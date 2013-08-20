@@ -1,0 +1,6 @@
+name="cpdf"
+description="PDF command line tools and library"
+version="1.7"
+requires="camlpdf"
+archive(byte)="cpdf.cma"
+archive(native)="cpdf.cmxa"
