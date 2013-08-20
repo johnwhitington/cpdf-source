@@ -1,6 +1,7 @@
 # Build the cpdf command line tools and top level
-SOURCES = cpdfstrftime.mli cpdfstrftime.ml cpdf.mli cpdf.ml cpdfcommand.mli \
-cpdfcommand.ml cpdfcommandrun.ml
+MODS = cpdfstrftime cpdf cpdfcommand
+
+SOURCES = $(foreach x,$(MODS),$(x).ml $(x).mli) cpdfcommandrun.ml
 
 RESULT = cpdf
 
@@ -10,7 +11,12 @@ OCAMLNCFLAGS = -g
 OCAMLBCFLAGS = -g
 OCAMLLDFLAGS = -g
 
-all : native-code top htdoc
+all : native-code native-code-library byte-code-library top htdoc
+
+LIBINSTALL_FILES = cpdf.a cpdf.cma cpdf.cmxa \
+$(foreach x,$(MODS),$x.mli) $(foreach x,$(MODS),$x.cmi)
+
+install : libinstall
 
 -include OCamlMakefile
 
