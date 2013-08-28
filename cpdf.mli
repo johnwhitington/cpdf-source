@@ -167,10 +167,17 @@ val print_metadata : Pdf.t -> unit
 
 (** {2 Stamping} *)
 
-(** [combine_pages fast under over scaletofit swap equalize] *)
+(** [combine_pages fast under over scaletofit swap equalize] combines the page
+content of two PDFs, page-by-page. If [equalize] is true the output will have
+the same number of pages as the shorter file. If [scaletofit] is true, the
+[over] file will be scaled to fit. If [swap] is true, [over] and [under] are
+swapped.  If [fast] is true, the PDFs are assumed to be well-formed and no
+fixes are done. *)
 val combine_pages : bool -> Pdf.t -> Pdf.t -> bool -> bool -> bool -> Pdf.t
 
-(** [stamp scale_to_fit fast isover range over pdf] stamps the first page of [over] over each page of the PDF. *)
+(** [stamp scale_to_fit fast isover range over pdf] stamps the first page of
+[over] over each page of the PDF. The arguments have the same meaning as in
+[combine_pages]. *)
 val stamp : bool -> bool -> bool -> int list -> Pdf.t -> Pdf.t -> Pdf.t
 
 (** {2 Splitting PDFs} *)
