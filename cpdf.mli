@@ -86,7 +86,9 @@ val decompress_pdf : Pdf.t -> Pdf.t
 
 (** {2 Metadata and settings} *)
 
-(** [copy_id keepversion copyfrom copyto] *) 
+(** [copy_id keepversion copyfrom copyto] copies the ID, if any, from
+[copyfrom] to [copyto]. If [keepversion] is true, the PDF version of [copyto]
+won't be affected. *)
 val copy_id : bool -> Pdf.t -> Pdf.t -> Pdf.t
 
 (** [set_pdf_info (key, value, version)] sets the entry [key] in the /Info directory, updating
@@ -103,22 +105,26 @@ val set_page_layout : Pdf.t -> string -> Pdf.t
 (** Set the page layout to the given name (sans slash) e.g SinglePage *)
 val set_page_mode : Pdf.t -> string -> Pdf.t
 
+(** Set the PDF version number *)
 val set_version : int -> Pdf.t -> unit
 
-(** Output to standard output general information about a PDF. *)
-
+(** Given a PDF, returns a function which can lookup a given dictionary entry
+from the /Info dictionary, returning it as a UTF8 string *)
 val get_info_utf8 : Pdf.t -> string -> string
 
+(** Output to standard output general information about a PDF. *)
 val output_info : encoding -> Pdf.t -> unit
 
 (** {2 Presentations} *)
 
-(** [presentation range t d h i dir effect_dur pdf] *)
+(** [presentation range t d horizontal inward direction effect_duration pdf]
+adds a presentation on the pages in [range]. See cpdfmanual.pdf for details.
+*)
 val presentation : int list -> string option ->
     float option -> bool -> bool -> int -> float -> Pdf.t -> Pdf.t
 
 (** {2 File Attachments} *)
-(** [attach_file keep-version topage pdf filename] *)
+(** [attach_file keepversion topage pdf filename] attaches the file in [filename] to the pdf, optionally to a page (rather than document-level). If keepversion is true, the PDF version number won't be altered. *)
 val attach_file : bool -> int option -> Pdf.t -> string -> Pdf.t
 
 (** Remove attached files. *)
@@ -129,28 +135,34 @@ val list_attached_files : Pdf.t -> (string * int) list
 
 (** {2 Bookmarks} *)
 
-(** [parse_bookmark_file verify pdf input] *)
+(** [parse_bookmark_file verify pdf input] parses the bookmark file in [input].
+Details of the bookmark file format can be found in cpdfmanual.pdf *)
 val parse_bookmark_file : bool -> Pdf.t -> Pdfio.input -> Pdfmarks.t list
 
-(** [add_bookmarks verify input pdf] *) 
+(** [add_bookmarks verify input pdf] adds bookmarks from the bookmark file
+give. If [verify] is given, bookmarks will be verified to ensure, for example,
+that they are not out of the page range. *) 
 val add_bookmarks : bool -> Pdfio.input -> Pdf.t -> Pdf.t
 
-(** [list_bookmarks deunicode range page_offset pdf output] *)
+(** [list_bookmarks encoding range pdf output] lists the bookmarks to the given
+output in the format specified in cpdfmanual.pdf *)
 val list_bookmarks : encoding -> int list -> Pdf.t -> Pdfio.output -> unit
 
 (** {2 XML Metadata} *)
 
-(** [set_metadata keepversion filename pdf] *) 
+(** [set_metadata keepversion filename pdf] sets the XML metadata of a PDF to the contents of [filename]. If [keepversion] is true, the PDF version will not be altered. *) 
 val set_metadata : bool -> string -> Pdf.t -> Pdf.t
 
+(** The same, but the content comes from [bytes]. *)
 val set_metadata_from_bytes : bool -> Pdfio.bytes -> Pdf.t -> Pdf.t
 
 (** Remove the metadata from a file *)
 val remove_metadata : Pdf.t -> Pdf.t
 
-(** Print metadate to stdout *)
+(** Extract metadata to a [Pdfio.bytes] *)
 val get_metadata : Pdf.t -> Pdfio.bytes
 
+(** Print metadate to stdout *)
 val print_metadata : Pdf.t -> unit
 
 (** {2 Stamping} *)
@@ -177,6 +189,7 @@ val split_pdf : Pdfwrite.encryption option -> bool -> string -> int -> bool -> (
 (** Print font list to stdout *)
 val print_fonts : Pdf.t -> unit
 
+(** Return font list. Page number, name, subtype, basefont, encoding.  *)
 val list_fonts : Pdf.t -> (int * string * string * string * string) list
 
 (** {2 Adding text} *)
@@ -321,14 +334,16 @@ val padmultiple : int -> Pdf.t -> Pdf.t
 
 (** {2 Annotations} *)
 
-(** List the annotations to standard output *)
+(** List the annotations to standard output in a given encoding. See cpdfmanual.pdf for the format details. *)
 val list_annotations : encoding -> Pdf.t -> unit
 
+(** The same, but giving more information. Deprecated *)
 val list_annotations_more : Pdf.t -> unit
 
+(** Return the annotations as a (pagenumber, content) list *)
 val get_annotations : encoding -> Pdf.t -> (int * string) list
 
-(** Copy the annotations on a given set of pages from a to b yielding c. *)
+(** Copy the annotations on a given set of pages from a to b. b is returned. *)
 val copy_annotations : int list -> Pdf.t -> Pdf.t -> Pdf.t
 
 (** Remove the annotations on given pages. *)
@@ -336,16 +351,20 @@ val remove_annotations : int list -> Pdf.t -> Pdf.t
 
 (** {2 Imposition} *)
 
-(** Two-up a PDF. *)
-val twoup : Pdf.t -> Pdf.t
-
-(** Stack Two-up a PDF. *)
+(** The twoup_stack operation puts two logical pages on each physical page,
+rotating them 90 degrees to do so. The new mediabox is thus larger. *)
 val twoup_stack : Pdf.t -> Pdf.t
+
+(** The twoup operation does the same, but scales the new sides down so that
+the media box is unchanged. *)
+val twoup : Pdf.t -> Pdf.t
 
 (** {2 Making new documents} *)
 
+(** Make a blank document given x and y page dimensions in points and a number of pages *)
 val blank_document : float -> float -> int -> Pdf.t
 
+(** The same, but give a Pdfpaper.t paper size. *)
 val blank_document_paper : Pdfpaper.t -> int -> Pdf.t
 
 (** {2 Miscellany} *)
