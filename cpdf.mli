@@ -3,10 +3,16 @@ open Pdfutil
 
 (** {2 Types and Exceptions} *)
 
+(** Possible output encodings for some function. [Raw] does no processing at
+all - the PDF string is output as-is. [UTF8] converts loslessly to UTF8.
+[Stripped] extracts the unicode codepoints and returns only those which
+correspond to 7 bit ASCII. *)
 type encoding = Raw | UTF8 | Stripped
 
 exception SoftError of string
 exception HardError of string
+(** Two exceptions recommended for use with the library, though currently not
+raised by any function in this module. Cpdfcommand uses them extensively. *)
 
 (** {2 Debug} *)
 
@@ -23,20 +29,50 @@ val endpage_io : Pdfio.input -> string option -> string option -> int
 of page numbers to apply it to, apply the function to all those pages. *)
 val process_pages : (int -> Pdfpage.t -> Pdfpage.t) -> Pdf.t -> int list -> Pdf.t
 
-(** Same, but just iterate *)
+(** Same as [process_pages], but iterate rather than map. *)
 val iter_pages : (int -> Pdfpage.t -> unit) -> Pdf.t -> int list -> unit
 
-(** Same, but map *)
+(** Same as [process_pages] but return the list of outputs of the map function. *)
 val map_pages : (int -> Pdfpage.t -> 'a) -> Pdf.t -> int list -> 'a list
 
 (** {2 Page specifications and ranges } *)
 
+(** Here are the rules for building input ranges:
+
+{ul
+{- A comma (,) allows one to specify several ranges, e.g. 1-2,4-5.}
+{- The word end represents the last page number. }
+{- The words odd and even can be used in place of or at the end of a page range to restrict to just the odd or even pages. }
+{- The word reverse is the same as end-1.}
+{- The word all is the same as 1-end.}
+{- A range must contain no spaces.}
+{- A tilde (~) defines a page number counting from the end of the document rather than the beginning. Page ~1 is the last page, ~2 the penultimate page etc.}
+}
+*)
+
+(** Parse a (valid) page specification to a page range *)
 val parse_pagespec : Pdf.t -> string -> int list
 
+(** Return a string for the given range. Knows how to identify all, odd, even,
+x-y ranges etc. *)
 val string_of_pagespec : Pdf.t -> int list -> string
 
+(** Is a page specification, in theory, valid? This is the most we can find out
+without supplying a PDF, and thus knowing how many pages there are in it. *)
 val validate_pagespec : string -> bool
 
+(** [name_of_spec printf marks pdf splitlevel spec n filename startpage
+endpage] makes format substitutions in [spec] to make an output file name:
+
+{ul
+{- @F will be replaced by [filename]}
+{- @N will be replace by the current sequence number [n], [n+1] etc.}
+{- @S will be replace by the start page}
+{- @E will be replace by the end page}
+{- @B will be replace by the bookmark name in [marks] at the given level [splitlevel]}
+}
+[printf] is undocumented and should be set to [false].
+*)
 val name_of_spec : bool -> Pdfmarks.t list -> Pdf.t -> int -> string -> int -> string -> int -> int -> string
 
 (** {2 Compress and Decompress} *)
@@ -45,6 +81,7 @@ val name_of_spec : bool -> Pdfmarks.t list -> Pdf.t -> int -> string -> int -> s
 /FlateDecode, leaving out metadata.  If the PDF is encrypted, does nothing. *)
 val recompress_pdf : Pdf.t -> Pdf.t
 
+(** Decompresses all streams in a PDF document, assuming it isn't encrypted. *)
 val decompress_pdf : Pdf.t -> Pdf.t
 
 (** {2 Metadata and settings} *)
