@@ -182,13 +182,16 @@ val stamp : bool -> bool -> bool -> int list -> Pdf.t -> Pdf.t -> Pdf.t
 
 (** {2 Splitting PDFs} *)
 
-(** [split_at_bookmarks linearize nobble level spec pdf] *)
+(** [split_at_bookmarks linearize nobble level spec pdf] splits on bookmarks at
+the fiven level, writing to files with names given by [spec] (see
+cpdfmanual.pdf). [nobble] is undocumented and should be false. If [linearize]
+is true, the files will be linearized. *)
 val split_at_bookmarks : string -> bool -> (Pdf.t -> Pdf.t) -> int -> string -> Pdf.t -> unit
 
-(** The new one *)
+(** Split a PDF on bookmarks of a given level or below. Level 0 is top level. *)
 val split_on_bookmarks : Pdf.t -> int -> Pdf.t list
 
-(** [split_pdf printf chunksize linearize nobble spec pdf] *)
+(** [split_pdf printf chunksize linearize nobble spec pdf] splits a PDF to files given a chunk size (number of pages in each split), a file specification (see cpdfmanual.pdf). If linearize is true each output is linearized. [printf] and [nobble] are undocumented and should be false. *)
 val split_pdf : Pdfwrite.encryption option -> bool -> string -> int -> bool -> (Pdf.t -> Pdf.t) -> string -> Pdf.t -> unit
 
 (** {2 Listing fonts} *)
@@ -204,7 +207,7 @@ val list_fonts : Pdf.t -> (int * string * string * string * string) list
 (** Expand the string "now" to a PDF date string, ignoring any other string *)
 val expand_date : string -> string
 
-(** Possible positions for adding text and other uses. *)
+(** Possible positions for adding text and other uses. See cpdfmanual.pdf *)
 type position =
   | PosCentre of float * float
   | PosLeft of float * float
@@ -220,36 +223,36 @@ type position =
   | Diagonal
   | ReverseDiagonal
 
+(** Produce a debug string of a [position] *)
 val string_of_position : position -> string
 
+(** Orientation of the string on the page *)
 type orientation =
   | Horizontal
   | Vertical
   | VerticalDown
 
+(** Justification of multiline text *)
 type justification =
   | LeftJustify
   | CentreJustify
   | RightJustify
 
-(** [calculate ignore_d w (xmin, ymin, xmax, ymax) shorterside pos] *)
+(** [calculate ignore_d w (xmin, ymin, xmax, ymax) orientation pos] calculates
+the absolute position of text given its width, bounding box, orientation and
+position. If [ignore_d] is true, the distance from the position (e.g 10 in
+TopLeft 10) is ignored (considered zero). *)
 val calculate_position :
     bool ->
     float ->
     float * float * float * float ->
     orientation -> position -> float * float * float
 
-(** Returns what the added text string would be *)
-(*val addtext_returntext : Pdf.t -> string -> int -> string -> int -> string*)
 
-val metrics_howmany : unit -> int
-val metrics_text : int -> string
-val metrics_x : int -> float
-val metrics_y : int -> float
-val metrics_rot : int -> float
-val metrics_baseline_adjustment : unit -> float
 
-(** [add_texts fontname font bates colour positino linespacing fontsize shorterside text pages pdf] *)
+(** Call [add_texts metrics linewidth outline fast fontname font bates colour
+position linespacing fontsize underneath text pages orientation
+relative_to_cropbox midline_adjust filename pdf]. For details see cpdfmanual.pdf *)
 val addtexts :
     bool -> (*metrics*)
     float -> (*linewidth*)
@@ -274,28 +277,44 @@ val addtexts :
     Pdf.t ->(*pdf*)
     Pdf.t
 
+val metrics_howmany : unit -> int
+val metrics_text : int -> string
+val metrics_x : int -> float
+val metrics_y : int -> float
+val metrics_rot : int -> float
+val metrics_baseline_adjustment : unit -> float
+(** These functions returns some details about the text if [addtexts] is called with [metrics] true. The integer arguments are  1 for the first one, 2 for the second etc. Call [metrics_howmany] first to find out how many. *)
+
 (** Remove text from the given pages. *)
 val removetext : int list -> Pdf.t -> Pdf.t
 
 (**  {2 Page geometry} *)
 
-(** Print page info (Mediabox etc) *)
+(** Print page info (Mediabox etc) to standard output. *)
 val output_page_info : Pdf.t -> unit
 
+(** True if a given page in a PDF has a given box *)
 val hasbox : Pdf.t -> int -> string -> bool
 
-(** [crop_pdf x y w h pdf range] *)
+(** [crop_pdf x y w h pdf range] sets the cropbox on the given pages. *)
 val crop_pdf : float -> float -> float -> float -> Pdf.t -> int list -> Pdf.t
 
-(** [set_mediabox x y w h pdf range] *)
+(** [set_mediabox x y w h pdf range] sets the cropbox on the given pages. *)
 val set_mediabox : float -> float -> float -> float -> Pdf.t -> int list -> Pdf.t
 
+(** [setBox boxname x y w h pdf range] sets the given box on the given pages. *)
 val setBox : string -> float -> float -> float -> float -> Pdf.t -> int list -> Pdf.t
 
 (** Remove any cropping from the given pages. *)
 val remove_cropping_pdf : Pdf.t -> int list -> Pdf.t
+
+(** Remove any trim box from the given pages. *)
 val remove_trim_pdf : Pdf.t -> int list -> Pdf.t
+
+(** Remove any bleed box from the given pages. *)
 val remove_bleed_pdf : Pdf.t -> int list -> Pdf.t
+
+(** Remove any art box from the given pages. *)
 val remove_art_pdf : Pdf.t -> int list -> Pdf.t
 
 (** Change rotation to a given value 0, 90, 180, 270 on given pages. *)
@@ -304,7 +323,7 @@ val rotate_pdf : int -> Pdf.t -> int list -> Pdf.t
 (** Rotate clockwise by 0, 90, 180, 270 on given pages. *)
 val rotate_pdf_by : int -> Pdf.t -> int list -> Pdf.t
 
-(** Rotate the contents by the given angle on the given pages. *)
+(** Rotate the contents by the given angle on the given pages. If [fast] is true, assume PDF is well-formed. *)
 val rotate_contents : ?fast:bool -> float -> Pdf.t -> int list -> Pdf.t
 
 (** Modify the rotation of the page and its contents to leave the rotation at 0 with the page effectively unaltered. *)
@@ -322,7 +341,9 @@ val shift_pdf : ?fast:bool -> float -> float -> Pdf.t -> int list -> Pdf.t
 (** Scale a PDF in sx, sy in the given pages. *)
 val scale_pdf : ?fast:bool -> float -> float -> Pdf.t -> int list -> Pdf.t
 
-(** [scale_to_fit_pdf input_scale x y op pdf range] *) 
+(** [scale_to_fit_pdf input_scale x y op pdf range] scales a page to fit the
+page size given by (x, y) and by the [input_scale] (e.g 1.0 = scale to fit, 0.9
+= scale to fit leaving a border etc.). [op] is unused. *) 
 val scale_to_fit_pdf : ?fast:bool -> float -> float -> float -> 'a -> Pdf.t -> int list -> Pdf.t
 
 (** Scale the contents of a page by a given factor centred around a given point in a given range. *)
