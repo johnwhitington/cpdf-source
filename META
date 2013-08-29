@@ -1,5 +1,5 @@
 name="cpdf"
-description="PDF command line tools and library"
+description="High-level pdf tools base on CamlPDF"
 version="1.7"
 requires="camlpdf"
 archive(byte)="cpdf.cma"

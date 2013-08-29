@@ -1,5 +1,6 @@
 (* cpdf command line tools} *)
 let demo = false
+and noncomp = true
 and major_version = 1
 and minor_version = 7
 and version_date = "(7th August 2013)"
@@ -3343,6 +3344,12 @@ let align_specs s =
 let go_withargv argv =
   if demo then
     flprint "This demo is for evaluation only. http://www.coherentpdf.com/\n";
+  if noncomp then
+    begin
+      prerr_string "For non-commercial use only\n";
+      prerr_string "To purchase a license visit http://www.coherentpdf.com/\n\n";
+      flush stderr
+    end;
   try
     (* Split the arguments into sets either side of ANDs *)
     let sets =
