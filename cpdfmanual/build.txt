@@ -1,0 +1,1 @@
+htlatex index "html,3,pic-tabular"

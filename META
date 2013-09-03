@@ -1,5 +1,5 @@
 name="cpdf"
-description="High-level pdf tools base on CamlPDF"
+description="High-level pdf tools based on CamlPDF"
 version="1.7"
 requires="camlpdf"
 archive(byte)="cpdf.cma"
