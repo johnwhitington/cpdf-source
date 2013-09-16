@@ -4,7 +4,7 @@ MODS = cpdfstrftime cpdf cpdfcommand
 SOURCES = $(foreach x,$(MODS),$(x).ml $(x).mli) cpdfcommandrun.ml
 
 RESULT = cpdf
-
+ANNOTATE = true
 PACKS = camlpdf
 
 OCAMLNCFLAGS = -g
