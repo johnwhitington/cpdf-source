@@ -2253,21 +2253,24 @@ let get_annotation_string encoding pdf annot =
   | Some (Pdf.String s) -> encode_output encoding s
   | _ -> ""
 
-let print_annotation encoding pdf s =
+let print_annotation encoding pdf num s =
   let s = get_annotation_string encoding pdf s in
-  flprint "------------------------------------------------------------------------\n";
-  flprint s;
-  flprint "\n"
+  match s with
+  | "" -> ()
+  | s ->
+    flprint (Printf.sprintf "Page %d: " num);
+    flprint s;
+    flprint "\n"
 
-let list_page_annotations encoding pdf page =
+let list_page_annotations encoding pdf num page =
   match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
   | Some (Pdf.Array annots) ->
-      iter (print_annotation encoding pdf) (map (Pdf.direct pdf) annots)
+      iter (print_annotation encoding pdf num) (map (Pdf.direct pdf) annots)
   | _ -> ()
 
 let list_annotations encoding pdf =
-  let pages = Pdfpage.pages_of_pagetree pdf in
-    iter (list_page_annotations encoding pdf) pages 
+  let range = parse_pagespec pdf "all" in
+  iter_pages (list_page_annotations encoding pdf) pdf range
 
 let get_annotations encoding pdf =
   let pages = Pdfpage.pages_of_pagetree pdf in
