@@ -32,30 +32,34 @@ If you are using the OPAM package manager:
 
 these can be installed by:
 
-opam install ocamlfind camlpdf
+```
+opam install camlpdf
+```
 
 To build
 --------
 
-1. Type 'make' to make the cpdf executable and the library
+1. Type `make` to make the cpdf executable and the library
 
-2. Type 'make install' to install the OCaml cpdf library.
+2. Type `make install` to install the OCaml cpdf library.
 
-The cpdf executable should be manually placed somewhere suitable.
+The `cpdf` executable should be manually placed somewhere suitable.
 
-Alternatively, the library only can be installed by
+Alternatively, the library and command-line binary can be installed by
 
+```
 opam install cpdf
+```
+
 
 Documentation
 -------------
 
-The file cpdfmanual.pdf in this folder is the documentation for the command
-line tools. The documentation for the cpdf OCaml library is in doc/html/cpdf/
+The file `cpdfmanual.pdf` in this folder is the documentation for the command
+line tools. The documentation for the cpdf OCaml library is in `doc/html/cpdf/`
 in this folder once the library has been built.
 
 Contact
 -------
 
 [contact@coherentgraphics.co.uk](contact@coherentgraphics.co.uk)
-
