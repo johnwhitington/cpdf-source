@@ -1,9 +1,9 @@
-(* cpdf command line tools} *)
+(* cpdf command line tools *)
 let demo = false
 and noncomp = true
 and major_version = 1
-and minor_version = 7
-and version_date = "(7th August 2013)"
+and minor_version = 8
+and version_date = "(unreleased)"
 
 open Pdfutil
 open Pdfio
@@ -150,6 +150,8 @@ type op =
   | ExtractFontFile
   | ExtractText
   | PrintLinearization
+  | OpenAtPage of int
+  | OpenAtPageFit of int
 
 (* Inputs: filename, pagespec. *)
 type input_kind =
@@ -399,7 +401,8 @@ let reset_arguments () =
   args.makenewid <- false;
   args.ismulti <- false;
   args.uprightstamp <- false
-  (* We don't reset args.do_ask and args.verbose, because they operate on all parts of the AND-ed command line sent from cpdftk. *)
+  (* We don't reset args.do_ask and args.verbose, because they operate on all
+  parts of the AND-ed command line sent from cpdftk. *)
 
 let banlist_of_args () =
   let l = ref [] in
@@ -1178,6 +1181,12 @@ let setstdinowner o =
   |  (StdIn, x, y, u, _)::t -> args.inputs <- (StdIn, x, y, u, o)::t
   | _ -> error "-stdin-user: must follow -stdin"
 
+let setopenatpage n =
+  args.op <- Some (OpenAtPage n)
+
+let setopenatpagefit n =
+  args.op <- Some (OpenAtPageFit n)
+
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
   control_args := !control_args @ parse_control_file filename
@@ -1539,6 +1548,12 @@ and specs =
    ("-set-page-mode",
       Arg.String setpagemode,
       " Set page mode upon document opening");
+   ("-open-at-page",
+      Arg.Int setopenatpage,
+      " Set initial page");
+   ("-open-at-page-fit",
+      Arg.Int setopenatpagefit,
+      " Set inital page, scaling to fit");
    ("-set-metadata",
       Arg.String setmetadata,
       " Set metadata to the contents of a file");
@@ -2621,7 +2636,7 @@ let addrectangle (w, h) color position relative_to_cropbox underneath range pdf 
   in
     Cpdf.process_pages addrectangle_page pdf range
 
-(* \section{Main function} *)
+(* Main function *)
 let go () =
   match args.op with
   | Some Version ->
@@ -2938,6 +2953,10 @@ let go () =
      let version = if args.keepversion then pdf.Pdf.minor else version in
           write_pdf false (Cpdf.set_viewer_preference (key, value, version) pdf)
       end
+  | Some (OpenAtPage n) ->
+      write_pdf false (Cpdf.set_open_action (get_single_pdf args.op false) false n)
+  | Some (OpenAtPageFit n) ->
+      write_pdf false (Cpdf.set_open_action (get_single_pdf args.op true) false n)
   | Some (SetMetadata metadata_file) ->
       write_pdf false (Cpdf.set_metadata args.keepversion metadata_file (get_single_pdf args.op false))
   | Some (SetVersion v) ->

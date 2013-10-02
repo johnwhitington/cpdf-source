@@ -105,6 +105,9 @@ val set_page_layout : Pdf.t -> string -> Pdf.t
 (** Set the page layout to the given name (sans slash) e.g SinglePage *)
 val set_page_mode : Pdf.t -> string -> Pdf.t
 
+(** Set the open action. If the boolean is true, /Fit will be used, otherwise /XYZ *)
+val set_open_action : Pdf.t -> bool -> int -> Pdf.t
+
 (** Set the PDF version number *)
 val set_version : int -> Pdf.t -> unit
 
@@ -247,8 +250,6 @@ val calculate_position :
     float ->
     float * float * float * float ->
     orientation -> position -> float * float * float
-
-
 
 (** Call [add_texts metrics linewidth outline fast fontname font bates colour
 position linespacing fontsize underneath text pages orientation
