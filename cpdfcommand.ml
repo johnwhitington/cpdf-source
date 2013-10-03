@@ -2956,7 +2956,7 @@ let go () =
   | Some (OpenAtPage n) ->
       write_pdf false (Cpdf.set_open_action (get_single_pdf args.op false) false n)
   | Some (OpenAtPageFit n) ->
-      write_pdf false (Cpdf.set_open_action (get_single_pdf args.op true) false n)
+      write_pdf false (Cpdf.set_open_action (get_single_pdf args.op false) true n)
   | Some (SetMetadata metadata_file) ->
       write_pdf false (Cpdf.set_metadata args.keepversion metadata_file (get_single_pdf args.op false))
   | Some (SetVersion v) ->
