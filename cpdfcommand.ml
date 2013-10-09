@@ -1248,7 +1248,7 @@ and specs =
       " Speed over correctness with malformed documents");
    ("-control",
       Arg.String make_control_argv_and_parse,
-      " Use a control file");
+      " Use a control file. Deprecated. Use -args.");
    ("-merge",
        Arg.Unit (setop Merge),
        " Merge a number of files into one");
