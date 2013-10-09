@@ -3359,6 +3359,19 @@ let parse_argv () =
 let align_specs s =
   Arg.align s
 
+(* The old -control mechanism clashed with AND, but must be retained for
+backwards compatibility. There is a new mechanism -args file which performs
+direct textual substitution of the file, before any expansion of ANDs *)
+let rec expand_args_inner prev = function
+    [] -> rev prev
+  | "-args"::filename::r ->
+      expand_args_inner (rev (parse_control_file filename) @ prev) r
+  | h::t -> expand_args_inner (h::prev) t
+
+let expand_args argv =
+  let l = Array.to_list argv in
+    Array.of_list (expand_args_inner [] l)
+
 (* Main function. *)
 let go_withargv argv =
   if demo then
@@ -3370,6 +3383,8 @@ let go_withargv argv =
       flush stderr
     end;
   try
+    (* Pre-expand -args *)
+    let argv = expand_args argv in
     (* Split the arguments into sets either side of ANDs *)
     let sets =
       let args =
@@ -3394,13 +3409,10 @@ let go_withargv argv =
       flush stdout (*r for Windows *)
   with
   | Arg.Bad s ->
-      let s' =
-        let chars = explode s in
-          implode (takewhile (neq '\n') chars) ^ " Use -help for help.\n\n"
-      in
-        prerr_string s';
-        flush stderr;
-        exit 2
+      prerr_string
+        (implode (takewhile (neq '\n') (explode s)) ^ " Use -help for help.\n\n");
+      flush stderr;
+      exit 2
   | Arg.Help _ ->
       Arg.usage (align_specs specs) usage_msg;
       flush stderr (*r for Windows *)
