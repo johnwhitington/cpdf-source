@@ -418,7 +418,7 @@ let rec process_text text m =
   | (s, r)::t -> process_text (string_replace_all s r text) t
 
 let expand_date = function
-  | "now" -> Cpdfstrftime.strftime "D:%Y%m%d%t%M%S"
+  | "now" -> Cpdfstrftime.strftime "D:%Y%m%d%H%M%S"
   | x -> x
 
 let process_pages f pdf range =
