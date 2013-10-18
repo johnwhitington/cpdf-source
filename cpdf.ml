@@ -1707,6 +1707,7 @@ let addtext
 let split_at_newline t =
   let rec split_at_newline_inner prev = function
     | [] -> rev (map implode (map rev prev))
+    | '\\'::'\\'::'n'::t -> split_at_newline_inner (('n'::'\\'::'\\'::hd prev)::tl prev) t
     | '\\'::'n'::t -> split_at_newline_inner ([]::prev) t
     | h::t -> split_at_newline_inner ((h::hd prev)::tl prev) t
   in
@@ -1716,7 +1717,8 @@ let rec unescape_chars prev = function
   | [] -> rev prev
   | '\\'::('0'..'9' as a)::('0'..'9' as b)::('0'..'9' as c)::t ->
        let chr = char_of_int (int_of_string ("0o" ^ implode [a;b;c])) in
-         unescape_chars (chr::prev) t 
+         unescape_chars (chr::prev) t
+  | '\\'::'\\'::t -> unescape_chars ('\\'::prev) t
   | '\\'::c::t when c <> 'n' -> unescape_chars (c::prev) t
   | h::t -> unescape_chars (h::prev) t
 
@@ -1753,9 +1755,8 @@ let
   flprint "\n";*)
   ops_metrics := [];
   let text = winansi_of_utf8 text in
-    let text = unescape_string text in
-      let lines = split_at_newline text
-      and pdf = ref pdf in
+    let lines = map unescape_string (split_at_newline text) in
+      let pdf = ref pdf in
         let voffset =
           match position with
           | Bottom _ | BottomLeft _ | BottomRight _ ->
