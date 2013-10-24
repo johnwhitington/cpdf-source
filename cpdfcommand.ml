@@ -152,6 +152,9 @@ type op =
   | PrintLinearization
   | OpenAtPage of int
   | OpenAtPageFit of int
+  | AddPageLabels of string
+  | RemovePageLabels
+  | PrintPageLabels
 
 (* Inputs: filename, pagespec. *)
 type input_kind =
@@ -1187,6 +1190,9 @@ let setopenatpage n =
 let setopenatpagefit n =
   args.op <- Some (OpenAtPageFit n)
 
+let setaddpagelabels s =
+  args.op <- Some (AddPageLabels s)
+
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
   control_args := !control_args @ parse_control_file filename
@@ -1647,6 +1653,15 @@ and specs =
    ("-copy-id-from",
       Arg.String setcopyid,
       " Copy one file's ID tag to another");
+   ("-print-page-labels",
+      Arg.Unit (setop PrintPageLabels),
+      " Print page labels");
+   ("-remove-page-labels",
+      Arg.Unit (setop RemovePageLabels),
+      " Remove page labels");
+   ("-add-page-labels",
+      Arg.String setaddpagelabels,
+      " Add or replace page labels");
    (* These items are for cpdftk *)
    ("-update-info", Arg.String setupdateinfo, "");
    ("-printf-format", Arg.Unit setprintfformat, "");
@@ -3352,6 +3367,16 @@ let go () =
            Pdfread.print_linearization (Pdfio.input_of_channel (open_in_bin inname))
       | _ -> raise (Arg.Bad "-print-linearization: supply a single file name")
       end
+  | Some (AddPageLabels labelspec) -> ()
+  | Some RemovePageLabels ->
+      let pdf = get_single_pdf args.op false in
+        Pdfpagelabels.remove pdf;
+        write_pdf false pdf
+  | Some PrintPageLabels ->
+      let pdf = get_single_pdf args.op true in
+        iter
+          print_string
+          (map Pdfpagelabels.string_of_pagelabel (Pdfpagelabels.read pdf))
 
 let parse_argv () =
   Arg.parse_argv ~current:(ref 0)
