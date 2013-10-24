@@ -3095,3 +3095,41 @@ let blank_document_paper papersize pages =
     let pdf, pageroot = Pdfpage.add_pagetree pdf_pages (Pdf.empty ()) in
       Pdfpage.add_root pageroot [] pdf
 
+(* Split the given range (which is in order) into multiple contiguous ones. *)
+let rec ranges_of_range curr prev = function
+  | [] -> begin match curr with [] -> rev prev | _ -> rev (rev curr::prev) end
+  | x::xs ->
+      match curr with
+      | [] -> ranges_of_range [x] prev xs
+      | c::cs when x = c + 1 -> ranges_of_range (x::curr) prev xs
+      | cs -> ranges_of_range [x] (rev cs::prev) xs
+
+(* Predicate which is true if at least one page range starts at page 1 *)
+let page1 labels =
+  mem true (map (function l -> l.Pdfpagelabels.startpage = 1) labels)
+
+let add_page_labels pdf style prefix offset range =
+  let ranges = map extremes (ranges_of_range [] [] range)
+  and labels = Pdfpagelabels.read pdf in
+    let labels =
+      if not (page1 labels) then
+        ref
+          ({Pdfpagelabels.labelstyle = Some Pdfpagelabels.DecimalArabic;
+            Pdfpagelabels.labelprefix = None;
+            Pdfpagelabels.startpage = 1;
+            Pdfpagelabels.startvalue = 1}::labels)
+      else
+        ref labels
+    in
+      iter
+        (function (s, e) ->
+           let label =
+             {Pdfpagelabels.labelstyle = style;
+              Pdfpagelabels.labelprefix = prefix;
+              Pdfpagelabels.startpage = s;
+              Pdfpagelabels.startvalue = s + offset}
+           in
+             labels := Pdfpagelabels.add_label !labels label e)
+        ranges;
+        Pdfpagelabels.write pdf !labels
+

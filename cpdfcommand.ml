@@ -152,7 +152,7 @@ type op =
   | PrintLinearization
   | OpenAtPage of int
   | OpenAtPageFit of int
-  | AddPageLabels of string
+  | AddPageLabels
   | RemovePageLabels
   | PrintPageLabels
 
@@ -254,7 +254,10 @@ type args =
    mutable dont_overwrite_existing_files : bool;
    mutable makenewid : bool;
    mutable ismulti : bool;
-   mutable uprightstamp : bool}
+   mutable uprightstamp : bool;
+   mutable labelstyle : Pdfpagelabels.labelstyle option;
+   mutable labelprefix : string option;
+   mutable labeloffset : int option}
 
 (* List of all filenames in any AND stage - this is used to check that we don't
 overwrite any input file when -dont-overwrite-existing-files is used. *)
@@ -333,7 +336,10 @@ let args =
    dont_overwrite_existing_files = false;
    makenewid = false;
    ismulti = false;
-   uprightstamp = false}
+   uprightstamp = false;
+   labelstyle = None;
+   labelprefix = None;
+   labeloffset = None}
 
 let reset_arguments () =
   args.op <- None;
@@ -403,7 +409,10 @@ let reset_arguments () =
   args.keep_this_id <- None;
   args.makenewid <- false;
   args.ismulti <- false;
-  args.uprightstamp <- false
+  args.uprightstamp <- false;
+  args.labelstyle <- None;
+  args.labelprefix <- None;
+  args.labeloffset <- None
   (* We don't reset args.do_ask and args.verbose, because they operate on all
   parts of the AND-ed command line sent from cpdftk. *)
 
@@ -1190,8 +1199,23 @@ let setopenatpage n =
 let setopenatpagefit n =
   args.op <- Some (OpenAtPageFit n)
 
-let setaddpagelabels s =
-  args.op <- Some (AddPageLabels s)
+let setlabelstyle s =
+  let style =
+    match s with
+    | "DecimalArabic" -> Pdfpagelabels.DecimalArabic
+    | "UppercaseRoman" -> Pdfpagelabels.UppercaseRoman
+    | "LowercaseRoman" -> Pdfpagelabels.LowercaseRoman
+    | "UppercaseLetters" -> Pdfpagelabels.UppercaseLetters
+    | "LowercaseLetters" -> Pdfpagelabels.LowercaseLetters
+    | _ -> error "Unknown label style"
+  in
+    args.labelstyle <- Some style
+
+let setlabelprefix s =
+  args.labelprefix <- Some s
+
+let setlabeloffset i =
+  args.labeloffset <- Some i
 
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
@@ -1660,8 +1684,17 @@ and specs =
       Arg.Unit (setop RemovePageLabels),
       " Remove page labels");
    ("-add-page-labels",
-      Arg.String setaddpagelabels,
+      Arg.Unit (setop AddPageLabels),
       " Add or replace page labels");
+   ("-label-style",
+      Arg.String setlabelstyle,
+      " Set label style (default DecimalArabic)");
+   ("-label-prefix",
+      Arg.String setlabelprefix,
+      " Set label prefix (default none)");
+   ("-label-offset",
+      Arg.Int setlabeloffset,
+      " Set label offset (default 1)");
    (* These items are for cpdftk *)
    ("-update-info", Arg.String setupdateinfo, "");
    ("-printf-format", Arg.Unit setprintfformat, "");
@@ -3367,7 +3400,14 @@ let go () =
            Pdfread.print_linearization (Pdfio.input_of_channel (open_in_bin inname))
       | _ -> raise (Arg.Bad "-print-linearization: supply a single file name")
       end
-  | Some (AddPageLabels labelspec) -> ()
+  | Some AddPageLabels ->
+      let pdf = get_single_pdf args.op false in
+        let range = parse_pagespec pdf (get_pagespec ()) in
+          let offset =
+            match args.labeloffset with None -> 0 | Some x -> x
+          in
+            Cpdf.add_page_labels pdf args.labelstyle args.labelprefix offset range;
+            write_pdf false pdf
   | Some RemovePageLabels ->
       let pdf = get_single_pdf args.op false in
         Pdfpagelabels.remove pdf;
