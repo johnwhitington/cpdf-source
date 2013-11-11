@@ -683,7 +683,7 @@ ifndef REAL_OCAMLC
     ALL_LDFLAGS := $(THREAD_FLAG) $(ALL_LDFLAGS)
     ifndef CREATE_LIB
       ifndef REAL_OCAMLFIND
-        ALL_LDFLAGS := unix.cma threads.cma $(ALL_LDFLAGS)
+        ALL_LDFLAGS := $(ALL_LDFLAGS)
       endif
     endif
   endif
@@ -729,7 +729,7 @@ else
     ALL_LDFLAGS := $(THREAD_FLAG) $(ALL_LDFLAGS)
     ifndef CREATE_LIB
       ifndef REAL_OCAMLFIND
-        ALL_LDFLAGS := unix.cmxa threads.cmxa $(ALL_LDFLAGS)
+        ALL_LDFLAGS := $(ALL_LDFLAGS)
       endif
     endif
   endif

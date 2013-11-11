@@ -1,7 +1,7 @@
 # Build the cpdf command line tools and top level
 MODS = cpdfstrftime cpdf cpdfcommand
 
-SOURCES = $(foreach x,$(MODS),$(x).ml $(x).mli) cpdfcommandrun.ml
+SOURCES = cst2constr.h cst2constr.c unixsupport.h unixsupport.c gmtime.c gettimeofday.c cpdfunix.ml cpdfunix.mli $(foreach x,$(MODS),$(x).ml $(x).mli) cpdfcommandrun.ml
 
 RESULT = cpdf
 ANNOTATE = true
