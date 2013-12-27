@@ -62,4 +62,4 @@ in this folder once the library has been built.
 Contact
 -------
 
-[mailto:contact@coherentgraphics.co.uk](contact@coherentgraphics.co.uk)
+[contact@coherentgraphics.co.uk](mailto:contact@coherentgraphics.co.uk)
