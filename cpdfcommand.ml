@@ -2976,7 +2976,6 @@ let go () =
   | Some ((SetAuthor _ | SetTitle _ | SetSubject _ | SetKeywords _
           | SetCreate _ | SetModify _ | SetCreator _ | SetProducer _
           | SetTrapped | SetUntrapped) as op) ->
-      flprint "a set operation\n";
       let key, value, version  =
         let f s = if args.encoding <> Cpdf.Raw then Pdftext.pdfdocstring_of_utf8 s else unescape_octals s in
           match op with
