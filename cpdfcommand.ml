@@ -2684,7 +2684,18 @@ let addrectangle (w, h) color position relative_to_cropbox underneath range pdf 
   in
     Cpdf.process_pages addrectangle_page pdf range
 
-(* Main function *)
+let rec unescape_octals prev = function
+  | [] -> rev prev
+  | '\\'::('0'..'9' as a)::('0'..'9' as b)::('0'..'9' as c)::t ->
+       let chr = char_of_int (int_of_string ("0o" ^ implode [a;b;c])) in
+         unescape_octals (chr::prev) t
+  | '\\'::'\\'::t -> unescape_octals ('\\'::prev) t
+  | h::t -> unescape_octals (h::prev) t
+
+let unescape_octals s =
+  implode (unescape_octals [] (explode s))
+
+  (* Main function *)
 let go () =
   match args.op with
   | Some Version ->
@@ -2965,8 +2976,9 @@ let go () =
   | Some ((SetAuthor _ | SetTitle _ | SetSubject _ | SetKeywords _
           | SetCreate _ | SetModify _ | SetCreator _ | SetProducer _
           | SetTrapped | SetUntrapped) as op) ->
+      flprint "a set operation\n";
       let key, value, version  =
-        let f s = if args.encoding <> Cpdf.Raw then Pdftext.pdfdocstring_of_utf8 s else s in
+        let f s = if args.encoding <> Cpdf.Raw then Pdftext.pdfdocstring_of_utf8 s else unescape_octals s in
           match op with
           | SetAuthor s -> "/Author", Pdf.String (f s), 0
           | SetTitle s -> "/Title", Pdf.String (f s), 1

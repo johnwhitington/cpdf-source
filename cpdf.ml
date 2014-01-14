@@ -881,6 +881,7 @@ let set_viewer_preference (key, value, version) pdf =
 
 (* \section{Set an entry in the /Info dictionary} *)
 let set_pdf_info (key, value, version) pdf =
+  Printf.printf "set_pdf_info: %s %s\n" key (Pdfwrite.string_of_pdf value);
   let infodict =
     match Pdf.lookup_direct pdf "/Info" pdf.Pdf.trailerdict with
     | Some d -> d
