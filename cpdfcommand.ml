@@ -3277,7 +3277,7 @@ let go () =
       in
         let overpdf = if args.uprightstamp then Cpdf.upright ~fast:args.fast (ilist 1 (Pdfpage.endpage overpdf)) overpdf else overpdf in
           let pdf = get_single_pdf args.op false in
-            let marks = Pdfmarks.read_bookmarks pdf in
+            (*let marks = Pdfmarks.read_bookmarks pdf in*)
             let range = parse_pagespec pdf (get_pagespec ()) in
               let pdf =
                 if args.ismulti
@@ -3287,7 +3287,9 @@ let go () =
                   else
                     Cpdf.stamp args.fast args.scale_stamp_to_fit true range overpdf pdf
               in
-                write_pdf false (Pdfmarks.add_bookmarks marks pdf)
+                (*let p = Pdfmarks.add_bookmarks marks pdf in
+                Pdfwrite.debug_whole_pdf p;*)
+                write_pdf false pdf
   | Some (StampUnder under) ->
       let underpdf =
         match under with
@@ -3296,7 +3298,7 @@ let go () =
       in
         let underpdf = if args.uprightstamp then Cpdf.upright ~fast:args.fast (ilist 1 (Pdfpage.endpage underpdf)) underpdf else underpdf in
           let pdf = get_single_pdf args.op false in
-            let marks = Pdfmarks.read_bookmarks pdf in
+            (*let marks = Pdfmarks.read_bookmarks pdf in*)
             let range = parse_pagespec pdf (get_pagespec ()) in
               let pdf =
                 if args.ismulti
@@ -3305,7 +3307,7 @@ let go () =
                      Cpdf.combine_pages args.fast pdf underpdf true true false
                  else Cpdf.stamp args.fast args.scale_stamp_to_fit false range underpdf pdf
               in
-                write_pdf false (Pdfmarks.add_bookmarks marks pdf)
+                write_pdf false pdf (*(Pdfmarks.add_bookmarks marks pdf)*)
   | Some (CombinePages over) ->
       write_pdf false
         (Cpdf.combine_pages args.fast (get_single_pdf args.op false) (pdfread_pdf_of_file None None over) false false true)

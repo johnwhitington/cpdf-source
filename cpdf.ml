@@ -1050,8 +1050,34 @@ let do_stamp fast scale_to_fit isover pdf o u opdf =
        Pdfpage.resources =
          combine_pdf_resources pdf u.Pdfpage.resources o.Pdfpage.resources}
 
+(* Alter bookmark destinations given a hash table of (old page reference
+ * number, new page reference number) pairings *)
+let change_destination t = function
+   Pdfdest.XYZ (Pdfdest.PageObject p, a, b, c) ->
+     Pdfdest.XYZ (Pdfdest.PageObject (Hashtbl.find t p), a, b, c)
+ | Pdfdest.Fit (Pdfdest.PageObject p) ->
+     Pdfdest.Fit (Pdfdest.PageObject (Hashtbl.find t p))
+ | Pdfdest.FitH (Pdfdest.PageObject p, x) ->
+     Pdfdest.FitH (Pdfdest.PageObject (Hashtbl.find t p), x)
+ | Pdfdest.FitV (Pdfdest.PageObject p, x) ->
+     Pdfdest.FitV (Pdfdest.PageObject (Hashtbl.find t p), x)
+ | Pdfdest.FitR (Pdfdest.PageObject p, a, b, c, d) ->
+     Pdfdest.FitR (Pdfdest.PageObject (Hashtbl.find t p), a, b, c, d)
+ | Pdfdest.FitB (Pdfdest.PageObject p) ->
+     Pdfdest.Fit (Pdfdest.PageObject (Hashtbl.find t p))
+ | Pdfdest.FitBH (Pdfdest.PageObject p, x) ->
+     Pdfdest.FitBH (Pdfdest.PageObject (Hashtbl.find t p), x)
+ | Pdfdest.FitBV (Pdfdest.PageObject p, x) ->
+     Pdfdest.FitBV (Pdfdest.PageObject (Hashtbl.find t p), x)
+ | x -> x
+
+let change_bookmark t m =
+  {m with Pdfmarks.target =
+    try change_destination t m.Pdfmarks.target with Not_found -> m.Pdfmarks.target}
+
 let stamp (fast : bool) scale_to_fit isover range over pdf =
   let marks = Pdfmarks.read_bookmarks pdf in
+  let marks_refnumbers = Pdf.page_reference_numbers pdf in
   let pdf = Pdfmarks.remove_bookmarks pdf in
   let over = Pdfmarks.remove_bookmarks over in
   let pageseqs = ilist 1 (Pdfpage.endpage pdf) in
@@ -1060,7 +1086,11 @@ let stamp (fast : bool) scale_to_fit isover range over pdf =
       | [] -> error "empty PDF"
       | h::_ -> Pdfpage.change_pages true over [h]
     in
-      let merged = Pdfmerge.merge_pdfs ~rotations:[Pdfmerge.DNR; Pdfmerge.DNR] false false ["a"; "b"] [pdf; over_firstpage_pdf] [pageseqs; [1]] in
+      let merged =
+        Pdfmerge.merge_pdfs
+          ~rotations:[Pdfmerge.DNR; Pdfmerge.DNR]
+          false false ["a"; "b"] [pdf; over_firstpage_pdf] [pageseqs; [1]]
+      in
         let renamed_pdf =
           Pdfpage.change_pages true
             merged (Pdfpage.renumber_pages merged (Pdfpage.pages_of_pagetree merged))
@@ -1079,7 +1109,11 @@ let stamp (fast : bool) scale_to_fit isover range over pdf =
                   pageseqs
                   under_pages 
               in
-                Pdfmarks.add_bookmarks marks (Pdfpage.change_pages true renamed_pdf new_pages)
+                let changed = Pdfpage.change_pages true renamed_pdf new_pages in
+                let new_refnumbers = Pdf.page_reference_numbers changed in
+                let changetable = hashtable_of_dictionary (List.combine marks_refnumbers new_refnumbers) in
+                let new_marks = map (change_bookmark changetable) marks in
+                Pdfmarks.add_bookmarks new_marks changed
 
 (* Combine pages from two PDFs. For now, assume equal length. *)
 
