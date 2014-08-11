@@ -292,7 +292,7 @@ val removetext : int list -> Pdf.t -> Pdf.t
 (**  {2 Page geometry} *)
 
 (** Print page info (Mediabox etc) to standard output. *)
-val output_page_info : Pdf.t -> unit
+val output_page_info : Pdf.t -> int list -> unit
 
 (** True if a given page in a PDF has a given box *)
 val hasbox : Pdf.t -> int -> string -> bool

@@ -1271,7 +1271,7 @@ let split_on_bookmarks pdf level =
       map (fun rs -> Pdfpage.pdf_of_pages pdf rs) ranges
 
 (* Output information for each page *)
-let output_page_info pdf =
+let output_page_info pdf range =
   let pages = Pdfpage.pages_of_pagetree pdf
   and labels = Pdfpagelabels.read pdf in
     let getbox page box =
@@ -1290,18 +1290,19 @@ let output_page_info pdf =
     and rotation page =
       Pdfpage.int_of_rotation page.Pdfpage.rotate
     in
-      for pnum = 1 to Pdfpage.endpage pdf do
-        let page = select pnum pages in
-          Printf.printf "Page %i:\n" pnum;
-          Printf.printf "Label: %s\n"
-            (try Pdfpagelabels.pagelabeltext_of_pagenumber pnum labels with Not_found -> "");
-          Printf.printf "MediaBox: %s\n" (getbox page "/MediaBox");
-          Printf.printf "CropBox: %s\n" (getbox page "/CropBox");
-          Printf.printf "BleedBox: %s\n" (getbox page "/BleedBox");
-          Printf.printf "TrimBox: %s\n" (getbox page "/TrimBox");
-          Printf.printf "ArtBox: %s\n" (getbox page "/ArtBox");
-          Printf.printf "Rotation: %i\n" (rotation page)
-      done
+      List.iter
+        (fun pnum ->
+           let page = select pnum pages in
+             Printf.printf "Page %i:\n" pnum;
+             Printf.printf "Label: %s\n"
+               (try Pdfpagelabels.pagelabeltext_of_pagenumber pnum labels with Not_found -> "");
+             Printf.printf "MediaBox: %s\n" (getbox page "/MediaBox");
+             Printf.printf "CropBox: %s\n" (getbox page "/CropBox");
+             Printf.printf "BleedBox: %s\n" (getbox page "/BleedBox");
+             Printf.printf "TrimBox: %s\n" (getbox page "/TrimBox");
+             Printf.printf "ArtBox: %s\n" (getbox page "/ArtBox");
+             Printf.printf "Rotation: %i\n" (rotation page))
+        range
 
 (* Does the page have a defined box e.g "/CropBox" *)
 let hasbox pdf page boxname =

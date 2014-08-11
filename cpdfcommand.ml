@@ -3,7 +3,7 @@ let demo = false
 let noncomp = false
 let major_version = 1
 let minor_version = 8
-let version_date = "(unreleased, 18th April 2014)"
+let version_date = "(unreleased, 11th August 2014)"
 
 open Pdfutil
 open Pdfio
@@ -2837,7 +2837,13 @@ let go () =
         let pdf = decrypt_if_necessary input (Some Info) pdf in
           Cpdf.output_info args.encoding pdf
   | Some PageInfo ->
-      Cpdf.output_page_info (get_single_pdf (Some PageInfo) true)
+      begin match args.inputs, args.out with
+      | (_, pagespec, _, _, _)::_, _ ->
+          let pdf = get_single_pdf args.op true in
+            let range = parse_pagespec pdf pagespec in
+              Cpdf.output_page_info (get_single_pdf (Some PageInfo) true) range
+      | _ -> error "list-bookmarks: bad command line"
+      end
   | Some Metadata ->
       Cpdf.print_metadata (get_single_pdf (Some Metadata) true)
   | Some Fonts ->
