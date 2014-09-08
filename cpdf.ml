@@ -1322,16 +1322,18 @@ let get_metadata pdf =
       | Some ((Pdf.Stream _) as s) ->
           Pdf.getstream s;
           begin match s with
-          | Pdf.Stream {contents = (_, Pdf.Got data)} -> data 
+          | Pdf.Stream {contents = (_, Pdf.Got data)} -> Some data 
           | _ -> assert false
           end
-      | _ -> mkbytes 0
+      | _ -> None
 
 let print_metadata pdf =
-  let data = get_metadata pdf in
-    for x = 0 to bytes_size data - 1 do
-      Printf.printf "%c" (char_of_int (bget data x))
-    done
+  match get_metadata pdf with
+    None -> ()
+  | Some data ->
+      for x = 0 to bytes_size data - 1 do
+        Printf.printf "%c" (char_of_int (bget data x))
+      done
 
 (* \section{Print font data} *)
 let list_font pdf page (name, dict) =
@@ -1626,6 +1628,59 @@ let find_justification_offsets longest_w w position = function
       | ReverseDiagonal -> 0.
       end
 
+(* Lex an integer from the table *)
+let extract_num header s =
+  match Pdfgenlex.lex_string (Hashtbl.find header s) with
+    [Pdfgenlex.LexInt i] -> i
+  | _ -> raise (Failure "extract_num")
+
+let extract_fontbbox header s =
+  match Pdfgenlex.lex_string (Hashtbl.find header s) with
+    [Pdfgenlex.LexInt a;
+     Pdfgenlex.LexInt b;
+     Pdfgenlex.LexInt c;
+     Pdfgenlex.LexInt d] ->
+       [Pdf.Integer a; Pdf.Integer b; Pdf.Integer c; Pdf.Integer d]
+  | _ -> raise (Failure "extract_fontbbox")
+
+let extract_widths width_data = []
+
+let extract_firstlast header = (0, 0)
+
+let make_font fontname =
+  let font = unopt (Pdftext.standard_font_of_name ("/" ^ fontname)) in
+  let header, width_data, _ = Pdfstandard14.afm_data font in
+    let widths = extract_widths width_data
+    and firstchar, lastchar = extract_firstlast header
+    and flags = Pdfstandard14.flags_of_standard_font font
+    and fontbbox = extract_fontbbox header "FontBBox" 
+    and italicangle = extract_num header "ItalicAngle"
+    and ascent = extract_num header  "Ascender"
+    and descent = extract_num header "Descender"
+    and capheight = extract_num header "CapHeight"
+    and stemv = Pdfstandard14.stemv_of_standard_font font in
+      let fontdescriptor =
+        Pdf.Dictionary
+          [("/Type", Pdf.Name "/FontDescriptor");
+           ("/FontName", Pdf.Name ("/" ^ fontname));
+           ("/Flags", Pdf.Integer flags);
+           ("/FontBBox", Pdf.Array fontbbox);
+           ("/ItalicAngle", Pdf.Integer italicangle);
+           ("/Ascent", Pdf.Integer ascent);
+           ("/Descent", Pdf.Integer descent);
+           ("/CapHeight", Pdf.Integer capheight);
+           ("/StemV", Pdf.Integer stemv)]
+      in
+        Pdf.Dictionary
+          [("/Type", Pdf.Name "/Font");
+           ("/Encoding", Pdf.Name "/WinAnsiEncoding");
+           ("/Subtype", Pdf.Name "/Type1");
+           ("/BaseFont", Pdf.Name ("/" ^ fontname));
+           ("/FirstChar", Pdf.Integer firstchar);
+           ("/LastChar", Pdf.Integer lastchar);
+           ("/Widths", Pdf.Array widths);
+           ("/FontDescriptor", fontdescriptor)]
+
 let addtext
   metrics lines linewidth outline fast colour fontname bates fontsize font
   underneath position hoffset voffset text pages orientation cropbox opacity
@@ -1720,15 +1775,10 @@ let addtext
             let newresources =
               match font with
               | Some _ ->
-                  let thefont =
-                    Pdf.Dictionary
-                      [("/Type", Pdf.Name "/Font");
-                       ("/Encoding", Pdf.Name "/WinAnsiEncoding");
-                       ("/Subtype", Pdf.Name "/Type1");
-                       ("/BaseFont", Pdf.Name ("/" ^ fontname))]
+                  let newfontdict =
+                    Pdf.add_dict_entry fontdict unique_fontname (make_font fontname)
                   in
-                    let newfontdict = Pdf.add_dict_entry fontdict unique_fontname thefont in
-                      Pdf.add_dict_entry resources' "/Font" newfontdict
+                    Pdf.add_dict_entry resources' "/Font" newfontdict
               | None -> page.Pdfpage.resources
           in
             let page = {page with Pdfpage.resources = newresources} in
@@ -2624,6 +2674,14 @@ let get_info_utf8 pdf =
       | Some (Pdf.String s) -> Pdftext.utf8_of_pdfdocstring s
       | _ -> "")
 
+let output_xml_info pdf =
+  match get_metadata pdf with
+    None -> ()
+  | Some metadata ->
+      print_string (string_of_bytes metadata);
+      let parsed = Xml.parse_string (string_of_bytes metadata) in
+        print_string (Xml.to_string parsed)
+
 let output_info encoding pdf =
   let getstring =
     match encoding with
@@ -2640,7 +2698,8 @@ let output_info encoding pdf =
     Printf.printf "Creator: %s\n" (getstring "/Creator");
     Printf.printf "Producer: %s\n" (getstring "/Producer");
     Printf.printf "Created: %s\n" (getstring "/CreationDate");
-    Printf.printf "Modified: %s\n" (getstring "/ModDate")
+    Printf.printf "Modified: %s\n" (getstring "/ModDate");
+    output_xml_info pdf
 
 (* \section{Blacken text} *)
 

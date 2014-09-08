@@ -2820,8 +2820,6 @@ let go () =
       | _ -> error "Clean: No output specified"
       end
   | Some Info ->
-      (* Change as of 17th Sept 08 - now presents the pdf undecrypted so that
-      encryption info can be read out *)
       let pdf, inname, input =
         match args.inputs with
         | (InFile inname, _, _, u, o) as input::_ ->

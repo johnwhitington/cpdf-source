@@ -163,7 +163,7 @@ val set_metadata_from_bytes : bool -> Pdfio.bytes -> Pdf.t -> Pdf.t
 val remove_metadata : Pdf.t -> Pdf.t
 
 (** Extract metadata to a [Pdfio.bytes] *)
-val get_metadata : Pdf.t -> Pdfio.bytes
+val get_metadata : Pdf.t -> Pdfio.bytes option
 
 (** Print metadate to stdout *)
 val print_metadata : Pdf.t -> unit

@@ -5,7 +5,7 @@ SOURCES = $(foreach x,$(MODS),$(x).ml $(x).mli) cpdfcommandrun.ml
 
 RESULT = cpdf
 ANNOTATE = true
-PACKS = camlpdf
+PACKS = camlpdf xml-light
 
 OCAMLNCFLAGS = -g
 OCAMLBCFLAGS = -g
