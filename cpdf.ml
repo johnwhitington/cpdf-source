@@ -1631,44 +1631,54 @@ let find_justification_offsets longest_w w position = function
 (* Lex an integer from the table *)
 let extract_num header s =
   match Pdfgenlex.lex_string (Hashtbl.find header s) with
-    [Pdfgenlex.LexInt i] -> i
-  | _ -> raise (Failure "extract_num")
+    [Pdfgenlex.LexInt i] -> Pdf.Integer i
+  | [Pdfgenlex.LexReal f] -> Pdf.Real f
+  | _ -> raise (Failure ("extract_num: " ^ s))
 
 let extract_fontbbox header s =
-  match Pdfgenlex.lex_string (Hashtbl.find header s) with
-    [Pdfgenlex.LexInt a;
-     Pdfgenlex.LexInt b;
-     Pdfgenlex.LexInt c;
-     Pdfgenlex.LexInt d] ->
-       [Pdf.Integer a; Pdf.Integer b; Pdf.Integer c; Pdf.Integer d]
-  | _ -> raise (Failure "extract_fontbbox")
+  let num = function
+      Pdfgenlex.LexInt i -> Pdf.Integer i
+    | Pdfgenlex.LexReal f -> Pdf.Real f
+    | _ -> raise (Failure "extract_fontbbox")
+  in
+    match Pdfgenlex.lex_string (Hashtbl.find header s) with
+      [a; b; c; d] -> [num a; num b; num c; num d] 
+    | _ -> raise (Failure "extract_fontbbox")
 
-let extract_widths width_data = []
-
-let extract_firstlast header = (0, 0)
+(* Get the widths for each character from the hash table, in order, noting the
+first and last *)
+let extract_widths_firstlast width_data =
+  let sorted = List.sort compare (list_of_hashtbl width_data) in
+    match sorted, rev sorted with
+      (first, _)::_, (last, _)::_ ->
+        for x = first to last do
+          if not (Hashtbl.mem width_data x) then Hashtbl.add width_data x 0
+        done;
+        (first, last,
+         map snd (List.sort compare (list_of_hashtbl width_data))) 
+    | _ -> raise (Failure "extract_widths_firstlast") 
 
 let make_font fontname =
   let font = unopt (Pdftext.standard_font_of_name ("/" ^ fontname)) in
   let header, width_data, _ = Pdfstandard14.afm_data font in
-    let widths = extract_widths width_data
-    and firstchar, lastchar = extract_firstlast header
-    and flags = Pdfstandard14.flags_of_standard_font font
-    and fontbbox = extract_fontbbox header "FontBBox" 
-    and italicangle = extract_num header "ItalicAngle"
-    and ascent = extract_num header  "Ascender"
-    and descent = extract_num header "Descender"
-    and capheight = extract_num header "CapHeight"
-    and stemv = Pdfstandard14.stemv_of_standard_font font in
+    let firstchar, lastchar, widths = extract_widths_firstlast width_data in
+    let flags = Pdfstandard14.flags_of_standard_font font in
+    let fontbbox = extract_fontbbox header "FontBBox" in
+    let italicangle = extract_num header "ItalicAngle" in
+    let ascent = try extract_num header "Ascender" with _ -> Pdf.Integer 0 in
+    let descent = try extract_num header "Descender" with _ -> Pdf.Integer 0 in
+    let capheight = try extract_num header "CapHeight" with _ -> Pdf.Integer 0 in
+    let stemv = Pdfstandard14.stemv_of_standard_font font in
       let fontdescriptor =
         Pdf.Dictionary
           [("/Type", Pdf.Name "/FontDescriptor");
            ("/FontName", Pdf.Name ("/" ^ fontname));
            ("/Flags", Pdf.Integer flags);
            ("/FontBBox", Pdf.Array fontbbox);
-           ("/ItalicAngle", Pdf.Integer italicangle);
-           ("/Ascent", Pdf.Integer ascent);
-           ("/Descent", Pdf.Integer descent);
-           ("/CapHeight", Pdf.Integer capheight);
+           ("/ItalicAngle", italicangle);
+           ("/Ascent", ascent);
+           ("/Descent", descent);
+           ("/CapHeight", capheight);
            ("/StemV", Pdf.Integer stemv)]
       in
         Pdf.Dictionary
@@ -1678,7 +1688,7 @@ let make_font fontname =
            ("/BaseFont", Pdf.Name ("/" ^ fontname));
            ("/FirstChar", Pdf.Integer firstchar);
            ("/LastChar", Pdf.Integer lastchar);
-           ("/Widths", Pdf.Array widths);
+           ("/Widths", Pdf.Array (map (fun x -> Pdf.Integer x) widths));
            ("/FontDescriptor", fontdescriptor)]
 
 let addtext
