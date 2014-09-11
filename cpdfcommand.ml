@@ -1781,7 +1781,7 @@ let squeeze pdf =
         (fun x -> length x > 1)
         (collate (pdfobjeq pdf) (sort (pdfobjeq pdf) !objs))
     in
-      Printf.printf "Found %i pools of duplicate objects to coalesce\n" (length toprocess);
+      (*Printf.printf "Found %i pools of duplicate objects to coalesce\n" (length toprocess);*)
       (*List.iter
         (fun x -> Printf.printf "\n\nPool: "; List.iter (Printf.printf "%i ") x)
         toprocess;*)
