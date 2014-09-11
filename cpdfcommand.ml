@@ -257,7 +257,8 @@ type args =
    mutable uprightstamp : bool;
    mutable labelstyle : Pdfpagelabels.labelstyle option;
    mutable labelprefix : string option;
-   mutable labeloffset : int option}
+   mutable labeloffset : int option;
+   mutable squeeze : bool}
 
 (* List of all filenames in any AND stage - this is used to check that we don't
 overwrite any input file when -dont-overwrite-existing-files is used. *)
@@ -339,7 +340,8 @@ let args =
    uprightstamp = false;
    labelstyle = None;
    labelprefix = None;
-   labeloffset = None}
+   labeloffset = None;
+   squeeze = false}
 
 let reset_arguments () =
   args.op <- None;
@@ -412,7 +414,8 @@ let reset_arguments () =
   args.uprightstamp <- false;
   args.labelstyle <- None;
   args.labelprefix <- None;
-  args.labeloffset <- None
+  args.labeloffset <- None;
+  args.squeeze <- false
   (* We don't reset args.do_ask and args.verbose, because they operate on all
   parts of the AND-ed command line sent from cpdftk. *)
 
@@ -1010,6 +1013,9 @@ let setscalecontents f =
   args.op <- Some (ScaleContents f);
   args.position <- Cpdf.Diagonal (* Will be center *)
 
+let setsqueeze () =
+  args.squeeze <- true
+
 (* Parsing the control file *)
 let rec getuntilendquote prev = function
   | [] -> implode (rev prev), []
@@ -1374,6 +1380,9 @@ and specs =
    ("-remove-duplicate-streams",
        Arg.Unit setremoveduplicatestreams,
        "");
+   ("-squeeze",
+       Arg.Unit setsqueeze,
+       " Slow, lossless compression of a PDF file");
    ("-list-bookmarks",
       Arg.Unit (setop ListBookmarks),
       " List Bookmarks");
@@ -1756,6 +1765,42 @@ let rec writing_ok outname =
   else
     outname
 
+(* Equality on PDF streams *)
+let pdfobjeq pdf x y =
+  let x = Pdf.lookup_obj pdf x 
+  and y = Pdf.lookup_obj pdf y in
+    begin match x with Pdf.Stream _ -> Pdf.getstream x | _ -> () end;
+    begin match y with Pdf.Stream _ -> Pdf.getstream y | _ -> () end;
+    compare x y
+
+let squeeze pdf =
+  let objs = ref [] in
+    Pdf.objiter (fun objnum _ -> objs := objnum :: !objs) pdf;
+    let toprocess =
+      keep
+        (fun x -> length x > 1)
+        (collate (pdfobjeq pdf) (sort (pdfobjeq pdf) !objs))
+    in
+      Printf.printf "Found %i pools of duplicate objects to coalesce\n" (length toprocess);
+      (*List.iter
+        (fun x -> Printf.printf "\n\nPool: "; List.iter (Printf.printf "%i ") x)
+        toprocess;*)
+      let pdfr = ref pdf in
+      let changetable = Hashtbl.create 100 in
+        iter
+          (function [] -> assert false | h::t ->
+             iter (fun e -> Hashtbl.add changetable e h) t)
+          toprocess;
+        (* For a unknown reason, the output file is much smaller if
+           Pdf.renumber is run twice. This is bizarre, since Pdf.renumber is
+           an old, well-understood function in use for years -- what is
+           going on? *)
+        pdfr := Pdf.renumber changetable !pdfr;
+        pdfr := Pdf.renumber changetable !pdfr;
+        pdf.Pdf.root <- !pdfr.Pdf.root;
+        pdf.Pdf.objects <- !pdfr.Pdf.objects;
+        pdf.Pdf.trailerdict <- !pdfr.Pdf.trailerdict
+
 let write_pdf mk_id pdf =
   if args.create_objstm && not args.keepversion
     then pdf.Pdf.minor <- max pdf.Pdf.minor 5;
@@ -1766,6 +1811,7 @@ let write_pdf mk_id pdf =
     | File outname ->
         let outname = writing_ok outname in
           let pdf = Cpdf.recompress_pdf <| nobble pdf in
+            if args.squeeze then squeeze pdf;
             Pdf.remove_unreferenced pdf;
             Pdfwrite.pdf_to_file_options
               ~preserve_objstm:args.preserve_objstm
@@ -1773,6 +1819,7 @@ let write_pdf mk_id pdf =
               args.linearize None mk_id pdf outname
     | Stdout ->
         let pdf = Cpdf.recompress_pdf <| nobble pdf in
+          if args.squeeze then squeeze pdf;
           Pdf.remove_unreferenced pdf;
           Pdfwrite.pdf_to_channel
             ~preserve_objstm:args.preserve_objstm

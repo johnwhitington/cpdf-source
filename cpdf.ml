@@ -2688,9 +2688,9 @@ let output_xml_info pdf =
   match get_metadata pdf with
     None -> ()
   | Some metadata ->
-      print_string (string_of_bytes metadata);
-      let parsed = Xml.parse_string (string_of_bytes metadata) in
-        print_string (Xml.to_string parsed)
+      print_string (string_of_bytes metadata)
+      (*let parsed = Xml.parse_string (string_of_bytes metadata) in
+        print_string (Xml.to_string parsed)*)
 
 let output_info encoding pdf =
   let getstring =

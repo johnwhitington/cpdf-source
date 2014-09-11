@@ -30,7 +30,7 @@ Command Line Toolkit}
 \vspace{12mm}
 
 {\Huge User Manual}\\
-Version 1.7 (August 2013)
+Version 1.8 (October 2014)
 
 \vspace{25mm}
 
@@ -911,8 +911,11 @@ metadata. Add \texttt{-no-encrypt-metadata} to the command line.
 
      \vspace{1.5mm}
      \noindent\verb!cpdf -compress in.pdf -o out.pdf!
-  \end{framed}
-  \cpdf\ provides basic facilities for decompressing and compressing PDF streams.
+     
+     \vspace{1.5mm}
+     \noindent\verb!cpdf -squeeze in.pdf -o out.pdf!  
+   \end{framed}
+  \cpdf\ provides basic facilities for decompressing and compressing PDF streams, and a more advanced PDF \textit{squeezer}.
   \section{Decompressing a Document}
 \index{decompressing}
   To decompress the streams in a PDF file, for instance to manually inspect the
@@ -930,7 +933,15 @@ PDF, use:
   \noindent\cpdf\ compresses any streams which have no compression using the
   \textbf{Flate\-Decode} method, with the exception of Metadata streams, which
   are left uncompressed.
-
+  
+  \section{Squeezing a Document}
+\index{squeeze}
+  To \textit{squeeze} a PDF file, use:
+  \begin{framed}
+    \small\verb!cpdf -squeeze in.pdf -o out.pdf!
+  \end{framed}
+  \noindent Adding \texttt{-squeeze} to the command line will \textit{squeeze} the file upon output. The squeezing process involves several processes which losslessly attempt to reduce the file size. The squeezing process is slow. 
+  
 \chapter{Bookmarks}
   \begin{framed}
   \small\noindent\verb!cpdf -list-bookmarks [-utf8 | -raw] in.pdf!
