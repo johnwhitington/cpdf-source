@@ -231,7 +231,23 @@ let rec splitat_commas toks =
   | some, [] -> [some]
   | _::_ as before, _::rest -> before::splitat_commas rest 
 
-let rec mk_numbers endpage = function
+let is_dimension comparison {Pdfpage.mediabox = box} =
+  let minx, miny, maxx, maxy = Pdf.parse_rectangle box in
+    comparison (maxx -. minx) (maxy -. miny)
+
+let select_dimensions comparison pdf candidates =
+  let pages = Pdfpage.pages_of_pagetree pdf in
+    option_map2
+      (fun pagenum page ->
+        if is_dimension comparison page then Some pagenum else None)
+      (keep (mem' candidates) (indx pages))
+      pages
+
+let select_portrait = select_dimensions ( < )
+
+let select_landscape = select_dimensions ( > )
+
+let rec mk_numbers pdf endpage = function
   | [Pdfgenlex.LexInt n] -> [n]
   | [Pdfgenlex.LexName "end"] -> [endpage]
   | [Pdfgenlex.LexInt n; Pdfgenlex.LexName "-"; Pdfgenlex.LexInt n'] ->
@@ -248,6 +264,10 @@ let rec mk_numbers endpage = function
        [endpage]
   | [Pdfgenlex.LexName "even"] ->
        drop_odds (ilist 1 endpage)
+  | [Pdfgenlex.LexName "portrait"] ->
+       select_portrait pdf (ilist 1 endpage)
+  | [Pdfgenlex.LexName "landscape"] ->
+       select_landscape pdf (ilist 1 endpage)
   | [Pdfgenlex.LexName "odd"] ->
        really_drop_evens (ilist 1 endpage)
   | [Pdfgenlex.LexName "all"] ->
@@ -257,7 +277,7 @@ let rec mk_numbers endpage = function
   | toks ->
       let ranges = splitat_commas toks in
         if ranges = [toks] then raise PageSpecBadSyntax else
-          flatten (map (mk_numbers endpage) ranges)
+          flatten (map (mk_numbers pdf endpage) ranges)
 
 (* Space dashes and commas *)
 let rec add_spaces = function
@@ -273,17 +293,30 @@ let fixup_negatives endpage = function
       Pdfgenlex.LexInt (endpage + 1 + ~-(int_of_string (implode (tl (explode s)))))
   | x -> x
 
-let parse_pagespec_inner endpage spec =
+let parse_pagespec_inner endpage pdf spec =
   let spec = space_string spec in
     if endpage < 1 then raise (Pdf.PDFError "This PDF file has no pages and is therefore malformed") else
       let numbers =
         try
           match rev (explode spec) with
-          | ['n'; 'e'; 'v'; 'e'] -> keep even (ilist 1 endpage)
-          | ['d'; 'd'; 'o'] -> keep odd (ilist 1 endpage)
-          | 'n'::'e'::'v'::'e'::more -> keep even (mk_numbers endpage (Pdfgenlex.lex_string (implode (rev more))))
-          | 'd'::'d'::'o'::more -> keep odd (mk_numbers endpage (Pdfgenlex.lex_string (implode (rev more))))
-          | _ -> mk_numbers endpage (map (fixup_negatives endpage) (Pdfgenlex.lex_string spec))
+          | ['n'; 'e'; 'v'; 'e'] ->
+              keep even (ilist 1 endpage)
+          | ['d'; 'd'; 'o'] ->
+              keep odd (ilist 1 endpage)
+          | ['t'; 'i'; 'a'; 'r'; 't'; 'r'; 'o'; 'p'] ->
+              select_portrait pdf (ilist 1 endpage)
+          | ['e'; 'p'; 'a'; 'c'; 's'; 'd'; 'n'; 'a'; 'l'] ->
+              select_landscape pdf (ilist 1 endpage)
+          | 't'::'i'::'a'::'r'::'t'::'r'::'o'::'p'::more ->
+              select_portrait pdf (mk_numbers pdf endpage (Pdfgenlex.lex_string (implode (rev more))))
+          | 'e'::'p'::'a'::'c'::'s'::'d'::'n'::'a'::'l'::more ->
+              select_landscape pdf (mk_numbers pdf endpage (Pdfgenlex.lex_string (implode (rev more))))
+          | 'd'::'d'::'o'::more ->
+              keep odd (mk_numbers pdf endpage (Pdfgenlex.lex_string (implode (rev more))))
+          | 'n'::'e'::'v'::'e'::more ->
+              keep even (mk_numbers pdf endpage (Pdfgenlex.lex_string (implode (rev more))))
+          | _ ->
+              mk_numbers pdf endpage (map (fixup_negatives endpage) (Pdfgenlex.lex_string spec))
         with
           e -> raise PageSpecBadSyntax
       in
@@ -295,7 +328,7 @@ let parse_pagespec_inner endpage spec =
          numbers
 
 let parse_pagespec pdf spec =
-  try parse_pagespec_inner (Pdfpage.endpage pdf) spec with
+  try parse_pagespec_inner (Pdfpage.endpage pdf) pdf spec with
   | PageSpecUnknownPage n ->
      raise (Pdf.PDFError ("Page " ^ string_of_int n ^ " does not exist."))
   | PageSpecWouldBeNoPages ->
@@ -313,7 +346,7 @@ endpage of the PDF (which we don't have). Pass 100 as the endpage, doubling on
 page range exception, bailng out above 500000. *)
 let rec validate_pagespec_inner n spec =
   try
-    ignore (parse_pagespec_inner n spec); true
+    ignore (parse_pagespec_inner n (Pdf.empty ()) spec); true
   with
   | PageSpecUnknownPage _ -> if n < 500000 then validate_pagespec_inner (n * 2) spec else false
   | PageSpecBadSyntax | _ -> false

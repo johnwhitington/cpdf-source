@@ -2958,7 +2958,7 @@ let go () =
   | Some Compress ->
       let pdf = get_single_pdf (Some Compress) false in
         if args.remove_duplicate_streams then
-          Pdfmerge.remove_duplicate_fonts pdf; (* Will eventually do more! *)
+          Pdfmerge.remove_duplicate_fonts pdf;
         write_pdf false (Cpdf.recompress_pdf pdf)
   | Some RemoveCrop ->
       begin match args.inputs, args.out with
