@@ -237,17 +237,25 @@ let is_dimension comparison {Pdfpage.mediabox = box} =
 
 let select_dimensions comparison pdf candidates =
   let pages = Pdfpage.pages_of_pagetree pdf in
-    option_map2
-      (fun pagenum page ->
-        if is_dimension comparison page then Some pagenum else None)
-      (keep (mem' candidates) (indx pages))
-      pages
+    let pagenums, kept_pages =
+      split
+        (option_map
+           (fun (index, page) ->
+             if mem index candidates then Some (index, page) else None)
+           (combine (indx pages) pages))
+    in
+      option_map2
+        (fun pagenum page ->
+          if is_dimension comparison page then Some pagenum else None)
+        pagenums
+        kept_pages
 
 let select_portrait = select_dimensions ( < )
 
 let select_landscape = select_dimensions ( > )
 
-let rec mk_numbers pdf endpage = function
+let rec mk_numbers pdf endpage lexemes =
+  match lexemes with
   | [Pdfgenlex.LexInt n] -> [n]
   | [Pdfgenlex.LexName "end"] -> [endpage]
   | [Pdfgenlex.LexInt n; Pdfgenlex.LexName "-"; Pdfgenlex.LexInt n'] ->
