@@ -13,6 +13,9 @@ OCAMLLDFLAGS = -g
 
 all : native-code native-code-library byte-code-library top htdoc
 
+clean ::
+	rm -r doc
+
 LIBINSTALL_FILES = cpdf.a cpdf.cma cpdf.cmxa \
 $(foreach x,$(MODS),$x.mli) $(foreach x,$(MODS),$x.cmi)
 
