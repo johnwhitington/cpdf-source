@@ -3468,7 +3468,7 @@ let go () =
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
           let offset =
-            match args.labeloffset with None -> 0 | Some x -> x
+            match args.labeloffset with None -> 1 | Some x -> x
           in
             Cpdf.add_page_labels pdf args.labelstyle args.labelprefix offset range;
             write_pdf false pdf
