@@ -255,7 +255,7 @@ type args =
    mutable makenewid : bool;
    mutable ismulti : bool;
    mutable uprightstamp : bool;
-   mutable labelstyle : Pdfpagelabels.labelstyle option;
+   mutable labelstyle : Pdfpagelabels.labelstyle;
    mutable labelprefix : string option;
    mutable labeloffset : int option;
    mutable squeeze : bool}
@@ -338,7 +338,7 @@ let args =
    makenewid = false;
    ismulti = false;
    uprightstamp = false;
-   labelstyle = None;
+   labelstyle = Pdfpagelabels.DecimalArabic;
    labelprefix = None;
    labeloffset = None;
    squeeze = false}
@@ -412,7 +412,7 @@ let reset_arguments () =
   args.makenewid <- false;
   args.ismulti <- false;
   args.uprightstamp <- false;
-  args.labelstyle <- None;
+  args.labelstyle <- Pdfpagelabels.DecimalArabic;
   args.labelprefix <- None;
   args.labeloffset <- None;
   args.squeeze <- false
@@ -1213,9 +1213,10 @@ let setlabelstyle s =
     | "LowercaseRoman" -> Pdfpagelabels.LowercaseRoman
     | "UppercaseLetters" -> Pdfpagelabels.UppercaseLetters
     | "LowercaseLetters" -> Pdfpagelabels.LowercaseLetters
+    | "NoLabelPrefixOnly" -> Pdfpagelabels.NoLabelPrefixOnly
     | _ -> error "Unknown label style"
   in
-    args.labelstyle <- Some style
+    args.labelstyle <- style
 
 let setlabelprefix s =
   args.labelprefix <- Some s

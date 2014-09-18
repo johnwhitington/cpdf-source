@@ -399,7 +399,8 @@ val blank_document_paper : Pdfpaper.t -> int -> Pdf.t
 (** {2 Page labels} *)
 
 (** Add page labels. *)
-val add_page_labels : Pdf.t -> Pdfpagelabels.labelstyle option -> string option -> int -> int list -> unit 
+val add_page_labels :
+  Pdf.t -> Pdfpagelabels.labelstyle -> string option -> int -> int list -> unit 
 
 (** {2 Miscellany} *)
 

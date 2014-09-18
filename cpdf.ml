@@ -3256,20 +3256,20 @@ let page1 labels =
 let add_page_labels pdf style prefix startval range =
   let ranges = map extremes (ranges_of_range [] [] range)
   and labels = Pdfpagelabels.read pdf in
-    (*Printf.printf "We have %i existing labels\n" (List.length labels);
-    Printf.printf "We have %i ranges to apply these labels to\n" (List.length ranges);*)
+    Printf.printf "We have %i existing labels\n" (List.length labels);
+    Printf.printf "We have %i ranges to apply these labels to\n" (List.length ranges);
     let labels =
       if not (page1 labels) then
         ref
-          ({Pdfpagelabels.labelstyle = Some Pdfpagelabels.DecimalArabic;
+          ({Pdfpagelabels.labelstyle = Pdfpagelabels.DecimalArabic;
             Pdfpagelabels.labelprefix = None;
             Pdfpagelabels.startpage = 1;
             Pdfpagelabels.startvalue = 1}::labels)
       else
         ref labels
     in
-      (*Printf.printf "Before adding, we have these labels:\n";
-      iter (fun x -> flprint (Pdfpagelabels.string_of_pagelabel x)) !labels;*)
+      Printf.printf "Before adding, we have these labels:\n";
+      iter (fun x -> flprint (Pdfpagelabels.string_of_pagelabel x)) !labels;
       iter
         (function (s, e) ->
            let label =
@@ -3278,11 +3278,11 @@ let add_page_labels pdf style prefix startval range =
               Pdfpagelabels.startpage = s;
               Pdfpagelabels.startvalue = startval}
            in
-             (*Printf.printf "We are adding this label:\n";
-             flprint (Pdfpagelabels.string_of_pagelabel label);*)
+             Printf.printf "We are adding this label:\n";
+             flprint (Pdfpagelabels.string_of_pagelabel label);
              labels := Pdfpagelabels.add_label (Pdfpage.endpage pdf) !labels label e)
         ranges;
-        (*Printf.printf "After adding, we have these labels:\n";
-        iter (fun x -> flprint (Pdfpagelabels.string_of_pagelabel x)) !labels;*)
+        Printf.printf "After adding, we have these labels:\n";
+        iter (fun x -> flprint (Pdfpagelabels.string_of_pagelabel x)) !labels;
         Pdfpagelabels.write pdf !labels
 
