@@ -1563,6 +1563,12 @@ given page range.
 
     \vspace{1.5mm}
     \small\noindent\verb!cpdf -print-metadata in.pdf -o out.pdf!
+    
+    \vspace{1.5mm}
+    \small\noindent\verb!cpdf -add-page-labels in.pdf -o out.pdf!\\
+    \noindent\verb!     [-label-style <style>]!\\
+    \noindent\verb!     [-label-prefix <string>]!\\
+    \noindent\verb!     [-label-offset <integer>]!
   \end{framed}
   \section{Listing Fonts}
 \index{fonts!listing}
@@ -1646,7 +1652,7 @@ Rotation: 0
 \noindent The \texttt{-pages} operation prints the number of pages in the file.
 \begin{framed}
 \begin{verbatim}
-$cpdf -pages Archos.pdf
+cpdf -pages Archos.pdf
 8
 \end{verbatim}
 \end{framed}
@@ -1763,6 +1769,42 @@ can read it without having to decode the whole PDF. To set the metadata:
   \begin{framed}
     \small\verb!cpdf -print-metadata in.pdf!
   \end{framed}
+
+\section{Page Labels}
+\index{page labels}\index{page!labels}
+
+It is possible to add \textit{page labels} to a document. These are not the printed on the page, but may be displayed alongside thumbnails or in print dialogue boxes by PDF readers. We use \texttt{-add-page-labels} to do this, by default with decimal arabic numbers (1,2,3\ldots). We can add \texttt{-label-style} to choose what type of labels to add from these kinds:
+
+\vspace{4mm}
+\begin{tabular}{rl}
+  \texttt{DecimalArabic} & 1,2,3,4,5\ldots \\
+  \texttt{LowercaseRoman} & i,ii,iii,iv,v\ldots \\
+  \texttt{UppercaseRoman} & I,II,III,IV,V\ldots \\
+  \texttt{LowercaseLetters} & a,b,c,\ldots,z,aa,ab\ldots \\
+  \texttt{UppercaseLetters} & A,B,C,\ldots,Z,AA,AB\ldots \\
+\end{tabular}
+\vspace{4mm}
+
+\noindent We can use \texttt{-label-prefix} to add a textual prefix to each label. 
+Consider a file with twenty pages and no current page labels (a PDF reader will assume 1,2,3\ldots if there are none). We will add the following page labels:
+
+\vspace{4mm}
+i, ii, iii, iv, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, A-0, A-1, A-2, A-3, A-4, A-5
+\vspace{4mm}
+
+\noindent Here are the commands, in order:
+
+\begin{framed}
+  \noindent\verb!cpdf -add-page-labels in.pdf 1-4 -label-style LowercaseRoman!\\
+  \noindent\verb!     -o out.pdf!\\
+  
+  \noindent\verb!cpdf -add-page-labels out.pdf 5-14 -o out.pdf!\\
+
+  \noindent\verb!cpdf -add-page-labels out.pdf 15-20 -label-prefix "A-"!\\
+  \noindent\verb!     -label-offset -1 -o out.pdf!
+\end{framed}
+
+\noindent By default the labels begin at page number 1 for each range. To override this, we can use \texttt{-label-offset} (we used $-1$ in the final command), where we want the numbers to begin at zero rather than one.
 
 \chapter{File Attachments}
 \index{attachments}
