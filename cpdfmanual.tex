@@ -1568,7 +1568,7 @@ given page range.
     \small\noindent\verb!cpdf -add-page-labels in.pdf -o out.pdf!\\
     \noindent\verb!     [-label-style <style>]!\\
     \noindent\verb!     [-label-prefix <string>]!\\
-    \noindent\verb!     [-label-offset <integer>]!
+    \noindent\verb!     [-label-startval <integer>]!
   \end{framed}
   \section{Listing Fonts}
 \index{fonts!listing}
@@ -1802,10 +1802,10 @@ i, ii, iii, iv, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, A-0, A-1, A-2, A-3, A-4, A-5
   \noindent\verb!cpdf -add-page-labels out.pdf 5-14 -o out.pdf!\\
 
   \noindent\verb!cpdf -add-page-labels out.pdf 15-20 -label-prefix "A-"!\\
-  \noindent\verb!     -label-offset -1 -o out.pdf!
+  \noindent\verb!     -label-startval 0 -o out.pdf!
 \end{framed}
 
-\noindent By default the labels begin at page number 1 for each range. To override this, we can use \texttt{-label-offset} (we used $-1$ in the final command), where we want the numbers to begin at zero rather than one.
+\noindent By default the labels begin at page number 1 for each range. To override this, we can use \texttt{-label-startval} (we used $0$ in the final command), where we want the numbers to begin at zero rather than one.
 
 \chapter{File Attachments}
 \index{attachments}

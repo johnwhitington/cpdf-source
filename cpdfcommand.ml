@@ -257,7 +257,7 @@ type args =
    mutable uprightstamp : bool;
    mutable labelstyle : Pdfpagelabels.labelstyle;
    mutable labelprefix : string option;
-   mutable labeloffset : int option;
+   mutable labelstartval : int;
    mutable squeeze : bool}
 
 (* List of all filenames in any AND stage - this is used to check that we don't
@@ -340,7 +340,7 @@ let args =
    uprightstamp = false;
    labelstyle = Pdfpagelabels.DecimalArabic;
    labelprefix = None;
-   labeloffset = None;
+   labelstartval = 1;
    squeeze = false}
 
 let reset_arguments () =
@@ -414,7 +414,7 @@ let reset_arguments () =
   args.uprightstamp <- false;
   args.labelstyle <- Pdfpagelabels.DecimalArabic;
   args.labelprefix <- None;
-  args.labeloffset <- None;
+  args.labelstartval <- 1;
   args.squeeze <- false
   (* We don't reset args.do_ask and args.verbose, because they operate on all
   parts of the AND-ed command line sent from cpdftk. *)
@@ -1221,8 +1221,8 @@ let setlabelstyle s =
 let setlabelprefix s =
   args.labelprefix <- Some s
 
-let setlabeloffset i =
-  args.labeloffset <- Some i
+let setlabelstartval i =
+  args.labelstartval <- i
 
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
@@ -1702,9 +1702,9 @@ and specs =
    ("-label-prefix",
       Arg.String setlabelprefix,
       " Set label prefix (default none)");
-   ("-label-offset",
-      Arg.Int setlabeloffset,
-      " Set label offset (default 1)");
+   ("-label-startval",
+      Arg.Int setlabelstartval,
+      " Set label start value (default 1)");
    (* These items are for cpdftk *)
    ("-update-info", Arg.String setupdateinfo, "");
    ("-printf-format", Arg.Unit setprintfformat, "");
@@ -3468,11 +3468,9 @@ let go () =
   | Some AddPageLabels ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
-          let offset =
-            match args.labeloffset with None -> 1 | Some x -> x
-          in
-            Cpdf.add_page_labels pdf args.labelstyle args.labelprefix offset range;
-            write_pdf false pdf
+          Cpdf.add_page_labels
+            pdf args.labelstyle args.labelprefix args.labelstartval range;
+          write_pdf false pdf
   | Some RemovePageLabels ->
       let pdf = get_single_pdf args.op false in
         Pdfpagelabels.remove pdf;
