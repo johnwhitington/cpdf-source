@@ -1568,7 +1568,10 @@ given page range.
     \small\noindent\verb!cpdf -add-page-labels in.pdf -o out.pdf!\\
     \noindent\verb!     [-label-style <style>]!\\
     \noindent\verb!     [-label-prefix <string>]!\\
-    \noindent\verb!     [-label-startval <integer>]!
+    \noindent\verb!     [-label-startval <integer>]!\\
+    
+    \vspace{1.5mm}
+    \small\noindent\verb!cpdf -remove-page-labels in.pdf -o out.pdf!
   \end{framed}
   \section{Listing Fonts}
 \index{fonts!listing}
@@ -1806,6 +1809,8 @@ i, ii, iii, iv, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, A-0, A-1, A-2, A-3, A-4, A-5
 \end{framed}
 
 \noindent By default the labels begin at page number 1 for each range. To override this, we can use \texttt{-label-startval} (we used $0$ in the final command), where we want the numbers to begin at zero rather than one.
+
+Page labels may be removed altogether by using \texttt{-remove-page-labels} command.
 
 \chapter{File Attachments}
 \index{attachments}
