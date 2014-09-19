@@ -2750,7 +2750,6 @@ let go () =
       flprint
         ("cpdf Version " ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ " " ^ version_date ^ "\n")
   | None | Some Merge ->
-      (* 14th Sept 2010 - changed to write_pdf false pdf because we're not supposed to change it.*)
       begin match args.out, args.inputs with
       | _, (_::_ as inputs) ->
           let write_pdf x pdf =
@@ -2781,8 +2780,6 @@ let go () =
                     (* FIXME Here, if the output file is different from the
                     input file, and we're just extracting pages, might we use a
                     lazy read? *)
-                    (*Pdfwrite.debug_whole_pdf pdf;*)
-                    flprint "Just one file, we'll use Pdfpage.pdf_of_pages...\n";
                     if hd ranges <> "all" || hd rotations <> Pdfmerge.DNR || !Pdfpage.flat_pagetrees then
                       let pdf = if hd rotations <> Pdfmerge.DNR then prerotate_pdf pdf (hd rotations) else pdf in
                         let range = parse_pagespec pdf (hd ranges) in
