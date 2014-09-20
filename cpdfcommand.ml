@@ -1014,7 +1014,8 @@ let setscalecontents f =
   args.position <- Cpdf.Diagonal (* Will be center *)
 
 let setsqueeze () =
-  args.squeeze <- true
+  args.squeeze <- true;
+  args.create_objstm <- true
 
 (* Parsing the control file *)
 let rec getuntilendquote prev = function
@@ -1772,9 +1773,17 @@ let pdfobjeq pdf x y =
   and y = Pdf.lookup_obj pdf y in
     begin match x with Pdf.Stream _ -> Pdf.getstream x | _ -> () end;
     begin match y with Pdf.Stream _ -> Pdf.getstream y | _ -> () end;
-    compare x y
+    match x with
+      (*Pdf.Dictionary _
+        when
+          Pdf.lookup_direct pdf "/Type" x = Some (Pdf.Name "/Page")
+        ->
+          (-1)*) (* FIXME *)
+    | _ -> compare x y
 
-let squeeze pdf =
+(* FIXME: We need to be able to do squeeze on encrypted files, which at the
+ * moment thinks it has a permissions problem. *)
+let really_squeeze pdf =
   let objs = ref [] in
     Pdf.objiter (fun objnum _ -> objs := objnum :: !objs) pdf;
     let toprocess =
@@ -1801,6 +1810,16 @@ let squeeze pdf =
         pdf.Pdf.root <- !pdfr.Pdf.root;
         pdf.Pdf.objects <- !pdfr.Pdf.objects;
         pdf.Pdf.trailerdict <- !pdfr.Pdf.trailerdict
+
+(* We run squeeze enough times to reach a fixed point in the cardinality of the
+ * object map *)
+let squeeze pdf =
+  let n = ref (Pdf.objcard pdf) in
+  Printf.printf "Beginning squeeze: %i objects\n%!" (Pdf.objcard pdf);
+  while !n > (ignore (really_squeeze pdf); Pdf.objcard pdf) do
+    n := Pdf.objcard pdf;
+    Printf.printf "Squeezing... Down to %i objects\n%!" (Pdf.objcard pdf);
+  done
 
 let write_pdf mk_id pdf =
   if args.create_objstm && not args.keepversion
