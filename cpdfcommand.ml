@@ -1811,6 +1811,40 @@ let really_squeeze pdf =
         pdf.Pdf.objects <- !pdfr.Pdf.objects;
         pdf.Pdf.trailerdict <- !pdfr.Pdf.trailerdict
 
+(* For each object in the PDF marked with /Type /Page, for each /Contents
+indirect reference or array of such, decode and recode that content stream. *)
+let squeeze_all_content_streams pdf =
+  Pdf.objiter
+    (fun objnum _ ->
+      match Pdf.lookup_obj pdf objnum with
+        Pdf.Dictionary dict as d
+          when
+            Pdf.lookup_direct pdf "/Type" d = Some (Pdf.Name "/Page")
+          ->
+            let resources =
+              match Pdf.lookup_direct pdf "/Resources" d with
+                Some d -> d
+              | None -> Pdf.Dictionary []
+            in
+              let newstream =
+                match lookup "/Contents" dict with
+                  Some (Pdf.Indirect i) ->
+                    Pdfops.stream_of_ops
+                      (Pdfops.parse_operators pdf resources [Pdf.Indirect i])
+                | Some (Pdf.Array x) ->
+                    Pdfops.stream_of_ops
+                      (Pdfops.parse_operators pdf resources x)
+                | _ ->
+                    raise (Pdf.PDFError "squeeze_all_content_streams")
+              in
+                let newdict =
+                  Pdf.add_dict_entry
+                    d "/Contents" (Pdf.Indirect (Pdf.addobj pdf newstream))
+                in
+                  Pdf.addobj_given_num pdf (objnum, newdict)
+        | _ -> ())
+    pdf
+
 (* We run squeeze enough times to reach a fixed point in the cardinality of the
  * object map *)
 let squeeze pdf =
@@ -1819,7 +1853,11 @@ let squeeze pdf =
   while !n > (ignore (really_squeeze pdf); Pdf.objcard pdf) do
     n := Pdf.objcard pdf;
     Printf.printf "Squeezing... Down to %i objects\n%!" (Pdf.objcard pdf);
-  done
+  done;
+  Printf.printf "Squeezing page data\n%!";
+  squeeze_all_content_streams pdf;
+  Printf.printf "Recompressing document\n%!";
+  ignore (Cpdf.recompress_pdf pdf)
 
 let write_pdf mk_id pdf =
   if args.create_objstm && not args.keepversion
