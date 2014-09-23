@@ -1826,22 +1826,30 @@ let squeeze_all_content_streams pdf =
                 Some d -> d
               | None -> Pdf.Dictionary []
             in
-              let newstream =
-                match lookup "/Contents" dict with
-                  Some (Pdf.Indirect i) ->
+              begin try
+                let newstream =
+                  let content_streams =
+                    match lookup "/Contents" dict with
+                      Some (Pdf.Indirect i) ->
+                        begin match Pdf.direct pdf (Pdf.Indirect i) with
+                          Pdf.Array x -> x
+                        | _ -> [Pdf.Indirect i]
+                        end
+                    | Some (Pdf.Array x) -> x
+                    | _ -> raise Not_found
+                  in
                     Pdfops.stream_of_ops
-                      (Pdfops.parse_operators pdf resources [Pdf.Indirect i])
-                | Some (Pdf.Array x) ->
-                    Pdfops.stream_of_ops
-                      (Pdfops.parse_operators pdf resources x)
-                | _ ->
-                    raise (Pdf.PDFError "squeeze_all_content_streams")
-              in
-                let newdict =
-                  Pdf.add_dict_entry
-                    d "/Contents" (Pdf.Indirect (Pdf.addobj pdf newstream))
+                      (Pdfops.parse_operators pdf resources content_streams)
                 in
-                  Pdf.addobj_given_num pdf (objnum, newdict)
+                  let newdict =
+                    Pdf.add_dict_entry
+                      d "/Contents" (Pdf.Indirect (Pdf.addobj pdf newstream))
+                  in
+                    Pdf.addobj_given_num pdf (objnum, newdict)
+              with
+                (* No /Contents, which is ok. *)
+                Not_found -> ()
+              end
         | _ -> ())
     pdf
 

@@ -943,12 +943,23 @@ PDF, use:
   
   \section{Squeezing a Document}
 \index{squeeze}
-  To \textit{squeeze} a PDF file, use:
+  To \textit{squeeze} a PDF file, reducing its size by an average of about twenty percent (though sometimes not at all), use:
   \begin{framed}
     \small\verb!cpdf -squeeze in.pdf -o out.pdf!
   \end{framed}
-  \noindent Adding \texttt{-squeeze} to the command line will \textit{squeeze} the file upon output. The squeezing process involves several processes which losslessly attempt to reduce the file size. The squeezing process is slow. 
+  \noindent Adding \texttt{-squeeze} to the command line when using another operation will \textit{squeeze} the file or files upon output.
   
+  The \texttt{-squeeze} operation writes some information about the squeezing process to standard output. The squeezing process involves several processes which losslessly attempt to reduce the file size. It is slow, so should not be used without thought.
+
+\begin{verbatim}
+$ ./cpdf -squeeze in.pdf -o out.pdf
+Beginning squeeze: 123847 objects
+Squeezing... Down to 114860 objects
+Squeezing... Down to 114842 objects
+Squeezing page data
+Recompressing document
+\end{verbatim}
+
 \chapter{Bookmarks}
   \begin{framed}
   \small\noindent\verb!cpdf -list-bookmarks [-utf8 | -raw] in.pdf!
