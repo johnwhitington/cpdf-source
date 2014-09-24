@@ -444,10 +444,12 @@ let banned banlist = function
   | _ -> mem Pdfcrypt.NoEdit banlist
 
 let operation_allowed banlist = function
-  | None -> true (* Merge *) (* changed to allow it *)
-  | Some op -> not (banned banlist op)
+  | None -> flprint "no-op, allow\n"; true (* Merge *) (* changed to allow it *)
+  | Some op -> flprint "checking...\n"; not (banned banlist op)
 
 let rec decrypt_if_necessary (a, b, c, user_pw, owner_pw) op pdf =
+  Printf.printf "decrypt_if_necessary: args.op is %s\n"
+  (match args.op with None -> "None" | Some _ -> "Some");
   if not (Pdfcrypt.is_encrypted pdf) then pdf else
     match Pdfcrypt.decrypt_pdf_owner owner_pw pdf with
     | Some pdf -> pdf
