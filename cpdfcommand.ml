@@ -1767,19 +1767,13 @@ let rec writing_ok outname =
   else
     outname
 
-(* Equality on PDF streams *)
+(* Equality on PDF objects *)
 let pdfobjeq pdf x y =
   let x = Pdf.lookup_obj pdf x 
   and y = Pdf.lookup_obj pdf y in
     begin match x with Pdf.Stream _ -> Pdf.getstream x | _ -> () end;
     begin match y with Pdf.Stream _ -> Pdf.getstream y | _ -> () end;
-    match x with
-      (*Pdf.Dictionary _
-        when
-          Pdf.lookup_direct pdf "/Type" x = Some (Pdf.Name "/Page")
-        ->
-          (-1)*) (* FIXME *)
-    | _ -> compare x y
+    compare x y
 
 (* FIXME: We need to be able to do squeeze on encrypted files, which at the
  * moment thinks it has a permissions problem. *)
@@ -1791,25 +1785,34 @@ let really_squeeze pdf =
         (fun x -> length x > 1)
         (collate (pdfobjeq pdf) (sort (pdfobjeq pdf) !objs))
     in
-      (*Printf.printf "Found %i pools of duplicate objects to coalesce\n" (length toprocess);*)
-      (*List.iter
-        (fun x -> Printf.printf "\n\nPool: "; List.iter (Printf.printf "%i ") x)
-        toprocess;*)
-      let pdfr = ref pdf in
-      let changetable = Hashtbl.create 100 in
-        iter
-          (function [] -> assert false | h::t ->
-             iter (fun e -> Hashtbl.add changetable e h) t)
-          toprocess;
-        (* For a unknown reason, the output file is much smaller if
-           Pdf.renumber is run twice. This is bizarre, since Pdf.renumber is
-           an old, well-understood function in use for years -- what is
-           going on? *)
-        pdfr := Pdf.renumber changetable !pdfr;
-        pdfr := Pdf.renumber changetable !pdfr;
-        pdf.Pdf.root <- !pdfr.Pdf.root;
-        pdf.Pdf.objects <- !pdfr.Pdf.objects;
-        pdf.Pdf.trailerdict <- !pdfr.Pdf.trailerdict
+      (* Remove any pools of objects which are page objects, since Adobe Reader
+       * gets confused when there are duplicate page objects. *)
+      let toprocess =
+        option_map
+          (function
+             [] -> assert false
+           | h::_ as l ->
+               match Pdf.lookup_direct pdf "/Type" (Pdf.lookup_obj pdf h) with
+                 Some (Pdf.Name "/Page") -> None
+               | _ -> Some l)
+          toprocess
+      in
+        let pdfr = ref pdf in
+        let changetable = Hashtbl.create 100 in
+          iter
+            (function [] -> assert false | h::t ->
+               iter (fun e -> Hashtbl.add changetable e h) t)
+            toprocess;
+          (* For a unknown reason, the output file is much smaller if
+             Pdf.renumber is run twice. This is bizarre, since Pdf.renumber is
+             an old, well-understood function in use for years -- what is
+             going on? *)
+          pdfr := Pdf.renumber changetable !pdfr;
+          pdfr := Pdf.renumber changetable !pdfr;
+          Pdf.remove_unreferenced !pdfr;
+          pdf.Pdf.root <- !pdfr.Pdf.root;
+          pdf.Pdf.objects <- !pdfr.Pdf.objects;
+          pdf.Pdf.trailerdict <- !pdfr.Pdf.trailerdict
 
 (* For each object in the PDF marked with /Type /Page, for each /Contents
 indirect reference or array of such, decode and recode that content stream. *)
@@ -1856,16 +1859,19 @@ let squeeze_all_content_streams pdf =
 (* We run squeeze enough times to reach a fixed point in the cardinality of the
  * object map *)
 let squeeze pdf =
-  let n = ref (Pdf.objcard pdf) in
-  Printf.printf "Beginning squeeze: %i objects\n%!" (Pdf.objcard pdf);
-  while !n > (ignore (really_squeeze pdf); Pdf.objcard pdf) do
-    n := Pdf.objcard pdf;
-    Printf.printf "Squeezing... Down to %i objects\n%!" (Pdf.objcard pdf);
-  done;
-  Printf.printf "Squeezing page data\n%!";
-  squeeze_all_content_streams pdf;
-  Printf.printf "Recompressing document\n%!";
-  ignore (Cpdf.recompress_pdf pdf)
+  try
+    let n = ref (Pdf.objcard pdf) in
+    Printf.printf "Beginning squeeze: %i objects\n%!" (Pdf.objcard pdf);
+    while !n > (ignore (really_squeeze pdf); Pdf.objcard pdf) do
+      n := Pdf.objcard pdf;
+      Printf.printf "Squeezing... Down to %i objects\n%!" (Pdf.objcard pdf);
+    done;
+    Printf.printf "Squeezing page data\n%!";
+    squeeze_all_content_streams pdf;
+    Printf.printf "Recompressing document\n%!";
+    ignore (Cpdf.recompress_pdf pdf)
+  with
+    e -> raise (Pdf.PDFError "Squeeze failed. No output written")
 
 let write_pdf mk_id pdf =
   if args.create_objstm && not args.keepversion
