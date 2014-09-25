@@ -3324,7 +3324,8 @@ let go () =
               | [(InFile f, _, _, _, _)] -> f
               | _ -> ""
             in
-              Cpdf.split_at_bookmarks filename args.linearize nobble level output_spec pdf
+              Cpdf.split_at_bookmarks filename args.linearize args.preserve_objstm
+              (* Yes *)args.preserve_objstm nobble level output_spec pdf
         | Stdout -> error "Can't split to standard output"
         | NoOutputSpecified -> error "Split: No output format specified"
       end

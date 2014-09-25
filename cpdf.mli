@@ -189,7 +189,7 @@ val stamp : bool -> bool -> bool -> int list -> Pdf.t -> Pdf.t -> Pdf.t
 the fiven level, writing to files with names given by [spec] (see
 cpdfmanual.pdf). [nobble] is undocumented and should be false. If [linearize]
 is true, the files will be linearized. *)
-val split_at_bookmarks : string -> bool -> (Pdf.t -> Pdf.t) -> int -> string -> Pdf.t -> unit
+val split_at_bookmarks : string -> bool -> preserve_objstm:bool -> create_objstm:bool -> (Pdf.t -> Pdf.t) -> int -> string -> Pdf.t -> unit
 
 (** Split a PDF on bookmarks of a given level or below. Level 0 is top level. *)
 val split_on_bookmarks : Pdf.t -> int -> Pdf.t list

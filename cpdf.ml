@@ -1290,20 +1290,15 @@ let bookmark_pages level pdf =
       (function l when l.Pdfmarks.level = level -> Some (Pdfpage.pagenumber_of_target pdf l.Pdfmarks.target) | _ -> None)
       (Pdfmarks.read_bookmarks pdf))
 
-let split_at_bookmarks original_filename linearize nobble level spec pdf =
-  (*flprint "split_at_bookmarks\n";*)
-  let pdf_pages = Pdfpage.pages_of_pagetree pdf
-  in let points = bookmark_pages level pdf in
-    let points =
-      lose (fun x -> x <= 0 || x > Pdfpage.endpage pdf) (map pred points) (* FIXME: What actually causes these problems? *)
-    in
-      (*flprint "Points: ";
-      iter (Printf.printf "%i ,") points;
-      flprint "\n";*)
+let split_at_bookmarks original_filename linearize ~preserve_objstm ~create_objstm nobble level spec pdf =
+  let pdf_pages = Pdfpage.pages_of_pagetree pdf in
+    let points = bookmark_pages level pdf in
+      let points =
+        lose (fun x -> x <= 0 || x > Pdfpage.endpage pdf) (map pred points)
+      in
       let pts = splitat points (indx pdf_pages) in
-      (*flprint "Calling fast_write_split_pdfs\n";*)
       fast_write_split_pdfs None false level
-        original_filename linearize false false nobble spec pdf pts pdf_pages
+        original_filename linearize preserve_objstm create_objstm nobble spec pdf pts pdf_pages
 
 (* Called from cpdflib.ml - different from above *)
 let split_on_bookmarks pdf level =
