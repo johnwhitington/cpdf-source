@@ -448,8 +448,6 @@ let operation_allowed banlist = function
   | Some op -> flprint "checking...\n"; not (banned banlist op)
 
 let rec decrypt_if_necessary (a, b, c, user_pw, owner_pw) op pdf =
-  Printf.printf "decrypt_if_necessary: args.op is %s\n"
-  (match args.op with None -> "None" | Some _ -> "Some");
   if not (Pdfcrypt.is_encrypted pdf) then pdf else
     match Pdfcrypt.decrypt_pdf_owner owner_pw pdf with
     | Some pdf -> pdf
