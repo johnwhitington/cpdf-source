@@ -194,8 +194,15 @@ val split_at_bookmarks : string -> bool -> (Pdf.t -> Pdf.t) -> int -> string -> 
 (** Split a PDF on bookmarks of a given level or below. Level 0 is top level. *)
 val split_on_bookmarks : Pdf.t -> int -> Pdf.t list
 
-(** [split_pdf printf chunksize linearize nobble spec pdf] splits a PDF to files given a chunk size (number of pages in each split), a file specification (see cpdfmanual.pdf). If linearize is true each output is linearized. [printf] and [nobble] are undocumented and should be false. *)
-val split_pdf : Pdfwrite.encryption option -> bool -> string -> int -> bool -> (Pdf.t -> Pdf.t) -> string -> Pdf.t -> unit
+(** [split_pdf printf chunksize linearize preserve_objstm create_objstm nobble
+spec pdf] splits a PDF to files given a chunk size (number of pages in each
+split), a file specification (see cpdfmanual.pdf). If [linearize] is true
+each output is linearized. If [preserve_objstm] is true, object streams will
+be used if the input file had them. If [create_objstm] is true, object
+streams will be created in any event. [printf] and [nobble] are
+undocumented and should be false. *)
+val split_pdf : Pdfwrite.encryption option -> bool -> string -> int -> bool ->
+  preserve_objstm:bool -> create_objstm:bool -> (Pdf.t -> Pdf.t) -> string -> Pdf.t -> unit
 
 (** {2 Listing fonts} *)
 

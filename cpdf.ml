@@ -1266,7 +1266,7 @@ let name_of_spec printf marks (pdf : Pdf.t) splitlevel spec n filename startpage
 let stem s =
   implode (rev (tail_no_fail (dropwhile (neq '.') (rev (explode (Filename.basename s))))))
 
-let fast_write_split_pdfs enc printf splitlevel original_filename linearize nobble spec main_pdf pagenums pdf_pages =
+let fast_write_split_pdfs enc printf splitlevel original_filename linearize preserve_objstm create_objstm nobble spec main_pdf pagenums pdf_pages =
   let marks = Pdfmarks.read_bookmarks main_pdf in
     iter2
       (fun number pagenums ->
@@ -1274,13 +1274,14 @@ let fast_write_split_pdfs enc printf splitlevel original_filename linearize nobb
            let startpage, endpage = extremes pagenums in
              let name = name_of_spec printf marks main_pdf splitlevel spec number (stem original_filename) startpage endpage in
                Pdf.remove_unreferenced pdf;
-               Pdfwrite.pdf_to_file_options linearize enc (not (enc = None)) pdf name)
+               Pdfwrite.pdf_to_file_options ~preserve_objstm ~generate_objstm:create_objstm linearize enc (not (enc = None)) pdf name)
       (indx pagenums)
       pagenums
 
-let split_pdf enc printf original_filename chunksize linearize nobble spec pdf =
+let split_pdf enc printf original_filename chunksize linearize ~preserve_objstm ~create_objstm nobble spec pdf =
   let pdf_pages = Pdfpage.pages_of_pagetree pdf in
-    fast_write_split_pdfs enc printf 0 original_filename linearize nobble spec pdf (splitinto chunksize (indx pdf_pages)) pdf_pages
+    fast_write_split_pdfs enc printf 0 original_filename linearize preserve_objstm
+      create_objstm nobble spec pdf (splitinto chunksize (indx pdf_pages)) pdf_pages
 
 (* Return list, in order, a *set* of page numbers of bookmarks at a given level *)
 let bookmark_pages level pdf =
@@ -1302,7 +1303,7 @@ let split_at_bookmarks original_filename linearize nobble level spec pdf =
       let pts = splitat points (indx pdf_pages) in
       (*flprint "Calling fast_write_split_pdfs\n";*)
       fast_write_split_pdfs None false level
-        original_filename linearize nobble spec pdf pts pdf_pages
+        original_filename linearize false false nobble spec pdf pts pdf_pages
 
 (* Called from cpdflib.ml - different from above *)
 let split_on_bookmarks pdf level =

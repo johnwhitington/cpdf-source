@@ -3172,7 +3172,9 @@ let go () =
                      Pdfwrite.user_password = args.user;
                      Pdfwrite.permissions = banlist_of_args ()}
               in
-                Cpdf.split_pdf enc args.printf_format filename args.chunksize args.linearize nobble output_spec pdf
+                Cpdf.split_pdf
+                  enc args.printf_format filename args.chunksize args.linearize
+                  args.preserve_objstm args.preserve_objstm (*yes--always create if preserving *) nobble output_spec pdf
         | _, Stdout -> error "Can't split to standard output"
         | _, NoOutputSpecified -> error "Split: No output format specified"
         | _ -> error "Split: bad parameters"
