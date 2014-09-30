@@ -283,7 +283,6 @@ let rec mk_numbers pdf endpage lexemes =
   | [Pdfgenlex.LexName "reverse"] ->
        rev (ilist 1 endpage)
   | toks ->
-      flprint "Unknown tokens\n";
       let ranges = splitat_commas toks in
         if ranges = [toks] then raise PageSpecBadSyntax else
           flatten (map (mk_numbers pdf endpage) ranges)
