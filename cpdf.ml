@@ -2,6 +2,137 @@
 open Pdfutil
 open Pdfio
 
+(* Recompress anything which isn't compressed, unless it's metadata. *)
+let recompress_stream pdf = function
+  (* If there is no compression, compress with /FlateDecode *)
+  | Pdf.Stream {contents = (dict, _)} as stream ->
+      begin match
+        Pdf.lookup_direct pdf "/Filter" dict, 
+        Pdf.lookup_direct pdf "/Type" dict
+      with
+      | _, Some (Pdf.Name "/Metadata") -> ()
+      | (None | Some (Pdf.Array [])), _ ->
+          Pdfcodec.encode_pdfstream pdf Pdfcodec.Flate stream
+      | _ -> ()
+      end
+  | _ -> assert false
+
+let recompress_pdf pdf =
+  if not (Pdfcrypt.is_encrypted pdf) then
+    Pdf.iter_stream (recompress_stream pdf) pdf;
+    pdf
+
+let decompress_pdf pdf =
+  if not (Pdfcrypt.is_encrypted pdf) then
+    (Pdf.iter_stream (Pdfcodec.decode_pdfstream_until_unknown pdf) pdf);
+    pdf
+
+(* Equality on PDF objects *)
+let pdfobjeq pdf x y =
+  let x = Pdf.lookup_obj pdf x 
+  and y = Pdf.lookup_obj pdf y in
+    begin match x with Pdf.Stream _ -> Pdf.getstream x | _ -> () end;
+    begin match y with Pdf.Stream _ -> Pdf.getstream y | _ -> () end;
+    compare x y
+
+(* FIXME: We need to be able to do squeeze on encrypted files, which at the
+ * moment thinks it has a permissions problem. *)
+let really_squeeze pdf =
+  let objs = ref [] in
+    Pdf.objiter (fun objnum _ -> objs := objnum :: !objs) pdf;
+    let toprocess =
+      keep
+        (fun x -> length x > 1)
+        (collate (pdfobjeq pdf) (sort (pdfobjeq pdf) !objs))
+    in
+      (* Remove any pools of objects which are page objects, since Adobe Reader
+       * gets confused when there are duplicate page objects. *)
+      let toprocess =
+        option_map
+          (function
+             [] -> assert false
+           | h::_ as l ->
+               match Pdf.lookup_direct pdf "/Type" (Pdf.lookup_obj pdf h) with
+                 Some (Pdf.Name "/Page") -> None
+               | _ -> Some l)
+          toprocess
+      in
+        let pdfr = ref pdf in
+        let changetable = Hashtbl.create 100 in
+          iter
+            (function [] -> assert false | h::t ->
+               iter (fun e -> Hashtbl.add changetable e h) t)
+            toprocess;
+          (* For a unknown reason, the output file is much smaller if
+             Pdf.renumber is run twice. This is bizarre, since Pdf.renumber is
+             an old, well-understood function in use for years -- what is
+             going on? *)
+          pdfr := Pdf.renumber changetable !pdfr;
+          pdfr := Pdf.renumber changetable !pdfr;
+          Pdf.remove_unreferenced !pdfr;
+          pdf.Pdf.root <- !pdfr.Pdf.root;
+          pdf.Pdf.objects <- !pdfr.Pdf.objects;
+          pdf.Pdf.trailerdict <- !pdfr.Pdf.trailerdict
+
+(* For each object in the PDF marked with /Type /Page, for each /Contents
+indirect reference or array of such, decode and recode that content stream. *)
+let squeeze_all_content_streams pdf =
+  Pdf.objiter
+    (fun objnum _ ->
+      match Pdf.lookup_obj pdf objnum with
+        Pdf.Dictionary dict as d
+          when
+            Pdf.lookup_direct pdf "/Type" d = Some (Pdf.Name "/Page")
+          ->
+            let resources =
+              match Pdf.lookup_direct pdf "/Resources" d with
+                Some d -> d
+              | None -> Pdf.Dictionary []
+            in
+              begin try
+                let newstream =
+                  let content_streams =
+                    match lookup "/Contents" dict with
+                      Some (Pdf.Indirect i) ->
+                        begin match Pdf.direct pdf (Pdf.Indirect i) with
+                          Pdf.Array x -> x
+                        | _ -> [Pdf.Indirect i]
+                        end
+                    | Some (Pdf.Array x) -> x
+                    | _ -> raise Not_found
+                  in
+                    Pdfops.stream_of_ops
+                      (Pdfops.parse_operators pdf resources content_streams)
+                in
+                  let newdict =
+                    Pdf.add_dict_entry
+                      d "/Contents" (Pdf.Indirect (Pdf.addobj pdf newstream))
+                  in
+                    Pdf.addobj_given_num pdf (objnum, newdict)
+              with
+                (* No /Contents, which is ok. *)
+                Not_found -> ()
+              end
+        | _ -> ())
+    pdf
+
+(* We run squeeze enough times to reach a fixed point in the cardinality of the
+ * object map *)
+let squeeze pdf =
+  try
+    let n = ref (Pdf.objcard pdf) in
+    Printf.printf "Beginning squeeze: %i objects\n%!" (Pdf.objcard pdf);
+    while !n > (ignore (really_squeeze pdf); Pdf.objcard pdf) do
+      n := Pdf.objcard pdf;
+      Printf.printf "Squeezing... Down to %i objects\n%!" (Pdf.objcard pdf);
+    done;
+    Printf.printf "Squeezing page data\n%!";
+    squeeze_all_content_streams pdf;
+    Printf.printf "Recompressing document\n%!";
+    ignore (recompress_pdf pdf)
+  with
+    e -> raise (Pdf.PDFError "Squeeze failed. No output written")
+
 (* Printf implementation *)
 exception PrintfFailure of string
 
@@ -429,30 +560,7 @@ let print_pdf_objs pdf =
        Printf.printf "%s\n" (Pdfwrite.string_of_pdf obj))
     pdf
 
-(* Recompress anything which isn't compressed, unless it's metadata. *)
-let recompress_stream pdf = function
-  (* If there is no compression, compress with /FlateDecode *)
-  | Pdf.Stream {contents = (dict, _)} as stream ->
-      begin match
-        Pdf.lookup_direct pdf "/Filter" dict, 
-        Pdf.lookup_direct pdf "/Type" dict
-      with
-      | _, Some (Pdf.Name "/Metadata") -> ()
-      | (None | Some (Pdf.Array [])), _ ->
-          Pdfcodec.encode_pdfstream pdf Pdfcodec.Flate stream
-      | _ -> ()
-      end
-  | _ -> assert false
 
-let recompress_pdf pdf =
-  if not (Pdfcrypt.is_encrypted pdf) then
-    Pdf.iter_stream (recompress_stream pdf) pdf;
-    pdf
-
-let decompress_pdf pdf =
-  if not (Pdfcrypt.is_encrypted pdf) then
-    (Pdf.iter_stream (Pdfcodec.decode_pdfstream_until_unknown pdf) pdf);
-    pdf
 
 (* Return page label at pdf page num, or page number in arabic if no label *) 
 let pagelabel pdf num =
@@ -1274,7 +1382,7 @@ let name_of_spec printf marks (pdf : Pdf.t) splitlevel spec n filename startpage
 let stem s =
   implode (rev (tail_no_fail (dropwhile (neq '.') (rev (explode (Filename.basename s))))))
 
-let fast_write_split_pdfs enc printf splitlevel original_filename linearize preserve_objstm create_objstm nobble spec main_pdf pagenums pdf_pages =
+let fast_write_split_pdfs enc printf splitlevel original_filename linearize preserve_objstm create_objstm sq nobble spec main_pdf pagenums pdf_pages =
   let marks = Pdfmarks.read_bookmarks main_pdf in
     iter2
       (fun number pagenums ->
@@ -1282,14 +1390,15 @@ let fast_write_split_pdfs enc printf splitlevel original_filename linearize pres
            let startpage, endpage = extremes pagenums in
              let name = name_of_spec printf marks main_pdf splitlevel spec number (stem original_filename) startpage endpage in
                Pdf.remove_unreferenced pdf;
+               if sq then squeeze pdf;
                Pdfwrite.pdf_to_file_options ~preserve_objstm ~generate_objstm:create_objstm linearize enc (not (enc = None)) pdf name)
       (indx pagenums)
       pagenums
 
-let split_pdf enc printf original_filename chunksize linearize ~preserve_objstm ~create_objstm nobble spec pdf =
+let split_pdf enc printf original_filename chunksize linearize ~preserve_objstm ~create_objstm ~squeeze nobble spec pdf =
   let pdf_pages = Pdfpage.pages_of_pagetree pdf in
     fast_write_split_pdfs enc printf 0 original_filename linearize preserve_objstm
-      create_objstm nobble spec pdf (splitinto chunksize (indx pdf_pages)) pdf_pages
+      create_objstm squeeze nobble spec pdf (splitinto chunksize (indx pdf_pages)) pdf_pages
 
 (* Return list, in order, a *set* of page numbers of bookmarks at a given level *)
 let bookmark_pages level pdf =
@@ -1298,7 +1407,7 @@ let bookmark_pages level pdf =
       (function l when l.Pdfmarks.level = level -> Some (Pdfpage.pagenumber_of_target pdf l.Pdfmarks.target) | _ -> None)
       (Pdfmarks.read_bookmarks pdf))
 
-let split_at_bookmarks original_filename linearize ~preserve_objstm ~create_objstm nobble level spec pdf =
+let split_at_bookmarks original_filename linearize ~preserve_objstm ~create_objstm ~squeeze nobble level spec pdf =
   let pdf_pages = Pdfpage.pages_of_pagetree pdf in
     let points = bookmark_pages level pdf in
       let points =
@@ -1306,7 +1415,7 @@ let split_at_bookmarks original_filename linearize ~preserve_objstm ~create_objs
       in
       let pts = splitat points (indx pdf_pages) in
       fast_write_split_pdfs None false level
-        original_filename linearize preserve_objstm create_objstm nobble spec pdf pts pdf_pages
+        original_filename linearize preserve_objstm create_objstm squeeze nobble spec pdf pts pdf_pages
 
 (* Called from cpdflib.ml - different from above *)
 let split_on_bookmarks pdf level =
@@ -3289,4 +3398,5 @@ let add_page_labels pdf style prefix startval range =
         (*Printf.printf "After adding, we have these labels:\n";
         iter (fun x -> flprint (Pdfpagelabels.string_of_pagelabel x)) !labels;*)
         Pdfpagelabels.write pdf !labels
+
 

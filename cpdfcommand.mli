@@ -9,4 +9,3 @@ val go_withargv : string array -> unit
 (**/**)
 val demo : bool
 
-val pdfobjeq : Pdf.t -> int -> int -> int

@@ -1772,112 +1772,6 @@ let rec writing_ok outname =
   else
     outname
 
-(* Equality on PDF objects *)
-let pdfobjeq pdf x y =
-  let x = Pdf.lookup_obj pdf x 
-  and y = Pdf.lookup_obj pdf y in
-    begin match x with Pdf.Stream _ -> Pdf.getstream x | _ -> () end;
-    begin match y with Pdf.Stream _ -> Pdf.getstream y | _ -> () end;
-    compare x y
-
-(* FIXME: We need to be able to do squeeze on encrypted files, which at the
- * moment thinks it has a permissions problem. *)
-let really_squeeze pdf =
-  let objs = ref [] in
-    Pdf.objiter (fun objnum _ -> objs := objnum :: !objs) pdf;
-    let toprocess =
-      keep
-        (fun x -> length x > 1)
-        (collate (pdfobjeq pdf) (sort (pdfobjeq pdf) !objs))
-    in
-      (* Remove any pools of objects which are page objects, since Adobe Reader
-       * gets confused when there are duplicate page objects. *)
-      let toprocess =
-        option_map
-          (function
-             [] -> assert false
-           | h::_ as l ->
-               match Pdf.lookup_direct pdf "/Type" (Pdf.lookup_obj pdf h) with
-                 Some (Pdf.Name "/Page") -> None
-               | _ -> Some l)
-          toprocess
-      in
-        let pdfr = ref pdf in
-        let changetable = Hashtbl.create 100 in
-          iter
-            (function [] -> assert false | h::t ->
-               iter (fun e -> Hashtbl.add changetable e h) t)
-            toprocess;
-          (* For a unknown reason, the output file is much smaller if
-             Pdf.renumber is run twice. This is bizarre, since Pdf.renumber is
-             an old, well-understood function in use for years -- what is
-             going on? *)
-          pdfr := Pdf.renumber changetable !pdfr;
-          pdfr := Pdf.renumber changetable !pdfr;
-          Pdf.remove_unreferenced !pdfr;
-          pdf.Pdf.root <- !pdfr.Pdf.root;
-          pdf.Pdf.objects <- !pdfr.Pdf.objects;
-          pdf.Pdf.trailerdict <- !pdfr.Pdf.trailerdict
-
-(* For each object in the PDF marked with /Type /Page, for each /Contents
-indirect reference or array of such, decode and recode that content stream. *)
-let squeeze_all_content_streams pdf =
-  Pdf.objiter
-    (fun objnum _ ->
-      match Pdf.lookup_obj pdf objnum with
-        Pdf.Dictionary dict as d
-          when
-            Pdf.lookup_direct pdf "/Type" d = Some (Pdf.Name "/Page")
-          ->
-            let resources =
-              match Pdf.lookup_direct pdf "/Resources" d with
-                Some d -> d
-              | None -> Pdf.Dictionary []
-            in
-              begin try
-                let newstream =
-                  let content_streams =
-                    match lookup "/Contents" dict with
-                      Some (Pdf.Indirect i) ->
-                        begin match Pdf.direct pdf (Pdf.Indirect i) with
-                          Pdf.Array x -> x
-                        | _ -> [Pdf.Indirect i]
-                        end
-                    | Some (Pdf.Array x) -> x
-                    | _ -> raise Not_found
-                  in
-                    Pdfops.stream_of_ops
-                      (Pdfops.parse_operators pdf resources content_streams)
-                in
-                  let newdict =
-                    Pdf.add_dict_entry
-                      d "/Contents" (Pdf.Indirect (Pdf.addobj pdf newstream))
-                  in
-                    Pdf.addobj_given_num pdf (objnum, newdict)
-              with
-                (* No /Contents, which is ok. *)
-                Not_found -> ()
-              end
-        | _ -> ())
-    pdf
-
-(* We run squeeze enough times to reach a fixed point in the cardinality of the
- * object map *)
-let squeeze pdf =
-  try
-    let n = ref (Pdf.objcard pdf) in
-    Printf.printf "Beginning squeeze: %i objects\n%!" (Pdf.objcard pdf);
-    while !n > (ignore (really_squeeze pdf); Pdf.objcard pdf) do
-      n := Pdf.objcard pdf;
-      Printf.printf "Squeezing... Down to %i objects\n%!" (Pdf.objcard pdf);
-    done;
-    Printf.printf "Squeezing page data\n%!";
-    squeeze_all_content_streams pdf;
-    Printf.printf "Recompressing document\n%!";
-    ignore (Cpdf.recompress_pdf pdf)
-  with
-    e -> raise (Pdf.PDFError "Squeeze failed. No output written")
-
 let write_pdf mk_id pdf =
   if args.create_objstm && not args.keepversion
     then pdf.Pdf.minor <- max pdf.Pdf.minor 5;
@@ -1888,7 +1782,7 @@ let write_pdf mk_id pdf =
     | File outname ->
         let outname = writing_ok outname in
           let pdf = Cpdf.recompress_pdf <| nobble pdf in
-            if args.squeeze then squeeze pdf;
+            if args.squeeze then Cpdf.squeeze pdf;
             Pdf.remove_unreferenced pdf;
             Pdfwrite.pdf_to_file_options
               ~preserve_objstm:args.preserve_objstm
@@ -1896,7 +1790,7 @@ let write_pdf mk_id pdf =
               args.linearize None mk_id pdf outname
     | Stdout ->
         let pdf = Cpdf.recompress_pdf <| nobble pdf in
-          if args.squeeze then squeeze pdf;
+          if args.squeeze then Cpdf.squeeze pdf;
           Pdf.remove_unreferenced pdf;
           Pdfwrite.pdf_to_channel
             ~preserve_objstm:args.preserve_objstm
@@ -3180,7 +3074,8 @@ let go () =
                 Printf.printf "original filename: %s\n" args.original_filename;
                 Cpdf.split_pdf
                   enc args.printf_format args.original_filename args.chunksize args.linearize
-                  args.preserve_objstm args.preserve_objstm (*yes--always create if preserving *) nobble output_spec pdf
+                  args.preserve_objstm args.preserve_objstm (*yes--always create if preserving *)
+                  args.squeeze nobble output_spec pdf
         | _, Stdout -> error "Can't split to standard output"
         | _, NoOutputSpecified -> error "Split: No output format specified"
         | _ -> error "Split: bad parameters"
@@ -3331,7 +3226,7 @@ let go () =
               | _ -> ""
             in
               Cpdf.split_at_bookmarks filename args.linearize args.preserve_objstm
-              (* Yes *)args.preserve_objstm nobble level output_spec pdf
+              (* Yes *)args.preserve_objstm args.squeeze nobble level output_spec pdf
         | Stdout -> error "Can't split to standard output"
         | NoOutputSpecified -> error "Split: No output format specified"
       end
