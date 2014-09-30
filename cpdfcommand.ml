@@ -258,7 +258,8 @@ type args =
    mutable labelstyle : Pdfpagelabels.labelstyle;
    mutable labelprefix : string option;
    mutable labelstartval : int;
-   mutable squeeze : bool}
+   mutable squeeze : bool;
+   mutable original_filename : string}
 
 (* List of all filenames in any AND stage - this is used to check that we don't
 overwrite any input file when -dont-overwrite-existing-files is used. *)
@@ -341,7 +342,8 @@ let args =
    labelstyle = Pdfpagelabels.DecimalArabic;
    labelprefix = None;
    labelstartval = 1;
-   squeeze = false}
+   squeeze = false;
+   original_filename = ""}
 
 let reset_arguments () =
   args.op <- None;
@@ -417,7 +419,8 @@ let reset_arguments () =
   args.labelstartval <- 1;
   args.squeeze <- false
   (* We don't reset args.do_ask and args.verbose, because they operate on all
-  parts of the AND-ed command line sent from cpdftk. *)
+  parts of the AND-ed command line sent from cpdftk. Also do not reset
+  original_filename, since we want it to work across AND sections. *)
 
 let banlist_of_args () =
   let l = ref [] in
@@ -562,6 +565,7 @@ let anon_fun s =
       try
         ignore (String.index s '.');
         args.inputs <- (InFile s, "all", Pdfmerge.DNR, "", "")::args.inputs;
+        args.original_filename <- s;
         all_inputs := s::!all_inputs
       with
         Not_found ->
@@ -970,6 +974,7 @@ let set_no_hq_print () =
   args.no_hq_print <- true
 
 let set_input s =
+  args.original_filename <- s;
   args.inputs <- (InFile s, "all", Pdfmerge.DNR, "", "")::args.inputs;
   all_inputs := s::!all_inputs
 
@@ -3150,10 +3155,10 @@ let go () =
       begin match args.inputs, args.out with
         | [(f, ranges, _, _, _)], File output_spec ->
             let pdf = get_single_pdf args.op true
-            and filename =
+            (*and filename =
               match f with
               | InFile n -> n
-              | _ -> ""
+              | _ -> ""*)
             in
               let enc =
                 match args.crypt_method with
@@ -3172,8 +3177,9 @@ let go () =
                      Pdfwrite.user_password = args.user;
                      Pdfwrite.permissions = banlist_of_args ()}
               in
+                Printf.printf "original filename: %s\n" args.original_filename;
                 Cpdf.split_pdf
-                  enc args.printf_format filename args.chunksize args.linearize
+                  enc args.printf_format args.original_filename args.chunksize args.linearize
                   args.preserve_objstm args.preserve_objstm (*yes--always create if preserving *) nobble output_spec pdf
         | _, Stdout -> error "Can't split to standard output"
         | _, NoOutputSpecified -> error "Split: No output format specified"
