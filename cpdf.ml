@@ -283,6 +283,7 @@ let rec mk_numbers pdf endpage lexemes =
   | [Pdfgenlex.LexName "reverse"] ->
        rev (ilist 1 endpage)
   | toks ->
+      flprint "Unknown tokens\n";
       let ranges = splitat_commas toks in
         if ranges = [toks] then raise PageSpecBadSyntax else
           flatten (map (mk_numbers pdf endpage) ranges)
@@ -316,13 +317,21 @@ let parse_pagespec_inner endpage pdf spec =
           | ['e'; 'p'; 'a'; 'c'; 's'; 'd'; 'n'; 'a'; 'l'] ->
               select_landscape pdf (ilist 1 endpage)
           | 't'::'i'::'a'::'r'::'t'::'r'::'o'::'p'::more ->
-              select_portrait pdf (mk_numbers pdf endpage (Pdfgenlex.lex_string (implode (rev more))))
+              select_portrait
+                pdf
+                (mk_numbers pdf endpage (map (fixup_negatives endpage) (Pdfgenlex.lex_string (implode (rev more)))))
           | 'e'::'p'::'a'::'c'::'s'::'d'::'n'::'a'::'l'::more ->
-              select_landscape pdf (mk_numbers pdf endpage (Pdfgenlex.lex_string (implode (rev more))))
+              select_landscape
+                pdf
+                (mk_numbers pdf endpage (map (fixup_negatives endpage) (Pdfgenlex.lex_string (implode (rev more)))))
           | 'd'::'d'::'o'::more ->
-              keep odd (mk_numbers pdf endpage (Pdfgenlex.lex_string (implode (rev more))))
+              keep
+                odd
+                (mk_numbers pdf endpage (map (fixup_negatives endpage) (Pdfgenlex.lex_string (implode (rev more)))))
           | 'n'::'e'::'v'::'e'::more ->
-              keep even (mk_numbers pdf endpage (Pdfgenlex.lex_string (implode (rev more))))
+              keep
+                even
+                (mk_numbers pdf endpage (map (fixup_negatives endpage) (Pdfgenlex.lex_string (implode (rev more)))))
           | _ ->
               mk_numbers pdf endpage (map (fixup_negatives endpage) (Pdfgenlex.lex_string spec))
         with
