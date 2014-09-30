@@ -66,13 +66,18 @@ let really_squeeze pdf =
           (* For a unknown reason, the output file is much smaller if
              Pdf.renumber is run twice. This is bizarre, since Pdf.renumber is
              an old, well-understood function in use for years -- what is
-             going on? *)
+             going on? Furthermore, if we run it 3 times, it gets bigger again! *)
           pdfr := Pdf.renumber changetable !pdfr;
           pdfr := Pdf.renumber changetable !pdfr;
           Pdf.remove_unreferenced !pdfr;
           pdf.Pdf.root <- !pdfr.Pdf.root;
           pdf.Pdf.objects <- !pdfr.Pdf.objects;
           pdf.Pdf.trailerdict <- !pdfr.Pdf.trailerdict
+
+(* Squeeze the form xobject at objnum. Any resources from the page (or its
+ancestors in the page tree!) are also needed - we must merge them with the
+ones from the xobject itself. *)
+let squeeze_form_xobjects page_resources pdf objnum = ()
 
 (* For each object in the PDF marked with /Type /Page, for each /Contents
 indirect reference or array of such, decode and recode that content stream. *)
