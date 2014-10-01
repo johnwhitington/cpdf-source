@@ -1787,7 +1787,7 @@ let write_pdf mk_id pdf =
             Pdfwrite.pdf_to_file_options
               ~preserve_objstm:args.preserve_objstm
               ~generate_objstm:args.create_objstm
-              args.linearize None mk_id pdf outname
+              false (*FIXLIN args.linearize*) None mk_id pdf outname
     | Stdout ->
         let pdf = Cpdf.recompress_pdf <| nobble pdf in
           if args.squeeze then Cpdf.squeeze pdf;
@@ -1795,7 +1795,7 @@ let write_pdf mk_id pdf =
           Pdfwrite.pdf_to_channel
             ~preserve_objstm:args.preserve_objstm
             ~generate_objstm:args.create_objstm
-            args.linearize None mk_id pdf stdout;
+            false (*FIXLIN args.linearize*) None mk_id pdf stdout;
           flush stdout (*r For Windows *)
 
 let pdf_of_stdin user_pw owner_pw =
@@ -2919,9 +2919,9 @@ let go () =
             error "no output specified"
         | File outname ->
             let outname = writing_ok outname in
-              Pdfwrite.pdf_to_file_options args.linearize None args.makenewid pdf outname
+              Pdfwrite.pdf_to_file_options (*FIXLIN args.linearize*) false None args.makenewid pdf outname
         | Stdout ->
-            Pdfwrite.pdf_to_channel args.linearize None args.makenewid pdf stdout;
+            Pdfwrite.pdf_to_channel (*FIXLIN args.linearize *) false None args.makenewid pdf stdout;
             flush stdout
         end
   | Some Compress ->
@@ -3099,13 +3099,13 @@ let go () =
               Pdfwrite.pdf_to_file_options
                 ~preserve_objstm:args.preserve_objstm
                 ~generate_objstm:args.create_objstm
-                args.linearize None true pdf s
+                (*FIXLIN args.linearize*) false None true pdf s
       | [(k, _, _, _, _) as input], Stdout ->
           let pdf = get_pdf_from_input_kind input args.op k in
             Pdfwrite.pdf_to_channel
               ~preserve_objstm:args.preserve_objstm
               ~generate_objstm:args.create_objstm
-              args.linearize None true pdf stdout;
+              (*FIXLIN args.linearize*) false None true pdf stdout;
             flush stdout
       | _ -> error "ChangeId: exactly one input file and output file required."
       end
@@ -3370,12 +3370,12 @@ let go () =
                 Pdfwrite.pdf_to_file_options
                   ~preserve_objstm:args.preserve_objstm
                   ~generate_objstm:args.create_objstm
-                  args.linearize (Some encryption) args.makenewid pdf outname
+                  (*FIXLIN args.linearize*)false (Some encryption) args.makenewid pdf outname
           | Stdout ->
               Pdfwrite.pdf_to_channel
                 ~preserve_objstm:args.preserve_objstm
                 ~generate_objstm:args.create_objstm
-                args.linearize (Some encryption) args.makenewid pdf stdout;
+                (*FIXLIN args.linearize*)false (Some encryption) args.makenewid pdf stdout;
               flush stdout;
           end
   | Some Decrypt ->

@@ -1433,7 +1433,7 @@ let fast_write_split_pdfs enc printf splitlevel original_filename linearize pres
              let name = name_of_spec printf marks main_pdf splitlevel spec number (stem original_filename) startpage endpage in
                Pdf.remove_unreferenced pdf;
                if sq then squeeze pdf;
-               Pdfwrite.pdf_to_file_options ~preserve_objstm ~generate_objstm:create_objstm linearize enc (not (enc = None)) pdf name)
+               Pdfwrite.pdf_to_file_options ~preserve_objstm ~generate_objstm:create_objstm false (*FIXLIN*) enc (not (enc = None)) pdf name)
       (indx pagenums)
       pagenums
 
