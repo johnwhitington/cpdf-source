@@ -1451,7 +1451,7 @@ let name_of_spec printf marks (pdf : Pdf.t) splitlevel spec n filename startpage
 let stem s =
   implode (rev (tail_no_fail (dropwhile (neq '.') (rev (explode (Filename.basename s))))))
 
-let really_write_pdf ~preserve_objstm ~create_objstm ?(encryption = None) linearize mk_id pdf outname =
+let really_write_pdf ~preserve_objstm ~create_objstm ?(encryption = None) ?(cpdflin = None) linearize mk_id pdf outname =
   let outname' =
     if linearize
       then Filename.temp_file "cpdflin" ".pdf"
@@ -1463,7 +1463,7 @@ let really_write_pdf ~preserve_objstm ~create_objstm ?(encryption = None) linear
       false encryption mk_id pdf outname';
     if linearize then
       let cpdflin =
-        match find_cpdflin None with
+        match find_cpdflin cpdflin with
           Some x -> x
         | None -> raise (Pdf.PDFError "Could not find cpdflin")
       in
@@ -1483,7 +1483,7 @@ let really_write_pdf ~preserve_objstm ~create_objstm ?(encryption = None) linear
                 raise (Pdf.PDFError "linearizer failed")
               end
 
-let fast_write_split_pdfs enc printf splitlevel original_filename linearize preserve_objstm create_objstm sq nobble spec main_pdf pagenums pdf_pages =
+let fast_write_split_pdfs enc printf splitlevel original_filename linearize ?(cpdflin = None) preserve_objstm create_objstm sq nobble spec main_pdf pagenums pdf_pages =
   let marks = Pdfmarks.read_bookmarks main_pdf in
     iter2
       (fun number pagenums ->
@@ -1496,7 +1496,7 @@ let fast_write_split_pdfs enc printf splitlevel original_filename linearize pres
       (indx pagenums)
       pagenums
 
-let split_pdf enc printf original_filename chunksize linearize ~preserve_objstm ~create_objstm ~squeeze nobble spec pdf =
+let split_pdf enc printf original_filename chunksize linearize ~cpdflin ~preserve_objstm ~create_objstm ~squeeze nobble spec pdf =
   let pdf_pages = Pdfpage.pages_of_pagetree pdf in
     fast_write_split_pdfs enc printf 0 original_filename linearize preserve_objstm
       create_objstm squeeze nobble spec pdf (splitinto chunksize (indx pdf_pages)) pdf_pages
@@ -1508,7 +1508,7 @@ let bookmark_pages level pdf =
       (function l when l.Pdfmarks.level = level -> Some (Pdfpage.pagenumber_of_target pdf l.Pdfmarks.target) | _ -> None)
       (Pdfmarks.read_bookmarks pdf))
 
-let split_at_bookmarks original_filename linearize ~preserve_objstm ~create_objstm ~squeeze nobble level spec pdf =
+let split_at_bookmarks original_filename linearize ~cpdflin ~preserve_objstm ~create_objstm ~squeeze nobble level spec pdf =
   let pdf_pages = Pdfpage.pages_of_pagetree pdf in
     let points = bookmark_pages level pdf in
       let points =

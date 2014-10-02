@@ -258,7 +258,8 @@ type args =
    mutable labelprefix : string option;
    mutable labelstartval : int;
    mutable squeeze : bool;
-   mutable original_filename : string}
+   mutable original_filename : string;
+   mutable cpdflin : string option}
 
 (* List of all filenames in any AND stage - this is used to check that we don't
 overwrite any input file when -dont-overwrite-existing-files is used. *)
@@ -342,7 +343,8 @@ let args =
    labelprefix = None;
    labelstartval = 1;
    squeeze = false;
-   original_filename = ""}
+   original_filename = "";
+   cpdflin = None}
 
 let reset_arguments () =
   args.op <- None;
@@ -419,7 +421,8 @@ let reset_arguments () =
   args.squeeze <- false
   (* We don't reset args.do_ask and args.verbose, because they operate on all
   parts of the AND-ed command line sent from cpdftk. Also do not reset
-  original_filename, since we want it to work across AND sections. *)
+  original_filename, since we want it to work across AND sections. Also do not
+  reset cpdflin. *)
 
 let banlist_of_args () =
   let l = ref [] in
@@ -1229,6 +1232,9 @@ let setlabelprefix s =
 let setlabelstartval i =
   args.labelstartval <- i
 
+let setcpdflin s = 
+  args.cpdflin <- Some s
+
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
   control_args := !control_args @ parse_control_file filename
@@ -1276,6 +1282,9 @@ and specs =
    ("-l",
        Arg.Unit setlinearize,
        " Linearize output files where possible");
+   ("-cpdflin",
+       Arg.String setcpdflin,
+       " Set location of 'cpdflin'");
    ("-raw",
       Arg.Unit (setencoding Cpdf.Raw),
       " Do not process text");
@@ -1782,7 +1791,7 @@ let really_write_pdf ?(encryption = None) mk_id pdf outname =
       false encryption mk_id pdf outname';
     if args.linearize then
       let cpdflin =
-        match Cpdf.find_cpdflin None with
+        match Cpdf.find_cpdflin args.cpdflin with
           Some x -> x
         | None -> raise (Pdf.PDFError "Could not find cpdflin")
       in
@@ -3104,7 +3113,7 @@ let go () =
                      Pdfwrite.permissions = banlist_of_args ()}
               in
                 Cpdf.split_pdf
-                  enc args.printf_format args.original_filename args.chunksize args.linearize
+                  enc args.printf_format args.original_filename args.chunksize args.linearize args.cpdflin
                   args.preserve_objstm args.preserve_objstm (*yes--always create if preserving *)
                   args.squeeze nobble output_spec pdf
         | _, Stdout -> error "Can't split to standard output"
@@ -3248,7 +3257,7 @@ let go () =
               | [(InFile f, _, _, _, _)] -> f
               | _ -> ""
             in
-              Cpdf.split_at_bookmarks filename args.linearize args.preserve_objstm
+              Cpdf.split_at_bookmarks filename args.linearize args.cpdflin args.preserve_objstm
               (* Yes *)args.preserve_objstm args.squeeze nobble level output_spec pdf
         | Stdout -> error "Can't split to standard output"
         | NoOutputSpecified -> error "Split: No output format specified"
