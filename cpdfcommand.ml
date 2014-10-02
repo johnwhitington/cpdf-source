@@ -8,8 +8,6 @@ let version_date = "(unreleased, 16th September 2014)"
 open Pdfutil
 open Pdfio
 
-
-
 (* Wrap up the file reading functions to exit with code 1 when an encryption
 problem occurs. This happens when object streams are in an encrypted document
 and so it can't be read without the right password... The existing error
@@ -1797,7 +1795,7 @@ let really_write_pdf ?(encryption = None) mk_id pdf outname =
                 raise (Pdf.PDFError "linearizer failed")
               end
 
-let write_pdf ?(encryption = None) mk_id pdf =
+let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
   if args.create_objstm && not args.keepversion
     then pdf.Pdf.minor <- max pdf.Pdf.minor 5;
   let mk_id = args.makenewid || mk_id in
@@ -1808,10 +1806,14 @@ let write_pdf ?(encryption = None) mk_id pdf =
         let outname = writing_ok outname in
           begin match encryption with
             None ->
-              let pdf = Cpdf.recompress_pdf <| nobble pdf in
-                if args.squeeze then Cpdf.squeeze pdf;
-                Pdf.remove_unreferenced pdf;
-                really_write_pdf mk_id pdf outname
+              ignore (nobble pdf);
+              if not is_decompress then
+                begin
+                  ignore (Cpdf.recompress_pdf pdf);
+                  if args.squeeze then Cpdf.squeeze pdf;
+                  Pdf.remove_unreferenced pdf
+                end;
+              really_write_pdf mk_id pdf outname
           | Some _ ->
               really_write_pdf ~encryption mk_id pdf outname
           end
@@ -1819,9 +1821,13 @@ let write_pdf ?(encryption = None) mk_id pdf =
         let temp = Filename.temp_file "cpdflin" ".pdf" in
           begin match encryption with
             None -> 
-              let pdf = Cpdf.recompress_pdf <| nobble pdf in
-                if args.squeeze then Cpdf.squeeze pdf;
-                Pdf.remove_unreferenced pdf;
+              ignore (nobble pdf);
+              if not is_decompress then
+                begin
+                  ignore (Cpdf.recompress_pdf pdf);
+                  if args.squeeze then Cpdf.squeeze pdf;
+                  Pdf.remove_unreferenced pdf
+                end;
                 really_write_pdf ~encryption mk_id pdf temp;
           | Some _ ->
               really_write_pdf ~encryption mk_id pdf temp
@@ -2949,16 +2955,7 @@ let go () =
              try Pdfcodec.decode_pdfstream_until_unknown pdf stream with
                e -> Printf.eprintf "Decode failure: %s. Carrying on...\n" (Printexc.to_string e); ())
           pdf;
-        begin match args.out with
-        | NoOutputSpecified ->
-            error "no output specified"
-        | File outname ->
-            let outname = writing_ok outname in
-              Pdfwrite.pdf_to_file_options (*FIXLIN args.linearize*) false None args.makenewid pdf outname
-        | Stdout ->
-            Pdfwrite.pdf_to_channel (*FIXLIN args.linearize *) false None args.makenewid pdf stdout;
-            flush stdout
-        end
+        write_pdf ~is_decompress:true args.makenewid pdf
   | Some Compress ->
       let pdf = get_single_pdf (Some Compress) false in
         if args.remove_duplicate_streams then
@@ -3129,18 +3126,10 @@ let go () =
       begin match args.inputs, args.out with
       | [(k, _, _, _, _) as input], File s ->
           let pdf = get_pdf_from_input_kind input args.op k in
-            let s = writing_ok s in
-              Pdfwrite.pdf_to_file_options
-                ~preserve_objstm:args.preserve_objstm
-                ~generate_objstm:args.create_objstm
-                (*FIXLIN args.linearize*) false None true pdf s
+            write_pdf true pdf
       | [(k, _, _, _, _) as input], Stdout ->
           let pdf = get_pdf_from_input_kind input args.op k in
-            Pdfwrite.pdf_to_channel
-              ~preserve_objstm:args.preserve_objstm
-              ~generate_objstm:args.create_objstm
-              (*FIXLIN args.linearize*) false None true pdf stdout;
-            flush stdout
+            write_pdf true pdf
       | _ -> error "ChangeId: exactly one input file and output file required."
       end
   | Some RemoveId ->
