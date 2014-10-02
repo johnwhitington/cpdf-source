@@ -8,6 +8,35 @@ let version_date = "(unreleased, 16th September 2014)"
 open Pdfutil
 open Pdfio
 
+(* Find the location of the cpdflin binary, either in a provided place (with
+-cpdflin), or using argv[0] or in the current directory *)
+let find_cpdflin provided =
+  match provided with
+    Some x -> Some x
+  | None ->
+      match Sys.argv.(0) with
+       "cpdf" ->
+          Printf.printf "Argv no use, looking in current directory\n";
+          if Sys.file_exists "cpdflin" then Some "cpdflin" else None
+      | s ->
+          Printf.printf "Found location from argv at %s\n%!" s;
+          try
+            let fullname =
+              Filename.dirname s ^ Filename.dir_sep ^ "cpdflin"
+            in
+              if Sys.file_exists fullname then Some fullname else None
+          with
+            _ -> None
+
+let _ =
+  let cpdflin =
+    (match find_cpdflin None with
+      None -> "none"
+    | Some x -> x)
+  in
+    print_endline cpdflin;
+    Sys.command cpdflin
+
 (* Wrap up the file reading functions to exit with code 1 when an encryption
 problem occurs. This happens when object streams are in an encrypted document
 and so it can't be read without the right password... The existing error
@@ -149,7 +178,6 @@ type op =
   | RemoveUnusedResources
   | ExtractFontFile
   | ExtractText
-  | PrintLinearization
   | OpenAtPage of int
   | OpenAtPageFit of int
   | AddPageLabels
@@ -1743,8 +1771,7 @@ and specs =
    ("-gs", Arg.String setgspath, "");
    ("-debug", Arg.Unit setdebug, "");
    ("-fix-prince", Arg.Unit (setop RemoveUnusedResources), "");
-   ("-extract-text", Arg.Unit (setop ExtractText), "");
-   ("-print-linearization", Arg.Unit (setop PrintLinearization), "")]
+   ("-extract-text", Arg.Unit (setop ExtractText), "")]
 
 and usage_msg =
 "Syntax: cpdf <op> <op-specific arguments> [-o <output file>] <input files>\n\n\
@@ -3432,12 +3459,6 @@ let go () =
                 print_string text;
                 print_newline ()
             end
-  | Some PrintLinearization ->
-      begin match args.inputs with
-      | (InFile inname, _, _, u, o)::_ ->
-           Pdfread.print_linearization (Pdfio.input_of_channel (open_in_bin inname))
-      | _ -> raise (Arg.Bad "-print-linearization: supply a single file name")
-      end
   | Some AddPageLabels ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
