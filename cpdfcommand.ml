@@ -9,17 +9,15 @@ open Pdfutil
 open Pdfio
 
 (* Find the location of the cpdflin binary, either in a provided place (with
--cpdflin), or using argv[0] or in the current directory *)
+-cpdflin), or using argv[0] or in the current directory. *)
 let find_cpdflin provided =
   match provided with
     Some x -> Some x
   | None ->
       match Sys.argv.(0) with
        "cpdf" ->
-          Printf.printf "Argv no use, looking in current directory\n";
           if Sys.file_exists "cpdflin" then Some "cpdflin" else None
       | s ->
-          Printf.printf "Found location from argv at %s\n%!" s;
           try
             let fullname =
               Filename.dirname s ^ Filename.dir_sep ^ "cpdflin"
@@ -35,7 +33,6 @@ let call_cpdflin cpdflin temp output best_password =
     cpdflin ^ " " ^ Filename.quote temp ^
     " \"" ^ best_password ^ "\" " ^ Filename.quote output
   in
-    print_endline command;
     Sys.command command
 
 (* Wrap up the file reading functions to exit with code 1 when an encryption
@@ -1800,7 +1797,32 @@ let rec writing_ok outname =
   else
     outname
 
-let write_pdf mk_id pdf =
+let really_write_pdf ?(encryption = None) mk_id pdf outname =
+  let outname' =
+    if args.linearize
+      then Filename.temp_file "cpdflin" ".pdf"
+      else outname
+  in
+    Pdfwrite.pdf_to_file_options
+      ~preserve_objstm:args.preserve_objstm
+      ~generate_objstm:args.create_objstm
+      false encryption mk_id pdf outname';
+    if args.linearize then
+      let cpdflin =
+        match find_cpdflin None with
+          Some x -> x
+        | None -> raise (Pdf.PDFError "Could not find cpdflin")
+      in
+        let best_password = if args.owner <> "" then args.owner else args.user in
+          let code = call_cpdflin cpdflin outname' outname best_password in
+            begin try Sys.remove outname' with _ -> () end;
+            if code > 0 then
+              begin
+                begin try Sys.remove outname with _ -> () end;
+                raise (Pdf.PDFError "linearizer failed")
+              end
+
+let write_pdf ?(encryption = None) mk_id pdf =
   if args.create_objstm && not args.keepversion
     then pdf.Pdf.minor <- max pdf.Pdf.minor 5;
   let mk_id = args.makenewid || mk_id in
@@ -1809,40 +1831,32 @@ let write_pdf mk_id pdf =
         output_pdfs =| pdf
     | File outname ->
         let outname = writing_ok outname in
-          let pdf = Cpdf.recompress_pdf <| nobble pdf in
-            if args.squeeze then Cpdf.squeeze pdf;
-            Pdf.remove_unreferenced pdf;
-            let outname' =
-              if args.linearize
-                then Filename.temp_file "cpdflin" ".pdf"
-                else outname
-            in
-              Pdfwrite.pdf_to_file_options
-                ~preserve_objstm:args.preserve_objstm
-                ~generate_objstm:args.create_objstm
-                false None mk_id pdf outname';
-              let cpdflin =
-                match find_cpdflin None with
-                  Some x -> x
-                | None -> raise (Pdf.PDFError "Could not find cpdflin")
-              in
-                if args.linearize then
-                  let code = call_cpdflin cpdflin outname' outname "" in
-                    begin try Sys.remove outname' with _ -> () end;
-                    if code > 0 then
-                      begin
-                        begin try Sys.remove outname with _ -> () end;
-                        raise (Pdf.PDFError "linearizer failed")
-                      end
+          begin match encryption with
+            None ->
+              let pdf = Cpdf.recompress_pdf <| nobble pdf in
+                if args.squeeze then Cpdf.squeeze pdf;
+                Pdf.remove_unreferenced pdf;
+                really_write_pdf mk_id pdf outname
+          | Some _ ->
+              really_write_pdf ~encryption mk_id pdf outname
+          end
     | Stdout ->
-        let pdf = Cpdf.recompress_pdf <| nobble pdf in
-          if args.squeeze then Cpdf.squeeze pdf;
-          Pdf.remove_unreferenced pdf;
-          Pdfwrite.pdf_to_channel
-            ~preserve_objstm:args.preserve_objstm
-            ~generate_objstm:args.create_objstm
-            false (*FIXLIN args.linearize*) None mk_id pdf stdout;
-          flush stdout (*r For Windows *)
+        let temp = Filename.temp_file "cpdflin" ".pdf" in
+          begin match encryption with
+            None -> 
+              let pdf = Cpdf.recompress_pdf <| nobble pdf in
+                if args.squeeze then Cpdf.squeeze pdf;
+                Pdf.remove_unreferenced pdf;
+                really_write_pdf ~encryption mk_id pdf temp;
+          | Some _ ->
+              really_write_pdf ~encryption mk_id pdf temp
+          end;
+          let temp_file = open_in_bin temp in
+            try
+              while true do output_char stdout (input_char temp_file) done;
+              assert false
+            with
+              End_of_file -> flush stdout (*r For Windows *)
 
 let pdf_of_stdin user_pw owner_pw =
   let user_pw = Some user_pw
@@ -3408,22 +3422,7 @@ let go () =
                 let newversion = if args.create_objstm then 5 else newversion in
                   pdf.Pdf.minor <- max pdf.Pdf.minor newversion
             end;
-          begin match args.out with
-          | NoOutputSpecified ->
-              error "encrypt: no output specified"
-          | File outname ->
-              let outname = writing_ok outname in
-                Pdfwrite.pdf_to_file_options
-                  ~preserve_objstm:args.preserve_objstm
-                  ~generate_objstm:args.create_objstm
-                  (*FIXLIN args.linearize*)false (Some encryption) args.makenewid pdf outname
-          | Stdout ->
-              Pdfwrite.pdf_to_channel
-                ~preserve_objstm:args.preserve_objstm
-                ~generate_objstm:args.create_objstm
-                (*FIXLIN args.linearize*)false (Some encryption) args.makenewid pdf stdout;
-              flush stdout;
-          end
+            write_pdf ~encryption:(Some encryption) args.makenewid pdf
   | Some Decrypt ->
       write_pdf false (get_single_pdf args.op false)
   | Some RemoveMetadata ->
