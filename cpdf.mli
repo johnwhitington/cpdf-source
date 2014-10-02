@@ -440,3 +440,7 @@ val custom_csp2 : float -> Pdf.t -> Pdf.t
 (** Nobble a page, given pdf, pagenumber and page *)
 val nobble_page : Pdf.t -> 'a -> Pdfpage.t -> Pdfpage.t
 
+val find_cpdflin : string option -> string option
+
+val call_cpdflin : string -> string -> string -> string -> int
+

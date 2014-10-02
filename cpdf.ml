@@ -2,6 +2,33 @@
 open Pdfutil
 open Pdfio
 
+(* Find the location of the cpdflin binary, either in a provided place (with
+-cpdflin), or using argv[0] or in the current directory. *)
+let find_cpdflin provided =
+  match provided with
+    Some x -> Some x
+  | None ->
+      match Sys.argv.(0) with
+       "cpdf" ->
+          if Sys.file_exists "cpdflin" then Some "cpdflin" else None
+      | s ->
+          try
+            let fullname =
+              Filename.dirname s ^ Filename.dir_sep ^ "cpdflin"
+            in
+              if Sys.file_exists fullname then Some fullname else None
+          with
+            _ -> None
+
+(* Call cpdflin, given the (temp) input name, the output name, and the location
+of the cpdflin binary. Returns the exit code. *)
+let call_cpdflin cpdflin temp output best_password =
+  let command =
+    cpdflin ^ " " ^ Filename.quote temp ^
+    " \"" ^ best_password ^ "\" " ^ Filename.quote output
+  in
+    Sys.command command
+
 (* Recompress anything which isn't compressed, unless it's metadata. *)
 let recompress_stream pdf = function
   (* If there is no compression, compress with /FlateDecode *)
@@ -1424,6 +1451,38 @@ let name_of_spec printf marks (pdf : Pdf.t) splitlevel spec n filename startpage
 let stem s =
   implode (rev (tail_no_fail (dropwhile (neq '.') (rev (explode (Filename.basename s))))))
 
+let really_write_pdf ~preserve_objstm ~create_objstm ?(encryption = None) linearize mk_id pdf outname =
+  let outname' =
+    if linearize
+      then Filename.temp_file "cpdflin" ".pdf"
+      else outname
+  in
+    Pdfwrite.pdf_to_file_options
+      ~preserve_objstm
+      ~generate_objstm:create_objstm
+      false encryption mk_id pdf outname';
+    if linearize then
+      let cpdflin =
+        match find_cpdflin None with
+          Some x -> x
+        | None -> raise (Pdf.PDFError "Could not find cpdflin")
+      in
+        let best_password =
+          match encryption with
+            None -> ""
+          | Some x ->
+              if x.Pdfwrite.owner_password <> ""
+                then x.Pdfwrite.owner_password
+                else x.Pdfwrite.user_password
+        in
+          let code = call_cpdflin cpdflin outname' outname best_password in
+            begin try Sys.remove outname' with _ -> () end;
+            if code > 0 then
+              begin
+                begin try Sys.remove outname with _ -> () end;
+                raise (Pdf.PDFError "linearizer failed")
+              end
+
 let fast_write_split_pdfs enc printf splitlevel original_filename linearize preserve_objstm create_objstm sq nobble spec main_pdf pagenums pdf_pages =
   let marks = Pdfmarks.read_bookmarks main_pdf in
     iter2
@@ -1433,7 +1492,7 @@ let fast_write_split_pdfs enc printf splitlevel original_filename linearize pres
              let name = name_of_spec printf marks main_pdf splitlevel spec number (stem original_filename) startpage endpage in
                Pdf.remove_unreferenced pdf;
                if sq then squeeze pdf;
-               Pdfwrite.pdf_to_file_options ~preserve_objstm ~generate_objstm:create_objstm false (*FIXLIN*) enc (not (enc = None)) pdf name)
+               really_write_pdf ~preserve_objstm ~create_objstm ~encryption:enc linearize (not (enc = None)) pdf name)
       (indx pagenums)
       pagenums
 

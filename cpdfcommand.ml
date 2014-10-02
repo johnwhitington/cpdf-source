@@ -8,32 +8,7 @@ let version_date = "(unreleased, 16th September 2014)"
 open Pdfutil
 open Pdfio
 
-(* Find the location of the cpdflin binary, either in a provided place (with
--cpdflin), or using argv[0] or in the current directory. *)
-let find_cpdflin provided =
-  match provided with
-    Some x -> Some x
-  | None ->
-      match Sys.argv.(0) with
-       "cpdf" ->
-          if Sys.file_exists "cpdflin" then Some "cpdflin" else None
-      | s ->
-          try
-            let fullname =
-              Filename.dirname s ^ Filename.dir_sep ^ "cpdflin"
-            in
-              if Sys.file_exists fullname then Some fullname else None
-          with
-            _ -> None
 
-(* Call cpdflin, given the (temp) input name, the output name, and the location
-of the cpdflin binary. Returns the exit code. *)
-let call_cpdflin cpdflin temp output best_password =
-  let command =
-    cpdflin ^ " " ^ Filename.quote temp ^
-    " \"" ^ best_password ^ "\" " ^ Filename.quote output
-  in
-    Sys.command command
 
 (* Wrap up the file reading functions to exit with code 1 when an encryption
 problem occurs. This happens when object streams are in an encrypted document
@@ -1809,12 +1784,12 @@ let really_write_pdf ?(encryption = None) mk_id pdf outname =
       false encryption mk_id pdf outname';
     if args.linearize then
       let cpdflin =
-        match find_cpdflin None with
+        match Cpdf.find_cpdflin None with
           Some x -> x
         | None -> raise (Pdf.PDFError "Could not find cpdflin")
       in
         let best_password = if args.owner <> "" then args.owner else args.user in
-          let code = call_cpdflin cpdflin outname' outname best_password in
+          let code = Cpdf.call_cpdflin cpdflin outname' outname best_password in
             begin try Sys.remove outname' with _ -> () end;
             if code > 0 then
               begin
@@ -3131,7 +3106,6 @@ let go () =
                      Pdfwrite.user_password = args.user;
                      Pdfwrite.permissions = banlist_of_args ()}
               in
-                Printf.printf "original filename: %s\n" args.original_filename;
                 Cpdf.split_pdf
                   enc args.printf_format args.original_filename args.chunksize args.linearize
                   args.preserve_objstm args.preserve_objstm (*yes--always create if preserving *)
