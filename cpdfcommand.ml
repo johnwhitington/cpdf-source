@@ -28,14 +28,15 @@ let find_cpdflin provided =
           with
             _ -> None
 
-let _ =
-  let cpdflin =
-    (match find_cpdflin None with
-      None -> "none"
-    | Some x -> x)
+(* Call cpdflin, given the (temp) input name, the output name, and the location
+of the cpdflin binary. Returns the exit code. *)
+let call_cpdflin cpdflin temp output best_password =
+  let command =
+    cpdflin ^ " " ^ Filename.quote temp ^
+    " \"" ^ best_password ^ "\" " ^ Filename.quote output
   in
-    print_endline cpdflin;
-    Sys.command cpdflin
+    print_endline command;
+    Sys.command command
 
 (* Wrap up the file reading functions to exit with code 1 when an encryption
 problem occurs. This happens when object streams are in an encrypted document
@@ -1811,10 +1812,28 @@ let write_pdf mk_id pdf =
           let pdf = Cpdf.recompress_pdf <| nobble pdf in
             if args.squeeze then Cpdf.squeeze pdf;
             Pdf.remove_unreferenced pdf;
-            Pdfwrite.pdf_to_file_options
-              ~preserve_objstm:args.preserve_objstm
-              ~generate_objstm:args.create_objstm
-              false (*FIXLIN args.linearize*) None mk_id pdf outname
+            let outname' =
+              if args.linearize
+                then Filename.temp_file "cpdflin" ".pdf"
+                else outname
+            in
+              Pdfwrite.pdf_to_file_options
+                ~preserve_objstm:args.preserve_objstm
+                ~generate_objstm:args.create_objstm
+                false None mk_id pdf outname';
+              let cpdflin =
+                match find_cpdflin None with
+                  Some x -> x
+                | None -> raise (Pdf.PDFError "Could not find cpdflin")
+              in
+                if args.linearize then
+                  let code = call_cpdflin cpdflin outname' outname "" in
+                    begin try Sys.remove outname' with _ -> () end;
+                    if code > 0 then
+                      begin
+                        begin try Sys.remove outname with _ -> () end;
+                        raise (Pdf.PDFError "linearizer failed")
+                      end
     | Stdout ->
         let pdf = Cpdf.recompress_pdf <| nobble pdf in
           if args.squeeze then Cpdf.squeeze pdf;
