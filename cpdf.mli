@@ -232,6 +232,7 @@ type position =
   | Right of float
   | Diagonal
   | ReverseDiagonal
+  | Centre
 
 (** Produce a debug string of a [position] *)
 val string_of_position : position -> string

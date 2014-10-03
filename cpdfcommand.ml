@@ -932,9 +932,12 @@ let setreversediagonal n =
   args.position <- Cpdf.ReverseDiagonal;
   args.justification <- Cpdf.CentreJustify
 
-(* FIXME: We will add a center option to text positioning, which can be used for this too *)
 let setcenter n =
-  args.position <- Cpdf.Diagonal;
+  args.position <- Cpdf.Centre;
+  args.justification <- Cpdf.CentreJustify
+
+let setscalecenter n =
+  args.position <- Cpdf.ReverseDiagonal;
   args.justification <- Cpdf.CentreJustify
 
 let setbates n =
@@ -1331,8 +1334,8 @@ and specs =
    ("-scale-contents",
       Arg.Float setscalecontents,
       "  Scale Contents by the given factor");
-   ("-center",
-      Arg.Float setcenter,
+   ("-scale-center",
+      Arg.Float setscalecenter,
       "  Scale contents around center");
    ("-scale-to-fit-scale",
       Arg.Float setscaletofitscale,
@@ -1510,6 +1513,9 @@ and specs =
    ("-reverse-diagonal",
       Arg.Unit setreversediagonal,
       " Place text diagonally across page from top left");
+   ("-center",
+      Arg.Unit setcenter,
+      " Place text in the center of the page");
    ("-justify-left",
       Arg.Unit setjustifyleft,
       " Justify multiline text left");

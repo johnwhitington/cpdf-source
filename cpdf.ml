@@ -1694,6 +1694,7 @@ type position =
   | Right of float
   | Diagonal
   | ReverseDiagonal
+  | Centre
 
 let string_of_position = function
   | PosCentre (a, b) -> Printf.sprintf "PosCentre %f %f" a b
@@ -1709,6 +1710,7 @@ let string_of_position = function
   | Right a -> Printf.sprintf "Right %f" a
   | Diagonal -> "Diagonal"
   | ReverseDiagonal -> "Reverse Diagonal"
+  | Centre -> "Centre"
 
 type orientation =
   | Horizontal
@@ -1719,53 +1721,53 @@ type justification = LeftJustify | CentreJustify | RightJustify
 
 (* Given the mediabox, calculate an absolute position for the text. *)
 let calculate_position ignore_d w (xmin, ymin, xmax, ymax) orientation pos =
-  (*i Printf.printf "calculate_position %b %f %f %f %f %f %b\n" ignore_d w xmin ymin xmax ymax shorterside; i*)
-    let rot = if orientation = VerticalDown then rad_of_deg 270. else 0. in
-      match pos with
-      | Diagonal ->
-          let angle = atan ((ymax -. ymin) /. (xmax -. xmin))
-          in let cx, cy = (xmax +. xmin) /. 2., (ymax +. ymin) /. 2. in
-            let dl = w /. 2. in
-              let dx = dl *. cos angle
-              in let dy = dl *. sin angle in
-                (*i Printf.printf "Diagonal: angle = %f, cx = %f, cy = %f, dx = %f, dy = %f\n" angle cx cy dx dy; i*)
-                cx -. dx, cy -. dy, angle
-      | ReverseDiagonal ->
-          (*flprint "REVERSE DIAGONAL IN CALCULATE POSITION\n";*)
-          let angle = atan ((ymax -. ymin) /. (xmax -. xmin))
-          in let cx, cy = (xmax +. xmin) /. 2., (ymax +. ymin) /. 2. in
-            let dl = w /. 2. in
-              let dx = dl *. cos angle
-              in let dy = dl *. sin angle in
-                (*Printf.printf "Diagonal: angle = %f\n" (deg_of_rad angle);*)
-                cx -. dx, (ymax +. ymin) -. (cy -. dy), angle -. ((2. *. pi) -. ((pi -. (2. *. angle)) *. 2.) /. 2.) +. pi
-      | PosLeft (x, y) -> xmin +. x, ymin +. y, rot
-      | PosCentre (x, y) -> xmin +. x -. (w /. 2.), ymin +. y, rot
-      | PosRight (x, y) -> xmin +. x -. w, ymin +. y, rot
-      | Top d ->
-          let d = if ignore_d then 0. else d in
-            (xmin +. xmax) /. 2. -. w /. 2., ymax -. d, rot
-      | TopLeft d ->
-          let d = if ignore_d then 0. else d in
-            xmin +. d, ymax -. d, rot
-      | TopRight d ->
-          let d = if ignore_d then 0. else d in
-          xmax -. d -. w, ymax -. d, rot
-      | Left d ->
-          let d = if ignore_d then 0. else d in
-            xmin +. d, (ymax +. ymin) /. 2., rot
-      | BottomLeft d ->
-          let d = if ignore_d then 0. else d in
-            xmin +. d, ymin +. d, rot
-      | Bottom d ->
-          let d = if ignore_d then 0. else d in
-            (xmin +. xmax) /. 2. -. w /. 2., ymin +. d, rot
-      | BottomRight d ->
-          let d = if ignore_d then 0. else d in
-            xmax -. d -. w, ymin +. d, rot
-      | Right d ->
-          let d = if ignore_d then 0. else d in
-            xmax -. d -. w, (ymax +. ymin) /. 2., rot
+  let rot = if orientation = VerticalDown then rad_of_deg 270. else 0. in
+    match pos with
+    | Centre ->
+        (xmin +. xmax) /. 2. -. w /. 2.,
+        (ymin +. ymax) /. 2.,
+        rot
+    | Diagonal ->
+        let angle = atan ((ymax -. ymin) /. (xmax -. xmin))
+        in let cx, cy = (xmax +. xmin) /. 2., (ymax +. ymin) /. 2. in
+          let dl = w /. 2. in
+            let dx = dl *. cos angle
+            in let dy = dl *. sin angle in
+              cx -. dx, cy -. dy, angle
+    | ReverseDiagonal ->
+        let angle = atan ((ymax -. ymin) /. (xmax -. xmin))
+        in let cx, cy = (xmax +. xmin) /. 2., (ymax +. ymin) /. 2. in
+          let dl = w /. 2. in
+            let dx = dl *. cos angle
+            in let dy = dl *. sin angle in
+              cx -. dx, (ymax +. ymin) -. (cy -. dy), angle -. ((2. *. pi) -. ((pi -. (2. *. angle)) *. 2.) /. 2.) +. pi
+    | PosLeft (x, y) -> xmin +. x, ymin +. y, rot
+    | PosCentre (x, y) -> xmin +. x -. (w /. 2.), ymin +. y, rot
+    | PosRight (x, y) -> xmin +. x -. w, ymin +. y, rot
+    | Top d ->
+        let d = if ignore_d then 0. else d in
+          (xmin +. xmax) /. 2. -. w /. 2., ymax -. d, rot
+    | TopLeft d ->
+        let d = if ignore_d then 0. else d in
+          xmin +. d, ymax -. d, rot
+    | TopRight d ->
+        let d = if ignore_d then 0. else d in
+        xmax -. d -. w, ymax -. d, rot
+    | Left d ->
+        let d = if ignore_d then 0. else d in
+          xmin +. d, (ymax +. ymin) /. 2., rot
+    | BottomLeft d ->
+        let d = if ignore_d then 0. else d in
+          xmin +. d, ymin +. d, rot
+    | Bottom d ->
+        let d = if ignore_d then 0. else d in
+          (xmin +. xmax) /. 2. -. w /. 2., ymin +. d, rot
+    | BottomRight d ->
+        let d = if ignore_d then 0. else d in
+          xmax -. d -. w, ymin +. d, rot
+    | Right d ->
+        let d = if ignore_d then 0. else d in
+          xmax -. d -. w, (ymax +. ymin) /. 2., rot
 
 (* Process UTF8 text to /WinAnsiEncoding string. *)
 let winansi_of_utf8 s =
@@ -1861,7 +1863,7 @@ let find_justification_offsets longest_w w position = function
   | LeftJustify ->
       begin match position with
       | TopLeft _ | Left _ | PosLeft _ | BottomLeft _ -> 0.
-      | Top _ | PosCentre _ | Bottom _ -> (longest_w -. w) /. 2.
+      | Top _ | PosCentre _ | Bottom _ | Centre -> (longest_w -. w) /. 2.
       | TopRight _ | BottomRight _ | PosRight _ | Right _ -> longest_w -. w
       | Diagonal -> 0.
       | ReverseDiagonal -> 0.
@@ -1869,7 +1871,7 @@ let find_justification_offsets longest_w w position = function
   | RightJustify ->
       begin match position with
       | TopLeft _ | Left _ | PosLeft _ | BottomLeft _ -> ~-.(longest_w -. w)
-      | Top _ | PosCentre _ | Bottom _ -> ~-.((longest_w -. w) /. 2.)
+      | Top _ | PosCentre _ | Bottom _ | Centre -> ~-.((longest_w -. w) /. 2.)
       | TopRight _ | BottomRight _ | PosRight _ | Right _ -> 0.
       | Diagonal -> 0.
       | ReverseDiagonal -> 0.
@@ -1877,7 +1879,7 @@ let find_justification_offsets longest_w w position = function
   | CentreJustify ->
       begin match position with
       | TopLeft _ | Left _ | PosLeft _ | BottomLeft _ -> ~-.((longest_w -. w) /. 2.)
-      | Top _ | PosCentre _ | Bottom _ -> 0.
+      | Top _ | PosCentre _ | Bottom _ | Centre -> 0.
       | TopRight _ | BottomRight _ | PosRight _ | Right _ -> (longest_w -. w) /. 2.
       | Diagonal -> 0.
       | ReverseDiagonal -> 0.
