@@ -324,6 +324,15 @@ option to the command line, in addition to any other command being used. For exa
 \noindent Linearize the file \texttt{in.pdf}, writing to \texttt{out.pdf}.
 \end{framed}
 
+\noindent This requires the existence of the external program \texttt{cpdflin} which is provided with \texttt{cpdf}. For Unix and Mac OS X, and for Windows under Cygwin or Mingw, it suffices to place the \texttt{cpdflin} executable in the same folder as \texttt{cpdf}. On Windows with \texttt{command.exe}, you must use \texttt{-cpdflin} to let \texttt{cpdf} know where to find it:
+
+\begin{framed}
+\small\verb!cpdf.exe -cpdflin "C:\\cpdflin.exe" -l in.pdf -o out.pdf!
+
+\vspace{2.5mm}
+\noindent Linearize the file \texttt{in.pdf}, writing to \texttt{out.pdf}.
+\end{framed}
+
 \section{Object Streams}
 PDF 1.5 introduced a new mechanism for storing objects to save space: object streams. by default, \texttt{cpdf} will preserve object streams in input files, creating no more. To prevent the retention of existing object streams, use \texttt{-no-preserve-objstm}:
 

@@ -1084,7 +1084,11 @@ let setextractimages () =
 
 (* Explicitly add a range. Parse it and replace the top input file with the range. *)
 let setrange spec =
-  args.dashrange <- spec
+  args.dashrange <- spec;
+  match args.inputs with
+    (StdIn, a, b, c, d)::more ->
+      args.inputs <- (StdIn, spec, b, c, d) :: more
+  | x -> ()
 
 let setoutline () =
   args.outline <- true

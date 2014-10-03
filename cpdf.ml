@@ -108,7 +108,6 @@ let squeeze_form_xobject pdf objnum =
   let obj = Pdf.lookup_obj pdf objnum in
     match Pdf.lookup_direct pdf "/Subtype" obj with
       Some (Pdf.Name "/Form") ->
-        Printf.printf "squeeze_form_xobject at object %i\n%!" objnum;
         let resources =
           match Pdf.lookup_direct pdf "/Resources" obj with
             Some d -> d
@@ -166,7 +165,8 @@ let squeeze_all_content_streams pdf =
                       d "/Contents" (Pdf.Indirect (Pdf.addobj pdf newstream))
                   in
                     Pdf.addobj_given_num pdf (objnum, newdict);
-                    (* Now process all xobjects related to this page *)
+                    (* Now process all xobjects related to this page
+                    FIXME due to their shared nature, we are overdoing this work! *)
                     begin match Pdf.lookup_direct pdf "/XObject" resources with
                       Some (Pdf.Dictionary xobjs) ->
                         iter
@@ -195,7 +195,7 @@ let squeeze pdf =
       n := Pdf.objcard pdf;
       Printf.printf "Squeezing... Down to %i objects\n%!" (Pdf.objcard pdf);
     done;
-    Printf.printf "Squeezing page data\n%!";
+    Printf.printf "Squeezing page data and xobjects\n%!";
     squeeze_all_content_streams pdf;
     Printf.printf "Recompressing document\n%!";
     ignore (recompress_pdf pdf)
