@@ -198,6 +198,7 @@ let squeeze pdf =
     Printf.printf "Squeezing page data and xobjects\n%!";
     squeeze_all_content_streams pdf;
     Printf.printf "Recompressing document\n%!";
+    Pdfcodec.flate_level := 9;
     ignore (recompress_pdf pdf)
   with
     e -> raise (Pdf.PDFError "Squeeze failed. No output written")
