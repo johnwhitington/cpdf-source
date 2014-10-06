@@ -14,6 +14,23 @@ exception HardError of string
 (** Two exceptions recommended for use with the library, though currently not
 raised by any function in this module. Cpdfcommand uses them extensively. *)
 
+(** Possible positions for adding text and other uses. See cpdfmanual.pdf *)
+type position =
+  | PosCentre of float * float
+  | PosLeft of float * float
+  | PosRight of float * float
+  | Top of float
+  | TopLeft of float
+  | TopRight of float
+  | Left of float
+  | BottomLeft of float
+  | Bottom of float
+  | BottomRight of float
+  | Right of float
+  | Diagonal
+  | ReverseDiagonal
+  | Centre
+
 (** {2 Debug} *)
 
 (** Debug: Print out a PDF in readable form to the terminal *)
@@ -178,10 +195,10 @@ swapped.  If [fast] is true, the PDFs are assumed to be well-formed and no
 fixes are done. *)
 val combine_pages : bool -> Pdf.t -> Pdf.t -> bool -> bool -> bool -> Pdf.t
 
-(** [stamp scale_to_fit fast isover range over pdf] stamps the first page of
+(** [stamp scale_to_fit position fast isover range over pdf] stamps the first page of
 [over] over each page of the PDF. The arguments have the same meaning as in
 [combine_pages]. *)
-val stamp : bool -> bool -> bool -> int list -> Pdf.t -> Pdf.t -> Pdf.t
+val stamp : position -> bool -> bool -> bool -> int list -> Pdf.t -> Pdf.t -> Pdf.t
 
 (** {2 Splitting PDFs} *)
 
@@ -217,22 +234,6 @@ val list_fonts : Pdf.t -> (int * string * string * string * string) list
 (** Expand the string "now" to a PDF date string, ignoring any other string *)
 val expand_date : string -> string
 
-(** Possible positions for adding text and other uses. See cpdfmanual.pdf *)
-type position =
-  | PosCentre of float * float
-  | PosLeft of float * float
-  | PosRight of float * float
-  | Top of float
-  | TopLeft of float
-  | TopRight of float
-  | Left of float
-  | BottomLeft of float
-  | Bottom of float
-  | BottomRight of float
-  | Right of float
-  | Diagonal
-  | ReverseDiagonal
-  | Centre
 
 (** Produce a debug string of a [position] *)
 val string_of_position : position -> string

@@ -6,6 +6,7 @@
 % Explain page labels in -page-info
 % Correct the documentation for -diagonal and -reverse-diagonal
 % Explain octal escape sequences in meta fields with -raw
+% is scale_to_fit in do_stamp documented?
 
 \documentclass[a4paper,makeidx]{memoir}
 \usepackage{palatino}
@@ -1160,7 +1161,9 @@ writing to \texttt{out.pdf}. A watermark should go underneath each page:
     \small\verb!cpdf -stamp-under topsecret.pdf in.pdf -o out.pdf!
   \end{framed}
 
-  \noindent The \texttt{-combine-pages} operation takes two PDF files and stamps each
+\noindent The position commands in \Sref{position} can be used to locate the stamp more precisely (they are calculated relative to the crop box of the stamp). Or, preprocess the stamp with \texttt{-shift} first.
+
+  The \texttt{-combine-pages} operation takes two PDF files and stamps each
 page of one over each page of the other. The length of the output is the same
 as the length of the ``under'' file. For instance:
   \begin{framed}

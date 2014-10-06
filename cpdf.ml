@@ -1233,156 +1233,7 @@ let list_bookmarks encoding range pdf output =
                    (if mark.Pdfmarks.isopen then "open" else "")))
             inrange
 
-(* \section{Stamping files} *)
 (* o is the stamp, u is the main pdf page *)
-let do_stamp fast scale_to_fit isover pdf o u opdf =
-  (* Scale page stamp o to fit page u *)
-  let o =
-    if scale_to_fit then
-      let sxmin, symin, sxmax, symax =
-        Pdf.parse_rectangle
-          (match Pdf.lookup_direct pdf "/CropBox" o.Pdfpage.rest with | Some r -> r | None -> o.Pdfpage.mediabox)
-      in let txmin, tymin, txmax, tymax =
-        Pdf.parse_rectangle
-          (match Pdf.lookup_direct pdf "/CropBox" u.Pdfpage.rest with | Some r -> r | None -> u.Pdfpage.mediabox)
-      in
-        let xmag = (txmax -. txmin) /. (sxmax -. sxmin)
-        in let ymag = (tymax -. tymin) /. (symax -. symin) in
-          let scale =
-            if xmag < 0.999 && ymag < 0.999 then
-              if xmag > ymag then xmag else ymag
-            else if xmag >= 1.001 && ymag >= 1.001 then
-              if xmag > ymag then ymag else xmag
-            else if xmag >= 1.001 then ymag
-            else xmag
-          in
-            let dx = txmin +. ((txmax -. txmin) -. (sxmax -. sxmin) *. scale) /. 2.
-            in let dy = tymin +. ((tymax -. tymin) -. (symax -. symin) *. scale) /. 2. in
-              let scale_op =
-                Pdfops.Op_cm
-                  (Pdftransform.matrix_of_transform
-                     [Pdftransform.Translate (dx, dy);
-                      Pdftransform.Scale ((sxmin, symin), scale, scale)])
-              in
-                Pdfpage.prepend_operators opdf [scale_op] ~fast o
-    else
-      o
-  in
-    {u with
-       Pdfpage.content =
-         (if isover then ( @ ) else ( @@ ))
-         [protect_removeme pdf u.Pdfpage.resources u.Pdfpage.content]
-           [protect_removeme pdf o.Pdfpage.resources o.Pdfpage.content];
-       Pdfpage.resources =
-         combine_pdf_resources pdf u.Pdfpage.resources o.Pdfpage.resources}
-
-(* Alter bookmark destinations given a hash table of (old page reference
- * number, new page reference number) pairings *)
-let change_destination t = function
-   Pdfdest.XYZ (Pdfdest.PageObject p, a, b, c) ->
-     Pdfdest.XYZ (Pdfdest.PageObject (Hashtbl.find t p), a, b, c)
- | Pdfdest.Fit (Pdfdest.PageObject p) ->
-     Pdfdest.Fit (Pdfdest.PageObject (Hashtbl.find t p))
- | Pdfdest.FitH (Pdfdest.PageObject p, x) ->
-     Pdfdest.FitH (Pdfdest.PageObject (Hashtbl.find t p), x)
- | Pdfdest.FitV (Pdfdest.PageObject p, x) ->
-     Pdfdest.FitV (Pdfdest.PageObject (Hashtbl.find t p), x)
- | Pdfdest.FitR (Pdfdest.PageObject p, a, b, c, d) ->
-     Pdfdest.FitR (Pdfdest.PageObject (Hashtbl.find t p), a, b, c, d)
- | Pdfdest.FitB (Pdfdest.PageObject p) ->
-     Pdfdest.Fit (Pdfdest.PageObject (Hashtbl.find t p))
- | Pdfdest.FitBH (Pdfdest.PageObject p, x) ->
-     Pdfdest.FitBH (Pdfdest.PageObject (Hashtbl.find t p), x)
- | Pdfdest.FitBV (Pdfdest.PageObject p, x) ->
-     Pdfdest.FitBV (Pdfdest.PageObject (Hashtbl.find t p), x)
- | x -> x
-
-let change_bookmark t m =
-  {m with Pdfmarks.target =
-    try change_destination t m.Pdfmarks.target with Not_found -> m.Pdfmarks.target}
-
-let stamp (fast : bool) scale_to_fit isover range over pdf =
-  let marks = Pdfmarks.read_bookmarks pdf in
-  let marks_refnumbers = Pdf.page_reference_numbers pdf in
-  let pdf = Pdfmarks.remove_bookmarks pdf in
-  let over = Pdfmarks.remove_bookmarks over in
-  let pageseqs = ilist 1 (Pdfpage.endpage pdf) in
-    let over_firstpage_pdf =
-      match Pdfpage.pages_of_pagetree over with
-      | [] -> error "empty PDF"
-      | h::_ -> Pdfpage.change_pages true over [h]
-    in
-      let merged =
-        Pdfmerge.merge_pdfs
-          ~rotations:[Pdfmerge.DNR; Pdfmerge.DNR]
-          false false ["a"; "b"] [pdf; over_firstpage_pdf] [pageseqs; [1]]
-      in
-        let renamed_pdf =
-          Pdfpage.change_pages true
-            merged (Pdfpage.renumber_pages merged (Pdfpage.pages_of_pagetree merged))
-        in
-          let renamed_pages = Pdfpage.pages_of_pagetree renamed_pdf in
-            let under_pages, over_page =
-              all_but_last renamed_pages, last renamed_pages
-            in
-              let new_pages =
-                map2
-                  (fun pageseq under_page ->
-                    do_stamp fast scale_to_fit isover renamed_pdf
-                    (if mem pageseq range then over_page else
-                      Pdfpage.blankpage Pdfpaper.a4)
-                    under_page over)
-                  pageseqs
-                  under_pages 
-              in
-                let changed = Pdfpage.change_pages true renamed_pdf new_pages in
-                let new_refnumbers = Pdf.page_reference_numbers changed in
-                let changetable = hashtable_of_dictionary (List.combine marks_refnumbers new_refnumbers) in
-                let new_marks = map (change_bookmark changetable) marks in
-                Pdfmarks.add_bookmarks new_marks changed
-
-(* Combine pages from two PDFs. For now, assume equal length. *)
-
-(* If [over] has more pages than [under], chop the excess. If the converse, pad
-[over] to the same length *)
-let equalize_pages under over =
-  let length_under = Pdfpage.endpage under
-  in let length_over = Pdfpage.endpage over
-  in
-    if length_over > length_under then
-      under,
-      (Pdfpage.change_pages true over (take (Pdfpage.pages_of_pagetree over) length_under))
-    else if length_under > length_over then
-      under,
-      Pdfpage.change_pages true
-        over
-        (Pdfpage.pages_of_pagetree over @
-           (many (Pdfpage.blankpage Pdfpaper.a4) (length_under - length_over)))
-    else
-      under, over
-
-let combine_pages (fast : bool) under over scaletofit swap equalize =
-  let marks_under = Pdfmarks.read_bookmarks under in
-  let marks_over = Pdfmarks.read_bookmarks over in
-  let under, over = if equalize then equalize_pages under over else under, over in
-    let under_length = Pdfpage.endpage under
-    in let over_length = Pdfpage.endpage over in
-      if under_length <> over_length then raise (Pdf.PDFError "combine_pages: not of equal length") else
-      let pageseqs_under = ilist 1 (Pdfpage.endpage under)
-      in let pageseqs_over = ilist 1 (Pdfpage.endpage over) in
-        let merged =
-          Pdfmerge.merge_pdfs ~rotations: [Pdfmerge.DNR; Pdfmerge.DNR] false false ["a"; "b"] [under; over] [pageseqs_under; pageseqs_over] in
-          let renamed_pdf =
-            Pdfpage.change_pages true
-              merged (Pdfpage.renumber_pages merged (Pdfpage.pages_of_pagetree merged))
-          in
-            let under_pages, over_pages =
-              cleave (Pdfpage.pages_of_pagetree renamed_pdf) under_length
-            in
-              let new_pages =
-                map2 (fun o u -> do_stamp fast scaletofit (not swap) renamed_pdf o u over) over_pages under_pages
-              in
-                Pdfmarks.add_bookmarks (marks_under @ marks_over) (Pdfpage.change_pages true renamed_pdf new_pages)
 
 (* \section{Split at bookmarks} *)
 
@@ -1627,56 +1478,6 @@ let print_fonts pdf =
   flprint
     (fold_left ( ^ ) "" (map string_of_font (list_fonts pdf)))
 
-(* \section{Nobbling for Demo Version} *)
-let nobble_page pdf _ page =
-  let minx, miny, maxx, maxy =
-    (* Use cropbox if available *)
-    Pdf.parse_rectangle
-      (match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
-       | Some r -> r
-       | None -> page.Pdfpage.mediabox)
-  in
-    let fontdict =
-      match Pdf.lookup_direct pdf "/Font" page.Pdfpage.resources with
-      | None -> Pdf.Dictionary []
-      | Some d -> d
-    in
-      let fontname = Pdf.unique_key "F" fontdict in
-    let width = maxx -. minx in let height = maxy -. miny in
-      let scalex =
-        (width *. 1000.) /. float (Pdfstandard14.textwidth false Pdftext.Helvetica "DEMO")
-      in
-        let page' =
-          let font =
-            Pdf.Dictionary
-              [("/Type", Pdf.Name "/Font");
-               ("/Subtype", Pdf.Name "/Type1");
-               ("/BaseFont", Pdf.Name "/Helvetica")]
-          in let ops =
-            [Pdfops.Op_BMC "/CPDFSTAMP";
-             Pdfops.Op_cm
-               (Pdftransform.matrix_of_transform
-                  [Pdftransform.Translate (minx, miny +. height /. 2.)]);
-             Pdfops.Op_gs "/gs0";
-             Pdfops.Op_BT;
-             Pdfops.Op_Tf (fontname, scalex);
-             Pdfops.Op_Tj "DEMO";
-             Pdfops.Op_ET;
-             Pdfops.Op_EMC]
-          in
-            {(Pdfpage.blankpage Pdfpaper.a4) with
-                Pdfpage.mediabox = page.Pdfpage.mediabox;
-                Pdfpage.content = [Pdfops.stream_of_ops ops];
-                Pdfpage.resources =
-                  Pdf.Dictionary
-                    [("/Font", Pdf.Dictionary [(fontname, font)]);
-                     ("/ExtGState", Pdf.Dictionary
-                        ["/gs0",
-                        Pdf.Dictionary["/Type", Pdf.Name "/ExtGState"; "/ca", Pdf.Real 0.2]]);
-                    ]
-            }
-        in
-          do_stamp false false true pdf page' page (Pdf.empty ())
 
 (* \section{Superimpose text, page numbers etc.} *)
 
@@ -2396,6 +2197,230 @@ let hflip_pdf ?(fast=false) pdf range =
       (Pdftransform.Scale (((minx +. maxx) /. 2., 0.), -.1., 1.))
   in
     process_pages (flip_page ~fast transform_op pdf) pdf range
+
+let stamp_shift_of_position sw sh w h p =
+  let half x = x /. 2. in
+    match p with
+    | PosCentre (ox, oy) -> ox -. half sw, oy
+    | PosLeft (ox, oy) -> ox, oy
+    | PosRight (ox, oy) -> ox -. sw, oy
+    | Top o -> half w -. half sw, h -. o -. sh
+    | TopLeft o -> o, h -. sh -. o
+    | TopRight o -> w -. sw -. o, h -. sh -. o
+    | Left o -> o, half h -. half sh
+    | BottomLeft o -> o, o
+    | Bottom o -> half w -. half sw, o
+    | BottomRight o -> w -. sw, o 
+    | Right o -> w -. sw -. o, half h -. half sh
+    | Diagonal | ReverseDiagonal | Centre -> half w -. half sw, half h -. half sh
+
+let do_stamp fast position scale_to_fit isover pdf o u opdf =
+  (* Scale page stamp o to fit page u *)
+  let sxmin, symin, sxmax, symax =
+    Pdf.parse_rectangle
+      (match Pdf.lookup_direct pdf "/CropBox" o.Pdfpage.rest with | Some r -> r | None -> o.Pdfpage.mediabox)
+  in let txmin, tymin, txmax, tymax =
+    Pdf.parse_rectangle
+      (match Pdf.lookup_direct pdf "/CropBox" u.Pdfpage.rest with | Some r -> r | None -> u.Pdfpage.mediabox)
+  in
+    let o =
+      if scale_to_fit then
+        let xmag = (txmax -. txmin) /. (sxmax -. sxmin) in
+          let ymag = (tymax -. tymin) /. (symax -. symin) in
+            let scale =
+              if xmag < 0.999 && ymag < 0.999 then
+                if xmag > ymag then xmag else ymag
+              else if xmag >= 1.001 && ymag >= 1.001 then
+                if xmag > ymag then ymag else xmag
+              else if xmag >= 1.001 then ymag
+              else xmag
+            in
+              let dx = txmin +. ((txmax -. txmin) -. (sxmax -. sxmin) *. scale) /. 2. in
+                let dy = tymin +. ((tymax -. tymin) -. (symax -. symin) *. scale) /. 2. in
+                  let scale_op =
+                    Pdfops.Op_cm
+                      (Pdftransform.matrix_of_transform
+                         [Pdftransform.Translate (dx, dy);
+                          Pdftransform.Scale ((sxmin, symin), scale, scale)])
+                  in
+                    Pdfpage.prepend_operators pdf [scale_op] ~fast o
+      else
+        let sw = sxmax -. sxmin
+        and sh = symax -. symin
+        and w = txmax -. txmin
+        and h = tymax -. tymin in
+          let dx, dy = stamp_shift_of_position sw sh w h position in
+            let translate_op =
+              Pdfops.Op_cm
+                (Pdftransform.matrix_of_transform [Pdftransform.Translate (dx, dy)])
+            in
+              Pdfpage.prepend_operators pdf [translate_op] ~fast o
+    in
+      {u with
+         Pdfpage.content =
+           (if isover then ( @ ) else ( @@ ))
+           [protect_removeme pdf u.Pdfpage.resources u.Pdfpage.content]
+             [protect_removeme pdf o.Pdfpage.resources o.Pdfpage.content];
+         Pdfpage.resources =
+           combine_pdf_resources pdf u.Pdfpage.resources o.Pdfpage.resources}
+
+(* Alter bookmark destinations given a hash table of (old page reference
+ * number, new page reference number) pairings *)
+let change_destination t = function
+   Pdfdest.XYZ (Pdfdest.PageObject p, a, b, c) ->
+     Pdfdest.XYZ (Pdfdest.PageObject (Hashtbl.find t p), a, b, c)
+ | Pdfdest.Fit (Pdfdest.PageObject p) ->
+     Pdfdest.Fit (Pdfdest.PageObject (Hashtbl.find t p))
+ | Pdfdest.FitH (Pdfdest.PageObject p, x) ->
+     Pdfdest.FitH (Pdfdest.PageObject (Hashtbl.find t p), x)
+ | Pdfdest.FitV (Pdfdest.PageObject p, x) ->
+     Pdfdest.FitV (Pdfdest.PageObject (Hashtbl.find t p), x)
+ | Pdfdest.FitR (Pdfdest.PageObject p, a, b, c, d) ->
+     Pdfdest.FitR (Pdfdest.PageObject (Hashtbl.find t p), a, b, c, d)
+ | Pdfdest.FitB (Pdfdest.PageObject p) ->
+     Pdfdest.Fit (Pdfdest.PageObject (Hashtbl.find t p))
+ | Pdfdest.FitBH (Pdfdest.PageObject p, x) ->
+     Pdfdest.FitBH (Pdfdest.PageObject (Hashtbl.find t p), x)
+ | Pdfdest.FitBV (Pdfdest.PageObject p, x) ->
+     Pdfdest.FitBV (Pdfdest.PageObject (Hashtbl.find t p), x)
+ | x -> x
+
+let change_bookmark t m =
+  {m with Pdfmarks.target =
+    try change_destination t m.Pdfmarks.target with Not_found -> m.Pdfmarks.target}
+
+let stamp position fast scale_to_fit isover range over pdf =
+  let marks = Pdfmarks.read_bookmarks pdf in
+  let marks_refnumbers = Pdf.page_reference_numbers pdf in
+  let pdf = Pdfmarks.remove_bookmarks pdf in
+  let over = Pdfmarks.remove_bookmarks over in
+  let pageseqs = ilist 1 (Pdfpage.endpage pdf) in
+    let over_firstpage_pdf =
+      match Pdfpage.pages_of_pagetree over with
+      | [] -> error "empty PDF"
+      | h::_ -> Pdfpage.change_pages true over [h]
+    in
+      let merged =
+        Pdfmerge.merge_pdfs
+          ~rotations:[Pdfmerge.DNR; Pdfmerge.DNR]
+          false false ["a"; "b"] [pdf; over_firstpage_pdf] [pageseqs; [1]]
+      in
+        let renamed_pdf =
+          Pdfpage.change_pages true
+            merged (Pdfpage.renumber_pages merged (Pdfpage.pages_of_pagetree merged))
+        in
+          let renamed_pages = Pdfpage.pages_of_pagetree renamed_pdf in
+            let under_pages, over_page =
+              all_but_last renamed_pages, last renamed_pages
+            in
+              let new_pages =
+                map2
+                  (fun pageseq under_page ->
+                    do_stamp fast position scale_to_fit isover renamed_pdf
+                    (if mem pageseq range then over_page else
+                      Pdfpage.blankpage Pdfpaper.a4)
+                    under_page over)
+                  pageseqs
+                  under_pages 
+              in
+                let changed = Pdfpage.change_pages true renamed_pdf new_pages in
+                let new_refnumbers = Pdf.page_reference_numbers changed in
+                let changetable = hashtable_of_dictionary (List.combine marks_refnumbers new_refnumbers) in
+                let new_marks = map (change_bookmark changetable) marks in
+                Pdfmarks.add_bookmarks new_marks changed
+
+(* Combine pages from two PDFs. For now, assume equal length. *)
+
+(* If [over] has more pages than [under], chop the excess. If the converse, pad
+[over] to the same length *)
+let equalize_pages under over =
+  let length_under = Pdfpage.endpage under
+  in let length_over = Pdfpage.endpage over
+  in
+    if length_over > length_under then
+      under,
+      (Pdfpage.change_pages true over (take (Pdfpage.pages_of_pagetree over) length_under))
+    else if length_under > length_over then
+      under,
+      Pdfpage.change_pages true
+        over
+        (Pdfpage.pages_of_pagetree over @
+           (many (Pdfpage.blankpage Pdfpaper.a4) (length_under - length_over)))
+    else
+      under, over
+
+let combine_pages (fast : bool) under over scaletofit swap equalize =
+  let marks_under = Pdfmarks.read_bookmarks under in
+  let marks_over = Pdfmarks.read_bookmarks over in
+  let under, over = if equalize then equalize_pages under over else under, over in
+    let under_length = Pdfpage.endpage under
+    in let over_length = Pdfpage.endpage over in
+      if under_length <> over_length then raise (Pdf.PDFError "combine_pages: not of equal length") else
+      let pageseqs_under = ilist 1 (Pdfpage.endpage under)
+      in let pageseqs_over = ilist 1 (Pdfpage.endpage over) in
+        let merged =
+          Pdfmerge.merge_pdfs ~rotations: [Pdfmerge.DNR; Pdfmerge.DNR] false false ["a"; "b"] [under; over] [pageseqs_under; pageseqs_over] in
+          let renamed_pdf =
+            Pdfpage.change_pages true
+              merged (Pdfpage.renumber_pages merged (Pdfpage.pages_of_pagetree merged))
+          in
+            let under_pages, over_pages =
+              cleave (Pdfpage.pages_of_pagetree renamed_pdf) under_length
+            in
+              let new_pages =
+                map2 (fun o u -> do_stamp fast (BottomLeft 0.) scaletofit (not swap) renamed_pdf o u over) over_pages under_pages
+              in
+                Pdfmarks.add_bookmarks (marks_under @ marks_over) (Pdfpage.change_pages true renamed_pdf new_pages)
+
+let nobble_page pdf _ page =
+  let minx, miny, maxx, maxy =
+    (* Use cropbox if available *)
+    Pdf.parse_rectangle
+      (match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
+       | Some r -> r
+       | None -> page.Pdfpage.mediabox)
+  in
+    let fontdict =
+      match Pdf.lookup_direct pdf "/Font" page.Pdfpage.resources with
+      | None -> Pdf.Dictionary []
+      | Some d -> d
+    in
+      let fontname = Pdf.unique_key "F" fontdict in
+    let width = maxx -. minx in let height = maxy -. miny in
+      let scalex =
+        (width *. 1000.) /. float (Pdfstandard14.textwidth false Pdftext.Helvetica "DEMO")
+      in
+        let page' =
+          let font =
+            Pdf.Dictionary
+              [("/Type", Pdf.Name "/Font");
+               ("/Subtype", Pdf.Name "/Type1");
+               ("/BaseFont", Pdf.Name "/Helvetica")]
+          in let ops =
+            [Pdfops.Op_BMC "/CPDFSTAMP";
+             Pdfops.Op_cm
+               (Pdftransform.matrix_of_transform
+                  [Pdftransform.Translate (minx, miny +. height /. 2.)]);
+             Pdfops.Op_gs "/gs0";
+             Pdfops.Op_BT;
+             Pdfops.Op_Tf (fontname, scalex);
+             Pdfops.Op_Tj "DEMO";
+             Pdfops.Op_ET;
+             Pdfops.Op_EMC]
+          in
+            {(Pdfpage.blankpage Pdfpaper.a4) with
+                Pdfpage.mediabox = page.Pdfpage.mediabox;
+                Pdfpage.content = [Pdfops.stream_of_ops ops];
+                Pdfpage.resources =
+                  Pdf.Dictionary
+                    [("/Font", Pdf.Dictionary [(fontname, font)]);
+                     ("/ExtGState", Pdf.Dictionary
+                        ["/gs0",
+                        Pdf.Dictionary["/Type", Pdf.Name "/ExtGState"; "/ca", Pdf.Real 0.2]]);
+                    ]
+            }
+        in
+          do_stamp false (BottomLeft 0.) false true pdf page' page (Pdf.empty ())
 
 (* \section{Set media box} *)
 let set_mediabox x y w h pdf range =
