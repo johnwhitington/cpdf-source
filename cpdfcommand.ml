@@ -1444,6 +1444,9 @@ and specs =
    ("-stamp-under",
       Arg.String setstampunder,
       " Stamp a file under some pages of another");
+   ("-scale-stamp-to-fit",
+      Arg.Unit setscalestamptofit,
+      " Scale the stamp to fit the page");
    ("-combine-pages",
       Arg.String setcombinepages,
       " Combine two files by merging individual pages");
@@ -1735,7 +1738,7 @@ and specs =
    (* These items are for cpdftk *)
    ("-update-info", Arg.String setupdateinfo, "");
    ("-printf-format", Arg.Unit setprintfformat, "");
-   ("-scale-stamp-to-fit", Arg.Unit setscalestamptofit, "");
+
    ("-dump-data", Arg.Unit (setop DumpData), "");
    ("-keep-this-id", Arg.Unit setkeepthisid, "");
    ("-do-ask", Arg.Unit setdoask, "");

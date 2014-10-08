@@ -402,7 +402,8 @@ displayed on the screen. When a bad or inappropriate password is given, the exit
 \section{Control Files}
 \index{control file}
 \begin{framed}
-  \noindent\small\verb!cpdf -control <filename>!
+  \noindent\small\verb!cpdf -control <filename>!\\
+  \noindent\small\verb!cpdf -args <filename>!
 \end{framed}
 
 Some operating systems have a limit on the length of a command line. To
@@ -415,7 +416,10 @@ may be used to introduce a genuine quotation mark in such an argument.
 Several \verb!-control! arguments may be specified, and may be mixed in with
 conventional command-line arguments. The commands in each control file are
 considered in the order in which they are given, after all conventional
-arguements have been processed.
+arguments have been processed. It is recommended to use \texttt{-args} in all new applications. However, \texttt{-control} will be supported for legacy applications.
+
+To avoid interference between \texttt{-control} and \texttt{AND}, a new mechanism has been added. Using \texttt{-args} in place of \texttt{-control} will perform direct textual substitution of the file into the command line, prior to any other processing.
+
 
 \section{String Arguments}
 Command lines are handled differently on each operating system. Some
@@ -1153,6 +1157,8 @@ writing to \texttt{out.pdf}. A watermark should go underneath each page:
 
 \noindent The position commands in \Sref{position} can be used to locate the stamp more precisely (they are calculated relative to the crop box of the stamp). Or, preprocess the stamp with \texttt{-shift} first.
 
+The \texttt{-scale-to-fit-stamp} option can be added to scale the stamp to fit the page before applying it. The use of positioning commands together with \texttt{-scale-stamp-to-fit} is not recommended.
+
   The \texttt{-combine-pages} operation takes two PDF files and stamps each
 page of one over each page of the other. The length of the output is the same
 as the length of the ``under'' file. For instance:
@@ -1268,7 +1274,7 @@ The starting point can be set with the \texttt{-bates} option. For example:
       \small\verb!-bottomright 10! & Right of baseline 10 pts up and in from bottom right \\
       \small\verb!-right 10! & Right of baseline 10 pts in from the center right \\
       \small\verb!-diagonal! & Diagonal, bottom left to top right, centered on page\\
-      \small\verb!-reverse-diagonal! & Diagonal, bottom right to top left, centered on page\\    
+      \small\verb!-reverse-diagonal! & Diagonal, top left to bottom right, centered on page\\    
       \small\verb!-center! & Centered on page\\
     \end{tabular}
   \end{framed}
@@ -1566,6 +1572,10 @@ given page range.
     \noindent\verb!     -fit-window!\\
     \noindent\verb!     -center-window!\\
     \noindent\verb!     -display-doc-title!
+    
+    \vspace{1.5mm}
+    \small\noindent\verb!cpdf -open-at-page <page number> in.pdf -o out.pdf!\\
+    \noindent\verb!cpdf -open-at-page-fit <page number> in.pdf -o out.pdf!
 
     \vspace{1.5mm}
     \small\noindent\verb!cpdf -set-metadata <metadata-file> in.pdf -o out.pdf!
@@ -1645,13 +1655,14 @@ Appendix~\ref{dates}.
 By default, cpdf strips to ASCII, discarding character codes in excess of 127. In order to preserve the original unicode, add the \texttt{-utf8} option. To disable all postprocessing of the string, add \texttt{-raw}.
 
 \vspace{4mm}
-The \texttt{-page-info} option prints the media box and other boxes
-page-by-page to standard output:
+The \texttt{-page-info} option prints the page label, media box and other boxes
+page-by-page to standard output, for all pages in the current range.
 
 \begin{framed}
 \begin{verbatim}
 $cpdf -page-info 14psfonts.pdf
 Page 1:
+Label: i
 MediaBox: 0.000000 0.000000 600.000000 450.000000
 CropBox: 200.000000 200.000000 500.000000 500.000000
 BleedBox: 
@@ -1707,7 +1718,7 @@ at which the command is executed.)
     \small\verb!cpdf -set-title "A Night in London" in.pdf -o out.pdf!
   \end{framed}
 \noindent The text string is considered to be in UTF8 format, unless the \texttt{-raw}
-option is added---in which case, it is unprocessed.
+option is added---in which case, it is unprocessed, save for the replacement of any octal escape sequence such as \texttt{\textbackslash 017}, which is replaced by a character of its value (here, 15).
 
 \section{Upon Opening a Document}
 
@@ -1766,6 +1777,16 @@ document when first opened. The possible (case-sensitive) values are:
   \noindent For instance:
   \begin{framed}
     \small\verb!cpdf -hide-toolbar true in.pdf -o out.pdf!
+  \end{framed}
+
+The page a PDF file opens at can be set using \texttt{-open-at-page}:
+  \begin{framed}
+    \small\verb!cpdf -open-at-page 15 in.pdf -o out.pdf!
+  \end{framed}
+
+To have that page scaled to fit the window in the viewer, use \texttt{-open-at-page-fit} instead:
+  \begin{framed}
+    \small\verb!cpdf -open-at-page-fit 15 in.pdf -o out.pdf!
   \end{framed}
 
   \section{Metadata}
