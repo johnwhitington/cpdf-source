@@ -632,7 +632,7 @@ one of the output files.
   %\small\noindent\verb!cpdf -copy-cropbox-to-mediabox in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -frombox <boxname> -tobox <boxname> [-mediabox_if_missing]! \\
+  \small\noindent\verb!cpdf -frombox <boxname> -tobox <boxname> [-mediabox-if-missing]! \\
   \noindent\verb!     in.pdf [<range>] -o out.pdf!
   \end{framed}
 
@@ -1115,10 +1115,14 @@ the file using a different page range each time.
 \index{watermarks}
 \index{stamps}
   \begin{framed}
-  \noindent\small\verb!cpdf -stamp-on source.pdf in.pdf [<range>] -o out.pdf!
-
+  \noindent\small\verb!cpdf -stamp-on source.pdf!\\
+  \noindent\small\verb!     [-scale-to-fit-stamp] [positioning command] !\\
+  \noindent\small\verb!     in.pdf [<range>] -o out.pdf!
+  
   \vspace{1.5mm}
-  \noindent\small\verb!cpdf -stamp-under source.pdf in.pdf [<range>] -o out.pdf!
+  \noindent\small\verb!cpdf -stamp-on source.pdf!\\
+  \noindent\small\verb!     [-scale-to-fit-stamp] [positioning command] !\\
+  \noindent\small\verb!     in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
   \noindent\small\verb!cpdf -combine-pages over.pdf under.pdf -o out.pdf!
@@ -1206,7 +1210,7 @@ font size and color.
   \vspace{2mm}
   \noindent For example, the format \texttt{"Page~\%Page~of~\%EndPage"} might become "Page~5~of~17".
 
-  NB: In some circumstances (e.g in batch files) on Microsoft Windows, \% is a special character, and must be escaped (written as \verb$%%$). Consult your local documentation for details.
+  NB: In some circumstances (e.g in batch files) on Microsoft Windows, \verb!%! is a special character, and must be escaped (written as \verb$%%$). Consult your local documentation for details.
 
   \subsection{Date and Time Formats}
   \begin{ctabular}{ll}
