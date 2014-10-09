@@ -3,7 +3,22 @@ open Pdfutil
 open Pdfio
 
 (* Find the location of the cpdflin binary, either in a provided place (with
--cpdflin), or using argv[0] or in the current directory. *)
+-cpdflin), or in the current directory or in $PATH. *)
+let rec paths_of_chars prev = function
+   [] -> keep (fun x -> x <> "") (map implode (rev (map rev prev)))
+ | ':'::t -> paths_of_chars ([] :: prev) t
+ | h::t ->
+     match prev with
+       [] -> paths_of_chars [[h]] t
+     | ph::pt -> paths_of_chars ((h :: ph) :: pt) t
+
+let paths () =
+  paths_of_chars [] (explode (Sys.getenv "PATH"))
+
+let is_at_path file path =
+  let full = path ^ Filename.dir_sep ^ file in
+    if Sys.file_exists full then Some full else None
+
 let find_cpdflin provided =
   match provided with
     Some x -> Some x
@@ -12,13 +27,9 @@ let find_cpdflin provided =
        "cpdf" ->
           if Sys.file_exists "cpdflin" then Some "cpdflin" else None
       | s ->
-          try
-            let fullname =
-              Filename.dirname s ^ Filename.dir_sep ^ "cpdflin"
-            in
-              if Sys.file_exists fullname then Some fullname else None
-          with
-            _ -> None
+          match option_map (is_at_path "cpdflin") (paths ()) with
+            h::_ -> Some h
+          | _ -> None
 
 (* Call cpdflin, given the (temp) input name, the output name, and the location
 of the cpdflin binary. Returns the exit code. *)
