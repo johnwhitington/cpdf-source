@@ -23,13 +23,10 @@ let find_cpdflin provided =
   match provided with
     Some x -> Some x
   | None ->
-      match Sys.argv.(0) with
-       "cpdf" ->
-          if Sys.file_exists "cpdflin" then Some "cpdflin" else None
-      | s ->
-          match option_map (is_at_path "cpdflin") (paths ()) with
-            h::_ -> Some h
-          | _ -> None
+      if Sys.file_exists "cpdflin" then Some "cpdflin" else
+        match option_map (is_at_path "cpdflin") (paths ()) with
+          h::_ -> Some h
+        | _ -> None
 
 (* Call cpdflin, given the (temp) input name, the output name, and the location
 of the cpdflin binary. Returns the exit code. *)
