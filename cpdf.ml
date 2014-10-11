@@ -109,9 +109,13 @@ let really_squeeze pdf =
           pdf.Pdf.objects <- !pdfr.Pdf.objects;
           pdf.Pdf.trailerdict <- !pdfr.Pdf.trailerdict
 
-(* Squeeze the form xobject at objnum. FIXME: For old PDFs (< v1.2) any
-resources from the page (or its ancestors in the page tree!) are also needed -
-we must merge them with the ones from the xobject itself. *)
+(* Squeeze the form xobject at objnum.
+
+FIXME: For old PDFs (< v1.2) any resources from the page (or its ancestors in
+the page tree!) are also needed - we must merge them with the ones from the
+xobject itself. However, it it safe for now -- in the unlikely event that the
+resources actually need to be available, the parse will fail, the squeeze of
+this object will fail, and we bail out. *)
 let xobjects_done = ref []
 
 let squeeze_form_xobject pdf objnum =
@@ -142,60 +146,92 @@ let squeeze_form_xobject pdf objnum =
             end
       | _ -> ()
 
+(* For a list of indirects representing content streams, make sure that none of
+them are duplicated in the PDF. This indicates sharing, which parsing and
+rewriting the streams might destroy, thus making the file bigger. FIXME: The
+correct thing to do is to preserve the multiple content streams. *)
+let no_duplicates content_stream_numbers stream_numbers =
+  not
+    (mem false
+       (map
+         (fun n -> length (keep (eq n) content_stream_numbers) < 2)
+         stream_numbers))
+
+(* Give a list of content stream numbers, given a page reference number *)
+let content_streams_of_page pdf refnum =
+  match Pdf.direct pdf (Pdf.lookup_obj pdf refnum) with
+    Pdf.Dictionary dict ->
+      begin match lookup "/Contents" dict with
+        Some (Pdf.Indirect i) -> [i]
+      | Some (Pdf.Array x) ->
+          option_map (function Pdf.Indirect i -> Some i | _ -> None) x
+      | _ -> []
+      end
+  | _ -> []
+
 (* For each object in the PDF marked with /Type /Page, for each /Contents
 indirect reference or array of such, decode and recode that content stream. *)
 let squeeze_all_content_streams pdf =
-  xobjects_done := [];
-  Pdf.objiter
-    (fun objnum _ ->
-      match Pdf.lookup_obj pdf objnum with
-        Pdf.Dictionary dict as d
-          when
-            Pdf.lookup_direct pdf "/Type" d = Some (Pdf.Name "/Page")
-          ->
-            let resources =
-              match Pdf.lookup_direct pdf "/Resources" d with
-                Some d -> d
-              | None -> Pdf.Dictionary []
-            in
-              begin try
-                let newstream =
-                  let content_streams =
-                    match lookup "/Contents" dict with
-                      Some (Pdf.Indirect i) ->
-                        begin match Pdf.direct pdf (Pdf.Indirect i) with
-                          Pdf.Array x -> x
-                        | _ -> [Pdf.Indirect i]
-                        end
-                    | Some (Pdf.Array x) -> x
-                    | _ -> raise Not_found
-                  in
-                    Pdfops.stream_of_ops
-                      (Pdfops.parse_operators pdf resources content_streams)
+  let page_reference_numbers = Pdf.page_reference_numbers pdf in
+    let all_content_streams_in_doc =
+      flatten (map (content_streams_of_page pdf) page_reference_numbers)
+    in
+      xobjects_done := [];
+      Pdf.objiter
+        (fun objnum _ ->
+          match Pdf.lookup_obj pdf objnum with
+            Pdf.Dictionary dict as d
+              when
+                Pdf.lookup_direct pdf "/Type" d = Some (Pdf.Name "/Page")
+              ->
+                let resources =
+                  match Pdf.lookup_direct pdf "/Resources" d with
+                    Some d -> d
+                  | None -> Pdf.Dictionary []
                 in
-                  let newdict =
-                    Pdf.add_dict_entry
-                      d "/Contents" (Pdf.Indirect (Pdf.addobj pdf newstream))
-                  in
-                    Pdf.addobj_given_num pdf (objnum, newdict);
-                    (* Now process all xobjects related to this page *)
-                    begin match Pdf.lookup_direct pdf "/XObject" resources with
-                      Some (Pdf.Dictionary xobjs) ->
-                        iter
-                          (function
-                             (_, Pdf.Indirect i) -> squeeze_form_xobject pdf i
-                            | _ -> failwith "squeeze_xobject")
-                          xobjs
-                    | _ -> ()
-                    end
-              with
-                (* No /Contents, which is ok. Or a parsing failure due to
-                 uninherited resources. FIXME: Add support for inherited
-                 resources. *)
-                Not_found -> ()
-              end
-        | _ -> ())
-    pdf
+                  begin try
+                    let content_streams =
+                      match lookup "/Contents" dict with
+                        Some (Pdf.Indirect i) ->
+                          begin match Pdf.direct pdf (Pdf.Indirect i) with
+                            Pdf.Array x -> x
+                          | _ -> [Pdf.Indirect i]
+                          end
+                      | Some (Pdf.Array x) -> x
+                      | _ -> raise Not_found
+                    in
+                      if
+                        no_duplicates
+                          all_content_streams_in_doc
+                          (map (function Pdf.Indirect i -> i | _ -> assert false) content_streams)
+                      then
+                        let newstream =
+                          Pdfops.stream_of_ops
+                            (Pdfops.parse_operators pdf resources content_streams)
+                        in
+                          let newdict =
+                            Pdf.add_dict_entry
+                              d "/Contents" (Pdf.Indirect (Pdf.addobj pdf newstream))
+                          in
+                            Pdf.addobj_given_num pdf (objnum, newdict);
+                            (* Now process all xobjects related to this page *)
+                            begin match Pdf.lookup_direct pdf "/XObject" resources with
+                              Some (Pdf.Dictionary xobjs) ->
+                                iter
+                                  (function
+                                     (_, Pdf.Indirect i) -> squeeze_form_xobject pdf i
+                                    | _ -> failwith "squeeze_xobject")
+                                  xobjs
+                            | _ -> ()
+                            end
+                  with
+                    (* No /Contents, which is ok. Or a parsing failure due to
+                     uninherited resources. FIXME: Add support for inherited
+                     resources. *)
+                    Not_found -> ()
+                  end
+            | _ -> ())
+        pdf
 
 (* We run squeeze enough times to reach a fixed point in the cardinality of the
  * object map *)
