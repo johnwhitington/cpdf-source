@@ -1468,7 +1468,41 @@ let hasbox pdf page boxname =
         | Some _ -> true
         | _ -> false
 
-(* \section{Print metadata} *)
+type xmltree =
+    E of Xmlm.tag * xmltree list
+  | D of string
+
+let xmltree_of_bytes b =
+  let i = Xmlm.make_input (`String (0, string_of_bytes b)) in
+    let el tag childs = E (tag, childs)
+    and data d = D d in
+      Xmlm.input_doc_tree ~el ~data i
+
+let rec string_of_xmltree = function
+   D d ->
+     Printf.sprintf "DATA %s" d
+ | E (tag, trees) ->
+     Printf.sprintf "ELT (%s, %s)"
+       (string_of_tag tag)
+       (string_of_xmltrees trees)
+
+and string_of_tag ((n, n'), attributes) =
+  Printf.sprintf
+    "NAME %s %s, ATTRIBUTES %s" n n'
+    (string_of_attributes attributes)
+
+and string_of_attribute ((n, n'), str) =
+  Printf.sprintf "NAME %s %s, STR %s" n n' str
+
+and string_of_attributes attrs =
+  fold_left
+    (fun a b -> a ^ " " ^ b) "" (map string_of_attribute attrs)
+
+and string_of_xmltrees trees =
+  fold_left
+    (fun a b -> a ^ " " ^ b) "" (map string_of_xmltree trees)
+
+(* Print metadata *)
 let get_metadata pdf =
   match Pdf.lookup_direct pdf "/Root" pdf.Pdf.trailerdict with
   | None -> error "malformed file"
@@ -1477,7 +1511,11 @@ let get_metadata pdf =
       | Some ((Pdf.Stream _) as s) ->
           Pdf.getstream s;
           begin match s with
-          | Pdf.Stream {contents = (_, Pdf.Got data)} -> Some data 
+          | Pdf.Stream {contents = (_, Pdf.Got data)} ->
+              (* Try to parse it with xmlm *)
+              let xmp = xmltree_of_bytes data in
+                print_endline (string_of_xmltree (snd xmp));
+                Some data 
           | _ -> assert false
           end
       | _ -> None
@@ -3546,8 +3584,6 @@ let page1 labels =
 let add_page_labels pdf style prefix startval range =
   let ranges = map extremes (ranges_of_range [] [] range)
   and labels = Pdfpagelabels.read pdf in
-    (*Printf.printf "We have %i existing labels\n" (List.length labels);
-    Printf.printf "We have %i ranges to apply these labels to\n" (List.length ranges);*)
     let labels =
       if not (page1 labels) then
         ref
@@ -3558,8 +3594,6 @@ let add_page_labels pdf style prefix startval range =
       else
         ref labels
     in
-      (*Printf.printf "Before adding, we have these labels:\n";
-      iter (fun x -> flprint (Pdfpagelabels.string_of_pagelabel x)) !labels;*)
       iter
         (function (s, e) ->
            let label =
@@ -3568,12 +3602,7 @@ let add_page_labels pdf style prefix startval range =
               Pdfpagelabels.startpage = s;
               Pdfpagelabels.startvalue = startval}
            in
-             (*Printf.printf "We are adding this label:\n";
-             flprint (Pdfpagelabels.string_of_pagelabel label);*)
              labels := Pdfpagelabels.add_label (Pdfpage.endpage pdf) !labels label e)
         ranges;
-        (*Printf.printf "After adding, we have these labels:\n";
-        iter (fun x -> flprint (Pdfpagelabels.string_of_pagelabel x)) !labels;*)
         Pdfpagelabels.write pdf !labels
-
 
