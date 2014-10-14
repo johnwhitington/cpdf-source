@@ -90,7 +90,7 @@ endpage] makes format substitutions in [spec] to make an output file name:
 }
 [printf] is undocumented and should be set to [false].
 *)
-val name_of_spec : bool -> Pdfmarks.t list -> Pdf.t -> int -> string -> int -> string -> int -> int -> string
+val name_of_spec : Pdfmarks.t list -> Pdf.t -> int -> string -> int -> string -> int -> int -> string
 
 (** {2 Compress and Decompress} *)
 
@@ -220,7 +220,7 @@ each output is linearized. If [preserve_objstm] is true, object streams will
 be used if the input file had them. If [create_objstm] is true, object
 streams will be created in any event. [printf] and [nobble] are
 undocumented and should be false. *)
-val split_pdf : Pdfwrite.encryption option -> bool -> string -> int -> bool -> cpdflin:string option ->
+val split_pdf : Pdfwrite.encryption option -> string -> int -> bool -> cpdflin:string option ->
   preserve_objstm:bool -> create_objstm:bool -> squeeze:bool -> (Pdf.t -> Pdf.t) -> string -> Pdf.t -> unit
 
 (** {2 Listing fonts} *)

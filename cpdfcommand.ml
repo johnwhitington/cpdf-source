@@ -8,6 +8,8 @@ let version_date = "(unreleased, 16th September 2014)"
 open Pdfutil
 open Pdfio
 
+let initial_file_size = ref 0
+
 (* Wrap up the file reading functions to exit with code 1 when an encryption
 problem occurs. This happens when object streams are in an encrypted document
 and so it can't be read without the right password... The existing error
@@ -144,8 +146,6 @@ type op =
   | ExtractImages
   | ImageResolution of float
   | MissingFonts
-  | DumpData
-  | UpdateInfo of string
   | RemoveUnusedResources
   | ExtractFontFile
   | ExtractText
@@ -461,25 +461,9 @@ let rec decrypt_if_necessary (a, b, c, user_pw, owner_pw) op pdf =
       | Some pdf, permissions ->
           if operation_allowed permissions op
             then pdf
-            else if args.do_ask
-                then decrypt_if_necessary_ask (a, b, c, user_pw, owner_pw) op pdf
-                else soft_error "User password cannot give permission for this operation"
+            else soft_error "User password cannot give permission for this operation"
       | _ ->
-         if args.do_ask
-           then decrypt_if_necessary_ask (a, b, c, user_pw, owner_pw) op pdf
-           else soft_error "Failed to decrypt file: wrong password?"
-
-and decrypt_if_necessary_ask (a, b, c, user_pw, owner_pw) op pdf =
-  let name = match a with InFile x -> x | StdIn -> "Standard input" | AlreadyInMemory _ -> "PDF" in 
-    flprint "The password supplied for input PDF:\n";
-    flprint ("   " ^ name);
-    flprint "\n   did not work. The PDF is encrypted, so you must supply the\n";
-    flprint "   owner password to open it.  To quit, enter a blank password\n";
-    flprint "Please enter the password to use on the input PDF:\n";
-    flprint ("   " ^ name ^ ".\n");
-    match Pervasives.read_line () with
-    | "" -> soft_error "Failed to decrypt file: wrong password?"
-    | x -> decrypt_if_necessary (a, b, c, user_pw, x) op pdf
+         soft_error "Failed to decrypt file: wrong password?"
 
 let nobble pdf =
   if not demo then pdf else
@@ -523,20 +507,10 @@ let setmethod s =
   | _ -> error "Unsupported encryption method"
 
 let setowner s =
-  match s with
-  | "PROMPT" ->
-      flprint "Enter owner password to use on the output PDF.\n";
-      args.owner <- Pervasives.read_line ()
-  | s ->
-      args.owner <- s
+  args.owner <- s
 
 let setuser s =
-  match s with
-  | "PROMPT" ->
-      flprint "Enter user password to use on the output PDF.\n";
-      args.user <- Pervasives.read_line ()
-  | s ->
-      args.user <- s
+  args.user <- s
 
 let anon_fun s =
   try
@@ -872,14 +846,6 @@ let setstampunder f =
   setop (StampUnder f) ();
   if args.position = Cpdf.TopLeft 100. then args.position <- Cpdf.BottomLeft 0.
 
-let setstamponmulti f =
-  setop (StampOn f) ();
-  args.ismulti <- true
-
-let setstampundermulti f =
-  setop (StampUnder f) ();
-  args.ismulti <- true
-
 let setcombinepages f =
   setop (CombinePages f) ()
 
@@ -1150,38 +1116,11 @@ let setkeepthisid () =
   | (InFile s, _, _, _, _)::_ -> args.keep_this_id <- Some s
   | _ -> ()
 
-let setupdateinfo s =
-  args.op <- Some (UpdateInfo s)
-
 let setdoask () =
   args.do_ask <- true
 
 let setverbose () =
   args.verbose <- true
-
-let promptinputs () =
-  flprint "Please enter a filename for an input PDF:\n";
-  set_input (Pervasives.read_line ())
-
-let promptinputpasswords () =
-  flprint "Please enter the open password to use on the input PDF:\n  ";
-  match args.inputs with
-  | (InFile s, b, c, d, _)::more ->
-       flprint s;
-       flprint ".\n  It can be empty, or have a maximum of 32 characters:\n";
-       let pw = Pervasives.read_line () in
-         args.inputs <- (InFile s, b, c, d, pw)::more
-  | _ -> ()
-
-let promptoutput () =
-  flprint "Please enter a name for the output:\n";
-  args.out <- File (Pervasives.read_line ())
-
-let setdontoverwriteexistingfiles () =
-  args.dont_overwrite_existing_files <- true
-
-let setdontoverwriteinputs () =
-  args.dont_overwrite_inputs <- true
 
 let setmakenewid () =
   args.makenewid <- true
@@ -1736,7 +1675,7 @@ and specs =
       Arg.Int setlabelstartval,
       " Set label start value (default 1)");
    (* These items are for cpdftk *)
-   ("-update-info", Arg.String setupdateinfo, "");
+   (*("-update-info", Arg.String setupdateinfo, "");
    ("-printf-format", Arg.Unit setprintfformat, "");
 
    ("-dump-data", Arg.Unit (setop DumpData), "");
@@ -1753,7 +1692,7 @@ and specs =
    ("-remove-unused-resources", Arg.Unit (setop RemoveUnusedResources), "");
    ("-stamp-under-multi", Arg.String setstampundermulti, "");
    ("-stamp-on-multi", Arg.String setstamponmulti, "");
-   ("-list-annotations-more", Arg.Unit (setop ListAnnotationsMore), "");
+   ("-list-annotations-more", Arg.Unit (setop ListAnnotationsMore), "");*)
    (*These items are undocumented *)
    ("-extract-fontfile", Arg.Unit (setop ExtractFontFile), "");
    ("-extract-images", Arg.Unit setextractimages, "");
@@ -1780,20 +1719,14 @@ or \"1-6,9-end\" or \"even\" or \"odd\" or \"reverse\".\n\nOperations (See \
 manual for full details):\n"
 
 (* Reading and writing *)
-let rec writing_ok outname =
-  if args.dont_overwrite_inputs && mem outname !all_inputs then
-    error ("Error: The output filename: " ^ outname ^"\n  is the same as an input filename.\n");
-  if args.dont_overwrite_existing_files && Sys.file_exists outname then
-    begin
-      flprint ("Output file: " ^ outname ^ " already exists. Overwrite? (y/n)\n");
-      match explode (Pervasives.read_line ()) with
-      | ('y' | 'Y')::_ -> outname
-      | _ ->
-         flprint "Enter a name for the output:\n";
-         writing_ok (Pervasives.read_line ())
-    end
-  else
-    outname
+let filesize name =
+  try
+   let x = open_in_bin name in
+     let r = in_channel_length x in
+       close_in x;
+       r
+  with
+    _ -> 0
 
 let really_write_pdf ?(encryption = None) mk_id pdf outname =
   let outname' =
@@ -1805,20 +1738,28 @@ let really_write_pdf ?(encryption = None) mk_id pdf outname =
       ~preserve_objstm:args.preserve_objstm
       ~generate_objstm:args.create_objstm
       false encryption mk_id pdf outname';
-    if args.linearize then
-      let cpdflin =
-        match Cpdf.find_cpdflin args.cpdflin with
-          Some x -> x
-        | None -> raise (Pdf.PDFError "Could not find cpdflin")
-      in
-        let best_password = if args.owner <> "" then args.owner else args.user in
-          let code = Cpdf.call_cpdflin cpdflin outname' outname best_password in
-            begin try Sys.remove outname' with _ -> () end;
-            if code > 0 then
-              begin
-                begin try Sys.remove outname with _ -> () end;
-                raise (Pdf.PDFError "linearizer failed")
-              end
+    begin
+      if args.linearize then
+        let cpdflin =
+          match Cpdf.find_cpdflin args.cpdflin with
+            Some x -> x
+          | None -> raise (Pdf.PDFError "Could not find cpdflin")
+        in
+          let best_password = if args.owner <> "" then args.owner else args.user in
+            let code = Cpdf.call_cpdflin cpdflin outname' outname best_password in
+              begin try Sys.remove outname' with _ -> () end;
+              if code > 0 then
+                begin
+                  begin try Sys.remove outname with _ -> () end;
+                  raise (Pdf.PDFError "linearizer failed")
+                end
+    end;
+    if args.squeeze then
+      let s = filesize outname in
+        Printf.printf
+          "Final file size is %i bytes, %.2f%% of original.\n"
+          s
+          ((float s /. float !initial_file_size) *. 100.)
 
 let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
   if args.create_objstm && not args.keepversion
@@ -1828,20 +1769,19 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
     | NoOutputSpecified ->
         output_pdfs =| pdf
     | File outname ->
-        let outname = writing_ok outname in
-          begin match encryption with
-            None ->
-              ignore (nobble pdf);
-              if not is_decompress then
-                begin
-                  ignore (Cpdf.recompress_pdf pdf);
-                  if args.squeeze then Cpdf.squeeze pdf;
-                  Pdf.remove_unreferenced pdf
-                end;
-              really_write_pdf mk_id pdf outname
-          | Some _ ->
-              really_write_pdf ~encryption mk_id pdf outname
-          end
+        begin match encryption with
+          None ->
+            ignore (nobble pdf);
+            if not is_decompress then
+              begin
+                ignore (Cpdf.recompress_pdf pdf);
+                if args.squeeze then Cpdf.squeeze pdf;
+                Pdf.remove_unreferenced pdf
+              end;
+            really_write_pdf mk_id pdf outname
+        | Some _ ->
+            really_write_pdf ~encryption mk_id pdf outname
+        end
     | Stdout ->
         let temp = Filename.temp_file "cpdflin" ".pdf" in
           begin match encryption with
@@ -1880,6 +1820,8 @@ let pdf_of_stdin user_pw owner_pw =
 let get_single_pdf op read_lazy =
   match args.inputs with
   | (InFile inname, _, _, u, o) as input::_ ->
+      if args.squeeze then
+        Printf.printf "Initial file size is %i bytes\n" (filesize inname);
       let pdf =
         if read_lazy then
           pdfread_pdf_of_channel_lazy (optstring u) (optstring o) (open_in_bin inname)
@@ -1905,6 +1847,12 @@ file once *)
 let get_pdf_from_input_kind ((_, _, _, u, o) as input) op = function
   | AlreadyInMemory pdf -> pdf
   | InFile s ->
+      if args.squeeze then
+        begin
+          let size = filesize s in
+            initial_file_size := size;
+            Printf.printf "Initial file size is %i bytes\n" size
+        end;
       begin try Hashtbl.find filenames s with
         Not_found ->
           let pdf = decrypt_if_necessary input op (pdfread_pdf_of_file (optstring u) (optstring o) s) in
@@ -2047,7 +1995,7 @@ let extract_images pdf range stem =
                if images <> [] then
                (let names =
                  map
-                   (function n -> let r = Cpdf.name_of_spec false [] (*FIXME *) pdf 0 stem n "" 0 0 in (*i flprint r; flprint "\n"; i*) r)
+                   (function n -> let r = Cpdf.name_of_spec [] (*FIXME *) pdf 0 stem n "" 0 0 in (*i flprint r; flprint "\n"; i*) r)
                    (ilist 1 (length images))
                in
                  iter2 (write_image pdf page.Pdfpage.resources) names images))
@@ -2492,170 +2440,6 @@ let dump_attached_files pdf out =
   with
     _ -> error "Couldn't dump attached files"
 
-(* Prerotate a pdf *)
-let prerotate_pdf pdf r =
-  let setto angle = Cpdf.rotate_pdf angle pdf (ilist 1 (Pdfpage.endpage pdf))
-  and setby angle = Cpdf.rotate_pdf_by angle pdf (ilist 1 (Pdfpage.endpage pdf)) in
-    match r with
-    | Pdfmerge.DNR -> pdf
-    | Pdfmerge.N -> setto 0
-    | Pdfmerge.S -> setto 180
-    | Pdfmerge.E -> setto 90
-    | Pdfmerge.W -> setto 270
-    | Pdfmerge.L -> setby ~-90
-    | Pdfmerge.R -> setby 90
-    | Pdfmerge.D -> setby 180
-
-(* Convert from unicode or PDFDocencoded to ASCII string with HTML entities in it. *)
-let html_of_unicode s =
-  implode
-    (flatten
-      (map
-        (function 60 -> explode "&lt;"
-                | 62 -> explode "&gt;"
-                | 38 -> explode "&amp;"
-                | 34 -> explode "&quot;"
-                | x when x >= 0x20 && x <= 0x7e -> [char_of_int x]
-                | x -> ['&';'#'] @ explode (string_of_int x) @ [';'])
-        (Pdftext.codepoints_of_pdfdocstring s)))
-
-(* Convert from HTML entities to a PDF string which is unicode-encoded (if there are any non-ASCII chars, or PDFDocEncoded if there aren't) . *)
-let unicode_of_html s =
-  let rec codepoints_of_html ps = function
-    | '&'::'l'::'t'::';'::r -> codepoints_of_html (60::ps) r
-    | '&'::'g'::'t'::';'::r -> codepoints_of_html (62::ps) r
-    | '&'::'a'::'m'::'p'::';'::r -> codepoints_of_html (38::ps) r
-    | '&'::'q'::'u'::'o'::'t'::';'::r -> codepoints_of_html (34::ps) r
-    | '&'::'#'::r ->
-        begin match cleavewhile (function '0'..'9' -> true | _ -> false) r with
-        | [], r -> codepoints_of_html ps r
-        | cs, (';'::r) ->
-           let i = try int_of_string (implode cs) with _ -> error "bad HTML literal in update_info" in
-             codepoints_of_html (i::ps) r
-        | _ -> error "bad HTML literal in update_info 2"
-        end
-    | x::r when int_of_char x >= 0x20 && int_of_char x <= 0x7e -> codepoints_of_html (int_of_char x::ps) r
-    | _::r -> codepoints_of_html ps r
-    | [] -> rev ps
-  in
-    Pdftext.pdfdocstring_of_codepoints (codepoints_of_html [] (explode s))
-
-let dump_data pdf out =
-  let channel =
-    match out with
-    | NoOutputSpecified -> stdout
-    | Stdout -> stdout
-    | File f -> open_out_bin f 
-  in
-    let prs s = Pervasives.output_string channel s in
-    (* 1. Info keys *)
-    begin match Pdf.lookup_direct pdf "/Info" pdf.Pdf.trailerdict with
-    | Some (Pdf.Dictionary d) ->
-        iter
-          (function (name, pdfobj) ->
-             match pdfobj with
-             | Pdf.String s ->
-                 begin match s with "" -> () | _ ->
-                   begin match explode name with
-                   | [] -> ()
-                   | h::t -> prs (Printf.sprintf "InfoKey: %s\nInfoValue: %s\n" (implode t) (html_of_unicode s))
-                   end
-                 end
-             | _ -> ())
-          d
-    | _ -> flprint "Warning: no info dictionary found\n"; ()
-    end;
-    let hex s =
-      fold_left ( ^ ) "" (map (Printf.sprintf "%02x") (map int_of_char (explode s))) 
-    in
-      (* 2. IDs *)
-      begin match Pdf.lookup_direct pdf "/ID" pdf.Pdf.trailerdict with
-      | Some (Pdf.Array [Pdf.String s; Pdf.String t]) -> prs (Printf.sprintf "PdfID0: %s\nPdfID1: %s\n" (hex s) (hex t))
-      | _ -> ()
-      end;
-      (* 3. No of pages *)
-      prs (Printf.sprintf "NumberOfPages: %i\n" (Pdfpage.endpage pdf));
-      (* 4. Outlines *)
-      iter
-        (function m ->
-           prs (Printf.sprintf "BookmarkTitle: %s\n" (html_of_unicode m.Pdfmarks.text));
-           prs (Printf.sprintf "BookmarkLevel: %i\n" (m.Pdfmarks.level + 1));
-           prs (Printf.sprintf "BookmarkPageNumber: %i\n" (Pdfpage.pagenumber_of_target pdf m.Pdfmarks.target)))
-        (Pdfmarks.read_bookmarks pdf);
-      (* 5. Close and finish *)
-      match out with File _ -> close_out channel | _ -> flush stdout
-
-(* Parse and update info *)
-let update_info pdf source =
-  let channel =
-    match source with
-    | "use-stdin" -> stdin
-    | x -> open_in_bin x
-  in
-    let rec read_lines prev channel =
-      try read_lines (input_line channel::prev) channel with End_of_file -> rev prev
-    in
-      let lines = read_lines [] channel in
-        let kvpairs =
-          map
-            (function l -> let k, v = cleavewhile (neq ':') (explode l) in implode k, implode (tail_no_fail (tail_no_fail v)))
-            lines
-        in
-          (*i iter
-            (function (k, v) -> Printf.printf "(%s,%s)\n" k v)
-            kvpairs; i*)
-          (* Split into 1) info keys / values 2) PdfIDs, Bookmarks *)
-          let infolines =
-            keep (function (("InfoKey" | "InfoValue"), _) -> true | _ -> false) kvpairs;
-          and pdfidlines =
-            keep (function (("PdfID0" | "PdfID1"), _) -> true | _ -> false) kvpairs
-          and bookmarklines =
-            keep (function (("BookmarkTitle" | "BookmarkLevel" | "BookmarkPageNumber"), _) -> true | _ -> false) kvpairs
-          in
-            (* 1. Add/Replace info keys *)
-            let kvpairs =
-              map
-                (function [(_, k); (_, v)] -> k, v | _ -> error "Mismatched info Key/Value pairs")
-                (splitinto 2 infolines)
-            in
-              let pdf =
-                {pdf with Pdf.trailerdict =
-                   Pdf.add_dict_entry pdf.Pdf.trailerdict "/Info"
-                     (Pdf.Dictionary
-                        (fold_left
-                          (fun d (k, v) -> add k v d)
-                          (match Pdf.lookup_direct pdf "/Info" pdf.Pdf.trailerdict with | Some (Pdf.Dictionary d) -> d | _ -> [])
-                          (map (function (k, v) -> "/" ^ k, Pdf.String (unicode_of_html v)) kvpairs)))}
-              in
-                (* 2. Add/Replace PDF Id *)
-                let pdf =
-                  let unhex s =
-                    match Pdfread.lex_hexstring (Pdfio.input_of_string ("<" ^ s ^ ">")) with
-                    | Pdfgenlex.LexString s -> s
-                    | _ -> error "PDFId wrongly formed in update_info file"
-                  in
-                    match pdfidlines with
-                    | ["PdfID0", a; "PdfID1", b] ->
-                         {pdf with Pdf.trailerdict =
-                           Pdf.add_dict_entry pdf.Pdf.trailerdict "/ID" (Pdf.Array [Pdf.String (unhex a); Pdf.String (unhex b)])}
-                    | _ -> pdf
-                in
-              (* 3. Replace Bookmarks *)
-              let marks =
-                map
-                  (function
-                   | [("BookmarkTitle", a); ("BookmarkLevel", b); ("BookmarkPageNumber", c)] ->
-                        {Pdfmarks.level = int_of_string b - 1;
-                         Pdfmarks.text = unicode_of_html a;
-                         Pdfmarks.target = Pdfpage.target_of_pagenumber pdf (int_of_string c);
-                         Pdfmarks.isopen = false}
-                   | _ -> error "Bookmark entries malformed in update_info file")
-                  (splitinto 3 bookmarklines)
-              in
-                let pdf = Pdfmarks.add_bookmarks marks pdf in
-                  begin match source with "use-stdin" -> () | _ -> close_in channel end;
-                  pdf
-
 (* If pages in stamp < pages in main, extend stamp by repeating its last page. If pages in stamp more, chop stamp *)
 let equalize_pages_extend main stamp =
   let length_stamp = Pdfpage.endpage stamp
@@ -2817,10 +2601,9 @@ let go () =
                     input file, and we're just extracting pages, might we use a
                     lazy read? *)
                     if hd ranges <> "all" || hd rotations <> Pdfmerge.DNR || !Pdfpage.flat_pagetrees then
-                      let pdf = if hd rotations <> Pdfmerge.DNR then prerotate_pdf pdf (hd rotations) else pdf in
-                        let range = parse_pagespec pdf (hd ranges) in
-                          let newpdf = Pdfpage.pdf_of_pages ~retain_numbering:args.retain_numbering pdf range in
-                            write_pdf false newpdf
+                      let range = parse_pagespec pdf (hd ranges) in
+                        let newpdf = Pdfpage.pdf_of_pages ~retain_numbering:args.retain_numbering pdf range in
+                          write_pdf false newpdf
                     else
                         write_pdf false pdf
                 | _ ->
@@ -3125,7 +2908,7 @@ let go () =
                      Pdfwrite.permissions = banlist_of_args ()}
               in
                 Cpdf.split_pdf
-                  enc args.printf_format args.original_filename args.chunksize args.linearize args.cpdflin
+                  enc args.original_filename args.chunksize args.linearize args.cpdflin
                   args.preserve_objstm args.preserve_objstm (*yes--always create if preserving *)
                   args.squeeze nobble output_spec pdf
         | _, Stdout -> error "Can't split to standard output"
@@ -3438,12 +3221,6 @@ let go () =
       | _ ->
          Printf.eprintf "CSP3: Too many input files or input not a file"
       end
-  | Some DumpData ->
-      let pdf = get_single_pdf args.op true in
-        dump_data pdf args.out
-  | Some (UpdateInfo source) ->
-      let pdf = get_single_pdf args.op false in
-         write_pdf false (update_info pdf source)
   | Some ExtractText ->
       let pdf = get_single_pdf args.op true in
         let range = parse_pagespec pdf (get_pagespec ()) in

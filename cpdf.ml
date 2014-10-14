@@ -251,196 +251,6 @@ let squeeze pdf =
   with
     e -> raise (Pdf.PDFError "Squeeze failed. No output written")
 
-(* Printf implementation *)
-exception PrintfFailure of string
-
-type convop = Ca | CA | Cc | Cd | Ce | CE | Cf | Cg | CG | Ci | Cn | Co | Cp | Cs | Cu | Cx | CX | CPercent
-
-type sizespec = Sll | Sl | SL | Sh | Shh | Sj | Sz | St
-
-type pformat =
-  {leftjustify : bool;
-   padzero : bool;
-   signalways : bool;
-   space : bool;
-   variant : bool;
-   minwidth : int option;
-   precision : int option;
-   sizespec : sizespec option;
-   convop : convop}
-
-let string_of_options f =
-  (if f.leftjustify then "-" else "") ^
-  (if f.padzero then "0" else "") ^
-  (if f.signalways then "+" else "") ^
-  (if f.space then " " else "") ^
-  (if f.variant then "#" else "")
-
-let string_of_minwidth = function
-  | None -> ""
-  | Some x -> string_of_int x
-
-let string_of_precision = function
-  | None -> ""
-  | Some x -> "." ^ string_of_int x
-
-let string_of_sizespec = function
-  | None -> ""
-  | Some s->
-      match s with
-      | Sll -> "ll" | Sl -> "l" | SL -> "L" | Sh -> "h"
-      | Shh -> "hh" | Sj -> "j" | Sz -> "z" | St -> "t"
-
-let string_of_convop = function
-  | Ca -> "a" | CA -> "A" | Cc -> "c" | Cd -> "d"
-  | Ce -> "e" | CE -> "E" | Cf -> "f" | Cg -> "g"
-  | CG -> "G" | Ci -> "i" | Cn -> "n" | Co -> "o"
-  | Cp -> "p" | Cs -> "s" | Cu -> "u" | Cx -> "x"
-  | CX -> "X" | CPercent -> "%"
-
-let string_of_format f =
-  "%" ^
-  string_of_options f ^
-  string_of_minwidth f.minwidth ^
-  string_of_precision f.precision ^
-  string_of_sizespec f.sizespec ^
-  string_of_convop f.convop
-
-type section =
-  | Format of pformat
-  | String of string 
-
-let sec_of_format cs =
-  (* 1. Read zero or more flags -, +, 0, #, <space> *)
-  let cs = ref cs in
-    let lj, pz, sa, sp, va, fin =
-      ref false, ref false, ref false, ref false, ref false, ref false
-    in
-  while not !fin do
-    match !cs with
-    | '-'::_ -> set lj; cs := tl !cs
-    | '+'::_ -> set sa; cs := tl !cs
-    | '0'::_ -> set pz; cs := tl !cs
-    | ' '::_ -> set sp; cs := tl !cs
-    | '#'::_ -> set va; cs := tl !cs
-    | _ -> set fin
-  done;
-  (* 2. Read a possible minimum field width *)
-  let minwidth =
-    let fwchars, rest = cleavewhile isdigit !cs in
-      cs := rest;
-      if fwchars = [] then None else Some (int_of_string (implode fwchars))
-  in
-  (* 3. Read an optional precision specification *)
-  let precision =
-    match !cs with
-    | '.'::more ->
-        cs := more;
-        let pchars, rest = cleavewhile isdigit !cs in
-          cs := rest;
-          if pchars = [] then None else Some (int_of_string (implode pchars))
-    | _ -> None
-  in
-  (* 4. Read an optional size specification *)
-  let sizespec =
-    match !cs with
-    | 'l'::'l'::r -> cs := r; Some Sll
-    | 'l'::r -> cs := r; Some Sl
-    | 'L'::r -> cs := r; Some SL
-    | 'h'::'h'::r -> cs := r; Some Shh
-    | 'h'::r -> cs := r; Some Sh
-    | 'j'::r -> cs := r; Some Sj
-    | 'z'::r -> cs := r; Some Sz
-    | 't'::r -> cs := r; Some St
-    | _ -> None
-  in
-  (* 5. Read the conversion operation *)
-  let convop =
-    match !cs with
-    | 'a'::r -> cs := r; Ca
-    | 'A'::r -> cs := r; CA
-    | 'c'::r -> cs := r; Cc
-    | 'd'::r -> cs := r; Cd
-    | 'e'::r -> cs := r; Ce
-    | 'E'::r -> cs := r; CE
-    | 'f'::r -> cs := r; Cf
-    | 'g'::r -> cs := r; Cg
-    | 'G'::r -> cs := r; CG
-    | 'i'::r -> cs := r; Ci
-    | 'n'::r -> cs := r; Cn
-    | 'o'::r -> cs := r; Co
-    | 'p'::r -> cs := r; Cp
-    | 's'::r -> cs := r; Cs
-    | 'u'::r -> cs := r; Cu
-    | 'x'::r -> cs := r; Cx
-    | 'X'::r -> cs := r; CX
-    | '%'::r -> cs := r; CPercent
-    | _ -> raise (Failure "sec_of_format")
-  in
-    {leftjustify = !lj;
-     padzero = !pz;
-     signalways = !sa;
-     space = !sp;
-     variant = !va;
-     minwidth = minwidth;
-     precision = precision;
-     sizespec = sizespec;
-     convop = convop},
-   !cs
-
-let rec sections_of_string_inner secs currstr = function
-  | '%'::m ->
-      let sec, rest = sec_of_format m in
-        if currstr = []
-          then sections_of_string_inner (Format sec::secs) currstr rest
-          else sections_of_string_inner (Format sec::String (implode (rev currstr))::secs) [] rest
-  | x::xs ->
-     sections_of_string_inner secs (x::currstr) xs
-  | [] ->
-     if currstr = [] then rev secs else rev (String (implode (rev currstr))::secs)
-
-(* Take a format string, and split it into sections *)
-let sections_of_string s =
-  try
-    sections_of_string_inner [] [] (explode s)
-  with
-    _ -> raise (PrintfFailure "Couldn't parse Printf format")
-
-(* Substitute an integer into a format, returning the empty string if the format is not suitable. *)
-
-(* For now, just 'd', 'u', 'i' *)
-let sub_int i f =
-  (*i Printf.printf "Substituting format |%s|\n" (string_of_format f); i*)
-  let str = string_of_int i
-  in let padding = if f.padzero then '0' else ' ' in
-    if f.minwidth <> None && String.length str < unopt f.minwidth then
-      let padding = many padding (unopt f.minwidth - String.length str) in
-        if f.leftjustify then str ^ implode padding else implode padding ^ str
-    else
-      str
-
-(* Given a list of integers, substitute into integer formats *)
-let rec substitute_inner donesections sections = function
-  | [] -> rev donesections @ sections
-  | i::is ->
-      match sections with
-      | [] -> rev donesections @ sections
-      | String s::more -> substitute_inner (String s::donesections) more (i::is)
-      | Format f::more -> substitute_inner (String (sub_int i f)::donesections) more is
-
-let substitute x =
-  try substitute_inner [] x with
-    _ -> raise (PrintfFailure "Failed to substitute integer")
-
-(* Flatten a set of sections to a string *)
-let string_of_section = function
-  | String s -> s
-  | Format f -> string_of_format f
-
-let string_of_sections sections =
-  try fold_left ( ^ ) "" (map string_of_section sections) with
-    _ -> raise (PrintfFailure "Failed to build string from Printf sections")
-
 type encoding =
   | Raw
   | UTF8
@@ -1324,28 +1134,22 @@ let process_others marks pdf splitlevel filename sequence startpage endpage s =
   in
      implode (procss [] (explode s))
 
-let name_of_spec printf marks (pdf : Pdf.t) splitlevel spec n filename startpage endpage =
-  if printf then
-    let spec =
-      string_of_sections (substitute (sections_of_string spec) [n])
-    in
-      process_others marks pdf splitlevel filename n startpage endpage spec
-  else
-    let fill l n =
-      let chars = explode (string_of_int n) in
-        if length chars > l
-          then implode (drop chars (length chars - l))
-          else implode ((many '0' (l - length chars)) @ chars)
-    in
-      let chars = explode spec in
-        let before, including = cleavewhile (neq '%') chars in
-          let percents, after = cleavewhile (eq '%') including in
-            if percents = []
-              then
-                process_others marks pdf splitlevel filename n startpage endpage spec
-              else
-                process_others marks pdf splitlevel filename n startpage endpage
-                (implode before ^ fill (length percents) n ^ implode after)
+let name_of_spec marks (pdf : Pdf.t) splitlevel spec n filename startpage endpage =
+  let fill l n =
+    let chars = explode (string_of_int n) in
+      if length chars > l
+        then implode (drop chars (length chars - l))
+        else implode ((many '0' (l - length chars)) @ chars)
+  in
+    let chars = explode spec in
+      let before, including = cleavewhile (neq '%') chars in
+        let percents, after = cleavewhile (eq '%') including in
+          if percents = []
+            then
+              process_others marks pdf splitlevel filename n startpage endpage spec
+            else
+              process_others marks pdf splitlevel filename n startpage endpage
+              (implode before ^ fill (length percents) n ^ implode after)
 
 (* Find the stem of a filename *)
 let stem s =
@@ -1383,22 +1187,22 @@ let really_write_pdf ~preserve_objstm ~create_objstm ?(encryption = None) ?(cpdf
                 raise (Pdf.PDFError "linearizer failed")
               end
 
-let fast_write_split_pdfs enc printf splitlevel original_filename linearize ?(cpdflin = None) preserve_objstm create_objstm sq nobble spec main_pdf pagenums pdf_pages =
+let fast_write_split_pdfs enc splitlevel original_filename linearize ?(cpdflin = None) preserve_objstm create_objstm sq nobble spec main_pdf pagenums pdf_pages =
   let marks = Pdfmarks.read_bookmarks main_pdf in
     iter2
       (fun number pagenums ->
          let pdf = nobble (Pdfpage.pdf_of_pages main_pdf pagenums) in
            let startpage, endpage = extremes pagenums in
-             let name = name_of_spec printf marks main_pdf splitlevel spec number (stem original_filename) startpage endpage in
+             let name = name_of_spec marks main_pdf splitlevel spec number (stem original_filename) startpage endpage in
                Pdf.remove_unreferenced pdf;
                if sq then squeeze pdf;
                really_write_pdf ~preserve_objstm ~create_objstm ~encryption:enc linearize (not (enc = None)) pdf name)
       (indx pagenums)
       pagenums
 
-let split_pdf enc printf original_filename chunksize linearize ~cpdflin ~preserve_objstm ~create_objstm ~squeeze nobble spec pdf =
+let split_pdf enc original_filename chunksize linearize ~cpdflin ~preserve_objstm ~create_objstm ~squeeze nobble spec pdf =
   let pdf_pages = Pdfpage.pages_of_pagetree pdf in
-    fast_write_split_pdfs enc printf 0 original_filename linearize preserve_objstm
+    fast_write_split_pdfs enc 0 original_filename linearize preserve_objstm
       create_objstm squeeze nobble spec pdf (splitinto chunksize (indx pdf_pages)) pdf_pages
 
 (* Return list, in order, a *set* of page numbers of bookmarks at a given level *)
@@ -1415,7 +1219,7 @@ let split_at_bookmarks original_filename linearize ~cpdflin ~preserve_objstm ~cr
         lose (fun x -> x <= 0 || x > Pdfpage.endpage pdf) (map pred points)
       in
       let pts = splitat points (indx pdf_pages) in
-      fast_write_split_pdfs None false level
+      fast_write_split_pdfs None level
         original_filename linearize preserve_objstm create_objstm squeeze nobble spec pdf pts pdf_pages
 
 (* Called from cpdflib.ml - different from above *)
@@ -3045,7 +2849,7 @@ let xmltree_of_bytes b =
     and data d = D d in
       Xmlm.input_doc_tree ~el ~data i
 
-let rec string_of_xmltree = function
+(*let rec string_of_xmltree = function
    D d ->
      Printf.sprintf "DATA **%s**" d
  | E (tag, trees) ->
@@ -3067,7 +2871,7 @@ and string_of_attributes attrs =
 
 and string_of_xmltrees trees =
   fold_left
-    (fun a b -> a ^ " " ^ b) "" (map string_of_xmltree trees)
+    (fun a b -> a ^ " " ^ b) "" (map string_of_xmltree trees)*)
 
 let rec get_data_for namespace name = function
    D _ -> None
