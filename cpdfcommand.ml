@@ -2915,7 +2915,8 @@ let go () =
         if inname <> "" then
           Printf.printf "Linearized: %b\n" (Pdfread.is_linearized (Pdfio.input_of_channel (open_in_bin inname)));
         let pdf = decrypt_if_necessary input (Some Info) pdf in
-          Cpdf.output_info args.encoding pdf
+          Cpdf.output_info args.encoding pdf;
+          Cpdf.output_xmp_info args.encoding pdf
   | Some PageInfo ->
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _)::_, _ ->

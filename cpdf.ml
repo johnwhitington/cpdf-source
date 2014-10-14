@@ -1468,39 +1468,6 @@ let hasbox pdf page boxname =
         | Some _ -> true
         | _ -> false
 
-type xmltree =
-    E of Xmlm.tag * xmltree list
-  | D of string
-
-let xmltree_of_bytes b =
-  let i = Xmlm.make_input (`String (0, string_of_bytes b)) in
-    let el tag childs = E (tag, childs)
-    and data d = D d in
-      Xmlm.input_doc_tree ~el ~data i
-
-let rec string_of_xmltree = function
-   D d ->
-     Printf.sprintf "DATA %s" d
- | E (tag, trees) ->
-     Printf.sprintf "ELT (%s, %s)"
-       (string_of_tag tag)
-       (string_of_xmltrees trees)
-
-and string_of_tag ((n, n'), attributes) =
-  Printf.sprintf
-    "NAME %s %s, ATTRIBUTES %s" n n'
-    (string_of_attributes attributes)
-
-and string_of_attribute ((n, n'), str) =
-  Printf.sprintf "NAME %s %s, STR %s" n n' str
-
-and string_of_attributes attrs =
-  fold_left
-    (fun a b -> a ^ " " ^ b) "" (map string_of_attribute attrs)
-
-and string_of_xmltrees trees =
-  fold_left
-    (fun a b -> a ^ " " ^ b) "" (map string_of_xmltree trees)
 
 (* Print metadata *)
 let get_metadata pdf =
@@ -1511,11 +1478,7 @@ let get_metadata pdf =
       | Some ((Pdf.Stream _) as s) ->
           Pdf.getstream s;
           begin match s with
-          | Pdf.Stream {contents = (_, Pdf.Got data)} ->
-              (* Try to parse it with xmlm *)
-              let xmp = xmltree_of_bytes data in
-                print_endline (string_of_xmltree (snd xmp));
-                Some data 
+          | Pdf.Stream {contents = (_, Pdf.Got data)} -> Some data 
           | _ -> assert false
           end
       | _ -> None
@@ -3053,21 +3016,14 @@ let get_info_utf8 pdf =
       | Some (Pdf.String s) -> Pdftext.utf8_of_pdfdocstring s
       | _ -> "")
 
-let output_xml_info pdf =
-  match get_metadata pdf with
-    None -> ()
-  | Some metadata ->
-      print_string (string_of_bytes metadata)
-      (*let parsed = Xml.parse_string (string_of_bytes metadata) in
-        print_string (Xml.to_string parsed)*)
+let getstring encoding pdf =
+  match encoding with
+  | Raw -> get_info true pdf
+  | Stripped -> get_info false pdf
+  | UTF8 -> get_info_utf8 pdf
 
 let output_info encoding pdf =
-  let getstring =
-    match encoding with
-    | Raw -> get_info true pdf
-    | Stripped -> get_info false pdf
-    | UTF8 -> get_info_utf8 pdf
-  in
+  let getstring = getstring encoding pdf in
     Printf.printf "Version: %i.%i\n" pdf.Pdf.major pdf.Pdf.minor;
     Printf.printf "Pages: %i\n" (Pdfpage.endpage pdf);
     Printf.printf "Title: %s\n" (getstring "/Title");
@@ -3077,8 +3033,83 @@ let output_info encoding pdf =
     Printf.printf "Creator: %s\n" (getstring "/Creator");
     Printf.printf "Producer: %s\n" (getstring "/Producer");
     Printf.printf "Created: %s\n" (getstring "/CreationDate");
-    Printf.printf "Modified: %s\n" (getstring "/ModDate");
-    output_xml_info pdf
+    Printf.printf "Modified: %s\n" (getstring "/ModDate")
+
+type xmltree =
+    E of Xmlm.tag * xmltree list
+  | D of string
+
+let xmltree_of_bytes b =
+  let i = Xmlm.make_input (`String (0, string_of_bytes b)) in
+    let el tag childs = E (tag, childs)
+    and data d = D d in
+      Xmlm.input_doc_tree ~el ~data i
+
+let rec string_of_xmltree = function
+   D d ->
+     Printf.sprintf "DATA **%s**" d
+ | E (tag, trees) ->
+     Printf.sprintf "ELT (%s, %s)"
+       (string_of_tag tag)
+       (string_of_xmltrees trees)
+
+and string_of_tag ((n, n'), attributes) =
+  Printf.sprintf
+    "NAME |%s| |%s|, ATTRIBUTES {%s}" n n'
+    (string_of_attributes attributes)
+
+and string_of_attribute ((n, n'), str) =
+  Printf.sprintf "ATTRNAME |%s| |%s|, STR **%s**" n n' str
+
+and string_of_attributes attrs =
+  fold_left
+    (fun a b -> a ^ " " ^ b) "" (map string_of_attribute attrs)
+
+and string_of_xmltrees trees =
+  fold_left
+    (fun a b -> a ^ " " ^ b) "" (map string_of_xmltree trees)
+
+let rec get_data_for namespace name = function
+   D _ -> None
+ | E (((n, n'), children), [D d]) when n = namespace && n' = name ->
+     Some d
+ (*| E (((n, n'), l), [D d]) ->
+     if n' <> "image" then Printf.printf "%s %s %s\n" n n' d;
+     None*)
+ | E (_, l) ->
+     match option_map (get_data_for namespace name) l with
+       x :: _ -> Some x
+     | _ -> None
+
+let output_xmp_info encoding pdf =
+  let print_out tree title namespace name =
+    match get_data_for namespace name tree with
+      None -> ()
+    | Some data ->
+        Printf.printf "%s: " title;
+        print_endline data
+  in
+    match get_metadata pdf with
+      None -> ()
+    | Some metadata ->
+        let dtd, tree = xmltree_of_bytes metadata in
+          (*flprint "***************** ORIGINAL\n";
+          print_endline (string_of_bytes metadata);
+          flprint "***************** TREE\n";
+          print_endline (string_of_xmltree tree);*)
+          let adobe = "http://ns.adobe.com/pdf/1.3/"
+          and xmp = "http://ns.adobe.com/xap/1.0/"
+          and dc = "http://purl.org/dc/elements/1.1/" in
+          print_out tree "XMP pdf:Keywords" adobe "Keywords";
+          print_out tree "XMP pdf:PDFVersion" adobe "PDFVersion";
+          print_out tree "XMP pdf:Producer" adobe "Producer";
+          print_out tree "XMP pdf:Trapped" adobe "Trapped";
+          print_out tree "XMP xmp:CreateDate" xmp "CreateDate";
+          print_out tree "XMP xmp:CreatorTool" xmp "CreatorTool";
+          print_out tree "XMP xmp:MetadataDate" xmp "MetadataDate";
+          print_out tree "XMP xmp:ModifyDate" xmp "ModifyDate";
+          print_out tree "XMP dc:title" dc "title";
+          print_out tree "XMP dc:creator" dc "creator"
 
 (* \section{Blacken text} *)
 

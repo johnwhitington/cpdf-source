@@ -135,6 +135,8 @@ val get_info_utf8 : Pdf.t -> string -> string
 (** Output to standard output general information about a PDF. *)
 val output_info : encoding -> Pdf.t -> unit
 
+val output_xmp_info : encoding -> Pdf.t -> unit
+
 (** {2 Presentations} *)
 
 (** [presentation range t d horizontal inward direction effect_duration pdf]
