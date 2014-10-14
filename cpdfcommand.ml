@@ -244,16 +244,9 @@ type args =
    mutable tobox : string option;
    mutable mediabox_if_missing : bool;
    mutable topage : string option;
-   mutable printf_format : bool;
    mutable scale_stamp_to_fit : bool;
    mutable keep_this_id : string option;
-   mutable do_ask : bool;
-   mutable verbose : bool;
-   mutable dont_overwrite_inputs : bool;
-   mutable dont_overwrite_existing_files : bool;
    mutable makenewid : bool;
-   mutable ismulti : bool;
-   mutable uprightstamp : bool;
    mutable labelstyle : Pdfpagelabels.labelstyle;
    mutable labelprefix : string option;
    mutable labelstartval : int;
@@ -329,16 +322,9 @@ let args =
    tobox = None;
    mediabox_if_missing = false;
    topage = None;
-   printf_format = false;
    scale_stamp_to_fit = false;
    keep_this_id = None;
-   do_ask = false;
-   verbose = false;
-   dont_overwrite_inputs = false;
-   dont_overwrite_existing_files = false;
    makenewid = false;
-   ismulti = false;
-   uprightstamp = false;
    labelstyle = Pdfpagelabels.DecimalArabic;
    labelprefix = None;
    labelstartval = 1;
@@ -409,20 +395,14 @@ let reset_arguments () =
   args.tobox <- None;
   args.mediabox_if_missing <- false;
   args.topage <- None;
-  args.printf_format <- false;
   args.scale_stamp_to_fit <- false;
   args.keep_this_id <- None;
   args.makenewid <- false;
-  args.ismulti <- false;
-  args.uprightstamp <- false;
   args.labelstyle <- Pdfpagelabels.DecimalArabic;
   args.labelprefix <- None;
   args.labelstartval <- 1;
   args.squeeze <- false
-  (* We don't reset args.do_ask and args.verbose, because they operate on all
-  parts of the AND-ed command line sent from cpdftk. Also do not reset
-  original_filename, since we want it to work across AND sections. Also do not
-  reset cpdflin. *)
+  (* Do not reset original_filename or cpdflin, since we want it to work across ANDs. *)
 
 let banlist_of_args () =
   let l = ref [] in
@@ -1105,9 +1085,6 @@ let setflatkids () =
 let settopage s =
   args.topage <- Some s
 
-let setprintfformat () =
-  args.printf_format <- true
-
 let setscalestamptofit () =
   args.scale_stamp_to_fit <- true
 
@@ -1116,17 +1093,8 @@ let setkeepthisid () =
   | (InFile s, _, _, _, _)::_ -> args.keep_this_id <- Some s
   | _ -> ()
 
-let setdoask () =
-  args.do_ask <- true
-
-let setverbose () =
-  args.verbose <- true
-
 let setmakenewid () =
   args.makenewid <- true
-
-let setuprightstamp () =
-  args.uprightstamp <- true
 
 let setjustifyleft () =
   args.justification <- Cpdf.LeftJustify
@@ -2563,7 +2531,7 @@ let rec unescape_octals prev = function
 let unescape_octals s =
   implode (unescape_octals [] (explode s))
 
-  (* Main function *)
+(* Main function *)
 let go () =
   match args.op with
   | Some Version ->
@@ -3126,36 +3094,24 @@ let go () =
         | "stamp_use_stdin" -> pdf_of_stdin "" ""
         | x -> pdfread_pdf_of_file None None x
       in
-        let overpdf = if args.uprightstamp then Cpdf.upright ~fast:args.fast (ilist 1 (Pdfpage.endpage overpdf)) overpdf else overpdf in
-          let pdf = get_single_pdf args.op false in
-            let range = parse_pagespec pdf (get_pagespec ()) in
-              let pdf =
-                if args.ismulti
-                  then
-                    let overpdf = equalize_pages_extend pdf overpdf in
-                      Cpdf.combine_pages args.fast pdf overpdf true false false
-                  else
-                    Cpdf.stamp args.position args.fast args.scale_stamp_to_fit true range overpdf pdf
-              in
-                write_pdf false pdf
+        let pdf = get_single_pdf args.op false in
+          let range = parse_pagespec pdf (get_pagespec ()) in
+            let pdf =
+              Cpdf.stamp args.position args.fast args.scale_stamp_to_fit true range overpdf pdf
+            in
+              write_pdf false pdf
   | Some (StampUnder under) ->
       let underpdf =
         match under with
         | "stamp_use_stdin" -> pdf_of_stdin "" ""
         | x -> pdfread_pdf_of_file None None x
       in
-        let underpdf = if args.uprightstamp then Cpdf.upright ~fast:args.fast (ilist 1 (Pdfpage.endpage underpdf)) underpdf else underpdf in
-          let pdf = get_single_pdf args.op false in
-            let range = parse_pagespec pdf (get_pagespec ()) in
-              let pdf =
-                if args.ismulti
-                 then
-                   let underpdf = equalize_pages_extend pdf underpdf in
-                     Cpdf.combine_pages args.fast pdf underpdf true true false
-                 else
-                   Cpdf.stamp args.position args.fast args.scale_stamp_to_fit false range underpdf pdf
-              in
-                write_pdf false pdf
+        let pdf = get_single_pdf args.op false in
+          let range = parse_pagespec pdf (get_pagespec ()) in
+            let pdf =
+              Cpdf.stamp args.position args.fast args.scale_stamp_to_fit false range underpdf pdf
+            in
+              write_pdf false pdf
   | Some (CombinePages over) ->
       write_pdf false
         (Cpdf.combine_pages args.fast (get_single_pdf args.op false) (pdfread_pdf_of_file None None over) false false true)
