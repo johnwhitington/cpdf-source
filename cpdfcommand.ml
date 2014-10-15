@@ -252,7 +252,8 @@ type args =
    mutable labelstartval : int;
    mutable squeeze : bool;
    mutable original_filename : string;
-   mutable cpdflin : string option}
+   mutable cpdflin : string option;
+   mutable recrypt : bool}
 
 (* List of all filenames in any AND stage - this is used to check that we don't
 overwrite any input file when -dont-overwrite-existing-files is used. *)
@@ -330,7 +331,8 @@ let args =
    labelstartval = 1;
    squeeze = false;
    original_filename = "";
-   cpdflin = None}
+   cpdflin = None;
+   recrypt = false}
 
 let reset_arguments () =
   args.op <- None;
@@ -401,7 +403,8 @@ let reset_arguments () =
   args.labelstyle <- Pdfpagelabels.DecimalArabic;
   args.labelprefix <- None;
   args.labelstartval <- 1;
-  args.squeeze <- false
+  args.squeeze <- false;
+  args.recrypt <- false
   (* Do not reset original_filename or cpdflin, since we want it to work across ANDs. *)
 
 let banlist_of_args () =
@@ -1152,6 +1155,9 @@ let setlabelstartval i =
 let setcpdflin s = 
   args.cpdflin <- Some s
 
+let setrecrypt b =
+  args.recrypt <- b
+
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
   control_args := !control_args @ parse_control_file filename
@@ -1202,6 +1208,9 @@ and specs =
    ("-cpdflin",
        Arg.String setcpdflin,
        " Set location of 'cpdflin'");
+   ("-recrypt",
+       Arg.Bool setrecrypt,
+       " Keep this file's encryption when writing");
    ("-raw",
       Arg.Unit (setencoding Cpdf.Raw),
       " Do not process text");
