@@ -431,7 +431,9 @@ let banned banlist = function
   | Decrypt | Encrypt -> true (* Never allowed *)
   | _ -> mem Pdfcrypt.NoEdit banlist
 
-let operation_allowed banlist = function
+let operation_allowed banlist op =
+  args.recrypt || (* FIXME *)
+  match op with
   | None -> true (* Merge *) (* changed to allow it *)
   | Some op -> not (banned banlist op)
 
@@ -1155,8 +1157,8 @@ let setlabelstartval i =
 let setcpdflin s = 
   args.cpdflin <- Some s
 
-let setrecrypt b =
-  args.recrypt <- b
+let setrecrypt () =
+  args.recrypt <- true
 
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
@@ -1209,7 +1211,7 @@ and specs =
        Arg.String setcpdflin,
        " Set location of 'cpdflin'");
    ("-recrypt",
-       Arg.Bool setrecrypt,
+       Arg.Unit setrecrypt,
        " Keep this file's encryption when writing");
    ("-raw",
       Arg.Unit (setencoding Cpdf.Raw),
@@ -1323,7 +1325,7 @@ and specs =
        "");
    ("-squeeze",
        Arg.Unit setsqueeze,
-       " Slow, lossless compression of a PDF file");
+       "");
    ("-list-bookmarks",
       Arg.Unit (setop ListBookmarks),
       " List Bookmarks");
@@ -1705,16 +1707,87 @@ let filesize name =
   with
     _ -> 0
 
+let pdf_of_stdin user_pw owner_pw =
+  let user_pw = Some user_pw
+  and owner_pw = if owner_pw = "" then None else Some owner_pw
+  in
+    let o, bytes = Pdfio.input_output_of_bytes 16384 in
+      try
+        while true do o.Pdfio.output_char (input_char stdin) done;
+        Pdf.empty ()
+      with
+        End_of_file ->
+          let i = Pdfio.input_of_bytes (Pdfio.extract_bytes_from_input_output o bytes) in
+            pdfread_pdf_of_input user_pw owner_pw i
+
+let filenames = null_hash ()
+
+(* This now memoizes on the name of the file to make sure we only load each
+file once *)
+let get_pdf_from_input_kind ((_, _, _, u, o) as input) op = function
+  | AlreadyInMemory pdf -> pdf
+  | InFile s ->
+      if args.squeeze then
+        begin
+          let size = filesize s in
+            initial_file_size := size;
+            Printf.printf "Initial file size is %i bytes\n" size
+        end;
+      begin try Hashtbl.find filenames s with
+        Not_found ->
+          let pdf = decrypt_if_necessary input op (pdfread_pdf_of_file (optstring u) (optstring o) s) in
+            Hashtbl.add filenames s pdf; pdf
+      end
+  | StdIn ->
+      decrypt_if_necessary input op (pdf_of_stdin u o)
+
+let get_single_pdf op read_lazy =
+  match args.inputs with
+  | (InFile inname, _, _, u, o) as input::_ ->
+      if args.squeeze then
+        Printf.printf "Initial file size is %i bytes\n" (filesize inname);
+      let pdf =
+        if read_lazy then
+          pdfread_pdf_of_channel_lazy (optstring u) (optstring o) (open_in_bin inname)
+        else
+          pdfread_pdf_of_file (optstring u) (optstring o) inname
+      in
+        decrypt_if_necessary input op pdf
+  | (StdIn, _, _, u, o) as input::_ ->
+      decrypt_if_necessary input op (pdf_of_stdin u o)
+  | (AlreadyInMemory pdf, _, _, _, _)::_ -> pdf
+  | _ ->
+      raise (Arg.Bad "cpdf: No input specified.\n")
+
+let get_single_pdf_nodecrypt read_lazy =
+  match args.inputs with
+  | (InFile inname, _, _, u, o)::_ ->
+      if args.squeeze then
+        Printf.printf "Initial file size is %i bytes\n" (filesize inname);
+        if read_lazy then
+          pdfread_pdf_of_channel_lazy (optstring u) (optstring o) (open_in_bin inname)
+        else
+          pdfread_pdf_of_file (optstring u) (optstring o) inname
+  | (StdIn, _, _, u, o)::_ -> pdf_of_stdin u o
+  | (AlreadyInMemory pdf, _, _, _, _)::_ -> pdf
+  | _ ->
+      raise (Arg.Bad "cpdf: No input specified.\n")
+
 let really_write_pdf ?(encryption = None) mk_id pdf outname =
   let outname' =
     if args.linearize
       then Filename.temp_file "cpdflin" ".pdf"
       else outname
   in
-    Pdfwrite.pdf_to_file_options
-      ~preserve_objstm:args.preserve_objstm
-      ~generate_objstm:args.create_objstm
-      false encryption mk_id pdf outname';
+    begin if args.recrypt then
+      Pdfwrite.pdf_to_file_recrypting
+        (get_single_pdf_nodecrypt false) pdf args.user outname'
+    else
+      Pdfwrite.pdf_to_file_options
+        ~preserve_objstm:args.preserve_objstm
+        ~generate_objstm:args.create_objstm
+        false encryption mk_id pdf outname'
+    end;
     begin
       if args.linearize then
         let cpdflin =
@@ -1781,62 +1854,13 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
             with
               End_of_file -> flush stdout (*r For Windows *)
 
-let pdf_of_stdin user_pw owner_pw =
-  let user_pw = Some user_pw
-  and owner_pw = if owner_pw = "" then None else Some owner_pw
-  in
-    let o, bytes = Pdfio.input_output_of_bytes 16384 in
-      try
-        while true do o.Pdfio.output_char (input_char stdin) done;
-        Pdf.empty ()
-      with
-        End_of_file ->
-          let i = Pdfio.input_of_bytes (Pdfio.extract_bytes_from_input_output o bytes) in
-            pdfread_pdf_of_input user_pw owner_pw i
-
-let get_single_pdf op read_lazy =
-  match args.inputs with
-  | (InFile inname, _, _, u, o) as input::_ ->
-      if args.squeeze then
-        Printf.printf "Initial file size is %i bytes\n" (filesize inname);
-      let pdf =
-        if read_lazy then
-          pdfread_pdf_of_channel_lazy (optstring u) (optstring o) (open_in_bin inname)
-        else
-          pdfread_pdf_of_file (optstring u) (optstring o) inname
-      in
-        decrypt_if_necessary input op pdf
-  | (StdIn, _, _, u, o) as input::_ ->
-      decrypt_if_necessary input op (pdf_of_stdin u o)
-  | (AlreadyInMemory pdf, _, _, _, _)::_ -> pdf
-  | _ ->
-      raise (Arg.Bad "cpdf: No input specified.\n")
 
 let get_pagespec () =
   match args.inputs with
   | (_, ps, _, _, _)::_ -> ps
   | _ -> error "get_pagespec"
 
-let filenames = null_hash ()
 
-(* This now memoizes on the name of the file to make sure we only load each
-file once *)
-let get_pdf_from_input_kind ((_, _, _, u, o) as input) op = function
-  | AlreadyInMemory pdf -> pdf
-  | InFile s ->
-      if args.squeeze then
-        begin
-          let size = filesize s in
-            initial_file_size := size;
-            Printf.printf "Initial file size is %i bytes\n" size
-        end;
-      begin try Hashtbl.find filenames s with
-        Not_found ->
-          let pdf = decrypt_if_necessary input op (pdfread_pdf_of_file (optstring u) (optstring o) s) in
-            Hashtbl.add filenames s pdf; pdf
-      end
-  | StdIn ->
-      decrypt_if_necessary input op (pdf_of_stdin u o)
 
 (* Copy a font from [frompdf] with name [fontname] on page [fontpage] to [pdf] on all pages in [range] *)
 let copy_font frompdf fontname fontpage range pdf =

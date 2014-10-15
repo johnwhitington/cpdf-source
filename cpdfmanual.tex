@@ -923,10 +923,10 @@ metadata. Add \texttt{-no-encrypt-metadata} to the command line.
      \vspace{1.5mm}
      \noindent\verb!cpdf -compress in.pdf -o out.pdf!
      
-     \vspace{1.5mm}
-     \noindent\verb!cpdf -squeeze in.pdf -o out.pdf!  
+     %\vspace{1.5mm}
+     %\noindent\verb!cpdf -squeeze in.pdf -o out.pdf!  
    \end{framed}
-  \cpdf\ provides basic facilities for decompressing and compressing PDF streams, and a more advanced PDF \textit{squeezer}.
+  \cpdf\ provides basic facilities for decompressing and compressing PDF streams.
   \section{Decompressing a Document}
 \index{decompressing}
   To decompress the streams in a PDF file, for instance to manually inspect the
@@ -945,24 +945,24 @@ PDF, use:
   \textbf{Flate\-Decode} method, with the exception of Metadata streams, which
   are left uncompressed.
   
-  \section{Squeezing a Document}
-\index{squeeze}
-  To \textit{squeeze} a PDF file, reducing its size by an average of about twenty percent (though sometimes not at all), use:
-  \begin{framed}
-    \small\verb!cpdf -squeeze in.pdf -o out.pdf!
-  \end{framed}
-  \noindent Adding \texttt{-squeeze} to the command line when using another operation will \textit{squeeze} the file or files upon output.
-  
-  The \texttt{-squeeze} operation writes some information about the squeezing process to standard output. The squeezing process involves several processes which losslessly attempt to reduce the file size. It is slow, so should not be used without thought.
+%  \section{Squeezing a Document}
+%\index{squeeze}
+%  To \textit{squeeze} a PDF file, reducing its size by an average of about twenty percent (though sometimes not at all), use:
+%  \begin{framed}
+%    \small\verb!cpdf -squeeze in.pdf -o out.pdf!
+%  \end{framed}
+%  \noindent Adding \texttt{-squeeze} to the command line when using another operation will \textit{squeeze} the file or files upon output.
+%  
+%  The \texttt{-squeeze} operation writes some information about the squeezing process to standard output. The squeezing process involves several processes which losslessly attempt to reduce the file size. It is slow, so should not be used without thought.
 
-\begin{verbatim}
-$ ./cpdf -squeeze in.pdf -o out.pdf
-Beginning squeeze: 123847 objects
-Squeezing... Down to 114860 objects
-Squeezing... Down to 114842 objects
-Squeezing page data
-Recompressing document
-\end{verbatim}
+%\begin{verbatim}
+%$ ./cpdf -squeeze in.pdf -o out.pdf
+%Beginning squeeze: 123847 objects
+%Squeezing... Down to 114860 objects
+%Squeezing... Down to 114842 objects
+%Squeezing page data
+%Recompressing document
+%\end{verbatim}
 
 \chapter{Bookmarks}
   \begin{framed}
