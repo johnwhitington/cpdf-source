@@ -2849,9 +2849,9 @@ let xmltree_of_bytes b =
     and data d = D d in
       Xmlm.input_doc_tree ~el ~data i
 
-(*let rec string_of_xmltree = function
+let rec string_of_xmltree = function
    D d ->
-     Printf.sprintf "DATA **%s**" d
+     Printf.sprintf "DATA {%s}" d
  | E (tag, trees) ->
      Printf.sprintf "ELT (%s, %s)"
        (string_of_tag tag)
@@ -2863,7 +2863,7 @@ and string_of_tag ((n, n'), attributes) =
     (string_of_attributes attributes)
 
 and string_of_attribute ((n, n'), str) =
-  Printf.sprintf "ATTRNAME |%s| |%s|, STR **%s**" n n' str
+  Printf.sprintf "ATTRNAME |%s| |%s|, STR {%s}" n n' str
 
 and string_of_attributes attrs =
   fold_left
@@ -2871,15 +2871,46 @@ and string_of_attributes attrs =
 
 and string_of_xmltrees trees =
   fold_left
-    (fun a b -> a ^ " " ^ b) "" (map string_of_xmltree trees)*)
+    (fun a b -> a ^ " " ^ b) "" (map string_of_xmltree trees)
+
+let adobe = "http://ns.adobe.com/pdf/1.3/"
+
+let xmp = "http://ns.adobe.com/xap/1.0/"
+
+let dc = "http://purl.org/dc/elements/1.1/"
+
+let rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+
+let combine_with_spaces strs =
+  String.trim
+    (fold_left (fun x y -> x ^ (if x <> "" then ", " else "") ^ y) "" strs)
+
+(* Collect all <li> elements inside a seq, bag, or alt. Combine with commas. If
+none found, return empty string instead. *)
+let collect_list_items = function
+   E (((n, n'), _), elts) when
+     n = rdf && (n' = "Alt" || n' = "Seq" || n' = "Bag")
+   ->
+     combine_with_spaces
+       (option_map
+         (function
+             E (((n, n'), _), [D d]) when n = rdf && n' = "li" ->
+               Some d
+           | _ -> None)
+         elts)
+ | _ -> ""
+
+let collect_list_items_all all =
+  match keep (function E _ -> true | _ -> false) all with
+    h::_ -> Some (collect_list_items h)
+  | [] -> None
 
 let rec get_data_for namespace name = function
    D _ -> None
- | E (((n, n'), children), [D d]) when n = namespace && n' = name ->
+ | E (((n, n'), _), [D d]) when n = namespace && n' = name ->
      Some d
- (*| E (((n, n'), l), [D d]) ->
-     if n' <> "image" then Printf.printf "%s %s %s\n" n n' d;
-     None*)
+ | E (((n, n'), _), e) when n = namespace && n' = name ->
+     collect_list_items_all e
  | E (_, l) ->
      match option_map (get_data_for namespace name) l with
        x :: _ -> Some x
@@ -2897,13 +2928,6 @@ let output_xmp_info encoding pdf =
       None -> ()
     | Some metadata ->
         let dtd, tree = xmltree_of_bytes metadata in
-          (*flprint "***************** ORIGINAL\n";
-          print_endline (string_of_bytes metadata);
-          flprint "***************** TREE\n";
-          print_endline (string_of_xmltree tree);*)
-          let adobe = "http://ns.adobe.com/pdf/1.3/"
-          and xmp = "http://ns.adobe.com/xap/1.0/"
-          and dc = "http://purl.org/dc/elements/1.1/" in
           print_out tree "XMP pdf:Keywords" adobe "Keywords";
           print_out tree "XMP pdf:PDFVersion" adobe "PDFVersion";
           print_out tree "XMP pdf:Producer" adobe "Producer";
@@ -2913,7 +2937,8 @@ let output_xmp_info encoding pdf =
           print_out tree "XMP xmp:MetadataDate" xmp "MetadataDate";
           print_out tree "XMP xmp:ModifyDate" xmp "ModifyDate";
           print_out tree "XMP dc:title" dc "title";
-          print_out tree "XMP dc:creator" dc "creator"
+          print_out tree "XMP dc:creator" dc "creator";
+          print_out tree "XMP dc:subject" dc "subject"
 
 (* \section{Blacken text} *)
 
