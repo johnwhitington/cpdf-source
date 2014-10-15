@@ -249,7 +249,12 @@ let squeeze pdf =
     Pdfcodec.flate_level := 9;
     ignore (recompress_pdf pdf)
   with
-    e -> raise (Pdf.PDFError "Squeeze failed. No output written")
+    e ->
+      raise
+        (Pdf.PDFError
+           (Printf.sprintf
+              "Squeeze failed. No output written.\n Proximate error was:\n %s"
+              (Printexc.to_string e)))
 
 type encoding =
   | Raw
