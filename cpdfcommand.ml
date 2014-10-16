@@ -155,6 +155,106 @@ type op =
   | RemovePageLabels
   | PrintPageLabels
 
+let string_of_op = function
+  | CopyFont _ -> "CopyFont"
+  | CSP1 -> "CSP1"
+  | CSP2 _ -> "CSP2"
+  | CSP3 -> "CSP3"
+  | CountPages -> "CountPages"
+  | Version -> "Version"
+  | Encrypt -> "Encrypt"
+  | Decrypt -> "Decrypt"
+  | StampOn _ -> "StampOn"
+  | StampUnder _ -> "StampUnder"
+  | CombinePages _ -> "CombinePages"
+  | TwoUp -> "TwoUp"
+  | TwoUpStack -> "TwoUpStack"
+  | RemoveBookmarks -> "RemoveBookmarks"
+  | AddBookmarks _ -> "AddBookmarks"
+  | AddText _ -> "AddText"
+  | AddRectangle -> "AddRectangle"
+  | RemoveText -> "RemoveText"
+  | Draft -> "Draft"
+  | PadBefore -> "PadBefore"
+  | PadAfter -> "PadAfter"
+  | PadEvery _ -> "PadEvery"
+  | PadMultiple _ -> "PadMultiple"
+  | Shift -> "Shift"
+  | Scale -> "Scale"
+  | ScaleToFit -> "ScaleToFit"
+  | ScaleContents _ -> "ScaleContents"
+  | AttachFile _ -> "AttachFile"
+  | RemoveAttachedFiles -> "RemoveAttachedFiles"
+  | ListAttachedFiles -> "ListAttachedFiles"
+  | DumpAttachedFiles -> "DumpAttachedFiles"
+  | RemoveAnnotations -> "RemoveAnnotations"
+  | ListAnnotations -> "ListAnnotations"
+  | ListAnnotationsMore -> "ListAnnotationsMore"
+  | CopyAnnotations _ -> "CopyAnnotations"
+  | Merge -> "Merge"
+  | Split -> "Split"
+  | SplitOnBookmarks _ -> "SplitOnBookmarks"
+  | Clean -> "Clean"
+  | Info -> "Info"
+  | PageInfo -> "PageInfo"
+  | Metadata -> "Metadata"
+  | SetMetadata _ -> "SetMetadata"
+  | RemoveMetadata -> "RemoveMetadata"
+  | Fonts -> "Fonts"
+  | RemoveFonts -> "RemoveFonts"
+  | Compress -> "Compress"
+  | Decompress -> "Decompress"
+  | Crop -> "Crop"
+  | RemoveCrop -> "RemoveCrop"
+  | CopyCropBoxToMediaBox -> "CopyCropBoxToMediaBox"
+  | CopyBox -> "CopyBox"
+  | MediaBox -> "MediaBox"
+  | Rotate _ -> "Rotate"
+  | Rotateby _ -> "Rotateby"
+  | RotateContents _ -> "RotateContents"
+  | Upright -> "Upright"
+  | VFlip -> "VFlip"
+  | HFlip -> "HFlip"
+  | ThinLines _ -> "ThinLines"
+  | SetAuthor _ -> "SetAuthor"
+  | SetTitle _ -> "SetTitle"
+  | SetSubject _ -> "SetSubject"
+  | SetKeywords _ -> "SetKeywords"
+  | SetCreate _ -> "SetCreate"
+  | SetModify _ -> "SetModify"
+  | SetCreator _ -> "SetCreator"
+  | SetProducer _ -> "SetProducer"
+  | SetTrapped -> "SetTrapped"
+  | SetUntrapped -> "SetUntrapped"
+  | SetVersion _ -> "SetVersion"
+  | ListBookmarks -> "ListBookmarks"
+  | SetPageLayout _ -> "SetPageLayout"
+  | SetPageMode _ -> "SetPageMode"
+  | HideToolbar _ -> "HideToolbar"
+  | HideMenubar _ -> "HideMenubar"
+  | HideWindowUI _ -> "HideWindowUI"
+  | FitWindow _ -> "FitWindow"
+  | CenterWindow _ -> "CenterWindow"
+  | DisplayDocTitle _ -> "DisplayDocTitle"
+  | Presentation -> "Presentation"
+  | ChangeId -> "ChangeId"
+  | RemoveId -> "RemoveId"
+  | CopyId _ -> "CopyId"
+  | BlackText -> "BlackText"
+  | BlackLines -> "BlackLines"
+  | BlackFills -> "BlackFills"
+  | ExtractImages -> "ExtractImages"
+  | ImageResolution _ -> "ImageResolution"
+  | MissingFonts -> "MissingFonts"
+  | RemoveUnusedResources -> "RemoveUnusedResources"
+  | ExtractFontFile -> "ExtractFontFile"
+  | ExtractText -> "ExtractText"
+  | OpenAtPage _ -> "OpenAtPage"
+  | OpenAtPageFit _ -> "OpenAtPageFit"
+  | AddPageLabels -> "AddPageLabels"
+  | RemovePageLabels -> "RemovePageLabels"
+  | PrintPageLabels -> "PrintPageLabels"
+
 (* Inputs: filename, pagespec. *)
 type input_kind =
   | AlreadyInMemory of Pdf.t
@@ -252,6 +352,7 @@ type args =
    mutable labelstartval : int;
    mutable squeeze : bool;
    mutable original_filename : string;
+   mutable was_encrypted : bool;
    mutable cpdflin : string option;
    mutable recrypt : bool}
 
@@ -331,6 +432,7 @@ let args =
    labelstartval = 1;
    squeeze = false;
    original_filename = "";
+   was_encrypted = false;
    cpdflin = None;
    recrypt = false}
 
@@ -405,7 +507,7 @@ let reset_arguments () =
   args.labelstartval <- 1;
   args.squeeze <- false;
   args.recrypt <- false
-  (* Do not reset original_filename or cpdflin, since we want it to work across ANDs. *)
+  (* Do not reset original_filename or cpdflin or was_encrypted, since we want it to work across ANDs. *)
 
 let banlist_of_args () =
   let l = ref [] in
@@ -432,12 +534,15 @@ let banned banlist = function
   | _ -> mem Pdfcrypt.NoEdit banlist
 
 let operation_allowed banlist op =
-  args.recrypt || (* FIXME *)
   match op with
   | None -> true (* Merge *) (* changed to allow it *)
   | Some op -> not (banned banlist op)
 
-let rec decrypt_if_necessary (a, b, c, user_pw, owner_pw) op pdf =
+let rec decrypt_if_necessary (_, _, _, user_pw, owner_pw) op pdf =
+  begin match op with
+    None -> flprint "decrypt_if_necessary: op = None\n"
+  | Some x -> Printf.printf "decrypt_if_necessary: op = %s\n" (string_of_op x)
+  end;
   if not (Pdfcrypt.is_encrypted pdf) then pdf else
     match Pdfcrypt.decrypt_pdf_owner owner_pw pdf with
     | Some pdf -> pdf
@@ -1752,6 +1857,7 @@ let get_single_pdf op read_lazy =
         else
           pdfread_pdf_of_file (optstring u) (optstring o) inname
       in
+        args.was_encrypted <- Pdfcrypt.is_encrypted pdf;
         decrypt_if_necessary input op pdf
   | (StdIn, _, _, u, o) as input::_ ->
       decrypt_if_necessary input op (pdf_of_stdin u o)
@@ -1779,7 +1885,7 @@ let really_write_pdf ?(encryption = None) mk_id pdf outname =
       then Filename.temp_file "cpdflin" ".pdf"
       else outname
   in
-    begin if args.recrypt then
+    begin if args.recrypt && args.was_encrypted then
       Pdfwrite.pdf_to_file_recrypting
         (get_single_pdf_nodecrypt false) pdf args.user outname'
     else
@@ -2583,7 +2689,12 @@ let go () =
                 in
                   match namewiths with
                   | (namewiths, _, _, _, _) as input::t ->
-                      let spdf = get_pdf_from_input_kind input (Some Decrypt) namewiths in
+                      let spdf =
+                        get_pdf_from_input_kind
+                          input
+                          (Some Decrypt)
+                          namewiths
+                      in
                         write_pdf x (Cpdf.copy_id true spdf pdf)
                   | _ -> write_pdf x pdf
           in
@@ -3176,6 +3287,7 @@ let go () =
             end;
             write_pdf ~encryption:(Some encryption) args.makenewid pdf
   | Some Decrypt ->
+      args.recrypt <- false;
       write_pdf false (get_single_pdf args.op false)
   | Some RemoveMetadata ->
       write_pdf false (Cpdf.remove_metadata (get_single_pdf args.op false))
