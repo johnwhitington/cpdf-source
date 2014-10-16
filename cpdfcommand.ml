@@ -556,6 +556,7 @@ let rec decrypt_if_necessary (_, _, _, user_pw, owner_pw) op pdf =
          soft_error "Failed to decrypt file: wrong password?"
 
 let nobble pdf =
+  flprint "nobble\n";
   if not demo then pdf else
     Cpdf.process_pages (Cpdf.nobble_page pdf) pdf (ilist 1 (Pdfpage.endpage pdf))
 
