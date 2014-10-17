@@ -547,6 +547,7 @@ let rec decrypt_if_necessary (_, _, _, user_pw, owner_pw) op pdf =
     match Pdfcrypt.decrypt_pdf_owner owner_pw pdf with
     | Some pdf -> pdf
     | _ ->
+      Printf.printf "Couldn't decrypt with owner password %s\n" owner_pw;
       match Pdfcrypt.decrypt_pdf user_pw pdf with
       | Some pdf, permissions ->
           if operation_allowed permissions op
