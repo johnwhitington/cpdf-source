@@ -1,5 +1,5 @@
 (* cpdf command line tools *)
-let demo = true
+let demo = false
 let noncomp = false
 let major_version = 1
 let minor_version = 8
