@@ -1,5 +1,5 @@
 (* cpdf command line tools *)
-let demo = false
+let demo = true
 let noncomp = false
 let major_version = 1
 let minor_version = 8
@@ -557,7 +557,6 @@ let rec decrypt_if_necessary (_, _, _, user_pw, owner_pw) op pdf =
          soft_error "Failed to decrypt file: wrong password?"
 
 let nobble pdf =
-  flprint "nobble\n";
   if not demo then pdf else
     Cpdf.process_pages (Cpdf.nobble_page pdf) pdf (ilist 1 (Pdfpage.endpage pdf))
 
@@ -1929,14 +1928,14 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
     | File outname ->
         begin match encryption with
           None ->
-            ignore (nobble pdf);
-            if not is_decompress then
-              begin
-                ignore (Cpdf.recompress_pdf pdf);
-                if args.squeeze then Cpdf.squeeze pdf;
-                Pdf.remove_unreferenced pdf
-              end;
-            really_write_pdf mk_id pdf outname
+            let pdf = nobble pdf in
+              if not is_decompress then
+                begin
+                  ignore (Cpdf.recompress_pdf pdf);
+                  if args.squeeze then Cpdf.squeeze pdf;
+                  Pdf.remove_unreferenced pdf
+                end;
+              really_write_pdf mk_id pdf outname
         | Some _ ->
             really_write_pdf ~encryption mk_id pdf outname
         end
@@ -1944,14 +1943,14 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
         let temp = Filename.temp_file "cpdflin" ".pdf" in
           begin match encryption with
             None -> 
-              ignore (nobble pdf);
-              if not is_decompress then
-                begin
-                  ignore (Cpdf.recompress_pdf pdf);
-                  if args.squeeze then Cpdf.squeeze pdf;
-                  Pdf.remove_unreferenced pdf
-                end;
-                really_write_pdf ~encryption mk_id pdf temp;
+              let pdf = nobble pdf in
+                if not is_decompress then
+                  begin
+                    ignore (Cpdf.recompress_pdf pdf);
+                    if args.squeeze then Cpdf.squeeze pdf;
+                    Pdf.remove_unreferenced pdf
+                  end;
+                  really_write_pdf ~encryption mk_id pdf temp;
           | Some _ ->
               really_write_pdf ~encryption mk_id pdf temp
           end;
