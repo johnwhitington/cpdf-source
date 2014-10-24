@@ -545,11 +545,13 @@ let rec decrypt_if_necessary (_, _, _, user_pw, owner_pw) op pdf =
   end;
   if not (Pdfcrypt.is_encrypted pdf) then pdf else
     match Pdfcrypt.decrypt_pdf_owner owner_pw pdf with
-    | Some pdf -> pdf
+    | Some pdf ->
+        Printf.printf "Managed to decrypt with owner password"; pdf
     | _ ->
       Printf.printf "Couldn't decrypt with owner password %s\n" owner_pw;
       match Pdfcrypt.decrypt_pdf user_pw pdf with
       | Some pdf, permissions ->
+          Printf.printf "Managed to decrypt with user password\n";
           if operation_allowed permissions op
             then pdf
             else soft_error "User password cannot give permission for this operation"

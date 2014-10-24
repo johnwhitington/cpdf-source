@@ -1285,7 +1285,7 @@ let get_metadata pdf =
   | Some root ->
       match Pdf.lookup_direct pdf "/Metadata" root with
       | Some ((Pdf.Stream _) as s) ->
-          Pdf.getstream s;
+          Pdfcodec.decode_pdfstream pdf s;
           begin match s with
           | Pdf.Stream {contents = (_, Pdf.Got data)} -> Some data 
           | _ -> assert false
