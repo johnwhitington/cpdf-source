@@ -2932,18 +2932,21 @@ let output_xmp_info encoding pdf =
     match get_metadata pdf with
       None -> ()
     | Some metadata ->
-        let dtd, tree = xmltree_of_bytes metadata in
-          print_out tree "XMP pdf:Keywords" adobe "Keywords";
-          print_out tree "XMP pdf:PDFVersion" adobe "PDFVersion";
-          print_out tree "XMP pdf:Producer" adobe "Producer";
-          print_out tree "XMP pdf:Trapped" adobe "Trapped";
-          print_out tree "XMP xmp:CreateDate" xmp "CreateDate";
-          print_out tree "XMP xmp:CreatorTool" xmp "CreatorTool";
-          print_out tree "XMP xmp:MetadataDate" xmp "MetadataDate";
-          print_out tree "XMP xmp:ModifyDate" xmp "ModifyDate";
-          print_out tree "XMP dc:title" dc "title";
-          print_out tree "XMP dc:creator" dc "creator";
-          print_out tree "XMP dc:subject" dc "subject"
+        try
+          let dtd, tree = xmltree_of_bytes metadata in
+            print_out tree "XMP pdf:Keywords" adobe "Keywords";
+            print_out tree "XMP pdf:PDFVersion" adobe "PDFVersion";
+            print_out tree "XMP pdf:Producer" adobe "Producer";
+            print_out tree "XMP pdf:Trapped" adobe "Trapped";
+            print_out tree "XMP xmp:CreateDate" xmp "CreateDate";
+            print_out tree "XMP xmp:CreatorTool" xmp "CreatorTool";
+            print_out tree "XMP xmp:MetadataDate" xmp "MetadataDate";
+            print_out tree "XMP xmp:ModifyDate" xmp "ModifyDate";
+            print_out tree "XMP dc:title" dc "title";
+            print_out tree "XMP dc:creator" dc "creator";
+            print_out tree "XMP dc:subject" dc "subject"
+        with
+          _ -> ()
 
 (* \section{Blacken text} *)
 
