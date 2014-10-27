@@ -3,7 +3,7 @@ let demo = false
 let noncomp = false
 let major_version = 1
 let minor_version = 8
-let version_date = "(unreleased, 16th September 2014)"
+let version_date = "(unreleased, 27th October 2014)"
 
 open Pdfutil
 open Pdfio
@@ -355,7 +355,8 @@ type args =
    mutable original_filename : string;
    mutable was_encrypted : bool;
    mutable cpdflin : string option;
-   mutable recrypt : bool}
+   mutable recrypt : bool;
+   mutable was_decrypted_with_owner : bool}
 
 (* List of all filenames in any AND stage - this is used to check that we don't
 overwrite any input file when -dont-overwrite-existing-files is used. *)
@@ -436,7 +437,8 @@ let args =
    original_filename = "";
    was_encrypted = false;
    cpdflin = None;
-   recrypt = false}
+   recrypt = false;
+   was_decrypted_with_owner = false}
 
 let reset_arguments () =
   args.op <- None;
@@ -508,9 +510,25 @@ let reset_arguments () =
   args.labelstyle <- Pdfpagelabels.DecimalArabic;
   args.labelprefix <- None;
   args.labelstartval <- 1;
-  args.squeeze <- false;
-  args.recrypt <- false
-  (* Do not reset original_filename or cpdflin or was_encrypted, since we want it to work across ANDs. *)
+  args.squeeze <- false
+  (* Do not reset original_filename or cpdflin or was_encrypted or
+   * was_decrypted_with_owner or recrypt, since we want it to work across ANDs. *)
+
+let string_of_permission = function
+  | Pdfcrypt.NoEdit -> "No edit"
+  | Pdfcrypt.NoPrint -> "No print" 
+  | Pdfcrypt.NoCopy -> "No copy"
+  | Pdfcrypt.NoAnnot -> "No annotate"
+  | Pdfcrypt.NoForms -> "No edit forms"
+  | Pdfcrypt.NoExtract -> "No extract"
+  | Pdfcrypt.NoAssemble -> "No assemble"
+  | Pdfcrypt.NoHqPrint -> "No high-quality print"
+
+let getpermissions pdf =
+  fold_left
+    (fun x y -> if x = "" then x ^ y else x ^ ", " ^ y)
+    ""
+    (map string_of_permission (Pdfread.permissions pdf))
 
 let banlist_of_args () =
   let l = ref [] in
@@ -532,14 +550,31 @@ performed is checked to see if it's allowable under the permissions regime. *)
 bans list in the input file, the operation cannot proceed. Other operations
 cannot proceed at all without owner password. *)
 let banned banlist = function
-  | Fonts | Info | Metadata | PageInfo | CountPages -> false (* Always allowed *)
+  | Fonts | Info | Metadata | PageInfo | CountPages
+  | ListAttachedFiles | ListAnnotationsMore | ListAnnotations
+  | ListBookmarks | ImageResolution _ | MissingFonts
+  | PrintPageLabels | Clean | Compress | Decompress
+  | RemoveUnusedResources -> false (* Always allowed *)
   | Decrypt | Encrypt -> true (* Never allowed *)
+  | ExtractText | ExtractImages | ExtractFontFile -> mem Pdfcrypt.NoExtract banlist
+  | AddBookmarks _ | PadBefore | PadAfter | PadEvery _ | PadMultiple _
+  | Merge | Split | SplitOnBookmarks _ | RotateContents _ | Rotate _
+  | Rotateby _ | Upright | VFlip | HFlip | SetPageLayout _
+  | SetPageMode _ | HideToolbar _ | HideMenubar _ | HideWindowUI _
+  | FitWindow _ | CenterWindow _ | DisplayDocTitle _ | ChangeId
+  | RemoveId | CopyId _ | OpenAtPageFit _ | OpenAtPage _
+  | AddPageLabels | RemovePageLabels -> mem Pdfcrypt.NoAssemble banlist
   | _ -> mem Pdfcrypt.NoEdit banlist
 
-let operation_allowed banlist op =
+let operation_allowed pdf banlist op =
   match op with
-  | None -> true (* Merge *) (* changed to allow it *)
-  | Some op -> not (banned banlist op)
+  | None ->
+      Printf.printf "operation is None, so allowed!\n";
+      true (* Merge *) (* changed to allow it *)
+  | Some op ->
+      if args.debugcrypt then Printf.printf "operation_allowed: op = %s\n" (string_of_op op);
+      if args.debugcrypt then Printf.printf "Permissions: %s\n" (getpermissions pdf);
+      not (banned banlist op)
 
 let rec decrypt_if_necessary (_, _, _, user_pw, owner_pw) op pdf =
   if args.debugcrypt then
@@ -550,13 +585,15 @@ let rec decrypt_if_necessary (_, _, _, user_pw, owner_pw) op pdf =
   if not (Pdfcrypt.is_encrypted pdf) then pdf else
     match Pdfcrypt.decrypt_pdf_owner owner_pw pdf with
     | Some pdf ->
-        if args.debugcrypt then Printf.printf "Managed to decrypt with owner password\n"; pdf
+        args.was_decrypted_with_owner <- true;
+        if args.debugcrypt then Printf.printf "Managed to decrypt with owner password\n";
+        pdf
     | _ ->
       if args.debugcrypt then Printf.printf "Couldn't decrypt with owner password %s\n" owner_pw;
       match Pdfcrypt.decrypt_pdf user_pw pdf with
       | Some pdf, permissions ->
           if args.debugcrypt then Printf.printf "Managed to decrypt with user password\n";
-          if operation_allowed permissions op
+          if operation_allowed pdf permissions op
             then pdf
             else soft_error "User password cannot give permission for this operation"
       | _ ->
@@ -1851,8 +1888,10 @@ let get_pdf_from_input_kind ((_, _, _, u, o) as input) op = function
         end;
       begin try Hashtbl.find filenames s with
         Not_found ->
-          let pdf = decrypt_if_necessary input op (pdfread_pdf_of_file (optstring u) (optstring o) s) in
-            Hashtbl.add filenames s pdf; pdf
+          let pdf = pdfread_pdf_of_file (optstring u) (optstring o) s in
+            args.was_encrypted <- Pdfcrypt.is_encrypted pdf;
+            let pdf = decrypt_if_necessary input op pdf in
+              Hashtbl.add filenames s pdf; pdf
       end
   | StdIn ->
       decrypt_if_necessary input op (pdf_of_stdin u o)
@@ -1891,11 +1930,14 @@ let get_single_pdf_nodecrypt read_lazy =
       raise (Arg.Bad "cpdf: No input specified.\n")
 
 let really_write_pdf ?(encryption = None) mk_id pdf outname =
+  if args.debugcrypt then Printf.printf "really_write_pdf\n";
   let outname' =
     if args.linearize
       then Filename.temp_file "cpdflin" ".pdf"
       else outname
   in
+    if args.debugcrypt then
+      Printf.printf "args.recrypt = %b, args.was_encrypted = %b\n" args.recrypt args.was_encrypted;
     begin
       if args.recrypt && args.was_encrypted then
         begin
@@ -1905,11 +1947,16 @@ let really_write_pdf ?(encryption = None) mk_id pdf outname =
         end
       else
         begin
-          if args.debugcrypt then Printf.printf "Pdf to file in really_write_pdf\n";
-          Pdfwrite.pdf_to_file_options
-            ~preserve_objstm:args.preserve_objstm
-            ~generate_objstm:args.create_objstm
-            false encryption mk_id pdf outname'
+          if not args.was_encrypted || args.was_decrypted_with_owner && args.was_encrypted then
+            begin
+              if args.debugcrypt then Printf.printf "Pdf to file in really_write_pdf\n";
+                Pdfwrite.pdf_to_file_options
+                  ~preserve_objstm:args.preserve_objstm
+                  ~generate_objstm:args.create_objstm
+                  false encryption mk_id pdf outname'
+            end
+          else
+            soft_error "You must supply -recrypt here, or provide the owner password."
         end
     end;
     begin
@@ -1936,6 +1983,7 @@ let really_write_pdf ?(encryption = None) mk_id pdf outname =
           ((float s /. float !initial_file_size) *. 100.)
 
 let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
+  if args.debugcrypt then Printf.printf "write_pdf\n";
   if args.create_objstm && not args.keepversion
     then pdf.Pdf.minor <- max pdf.Pdf.minor 5;
   let mk_id = args.makenewid || mk_id in
@@ -2138,21 +2186,6 @@ let getencryption pdf =
   | Some (Pdfwrite.AES256bitISO true) -> "256bit AES ISO, Metadata encrypted"
   | Some (Pdfwrite.AES256bitISO false) -> "256bit AES ISO, Metadata not encrypted"
 
-let string_of_permission = function
-  | Pdfcrypt.NoEdit -> "No edit"
-  | Pdfcrypt.NoPrint -> "No print" 
-  | Pdfcrypt.NoCopy -> "No copy"
-  | Pdfcrypt.NoAnnot -> "No Annotate"
-  | Pdfcrypt.NoForms -> "No edit forms"
-  | Pdfcrypt.NoExtract -> "No extract"
-  | Pdfcrypt.NoAssemble -> "No assemble"
-  | Pdfcrypt.NoHqPrint -> "No high-quality print"
-
-let getpermissions pdf =
-  fold_left
-    (fun x y -> if x = "" then x ^ y else x ^ ", " ^ y)
-    ""
-    (map string_of_permission (Pdfread.permissions pdf))
 
 (* If a cropbox exists, make it the mediabox. If not, change nothing. *)
 let copy_cropbox_to_mediabox pdf range =
@@ -2707,17 +2740,12 @@ let go () =
                 in
                   match namewiths with
                   | (namewiths, _, _, _, _) as input::t ->
-                      let spdf =
-                        get_pdf_from_input_kind
-                          input
-                          (Some Decrypt)
-                          namewiths
-                      in
+                      let spdf = get_pdf_from_input_kind input (Some Merge) namewiths in
                         write_pdf x (Cpdf.copy_id true spdf pdf)
                   | _ -> write_pdf x pdf
           in
             let names, ranges, rotations, _, _ = split5 inputs in
-              let pdfs = map2 (fun i -> get_pdf_from_input_kind i (Some Decrypt)) inputs names in
+              let pdfs = map2 (fun i -> get_pdf_from_input_kind i (Some Merge)) inputs names in
                 (* If at least one file had object streams and args.preserve_objstm is true, set -objstm-create *)
                 if args.preserve_objstm then
                   iter
@@ -2805,7 +2833,7 @@ let go () =
         | (AlreadyInMemory pdf, _, _, _, _) as input::_ -> pdf, "", input
         | _ -> raise (Arg.Bad "cpdf: No input specified.\n")
       in
-        let pdf = decrypt_if_necessary input (Some Info) pdf in
+        let pdf = decrypt_if_necessary input (Some CountPages) pdf in
           output_page_count pdf
   | Some Clean ->
       begin match args.out with
