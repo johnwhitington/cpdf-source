@@ -1192,7 +1192,11 @@ let really_write_pdf ~preserve_objstm ~create_objstm ?(encryption = None) ?(cpdf
                 raise (Pdf.PDFError "linearizer failed")
               end
 
-let fast_write_split_pdfs enc splitlevel original_filename linearize ?(cpdflin = None) preserve_objstm create_objstm sq nobble spec main_pdf pagenums pdf_pages =
+let fast_write_split_pdfs
+  recrypt was_encrypted was_decrypted_with_owner enc splitlevel
+  original_filename linearize ?(cpdflin = None) preserve_objstm
+  create_objstm sq nobble spec main_pdf pagenums pdf_pages
+=
   let marks = Pdfmarks.read_bookmarks main_pdf in
     iter2
       (fun number pagenums ->
@@ -1205,10 +1209,16 @@ let fast_write_split_pdfs enc splitlevel original_filename linearize ?(cpdflin =
       (indx pagenums)
       pagenums
 
-let split_pdf enc original_filename chunksize linearize ~cpdflin ~preserve_objstm ~create_objstm ~squeeze nobble spec pdf =
+let split_pdf
+  recrypt was_encrypted was_decrypted_with_owner enc original_filename
+  chunksize linearize ~cpdflin ~preserve_objstm ~create_objstm ~squeeze
+  nobble spec pdf
+=
   let pdf_pages = Pdfpage.pages_of_pagetree pdf in
-    fast_write_split_pdfs enc 0 original_filename linearize preserve_objstm
-      create_objstm squeeze nobble spec pdf (splitinto chunksize (indx pdf_pages)) pdf_pages
+    fast_write_split_pdfs
+      recrypt was_encrypted was_decrypted_with_owner
+      enc 0 original_filename linearize preserve_objstm create_objstm
+      squeeze nobble spec pdf (splitinto chunksize (indx pdf_pages)) pdf_pages
 
 (* Return list, in order, a *set* of page numbers of bookmarks at a given level *)
 let bookmark_pages level pdf =
@@ -1217,15 +1227,20 @@ let bookmark_pages level pdf =
       (function l when l.Pdfmarks.level = level -> Some (Pdfpage.pagenumber_of_target pdf l.Pdfmarks.target) | _ -> None)
       (Pdfmarks.read_bookmarks pdf))
 
-let split_at_bookmarks original_filename linearize ~cpdflin ~preserve_objstm ~create_objstm ~squeeze nobble level spec pdf =
+let split_at_bookmarks
+  recrypt was_encrypted was_decrypted_with_owner original_filename linearize
+  ~cpdflin ~preserve_objstm ~create_objstm ~squeeze nobble level spec pdf
+=
   let pdf_pages = Pdfpage.pages_of_pagetree pdf in
     let points = bookmark_pages level pdf in
       let points =
         lose (fun x -> x <= 0 || x > Pdfpage.endpage pdf) (map pred points)
       in
-      let pts = splitat points (indx pdf_pages) in
-      fast_write_split_pdfs None level
-        original_filename linearize preserve_objstm create_objstm squeeze nobble spec pdf pts pdf_pages
+        let pts = splitat points (indx pdf_pages) in
+          fast_write_split_pdfs
+            recrypt was_encrypted was_decrypted_with_owner None level
+            original_filename linearize preserve_objstm create_objstm
+            squeeze nobble spec pdf pts pdf_pages
 
 (* Called from cpdflib.ml - different from above *)
 let split_on_bookmarks pdf level =

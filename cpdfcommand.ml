@@ -3066,6 +3066,7 @@ let go () =
                      Pdfwrite.permissions = banlist_of_args ()}
               in
                 Cpdf.split_pdf
+                  args.recrypt args.was_encrypted args.was_decrypted_with_owner
                   enc args.original_filename args.chunksize args.linearize args.cpdflin
                   args.preserve_objstm args.preserve_objstm (*yes--always create if preserving *)
                   args.squeeze nobble output_spec pdf
@@ -3209,8 +3210,10 @@ let go () =
               | [(InFile f, _, _, _, _)] -> f
               | _ -> ""
             in
-              Cpdf.split_at_bookmarks filename args.linearize args.cpdflin args.preserve_objstm
-              (* Yes *)args.preserve_objstm args.squeeze nobble level output_spec pdf
+              Cpdf.split_at_bookmarks
+                args.recrypt args.was_encrypted args.was_decrypted_with_owner
+                filename args.linearize args.cpdflin args.preserve_objstm
+                (* Yes *)args.preserve_objstm args.squeeze nobble level output_spec pdf
         | Stdout -> error "Can't split to standard output"
         | NoOutputSpecified -> error "Split: No output format specified"
       end

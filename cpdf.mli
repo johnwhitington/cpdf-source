@@ -208,7 +208,21 @@ val stamp : position -> bool -> bool -> bool -> int list -> Pdf.t -> Pdf.t -> Pd
 the fiven level, writing to files with names given by [spec] (see
 cpdfmanual.pdf). [nobble] is undocumented and should be false. If [linearize]
 is true, the files will be linearized. *)
-val split_at_bookmarks : string -> bool -> cpdflin:string option -> preserve_objstm:bool -> create_objstm:bool -> squeeze:bool -> (Pdf.t -> Pdf.t) -> int -> string -> Pdf.t -> unit
+val split_at_bookmarks :
+  bool ->
+  bool ->
+  bool ->
+  string ->
+  bool ->
+  cpdflin:string option ->
+  preserve_objstm:bool ->
+  create_objstm:bool ->
+  squeeze:bool ->
+  (Pdf.t -> Pdf.t) ->
+  int ->
+  string ->
+  Pdf.t ->
+  unit
 
 (** Split a PDF on bookmarks of a given level or below. Level 0 is top level. *)
 val split_on_bookmarks : Pdf.t -> int -> Pdf.t list
@@ -220,8 +234,22 @@ each output is linearized. If [preserve_objstm] is true, object streams will
 be used if the input file had them. If [create_objstm] is true, object
 streams will be created in any event. [printf] and [nobble] are
 undocumented and should be false. *)
-val split_pdf : Pdfwrite.encryption option -> string -> int -> bool -> cpdflin:string option ->
-  preserve_objstm:bool -> create_objstm:bool -> squeeze:bool -> (Pdf.t -> Pdf.t) -> string -> Pdf.t -> unit
+val split_pdf :
+  bool ->
+  bool ->
+  bool ->
+  Pdfwrite.encryption option ->
+  string ->
+  int ->
+  bool ->
+  cpdflin:string option ->
+  preserve_objstm:bool ->
+  create_objstm:bool ->
+  squeeze:bool ->
+  (Pdf.t -> Pdf.t) ->
+  string ->
+  Pdf.t ->
+  unit
 
 (** {2 Listing fonts} *)
 
