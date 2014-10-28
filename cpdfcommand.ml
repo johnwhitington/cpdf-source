@@ -2026,13 +2026,118 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
             with
               End_of_file -> flush stdout (*r For Windows *)
 
+(* Returns empty string on failure. Should only be used in conjunction with
+split at bookmarks code, so should never fail, by definiton. *)
+let remove_unsafe_characters s =
+  let chars =
+    lose
+      (function x ->
+         match x with
+         '/' | '?' | '<' | '>' | '\\' | ':' | '*' | '|' | '\"' | '^' | '+' | '=' -> true
+         | x when int_of_char x < 32 || int_of_char x > 126 -> true
+         | _ -> false)
+      (explode s)
+  in
+    match chars with
+    | '.'::more -> implode more
+    | chars -> implode chars
+
+let get_bookmark_name pdf marks splitlevel n _ =
+  match keep (function m -> n = Pdfpage.pagenumber_of_target pdf m.Pdfmarks.target && m.Pdfmarks.level <= splitlevel) marks with
+  | {Pdfmarks.text = title}::_ -> remove_unsafe_characters title
+  | _ -> ""
+
+(* @F means filename without extension *)
+(* @N means sequence number with no padding *)
+(* @S means start page of this section *)
+(* @E means end page of this section *)
+(* @B means bookmark name at start page *)
+let process_others marks pdf splitlevel filename sequence startpage endpage s =
+  let rec procss prev = function
+    | [] -> rev prev
+    | '@'::'F'::t -> procss (rev (explode filename) @ prev) t
+    | '@'::'N'::t -> procss (rev (explode (string_of_int sequence)) @ prev) t
+    | '@'::'S'::t -> procss (rev (explode (string_of_int startpage)) @ prev) t
+    | '@'::'E'::t -> procss (rev (explode (string_of_int endpage)) @ prev) t
+    | '@'::'B'::t -> procss (rev (explode (get_bookmark_name pdf marks splitlevel startpage pdf)) @ prev) t
+    | h::t -> procss (h::prev) t
+  in
+     implode (procss [] (explode s))
+
+let name_of_spec marks (pdf : Pdf.t) splitlevel spec n filename startpage endpage =
+  let fill l n =
+    let chars = explode (string_of_int n) in
+      if length chars > l
+        then implode (drop chars (length chars - l))
+        else implode ((many '0' (l - length chars)) @ chars)
+  in
+    let chars = explode spec in
+      let before, including = cleavewhile (neq '%') chars in
+        let percents, after = cleavewhile (eq '%') including in
+          if percents = []
+            then
+              process_others marks pdf splitlevel filename n startpage endpage spec
+            else
+              process_others marks pdf splitlevel filename n startpage endpage
+              (implode before ^ fill (length percents) n ^ implode after)
+
+(* Find the stem of a filename *)
+let stem s =
+  implode (rev (tail_no_fail (dropwhile (neq '.') (rev (explode (Filename.basename s))))))
+
+let fast_write_split_pdfs
+  enc splitlevel
+  original_filename linearize ?(cpdflin = None) preserve_objstm
+  create_objstm sq nobble spec main_pdf pagenums pdf_pages
+=
+  let marks = Pdfmarks.read_bookmarks main_pdf in
+    iter2
+      (fun number pagenums ->
+         let pdf = nobble (Pdfpage.pdf_of_pages main_pdf pagenums) in
+           let startpage, endpage = extremes pagenums in
+             let name = name_of_spec marks main_pdf splitlevel spec number (stem original_filename) startpage endpage in
+               Pdf.remove_unreferenced pdf;
+               if sq then Cpdf.squeeze pdf;
+               really_write_pdf ~encryption:enc (not (enc = None)) pdf name)
+      (indx pagenums)
+      pagenums
+
+(* Return list, in order, a *set* of page numbers of bookmarks at a given level *)
+let bookmark_pages level pdf =
+  setify_preserving_order
+    (option_map
+      (function l when l.Pdfmarks.level = level -> Some (Pdfpage.pagenumber_of_target pdf l.Pdfmarks.target) | _ -> None)
+      (Pdfmarks.read_bookmarks pdf))
+
+let split_at_bookmarks
+  original_filename linearize
+  ~cpdflin ~preserve_objstm ~create_objstm ~squeeze nobble level spec pdf
+=
+  let pdf_pages = Pdfpage.pages_of_pagetree pdf in
+    let points = bookmark_pages level pdf in
+      let points =
+        lose (fun x -> x <= 0 || x > Pdfpage.endpage pdf) (map pred points)
+      in
+        let pts = splitat points (indx pdf_pages) in
+          fast_write_split_pdfs
+            None level
+            original_filename linearize preserve_objstm create_objstm
+            squeeze nobble spec pdf pts pdf_pages
+
+let split_pdf
+  enc original_filename
+  chunksize linearize ~cpdflin ~preserve_objstm ~create_objstm ~squeeze
+  nobble spec pdf
+=
+  let pdf_pages = Pdfpage.pages_of_pagetree pdf in
+    fast_write_split_pdfs
+      enc 0 original_filename linearize preserve_objstm create_objstm
+      squeeze nobble spec pdf (splitinto chunksize (indx pdf_pages)) pdf_pages
 
 let get_pagespec () =
   match args.inputs with
   | (_, ps, _, _, _)::_ -> ps
   | _ -> error "get_pagespec"
-
-
 
 (* Copy a font from [frompdf] with name [fontname] on page [fontpage] to [pdf] on all pages in [range] *)
 let copy_font frompdf fontname fontpage range pdf =
@@ -3065,8 +3170,7 @@ let go () =
                      Pdfwrite.user_password = args.user;
                      Pdfwrite.permissions = banlist_of_args ()}
               in
-                Cpdf.split_pdf
-                  args.recrypt args.was_encrypted args.was_decrypted_with_owner
+                split_pdf
                   enc args.original_filename args.chunksize args.linearize args.cpdflin
                   args.preserve_objstm args.preserve_objstm (*yes--always create if preserving *)
                   args.squeeze nobble output_spec pdf
@@ -3210,8 +3314,7 @@ let go () =
               | [(InFile f, _, _, _, _)] -> f
               | _ -> ""
             in
-              Cpdf.split_at_bookmarks
-                args.recrypt args.was_encrypted args.was_decrypted_with_owner
+              split_at_bookmarks
                 filename args.linearize args.cpdflin args.preserve_objstm
                 (* Yes *)args.preserve_objstm args.squeeze nobble level output_spec pdf
         | Stdout -> error "Can't split to standard output"
