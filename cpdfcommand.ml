@@ -2120,7 +2120,7 @@ let bookmark_pages level pdf =
       (Pdfmarks.read_bookmarks pdf))
 
 let split_at_bookmarks
-  original_filename linearize
+  enc original_filename linearize
   ~cpdflin ~preserve_objstm ~create_objstm ~squeeze nobble level spec pdf
 =
   let pdf_pages = Pdfpage.pages_of_pagetree pdf in
@@ -2130,9 +2130,8 @@ let split_at_bookmarks
       in
         let pts = splitat points (indx pdf_pages) in
           fast_write_split_pdfs
-            None level
-            original_filename linearize preserve_objstm create_objstm
-            squeeze nobble spec pdf pts pdf_pages
+            enc level original_filename linearize preserve_objstm
+            create_objstm squeeze nobble spec pdf pts pdf_pages
 
 let split_pdf
   enc original_filename
@@ -3189,6 +3188,33 @@ let go () =
         | _, NoOutputSpecified -> error "Split: No output format specified"
         | _ -> error "Split: bad parameters"
       end
+  | Some (SplitOnBookmarks level) ->
+      begin match args.out with
+        | File output_spec ->
+            let pdf = get_single_pdf args.op false in
+              let enc =
+                match args.crypt_method with
+                | "" -> None
+                | _ ->
+                  Some
+                    {Pdfwrite.encryption_method =
+                       (match args.crypt_method with
+                       | "40bit" -> Pdfwrite.PDF40bit
+                       | "128bit" -> Pdfwrite.PDF128bit
+                       | "AES" -> Pdfwrite.AES128bit args.encrypt_metadata
+                       | "AES256" -> Pdfwrite.AES256bit args.encrypt_metadata
+                       | "AES256ISO" -> Pdfwrite.AES256bitISO args.encrypt_metadata
+                       | _ -> assert false (* Pre-checked *));
+                     Pdfwrite.owner_password = args.owner;
+                     Pdfwrite.user_password = args.user;
+                     Pdfwrite.permissions = banlist_of_args ()}
+              in
+                split_at_bookmarks
+                  enc args.original_filename args.linearize args.cpdflin args.preserve_objstm
+                  (* Yes *)args.preserve_objstm args.squeeze nobble level output_spec pdf
+        | Stdout -> error "Can't split to standard output"
+        | NoOutputSpecified -> error "Split: No output format specified"
+      end
   | Some Presentation ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
@@ -3316,21 +3342,7 @@ let go () =
               write_pdf false pdf
       | _ -> error "attach file: No input file specified"
       end
-  | Some (SplitOnBookmarks level) ->
-      begin match args.out with
-        | File output_spec ->
-            let pdf = get_single_pdf args.op false
-            and filename =
-              match args.inputs with
-              | [(InFile f, _, _, _, _)] -> f
-              | _ -> ""
-            in
-              split_at_bookmarks
-                filename args.linearize args.cpdflin args.preserve_objstm
-                (* Yes *)args.preserve_objstm args.squeeze nobble level output_spec pdf
-        | Stdout -> error "Can't split to standard output"
-        | NoOutputSpecified -> error "Split: No output format specified"
-      end
+
   | Some PadBefore ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
