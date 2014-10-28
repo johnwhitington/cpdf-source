@@ -569,7 +569,7 @@ let banned banlist = function
 let operation_allowed pdf banlist op =
   match op with
   | None ->
-      Printf.printf "operation is None, so allowed!\n";
+      if args.debugcrypt then Printf.printf "operation is None, so allowed!\n";
       true (* Merge *) (* changed to allow it *)
   | Some op ->
       if args.debugcrypt then Printf.printf "operation_allowed: op = %s\n" (string_of_op op);
@@ -1930,7 +1930,7 @@ let get_single_pdf_nodecrypt read_lazy =
       raise (Arg.Bad "cpdf: No input specified.\n")
 
 let really_write_pdf ?(encryption = None) mk_id pdf outname =
-  if args.debugcrypt then Printf.printf "really_write_pdf\n";
+  if args.debugcrypt then Printf.printf "really_write_pdf\n%!";
   let outname' =
     if args.linearize
       then Filename.temp_file "cpdflin" ".pdf"
@@ -2083,7 +2083,10 @@ let name_of_spec marks (pdf : Pdf.t) splitlevel spec n filename startpage endpag
 
 (* Find the stem of a filename *)
 let stem s =
-  implode (rev (tail_no_fail (dropwhile (neq '.') (rev (explode (Filename.basename s))))))
+  implode
+    (rev (tail_no_fail
+      (dropwhile
+        (neq '.') (rev (explode (Filename.basename s))))))
 
 let fast_write_split_pdfs
   enc splitlevel
@@ -2095,7 +2098,11 @@ let fast_write_split_pdfs
       (fun number pagenums ->
          let pdf = nobble (Pdfpage.pdf_of_pages main_pdf pagenums) in
            let startpage, endpage = extremes pagenums in
-             let name = name_of_spec marks main_pdf splitlevel spec number (stem original_filename) startpage endpage in
+             let name =
+               name_of_spec
+                 marks main_pdf splitlevel spec number
+                 (stem original_filename) startpage endpage
+             in
                Pdf.remove_unreferenced pdf;
                if sq then Cpdf.squeeze pdf;
                really_write_pdf ~encryption:enc (not (enc = None)) pdf name)
@@ -2106,7 +2113,10 @@ let fast_write_split_pdfs
 let bookmark_pages level pdf =
   setify_preserving_order
     (option_map
-      (function l when l.Pdfmarks.level = level -> Some (Pdfpage.pagenumber_of_target pdf l.Pdfmarks.target) | _ -> None)
+      (function
+         l when l.Pdfmarks.level = level ->
+           Some (Pdfpage.pagenumber_of_target pdf l.Pdfmarks.target)
+       | _ -> None)
       (Pdfmarks.read_bookmarks pdf))
 
 let split_at_bookmarks
@@ -2835,6 +2845,7 @@ let go () =
   | None | Some Merge ->
       begin match args.out, args.inputs with
       | _, (_::_ as inputs) ->
+          let op = match inputs with [_] -> None | _ -> Some Merge in
           let write_pdf x pdf =
             match args.keep_this_id with
             | None -> write_pdf x pdf
@@ -2845,12 +2856,12 @@ let go () =
                 in
                   match namewiths with
                   | (namewiths, _, _, _, _) as input::t ->
-                      let spdf = get_pdf_from_input_kind input (Some Merge) namewiths in
+                      let spdf = get_pdf_from_input_kind input op namewiths in
                         write_pdf x (Cpdf.copy_id true spdf pdf)
                   | _ -> write_pdf x pdf
           in
             let names, ranges, rotations, _, _ = split5 inputs in
-              let pdfs = map2 (fun i -> get_pdf_from_input_kind i (Some Merge)) inputs names in
+              let pdfs = map2 (fun i -> get_pdf_from_input_kind i op) inputs names in
                 (* If at least one file had object streams and args.preserve_objstm is true, set -objstm-create *)
                 if args.preserve_objstm then
                   iter

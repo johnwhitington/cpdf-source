@@ -70,8 +70,6 @@ let pdfobjeq pdf x y =
     begin match y with Pdf.Stream _ -> Pdf.getstream y | _ -> () end;
     compare x y
 
-(* FIXME: We need to be able to do squeeze on encrypted files, which at the
- * moment thinks it has a permissions problem. *)
 let really_squeeze pdf =
   let objs = ref [] in
     Pdf.objiter (fun objnum _ -> objs := objnum :: !objs) pdf;
