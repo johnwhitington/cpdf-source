@@ -1929,7 +1929,7 @@ let get_single_pdf_nodecrypt read_lazy =
   | _ ->
       raise (Arg.Bad "cpdf: No input specified.\n")
 
-let really_write_pdf ?(encryption = None) mk_id pdf outname =
+let really_write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf outname =
   if args.debugcrypt then Printf.printf "really_write_pdf\n%!";
   let outname' =
     if args.linearize
@@ -1953,6 +1953,7 @@ let really_write_pdf ?(encryption = None) mk_id pdf outname =
                 Pdfwrite.pdf_to_file_options
                   ~preserve_objstm:args.preserve_objstm
                   ~generate_objstm:args.create_objstm
+                  ~compress_objstm:(not is_decompress)
                   false encryption mk_id pdf outname'
             end
           else
@@ -2000,9 +2001,9 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
                   if args.squeeze then Cpdf.squeeze pdf;
                   Pdf.remove_unreferenced pdf
                 end;
-              really_write_pdf mk_id pdf outname
+              really_write_pdf ~is_decompress mk_id pdf outname
         | Some _ ->
-            really_write_pdf ~encryption mk_id pdf outname
+            really_write_pdf ~encryption ~is_decompress mk_id pdf outname
         end
     | Stdout ->
         let temp = Filename.temp_file "cpdflin" ".pdf" in
@@ -2015,9 +2016,9 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
                     if args.squeeze then Cpdf.squeeze pdf;
                     Pdf.remove_unreferenced pdf
                   end;
-                  really_write_pdf ~encryption mk_id pdf temp;
+                  really_write_pdf ~encryption ~is_decompress mk_id pdf temp;
           | Some _ ->
-              really_write_pdf ~encryption mk_id pdf temp
+              really_write_pdf ~encryption ~is_decompress mk_id pdf temp
           end;
           let temp_file = open_in_bin temp in
             try
