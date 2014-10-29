@@ -179,9 +179,17 @@ example:
 \begin{framed}
 \small\verb!cpdf in.pdf user=fred reverse -o out.pdf!
 \end{framed}
+
+\noindent To re-encrypt the file with its existing encryption upon writing, which is required if only the user password was supplied, but allowed in any case, add the \texttt{-recrypt} option:
+
+\begin{framed}
+\small\verb!cpdf in.pdf user=fred reverse -recrypt -o out.pdf!
+\end{framed}
+
 \noindent The password required (owner or user) depends upon the operation
 being performed. Separate facilities are provided to decrypt and encrypt files
-(See \Sref{crypt}). 
+(See \Sref{crypt}).
+
   \section{Standard Input and Standard Output}
 \index{standard input} \index{standard output}
   Thus far, we have assumed that the input PDF will be read from a file on

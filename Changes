@@ -1,2 +1,18 @@
-Version 1.8 (October 2014)
+Version 1.8 (November 2014)
+
+o New external linearizer cpdflin replaces original one
+o Encryption now much, much faster.
+o Faster parsing of delayed object streams on large files
+o -decompress now leaves object streams decompressed
+o New -squeeze option to reduce the size of PDF files
+o Select pages by landscape-ness or portrait-ness in a page range
+o New -set-open-action option
+o New -recrypt option to re-encrypt output
+o Reads XML metadata and outputs it on -info
+o New -center position for text
+o -stamp can now use positions, just like stamping text
+o Better handling of permissions for files with user passwords
+o Can encrypt output of -split-bookmarks now
+o -args replaces -control with better behaviour
+o Can scale a stamp to fit before stamping with -scale-stamp-to-fit
 
