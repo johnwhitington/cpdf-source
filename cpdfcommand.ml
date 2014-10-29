@@ -1088,9 +1088,8 @@ let set_input s =
 
 let set_input_dir s =
   let names = sort compare (leafnames_of_dir s) in
-    (* We don't need to set all_inputs here, since pdftk doesn't used -idir *)
     args.inputs <-
-      (rev (map (fun n -> (InFile (s ^ slash ^ n), "all", Pdfmerge.DNR, "", "")) names)) @ args.inputs
+      (rev (map (fun n -> (InFile (s ^ Filename.dir_sep ^ n), "all", Pdfmerge.DNR, "", "")) names)) @ args.inputs
 
 let setdebug () =
   set Pdfread.read_debug;
