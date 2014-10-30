@@ -1941,8 +1941,9 @@ let really_write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf outna
       if args.recrypt && args.was_encrypted then
         begin
           if args.debugcrypt then Printf.printf "Recrypting in really_write_pdf\n";
-          Pdfwrite.pdf_to_file_recrypting
-            (get_single_pdf_nodecrypt false) pdf args.user outname'
+          match args.inputs with
+            [] -> raise (Pdf.PDFError "no input in recryption")
+          | (_, _, _, user_pw, _)::_ -> Pdfwrite.pdf_to_file_recrypting pdf user_pw outname'
         end
       else
         begin
