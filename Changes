@@ -1,5 +1,6 @@
 Version 1.8 (November 2014)
 
+
 o New external linearizer cpdflin replaces original one
 o New -squeeze option to reduce the size of PDF files
 o Encryption now much, much faster
