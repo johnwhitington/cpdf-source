@@ -1,12 +1,15 @@
-\documentclass[a4paper,makeidx]{memoir}
+\documentclass{book}
 \usepackage{palatino}
 \usepackage{microtype}
 \usepackage{graphics}
 \usepackage[plainpages=false,pdfpagelabels,pdfborder=0 0 0]{hyperref}
+\usepackage{framed}
 \newcommand{\smallgap}{\vspace{4mm}}
 \newcommand{\cpdf}{\texttt{cpdf}}
 \addtolength{\textwidth}{20mm}
-\makeindex
+\usepackage{makeidx}\makeindex
+\usepackage[left=3cm, right=1.5cm, top=2cm, bottom=1.8cm, paperwidth=7.5in, paperheight=9.25in]{geometry}
+
 \begin{document}
 \frontmatter
 \thispagestyle{empty}
@@ -21,7 +24,7 @@ Command Line Toolkit}
 \vspace{12mm}
 
 {\Huge User Manual}\\
-Version 1.8 (October 2014)
+Version 2.1 (November 2014)
 
 \vspace{25mm}
 
@@ -40,7 +43,7 @@ Version 1.8 (October 2014)
 \noindent For bug reports, feature requests and comments, email\\ \texttt{contact@coherentgraphics.co.uk}
 
 \vspace*{\fill}
-\noindent\copyright 2013 Coherent Graphics Limited. All rights reserved.
+\noindent\copyright 2014 Coherent Graphics Limited. All rights reserved.
 
 \smallgap 
 \noindent Adobe, Acrobat, Adobe PDF, Adobe Reader and PostScript are
@@ -71,8 +74,8 @@ instead of \texttt{<input file>} and \texttt{<output file>} to reduce
 verbosity. Under Microsoft Windows, type \texttt{cpdf.exe} instead of \texttt{cpdf}.
 \cleardoublepage
 \mainmatter
-\chapterstyle{hangnum}
-\pagestyle{ruled}
+%\chapterstyle{hangnum}
+%\pagestyle{ruled}
 \chapter{Basic Usage}
   The Coherent PDF tools provide a wide range of facilities for modifying PDF
 files created by other means. There is a single command-line program
@@ -188,7 +191,7 @@ example:
 
 \noindent The password required (owner or user) depends upon the operation
 being performed. Separate facilities are provided to decrypt and encrypt files
-(See \Sref{crypt}).
+(See Section \ref{crypt}).
 
   \section{Standard Input and Standard Output}
 \index{standard input} \index{standard output}
@@ -226,7 +229,7 @@ achieved with the \texttt{>} operator:
   \small\verb!cpdf -info in.pdf > file.txt!
 
   \vspace{2.5mm}
-  \noindent Use the \texttt{-info} operation (See \Sref{info}), redirecting the
+  \noindent Use the \texttt{-info} operation (See Section \ref{info}), redirecting the
 output to \texttt{file.txt}.
 \end{framed}
 
@@ -294,7 +297,7 @@ are intended to support:
 \vspace{2mm}
 
 \noindent If you wish to manually alter the PDF version of a file, use the
-\texttt{-set-version} option described in \Sref{setversion}.
+\texttt{-set-version} option described in Section \ref{setversion}.
 
 \section{File IDs}
 PDF files contain an ID (consisting of two parts), used by some workflow
@@ -390,11 +393,11 @@ shortcuts which speed up processing, but would fail on badly-produced files.
 The \verb!-fast! option may be used with:
 
 \begin{framed}
-\small\noindent \Sref{pages}\\
+\small\noindent Section \ref{pages}\\
 \noindent\small\verb!-rotate-contents -upright -vflip -hflip!\\
 \small\verb!-shift -scale -scale-to-fit -scale-contents!\\
 
-\noindent \Sref{stamps}\\
+\noindent Section \ref{stamps}\\
 \noindent\small\verb!-add-text!\\
 \small\verb!-stamp-on -stamp-under -combine-pages!
 \end{framed}
@@ -707,7 +710,7 @@ Y factors given. This scales both the page contents, and the page size itself. I
   \noindent Scale a file's contents on all pages to 50\% of its original dimensions.
   \end{framed}
 
-  \noindent To scale about a point other than the center, see the positioning commands described in \Sref{position}.
+  \noindent To scale about a point other than the center, see the positioning commands described in Section \ref{position}.
 
   \section{Shift Page Contents}
   \index{shift page contents}
@@ -1167,7 +1170,7 @@ writing to \texttt{out.pdf}. A watermark should go underneath each page:
     \small\verb!cpdf -stamp-under topsecret.pdf in.pdf -o out.pdf!
   \end{framed}
 
-\noindent The position commands in \Sref{position} can be used to locate the stamp more precisely (they are calculated relative to the crop box of the stamp). Or, preprocess the stamp with \texttt{-shift} first.
+\noindent The position commands in Section \ref{position} can be used to locate the stamp more precisely (they are calculated relative to the crop box of the stamp). Or, preprocess the stamp with \texttt{-shift} first.
 
 The \texttt{-scale-to-fit-stamp} option can be added to scale the stamp to fit the page before applying it. The use of positioning commands together with \texttt{-scale-stamp-to-fit} is not recommended.
 
@@ -1190,7 +1193,7 @@ file. For best results, remove any rotation differences in the two files using
 over one or more pages of the input at a given position and using a given font,
 font size and color.
   \begin{framed}
-    \small\verb!cpdf -add-text "Copyright 2013 ACME Corp." in.pdf -o out.pdf!
+    \small\verb!cpdf -add-text "Copyright 2014 ACME Corp." in.pdf -o out.pdf!
   \end{framed}
   \noindent The default is black 12pt Times New Roman text in the top left of each page. The text can be placed underneath rather than over the page by adding the \texttt{-underneath} option.
   
@@ -1221,7 +1224,7 @@ font size and color.
   NB: In some circumstances (e.g in batch files) on Microsoft Windows, \verb!%! is a special character, and must be escaped (written as \verb$%%$). Consult your local documentation for details.
 
   \subsection{Date and Time Formats}
-  \begin{ctabular}{ll}
+  \begin{tabular}{ll}
     \texttt{\%a} & Abbreviated weekday name (Sun, Mon etc.)\\
     \texttt{\%A} & Full weekday name (Sunday, Monday etc.)\\
     \texttt{\%b} & Abbreviated month name (Jan, Feb etc.)\\
@@ -1240,7 +1243,7 @@ font size and color.
     \texttt{\%w} & Weekday (0--6, 0 = Monday)\\
     \texttt{\%Y} & Year (0000--9999)\\
     \texttt{\%\%} & The \% character.
-  \end{ctabular}
+  \end{tabular}
 
   \subsection{Bates Numbers}
 \index{bates numbers}
@@ -1317,7 +1320,7 @@ than its baseline.
   The font may be set with the \texttt{-font} option. The 14 Standard PDF fonts are available:
 
   \vspace{2mm}
-  \begin{ctabular}{l}
+  \begin{tabular}{l}
   Times-Roman\\
   Times-Bold\\
   Times-Italic\\
@@ -1332,13 +1335,13 @@ than its baseline.
   Courier-BoldOblique\\
   Symbol\\
   ZapfDingbats
-  \end{ctabular}
+  \end{tabular}
 
   \noindent For example, page numbers in Times Italic can be achieved by:
   \begin{framed}
     \small\verb!cpdf -add-text "-%Page-" -font "Times-Italic" in.pdf -o out.pdf!
   \end{framed}
-  \noindent See \Sref{copyfont} for how to use other fonts.
+  \noindent See Section \ref{copyfont} for how to use other fonts.
 
   The font size can be altered with the \texttt{-font-size} option, which
 specifies the size in points:
@@ -1569,7 +1572,7 @@ given page range.
 
     \vspace{1.5mm}
     \small\noindent\verb!cpdf -set-title <title of document> in.pdf -o out.pdf!\\
-    (Also \texttt{-set-author} etc. See \Sref{setdocinfo}.)
+    (Also \texttt{-set-author} etc. See Section \ref{setdocinfo}.)
 
     \vspace{1.5mm}
     \small\noindent\verb!cpdf -set-page-layout <layout> in.pdf -o out.pdf!
@@ -2157,13 +2160,13 @@ Dates in PDF are specified according to the following format:
 accuracy dates. For example:
 
 \begin{framed}
-   \small\noindent\verb!D:2013! (2013)
+   \small\noindent\verb!D:2014! (2014)
    
    \vspace{1.5mm}
-   \noindent\verb!D:20130103! (3rd March 2013)
+   \noindent\verb!D:20140103! (3rd March 2014)
 
    \vspace{1.5mm}
-   \noindent\verb!D:201301031854-08'00'! (3rd March 2013, 6:54PM, US Pacific Standard Time)
+   \noindent\verb!D:201401031854-08'00'! (3rd March 2014, 6:54PM, US Pacific Standard Time)
    
 \end{framed}
  
