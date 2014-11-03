@@ -2097,9 +2097,7 @@ let stem s =
         (neq '.') (rev (explode (Filename.basename s))))))
 
 let fast_write_split_pdfs
-  enc splitlevel
-  original_filename linearize ?(cpdflin = None) preserve_objstm
-  create_objstm sq nobble spec main_pdf pagenums pdf_pages
+  enc splitlevel original_filename sq nobble spec main_pdf pagenums pdf_pages
 =
   let marks = Pdfmarks.read_bookmarks main_pdf in
     iter2
@@ -2128,8 +2126,7 @@ let bookmark_pages level pdf =
       (Pdfmarks.read_bookmarks pdf))
 
 let split_at_bookmarks
-  enc original_filename linearize
-  ~cpdflin ~preserve_objstm ~create_objstm ~squeeze nobble level spec pdf
+  enc original_filename ~squeeze nobble level spec pdf
 =
   let pdf_pages = Pdfpage.pages_of_pagetree pdf in
     let points = bookmark_pages level pdf in
@@ -2138,8 +2135,7 @@ let split_at_bookmarks
       in
         let pts = splitat points (indx pdf_pages) in
           fast_write_split_pdfs
-            enc level original_filename linearize preserve_objstm
-            create_objstm squeeze nobble spec pdf pts pdf_pages
+            enc level original_filename squeeze nobble spec pdf pts pdf_pages
 
 let split_pdf
   enc original_filename
@@ -2148,8 +2144,8 @@ let split_pdf
 =
   let pdf_pages = Pdfpage.pages_of_pagetree pdf in
     fast_write_split_pdfs
-      enc 0 original_filename linearize preserve_objstm create_objstm
-      squeeze nobble spec pdf (splitinto chunksize (indx pdf_pages)) pdf_pages
+      enc 0 original_filename squeeze nobble spec pdf
+      (splitinto chunksize (indx pdf_pages)) pdf_pages
 
 let get_pagespec () =
   match args.inputs with
@@ -3188,6 +3184,7 @@ let go () =
                      Pdfwrite.user_password = args.user;
                      Pdfwrite.permissions = banlist_of_args ()}
               in
+                args.create_objstm <- args.preserve_objstm;
                 split_pdf
                   enc args.original_filename args.chunksize args.linearize args.cpdflin
                   args.preserve_objstm args.preserve_objstm (*yes--always create if preserving *)
@@ -3217,9 +3214,9 @@ let go () =
                      Pdfwrite.user_password = args.user;
                      Pdfwrite.permissions = banlist_of_args ()}
               in
+                args.create_objstm <- args.preserve_objstm;
                 split_at_bookmarks
-                  enc args.original_filename args.linearize args.cpdflin args.preserve_objstm
-                  (* Yes *)args.preserve_objstm args.squeeze nobble level output_spec pdf
+                  enc args.original_filename args.squeeze nobble level output_spec pdf
         | Stdout -> error "Can't split to standard output"
         | NoOutputSpecified -> error "Split: No output format specified"
       end
