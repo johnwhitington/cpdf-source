@@ -2898,15 +2898,27 @@ let go () =
                         write_pdf false pdf
                 | _ ->
                     (* We check permissions. A merge is allowed if each file
-                     included was (a) not encrypted, or (b) decrypted using
-                     the owner password *)
-                    (* If args.keep_this_id is set, change the ID to the one from the kept one *)
-                    let rangenums = map2 parse_pagespec pdfs ranges in
-                      let outpdf =
-                        Pdfmerge.merge_pdfs ~rotations args.retain_numbering args.remove_duplicate_fonts
-                        (map string_of_input_kind names) pdfs rangenums
-                      in
-                        write_pdf false outpdf
+                     included was (a) not encrypted (detected by the absence of
+                     saved encryption information in the PDF, or (b) decrypted using
+                     the owner password (stored in the input) *)
+                    if
+                      not
+                        (fold_left ( && ) true
+                          (map2
+                            (fun (_, _, _, _, _, was_dec_with_owner) pdf ->
+                               !was_dec_with_owner || pdf.Pdf.saved_encryption = None)
+                            inputs
+                            pdfs))
+                    then
+                      soft_error "Merge requires the owner password for all encrypted files."
+                    else
+                      (* If args.keep_this_id is set, change the ID to the one from the kept one *)
+                      let rangenums = map2 parse_pagespec pdfs ranges in
+                        let outpdf =
+                          Pdfmerge.merge_pdfs ~rotations args.retain_numbering args.remove_duplicate_fonts
+                          (map string_of_input_kind names) pdfs rangenums
+                        in
+                          write_pdf false outpdf
                   end
       | _ ->
           match args.op with
