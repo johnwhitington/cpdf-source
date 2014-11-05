@@ -267,7 +267,8 @@ let string_of_input_kind = function
   | StdIn -> "Stdin"
 
 type input =
-  input_kind * string * Pdfmerge.rotation * string * string (* input kind, range, rotation, user_pw, owner_pw *)
+  input_kind * string * Pdfmerge.rotation * string * string * bool ref
+  (* input kind, range, rotation, user_pw, owner_pw, was_decrypted_with_owner *)
 
 type output_method =
   | NoOutputSpecified
@@ -576,7 +577,7 @@ let operation_allowed pdf banlist op =
       if args.debugcrypt then Printf.printf "Permissions: %s\n" (getpermissions pdf);
       not (banned banlist op)
 
-let rec decrypt_if_necessary (_, _, _, user_pw, owner_pw) op pdf =
+let rec decrypt_if_necessary (_, _, _, user_pw, owner_pw, was_dec_with_owner) op pdf =
   if args.debugcrypt then
     begin match op with
       None -> flprint "decrypt_if_necessary: op = None\n"
@@ -586,6 +587,7 @@ let rec decrypt_if_necessary (_, _, _, user_pw, owner_pw) op pdf =
     match Pdfcrypt.decrypt_pdf_owner owner_pw pdf with
     | Some pdf ->
         args.was_decrypted_with_owner <- true;
+        was_dec_with_owner := true;
         if args.debugcrypt then Printf.printf "Managed to decrypt with owner password\n";
         pdf
     | _ ->
@@ -658,14 +660,14 @@ let anon_fun s =
         | "user" ->
             begin match args.inputs with
             | [] -> ()
-            | (a, b, c, _, e)::more ->
-                args.inputs <- (a, b, c, implode (tl after), e)::more
+            | (a, b, c, _, e, f)::more ->
+                args.inputs <- (a, b, c, implode (tl after), e, f)::more
             end
         | "owner" ->
             begin match args.inputs with
             | [] -> ()
-            | (a, b, c, d, _)::more ->
-                args.inputs <- (a, b, c, d, implode (tl after))::more
+            | (a, b, c, d, _, f)::more ->
+                args.inputs <- (a, b, c, d, implode (tl after), f)::more
             end
         | _ -> raise Not_found
         end
@@ -674,31 +676,39 @@ let anon_fun s =
     Not_found ->
       try
         ignore (String.index s '.');
-        args.inputs <- (InFile s, "all", Pdfmerge.DNR, "", "")::args.inputs;
+        args.inputs <- (InFile s, "all", Pdfmerge.DNR, "", "", ref false)::args.inputs;
         args.original_filename <- s;
         all_inputs := s::!all_inputs
       with
         Not_found ->
           match args.inputs with
           | [] -> ()
-          | (a, _, r, d, e)::t ->
+          | (a, _, r, d, e, f)::t ->
               match rev (explode s) with
               | 'N'::more ->
-                 args.inputs <- (a, fixdashes (implode (rev more)), Pdfmerge.N, d, e)::t
+                 args.inputs <-
+                   (a, fixdashes (implode (rev more)), Pdfmerge.N, d, e, f)::t
               | 'S'::more ->
-                 args.inputs <- (a, fixdashes (implode (rev more)), Pdfmerge.S, d, e)::t
+                 args.inputs <-
+                   (a, fixdashes (implode (rev more)), Pdfmerge.S, d, e, f)::t
               | 'E'::more ->
-                 args.inputs <- (a, fixdashes (implode (rev more)), Pdfmerge.E, d, e)::t
+                 args.inputs <-
+                   (a, fixdashes (implode (rev more)), Pdfmerge.E, d, e, f)::t
               | 'W'::more ->
-                 args.inputs <- (a, fixdashes (implode (rev more)), Pdfmerge.W, d, e)::t
+                 args.inputs <-
+                   (a, fixdashes (implode (rev more)), Pdfmerge.W, d, e, f)::t
               | 'L'::more ->
-                 args.inputs <- (a, fixdashes (implode (rev more)), Pdfmerge.L, d, e)::t
+                 args.inputs <-
+                   (a, fixdashes (implode (rev more)), Pdfmerge.L, d, e, f)::t
               | 'R'::more ->
-                 args.inputs <- (a, fixdashes (implode (rev more)), Pdfmerge.R, d, e)::t
+                 args.inputs <-
+                   (a, fixdashes (implode (rev more)), Pdfmerge.R, d, e, f)::t
               | 'D'::more ->
-                 args.inputs <- (a, fixdashes (implode (rev more)), Pdfmerge.D, d, e)::t
+                 args.inputs <-
+                   (a, fixdashes (implode (rev more)), Pdfmerge.D, d, e, f)::t
               | _ ->
-                 args.inputs <- (a, fixdashes s, r, d, e)::t
+                 args.inputs <-
+                   (a, fixdashes s, r, d, e, f)::t
 
 (* Unit conversions to points. *)
 let mm x = ((x /. 10.) /. 2.54) *. 72.
@@ -894,7 +904,7 @@ let displaydoctitle b =
 
 let setsplitbookmarks i = setop (SplitOnBookmarks i) ()
 let setstdout () = args.out <- Stdout
-let setstdin () = args.inputs <- [StdIn, "all", Pdfmerge.DNR, "", ""]
+let setstdin () = args.inputs <- [StdIn, "all", Pdfmerge.DNR, "", "", ref false]
 let settrans s = args.transition <- Some s
 let setduration f = args.duration <- Some f
 let setvertical () = args.horizontal <- false
@@ -1083,13 +1093,16 @@ let set_no_hq_print () =
 
 let set_input s =
   args.original_filename <- s;
-  args.inputs <- (InFile s, "all", Pdfmerge.DNR, "", "")::args.inputs;
+  args.inputs <- (InFile s, "all", Pdfmerge.DNR, "", "", ref false)::args.inputs;
   all_inputs := s::!all_inputs
 
 let set_input_dir s =
   let names = sort compare (leafnames_of_dir s) in
     args.inputs <-
-      (rev (map (fun n -> (InFile (s ^ Filename.dir_sep ^ n), "all", Pdfmerge.DNR, "", "")) names)) @ args.inputs
+      (rev
+        (map
+          (fun n -> (InFile (s ^ Filename.dir_sep ^ n), "all", Pdfmerge.DNR, "", "", ref false)) names))
+  @ args.inputs
 
 let setdebug () =
   set Pdfread.read_debug;
@@ -1194,8 +1207,8 @@ let setextractimages () =
 let setrange spec =
   args.dashrange <- spec;
   match args.inputs with
-    (StdIn, a, b, c, d)::more ->
-      args.inputs <- (StdIn, spec, b, c, d) :: more
+    (StdIn, a, b, c, d, e)::more ->
+      args.inputs <- (StdIn, spec, b, c, d, e) :: more
   | x -> ()
 
 let setoutline () =
@@ -1246,7 +1259,7 @@ let setscalestamptofit () =
 
 let setkeepthisid () =
   match args.inputs with
-  | (InFile s, _, _, _, _)::_ -> args.keep_this_id <- Some s
+  | (InFile s, _, _, _, _, _)::_ -> args.keep_this_id <- Some s
   | _ -> ()
 
 let setmakenewid () =
@@ -1272,12 +1285,12 @@ let setcreateobjstm () =
 
 let setstdinuser u =
   match args.inputs with
-  |  (StdIn, x, y, _, o)::t -> args.inputs <- (StdIn, x, y, u, o)::t
+  |  (StdIn, x, y, _, o, f)::t -> args.inputs <- (StdIn, x, y, u, o, f)::t
   | _ -> error "-stdin-user: must follow -stdin"
 
 let setstdinowner o =
   match args.inputs with
-  |  (StdIn, x, y, u, _)::t -> args.inputs <- (StdIn, x, y, u, o)::t
+  |  (StdIn, x, y, u, _, f)::t -> args.inputs <- (StdIn, x, y, u, o, f)::t
   | _ -> error "-stdin-user: must follow -stdin"
 
 let setopenatpage n =
@@ -1876,7 +1889,7 @@ let filenames = null_hash ()
 
 (* This now memoizes on the name of the file to make sure we only load each
 file once *)
-let get_pdf_from_input_kind ((_, _, _, u, o) as input) op = function
+let get_pdf_from_input_kind ((_, _, _, u, o, _) as input) op = function
   | AlreadyInMemory pdf -> pdf
   | InFile s ->
       if args.squeeze then
@@ -1897,7 +1910,7 @@ let get_pdf_from_input_kind ((_, _, _, u, o) as input) op = function
 
 let get_single_pdf op read_lazy =
   match args.inputs with
-  | (InFile inname, _, _, u, o) as input::_ ->
+  | (InFile inname, _, _, u, o, _) as input::_ ->
       if args.squeeze then
         Printf.printf "Initial file size is %i bytes\n" (filesize inname);
       let pdf =
@@ -1908,23 +1921,23 @@ let get_single_pdf op read_lazy =
       in
         args.was_encrypted <- Pdfcrypt.is_encrypted pdf;
         decrypt_if_necessary input op pdf
-  | (StdIn, _, _, u, o) as input::_ ->
+  | (StdIn, _, _, u, o, _) as input::_ ->
       decrypt_if_necessary input op (pdf_of_stdin u o)
-  | (AlreadyInMemory pdf, _, _, _, _)::_ -> pdf
+  | (AlreadyInMemory pdf, _, _, _, _, _)::_ -> pdf
   | _ ->
       raise (Arg.Bad "cpdf: No input specified.\n")
 
 let get_single_pdf_nodecrypt read_lazy =
   match args.inputs with
-  | (InFile inname, _, _, u, o)::_ ->
+  | (InFile inname, _, _, u, o, _)::_ ->
       if args.squeeze then
         Printf.printf "Initial file size is %i bytes\n" (filesize inname);
         if read_lazy then
           pdfread_pdf_of_channel_lazy (optstring u) (optstring o) (open_in_bin inname)
         else
           pdfread_pdf_of_file (optstring u) (optstring o) inname
-  | (StdIn, _, _, u, o)::_ -> pdf_of_stdin u o
-  | (AlreadyInMemory pdf, _, _, _, _)::_ -> pdf
+  | (StdIn, _, _, u, o, _)::_ -> pdf_of_stdin u o
+  | (AlreadyInMemory pdf, _, _, _, _, _)::_ -> pdf
   | _ ->
       raise (Arg.Bad "cpdf: No input specified.\n")
 
@@ -1943,7 +1956,7 @@ let really_write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf outna
           if args.debugcrypt then Printf.printf "Recrypting in really_write_pdf\n";
           match args.inputs with
             [] -> raise (Pdf.PDFError "no input in recryption")
-          | (_, _, _, user_pw, owner_pw)::_ ->
+          | (_, _, _, user_pw, owner_pw, _)::_ ->
               let best_password = if owner_pw <> "" then owner_pw else user_pw in
                 Pdfwrite.pdf_to_file_options
                   ~preserve_objstm:args.preserve_objstm
@@ -2149,7 +2162,7 @@ let split_pdf
 
 let get_pagespec () =
   match args.inputs with
-  | (_, ps, _, _, _)::_ -> ps
+  | (_, ps, _, _, _, _)::_ -> ps
   | _ -> error "get_pagespec"
 
 (* Copy a font from [frompdf] with name [fontname] on page [fontpage] to [pdf] on all pages in [range] *)
@@ -2855,15 +2868,15 @@ let go () =
             | Some s ->
                 (* get the ID from the file with name 's', and copy to pdf *)
                 let namewiths =
-                  keep (function (InFile s', _, _, _, _) when s' = s -> true | _ -> false) inputs
+                  keep (function (InFile s', _, _, _, _, _) when s' = s -> true | _ -> false) inputs
                 in
                   match namewiths with
-                  | (namewiths, _, _, _, _) as input::t ->
+                  | (namewiths, _, _, _, _, _) as input::t ->
                       let spdf = get_pdf_from_input_kind input op namewiths in
                         write_pdf x (Cpdf.copy_id true spdf pdf)
                   | _ -> write_pdf x pdf
           in
-            let names, ranges, rotations, _, _ = split5 inputs in
+            let names, ranges, rotations, _, _, _ = split6 inputs in
               let pdfs = map2 (fun i -> get_pdf_from_input_kind i op) inputs names in
                 (* If at least one file had object streams and args.preserve_objstm is true, set -objstm-create *)
                 if args.preserve_objstm then
@@ -2884,6 +2897,9 @@ let go () =
                     else
                         write_pdf false pdf
                 | _ ->
+                    (* We check permissions. A merge is allowed if each file
+                     included was (a) not encrypted, or (b) decrypted using
+                     the owner password *)
                     (* If args.keep_this_id is set, change the ID to the one from the kept one *)
                     let rangenums = map2 parse_pagespec pdfs ranges in
                       let outpdf =
@@ -2910,7 +2926,7 @@ let go () =
       end
   | Some (CopyFont fromfile) ->
       begin match args.inputs, args.out with
-      | (_, pagespec, _, u, o)::_, _ ->
+      | (_, pagespec, _, u, o, _)::_, _ ->
           let pdf = get_single_pdf (Some (CopyFont fromfile)) false
           and frompdf = pdfread_pdf_of_file (optstring u) (optstring o) fromfile in
             let range = parse_pagespec pdf pagespec in
@@ -2925,7 +2941,7 @@ let go () =
       end
   | Some RemoveFonts ->
       begin match args.inputs, args.out with
-      | (_, pagespec, _, _, _)::_, _ ->
+      | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some RemoveFonts) false in
             write_pdf true (remove_fonts pdf)
       | _ -> error "remove fonts: bad command line"
@@ -2933,7 +2949,7 @@ let go () =
   | Some ExtractFontFile ->
       (*Graphics.open_graph " 1600x1050";*)
       begin match args.inputs, args.out with
-      | (_, pagespec, _, u, o)::_, _ ->
+      | (_, pagespec, _, u, o, _)::_, _ ->
           let pdf = get_single_pdf (Some ExtractFontFile) false in
             let page = args.copyfontpage
             and name =
@@ -2947,9 +2963,9 @@ let go () =
   | Some CountPages ->
       let pdf, inname, input =
         match args.inputs with
-        | (InFile inname, _, _, u, o) as input::_ -> pdfread_pdf_of_channel_lazy (optstring u) (optstring o) (open_in_bin inname), inname, input
-        | (StdIn, _, _, u, o) as input::_ -> pdf_of_stdin u o, "", input
-        | (AlreadyInMemory pdf, _, _, _, _) as input::_ -> pdf, "", input
+        | (InFile inname, _, _, u, o, _) as input::_ -> pdfread_pdf_of_channel_lazy (optstring u) (optstring o) (open_in_bin inname), inname, input
+        | (StdIn, _, _, u, o, _) as input::_ -> pdf_of_stdin u o, "", input
+        | (AlreadyInMemory pdf, _, _, _, _, _) as input::_ -> pdf, "", input
         | _ -> raise (Arg.Bad "cpdf: No input specified.\n")
       in
         let pdf = decrypt_if_necessary input (Some CountPages) pdf in
@@ -2964,10 +2980,10 @@ let go () =
   | Some Info ->
       let pdf, inname, input =
         match args.inputs with
-        | (InFile inname, _, _, u, o) as input::_ ->
+        | (InFile inname, _, _, u, o, _) as input::_ ->
              pdfread_pdf_of_channel_lazy (optstring u) (optstring o) (open_in_bin inname), inname, input
-        | (StdIn, _, _, u, o) as input::_ -> pdf_of_stdin u o, "", input
-        | (AlreadyInMemory pdf, _, _, _, _) as input::_ -> pdf, "", input
+        | (StdIn, _, _, u, o, _) as input::_ -> pdf_of_stdin u o, "", input
+        | (AlreadyInMemory pdf, _, _, _, _, _) as input::_ -> pdf, "", input
         | _ -> raise (Arg.Bad "cpdf: No input specified.\n")
       in
         Printf.printf "Encryption: %s\n" (getencryption pdf);
@@ -2979,7 +2995,7 @@ let go () =
           Cpdf.output_xmp_info args.encoding pdf
   | Some PageInfo ->
       begin match args.inputs, args.out with
-      | (_, pagespec, _, _, _)::_, _ ->
+      | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf args.op true in
             let range = parse_pagespec pdf pagespec in
               Cpdf.output_page_info (get_single_pdf (Some PageInfo) true) range
@@ -2991,7 +3007,7 @@ let go () =
       Cpdf.print_fonts (get_single_pdf (Some Fonts) true)
   | Some ListBookmarks ->
       begin match args.inputs, args.out with
-      | (_, pagespec, _, _, _)::_, _ ->
+      | (_, pagespec, _, _, _, _)::_, _ ->
         let pdf = get_single_pdf args.op true in
           let range = parse_pagespec pdf pagespec in
             Cpdf.list_bookmarks args.encoding range pdf (Pdfio.output_of_channel stdout);
@@ -3000,7 +3016,7 @@ let go () =
       end
   | Some Crop ->
       begin match args.inputs, args.out with
-      | (_, pagespec, _, _, _)::_, _ ->
+      | (_, pagespec, _, _, _, _)::_, _ ->
           let x, y, w, h = args.rectangle in
             let pdf = get_single_pdf (Some Crop) false in
               let range = parse_pagespec pdf pagespec in
@@ -3011,7 +3027,7 @@ let go () =
 
   | Some MediaBox ->
       begin match args.inputs, args.out with
-      | (_, pagespec, _, _, _)::_, _ ->
+      | (_, pagespec, _, _, _, _)::_, _ ->
           let x, y, w, h = args.rectangle in
             let pdf = get_single_pdf (Some MediaBox) false in
               let range = parse_pagespec pdf pagespec in
@@ -3021,7 +3037,7 @@ let go () =
       end
   | Some CopyBox ->
       begin match args.inputs, args.out with
-      | (_, pagespec, _, _, _)::_, _ ->
+      | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some CopyBox) false in
             let range = parse_pagespec pdf pagespec in
               let f, t =
@@ -3049,7 +3065,7 @@ let go () =
         write_pdf false (Cpdf.recompress_pdf pdf)
   | Some RemoveCrop ->
       begin match args.inputs, args.out with
-      | (_, pagespec, _, _, _)::_, _ ->
+      | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some RemoveCrop) false in
             let range = parse_pagespec pdf pagespec in
               let pdf = Cpdf.remove_cropping_pdf pdf range in
@@ -3058,7 +3074,7 @@ let go () =
       end
   | Some CopyCropBoxToMediaBox ->
       begin match args.inputs, args.out with
-      | (_, pagespec, _, _, _)::_, _ ->
+      | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some CopyCropBoxToMediaBox) false in
             let range = parse_pagespec pdf pagespec in
               let pdf = copy_cropbox_to_mediabox pdf range in
@@ -3067,7 +3083,7 @@ let go () =
       end
   | Some (Rotate _)  | Some (Rotateby _) ->
       begin match args.inputs, args.out with
-      | (_, pagespec, _, _, _)::_, _ ->
+      | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf args.op false in
             let range = parse_pagespec pdf pagespec in
               let rotate =
@@ -3082,7 +3098,7 @@ let go () =
       end
   | Some (RotateContents a) ->
       begin match args.inputs, args.out with
-      | (_, pagespec, _, _, _)::_, _ ->
+      | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf args.op false in
             let range = parse_pagespec pdf pagespec in
               let pdf = Cpdf.rotate_contents ~fast:args.fast a pdf range in
@@ -3091,7 +3107,7 @@ let go () =
       end
   | Some Upright ->
       begin match args.inputs, args.out with
-      | (_, pagespec, _, _, _)::_, _ ->
+      | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf args.op false in
             let range = parse_pagespec pdf pagespec in
               let pdf = Cpdf.upright ~fast:args.fast range pdf in
@@ -3100,7 +3116,7 @@ let go () =
       end
   | Some ((VFlip | HFlip) as flip) ->
       begin match args.inputs, args.out with
-      | (_, pagespec, _, _, _)::_, _ ->
+      | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf args.op false in
             let range = parse_pagespec pdf pagespec in
               let pdf = 
@@ -3165,7 +3181,7 @@ let go () =
            write_pdf false (Cpdf.set_page_mode (get_single_pdf args.op false) s)
   | Some Split ->
       begin match args.inputs, args.out with
-        | [(f, ranges, _, _, _)], File output_spec ->
+        | [(f, ranges, _, _, _, _)], File output_spec ->
             let pdf = get_single_pdf args.op true in
               let enc =
                 match args.crypt_method with
@@ -3233,10 +3249,10 @@ let go () =
             write_pdf false pdf'
   | Some ChangeId ->
       begin match args.inputs, args.out with
-      | [(k, _, _, _, _) as input], File s ->
+      | [(k, _, _, _, _, _) as input], File s ->
           let pdf = get_pdf_from_input_kind input args.op k in
             write_pdf true pdf
-      | [(k, _, _, _, _) as input], Stdout ->
+      | [(k, _, _, _, _, _) as input], Stdout ->
           let pdf = get_pdf_from_input_kind input args.op k in
             write_pdf true pdf
       | _ -> error "ChangeId: exactly one input file and output file required."
@@ -3247,7 +3263,7 @@ let go () =
         write_pdf false pdf
   | Some (CopyId getfrom) ->
       begin match args.inputs with
-      | [(k, _, _, u, o) as input] ->
+      | [(k, _, _, u, o, _) as input] ->
           let pdf =
             Cpdf.copy_id
               args.keepversion
@@ -3279,7 +3295,7 @@ let go () =
           write_pdf false (Cpdf.remove_annotations range pdf)
   | Some (CopyAnnotations getfrom) ->
       begin match args.inputs with
-      | [(k, _, _, u, o) as input] ->
+      | [(k, _, _, u, o, _) as input] ->
         let input_pdf = get_pdf_from_input_kind input args.op k in
           let range = parse_pagespec input_pdf (get_pagespec ()) in
             let pdf =
@@ -3333,7 +3349,7 @@ let go () =
       write_pdf false (Cpdf.remove_attached_files (get_single_pdf args.op false))
   | Some (AttachFile files) ->
       begin match args.inputs with
-      | [(k, _, _, _, _) as input] ->
+      | [(k, _, _, _, _, _) as input] ->
           let pdf = get_pdf_from_input_kind input args.op k in
             let topage =
               try
@@ -3383,7 +3399,7 @@ let go () =
               if args.prerotate then Cpdf.upright ~fast:args.fast range pdf else pdf
             and filename =
               match args.inputs with
-              | (InFile inname, _, _, _, _)::_ -> inname
+              | (InFile inname, _, _, _, _, _)::_ -> inname
               | _ -> ""
             in
               write_pdf false
@@ -3495,7 +3511,7 @@ let go () =
       write_pdf false (Cpdf.custom_csp2 f (get_single_pdf (Some (CSP2 f)) false)) 
   | Some CSP3 ->
       begin match args.inputs with
-      | [InFile s, _, _, _, _] ->
+      | [InFile s, _, _, _, _, _] ->
            let pdf = get_single_pdf args.op true in
              let range = parse_pagespec pdf (get_pagespec ()) in
                calculate_margins s pdf range
@@ -3579,7 +3595,7 @@ let go_withargv argv =
            reset_arguments ();
            parse_argv () s (align_specs specs) anon_fun usage_msg;
            parse_argv () (Array.of_list ("cpdf"::!control_args)) (align_specs specs) anon_fun usage_msg;
-           let addrange pdf = AlreadyInMemory pdf, args.dashrange, Pdfmerge.DNR, "", "" in
+           let addrange pdf = AlreadyInMemory pdf, args.dashrange, Pdfmerge.DNR, "", "", ref false in
              args.inputs <- rev (map addrange !output_pdfs) @ rev args.inputs;
              output_pdfs := [];
              go ())
