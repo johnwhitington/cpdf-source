@@ -555,15 +555,15 @@ let banned banlist = function
   | ListAttachedFiles | ListAnnotationsMore | ListAnnotations
   | ListBookmarks | ImageResolution _ | MissingFonts
   | PrintPageLabels | Clean | Compress | Decompress
-  | RemoveUnusedResources -> false (* Always allowed *)
+  | RemoveUnusedResources | ChangeId | CopyId _ -> false (* Always allowed *)
   | Decrypt | Encrypt -> true (* Never allowed *)
   | ExtractText | ExtractImages | ExtractFontFile -> mem Pdfcrypt.NoExtract banlist
   | AddBookmarks _ | PadBefore | PadAfter | PadEvery _ | PadMultiple _
   | Merge | Split | SplitOnBookmarks _ | RotateContents _ | Rotate _
   | Rotateby _ | Upright | VFlip | HFlip | SetPageLayout _
   | SetPageMode _ | HideToolbar _ | HideMenubar _ | HideWindowUI _
-  | FitWindow _ | CenterWindow _ | DisplayDocTitle _ | ChangeId
-  | RemoveId | CopyId _ | OpenAtPageFit _ | OpenAtPage _
+  | FitWindow _ | CenterWindow _ | DisplayDocTitle _
+  | RemoveId | OpenAtPageFit _ | OpenAtPage _
   | AddPageLabels | RemovePageLabels -> mem Pdfcrypt.NoAssemble banlist
   | _ -> mem Pdfcrypt.NoEdit banlist
 
