@@ -1989,12 +1989,14 @@ let really_write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf outna
         in
           let best_password = if args.owner <> "" then args.owner else args.user in
             let code = Cpdf.call_cpdflin cpdflin outname' outname best_password in
-              begin try Sys.remove outname' with _ -> () end;
               if code > 0 then
                 begin
                   begin try Sys.remove outname with _ -> () end;
-                  raise (Pdf.PDFError "linearizer failed")
+                  Sys.rename outname' outname;
+                  soft_error "Linearizer failed with above error. File written without linearization."
                 end
+              else
+                begin try Sys.remove outname' with _ -> () end;
     end;
     if args.squeeze then
       let s = filesize outname in
