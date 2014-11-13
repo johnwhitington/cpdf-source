@@ -11,8 +11,9 @@
 \usepackage[left=3cm, right=1.5cm, top=2cm, bottom=1.8cm, paperwidth=7.5in, paperheight=9.25in]{geometry}
 
 \begin{document}
+
 \frontmatter
-\thispagestyle{empty}
+\pagestyle{empty}
 
 \begin{flushright}
 
@@ -39,7 +40,7 @@ Version 2.1 (November 2014)
 
 \clearpage
 
-\thispagestyle{empty}
+\pagestyle{empty}
 \noindent For bug reports, feature requests and comments, email\\ \texttt{contact@coherentgraphics.co.uk}
 
 \vspace*{\fill}
@@ -76,6 +77,7 @@ verbosity. Under Microsoft Windows, type \texttt{cpdf.exe} instead of \texttt{cp
 \mainmatter
 %\chapterstyle{hangnum}
 %\pagestyle{ruled}
+\pagestyle{headings}
 \chapter{Basic Usage}
   The Coherent PDF tools provide a wide range of facilities for modifying PDF
 files created by other means. There is a single command-line program
@@ -651,6 +653,7 @@ one of the output files.
   \index{page size}
   Any time when a page size is required, instead of writing, for instance \texttt{"210mm 197mm"} one can instead write \texttt{a4portrait}. Here is a list of supported page sizes:
 
+{\small
   \smallgap
   \begin{tabular}{lll}
   \texttt{a0portrait} & \texttt{a1portrait} & \texttt{a2portrait} \\
@@ -666,7 +669,7 @@ one of the output files.
   \texttt{usletterportrait} & \texttt{usletterlandscape} & \\
   \texttt{uslegalportrait} & \texttt{uslegallandscape} &
   \end{tabular}
-
+}
   \section{Scale Pages}
 \index{scale pages}
   The \texttt{-scale-page} operation scales each page in the range by the X and
@@ -1008,15 +1011,12 @@ the file is loaded. For example, upon executing
 \end{framed}
 
 \noindent the result might be:
-\begin{framed}
-\begin{verbatim}
+\begin{framed}{\small\begin{verbatim}
 0 "Part 1" 1 open
 1 "Part 1A" 2
 1 "Part 1B" 3
 0 "Part 2" 4
-1 "Part 2a" 5
-\end{verbatim}
-\end{framed}
+1 "Part 2a" 5\end{verbatim}}\end{framed}
 \noindent If the page number is 0, it indicates that clicking on that entry doesn't move to a page.
 
 By default, \cpdf\ converts unicode to ASCII text, dropping characters outside
@@ -1647,7 +1647,7 @@ The \texttt{-info} option prints entries from the document information
 dictionary to standard output.
 
 \begin{framed}
-\begin{verbatim}
+{\small\begin{verbatim}
 $cpdf -info pdf_reference.pdf
 Encryption: 40bit
 Linearized: true
@@ -1661,8 +1661,7 @@ Keywords:
 Creator: FrameMaker 7.2
 Producer: Acrobat Distiller 7.0.5 (Windows)
 Created: D:20061017081020Z
-Modified: D:20061118211043-02'30'
-\end{verbatim}
+Modified: D:20061118211043-02'30'\end{verbatim}}
 \end{framed}
 \noindent The details of the format for creation and modification dates can be found in
 Appendix~\ref{dates}.
@@ -1674,7 +1673,7 @@ The \texttt{-page-info} option prints the page label, media box and other boxes
 page-by-page to standard output, for all pages in the current range.
 
 \begin{framed}
-\begin{verbatim}
+{\small\begin{verbatim}
 $cpdf -page-info 14psfonts.pdf
 Page 1:
 Label: i
@@ -1684,7 +1683,7 @@ BleedBox:
 TrimBox: 
 ArtBox:
 Rotation: 0
-\end{verbatim}
+\end{verbatim}}
 \end{framed}
 
 \noindent Note that the format for boxes is minimum x, minimum y, maximum x, maximum y.
@@ -1692,10 +1691,10 @@ Rotation: 0
 \smallgap 
 \noindent The \texttt{-pages} operation prints the number of pages in the file.
 \begin{framed}
-\begin{verbatim}
+{\small\begin{verbatim}
 cpdf -pages Archos.pdf
 8
-\end{verbatim}
+\end{verbatim}}
 \end{framed}
 
 \section{Setting Document Information}
@@ -1707,7 +1706,7 @@ instance, Acrobat).
   Here is a summary of the commands for setting entries in the document
 information dictionary:
 
-\begin{framed}
+{\small\begin{framed}
     \noindent\begin{tabular}{ll}
        \textbf{Information} & \textbf{Example command-line fragment} \\
        Title & \texttt{cpdf -set-title "Discourses"} \\
@@ -1721,7 +1720,7 @@ information dictionary:
        Mark as Trapped & \texttt{cpdf -set-trapped} \\
        Mark as Untrapped & \texttt{cpdf -set-untrapped} \\
     \end{tabular}
-\end{framed}
+\end{framed}}
 
   \noindent (The details of the format for creation and modification dates can be found
 in Appendix~\ref{dates}. Using the date \texttt{"now"} uses the time and date
@@ -1744,14 +1743,14 @@ when a document is opened in, for instance, Acrobat. The possible
 (case-sensitive) values are:
 
 \vspace{2mm}
-  \begin{tabular}{ll}
+  {\small\begin{tabular}{ll}
     \texttt{SinglePage} & \vspace{2mm} \parbox{8cm}{Display one page at a time} \\
     \texttt{OneColumn} & \vspace{2mm} \parbox{8cm}{Display the pages in one column} \\
     \texttt{TwoColumnLeft} & \vspace{2mm} \parbox{8cm}{Display the pages in two columns, odd numbered pages on the left} \\
     \texttt{TwoColumnRight} & \vspace{2mm} \parbox{8cm}{Display the pages in two columns, even numbered pages on the left} \\
     \texttt{TwoPageLeft} & \vspace{2mm} \parbox{8cm}{(PDF 1.5 and above) Display the pages two at a time, odd numbered pages on the left} \\
     \texttt{TwoPageRight} & \vspace{2mm} \parbox{8cm}{(PDF 1.5 and above) Display the pages two at a time, even numbered pages on the left}
-  \end{tabular}\\
+  \end{tabular}}\\
 
   \noindent For instance:
   \begin{framed}
@@ -1764,14 +1763,14 @@ when a document is opened in, for instance, Acrobat. The possible
 document when first opened. The possible (case-sensitive) values are:
 
 \vspace{2mm}
-  \begin{tabular}{ll}
+  {\small\begin{tabular}{ll}
     \texttt{UseNone} & \vspace{2mm} \parbox{8cm}{Neither document outline nor thumbnail images visible} \\
     \texttt{UseOutlines} & \vspace{2mm} \parbox{8cm}{Document outline (bookmarks) visible} \\
     \texttt{UseThumbs} & \vspace{2mm} \parbox{8cm}{Thumbnail images visible} \\
     \texttt{FullScreen} & \vspace{2mm} \parbox{8cm}{Full-screen mode (no menu bar, window controls, or anything but the document visible)} \\
     \texttt{UseOC} & \vspace{2mm} \parbox{8cm}{(PDF 1.5 and above) Optional content group panel visible} \\
     \texttt{UseAttachments} & \vspace{2mm} \parbox{8cm}{(PDF 1.5 and above) Attachments panel visible}
-  \end{tabular}\\
+  \end{tabular}}\\
 
   \noindent For instance:
   \begin{framed}
@@ -1780,14 +1779,14 @@ document when first opened. The possible (case-sensitive) values are:
   
   \subsection{Display Options}
 \vspace{2mm}
-  \begin{tabular}{ll}
+  {\small\begin{tabular}{ll}
     \texttt{-hide-toolbar} & \vspace{2mm} \parbox{8cm}{Hide the viewer's toolbar} \\
     \texttt{-hide-menubar} & \vspace{2mm} \parbox{8cm}{Document outline (bookmarks) visible} \\
     \texttt{-hide-window-ui} & \vspace{2mm} \parbox{8cm}{Hide the viewer's scroll bars} \\
     \texttt{-fit-window} & \vspace{2mm} \parbox{8cm}{Resize the document's windows to fit size of first page} \\
     \texttt{-center-window} & \vspace{2mm} \parbox{8cm}{Position the document window in the center of the screen} \\
     \texttt{-display-doc-title} & \vspace{2mm} \parbox{8cm}{Display the document title instead of the file name in the title bar}
-  \end{tabular}\\
+  \end{tabular}}\\
 
   \noindent For instance:
   \begin{framed}
@@ -1827,14 +1826,14 @@ can read it without having to decode the whole PDF. To set the metadata:
 It is possible to add \textit{page labels} to a document. These are not the printed on the page, but may be displayed alongside thumbnails or in print dialogue boxes by PDF readers. We use \texttt{-add-page-labels} to do this, by default with decimal arabic numbers (1,2,3\ldots). We can add \texttt{-label-style} to choose what type of labels to add from these kinds:
 
 \vspace{4mm}
-\begin{tabular}{rl}
+{\small\begin{tabular}{rl}
   \texttt{DecimalArabic} & 1,2,3,4,5\ldots \\
   \texttt{LowercaseRoman} & i,ii,iii,iv,v\ldots \\
   \texttt{UppercaseRoman} & I,II,III,IV,V\ldots \\
   \texttt{LowercaseLetters} & a,b,c,\ldots,z,aa,bb\ldots \\
   \texttt{UppercaseLetters} & A,B,C,\ldots,Z,AA,BB\ldots \\
   \texttt{NoLabelPrefixOnly} & No number, but a prefix will be used if defined.
-\end{tabular}
+\end{tabular}}
 \vspace{4mm}
 
 \noindent We can use \texttt{-label-prefix} to add a textual prefix to each label. 
@@ -1846,7 +1845,7 @@ i, ii, iii, iv, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, A-0, A-1, A-2, A-3, A-4, A-5
 
 \noindent Here are the commands, in order:
 
-\begin{framed}
+{\small\begin{framed}
   \noindent\verb!cpdf -add-page-labels in.pdf 1-4 -label-style LowercaseRoman!\\
   \noindent\verb!     -o out.pdf!\\
   
@@ -1854,7 +1853,7 @@ i, ii, iii, iv, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, A-0, A-1, A-2, A-3, A-4, A-5
 
   \noindent\verb!cpdf -add-page-labels out.pdf 15-20 -label-prefix "A-"!\\
   \noindent\verb!     -label-startval 0 -o out.pdf!
-\end{framed}
+\end{framed}}
 
 \noindent By default the labels begin at page number 1 for each range. To override this, we can use \texttt{-label-startval} (we used $0$ in the final command), where we want the numbers to begin at zero rather than one.
 
@@ -1889,12 +1888,12 @@ whole rather than with an individual page, and also \textit{page-level attachmen
 \index{attachments!listing}
 To list all document- and page-level attachments, use the \texttt{-list-attached-files} operation. The page number and filename of each attachment is given, page 0 representing a document-level attachment.
 \begin{framed}
-\begin{verbatim}
+{\small\begin{verbatim}
 $cpdf -list-attached-files 14psfonts.pdf
 0 utility.ml
 0 utility.mli
 4 notes.xls
-\end{verbatim}
+\end{verbatim}}
 \end{framed}
 
   \section{Removing Attachments}
@@ -1918,13 +1917,13 @@ $cpdf -list-attached-files 14psfonts.pdf
   \end{framed}
 
   \begin{framed}
-\begin{verbatim}2, /Im5, 531, 684, 149.935297, 150.138267
+{\small\begin{verbatim}2, /Im5, 531, 684, 149.935297, 150.138267
 2, /Im6, 184, 164, 149.999988, 150.458710
 2, /Im7, 171, 156, 149.999996, 150.579145
 2, /Im9, 65, 91, 149.999986, 151.071856
 2, /Im10, 94, 60, 149.999990, 152.284285
 2, /Im15, 184, 139, 149.960011, 150.672060
-4, /Im29, 53, 48, 149.970749, 151.616446\end{verbatim}
+4, /Im29, 53, 48, 149.970749, 151.616446\end{verbatim}}
   \end{framed}
   \noindent The format is \textit{page number, image name, x pixels, y pixels, x resolution, y resolution}. The resolutions refer to the image's effective resolution at point of use (taking account of scaling, rotation etc).
 %  \section{Extracting Images}
@@ -1940,8 +1939,8 @@ $cpdf -list-attached-files 14psfonts.pdf
 %might generate \texttt{img001.jpg}, \texttt{img002.png}, \texttt{img003.jpg} etc. from the images on pages two to six. The number of percentage characters in the output format indicate the width of the numbering system for the output file names.
 
 \chapter{Fonts}
-  \begin{framed}
-  \noindent\verb!cpdf -copy-font fromfile.pdf -copy-font-page <int>!
+ {\small \begin{framed}
+  \noindent\verb!cpdf -copy-font fromfile.pdf -copy-font-page <int>!\\
   \noindent\verb!     -copy-font-name <name> in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
@@ -1949,7 +1948,7 @@ $cpdf -list-attached-files 14psfonts.pdf
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -missing-fonts in.pdf!
-  \end{framed} 
+  \end{framed}}
 \section{Copying Fonts}
 \label{copyfont}
 
@@ -1966,9 +1965,8 @@ the name \verb!/F10! on page 1 (this information can be found with
 \verb!-list-fonts!), the following would copy the font to the file
 \verb!in.pdf! on all pages, writing the output to \verb!out.pdf!:
   \begin{framed}
-  \small\noindent\verb!cpdf -copy-font fromfile.pdf -copy-font-name /F10!
+  \small\noindent\verb!cpdf -copy-font fromfile.pdf -copy-font-name /F10!\\
   \small\noindent\verb!     -copy-font-page 1 in.pdf -o out.pdf!
-  \vspace{2.5mm}
   \end{framed}
 
 \noindent Text in this font can then be added by giving \verb!-font /GHLIGA+c128!. Be
@@ -2004,7 +2002,7 @@ recommended when file size is the sole consideration.
 \label{listmisingfonts}
 
 \chapter{Miscellaneous}
-  \begin{framed}
+  {\small\begin{framed}
   \noindent\verb!cpdf -draft [-boxes] in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
@@ -2031,7 +2029,7 @@ recommended when file size is the sole consideration.
   \vspace{1.5mm}
   \noindent\verb!cpdf -remove-id in.pdf -o out.pdf!
 
-  \end{framed} 
+  \end{framed}}
   \section{Draft Documents}
 \index{draft}
     The \texttt{-draft} option removes bitmap (photographic) images from a
