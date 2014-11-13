@@ -2019,8 +2019,8 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
                 begin
                   ignore (Cpdf.recompress_pdf pdf);
                   if args.squeeze then Cpdf.squeeze pdf;
-                  Pdf.remove_unreferenced pdf
                 end;
+              Pdf.remove_unreferenced pdf;
               really_write_pdf ~is_decompress mk_id pdf outname
         | Some _ ->
             really_write_pdf ~encryption ~is_decompress mk_id pdf outname
