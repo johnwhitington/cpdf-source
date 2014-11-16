@@ -556,7 +556,9 @@ let banned banlist = function
   | ListBookmarks | ImageResolution _ | MissingFonts
   | PrintPageLabels | Clean | Compress | Decompress
   | RemoveUnusedResources | ChangeId | CopyId _ -> false (* Always allowed *)
-  | Decrypt | Encrypt -> true (* Never allowed *)
+  (* Combine pages is not allowed because we would not know where to get the
+  -recrypt from -- the first or second file? *)
+  | Decrypt | Encrypt | CombinePages _ -> true (* Never allowed *)
   | ExtractText | ExtractImages | ExtractFontFile -> mem Pdfcrypt.NoExtract banlist
   | AddBookmarks _ | PadBefore | PadAfter | PadEvery _ | PadMultiple _
   | Merge | Split | SplitOnBookmarks _ | RotateContents _ | Rotate _

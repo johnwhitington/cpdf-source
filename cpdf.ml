@@ -2177,29 +2177,33 @@ let stamp position fast scale_to_fit isover range over pdf =
           ~rotations:[Pdfmerge.DNR; Pdfmerge.DNR]
           false false ["a"; "b"] [pdf; over_firstpage_pdf] [pageseqs; [1]]
       in
-        let renamed_pdf =
-          Pdfpage.change_pages true
-            merged (Pdfpage.renumber_pages merged (Pdfpage.pages_of_pagetree merged))
+        let merged =
+          {merged with Pdf.saved_encryption = pdf.Pdf.saved_encryption}
         in
-          let renamed_pages = Pdfpage.pages_of_pagetree renamed_pdf in
-            let under_pages, over_page =
-              all_but_last renamed_pages, last renamed_pages
-            in
-              let new_pages =
-                map2
-                  (fun pageseq under_page ->
-                    do_stamp fast position scale_to_fit isover renamed_pdf
-                    (if mem pageseq range then over_page else
-                      Pdfpage.blankpage Pdfpaper.a4)
-                    under_page over)
-                  pageseqs
-                  under_pages 
+          let merged = copy_id true pdf merged in
+          let renamed_pdf =
+            Pdfpage.change_pages true
+              merged (Pdfpage.renumber_pages merged (Pdfpage.pages_of_pagetree merged))
+          in
+            let renamed_pages = Pdfpage.pages_of_pagetree renamed_pdf in
+              let under_pages, over_page =
+                all_but_last renamed_pages, last renamed_pages
               in
-                let changed = Pdfpage.change_pages true renamed_pdf new_pages in
-                let new_refnumbers = Pdf.page_reference_numbers changed in
-                let changetable = hashtable_of_dictionary (List.combine marks_refnumbers new_refnumbers) in
-                let new_marks = map (change_bookmark changetable) marks in
-                Pdfmarks.add_bookmarks new_marks changed
+                let new_pages =
+                  map2
+                    (fun pageseq under_page ->
+                      do_stamp fast position scale_to_fit isover renamed_pdf
+                      (if mem pageseq range then over_page else
+                        Pdfpage.blankpage Pdfpaper.a4)
+                      under_page over)
+                    pageseqs
+                    under_pages 
+                in
+                  let changed = Pdfpage.change_pages true renamed_pdf new_pages in
+                  let new_refnumbers = Pdf.page_reference_numbers changed in
+                  let changetable = hashtable_of_dictionary (List.combine marks_refnumbers new_refnumbers) in
+                  let new_marks = map (change_bookmark changetable) marks in
+                  Pdfmarks.add_bookmarks new_marks changed
 
 (* Combine pages from two PDFs. For now, assume equal length. *)
 
