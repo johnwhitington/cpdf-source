@@ -170,7 +170,7 @@ at least five pages.
   \end{framed}
 
 \index{decryption}
-  \section{Decryption}
+  \section{Working with Encrypted Documents}
 \index{owner password}
 \index{user password}
 \index{password}
@@ -182,7 +182,8 @@ after any range). The document will \textit{not} be re-encrypted upon writing.  
 example:
 
 \begin{framed}
-\small\verb!cpdf in.pdf user=fred reverse -o out.pdf!
+\noindent\small\verb!cpdf in.pdf user=charles -info!\\
+\noindent\small\verb!cpdf in.pdf owner=fred reverse -o out.pdf!
 \end{framed}
 
 \noindent To re-encrypt the file with its existing encryption upon writing, which is required if only the user password was supplied, but allowed in any case, add the \texttt{-recrypt} option:
@@ -242,7 +243,7 @@ one. The advantage compared with using pipes is that the file need not be
 repeatedly parsed and written out, saving time.
 
 To use \texttt{AND}, simply leave off the output specifier (e.g \texttt{-o}) of
-one command, and the input specifier (e.g filename). For instance:
+one command, and the input specifier (e.g filename) of the next. For instance:
 
 \begin{framed}
   \small\verb!cpdf -merge in.pdf in2.pdf AND -add-text "Label"!
@@ -367,13 +368,11 @@ PDF 1.5 introduced a new mechanism for storing objects to save space: object str
 
 \noindent Files written with object streams will be set to PDF 1.5 or higher, unless \texttt{-keep-version} is used (see above).
 
-Object streams are always removed prior to linearization.
-
 \section{Malformed Files}
 
 There are many malformed PDF files in existence, including many produced by
 otherwise-reputable applications. \cpdf\ attempts to correct these problems
-silently, but sometimes this can be very slow.
+silently.
 
 Grossly malformed files will be reconstructed. The reconstruction
 progress is shown on \verb!stderr! (Standard Error):
@@ -395,11 +394,11 @@ shortcuts which speed up processing, but would fail on badly-produced files.
 The \verb!-fast! option may be used with:
 
 \begin{framed}
-\small\noindent Section \ref{pages}\\
+\small\noindent Chapter \ref{pages}\\
 \noindent\small\verb!-rotate-contents -upright -vflip -hflip!\\
 \small\verb!-shift -scale -scale-to-fit -scale-contents!\\
 
-\noindent Section \ref{stamps}\\
+\noindent Chapter \ref{stamps}\\
 \noindent\small\verb!-add-text!\\
 \small\verb!-stamp-on -stamp-under -combine-pages!
 \end{framed}

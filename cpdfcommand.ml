@@ -1,9 +1,9 @@
 (* cpdf command line tools *)
 let demo = false
 let noncomp = false
-let major_version = 1
-let minor_version = 8
-let version_date = "(unreleased, 28th October 2014)"
+let major_version = 2
+let minor_version = 1
+let version_date = "(RC1, 17th November 2014)"
 
 open Pdfutil
 open Pdfio
@@ -1300,7 +1300,7 @@ let setstdinuser u =
 let setstdinowner o =
   match args.inputs with
   |  (StdIn, x, y, u, _, f)::t -> args.inputs <- (StdIn, x, y, u, o, f)::t
-  | _ -> error "-stdin-user: must follow -stdin"
+  | _ -> error "-stdin-owner: must follow -stdin"
 
 let setopenatpage n =
   args.op <- Some (OpenAtPage n)
