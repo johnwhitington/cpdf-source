@@ -598,7 +598,8 @@ one of the output files.
   \small\noindent\verb!cpdf -scale-page "<scale x> <scale y>" in.pdf [<range>] -o out.pdf!
    
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -scale-to-fit "<x size> <y size>" in.pdf [<range>] -o out.pdf!
+  \small\noindent\verb!cpdf -scale-to-fit "<x size> <y size>" [-scale-to-fit-scale <scale>]!\\    
+        \noindent\verb!     in.pdf [<range>] -o out.pdf!
 
   %\vspace{1.5mm}
   %\small\noindent\verb!cpdf -scale-to-fit-best "<x size> <y size>" in.pdf [<range>] -o out.pdf!
@@ -712,7 +713,16 @@ Y factors given. This scales both the page contents, and the page size itself. I
   \noindent Scale a file's contents on all pages to 50\% of its original dimensions.
   \end{framed}
 
-  \noindent To scale about a point other than the center, see the positioning commands described in Section \ref{position}.
+  \noindent To scale about a point other than the center, one can use the positioning commands described in Section \ref{position}. For example:
+  
+  \begin{framed}
+  \small\noindent\verb!cpdf -scale-contents 0.5 -topright 20 in.pdf -o out.pdf!
+
+  \vspace{2.5mm}
+  \noindent Scale a file's contents on all pages to 50\% of its original dimensions about a point 20pts from its top right corner.
+  \end{framed}
+
+  
 
   \section{Shift Page Contents}
   \index{shift page contents}
@@ -767,7 +777,7 @@ of the page by the given relative value.
   \vspace{2.5mm}
 
   \noindent Rotate all the page contents in the input file by
-ninety degrees clockwise. Doesn't change the page dimensions.
+ninety degrees clockwise. Does not change the page dimensions.
   \end{framed}
 
   \label{upright}
