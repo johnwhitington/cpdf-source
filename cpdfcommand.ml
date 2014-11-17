@@ -586,22 +586,29 @@ let rec decrypt_if_necessary (_, _, _, user_pw, owner_pw, was_dec_with_owner) op
     | Some x -> Printf.printf "decrypt_if_necessary: op = %s\n" (string_of_op x)
     end;
   if not (Pdfcrypt.is_encrypted pdf) then pdf else
-    match Pdfcrypt.decrypt_pdf_owner owner_pw pdf with
-    | Some pdf ->
-        args.was_decrypted_with_owner <- true;
-        was_dec_with_owner := true;
-        if args.debugcrypt then Printf.printf "Managed to decrypt with owner password\n";
-        pdf
-    | _ ->
-      if args.debugcrypt then Printf.printf "Couldn't decrypt with owner password %s\n" owner_pw;
-      match Pdfcrypt.decrypt_pdf user_pw pdf with
-      | Some pdf, permissions ->
-          if args.debugcrypt then Printf.printf "Managed to decrypt with user password\n";
-          if operation_allowed pdf permissions op
-            then pdf
-            else soft_error "User password cannot give permission for this operation"
+    match op with Some (CombinePages _) ->
+      (* This is a hack because we don't have support for recryption on combine
+       * pages. This is pervented by permissions above, but in the case that the
+       * owner password is blank (e.g christmas_tree_lights.pdf), we would end
+       * up here. *)
+      soft_error "Combine pages: both files must be unencrypted for this operation."
+    | _ -> 
+      match Pdfcrypt.decrypt_pdf_owner owner_pw pdf with
+      | Some pdf ->
+          args.was_decrypted_with_owner <- true;
+          was_dec_with_owner := true;
+          if args.debugcrypt then Printf.printf "Managed to decrypt with owner password\n";
+          pdf
       | _ ->
-         soft_error "Failed to decrypt file: wrong password?"
+        if args.debugcrypt then Printf.printf "Couldn't decrypt with owner password %s\n" owner_pw;
+        match Pdfcrypt.decrypt_pdf user_pw pdf with
+        | Some pdf, permissions ->
+            if args.debugcrypt then Printf.printf "Managed to decrypt with user password\n";
+            if operation_allowed pdf permissions op
+              then pdf
+              else soft_error "User password cannot give permission for this operation"
+        | _ ->
+           soft_error "Failed to decrypt file: wrong password?"
 
 let nobble pdf =
   if not demo then pdf else
