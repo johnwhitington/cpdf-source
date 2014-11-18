@@ -2140,7 +2140,7 @@ input, writing to the output.
   \vspace{2.5mm}
   \noindent Copy the id from \texttt{source.pdf} to the contents of \texttt{in.pdf}, writing to \texttt{out.pdf}.
   \end{framed}
-  \noindent If there is no ID in the source file, the existing ID is retained.
+  \noindent If there is no ID in the source file, the existing ID is retained. You cannot use \texttt{-recrypt} with \texttt{-copy-id-from}.
 
 \section{Remove ID}
 \index{remove ID}
@@ -2152,7 +2152,7 @@ input, writing to the output.
   \noindent Remove the ID from \texttt{in.pdf}, writing to \texttt{out.pdf}.
   \end{framed}
 
-Note that \texttt{-recrypt} will add an ID, since one is required for encrypted PDFs.
+You cannot use \texttt{-recrypt} with \texttt{-remove-id}.
 
 \appendix
 \chapter{Dates}

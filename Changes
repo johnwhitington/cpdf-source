@@ -11,7 +11,7 @@ o New -center position for text
 o -stamp can now use positions, just like stamping text
 o Better handling of permissions for files with user passwords
 o Linearization excised
-o Can encrypt output of -split-bookmarks now
+o Can encrypt or recrypt output of -split and -split-bookmarks now
 o -args replaces -control with better behaviour
 o Can scale a stamp to fit before stamping with -scale-stamp-to-fit
 

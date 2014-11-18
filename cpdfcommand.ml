@@ -3253,6 +3253,8 @@ let go () =
             pdf.Pdf.minor <- if args.keepversion then pdf.Pdf.minor else max pdf.Pdf.minor 1;
             write_pdf false pdf'
   | Some ChangeId ->
+      if args.recrypt then
+        soft_error "Cannot recrypt with change id: an id is part of encryption information";
       begin match args.inputs, args.out with
       | [(k, _, _, _, _, _) as input], File s ->
           let pdf = get_pdf_from_input_kind input args.op k in
@@ -3263,10 +3265,14 @@ let go () =
       | _ -> error "ChangeId: exactly one input file and output file required."
       end
   | Some RemoveId ->
+      if args.recrypt then
+        soft_error "Cannot recrypt with remove id: an id is part of encryption information";
       let pdf = get_single_pdf args.op false in
         pdf.Pdf.trailerdict <- Pdf.remove_dict_entry pdf.Pdf.trailerdict "/ID";
         write_pdf false pdf
   | Some (CopyId getfrom) ->
+      if args.recrypt then
+        soft_error "Cannot recrypt with copy id: an id is part of encryption information"
       begin match args.inputs with
       | [(k, _, _, u, o, _) as input] ->
           let pdf =
