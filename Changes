@@ -4,7 +4,7 @@ o Encryption now much, much faster
 o Faster parsing of delayed object streams on large files
 o -decompress now leaves object streams decompressed
 o Select pages by landscape-ness or portrait-ness in a page range
-o New -set-open-action option to set the open action of a PDF
+o New -open-at-page and -open-at-page-fit option to set the open action
 o New -recrypt option to re-encrypt output
 o Reads XMP metadata and outputs it on -info
 o New -center position for text

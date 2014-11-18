@@ -3272,7 +3272,7 @@ let go () =
         write_pdf false pdf
   | Some (CopyId getfrom) ->
       if args.recrypt then
-        soft_error "Cannot recrypt with copy id: an id is part of encryption information"
+        soft_error "Cannot recrypt with copy id: an id is part of encryption information";
       begin match args.inputs with
       | [(k, _, _, u, o, _) as input] ->
           let pdf =
