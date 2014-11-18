@@ -79,6 +79,7 @@ verbosity. Under Microsoft Windows, type \texttt{cpdf.exe} instead of \texttt{cp
 %\pagestyle{ruled}
 \pagestyle{headings}
 \chapter{Basic Usage}
+\label{basicusage}
   The Coherent PDF tools provide a wide range of facilities for modifying PDF
 files created by other means. There is a single command-line program
 \cpdf\ (\texttt{cpdf.exe} under Microsoft Windows). The rest of this manual describes the options that may be given
@@ -592,6 +593,11 @@ one of the output files.
   \verb! / ? < > \ : * | " ^ + =!
   \end{framed}
 
+\section{Encrypting with Split and Split Bookmarks}
+
+The encryption parameters described in Chapter \ref{encryption} may be added to the command line to encrypt each split PDF. Similarly, the \texttt{-recrypt} switch described in \ref{basicusage} may by given to re-encrypt each file with the existing encryption of the source PDF. 
+
+
 \chapter{Pages}
   \label{pages}
   \begin{framed}
@@ -853,6 +859,7 @@ existing crop box, use \texttt{-remove-crop}.
   \noindent copies the Trim Box of each page to the Crop Box of each page. The possible boxes are \texttt{/MediaBox}, \texttt{/CropBox}, \texttt{/BleedBox}, \texttt{/TrimBox}, \texttt{/ArtBox}.
 
 \chapter{Encryption and Decryption}
+\label{encryption}
 \index{encryption}
 \index{decryption}
   \begin{framed}
