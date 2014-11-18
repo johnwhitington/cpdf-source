@@ -1136,12 +1136,12 @@ the file using a different page range each time.
 \index{stamps}
   \begin{framed}
   \noindent\small\verb!cpdf -stamp-on source.pdf!\\
-  \noindent\small\verb!     [-scale-to-fit-stamp] [positioning command] !\\
+  \noindent\small\verb!     ([-scale-stamp-to-fit] | [<positioning command>]) !\\
   \noindent\small\verb!     in.pdf [<range>] -o out.pdf!
   
   \vspace{1.5mm}
-  \noindent\small\verb!cpdf -stamp-on source.pdf!\\
-  \noindent\small\verb!     [-scale-to-fit-stamp] [positioning command] !\\
+  \noindent\small\verb!cpdf -stamp-under source.pdf!\\
+  \noindent\small\verb!     ([-scale-stamp-to-fit] | [<positioning command>]) !\\
   \noindent\small\verb!     in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
@@ -1181,7 +1181,7 @@ writing to \texttt{out.pdf}. A watermark should go underneath each page:
 
 \noindent The position commands in Section \ref{position} can be used to locate the stamp more precisely (they are calculated relative to the crop box of the stamp). Or, preprocess the stamp with \texttt{-shift} first.
 
-The \texttt{-scale-to-fit-stamp} option can be added to scale the stamp to fit the page before applying it. The use of positioning commands together with \texttt{-scale-stamp-to-fit} is not recommended.
+The \texttt{-scale-stamp-to-fit} option can be added to scale the stamp to fit the page before applying it. The use of positioning commands together with \texttt{-scale-stamp-to-fit} is not recommended.
 
   The \texttt{-combine-pages} operation takes two PDF files and stamps each
 page of one over each page of the other. The length of the output is the same
