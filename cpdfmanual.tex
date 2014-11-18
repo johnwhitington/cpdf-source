@@ -1612,8 +1612,7 @@ given page range.
     
     \vspace{1.5mm}
     \small\noindent\verb!cpdf -add-page-labels in.pdf -o out.pdf!\\
-    \noindent\verb!     [-label-style <style>]!\\
-    \noindent\verb!     [-label-prefix <string>]!\\
+    \noindent\verb!     [-label-style <style>] [-label-prefix <string>]!\\
     \noindent\verb!     [-label-startval <integer>]!\\
     
     \vspace{1.5mm}
@@ -1653,7 +1652,7 @@ name, the fifth the PDF font encoding.
 \section{Reading Document Information}
 \label{info}
 The \texttt{-info} option prints entries from the document information
-dictionary to standard output.
+dictionary, and from any XMP metadata to standard output.
 
 \begin{framed}
 {\small\begin{verbatim}
@@ -1670,8 +1669,13 @@ Keywords:
 Creator: FrameMaker 7.2
 Producer: Acrobat Distiller 7.0.5 (Windows)
 Created: D:20061017081020Z
-Modified: D:20061118211043-02'30'\end{verbatim}}
-\end{framed}
+Modified: D:20061118211043-02'30'
+XMP pdf:Producer: Adobe PDF library 7.77
+XMP xmp:CreateDate: 2006-12-21T18:19:09+01:00
+XMP xmp:CreatorTool: Adobe Illustrator CS2
+XMP xmp:MetadataDate: 2006-12-21T18:19:09Z
+XMP xmp:ModifyDate: 2006-12-21T18:19:09Z
+XMP dc:title: AI6\end{verbatim}}\end{framed}
 \noindent The details of the format for creation and modification dates can be found in
 Appendix~\ref{dates}.
 
@@ -1814,7 +1818,7 @@ To have that page scaled to fit the window in the viewer, use \texttt{-open-at-p
 
   \section{Metadata}
 \index{metadata}
-  PDF files can contain a piece of arbitrary metadata, often in XML format.
+  PDF files can contain a piece of arbitrary metadata, often in XMP format.
 This is typically stored in an uncompressed stream, so that other applications
 can read it without having to decode the whole PDF. To set the metadata:
   \begin{framed}
@@ -2140,6 +2144,8 @@ input, writing to the output.
   \vspace{2.5mm}
   \noindent Remove the ID from \texttt{in.pdf}, writing to \texttt{out.pdf}.
   \end{framed}
+
+Note that \texttt{-recrypt} will add an ID, since one is required for encrypted PDFs.
 
 \appendix
 \chapter{Dates}
