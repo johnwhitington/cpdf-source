@@ -642,17 +642,16 @@ let presentation range t d h i dir effect_dur pdf =
     in
       Pdfpage.change_pages true pdf pages'
 
-(* \section{Attaching files} *)
+(* Attaching files *)
 let make_filestream file =
   let data =
     let ch = open_in_bin file in
-      let len = in_channel_length ch in
-        let stream = mkbytes len in
-          for x = 0 to bytes_size stream - 1 do
-            bset stream x (input_byte ch)
-          done;
-          close_in ch;
-          stream
+    let len = in_channel_length ch in
+    let stream = mkbytes len in
+    let i = input_of_channel ch in
+      setinit i stream 0 len;
+      close_in ch;
+      stream
   in
     Pdf.Stream
       (ref (Pdf.Dictionary

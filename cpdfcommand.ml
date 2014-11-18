@@ -1198,7 +1198,10 @@ let setcopyfontname s =
   args.copyfontname <- Some s
 
 let setpadevery i =
-  args.op <- Some (PadEvery i)
+  if i > 0 then
+    args.op <- Some (PadEvery i)
+  else
+    error "PadEvery: must be > 0"
 
 let setpadmultiple i =
   args.op <- Some (PadMultiple i)
@@ -1496,9 +1499,7 @@ and specs =
    ("-remove-duplicate-streams",
        Arg.Unit setremoveduplicatestreams,
        "");
-   ("-squeeze",
-       Arg.Unit setsqueeze,
-       "");
+
    ("-list-bookmarks",
       Arg.Unit (setop ListBookmarks),
       " List Bookmarks");
@@ -1826,29 +1827,9 @@ and specs =
    ("-label-startval",
       Arg.Int setlabelstartval,
       " Set label start value (default 1)");
-   (* These items are for cpdftk *)
-   (*("-update-info", Arg.String setupdateinfo, "");
-   ("-printf-format", Arg.Unit setprintfformat, "");
-
-   ("-dump-data", Arg.Unit (setop DumpData), "");
-   ("-keep-this-id", Arg.Unit setkeepthisid, "");
-   ("-do-ask", Arg.Unit setdoask, "");
-   ("-verbose", Arg.Unit setverbose, "");
-   ("-prompt-inputs", Arg.Unit promptinputs, "");
-   ("-prompt-input-passwords", Arg.Unit promptinputpasswords, "");
-   ("-prompt-output", Arg.Unit promptoutput, "");
-   ("-dont-overwrite-existing-files", Arg.Unit setdontoverwriteexistingfiles, "");
-   ("-dont-overwrite-inputs", Arg.Unit setdontoverwriteinputs, "");
-   ("-make-new-id", Arg.Unit setmakenewid, "");
-   ("-upright-stamp", Arg.Unit setuprightstamp, "");
-   ("-remove-unused-resources", Arg.Unit (setop RemoveUnusedResources), "");
-   ("-stamp-under-multi", Arg.String setstampundermulti, "");
-   ("-stamp-on-multi", Arg.String setstamponmulti, "");
-   ("-list-annotations-more", Arg.Unit (setop ListAnnotationsMore), "");*)
    (*These items are undocumented *)
    ("-extract-fontfile", Arg.Unit (setop ExtractFontFile), "");
    ("-extract-images", Arg.Unit setextractimages, "");
-   (*("-output-graph", Arg.Unit (setoutputgraph), "");*)
    ("-csp1", Arg.Unit (setop CSP1), "");
    ("-csp2", Arg.Float setcsp2, "");
    ("-csp3", Arg.Unit (setop CSP3), "");
@@ -1859,6 +1840,7 @@ and specs =
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit setdebugcrypt, "");
    ("-fix-prince", Arg.Unit (setop RemoveUnusedResources), "");
+   ("-squeeze", Arg.Unit setsqueeze, "");
    ("-extract-text", Arg.Unit (setop ExtractText), "")]
 
 and usage_msg =
