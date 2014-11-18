@@ -1,4 +1,4 @@
-Version 1.8 (November 2014)
+Version 2.1 (November 2014)
 
 o Encryption now much, much faster
 o Faster parsing of delayed object streams on large files
