@@ -1935,20 +1935,22 @@ let get_single_pdf_nodecrypt read_lazy =
 let really_write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf outname =
   if args.debugcrypt then Printf.printf "really_write_pdf\n%!";
   let outname' =
-    if args.linearize
-      then Filename.temp_file "cpdflin" ".pdf"
-      else outname
+    if args.linearize then Filename.temp_file "cpdflin" ".pdf" else outname
   in
     if args.debugcrypt then
-      Printf.printf "args.recrypt = %b, args.was_encrypted = %b\n" args.recrypt args.was_encrypted;
+      Printf.printf "args.recrypt = %b, args.was_encrypted = %b\n"
+        args.recrypt args.was_encrypted;
     begin
       if args.recrypt && args.was_encrypted then
         begin
-          if args.debugcrypt then Printf.printf "Recrypting in really_write_pdf\n";
+          if args.debugcrypt then
+            Printf.printf "Recrypting in really_write_pdf\n";
           match args.inputs with
             [] -> raise (Pdf.PDFError "no input in recryption")
           | (_, _, _, user_pw, owner_pw, _)::_ ->
-              let best_password = if owner_pw <> "" then owner_pw else user_pw in
+              let best_password =
+                if owner_pw <> "" then owner_pw else user_pw
+              in
                 Pdfwrite.pdf_to_file_options
                   ~preserve_objstm:args.preserve_objstm
                   ~generate_objstm:args.create_objstm
@@ -1960,15 +1962,17 @@ let really_write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf outna
         begin
           if not args.was_encrypted || args.was_decrypted_with_owner then
             begin
-              if args.debugcrypt then Printf.printf "Pdf to file in really_write_pdf\n";
-                Pdfwrite.pdf_to_file_options
-                  ~preserve_objstm:args.preserve_objstm
-                  ~generate_objstm:args.create_objstm
-                  ~compress_objstm:(not is_decompress)
-                  false encryption mk_id pdf outname'
+              if args.debugcrypt then
+                Printf.printf "Pdf to file in really_write_pdf\n";
+              Pdfwrite.pdf_to_file_options
+                ~preserve_objstm:args.preserve_objstm
+                ~generate_objstm:args.create_objstm
+                ~compress_objstm:(not is_decompress)
+                false encryption mk_id pdf outname'
             end
           else
-            soft_error "You must supply -recrypt here, or provide the owner password."
+            soft_error
+              "You must supply -recrypt here, or provide the owner password."
         end
     end;
     begin
@@ -1978,16 +1982,25 @@ let really_write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf outna
             Some x -> x
           | None -> raise (Pdf.PDFError "Could not find cpdflin")
         in
-          let best_password = if args.owner <> "" then args.owner else args.user in
-            let code = Cpdf.call_cpdflin cpdflin outname' outname best_password in
-              if code > 0 then
-                begin
-                  begin try Sys.remove outname with _ -> () end;
-                  Sys.rename outname' outname;
-                  soft_error "Linearizer failed with above error. File written without linearization."
-                end
-              else
-                begin try Sys.remove outname' with _ -> () end;
+          match args.inputs with
+            [] -> raise (Pdf.PDFError "no input in recryption")
+          | (_, _, _, user_pw, owner_pw, _)::_ ->
+              let best_password =
+                if owner_pw <> "" then owner_pw else user_pw
+              in
+                let code =
+                  Cpdf.call_cpdflin cpdflin outname' outname best_password
+                in
+                  if code > 0 then
+                    begin
+                      begin try Sys.remove outname with _ -> () end;
+                      Sys.rename outname' outname;
+                      soft_error
+                        "Linearizer failed with above error. \
+                        File written without linearization."
+                    end
+                  else
+                    begin try Sys.remove outname' with _ -> () end;
     end;
     if args.squeeze then
       let s = filesize outname in

@@ -36,13 +36,8 @@ let find_cpdflin provided =
 of the cpdflin binary. Returns the exit code. *)
 let call_cpdflin cpdflin temp output best_password =
   let command =
-    match Sys.os_type with
-      "Win32" ->
-        cpdflin ^ " --linearize " ^
-        Filename.quote temp ^ " " ^ Filename.quote output 
-    | _ ->
-        cpdflin ^ " " ^ Filename.quote temp ^
-        " \"" ^ best_password ^ "\" " ^ Filename.quote output
+    cpdflin ^ " --linearize " ^ " --password=" ^ best_password ^ " " ^
+    Filename.quote temp ^ " " ^ Filename.quote output 
   in
     Sys.command command
 
@@ -1166,87 +1161,12 @@ let name_of_spec marks (pdf : Pdf.t) splitlevel spec n filename startpage endpag
 let stem s =
   implode (rev (tail_no_fail (dropwhile (neq '.') (rev (explode (Filename.basename s))))))
 
-let really_write_pdf ~preserve_objstm ~create_objstm ?(encryption = None) ?(cpdflin = None) linearize mk_id pdf outname =
-  let outname' =
-    if linearize
-      then Filename.temp_file "cpdflin" ".pdf"
-      else outname
-  in
-    Pdfwrite.pdf_to_file_options
-      ~preserve_objstm
-      ~generate_objstm:create_objstm
-      false encryption mk_id pdf outname';
-    if linearize then
-      let cpdflin =
-        match find_cpdflin cpdflin with
-          Some x -> x
-        | None -> raise (Pdf.PDFError "Could not find cpdflin")
-      in
-        let best_password =
-          match encryption with
-            None -> ""
-          | Some x ->
-              if x.Pdfwrite.owner_password <> ""
-                then x.Pdfwrite.owner_password
-                else x.Pdfwrite.user_password
-        in
-          let code = call_cpdflin cpdflin outname' outname best_password in
-            begin try Sys.remove outname' with _ -> () end;
-            if code > 0 then
-              begin
-                begin try Sys.remove outname with _ -> () end;
-                raise (Pdf.PDFError "linearizer failed")
-              end
-
-(*let fast_write_split_pdfs
-  recrypt was_encrypted was_decrypted_with_owner enc splitlevel
-  original_filename linearize ?(cpdflin = None) preserve_objstm
-  create_objstm sq nobble spec main_pdf pagenums pdf_pages
-=
-  let marks = Pdfmarks.read_bookmarks main_pdf in
-    iter2
-      (fun number pagenums ->
-         let pdf = nobble (Pdfpage.pdf_of_pages main_pdf pagenums) in
-           let startpage, endpage = extremes pagenums in
-             let name = name_of_spec marks main_pdf splitlevel spec number (stem original_filename) startpage endpage in
-               Pdf.remove_unreferenced pdf;
-               if sq then squeeze pdf;
-               really_write_pdf ~preserve_objstm ~create_objstm ~encryption:enc linearize (not (enc = None)) pdf name)
-      (indx pagenums)
-      pagenums
-
-let split_pdf
-  recrypt was_encrypted was_decrypted_with_owner enc original_filename
-  chunksize linearize ~cpdflin ~preserve_objstm ~create_objstm ~squeeze
-  nobble spec pdf
-=
-  let pdf_pages = Pdfpage.pages_of_pagetree pdf in
-    fast_write_split_pdfs
-      recrypt was_encrypted was_decrypted_with_owner
-      enc 0 original_filename linearize preserve_objstm create_objstm
-      squeeze nobble spec pdf (splitinto chunksize (indx pdf_pages)) pdf_pages*)
-
 (* Return list, in order, a *set* of page numbers of bookmarks at a given level *)
 let bookmark_pages level pdf =
   setify_preserving_order
     (option_map
       (function l when l.Pdfmarks.level = level -> Some (Pdfpage.pagenumber_of_target pdf l.Pdfmarks.target) | _ -> None)
       (Pdfmarks.read_bookmarks pdf))
-
-(*let split_at_bookmarks
-  recrypt was_encrypted was_decrypted_with_owner original_filename linearize
-  ~cpdflin ~preserve_objstm ~create_objstm ~squeeze nobble level spec pdf
-=
-  let pdf_pages = Pdfpage.pages_of_pagetree pdf in
-    let points = bookmark_pages level pdf in
-      let points =
-        lose (fun x -> x <= 0 || x > Pdfpage.endpage pdf) (map pred points)
-      in
-        let pts = splitat points (indx pdf_pages) in
-          fast_write_split_pdfs
-            recrypt was_encrypted was_decrypted_with_owner None level
-            original_filename linearize preserve_objstm create_objstm
-            squeeze nobble spec pdf pts pdf_pages*)
 
 (* Called from cpdflib.ml - different from above *)
 let split_on_bookmarks pdf level =
