@@ -24,16 +24,25 @@ let find_cpdflin provided =
     Some x -> Some x
   | None ->
       if Sys.file_exists "cpdflin" then Some "cpdflin" else
+      if Sys.file_exists "cpdflin.exe" then Some "cpdflin.exe" else
         match option_map (is_at_path "cpdflin") (paths ()) with
           h::_ -> Some h
-        | _ -> None
+        | _ ->
+           match option_map (is_at_path "cpdflin.exe") (paths ()) with
+             h::_ -> Some h
+           | _ -> None
 
 (* Call cpdflin, given the (temp) input name, the output name, and the location
 of the cpdflin binary. Returns the exit code. *)
 let call_cpdflin cpdflin temp output best_password =
   let command =
-    cpdflin ^ " " ^ Filename.quote temp ^
-    " \"" ^ best_password ^ "\" " ^ Filename.quote output
+    match Sys.os_type with
+      "Win32" ->
+        cpdflin ^ " --linearize " ^
+        Filename.quote temp ^ " " ^ Filename.quote output 
+    | _ ->
+        cpdflin ^ " " ^ Filename.quote temp ^
+        " \"" ^ best_password ^ "\" " ^ Filename.quote output
   in
     Sys.command command
 
