@@ -23,10 +23,10 @@ let find_cpdflin provided =
   match provided with
     Some x -> Some x
   | None ->
-      if Sys.file_exists "cpdflin" then Some "cpdflin" else
-      if Sys.file_exists "cpdflin.exe" then Some "cpdflin.exe" else
-      if Sys.file_exists "qpdf" then Some "qpdf" else
-      if Sys.file_exists "qpdf.exe" then Some "qpdf.exe" else
+      if Sys.file_exists "cpdflin" then Some "./cpdflin" else
+      if Sys.file_exists "cpdflin.exe" then Some "./cpdflin.exe" else
+      if Sys.file_exists "qpdf" then Some "./qpdf" else
+      if Sys.file_exists "qpdf.exe" then Some "./qpdf.exe" else
         match option_map (is_at_path "cpdflin") (paths ()) with
           h::_ -> Some h
         | _ ->
@@ -47,7 +47,13 @@ let call_cpdflin cpdflin temp output best_password =
     cpdflin ^ " --linearize " ^ " --password=" ^ best_password ^ " " ^
     Filename.quote temp ^ " " ^ Filename.quote output 
   in
-    Sys.command command
+    match Sys.os_type with
+      "win32" ->
+        (* On windows, don't use LD_LIBRARY_PATH - it will happen automatically *)
+        Sys.command command
+    | _ ->
+        (* On linux, set LD_LIBRARY_PATH to the stem of cpdflin *)
+        Sys.command ("LD_LIBRARY_PATH=" ^ Filename.dirname cpdflin ^ " " ^ command)
 
 (* Recompress anything which isn't compressed, unless it's metadata. *)
 let recompress_stream pdf = function
