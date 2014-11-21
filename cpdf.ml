@@ -25,12 +25,20 @@ let find_cpdflin provided =
   | None ->
       if Sys.file_exists "cpdflin" then Some "cpdflin" else
       if Sys.file_exists "cpdflin.exe" then Some "cpdflin.exe" else
+      if Sys.file_exists "qpdf" then Some "qpdf" else
+      if Sys.file_exists "qpdf.exe" then Some "qpdf.exe" else
         match option_map (is_at_path "cpdflin") (paths ()) with
           h::_ -> Some h
         | _ ->
            match option_map (is_at_path "cpdflin.exe") (paths ()) with
              h::_ -> Some h
-           | _ -> None
+           | _ ->
+               match option_map (is_at_path "qpdf") (paths ()) with
+                 h::_ -> Some h
+               | _ ->
+                   match option_map (is_at_path "qpdf") (paths ()) with
+                     h::_ -> Some h
+                   | _ -> None
 
 (* Call cpdflin, given the (temp) input name, the output name, and the location
 of the cpdflin binary. Returns the exit code. *)
