@@ -2123,7 +2123,6 @@ let stamp position fast scale_to_fit isover range over pdf =
     in
       let merged =
         Pdfmerge.merge_pdfs
-          ~rotations:[Pdfmerge.DNR; Pdfmerge.DNR]
           false false ["a"; "b"] [pdf; over_firstpage_pdf] [pageseqs; [1]]
       in
         let merged =
@@ -2184,7 +2183,7 @@ let combine_pages (fast : bool) under over scaletofit swap equalize =
       let pageseqs_under = ilist 1 (Pdfpage.endpage under)
       in let pageseqs_over = ilist 1 (Pdfpage.endpage over) in
         let merged =
-          Pdfmerge.merge_pdfs ~rotations: [Pdfmerge.DNR; Pdfmerge.DNR] false false ["a"; "b"] [under; over] [pageseqs_under; pageseqs_over] in
+          Pdfmerge.merge_pdfs false false ["a"; "b"] [under; over] [pageseqs_under; pageseqs_over] in
           let renamed_pdf =
             Pdfpage.change_pages true
               merged (Pdfpage.renumber_pages merged (Pdfpage.pages_of_pagetree merged))
