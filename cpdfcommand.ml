@@ -290,6 +290,7 @@ type args =
    mutable inputs : input list;
    mutable chunksize : int;
    mutable linearize : bool;
+   mutable keeplinearize : bool;
    mutable rectangle : float * float * float * float;
    mutable coord : float * float;
    mutable duration : float option;
@@ -372,6 +373,7 @@ let args =
    inputs = [];
    chunksize = 1;
    linearize = false;
+   keeplinearize = false;
    rectangle = 0., 0., 0., 0.;
    coord = 0., 0.;
    duration = None;
@@ -449,6 +451,7 @@ let reset_arguments () =
   args.inputs <- [];
   args.chunksize <- 1;
   args.linearize <- false;
+  args.keeplinearize <- false;
   args.rectangle <- 0., 0., 0., 0.;
   args.coord <- 0., 0.;
   args.duration <- None;
@@ -631,6 +634,9 @@ let setchunk c =
 
 let setlinearize () =
   args.linearize <- true
+
+let setkeeplinearize () =
+  args.keeplinearize <- true
 
 let fixdashes s =
   let bufferdashes chars =
@@ -1383,6 +1389,10 @@ and specs =
    ("-l",
        Arg.Unit setlinearize,
        " Linearize output files where possible");
+   ("-keep-l", (* Must add rentention of was-linearized to pdf data type, read
+   it in Pdfread module *)
+       Arg.Unit setkeeplinearize,
+       "");
    ("-cpdflin",
        Arg.String setcpdflin,
        " Set location of 'cpdflin'");
