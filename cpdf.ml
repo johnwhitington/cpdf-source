@@ -2,11 +2,15 @@
 open Pdfutil
 open Pdfio
 
+let system_path_separator =
+  match Sys.os_type with "Win32" -> ';' | _ -> ':'
+
 (* Find the location of the cpdflin binary, either in a provided place (with
 -cpdflin), or in the current directory or in $PATH. *)
 let rec paths_of_chars prev = function
    [] -> keep (fun x -> x <> "") (map implode (rev (map rev prev)))
- | ':'::t -> paths_of_chars ([] :: prev) t
+ | pathsep::t when pathsep = system_path_separator ->
+     paths_of_chars ([] :: prev) t
  | h::t ->
      match prev with
        [] -> paths_of_chars [[h]] t
@@ -17,27 +21,29 @@ let paths () =
 
 let is_at_path file path =
   let full = path ^ Filename.dir_sep ^ file in
+    Printf.printf "Looking for %s\n%!" full;
     if Sys.file_exists full then Some full else None
 
 let find_cpdflin provided =
   match provided with
     Some x -> Some x
   | None ->
-      if Sys.file_exists "cpdflin" then Some "./cpdflin" else
-      if Sys.file_exists "cpdflin.exe" then Some "./cpdflin.exe" else
-      if Sys.file_exists "qpdf" then Some "./qpdf" else
-      if Sys.file_exists "qpdf.exe" then Some "./qpdf.exe" else
+      let dotslash = match Sys.os_type with "Win32" -> "" | _ -> "./" in
+      if Sys.file_exists "cpdflin" then Some (dotslash ^ "cpdflin") else
+      if Sys.file_exists "cpdflin.exe" then Some (dotslash ^ "cpdflin.exe") else
+      if Sys.file_exists "qpdf" then Some (dotslash ^ "qpdf") else
+      if Sys.file_exists "qpdf.exe" then Some (dotslash ^ "qpdf.exe") else
         match option_map (is_at_path "cpdflin") (paths ()) with
-          h::_ -> Some h
+          h::_ -> Some (Filename.quote h)
         | _ ->
            match option_map (is_at_path "cpdflin.exe") (paths ()) with
-             h::_ -> Some h
+             h::_ -> Some (Filename.quote h)
            | _ ->
                match option_map (is_at_path "qpdf") (paths ()) with
-                 h::_ -> Some h
+                 h::_ -> Some (Filename.quote h)
                | _ ->
                    match option_map (is_at_path "qpdf") (paths ()) with
-                     h::_ -> Some h
+                     h::_ -> Some (Filename.quote h)
                    | _ -> None
 
 (* Call cpdflin, given the (temp) input name, the output name, and the location
@@ -47,8 +53,9 @@ let call_cpdflin cpdflin temp output best_password =
     cpdflin ^ " --linearize " ^ " --password=" ^ best_password ^ " " ^
     Filename.quote temp ^ " " ^ Filename.quote output 
   in
+    print_endline command;
     match Sys.os_type with
-      "win32" ->
+      "Win32" ->
         (* On windows, don't use LD_LIBRARY_PATH - it will happen automatically *)
         Sys.command command
     | _ ->
