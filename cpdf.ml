@@ -22,7 +22,7 @@ let call_cpdflin cpdflin temp output best_password =
     cpdflin ^ " --linearize " ^ " --password=" ^ best_password ^ " " ^
     Filename.quote temp ^ " " ^ Filename.quote output 
   in
-    print_endline command;
+
     match Sys.os_type with
       "Win32" ->
         (* On windows, don't use LD_LIBRARY_PATH - it will happen automatically *)
@@ -31,8 +31,17 @@ let call_cpdflin cpdflin temp output best_password =
         (* On other platforms, if -cpdflin was provided, or cpdflin was in the
         current folder, set up LD_LIBRARY_PATH: *)
         match cpdflin with
-          "cpdflin" -> Sys.command (cpdflin ^ " " ^ command)
-        | _ -> Sys.command ("LD_LIBRARY_PATH=" ^ Filename.dirname cpdflin ^ " " ^ command)
+          "cpdflin" ->
+            print_endline command;
+            Sys.command command
+        | _ ->
+            let command = 
+              "DYLD_FALLBACK_LIBRARY_PATH=" ^ Filename.dirname cpdflin ^ " " ^
+              "LD_LIBRARY_PATH=" ^ Filename.dirname cpdflin ^ " " ^
+              command
+            in
+              print_endline command;
+              Sys.command command
 
 (* Recompress anything which isn't compressed, unless it's metadata. *)
 let recompress_stream pdf = function
