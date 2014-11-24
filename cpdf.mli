@@ -476,3 +476,5 @@ val find_cpdflin : string option -> string
 
 val call_cpdflin : string -> string -> string -> string -> int
 
+val debug : bool ref
+

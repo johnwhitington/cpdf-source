@@ -2,6 +2,8 @@
 open Pdfutil
 open Pdfio
 
+let debug = ref false
+
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
 let find_cpdflin provided =
@@ -25,14 +27,14 @@ let call_cpdflin cpdflin temp output best_password =
     match Sys.os_type with
       "Win32" ->
         (* On windows, don't use LD_LIBRARY_PATH - it will happen automatically *)
-        print_endline command;
+        if !debug then prerr_endline command;
         Sys.command command
     | _ ->
         (* On other platforms, if -cpdflin was provided, or cpdflin was in the
         current folder, set up LD_LIBRARY_PATH: *)
         match cpdflin with
           "cpdflin" ->
-            print_endline command;
+            if !debug then prerr_endline command;
             Sys.command command
         | _ ->
             let command = 
@@ -40,7 +42,7 @@ let call_cpdflin cpdflin temp output best_password =
               "LD_LIBRARY_PATH=" ^ Filename.dirname cpdflin ^ " " ^
               command
             in
-              print_endline command;
+              if !debug then prerr_endline command;
               Sys.command command
 
 (* Recompress anything which isn't compressed, unless it's metadata. *)

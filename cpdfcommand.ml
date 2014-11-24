@@ -1099,6 +1099,7 @@ let setdebug () =
   set Pdfread.read_debug;
   set Pdfwrite.write_debug;
   set Pdfcrypt.crypt_debug;
+  set Cpdf.debug;
   args.debug <- true
 
 let setdebugcrypt () =
