@@ -22,10 +22,10 @@ let call_cpdflin cpdflin temp output best_password =
     cpdflin ^ " --linearize " ^ " --password=" ^ best_password ^ " " ^
     Filename.quote temp ^ " " ^ Filename.quote output 
   in
-
     match Sys.os_type with
       "Win32" ->
         (* On windows, don't use LD_LIBRARY_PATH - it will happen automatically *)
+        print_endline command;
         Sys.command command
     | _ ->
         (* On other platforms, if -cpdflin was provided, or cpdflin was in the
