@@ -330,7 +330,7 @@ option to the command line, in addition to any other command being used. For exa
 \noindent Linearize the file \texttt{in.pdf}, writing to \texttt{out.pdf}.
 \end{framed}
 
-\noindent This requires the existence of the external program \texttt{cpdflin} which is provided with commercial versions of \texttt{cpdf}. For Unix and Mac OS X, and for Windows under Cygwin or Mingw, it suffices to place the \texttt{cpdflin} executable in the same folder as \texttt{cpdf}. On Windows with \texttt{command.exe}, you must use \texttt{-cpdflin} to let \texttt{cpdf} know where to find it:
+\noindent This requires the existence of the external program \texttt{cpdflin} which is provided with commercial versions of \texttt{cpdf}. This must be installed as described in the installation documentation provided with your copy of \texttt{cpdf}. If you are unable to install \texttt{cpdflin}, you must use \texttt{-cpdflin} to let \texttt{cpdf} know where to find it:
 
 \begin{framed}
 \small\verb!cpdf.exe -cpdflin "C:\\cpdflin.exe" -l in.pdf -o out.pdf!
