@@ -2,49 +2,18 @@
 open Pdfutil
 open Pdfio
 
-let system_path_separator =
-  match Sys.os_type with "Win32" -> ';' | _ -> ':'
-
-(* Find the location of the cpdflin binary, either in a provided place (with
--cpdflin), or in the current directory or in $PATH. *)
-let rec paths_of_chars prev = function
-   [] -> keep (fun x -> x <> "") (map implode (rev (map rev prev)))
- | pathsep::t when pathsep = system_path_separator ->
-     paths_of_chars ([] :: prev) t
- | h::t ->
-     match prev with
-       [] -> paths_of_chars [[h]] t
-     | ph::pt -> paths_of_chars ((h :: ph) :: pt) t
-
-let paths () =
-  paths_of_chars [] (explode (Sys.getenv "PATH"))
-
-let is_at_path file path =
-  let full = path ^ Filename.dir_sep ^ file in
-    Printf.printf "Looking for %s\n%!" full;
-    if Sys.file_exists full then Some full else None
-
+(* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
+installed at a system place *)
 let find_cpdflin provided =
   match provided with
-    Some x -> Some x
+    Some x -> x
   | None ->
       let dotslash = match Sys.os_type with "Win32" -> "" | _ -> "./" in
-      if Sys.file_exists "cpdflin" then Some (dotslash ^ "cpdflin") else
-      if Sys.file_exists "cpdflin.exe" then Some (dotslash ^ "cpdflin.exe") else
-      if Sys.file_exists "qpdf" then Some (dotslash ^ "qpdf") else
-      if Sys.file_exists "qpdf.exe" then Some (dotslash ^ "qpdf.exe") else
-        match option_map (is_at_path "cpdflin") (paths ()) with
-          h::_ -> Some (Filename.quote h)
-        | _ ->
-           match option_map (is_at_path "cpdflin.exe") (paths ()) with
-             h::_ -> Some (Filename.quote h)
-           | _ ->
-               match option_map (is_at_path "qpdf") (paths ()) with
-                 h::_ -> Some (Filename.quote h)
-               | _ ->
-                   match option_map (is_at_path "qpdf") (paths ()) with
-                     h::_ -> Some (Filename.quote h)
-                   | _ -> None
+      if Sys.file_exists "cpdflin" then (dotslash ^ "cpdflin") else
+      if Sys.file_exists "cpdflin.exe" then (dotslash ^ "cpdflin.exe") else
+        match Sys.os_type with
+          "Win32" -> "cpdflin.exe"
+        | _ -> "cpdflin"
 
 (* Call cpdflin, given the (temp) input name, the output name, and the location
 of the cpdflin binary. Returns the exit code. *)
@@ -59,8 +28,11 @@ let call_cpdflin cpdflin temp output best_password =
         (* On windows, don't use LD_LIBRARY_PATH - it will happen automatically *)
         Sys.command command
     | _ ->
-        (* On linux, set LD_LIBRARY_PATH to the stem of cpdflin *)
-        Sys.command ("LD_LIBRARY_PATH=" ^ Filename.dirname cpdflin ^ " " ^ command)
+        (* On other platforms, if -cpdflin was provided, or cpdflin was in the
+        current folder, set up LD_LIBRARY_PATH: *)
+        match cpdflin with
+          "cpdflin" -> Sys.command (cpdflin ^ " " ^ command)
+        | _ -> Sys.command ("LD_LIBRARY_PATH=" ^ Filename.dirname cpdflin ^ " " ^ command)
 
 (* Recompress anything which isn't compressed, unless it's metadata. *)
 let recompress_stream pdf = function

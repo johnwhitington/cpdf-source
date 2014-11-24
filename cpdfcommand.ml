@@ -1963,11 +1963,7 @@ let really_write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf outna
     end;
     begin
       if args.linearize then
-        let cpdflin =
-          match Cpdf.find_cpdflin args.cpdflin with
-            Some x -> x
-          | None -> raise (Pdf.PDFError "Could not find cpdflin")
-        in
+        let cpdflin = Cpdf.find_cpdflin args.cpdflin in
           match args.inputs with
             [] -> raise (Pdf.PDFError "no input in recryption")
           | (_, _, user_pw, owner_pw, _)::_ ->
