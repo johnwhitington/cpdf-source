@@ -1365,11 +1365,10 @@ and specs =
       " Don't change the version number");
    ("-l",
        Arg.Unit setlinearize,
-       " Linearize output files where possible");
-   ("-keep-l", (* Must add rentention of was-linearized to pdf data type, read
-   it in Pdfread module *)
+       " Linearize output file");
+   ("-keep-l",
        Arg.Unit setkeeplinearize,
-       "");
+       " Linearize if the input file was linearized");
    ("-cpdflin",
        Arg.String setcpdflin,
        " Set location of 'cpdflin'");
