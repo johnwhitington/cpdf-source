@@ -1,3 +1,7 @@
+Version 2.2
+
+o -keep-l keeps existing linearization status
+
 Version 2.1 (November 2014)
 
 o Encryption now much, much faster

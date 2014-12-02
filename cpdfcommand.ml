@@ -1920,8 +1920,11 @@ let get_single_pdf_nodecrypt read_lazy =
 
 let really_write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf outname =
   if args.debugcrypt then Printf.printf "really_write_pdf\n%!";
+  let will_linearize =
+    args.linearize || args.keeplinearize && pdf.Pdf.was_linearized
+  in
   let outname' =
-    if args.linearize then Filename.temp_file "cpdflin" ".pdf" else outname
+    if will_linearize then Filename.temp_file "cpdflin" ".pdf" else outname
   in
     if args.debugcrypt then
       Printf.printf "args.recrypt = %b, args.was_encrypted = %b\n"
@@ -1962,7 +1965,7 @@ let really_write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf outna
         end
     end;
     begin
-      if args.linearize then
+      if will_linearize then
         let cpdflin = Cpdf.find_cpdflin args.cpdflin in
           match args.inputs with
             [] -> raise (Pdf.PDFError "no input in recryption")
