@@ -154,6 +154,7 @@ type op =
   | AddPageLabels
   | RemovePageLabels
   | PrintPageLabels
+  | Revisions
 
 let string_of_op = function
   | CopyFont _ -> "CopyFont"
@@ -254,6 +255,7 @@ let string_of_op = function
   | AddPageLabels -> "AddPageLabels"
   | RemovePageLabels -> "RemovePageLabels"
   | PrintPageLabels -> "PrintPageLabels"
+  | Revisions -> "Revisions"
 
 (* Inputs: filename, pagespec. *)
 type input_kind =
@@ -554,7 +556,7 @@ performed is checked to see if it's allowable under the permissions regime. *)
 bans list in the input file, the operation cannot proceed. Other operations
 cannot proceed at all without owner password. *)
 let banned banlist = function
-  | Fonts | Info | Metadata | PageInfo | CountPages
+  | Fonts | Info | Metadata | PageInfo | Revisions | CountPages
   | ListAttachedFiles | ListAnnotationsMore | ListAnnotations
   | ListBookmarks | ImageResolution _ | MissingFonts
   | PrintPageLabels | Clean | Compress | Decompress
@@ -1732,6 +1734,9 @@ and specs =
    ("-pages",
       Arg.Unit (setop CountPages),
       " Count pages");
+   ("-revisions",
+      Arg.Unit (setop Revisions),
+      " Count number of revisions");
    ("-list-attached-files",
       Arg.Unit (setop ListAttachedFiles),
       " List attached files");
@@ -2973,6 +2978,14 @@ let go () =
       in
         let pdf = decrypt_if_necessary input (Some CountPages) pdf in
           output_page_count pdf
+  | Some Revisions ->
+      let input =
+        match args.inputs with
+          (InFile inname, _, _, _, _)::_ -> Pdfio.input_of_channel (open_in_bin inname)
+        | (StdIn, _, _, _, _)::_ -> Pdfio.input_of_channel stdin
+        | _ -> raise (Arg.Bad "Revisions: must be a filename or stdin")
+      in
+        Printf.printf "%i\n%!" (Pdfread.revisions input) 
   | Some Clean ->
       begin match args.out with
       | (File _ | Stdout) ->
