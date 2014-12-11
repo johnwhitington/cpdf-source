@@ -278,8 +278,8 @@ let encode_output enc s =
   | Stripped -> crude_de_unicode s
 
 (* Get the number of pages in file. Doesn't need decryption. *)
-let endpage_io i user_pw owner_pw =
-  let pdf = Pdfread.pdf_of_input_lazy user_pw owner_pw i in
+let endpage_io ?revision i user_pw owner_pw =
+  let pdf = Pdfread.pdf_of_input_lazy ?revision user_pw owner_pw i in
     Pdfpage.endpage pdf
 
 (* Raised when syntax is ok, but endpage is too low. Caught by validator.

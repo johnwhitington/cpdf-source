@@ -40,7 +40,7 @@ val print_pdf_objs : Pdf.t -> unit
 
 (** Like [Pdfpage.endpage], but from an input and possible password - does the
 minimal work to find the number of pages. *)
-val endpage_io : Pdfio.input -> string option -> string option -> int
+val endpage_io : ?revision:int -> Pdfio.input -> string option -> string option -> int
 
 (** Given a function from page number and page to page, a document, and a list
 of page numbers to apply it to, apply the function to all those pages. *)

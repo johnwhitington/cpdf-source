@@ -3,7 +3,7 @@ let demo = false
 let noncomp = false
 let major_version = 2
 let minor_version = 2
-let version_date = "(build of 1st December 2014)"
+let version_date = "(build of 11th December 2014)"
 
 open Pdfutil
 open Pdfio
@@ -15,18 +15,18 @@ problem occurs. This happens when object streams are in an encrypted document
 and so it can't be read without the right password... The existing error
 handling only dealt with the case where the document couldn't be decrypted once
 it had been loaded. *)
-let pdfread_pdf_of_input a b c =
-  try Pdfread.pdf_of_input a b c with
+let pdfread_pdf_of_input ?revision a b c =
+  try Pdfread.pdf_of_input ?revision a b c with
     Pdf.PDFError s when String.length s >=10 && String.sub s 0 10 = "Encryption" ->
       raise (Cpdf.SoftError "Bad owner or user password when reading document")
 
-let pdfread_pdf_of_channel_lazy ?source b c d =
-  try Pdfread.pdf_of_channel_lazy ?source b c d with
+let pdfread_pdf_of_channel_lazy ?revision ?source b c d =
+  try Pdfread.pdf_of_channel_lazy ?revision ?source b c d with
     Pdf.PDFError s when String.length s >=10 && String.sub s 0 10 = "Encryption" ->
       raise (Cpdf.SoftError "Bad owner or user password when reading document")
 
-let pdfread_pdf_of_file a b c =
-  try Pdfread.pdf_of_file a b c with
+let pdfread_pdf_of_file ?revision a b c =
+  try Pdfread.pdf_of_file ?revision a b c with
     Pdf.PDFError s when String.length s >=10 && String.sub s 0 10 = "Encryption" ->
       raise (Cpdf.SoftError "Bad owner or user password when reading document")
 
@@ -1863,10 +1863,9 @@ let filesize name =
   with
     _ -> 0
 
-let pdf_of_stdin user_pw owner_pw =
+let pdf_of_stdin ?revision user_pw owner_pw =
   let user_pw = Some user_pw
-  and owner_pw = if owner_pw = "" then None else Some owner_pw
-  in
+  and owner_pw = if owner_pw = "" then None else Some owner_pw in
     let o, bytes = Pdfio.input_output_of_bytes 16384 in
       try
         while true do o.Pdfio.output_char (input_char stdin) done;
@@ -1874,13 +1873,13 @@ let pdf_of_stdin user_pw owner_pw =
       with
         End_of_file ->
           let i = Pdfio.input_of_bytes (Pdfio.extract_bytes_from_input_output o bytes) in
-            pdfread_pdf_of_input user_pw owner_pw i
+            pdfread_pdf_of_input ?revision user_pw owner_pw i
 
 let filenames = null_hash ()
 
 (* This now memoizes on the name of the file to make sure we only load each
 file once *)
-let get_pdf_from_input_kind ((_, _, u, o, _, _) as input) op = function
+let get_pdf_from_input_kind ((_, _, u, o, _, revision) as input) op = function
   | AlreadyInMemory pdf -> pdf
   | InFile s ->
       if args.squeeze then
@@ -1891,43 +1890,43 @@ let get_pdf_from_input_kind ((_, _, u, o, _, _) as input) op = function
         end;
       begin try Hashtbl.find filenames s with
         Not_found ->
-          let pdf = pdfread_pdf_of_file (optstring u) (optstring o) s in
+          let pdf = pdfread_pdf_of_file ?revision (optstring u) (optstring o) s in
             args.was_encrypted <- Pdfcrypt.is_encrypted pdf;
             let pdf = decrypt_if_necessary input op pdf in
               Hashtbl.add filenames s pdf; pdf
       end
   | StdIn ->
-      decrypt_if_necessary input op (pdf_of_stdin u o)
+      decrypt_if_necessary input op (pdf_of_stdin ?revision u o)
 
 let get_single_pdf op read_lazy =
   match args.inputs with
-  | (InFile inname, _, u, o, _, _) as input::_ ->
+  | (InFile inname, _, u, o, _, revision) as input::_ ->
       if args.squeeze then
         Printf.printf "Initial file size is %i bytes\n" (filesize inname);
       let pdf =
         if read_lazy then
-          pdfread_pdf_of_channel_lazy (optstring u) (optstring o) (open_in_bin inname)
+          pdfread_pdf_of_channel_lazy ?revision (optstring u) (optstring o) (open_in_bin inname)
         else
-          pdfread_pdf_of_file (optstring u) (optstring o) inname
+          pdfread_pdf_of_file ?revision (optstring u) (optstring o) inname
       in
         args.was_encrypted <- Pdfcrypt.is_encrypted pdf;
         decrypt_if_necessary input op pdf
-  | (StdIn, _, u, o, _, _) as input::_ ->
-      decrypt_if_necessary input op (pdf_of_stdin u o)
+  | (StdIn, _, u, o, _, revision) as input::_ ->
+      decrypt_if_necessary input op (pdf_of_stdin ?revision u o)
   | (AlreadyInMemory pdf, _, _, _, _, _)::_ -> pdf
   | _ ->
       raise (Arg.Bad "cpdf: No input specified.\n")
 
 let get_single_pdf_nodecrypt read_lazy =
   match args.inputs with
-  | (InFile inname, _, u, o, _, _)::_ ->
+  | (InFile inname, _, u, o, _, revision)::_ ->
       if args.squeeze then
         Printf.printf "Initial file size is %i bytes\n" (filesize inname);
         if read_lazy then
-          pdfread_pdf_of_channel_lazy (optstring u) (optstring o) (open_in_bin inname)
+          pdfread_pdf_of_channel_lazy ?revision (optstring u) (optstring o) (open_in_bin inname)
         else
-          pdfread_pdf_of_file (optstring u) (optstring o) inname
-  | (StdIn, _, u, o, _, _)::_ -> pdf_of_stdin u o
+          pdfread_pdf_of_file ?revision (optstring u) (optstring o) inname
+  | (StdIn, _, u, o, _, revision)::_ -> pdf_of_stdin ?revision u o
   | (AlreadyInMemory pdf, _, _, _, _, _)::_ -> pdf
   | _ ->
       raise (Arg.Bad "cpdf: No input specified.\n")
@@ -2980,8 +2979,9 @@ let go () =
   | Some CountPages ->
       let pdf, inname, input =
         match args.inputs with
-        | (InFile inname, _, u, o, _, _) as input::_ -> pdfread_pdf_of_channel_lazy (optstring u) (optstring o) (open_in_bin inname), inname, input
-        | (StdIn, _, u, o, _, _) as input::_ -> pdf_of_stdin u o, "", input
+        | (InFile inname, _, u, o, _, revision) as input::_ ->
+             pdfread_pdf_of_channel_lazy ?revision (optstring u) (optstring o) (open_in_bin inname), inname, input
+        | (StdIn, _, u, o, _, revision) as input::_ -> pdf_of_stdin ?revision u o, "", input
         | (AlreadyInMemory pdf, _, _, _, _, _) as input::_ -> pdf, "", input
         | _ -> raise (Arg.Bad "cpdf: No input specified.\n")
       in
@@ -3005,9 +3005,9 @@ let go () =
   | Some Info ->
       let pdf, inname, input =
         match args.inputs with
-        | (InFile inname, _, u, o, _, _) as input::_ ->
-             pdfread_pdf_of_channel_lazy (optstring u) (optstring o) (open_in_bin inname), inname, input
-        | (StdIn, _, u, o, _, _) as input::_ -> pdf_of_stdin u o, "", input
+        | (InFile inname, _, u, o, _, revision) as input::_ ->
+             pdfread_pdf_of_channel_lazy ?revision (optstring u) (optstring o) (open_in_bin inname), inname, input
+        | (StdIn, _, u, o, _, revision) as input::_ -> pdf_of_stdin ?revision u o, "", input
         | (AlreadyInMemory pdf, _, _, _, _, _) as input::_ -> pdf, "", input
         | _ -> raise (Arg.Bad "cpdf: No input specified.\n")
       in
