@@ -1208,6 +1208,12 @@ let setrange spec =
       args.inputs <- (StdIn, spec, c, d, e, f) :: more
   | x -> ()
 
+let setrevision n =
+  match args.inputs with
+    (a, b, c, d, e, _)::more ->
+      args.inputs <- (a, b, c, d, e, Some n) :: more
+  | [] -> Printf.eprintf "Warning. -revision ignored"
+
 let setoutline () =
   args.outline <- true
 
@@ -1353,6 +1359,9 @@ and specs =
    ("-range",
       Arg.String setrange,
       " Explicitly add a range");
+   ("-revision",
+      Arg.Int setrevision,
+      " Set the revision to read for the file just named.");
    ("-change-id",
       Arg.Unit (setop ChangeId),
       " Change the file's /ID tag");
