@@ -1212,7 +1212,7 @@ let setrevision n =
   match args.inputs with
     (a, b, c, d, e, _)::more ->
       args.inputs <- (a, b, c, d, e, Some n) :: more
-  | [] -> Printf.eprintf "Warning. -revision ignored"
+  | [] -> Printf.eprintf "Warning. -revision ignored.\n"
 
 let setoutline () =
   args.outline <- true
