@@ -2994,7 +2994,11 @@ let go () =
         | (StdIn, _, _, _, _, _)::_ -> Pdfio.input_of_channel stdin
         | _ -> raise (Arg.Bad "Revisions: must be a filename or stdin")
       in
-        Printf.printf "%i\n%!" (Pdfread.revisions input) 
+        begin try
+          Printf.printf "%i\n%!" (Pdfread.revisions input) 
+        with
+          _ -> soft_error "Malformed XRef table. Cannot determine number of revisions."
+        end
   | Some Clean ->
       begin match args.out with
       | (File _ | Stdout) ->
