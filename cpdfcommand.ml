@@ -3,7 +3,7 @@ let demo = false
 let noncomp = false
 let major_version = 2
 let minor_version = 2
-let version_date = "(build of 11th December 2014)"
+let version_date = "(build of 22nd December 2014)"
 
 open Pdfutil
 open Pdfio
@@ -1212,7 +1212,8 @@ let setrevision n =
   match args.inputs with
     (a, b, c, d, e, _)::more ->
       args.inputs <- (a, b, c, d, e, Some n) :: more
-  | [] -> Printf.eprintf "Warning. -revision ignored.\n"
+  | [] ->
+      Printf.eprintf "Warning. -revision ignored. Put it after the filename.\n"
 
 let setoutline () =
   args.outline <- true
