@@ -459,7 +459,7 @@ val blackfills : int list -> Pdf.t -> Pdf.t
 val draft : bool -> int list -> Pdf.t -> Pdf.t
 
 (** Squeeze a PDF *)
-val squeeze : Pdf.t -> unit
+val squeeze : ?logto:string -> Pdf.t -> unit
 
 (**/**)
 

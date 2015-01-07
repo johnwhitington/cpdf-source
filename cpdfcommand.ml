@@ -1333,6 +1333,11 @@ let setrecrypt () =
 let setremovedictentry s =
   args.op <- Some (RemoveDictEntry s)
 
+let logto = ref None
+
+let setsqueezelogto s =
+  logto := Some s
+
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
   control_args := !control_args @ parse_control_file filename
@@ -1850,6 +1855,7 @@ and specs =
    ("-debug-crypt", Arg.Unit setdebugcrypt, "");
    ("-fix-prince", Arg.Unit (setop RemoveUnusedResources), "");
    ("-squeeze", Arg.Unit setsqueeze, "");
+   ("-squeeze-log-to", Arg.String setsqueezelogto, "");
    ("-extract-text", Arg.Unit (setop ExtractText), "")]
 
 and usage_msg =
@@ -2031,7 +2037,7 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
               if not is_decompress then
                 begin
                   ignore (Cpdf.recompress_pdf pdf);
-                  if args.squeeze then Cpdf.squeeze pdf;
+                  if args.squeeze then Cpdf.squeeze ?logto:!logto pdf;
                 end;
               Pdf.remove_unreferenced pdf;
               really_write_pdf ~is_decompress mk_id pdf outname
@@ -2046,7 +2052,7 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
                 if not is_decompress then
                   begin
                     ignore (Cpdf.recompress_pdf pdf);
-                    if args.squeeze then Cpdf.squeeze pdf;
+                    if args.squeeze then Cpdf.squeeze ?logto:!logto pdf;
                     Pdf.remove_unreferenced pdf
                   end;
                   really_write_pdf ~encryption ~is_decompress mk_id pdf temp;
@@ -2136,7 +2142,7 @@ let fast_write_split_pdfs
                  (stem original_filename) startpage endpage
              in
                Pdf.remove_unreferenced pdf;
-               if sq then Cpdf.squeeze pdf;
+               if sq then Cpdf.squeeze ?logto:!logto pdf;
                really_write_pdf ~encryption:enc (not (enc = None)) pdf name)
       (indx pagenums)
       pagenums

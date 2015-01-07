@@ -241,26 +241,35 @@ let squeeze_all_content_streams pdf =
 
 (* We run squeeze enough times to reach a fixed point in the cardinality of the
  * object map *)
-let squeeze pdf =
-  try
-    let n = ref (Pdf.objcard pdf) in
-    Printf.printf "Beginning squeeze: %i objects\n%!" (Pdf.objcard pdf);
-    while !n > (ignore (really_squeeze pdf); Pdf.objcard pdf) do
-      n := Pdf.objcard pdf;
-      Printf.printf "Squeezing... Down to %i objects\n%!" (Pdf.objcard pdf);
-    done;
-    Printf.printf "Squeezing page data and xobjects\n%!";
-    squeeze_all_content_streams pdf;
-    Printf.printf "Recompressing document\n%!";
-    Pdfcodec.flate_level := 9;
-    ignore (recompress_pdf pdf)
-  with
-    e ->
-      raise
-        (Pdf.PDFError
-           (Printf.sprintf
-              "Squeeze failed. No output written.\n Proximate error was:\n %s"
-              (Printexc.to_string e)))
+let squeeze ?logto pdf =
+  let log x =
+    match logto with
+      None -> print_string x; flush stdout
+    | Some s ->
+        let fh = open_out_gen [Open_wronly; Open_creat] 0o666 s in
+          seek_out fh (out_channel_length fh);
+          output_string fh x;
+          close_out fh
+  in
+    try
+      let n = ref (Pdf.objcard pdf) in
+      log (Printf.sprintf "Beginning squeeze: %i objects\n" (Pdf.objcard pdf));
+      while !n > (ignore (really_squeeze pdf); Pdf.objcard pdf) do
+        n := Pdf.objcard pdf;
+        log (Printf.sprintf "Squeezing... Down to %i objects\n" (Pdf.objcard pdf));
+      done;
+      log (Printf.sprintf "Squeezing page data and xobjects\n");
+      squeeze_all_content_streams pdf;
+      log (Printf.sprintf "Recompressing document\n");
+      Pdfcodec.flate_level := 9;
+      ignore (recompress_pdf pdf)
+    with
+      e ->
+        raise
+          (Pdf.PDFError
+             (Printf.sprintf
+                "Squeeze failed. No output written.\n Proximate error was:\n %s"
+                (Printexc.to_string e)))
 
 type encoding =
   | Raw
