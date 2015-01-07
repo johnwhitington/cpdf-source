@@ -155,6 +155,7 @@ type op =
   | RemovePageLabels
   | PrintPageLabels
   | Revisions
+  | RemoveDictEntry of string
 
 let string_of_op = function
   | CopyFont _ -> "CopyFont"
@@ -256,6 +257,7 @@ let string_of_op = function
   | RemovePageLabels -> "RemovePageLabels"
   | PrintPageLabels -> "PrintPageLabels"
   | Revisions -> "Revisions"
+  | RemoveDictEntry _ -> "RemoveDictEntry"
 
 (* Inputs: filename, pagespec. *)
 type input_kind =
@@ -1328,6 +1330,9 @@ let setcpdflin s =
 let setrecrypt () =
   args.recrypt <- true
 
+let setremovedictentry s =
+  args.op <- Some (RemoveDictEntry s)
+
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
   control_args := !control_args @ parse_control_file filename
@@ -1828,6 +1833,9 @@ and specs =
    ("-label-startval",
       Arg.Int setlabelstartval,
       " Set label start value (default 1)");
+   ("-remove-dict-entry",
+    Arg.String setremovedictentry,
+    " Remove an entry from all dictionaries");
    (*These items are undocumented *)
    ("-extract-fontfile", Arg.Unit (setop ExtractFontFile), "");
    ("-extract-images", Arg.Unit setextractimages, "");
@@ -3581,6 +3589,17 @@ let go () =
         iter
           print_string
           (map Pdfpagelabels.string_of_pagelabel (Pdfpagelabels.read pdf))
+  | Some (RemoveDictEntry key) ->
+      let pdf = get_single_pdf args.op true in
+        (* 1. Process all objects *)
+        Pdf.objselfmap
+          (function
+             (Pdf.Dictionary _ as d) | (Pdf.Stream _ as d) ->
+               Pdf.remove_dict_entry d key
+           | x -> x)
+          pdf;
+        (* FIXME: We might like to do the trailer dictionary too *)
+        write_pdf false pdf
 
 let parse_argv () =
   Arg.parse_argv ~current:(ref 0)
