@@ -39,16 +39,20 @@ let _ =
   set_binary_mode_in stdin true;
   set_binary_mode_out stdout true
 
+let stay_on_error = ref false
+
+exception StayOnError
+
 (* Fatal error reporting. *)
 let error s =
   prerr_string (s ^ "\nUse -help for help.\n");
   flush stderr;
-  exit 2
+  if not !stay_on_error then exit 2 else raise StayOnError
 
 let soft_error s =
   Printf.eprintf "%s\n" s;
   flush stderr;
-  exit 1
+  if not !stay_on_error then exit 1 else raise StayOnError
 
 let parse_pagespec pdf spec =
   try Cpdf.parse_pagespec pdf spec with
@@ -1331,6 +1335,9 @@ let logto = ref None
 let setsqueezelogto s =
   logto := Some s
 
+let setstayonerror () =
+  set stay_on_error
+
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
   control_args := !control_args @ parse_control_file filename
@@ -1835,6 +1842,7 @@ and specs =
     Arg.String setremovedictentry,
     " Remove an entry from all dictionaries");
    (*These items are undocumented *)
+   ("-stay-on-error", Arg.Unit setstayonerror, "");
    ("-extract-fontfile", Arg.Unit (setop ExtractFontFile), "");
    ("-extract-images", Arg.Unit setextractimages, "");
    ("-csp1", Arg.Unit (setop CSP1), "");
@@ -1894,7 +1902,7 @@ let get_pdf_from_input_kind ((_, _, u, o, _, revision) as input) op = function
         begin
           let size = filesize s in
             initial_file_size := size;
-            Printf.printf "Initial file size is %i bytes\n" size
+            if !logto = None then Printf.printf "Initial file size is %i bytes\n" size
         end;
       begin try Hashtbl.find filenames s with
         Not_found ->
@@ -2010,10 +2018,11 @@ let really_write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf outna
     end;
     if args.squeeze then
       let s = filesize outname in
-        Printf.printf
-          "Final file size is %i bytes, %.2f%% of original.\n"
-          s
-          ((float s /. float !initial_file_size) *. 100.)
+        if !logto = None then
+          Printf.printf
+            "Final file size is %i bytes, %.2f%% of original.\n"
+            s
+            ((float s /. float !initial_file_size) *. 100.)
 
 let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
   if args.debugcrypt then Printf.printf "write_pdf\n";
@@ -3664,21 +3673,23 @@ let go_withargv argv =
       prerr_string
         (implode (takewhile (neq '\n') (explode s)) ^ " Use -help for help.\n\n");
       flush stderr;
-      exit 2
+      if not !stay_on_error then exit 2
   | Arg.Help _ ->
       Arg.usage (align_specs specs) usage_msg;
       flush stderr (*r for Windows *)
   | Sys_error s as e ->
       prerr_string (s ^ "\n\n");
       flush stderr;
-      if args.debug then raise e else exit 2
+      if not !stay_on_error then
+        if args.debug then raise e else exit 2
   | Pdf.PDFError s as e ->
       prerr_string
         ("cpdf encountered an error. Technical details follow:\n\n" ^ s ^ "\n\n");
       flush stderr;
-      if args.debug then raise e else exit 2
-  | Cpdf.SoftError s -> soft_error s
-  | Cpdf.HardError s -> error s
+      if not !stay_on_error then
+        if args.debug then raise e else exit 2
+  | Cpdf.SoftError s -> try soft_error s with StayOnError -> ()
+  | Cpdf.HardError s -> try error s with StayOnError -> ()
   | e ->
       prerr_string
         ("cpdf encountered an unexpected error. Technical Details follow:\n" ^
