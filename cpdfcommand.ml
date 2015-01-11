@@ -3,7 +3,7 @@ let demo = false
 let noncomp = false
 let major_version = 2
 let minor_version = 2
-let version_date = "(build of 22nd December 2014)"
+let version_date = "(build of 7th January 2015)"
 
 open Pdfutil
 open Pdfio
@@ -364,11 +364,6 @@ type args =
    mutable recrypt : bool;
    mutable was_decrypted_with_owner : bool}
 
-(* List of all filenames in any AND stage - this is used to check that we don't
-overwrite any input file when -dont-overwrite-existing-files is used. *)
-
-let all_inputs : string list ref = ref []
-
 let args =
   {op = None;
    preserve_objstm = true;
@@ -696,8 +691,7 @@ let anon_fun s =
       try
         ignore (String.index s '.');
         args.inputs <- (InFile s, "all", "", "", ref false, None)::args.inputs;
-        args.original_filename <- s;
-        all_inputs := s::!all_inputs
+        args.original_filename <- s
       with
         Not_found ->
           match args.inputs with
@@ -1088,8 +1082,7 @@ let set_no_hq_print () =
 
 let set_input s =
   args.original_filename <- s;
-  args.inputs <- (InFile s, "all", "", "", ref false, None)::args.inputs;
-  all_inputs := s::!all_inputs
+  args.inputs <- (InFile s, "all", "", "", ref false, None)::args.inputs
 
 let set_input_dir s =
   let names = sort compare (leafnames_of_dir s) in
@@ -3626,8 +3619,13 @@ let expand_args argv =
   let l = Array.to_list argv in
     Array.of_list (expand_args_inner [] l)
 
+(* FIXME: Now we call this repeatedly from interactive programs, careful to
+ensure that all memory is cleaned. See clearance of filenames hashtable, for
+example. *)
+
 (* Main function. *)
 let go_withargv argv =
+  Hashtbl.clear filenames;
   if demo then
     flprint "This demo is for evaluation only. http://www.coherentpdf.com/\n";
   if noncomp then
@@ -3688,5 +3686,6 @@ let go_withargv argv =
       flush stderr;
       if args.debug then raise e else exit 2
 
-let go () = go_withargv Sys.argv
+let go () =
+  go_withargv Sys.argv
 

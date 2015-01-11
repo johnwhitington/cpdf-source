@@ -1,6 +1,7 @@
 Version 2.2
 
 o -keep-l keeps existing linearization status
+o -remove-dict-entry te remove the contents of a dictionary entry
 
 Version 2.1 (November 2014)
 
