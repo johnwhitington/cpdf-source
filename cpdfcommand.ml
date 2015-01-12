@@ -3673,7 +3673,7 @@ let go_withargv argv =
       prerr_string
         (implode (takewhile (neq '\n') (explode s)) ^ " Use -help for help.\n\n");
       flush stderr;
-      if not !stay_on_error then exit 2
+      if not !stay_on_error then exit 2 else raise StayOnError
   | Arg.Help _ ->
       Arg.usage (align_specs specs) usage_msg;
       flush stderr (*r for Windows *)
@@ -3681,21 +3681,25 @@ let go_withargv argv =
       prerr_string (s ^ "\n\n");
       flush stderr;
       if not !stay_on_error then
-        if args.debug then raise e else exit 2
+        (if args.debug then raise e else exit 2)
+      else raise StayOnError
   | Pdf.PDFError s as e ->
       prerr_string
         ("cpdf encountered an error. Technical details follow:\n\n" ^ s ^ "\n\n");
       flush stderr;
       if not !stay_on_error then
         if args.debug then raise e else exit 2
-  | Cpdf.SoftError s -> try soft_error s with StayOnError -> ()
-  | Cpdf.HardError s -> try error s with StayOnError -> ()
+      else
+        raise StayOnError
+  | Cpdf.SoftError s -> soft_error s
+  | Cpdf.HardError s -> error s
   | e ->
       prerr_string
         ("cpdf encountered an unexpected error. Technical Details follow:\n" ^
          Printexc.to_string e ^ "\n\n");
       flush stderr;
-      if args.debug then raise e else exit 2
+      if not !stay_on_error then
+        (if args.debug then raise e else exit 2) else raise StayOnError
 
 let go () =
   go_withargv Sys.argv
