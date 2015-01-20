@@ -1696,7 +1696,8 @@ let unescape_string s =
 
 let
   addtexts metrics linewidth outline fast fontname font bates colour position linespacing
-  fontsize underneath text pages orientation cropbox opacity justification midline filename pdf
+  fontsize underneath text pages orientation cropbox opacity justification
+  midline topline filename pdf
 =
   (*flprint "addtexts:\n";
   iter (Printf.printf "%C ") (explode text);
@@ -1743,6 +1744,18 @@ let
               | Some font ->
                   let baseline_adjustment =
                     (fontsize *. float (Pdfstandard14.baseline_adjustment font)) /. 1000.
+                  in
+                    ops_baseline_adjustment := baseline_adjustment;
+                    voffset := !voffset +. baseline_adjustment
+              | _ ->
+                 ops_baseline_adjustment := 0.
+            end
+          else
+          if topline then
+            begin match font with
+              | Some font ->
+                  let baseline_adjustment =
+                    (fontsize *. float (Pdfstandard14.baseline_adjustment font) *. 2.0) /. 1000.
                   in
                     ops_baseline_adjustment := baseline_adjustment;
                     voffset := !voffset +. baseline_adjustment

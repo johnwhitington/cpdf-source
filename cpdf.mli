@@ -292,7 +292,7 @@ val calculate_position :
 
 (** Call [add_texts metrics linewidth outline fast fontname font bates colour
 position linespacing fontsize underneath text pages orientation
-relative_to_cropbox midline_adjust filename pdf]. For details see cpdfmanual.pdf *)
+relative_to_cropbox midline_adjust topline filename pdf]. For details see cpdfmanual.pdf *)
 val addtexts :
     bool -> (*metrics*)
     float -> (*linewidth*)
@@ -313,6 +313,7 @@ val addtexts :
     float ->(*opacity*)
     justification ->(*justification*)
     bool ->(*midline adjust?*)
+    bool ->(*topline adjust?*)
     string ->(*filename*)
     Pdf.t ->(*pdf*)
     Pdf.t

@@ -1,9 +1,9 @@
 (* cpdf command line tools *)
-let demo = false
+let demo = true
 let noncomp = false
 let major_version = 2
 let minor_version = 2
-let version_date = "(build of 7th January 2015)"
+let version_date = "(build of 20th January 2015)"
 
 open Pdfutil
 open Pdfio
@@ -316,6 +316,7 @@ type args =
    mutable underneath : bool;
    mutable linespacing : float;
    mutable midline : bool;
+   mutable topline : bool;
    mutable justification : Cpdf.justification;
    mutable bates : int;
    mutable prerotate : bool;
@@ -394,6 +395,7 @@ let args =
    underneath = false;
    linespacing = 1.;
    midline = false;
+   topline = false;
    justification = Cpdf.LeftJustify;
    bates = 0;
    prerotate = false;
@@ -472,6 +474,7 @@ let reset_arguments () =
   args.underneath <- false;
   args.linespacing <- 1.;
   args.midline <- false;
+  args.topline <- false;
   args.justification <- Cpdf.LeftJustify;
   args.bates <- 0;
   args.prerotate <- false;
@@ -1127,6 +1130,9 @@ let setlinespacing f =
 let setmidline () =
   args.midline <- true
 
+let settopline () =
+  args.topline <- true
+
 let setscaletofitscale f =
   args.scale <- f
 
@@ -1640,6 +1646,9 @@ and specs =
    ("-midline",
       Arg.Unit setmidline,
       " Adjust text to midline rather than baseline");
+   ("-topline",
+      Arg.Unit settopline,
+      " Adjust text to topline rather than baseline");
    ("-relative-to-cropbox",
       Arg.Unit setrelativetocropbox,
       " Add text relative to Crop Box not Media Box");
@@ -3458,7 +3467,7 @@ let go () =
                    false args.linewidth args.outline args.fast args.fontname font args.bates
                    args.color args.position args.linespacing args.fontsize
                    args.underneath text range args.orientation args.relative_to_cropbox args.opacity
-                   args.justification args.midline filename pdf)
+                   args.justification args.midline args.topline filename pdf)
   | Some RemoveText ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
