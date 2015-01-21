@@ -1483,7 +1483,9 @@ and specs =
        ""); (* Undocumented now, since /frombox, /tobox now used *)
    ("-frombox", Arg.String setfrombox, " Set box to copy from");
    ("-tobox", Arg.String settobox, " Set box to copy to");
-   ("-mediabox-if-missing", Arg.Unit setmediaboxifmissing, " If copy from box missing, substitute media box");
+   ("-mediabox-if-missing",
+    Arg.Unit setmediaboxifmissing,
+    " If copy from box missing, substitute media box");
    ("-mediabox",
        Arg.String setmediabox,
        " Set media box on specified pages");
