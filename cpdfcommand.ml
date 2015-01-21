@@ -1,5 +1,5 @@
 (* cpdf command line tools *)
-let demo = true
+let demo = false
 let noncomp = false
 let major_version = 2
 let minor_version = 2
@@ -1209,8 +1209,8 @@ let setextractimages () =
 let setrange spec =
   args.dashrange <- spec;
   match args.inputs with
-    (StdIn, a, c, d, e, f)::more ->
-      args.inputs <- (StdIn, spec, c, d, e, f) :: more
+    (x, _, c, d, e, f)::more ->
+      args.inputs <- (x, spec, c, d, e, f) :: more
   | x -> ()
 
 let setrevision n =
