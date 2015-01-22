@@ -367,7 +367,9 @@ type args =
    mutable was_encrypted : bool;
    mutable cpdflin : string option;
    mutable recrypt : bool;
-   mutable was_decrypted_with_owner : bool}
+   mutable was_decrypted_with_owner : bool;
+   mutable creator : string option;
+   mutable producer : string option}
 
 let args =
   {op = None;
@@ -446,7 +448,9 @@ let args =
    was_encrypted = false;
    cpdflin = None;
    recrypt = false;
-   was_decrypted_with_owner = false}
+   was_decrypted_with_owner = false;
+   producer = None;
+   creator = None}
 
 let reset_arguments () =
   args.op <- None;
@@ -520,7 +524,9 @@ let reset_arguments () =
   args.labelstyle <- Pdfpagelabels.DecimalArabic;
   args.labelprefix <- None;
   args.labelstartval <- 1;
-  args.squeeze <- false
+  args.squeeze <- false;
+  args.producer <- None;
+  args.creator <- None
   (* Do not reset original_filename or cpdflin or was_encrypted or
    * was_decrypted_with_owner or recrypt, since we want it to work across ANDs. *)
 
@@ -1144,6 +1150,12 @@ let setsqueeze () =
   args.squeeze <- true;
   args.create_objstm <- true
 
+let setcreator s =
+  args.creator <- Some s
+
+let setproducer s =
+  args.producer <- Some s
+
 (* Parsing the control file *)
 let rec getuntilendquote prev = function
   | [] -> implode (rev prev), []
@@ -1515,7 +1527,6 @@ and specs =
    ("-remove-duplicate-streams",
        Arg.Unit setremoveduplicatestreams,
        "");
-
    ("-list-bookmarks",
       Arg.Unit (setop ListBookmarks),
       " List Bookmarks");
@@ -1852,6 +1863,12 @@ and specs =
    ("-remove-dict-entry",
     Arg.String setremovedictentry,
     " Remove an entry from all dictionaries");
+   ("-producer",
+    Arg.String setproducer,
+    " Change the /Producer entry in the /Info dictionary");
+   ("-creator",
+    Arg.String setcreator,
+    " Change the /Creator entry in the /Info dictionary");
    (*These items are undocumented *)
    ("-stay-on-error", Arg.Unit setstayonerror, "");
    ("-extract-fontfile", Arg.Unit (setop ExtractFontFile), "");
@@ -1958,7 +1975,31 @@ let get_single_pdf_nodecrypt read_lazy =
   | _ ->
       raise (Arg.Bad "cpdf: No input specified.\n")
 
+let rec unescape_octals prev = function
+  | [] -> rev prev
+  | '\\'::('0'..'9' as a)::('0'..'9' as b)::('0'..'9' as c)::t ->
+       let chr = char_of_int (int_of_string ("0o" ^ implode [a;b;c])) in
+         unescape_octals (chr::prev) t
+  | '\\'::'\\'::t -> unescape_octals ('\\'::prev) t
+  | h::t -> unescape_octals (h::prev) t
+
+let unescape_octals s =
+  implode (unescape_octals [] (explode s))
+
+let process s = 
+  if args.encoding <> Cpdf.Raw
+    then Pdftext.pdfdocstring_of_utf8 s
+    else unescape_octals s
+
+let set_producer s pdf =
+  ignore (Cpdf.set_pdf_info ("/Producer", Pdf.String (process s), 0) pdf)
+
+let set_creator s pdf =
+  ignore (Cpdf.set_pdf_info ("/Creator", Pdf.String (process s), 0) pdf)
+
 let really_write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf outname =
+  if args.producer <> None then set_producer (unopt args.producer) pdf;
+  if args.creator <> None then set_creator (unopt args.creator) pdf;
   if args.debugcrypt then Printf.printf "really_write_pdf\n%!";
   let will_linearize =
     args.linearize || args.keeplinearize && pdf.Pdf.was_linearized
@@ -2873,16 +2914,7 @@ let addrectangle (w, h) color position relative_to_cropbox underneath range pdf 
   in
     Cpdf.process_pages addrectangle_page pdf range
 
-let rec unescape_octals prev = function
-  | [] -> rev prev
-  | '\\'::('0'..'9' as a)::('0'..'9' as b)::('0'..'9' as c)::t ->
-       let chr = char_of_int (int_of_string ("0o" ^ implode [a;b;c])) in
-         unescape_octals (chr::prev) t
-  | '\\'::'\\'::t -> unescape_octals ('\\'::prev) t
-  | h::t -> unescape_octals (h::prev) t
 
-let unescape_octals s =
-  implode (unescape_octals [] (explode s))
 
 (* Main function *)
 let go () =
