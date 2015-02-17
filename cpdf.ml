@@ -2024,23 +2024,29 @@ let hflip_pdf ?(fast=false) pdf range =
   in
     process_pages (flip_page ~fast transform_op pdf) pdf range
 
-let stamp_shift_of_position sw sh w h p =
-  let half x = x /. 2. in
+let stamp_shift_of_position topline midline sw sh w h p =
+  let half x = x /. 2.
+  and dy =
+    if midline then sh /. 2.
+    else if topline then sh
+    else 0.
+  in
     match p with
-    | PosCentre (ox, oy) -> ox -. half sw, oy
-    | PosLeft (ox, oy) -> ox, oy
-    | PosRight (ox, oy) -> ox -. sw, oy
-    | Top o -> half w -. half sw, h -. o -. sh
-    | TopLeft o -> o, h -. sh -. o
-    | TopRight o -> w -. sw -. o, h -. sh -. o
-    | Left o -> o, half h -. half sh
-    | BottomLeft o -> o, o
-    | Bottom o -> half w -. half sw, o
-    | BottomRight o -> w -. sw, o 
-    | Right o -> w -. sw -. o, half h -. half sh
-    | Diagonal | ReverseDiagonal | Centre -> half w -. half sw, half h -. half sh
+    | PosCentre (ox, oy) -> ox -. half sw, oy -. dy
+    | PosLeft (ox, oy) -> ox, oy -. dy
+    | PosRight (ox, oy) -> ox -. sw, oy -. dy
+    | Top o -> half w -. half sw, h -. o -. sh -. dy
+    | TopLeft o -> o, h -. sh -. o -. dy
+    | TopRight o -> w -. sw -. o, h -. sh -. o -. dy
+    | Left o -> o, half h -. half sh -. dy
+    | BottomLeft o -> o, o -. dy
+    | Bottom o -> half w -. half sw, o -. dy
+    | BottomRight o -> w -. sw, o -. dy
+    | Right o -> w -. sw -. o, half h -. half sh -. dy
+    | Diagonal | ReverseDiagonal | Centre ->
+        half w -. half sw, half h -. half sh -. dy
 
-let do_stamp fast position scale_to_fit isover pdf o u opdf =
+let do_stamp fast position topline midline scale_to_fit isover pdf o u opdf =
   (* Scale page stamp o to fit page u *)
   let sxmin, symin, sxmax, symax =
     Pdf.parse_rectangle
@@ -2075,7 +2081,7 @@ let do_stamp fast position scale_to_fit isover pdf o u opdf =
         and sh = symax -. symin
         and w = txmax -. txmin
         and h = tymax -. tymin in
-          let dx, dy = stamp_shift_of_position sw sh w h position in
+          let dx, dy = stamp_shift_of_position topline midline sw sh w h position in
             let translate_op =
               Pdfops.Op_cm
                 (Pdftransform.matrix_of_transform [Pdftransform.Translate (dx, dy)])
@@ -2115,7 +2121,7 @@ let change_bookmark t m =
   {m with Pdfmarks.target =
     try change_destination t m.Pdfmarks.target with Not_found -> m.Pdfmarks.target}
 
-let stamp position fast scale_to_fit isover range over pdf =
+let stamp position topline midline fast scale_to_fit isover range over pdf =
   let marks = Pdfmarks.read_bookmarks pdf in
   let marks_refnumbers = Pdf.page_reference_numbers pdf in
   let pdf = Pdfmarks.remove_bookmarks pdf in
@@ -2145,7 +2151,7 @@ let stamp position fast scale_to_fit isover range over pdf =
                 let new_pages =
                   map2
                     (fun pageseq under_page ->
-                      do_stamp fast position scale_to_fit isover renamed_pdf
+                      do_stamp fast position topline midline scale_to_fit isover renamed_pdf
                       (if mem pageseq range then over_page else
                         Pdfpage.blankpage Pdfpaper.a4)
                       under_page over)
@@ -2197,7 +2203,11 @@ let combine_pages (fast : bool) under over scaletofit swap equalize =
               cleave (Pdfpage.pages_of_pagetree renamed_pdf) under_length
             in
               let new_pages =
-                map2 (fun o u -> do_stamp fast (BottomLeft 0.) scaletofit (not swap) renamed_pdf o u over) over_pages under_pages
+                map2
+                  (fun o u ->
+                     do_stamp fast (BottomLeft 0.) false false scaletofit (not swap) renamed_pdf o u over)
+                  over_pages
+                  under_pages
               in
                 Pdfmarks.add_bookmarks (marks_under @ marks_over) (Pdfpage.change_pages true renamed_pdf new_pages)
 
@@ -2249,7 +2259,7 @@ let nobble_page pdf _ page =
                     ]
             }
         in
-          do_stamp false (BottomLeft 0.) false true pdf page' page (Pdf.empty ())
+          do_stamp false (BottomLeft 0.) false false false true pdf page' page (Pdf.empty ())
 
 (* \section{Set media box} *)
 let set_mediabox x y w h pdf range =

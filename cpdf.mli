@@ -197,10 +197,10 @@ swapped.  If [fast] is true, the PDFs are assumed to be well-formed and no
 fixes are done. *)
 val combine_pages : bool -> Pdf.t -> Pdf.t -> bool -> bool -> bool -> Pdf.t
 
-(** [stamp scale_to_fit position fast isover range over pdf] stamps the first page of
+(** [stamp topline midline scale_to_fit position fast isover range over pdf] stamps the first page of
 [over] over each page of the PDF. The arguments have the same meaning as in
 [combine_pages]. *)
-val stamp : position -> bool -> bool -> bool -> int list -> Pdf.t -> Pdf.t -> Pdf.t
+val stamp : position -> bool -> bool -> bool -> bool -> bool -> int list -> Pdf.t -> Pdf.t -> Pdf.t
 
 (** {2 Splitting PDFs} *)
 

@@ -1,10 +1,11 @@
-Version 2.2
+Version 2.2 (To come)
 
 o -keep-l keeps existing linearization status
 o -remove-dict-entry to remove the contents of a dictionary entry
 o -topline in addition to -midline
 o -producer and -creator may be used to alter producer and creator
 in conjunction with any other operation
+o -topline and -midline now apply to stamps
 
 Version 2.1 (November 2014)
 

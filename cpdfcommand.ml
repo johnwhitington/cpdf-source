@@ -3531,7 +3531,9 @@ let go () =
         let pdf = get_single_pdf args.op false in
           let range = parse_pagespec pdf (get_pagespec ()) in
             let pdf =
-              Cpdf.stamp args.position args.fast args.scale_stamp_to_fit true range overpdf pdf
+              Cpdf.stamp
+                args.position args.topline args.midline args.fast
+                args.scale_stamp_to_fit true range overpdf pdf
             in
               write_pdf false pdf
   | Some (StampUnder under) ->
@@ -3543,7 +3545,9 @@ let go () =
         let pdf = get_single_pdf args.op false in
           let range = parse_pagespec pdf (get_pagespec ()) in
             let pdf =
-              Cpdf.stamp args.position args.fast args.scale_stamp_to_fit false range underpdf pdf
+              Cpdf.stamp
+                args.position args.topline args.midline args.fast
+                args.scale_stamp_to_fit false range underpdf pdf
             in
               write_pdf false pdf
   | Some (CombinePages over) ->
