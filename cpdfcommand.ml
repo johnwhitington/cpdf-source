@@ -369,7 +369,8 @@ type args =
    mutable recrypt : bool;
    mutable was_decrypted_with_owner : bool;
    mutable creator : string option;
-   mutable producer : string option}
+   mutable producer : string option;
+   mutable embedfonts : bool}
 
 let args =
   {op = None;
@@ -450,7 +451,8 @@ let args =
    recrypt = false;
    was_decrypted_with_owner = false;
    producer = None;
-   creator = None}
+   creator = None;
+   embedfonts = true}
 
 let reset_arguments () =
   args.op <- None;
@@ -526,9 +528,10 @@ let reset_arguments () =
   args.labelstartval <- 1;
   args.squeeze <- false;
   args.producer <- None;
-  args.creator <- None
+  args.creator <- None;
+  args.embedfonts <- true
   (* Do not reset original_filename or cpdflin or was_encrypted or
-   * was_decrypted_with_owner or recrypt, since we want it to work across ANDs. *)
+   * was_decrypted_with_owner or recrypt, since we want these to work across ANDs. *)
 
 let string_of_permission = function
   | Pdfcrypt.NoEdit -> "No edit"
@@ -1356,6 +1359,9 @@ let setsqueezelogto s =
 let setstayonerror () =
   set stay_on_error
 
+let setnoembedfont () =
+  args.embedfonts <- false
+
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
   control_args := !control_args @ parse_control_file filename
@@ -1587,6 +1593,9 @@ and specs =
    ("-font-size",
       Arg.Float setfontsize,
       " Set the font size");
+   ("-no-embed-font",
+      Arg.Unit setnoembedfont,
+      "Do not embed fonts");
    ("-color",
       Arg.String setcolor,
       " Set the color");

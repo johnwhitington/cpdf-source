@@ -1532,6 +1532,10 @@ let extract_widths_firstlast width_data =
 let make_font fontname =
   let font = unopt (Pdftext.standard_font_of_name ("/" ^ fontname)) in
   let header, width_data, _ = Pdfstandard14.afm_data font in
+    (* Print out the width data *)
+    Hashtbl.iter
+      (Printf.printf "%i -> %i\n")
+      width_data;
     let firstchar, lastchar, widths = extract_widths_firstlast width_data in
     let flags = Pdfstandard14.flags_of_standard_font font in
     let fontbbox = extract_fontbbox header "FontBBox" in
