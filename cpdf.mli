@@ -300,6 +300,7 @@ val addtexts :
     bool -> (*fast*)
     string -> (*fontname*)
     Pdftext.standard_font option -> (*font*)
+    bool -> (* embed font *)
     int -> (*bates number *)
     float * float * float -> (*colour*)
     position -> (*position*)

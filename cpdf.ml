@@ -1699,7 +1699,7 @@ let unescape_string s =
   implode (unescape_chars [] (explode s))
 
 let
-  addtexts metrics linewidth outline fast fontname font bates colour position linespacing
+  addtexts metrics linewidth outline fast fontname font embed bates colour position linespacing
   fontsize underneath text pages orientation cropbox opacity justification
   midline topline filename pdf
 =

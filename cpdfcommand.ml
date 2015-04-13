@@ -3507,9 +3507,10 @@ let go () =
             in
               write_pdf false
                 (Cpdf.addtexts
-                   false args.linewidth args.outline args.fast args.fontname font args.bates
-                   args.color args.position args.linespacing args.fontsize
-                   args.underneath text range args.orientation args.relative_to_cropbox args.opacity
+                   false args.linewidth args.outline args.fast args.fontname
+                   font args.embedfonts args.bates args.color args.position
+                   args.linespacing args.fontsize args.underneath text range
+                   args.orientation args.relative_to_cropbox args.opacity
                    args.justification args.midline args.topline filename pdf)
   | Some RemoveText ->
       let pdf = get_single_pdf args.op false in
