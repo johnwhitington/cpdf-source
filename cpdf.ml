@@ -1529,13 +1529,13 @@ let extract_widths_firstlast width_data =
          map snd (List.sort compare (list_of_hashtbl width_data))) 
     | _ -> raise (Failure "extract_widths_firstlast") 
 
-let make_font fontname =
+let make_font embed fontname =
   let font = unopt (Pdftext.standard_font_of_name ("/" ^ fontname)) in
   let header, width_data, _ = Pdfstandard14.afm_data font in
     (* Print out the width data *)
-    Hashtbl.iter
+    (*Hashtbl.iter
       (Printf.printf "%i -> %i\n")
-      width_data;
+      width_data;*)
     let firstchar, lastchar, widths = extract_widths_firstlast width_data in
     let flags = Pdfstandard14.flags_of_standard_font font in
     let fontbbox = extract_fontbbox header "FontBBox" in
@@ -1556,18 +1556,28 @@ let make_font fontname =
            ("/CapHeight", capheight);
            ("/StemV", Pdf.Integer stemv)]
       in
-        Pdf.Dictionary
-          [("/Type", Pdf.Name "/Font");
-           ("/Encoding", Pdf.Name "/WinAnsiEncoding");
-           ("/Subtype", Pdf.Name "/Type1");
-           ("/BaseFont", Pdf.Name ("/" ^ fontname));
-           ("/FirstChar", Pdf.Integer firstchar);
-           ("/LastChar", Pdf.Integer lastchar);
-           ("/Widths", Pdf.Array (map (fun x -> Pdf.Integer x) widths));
-           ("/FontDescriptor", fontdescriptor)]
+        (* With -no-embed-font, we use the standard encoding, and just the
+         * minimal stuff. Without -no-embed-font, we switch to WinAnsiEncoding,
+         * and fill out everything except the font file instead *)
+        if embed then
+          Pdf.Dictionary
+            [("/Type", Pdf.Name "/Font");
+             ("/Subtype", Pdf.Name "/Type1");
+             ("/BaseFont", Pdf.Name ("/" ^ fontname));          
+             ("/Encoding", Pdf.Name "/WinAnsiEncoding");
+             ("/FirstChar", Pdf.Integer firstchar);
+             ("/LastChar", Pdf.Integer lastchar);
+             ("/Widths", Pdf.Array (map (fun x -> Pdf.Integer x) widths));
+             ("/FontDescriptor", fontdescriptor)]
+        else
+          Pdf.Dictionary
+            [("/Type", Pdf.Name "/Font");
+             ("/Subtype", Pdf.Name "/Type1");
+             ("/Encoding", Pdf.Name "/WinAnsiEncoding");
+             ("/BaseFont", Pdf.Name ("/" ^ fontname))]
 
 let addtext
-  metrics lines linewidth outline fast colour fontname bates fontsize font
+  metrics lines linewidth outline fast colour fontname embed bates fontsize font
   underneath position hoffset voffset text pages orientation cropbox opacity
   justification filename pdf
 =
@@ -1661,7 +1671,7 @@ let addtext
               match font with
               | Some _ ->
                   let newfontdict =
-                    Pdf.add_dict_entry fontdict unique_fontname (make_font fontname)
+                    Pdf.add_dict_entry fontdict unique_fontname (make_font embed fontname)
                   in
                     Pdf.add_dict_entry resources' "/Font" newfontdict
               | None -> page.Pdfpage.resources
@@ -1774,8 +1784,10 @@ let
                  if orientation = Vertical then 0., -.(!voffset) else !voffset, 0.
                in
                  pdf :=
-                   addtext metrics lines linewidth outline fast colour fontname bates fontsize font
-                   underneath position hoff voff line pages orientation cropbox opacity justification filename !pdf;
+                   addtext metrics lines linewidth outline fast colour fontname
+                   embed bates fontsize font underneath position hoff voff line
+                   pages orientation cropbox opacity justification filename
+                   !pdf;
                  voffset := !voffset +. (linespacing *. fontsize))
             lines;
             ops_metrics := rev !ops_metrics;
