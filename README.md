@@ -39,6 +39,10 @@ opam install camlpdf
 To build
 --------
 
+If downloading from Github, obtain the correct source. This means choosing the tag for a
+particaular version, such as "v2.1.1". The head of the master branch is
+unstable.
+
 1. Type `make` to make the cpdf executable and the library
 
 2. Type `make install` to install the OCaml cpdf library.
