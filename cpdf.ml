@@ -2057,7 +2057,7 @@ let stamp_shift_of_position topline midline sw sh w h p =
     | Left o -> o, half h -. half sh -. dy
     | BottomLeft o -> o, o -. dy
     | Bottom o -> half w -. half sw, o -. dy
-    | BottomRight o -> w -. sw, o -. dy
+    | BottomRight o -> w -. sw -. o, o -. dy
     | Right o -> w -. sw -. o, half h -. half sh -. dy
     | Diagonal | ReverseDiagonal | Centre ->
         half w -. half sw, half h -. half sh -. dy
