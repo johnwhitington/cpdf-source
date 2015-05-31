@@ -2715,14 +2715,25 @@ let twoup_pages pdf = function
          (map (fun p -> p.Pdfpage.resources) pages)
      in
        let content' =
-          let transform_stream contents transform =
-            let ops = Pdfops.parse_operators pdf resources' contents in
-              (* Need protect_removeme here? especially new, Q-adding protect? *)
-              Pdfops.stream_of_ops
-                ([Pdfops.Op_q] @ [Pdfops.Op_cm transform] @ ops @ [Pdfops.Op_Q])
+          let transform_stream clipbox contents transform =
+            let clipops =
+              let minx, miny, maxx, maxy = Pdf.parse_rectangle clipbox in
+                [Pdfops.Op_re (minx, miny, maxx -. minx, maxy -. miny);
+                 Pdfops.Op_n;
+                 Pdfops.Op_W]
+            in
+              let ops = Pdfops.parse_operators pdf resources' contents in
+                (* Need protect_removeme here? especially new, Q-adding protect? *)
+                Pdfops.stream_of_ops
+                  ([Pdfops.Op_q] @ [Pdfops.Op_cm transform] @ clipops @ ops @ [Pdfops.Op_Q])
           in
             map2
-              (fun p -> transform_stream p.Pdfpage.content)
+              (fun p ->
+                 transform_stream
+                   (match Pdf.lookup_direct pdf "/CropBox" p.Pdfpage.rest with
+                      None -> p.Pdfpage.mediabox
+                    | Some box -> box)
+                   p.Pdfpage.content)
               pages
               (take (twoup_transforms h.Pdfpage.mediabox) (length pages))
        in
@@ -2731,15 +2742,6 @@ let twoup_pages pdf = function
           Pdfpage.content = content';
           Pdfpage.resources = resources';
           Pdfpage.rest = h.Pdfpage.rest}
-
-(* Main function *)
-let twoup pdf =
-  let pdf = upright (ilist 1 (Pdfpage.endpage pdf)) pdf in
-    let pages = Pdfpage.pages_of_pagetree pdf in
-      let pagesets = splitinto 2 pages in
-        let renumbered = map (Pdfpage.renumber_pages pdf) pagesets in
-          let pages' = map (twoup_pages pdf) renumbered in
-            Pdfpage.change_pages true pdf pages'
 
 let twoup_stack_transforms mediabox =
   let width, height =
@@ -2753,6 +2755,7 @@ let twoup_stack_transforms mediabox =
       in let t1 = Pdftransform.matrix_of_transform [tr1; rotate] in
         [t0; t1]
 
+(* FIXME: Add clipping, as for twoup, or merge these two functions properly *)
 let twoup_pages_stack pdf = function
   | [] -> assert false
   | (h::_) as pages ->
@@ -2787,13 +2790,17 @@ let twoup_pages_stack pdf = function
           Pdfpage.resources = resources;
           Pdfpage.rest = rest}
 
-let twoup_stack pdf =
+let f_twoup f_pages pdf =
   let pdf = upright (ilist 1 (Pdfpage.endpage pdf)) pdf in
     let pages = Pdfpage.pages_of_pagetree pdf in
       let pagesets = splitinto 2 pages in
         let renumbered = map (Pdfpage.renumber_pages pdf) pagesets in
-          let pages' = map (twoup_pages_stack pdf) renumbered in
+          let pages' = map (f_pages pdf) renumbered in
             Pdfpage.change_pages true pdf pages'
+
+let twoup pdf = f_twoup twoup_pages pdf
+
+let twoup_stack pdf = f_twoup twoup_pages_stack pdf
 
 (* \section{Output info} *)
 let get_info raw pdf =
