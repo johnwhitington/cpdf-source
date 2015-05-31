@@ -1698,7 +1698,7 @@ let split_at_newline t =
 
 let rec unescape_chars prev = function
   | [] -> rev prev
-  | '\\'::('0'..'9' as a)::('0'..'9' as b)::('0'..'9' as c)::t ->
+  | '\\'::('0'..'7' as a)::('0'..'7' as b)::('0'..'7' as c)::t ->
        let chr = char_of_int (int_of_string ("0o" ^ implode [a;b;c])) in
          unescape_chars (chr::prev) t
   | '\\'::'\\'::t -> unescape_chars ('\\'::prev) t
