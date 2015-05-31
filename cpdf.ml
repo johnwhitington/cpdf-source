@@ -1631,9 +1631,9 @@ let addtext
                       | Some fontdict ->
                           begin match Pdf.lookup_direct pdf fontname fontdict with
                           | Some font -> font
-                          | _ -> failwith "addtext: bad font"
+                          | _ -> failwith "addtext: bad font A"
                           end
-                      | _ -> failwith "addtext: bad font"
+                      | _ -> failwith "addtext: bad font B"
                     in
                       let rawwidth = width_of_text (Pdftext.read_font pdf font) text in
                         (rawwidth *. fontsize) /. 1000.
