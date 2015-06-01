@@ -3667,6 +3667,8 @@ let go () =
         write_pdf false pdf
 
 let parse_argv () =
+  if args.debug then
+    Array.iter (Printf.eprintf "arg: %s\n") Sys.argv;
   Arg.parse_argv ~current:(ref 0)
 
 let align_specs s =
