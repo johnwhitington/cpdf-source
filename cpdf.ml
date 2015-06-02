@@ -2889,8 +2889,14 @@ let dc = "http://purl.org/dc/elements/1.1/"
 
 let rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 
+(* For OCaml < 4.00 *)
+let string_trim s =
+  implode
+    (dropwhile
+       Pdf.is_whitespace (rev (dropwhile Pdf.is_whitespace (explode s))))
+
 let combine_with_spaces strs =
-  String.trim
+  string_trim
     (fold_left (fun x y -> x ^ (if x <> "" then ", " else "") ^ y) "" strs)
 
 (* Collect all <li> elements inside a seq, bag, or alt. Combine with commas. If
