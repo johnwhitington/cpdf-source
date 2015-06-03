@@ -2769,13 +2769,24 @@ let twoup_pages_stack pdf = function
          Pdf.remove_dict_entry h.Pdfpage.rest "/CropBox"
        in
        let content' =
-          let transform_stream contents transform =
-            let ops = Pdfops.parse_operators pdf resources contents in
-              Pdfops.stream_of_ops
-                ([Pdfops.Op_q] @ [Pdfops.Op_cm transform] @ ops @ [Pdfops.Op_Q])
+          let transform_stream clipbox contents transform =
+            let clipops =
+              let minx, miny, maxx, maxy = Pdf.parse_rectangle clipbox in
+                [Pdfops.Op_re (minx, miny, maxx -. minx, maxy -. miny);
+                 Pdfops.Op_n;
+                 Pdfops.Op_W]
+            in
+              let ops = Pdfops.parse_operators pdf resources contents in
+                Pdfops.stream_of_ops
+                  ([Pdfops.Op_q] @ [Pdfops.Op_cm transform] @ clipops @ ops @ [Pdfops.Op_Q])
           in
             map2
-              (fun p -> transform_stream p.Pdfpage.content)
+              (fun p ->
+                 transform_stream
+                   (match Pdf.lookup_direct pdf "/CropBox" p.Pdfpage.rest with
+                      None -> p.Pdfpage.mediabox
+                    | Some box -> box)
+                   p.Pdfpage.content)
               pages
               (take (twoup_stack_transforms h.Pdfpage.mediabox) (length pages))
        in
