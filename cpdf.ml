@@ -2721,9 +2721,9 @@ let twoup_pages pdf = function
           let transform_stream clipbox contents transform =
             let clipops =
               let minx, miny, maxx, maxy = Pdf.parse_rectangle clipbox in
-                [Pdfops.Op_re (minx, miny, maxx -. minx, maxy -. miny);
-                 Pdfops.Op_n;
-                 Pdfops.Op_W]
+              [Pdfops.Op_re (minx, miny, maxx -. minx, maxy -. miny);
+               Pdfops.Op_n;
+               Pdfops.Op_W]
             in
               let ops = Pdfops.parse_operators pdf resources' contents in
                 (* Need protect_removeme here? especially new, Q-adding protect? *)
