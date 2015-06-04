@@ -792,7 +792,7 @@ ninety degrees clockwise. Does not change the page dimensions.
   \label{upright}
    \noindent The \texttt{-upright} operation does whatever combination of
 \texttt{-rotate} and \texttt{-rotate-contents} is required to change the
-rotation of the document to zero without altering its appearance.
+rotation of the document to zero without altering its appearance. In addition, it makes sure the media box has its origin at (0,0), changing other boxes to compensate.
 
   \section{Flipping Pages}
 \index{flip pages}

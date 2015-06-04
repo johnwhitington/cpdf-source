@@ -2389,10 +2389,13 @@ let select_pages range pdf =
 
 (* Upright functionality *)
 
-(* If all pages are already upright, do nothing to save time. *)
+(* If all pages are already upright, and the mediabox is (0,0)-based, do nothing
+to save time. *)
 let allupright range pdf =
   let page_is_upright page =
-    page.Pdfpage.rotate = Pdfpage.Rotate0
+    page.Pdfpage.rotate = Pdfpage.Rotate0 &&
+      (let (minx, miny, _, _) = Pdf.parse_rectangle page.Pdfpage.mediabox in
+         minx < 0.001 && miny < 0.001 && minx > ~-.0.001 && miny > ~-.0.001)
   in
     not (mem false (map page_is_upright (select_pages range pdf)))
 
