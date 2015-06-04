@@ -2722,8 +2722,8 @@ let twoup_pages pdf = function
             let clipops =
               let minx, miny, maxx, maxy = Pdf.parse_rectangle clipbox in
               [Pdfops.Op_re (minx, miny, maxx -. minx, maxy -. miny);
-               Pdfops.Op_n;
-               Pdfops.Op_W]
+               Pdfops.Op_W;
+               Pdfops.Op_n]
             in
               let ops = Pdfops.parse_operators pdf resources' contents in
                 (* Need protect_removeme here? especially new, Q-adding protect? *)
@@ -2776,8 +2776,8 @@ let twoup_pages_stack pdf = function
             let clipops =
               let minx, miny, maxx, maxy = Pdf.parse_rectangle clipbox in
                 [Pdfops.Op_re (minx, miny, maxx -. minx, maxy -. miny);
-                 Pdfops.Op_n;
-                 Pdfops.Op_W]
+                 Pdfops.Op_W;
+                 Pdfops.Op_n]
             in
               let ops = Pdfops.parse_operators pdf resources contents in
                 Pdfops.stream_of_ops
