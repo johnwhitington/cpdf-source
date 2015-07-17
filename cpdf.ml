@@ -1577,12 +1577,12 @@ let make_font embed fontname =
              ("/BaseFont", Pdf.Name ("/" ^ fontname))]
 
 let addtext
-  metrics lines linewidth outline fast colour fontname embed bates fontsize font
+  metrics lines linewidth outline fast colour fontname embed bates batespad fontsize font
   underneath position hoffset voffset text pages orientation cropbox opacity
   justification filename pdf
 =
   let endpage = Pdfpage.endpage pdf in
-  let replace_pairs pdf filename bates num =
+  let replace_pairs pdf filename bates batespad num =
       ["%Page", string_of_int num;
        "%Roman", roman_upper num;
        "%roman", roman_lower num;
@@ -1590,7 +1590,15 @@ let addtext
        "%Label", pagelabel pdf num;
        "%EndPage", string_of_int endpage;
        "%EndLabel", pagelabel pdf endpage;
-       "%Bates", string_of_int (bates + num - 1)] in
+       "%Bates",
+          (let numstring = string_of_int (bates + num - 1) in
+             match batespad with
+               None -> numstring
+             | Some w ->
+                 if String.length numstring >= w
+                   then numstring
+                   else implode (many '0' (w - String.length numstring)) ^ numstring)]
+  in
   let addtext_page num page =
     let resources', unique_extgstatename =
       if opacity < 1.0 then
@@ -1615,7 +1623,7 @@ let addtext
       in
         let unique_fontname = Pdf.unique_key "F" fontdict in
           let ops =
-            let text = process_text text (replace_pairs pdf filename bates num) in
+            let text = process_text text (replace_pairs pdf filename bates batespad num) in
               let calc_textwidth text =
                 match font with
                 | Some f ->
@@ -1639,7 +1647,8 @@ let addtext
                         (rawwidth *. fontsize) /. 1000.
               in
                 let expanded_lines =
-                  map (function text -> process_text text (replace_pairs pdf filename bates num)) lines
+                  map (function text -> process_text text (replace_pairs pdf
+                  filename bates batespad num)) lines
                 in
                 let textwidth = calc_textwidth text
                 and allwidths = map calc_textwidth expanded_lines in
@@ -1709,7 +1718,7 @@ let unescape_string s =
   implode (unescape_chars [] (explode s))
 
 let
-  addtexts metrics linewidth outline fast fontname font embed bates colour position linespacing
+  addtexts metrics linewidth outline fast fontname font embed bates batespad colour position linespacing
   fontsize underneath text pages orientation cropbox opacity justification
   midline topline filename pdf
 =
@@ -1785,7 +1794,7 @@ let
                in
                  pdf :=
                    addtext metrics lines linewidth outline fast colour fontname
-                   embed bates fontsize font underneath position hoff voff line
+                   embed bates batespad fontsize font underneath position hoff voff line
                    pages orientation cropbox opacity justification filename
                    !pdf;
                  voffset := !voffset +. (linespacing *. fontsize))

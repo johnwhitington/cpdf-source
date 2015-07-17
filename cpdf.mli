@@ -290,7 +290,7 @@ val calculate_position :
     float * float * float * float ->
     orientation -> position -> float * float * float
 
-(** Call [add_texts metrics linewidth outline fast fontname font bates colour
+(** Call [add_texts metrics linewidth outline fast fontname font bates batespad colour
 position linespacing fontsize underneath text pages orientation
 relative_to_cropbox midline_adjust topline filename pdf]. For details see cpdfmanual.pdf *)
 val addtexts :
@@ -301,7 +301,8 @@ val addtexts :
     string -> (*fontname*)
     Pdftext.standard_font option -> (*font*)
     bool -> (* embed font *)
-    int -> (*bates number *)
+    int -> (* bates number *)
+    int option -> (* bates padding width *)
     float * float * float -> (*colour*)
     position -> (*position*)
     float -> (*linespacing*)

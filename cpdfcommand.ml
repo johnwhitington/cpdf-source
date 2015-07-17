@@ -319,6 +319,7 @@ type args =
    mutable topline : bool;
    mutable justification : Cpdf.justification;
    mutable bates : int;
+   mutable batespad : int option;
    mutable prerotate : bool;
    mutable orientation : Cpdf.orientation;
    mutable relative_to_cropbox : bool;
@@ -401,6 +402,7 @@ let args =
    topline = false;
    justification = Cpdf.LeftJustify;
    bates = 0;
+   batespad = None;
    prerotate = false;
    orientation = Cpdf.Horizontal;
    relative_to_cropbox = false;
@@ -483,6 +485,7 @@ let reset_arguments () =
   args.topline <- false;
   args.justification <- Cpdf.LeftJustify;
   args.bates <- 0;
+  args.batespad <- None;
   args.prerotate <- false;
   args.orientation <- Cpdf.Horizontal;
   args.relative_to_cropbox <- false;
@@ -1058,6 +1061,9 @@ let setscalecenter n =
   args.position <- Cpdf.ReverseDiagonal;
   args.justification <- Cpdf.CentreJustify
 
+let setbatespad n =
+  args.batespad <- Some n
+
 let setbates n =
   args.bates <- n
 
@@ -1587,6 +1593,9 @@ and specs =
    ("-bates",
       Arg.Int setbates,
       " Set the base bates number");
+   ("-bates-pad-to",
+      Arg.Int setbatespad,
+      " Pad the bates number with leading zeroes to width");
    ("-font",
       Arg.String setfont,
       " Set the font");
@@ -3508,7 +3517,7 @@ let go () =
               write_pdf false
                 (Cpdf.addtexts
                    false args.linewidth args.outline args.fast args.fontname
-                   font args.embedfonts args.bates args.color args.position
+                   font args.embedfonts args.bates args.batespad args.color args.position
                    args.linespacing args.fontsize args.underneath text range
                    args.orientation args.relative_to_cropbox args.opacity
                    args.justification args.midline args.topline filename pdf)
