@@ -78,6 +78,8 @@ val string_of_pagespec : Pdf.t -> int list -> string
 without supplying a PDF, and thus knowing how many pages there are in it. *)
 val validate_pagespec : string -> bool
 
+val parse_pagespec_without_pdf : string -> int list
+
 (** [name_of_spec printf marks pdf splitlevel spec n filename startpage
 endpage] makes format substitutions in [spec] to make an output file name:
 

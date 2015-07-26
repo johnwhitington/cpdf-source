@@ -1,12 +1,14 @@
 %FIXME: Document -no-embed-font and encoding switch
 %Documents bates enhancements
+%Document -bates-at-range (must come after range given) and after -bates if
+%given
 \documentclass{book}
 \usepackage{palatino}
 \usepackage{microtype}
 \usepackage{graphics}
 \usepackage[plainpages=false,pdfpagelabels,pdfborder=0 0 0]{hyperref}
 \usepackage{framed}
-\newcommand{\smallgap}{\vspace{4mm}}
+\newcommand{\smallgap}{\bigskip}
 \newcommand{\cpdf}{\texttt{cpdf}}
 \addtolength{\textwidth}{20mm}
 \usepackage{makeidx}\makeindex

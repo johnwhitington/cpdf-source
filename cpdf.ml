@@ -449,6 +449,18 @@ let rec validate_pagespec_inner n spec =
 let validate_pagespec spec =
   validate_pagespec_inner 100 spec
 
+let rec parse_pagespec_without_pdf_inner n spec =
+  try
+    parse_pagespec_inner n (Pdf.empty ()) spec
+  with
+    PageSpecUnknownPage _ ->
+      if n < 500000
+        then parse_pagespec_without_pdf_inner (n * 2) spec
+        else raise (Pdf.PDFError "PageSpecUnknownPage")
+
+let parse_pagespec_without_pdf spec =
+  parse_pagespec_without_pdf_inner 100 spec
+
 (* Convert an integer list representing a set to a page specification, in order. *)
 let string_of_pagespec pdf = function
   | [] -> ""

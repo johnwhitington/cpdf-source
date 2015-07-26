@@ -278,6 +278,7 @@ type input =
   input_kind * string * string * string * bool ref * int option
   (* input kind, range, user_pw, owner_pw, was_decrypted_with_owner, revision *)
 
+
 type output_method =
   | NoOutputSpecified
   | Stdout
@@ -535,6 +536,11 @@ let reset_arguments () =
   args.embedfonts <- true
   (* Do not reset original_filename or cpdflin or was_encrypted or
    * was_decrypted_with_owner or recrypt, since we want these to work across ANDs. *)
+
+let get_pagespec () =
+  match args.inputs with
+  | (_, ps, _, _, _, _)::_ -> ps
+  | _ -> error "No range specified for input, or specified too late."
 
 let string_of_permission = function
   | Pdfcrypt.NoEdit -> "No edit"
@@ -1067,6 +1073,14 @@ let setbatespad n =
 let setbates n =
   args.bates <- n
 
+(* Calculate -bates automatically so that n is applied to the first page in the range *)  
+let setbatesrange n =
+  let first_page =
+    let range = Cpdf.parse_pagespec_without_pdf (get_pagespec ()) in
+      fold_left min max_int range
+  in
+    args.bates <- n + 1 - first_page
+
 let setkeepversion () =
   args.keepversion <- true
 
@@ -1593,6 +1607,9 @@ and specs =
    ("-bates",
       Arg.Int setbates,
       " Set the base bates number");
+   ("-bates-at-range",
+      Arg.Int setbatesrange,
+      " Set the base bates number at first page in range");
    ("-bates-pad-to",
       Arg.Int setbatespad,
       " Pad the bates number with leading zeroes to width");
@@ -2251,10 +2268,6 @@ let split_pdf
       enc 0 original_filename squeeze nobble spec pdf
       (splitinto chunksize (indx pdf_pages)) pdf_pages
 
-let get_pagespec () =
-  match args.inputs with
-  | (_, ps, _, _, _, _)::_ -> ps
-  | _ -> error "get_pagespec"
 
 (* Copy a font from [frompdf] with name [fontname] on page [fontpage] to [pdf] on all pages in [range] *)
 let copy_font frompdf fontname fontpage range pdf =
