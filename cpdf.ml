@@ -2645,59 +2645,70 @@ let equalise_lengths a b =
         (take (Pdfpage.pages_of_pagetree a) (Pdfpage.endpage b))
     else a 
   in
-     a', b
+    a', b
 
-(* \section{Copy annotations} *)
+(* Copy annotations *)
+let copy_annotations_page topdf frompdf frompage topage =
+  match Pdf.lookup_direct frompdf "/Annots" frompage.Pdfpage.rest with
+    Some (Pdf.Array frompage_annots as annots) ->
+      (* Rewrite any annotation destinations to point to pages in the
+      destination file. This prevents pages being copied, and ensures the
+      links are correct *)
+      List.iter
+       (function
+          x ->
+            Printf.printf "Copying annotation %s which is\n%s\n"
+              (Pdfwrite.string_of_pdf x)
+              (Pdfwrite.string_of_pdf (Pdf.direct frompdf x)))
+       frompage_annots;
+      let objects_to_copy = Pdf.objects_referenced [] [] frompdf annots in
+        iter
+          (fun n ->
+             ignore (Pdf.addobj_given_num topdf (n, Pdf.lookup_obj frompdf n)))
+          objects_to_copy;
+        let topage_annots =
+          match Pdf.lookup_direct frompdf "/Annots" topage.Pdfpage.rest with
+          | Some (Pdf.Array annots) -> annots
+          | _ -> []
+        in
+          let merged_dict = Pdf.Array (frompage_annots @ topage_annots) in
+            let topage' =
+              {topage with Pdfpage.rest =
+                 Pdf.add_dict_entry topage.Pdfpage.rest "/Annots" merged_dict}
+            in
+              topdf, topage'
+  | Some x -> topdf, topage
+  | None -> topdf, topage
+
 let copy_annotations range frompdf topdf =
   let frompdf, topdf = equalise_lengths frompdf topdf in
-    let copy_annotations_page topdf frompdf frompage topage =
-      match Pdf.lookup_direct frompdf "/Annots" frompage.Pdfpage.rest with
-      | Some ((Pdf.Array frompage_annots) as annots) ->
-          let objects_to_copy = Pdf.objects_referenced [] [] frompdf annots in
-            iter
-              (fun n ->
-                 ignore (Pdf.addobj_given_num topdf (n, Pdf.lookup_obj frompdf n)))
-              objects_to_copy;
-            let topage_annots =
-              match Pdf.lookup_direct frompdf "/Annots" topage.Pdfpage.rest with
-              | Some (Pdf.Array annots) -> annots
-              | _ -> []
-            in
-              let merged_dict = Pdf.Array (frompage_annots @ topage_annots) in
-                let topage' =
-                  {topage with Pdfpage.rest =
-                     Pdf.add_dict_entry topage.Pdfpage.rest "/Annots" merged_dict}
+    match Pdf.renumber_pdfs [frompdf; topdf] with 
+    | [frompdf; topdf] ->
+        let frompdf_pages = Pdfpage.pages_of_pagetree frompdf
+        in let topdf_pages = Pdfpage.pages_of_pagetree topdf in
+          let pdf = ref topdf
+          and pages = ref []
+          and pnum = ref 1
+          and frompdf_pages = ref frompdf_pages
+          and topdf_pages = ref topdf_pages in
+            (* Go through, updating pdf and collecting new pages. *)
+            while not (isnull !frompdf_pages) do
+              let frompdf_page = hd !frompdf_pages
+              and topdf_page = hd !topdf_pages in
+                Printf.printf "Page %i...\n" !pnum;
+                let pdf', page =
+                  if mem !pnum range
+                    then copy_annotations_page !pdf frompdf frompdf_page topdf_page
+                    else !pdf, topdf_page
                 in
-                  topdf, topage'
-      | Some x -> topdf, topage
-      | None -> topdf, topage
-    in
-      match Pdf.renumber_pdfs [frompdf; topdf] with 
-      | [frompdf; topdf] ->
-          let frompdf_pages = Pdfpage.pages_of_pagetree frompdf
-          in let topdf_pages = Pdfpage.pages_of_pagetree topdf in
-            let pdf = ref topdf
-            and pages = ref []
-            and pnum = ref 1
-            and frompdf_pages = ref frompdf_pages
-            and topdf_pages = ref topdf_pages in
-              (* Go through, updating pdf and collecting new pages. *)
-              while not (isnull !frompdf_pages) do
-                let frompdf_page = hd !frompdf_pages
-                and topdf_page = hd !topdf_pages in
-                  let pdf', page =
-                    if mem !pnum range
-                      then copy_annotations_page !pdf frompdf frompdf_page topdf_page
-                      else !pdf, topdf_page
-                  in
-                    pdf := pdf';
-                    pages =| page;
-                    incr pnum;
-                    frompdf_pages := tl !frompdf_pages;
-                    topdf_pages := tl !topdf_pages
-              done;
-              Pdfpage.change_pages true !pdf (rev !pages)
-      | _ -> assert false
+                  pdf := pdf';
+                  pages =| page;
+                  incr pnum;
+                  frompdf_pages := tl !frompdf_pages;
+                  topdf_pages := tl !topdf_pages
+            done;
+            Pdfpage.change_pages true !pdf (rev !pages)
+    | _ -> assert false
 
 (* \section{N-up} *)
 
