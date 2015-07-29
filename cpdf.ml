@@ -2687,7 +2687,8 @@ let copy_annotations_page topdf frompdf frompage topage =
       in
         List.iter
          (function
-            (* FIXME: We assume they are indirects. Must also do directs *)
+            (* FIXME: We assume they are indirects. Must also do direct, though
+            rare.*)
             Pdf.Indirect x ->
               (*Printf.printf "Copying annotation %s which is\n%s\n"
                 (Pdfwrite.string_of_pdf (Pdf.Indirect x))
