@@ -2648,35 +2648,70 @@ let equalise_lengths a b =
     a', b
 
 (* Copy annotations *)
+
+(* FIXME: Why does this chop the files to the same length? Should be able to
+apply annotations from a longer file to a shorter? *)
+
+(* Rewrite any annotation destinations to point to pages in the
+destination file. This prevents pages being copied, and ensures the links are
+correct Any Indirect link inside a /Dest is rewritten if in the table. If not
+inside a /Dest, nothing is rewritten. *)
+let rec renumber_in_dest table indest = function
+    Pdf.Indirect i -> 
+      begin
+        try Pdf.Indirect (Hashtbl.find table i) with _ -> Pdf.Indirect i
+      end
+  | Pdf.Array a ->
+      Pdf.recurse_array (renumber_in_dest table indest) a
+  | Pdf.Dictionary d ->
+      Pdf.Dictionary
+        (List.map
+          (function
+             ("/Dest", v) -> ("/Dest", renumber_in_dest table true v)
+           | (k, v) -> (k, renumber_in_dest table indest v))
+          d)
+  | x -> x 
+
+let renumber_in_object pdf objnum table =
+  Pdf.addobj_given_num
+    pdf (objnum, (renumber_in_dest table false (Pdf.lookup_obj pdf objnum)))
+
 let copy_annotations_page topdf frompdf frompage topage =
   match Pdf.lookup_direct frompdf "/Annots" frompage.Pdfpage.rest with
     Some (Pdf.Array frompage_annots as annots) ->
-      (* Rewrite any annotation destinations to point to pages in the
-      destination file. This prevents pages being copied, and ensures the
-      links are correct *)
-      List.iter
-       (function
-          x ->
-            Printf.printf "Copying annotation %s which is\n%s\n"
-              (Pdfwrite.string_of_pdf x)
-              (Pdfwrite.string_of_pdf (Pdf.direct frompdf x)))
-       frompage_annots;
-      let objects_to_copy = Pdf.objects_referenced [] [] frompdf annots in
-        iter
-          (fun n ->
-             ignore (Pdf.addobj_given_num topdf (n, Pdf.lookup_obj frompdf n)))
-          objects_to_copy;
-        let topage_annots =
-          match Pdf.lookup_direct frompdf "/Annots" topage.Pdfpage.rest with
-          | Some (Pdf.Array annots) -> annots
-          | _ -> []
-        in
-          let merged_dict = Pdf.Array (frompage_annots @ topage_annots) in
-            let topage' =
-              {topage with Pdfpage.rest =
-                 Pdf.add_dict_entry topage.Pdfpage.rest "/Annots" merged_dict}
-            in
-              topdf, topage'
+      let table =
+        hashtable_of_dictionary
+          (combine
+             (Pdf.page_reference_numbers frompdf)
+             (Pdf.page_reference_numbers topdf))
+      in
+        List.iter
+         (function
+            (* FIXME: We assume they are indirects. Must also do directs *)
+            Pdf.Indirect x ->
+              (*Printf.printf "Copying annotation %s which is\n%s\n"
+                (Pdfwrite.string_of_pdf (Pdf.Indirect x))
+                (Pdfwrite.string_of_pdf (Pdf.direct frompdf (Pdf.Indirect
+                x)));*)
+              renumber_in_object frompdf x table
+          | _ -> ())
+         frompage_annots;
+        let objects_to_copy = Pdf.objects_referenced [] [] frompdf annots in
+          iter
+            (fun n ->
+               ignore (Pdf.addobj_given_num topdf (n, Pdf.lookup_obj frompdf n)))
+            objects_to_copy;
+          let topage_annots =
+            match Pdf.lookup_direct frompdf "/Annots" topage.Pdfpage.rest with
+            | Some (Pdf.Array annots) -> annots
+            | _ -> []
+          in
+            let merged_dict = Pdf.Array (frompage_annots @ topage_annots) in
+              let topage' =
+                {topage with Pdfpage.rest =
+                   Pdf.add_dict_entry topage.Pdfpage.rest "/Annots" merged_dict}
+              in
+                topdf, topage'
   | Some x -> topdf, topage
   | None -> topdf, topage
 
@@ -2695,7 +2730,6 @@ let copy_annotations range frompdf topdf =
             while not (isnull !frompdf_pages) do
               let frompdf_page = hd !frompdf_pages
               and topdf_page = hd !topdf_pages in
-                Printf.printf "Page %i...\n" !pnum;
                 let pdf', page =
                   if mem !pnum range
                     then copy_annotations_page !pdf frompdf frompdf_page topdf_page
