@@ -245,6 +245,7 @@ let squeeze ?logto pdf =
   let log x =
     match logto with
       None -> print_string x; flush stdout
+    | Some "nolog" -> ()
     | Some s ->
         let fh = open_out_gen [Open_wronly; Open_creat] 0o666 s in
           seek_out fh (out_channel_length fh);
