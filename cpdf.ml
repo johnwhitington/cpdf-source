@@ -673,89 +673,91 @@ let presentation range t d h i dir effect_dur pdf =
       Pdfpage.change_pages true pdf pages'
 
 (* Attaching files *)
-let make_filestream file =
+let attach_file ?memory keepversion topage pdf file =
   let data =
-    let ch = open_in_bin file in
-    let len = in_channel_length ch in
-    let stream = mkbytes len in
-    let i = input_of_channel ch in
-      setinit i stream 0 len;
-      close_in ch;
-      stream
+    match memory with
+      Some data -> data
+    | None ->
+        let ch = open_in_bin file in
+        let len = in_channel_length ch in
+        let stream = mkbytes len in
+        let i = input_of_channel ch in
+          setinit i stream 0 len;
+          close_in ch;
+          stream
   in
-    Pdf.Stream
-      (ref (Pdf.Dictionary
-             [("/Length", Pdf.Integer (bytes_size data));
-              ("/Type", Pdf.Name "/EmbeddedFile")],
-            Pdf.Got data))
-
-let attach_file keepversion topage pdf file =
-  let filestream = make_filestream file in
-    let filestream_num = Pdf.addobj pdf filestream in
-      let filespec =
-        Pdf.Dictionary
-          [("/EF", Pdf.Dictionary ["/F", Pdf.Indirect filestream_num]);
-           ("/F", Pdf.String (Filename.basename file));
-           ("/Type", Pdf.Name "/F")]
-      in
-        match topage with
-        | None ->
-            (* Look up /Names and /EmbeddedFiles and /Names. *)
-            let rootdict = Pdf.lookup_obj pdf pdf.Pdf.root in
-              let namedict =
-                match Pdf.lookup_direct pdf "/Names" rootdict with
-                | None -> Pdf.Dictionary []
-                | Some namedict -> namedict
-              in
-                let embeddednamedict =
-                  match Pdf.lookup_direct pdf "/EmbeddedFiles" namedict with
+    let filestream =
+      Pdf.Stream
+        (ref (Pdf.Dictionary
+               [("/Length", Pdf.Integer (bytes_size data));
+                ("/Type", Pdf.Name "/EmbeddedFile")],
+              Pdf.Got data))
+    in
+      let filestream_num = Pdf.addobj pdf filestream in
+        let filespec =
+          Pdf.Dictionary
+            [("/EF", Pdf.Dictionary ["/F", Pdf.Indirect filestream_num]);
+             ("/F", Pdf.String (Filename.basename file));
+             ("/Type", Pdf.Name "/F")]
+        in
+          match topage with
+          | None ->
+              (* Look up /Names and /EmbeddedFiles and /Names. *)
+              let rootdict = Pdf.lookup_obj pdf pdf.Pdf.root in
+                let namedict =
+                  match Pdf.lookup_direct pdf "/Names" rootdict with
                   | None -> Pdf.Dictionary []
-                  | Some embeddednamedict -> embeddednamedict
+                  | Some namedict -> namedict
                 in
-                  let elts =
-                    match Pdf.lookup_direct pdf "/Names" embeddednamedict with
-                    | Some (Pdf.Array elts) -> elts
-                    | _ -> []
+                  let embeddednamedict =
+                    match Pdf.lookup_direct pdf "/EmbeddedFiles" namedict with
+                    | None -> Pdf.Dictionary []
+                    | Some embeddednamedict -> embeddednamedict
                   in
-                    let names' = Pdf.Array (elts @ [Pdf.String (Filename.basename file); filespec]) in
-                      let embeddednamedict' = Pdf.add_dict_entry embeddednamedict "/Names" names' in
-                        let namedict' = Pdf.add_dict_entry namedict "/EmbeddedFiles" embeddednamedict' in
-                          let rootdict' = Pdf.add_dict_entry rootdict "/Names" namedict' in
-                            let rootnum = Pdf.addobj pdf rootdict' in
-                              {pdf with
-                                 Pdf.minor = if keepversion then pdf.Pdf.minor else max pdf.Pdf.minor 4;
-                                 Pdf.root = rootnum;
-                                 Pdf.trailerdict =
-                                   Pdf.add_dict_entry
-                                     pdf.Pdf.trailerdict "/Root" (Pdf.Indirect rootnum)}
-        | Some pagenumber ->
-            let pages = Pdfpage.pages_of_pagetree pdf in
-              if pagenumber < 0 || pagenumber > length pages then error "attach_file: Page not found" else
-                let page = select pagenumber pages in
-                  let annots =
-                    match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
-                    | Some (Pdf.Array annots) -> annots
-                    | _ -> []
-                  in
-                    let rect =
-                      let minx, miny, maxx, maxy = Pdf.parse_rectangle page.Pdfpage.mediabox in
-                        Pdf.Array [Pdf.Real 18.; Pdf.Real (maxy -. 45.); Pdf.Real 45.; Pdf.Real (maxy -. 18.)]
+                    let elts =
+                      match Pdf.lookup_direct pdf "/Names" embeddednamedict with
+                      | Some (Pdf.Array elts) -> elts
+                      | _ -> []
                     in
-                      let annot =
-                        Pdf.Dictionary
-                          [("/FS", filespec);
-                           ("/Subtype", Pdf.Name "/FileAttachment");
-                           ("/Contents", Pdf.String (Filename.basename file));
-                           ("/Rect", rect)]
+                      let names' = Pdf.Array (elts @ [Pdf.String (Filename.basename file); filespec]) in
+                      let embeddednamedict' = Pdf.add_dict_entry embeddednamedict "/Names" names' in
+                      let namedict' = Pdf.add_dict_entry namedict "/EmbeddedFiles" embeddednamedict' in
+                      let rootdict' = Pdf.add_dict_entry rootdict "/Names" namedict' in
+                      let rootnum = Pdf.addobj pdf rootdict' in
+                        {pdf with
+                           Pdf.minor = if keepversion then pdf.Pdf.minor else max pdf.Pdf.minor 4;
+                           Pdf.root = rootnum;
+                           Pdf.trailerdict =
+                             Pdf.add_dict_entry
+                               pdf.Pdf.trailerdict "/Root" (Pdf.Indirect rootnum)}
+          | Some pagenumber ->
+              let pages = Pdfpage.pages_of_pagetree pdf in
+                if pagenumber < 0 || pagenumber > length pages then error "attach_file: Page not found" else
+                  let page = select pagenumber pages in
+                    let annots =
+                      match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
+                      | Some (Pdf.Array annots) -> annots
+                      | _ -> []
+                    in
+                      let rect =
+                        let minx, miny, maxx, maxy = Pdf.parse_rectangle page.Pdfpage.mediabox in
+                          Pdf.Array [Pdf.Real 18.; Pdf.Real (maxy -. 45.); Pdf.Real 45.; Pdf.Real (maxy -. 18.)]
                       in
-                        let annots' = Pdf.Array (annot::annots) in
-                          let page' =
-                            {page with Pdfpage.rest = Pdf.add_dict_entry page.Pdfpage.rest "/Annots" annots'}
-                          in
-                            let pages' = replace_number pagenumber page' pages in
-                              let pdf = Pdfpage.change_pages false pdf pages' in
-                                {pdf with
-                                   Pdf.minor = if keepversion then pdf.Pdf.minor else max pdf.Pdf.minor 4}
+                        let annot =
+                          Pdf.Dictionary
+                            [("/FS", filespec);
+                             ("/Subtype", Pdf.Name "/FileAttachment");
+                             ("/Contents", Pdf.String (Filename.basename file));
+                             ("/Rect", rect)]
+                        in
+                          let annots' = Pdf.Array (annot::annots) in
+                            let page' =
+                              {page with Pdfpage.rest = Pdf.add_dict_entry page.Pdfpage.rest "/Annots" annots'}
+                            in
+                              let pages' = replace_number pagenumber page' pages in
+                                let pdf = Pdfpage.change_pages false pdf pages' in
+                                  {pdf with
+                                     Pdf.minor = if keepversion then pdf.Pdf.minor else max pdf.Pdf.minor 4}
 
 let list_attached_files pdf =
   let toplevel =
