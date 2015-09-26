@@ -759,6 +759,11 @@ let attach_file ?memory keepversion topage pdf file =
                                   {pdf with
                                      Pdf.minor = if keepversion then pdf.Pdf.minor else max pdf.Pdf.minor 4}
 
+type attachment =
+  {name : string;
+   pagenumber : int;
+   data : int}
+
 let list_attached_files pdf =
   let toplevel =
     match Pdf.lookup_direct pdf "/Root" pdf.Pdf.trailerdict with
@@ -770,7 +775,7 @@ let list_attached_files pdf =
             match Pdf.lookup_direct pdf "/EmbeddedFiles" namedict with
             | Some nametree ->
                  map
-                   (function x -> x, 0)
+                   (function x -> {name = x; pagenumber = 0; data = 0})
                    (option_map
                      (function (Pdf.String s, _) -> Some s | _ -> None)
                      (Pdf.contents_of_nametree pdf nametree))
@@ -785,7 +790,8 @@ let list_attached_files pdf =
                   match Pdf.lookup_direct pdf "/Subtype" annot with
                   | Some (Pdf.Name "/FileAttachment") ->
                       (match Pdf.lookup_direct pdf "/Contents" annot with
-                      | Some (Pdf.String s) -> Some (s, pagenumber)
+                      | Some (Pdf.String s) ->
+                          Some {name = s; pagenumber; data = 0}
                       | _ -> None)
                   | _ -> None)
                (match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with

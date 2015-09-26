@@ -3463,9 +3463,11 @@ let go () =
           write_pdf false (Cpdf.scale_contents ~fast:args.fast args.position scale pdf range)
   | Some ListAttachedFiles ->
       let pdf = get_single_pdf args.op false in
-        let names, numbers = split (Cpdf.list_attached_files pdf) in
-          iter2 (Printf.printf "%i %s\n") numbers names;
-          flprint ""
+        let attachments = Cpdf.list_attached_files pdf in
+        iter
+          (fun a -> Printf.printf "%i %s\n" a.Cpdf.pagenumber a.Cpdf.name)
+          attachments;
+        flprint ""
   | Some DumpAttachedFiles ->
       let pdf = get_single_pdf args.op false in
         begin match args.out with
