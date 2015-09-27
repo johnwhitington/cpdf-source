@@ -157,7 +157,7 @@ val remove_attached_files : Pdf.t -> Pdf.t
 type attachment =
   {name : string;
    pagenumber : int;
-   data : int}
+   data : unit -> Pdfio.bytes}
 
 (** List attached files. Attachment name and page number. Page 0 is document level. *)
 val list_attached_files : Pdf.t -> attachment list

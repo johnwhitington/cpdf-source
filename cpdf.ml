@@ -762,7 +762,7 @@ let attach_file ?memory keepversion topage pdf file =
 type attachment =
   {name : string;
    pagenumber : int;
-   data : int}
+   data : unit -> Pdfio.bytes}
 
 let list_attached_files pdf =
   let toplevel =
@@ -775,7 +775,10 @@ let list_attached_files pdf =
             match Pdf.lookup_direct pdf "/EmbeddedFiles" namedict with
             | Some nametree ->
                  map
-                   (function x -> {name = x; pagenumber = 0; data = 0})
+                   (function x ->
+                      {name = x;
+                       pagenumber = 0;
+                       data = (fun () -> Pdfio.mkbytes 0)})
                    (option_map
                      (function (Pdf.String s, _) -> Some s | _ -> None)
                      (Pdf.contents_of_nametree pdf nametree))
@@ -791,7 +794,36 @@ let list_attached_files pdf =
                   | Some (Pdf.Name "/FileAttachment") ->
                       (match Pdf.lookup_direct pdf "/Contents" annot with
                       | Some (Pdf.String s) ->
-                          Some {name = s; pagenumber; data = 0}
+                          begin match Pdf.lookup_direct pdf "/FS" annot with
+                          | Some ((Pdf.Dictionary _) as d) ->
+                              Printf.eprintf "%s\n" (Pdfwrite.string_of_pdf d);
+                              begin match Pdf.lookup_direct pdf "/EF" d with
+                              |  Some ((Pdf.Dictionary _) as d) ->
+                                   begin match Pdf.lookup_direct pdf "/F" d with
+                                   | Some stream ->
+                                       Some
+                                        {name = s;
+                                         pagenumber;
+                                         data =
+                                           (fun () ->
+                                             try
+                                               Pdf.getstream stream;
+                                               Pdfcodec.decode_pdfstream pdf stream;
+                                               match stream with
+                                                 Pdf.Stream {contents = (_, Pdf.Got data)} -> data
+                                               | _ -> raise Not_found
+                                             with
+                                               _ -> raise (Pdf.PDFError "could not retreive attachment data"))}
+                                   | _ -> raise (Pdf.PDFError "no /F found in attachment")
+                                   end
+                              | _ ->
+                                  Some
+                                    {name = s;
+                                     pagenumber;
+                                     data = (fun () -> raise (Pdf.PDFError "no attachment data"))}
+                              end
+                          | _ -> None
+                          end
                       | _ -> None)
                   | _ -> None)
                (match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
