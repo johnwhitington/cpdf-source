@@ -775,12 +775,28 @@ let list_attached_files pdf =
             match Pdf.lookup_direct pdf "/EmbeddedFiles" namedict with
             | Some nametree ->
                  map
-                   (function x ->
-                      {name = x;
-                       pagenumber = 0;
-                       data = (fun () -> Pdfio.mkbytes 0)})
+                   (function (x, ef) ->
+                      match Pdf.lookup_direct pdf "/EF" ef with
+                      | Some ((Pdf.Dictionary _) as d) ->
+                          begin match Pdf.lookup_direct pdf "/F" d with
+                          | Some stream ->
+                              {name = x;
+                               pagenumber = 0;
+                               data =
+                                 (fun () ->
+                                   try
+                                     Pdf.getstream stream;
+                                     Pdfcodec.decode_pdfstream pdf stream;
+                                     match stream with
+                                       Pdf.Stream {contents = (_, Pdf.Got data)} -> data
+                                     | _ -> raise Not_found
+                                   with
+                                     _ -> raise (Pdf.PDFError "could not retreive attachment data"))}
+                          | None -> raise (Pdf.PDFError "/F not found")
+                          end
+                      | _ -> raise (Pdf.PDFError "/EF not found"))
                    (option_map
-                     (function (Pdf.String s, _) -> Some s | _ -> None)
+                     (function (Pdf.String s, ef) -> Some (s, ef) | _ -> None)
                      (Pdf.contents_of_nametree pdf nametree))
             | _ -> []
   in let pagelevel =
