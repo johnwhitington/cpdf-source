@@ -3285,7 +3285,7 @@ let thinlines range width pdf =
               (scale, _, _, _, _, _) ->
                  scale
           with
-            Failure "hd" -> 1.
+            Failure _ (*"hd"*) -> 1.
         in
           let rec replace_operators prev = function
             | [] -> rev prev
@@ -3302,7 +3302,7 @@ let thinlines range width pdf =
                   let top = hd !ctmstack in
                     top := Pdftransform.matrix_compose !top m
                 with
-                  Failure "hd" -> error "Malformed file."
+                  Failure _ (*"hd"*) -> error "Malformed file."
                 end;
                 replace_operators ((Pdfops.Op_cm m)::prev) more
             | Pdfops.Op_q::more ->
@@ -3310,7 +3310,7 @@ let thinlines range width pdf =
                 begin try
                   ctmstack =| ref (!(hd !ctmstack))
                 with
-                  Failure "hd" -> error "Malformed file"
+                  Failure _ (*"hd"*) -> error "Malformed file"
                 end;
                 replace_operators (Pdfops.Op_q::prev) more
             | Pdfops.Op_Q::more ->
@@ -3318,7 +3318,7 @@ let thinlines range width pdf =
                 begin try
                   ctmstack := tl !ctmstack
                 with
-                  Failure "tl" -> error "Malformed file"
+                  Failure _ (*"tl"*) -> error "Malformed file"
                 end;
                 replace_operators (Pdfops.Op_Q::prev) more
             | (Pdfops.Op_gs gsname)::more ->
