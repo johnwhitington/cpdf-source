@@ -2140,7 +2140,7 @@ let stamp_shift_of_position topline midline sw sh w h p =
     | Diagonal | ReverseDiagonal | Centre ->
         half w -. half sw, half h -. half sh -. dy
 
-let do_stamp fast position topline midline scale_to_fit isover pdf o u opdf =
+let do_stamp relative_to_cropbox fast position topline midline scale_to_fit isover pdf o u opdf =
   (* Scale page stamp o to fit page u *)
   let sxmin, symin, sxmax, symax =
     Pdf.parse_rectangle
@@ -2166,9 +2166,9 @@ let do_stamp fast position topline midline scale_to_fit isover pdf o u opdf =
                   let scale_op =
                     Pdfops.Op_cm
                       (Pdftransform.matrix_of_transform
-                         [Pdftransform.Translate (dx, dy);
-                          Pdftransform.Translate (txmin, tymin);
-                          Pdftransform.Scale ((sxmin, symin), scale, scale)])
+                         ([Pdftransform.Translate (dx, dy)] @
+                          (if relative_to_cropbox then [Pdftransform.Translate (txmin, tymin)] else []) @
+                          [Pdftransform.Scale ((sxmin, symin), scale, scale)]))
                   in
                     Pdfpage.prepend_operators pdf [scale_op] ~fast o
       else
@@ -2180,8 +2180,8 @@ let do_stamp fast position topline midline scale_to_fit isover pdf o u opdf =
             let translate_op =
               Pdfops.Op_cm
                 (Pdftransform.matrix_of_transform
-                  [Pdftransform.Translate (txmin, tymin);
-                   Pdftransform.Translate (dx, dy)])
+                  ((if relative_to_cropbox then [Pdftransform.Translate (txmin, tymin)] else []) @
+                   [Pdftransform.Translate (dx, dy)]))
             in
               Pdfpage.prepend_operators pdf [translate_op] ~fast o
     in
@@ -2218,7 +2218,7 @@ let change_bookmark t m =
   {m with Pdfmarks.target =
     try change_destination t m.Pdfmarks.target with Not_found -> m.Pdfmarks.target}
 
-let stamp position topline midline fast scale_to_fit isover range over pdf =
+let stamp relative_to_cropbox position topline midline fast scale_to_fit isover range over pdf =
   let marks = Pdfmarks.read_bookmarks pdf in
   let marks_refnumbers = Pdf.page_reference_numbers pdf in
   let pdf = Pdfmarks.remove_bookmarks pdf in
@@ -2248,7 +2248,7 @@ let stamp position topline midline fast scale_to_fit isover range over pdf =
                 let new_pages =
                   map2
                     (fun pageseq under_page ->
-                      do_stamp fast position topline midline scale_to_fit isover renamed_pdf
+                      do_stamp relative_to_cropbox fast position topline midline scale_to_fit isover renamed_pdf
                       (if mem pageseq range then over_page else
                         Pdfpage.blankpage Pdfpaper.a4)
                       under_page over)
@@ -2302,7 +2302,7 @@ let combine_pages (fast : bool) under over scaletofit swap equalize =
               let new_pages =
                 map2
                   (fun o u ->
-                     do_stamp fast (BottomLeft 0.) false false scaletofit (not swap) renamed_pdf o u over)
+                     do_stamp false fast (BottomLeft 0.) false false scaletofit (not swap) renamed_pdf o u over)
                   over_pages
                   under_pages
               in
@@ -2356,7 +2356,7 @@ let nobble_page pdf _ page =
                     ]
             }
         in
-          do_stamp false (BottomLeft 0.) false false false true pdf page' page (Pdf.empty ())
+          do_stamp false false (BottomLeft 0.) false false false true pdf page' page (Pdf.empty ())
 
 (* \section{Set media box} *)
 let set_mediabox x y w h pdf range =

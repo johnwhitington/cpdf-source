@@ -1,3 +1,4 @@
+(* Added -relative-to-cropbox for stamps *)
 (* cpdf command line tools *)
 let demo = false
 let noncomp = false
@@ -3568,7 +3569,7 @@ let go () =
           let range = parse_pagespec pdf (get_pagespec ()) in
             let pdf =
               Cpdf.stamp
-                args.position args.topline args.midline args.fast
+                args.relative_to_cropbox args.position args.topline args.midline args.fast
                 args.scale_stamp_to_fit true range overpdf pdf
             in
               write_pdf false pdf
@@ -3582,7 +3583,7 @@ let go () =
           let range = parse_pagespec pdf (get_pagespec ()) in
             let pdf =
               Cpdf.stamp
-                args.position args.topline args.midline args.fast
+                args.relative_to_cropbox args.position args.topline args.midline args.fast
                 args.scale_stamp_to_fit false range underpdf pdf
             in
               write_pdf false pdf
