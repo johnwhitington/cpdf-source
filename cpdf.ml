@@ -2167,6 +2167,7 @@ let do_stamp fast position topline midline scale_to_fit isover pdf o u opdf =
                     Pdfops.Op_cm
                       (Pdftransform.matrix_of_transform
                          [Pdftransform.Translate (dx, dy);
+                          Pdftransform.Translate (txmin, tymin);
                           Pdftransform.Scale ((sxmin, symin), scale, scale)])
                   in
                     Pdfpage.prepend_operators pdf [scale_op] ~fast o
@@ -2178,7 +2179,9 @@ let do_stamp fast position topline midline scale_to_fit isover pdf o u opdf =
           let dx, dy = stamp_shift_of_position topline midline sw sh w h position in
             let translate_op =
               Pdfops.Op_cm
-                (Pdftransform.matrix_of_transform [Pdftransform.Translate (dx, dy)])
+                (Pdftransform.matrix_of_transform
+                  [Pdftransform.Translate (txmin, tymin);
+                   Pdftransform.Translate (dx, dy)])
             in
               Pdfpage.prepend_operators pdf [translate_op] ~fast o
     in
