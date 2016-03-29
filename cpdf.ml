@@ -564,7 +564,7 @@ let map_pages f pdf range =
       pages
 
 (* Add stack operators to a content stream to ensure it is composeable. FIXME:
-This will go away once we're using postpend_content or similar for twoup and do_stamp... *)
+This will go away once we're using  a better postpend_content or similar for twoup and do_stamp... *)
 let protect_removeme pdf resources content =
   let ops = Pdfops.parse_operators pdf resources content in
     let qs = length (keep (eq Pdfops.Op_q) ops)
@@ -2170,6 +2170,8 @@ let do_stamp relative_to_cropbox fast position topline midline scale_to_fit isov
                           (if relative_to_cropbox then [Pdftransform.Translate (txmin, tymin)] else []) @
                           [Pdftransform.Scale ((sxmin, symin), scale, scale)]))
                   in
+                    (* NOTE: This shares on -fast, because prepend_operators shares.
+                    On slow, it breaks sharing *)
                     Pdfpage.prepend_operators pdf [scale_op] ~fast o
       else
         let sw = sxmax -. sxmin
@@ -2183,13 +2185,17 @@ let do_stamp relative_to_cropbox fast position topline midline scale_to_fit isov
                   ((if relative_to_cropbox then [Pdftransform.Translate (txmin, tymin)] else []) @
                    [Pdftransform.Translate (dx, dy)]))
             in
+              (* NOTE: This shares on -fast, because prepend_operators shares.
+              On slow, it breaks sharing *)
               Pdfpage.prepend_operators pdf [translate_op] ~fast o
     in
+      (* NOTE: On -fast, this is ok. Shares content streams properly. On slow,
+      protect_removeme would break sharing *)
       {u with
          Pdfpage.content =
            (if isover then ( @ ) else ( @@ ))
-           [protect_removeme pdf u.Pdfpage.resources u.Pdfpage.content]
-             [protect_removeme pdf o.Pdfpage.resources o.Pdfpage.content];
+           (if fast then u.Pdfpage.content else [protect_removeme pdf u.Pdfpage.resources u.Pdfpage.content])
+           (if fast then o.Pdfpage.content else [protect_removeme pdf o.Pdfpage.resources o.Pdfpage.content]);
          Pdfpage.resources =
            combine_pdf_resources pdf u.Pdfpage.resources o.Pdfpage.resources}
 
@@ -2281,7 +2287,21 @@ let equalize_pages under over =
     else
       under, over
 
+let report_pdf_size pdf =
+  Pdf.remove_unreferenced pdf;
+  Pdfwrite.pdf_to_file pdf "temp.pdf";
+  let fh = open_in_bin "temp.pdf" in
+    Printf.printf "Size %i bytes\n" (in_channel_length fh);
+    flush stdout;
+    close_in fh
+
 let combine_pages (fast : bool) under over scaletofit swap equalize =
+  Printf.printf "combine_pages: fast = %b\n" fast;
+  flush stdout;
+  Printf.printf "Under size\n";
+  report_pdf_size under;
+  Printf.printf "Over size\n";
+  report_pdf_size over;
   let marks_under = Pdfmarks.read_bookmarks under in
   let marks_over = Pdfmarks.read_bookmarks over in
   let under, over = if equalize then equalize_pages under over else under, over in
@@ -2292,10 +2312,16 @@ let combine_pages (fast : bool) under over scaletofit swap equalize =
       in let pageseqs_over = ilist 1 (Pdfpage.endpage over) in
         let merged =
           Pdfmerge.merge_pdfs false false ["a"; "b"] [under; over] [pageseqs_under; pageseqs_over] in
+          Printf.printf "merged\n";
+          flush stdout;
+          report_pdf_size merged;
           let renamed_pdf =
             Pdfpage.change_pages true
               merged (Pdfpage.renumber_pages merged (Pdfpage.pages_of_pagetree merged))
           in
+            Printf.printf "renamed\n";
+            flush stdout;
+            report_pdf_size renamed_pdf;
             let under_pages, over_pages =
               cleave (Pdfpage.pages_of_pagetree renamed_pdf) under_length
             in
@@ -2306,7 +2332,19 @@ let combine_pages (fast : bool) under over scaletofit swap equalize =
                   over_pages
                   under_pages
               in
-                Pdfmarks.add_bookmarks (marks_under @ marks_over) (Pdfpage.change_pages true renamed_pdf new_pages)
+                Printf.printf "stamped\n";
+                flush stdout;
+                let r =
+                  let changed = Pdfpage.change_pages true renamed_pdf new_pages
+                  in
+                  Printf.printf "pages changed\n";
+                  flush stdout;
+                  Pdfmarks.add_bookmarks (marks_under @ marks_over) changed
+                in
+                  report_pdf_size r;
+                  Printf.printf "bookmarks added\n";
+                  flush stdout;
+                  r
 
 let nobble_page pdf _ page =
   let minx, miny, maxx, maxy =
@@ -2853,7 +2891,9 @@ let twoup_pages pdf = function
                Pdfops.Op_n]
             in
               let ops = Pdfops.parse_operators pdf resources' contents in
-                (* Need protect_removeme here? especially new, Q-adding protect? *)
+                (* Need protect_removeme here? especially new, Q-adding
+                 * protect?. This will also make it faster on -fast, since Q
+                 * adding will be disabled. *)
                 Pdfops.stream_of_ops
                   ([Pdfops.Op_q] @ [Pdfops.Op_cm transform] @ clipops @ ops @ [Pdfops.Op_Q])
           in
