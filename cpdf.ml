@@ -2225,6 +2225,8 @@ let change_bookmark t m =
     try change_destination t m.Pdfmarks.target with Not_found -> m.Pdfmarks.target}
 
 let stamp relative_to_cropbox position topline midline fast scale_to_fit isover range over pdf =
+  let prefix = Pdfpage.shortest_unused_prefix pdf in
+  Pdfpage.add_prefix over prefix;
   let marks = Pdfmarks.read_bookmarks pdf in
   let marks_refnumbers = Pdf.page_reference_numbers pdf in
   let pdf = Pdfmarks.remove_bookmarks pdf in
@@ -2243,25 +2245,21 @@ let stamp relative_to_cropbox position topline midline fast scale_to_fit isover 
           {merged with Pdf.saved_encryption = pdf.Pdf.saved_encryption}
         in
           let merged = copy_id true pdf merged in
-          let renamed_pdf =
-            Pdfpage.change_pages true
-              merged (Pdfpage.renumber_pages merged (Pdfpage.pages_of_pagetree merged))
-          in
-            let renamed_pages = Pdfpage.pages_of_pagetree renamed_pdf in
+            let merged_pages = Pdfpage.pages_of_pagetree merged in
               let under_pages, over_page =
-                all_but_last renamed_pages, last renamed_pages
+                all_but_last merged_pages, last merged_pages
               in
                 let new_pages =
                   map2
                     (fun pageseq under_page ->
-                      do_stamp relative_to_cropbox fast position topline midline scale_to_fit isover renamed_pdf
+                      do_stamp relative_to_cropbox fast position topline midline scale_to_fit isover merged
                       (if mem pageseq range then over_page else
                         Pdfpage.blankpage Pdfpaper.a4)
                       under_page over)
                     pageseqs
                     under_pages 
                 in
-                  let changed = Pdfpage.change_pages true renamed_pdf new_pages in
+                  let changed = Pdfpage.change_pages true merged new_pages in
                   let new_refnumbers = Pdf.page_reference_numbers changed in
                   let changetable = hashtable_of_dictionary (List.combine marks_refnumbers new_refnumbers) in
                   let new_marks = map (change_bookmark changetable) marks in
