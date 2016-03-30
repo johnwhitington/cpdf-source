@@ -2289,19 +2289,28 @@ let equalize_pages under over =
 
 let report_pdf_size pdf =
   Pdf.remove_unreferenced pdf;
-  Pdfwrite.pdf_to_file pdf "temp.pdf";
+  Pdfwrite.pdf_to_file_options ~preserve_objstm:false ~generate_objstm:false
+  ~compress_objstm:false false None false pdf "temp.pdf";
   let fh = open_in_bin "temp.pdf" in
     Printf.printf "Size %i bytes\n" (in_channel_length fh);
     flush stdout;
     close_in fh
 
 let combine_pages (fast : bool) under over scaletofit swap equalize =
-  Printf.printf "combine_pages: fast = %b\n" fast;
+  (*Printf.printf "combine_pages: fast = %b\n" fast;
   flush stdout;
   Printf.printf "Under size\n";
   report_pdf_size under;
   Printf.printf "Over size\n";
-  report_pdf_size over;
+  report_pdf_size over;*)
+  let prefix = Pdfpage.shortest_unused_prefix under in
+    (*Printf.printf "prefix was %s\n" prefix;*)
+    Pdfpage.add_prefix over prefix;
+    (*Printf.printf "added prefix\n";
+    Printf.printf "under now:\n";
+    report_pdf_size under;
+    Printf.printf "over now:\n";
+    report_pdf_size over;*)
   let marks_under = Pdfmarks.read_bookmarks under in
   let marks_over = Pdfmarks.read_bookmarks over in
   let under, over = if equalize then equalize_pages under over else under, over in
@@ -2312,38 +2321,33 @@ let combine_pages (fast : bool) under over scaletofit swap equalize =
       in let pageseqs_over = ilist 1 (Pdfpage.endpage over) in
         let merged =
           Pdfmerge.merge_pdfs false false ["a"; "b"] [under; over] [pageseqs_under; pageseqs_over] in
-          Printf.printf "merged\n";
+          (*Printf.printf "merged\n";
           flush stdout;
-          report_pdf_size merged;
-          let renamed_pdf =
-            Pdfpage.change_pages true
-              merged (Pdfpage.renumber_pages merged (Pdfpage.pages_of_pagetree merged))
-          in
-            Printf.printf "renamed\n";
-            flush stdout;
-            report_pdf_size renamed_pdf;
+          report_pdf_size merged;*)
             let under_pages, over_pages =
-              cleave (Pdfpage.pages_of_pagetree renamed_pdf) under_length
+              cleave (Pdfpage.pages_of_pagetree merged) under_length
             in
               let new_pages =
                 map2
                   (fun o u ->
-                     do_stamp false fast (BottomLeft 0.) false false scaletofit (not swap) renamed_pdf o u over)
+                     do_stamp
+                       false fast (BottomLeft 0.) false false scaletofit (not swap)
+                       merged o u over)
                   over_pages
                   under_pages
               in
-                Printf.printf "stamped\n";
-                flush stdout;
+                (*Printf.printf "stamped\n";
+                flush stdout;*)
                 let r =
-                  let changed = Pdfpage.change_pages true renamed_pdf new_pages
+                  let changed = Pdfpage.change_pages true merged new_pages
                   in
-                  Printf.printf "pages changed\n";
-                  flush stdout;
+                  (*Printf.printf "pages changed\n";
+                  flush stdout;*)
                   Pdfmarks.add_bookmarks (marks_under @ marks_over) changed
                 in
-                  report_pdf_size r;
+                  (*report_pdf_size r;
                   Printf.printf "bookmarks added\n";
-                  flush stdout;
+                  flush stdout;*)
                   r
 
 let nobble_page pdf _ page =
