@@ -4,6 +4,16 @@ open Pdfio
 
 let debug = ref false
 
+(* For debugging *)
+let report_pdf_size pdf =
+  Pdf.remove_unreferenced pdf;
+  Pdfwrite.pdf_to_file_options ~preserve_objstm:false ~generate_objstm:false
+  ~compress_objstm:false false None false pdf "temp.pdf";
+  let fh = open_in_bin "temp.pdf" in
+    Printf.printf "Size %i bytes\n" (in_channel_length fh);
+    flush stdout;
+    close_in fh
+
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
 let find_cpdflin provided =
@@ -564,7 +574,8 @@ let map_pages f pdf range =
       pages
 
 (* Add stack operators to a content stream to ensure it is composeable. FIXME:
-This will go away once we're using  a better postpend_content or similar for twoup and do_stamp... *)
+  * This is only used for non-fast, and it blows up shared streams. Fix place
+  * which use this not to blow up, and remove this code. *)
 let protect_removeme pdf resources content =
   let ops = Pdfops.parse_operators pdf resources content in
     let qs = length (keep (eq Pdfops.Op_q) ops)
@@ -2270,9 +2281,8 @@ let stamp relative_to_cropbox position topline midline fast scale_to_fit isover 
 (* If [over] has more pages than [under], chop the excess. If the converse, pad
 [over] to the same length *)
 let equalize_pages under over =
-  let length_under = Pdfpage.endpage under
-  in let length_over = Pdfpage.endpage over
-  in
+  let length_under = Pdfpage.endpage under in
+  let length_over = Pdfpage.endpage over in
     if length_over > length_under then
       under,
       (Pdfpage.change_pages true over (take (Pdfpage.pages_of_pagetree over) length_under))
@@ -2285,68 +2295,60 @@ let equalize_pages under over =
     else
       under, over
 
-let report_pdf_size pdf =
-  Pdf.remove_unreferenced pdf;
-  Pdfwrite.pdf_to_file_options ~preserve_objstm:false ~generate_objstm:false
-  ~compress_objstm:false false None false pdf "temp.pdf";
-  let fh = open_in_bin "temp.pdf" in
-    Printf.printf "Size %i bytes\n" (in_channel_length fh);
-    flush stdout;
-    close_in fh
-
 let combine_pages (fast : bool) under over scaletofit swap equalize =
+  Pdfpage.add_prefix over (Pdfpage.shortest_unused_prefix under);
+  let marks_under = Pdfmarks.read_bookmarks under in
+  let marks_over = Pdfmarks.read_bookmarks over in
+  let under, over = if equalize then equalize_pages under over else under, over in
+  let under_length = Pdfpage.endpage under in
+  let over_length = Pdfpage.endpage over in
+    if under_length <> over_length then
+      raise (Pdf.PDFError "combine_pages: not of equal length")
+    else
+      let pageseqs_under = ilist 1 (Pdfpage.endpage under) in
+      let pageseqs_over = ilist 1 (Pdfpage.endpage over) in
+      let merged =
+        Pdfmerge.merge_pdfs
+          false false ["a"; "b"] [under; over] [pageseqs_under; pageseqs_over]
+      in
+        let under_pages, over_pages =
+          cleave (Pdfpage.pages_of_pagetree merged) under_length
+        in
+          let new_pages =
+            map2
+              (fun o u ->
+                 do_stamp
+                   false fast (BottomLeft 0.) false false scaletofit (not swap)
+                   merged o u over)
+              over_pages under_pages
+          in
+            let changed = Pdfpage.change_pages true merged new_pages in
+              Pdfmarks.add_bookmarks (marks_under @ marks_over) changed
+
   (*Printf.printf "combine_pages: fast = %b\n" fast;
   flush stdout;
   Printf.printf "Under size\n";
   report_pdf_size under;
   Printf.printf "Over size\n";
   report_pdf_size over;*)
-  let prefix = Pdfpage.shortest_unused_prefix under in
+
     (*Printf.printf "prefix was %s\n" prefix;*)
-    Pdfpage.add_prefix over prefix;
+
     (*Printf.printf "added prefix\n";
     Printf.printf "under now:\n";
     report_pdf_size under;
     Printf.printf "over now:\n";
     report_pdf_size over;*)
-  let marks_under = Pdfmarks.read_bookmarks under in
-  let marks_over = Pdfmarks.read_bookmarks over in
-  let under, over = if equalize then equalize_pages under over else under, over in
-    let under_length = Pdfpage.endpage under
-    in let over_length = Pdfpage.endpage over in
-      if under_length <> over_length then raise (Pdf.PDFError "combine_pages: not of equal length") else
-      let pageseqs_under = ilist 1 (Pdfpage.endpage under)
-      in let pageseqs_over = ilist 1 (Pdfpage.endpage over) in
-        let merged =
-          Pdfmerge.merge_pdfs false false ["a"; "b"] [under; over] [pageseqs_under; pageseqs_over] in
           (*Printf.printf "merged\n";
           flush stdout;
           report_pdf_size merged;*)
-            let under_pages, over_pages =
-              cleave (Pdfpage.pages_of_pagetree merged) under_length
-            in
-              let new_pages =
-                map2
-                  (fun o u ->
-                     do_stamp
-                       false fast (BottomLeft 0.) false false scaletofit (not swap)
-                       merged o u over)
-                  over_pages
-                  under_pages
-              in
                 (*Printf.printf "stamped\n";
                 flush stdout;*)
-                let r =
-                  let changed = Pdfpage.change_pages true merged new_pages
-                  in
                   (*Printf.printf "pages changed\n";
                   flush stdout;*)
-                  Pdfmarks.add_bookmarks (marks_under @ marks_over) changed
-                in
                   (*report_pdf_size r;
                   Printf.printf "bookmarks added\n";
                   flush stdout;*)
-                  r
 
 let nobble_page pdf _ page =
   let minx, miny, maxx, maxy =
