@@ -621,15 +621,14 @@ let combine_pdf_resources pdf a b =
           | Some (Pdf.Dictionary d) -> d
           | _ -> []
         in
-          key, Pdf.Dictionary (a_entries @ b_entries)
+          if a_entries = [] && b_entries = [] then
+            None
+          else
+            Some (key, Pdf.Dictionary (a_entries @ b_entries))
       in
-        let unknown_keys_a =
-          lose (fun (k, _) -> mem k resource_keys) a_entries
-        in let unknown_keys_b =
-          lose (fun (k, _) -> mem k resource_keys) b_entries
-        in let combined_known_entries =
-          map combine_entries resource_keys
-        in
+        let unknown_keys_a = lose (fun (k, _) -> mem k resource_keys) a_entries in
+        let unknown_keys_b = lose (fun (k, _) -> mem k resource_keys) b_entries in
+        let combined_known_entries = option_map combine_entries resource_keys in
           Pdf.Dictionary (unknown_keys_a @ unknown_keys_b @ combined_known_entries)
 
 (* \section{Build PDF Presentations} *)
