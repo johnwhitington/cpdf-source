@@ -573,16 +573,22 @@ let map_pages f pdf range =
       (ilist 1 (length pages))
       pages
 
-(* Add stack operators to a content stream to ensure it is composeable. FIXME:
-  * This is only used for non-fast, and it blows up shared streams. Fix place
-  * which use this not to blow up, and remove this code. *)
-let protect_removeme pdf resources content =
-  let ops = Pdfops.parse_operators pdf resources content in
-    let qs = length (keep (eq Pdfops.Op_q) ops)
-    and bigqs = length (keep (eq Pdfops.Op_Q) ops) in
-    let deficit = if qs > bigqs then qs - bigqs else 0 in
-      if deficit <> 0 then Printf.eprintf "Q Deficit was nonzero. Fixing. %i\n" deficit;
-      Pdfops.stream_of_ops ([Pdfops.Op_q] @ ops @ many Pdfops.Op_Q deficit @ [Pdfops.Op_Q])
+(* Add stack operators to a content stream to ensure it is composeable. On
+-fast, we don't check for Q deficit, assuming PDF is ISO. *)
+let protect fast pdf resources content =
+  let deficit =
+    if fast then 0 else
+      let ops = Pdfops.parse_operators pdf resources content in
+      let qs = length (keep (eq Pdfops.Op_q) ops) in
+      let bigqs = length (keep (eq Pdfops.Op_Q) ops) in
+      let deficit = if qs > bigqs then qs - bigqs else 0 in
+        if deficit <> 0 then Printf.eprintf "Q Deficit was nonzero. Fixing. %i\n" deficit;
+        deficit
+  in
+    let addstream ops = Pdf.addobj pdf (Pdfops.stream_of_ops ops) in
+    let q = addstream [Pdfops.Op_q] in
+    let qs = addstream (many Pdfops.Op_Q deficit @ [Pdfops.Op_Q]) in
+      [Pdf.Indirect q] @ content @ [Pdf.Indirect qs]
 
 exception SoftError of string
 
@@ -2181,14 +2187,10 @@ let do_stamp relative_to_cropbox fast position topline midline scale_to_fit isov
                           (if relative_to_cropbox then [Pdftransform.Translate (txmin, tymin)] else []) @
                           [Pdftransform.Scale ((sxmin, symin), scale, scale)]))
                   in
-                    (* NOTE: This shares on -fast, because prepend_operators shares.
-                    On slow, it breaks sharing *)
                     Pdfpage.prepend_operators pdf [scale_op] ~fast o
       else
-        let sw = sxmax -. sxmin
-        and sh = symax -. symin
-        and w = txmax -. txmin
-        and h = tymax -. tymin in
+        let sw = sxmax -. sxmin and sh = symax -. symin
+        and w = txmax -. txmin and h = tymax -. tymin in
           let dx, dy = stamp_shift_of_position topline midline sw sh w h position in
             let translate_op =
               Pdfops.Op_cm
@@ -2196,17 +2198,13 @@ let do_stamp relative_to_cropbox fast position topline midline scale_to_fit isov
                   ((if relative_to_cropbox then [Pdftransform.Translate (txmin, tymin)] else []) @
                    [Pdftransform.Translate (dx, dy)]))
             in
-              (* NOTE: This shares on -fast, because prepend_operators shares.
-              On slow, it breaks sharing *)
               Pdfpage.prepend_operators pdf [translate_op] ~fast o
     in
-      (* NOTE: On -fast, this is ok. Shares content streams properly. On slow,
-      protect_removeme would break sharing *)
       {u with
          Pdfpage.content =
            (if isover then ( @ ) else ( @@ ))
-           (if fast then u.Pdfpage.content else [protect_removeme pdf u.Pdfpage.resources u.Pdfpage.content])
-           (if fast then o.Pdfpage.content else [protect_removeme pdf o.Pdfpage.resources o.Pdfpage.content]);
+           (protect fast pdf u.Pdfpage.resources u.Pdfpage.content)
+           (protect fast pdf o.Pdfpage.resources o.Pdfpage.content);
          Pdfpage.resources =
            combine_pdf_resources pdf u.Pdfpage.resources o.Pdfpage.resources}
 
