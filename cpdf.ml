@@ -947,6 +947,7 @@ let rec fixup_characters prev = function
   | h::t -> fixup_characters (h::prev) t
 
 let parse_bookmark_file verify pdf input =
+  let currline = ref 0 in
   try
     let lines = Pdfio.read_lines input in
       (*i Printf.printf "Read %i lines\n" (length lines);
@@ -974,7 +975,6 @@ let parse_bookmark_file verify pdf input =
                     Pdfmarks.isopen = false}
              | [] -> () (* ignore blank lines *)
              | _ ->
-                 (*i flprint (Pdfgenlex.string_of_tokens n); i*)
                  error ("Bad bookmark file, line " ^ (string_of_int !currline)))
           lines;
         let bookmarks = rev !bookmarks in
@@ -987,7 +987,7 @@ let parse_bookmark_file verify pdf input =
             else
               bookmarks
   with
-    _ -> (*i Printf.printf "%s\n" (Printexc.to_string e); i*) error "Bad bookmark file (syntax)"
+    _ -> error (Printf.sprintf "Bad bookmark file (syntax) at line %i" !currline)
 
 
 let add_bookmarks verify input pdf =
