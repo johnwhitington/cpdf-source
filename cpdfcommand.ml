@@ -783,6 +783,29 @@ let find_page_crop_miny pdf page = miny (cropbox pdf page)
 let find_page_crop_maxx pdf page = maxx (cropbox pdf page)
 let find_page_crop_maxy pdf page = maxy (cropbox pdf page)
 
+type expr =
+  Num of float
+| Add of expr * expr
+| Mul of expr * expr
+| Sub of expr * expr
+| Div of expr * expr
+
+type lexeme =
+  LNum of float | LAdd | LMul | LSub | LDiv | LParen | RParen
+
+let string_of_our_lexeme = function
+  LNum x -> Printf.sprintf "LNum %f" x;
+| LAdd -> Printf.sprintf "LAdd"
+| LMul -> Printf.sprintf "LMul"
+| LSub -> Printf.sprintf "LSub"
+| LDiv -> Printf.sprintf "LDiv"
+| LParen -> Printf.sprintf "LParen"
+| RParen -> Printf.sprintf "RParen"
+
+let string_of_our_lexemes lexemes =
+  List.fold_left
+    (fun x y -> x ^ " " ^ y) "" (List.map string_of_our_lexeme lexemes)
+
 let rec parse_units_again pdf numbers papersize more =
   let w, h = points_of_papersize papersize in
     parse_units pdf (h::w::numbers) more
@@ -884,13 +907,67 @@ and parse_units pdf numbers = function
       parse_units pdf numbers more
   | Pdfgenlex.LexName "["::more ->
       (* The beginning of a mathematical expression for one number *)
-      let n, rest = parse_expression more in
+      let n, rest = parse_expression pdf more in
         parse_units pdf (n::numbers) rest
   | _ -> rev numbers
 
+and really_parse_expression coalesced =
+  Printf.printf "%s\n" (string_of_our_lexemes coalesced);
+  Num 4.3
+
+(* Replace +, - by ))+(( etc. Replace * and / by )*( etc. Add (( on left, )) on
+right. Now the expression is correctly parenthesised, as if by magic. This is a
+trick from a very early FORTRAN compiler. *)
+and parenthesise_inner = function
+  | (LAdd | LSub) as op::t ->
+      RParen::RParen::op::LParen::LParen::parenthesise_inner t
+  | (LMul | LDiv) as op::t ->
+      RParen::op::LParen::parenthesise_inner t
+  | x::t -> x::parenthesise_inner t
+  | [] -> []
+
+and parenthesise lexemes =
+  [LParen; LParen] @ parenthesise_inner lexemes @ [RParen; RParen]
+
+and eval_expr = function
+  Num x -> x
+| _ -> failwith "eval_expr"
+
+and notop = function
+  "+" | "-" | "*" | "/" | "(" | ")" -> false
+| _ -> true
+
+(* We have int/float + an ident [1.6, mm] or [a4portrait] or [PW]. Coalesce those. Now we just have
+operators and operands and parentheses. *)
+and coalesce_lexemes pdf = function
+  [] -> []
+| Pdfgenlex.LexName "+"::more -> LAdd::coalesce_lexemes pdf more
+| Pdfgenlex.LexName "-"::more -> LSub::coalesce_lexemes pdf more
+| Pdfgenlex.LexName "/"::more -> LDiv::coalesce_lexemes pdf more
+| Pdfgenlex.LexName "*"::more -> LMul::coalesce_lexemes pdf more
+| Pdfgenlex.LexName "("::more -> LParen::coalesce_lexemes pdf more
+| Pdfgenlex.LexName ")"::more -> RParen::coalesce_lexemes pdf more
+| Pdfgenlex.LexInt a::Pdfgenlex.LexName b::more when notop b ->
+    begin match parse_units pdf [] [Pdfgenlex.LexInt a; Pdfgenlex.LexName b] with
+      [x] -> LNum x::coalesce_lexemes pdf more
+    | _ -> failwith "coalesce_lexemes"
+    end
+| Pdfgenlex.LexReal a::Pdfgenlex.LexName b::more when notop b ->
+    begin match parse_units pdf [] [Pdfgenlex.LexReal a; Pdfgenlex.LexName b] with
+      [x] -> LNum x::coalesce_lexemes pdf more
+    | _ -> failwith "coalesce_lexemes"
+    end
+| Pdfgenlex.LexInt a::more -> LNum (float_of_int a)::coalesce_lexemes pdf more
+| Pdfgenlex.LexReal a::more -> LNum a::coalesce_lexemes pdf more
+| x -> failwith "coalesce_lexemes: unknown lexemes"
+
 (* Parse a mathematical expression such as 1 + 2 * %PW *)
-and parse_expression lexemes =
-  (0.0, [])
+and parse_expression pdf lexemes =
+  let lexemes, rest = cleavewhile (neq (Pdfgenlex.LexName "]")) lexemes in
+    Printf.printf "%s\n" (Pdfgenlex.string_of_tokens lexemes);
+    let our_lexemes = coalesce_lexemes pdf lexemes in
+      let expr = really_parse_expression (parenthesise our_lexemes) in
+        (eval_expr expr, rest)
 
 let rec space_units_inner = function
   | [] -> []
