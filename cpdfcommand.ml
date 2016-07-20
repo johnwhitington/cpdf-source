@@ -747,28 +747,22 @@ let cropbox pdf page =
   | None -> page.Pdfpage.mediabox
 
 let width box =
-  let minx, miny, maxx, maxy = Pdf.parse_rectangle box in
-    maxx -. minx
+  let minx, miny, maxx, maxy = Pdf.parse_rectangle box in maxx -. minx
 
 let height box =
-  let minx, miny, maxx, maxy = Pdf.parse_rectangle box in
-    maxy -. miny
+  let minx, miny, maxx, maxy = Pdf.parse_rectangle box in maxy -. miny
 
 let minx box =
-  let minx, miny, maxx, maxy = Pdf.parse_rectangle box in
-    minx
+  let minx, miny, maxx, maxy = Pdf.parse_rectangle box in minx
 
 let miny box =
-  let minx, miny, maxx, maxy = Pdf.parse_rectangle box in
-    miny
+  let minx, miny, maxx, maxy = Pdf.parse_rectangle box in miny
 
 let maxx box =
-  let minx, miny, maxx, maxy = Pdf.parse_rectangle box in
-    maxx
+  let minx, miny, maxx, maxy = Pdf.parse_rectangle box in maxx
 
 let maxy box =
-  let minx, miny, maxx, maxy = Pdf.parse_rectangle box in
-    maxy
+  let minx, miny, maxx, maxy = Pdf.parse_rectangle box in maxy
 
 let find_page_width pdf page = width page.Pdfpage.mediabox
 let find_page_height pdf page = height page.Pdfpage.mediabox
@@ -783,28 +777,48 @@ let find_page_crop_miny pdf page = miny (cropbox pdf page)
 let find_page_crop_maxx pdf page = maxx (cropbox pdf page)
 let find_page_crop_maxy pdf page = maxy (cropbox pdf page)
 
-type expr =
-  Num of float
-| Add of expr * expr
-| Mul of expr * expr
-| Sub of expr * expr
-| Div of expr * expr
+let make_num unt num =
+  let f =
+    match num with
+    | Pdfgenlex.LexInt i -> float_of_int i
+    | Pdfgenlex.LexReal r -> r
+    | _ -> failwith "make_num"
+  in
+    match unt with
+    | Pdfgenlex.LexName "pt" -> f
+    | Pdfgenlex.LexName "cm" -> cm f
+    | Pdfgenlex.LexName "mm" -> mm f
+    | Pdfgenlex.LexName "in" -> inch f
+    | _ -> failwith "make_num"
 
-type lexeme =
-  LNum of float | LAdd | LMul | LSub | LDiv | LParen | RParen
+let update_last_number unt op num = function
+  [] -> []
+| h::t ->
+    let final_num = make_num unt num in
+      let h' =
+        match op with
+          Pdfgenlex.LexName "add" -> h +. final_num
+        | Pdfgenlex.LexName "sub" -> h -. final_num
+        | Pdfgenlex.LexName "mul" -> h *. final_num
+        | Pdfgenlex.LexName "div" -> h /. final_num
+        | _ -> failwith "update_last_number"
+      in
+        h'::t
 
-let string_of_our_lexeme = function
-  LNum x -> Printf.sprintf "LNum %f" x;
-| LAdd -> Printf.sprintf "LAdd"
-| LMul -> Printf.sprintf "LMul"
-| LSub -> Printf.sprintf "LSub"
-| LDiv -> Printf.sprintf "LDiv"
-| LParen -> Printf.sprintf "LParen"
-| RParen -> Printf.sprintf "RParen"
-
-let string_of_our_lexemes lexemes =
-  List.fold_left
-    (fun x y -> x ^ " " ^ y) "" (List.map string_of_our_lexeme lexemes)
+let find_page_characteristic pdf page = function
+  | Pdfgenlex.LexName "PW" -> find_page_width pdf page
+  | Pdfgenlex.LexName "PH" -> find_page_height pdf page
+  | Pdfgenlex.LexName "CW" -> find_page_crop_width pdf page
+  | Pdfgenlex.LexName "CH" -> find_page_crop_height pdf page
+  | Pdfgenlex.LexName "PMINX" -> find_page_minx pdf page
+  | Pdfgenlex.LexName "PMINY" -> find_page_miny pdf page
+  | Pdfgenlex.LexName "PMAXX" -> find_page_maxx pdf page
+  | Pdfgenlex.LexName "PMAXY" -> find_page_maxy pdf page
+  | Pdfgenlex.LexName "CMINX" -> find_page_crop_minx pdf page
+  | Pdfgenlex.LexName "CMINY" -> find_page_crop_miny pdf page
+  | Pdfgenlex.LexName "CMAXX" -> find_page_crop_maxx pdf page
+  | Pdfgenlex.LexName "CMAXY" -> find_page_crop_maxy pdf page
+  | _ -> failwith "find_page_characteristic"
 
 let rec parse_units_again pdf numbers papersize more =
   let w, h = points_of_papersize papersize in
@@ -875,99 +889,24 @@ and parse_units pdf numbers = function
       parse_units pdf ((inch <| float_of_int x)::numbers) more
   | Pdfgenlex.LexReal x::Pdfgenlex.LexName "in"::more ->
       parse_units pdf (inch x::numbers) more
-  | Pdfgenlex.LexName "PW"::more ->
-      parse_units pdf ((find_page_width pdf (firstpage pdf))::numbers) more
-  | Pdfgenlex.LexName "PH"::more ->
-      parse_units pdf ((find_page_height pdf (firstpage pdf))::numbers) more
-  | Pdfgenlex.LexName "CW"::more ->
-      parse_units pdf ((find_page_crop_width pdf (firstpage pdf))::numbers) more
-  | Pdfgenlex.LexName "CH"::more ->
-      parse_units pdf ((find_page_crop_height pdf (firstpage pdf))::numbers) more
-  | Pdfgenlex.LexName "PMINX"::more ->
-      parse_units pdf ((find_page_minx pdf (firstpage pdf))::numbers) more
-  | Pdfgenlex.LexName "PMINY"::more ->
-      parse_units pdf ((find_page_miny pdf (firstpage pdf))::numbers) more
-  | Pdfgenlex.LexName "PMAXX"::more ->
-      parse_units pdf ((find_page_maxx pdf (firstpage pdf))::numbers) more
-  | Pdfgenlex.LexName "PMAXY"::more ->
-      parse_units pdf ((find_page_maxy pdf (firstpage pdf))::numbers) more
-  | Pdfgenlex.LexName "CMINX"::more ->
-      parse_units pdf ((find_page_crop_minx pdf (firstpage pdf))::numbers) more
-  | Pdfgenlex.LexName "CMINY"::more ->
-      parse_units pdf ((find_page_crop_miny pdf (firstpage pdf))::numbers) more
-  | Pdfgenlex.LexName "CMAXX"::more ->
-      parse_units pdf ((find_page_crop_maxx pdf (firstpage pdf))::numbers) more
-  | Pdfgenlex.LexName "CMAXY"::more ->
-      parse_units pdf ((find_page_crop_maxy pdf (firstpage pdf))::numbers) more
   | Pdfgenlex.LexInt x::more ->
       parse_units pdf (float_of_int x::numbers) more
   | Pdfgenlex.LexReal x::more ->
       parse_units pdf (x::numbers) more
   | Pdfgenlex.LexName "pt"::more ->
       parse_units pdf numbers more
-  | Pdfgenlex.LexName "["::more ->
-      (* The beginning of a mathematical expression for one number *)
-      let n, rest = parse_expression pdf more in
-        parse_units pdf (n::numbers) rest
+  | Pdfgenlex.LexName
+      ( "PW" | "PH" | "CW" | "CH" | "PMINX" | "PMINY" | "PMAXX" | "PMAXY"
+       | "CMINX" | "CMINY" | "CMAXX" | "CMAXY") as page_characteristic::more ->
+         parse_units
+           pdf
+           ((find_page_characteristic pdf (firstpage pdf) page_characteristic)::numbers)
+           more
+  | Pdfgenlex.LexName ("add" | "sub" | "mul" | "div") as op::
+    ((Pdfgenlex.LexInt _ | Pdfgenlex.LexReal _) as num)::
+    (Pdfgenlex.LexName ("pt" | "mm" | "cm" | "in") as unt)::more ->
+      parse_units pdf (update_last_number unt op num numbers) more
   | _ -> rev numbers
-
-and really_parse_expression coalesced =
-  Printf.printf "%s\n" (string_of_our_lexemes coalesced);
-  Num 4.3
-
-(* Replace +, - by ))+(( etc. Replace * and / by )*( etc. Add (( on left, )) on
-right. Now the expression is correctly parenthesised, as if by magic. This is a
-trick from a very early FORTRAN compiler. *)
-and parenthesise_inner = function
-  | (LAdd | LSub) as op::t ->
-      RParen::RParen::op::LParen::LParen::parenthesise_inner t
-  | (LMul | LDiv) as op::t ->
-      RParen::op::LParen::parenthesise_inner t
-  | x::t -> x::parenthesise_inner t
-  | [] -> []
-
-and parenthesise lexemes =
-  [LParen; LParen] @ parenthesise_inner lexemes @ [RParen; RParen]
-
-and eval_expr = function
-  Num x -> x
-| _ -> failwith "eval_expr"
-
-and notop = function
-  "+" | "-" | "*" | "/" | "(" | ")" -> false
-| _ -> true
-
-(* We have int/float + an ident [1.6, mm] or [a4portrait] or [PW]. Coalesce those. Now we just have
-operators and operands and parentheses. *)
-and coalesce_lexemes pdf = function
-  [] -> []
-| Pdfgenlex.LexName "+"::more -> LAdd::coalesce_lexemes pdf more
-| Pdfgenlex.LexName "-"::more -> LSub::coalesce_lexemes pdf more
-| Pdfgenlex.LexName "/"::more -> LDiv::coalesce_lexemes pdf more
-| Pdfgenlex.LexName "*"::more -> LMul::coalesce_lexemes pdf more
-| Pdfgenlex.LexName "("::more -> LParen::coalesce_lexemes pdf more
-| Pdfgenlex.LexName ")"::more -> RParen::coalesce_lexemes pdf more
-| Pdfgenlex.LexInt a::Pdfgenlex.LexName b::more when notop b ->
-    begin match parse_units pdf [] [Pdfgenlex.LexInt a; Pdfgenlex.LexName b] with
-      [x] -> LNum x::coalesce_lexemes pdf more
-    | _ -> failwith "coalesce_lexemes"
-    end
-| Pdfgenlex.LexReal a::Pdfgenlex.LexName b::more when notop b ->
-    begin match parse_units pdf [] [Pdfgenlex.LexReal a; Pdfgenlex.LexName b] with
-      [x] -> LNum x::coalesce_lexemes pdf more
-    | _ -> failwith "coalesce_lexemes"
-    end
-| Pdfgenlex.LexInt a::more -> LNum (float_of_int a)::coalesce_lexemes pdf more
-| Pdfgenlex.LexReal a::more -> LNum a::coalesce_lexemes pdf more
-| x -> failwith "coalesce_lexemes: unknown lexemes"
-
-(* Parse a mathematical expression such as 1 + 2 * %PW *)
-and parse_expression pdf lexemes =
-  let lexemes, rest = cleavewhile (neq (Pdfgenlex.LexName "]")) lexemes in
-    Printf.printf "%s\n" (Pdfgenlex.string_of_tokens lexemes);
-    let our_lexemes = coalesce_lexemes pdf lexemes in
-      let expr = really_parse_expression (parenthesise our_lexemes) in
-        (eval_expr expr, rest)
 
 let rec space_units_inner = function
   | [] -> []
@@ -981,7 +920,11 @@ let space_units s =
   implode (space_units_inner (explode s))
 
 let parse_units_string pdf s =
-  parse_units pdf [] (Pdfgenlex.lex_string <| space_units s)
+  Printf.printf "Parsing string [%s]\n" s;
+  let fs = parse_units pdf [] (Pdfgenlex.lex_string <| space_units s) in
+    Printf.printf "Got numbers: %s\n"
+    (List.fold_left (fun x y -> x ^ " " ^ y) "" (List.map string_of_float fs));
+    fs
 
 let parse_rectangle pdf s =
   try
