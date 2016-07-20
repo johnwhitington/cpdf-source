@@ -777,34 +777,6 @@ let find_page_crop_miny pdf page = miny (cropbox pdf page)
 let find_page_crop_maxx pdf page = maxx (cropbox pdf page)
 let find_page_crop_maxy pdf page = maxy (cropbox pdf page)
 
-let make_num unt num =
-  let f =
-    match num with
-    | Pdfgenlex.LexInt i -> float_of_int i
-    | Pdfgenlex.LexReal r -> r
-    | _ -> failwith "make_num"
-  in
-    match unt with
-    | Pdfgenlex.LexName "pt" -> f
-    | Pdfgenlex.LexName "cm" -> cm f
-    | Pdfgenlex.LexName "mm" -> mm f
-    | Pdfgenlex.LexName "in" -> inch f
-    | _ -> failwith "make_num"
-
-let update_last_number unt op num = function
-  [] -> []
-| h::t ->
-    let final_num = make_num unt num in
-      let h' =
-        match op with
-          Pdfgenlex.LexName "add" -> h +. final_num
-        | Pdfgenlex.LexName "sub" -> h -. final_num
-        | Pdfgenlex.LexName "mul" -> h *. final_num
-        | Pdfgenlex.LexName "div" -> h /. final_num
-        | _ -> failwith "update_last_number"
-      in
-        h'::t
-
 let find_page_characteristic pdf page = function
   | Pdfgenlex.LexName "PW" -> find_page_width pdf page
   | Pdfgenlex.LexName "PH" -> find_page_height pdf page
@@ -819,6 +791,39 @@ let find_page_characteristic pdf page = function
   | Pdfgenlex.LexName "CMAXX" -> find_page_crop_maxx pdf page
   | Pdfgenlex.LexName "CMAXY" -> find_page_crop_maxy pdf page
   | _ -> failwith "find_page_characteristic"
+
+let make_num pdf page unt num =
+  let f =
+    match num with
+    | Pdfgenlex.LexInt i -> float_of_int i
+    | Pdfgenlex.LexReal r -> r
+    | Pdfgenlex.LexName
+      ( "PW" | "PH" | "CW" | "CH" | "PMINX" | "PMINY" | "PMAXX" | "PMAXY"
+      | "CMINX" | "CMINY" | "CMAXX" | "CMAXY") as page_characteristic ->
+        find_page_characteristic pdf page page_characteristic
+    | _ -> failwith "make_num"
+  in
+    match unt with
+    | Pdfgenlex.LexName "pt" -> f
+    | Pdfgenlex.LexName "cm" -> cm f
+    | Pdfgenlex.LexName "mm" -> mm f
+    | Pdfgenlex.LexName "in" -> inch f
+    | _ -> failwith "make_num"
+
+let update_last_number pdf page unt op num = function
+  [] -> []
+| h::t ->
+    let final_num = make_num pdf page unt num in
+      let h' =
+        match op with
+          Pdfgenlex.LexName "add" -> h +. final_num
+        | Pdfgenlex.LexName "sub" -> h -. final_num
+        | Pdfgenlex.LexName "mul" -> h *. final_num
+        | Pdfgenlex.LexName "div" -> h /. final_num
+        | _ -> failwith "update_last_number"
+      in
+        h'::t
+
 
 let rec parse_units_again pdf numbers papersize more =
   let w, h = points_of_papersize papersize in
@@ -903,9 +908,16 @@ and parse_units pdf numbers = function
            ((find_page_characteristic pdf (firstpage pdf) page_characteristic)::numbers)
            more
   | Pdfgenlex.LexName ("add" | "sub" | "mul" | "div") as op::
-    ((Pdfgenlex.LexInt _ | Pdfgenlex.LexReal _) as num)::
+    ((Pdfgenlex.LexInt _ | Pdfgenlex.LexReal _ |  Pdfgenlex.LexName
+      ( "PW" | "PH" | "CW" | "CH" | "PMINX" | "PMINY" | "PMAXX" | "PMAXY"
+       | "CMINX" | "CMINY" | "CMAXX" | "CMAXY")) as num)::
     (Pdfgenlex.LexName ("pt" | "mm" | "cm" | "in") as unt)::more ->
-      parse_units pdf (update_last_number unt op num numbers) more
+      parse_units pdf (update_last_number pdf (firstpage pdf) unt op num numbers) more
+  | Pdfgenlex.LexName ("add" | "sub" | "mul" | "div") as op::
+    ((Pdfgenlex.LexInt _ | Pdfgenlex.LexReal _ |  Pdfgenlex.LexName
+      ( "PW" | "PH" | "CW" | "CH" | "PMINX" | "PMINY" | "PMAXX" | "PMAXY"
+       | "CMINX" | "CMINY" | "CMAXX" | "CMAXY")) as num)::more ->
+      parse_units pdf (update_last_number pdf (firstpage pdf) (Pdfgenlex.LexName "pt") op num numbers) more
   | _ -> rev numbers
 
 let rec space_units_inner = function
@@ -920,10 +932,11 @@ let space_units s =
   implode (space_units_inner (explode s))
 
 let parse_units_string pdf s =
-  Printf.printf "Parsing string [%s]\n" s;
+  (*Printf.printf "Parsing string [%s]\n" s;*)
   let fs = parse_units pdf [] (Pdfgenlex.lex_string <| space_units s) in
-    Printf.printf "Got numbers: %s\n"
-    (List.fold_left (fun x y -> x ^ " " ^ y) "" (List.map string_of_float fs));
+    (*Printf.printf "Got numbers: %s\n"
+    (List.fold_left (fun x y -> x ^ " " ^ y) "" (List.map string_of_float
+    fs));*)
     fs
 
 let parse_rectangle pdf s =
