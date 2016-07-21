@@ -346,11 +346,11 @@ val output_page_info : Pdf.t -> int list -> unit
 (** True if a given page in a PDF has a given box *)
 val hasbox : Pdf.t -> int -> string -> bool
 
-(** [crop_pdf x y w h pdf range] sets the cropbox on the given pages. *)
-val crop_pdf : float -> float -> float -> float -> Pdf.t -> int list -> Pdf.t
+(** [crop_pdf xywhlist pdf range] sets the cropbox on the given pages. *)
+val crop_pdf : (float * float * float * float) list -> Pdf.t -> int list -> Pdf.t
 
-(** [set_mediabox x y w h pdf range] sets the cropbox on the given pages. *)
-val set_mediabox : float -> float -> float -> float -> Pdf.t -> int list -> Pdf.t
+(** [set_mediabox xywhlist pdf range] sets the media box on the given pages. *)
+val set_mediabox : (float * float * float * float) list -> Pdf.t -> int list -> Pdf.t
 
 (** [setBox boxname x y w h pdf range] sets the given box on the given pages. *)
 val setBox : string -> float -> float -> float -> float -> Pdf.t -> int list -> Pdf.t
@@ -385,16 +385,18 @@ val vflip_pdf : ?fast:bool -> Pdf.t -> int list -> Pdf.t
 (** Flip the given pages horizontally *)
 val hflip_pdf : ?fast:bool -> Pdf.t -> int list -> Pdf.t
 
-(** Shift a PDF in x and y (in pts) in the given pages. *)
-val shift_pdf : ?fast:bool -> float -> float -> Pdf.t -> int list -> Pdf.t
+(** Shift a PDF in x and y (in pts) in the given pages. List of (x, y) pairs is
+for all pages in pdf. *)
+val shift_pdf : ?fast:bool -> (float * float) list -> Pdf.t -> int list -> Pdf.t
 
-(** Scale a PDF in sx, sy in the given pages. *)
-val scale_pdf : ?fast:bool -> float -> float -> Pdf.t -> int list -> Pdf.t
+(** Scale a PDF in sx, sy in the given pages. List of (sx, sy) pairs is
+for all pages in pdf. *)
+val scale_pdf : ?fast:bool -> (float * float) list -> Pdf.t -> int list -> Pdf.t
 
 (** [scale_to_fit_pdf input_scale x y op pdf range] scales a page to fit the
 page size given by (x, y) and by the [input_scale] (e.g 1.0 = scale to fit, 0.9
 = scale to fit leaving a border etc.). [op] is unused. *) 
-val scale_to_fit_pdf : ?fast:bool -> float -> float -> float -> 'a -> Pdf.t -> int list -> Pdf.t
+val scale_to_fit_pdf : ?fast:bool -> float -> (float * float) list -> 'a -> Pdf.t -> int list -> Pdf.t
 
 (** Scale the contents of a page by a given factor centred around a given point in a given range. *)
 val scale_contents : ?fast:bool -> position -> float -> Pdf.t -> int list -> Pdf.t

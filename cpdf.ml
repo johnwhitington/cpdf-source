@@ -2082,17 +2082,18 @@ let change_pattern_matrices pdf tr resources =
   with
     Pdftransform.NonInvertable -> resources
 
-let shift_page ?(fast=false) dx dy pdf _ page =
-  let transform_op =
-    Pdfops.Op_cm (Pdftransform.matrix_of_op (Pdftransform.Translate (dx, dy)))
-  in
-    let resources' =
-      change_pattern_matrices pdf (Pdftransform.mktranslate ~-.dx ~-.dy) page.Pdfpage.resources
+let shift_page ?(fast=false) dxdylist pdf pnum page =
+  let dx, dy = List.nth dxdylist (pnum - 1) in
+    let transform_op =
+      Pdfops.Op_cm (Pdftransform.matrix_of_op (Pdftransform.Translate (dx, dy)))
     in
-      Pdfpage.prepend_operators pdf [transform_op] ~fast {page with Pdfpage.resources = resources'}
+      let resources' =
+        change_pattern_matrices pdf (Pdftransform.mktranslate ~-.dx ~-.dy) page.Pdfpage.resources
+      in
+        Pdfpage.prepend_operators pdf [transform_op] ~fast {page with Pdfpage.resources = resources'}
 
-let shift_pdf ?(fast=false) dx dy pdf range =
-  process_pages (shift_page ~fast dx dy pdf) pdf range
+let shift_pdf ?(fast=false) dxdylist pdf range =
+  process_pages (shift_page ~fast dxdylist pdf) pdf range
 
 (* Change a page's media box so its minimum x and y are 0, making other
 operations simpler to think about. Any shift that is done is reflected in
@@ -2106,7 +2107,7 @@ let rectify_boxes ?(fast=false) pdf page =
     in
       let page = change_boxes f pdf page in
         if minx <> 0. || miny <> 0.
-          then shift_page ~fast (-.minx) (-.miny) pdf 0 page
+          then shift_page ~fast [(-.minx),(-.miny)] pdf 1 page
           else page
 
 (* \section{Flip pages} *)
@@ -2398,8 +2399,9 @@ let nobble_page pdf _ page =
           do_stamp false false (BottomLeft 0.) false false false true pdf page' page (Pdf.empty ())
 
 (* \section{Set media box} *)
-let set_mediabox x y w h pdf range =
-  let crop_page _ page =
+let set_mediabox xywhlist pdf range =
+  let crop_page pnum page =
+    let x, y, w, h = List.nth xywhlist (pnum - 1) in
     {page with
        Pdfpage.mediabox =
         (Pdf.Array
@@ -2419,16 +2421,17 @@ let setBox box minx maxx miny maxy pdf range =
     process_pages set_box_page pdf range
 
 (* \section{Cropping} *)
-let crop_pdf x y w h pdf range =
-  let crop_page _ page =
+let crop_pdf xywhlist pdf range =
+  let crop_page pagenum page =
     {page with
        Pdfpage.rest =
          (Pdf.add_dict_entry
             page.Pdfpage.rest
             "/CropBox"
-            (Pdf.Array
-               [Pdf.Real x; Pdf.Real y;
-                Pdf.Real (x +.  w); Pdf.Real (y +. h)]))}
+            (let x, y, w, h = List.nth xywhlist (pagenum - 1) in
+              (Pdf.Array
+                 [Pdf.Real x; Pdf.Real y;
+                  Pdf.Real (x +.  w); Pdf.Real (y +. h)])))}
   in
     process_pages crop_page pdf range
 
@@ -2552,26 +2555,28 @@ let upright ?(fast=false) range pdf =
       process_pages (upright_page pdf) pdf range
 
 (* \section{Scale page data} *)
-let scale_pdf ?(fast=false) sx sy pdf range =
-  let scale_page _ page =
-    let f (xmin, ymin, xmax, ymax) =
-      xmin *. sx, ymin *. sy, xmax *. sx, ymax *. sy
-    in
-      let page = change_boxes f pdf page
-      and matrix = Pdftransform.matrix_of_op (Pdftransform.Scale ((0., 0.), sx, sy)) in
-        let transform_op =
-          Pdfops.Op_cm matrix
-        and resources' =
-          change_pattern_matrices pdf (Pdftransform.matrix_invert matrix) page.Pdfpage.resources
-        in
-         Pdfpage.prepend_operators pdf ~fast [transform_op] {page with Pdfpage.resources = resources'} 
-    in
-      process_pages scale_page pdf range
+let scale_pdf ?(fast=false) sxsylist pdf range =
+  let scale_page pnum page =
+    let sx, sy = List.nth sxsylist (pnum - 1) in
+      let f (xmin, ymin, xmax, ymax) =
+        xmin *. sx, ymin *. sy, xmax *. sx, ymax *. sy
+      in
+        let page = change_boxes f pdf page
+        and matrix = Pdftransform.matrix_of_op (Pdftransform.Scale ((0., 0.), sx, sy)) in
+          let transform_op =
+            Pdfops.Op_cm matrix
+          and resources' =
+            change_pattern_matrices pdf (Pdftransform.matrix_invert matrix) page.Pdfpage.resources
+          in
+           Pdfpage.prepend_operators pdf ~fast [transform_op] {page with Pdfpage.resources = resources'} 
+      in
+        process_pages scale_page pdf range
 
 (* Scale to fit page of size x * y *)
 (* FIXME: Can we do this in terms of scale_contents - and then just fix up the boxes? For 1.8 *)
-let scale_to_fit_pdf ?(fast=false) input_scale x y op pdf range =
-  let scale_page_to_fit _ page =
+let scale_to_fit_pdf ?(fast=false) input_scale xylist op pdf range =
+  let scale_page_to_fit pnum page =
+    let x, y = List.nth xylist (pnum - 1) in
     let matrix =
       let (minx, miny, maxx, maxy) =
         (* Use cropbox if available *)

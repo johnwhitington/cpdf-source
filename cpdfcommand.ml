@@ -11,6 +11,9 @@ open Pdfio
 
 let initial_file_size = ref 0
 
+let empty = Pdf.empty ()
+let emptypage = Pdfpage.blankpage Pdfpaper.a4
+
 (* Wrap up the file reading functions to exit with code 1 when an encryption
 problem occurs. This happens when object streams are in an encrypted document
 and so it can't be read without the right password... The existing error
@@ -738,8 +741,8 @@ let points_of_papersize p =
     let c  = Pdfunits.convert 0. unit Pdfunits.PdfPoint in
       c w, c h
 
-let firstpage pdf =
-  List.hd (Pdfpage.pages_of_pagetree pdf)
+(*let firstpage pdf =
+  List.hd (Pdfpage.pages_of_pagetree pdf)*)
 
 let cropbox pdf page =
   match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
@@ -824,100 +827,100 @@ let update_last_number pdf page unt op num = function
       in
         h'::t
 
-
-let rec parse_units_again pdf numbers papersize more =
+let rec parse_units_again pdf page numbers papersize more =
   let w, h = points_of_papersize papersize in
-    parse_units pdf (h::w::numbers) more
+    parse_units pdf page (h::w::numbers) more
 
-and parse_units pdf numbers = function
+and parse_units pdf page numbers = function
   | Pdfgenlex.LexName "a10portrait"::more ->
-      parse_units_again pdf numbers Pdfpaper.a10 more
+      parse_units_again pdf page numbers Pdfpaper.a10 more
   | Pdfgenlex.LexName "a9portrait"::more ->
-      parse_units_again pdf numbers Pdfpaper.a9 more
+      parse_units_again pdf page numbers Pdfpaper.a9 more
   | Pdfgenlex.LexName "a8portrait"::more ->
-      parse_units_again pdf numbers Pdfpaper.a8 more
+      parse_units_again pdf page numbers Pdfpaper.a8 more
   | Pdfgenlex.LexName "a7portrait"::more ->
-      parse_units_again pdf numbers Pdfpaper.a7 more
+      parse_units_again pdf page numbers Pdfpaper.a7 more
   | Pdfgenlex.LexName "a6portrait"::more ->
-      parse_units_again pdf numbers Pdfpaper.a6 more
+      parse_units_again pdf page numbers Pdfpaper.a6 more
   | Pdfgenlex.LexName "a5portrait"::more ->
-      parse_units_again pdf numbers Pdfpaper.a5 more
+      parse_units_again pdf page numbers Pdfpaper.a5 more
   | Pdfgenlex.LexName "a4portrait"::more ->
-      parse_units_again pdf numbers Pdfpaper.a4 more
+      parse_units_again pdf page numbers Pdfpaper.a4 more
   | Pdfgenlex.LexName "a3portrait"::more ->
-      parse_units_again pdf numbers Pdfpaper.a3 more
+      parse_units_again pdf page numbers Pdfpaper.a3 more
   | Pdfgenlex.LexName "a2portrait"::more ->
-      parse_units_again pdf numbers Pdfpaper.a2 more
+      parse_units_again pdf page numbers Pdfpaper.a2 more
   | Pdfgenlex.LexName "a1portrait"::more ->
-      parse_units_again pdf numbers Pdfpaper.a1 more
+      parse_units_again pdf page numbers Pdfpaper.a1 more
   | Pdfgenlex.LexName "a0portrait"::more ->
-      parse_units_again pdf numbers Pdfpaper.a0 more
+      parse_units_again pdf page numbers Pdfpaper.a0 more
   | Pdfgenlex.LexName "a10landscape"::more ->
-      parse_units_again pdf numbers (Pdfpaper.landscape Pdfpaper.a10) more
+      parse_units_again pdf page numbers (Pdfpaper.landscape Pdfpaper.a10) more
   | Pdfgenlex.LexName "a9landscape"::more -> 
-      parse_units_again pdf numbers (Pdfpaper.landscape Pdfpaper.a9) more
+      parse_units_again pdf page numbers (Pdfpaper.landscape Pdfpaper.a9) more
   | Pdfgenlex.LexName "a8landscape"::more ->
-      parse_units_again pdf numbers (Pdfpaper.landscape Pdfpaper.a8) more
+      parse_units_again pdf page numbers (Pdfpaper.landscape Pdfpaper.a8) more
   | Pdfgenlex.LexName "a7landscape"::more ->
-      parse_units_again pdf numbers (Pdfpaper.landscape Pdfpaper.a7) more
+      parse_units_again pdf page numbers (Pdfpaper.landscape Pdfpaper.a7) more
   | Pdfgenlex.LexName "a6landscape"::more ->
-      parse_units_again pdf numbers (Pdfpaper.landscape Pdfpaper.a6) more
+      parse_units_again pdf page numbers (Pdfpaper.landscape Pdfpaper.a6) more
   | Pdfgenlex.LexName "a5landscape"::more ->
-      parse_units_again pdf numbers (Pdfpaper.landscape Pdfpaper.a5) more
+      parse_units_again pdf page numbers (Pdfpaper.landscape Pdfpaper.a5) more
   | Pdfgenlex.LexName "a4landscape"::more ->
-      parse_units_again pdf numbers (Pdfpaper.landscape Pdfpaper.a4) more
+      parse_units_again pdf page numbers (Pdfpaper.landscape Pdfpaper.a4) more
   | Pdfgenlex.LexName "a3landscape"::more ->
-      parse_units_again pdf numbers (Pdfpaper.landscape Pdfpaper.a3) more
+      parse_units_again pdf page numbers (Pdfpaper.landscape Pdfpaper.a3) more
   | Pdfgenlex.LexName "a2landscape"::more ->
-      parse_units_again pdf numbers (Pdfpaper.landscape Pdfpaper.a2) more
+      parse_units_again pdf page numbers (Pdfpaper.landscape Pdfpaper.a2) more
   | Pdfgenlex.LexName "a1landscape"::more ->
-      parse_units_again pdf numbers (Pdfpaper.landscape Pdfpaper.a1) more
+      parse_units_again pdf page numbers (Pdfpaper.landscape Pdfpaper.a1) more
   | Pdfgenlex.LexName "a0landscape"::more ->
-      parse_units_again pdf numbers (Pdfpaper.landscape Pdfpaper.a0) more
+      parse_units_again pdf page numbers (Pdfpaper.landscape Pdfpaper.a0) more
   | Pdfgenlex.LexName "uslegalportrait"::more ->
-      parse_units_again pdf numbers Pdfpaper.uslegal more
+      parse_units_again pdf page numbers Pdfpaper.uslegal more
   | Pdfgenlex.LexName "usletterportrait"::more ->
-      parse_units_again pdf numbers Pdfpaper.usletter more
+      parse_units_again pdf page numbers Pdfpaper.usletter more
   | Pdfgenlex.LexName "uslegallandscape"::more ->
-      parse_units_again pdf numbers (Pdfpaper.landscape Pdfpaper.uslegal) more
+      parse_units_again pdf page numbers (Pdfpaper.landscape Pdfpaper.uslegal) more
   | Pdfgenlex.LexName "usletterlandscape"::more ->
-      parse_units_again pdf numbers (Pdfpaper.landscape Pdfpaper.usletter) more
+      parse_units_again pdf page numbers (Pdfpaper.landscape Pdfpaper.usletter) more
   | Pdfgenlex.LexInt x::Pdfgenlex.LexName "mm"::more ->
-      parse_units pdf ((mm <| float_of_int x)::numbers) more
+      parse_units pdf page ((mm <| float_of_int x)::numbers) more
   | Pdfgenlex.LexReal x::Pdfgenlex.LexName "mm"::more ->
-      parse_units pdf (mm x::numbers) more
+      parse_units pdf page (mm x::numbers) more
   | Pdfgenlex.LexInt x::Pdfgenlex.LexName "cm"::more ->
-      parse_units pdf ((cm <| float_of_int x)::numbers) more
+      parse_units pdf page ((cm <| float_of_int x)::numbers) more
   | Pdfgenlex.LexReal x::Pdfgenlex.LexName "cm"::more ->
-      parse_units pdf (cm x::numbers) more
+      parse_units pdf page (cm x::numbers) more
   | Pdfgenlex.LexInt x::Pdfgenlex.LexName "in"::more ->
-      parse_units pdf ((inch <| float_of_int x)::numbers) more
+      parse_units pdf page ((inch <| float_of_int x)::numbers) more
   | Pdfgenlex.LexReal x::Pdfgenlex.LexName "in"::more ->
-      parse_units pdf (inch x::numbers) more
+      parse_units pdf page (inch x::numbers) more
   | Pdfgenlex.LexInt x::more ->
-      parse_units pdf (float_of_int x::numbers) more
+      parse_units pdf page (float_of_int x::numbers) more
   | Pdfgenlex.LexReal x::more ->
-      parse_units pdf (x::numbers) more
+      parse_units pdf page (x::numbers) more
   | Pdfgenlex.LexName "pt"::more ->
-      parse_units pdf numbers more
+      parse_units pdf page numbers more
   | Pdfgenlex.LexName
       ( "PW" | "PH" | "CW" | "CH" | "PMINX" | "PMINY" | "PMAXX" | "PMAXY"
        | "CMINX" | "CMINY" | "CMAXX" | "CMAXY") as page_characteristic::more ->
          parse_units
            pdf
-           ((find_page_characteristic pdf (firstpage pdf) page_characteristic)::numbers)
+           page
+           ((find_page_characteristic pdf page page_characteristic)::numbers)
            more
   | Pdfgenlex.LexName ("add" | "sub" | "mul" | "div") as op::
     ((Pdfgenlex.LexInt _ | Pdfgenlex.LexReal _ |  Pdfgenlex.LexName
       ( "PW" | "PH" | "CW" | "CH" | "PMINX" | "PMINY" | "PMAXX" | "PMAXY"
        | "CMINX" | "CMINY" | "CMAXX" | "CMAXY")) as num)::
     (Pdfgenlex.LexName ("pt" | "mm" | "cm" | "in") as unt)::more ->
-      parse_units pdf (update_last_number pdf (firstpage pdf) unt op num numbers) more
+      parse_units pdf page (update_last_number pdf page unt op num numbers) more
   | Pdfgenlex.LexName ("add" | "sub" | "mul" | "div") as op::
     ((Pdfgenlex.LexInt _ | Pdfgenlex.LexReal _ |  Pdfgenlex.LexName
       ( "PW" | "PH" | "CW" | "CH" | "PMINX" | "PMINY" | "PMAXX" | "PMAXY"
        | "CMINX" | "CMINY" | "CMAXX" | "CMAXY")) as num)::more ->
-      parse_units pdf (update_last_number pdf (firstpage pdf) (Pdfgenlex.LexName "pt") op num numbers) more
+      parse_units pdf page (update_last_number pdf page (Pdfgenlex.LexName "pt") op num numbers) more
   | _ -> rev numbers
 
 let rec space_units_inner = function
@@ -931,33 +934,56 @@ let rec space_units_inner = function
 let space_units s =
   implode (space_units_inner (explode s))
 
-let parse_units_string pdf s =
-  (*Printf.printf "Parsing string [%s]\n" s;*)
-  let fs = parse_units pdf [] (Pdfgenlex.lex_string <| space_units s) in
-    (*Printf.printf "Got numbers: %s\n"
-    (List.fold_left (fun x y -> x ^ " " ^ y) "" (List.map string_of_float
-    fs));*)
+let parse_units_string pdf page s =
+  Printf.printf "Parsing string [%s]\n" s;
+  let fs = parse_units pdf page [] (Pdfgenlex.lex_string <| space_units s) in
+    Printf.printf "Got numbers: %s\n"
+    (List.fold_left (fun x y -> x ^ " " ^ y) "" (List.map string_of_float fs));
     fs
 
 let parse_rectangle pdf s =
   try
-    match parse_units_string pdf s with
+    match parse_units_string pdf emptypage s with
     | [x; y; w; h] -> x, y, w, h
     | _ -> error "Bad rectangle specification"
   with
     _ -> error "Bad rectangle specification"
 
+let parse_rectangles pdf s =
+  try
+    let pages = Pdfpage.pages_of_pagetree pdf in
+    let groups = List.map (fun page -> parse_units_string pdf page s) pages in
+      List.map
+        (function
+         | [x; y; w; h] -> (x, y, w, h)
+         | _ -> error "Bad rectangle specification")
+        groups
+  with
+    _ -> error "Bad rectangle specification"
+
 let parse_coordinate pdf s =
   try
-    match parse_units_string pdf s with
+    match parse_units_string pdf emptypage s with
     | [dx; dy] -> dx, dy
     | _ -> error "Bad coordinate specification"
   with
     _ -> error "Bad coordinate specification"
 
+let parse_coordinates pdf s =
+  try
+    let pages = Pdfpage.pages_of_pagetree pdf in
+      let groups = List.map (fun page -> parse_units_string pdf page s) pages in
+        List.map
+          (function
+            | [dx; dy] -> (dx, dy)
+           | _ -> error "Bad coordinate specification")
+          groups
+  with
+    _ -> error "Bad coordinate specification"
+
 let parse_single_number pdf s =
   try
-    match parse_units_string pdf s with
+    match parse_units_string pdf emptypage s with
     | [x] -> x
     | _ -> error "Bad number Argument"
   with
@@ -1026,7 +1052,7 @@ let displaydoctitle b =
   try setop (DisplayDocTitle (bool_of_string b)) () with
     _ -> failwith "DisplayDocTitle: must use true or false"
 
-let empty = Pdf.empty ()
+
 
 let setsplitbookmarks i = setop (SplitOnBookmarks i) ()
 let setstdout () = args.out <- Stdout
@@ -3252,20 +3278,19 @@ let go () =
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some Crop) false in
-            let x, y, w, h = parse_rectangle pdf args.rectangle in
+            let xywhlist = parse_rectangles pdf args.rectangle in
               let range = parse_pagespec pdf pagespec in
-                let pdf = Cpdf.crop_pdf x y w h pdf range in
+                let pdf = Cpdf.crop_pdf xywhlist pdf range in
                   write_pdf false pdf
       | _ -> error "crop: bad command line"
       end
-
   | Some MediaBox ->
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some MediaBox) false in
-            let x, y, w, h = parse_rectangle pdf args.rectangle in
+            let xywhlist = parse_rectangles pdf args.rectangle in
               let range = parse_pagespec pdf pagespec in
-                let pdf = Cpdf.set_mediabox x y w h pdf range in
+                let pdf = Cpdf.set_mediabox xywhlist pdf range in
                   write_pdf false pdf
       | _ -> error "set media box: bad command line"
       end
@@ -3554,21 +3579,19 @@ let go () =
   | Some Shift ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
-          begin match parse_coordinate pdf args.coord with (dx, dy) ->
-            write_pdf false (Cpdf.shift_pdf ~fast:args.fast dx dy pdf range)
-          end
+          let dxdylist = parse_coordinates pdf args.coord in
+            write_pdf false (Cpdf.shift_pdf ~fast:args.fast dxdylist pdf range)
   | Some Scale ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
-          begin match parse_coordinate pdf args.coord with (sx, sy) ->
-            write_pdf false (Cpdf.scale_pdf ~fast:args.fast sx sy pdf range)
-          end
+          let sxsylist = parse_coordinates pdf args.coord in
+            write_pdf false (Cpdf.scale_pdf ~fast:args.fast sxsylist pdf range)
   | Some ScaleToFit ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
-          let x, y = parse_coordinate pdf args.coord
+          let xylist = parse_coordinates pdf args.coord
           and scale = args.scale in
-            write_pdf false (Cpdf.scale_to_fit_pdf ~fast:args.fast scale x y args.op pdf range)
+            write_pdf false (Cpdf.scale_to_fit_pdf ~fast:args.fast scale xylist args.op pdf range)
   | Some (ScaleContents scale) ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
