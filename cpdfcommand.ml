@@ -749,23 +749,12 @@ let cropbox pdf page =
   | Some pdfobject -> Pdf.direct pdf pdfobject
   | None -> page.Pdfpage.mediabox
 
-let width box =
-  let minx, miny, maxx, maxy = Pdf.parse_rectangle box in maxx -. minx
-
-let height box =
-  let minx, miny, maxx, maxy = Pdf.parse_rectangle box in maxy -. miny
-
-let minx box =
-  let minx, miny, maxx, maxy = Pdf.parse_rectangle box in minx
-
-let miny box =
-  let minx, miny, maxx, maxy = Pdf.parse_rectangle box in miny
-
-let maxx box =
-  let minx, miny, maxx, maxy = Pdf.parse_rectangle box in maxx
-
-let maxy box =
-  let minx, miny, maxx, maxy = Pdf.parse_rectangle box in maxy
+let width box = let minx, miny, maxx, maxy = Pdf.parse_rectangle box in maxx -. minx
+let height box = let minx, miny, maxx, maxy = Pdf.parse_rectangle box in maxy -. miny
+let minx box = let minx, miny, maxx, maxy = Pdf.parse_rectangle box in minx
+let miny box = let minx, miny, maxx, maxy = Pdf.parse_rectangle box in miny
+let maxx box = let minx, miny, maxx, maxy = Pdf.parse_rectangle box in maxx
+let maxy box = let minx, miny, maxx, maxy = Pdf.parse_rectangle box in maxy
 
 let find_page_width pdf page = width page.Pdfpage.mediabox
 let find_page_height pdf page = height page.Pdfpage.mediabox

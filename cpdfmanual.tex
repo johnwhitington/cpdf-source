@@ -276,12 +276,36 @@ supported:
 \begin{table}[h]
 \centering
 \begin{tabular}{rl}
-  pt & Points (72 points per inch). The default. \\
-  cm & Centimeters \\
-  mm & Millimeters \\
-  in & Inches \\
+  \texttt{pt} & Points (72 points per inch). The default. \\
+  \texttt{cm} & Centimeters \\
+  \texttt{mm} & Millimeters \\
+  \texttt{in} & Inches \\
 \end{tabular}
 \end{table}
+
+\noindent For example, one may write \texttt{14mm} or \texttt{21.6in}. In addition, the following letters stand, in some operations (\texttt{-scale-page}, \texttt{-scale-to-fit}, \texttt{-scale-contents}, \texttt{-shift}, \texttt{-mediabox}, \texttt{-crop}) for various page dimensions:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{rl}
+  \texttt{PW} & Page width\\
+  \texttt{PH} & Page height\\
+  \texttt{PMINX} & Page minimum x coordinate\\
+  \texttt{PMINY} & Page minimum y coordinate\\
+  \texttt{PMAXX} & Page maximum x coordinate\\
+  \texttt{PMAXY} & Page maximum y coordinate\\
+  \texttt{CW} & Crop box width\\
+  \texttt{CH} & Crop box height\\
+  \texttt{CMINX} & Crop box minimum x coordinate\\
+  \texttt{CMINY} & Crop box minimum y coordinate\\
+  \texttt{CMAXX} & Crop box maximum x coordinate\\
+  \texttt{CMAXY} & Crop box maximum y coordinate
+\end{tabular}
+\end{table}
+
+\noindent For example, we may write \texttt{PMINX PMINY} to stand for the coordinate of the lower left corner of the page.
+
+Simple arithmetic may be performed using the words \texttt{add}, \texttt{sub}, \texttt{mul} and \texttt{div} to stand for addition, subtraction, multiplication and division. For example, one may write \texttt{14in sub 30pt} or \texttt{PMINX mul 2}
 
 \section{PDF Version Numbers}
 \index{version number}
