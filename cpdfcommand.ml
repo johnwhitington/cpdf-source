@@ -3072,8 +3072,6 @@ let addrectangle (w, h) color position relative_to_cropbox underneath range pdf 
   in
     Cpdf.process_pages addrectangle_page pdf range
 
-
-
 (* Main function *)
 let go () =
   match args.op with

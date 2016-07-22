@@ -2320,33 +2320,17 @@ let combine_pages (fast : bool) under over scaletofit swap equalize =
                    merged o u over)
               over_pages under_pages
           in
-            let changed = Pdfpage.change_pages true merged new_pages in
-              Pdfmarks.add_bookmarks (marks_under @ marks_over) changed
-
-  (*Printf.printf "combine_pages: fast = %b\n" fast;
-  flush stdout;
-  Printf.printf "Under size\n";
-  report_pdf_size under;
-  Printf.printf "Over size\n";
-  report_pdf_size over;*)
-
-    (*Printf.printf "prefix was %s\n" prefix;*)
-
-    (*Printf.printf "added prefix\n";
-    Printf.printf "under now:\n";
-    report_pdf_size under;
-    Printf.printf "over now:\n";
-    report_pdf_size over;*)
-          (*Printf.printf "merged\n";
-          flush stdout;
-          report_pdf_size merged;*)
-                (*Printf.printf "stamped\n";
-                flush stdout;*)
-                  (*Printf.printf "pages changed\n";
-                  flush stdout;*)
-                  (*report_pdf_size r;
-                  Printf.printf "bookmarks added\n";
-                  flush stdout;*)
+            (* we use new_pages @ new_pages here to preserve the number of pages
+             * so that Pdfpage.change_pages can do its renumbering properly.
+             * Otherwise things like outlines are lost. TODO: Fix
+             * Pdfpage.change_pages properly. For now, we just use
+             * Pdfpage.pdf_of_pages afterward to chop it. *)
+            let changed = Pdfpage.change_pages true merged (new_pages @ new_pages) in
+              let cut =
+                Pdfpage.pdf_of_pages ~retain_numbering:true changed (ilist 1 (length new_pages))
+              in 
+              (* Now shorten to just new_pages *)
+              Pdfmarks.add_bookmarks (marks_under @ marks_over) cut
 
 let nobble_page pdf _ page =
   let minx, miny, maxx, maxy =
