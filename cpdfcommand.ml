@@ -1,7 +1,7 @@
 (* Added -relative-to-cropbox for stamps *)
 (* cpdf command line tools *)
 let demo = false
-let noncomp = false
+let noncomp = true
 let major_version = 2
 let minor_version = 2
 let version_date = "(build of 3rd April 2016)"
@@ -2161,6 +2161,9 @@ let set_creator s pdf =
 
 let really_write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf outname =
   if args.producer <> None then set_producer (unopt args.producer) pdf;
+  if noncomp then
+    set_producer "cpdf non-commercial use only. To buy: http://coherentpdf.com/"
+    pdf;
   if args.creator <> None then set_creator (unopt args.creator) pdf;
   if args.debugcrypt then Printf.printf "really_write_pdf\n%!";
   let will_linearize =
