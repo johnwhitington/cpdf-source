@@ -1,10 +1,10 @@
 (* Added -relative-to-cropbox for stamps *)
 (* cpdf command line tools *)
 let demo = false
-let noncomp = true
+let noncomp = false
 let major_version = 2
 let minor_version = 2
-let version_date = "(build of 3rd April 2016)"
+let version_date = "(build of 24th July 2016)"
 
 open Pdfutil
 open Pdfio

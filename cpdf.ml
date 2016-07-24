@@ -2268,11 +2268,19 @@ let stamp relative_to_cropbox position topline midline fast scale_to_fit isover 
                     pageseqs
                     under_pages 
                 in
-                  let changed = Pdfpage.change_pages true merged new_pages in
-                  let new_refnumbers = Pdf.page_reference_numbers changed in
+                  let changed = Pdfpage.change_pages true merged (new_pages @ [last new_pages]) in
+                (* we use new_pages @ new_pages here to preserve the number of pages
+                 * so that Pdfpage.change_pages can do its renumbering properly.
+                 * Otherwise things like outlines are lost. TODO: Fix
+                 * Pdfpage.change_pages properly. For now, we just use
+                 * Pdfpage.pdf_of_pages afterward to chop it. *)
+                  let cut =
+                    Pdfpage.pdf_of_pages ~retain_numbering:true changed (ilist 1 (length new_pages))
+                  in 
+                  let new_refnumbers = Pdf.page_reference_numbers cut in
                   let changetable = hashtable_of_dictionary (List.combine marks_refnumbers new_refnumbers) in
                   let new_marks = map (change_bookmark changetable) marks in
-                  Pdfmarks.add_bookmarks new_marks changed
+                  Pdfmarks.add_bookmarks new_marks cut
 
 (* Combine pages from two PDFs. For now, assume equal length. *)
 
@@ -2325,6 +2333,7 @@ let combine_pages (fast : bool) under over scaletofit swap equalize =
              * Otherwise things like outlines are lost. TODO: Fix
              * Pdfpage.change_pages properly. For now, we just use
              * Pdfpage.pdf_of_pages afterward to chop it. *)
+            (* See also combine_pages below *)
             let changed = Pdfpage.change_pages true merged (new_pages @ new_pages) in
               let cut =
                 Pdfpage.pdf_of_pages ~retain_numbering:true changed (ilist 1 (length new_pages))
