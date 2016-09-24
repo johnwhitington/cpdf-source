@@ -4,7 +4,7 @@ let demo = false
 let noncomp = false
 let major_version = 2
 let minor_version = 2
-let version_date = "(build of 24th July 2016)"
+let version_date = "(build of 30th July 2016)"
 
 open Pdfutil
 open Pdfio
@@ -924,10 +924,9 @@ let space_units s =
   implode (space_units_inner (explode s))
 
 let parse_units_string pdf page s =
-  Printf.printf "Parsing string [%s]\n" s;
   let fs = parse_units pdf page [] (Pdfgenlex.lex_string <| space_units s) in
-    Printf.printf "Got numbers: %s\n"
-    (List.fold_left (fun x y -> x ^ " " ^ y) "" (List.map string_of_float fs));
+    (*(List.fold_left (fun x y -> x ^ " " ^ y) "" (List.map string_of_float
+     * fs));*)
     fs
 
 let parse_rectangle pdf s =
@@ -2921,7 +2920,7 @@ let dump_attachment out pdf (_, embeddedfile) =
         | _ -> error "Bad embedded file stream"
         end
       in
-        let filename = if out = "" then s else out ^ "/" ^ s in
+        let filename = if out = "" then s else out ^ "/" ^ s in (* FIXME dirsep! *)
         (*i Printf.printf "writing to %s\n" filename; i*)
           let fh = open_out_bin filename in
             for x = 0 to bytes_size efdata - 1 do output_byte fh (bget efdata x) done;
