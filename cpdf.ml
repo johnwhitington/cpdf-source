@@ -1661,6 +1661,10 @@ let make_font embed fontname =
              ("/Encoding", Pdf.Name "/WinAnsiEncoding");
              ("/BaseFont", Pdf.Name ("/" ^ fontname))]
 
+(* Convert text in winasciiencoding to standard encoding, so that
+Pdfstandard14.textwidth works *)
+let win_of_standard text = text
+
 let addtext
   metrics lines linewidth outline fast colour fontname embed bates batespad fontsize font
   underneath position hoffset voffset text pages orientation cropbox opacity
@@ -1712,12 +1716,11 @@ let addtext
               let calc_textwidth text =
                 match font with
                 | Some f ->
-                    (* FIXME This is a bit wrong in the prescence of special
-                    characters due to standard encoding not win encoding being
-                    used in textwidth. When we have new AFM parsing up and
-                    running, can improve. *)
-                    let rawwidth = Pdfstandard14.textwidth false f text in
-                      (float rawwidth *. fontsize) /. 1000.
+                    let text =
+                      if embed then win_of_standard text else text
+                    in
+                      let rawwidth = Pdfstandard14.textwidth false f text in
+                        (float rawwidth *. fontsize) /. 1000.
                 | None -> 
                     let font =
                       match Pdf.lookup_direct pdf "/Font" page.Pdfpage.resources with
