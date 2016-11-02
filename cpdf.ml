@@ -1601,31 +1601,27 @@ let extract_fontbbox header s =
       [a; b; c; d] -> [num a; num b; num c; num d] 
     | _ -> raise (Failure "extract_fontbbox")
 
-(* Get the widths for each character from the hash table, in order, noting the
-first and last *)
-let extract_widths_firstlast width_data =
-  let sorted = List.sort compare (list_of_hashtbl width_data) in
-    match sorted, rev sorted with
-      (first, _)::_, (last, _)::_ ->
-        for x = first to last do
-          if not (Hashtbl.mem width_data x) then
-            begin
-              Printf.printf "Failed to find width for char %i\n" x;
-              Hashtbl.add width_data x 0
-            end
-        done;
-        (first, last,
-         map snd (List.sort compare (list_of_hashtbl width_data))) 
-    | _ -> raise (Failure "extract_widths_firstlast") 
+let remove_slash s =
+  match explode s with
+   '/'::x -> implode x
+  | _ -> raise (Failure "remove_slash")
+
+let extract_widths chars_and_widths =
+  let win_to_name = List.map (fun (x, y) -> (y, x)) Pdfglyphlist.name_to_win in
+    List.map
+      (fun x ->
+          try
+            let name = List.assoc x win_to_name in
+              let width = List.assoc (remove_slash name) chars_and_widths in
+                width
+          with
+            _ -> 0)
+      (ilist 0 255)
 
 let make_font embed fontname =
   let font = unopt (Pdftext.standard_font_of_name ("/" ^ fontname)) in
-  let header, width_data, _, _ = Pdfstandard14.afm_data font in
-    (* Print out the width data *)
-    (*Hashtbl.iter
-      (Printf.printf "%i -> %i\n")
-      width_data;*)
-    let firstchar, lastchar, widths = extract_widths_firstlast width_data in
+  let header, width_data, _, chars_and_widths = Pdfstandard14.afm_data font in
+    let widths = extract_widths (list_of_hashtbl chars_and_widths) in
     let flags = Pdfstandard14.flags_of_standard_font font in
     let fontbbox = extract_fontbbox header "FontBBox" in
     let italicangle = extract_num header "ItalicAngle" in
@@ -1654,8 +1650,8 @@ let make_font embed fontname =
              ("/Subtype", Pdf.Name "/Type1");
              ("/BaseFont", Pdf.Name ("/" ^ fontname));          
              ("/Encoding", Pdf.Name "/WinAnsiEncoding");
-             ("/FirstChar", Pdf.Integer firstchar);
-             ("/LastChar", Pdf.Integer lastchar);
+             ("/FirstChar", Pdf.Integer 0);
+             ("/LastChar", Pdf.Integer 255);
              ("/Widths", Pdf.Array (map (fun x -> Pdf.Integer x) widths));
              ("/FontDescriptor", fontdescriptor)]
         else
