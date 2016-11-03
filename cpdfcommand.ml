@@ -3108,14 +3108,36 @@ let list_spot_colours_csdict pagenum pdf resources = function
   Pdf.Dictionary items ->
     List.iter
       (list_spot_colours_colourspace pagenum pdf resources)
-      (List.map snd items)
+      (List.map snd items) (* FIXME indirect *)
 | _ -> raise (Pdf.PDFError "Bad csdict in list_spot_colours_csdict")
 
+let list_spot_colours_xobject pagenum pdf resources xobject =
+  match Pdf.lookup_direct pdf "/Resources" xobject with
+    Some resources ->
+      begin match Pdf.lookup_direct pdf "/ColorSpace" resources with
+        Some csdict -> list_spot_colours_csdict pagenum pdf resources csdict
+      | None -> ()
+      end
+  | None -> ()
+
+let list_spot_colours_xobjectdict pagenum pdf resources = function
+  Pdf.Dictionary items ->
+    List.iter
+      (list_spot_colours_xobject pagenum pdf resources)
+      (List.map snd items) (* FIXME indirect *)
+| _ -> raise (Pdf.PDFError "Bad xobjectdict in list_spot_colours_xobjectdict")
+
 let list_spot_colours_page pdf pagenumber page =
-  match Pdf.lookup_direct pdf "/ColorSpace" page.Pdfpage.resources with
+  begin match Pdf.lookup_direct pdf "/ColorSpace" page.Pdfpage.resources with
     None -> ()
   | Some csdict ->
       list_spot_colours_csdict pagenumber pdf page.Pdfpage.resources csdict
+  end;
+  begin match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
+    None -> ()
+  | Some xobjectdict ->
+      list_spot_colours_xobjectdict pagenumber pdf page.Pdfpage.resources xobjectdict
+  end
 
 let list_spot_colours (pdf : Pdf.t) (range : int list) =
   Cpdf.iter_pages (list_spot_colours_page pdf) pdf range
