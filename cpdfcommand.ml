@@ -164,6 +164,7 @@ type op =
   | PrintPageLabels
   | Revisions
   | RemoveDictEntry of string
+  | ListSpotColours
 
 let string_of_op = function
   | CopyFont _ -> "CopyFont"
@@ -266,6 +267,7 @@ let string_of_op = function
   | PrintPageLabels -> "PrintPageLabels"
   | Revisions -> "Revisions"
   | RemoveDictEntry _ -> "RemoveDictEntry"
+  | ListSpotColours -> "ListSpotColours"
 
 (* Inputs: filename, pagespec. *)
 type input_kind =
@@ -585,7 +587,8 @@ let banned banlist = function
   | ListAttachedFiles | ListAnnotationsMore | ListAnnotations
   | ListBookmarks | ImageResolution _ | MissingFonts
   | PrintPageLabels | Clean | Compress | Decompress
-  | RemoveUnusedResources | ChangeId | CopyId _ -> false (* Always allowed *)
+  | RemoveUnusedResources | ChangeId | CopyId _ | ListSpotColours | Version
+  | DumpAttachedFiles -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
   | Decrypt | Encrypt | CombinePages _ -> true (* Never allowed *)
@@ -597,7 +600,15 @@ let banned banlist = function
   | FitWindow _ | CenterWindow _ | DisplayDocTitle _
   | RemoveId | OpenAtPageFit _ | OpenAtPage _
   | AddPageLabels | RemovePageLabels -> mem Pdfcrypt.NoAssemble banlist
-  | _ -> mem Pdfcrypt.NoEdit banlist
+  | CSP1|CSP3|TwoUp|TwoUpStack|RemoveBookmarks|AddRectangle|RemoveText|
+    Draft|Shift|Scale|ScaleToFit|RemoveAttachedFiles|
+    RemoveAnnotations|RemoveMetadata|RemoveFonts|Crop|RemoveCrop|
+    CopyCropBoxToMediaBox|CopyBox|MediaBox|SetTrapped|SetUntrapped|Presentation|
+    BlackText|BlackLines|BlackFills|CopyFont _|CSP2 _|StampOn _|StampUnder _|
+    AddText _|ScaleContents _|AttachFile _|CopyAnnotations _|SetMetadata _|
+    ThinLines _|SetAuthor _|SetTitle _|SetSubject _|SetKeywords _|SetCreate _|
+    SetModify _|SetCreator _|SetProducer _|SetVersion _|RemoveDictEntry _ ->
+      mem Pdfcrypt.NoEdit banlist
 
 let operation_allowed pdf banlist op =
   match op with
@@ -2030,6 +2041,9 @@ and specs =
    ("-creator",
     Arg.String setcreator,
     " Change the /Creator entry in the /Info dictionary");
+   ("-list-spot-colours",
+    Arg.Unit (setop ListSpotColours),
+    " List spot colours");
    (*These items are undocumented *)
    ("-stay-on-error", Arg.Unit setstayonerror, "");
    ("-extract-fontfile", Arg.Unit (setop ExtractFontFile), "");
@@ -3074,6 +3088,38 @@ let addrectangle (w, h) color position relative_to_cropbox underneath range pdf 
   in
     Cpdf.process_pages addrectangle_page pdf range
 
+let print_spot_colour n s =
+  Printf.printf "%i %s\n" n s
+
+let rec really_list_spot_colours pagenum = function
+  | Pdfspace.Separation (n, t, _) ->
+      print_spot_colour pagenum n;
+      really_list_spot_colours pagenum t
+  | Pdfspace.Indexed (t, _)
+  | Pdfspace.PatternWithBaseColourspace t
+  | Pdfspace.DeviceN (_, t, _, _) -> really_list_spot_colours pagenum t
+  | _ -> ()
+
+let list_spot_colours_colourspace pagenum pdf resources cs =
+  let space = Pdfspace.read_colourspace pdf resources cs in
+    really_list_spot_colours pagenum space
+
+let list_spot_colours_csdict pagenum pdf resources = function
+  Pdf.Dictionary items ->
+    List.iter
+      (list_spot_colours_colourspace pagenum pdf resources)
+      (List.map snd items)
+| _ -> raise (Pdf.PDFError "Bad csdict in list_spot_colours_csdict")
+
+let list_spot_colours_page pdf pagenumber page =
+  match Pdf.lookup_direct pdf "/ColorSpace" page.Pdfpage.resources with
+    None -> ()
+  | Some csdict ->
+      list_spot_colours_csdict pagenumber pdf page.Pdfpage.resources csdict
+
+let list_spot_colours (pdf : Pdf.t) (range : int list) =
+  Cpdf.iter_pages (list_spot_colours_page pdf) pdf range
+
 (* Main function *)
 let go () =
   match args.op with
@@ -3816,6 +3862,10 @@ let go () =
           pdf;
         (* FIXME: We might like to do the trailer dictionary too *)
         write_pdf false pdf
+  | Some ListSpotColours ->
+      let pdf = get_single_pdf args.op true in
+        let range = parse_pagespec pdf (get_pagespec ()) in
+          list_spot_colours pdf range
 
 let parse_argv () =
   if args.debug then
