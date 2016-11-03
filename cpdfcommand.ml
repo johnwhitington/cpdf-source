@@ -3203,9 +3203,9 @@ let go () =
         | (AlreadyInMemory pdf, _, _, _, _, _) as input::_ -> pdf, "", input
         | _ -> raise (Arg.Bad "cpdf: No input specified.\n")
       in
-        (* FIXME FIXME. Why do we need this decryption? Endpage_io claims not to...
-         REMOVE. Seems to work. *)
-        let pdf = decrypt_if_necessary input (Some CountPages) pdf in
+        (*let pdf = decrypt_if_necessary input (Some CountPages) pdf in*)
+        (* 3/11/2016. We removed decryption here, because it doesn't seem necessary. Put
+         * back in on counterexample *)
           output_page_count pdf
   | Some Revisions ->
       let input =
