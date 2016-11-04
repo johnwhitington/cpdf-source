@@ -6,6 +6,7 @@ o -topline in addition to -midline
 o -producer and -creator may be used to alter producer and creator
 in conjunction with any other operation
 o -topline and -midline now apply to stamps
+o -list-spot-colours
 
 Version 2.1 (November 2014)
 

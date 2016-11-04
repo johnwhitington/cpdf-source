@@ -1661,10 +1661,6 @@ let make_font embed fontname =
              ("/Encoding", Pdf.Name "/WinAnsiEncoding");
              ("/BaseFont", Pdf.Name ("/" ^ fontname))]
 
-(* Convert text in winasciiencoding to standard encoding, so that
-Pdfstandard14.textwidth works *)
-let win_of_standard text = text
-
 let addtext
   metrics lines linewidth outline fast colour fontname embed bates batespad fontsize font
   underneath position hoffset voffset text pages orientation cropbox opacity
@@ -1716,11 +1712,14 @@ let addtext
               let calc_textwidth text =
                 match font with
                 | Some f ->
-                    let text =
-                      if embed then win_of_standard text else text
+                    let rawwidth =
+                      Pdfstandard14.textwidth
+                        false
+                        (if embed then Pdftext.WinAnsiEncoding else Pdftext.StandardEncoding)
+                        f
+                        text
                     in
-                      let rawwidth = Pdfstandard14.textwidth false f text in
-                        (float rawwidth *. fontsize) /. 1000.
+                      (float rawwidth *. fontsize) /. 1000.
                 | None -> 
                     let font =
                       match Pdf.lookup_direct pdf "/Font" page.Pdfpage.resources with
@@ -2360,7 +2359,7 @@ let nobble_page pdf _ page =
       let fontname = Pdf.unique_key "F" fontdict in
     let width = maxx -. minx in let height = maxy -. miny in
       let scalex =
-        (width *. 1000.) /. float (Pdfstandard14.textwidth false Pdftext.Helvetica "DEMO")
+        (width *. 1000.) /. float (Pdfstandard14.textwidth false Pdftext.StandardEncoding Pdftext.Helvetica "DEMO")
       in
         let page' =
           let font =
