@@ -1553,7 +1553,7 @@ and specs =
       " Explicitly add a range");
    ("-revision",
       Arg.Int setrevision,
-      " Set the revision to read for the file just named.");
+      "");
    ("-change-id",
       Arg.Unit (setop ChangeId),
       " Change the file's /ID tag");
@@ -1758,7 +1758,7 @@ and specs =
       " Set the font size");
    ("-no-embed-font",
       Arg.Unit setnoembedfont,
-      "Do not embed fonts");
+      " Do not embed fonts");
    ("-color",
       Arg.String setcolor,
       " Set the color");
@@ -1950,7 +1950,7 @@ and specs =
       " Count pages");
    ("-revisions",
       Arg.Unit (setop Revisions),
-      " Count number of revisions");
+      "");
    ("-list-attached-files",
       Arg.Unit (setop ListAttachedFiles),
       " List attached files");
@@ -2044,6 +2044,8 @@ and specs =
    ("-list-spot-colours",
     Arg.Unit (setop ListSpotColours),
     " List spot colours");
+   ("-squeeze", Arg.Unit setsqueeze, " Squeeze");
+   ("-squeeze-log-to", Arg.String setsqueezelogto, " Squeeze log location");
    (*These items are undocumented *)
    ("-stay-on-error", Arg.Unit setstayonerror, "");
    ("-extract-fontfile", Arg.Unit (setop ExtractFontFile), "");
@@ -2058,8 +2060,6 @@ and specs =
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit setdebugcrypt, "");
    ("-fix-prince", Arg.Unit (setop RemoveUnusedResources), "");
-   ("-squeeze", Arg.Unit setsqueeze, "");
-   ("-squeeze-log-to", Arg.String setsqueezelogto, "");
    ("-extract-text", Arg.Unit (setop ExtractText), "")]
 
 and usage_msg =
