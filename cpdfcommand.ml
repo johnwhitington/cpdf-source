@@ -4,7 +4,7 @@ let demo = false
 let noncomp = false
 let major_version = 2
 let minor_version = 2
-let version_date = "(build of 30th July 2016)"
+let version_date = "(build of 3rd November 2016)"
 
 open Pdfutil
 open Pdfio
@@ -3091,56 +3091,17 @@ let addrectangle (w, h) color position relative_to_cropbox underneath range pdf 
 let print_spot_colour n s =
   Printf.printf "%i %s\n" n s
 
-let rec really_list_spot_colours pagenum = function
-  | Pdfspace.Separation (n, t, _) ->
-      print_spot_colour pagenum n;
-      really_list_spot_colours pagenum t
-  | Pdfspace.Indexed (t, _)
-  | Pdfspace.PatternWithBaseColourspace t
-  | Pdfspace.DeviceN (_, t, _, _) -> really_list_spot_colours pagenum t
-  | _ -> ()
-
-let list_spot_colours_colourspace pagenum pdf resources cs =
-  let space = Pdfspace.read_colourspace pdf resources cs in
-    really_list_spot_colours pagenum space
-
-let list_spot_colours_csdict pagenum pdf resources = function
-  Pdf.Dictionary items ->
-    List.iter
-      (list_spot_colours_colourspace pagenum pdf resources)
-      (List.map snd items) (* FIXME indirect *)
-| _ -> raise (Pdf.PDFError "Bad csdict in list_spot_colours_csdict")
-
-let list_spot_colours_xobject pagenum pdf resources xobject =
-  match Pdf.lookup_direct pdf "/Resources" xobject with
-    Some resources ->
-      begin match Pdf.lookup_direct pdf "/ColorSpace" resources with
-        Some csdict -> list_spot_colours_csdict pagenum pdf resources csdict
-      | None -> ()
-      end
-  | None -> ()
-
-let list_spot_colours_xobjectdict pagenum pdf resources = function
-  Pdf.Dictionary items ->
-    List.iter
-      (list_spot_colours_xobject pagenum pdf resources)
-      (List.map snd items) (* FIXME indirect *)
-| _ -> raise (Pdf.PDFError "Bad xobjectdict in list_spot_colours_xobjectdict")
-
-let list_spot_colours_page pdf pagenumber page =
-  begin match Pdf.lookup_direct pdf "/ColorSpace" page.Pdfpage.resources with
-    None -> ()
-  | Some csdict ->
-      list_spot_colours_csdict pagenumber pdf page.Pdfpage.resources csdict
-  end;
-  begin match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
-    None -> ()
-  | Some xobjectdict ->
-      list_spot_colours_xobjectdict pagenumber pdf page.Pdfpage.resources xobjectdict
-  end
-
-let list_spot_colours (pdf : Pdf.t) (range : int list) =
-  Cpdf.iter_pages (list_spot_colours_page pdf) pdf range
+let list_spot_colours pdf =
+  Pdf.objiter
+    (fun _ obj ->
+       match obj with
+         Pdf.Array (Pdf.Name "/Separation"::x::_) ->
+           begin match Pdf.direct pdf x with
+             Pdf.Name col -> Printf.printf "%s\n" col
+           | _ -> ()
+           end
+       | _ -> ())
+    pdf
 
 (* Main function *)
 let go () =
@@ -3885,9 +3846,8 @@ let go () =
         (* FIXME: We might like to do the trailer dictionary too *)
         write_pdf false pdf
   | Some ListSpotColours ->
-      let pdf = get_single_pdf args.op true in
-        let range = parse_pagespec pdf (get_pagespec ()) in
-          list_spot_colours pdf range
+      let pdf = get_single_pdf args.op false in
+        list_spot_colours pdf
 
 let parse_argv () =
   if args.debug then
