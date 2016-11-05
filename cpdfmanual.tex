@@ -365,6 +365,8 @@ option to the command line, in addition to any other command being used. For exa
 
 In extremis, you may place \texttt{cpdflin} and its resources in the current working directory, though this is not recommended. For further help, refer to the installation instructions for your copy of \texttt{cpdf}.
 
+To keep the existing linearization status of a file (produce linearized output if the input is linearized and the reverse), use \texttt{-keep-l} instead of \texttt{-l}.
+
 \section{Object Streams}
 PDF 1.5 introduced a new mechanism for storing objects to save space: object streams. by default, \texttt{cpdf} will preserve object streams in input files, creating no more. To prevent the retention of existing object streams, use \texttt{-no-preserve-objstm}:
 
@@ -1192,7 +1194,11 @@ the file using a different page range each time.
               [-relative-to-cropbox]
               [-prerotate]
               [-bates <number>]
+              [-bates-at-range <number>]
+              [-bates-pad-to <number>]
               [-opacity <number>]
+              [-midline]
+              [-topline]
               in.pdf [<range>] -o out.pdf\end{verbatim}
   \noindent See also positioning commands below.
 
@@ -1295,6 +1301,10 @@ The starting point can be set with the \texttt{-bates} option. For example:
     \small\verb!cpdf -add-text "Page ID: %Bates" -bates 23745 in.pdf -o out.pdf!
   \end{framed}
 
+To specify that bates numbering begins at the first page of the range, use \texttt{-bates-at-range} instead. This option must be specified after the range is specified. To pad the bates number up to a given number of leading zeros, use \texttt{-bates-pad-to} in addition to either \texttt{-bates} or \texttt{-bates-at-range}.
+
+
+
   \subsection{Position}
   \label{position}
   The position of the text may be specified either in absolute terms:
@@ -1355,7 +1365,7 @@ The default position is equivalent to \texttt{-topleft 100}.
 
 The \texttt{-midline} option may be added to specify that the positioning
 commands above are to be considered relative to the midline of the text, rather
-than its baseline.
+than its baseline. Similarly, the \texttt{-topline} option may be used to specify that the position is taken relative to the top of the text.
 
   \subsection{Font and Size}
 \index{font}
