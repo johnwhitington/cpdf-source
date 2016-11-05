@@ -302,6 +302,16 @@ supported:
 
 Simple arithmetic may be performed using the words \texttt{add}, \texttt{sub}, \texttt{mul} and \texttt{div} to stand for addition, subtraction, multiplication and division. For example, one may write \texttt{14in sub 30pt} or \texttt{PMINX mul 2}
 
+\section{Setting the Producer and Creator}
+
+The \texttt{-producer} and \texttt{-creator} options may be added to any \texttt{cpdf} command line to set the producer and/or creator of the PDF file. If the file was converted from another format, the \textit{creator} is the program producing the original, the \textit{producer} the program converting it to PDF.
+
+\begin{framed}
+  \small\verb!cpdf -merge in.pdf in2.pdf -producer MyMerger -o out.pdf!\\
+
+  \vspace{2.5mm}
+  \noindent Merge \texttt{in.pdf} and \texttt{in2.pf}, setting the producer to \texttt{MyMerger} and writing the output to \texttt{out.pdf}.\end{framed}
+
 \section{PDF Version Numbers}
 \index{version number}
 When an operation which uses a part of the PDF standard which was introduced in
@@ -506,6 +516,9 @@ the command line or configuration files. These are:
 \noindent Add \verb!-utf8! to use Unicode UTF8, \verb!-stripped! to convert to 7
 bit ASCII by dropping any high characters, or \verb!-raw! to perform no
 processing. The default is \verb!-stripped!.
+
+\section{Font Embedding}
+Use the \texttt{-no-embed-font} to avoid embedding the Standard 14 Font metrics when adding text with \texttt{-add-text}.
 
 \chapter{Merging and Splitting}
   \begin{framed}
@@ -981,8 +994,8 @@ metadata. Add \texttt{-no-encrypt-metadata} to the command line.
      \vspace{1.5mm}
      \noindent\verb!cpdf -compress in.pdf -o out.pdf!
      
-     %\vspace{1.5mm}
-     %\noindent\verb!cpdf -squeeze in.pdf -o out.pdf!  
+     \vspace{1.5mm}
+     \noindent\verb!cpdf -squeeze in.pdf [-squeeze-log-to <filename>] -o out.pdf!  
    \end{framed}
   \cpdf\ provides basic facilities for decompressing and compressing PDF streams.
   \section{Decompressing a Document}
@@ -1003,24 +1016,26 @@ PDF, use:
   \textbf{Flate\-Decode} method, with the exception of Metadata streams, which
   are left uncompressed.
   
-%  \section{Squeezing a Document}
-%\index{squeeze}
-%  To \textit{squeeze} a PDF file, reducing its size by an average of about twenty percent (though sometimes not at all), use:
-%  \begin{framed}
-%    \small\verb!cpdf -squeeze in.pdf -o out.pdf!
-%  \end{framed}
-%  \noindent Adding \texttt{-squeeze} to the command line when using another operation will \textit{squeeze} the file or files upon output.
-%  
-%  The \texttt{-squeeze} operation writes some information about the squeezing process to standard output. The squeezing process involves several processes which losslessly attempt to reduce the file size. It is slow, so should not be used without thought.
+  \section{Squeezing a Document}
+\index{squeeze}
+  To \textit{squeeze} a PDF file, reducing its size by an average of about twenty percent (though sometimes not at all), use:
+  \begin{framed}
+    \small\verb!cpdf -squeeze in.pdf -o out.pdf!
+  \end{framed}
+  \noindent Adding \texttt{-squeeze} to the command line when using another operation will \textit{squeeze} the file or files upon output.
+  
+  The \texttt{-squeeze} operation writes some information about the squeezing process to standard output. The squeezing process involves several processes which losslessly attempt to reduce the file size. It is slow, so should not be used without thought.
 
-%\begin{verbatim}
-%$ ./cpdf -squeeze in.pdf -o out.pdf
-%Beginning squeeze: 123847 objects
-%Squeezing... Down to 114860 objects
-%Squeezing... Down to 114842 objects
-%Squeezing page data
-%Recompressing document
-%\end{verbatim}
+\begin{verbatim}
+$ ./cpdf -squeeze in.pdf -o out.pdf
+Beginning squeeze: 123847 objects
+Squeezing... Down to 114860 objects
+Squeezing... Down to 114842 objects
+Squeezing page data
+Recompressing document
+\end{verbatim}
+
+The \texttt{-squeeze-log-to <filename>} option writes the log to the given file instead of to standard output.
 
 \chapter{Bookmarks}
   \begin{framed}
@@ -1646,11 +1661,7 @@ given page range.
 
     \vspace{1.5mm}
     \small\noindent\verb!cpdf -set-metadata <metadata-file> in.pdf -o out.pdf!
-
-    \vspace{1.5mm}
-    \small\noindent\verb!cpdf -remove-metadata in.pdf -o out.pdf!
-
-    \vspace{1.5mm}
+    \small\noindent\verb!cpdf -remove-metadata in.pdf -o out.pdf!\\
     \small\noindent\verb!cpdf -print-metadata in.pdf -o out.pdf!
     
     \vspace{1.5mm}
@@ -1659,7 +1670,8 @@ given page range.
     \noindent\verb!     [-label-startval <integer>]!\\
     
     \vspace{1.5mm}
-    \small\noindent\verb!cpdf -remove-page-labels in.pdf -o out.pdf!
+    \small\noindent\verb!cpdf -remove-page-labels in.pdf -o out.pdf!\\
+    \small\noindent\verb!cpdf -print-page-labels in.pdf!
   \end{framed}
   \section{Listing Fonts}
 \index{fonts!listing}
@@ -1780,7 +1792,7 @@ information dictionary:
 
   \noindent (The details of the format for creation and modification dates can be found
 in Appendix~\ref{dates}. Using the date \texttt{"now"} uses the time and date
-at which the command is executed.)
+at which the command is executed. Note also that \texttt{-producer} and \texttt{-creator} may be used to set the producer and/or the creator when writing any file, separate from the operations described in this chapter.)
   
   \vspace{2mm}
   For example, to set the title, the full command line would be
@@ -1913,7 +1925,18 @@ i, ii, iii, iv, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, A-0, A-1, A-2, A-3, A-4, A-5
 
 \noindent By default the labels begin at page number 1 for each range. To override this, we can use \texttt{-label-startval} (we used $0$ in the final command), where we want the numbers to begin at zero rather than one.
 
-Page labels may be removed altogether by using \texttt{-remove-page-labels} command.
+Page labels may be removed altogether by using \texttt{-remove-page-labels} command. To print the page labels from an existing file, use \texttt{-print-page-labels}. For example:
+\begin{framed}\small\begin{verbatim}$ cpdf -print-page-labels cpdfmanual.pdf
+labelstyle: LowercaseRoman
+labelprefix: None
+startpage: 1
+startvalue: 1
+labelstyle: DecimalArabic
+labelprefix: None
+startpage: 9
+startvalue: 1
+\end{verbatim}
+\end{framed}
 
 \chapter{File Attachments}
 \index{attachments}
@@ -2085,6 +2108,11 @@ recommended when file size is the sole consideration.
   \vspace{1.5mm}
   \noindent\verb!cpdf -remove-id in.pdf -o out.pdf!
 
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -list-spot-colours in.pdf!
+
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -remove-dict-entry in.pdf -o out.pdf!
   \end{framed}}
   \section{Draft Documents}
 \index{draft}
@@ -2189,6 +2217,29 @@ input, writing to the output.
   \end{framed}
 
 You cannot use \texttt{-recrypt} with \texttt{-remove-id}.
+
+\section{List Spot Colours}
+
+This operation lists the name of any ``separation'' colour space in the given PDF file.
+
+  \begin{framed}
+  \small\noindent\verb!cpdf -list-spot-colours in.pdf!
+
+  \vspace{2.5mm}
+  \noindent List the spot colours, one per line in \texttt{in.pdf}, writing to \texttt{stdout}.
+  \end{framed}
+
+\section{Removing Dictionary Entries}
+
+This is for editing data within the PDF's internal representation. Use with caution.
+
+  \begin{framed}
+  \small\noindent\verb!cpdf -remove-dict-entry /One in.pdf -o out.pdf!
+
+  \vspace{2.5mm}
+  \noindent Remove the entry for \texttt{/One} in every dictionary \texttt{in.pdf}, writing to \texttt{out.pdf}. 
+  \end{framed}
+
 
 \appendix
 \chapter{Dates}
