@@ -1,5 +1,6 @@
 Version 2.2 (To come)
 
+o Perform artihmetic on dimensions when specifying size or position
 o Add simple rectangles to PDF to blank things out
 o Stamping operations now preserve annotations
 o Decryption fully on-demand for speed.

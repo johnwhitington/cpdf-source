@@ -1740,7 +1740,7 @@ and specs =
       " Remove text previously added by cpdf");
    ("-add-rectangle",
       Arg.String setrectangle,
-      "");
+      " Add a rectangle to the page");
    ("-bates",
       Arg.Int setbates,
       " Set the base bates number");
@@ -2041,9 +2041,9 @@ and specs =
    ("-creator",
     Arg.String setcreator,
     " Change the /Creator entry in the /Info dictionary");
-   ("-list-spot-colours",
+   ("-list-spot-colors",
     Arg.Unit (setop ListSpotColours),
-    " List spot colours");
+    " List spot colors");
    ("-squeeze", Arg.Unit setsqueeze, " Squeeze");
    ("-squeeze-log-to", Arg.String setsqueezelogto, " Squeeze log location");
    (*These items are undocumented *)
@@ -3082,9 +3082,61 @@ let extract_fontfile pagenumber fontname pdf =
                 end
             | _ -> failwith "unsupported or unfound font"
 
-let addrectangle (w, h) color position relative_to_cropbox underneath range pdf =
+let addrectangle
+  fast (w, h) colour outline linewidth opacity position relative_to_cropbox
+  underneath range pdf
+=
   let addrectangle_page _ page =
-    page
+    let resources', unique_extgstatename =
+      if opacity < 1.0 then
+        let dict =
+          match Pdf.lookup_direct pdf "/ExtGState" page.Pdfpage.resources with
+          | Some d -> d
+          | None -> Pdf.Dictionary []
+        in
+          let unique_extgstatename = Pdf.unique_key "gs" dict in
+            let dict' =
+              Pdf.add_dict_entry dict unique_extgstatename
+                (Pdf.Dictionary [("/ca", Pdf.Real opacity); ("/CA", Pdf.Real opacity)])
+            in
+              Pdf.add_dict_entry page.Pdfpage.resources "/ExtGState" dict', Some unique_extgstatename
+      else
+        page.Pdfpage.resources, None
+    in
+    let mediabox =
+      if relative_to_cropbox then
+        match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
+        | Some pdfobject -> Pdf.parse_rectangle (Pdf.direct pdf pdfobject)
+        | None -> Pdf.parse_rectangle page.Pdfpage.mediabox
+      else
+        Pdf.parse_rectangle page.Pdfpage.mediabox
+    in
+    let x, y, _ =
+      Cpdf.calculate_position false w mediabox Cpdf.Horizontal position
+    in
+    let ops =
+      [
+       Pdfops.Op_q;
+       Pdfops.Op_BMC "/CPDFSTAMP";
+       (match colour with (r, g, b) -> Pdfops.Op_rg (r, g, b));
+       (match colour with (r, g, b) -> Pdfops.Op_RG (r, g, b))
+      ]
+      @
+     (if outline then [Pdfops.Op_w linewidth] else [])
+     @
+     (match unique_extgstatename with None -> [] | Some n -> [Pdfops.Op_gs n])
+     @
+     [
+       Pdfops.Op_re (x, y, w, h);
+       (if outline then Pdfops.Op_s else Pdfops.Op_f);
+       Pdfops.Op_EMC;
+       Pdfops.Op_Q
+      ]
+    in
+      let page = {page with Pdfpage.resources = resources'} in
+        if underneath
+          then Pdfpage.prepend_operators pdf ops ~fast:fast page
+          else Pdfpage.postpend_operators pdf ops ~fast:fast page
   in
     Cpdf.process_pages addrectangle_page pdf range
 
@@ -3700,8 +3752,9 @@ let go () =
         let range = parse_pagespec pdf (get_pagespec ()) in
           write_pdf false
             (addrectangle
-               (parse_coordinate pdf args.coord)
-               args.color args.position args.relative_to_cropbox args.underneath range pdf)
+               args.fast (parse_coordinate pdf args.coord)
+               args.color args.outline args.linewidth args.opacity args.position
+               args.relative_to_cropbox args.underneath range pdf)
   | Some (AddBookmarks file) ->
       write_pdf false
         (Cpdf.add_bookmarks true (Pdfio.input_of_channel (open_in_bin file))

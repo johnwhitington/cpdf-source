@@ -1,3 +1,4 @@
+%FIXME: Document that -upright also shifts the page to 0,0
 \documentclass{book}
 \usepackage{palatino}
 \usepackage{microtype}
@@ -2124,7 +2125,7 @@ recommended when file size is the sole consideration.
   \noindent\verb!cpdf -remove-id in.pdf -o out.pdf!
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf -list-spot-colours in.pdf!
+  \noindent\verb!cpdf -list-spot-colors in.pdf!
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -remove-dict-entry in.pdf -o out.pdf!
@@ -2235,13 +2236,13 @@ You cannot use \texttt{-recrypt} with \texttt{-remove-id}.
 
 \section{List Spot Colours}
 
-This operation lists the name of any ``separation'' colour space in the given PDF file.
+This operation lists the name of any ``separation'' color space in the given PDF file.
 
   \begin{framed}
-  \small\noindent\verb!cpdf -list-spot-colours in.pdf!
+  \small\noindent\verb!cpdf -list-spot-colors in.pdf!
 
   \vspace{2.5mm}
-  \noindent List the spot colours, one per line in \texttt{in.pdf}, writing to \texttt{stdout}.
+  \noindent List the spot colors, one per line in \texttt{in.pdf}, writing to \texttt{stdout}.
   \end{framed}
 
 \section{Removing Dictionary Entries}
