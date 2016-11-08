@@ -1214,7 +1214,7 @@ the file using a different page range each time.
   \noindent\small\verb!cpdf -combine-pages over.pdf under.pdf -o out.pdf!
 
   \vspace{1.5mm}
-  \noindent\small\begin{verbatim}cpdf -add-text <text-format>
+  \noindent\small\begin{verbatim}cpdf ([-add-text <text-format> | -add-rectangle <size>])
               [-font <fontname>]
               [-font-size <size-in-points>]
               [-color <color>]
@@ -1522,6 +1522,18 @@ included in Appendix D of the Adobe PDF Reference Manual, which is available at
 \url{http://www.adobe.com/devnet/pdf/pdf_reference.html}.
 
 For example, a German sharp s (\ss) may be introduced by \verb!\337!. 
+
+\section{Stamping Graphics}
+
+A rectangle may be placed on one or more pages by using the \texttt{-add-rectangle <size>} command. Most of the options discussed above for text placement apply in the same way. For example:
+
+\begin{framed}
+  \small\begin{verbatim}cpdf -add-rectangle "200 300" -pos-right 30 -color red -outline
+                    in.pdf -o out.pdf\end{verbatim}
+\end{framed}
+
+This can be used to blank out or highlight part of the document.
+
 
 \chapter{Multipage Facilities}
   \begin{framed}
