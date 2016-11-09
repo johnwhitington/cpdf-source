@@ -3192,8 +3192,21 @@ let remove_clipping pdf range =
   in
     Cpdf.process_pages remove_clipping_page pdf range
 
-let change_font_size pdf range dx dy target_size =
-  pdf
+let change_font_size_ops dx dy source_size target_size pdf resources content =
+  content
+
+let change_font_size pdf range dx dy source_size target_size =
+  let change_font_size_page _ page =
+    let content' =
+      change_font_size_ops
+        dx dy source_size target_size pdf
+        page.Pdfpage.resources page.Pdfpage.content
+    in
+      Cpdf.process_xobjects
+        pdf page (change_font_size_ops dx dy source_size target_size);
+      {page with Pdfpage.content = content'}
+  in
+    Cpdf.process_pages change_font_size_page pdf range
 
 (* Main function *)
 let go () =
@@ -3949,7 +3962,7 @@ let go () =
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
           let dx, dy = parse_coordinate pdf args.coord in
-            write_pdf false (change_font_size pdf range dx dy target_size)
+            write_pdf false (change_font_size pdf range dx dy args.fontsize target_size)
 
 let parse_argv () =
   if args.debug then
