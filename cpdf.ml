@@ -3242,7 +3242,6 @@ let process_xobject f pdf resources i =
         end
     | Some _ -> ()
 
-
 let process_xobjects pdf page f =
   match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
   | Some (Pdf.Dictionary elts) ->
@@ -3250,7 +3249,7 @@ let process_xobjects pdf page f =
         (fun (k, v) ->
           match v with
           | Pdf.Indirect i -> process_xobject f pdf page.Pdfpage.resources i
-          | _ -> raise (Pdf.PDFError "blacktext"))
+          | _ -> raise (Pdf.PDFError "process_xobject"))
         elts
   | _ -> ()
 

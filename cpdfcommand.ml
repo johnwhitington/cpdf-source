@@ -1,4 +1,4 @@
-(* Added -relative-to-cropbox for stamps *)
+(* FIXME DOC Added -relative-to-cropbox for stamps *)
 (* cpdf command line tools *)
 let demo = false
 let noncomp = false
@@ -165,6 +165,7 @@ type op =
   | Revisions
   | RemoveDictEntry of string
   | ListSpotColours
+  | RemoveClipping
 
 let string_of_op = function
   | CopyFont _ -> "CopyFont"
@@ -268,6 +269,7 @@ let string_of_op = function
   | Revisions -> "Revisions"
   | RemoveDictEntry _ -> "RemoveDictEntry"
   | ListSpotColours -> "ListSpotColours"
+  | RemoveClipping -> "RemoveClipping"
 
 (* Inputs: filename, pagespec. *)
 type input_kind =
@@ -607,7 +609,8 @@ let banned banlist = function
     BlackText|BlackLines|BlackFills|CopyFont _|CSP2 _|StampOn _|StampUnder _|
     AddText _|ScaleContents _|AttachFile _|CopyAnnotations _|SetMetadata _|
     ThinLines _|SetAuthor _|SetTitle _|SetSubject _|SetKeywords _|SetCreate _|
-    SetModify _|SetCreator _|SetProducer _|SetVersion _|RemoveDictEntry _ ->
+    SetModify _|SetCreator _|SetProducer _|SetVersion _|RemoveDictEntry _ |
+    RemoveClipping ->
       mem Pdfcrypt.NoEdit banlist
 
 let operation_allowed pdf banlist op =
@@ -2005,6 +2008,9 @@ and specs =
    ("-thinlines",
        Arg.String setthinlines,
        " Set minimum line thickness to the given width");
+   ("-remove-clipping",
+      Arg.Unit (setop RemoveClipping),
+      " Remove clipping paths");
    ("-clean",
        Arg.Unit (setop Clean),
        " Garbage-collect a file");
@@ -3155,6 +3161,18 @@ let list_spot_colours pdf =
        | _ -> ())
     pdf
 
+let remove_clipping_ops pdf resources content = content
+
+let remove_clipping pdf range =
+  let remove_clipping_page _ page =
+    let content' =
+      remove_clipping_ops pdf page.Pdfpage.resources page.Pdfpage.content
+    in
+      Cpdf.process_xobjects pdf page remove_clipping_ops;
+      {page with Pdfpage.content = content'}
+  in
+    Cpdf.process_pages remove_clipping_page pdf range
+
 (* Main function *)
 let go () =
   match args.op with
@@ -3901,6 +3919,10 @@ let go () =
   | Some ListSpotColours ->
       let pdf = get_single_pdf args.op false in
         list_spot_colours pdf
+  | Some RemoveClipping ->
+      let pdf = get_single_pdf args.op false in
+        let range = parse_pagespec pdf (get_pagespec ()) in
+          write_pdf false (remove_clipping pdf range)
 
 let parse_argv () =
   if args.debug then

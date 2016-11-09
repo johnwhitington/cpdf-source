@@ -473,6 +473,8 @@ val draft : bool -> int list -> Pdf.t -> Pdf.t
 (** Squeeze a PDF *)
 val squeeze : ?logto:string -> Pdf.t -> unit
 
+val process_xobjects : Pdf.t -> Pdfpage.t -> (Pdf.t -> Pdf.pdfobject -> Pdf.pdfobject list -> Pdf.pdfobject list) -> unit
+
 (**/**)
 
 (** Custom CSP1 *)
