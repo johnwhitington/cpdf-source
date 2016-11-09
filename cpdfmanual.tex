@@ -2141,6 +2141,9 @@ recommended when file size is the sole consideration.
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -remove-dict-entry in.pdf -o out.pdf!
+
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -remove-clipping in.pdf -o out.pdf!
   \end{framed}}
   \section{Draft Documents}
 \index{draft}
@@ -2182,6 +2185,8 @@ which is part of a form.
   \begin{framed}
     \small\verb!cpdf -blackfills in.pdf -o out.pdf!
   \end{framed}
+
+\noindent Contrary to their names, all these operations can use another color, if specified with \texttt{-color}.
 
   \section{Hairline Removal}
 \index{hairline removal}
@@ -2266,6 +2271,19 @@ This is for editing data within the PDF's internal representation. Use with caut
 
   \vspace{2.5mm}
   \noindent Remove the entry for \texttt{/One} in every dictionary \texttt{in.pdf}, writing to \texttt{out.pdf}. 
+  \end{framed}
+
+
+\section{Remove Clipping}
+
+
+The \texttt{-remove-clipping} operation removes any clipping paths from the file.
+
+  \begin{framed}
+  \small\noindent\verb!cpdf -remove-clipping in.pdf -o out.pdf!
+
+  \vspace{2.5mm}
+  \noindent Remove every clipping path in \texttt{in.pdf}, writing to \texttt{out.pdf}. 
   \end{framed}
 
 

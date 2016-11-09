@@ -459,13 +459,13 @@ val add_page_labels :
 val thinlines : int list -> float -> Pdf.t -> Pdf.t
 
 (** Make all text on certain pages black. *)
-val blacktext : int list -> Pdf.t -> Pdf.t
+val blacktext : float * float * float -> int list -> Pdf.t -> Pdf.t
 
 (** Make all lines on certain pages black. *)
-val blacklines : int list -> Pdf.t -> Pdf.t
+val blacklines : float * float * float -> int list -> Pdf.t -> Pdf.t
 
 (** Make all fills on certain pages black. *)
-val blackfills : int list -> Pdf.t -> Pdf.t
+val blackfills : float * float * float -> int list -> Pdf.t -> Pdf.t
 
 (** Remove images from a PDF, optionally adding crossed boxes. *)
 val draft : bool -> int list -> Pdf.t -> Pdf.t

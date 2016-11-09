@@ -166,6 +166,7 @@ type op =
   | RemoveDictEntry of string
   | ListSpotColours
   | RemoveClipping
+  | ChangeFontSize of float
 
 let string_of_op = function
   | CopyFont _ -> "CopyFont"
@@ -270,6 +271,7 @@ let string_of_op = function
   | RemoveDictEntry _ -> "RemoveDictEntry"
   | ListSpotColours -> "ListSpotColours"
   | RemoveClipping -> "RemoveClipping"
+  | ChangeFontSize _ -> "ChangeFontSize"
 
 (* Inputs: filename, pagespec. *)
 type input_kind =
@@ -379,7 +381,8 @@ type args =
    mutable was_decrypted_with_owner : bool;
    mutable creator : string option;
    mutable producer : string option;
-   mutable embedfonts : bool}
+   mutable embedfonts : bool;
+   mutable change_font_size_shift : string}
 
 let args =
   {op = None;
@@ -462,7 +465,8 @@ let args =
    was_decrypted_with_owner = false;
    producer = None;
    creator = None;
-   embedfonts = true}
+   embedfonts = true;
+   change_font_size_shift = "0 0"}
 
 let reset_arguments () =
   args.op <- None;
@@ -610,7 +614,7 @@ let banned banlist = function
     AddText _|ScaleContents _|AttachFile _|CopyAnnotations _|SetMetadata _|
     ThinLines _|SetAuthor _|SetTitle _|SetSubject _|SetKeywords _|SetCreate _|
     SetModify _|SetCreator _|SetProducer _|SetVersion _|RemoveDictEntry _ |
-    RemoveClipping ->
+    RemoveClipping | ChangeFontSize _ ->
       mem Pdfcrypt.NoEdit banlist
 
 let operation_allowed pdf banlist op =
@@ -1522,6 +1526,12 @@ let setstayonerror () =
 let setnoembedfont () =
   args.embedfonts <- false
 
+let setchangefontsizeto i =
+  args.op <- Some (ChangeFontSize i) 
+
+let setchangefontsizeshift s =
+  args.change_font_size_shift <- s
+
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
   control_args := !control_args @ parse_control_file filename
@@ -2066,7 +2076,9 @@ and specs =
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit setdebugcrypt, "");
    ("-fix-prince", Arg.Unit (setop RemoveUnusedResources), "");
-   ("-extract-text", Arg.Unit (setop ExtractText), "")]
+   ("-extract-text", Arg.Unit (setop ExtractText), "");
+   ("-change-font-size-to", Arg.Float setchangefontsizeto, "");
+   ("-change-font-size-shift", Arg.String setchangefontsizeshift, "")]
 
 and usage_msg =
 "Syntax: cpdf <op> <op-specific arguments> [-o <output file>] <input files>\n\n\
@@ -3161,7 +3173,14 @@ let list_spot_colours pdf =
        | _ -> ())
     pdf
 
-let remove_clipping_ops pdf resources content = content
+let remove_clipping_ops pdf resources content =
+  let ops = Pdfops.parse_operators pdf resources content in
+    let rec process a = function
+      Pdfops.Op_W::Pdfops.Op_n::t -> process (Pdfops.Op_n::a) t
+    | h::t -> process (h::a) t
+    | [] -> rev a
+    in
+      [Pdfops.stream_of_ops (process [] ops)] 
 
 let remove_clipping pdf range =
   let remove_clipping_page _ page =
@@ -3172,6 +3191,9 @@ let remove_clipping pdf range =
       {page with Pdfpage.content = content'}
   in
     Cpdf.process_pages remove_clipping_page pdf range
+
+let change_font_size pdf range dx dy target_size =
+  pdf
 
 (* Main function *)
 let go () =
@@ -3633,15 +3655,15 @@ let go () =
   | Some BlackText ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
-          write_pdf false (Cpdf.blacktext range pdf)
+          write_pdf false (Cpdf.blacktext args.color range pdf)
   | Some BlackLines ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
-          write_pdf false (Cpdf.blacklines range pdf)
+          write_pdf false (Cpdf.blacklines args.color range pdf)
   | Some BlackFills ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
-          write_pdf false (Cpdf.blackfills range pdf)
+          write_pdf false (Cpdf.blackfills args.color range pdf)
   | Some RemoveAnnotations ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
@@ -3923,6 +3945,11 @@ let go () =
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
           write_pdf false (remove_clipping pdf range)
+  | Some (ChangeFontSize target_size) ->
+      let pdf = get_single_pdf args.op false in
+        let range = parse_pagespec pdf (get_pagespec ()) in
+          let dx, dy = parse_coordinate pdf args.coord in
+            write_pdf false (change_font_size pdf range dx dy target_size)
 
 let parse_argv () =
   if args.debug then

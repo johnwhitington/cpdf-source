@@ -3157,7 +3157,7 @@ let output_xmp_info encoding pdf =
     <ops minus any text positioning or text rendering ones>
     \end{verbatim}
 *)
-let blacktext_ops pdf resources content =
+let blacktext_ops (r, g, b) pdf resources content =
   let not_text = function
     | Pdfops.Op_Tj _ | Pdfops.Op_TJ _
     | Pdfops.Op_' _ | Pdfops.Op_'' (_, _, _)
@@ -3181,7 +3181,7 @@ let blacktext_ops pdf resources content =
       | Pdfops.Op_BT::more ->
           incr textlevel;
           remove_colourops
-            (Pdfops.Op_g 0.::Pdfops.Op_BT::prev)
+            (Pdfops.Op_rg (r, g, b)::Pdfops.Op_BT::prev)
             more
       | Pdfops.Op_ET::more ->
           decr textlevel;
@@ -3253,25 +3253,25 @@ let process_xobjects pdf page f =
         elts
   | _ -> ()
 
-let blacktext range pdf =
+let blacktext (r, g, b) range pdf =
   let blacktext_page _ page =
     let content' =
-      blacktext_ops pdf page.Pdfpage.resources page.Pdfpage.content
+      blacktext_ops (r, g, b) pdf page.Pdfpage.resources page.Pdfpage.content
     in
-      process_xobjects pdf page blacktext_ops;
+      process_xobjects pdf page (blacktext_ops (r, g, b));
       {page with Pdfpage.content = content'}
   in
     process_pages blacktext_page pdf range
 
 (* \section{Blacken lines} *)
-let blacklines_ops pdf resources content =
+let blacklines_ops (r, g, b) pdf resources content =
   let rec blacken_strokeops prev = function
     | [] -> rev prev
     | Pdfops.Op_CS _::t ->
-        blacken_strokeops (Pdfops.Op_CS "/DeviceGray"::prev) t
+        blacken_strokeops (Pdfops.Op_CS "/DeviceRGB"::prev) t
     | (Pdfops.Op_SC _ | Pdfops.Op_SCN _ | Pdfops.Op_SCNName _ | Pdfops.Op_G _
        | Pdfops.Op_RG _ | Pdfops.Op_K _)::t ->
-           blacken_strokeops (Pdfops.Op_G 0.::prev) t
+           blacken_strokeops (Pdfops.Op_RG (r, g, b)::prev) t
     | h::t -> blacken_strokeops (h::prev) t
   and operators =
     Pdfops.parse_operators pdf resources content
@@ -3279,25 +3279,25 @@ let blacklines_ops pdf resources content =
     let operators' = blacken_strokeops [] operators in
       [Pdfops.stream_of_ops operators']
 
-let blacklines range pdf =
+let blacklines (r, g, b) range pdf =
   let blacklines_page _ page =
     let content' =
-      blacklines_ops pdf page.Pdfpage.resources page.Pdfpage.content
+      blacklines_ops (r, g, b) pdf page.Pdfpage.resources page.Pdfpage.content
     in
-      process_xobjects pdf page blacklines_ops;
+      process_xobjects pdf page (blacklines_ops (r, g, b));
       {page with Pdfpage.content = content'}
   in
     process_pages blacklines_page pdf range
 
 (* \section{Blacken Fills} *)
-let blackfills_ops pdf resources content =
+let blackfills_ops (r, g, b) pdf resources content =
   let rec blacken_fillops prev = function
     | [] -> rev prev
     | Pdfops.Op_cs _::t ->
-        blacken_fillops (Pdfops.Op_cs "/DeviceGray"::prev) t
+        blacken_fillops (Pdfops.Op_cs "/DeviceRGB"::prev) t
     | (Pdfops.Op_sc _ | Pdfops.Op_scn _ | Pdfops.Op_scnName _ | Pdfops.Op_g _
        | Pdfops.Op_rg _ | Pdfops.Op_k _)::t ->
-           blacken_fillops (Pdfops.Op_g 0.::prev) t
+           blacken_fillops (Pdfops.Op_rg (r, g, b)::prev) t
     | h::t -> blacken_fillops (h::prev) t
   and operators =
     Pdfops.parse_operators pdf resources content
@@ -3305,12 +3305,12 @@ let blackfills_ops pdf resources content =
     let operators' = blacken_fillops [] operators in
       [Pdfops.stream_of_ops operators']
 
-let blackfills range pdf =
+let blackfills (r, g, b) range pdf =
   let blackfills_page _ page =
     let content' =
-      blackfills_ops pdf page.Pdfpage.resources page.Pdfpage.content
+      blackfills_ops (r, g, b) pdf page.Pdfpage.resources page.Pdfpage.content
     in
-      process_xobjects pdf page blackfills_ops;
+      process_xobjects pdf page (blackfills_ops (r, g, b));
       {page with Pdfpage.content = content'}
   in
     process_pages blackfills_page pdf range
