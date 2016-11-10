@@ -3193,7 +3193,18 @@ let remove_clipping pdf range =
     Cpdf.process_pages remove_clipping_page pdf range
 
 let change_font_size_ops dx dy source_size target_size pdf resources content =
-  content
+  Printf.printf "dx = %f, dy = %f\n" dx dy;
+  let ops = Pdfops.parse_operators pdf resources content in
+  let tr = Pdftransform.mktranslate dx dy in
+    let rec process a = function
+      Pdfops.Op_Tf (fontname, size)::t when fabs (size -. source_size) < 0.01 ->
+        process
+          (Pdfops.Op_Tf (fontname, target_size)::Pdfops.Op_cm tr::a)
+          t
+    | h::t -> process (h::a) t
+    | [] -> rev a
+    in
+      [Pdfops.stream_of_ops (process [] ops)]
 
 let change_font_size pdf range dx dy source_size target_size =
   let change_font_size_page _ page =
@@ -3961,7 +3972,7 @@ let go () =
   | Some (ChangeFontSize target_size) ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
-          let dx, dy = parse_coordinate pdf args.coord in
+          let dx, dy = parse_coordinate pdf args.change_font_size_shift in
             write_pdf false (change_font_size pdf range dx dy args.fontsize target_size)
 
 let parse_argv () =
