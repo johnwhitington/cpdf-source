@@ -382,7 +382,8 @@ type args =
    mutable creator : string option;
    mutable producer : string option;
    mutable embedfonts : bool;
-   mutable change_font_size_shift : string}
+   mutable change_font_size_shift : string;
+   mutable change_font_size_color : float * float * float}
 
 let args =
   {op = None;
@@ -466,7 +467,8 @@ let args =
    producer = None;
    creator = None;
    embedfonts = true;
-   change_font_size_shift = "0 0"}
+   change_font_size_shift = "0 0";
+   change_font_size_color = (0., 0., 0.)}
 
 let reset_arguments () =
   args.op <- None;
@@ -1113,25 +1115,25 @@ let setfontsize f =
 let setaddtext s =
   setop (AddText s) ()
 
+let parse_color s =
+  match String.lowercase s with
+  | "white" -> 1., 1., 1.
+  | "black" -> 0., 0., 0.
+  | "red" -> 1., 0., 0.
+  | "green" -> 0., 1., 0.
+  | "blue" -> 0., 0., 1.
+  | _ ->
+      let getnum = function
+        | Pdfgenlex.LexInt i -> float i
+        | Pdfgenlex.LexReal f -> f
+        | _ -> error "Bad color"
+      in
+        match Pdfgenlex.lex_string s with
+        | [a;b;c] -> getnum a, getnum b, getnum c
+        | _ -> error "Bad color"
+
 let setcolor s =
-  let r, g, b =
-    match String.lowercase s with
-    | "white" -> 1., 1., 1.
-    | "black" -> 0., 0., 0.
-    | "red" -> 1., 0., 0.
-    | "green" -> 0., 1., 0.
-    | "blue" -> 0., 0., 1.
-    | _ ->
-        let getnum = function
-          | Pdfgenlex.LexInt i -> float i
-          | Pdfgenlex.LexReal f -> f
-          | _ -> error "Bad color"
-        in
-          match Pdfgenlex.lex_string s with
-          | [a;b;c] -> getnum a, getnum b, getnum c
-          | _ -> error "Bad color"
-  in
-    args.color <- r, g, b
+  args.color <- parse_color s
 
 let setopacity o =
   args.opacity <- o
@@ -1531,6 +1533,9 @@ let setchangefontsizeto i =
 
 let setchangefontsizeshift s =
   args.change_font_size_shift <- s
+
+let setchangefontsizecolor s =
+  args.change_font_size_color <- parse_color s
 
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
@@ -2078,7 +2083,9 @@ and specs =
    ("-fix-prince", Arg.Unit (setop RemoveUnusedResources), "");
    ("-extract-text", Arg.Unit (setop ExtractText), "");
    ("-change-font-size-to", Arg.Float setchangefontsizeto, "");
-   ("-change-font-size-shift", Arg.String setchangefontsizeshift, "")]
+   ("-change-font-size-shift", Arg.String setchangefontsizeshift, "");
+   ("-change-font-size-color", Arg.String setchangefontsizecolor, "")
+  ]
 
 and usage_msg =
 "Syntax: cpdf <op> <op-specific arguments> [-o <output file>] <input files>\n\n\
@@ -3192,29 +3199,28 @@ let remove_clipping pdf range =
   in
     Cpdf.process_pages remove_clipping_page pdf range
 
-let change_font_size_ops dx dy source_size target_size pdf resources content =
-  Printf.printf "dx = %f, dy = %f\n" dx dy;
+let change_font_size_ops (r, g, b) dx dy source_size target_size pdf resources content =
   let ops = Pdfops.parse_operators pdf resources content in
   let tr = Pdftransform.mktranslate dx dy in
     let rec process a = function
       Pdfops.Op_Tf (fontname, size)::t when fabs (size -. source_size) < 0.01 ->
         process
-          (Pdfops.Op_Tf (fontname, target_size)::Pdfops.Op_cm tr::a)
+          (Pdfops.Op_rg (r, g, b)::Pdfops.Op_Tf (fontname, target_size)::Pdfops.Op_cm tr::a)
           t
     | h::t -> process (h::a) t
     | [] -> rev a
     in
       [Pdfops.stream_of_ops (process [] ops)]
 
-let change_font_size pdf range dx dy source_size target_size =
+let change_font_size pdf range (r, g, b) dx dy source_size target_size =
   let change_font_size_page _ page =
     let content' =
       change_font_size_ops
-        dx dy source_size target_size pdf
+        (r, g, b) dx dy source_size target_size pdf
         page.Pdfpage.resources page.Pdfpage.content
     in
       Cpdf.process_xobjects
-        pdf page (change_font_size_ops dx dy source_size target_size);
+        pdf page (change_font_size_ops (r, g, b) dx dy source_size target_size);
       {page with Pdfpage.content = content'}
   in
     Cpdf.process_pages change_font_size_page pdf range
@@ -3973,7 +3979,7 @@ let go () =
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
           let dx, dy = parse_coordinate pdf args.change_font_size_shift in
-            write_pdf false (change_font_size pdf range dx dy args.fontsize target_size)
+            write_pdf false (change_font_size pdf range args.change_font_size_color dx dy args.fontsize target_size)
 
 let parse_argv () =
   if args.debug then
