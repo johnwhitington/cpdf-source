@@ -383,7 +383,8 @@ type args =
    mutable producer : string option;
    mutable embedfonts : bool;
    mutable change_font_size_shift : string;
-   mutable change_font_size_color : float * float * float}
+   mutable change_font_size_color : float * float * float;
+   mutable extract_text_font_size : float option}
 
 let args =
   {op = None;
@@ -468,7 +469,8 @@ let args =
    creator = None;
    embedfonts = true;
    change_font_size_shift = "0 0";
-   change_font_size_color = (0., 0., 0.)}
+   change_font_size_color = (0., 0., 0.);
+   extract_text_font_size = None}
 
 let reset_arguments () =
   args.op <- None;
@@ -1109,8 +1111,13 @@ let setfont f =
 
 let setfontsize f =
   if f > 0.
-    then args.fontsize <-f
-    else error "Negative font size specified" 
+    then
+      begin
+        args.fontsize <- f;
+        args.extract_text_font_size <- Some f
+      end
+    else
+      error "Negative font size specified" 
 
 let setaddtext s =
   setop (AddText s) ()
@@ -2082,9 +2089,9 @@ and specs =
    ("-debug-crypt", Arg.Unit setdebugcrypt, "");
    ("-fix-prince", Arg.Unit (setop RemoveUnusedResources), "");
    ("-extract-text", Arg.Unit (setop ExtractText), "");
-   ("-change-font-size-to", Arg.Float setchangefontsizeto, "");
+   (*("-change-font-size-to", Arg.Float setchangefontsizeto, "");
    ("-change-font-size-shift", Arg.String setchangefontsizeshift, "");
-   ("-change-font-size-color", Arg.String setchangefontsizecolor, "")
+   ("-change-font-size-color", Arg.String setchangefontsizecolor, "")*)
   ]
 
 and usage_msg =
@@ -3032,12 +3039,18 @@ let remove_unused_resources_page pdf n page =
 let remove_unused_resources pdf =
   Cpdf.process_pages (remove_unused_resources_page pdf) pdf (ilist 1 (Pdfpage.endpage pdf))
 
-let extract_page_text pdf _ page =
+let extract_page_text only_fontsize pdf _ page =
   let text_extractor = ref None in
+  let right_font_size = ref false in
     fold_left ( ^ ) ""
       (map
         (function
-         | Pdfops.Op_Tf (fontname, _) ->
+         | Pdfops.Op_Tf (fontname, fontsize) ->
+             right_font_size :=
+               begin match only_fontsize with
+                 Some x -> x = fontsize
+               | _ -> false
+               end;
              let fontdict =
                match Pdf.lookup_direct pdf "/Font" page.Pdfpage.resources with
                | None -> raise (Pdf.PDFError "Missing /Font in text extraction")
@@ -3049,25 +3062,31 @@ let extract_page_text pdf _ page =
                text_extractor := Some (Pdftext.text_extractor_of_font pdf fontdict);
                ""
          | Pdfops.Op_Tj text when !text_extractor <> None ->
-             Pdftext.utf8_of_codepoints
-               (Pdftext.codepoints_of_text (unopt !text_extractor) text)
+             if not !right_font_size then
+               ""
+             else
+               Pdftext.utf8_of_codepoints
+                 (Pdftext.codepoints_of_text (unopt !text_extractor) text)
          | Pdfops.Op_TJ (Pdf.Array objs) when !text_extractor <> None ->
-             fold_left ( ^ ) ""
-               (option_map
-                  (function
-                   | Pdf.String text ->
-                       Some
-                         (Pdftext.utf8_of_codepoints
-                           (Pdftext.codepoints_of_text (unopt !text_extractor) text))
-                   | _ -> None)
-                  objs)
+             if not !right_font_size then
+               ""
+             else
+               fold_left ( ^ ) ""
+                 (option_map
+                    (function
+                     | Pdf.String text ->
+                         Some
+                           (Pdftext.utf8_of_codepoints
+                             (Pdftext.codepoints_of_text (unopt !text_extractor) text))
+                     | _ -> None)
+                    objs)
          | _ -> "")
         (Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content))
 
 (* For each page, extract all the ops with text in them, and concatenate it all together *)
 let extract_text pdf range =
-  fold_left ( ^ ) ""
-    (Cpdf.map_pages (extract_page_text pdf) pdf range)
+  fold_left (fun x y -> x ^ (if x <> "" && y <> "" then "\n" else "") ^ y) ""
+    (Cpdf.map_pages (extract_page_text args.extract_text_font_size pdf) pdf range)
 
 (* Extracts font to font.dat in CWD. *)
 let extract_fontfile pagenumber fontname pdf =
