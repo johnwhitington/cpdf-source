@@ -287,7 +287,7 @@ type justification =
   | CentreJustify
   | RightJustify
 
-(** [calculate ignore_d w (xmin, ymin, xmax, ymax) orientation pos] calculates
+(** [calculate_position ignore_d w (xmin, ymin, xmax, ymax) orientation pos] calculates
 the absolute position of text given its width, bounding box, orientation and
 position. If [ignore_d] is true, the distance from the position (e.g 10 in
 TopLeft 10) is ignored (considered zero). *)
@@ -324,6 +324,7 @@ val addtexts :
     bool ->(*midline adjust?*)
     bool ->(*topline adjust?*)
     string ->(*filename*)
+    float option -> (*extract_text_font_size*)
     Pdf.t ->(*pdf*)
     Pdf.t
 
@@ -492,3 +493,4 @@ val call_cpdflin : string -> string -> string -> string -> int
 
 val debug : bool ref
 
+val extract_text : float option -> Pdf.t -> int list -> string 

@@ -531,19 +531,16 @@ let print_pdf_objs pdf =
        Printf.printf "%s\n" (Pdfwrite.string_of_pdf obj))
     pdf
 
-
-
 (* Return page label at pdf page num, or page number in arabic if no label *) 
 let pagelabel pdf num =
   Pdfpagelabels.pagelabeltext_of_pagenumber
     num
     (Pdfpagelabels.complete (Pdfpagelabels.read pdf))
 
-
 let rec process_text text m =
   match m with
-  | ([] : (string * string) list) -> Cpdfstrftime.strftime text
-  | (s, r)::t -> process_text (string_replace_all s r text) t
+  | [] -> Cpdfstrftime.strftime text
+  | (s, r)::t -> process_text (string_replace_all_lazy s r text) t
 
 let expand_date = function
   | "now" -> Cpdfstrftime.strftime "D:%Y%m%d%H%M%S"
@@ -1661,28 +1658,79 @@ let make_font embed fontname =
              ("/Encoding", Pdf.Name "/WinAnsiEncoding");
              ("/BaseFont", Pdf.Name ("/" ^ fontname))]
 
+let extract_page_text only_fontsize pdf _ page =
+  let text_extractor = ref None in
+  let right_font_size = ref false in
+    fold_left ( ^ ) ""
+      (map
+        (function
+         | Pdfops.Op_Tf (fontname, fontsize) ->
+             right_font_size :=
+               begin match only_fontsize with
+                 Some x -> x = fontsize
+               | _ -> false
+               end;
+             let fontdict =
+               match Pdf.lookup_direct pdf "/Font" page.Pdfpage.resources with
+               | None -> raise (Pdf.PDFError "Missing /Font in text extraction")
+               | Some d ->
+                   match Pdf.lookup_direct pdf fontname d with
+                   | None -> raise (Pdf.PDFError "Missing font in text extraction")
+                   | Some d -> d
+             in
+               text_extractor := Some (Pdftext.text_extractor_of_font pdf fontdict);
+               ""
+         | Pdfops.Op_Tj text when !text_extractor <> None ->
+             if not !right_font_size then
+               ""
+             else
+               Pdftext.utf8_of_codepoints
+                 (Pdftext.codepoints_of_text (unopt !text_extractor) text)
+         | Pdfops.Op_TJ (Pdf.Array objs) when !text_extractor <> None ->
+             if not !right_font_size then
+               ""
+             else
+               fold_left ( ^ ) ""
+                 (option_map
+                    (function
+                     | Pdf.String text ->
+                         Some
+                           (Pdftext.utf8_of_codepoints
+                             (Pdftext.codepoints_of_text (unopt !text_extractor) text))
+                     | _ -> None)
+                    objs)
+         | _ -> "")
+        (Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content))
+
+(* For each page, extract all the ops with text in them, and concatenate it all together *)
+let extract_text extract_text_font_size pdf range =
+  fold_left (fun x y -> x ^ (if x <> "" && y <> "" then "\n" else "") ^ y) ""
+    (map_pages (extract_page_text extract_text_font_size pdf) pdf range)
+
 let addtext
   metrics lines linewidth outline fast colour fontname embed bates batespad fontsize font
   underneath position hoffset voffset text pages orientation cropbox opacity
-  justification filename pdf
+  justification filename extract_text_font_size pdf
 =
   let endpage = Pdfpage.endpage pdf in
-  let replace_pairs pdf filename bates batespad num =
-      ["%Page", string_of_int num;
-       "%Roman", roman_upper num;
-       "%roman", roman_lower num;
-       "%filename", filename;
-       "%Label", pagelabel pdf num;
-       "%EndPage", string_of_int endpage;
-       "%EndLabel", pagelabel pdf endpage;
+  let replace_pairs pdf filename bates batespad num page =
+      ["%Page", (fun () -> string_of_int num);
+       "%Roman", (fun () -> roman_upper num);
+       "%roman", (fun () -> roman_lower num);
+       "%filename", (fun () -> filename);
+       "%Label", (fun () -> pagelabel pdf num);
+       "%EndPage", (fun () -> string_of_int endpage);
+       "%EndLabel", (fun () -> pagelabel pdf endpage);
+       "%ExtractedText", (fun () -> extract_page_text extract_text_font_size pdf num page);
        "%Bates",
-          (let numstring = string_of_int (bates + num - 1) in
+          (fun () ->
+            (let numstring = string_of_int (bates + num - 1) in
              match batespad with
                None -> numstring
              | Some w ->
                  if String.length numstring >= w
                    then numstring
-                   else implode (many '0' (w - String.length numstring)) ^ numstring)]
+                   else implode (many '0' (w - String.length numstring)) ^ numstring))]
   in
   let addtext_page num page =
     let resources', unique_extgstatename =
@@ -1708,7 +1756,7 @@ let addtext
       in
         let unique_fontname = Pdf.unique_key "F" fontdict in
           let ops =
-            let text = process_text text (replace_pairs pdf filename bates batespad num) in
+            let text = process_text text (replace_pairs pdf filename bates batespad num page) in
               let calc_textwidth text =
                 match font with
                 | Some f ->
@@ -1734,8 +1782,10 @@ let addtext
                         (rawwidth *. fontsize) /. 1000.
               in
                 let expanded_lines =
-                  map (function text -> process_text text (replace_pairs pdf
-                  filename bates batespad num)) lines
+                  map
+                    (function text ->
+                       process_text text (replace_pairs pdf filename bates batespad num page))
+                    lines
                 in
                 let textwidth = calc_textwidth text
                 and allwidths = map calc_textwidth expanded_lines in
@@ -1807,7 +1857,7 @@ let unescape_string s =
 let
   addtexts metrics linewidth outline fast fontname font embed bates batespad colour position linespacing
   fontsize underneath text pages orientation cropbox opacity justification
-  midline topline filename pdf
+  midline topline filename extract_text_font_size pdf
 =
   (*flprint "addtexts:\n";
   iter (Printf.printf "%C ") (explode text);
@@ -1883,6 +1933,7 @@ let
                    addtext metrics lines linewidth outline fast colour fontname
                    embed bates batespad fontsize font underneath position hoff voff line
                    pages orientation cropbox opacity justification filename
+                   extract_text_font_size
                    !pdf;
                  voffset := !voffset +. (linespacing *. fontsize))
             lines;
@@ -3663,4 +3714,5 @@ let add_page_labels pdf style prefix startval range =
              labels := Pdfpagelabels.add_label (Pdfpage.endpage pdf) !labels label e)
         ranges;
         Pdfpagelabels.write pdf !labels
+
 
