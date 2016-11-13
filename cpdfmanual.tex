@@ -1202,12 +1202,12 @@ the file using a different page range each time.
 \index{stamps}
   \begin{framed}
   \noindent\small\verb!cpdf -stamp-on source.pdf!\\
-  \noindent\small\verb!     ([-scale-stamp-to-fit] | [<positioning command>]) !\\
+  \noindent\small\verb!     [-scale-stamp-to-fit] [<positioning command>] [-relative-to-cropbox] !\\
   \noindent\small\verb!     in.pdf [<range>] -o out.pdf!
   
   \vspace{1.5mm}
   \noindent\small\verb!cpdf -stamp-under source.pdf!\\
-  \noindent\small\verb!     ([-scale-stamp-to-fit] | [<positioning command>]) !\\
+  \noindent\small\verb!     [-scale-stamp-to-fit] [<positioning command>] [-relative-to-cropbox]!\\
   \noindent\small\verb!     in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
@@ -1263,6 +1263,8 @@ as the length of the ``under'' file. For instance:
 \noindent Page attributes (such as the display rotation) are taken from the ``under''
 file. For best results, remove any rotation differences in the two files using
 \texttt{-upright} first.
+
+\noindent The \texttt{-relative-to-cropbox} option takes the positioning command to be relative to the cro box of each page rather than the media box.
 
   \section{Stamp Text, Dates and Times.}
 \index{date}

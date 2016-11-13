@@ -2619,7 +2619,6 @@ let scale_pdf ?(fast=false) sxsylist pdf range =
         process_pages scale_page pdf range
 
 (* Scale to fit page of size x * y *)
-(* FIXME: Can we do this in terms of scale_contents - and then just fix up the boxes? For 1.8 *)
 let scale_to_fit_pdf ?(fast=false) input_scale xylist op pdf range =
   let scale_page_to_fit pnum page =
     let x, y = List.nth xylist (pnum - 1) in
@@ -2642,7 +2641,7 @@ let scale_to_fit_pdf ?(fast=false) input_scale xylist op pdf range =
     in
       let page =
         change_boxes
-          (function (minx, miny, maxx, maxy) -> 0., 0., x, y (* FIXME: scale boxes properly *))
+          (function (minx, miny, maxx, maxy) -> 0., 0., x, y)
           pdf page
       in
         Pdfpage.prepend_operators pdf [Pdfops.Op_cm matrix] ~fast

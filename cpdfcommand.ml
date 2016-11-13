@@ -1,4 +1,3 @@
-(* FIXME DOC Added -relative-to-cropbox for stamps *)
 (* cpdf command line tools *)
 let demo = false
 let noncomp = false
@@ -166,7 +165,6 @@ type op =
   | RemoveDictEntry of string
   | ListSpotColours
   | RemoveClipping
-  | ChangeFontSize of float
 
 let string_of_op = function
   | CopyFont _ -> "CopyFont"
@@ -271,7 +269,6 @@ let string_of_op = function
   | RemoveDictEntry _ -> "RemoveDictEntry"
   | ListSpotColours -> "ListSpotColours"
   | RemoveClipping -> "RemoveClipping"
-  | ChangeFontSize _ -> "ChangeFontSize"
 
 (* Inputs: filename, pagespec. *)
 type input_kind =
@@ -382,8 +379,6 @@ type args =
    mutable creator : string option;
    mutable producer : string option;
    mutable embedfonts : bool;
-   mutable change_font_size_shift : string;
-   mutable change_font_size_color : float * float * float;
    mutable extract_text_font_size : float option}
 
 let args =
@@ -468,8 +463,6 @@ let args =
    producer = None;
    creator = None;
    embedfonts = true;
-   change_font_size_shift = "0 0";
-   change_font_size_color = (0., 0., 0.);
    extract_text_font_size = None}
 
 let reset_arguments () =
@@ -548,7 +541,10 @@ let reset_arguments () =
   args.squeeze <- false;
   args.producer <- None;
   args.creator <- None;
-  args.embedfonts <- true
+  args.embedfonts <- true;
+  args.creator <- None;
+  args.producer <- None;
+  args.extract_text_font_size <- None
   (* Do not reset original_filename or cpdflin or was_encrypted or
    * was_decrypted_with_owner or recrypt, since we want these to work across ANDs. *)
 
@@ -618,7 +614,7 @@ let banned banlist = function
     AddText _|ScaleContents _|AttachFile _|CopyAnnotations _|SetMetadata _|
     ThinLines _|SetAuthor _|SetTitle _|SetSubject _|SetKeywords _|SetCreate _|
     SetModify _|SetCreator _|SetProducer _|SetVersion _|RemoveDictEntry _ |
-    RemoveClipping | ChangeFontSize _ ->
+    RemoveClipping ->
       mem Pdfcrypt.NoEdit banlist
 
 let operation_allowed pdf banlist op =
@@ -1530,15 +1526,6 @@ let setstayonerror () =
 
 let setnoembedfont () =
   args.embedfonts <- false
-
-let setchangefontsizeto i =
-  args.op <- Some (ChangeFontSize i) 
-
-let setchangefontsizeshift s =
-  args.change_font_size_shift <- s
-
-let setchangefontsizecolor s =
-  args.change_font_size_color <- parse_color s
 
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
@@ -3949,11 +3936,6 @@ let go () =
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
           write_pdf false (remove_clipping pdf range)
-  | Some (ChangeFontSize target_size) ->
-      let pdf = get_single_pdf args.op false in
-        let range = parse_pagespec pdf (get_pagespec ()) in
-          let dx, dy = parse_coordinate pdf args.change_font_size_shift in
-            write_pdf false (change_font_size pdf range args.change_font_size_color dx dy args.fontsize target_size)
 
 let parse_argv () =
   if args.debug then
