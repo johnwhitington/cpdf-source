@@ -3106,6 +3106,12 @@ let addrectangle
     let x, y, _ =
       Cpdf.calculate_position false w mediabox Cpdf.Horizontal position
     in
+    let x, y =
+      match position with
+        Cpdf.Top _ | Cpdf.TopLeft _ | Cpdf.TopRight _ -> (x, y -. h)
+      | Cpdf.Centre -> (x, y -. (h /. 2.))
+      | _ -> (x, y)
+    in
     let ops =
       [
        Pdfops.Op_q;
