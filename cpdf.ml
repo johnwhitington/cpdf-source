@@ -2210,6 +2210,28 @@ let stamp_shift_of_position topline midline sw sh w h p =
     | Diagonal | ReverseDiagonal | Centre ->
         half w -. half sw, half h -. half sh -. dy
 
+(* Combine Pdfpage.rest items for two PDFs. For now, we combine /Annots, and
+ * copy everything else from adict. What else should we combine? *)
+
+(*FIXME: The annotations must be renumbered to reflect new page object numbers?
+ * *)
+let combine_page_items pdf adict bdict =
+  let getannots dict =
+    begin match dict with
+      Pdf.Dictionary d ->
+        begin match lookup "/Annots" d with
+          Some (Pdf.Array items) -> items
+        | _ -> []
+        end
+    | _ -> []
+    end
+  in
+    let a_annots = getannots adict in
+    let b_annots = getannots bdict in
+      match a_annots @ b_annots with
+        [] -> adict
+      | annots -> Pdf.add_dict_entry adict "/Annots" (Pdf.Array annots)
+
 let do_stamp relative_to_cropbox fast position topline midline scale_to_fit isover pdf o u opdf =
   (* Scale page stamp o to fit page u *)
   let sxmin, symin, sxmax, symax =
@@ -2258,6 +2280,8 @@ let do_stamp relative_to_cropbox fast position topline midline scale_to_fit isov
            (if isover then ( @ ) else ( @@ ))
            (protect fast pdf u.Pdfpage.resources u.Pdfpage.content)
            (protect fast pdf o.Pdfpage.resources o.Pdfpage.content);
+         Pdfpage.rest =
+           combine_page_items pdf u.Pdfpage.rest o.Pdfpage.rest; 
          Pdfpage.resources =
            combine_pdf_resources pdf u.Pdfpage.resources o.Pdfpage.resources}
 
