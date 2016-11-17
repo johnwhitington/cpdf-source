@@ -703,7 +703,12 @@ let attach_file ?memory keepversion topage pdf file =
       Pdf.Stream
         (ref (Pdf.Dictionary
                [("/Length", Pdf.Integer (bytes_size data));
-                ("/Type", Pdf.Name "/EmbeddedFile")],
+                ("/Type", Pdf.Name "/EmbeddedFile");
+                ("/Params",
+                   Pdf.Dictionary
+                     [("/Size", Pdf.Integer (bytes_size data));
+                      ("/CheckSum", Pdf.String (Digest.string (string_of_bytes data)))
+                     ])],
               Pdf.Got data))
     in
       let filestream_num = Pdf.addobj pdf filestream in
@@ -711,7 +716,9 @@ let attach_file ?memory keepversion topage pdf file =
           Pdf.Dictionary
             [("/EF", Pdf.Dictionary ["/F", Pdf.Indirect filestream_num]);
              ("/F", Pdf.String (Filename.basename file));
-             ("/Type", Pdf.Name "/F")]
+             ("/Type", Pdf.Name "/Filespec");
+             ("/Desc", Pdf.String "");
+             ("/UF", Pdf.String (Filename.basename file))]
         in
           match topage with
           | None ->
@@ -732,7 +739,8 @@ let attach_file ?memory keepversion topage pdf file =
                       | Some (Pdf.Array elts) -> elts
                       | _ -> []
                     in
-                      let names' = Pdf.Array (elts @ [Pdf.String (Filename.basename file); filespec]) in
+                      let filespecobj = Pdf.addobj pdf filespec in
+                      let names' = Pdf.Array (elts @ [Pdf.String (Filename.basename file); Pdf.Indirect filespecobj]) in
                       let embeddednamedict' = Pdf.add_dict_entry embeddednamedict "/Names" names' in
                       let namedict' = Pdf.add_dict_entry namedict "/EmbeddedFiles" embeddednamedict' in
                       let rootdict' = Pdf.add_dict_entry rootdict "/Names" namedict' in
@@ -756,9 +764,10 @@ let attach_file ?memory keepversion topage pdf file =
                         let minx, miny, maxx, maxy = Pdf.parse_rectangle page.Pdfpage.mediabox in
                           Pdf.Array [Pdf.Real 18.; Pdf.Real (maxy -. 45.); Pdf.Real 45.; Pdf.Real (maxy -. 18.)]
                       in
+                        let filespecobj = Pdf.addobj pdf filespec in
                         let annot =
                           Pdf.Dictionary
-                            [("/FS", filespec);
+                            [("/FS", Pdf.Indirect filespecobj);
                              ("/Subtype", Pdf.Name "/FileAttachment");
                              ("/Contents", Pdf.String (Filename.basename file));
                              ("/Rect", rect)]
@@ -2212,9 +2221,6 @@ let stamp_shift_of_position topline midline sw sh w h p =
 
 (* Combine Pdfpage.rest items for two PDFs. For now, we combine /Annots, and
  * copy everything else from adict. What else should we combine? *)
-
-(*FIXME: The annotations must be renumbered to reflect new page object numbers?
- * *)
 let combine_page_items pdf adict bdict =
   let getannots dict =
     begin match dict with
@@ -2379,6 +2385,14 @@ let equalize_pages under over =
       under, over
 
 let combine_pages (fast : bool) under over scaletofit swap equalize =
+  let debug_combine_pages = true in (* DEBUG *)
+  let debug_pdf pdf n =
+    if debug_combine_pages then
+    begin
+      Pdf.remove_unreferenced pdf;
+      Pdfwrite.pdf_to_file pdf n
+    end
+  in
   Pdfpage.add_prefix over (Pdfpage.shortest_unused_prefix under);
   let marks_under = Pdfmarks.read_bookmarks under in
   let marks_over = Pdfmarks.read_bookmarks over in
@@ -2394,6 +2408,7 @@ let combine_pages (fast : bool) under over scaletofit swap equalize =
         Pdfmerge.merge_pdfs
           false false ["a"; "b"] [under; over] [pageseqs_under; pageseqs_over]
       in
+        debug_pdf merged "merged.pdf";
         let under_pages, over_pages =
           cleave (Pdfpage.pages_of_pagetree merged) under_length
         in
@@ -2412,11 +2427,15 @@ let combine_pages (fast : bool) under over scaletofit swap equalize =
              * Pdfpage.pdf_of_pages afterward to chop it. *)
             (* See also combine_pages below *)
             let changed = Pdfpage.change_pages true merged (new_pages @ new_pages) in
+              debug_pdf changed "changed.pdf";
               let cut =
                 Pdfpage.pdf_of_pages ~retain_numbering:true changed (ilist 1 (length new_pages))
               in 
+              debug_pdf cut "cut.pdf";
               (* Now shorten to just new_pages *)
-              Pdfmarks.add_bookmarks (marks_under @ marks_over) cut
+              let r = Pdfmarks.add_bookmarks (marks_under @ marks_over) cut in
+                 debug_pdf r "final.pdf";
+                 r
 
 let nobble_page pdf _ page =
   let minx, miny, maxx, maxy =
