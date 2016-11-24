@@ -2642,7 +2642,7 @@ let rec image_resolution_page pdf page pagenum dpi (images : (int * string * xob
                              Pdfpage.rotate = Pdfpage.Rotate0;
                              Pdfpage.rest = Pdf.Dictionary []}
                           in
-                            let newpdf = Pdfpage.change_pages true pdf [page] in
+                            let newpdf = Pdfpage.change_pages false pdf [page] in
                               image_resolution newpdf [pagenum] dpi
                    | (pagenum, name, Image (w, h)) ->
                        let lx = Pdfunits.convert 0. Pdfunits.PdfPoint Pdfunits.Inch (distance_between o x)

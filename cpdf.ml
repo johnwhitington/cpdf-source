@@ -2385,7 +2385,7 @@ let equalize_pages under over =
       under, over
 
 let combine_pages (fast : bool) under over scaletofit swap equalize =
-  let debug_combine_pages = true in (* DEBUG *)
+  let debug_combine_pages = false in (* DEBUG *)
   let debug_pdf pdf n =
     if debug_combine_pages then
     begin
@@ -2879,8 +2879,7 @@ let copy_annotations_page topdf frompdf frompage topage =
       in
         List.iter
          (function
-            (* FIXME: We assume they are indirects. Must also do direct, though
-            rare.*)
+            (* FIXME: We assume they are indirects. Must also do direct, though rare.*)
             Pdf.Indirect x ->
               (*Printf.printf "Copying annotation %s which is\n%s\n"
                 (Pdfwrite.string_of_pdf (Pdf.Indirect x))
