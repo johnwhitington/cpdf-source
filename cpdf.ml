@@ -2426,7 +2426,7 @@ let combine_pages (fast : bool) under over scaletofit swap equalize =
              * Pdfpage.change_pages properly. For now, we just use
              * Pdfpage.pdf_of_pages afterward to chop it. *)
             (* See also combine_pages below *)
-            let changed = Pdfpage.change_pages true merged (new_pages @ new_pages) in
+            let changed = Pdfpage.change_pages ~is_combine_pages:true true merged new_pages in
               debug_pdf changed "changed.pdf";
               let cut =
                 Pdfpage.pdf_of_pages ~retain_numbering:true changed (ilist 1 (length new_pages))
