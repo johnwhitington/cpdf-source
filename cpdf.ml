@@ -2384,21 +2384,16 @@ let equalize_pages under over =
     else
       under, over
 
-let combine_pages (fast : bool) under over scaletofit swap equalize =
-  let debug_combine_pages = false in (* DEBUG *)
+let combine_pages fast under over scaletofit swap equalize =
+  let debug_combine_pages = false in
   let debug_pdf pdf n =
     if debug_combine_pages then
-    begin
-      Pdf.remove_unreferenced pdf;
-      Pdfwrite.pdf_to_file pdf n
-    end
+      begin Pdf.remove_unreferenced pdf; Pdfwrite.pdf_to_file pdf n end
   in
   Pdfpage.add_prefix over (Pdfpage.shortest_unused_prefix under);
-  let marks_under = Pdfmarks.read_bookmarks under in
-  let marks_over = Pdfmarks.read_bookmarks over in
+  let marks_under, marks_over = Pdfmarks.read_bookmarks under, Pdfmarks.read_bookmarks over in
   let under, over = if equalize then equalize_pages under over else under, over in
-  let under_length = Pdfpage.endpage under in
-  let over_length = Pdfpage.endpage over in
+  let under_length, over_length = Pdfpage.endpage under, Pdfpage.endpage over in
     if under_length <> over_length then
       raise (Pdf.PDFError "combine_pages: not of equal length")
     else
@@ -2416,26 +2411,18 @@ let combine_pages (fast : bool) under over scaletofit swap equalize =
             map2
               (fun o u ->
                  do_stamp
-                   false fast (BottomLeft 0.) false false scaletofit (not swap)
-                   merged o u over)
+                   false fast (BottomLeft 0.) false false scaletofit (not swap) merged o u over)
               over_pages under_pages
           in
-            (* we use new_pages @ new_pages here to preserve the number of pages
-             * so that Pdfpage.change_pages can do its renumbering properly.
-             * Otherwise things like outlines are lost. TODO: Fix
-             * Pdfpage.change_pages properly. For now, we just use
-             * Pdfpage.pdf_of_pages afterward to chop it. *)
-            (* See also combine_pages below *)
-            let changed = Pdfpage.change_pages ~is_combine_pages:true true merged new_pages in
-              debug_pdf changed "changed.pdf";
-              let cut =
-                Pdfpage.pdf_of_pages ~retain_numbering:true changed (ilist 1 (length new_pages))
-              in 
-              debug_pdf cut "cut.pdf";
-              (* Now shorten to just new_pages *)
-              let r = Pdfmarks.add_bookmarks (marks_under @ marks_over) cut in
-                 debug_pdf r "final.pdf";
-                 r
+            (* Build the changes. 123456 -> 123123 *)
+            let changes =
+              let len = List.length new_pages in
+                combine (ilist 1 (len * 2)) (let x = ilist 1 len in x @ x)
+            in
+              let changed = Pdfpage.change_pages ~changes true merged new_pages in
+                let r = Pdfmarks.add_bookmarks (marks_under @ marks_over) changed in
+                   debug_pdf r "final.pdf";
+                   r
 
 let nobble_page pdf _ page =
   let minx, miny, maxx, maxy =
