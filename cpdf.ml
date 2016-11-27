@@ -1989,7 +1989,22 @@ let rec insert_after_many pages = function
       let pages' = insert_after pos page pages in
         insert_after_many pages' (map (fun (p, pa) -> p + 1, pa) more)
 
-let pad range pdf i =
+(* For each pagenum in the range, increment the count by padsize, and carry on. e.g
+insert_after_many_changes 1 0 [2] [1; 2; 3] --> [(1, 1); (2, 2); (3, 4)] *)
+let rec insert_after_many_changes isbefore padsize offset range = function
+  [] -> []
+| h::t ->
+    let item = (h, h + offset + if isbefore && mem h range then 1 else 0) in
+      if mem h range then
+        item::insert_after_many_changes isbefore padsize (offset + padsize) range t
+      else
+        item::insert_after_many_changes isbefore padsize offset range t
+
+let print_changes =
+  List.iter (fun (f, t) -> Printf.printf "%i --> %i\n" f t)
+
+let pad range pdf isbefore =
+  let i = if isbefore then 1 else 0 in
   let pages = Pdfpage.pages_of_pagetree pdf in
     let blankpages =
       map
@@ -2002,19 +2017,24 @@ let pad range pdf i =
         range
     in
       let pages' = insert_after_many pages (combine range blankpages) in
-        Pdfpage.change_pages true pdf pages'
+      let changes =
+        insert_after_many_changes
+          isbefore 1 0 (List.map (fun x -> x + i) range) (ilist 1 (length pages))
+      in
+        (*print_changes changes;*)
+        Pdfpage.change_pages ~changes true pdf pages'
 
 let padafter range pdf =
   let isinpdf n = mem n (ilist 1 (Pdfpage.endpage pdf)) in
     if not (fold_left ( && ) true (map isinpdf range)) then
       raise (Failure "padafter: range contains pages not present in pdf");
-    pad range pdf 0
+    pad range pdf false
 
 let padbefore range pdf =
   let isinpdf n = mem n (ilist 1 (Pdfpage.endpage pdf)) in
     if not (fold_left ( && ) true (map isinpdf range)) then
       raise (Failure "padbefore: range contains pages not present in pdf");
-    pad (map pred range) pdf 1
+    pad (map pred range) pdf true
 
 let padmultiple n pdf =
   let pages = Pdfpage.pages_of_pagetree pdf in
@@ -2030,7 +2050,8 @@ let padmultiple n pdf =
                Pdfpage.rest = (select len pages).Pdfpage.rest}
               pages_to_add
           in
-            Pdfpage.change_pages true pdf (pages @ blankpages)
+            let changes = map (fun x -> (x, x)) (ilist 1 (length pages)) in
+              Pdfpage.change_pages ~changes true pdf (pages @ blankpages)
         else
           pdf
 
