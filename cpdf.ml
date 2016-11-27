@@ -2327,7 +2327,7 @@ let stamp relative_to_cropbox position topline midline fast scale_to_fit isover 
     let over_firstpage_pdf =
       match Pdfpage.pages_of_pagetree over with
       | [] -> error "empty PDF"
-      | h::_ -> Pdfpage.change_pages true over [h]
+      | h::_ -> Pdfpage.change_pages ~changes:[(1, 1)] true over [h]
     in
       let merged =
         Pdfmerge.merge_pdfs
@@ -2351,19 +2351,16 @@ let stamp relative_to_cropbox position topline midline fast scale_to_fit isover 
                     pageseqs
                     under_pages 
                 in
-                  let changed = Pdfpage.change_pages true merged (new_pages @ [last new_pages]) in
-                (* we use new_pages @ new_pages here to preserve the number of pages
-                 * so that Pdfpage.change_pages can do its renumbering properly.
-                 * Otherwise things like outlines are lost. TODO: Fix
-                 * Pdfpage.change_pages properly. For now, we just use
-                 * Pdfpage.pdf_of_pages afterward to chop it. *)
-                  let cut =
-                    Pdfpage.pdf_of_pages ~retain_numbering:true changed (ilist 1 (length new_pages))
-                  in 
-                  let new_refnumbers = Pdf.page_reference_numbers cut in
-                  let changetable = hashtable_of_dictionary (List.combine marks_refnumbers new_refnumbers) in
-                  let new_marks = map (change_bookmark changetable) marks in
-                  Pdfmarks.add_bookmarks new_marks cut
+                  let changed =
+                    let changes =
+                      List.map (fun x -> (x, x)) (ilist 1 (length new_pages))
+                    in
+                      Pdfpage.change_pages ~changes true merged new_pages
+                  in
+                    let new_refnumbers = Pdf.page_reference_numbers changed in
+                    let changetable = hashtable_of_dictionary (List.combine marks_refnumbers new_refnumbers) in
+                    let new_marks = map (change_bookmark changetable) marks in
+                      Pdfmarks.add_bookmarks new_marks changed
 
 (* Combine pages from two PDFs. For now, assume equal length. *)
 
@@ -2373,14 +2370,21 @@ let equalize_pages under over =
   let length_under = Pdfpage.endpage under in
   let length_over = Pdfpage.endpage over in
     if length_over > length_under then
-      under,
-      (Pdfpage.change_pages true over (take (Pdfpage.pages_of_pagetree over) length_under))
+      let changes =
+        List.map (fun x -> (x, x)) (ilist 1 length_under)
+      in
+        (under,
+         (Pdfpage.change_pages
+            ~changes true over (take (Pdfpage.pages_of_pagetree over) length_under)))
     else if length_under > length_over then
-      under,
-      Pdfpage.change_pages true
-        over
-        (Pdfpage.pages_of_pagetree over @
-           (many (Pdfpage.blankpage Pdfpaper.a4) (length_under - length_over)))
+      let changes =
+        List.map (fun x -> (x, x)) (ilist 1 length_over)
+      in
+        (under,
+         Pdfpage.change_pages
+           ~changes true over
+           (Pdfpage.pages_of_pagetree over @
+              (many (Pdfpage.blankpage Pdfpaper.a4) (length_under - length_over))))
     else
       under, over
 
