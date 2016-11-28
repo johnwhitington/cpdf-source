@@ -777,7 +777,7 @@ let attach_file ?memory keepversion topage pdf file =
                               {page with Pdfpage.rest = Pdf.add_dict_entry page.Pdfpage.rest "/Annots" annots'}
                             in
                               let pages' = replace_number pagenumber page' pages in
-                                let pdf = Pdfpage.change_pages false pdf pages' in
+                                let pdf = Pdfpage.change_pages true pdf pages' in
                                   {pdf with
                                      Pdf.minor = if keepversion then pdf.Pdf.minor else max pdf.Pdf.minor 4}
 
@@ -2841,11 +2841,11 @@ let list_annotations_more pdf =
 let equalise_lengths a b =
   let a' =
     if Pdfpage.endpage a < Pdfpage.endpage b then
-      Pdfpage.change_pages true a
+      Pdfpage.change_pages false a
         (Pdfpage.pages_of_pagetree a @
            many (Pdfpage.blankpage Pdfpaper.a4) (Pdfpage.endpage b - Pdfpage.endpage a))
     else if Pdfpage.endpage a > Pdfpage.endpage b then
-      Pdfpage.change_pages true a
+      Pdfpage.change_pages false a
         (take (Pdfpage.pages_of_pagetree a) (Pdfpage.endpage b))
     else a 
   in
@@ -2923,8 +2923,8 @@ let copy_annotations range frompdf topdf =
   let frompdf, topdf = equalise_lengths frompdf topdf in
     match Pdf.renumber_pdfs [frompdf; topdf] with 
     | [frompdf; topdf] ->
-        let frompdf_pages = Pdfpage.pages_of_pagetree frompdf
-        in let topdf_pages = Pdfpage.pages_of_pagetree topdf in
+        let frompdf_pages = Pdfpage.pages_of_pagetree frompdf in
+        let topdf_pages = Pdfpage.pages_of_pagetree topdf in
           let pdf = ref topdf
           and pages = ref []
           and pnum = ref 1
@@ -3077,12 +3077,15 @@ let twoup_pages_stack pdf = function
           Pdfpage.rest = rest}
 
 let f_twoup f_pages pdf =
-  let pdf = upright (ilist 1 (Pdfpage.endpage pdf)) pdf in
+  let pagenums = ilist 1 (Pdfpage.endpage pdf) in
+  let pdf = upright pagenums pdf in
     let pages = Pdfpage.pages_of_pagetree pdf in
       let pagesets = splitinto 2 pages in
         let renumbered = map (Pdfpage.renumber_pages pdf) pagesets in
           let pages' = map (f_pages pdf) renumbered in
-            Pdfpage.change_pages true pdf pages'
+            let changes = List.map (fun x -> (x, (x + 1) / 2)) pagenums in
+              (*print_changes changes;*)
+              Pdfpage.change_pages ~changes true pdf pages'
 
 let twoup pdf = f_twoup twoup_pages pdf
 
