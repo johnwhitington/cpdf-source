@@ -3410,7 +3410,7 @@ let go () =
       | _ -> error "Copy Box: bad command line"
       end
   | Some Decompress ->
-      let pdf = get_single_pdf (Some Decompress) true in
+      let pdf = get_single_pdf (Some Decompress) false in
         Pdf.iter_stream
           (function stream ->
              try Pdfcodec.decode_pdfstream_until_unknown pdf stream with
