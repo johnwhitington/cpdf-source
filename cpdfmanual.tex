@@ -10,7 +10,15 @@
 \addtolength{\textwidth}{20mm}
 \usepackage{makeidx}\makeindex
 \usepackage[left=3cm, right=1.5cm, top=2cm, bottom=1.8cm, paperwidth=7.5in, paperheight=9.25in]{geometry}
-
+\usepackage{fancyhdr}
+\fancyhf{}
+\pagestyle{fancy}
+\fancyhead[lo]{\slshape\nouppercase{\leftmark}\hfill\thepage}
+\fancyhead[re]{\thepage\hfill\slshape\nouppercase{\leftmark}}
+\fancyfoot{}
+%\fancyfoot[LE,RO]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
 \begin{document}
 
 \frontmatter
@@ -58,7 +66,7 @@ Excel are registered trademarks of Microsoft Corporation.
 
 \cleardoublepage
 \chapter*{Typographical Conventions}
-Command lines to be typed are shown in \texttt{typewriter font} in a box.
+Command lines to be typed are shown in \texttt{typewriter\hspace{-1mm} font} in a box.
 For example:
 \begin{framed}
 \small\verb!cpdf in.pdf -o out.pdf!
@@ -78,7 +86,7 @@ verbosity. Under Microsoft Windows, type \texttt{cpdf.exe} instead of \texttt{cp
 \mainmatter
 %\chapterstyle{hangnum}
 %\pagestyle{ruled}
-\pagestyle{headings}
+\pagestyle{fancy}
 \chapter{Basic Usage}
 
 
@@ -253,7 +261,7 @@ achieved with the \texttt{>} operator:
 output to \texttt{file.txt}.
 \end{framed}
 
-\section{Doing several things at once with AND}
+\section{Doing Several Things at Once with AND}
 
 The keyword \texttt{AND} can be used to string together several commands in
 one. The advantage compared with using pipes is that the file need not be
@@ -294,7 +302,7 @@ supported:
 \end{tabular}
 \end{table}
 
-\noindent For example, one may write \texttt{14mm} or \texttt{21.6in}. In addition, the following letters stand, in some operations (\texttt{-scale-page}, \texttt{-scale-to-fit}, \texttt{-scale-contents}, \texttt{-shift}, \texttt{-mediabox}, \texttt{-crop}) for various page dimensions:
+\noindent For example, one may write \texttt{14mm} or \texttt{21.6in}. In addition, the following letters stand, in some operations (\texttt{-scale-page}, \texttt{-scale-to-fit}, \texttt{-scale-contents}, \texttt{-shift}, \texttt{-mediabox},\\ \texttt{-crop}) for various page dimensions:
 
 \begin{table}[h]
 \centering
@@ -316,7 +324,7 @@ supported:
 
 \noindent For example, we may write \texttt{PMINX PMINY} to stand for the coordinate of the lower left corner of the page.
 
-Simple arithmetic may be performed using the words \texttt{add}, \texttt{sub}, \texttt{mul} and \texttt{div} to stand for addition, subtraction, multiplication and division. For example, one may write \texttt{14in sub 30pt} or \texttt{PMINX mul 2}
+Simple arithmetic may be performed using the words \texttt{add}, \texttt{sub}, \texttt{mul} and \texttt{div} to stand for addition, subtraction, multiplication and division. For example, one may write \texttt{14in\hspace{-1mm} sub\hspace{-1mm} 30pt} or \texttt{PMINX\hspace{-1mm} mul\hspace{-1mm} 2}
 
 \section{Setting the Producer and Creator}
 
@@ -653,9 +661,10 @@ one of the output files.
 \section{Encrypting with Split and Split Bookmarks}
 
 The encryption parameters described in Chapter \ref{encryption} may be added to the command line to encrypt each split PDF. Similarly, the \texttt{-recrypt} switch described in \ref{basicusage} may by given to re-encrypt each file with the existing encryption of the source PDF. 
-
+\pagestyle{empty}\thispagestyle{fancy}
 
 \chapter{Pages}
+\pagestyle{fancy}
   \label{pages}
   \begin{framed}
   \small\noindent\verb!cpdf -scale-page "<scale x> <scale y>" in.pdf [<range>] -o out.pdf!
@@ -913,9 +922,10 @@ existing crop box, use \texttt{-remove-crop}.
   \begin{framed}
     \small\verb!cpdf -frombox /TrimBox -tobox /CropBox in.pdf -o out.pdf!
   \end{framed}
-  \noindent copies the Trim Box of each page to the Crop Box of each page. The possible boxes are \texttt{/MediaBox}, \texttt{/CropBox}, \texttt{/BleedBox}, \texttt{/TrimBox}, \texttt{/ArtBox}.
+  \noindent copies the Trim Box of each page to the Crop Box of each page. The possible boxes are \texttt{/MediaBox}, \texttt{/CropBox}, \texttt{/BleedBox}, \texttt{/TrimBox}, \texttt{/ArtBox}.\pagestyle{empty}\thispagestyle{fancy}
 
 \chapter{Encryption and Decryption}
+\pagestyle{fancy}
 \label{encryption}
 \index{encryption}
 \index{decryption}
@@ -1534,10 +1544,10 @@ A rectangle may be placed on one or more pages by using the \texttt{-add-rectang
                     in.pdf -o out.pdf\end{verbatim}
 \end{framed}
 
-This can be used to blank out or highlight part of the document. The following positioning options work as you would expect: \texttt{-topleft}, \texttt{-top}, \texttt{-topright}, \texttt{-right}, \texttt{-bottomright}, \texttt{-bottom}, \texttt{-bottomleft}, \texttt{-left}, \texttt{-center}. When using the option \texttt{-pos-left "x y"}, the point (x, y) refers to the bottom-left of the rectangle. When using the option \texttt{-pos-right "x y"}, the point (x, y) refers to the bottom-right of the rectangle. When using the option \texttt{-pos-center "x y"}, the point (x, y) refers to the center of the rectangle. The options \texttt{-diagonal} and \texttt{-reverse-diagonal} have no meaning.
+This can be used to blank out or highlight part of the document. The following positioning options work as you would expect: \texttt{-topleft}, \texttt{-top}, \texttt{-topright}, \texttt{-right}, \texttt{-bottomright}, \texttt{-bottom}, \texttt{-bottomleft}, \texttt{-left}, \texttt{-center}. When using the option \texttt{-pos-left "x y"}, the point (x, y) refers to the bottom-left of the rectangle. When using the option \texttt{-pos-right "x y"}, the point (x, y) refers to the bottom-right of the rectangle. When using the option \texttt{-pos-center "x y"}, the point (x, y) refers to the center of the rectangle. The options \texttt{-diagonal} and \texttt{-reverse-diagonal} have no meaning.\pagestyle{empty}\thispagestyle{fancy}
 
 
-\chapter{Multipage Facilities}
+\chapter{Multipage Facilities}\pagestyle{fancy}
   \begin{framed}
     \small\noindent\verb!cpdf -twoup-stack in.pdf -o out.pdf! 
 
@@ -1558,12 +1568,8 @@ This can be used to blank out or highlight part of the document. The following p
   \end{framed}
   \section{Two-up}
 \index{two-up}
-    This facility puts multiple logical pages on a single physical page. 
-
-The \texttt{-twoup-stack} operation puts two logical pages on each physical
-page, rotating them 90 degrees to do so. The new mediabox is thus larger.
-
-The \texttt{-twoup} operation does the same, but scales the new sides down so
+    This facility puts multiple logical pages on a single physical page.  The \texttt{-twoup-stack} operation puts two logical pages on each physical
+page, rotating them 90 degrees to do so. The new mediabox is thus larger. The \texttt{-twoup} operation does the same, but scales the new sides down so
 that the media box is unchanged.
 
   \section{Inserting Blank Pages}
@@ -1891,12 +1897,12 @@ document when first opened. The possible (case-sensitive) values are:
     \small\verb!cpdf -hide-toolbar true in.pdf -o out.pdf!
   \end{framed}
 
-The page a PDF file opens at can be set using \texttt{-open-at-page}:
+\noindent The page a PDF file opens at can be set using \texttt{-open-at-page}:
   \begin{framed}
     \small\verb!cpdf -open-at-page 15 in.pdf -o out.pdf!
   \end{framed}
 
-To have that page scaled to fit the window in the viewer, use \texttt{-open-at-page-fit} instead:
+\noindent To have that page scaled to fit the window in the viewer, use \texttt{-open-at-page-fit} instead:
   \begin{framed}
     \small\verb!cpdf -open-at-page-fit 15 in.pdf -o out.pdf!
   \end{framed}
@@ -1966,9 +1972,9 @@ labelprefix: None
 startpage: 9
 startvalue: 1
 \end{verbatim}
-\end{framed}
+\end{framed}\pagestyle{empty}\thispagestyle{fancy}
 
-\chapter{File Attachments}
+\chapter{File Attachments}\pagestyle{fancy}
 \index{attachments}
 \begin{framed}
   \small\noindent\verb!cpdf -attach-file <filename> [-to-page <page number>] in.pdf -o out.pdf!
@@ -2046,8 +2052,9 @@ $cpdf -list-attached-files 14psfonts.pdf
 %    \small\verb!cpdf -extract-images in.pdf 2-6 -o img%%%!
 %  \end{framed}
 %might generate \texttt{img001.jpg}, \texttt{img002.png}, \texttt{img003.jpg} etc. from the images on pages two to six. The number of percentage characters in the output format indicate the width of the numbering system for the output file names.
+\pagestyle{empty}
 
-\chapter{Fonts}
+\chapter{Fonts}\pagestyle{fancy}
  {\small \begin{framed}
   \noindent\verb!cpdf -copy-font fromfile.pdf -copy-font-page <int>!\\
   \noindent\verb!     -copy-font-name <name> in.pdf [<range>] -o out.pdf!
@@ -2290,7 +2297,7 @@ The \texttt{-remove-clipping} operation removes any clipping paths from the file
 
 
 \appendix
-\chapter{Dates}
+\chapter{Dates}\pagestyle{empty}
 \label{dates}
 \index{dates!defined}
 Dates in PDF are specified according to the following format:
@@ -2324,8 +2331,9 @@ accuracy dates. For example:
    \noindent\verb!D:201401031854-08'00'! (3rd March 2014, 6:54PM, US Pacific Standard Time)
    
 \end{framed}
- 
 \backmatter
+\pagestyle{fancy}
+
 \printindex
 \end{document}
 
