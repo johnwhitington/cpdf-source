@@ -1,9 +1,9 @@
 (* cpdf command line tools *)
-let demo = false
+let demo = true
 let noncomp = false
 let major_version = 2
 let minor_version = 2
-let version_date = "(build of 3rd November 2016)"
+let version_date = "(build of 9th January 2017)"
 
 open Pdfutil
 open Pdfio

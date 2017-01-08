@@ -1,4 +1,4 @@
-Version 2.2 (To come)
+Version 2.2 (March 2017)
 
 o Perform artihmetic on dimensions when specifying size or position
 o Add simple rectangles to PDF to blank things out
@@ -16,7 +16,7 @@ o -print-page-labels
 o -squeeze replaces smpdf
 o Preserve more sharing of data when doing merges and page alterations
 
-Version 2.1 (November 2014)
+Version 2.1 (December 2014)
 
 o Encryption now much, much faster
 o Faster parsing of delayed object streams on large files
