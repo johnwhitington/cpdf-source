@@ -1,7 +1,5 @@
 (** PDF Command Line Tools in library form. *)
 
-exception StayOnError
-
 (** Call the command line tools with the contents of [Sys.argv] *)
 val go : unit -> unit
 
@@ -11,3 +9,4 @@ val go_withargv : string array -> unit
 (**/**)
 val demo : bool
 
+exception StayOnError

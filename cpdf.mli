@@ -137,6 +137,7 @@ val get_info_utf8 : Pdf.t -> string -> string
 (** Output to standard output general information about a PDF. *)
 val output_info : encoding -> Pdf.t -> unit
 
+(** Output to standard output information from any XMP metadata stream in a PDF. *)
 val output_xmp_info : encoding -> Pdf.t -> unit
 
 (** {2 Presentations} *)
@@ -204,59 +205,15 @@ swapped.  If [fast] is true, the PDFs are assumed to be well-formed and no
 fixes are done. *)
 val combine_pages : bool -> Pdf.t -> Pdf.t -> bool -> bool -> bool -> Pdf.t
 
-(** [stamp relative_to_cropbox position topline midline scale_to_fit fast isover range over pdf] stamps the first page of
+(** [stamp relative_to_cropbox position topline midline fast scale_to_fit isover range over pdf] stamps the first page of
 [over] over each page of the PDF. The arguments have the same meaning as in
 [combine_pages]. *)
 val stamp : bool -> position -> bool -> bool -> bool -> bool -> bool -> int list -> Pdf.t -> Pdf.t -> Pdf.t
 
 (** {2 Splitting PDFs} *)
 
-(** [split_at_bookmarks linearize nobble level spec pdf] splits on bookmarks at
-the fiven level, writing to files with names given by [spec] (see
-cpdfmanual.pdf). [nobble] is undocumented and should be false. If [linearize]
-is true, the files will be linearized. *)
-(*val split_at_bookmarks :
-  bool ->
-  bool ->
-  bool ->
-  string ->
-  bool ->
-  cpdflin:string option ->
-  preserve_objstm:bool ->
-  create_objstm:bool ->
-  squeeze:bool ->
-  (Pdf.t -> Pdf.t) ->
-  int ->
-  string ->
-  Pdf.t ->
-  unit*)
-
 (** Split a PDF on bookmarks of a given level or below. Level 0 is top level. *)
 val split_on_bookmarks : Pdf.t -> int -> Pdf.t list
-
-(** [split_pdf printf chunksize linearize preserve_objstm create_objstm nobble
-spec pdf] splits a PDF to files given a chunk size (number of pages in each
-split), a file specification (see cpdfmanual.pdf). If [linearize] is true
-each output is linearized. If [preserve_objstm] is true, object streams will
-be used if the input file had them. If [create_objstm] is true, object
-streams will be created in any event. [printf] and [nobble] are
-undocumented and should be false. *)
-(*val split_pdf :
-  bool ->
-  bool ->
-  bool ->
-  Pdfwrite.encryption option ->
-  string ->
-  int ->
-  bool ->
-  cpdflin:string option ->
-  preserve_objstm:bool ->
-  create_objstm:bool ->
-  squeeze:bool ->
-  (Pdf.t -> Pdf.t) ->
-  string ->
-  Pdf.t ->
-  unit*)
 
 (** {2 Listing fonts} *)
 
@@ -474,9 +431,9 @@ val draft : bool -> int list -> Pdf.t -> Pdf.t
 (** Squeeze a PDF *)
 val squeeze : ?logto:string -> Pdf.t -> unit
 
-val process_xobjects : Pdf.t -> Pdfpage.t -> (Pdf.t -> Pdf.pdfobject -> Pdf.pdfobject list -> Pdf.pdfobject list) -> unit
-
 (**/**)
+
+val process_xobjects : Pdf.t -> Pdfpage.t -> (Pdf.t -> Pdf.pdfobject -> Pdf.pdfobject list -> Pdf.pdfobject list) -> unit
 
 (** Custom CSP1 *)
 val custom_csp1 : Pdf.t -> Pdf.t
