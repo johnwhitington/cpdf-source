@@ -1,6 +1,6 @@
 %FIXME: Document that -upright also shifts the page to 0,0
 \documentclass{book}
-\usepackage{palatino}
+\usepackage{textcomp}
 \usepackage{microtype}
 \usepackage{graphics}
 \usepackage[plainpages=false,pdfpagelabels,pdfborder=0 0 0]{hyperref}
@@ -68,27 +68,27 @@ Excel are registered trademarks of Microsoft Corporation.
 Command lines to be typed are shown in \texttt{typewriter\hspace{-1mm} font} in a box.
 For example:
 
-\noindent\fbox{%
-    \parbox{\textwidth}{%
-      \small\texttt{cpdf in.pdf -o out.pdf}
-    }%
-}
+\noindent\fbox{\parbox{\textwidth}{
+\small\texttt{cpdf in.pdf -o out.pdf}
+}}
 
-\end{document}
 
-\begin{framed}
-\small\verb!cpdf in.pdf -o out.pdf!
-\end{framed}
+
 \noindent When describing the general form of a command, rather than a particular
 example, square brackets \verb|[]| are used to enclose optional parts, and
 angled braces \verb!<>! to enclose general descriptions which may be
 substituted for particular instances. For example,
-\begin{framed}\small\verb!cpdf <operation> in.pdf [<range>] -o out.pdf!
-\end{framed}
+
+\noindent\fbox{\parbox{\textwidth}{\small\texttt{cpdf <operation> in.pdf [<range>] -o out.pdf}
+}}
+
 \noindent describes a command line which requires an operation and, optionally,
 a range. An exception is that we use \texttt{in.pdf} and \texttt{out.pdf}
 instead of \texttt{<input file>} and \texttt{<output file>} to reduce
 verbosity. Under Microsoft Windows, type \texttt{cpdf.exe} instead of \texttt{cpdf}.
+
+
+
 \cleardoublepage
 \mainmatter
 %\chapterstyle{hangnum}
@@ -98,22 +98,22 @@ verbosity. Under Microsoft Windows, type \texttt{cpdf.exe} instead of \texttt{cp
 
 
 \label{basicusage}
-  \begin{framed}
-  \small
-  \noindent\begin{verbatim}
-  -o                       -idir <directory>     -recrypt
-  -stdout                  -stdin                -stdin-user <password>
-  -stdin-owner <password>  -producer <text>      -creator <text>
-  -change-id               -l                    -cpdflin <filename>
-  -keep-l                  -no-preserve-objstm   -create-objstm
-  -control <filename>      -args <filename>      -utf8
-  -stripped                -raw                  -no-embed-font\end{verbatim}\end{framed}
+
+\noindent\fbox{\parbox{\textwidth}{
+\texttt{-o\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \  -idir \textlangle directory\textrangle \ \ \ \    -recrypt\\
+  -stdout \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ -stdin     \ \ \ \ \ \ \  \ \ \ \ \ \ \          -stdin-user \textlangle password\textrangle\\
+  -stdin-owner \textlangle password\textrangle \  -producer \textlangle text\textrangle \ \ \ \ \     -creator \textlangle text\textrangle\\
+  -change-id \ \ \ \ \ \ \ \ \ \ \ \ \              -l  \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \                    -cpdflin \textlangle filename\textrangle\\
+  -keep-l \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \                  -no-preserve-objstm \  -create-objstm\\
+  -control \textlangle filename\textrangle \ \ \ \ \      -args \textlangle filename\textrangle  \ \ \ \ \    -utf8\\
+  -stripped  \ \ \ \ \ \ \ \ \ \ \ \ \ \               -raw  \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \               -no-embed-font}}}
 
   The Coherent PDF tools provide a wide range of facilities for modifying PDF
 files created by other means. There is a single command-line program
 \cpdf\ (\texttt{cpdf.exe} under Microsoft Windows). The rest of this manual describes the options that may be given
 to this program.
 
+\end{document}
 
   \index{input files} \index{output files}
   \section{Input and Output Files}
