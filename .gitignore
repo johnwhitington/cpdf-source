@@ -1,13 +1,2 @@
-*.cmi
-*.cmo
-*.cma
-*.cmx
-*.cmxa
-*.top
-*.o
-*.a
-._bcdi/
-._ncdi/
-._d/
-cpdf
-*.annot
+.DS_Store
+.texpadtmp
