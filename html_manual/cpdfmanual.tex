@@ -113,43 +113,53 @@ files created by other means. There is a single command-line program
 \cpdf\ (\texttt{cpdf.exe} under Microsoft Windows). The rest of this manual describes the options that may be given
 to this program.
 
-\end{document}
+
 
   \index{input files} \index{output files}
   \section{Input and Output Files}
   The typical pattern for usage is
-  \begin{framed}
-  \small\verb!cpdf [<operation>] <input file(s)>  -o <output file>!
-  \end{framed}
+
+\noindent\fbox{\parbox{\textwidth}{
+  \small\texttt{cpdf [<operation>] <input file(s)>  -o <output file>}
+  }}
+
   \noindent and the simplest concrete example, assuming the existence of a file
 \texttt{in.pdf} is:
-  \begin{framed}
-  \small\verb!cpdf in.pdf -o out.pdf!
-  \end{framed}
+
+\noindent\fbox{\parbox{\textwidth}{
+  \small\texttt{cpdf in.pdf -o out.pdf}
+  }}
+
   \noindent which copies \texttt{in.pdf} to \texttt{out.pdf}. The input and
 output may be the same file. Of course, we should like to do more interesting
 things to the PDF file than that!
+
 
   Files on the command line are distinguished from other input by their
 containing a period. If an input file does not contain a period, it should be
 preceded by \verb!-i!. For example:
 
-  \begin{framed}
-  \small\verb!cpdf -i in -o out.pdf!
-  \end{framed}
+\noindent\fbox{\parbox{\textwidth}{
+  \small\texttt{cpdf -i in -o out.pdf}
+  }}
+
 \noindent A whole directory of files may be added (where a command supports multiple files) by using the \verb!-idir! option:
-  \begin{framed}
-  \small\verb!cpdf -merge -idir myfiles -o out.pdf!
-  \end{framed}
+
+\noindent\fbox{\parbox{\textwidth}{
+  \small\texttt{cpdf -merge -idir myfiles -o out.pdf}
+ }}
+
   \noindent The files in the directory \verb!myfiles! are considered in alphabetical order. They must all be PDF files. If the names of the files are numeric, leading zeroes will be required for the order to be correct (e.g \verb!001.pdf!, \verb!002.pdf! etc).
 
   \section{Input Ranges}
   An \index{input range} \index{range} \textit{input range} may be specified
 after each input file. This is treated differently by each operation. For
 instance
-  \begin{framed}
-  \small\verb!cpdf in.pdf 2-5 out.pdf!
-  \end{framed}
+
+\noindent\fbox{\parbox{\textwidth}{
+  \small\texttt{cpdf in.pdf 2-5 out.pdf}
+  }}
+
   \noindent extracts pages two, three, four and five from \texttt{in.pdf},
 writing the result to \texttt{out.pdf}, assuming that \texttt{in.pdf} contains
 at least five pages.
@@ -169,37 +179,40 @@ at least five pages.
   \end{itemize}
  
   \noindent For example:
-  \begin{framed}
-  \small\verb!cpdf in.pdf 1,2,7-end -o out.pdf!
+
+\noindent\fbox{\parbox{\textwidth}{
+  \small\texttt{cpdf in.pdf 1,2,7-end -o out.pdf}
 
   \vspace{2.5mm}
   \noindent Remove pages three, four, five and six from a document.
 
   \vspace{2.5mm}
-  \verb!cpdf in.pdf 1-16odd -o out.pdf!
+  \texttt{cpdf in.pdf 1-16odd -o out.pdf}
 
   \vspace{2.5mm}
   \noindent Extract the odd pages 1,3,...,13,15.
   
   \vspace{2.5mm}
-  \verb!cpdf in.pdf landscape -rotate 90 -o out.pdf!
+  \texttt{cpdf in.pdf landscape -rotate 90 -o out.pdf}
 
   \vspace{2.5mm}
   \noindent Rotate all landscape pages by ninety degrees.
     
   \vspace{2.5mm}
-  \verb!cpdf in.pdf 1,all -o out.pdf!
+  \texttt{cpdf in.pdf 1,all -o out.pdf}
 
   \vspace{2.5mm}
   \noindent Duplicate the front page of a document, perhaps as a fax cover sheet.
 
   \vspace{2.5mm}
-  \verb!cpdf in.pdf ~3-~1 -o out.pdf!
+  \texttt{cpdf in.pdf ~3-~1 -o out.pdf}
 
   \vspace{2.5mm}
   \noindent Extract the last three pages of a document, in order.
 
-  \end{framed}
+  }}
+
+
 
 \index{decryption}
   \section{Working with Encrypted Documents}
@@ -213,16 +226,18 @@ passwords. Either password is supplied by writing \texttt{user=<password>} or
 after any range). The document will \textit{not} be re-encrypted upon writing.  For
 example:
 
-\begin{framed}
-\noindent\small\verb!cpdf in.pdf user=charles -info!\\
-\noindent\small\verb!cpdf in.pdf owner=fred reverse -o out.pdf!
-\end{framed}
+\noindent\fbox{\parbox{\textwidth}{
+
+\noindent\small\texttt{cpdf in.pdf user=charles -info}\\
+\noindent\small\texttt{cpdf in.pdf owner=fred reverse -o out.pdf}
+}}
 
 \noindent To re-encrypt the file with its existing encryption upon writing, which is required if only the user password was supplied, but allowed in any case, add the \texttt{-recrypt} option:
 
-\begin{framed}
-\small\verb!cpdf in.pdf user=fred reverse -recrypt -o out.pdf!
-\end{framed}
+\noindent\fbox{\parbox{\textwidth}{
+
+\small\texttt{cpdf in.pdf user=fred reverse -recrypt -o out.pdf}
+}}
 
 \noindent The password required (owner or user) depends upon the operation
 being performed. Separate facilities are provided to decrypt and encrypt files
@@ -239,11 +254,13 @@ use of intermediate files. Use \texttt{-stdin} to read from standard input, and
 \texttt{-stdout} to write to standard input, either to pipe data between
 multiple programs, or multiple invocations of the same program. For example, this sequence of commands (all typed on one line)
 
-  \begin{framed}
-  \small\begin{verbatim}   cpdf in.pdf reverse -stdout |
-   cpdf -stdin 1-5 -stdout |
-   cpdf -stdin reverse -o out.pdf\end{verbatim}
-  \end{framed}
+\noindent\fbox{\parbox{\textwidth}{
+
+  \small\texttt{   cpdf in.pdf reverse -stdout |\\
+   cpdf -stdin 1-5 -stdout |\\
+   cpdf -stdin reverse -o out.pdf}
+  }}
+
 
 \noindent extracts the last five pages of \texttt{in.pdf} in the correct order,
 writing them to \texttt{out.pdf}. It does this by reversing the input, taking
@@ -260,13 +277,14 @@ example, listing fonts). A useful feature of the command line (not specific to
 \cpdf) is the ability to redirect this output to a file. This is
 achieved with the \texttt{>} operator:
 
-\begin{framed}
-  \small\verb!cpdf -info in.pdf > file.txt!
+\noindent\fbox{\parbox{\textwidth}{
+  \small\texttt{cpdf -info in.pdf > file.txt}
 
   \vspace{2.5mm}
   \noindent Use the \texttt{-info} operation (See Section \ref{info}), redirecting the
 output to \texttt{file.txt}.
-\end{framed}
+}}
+
 
 \section{Doing Several Things at Once with AND}
 
@@ -277,21 +295,24 @@ repeatedly parsed and written out, saving time.
 To use \texttt{AND}, simply leave off the output specifier (e.g \texttt{-o}) of
 one command, and the input specifier (e.g filename) of the next. For instance:
 
-\begin{framed}
-  \small\verb!cpdf -merge in.pdf in2.pdf AND -add-text "Label"!
-  \noindent\small\verb!        AND -merge in3.pdf -o out.pdf!
+\noindent\fbox{\parbox{\textwidth}{
+
+  \small\texttt{cpdf -merge in.pdf in2.pdf AND -add-text "Label"}\\
+  \noindent\small\texttt{        AND -merge in3.pdf -o out.pdf}
 
   \vspace{2.5mm}
   \noindent Merge \texttt{in.pdf} and \texttt{in2.pdf} together, add text to both pages, append \texttt{in3.pdf} and write to \texttt{out.pdf}.
-\end{framed}
+}}
 
 \noindent To specify the range for each section, use \texttt{-range}:
 
-\begin{framed}
-  \small\verb!cpdf -merge in.pdf in2.pdf AND -range 2-4 -add-text "Label"!
-  \noindent\small\verb!        AND -merge in3.pdf -o out.pdf!
+\noindent\fbox{\parbox{\textwidth}{
 
-\end{framed}
+  \small\texttt{cpdf -merge in.pdf in2.pdf AND -range 2-4 -add-text "Label"}\\
+  \noindent\small\texttt{        AND -merge in3.pdf -o out.pdf}
+
+}}
+
 
 \section{Units}
 \index{units}
@@ -308,6 +329,9 @@ supported:
   \texttt{in} & Inches \\
 \end{tabular}
 \end{table}
+
+
+
 
 \noindent For example, one may write \texttt{14mm} or \texttt{21.6in}. In addition, the following letters stand, in some operations (\texttt{-scale-page}, \texttt{-scale-to-fit}, \texttt{-scale-contents}, \texttt{-shift}, \texttt{-mediabox},\\ \texttt{-crop}) for various page dimensions:
 
@@ -337,11 +361,17 @@ Simple arithmetic may be performed using the words \texttt{add}, \texttt{sub}, \
 
 The \texttt{-producer} and \texttt{-creator} options may be added to any \texttt{cpdf} command line to set the producer and/or creator of the PDF file. If the file was converted from another format, the \textit{creator} is the program producing the original, the \textit{producer} the program converting it to PDF.
 
-\begin{framed}
-  \small\verb!cpdf -merge in.pdf in2.pdf -producer MyMerger -o out.pdf!\\
+
+
+\noindent\fbox{\parbox{\textwidth}{
+  \small\texttt{cpdf -merge in.pdf in2.pdf -producer MyMerger -o out.pdf}\\
 
   \vspace{2.5mm}
-  \noindent Merge \texttt{in.pdf} and \texttt{in2.pf}, setting the producer to \texttt{MyMerger} and writing the output to \texttt{out.pdf}.\end{framed}
+  \noindent Merge \texttt{in.pdf} and \texttt{in2.pf}, setting the producer to \texttt{MyMerger} and writing the output to \texttt{out.pdf}.
+
+}}
+
+
 
 \section{PDF Version Numbers}
 \index{version number}
@@ -373,12 +403,17 @@ PDF files contain an ID (consisting of two parts), used by some workflow
 systems to uniquely identify a file. To change the ID, behavior, use the
 \texttt{-change-id} operation. This will create a new ID for the output file. 
 
-\begin{framed}
-\small\verb!cpdf -change-id in.pdf -o out.pdf!
+\noindent\fbox{\parbox{\textwidth}{
+
+\small\texttt{cpdf -change-id in.pdf -o out.pdf}
 
 \vspace{2.5mm}
 \noindent Write \texttt{in.pdf} to \texttt{out.pdf}, changing the ID.
-\end{framed}
+}}
+
+
+
+
 
 \section{Linearization}
 \index{linearization}
@@ -388,21 +423,27 @@ viewing a multipage PDF over a slow connection is more responsive. By default,
 \cpdf\ does not linearize output files. To make it do so, add the \texttt{-l}
 option to the command line, in addition to any other command being used. For example:
 
-\begin{framed}
-\small\verb!cpdf -l in.pdf -o out.pdf!
+\noindent\fbox{\parbox{\textwidth}{
+
+\small\texttt{cpdf -change-id in.pdf -o out.pdf}
+
+\small\texttt{cpdf -l in.pdf -o out.pdf}
 
 \vspace{2.5mm}
 \noindent Linearize the file \texttt{in.pdf}, writing to \texttt{out.pdf}.
-\end{framed}
+}}
+
 
 \noindent This requires the existence of the external program \texttt{cpdflin} which is provided with commercial versions of \texttt{cpdf}. This must be installed as described in the installation documentation provided with your copy of \texttt{cpdf}. If you are unable to install \texttt{cpdflin}, you must use \texttt{-cpdflin} to let \texttt{cpdf} know where to find it:
 
-\begin{framed}
-\small\verb!cpdf.exe -cpdflin "C:\\cpdflin.exe" -l in.pdf -o out.pdf!
+\noindent\fbox{\parbox{\textwidth}{
+
+\small\texttt{cpdf.exe -cpdflin "C:\textbackslash\textbackslash cpdflin.exe" -l in.pdf -o out.pdf}
 
 \vspace{2.5mm}
 \noindent Linearize the file \texttt{in.pdf}, writing to \texttt{out.pdf}.
-\end{framed}
+}}
+
 
 In extremis, you may place \texttt{cpdflin} and its resources in the current working directory, though this is not recommended. For further help, refer to the installation instructions for your copy of \texttt{cpdf}.
 
@@ -411,32 +452,43 @@ To keep the existing linearization status of a file (produce linearized output i
 \section{Object Streams}
 PDF 1.5 introduced a new mechanism for storing objects to save space: object streams. by default, \texttt{cpdf} will preserve object streams in input files, creating no more. To prevent the retention of existing object streams, use \texttt{-no-preserve-objstm}:
 
-\begin{framed}
-\small\verb!cpdf -no-preserve-objstm in.pdf -o out.pdf!
+\noindent\fbox{\parbox{\textwidth}{
+
+\small\texttt{cpdf -no-preserve-objstm in.pdf -o out.pdf}
 
 \vspace{2.5mm}
 \noindent Write the file \texttt{in.pdf} to \texttt{out.pdf}, removing any object streams.
-\end{framed}
+}}
+
+
+
 
 \noindent To create new object streams if none exist, or augment the existing ones, use \texttt{-create-objstm}:
 
-\begin{framed}
-\small\verb!cpdf -create-objstm in.pdf -o out.pdf!
+\noindent\fbox{\parbox{\textwidth}{
+
+\small\texttt{cpdf -create-objstm in.pdf -o out.pdf}
 
 \vspace{2.5mm}
 \noindent Write the file \texttt{in.pdf} to \texttt{out.pdf}, preserving any existing object streams, and creating any new ones for new objects which have been added.
-\end{framed}
+}}
 
 \noindent To create wholly new object streams, use both options together:
 
-\begin{framed}
-\small\verb!cpdf -create-objstm -no-preserve-objstm in.pdf -o out.pdf!
+\noindent\fbox{\parbox{\textwidth}{
+
+\small\texttt{cpdf -create-objstm -no-preserve-objstm in.pdf -o out.pdf}
 
 \vspace{2.5mm}
 \noindent Write the file \texttt{in.pdf} to \texttt{out.pdf} with wholly new object streams.
-\end{framed}
+}}
+
+
 
 \noindent Files written with object streams will be set to PDF 1.5 or higher, unless \texttt{-keep-version} is used (see above).
+
+
+
 
 \section{Malformed Files}
 
@@ -447,13 +499,13 @@ silently.
 Grossly malformed files will be reconstructed. The reconstruction
 progress is shown on \verb!stderr! (Standard Error):
 
-\begin{framed}
-\noindent\small\verb!./cpdf in.pdf -o out.pdf!\\
-\small\verb!couldn't lex object number!\\
-\small\verb!Attempting to reconstruct the malformed pdf in.pdf...!\\
-\small\verb!Read 5530 objects!\\
-\small\verb$Malformed PDF reconstruction succeeded!$
-\end{framed}
+\noindent\fbox{\parbox{\textwidth}{
+\noindent\small\texttt{./cpdf in.pdf -o out.pdf}\\
+\small\texttt{couldn't lex object number}\\
+\small\texttt{Attempting to reconstruct the malformed pdf in.pdf...}\\
+\small\texttt{Read 5530 objects}\\
+\small\texttt{Malformed PDF reconstruction succeeded!}
+}}
 
 \noindent Sometimes files can be technically well-formed but use inefficient PDF
 constructs.  If you are sure the input files you are using are
@@ -463,15 +515,17 @@ shortcuts which speed up processing, but would fail on badly-produced files.
 
 The \verb!-fast! option may be used with:
 
-\begin{framed}
+\noindent\fbox{\parbox{\textwidth}{
+
 \small\noindent Chapter \ref{pages}\\
-\noindent\small\verb!-rotate-contents -upright -vflip -hflip!\\
-\small\verb!-shift -scale -scale-to-fit -scale-contents!\\
+\noindent\small\texttt{-rotate-contents -upright -vflip -hflip}\\
+\small\texttt{-shift -scale -scale-to-fit -scale-contents}\\
 
 \noindent Chapter \ref{stamps}\\
-\noindent\small\verb!-add-text!\\
-\small\verb!-stamp-on -stamp-under -combine-pages!
-\end{framed}
+\noindent\small\texttt{-add-text}\\
+\small\texttt{-stamp-on -stamp-under -combine-pages}
+}}
+
 
 \noindent If problems occur, refrain from using \verb!-fast!.
 
@@ -481,12 +535,18 @@ When \cpdf\ encounters an error, it exits with code 2. An error message is
 displayed on \texttt{stderr} (Standard Error). In normal usage, this means it's
 displayed on the screen. When a bad or inappropriate password is given, the exit code is 1.
 
+
 \section{Control Files}
 \index{control file}
-\begin{framed}
-  \noindent\small\verb!cpdf -control <filename>!\\
-  \noindent\small\verb!cpdf -args <filename>!
-\end{framed}
+
+\noindent\fbox{\parbox{\textwidth}{
+
+\small\noindent Chapter \ref{pages}\\
+  \noindent\small\texttt{cpdf -control <filename>}\\
+  \noindent\small\texttt{cpdf -args <filename>}
+}}
+
+
 
 Some operating systems have a limit on the length of a command line. To
 circumvent this, or simply for reasons of flexibility, a control file may be
@@ -513,15 +573,21 @@ A backslash is used to indicate that a character which would otherwise be
 treated specially by the command line interpreter is to be treated literally. For
 example, Unix-like systems attribute a special meaning to the exclamation mark, so
 the command line
-\begin{framed}
- \small\verb?cpdf -add-text "Hello!" in.pdf -o out.pdf?
-\end{framed}
+
+\noindent\fbox{\parbox{\textwidth}{
+
+ \small\texttt{cpdf -add-text "Hello!" in.pdf -o out.pdf}
+}}
+
 \noindent would fail. We must escape the exclamation mark with a backslash:
-\begin{framed}
- \small\verb?cpdf -add-text "Hello\!" in.pdf -o out.pdf?
-\end{framed}
+
+\noindent\fbox{\parbox{\textwidth}{
+ \small\texttt{cpdf -add-text "Hello\textbackslash !" in.pdf -o out.pdf}
+}}
+
 \noindent It follows that backslashes intended to be taken literally must themselves be
 escaped (i.e. written \verb!\\!).
+
 
 \section{Text Encodings}
 \index{text encodings}
@@ -529,41 +595,43 @@ escaped (i.e. written \verb!\\!).
 Some \texttt{cpdf} commands write text to standard output, or read text from
 the command line or configuration files. These are:
 
-\begin{framed}
-  \noindent\small\verb!-info!\\
-  \noindent\small\verb!-list-bookmarks!\\
-  \noindent\small\verb!-set-author! et al.\\
-  \noindent\small\verb!-list-annotations!
-\end{framed}
+\noindent\fbox{\parbox{\textwidth}{
+  \noindent\small\texttt{-info}\\
+  \noindent\small\texttt{-list-bookmarks}\\
+  \noindent\small\texttt{-set-author et al.}\\
+  \noindent\small\texttt{-list-annotations}
+}}
 
 \noindent There are three options to control how the text is interpreted:
 
-\begin{framed}
-  \noindent\small\verb!-utf8!\\
-  \noindent\small\verb!-stripped!\\
-  \noindent\small\verb!-raw!
-\end{framed}
+\noindent\fbox{\parbox{\textwidth}{
+  \noindent\small\texttt{-utf8}\\
+  \noindent\small\texttt{-stripped}\\
+  \noindent\small\texttt{-raw}
+}}
 
 \noindent Add \verb!-utf8! to use Unicode UTF8, \verb!-stripped! to convert to 7
 bit ASCII by dropping any high characters, or \verb!-raw! to perform no
 processing. The default is \verb!-stripped!.
 
+
 \section{Font Embedding}
 Use the \texttt{-no-embed-font} to avoid embedding the Standard 14 Font metrics when adding text with \texttt{-add-text}.
 
 \chapter{Merging and Splitting}
-  \begin{framed}
+\noindent\fbox{\parbox{\textwidth}{
   \small
-  \noindent\begin{verbatim}
-cpdf -merge in1.pdf [<range>] in2.pdf [<range>] [<more names/ranges>]
-     [-retain-numbering] [-remove-duplicate-fonts] -o out.pdf\end{verbatim}
+  \noindent
+\texttt{cpdf -merge in1.pdf [<range>] in2.pdf [<range>] [<more names/ranges>]
+     [-retain-numbering] [-remove-duplicate-fonts] -o out.pdf}
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf -split in.pdf -o <format> [-chunk <chunksize>]!
+  \noindent\texttt{cpdf -split in.pdf -o <format> [-chunk <chunksize>]}
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf -split-bookmarks <level> in.pdf -o <format>!
-  \end{framed}
+  \noindent\texttt{cpdf -split-bookmarks <level> in.pdf -o <format>}
+  }}
+
 
   \vspace{12mm}
   \section{Merging}
@@ -574,13 +642,18 @@ input file in the output. The output file consists of the concatenation of all
 the input pages in the order specified on the command line. Actually, the
 \texttt{-merge} can be omitted, since this is the default operation of \cpdf.
 
-  \begin{framed}\small
-    \verb!cpdf -merge a.pdf 1 b.pdf 2-end -o out.pdf!
+\noindent\fbox{\parbox{\textwidth}{
+
+ \small
+    \texttt{cpdf -merge a.pdf 1 b.pdf 2-end -o out.pdf}
 
     \vspace{2.5mm}
     \noindent Take page one of \texttt{a.pdf} and all but the first page of
 \texttt{b.pdf}, merge them and produce \texttt{out.pdf}.
-  \end{framed}
+}}
+
+
+
 
 \noindent Merge maintains bookmarks, named destinations, and name dictionaries.
 
@@ -599,20 +672,24 @@ of the inputs only appear once in the output.
 are written to file, their names being generated from a \emph{format}. The
 optional \texttt{-chunk} option allows the number of pages written to each
 output file to be set. 
-  \begin{framed}\small
-    \verb!cpdf -split a.pdf -o out%%%.pdf!
+
+\noindent\fbox{\parbox{\textwidth}{
+  \small
+    \texttt{cpdf -split a.pdf -o out\%\%\%.pdf}
 
     \vspace{2.5mm}
     \noindent Split \texttt{a.pdf} to the files \texttt{out001.pdf}, \texttt{out002.pdf} etc.
 
     \vspace{2.5mm}
-    \verb!cpdf -split a.pdf 1 even -chunk 10 -o dir/out%%%.pdf!
+    \texttt{cpdf -split a.pdf 1 even -chunk 10 -o dir/out\%\%\%.pdf}
 
     \vspace{2.5mm}
     \noindent Split the even pages of \texttt{a.pdf} to the files
 \texttt{out001.pdf}, \texttt{out002.pdf} etc. with at most ten pages in each
 file. The directory (folder) \texttt{dir} must exist.
-  \end{framed}
+  }}
+
+
 \noindent If the output format does not provide enough numbers for the files generated,
 the result is unspecified. The following format operators may be used:
 
@@ -638,32 +715,39 @@ Level 0 denotes the top-level bookmarks, level 1 the next level (sub-bookmarks)
 and so on. So \texttt{-split-bookmarks 1} creates breaks on level 0 and level
 1 boundaries.
 
-  \begin{framed}\small
-    \verb!cpdf -split-bookmarks 0 a.pdf -o out%%%.pdf!
+\noindent\fbox{\parbox{\textwidth}{
+ \small
+    \texttt{cpdf -split-bookmarks 0 a.pdf -o out\%\%\%.pdf}
 
     \vspace{2.5mm}
     \noindent Split \texttt{a.pdf} to the files \texttt{out001.pdf},
 \texttt{out002.pdf} on bookmark boundaries.
+}}
 
-  \end{framed}
 \noindent Now, there may be many bookmarks on a single page (for instance, if
 paragraphs are bookmarked or there are two subsections on one page). The splits
 calculated by \texttt{-split-bookmarks} ensure that each page appears in only
 one of the output files.
   It is possible to use the \texttt{@} operators above, including operator \texttt{@B} which expands to the text of the bookmark:
 
-  \begin{framed}\small
-    \verb!cpdf -split-bookmarks 0 a.pdf -o @B.pdf!
+\noindent\fbox{\parbox{\textwidth}{
+  \small
+    \texttt{cpdf -split-bookmarks 0 a.pdf -o @B.pdf}
 
     \vspace{2.5mm}
     \noindent Split \texttt{a.pdf} on bookmark boundaries, using the bookmark text as the filename.
+}}
 
-  \end{framed}
+
+
 \noindent The bookmark text used for a name is converted from unicode to 7 bit ASCII, and the following characters are removed, in addition to any character with ASCII code less than 32:
-  \begin{framed}
-  \centering
-  \verb! / ? < > \ : * | " ^ + =!
-  \end{framed}
+
+\noindent\fbox{\parbox{\textwidth}{
+\centering
+  \texttt{/ ?\ \textlangle\ \textrangle\ \textbackslash\ \% :\ * | " \textasciicircum\ + =}
+}}
+
+\end{document}
 
 \section{Encrypting with Split and Split Bookmarks}
 
