@@ -19,22 +19,22 @@
 >
 <!--l. 26--><p class="noindent" >
 <!--l. 28--><p class="noindent" ><span 
-class="phvb7t-x-x-248">Coherent PDF</span>
+class="cmssbx-10x-x-248">Coherent PDF</span>
 <!--l. 31--><p class="noindent" ><span 
-class="phvb7t-x-x-248">Command Line Toolkit</span>
+class="cmssbx-10x-x-248">Command Line Toolkit</span>
 <!--l. 35--><p class="noindent" ><span 
-class="pplr7t-x-x-248">User Manual</span><br />
+class="cmr-17x-x-143">User Manual</span><br />
 Version 2.2 (March 2017)
 <!--l. 45--><p class="noindent" ><span 
-class="phvb7t-x-x-172">Coherent Graphics Ltd</span>
+class="cmssbx-10x-x-172">Coherent Graphics Ltd</span>
 </div>
                                                                                
                                                                                
 <!--l. 52--><p class="noindent" >For bug reports, feature requests and comments, email<br 
 class="newline" /><span 
-class="pcrr7t-">contact@coherentgraphics.co.uk</span>
+class="cmtt-10">contact@coherentgraphics.co.uk</span>
 <!--l. 55--><p class="noindent" ><span 
-class="cmsy-10">©</span>2017 Coherent Graphics Limited. All rights reserved. ISBN 978-0957671140
+class="tcrm-1000">©</span>2017 Coherent Graphics Limited. All rights reserved. ISBN 978-0957671140
 <!--l. 58--><p class="noindent" >Adobe, Acrobat, Adobe PDF, Adobe Reader and PostScript are registered trademarks of Adobe
 Systems Incorporated. Windows, Powerpoint and Excel are registered trademarks of Microsoft
 Corporation.
@@ -47,6 +47,50 @@ Corporation.
                                                                                
    <h2 class="likechapterHead"><a 
  id="x1-1000"></a>Contents</h2> <div class="tableofcontents">
+   <span class="chapterToc" >1 <a 
+href="#x1-30001" id="QQ2-1-3">Basic Usage</a></span>
+<br />   &#x00A0;<span class="sectionToc" >1.1 <a 
+href="#x1-40001.1" id="QQ2-1-4">Input and Output Files</a></span>
+<br />   &#x00A0;<span class="sectionToc" >1.2 <a 
+href="#x1-50001.2" id="QQ2-1-5">Input Ranges</a></span>
+<br />   &#x00A0;<span class="sectionToc" >1.3 <a 
+href="#x1-60001.3" id="QQ2-1-6">Working with Encrypted Documents</a></span>
+<br />   &#x00A0;<span class="sectionToc" >1.4 <a 
+href="#x1-70001.4" id="QQ2-1-7">Standard Input and Standard Output</a></span>
+<br />   &#x00A0;<span class="sectionToc" >1.5 <a 
+href="#x1-80001.5" id="QQ2-1-8">Doing Several Things at Once with AND</a></span>
+<br />   &#x00A0;<span class="sectionToc" >1.6 <a 
+href="#x1-90001.6" id="QQ2-1-9">Units</a></span>
+<br />   &#x00A0;<span class="sectionToc" >1.7 <a 
+href="#x1-100001.7" id="QQ2-1-10">Setting the Producer and Creator</a></span>
+<br />   &#x00A0;<span class="sectionToc" >1.8 <a 
+href="#x1-110001.8" id="QQ2-1-11">PDF Version Numbers</a></span>
+<br />   &#x00A0;<span class="sectionToc" >1.9 <a 
+href="#x1-120001.9" id="QQ2-1-12">File IDs</a></span>
+<br />   &#x00A0;<span class="sectionToc" >1.10 <a 
+href="#x1-130001.10" id="QQ2-1-13">Linearization</a></span>
+<br />   &#x00A0;<span class="sectionToc" >1.11 <a 
+href="#x1-140001.11" id="QQ2-1-14">Object Streams</a></span>
+<br />   &#x00A0;<span class="sectionToc" >1.12 <a 
+href="#x1-150001.12" id="QQ2-1-15">Malformed Files</a></span>
+<br />   &#x00A0;<span class="sectionToc" >1.13 <a 
+href="#x1-160001.13" id="QQ2-1-16">Error Handling</a></span>
+<br />   &#x00A0;<span class="sectionToc" >1.14 <a 
+href="#x1-170001.14" id="QQ2-1-17">Control Files</a></span>
+<br />   &#x00A0;<span class="sectionToc" >1.15 <a 
+href="#x1-180001.15" id="QQ2-1-18">String Arguments</a></span>
+<br />   &#x00A0;<span class="sectionToc" >1.16 <a 
+href="#x1-190001.16" id="QQ2-1-19">Text Encodings</a></span>
+<br />   &#x00A0;<span class="sectionToc" >1.17 <a 
+href="#x1-200001.17" id="QQ2-1-20">Font Embedding</a></span>
+<br />   <span class="chapterToc" >2 <a 
+href="#x1-210002" id="QQ2-1-21">Merging and Splitting</a></span>
+<br />   &#x00A0;<span class="sectionToc" >2.1 <a 
+href="#x1-220002.1" id="QQ2-1-22">Merging</a></span>
+<br />   &#x00A0;<span class="sectionToc" >2.2 <a 
+href="#x1-230002.2" id="QQ2-1-23">Splitting</a></span>
+<br />   &#x00A0;<span class="sectionToc" >2.3 <a 
+href="#x1-240002.3" id="QQ2-1-24">Splitting on Bookmarks</a></span>
    </div>
                                                                                
                                                                                
@@ -60,26 +104,620 @@ Corporation.
                                                                                
    <h2 class="likechapterHead"><a 
  id="x1-2000"></a>Typographical Conventions</h2> Command lines to be typed are shown in <span 
-class="pcrr7t-">typewriter font </span>in a
-box. For example:
+class="cmtt-10">typewriterfont </span>in a box.
+For example:
 <!--l. 71--><p class="noindent" ><img 
 src="cpdfmanual0x.png" alt=""  class="fbox" >
-<!--l. 77--><p class="noindent" >When describing the general form of a command, rather than a particular example, square brackets
-<span class="obeylines-h"><span class="verb"><span 
-class="pcrr7t-">[]</span></span></span> are used to enclose optional parts, and angled braces <span class="obeylines-h"><span class="verb"><span 
-class="pcrr7t-">&#x003C;&#x003E;</span></span></span> to enclose general descriptions which
-may be substituted for particular instances. For example,
+<!--l. 77--><p class="noindent" >When describing the general form of a command, rather than a particular example, square brackets <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-10">[]</span></span></span>
+are used to enclose optional parts, and angled braces <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-10">&#x003C;&#x003E;</span></span></span> to enclose general descriptions which may be
+substituted for particular instances. For example,
 <!--l. 82--><p class="noindent" ><img 
 src="cpdfmanual1x.png" alt=""  class="fbox" >
 <!--l. 85--><p class="noindent" >describes a command line which requires an operation and, optionally, a range. An exception is that
 we use <span 
-class="pcrr7t-">in.pdf </span>and <span 
-class="pcrr7t-">out.pdf </span>instead of <span 
-class="pcrr7t-">&#x003C;input file&#x003E; </span>and <span 
-class="pcrr7t-">&#x003C;output file&#x003E; </span>to reduce verbosity.
-Under Microsoft Windows, type <span 
-class="pcrr7t-">cpdf.exe </span>instead of <span 
-class="pcrr7t-">cpdf</span>.
+class="cmtt-10">in.pdf </span>and <span 
+class="cmtt-10">out.pdf </span>instead of <span 
+class="cmtt-10">&#x003C;input file&#x003E; </span>and <span 
+class="cmtt-10">&#x003C;output file&#x003E; </span>to reduce verbosity. Under
+Microsoft Windows, type <span 
+class="cmtt-10">cpdf.exe </span>instead of <span 
+class="cmtt-10">cpdf</span>.
+                                                                               
+                                                                               
+<!--l. 92--><p class="indent" >
+                                                                               
+                                                                               
+                                                                               
+                                                                               
+<!--l. 93--><p class="indent" >
+                                                                               
+                                                                               
+                                                                               
+                                                                               
+<!--l. 97--><p class="indent" >
+                                                                               
+                                                                               
+   <h2 class="chapterHead"><span class="titlemark">Chapter&#x00A0;1</span><br /><a 
+ id="x1-30001"></a>Basic Usage</h2>
+<!--l. 102--><p class="noindent" ><img 
+src="cpdfmanual2x.png" alt=""  class="fbox" >
+<!--l. 111--><p class="indent" >   The Coherent PDF tools provide a wide range of facilities for modifying PDF files
+created by other means. There is a single command-line program <span 
+class="cmtt-10">cpdf</span>&#x00A0;(<span 
+class="cmtt-10">cpdf.exe </span>under
+Microsoft Windows). The rest of this manual describes the options that may be given to this
+program.
+<a 
+ id="dx1-3001"></a>
+<a 
+ id="dx1-3002"></a>
+   <h3 class="sectionHead"><span class="titlemark">1.1   </span> <a 
+ id="x1-40001.1"></a>Input and Output Files</h3>
+<!--l. 120--><p class="noindent" >The typical pattern for usage is
+<!--l. 122--><p class="noindent" ><img 
+src="cpdfmanual3x.png" alt=""  class="fbox" >
+<!--l. 126--><p class="noindent" >and the simplest concrete example, assuming the existence of a file <span 
+class="cmtt-10">in.pdf </span>is:
+<!--l. 129--><p class="noindent" ><img 
+src="cpdfmanual4x.png" alt=""  class="fbox" >
+<!--l. 133--><p class="noindent" >which copies <span 
+class="cmtt-10">in.pdf </span>to <span 
+class="cmtt-10">out.pdf</span>. The input and output may be the same file. Of course, we should like
+to do more interesting things to the PDF file than that!
+<!--l. 138--><p class="indent" >   Files on the command line are distinguished from other input by their containing a period. If an
+input file does not contain a period, it should be preceded by <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-10">-i</span></span></span>. For example:
+<!--l. 142--><p class="noindent" ><img 
+src="cpdfmanual5x.png" alt=""  class="fbox" >
+<!--l. 146--><p class="noindent" >A whole directory of files may be added (where a command supports multiple files) by using the <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-10">-idir</span></span></span>
+option:
+<!--l. 148--><p class="noindent" ><img 
+src="cpdfmanual6x.png" alt=""  class="fbox" >
+<!--l. 152--><p class="noindent" >The files in the directory <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-10">myfiles</span></span></span> are considered in alphabetical order. They must all be PDF files. If
+the names of the files are numeric, leading zeroes will be required for the order to be correct (e.g
+<span class="obeylines-h"><span class="verb"><span 
+class="cmtt-10">001.pdf</span></span></span>, <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-10">002.pdf</span></span></span> etc).
+<!--l. 154--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">1.2   </span> <a 
+ id="x1-50001.2"></a>Input Ranges</h3>
+<!--l. 155--><p class="noindent" >An <a 
+ id="dx1-5001"></a><a 
+ id="dx1-5002"></a> <span 
+class="cmti-10">input range </span>may be specified after each input file. This is treated differently by each operation.
+For instance
+<!--l. 159--><p class="noindent" ><img 
+src="cpdfmanual7x.png" alt=""  class="fbox" >
+<!--l. 163--><p class="noindent" >extracts pages two, three, four and five from <span 
+class="cmtt-10">in.pdf</span>, writing the result to <span 
+class="cmtt-10">out.pdf</span>, assuming that
+<span 
+class="cmtt-10">in.pdf </span>contains at least five pages. <a 
+ id="dx1-5003"></a><a 
+ id="dx1-5004"></a> Here are the rules for building input ranges:
+                                                                               
+                                                                               
+     <ul class="itemize1">
+     <li class="itemize">A dash (<span 
+class="cmtt-10">-</span>) defines ranges, e.g. <span 
+class="cmtt-10">1-5 </span>or <span 
+class="cmtt-10">6-3</span>.
+     </li>
+     <li class="itemize">A comma (<span 
+class="cmtt-10">,</span>) allows one to specify several ranges, e.g. <span 
+class="cmtt-10">1-2,4-5</span>.
+     </li>
+     <li class="itemize">The word <span 
+class="cmtt-10">end </span>represents the last page number.
+     </li>
+     <li class="itemize">The words <span 
+class="cmtt-10">odd </span>and <span 
+class="cmtt-10">even </span>can be used in place of or at the end of a page range to restrict
+     to just the odd or even pages.
+     </li>
+     <li class="itemize">The words <span 
+class="cmtt-10">portrait </span>and <span 
+class="cmtt-10">landscape </span>can be used in place of or at the end of a page range
+     to restrict to just those pages which are portrait or landscape. Note that the meaning of
+     &#8220;portrait&#8221; and &#8220;landscape&#8221; does not take account of any viewing rotation in place (use
+     <span 
+class="cmtt-10">-upright </span>first, if required). A page with equal width and height is considered neither
+     portrait nor landscape.
+     </li>
+     <li class="itemize">The word <span 
+class="cmtt-10">reverse </span>is the same as <span 
+class="cmtt-10">end-1</span>.
+     </li>
+     <li class="itemize">The word <span 
+class="cmtt-10">all </span>is the same as <span 
+class="cmtt-10">1-end</span>.
+     </li>
+     <li class="itemize">A range must contain no spaces.
+     </li>
+     <li class="itemize">A tilde (<span 
+class="cmtt-10">~</span>) defines a page number counting from the end of the document rather than the
+     beginning. Page <span 
+class="cmtt-10">~1 </span>is the last page, <span 
+class="cmtt-10">~2 </span>the penultimate page etc.</li></ul>
+<!--l. 181--><p class="noindent" >For example:
+<!--l. 183--><p class="noindent" ><img 
+src="cpdfmanual8x.png" alt=""  class="fbox" >
+<a 
+ id="dx1-5005"></a>
+                                                                               
+                                                                               
+<!--l. 218--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">1.3   </span> <a 
+ id="x1-60001.3"></a>Working with Encrypted Documents</h3>
+<a 
+ id="dx1-6001"></a>
+<a 
+ id="dx1-6002"></a>
+<a 
+ id="dx1-6003"></a>
+<!--l. 222--><p class="noindent" >In order to perform many operations, encrypted input PDF files must be decrypted. Some require the
+owner password, some either the user or owner passwords. Either password is supplied
+by writing <span 
+class="cmtt-10">user=&#x003C;password&#x003E; </span>or <span 
+class="cmtt-10">owner=&#x003C;password&#x003E; </span>following each input file requiring it
+(before or after any range). The document will <span 
+class="cmti-10">not </span>be re-encrypted upon writing. For
+example:
+<!--l. 229--><p class="noindent" ><img 
+src="cpdfmanual9x.png" alt=""  class="fbox" >
+<!--l. 235--><p class="noindent" >To re-encrypt the file with its existing encryption upon writing, which is required if only the user
+password was supplied, but allowed in any case, add the <span 
+class="cmtt-10">-recrypt </span>option:
+<!--l. 237--><p class="noindent" ><img 
+src="cpdfmanual10x.png" alt=""  class="fbox" >
+<!--l. 242--><p class="noindent" >The password required (owner or user) depends upon the operation being performed. Separate
+facilities are provided to decrypt and encrypt files (See Section <span 
+class="cmbx-10">??</span>).
+<!--l. 246--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">1.4   </span> <a 
+ id="x1-70001.4"></a>Standard Input and Standard Output</h3>
+<a 
+ id="dx1-7001"></a>
+<a 
+ id="dx1-7002"></a>
+<!--l. 248--><p class="noindent" >Thus far, we have assumed that the input PDF will be read from a file on disk, and the output written
+similarly. Often it&#8217;s useful to be able to read input from <span 
+class="cmtt-10">stdin </span>(Standard Input) or write output to
+<span 
+class="cmtt-10">stdout </span>(Standard Output) instead. The typical use is to join several programs together into a <span 
+class="cmti-10">pipe</span>,
+passing data from one to the next without the use of intermediate files. Use <span 
+class="cmtt-10">-stdin </span>to read from
+standard input, and <span 
+class="cmtt-10">-stdout </span>to write to standard input, either to pipe data between multiple
+programs, or multiple invocations of the same program. For example, this sequence of commands (all
+typed on one line)
+<!--l. 257--><p class="noindent" ><img 
+src="cpdfmanual11x.png" alt=""  class="fbox" >
+<!--l. 265--><p class="noindent" >extracts the last five pages of <span 
+class="cmtt-10">in.pdf </span>in the correct order, writing them to <span 
+class="cmtt-10">out.pdf</span>. It does this by
+reversing the input, taking the first five pages and then reversing the result.
+<!--l. 269--><p class="indent" >   To supply passwords for a file from <span 
+class="cmtt-10">-stdin</span>, use <span 
+class="cmtt-10">-stdin-owner &#x003C;password&#x003E; </span>and/or <span 
+class="cmtt-10">-stdin-user</span>
+<span 
+class="cmtt-10">&#x003C;password&#x003E;</span>.
+<!--l. 271--><p class="indent" >   Using <span 
+class="cmtt-10">-stdout </span>on the final command in the pipeline to output the PDF to screen is not
+recommended, since PDF files often contain compressed sections which are not screen-readable.
+<!--l. 275--><p class="indent" >   Several <span 
+class="cmtt-10">cpdf</span>&#x00A0;operations write to standard output by default (for example, listing fonts). A useful
+feature of the command line (not specific to <span 
+class="cmtt-10">cpdf</span>) is the ability to redirect this output to a file. This is
+achieved with the <span 
+class="cmtt-10">&#x003E; </span>operator:
+                                                                               
+                                                                               
+<!--l. 280--><p class="noindent" ><img 
+src="cpdfmanual12x.png" alt=""  class="fbox" >
+<!--l. 289--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">1.5   </span> <a 
+ id="x1-80001.5"></a>Doing Several Things at Once with AND</h3>
+<!--l. 291--><p class="noindent" >The keyword <span 
+class="cmtt-10">AND </span>can be used to string together several commands in one. The advantage compared
+with using pipes is that the file need not be repeatedly parsed and written out, saving
+time.
+<!--l. 295--><p class="indent" >   To use <span 
+class="cmtt-10">AND</span>, simply leave off the output specifier (e.g <span 
+class="cmtt-10">-o</span>) of one command, and the input specifier
+(e.g filename) of the next. For instance:
+<!--l. 298--><p class="noindent" ><img 
+src="cpdfmanual13x.png" alt=""  class="fbox" >
+<!--l. 307--><p class="noindent" >To specify the range for each section, use <span 
+class="cmtt-10">-range</span>:
+<!--l. 309--><p class="noindent" ><img 
+src="cpdfmanual14x.png" alt=""  class="fbox" >
+<!--l. 317--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">1.6   </span> <a 
+ id="x1-90001.6"></a>Units</h3>
+<a 
+ id="dx1-9001"></a>
+<!--l. 319--><p class="noindent" >When measurements are given to <span 
+class="cmtt-10">cpdf</span>, they are in points (1 point = 1/72 inch). They
+may optionally be followed by some letters to change the measurement. The following are
+supported:
+   <div class="table">
+                                                                               
+                                                                               
+<!--l. 323--><p class="indent" >   <hr class="float"><div class="float" 
+>
+                                                                               
+                                                                               
+<div class="pic-tabular">
+<img 
+src="cpdfmanual15x.png" alt="pt  Points (72 points per inch). The default.
+cm  Centimeters
+mm  Millimeters
+in  Inches
+" ></div>
+                                                                               
+                                                                               
+   </div><hr class="endfloat" />
+   </div>
+<!--l. 336--><p class="noindent" >For example, one may write <span 
+class="cmtt-10">14mm </span>or <span 
+class="cmtt-10">21.6in</span>. In addition, the following letters stand, in some
+operations (<span 
+class="cmtt-10">-scale-page</span>, <span 
+class="cmtt-10">-scale-to-fit</span>, <span 
+class="cmtt-10">-scale-contents</span>, <span 
+class="cmtt-10">-shift</span>, <span 
+class="cmtt-10">-mediabox</span>,<br 
+class="newline" /><span 
+class="cmtt-10">-crop</span>) for various page dimensions:
+   <div class="table">
+                                                                               
+                                                                               
+<!--l. 338--><p class="indent" >   <hr class="float"><div class="float" 
+>
+                                                                               
+                                                                               
+<div class="pic-tabular">
+<img 
+src="cpdfmanual16x.png" alt="   PW  Page width
+   PH  Page height
+PMINX  Page minimum x coordinate
+PMINY  Page minimum y coordinate
+PMAXX  Page maximum  x coordinate
+PMAXY  Page maximum  y coordinate
+   CW  Crop box width
+   CH  Crop box height
+CMINX  Crop box minimum  x coordinate
+CMINY  Crop box minimum  y coordinate
+CMAXX  Crop box maximum  x coordinate
+CMAXY  Crop box maximum  y coordinate
+" ></div>
+                                                                               
+                                                                               
+   </div><hr class="endfloat" />
+   </div>
+<!--l. 356--><p class="noindent" >For example, we may write <span 
+class="cmtt-10">PMINX PMINY </span>to stand for the coordinate of the lower left corner of the
+page.
+<!--l. 358--><p class="indent" >   Simple arithmetic may be performed using the words <span 
+class="cmtt-10">add</span>, <span 
+class="cmtt-10">sub</span>, <span 
+class="cmtt-10">mul </span>and <span 
+class="cmtt-10">div </span>to stand for addition,
+subtraction, multiplication and division. For example, one may write <span 
+class="cmtt-10">14insub30pt </span>or <span 
+class="cmtt-10">PMINXmul</span>
+<span 
+class="cmtt-10">2</span>
+   <h3 class="sectionHead"><span class="titlemark">1.7   </span> <a 
+ id="x1-100001.7"></a>Setting the Producer and Creator</h3>
+<!--l. 362--><p class="noindent" >The <span 
+class="cmtt-10">-producer </span>and <span 
+class="cmtt-10">-creator </span>options may be added to any <span 
+class="cmtt-10">cpdf </span>command line to set the
+producer and/or creator of the PDF file. If the file was converted from another format, the
+<span 
+class="cmti-10">creator </span>is the program producing the original, the <span 
+class="cmti-10">producer </span>the program converting it to
+PDF.
+<!--l. 366--><p class="noindent" ><img 
+src="cpdfmanual17x.png" alt=""  class="fbox" >
+<!--l. 376--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">1.8   </span> <a 
+ id="x1-110001.8"></a>PDF Version Numbers</h3>
+<a 
+ id="dx1-11001"></a>
+<!--l. 378--><p class="noindent" >When an operation which uses a part of the PDF standard which was introduced in a later version
+than that of the input file, the PDF version in the output file is set to the later version (most PDF
+viewers will try to load any PDF file, even if it is marked with a later version number).
+However, this automatic version changing may be suppressed with the <span 
+class="cmtt-10">-keep-version</span>
+flag.
+<!--l. 384--><p class="indent" >   Here is a list of Acrobat versions together with the maximum PDF version they are intended to
+support:
+<div class="pic-tabular">
+   <img 
+src="cpdfmanual18x.png" alt="PDF 1.2  Acrobat 3.0
+PDF 1.3  Acrobat 4.0
+PDF 1.4  Acrobat 5.0
+PDF 1.5  Acrobat 6.0
+PDF 1.6  Acrobat 7.0
+PDF 1.7  Acrobat 8.0, 9.0, 10.0  " ></div>
+<!--l. 398--><p class="noindent" >If you wish to manually alter the PDF version of a file, use the <span 
+class="cmtt-10">-set-version </span>option described in
+Section <span 
+class="cmbx-10">??</span>.
+<!--l. 401--><p class="noindent" >
+                                                                               
+                                                                               
+   <h3 class="sectionHead"><span class="titlemark">1.9   </span> <a 
+ id="x1-120001.9"></a>File IDs</h3>
+<!--l. 402--><p class="noindent" >PDF files contain an ID (consisting of two parts), used by some workflow systems to uniquely identify
+a file. To change the ID, behavior, use the <span 
+class="cmtt-10">-change-id </span>operation. This will create a new ID for the
+output file.
+<!--l. 406--><p class="noindent" ><img 
+src="cpdfmanual19x.png" alt=""  class="fbox" >
+<!--l. 418--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">1.10   </span> <a 
+ id="x1-130001.10"></a>Linearization</h3>
+<a 
+ id="dx1-13001"></a>
+<!--l. 420--><p class="noindent" >Linearized PDF is a version of the PDF format in which the data is held in a special manner to allow
+content to be fetched only when needed. This means viewing a multipage PDF over a slow connection
+is more responsive. By default, <span 
+class="cmtt-10">cpdf</span>&#x00A0;does not linearize output files. To make it do so, add
+the <span 
+class="cmtt-10">-l </span>option to the command line, in addition to any other command being used. For
+example:
+<!--l. 426--><p class="noindent" ><img 
+src="cpdfmanual20x.png" alt=""  class="fbox" >
+<!--l. 437--><p class="noindent" >This requires the existence of the external program <span 
+class="cmtt-10">cpdflin </span>which is provided with commercial
+versions of <span 
+class="cmtt-10">cpdf</span>. This must be installed as described in the installation documentation provided with
+your copy of <span 
+class="cmtt-10">cpdf</span>. If you are unable to install <span 
+class="cmtt-10">cpdflin</span>, you must use <span 
+class="cmtt-10">-cpdflin </span>to let <span 
+class="cmtt-10">cpdf </span>know
+where to find it:
+<!--l. 439--><p class="noindent" ><img 
+src="cpdfmanual21x.png" alt=""  class="fbox" >
+<!--l. 448--><p class="indent" >   In extremis, you may place <span 
+class="cmtt-10">cpdflin </span>and its resources in the current working directory, though this
+is not recommended. For further help, refer to the installation instructions for your copy of
+<span 
+class="cmtt-10">cpdf</span>.
+<!--l. 450--><p class="indent" >   To keep the existing linearization status of a file (produce linearized output if the input is
+linearized and the reverse), use <span 
+class="cmtt-10">-keep-l </span>instead of <span 
+class="cmtt-10">-l</span>.
+<!--l. 452--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">1.11   </span> <a 
+ id="x1-140001.11"></a>Object Streams</h3>
+<!--l. 453--><p class="noindent" >PDF 1.5 introduced a new mechanism for storing objects to save space: object streams. by default,
+<span 
+class="cmtt-10">cpdf </span>will preserve object streams in input files, creating no more. To prevent the retention of existing
+object streams, use <span 
+class="cmtt-10">-no-preserve-objstm</span>:
+<!--l. 455--><p class="noindent" ><img 
+src="cpdfmanual22x.png" alt=""  class="fbox" >
+<!--l. 466--><p class="noindent" >To create new object streams if none exist, or augment the existing ones, use <span 
+class="cmtt-10">-create-objstm</span>:
+                                                                               
+                                                                               
+<!--l. 468--><p class="noindent" ><img 
+src="cpdfmanual23x.png" alt=""  class="fbox" >
+<!--l. 476--><p class="noindent" >To create wholly new object streams, use both options together:
+<!--l. 478--><p class="noindent" ><img 
+src="cpdfmanual24x.png" alt=""  class="fbox" >
+<!--l. 488--><p class="noindent" >Files written with object streams will be set to PDF 1.5 or higher, unless <span 
+class="cmtt-10">-keep-version </span>is used (see
+above).
+<!--l. 493--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">1.12   </span> <a 
+ id="x1-150001.12"></a>Malformed Files</h3>
+<!--l. 495--><p class="noindent" >There are many malformed PDF files in existence, including many produced by otherwise-reputable
+applications. <span 
+class="cmtt-10">cpdf</span>&#x00A0;attempts to correct these problems silently.
+<!--l. 499--><p class="indent" >   Grossly malformed files will be reconstructed. The reconstruction progress is shown on <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-10">stderr</span></span></span>
+(Standard Error):
+<!--l. 502--><p class="noindent" ><img 
+src="cpdfmanual25x.png" alt=""  class="fbox" >
+<!--l. 510--><p class="noindent" >Sometimes files can be technically well-formed but use inefficient PDF constructs. If you are sure the
+input files you are using are impeccably formed, the <span 
+class="cmtt-10">-fast </span>option added to the command line (or, if
+using <span 
+class="cmtt-10">AND</span>, to each section of the command line). This will use certain shortcuts which speed up
+processing, but would fail on badly-produced files.
+<!--l. 516--><p class="indent" >   The <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-10">-fast</span></span></span> option may be used with:
+<!--l. 518--><p class="noindent" ><img 
+src="cpdfmanual26x.png" alt=""  class="fbox" >
+<!--l. 530--><p class="noindent" >If problems occur, refrain from using <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-10">-fast</span></span></span>.
+<!--l. 532--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">1.13   </span> <a 
+ id="x1-160001.13"></a>Error Handling</h3>
+<a 
+ id="dx1-16001"></a>
+<!--l. 534--><p class="noindent" >When <span 
+class="cmtt-10">cpdf</span>&#x00A0;encounters an error, it exits with code 2. An error message is displayed on <span 
+class="cmtt-10">stderr</span>
+(Standard Error). In normal usage, this means it&#8217;s displayed on the screen. When a bad or
+inappropriate password is given, the exit code is 1.
+                                                                               
+                                                                               
+<!--l. 539--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">1.14   </span> <a 
+ id="x1-170001.14"></a>Control Files</h3>
+<a 
+ id="dx1-17001"></a>
+<!--l. 542--><p class="noindent" ><img 
+src="cpdfmanual27x.png" alt=""  class="fbox" >
+<!--l. 551--><p class="indent" >   Some operating systems have a limit on the length of a command line. To circumvent this, or
+simply for reasons of flexibility, a control file may be specified from which arguments are drawn. This
+file does not support the full syntax of the command line. Commands are separated by whitespace,
+quotation marks may be used if an argument contains a space, and the sequence <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-10">\"</span></span></span> may be used to
+introduce a genuine quotation mark in such an argument.
+<!--l. 558--><p class="indent" >   Several <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-10">-control</span></span></span> arguments may be specified, and may be mixed in with conventional
+command-line arguments. The commands in each control file are considered in the order in which they
+are given, after all conventional arguments have been processed. It is recommended to use <span 
+class="cmtt-10">-args </span>in all
+new applications. However, <span 
+class="cmtt-10">-control </span>will be supported for legacy applications.
+<!--l. 563--><p class="indent" >   To avoid interference between <span 
+class="cmtt-10">-control </span>and <span 
+class="cmtt-10">AND</span>, a new mechanism has been added. Using <span 
+class="cmtt-10">-args</span>
+in place of <span 
+class="cmtt-10">-control </span>will perform direct textual substitution of the file into the command line, prior to
+any other processing.
+<!--l. 566--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">1.15   </span> <a 
+ id="x1-180001.15"></a>String Arguments</h3>
+<!--l. 567--><p class="noindent" >Command lines are handled differently on each operating system. Some characters are reserved with
+special meanings, even when they occur inside quoted string arguments. To avoid this problem,
+<span 
+class="cmtt-10">cpdf</span>&#x00A0;performs processing on string arguments as they are read.
+<!--l. 572--><p class="indent" >   A backslash is used to indicate that a character which would otherwise be treated specially by the
+command line interpreter is to be treated literally. For example, Unix-like systems attribute a special
+meaning to the exclamation mark, so the command line
+<!--l. 577--><p class="noindent" ><img 
+src="cpdfmanual28x.png" alt=""  class="fbox" >
+<!--l. 582--><p class="noindent" >would fail. We must escape the exclamation mark with a backslash:
+<!--l. 584--><p class="noindent" ><img 
+src="cpdfmanual29x.png" alt=""  class="fbox" >
+<!--l. 588--><p class="noindent" >It follows that backslashes intended to be taken literally must themselves be escaped (i.e. written
+<span class="obeylines-h"><span class="verb"><span 
+class="cmtt-10">\\</span></span></span>).
+<!--l. 592--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">1.16   </span> <a 
+ id="x1-190001.16"></a>Text Encodings</h3>
+<a 
+ id="dx1-19001"></a>
+<!--l. 595--><p class="noindent" >Some <span 
+class="cmtt-10">cpdf </span>commands write text to standard output, or read text from the command line or
+configuration files. These are:
+                                                                               
+                                                                               
+<!--l. 598--><p class="noindent" ><img 
+src="cpdfmanual30x.png" alt=""  class="fbox" >
+<!--l. 605--><p class="noindent" >There are three options to control how the text is interpreted:
+<!--l. 607--><p class="noindent" ><img 
+src="cpdfmanual31x.png" alt=""  class="fbox" >
+<!--l. 613--><p class="noindent" >Add <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-10">-utf8</span></span></span> to use Unicode UTF8, <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-10">-stripped</span></span></span> to convert to 7 bit ASCII by dropping any high
+characters, or <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-10">-raw</span></span></span> to perform no processing. The default is <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-10">-stripped</span></span></span>.
+<!--l. 618--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">1.17   </span> <a 
+ id="x1-200001.17"></a>Font Embedding</h3>
+<!--l. 619--><p class="noindent" >Use the <span 
+class="cmtt-10">-no-embed-font </span>to avoid embedding the Standard 14 Font metrics when adding text with
+<span 
+class="cmtt-10">-add-text</span>.
+                                                                               
+                                                                               
+   <h2 class="chapterHead"><span class="titlemark">Chapter&#x00A0;2</span><br /><a 
+ id="x1-210002"></a>Merging and Splitting</h2> <img 
+src="cpdfmanual32x.png" alt=""  class="fbox" >
+   <h3 class="sectionHead"><span class="titlemark">2.1   </span> <a 
+ id="x1-220002.1"></a>Merging</h3>
+<a 
+ id="dx1-22001"></a>
+<!--l. 639--><p class="noindent" >The <span 
+class="cmtt-10">-merge </span>operation allow the merging of several files into one. Ranges can be used to select only a
+subset of pages from each input file in the output. The output file consists of the concatenation of all
+the input pages in the order specified on the command line. Actually, the <span 
+class="cmtt-10">-merge </span>can be omitted, since
+this is the default operation of <span 
+class="cmtt-10">cpdf</span>.
+<!--l. 645--><p class="noindent" ><img 
+src="cpdfmanual33x.png" alt=""  class="fbox" >
+<!--l. 658--><p class="noindent" >Merge maintains bookmarks, named destinations, and name dictionaries.
+<!--l. 660--><p class="indent" >   Forms and other objects which cannot be merged are retained if they are from the document which
+first exhibits that feature.
+<!--l. 663--><p class="indent" >   The <span 
+class="cmtt-10">-retain-numbering </span>option keeps the PDF page numbering labels of each document intact,
+rather than renumbering the output pages from 1.
+<!--l. 666--><p class="indent" >   The <span 
+class="cmtt-10">-remove-duplicate-fonts </span>ensures that fonts used in more than one of the inputs only
+appear once in the output.
+<!--l. 669--><p class="noindent" >
+   <h3 class="sectionHead"><span class="titlemark">2.2   </span> <a 
+ id="x1-230002.2"></a>Splitting</h3>
+<a 
+ id="dx1-23001"></a>
+<!--l. 671--><p class="noindent" >The <span 
+class="cmtt-10">-split </span>operation splits a PDF file into a number of parts which are written to file, their names
+being generated from a <span 
+class="cmti-10">format</span>. The optional <span 
+class="cmtt-10">-chunk </span>option allows the number of pages written to
+each output file to be set.
+<!--l. 676--><p class="noindent" ><img 
+src="cpdfmanual34x.png" alt=""  class="fbox" >
+<!--l. 693--><p class="noindent" >If the output format does not provide enough numbers for the files generated, the result is unspecified.
+The following format operators may be used:
+   <div class="table">
+                                                                               
+                                                                               
+<!--l. 696--><p class="indent" >   <hr class="float"><div class="float" 
+>
+                                                                               
+                                                                               
+<div class="pic-tabular">
+<img 
+src="cpdfmanual35x.png" alt="%, %%, %%% etc.  Sequence number padded to the number of percent signs
+             @F  Original filename without extension
+             @N  Sequence number without padding zeroes
+             @S  Start page of this chunk
+             @E  End page of this chunk
+             @B  Bookmark name  at this page
+" ></div>
+                                                                               
+                                                                               
+   </div><hr class="endfloat" />
+   </div>
+   <h3 class="sectionHead"><span class="titlemark">2.3   </span> <a 
+ id="x1-240002.3"></a>Splitting on Bookmarks</h3>
+<a 
+ id="dx1-24001"></a>
+<!--l. 710--><p class="noindent" >The <span 
+class="cmtt-10">-split-bookmarks &#x003C;level&#x003E; </span>operation splits a PDF file into a number of parts, according to the
+page ranges implied by the document&#8217;s bookmarks. These parts are then written to file with names
+generated from the given format.
+<!--l. 714--><p class="indent" >   Level 0 denotes the top-level bookmarks, level 1 the next level (sub-bookmarks) and so on. So
+<span 
+class="cmtt-10">-split-bookmarks 1 </span>creates breaks on level 0 and level 1 boundaries.
+<!--l. 718--><p class="noindent" ><img 
+src="cpdfmanual36x.png" alt=""  class="fbox" >
+<!--l. 727--><p class="noindent" >Now, there may be many bookmarks on a single page (for instance, if paragraphs are bookmarked or
+there are two subsections on one page). The splits calculated by <span 
+class="cmtt-10">-split-bookmarks </span>ensure that each
+page appears in only one of the output files. It is possible to use the <span 
+class="cmtt-10">@ </span>operators above, including
+operator <span 
+class="cmtt-10">@B </span>which expands to the text of the bookmark:
+<!--l. 733--><p class="noindent" ><img 
+src="cpdfmanual37x.png" alt=""  class="fbox" >
+<!--l. 743--><p class="noindent" >The bookmark text used for a name is converted from unicode to 7 bit ASCII, and the
+following characters are removed, in addition to any character with ASCII code less than
+32:
+<!--l. 745--><p class="noindent" ><img 
+src="cpdfmanual38x.png" alt=""  class="fbox" >
     
 </body></html> 
 
