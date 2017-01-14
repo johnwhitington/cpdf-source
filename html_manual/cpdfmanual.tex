@@ -747,7 +747,6 @@ one of the output files.
   \texttt{/ ?\ \textlangle\ \textrangle\ \textbackslash\ \% :\ * | " \textasciicircum\ + =}
 }}
 
-\end{document}
 
 \section{Encrypting with Split and Split Bookmarks}
 
@@ -757,60 +756,52 @@ The encryption parameters described in Chapter \ref{encryption} may be added to 
 \chapter{Pages}
 \pagestyle{fancy}
   \label{pages}
-  \begin{framed}
-  \small\noindent\verb!cpdf -scale-page "<scale x> <scale y>" in.pdf [<range>] -o out.pdf!
+\noindent\fbox{\parbox{\textwidth}{
+
+  \small\noindent\texttt{cpdf -scale-page "<scale x> <scale y>" in.pdf [<range>] -o out.pdf}
    
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -scale-to-fit "<x size> <y size>" [-scale-to-fit-scale <scale>]!\\    
-        \noindent\verb!     in.pdf [<range>] -o out.pdf!
-
-  %\vspace{1.5mm}
-  %\small\noindent\verb!cpdf -scale-to-fit-best "<x size> <y size>" in.pdf [<range>] -o out.pdf!
-  %
-  %\vspace{1.5mm}
-  %\small\noindent\verb!cpdf -scale-to-fit-minus "<x size> <y size>" in.pdf [<range>] -o out.pdf!
+  \small\noindent\texttt{cpdf -scale-to-fit "<x size> <y size>" [-scale-to-fit-scale <scale>]}\\    
+        \noindent\texttt{     in.pdf [<range>] -o out.pdf}
 
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -scale-contents [<scale>] [<position>] in.pdf [<range>] -o out.pdf!
+  \small\noindent\texttt{cpdf -scale-contents [<scale>] [<position>] in.pdf [<range>] -o out.pdf}
   
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -shift "<shift x> <shift y>" in.pdf [<range>] -o out.pdf!
+  \small\noindent\texttt{cpdf -shift "<shift x> <shift y>" in.pdf [<range>] -o out.pdf}
 
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -rotate <angle> in.pdf [<range>] -o out.pdf!
+  \small\noindent\texttt{cpdf -rotate <angle> in.pdf [<range>] -o out.pdf}
 
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -rotateby <angle> in.pdf [<range>] -o out.pdf!
+  \small\noindent\texttt{cpdf -rotateby <angle> in.pdf [<range>] -o out.pdf}
 
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -rotate-contents <angle> in.pdf [<range>] -o out.pdf!
+  \small\noindent\texttt{cpdf -rotate-contents <angle> in.pdf [<range>] -o out.pdf}
 
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -upright in.pdf [<range>] -o out.pdf!
+  \small\noindent\texttt{cpdf -upright in.pdf [<range>] -o out.pdf}
 
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -hflip in.pdf [<range>] -o out.pdf!
+  \small\noindent\texttt{cpdf -hflip in.pdf [<range>] -o out.pdf}
 
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -vflip in.pdf [<range>] -o out.pdf!
+  \small\noindent\texttt{cpdf -vflip in.pdf [<range>] -o out.pdf}
   
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -mediabox "<x> <y> <w> <h>" in.pdf [<range>] -o out.pdf!
-
-
-  \vspace{1.5mm}
-  \small\noindent\verb!cpdf -crop "<x> <y> <w> <h>" in.pdf [<range>] -o out.pdf!
+  \small\noindent\texttt{cpdf -mediabox "<x> <y> <w> <h>" in.pdf [<range>] -o out.pdf}
 
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -remove-crop in.pdf [<range>] -o out.pdf!
-
-  %\vspace{1.5mm}
-  %\small\noindent\verb!cpdf -copy-cropbox-to-mediabox in.pdf [<range>] -o out.pdf!
+  \small\noindent\texttt{cpdf -crop "<x> <y> <w> <h>" in.pdf [<range>] -o out.pdf}
 
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -frombox <boxname> -tobox <boxname> [-mediabox-if-missing]! \\
-  \noindent\verb!     in.pdf [<range>] -o out.pdf!
-  \end{framed}
+  \small\noindent\texttt{cpdf -remove-crop in.pdf [<range>] -o out.pdf}
+
+  \vspace{1.5mm}
+  \small\noindent\texttt{cpdf -frombox <boxname> -tobox <boxname> [-mediabox-if-missing]} \\
+  \noindent\texttt{     in.pdf [<range>] -o out.pdf}
+  }}
+
 
   \section{Page Sizes}
   \index{page size}
@@ -838,54 +829,60 @@ The encryption parameters described in Chapter \ref{encryption} may be added to 
   The \texttt{-scale-page} operation scales each page in the range by the X and
 Y factors given. This scales both the page contents, and the page size itself. It also scales any Crop Box and other boxes (Art Box, Trim Box etc). As with several of these commands, remember to take into account any page rotation when considering what the X and Y axes relate to.
 
-  \begin{framed}
-  \small\noindent\verb!cpdf -scale-page "2 2" in.pdf -o out.pdf!
+\noindent\fbox{\parbox{\textwidth}{
+  \small\noindent\texttt{cpdf -scale-page "2 2" in.pdf -o out.pdf}
 
   \vspace{2.5mm}
   \noindent Convert an A4 page to A3, for instance.
-  \end{framed}
+  }}
+
 
   \noindent The \texttt{-scale-to-fit} operation scales each page in the range to fit a
   given page size, preserving aspect ratio and centering the result.
 
-  \begin{framed}
-  \small\noindent\verb!cpdf -scale-to-fit "297mm 210mm" in.pdf -o out.pdf!
-  \small\noindent\verb!cpdf -scale-to-fit a4portrait in.pdf -o out.pdf!
+
+\noindent\fbox{\parbox{\textwidth}{
+
+  \small\noindent\texttt{cpdf -scale-to-fit "297mm 210mm" in.pdf -o out.pdf}
+  \small\noindent\texttt{cpdf -scale-to-fit a4portrait in.pdf -o out.pdf}
 
   \vspace{2.5mm}
   \noindent Scale a file's pages to fit A4 portrait.
-  \end{framed}
-  %The \texttt{-scale-to-fit-best} and \texttt{-scale-to-fit-minus} are similar, but will rotate a page by $90^\circ$ or $-90^\circ$ respectively on any page where doing so would maximise the scale.
+  }}
 
   \noindent The scale can optionally be set to a percentage of the available area, instead of filling it.
-  \begin{framed}
-  \small\noindent\verb!cpdf -scale-to-fit a4portrait -scale-to-fit-scale 0.9 in.pdf -o out.pdf!
+
+\noindent\fbox{\parbox{\textwidth}{
+
+  \small\noindent\texttt{cpdf -scale-to-fit a4portrait -scale-to-fit-scale 0.9 in.pdf -o out.pdf}
 
   \vspace{2.5mm}
   \noindent Scale a file's pages to fit A4 portrait, scaling the page 90\% of its possible size.
-  \end{framed}
+  }}
 
   \noindent The \texttt{-scale-contents} operation scales the contents about the center
   of the crop box (or, if absent, the media box), leaving the page dimensions
   (boxes) unchanged.
 
-  \begin{framed}
-  \small\noindent\verb!cpdf -scale-contents 0.5 in.pdf -o out.pdf!
+\noindent\fbox{\parbox{\textwidth}{
+
+  \small\noindent\texttt{cpdf -scale-contents 0.5 in.pdf -o out.pdf}
 
   \vspace{2.5mm}
   \noindent Scale a file's contents on all pages to 50\% of its original dimensions.
-  \end{framed}
+  }}
 
   \noindent To scale about a point other than the center, one can use the positioning commands described in Section \ref{position}. For example:
   
-  \begin{framed}
-  \small\noindent\verb!cpdf -scale-contents 0.5 -topright 20 in.pdf -o out.pdf!
+\noindent\fbox{\parbox{\textwidth}{
+
+  \small\noindent\texttt{cpdf -scale-contents 0.5 -topright 20 in.pdf -o out.pdf}
 
   \vspace{2.5mm}
   \noindent Scale a file's contents on all pages to 50\% of its original dimensions about a point 20pts from its top right corner.
-  \end{framed}
+  }}
 
-  
+
 
   \section{Shift Page Contents}
   \index{shift page contents}
@@ -893,15 +890,17 @@ Y factors given. This scales both the page contents, and the page size itself. I
   The \texttt{-shift} operation shifts the contents of each page in the range
 by X points horizontally and Y points vertically.
 
-  \begin{framed}
-  \small\noindent\verb!cpdf -shift "50 0" in.pdf even -o out.pdf!
+\noindent\fbox{\parbox{\textwidth}{
+
+
+  \small\noindent\texttt{cpdf -shift "50 0" in.pdf even -o out.pdf}
 
   \vspace{2.5mm}
 
   \noindent Shift pages to the right by 50 points (for instance, to increase
 the binding margin).
+}}
 
-  \end{framed}
   \section{Rotating Pages}
 \index{rotate!pages}
 
@@ -917,31 +916,41 @@ contents and/or the page dimensions (use \texttt{-upright} afterwards or
   
 The \texttt{-rotate} operation sets the viewing rotation of the selected pages to
 the absolute value given.
-  \begin{framed}
-  \small\verb!cpdf -rotate 90 in.pdf -o out.pdf!
+
+\noindent\fbox{\parbox{\textwidth}{
+
+
+  \small\texttt{cpdf -rotate 90 in.pdf -o out.pdf}
 
   \vspace{2.5mm}
   \noindent Set the rotation of all the pages in the input file to ninety degrees clockwise.
-  \end{framed}
+  }}
   \noindent The \texttt{-rotateby} operation changes the viewing rotation of all the
 given pages by the relative value given.
-  \begin{framed}
-  \small\verb!cpdf -rotateby 90 in.pdf -o out.pdf!
+
+\noindent\fbox{\parbox{\textwidth}{
+
+  \small\texttt{cpdf -rotateby 90 in.pdf -o out.pdf}
 
   \vspace{2.5mm}
   \noindent Rotate all the pages in the input file by ninety degrees clockwise.
-  \end{framed}
+  }}
   \noindent The \texttt{-rotate-contents} operation rotates the contents and dimensions
 of the page by the given relative value.
   \index{rotate!contents}
-  \begin{framed}
-  \small\verb!cpdf -rotate-contents 90 in.pdf -o out.pdf!
+
+
+\noindent\fbox{\parbox{\textwidth}{
+
+  \small\texttt{cpdf -rotate-contents 90 in.pdf -o out.pdf}
 
   \vspace{2.5mm}
 
   \noindent Rotate all the page contents in the input file by
 ninety degrees clockwise. Does not change the page dimensions.
-  \end{framed}
+  }}
+
+
 
   \label{upright}
    \noindent The \texttt{-upright} operation does whatever combination of
@@ -953,31 +962,34 @@ rotation of the document to zero without altering its appearance. In addition, i
   The \texttt{-hflip} and \texttt{-vflip} operations flip the contents of the
 chosen pages horizontally or vertically. No account is taken of the current
 page rotation when considering what "horizontally" and "vertically" mean, so you may like to use \texttt{-upright} first.
-  \begin{framed}
-    \small\verb!cpdf -hflip in.pdf even -o out.pdf!
+
+\noindent\fbox{\parbox{\textwidth}{
+
+    \small\texttt{cpdf -hflip in.pdf even -o out.pdf}
 
     \vspace{2.5mm}
     \noindent Flip the even pages in \texttt{in.pdf} horizontally.
 
     \vspace{2.5mm}
-    \verb!cpdf -vflip in.pdf -o out.pdf!
+    \texttt{cpdf -vflip in.pdf -o out.pdf}
 
     \vspace{2.5mm}
     \noindent Flip all the pages in \texttt{in.pdf} vertically.
-  \end{framed}
-
+}}
   \section{Boxes and Cropping}
  \index{crop pages}
 \index{media box}
   All PDF files contain a \textit{media box} for each page, giving the
 dimensions of the paper. To change these dimensions (without altering the page
 contents in any way), use the \texttt{-mediabox} option.
-  \begin{framed}
-  \small\verb!cpdf -mediabox "0pt 0pt 500pt 500pt" in.pdf -o out.pdf!
+
+\noindent\fbox{\parbox{\textwidth}{
+
+  \small\texttt{cpdf -mediabox "0pt 0pt 500pt 500pt" in.pdf -o out.pdf}
 
   \vspace{2.5mm}
   \noindent Set the media box to 500 points square.
-  \end{framed}
+  }}
   \noindent The four numbers are minimum x, minimum y, width, height. x
 coordinates increase to the right, y coordinates increase upwards.
   PDF file can also optionally contain a \textit{crop box} for each page,
@@ -985,48 +997,53 @@ defining to what extent the page is cropped before being displayed or printed.
 A crop box can be set, changed and removed, without affecting the underlying
 media box. To set or change the crop box use \texttt{-crop}. To remove any
 existing crop box, use \texttt{-remove-crop}.
-  \begin{framed}
-  \small\verb!cpdf -crop "0pt 0pt 200mm 200mm" in.pdf -o out.pdf!
+
+\noindent\fbox{\parbox{\textwidth}{
+
+  \small\texttt{cpdf -crop "0pt 0pt 200mm 200mm" in.pdf -o out.pdf}
 
   \vspace{2.5mm}
   \noindent Crop pages to the bottom left 200-millimeter square of the page.
 
   \vspace{2.5mm}
-  \verb!cpdf -remove-crop in.pdf -o out.pdf!
+  \texttt{cpdf -remove-crop in.pdf -o out.pdf}
   
   \vspace{2.5mm}
   \noindent Remove cropping.
-  \end{framed}
+  }}
 
 \noindent Note that the crop box is only obeyed in some viewers. 
 
-  \begin{framed}
-  \small\noindent\verb!cpdf -frombox <boxname> -tobox <boxname> [-mediabox-if-missing]! \\
-  \noindent\verb!     in.pdf [<range>] -o out.pdf!
+\noindent\fbox{\parbox{\textwidth}{
+
+  \small\noindent\texttt{cpdf -frombox <boxname> -tobox <boxname> [-mediabox-if-missing]} \\
+  \noindent\texttt{     in.pdf [<range>] -o out.pdf}
 
   \vspace{2.5mm}
   \noindent Copy the contents of one box to another.
 
-  \end{framed}
+  }}
   \noindent This operation copies the contents of one box (Media box, Crop box, Trim box etc.) to another. If \texttt{-mediabox-if-missing} is added, the media box will be substituted when the 'from' box is not set for a given page. For example
 
-  \begin{framed}
-    \small\verb!cpdf -frombox /TrimBox -tobox /CropBox in.pdf -o out.pdf!
-  \end{framed}
+\noindent\fbox{\parbox{\textwidth}{
+
+    \small\texttt{cpdf -frombox /TrimBox -tobox /CropBox in.pdf -o out.pdf}
+  }}
   \noindent copies the Trim Box of each page to the Crop Box of each page. The possible boxes are \texttt{/MediaBox}, \texttt{/CropBox}, \texttt{/BleedBox}, \texttt{/TrimBox}, \texttt{/ArtBox}.\pagestyle{empty}\thispagestyle{fancy}
+
 
 \chapter{Encryption and Decryption}
 \pagestyle{fancy}
 \label{encryption}
 \index{encryption}
 \index{decryption}
-  \begin{framed}
-    \small\noindent\verb!cpdf -encrypt <method> <owner> <user>!\\
-    \noindent\verb!     [-no-encrypt-metadata] <permissions> in.pdf -o out.pdf!
+\noindent\fbox{\parbox{\textwidth}{
+    \small\noindent\texttt{cpdf -encrypt <method> <owner> <user>}\\
+    \noindent\texttt{     [-no-encrypt-metadata] <permissions> in.pdf -o out.pdf}
 
     \vspace{1.5mm}
-    \noindent\verb!cpdf -decrypt in.pdf owner=<owner password> -o out.pdf!
-  \end{framed}
+    \noindent\texttt{cpdf -decrypt in.pdf owner=<owner password> -o out.pdf}
+  }}
   \label{crypt}
   \section{Introduction}
   PDF files can be encrypted using various types of encryption and attaching
@@ -1075,22 +1092,26 @@ person:
 
   \section{Encrypting a Document}
   To encrypt a document, the owner and user passwords must be given (here, \texttt{fred} and \texttt{charles} respectively):
-  \begin{framed}
-    \small\verb!cpdf -encrypt 40bit fred charles -no-print in.pdf -o out.pdf!
+
+\noindent\fbox{\parbox{\textwidth}{
+
+    \small\texttt{cpdf -encrypt 40bit fred charles -no-print in.pdf -o out.pdf}
 
     \vspace{1.5mm}
-    \small\verb!cpdf -encrypt 128bit fred charles -no-extract in.pdf -o out.pdf!
+    \small\texttt{cpdf -encrypt 128bit fred charles -no-extract in.pdf -o out.pdf}
 
     \vspace{1.5mm}
-    \small\verb!cpdf -encrypt AES fred "" -no-edit -no-copy in.pdf -o out.pdf!
-  \end{framed}
+    \small\texttt{cpdf -encrypt AES fred "" -no-edit -no-copy in.pdf -o out.pdf}
+  }}
   \noindent A blank user password is
 common. In this event, PDF viewers will typically not prompt for a
 password for when opening the file or for operations allowable with the user password.
-  \begin{framed}
+
+\noindent\fbox{\parbox{\textwidth}{
+
     \vspace{1.5mm}
-    \small\verb!cpdf -encrypt AES256 fred "" -no-forms in.pdf -o out.pdf!
-  \end{framed}
+    \small\texttt{cpdf -encrypt AES256 fred "" -no-forms in.pdf -o out.pdf}
+  }}
 \noindent In addition, the usual method can be used to give the existing owner
 password, if the document is already encrypted. 
 
@@ -1099,36 +1120,42 @@ metadata. Add \texttt{-no-encrypt-metadata} to the command line.
 
   \section{Decrypting a Document}
   To decrypt a document, the owner password is provided.
-  \begin{framed}
-    \small\verb!cpdf -decrypt in.pdf owner=fred -o out.pdf!
-  \end{framed}
+
+\noindent\fbox{\parbox{\textwidth}{
+
+    \small\texttt{cpdf -decrypt in.pdf owner=fred -o out.pdf}
+  }}
   \noindent The user password cannot decrypt a file.
 
 \chapter{Compression}
-  \begin{framed}
-     \small\noindent\verb!cpdf -decompress in.pdf -o out.pdf!
+
+\noindent\fbox{\parbox{\textwidth}{
+
+     \small\noindent\texttt{cpdf -decompress in.pdf -o out.pdf}
 
      \vspace{1.5mm}
-     \noindent\verb!cpdf -compress in.pdf -o out.pdf!
+     \noindent\texttt{cpdf -compress in.pdf -o out.pdf}
      
      \vspace{1.5mm}
-     \noindent\verb!cpdf -squeeze in.pdf [-squeeze-log-to <filename>] -o out.pdf!  
-   \end{framed}
+     \noindent\texttt{cpdf -squeeze in.pdf [-squeeze-log-to <filename>] -o out.pdf}  
+   }}
   \cpdf\ provides basic facilities for decompressing and compressing PDF streams.
   \section{Decompressing a Document}
 \index{decompressing}
   To decompress the streams in a PDF file, for instance to manually inspect the
 PDF, use:
-  \begin{framed}
-   \small\verb!cpdf -decompress in.pdf -o out.pdf!
-  \end{framed}
+
+\noindent\fbox{\parbox{\textwidth}{
+
+   \small\texttt{cpdf -decompress in.pdf -o out.pdf}
+  }}
   \noindent If \cpdf\ finds a compression type it can't cope with, the stream is left compressed. When using \texttt{-decompress}, object streams are not compressed.
   \section{Compressing a Document}
 \index{compressing}
   To compress the streams in a PDF file, use:
-  \begin{framed}
-    \small\verb!cpdf -compress in.pdf -o out.pdf!
-  \end{framed}
+\noindent\fbox{\parbox{\textwidth}{
+    \small\texttt{cpdf -compress in.pdf -o out.pdf}
+  }}
   \noindent\cpdf\ compresses any streams which have no compression using the
   \textbf{Flate\-Decode} method, with the exception of Metadata streams, which
   are left uncompressed.
@@ -1136,9 +1163,11 @@ PDF, use:
   \section{Squeezing a Document}
 \index{squeeze}
   To \textit{squeeze} a PDF file, reducing its size by an average of about twenty percent (though sometimes not at all), use:
-  \begin{framed}
-    \small\verb!cpdf -squeeze in.pdf -o out.pdf!
-  \end{framed}
+
+\noindent\fbox{\parbox{\textwidth}{
+
+    \small\texttt{cpdf -squeeze in.pdf -o out.pdf}
+  }}
   \noindent Adding \texttt{-squeeze} to the command line when using another operation will \textit{squeeze} the file or files upon output.
   
   The \texttt{-squeeze} operation writes some information about the squeezing process to standard output. The squeezing process involves several processes which losslessly attempt to reduce the file size. It is slow, so should not be used without thought.
@@ -1149,22 +1178,24 @@ Beginning squeeze: 123847 objects
 Squeezing... Down to 114860 objects
 Squeezing... Down to 114842 objects
 Squeezing page data
-Recompressing document
-\end{verbatim}
+Recompressing document\end{verbatim}
 
 The \texttt{-squeeze-log-to <filename>} option writes the log to the given file instead of to standard output.
 
+
+
 \chapter{Bookmarks}
-  \begin{framed}
-  \small\noindent\verb!cpdf -list-bookmarks [-utf8 | -raw] in.pdf!
+\noindent\fbox{\parbox{\textwidth}{
+
+  \small\noindent\texttt{cpdf -list-bookmarks [-utf8 | -raw] in.pdf}
 
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -remove-bookmarks in.pdf -o out.pdf!
+  \small\noindent\texttt{cpdf -remove-bookmarks in.pdf -o out.pdf}
 
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -add-bookmarks <bookmark file> in.pdf -o out.pdf!
+  \small\noindent\texttt{cpdf -add-bookmarks <bookmark file> in.pdf -o out.pdf}
 
-  \end{framed}
+  }}
 \index{bookmarks}
 \index{document outline}
   PDF Bookmarks (properly called the \textit{document outline}) represent a tree
@@ -1182,17 +1213,20 @@ particular bookmark is. Then the text of the bookmark in quotes, then the page
 number which the bookmark points to, then (optionally) the word "open" if the
 bookmark should have its children (at the level immediately below) visible when
 the file is loaded. For example, upon executing
-\begin{framed}
-  \small\verb!cpdf -list-bookmarks doc.pdf!
-\end{framed}
+\noindent\fbox{\parbox{\textwidth}{
+
+  \small\texttt{cpdf -list-bookmarks doc.pdf}
+}}
 
 \noindent the result might be:
-\begin{framed}{\small\begin{verbatim}
+
+\begin{verbatim}
 0 "Part 1" 1 open
 1 "Part 1A" 2
 1 "Part 1B" 3
 0 "Part 2" 4
-1 "Part 2a" 5\end{verbatim}}\end{framed}
+1 "Part 2a" 5\end{verbatim}
+
 \noindent If the page number is 0, it indicates that clicking on that entry doesn't move to a page.
 
 By default, \cpdf\ converts unicode to ASCII text, dropping characters outside
@@ -1204,9 +1238,10 @@ the ASCII range. To prevent this, and return unicode UTF8 output, add the
   \label{removebookmarks}
 \index{bookmarks!removing}
   The \texttt{-remove-bookmarks} operations removes all bookmarks from the file.
-  \begin{framed}
-    \small\verb!cpdf -remove-bookmarks in.pdf -o out.pdf!
-  \end{framed}
+\noindent\fbox{\parbox{\textwidth}{
+
+    \small\texttt{cpdf -remove-bookmarks in.pdf -o out.pdf}
+  }}
 
   \section{Add Bookmarks}
   
@@ -1216,22 +1251,26 @@ the ASCII range. To prevent this, and return unicode UTF8 output, add the
 \texttt{-list-bookmarks} option. If there are any bookmarks in the input PDF
 already, they are discarded. For example, if the file \texttt{bookmarks.txt}
 contains the output from \texttt{-list-bookmarks} above, then the command
-  \begin{framed}
-   \small\verb!cpdf -add-bookmarks bookmarks.txt in.pdf -o out.pdf!
-  \end{framed}
+\noindent\fbox{\parbox{\textwidth}{
+
+   \small\texttt{cpdf -add-bookmarks bookmarks.txt in.pdf -o out.pdf}
+  }}
 \noindent adds the bookmarks to the input file, writing to \texttt{out.pdf}. An error
 will be given if the bookmarks file is not in the correct form (in particular,
 the numbers in the first column which specify the level must form a proper
 tree with no entry being more than one greater than the last).
 
 \chapter{Presentations}
-  \begin{framed}
-  \small\noindent\begin{verbatim}
-  cpdf -presentation in.pdf [<range>] -o out.pdf
-                     [-trans <transition-name>] [-duration <float>]
-                     [-vertical] [-outward] [-direction <int>]
-                     [-effect-duration <float>]\end{verbatim}
-\end{framed}
+
+\noindent\fbox{\parbox{\textwidth}{
+
+  \small\noindent
+  \texttt{cpdf -presentation in.pdf [\textlangle range\textrangle ] -o out.pdf}\\
+  \texttt{     [-trans \textlangle\ transition-name\textrangle ] [-duration \textlangle\ float\textrangle\ ]}\\
+\texttt{                     [-vertical] [-outward] [-direction \textlangle\ int \textrangle]}\\
+\texttt{                     [-effect-duration \textlangle\ float \textrangle ]}\\
+}}
+
 \index{presentations}
 
   \vspace{12mm}
@@ -1283,19 +1322,23 @@ only) specifies the direction of the effect. The following values are valid:
 \end{itemize}
 
 \noindent For example:
-\begin{framed}
+
+\noindent\fbox{\parbox{\textwidth}{
+
   \small
-  \noindent\verb!cpdf -presentation in.pdf 2-end -trans Split -duration 10 -o out.pdf!
+  \noindent\texttt{cpdf -presentation in.pdf 2-end -trans Split -duration 10 -o out.pdf}
 
   \vspace{2.5mm}
   The \textbf{Split} style, with vertical lines, and each slide staying ten
 seconds unless manually advanced. The first page (being a title) does not move
 on automatically, and has no transition effect.
 
-\end{framed}
+}}
 
 \noindent To use different options on different page ranges, run \cpdf\ multiple times on
 the file using a different page range each time.
+
+\end{document}
 
 \chapter{Watermarks and Stamps}
 \label{stamps}
