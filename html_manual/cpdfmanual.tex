@@ -1338,60 +1338,67 @@ on automatically, and has no transition effect.
 \noindent To use different options on different page ranges, run \cpdf\ multiple times on
 the file using a different page range each time.
 
-\end{document}
 
 \chapter{Watermarks and Stamps}
 \label{stamps}
 \index{watermarks}
 \index{stamps}
-  \begin{framed}
-  \noindent\small\verb!cpdf -stamp-on source.pdf!\\
-  \noindent\small\verb!     [-scale-stamp-to-fit] [<positioning command>] [-relative-to-cropbox] !\\
-  \noindent\small\verb!     in.pdf [<range>] -o out.pdf!
+
+\noindent\fbox{\parbox{\textwidth}{
+
+  \noindent\small\texttt{cpdf -stamp-on source.pdf}\\
+  \noindent\small\texttt{     [-scale-stamp-to-fit] [\textlangle positioning command\textrangle ] [-relative-to-cropbox] }\\
+  \noindent\small\texttt{     in.pdf [\textlangle range\textrangle ] -o out.pdf}!
   
   \vspace{1.5mm}
-  \noindent\small\verb!cpdf -stamp-under source.pdf!\\
-  \noindent\small\verb!     [-scale-stamp-to-fit] [<positioning command>] [-relative-to-cropbox]!\\
-  \noindent\small\verb!     in.pdf [<range>] -o out.pdf!
+  \noindent\small\texttt{cpdf -stamp-under source.pdf}\\
+  \noindent\small\texttt{     [-scale-stamp-to-fit] [\textlangle positioning command\textrangle ] [-relative-to-cropbox]}\\
+  \noindent\small\texttt{     in.pdf [\textlangle range\textrangle ] -o out.pdf}
 
   \vspace{1.5mm}
-  \noindent\small\verb!cpdf -combine-pages over.pdf under.pdf -o out.pdf!
+  \noindent\small\texttt{cpdf -combine-pages over.pdf under.pdf -o out.pdf}
 
   \vspace{1.5mm}
-  \noindent\small\begin{verbatim}cpdf ([-add-text <text-format> | -add-rectangle <size>])
-              [-font <fontname>]
-              [-font-size <size-in-points>]
-              [-color <color>]
-              [-line-spacing <number>]
-              [-outline]
-              [-linewidth <number>]
-              [-underneath]
-              [-relative-to-cropbox]
-              [-prerotate]
-              [-bates <number>]
-              [-bates-at-range <number>]
-              [-bates-pad-to <number>]
-              [-opacity <number>]
-              [-midline]
-              [-topline]
-              in.pdf [<range>] -o out.pdf\end{verbatim}
+  \noindent\small\texttt{cpdf ([-add-text \textlangle text-format\textrangle | -add-rectangle\\\textlangle size\textrangle ])}\\
+              \texttt{[-font \textlangle fontname\textrangle ]}\\
+              \texttt{[-font-size \textlangle size-in-points\textrangle ]}\\
+              \texttt{[-color \textlangle color\textrangle ]}\\
+              \texttt{[-line-spacing \textlangle number \textrangle ]}\\
+              \texttt{[-outline]}\\
+              \texttt{[-linewidth \textlangle number\textrangle ]}\\
+              \texttt{[-underneath]}\\
+              \texttt{[-relative-to-cropbox]}\\
+              \texttt{[-prerotate]}\\
+              \texttt{[-bates \textlangle number\textrangle ]}\\
+              \texttt{[-bates-at-range \textlangle number\textrangle ]}\\
+              \texttt{[-bates-pad-to \textlangle number\textrangle ]}\\
+              \texttt{[-opacity \textlangle number\textrangle ]}\\
+              \texttt{[-midline]}\\
+              \texttt{[-topline]}\\
+              \texttt{in.pdf [\textlangle range\textrangle ] -o out.pdf}\\
+
   \noindent See also positioning commands below.
 
   \vspace{1.5mm}
-  \noindent\small\verb!cpdf -remove-text in.pdf [<range>] -o out.pdf!
-  \end{framed}
-  \section{Add a Watermark or Logo}
+  \noindent\small\texttt{cpdf -remove-text in.pdf [<range>] -o out.pdf}
+  }}
+\section{Add a Watermark or Logo}
   The \texttt{-stamp-on} and \texttt{-stamp-under} operations stamp the first
 page of a source PDF onto or under each page in the given range of the input
 file. For example,
-  \begin{framed}
-    \small\verb!cpdf -stamp-on logo.pdf in.pdf odd -o out.pdf!
-  \end{framed}
+
+\noindent\fbox{\parbox{\textwidth}{
+
+    \small\texttt{cpdf -stamp-on logo.pdf in.pdf odd -o out.pdf}
+  }}
 \noindent stamps the file \texttt{logo.pdf} onto the odd pages of \texttt{in.pdf},
 writing to \texttt{out.pdf}. A watermark should go underneath each page:
-  \begin{framed}
-    \small\verb!cpdf -stamp-under topsecret.pdf in.pdf -o out.pdf!
-  \end{framed}
+
+\noindent\fbox{\parbox{\textwidth}{
+
+    \small\texttt{cpdf -stamp-under topsecret.pdf in.pdf -o out.pdf}
+  }}
+
 
 \noindent The position commands in Section \ref{position} can be used to locate the stamp more precisely (they are calculated relative to the crop box of the stamp). Or, preprocess the stamp with \texttt{-shift} first.
 
@@ -1400,15 +1407,19 @@ The \texttt{-scale-stamp-to-fit} option can be added to scale the stamp to fit t
   The \texttt{-combine-pages} operation takes two PDF files and stamps each
 page of one over each page of the other. The length of the output is the same
 as the length of the ``under'' file. For instance:
-  \begin{framed}
-    \small\verb!cpdf -combine-pages over.pdf under.pdf -o out.pdf!
-  \end{framed}
+
+\noindent\fbox{\parbox{\textwidth}{
+
+    \small\texttt{cpdf -combine-pages over.pdf under.pdf -o out.pdf}
+  }}
 
 \noindent Page attributes (such as the display rotation) are taken from the ``under''
 file. For best results, remove any rotation differences in the two files using
 \texttt{-upright} first.
 
-\noindent The \texttt{-relative-to-cropbox} option takes the positioning command to be relative to the cro box of each page rather than the media box.
+\noindent The \texttt{-relative-to-cropbox} option takes the positioning command to be relative to the crop box of each page rather than the media box.
+
+
 
   \section{Stamp Text, Dates and Times.}
 \index{date}
@@ -1417,16 +1428,21 @@ file. For best results, remove any rotation differences in the two files using
   The \texttt{-add-text} operation allows text, dates and times to be stamped
 over one or more pages of the input at a given position and using a given font,
 font size and color.
-  \begin{framed}
-    \small\verb!cpdf -add-text "Copyright 2014 ACME Corp." in.pdf -o out.pdf!
-  \end{framed}
+
+\noindent\fbox{\parbox{\textwidth}{
+
+    \small\texttt{cpdf -add-text "Copyright 2014 ACME Corp." in.pdf -o out.pdf}
+ }}
+
   \noindent The default is black 12pt Times New Roman text in the top left of each page. The text can be placed underneath rather than over the page by adding the \texttt{-underneath} option.
   
   Text previously added by \cpdf\ may be removed by the \texttt{-remove-text} operation.
 \index{removing text}
-  \begin{framed}
-    \small\verb!cpdf -remove-text in.pdf -o out.pdf!
-  \end{framed}
+
+\noindent\fbox{\parbox{\textwidth}{
+
+    \small\texttt{cpdf -remove-text in.pdf -o out.pdf}
+  }}
 
   \subsection{Page Numbers}
 \index{page!numbers}
@@ -1470,71 +1486,68 @@ font size and color.
     \texttt{\%\%} & The \% character.
   \end{tabular}
 
+
   \subsection{Bates Numbers}
 \index{bates numbers}
   Unique page identifiers can be specified by putting \verb!%Bates! in the format.
 The starting point can be set with the \texttt{-bates} option. For example:
-  \begin{framed}
-    \small\verb!cpdf -add-text "Page ID: %Bates" -bates 23745 in.pdf -o out.pdf!
-  \end{framed}
+\noindent\fbox{\parbox{\textwidth}{
+
+    \small\texttt{cpdf -add-text "Page ID: \%Bates" -bates 23745 in.pdf -o out.pdf}
+}}
 
 To specify that bates numbering begins at the first page of the range, use \texttt{-bates-at-range} instead. This option must be specified after the range is specified. To pad the bates number up to a given number of leading zeros, use \texttt{-bates-pad-to} in addition to either \texttt{-bates} or \texttt{-bates-at-range}.
-
-
 
   \subsection{Position}
   \label{position}
   The position of the text may be specified either in absolute terms:
-  \begin{framed}
-    \small\verb!-pos-center "200 200"!
+
+\noindent\fbox{\parbox{\textwidth}{
+
+    \small\texttt{-pos-center "200 200"}
   
     \vspace{2.5mm}
     \noindent Position the center of the baseline text at (200pt, 200pt)
 
     \vspace{2.5mm}
-    \small\verb!-pos-left "200 200"!
+    \small\texttt{-pos-left "200 200"}
   
     \vspace{2.5mm}
     \noindent Position the left of the baseline of the text at (200pt, 200pt)
 
     \vspace{2.5mm}
-    \small\verb!-pos-right "200 200"!
+    \small\texttt{-pos-right "200 200"}
   
     \vspace{2.5mm}
     \noindent Position the right of the baseline of the text at (200pt, 200pt)
 
-  \end{framed}
+}}
 
   \noindent Positions relative to certain common points can be set:
 
-  \begin{framed}
+\noindent\fbox{\parbox{\textwidth}{
     \noindent\begin{tabular}{ll}
-      \small\verb!-top 10! & Center of baseline 10 pts down from the top center \\
-      \small\verb!-topleft 10! & Left of baseline 10 pts down and in from top left \\
-      \small\verb!-topright 10! & Right of baseline 10 pts down and left from top right\\
-      \small\verb!-left 10! & Left of baseline 10 pts in from center left \\
-      \small\verb!-bottomleft 10! & Left of baseline 10 pts in and up from bottom left \\
-      \small\verb!-bottom 10! & Center of baseline 10 pts up from bottom center\\
-      \small\verb!-bottomright 10! & Right of baseline 10 pts up and in from bottom right \\
-      \small\verb!-right 10! & Right of baseline 10 pts in from the center right \\
-      \small\verb!-diagonal! & Diagonal, bottom left to top right, centered on page\\
-      \small\verb!-reverse-diagonal! & Diagonal, top left to bottom right, centered on page\\    
-      \small\verb!-center! & Centered on page\\
+      \small\texttt{-top 10} & Center of baseline 10 pts down from the top center \\
+      \small\texttt{-topleft 10} & Left of baseline 10 pts down and in from top left \\
+      \small\texttt{-topright 10} & Right of baseline 10 pts down and left from top right\\
+      \small\texttt{-left 10} & Left of baseline 10 pts in from center left \\
+      \small\texttt{-bottomleft 10} & Left of baseline 10 pts in and up from bottom left \\
+      \small\texttt{-bottom 10} & Center of baseline 10 pts up from bottom center\\
+      \small\texttt{-bottomright 10} & Right of baseline 10 pts up and in from bottom right \\
+      \small\texttt{-right 10} & Right of baseline 10 pts in from the center right \\
+      \small\texttt{-diagonal} & Diagonal, bottom left to top right, centered on page\\
+      \small\texttt{-reverse-diagonal} & Diagonal, top left to bottom right, centered on page\\    
+      \small\texttt{-center} & Centered on page\\
     \end{tabular}
-  \end{framed}
+}}
+
+
 
 \noindent No attempt is made to take account of the page rotation when interpreting the
 position, so \texttt{-prerotate} must be added to the command line if the file
 contains pages with a non-zero viewing rotation. This is equivalent to
 pre-processing the document with \texttt{-upright}.
    
-%The \texttt{-shorter-side} modifier can be used to indicate that all the
-%positions above are relative to the shorter side of the page, any rotation
-%required being automatic. In other words, \texttt{top, topleft, topright} are
-%either on the top or left, depending upon which is the shorter side, and
-%\texttt{bottom, bottomleft, bottomright} are either on the bottom or right
-%similarly. This flag has no effect on \texttt{-diagonal}.
-
 The \texttt{-relative-to-cropbox} modifier can be added to the command line to
 make these measurements relative to the crop box instead of the media box.
 
@@ -1566,17 +1579,22 @@ than its baseline. Similarly, the \texttt{-topline} option may be used to specif
   ZapfDingbats
   \end{tabular}
 
+
+
   \noindent For example, page numbers in Times Italic can be achieved by:
-  \begin{framed}
-    \small\verb!cpdf -add-text "-%Page-" -font "Times-Italic" in.pdf -o out.pdf!
-  \end{framed}
+
+\noindent\fbox{\parbox{\textwidth}{
+
+    \small\texttt{cpdf -add-text "-\%Page-" -font "Times-Italic" in.pdf -o out.pdf}
+}}
   \noindent See Section \ref{copyfont} for how to use other fonts.
 
   The font size can be altered with the \texttt{-font-size} option, which
 specifies the size in points:
-  \begin{framed}
-    \small\verb!cpdf -add-text "-%Page-" -font-size 36 in.pdf -o out.pdf!
-  \end{framed}
+
+\noindent\fbox{\parbox{\textwidth}{
+    \small\texttt{cpdf -add-text "-\%Page-" -font-size 36 in.pdf -o out.pdf!}
+  }}
 
   \subsection{Colors}
 \index{color}
@@ -1593,18 +1611,24 @@ components range between 0 and 1. The following values are predefined:
      blue & 0, 0, 1\\
   \end{tabular}
 
-  \begin{framed}
-    \small\verb!cpdf -add-text "Hullo" -color "red" in.pdf -o out.pdf!
+
+\noindent\fbox{\parbox{\textwidth}{
+    \small\texttt{cpdf -add-text "Hullo" -color "red" in.pdf -o out.pdf}
     
     \vspace{1.5mm}
-    \small\verb!cpdf -add-text "Hullo" -color "0.5 0.5 0.5" in.pdf -o out.pdf!
-  \end{framed}
+    \small\texttt{cpdf -add-text "Hullo" -color "0.5 0.5 0.5" in.pdf -o out.pdf}
+  }}
 
 \noindent Partly-transparent text may be specified using the \verb!-opacity! option. Wholly opaque is 1 and wholly transparent is 0. For example:
 
-\begin{framed}
-  \small\verb!cpdf -add-text "DRAFT" -color "red" -opacity 0.3 -o out.pdf!
-\end{framed}
+
+
+
+\noindent\fbox{\parbox{\textwidth}{
+
+  \small\texttt{cpdf -add-text "DRAFT" -color "red" -opacity 0.3 -o out.pdf}
+}}
+
 
 \subsection{Outline Text}
 \index{outline text}
@@ -1613,10 +1637,13 @@ components range between 0 and 1. The following values are predefined:
   may be set with the \texttt{-linewidth} option. For example, to stamp
   documents as drafts:
 
-  \begin{framed}
-    \small\verb!cpdf -add-text "DRAFT" -diagonal -outline in.pdf -o out.pdf!
+
+\noindent\fbox{\parbox{\textwidth}{
+
+    \small\texttt{cpdf -add-text "DRAFT" -diagonal -outline in.pdf -o out.pdf}
     
-  \end{framed}
+}}
+
 
 \subsection{Multi-line Text}
 
@@ -1626,10 +1653,13 @@ the first line of text (if the position is at the top, top left or top right of
 the page) or the baseline of the last line of text (if the position is at the
 bottom, bottom left or bottom right).
 
-  \begin{framed}
-    \small\begin{verbatim}cpdf -add-text "Specification\n%Page of %EndPage"
-               -topright 10 in.pdf -o out.pdf\end{verbatim}
-  \end{framed}
+\noindent\fbox{\parbox{\textwidth}{
+
+    \small\texttt{cpdf -add-text "Specification\textbackslash n\%Page of \%EndPage"\\
+               -topright 10 in.pdf -o out.pdf}
+}}
+
+
 
 \noindent The \texttt{-midline} option may be used to make these vertical positions
 relative to the midline of a line of text rather than the baseline, as usual.
@@ -1637,10 +1667,12 @@ relative to the midline of a line of text rather than the baseline, as usual.
 The \texttt{-line-spacing} option can be used to increase or decrease the line
 spacing, where a spacing of 1 is the standard.
 
-  \begin{framed}
-    \small\begin{verbatim}cpdf -add-text "Specification\n%Page of %EndPage"
-               -topright 10 -line-spacing 1.5 in.pdf -o out.pdf\end{verbatim}
-  \end{framed}
+\noindent\fbox{\parbox{\textwidth}{
+
+    \small\texttt{cpdf -add-text "Specification\textbackslash n\%Page of \%EndPage"\\
+               -topright 10 -line-spacing 1.5 in.pdf -o out.pdf}
+}}
+
 
 \noindent Justification of multiple lines is handled by the \texttt{-justify-left}, 
 \texttt{-justify-right} and\\ \texttt{-justify-center} options. The defaults are
@@ -1648,10 +1680,12 @@ left justification for positions relative to the left hand side of the page,
 right justification for those relative to the right, and center justification
 for positions relative to the center of the page. For example:
 
-\begin{framed}
-  \small\begin{verbatim}cpdf -add-text "Long line\nShort" -justify-right
-               in.pdf -o out.pdf\end{verbatim}
-\end{framed}
+\noindent\fbox{\parbox{\textwidth}{
+
+  \small\texttt{cpdf -add-text "Long line\textbackslash nShort" -justify-right\\
+               in.pdf -o out.pdf}
+}}
+
 
 \subsection{Special Characters}
 
@@ -1669,16 +1703,21 @@ included in Appendix D of the Adobe PDF Reference Manual, which is available at
 
 For example, a German sharp s (\ss) may be introduced by \verb!\337!. 
 
+
+
 \section{Stamping Graphics}
 
 A rectangle may be placed on one or more pages by using the \texttt{-add-rectangle <size>} command. Most of the options discussed above for text placement apply in the same way. For example:
 
-\begin{framed}
-  \small\begin{verbatim}cpdf -add-rectangle "200 300" -pos-right 30 -color red -outline
-                    in.pdf -o out.pdf\end{verbatim}
-\end{framed}
+\noindent\fbox{\parbox{\textwidth}{
+
+  \small\texttt{cpdf -add-rectangle "200 300" -pos-right 30 -color red -outline\\
+                    in.pdf -o out.pdf}
+}}
 
 This can be used to blank out or highlight part of the document. The following positioning options work as you would expect: \texttt{-topleft}, \texttt{-top}, \texttt{-topright}, \texttt{-right}, \texttt{-bottomright}, \texttt{-bottom}, \texttt{-bottomleft}, \texttt{-left}, \texttt{-center}. When using the option \texttt{-pos-left "x y"}, the point (x, y) refers to the bottom-left of the rectangle. When using the option \texttt{-pos-right "x y"}, the point (x, y) refers to the bottom-right of the rectangle. When using the option \texttt{-pos-center "x y"}, the point (x, y) refers to the center of the rectangle. The options \texttt{-diagonal} and \texttt{-reverse-diagonal} have no meaning.\pagestyle{empty}\thispagestyle{fancy}
+
+\end{document}
 
 
 \chapter{Multipage Facilities}\pagestyle{fancy}
