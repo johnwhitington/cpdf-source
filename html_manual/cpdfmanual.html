@@ -523,9 +523,9 @@ class="cmtt-10">-scale-page</span>, <span
 class="cmtt-10">-scale-to-fit</span>, <span 
 class="cmtt-10">-scale-contents</span>, <span 
 class="cmtt-10">-shift</span>, <span 
-class="cmtt-10">-mediabox</span>,<br 
-class="newline" /><span 
-class="cmtt-10">-crop</span>) for various page dimensions:
+class="cmtt-10">-mediabox</span>, <span 
+class="cmtt-10">-crop</span>) for various
+page dimensions:
    <div class="table">
                                                                                
                                                                                
@@ -1150,26 +1150,28 @@ class="cmtt-10">-decompress</span>, object streams are not compressed.
  id="x1-390005.2"></a>Compressing a Document</h3>
 <a 
  id="dx1-39001"></a>
-<!--l. 1154--><p class="noindent" >To compress the streams in a PDF file, use: <img 
-src="cpdfmanual63x.png" alt=""  class="fbox" > <span 
+<!--l. 1154--><p class="noindent" >To compress the streams in a PDF file, use:
+<!--l. 1156--><p class="noindent" ><img 
+src="cpdfmanual63x.png" alt=""  class="fbox" >
+<span 
 class="cmtt-10">cpdf</span>&#x00A0;compresses any streams which have no compression using the <span 
 class="cmbx-10">FlateDecode </span>method, with the
 exception of Metadata streams, which are left uncompressed.
-<!--l. 1162--><p class="noindent" >
+<!--l. 1163--><p class="noindent" >
    <h3 class="sectionHead"><span class="titlemark">5.3   </span> <a 
  id="x1-400005.3"></a>Squeezing a Document</h3>
 <a 
  id="dx1-40001"></a>
-<!--l. 1164--><p class="noindent" >To <span 
+<!--l. 1165--><p class="noindent" >To <span 
 class="cmti-10">squeeze </span>a PDF file, reducing its size by an average of about twenty percent (though sometimes not
 at all), use:
-<!--l. 1166--><p class="noindent" ><img 
+<!--l. 1167--><p class="noindent" ><img 
 src="cpdfmanual64x.png" alt=""  class="fbox" >
 Adding <span 
 class="cmtt-10">-squeeze </span>to the command line when using another operation will <span 
 class="cmti-10">squeeze </span>the file or files upon
 output.
-<!--l. 1172--><p class="indent" >   The <span 
+<!--l. 1173--><p class="indent" >   The <span 
 class="cmtt-10">-squeeze </span>operation writes some information about the squeezing process to standard output.
 The squeezing process involves several processes which losslessly attempt to reduce the file size. It is
 slow, so should not be used without thought.
@@ -1183,8 +1185,8 @@ $&#x00A0;./cpdf&#x00A0;-squeeze&#x00A0;in.pdf&#x00A0;-o&#x00A0;out.pdf
 &#x00A0;<br />Squeezing&#x00A0;page&#x00A0;data
 &#x00A0;<br />Recompressing&#x00A0;document
 </div>
-<!--l. 1180--><p class="nopar" >
-<!--l. 1182--><p class="indent" >   The <span 
+<!--l. 1181--><p class="nopar" >
+<!--l. 1183--><p class="indent" >   The <span 
 class="cmtt-10">-squeeze-log-to &#x003C;filename&#x003E; </span>option writes the log to the given file instead of to standard
 output.
                                                                                
@@ -1204,15 +1206,15 @@ bookmarks.
  id="x1-420006.1"></a>List Bookmarks</h3>
 <a 
  id="dx1-42001"></a>
-<!--l. 1209--><p class="noindent" >The <span 
-class="cmtt-10">-list-bookmarks </span>operation prints (to standard output) the bookmarks in a file. The
-first column gives the level of the tree at which a particular bookmark is. Then the
-text of the bookmark in quotes, then the page number which the bookmark points to,
-then (optionally) the word &#8221;open&#8221; if the bookmark should have its children (at the
-level immediately below) visible when the file is loaded. For example, upon executing
-<img 
+<!--l. 1210--><p class="noindent" >The <span 
+class="cmtt-10">-list-bookmarks </span>operation prints (to standard output) the bookmarks in a file. The first column
+gives the level of the tree at which a particular bookmark is. Then the text of the bookmark in quotes,
+then the page number which the bookmark points to, then (optionally) the word &#8221;open&#8221; if the
+bookmark should have its children (at the level immediately below) visible when the file is loaded. For
+example, upon executing
+<!--l. 1217--><p class="noindent" ><img 
 src="cpdfmanual66x.png" alt=""  class="fbox" >
-<!--l. 1220--><p class="noindent" >the result might be:
+<!--l. 1222--><p class="noindent" >the result might be:
                                                                                
                                                                                
    <div class="verbatim" id="verbatim-2">
@@ -1222,29 +1224,29 @@ src="cpdfmanual66x.png" alt=""  class="fbox" >
 &#x00A0;<br />0&#x00A0;"Part&#x00A0;2"&#x00A0;4
 &#x00A0;<br />1&#x00A0;"Part&#x00A0;2a"&#x00A0;5
 </div>
-<!--l. 1227--><p class="nopar" >
-<!--l. 1229--><p class="noindent" >If the page number is 0, it indicates that clicking on that entry doesn&#8217;t move to a page.
-<!--l. 1231--><p class="indent" >   By default, <span 
+<!--l. 1229--><p class="nopar" >
+<!--l. 1231--><p class="noindent" >If the page number is 0, it indicates that clicking on that entry doesn&#8217;t move to a page.
+<!--l. 1233--><p class="indent" >   By default, <span 
 class="cmtt-10">cpdf</span>&#x00A0;converts unicode to ASCII text, dropping characters outside the ASCII range. To
 prevent this, and return unicode UTF8 output, add the <span 
 class="cmtt-10">-utf8 </span>option to the command. To prevent any
 processing, use the <span 
 class="cmtt-10">-raw </span>option.
-<!--l. 1236--><p class="noindent" >
+<!--l. 1238--><p class="noindent" >
    <h3 class="sectionHead"><span class="titlemark">6.2   </span> <a 
  id="x1-430006.2"></a>Remove Bookmarks</h3>
 <a 
  id="dx1-43001"></a>
-<!--l. 1239--><p class="noindent" >The <span 
+<!--l. 1241--><p class="noindent" >The <span 
 class="cmtt-10">-remove-bookmarks </span>operations removes all bookmarks from the file.
-<img 
+<!--l. 1243--><p class="noindent" ><img 
 src="cpdfmanual67x.png" alt=""  class="fbox" >
-<!--l. 1245--><p class="noindent" >
+<!--l. 1248--><p class="noindent" >
    <h3 class="sectionHead"><span class="titlemark">6.3   </span> <a 
  id="x1-440006.3"></a>Add Bookmarks</h3>
 <a 
  id="dx1-44001"></a>
-<!--l. 1248--><p class="noindent" >The <span 
+<!--l. 1251--><p class="noindent" >The <span 
 class="cmtt-10">-add-bookmarks </span>file adds bookmarks as specified by a <span 
 class="cmti-10">bookmarks file</span>, a text file in ASCII or
 UTF8 encoding and in the same format as that produced by the <span 
@@ -1264,16 +1266,16 @@ last).
                                                                                
    <h2 class="chapterHead"><span class="titlemark">Chapter&#x00A0;7</span><br /><a 
  id="x1-450007"></a>Presentations</h2>
-<!--l. 1264--><p class="noindent" ><img 
+<!--l. 1267--><p class="noindent" ><img 
 src="cpdfmanual69x.png" alt=""  class="fbox" >
 <a 
  id="dx1-45001"></a>
-<!--l. 1276--><p class="indent" >   The PDF file format, starting at Version 1.1, provides for simple slide-show presentations in the
+<!--l. 1279--><p class="indent" >   The PDF file format, starting at Version 1.1, provides for simple slide-show presentations in the
 manner of Microsoft Powerpoint. These can be played in Acrobat and possibly other PDF viewers,
 typically started by entering full-screen mode. The <span 
 class="cmtt-10">-presentation </span>operation allows such a
 presentation to be built from any PDF file.
-<!--l. 1282--><p class="indent" >   The <span 
+<!--l. 1285--><p class="indent" >   The <span 
 class="cmtt-10">-trans </span>option chooses the transition style. When a page range is used, it is the transition
 <span 
 class="cmti-10">from </span>each page named which is altered. The following transition styles are available:
@@ -1312,17 +1314,17 @@ class="description">The same as <span
 class="cmbx-10">Dissolve </span>but the effect sweeps across the page in the direction specified
      by the <span 
 class="cmtt-10">-direction </span>option.</dd></dl>
-<!--l. 1302--><p class="noindent" >To remove a transition style currently applied to the selected pages, omit the <span 
+<!--l. 1305--><p class="noindent" >To remove a transition style currently applied to the selected pages, omit the <span 
 class="cmtt-10">-trans </span>option.
-<!--l. 1305--><p class="indent" >   The <span 
+<!--l. 1308--><p class="indent" >   The <span 
 class="cmtt-10">-effect-duration </span>option specifies the length of time in seconds for the transition itself. The
 default value is one second.
-<!--l. 1308--><p class="indent" >   The <span 
+<!--l. 1311--><p class="indent" >   The <span 
 class="cmtt-10">-duration </span>option specifies the maximum time in seconds that the page is displayed before the
 presentation automatically advances. The default, in the absence of the <span 
 class="cmtt-10">-duration </span>option, is for no
 automatic advancement.
-<!--l. 1313--><p class="indent" >   The <span 
+<!--l. 1316--><p class="indent" >   The <span 
 class="cmtt-10">-direction </span>option (for <span 
 class="cmbx-10">Wipe </span>and <span 
 class="cmbx-10">Glitter </span>styles only) specifies the direction of the effect.
@@ -1342,10 +1344,10 @@ class="cmbx-10">Wipe </span>only)
      </li>
      <li class="itemize">Top-left to bottom-right (<span 
 class="cmbx-10">Glitter </span>only)</li></ul>
-<!--l. 1323--><p class="noindent" >For example:
-<!--l. 1325--><p class="noindent" ><img 
+<!--l. 1326--><p class="noindent" >For example:
+<!--l. 1328--><p class="noindent" ><img 
 src="cpdfmanual70x.png" alt=""  class="fbox" >
-<!--l. 1337--><p class="noindent" >To use different options on different page ranges, run <span 
+<!--l. 1340--><p class="noindent" >To use different options on different page ranges, run <span 
 class="cmtt-10">cpdf</span>&#x00A0;multiple times on the file using a different
 page range each time.
                                                                                
@@ -1354,48 +1356,48 @@ page range each time.
  id="x1-460008"></a>Watermarks and Stamps</h2> <a 
  id="dx1-46001"></a> <a 
  id="dx1-46002"></a>
-<!--l. 1346--><p class="noindent" ><img 
+<!--l. 1349--><p class="noindent" ><img 
 src="cpdfmanual71x.png" alt=""  class="fbox" >
    <h3 class="sectionHead"><span class="titlemark">8.1   </span> <a 
  id="x1-470008.1"></a>Add a Watermark or Logo</h3>
-<!--l. 1385--><p class="noindent" >The <span 
+<!--l. 1388--><p class="noindent" >The <span 
 class="cmtt-10">-stamp-on </span>and <span 
 class="cmtt-10">-stamp-under </span>operations stamp the first page of a source PDF onto or under
 each page in the given range of the input file. For example,
-<!--l. 1389--><p class="noindent" ><img 
+<!--l. 1392--><p class="noindent" ><img 
 src="cpdfmanual72x.png" alt=""  class="fbox" >
 stamps the file <span 
 class="cmtt-10">logo.pdf </span>onto the odd pages of <span 
 class="cmtt-10">in.pdf</span>, writing to <span 
 class="cmtt-10">out.pdf</span>. A watermark should go
 underneath each page:
-<!--l. 1396--><p class="noindent" ><img 
+<!--l. 1399--><p class="noindent" ><img 
 src="cpdfmanual73x.png" alt=""  class="fbox" >
-<!--l. 1402--><p class="noindent" >The position commands in Section <a 
+<!--l. 1405--><p class="noindent" >The position commands in Section <a 
 href="#x1-520008.2.4">8.2.4<!--tex4ht:ref: position --></a> can be used to locate the stamp more precisely (they are
 calculated relative to the crop box of the stamp). Or, preprocess the stamp with <span 
 class="cmtt-10">-shift</span>
 first.
-<!--l. 1404--><p class="indent" >   The <span 
+<!--l. 1407--><p class="indent" >   The <span 
 class="cmtt-10">-scale-stamp-to-fit </span>option can be added to scale the stamp to fit the page before
 applying it. The use of positioning commands together with <span 
 class="cmtt-10">-scale-stamp-to-fit </span>is not
 recommended.
-<!--l. 1406--><p class="indent" >   The <span 
+<!--l. 1409--><p class="indent" >   The <span 
 class="cmtt-10">-combine-pages </span>operation takes two PDF files and stamps each page of one over each page
 of the other. The length of the output is the same as the length of the &#8220;under&#8221; file. For
-                                                                               
-                                                                               
 instance:
-<!--l. 1410--><p class="noindent" ><img 
+                                                                               
+                                                                               
+<!--l. 1413--><p class="noindent" ><img 
 src="cpdfmanual74x.png" alt=""  class="fbox" >
-<!--l. 1415--><p class="noindent" >Page attributes (such as the display rotation) are taken from the &#8220;under&#8221; file. For best results, remove
+<!--l. 1418--><p class="noindent" >Page attributes (such as the display rotation) are taken from the &#8220;under&#8221; file. For best results, remove
 any rotation differences in the two files using <span 
 class="cmtt-10">-upright </span>first.
-<!--l. 1419--><p class="noindent" >The <span 
+<!--l. 1422--><p class="noindent" >The <span 
 class="cmtt-10">-relative-to-cropbox </span>option takes the positioning command to be relative to the crop box of
 each page rather than the media box.
-<!--l. 1423--><p class="noindent" >
+<!--l. 1426--><p class="noindent" >
    <h3 class="sectionHead"><span class="titlemark">8.2   </span> <a 
  id="x1-480008.2"></a>Stamp Text, Dates and Times.</h3>
 <a 
@@ -1404,26 +1406,26 @@ each page rather than the media box.
  id="dx1-48002"></a>
 <a 
  id="dx1-48003"></a>
-<!--l. 1427--><p class="noindent" >The <span 
+<!--l. 1430--><p class="noindent" >The <span 
 class="cmtt-10">-add-text </span>operation allows text, dates and times to be stamped over one or more pages of the
 input at a given position and using a given font, font size and color.
-<!--l. 1431--><p class="noindent" ><img 
+<!--l. 1434--><p class="noindent" ><img 
 src="cpdfmanual75x.png" alt=""  class="fbox" >
-<!--l. 1436--><p class="noindent" >The default is black 12pt Times New Roman text in the top left of each page. The text can be placed
+<!--l. 1439--><p class="noindent" >The default is black 12pt Times New Roman text in the top left of each page. The text can be placed
 underneath rather than over the page by adding the <span 
 class="cmtt-10">-underneath </span>option.
-<!--l. 1438--><p class="indent" >   Text previously added by <span 
+<!--l. 1441--><p class="indent" >   Text previously added by <span 
 class="cmtt-10">cpdf</span>&#x00A0;may be removed by the <span 
 class="cmtt-10">-remove-text </span>operation. <a 
  id="dx1-48004"></a>
-<!--l. 1441--><p class="noindent" ><img 
+<!--l. 1444--><p class="noindent" ><img 
 src="cpdfmanual76x.png" alt=""  class="fbox" >
-<!--l. 1446--><p class="noindent" >
+<!--l. 1449--><p class="noindent" >
    <h4 class="subsectionHead"><span class="titlemark">8.2.1   </span> <a 
  id="x1-490008.2.1"></a>Page Numbers</h4>
 <a 
  id="dx1-49001"></a>
-<!--l. 1448--><p class="noindent" >There are various special codes to include the page number in the text:
+<!--l. 1451--><p class="noindent" >There are various special codes to include the page number in the text:
 <div class="pic-tabular">
    <img 
 src="cpdfmanual77x.png" alt="%Page      Page number in arabic notation (1, 2, 3...)
@@ -1434,19 +1436,19 @@ src="cpdfmanual77x.png" alt="%Page      Page number in arabic notation (1, 2, 3.
 %EndLabel  The page label of the last page
 %filename  The full file name of the input document
 " ></div>
-<!--l. 1462--><p class="noindent" >For example, the format <span 
+<!--l. 1465--><p class="noindent" >For example, the format <span 
 class="cmtt-10">"Page</span><span 
 class="cmtt-10">&#x00A0;%Page</span><span 
 class="cmtt-10">&#x00A0;of</span><span 
 class="cmtt-10">&#x00A0;%EndPage" </span>might become &#8221;Page&#x00A0;5&#x00A0;of&#x00A0;17&#8221;.
-<!--l. 1464--><p class="indent" >   NB: In some circumstances (e.g in batch files) on Microsoft Windows, <span class="obeylines-h"><span class="verb"><span 
+<!--l. 1467--><p class="indent" >   NB: In some circumstances (e.g in batch files) on Microsoft Windows, <span class="obeylines-h"><span class="verb"><span 
 class="cmtt-10">%</span></span></span> is a special
 character, and must be escaped (written as <span class="obeylines-h"><span class="verb"><span 
 class="cmtt-10">%%</span></span></span>). Consult your local documentation for
 details.
                                                                                
                                                                                
-<!--l. 1466--><p class="noindent" >
+<!--l. 1469--><p class="noindent" >
    <h4 class="subsectionHead"><span class="titlemark">8.2.2   </span> <a 
  id="x1-500008.2.2"></a>Date and Time Formats</h4>
 <div class="pic-tabular">
@@ -1470,18 +1472,18 @@ src="cpdfmanual78x.png" alt="%a  Abbreviated weekday name (Sun, Mon etc.)
 %Y  Year (0000&#8211;9999)
 %%  The % character.
 " ></div>
-<!--l. 1489--><p class="noindent" >
+<!--l. 1492--><p class="noindent" >
    <h4 class="subsectionHead"><span class="titlemark">8.2.3   </span> <a 
  id="x1-510008.2.3"></a>Bates Numbers</h4>
 <a 
  id="dx1-51001"></a>
-<!--l. 1491--><p class="noindent" >Unique page identifiers can be specified by putting <span class="obeylines-h"><span class="verb"><span 
-class="cmtt-10">%Bates</span></span></span> in the format.
-The starting point can be set with the <span 
+<!--l. 1494--><p class="noindent" >Unique page identifiers can be specified by putting <span class="obeylines-h"><span class="verb"><span 
+class="cmtt-10">%Bates</span></span></span> in the format. The starting point can be set
+with the <span 
 class="cmtt-10">-bates </span>option. For example:
-<img 
+<!--l. 1497--><p class="noindent" ><img 
 src="cpdfmanual79x.png" alt=""  class="fbox" >
-<!--l. 1498--><p class="indent" >   To specify that bates numbering begins at the first page of the range, use <span 
+<!--l. 1502--><p class="indent" >   To specify that bates numbering begins at the first page of the range, use <span 
 class="cmtt-10">-bates-at-range</span>
 instead. This option must be specified after the range is specified. To pad the bates number up
 to a given number of leading zeros, use <span 
@@ -1489,39 +1491,39 @@ class="cmtt-10">-bates-pad-to </span>in addition to either <span
 class="cmtt-10">-bates </span>or
 <span 
 class="cmtt-10">-bates-at-range</span>.
-<!--l. 1500--><p class="noindent" >
+<!--l. 1504--><p class="noindent" >
    <h4 class="subsectionHead"><span class="titlemark">8.2.4   </span> <a 
  id="x1-520008.2.4"></a>Position</h4>
-<!--l. 1502--><p class="noindent" >The position of the text may be specified either in absolute terms:
+<!--l. 1506--><p class="noindent" >The position of the text may be specified either in absolute terms:
                                                                                
                                                                                
-<!--l. 1504--><p class="noindent" ><img 
+<!--l. 1508--><p class="noindent" ><img 
 src="cpdfmanual80x.png" alt=""  class="fbox" >
-<!--l. 1525--><p class="noindent" >Positions relative to certain common points can be set:
-<!--l. 1527--><p class="noindent" ><img 
+<!--l. 1529--><p class="noindent" >Positions relative to certain common points can be set:
+<!--l. 1531--><p class="noindent" ><img 
 src="cpdfmanual81x.png" alt=""  class="fbox" >
-<!--l. 1545--><p class="noindent" >No attempt is made to take account of the page rotation when interpreting the position, so
+<!--l. 1549--><p class="noindent" >No attempt is made to take account of the page rotation when interpreting the position, so
 <span 
 class="cmtt-10">-prerotate </span>must be added to the command line if the file contains pages with a non-zero viewing
 rotation. This is equivalent to pre-processing the document with <span 
 class="cmtt-10">-upright</span>.
-<!--l. 1550--><p class="indent" >   The <span 
+<!--l. 1554--><p class="indent" >   The <span 
 class="cmtt-10">-relative-to-cropbox </span>modifier can be added to the command line to make these
 measurements relative to the crop box instead of the media box.
-<!--l. 1553--><p class="indent" >   The default position is equivalent to <span 
+<!--l. 1557--><p class="indent" >   The default position is equivalent to <span 
 class="cmtt-10">-topleft 100</span>.
-<!--l. 1555--><p class="indent" >   The <span 
+<!--l. 1559--><p class="indent" >   The <span 
 class="cmtt-10">-midline </span>option may be added to specify that the positioning commands above are to
 be considered relative to the midline of the text, rather than its baseline. Similarly, the
 <span 
 class="cmtt-10">-topline </span>option may be used to specify that the position is taken relative to the top of the
 text.
-<!--l. 1559--><p class="noindent" >
+<!--l. 1563--><p class="noindent" >
    <h4 class="subsectionHead"><span class="titlemark">8.2.5   </span> <a 
  id="x1-530008.2.5"></a>Font and Size</h4>
 <a 
  id="dx1-53001"></a>
-<!--l. 1561--><p class="noindent" >The font may be set with the <span 
+<!--l. 1565--><p class="noindent" >The font may be set with the <span 
 class="cmtt-10">-font </span>option. The 14 Standard PDF fonts are available:
 <div class="pic-tabular">
    <img 
@@ -1539,22 +1541,22 @@ Courier-BoldOblique
 Symbol
 ZapfDingbats
 " ></div>
-<!--l. 1583--><p class="noindent" >For example, page numbers in Times Italic can be achieved by:
-<!--l. 1585--><p class="noindent" ><img 
+<!--l. 1587--><p class="noindent" >For example, page numbers in Times Italic can be achieved by:
+<!--l. 1589--><p class="noindent" ><img 
 src="cpdfmanual83x.png" alt=""  class="fbox" > See
 Section <a 
 href="#x1-8300014.1">14.1<!--tex4ht:ref: copyfont --></a> for how to use other fonts.
-<!--l. 1591--><p class="indent" >   The font size can be altered with the <span 
+<!--l. 1595--><p class="indent" >   The font size can be altered with the <span 
 class="cmtt-10">-font-size </span>option, which specifies the size in
 points:
-<!--l. 1594--><p class="noindent" ><img 
+<!--l. 1598--><p class="noindent" ><img 
 src="cpdfmanual84x.png" alt=""  class="fbox" >
-<!--l. 1598--><p class="noindent" >
+<!--l. 1602--><p class="noindent" >
    <h4 class="subsectionHead"><span class="titlemark">8.2.6   </span> <a 
  id="x1-540008.2.6"></a>Colors</h4>
 <a 
  id="dx1-54001"></a>
-<!--l. 1600--><p class="noindent" >The <span 
+<!--l. 1604--><p class="noindent" >The <span 
 class="cmtt-10">-color </span>option takes an RGB color, where red, green and blue components range between 0 and 1.
 The following values are predefined:
 <div class="pic-tabular">
@@ -1566,82 +1568,82 @@ src="cpdfmanual85x.png" alt="-Color--R,-G,-B---
  green   0, 1, 0
  blue    0, 0, 1
 " ></div>
-<!--l. 1614--><p class="noindent" ><img 
+<!--l. 1618--><p class="noindent" ><img 
 src="cpdfmanual86x.png" alt=""  class="fbox" >
-<!--l. 1621--><p class="noindent" >Partly-transparent text may be specified using the <span class="obeylines-h"><span class="verb"><span 
+<!--l. 1625--><p class="noindent" >Partly-transparent text may be specified using the <span class="obeylines-h"><span class="verb"><span 
 class="cmtt-10">-opacity</span></span></span> option. Wholly opaque is 1 and wholly
 transparent is 0. For example:
-<!--l. 1626--><p class="noindent" ><img 
+<!--l. 1630--><p class="noindent" ><img 
 src="cpdfmanual87x.png" alt=""  class="fbox" >
                                                                                
                                                                                
-<!--l. 1632--><p class="noindent" >
+<!--l. 1636--><p class="noindent" >
    <h4 class="subsectionHead"><span class="titlemark">8.2.7   </span> <a 
  id="x1-550008.2.7"></a>Outline Text</h4>
 <a 
  id="dx1-55001"></a>
-<!--l. 1635--><p class="noindent" >The <span 
+<!--l. 1639--><p class="noindent" >The <span 
 class="cmtt-10">-outline </span>option sets outline text. The line width (default 1pt) may be set with the <span 
 class="cmtt-10">-linewidth</span>
 option. For example, to stamp documents as drafts:
-<!--l. 1640--><p class="noindent" ><img 
+<!--l. 1644--><p class="noindent" ><img 
 src="cpdfmanual88x.png" alt=""  class="fbox" >
-<!--l. 1647--><p class="noindent" >
+<!--l. 1651--><p class="noindent" >
    <h4 class="subsectionHead"><span class="titlemark">8.2.8   </span> <a 
  id="x1-560008.2.8"></a>Multi-line Text</h4>
-<!--l. 1649--><p class="noindent" >The code <span 
+<!--l. 1653--><p class="noindent" >The code <span 
 class="cmsy-10">\</span><span 
 class="cmtt-10">n </span>can be included in the text string to move to the next line. In this case, the vertical
 position refers to the baseline of the first line of text (if the position is at the top, top left or top right
 of the page) or the baseline of the last line of text (if the position is at the bottom, bottom left or
 bottom right).
-<!--l. 1655--><p class="noindent" ><img 
+<!--l. 1659--><p class="noindent" ><img 
 src="cpdfmanual89x.png" alt=""  class="fbox" >
-<!--l. 1663--><p class="noindent" >The <span 
+<!--l. 1667--><p class="noindent" >The <span 
 class="cmtt-10">-midline </span>option may be used to make these vertical positions relative to the midline of a line of
 text rather than the baseline, as usual.
-<!--l. 1666--><p class="indent" >   The <span 
+<!--l. 1670--><p class="indent" >   The <span 
 class="cmtt-10">-line-spacing </span>option can be used to increase or decrease the line spacing, where a spacing of
 1 is the standard.
-<!--l. 1669--><p class="noindent" ><img 
+<!--l. 1673--><p class="noindent" ><img 
 src="cpdfmanual90x.png" alt=""  class="fbox" >
-<!--l. 1676--><p class="noindent" >Justification of multiple lines is handled by the <span 
+<!--l. 1680--><p class="noindent" >Justification of multiple lines is handled by the <span 
 class="cmtt-10">-justify-left</span>, <span 
 class="cmtt-10">-justify-right </span>and<br 
 class="newline" /><span 
 class="cmtt-10">-justify-center </span>options. The defaults are left justification for positions relative to the left hand side
 of the page, right justification for those relative to the right, and center justification for positions
 relative to the center of the page. For example:
-<!--l. 1682--><p class="noindent" ><img 
+<!--l. 1686--><p class="noindent" ><img 
 src="cpdfmanual91x.png" alt=""  class="fbox" >
-<!--l. 1689--><p class="noindent" >
+<!--l. 1693--><p class="noindent" >
    <h4 class="subsectionHead"><span class="titlemark">8.2.9   </span> <a 
  id="x1-570008.2.9"></a>Special Characters</h4>
-<!--l. 1691--><p class="noindent" >If your command line allows for the inclusion of unicode characters, the input text will be considered
+<!--l. 1695--><p class="noindent" >If your command line allows for the inclusion of unicode characters, the input text will be considered
 as UTF8 by <span class="obeylines-h"><span class="verb"><span 
 class="cmtt-10">cpdf</span></span></span>. Special characters which exist in the PDF WinAnsiEncoding Latin 1 code (such as
 many accented characters) will be reproduced in the PDF. This does not mean, however, that every
 special character can be reproduced. You must experiment.
-<!--l. 1697--><p class="indent" >   For compatibility with previous versions of cpdf, special characters may be introduced manually
+<!--l. 1701--><p class="indent" >   For compatibility with previous versions of cpdf, special characters may be introduced manually
 with a backslash followed by the three-digit octal code of the character in the PDF WinAnsiEncoding
 Latin 1 Code. The full table is included in Appendix D of the Adobe PDF Reference Manual, which is
 available at <a 
 href="http://www.adobe.com/devnet/pdf/pdf_reference.html" class="url" ><span 
 class="cmtt-10">http://www.adobe.com/devnet/pdf/pdf_reference.html</span></a>.
-<!--l. 1703--><p class="indent" >   For example, a German sharp s (ß) may be introduced by <span class="obeylines-h"><span class="verb"><span 
+<!--l. 1707--><p class="indent" >   For example, a German sharp s (ß) may be introduced by <span class="obeylines-h"><span class="verb"><span 
 class="cmtt-10">\337</span></span></span>.
                                                                                
                                                                                
-<!--l. 1707--><p class="noindent" >
+<!--l. 1711--><p class="noindent" >
    <h3 class="sectionHead"><span class="titlemark">8.3   </span> <a 
  id="x1-580008.3"></a>Stamping Graphics</h3>
-<!--l. 1709--><p class="noindent" >A rectangle may be placed on one or more pages by using the <span 
+<!--l. 1713--><p class="noindent" >A rectangle may be placed on one or more pages by using the <span 
 class="cmtt-10">-add-rectangle &#x003C;size&#x003E;</span>
 command. Most of the options discussed above for text placement apply in the same way. For
 example:
-<!--l. 1711--><p class="noindent" ><img 
+<!--l. 1715--><p class="noindent" ><img 
 src="cpdfmanual92x.png" alt=""  class="fbox" >
-<!--l. 1717--><p class="indent" >   This can be used to blank out or highlight part of the document. The following positioning options
+<!--l. 1721--><p class="indent" >   This can be used to blank out or highlight part of the document. The following positioning options
 work as you would expect: <span 
 class="cmtt-10">-topleft</span>, <span 
 class="cmtt-10">-top</span>, <span 
@@ -1664,7 +1666,7 @@ class="cmtt-10">-reverse-diagonal </span>have no
 meaning.
                                                                                
                                                                                
-<!--l. 1721--><p class="indent" >
+<!--l. 1725--><p class="indent" >
                                                                                
                                                                                
    <h2 class="chapterHead"><span class="titlemark">Chapter&#x00A0;9</span><br /><a 
@@ -1674,42 +1676,42 @@ src="cpdfmanual93x.png" alt=""  class="fbox" >
  id="x1-600009.1"></a>Two-up</h3>
 <a 
  id="dx1-60001"></a>
-<!--l. 1743--><p class="noindent" >This facility puts multiple logical pages on a single physical page. The <span 
+<!--l. 1747--><p class="noindent" >This facility puts multiple logical pages on a single physical page. The <span 
 class="cmtt-10">-twoup-stack </span>operation puts
 two logical pages on each physical page, rotating them 90 degrees to do so. The new mediabox is thus
 larger. The <span 
 class="cmtt-10">-twoup </span>operation does the same, but scales the new sides down so that the media box is
 unchanged.
-<!--l. 1748--><p class="noindent" >
+<!--l. 1752--><p class="noindent" >
    <h3 class="sectionHead"><span class="titlemark">9.2   </span> <a 
  id="x1-610009.2"></a>Inserting Blank Pages</h3>
 <a 
  id="dx1-61001"></a>
-<!--l. 1750--><p class="noindent" >Sometimes, for instance to get a printing arrangement right, it&#8217;s useful to be able to insert blank pages
+<!--l. 1754--><p class="noindent" >Sometimes, for instance to get a printing arrangement right, it&#8217;s useful to be able to insert blank pages
 into a PDF file. <span 
 class="cmtt-10">cpdf</span>&#x00A0;can add blank pages before a given page or pages, or after. The pages in
 question are specified by a range in the usual way:
-<!--l. 1755--><p class="noindent" ><img 
+<!--l. 1759--><p class="noindent" ><img 
 src="cpdfmanual94x.png" alt=""  class="fbox" > The
 dimensions of the padded page are derived from the boxes (media box, crop box etc.) of the page after
 or before which the padding is to be applied.
-<!--l. 1771--><p class="indent" >   The <span class="obeylines-h"><span class="verb"><span 
+<!--l. 1775--><p class="indent" >   The <span class="obeylines-h"><span class="verb"><span 
 class="cmtt-10">-pad-every</span><span 
 class="cmtt-10">&#x00A0;n</span></span></span> operation places a blank page after every n pages, excluding any last one. For
 example&#x2026;
-<!--l. 1773--><p class="noindent" ><img 
+<!--l. 1777--><p class="noindent" ><img 
 src="cpdfmanual95x.png" alt=""  class="fbox" > &#x2026;on
 a 9 page document adds a blank page after pages 3 and 6.
-<!--l. 1782--><p class="indent" >   The <span class="obeylines-h"><span class="verb"><span 
+<!--l. 1786--><p class="indent" >   The <span class="obeylines-h"><span class="verb"><span 
 class="cmtt-10">-pad-multiple</span><span 
 class="cmtt-10">&#x00A0;n</span></span></span> operation adds blank pages so the document has a multiple of <span class="obeylines-h"><span class="verb"><span 
 class="cmtt-10">n</span></span></span> pages. For
 example:
-<!--l. 1784--><p class="noindent" ><img 
+<!--l. 1788--><p class="noindent" ><img 
 src="cpdfmanual96x.png" alt=""  class="fbox" >
                                                                                
                                                                                
-<!--l. 1793--><p class="indent" >
+<!--l. 1797--><p class="indent" >
                                                                                
                                                                                
    <h2 class="chapterHead"><span class="titlemark">Chapter&#x00A0;10</span><br /><a 
@@ -1719,97 +1721,97 @@ src="cpdfmanual97x.png" alt=""  class="fbox" >
  id="x1-6300010.1"></a>List Annotations</h3>
 <a 
  id="dx1-63001"></a>
-<!--l. 1808--><p class="noindent" >The <span 
+<!--l. 1812--><p class="noindent" >The <span 
 class="cmtt-10">-list-annotations </span>operation prints the textual content of any annotations on the selected pages
 to standard output. Each annotation is preceded by the page number and followed by a
 newline.
-<!--l. 1811--><p class="noindent" ><img 
+<!--l. 1815--><p class="noindent" ><img 
 src="cpdfmanual98x.png" alt=""  class="fbox" >
-<!--l. 1819--><p class="noindent" >
+<!--l. 1823--><p class="noindent" >
    <h3 class="sectionHead"><span class="titlemark">10.2   </span> <a 
  id="x1-6400010.2"></a>Copy Annotations</h3>
 <a 
  id="dx1-64001"></a>
-<!--l. 1821--><p class="noindent" >The <span 
+<!--l. 1825--><p class="noindent" >The <span 
 class="cmtt-10">-copy-annotations </span>operation copies the annotations in the given page range from one file (the
 file specified immediately after the option) to another pre-existing PDF. The range is specified after
 this pre-existing PDF. The result is then written an output file, specified in the usual way.
 <img 
 src="cpdfmanual99x.png" alt=""  class="fbox" >
-<!--l. 1835--><p class="noindent" >
+<!--l. 1839--><p class="noindent" >
    <h3 class="sectionHead"><span class="titlemark">10.3   </span> <a 
  id="x1-6500010.3"></a>Remove Annotations</h3>
 <a 
  id="dx1-65001"></a>
-<!--l. 1837--><p class="noindent" >The <span 
+<!--l. 1841--><p class="noindent" >The <span 
 class="cmtt-10">-remove-annotations </span>operation removes all annotations from the given page range.
-<!--l. 1840--><p class="noindent" ><img 
+<!--l. 1844--><p class="noindent" ><img 
 src="cpdfmanual100x.png" alt=""  class="fbox" >
                                                                                
                                                                                
-<!--l. 1849--><p class="indent" >
+<!--l. 1853--><p class="indent" >
                                                                                
                                                                                
    <h2 class="chapterHead"><span class="titlemark">Chapter&#x00A0;11</span><br /><a 
  id="x1-6600011"></a>Document Information and Metadata</h2> <a 
  id="dx1-66001"></a><a 
  id="dx1-66002"></a>
-<!--l. 1853--><p class="noindent" ><img 
+<!--l. 1857--><p class="noindent" ><img 
 src="cpdfmanual101x.png" alt=""  class="fbox" >
    <h3 class="sectionHead"><span class="titlemark">11.1   </span> <a 
  id="x1-6700011.1"></a>Listing Fonts</h3>
 <a 
  id="dx1-67001"></a>
-<!--l. 1906--><p class="noindent" >The <span 
+<!--l. 1910--><p class="noindent" >The <span 
 class="cmtt-10">-list-fonts </span>operation prints the fonts in the document, one-per-line to standard output. For
 example:
                                                                                
                                                                                
-<!--l. 1909--><p class="noindent" ><img 
+<!--l. 1913--><p class="noindent" ><img 
 src="cpdfmanual102x.png" alt=""  class="fbox" >
-<!--l. 1936--><p class="noindent" >The first column gives the page number, the second the internal unique font name, the third the type
+<!--l. 1940--><p class="noindent" >The first column gives the page number, the second the internal unique font name, the third the type
 of font (Type1, TrueType etc), the fourth the PDF font name, the fifth the PDF font
 encoding.
-<!--l. 1941--><p class="noindent" >
+<!--l. 1945--><p class="noindent" >
    <h3 class="sectionHead"><span class="titlemark">11.2   </span> <a 
  id="x1-6800011.2"></a>Reading Document Information</h3>
-<!--l. 1943--><p class="noindent" >The <span 
+<!--l. 1947--><p class="noindent" >The <span 
 class="cmtt-10">-info </span>option prints entries from the document information dictionary, and from any XMP
 metadata to standard output.
                                                                                
                                                                                
-<!--l. 1946--><p class="noindent" ><img 
+<!--l. 1950--><p class="noindent" ><img 
 src="cpdfmanual103x.png" alt=""  class="fbox" >
-<!--l. 1970--><p class="noindent" >The details of the format for creation and modification dates can be found in Appendix&#x00A0;<a 
+<!--l. 1974--><p class="noindent" >The details of the format for creation and modification dates can be found in Appendix&#x00A0;<a 
 href="#x1-97000A">A<!--tex4ht:ref: dates --></a>.
-<!--l. 1973--><p class="indent" >   By default, cpdf strips to ASCII, discarding character codes in excess of 127. In order to preserve
+<!--l. 1977--><p class="indent" >   By default, cpdf strips to ASCII, discarding character codes in excess of 127. In order to preserve
 the original unicode, add the <span 
 class="cmtt-10">-utf8 </span>option. To disable all postprocessing of the string, add
 <span 
 class="cmtt-10">-raw</span>.
-<!--l. 1976--><p class="indent" >   The <span 
+<!--l. 1980--><p class="indent" >   The <span 
 class="cmtt-10">-page-info </span>option prints the page label, media box and other boxes page-by-page to standard
 output, for all pages in the current range.
-<!--l. 1979--><p class="noindent" ><img 
+<!--l. 1983--><p class="noindent" ><img 
 src="cpdfmanual104x.png" alt=""  class="fbox" >
-<!--l. 1994--><p class="noindent" >Note that the format for boxes is minimum x, minimum y, maximum x, maximum y.
-<!--l. 1997--><p class="noindent" >The <span 
+<!--l. 1998--><p class="noindent" >Note that the format for boxes is minimum x, minimum y, maximum x, maximum y.
+<!--l. 2001--><p class="noindent" >The <span 
 class="cmtt-10">-pages </span>operation prints the number of pages in the file.
-<!--l. 1999--><p class="noindent" ><img 
+<!--l. 2003--><p class="noindent" ><img 
 src="cpdfmanual105x.png" alt=""  class="fbox" >
-<!--l. 2004--><p class="noindent" >
+<!--l. 2008--><p class="noindent" >
    <h3 class="sectionHead"><span class="titlemark">11.3   </span> <a 
  id="x1-6900011.3"></a>Setting Document Information</h3>
                                                                                
                                                                                
-<!--l. 2006--><p class="noindent" >The <span 
+<!--l. 2010--><p class="noindent" >The <span 
 class="cmti-10">document information dictionary </span>in a PDF file specifies various pieces of information about a
 PDF. These can be consulted in a PDF viewer (for instance, Acrobat).
-<!--l. 2010--><p class="indent" >   Here is a summary of the commands for setting entries in the document information
+<!--l. 2014--><p class="indent" >   Here is a summary of the commands for setting entries in the document information
 dictionary:
-<!--l. 2013--><p class="noindent" ><img 
+<!--l. 2017--><p class="noindent" ><img 
 src="cpdfmanual106x.png" alt=""  class="fbox" >
-<!--l. 2032--><p class="noindent" >(The details of the format for creation and modification dates can be found in Appendix&#x00A0;<a 
+<!--l. 2036--><p class="noindent" >(The details of the format for creation and modification dates can be found in Appendix&#x00A0;<a 
 href="#x1-97000A">A<!--tex4ht:ref: dates --></a>. Using the
 date <span 
 class="cmtt-10">"now" </span>uses the time and date at which the command is executed. Note also that <span 
@@ -1817,24 +1819,24 @@ class="cmtt-10">-producer </span>and
 <span 
 class="cmtt-10">-creator </span>may be used to set the producer and/or the creator when writing any file, separate from the
 operations described in this chapter.)
-<!--l. 2037--><p class="indent" >   For example, to set the title, the full command line would be
-<!--l. 2039--><p class="noindent" ><img 
+<!--l. 2041--><p class="indent" >   For example, to set the title, the full command line would be
+<!--l. 2043--><p class="noindent" ><img 
 src="cpdfmanual107x.png" alt=""  class="fbox" >
-<!--l. 2044--><p class="noindent" >The text string is considered to be in UTF8 format, unless the <span 
+<!--l. 2048--><p class="noindent" >The text string is considered to be in UTF8 format, unless the <span 
 class="cmtt-10">-raw </span>option is added&#8212;in which case, it
 is unprocessed, save for the replacement of any octal escape sequence such as <span 
 class="cmsy-10">\</span><span 
 class="cmtt-10">017</span>, which is replaced
 by a character of its value (here, 15).
-<!--l. 2048--><p class="noindent" >
+<!--l. 2052--><p class="noindent" >
    <h3 class="sectionHead"><span class="titlemark">11.4   </span> <a 
  id="x1-7000011.4"></a>Upon Opening a Document</h3>
-<!--l. 2050--><p class="noindent" >
+<!--l. 2054--><p class="noindent" >
    <h4 class="subsectionHead"><span class="titlemark">11.4.1   </span> <a 
  id="x1-7100011.4.1"></a>Page Layout</h4>
 <a 
  id="dx1-71001"></a>
-<!--l. 2052--><p class="noindent" >The <span 
+<!--l. 2056--><p class="noindent" >The <span 
 class="cmtt-10">-set-page-layout </span>option specifies the page layout to be used when a document is opened in, for
 instance, Acrobat. The possible (case-sensitive) values are:
 <div class="pic-tabular">
@@ -1851,15 +1853,15 @@ TwoPageRight    (PDF  1.5 and above) Display the pages two at a time,
                even numbered pages on the left
 " ></div><br 
 class="newline" />
-<!--l. 2067--><p class="noindent" >For instance:
-<!--l. 2069--><p class="noindent" ><img 
+<!--l. 2071--><p class="noindent" >For instance:
+<!--l. 2073--><p class="noindent" ><img 
 src="cpdfmanual109x.png" alt=""  class="fbox" >
-<!--l. 2074--><p class="noindent" >
+<!--l. 2078--><p class="noindent" >
    <h4 class="subsectionHead"><span class="titlemark">11.4.2   </span> <a 
  id="x1-7200011.4.2"></a>Page Mode</h4>
 <a 
  id="dx1-72001"></a>
-<!--l. 2076--><p class="noindent" >The <span 
+<!--l. 2080--><p class="noindent" >The <span 
 class="cmti-10">page mode </span>in a PDF file defines how a viewer should display the document when first opened.
 The possible (case-sensitive) values are:
 <div class="pic-tabular">
@@ -1875,10 +1877,10 @@ UseOC           (PDF  1.5 and above) Optional content group panel visi-
 UseAttachments   (PDF  1.5 and above) Attachments panel visible
 " ></div><br 
 class="newline" />
-<!--l. 2090--><p class="noindent" >For instance:
-<!--l. 2092--><p class="noindent" ><img 
+<!--l. 2094--><p class="noindent" >For instance:
+<!--l. 2096--><p class="noindent" ><img 
 src="cpdfmanual111x.png" alt=""  class="fbox" >
-<!--l. 2098--><p class="noindent" >
+<!--l. 2102--><p class="noindent" >
    <h4 class="subsectionHead"><span class="titlemark">11.4.3   </span> <a 
  id="x1-7300011.4.3"></a>Display Options</h4>
 <div class="pic-tabular">
@@ -1893,41 +1895,41 @@ src="cpdfmanual112x.png" alt="-hide-toolbar      Hide the viewer&#8217;s toolbar
 -display-doc- title  title bar
 " ></div><br 
 class="newline" />
-<!--l. 2110--><p class="noindent" >For instance:
-<!--l. 2112--><p class="noindent" ><img 
+<!--l. 2114--><p class="noindent" >For instance:
+<!--l. 2116--><p class="noindent" ><img 
 src="cpdfmanual113x.png" alt=""  class="fbox" >
-<!--l. 2117--><p class="noindent" >The page a PDF file opens at can be set using <span 
+<!--l. 2121--><p class="noindent" >The page a PDF file opens at can be set using <span 
 class="cmtt-10">-open-at-page</span>:
-<!--l. 2119--><p class="noindent" ><img 
+<!--l. 2123--><p class="noindent" ><img 
 src="cpdfmanual114x.png" alt=""  class="fbox" >
-<!--l. 2124--><p class="noindent" >To have that page scaled to fit the window in the viewer, use <span 
+<!--l. 2128--><p class="noindent" >To have that page scaled to fit the window in the viewer, use <span 
 class="cmtt-10">-open-at-page-fit </span>instead:
-<!--l. 2126--><p class="noindent" ><img 
+<!--l. 2130--><p class="noindent" ><img 
 src="cpdfmanual115x.png" alt=""  class="fbox" >
-<!--l. 2132--><p class="noindent" >
+<!--l. 2136--><p class="noindent" >
    <h3 class="sectionHead"><span class="titlemark">11.5   </span> <a 
  id="x1-7400011.5"></a>Metadata</h3>
 <a 
  id="dx1-74001"></a>
-<!--l. 2134--><p class="noindent" >PDF files can contain a piece of arbitrary metadata, often in XMP format. This is typically stored in
+<!--l. 2138--><p class="noindent" >PDF files can contain a piece of arbitrary metadata, often in XMP format. This is typically stored in
 an uncompressed stream, so that other applications can read it without having to decode the whole
 PDF. To set the metadata:
-<!--l. 2138--><p class="noindent" ><img 
+<!--l. 2142--><p class="noindent" ><img 
 src="cpdfmanual116x.png" alt=""  class="fbox" >
-<!--l. 2143--><p class="noindent" >To remove any metadata:
-<!--l. 2145--><p class="noindent" ><img 
+<!--l. 2147--><p class="noindent" >To remove any metadata:
+<!--l. 2149--><p class="noindent" ><img 
 src="cpdfmanual117x.png" alt=""  class="fbox" > To
 print the current metadata to standard output:
-<!--l. 2151--><p class="noindent" ><img 
+<!--l. 2155--><p class="noindent" ><img 
 src="cpdfmanual118x.png" alt=""  class="fbox" >
-<!--l. 2158--><p class="noindent" >
+<!--l. 2162--><p class="noindent" >
    <h3 class="sectionHead"><span class="titlemark">11.6   </span> <a 
  id="x1-7500011.6"></a>Page Labels</h3>
 <a 
  id="dx1-75001"></a>
 <a 
  id="dx1-75002"></a>
-<!--l. 2161--><p class="noindent" >It is possible to add <span 
+<!--l. 2165--><p class="noindent" >It is possible to add <span 
 class="cmti-10">page labels </span>to a document. These are not the printed on the page, but may be
 displayed alongside thumbnails or in print dialogue boxes by PDF readers. We use <span 
 class="cmtt-10">-add-page-labels</span>
@@ -1944,35 +1946,35 @@ src="cpdfmanual119x.png" alt="   DecimalArabic  1,2,3,4,5...
  LowercaseLetters  a,b,c,...,z,aa,bb...
  UppercaseLetters  A,B,C,...,Z,AA,BB...
 NoLabelPrefixOnly  No number, but a prefix will be used if defined.  " ></div>
-<!--l. 2174--><p class="noindent" >We can use <span 
+<!--l. 2178--><p class="noindent" >We can use <span 
 class="cmtt-10">-label-prefix </span>to add a textual prefix to each label. Consider a file with twenty pages
 and no current page labels (a PDF reader will assume 1,2,3&#x2026;if there are none). We will add the
 following page labels:
-<!--l. 2178--><p class="indent" >   i, ii, iii, iv, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, A-0, A-1, A-2, A-3, A-4, A-5
-<!--l. 2181--><p class="noindent" >Here are the commands, in order:
-<!--l. 2184--><p class="noindent" ><img 
+<!--l. 2182--><p class="indent" >   i, ii, iii, iv, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, A-0, A-1, A-2, A-3, A-4, A-5
+<!--l. 2185--><p class="noindent" >Here are the commands, in order:
+<!--l. 2188--><p class="noindent" ><img 
 src="cpdfmanual120x.png" alt=""  class="fbox" >
-<!--l. 2194--><p class="noindent" >By default the labels begin at page number 1 for each range. To override this, we can use
+<!--l. 2198--><p class="noindent" >By default the labels begin at page number 1 for each range. To override this, we can use
 <span 
 class="cmtt-10">-label-startval </span>(we used 0 in the final command), where we want the numbers to begin at zero
 rather than one.
-<!--l. 2198--><p class="indent" >   Page labels may be removed altogether by using <span 
+<!--l. 2202--><p class="indent" >   Page labels may be removed altogether by using <span 
 class="cmtt-10">-remove-page-labels </span>command. To print the
 page labels from an existing file, use <span 
 class="cmtt-10">-print-page-labels</span>. For example:
-<!--l. 2200--><p class="noindent" ><img 
+<!--l. 2204--><p class="noindent" ><img 
 src="cpdfmanual121x.png" alt=""  class="fbox" >
                                                                                
                                                                                
-<!--l. 2217--><p class="indent" >
+<!--l. 2221--><p class="indent" >
                                                                                
                                                                                
    <h2 class="chapterHead"><span class="titlemark">Chapter&#x00A0;12</span><br /><a 
  id="x1-7600012"></a>File Attachments</h2> <a 
  id="dx1-76001"></a>
-<!--l. 2220--><p class="noindent" ><img 
+<!--l. 2224--><p class="noindent" ><img 
 src="cpdfmanual122x.png" alt=""  class="fbox" >
-<!--l. 2232--><p class="indent" >   PDF supports adding attachments (files of any kind, including other PDFs) to an existing file. The
+<!--l. 2236--><p class="indent" >   PDF supports adding attachments (files of any kind, including other PDFs) to an existing file. The
 <span 
 class="cmtt-10">cpdf</span>&#x00A0;tool supports adding and removing <span 
 class="cmti-10">document-level attachments </span>&#8212; that is, ones which are
@@ -1984,83 +1986,83 @@ class="cmti-10">attachments</span>, associated with a particular page.
  id="x1-7700012.1"></a>Adding Attachments</h3>
 <a 
  id="dx1-77001"></a>
-<!--l. 2238--><p class="noindent" >To add an attachment, use the <span 
+<!--l. 2242--><p class="noindent" >To add an attachment, use the <span 
 class="cmtt-10">-attach-file </span>option. For instance,
-<!--l. 2240--><p class="noindent" ><img 
+<!--l. 2244--><p class="noindent" ><img 
 src="cpdfmanual123x.png" alt=""  class="fbox" >
 attaches the Excel spreadsheet <span 
 class="cmtt-10">sheet.xls </span>to the input file. If the file already has attachments, the
 new file is added to their number. You can specify multiple files to be attached by using <span class="obeylines-h"><span class="verb"><span 
 class="cmtt-10">-attach-file</span></span></span>
 multiple times. They will be attached in the given order.
-<!--l. 2245--><p class="indent" >   The <span 
+<!--l. 2249--><p class="indent" >   The <span 
 class="cmtt-10">-to-page </span>option can be used to specify that the files will be attached to the given
 page, rather than at the document level. The <span 
 class="cmtt-10">-to-page </span>option may be specified at most
 once.
-<!--l. 2248--><p class="noindent" >
+<!--l. 2252--><p class="noindent" >
    <h3 class="sectionHead"><span class="titlemark">12.2   </span> <a 
  id="x1-7800012.2"></a>Listing Attachments</h3>
 <a 
  id="dx1-78001"></a>
-<!--l. 2250--><p class="noindent" >To list all document- and page-level attachments, use the <span 
+<!--l. 2254--><p class="noindent" >To list all document- and page-level attachments, use the <span 
 class="cmtt-10">-list-attached-files </span>operation. The page
 number and filename of each attachment is given, page 0 representing a document-level
 attachment.
-<!--l. 2252--><p class="noindent" ><img 
+<!--l. 2256--><p class="noindent" ><img 
 src="cpdfmanual124x.png" alt=""  class="fbox" >
-<!--l. 2261--><p class="noindent" >
+<!--l. 2265--><p class="noindent" >
    <h3 class="sectionHead"><span class="titlemark">12.3   </span> <a 
  id="x1-7900012.3"></a>Removing Attachments</h3>
 <a 
  id="dx1-79001"></a>
-<!--l. 2263--><p class="noindent" >To remove all document-level and page-level attachments from a file, use the <span 
+<!--l. 2267--><p class="noindent" >To remove all document-level and page-level attachments from a file, use the <span 
 class="cmtt-10">-remove-files</span>
 operation:
-<!--l. 2265--><p class="noindent" ><img 
+<!--l. 2269--><p class="noindent" ><img 
 src="cpdfmanual125x.png" alt=""  class="fbox" >
                                                                                
                                                                                
-<!--l. 2271--><p class="indent" >
+<!--l. 2275--><p class="indent" >
                                                                                
                                                                                
    <h2 class="chapterHead"><span class="titlemark">Chapter&#x00A0;13</span><br /><a 
  id="x1-8000013"></a>Working with Images</h2>
-<!--l. 2273--><p class="noindent" ><img 
+<!--l. 2277--><p class="noindent" ><img 
 src="cpdfmanual126x.png" alt=""  class="fbox" >
    <h3 class="sectionHead"><span class="titlemark">13.1   </span> <a 
  id="x1-8100013.1"></a>Detecting Low-resolution Images</h3>
-<!--l. 2281--><p class="noindent" >To list all images in the given range of pages which fall below a given resolution (in dots-per-inch), use
+<!--l. 2285--><p class="noindent" >To list all images in the given range of pages which fall below a given resolution (in dots-per-inch), use
 the <span class="obeylines-h"><span class="verb"><span 
 class="cmtt-10">-image-resolution</span></span></span> function:
-<!--l. 2283--><p class="noindent" ><img 
-src="cpdfmanual127x.png" alt=""  class="fbox" >
 <!--l. 2287--><p class="noindent" ><img 
+src="cpdfmanual127x.png" alt=""  class="fbox" >
+<!--l. 2291--><p class="noindent" ><img 
 src="cpdfmanual128x.png" alt=""  class="fbox" >
-<!--l. 2297--><p class="noindent" >The format is <span 
+<!--l. 2301--><p class="noindent" >The format is <span 
 class="cmti-10">page number, image name, x pixels, y pixels, x resolution, y resolution</span>. The resolutions
 refer to the image&#8217;s effective resolution at point of use (taking account of scaling, rotation
 etc).
                                                                                
                                                                                
-<!--l. 2303--><p class="indent" >
+<!--l. 2307--><p class="indent" >
                                                                                
                                                                                
    <h2 class="chapterHead"><span class="titlemark">Chapter&#x00A0;14</span><br /><a 
  id="x1-8200014"></a>Fonts</h2>
-<!--l. 2305--><p class="noindent" ><img 
+<!--l. 2309--><p class="noindent" ><img 
 src="cpdfmanual129x.png" alt=""  class="fbox" >
    <h3 class="sectionHead"><span class="titlemark">14.1   </span> <a 
  id="x1-8300014.1"></a>Copying Fonts</h3>
-<!--l. 2320--><p class="noindent" >In order to use a font other than the standard 14 with <span class="obeylines-h"><span class="verb"><span 
+<!--l. 2324--><p class="noindent" >In order to use a font other than the standard 14 with <span class="obeylines-h"><span class="verb"><span 
 class="cmtt-10">-add-text</span></span></span>, it must be added to the file. The
 font source PDF is given, together with the font&#8217;s resource name on a given page, and that
 font is copied to all the pages in the input file&#8217;s range, and then written to the output
 file.
-<!--l. 2325--><p class="indent" >   The font is named in the output file with its basefont name, so it can be easily used with
+<!--l. 2329--><p class="indent" >   The font is named in the output file with its basefont name, so it can be easily used with
 <span class="obeylines-h"><span class="verb"><span 
 class="cmtt-10">-add-text</span></span></span>.
-<!--l. 2328--><p class="indent" >   For example, if the file <span class="obeylines-h"><span class="verb"><span 
+<!--l. 2332--><p class="indent" >   For example, if the file <span class="obeylines-h"><span class="verb"><span 
 class="cmtt-10">fromfile.pdf</span></span></span> has a font <span class="obeylines-h"><span class="verb"><span 
 class="cmtt-10">/GHLIGA+c128</span></span></span> with the name <span class="obeylines-h"><span class="verb"><span 
 class="cmtt-10">/F10</span></span></span> on page 1
@@ -2069,90 +2071,90 @@ class="cmtt-10">-list-fonts</span></span></span>), the following would copy the 
 <span class="obeylines-h"><span class="verb"><span 
 class="cmtt-10">in.pdf</span></span></span> on all pages, writing the output to <span class="obeylines-h"><span class="verb"><span 
 class="cmtt-10">out.pdf</span></span></span>:
-<!--l. 2333--><p class="noindent" ><img 
+<!--l. 2337--><p class="noindent" ><img 
 src="cpdfmanual130x.png" alt=""  class="fbox" >
-<!--l. 2339--><p class="noindent" >Text in this font can then be added by giving <span class="obeylines-h"><span class="verb"><span 
+<!--l. 2343--><p class="noindent" >Text in this font can then be added by giving <span class="obeylines-h"><span class="verb"><span 
 class="cmtt-10">-font</span><span 
 class="cmtt-10">&#x00A0;/GHLIGA+c128</span></span></span>. Be aware that due to the vagaries
 of PDF font handling concerning which characters are present in the source font, not all
 characters may be available, or the encoding (mapping from input codes to glyphs) may be
 non-obvious.
-<!--l. 2344--><p class="noindent" >
+<!--l. 2348--><p class="noindent" >
    <h3 class="sectionHead"><span class="titlemark">14.2   </span> <a 
  id="x1-8400014.2"></a>Removing Fonts</h3>
-<!--l. 2347--><p class="noindent" >To remove embedded fonts from a document, use <span class="obeylines-h"><span class="verb"><span 
+<!--l. 2351--><p class="noindent" >To remove embedded fonts from a document, use <span class="obeylines-h"><span class="verb"><span 
 class="cmtt-10">-remove-fonts</span></span></span>. PDF readers will substitute local
 fonts for the missing fonts. The use of this function is only recommended when file size is the sole
 consideration.
-<!--l. 2351--><p class="noindent" ><img 
+<!--l. 2355--><p class="noindent" ><img 
 src="cpdfmanual131x.png" alt=""  class="fbox" >
-<!--l. 2357--><p class="noindent" >
+<!--l. 2361--><p class="noindent" >
    <h3 class="sectionHead"><span class="titlemark">14.3   </span> <a 
  id="x1-8500014.3"></a>Listing Missing Fonts</h3>
-<!--l. 2358--><p class="noindent" >The <span class="obeylines-h"><span class="verb"><span 
+<!--l. 2362--><p class="noindent" >The <span class="obeylines-h"><span class="verb"><span 
 class="cmtt-10">-missing-fonts</span></span></span> operation lists any unembedded fonts in the document, one per line.
-<!--l. 2360--><p class="noindent" ><img 
+<!--l. 2364--><p class="noindent" ><img 
 src="cpdfmanual132x.png" alt=""  class="fbox" >
-<!--l. 2366--><p class="noindent" >The format is
-<!--l. 2368--><p class="noindent" ><img 
+<!--l. 2370--><p class="noindent" >The format is
+<!--l. 2372--><p class="noindent" ><img 
 src="cpdfmanual133x.png" alt=""  class="fbox" >
                                                                                
                                                                                
-<!--l. 2378--><p class="indent" >
+<!--l. 2382--><p class="indent" >
                                                                                
                                                                                
    <h2 class="chapterHead"><span class="titlemark">Chapter&#x00A0;15</span><br /><a 
  id="x1-8600015"></a>Miscellaneous</h2>
-<!--l. 2380--><p class="noindent" ><img 
+<!--l. 2384--><p class="noindent" ><img 
 src="cpdfmanual134x.png" alt=""  class="fbox" >
    <h3 class="sectionHead"><span class="titlemark">15.1   </span> <a 
  id="x1-8700015.1"></a>Draft Documents</h3>
 <a 
  id="dx1-87001"></a>
-<!--l. 2421--><p class="noindent" >The <span 
+<!--l. 2425--><p class="noindent" >The <span 
 class="cmtt-10">-draft </span>option removes bitmap (photographic) images from a file, so that it can be printed with
 less ink. Optionally, the <span 
 class="cmtt-10">-boxes </span>option can be added, filling the spaces left blank with a crossed box
 denoting where the image was. This is not guaranteed to be fully visible in all cases (the
 bitmap may be have been partially covered by vector objects or clipped in the original). For
 example:
-<!--l. 2428--><p class="noindent" ><img 
+<!--l. 2432--><p class="noindent" ><img 
 src="cpdfmanual135x.png" alt=""  class="fbox" >
-<!--l. 2433--><p class="noindent" >
+<!--l. 2437--><p class="noindent" >
    <h3 class="sectionHead"><span class="titlemark">15.2   </span> <a 
  id="x1-8800015.2"></a>Blackening Text, Lines and Fills</h3>
 <a 
  id="dx1-88001"></a>
-<!--l. 2435--><p class="noindent" >Sometimes PDF output from an application (for instance, a web browser) has text in colors which
+<!--l. 2439--><p class="noindent" >Sometimes PDF output from an application (for instance, a web browser) has text in colors which
 would not print well on a grayscale printer. The <span 
 class="cmtt-10">-blacktext </span>operation blackens all text on the given
 pages so it will be readable when printed.
-<!--l. 2440--><p class="indent" >   This will not work on text which has been converted to outlines, nor on text which is part of a
+<!--l. 2444--><p class="indent" >   This will not work on text which has been converted to outlines, nor on text which is part of a
 form.
-<!--l. 2443--><p class="noindent" ><img 
+<!--l. 2447--><p class="noindent" ><img 
 src="cpdfmanual136x.png" alt=""  class="fbox" >
 <a 
  id="dx1-88002"></a>
-<!--l. 2450--><p class="noindent" >The <span 
+<!--l. 2454--><p class="noindent" >The <span 
 class="cmtt-10">-blacklines </span>operation blackens all lines on the given pages.
-<!--l. 2452--><p class="noindent" ><img 
+<!--l. 2456--><p class="noindent" ><img 
 src="cpdfmanual137x.png" alt=""  class="fbox" >
 <a 
  id="dx1-88003"></a>
-<!--l. 2459--><p class="noindent" >The <span 
+<!--l. 2463--><p class="noindent" >The <span 
 class="cmtt-10">-blackfills </span>operation blackens all fills on the given pages.
                                                                                
                                                                                
-<!--l. 2461--><p class="noindent" ><img 
+<!--l. 2465--><p class="noindent" ><img 
 src="cpdfmanual138x.png" alt=""  class="fbox" >
-<!--l. 2466--><p class="noindent" >Contrary to their names, all these operations can use another color, if specified with <span 
+<!--l. 2470--><p class="noindent" >Contrary to their names, all these operations can use another color, if specified with <span 
 class="cmtt-10">-color</span>.
-<!--l. 2469--><p class="noindent" >
+<!--l. 2473--><p class="noindent" >
    <h3 class="sectionHead"><span class="titlemark">15.3   </span> <a 
  id="x1-8900015.3"></a>Hairline Removal</h3>
 <a 
  id="dx1-89001"></a>
-<!--l. 2471--><p class="noindent" >Quite often, applications will use very thin lines, or even the value of 0, which in PDF means &#8221;The
+<!--l. 2475--><p class="noindent" >Quite often, applications will use very thin lines, or even the value of 0, which in PDF means &#8221;The
 thinnest possible line on the output device&#8221;. This might be fine for on-screen work, but when printed
 on a high resolution device, such as by a commercial printer, they may be too faint, or
 disappear altogether. The <span 
@@ -2160,78 +2162,78 @@ class="cmtt-10">-thinlines </span>option prevents this by changing all lines thi
 <span 
 class="cmtt-10">&#x003C;minimal</span><span 
 class="cmtt-10">&#x00A0;thickness&#x003E; </span>to the given thickness. For example:
-<!--l. 2478--><p class="noindent" ><img 
+<!--l. 2482--><p class="noindent" ><img 
 src="cpdfmanual139x.png" alt=""  class="fbox" >
-<!--l. 2486--><p class="noindent" >
+<!--l. 2490--><p class="noindent" >
    <h3 class="sectionHead"><span class="titlemark">15.4   </span> <a 
  id="x1-9000015.4"></a>Garbage Collection</h3>
 <a 
  id="dx1-90001"></a>
-<!--l. 2488--><p class="noindent" >Sometimes incremental updates to a file by an application, or bad applications can leave data in a
+<!--l. 2492--><p class="noindent" >Sometimes incremental updates to a file by an application, or bad applications can leave data in a
 PDF file which is no longer used. This function removes that unneeded data.
-<!--l. 2492--><p class="noindent" ><img 
+<!--l. 2496--><p class="noindent" ><img 
 src="cpdfmanual140x.png" alt=""  class="fbox" >
-<!--l. 2497--><p class="noindent" >
+<!--l. 2501--><p class="noindent" >
    <h3 class="sectionHead"><span class="titlemark">15.5   </span> <a 
  id="x1-9100015.5"></a>Change PDF Version Number</h3>
 <a 
  id="dx1-91001"></a>
-<!--l. 2500--><p class="noindent" >To change the pdf version number, use the <span 
+<!--l. 2504--><p class="noindent" >To change the pdf version number, use the <span 
 class="cmtt-10">-set-version </span>operation, giving the part of the version
 number after the decimal point. For example:
-<!--l. 2503--><p class="noindent" ><img 
+<!--l. 2507--><p class="noindent" ><img 
 src="cpdfmanual141x.png" alt=""  class="fbox" >
 This does not alter any of the actual data in the file &#8212; just the supposed version number.
-<!--l. 2513--><p class="noindent" >
+<!--l. 2517--><p class="noindent" >
    <h3 class="sectionHead"><span class="titlemark">15.6   </span> <a 
  id="x1-9200015.6"></a>Copy ID</h3>
 <a 
  id="dx1-92001"></a>
-<!--l. 2515--><p class="noindent" >The <span 
+<!--l. 2519--><p class="noindent" >The <span 
 class="cmtt-10">-copy-id-from </span>operation copies the ID from the given file to the input, writing to the
 output.
                                                                                
                                                                                
-<!--l. 2518--><p class="noindent" ><img 
+<!--l. 2522--><p class="noindent" ><img 
 src="cpdfmanual142x.png" alt=""  class="fbox" >
-<!--l. 2526--><p class="noindent" >If there is no ID in the source file, the existing ID is retained. You cannot use <span 
+<!--l. 2530--><p class="noindent" >If there is no ID in the source file, the existing ID is retained. You cannot use <span 
 class="cmtt-10">-recrypt </span>with
 <span 
 class="cmtt-10">-copy-id-from</span>.
-<!--l. 2528--><p class="noindent" >
+<!--l. 2532--><p class="noindent" >
    <h3 class="sectionHead"><span class="titlemark">15.7   </span> <a 
  id="x1-9300015.7"></a>Remove ID</h3>
 <a 
  id="dx1-93001"></a>
-<!--l. 2530--><p class="noindent" >The <span 
+<!--l. 2534--><p class="noindent" >The <span 
 class="cmtt-10">-remove-id </span>operation removes the ID from a document.
-<!--l. 2532--><p class="noindent" ><img 
+<!--l. 2536--><p class="noindent" ><img 
 src="cpdfmanual143x.png" alt=""  class="fbox" >
-<!--l. 2540--><p class="indent" >   You cannot use <span 
+<!--l. 2544--><p class="indent" >   You cannot use <span 
 class="cmtt-10">-recrypt </span>with <span 
 class="cmtt-10">-remove-id</span>.
-<!--l. 2542--><p class="noindent" >
+<!--l. 2546--><p class="noindent" >
    <h3 class="sectionHead"><span class="titlemark">15.8   </span> <a 
  id="x1-9400015.8"></a>List Spot Colours</h3>
-<!--l. 2544--><p class="noindent" >This operation lists the name of any &#8220;separation&#8221; color space in the given PDF file.
-<!--l. 2546--><p class="noindent" ><img 
+<!--l. 2548--><p class="noindent" >This operation lists the name of any &#8220;separation&#8221; color space in the given PDF file.
+<!--l. 2550--><p class="noindent" ><img 
 src="cpdfmanual144x.png" alt=""  class="fbox" >
-<!--l. 2554--><p class="noindent" >
+<!--l. 2558--><p class="noindent" >
    <h3 class="sectionHead"><span class="titlemark">15.9   </span> <a 
  id="x1-9500015.9"></a>Removing Dictionary Entries</h3>
-<!--l. 2556--><p class="noindent" >This is for editing data within the PDF&#8217;s internal representation. Use with caution.
-<!--l. 2558--><p class="noindent" ><img 
+<!--l. 2560--><p class="noindent" >This is for editing data within the PDF&#8217;s internal representation. Use with caution.
+<!--l. 2562--><p class="noindent" ><img 
 src="cpdfmanual145x.png" alt=""  class="fbox" >
-<!--l. 2567--><p class="noindent" >
+<!--l. 2571--><p class="noindent" >
    <h3 class="sectionHead"><span class="titlemark">15.10   </span> <a 
  id="x1-9600015.10"></a>Remove Clipping</h3>
-<!--l. 2570--><p class="noindent" >The <span 
+<!--l. 2574--><p class="noindent" >The <span 
 class="cmtt-10">-remove-clipping </span>operation removes any clipping paths from the file.
-<!--l. 2572--><p class="noindent" ><img 
+<!--l. 2576--><p class="noindent" ><img 
 src="cpdfmanual146x.png" alt=""  class="fbox" >
                                                                                
                                                                                
-<!--l. 2581--><p class="indent" >
+<!--l. 2585--><p class="indent" >
                                                                                
                                                                                
 <a 
@@ -2239,11 +2241,11 @@ src="cpdfmanual146x.png" alt=""  class="fbox" >
    <h2 class="appendixHead"><span class="titlemark">Appendix&#x00A0;A</span><br /><a 
  id="x1-97000A"></a>Dates</h2> <a 
  id="dx1-97001"></a> Dates in PDF are specified according to the following format:
-<!--l. 2586--><p class="noindent" ><img 
+<!--l. 2590--><p class="noindent" ><img 
 src="cpdfmanual147x.png" alt=""  class="fbox" >
-<!--l. 2604--><p class="noindent" >A contiguous prefix of the parts above can be used instead, for lower accuracy dates. For
+<!--l. 2608--><p class="noindent" >A contiguous prefix of the parts above can be used instead, for lower accuracy dates. For
 example:
-<!--l. 2607--><p class="noindent" ><img 
+<!--l. 2611--><p class="noindent" ><img 
 src="cpdfmanual148x.png" alt=""  class="fbox" >
                                                                                
                                                                                

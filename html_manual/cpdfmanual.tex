@@ -256,8 +256,8 @@ multiple programs, or multiple invocations of the same program. For example, thi
 \noindent\fbox{\parbox{\textwidth}{
 
   \small\texttt{   cpdf in.pdf reverse -stdout |\\
-   cpdf -stdin 1-5 -stdout |\\
-   cpdf -stdin reverse -o out.pdf}
+   \phantom{\ }cpdf -stdin 1-5 -stdout |\\
+   \phantom{\ }cpdf -stdin reverse -o out.pdf}
   }}
 
 
@@ -297,7 +297,7 @@ one command, and the input specifier (e.g filename) of the next. For instance:
 \noindent\fbox{\parbox{\textwidth}{
 
   \small\texttt{cpdf -merge in.pdf in2.pdf AND -add-text "Label"}\\
-  \noindent\small\texttt{        AND -merge in3.pdf -o out.pdf}
+  \noindent\small\texttt{\vphantom{\ \ \ \ \ }        AND -merge in3.pdf -o out.pdf}
 
   \vspace{2.5mm}
   \noindent Merge \texttt{in.pdf} and \texttt{in2.pdf} together, add text to both pages, append \texttt{in3.pdf} and write to \texttt{out.pdf}.
@@ -308,7 +308,7 @@ one command, and the input specifier (e.g filename) of the next. For instance:
 \noindent\fbox{\parbox{\textwidth}{
 
   \small\texttt{cpdf -merge in.pdf in2.pdf AND -range 2-4 -add-text "Label"}\\
-  \noindent\small\texttt{        AND -merge in3.pdf -o out.pdf}
+  \noindent\small\texttt{\vphantom{\ }        AND -merge in3.pdf -o out.pdf}
 
 }}
 
@@ -332,7 +332,7 @@ supported:
 
 
 
-\noindent For example, one may write \texttt{14mm} or \texttt{21.6in}. In addition, the following letters stand, in some operations (\texttt{-scale-page}, \texttt{-scale-to-fit}, \texttt{-scale-contents}, \texttt{-shift}, \texttt{-mediabox},\\ \texttt{-crop}) for various page dimensions:
+\noindent For example, one may write \texttt{14mm} or \texttt{21.6in}. In addition, the following letters stand, in some operations (\texttt{-scale-page}, \texttt{-scale-to-fit}, \texttt{-scale-contents}, \texttt{-shift}, \texttt{-mediabox}, \texttt{-crop}) for various page dimensions:
 
 \begin{table}[h]
 \centering
@@ -761,7 +761,7 @@ The encryption parameters described in Chapter \ref{encryption} may be added to 
    
   \vspace{1.5mm}
   \small\noindent\texttt{cpdf -scale-to-fit "<x size> <y size>" [-scale-to-fit-scale <scale>]}\\    
-        \noindent\texttt{     in.pdf [<range>] -o out.pdf}
+        \noindent\texttt{{}\vphantom{\ } \vphantom{\ } \vphantom{\ } \vphantom{\ } \vphantom{\ }     in.pdf [<range>] -o out.pdf}
 
   \vspace{1.5mm}
   \small\noindent\texttt{cpdf -scale-contents [<scale>] [<position>] in.pdf [<range>] -o out.pdf}
@@ -798,7 +798,7 @@ The encryption parameters described in Chapter \ref{encryption} may be added to 
 
   \vspace{1.5mm}
   \small\noindent\texttt{cpdf -frombox <boxname> -tobox <boxname> [-mediabox-if-missing]} \\
-  \noindent\texttt{     in.pdf [<range>] -o out.pdf}
+  \noindent\texttt{\vphantom{\ } \vphantom{\ } \vphantom{\ } \vphantom{\ } \vphantom{\ }     in.pdf [<range>] -o out.pdf}
   }}
 
 
@@ -842,7 +842,7 @@ Y factors given. This scales both the page contents, and the page size itself. I
 
 \noindent\fbox{\parbox{\textwidth}{
 
-  \small\noindent\texttt{cpdf -scale-to-fit "297mm 210mm" in.pdf -o out.pdf}
+  \small\noindent\texttt{cpdf -scale-to-fit "297mm 210mm" in.pdf -o out.pdf}\\
   \small\noindent\texttt{cpdf -scale-to-fit a4portrait in.pdf -o out.pdf}
 
   \vspace{2.5mm}
@@ -1016,7 +1016,7 @@ existing crop box, use \texttt{-remove-crop}.
 \noindent\fbox{\parbox{\textwidth}{
 
   \small\noindent\texttt{cpdf -frombox <boxname> -tobox <boxname> [-mediabox-if-missing]} \\
-  \noindent\texttt{     in.pdf [<range>] -o out.pdf}
+  \noindent\texttt{{}\phantom{cpdf}     in.pdf [<range>] -o out.pdf}
 
   \vspace{2.5mm}
   \noindent Copy the contents of one box to another.
@@ -1038,7 +1038,7 @@ existing crop box, use \texttt{-remove-crop}.
 \index{decryption}
 \noindent\fbox{\parbox{\textwidth}{
     \small\noindent\texttt{cpdf -encrypt <method> <owner> <user>}\\
-    \noindent\texttt{     [-no-encrypt-metadata] <permissions> in.pdf -o out.pdf}
+    \noindent\texttt{\phantom{cpdf }[-no-encrypt-metadata] <permissions> in.pdf -o out.pdf}
 
     \vspace{1.5mm}
     \noindent\texttt{cpdf -decrypt in.pdf owner=<owner password> -o out.pdf}
@@ -1152,6 +1152,7 @@ PDF, use:
   \section{Compressing a Document}
 \index{compressing}
   To compress the streams in a PDF file, use:
+
 \noindent\fbox{\parbox{\textwidth}{
     \small\texttt{cpdf -compress in.pdf -o out.pdf}
   }}
@@ -1212,6 +1213,7 @@ particular bookmark is. Then the text of the bookmark in quotes, then the page
 number which the bookmark points to, then (optionally) the word "open" if the
 bookmark should have its children (at the level immediately below) visible when
 the file is loaded. For example, upon executing
+
 \noindent\fbox{\parbox{\textwidth}{
 
   \small\texttt{cpdf -list-bookmarks doc.pdf}
@@ -1237,6 +1239,7 @@ the ASCII range. To prevent this, and return unicode UTF8 output, add the
   \label{removebookmarks}
 \index{bookmarks!removing}
   The \texttt{-remove-bookmarks} operations removes all bookmarks from the file.
+
 \noindent\fbox{\parbox{\textwidth}{
 
     \small\texttt{cpdf -remove-bookmarks in.pdf -o out.pdf}
@@ -1265,9 +1268,9 @@ tree with no entry being more than one greater than the last).
 
   \small\noindent
   \texttt{cpdf -presentation in.pdf [\textlangle range\textrangle ] -o out.pdf}\\
-  \texttt{     [-trans \textlangle\ transition-name\textrangle ] [-duration \textlangle\ float\textrangle\ ]}\\
-\texttt{                     [-vertical] [-outward] [-direction \textlangle\ int \textrangle]}\\
-\texttt{                     [-effect-duration \textlangle\ float \textrangle ]}\\
+  \texttt{\phantom{cpdf}     [-trans \textlangle\ transition-name\textrangle ] [-duration \textlangle\ float\textrangle\ ]}\\
+\texttt{\phantom{cpdf}                     [-vertical] [-outward] [-direction \textlangle\ int \textrangle]}\\
+\texttt{\phantom{cpdf}                     [-effect-duration \textlangle\ float \textrangle ]}\\
 }}
 
 \index{presentations}
@@ -1346,35 +1349,35 @@ the file using a different page range each time.
 \noindent\fbox{\parbox{\textwidth}{
 
   \noindent\small\texttt{cpdf -stamp-on source.pdf}\\
-  \noindent\small\texttt{     [-scale-stamp-to-fit] [\textlangle positioning command\textrangle ] [-relative-to-cropbox] }\\
-  \noindent\small\texttt{     in.pdf [\textlangle range\textrangle ] -o out.pdf}!
+  \noindent\small\texttt{\phantom{cpdf}     [-scale-stamp-to-fit] [\textlangle positioning command\textrangle ] [-relative-to-cropbox] }\\
+  \noindent\small\texttt{\phantom{cpdf}     in.pdf [\textlangle range\textrangle ] -o out.pdf}!
   
   \vspace{1.5mm}
   \noindent\small\texttt{cpdf -stamp-under source.pdf}\\
-  \noindent\small\texttt{     [-scale-stamp-to-fit] [\textlangle positioning command\textrangle ] [-relative-to-cropbox]}\\
-  \noindent\small\texttt{     in.pdf [\textlangle range\textrangle ] -o out.pdf}
+  \noindent\small\texttt{\phantom{cpdf}     [-scale-stamp-to-fit] [\textlangle positioning command\textrangle ] [-relative-to-cropbox]}\\
+  \noindent\small\texttt{\phantom{cpdf}     in.pdf [\textlangle range\textrangle ] -o out.pdf}
 
   \vspace{1.5mm}
   \noindent\small\texttt{cpdf -combine-pages over.pdf under.pdf -o out.pdf}
 
   \vspace{1.5mm}
-  \noindent\small\texttt{cpdf ([-add-text \textlangle text-format\textrangle | -add-rectangle\\\textlangle size\textrangle ])}\\
-              \texttt{[-font \textlangle fontname\textrangle ]}\\
-              \texttt{[-font-size \textlangle size-in-points\textrangle ]}\\
-              \texttt{[-color \textlangle color\textrangle ]}\\
-              \texttt{[-line-spacing \textlangle number \textrangle ]}\\
-              \texttt{[-outline]}\\
-              \texttt{[-linewidth \textlangle number\textrangle ]}\\
-              \texttt{[-underneath]}\\
-              \texttt{[-relative-to-cropbox]}\\
-              \texttt{[-prerotate]}\\
-              \texttt{[-bates \textlangle number\textrangle ]}\\
-              \texttt{[-bates-at-range \textlangle number\textrangle ]}\\
-              \texttt{[-bates-pad-to \textlangle number\textrangle ]}\\
-              \texttt{[-opacity \textlangle number\textrangle ]}\\
-              \texttt{[-midline]}\\
-              \texttt{[-topline]}\\
-              \texttt{in.pdf [\textlangle range\textrangle ] -o out.pdf}\\
+  \noindent\small\texttt{cpdf ([-add-text \textlangle text-format\textrangle | -add-rectangle \textlangle size\textrangle ])}\\
+    \phantom{cpdf}          \texttt{[-font \textlangle fontname\textrangle ]}\\
+     \phantom{cpdf}         \texttt{[-font-size \textlangle size-in-points\textrangle ]}\\
+     \phantom{cpdf}         \texttt{[-color \textlangle color\textrangle ]}\\
+     \phantom{cpdf}         \texttt{[-line-spacing \textlangle number \textrangle ]}\\
+     \phantom{cpdf}         \texttt{[-outline]}\\
+     \phantom{cpdf}         \texttt{[-linewidth \textlangle number\textrangle ]}\\
+    \phantom{cpdf}          \texttt{[-underneath]}\\
+     \phantom{cpdf}         \texttt{[-relative-to-cropbox]}\\
+    \phantom{cpdf}          \texttt{[-prerotate]}\\
+    \phantom{cpdf}          \texttt{[-bates \textlangle number\textrangle ]}\\
+    \phantom{cpdf}          \texttt{[-bates-at-range \textlangle number\textrangle ]}\\
+    \phantom{cpdf}          \texttt{[-bates-pad-to \textlangle number\textrangle ]}\\
+    \phantom{cpdf}          \texttt{[-opacity \textlangle number\textrangle ]}\\
+    \phantom{cpdf}          \texttt{[-midline]}\\
+     \phantom{cpdf}         \texttt{[-topline]}\\
+     \phantom{cpdf}         \texttt{in.pdf [\textlangle range\textrangle ] -o out.pdf}\\
 
   \noindent See also positioning commands below.
 
@@ -1490,6 +1493,7 @@ font size and color.
 \index{bates numbers}
   Unique page identifiers can be specified by putting \verb!%Bates! in the format.
 The starting point can be set with the \texttt{-bates} option. For example:
+
 \noindent\fbox{\parbox{\textwidth}{
 
     \small\texttt{cpdf -add-text "Page ID: \%Bates" -bates 23745 in.pdf -o out.pdf}
@@ -1655,7 +1659,7 @@ bottom, bottom left or bottom right).
 \noindent\fbox{\parbox{\textwidth}{
 
     \small\texttt{cpdf -add-text "Specification\textbackslash n\%Page of \%EndPage"\\
-               -topright 10 in.pdf -o out.pdf}
+          \phantom{cpdf}     -topright 10 in.pdf -o out.pdf}
 }}
 
 
@@ -1669,7 +1673,7 @@ spacing, where a spacing of 1 is the standard.
 \noindent\fbox{\parbox{\textwidth}{
 
     \small\texttt{cpdf -add-text "Specification\textbackslash n\%Page of \%EndPage"\\
-               -topright 10 -line-spacing 1.5 in.pdf -o out.pdf}
+      \phantom{cpdf}         -topright 10 -line-spacing 1.5 in.pdf -o out.pdf}
 }}
 
 
@@ -1682,7 +1686,7 @@ for positions relative to the center of the page. For example:
 \noindent\fbox{\parbox{\textwidth}{
 
   \small\texttt{cpdf -add-text "Long line\textbackslash nShort" -justify-right\\
-               in.pdf -o out.pdf}
+        \phantom{cpdf}       in.pdf -o out.pdf}
 }}
 
 
@@ -1711,7 +1715,7 @@ A rectangle may be placed on one or more pages by using the \texttt{-add-rectang
 \noindent\fbox{\parbox{\textwidth}{
 
   \small\texttt{cpdf -add-rectangle "200 300" -pos-right 30 -color red -outline\\
-                    in.pdf -o out.pdf}
+       \phantom{cpdf}             in.pdf -o out.pdf}
 }}
 
 This can be used to blank out or highlight part of the document. The following positioning options work as you would expect: \texttt{-topleft}, \texttt{-top}, \texttt{-topright}, \texttt{-right}, \texttt{-bottomright}, \texttt{-bottom}, \texttt{-bottomleft}, \texttt{-left}, \texttt{-center}. When using the option \texttt{-pos-left "x y"}, the point (x, y) refers to the bottom-left of the rectangle. When using the option \texttt{-pos-right "x y"}, the point (x, y) refers to the bottom-right of the rectangle. When using the option \texttt{-pos-center "x y"}, the point (x, y) refers to the center of the rectangle. The options \texttt{-diagonal} and \texttt{-reverse-diagonal} have no meaning.\pagestyle{empty}\thispagestyle{fancy}
@@ -1875,11 +1879,11 @@ given page range.
 
     \vspace{1.5mm} 
     \small\noindent\texttt{cpdf -hide-toolbar \textlangle true | false\textrangle in.pdf -o out.pdf}\\
-    \noindent\texttt{     -hide-menubar}\\
-    \noindent\texttt{    -hide-window-ui}\\
-    \noindent\texttt{     -fit-window}\\
-    \noindent\texttt{    -center-window}\\
-    \noindent\texttt{     -display-doc-title}
+    \noindent\texttt{\phantom{cpdf}     -hide-menubar}\\
+    \noindent\texttt{\phantom{cpdf}    -hide-window-ui}\\
+    \noindent\texttt{\phantom{cpdf}     -fit-window}\\
+    \noindent\texttt{\phantom{cpdf}    -center-window}\\
+    \noindent\texttt{\phantom{cpdf}     -display-doc-title}
     
     \vspace{1.5mm}
     \small\noindent\texttt{cpdf -open-at-page \textlangle page number\textrangle in.pdf -o out.pdf}\\
@@ -1892,8 +1896,8 @@ given page range.
     
     \vspace{1.5mm}
     \small\noindent\texttt{cpdf -add-page-labels in.pdf -o out.pdf}\\
-    \noindent\texttt{     [-label-style \textlangle style\textrangle ] [-label-prefix \textlangle string\textrangle ]}\\
-    \noindent\texttt{     [-label-startval \textlangle integer\textrangle ]}\\
+    \noindent\texttt{\phantom{cpdf}     [-label-style \textlangle style\textrangle ] [-label-prefix \textlangle string\textrangle ]}\\
+    \noindent\texttt{\phantom{cpdf}     [-label-startval \textlangle integer\textrangle ]}\\
     
     \vspace{1.5mm}
     \small\noindent\texttt{cpdf -remove-page-labels in.pdf -o out.pdf}\\
@@ -2183,12 +2187,12 @@ i, ii, iii, iv, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, A-0, A-1, A-2, A-3, A-4, A-5
 
 \noindent\fbox{\parbox{\textwidth}{
   \noindent\texttt{cpdf -add-page-labels in.pdf 1-4 -label-style LowercaseRoman}\\
-  \noindent\texttt{     -o out.pdf}\\
+  \noindent\texttt{\phantom{cpdf}     -o out.pdf}\\
   
   \noindent\texttt{cpdf -add-page-labels out.pdf 5-14 -o out.pdf}\\
 
   \noindent\texttt{cpdf -add-page-labels out.pdf 15-20 -label-prefix "A-"}\\
-  \noindent\texttt{     -label-startval 0 -o out.pdf}
+  \noindent\texttt{\phantom{cpdf}     -label-startval 0 -o out.pdf}
 }}
 
 \noindent By default the labels begin at page number 1 for each range. To override this, we can use \texttt{-label-startval} (we used $0$ in the final command), where we want the numbers to begin at zero rather than one.
@@ -2305,7 +2309,7 @@ To list all document- and page-level attachments, use the \texttt{-list-attached
 \noindent\fbox{\parbox{\textwidth}{
 
   \noindent\texttt{cpdf -copy-font fromfile.pdf -copy-font-page <int>}\\
-  \noindent\texttt{     -copy-font-name <name> in.pdf [<range>] -o out.pdf}
+  \noindent\texttt{\phantom{cpdf}     -copy-font-name <name> in.pdf [<range>] -o out.pdf}
 
   \vspace{1.5mm}
   \noindent\texttt{cpdf -remove-fonts in.pdf -o out.pdf}
@@ -2333,7 +2337,7 @@ the name \verb!/F10! on page 1 (this information can be found with
 \noindent\fbox{\parbox{\textwidth}{
 
   \small\noindent\texttt{cpdf -copy-font fromfile.pdf -copy-font-name /F10}\\
-  \small\noindent\texttt{    -copy-font-page 1 in.pdf -o out.pdf}
+  \small\noindent\texttt{\phantom{cpdf}    -copy-font-page 1 in.pdf -o out.pdf}
 }}
 
 \noindent Text in this font can then be added by giving \verb!-font /GHLIGA+c128!. Be
