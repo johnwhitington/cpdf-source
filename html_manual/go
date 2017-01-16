@@ -1,1 +1,1 @@
-htlatex cpdfmanual "html,pic-fbox,pic-equations,pic-tabular"
+htlatex index "html,2,pic-fbox,pic-equations,pic-tabular"

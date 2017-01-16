@@ -924,6 +924,7 @@ the absolute value given.
   \vspace{2.5mm}
   \noindent Set the rotation of all the pages in the input file to ninety degrees clockwise.
   }}
+
   \noindent The \texttt{-rotateby} operation changes the viewing rotation of all the
 given pages by the relative value given.
 
@@ -934,6 +935,7 @@ given pages by the relative value given.
   \vspace{2.5mm}
   \noindent Rotate all the pages in the input file by ninety degrees clockwise.
   }}
+
   \noindent The \texttt{-rotate-contents} operation rotates the contents and dimensions
 of the page by the given relative value.
   \index{rotate!contents}
@@ -989,6 +991,7 @@ contents in any way), use the \texttt{-mediabox} option.
   \vspace{2.5mm}
   \noindent Set the media box to 500 points square.
   }}
+
   \noindent The four numbers are minimum x, minimum y, width, height. x
 coordinates increase to the right, y coordinates increase upwards.
   PDF file can also optionally contain a \textit{crop box} for each page,
@@ -1022,12 +1025,14 @@ existing crop box, use \texttt{-remove-crop}.
   \noindent Copy the contents of one box to another.
 
   }}
+
   \noindent This operation copies the contents of one box (Media box, Crop box, Trim box etc.) to another. If \texttt{-mediabox-if-missing} is added, the media box will be substituted when the 'from' box is not set for a given page. For example
 
 \noindent\fbox{\parbox{\textwidth}{
 
     \small\texttt{cpdf -frombox /TrimBox -tobox /CropBox in.pdf -o out.pdf}
   }}
+
   \noindent copies the Trim Box of each page to the Crop Box of each page. The possible boxes are \texttt{/MediaBox}, \texttt{/CropBox}, \texttt{/BleedBox}, \texttt{/TrimBox}, \texttt{/ArtBox}.\pagestyle{empty}\thispagestyle{fancy}
 
 
@@ -1102,6 +1107,7 @@ person:
     \vspace{1.5mm}
     \small\texttt{cpdf -encrypt AES fred "" -no-edit -no-copy in.pdf -o out.pdf}
   }}
+
   \noindent A blank user password is
 common. In this event, PDF viewers will typically not prompt for a
 password for when opening the file or for operations allowable with the user password.
@@ -1111,6 +1117,7 @@ password for when opening the file or for operations allowable with the user pas
     \vspace{1.5mm}
     \small\texttt{cpdf -encrypt AES256 fred "" -no-forms in.pdf -o out.pdf}
   }}
+
 \noindent In addition, the usual method can be used to give the existing owner
 password, if the document is already encrypted. 
 
@@ -1124,6 +1131,7 @@ metadata. Add \texttt{-no-encrypt-metadata} to the command line.
 
     \small\texttt{cpdf -decrypt in.pdf owner=fred -o out.pdf}
   }}
+
   \noindent The user password cannot decrypt a file.
 
 \chapter{Compression}
@@ -1138,6 +1146,7 @@ metadata. Add \texttt{-no-encrypt-metadata} to the command line.
      \vspace{1.5mm}
      \noindent\texttt{cpdf -squeeze in.pdf [-squeeze-log-to <filename>] -o out.pdf}  
    }}
+
   \cpdf\ provides basic facilities for decompressing and compressing PDF streams.
   \section{Decompressing a Document}
 \index{decompressing}
@@ -1148,6 +1157,7 @@ PDF, use:
 
    \small\texttt{cpdf -decompress in.pdf -o out.pdf}
   }}
+
   \noindent If \cpdf\ finds a compression type it can't cope with, the stream is left compressed. When using \texttt{-decompress}, object streams are not compressed.
   \section{Compressing a Document}
 \index{compressing}
@@ -1156,6 +1166,7 @@ PDF, use:
 \noindent\fbox{\parbox{\textwidth}{
     \small\texttt{cpdf -compress in.pdf -o out.pdf}
   }}
+
   \noindent\cpdf\ compresses any streams which have no compression using the
   \textbf{Flate\-Decode} method, with the exception of Metadata streams, which
   are left uncompressed.
@@ -1168,6 +1179,7 @@ PDF, use:
 
     \small\texttt{cpdf -squeeze in.pdf -o out.pdf}
   }}
+
   \noindent Adding \texttt{-squeeze} to the command line when using another operation will \textit{squeeze} the file or files upon output.
   
   The \texttt{-squeeze} operation writes some information about the squeezing process to standard output. The squeezing process involves several processes which losslessly attempt to reduce the file size. It is slow, so should not be used without thought.
@@ -1196,6 +1208,7 @@ The \texttt{-squeeze-log-to <filename>} option writes the log to the given file 
   \small\noindent\texttt{cpdf -add-bookmarks <bookmark file> in.pdf -o out.pdf}
 
   }}
+
 \index{bookmarks}
 \index{document outline}
   PDF Bookmarks (properly called the \textit{document outline}) represent a tree
@@ -1257,6 +1270,7 @@ contains the output from \texttt{-list-bookmarks} above, then the command
 
    \small\texttt{cpdf -add-bookmarks bookmarks.txt in.pdf -o out.pdf}
   }}
+
 \noindent adds the bookmarks to the input file, writing to \texttt{out.pdf}. An error
 will be given if the bookmarks file is not in the correct form (in particular,
 the numbers in the first column which specify the level must form a proper
@@ -1393,6 +1407,7 @@ file. For example,
 
     \small\texttt{cpdf -stamp-on logo.pdf in.pdf odd -o out.pdf}
   }}
+
 \noindent stamps the file \texttt{logo.pdf} onto the odd pages of \texttt{in.pdf},
 writing to \texttt{out.pdf}. A watermark should go underneath each page:
 
@@ -1590,6 +1605,7 @@ than its baseline. Similarly, the \texttt{-topline} option may be used to specif
 
     \small\texttt{cpdf -add-text "-\%Page-" -font "Times-Italic" in.pdf -o out.pdf}
 }}
+
   \noindent See Section \ref{copyfont} for how to use other fonts.
 
   The font size can be altered with the \texttt{-font-size} option, which
@@ -1770,6 +1786,7 @@ a range in the usual way:
     \noindent Add a blank page after pages 2, 16, 38, 84, 121 and 147 (for
 instance, to add a clean page between chapters of a document.)
 }}
+
   \noindent The dimensions of the padded page are derived from the boxes (media box, crop box etc.) of the page after or before which the padding is to be applied.
 
   The \verb!-pad-every n! operation places a blank page after every n pages, excluding any last one. For example\ldots
@@ -1781,6 +1798,7 @@ instance, to add a clean page between chapters of a document.)
     \vspace{2.5mm}
     \noindent Add a blank page after every three pages
 }}
+
   \noindent\ldots on a 9 page document adds a blank page after pages 3 and 6.
 
   The \verb!-pad-multiple n! operation adds blank pages so the document has a multiple of \verb!n! pages. For example:
@@ -2150,6 +2168,7 @@ can read it without having to decode the whole PDF. To set the metadata:
 
     \small\texttt{cpdf -remove-metadata in.pdf -o out.pdf}
 }}
+
   \noindent To print the current metadata to standard output:
 
 \noindent\fbox{\parbox{\textwidth}{
@@ -2244,6 +2263,7 @@ whole rather than with an individual page, and also \textit{page-level attachmen
 \noindent\fbox{\parbox{\textwidth}{
   \small\texttt{cpdf -attach-file sheet.xls in.pdf -o out.pdf}
 }}
+
   \noindent attaches the Excel spreadsheet \texttt{sheet.xls} to the input file. If the file already has attachments, the new file is added to their number. You can specify multiple files to be attached by using \verb!-attach-file! multiple times. They will be attached in the given order.
   
   The \texttt{-to-page} option can be used to specify that the files will be attached to the given page, rather than at the document level. The \texttt{-to-page} option may be specified at most once. 
@@ -2510,7 +2530,8 @@ giving the part of the version number after the decimal point. For example:
 
   \vspace{2.5mm}
   \noindent Change file to PDF 1.4.
-}} 
+}}
+
   \noindent This does not alter any of the actual data in the file ---
 just the supposed version number.
 
