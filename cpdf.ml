@@ -841,7 +841,7 @@ let list_attached_files pdf =
                                    | Some stream ->
                                        Some
                                         {name = s;
-                                         pagenumber;
+                                         pagenumber = pagenumber;
                                          data =
                                            (fun () ->
                                              try
@@ -857,7 +857,7 @@ let list_attached_files pdf =
                               | _ ->
                                   Some
                                     {name = s;
-                                     pagenumber;
+                                     pagenumber = pagenumber;
                                      data = (fun () -> raise (Pdf.PDFError "no attachment data"))}
                               end
                           | _ -> None
