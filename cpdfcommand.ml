@@ -116,6 +116,7 @@ type op =
   | CopyCropBoxToMediaBox
   | CopyBox
   | MediaBox
+  | HardBox of string
   | Rotate of int
   | Rotateby of int
   | RotateContents of float
@@ -220,6 +221,7 @@ let string_of_op = function
   | CopyCropBoxToMediaBox -> "CopyCropBoxToMediaBox"
   | CopyBox -> "CopyBox"
   | MediaBox -> "MediaBox"
+  | HardBox _ -> "HardBox"
   | Rotate _ -> "Rotate"
   | Rotateby _ -> "Rotateby"
   | RotateContents _ -> "RotateContents"
@@ -609,7 +611,7 @@ let banned banlist = function
   | CSP1|CSP3|TwoUp|TwoUpStack|RemoveBookmarks|AddRectangle|RemoveText|
     Draft|Shift|Scale|ScaleToFit|RemoveAttachedFiles|
     RemoveAnnotations|RemoveMetadata|RemoveFonts|Crop|RemoveCrop|
-    CopyCropBoxToMediaBox|CopyBox|MediaBox|SetTrapped|SetUntrapped|Presentation|
+    CopyCropBoxToMediaBox|CopyBox|MediaBox|HardBox _|SetTrapped|SetUntrapped|Presentation|
     BlackText|BlackLines|BlackFills|CopyFont _|CSP2 _|StampOn _|StampUnder _|
     AddText _|ScaleContents _|AttachFile _|CopyAnnotations _|SetMetadata _|
     ThinLines _|SetAuthor _|SetTitle _|SetSubject _|SetKeywords _|SetCreate _|
@@ -1527,6 +1529,9 @@ let setstayonerror () =
 let setnoembedfont () =
   args.embedfonts <- false
 
+let sethardbox box =
+  args.op <- Some (HardBox box)
+
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
   control_args := !control_args @ parse_control_file filename
@@ -1658,6 +1663,9 @@ and specs =
    ("-crop",
        Arg.String setcrop,
        " Crop specified pages");
+   ("-hard-box",
+       Arg.String sethardbox,
+       " Hard crop specified pages to the given box");
    ("-remove-crop",
        Arg.Unit (setop RemoveCrop),
        " Remove cropping on specified pages");
@@ -3393,6 +3401,15 @@ let go () =
                 let pdf = Cpdf.set_mediabox xywhlist pdf range in
                   write_pdf false pdf
       | _ -> error "set media box: bad command line"
+      end
+  | Some (HardBox box) ->
+      begin match args.inputs, args.out with
+      | (_, pagespec, _, _, _, _)::_, _ ->
+          let pdf = get_single_pdf (Some (HardBox box)) false in
+          let range = parse_pagespec pdf pagespec in
+            let pdf = Cpdf.hard_box pdf range box args.mediabox_if_missing args.fast in
+              write_pdf false pdf
+      | _ -> error "hard box: bad command line"
       end
   | Some CopyBox ->
       begin match args.inputs, args.out with

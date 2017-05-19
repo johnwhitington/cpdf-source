@@ -307,6 +307,8 @@ val hasbox : Pdf.t -> int -> string -> bool
 (** [crop_pdf xywhlist pdf range] sets the cropbox on the given pages. *)
 val crop_pdf : (float * float * float * float) list -> Pdf.t -> int list -> Pdf.t
 
+val hard_box : Pdf.t -> int list -> string -> bool -> bool -> Pdf.t
+
 (** [set_mediabox xywhlist pdf range] sets the media box on the given pages. *)
 val set_mediabox : (float * float * float * float) list -> Pdf.t -> int list -> Pdf.t
 

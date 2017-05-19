@@ -2536,6 +2536,29 @@ let crop_pdf xywhlist pdf range =
   in
     process_pages crop_page pdf range
 
+(* Clip a page to one of its boxes, or the media box if that box is not
+ * present. This is a hard clip, done by using a clipping rectangle, so that
+ * the page may then be used as a stamp without extraneous material reapearing.
+ * *)
+let hard_box pdf range boxname mediabox_if_missing fast =
+  process_pages
+    (fun pagenum page ->
+       let minx, miny, maxx, maxy =
+         if boxname = "/MediaBox" then
+           Pdf.parse_rectangle page.Pdfpage.mediabox
+         else
+           match Pdf.lookup_direct pdf boxname page.Pdfpage.rest with
+           | Some a -> Pdf.parse_rectangle a
+           | _ ->
+               if mediabox_if_missing
+                 then Pdf.parse_rectangle page.Pdfpage.mediabox
+                 else error "hard_box: Box not found"
+       in
+         let ops = [Pdfops.Op_re (minx, miny, maxx, maxy); Pdfops.Op_W; Pdfops.Op_n] in
+           Pdfpage.prepend_operators pdf ops ~fast:fast page)
+    pdf
+    range
+
 let remove_cropping_pdf pdf range =
   let remove_cropping_page _ page =
     {page with
