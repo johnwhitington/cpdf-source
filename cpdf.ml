@@ -2554,7 +2554,7 @@ let hard_box pdf range boxname mediabox_if_missing fast =
                  then Pdf.parse_rectangle page.Pdfpage.mediabox
                  else error "hard_box: Box not found"
        in
-         let ops = [Pdfops.Op_re (minx, miny, maxx, maxy); Pdfops.Op_W; Pdfops.Op_n] in
+         let ops = [Pdfops.Op_re (minx, miny, maxx -. minx, maxy -. miny); Pdfops.Op_W; Pdfops.Op_n] in
            Pdfpage.prepend_operators pdf ops ~fast:fast page)
     pdf
     range
