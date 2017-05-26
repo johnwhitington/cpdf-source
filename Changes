@@ -1,6 +1,10 @@
+Version 2.3
+
+o New operation -hard-box to clip contents to a given box
+
 Version 2.2 (March 2017)
 
-o Perform artihmetic on dimensions when specifying size or position
+o Perform arithmetic on dimensions when specifying size or position
 o Add simple rectangles to PDF to blank things out
 o Stamping operations now preserve annotations
 o Decryption fully on-demand for speed.
