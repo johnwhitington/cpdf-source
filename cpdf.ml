@@ -1169,6 +1169,14 @@ let remove_metadata pdf =
 
 (* List the bookmarks, optionally deunicoding the text, in the given range to the given output *)
 let list_bookmarks encoding range pdf output =
+  let process_stripped escaped =
+    let b = Buffer.create 200 in
+      List.iter
+        (fun x ->
+           if x <= 127 then Buffer.add_char b (char_of_int x))
+        escaped;
+      Buffer.contents b
+  in
   let process_string s =
     let rec replace c x y = function
     | [] -> []
@@ -1186,12 +1194,13 @@ let list_bookmarks encoding range pdf output =
         in
           match encoding with
           | UTF8 -> Pdftext.utf8_of_codepoints escaped
-          | Stripped -> implode (map char_of_int (lose (fun x -> x > 127) escaped))
+          | Stripped -> process_stripped escaped
           | Raw -> s
     in
       let bookmarks = Pdfmarks.read_bookmarks pdf in
       let refnums = Pdf.page_reference_numbers pdf in
         let inrange =
+          (* n ^ 2 here too? *)
           keep
             (function x ->
                x.Pdfmarks.target = Pdfdest.NullDestination || 
