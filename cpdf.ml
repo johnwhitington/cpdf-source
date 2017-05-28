@@ -1170,10 +1170,10 @@ let remove_metadata pdf =
 (* List the bookmarks, optionally deunicoding the text, in the given range to the given output *)
 let list_bookmarks encoding range pdf output =
   let process_string s =
-    let rec replace c cs = function
+    let rec replace c x y = function
     | [] -> []
-    | h::t when h = c -> cs @ replace c cs t
-    | h::t -> h::replace c cs t
+    | h::t when h = c -> x::y::replace c x y t
+    | h::t -> h::replace c x y t
     in
       (* Convert to UTF8, raw, or stripped, and escape backslashed and quotation marks *)
       let codepoints = Pdftext.codepoints_of_pdfdocstring s in
@@ -1182,7 +1182,7 @@ let list_bookmarks encoding range pdf output =
           and nl = int_of_char '\n'
           and n = int_of_char 'n'
           and q = int_of_char '\"' in
-            replace bs [bs; bs] (replace nl [bs; n] (replace q [bs; q] codepoints))
+            replace bs bs bs (replace nl bs n (replace q bs q codepoints))
         in
           match encoding with
           | UTF8 -> Pdftext.utf8_of_codepoints escaped
