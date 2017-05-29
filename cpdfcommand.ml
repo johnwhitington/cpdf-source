@@ -2341,7 +2341,8 @@ let remove_unsafe_characters s =
 
 let get_bookmark_name pdf marks splitlevel n _ =
   let refnums = Pdf.page_reference_numbers pdf in
-  match keep (function m -> n = Pdfpage.pagenumber_of_target ~refnums pdf m.Pdfmarks.target && m.Pdfmarks.level <= splitlevel) marks with
+  let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
+  match keep (function m -> n = Pdfpage.pagenumber_of_target ~fastrefnums pdf m.Pdfmarks.target && m.Pdfmarks.level <= splitlevel) marks with
   | {Pdfmarks.text = title}::_ -> remove_unsafe_characters title
   | _ -> ""
 
@@ -2408,11 +2409,12 @@ let fast_write_split_pdfs
 (* Return list, in order, a *set* of page numbers of bookmarks at a given level *)
 let bookmark_pages level pdf =
   let refnums = Pdf.page_reference_numbers pdf in
+  let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
     setify_preserving_order
       (option_map
         (function
            l when l.Pdfmarks.level = level ->
-             Some (Pdfpage.pagenumber_of_target ~refnums pdf l.Pdfmarks.target)
+             Some (Pdfpage.pagenumber_of_target ~fastrefnums pdf l.Pdfmarks.target)
          | _ -> None)
         (Pdfmarks.read_bookmarks pdf))
 

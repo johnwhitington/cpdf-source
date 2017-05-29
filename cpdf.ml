@@ -932,19 +932,20 @@ let read_lines input =
 
 (* Verify a list of bookmarks. Positive jumps of > 1 not allowed, no numbers
 smaller than 0. *)
-let rec verify_bookmarks pdf lastlevel refnums endpage = function
+let rec verify_bookmarks pdf lastlevel fastrefnums endpage = function
   | [] -> true
   | {Pdfmarks.level = level; Pdfmarks.target = target}::more ->
-      let page = Pdfpage.pagenumber_of_target pdf ~refnums target in
+      let page = Pdfpage.pagenumber_of_target pdf ~fastrefnums target in
         level < lastlevel + 2 &&
         level >= 0 &&
         page <= endpage &&
         page >= 0 &&
-        verify_bookmarks pdf level refnums endpage more
+        verify_bookmarks pdf level fastrefnums endpage more
 
 let verify_bookmarks pdf lastlevel endpage marks =
   let refnums = Pdf.page_reference_numbers pdf in
-    verify_bookmarks pdf lastlevel refnums endpage marks
+  let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
+    verify_bookmarks pdf lastlevel fastrefnums endpage marks
 
 (* Parse a line of the bookmarks file. *)
 
@@ -1216,7 +1217,7 @@ let list_bookmarks encoding range pdf output =
                  (Printf.sprintf "%i \"%s\" %i %s\n"
                    mark.Pdfmarks.level
                    (process_string mark.Pdfmarks.text)
-                   (Pdfpage.pagenumber_of_target ~refnums pdf mark.Pdfmarks.target)
+                   (Pdfpage.pagenumber_of_target ~fastrefnums pdf mark.Pdfmarks.target)
                    (if mark.Pdfmarks.isopen then "open" else "")))
             inrange
 
@@ -1242,7 +1243,8 @@ let remove_unsafe_characters s =
 
 let get_bookmark_name pdf marks splitlevel n _ =
   let refnums = Pdf.page_reference_numbers pdf in
-  match keep (function m -> n = Pdfpage.pagenumber_of_target ~refnums pdf m.Pdfmarks.target && m.Pdfmarks.level <= splitlevel) marks with
+  let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
+  match keep (function m -> n = Pdfpage.pagenumber_of_target ~fastrefnums pdf m.Pdfmarks.target && m.Pdfmarks.level <= splitlevel) marks with
   | {Pdfmarks.text = title}::_ -> remove_unsafe_characters title
   | _ -> ""
 
@@ -1287,9 +1289,10 @@ let stem s =
 (* Return list, in order, a *set* of page numbers of bookmarks at a given level *)
 let bookmark_pages level pdf =
   let refnums = Pdf.page_reference_numbers pdf in
+  let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
   setify_preserving_order
     (option_map
-      (function l when l.Pdfmarks.level = level -> Some (Pdfpage.pagenumber_of_target ~refnums pdf l.Pdfmarks.target) | _ -> None)
+      (function l when l.Pdfmarks.level = level -> Some (Pdfpage.pagenumber_of_target ~fastrefnums pdf l.Pdfmarks.target) | _ -> None)
       (Pdfmarks.read_bookmarks pdf))
 
 (* Called from cpdflib.ml - different from above *)
