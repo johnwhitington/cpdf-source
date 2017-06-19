@@ -3227,8 +3227,8 @@ let rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 (* For OCaml < 4.00 *)
 let string_trim s =
   implode
-    (dropwhile
-       Pdf.is_whitespace (rev (dropwhile Pdf.is_whitespace (explode s))))
+    (rev (dropwhile
+       Pdf.is_whitespace (rev (dropwhile Pdf.is_whitespace (explode s)))))
 
 let combine_with_spaces strs =
   string_trim
