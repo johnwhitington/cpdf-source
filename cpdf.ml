@@ -1746,7 +1746,9 @@ let addtext
 =
   let endpage = Pdfpage.endpage pdf in
   let replace_pairs pdf filename bates batespad num page =
-      ["%Page", (fun () -> string_of_int num);
+      [
+       "%PageDiv2", (fun () -> string_of_int ((num + 1) / 2));
+       "%Page", (fun () -> string_of_int num);
        "%Roman", (fun () -> roman_upper num);
        "%roman", (fun () -> roman_lower num);
        "%filename", (fun () -> filename);
