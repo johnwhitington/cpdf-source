@@ -957,12 +957,33 @@ let rec fixup_characters prev = function
   | '\\'::'\n'::t -> fixup_characters ('\n'::prev) t
   | h::t -> fixup_characters (h::prev) t
 
+(* If optionaldest = [Pdfgenlex.LexString s], we parse the string, convert the
+ * integer to an indirect of the real page target, and then put it in. *)
+let bookmark_of_data pdf i s i' isopen optionaldest =
+  let target =
+    match optionaldest with
+    | [Pdfgenlex.LexString s] ->
+        let pdfobj =
+          Pdfread.parse_single_object s
+        in
+          Printf.printf "Parsed %s\n" (Pdfwrite.string_of_pdf pdfobj);
+          begin match pdfobj with
+            Pdf.Array (Pdf.Integer x::more) ->
+              Pdfdest.read_destination (Pdf.empty ()) (Pdf.Array (Pdf.Indirect 0::more))
+          | _ ->
+             raise (Pdf.PDFError "bookmark_of_data: dest")
+          end
+    | _ -> Pdfpage.target_of_pagenumber pdf i'
+  in
+    {Pdfmarks.level = i;
+     Pdfmarks.text = Pdftext.pdfdocstring_of_utf8 (implode (fixup_characters [] (explode s)));
+     Pdfmarks.target = target;
+     Pdfmarks.isopen = isopen}
+
 let parse_bookmark_file verify pdf input =
   let currline = ref 0 in
   try
     let lines = Pdfio.read_lines input in
-      (*i Printf.printf "Read %i lines\n" (length lines);
-      iter (function x -> Printf.printf "%s\n" x) lines; i*)
       let currline = ref 0 in
       let bookmarks = ref [] in
         iter
@@ -971,19 +992,10 @@ let parse_bookmark_file verify pdf input =
                incr currline;
                Pdfgenlex.lex_string line
              with
-             | [Pdfgenlex.LexInt i; Pdfgenlex.LexString s; Pdfgenlex.LexInt i'; Pdfgenlex.LexName "open"] ->
-                 bookmarks =|
-                   {Pdfmarks.level = i;
-                    Pdfmarks.text = Pdftext.pdfdocstring_of_utf8 (implode (fixup_characters [] (explode s)));
-                    Pdfmarks.target = Pdfpage.target_of_pagenumber pdf i';
-                    Pdfmarks.isopen = true}
-             | [Pdfgenlex.LexInt i; Pdfgenlex.LexString s; Pdfgenlex.LexInt i'; Pdfgenlex.LexName "closed"]
-             | [Pdfgenlex.LexInt i; Pdfgenlex.LexString s; Pdfgenlex.LexInt i'] ->
-                 bookmarks =|
-                   {Pdfmarks.level = i;
-                    Pdfmarks.text = Pdftext.pdfdocstring_of_utf8 (implode (fixup_characters [] (explode s)));
-                    Pdfmarks.target = Pdfpage.target_of_pagenumber pdf i';
-                    Pdfmarks.isopen = false}
+             | Pdfgenlex.LexInt i::Pdfgenlex.LexString s::Pdfgenlex.LexInt i'::Pdfgenlex.LexName "open"::optionaldest ->
+                 bookmarks =| bookmark_of_data pdf i s i' true optionaldest
+             | Pdfgenlex.LexInt i::Pdfgenlex.LexString s::Pdfgenlex.LexInt i'::optionaldest ->
+                 bookmarks =| bookmark_of_data pdf i s i' false optionaldest
              | [] -> () (* ignore blank lines *)
              | _ ->
                  error ("Bad bookmark file, line " ^ (string_of_int !currline)))
@@ -998,7 +1010,12 @@ let parse_bookmark_file verify pdf input =
             else
               bookmarks
   with
-    _ -> error (Printf.sprintf "Bad bookmark file (syntax) at line %i" !currline)
+    e ->
+      error
+        (Printf.sprintf 
+           "Bad bookmark file (syntax) at line %i (error was %s)"
+           !currline
+           (Printexc.to_string e))
 
 
 let add_bookmarks verify input pdf =
@@ -1169,6 +1186,7 @@ let remove_metadata pdf =
 (* List bookmarks *)
 let output_string_of_target pdf fastrefnums x =
   match Pdfdest.pdfobject_of_destination x with
+  | Pdf.Array [_; Pdf.Name "/Fit"] -> ""
   | Pdf.Array (Pdf.Indirect targetobjnum::more) ->
       let a =
         Pdf.Array (Pdf.Integer (Pdfpage.pagenumber_of_target ~fastrefnums pdf x)::more)
