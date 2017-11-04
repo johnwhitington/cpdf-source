@@ -2,8 +2,8 @@
 let demo = false
 let noncomp = false
 let major_version = 2
-let minor_version = 2
-let version_date = "(patchlevel 1, build of 1st September 2017)"
+let minor_version = 3
+let version_date = "(devel, build of 4th November 2017)"
 
 open Pdfutil
 open Pdfio
