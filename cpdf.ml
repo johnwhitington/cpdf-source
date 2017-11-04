@@ -966,10 +966,18 @@ let bookmark_of_data pdf i s i' isopen optionaldest =
         let pdfobj =
           Pdfread.parse_single_object s
         in
-          Printf.printf "Parsed %s\n" (Pdfwrite.string_of_pdf pdfobj);
+          (*Printf.printf "Parsed %s\n" (Pdfwrite.string_of_pdf pdfobj);*)
           begin match pdfobj with
             Pdf.Array (Pdf.Integer x::more) ->
-              Pdfdest.read_destination (Pdf.empty ()) (Pdf.Array (Pdf.Indirect 0::more))
+              let pageobjnum = Pdfpage.page_object_number pdf i' in
+                begin match pageobjnum with
+                  None ->
+                    raise (Pdf.PDFError "bookmark_of_data: page obj num not found")
+                | Some p ->
+                    Pdfdest.read_destination
+                      (Pdf.empty ())
+                      (Pdf.Array (Pdf.Indirect p::more))
+                end
           | _ ->
              raise (Pdf.PDFError "bookmark_of_data: dest")
           end
