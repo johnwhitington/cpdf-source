@@ -596,11 +596,13 @@ let banned banlist = function
   | ListBookmarks | ImageResolution _ | MissingFonts
   | PrintPageLabels | Clean | Compress | Decompress
   | RemoveUnusedResources | ChangeId | CopyId _ | ListSpotColours | Version
-  | DumpAttachedFiles -> false (* Always allowed *)
+  | DumpAttachedFiles | RemoveMetadata -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
+  | ExtractText | ExtractImages | ExtractFontFile
   | Decrypt | Encrypt | CombinePages _ -> true (* Never allowed *)
-  | ExtractText | ExtractImages | ExtractFontFile -> mem Pdfcrypt.NoExtract banlist
+  (* ISO says Noextract no longer relevent, due to accessibility concerns *)
+  (*| ExtractText | ExtractImages | ExtractFontFile -> mem Pdfcrypt.NoExtract banlist*)
   | AddBookmarks _ | PadBefore | PadAfter | PadEvery _ | PadMultiple _
   | Merge | Split | SplitOnBookmarks _ | RotateContents _ | Rotate _
   | Rotateby _ | Upright | VFlip | HFlip | SetPageLayout _
@@ -610,7 +612,7 @@ let banned banlist = function
   | AddPageLabels | RemovePageLabels -> mem Pdfcrypt.NoAssemble banlist
   | CSP1|CSP3|TwoUp|TwoUpStack|RemoveBookmarks|AddRectangle|RemoveText|
     Draft|Shift|Scale|ScaleToFit|RemoveAttachedFiles|
-    RemoveAnnotations|RemoveMetadata|RemoveFonts|Crop|RemoveCrop|
+    RemoveAnnotations|RemoveFonts|Crop|RemoveCrop|
     CopyCropBoxToMediaBox|CopyBox|MediaBox|HardBox _|SetTrapped|SetUntrapped|Presentation|
     BlackText|BlackLines|BlackFills|CopyFont _|CSP2 _|StampOn _|StampUnder _|
     AddText _|ScaleContents _|AttachFile _|CopyAnnotations _|SetMetadata _|
