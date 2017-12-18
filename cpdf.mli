@@ -364,10 +364,10 @@ val scale_contents : ?fast:bool -> position -> float -> Pdf.t -> int list -> Pdf
 (** {2 Padding} *)
 
 (** Put blank pages before the given page numbers *)
-val padbefore : int list -> Pdf.t -> Pdf.t
+val padbefore : ?padwith:Pdf.t -> int list -> Pdf.t -> Pdf.t
 
 (** Put blank pages after the given page numbers *)
-val padafter : int list -> Pdf.t -> Pdf.t
+val padafter : ?padwith:Pdf.t -> int list -> Pdf.t -> Pdf.t
 
 (** Pad to a multiple of n pages *)
 val padmultiple : int -> Pdf.t -> Pdf.t

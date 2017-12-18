@@ -381,7 +381,8 @@ type args =
    mutable creator : string option;
    mutable producer : string option;
    mutable embedfonts : bool;
-   mutable extract_text_font_size : float option}
+   mutable extract_text_font_size : float option;
+   mutable padwith : string option}
 
 let args =
   {op = None;
@@ -465,7 +466,8 @@ let args =
    producer = None;
    creator = None;
    embedfonts = true;
-   extract_text_font_size = None}
+   extract_text_font_size = None;
+   padwith = None}
 
 let reset_arguments () =
   args.op <- None;
@@ -546,7 +548,8 @@ let reset_arguments () =
   args.embedfonts <- true;
   args.creator <- None;
   args.producer <- None;
-  args.extract_text_font_size <- None
+  args.extract_text_font_size <- None;
+  args.padwith <- None
   (* Do not reset original_filename or cpdflin or was_encrypted or
    * was_decrypted_with_owner or recrypt, since we want these to work across ANDs. *)
 
@@ -1378,6 +1381,9 @@ let setpadevery i =
   else
     error "PadEvery: must be > 0"
 
+let setpadwith filename =
+  args.padwith <- Some filename
+
 let setpadmultiple i =
   args.op <- Some (PadMultiple i)
 
@@ -1874,6 +1880,9 @@ and specs =
    ("-pad-every",
       Arg.Int setpadevery,
       " Add a blank page after every n pages");
+   ("-pad-with",
+      Arg.String setpadwith,
+      " Use a given PDF instead of a blank page");
    ("-pad-multiple",
       Arg.Int setpadmultiple,
       " Pad the document to a multiple of n pages");
@@ -3756,11 +3765,21 @@ let go () =
   | Some PadBefore ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
-          write_pdf false (Cpdf.padbefore range pdf)
+          let padwith =
+            match args.padwith with
+              None -> None
+            | Some filename -> Some (pdfread_pdf_of_file None None filename)
+          in
+            write_pdf false (Cpdf.padbefore ?padwith range pdf)
   | Some PadAfter ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
-          write_pdf false (Cpdf.padafter range pdf)
+          let padwith =
+            match args.padwith with
+              None -> None
+            | Some filename -> Some (pdfread_pdf_of_file None None filename)
+          in
+            write_pdf false (Cpdf.padafter ?padwith range pdf)
   | Some (PadEvery n) ->
       let pdf = get_single_pdf args.op false in
         let range =

@@ -2063,38 +2063,45 @@ let rec insert_after_many_changes isbefore padsize offset range = function
 let print_changes =
   List.iter (fun (f, t) -> Printf.printf "%i --> %i\n" f t)
 
-let pad range pdf isbefore =
-  let i = if isbefore then 1 else 0 in
-  let pages = Pdfpage.pages_of_pagetree pdf in
-    let blankpages =
-      map
-        (fun n ->
-           {Pdfpage.content = [];
-            Pdfpage.mediabox = (select (n + i) pages).Pdfpage.mediabox;
-            Pdfpage.resources = Pdf.Dictionary [];
-            Pdfpage.rotate = (select (n + i) pages).Pdfpage.rotate;
-            Pdfpage.rest = (select (n + i) pages).Pdfpage.rest})
-        range
-    in
-      let pages' = insert_after_many pages (combine range blankpages) in
-      let changes =
-        insert_after_many_changes
-          isbefore 1 0 (List.map (fun x -> x + i) range) (ilist 1 (length pages))
-      in
-        (*print_changes changes;*)
-        Pdfpage.change_pages ~changes true pdf pages'
+let pad_with_pdf range pdf isbefore padfile =
+  (* 1. Split the input pdf around the range, taking account of isbefore *)
+  (* 2. Build a merge after "a p b p c p" or before "p a p b p c" *)
+  pdf
 
-let padafter range pdf =
+let pad padwith range pdf isbefore =
+  match padwith with
+    Some padfile -> pad_with_pdf range pdf isbefore padfile
+  | None ->
+      let i = if isbefore then 1 else 0 in
+      let pages = Pdfpage.pages_of_pagetree pdf in
+        let blankpages =
+          map
+            (fun n ->
+               {Pdfpage.content = [];
+                Pdfpage.mediabox = (select (n + i) pages).Pdfpage.mediabox;
+                Pdfpage.resources = Pdf.Dictionary [];
+                Pdfpage.rotate = (select (n + i) pages).Pdfpage.rotate;
+                Pdfpage.rest = (select (n + i) pages).Pdfpage.rest})
+            range
+        in
+          let pages' = insert_after_many pages (combine range blankpages) in
+          let changes =
+            insert_after_many_changes
+              isbefore 1 0 (List.map (fun x -> x + i) range) (ilist 1 (length pages))
+          in
+            Pdfpage.change_pages ~changes true pdf pages'
+
+let padafter ?padwith range pdf =
   let isinpdf n = mem n (ilist 1 (Pdfpage.endpage pdf)) in
     if not (fold_left ( && ) true (map isinpdf range)) then
       raise (Failure "padafter: range contains pages not present in pdf");
-    pad range pdf false
+    pad padwith range pdf false
 
-let padbefore range pdf =
+let padbefore ?padwith range pdf =
   let isinpdf n = mem n (ilist 1 (Pdfpage.endpage pdf)) in
     if not (fold_left ( && ) true (map isinpdf range)) then
       raise (Failure "padbefore: range contains pages not present in pdf");
-    pad (map pred range) pdf true
+    pad padwith (map pred range) pdf true
 
 let padmultiple n pdf =
   let pages = Pdfpage.pages_of_pagetree pdf in
