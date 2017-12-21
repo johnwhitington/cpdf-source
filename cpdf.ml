@@ -2063,10 +2063,26 @@ let rec insert_after_many_changes isbefore padsize offset range = function
 let print_changes =
   List.iter (fun (f, t) -> Printf.printf "%i --> %i\n" f t)
 
-let pad_with_pdf range pdf isbefore padfile =
-  (* 1. Split the input pdf around the range, taking account of isbefore *)
-  (* 2. Build a merge after "a p b p c p" or before "p a p b p c" *)
-  pdf
+let pad_with_pdf (range : int list) (pdf : Pdf.t) (isbefore : bool) (padfile : Pdf.t) =
+  let range = List.sort compare (setify range) in
+  let merged =
+    Pdfmerge.merge_pdfs
+      false false ["a"; "b"] [pdf; padfile] [ilist 1 (Pdfpage.endpage pdf); ilist 1 (Pdfpage.endpage padfile)]
+  in
+  let original_pages, padpages =
+    cleave (Pdfpage.pages_of_pagetree merged) (Pdfpage.endpage pdf) 
+  in
+    let newpages =
+      List.map
+        (fun (pagenum, page) ->
+           if mem pagenum range then
+             (if isbefore then padpages @ [page] else [page] @ padpages)
+           else
+             [page])
+        (combine (indx original_pages) original_pages)
+    in
+      (* FIXME Provide ~changes here? *)
+      Pdfpage.change_pages false merged (flatten newpages)
 
 let pad padwith range pdf isbefore =
   match padwith with

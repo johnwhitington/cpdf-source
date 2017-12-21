@@ -3787,7 +3787,12 @@ let go () =
           | [] -> []
           | l -> if last l = Pdfpage.endpage pdf then all_but_last l else l
         in
-          write_pdf false (Cpdf.padafter range pdf)
+          let padwith =
+            match args.padwith with
+              None -> None
+            | Some filename -> Some (pdfread_pdf_of_file None None filename)
+          in
+            write_pdf false (Cpdf.padafter ?padwith range pdf)
   | Some (PadMultiple n) ->
       let pdf = get_single_pdf args.op false in
         write_pdf false (Cpdf.padmultiple n pdf)
