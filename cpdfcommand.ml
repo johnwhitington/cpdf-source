@@ -2314,7 +2314,7 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
             really_write_pdf ~encryption ~is_decompress mk_id pdf outname
         end
     | Stdout ->
-        let temp = Filename.temp_file "cpdflin" ".pdf" in
+        let temp = Filename.temp_file "cpdfstdout" ".pdf" in
           begin match encryption with
             None -> 
               let pdf = nobble pdf in
@@ -2333,7 +2333,11 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
               while true do output_char stdout (input_char temp_file) done;
               assert false
             with
-              End_of_file -> flush stdout (*r For Windows *)
+              End_of_file ->
+                begin try Sys.remove temp with
+                  e -> Printf.eprintf "Failed to remove temp file %s (%s)\n" temp (Printexc.to_string e)
+                end;
+                flush stdout (*r For Windows *)
 
 (* Returns empty string on failure. Should only be used in conjunction with
 split at bookmarks code, so should never fail, by definiton. *)
