@@ -2314,6 +2314,7 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
             really_write_pdf ~encryption ~is_decompress mk_id pdf outname
         end
     | Stdout ->
+        (* FIXME Do not use a temp file if not calling cpdflin *)
         let temp = Filename.temp_file "cpdfstdout" ".pdf" in
           begin match encryption with
             None -> 
@@ -2334,7 +2335,7 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
               assert false
             with
               End_of_file ->
-                begin try Sys.remove temp with
+                begin try close_out temp_file; Sys.remove temp with
                   e -> Printf.eprintf "Failed to remove temp file %s (%s)\n" temp (Printexc.to_string e)
                 end;
                 flush stdout (*r For Windows *)
