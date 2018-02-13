@@ -2335,7 +2335,7 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
               assert false
             with
               End_of_file ->
-                begin try close_out temp_file; Sys.remove temp with
+                begin try close_in temp_file; Sys.remove temp with
                   e -> Printf.eprintf "Failed to remove temp file %s (%s)\n" temp (Printexc.to_string e)
                 end;
                 flush stdout (*r For Windows *)
