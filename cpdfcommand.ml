@@ -3273,13 +3273,14 @@ let go () =
                      saved encryption information in the PDF, or (b) decrypted using
                      the owner password (stored in the input) *)
                     if
-                      not
+                      (not args.debugforce) &&
+                      (not
                         (fold_left ( && ) true
                           (map2
                             (fun (_, _, _, _, was_dec_with_owner, _) pdf ->
                                !was_dec_with_owner || pdf.Pdf.saved_encryption = None)
                             inputs
-                            pdfs))
+                            pdfs)))
                     then
                       soft_error "Merge requires the owner password for all encrypted files."
                     else
