@@ -348,6 +348,7 @@ type args =
    mutable no_hq_print : bool;
    mutable debug : bool;
    mutable debugcrypt : bool;
+   mutable debugforce : bool;
    mutable boxes : bool;
    mutable encrypt_metadata : bool;
    mutable retain_numbering : bool;
@@ -433,6 +434,7 @@ let args =
    no_hq_print = false;
    debug = false;
    debugcrypt = false;
+   debugforce = false;
    boxes = false;
    encrypt_metadata = true;
    retain_numbering = false;
@@ -518,6 +520,7 @@ let reset_arguments () =
   args.no_hq_print <- false;
   args.debug <- false;
   args.debugcrypt <- false;
+  args.debugforce <- false;
   args.boxes <- false;
   args.encrypt_metadata <- true;
   args.retain_numbering <- false;
@@ -625,6 +628,7 @@ let banned banlist = function
       mem Pdfcrypt.NoEdit banlist
 
 let operation_allowed pdf banlist op =
+  args.debugforce || 
   match op with
   | None ->
       if args.debugcrypt then Printf.printf "operation is None, so allowed!\n";
@@ -1290,6 +1294,9 @@ let setdebug () =
 
 let setdebugcrypt () =
   args.debugcrypt <- true
+
+let setdebugforce () =
+  args.debugforce <- true
 
 let setboxes () =
   args.boxes <- true
@@ -2091,6 +2098,7 @@ and specs =
    ("-gs", Arg.String setgspath, "");
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit setdebugcrypt, "");
+   ("-debug-force", Arg.Unit setdebugforce, "");
    ("-fix-prince", Arg.Unit (setop RemoveUnusedResources), "");
    ("-extract-text", Arg.Unit (setop ExtractText), "");
    ("-extract-text-font-size", Arg.Float setextracttextfontsize, "");
