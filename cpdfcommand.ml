@@ -2253,7 +2253,7 @@ let really_write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf outna
         end
       else
         begin
-          if not args.was_encrypted || args.was_decrypted_with_owner then
+          if args.debugforce || not args.was_encrypted || args.was_decrypted_with_owner then
             begin
               if args.debugcrypt then
                 Printf.printf "Pdf to file in really_write_pdf\n";
