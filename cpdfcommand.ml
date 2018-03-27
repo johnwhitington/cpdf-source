@@ -2587,8 +2587,8 @@ let extract_images pdf range stem =
         (function (i, pdf_pages) -> if mem i range then Some pdf_pages else None)
         (combine (indx pdf_pages) pdf_pages)
     in
-      iter
-        (function page ->
+      iter2
+        (fun page pnum ->
            let xobjects =
              match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
              | Some (Pdf.Dictionary elts) -> map snd elts
@@ -2600,11 +2600,13 @@ let extract_images pdf range stem =
                if images <> [] then
                (let names =
                  map
-                   (function n -> let r = Cpdf.name_of_spec [] (*FIXME *) pdf 0 stem n "" 0 0 in (*i flprint r; flprint "\n"; i*) r)
-                   (ilist 1 (length images))
+                   (function n ->
+                      let r = Cpdf.name_of_spec [] pdf 0 ("p" ^ string_of_int pnum ^ "_" ^ stem) n "" 0 0 in r)
+                   (indx images)
                in
                  iter2 (write_image pdf page.Pdfpage.resources) names images))
         pages
+        (indx pages)
 
 let getencryption pdf =
   match Pdfread.what_encryption pdf with
