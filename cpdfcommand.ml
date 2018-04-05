@@ -1577,6 +1577,9 @@ and specs =
    ("-stdout",
        Arg.Unit setstdout,
        " Send result to standard output");
+   ("-error-on-malformed",
+       Arg.Set Pdfread.error_on_malformed,
+       " Do not try to read malformed files");
    ("-range",
       Arg.String setrange,
       " Explicitly add a range");
@@ -2099,6 +2102,7 @@ and specs =
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit setdebugcrypt, "");
    ("-debug-force", Arg.Unit setdebugforce, "");
+   ("-debug-malformed", Arg.Set Pdfread.debug_always_treat_malformed, "");
    ("-fix-prince", Arg.Unit (setop RemoveUnusedResources), "");
    ("-extract-text", Arg.Unit (setop ExtractText), "");
    ("-extract-text-font-size", Arg.Float setextracttextfontsize, "");
