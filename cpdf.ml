@@ -1225,7 +1225,7 @@ let list_bookmarks encoding range pdf output =
           and nl = int_of_char '\n'
           and n = int_of_char 'n'
           and q = int_of_char '\"' in
-            replace bs bs bs (replace nl bs n (replace q bs q codepoints))
+            replace q bs q (replace nl bs n (replace bs bs bs codepoints))
         in
           match encoding with
           | UTF8 -> Pdftext.utf8_of_codepoints escaped
