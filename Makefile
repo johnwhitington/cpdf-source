@@ -7,8 +7,8 @@ RESULT = cpdf
 ANNOTATE = true
 PACKS = camlpdf
 
-OCAMLNCFLAGS = -g -unsafe-string -w -3 -annot
-OCAMLBCFLAGS = -g -unsafe-string -w -3 -annot
+OCAMLNCFLAGS = -g -safe-string -w -3 -annot
+OCAMLBCFLAGS = -g -safe-string -w -3 -annot
 OCAMLLDFLAGS = -g
 
 all : native-code native-code-library byte-code-library top htdoc

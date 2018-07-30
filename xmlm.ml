@@ -961,7 +961,7 @@ struct
   let make_output ?(decl = true) ?(nl = false) ?(indent = None)
       ?(ns_prefix = fun _ ->None) d =
     let outs, outc = match d with
-    | `Channel c -> (output c), (output_char c)
+    | `Channel c -> (output_substring c), (output_char c)
     | `Buffer b -> (Std_buffer.add_substring b), (Std_buffer.add_char b)
     | `Fun f ->
         let os s p l =
