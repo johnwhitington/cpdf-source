@@ -353,10 +353,10 @@ val shift_pdf : ?fast:bool -> (float * float) list -> Pdf.t -> int list -> Pdf.t
 for all pages in pdf. *)
 val scale_pdf : ?fast:bool -> (float * float) list -> Pdf.t -> int list -> Pdf.t
 
-(** [scale_to_fit_pdf input_scale x y op pdf range] scales a page to fit the
+(** [scale_to_fit_pdf fast position input_scale x y op pdf range] scales a page to fit the
 page size given by (x, y) and by the [input_scale] (e.g 1.0 = scale to fit, 0.9
 = scale to fit leaving a border etc.). [op] is unused. *) 
-val scale_to_fit_pdf : ?fast:bool -> float -> (float * float) list -> 'a -> Pdf.t -> int list -> Pdf.t
+val scale_to_fit_pdf : ?fast:bool -> position -> float -> (float * float) list -> 'a -> Pdf.t -> int list -> Pdf.t
 
 (** Scale the contents of a page by a given factor centred around a given point in a given range. *)
 val scale_contents : ?fast:bool -> position -> float -> Pdf.t -> int list -> Pdf.t

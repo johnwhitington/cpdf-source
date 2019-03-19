@@ -953,9 +953,12 @@ let verify_bookmarks pdf lastlevel endpage marks =
 let rec fixup_characters prev = function
   | [] -> rev prev
   | '\\'::'\\'::t -> fixup_characters ('\\'::prev) t
-  | '\\'::'\"'::t -> fixup_characters ('\"'::prev) t
-  | '\\'::'\n'::t -> fixup_characters ('\n'::prev) t
+  | '\\'::'"'::t -> fixup_characters ('\"'::prev) t
+  | '\\'::'\n'::t -> fixup_characters ('\n'::prev) t (* This can never have been right? *)
   | h::t -> fixup_characters (h::prev) t
+
+let debug_bookmark_string s =
+  Printf.printf "STR: %s\n" s
 
 (* If optionaldest = [Pdfgenlex.LexString s], we parse the string, convert the
  * integer to an indirect of the real page target, and then put it in. *)
@@ -983,6 +986,9 @@ let bookmark_of_data pdf i s i' isopen optionaldest =
           end
     | _ -> Pdfpage.target_of_pagenumber pdf i'
   in
+    (*debug_bookmark_string s;
+    debug_bookmark_string (implode (fixup_characters [] (explode s)));
+    debug_bookmark_string (Pdftext.pdfdocstring_of_utf8 (implode (fixup_characters [] (explode s))));*)
     {Pdfmarks.level = i;
      Pdfmarks.text = Pdftext.pdfdocstring_of_utf8 (implode (fixup_characters [] (explode s)));
      Pdfmarks.target = target;
@@ -2780,7 +2786,7 @@ let scale_pdf ?(fast=false) sxsylist pdf range =
         process_pages scale_page pdf range
 
 (* Scale to fit page of size x * y *)
-let scale_to_fit_pdf ?(fast=false) input_scale xylist op pdf range =
+let scale_to_fit_pdf ?(fast=false) position input_scale xylist op pdf range =
   let scale_page_to_fit pnum page =
     let x, y = List.nth xylist (pnum - 1) in
     let matrix =
@@ -2794,8 +2800,17 @@ let scale_to_fit_pdf ?(fast=false) input_scale xylist op pdf range =
         if maxx <= 0. || maxy <= 0. then failwith "Zero-sized pages are invalid" else
           let fx = x /. maxx in let fy = y /. maxy in
             let scale = fmin fx fy *. input_scale in
-              let trans_x = (x -. (maxx *. scale)) /. 2.
-              in let trans_y = (y -. (maxy *. scale)) /. 2. in
+              let trans_x =
+                match position with
+                  Left _ -> 0.
+                | Right _ -> (x -. (maxx *. scale))
+                | _ -> (x -. (maxx *. scale)) /. 2.
+              and trans_y =
+                match position with
+                | Top _ -> (y -. (maxy *. scale))
+                | Bottom _ -> 0.
+                | _ -> (y -. (maxy *. scale)) /. 2.
+              in
                 (Pdftransform.matrix_of_transform
                    [Pdftransform.Translate (trans_x, trans_y);
                     Pdftransform.Scale ((0., 0.), scale, scale)])

@@ -3745,7 +3745,7 @@ let go () =
         let range = parse_pagespec pdf (get_pagespec ()) in
           let xylist = parse_coordinates pdf args.coord
           and scale = args.scale in
-            write_pdf false (Cpdf.scale_to_fit_pdf ~fast:args.fast scale xylist args.op pdf range)
+            write_pdf false (Cpdf.scale_to_fit_pdf ~fast:args.fast args.position scale xylist args.op pdf range)
   | Some (ScaleContents scale) ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
