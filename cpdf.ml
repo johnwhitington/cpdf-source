@@ -953,8 +953,8 @@ let verify_bookmarks pdf lastlevel endpage marks =
 let rec fixup_characters prev = function
   | [] -> rev prev
   | '\\'::'\\'::t -> fixup_characters ('\\'::prev) t
-  | '\\'::'"'::t -> fixup_characters ('\"'::prev) t
-  | '\\'::'\n'::t -> fixup_characters ('\n'::prev) t (* This can never have been right? *)
+  | '\\'::'"'::t -> fixup_characters ('"'::prev) t
+  | '\\'::'n'::t -> fixup_characters ('\n'::prev) t
   | h::t -> fixup_characters (h::prev) t
 
 let debug_bookmark_string s =
