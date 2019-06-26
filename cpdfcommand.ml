@@ -172,6 +172,7 @@ type op =
   | RemoveDictEntry of string
   | ListSpotColours
   | RemoveClipping
+  | SetMetadataDate of string
 
 let string_of_op = function
   | CopyFont _ -> "CopyFont"
@@ -283,6 +284,7 @@ let string_of_op = function
   | RemoveArt -> "RemoveArt"
   | RemoveTrim -> "RemoveTrim"
   | RemoveBleed -> "RemoveBleed"
+  | SetMetadataDate _ -> "SetMetadataDate"
 
 (* Inputs: filename, pagespec. *)
 type input_kind =
@@ -395,7 +397,10 @@ type args =
    mutable producer : string option;
    mutable embedfonts : bool;
    mutable extract_text_font_size : float option;
-   mutable padwith : string option}
+   mutable padwith : string option;
+   mutable alsosetxml : bool;
+   mutable alsosetxmlwhenpresent : bool;
+   mutable justsetxml : bool}
 
 let args =
   {op = None;
@@ -481,7 +486,10 @@ let args =
    creator = None;
    embedfonts = true;
    extract_text_font_size = None;
-   padwith = None}
+   padwith = None;
+   alsosetxml = false;
+   alsosetxmlwhenpresent = false;
+   justsetxml = false}
 
 let reset_arguments () =
   args.op <- None;
@@ -560,7 +568,10 @@ let reset_arguments () =
   args.squeeze <- false;
   args.embedfonts <- true;
   args.extract_text_font_size <- None;
-  args.padwith <- None
+  args.padwith <- None;
+  args.alsosetxml <- false;
+  args.alsosetxmlwhenpresent <- false;
+  args.justsetxml <- false
   (* Do not reset original_filename or cpdflin or was_encrypted or
    * was_decrypted_with_owner or recrypt or producer or creator, since we want
    * these to work across ANDs. *)
@@ -633,7 +644,7 @@ let banned banlist = function
     AddText _|ScaleContents _|AttachFile _|CopyAnnotations _|SetMetadata _|
     ThinLines _|SetAuthor _|SetTitle _|SetSubject _|SetKeywords _|SetCreate _|
     SetModify _|SetCreator _|SetProducer _|SetVersion _|RemoveDictEntry _ |
-    RemoveClipping ->
+    RemoveClipping | SetMetadataDate _ ->
       mem Pdfcrypt.NoEdit banlist
 
 let operation_allowed pdf banlist op =
@@ -1569,6 +1580,15 @@ let setnoembedfont () =
 let sethardbox box =
   args.op <- Some (HardBox box)
 
+let setalsosetxml () =
+  args.alsosetxml <- true
+
+let setalsosetxmlwhenpresent () =
+  args.alsosetxmlwhenpresent <- true
+
+let setjustsetxml () =
+  args.justsetxml <- true
+
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
   control_args := !control_args @ parse_control_file filename
@@ -1989,6 +2009,15 @@ and specs =
    ("-set-untrapped",
       Arg.Unit (setop SetUntrapped),
       " Mark as not trapped");
+   ("-also-set-xml",
+      Arg.Unit setalsosetxml,
+      " Also set XML metadata");
+   ("-also-set-xml-when-present",
+      Arg.Unit setalsosetxmlwhenpresent,
+      " Also set XML metadata, but only if field already present");
+   ("-just-set-xml",
+      Arg.Unit setjustsetxml,
+      " Just set XML metadata, not old-fashioned metadata");
    ("-set-page-layout",
       Arg.String setpagelayout,
       " Set page layout upon document opening");
