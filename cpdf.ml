@@ -2600,7 +2600,7 @@ let set_mediabox xywhlist pdf range =
   in
     process_pages crop_page pdf range
 
-let setBox box minx maxx miny maxy pdf range =
+(*let setBox box minx maxx miny maxy pdf range =
   let set_box_page _ page =
     {page with
        Pdfpage.rest =
@@ -2608,16 +2608,16 @@ let setBox box minx maxx miny maxy pdf range =
            page.Pdfpage.rest box
            (Pdf.Array [Pdf.Real minx; Pdf.Real miny; Pdf.Real maxx; Pdf.Real maxy])}
   in
-    process_pages set_box_page pdf range
+    process_pages set_box_page pdf range*)
 
 (* \section{Cropping} *)
-let crop_pdf xywhlist pdf range =
+let crop_pdf ?(box="/CropBox") xywhlist pdf range =
   let crop_page pagenum page =
     {page with
        Pdfpage.rest =
          (Pdf.add_dict_entry
             page.Pdfpage.rest
-            "/CropBox"
+            box
             (let x, y, w, h = List.nth xywhlist (pagenum - 1) in
               (Pdf.Array
                  [Pdf.Real x; Pdf.Real y;

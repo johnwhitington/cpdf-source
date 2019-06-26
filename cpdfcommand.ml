@@ -3,7 +3,7 @@ let demo = false
 let noncomp = false
 let major_version = 2
 let minor_version = 3
-let version_date = "(devel, build of 31st July 2018)"
+let version_date = "(devel, build of 4th June 2019)"
 
 open Pdfutil
 open Pdfio
@@ -112,7 +112,13 @@ type op =
   | Compress
   | Decompress
   | Crop
+  | Trim
+  | Bleed
+  | Art
   | RemoveCrop
+  | RemoveArt
+  | RemoveTrim
+  | RemoveBleed
   | CopyCropBoxToMediaBox
   | CopyBox
   | MediaBox
@@ -271,6 +277,12 @@ let string_of_op = function
   | RemoveDictEntry _ -> "RemoveDictEntry"
   | ListSpotColours -> "ListSpotColours"
   | RemoveClipping -> "RemoveClipping"
+  | Trim -> "Trim"
+  | Art -> "Art"
+  | Bleed -> "Bleed"
+  | RemoveArt -> "RemoveArt"
+  | RemoveTrim -> "RemoveTrim"
+  | RemoveBleed -> "RemoveBleed"
 
 (* Inputs: filename, pagespec. *)
 type input_kind =
@@ -546,15 +558,12 @@ let reset_arguments () =
   args.labelprefix <- None;
   args.labelstartval <- 1;
   args.squeeze <- false;
-  args.producer <- None;
-  args.creator <- None;
   args.embedfonts <- true;
-  args.creator <- None;
-  args.producer <- None;
   args.extract_text_font_size <- None;
   args.padwith <- None
   (* Do not reset original_filename or cpdflin or was_encrypted or
-   * was_decrypted_with_owner or recrypt, since we want these to work across ANDs. *)
+   * was_decrypted_with_owner or recrypt or producer or creator, since we want
+   * these to work across ANDs. *)
 
 let get_pagespec () =
   match args.inputs with
@@ -618,7 +627,7 @@ let banned banlist = function
   | AddPageLabels | RemovePageLabels -> mem Pdfcrypt.NoAssemble banlist
   | CSP1|CSP3|TwoUp|TwoUpStack|RemoveBookmarks|AddRectangle|RemoveText|
     Draft|Shift|Scale|ScaleToFit|RemoveAttachedFiles|
-    RemoveAnnotations|RemoveFonts|Crop|RemoveCrop|
+    RemoveAnnotations|RemoveFonts|Crop|RemoveCrop|Trim|RemoveTrim|Bleed|RemoveBleed|Art|RemoveArt|
     CopyCropBoxToMediaBox|CopyBox|MediaBox|HardBox _|SetTrapped|SetUntrapped|Presentation|
     BlackText|BlackLines|BlackFills|CopyFont _|CSP2 _|StampOn _|StampUnder _|
     AddText _|ScaleContents _|AttachFile _|CopyAnnotations _|SetMetadata _|
@@ -1009,6 +1018,18 @@ let parse_single_number pdf s =
 (* Setting operations *)
 let setcrop s =
   setop Crop ();
+  args.rectangle <- s
+
+let settrim s =
+  setop Trim ();
+  args.rectangle <- s
+
+let setbleed s =
+  setop Bleed ();
+  args.rectangle <- s
+
+let setart s =
+  setop Art ();
   args.rectangle <- s
 
 let setmediabox s =
@@ -1682,12 +1703,36 @@ and specs =
    ("-crop",
        Arg.String setcrop,
        " Crop specified pages");
+   ("-cropbox",
+       Arg.String setcrop,
+       " Crop specified pages (synonym for -crop)");
+   ("-artbox",
+       Arg.String setart,
+       " Set art box for specified pages");
+   ("-bleedbox",
+       Arg.String setbleed,
+       " Set bleed box for specified pages");
+   ("-trimbox",
+       Arg.String settrim,
+       " Set trim box for specified pages");
    ("-hard-box",
        Arg.String sethardbox,
        " Hard crop specified pages to the given box");
    ("-remove-crop",
        Arg.Unit (setop RemoveCrop),
        " Remove cropping on specified pages");
+   ("-remove-cropbox",
+       Arg.Unit (setop RemoveCrop),
+       " Synonym for -remove-crop");
+   ("-remove-trimbox",
+       Arg.Unit (setop RemoveTrim),
+       " Remove trim box on specified pages");
+   ("-remove-bleedbox",
+       Arg.Unit (setop RemoveBleed),
+       " Remove bleed box on specified pages");
+   ("-remove-artbox",
+       Arg.Unit (setop RemoveArt),
+       " Remove art box on specified pages");
    ("-copy-cropbox-to-mediabox",
        Arg.Unit (setop CopyCropBoxToMediaBox),
        ""); (* Undocumented now, since /frombox, /tobox now used *)
@@ -3429,6 +3474,36 @@ let go () =
                   write_pdf false pdf
       | _ -> error "crop: bad command line"
       end
+  | Some Art ->
+      begin match args.inputs, args.out with
+      | (_, pagespec, _, _, _, _)::_, _ ->
+          let pdf = get_single_pdf (Some Art) false in
+            let xywhlist = parse_rectangles pdf args.rectangle in
+              let range = parse_pagespec pdf pagespec in
+                let pdf = Cpdf.crop_pdf ~box:"/ArtBox" xywhlist pdf range in
+                  write_pdf false pdf
+      | _ -> error "crop: bad command line"
+      end
+  | Some Bleed ->
+      begin match args.inputs, args.out with
+      | (_, pagespec, _, _, _, _)::_, _ ->
+          let pdf = get_single_pdf (Some Bleed) false in
+            let xywhlist = parse_rectangles pdf args.rectangle in
+              let range = parse_pagespec pdf pagespec in
+                let pdf = Cpdf.crop_pdf ~box:"/BleedBox" xywhlist pdf range in
+                  write_pdf false pdf
+      | _ -> error "crop: bad command line"
+      end
+  | Some Trim ->
+      begin match args.inputs, args.out with
+      | (_, pagespec, _, _, _, _)::_, _ ->
+          let pdf = get_single_pdf (Some Trim) false in
+            let xywhlist = parse_rectangles pdf args.rectangle in
+              let range = parse_pagespec pdf pagespec in
+                let pdf = Cpdf.crop_pdf ~box:"/TrimBox" xywhlist pdf range in
+                  write_pdf false pdf
+      | _ -> error "crop: bad command line"
+      end
   | Some MediaBox ->
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
@@ -3482,6 +3557,33 @@ let go () =
           let pdf = get_single_pdf (Some RemoveCrop) false in
             let range = parse_pagespec pdf pagespec in
               let pdf = Cpdf.remove_cropping_pdf pdf range in
+                write_pdf false pdf
+      | _ -> error "remove-crop: bad command line"
+      end
+  | Some RemoveArt ->
+      begin match args.inputs, args.out with
+      | (_, pagespec, _, _, _, _)::_, _ ->
+          let pdf = get_single_pdf (Some RemoveArt) false in
+            let range = parse_pagespec pdf pagespec in
+              let pdf = Cpdf.remove_art_pdf pdf range in
+                write_pdf false pdf
+      | _ -> error "remove-crop: bad command line"
+      end
+  | Some RemoveTrim ->
+      begin match args.inputs, args.out with
+      | (_, pagespec, _, _, _, _)::_, _ ->
+          let pdf = get_single_pdf (Some RemoveTrim) false in
+            let range = parse_pagespec pdf pagespec in
+              let pdf = Cpdf.remove_trim_pdf pdf range in
+                write_pdf false pdf
+      | _ -> error "remove-crop: bad command line"
+      end
+  | Some RemoveBleed ->
+      begin match args.inputs, args.out with
+      | (_, pagespec, _, _, _, _)::_, _ ->
+          let pdf = get_single_pdf (Some RemoveBleed) false in
+            let range = parse_pagespec pdf pagespec in
+              let pdf = Cpdf.remove_bleed_pdf pdf range in
                 write_pdf false pdf
       | _ -> error "remove-crop: bad command line"
       end

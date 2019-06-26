@@ -305,15 +305,15 @@ val output_page_info : Pdf.t -> int list -> unit
 val hasbox : Pdf.t -> int -> string -> bool
 
 (** [crop_pdf xywhlist pdf range] sets the cropbox on the given pages. *)
-val crop_pdf : (float * float * float * float) list -> Pdf.t -> int list -> Pdf.t
+val crop_pdf : ?box:string -> (float * float * float * float) list -> Pdf.t -> int list -> Pdf.t
 
 val hard_box : Pdf.t -> int list -> string -> bool -> bool -> Pdf.t
 
 (** [set_mediabox xywhlist pdf range] sets the media box on the given pages. *)
 val set_mediabox : (float * float * float * float) list -> Pdf.t -> int list -> Pdf.t
 
-(** [setBox boxname x y w h pdf range] sets the given box on the given pages. *)
-val setBox : string -> float -> float -> float -> float -> Pdf.t -> int list -> Pdf.t
+(*(** [setBox boxname x y w h pdf range] sets the given box on the given pages. *)
+val setBox : string -> float -> float -> float -> float -> Pdf.t -> int list -> Pdf.t*)
 
 (** Remove any cropping from the given pages. *)
 val remove_cropping_pdf : Pdf.t -> int list -> Pdf.t
