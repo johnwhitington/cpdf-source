@@ -1,3 +1,7 @@
+Version 2.3 (October 2019)
+
+o Directly set and remove Trim, Art, and Bleed boxes
+
 Version 2.2 (patchlevel 1)
 
 o Fix for inability to read null objects in streams
