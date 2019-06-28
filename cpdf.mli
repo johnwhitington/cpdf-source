@@ -112,7 +112,7 @@ val copy_id : bool -> Pdf.t -> Pdf.t -> Pdf.t
 
 (** [set_pdf_info (key, value, version)] sets the entry [key] in the /Info directory, updating
 the PDF minor version to [version].*)
-val set_pdf_info : (string * Pdf.pdfobject * int) -> Pdf.t -> Pdf.t
+val set_pdf_info : ?xmp_also:bool -> ?xmp_also_when_present:bool -> ?xmp_just_set:bool -> (string * Pdf.pdfobject * int) -> Pdf.t -> Pdf.t
 
 (** [set_pdf_info (key, value, version)] sets the entry [key] in the
 /ViewerPreferences directory, updating the PDF minor version to [version].*)

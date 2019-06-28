@@ -3691,7 +3691,14 @@ let go () =
       in
         let pdf = get_single_pdf args.op false in
           let version = if args.keepversion then pdf.Pdf.minor else version in
-            write_pdf false (Cpdf.set_pdf_info (key, value, version) pdf)
+            write_pdf false
+              (Cpdf.set_pdf_info 
+                 ~xmp_also:args.alsosetxml
+                 ~xmp_also_when_present:args.alsosetxmlwhenpresent
+                 ~xmp_just_set:args.justsetxml
+                 (key, value, version) pdf)
+  | Some (SetMetadataDate date) ->
+      failwith "SetMetadataDate unimplemented"
   | Some ((HideToolbar _ | HideMenubar _ | HideWindowUI _
           | FitWindow _ | CenterWindow _ | DisplayDocTitle _) as op) ->
       begin match args.out with

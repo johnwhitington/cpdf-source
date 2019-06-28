@@ -1110,20 +1110,7 @@ let set_viewer_preference (key, value, version) pdf =
                   Pdf.trailerdict = trailerdict'}
   | None -> error "bad root"
 
-(* \section{Set an entry in the /Info dictionary} *)
-let set_pdf_info (key, value, version) pdf =
-  let infodict =
-    match Pdf.lookup_direct pdf "/Info" pdf.Pdf.trailerdict with
-    | Some d -> d
-    | None -> Pdf.Dictionary []
-  in
-    let infodict' = Pdf.add_dict_entry infodict key value in
-      let objnum = Pdf.addobj pdf infodict' in
-        pdf.Pdf.trailerdict <-
-          Pdf.add_dict_entry pdf.Pdf.trailerdict "/Info" (Pdf.Indirect objnum);
-        pdf.Pdf.minor <-
-          max pdf.Pdf.minor version;
-        pdf
+
 
 (* \section{Set page layout} *)
 let set_page_layout pdf s =
@@ -1408,6 +1395,40 @@ let print_metadata pdf =
       for x = 0 to bytes_size data - 1 do
         Printf.printf "%c" (char_of_int (bget data x))
       done
+
+(* Set XMP info *)
+let set_pdf_info_xml only_when_present (key, value, version) xmldata pdf = xmldata
+
+(* \section{Set an entry in the /Info dictionary} *)
+let set_pdf_info ?(xmp_also=false) ?(xmp_also_when_present=false) ?(xmp_just_set=false) (key, value, version) pdf =
+  let infodict =
+    match Pdf.lookup_direct pdf "/Info" pdf.Pdf.trailerdict with
+    | Some d -> d
+    | None -> Pdf.Dictionary []
+  in
+    let infodict' = Pdf.add_dict_entry infodict key value in
+      let objnum = Pdf.addobj pdf infodict' in
+        if not xmp_just_set then
+          begin
+            pdf.Pdf.trailerdict <-
+              Pdf.add_dict_entry pdf.Pdf.trailerdict "/Info" (Pdf.Indirect objnum);
+            pdf.Pdf.minor <-
+              max pdf.Pdf.minor version
+          end;
+        if xmp_also || xmp_also_when_present then
+          begin match get_metadata pdf with
+            None -> pdf
+          | Some xmldata ->
+              let pdf =
+                set_metadata_from_bytes
+                  true
+                  (set_pdf_info_xml xmp_also_when_present (key, value, version) xmldata pdf)
+                  pdf
+              in
+                pdf
+          end
+       else
+         pdf
 
 (* \section{Print font data} *)
 let list_font pdf page (name, dict) =
