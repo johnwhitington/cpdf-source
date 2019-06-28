@@ -3381,8 +3381,13 @@ let rec set_xml_field only_when_present kind fieldname value = function
 
 let set_pdf_info_xml only_when_present kind fieldname value xmldata pdf =
   let dtd, tree = xmltree_of_bytes xmldata in
-  (* FIXME NEED BOOLEANS HERE FOR TRAPPED/UNTRAPPED *)
-  let str = match value with Pdf.String s -> s | _ -> failwith "set_pdf_info_xml: not a string" in
+  let str =
+    match value with
+      Pdf.String s -> s
+    | Pdf.Boolean true -> "True"
+    | Pdf.Boolean false -> "False"
+    | _ -> failwith "set_pdf_info_xml: not a string"
+  in
   let newtree = set_xml_field only_when_present kind fieldname str tree in
     bytes_of_xmltree (dtd, newtree)
 
