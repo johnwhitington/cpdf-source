@@ -3381,9 +3381,18 @@ let rec set_xml_field only_when_present kind fieldname value = function
 
 let set_pdf_info_xml only_when_present kind fieldname value xmldata pdf =
   let dtd, tree = xmltree_of_bytes xmldata in
+  (* FIXME NEED BOOLEANS HERE FOR TRAPPED/UNTRAPPED *)
   let str = match value with Pdf.String s -> s | _ -> failwith "set_pdf_info_xml: not a string" in
   let newtree = set_xml_field only_when_present kind fieldname str tree in
     bytes_of_xmltree (dtd, newtree)
+
+let set_pdf_info_xml_many only_when_present changes value xmldata pdf =
+  let xmldata = ref xmldata in
+    List.iter
+      (fun (kind, fieldname) ->
+         xmldata := set_pdf_info_xml only_when_present kind fieldname value !xmldata pdf)
+      changes;
+    !xmldata
 
 (* \section{Set an entry in the /Info dictionary} *)
 let set_pdf_info ?(xmp_also=false) ?(xmp_also_when_present=false) ?(xmp_just_set=false) (key, value, version) pdf =
@@ -3405,13 +3414,23 @@ let set_pdf_info ?(xmp_also=false) ?(xmp_also_when_present=false) ?(xmp_just_set
           begin match get_metadata pdf with
             None -> pdf
           | Some xmldata ->
-              let kind, fieldname =
-                dc, "title"
+              let changes =
+                match key with
+                | "/Producer" -> [(adobe, "Producer")]
+                | "/Creator" -> [(adobe, "Creator"); (xmp, "CreatorTool"); (dc, "creator")] 
+                | "/Author" -> [(adobe, "Author")]
+                | "/Title" -> [(adobe, "Title"); (dc, "title")]
+                | "/Subject" -> [(adobe, "Subject"); (dc, "subject")]
+                | "/Keywords" -> [(adobe, "Keywords")]
+                | "/CreationDate" -> [(adobe, "CreationDate"); (xmp, "CreateDate")] (* FIXME Fudge date format *)
+                | "/ModDate" -> [(adobe, "ModDate"); (xmp, "ModifyDate")] (* FIXME Fudge date format *)
+                | "/Trapped" -> [(adobe, "Trapped")]
+                | _ -> failwith "Unknown call to set_pdf_info"
               in
               let pdf =
                 set_metadata_from_bytes
                   true
-                  (set_pdf_info_xml xmp_also_when_present kind fieldname value xmldata pdf)
+                  (set_pdf_info_xml_many xmp_also_when_present changes value xmldata pdf)
                   pdf
               in
                 pdf
