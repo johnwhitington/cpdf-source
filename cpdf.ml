@@ -1396,39 +1396,7 @@ let print_metadata pdf =
         Printf.printf "%c" (char_of_int (bget data x))
       done
 
-(* Set XMP info *)
-let set_pdf_info_xml only_when_present (key, value, version) xmldata pdf = xmldata
 
-(* \section{Set an entry in the /Info dictionary} *)
-let set_pdf_info ?(xmp_also=false) ?(xmp_also_when_present=false) ?(xmp_just_set=false) (key, value, version) pdf =
-  let infodict =
-    match Pdf.lookup_direct pdf "/Info" pdf.Pdf.trailerdict with
-    | Some d -> d
-    | None -> Pdf.Dictionary []
-  in
-    let infodict' = Pdf.add_dict_entry infodict key value in
-      let objnum = Pdf.addobj pdf infodict' in
-        if not xmp_just_set then
-          begin
-            pdf.Pdf.trailerdict <-
-              Pdf.add_dict_entry pdf.Pdf.trailerdict "/Info" (Pdf.Indirect objnum);
-            pdf.Pdf.minor <-
-              max pdf.Pdf.minor version
-          end;
-        if xmp_also || xmp_also_when_present then
-          begin match get_metadata pdf with
-            None -> pdf
-          | Some xmldata ->
-              let pdf =
-                set_metadata_from_bytes
-                  true
-                  (set_pdf_info_xml xmp_also_when_present (key, value, version) xmldata pdf)
-                  pdf
-              in
-                pdf
-          end
-       else
-         pdf
 
 (* \section{Print font data} *)
 let list_font pdf page (name, dict) =
@@ -3288,6 +3256,16 @@ let xmltree_of_bytes b =
     and data d = D d in
       Xmlm.input_doc_tree ~el ~data i
 
+let bytes_of_xmltree t =
+  let buf = Buffer.create 1024 in
+  let o = Xmlm.make_output (`Buffer buf) in
+  let frag = function
+      E (tag, childs) -> `El (tag, childs)
+    | D d -> `Data d
+  in
+    Xmlm.output_doc_tree frag o t;
+    bytes_of_string (Buffer.contents buf)
+
 let rec string_of_xmltree = function
    D d ->
      Printf.sprintf "DATA {%s}" d
@@ -3378,6 +3356,12 @@ let output_xmp_info encoding pdf =
             print_out tree "XMP pdf:PDFVersion" adobe "PDFVersion";
             print_out tree "XMP pdf:Producer" adobe "Producer";
             print_out tree "XMP pdf:Trapped" adobe "Trapped";
+            print_out tree "XMP pdf:Title" adobe "Title";
+            print_out tree "XMP pdf:Creator" adobe "Creator";
+            print_out tree "XMP pdf:Subject" adobe "Subject";
+            print_out tree "XMP pdf:Author" adobe "Author";
+            print_out tree "XMP pdf:CreationDate" adobe "CreationDate";
+            print_out tree "XMP pdf:ModDate" adobe "ModDate";
             print_out tree "XMP xmp:CreateDate" xmp "CreateDate";
             print_out tree "XMP xmp:CreatorTool" xmp "CreatorTool";
             print_out tree "XMP xmp:MetadataDate" xmp "MetadataDate";
@@ -3388,6 +3372,52 @@ let output_xmp_info encoding pdf =
         with
           _ -> ()
 
+(* Set XMP info *)
+let rec set_xml_field only_when_present kind fieldname value = function
+  D data -> D data
+| E (((n, n'), m), [D _]) when n = kind && n' = fieldname ->
+    E (((n, n'), m), [D value])
+| E (x, ts) -> E (x, List.map (set_xml_field only_when_present kind fieldname value) ts)
+
+let set_pdf_info_xml only_when_present kind fieldname value xmldata pdf =
+  let dtd, tree = xmltree_of_bytes xmldata in
+  let str = match value with Pdf.String s -> s | _ -> failwith "set_pdf_info_xml: not a string" in
+  let newtree = set_xml_field only_when_present kind fieldname str tree in
+    bytes_of_xmltree (dtd, newtree)
+
+(* \section{Set an entry in the /Info dictionary} *)
+let set_pdf_info ?(xmp_also=false) ?(xmp_also_when_present=false) ?(xmp_just_set=false) (key, value, version) pdf =
+  let infodict =
+    match Pdf.lookup_direct pdf "/Info" pdf.Pdf.trailerdict with
+    | Some d -> d
+    | None -> Pdf.Dictionary []
+  in
+    let infodict' = Pdf.add_dict_entry infodict key value in
+      let objnum = Pdf.addobj pdf infodict' in
+        if not xmp_just_set then
+          begin
+            pdf.Pdf.trailerdict <-
+              Pdf.add_dict_entry pdf.Pdf.trailerdict "/Info" (Pdf.Indirect objnum);
+            pdf.Pdf.minor <-
+              max pdf.Pdf.minor version
+          end;
+        if xmp_also || xmp_also_when_present then
+          begin match get_metadata pdf with
+            None -> pdf
+          | Some xmldata ->
+              let kind, fieldname =
+                dc, "title"
+              in
+              let pdf =
+                set_metadata_from_bytes
+                  true
+                  (set_pdf_info_xml xmp_also_when_present kind fieldname value xmldata pdf)
+                  pdf
+              in
+                pdf
+          end
+       else
+         pdf
 (* \section{Blacken text} *)
 
 (*
