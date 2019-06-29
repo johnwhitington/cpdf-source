@@ -3400,6 +3400,89 @@ let set_pdf_info_xml_many only_when_present changes value xmldata pdf =
     !xmldata
 
 (* \section{Set an entry in the /Info dictionary} *)
+
+(* We must parse the date to get its components, then use strftime to build the
+ * new string in XMP format *)
+
+type date =
+  {mutable year : int;
+   mutable month : int; (* 1 - 12 *)
+   mutable day : int; (* 1 - 31 *)
+   mutable hour : int; (* 0 - 23 *)
+   mutable minute : int; (* 0 - 59 *)
+   mutable second : int; (* 0 - 59 *)
+   mutable ut_relationship : int; (* -1, 0, +1 *)
+   mutable offset_hours : int; (* 0 - 59 *)
+   mutable offset_minutes : int (* 0 - 59 *)}
+
+let default_date () =
+  {year = 0;
+   month = 1;
+   day = 1;
+   hour = 0;
+   minute = 0;
+   second = 0;
+   ut_relationship = 0;
+   offset_hours = 0;
+   offset_minutes = 0}
+
+let make_xmp_date_from_components d = ""
+
+let xmp_date date =
+  let d = default_date () in
+  try
+    match explode date with
+      'D'::':'::r ->
+        begin match r with
+          y1::y2::y3::y4::r ->
+            d.year <- 0;
+            begin match r with
+              m1::m2::r ->
+                d.month <- 0;
+                begin match r with
+                  d1::d2::r ->
+                  d.day <- 0;
+                  begin match r with
+                    h1::h2::r ->
+                    d.hour <- 0;
+                    begin match r with
+                      m1::m2::r ->
+                      d.minute <- 0;
+                      begin match r with
+                       s1::s2::r ->
+                       d.second <- 0;
+                         begin match r with
+                           o::r ->
+                           d.ut_relationship <- 0;
+                           begin match r with
+                             h1::h2::'\''::r ->
+                             d.offset_hours <- 0;
+                             begin match r with
+                               m1::m2::_ ->
+                               d.offset_minutes <- 0;
+                               raise Exit
+                             | _ -> raise Exit
+                             end
+                           | _ -> raise Exit
+                           end
+                         | _ -> raise Exit
+                         end
+                      | _ -> raise Exit
+                      end
+                    | _ -> raise Exit
+                    end
+                  | _ -> raise Exit
+                  end
+                | _ -> raise Exit
+                end
+            | _ -> raise Exit  
+            end
+        | _ -> failwith "xmp_date: Malformed date string (no year)"
+        end
+    | _ -> failwith "xmp_date: Malformed date string (no prefix)"
+  with
+    Exit -> make_xmp_date_from_components d
+
 let set_pdf_info ?(xmp_also=false) ?(xmp_also_when_present=false) ?(xmp_just_set=false) (key, value, version) pdf =
   let infodict =
     match Pdf.lookup_direct pdf "/Info" pdf.Pdf.trailerdict with
@@ -3419,17 +3502,18 @@ let set_pdf_info ?(xmp_also=false) ?(xmp_also_when_present=false) ?(xmp_just_set
           begin match get_metadata pdf with
             None -> pdf
           | Some xmldata ->
-              let changes =
+              let xmp_date = function Pdf.String s -> Pdf.String (xmp_date s) | _ -> failwith "xmp_date not a string" in
+              let changes, value =
                 match key with
-                | "/Producer" -> [(adobe, "Producer")]
-                | "/Creator" -> [(adobe, "Creator"); (xmp, "CreatorTool"); (dc, "creator")] 
-                | "/Author" -> [(adobe, "Author")]
-                | "/Title" -> [(adobe, "Title"); (dc, "title")]
-                | "/Subject" -> [(adobe, "Subject"); (dc, "subject")]
-                | "/Keywords" -> [(adobe, "Keywords")]
-                | "/CreationDate" -> [(adobe, "CreationDate"); (xmp, "CreateDate")] (* FIXME Fudge date format *)
-                | "/ModDate" -> [(adobe, "ModDate"); (xmp, "ModifyDate")] (* FIXME Fudge date format *)
-                | "/Trapped" -> [(adobe, "Trapped")]
+                | "/Producer" -> [(adobe, "Producer")], value
+                | "/Creator" -> [(adobe, "Creator"); (xmp, "CreatorTool"); (dc, "creator")], value
+                | "/Author" -> [(adobe, "Author")], value
+                | "/Title" -> [(adobe, "Title"); (dc, "title")], value
+                | "/Subject" -> [(adobe, "Subject"); (dc, "subject")], value
+                | "/Keywords" -> [(adobe, "Keywords")], value
+                | "/CreationDate" -> [(adobe, "CreationDate"); (xmp, "CreateDate")], xmp_date value
+                | "/ModDate" -> [(adobe, "ModDate"); (xmp, "ModifyDate")], xmp_date value
+                | "/Trapped" -> [(adobe, "Trapped")], value
                 | _ -> failwith "Unknown call to set_pdf_info"
               in
               let pdf =
