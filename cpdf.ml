@@ -3426,7 +3426,27 @@ let default_date () =
    offset_hours = 0;
    offset_minutes = 0}
 
-let make_xmp_date_from_components d = ""
+(* XMP date format is YYYY-MM-DDThh:mm:ssTZD *)
+let make_xmp_date_from_components d =
+  let tzd =
+    (if d.ut_relationship >=0 then "+" else "-") ^
+    Printf.sprintf "%2i" d.offset_hours ^
+    ":" ^
+    Printf.sprintf "%2i" d.offset_minutes
+  in 
+    Cpdfstrftime.strftime
+      ~time:{Unix.tm_sec = d.second;
+             Unix.tm_min = d.minute;
+             Unix.tm_hour = d.hour;
+             Unix.tm_mday = d.day;
+             Unix.tm_mon = d.month - 1;
+             Unix.tm_year = d.year - 1900;
+             Unix.tm_wday = 0;
+             Unix.tm_yday = 0;
+             Unix.tm_isdst = false}
+      "%Y-%m-%dT%H:%M:%S"
+  ^
+    tzd
 
 let xmp_date date =
   let d = default_date () in
@@ -3435,31 +3455,34 @@ let xmp_date date =
       'D'::':'::r ->
         begin match r with
           y1::y2::y3::y4::r ->
-            d.year <- 0;
+            d.year <- int_of_string (implode [y1; y2; y3; y4]);
             begin match r with
               m1::m2::r ->
-                d.month <- 0;
+                d.month <- int_of_string (implode [y1; y2]);
                 begin match r with
                   d1::d2::r ->
-                  d.day <- 0;
+                  d.day <- int_of_string (implode [d1; d2]);
                   begin match r with
                     h1::h2::r ->
-                    d.hour <- 0;
+                    d.hour <- int_of_string (implode [h1; h2]);
                     begin match r with
                       m1::m2::r ->
-                      d.minute <- 0;
+                      d.minute <- int_of_string (implode [m1; m2]);
                       begin match r with
                        s1::s2::r ->
-                       d.second <- 0;
+                       d.second <- int_of_string (implode [s1; s2]);
                          begin match r with
                            o::r ->
-                           d.ut_relationship <- 0;
+                           d.ut_relationship <-
+                             if o = '+' then 1 else
+                             if o = '-' then -1 else
+                             0;
                            begin match r with
                              h1::h2::'\''::r ->
-                             d.offset_hours <- 0;
+                             d.offset_hours <- int_of_string (implode [h1; h2]);
                              begin match r with
                                m1::m2::_ ->
-                               d.offset_minutes <- 0;
+                               d.offset_minutes <- int_of_string (implode [m1; m2]);
                                raise Exit
                              | _ -> raise Exit
                              end

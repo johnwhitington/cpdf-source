@@ -82,8 +82,10 @@ let strftime_pairs =
    "%p", strf_p; "%S", strf_S; "%T", strf_T; "%u", strf_u;
    "%w", strf_w; "%Y", strf_Y; "%%", strf_percent]
 
-let strftime text =
-  let time = Unix.localtime (Unix.gettimeofday ()) in
+let strftime ?time text =
+  let time =
+    match time with None -> Unix.localtime (Unix.gettimeofday ()) | Some t -> t
+  in
     let text = ref text in
       iter
         (fun (search, replace_fun) ->
