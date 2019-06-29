@@ -3399,6 +3399,9 @@ let set_pdf_info_xml_many only_when_present changes value xmldata pdf =
       changes;
     !xmldata
 
+(* Set metadata date *)
+let set_metadata_date pdf only_when_present date = pdf
+
 (* \section{Set an entry in the /Info dictionary} *)
 
 (* We must parse the date to get its components, then use strftime to build the
@@ -3429,10 +3432,11 @@ let default_date () =
 (* XMP date format is YYYY-MM-DDThh:mm:ssTZD *)
 let make_xmp_date_from_components d =
   let tzd =
+    if d.ut_relationship = 0 && d.offset_hours = 0 && d.offset_minutes = 0 then "Z" else
     (if d.ut_relationship >=0 then "+" else "-") ^
-    Printf.sprintf "%2i" d.offset_hours ^
+    Printf.sprintf "%02i" d.offset_hours ^
     ":" ^
-    Printf.sprintf "%2i" d.offset_minutes
+    Printf.sprintf "%02i" d.offset_minutes
   in 
     Cpdfstrftime.strftime
       ~time:{Unix.tm_sec = d.second;

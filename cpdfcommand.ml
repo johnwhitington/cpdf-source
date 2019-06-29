@@ -1589,6 +1589,9 @@ let setalsosetxmlwhenpresent () =
 let setjustsetxml () =
   args.justsetxml <- true
 
+let setsetmetadatadate d =
+  args.op <- Some (SetMetadataDate d)
+
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
   control_args := !control_args @ parse_control_file filename
@@ -2039,6 +2042,9 @@ and specs =
    ("-remove-metadata",
        Arg.Unit (setop RemoveMetadata),
        " Remove document metadata");
+   ("-set-metadata-date",
+       Arg.String setsetmetadatadate,
+       " Set the XMP metadata date property");
    ("-hide-toolbar",
       Arg.String hidetoolbar,
       " Hide the viewer's toolbar");
@@ -3698,7 +3704,7 @@ let go () =
                  ~xmp_just_set:args.justsetxml
                  (key, value, version) pdf)
   | Some (SetMetadataDate date) ->
-      failwith "SetMetadataDate unimplemented"
+      write_pdf false (Cpdf.set_metadata_date (get_single_pdf args.op false) date args.alsosetxmlwhenpresent)
   | Some ((HideToolbar _ | HideMenubar _ | HideWindowUI _
           | FitWindow _ | CenterWindow _ | DisplayDocTitle _) as op) ->
       begin match args.out with

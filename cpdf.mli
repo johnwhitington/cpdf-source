@@ -195,6 +195,8 @@ val get_metadata : Pdf.t -> Pdfio.bytes option
 (** Print metadate to stdout *)
 val print_metadata : Pdf.t -> unit
 
+val set_metadata_date : Pdf.t -> string -> bool -> Pdf.t
+
 (** {2 Stamping} *)
 
 (** [combine_pages fast under over scaletofit swap equalize] combines the page
