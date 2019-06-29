@@ -3399,8 +3399,6 @@ let set_pdf_info_xml_many only_when_present changes value xmldata pdf =
       changes;
     !xmldata
 
-(* Set metadata date *)
-let set_metadata_date pdf only_when_present date = pdf
 
 (* \section{Set an entry in the /Info dictionary} *)
 
@@ -3462,7 +3460,7 @@ let xmp_date date =
             d.year <- int_of_string (implode [y1; y2; y3; y4]);
             begin match r with
               m1::m2::r ->
-                d.month <- int_of_string (implode [y1; y2]);
+                d.month <- int_of_string (implode [m1; m2]);
                 begin match r with
                   d1::d2::r ->
                   d.day <- int_of_string (implode [d1; d2]);
@@ -3543,16 +3541,26 @@ let set_pdf_info ?(xmp_also=false) ?(xmp_also_when_present=false) ?(xmp_just_set
                 | "/Trapped" -> [(adobe, "Trapped")], value
                 | _ -> failwith "Unknown call to set_pdf_info"
               in
-              let pdf =
                 set_metadata_from_bytes
                   true
                   (set_pdf_info_xml_many xmp_also_when_present changes value xmldata pdf)
                   pdf
-              in
-                pdf
           end
        else
          pdf
+
+(* Set metadata date *)
+let set_metadata_date pdf date only_when_present =
+  match get_metadata pdf with
+    None -> pdf
+  | Some xmldata ->
+      let changes= [(xmp, "MetadataDate")] in
+      let value = match date with "now" -> xmp_date (expand_date "now") | x -> x in
+        set_metadata_from_bytes
+          true
+          (set_pdf_info_xml_many only_when_present changes (Pdf.String value) xmldata pdf)
+          pdf
+
 (* \section{Blacken text} *)
 
 (*
