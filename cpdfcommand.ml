@@ -400,7 +400,8 @@ type args =
    mutable padwith : string option;
    mutable alsosetxml : bool;
    mutable alsosetxmlwhenpresent : bool;
-   mutable justsetxml : bool}
+   mutable justsetxml : bool;
+   mutable gs_malformed : bool}
 
 let args =
   {op = None;
@@ -489,7 +490,8 @@ let args =
    padwith = None;
    alsosetxml = false;
    alsosetxmlwhenpresent = false;
-   justsetxml = false}
+   justsetxml = false;
+   gs_malformed = false}
 
 let reset_arguments () =
   args.op <- None;
@@ -554,7 +556,6 @@ let reset_arguments () =
   args.dashrange <- "all";
   args.outline <- false;
   args.linewidth <- 1.0;
-  args.path_to_ghostscript <- "";
   args.frombox <- None;
   args.tobox <- None;
   args.mediabox_if_missing <- false;
@@ -573,8 +574,9 @@ let reset_arguments () =
   args.alsosetxmlwhenpresent <- false;
   args.justsetxml <- false
   (* Do not reset original_filename or cpdflin or was_encrypted or
-   * was_decrypted_with_owner or recrypt or producer or creator, since we want
-   * these to work across ANDs. *)
+   * was_decrypted_with_owner or recrypt or producer or creator or
+   * path_to_ghostscript or gs_malformed, since we want these to work across
+   * ANDs. *)
 
 let get_pagespec () =
   match args.inputs with
@@ -1592,6 +1594,9 @@ let setjustsetxml () =
 let setsetmetadatadate d =
   args.op <- Some (SetMetadataDate d)
 
+let setgsmalformed () =
+  args.gs_malformed <- true
+
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
   control_args := !control_args @ parse_control_file filename
@@ -2165,6 +2170,8 @@ and specs =
    ("-list-spot-colors",
     Arg.Unit (setop ListSpotColours),
     " List spot colors");
+   ("-gs", Arg.String setgspath, " Path to gs executable");
+   ("-gs-malformed", Arg.Unit setgsmalformed, " Try to reconstruct malformed files with gs");
    ("-squeeze", Arg.Unit setsqueeze, " Squeeze");
    ("-squeeze-log-to", Arg.String setsqueezelogto, " Squeeze log location");
    (*These items are undocumented *)
@@ -2178,7 +2185,6 @@ and specs =
    ("-text-vertical", Arg.Unit setvertical, "");
    ("-text-vertical-down", Arg.Unit setverticaldown, "");
    ("-flat-kids", Arg.Unit setflatkids, "");
-   ("-gs", Arg.String setgspath, "");
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit setdebugcrypt, "");
    ("-debug-force", Arg.Unit setdebugforce, "");
@@ -2210,6 +2216,24 @@ let filesize name =
        r
   with
     _ -> 0
+
+(* Mend PDF file with Ghostscript. We use this if a file is malformed and CPDF
+ * cannot mend it. It is copied to a temporary file, fixed, then we return None or Some (pdf). *)
+let mend_pdf_file_with_ghostscript filename =
+  if args.path_to_ghostscript = "" then begin
+    Printf.eprintf "Please supply path to gs with -gs\n";
+  end;
+  Printf.eprintf "CPDF could not mend. Attempting to mend file with gs\n";
+  flush stderr;
+  let tmpout = Filename.temp_file "cpdf" ".pdf" in
+    let gscall =
+      args.path_to_ghostscript ^
+      " -dNOPAUSE -dQUIET -sDEVICE=pdfwrite -sOUTPUTFILE=" ^ tmpout ^
+      " -dBATCH " ^ filename
+    in
+      match Sys.command gscall with
+      | 0 -> Printf.eprintf "Succeeded!\n"; flush stderr; tmpout
+      | _ -> Printf.eprintf "Could not fix malformed PDF file, even with gs\n"; flush stderr; exit 2
 
 let pdf_of_stdin ?revision user_pw owner_pw =
   let user_pw = Some user_pw
@@ -2246,16 +2270,35 @@ let get_pdf_from_input_kind ((_, _, u, o, _, revision) as input) op = function
   | StdIn ->
       decrypt_if_necessary input op (pdf_of_stdin ?revision u o)
 
-let get_single_pdf op read_lazy =
+let rec get_single_pdf ?(fail=false) op read_lazy =
   match args.inputs with
-  | (InFile inname, _, u, o, _, revision) as input::_ ->
+  | (InFile inname, x, u, o, y, revision) as input::more ->
       if args.squeeze then
         Printf.printf "Initial file size is %i bytes\n" (filesize inname);
       let pdf =
-        if read_lazy then
-          pdfread_pdf_of_channel_lazy ?revision (optstring u) (optstring o) (open_in_bin inname)
-        else
-          pdfread_pdf_of_file ?revision (optstring u) (optstring o) inname
+        try 
+          if read_lazy then
+            pdfread_pdf_of_channel_lazy ?revision (optstring u) (optstring o) (open_in_bin inname)
+          else
+            pdfread_pdf_of_file ?revision (optstring u) (optstring o) inname
+        with
+          _ ->
+            if args.gs_malformed then
+              begin
+                if fail then begin
+                  (* Reconstructed with ghostscript, but then we couldn't read it even then. Do not loop. *)
+                  Printf.eprintf "Failed to read gs-reconstructed PDF even though gs succeeded\n";
+                  exit 2
+                end; 
+                let newname = mend_pdf_file_with_ghostscript inname in
+                  args.inputs <- (InFile newname, x, u, o, y, revision)::more;
+                  get_single_pdf ~fail:true op read_lazy 
+              end
+            else
+              begin
+                Printf.eprintf "Failed to read malformed PDF file. Consider using -gs-malformed\n";
+                exit 2
+              end
       in
         args.was_encrypted <- Pdfcrypt.is_encrypted pdf;
         decrypt_if_necessary input op pdf
@@ -2961,6 +3004,7 @@ let rec startends_of_range_inner pairs ls =
 
 let startends_of_range x =
   startends_of_range_inner [] x
+
 
 (* Calculating margins *)
 let calculate_margins filename pdf (s, e) =
