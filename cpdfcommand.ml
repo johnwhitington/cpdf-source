@@ -8,6 +8,12 @@ let version_date = "(devel, build of 4th June 2019)"
 open Pdfutil
 open Pdfio
 
+let tempfiles = ref []
+
+let exit n =
+  begin try List.iter Sys.remove !tempfiles with _ -> exit n end;
+  exit n
+
 let initial_file_size = ref 0
 
 let empty = Pdf.empty ()
@@ -2226,6 +2232,7 @@ let mend_pdf_file_with_ghostscript filename =
   Printf.eprintf "CPDF could not mend. Attempting to mend file with gs\n";
   flush stderr;
   let tmpout = Filename.temp_file "cpdf" ".pdf" in
+    tempfiles := tmpout::!tempfiles;
     let gscall =
       args.path_to_ghostscript ^
       " -dNOPAUSE -dQUIET -sDEVICE=pdfwrite -sOUTPUTFILE=" ^ tmpout ^
