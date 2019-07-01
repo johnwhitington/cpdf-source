@@ -179,6 +179,7 @@ type op =
   | ListSpotColours
   | RemoveClipping
   | SetMetadataDate of string
+  | CreateMetadata
 
 let string_of_op = function
   | CopyFont _ -> "CopyFont"
@@ -291,6 +292,7 @@ let string_of_op = function
   | RemoveTrim -> "RemoveTrim"
   | RemoveBleed -> "RemoveBleed"
   | SetMetadataDate _ -> "SetMetadataDate"
+  | CreateMetadata -> "CreateMetadata"
 
 (* Inputs: filename, pagespec. *)
 type input_kind =
@@ -405,7 +407,6 @@ type args =
    mutable extract_text_font_size : float option;
    mutable padwith : string option;
    mutable alsosetxml : bool;
-   mutable alsosetxmlwhenpresent : bool;
    mutable justsetxml : bool;
    mutable gs_malformed : bool}
 
@@ -495,7 +496,6 @@ let args =
    extract_text_font_size = None;
    padwith = None;
    alsosetxml = false;
-   alsosetxmlwhenpresent = false;
    justsetxml = false;
    gs_malformed = false}
 
@@ -577,7 +577,6 @@ let reset_arguments () =
   args.extract_text_font_size <- None;
   args.padwith <- None;
   args.alsosetxml <- false;
-  args.alsosetxmlwhenpresent <- false;
   args.justsetxml <- false
   (* Do not reset original_filename or cpdflin or was_encrypted or
    * was_decrypted_with_owner or recrypt or producer or creator or
@@ -652,7 +651,7 @@ let banned banlist = function
     AddText _|ScaleContents _|AttachFile _|CopyAnnotations _|SetMetadata _|
     ThinLines _|SetAuthor _|SetTitle _|SetSubject _|SetKeywords _|SetCreate _|
     SetModify _|SetCreator _|SetProducer _|SetVersion _|RemoveDictEntry _ |
-    RemoveClipping | SetMetadataDate _ ->
+    RemoveClipping | SetMetadataDate _ | CreateMetadata ->
       mem Pdfcrypt.NoEdit banlist
 
 let operation_allowed pdf banlist op =
@@ -1591,9 +1590,6 @@ let sethardbox box =
 let setalsosetxml () =
   args.alsosetxml <- true
 
-let setalsosetxmlwhenpresent () =
-  args.alsosetxmlwhenpresent <- true
-
 let setjustsetxml () =
   args.justsetxml <- true
 
@@ -2026,12 +2022,12 @@ and specs =
    ("-also-set-xml",
       Arg.Unit setalsosetxml,
       " Also set XML metadata");
-   ("-also-set-xml-when-present",
-      Arg.Unit setalsosetxmlwhenpresent,
-      " Also set XML metadata, but only if field already present");
    ("-just-set-xml",
       Arg.Unit setjustsetxml,
       " Just set XML metadata, not old-fashioned metadata");
+   ("-create-metadata",
+      Arg.Unit (setop CreateMetadata),
+      " Create XML metadata from scratch.");
    ("-set-page-layout",
       Arg.String setpagelayout,
       " Set page layout upon document opening");
@@ -3334,32 +3330,6 @@ let remove_clipping pdf range =
   in
     Cpdf.process_pages remove_clipping_page pdf range
 
-let change_font_size_ops (r, g, b) dx dy source_size target_size pdf resources content =
-  let ops = Pdfops.parse_operators pdf resources content in
-  let tr = Pdftransform.mktranslate dx dy in
-    let rec process a = function
-      Pdfops.Op_Tf (fontname, size)::t when fabs (size -. source_size) < 0.01 ->
-        process
-          (Pdfops.Op_rg (r, g, b)::Pdfops.Op_Tf (fontname, target_size)::Pdfops.Op_cm tr::a)
-          t
-    | h::t -> process (h::a) t
-    | [] -> rev a
-    in
-      [Pdfops.stream_of_ops (process [] ops)]
-
-let change_font_size pdf range (r, g, b) dx dy source_size target_size =
-  let change_font_size_page _ page =
-    let content' =
-      change_font_size_ops
-        (r, g, b) dx dy source_size target_size pdf
-        page.Pdfpage.resources page.Pdfpage.content
-    in
-      Cpdf.process_xobjects
-        pdf page (change_font_size_ops (r, g, b) dx dy source_size target_size);
-      {page with Pdfpage.content = content'}
-  in
-    Cpdf.process_pages change_font_size_page pdf range
-
 (* Main function *)
 let go () =
   match args.op with
@@ -3751,11 +3721,10 @@ let go () =
             write_pdf false
               (Cpdf.set_pdf_info 
                  ~xmp_also:args.alsosetxml
-                 ~xmp_also_when_present:args.alsosetxmlwhenpresent
                  ~xmp_just_set:args.justsetxml
                  (key, value, version) pdf)
   | Some (SetMetadataDate date) ->
-      write_pdf false (Cpdf.set_metadata_date (get_single_pdf args.op false) date args.alsosetxmlwhenpresent)
+      write_pdf false (Cpdf.set_metadata_date (get_single_pdf args.op false) date)
   | Some ((HideToolbar _ | HideMenubar _ | HideWindowUI _
           | FitWindow _ | CenterWindow _ | DisplayDocTitle _) as op) ->
       begin match args.out with
@@ -4200,6 +4169,9 @@ let go () =
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
           write_pdf false (remove_clipping pdf range)
+  | Some CreateMetadata ->
+      let pdf = get_single_pdf args.op false in
+        write_pdf false (Cpdf.create_metadata pdf)
 
 let parse_argv () =
   if args.debug then

@@ -4,6 +4,45 @@ open Pdfio
 
 let debug = ref false
 
+let xmp_template =
+{|<?xpacket begin='' id='W5M0MpCehiHzreSzNTczkc9d'?>
+
+<rdf:RDF xmlns:rdf='http://www.w3.org/1999/02/22-rdf-syntax-ns#'
+ xmlns:iX='http://ns.adobe.com/iX/1.0/'>
+
+ <rdf:Description about=''
+  xmlns='http://ns.adobe.com/pdf/1.3/'
+  xmlns:pdf='http://ns.adobe.com/pdf/1.3/'>
+  <pdf:CreationDate>CREATEDATE</pdf:CreationDate>
+  <pdf:ModDate>MODDATE</pdf:ModDate>
+  <pdf:Producer>PRODUCER</pdf:Producer>
+  <pdf:Creator>CREATOR</pdf:Creator>
+  <pdf:Title>TITLE</pdf:Title>
+  <pdf:Subject>SUBJECT</pdf:Subject>
+  <pdf:Author>AUTHOR</pdf:Author>
+  <pdf:Keywords>KEYWORDS</pdf:Keywords>
+  <pdf:Trapped>TRAPPED</pdf:Trapped>
+ </rdf:Description>
+
+ <rdf:Description about=''
+  xmlns='http://ns.adobe.com/xap/1.0/'
+  xmlns:xap='http://ns.adobe.com/xap/1.0/'>
+   <xap:CreateDate>CREATEDATE</xap:CreateDate>
+   <xap:CreatorTool>CREATOR</xap:CreatorTool>
+   <xap:ModifyDate>MODDATE</xap:ModifyDate>
+   <xap:MetadataDate>METADATADATE</xap:MetadataDate>
+ </rdf:Description>
+
+ <rdf:Description about=''
+  xmlns='http://purl.org/dc/elements/1.1/'
+  xmlns:dc='http://purl.org/dc/elements/1.1/'>
+   <dc:title>TITLE</dc:title>
+ </rdf:Description>
+
+</rdf:RDF>
+
+<?xpacket end='r'?>|}
+
 (* For debugging *)
 let report_pdf_size pdf =
   Pdf.remove_unreferenced pdf;
@@ -1170,6 +1209,8 @@ let set_metadata keepversion filename pdf =
         bset data x (input_byte ch)
       done;
       set_metadata_from_bytes keepversion data pdf
+
+
 
 (* \section{Remove metadata} *)
 let remove_metadata pdf =
@@ -3212,7 +3253,9 @@ let get_info raw pdf =
       match Pdf.lookup_direct pdf name infodict with
       | Some (Pdf.String s) ->
           if raw then s else crude_de_unicode s
-      | _ -> ""
+      | Some (Pdf.Boolean false) -> "False"
+      | Some (Pdf.Boolean true) -> "True"
+      | _ -> if name = "/Trapped" then "False" else ""
     in
       getstring
        
@@ -3225,7 +3268,9 @@ let get_info_utf8 pdf =
     (function name ->
       match Pdf.lookup_direct pdf name infodict with
       | Some (Pdf.String s) -> Pdftext.utf8_of_pdfdocstring s
-      | _ -> "")
+      | Some (Pdf.Boolean false) -> "False"
+      | Some (Pdf.Boolean true) -> "True"
+      | _ -> if name = "/Trapped" then "False" else "")
 
 let getstring encoding pdf =
   match encoding with
@@ -3244,7 +3289,8 @@ let output_info encoding pdf =
     Printf.printf "Creator: %s\n" (getstring "/Creator");
     Printf.printf "Producer: %s\n" (getstring "/Producer");
     Printf.printf "Created: %s\n" (getstring "/CreationDate");
-    Printf.printf "Modified: %s\n" (getstring "/ModDate")
+    Printf.printf "Modified: %s\n" (getstring "/ModDate");
+    Printf.printf "Trapped: %s\n" (getstring "/Trapped")
 
 type xmltree =
     E of Xmlm.tag * xmltree list
@@ -3353,7 +3399,6 @@ let output_xmp_info encoding pdf =
         try
           let dtd, tree = xmltree_of_bytes metadata in
             print_out tree "XMP pdf:Keywords" adobe "Keywords";
-            print_out tree "XMP pdf:PDFVersion" adobe "PDFVersion";
             print_out tree "XMP pdf:Producer" adobe "Producer";
             print_out tree "XMP pdf:Trapped" adobe "Trapped";
             print_out tree "XMP pdf:Title" adobe "Title";
@@ -3373,13 +3418,13 @@ let output_xmp_info encoding pdf =
           _ -> ()
 
 (* Set XMP info *)
-let rec set_xml_field only_when_present kind fieldname value = function
+let rec set_xml_field kind fieldname value = function
   D data -> D data
 | E (((n, n'), m), [D _]) when n = kind && n' = fieldname ->
     E (((n, n'), m), [D value])
-| E (x, ts) -> E (x, List.map (set_xml_field only_when_present kind fieldname value) ts)
+| E (x, ts) -> E (x, List.map (set_xml_field kind fieldname value) ts)
 
-let set_pdf_info_xml only_when_present kind fieldname value xmldata pdf =
+let set_pdf_info_xml kind fieldname value xmldata pdf =
   let dtd, tree = xmltree_of_bytes xmldata in
   let str =
     match value with
@@ -3388,14 +3433,14 @@ let set_pdf_info_xml only_when_present kind fieldname value xmldata pdf =
     | Pdf.Boolean false -> "False"
     | _ -> failwith "set_pdf_info_xml: not a string"
   in
-  let newtree = set_xml_field only_when_present kind fieldname str tree in
+  let newtree = set_xml_field kind fieldname str tree in
     bytes_of_xmltree (dtd, newtree)
 
-let set_pdf_info_xml_many only_when_present changes value xmldata pdf =
+let set_pdf_info_xml_many changes value xmldata pdf =
   let xmldata = ref xmldata in
     List.iter
       (fun (kind, fieldname) ->
-         xmldata := set_pdf_info_xml only_when_present kind fieldname value !xmldata pdf)
+         xmldata := set_pdf_info_xml kind fieldname value !xmldata pdf)
       changes;
     !xmldata
 
@@ -3508,7 +3553,7 @@ let xmp_date date =
   with
     Exit -> make_xmp_date_from_components d
 
-let set_pdf_info ?(xmp_also=false) ?(xmp_also_when_present=false) ?(xmp_just_set=false) (key, value, version) pdf =
+let set_pdf_info ?(xmp_also=false) ?(xmp_just_set=false) (key, value, version) pdf =
   let infodict =
     match Pdf.lookup_direct pdf "/Info" pdf.Pdf.trailerdict with
     | Some d -> d
@@ -3523,7 +3568,7 @@ let set_pdf_info ?(xmp_also=false) ?(xmp_also_when_present=false) ?(xmp_just_set
             pdf.Pdf.minor <-
               max pdf.Pdf.minor version
           end;
-        if xmp_also || xmp_also_when_present then
+        if xmp_also then
           begin match get_metadata pdf with
             None -> pdf
           | Some xmldata ->
@@ -3543,14 +3588,14 @@ let set_pdf_info ?(xmp_also=false) ?(xmp_also_when_present=false) ?(xmp_just_set
               in
                 set_metadata_from_bytes
                   true
-                  (set_pdf_info_xml_many xmp_also_when_present changes value xmldata pdf)
+                  (set_pdf_info_xml_many changes value xmldata pdf)
                   pdf
           end
        else
          pdf
 
 (* Set metadata date *)
-let set_metadata_date pdf date only_when_present =
+let set_metadata_date pdf date =
   match get_metadata pdf with
     None -> pdf
   | Some xmldata ->
@@ -3558,8 +3603,28 @@ let set_metadata_date pdf date only_when_present =
       let value = match date with "now" -> xmp_date (expand_date "now") | x -> x in
         set_metadata_from_bytes
           true
-          (set_pdf_info_xml_many only_when_present changes (Pdf.String value) xmldata pdf)
+          (set_pdf_info_xml_many changes (Pdf.String value) xmldata pdf)
           pdf
+
+let replacements pdf =
+  let info = get_info_utf8 pdf in
+    [("CREATEDATE", xmp_date (info "/CreationDate"));
+     ("MODDATE", xmp_date (info "/ModDate"));
+     ("PRODUCER", info "/Producer");
+     ("CREATOR", info "/Creator");
+     ("TITLE", info "/Title");
+     ("SUBJECT", info "/Subject");
+     ("AUTHOR", info "/Author");
+     ("KEYWORDS", info "/Keywords");
+     ("TRAPPED", info "/Trapped");
+     ("METADATADATE", xmp_date (expand_date "now"))]
+
+let create_metadata pdf =
+  let xmp = ref xmp_template in
+  List.iter
+    (fun (s, r) -> xmp := string_replace_all s r !xmp)
+    (replacements pdf);
+  set_metadata_from_bytes false (bytes_of_string !xmp) pdf
 
 (* \section{Blacken text} *)
 

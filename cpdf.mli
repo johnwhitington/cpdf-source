@@ -112,7 +112,7 @@ val copy_id : bool -> Pdf.t -> Pdf.t -> Pdf.t
 
 (** [set_pdf_info (key, value, version)] sets the entry [key] in the /Info directory, updating
 the PDF minor version to [version].*)
-val set_pdf_info : ?xmp_also:bool -> ?xmp_also_when_present:bool -> ?xmp_just_set:bool -> (string * Pdf.pdfobject * int) -> Pdf.t -> Pdf.t
+val set_pdf_info : ?xmp_also:bool -> ?xmp_just_set:bool -> (string * Pdf.pdfobject * int) -> Pdf.t -> Pdf.t
 
 (** [set_pdf_info (key, value, version)] sets the entry [key] in the
 /ViewerPreferences directory, updating the PDF minor version to [version].*)
@@ -195,7 +195,11 @@ val get_metadata : Pdf.t -> Pdfio.bytes option
 (** Print metadate to stdout *)
 val print_metadata : Pdf.t -> unit
 
-val set_metadata_date : Pdf.t -> string -> bool -> Pdf.t
+(** Set the metadata date *)
+val set_metadata_date : Pdf.t -> string -> Pdf.t
+
+(** Create XMP metadata from scratch *)
+val create_metadata : Pdf.t -> Pdf.t
 
 (** {2 Stamping} *)
 
