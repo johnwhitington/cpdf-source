@@ -92,6 +92,7 @@ type op =
   | PadAfter
   | PadEvery of int
   | PadMultiple of int
+  | PadMultipleBefore of int
   | Shift
   | Scale
   | ScaleToFit
@@ -205,6 +206,7 @@ let string_of_op = function
   | PadAfter -> "PadAfter"
   | PadEvery _ -> "PadEvery"
   | PadMultiple _ -> "PadMultiple"
+  | PadMultipleBefore _ -> "PadMultipleBefore"
   | Shift -> "Shift"
   | Scale -> "Scale"
   | ScaleToFit -> "ScaleToFit"
@@ -636,7 +638,7 @@ let banned banlist = function
   | Decrypt | Encrypt | CombinePages _ -> true (* Never allowed *)
   (* ISO says Noextract no longer relevent, due to accessibility concerns *)
   (*| ExtractText | ExtractImages | ExtractFontFile -> mem Pdfcrypt.NoExtract banlist*)
-  | AddBookmarks _ | PadBefore | PadAfter | PadEvery _ | PadMultiple _
+  | AddBookmarks _ | PadBefore | PadAfter | PadEvery _ | PadMultiple _ | PadMultipleBefore _
   | Merge | Split | SplitOnBookmarks _ | RotateContents _ | Rotate _
   | Rotateby _ | Upright | VFlip | HFlip | SetPageLayout _
   | SetPageMode _ | HideToolbar _ | HideMenubar _ | HideWindowUI _
@@ -1433,6 +1435,9 @@ let setpadwith filename =
 let setpadmultiple i =
   args.op <- Some (PadMultiple i)
 
+let setpadmultiplebefore i =
+  args.op <- Some (PadMultipleBefore i)
+
 let setfast () =
   args.fast <- true
 
@@ -1971,6 +1976,9 @@ and specs =
    ("-pad-multiple",
       Arg.Int setpadmultiple,
       " Pad the document to a multiple of n pages");
+   ("-pad-multiple-before",
+      Arg.Int setpadmultiplebefore,
+      " Pad the document at beginning to a multiple of n pages");
    ("-list-annotations",
       Arg.Unit (setop ListAnnotations),
       " List annotations");
@@ -3980,6 +3988,9 @@ let go () =
   | Some (PadMultiple n) ->
       let pdf = get_single_pdf args.op false in
         write_pdf false (Cpdf.padmultiple n pdf)
+  | Some (PadMultipleBefore n) ->
+      let pdf = get_single_pdf args.op false in
+        write_pdf false (Cpdf.padmultiple (-n) pdf)
   | Some Draft ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in

@@ -2156,6 +2156,7 @@ let padbefore ?padwith range pdf =
     pad padwith (map pred range) pdf true
 
 let padmultiple n pdf =
+  let neg, n = n < 0, if n < 0 then -n else n in
   let pages = Pdfpage.pages_of_pagetree pdf in
     let len = length pages in
       let pages_to_add = if len / n * n = len then 0 else n - (len mod n) in
@@ -2166,11 +2167,11 @@ let padmultiple n pdf =
                Pdfpage.mediabox = (select len pages).Pdfpage.mediabox;
                Pdfpage.resources = Pdf.Dictionary [];
                Pdfpage.rotate = (select len pages).Pdfpage.rotate;
-               Pdfpage.rest = (select len pages).Pdfpage.rest}
+               Pdfpage.rest = Pdf.Dictionary []}
               pages_to_add
           in
             let changes = map (fun x -> (x, x)) (ilist 1 (length pages)) in
-              Pdfpage.change_pages ~changes true pdf (pages @ blankpages)
+              Pdfpage.change_pages ~changes true pdf (if neg then blankpages @ pages else pages @ blankpages)
         else
           pdf
 
