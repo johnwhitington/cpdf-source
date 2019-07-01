@@ -1317,40 +1317,6 @@ let get_bookmark_name pdf marks splitlevel n _ =
   | {Pdfmarks.text = title}::_ -> remove_unsafe_characters title
   | _ -> ""
 
-(* @F means filename without extension *)
-(* @N means sequence number with no padding *)
-(* @S means start page of this section *)
-(* @E means end page of this section *)
-(* @B means bookmark name at start page *)
-let process_others marks pdf splitlevel filename sequence startpage endpage s =
-  let rec procss prev = function
-    | [] -> rev prev
-    | '@'::'F'::t -> procss (rev (explode filename) @ prev) t
-    | '@'::'N'::t -> procss (rev (explode (string_of_int sequence)) @ prev) t
-    | '@'::'S'::t -> procss (rev (explode (string_of_int startpage)) @ prev) t
-    | '@'::'E'::t -> procss (rev (explode (string_of_int endpage)) @ prev) t
-    | '@'::'B'::t -> procss (rev (explode (get_bookmark_name pdf marks splitlevel startpage pdf)) @ prev) t
-    | h::t -> procss (h::prev) t
-  in
-     implode (procss [] (explode s))
-
-let name_of_spec marks (pdf : Pdf.t) splitlevel spec n filename startpage endpage =
-  let fill l n =
-    let chars = explode (string_of_int n) in
-      if length chars > l
-        then implode (drop chars (length chars - l))
-        else implode ((many '0' (l - length chars)) @ chars)
-  in
-    let chars = explode spec in
-      let before, including = cleavewhile (neq '%') chars in
-        let percents, after = cleavewhile (eq '%') including in
-          if percents = []
-            then
-              process_others marks pdf splitlevel filename n startpage endpage spec
-            else
-              process_others marks pdf splitlevel filename n startpage endpage
-              (implode before ^ fill (length percents) n ^ implode after)
-
 (* Find the stem of a filename *)
 let stem s =
   implode (rev (tail_no_fail (dropwhile (neq '.') (rev (explode (Filename.basename s))))))

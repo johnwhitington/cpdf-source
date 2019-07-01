@@ -2515,16 +2515,42 @@ let get_bookmark_name pdf marks splitlevel n _ =
 (* @E means end page of this section *)
 (* @B means bookmark name at start page *)
 let process_others marks pdf splitlevel filename sequence startpage endpage s =
-  let rec procss prev = function
-    | [] -> rev prev
-    | '@'::'F'::t -> procss (rev (explode filename) @ prev) t
-    | '@'::'N'::t -> procss (rev (explode (string_of_int sequence)) @ prev) t
-    | '@'::'S'::t -> procss (rev (explode (string_of_int startpage)) @ prev) t
-    | '@'::'E'::t -> procss (rev (explode (string_of_int endpage)) @ prev) t
-    | '@'::'B'::t -> procss (rev (explode (get_bookmark_name pdf marks splitlevel startpage pdf)) @ prev) t
-    | h::t -> procss (h::prev) t
+  let rec find_ats p = function
+    '@'::r -> find_ats (p + 1) r
+  | r -> (p, r)
   in
-     implode (procss [] (explode s))
+  let string_of_int_width w i =
+    if w < 0 then raise (Pdf.PDFError "width of field too narrow")
+    else if w > 8 then raise (Pdf.PDFError "width of field too broad") else
+      let formats =
+        [|format_of_string "%i";
+          format_of_string "%i";
+          format_of_string "%02i";
+          format_of_string "%03i";
+          format_of_string "%04i";
+          format_of_string "%05i";
+          format_of_string "%06i";
+          format_of_string "%07i";
+          format_of_string "%08i"|]
+      in
+        Printf.sprintf formats.(w) i
+  in
+    let rec procss prev = function
+      | [] -> rev prev
+      | '@'::'F'::t -> procss (rev (explode filename) @ prev) t
+      | '@'::'N'::t ->
+          let width, rest = find_ats 0 t in
+            procss (rev (explode (string_of_int_width width sequence)) @ prev) rest
+      | '@'::'S'::t ->
+          let width, rest = find_ats 0 t in
+            procss (rev (explode (string_of_int_width width startpage)) @ prev) rest
+      | '@'::'E'::t ->
+          let width, rest = find_ats 0 t in
+            procss (rev (explode (string_of_int_width width endpage)) @ prev) rest
+      | '@'::'B'::t -> procss (rev (explode (get_bookmark_name pdf marks splitlevel startpage pdf)) @ prev) t
+      | h::t -> procss (h::prev) t
+    in
+       implode (procss [] (explode s))
 
 let name_of_spec marks (pdf : Pdf.t) splitlevel spec n filename startpage endpage =
   let fill l n =
@@ -2739,7 +2765,7 @@ let extract_images pdf range stem =
                (let names =
                  map
                    (function n ->
-                      let r = Cpdf.name_of_spec [] pdf 0 ("p" ^ string_of_int pnum ^ "_" ^ stem) n "" 0 0 in r)
+                      let r = name_of_spec [] pdf 0 ("p" ^ string_of_int pnum ^ "_" ^ stem) n "" 0 0 in r)
                    (indx images)
                in
                  iter2 (write_image pdf page.Pdfpage.resources) names images))
@@ -2757,7 +2783,6 @@ let getencryption pdf =
   | Some (Pdfwrite.AES256bit false) -> "256bit AES, Metadata not encrypted"
   | Some (Pdfwrite.AES256bitISO true) -> "256bit AES ISO, Metadata encrypted"
   | Some (Pdfwrite.AES256bitISO false) -> "256bit AES ISO, Metadata not encrypted"
-
 
 (* If a cropbox exists, make it the mediabox. If not, change nothing. *)
 let copy_cropbox_to_mediabox pdf range =

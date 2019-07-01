@@ -80,22 +80,6 @@ val validate_pagespec : string -> bool
 
 val parse_pagespec_without_pdf : string -> int list
 
-(** [name_of_spec printf marks pdf splitlevel spec n filename startpage
-endpage] makes format substitutions in [spec] to make an output file name:
-
-{ul
-{- @F will be replaced by [filename]}
-{- @N will be replace by the current sequence number [n], [n+1] etc.}
-{- @S will be replace by the start page}
-{- @E will be replace by the end page}
-{- @B will be replace by the bookmark name in [marks] at the given level [splitlevel]}
-}
-[printf] is undocumented and should be set to [false].
-*)
-val name_of_spec : Pdfmarks.t list -> Pdf.t -> int -> string -> int -> string -> int -> int -> string
-
-(** {2 Compress and Decompress} *)
-
 (** Compresses all streams in the PDF document which are uncompressed, using
 /FlateDecode, leaving out metadata.  If the PDF is encrypted, does nothing. *)
 val recompress_pdf : Pdf.t -> Pdf.t
