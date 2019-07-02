@@ -2246,17 +2246,25 @@ let mend_pdf_file_with_ghostscript filename =
       | 0 -> Printf.eprintf "Succeeded!\n"; flush stderr; tmpout
       | _ -> Printf.eprintf "Could not fix malformed PDF file, even with gs\n"; flush stderr; exit 2
 
+exception StdInBytes of bytes
+
 let pdf_of_stdin ?revision user_pw owner_pw =
-  let user_pw = Some user_pw
-  and owner_pw = if owner_pw = "" then None else Some owner_pw in
-    let o, bytes = Pdfio.input_output_of_bytes 16384 in
-      try
-        while true do o.Pdfio.output_char (input_char stdin) done;
-        Pdf.empty ()
-      with
-        End_of_file ->
-          let i = Pdfio.input_of_bytes (Pdfio.extract_bytes_from_input_output o bytes) in
-            pdfread_pdf_of_input ?revision user_pw owner_pw i
+  let rbytes = ref (mkbytes 0) in
+  try 
+    let user_pw = Some user_pw
+    and owner_pw = if owner_pw = "" then None else Some owner_pw in
+      let o, bytes = Pdfio.input_output_of_bytes 16384 in
+        try
+          while true do o.Pdfio.output_char (input_char stdin) done;
+          Pdf.empty ()
+        with
+          End_of_file ->
+            let thebytes = Pdfio.extract_bytes_from_input_output o bytes in
+            rbytes := thebytes;
+            let i = Pdfio.input_of_bytes thebytes in
+              pdfread_pdf_of_input ?revision user_pw owner_pw i
+   with
+     _ -> raise (StdInBytes !rbytes)
 
 let filenames = null_hash ()
 
@@ -2282,6 +2290,17 @@ let get_pdf_from_input_kind ((_, _, u, o, _, revision) as input) op = function
       decrypt_if_necessary input op (pdf_of_stdin ?revision u o)
 
 let rec get_single_pdf ?(fail=false) op read_lazy =
+  let failout () =
+    if fail then begin
+      (* Reconstructed with ghostscript, but then we couldn't read it even then. Do not loop. *)
+      Printf.eprintf "Failed to read gs-reconstructed PDF even though gs succeeded\n";
+      exit 2
+    end
+  in
+  let warn_gs () =
+    Printf.eprintf "Failed to read malformed PDF file. Consider using -gs-malformed\n";
+    exit 2
+  in
   match args.inputs with
   | (InFile inname, x, u, o, y, revision) as input::more ->
       if args.squeeze then
@@ -2296,25 +2315,37 @@ let rec get_single_pdf ?(fail=false) op read_lazy =
           _ ->
             if args.gs_malformed then
               begin
-                if fail then begin
-                  (* Reconstructed with ghostscript, but then we couldn't read it even then. Do not loop. *)
-                  Printf.eprintf "Failed to read gs-reconstructed PDF even though gs succeeded\n";
-                  exit 2
-                end; 
+                failout ();
                 let newname = mend_pdf_file_with_ghostscript inname in
                   args.inputs <- (InFile newname, x, u, o, y, revision)::more;
                   get_single_pdf ~fail:true op read_lazy 
               end
             else
-              begin
-                Printf.eprintf "Failed to read malformed PDF file. Consider using -gs-malformed\n";
-                exit 2
-              end
+              warn_gs ()
       in
         args.was_encrypted <- Pdfcrypt.is_encrypted pdf;
         decrypt_if_necessary input op pdf
-  | (StdIn, _, u, o, _, revision) as input::_ ->
-      decrypt_if_necessary input op (pdf_of_stdin ?revision u o)
+  | (StdIn, x, u, o, y, revision) as input::more ->
+      let pdf =
+        try pdf_of_stdin ?revision u o with
+          StdInBytes b ->
+            if args.gs_malformed then
+              begin
+                failout ();
+                let inname = Filename.temp_file "cpdf" ".pdf" in
+                tempfiles := inname::!tempfiles;
+                let fh = open_out_bin inname in
+                Pdfio.bytes_to_output_channel fh b;
+                close_out fh;
+                let newname = mend_pdf_file_with_ghostscript inname in
+                args.inputs <- (InFile newname, x, u, o, y, revision)::more;
+                get_single_pdf ~fail:true op read_lazy
+              end
+            else
+              warn_gs ()
+      in
+        args.was_encrypted <- Pdfcrypt.is_encrypted pdf;
+        decrypt_if_necessary input op pdf
   | (AlreadyInMemory pdf, _, _, _, _, _)::_ -> pdf
   | _ ->
       raise (Arg.Bad "cpdf: No input specified.\n")
@@ -4269,7 +4300,8 @@ let go_withargv argv =
              output_pdfs := [];
              go ())
          sets;
-      flush stdout (*r for Windows *)
+      flush stdout; (*r for Windows *)
+      exit 0
   with
   | Arg.Bad s ->
       prerr_string
