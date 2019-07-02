@@ -2334,7 +2334,7 @@ let filenames = null_hash ()
 
 (* This now memoizes on the name of the file to make sure we only load each
 file once *)
-let rec get_pdf_from_input_kind ?(decrypt=true) ?(fail=false) ((_, x, u, o, y, revision) as input) op ik =
+let rec get_pdf_from_input_kind ?(read_lazy=false) ?(decrypt=true) ?(fail=false) ((_, x, u, o, y, revision) as input) op ik =
   let failout () =
     if fail then begin
       (* Reconstructed with ghostscript, but then we couldn't read it even then. Do not loop. *)
@@ -2358,7 +2358,12 @@ let rec get_pdf_from_input_kind ?(decrypt=true) ?(fail=false) ((_, x, u, o, y, r
       begin try Hashtbl.find filenames s with
         Not_found ->
           let pdf =
-            try pdfread_pdf_of_file ?revision (optstring u) (optstring o) s with
+            try
+              if read_lazy then
+                pdfread_pdf_of_channel_lazy ?revision (optstring u) (optstring o) (open_in_bin s)
+              else
+                pdfread_pdf_of_file ?revision (optstring u) (optstring o) s
+            with
               _ ->
                 if args.gs_malformed then
                   begin
@@ -3548,7 +3553,7 @@ let go () =
   | Some CountPages ->
       begin match args.inputs with
        [(ik, _, _, _, _, _) as input] ->
-         let pdf = get_pdf_from_input_kind ~decrypt:false input (Some CountPages) ik in
+         let pdf = get_pdf_from_input_kind ~read_lazy:true ~decrypt:false input (Some CountPages) ik in
            output_page_count pdf
       | _ -> raise (Arg.Bad "CountPages: must have a single input file only")
       end
@@ -3572,21 +3577,15 @@ let go () =
       | _ -> error "Clean: No output specified"
       end
   | Some Info ->
-      let pdf, inname, input =
-        match args.inputs with
-        | (InFile inname, _, u, o, _, revision) as input::_ ->
-             pdfread_pdf_of_channel_lazy ?revision (optstring u) (optstring o) (open_in_bin inname), inname, input
-        | (StdIn, _, u, o, _, revision) as input::_ -> pdf_of_stdin ?revision u o, "", input
-        | (AlreadyInMemory pdf, _, _, _, _, _) as input::_ -> pdf, "", input
-        | _ -> raise (Arg.Bad "cpdf: No input specified.\n")
-      in
-        Printf.printf "Encryption: %s\n" (getencryption pdf);
-        Printf.printf "Permissions: %s\n" (getpermissions pdf);
-        if inname <> "" then
-          Printf.printf "Linearized: %b\n" (Pdfread.is_linearized (Pdfio.input_of_channel (open_in_bin inname)));
-        let pdf = decrypt_if_necessary input (Some Info) pdf in
-          Cpdf.output_info args.encoding pdf;
-          Cpdf.output_xmp_info args.encoding pdf
+      let pdf = get_single_pdf ~decrypt:true (Some Info) true in
+      let inname = match args.inputs with (InFile x, _, _, _, _, _)::_ -> x | _ -> "" in
+      Printf.printf "Encryption: %s\n" (getencryption pdf);
+      Printf.printf "Permissions: %s\n" (getpermissions pdf);
+      if inname <> "" then
+        Printf.printf "Linearized: %b\n" (Pdfread.is_linearized (Pdfio.input_of_channel (open_in_bin inname)));
+      let pdf = decrypt_if_necessary (List.hd args.inputs) (Some Info) pdf in
+        Cpdf.output_info args.encoding pdf;
+        Cpdf.output_xmp_info args.encoding pdf
   | Some PageInfo ->
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
