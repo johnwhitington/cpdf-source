@@ -181,6 +181,7 @@ type op =
   | RemoveClipping
   | SetMetadataDate of string
   | CreateMetadata
+  | EmbedMissingFonts
 
 let string_of_op = function
   | CopyFont _ -> "CopyFont"
@@ -295,6 +296,7 @@ let string_of_op = function
   | RemoveBleed -> "RemoveBleed"
   | SetMetadataDate _ -> "SetMetadataDate"
   | CreateMetadata -> "CreateMetadata"
+  | EmbedMissingFonts -> "EmbedMissingFonts"
 
 (* Inputs: filename, pagespec. *)
 type input_kind =
@@ -631,7 +633,7 @@ let banned banlist = function
   | ListBookmarks | ImageResolution _ | MissingFonts
   | PrintPageLabels | Clean | Compress | Decompress
   | RemoveUnusedResources | ChangeId | CopyId _ | ListSpotColours | Version
-  | DumpAttachedFiles | RemoveMetadata -> false (* Always allowed *)
+  | DumpAttachedFiles | RemoveMetadata | EmbedMissingFonts -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
   | ExtractText | ExtractImages | ExtractFontFile
@@ -1952,6 +1954,9 @@ and specs =
    ("-relative-to-cropbox",
       Arg.Unit setrelativetocropbox,
       " Add text relative to Crop Box not Media Box");
+   ("-embed-missing-fonts",
+      Arg.Unit (setop EmbedMissingFonts),
+      " Embed missing fonts by calling gs");
    ("-prerotate",
       Arg.Unit setprerotate,
       " Calls -upright on pages before adding text");
@@ -2226,6 +2231,20 @@ let filesize name =
        r
   with
     _ -> 0
+
+(* Embed missing fonts with Ghostscript. *)
+let embed_missing_fonts fi fo =
+  if args.path_to_ghostscript = "" then begin
+    Printf.eprintf "Please supply path to gs with -gs\n";
+  end;
+    let gscall =
+      args.path_to_ghostscript ^
+      " -dNOPAUSE -dQUIET -sDEVICE=pdfwrite -sOUTPUTFILE=" ^ fo ^
+      " -dBATCH " ^ fi
+    in
+      match Sys.command gscall with
+      | 0 -> exit 0
+      | _ -> Printf.eprintf "Font embedding failed.\n"; exit 2
 
 (* Mend PDF file with Ghostscript. We use this if a file is malformed and CPDF
  * cannot mend it. It is copied to a temporary file, fixed, then we return None or Some (pdf). *)
@@ -4262,6 +4281,18 @@ let go () =
   | Some CreateMetadata ->
       let pdf = get_single_pdf args.op false in
         write_pdf false (Cpdf.create_metadata pdf)
+  | Some EmbedMissingFonts ->
+      let fi =
+        match args.inputs with
+          [(InFile fi, _, _, _, _, _)] -> fi
+        | _ -> error "Input method not supported for -embed-missing-fonts"
+      in
+      let fo =
+        match args.out with
+          File fo -> fo
+        | _ -> error "Output method not supported for -embed-missing-fonts"
+      in
+        embed_missing_fonts fi fo
 
 let parse_argv () =
   if args.debug then
