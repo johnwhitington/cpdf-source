@@ -984,7 +984,9 @@ let rec verify_bookmarks pdf lastlevel fastrefnums endpage = function
 let verify_bookmarks pdf lastlevel endpage marks =
   let refnums = Pdf.page_reference_numbers pdf in
   let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
-    verify_bookmarks pdf lastlevel fastrefnums endpage marks
+    match marks with
+    | [] -> true
+    | m::more -> m.Pdfmarks.level = 0 && verify_bookmarks pdf lastlevel fastrefnums endpage more
 
 (* Parse a line of the bookmarks file. *)
 
