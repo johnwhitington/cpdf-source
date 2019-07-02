@@ -2266,30 +2266,7 @@ let pdf_of_stdin ?revision user_pw owner_pw =
    with
      _ -> raise (StdInBytes !rbytes)
 
-let filenames = null_hash ()
-
-(* This now memoizes on the name of the file to make sure we only load each
-file once *)
-let get_pdf_from_input_kind ((_, _, u, o, _, revision) as input) op = function
-  | AlreadyInMemory pdf -> pdf
-  | InFile s ->
-      if args.squeeze then
-        begin
-          let size = filesize s in
-            initial_file_size := size;
-            if !logto = None then Printf.printf "Initial file size is %i bytes\n" size
-        end;
-      begin try Hashtbl.find filenames s with
-        Not_found ->
-          let pdf = pdfread_pdf_of_file ?revision (optstring u) (optstring o) s in
-            args.was_encrypted <- Pdfcrypt.is_encrypted pdf;
-            let pdf = decrypt_if_necessary input op pdf in
-              Hashtbl.add filenames s pdf; pdf
-      end
-  | StdIn ->
-      decrypt_if_necessary input op (pdf_of_stdin ?revision u o)
-
-let rec get_single_pdf ?(fail=false) op read_lazy =
+let rec get_single_pdf ?(decrypt=true) ?(fail=false) op read_lazy =
   let failout () =
     if fail then begin
       (* Reconstructed with ghostscript, but then we couldn't read it even then. Do not loop. *)
@@ -2324,7 +2301,7 @@ let rec get_single_pdf ?(fail=false) op read_lazy =
               warn_gs ()
       in
         args.was_encrypted <- Pdfcrypt.is_encrypted pdf;
-        decrypt_if_necessary input op pdf
+        if decrypt then decrypt_if_necessary input op pdf else pdf
   | (StdIn, x, u, o, y, revision) as input::more ->
       let pdf =
         try pdf_of_stdin ?revision u o with
@@ -2345,24 +2322,77 @@ let rec get_single_pdf ?(fail=false) op read_lazy =
               warn_gs ()
       in
         args.was_encrypted <- Pdfcrypt.is_encrypted pdf;
-        decrypt_if_necessary input op pdf
+        if decrypt then decrypt_if_necessary input op pdf else pdf
   | (AlreadyInMemory pdf, _, _, _, _, _)::_ -> pdf
   | _ ->
       raise (Arg.Bad "cpdf: No input specified.\n")
 
 let get_single_pdf_nodecrypt read_lazy =
-  match args.inputs with
-  | (InFile inname, _, u, o, _, revision)::_ ->
+  get_single_pdf ~decrypt:false None read_lazy 
+
+let filenames = null_hash ()
+
+(* This now memoizes on the name of the file to make sure we only load each
+file once *)
+let rec get_pdf_from_input_kind ?(decrypt=true) ?(fail=false) ((_, x, u, o, y, revision) as input) op ik =
+  let failout () =
+    if fail then begin
+      (* Reconstructed with ghostscript, but then we couldn't read it even then. Do not loop. *)
+      Printf.eprintf "Failed to read gs-reconstructed PDF even though gs succeeded\n";
+      exit 2
+    end
+  in
+  let warn_gs () =
+    Printf.eprintf "Failed to read malformed PDF file. Consider using -gs-malformed\n";
+    exit 2
+  in
+  match ik with
+  | AlreadyInMemory pdf -> pdf
+  | InFile s ->
       if args.squeeze then
-        Printf.printf "Initial file size is %i bytes\n" (filesize inname);
-        if read_lazy then
-          pdfread_pdf_of_channel_lazy ?revision (optstring u) (optstring o) (open_in_bin inname)
-        else
-          pdfread_pdf_of_file ?revision (optstring u) (optstring o) inname
-  | (StdIn, _, u, o, _, revision)::_ -> pdf_of_stdin ?revision u o
-  | (AlreadyInMemory pdf, _, _, _, _, _)::_ -> pdf
-  | _ ->
-      raise (Arg.Bad "cpdf: No input specified.\n")
+        begin
+          let size = filesize s in
+            initial_file_size := size;
+            if !logto = None then Printf.printf "Initial file size is %i bytes\n" size
+        end;
+      begin try Hashtbl.find filenames s with
+        Not_found ->
+          let pdf =
+            try pdfread_pdf_of_file ?revision (optstring u) (optstring o) s with
+              _ ->
+                if args.gs_malformed then
+                  begin
+                    failout ();
+                    let newname = mend_pdf_file_with_ghostscript s in
+                      get_pdf_from_input_kind ~fail:true (InFile newname, x, u, o, y, revision) op (InFile newname);
+                  end
+                else
+                  warn_gs ()
+          in
+            args.was_encrypted <- Pdfcrypt.is_encrypted pdf;
+            let pdf = if decrypt then decrypt_if_necessary input op pdf else pdf in
+              Hashtbl.add filenames s pdf; pdf
+      end
+  | StdIn ->
+      let pdf =
+        try pdf_of_stdin ?revision u o with
+          StdInBytes b ->
+            if args.gs_malformed then
+              begin
+                failout ();
+                let inname = Filename.temp_file "cpdf" ".pdf" in
+                tempfiles := inname::!tempfiles;
+                let fh = open_out_bin inname in
+                Pdfio.bytes_to_output_channel fh b;
+                close_out fh;
+                let newname = mend_pdf_file_with_ghostscript inname in
+                get_pdf_from_input_kind ~fail:true (InFile newname, x, u, o, y, revision) op (InFile newname);
+              end
+            else
+              warn_gs ()
+      in
+        args.was_encrypted <- Pdfcrypt.is_encrypted pdf;
+        if decrypt then decrypt_if_necessary input op pdf else pdf
 
 let rec unescape_octals prev = function
   | [] -> rev prev
@@ -3516,18 +3546,12 @@ let go () =
       | _ -> error "extract fontfile: bad command line"
       end 
   | Some CountPages ->
-      let pdf, inname, input =
-        match args.inputs with
-        | (InFile inname, _, u, o, _, revision) as input::_ ->
-             pdfread_pdf_of_channel_lazy ?revision (optstring u) (optstring o) (open_in_bin inname), inname, input
-        | (StdIn, _, u, o, _, revision) as input::_ -> pdf_of_stdin ?revision u o, "", input
-        | (AlreadyInMemory pdf, _, _, _, _, _) as input::_ -> pdf, "", input
-        | _ -> raise (Arg.Bad "cpdf: No input specified.\n")
-      in
-        (*let pdf = decrypt_if_necessary input (Some CountPages) pdf in*)
-        (* 3/11/2016. We removed decryption here, because it doesn't seem necessary. Put
-         * back in on counterexample *)
-          output_page_count pdf
+      begin match args.inputs with
+       [(ik, _, _, _, _, _) as input] ->
+         let pdf = get_pdf_from_input_kind ~decrypt:false input (Some CountPages) ik in
+           output_page_count pdf
+      | _ -> raise (Arg.Bad "CountPages: must have a single input file only")
+      end
   | Some Revisions ->
       let input =
         match args.inputs with
