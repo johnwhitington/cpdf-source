@@ -1271,6 +1271,7 @@ let list_bookmarks encoding range pdf output =
       let bookmarks = Pdfmarks.read_bookmarks pdf in
       let refnums = Pdf.page_reference_numbers pdf in
       let rangetable = hashset_of_list range in
+      let range_is_all = range = ilist 1 (Pdfpage.endpage pdf) in
       let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
         (* Find the pagenumber of each bookmark target. If it is in the range,
          * keep that bookmark. Also keep the bookmark if its target is the null
@@ -1278,6 +1279,7 @@ let list_bookmarks encoding range pdf output =
         let inrange =
           keep
             (function x ->
+               range_is_all || 
                x.Pdfmarks.target = Pdfdest.NullDestination ||
                (match x.Pdfmarks.target with Pdfdest.NamedDestinationElsewhere _ -> true | _ -> false) ||
                Hashtbl.mem rangetable (Pdfpage.pagenumber_of_target ~fastrefnums pdf x.Pdfmarks.target)) bookmarks
