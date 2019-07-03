@@ -412,7 +412,9 @@ type args =
    mutable padwith : string option;
    mutable alsosetxml : bool;
    mutable justsetxml : bool;
-   mutable gs_malformed : bool}
+   mutable gs_malformed : bool;
+   mutable merge_add_bookmarks : bool;
+   mutable merge_add_bookmarks_use_titles : bool}
 
 let args =
   {op = None;
@@ -501,7 +503,9 @@ let args =
    padwith = None;
    alsosetxml = false;
    justsetxml = false;
-   gs_malformed = false}
+   gs_malformed = false;
+   merge_add_bookmarks = false;
+   merge_add_bookmarks_use_titles = false}
 
 let reset_arguments () =
   args.op <- None;
@@ -581,7 +585,9 @@ let reset_arguments () =
   args.extract_text_font_size <- None;
   args.padwith <- None;
   args.alsosetxml <- false;
-  args.justsetxml <- false
+  args.justsetxml <- false;
+  args.merge_add_bookmarks <- false;
+  args.merge_add_bookmarks_use_titles <- false
   (* Do not reset original_filename or cpdflin or was_encrypted or
    * was_decrypted_with_owner or recrypt or producer or creator or
    * path_to_ghostscript or gs_malformed, since we want these to work across
@@ -1606,6 +1612,12 @@ let setsetmetadatadate d =
 let setgsmalformed () =
   args.gs_malformed <- true
 
+let setmergeaddbookmarks () =
+  args.merge_add_bookmarks <- true
+
+let setmergeaddbookmarksusetitles () =
+  args.merge_add_bookmarks_use_titles <- true
+
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
   control_args := !control_args @ parse_control_file filename
@@ -1689,6 +1701,12 @@ and specs =
    ("-retain-numbering",
        Arg.Unit set_retain_numbering,
        " Don't renumber pages when merging");
+   ("-merge-add-bookmarks",
+       Arg.Unit setmergeaddbookmarks,
+       " Add bookmarks for each file to merged file");
+   ("-merge-add-bookmarks-use-titles",
+       Arg.Unit setmergeaddbookmarksusetitles,
+       " Use title of document rather than filename");
    ("-remove-duplicate-fonts",
        Arg.Unit set_remove_duplicate_fonts,
        " Remove duplicate fonts when merging");
@@ -3448,6 +3466,31 @@ let remove_clipping pdf range =
   in
     Cpdf.process_pages remove_clipping_page pdf range
 
+
+(* Indent bookmarks in each file by one and add a title bookmark pointing to the first page. *)
+let add_bookmark_title filename use_title pdf =
+  let title =
+    if use_title then
+      match Cpdf.get_info_utf8 pdf "/Title", Cpdf.get_xmp_info pdf "/Title" with
+        "", x | x, "" | _, x -> x
+    else
+      Filename.basename filename
+  in
+  let marks = Pdfmarks.read_bookmarks pdf in
+  let page1objnum =
+    match Pdfpage.page_object_number pdf 1 with
+      None -> error "add_bookmark_title: page not found"
+    | Some x -> x
+  in
+  let newmarks =
+      {Pdfmarks.level = 0;
+       Pdfmarks.text = title;
+       Pdfmarks.target = Pdfdest.XYZ (Pdfdest.PageObject page1objnum, None, None, None);
+       Pdfmarks.isopen = false}
+    ::map (function m -> {m with Pdfmarks.level = m.Pdfmarks.level + 1}) marks
+  in
+    Pdfmarks.add_bookmarks newmarks pdf
+
 (* Main function *)
 let go () =
   match args.op with
@@ -3509,10 +3552,20 @@ let go () =
                     then
                       soft_error "Merge requires the owner password for all encrypted files."
                     else
+                      let pdfs =
+                        if args.merge_add_bookmarks then
+                          List.map2
+                            (fun filename pdf -> add_bookmark_title filename args.merge_add_bookmarks_use_titles pdf)
+                            (List.map (function InFile s -> s | StdIn -> "" | AlreadyInMemory _ -> "") names)
+                            pdfs
+                        else
+                          pdfs
+                      in
                       (* If args.keep_this_id is set, change the ID to the one from the kept one *)
                       let rangenums = map2 parse_pagespec pdfs ranges in
                         let outpdf =
-                          Pdfmerge.merge_pdfs args.retain_numbering args.remove_duplicate_fonts
+                          Pdfmerge.merge_pdfs
+                            args.retain_numbering args.remove_duplicate_fonts
                           (map string_of_input_kind names) pdfs rangenums
                         in
                           write_pdf false outpdf

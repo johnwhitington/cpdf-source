@@ -3386,6 +3386,25 @@ let output_xmp_info encoding pdf =
         with
           _ -> ()
 
+(* Get XMP info equivalent of an old metadata field e.g Title. For now just title, used by Cpdfcommand.add_bookmark_title *)
+let check = function
+  "/Title" -> [(adobe, "Title"); (dc, "title")]
+| _ -> failwith "Cpdf.check_name not /Title"
+
+let get_xmp_info pdf name =
+  let tocheck = check name in
+  match get_metadata pdf with
+    None -> ""
+  | Some metadata ->
+      try
+        let _, tree = xmltree_of_bytes metadata in
+          let results = List.map (fun (kind, key) -> match get_data_for kind key tree with Some x -> x | None -> "") tocheck in
+            match lose (eq "") results with
+             x::_ -> x
+           | [] -> ""
+      with
+        _ -> ""
+
 (* Set XMP info *)
 let rec set_xml_field kind fieldname value = function
   D data -> D data
