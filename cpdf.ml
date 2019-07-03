@@ -1278,7 +1278,8 @@ let list_bookmarks encoding range pdf output =
         let inrange =
           keep
             (function x ->
-               x.Pdfmarks.target = Pdfdest.NullDestination || 
+               x.Pdfmarks.target = Pdfdest.NullDestination ||
+               (match x.Pdfmarks.target with Pdfdest.NamedDestinationElsewhere _ -> true | _ -> false) ||
                Hashtbl.mem rangetable (Pdfpage.pagenumber_of_target ~fastrefnums pdf x.Pdfmarks.target)) bookmarks
         in
           iter
