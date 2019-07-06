@@ -1230,13 +1230,13 @@ let remove_metadata pdf =
 (* List bookmarks *)
 let output_string_of_target pdf fastrefnums x =
   match Pdfdest.pdfobject_of_destination x with
-  | Pdf.Array [_; Pdf.Name "/Fit"] -> ""
-  | Pdf.Array (Pdf.Indirect targetobjnum::more) ->
+  (*| Pdf.Array [_; Pdf.Name "/Fit"] -> ""*)
+  | Pdf.Array (_::more) ->
       let a =
         Pdf.Array (Pdf.Integer (Pdfpage.pagenumber_of_target ~fastrefnums pdf x)::more)
       in
         "\"" ^ Pdfwrite.string_of_pdf a ^ "\"" 
-  | _ -> ""
+  | _ -> Printf.eprintf "Warning: could not read target for bookmark\n"; ""
 
 (* List the bookmarks, optionally deunicoding the text, in the given range to the given output *)
 let list_bookmarks encoding range pdf output =
@@ -1284,16 +1284,26 @@ let list_bookmarks encoding range pdf output =
                (match x.Pdfmarks.target with Pdfdest.NamedDestinationElsewhere _ -> true | _ -> false) ||
                Hashtbl.mem rangetable (Pdfpage.pagenumber_of_target ~fastrefnums pdf x.Pdfmarks.target)) bookmarks
         in
-          iter
-            (function mark ->
-               output.Pdfio.output_string
-                 (Printf.sprintf "%i \"%s\" %i %s %s\n"
-                   mark.Pdfmarks.level
-                   (process_string mark.Pdfmarks.text)
-                   (Pdfpage.pagenumber_of_target ~fastrefnums pdf mark.Pdfmarks.target)
-                   (if mark.Pdfmarks.isopen then "open" else "")
-                   (output_string_of_target pdf fastrefnums mark.Pdfmarks.target)))
-            inrange
+          let calculate_page_number mark =
+            (* Some buggy PDFs use integers for page numbers instead of page
+             * object references. Adobe Reader and Preview seem to support
+             * this, for presumably historical reasons. So if we see a
+             * OtherDocPageNumber (which is what Pdfdest parses these as,
+             * because that's what they are legitimately, we use this as the
+             * page number. It is zero based, though, and we are one-based, so
+             * we add one. Pdfpage.pagenumber_of_target has been modified to support this.*)
+            Pdfpage.pagenumber_of_target ~fastrefnums pdf mark.Pdfmarks.target
+          in
+            iter
+              (function mark ->
+                 output.Pdfio.output_string
+                   (Printf.sprintf "%i \"%s\" %i %s %s\n"
+                     mark.Pdfmarks.level
+                     (process_string mark.Pdfmarks.text)
+                     (calculate_page_number mark)
+                     (if mark.Pdfmarks.isopen then "open" else "")
+                     (output_string_of_target pdf fastrefnums mark.Pdfmarks.target)))
+              inrange
 
 (* o is the stamp, u is the main pdf page *)
 
