@@ -1230,13 +1230,12 @@ let remove_metadata pdf =
 (* List bookmarks *)
 let output_string_of_target pdf fastrefnums x =
   match Pdfdest.pdfobject_of_destination x with
-  (*| Pdf.Array [_; Pdf.Name "/Fit"] -> ""*)
   | Pdf.Array (_::more) ->
       let a =
         Pdf.Array (Pdf.Integer (Pdfpage.pagenumber_of_target ~fastrefnums pdf x)::more)
       in
         "\"" ^ Pdfwrite.string_of_pdf a ^ "\"" 
-  | _ -> Printf.eprintf "Warning: could not read target for bookmark\n"; ""
+  | x -> "\"" ^ Pdfwrite.string_of_pdf x ^ "\""
 
 (* List the bookmarks, optionally deunicoding the text, in the given range to the given output *)
 let list_bookmarks encoding range pdf output =
