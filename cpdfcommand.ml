@@ -182,6 +182,7 @@ type op =
   | SetMetadataDate of string
   | CreateMetadata
   | EmbedMissingFonts
+  | BookmarksOpenToLevel of int
 
 let string_of_op = function
   | CopyFont _ -> "CopyFont"
@@ -297,6 +298,7 @@ let string_of_op = function
   | SetMetadataDate _ -> "SetMetadataDate"
   | CreateMetadata -> "CreateMetadata"
   | EmbedMissingFonts -> "EmbedMissingFonts"
+  | BookmarksOpenToLevel _ -> "BookmarksOpenToLevel"
 
 (* Inputs: filename, pagespec. *)
 type input_kind =
@@ -639,7 +641,7 @@ let banned banlist = function
   | ListBookmarks | ImageResolution _ | MissingFonts
   | PrintPageLabels | Clean | Compress | Decompress
   | RemoveUnusedResources | ChangeId | CopyId _ | ListSpotColours | Version
-  | DumpAttachedFiles | RemoveMetadata | EmbedMissingFonts -> false (* Always allowed *)
+  | DumpAttachedFiles | RemoveMetadata | EmbedMissingFonts | BookmarksOpenToLevel _ -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
   | ExtractText | ExtractImages | ExtractFontFile
@@ -1618,6 +1620,9 @@ let setmergeaddbookmarks () =
 let setmergeaddbookmarksusetitles () =
   args.merge_add_bookmarks_use_titles <- true
 
+let setbookmarksopentolevel l =
+  args.op <- Some (BookmarksOpenToLevel l)
+
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
   control_args := !control_args @ parse_control_file filename
@@ -1834,6 +1839,9 @@ and specs =
    ("-add-bookmarks",
       Arg.String setaddbookmarks,
       " Add bookmarks from the given file");
+   ("-bookmarks-open-to-level",
+      Arg.Int setbookmarksopentolevel,
+      " Open bookmarks to this level (0 = all closed)");
    ("-presentation",
       Arg.Unit (setop Presentation),
       " Make a presentation");
@@ -3491,6 +3499,15 @@ let add_bookmark_title filename use_title pdf =
   in
     Pdfmarks.add_bookmarks newmarks pdf
 
+let bookmarks_open_to_level n pdf =
+  let marks = Pdfmarks.read_bookmarks pdf in
+  let newmarks =
+    List.map
+      (fun m -> {m with Pdfmarks.isopen = true(*m.Pdfmarks.level < n*)})
+      marks
+  in
+    Pdfmarks.add_bookmarks newmarks pdf
+
 (* Main function *)
 let go () =
   match args.op with
@@ -4346,6 +4363,9 @@ let go () =
         | _ -> error "Output method not supported for -embed-missing-fonts"
       in
         embed_missing_fonts fi fo
+  | Some (BookmarksOpenToLevel n) ->
+      let pdf = get_single_pdf args.op false in
+        write_pdf false (bookmarks_open_to_level n pdf)
 
 let parse_argv () =
   if args.debug then
