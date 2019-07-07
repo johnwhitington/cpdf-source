@@ -2600,18 +2600,19 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
 (* Returns empty string on failure. Should only be used in conjunction with
 split at bookmarks code, so should never fail, by definiton. *)
 let remove_unsafe_characters s =
-  let chars =
-    lose
-      (function x ->
-         match x with
-         '/' | '?' | '<' | '>' | '\\' | ':' | '*' | '|' | '\"' | '^' | '+' | '=' -> true
-         | x when int_of_char x < 32 || int_of_char x > 126 -> true
-         | _ -> false)
-      (explode s)
-  in
-    match chars with
-    | '.'::more -> implode more
-    | chars -> implode chars
+  if args.encoding = Cpdf.Raw then s else
+    let chars =
+      lose
+        (function x ->
+           match x with
+           '/' | '?' | '<' | '>' | '\\' | ':' | '*' | '|' | '\"' | '^' | '+' | '=' -> true
+           | x when int_of_char x < 32 || (int_of_char x > 126 && args.encoding <> Cpdf.Stripped) -> true
+           | _ -> false)
+        (explode s)
+    in
+      match chars with
+      | '.'::more -> implode more
+      | chars -> implode chars
 
 let get_bookmark_name pdf marks splitlevel n _ =
   let refnums = Pdf.page_reference_numbers pdf in
@@ -3503,7 +3504,7 @@ let bookmarks_open_to_level n pdf =
   let marks = Pdfmarks.read_bookmarks pdf in
   let newmarks =
     List.map
-      (fun m -> {m with Pdfmarks.isopen = true(*m.Pdfmarks.level < n*)})
+      (fun m -> {m with Pdfmarks.isopen = m.Pdfmarks.level < n})
       marks
   in
     Pdfmarks.add_bookmarks newmarks pdf
