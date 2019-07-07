@@ -183,6 +183,7 @@ type op =
   | CreateMetadata
   | EmbedMissingFonts
   | BookmarksOpenToLevel of int
+  | CreatePDF
 
 let string_of_op = function
   | CopyFont _ -> "CopyFont"
@@ -299,6 +300,7 @@ let string_of_op = function
   | CreateMetadata -> "CreateMetadata"
   | EmbedMissingFonts -> "EmbedMissingFonts"
   | BookmarksOpenToLevel _ -> "BookmarksOpenToLevel"
+  | CreatePDF -> "CreatePDF"
 
 (* Inputs: filename, pagespec. *)
 type input_kind =
@@ -416,7 +418,9 @@ type args =
    mutable justsetxml : bool;
    mutable gs_malformed : bool;
    mutable merge_add_bookmarks : bool;
-   mutable merge_add_bookmarks_use_titles : bool}
+   mutable merge_add_bookmarks_use_titles : bool;
+   mutable createpdf_pages : int;
+   mutable createpdf_pagesize : Pdfpaper.t}
 
 let args =
   {op = None;
@@ -507,7 +511,9 @@ let args =
    justsetxml = false;
    gs_malformed = false;
    merge_add_bookmarks = false;
-   merge_add_bookmarks_use_titles = false}
+   merge_add_bookmarks_use_titles = false;
+   createpdf_pages = 1;
+   createpdf_pagesize = Pdfpaper.a4}
 
 let reset_arguments () =
   args.op <- None;
@@ -589,7 +595,9 @@ let reset_arguments () =
   args.alsosetxml <- false;
   args.justsetxml <- false;
   args.merge_add_bookmarks <- false;
-  args.merge_add_bookmarks_use_titles <- false
+  args.merge_add_bookmarks_use_titles <- false;
+  args.createpdf_pages <- 1;
+  args.createpdf_pagesize <- Pdfpaper.a4
   (* Do not reset original_filename or cpdflin or was_encrypted or
    * was_decrypted_with_owner or recrypt or producer or creator or
    * path_to_ghostscript or gs_malformed, since we want these to work across
@@ -641,7 +649,7 @@ let banned banlist = function
   | ListBookmarks | ImageResolution _ | MissingFonts
   | PrintPageLabels | Clean | Compress | Decompress
   | RemoveUnusedResources | ChangeId | CopyId _ | ListSpotColours | Version
-  | DumpAttachedFiles | RemoveMetadata | EmbedMissingFonts | BookmarksOpenToLevel _ -> false (* Always allowed *)
+  | DumpAttachedFiles | RemoveMetadata | EmbedMissingFonts | BookmarksOpenToLevel _ | CreatePDF -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
   | ExtractText | ExtractImages | ExtractFontFile
@@ -993,8 +1001,7 @@ let space_units s =
 
 let parse_units_string pdf page s =
   let fs = parse_units pdf page [] (Pdfgenlex.lex_string <| space_units s) in
-    (*(List.fold_left (fun x y -> x ^ " " ^ y) "" (List.map string_of_float
-     * fs));*)
+    (*(List.fold_left (fun x y -> x ^ " " ^ y) "" (List.map string_of_float * fs));*)
     fs
 
 let parse_rectangle pdf s =
@@ -1623,6 +1630,14 @@ let setmergeaddbookmarksusetitles () =
 let setbookmarksopentolevel l =
   args.op <- Some (BookmarksOpenToLevel l)
 
+let setcreatepdfpages i =
+  args.createpdf_pages <- i
+
+let setcreatepdfpapersize s =
+  args.createpdf_pagesize <-
+    let w, h = parse_coordinate (Pdf.empty ()) s in
+    Pdfpaper.make Pdfunits.PdfPoint w h
+
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
   control_args := !control_args @ parse_control_file filename
@@ -2211,6 +2226,15 @@ and specs =
    ("-list-spot-colors",
     Arg.Unit (setop ListSpotColours),
     " List spot colors");
+   ("-create-pdf",
+    Arg.Unit (setop CreatePDF),
+    " Create a new PDF");
+   ("-create-pdf-pages",
+    Arg.Int setcreatepdfpages,
+    " Number of pages for new PDF");
+   ("-create-pdf-papersize",
+    Arg.String setcreatepdfpapersize,
+    " Paper size for new PDF"); 
    ("-gs", Arg.String setgspath, " Path to gs executable");
    ("-gs-malformed", Arg.Unit setgsmalformed, " Try to reconstruct malformed files with gs");
    ("-squeeze", Arg.Unit setsqueeze, " Squeeze");
@@ -3509,6 +3533,15 @@ let bookmarks_open_to_level n pdf =
   in
     Pdfmarks.add_bookmarks newmarks pdf
 
+let create_pdf pages pagesize =
+  let page =
+    {(Pdfpage.blankpage args.createpdf_pagesize) with
+        Pdfpage.content = [Pdfops.stream_of_ops []];
+        Pdfpage.resources = Pdf.Dictionary []}
+  in
+    let pdf, pageroot = Pdfpage.add_pagetree (many page args.createpdf_pages) (Pdf.empty ()) in
+      Pdfpage.add_root pageroot [] pdf
+
 (* Main function *)
 let go () =
   match args.op with
@@ -4367,6 +4400,9 @@ let go () =
   | Some (BookmarksOpenToLevel n) ->
       let pdf = get_single_pdf args.op false in
         write_pdf false (bookmarks_open_to_level n pdf)
+  | Some CreatePDF ->
+      let pdf = create_pdf args.createpdf_pages args.createpdf_pagesize in
+        write_pdf false pdf
 
 let parse_argv () =
   if args.debug then
