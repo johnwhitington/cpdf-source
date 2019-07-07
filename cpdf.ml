@@ -1018,12 +1018,12 @@ let bookmark_of_data pdf i s i' isopen optionaldest =
                   None ->
                     raise (Pdf.PDFError "bookmark_of_data: page obj num not found")
                 | Some p ->
-                    Pdfdest.read_destination
-                      (Pdf.empty ())
-                      (Pdf.Array (Pdf.Indirect p::more))
+                    Pdfdest.read_destination pdf (Pdf.Array (Pdf.Indirect p::more))
                 end
-          | _ ->
-             raise (Pdf.PDFError "bookmark_of_data: dest")
+          (* Need to deal with "null", "(string)", and "<<other thing like action" *) 
+          | Pdf.Null -> Pdfdest.NullDestination
+          | Pdf.String s -> Pdfdest.read_destination pdf (Pdf.String s)
+          | x -> Pdfdest.Action x
           end
     | _ -> Pdfpage.target_of_pagenumber pdf i'
   in
@@ -1296,11 +1296,11 @@ let list_bookmarks encoding range pdf output =
             iter
               (function mark ->
                  output.Pdfio.output_string
-                   (Printf.sprintf "%i \"%s\" %i %s %s\n"
+                   (Printf.sprintf "%i \"%s\" %i%s %s\n"
                      mark.Pdfmarks.level
                      (process_string mark.Pdfmarks.text)
                      (calculate_page_number mark)
-                     (if mark.Pdfmarks.isopen then "open" else "")
+                     (if mark.Pdfmarks.isopen then " open" else "")
                      (output_string_of_target pdf fastrefnums mark.Pdfmarks.target)))
               inrange
 
