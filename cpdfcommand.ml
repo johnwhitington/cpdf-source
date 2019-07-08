@@ -588,7 +588,6 @@ let reset_arguments () =
   args.labelstyle <- Pdfpagelabels.DecimalArabic;
   args.labelprefix <- None;
   args.labelstartval <- 1;
-  args.squeeze <- false;
   args.embedfonts <- true;
   args.extract_text_font_size <- None;
   args.padwith <- None;
@@ -601,7 +600,7 @@ let reset_arguments () =
   (* Do not reset original_filename or cpdflin or was_encrypted or
    * was_decrypted_with_owner or recrypt or producer or creator or
    * path_to_ghostscript or gs_malformed, since we want these to work across
-   * ANDs. *)
+   * ANDs. Or squeeze: a little odd, but we want it to happen on eventual output. *)
 
 let get_pagespec () =
   match args.inputs with
@@ -2308,6 +2307,7 @@ let filesize name =
 let embed_missing_fonts fi fo =
   if args.path_to_ghostscript = "" then begin
     Printf.eprintf "Please supply path to gs with -gs\n";
+    exit 2
   end;
     let gscall =
       args.path_to_ghostscript ^
@@ -4447,12 +4447,35 @@ let expand_args argv =
   let l = Array.to_list argv in
     Array.of_list (expand_args_inner [] l)
 
+let gs_malformed_force fi fo =
+  if args.path_to_ghostscript = "" then begin
+    Printf.eprintf "Please supply path to gs with -gs\n";
+    exit 2
+  end;
+    let gscall =
+      args.path_to_ghostscript ^
+      " -dNOPAUSE -dQUIET -sDEVICE=pdfwrite -sOUTPUTFILE=" ^ fo ^
+      " -dBATCH " ^ fi
+    in
+      match Sys.command gscall with
+      | 0 -> exit 0
+      | _ -> Printf.eprintf "Failed to mend file.\n"; exit 2
+
 (* FIXME: Now we call this repeatedly from interactive programs, careful to
 ensure that all memory is cleaned. See clearance of filenames hashtable, for
 example. *)
 
 (* Main function. *)
 let go_withargv argv =
+  (* Check for the standalone -gs-malformed-force special command line. This
+   * has exactly one file input and exactly one output and just -gs <gs>
+   * -gs-malformed-force between.  *)
+  match argv with
+    [|_; inputfilename; "-gs"; gslocation; "-gs-malformed-force"; "-o"; outputfilename|] ->
+    args.path_to_ghostscript <- gslocation;
+    ignore (gs_malformed_force inputfilename outputfilename);
+    exit 0
+  | _ -> 
   Hashtbl.clear filenames;
   if demo then
     flprint "This demo is for evaluation only. http://www.coherentpdf.com/\n";
