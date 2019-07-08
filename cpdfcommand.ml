@@ -4261,9 +4261,9 @@ let go () =
   | Some RemoveBookmarks ->
       write_pdf false (Pdfmarks.remove_bookmarks (get_single_pdf args.op false))
   | Some TwoUp ->
-      write_pdf false (Cpdf.twoup (get_single_pdf args.op false))
+      write_pdf false (Cpdf.twoup args.fast (get_single_pdf args.op false))
   | Some TwoUpStack ->
-      write_pdf false (Cpdf.twoup_stack (get_single_pdf args.op false))
+      write_pdf false (Cpdf.twoup_stack args.fast (get_single_pdf args.op false))
   | Some (StampOn over) ->
       let overpdf =
         match over with

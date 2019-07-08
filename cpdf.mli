@@ -384,12 +384,13 @@ val remove_annotations : int list -> Pdf.t -> Pdf.t
 (** {2 Imposition} *)
 
 (** The twoup_stack operation puts two logical pages on each physical page,
-rotating them 90 degrees to do so. The new mediabox is thus larger. *)
-val twoup_stack : Pdf.t -> Pdf.t
+rotating them 90 degrees to do so. The new mediabox is thus larger. Bool true
+(fast) if assume well-formed ISO content streams. *)
+val twoup_stack : bool -> Pdf.t -> Pdf.t
 
 (** The twoup operation does the same, but scales the new sides down so that
-the media box is unchanged. *)
-val twoup : Pdf.t -> Pdf.t
+the media box is unchanged. Bool true (fast) if assume well-formed ISO content streams. *)
+val twoup : bool -> Pdf.t -> Pdf.t
 
 (** {2 Making new documents} *)
 

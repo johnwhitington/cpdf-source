@@ -3111,7 +3111,7 @@ let twoup_transforms mediabox =
 
 (* Combine two pages into one throughout the document. The pages have already
 had their objects renumbered so as not to clash.*)
-let twoup_pages pdf = function
+let twoup_pages fast pdf = function
   | [] -> assert false
   | (h::_) as pages ->
      let resources' =
@@ -3163,7 +3163,7 @@ let twoup_stack_transforms mediabox =
         [t0; t1]
 
 (* FIXME: Add clipping, as for twoup, or merge these two functions properly *)
-let twoup_pages_stack pdf = function
+let twoup_pages_stack fast pdf = function
   | [] -> assert false
   | (h::_) as pages ->
      let resources =
@@ -3219,9 +3219,9 @@ let f_twoup f_pages pdf =
               (*print_changes changes;*)
               Pdfpage.change_pages ~changes true pdf pages'
 
-let twoup pdf = f_twoup twoup_pages pdf
+let twoup fast pdf = f_twoup (twoup_pages fast) pdf
 
-let twoup_stack pdf = f_twoup twoup_pages_stack pdf
+let twoup_stack fast pdf = f_twoup (twoup_pages_stack fast) pdf
 
 (* \section{Output info} *)
 let get_info raw pdf =
