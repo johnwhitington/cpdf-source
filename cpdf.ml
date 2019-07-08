@@ -3083,7 +3083,7 @@ let copy_annotations range frompdf topdf =
 (* \section{N-up} *)
 
 (* Given a number to fit and a mediabox, return a list of transforms for the
-2 pages. FIXME: Assumes mediabox (0, 0)-based. Check this for all operations for 1.8. *)
+2 pages. *)
 let twoup_transforms mediabox =
   let width, height =
     match Pdf.parse_rectangle mediabox with
@@ -3109,9 +3109,21 @@ let twoup_transforms mediabox =
             in let t1 = Pdftransform.matrix_of_transform [tr1; rotate; scale] in
               [t0; t1]
 
+let twoup_stack_transforms mediabox =
+  let width, height =
+    match Pdf.parse_rectangle mediabox with
+      xmin, ymin, xmax, ymax -> xmax -. xmin, ymax -. ymin
+  in
+    let rotate = Pdftransform.Rotate ((0., 0.), rad_of_deg 90.) 
+    in let tr0 = Pdftransform.Translate (height, 0.)
+    in let tr1 = Pdftransform.Translate (height, width) in
+      let t0 = Pdftransform.matrix_of_transform [tr0; rotate]
+      in let t1 = Pdftransform.matrix_of_transform [tr1; rotate] in
+        [t0; t1]
+
 (* Combine two pages into one throughout the document. The pages have already
 had their objects renumbered so as not to clash.*)
-let twoup_pages fast pdf = function
+let twoup_pages_inner isstack fast pdf = function
   | [] -> assert false
   | (h::_) as pages ->
      let resources' =
@@ -3128,9 +3140,6 @@ let twoup_pages fast pdf = function
                Pdfops.Op_n]
             in
               let ops = Pdfops.parse_operators pdf resources' contents in
-                (* Need protect_removeme here? especially new, Q-adding
-                 * protect?. This will also make it faster on -fast, since Q
-                 * adding will be disabled. *)
                 Pdfops.stream_of_ops
                   ([Pdfops.Op_q] @ [Pdfops.Op_cm transform] @ clipops @ ops @ [Pdfops.Op_Q])
           in
@@ -3142,71 +3151,21 @@ let twoup_pages fast pdf = function
                     | Some box -> box)
                    p.Pdfpage.content)
               pages
-              (take (twoup_transforms h.Pdfpage.mediabox) (length pages))
-       in
-         {Pdfpage.mediabox = h.Pdfpage.mediabox;
-          Pdfpage.rotate = h.Pdfpage.rotate;
-          Pdfpage.content = content';
-          Pdfpage.resources = resources';
-          Pdfpage.rest = h.Pdfpage.rest}
-
-let twoup_stack_transforms mediabox =
-  let width, height =
-    match Pdf.parse_rectangle mediabox with
-      xmin, ymin, xmax, ymax -> xmax -. xmin, ymax -. ymin
-  in
-    let rotate = Pdftransform.Rotate ((0., 0.), rad_of_deg 90.) 
-    in let tr0 = Pdftransform.Translate (height, 0.)
-    in let tr1 = Pdftransform.Translate (height, width) in
-      let t0 = Pdftransform.matrix_of_transform [tr0; rotate]
-      in let t1 = Pdftransform.matrix_of_transform [tr1; rotate] in
-        [t0; t1]
-
-(* FIXME: Add clipping, as for twoup, or merge these two functions properly *)
-let twoup_pages_stack fast pdf = function
-  | [] -> assert false
-  | (h::_) as pages ->
-     let resources =
-       pair_reduce
-         (combine_pdf_resources pdf)
-         (map (fun p -> p.Pdfpage.resources) pages)
-     in
-       (* Remove any CropBox *)
-       let rest =
-         Pdf.remove_dict_entry h.Pdfpage.rest "/CropBox"
-       in
-       let content' =
-          let transform_stream clipbox contents transform =
-            let clipops =
-              let minx, miny, maxx, maxy = Pdf.parse_rectangle clipbox in
-                [Pdfops.Op_re (minx, miny, maxx -. minx, maxy -. miny);
-                 Pdfops.Op_W;
-                 Pdfops.Op_n]
-            in
-              let ops = Pdfops.parse_operators pdf resources contents in
-                Pdfops.stream_of_ops
-                  ([Pdfops.Op_q] @ [Pdfops.Op_cm transform] @ clipops @ ops @ [Pdfops.Op_Q])
-          in
-            map2
-              (fun p ->
-                 transform_stream
-                   (match Pdf.lookup_direct pdf "/CropBox" p.Pdfpage.rest with
-                      None -> p.Pdfpage.mediabox
-                    | Some box -> box)
-                   p.Pdfpage.content)
-              pages
-              (take (twoup_stack_transforms h.Pdfpage.mediabox) (length pages))
+              (take (((if isstack then twoup_stack_transforms else twoup_transforms) h.Pdfpage.mediabox)) (length pages))
        in
          {Pdfpage.mediabox =
-            (let width, height =
+           if isstack then
+            let width, height =
               match Pdf.parse_rectangle h.Pdfpage.mediabox with
                 xmin, ymin, xmax, ymax -> xmax -. xmin, ymax -. ymin
             in
-              Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real height; Pdf.Real (width *. 2.)]);
+              Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real height; Pdf.Real (width *. 2.)]
+           else
+             h.Pdfpage.mediabox;
           Pdfpage.rotate = h.Pdfpage.rotate;
           Pdfpage.content = content';
-          Pdfpage.resources = resources;
-          Pdfpage.rest = rest}
+          Pdfpage.resources = resources';
+          Pdfpage.rest = if isstack then Pdf.remove_dict_entry h.Pdfpage.rest "/CropBox" else h.Pdfpage.rest}
 
 let f_twoup f_pages pdf =
   let pagenums = ilist 1 (Pdfpage.endpage pdf) in
@@ -3219,9 +3178,9 @@ let f_twoup f_pages pdf =
               (*print_changes changes;*)
               Pdfpage.change_pages ~changes true pdf pages'
 
-let twoup fast pdf = f_twoup (twoup_pages fast) pdf
+let twoup fast pdf = f_twoup (twoup_pages_inner false fast) pdf
 
-let twoup_stack fast pdf = f_twoup (twoup_pages_stack fast) pdf
+let twoup_stack fast pdf = f_twoup (twoup_pages_inner true fast) pdf
 
 (* \section{Output info} *)
 let get_info raw pdf =
