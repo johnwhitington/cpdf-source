@@ -724,7 +724,16 @@ let nobble pdf =
 let output_page_count pdf =
   Printf.printf "%i\n" (Pdfpage.endpage pdf)
 
+let detect_duplicate_op op =
+  if args.op <> None then
+    begin
+      Printf.eprintf "Operation %s already specified, so cannot specify operation %s.\nUse AND from Chapter 1 of the manual to chain commands together.\n"
+      (string_of_op (unopt args.op)) (string_of_op op);
+      exit 1
+    end
+
 let setop op () =
+  detect_duplicate_op op;
   args.op <- Some op
 
 let setout name =
@@ -755,6 +764,7 @@ let fixdashes s =
 let encrypt_to_collect = ref 0
 
 let setmethod s =
+  detect_duplicate_op Encrypt;
   if args.op = None then args.op <- Some Encrypt; (* Could be additional to -split *)
   match s with
   | "40bit" | "128bit" | "AES" | "AES256" | "AES256ISO" -> args.crypt_method <- s
@@ -1163,8 +1173,9 @@ let setattachfile s =
   match args.op with
   | Some (AttachFile t) ->
       args.op <- Some (AttachFile (s::t))
-  | _ ->
+  | None ->
       setop (AttachFile [s]) ()
+  | Some _ -> detect_duplicate_op (AttachFile [s])
 
 let setfont f =
   args.font <-
@@ -1384,6 +1395,7 @@ let setscaletofitscale f =
   args.scale <- f
 
 let setscalecontents f =
+  detect_duplicate_op (ScaleContents f);
   args.op <- Some (ScaleContents f);
   args.position <- Cpdf.Diagonal (* Will be center *)
 
@@ -1432,6 +1444,7 @@ let setencryptcollect () =
   encrypt_to_collect := 3
 
 let setcopyfont s =
+  detect_duplicate_op (CopyFont s);
   args.op <- Some (CopyFont s)
 
 let setfontpage i =
@@ -1441,6 +1454,7 @@ let setcopyfontname s =
   args.copyfontname <- Some s
 
 let setpadevery i =
+  detect_duplicate_op (PadEvery i);
   if i > 0 then
     args.op <- Some (PadEvery i)
   else
@@ -1450,19 +1464,19 @@ let setpadwith filename =
   args.padwith <- Some filename
 
 let setpadmultiple i =
+  detect_duplicate_op (PadMultiple i);
   args.op <- Some (PadMultiple i)
 
 let setpadmultiplebefore i =
+  detect_duplicate_op (PadMultipleBefore i);
   args.op <- Some (PadMultipleBefore i)
 
 let setfast () =
   args.fast <- true
 
 let setcsp2 f =
+  detect_duplicate_op (CSP2 f);
   args.op <- Some (CSP2 f)
-
-let setextractimages () =
-  args.op <- Some ExtractImages
 
 (* Explicitly add a range. Parse it and replace the top input file with the range. *)
 let setrange spec =
@@ -1489,6 +1503,7 @@ let setunderneath () =
   args.underneath <- true
 
 let setimageresolution f =
+  detect_duplicate_op (ImageResolution f);
   args.op <- Some (ImageResolution f)
 
 let setgspath p =
@@ -1501,6 +1516,7 @@ let setverticaldown () =
   args.orientation <- Cpdf.VerticalDown
 
 let setfrombox s =
+  detect_duplicate_op CopyBox;
   args.op <- Some CopyBox;
   args.frombox <- Some s
 
@@ -1562,9 +1578,11 @@ let setstdinowner o =
   | _ -> error "-stdin-owner: must follow -stdin"
 
 let setopenatpage n =
+  detect_duplicate_op (OpenAtPage n);
   args.op <- Some (OpenAtPage n)
 
 let setopenatpagefit n =
+  detect_duplicate_op (OpenAtPageFit n);
   args.op <- Some (OpenAtPageFit n)
 
 let setlabelstyle s =
@@ -1593,6 +1611,7 @@ let setrecrypt () =
   args.recrypt <- true
 
 let setremovedictentry s =
+  detect_duplicate_op (RemoveDictEntry s);
   args.op <- Some (RemoveDictEntry s)
 
 let logto = ref None
@@ -1607,6 +1626,7 @@ let setnoembedfont () =
   args.embedfonts <- false
 
 let sethardbox box =
+  detect_duplicate_op (HardBox box);
   args.op <- Some (HardBox box)
 
 let setalsosetxml () =
@@ -1616,6 +1636,7 @@ let setjustsetxml () =
   args.justsetxml <- true
 
 let setsetmetadatadate d =
+  detect_duplicate_op (SetMetadataDate d);
   args.op <- Some (SetMetadataDate d)
 
 let setgsmalformed () =
@@ -1628,6 +1649,7 @@ let setmergeaddbookmarksusetitles () =
   args.merge_add_bookmarks_use_titles <- true
 
 let setbookmarksopentolevel l =
+  detect_duplicate_op (BookmarksOpenToLevel l);
   args.op <- Some (BookmarksOpenToLevel l)
 
 let setcreatepdfpages i =
@@ -2243,7 +2265,7 @@ and specs =
    ("-remove-unused-resources", Arg.Unit (setop RemoveUnusedResources), "");
    ("-stay-on-error", Arg.Unit setstayonerror, "");
    ("-extract-fontfile", Arg.Unit (setop ExtractFontFile), "");
-   ("-extract-images", Arg.Unit setextractimages, "");
+   ("-extract-images", Arg.Unit (setop ExtractImages), "");
    ("-csp1", Arg.Unit (setop CSP1), "");
    ("-csp2", Arg.Float setcsp2, "");
    ("-csp3", Arg.Unit (setop CSP3), "");
