@@ -3988,7 +3988,7 @@ and remove_images_page boxes pdf page =
           Pdfpage.resources = resources'}, pdf
 
 (* Remove images from all pages in a document. *)
-let draft boxes range pdf =
+let draft onlyremove boxes range pdf =
   let pages = Pdfpage.pages_of_pagetree pdf in
     let pagenums = indx pages in
     let pdf = ref pdf

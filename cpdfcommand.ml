@@ -420,7 +420,8 @@ type args =
    mutable merge_add_bookmarks : bool;
    mutable merge_add_bookmarks_use_titles : bool;
    mutable createpdf_pages : int;
-   mutable createpdf_pagesize : Pdfpaper.t}
+   mutable createpdf_pagesize : Pdfpaper.t;
+   mutable removeonly : string option}
 
 let args =
   {op = None;
@@ -513,7 +514,8 @@ let args =
    merge_add_bookmarks = false;
    merge_add_bookmarks_use_titles = false;
    createpdf_pages = 1;
-   createpdf_pagesize = Pdfpaper.a4}
+   createpdf_pagesize = Pdfpaper.a4;
+   removeonly = None}
 
 let reset_arguments () =
   args.op <- None;
@@ -596,7 +598,8 @@ let reset_arguments () =
   args.merge_add_bookmarks <- false;
   args.merge_add_bookmarks_use_titles <- false;
   args.createpdf_pages <- 1;
-  args.createpdf_pagesize <- Pdfpaper.a4
+  args.createpdf_pagesize <- Pdfpaper.a4;
+  args.removeonly <- None
   (* Do not reset original_filename or cpdflin or was_encrypted or
    * was_decrypted_with_owner or recrypt or producer or creator or
    * path_to_ghostscript or gs_malformed, since we want these to work across
@@ -1659,6 +1662,9 @@ let setcreatepdfpapersize s =
     let w, h = parse_coordinate (Pdf.empty ()) s in
     Pdfpaper.make Pdfunits.PdfPoint w h
 
+let setdraftremoveonly s =
+  args.removeonly <- Some s
+
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
   control_args := !control_args @ parse_control_file filename
@@ -2190,6 +2196,9 @@ and specs =
    ("-draft",
       Arg.Unit (setop Draft),
       " Remove images from the file");
+   ("-draft-remove-only",
+      Arg.String setdraftremoveonly,
+      " Only remove named image");
    ("-boxes",
       Arg.Unit setboxes,
       " Add crossed boxes to -draft option");
@@ -4218,7 +4227,7 @@ let go () =
   | Some Draft ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
-          write_pdf false (Cpdf.draft args.boxes range pdf)
+          write_pdf false (Cpdf.draft args.removeonly args.boxes range pdf)
   | Some (AddText text) ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in

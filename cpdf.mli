@@ -421,7 +421,7 @@ val blacklines : float * float * float -> int list -> Pdf.t -> Pdf.t
 val blackfills : float * float * float -> int list -> Pdf.t -> Pdf.t
 
 (** Remove images from a PDF, optionally adding crossed boxes. *)
-val draft : bool -> int list -> Pdf.t -> Pdf.t
+val draft : string option -> bool -> int list -> Pdf.t -> Pdf.t
 
 (** Squeeze a PDF *)
 val squeeze : ?logto:string -> Pdf.t -> unit
