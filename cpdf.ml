@@ -3139,11 +3139,19 @@ let twoup_pages_inner isstack fast pdf = function
                Pdfops.Op_W;
                Pdfops.Op_n]
             in
-              let ops = Pdfops.parse_operators pdf resources' contents in
-                Pdfops.stream_of_ops
-                  ([Pdfops.Op_q] @ [Pdfops.Op_cm transform] @ clipops @ ops @ [Pdfops.Op_Q])
+              (* If fast, no q/Q protection and no parsing of operators. *)
+              if fast then
+                let before = Pdfops.stream_of_ops (Pdfops.Op_q::Pdfops.Op_cm transform::clipops) in
+                let after = Pdfops.stream_of_ops [Pdfops.Op_Q] in
+                [before] @ contents @ [after]
+              else
+              (* If slow, use protect from Pdfpage. *)
+              let ops = Pdfpage.protect pdf resources' contents @ Pdfops.parse_operators pdf resources' contents in
+                [Pdfops.stream_of_ops
+                  ([Pdfops.Op_q] @ [Pdfops.Op_cm transform] @ clipops @ ops @ [Pdfops.Op_Q])]
           in
-            map2
+            List.flatten
+              (map2
               (fun p ->
                  transform_stream
                    (match Pdf.lookup_direct pdf "/CropBox" p.Pdfpage.rest with
@@ -3151,7 +3159,7 @@ let twoup_pages_inner isstack fast pdf = function
                     | Some box -> box)
                    p.Pdfpage.content)
               pages
-              (take (((if isstack then twoup_stack_transforms else twoup_transforms) h.Pdfpage.mediabox)) (length pages))
+              (take (((if isstack then twoup_stack_transforms else twoup_transforms) h.Pdfpage.mediabox)) (length pages)))
        in
          {Pdfpage.mediabox =
            if isstack then
