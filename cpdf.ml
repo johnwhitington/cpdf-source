@@ -3895,18 +3895,20 @@ let substitute boxes =
     []
 
 (* Remove references to images from a graphics stream. *)
-let rec remove_images_stream boxes pdf resources prev = function
+let rec remove_images_stream onlyremove boxes pdf resources prev = function
   | [] -> rev prev
   | (Pdfops.Op_Do name) as h::t ->
-      if xobject_isimage pdf resources name
-        then remove_images_stream boxes pdf resources (substitute boxes @ prev) t
-        else remove_images_stream boxes pdf resources (h::prev) t
-  | Pdfops.InlineImage _::t ->
-      remove_images_stream boxes pdf resources (substitute boxes @ prev) t
+      if xobject_isimage pdf resources name && (match onlyremove with None -> true | Some x -> x = name)
+        then remove_images_stream onlyremove boxes pdf resources (substitute boxes @ prev) t
+        else remove_images_stream onlyremove boxes pdf resources (h::prev) t
+  | Pdfops.InlineImage _ as h::t ->
+      if onlyremove <> None
+        then remove_images_stream onlyremove boxes pdf resources (h::prev) t
+        else remove_images_stream onlyremove boxes pdf resources (substitute boxes @ prev) t
   | h::t ->
-      remove_images_stream boxes pdf resources (h::prev) t
+      remove_images_stream onlyremove boxes pdf resources (h::prev) t
 
-let rec process_form_xobject boxes pdf form =
+let rec process_form_xobject onlyremove boxes pdf form =
   let form = Pdf.direct pdf form in
     let page =
       {Pdfpage.content = [form];
@@ -3920,7 +3922,7 @@ let rec process_form_xobject boxes pdf form =
        Pdfpage.rest = Pdf.Dictionary []}
     in
       let page', pdf =
-        remove_images_page boxes pdf page
+        remove_images_page onlyremove boxes pdf page
       in
         let form' =
           match form with
@@ -3941,7 +3943,7 @@ let rec process_form_xobject boxes pdf form =
           form', pdf
 
 (* Remove images from a page. *)
-and remove_images_page boxes pdf page =
+and remove_images_page onlyremove boxes pdf page =
   let isform pdf xobj =
     match Pdf.lookup_direct pdf "/Subtype" xobj with Some (Pdf.Name "/Form") -> true | _ -> false
   in
@@ -3959,7 +3961,7 @@ and remove_images_page boxes pdf page =
         in let outputs = ref [] in
           iter
             (fun p ->
-              let p', pdf' = process_form_xobject boxes !pdf p in
+              let p', pdf' = process_form_xobject onlyremove boxes !pdf p in
                 pdf := pdf';
                 outputs =| p')
             pointers;
@@ -3977,7 +3979,7 @@ and remove_images_page boxes pdf page =
               Pdf.add_dict_entry page.Pdfpage.resources "/XObject" newdict, pdf
     in
       let content' =
-        remove_images_stream boxes pdf page.Pdfpage.resources []
+        remove_images_stream onlyremove boxes pdf page.Pdfpage.resources []
            (Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content)
       in
         {page with
@@ -3997,7 +3999,7 @@ let draft onlyremove boxes range pdf =
        (fun p pagenum ->
          let p', pdf' =
            if mem pagenum range
-             then remove_images_page boxes !pdf p
+             then remove_images_page onlyremove boxes !pdf p
              else p, !pdf
          in
            pdf := pdf';
