@@ -2277,11 +2277,15 @@ let transform_annotations pdf transform rest =
                  match Pdf.lookup_direct pdf "/Rect" annot with
                    Some rect ->
                      let minx, miny, maxx, maxy = Pdf.parse_rectangle rect in
-                       let (minx', miny') = Pdftransform.transform_matrix transform (minx, miny) in
-                       let (maxx', maxy') = Pdftransform.transform_matrix transform (maxx, maxy) in
-                         (* FIXME: This is not correct for -rotate-contents <> 90 degree changes. Need to find the axis-aligned box which encloses the new rotated box *) 
-                         Pdf.Array [Pdf.Real (fmin minx' maxx'); Pdf.Real (fmin miny' maxy');
-                                    Pdf.Real (fmax maxx' minx'); Pdf.Real (fmax miny' maxy')]
+                       let (x0, y0) = Pdftransform.transform_matrix transform (minx, miny) in
+                       let (x1, y1) = Pdftransform.transform_matrix transform (maxx, maxy) in
+                       let (x2, y2) = Pdftransform.transform_matrix transform (minx, maxy) in
+                       let (x3, y3) = Pdftransform.transform_matrix transform (maxx, miny) in
+                         let minx = fmin (fmin x0 x1) (fmin x2 x3) in
+                         let miny = fmin (fmin y0 y1) (fmin y2 y3) in
+                         let maxx = fmax (fmax x0 x1) (fmax x2 x3) in
+                         let maxy = fmax (fmax y0 y1) (fmax y2 y3) in
+                           Pdf.Array [Pdf.Real minx; Pdf.Real miny; Pdf.Real maxx; Pdf.Real maxy]
                  | None -> raise (Pdf.PDFError "transform_annotations: no rect")
                in
                  let annot' = Pdf.add_dict_entry annot "/Rect" rect' in 
@@ -2409,25 +2413,29 @@ let do_stamp relative_to_cropbox fast position topline midline scale_to_fit isov
             in
               let dx = txmin +. ((txmax -. txmin) -. (sxmax -. sxmin) *. scale) /. 2. in
                 let dy = tymin +. ((tymax -. tymin) -. (symax -. symin) *. scale) /. 2. in
-                  let scale_op =
-                    Pdfops.Op_cm
-                      (Pdftransform.matrix_of_transform
+                  let matrix = 
+                    (Pdftransform.matrix_of_transform
                          ([Pdftransform.Translate (dx, dy)] @
                           (if relative_to_cropbox then [Pdftransform.Translate (txmin, tymin)] else []) @
                           [Pdftransform.Scale ((sxmin, symin), scale, scale)]))
                   in
-                    Pdfpage.prepend_operators pdf [scale_op] ~fast o
+                    transform_annotations pdf matrix o.Pdfpage.rest;
+                    let r = Pdfpage.prepend_operators pdf [Pdfops.Op_cm matrix] ~fast o in
+                      {r with Pdfpage.resources = 
+                        change_pattern_matrices pdf matrix r.Pdfpage.resources}
       else
         let sw = sxmax -. sxmin and sh = symax -. symin
         and w = txmax -. txmin and h = tymax -. tymin in
           let dx, dy = stamp_shift_of_position topline midline sw sh w h position in
-            let translate_op =
-              Pdfops.Op_cm
-                (Pdftransform.matrix_of_transform
-                  ((if relative_to_cropbox then [Pdftransform.Translate (txmin, tymin)] else []) @
-                   [Pdftransform.Translate (dx, dy)]))
+            let matrix =
+              (Pdftransform.matrix_of_transform
+                ((if relative_to_cropbox then [Pdftransform.Translate (txmin, tymin)] else []) @
+                [Pdftransform.Translate (dx, dy)]))
             in
-              Pdfpage.prepend_operators pdf [translate_op] ~fast o
+              transform_annotations pdf matrix o.Pdfpage.rest;
+              let r = Pdfpage.prepend_operators pdf [Pdfops.Op_cm matrix] ~fast o in
+                {r with Pdfpage.resources = 
+                   change_pattern_matrices pdf matrix r.Pdfpage.resources}
     in
       {u with
          Pdfpage.content =
