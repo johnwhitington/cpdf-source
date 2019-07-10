@@ -288,8 +288,7 @@ let squeeze_all_content_streams pdf =
             | _ -> ())
         pdf
 
-(* We run squeeze enough times to reach a fixed point in the cardinality of the
- * object map *)
+(* We run squeeze enough times for the number of objects to not change *)
 let squeeze ?logto pdf =
   let log x =
     match logto with
@@ -2265,6 +2264,32 @@ let change_pattern_matrices pdf tr resources =
   with
     Pdftransform.NonInvertable -> resources
 
+(* Apply transformations to any annotations in /Annots (i.e their /Rect entries) *)
+let transform_annotations pdf transform rest =
+  match Pdf.lookup_direct pdf "/Annots" rest with
+  | Some (Pdf.Array annots) ->
+      (* Always indirect references, so alter in place *)
+      List.iter
+        (function
+         | Pdf.Indirect i ->
+             let annot = Pdf.lookup_obj pdf i in
+               let rect' =
+                 match Pdf.lookup_direct pdf "/Rect" annot with
+                   Some rect ->
+                     let minx, miny, maxx, maxy = Pdf.parse_rectangle rect in
+                       let (minx', miny') = Pdftransform.transform_matrix transform (minx, miny) in
+                       let (maxx', maxy') = Pdftransform.transform_matrix transform (maxx, maxy) in
+                         (* FIXME: This is not correct for -rotate-contents <> 90 degree changes. Need to find the axis-aligned box which encloses the new rotated box *) 
+                         Pdf.Array [Pdf.Real (fmin minx' maxx'); Pdf.Real (fmin miny' maxy');
+                                    Pdf.Real (fmax maxx' minx'); Pdf.Real (fmax miny' maxy')]
+                 | None -> raise (Pdf.PDFError "transform_annotations: no rect")
+               in
+                 let annot' = Pdf.add_dict_entry annot "/Rect" rect' in 
+                 Pdf.addobj_given_num pdf (i, annot')
+         | _ -> Printf.eprintf "transform_annotations: not indirect")
+        annots
+   | _ -> ()
+
 let shift_page ?(fast=false) dxdylist pdf pnum page =
   let dx, dy = List.nth dxdylist (pnum - 1) in
     let transform_op =
@@ -2273,6 +2298,7 @@ let shift_page ?(fast=false) dxdylist pdf pnum page =
       let resources' =
         change_pattern_matrices pdf (Pdftransform.mktranslate ~-.dx ~-.dy) page.Pdfpage.resources
       in
+        transform_annotations pdf (Pdftransform.mktranslate ~-.dx ~-.dy) page.Pdfpage.rest;
         Pdfpage.prepend_operators pdf [transform_op] ~fast {page with Pdfpage.resources = resources'}
 
 let shift_pdf ?(fast=false) dxdylist pdf range =
@@ -2302,6 +2328,7 @@ let flip_page ?(fast=false) transform_op pdf _ page =
       let resources =
         change_pattern_matrices pdf tr page.Pdfpage.resources
       in
+        transform_annotations pdf tr page.Pdfpage.rest;
         Pdfpage.prepend_operators pdf [Pdfops.Op_cm tr] ~fast {page with Pdfpage.resources = resources}
 
 let vflip_pdf ?(fast=false) pdf range =
@@ -2723,6 +2750,7 @@ let rotate_page_contents ~fast rotpoint r pdf _ page =
     in    
       let transform_op = Pdfops.Op_cm tr in
         let resources' = change_pattern_matrices pdf tr2 page.Pdfpage.resources in
+          transform_annotations pdf tr page.Pdfpage.rest;
           Pdfpage.prepend_operators pdf [transform_op] ~fast {page with Pdfpage.resources = resources'}
 
 let rotate_contents ?(fast=false) r pdf range =
@@ -2766,6 +2794,7 @@ let transform_boxes tr pdf page =
 let transform_contents ?(fast=false) tr pdf page =
   let transform_op = Pdfops.Op_cm tr in
     let resources' = change_pattern_matrices pdf (Pdftransform.matrix_invert tr) page.Pdfpage.resources in
+      transform_annotations pdf tr page.Pdfpage.rest;
       Pdfpage.prepend_operators pdf [transform_op] ~fast {page with Pdfpage.resources = resources'}
 
 let upright ?(fast=false) range pdf =
@@ -2792,6 +2821,7 @@ let scale_pdf ?(fast=false) sxsylist pdf range =
           and resources' =
             change_pattern_matrices pdf (Pdftransform.matrix_invert matrix) page.Pdfpage.resources
           in
+           transform_annotations pdf matrix page.Pdfpage.rest;
            Pdfpage.prepend_operators pdf ~fast [transform_op] {page with Pdfpage.resources = resources'} 
       in
         process_pages scale_page pdf range
@@ -2831,34 +2861,12 @@ let scale_to_fit_pdf ?(fast=false) position input_scale xylist op pdf range =
           (function (minx, miny, maxx, maxy) -> 0., 0., x, y)
           pdf page
       in
+        transform_annotations pdf matrix page.Pdfpage.rest;
         Pdfpage.prepend_operators pdf [Pdfops.Op_cm matrix] ~fast
         {page with Pdfpage.resources = change_pattern_matrices pdf (Pdftransform.matrix_invert matrix) page.Pdfpage.resources}
   in
     process_pages scale_page_to_fit pdf range
 
-(* Apply transformations to any annotations in /Annots (i.e their /Rect entries) *)
-let transform_annotations pdf transform rest =
-  match Pdf.lookup_direct pdf "/Annots" rest with
-  | Some (Pdf.Array annots) ->
-      (* Always indirect references, so alter in place *)
-      List.iter
-        (function
-         | Pdf.Indirect i ->
-             let annot = Pdf.lookup_obj pdf i in
-               let rect' =
-                 match Pdf.lookup_direct pdf "/Rect" annot with
-                   Some rect ->
-                     let minx, miny, maxx, maxy = Pdf.parse_rectangle rect in
-                       let (minx', miny') = Pdftransform.transform_matrix transform (minx, miny) in
-                       let (maxx', maxy') = Pdftransform.transform_matrix transform (maxx, maxy) in
-                         Pdf.Array [Pdf.Real minx'; Pdf.Real miny'; Pdf.Real maxx'; Pdf.Real maxy']
-                 | None -> raise (Pdf.PDFError "transform_annotations: no rect")
-               in
-                 let annot' = Pdf.add_dict_entry annot "/Rect" rect' in 
-                 Pdf.addobj_given_num pdf (i, annot')
-         | _ -> Printf.eprintf "transform_annotations: not indirect")
-        annots
-   | _ -> ()
 
 (* Scale contents *)
 let scale_page_contents ?(fast=false) scale position pdf _ page =
