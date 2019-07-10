@@ -2836,6 +2836,30 @@ let scale_to_fit_pdf ?(fast=false) position input_scale xylist op pdf range =
   in
     process_pages scale_page_to_fit pdf range
 
+(* Apply transformations to any annotations in /Annots (i.e their /Rect entries) *)
+let transform_annotations pdf transform rest =
+  match Pdf.lookup_direct pdf "/Annots" rest with
+  | Some (Pdf.Array annots) ->
+      (* Always indirect references, so alter in place *)
+      List.iter
+        (function
+         | Pdf.Indirect i ->
+             let annot = Pdf.lookup_obj pdf i in
+               let rect' =
+                 match Pdf.lookup_direct pdf "/Rect" annot with
+                   Some rect ->
+                     let minx, miny, maxx, maxy = Pdf.parse_rectangle rect in
+                       let (minx', miny') = Pdftransform.transform_matrix transform (minx, miny) in
+                       let (maxx', maxy') = Pdftransform.transform_matrix transform (maxx, maxy) in
+                         Pdf.Array [Pdf.Real minx'; Pdf.Real miny'; Pdf.Real maxx'; Pdf.Real maxy']
+                 | None -> raise (Pdf.PDFError "transform_annotations: no rect")
+               in
+                 let annot' = Pdf.add_dict_entry annot "/Rect" rect' in 
+                 Pdf.addobj_given_num pdf (i, annot')
+         | _ -> Printf.eprintf "transform_annotations: not indirect")
+        annots
+   | _ -> ()
+
 (* Scale contents *)
 let scale_page_contents ?(fast=false) scale position pdf _ page =
   let (minx, miny, maxx, maxy) as box =
@@ -2865,7 +2889,9 @@ let scale_page_contents ?(fast=false) scale position pdf _ page =
       in
         let transform_op = Pdfops.Op_cm transform in
           let resources' = change_pattern_matrices pdf transform page.Pdfpage.resources in
-            Pdfpage.prepend_operators pdf [transform_op] ~fast {page with Pdfpage.resources = resources'}
+          transform_annotations pdf transform page.Pdfpage.rest;
+          Pdfpage.prepend_operators pdf [transform_op] ~fast
+            {page with Pdfpage.resources = resources'}
 
 let scale_contents ?(fast=false) position scale pdf range =
   process_pages (scale_page_contents ~fast scale position pdf) pdf range
