@@ -184,6 +184,7 @@ type op =
   | EmbedMissingFonts
   | BookmarksOpenToLevel of int
   | CreatePDF
+  | RemoveAllText
 
 let string_of_op = function
   | CopyFont _ -> "CopyFont"
@@ -301,6 +302,7 @@ let string_of_op = function
   | EmbedMissingFonts -> "EmbedMissingFonts"
   | BookmarksOpenToLevel _ -> "BookmarksOpenToLevel"
   | CreatePDF -> "CreatePDF"
+  | RemoveAllText -> "RemoveAllText"
 
 (* Inputs: filename, pagespec. *)
 type input_kind =
@@ -673,7 +675,7 @@ let banned banlist = function
     AddText _|ScaleContents _|AttachFile _|CopyAnnotations _|SetMetadata _|
     ThinLines _|SetAuthor _|SetTitle _|SetSubject _|SetKeywords _|SetCreate _|
     SetModify _|SetCreator _|SetProducer _|SetVersion _|RemoveDictEntry _ |
-    RemoveClipping | SetMetadataDate _ | CreateMetadata ->
+    RemoveClipping | SetMetadataDate _ | CreateMetadata | RemoveAllText ->
       mem Pdfcrypt.NoEdit banlist
 
 let operation_allowed pdf banlist op =
@@ -2202,6 +2204,9 @@ and specs =
    ("-boxes",
       Arg.Unit setboxes,
       " Add crossed boxes to -draft option");
+   ("-remove-all-text",
+      Arg.Unit (setop RemoveAllText),
+      " Remove all text");
    ("-blacktext",
       Arg.Unit (setop BlackText),
       " Blacken document text");
@@ -3573,6 +3578,42 @@ let create_pdf pages pagesize =
     let pdf, pageroot = Pdfpage.add_pagetree (many page args.createpdf_pages) (Pdf.empty ()) in
       Pdfpage.add_root pageroot [] pdf
 
+let rec remove_all_text_ops pdf resources content =
+  let is_textop = function
+    Pdfops.Op_Tj _ | Pdfops.Op_' _ | Pdfops.Op_'' _ | Pdfops.Op_TJ _ -> true
+  | _ -> false
+  in
+    let content' =
+      let ops = Pdfops.parse_operators pdf resources content in
+        Pdfops.stream_of_ops
+          (option_map (function x -> if is_textop x then None else Some x) ops) 
+    in
+      [content']
+
+let remove_all_text_page pdf p =
+  let resources = p.Pdfpage.resources in
+  let content = p.Pdfpage.content in
+    Cpdf.process_xobjects pdf p remove_all_text_ops;
+    {p with content = remove_all_text_ops pdf resources content}, pdf
+
+let remove_all_text range pdf =
+  let pages = Pdfpage.pages_of_pagetree pdf in
+    let pagenums = indx pages in
+    let pdf = ref pdf in
+    let pages' = ref [] in
+      iter2 
+        (fun p pagenum ->
+          let p', pdf' =
+            if mem pagenum range
+              then remove_all_text_page !pdf p
+              else p, !pdf
+          in
+            pdf := pdf';
+            pages' =| p')
+        pages
+        pagenums;
+      Pdfpage.change_pages true !pdf (rev !pages')
+
 (* Main function *)
 let go () =
   match args.op with
@@ -4434,6 +4475,10 @@ let go () =
   | Some CreatePDF ->
       let pdf = create_pdf args.createpdf_pages args.createpdf_pagesize in
         write_pdf false pdf
+  | Some RemoveAllText ->
+      let pdf = get_single_pdf args.op false in
+      let range = parse_pagespec pdf (get_pagespec ()) in
+        write_pdf false (remove_all_text range pdf)
 
 let parse_argv () =
   if args.debug then
