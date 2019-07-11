@@ -3163,16 +3163,57 @@ let twoup_stack_transforms mediabox =
       in let t1 = Pdftransform.matrix_of_transform [tr1; rotate] in
         [t0; t1]
 
+(* Union two rest dictionaries from the same PDF. *)
+let combine_pdf_rests pdf a b =
+  let a_entries =
+    match a with
+    | Pdf.Dictionary entries -> entries
+    | _ -> []
+  in let b_entries =
+    match b with
+    | Pdf.Dictionary entries -> entries
+    | _ -> []
+  in
+    let keys_to_combine = ["/Annots"] in
+      let combine_entries key =
+        let a_entries =
+          match Pdf.lookup_direct pdf key a with
+          | Some (Pdf.Array d) -> d
+          | _ -> []
+        in let b_entries =
+          match Pdf.lookup_direct pdf key b with
+          | Some (Pdf.Array d) -> d
+          | _ -> []
+        in
+          if a_entries = [] && b_entries = [] then
+            None
+          else
+            Some (key, Pdf.Array (a_entries @ b_entries))
+      in
+        let unknown_keys_a = lose (fun (k, _) -> mem k keys_to_combine) a_entries in
+        let unknown_keys_b = lose (fun (k, _) -> mem k keys_to_combine) b_entries in
+        let combined_known_entries = option_map combine_entries keys_to_combine in
+          Pdf.Dictionary (unknown_keys_a @ unknown_keys_b @ combined_known_entries)
+          
 (* Combine two pages into one throughout the document. The pages have already
 had their objects renumbered so as not to clash.*)
 let twoup_pages_inner isstack fast pdf = function
   | [] -> assert false
   | (h::_) as pages ->
-     let resources' =
-       pair_reduce
-         (combine_pdf_resources pdf)
-         (map (fun p -> p.Pdfpage.resources) pages)
+     let transforms = 
+       take (((if isstack then twoup_stack_transforms else twoup_transforms) h.Pdfpage.mediabox)) (length pages)
      in
+       (* Change the pattern matrices before combining resources *)
+       let pages, h =
+         let r =
+           List.map2
+             (fun p t -> {p with Pdfpage.resources = change_pattern_matrices pdf t p.Pdfpage.resources})
+             pages transforms
+         in
+           r, List.hd r
+       in
+     let resources' = pair_reduce (combine_pdf_resources pdf) (map (fun p -> p.Pdfpage.resources) pages) in
+     let rest' = pair_reduce (combine_pdf_rests pdf) (map (fun p -> p.Pdfpage.rest) pages) in
        let content' =
           let transform_stream clipbox contents transform =
             let clipops =
@@ -3194,14 +3235,15 @@ let twoup_pages_inner isstack fast pdf = function
           in
             List.flatten
               (map2
-              (fun p ->
+              (fun p t ->
+                 transform_annotations pdf t p.Pdfpage.rest;
                  transform_stream
                    (match Pdf.lookup_direct pdf "/CropBox" p.Pdfpage.rest with
                       None -> p.Pdfpage.mediabox
                     | Some box -> box)
-                   p.Pdfpage.content)
+                   p.Pdfpage.content t)
               pages
-              (take (((if isstack then twoup_stack_transforms else twoup_transforms) h.Pdfpage.mediabox)) (length pages)))
+              transforms)
        in
          {Pdfpage.mediabox =
            if isstack then
@@ -3215,7 +3257,7 @@ let twoup_pages_inner isstack fast pdf = function
           Pdfpage.rotate = h.Pdfpage.rotate;
           Pdfpage.content = content';
           Pdfpage.resources = resources';
-          Pdfpage.rest = if isstack then Pdf.remove_dict_entry h.Pdfpage.rest "/CropBox" else h.Pdfpage.rest}
+          Pdfpage.rest = if isstack then Pdf.remove_dict_entry rest' "/CropBox" else rest'}
 
 let f_twoup f_pages pdf =
   let pagenums = ilist 1 (Pdfpage.endpage pdf) in
