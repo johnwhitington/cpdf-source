@@ -2380,6 +2380,14 @@ let rec get_single_pdf ?(decrypt=true) ?(fail=false) op read_lazy =
     end
   in
   let warn_gs () =
+    begin match args.inputs with
+      (InFile inname, _, _, _, _, _)::_ ->
+        begin try ignore (close_in (open_in inname)) with _ ->
+          Printf.eprintf "File %s does not exist" inname;
+          exit 2
+        end
+    | _ -> ()
+    end;
     Printf.eprintf "Failed to read malformed PDF file. Consider using -gs-malformed\n";
     exit 2
   in
@@ -2448,6 +2456,14 @@ let rec get_pdf_from_input_kind ?(read_lazy=false) ?(decrypt=true) ?(fail=false)
     end
   in
   let warn_gs () =
+    begin match input with
+      (InFile inname, _, _, _, _, _) ->
+        begin try ignore (close_in (open_in inname)) with _ ->
+          Printf.eprintf "File %s does not exist\n" inname;
+          exit 2
+        end
+    | _ -> ()
+    end;
     Printf.eprintf "Failed to read malformed PDF file. Consider using -gs-malformed\n";
     exit 2
   in
