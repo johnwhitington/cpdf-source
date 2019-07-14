@@ -2192,7 +2192,7 @@ let change_boxes f pdf page =
 alter any /Matrix entries in pattern dictionaries for tiled and shading
 patterns. In addition, shadings used by Op_sh in the main page content and in
 xobjects must be altered. *)
-(*let rec change_shadings pdf tr resources =
+let rec change_shadings pdf tr resources =
   let transform_shading s =
     s
   in
@@ -2235,11 +2235,13 @@ xobjects must be altered. *)
           | _ -> resources
           end
     with
-      _ -> resources*)
+      _ ->
+        Printf.eprintf "Error in change_shadings: returning default resources\n";
+        resources
 
 let change_pattern_matrices pdf tr resources =
   try
-    (*let resources = change_shadings pdf tr resources in*)
+    let resources = change_shadings pdf tr resources in
       begin match Pdf.lookup_direct pdf "/Pattern" resources with
       | Some (Pdf.Dictionary patterns) ->
           let names, nums =
@@ -2262,7 +2264,9 @@ let change_pattern_matrices pdf tr resources =
       | _ -> resources
     end
   with
-    Pdftransform.NonInvertable -> resources
+    Pdftransform.NonInvertable ->
+      Printf.eprintf "Warning: noninvertible matrix";
+      resources
 
 (* Apply transformations to any annotations in /Annots (i.e their /Rect entries) *)
 let transform_annotations pdf transform rest =

@@ -1513,10 +1513,10 @@ let setimageresolution f =
 let setgspath p =
   args.path_to_ghostscript <- p
 
-let setvertical () =
+let settextvertical () =
   args.orientation <- Cpdf.Vertical
 
-let setverticaldown () =
+let settextverticaldown () =
   args.orientation <- Cpdf.VerticalDown
 
 let setfrombox s =
@@ -2164,7 +2164,7 @@ and specs =
       " List attached files");
    ("-dump-attachments",
       Arg.Unit (setop DumpAttachedFiles),
-      "");
+      " Dump attachments to disk");
    ("-attach-file",
       Arg.String setattachfile,
       " Attach a file");
@@ -2282,8 +2282,8 @@ and specs =
    ("-csp1", Arg.Unit (setop CSP1), "");
    ("-csp2", Arg.Float setcsp2, "");
    ("-csp3", Arg.Unit (setop CSP3), "");
-   ("-text-vertical", Arg.Unit setvertical, "");
-   ("-text-vertical-down", Arg.Unit setverticaldown, "");
+   ("-text-vertical", Arg.Unit settextvertical, "");
+   ("-text-vertical-down", Arg.Unit settextverticaldown, "");
    ("-flat-kids", Arg.Unit setflatkids, "");
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit setdebugcrypt, "");
@@ -2673,8 +2673,7 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
                 end;
                 flush stdout (*r For Windows *)
 
-(* Returns empty string on failure. Should only be used in conjunction with
-split at bookmarks code, so should never fail, by definiton. *)
+(* Remove characters which might not make good filenames. *)
 let remove_unsafe_characters s =
   if args.encoding = Cpdf.Raw then s else
     let chars =
@@ -3342,11 +3341,15 @@ let dump_attachment out pdf (_, embeddedfile) =
         | _ -> error "Bad embedded file stream"
         end
       in
-        let filename = if out = "" then s else out ^ "/" ^ s in (* FIXME dirsep! *)
-        (*i Printf.printf "writing to %s\n" filename; i*)
+        let s = remove_unsafe_characters s in
+        let filename = if out = "" then s else out ^ Filename.dir_sep ^ s in
+        begin try
           let fh = open_out_bin filename in
             for x = 0 to bytes_size efdata - 1 do output_byte fh (bget efdata x) done;
             close_out fh
+        with
+          e -> Printf.eprintf "Failed to write attachment to %s\n" filename;
+        end
   | _ -> ()
 
 let dump_attached_document pdf out =
@@ -3382,7 +3385,7 @@ let dump_attached_files pdf out =
     dump_attached_document pdf out;
     iter (dump_attached_page pdf out) (Pdfpage.pages_of_pagetree pdf)
   with
-    _ -> error "Couldn't dump attached files"
+    e -> error (Printf.sprintf "Couldn't dump attached files: %s\n" (Printexc.to_string e))
 
 (* If pages in stamp < pages in main, extend stamp by repeating its last page. If pages in stamp more, chop stamp *)
 let equalize_pages_extend main stamp =
