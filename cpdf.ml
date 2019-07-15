@@ -2192,56 +2192,45 @@ let change_boxes f pdf page =
 alter any /Matrix entries in pattern dictionaries for tiled and shading
 patterns. In addition, shadings used by Op_sh in the main page content and in
 xobjects must be altered. *)
-let rec change_shadings pdf tr resources =
-  let transform_shading s =
-    s
-  in
-    try
-      let resources =
-        begin match Pdf.lookup_direct pdf "/Shading" resources with
-        | Some (Pdf.Dictionary shadings) ->
-            let names, nums =
-              split
-                (map
-                   (fun (name, shading) ->
-                      Printf.printf "Fixing up shading %s\n" name;
-                      name, Pdf.addobj pdf (transform_shading shading))
-                   shadings)
-            in
-              let entries =
-                map2 (fun name num -> name, Pdf.Indirect num) names nums
-              in
-                Pdf.add_dict_entry resources "/Shading" (Pdf.Dictionary entries)
-        | _ -> resources
-        end
-      in
-        let process_xobject xobject =
-          change_shadings pdf tr xobject
-        in
-          begin match Pdf.lookup_direct pdf "/XObject" resources with
-          | Some (Pdf.Dictionary xobjects) ->
-              let names, nums =
-                split
-                  (map
-                     (fun (name, xobject) ->
-                        Printf.printf "Looking for shadings in xobject %s\n" name;
-                        name, Pdf.addobj pdf (process_xobject xobject))
-                     xobjects)
-              in
-                let entries =
-                  map2 (fun name num -> name, Pdf.Indirect num) names nums
-                in
-                  Pdf.add_dict_entry resources "/XObject" (Pdf.Dictionary entries)
-          | _ -> resources
-          end
-    with
-      _ ->
-        Printf.eprintf "Error in change_shadings: returning default resources\n";
-        resources
 
+(*let transform_shading tr s = s
+
+let change_shadings pdf tr shadingdict =
+  match Pdf.direct pdf shadingdict with
+  | Pdf.Dictionary shadings ->
+      let shadings' =
+        map
+          (fun (name, shading) ->
+             Printf.printf "Fixing up shading %s\n" name;
+             (name, Pdf.Indirect (Pdf.addobj pdf (transform_shading tr shading))))
+           shadings
+      in
+        Pdf.Dictionary shadings'
+  | _ -> raise (Pdf.PDFError "not a shading dictionary")
+
+let change_shadings_xobject pdf tr xobject =
+  match Pdf.lookup_direct pdf "/Shading" xobject with
+  | Some ss -> Pdf.add_dict_entry xobject "/Shading" (change_shadings pdf tr ss)
+  | None -> xobject
+
+let change_shadings pdf tr resources =
+  match Pdf.lookup_direct pdf "/XObject" resources with
+  | Some (Pdf.Dictionary xobjects) ->
+      let entries =
+        map
+           (fun (name, xobject) ->
+              Printf.printf "Looking for shadings in xobject %s\n" name;
+              name, Pdf.Indirect (Pdf.addobj pdf (change_shadings_xobject pdf tr xobject)))
+           xobjects
+      in
+        Pdf.add_dict_entry resources "/XObject" (Pdf.Dictionary entries)
+  | _ -> resources*)
+
+
+(* FIXME: Why doesn't this do patterns in xobjects? Are they always in page space not xobject space? Is change_shadings a wild goose chase? *)
 let change_pattern_matrices pdf tr resources =
   try
-    let resources = change_shadings pdf tr resources in
+    (*let resources = change_shadings pdf tr resources in*)
       begin match Pdf.lookup_direct pdf "/Pattern" resources with
       | Some (Pdf.Dictionary patterns) ->
           let names, nums =
