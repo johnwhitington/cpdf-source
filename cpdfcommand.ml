@@ -185,6 +185,7 @@ type op =
   | BookmarksOpenToLevel of int
   | CreatePDF
   | RemoveAllText
+  | ShowBoxes
 
 let string_of_op = function
   | CopyFont _ -> "CopyFont"
@@ -303,6 +304,7 @@ let string_of_op = function
   | BookmarksOpenToLevel _ -> "BookmarksOpenToLevel"
   | CreatePDF -> "CreatePDF"
   | RemoveAllText -> "RemoveAllText"
+  | ShowBoxes -> "ShowBoxes"
 
 (* Inputs: filename, pagespec. *)
 type input_kind =
@@ -653,7 +655,8 @@ let banned banlist = function
   | ListBookmarks | ImageResolution _ | MissingFonts
   | PrintPageLabels | Clean | Compress | Decompress
   | RemoveUnusedResources | ChangeId | CopyId _ | ListSpotColours | Version
-  | DumpAttachedFiles | RemoveMetadata | EmbedMissingFonts | BookmarksOpenToLevel _ | CreatePDF -> false (* Always allowed *)
+  | DumpAttachedFiles | RemoveMetadata | EmbedMissingFonts | BookmarksOpenToLevel _ | CreatePDF
+  | ShowBoxes -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
   | ExtractText | ExtractImages | ExtractFontFile
@@ -1822,6 +1825,9 @@ and specs =
    ("-hard-box",
        Arg.String sethardbox,
        " Hard crop specified pages to the given box");
+   ("-show-boxes",
+       Arg.Unit (setop ShowBoxes),
+       " Show boxes by adding rectangles to pages");
    ("-remove-crop",
        Arg.Unit (setop RemoveCrop),
        " Remove cropping on specified pages");
@@ -3633,6 +3639,52 @@ let remove_all_text range pdf =
         pagenums;
       Pdfpage.change_pages true !pdf (rev !pages')
 
+(* Add rectangles on top of pages to show Media, Crop, Art, Trim, Bleed boxes.
+ *
+ * We use different dash lengths and colours to help distinguish coincident
+ * boxes The sequence of operators is postpended to the page content,
+ * appropriately protected to prevent pollution of matrices.
+ *
+ * /MediaBox: Solid red line
+ * /CropBox: Dashed 7 on 7 off green line
+ * /ArtBox: Dashed 5 on 5 off blue line
+ * /TrimBox: Dashed 3 on 3 off orange line
+ * /BleedBox: Dashed 2 on 2 off pink line *)
+let get_rectangle pdf page box =
+  if box = "/MediaBox" then
+    match page.Pdfpage.mediabox with
+      Pdf.Array [a; b; c; d] as r -> Some (Pdf.parse_rectangle r)
+    | _ -> None
+  else
+    match Pdf.lookup_direct pdf box page.Pdfpage.rest with
+      Some (Pdf.Array [a; b; c; d] as r) -> Some (Pdf.parse_rectangle r)
+    | _ -> None
+
+let show_boxes_page pdf _ page =
+  let make_ops (r, g, b) on off boxname =
+    match get_rectangle pdf page boxname with
+      Some (r1, r2, r3, r4) ->
+        [Pdfops.Op_q;
+         Pdfops.Op_RG (r /. 255., g /. 255., b /. 255.);
+         Pdfops.Op_w 1.;
+         Pdfops.Op_d ((if on = 0. && off = 0. then [] else [on; off]), 0.);
+         Pdfops.Op_re (r1, r2, r3 -. r1, r4 -. r2);
+         Pdfops.Op_S;
+         Pdfops.Op_Q]
+    | None -> []
+  in
+    let ops =
+        make_ops (255., 0., 0.) 0. 0. "/MediaBox"
+      @ make_ops (0., 255., 0.) 7. 7. "/CropBox"
+      @ make_ops (0., 0., 255.) 5. 5. "/ArtBox"
+      @ make_ops (255.,150.,0.) 3. 3. "/TrimBox"
+      @ make_ops (255.,9.,147.) 2. 2. "/BleedBox"
+    in
+      Pdfpage.postpend_operators pdf ops ~fast:args.fast page
+
+let show_boxes range pdf =
+  Cpdf.process_pages (show_boxes_page pdf) pdf range
+
 (* Main function *)
 let go () =
   match args.op with
@@ -4498,6 +4550,10 @@ let go () =
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
         write_pdf false (remove_all_text range pdf)
+  | Some ShowBoxes ->
+      let pdf = get_single_pdf args.op false in
+      let range = parse_pagespec pdf (get_pagespec ()) in
+        write_pdf false (show_boxes range pdf)
 
 let parse_argv () =
   if args.debug then
