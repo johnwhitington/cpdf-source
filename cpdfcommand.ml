@@ -186,6 +186,7 @@ type op =
   | CreatePDF
   | RemoveAllText
   | ShowBoxes
+  | TrimMarks
 
 let string_of_op = function
   | CopyFont _ -> "CopyFont"
@@ -305,6 +306,7 @@ let string_of_op = function
   | CreatePDF -> "CreatePDF"
   | RemoveAllText -> "RemoveAllText"
   | ShowBoxes -> "ShowBoxes"
+  | TrimMarks -> "TrimMarks"
 
 (* Inputs: filename, pagespec. *)
 type input_kind =
@@ -656,7 +658,7 @@ let banned banlist = function
   | PrintPageLabels | Clean | Compress | Decompress
   | RemoveUnusedResources | ChangeId | CopyId _ | ListSpotColours | Version
   | DumpAttachedFiles | RemoveMetadata | EmbedMissingFonts | BookmarksOpenToLevel _ | CreatePDF
-  | ShowBoxes -> false (* Always allowed *)
+  | ShowBoxes | TrimMarks -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
   | ExtractText | ExtractImages | ExtractFontFile
@@ -1828,6 +1830,9 @@ and specs =
    ("-show-boxes",
        Arg.Unit (setop ShowBoxes),
        " Show boxes by adding rectangles to pages");
+   ("-trim-marks",
+       Arg.Unit (setop TrimMarks),
+       " Add trim marks");
    ("-remove-crop",
        Arg.Unit (setop RemoveCrop),
        " Remove cropping on specified pages");
@@ -3685,6 +3690,36 @@ let show_boxes_page pdf _ page =
 let show_boxes range pdf =
   Cpdf.process_pages (show_boxes_page pdf) pdf range
 
+let allowance = 9.
+
+let line (x0, y0, x1, y1) =
+  [Pdfops.Op_m (x0, y0);
+   Pdfops.Op_l (x1, y1);
+   Pdfops.Op_s]
+
+let trim_marks_page pdf n page =
+  match get_rectangle pdf page "/TrimBox", get_rectangle pdf page "/MediaBox" with
+  | Some (tminx, tminy, tmaxx, tmaxy), Some (minx, miny, maxx, maxy) ->
+      let ops =
+        [Pdfops.Op_q;
+         Pdfops.Op_K (1., 1., 1., 1.);
+         Pdfops.Op_w 1.]
+         @ line (minx, tmaxy, tminy -. allowance, tmaxy) (* top left *)
+         @ line (tminx, tmaxy +. allowance, tminx, maxy)
+         @ line (tmaxx +. allowance, tmaxy, maxx, tmaxy) (* top right *)
+         @ line (tmaxx, tmaxy +. allowance, tmaxx, maxy)
+         @ line (tmaxx +. allowance, tminy, maxx, tminy) (* bottom right *)
+         @ line (tmaxx, tminy -. allowance, tmaxx, miny)
+         @ line (tminx -. allowance, tminy, minx, tminy) (* bottom left *)
+         @ line (tminx, tminy -. allowance, tminx, miny)
+         @ [Pdfops.Op_Q]
+      in
+        Pdfpage.postpend_operators pdf ops ~fast:args.fast page
+  | _, _ -> Printf.eprintf "-trim_marks: No /TrimBox found on page %i\n" n; page
+
+let trim_marks range pdf =
+  Cpdf.process_pages (trim_marks_page pdf) pdf range
+
 (* Main function *)
 let go () =
   match args.op with
@@ -4554,6 +4589,10 @@ let go () =
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
         write_pdf false (show_boxes range pdf)
+  | Some TrimMarks ->
+      let pdf = get_single_pdf args.op false in
+      let range = parse_pagespec pdf (get_pagespec ()) in
+        write_pdf false (trim_marks range pdf)
 
 let parse_argv () =
   if args.debug then
