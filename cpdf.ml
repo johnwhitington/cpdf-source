@@ -2223,13 +2223,14 @@ let process_xobjects pdf page f =
 
 (* The content transformed by altering any use of [Op_cm]. But we must also
 alter any /Matrix entries in pattern dictionaries *)
-let change_pattern_matrices_page pdf tr page =
+let change_pattern_matrices_resources pdf tr resources =
   try
-    begin match Pdf.lookup_direct pdf "/Pattern" page.Pdfpage.resources with
+    begin match Pdf.lookup_direct pdf "/Pattern" resources with
     | Some (Pdf.Dictionary patterns) ->
         let entries =
           map
             (fun (name, p) ->
+              Printf.printf "Changing matrices of pattern %s\n" name;
               let old_pattern = Pdf.direct pdf p in
                 let new_pattern =
                   let existing_tr = Pdf.parse_matrix pdf "/Matrix" old_pattern in
@@ -2239,14 +2240,43 @@ let change_pattern_matrices_page pdf tr page =
                   name, Pdf.Indirect (Pdf.addobj pdf new_pattern))
             patterns
          in
-           {page with Pdfpage.resources =
-             Pdf.add_dict_entry page.Pdfpage.resources "/Pattern" (Pdf.Dictionary entries)}
-    | _ -> page
+           Pdf.add_dict_entry resources "/Pattern" (Pdf.Dictionary entries)
+    | _ -> resources
   end
     with
       Pdftransform.NonInvertable ->
         Printf.eprintf "Warning: noninvertible matrix";
+        resources
+
+let change_pattern_matrices_page pdf tr page =
+  let page =
+    {page with Pdfpage.resources = change_pattern_matrices_resources pdf tr page.Pdfpage.resources}
+  in
+    match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
+    | Some (Pdf.Dictionary elts) ->
+        iter
+          (fun (k, v) -> 
+             match v with
+             | Pdf.Indirect i ->
+                 (* Check if it's a form XObject. If so, rewrite its resources and add back as same number. *)
+                 begin match Pdf.lookup_direct pdf "/Subtype" v with
+                 | Some (Pdf.Name "/Form") ->
+                     Printf.printf "Processing form xobject %s for patterns\n" k; 
+                     let form_xobject = Pdf.lookup_obj pdf i in
+                       begin match Pdf.lookup_direct pdf "/Resources" form_xobject with
+                       | Some resources ->
+                           let form_xobject' =
+                             Pdf.add_dict_entry form_xobject "/Resources" (change_pattern_matrices_resources pdf tr resources)  
+                           in
+                             Pdf.addobj_given_num pdf (i, form_xobject')
+                       | _ -> ()
+                       end
+                 | _ -> ()
+                 end;
+             | _ -> raise (Pdf.PDFError "change_pattern_matrices_page"))
+          elts;
         page
+    | _ -> page
 
 (* Apply transformations to any annotations in /Annots (i.e their /Rect entries) *)
 let transform_annotations pdf transform rest =
