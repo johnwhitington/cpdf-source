@@ -2188,74 +2188,65 @@ let change_boxes f pdf page =
                  make_mediabox (f (Pdf.parse_rectangle page.Pdfpage.mediabox));
                Pdfpage.rest = rest'}
 
-(* The content is flipped by altering any use of [Op_cm]. But we must also
-alter any /Matrix entries in pattern dictionaries for tiled and shading
-patterns. In addition, shadings used by Op_sh in the main page content and in
-xobjects must be altered. *)
+let process_xobject f pdf resources i =
+  let xobj = Pdf.lookup_obj pdf i in
+    match Pdf.lookup_direct pdf "/Subtype" xobj with
+    | None -> raise (Pdf.PDFError "No /Subtype in Xobject") 
+    | Some (Pdf.Name "/Form") ->
+        Pdf.getstream xobj;
+        begin match xobj with
+        | Pdf.Stream ({contents = Pdf.Dictionary dict, Pdf.Got bytes} as rf) ->
+            begin match f pdf resources [Pdf.Stream rf] with
+            | [Pdf.Stream {contents = (Pdf.Dictionary dict', data)}] ->
+                let dict' =
+                  Pdf.remove_dict_entry
+                    (Pdf.Dictionary (mergedict dict dict'))
+                    "/Filter"
+                in
+                  rf := (dict', data)
+            | _ -> assert false
+            end
+        | _ -> assert false (* getstream would have complained already *)
+        end
+    | Some _ -> ()
 
-(*let transform_shading tr s = s
+let process_xobjects pdf page f =
+  match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
+  | Some (Pdf.Dictionary elts) ->
+      iter
+        (fun (k, v) ->
+          match v with
+          | Pdf.Indirect i -> process_xobject f pdf page.Pdfpage.resources i
+          | _ -> raise (Pdf.PDFError "process_xobject"))
+        elts
+  | _ -> ()
 
-let change_shadings pdf tr shadingdict =
-  match Pdf.direct pdf shadingdict with
-  | Pdf.Dictionary shadings ->
-      let shadings' =
-        map
-          (fun (name, shading) ->
-             Printf.printf "Fixing up shading %s\n" name;
-             (name, Pdf.Indirect (Pdf.addobj pdf (transform_shading tr shading))))
-           shadings
-      in
-        Pdf.Dictionary shadings'
-  | _ -> raise (Pdf.PDFError "not a shading dictionary")
-
-let change_shadings_xobject pdf tr xobject =
-  match Pdf.lookup_direct pdf "/Shading" xobject with
-  | Some ss -> Pdf.add_dict_entry xobject "/Shading" (change_shadings pdf tr ss)
-  | None -> xobject
-
-let change_shadings pdf tr resources =
-  match Pdf.lookup_direct pdf "/XObject" resources with
-  | Some (Pdf.Dictionary xobjects) ->
-      let entries =
-        map
-           (fun (name, xobject) ->
-              Printf.printf "Looking for shadings in xobject %s\n" name;
-              name, Pdf.Indirect (Pdf.addobj pdf (change_shadings_xobject pdf tr xobject)))
-           xobjects
-      in
-        Pdf.add_dict_entry resources "/XObject" (Pdf.Dictionary entries)
-  | _ -> resources*)
-
-
-(* FIXME: Why doesn't this do patterns in xobjects? Are they always in page space not xobject space? Is change_shadings a wild goose chase? *)
-let change_pattern_matrices pdf tr resources =
+(* The content transformed by altering any use of [Op_cm]. But we must also
+alter any /Matrix entries in pattern dictionaries *)
+let change_pattern_matrices_page pdf tr page =
   try
-    (*let resources = change_shadings pdf tr resources in*)
-      begin match Pdf.lookup_direct pdf "/Pattern" resources with
-      | Some (Pdf.Dictionary patterns) ->
-          let names, nums =
-            split
-              (map
-                (fun (name, p) ->
-                  let old_pattern = Pdf.direct pdf p in
-                    let new_pattern =
-                      let existing_tr = Pdf.parse_matrix pdf "/Matrix" old_pattern in
-                        let new_tr = Pdftransform.matrix_compose (Pdftransform.matrix_invert tr) existing_tr in
-                          Pdf.add_dict_entry old_pattern "/Matrix" (Pdf.make_matrix new_tr)
-                    in
-                      name, Pdf.addobj pdf new_pattern)
-                patterns)
-          in
-            let entries =
-              map2 (fun name num -> name, Pdf.Indirect num) names nums
-            in
-              Pdf.add_dict_entry resources "/Pattern" (Pdf.Dictionary entries)
-      | _ -> resources
-    end
-  with
-    Pdftransform.NonInvertable ->
-      Printf.eprintf "Warning: noninvertible matrix";
-      resources
+    begin match Pdf.lookup_direct pdf "/Pattern" page.Pdfpage.resources with
+    | Some (Pdf.Dictionary patterns) ->
+        let entries =
+          map
+            (fun (name, p) ->
+              let old_pattern = Pdf.direct pdf p in
+                let new_pattern =
+                  let existing_tr = Pdf.parse_matrix pdf "/Matrix" old_pattern in
+                    let new_tr = Pdftransform.matrix_compose (Pdftransform.matrix_invert tr) existing_tr in
+                      Pdf.add_dict_entry old_pattern "/Matrix" (Pdf.make_matrix new_tr)
+                in
+                  name, Pdf.Indirect (Pdf.addobj pdf new_pattern))
+            patterns
+         in
+           {page with Pdfpage.resources =
+             Pdf.add_dict_entry page.Pdfpage.resources "/Pattern" (Pdf.Dictionary entries)}
+    | _ -> page
+  end
+    with
+      Pdftransform.NonInvertable ->
+        Printf.eprintf "Warning: noninvertible matrix";
+        page
 
 (* Apply transformations to any annotations in /Annots (i.e their /Rect entries) *)
 let transform_annotations pdf transform rest =
@@ -2292,11 +2283,11 @@ let shift_page ?(fast=false) dxdylist pdf pnum page =
     let transform_op =
       Pdfops.Op_cm (Pdftransform.matrix_of_op (Pdftransform.Translate (dx, dy)))
     in
-      let resources' =
-        change_pattern_matrices pdf (Pdftransform.mktranslate ~-.dx ~-.dy) page.Pdfpage.resources
+      let page =
+        change_pattern_matrices_page pdf (Pdftransform.mktranslate ~-.dx ~-.dy) page
       in
         transform_annotations pdf (Pdftransform.mktranslate ~-.dx ~-.dy) page.Pdfpage.rest;
-        Pdfpage.prepend_operators pdf [transform_op] ~fast {page with Pdfpage.resources = resources'}
+        Pdfpage.prepend_operators pdf [transform_op] ~fast page
 
 let shift_pdf ?(fast=false) dxdylist pdf range =
   process_pages (shift_page ~fast dxdylist pdf) pdf range
@@ -2322,11 +2313,9 @@ let flip_page ?(fast=false) transform_op pdf _ page =
     Pdf.parse_rectangle page.Pdfpage.mediabox
   in
     let tr = transform_op minx miny maxx maxy in
-      let resources =
-        change_pattern_matrices pdf tr page.Pdfpage.resources
-      in
+      let page = change_pattern_matrices_page pdf tr page in
         transform_annotations pdf tr page.Pdfpage.rest;
-        Pdfpage.prepend_operators pdf [Pdfops.Op_cm tr] ~fast {page with Pdfpage.resources = resources}
+        Pdfpage.prepend_operators pdf [Pdfops.Op_cm tr] ~fast page
 
 let vflip_pdf ?(fast=false) pdf range =
   let transform_op _ miny _ maxy =
@@ -2414,8 +2403,7 @@ let do_stamp relative_to_cropbox fast position topline midline scale_to_fit isov
                   in
                     transform_annotations pdf matrix o.Pdfpage.rest;
                     let r = Pdfpage.prepend_operators pdf [Pdfops.Op_cm matrix] ~fast o in
-                      {r with Pdfpage.resources = 
-                        change_pattern_matrices pdf matrix r.Pdfpage.resources}
+                      change_pattern_matrices_page pdf matrix r
       else
         let sw = sxmax -. sxmin and sh = symax -. symin
         and w = txmax -. txmin and h = tymax -. tymin in
@@ -2427,8 +2415,7 @@ let do_stamp relative_to_cropbox fast position topline midline scale_to_fit isov
             in
               transform_annotations pdf matrix o.Pdfpage.rest;
               let r = Pdfpage.prepend_operators pdf [Pdfops.Op_cm matrix] ~fast o in
-                {r with Pdfpage.resources = 
-                   change_pattern_matrices pdf matrix r.Pdfpage.resources}
+                change_pattern_matrices_page pdf matrix r
     in
       {u with
          Pdfpage.content =
@@ -2750,9 +2737,9 @@ let rotate_page_contents ~fast rotpoint r pdf _ page =
         (Pdftransform.Rotate (rotation_point, rad_of_deg r))
     in    
       let transform_op = Pdfops.Op_cm tr in
-        let resources' = change_pattern_matrices pdf tr2 page.Pdfpage.resources in
-          transform_annotations pdf tr page.Pdfpage.rest;
-          Pdfpage.prepend_operators pdf [transform_op] ~fast {page with Pdfpage.resources = resources'}
+      let page = change_pattern_matrices_page pdf tr2 page in
+        transform_annotations pdf tr page.Pdfpage.rest;
+        Pdfpage.prepend_operators pdf [transform_op] ~fast page
 
 let rotate_contents ?(fast=false) r pdf range =
   process_pages (rotate_page_contents ~fast None r pdf) pdf range
@@ -2794,9 +2781,9 @@ let transform_boxes tr pdf page =
 
 let transform_contents ?(fast=false) tr pdf page =
   let transform_op = Pdfops.Op_cm tr in
-    let resources' = change_pattern_matrices pdf (Pdftransform.matrix_invert tr) page.Pdfpage.resources in
+    let page = change_pattern_matrices_page pdf (Pdftransform.matrix_invert tr) page in
       transform_annotations pdf tr page.Pdfpage.rest;
-      Pdfpage.prepend_operators pdf [transform_op] ~fast {page with Pdfpage.resources = resources'}
+      Pdfpage.prepend_operators pdf [transform_op] ~fast page
 
 let upright ?(fast=false) range pdf =
   if allupright range pdf then pdf else
@@ -2819,11 +2806,11 @@ let scale_pdf ?(fast=false) sxsylist pdf range =
         and matrix = Pdftransform.matrix_of_op (Pdftransform.Scale ((0., 0.), sx, sy)) in
           let transform_op =
             Pdfops.Op_cm matrix
-          and resources' =
-            change_pattern_matrices pdf (Pdftransform.matrix_invert matrix) page.Pdfpage.resources
+          and page =
+            change_pattern_matrices_page pdf (Pdftransform.matrix_invert matrix) page
           in
            transform_annotations pdf matrix page.Pdfpage.rest;
-           Pdfpage.prepend_operators pdf ~fast [transform_op] {page with Pdfpage.resources = resources'} 
+           Pdfpage.prepend_operators pdf ~fast [transform_op] page
       in
         process_pages scale_page pdf range
 
@@ -2864,7 +2851,7 @@ let scale_to_fit_pdf ?(fast=false) position input_scale xylist op pdf range =
       in
         transform_annotations pdf matrix page.Pdfpage.rest;
         Pdfpage.prepend_operators pdf [Pdfops.Op_cm matrix] ~fast
-        {page with Pdfpage.resources = change_pattern_matrices pdf (Pdftransform.matrix_invert matrix) page.Pdfpage.resources}
+         (change_pattern_matrices_page pdf (Pdftransform.matrix_invert matrix) page)
   in
     process_pages scale_page_to_fit pdf range
 
@@ -2897,10 +2884,9 @@ let scale_page_contents ?(fast=false) scale position pdf _ page =
            Pdftransform.Scale ((sx, sy), scale, scale)]
       in
         let transform_op = Pdfops.Op_cm transform in
-          let resources' = change_pattern_matrices pdf transform page.Pdfpage.resources in
+          let page = change_pattern_matrices_page pdf transform page in
           transform_annotations pdf transform page.Pdfpage.rest;
-          Pdfpage.prepend_operators pdf [transform_op] ~fast
-            {page with Pdfpage.resources = resources'}
+          Pdfpage.prepend_operators pdf [transform_op] ~fast page
 
 let scale_contents ?(fast=false) position scale pdf range =
   process_pages (scale_page_contents ~fast scale position pdf) pdf range
@@ -3200,7 +3186,7 @@ let twoup_pages_inner isstack fast pdf = function
        let pages, h =
          let r =
            List.map2
-             (fun p t -> {p with Pdfpage.resources = change_pattern_matrices pdf t p.Pdfpage.resources})
+             (fun p t -> change_pattern_matrices_page pdf t p)
              pages transforms
          in
            r, List.hd r
@@ -3751,38 +3737,6 @@ let blacktext_ops (r, g, b) pdf resources content =
         [Pdfops.stream_of_ops operators']
 
 (* Blacken a form xobject, writing it to the same object. *)
-let process_xobject f pdf resources i =
-  let xobj = Pdf.lookup_obj pdf i in
-    match Pdf.lookup_direct pdf "/Subtype" xobj with
-    | None -> raise (Pdf.PDFError "No /Subtype in Xobject") 
-    | Some (Pdf.Name "/Form") ->
-        Pdf.getstream xobj;
-        begin match xobj with
-        | Pdf.Stream ({contents = Pdf.Dictionary dict, Pdf.Got bytes} as rf) ->
-            begin match f pdf resources [Pdf.Stream rf] with
-            | [Pdf.Stream {contents = (Pdf.Dictionary dict', data)}] ->
-                let dict' =
-                  Pdf.remove_dict_entry
-                    (Pdf.Dictionary (mergedict dict dict'))
-                    "/Filter"
-                in
-                  rf := (dict', data)
-            | _ -> assert false
-            end
-        | _ -> assert false (* getstream would have complained already *)
-        end
-    | Some _ -> ()
-
-let process_xobjects pdf page f =
-  match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
-  | Some (Pdf.Dictionary elts) ->
-      iter
-        (fun (k, v) ->
-          match v with
-          | Pdf.Indirect i -> process_xobject f pdf page.Pdfpage.resources i
-          | _ -> raise (Pdf.PDFError "process_xobject"))
-        elts
-  | _ -> ()
 
 let blacktext (r, g, b) range pdf =
   let blacktext_page _ page =
