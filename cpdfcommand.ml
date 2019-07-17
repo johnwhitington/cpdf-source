@@ -2394,7 +2394,7 @@ let rec get_single_pdf ?(decrypt=true) ?(fail=false) op read_lazy =
     begin match args.inputs with
       (InFile inname, _, _, _, _, _)::_ ->
         begin try ignore (close_in (open_in inname)) with _ ->
-          Printf.eprintf "File %s does not exist" inname;
+          Printf.eprintf "File %s does not exist\n" inname;
           exit 2
         end
     | _ -> ()
