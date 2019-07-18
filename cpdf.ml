@@ -2230,7 +2230,7 @@ let change_pattern_matrices_resources pdf tr resources =
         let entries =
           map
             (fun (name, p) ->
-              Printf.printf "Changing matrices of pattern %s\n" name;
+              (*Printf.printf "Changing matrices of pattern %s\n" name;*)
               let old_pattern = Pdf.direct pdf p in
                 let new_pattern =
                   let existing_tr = Pdf.parse_matrix pdf "/Matrix" old_pattern in
@@ -2261,7 +2261,7 @@ let change_pattern_matrices_page pdf tr page =
                  (* Check if it's a form XObject. If so, rewrite its resources and add back as same number. *)
                  begin match Pdf.lookup_direct pdf "/Subtype" v with
                  | Some (Pdf.Name "/Form") ->
-                     Printf.printf "Processing form xobject %s for patterns\n" k; 
+                     (*Printf.printf "Processing form xobject %s for patterns\n" k; *)
                      let form_xobject = Pdf.lookup_obj pdf i in
                        begin match Pdf.lookup_direct pdf "/Resources" form_xobject with
                        | Some resources ->
