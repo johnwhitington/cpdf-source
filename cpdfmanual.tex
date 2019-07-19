@@ -2,7 +2,7 @@
 
 \documentclass{book}
 \usepackage{palatino}
-\usepackage{microtype}
+%\usepackage{microtype}
 \usepackage{graphics}
 \usepackage[plainpages=false,pdfpagelabels,pdfborder=0 0 0]{hyperref}
 \usepackage{framed}
@@ -709,17 +709,27 @@ The encryption parameters described in Chapter \ref{encryption} may be added to 
 
 
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -crop "<x> <y> <w> <h>" in.pdf [<range>] -o out.pdf!
+  \small\noindent\verb!cpdf -cropbox "<x> <y> <w> <h>" in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -remove-crop in.pdf [<range>] -o out.pdf!
+  \small\noindent\verb!cpdf -remove-cropbox in.pdf [<range>] -o out.pdf!
 
-  %\vspace{1.5mm}
-  %\small\noindent\verb!cpdf -copy-cropbox-to-mediabox in.pdf [<range>] -o out.pdf!
+  \vspace{1.5mm}
+  (Also \texttt{bleed}, \texttt{art}, and \texttt{trim} versions of these two commands, e.g \texttt{-artbox}, \texttt{-remove-trimbox})
 
   \vspace{1.5mm}
   \small\noindent\verb!cpdf -frombox <boxname> -tobox <boxname> [-mediabox-if-missing]! \\
   \noindent\verb!     in.pdf [<range>] -o out.pdf!
+
+  \vspace{1.5mm}
+  \small\noindent\verb!cpdf -hard-box in.pdf [<range>] -o out.pdf!
+
+  \vspace{1.5mm}
+  \small\noindent\verb!cpdf -show-boxes in.pdf [<range>] -o out.pdf!
+
+  \vspace{1.5mm}
+  \small\noindent\verb!cpdf -trim-marks in.pdf [<range>] -o out.pdf!
+
   \end{framed}
 
   \section{Page Sizes}
@@ -897,22 +907,22 @@ coordinates increase to the right, y coordinates increase upwards.
   PDF file can also optionally contain a \textit{crop box} for each page,
 defining to what extent the page is cropped before being displayed or printed.
 A crop box can be set, changed and removed, without affecting the underlying
-media box. To set or change the crop box use \texttt{-crop}. To remove any
-existing crop box, use \texttt{-remove-crop}.
+media box. To set or change the crop box use \texttt{-cropbox}. To remove any
+existing crop box, use \texttt{-remove-cropbox}.
   \begin{framed}
-  \small\verb!cpdf -crop "0pt 0pt 200mm 200mm" in.pdf -o out.pdf!
+  \small\verb!cpdf -cropbox "0pt 0pt 200mm 200mm" in.pdf -o out.pdf!
 
   \vspace{2.5mm}
   \noindent Crop pages to the bottom left 200-millimeter square of the page.
 
   \vspace{2.5mm}
-  \verb!cpdf -remove-crop in.pdf -o out.pdf!
+  \verb!cpdf -remove-cropbox in.pdf -o out.pdf!
   
   \vspace{2.5mm}
   \noindent Remove cropping.
   \end{framed}
 
-\noindent Note that the crop box is only obeyed in some viewers. 
+\noindent Note that the crop box is only obeyed in some viewers. Similar operations are available for the bleed, art, and trim boxes (\texttt{-art}, \texttt{-remove-bleed} etc.)
 
   \begin{framed}
   \small\noindent\verb!cpdf -frombox <boxname> -tobox <boxname> [-mediabox-if-missing]! \\
@@ -928,6 +938,30 @@ existing crop box, use \texttt{-remove-crop}.
     \small\verb!cpdf -frombox /TrimBox -tobox /CropBox in.pdf -o out.pdf!
   \end{framed}
   \noindent copies the Trim Box of each page to the Crop Box of each page. The possible boxes are \texttt{/MediaBox}, \texttt{/CropBox}, \texttt{/BleedBox}, \texttt{/TrimBox}, \texttt{/ArtBox}.\pagestyle{empty}\thispagestyle{fancy}
+
+A hard box (one which clips its contents by inserting a clipping rectangle) may be created with the \texttt{-hard-box} operation:
+
+  \begin{framed}
+    \small\verb!cpdf -hard-box /TrimBox in.pdf -o out.pdf!
+  \end{framed}
+
+This means the resultant file may be used as a stamp without contents outside the given box reappearing.
+
+\section{Showing Boxes and Printer's Marks}
+
+The \texttt{-show-boxes} operation displays the boxes present on each page as method of debugging. Since boxes may be coincident, they are shown in differing colours and dash patterns so they may be identified even where they overlap. The colours are:
+
+\medskip
+\begin{tabular}{ll}
+Media box & Red \\
+Crop box & Green \\
+Art box & Blue \\
+Trim box & Orange \\
+Bleed box & Pink 
+\end{tabular}
+\medskip
+
+The \texttt{-trim-marks} operation adds trim marks to a PDF file. The bleed and trim boxes must both be present.
 
 \chapter{Encryption and Decryption}
 \pagestyle{fancy}
