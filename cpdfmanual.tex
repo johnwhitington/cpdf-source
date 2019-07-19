@@ -1,33 +1,4 @@
-%FIXME: Distinguish properly between options and operations throughout manual.
-%FIXME: Document -dump-attachments.
-%FIXME: Mention that OpenAction supersedes PageLayout so use -remove-dict-option to get rid of it
-%FIXME: Document new -hard-box option
-%FIXME: Document that -upright also shifts the page to 0,0
-%FIXME: Document %PageDiv2
-%FIXME: Document new bookmark format + use of -utf8 for getting good bookmarks
-%FIXME: Fix docs on -fit-window and friends
-%FIXME: Document new -pad-with (for -pad-before, -pad-after, -pad-every)
-%FIXME: Document new -artbox, -trimbox, -bleedbox and -remove-artbox, -remove-trimbox, -remove-bleedbox
-%FIXME: Document -cropbox and -remove-cropbox as synonyms of -crop and -remove-crop
-%FIXME: Document new XMP metadata stuff including setmetadata date and its format
-%FIXME: Document new -gs-malformed flag.
-%FIXME: Document new -create-metadata
-%FIXME: Document -remove-clipping
-%FIXME: Document new -list-spot-colours
-%FIXME: Document new -pad-multiple-before
-%FIXME: Document new @N@@@ @E@@@, @S@@@ options
-%FIXME: Document the rotate dance for adding rotated text
-%FIXME: Document -gs gs -gs-malformed -gs-malformed-force (be careful to say if it works when i / o files the same)
-%FIXME: Document -gs gs -gs-embed-fonts
-%FIXME: Document -merge-add-bookmarks, -merge-add-bookmarks-use-titles
-%FIXME: Document -bookmarks-open-to-level <n>
-%FIXME: Explain in key places that you probably want UTF8 a lot
-%FIXME: Document new -create-pdf functionality
-%FIXME: Explain fast more / better and list things it works on
-%FIXME: Document new -draft-remove-only functionality for deleting images
-%FIXME: Document that -decompress may need -no-preserve-objstm
-%FIXME: Document new -show-boxes, -trim-marks operations. 
-%FIXME: Document frailties of -scale-to-fit as per github issue 110
+
 
 \documentclass{book}
 \usepackage{palatino}
@@ -800,9 +771,13 @@ Y factors given. This scales both the page contents, and the page size itself. I
   \begin{framed}
   \small\noindent\verb!cpdf -scale-to-fit a4portrait -scale-to-fit-scale 0.9 in.pdf -o out.pdf!
 
+
   \vspace{2.5mm}
   \noindent Scale a file's pages to fit A4 portrait, scaling the page 90\% of its possible size.
   \end{framed}
+
+\noindent NB: \texttt{-scale-to-fit} operates with respect to the media box not the crop box. If necessary, set the media box to be equal to the crop box first. In addition, \texttt{-scale-to-fit} presently requires that the origin of the media box be (0, 0). This can be assured by preprocessing with \texttt{-upright}.
+
 
   \noindent The \texttt{-scale-contents} operation scales the contents about the center
   of the crop box (or, if absent, the media box), leaving the page dimensions
@@ -885,7 +860,7 @@ ninety degrees clockwise. Does not change the page dimensions.
   \label{upright}
    \noindent The \texttt{-upright} operation does whatever combination of
 \texttt{-rotate} and \texttt{-rotate-contents} is required to change the
-rotation of the document to zero without altering its appearance. In addition, it makes sure the media box has its origin at (0,0), changing other boxes to compensate.
+rotation of the document to zero without altering its appearance. In addition, it makes sure the media box has its origin at (0,0), changing other boxes to compensate. This is important because some operations in CPDF (such as scale-to-fit), and in other PDF-processing programs, work properly only when the origin is (0, 0).
 
   \section{Flipping Pages}
 \index{flip pages}
@@ -1061,7 +1036,7 @@ PDF, use:
   \begin{framed}
    \small\verb!cpdf -decompress in.pdf -o out.pdf!
   \end{framed}
-  \noindent If \cpdf\ finds a compression type it can't cope with, the stream is left compressed. When using \texttt{-decompress}, object streams are not compressed.
+  \noindent If \cpdf\ finds a compression type it can't cope with, the stream is left compressed. When using \texttt{-decompress}, object streams are not compressed. It may be easier for manual inspection to also remove object streams, by adding the \texttt{-no-preserve-objstm} flag to the command.
   \section{Compressing a Document}
 \index{compressing}
   To compress the streams in a PDF file, use:
@@ -1891,6 +1866,12 @@ when a document is opened in, for instance, Acrobat. The possible
     \small\verb!cpdf -set-page-layout TwoColumnRight in.pdf -o out.pdf!
   \end{framed}
   
+\noindent NB: If the file has a valid \texttt{/OpenAction} setting, which tells the PDF reader to open at a certain page or position on a page, this will override the page layout option. To prevent this, use the \texttt{-remove-dict-entry} functionality from Section \ref{removedictentry}:
+
+  \begin{framed}
+    \small\verb!cpdf -remove-dict-entry /OpenAction in.pdf -o out.pdf!
+  \end{framed}
+
   \subsection{Page Mode}
 \index{page!mode}
   The \textit{page mode} in a PDF file defines how a viewer should display the
@@ -2302,7 +2283,7 @@ This operation lists the name of any ``separation'' color space in the given PDF
   \end{framed}
 
 \section{Removing Dictionary Entries}
-
+\label{removedictentry}
 This is for editing data within the PDF's internal representation. Use with caution.
 
   \begin{framed}
