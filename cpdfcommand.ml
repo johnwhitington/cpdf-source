@@ -3624,7 +3624,7 @@ let remove_all_text_page pdf p =
   let resources = p.Pdfpage.resources in
   let content = p.Pdfpage.content in
     Cpdf.process_xobjects pdf p remove_all_text_ops;
-    {p with content = remove_all_text_ops pdf resources content}, pdf
+    {p with Pdfpage.content = remove_all_text_ops pdf resources content}, pdf
 
 let remove_all_text range pdf =
   let pages = Pdfpage.pages_of_pagetree pdf in
