@@ -635,6 +635,8 @@ the result is unspecified. The following format operators may be used:
 \end{tabular}
 \end{table}
 
+Numbers padded to a fixed width field by zeroes may be obtained for \texttt{@S} and \texttt{@E} by following them with more @ signs e.g \texttt{@E@@@} for a fixed width of three.
+
   \section{Splitting on Bookmarks}
   \index{splitting!on bookmarks}
   The \texttt{-split-bookmarks <level>} operation splits a PDF file into a number of
@@ -1327,7 +1329,7 @@ as the length of the ``under'' file. For instance:
 file. For best results, remove any rotation differences in the two files using
 \texttt{-upright} first.
 
-\noindent The \texttt{-relative-to-cropbox} option takes the positioning command to be relative to the cro box of each page rather than the media box.
+\noindent The \texttt{-relative-to-cropbox} option takes the positioning command to be relative to the crop box of each page rather than the media box.
 
   \section{Stamp Text, Dates and Times.}
 \index{date}
@@ -1354,6 +1356,7 @@ font size and color.
   \vspace{2mm}
   \begin{tabular}{ll}
     \texttt{\%Page} & Page number in arabic notation (1, 2, 3\ldots) \\
+    \texttt{\%PageDiv2} & Page number in arabic notation divided by two. \\
     \texttt{\%roman} & Page number in lower-case roman notation (i, ii, iii\ldots) \\
     \texttt{\%Roman} & Page number in upper-case roman notation (I, II, III\ldots) \\
     \texttt{\%EndPage} & Last page of document in arabic notation \\
@@ -2092,7 +2095,7 @@ $cpdf -list-attached-files 14psfonts.pdf
 %\vspace{1.5mm}
 %\noindent\small\verb!cpdf -extract-images in.pdf [<range>] -o <string>!
 \end{framed}
-  \section{Detecting Low-resolution Images}
+  \section{Detecting Low-resolution Images}\label{imageres}
   To list all images in the given range of pages which fall below a given resolution (in dots-per-inch), use the \verb!-image-resolution! function:
   \begin{framed}
   \noindent\small\verb@cpdf -image-resolution 300 in.pdf [<range>]@
@@ -2108,6 +2111,11 @@ $cpdf -list-attached-files 14psfonts.pdf
 4, /Im29, 53, 48, 149.970749, 151.616446\end{verbatim}}
   \end{framed}
   \noindent The format is \textit{page number, image name, x pixels, y pixels, x resolution, y resolution}. The resolutions refer to the image's effective resolution at point of use (taking account of scaling, rotation etc).
+
+\section{Remove an image}
+
+To remove a particular image, find its name using \texttt{-image-resolution} with a sufficiently high resolution (so as to list all images), and then apply the \texttt{-draft} and \texttt{-draft-remove-only} options from Section \ref{draft}. 
+
 %  \section{Extracting Images}
 %  \begin{framed}
 %  \noindent\verb!cpdf -extract-images in.pdf [<range>] -o <string>!
@@ -2186,7 +2194,7 @@ recommended when file size is the sole consideration.
 
 \chapter{Miscellaneous}
   {\small\begin{framed}
-  \noindent\verb!cpdf -draft [-boxes] in.pdf [<range>] -o out.pdf!
+  \noindent\verb!cpdf -draft [-boxes] [-draft-remove-only <n>] in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -blacktext in.pdf [<range>] -o out.pdf!
@@ -2223,6 +2231,7 @@ recommended when file size is the sole consideration.
   \end{framed}}
   \section{Draft Documents}
 \index{draft}
+\label{draft}
     The \texttt{-draft} option removes bitmap (photographic) images from a
 file, so that it can be printed with less ink. Optionally, the
 \texttt{-boxes} option can be added, filling the spaces left blank with a
@@ -2231,6 +2240,12 @@ visible in all cases (the bitmap may be have been partially covered by vector
 objects or clipped in the original). For example:
   \begin{framed}
     \small\verb!cpdf -draft -boxes in.pdf -o out.pdf!
+  \end{framed}
+
+To remove a single image only, specify \texttt{-draft-remove-only}, giving the name of the image obtained by a call to \texttt{-image-resolution} as described in Section \ref{imageres} and giving the appropriate page. For example:
+
+  \begin{framed}
+    \small\verb!cpdf -draft -boxes -draft-remove-only "/Im1" in.pdf 7 -o out.pdf!
   \end{framed}
 
   \section{Blackening Text, Lines and Fills}
@@ -2353,13 +2368,13 @@ This is for editing data within the PDF's internal representation. Use with caut
 \section{Remove Clipping}
 
 
-The \texttt{-remove-clipping} operation removes any clipping paths from the file.
+The \texttt{-remove-clipping} operation removes any clipping paths on given pages from the file.
 
   \begin{framed}
   \small\noindent\verb!cpdf -remove-clipping in.pdf -o out.pdf!
 
   \vspace{2.5mm}
-  \noindent Remove every clipping path in \texttt{in.pdf}, writing to \texttt{out.pdf}. 
+  \noindent Remove clipping paths in \texttt{in.pdf}, writing to \texttt{out.pdf}. 
   \end{framed}
 
 
