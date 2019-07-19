@@ -1560,16 +1560,19 @@ This can be used to blank out or highlight part of the document. The following p
     \small\noindent\verb!cpdf -twoup in.pdf -o out.pdf! 
 
     \vspace{1.5mm}
-    \small\noindent\verb!cpdf -pad-before in.pdf [<range>] -o out.pdf!
+    \small\noindent\verb!cpdf -pad-before in.pdf [<range>] [-pad-with pad.pdf] -o out.pdf!
 
     \vspace{1.5mm}
-    \small\noindent\verb!cpdf -pad-after in.pdf [<range>] -o out.pdf!
+    \small\noindent\verb!cpdf -pad-after in.pdf [<range>] [-pad-with pad.pdf] -o out.pdf!
 
     \vspace{1.5mm}
-    \small\noindent\verb!cpdf -pad-every [<integer>] in.pdf -o out.pdf!
+    \small\noindent\verb!cpdf -pad-every [<integer>] in.pdf [-pad-with pad.pdf] -o out.pdf!
 
     \vspace{1.5mm}
     \small\noindent\verb!cpdf -pad-multiple [<integer>] in.pdf -o out.pdf!
+
+    \vspace{1.5mm}
+    \small\noindent\verb!cpdf -pad-multiple-before [<integer>] in.pdf -o out.pdf!
   \end{framed}
   \section{Two-up}
 \index{two-up}
@@ -1607,6 +1610,8 @@ instance, to add a clean page between chapters of a document.)
   \end{framed}
   \noindent\ldots on a 9 page document adds a blank page after pages 3 and 6.
 
+In all three of these operations, one may specify \texttt{-pad-with} providing a one-page PDF file to be used instead of a blank page. For example, a page saying ``This page left intentionally blank''.
+
   The \verb!-pad-multiple n! operation adds blank pages so the document has a multiple of \verb!n! pages. For example:
   \begin{framed}
     \small\verb!cpdf -pad-multiple 8 in.pdf -o out.pdf!
@@ -1615,6 +1620,9 @@ instance, to add a clean page between chapters of a document.)
     \noindent Add blank pages to \texttt{in.pdf} so it has a multiple of 8 pages. 
   \end{framed}
  
+
+The \texttt{-pad-multiple-before n} operation adds the padding pages at the beginning of the file  instead.
+
 \chapter{Annotations}
   \begin{framed}
   \small\noindent\verb!cpdf -list-annotations in.pdf [<range>]!
