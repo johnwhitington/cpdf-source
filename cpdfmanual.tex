@@ -2054,6 +2054,9 @@ startvalue: 1
  
   \vspace{1.5mm}
   \small\noindent\verb!cpdf -remove-files in.pdf -o out.pdf!
+
+  \vspace{1.5mm}
+  \small\noindent\verb!cpdf -dump-attachments in.pdf -o <directory>!
 \end{framed}
   PDF supports adding attachments (files of any kind, including other PDFs) to
 an existing file. The \cpdf\ tool supports adding and removing \textit{document-level
@@ -2086,6 +2089,14 @@ $cpdf -list-attached-files 14psfonts.pdf
    To remove all document-level and page-level attachments from a file, use the \texttt{-remove-files} operation:
   \begin{framed}
     \small\verb!cpdf -remove-files in.pdf -o out.pdf!
+  \end{framed}
+
+\section{Dumping attachments to file}
+
+The \texttt{-dump-attachments} operation, when given a PDF file and a directory path as the output, will write each attachment under its filename (as displayed by \texttt{-list-attached-files} to thath directory. The directory must exist prior to the call.
+
+  \begin{framed}
+    \small\verb!cpdf -dump-attached-files in.pdf -o /home/fred/attachments!
   \end{framed}
 
 \chapter{Working with Images}
