@@ -102,7 +102,9 @@ verbosity. Under Microsoft Windows, type \texttt{cpdf.exe} instead of \texttt{cp
   -keep-l                  -no-preserve-objstm   -create-objstm
   -control <filename>      -args <filename>      -utf8
   -stripped                -raw                  -no-embed-font
-  -create-pdf              -create-pdf-pages     -create-pdf-papersize\end{verbatim}\end{framed}
+  -create-pdf              -create-pdf-pages     -create-pdf-papersize
+  -gs                      -gs-malformed         -gs-force-malformed
+  -gs-quiet\end{verbatim}\end{framed}
 
   The Coherent PDF tools provide a wide range of facilities for modifying PDF
 files created by other means. There is a single command-line program
@@ -356,12 +358,13 @@ are intended to support:
      PDF 1.4 & Acrobat 5.0 \\
      PDF 1.5 & Acrobat 6.0 \\
      PDF 1.6 & Acrobat 7.0 \\
-     PDF 1.7 & Acrobat 8.0, 9.0, 10.0
+     PDF 1.7 & Acrobat 8.0, 9.0, 10.0\\
+     PDF 2.0 & Acrobat 11.0, DC
   \end{tabular}
 \vspace{2mm}
 
 \noindent If you wish to manually alter the PDF version of a file, use the
-\texttt{-set-version} option described in Section \ref{setversion}.
+\texttt{-set-version} operation described in Section \ref{setversion}.
 
 \section{File IDs}
 PDF files contain an ID (consisting of two parts), used by some workflow
@@ -449,6 +452,21 @@ progress is shown on \verb!stderr! (Standard Error):
 \small\verb!Read 5530 objects!\\
 \small\verb$Malformed PDF reconstruction succeeded!$
 \end{framed}
+
+If cpdf cannot reconstruct a malformed file, it is able to use the \texttt{gs} program to try to reconstruct the program, if you have it installed. For example, if \texttt{gs} is installed and in your path, we might try:
+
+\begin{framed}
+\noindent\small\verb!./cpdf -gs gs -gs-malformed in.pdf -o out.pdf!\end{framed}
+
+If the malformity lies inside an individual page of the PDF, rather than in its gross structure, cpdf may appear to succeed in reconstruction, only to fail when processing a page (e.g when adding text). To force the use of \texttt{gs} to pre-process such files so cpdf cannot fail on them, use \texttt{-gs-malformed-force}:
+
+\begin{framed}
+\noindent\small\verb!./cpdf -gs gs -gs-malformed-force in.pdf -o out.pdf!\end{framed}
+
+The command line for \texttt{-gs-malformed-force} must be of \textit{precisely} this form.
+
+To suppress the output of \texttt{gs} use the \texttt{-gs-quiet} option.
+
 
 \noindent Sometimes files can be technically well-formed but use inefficient PDF
 constructs.  If you are sure the input files you are using are
@@ -915,7 +933,7 @@ page rotation when considering what "horizontally" and "vertically" mean, so you
 \index{media box}
   All PDF files contain a \textit{media box} for each page, giving the
 dimensions of the paper. To change these dimensions (without altering the page
-contents in any way), use the \texttt{-mediabox} option.
+contents in any way), use the \texttt{-mediabox} operation.
   \begin{framed}
   \small\verb!cpdf -mediabox "0pt 0pt 500pt 500pt" in.pdf -o out.pdf!
 
@@ -1185,7 +1203,7 @@ the ASCII range. To prevent this, and return unicode UTF8 output, add the
 \index{bookmarks!adding}
   The \texttt{-add-bookmarks} file adds bookmarks as specified by a
 \textit{bookmarks file}, a text file in ASCII or UTF8 encoding and in the same format as that produced by the
-\texttt{-list-bookmarks} option. If there are any bookmarks in the input PDF
+\texttt{-list-bookmarks} operation. If there are any bookmarks in the input PDF
 already, they are discarded. For example, if the file \texttt{bookmarks.txt}
 contains the output from \texttt{-list-bookmarks} above, then the command
   \begin{framed}
@@ -1198,7 +1216,7 @@ tree with no entry being more than one greater than the last).
 
 \section{Opening bookmarks}
 
-As an alternative to extracting a bookmark file and manipulating the open-status of bookmarks, mass manipulation may be achieved by the following option.
+As an alternative to extracting a bookmark file and manipulating the open-status of bookmarks, mass manipulation may be achieved by the following operation:
 
   \begin{framed}
    \small\verb!cpdf -open-bookmarks-to-level <level> in.pdf -o out.pdf!
@@ -1826,7 +1844,7 @@ name, the fifth the PDF font encoding.
  
 \section{Reading Document Information}
 \label{info}
-The \texttt{-info} option prints entries from the document information
+The \texttt{-info} operation prints entries from the document information
 dictionary, and from any XMP metadata to standard output.
 
 \begin{framed}
@@ -1857,7 +1875,7 @@ Appendix~\ref{dates}.
 By default, cpdf strips to ASCII, discarding character codes in excess of 127. In order to preserve the original unicode, add the \texttt{-utf8} option. To disable all postprocessing of the string, add \texttt{-raw}.
 
 \vspace{4mm}
-The \texttt{-page-info} option prints the page label, media box and other boxes
+The \texttt{-page-info} operation prints the page label, media box and other boxes
 page-by-page to standard output, for all pages in the current range.
 
 \begin{framed}
@@ -1926,7 +1944,7 @@ option is added---in which case, it is unprocessed, save for the replacement of 
 
   \subsection{Page Layout}
 \index{page!layout}
-  The \texttt{-set-page-layout} option specifies the page layout to be used
+  The \texttt{-set-page-layout} operation specifies the page layout to be used
 when a document is opened in, for instance, Acrobat. The possible
 (case-sensitive) values are:
 
@@ -2084,7 +2102,7 @@ attachments} --- that is, ones which are associated with the document as a
 whole rather than with an individual page, and also \textit{page-level attachments}, associated with a particular page.
   \section{Adding Attachments}
 \index{attachments!adding}
-  To add an attachment, use the \texttt{-attach-file} option. For instance,
+  To add an attachment, use the \texttt{-attach-file} operation. For instance,
   \begin{framed}
   \small\verb!cpdf -attach-file sheet.xls in.pdf -o out.pdf!
   \end{framed}
@@ -2145,7 +2163,7 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 
 \section{Remove an image}
 
-To remove a particular image, find its name using \texttt{-image-resolution} with a sufficiently high resolution (so as to list all images), and then apply the \texttt{-draft} and \texttt{-draft-remove-only} options from Section \ref{draft}. 
+To remove a particular image, find its name using \texttt{-image-resolution} with a sufficiently high resolution (so as to list all images), and then apply the \texttt{-draft} and \texttt{-draft-remove-only} operations from Section \ref{draft}. 
 
 %  \section{Extracting Images}
 %  \begin{framed}
@@ -2170,6 +2188,9 @@ To remove a particular image, find its name using \texttt{-image-resolution} wit
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -missing-fonts in.pdf!
+
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -embed-missing-fonts -gs <path to gs> in.pdf -o out.pdf!
   \end{framed}}
 \section{Copying Fonts}
 \label{copyfont}
@@ -2208,17 +2229,21 @@ recommended when file size is the sole consideration.
   \vspace{2.5mm}
   \end{framed}
 
-\section{Listing Missing Fonts}
+\section{Missing Fonts}
   The \verb!-missing-fonts! operation lists any unembedded fonts in the document, one per line.
   \begin{framed}
   \small\noindent\verb!cpdf -missing-fonts in.pdf!
-  \vspace{2.5mm}
   \end{framed}
 
   \noindent The format is
   \begin{framed}
   \small\noindent\verb!Page number, Name, Subtype, Basefont, Encoding!
-  \vspace{2.5mm}
+  \end{framed}
+
+\noindent The operation \texttt{-embed-missing-fonts} will process the file with \texttt{gs} (which must be installed) to embed missing fonts (where found):
+
+  \begin{framed}
+  \small\noindent\verb!cpdf -embed-missing-fonts -gs gs in.pdf -o out.pdf!
   \end{framed}
 
 \label{listmisingfonts}
@@ -2263,7 +2288,7 @@ recommended when file size is the sole consideration.
   \section{Draft Documents}
 \index{draft}
 \label{draft}
-    The \texttt{-draft} option removes bitmap (photographic) images from a
+    The \texttt{-draft} operation removes bitmap (photographic) images from a
 file, so that it can be printed with less ink. Optionally, the
 \texttt{-boxes} option can be added, filling the spaces left blank with a
 crossed box denoting where the image was. This is not guaranteed to be fully
@@ -2316,7 +2341,7 @@ which is part of a form.
 which in PDF means "The thinnest possible line on the output device". This
 might be fine for on-screen work, but when printed on a high resolution device,
 such as by a commercial printer, they may be too faint, or disappear
-altogether. The \texttt{-thinlines} option prevents this by changing all lines
+altogether. The \texttt{-thinlines} operation prevents this by changing all lines
 thinner than \texttt{<minimal~thickness>} to the given thickness. For example:
   \begin{framed}
   \small\noindent\verb!cpdf -thinlines 0.2mm in.pdf [<range>] -o out.pdf!
