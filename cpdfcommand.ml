@@ -423,6 +423,7 @@ type args =
    mutable alsosetxml : bool;
    mutable justsetxml : bool;
    mutable gs_malformed : bool;
+   mutable gs_quiet : bool;
    mutable merge_add_bookmarks : bool;
    mutable merge_add_bookmarks_use_titles : bool;
    mutable createpdf_pages : int;
@@ -517,6 +518,7 @@ let args =
    alsosetxml = false;
    justsetxml = false;
    gs_malformed = false;
+   gs_quiet = false;
    merge_add_bookmarks = false;
    merge_add_bookmarks_use_titles = false;
    createpdf_pages = 1;
@@ -608,7 +610,7 @@ let reset_arguments () =
   args.removeonly <- None
   (* Do not reset original_filename or cpdflin or was_encrypted or
    * was_decrypted_with_owner or recrypt or producer or creator or
-   * path_to_ghostscript or gs_malformed, since we want these to work across
+   * path_to_ghostscript or gs_malformed or gs_quiet, since we want these to work across
    * ANDs. Or squeeze: a little odd, but we want it to happen on eventual output. *)
 
 let get_pagespec () =
@@ -1672,6 +1674,9 @@ let setcreatepdfpapersize s =
 let setdraftremoveonly s =
   args.removeonly <- Some s
 
+let setgsquiet () =
+  args.gs_quiet <- true
+
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
   control_args := !control_args @ parse_control_file filename
@@ -2282,7 +2287,8 @@ and specs =
     Arg.String setcreatepdfpapersize,
     " Paper size for new PDF"); 
    ("-gs", Arg.String setgspath, " Path to gs executable");
-   ("-gs-malformed", Arg.Unit setgsmalformed, " Try to reconstruct malformed files with gs");
+   ("-gs-malformed", Arg.Unit setgsmalformed, " Also try to reconstruct malformed files with gs");
+   ("-gs-quiet", Arg.Unit setgsquiet, " Make gs go into quiet mode");
    ("-squeeze", Arg.Unit setsqueeze, " Squeeze");
    ("-squeeze-log-to", Arg.String setsqueezelogto, " Squeeze log location");
    (*These items are undocumented *)
@@ -2336,7 +2342,7 @@ let embed_missing_fonts fi fo =
   end;
     let gscall =
       args.path_to_ghostscript ^
-      " -dNOPAUSE -dQUIET -sDEVICE=pdfwrite -sOUTPUTFILE=" ^ fo ^
+      " -dNOPAUSE " ^ (if args.gs_quiet then "-dQUIET" else "") ^ " -sDEVICE=pdfwrite -sOUTPUTFILE=" ^ fo ^
       " -dBATCH " ^ fi
     in
       match Sys.command gscall with
@@ -2355,7 +2361,7 @@ let mend_pdf_file_with_ghostscript filename =
     tempfiles := tmpout::!tempfiles;
     let gscall =
       args.path_to_ghostscript ^
-      " -dNOPAUSE -dQUIET -sDEVICE=pdfwrite -sOUTPUTFILE=" ^ tmpout ^
+      " -dNOPAUSE " ^ (if args.gs_quiet then "-dQUIET" else "") ^ " -sDEVICE=pdfwrite -sOUTPUTFILE=" ^ tmpout ^
       " -dBATCH " ^ filename
     in
       match Sys.command gscall with
@@ -4622,7 +4628,7 @@ let gs_malformed_force fi fo =
   end;
     let gscall =
       args.path_to_ghostscript ^
-      " -dNOPAUSE -dQUIET -sDEVICE=pdfwrite -sOUTPUTFILE=" ^ fo ^
+      " -dNOPAUSE " ^ (if args.gs_quiet then "-dQUIET" else "") ^ " -sDEVICE=pdfwrite -sOUTPUTFILE=" ^ fo ^
       " -dBATCH " ^ fi
     in
       match Sys.command gscall with

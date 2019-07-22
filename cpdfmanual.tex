@@ -563,7 +563,9 @@ The standard paper sizes are listed in Section \ref{papersizes}, or you may spec
   \small
   \noindent\begin{verbatim}
 cpdf -merge in1.pdf [<range>] in2.pdf [<range>] [<more names/ranges>]
-     [-retain-numbering] [-remove-duplicate-fonts] -o out.pdf\end{verbatim}
+     [-retain-numbering] [-remove-duplicate-fonts]
+     [-merge-add-bookmarks] [-merge-add-bookmarks-use-title] 
+     -o out.pdf\end{verbatim}
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -split in.pdf -o <format> [-chunk <chunksize>]!
@@ -597,8 +599,10 @@ the document which first exhibits that feature.
 The \texttt{-retain-numbering} option keeps the PDF page numbering labels of
 each document intact, rather than renumbering the output pages from 1.
 
-The \texttt{-remove-duplicate-fonts} ensures that fonts used in more than one
+The \texttt{-remove-duplicate-fonts} option ensures that fonts used in more than one
 of the inputs only appear once in the output.
+
+The \texttt{-merge-add-bookmarks} option adds a top-level bookmark for each file, using the filename. Any existing bookmarks are retained. Adding \texttt{-merge-add-bookmarks-use-titles} will use the title from each PDF's metadata instead of the filename.
 
   \section{Splitting}
 \index{splitting}
@@ -1128,6 +1132,10 @@ The \texttt{-squeeze-log-to <filename>} option writes the log to the given file 
   \vspace{1.5mm}
   \small\noindent\verb!cpdf -add-bookmarks <bookmark file> in.pdf -o out.pdf!
 
+  \vspace{1.5mm}
+  \small\noindent\verb!cpdf -bookmarks-open-to-level <n> in.pdf -o out.pdf!
+
+
   \end{framed}
 \index{bookmarks}
 \index{document outline}
@@ -1187,6 +1195,18 @@ contains the output from \texttt{-list-bookmarks} above, then the command
 will be given if the bookmarks file is not in the correct form (in particular,
 the numbers in the first column which specify the level must form a proper
 tree with no entry being more than one greater than the last).
+
+\section{Opening bookmarks}
+
+As an alternative to extracting a bookmark file and manipulating the open-status of bookmarks, mass manipulation may be achieved by the following option.
+
+  \begin{framed}
+   \small\verb!cpdf -open-bookmarks-to-level <level> in.pdf -o out.pdf!
+  \end{framed}
+
+A level of 0 will close all bookmarks, level 1 will open just the top level, closing all others etc. To open all of them, pick a sufficiently large level.
+
+
 
 \chapter{Presentations}
   \begin{framed}
