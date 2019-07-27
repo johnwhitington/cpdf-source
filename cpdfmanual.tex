@@ -437,7 +437,7 @@ PDF 1.5 introduced a new mechanism for storing objects to save space: object str
 \noindent Files written with object streams will be set to PDF 1.5 or higher, unless \texttt{-keep-version} is used (see above).
 
 \section{Malformed Files}
-
+\label{fast}
 There are many malformed PDF files in existence, including many produced by
 otherwise-reputable applications. \cpdf\ attempts to correct these problems
 silently.
@@ -479,7 +479,7 @@ The \verb!-fast! option may be used with:
 \begin{framed}
 \small\noindent Chapter \ref{pages}\\
 \noindent\small\verb!-rotate-contents -upright -vflip -hflip!\\
-\small\verb!-shift -scale -scale-to-fit -scale-contents!\\
+\small\verb!-shift -scale-page -scale-to-fit -scale-contents!\\
 \small\verb!-show-boxes -hard-box -trim-marks!\\
 
 \noindent Chapter \ref{stamps}\\
@@ -542,6 +542,7 @@ escaped (i.e. written \verb!\\!).
 
 \section{Text Encodings}
 \index{text encodings}
+\label{textencodings}
 
 Some \texttt{cpdf} commands write text to standard output, or read text from
 the command line or configuration files. These are:
@@ -564,7 +565,7 @@ the command line or configuration files. These are:
 
 \noindent Add \verb!-utf8! to use Unicode UTF8, \verb!-stripped! to convert to 7
 bit ASCII by dropping any high characters, or \verb!-raw! to perform no
-processing. The default is \verb!-stripped!.
+processing. The default unless specified in the documentation for an individual operation is \verb!-stripped!.
 
 \section{Font Embedding}
 Use the \texttt{-no-embed-font} to avoid embedding the Standard 14 Font metrics when adding text with \texttt{-add-text}.
@@ -710,23 +711,19 @@ The encryption parameters described in Chapter \ref{encryption} may be added to 
 \pagestyle{fancy}
   \label{pages}
   \begin{framed}
-  \small\noindent\verb!cpdf -scale-page "<scale x> <scale y>" in.pdf [<range>] -o out.pdf!
+  \small\noindent\verb!cpdf -scale-page "<scale x> <scale y>" [-fast] in.pdf [<range>] -o out.pdf!
    
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -scale-to-fit "<x size> <y size>" [-scale-to-fit-scale <scale>]!\\    
+  \small\noindent\verb!cpdf -scale-to-fit "<x size> <y size>" [-fast]!\\
+        \noindent\verb!     [-scale-to-fit-scale <scale>]!\\    
         \noindent\verb!     in.pdf [<range>] -o out.pdf!
 
-  %\vspace{1.5mm}
-  %\small\noindent\verb!cpdf -scale-to-fit-best "<x size> <y size>" in.pdf [<range>] -o out.pdf!
-  %
-  %\vspace{1.5mm}
-  %\small\noindent\verb!cpdf -scale-to-fit-minus "<x size> <y size>" in.pdf [<range>] -o out.pdf!
-
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -scale-contents [<scale>] [<position>] in.pdf [<range>] -o out.pdf!
+  \small\noindent\verb!cpdf -scale-contents [<scale>] [<position>] [-fast]!\\
+        \noindent\verb!     in.pdf [<range>] -o out.pdf!
   
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -shift "<shift x> <shift y>" in.pdf [<range>] -o out.pdf!
+  \small\noindent\verb!cpdf -shift "<shift x> <shift y>" [-fast] in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
   \small\noindent\verb!cpdf -rotate <angle> in.pdf [<range>] -o out.pdf!
@@ -735,16 +732,16 @@ The encryption parameters described in Chapter \ref{encryption} may be added to 
   \small\noindent\verb!cpdf -rotateby <angle> in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -rotate-contents <angle> in.pdf [<range>] -o out.pdf!
+  \small\noindent\verb!cpdf -rotate-contents <angle> [-fast] in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -upright in.pdf [<range>] -o out.pdf!
+  \small\noindent\verb!cpdf -upright [-fast] in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -hflip in.pdf [<range>] -o out.pdf!
+  \small\noindent\verb!cpdf -hflip [-fast] in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -vflip in.pdf [<range>] -o out.pdf!
+  \small\noindent\verb!cpdf -vflip [-fast] in.pdf [<range>] -o out.pdf!
   
   \vspace{1.5mm}
   \small\noindent\verb!cpdf -mediabox "<x> <y> <w> <h>" in.pdf [<range>] -o out.pdf!
@@ -757,20 +754,20 @@ The encryption parameters described in Chapter \ref{encryption} may be added to 
   \small\noindent\verb!cpdf -remove-cropbox in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
-  (Also \texttt{bleed}, \texttt{art}, and \texttt{trim} versions of these two commands, e.g \texttt{-artbox}, \texttt{-remove-trimbox})
+  (Also \texttt{bleed}, \texttt{art}, and \texttt{trim} versions of these two commands, for example  \texttt{-artbox}, \texttt{-remove-trimbox})
 
   \vspace{1.5mm}
   \small\noindent\verb!cpdf -frombox <boxname> -tobox <boxname> [-mediabox-if-missing]! \\
   \noindent\verb!     in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -hard-box in.pdf [<range>] -o out.pdf!
+  \small\noindent\verb!cpdf -hard-box [-fast] in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -show-boxes in.pdf [<range>] -o out.pdf!
+  \small\noindent\verb!cpdf -show-boxes [-fast] in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -trim-marks in.pdf [<range>] -o out.pdf!
+  \small\noindent\verb!cpdf -trim-marks [-fast] in.pdf [<range>] -o out.pdf!
 
   \end{framed}
 
@@ -1193,7 +1190,7 @@ the file is loaded. For example, upon executing
 By default, \cpdf\ converts unicode to ASCII text, dropping characters outside
 the ASCII range. To prevent this, and return unicode UTF8 output, add the
 \texttt{-utf8} option to the command. To prevent any processing, use the
-\texttt{-raw} option.
+\texttt{-raw} option. See Section \ref{textencodings} for more information.
 
   \section{Remove Bookmarks}
   \label{removebookmarks}
@@ -1311,15 +1308,15 @@ the file using a different page range each time.
   \begin{framed}
   \noindent\small\verb!cpdf -stamp-on source.pdf!\\
   \noindent\small\verb!     [-scale-stamp-to-fit] [<positioning command>] [-relative-to-cropbox] !\\
-  \noindent\small\verb!     in.pdf [<range>] -o out.pdf!
+  \noindent\small\verb!     in.pdf [<range>] [-fast] -o out.pdf!
   
   \vspace{1.5mm}
   \noindent\small\verb!cpdf -stamp-under source.pdf!\\
   \noindent\small\verb!     [-scale-stamp-to-fit] [<positioning command>] [-relative-to-cropbox]!\\
-  \noindent\small\verb!     in.pdf [<range>] -o out.pdf!
+  \noindent\small\verb!     in.pdf [<range>] [-fast] -o out.pdf!
 
   \vspace{1.5mm}
-  \noindent\small\verb!cpdf -combine-pages over.pdf under.pdf -o out.pdf!
+  \noindent\small\verb!cpdf -combine-pages over.pdf under.pdf [-fast] -o out.pdf!
 
   \vspace{1.5mm}
   \noindent\small\begin{verbatim}cpdf ([-add-text <text-format> | -add-rectangle <size>])
@@ -1338,12 +1335,17 @@ the file using a different page range each time.
               [-opacity <number>]
               [-midline]
               [-topline]
+              [-fast]
               in.pdf [<range>] -o out.pdf\end{verbatim}
   \noindent See also positioning commands below.
 
   \vspace{1.5mm}
   \noindent\small\verb!cpdf -remove-text in.pdf [<range>] -o out.pdf!
+
+  \vspace{1.5mm}
+  \noindent\small NB: See discussion of \texttt{-fast} in Section \ref{fast}.
   \end{framed}
+
   \section{Add a Watermark or Logo}
   The \texttt{-stamp-on} and \texttt{-stamp-under} operations stamp the first
 page of a source PDF onto or under each page in the given range of the input
@@ -1648,10 +1650,10 @@ This can be used to blank out or highlight part of the document. The following p
 
 \chapter{Multipage Facilities}\pagestyle{fancy}\label{multipage}
   \begin{framed}
-    \small\noindent\verb!cpdf -twoup-stack in.pdf -o out.pdf! 
+    \small\noindent\verb!cpdf -twoup-stack [-fast] in.pdf -o out.pdf! 
 
     \vspace{1.5mm}
-    \small\noindent\verb!cpdf -twoup in.pdf -o out.pdf! 
+    \small\noindent\verb!cpdf -twoup [-fast] in.pdf -o out.pdf! 
 
     \vspace{1.5mm}
     \small\noindent\verb!cpdf -pad-before in.pdf [<range>] [-pad-with pad.pdf] -o out.pdf!
@@ -1673,6 +1675,8 @@ This can be used to blank out or highlight part of the document. The following p
     This facility puts multiple logical pages on a single physical page.  The \texttt{-twoup-stack} operation puts two logical pages on each physical
 page, rotating them 90 degrees to do so. The new mediabox is thus larger. The \texttt{-twoup} operation does the same, but scales the new sides down so
 that the media box is unchanged.
+
+NB: See discussion of \texttt{-fast} in section \ref{fast}.
 
   \section{Inserting Blank Pages}
 \index{blank pages!inserting}
@@ -1731,7 +1735,7 @@ The \texttt{-pad-multiple-before n} operation adds the padding pages at the begi
   \section{List Annotations}
 \index{annotations!listing}
   The \texttt{-list-annotations} operation prints the textual content of any
-annotations on the selected pages to standard output. Each annotation is preceded by the page number and followed by a newline.
+annotations on the selected pages to standard output. Each annotation is preceded by the page number and followed by a newline. See Section \ref{textencodings} for more information on text encodings in the output of this operation.
   \begin{framed}
     \small\verb!cpdf -list-annotations in.pdf > annots.txt!
     
@@ -1781,7 +1785,7 @@ given page range.
     \small\noindent\verb!cpdf -pages in.pdf!
 
     \vspace{1.5mm}
-    \small\noindent\verb!cpdf -set-title <title of document> in.pdf -o out.pdf!\\
+    \small\noindent\verb!cpdf -set-title <title of document> [-raw] in.pdf -o out.pdf!\\
     (Also \texttt{-set-author} etc. See Section \ref{setdocinfo}.)
 
     \vspace{1.5mm}
@@ -1877,7 +1881,7 @@ XMP dc:title: AI6\end{verbatim}}\end{framed}
 \noindent The details of the format for creation and modification dates can be found in
 Appendix~\ref{dates}.
 
-By default, cpdf strips to ASCII, discarding character codes in excess of 127. In order to preserve the original unicode, add the \texttt{-utf8} option. To disable all postprocessing of the string, add \texttt{-raw}.
+By default, cpdf strips to ASCII, discarding character codes in excess of 127. In order to preserve the original unicode, add the \texttt{-utf8} option. To disable all postprocessing of the string, add \texttt{-raw}. See Section \ref{textencodings} for more information.
 
 \vspace{4mm}
 The \texttt{-page-info} operation prints the page label, media box and other boxes
@@ -2141,6 +2145,13 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
   \begin{framed}
     \small\verb!cpdf -dump-attached-files in.pdf -o /home/fred/attachments!
   \end{framed}
+
+Unless the \texttt{-raw} option is given, the filenames are stripped of dubious special characters before writing. It is converted from unicode to 7 bit ASCII, and the following characters are removed, in addition to any character with ASCII code less than 32:
+  \begin{framed}
+  \centering
+  \verb! / ? < > \ : * | " ^ + =!
+  \end{framed}
+
 
 \chapter{Working with Images}
 \begin{framed}
