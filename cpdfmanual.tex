@@ -480,10 +480,14 @@ The \verb!-fast! option may be used with:
 \small\noindent Chapter \ref{pages}\\
 \noindent\small\verb!-rotate-contents -upright -vflip -hflip!\\
 \small\verb!-shift -scale -scale-to-fit -scale-contents!\\
+\small\verb!-show-boxes -hard-box -trim-marks!\\
 
 \noindent Chapter \ref{stamps}\\
-\noindent\small\verb!-add-text!\\
-\small\verb!-stamp-on -stamp-under -combine-pages!
+\noindent\small\verb!-add-text -add-rectangle!\\
+\small\verb!-stamp-on -stamp-under -combine-pages!\\
+
+\noindent Chapter \ref{multipage}\\
+\noindent\verb!-twoup -twoup-stack!
 \end{framed}
 
 \noindent If problems occur, refrain from using \verb!-fast!.
@@ -546,7 +550,8 @@ the command line or configuration files. These are:
   \noindent\small\verb!-info!\\
   \noindent\small\verb!-list-bookmarks!\\
   \noindent\small\verb!-set-author! et al.\\
-  \noindent\small\verb!-list-annotations!
+  \noindent\small\verb!-list-annotations!\\
+  \noindent\small\verb!-dump-attachments!
 \end{framed}
 
 \noindent There are three options to control how the text is interpreted:
@@ -1641,7 +1646,7 @@ A rectangle may be placed on one or more pages by using the \texttt{-add-rectang
 This can be used to blank out or highlight part of the document. The following positioning options work as you would expect: \texttt{-topleft}, \texttt{-top}, \texttt{-topright}, \texttt{-right}, \texttt{-bottomright}, \texttt{-bottom}, \texttt{-bottomleft}, \texttt{-left}, \texttt{-center}. When using the option \texttt{-pos-left "x y"}, the point (x, y) refers to the bottom-left of the rectangle. When using the option \texttt{-pos-right "x y"}, the point (x, y) refers to the bottom-right of the rectangle. When using the option \texttt{-pos-center "x y"}, the point (x, y) refers to the center of the rectangle. The options \texttt{-diagonal} and \texttt{-reverse-diagonal} have no meaning.\pagestyle{empty}\thispagestyle{fancy}
 
 
-\chapter{Multipage Facilities}\pagestyle{fancy}
+\chapter{Multipage Facilities}\pagestyle{fancy}\label{multipage}
   \begin{framed}
     \small\noindent\verb!cpdf -twoup-stack in.pdf -o out.pdf! 
 
