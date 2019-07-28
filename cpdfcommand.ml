@@ -2118,12 +2118,12 @@ and specs =
    ("-set-untrapped",
       Arg.Unit (setop SetUntrapped),
       " Mark as not trapped");
-   ("-also-set-xml",
+   ("-also-set-xmp",
       Arg.Unit setalsosetxml,
-      " Also set XML metadata");
-   ("-just-set-xml",
+      " Also set XMP metadata");
+   ("-just-set-xmp",
       Arg.Unit setjustsetxml,
-      " Just set XML metadata, not old-fashioned metadata");
+      " Just set XMP metadata, not old-fashioned metadata");
    ("-create-metadata",
       Arg.Unit (setop CreateMetadata),
       " Create XML metadata from scratch.");
