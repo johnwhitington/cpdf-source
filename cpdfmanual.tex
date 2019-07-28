@@ -2508,6 +2508,30 @@ accuracy dates. For example:
 \section{XMP Metadata Date Format}
 \label{xmpdate}
 
+
+These are the possible data formats for \texttt{-set-metadata-date}:
+
+\begin{verbatim}
+YYYY
+YYYY-MM
+YYYY-MM-DD
+YYYY-MM-DDThh:mmTZD
+YYYY-MM-DDThh:mm:ssTZD
+\end{verbatim}
+
+\noindent where:
+
+\medskip
+\begin{tabular}{ll}
+\texttt{YYYY} & year \\
+\texttt{MM} & month (01 = Jan)\\
+\texttt{DD} & day of month (01 to 31)\\
+\texttt{hh} & hour (00 to 23)\\
+\texttt{mm} & minute (00 to 59)\\
+\texttt{ss} & second (00 to 59)\\
+\texttt{TZD} & time zone designator (\texttt{Z} or \texttt{+hh:mm} or \texttt{-hh::mm})
+\end{tabular}
+
 \backmatter
 \pagestyle{fancy}
 
