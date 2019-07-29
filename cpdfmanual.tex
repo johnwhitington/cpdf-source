@@ -1,7 +1,8 @@
 \documentclass{book}
 \usepackage{palatino}
-%\usepackage{microtype}
+\usepackage{microtype}
 \usepackage{graphics}
+\usepackage{upquote}
 \usepackage[plainpages=false,pdfpagelabels,pdfborder=0 0 0]{hyperref}
 \usepackage{framed}
 \newcommand{\smallgap}{\bigskip}
@@ -52,7 +53,7 @@ Version 2.3 (October 2019)
 \noindent For bug reports, feature requests and comments, email\\ \texttt{contact@coherentgraphics.co.uk}
 
 \vspace*{\fill}
-\noindent\copyright 2017 Coherent Graphics Limited. All rights reserved. ISBN 978-0957671140
+\noindent\copyright 2019 Coherent Graphics Limited. All rights reserved. ISBN 978-0957671140
 
 \smallgap 
 \noindent Adobe, Acrobat, Adobe PDF, Adobe Reader and PostScript are
@@ -336,7 +337,7 @@ The \texttt{-producer} and \texttt{-creator} options may be added to any \texttt
   \small\verb!cpdf -merge in.pdf in2.pdf -producer MyMerger -o out.pdf!\\
 
   \vspace{2.5mm}
-  \noindent Merge \texttt{in.pdf} and \texttt{in2.pf}, setting the producer to \texttt{MyMerger} and writing the output to \texttt{out.pdf}.\end{framed}
+  \noindent Merge \texttt{in.pdf} and \texttt{in2.pdf}, setting the producer to \texttt{MyMerger} and writing the output to \texttt{out.pdf}.\end{framed}
 
 \section{PDF Version Numbers}
 \index{version number}
@@ -344,7 +345,7 @@ When an operation which uses a part of the PDF standard which was introduced in
 a later version than that of the input file, the PDF version in the output file
 is set to the later version (most PDF viewers will try to load any PDF file,
 even if it is marked with a later version number). However, this automatic
-version changing may be suppressed with the \texttt{-keep-version} flag.
+version changing may be suppressed with the \texttt{-keep-version} option.
 
 Here is a list of Acrobat versions together with the maximum PDF version they
 are intended to support:
@@ -624,7 +625,7 @@ each document intact, rather than renumbering the output pages from 1.
 The \texttt{-remove-duplicate-fonts} option ensures that fonts used in more than one
 of the inputs only appear once in the output.
 
-The \texttt{-merge-add-bookmarks} option adds a top-level bookmark for each file, using the filename. Any existing bookmarks are retained. Adding \texttt{-merge-add-bookmarks-use-titles} will use the title from each PDF's metadata instead of the filename.
+The \texttt{-merge-add-bookmarks} option adds a top-level bookmark for each file, using the filename. Any existing bookmarks are retained. Adding \texttt{-merge\--add\--bookmarks\--use\--titles} will use the title from each PDF's metadata instead of the filename.
 
   \section{Splitting}
 \index{splitting}
@@ -661,7 +662,7 @@ the result is unspecified. The following format operators may be used:
 \end{tabular}
 \end{table}
 
-Numbers padded to a fixed width field by zeroes may be obtained for \texttt{@S} and \texttt{@E} by following them with more @ signs e.g \texttt{@E@@@} for a fixed width of three.
+Numbers padded to a fixed width field by zeroes may be obtained for \texttt{@S} and \texttt{@E} by following them with more \texttt{@} signs e.g \texttt{@E@@@} for a fixed width of three.
 
   \section{Splitting on Bookmarks}
   \index{splitting!on bookmarks}
@@ -826,8 +827,7 @@ Y factors given. This scales both the page contents, and the page size itself. I
 
 \noindent NB: \texttt{-scale-to-fit} operates with respect to the media box not the crop box. If necessary, set the media box to be equal to the crop box first. In addition, \texttt{-scale-to-fit} presently requires that the origin of the media box be (0, 0). This can be assured by preprocessing with \texttt{-upright}.
 
-
-  \noindent The \texttt{-scale-contents} operation scales the contents about the center
+The \texttt{-scale-contents} operation scales the contents about the center
   of the crop box (or, if absent, the media box), leaving the page dimensions
   (boxes) unchanged.
 
@@ -1055,7 +1055,7 @@ person:
    \end{tabular}
 
   \vspace{2mm}
-  \noindent Add these flags to the command line to prevent each operation.
+  \noindent Add these options to the command line to prevent each operation.
 
   \vspace{2mm}
 
@@ -1100,7 +1100,7 @@ metadata. Add \texttt{-no-encrypt-metadata} to the command line.
      \vspace{1.5mm}
      \noindent\verb!cpdf -squeeze in.pdf [-squeeze-log-to <filename>] -o out.pdf!  
    \end{framed}
-  \cpdf\ provides basic facilities for decompressing and compressing PDF streams.
+  \cpdf\ provides basic facilities for decompressing and compressing PDF streams, and for reprocessing the whole file to `squeeze' it.
   \section{Decompressing a Document}
 \index{decompressing}
   To decompress the streams in a PDF file, for instance to manually inspect the
@@ -1108,7 +1108,7 @@ PDF, use:
   \begin{framed}
    \small\verb!cpdf -decompress in.pdf -o out.pdf!
   \end{framed}
-  \noindent If \cpdf\ finds a compression type it can't cope with, the stream is left compressed. When using \texttt{-decompress}, object streams are not compressed. It may be easier for manual inspection to also remove object streams, by adding the \texttt{-no-preserve-objstm} flag to the command.
+  \noindent If \cpdf\ finds a compression type it can't cope with, the stream is left compressed. When using \texttt{-decompress}, object streams are not compressed. It may be easier for manual inspection to also remove object streams, by adding the \texttt{-no-preserve-objstm} option to the command.
   \section{Compressing a Document}
 \index{compressing}
   To compress the streams in a PDF file, use:
@@ -1179,7 +1179,7 @@ the file is loaded. For example, upon executing
 \noindent the result might be:
 \begin{framed}{\small\begin{verbatim}
 0 "Part 1" 1 open
-1 "Part 1A" 2 [2 200 400 100 100 /XYZ]
+1 "Part 1A" 2 [2 /XYZ 200 400 null]
 1 "Part 1B" 3
 0 "Part 2" 4
 1 "Part 2a" 5\end{verbatim}}\end{framed}
@@ -1422,7 +1422,7 @@ font size and color.
   \vspace{2mm}
   \begin{tabular}{ll}
     \texttt{\%Page} & Page number in arabic notation (1, 2, 3\ldots) \\
-    \texttt{\%PageDiv2} & Page number in arabic notation divided by two. \\
+    \texttt{\%PageDiv2} & Page number in arabic notation divided by two \\
     \texttt{\%roman} & Page number in lower-case roman notation (i, ii, iii\ldots) \\
     \texttt{\%Roman} & Page number in upper-case roman notation (I, II, III\ldots) \\
     \texttt{\%EndPage} & Last page of document in arabic notation \\
@@ -1516,13 +1516,6 @@ position, so \texttt{-prerotate} must be added to the command line if the file
 contains pages with a non-zero viewing rotation. This is equivalent to
 pre-processing the document with \texttt{-upright}.
    
-%The \texttt{-shorter-side} modifier can be used to indicate that all the
-%positions above are relative to the shorter side of the page, any rotation
-%required being automatic. In other words, \texttt{top, topleft, topright} are
-%either on the top or left, depending upon which is the shorter side, and
-%\texttt{bottom, bottomleft, bottomright} are either on the bottom or right
-%similarly. This flag has no effect on \texttt{-diagonal}.
-
 The \texttt{-relative-to-cropbox} modifier can be added to the command line to
 make these measurements relative to the crop box instead of the media box.
 
@@ -1553,6 +1546,7 @@ than its baseline. Similarly, the \texttt{-topline} option may be used to specif
   Symbol\\
   ZapfDingbats
   \end{tabular}
+ \vspace{2mm}
 
   \noindent For example, page numbers in Times Italic can be achieved by:
   \begin{framed}
@@ -1697,7 +1691,7 @@ This can be used to blank out or highlight part of the document. The following p
 page, rotating them 90 degrees to do so. The new mediabox is thus larger. The \texttt{-twoup} operation does the same, but scales the new sides down so
 that the media box is unchanged.
 
-NB: See discussion of \texttt{-fast} in section \ref{fast}.
+NB: See discussion of \texttt{-fast} in Section \ref{fast}.
 
   \section{Inserting Blank Pages}
 \index{blank pages!inserting}
@@ -2176,7 +2170,7 @@ $cpdf -list-attached-files 14psfonts.pdf
     \small\verb!cpdf -remove-files in.pdf -o out.pdf!
   \end{framed}
 
-\section{Dumping attachments to file}
+\section{Dumping Attachments to File}
 
 The \texttt{-dump-attachments} operation, when given a PDF file and a directory path as the output, will write each attachment under its filename (as displayed by \texttt{-list-attached-files} to thath directory. The directory must exist prior to the call.
 
@@ -2215,7 +2209,7 @@ Unless the \texttt{-raw} option is given, the filenames are stripped of dubious 
   \end{framed}
   \noindent The format is \textit{page number, image name, x pixels, y pixels, x resolution, y resolution}. The resolutions refer to the image's effective resolution at point of use (taking account of scaling, rotation etc).
 
-\section{Remove an image}
+\section{Removing an Image}
 
 To remove a particular image, find its name using \texttt{-image-resolution} with a sufficiently high resolution (so as to list all images), and then apply the \texttt{-draft} and \texttt{-draft-remove-only} operations from Section \ref{draft}. 
 
@@ -2475,7 +2469,7 @@ This is for editing data within the PDF's internal representation. Use with caut
   \end{framed}
 
 
-\section{Remove Clipping}
+\section{Removing Clipping}
 
 
 The \texttt{-remove-clipping} operation removes any clipping paths on given pages from the file.
@@ -2497,7 +2491,7 @@ The \texttt{-remove-clipping} operation removes any clipping paths on given page
 Dates in PDF are specified according to the following format:
 
 \begin{framed}
-\texttt{D:YYYYMMDDHHmmSSOHH'mm'}\\\\where:
+\verb!D:YYYYMMDDHHmmSSOHH'mm'!\\\\where:
 
 \begin{itemize}
   \item \texttt{YYYY} is the year;
