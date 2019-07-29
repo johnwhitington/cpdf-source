@@ -1,5 +1,3 @@
-
-
 \documentclass{book}
 \usepackage{palatino}
 %\usepackage{microtype}
@@ -1171,7 +1169,7 @@ for instance to copy bookmarks.
   The \texttt{-list-bookmarks} operation prints (to standard output) the
 bookmarks in a file. The first column gives the level of the tree at which a
 particular bookmark is. Then the text of the bookmark in quotes, then the page
-number which the bookmark points to, then (optionally) the word "open" if the
+number which the bookmark points to, then the destination (see below) then (optionally) the word "open" if the
 bookmark should have its children (at the level immediately below) visible when
 the file is loaded. For example, upon executing
 \begin{framed}
@@ -1181,7 +1179,7 @@ the file is loaded. For example, upon executing
 \noindent the result might be:
 \begin{framed}{\small\begin{verbatim}
 0 "Part 1" 1 open
-1 "Part 1A" 2
+1 "Part 1A" 2 [2 200 400 100 100 /XYZ]
 1 "Part 1B" 3
 0 "Part 2" 4
 1 "Part 2a" 5\end{verbatim}}\end{framed}
@@ -1191,6 +1189,29 @@ By default, \cpdf\ converts unicode to ASCII text, dropping characters outside
 the ASCII range. To prevent this, and return unicode UTF8 output, add the
 \texttt{-utf8} option to the command. To prevent any processing, use the
 \texttt{-raw} option. See Section \ref{textencodings} for more information.
+
+\subsection{Destinations}
+
+The destination is an extended description of where the bookmark should point to (i.e it can be more detailed than just giving the page). For example, it may point to a section heading halfway down a page. Here are the possibilities:
+
+\medskip
+
+\begin{tabular}{lp{8cm}}
+Format & Description\\\hline
+{[\textit{p} /XYZ \textit{left} \textit{top} \textit{zoom}]} & Display page number \textit{p} with (\textit{left}, \textit{top}) positioned at upper-left of window and magnification of \textit{zoom}. Writing ``null'' for any of \textit{left}, \textit{top} or \textit{zoom} specifies no change. A \textit{zoom} of 0 is the same as ``null''.\\
+{[\textit{p} /Fit]} & Display page number \textit{p} so as to fit fully within the window.\\
+{[\textit{p} /FitH \textit{top}]} & Display page number \textit{p} with vertical coordinate \textit{top} at the top of the window and the page magnified so its width fits the window. A null value for \textit{top} implies no change.\\
+{[\textit{p} /FitV \textit{left}]} & Display page number \textit{p} with horizontal coordinate \textit{left} at the left of the window, and the page magnified so its height fits the window. A null value for \textit{left} implies no change. \\
+{[\textit{p} /FitR \textit{left} \textit{bottom} \textit{right} \textit{top}]} & Display page number \textit{p} magnified so as to fit entirely within the rectangle specified by the other parameters. \\
+{[\textit{p} /FitB]} & As for /Fit but with the page's bounding box (see below).\\
+{[\textit{p} /FitBH \textit{top}]} & As for /FitH but with the page's bounding box (see below).\\
+{[\textit{p} /FitBV \textit{left}]} & As for /FitV but with the page's bounding box (see below).
+\end{tabular}
+
+\medskip
+
+The \textit{bounding box} is the intersection of the page's crop box and the bounding box of the page contents. Some other kinds of destination may be produced by \texttt{-list-bookmarks}. They will be preserved by \texttt{-add-bookmarks} and may be edited as your risk.
+
 
   \section{Remove Bookmarks}
   \label{removebookmarks}
