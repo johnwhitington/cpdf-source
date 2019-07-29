@@ -384,7 +384,7 @@ option to the command line, in addition to any other command being used. For exa
 \noindent Linearize the file \texttt{in.pdf}, writing to \texttt{out.pdf}.
 \end{framed}
 
-In extremis, you may place \texttt{cpdflin} and its resources in the current working directory, though this is not recommended. For further help, refer to the installation instructions for your copy of \texttt{cpdf}.
+\noindent In extremis, you may place \texttt{cpdflin} and its resources in the current working directory, though this is not recommended. For further help, refer to the installation instructions for your copy of \texttt{cpdf}.
 
 To keep the existing linearization status of a file (produce linearized output if the input is linearized and the reverse), use \texttt{-keep-l} instead of \texttt{-l}.
 
@@ -435,28 +435,25 @@ progress is shown on \verb!stderr! (Standard Error):
 \small\verb$Malformed PDF reconstruction succeeded!$
 \end{framed}
 
-If cpdf cannot reconstruct a malformed file, it is able to use the \texttt{gs} program to try to reconstruct the program, if you have it installed. For example, if \texttt{gs} is installed and in your path, we might try:
+\noindent If \texttt{cpdf} cannot reconstruct a malformed file, it is able to use the \texttt{gs} program to try to reconstruct the program, if you have it installed. For example, if \texttt{gs} is installed and in your path, we might try:
 
 \begin{framed}
 \noindent\small\verb!./cpdf -gs gs -gs-malformed in.pdf -o out.pdf!\end{framed}
 
-If the malformity lies inside an individual page of the PDF, rather than in its gross structure, cpdf may appear to succeed in reconstruction, only to fail when processing a page (e.g when adding text). To force the use of \texttt{gs} to pre-process such files so cpdf cannot fail on them, use \texttt{-gs-malformed-force}:
+\noindent If the malformity lies inside an individual page of the PDF, rather than in its gross structure, cpdf may appear to succeed in reconstruction, only to fail when processing a page (e.g when adding text). To force the use of \texttt{gs} to pre-process such files so cpdf cannot fail on them, use \texttt{-gs-malformed-force}:
 
 \begin{framed}
 \noindent\small\verb!./cpdf -gs gs -gs-malformed-force in.pdf -o out.pdf!\end{framed}
 
-The command line for \texttt{-gs-malformed-force} must be of \textit{precisely} this form.
+\noindent The command line for \texttt{-gs-malformed-force} must be of \textit{precisely} this form.
 
 To suppress the output of \texttt{gs} use the \texttt{-gs-quiet} option.
 
-
-\noindent Sometimes files can be technically well-formed but use inefficient PDF
+Sometimes files can be technically well-formed but use inefficient PDF
 constructs.  If you are sure the input files you are using are
 impeccably formed, the \texttt{-fast} option added to the command line (or, if
 using \texttt{AND}, to each section of the command line). This will use certain
-shortcuts which speed up processing, but would fail on badly-produced files.
-
-The \verb!-fast! option may be used with:
+shortcuts which speed up processing, but would fail on badly-produced files. The \verb!-fast! option may be used with:
 
 \begin{framed}
 \small\noindent Chapter \ref{pages}\\
@@ -561,7 +558,7 @@ Cpdf can build a new PDF file, given a number of pages and a paper size. The def
  \small\verb?        -create-pdf-papersize usletter -o out.pdf?
 \end{framed}
 
-The standard paper sizes are listed in Section \ref{papersizes}, or you may specify the width and height directly, as described in the same Chapter.
+\noindent The standard paper sizes are listed in Section \ref{papersizes}, or you may specify the width and height directly, as described in the same Chapter.
 
 
 \chapter{Merging and Splitting}
@@ -966,7 +963,7 @@ A hard box (one which clips its contents by inserting a clipping rectangle) may 
     \small\verb!cpdf -hard-box /TrimBox in.pdf -o out.pdf!
   \end{framed}
 
-This means the resultant file may be used as a stamp without contents outside the given box reappearing.
+\noindent This means the resultant file may be used as a stamp without contents outside the given box reappearing.
 
 \section{Showing Boxes and Printer's Marks}
 
@@ -1193,7 +1190,7 @@ Format & Description\\\hline
 
 \medskip
 
-The \textit{bounding box} is the intersection of the page's crop box and the bounding box of the page contents. Some other kinds of destination may be produced by \texttt{-list-bookmarks}. They will be preserved by \texttt{-add-bookmarks} and may be edited as your risk.
+\noindent The \textit{bounding box} is the intersection of the page's crop box and the bounding box of the page contents. Some other kinds of destination may be produced by \texttt{-list-bookmarks}. They will be preserved by \texttt{-add-bookmarks} and may be edited as your risk.
 
 
   \section{Remove Bookmarks}
@@ -1228,7 +1225,7 @@ As an alternative to extracting a bookmark file and manipulating the open-status
    \small\verb!cpdf -open-bookmarks-to-level <level> in.pdf -o out.pdf!
   \end{framed}
 
-A level of 0 will close all bookmarks, level 1 will open just the top level, closing all others etc. To open all of them, pick a sufficiently large level.
+\noindent A level of 0 will close all bookmarks, level 1 will open just the top level, closing all others etc. To open all of them, pick a sufficiently large level.
 
 
 
@@ -1449,7 +1446,7 @@ The starting point can be set with the \texttt{-bates} option. For example:
     \small\verb!cpdf -add-text "Page ID: %Bates" -bates 23745 in.pdf -o out.pdf!
   \end{framed}
 
-To specify that bates numbering begins at the first page of the range, use \texttt{-bates-at-range} instead. This option must be specified after the range is specified. To pad the bates number up to a given number of leading zeros, use \texttt{-bates-pad-to} in addition to either \texttt{-bates} or \texttt{-bates-at-range}.
+\noindent To specify that bates numbering begins at the first page of the range, use \texttt{-bates-at-range} instead. This option must be specified after the range is specified. To pad the bates number up to a given number of leading zeros, use \texttt{-bates-pad-to} in addition to either \texttt{-bates} or \texttt{-bates-at-range}.
 
 
 
@@ -1535,9 +1532,7 @@ than its baseline. Similarly, the \texttt{-topline} option may be used to specif
   \begin{framed}
     \small\verb!cpdf -add-text "-%Page-" -font "Times-Italic" in.pdf -o out.pdf!
   \end{framed}
-  \noindent See Section \ref{copyfont} for how to use other fonts.
-
-  The font size can be altered with the \texttt{-font-size} option, which
+  \noindent See Section \ref{copyfont} for how to use other fonts. The font size can be altered with the \texttt{-font-size} option, which
 specifies the size in points:
   \begin{framed}
     \small\verb!cpdf -add-text "-%Page-" -font-size 36 in.pdf -o out.pdf!
@@ -1643,7 +1638,7 @@ A rectangle may be placed on one or more pages by using the \texttt{-add-rectang
                     in.pdf -o out.pdf\end{verbatim}
 \end{framed}
 
-This can be used to blank out or highlight part of the document. The following positioning options work as you would expect: \texttt{-topleft}, \texttt{-top}, \texttt{-topright}, \texttt{-right}, \texttt{-bottomright}, \texttt{-bottom}, \texttt{-bottomleft}, \texttt{-left}, \texttt{-center}. When using the option \texttt{-pos-left "x y"}, the point (x, y) refers to the bottom-left of the rectangle. When using the option \texttt{-pos-right "x y"}, the point (x, y) refers to the bottom-right of the rectangle. When using the option \texttt{-pos-center "x y"}, the point (x, y) refers to the center of the rectangle. The options \texttt{-diagonal} and \texttt{-reverse-diagonal} have no meaning.\pagestyle{empty}\thispagestyle{fancy}
+\noindent This can be used to blank out or highlight part of the document. The following positioning options work as you would expect: \texttt{-topleft}, \texttt{-top}, \texttt{-topright}, \texttt{-right}, \texttt{-bottomright}, \texttt{-bottom}, \texttt{-bottomleft}, \texttt{-left}, \texttt{-center}. When using the option \texttt{-pos-left "x y"}, the point (x, y) refers to the bottom-left of the rectangle. When using the option \texttt{-pos-right "x y"}, the point (x, y) refers to the bottom-right of the rectangle. When using the option \texttt{-pos-center "x y"}, the point (x, y) refers to the center of the rectangle. The options \texttt{-diagonal} and \texttt{-reverse-diagonal} have no meaning.\pagestyle{empty}\thispagestyle{fancy}
 
 
 \chapter{Multipage Facilities}\pagestyle{fancy}\label{multipage}
@@ -1717,7 +1712,7 @@ In all three of these operations, one may specify \texttt{-pad-with} providing a
   \end{framed}
  
 
-The \texttt{-pad-multiple-before n} operation adds the padding pages at the beginning of the file  instead.
+\noindent The \texttt{-pad-multiple-before n} operation adds the padding pages at the beginning of the file  instead.
 
 \chapter{Annotations}
   \begin{framed}
@@ -1976,7 +1971,7 @@ can read it without having to decode the whole PDF. To set the metadata:
   \begin{framed}
     \small\verb!cpdf -set-metadata-date <date> in.pdf -o out.pdf!
   \end{framed}
-The date format is defined in Appendix \ref{xmpdate}. Using the date \texttt{"now"} uses the time and date
+\noindent The date format is defined in Appendix \ref{xmpdate}. Using the date \texttt{"now"} uses the time and date
 at which the command is executed.
 
 
@@ -2161,7 +2156,7 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
     \small\verb!cpdf -dump-attached-files in.pdf -o /home/fred/attachments!
   \end{framed}
 
-Unless the \texttt{-raw} option is given, the filenames are stripped of dubious special characters before writing. It is converted from unicode to 7 bit ASCII, and the following characters are removed, in addition to any character with ASCII code less than 32:
+\noindent  Unless the \texttt{-raw} option is given, the filenames are stripped of dubious special characters before writing. It is converted from unicode to 7 bit ASCII, and the following characters are removed, in addition to any character with ASCII code less than 32:
   \begin{framed}
   \centering
   \verb! / ? < > \ : * | " ^ + =!
@@ -2329,7 +2324,7 @@ objects or clipped in the original). For example:
     \small\verb!cpdf -draft -boxes in.pdf -o out.pdf!
   \end{framed}
 
-To remove a single image only, specify \texttt{-draft-remove-only}, giving the name of the image obtained by a call to \texttt{-image-resolution} as described in Section \ref{imageres} and giving the appropriate page. For example:
+\noindent To remove a single image only, specify \texttt{-draft-remove-only}, giving the name of the image obtained by a call to \texttt{-image-resolution} as described in Section \ref{imageres} and giving the appropriate page. For example:
 
   \begin{framed}
     \small\verb!cpdf -draft -boxes -draft-remove-only "/Im1" in.pdf 7 -o out.pdf!
@@ -2427,7 +2422,7 @@ input, writing to the output.
   \noindent Remove the ID from \texttt{in.pdf}, writing to \texttt{out.pdf}.
   \end{framed}
 
-You cannot use \texttt{-recrypt} with \texttt{-remove-id}.
+\noindent You cannot use \texttt{-recrypt} with \texttt{-remove-id}.
 
 \section{List Spot Colours}
 
