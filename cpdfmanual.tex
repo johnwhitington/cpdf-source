@@ -265,7 +265,7 @@ output to \texttt{file.txt}.
 \end{framed}
 
 \section{Doing Several Things at Once with AND}
-
+\index{AND}
 The keyword \texttt{AND} can be used to string together several commands in
 one. The advantage compared with using pipes is that the file need not be
 repeatedly parsed and written out, saving time.
@@ -330,7 +330,7 @@ supported:
 Simple arithmetic may be performed using the words \texttt{add}, \texttt{sub}, \texttt{mul} and \texttt{div} to stand for addition, subtraction, multiplication and division. For example, one may write \texttt{14in\hspace{-1mm} sub\hspace{-1mm} 30pt} or \texttt{PMINX\hspace{-1mm} mul\hspace{-1mm} 2}
 
 \section{Setting the Producer and Creator}
-
+\index{producer}\index{creator}
 The \texttt{-producer} and \texttt{-creator} options may be added to any \texttt{cpdf} command line to set the producer and/or creator of the PDF file. If the file was converted from another format, the \textit{creator} is the program producing the original, the \textit{producer} the program converting it to PDF.
 
 \begin{framed}
@@ -349,6 +349,7 @@ version changing may be suppressed with the \texttt{-keep-version} option. If yo
 \texttt{-set-version} operation described in Section \ref{setversion}.
 
 \section{File IDs}
+\index{file ID}
 PDF files contain an ID (consisting of two parts), used by some workflow
 systems to uniquely identify a file. To change the ID, behavior, use the
 \texttt{-change-id} operation. This will create a new ID for the output file. 
@@ -389,6 +390,7 @@ option to the command line, in addition to any other command being used. For exa
 To keep the existing linearization status of a file (produce linearized output if the input is linearized and the reverse), use \texttt{-keep-l} instead of \texttt{-l}.
 
 \section{Object Streams}
+\index{object stream}
 PDF 1.5 introduced a new mechanism for storing objects to save space: object streams. by default, \texttt{cpdf} will preserve object streams in input files, creating no more. To prevent the retention of existing object streams, use \texttt{-no-preserve-objstm}:
 
 \begin{framed}
@@ -419,6 +421,7 @@ PDF 1.5 introduced a new mechanism for storing objects to save space: object str
 \noindent Files written with object streams will be set to PDF 1.5 or higher, unless \texttt{-keep-version} is used (see above).
 
 \section{Malformed Files}
+\index{malformed file}
 \label{fast}
 There are many malformed PDF files in existence, including many produced by
 otherwise-reputable applications. \cpdf\ attempts to correct these problems
@@ -547,9 +550,11 @@ bit ASCII by dropping any high characters, or \verb!-raw! to perform no
 processing. The default unless specified in the documentation for an individual operation is \verb!-stripped!.
 
 \section{Font Embedding}
+\index{font!embedding}
 Use the \texttt{-no-embed-font} to avoid embedding the Standard 14 Font metrics when adding text with \texttt{-add-text}.
 
 \section{Creating a new PDF}
+\index{create new PDF}
 
 Cpdf can build a new PDF file, given a number of pages and a paper size. The default is one page, A4 portrait.
 
@@ -682,7 +687,7 @@ one of the output files.
   \end{framed}
 
 \section{Encrypting with Split and Split Bookmarks}
-
+\index{encryption}
 The encryption parameters described in Chapter \ref{encryption} may be added to the command line to encrypt each split PDF. Similarly, the \texttt{-recrypt} switch described in \ref{basicusage} may by given to re-encrypt each file with the existing encryption of the source PDF. 
 \pagestyle{empty}\thispagestyle{fancy}
 
@@ -751,7 +756,7 @@ The encryption parameters described in Chapter \ref{encryption} may be added to 
   \end{framed}
 
   \section{Page Sizes}
-  \index{page size}
+  \index{page!size}
 \label{papersizes}
   Any time when a page size is required, instead of writing, for instance \texttt{"210mm 197mm"} one can instead write \texttt{a4portrait}. Here is a list of supported page sizes:
 
@@ -966,6 +971,7 @@ A hard box (one which clips its contents by inserting a clipping rectangle) may 
 \noindent This means the resultant file may be used as a stamp without contents outside the given box reappearing.
 
 \section{Showing Boxes and Printer's Marks}
+\index{printer's marks}\index{trim marks}
 
 The \texttt{-show-boxes} operation displays the boxes present on each page as method of debugging. Since boxes may be coincident, they are shown in differing colours and dash patterns so they may be identified even where they overlap. The colours are:
 
@@ -1218,7 +1224,7 @@ the numbers in the first column which specify the level must form a proper
 tree with no entry being more than one greater than the last).
 
 \section{Opening bookmarks}
-
+\index{bookmarks!opening at level}
 As an alternative to extracting a bookmark file and manipulating the open-status of bookmarks, mass manipulation may be achieved by the following operation:
 
   \begin{framed}
@@ -1305,7 +1311,6 @@ the file using a different page range each time.
 \chapter{Watermarks and Stamps}
 \label{stamps}
 \index{watermarks}
-\index{stamps}
   \begin{framed}
   \noindent\small\verb!cpdf -stamp-on source.pdf!\\
   \noindent\small\verb!     [-scale-stamp-to-fit] [<positioning command>] [-relative-to-cropbox] !\\
@@ -1817,7 +1822,7 @@ given page range.
     \small\noindent\verb!cpdf -print-page-labels in.pdf!
   \end{framed}
   \section{Listing Fonts}
-\index{fonts!listing}
+\index{font!listing}
   The \texttt{-list-fonts} operation prints the fonts in the document,
 one-per-line to standard output. For example:
 \begin{framed}\small\begin{verbatim}1 /F245 /Type0 /Cleargothic-Bold /Identity-H
@@ -1948,7 +1953,7 @@ option is added---in which case, it is unprocessed, save for the replacement of 
 To set also any field in the XMP metadata, add \texttt{-also-set-xmp}. The field must exist already. To set only the field (not the document information dictionary), add \texttt{-just-set-xmp} instead.
 
   \section{XMP Metadata}
-\index{metadata}
+\index{metadata!XMP}\index{XMP metadata}
   PDF files can contain a piece of arbitrary metadata, often in XMP format.
 This is typically stored in an uncompressed stream, so that other applications
 can read it without having to decode the whole PDF. To set the metadata:
@@ -2052,7 +2057,7 @@ document when first opened. The possible (case-sensitive) values are:
 
 
 \section{Page Labels}
-\index{page labels}\index{page!labels}
+\index{page!labels}
 
 It is possible to add \textit{page labels} to a document. These are not the printed on the page, but may be displayed alongside thumbnails or in print dialogue boxes by PDF readers. We use \texttt{-add-page-labels} to do this, by default with decimal arabic numbers (1,2,3\ldots). We can add \texttt{-label-style} to choose what type of labels to add from these kinds:
 
@@ -2149,6 +2154,7 @@ $cpdf -list-attached-files 14psfonts.pdf
   \end{framed}
 
 \section{Dumping Attachments to File}
+\index{attachments!dumping to file}
 
 The \texttt{-dump-attachments} operation, when given a PDF file and a directory path as the output, will write each attachment under its filename (as displayed by \texttt{-list-attached-files} to thath directory. The directory must exist prior to the call.
 
@@ -2331,7 +2337,7 @@ objects or clipped in the original). For example:
   \end{framed}
 
   \section{Blackening Text, Lines and Fills}
-\index{blacken text}
+\index{blacken!text}
   Sometimes PDF output from an application (for instance, a web browser) has
 text in colors which would not print well on a grayscale printer. The
 \texttt{-blacktext} operation blackens all text on the given pages so it will be readable
@@ -2343,7 +2349,7 @@ which is part of a form.
     \small\verb!cpdf -blacktext in.pdf -o out.pdf!
   \end{framed}
 
-\index{blacken lines}
+\index{blacken!lines}
 
 \noindent The \texttt{-blacklines} operation blackens all lines on the given pages.
 
@@ -2351,7 +2357,7 @@ which is part of a form.
     \small\verb!cpdf -blacklines in.pdf -o out.pdf!
   \end{framed}
 
-\index{blacken fills}
+\index{blacken!fills}
 
 \noindent The \texttt{-blackfills} operation blackens all fills on the given pages.
 
@@ -2401,7 +2407,7 @@ giving the part of the version number after the decimal point. For example:
 just the supposed version number.
 
   \section{Copy ID}
-\index{copy ID}
+\index{file ID!copy}
   The \texttt{-copy-id-from} operation copies the ID from the given file to the
 input, writing to the output.
   \begin{framed}
@@ -2413,7 +2419,7 @@ input, writing to the output.
   \noindent If there is no ID in the source file, the existing ID is retained. You cannot use \texttt{-recrypt} with \texttt{-copy-id-from}.
 
 \section{Remove ID}
-\index{remove ID}
+\index{file ID!remove}
   The \texttt{-remove-id} operation removes the ID from a document.
   \begin{framed}
   \small\noindent\verb!cpdf -remove-id in.pdf -o out.pdf!
@@ -2425,7 +2431,7 @@ input, writing to the output.
 \noindent You cannot use \texttt{-recrypt} with \texttt{-remove-id}.
 
 \section{List Spot Colours}
-
+\index{spot colour}
 This operation lists the name of any ``separation'' color space in the given PDF file.
 
   \begin{framed}
@@ -2463,7 +2469,7 @@ The \texttt{-remove-clipping} operation removes any clipping paths on given page
 \appendix
 \chapter{Dates}\pagestyle{empty}
 \label{dates}
-\index{dates!defined}
+\index{date!defined}
 
 \section{PDF Date Format}
 Dates in PDF are specified according to the following format:
