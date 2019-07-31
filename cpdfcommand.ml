@@ -2199,12 +2199,12 @@ and specs =
    ("-copy-font-page",
       Arg.Int setfontpage,
       " Set the page a copied font is drawn from");
-   ("-remove-fonts",
-      Arg.Unit (setop RemoveFonts),
-      " Remove embedded fonts");
    ("-copy-font-name",
       Arg.String setcopyfontname,
       " Set the name of the font to copy");
+   ("-remove-fonts",
+      Arg.Unit (setop RemoveFonts),
+      " Remove embedded fonts");
    ("-missing-fonts",
       Arg.Unit (setop MissingFonts),
       " List missing fonts");

@@ -2290,6 +2290,9 @@ recommended when file size is the sole consideration.
   \noindent\verb!cpdf -draft [-boxes] [-draft-remove-only <n>] in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
+  \noindent\verb!cpdf -remove-all-text in.pdf [<range>] -o out.pdf!
+
+  \vspace{1.5mm}
   \noindent\verb!cpdf -blacktext in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
@@ -2339,6 +2342,12 @@ objects or clipped in the original). For example:
 
   \begin{framed}
     \small\verb!cpdf -draft -boxes -draft-remove-only "/Im1" in.pdf 7 -o out.pdf!
+  \end{framed}
+
+\noindent To remove text instead of images, use the \texttt{-remove-all-text} operation:
+
+  \begin{framed}
+    \small\verb!cpdf -remove-all-text in.pdf -o out.pdf!
   \end{framed}
 
   \section{Blackening Text, Lines and Fills}
