@@ -3721,7 +3721,7 @@ let trim_marks_page pdf n page =
          @ [Pdfops.Op_Q]
       in
         Pdfpage.postpend_operators pdf ops ~fast:args.fast page
-  | _, _ -> Printf.eprintf "-trim_marks: No /TrimBox found on page %i\n" n; page
+  | _, _ -> Printf.eprintf "warning: no /TrimBox found on page %i\n" n; page
 
 let trim_marks range pdf =
   Cpdf.process_pages (trim_marks_page pdf) pdf range

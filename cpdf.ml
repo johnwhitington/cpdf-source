@@ -2697,7 +2697,7 @@ let hard_box pdf range boxname mediabox_if_missing fast =
            | _ ->
                if mediabox_if_missing
                  then Pdf.parse_rectangle page.Pdfpage.mediabox
-                 else error "hard_box: Box not found"
+                 else error (Printf.sprintf "hard_box: box %s not found" boxname)
        in
          let ops = [Pdfops.Op_re (minx, miny, maxx -. minx, maxy -. miny); Pdfops.Op_W; Pdfops.Op_n] in
            Pdfpage.prepend_operators pdf ops ~fast:fast page)
@@ -3607,9 +3607,9 @@ let xmp_date date =
                 end
             | _ -> raise Exit  
             end
-        | _ -> failwith "xmp_date: Malformed date string (no year)"
+        | _ -> failwith (Printf.sprintf "xmp_date: Malformed date string (no year): %s" date)
         end
-    | _ -> failwith "xmp_date: Malformed date string (no prefix)"
+    | _ -> failwith (Printf.sprintf "xmp_date: Malformed date string (no prefix): %s" date)
   with
     Exit -> make_xmp_date_from_components d
 
@@ -3668,8 +3668,8 @@ let set_metadata_date pdf date =
 
 let replacements pdf =
   let info = get_info_utf8 pdf in
-    [("CREATEDATE", xmp_date (info "/CreationDate"));
-     ("MODDATE", xmp_date (info "/ModDate"));
+    [("CREATEDATE", xmp_date (let i = info "/CreationDate" in if i = "" then expand_date "now" else i));
+     ("MODDATE", xmp_date (let i = info "/ModDate" in if i = "" then expand_date "now" else i));
      ("PRODUCER", info "/Producer");
      ("CREATOR", info "/Creator");
      ("TITLE", info "/Title");
