@@ -660,6 +660,9 @@ let banned banlist = function
   | PrintPageLabels | Clean | Compress | Decompress
   | RemoveUnusedResources | ChangeId | CopyId _ | ListSpotColours | Version
   | DumpAttachedFiles | RemoveMetadata | EmbedMissingFonts | BookmarksOpenToLevel _ | CreatePDF
+  | SetPageMode _ | HideToolbar _ | HideMenubar _ | HideWindowUI _
+  | FitWindow _ | CenterWindow _ | DisplayDocTitle _
+  | RemoveId | OpenAtPageFit _ | OpenAtPage _ | SetPageLayout _
   | ShowBoxes | TrimMarks -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
@@ -669,11 +672,8 @@ let banned banlist = function
   (*| ExtractText | ExtractImages | ExtractFontFile -> mem Pdfcrypt.NoExtract banlist*)
   | AddBookmarks _ | PadBefore | PadAfter | PadEvery _ | PadMultiple _ | PadMultipleBefore _
   | Merge | Split | SplitOnBookmarks _ | RotateContents _ | Rotate _
-  | Rotateby _ | Upright | VFlip | HFlip | SetPageLayout _
-  | SetPageMode _ | HideToolbar _ | HideMenubar _ | HideWindowUI _
-  | FitWindow _ | CenterWindow _ | DisplayDocTitle _
-  | RemoveId | OpenAtPageFit _ | OpenAtPage _
-  | AddPageLabels | RemovePageLabels -> mem Pdfcrypt.NoAssemble banlist
+  | Rotateby _ | Upright | VFlip | HFlip | AddPageLabels | RemovePageLabels ->
+      mem Pdfcrypt.NoAssemble banlist
   | CSP1|CSP3|TwoUp|TwoUpStack|RemoveBookmarks|AddRectangle|RemoveText|
     Draft|Shift|Scale|ScaleToFit|RemoveAttachedFiles|
     RemoveAnnotations|RemoveFonts|Crop|RemoveCrop|Trim|RemoveTrim|Bleed|RemoveBleed|Art|RemoveArt|
@@ -4145,7 +4145,12 @@ let go () =
       write_pdf false (Cpdf.set_metadata args.keepversion metadata_file (get_single_pdf args.op false))
   | Some (SetVersion v) ->
       let pdf = get_single_pdf args.op false in
-         write_pdf false {pdf with Pdf.minor = v}
+      let pdf =
+        if v >= 10
+          then {pdf with Pdf.major = 2; Pdf.minor = v - 10}
+          else {pdf with Pdf.major = 1; Pdf.minor = v}
+      in
+         write_pdf false pdf
   | Some (SetPageLayout s) ->
            write_pdf false (Cpdf.set_page_layout (get_single_pdf args.op false) s)
   | Some (SetPageMode s) ->
