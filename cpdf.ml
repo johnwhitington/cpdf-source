@@ -3454,7 +3454,8 @@ let output_xmp_info encoding pdf =
             print_out tree "XMP xmp:ModifyDate" xmp "ModifyDate";
             print_out tree "XMP dc:title" dc "title";
             print_out tree "XMP dc:creator" dc "creator";
-            print_out tree "XMP dc:subject" dc "subject"
+            print_out tree "XMP dc:subject" dc "subject";
+            print_out tree "XMP dc:description" dc "description"
         with
           _ -> ()
 
