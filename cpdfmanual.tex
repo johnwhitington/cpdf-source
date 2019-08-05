@@ -215,8 +215,8 @@ after any range). The document will \textit{not} be re-encrypted upon writing.  
 example:
 
 \begin{framed}
-\noindent\small\verb!cpdf in.pdf user=charles -info!\\
-\noindent\small\verb!cpdf in.pdf owner=fred reverse -o out.pdf!
+\small\verb!cpdf in.pdf user=charles -info!\\
+\indent\small\verb!cpdf in.pdf owner=fred reverse -o out.pdf!
 \end{framed}
 
 \noindent To re-encrypt the file with its existing encryption upon writing, which is required if only the user password was supplied, but allowed in any case, add the \texttt{-recrypt} option:
@@ -436,7 +436,7 @@ Grossly malformed files will be reconstructed. The reconstruction
 progress is shown on \verb!stderr! (Standard Error):
 
 \begin{framed}
-\noindent\small\verb!./cpdf in.pdf -o out.pdf!\\
+\noindent\small\verb!$cpdf in.pdf -o out.pdf!\\
 \small\verb!couldn't lex object number!\\
 \small\verb!Attempting to reconstruct the malformed pdf in.pdf...!\\
 \small\verb!Read 5530 objects!\\
@@ -446,16 +446,17 @@ progress is shown on \verb!stderr! (Standard Error):
 \noindent If \texttt{cpdf} cannot reconstruct a malformed file, it is able to use the \texttt{gs} program to try to reconstruct the program, if you have it installed. For example, if \texttt{gs} is installed and in your path, we might try:
 
 \begin{framed}
-\noindent\small\verb!./cpdf -gs gs -gs-malformed in.pdf -o out.pdf!\end{framed}
+\noindent\small\verb!cpdf -gs gs -gs-malformed in.pdf -o out.pdf!\end{framed}
 
-\noindent If the malformity lies inside an individual page of the PDF, rather than in its gross structure, cpdf may appear to succeed in reconstruction, only to fail when processing a page (e.g when adding text). To force the use of \texttt{gs} to pre-process such files so cpdf cannot fail on them, use \texttt{-gs-malformed-force}:
+\noindent If the malformity lies inside an individual page of the PDF, rather than in its gross structure, cpdf may appear to succeed in reconstruction, only to fail when processing a page (e.g when adding text). To suppress the output of \texttt{gs} use the \texttt{-gs-quiet} option.
+
+To force the use of \texttt{gs} to pre-process such files so cpdf cannot fail on them, use \texttt{-gs\--malformed\--force}:
 
 \begin{framed}
-\noindent\small\verb!./cpdf -gs gs -gs-malformed-force in.pdf -o out.pdf!\end{framed}
+\noindent\small\verb!cpdf -gs gs -gs-malformed-force in.pdf -o out.pdf [-gs-quiet]!\end{framed}
 
 \noindent The command line for \texttt{-gs-malformed-force} must be of \textit{precisely} this form.
 
-To suppress the output of \texttt{gs} use the \texttt{-gs-quiet} option.
 
 Sometimes files can be technically well-formed but use inefficient PDF
 constructs.  If you are sure the input files you are using are
@@ -565,7 +566,7 @@ Cpdf can build a new PDF file, given a number of pages and a paper size. The def
 
 \begin{framed}
  \small\verb?cpdf -create-pdf -create-pdf-pages 20?\\
- \small\verb?        -create-pdf-papersize usletter -o out.pdf?
+ \noindent\small\verb?        -create-pdf-papersize usletterportrait -o out.pdf?
 \end{framed}
 
 \noindent The standard paper sizes are listed in Section \ref{papersizes}, or you may specify the width and height directly, as described in the same Chapter.

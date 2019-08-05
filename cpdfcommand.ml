@@ -1029,9 +1029,9 @@ let parse_rectangle pdf s =
   try
     match parse_units_string pdf emptypage s with
     | [x; y; w; h] -> x, y, w, h
-    | _ -> error "Bad rectangle specification"
+    | _ -> error ("Bad rectangle specification " ^ s)
   with
-    _ -> error "Bad rectangle specification"
+    _ -> error ("Bad rectangle specification " ^ s)
 
 let parse_rectangles pdf s =
   try
@@ -1040,18 +1040,18 @@ let parse_rectangles pdf s =
       List.map
         (function
          | [x; y; w; h] -> (x, y, w, h)
-         | _ -> error "Bad rectangle specification")
+         | _ -> error ("Bad rectangle specification " ^ s))
         groups
   with
-    _ -> error "Bad rectangle specification"
+    _ -> error ("Bad rectangle specification " ^ s)
 
 let parse_coordinate pdf s =
   try
     match parse_units_string pdf emptypage s with
     | [dx; dy] -> dx, dy
-    | _ -> error "Bad coordinate specification"
+    | _ -> error ("Bad coordinate specification " ^ s)
   with
-    _ -> error "Bad coordinate specification"
+    _ -> error ("Bad coordinate specification " ^ s)
 
 let parse_coordinates pdf s =
   try
@@ -1060,18 +1060,18 @@ let parse_coordinates pdf s =
         List.map
           (function
             | [dx; dy] -> (dx, dy)
-           | _ -> error "Bad coordinate specification")
+           | _ -> error ("Bad coordinate specification " ^ s))
           groups
   with
-    _ -> error "Bad coordinate specification"
+    _ -> error ("Bad coordinate specification " ^ s)
 
 let parse_single_number pdf s =
   try
     match parse_units_string pdf emptypage s with
     | [x] -> x
-    | _ -> error "Bad number Argument"
+    | _ -> error ("Bad number argument " ^ s)
   with
-    _ -> error "Bad number argument"
+    _ -> error ("Bad number argument " ^ s)
 
 (* Setting operations *)
 let setcrop s =
@@ -4652,6 +4652,11 @@ let go_withargv argv =
   match argv with
     [|_; inputfilename; "-gs"; gslocation; "-gs-malformed-force"; "-o"; outputfilename|] ->
     args.path_to_ghostscript <- gslocation;
+    ignore (gs_malformed_force inputfilename outputfilename);
+    exit 0
+  | [|_; inputfilename; "-gs"; gslocation; "-gs-malformed-force"; "-o"; outputfilename; "-gs-quiet"|] ->
+    args.path_to_ghostscript <- gslocation;
+    args.gs_quiet <- true;
     ignore (gs_malformed_force inputfilename outputfilename);
     exit 0
   | _ -> 
