@@ -1130,7 +1130,7 @@ Squeezing page data
 Recompressing document
 \end{verbatim}
 
-The \texttt{-squeeze-log-to <filename>} option writes the log to the given file instead of to standard output.
+\noindent The \texttt{-squeeze-log-to <filename>} option writes the log to the given file instead of to standard output.
 
 \chapter{Bookmarks}
   \begin{framed}
@@ -1829,6 +1829,7 @@ given page range.
   \end{framed}
   \section{Listing Fonts}
 \index{font!listing}
+\label{listingfonts}
   The \texttt{-list-fonts} operation prints the fonts in the document,
 one-per-line to standard output. For example:
 \begin{framed}\small\begin{verbatim}1 /F245 /Type0 /Cleargothic-Bold /Identity-H
@@ -2218,6 +2219,10 @@ To remove a particular image, find its name using \texttt{-image-resolution} wit
 
 \chapter{Fonts}\pagestyle{fancy}
  {\small \begin{framed}
+
+  \small\noindent\verb!cpdf -list-fonts in.pdf!
+
+  \vspace{1.5mm}
   \noindent\verb!cpdf -copy-font fromfile.pdf -copy-font-page <int>!\\
   \noindent\verb!     -copy-font-name <name> in.pdf [<range>] -o out.pdf!
 
@@ -2230,6 +2235,11 @@ To remove a particular image, find its name using \texttt{-image-resolution} wit
   \vspace{1.5mm}
   \noindent\verb!cpdf -embed-missing-fonts -gs <path to gs> in.pdf -o out.pdf!
   \end{framed}}
+
+\section{Listing Fonts}
+
+Described in Section \ref{listingfonts}.
+
 \section{Copying Fonts}
 \label{copyfont}
 
