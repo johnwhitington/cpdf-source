@@ -4,17 +4,15 @@ o Directly set and remove Trim, Art, and Bleed boxes
 o Dump attachments to file
 o New -hard-box option to set a box and clip to it
 o Extended bookmark format, preserving all bookmark information
-o New -pad-with, -pad-mutiple-before option
+o New -pad-with, -pad-mutiple-before options
 o Set or create XMP metadata
-o -remove-clipping
+o Remove graphics clipping
 o Extended support for reading malformed files
 o Embed missing fonts by calling out to gs
 o Set bookmarks open to a given level
 o Create PDF files from scatch
 o Remove single images by name
-o Add trim and registration marks
-o Merge AcroForms
-o Search for unicode characters in a font automatically
+o Add trim marks
 
 Version 2.2 (patchlevel 1)
 
