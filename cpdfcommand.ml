@@ -3932,7 +3932,7 @@ let go () =
               let range = parse_pagespec pdf pagespec in
                 let pdf = Cpdf.crop_pdf ~box:"/ArtBox" xywhlist pdf range in
                   write_pdf false pdf
-      | _ -> error "crop: bad command line"
+      | _ -> error "art: bad command line"
       end
   | Some Bleed ->
       begin match args.inputs, args.out with
@@ -3942,7 +3942,7 @@ let go () =
               let range = parse_pagespec pdf pagespec in
                 let pdf = Cpdf.crop_pdf ~box:"/BleedBox" xywhlist pdf range in
                   write_pdf false pdf
-      | _ -> error "crop: bad command line"
+      | _ -> error "bleed: bad command line"
       end
   | Some Trim ->
       begin match args.inputs, args.out with
@@ -3952,7 +3952,7 @@ let go () =
               let range = parse_pagespec pdf pagespec in
                 let pdf = Cpdf.crop_pdf ~box:"/TrimBox" xywhlist pdf range in
                   write_pdf false pdf
-      | _ -> error "crop: bad command line"
+      | _ -> error "trim: bad command line"
       end
   | Some MediaBox ->
       begin match args.inputs, args.out with
