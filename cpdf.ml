@@ -2280,12 +2280,14 @@ let change_pattern_matrices_page pdf tr page =
 
 (* Apply transformations to any annotations in /Annots (i.e their /Rect entries) *)
 let transform_annotations pdf transform rest =
+  (*Printf.printf "in transform_annotations\n";*)
   match Pdf.lookup_direct pdf "/Annots" rest with
   | Some (Pdf.Array annots) ->
       (* Always indirect references, so alter in place *)
       List.iter
         (function
          | Pdf.Indirect i ->
+             (*Printf.printf "Found an annotation to modify...\n";*)
              let annot = Pdf.lookup_obj pdf i in
                let rect' =
                  match Pdf.lookup_direct pdf "/Rect" annot with

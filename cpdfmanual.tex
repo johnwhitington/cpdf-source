@@ -1124,14 +1124,16 @@ PDF, use:
 
 \begin{verbatim}
 $ ./cpdf -squeeze in.pdf -o out.pdf
+Initial file size is 238169 bytes
 Beginning squeeze: 123847 objects
 Squeezing... Down to 114860 objects
 Squeezing... Down to 114842 objects
 Squeezing page data
 Recompressing document
+Final file size is 187200 bytes,  78.60% of original.
 \end{verbatim}
 
-\noindent The \texttt{-squeeze-log-to <filename>} option writes the log to the given file instead of to standard output.
+\noindent The \texttt{-squeeze-log-to <filename>} option writes the log to the given file instead of to standard output. Log contents is appended to the end of the log file, preserving existing contents.
 
 \chapter{Bookmarks}
   \begin{framed}

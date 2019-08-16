@@ -2462,6 +2462,12 @@ let get_single_pdf_nodecrypt read_lazy =
 
 let filenames = null_hash ()
 
+let squeeze_logto filename x =
+  let fh = open_out_gen [Open_wronly; Open_creat] 0o666 filename in
+    seek_out fh (out_channel_length fh);
+    output_string fh x;
+    close_out fh
+
 (* This now memoizes on the name of the file to make sure we only load each
 file once *)
 let rec get_pdf_from_input_kind ?(read_lazy=false) ?(decrypt=true) ?(fail=false) ((_, x, u, o, y, revision) as input) op ik =
@@ -2491,7 +2497,11 @@ let rec get_pdf_from_input_kind ?(read_lazy=false) ?(decrypt=true) ?(fail=false)
         begin
           let size = filesize s in
             initial_file_size := size;
-            if !logto = None then Printf.printf "Initial file size is %i bytes\n" size
+            let str = Printf.sprintf "Initial file size is %i bytes\n" size in
+            begin match !logto with
+            | None -> print_string str
+            | Some filename -> squeeze_logto filename str
+            end
         end;
       begin try Hashtbl.find filenames s with
         Not_found ->
@@ -2635,11 +2645,17 @@ let really_write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf outna
     end;
     if args.squeeze then
       let s = filesize outname in
-        if !logto = None then
-          Printf.printf
-            "Final file size is %i bytes, %.2f%% of original.\n"
-            s
-            ((float s /. float !initial_file_size) *. 100.)
+        begin
+          let str =
+            Printf.sprintf
+              "Final file size is %i bytes, %.2f%% of original.\n"
+              s
+              ((float s /. float !initial_file_size) *. 100.)
+          in
+          match !logto with
+          | None -> print_string str
+          | Some filename -> squeeze_logto filename str
+        end
 
 let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
   if args.debugcrypt then Printf.printf "write_pdf\n";
