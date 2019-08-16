@@ -2112,7 +2112,7 @@ let pad padwith range pdf isbefore =
                 Pdfpage.mediabox = (select (n + i) pages).Pdfpage.mediabox;
                 Pdfpage.resources = Pdf.Dictionary [];
                 Pdfpage.rotate = (select (n + i) pages).Pdfpage.rotate;
-                Pdfpage.rest = (select (n + i) pages).Pdfpage.rest})
+                Pdfpage.rest = Pdf.remove_dict_entry ((select (n + i) pages).Pdfpage.rest) "/Annots"})
             range
         in
           let pages' = insert_after_many pages (combine range blankpages) in
