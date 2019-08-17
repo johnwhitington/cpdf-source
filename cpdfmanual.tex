@@ -453,7 +453,7 @@ progress is shown on \verb!stderr! (Standard Error):
 If the malformity lies inside an individual page of the PDF, rather than in its gross structure, cpdf may appear to succeed in reconstruction, only to fail when processing a page (e.g when adding text). To force the use of \texttt{gs} to pre-process such files so cpdf cannot fail on them, use \texttt{-gs\--malformed\--force}:
 
 \begin{framed}
-\noindent\small\verb!cpdf -gs gs -gs-malformed-force in.pdf -o out.pdf [-gs-quiet]!\end{framed}
+\noindent\small\verb!cpdf in.pdf -gs gs -gs-malformed-force -o out.pdf [-gs-quiet]!\end{framed}
 
 \noindent The command line for \texttt{-gs-malformed-force} must be of \textit{precisely} this form.
 
