@@ -448,9 +448,9 @@ progress is shown on \verb!stderr! (Standard Error):
 \begin{framed}
 \noindent\small\verb!cpdf -gs gs -gs-malformed in.pdf -o out.pdf!\end{framed}
 
-\noindent If the malformity lies inside an individual page of the PDF, rather than in its gross structure, cpdf may appear to succeed in reconstruction, only to fail when processing a page (e.g when adding text). To suppress the output of \texttt{gs} use the \texttt{-gs-quiet} option.
+\noindent To suppress the output of \texttt{gs} use the \texttt{-gs-quiet} option.
 
-To force the use of \texttt{gs} to pre-process such files so cpdf cannot fail on them, use \texttt{-gs\--malformed\--force}:
+If the malformity lies inside an individual page of the PDF, rather than in its gross structure, cpdf may appear to succeed in reconstruction, only to fail when processing a page (e.g when adding text). To force the use of \texttt{gs} to pre-process such files so cpdf cannot fail on them, use \texttt{-gs\--malformed\--force}:
 
 \begin{framed}
 \noindent\small\verb!cpdf -gs gs -gs-malformed-force in.pdf -o out.pdf [-gs-quiet]!\end{framed}
@@ -1715,7 +1715,7 @@ instance, to add a clean page between chapters of a document.)
   \end{framed}
   \noindent\ldots on a 9 page document adds a blank page after pages 3 and 6.
 
-In all three of these operations, one may specify \texttt{-pad-with} providing a one-page PDF file to be used instead of a blank page. For example, a page saying ``This page left intentionally blank''.
+In all three of these operations, one may specify \texttt{-pad-with} providing a (usually one-page)  PDF file to be used instead of a blank page. For example, a page saying ``This page left intentionally blank''.
 
   The \verb!-pad-multiple n! operation adds blank pages so the document has a multiple of \verb!n! pages. For example:
   \begin{framed}
