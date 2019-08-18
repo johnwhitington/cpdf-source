@@ -1677,6 +1677,10 @@ let setdraftremoveonly s =
 let setgsquiet () =
   args.gs_quiet <- true
 
+let whingemalformed () =
+  prerr_string "Command line must be of exactly the form\ncpdf <infile> -gs <path> -gs-malformed-force -o <outfile>\n";
+  exit 1
+
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
   control_args := !control_args @ parse_control_file filename
@@ -2291,7 +2295,9 @@ and specs =
    ("-gs-quiet", Arg.Unit setgsquiet, " Make gs go into quiet mode");
    ("-squeeze", Arg.Unit setsqueeze, " Squeeze");
    ("-squeeze-log-to", Arg.String setsqueezelogto, " Squeeze log location");
-   (*These items are undocumented *)
+   (* Just for error reporting *)
+   ("-gs-malformed-force", Arg.Unit whingemalformed, "");
+   (* These items are undocumented *)
    ("-remove-unused-resources", Arg.Unit (setop RemoveUnusedResources), "");
    ("-stay-on-error", Arg.Unit setstayonerror, "");
    ("-extract-fontfile", Arg.Unit (setop ExtractFontFile), "");
@@ -2405,7 +2411,7 @@ let rec get_single_pdf ?(decrypt=true) ?(fail=false) op read_lazy =
         end
     | _ -> ()
     end;
-    Printf.eprintf "Failed to read malformed PDF file. Consider using -gs-malformed\n";
+    Printf.eprintf "get_single_pdf: failed to read malformed PDF file. Consider using -gs-malformed\n";
     exit 2
   in
   match args.inputs with
@@ -2419,7 +2425,8 @@ let rec get_single_pdf ?(decrypt=true) ?(fail=false) op read_lazy =
           else
             pdfread_pdf_of_file ?revision (optstring u) (optstring o) inname
         with
-          _ ->
+        | Cpdf.SoftError _ as e -> raise e (* Bad owner or user password *)
+        | _ ->
             if args.gs_malformed then
               begin
                 failout ();
@@ -2487,7 +2494,7 @@ let rec get_pdf_from_input_kind ?(read_lazy=false) ?(decrypt=true) ?(fail=false)
         end
     | _ -> ()
     end;
-    Printf.eprintf "Failed to read malformed PDF file. Consider using -gs-malformed\n";
+    Printf.eprintf "get_pdf_from_input_kind: failed to read malformed PDF file. Consider using -gs-malformed\n";
     exit 2
   in
   match ik with
@@ -2512,7 +2519,9 @@ let rec get_pdf_from_input_kind ?(read_lazy=false) ?(decrypt=true) ?(fail=false)
               else
                 pdfread_pdf_of_file ?revision (optstring u) (optstring o) s
             with
-              _ ->
+            | Cpdf.SoftError _ as e -> raise e (* Bad owner or user password *)
+            | e ->
+                Printf.printf "%s\n" (Printexc.to_string e);
                 if args.gs_malformed then
                   begin
                     failout ();
