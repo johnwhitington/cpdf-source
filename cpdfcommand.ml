@@ -663,26 +663,25 @@ let banned banlist = function
   | SetPageMode _ | HideToolbar _ | HideMenubar _ | HideWindowUI _
   | FitWindow _ | CenterWindow _ | DisplayDocTitle _
   | RemoveId | OpenAtPageFit _ | OpenAtPage _ | SetPageLayout _
-  | ShowBoxes | TrimMarks -> false (* Always allowed *)
+  | ShowBoxes | TrimMarks | CreateMetadata | SetMetadataDate _ | SetVersion _
+  | SetAuthor _|SetTitle _|SetSubject _|SetKeywords _|SetCreate _
+  | SetModify _|SetCreator _|SetProducer _|RemoveDictEntry _ | SetMetadata _
+  | ExtractText | ExtractImages | ExtractFontFile
+  | AddPageLabels | RemovePageLabels 
+     -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
-  | ExtractText | ExtractImages | ExtractFontFile
   | Decrypt | Encrypt | CombinePages _ -> true (* Never allowed *)
-  (* ISO says Noextract no longer relevent, due to accessibility concerns *)
-  (*| ExtractText | ExtractImages | ExtractFontFile -> mem Pdfcrypt.NoExtract banlist*)
   | AddBookmarks _ | PadBefore | PadAfter | PadEvery _ | PadMultiple _ | PadMultipleBefore _
   | Merge | Split | SplitOnBookmarks _ | RotateContents _ | Rotate _
-  | Rotateby _ | Upright | VFlip | HFlip | AddPageLabels | RemovePageLabels ->
+  | Rotateby _ | Upright | VFlip | HFlip ->
       mem Pdfcrypt.NoAssemble banlist
   | CSP1|CSP3|TwoUp|TwoUpStack|RemoveBookmarks|AddRectangle|RemoveText|
     Draft|Shift|Scale|ScaleToFit|RemoveAttachedFiles|
     RemoveAnnotations|RemoveFonts|Crop|RemoveCrop|Trim|RemoveTrim|Bleed|RemoveBleed|Art|RemoveArt|
     CopyCropBoxToMediaBox|CopyBox|MediaBox|HardBox _|SetTrapped|SetUntrapped|Presentation|
     BlackText|BlackLines|BlackFills|CopyFont _|CSP2 _|StampOn _|StampUnder _|
-    AddText _|ScaleContents _|AttachFile _|CopyAnnotations _|SetMetadata _|
-    ThinLines _|SetAuthor _|SetTitle _|SetSubject _|SetKeywords _|SetCreate _|
-    SetModify _|SetCreator _|SetProducer _|SetVersion _|RemoveDictEntry _ |
-    RemoveClipping | SetMetadataDate _ | CreateMetadata | RemoveAllText ->
+    AddText _|ScaleContents _|AttachFile _|CopyAnnotations _| ThinLines _ | RemoveClipping | RemoveAllText ->
       mem Pdfcrypt.NoEdit banlist
 
 let operation_allowed pdf banlist op =
