@@ -2318,7 +2318,7 @@ let shift_page ?(fast=false) dxdylist pdf pnum page =
       let page =
         change_pattern_matrices_page pdf (Pdftransform.mktranslate ~-.dx ~-.dy) page
       in
-        transform_annotations pdf (Pdftransform.mktranslate ~-.dx ~-.dy) page.Pdfpage.rest;
+        transform_annotations pdf (Pdftransform.mktranslate dx dy) page.Pdfpage.rest;
         Pdfpage.prepend_operators pdf [transform_op] ~fast page
 
 let shift_pdf ?(fast=false) dxdylist pdf range =
