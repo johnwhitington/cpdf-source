@@ -3484,7 +3484,7 @@ let get_xmp_info pdf name =
 (* Set XMP info *)
 let rec set_xml_field kind fieldname value = function
   D data -> D data
-| E (((n, n'), m), [D _]) when n = kind && n' = fieldname ->
+| E (((n, n'), m), _ (*[D _]*)) when n = kind && n' = fieldname ->
     E (((n, n'), m), [D value])
 | E (x, ts) -> E (x, List.map (set_xml_field kind fieldname value) ts)
 
