@@ -7,18 +7,19 @@ RESULT = cpdf
 ANNOTATE = true
 PACKS = camlpdf
 
-OCAMLNCFLAGS = -g -bin-annot -safe-string -w -3 -annot
-OCAMLBCFLAGS = -g -bin-annot -safe-string -w -3 -annot
+OCAMLFLAGS = -bin-annot
+OCAMLNCFLAGS = -g -safe-string -w -3
+OCAMLBCFLAGS = -g -safe-string -w -3
 OCAMLLDFLAGS = -g
 
 all : native-code native-code-library byte-code-library top htdoc
 
 clean ::
-	rm -rf doc foo foo2 out.pdf out2.pdf *.cmt
+	rm -rf doc foo foo2 out.pdf out2.pdf *.cmt *.cmti
 
 LIBINSTALL_FILES = cpdf.a cpdf.cma cpdf.cmxa \
 $(foreach x,$(MODS),$x.mli) $(foreach x,$(MODS),$x.cmi) \
-$(foreach x,$(MODS),$x.cmx) $(foreach x,$(MODS),$x.cmt)
+$(foreach x,$(MODS),$x.cmx) $(foreach x,$(MODS),$x.cmti)
 
 install : libinstall
 
