@@ -1,5 +1,5 @@
 # Build the cpdf command line tools and top level
-MODS = xmlm cpdfstrftime cpdf cpdfcommand
+MODS = xmlm cpdfstrftime cpdfcoord cpdf cpdfcommand
 
 SOURCES = $(foreach x,$(MODS),$(x).ml $(x).mli) cpdfcommandrun.ml
 

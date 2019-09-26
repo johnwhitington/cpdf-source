@@ -1,3 +1,7 @@
+Version 2.4 (in development)
+
+o Allow -shift with -add-text for additional adjustment
+
 Version 2.3 (October 2019)
 
 o Directly set and remove Trim, Art, and Bleed boxes

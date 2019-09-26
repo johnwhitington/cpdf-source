@@ -1792,7 +1792,7 @@ let extract_text extract_text_font_size pdf range =
 let addtext
   metrics lines linewidth outline fast colour fontname embed bates batespad fontsize font
   underneath position hoffset voffset text pages orientation cropbox opacity
-  justification filename extract_text_font_size pdf
+  justification filename extract_text_font_size shift pdf
 =
   let endpage = Pdfpage.endpage pdf in
   let replace_pairs pdf filename bates batespad num page =
@@ -1941,7 +1941,7 @@ let unescape_string s =
 let
   addtexts metrics linewidth outline fast fontname font embed bates batespad colour position linespacing
   fontsize underneath text pages orientation cropbox opacity justification
-  midline topline filename extract_text_font_size pdf
+  midline topline filename extract_text_font_size shift pdf
 =
   (*flprint "addtexts:\n";
   iter (Printf.printf "%C ") (explode text);
@@ -2017,7 +2017,7 @@ let
                    addtext metrics lines linewidth outline fast colour fontname
                    embed bates batespad fontsize font underneath position hoff voff line
                    pages orientation cropbox opacity justification filename
-                   extract_text_font_size
+                   extract_text_font_size shift
                    !pdf;
                  voffset := !voffset +. (linespacing *. fontsize))
             lines;
