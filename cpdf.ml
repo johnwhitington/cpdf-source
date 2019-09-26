@@ -1816,7 +1816,9 @@ let addtext
                    then numstring
                    else implode (many '0' (w - String.length numstring)) ^ numstring))]
   in
+  let shifts = Cpdfcoord.parse_coordinates pdf shift in
   let addtext_page num page =
+    let shift_x, shift_y = List.nth shifts (num - 1) in
     let resources', unique_extgstatename =
       if opacity < 1.0 then
         let dict =
@@ -1891,10 +1893,10 @@ let addtext
                       in
                         match font with
                         | Some f ->
-                            ops longest_w metrics x y rotate (hoffset +. joffset) voffset outline linewidth
+                            ops longest_w metrics (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
                             unique_fontname unique_extgstatename colour fontsize text
                         | None ->
-                            ops longest_w metrics x y rotate (hoffset +. joffset) voffset outline linewidth
+                            ops longest_w metrics (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
                             fontname None colour fontsize text 
           in
             let newresources =
