@@ -2,8 +2,8 @@
 let demo = false
 let noncomp = false
 let major_version = 2
-let minor_version = 3
-let version_date = "(build of 13th September 2019)"
+let minor_version = 4
+let version_date = "(devel build of 26th September 2019)"
 
 open Pdfutil
 open Pdfio
@@ -735,12 +735,12 @@ let output_page_count pdf =
   Printf.printf "%i\n" (Pdfpage.endpage pdf)
 
 let detect_duplicate_op op =
-  if args.op <> None then
-    begin
+  match args.op with
+    None | Some Shift -> ()
+  | _ ->
       Printf.eprintf "Operation %s already specified, so cannot specify operation %s.\nUse AND from Chapter 1 of the manual to chain commands together.\n"
       (string_of_op (unopt args.op)) (string_of_op op);
       exit 1
-    end
 
 let setop op () =
   detect_duplicate_op op;

@@ -69,11 +69,11 @@ let make_num pdf page unt num =
     | Pdfgenlex.LexName
       (( "PW" | "PH" | "CW" | "CH" | "PMINX" | "PMINY" | "PMAXX" | "PMAXY"
       | "CMINX" | "CMINY" | "CMAXX" | "CMAXY") as page_characteristic) ->
-        let r =
+        (*let r =*)
         find_page_characteristic pdf page page_characteristic
-        in
+        (*in
           Printf.printf "characteristic %s is %f\n" page_characteristic r;
-          r
+          r*)
     | _ -> failwith "make_num"
   in
     match unt with
@@ -178,7 +178,7 @@ and parse_units pdf page numbers = function
          let r =
            find_page_characteristic pdf page page_characteristic
          in
-           Printf.printf "characteristic %s is %f\n" page_characteristic r;
+         (*  Printf.printf "characteristic %s is %f\n" page_characteristic r;*)
            parse_units pdf page (r::numbers) more
   | Pdfgenlex.LexName ("add" | "sub" | "mul" | "div") as op::
     ((Pdfgenlex.LexInt _ | Pdfgenlex.LexReal _ |  Pdfgenlex.LexName
@@ -233,7 +233,7 @@ let parse_coordinate pdf s =
   try
     match parse_units_string pdf emptypage s with
     | [dx; dy] ->
-        Printf.printf "result = %f, %f\n" dx dy;
+        (*Printf.printf "result = %f, %f\n" dx dy;*)
         dx, dy
     | _ -> error ("Bad coordinate specification " ^ s)
   with
