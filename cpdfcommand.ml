@@ -187,6 +187,8 @@ type op =
   | RemoveAllText
   | ShowBoxes
   | TrimMarks
+  | Prepend of string
+  | Postpend of string
 
 let string_of_op = function
   | CopyFont _ -> "CopyFont"
@@ -307,6 +309,8 @@ let string_of_op = function
   | RemoveAllText -> "RemoveAllText"
   | ShowBoxes -> "ShowBoxes"
   | TrimMarks -> "TrimMarks"
+  | Prepend _ -> "Prepend"
+  | Postpend _ -> "Postpend"
 
 (* Inputs: filename, pagespec. *)
 type input_kind =
@@ -681,7 +685,8 @@ let banned banlist = function
     RemoveAnnotations|RemoveFonts|Crop|RemoveCrop|Trim|RemoveTrim|Bleed|RemoveBleed|Art|RemoveArt|
     CopyCropBoxToMediaBox|CopyBox|MediaBox|HardBox _|SetTrapped|SetUntrapped|Presentation|
     BlackText|BlackLines|BlackFills|CopyFont _|CSP2 _|StampOn _|StampUnder _|
-    AddText _|ScaleContents _|AttachFile _|CopyAnnotations _| ThinLines _ | RemoveClipping | RemoveAllText ->
+    AddText _|ScaleContents _|AttachFile _|CopyAnnotations _| ThinLines _ | RemoveClipping | RemoveAllText
+    | Prepend _ | Postpend _ ->
       mem Pdfcrypt.NoEdit banlist
 
 let operation_allowed pdf banlist op =
@@ -1173,6 +1178,12 @@ let setcreator s =
 
 let setproducer s =
   args.producer <- Some s
+
+let setprepend s =
+  args.op <- Some (Prepend s)
+
+let setpostpend s =
+  args.op <- Some (Postpend s)
 
 (* Parsing the control file *)
 let rec getuntilendquote prev = function
@@ -2043,7 +2054,13 @@ and specs =
     " Number of pages for new PDF");
    ("-create-pdf-papersize",
     Arg.String setcreatepdfpapersize,
-    " Paper size for new PDF"); 
+    " Paper size for new PDF");
+   ("-prepend-content",
+    Arg.String setprepend,
+    " Prepend content to page");
+   ("-postpend-content",
+    Arg.String setpostpend,
+    " Postpend content to page");
    ("-gs", Arg.String setgspath, " Path to gs executable");
    ("-gs-malformed", Arg.Unit setgsmalformed, " Also try to reconstruct malformed files with gs");
    ("-gs-quiet", Arg.Unit setgsquiet, " Make gs go into quiet mode");
@@ -3507,6 +3524,18 @@ let trim_marks_page pdf n page =
 let trim_marks range pdf =
   Cpdf.process_pages (trim_marks_page pdf) pdf range
 
+(* Parse the new content to make sure syntactically ok, append
+ * as required. Rewrite the content *)
+let append_page_content_page s before pdf n page =
+  let ops =
+    Pdfops.parse_stream pdf page.Pdfpage.resources [bytes_of_string s] 
+  in
+    (if before then Pdfpage.prepend_operators else Pdfpage.postpend_operators)
+    pdf ops ~fast:args.fast page
+
+let append_page_content s before range pdf =
+  Cpdf.process_pages (append_page_content_page s before pdf) pdf range
+
 (* Main function *)
 let go () =
   match args.op with
@@ -4385,6 +4414,11 @@ let go () =
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
         write_pdf false (trim_marks range pdf)
+  | Some (Postpend s | Prepend s as x) ->
+      let pdf = get_single_pdf args.op false in
+      let range = parse_pagespec pdf (get_pagespec ()) in
+      let before = match x with Prepend _ -> true | _ -> false in
+        write_pdf false (append_page_content s before range pdf)
 
 let parse_argv () =
   if args.debug then

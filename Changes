@@ -1,6 +1,7 @@
 Version 2.4 (in development)
 
 o Allow -shift with -add-text for additional adjustment
+o Prepend and postpend directly to page content streams
 
 Version 2.3 (October 2019)
 
