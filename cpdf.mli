@@ -447,3 +447,6 @@ val call_cpdflin : string -> string -> string -> string -> int
 val debug : bool ref
 
 val extract_text : float option -> Pdf.t -> int list -> string 
+
+val append_page_content : string -> bool -> bool -> int list -> Pdf.t -> Pdf.t
+

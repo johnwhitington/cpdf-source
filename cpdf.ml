@@ -4196,4 +4196,16 @@ let add_page_labels pdf style prefix startval range =
         ranges;
         Pdfpagelabels.write pdf !labels
 
+(* Parse the new content to make sure syntactically ok, append
+ * as required. Rewrite the content *)
+let append_page_content_page fast s before pdf n page =
+  let ops =
+    Pdfops.parse_stream pdf page.Pdfpage.resources [bytes_of_string s] 
+  in
+    (if before then Pdfpage.prepend_operators else Pdfpage.postpend_operators)
+    pdf ops ~fast page
+
+let append_page_content s before fast range pdf =
+  process_pages (append_page_content_page fast s before pdf) pdf range
+
 

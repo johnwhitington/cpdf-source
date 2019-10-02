@@ -3524,18 +3524,6 @@ let trim_marks_page pdf n page =
 let trim_marks range pdf =
   Cpdf.process_pages (trim_marks_page pdf) pdf range
 
-(* Parse the new content to make sure syntactically ok, append
- * as required. Rewrite the content *)
-let append_page_content_page s before pdf n page =
-  let ops =
-    Pdfops.parse_stream pdf page.Pdfpage.resources [bytes_of_string s] 
-  in
-    (if before then Pdfpage.prepend_operators else Pdfpage.postpend_operators)
-    pdf ops ~fast:args.fast page
-
-let append_page_content s before range pdf =
-  Cpdf.process_pages (append_page_content_page s before pdf) pdf range
-
 (* Main function *)
 let go () =
   match args.op with
@@ -4418,7 +4406,7 @@ let go () =
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
       let before = match x with Prepend _ -> true | _ -> false in
-        write_pdf false (append_page_content s before range pdf)
+        write_pdf false (Cpdf.append_page_content s before args.fast range pdf)
 
 let parse_argv () =
   if args.debug then
