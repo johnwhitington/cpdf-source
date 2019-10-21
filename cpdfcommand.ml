@@ -1793,7 +1793,7 @@ and specs =
       " Justify multiline text right");
    ("-justify-center",
       Arg.Unit setjustifycenter,
-      " Justify multiline text centre");
+      " Justify multiline text center");
    ("-underneath",
       Arg.Unit setunderneath,
       " Text stamp is underneath content");
@@ -1856,7 +1856,7 @@ and specs =
        " Output file information");
    ("-page-info",
        Arg.Unit (setop PageInfo),
-       " Output file information");
+       " Output page information");
    ("-set-author",
        Arg.String setauthor,
        " Set Author");
@@ -1895,7 +1895,7 @@ and specs =
       " Just set XMP metadata, not old-fashioned metadata");
    ("-create-metadata",
       Arg.Unit (setop CreateMetadata),
-      " Create XML metadata from scratch.");
+      " Create XMP metadata from scratch.");
    ("-set-page-layout",
       Arg.String setpagelayout,
       " Set page layout upon document opening");
