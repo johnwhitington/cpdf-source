@@ -1446,6 +1446,8 @@ let whingemalformed () =
   prerr_string "Command line must be of exactly the form\ncpdf <infile> -gs <path> -gs-malformed-force -o <outfile>\n";
   exit 1
 
+let nothing () = ()
+
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
   control_args := !control_args @ parse_control_file filename
@@ -1523,6 +1525,9 @@ and specs =
    ("-control",
       Arg.String make_control_argv_and_parse,
       " Use a control file. Deprecated. Use -args.");
+   ("-args",
+      Arg.Unit nothing,
+      " Get arguments from a file.");
    ("-merge",
        Arg.Unit (setop Merge),
        " Merge a number of files into one");
