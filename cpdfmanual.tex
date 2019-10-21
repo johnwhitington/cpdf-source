@@ -99,6 +99,7 @@ verbosity. Under Microsoft Windows, type \texttt{cpdf.exe} instead of \texttt{cp
   \begin{framed}
   \small
   \noindent\begin{verbatim}
+  -help                    --help                -version 
   -o                       -idir <directory>     -recrypt
   -stdout                  -stdin                -stdin-user <password>
   -stdin-owner <password>  -producer <text>      -creator <text>
@@ -108,13 +109,16 @@ verbosity. Under Microsoft Windows, type \texttt{cpdf.exe} instead of \texttt{cp
   -stripped                -raw                  -no-embed-font
   -create-pdf              -create-pdf-pages     -create-pdf-papersize
   -gs                      -gs-malformed         -gs-force-malformed
-  -gs-quiet\end{verbatim}\end{framed}
+  -gs-quiet                -error-on-malformed\end{verbatim}\end{framed}
 
   The Coherent PDF tools provide a wide range of facilities for modifying PDF
 files created by other means. There is a single command-line program
 \cpdf\ (\texttt{cpdf.exe} under Microsoft Windows). The rest of this manual describes the options that may be given
 to this program.
 
+\section{Documentation}
+
+The operation \texttt{-help / --help} prints each operation and option together with a short description. The operation \texttt{-version} prints the cpdf version string.
 
   \index{input files} \index{output files}
   \section{Input and Output Files}
@@ -455,7 +459,7 @@ If the malformity lies inside an individual page of the PDF, rather than in its 
 \begin{framed}
 \noindent\small\verb!cpdf in.pdf -gs gs -gs-malformed-force -o out.pdf [-gs-quiet]!\end{framed}
 
-\noindent The command line for \texttt{-gs-malformed-force} must be of \textit{precisely} this form.
+\noindent The command line for \texttt{-gs-malformed-force} must be of \textit{precisely} this form. Sometimes, on the other hand, we might wish \texttt{cpdf} to fail immediately on any malformed file, rather than try its own reconstruction process. The option \texttt{-error-on-malformed} achieves this.
 
 
 Sometimes files can be technically well-formed but use inefficient PDF

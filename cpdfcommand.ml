@@ -1058,10 +1058,6 @@ let setcenter n =
   args.position <- Cpdf.Centre;
   args.justification <- Cpdf.CentreJustify
 
-let setscalecenter n =
-  args.position <- Cpdf.ReverseDiagonal;
-  args.justification <- Cpdf.CentreJustify
-
 let setbatespad n =
   args.batespad <- Some n
 
@@ -1561,9 +1557,6 @@ and specs =
    ("-scale-contents",
       Arg.Float setscalecontents,
       "  Scale Contents by the given factor");
-   ("-scale-center",
-      Arg.Float setscalecenter,
-      "  Scale contents around center");
    ("-scale-to-fit-scale",
       Arg.Float setscaletofitscale,
       " -scale-to-fit-scale (1.0 = 100%)");
