@@ -3675,12 +3675,8 @@ let go () =
           _ -> soft_error "Malformed XRef table. Cannot determine number of revisions."
         end
   | Some Clean ->
-      begin match args.out with
-      | (File _ | Stdout) ->
-          let pdf' = get_single_pdf (Some Clean) false in
-            write_pdf false pdf'
-      | _ -> error "Clean: No output specified"
-      end
+      let pdf' = get_single_pdf (Some Clean) false in
+        write_pdf false pdf'
   | Some Info ->
       let pdf = get_single_pdf ~decrypt:true (Some Info) true in
       let inname = match args.inputs with (InFile x, _, _, _, _, _)::_ -> x | _ -> "" in
