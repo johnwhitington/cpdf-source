@@ -70,7 +70,7 @@ let find_cpdflin provided =
 of the cpdflin binary. Returns the exit code. *)
 let call_cpdflin cpdflin temp output best_password =
   let command =
-    Filename.quote cpdflin ^ " --linearize " ^ " --password=" ^ best_password ^ " " ^
+    cpdflin ^ " --linearize " ^ " --password=" ^ best_password ^ " " ^
     Filename.quote temp ^ " " ^ Filename.quote output 
   in
     match Sys.os_type with
@@ -87,8 +87,8 @@ let call_cpdflin cpdflin temp output best_password =
             Sys.command command
         | _ ->
             let command = 
-              "DYLD_FALLBACK_LIBRARY_PATH=" ^ Filename.quote (Filename.dirname cpdflin) ^ " " ^
-              "LD_LIBRARY_PATH=" ^ Filename.quote (Filename.dirname cpdflin) ^ " " ^
+              "DYLD_FALLBACK_LIBRARY_PATH=" ^ Filename.dirname cpdflin ^ " " ^
+              "LD_LIBRARY_PATH=" ^ Filename.dirname cpdflin ^ " " ^
               command
             in
               if !debug then prerr_endline command;

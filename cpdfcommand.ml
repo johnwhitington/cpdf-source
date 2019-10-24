@@ -2116,7 +2116,7 @@ let embed_missing_fonts fi fo =
     exit 2
   end;
     let gscall =
-      Filename.quote args.path_to_ghostscript ^
+      args.path_to_ghostscript ^
       " -dNOPAUSE " ^ (if args.gs_quiet then "-dQUIET" else "") ^ " -sDEVICE=pdfwrite -sOUTPUTFILE=" ^ Filename.quote fo ^
       " -dBATCH " ^ Filename.quote fi
     in
@@ -2135,7 +2135,7 @@ let mend_pdf_file_with_ghostscript filename =
   let tmpout = Filename.temp_file "cpdf" ".pdf" in
     tempfiles := tmpout::!tempfiles;
     let gscall =
-      Filename.quote args.path_to_ghostscript ^
+      args.path_to_ghostscript ^
       " -dNOPAUSE " ^ (if args.gs_quiet then "-dQUIET" else "") ^ " -sDEVICE=pdfwrite -sOUTPUTFILE=" ^ Filename.quote tmpout ^
       " -dBATCH " ^ Filename.quote filename
     in
@@ -2734,7 +2734,6 @@ let write_image pdf resources name image =
         close_out fh;
       (* If pnmtopng is present, convert the pnm to a PNG. *)
       begin match
-        (* FIXME: Use Filename.quote here *)
         Sys.command ("pnmtopng -gamma 0.45 -quiet " ^ "\"" ^ name ^ ".pnm\"" ^ "> \"" ^ name ^ ".png\" 2>" ^ null_device)
       with
       | 0 -> Sys.remove (name ^ ".pnm")
@@ -3044,7 +3043,6 @@ let startends_of_range x =
 (* Calculating margins *)
 let calculate_margins filename pdf (s, e) =
   (* Call ghostscript *)
-  (* FIXME: Use Filename.quote here *)
   let gscall =
    args.path_to_ghostscript ^
    " -dSAFER -dNOPAUSE -dBATCH -sDEVICE=bbox -r1200"
@@ -4429,7 +4427,7 @@ let gs_malformed_force fi fo =
     exit 2
   end;
     let gscall =
-      Filename.quote args.path_to_ghostscript ^
+      args.path_to_ghostscript ^
       " -dNOPAUSE " ^ (if args.gs_quiet then "-dQUIET" else "") ^ " -sDEVICE=pdfwrite -sOUTPUTFILE=" ^ Filename.quote fo ^
       " -dBATCH " ^ Filename.quote fi
     in
