@@ -722,13 +722,19 @@ let rec decrypt_if_necessary (_, _, user_pw, owner_pw, was_dec_with_owner, _) op
           pdf
       | _ ->
         if args.debugcrypt then Printf.printf "Couldn't decrypt with owner password %s\n" owner_pw;
-        match Pdfcrypt.decrypt_pdf user_pw pdf with
+        match
+          if args.debugcrypt then Printf.printf "call decrypt_pdf user\n";
+          let r = Pdfcrypt.decrypt_pdf user_pw pdf in
+          if args.debugcrypt then Printf.printf "returned from decrypt_pdf\n";
+          r
+        with
         | Some pdf, permissions ->
             if args.debugcrypt then Printf.printf "Managed to decrypt with user password\n";
             if operation_allowed pdf permissions op
               then pdf
               else soft_error "User password cannot give permission for this operation"
         | _ ->
+           if args.debugcrypt then Printf.printf "Failed to decrypt with user password: raising soft_error";
            soft_error "Failed to decrypt file: wrong password?"
 
 let nobble pdf =
@@ -3674,15 +3680,21 @@ let go () =
       let pdf' = get_single_pdf (Some Clean) false in
         write_pdf false pdf'
   | Some Info ->
-      let pdf = get_single_pdf ~decrypt:true (Some Info) true in
-      let inname = match args.inputs with (InFile x, _, _, _, _, _)::_ -> x | _ -> "" in
-      Printf.printf "Encryption: %s\n" (getencryption pdf);
-      Printf.printf "Permissions: %s\n" (getpermissions pdf);
-      if inname <> "" then
-        Printf.printf "Linearized: %b\n" (Pdfread.is_linearized (Pdfio.input_of_channel (open_in_bin inname)));
-      let pdf = decrypt_if_necessary (List.hd args.inputs) (Some Info) pdf in
-        Cpdf.output_info args.encoding pdf;
-        Cpdf.output_xmp_info args.encoding pdf
+      let pdf, inname, input =
+        match args.inputs with
+        | (InFile inname, _, u, o, _, _) as input::_ ->
+             pdfread_pdf_of_channel_lazy (optstring u) (optstring o) (open_in_bin inname), inname, input
+        | (StdIn, _, u, o, _, _) as input::_ -> pdf_of_stdin u o, "", input
+        | (AlreadyInMemory pdf, _, _, _, _, _) as input::_ -> pdf, "", input
+        | _ -> raise (Arg.Bad "cpdf: No input specified.\n")
+      in
+        Printf.printf "Encryption: %s\n" (getencryption pdf);
+        Printf.printf "Permissions: %s\n" (getpermissions pdf);
+        if inname <> "" then
+          Printf.printf "Linearized: %b\n" (Pdfread.is_linearized (Pdfio.input_of_channel (open_in_bin inname)));
+        let pdf = decrypt_if_necessary input (Some Info) pdf in
+          Cpdf.output_info args.encoding pdf;
+          Cpdf.output_xmp_info args.encoding pdf
   | Some PageInfo ->
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
