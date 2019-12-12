@@ -1,5 +1,6 @@
-Version 2.4 (in development)
+Version 2.3 (patchlevel 1, December 2019)
 
+o Fixed bug which prevented -info working on encrypted files
 o Allow -shift with -add-text for additional adjustment
 o Prepend and postpend directly to page content streams
 
