@@ -1,3 +1,7 @@
+Version 2.4 (to come)
+
+o Vendored in tiny_json from Yoshihiro Imai via Jan Furuse
+
 Version 2.3 (patchlevel 1, December 2019)
 
 o Fixed bug which prevented -info working on encrypted files
