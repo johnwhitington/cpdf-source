@@ -4171,7 +4171,7 @@ let rec ranges_of_range curr prev = function
 let page1 labels =
   mem true (map (function l -> l.Pdfpagelabels.startpage = 1) labels)
 
-let add_page_labels pdf style prefix startval range =
+let add_page_labels pdf progress style prefix startval range =
   let ranges = map extremes (ranges_of_range [] [] range)
   and labels = Pdfpagelabels.read pdf in
     let labels =

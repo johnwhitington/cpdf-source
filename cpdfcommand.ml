@@ -413,6 +413,7 @@ type args =
    mutable labelstyle : Pdfpagelabels.labelstyle;
    mutable labelprefix : string option;
    mutable labelstartval : int;
+   mutable labelsprogress : bool;
    mutable squeeze : bool;
    mutable original_filename : string;
    mutable was_encrypted : bool;
@@ -508,6 +509,7 @@ let args =
    labelstyle = Pdfpagelabels.DecimalArabic;
    labelprefix = None;
    labelstartval = 1;
+   labelsprogress = false;
    squeeze = false;
    original_filename = "";
    was_encrypted = false;
@@ -602,6 +604,7 @@ let reset_arguments () =
   args.labelstyle <- Pdfpagelabels.DecimalArabic;
   args.labelprefix <- None;
   args.labelstartval <- 1;
+  args.labelsprogress <- false;
   args.embedfonts <- true;
   args.extract_text_font_size <- None;
   args.padwith <- None;
@@ -1382,6 +1385,9 @@ let setlabelprefix s =
 let setlabelstartval i =
   args.labelstartval <- i
 
+let setlabelsprogress () =
+  args.labelsprogress <- true
+
 let setcpdflin s = 
   args.cpdflin <- Some s
 
@@ -2038,6 +2044,9 @@ and specs =
    ("-label-startval",
       Arg.Int setlabelstartval,
       " Set label start value (default 1)");
+   ("-labels-progress",
+      Arg.Unit setlabelsprogress,
+      " Label start value progresses with multiple ranges");
    ("-remove-dict-entry",
     Arg.String setremovedictentry,
     " Remove an entry from all dictionaries");
@@ -4344,7 +4353,7 @@ let go () =
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
           Cpdf.add_page_labels
-            pdf args.labelstyle args.labelprefix args.labelstartval range;
+            pdf args.labelsprogress args.labelstyle args.labelprefix args.labelstartval range;
           write_pdf false pdf
   | Some RemovePageLabels ->
       let pdf = get_single_pdf args.op false in
