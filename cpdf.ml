@@ -4174,6 +4174,10 @@ let page1 labels =
 let add_page_labels pdf progress style prefix startval range =
   let ranges = map extremes (ranges_of_range [] [] range)
   and labels = Pdfpagelabels.read pdf in
+    assert (length ranges > 0);
+    let startval_additions =
+      0 :: map (fun x -> x - fst (List.hd ranges) - 1) (List.tl (List.map fst ranges))
+    in
     let labels =
       if not (page1 labels) then
         ref
@@ -4184,16 +4188,17 @@ let add_page_labels pdf progress style prefix startval range =
       else
         ref labels
     in
-      iter
-        (function (s, e) ->
+      iter2
+        (fun (s, e) addition ->
            let label =
              {Pdfpagelabels.labelstyle = style;
               Pdfpagelabels.labelprefix = prefix;
               Pdfpagelabels.startpage = s;
-              Pdfpagelabels.startvalue = startval}
+              Pdfpagelabels.startvalue = startval + addition}
            in
              labels := Pdfpagelabels.add_label (Pdfpage.endpage pdf) !labels label e)
-        ranges;
+        ranges
+        startval_additions;
         Pdfpagelabels.write pdf !labels
 
 (* Parse the new content to make sure syntactically ok, append

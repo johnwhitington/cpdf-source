@@ -1,6 +1,7 @@
 Version 2.4 (to come)
 
 o Vendored in tiny_json from Yoshihiro Imai via Jan Furuse
+o New -labels-progress option to improve page labels interface
 
 Version 2.3 (patchlevel 1, December 2019)
 

@@ -34,7 +34,7 @@ Command Line Toolkit}
 \vspace{12mm}
 
 {\Huge User Manual}\\
-Version 2.3 (October 2019)
+Version 2.4 (? 2020)
 
 \vspace{25mm}
 
@@ -58,7 +58,7 @@ Version 2.3 (October 2019)
 \noindent For bug reports, feature requests and comments, email\\ \texttt{contact@coherentgraphics.co.uk}
 
 \vspace*{\fill}
-\noindent\copyright 2019 Coherent Graphics Limited. All rights reserved. ISBN 978-0957671140
+\noindent\copyright 2020 Coherent Graphics Limited. All rights reserved. ISBN 978-0957671140
 
 \smallgap 
 \noindent Adobe, Acrobat, Adobe PDF, Adobe Reader and PostScript are
@@ -1828,7 +1828,7 @@ given page range.
     \vspace{1.5mm}
     \small\noindent\verb!cpdf -add-page-labels in.pdf -o out.pdf!\\
     \noindent\verb!     [-label-style <style>] [-label-prefix <string>]!\\
-    \noindent\verb!     [-label-startval <integer>]!\\
+    \noindent\verb!     [-label-startval <integer>] [-labels-progress]!\\
     
     \vspace{1.5mm}
     \small\noindent\verb!cpdf -remove-page-labels in.pdf -o out.pdf!\\
@@ -2105,7 +2105,7 @@ i, ii, iii, iv, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, A-0, A-1, A-2, A-3, A-4, A-5
   \noindent\verb!     -label-startval 0 -o out.pdf!
 \end{framed}}
 
-\noindent By default the labels begin at page number 1 for each range. To override this, we can use \texttt{-label-startval} (we used $0$ in the final command), where we want the numbers to begin at zero rather than one.
+\noindent By default the labels begin at page number 1 for each range. To override this, we can use \texttt{-label-startval} (we used $0$ in the final command), where we want the numbers to begin at zero rather than one. The option \texttt{-labels-progress} can be added to make sure the  start value progresses between sub-ranges when the page range specified is disjoint, e.g \texttt{1-9, 30-40} or \texttt{odd}.
 
 Page labels may be removed altogether by using \texttt{-remove-page-labels} command. To print the page labels from an existing file, use \texttt{-print-page-labels}. For example:
 \begin{framed}\small\begin{verbatim}$ cpdf -print-page-labels cpdfmanual.pdf
