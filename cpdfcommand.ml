@@ -4443,6 +4443,11 @@ let go () =
         write_pdf false (Cpdf.append_page_content s before args.fast range pdf)
   | Some OutputJSON ->
       let pdf = get_single_pdf args.op false in
+        Pdf.iter_stream
+          (function stream ->
+             try Pdfcodec.decode_pdfstream_until_unknown pdf stream with
+               e -> Printf.eprintf "Decode failure: %s. Carrying on...\n" (Printexc.to_string e); ())
+          pdf;
         write_json args.out pdf
 
 let parse_argv () =
