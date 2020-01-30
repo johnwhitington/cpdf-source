@@ -189,6 +189,7 @@ type op =
   | TrimMarks
   | Prepend of string
   | Postpend of string
+  | OutputJSON
 
 let string_of_op = function
   | CopyFont _ -> "CopyFont"
@@ -311,6 +312,7 @@ let string_of_op = function
   | TrimMarks -> "TrimMarks"
   | Prepend _ -> "Prepend"
   | Postpend _ -> "Postpend"
+  | OutputJSON -> "OutputJSON"
 
 (* Inputs: filename, pagespec. *)
 type input_kind =
@@ -433,7 +435,8 @@ type args =
    mutable merge_add_bookmarks_use_titles : bool;
    mutable createpdf_pages : int;
    mutable createpdf_pagesize : Pdfpaper.t;
-   mutable removeonly : string option}
+   mutable removeonly : string option;
+   mutable jsonparsecontentstreams : bool}
 
 let args =
   {op = None;
@@ -529,7 +532,8 @@ let args =
    merge_add_bookmarks_use_titles = false;
    createpdf_pages = 1;
    createpdf_pagesize = Pdfpaper.a4;
-   removeonly = None}
+   removeonly = None;
+   jsonparsecontentstreams = false}
 
 let reset_arguments () =
   args.op <- None;
@@ -614,7 +618,8 @@ let reset_arguments () =
   args.merge_add_bookmarks_use_titles <- false;
   args.createpdf_pages <- 1;
   args.createpdf_pagesize <- Pdfpaper.a4;
-  args.removeonly <- None
+  args.removeonly <- None;
+  args.jsonparsecontentstreams <- false
   (* Do not reset original_filename or cpdflin or was_encrypted or
    * was_decrypted_with_owner or recrypt or producer or creator or
    * path_to_ghostscript or gs_malformed or gs_quiet, since we want these to work across
@@ -674,7 +679,7 @@ let banned banlist = function
   | SetAuthor _|SetTitle _|SetSubject _|SetKeywords _|SetCreate _
   | SetModify _|SetCreator _|SetProducer _|RemoveDictEntry _ | SetMetadata _
   | ExtractText | ExtractImages | ExtractFontFile
-  | AddPageLabels | RemovePageLabels 
+  | AddPageLabels | RemovePageLabels | OutputJSON
      -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
@@ -1450,6 +1455,9 @@ let setdraftremoveonly s =
 let setgsquiet () =
   args.gs_quiet <- true
 
+let setjsonparsecontentstreams () =
+  args.jsonparsecontentstreams <- true
+
 let whingemalformed () =
   prerr_string "Command line must be of exactly the form\ncpdf <infile> -gs <path> -gs-malformed-force -o <outfile>\n";
   exit 1
@@ -2082,6 +2090,8 @@ and specs =
    (* Just for error reporting *)
    ("-gs-malformed-force", Arg.Unit whingemalformed, "");
    (* These items are undocumented *)
+   ("-output-json", Arg.Unit (setop OutputJSON), "");
+   ("-output-json-parse-content-streams", Arg.Unit setjsonparsecontentstreams, "");
    ("-remove-unused-resources", Arg.Unit (setop RemoveUnusedResources), "");
    ("-stay-on-error", Arg.Unit setstayonerror, "");
    ("-extract-fontfile", Arg.Unit (setop ExtractFontFile), "");
@@ -3535,6 +3545,17 @@ let trim_marks_page pdf n page =
 let trim_marks range pdf =
   Cpdf.process_pages (trim_marks_page pdf) pdf range
 
+let write_json output pdf =
+  match output with
+  | NoOutputSpecified ->
+      error "-output-json: no output name specified"
+  | Stdout ->
+      CpdfwriteJSON.write stdout args.jsonparsecontentstreams pdf
+  | File filename ->
+      let f = open_out_bin filename in
+        CpdfwriteJSON.write f args.jsonparsecontentstreams pdf;
+        close_out f
+
 (* Main function *)
 let go () =
   match args.op with
@@ -4420,6 +4441,9 @@ let go () =
       let range = parse_pagespec pdf (get_pagespec ()) in
       let before = match x with Prepend _ -> true | _ -> false in
         write_pdf false (Cpdf.append_page_content s before args.fast range pdf)
+  | Some OutputJSON ->
+      let pdf = get_single_pdf args.op false in
+        write_json args.out pdf
 
 let parse_argv () =
   if args.debug then
