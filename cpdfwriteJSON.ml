@@ -69,11 +69,12 @@ let json_of_op = function
          J.String "cm"]
   | O.Op_d (fl, y) ->
       J.Array [J.Array (List.map (fun x -> J.Number (sof x)) fl); J.Number (sof y); J.String "d"]
+  | O.Op_w w -> J.Array [J.Number (sof w); J.String "w"]
 
   | _ -> J.Array [J.String "UNIMPLEMENTED"]
 
- (* | O.Op_w w -> J.Array [J.String "w"]
-  | O.Op_J j -> J.Array [J.String "J"]
+
+ (* | O.Op_J j -> J.Array [J.String "J"]
   | O.Op_M m -> J.Array [J.String "m"]
   | O.Op_ri s -> J.Array [J.String "ri"]
   | O.Op_i i -> J.Array [J.String "i"]
