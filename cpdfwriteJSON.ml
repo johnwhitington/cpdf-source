@@ -50,7 +50,6 @@ let json_of_op = function
   | O.Op_EMC -> J.Array [J.String "EMC"]
   | O.Op_BX -> J.Array [J.String "BX"]
   | O.Op_EX -> J.Array [J.String "EX"]
-  
   | O.Op_re (a, b, c, d) ->
       J.Array [J.Number (sof a); J.Number (sof b); J.Number (sof c); J.Number (sof d); J.String "re"]
   | O.Op_k (c, m, y, k) ->
@@ -75,50 +74,67 @@ let json_of_op = function
   | O.Op_d (fl, y) ->
       J.Array [J.Array (List.map (fun x -> J.Number (sof x)) fl); J.Number (sof y); J.String "d"]
   | O.Op_w w -> J.Array [J.Number (sof w); J.String "w"]
+  | O.Op_J j -> J.Array [J.Number (soi j); J.String "J"]
+  | O.Op_M m -> J.Array [J.Number (sof m); J.String "m"]
+  | O.Op_ri s -> J.Array [J.String s; J.String "ri"]
+  | O.Op_i i -> J.Array [J.Number (soi i); J.String "i"]
+  | O.Op_c (a, b, c, d, e, k) ->
+      J.Array
+        [J.Number (sof a); J.Number (sof b); J.Number (sof c);
+         J.Number (sof d); J.Number (sof e); J.Number (sof k); J.String "c"]
+  | O.Op_v (a, b, c, d) ->
+      J.Array
+        [J.Number (sof a); J.Number (sof b); J.Number (sof c);
+         J.Number (sof d); J.String "v"]
+  | O.Op_y (a, b, c, d) ->
+      J.Array
+        [J.Number (sof a); J.Number (sof b); J.Number (sof c);
+         J.Number (sof d); J.String "y"]
+  | O.Op_Tc c -> J.Array [J.Number (sof c); J.String "Tc"]
+  | O.Op_Tw w -> J.Array [J.Number (sof w); J.String "Tw"]
+  | O.Op_Tz z -> J.Array [J.Number (sof z); String "Tz"]
+  | O.Op_TL l -> J.Array [J.Number (sof l); J.String "TL"]
+  | O.Op_Tf (k, s) -> J.Array [J.String k; J.Number (sof s); J.String "Tf"]
+  | O.Op_Tr i -> J.Array [J.Number (soi i); J.String "Tr"]
+  | O.Op_Ts k -> J.Array [J.Number (sof k); J.String "Ts"]
+  | O.Op_Td (k, k') -> J.Array [J.Number (sof k); J.Number (sof k'); J.String "Td"]
+  | O.Op_TD (k, k') -> J.Array [J.Number (sof k); J.Number (sof k'); J.String "TD"]
+  | O.Op_Tm t ->
+      J.Array
+        [J.Number (sof t.Pdftransform.a);
+         J.Number (sof t.Pdftransform.b);
+         J.Number (sof t.Pdftransform.c);
+         J.Number (sof t.Pdftransform.d);
+         J.Number (sof t.Pdftransform.e);
+         J.Number (sof t.Pdftransform.f);
+         J.String "Tm"]
+  | O.Op_Tj s -> J.Array [J.String s; J.String "Tj"]
+  | O.Op_TJ pdfobject -> J.Array [json_of_object (fun _ -> ()) pdfobject; J.String "TJ"]
+  | O.Op_' s -> J.Array [J.String s; J.String "'"]
+  | O.Op_'' (k, k', s) -> J.Array [J.Number (sof k); J.Number (sof k'); J.String s; J.String "''"]
+  | O.Op_d0 (k, k') -> J.Array [J.Number (sof k); J.Number (sof k'); J.String "d0"]
+  | O.Op_d1 (a, b, c, d, e, k) ->
+      J.Array
+        [J.Number (sof a); J.Number (sof b); J.Number (sof c);
+         J.Number (sof d); J.Number (sof e); J.Number (sof k); J.String "d1"]
+  | O.Op_cs s -> J.Array [J.String s; J.String "cs"]
+  | O.Op_SC fs -> J.Array (List.map (fun x -> J.Number (sof x)) fs @ [J.String "SC"])
+  | O.Op_sc fs -> J.Array (List.map (fun x -> J.Number (sof x)) fs @ [J.String "sc"])
+  | O.Op_scn fs -> J.Array (List.map (fun x -> J.Number (sof x)) fs @ [J.String "scn"])
 
-  | _ -> J.Array [J.String "UNIMPLEMENTED"]
-
-
- (* | O.Op_J j -> J.Array [J.String "J"]
-  | O.Op_M m -> J.Array [J.String "m"]
-  | O.Op_ri s -> J.Array [J.String "ri"]
-  | O.Op_i i -> J.Array [J.String "i"]
-  | O.Op_c (a, b, c, d, e, k) ->J.Array [J.String "c"]
-  | O.Op_v (a, b, c, d) ->J.Array [J.String "v"]
-  | O.Op_y (a, b, c, d) -> J.Array [J.String "y"]
-  | O.Op_Tc c -> J.Array [J.String "Tc"]
-  | O.Op_Tw w -> J.Array [J.String "Tw"]
-  | O.Op_Tz z -> J.Array [J.String "Tz"]
-  | O.Op_TL l -> J.Array [J.String "TL"]
-  | O.Op_Tf (k, s) ->J.Array [J.String "Tf"]
-  | O.Op_Tr i -> J.Array [J.String "Tr"]
-  | O.Op_Ts k -> J.Array [J.String "Ts"]
-  | O.Op_Td (k, k') ->J.Array [J.String "Td"]
-  | O.Op_TD (k, k') ->J.Array [J.String "TD"]
-  | O.Op_Tm t ->J.Array [J.String "Tm"]
-  | O.Op_Tj s -> J.Array [J.String "Tj"]
-  | O.Op_TJ pdfobject -> J.Array [J.String "TJ"]
-  | O.Op_' s -> J.Array [J.String "'"]
-  | O.Op_'' (k, k', s) -> J.Array [J.String "''"]
-  | O.Op_d0 (k, k') ->J.Array [J.String "d0"]
-  | O.Op_d1 (a, b, c, d, e, k) ->J.Array [J.String "d1"]
-  | O.Op_cs s -> J.Array [J.String "cs"]
-  | O.Op_SC fs -> J.Array [J.String "SC"]
-  | O.Op_sc fs -> J.Array [J.String "sc"]
-  | O.Op_scn fs -> J.Array [J.String "scn"]
-  | O.Op_SCNName (s, fs) ->J.Array [J.String "SCNName"]
-  | O.Op_scnName (s, fs) ->J.Array [J.String "scnName"]
+  | O.Op_SCNName (s, fs) -> J.Array [J.String "SCNName"]
+  | O.Op_scnName (s, fs) -> J.Array [J.String "scnName"]
   | O.Op_G k -> J.Array [J.String "G"]
   | O.Op_g k -> J.Array [J.String "g"]
-  | O.Op_RG (r, g, b) ->J.Array [J.String "RG"]
-  | O.Op_rg (r, g, b) ->J.Array [J.String "rg"]
-  | O.Op_K (c, m, y, k) ->J.Array [J.String "K"]
+  | O.Op_RG (r, g, b) -> J.Array [J.String "RG"]
+  | O.Op_rg (r, g, b) -> J.Array [J.String "rg"]
+  | O.Op_K (c, m, y, k) -> J.Array [J.String "K"]
   | O.Op_sh s -> J.Array [J.String "sh"]
   | O.InlineImage (dict, data) -> J.Array [J.String "InlineImage"]
   | O.Op_MP s -> J.Array [J.String "MP"]
-  | O.Op_DP (s, obj) ->J.Array [J.String "DP"]
+  | O.Op_DP (s, obj) -> J.Array [J.String "DP"]
   | O.Op_BMC s -> J.Array [J.String "BMC"]
-  | O.Op_Unknown _ ->J.Array [J.String "Unknown"] *)
+  | O.Op_Unknown _ ->J.Array [J.String "Unknown"]
 
 (* parse_stream needs pdf and resources. These are for lexing of inline images,
  * looking up the colourspace. We do not need to worry about inherited
