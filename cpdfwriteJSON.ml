@@ -11,7 +11,12 @@ let rec json_of_object fcs = function
   | P.Name n -> J.String n
   | P.Array objs -> J.Array (List.map (json_of_object fcs) objs)
   | P.Dictionary elts ->
-      List.iter (function ("/Contents", P.Indirect i) -> fcs i | _ -> ()) elts;
+      List.iter
+        (function
+            ("/Contents", P.Indirect i) -> fcs i
+          | ("/Contents", P.Array elts) -> List.iter (function P.Indirect i -> fcs i | _ -> ()) elts
+          | _ -> ())
+        elts;
       J.Object (List.map (fun (k, v) -> (k, json_of_object fcs v)) elts)
   | P.Stream {contents = (Pdf.Dictionary dict, stream)} as thestream ->
       Pdf.getstream thestream;
@@ -130,6 +135,10 @@ let json_of_pdf parse_content pdf =
         pdf;
       trailerdict::!ps
   in
+    List.iter (Printf.printf "Found content stream %i\n") !content_streams;
+    List.iter
+      (fun n -> try Pdfcodec.decode_pdfstream_until_unknown pdf (Pdf.lookup_obj pdf n) with _ -> ())
+      !content_streams;
     let pairs_parsed =
       if not parse_content then pairs else
         List.map
