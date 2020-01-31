@@ -120,33 +120,43 @@ let json_of_op = function
   | O.Op_BMC s -> J.Array [J.String "BMC"]
   | O.Op_Unknown _ ->J.Array [J.String "Unknown"] *)
 
-let parse_content_stream str =
-  let ops = Pdfops.parse_stream (Pdf.empty ()) (Pdf.Dictionary []) [Pdfio.bytes_of_string str] in
+(* parse_stream needs pdf and resources. These are for lexing of inline images,
+ * looking up the colourspace. We do not need to worry about inherited
+ * resources, though? For now, don't worry about inherited resources: check in
+* PDF standard. *)
+let parse_content_stream pdf resources bs =
+  let ops = Pdfops.parse_stream pdf resources [bs] in
     J.Array (List.map json_of_op ops)
 
 let json_of_pdf parse_content pdf =
   let trailerdict = (0, json_of_object (fun x -> ()) pdf.Pdf.trailerdict) in
   let content_streams = ref [] in
+  let fcs n = content_streams := n::!content_streams in
   let pairs =
     let ps = ref [] in
       Pdf.objiter
         (fun i pdfobj ->
-          ps := (i, json_of_object (fun n -> content_streams := n::!content_streams) pdfobj)::!ps)
+          ps := (i, json_of_object fcs pdfobj)::!ps)
         pdf;
       trailerdict::!ps
   in
     List.iter (Printf.printf "Found content stream %i\n") !content_streams;
-    List.iter
-      (fun n -> try Pdfcodec.decode_pdfstream_until_unknown pdf (Pdf.lookup_obj pdf n) with _ -> ())
-      !content_streams;
+    List.iter (fun n -> Pdfcodec.decode_pdfstream_until_unknown pdf (Pdf.lookup_obj pdf n)) !content_streams;
+    (* Debug PDF to file here *)
     let pairs_parsed =
       if not parse_content then pairs else
         List.map
           (fun (objnum, obj) ->
              if Pdfutil.mem objnum !content_streams then
                begin match obj with
-               | J.Array [dict; J.String streamdata] ->
-                   (objnum, J.Array [dict; parse_content_stream streamdata])
+               | J.Array [dict; J.String _] ->
+                   (* FIXME Proper resources here for reasons explained above *)
+                   let streamdata =
+                     match Pdf.lookup_obj pdf objnum with
+                     | Stream {contents = (_, Got b)} -> b
+                     | _ -> failwith "JSON: stream not decoded"
+                   in
+                     (objnum, J.Array [dict; parse_content_stream pdf (Pdf.Dictionary []) streamdata])
                | _ -> failwith "json_of_pdf: stream parsing inconsistency"
                end
              else
