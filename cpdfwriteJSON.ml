@@ -2,6 +2,8 @@ module J = Tjjson
 module P = Pdf
 module O = Pdfops
 
+(* FIXME jsonlint doesn't like tiny_json's 0., 1. etc. *)
+
 let rec json_of_object fcs = function
   | P.Null -> J.String "null"
   | P.Boolean b -> J.Bool b
@@ -121,20 +123,21 @@ let json_of_op = function
   | O.Op_SC fs -> J.Array (List.map (fun x -> J.Number (sof x)) fs @ [J.String "SC"])
   | O.Op_sc fs -> J.Array (List.map (fun x -> J.Number (sof x)) fs @ [J.String "sc"])
   | O.Op_scn fs -> J.Array (List.map (fun x -> J.Number (sof x)) fs @ [J.String "scn"])
-
-  | O.Op_SCNName (s, fs) -> J.Array [J.String "SCNName"]
-  | O.Op_scnName (s, fs) -> J.Array [J.String "scnName"]
-  | O.Op_G k -> J.Array [J.String "G"]
-  | O.Op_g k -> J.Array [J.String "g"]
-  | O.Op_RG (r, g, b) -> J.Array [J.String "RG"]
-  | O.Op_rg (r, g, b) -> J.Array [J.String "rg"]
-  | O.Op_K (c, m, y, k) -> J.Array [J.String "K"]
-  | O.Op_sh s -> J.Array [J.String "sh"]
-  | O.InlineImage (dict, data) -> J.Array [J.String "InlineImage"]
-  | O.Op_MP s -> J.Array [J.String "MP"]
-  | O.Op_DP (s, obj) -> J.Array [J.String "DP"]
-  | O.Op_BMC s -> J.Array [J.String "BMC"]
-  | O.Op_Unknown _ ->J.Array [J.String "Unknown"]
+  | O.Op_G k -> J.Array [J.Number (sof k); J.String "G"]
+  | O.Op_g k -> J.Array [J.Number (sof k); J.String "g"]
+  | O.Op_RG (r, g, b) -> J.Array [J.Number (sof r); J.Number (sof g); J.Number (sof b); J.String "RG"]
+  | O.Op_rg (r, g, b) -> J.Array [J.Number (sof r); J.Number (sof g); J.Number (sof b); J.String "rg"]
+  | O.Op_K (c, m, y, k) -> J.Array [J.Number (sof c); J.Number (sof m); J.Number (sof y); J.Number (sof k); J.String "K"]
+  | O.Op_sh s -> J.Array [J.String s; J.String "sh"]
+  | O.Op_MP s -> J.Array [J.String s; J.String "MP"]
+  | O.Op_BMC s -> J.Array [J.String s; J.String "BMC"]
+  | O.Op_Unknown _ -> J.Array [J.String "Unknown"]
+  | O.Op_SCNName (s, fs) ->
+      J.Array (List.map (fun x -> J.Number (sof x)) fs @ [J.String s; J.String "SCNName"])
+  | O.Op_scnName (s, fs) ->
+      J.Array (List.map (fun x -> J.Number (sof x)) fs @ [J.String s; J.String "scnName"])
+  | O.InlineImage (dict, data) -> J.Array [json_of_object (fun _ -> ()) dict; J.String (Pdfio.string_of_bytes data)]
+  | O.Op_DP (s, obj) -> J.Array [J.String s; json_of_object (fun _ -> ()) obj; J.String "DP"]
 
 (* parse_stream needs pdf and resources. These are for lexing of inline images,
  * looking up the colourspace. We do not need to worry about inherited
@@ -156,9 +159,8 @@ let json_of_pdf parse_content pdf =
         pdf;
       trailerdict::!ps
   in
-    List.iter (Printf.printf "Found content stream %i\n") !content_streams;
-    List.iter (fun n -> Pdfcodec.decode_pdfstream_until_unknown pdf (Pdf.lookup_obj pdf n)) !content_streams;
-    (* Debug PDF to file here *)
+    if parse_content then
+      List.iter (fun n -> Pdfcodec.decode_pdfstream_until_unknown pdf (Pdf.lookup_obj pdf n)) !content_streams;
     let pairs_parsed =
       if not parse_content then pairs else
         List.map
