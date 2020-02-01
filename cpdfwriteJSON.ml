@@ -4,14 +4,14 @@ module O = Pdfops
 
 (* FIXME jsonlint doesn't like tiny_json's 0., 1. etc. *)
 
-let rec json_of_object fcs = function
+let rec json_of_object fcs no_stream_data = function
   | P.Null -> J.String "null"
   | P.Boolean b -> J.Bool b
   | P.Integer i -> J.Number (string_of_int i)
   | P.Real r -> J.Number (string_of_float r)
   | P.String s -> J.String s
   | P.Name n -> J.String n
-  | P.Array objs -> J.Array (List.map (json_of_object fcs) objs)
+  | P.Array objs -> J.Array (List.map (json_of_object fcs no_stream_data) objs)
   | P.Dictionary elts ->
       List.iter
         (function
@@ -19,18 +19,21 @@ let rec json_of_object fcs = function
           | ("/Contents", P.Array elts) -> List.iter (function P.Indirect i -> fcs i | _ -> ()) elts
           | _ -> ())
         elts;
-      J.Object (List.map (fun (k, v) -> (k, json_of_object fcs v)) elts)
+      J.Object (List.map (fun (k, v) -> (k, json_of_object fcs no_stream_data v)) elts)
   | P.Stream {contents = (Pdf.Dictionary dict, stream)} as thestream ->
       Pdf.getstream thestream;
-      let str = match stream with Got b -> Pdfio.string_of_bytes b | ToGet _ -> "failure: toget" in
-        json_of_object fcs (P.Array [P.Dictionary dict; P.String str])
+      let str =
+        if no_stream_data then "<<stream data elided>>" else
+          match stream with Pdf.Got b -> Pdfio.string_of_bytes b | Pdf.ToGet _ -> "failure: toget"
+      in
+        json_of_object fcs no_stream_data (P.Array [P.Dictionary dict; P.String str])
   | P.Stream _ -> J.String "error: stream with not-a-dictioary"
   | P.Indirect i -> J.Number (string_of_int i)
 
 let sof = string_of_float
 let soi = string_of_int
 
-let json_of_op = function
+let json_of_op no_stream_data = function
   | O.Op_S -> J.Array [J.String "S"]
   | O.Op_s -> J.Array [J.String "s"]
   | O.Op_f -> J.Array [J.String "f"]
@@ -94,7 +97,7 @@ let json_of_op = function
          J.Number (sof d); J.String "y"]
   | O.Op_Tc c -> J.Array [J.Number (sof c); J.String "Tc"]
   | O.Op_Tw w -> J.Array [J.Number (sof w); J.String "Tw"]
-  | O.Op_Tz z -> J.Array [J.Number (sof z); String "Tz"]
+  | O.Op_Tz z -> J.Array [J.Number (sof z); J.String "Tz"]
   | O.Op_TL l -> J.Array [J.Number (sof l); J.String "TL"]
   | O.Op_Tf (k, s) -> J.Array [J.String k; J.Number (sof s); J.String "Tf"]
   | O.Op_Tr i -> J.Array [J.Number (soi i); J.String "Tr"]
@@ -111,7 +114,7 @@ let json_of_op = function
          J.Number (sof t.Pdftransform.f);
          J.String "Tm"]
   | O.Op_Tj s -> J.Array [J.String s; J.String "Tj"]
-  | O.Op_TJ pdfobject -> J.Array [json_of_object (fun _ -> ()) pdfobject; J.String "TJ"]
+  | O.Op_TJ pdfobject -> J.Array [json_of_object (fun _ -> ()) no_stream_data pdfobject; J.String "TJ"]
   | O.Op_' s -> J.Array [J.String s; J.String "'"]
   | O.Op_'' (k, k', s) -> J.Array [J.Number (sof k); J.Number (sof k'); J.String s; J.String "''"]
   | O.Op_d0 (k, k') -> J.Array [J.Number (sof k); J.Number (sof k'); J.String "d0"]
@@ -136,8 +139,8 @@ let json_of_op = function
       J.Array (List.map (fun x -> J.Number (sof x)) fs @ [J.String s; J.String "SCNName"])
   | O.Op_scnName (s, fs) ->
       J.Array (List.map (fun x -> J.Number (sof x)) fs @ [J.String s; J.String "scnName"])
-  | O.InlineImage (dict, data) -> J.Array [json_of_object (fun _ -> ()) dict; J.String (Pdfio.string_of_bytes data)]
-  | O.Op_DP (s, obj) -> J.Array [J.String s; json_of_object (fun _ -> ()) obj; J.String "DP"]
+  | O.InlineImage (dict, data) -> J.Array [json_of_object (fun _ -> ()) no_stream_data dict; J.String (Pdfio.string_of_bytes data)]
+  | O.Op_DP (s, obj) -> J.Array [J.String s; json_of_object (fun _ -> ()) no_stream_data obj; J.String "DP"]
 
 (* parse_stream needs pdf and resources. These are for lexing of inline images,
  * looking up the colourspace. We do not need to worry about inherited
@@ -145,17 +148,17 @@ let json_of_op = function
 * PDF standard. *)
 let parse_content_stream pdf resources bs =
   let ops = Pdfops.parse_stream pdf resources [bs] in
-    J.Array (List.map json_of_op ops)
+    J.Array (List.map (json_of_op false) ops)
 
-let json_of_pdf parse_content pdf =
-  let trailerdict = (0, json_of_object (fun x -> ()) pdf.Pdf.trailerdict) in
+let json_of_pdf parse_content no_stream_data pdf =
+  let trailerdict = (0, json_of_object (fun x -> ()) no_stream_data pdf.Pdf.trailerdict) in
   let content_streams = ref [] in
   let fcs n = content_streams := n::!content_streams in
   let pairs =
     let ps = ref [] in
       Pdf.objiter
         (fun i pdfobj ->
-          ps := (i, json_of_object fcs pdfobj)::!ps)
+          ps := (i, json_of_object fcs no_stream_data pdfobj)::!ps)
         pdf;
       trailerdict::!ps
   in
@@ -171,7 +174,7 @@ let json_of_pdf parse_content pdf =
                    (* FIXME Proper resources here for reasons explained above *)
                    let streamdata =
                      match Pdf.lookup_obj pdf objnum with
-                     | Stream {contents = (_, Got b)} -> b
+                     | Pdf.Stream {contents = (_, Pdf.Got b)} -> b
                      | _ -> failwith "JSON: stream not decoded"
                    in
                      (objnum, J.Array [dict; parse_content_stream pdf (Pdf.Dictionary []) streamdata])
@@ -186,10 +189,10 @@ let json_of_pdf parse_content pdf =
           (fun (objnum, jsonobj) -> J.Array [J.String (string_of_int objnum); jsonobj])
           pairs_parsed)
 
-let write fh parse_content pdf =
+let write fh parse_content no_stream_data pdf =
   let b = Buffer.create 256 in
   let formatter = Format.formatter_of_buffer b in
-    Tjjson.format formatter (json_of_pdf parse_content pdf);
+    Tjjson.format formatter (json_of_pdf parse_content no_stream_data pdf);
     Format.pp_print_flush formatter ();
     output_string fh (Buffer.contents b)
 

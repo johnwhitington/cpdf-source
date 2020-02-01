@@ -436,7 +436,8 @@ type args =
    mutable createpdf_pages : int;
    mutable createpdf_pagesize : Pdfpaper.t;
    mutable removeonly : string option;
-   mutable jsonparsecontentstreams : bool}
+   mutable jsonparsecontentstreams : bool;
+   mutable jsonnostreamdata : bool}
 
 let args =
   {op = None;
@@ -533,7 +534,8 @@ let args =
    createpdf_pages = 1;
    createpdf_pagesize = Pdfpaper.a4;
    removeonly = None;
-   jsonparsecontentstreams = false}
+   jsonparsecontentstreams = false;
+   jsonnostreamdata = false}
 
 let reset_arguments () =
   args.op <- None;
@@ -619,7 +621,8 @@ let reset_arguments () =
   args.createpdf_pages <- 1;
   args.createpdf_pagesize <- Pdfpaper.a4;
   args.removeonly <- None;
-  args.jsonparsecontentstreams <- false
+  args.jsonparsecontentstreams <- false;
+  args.jsonnostreamdata <- false
   (* Do not reset original_filename or cpdflin or was_encrypted or
    * was_decrypted_with_owner or recrypt or producer or creator or
    * path_to_ghostscript or gs_malformed or gs_quiet, since we want these to work across
@@ -1458,6 +1461,9 @@ let setgsquiet () =
 let setjsonparsecontentstreams () =
   args.jsonparsecontentstreams <- true
 
+let setjsonnostreamdata () =
+  args.jsonnostreamdata <- true
+
 let whingemalformed () =
   prerr_string "Command line must be of exactly the form\ncpdf <infile> -gs <path> -gs-malformed-force -o <outfile>\n";
   exit 1
@@ -2092,6 +2098,7 @@ and specs =
    (* These items are undocumented *)
    ("-output-json", Arg.Unit (setop OutputJSON), "");
    ("-output-json-parse-content-streams", Arg.Unit setjsonparsecontentstreams, "");
+   ("-output-json-no-stream-data", Arg.Unit setjsonnostreamdata, "");
    ("-remove-unused-resources", Arg.Unit (setop RemoveUnusedResources), "");
    ("-stay-on-error", Arg.Unit setstayonerror, "");
    ("-extract-fontfile", Arg.Unit (setop ExtractFontFile), "");
@@ -3550,10 +3557,10 @@ let write_json output pdf =
   | NoOutputSpecified ->
       error "-output-json: no output name specified"
   | Stdout ->
-      CpdfwriteJSON.write stdout args.jsonparsecontentstreams pdf
+      CpdfwriteJSON.write stdout args.jsonparsecontentstreams args.jsonnostreamdata pdf
   | File filename ->
       let f = open_out_bin filename in
-        CpdfwriteJSON.write f args.jsonparsecontentstreams pdf;
+        CpdfwriteJSON.write f args.jsonparsecontentstreams args.jsonnostreamdata pdf;
         close_out f
 
 (* Main function *)
