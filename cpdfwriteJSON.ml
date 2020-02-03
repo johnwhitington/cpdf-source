@@ -2,13 +2,16 @@ module J = Tjjson
 module P = Pdf
 module O = Pdfops
 
-(* FIXME jsonlint doesn't like tiny_json's 0., 1. etc. *)
+let sof = Printf.sprintf "%g" (* To prevent "0." *)
+let soi = string_of_int
+let string_of_float _ = failwith "use sof"
+let string_of_int _ = failwith "use soi"
 
 let rec json_of_object fcs no_stream_data = function
   | P.Null -> J.String "null"
   | P.Boolean b -> J.Bool b
-  | P.Integer i -> J.Number (string_of_int i)
-  | P.Real r -> J.Number (string_of_float r)
+  | P.Integer i -> J.Number (soi i)
+  | P.Real r -> J.Number (sof r)
   | P.String s -> J.String s
   | P.Name n -> J.String n
   | P.Array objs -> J.Array (List.map (json_of_object fcs no_stream_data) objs)
@@ -28,10 +31,7 @@ let rec json_of_object fcs no_stream_data = function
       in
         json_of_object fcs no_stream_data (P.Array [P.Dictionary dict; P.String str])
   | P.Stream _ -> J.String "error: stream with not-a-dictioary"
-  | P.Indirect i -> J.Number (string_of_int i)
-
-let sof = string_of_float
-let soi = string_of_int
+  | P.Indirect i -> J.Number (soi i)
 
 let json_of_op no_stream_data = function
   | O.Op_S -> J.Array [J.String "S"]
@@ -186,7 +186,7 @@ let json_of_pdf parse_content no_stream_data pdf =
     in
       J.Array
         (List.map
-          (fun (objnum, jsonobj) -> J.Array [J.String (string_of_int objnum); jsonobj])
+          (fun (objnum, jsonobj) -> J.Array [J.Number (soi objnum); jsonobj])
           pairs_parsed)
 
 let write fh parse_content no_stream_data pdf =
@@ -195,5 +195,4 @@ let write fh parse_content no_stream_data pdf =
     Tjjson.format formatter (json_of_pdf parse_content no_stream_data pdf);
     Format.pp_print_flush formatter ();
     output_string fh (Buffer.contents b)
-
 
