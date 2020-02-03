@@ -2,7 +2,7 @@ module J = Tjjson
 module P = Pdf
 module O = Pdfops
 
-let sof = Printf.sprintf "%g" (* To prevent "0." *)
+let sof = Printf.sprintf "%f" (* To prevent "0." *)
 let soi = string_of_int
 let string_of_float _ = failwith "use sof"
 let string_of_int _ = failwith "use soi"
@@ -80,7 +80,7 @@ let json_of_op no_stream_data = function
       J.Array [J.Array (List.map (fun x -> J.Number (sof x)) fl); J.Number (sof y); J.String "d"]
   | O.Op_w w -> J.Array [J.Number (sof w); J.String "w"]
   | O.Op_J j -> J.Array [J.Number (soi j); J.String "J"]
-  | O.Op_M m -> J.Array [J.Number (sof m); J.String "m"]
+  | O.Op_M m -> J.Array [J.Number (sof m); J.String "M"]
   | O.Op_ri s -> J.Array [J.String s; J.String "ri"]
   | O.Op_i i -> J.Array [J.Number (soi i); J.String "i"]
   | O.Op_c (a, b, c, d, e, k) ->
