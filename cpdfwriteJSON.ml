@@ -7,14 +7,14 @@ let soi = string_of_int
 let string_of_float _ = failwith "use sof"
 let string_of_int _ = failwith "use soi"
 
-let rec json_of_object fcs no_stream_data = function
+let rec json_of_object pdf fcs no_stream_data = function
   | P.Null -> J.String "null"
   | P.Boolean b -> J.Bool b
   | P.Integer i -> J.Number (soi i)
   | P.Real r -> J.Number (sof r)
   | P.String s -> J.String s
   | P.Name n -> J.String n
-  | P.Array objs -> J.Array (List.map (json_of_object fcs no_stream_data) objs)
+  | P.Array objs -> J.Array (List.map (json_of_object pdf fcs no_stream_data) objs)
   | P.Dictionary elts ->
       List.iter
         (function
@@ -22,18 +22,27 @@ let rec json_of_object fcs no_stream_data = function
           | ("/Contents", P.Array elts) -> List.iter (function P.Indirect i -> fcs i | _ -> ()) elts
           | _ -> ())
         elts;
-      J.Object (List.map (fun (k, v) -> (k, json_of_object fcs no_stream_data v)) elts)
+      J.Object (List.map (fun (k, v) -> (k, json_of_object pdf fcs no_stream_data v)) elts)
   | P.Stream {contents = (Pdf.Dictionary dict, stream)} as thestream ->
       Pdf.getstream thestream;
       let str =
         if no_stream_data then "<<stream data elided>>" else
           match stream with Pdf.Got b -> Pdfio.string_of_bytes b | Pdf.ToGet _ -> "failure: toget"
       in
-        json_of_object fcs no_stream_data (P.Array [P.Dictionary dict; P.String str])
+        json_of_object pdf fcs no_stream_data (P.Array [P.Dictionary dict; P.String str])
   | P.Stream _ -> J.String "error: stream with not-a-dictioary"
-  | P.Indirect i -> J.Number (soi i)
+  | P.Indirect i ->
+      begin match Pdf.lookup_obj pdf i with
+      | P.Stream {contents = (Pdf.Dictionary dict as d, _)} ->
+          begin match Pdf.lookup_direct pdf "/Subtype" d with
+          | Some (Pdf.Name "/Form") -> fcs i
+          | _ -> ()
+          end
+      | _ -> ()
+      end;
+      J.Number (soi i)
 
-let json_of_op no_stream_data = function
+let json_of_op pdf no_stream_data = function
   | O.Op_S -> J.Array [J.String "S"]
   | O.Op_s -> J.Array [J.String "s"]
   | O.Op_f -> J.Array [J.String "f"]
@@ -114,7 +123,7 @@ let json_of_op no_stream_data = function
          J.Number (sof t.Pdftransform.f);
          J.String "Tm"]
   | O.Op_Tj s -> J.Array [J.String s; J.String "Tj"]
-  | O.Op_TJ pdfobject -> J.Array [json_of_object (fun _ -> ()) no_stream_data pdfobject; J.String "TJ"]
+  | O.Op_TJ pdfobject -> J.Array [json_of_object pdf (fun _ -> ()) no_stream_data pdfobject; J.String "TJ"]
   | O.Op_' s -> J.Array [J.String s; J.String "'"]
   | O.Op_'' (k, k', s) -> J.Array [J.Number (sof k); J.Number (sof k'); J.String s; J.String "''"]
   | O.Op_d0 (k, k') -> J.Array [J.Number (sof k); J.Number (sof k'); J.String "d0"]
@@ -139,8 +148,8 @@ let json_of_op no_stream_data = function
       J.Array (List.map (fun x -> J.Number (sof x)) fs @ [J.String s; J.String "SCNName"])
   | O.Op_scnName (s, fs) ->
       J.Array (List.map (fun x -> J.Number (sof x)) fs @ [J.String s; J.String "scnName"])
-  | O.InlineImage (dict, data) -> J.Array [json_of_object (fun _ -> ()) no_stream_data dict; J.String (Pdfio.string_of_bytes data)]
-  | O.Op_DP (s, obj) -> J.Array [J.String s; json_of_object (fun _ -> ()) no_stream_data obj; J.String "DP"]
+  | O.InlineImage (dict, data) -> J.Array [json_of_object pdf (fun _ -> ()) no_stream_data dict; J.String (Pdfio.string_of_bytes data)]
+  | O.Op_DP (s, obj) -> J.Array [J.String s; json_of_object pdf (fun _ -> ()) no_stream_data obj; J.String "DP"]
 
 (* parse_stream needs pdf and resources. These are for lexing of inline images,
  * looking up the colourspace. We do not need to worry about inherited
@@ -148,17 +157,17 @@ let json_of_op no_stream_data = function
 * PDF standard. *)
 let parse_content_stream pdf resources bs =
   let ops = Pdfops.parse_stream pdf resources [bs] in
-    J.Array (List.map (json_of_op false) ops)
+    J.Array (List.map (json_of_op pdf false) ops)
 
 let json_of_pdf parse_content no_stream_data pdf =
-  let trailerdict = (0, json_of_object (fun x -> ()) no_stream_data pdf.Pdf.trailerdict) in
+  let trailerdict = (0, json_of_object pdf (fun x -> ()) no_stream_data pdf.Pdf.trailerdict) in
   let content_streams = ref [] in
   let fcs n = content_streams := n::!content_streams in
   let pairs =
     let ps = ref [] in
       Pdf.objiter
         (fun i pdfobj ->
-          ps := (i, json_of_object fcs no_stream_data pdfobj)::!ps)
+          ps := (i, json_of_object pdf fcs no_stream_data pdfobj)::!ps)
         pdf;
       trailerdict::!ps
   in
