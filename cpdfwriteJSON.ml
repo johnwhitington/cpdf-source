@@ -23,11 +23,17 @@ let rec json_of_object pdf fcs no_stream_data = function
           | _ -> ())
         elts;
       J.Object (List.map (fun (k, v) -> (k, json_of_object pdf fcs no_stream_data v)) elts)
-  | P.Stream {contents = (Pdf.Dictionary dict, stream)} as thestream ->
+  | P.Stream ({contents = (Pdf.Dictionary dict as d, stream)} as mut) as thestream ->
       Pdf.getstream thestream;
       let str =
-        if no_stream_data then "<<stream data elided>>" else
-          match stream with Pdf.Got b -> Pdfio.string_of_bytes b | Pdf.ToGet _ -> "failure: toget"
+        begin match Pdf.lookup_direct pdf "/FunctionType" d with
+        | Some _ ->
+            Pdfcodec.decode_pdfstream_until_unknown pdf thestream;
+            begin match !mut with (_, Pdf.Got b) -> Pdfio.string_of_bytes b | _ -> "failure: decomp" end
+        | None ->
+            if no_stream_data then "<<stream data elided>>" else
+              match stream with Pdf.Got b -> Pdfio.string_of_bytes b | Pdf.ToGet _ -> "failure: toget"
+       end
       in
         json_of_object pdf fcs no_stream_data (P.Array [P.Dictionary dict; P.String str])
   | P.Stream _ -> J.String "error: stream with not-a-dictioary"
