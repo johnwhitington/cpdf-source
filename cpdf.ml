@@ -750,13 +750,14 @@ let attach_file ?memory keepversion topage pdf file =
               Pdf.Got data))
     in
       let filestream_num = Pdf.addobj pdf filestream in
+      let basename = Pdftext.pdfdocstring_of_utf8 (Filename.basename file) in
         let filespec =
           Pdf.Dictionary
             [("/EF", Pdf.Dictionary ["/F", Pdf.Indirect filestream_num]);
-             ("/F", Pdf.String (Filename.basename file));
+             ("/F", Pdf.String basename);
              ("/Type", Pdf.Name "/Filespec");
              ("/Desc", Pdf.String "");
-             ("/UF", Pdf.String (Filename.basename file))]
+             ("/UF", Pdf.String basename)]
         in
           match topage with
           | None ->
@@ -778,7 +779,7 @@ let attach_file ?memory keepversion topage pdf file =
                       | _ -> []
                     in
                       let filespecobj = Pdf.addobj pdf filespec in
-                      let names' = Pdf.Array (elts @ [Pdf.String (Filename.basename file); Pdf.Indirect filespecobj]) in
+                      let names' = Pdf.Array (elts @ [Pdf.String basename; Pdf.Indirect filespecobj]) in
                       let embeddednamedict' = Pdf.add_dict_entry embeddednamedict "/Names" names' in
                       let namedict' = Pdf.add_dict_entry namedict "/EmbeddedFiles" embeddednamedict' in
                       let rootdict' = Pdf.add_dict_entry rootdict "/Names" namedict' in
@@ -807,7 +808,7 @@ let attach_file ?memory keepversion topage pdf file =
                           Pdf.Dictionary
                             [("/FS", Pdf.Indirect filespecobj);
                              ("/Subtype", Pdf.Name "/FileAttachment");
-                             ("/Contents", Pdf.String (Filename.basename file));
+                             ("/Contents", Pdf.String basename);
                              ("/Rect", rect)]
                         in
                           let annots' = Pdf.Array (annot::annots) in
@@ -1331,8 +1332,8 @@ let get_bookmark_name pdf marks splitlevel n _ =
   | _ -> ""
 
 (* Find the stem of a filename *)
-let stem s =
-  implode (rev (tail_no_fail (dropwhile (neq '.') (rev (explode (Filename.basename s))))))
+(*let stem s =
+  implode (rev (tail_no_fail (dropwhile (neq '.') (rev (explode (Filename.basename s))))))*)
 
 (* Return list, in order, a *set* of page numbers of bookmarks at a given level *)
 let bookmark_pages level pdf =
