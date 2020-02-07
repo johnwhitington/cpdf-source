@@ -4177,7 +4177,10 @@ let add_page_labels pdf progress style prefix startval range =
   and labels = Pdfpagelabels.read pdf in
     assert (length ranges > 0);
     let startval_additions =
-      0 :: map (fun x -> x - fst (List.hd ranges) - 1) (List.tl (List.map fst ranges))
+      let r = ref [] in
+      let sofar = ref 0 in
+        iter (fun (s, e) -> r := !sofar :: !r; sofar := e - s + 1 + !sofar) ranges;
+        rev !r
     in
     let labels =
       if not (page1 labels) then
@@ -4195,7 +4198,7 @@ let add_page_labels pdf progress style prefix startval range =
              {Pdfpagelabels.labelstyle = style;
               Pdfpagelabels.labelprefix = prefix;
               Pdfpagelabels.startpage = s;
-              Pdfpagelabels.startvalue = startval + addition}
+              Pdfpagelabels.startvalue = startval + if progress then addition else 0}
            in
              labels := Pdfpagelabels.add_label (Pdfpage.endpage pdf) !labels label e)
         ranges
