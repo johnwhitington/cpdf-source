@@ -1,9 +1,9 @@
 Version 2.4 (to come)
 
+o Optional content groups now preserved when merging / stamping pages
 o Vendored in tiny_json from Yoshihiro Imai via Jan Furuse
 o New -labels-progress option to improve page labels interface
-o New options -output-json and -output-json-parse-content streams to export PDF
-files in JSON format
+o New options -output-json et al. to export PDF files in JSON format
 
 Version 2.3 (patchlevel 1, December 2019)
 
