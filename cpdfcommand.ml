@@ -190,6 +190,7 @@ type op =
   | Prepend of string
   | Postpend of string
   | OutputJSON
+  | OCGCoalesce
 
 let string_of_op = function
   | CopyFont _ -> "CopyFont"
@@ -313,6 +314,7 @@ let string_of_op = function
   | Prepend _ -> "Prepend"
   | Postpend _ -> "Postpend"
   | OutputJSON -> "OutputJSON"
+  | OCGCoalesce -> "OCGCoalesce"
 
 (* Inputs: filename, pagespec. *)
 type input_kind =
@@ -682,7 +684,7 @@ let banned banlist = function
   | SetAuthor _|SetTitle _|SetSubject _|SetKeywords _|SetCreate _
   | SetModify _|SetCreator _|SetProducer _|RemoveDictEntry _ | SetMetadata _
   | ExtractText | ExtractImages | ExtractFontFile
-  | AddPageLabels | RemovePageLabels | OutputJSON
+  | AddPageLabels | RemovePageLabels | OutputJSON | OCGCoalesce
      -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
@@ -2095,10 +2097,12 @@ and specs =
    ("-squeeze-log-to", Arg.String setsqueezelogto, " Squeeze log location");
    (* Just for error reporting *)
    ("-gs-malformed-force", Arg.Unit whingemalformed, "");
-   (* These items are undocumented *)
+   (* These items are not documented yet, but will be soon *)
    ("-output-json", Arg.Unit (setop OutputJSON), "");
    ("-output-json-parse-content-streams", Arg.Unit setjsonparsecontentstreams, "");
    ("-output-json-no-stream-data", Arg.Unit setjsonnostreamdata, "");
+   ("-ocg-coalesce-on-name", Arg.Unit (setop OCGCoalesce), "");
+   (* These items are undocumented *)
    ("-remove-unused-resources", Arg.Unit (setop RemoveUnusedResources), "");
    ("-stay-on-error", Arg.Unit setstayonerror, "");
    ("-extract-fontfile", Arg.Unit (setop ExtractFontFile), "");
@@ -2116,9 +2120,6 @@ and specs =
    ("-fix-prince", Arg.Unit (setop RemoveUnusedResources), "");
    ("-extract-text", Arg.Unit (setop ExtractText), "");
    ("-extract-text-font-size", Arg.Float setextracttextfontsize, "");
-   (*("-change-font-size-to", Arg.Float setchangefontsizeto, "");
-   ("-change-font-size-shift", Arg.String setchangefontsizeshift, "");
-   ("-change-font-size-color", Arg.String setchangefontsizecolor, "")*)
   ]
 
 and usage_msg =
@@ -3563,6 +3564,51 @@ let write_json output pdf =
         CpdfwriteJSON.write f args.jsonparsecontentstreams args.jsonnostreamdata pdf;
         close_out f
 
+(* 1. Get list of indirects of all OCGs from the /OCProperties, and their textual names
+ * 2. Calculate a change list to coalesce them
+ * 3. Make the changes in /Properties lists of pages / form xobjects. Anywhere else? 
+ * 4. Remove the old ones by making null everywhere else in the document. *)
+(*FIXME Pre-existing nulls - what to do? *)
+let ocg_coalesce pdf =
+  let number_name_pairs =
+    match Pdf.lookup_direct pdf "/OCProperties" (Pdf.catalog_of_pdf pdf) with
+      None -> []
+    | Some d ->
+        match Pdf.lookup_direct pdf "/OCGs" d with
+          Some (Pdf.Array ocgs) ->
+            begin let numbers =
+              map (function Pdf.Indirect i -> i | _ -> failwith "Malformed /OCG entry") ocgs
+            in
+              let names =
+                map
+                  (fun i ->
+                     try
+                       begin match Pdf.lookup_obj pdf i with
+                         Pdf.Dictionary d ->
+                           begin match Pdf.lookup_direct pdf "/Name" (Pdf.Dictionary d) with
+                             Some (Pdf.String s) -> s
+                           | _ -> failwith "ocg: missing name"
+                           end
+                       | _ -> 
+                           failwith "ocg: not a dictionary"
+                       end
+                      with _ -> failwith "OCG object missing")
+                  numbers
+              in
+                combine numbers names
+            end
+        | _ -> failwith "Malformed or missing /OCGs"
+  in
+    iter (fun (num, name) -> Printf.printf "%i = %s\n" num name) number_name_pairs;
+    let changes =
+      let cf (_, name) (_, name') = compare name name' in
+      let sets = collate cf (List.stable_sort cf number_name_pairs) in
+      flatten (option_map (function [] -> None | (hnum, _)::t -> Some (map (function (tnum, _) -> (tnum, hnum)) t)) sets)
+    in
+    Printf.printf "\nChanges are:\n";
+    List.iter (fun (f, t) -> Printf.printf "%i -> %i\n" f t) changes;
+    pdf
+
 (* Main function *)
 let go () =
   match args.op with
@@ -4451,6 +4497,9 @@ let go () =
   | Some OutputJSON ->
       let pdf = get_single_pdf args.op false in
         write_json args.out pdf
+  | Some OCGCoalesce ->
+      let pdf = get_single_pdf args.op false in
+        write_pdf false (ocg_coalesce pdf)
 
 let parse_argv () =
   if args.debug then
