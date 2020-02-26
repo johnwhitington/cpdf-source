@@ -3566,15 +3566,15 @@ let write_json output pdf =
 
 (* 1. Get list of indirects of all OCGs from the /OCProperties, and their textual names
  * 2. Calculate a change list to coalesce them
- * 3. Make the changes in /Properties lists of pages / form xobjects. Anywhere else? 
- * 4. Remove the old ones by making null everywhere else in the document. *)
+ * 3. Remove any changed ones from the /OCGs and /Order in /OCProperties
+ * 4. Do the changes to all indirect references in the whole pdf  *)
 (*FIXME Pre-existing nulls - what to do? *)
 let ocg_coalesce pdf =
-  let number_name_pairs =
-    match Pdf.lookup_direct pdf "/OCProperties" (Pdf.catalog_of_pdf pdf) with
-      None -> []
-    | Some d ->
-        match Pdf.lookup_direct pdf "/OCGs" d with
+  match Pdf.lookup_direct pdf "/OCProperties" (Pdf.catalog_of_pdf pdf) with
+    None -> pdf
+  | Some ocpdict ->
+      let number_name_pairs =
+        match Pdf.lookup_direct pdf "/OCGs" ocpdict with
           Some (Pdf.Array ocgs) ->
             begin let numbers =
               map (function Pdf.Indirect i -> i | _ -> failwith "Malformed /OCG entry") ocgs
@@ -3598,16 +3598,35 @@ let ocg_coalesce pdf =
                 combine numbers names
             end
         | _ -> failwith "Malformed or missing /OCGs"
-  in
-    iter (fun (num, name) -> Printf.printf "%i = %s\n" num name) number_name_pairs;
-    let changes =
-      let cf (_, name) (_, name') = compare name name' in
-      let sets = collate cf (List.stable_sort cf number_name_pairs) in
-      flatten (option_map (function [] -> None | (hnum, _)::t -> Some (map (function (tnum, _) -> (tnum, hnum)) t)) sets)
-    in
-    Printf.printf "\nChanges are:\n";
-    List.iter (fun (f, t) -> Printf.printf "%i -> %i\n" f t) changes;
-    pdf
+      in
+        iter (fun (num, name) -> Printf.printf "%i = %s\n" num name) number_name_pairs;
+        let changes =
+          let cf (_, name) (_, name') = compare name name' in
+          let sets = collate cf (List.stable_sort cf number_name_pairs) in
+          flatten (option_map (function [] -> None | (hnum, _)::t -> Some (map (function (tnum, _) -> (tnum, hnum)) t)) sets)
+        in
+        Printf.printf "\nChanges are:\n";
+        List.iter (fun (f, t) -> Printf.printf "%i -> %i\n" f t) changes;
+        let new_ocproperties =
+          (* FIXME: Instead, look for order / ocgs inside "/D" !!  - one more layer of indirection *)
+          let remove_from_array key nums dict =
+            match Pdf.lookup_direct pdf key dict with
+            | Some (Pdf.Array elts) ->
+                let elts' = option_map (function Pdf.Indirect i -> if mem i nums then None else Some (Pdf.Indirect i) | _ -> None) elts in
+                Pdf.add_dict_entry dict key (Pdf.Array elts')
+            | _ -> dict
+          in
+          let nums = map fst changes in
+            Printf.printf "\nto remove:\n";
+            List.iter (Printf.printf "%i ") nums;
+            remove_from_array "/OCGs" nums (remove_from_array "/Order" nums ocpdict)
+        in
+        flprint (Pdfwrite.string_of_pdf new_ocproperties);
+        let ocp_objnum = Pdf.addobj pdf new_ocproperties in
+        let new_catalog = Pdf.add_dict_entry (Pdf.catalog_of_pdf pdf) "/OCProperties" (Pdf.Indirect ocp_objnum) in
+        pdf.Pdf.trailerdict <- Pdf.add_dict_entry pdf.Pdf.trailerdict "/Root" new_catalog;
+        Pdf.objselfmap (Pdf.renumber_object_parsed pdf (hashtable_of_dictionary changes)) pdf;
+        pdf
 
 (* Main function *)
 let go () =
