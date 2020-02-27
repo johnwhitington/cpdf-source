@@ -3608,18 +3608,31 @@ let ocg_coalesce pdf =
         Printf.printf "\nChanges are:\n";
         List.iter (fun (f, t) -> Printf.printf "%i -> %i\n" f t) changes;
         let new_ocproperties =
-          (* FIXME: Instead, look for order / ocgs inside "/D" !!  - one more layer of indirection *)
           let remove_from_array key nums dict =
             match Pdf.lookup_direct pdf key dict with
             | Some (Pdf.Array elts) ->
                 let elts' = option_map (function Pdf.Indirect i -> if mem i nums then None else Some (Pdf.Indirect i) | _ -> None) elts in
-                Pdf.add_dict_entry dict key (Pdf.Array elts')
+                  Pdf.add_dict_entry dict key (Pdf.Array elts')
             | _ -> dict
+          in
+          let remove_from_array_inside_d key nums dict =
+            match Pdf.lookup_direct pdf "/D" dict with
+            | Some (Pdf.Dictionary ddict) ->
+                begin match Pdf.lookup_direct pdf key (Pdf.Dictionary ddict) with
+                | Some (Pdf.Array elts) ->
+                    let elts' = option_map (function Pdf.Indirect i -> if mem i nums then None else Some (Pdf.Indirect i) | _ -> None) elts in
+                    Pdf.add_dict_entry dict "/D" (Pdf.add_dict_entry (Pdf.Dictionary ddict) key (Pdf.Array elts'))
+                | _ -> dict
+                end
+            | _ -> failwith "No /D dict in OCGProperties"
           in
           let nums = map fst changes in
             Printf.printf "\nto remove:\n";
             List.iter (Printf.printf "%i ") nums;
-            remove_from_array "/OCGs" nums (remove_from_array "/Order" nums ocpdict)
+            remove_from_array "/OCGs" nums
+              (remove_from_array_inside_d "/ON" nums
+                (remove_from_array_inside_d "/OFF" nums
+                  (remove_from_array_inside_d "/Order" nums ocpdict)))
         in
         flprint (Pdfwrite.string_of_pdf new_ocproperties);
         let ocp_objnum = Pdf.addobj pdf new_ocproperties in
