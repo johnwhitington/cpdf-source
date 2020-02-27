@@ -450,3 +450,9 @@ val extract_text : float option -> Pdf.t -> int list -> string
 
 val append_page_content : string -> bool -> bool -> int list -> Pdf.t -> Pdf.t
 
+val ocg_coalesce : Pdf.t -> unit
+
+val ocg_list : Pdf.t -> unit
+
+val ocg_rename : string -> string -> Pdf.t -> unit
+
