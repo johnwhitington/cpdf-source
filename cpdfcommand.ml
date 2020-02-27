@@ -191,6 +191,8 @@ type op =
   | Postpend of string
   | OutputJSON
   | OCGCoalesce
+  | OCGList
+  | OCGRename
 
 let string_of_op = function
   | CopyFont _ -> "CopyFont"
@@ -315,6 +317,8 @@ let string_of_op = function
   | Postpend _ -> "Postpend"
   | OutputJSON -> "OutputJSON"
   | OCGCoalesce -> "OCGCoalesce"
+  | OCGList -> "OCGList"
+  | OCGRename -> "OCGRename"
 
 (* Inputs: filename, pagespec. *)
 type input_kind =
@@ -439,7 +443,9 @@ type args =
    mutable createpdf_pagesize : Pdfpaper.t;
    mutable removeonly : string option;
    mutable jsonparsecontentstreams : bool;
-   mutable jsonnostreamdata : bool}
+   mutable jsonnostreamdata : bool;
+   mutable ocgrenamefrom : string;
+   mutable ocgrenameto : string}
 
 let args =
   {op = None;
@@ -537,7 +543,9 @@ let args =
    createpdf_pagesize = Pdfpaper.a4;
    removeonly = None;
    jsonparsecontentstreams = false;
-   jsonnostreamdata = false}
+   jsonnostreamdata = false;
+   ocgrenamefrom = "";
+   ocgrenameto = ""}
 
 let reset_arguments () =
   args.op <- None;
@@ -624,7 +632,9 @@ let reset_arguments () =
   args.createpdf_pagesize <- Pdfpaper.a4;
   args.removeonly <- None;
   args.jsonparsecontentstreams <- false;
-  args.jsonnostreamdata <- false
+  args.jsonnostreamdata <- false;
+  args.ocgrenamefrom <- "";
+  args.ocgrenameto <- ""
   (* Do not reset original_filename or cpdflin or was_encrypted or
    * was_decrypted_with_owner or recrypt or producer or creator or
    * path_to_ghostscript or gs_malformed or gs_quiet, since we want these to work across
@@ -685,6 +695,7 @@ let banned banlist = function
   | SetModify _|SetCreator _|SetProducer _|RemoveDictEntry _ | SetMetadata _
   | ExtractText | ExtractImages | ExtractFontFile
   | AddPageLabels | RemovePageLabels | OutputJSON | OCGCoalesce
+  | OCGRename | OCGList
      -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
@@ -1466,6 +1477,12 @@ let setjsonparsecontentstreams () =
 let setjsonnostreamdata () =
   args.jsonnostreamdata <- true
 
+let setocgrenamefrom s =
+  args.ocgrenamefrom <- s
+
+let setocgrenameto s =
+  args.ocgrenameto <- s
+
 let whingemalformed () =
   prerr_string "Command line must be of exactly the form\ncpdf <infile> -gs <path> -gs-malformed-force -o <outfile>\n";
   exit 1
@@ -2102,6 +2119,10 @@ and specs =
    ("-output-json-parse-content-streams", Arg.Unit setjsonparsecontentstreams, "");
    ("-output-json-no-stream-data", Arg.Unit setjsonnostreamdata, "");
    ("-ocg-coalesce-on-name", Arg.Unit (setop OCGCoalesce), "");
+   ("-ocg-list", Arg.Unit (setop OCGList), "");
+   ("-ocg-rename", Arg.Unit (setop OCGRename), "");
+   ("-ocg-rename-from", Arg.String setocgrenamefrom, "");
+   ("-ocg-rename-to", Arg.String setocgrenameto, "");
    (* These items are undocumented *)
    ("-remove-unused-resources", Arg.Unit (setop RemoveUnusedResources), "");
    ("-stay-on-error", Arg.Unit setstayonerror, "");
@@ -3642,6 +3663,39 @@ let ocg_coalesce pdf =
         Pdf.objselfmap (Pdf.renumber_object_parsed pdf (hashtable_of_dictionary changes)) pdf;
         pdf
 
+let ocg_list pdf =
+  match Pdf.lookup_direct pdf "/OCProperties" (Pdf.catalog_of_pdf pdf) with
+    None -> ()
+  | Some ocpdict ->
+      match Pdf.lookup_direct pdf "/OCGs" ocpdict with
+        Some (Pdf.Array elts) ->
+          List.iter
+            (function
+               Pdf.Indirect i ->
+                 (match Pdf.lookup_direct pdf "/Name" (Pdf.lookup_obj pdf i) with
+                    Some (Pdf.String s) -> Printf.printf "%s\n" s | _ -> ())
+             | _ -> ())
+            elts
+      | _ -> ()
+
+let ocg_rename f t pdf =
+  Pdf.objselfmap
+    (function
+      Pdf.Dictionary d ->
+        begin match Pdf.lookup_direct pdf "/Type" (Pdf.Dictionary d) with
+          Some (Pdf.Name "/OCG") ->
+            begin match Pdf.lookup_direct pdf "/Name" (Pdf.Dictionary d) with
+              Some (Pdf.String s) when s = f ->
+                Pdf.add_dict_entry (Pdf.Dictionary d) "/Name" (Pdf.String t)
+            | _ -> Pdf.Dictionary d
+            end
+        | _ -> Pdf.Dictionary d
+        end
+     | x -> x
+    )
+    pdf;
+  pdf
+
 (* Main function *)
 let go () =
   match args.op with
@@ -4533,6 +4587,12 @@ let go () =
   | Some OCGCoalesce ->
       let pdf = get_single_pdf args.op false in
         write_pdf false (ocg_coalesce pdf)
+  | Some OCGList ->
+      let pdf = get_single_pdf args.op true in
+        ocg_list pdf
+  | Some OCGRename ->
+      let pdf = get_single_pdf args.op false in
+        write_pdf false (ocg_rename args.ocgrenamefrom args.ocgrenameto pdf)
 
 let parse_argv () =
   if args.debug then
