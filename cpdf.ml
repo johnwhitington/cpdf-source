@@ -4326,3 +4326,22 @@ let ocg_rename f t pdf =
      | x -> x
     )
     pdf
+
+let ocg_order_all pdf =
+  match Pdf.lookup_direct pdf "/OCProperties" (Pdf.catalog_of_pdf pdf) with
+    None -> ()
+  | Some ocpdict ->
+      match Pdf.lookup_direct pdf "/OCGs" ocpdict with
+        Some (Pdf.Array elts) ->
+          begin match Pdf.lookup_direct pdf "/D" ocpdict with
+            Some (Pdf.Dictionary d) ->
+              let newd = Pdf.add_dict_entry (Pdf.Dictionary d) "/Order" (Pdf.Array elts) in
+              let new_ocproperties = Pdf.add_dict_entry ocpdict "/D" newd in
+              let ocp_objnum = Pdf.addobj pdf new_ocproperties in
+              let new_catalog = Pdf.addobj pdf (Pdf.add_dict_entry (Pdf.catalog_of_pdf pdf) "/OCProperties" (Pdf.Indirect ocp_objnum)) in
+                pdf.Pdf.trailerdict <- Pdf.add_dict_entry pdf.Pdf.trailerdict "/Root" (Pdf.Indirect new_catalog);
+                pdf.Pdf.root <- new_catalog
+          | _ -> ()
+          end
+      | _ -> ()
+

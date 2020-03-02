@@ -193,6 +193,7 @@ type op =
   | OCGCoalesce
   | OCGList
   | OCGRename
+  | OCGOrderAll
 
 let string_of_op = function
   | CopyFont _ -> "CopyFont"
@@ -319,6 +320,7 @@ let string_of_op = function
   | OCGCoalesce -> "OCGCoalesce"
   | OCGList -> "OCGList"
   | OCGRename -> "OCGRename"
+  | OCGOrderAll -> "OCGOrderAll"
 
 (* Inputs: filename, pagespec. *)
 type input_kind =
@@ -695,7 +697,7 @@ let banned banlist = function
   | SetModify _|SetCreator _|SetProducer _|RemoveDictEntry _ | SetMetadata _
   | ExtractText | ExtractImages | ExtractFontFile
   | AddPageLabels | RemovePageLabels | OutputJSON | OCGCoalesce
-  | OCGRename | OCGList
+  | OCGRename | OCGList | OCGOrderAll
      -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
@@ -2123,6 +2125,7 @@ and specs =
    ("-ocg-rename", Arg.Unit (setop OCGRename), "");
    ("-ocg-rename-from", Arg.String setocgrenamefrom, "");
    ("-ocg-rename-to", Arg.String setocgrenameto, "");
+   ("-ocg-order-all", Arg.Unit (setop OCGOrderAll), "");
    (* These items are undocumented *)
    ("-remove-unused-resources", Arg.Unit (setop RemoveUnusedResources), "");
    ("-stay-on-error", Arg.Unit setstayonerror, "");
@@ -4483,6 +4486,10 @@ let go () =
   | Some OCGRename ->
       let pdf = get_single_pdf args.op false in
         Cpdf.ocg_rename args.ocgrenamefrom args.ocgrenameto pdf;
+        write_pdf false pdf
+  | Some OCGOrderAll ->
+      let pdf = get_single_pdf args.op false in
+        Cpdf.ocg_order_all pdf;
         write_pdf false pdf
 
 let parse_argv () =

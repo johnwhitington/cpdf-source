@@ -456,3 +456,5 @@ val ocg_list : Pdf.t -> unit
 
 val ocg_rename : string -> string -> Pdf.t -> unit
 
+val ocg_order_all : Pdf.t -> unit
+
