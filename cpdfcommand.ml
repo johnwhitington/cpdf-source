@@ -11,7 +11,7 @@ open Pdfio
 let tempfiles = ref []
 
 let exit n =
-  begin try List.iter Sys.remove !tempfiles with _ -> exit n end;
+  begin try iter Sys.remove !tempfiles with _ -> exit n end;
   exit n
 
 let initial_file_size = ref 0
@@ -3450,7 +3450,7 @@ let add_bookmark_title filename use_title pdf =
 let bookmarks_open_to_level n pdf =
   let marks = Pdfmarks.read_bookmarks pdf in
   let newmarks =
-    List.map
+    map
       (fun m -> {m with Pdfmarks.isopen = m.Pdfmarks.level < n})
       marks
   in
@@ -3651,9 +3651,9 @@ let go () =
                     else
                       let pdfs =
                         if args.merge_add_bookmarks then
-                          List.map2
+                          map2
                             (fun filename pdf -> add_bookmark_title filename args.merge_add_bookmarks_use_titles pdf)
-                            (List.map (function InFile s -> s | StdIn -> "" | AlreadyInMemory _ -> "") names)
+                            (map (function InFile s -> s | StdIn -> "" | AlreadyInMemory _ -> "") names)
                             pdfs
                         else
                           pdfs

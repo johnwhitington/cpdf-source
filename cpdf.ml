@@ -1241,7 +1241,7 @@ let output_string_of_target pdf fastrefnums x =
 let list_bookmarks encoding range pdf output =
   let process_stripped escaped =
     let b = Buffer.create 200 in
-      List.iter
+      iter
         (fun x ->
            if x <= 127 then Buffer.add_char b (char_of_int x))
         escaped;
@@ -1371,7 +1371,7 @@ let output_page_info pdf range =
     and rotation page =
       Pdfpage.int_of_rotation page.Pdfpage.rotate
     in
-      List.iter
+      iter
         (fun pnum ->
            let page = select pnum pages in
              Printf.printf "Page %i:\n" pnum;
@@ -1687,8 +1687,8 @@ let remove_slash s =
   | _ -> raise (Failure "remove_slash")
 
 let extract_widths chars_and_widths =
-  let win_to_name = List.map (fun (x, y) -> (y, x)) Pdfglyphlist.name_to_win in
-    List.map
+  let win_to_name = map (fun (x, y) -> (y, x)) Pdfglyphlist.name_to_win in
+    map
       (fun x ->
           try
             let name = List.assoc x win_to_name in
@@ -2079,10 +2079,10 @@ let rec insert_after_many_changes isbefore padsize offset range = function
         item::insert_after_many_changes isbefore padsize offset range t
 
 let print_changes =
-  List.iter (fun (f, t) -> Printf.printf "%i --> %i\n" f t)
+  iter (fun (f, t) -> Printf.printf "%i --> %i\n" f t)
 
 let pad_with_pdf (range : int list) (pdf : Pdf.t) (isbefore : bool) (padfile : Pdf.t) =
-  let range = List.sort compare (setify range) in
+  let range = sort compare (setify range) in
   let merged =
     Pdfmerge.merge_pdfs
       false false ["a"; "b"] [pdf; padfile] [ilist 1 (Pdfpage.endpage pdf); ilist 1 (Pdfpage.endpage padfile)]
@@ -2091,7 +2091,7 @@ let pad_with_pdf (range : int list) (pdf : Pdf.t) (isbefore : bool) (padfile : P
     cleave (Pdfpage.pages_of_pagetree merged) (Pdfpage.endpage pdf) 
   in
     let newpages =
-      List.map
+      map
         (fun (pagenum, page) ->
            if mem pagenum range then
              (if isbefore then padpages @ [page] else [page] @ padpages)
@@ -2121,7 +2121,7 @@ let pad padwith range pdf isbefore =
           let pages' = insert_after_many pages (combine range blankpages) in
           let changes =
             insert_after_many_changes
-              isbefore 1 0 (List.map (fun x -> x + i) range) (ilist 1 (length pages))
+              isbefore 1 0 (map (fun x -> x + i) range) (ilist 1 (length pages))
           in
             Pdfpage.change_pages ~changes true pdf pages'
 
@@ -2287,7 +2287,7 @@ let transform_annotations pdf transform rest =
   match Pdf.lookup_direct pdf "/Annots" rest with
   | Some (Pdf.Array annots) ->
       (* Always indirect references, so alter in place *)
-      List.iter
+      iter
         (function
          | Pdf.Indirect i ->
              (*Printf.printf "Found an annotation to modify...\n";*)
@@ -2524,12 +2524,12 @@ let stamp relative_to_cropbox position topline midline fast scale_to_fit isover 
                 in
                   let changed =
                     let changes =
-                      List.map (fun x -> (x, x)) (ilist 1 (length new_pages))
+                      map (fun x -> (x, x)) (ilist 1 (length new_pages))
                     in
                       Pdfpage.change_pages ~changes true merged new_pages
                   in
                     let new_refnumbers = Pdf.page_reference_numbers changed in
-                    let changetable = hashtable_of_dictionary (List.combine marks_refnumbers new_refnumbers) in
+                    let changetable = hashtable_of_dictionary (combine marks_refnumbers new_refnumbers) in
                     let new_marks = map (change_bookmark changetable) marks in
                       Pdfmarks.add_bookmarks new_marks changed
 
@@ -2542,14 +2542,14 @@ let equalize_pages under over =
   let length_over = Pdfpage.endpage over in
     if length_over > length_under then
       let changes =
-        List.map (fun x -> (x, x)) (ilist 1 length_under)
+        map (fun x -> (x, x)) (ilist 1 length_under)
       in
         (under,
          (Pdfpage.change_pages
             ~changes true over (take (Pdfpage.pages_of_pagetree over) length_under)))
     else if length_under > length_over then
       let changes =
-        List.map (fun x -> (x, x)) (ilist 1 length_over)
+        map (fun x -> (x, x)) (ilist 1 length_over)
       in
         (under,
          Pdfpage.change_pages
@@ -2591,7 +2591,7 @@ let combine_pages fast under over scaletofit swap equalize =
           in
             (* Build the changes. 123456 -> 123123 *)
             let changes =
-              let len = List.length new_pages in
+              let len = length new_pages in
                 combine (ilist 1 (len * 2)) (let x = ilist 1 len in x @ x)
             in
               let changed = Pdfpage.change_pages ~changes true merged new_pages in
@@ -3058,7 +3058,7 @@ let rec renumber_in_dest table indest = function
       Pdf.recurse_array (renumber_in_dest table indest) a
   | Pdf.Dictionary d ->
       Pdf.Dictionary
-        (List.map
+        (map
           (function
              ("/Dest", v) -> ("/Dest", renumber_in_dest table true v)
            | (k, v) -> (k, renumber_in_dest table indest v))
@@ -3078,7 +3078,7 @@ let copy_annotations_page topdf frompdf frompage topage =
              (Pdf.page_reference_numbers frompdf)
              (Pdf.page_reference_numbers topdf))
       in
-        List.iter
+        iter
          (function
             (* FIXME: We assume they are indirects. Must also do direct, though rare.*)
             Pdf.Indirect x ->
@@ -3221,7 +3221,7 @@ let twoup_pages_inner isstack fast pdf = function
        (* Change the pattern matrices before combining resources *)
        let pages, h =
          let r =
-           List.map2
+           map2
              (fun p t -> change_pattern_matrices_page pdf t p)
              pages transforms
          in
@@ -3248,7 +3248,7 @@ let twoup_pages_inner isstack fast pdf = function
                 [Pdfops.stream_of_ops
                   ([Pdfops.Op_q] @ [Pdfops.Op_cm transform] @ clipops @ ops @ [Pdfops.Op_Q])]
           in
-            List.flatten
+            flatten
               (map2
               (fun p t ->
                  transform_annotations pdf t p.Pdfpage.rest;
@@ -3281,7 +3281,7 @@ let f_twoup f_pages pdf =
       let pagesets = splitinto 2 pages in
         let renumbered = map (Pdfpage.renumber_pages pdf) pagesets in
           let pages' = map (f_pages pdf) renumbered in
-            let changes = List.map (fun x -> (x, (x + 1) / 2)) pagenums in
+            let changes = map (fun x -> (x, (x + 1) / 2)) pagenums in
               (*print_changes changes;*)
               Pdfpage.change_pages ~changes true pdf pages'
 
@@ -3477,7 +3477,7 @@ let get_xmp_info pdf name =
   | Some metadata ->
       try
         let _, tree = xmltree_of_bytes metadata in
-          let results = List.map (fun (kind, key) -> match get_data_for kind key tree with Some x -> x | None -> "") tocheck in
+          let results = map (fun (kind, key) -> match get_data_for kind key tree with Some x -> x | None -> "") tocheck in
             match lose (eq "") results with
              x::_ -> x
            | [] -> ""
@@ -3489,7 +3489,7 @@ let rec set_xml_field kind fieldname value = function
   D data -> D data
 | E (((n, n'), m), _ (*[D _]*)) when n = kind && n' = fieldname -> (* Replace anything inside, including nothing i.e <tag/> *)
     E (((n, n'), m), [D value])
-| E (x, ts) -> E (x, List.map (set_xml_field kind fieldname value) ts)
+| E (x, ts) -> E (x, map (set_xml_field kind fieldname value) ts)
 
 let set_pdf_info_xml kind fieldname value xmldata pdf =
   let dtd, tree = xmltree_of_bytes xmldata in
@@ -3505,7 +3505,7 @@ let set_pdf_info_xml kind fieldname value xmldata pdf =
 
 let set_pdf_info_xml_many changes value xmldata pdf =
   let xmldata = ref xmldata in
-    List.iter
+    iter
       (fun (kind, fieldname) ->
          xmldata := set_pdf_info_xml kind fieldname value !xmldata pdf)
       changes;
@@ -3688,7 +3688,7 @@ let replacements pdf =
 
 let create_metadata pdf =
   let xmp = ref xmp_template in
-  List.iter
+  iter
     (fun (s, r) -> xmp := string_replace_all s r !xmp)
     (replacements pdf);
   set_metadata_from_bytes false (bytes_of_string !xmp) pdf
@@ -4301,7 +4301,7 @@ let ocg_list pdf =
   | Some ocpdict ->
       match Pdf.lookup_direct pdf "/OCGs" ocpdict with
         Some (Pdf.Array elts) ->
-          List.iter
+          iter
             (function
                Pdf.Indirect i ->
                  (match Pdf.lookup_direct pdf "/Name" (Pdf.lookup_obj pdf i) with

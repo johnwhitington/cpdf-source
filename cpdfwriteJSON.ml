@@ -1,3 +1,5 @@
+open Pdfutil
+
 module J = Tjjson
 module P = Pdf
 module O = Pdfops
@@ -14,15 +16,15 @@ let rec json_of_object pdf fcs no_stream_data = function
   | P.Real r -> J.Number (sof r)
   | P.String s -> J.String s
   | P.Name n -> J.String n
-  | P.Array objs -> J.Array (List.map (json_of_object pdf fcs no_stream_data) objs)
+  | P.Array objs -> J.Array (map (json_of_object pdf fcs no_stream_data) objs)
   | P.Dictionary elts ->
-      List.iter
+      iter
         (function
             ("/Contents", P.Indirect i) -> fcs i
-          | ("/Contents", P.Array elts) -> List.iter (function P.Indirect i -> fcs i | _ -> ()) elts
+          | ("/Contents", P.Array elts) -> iter (function P.Indirect i -> fcs i | _ -> ()) elts
           | _ -> ())
         elts;
-      J.Object (List.map (fun (k, v) -> (k, json_of_object pdf fcs no_stream_data v)) elts)
+      J.Object (map (fun (k, v) -> (k, json_of_object pdf fcs no_stream_data v)) elts)
   | P.Stream ({contents = (Pdf.Dictionary dict as d, stream)} as mut) as thestream ->
       Pdf.getstream thestream;
       let str =
@@ -80,7 +82,7 @@ let json_of_op pdf no_stream_data = function
   | O.Op_gs s -> J.Array [J.String s; J.String "gs"]
   | O.Op_Do s -> J.Array [J.String s; J.String "Do"]
   | O.Op_CS s -> J.Array [J.String s; J.String "CS"]
-  | O.Op_SCN fs -> J.Array ((List.map (fun x -> J.Number (sof x)) fs) @ [J.String "SCN"])
+  | O.Op_SCN fs -> J.Array ((map (fun x -> J.Number (sof x)) fs) @ [J.String "SCN"])
   | O.Op_j j -> J.Array [J.Number (soi j); J.String "j"] 
   | O.Op_cm t ->
       J.Array
@@ -92,7 +94,7 @@ let json_of_op pdf no_stream_data = function
          J.Number (sof t.Pdftransform.f);
          J.String "cm"]
   | O.Op_d (fl, y) ->
-      J.Array [J.Array (List.map (fun x -> J.Number (sof x)) fl); J.Number (sof y); J.String "d"]
+      J.Array [J.Array (map (fun x -> J.Number (sof x)) fl); J.Number (sof y); J.String "d"]
   | O.Op_w w -> J.Array [J.Number (sof w); J.String "w"]
   | O.Op_J j -> J.Array [J.Number (soi j); J.String "J"]
   | O.Op_M m -> J.Array [J.Number (sof m); J.String "M"]
@@ -138,9 +140,9 @@ let json_of_op pdf no_stream_data = function
         [J.Number (sof a); J.Number (sof b); J.Number (sof c);
          J.Number (sof d); J.Number (sof e); J.Number (sof k); J.String "d1"]
   | O.Op_cs s -> J.Array [J.String s; J.String "cs"]
-  | O.Op_SC fs -> J.Array (List.map (fun x -> J.Number (sof x)) fs @ [J.String "SC"])
-  | O.Op_sc fs -> J.Array (List.map (fun x -> J.Number (sof x)) fs @ [J.String "sc"])
-  | O.Op_scn fs -> J.Array (List.map (fun x -> J.Number (sof x)) fs @ [J.String "scn"])
+  | O.Op_SC fs -> J.Array (map (fun x -> J.Number (sof x)) fs @ [J.String "SC"])
+  | O.Op_sc fs -> J.Array (map (fun x -> J.Number (sof x)) fs @ [J.String "sc"])
+  | O.Op_scn fs -> J.Array (map (fun x -> J.Number (sof x)) fs @ [J.String "scn"])
   | O.Op_G k -> J.Array [J.Number (sof k); J.String "G"]
   | O.Op_g k -> J.Array [J.Number (sof k); J.String "g"]
   | O.Op_RG (r, g, b) -> J.Array [J.Number (sof r); J.Number (sof g); J.Number (sof b); J.String "RG"]
@@ -151,9 +153,9 @@ let json_of_op pdf no_stream_data = function
   | O.Op_BMC s -> J.Array [J.String s; J.String "BMC"]
   | O.Op_Unknown _ -> J.Array [J.String "Unknown"]
   | O.Op_SCNName (s, fs) ->
-      J.Array (List.map (fun x -> J.Number (sof x)) fs @ [J.String s; J.String "SCNName"])
+      J.Array (map (fun x -> J.Number (sof x)) fs @ [J.String s; J.String "SCNName"])
   | O.Op_scnName (s, fs) ->
-      J.Array (List.map (fun x -> J.Number (sof x)) fs @ [J.String s; J.String "scnName"])
+      J.Array (map (fun x -> J.Number (sof x)) fs @ [J.String s; J.String "scnName"])
   | O.InlineImage (dict, data) -> J.Array [json_of_object pdf (fun _ -> ()) no_stream_data dict; J.String (Pdfio.string_of_bytes data)]
   | O.Op_DP (s, obj) -> J.Array [J.String s; json_of_object pdf (fun _ -> ()) no_stream_data obj; J.String "DP"]
 
@@ -163,7 +165,7 @@ let json_of_op pdf no_stream_data = function
 * PDF standard. *)
 let parse_content_stream pdf resources bs =
   let ops = Pdfops.parse_stream pdf resources [bs] in
-    J.Array (List.map (json_of_op pdf false) ops)
+    J.Array (map (json_of_op pdf false) ops)
 
 let json_of_pdf parse_content no_stream_data pdf =
   let trailerdict = (0, json_of_object pdf (fun x -> ()) no_stream_data pdf.Pdf.trailerdict) in
@@ -178,12 +180,12 @@ let json_of_pdf parse_content no_stream_data pdf =
       trailerdict::!ps
   in
     if parse_content then
-      List.iter (fun n -> Pdfcodec.decode_pdfstream_until_unknown pdf (Pdf.lookup_obj pdf n)) !content_streams;
+      iter (fun n -> Pdfcodec.decode_pdfstream_until_unknown pdf (Pdf.lookup_obj pdf n)) !content_streams;
     let pairs_parsed =
       if not parse_content then pairs else
-        List.map
+        map
           (fun (objnum, obj) ->
-             if Pdfutil.mem objnum !content_streams then
+             if mem objnum !content_streams then
                begin match obj with
                | J.Array [dict; J.String _] ->
                    (* FIXME Proper resources here for reasons explained above *)
@@ -200,7 +202,7 @@ let json_of_pdf parse_content no_stream_data pdf =
           pairs
     in
       J.Array
-        (List.map
+        (map
           (fun (objnum, jsonobj) -> J.Array [J.Number (soi objnum); jsonobj])
           pairs_parsed)
 
