@@ -194,6 +194,7 @@ type op =
   | OCGList
   | OCGRename
   | OCGOrderAll
+  | StampAsXObject of string
 
 let string_of_op = function
   | CopyFont _ -> "CopyFont"
@@ -321,6 +322,7 @@ let string_of_op = function
   | OCGList -> "OCGList"
   | OCGRename -> "OCGRename"
   | OCGOrderAll -> "OCGOrderAll"
+  | StampAsXObject _ -> "StampAsXObject"
 
 (* Inputs: filename, pagespec. *)
 type input_kind =
@@ -710,7 +712,7 @@ let banned banlist = function
     Draft|Shift|Scale|ScaleToFit|RemoveAttachedFiles|
     RemoveAnnotations|RemoveFonts|Crop|RemoveCrop|Trim|RemoveTrim|Bleed|RemoveBleed|Art|RemoveArt|
     CopyCropBoxToMediaBox|CopyBox|MediaBox|HardBox _|SetTrapped|SetUntrapped|Presentation|
-    BlackText|BlackLines|BlackFills|CopyFont _|CSP2 _|StampOn _|StampUnder _|
+    BlackText|BlackLines|BlackFills|CopyFont _|CSP2 _|StampOn _|StampUnder _|StampAsXObject _|
     AddText _|ScaleContents _|AttachFile _|CopyAnnotations _| ThinLines _ | RemoveClipping | RemoveAllText
     | Prepend _ | Postpend _ ->
       mem Pdfcrypt.NoEdit banlist
@@ -1030,6 +1032,9 @@ let setstampon f =
 let setstampunder f =
   setop (StampUnder f) ();
   if args.position = Cpdf.TopLeft 100. then args.position <- Cpdf.BottomLeft 0.
+
+let setstampasxobject f =
+  setop (StampAsXObject f) ()
 
 let setcombinepages f =
   setop (CombinePages f) ()
@@ -2126,6 +2131,7 @@ and specs =
    ("-ocg-rename-from", Arg.String setocgrenamefrom, "");
    ("-ocg-rename-to", Arg.String setocgrenameto, "");
    ("-ocg-order-all", Arg.Unit (setop OCGOrderAll), "");
+   ("-stamp-as-xobject", Arg.String setstampasxobject, "");
    (* These items are undocumented *)
    ("-remove-unused-resources", Arg.Unit (setop RemoveUnusedResources), "");
    ("-stay-on-error", Arg.Unit setstayonerror, "");
@@ -3588,6 +3594,9 @@ let write_json output pdf =
         CpdfwriteJSON.write f args.jsonparsecontentstreams args.jsonnostreamdata pdf;
         close_out f
 
+let stamp_as_xobject pdf stamp_pdf =
+  (pdf, "/X0")
+
 (* Main function *)
 let go () =
   match args.op with
@@ -4491,6 +4500,19 @@ let go () =
       let pdf = get_single_pdf args.op false in
         Cpdf.ocg_order_all pdf;
         write_pdf false pdf
+  | Some (StampAsXObject stamp) ->
+      let stamp_pdf =
+        match stamp with
+        | "stamp_use_stdin" -> pdf_of_stdin "" ""
+        | x -> pdfread_pdf_of_file None None x
+      in
+        let pdf = get_single_pdf args.op false in
+          let pdf, xobj_name =
+            stamp_as_xobject pdf stamp_pdf
+          in
+            Printf.printf "%s\n" xobj_name;
+            flush stdout;
+            write_pdf false pdf
 
 let parse_argv () =
   if args.debug then
