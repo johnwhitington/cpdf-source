@@ -458,3 +458,5 @@ val ocg_rename : string -> string -> Pdf.t -> unit
 
 val ocg_order_all : Pdf.t -> unit
 
+val stamp_as_xobject : Pdf.t -> Pdf.t -> Pdf.t * string
+

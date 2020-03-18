@@ -2533,6 +2533,48 @@ let stamp relative_to_cropbox position topline midline fast scale_to_fit isover 
                     let new_marks = map (change_bookmark changetable) marks in
                       Pdfmarks.add_bookmarks new_marks changed
 
+let add_page_as_xobject pdf page name =
+  pdf
+
+let stamp_as_xobject pdf over =
+  let prefix = Pdfpage.shortest_unused_prefix pdf in
+  Pdfpage.add_prefix over prefix;
+  let marks = Pdfmarks.read_bookmarks pdf in
+  let marks_refnumbers = Pdf.page_reference_numbers pdf in
+  let pdf = Pdfmarks.remove_bookmarks pdf in
+  let over = Pdfmarks.remove_bookmarks over in
+  let pageseqs = ilist 1 (Pdfpage.endpage pdf) in
+    let over_firstpage_pdf =
+      match Pdfpage.pages_of_pagetree over with
+      | [] -> error "empty PDF"
+      | h::_ -> Pdfpage.change_pages ~changes:[(1, 1)] true over [h]
+    in
+      let merged =
+        Pdfmerge.merge_pdfs
+          false false ["a"; "b"] [pdf; over_firstpage_pdf] [pageseqs; [1]]
+      in
+        let merged =
+          {merged with Pdf.saved_encryption = pdf.Pdf.saved_encryption}
+        in
+          let merged = copy_id true pdf merged in
+            let merged_pages = Pdfpage.pages_of_pagetree merged in
+              let under_pages, over_page =
+                all_but_last merged_pages, last merged_pages
+              in
+                let new_pages = under_pages in
+                  let changed =
+                    let changes =
+                      map (fun x -> (x, x)) (ilist 1 (length new_pages))
+                    in
+                      Pdfpage.change_pages ~changes true merged new_pages
+                  in
+                    let new_refnumbers = Pdf.page_reference_numbers changed in
+                    let changetable = hashtable_of_dictionary (combine marks_refnumbers new_refnumbers) in
+                    let new_marks = map (change_bookmark changetable) marks in
+                    let pdf = Pdfmarks.add_bookmarks new_marks changed in
+                    let name = "/X0" in
+                      (add_page_as_xobject pdf over_page name, name)
+
 (* Combine pages from two PDFs. For now, assume equal length. *)
 
 (* If [over] has more pages than [under], chop the excess. If the converse, pad

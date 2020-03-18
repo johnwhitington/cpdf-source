@@ -3594,9 +3594,6 @@ let write_json output pdf =
         CpdfwriteJSON.write f args.jsonparsecontentstreams args.jsonnostreamdata pdf;
         close_out f
 
-let stamp_as_xobject pdf stamp_pdf =
-  (pdf, "/X0")
-
 (* Main function *)
 let go () =
   match args.op with
@@ -4508,7 +4505,7 @@ let go () =
       in
         let pdf = get_single_pdf args.op false in
           let pdf, xobj_name =
-            stamp_as_xobject pdf stamp_pdf
+            Cpdf.stamp_as_xobject pdf stamp_pdf
           in
             Printf.printf "%s\n" xobj_name;
             flush stdout;
