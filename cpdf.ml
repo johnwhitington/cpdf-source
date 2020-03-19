@@ -2549,6 +2549,8 @@ let add_page_as_xobject pdf range page name =
       let xobject_objnum = Pdf.addobj pdf xobject in
       pdf
 
+(* n.b the use of change_pages here ensures no inheritable resources in the
+ * stamp, therefore creation of xobject from page is as simple as expected. *)
 let stamp_as_xobject pdf range over =
   let prefix = Pdfpage.shortest_unused_prefix pdf in
   Pdfpage.add_prefix over prefix;
