@@ -2533,10 +2533,23 @@ let stamp relative_to_cropbox position topline midline fast scale_to_fit isover 
                     let new_marks = map (change_bookmark changetable) marks in
                       Pdfmarks.add_bookmarks new_marks changed
 
-let add_page_as_xobject pdf page name =
-  pdf
+let add_page_as_xobject pdf range page name =
+  let xobject_data = bytes_of_string "0 0 m 0 100 l 100 100 l 100 0 l f" in
+  let xobject_dict =
+     ["/Type", Pdf.Name "/XObject";
+     "/Subtype", Pdf.Name "/Form";
+     "/BBox", Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real 1000.; Pdf.Real 1000.];
+     "/Resources", Pdf.Dictionary [];
+     "/Length", Pdf.Integer (bytes_size xobject_data);
+    ]
+  in
+    let xobject =
+      Pdf.Stream {contents = (Pdf.Dictionary xobject_dict, Pdf.Got xobject_data)}
+    in
+      let xobject_objnum = Pdf.addobj pdf xobject in
+      pdf
 
-let stamp_as_xobject pdf over =
+let stamp_as_xobject pdf range over =
   let prefix = Pdfpage.shortest_unused_prefix pdf in
   Pdfpage.add_prefix over prefix;
   let marks = Pdfmarks.read_bookmarks pdf in
@@ -2573,7 +2586,7 @@ let stamp_as_xobject pdf over =
                     let new_marks = map (change_bookmark changetable) marks in
                     let pdf = Pdfmarks.add_bookmarks new_marks changed in
                     let name = "/X0" in
-                      (add_page_as_xobject pdf over_page name, name)
+                      (add_page_as_xobject pdf range over_page name, name)
 
 (* Combine pages from two PDFs. For now, assume equal length. *)
 

@@ -4504,8 +4504,9 @@ let go () =
         | x -> pdfread_pdf_of_file None None x
       in
         let pdf = get_single_pdf args.op false in
+        let range = parse_pagespec pdf (get_pagespec ()) in
           let pdf, xobj_name =
-            Cpdf.stamp_as_xobject pdf stamp_pdf
+            Cpdf.stamp_as_xobject pdf range stamp_pdf
           in
             Printf.printf "%s\n" xobj_name;
             flush stdout;
