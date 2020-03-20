@@ -2533,13 +2533,31 @@ let stamp relative_to_cropbox position topline midline fast scale_to_fit isover 
                     let new_marks = map (change_bookmark changetable) marks in
                       Pdfmarks.add_bookmarks new_marks changed
 
+let add_xobject_to_page xobjname xobjnum page pdf =
+  let resources' =
+    let xobjects =
+      match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
+      | Some xobjects -> xobjects
+      | _ -> Pdf.Dictionary []
+    in
+    let new_xobjects =
+      Pdf.add_dict_entry xobjects xobjname (Pdf.Indirect xobjnum)
+    in
+      Pdf.add_dict_entry page.Pdfpage.resources "/XObject" new_xobjects
+  in
+    {page with Pdfpage.resources = resources'}
+
 let add_page_as_xobject pdf range page name =
-  let xobject_data = bytes_of_string "0 0 m 0 100 l 100 100 l 100 0 l f" in
+  let xobject_data =
+    match Pdfops.stream_of_ops (Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content) with
+      Pdf.Stream {contents = (_, Got b)} -> b
+    | _ -> assert false
+  in
   let xobject_dict =
      ["/Type", Pdf.Name "/XObject";
      "/Subtype", Pdf.Name "/Form";
      "/BBox", Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real 1000.; Pdf.Real 1000.];
-     "/Resources", Pdf.Dictionary [];
+     "/Resources", page.Pdfpage.resources;
      "/Length", Pdf.Integer (bytes_size xobject_data);
     ]
   in
@@ -2547,7 +2565,18 @@ let add_page_as_xobject pdf range page name =
       Pdf.Stream {contents = (Pdf.Dictionary xobject_dict, Pdf.Got xobject_data)}
     in
       let xobject_objnum = Pdf.addobj pdf xobject in
-      pdf
+      (* For each page in range, add the xobject to the list of xobjects in the resources of that page *)
+      let pages = Pdfpage.pages_of_pagetree pdf in
+      let new_pages =
+        List.map2
+          (fun page pnum ->
+             if mem pnum range
+               then add_xobject_to_page name xobject_objnum page pdf
+               else page)
+          pages
+          (indx pages)
+      in
+        Pdfpage.change_pages true pdf new_pages
 
 (* n.b the use of change_pages here ensures no inheritable resources in the
  * stamp, therefore creation of xobject from page is as simple as expected. *)
@@ -2587,7 +2616,7 @@ let stamp_as_xobject pdf range over =
                     let changetable = hashtable_of_dictionary (combine marks_refnumbers new_refnumbers) in
                     let new_marks = map (change_bookmark changetable) marks in
                     let pdf = Pdfmarks.add_bookmarks new_marks changed in
-                    let name = "/X0" in
+                    let name = "/" ^ Pdfpage.shortest_unused_prefix pdf ^ "CPDFXObj" in
                       (add_page_as_xobject pdf range over_page name, name)
 
 (* Combine pages from two PDFs. For now, assume equal length. *)
