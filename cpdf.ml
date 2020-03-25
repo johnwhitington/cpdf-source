@@ -2555,17 +2555,15 @@ let add_page_as_xobject pdf range page name =
   in
   let xobject_dict =
      ["/Type", Pdf.Name "/XObject";
-     "/Subtype", Pdf.Name "/Form";
-     "/BBox", Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real 1000.; Pdf.Real 1000.];
-     "/Resources", page.Pdfpage.resources;
-     "/Length", Pdf.Integer (bytes_size xobject_data);
-    ]
+      "/Subtype", Pdf.Name "/Form";
+      "/BBox", page.Pdfpage.mediabox;
+      "/Resources", page.Pdfpage.resources;
+      "/Length", Pdf.Integer (bytes_size xobject_data)]
   in
     let xobject =
       Pdf.Stream {contents = (Pdf.Dictionary xobject_dict, Pdf.Got xobject_data)}
     in
       let xobject_objnum = Pdf.addobj pdf xobject in
-      (* For each page in range, add the xobject to the list of xobjects in the resources of that page *)
       let pages = Pdfpage.pages_of_pagetree pdf in
       let new_pages =
         List.map2

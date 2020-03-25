@@ -25,25 +25,25 @@ let rec json_of_object pdf fcs no_stream_data = function
           | _ -> ())
         elts;
       J.Object (map (fun (k, v) -> (k, json_of_object pdf fcs no_stream_data v)) elts)
-  | P.Stream ({contents = (Pdf.Dictionary dict as d, stream)} as mut) as thestream ->
-      Pdf.getstream thestream;
+  | P.Stream ({contents = (P.Dictionary dict as d, stream)} as mut) as thestream ->
+      P.getstream thestream;
       let str =
-        begin match Pdf.lookup_direct pdf "/FunctionType" d with
+        begin match P.lookup_direct pdf "/FunctionType" d with
         | Some _ ->
             Pdfcodec.decode_pdfstream_until_unknown pdf thestream;
-            begin match !mut with (_, Pdf.Got b) -> Pdfio.string_of_bytes b | _ -> "failure: decomp" end
+            begin match !mut with (_, P.Got b) -> Pdfio.string_of_bytes b | _ -> "failure: decomp" end
         | None ->
             if no_stream_data then "<<stream data elided>>" else
-              match stream with Pdf.Got b -> Pdfio.string_of_bytes b | Pdf.ToGet _ -> "failure: toget"
+              match stream with P.Got b -> Pdfio.string_of_bytes b | P.ToGet _ -> "failure: toget"
        end
       in
         json_of_object pdf fcs no_stream_data (P.Array [P.Dictionary dict; P.String str])
   | P.Stream _ -> J.String "error: stream with not-a-dictioary"
   | P.Indirect i ->
-      begin match Pdf.lookup_obj pdf i with
-      | P.Stream {contents = (Pdf.Dictionary dict as d, _)} ->
-          begin match Pdf.lookup_direct pdf "/Subtype" d with
-          | Some (Pdf.Name "/Form") -> fcs i
+      begin match P.lookup_obj pdf i with
+      | P.Stream {contents = (P.Dictionary dict as d, _)} ->
+          begin match P.lookup_direct pdf "/Subtype" d with
+          | Some (P.Name "/Form") -> fcs i
           | _ -> ()
           end
       | _ -> ()
@@ -164,23 +164,23 @@ let json_of_op pdf no_stream_data = function
  * resources, though? For now, don't worry about inherited resources: check in
 * PDF standard. *)
 let parse_content_stream pdf resources bs =
-  let ops = Pdfops.parse_stream pdf resources [bs] in
+  let ops = O.parse_stream pdf resources [bs] in
     J.Array (map (json_of_op pdf false) ops)
 
 let json_of_pdf parse_content no_stream_data pdf =
-  let trailerdict = (0, json_of_object pdf (fun x -> ()) no_stream_data pdf.Pdf.trailerdict) in
+  let trailerdict = (0, json_of_object pdf (fun x -> ()) no_stream_data pdf.P.trailerdict) in
   let content_streams = ref [] in
   let fcs n = content_streams := n::!content_streams in
   let pairs =
     let ps = ref [] in
-      Pdf.objiter
+      P.objiter
         (fun i pdfobj ->
           ps := (i, json_of_object pdf fcs no_stream_data pdfobj)::!ps)
         pdf;
       trailerdict::!ps
   in
     if parse_content then
-      iter (fun n -> Pdfcodec.decode_pdfstream_until_unknown pdf (Pdf.lookup_obj pdf n)) !content_streams;
+      iter (fun n -> Pdfcodec.decode_pdfstream_until_unknown pdf (P.lookup_obj pdf n)) !content_streams;
     let pairs_parsed =
       if not parse_content then pairs else
         map
@@ -190,11 +190,11 @@ let json_of_pdf parse_content no_stream_data pdf =
                | J.Array [dict; J.String _] ->
                    (* FIXME Proper resources here for reasons explained above *)
                    let streamdata =
-                     match Pdf.lookup_obj pdf objnum with
-                     | Pdf.Stream {contents = (_, Pdf.Got b)} -> b
+                     match P.lookup_obj pdf objnum with
+                     | P.Stream {contents = (_, P.Got b)} -> b
                      | _ -> failwith "JSON: stream not decoded"
                    in
-                     (objnum, J.Array [dict; parse_content_stream pdf (Pdf.Dictionary []) streamdata])
+                     (objnum, J.Array [dict; parse_content_stream pdf (P.Dictionary []) streamdata])
                | _ -> failwith "json_of_pdf: stream parsing inconsistency"
                end
              else
@@ -209,7 +209,7 @@ let json_of_pdf parse_content no_stream_data pdf =
 let write fh parse_content no_stream_data pdf =
   let b = Buffer.create 256 in
   let formatter = Format.formatter_of_buffer b in
-    Tjjson.format formatter (json_of_pdf parse_content no_stream_data pdf);
+    J.format formatter (json_of_pdf parse_content no_stream_data pdf);
     Format.pp_print_flush formatter ();
     output_string fh (Buffer.contents b)
 
