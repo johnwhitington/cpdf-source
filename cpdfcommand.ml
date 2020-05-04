@@ -170,8 +170,8 @@ type op =
   | RemoveUnusedResources
   | ExtractFontFile
   | ExtractText
-  | OpenAtPage of int
-  | OpenAtPageFit of int
+  | OpenAtPage of string
+  | OpenAtPageFit of string
   | AddPageLabels
   | RemovePageLabels
   | PrintPageLabels
@@ -1953,10 +1953,10 @@ and specs =
       Arg.String setpagemode,
       " Set page mode upon document opening");
    ("-open-at-page",
-      Arg.Int setopenatpage,
+      Arg.String setopenatpage,
       " Set initial page");
    ("-open-at-page-fit",
-      Arg.Int setopenatpagefit,
+      Arg.String setopenatpagefit,
       " Set inital page, scaling to fit");
    ("-set-metadata",
       Arg.String setmetadata,
@@ -4007,10 +4007,16 @@ let go () =
      let version = if args.keepversion then pdf.Pdf.minor else version in
           write_pdf false (Cpdf.set_viewer_preference (key, value, version) pdf)
       end
-  | Some (OpenAtPage n) ->
-      write_pdf false (Cpdf.set_open_action (get_single_pdf args.op false) false n)
-  | Some (OpenAtPageFit n) ->
-      write_pdf false (Cpdf.set_open_action (get_single_pdf args.op false) true n)
+  | Some (OpenAtPage str) ->
+      let pdf = get_single_pdf args.op false in
+      let range = parse_pagespec pdf str in
+      let n = match range with [x] -> x | _ -> error "open_at_page: range does not specify single page" in
+        write_pdf false (Cpdf.set_open_action pdf false n)
+  | Some (OpenAtPageFit str) ->
+      let pdf = get_single_pdf args.op false in
+      let range = parse_pagespec pdf str in
+      let n = match range with [x] -> x | _ -> error "open_at_page: range does not specify single page" in
+        write_pdf false (Cpdf.set_open_action pdf true n)
   | Some (SetMetadata metadata_file) ->
       write_pdf false (Cpdf.set_metadata args.keepversion metadata_file (get_single_pdf args.op false))
   | Some (SetVersion v) ->
@@ -4022,9 +4028,9 @@ let go () =
       in
          write_pdf false pdf
   | Some (SetPageLayout s) ->
-           write_pdf false (Cpdf.set_page_layout (get_single_pdf args.op false) s)
+      write_pdf false (Cpdf.set_page_layout (get_single_pdf args.op false) s)
   | Some (SetPageMode s) ->
-           write_pdf false (Cpdf.set_page_mode (get_single_pdf args.op false) s)
+      write_pdf false (Cpdf.set_page_mode (get_single_pdf args.op false) s)
   | Some Split ->
       begin match args.inputs, args.out with
         | [(f, ranges, _, _, _, _)], File output_spec ->
