@@ -425,7 +425,7 @@ val blackfills : float * float * float -> int list -> Pdf.t -> Pdf.t
 val draft : string option -> bool -> int list -> Pdf.t -> Pdf.t
 
 (** Squeeze a PDF *)
-val squeeze : ?logto:string -> Pdf.t -> unit
+val squeeze : ?logto:string -> ?pagedata:bool -> ?recompress:bool -> Pdf.t -> unit
 
 (**/**)
 

@@ -3,7 +3,7 @@ let demo = false
 let noncomp = false
 let major_version = 2
 let minor_version = 4
-let version_date = "(devel, 30th January 2020)"
+let version_date = "(devel, 6th May 2020)"
 
 open Pdfutil
 open Pdfio
@@ -427,6 +427,8 @@ type args =
    mutable labelstartval : int;
    mutable labelsprogress : bool;
    mutable squeeze : bool;
+   mutable squeeze_recompress : bool;
+   mutable squeeze_pagedata: bool;
    mutable original_filename : string;
    mutable was_encrypted : bool;
    mutable cpdflin : string option;
@@ -527,6 +529,8 @@ let args =
    labelstartval = 1;
    labelsprogress = false;
    squeeze = false;
+   squeeze_recompress = true;
+   squeeze_pagedata = true;
    original_filename = "";
    was_encrypted = false;
    cpdflin = None;
@@ -642,7 +646,7 @@ let reset_arguments () =
   (* Do not reset original_filename or cpdflin or was_encrypted or
    * was_decrypted_with_owner or recrypt or producer or creator or
    * path_to_ghostscript or gs_malformed or gs_quiet, since we want these to work across
-   * ANDs. Or squeeze: a little odd, but we want it to happen on eventual output. *)
+   * ANDs. Or squeeze options: a little odd, but we want it to happen on eventual output. *)
 
 let get_pagespec () =
   match args.inputs with
@@ -1490,6 +1494,12 @@ let setocgrenamefrom s =
 let setocgrenameto s =
   args.ocgrenameto <- s
 
+let setsqueezepagedata () =
+  args.squeeze_pagedata <- false
+
+let setsqueezerecompress () =
+  args.squeeze_recompress <- false
+
 let whingemalformed () =
   prerr_string "Command line must be of exactly the form\ncpdf <infile> -gs <path> -gs-malformed-force -o <outfile>\n";
   exit 1
@@ -2119,6 +2129,8 @@ and specs =
    ("-gs-quiet", Arg.Unit setgsquiet, " Make gs go into quiet mode");
    ("-squeeze", Arg.Unit setsqueeze, " Squeeze");
    ("-squeeze-log-to", Arg.String setsqueezelogto, " Squeeze log location");
+   ("-squeeze-no-pagedata", Arg.Unit setsqueezepagedata, " Don't recompress pages");
+   ("-squeeze-no-recompress", Arg.Unit setsqueezerecompress, " Don't recompress streams");
    (* Just for error reporting *)
    ("-gs-malformed-force", Arg.Unit whingemalformed, "");
    (* These items are not documented yet, but will be soon *)
@@ -2513,7 +2525,7 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
               if not is_decompress then
                 begin
                   ignore (Cpdf.recompress_pdf pdf);
-                  if args.squeeze then Cpdf.squeeze ?logto:!logto pdf;
+                  if args.squeeze then Cpdf.squeeze ~pagedata:args.squeeze_pagedata ~recompress:args.squeeze_recompress ?logto:!logto pdf;
                 end;
               Pdf.remove_unreferenced pdf;
               really_write_pdf ~is_decompress mk_id pdf outname
@@ -2529,7 +2541,7 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
                 if not is_decompress then
                   begin
                     ignore (Cpdf.recompress_pdf pdf);
-                    if args.squeeze then Cpdf.squeeze ?logto:!logto pdf;
+                    if args.squeeze then Cpdf.squeeze ~pagedata:args.squeeze_pagedata ~recompress:args.squeeze_recompress ?logto:!logto pdf;
                     Pdf.remove_unreferenced pdf
                   end;
                   really_write_pdf ~encryption ~is_decompress mk_id pdf temp;
@@ -2651,7 +2663,7 @@ let fast_write_split_pdfs
                  (stem original_filename) startpage endpage
              in
                Pdf.remove_unreferenced pdf;
-               if sq then Cpdf.squeeze ?logto:!logto pdf;
+               if sq then Cpdf.squeeze ~pagedata:args.squeeze_pagedata ~recompress:args.squeeze_recompress ?logto:!logto pdf;
                really_write_pdf ~encryption:enc (not (enc = None)) pdf name)
       (indx pagenums)
       pagenums

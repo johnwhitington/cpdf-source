@@ -289,7 +289,7 @@ let squeeze_all_content_streams pdf =
         pdf
 
 (* We run squeeze enough times for the number of objects to not change *)
-let squeeze ?logto pdf =
+let squeeze ?logto ?(pagedata=true) ?(recompress=true) pdf =
   let log x =
     match logto with
       None -> print_string x; flush stdout
@@ -307,11 +307,17 @@ let squeeze ?logto pdf =
         n := Pdf.objcard pdf;
         log (Printf.sprintf "Squeezing... Down to %i objects\n" (Pdf.objcard pdf));
       done;
-      log (Printf.sprintf "Squeezing page data and xobjects\n");
-      squeeze_all_content_streams pdf;
-      log (Printf.sprintf "Recompressing document\n");
-      Pdfcodec.flate_level := 9;
-      ignore (recompress_pdf pdf)
+      if pagedata then
+        begin
+          log (Printf.sprintf "Squeezing page data and xobjects\n");
+          squeeze_all_content_streams pdf;
+        end;
+      if recompress then
+        begin
+          log (Printf.sprintf "Recompressing document\n");
+          Pdfcodec.flate_level := 9;
+          ignore (recompress_pdf pdf)
+        end
     with
       e ->
         raise
