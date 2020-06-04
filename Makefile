@@ -3,7 +3,7 @@ MODS = tjutil tjutf16 tjllist tjparserMonad tjjson \
        xmlm \
        cpdfwriteJSON cpdfstrftime cpdfcoord cpdf cpdfcommand
 
-SOURCES = gettimeofday.c $(foreach x,$(MODS),$(x).ml $(x).mli) cpdfcommandrun.ml
+SOURCES = $(foreach x,$(MODS),$(x).ml $(x).mli) cpdfcommandrun.ml
 
 RESULT = cpdf
 ANNOTATE = true
