@@ -6,6 +6,7 @@ o Vendored in tiny_json from Yoshihiro Imai via Jan Furuse
 o New -labels-progress option to improve page labels interface
 o New options -output-json et al. to export PDF files in JSON format
 o New option -stamp-as-xobject to add one PDF as an xobject in another
+o No longer depends on Bigarray or Unix modules
 
 Version 2.3 (patchlevel 1, December 2019)
 
