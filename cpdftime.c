@@ -13,6 +13,10 @@
 /*                                                                        */
 /**************************************************************************/
 
+/* This is not presently used. We need to bring in the win32unix implementation
+ * too and have the correct one chosen. Also need to copy across the OCaml
+ * interface to these functions */
+
 #include <caml/mlvalues.h>
 #include <caml/alloc.h>
 #include <caml/fail.h>
