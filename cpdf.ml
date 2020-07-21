@@ -2287,6 +2287,10 @@ let change_pattern_matrices_page pdf tr page =
         page
     | _ -> page
 
+(* test *)
+let transform_xobject_in_place pdf transform i =
+  Printf.printf "transforming xobject %i as part of annotation\n" i
+
 (* Apply transformations to any annotations in /Annots (i.e their /Rect entries) *)
 let transform_annotations pdf transform rest =
   (*Printf.printf "in transform_annotations\n";*)
@@ -2313,8 +2317,37 @@ let transform_annotations pdf transform rest =
                            Pdf.Array [Pdf.Real minx; Pdf.Real miny; Pdf.Real maxx; Pdf.Real maxy]
                  | None -> raise (Pdf.PDFError "transform_annotations: no rect")
                in
-                 let annot' = Pdf.add_dict_entry annot "/Rect" rect' in 
-                 Pdf.addobj_given_num pdf (i, annot')
+                 let ap' =
+                   match Pdf.lookup_direct pdf "/AP" annot with
+                     None -> None
+                   | Some dict -> Some dict
+                 in
+                 let annot = Pdf.add_dict_entry annot "/Rect" rect' in 
+                   begin match ap' with
+                     None -> ()
+                   | Some (Pdf.Dictionary dict) ->
+                       (* Each entry in the dictionary is either
+                        * a) an indirect reference to a stream Form XObject
+                        * b) a direct or indirect dictionary with some entries,
+                        *    each of which is an indirect reference to a stream. *)
+                       (* We do this in place. *)
+                       List.iter
+                         (fun (k, v) ->
+                           match v with
+                             Pdf.Indirect i -> transform_xobject_in_place pdf transform i
+                           | _ -> let dict = Pdf.lookup_direct pdf k (Pdf.Dictionary dict) in
+                                    match dict with Some (Pdf.Dictionary dict) ->
+                                    List.iter
+                                      (fun (_, v) ->
+                                         match v with
+                                           Pdf.Indirect i -> transform_xobject_in_place pdf transform i
+                                         | _ -> Printf.eprintf "Malformed /AP structure b"; ())
+                                      dict
+                                    | _ -> Printf.eprintf "Malformed /AP structure c"; ())
+                         dict
+                   | _ -> Printf.eprintf "Malformed /AP structure\n"; ()
+                   end;
+                 Pdf.addobj_given_num pdf (i, annot)
          | _ -> Printf.eprintf "transform_annotations: not indirect")
         annots
    | _ -> ()

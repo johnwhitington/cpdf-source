@@ -3,12 +3,13 @@ MODS = tjutil tjutf16 tjllist tjparserMonad tjjson \
        xmlm \
        cpdfwriteJSON cpdfstrftime cpdfcoord cpdf cpdfcommand
 
-SOURCES = cpdftime.c $(foreach x,$(MODS),$(x).ml $(x).mli) cpdfcommandrun.ml
+SOURCES = $(foreach x,$(MODS),$(x).ml $(x).mli) cpdfcommandrun.ml
 
 RESULT = cpdf
 ANNOTATE = true
-PACKS = camlpdf
+PACKS = unix camlpdf
 
+CFLAGS = -fPIC
 OCAMLFLAGS = -bin-annot
 OCAMLNCFLAGS = -g -safe-string -w -3
 OCAMLBCFLAGS = -g -safe-string -w -3

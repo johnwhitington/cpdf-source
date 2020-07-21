@@ -20,7 +20,11 @@ let rec json_of_object pdf fcs no_stream_data = function
   | P.Dictionary elts ->
       iter
         (function
-            ("/Contents", P.Indirect i) -> fcs i
+            ("/Contents", P.Indirect i) ->
+               begin match Pdf.lookup_obj pdf i with
+               | Pdf.Array is -> iter (function Pdf.Indirect i -> fcs i | _ -> ()) is
+               | _ -> fcs i
+               end
           | ("/Contents", P.Array elts) -> iter (function P.Indirect i -> fcs i | _ -> ()) elts
           | _ -> ())
         elts;
