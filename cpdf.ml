@@ -2287,13 +2287,33 @@ let change_pattern_matrices_page pdf tr page =
         page
     | _ -> page
 
-(* test *)
+let transform_rect transform rect =
+  let minx, miny, maxx, maxy = Pdf.parse_rectangle rect in
+    let (x0, y0) = Pdftransform.transform_matrix transform (minx, miny) in
+    let (x1, y1) = Pdftransform.transform_matrix transform (maxx, maxy) in
+    let (x2, y2) = Pdftransform.transform_matrix transform (minx, maxy) in
+    let (x3, y3) = Pdftransform.transform_matrix transform (maxx, miny) in
+      let minx = fmin (fmin x0 x1) (fmin x2 x3) in
+      let miny = fmin (fmin y0 y1) (fmin y2 y3) in
+      let maxx = fmax (fmax x0 x1) (fmax x2 x3) in
+      let maxy = fmax (fmax y0 y1) (fmax y2 y3) in
+        Pdf.Array [Pdf.Real minx; Pdf.Real miny; Pdf.Real maxx; Pdf.Real maxy]
+
+(* This is used to transform the BBox inside a form xobject representing an
+ * annotation appearance.*)
 let transform_xobject_in_place pdf transform i =
-  Printf.printf "transforming xobject %i as part of annotation\n" i
+  Printf.printf "transforming xobject %i as part of annotation\n" i;
+  let obj = Pdf.lookup_obj pdf i in
+    match Pdf.lookup_direct pdf "/BBox" obj with
+    | Some bbox ->
+        Printf.printf "Found bbox %s\n" (Pdfwrite.string_of_pdf bbox);
+        let obj = Pdf.add_dict_entry obj "/BBox" (transform_rect transform bbox) in
+          Pdf.addobj_given_num pdf (i, obj)
+    | None -> ()
 
 (* Apply transformations to any annotations in /Annots (i.e their /Rect entries) *)
 let transform_annotations pdf transform rest =
-  (*Printf.printf "in transform_annotations\n";*)
+  Printf.printf "in transform_annotations with transform %s\n" (Pdftransform.string_of_matrix transform);
   match Pdf.lookup_direct pdf "/Annots" rest with
   | Some (Pdf.Array annots) ->
       (* Always indirect references, so alter in place *)
@@ -2304,17 +2324,7 @@ let transform_annotations pdf transform rest =
              let annot = Pdf.lookup_obj pdf i in
                let rect' =
                  match Pdf.lookup_direct pdf "/Rect" annot with
-                   Some rect ->
-                     let minx, miny, maxx, maxy = Pdf.parse_rectangle rect in
-                       let (x0, y0) = Pdftransform.transform_matrix transform (minx, miny) in
-                       let (x1, y1) = Pdftransform.transform_matrix transform (maxx, maxy) in
-                       let (x2, y2) = Pdftransform.transform_matrix transform (minx, maxy) in
-                       let (x3, y3) = Pdftransform.transform_matrix transform (maxx, miny) in
-                         let minx = fmin (fmin x0 x1) (fmin x2 x3) in
-                         let miny = fmin (fmin y0 y1) (fmin y2 y3) in
-                         let maxx = fmax (fmax x0 x1) (fmax x2 x3) in
-                         let maxy = fmax (fmax y0 y1) (fmax y2 y3) in
-                           Pdf.Array [Pdf.Real minx; Pdf.Real miny; Pdf.Real maxx; Pdf.Real maxy]
+                   Some rect -> transform_rect transform rect
                  | None -> raise (Pdf.PDFError "transform_annotations: no rect")
                in
                  let ap' =
@@ -2331,16 +2341,30 @@ let transform_annotations pdf transform rest =
                         * b) a direct or indirect dictionary with some entries,
                         *    each of which is an indirect reference to a stream. *)
                        (* We do this in place. *)
+                       (* Make sure we never do an object more than once -- is this possible in a valid PDF anyway? *)
+                       let seen_nums = Hashtbl.create 128 in
                        List.iter
                          (fun (k, v) ->
                            match v with
-                             Pdf.Indirect i -> transform_xobject_in_place pdf transform i
+                             Pdf.Indirect i ->
+                               if Hashtbl.find_opt seen_nums i = None then
+                                 begin
+                                   Printf.printf "%i not in hash table\n" i;
+                                   Hashtbl.add seen_nums i ();
+                                   transform_xobject_in_place pdf transform i
+                                 end
                            | _ -> let dict = Pdf.lookup_direct pdf k (Pdf.Dictionary dict) in
                                     match dict with Some (Pdf.Dictionary dict) ->
                                     List.iter
                                       (fun (_, v) ->
                                          match v with
-                                           Pdf.Indirect i -> transform_xobject_in_place pdf transform i
+                                           Pdf.Indirect i ->
+                                             if Hashtbl.find_opt seen_nums i = None then
+                                               begin
+                                                 Printf.printf "%i not in hash table\n" i;
+                                                 Hashtbl.add seen_nums i ();
+                                                 transform_xobject_in_place pdf transform i
+                                               end
                                          | _ -> Printf.eprintf "Malformed /AP structure b"; ())
                                       dict
                                     | _ -> Printf.eprintf "Malformed /AP structure c"; ())
