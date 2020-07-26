@@ -4530,10 +4530,17 @@ let go () =
             flush stdout;
             write_pdf false pdf
 
-let parse_argv () =
+(* Advise the user if a combination of command line flags makes little sense,
+or error out if it make no sense at all. *)
+let check_command_line () =
+  if args.gs_malformed && !Pdfread.error_on_malformed then
+    error "Setting both -gs-malformed and -error-on-malformed makes no sense"
+
+let parse_argv () s specs anon_fun usage_msg =
   if args.debug then
     Array.iter (Printf.eprintf "arg: %s\n") Sys.argv;
-  Arg.parse_argv ~current:(ref 0)
+  Arg.parse_argv ~current:(ref 0) s specs anon_fun usage_msg;
+  check_command_line ()
 
 let align_specs s =
   Arg.align s
