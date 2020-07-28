@@ -2301,7 +2301,7 @@ let transform_rect transform rect =
 
 (* This is used to transform the BBox inside a form xobject representing an
  * annotation appearance.*)
-let transform_xobject_in_place pdf transform i =
+(*let transform_xobject_in_place pdf transform i =
   Printf.printf "transforming xobject %i as part of annotation\n" i;
   let obj = Pdf.lookup_obj pdf i in
     match Pdf.lookup_direct pdf "/BBox" obj with
@@ -2309,7 +2309,7 @@ let transform_xobject_in_place pdf transform i =
         Printf.printf "Found bbox %s\n" (Pdfwrite.string_of_pdf bbox);
         let obj = Pdf.add_dict_entry obj "/BBox" (transform_rect transform bbox) in
           Pdf.addobj_given_num pdf (i, obj)
-    | None -> ()
+    | None -> ()*)
 
 (* Apply transformations to any annotations in /Annots (i.e their /Rect entries) *)
 let transform_annotations pdf transform rest =
@@ -2327,13 +2327,13 @@ let transform_annotations pdf transform rest =
                    Some rect -> transform_rect transform rect
                  | None -> raise (Pdf.PDFError "transform_annotations: no rect")
                in
-                 let ap' =
+                 (*let ap' =
                    match Pdf.lookup_direct pdf "/AP" annot with
                      None -> None
                    | Some dict -> Some dict
-                 in
+                 in*)
                  let annot = Pdf.add_dict_entry annot "/Rect" rect' in 
-                   begin match ap' with
+                   (*begin match ap' with
                      None -> ()
                    | Some (Pdf.Dictionary dict) ->
                        (* Each entry in the dictionary is either
@@ -2370,7 +2370,7 @@ let transform_annotations pdf transform rest =
                                     | _ -> Printf.eprintf "Malformed /AP structure c"; ())
                          dict
                    | _ -> Printf.eprintf "Malformed /AP structure\n"; ()
-                   end;
+                   end;*)
                  Pdf.addobj_given_num pdf (i, annot)
          | _ -> Printf.eprintf "transform_annotations: not indirect")
         annots
