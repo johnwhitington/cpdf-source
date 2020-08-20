@@ -2313,7 +2313,7 @@ let transform_rect transform rect =
 
 (* Apply transformations to any annotations in /Annots (i.e their /Rect entries) *)
 let transform_annotations pdf transform rest =
-  Printf.printf "in transform_annotations with transform %s\n" (Pdftransform.string_of_matrix transform);
+  (*Printf.printf "in transform_annotations with transform %s\n" (Pdftransform.string_of_matrix transform);*)
   match Pdf.lookup_direct pdf "/Annots" rest with
   | Some (Pdf.Array annots) ->
       (* Always indirect references, so alter in place *)
