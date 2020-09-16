@@ -1210,10 +1210,10 @@ let setsqueeze () =
   args.squeeze <- true;
   args.create_objstm <- true
 
-let setcreator s =
+let setcreatoraswego s =
   args.creator <- Some s
 
-let setproducer s =
+let setproduceraswego s =
   args.producer <- Some s
 
 let setprepend s =
@@ -2101,10 +2101,10 @@ and specs =
     Arg.String setremovedictentry,
     " Remove an entry from all dictionaries");
    ("-producer",
-    Arg.String setproducer,
+    Arg.String setproduceraswego,
     " Change the /Producer entry in the /Info dictionary");
    ("-creator",
-    Arg.String setcreator,
+    Arg.String setcreatoraswego,
     " Change the /Creator entry in the /Info dictionary");
    ("-list-spot-colors",
     Arg.Unit (setop ListSpotColours),
