@@ -334,7 +334,7 @@ supported:
 \end{tabular}
 \end{table}
 
-\noindent For example, we may write \texttt{PMINX PMINY} to stand for the coordinate of the lower left corner of the page.
+\noindent For example, we may write \texttt{PMINX} \texttt{PMINY} to stand for the coordinate of the lower left corner of the page.
 
 Simple arithmetic may be performed using the words \texttt{add}, \texttt{sub}, \texttt{mul} and \texttt{div} to stand for addition, subtraction, multiplication and division. For example, one may write \texttt{14in\hspace{-1mm} sub\hspace{-1mm} 30pt} or \texttt{PMINX\hspace{-1mm} mul\hspace{-1mm} 2}
 
@@ -2073,7 +2073,7 @@ document when first opened. The possible (case-sensitive) values are:
     \small\verb!cpdf -open-at-page-fit end in.pdf -o out.pdf!
   \end{framed}
 
-\noindent (Here, we used \texttt{end} to open at the last page. And page specification describing a single page is ok here.)
+\noindent (Here, we used \texttt{end} to open at the last page. Any page specification describing a single page is ok here.)
 
 \section{Page Labels}
 \index{page!labels}
