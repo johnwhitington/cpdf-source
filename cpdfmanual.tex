@@ -1,7 +1,3 @@
-%Document \n in bookmark files
-%Document -labels-progress
-%Document -open-at-page-{fit} now take pagespec not just number
-%Document -squeeze-no-recompress -squeeze-no-pagedata
 \documentclass{book}
 \usepackage{palatino}
 \usepackage{microtype}
@@ -1099,7 +1095,8 @@ metadata. Add \texttt{-no-encrypt-metadata} to the command line.
      \noindent\verb!cpdf -compress in.pdf -o out.pdf!
      
      \vspace{1.5mm}
-     \noindent\verb!cpdf -squeeze in.pdf [-squeeze-log-to <filename>] -o out.pdf!  
+     \noindent\verb!cpdf -squeeze in.pdf [-squeeze-log-to <filename>]!\\
+     \noindent\verb!     [-squeeze-no-recompress] [-squeeze-no-page-data] -o out.pdf!   
    \end{framed}
   \cpdf\ provides basic facilities for decompressing and compressing PDF streams, and for reprocessing the whole file to `squeeze' it.
   \section{Decompressing a Document}
@@ -1142,6 +1139,9 @@ Final file size is 187200 bytes,  78.60% of original.
 \end{verbatim}
 
 \noindent The \texttt{-squeeze-log-to <filename>} option writes the log to the given file instead of to standard output. Log contents is appended to the end of the log file, preserving existing contents.
+
+There are two options which turn off parts of the squeezer. They are \texttt{-squeeze-no-recompress} for avoiding the reprocessing of malformed compressed sections, and \texttt{-squeeze-no-page-data} for avoiding the reprocessing of malformed page data.
+
 
 \chapter{Bookmarks}
   \begin{framed}
@@ -1191,7 +1191,7 @@ the file is loaded. Then the destination (see below). For example, upon executin
 By default, \cpdf\ converts unicode to ASCII text, dropping characters outside
 the ASCII range. To prevent this, and return unicode UTF8 output, add the
 \texttt{-utf8} option to the command. To prevent any processing, use the
-\texttt{-raw} option. See Section \ref{textencodings} for more information.
+\texttt{-raw} option. See Section \ref{textencodings} for more information. A newline in a bookmark is represented as \texttt{"\textbackslash n"}.
 
 \subsection{Destinations}
 
@@ -2070,9 +2070,10 @@ document when first opened. The possible (case-sensitive) values are:
 
 \noindent To have that page scaled to fit the window in the viewer, use \texttt{-open-at-page-fit} instead:
   \begin{framed}
-    \small\verb!cpdf -open-at-page-fit 15 in.pdf -o out.pdf!
+    \small\verb!cpdf -open-at-page-fit end in.pdf -o out.pdf!
   \end{framed}
 
+\noindent (Here, we used \texttt{end} to open at the last page. And page specification describing a single page is ok here.)
 
 \section{Page Labels}
 \index{page!labels}
