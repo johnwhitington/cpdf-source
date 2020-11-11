@@ -3,7 +3,7 @@ let demo = false
 let noncomp = false
 let major_version = 2
 let minor_version = 4
-let version_date = "(devel, 9th October 2020)"
+let version_date = "(devel, 11th November 2020)"
 
 open Pdfutil
 open Pdfio
@@ -420,8 +420,6 @@ type args =
    mutable mediabox_if_missing : bool;
    mutable topage : string option;
    mutable scale_stamp_to_fit : bool;
-   mutable keep_this_id : string option;
-   mutable makenewid : bool;
    mutable labelstyle : Pdfpagelabels.labelstyle;
    mutable labelprefix : string option;
    mutable labelstartval : int;
@@ -522,8 +520,6 @@ let args =
    mediabox_if_missing = false;
    topage = None;
    scale_stamp_to_fit = false;
-   keep_this_id = None;
-   makenewid = false;
    labelstyle = Pdfpagelabels.DecimalArabic;
    labelprefix = None;
    labelstartval = 1;
@@ -623,8 +619,6 @@ let reset_arguments () =
   args.mediabox_if_missing <- false;
   args.topage <- None;
   args.scale_stamp_to_fit <- false;
-  args.keep_this_id <- None;
-  args.makenewid <- false;
   args.labelstyle <- Pdfpagelabels.DecimalArabic;
   args.labelprefix <- None;
   args.labelstartval <- 1;
@@ -1353,14 +1347,6 @@ let settopage s =
 
 let setscalestamptofit () =
   args.scale_stamp_to_fit <- true
-
-let setkeepthisid () =
-  match args.inputs with
-  | (InFile s, _, _, _, _, _)::_ -> args.keep_this_id <- Some s
-  | _ -> ()
-
-let setmakenewid () =
-  args.makenewid <- true
 
 let setjustifyleft () =
   args.justification <- Cpdf.LeftJustify
@@ -2514,7 +2500,6 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
   if args.debugcrypt then Printf.printf "write_pdf\n";
   if args.create_objstm && not args.keepversion
     then pdf.Pdf.minor <- max pdf.Pdf.minor 5;
-  let mk_id = args.makenewid || mk_id in
     match args.out with
     | NoOutputSpecified ->
         output_pdfs =| pdf
@@ -3616,20 +3601,6 @@ let go () =
       begin match args.out, args.inputs with
       | _, (_::_ as inputs) ->
           let op = match inputs with [_] -> None | _ -> Some Merge in
-          let write_pdf x pdf =
-            match args.keep_this_id with
-            | None -> write_pdf x pdf
-            | Some s ->
-                (* get the ID from the file with name 's', and copy to pdf *)
-                let namewiths =
-                  keep (function (InFile s', _, _, _, _, _) when s' = s -> true | _ -> false) inputs
-                in
-                  match namewiths with
-                  | (namewiths, _, _, _, _, _) as input::t ->
-                      let spdf = get_pdf_from_input_kind input op namewiths in
-                        write_pdf x (Cpdf.copy_id true spdf pdf)
-                  | _ -> write_pdf x pdf
-          in
             let names, ranges, rotations, _, _, _ = split6 inputs in
               let pdfs = map2 (fun i -> get_pdf_from_input_kind i op) inputs names in
                 (* If at least one file had object streams and args.preserve_objstm is true, set -objstm-create *)
@@ -3877,7 +3848,7 @@ let go () =
              try Pdfcodec.decode_pdfstream_until_unknown pdf stream with
                e -> Printf.eprintf "Decode failure: %s. Carrying on...\n" (Printexc.to_string e); ())
           pdf;
-        write_pdf ~is_decompress:true args.makenewid pdf
+        write_pdf ~is_decompress:true false pdf
   | Some Compress ->
       let pdf = get_single_pdf (Some Compress) false in
         if args.remove_duplicate_streams then
@@ -4376,7 +4347,7 @@ let go () =
                 let newversion = if args.create_objstm then 5 else newversion in
                   pdf.Pdf.minor <- max pdf.Pdf.minor newversion
             end;
-            write_pdf ~encryption:(Some encryption) args.makenewid pdf
+            write_pdf ~encryption:(Some encryption) false pdf
   | Some Decrypt ->
       args.recrypt <- false;
       write_pdf false (get_single_pdf args.op false)
