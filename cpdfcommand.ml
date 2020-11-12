@@ -3504,81 +3504,6 @@ let remove_all_text range pdf =
         pagenums;
       Pdfpage.change_pages true !pdf (rev !pages')
 
-(* Add rectangles on top of pages to show Media, Crop, Art, Trim, Bleed boxes.
- *
- * We use different dash lengths and colours to help distinguish coincident
- * boxes The sequence of operators is postpended to the page content,
- * appropriately protected to prevent pollution of matrices.
- *
- * /MediaBox: Solid red line
- * /CropBox: Dashed 7 on 7 off green line
- * /ArtBox: Dashed 5 on 5 off blue line
- * /TrimBox: Dashed 3 on 3 off orange line
- * /BleedBox: Dashed 2 on 2 off pink line *)
-let get_rectangle pdf page box =
-  if box = "/MediaBox" then
-    match page.Pdfpage.mediabox with
-      Pdf.Array [a; b; c; d] as r -> Some (Pdf.parse_rectangle r)
-    | _ -> None
-  else
-    match Pdf.lookup_direct pdf box page.Pdfpage.rest with
-      Some (Pdf.Array [a; b; c; d] as r) -> Some (Pdf.parse_rectangle r)
-    | _ -> None
-
-let show_boxes_page pdf _ page =
-  let make_ops (r, g, b) on off boxname =
-    match get_rectangle pdf page boxname with
-      Some (r1, r2, r3, r4) ->
-        [Pdfops.Op_q;
-         Pdfops.Op_RG (r /. 255., g /. 255., b /. 255.);
-         Pdfops.Op_w 1.;
-         Pdfops.Op_d ((if on = 0. && off = 0. then [] else [on; off]), 0.);
-         Pdfops.Op_re (r1, r2, r3 -. r1, r4 -. r2);
-         Pdfops.Op_S;
-         Pdfops.Op_Q]
-    | None -> []
-  in
-    let ops =
-        make_ops (255., 0., 0.) 0. 0. "/MediaBox"
-      @ make_ops (0., 255., 0.) 7. 7. "/CropBox"
-      @ make_ops (0., 0., 255.) 5. 5. "/ArtBox"
-      @ make_ops (255.,150.,0.) 3. 3. "/TrimBox"
-      @ make_ops (255.,9.,147.) 2. 2. "/BleedBox"
-    in
-      Pdfpage.postpend_operators pdf ops ~fast:args.fast page
-
-let show_boxes range pdf =
-  Cpdf.process_pages (show_boxes_page pdf) pdf range
-
-let allowance = 9.
-
-let line (x0, y0, x1, y1) =
-  [Pdfops.Op_m (x0, y0);
-   Pdfops.Op_l (x1, y1);
-   Pdfops.Op_s]
-
-let trim_marks_page pdf n page =
-  match get_rectangle pdf page "/TrimBox", get_rectangle pdf page "/MediaBox" with
-  | Some (tminx, tminy, tmaxx, tmaxy), Some (minx, miny, maxx, maxy) ->
-      let ops =
-        [Pdfops.Op_q;
-         Pdfops.Op_K (1., 1., 1., 1.);
-         Pdfops.Op_w 1.]
-         @ line (minx, tmaxy, tminy -. allowance, tmaxy) (* top left *)
-         @ line (tminx, tmaxy +. allowance, tminx, maxy)
-         @ line (tmaxx +. allowance, tmaxy, maxx, tmaxy) (* top right *)
-         @ line (tmaxx, tmaxy +. allowance, tmaxx, maxy)
-         @ line (tmaxx +. allowance, tminy, maxx, tminy) (* bottom right *)
-         @ line (tmaxx, tminy -. allowance, tmaxx, miny)
-         @ line (tminx -. allowance, tminy, minx, tminy) (* bottom left *)
-         @ line (tminx, tminy -. allowance, tminx, miny)
-         @ [Pdfops.Op_Q]
-      in
-        Pdfpage.postpend_operators pdf ops ~fast:args.fast page
-  | _, _ -> Printf.eprintf "warning: no /TrimBox found on page %i\n" n; page
-
-let trim_marks range pdf =
-  Cpdf.process_pages (trim_marks_page pdf) pdf range
 
 let write_json output pdf =
   match output with
@@ -4458,11 +4383,11 @@ let go () =
   | Some ShowBoxes ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
-        write_pdf false (show_boxes range pdf)
+        write_pdf false (Cpdf.show_boxes pdf range)
   | Some TrimMarks ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
-        write_pdf false (trim_marks range pdf)
+        write_pdf false (Cpdf.trim_marks pdf range)
   | Some (Postpend s | Prepend s as x) ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in

@@ -354,6 +354,10 @@ val scale_to_fit_pdf : ?fast:bool -> position -> float -> (float * float) list -
 (** Scale the contents of a page by a given factor centred around a given point in a given range. *)
 val scale_contents : ?fast:bool -> position -> float -> Pdf.t -> int list -> Pdf.t
 
+val trim_marks : ?fast:bool -> Pdf.t -> int list -> Pdf.t
+
+val show_boxes : ?fast:bool -> Pdf.t -> int list -> Pdf.t
+
 (** {2 Padding} *)
 
 (** Put blank pages before the given page numbers *)
