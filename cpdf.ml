@@ -4567,3 +4567,67 @@ let trim_marks_page fast pdf n page =
 
 let trim_marks ?(fast=false) pdf range =
   process_pages (trim_marks_page fast pdf) pdf range
+
+let rec remove_all_text_ops pdf resources content =
+  let is_textop = function
+    Pdfops.Op_Tj _ | Pdfops.Op_' _ | Pdfops.Op_'' _ | Pdfops.Op_TJ _ -> true
+  | _ -> false
+  in
+    let content' =
+      let ops = Pdfops.parse_operators pdf resources content in
+        Pdfops.stream_of_ops
+          (option_map (function x -> if is_textop x then None else Some x) ops) 
+    in
+      [content']
+
+let remove_all_text_page pdf p =
+  let resources = p.Pdfpage.resources in
+  let content = p.Pdfpage.content in
+    process_xobjects pdf p remove_all_text_ops;
+    {p with Pdfpage.content = remove_all_text_ops pdf resources content}, pdf
+
+let remove_all_text range pdf =
+  let pages = Pdfpage.pages_of_pagetree pdf in
+    let pagenums = indx pages in
+    let pdf = ref pdf in
+    let pages' = ref [] in
+      iter2 
+        (fun p pagenum ->
+          let p', pdf' =
+            if mem pagenum range
+              then remove_all_text_page !pdf p
+              else p, !pdf
+          in
+            pdf := pdf';
+            pages' =| p')
+        pages
+        pagenums;
+      Pdfpage.change_pages true !pdf (rev !pages')
+
+let remove_dict_entry pdf key =
+  Pdf.objselfmap
+    (function
+       (Pdf.Dictionary _ as d) | (Pdf.Stream _ as d) ->
+         Pdf.remove_dict_entry d key
+     | x -> x)
+    pdf;
+  pdf.Pdf.trailerdict <- Pdf.remove_dict_entry pdf.Pdf.trailerdict key
+
+let remove_clipping_ops pdf resources content =
+  let ops = Pdfops.parse_operators pdf resources content in
+    let rec process a = function
+      Pdfops.Op_W::Pdfops.Op_n::t -> process (Pdfops.Op_n::a) t
+    | h::t -> process (h::a) t
+    | [] -> rev a
+    in
+      [Pdfops.stream_of_ops (process [] ops)] 
+
+let remove_clipping pdf range =
+  let remove_clipping_page _ page =
+    let content' =
+      remove_clipping_ops pdf page.Pdfpage.resources page.Pdfpage.content
+    in
+      process_xobjects pdf page remove_clipping_ops;
+      {page with Pdfpage.content = content'}
+  in
+    process_pages remove_clipping_page pdf range

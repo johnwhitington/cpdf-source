@@ -3406,26 +3406,6 @@ let list_spot_colours pdf =
        | _ -> ())
     pdf
 
-let remove_clipping_ops pdf resources content =
-  let ops = Pdfops.parse_operators pdf resources content in
-    let rec process a = function
-      Pdfops.Op_W::Pdfops.Op_n::t -> process (Pdfops.Op_n::a) t
-    | h::t -> process (h::a) t
-    | [] -> rev a
-    in
-      [Pdfops.stream_of_ops (process [] ops)] 
-
-let remove_clipping pdf range =
-  let remove_clipping_page _ page =
-    let content' =
-      remove_clipping_ops pdf page.Pdfpage.resources page.Pdfpage.content
-    in
-      Cpdf.process_xobjects pdf page remove_clipping_ops;
-      {page with Pdfpage.content = content'}
-  in
-    Cpdf.process_pages remove_clipping_page pdf range
-
-
 (* Indent bookmarks in each file by one and add a title bookmark pointing to the first page. *)
 let add_bookmark_title filename use_title pdf =
   let title =
@@ -3467,43 +3447,6 @@ let create_pdf pages pagesize =
   in
     let pdf, pageroot = Pdfpage.add_pagetree (many page args.createpdf_pages) (Pdf.empty ()) in
       Pdfpage.add_root pageroot [] pdf
-
-let rec remove_all_text_ops pdf resources content =
-  let is_textop = function
-    Pdfops.Op_Tj _ | Pdfops.Op_' _ | Pdfops.Op_'' _ | Pdfops.Op_TJ _ -> true
-  | _ -> false
-  in
-    let content' =
-      let ops = Pdfops.parse_operators pdf resources content in
-        Pdfops.stream_of_ops
-          (option_map (function x -> if is_textop x then None else Some x) ops) 
-    in
-      [content']
-
-let remove_all_text_page pdf p =
-  let resources = p.Pdfpage.resources in
-  let content = p.Pdfpage.content in
-    Cpdf.process_xobjects pdf p remove_all_text_ops;
-    {p with Pdfpage.content = remove_all_text_ops pdf resources content}, pdf
-
-let remove_all_text range pdf =
-  let pages = Pdfpage.pages_of_pagetree pdf in
-    let pagenums = indx pages in
-    let pdf = ref pdf in
-    let pages' = ref [] in
-      iter2 
-        (fun p pagenum ->
-          let p', pdf' =
-            if mem pagenum range
-              then remove_all_text_page !pdf p
-              else p, !pdf
-          in
-            pdf := pdf';
-            pages' =| p')
-        pages
-        pagenums;
-      Pdfpage.change_pages true !pdf (rev !pages')
-
 
 let write_json output pdf =
   match output with
@@ -4339,14 +4282,7 @@ let go () =
           (map Pdfpagelabels.string_of_pagelabel (Pdfpagelabels.read pdf))
   | Some (RemoveDictEntry key) ->
       let pdf = get_single_pdf args.op true in
-        (* 1. Process all objects *)
-        Pdf.objselfmap
-          (function
-             (Pdf.Dictionary _ as d) | (Pdf.Stream _ as d) ->
-               Pdf.remove_dict_entry d key
-           | x -> x)
-          pdf;
-        (* FIXME: We might like to do the trailer dictionary too *)
+        Cpdf.remove_dict_entry pdf key;
         write_pdf false pdf
   | Some ListSpotColours ->
       let pdf = get_single_pdf args.op false in
@@ -4354,7 +4290,7 @@ let go () =
   | Some RemoveClipping ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
-          write_pdf false (remove_clipping pdf range)
+          write_pdf false (Cpdf.remove_clipping pdf range)
   | Some CreateMetadata ->
       let pdf = get_single_pdf args.op false in
         write_pdf false (Cpdf.create_metadata pdf)
@@ -4379,7 +4315,7 @@ let go () =
   | Some RemoveAllText ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
-        write_pdf false (remove_all_text range pdf)
+        write_pdf false (Cpdf.remove_all_text range pdf)
   | Some ShowBoxes ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
