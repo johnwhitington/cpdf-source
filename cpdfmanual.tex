@@ -1788,9 +1788,7 @@ given page range.
 \index{document information}
 \index{metadata}
   \begin{framed}
-    \small\noindent\verb!cpdf -list-fonts in.pdf!
 
-    \vspace{1.5mm}
     \small\noindent\verb!cpdf -info [-raw | -utf8] in.pdf!
 
     \vspace{1.5mm}
@@ -1839,36 +1837,6 @@ given page range.
     \small\noindent\verb!cpdf -print-page-labels in.pdf!
   \end{framed}
   \section{Listing Fonts}
-\index{font!listing}
-\label{listingfonts}
-  The \texttt{-list-fonts} operation prints the fonts in the document,
-one-per-line to standard output. For example:
-\begin{framed}\small\begin{verbatim}1 /F245 /Type0 /Cleargothic-Bold /Identity-H
-1 /F247 /Type0 /ClearGothicSerialLight /Identity-H
-1 /F248 /Type1 /Times-Roman /WinAnsiEncoding
-1 /F250 /Type0 /Cleargothic-RegularItalic /Identity-H
-2 /F13 /Type0 /Cleargothic-Bold /Identity-H
-2 /F16 /Type0 /Arial-ItalicMT /Identity-H
-2 /F21 /Type0 /ArialMT /Identity-H
-2 /F58 /Type1 /Times-Roman /WinAnsiEncoding
-2 /F59 /Type0 /ClearGothicSerialLight /Identity-H
-2 /F61 /Type0 /Cleargothic-BoldItalic /Identity-H
-2 /F68 /Type0 /Cleargothic-RegularItalic /Identity-H
-3 /F47 /Type0 /Cleargothic-Bold /Identity-H
-3 /F49 /Type0 /ClearGothicSerialLight /Identity-H
-3 /F50 /Type1 /Times-Roman /WinAnsiEncoding
-3 /F52 /Type0 /Cleargothic-BoldItalic /Identity-H
-3 /F54 /Type0 /TimesNewRomanPS-BoldItalicMT /Identity-H
-3 /F57 /Type0 /Cleargothic-RegularItalic /Identity-H
-4 /F449 /Type0 /Cleargothic-Bold /Identity-H
-4 /F451 /Type0 /ClearGothicSerialLight /Identity-H
-4 /F452 /Type1 /Times-Roman /WinAnsiEncoding
-\end{verbatim}
-\end{framed}
-
-\noindent The first column gives the page number, the second the internal unique font
-name, the third the type of font (Type1, TrueType etc), the fourth the PDF font
-name, the fifth the PDF font encoding.
  
 \section{Reading Document Information}
 \label{info}
@@ -2250,7 +2218,37 @@ To remove a particular image, find its name using \texttt{-image-resolution} wit
 
 \section{Listing Fonts}
 
-Described in Section \ref{listingfonts}.
+\index{font!listing}
+\label{listingfonts}
+  The \texttt{-list-fonts} operation prints the fonts in the document,
+one-per-line to standard output. For example:
+\begin{framed}\small\begin{verbatim}1 /F245 /Type0 /Cleargothic-Bold /Identity-H
+1 /F247 /Type0 /ClearGothicSerialLight /Identity-H
+1 /F248 /Type1 /Times-Roman /WinAnsiEncoding
+1 /F250 /Type0 /Cleargothic-RegularItalic /Identity-H
+2 /F13 /Type0 /Cleargothic-Bold /Identity-H
+2 /F16 /Type0 /Arial-ItalicMT /Identity-H
+2 /F21 /Type0 /ArialMT /Identity-H
+2 /F58 /Type1 /Times-Roman /WinAnsiEncoding
+2 /F59 /Type0 /ClearGothicSerialLight /Identity-H
+2 /F61 /Type0 /Cleargothic-BoldItalic /Identity-H
+2 /F68 /Type0 /Cleargothic-RegularItalic /Identity-H
+3 /F47 /Type0 /Cleargothic-Bold /Identity-H
+3 /F49 /Type0 /ClearGothicSerialLight /Identity-H
+3 /F50 /Type1 /Times-Roman /WinAnsiEncoding
+3 /F52 /Type0 /Cleargothic-BoldItalic /Identity-H
+3 /F54 /Type0 /TimesNewRomanPS-BoldItalicMT /Identity-H
+3 /F57 /Type0 /Cleargothic-RegularItalic /Identity-H
+4 /F449 /Type0 /Cleargothic-Bold /Identity-H
+4 /F451 /Type0 /ClearGothicSerialLight /Identity-H
+4 /F452 /Type1 /Times-Roman /WinAnsiEncoding
+\end{verbatim}
+\end{framed}
+
+\noindent The first column gives the page number, the second the internal unique font
+name, the third the type of font (Type1, TrueType etc), the fourth the PDF font
+name, the fifth the PDF font encoding.
+
 
 \section{Copying Fonts}
 \label{copyfont}

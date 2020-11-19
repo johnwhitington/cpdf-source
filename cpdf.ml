@@ -3612,10 +3612,17 @@ let output_xmp_info encoding pdf =
         with
           _ -> ()
 
-(* Get XMP info equivalent of an old metadata field e.g Title. For now just title, used by Cpdfcommand.add_bookmark_title *)
+(* Get XMP info equivalent of an old metadata field *)
 let check = function
   "/Title" -> [(adobe, "Title"); (dc, "title")]
-| _ -> failwith "Cpdf.check_name not /Title"
+| "/Author" -> [(adobe, "Author"); (dc, "creator")]
+| "/Subject" -> [(adobe, "Subject"); (dc, "subject")]
+| "/Keywords" -> [(adobe, "Keywords")]
+| "/Creator" -> [(adobe, "Creator"); (xmp, "CreatorTool")]
+| "/Producer" -> [(adobe, "Producer")]
+| "/CreationDate" -> [(adobe, "CreationDate"); (xmp, "CreateDate")]
+| "/ModificationDate" -> [(adobe, "ModificationDate"); (xmp, "ModifyDate")]
+| _ -> failwith "Cpdf.check_name not known"
 
 let get_xmp_info pdf name =
   let tocheck = check name in
