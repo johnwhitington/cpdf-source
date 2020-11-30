@@ -3621,7 +3621,7 @@ let check = function
 | "/Creator" -> [(adobe, "Creator"); (xmp, "CreatorTool")]
 | "/Producer" -> [(adobe, "Producer")]
 | "/CreationDate" -> [(adobe, "CreationDate"); (xmp, "CreateDate")]
-| "/ModificationDate" -> [(adobe, "ModificationDate"); (xmp, "ModifyDate")]
+| "/ModDate" -> [(adobe, "ModificationDate"); (xmp, "ModifyDate")]
 | _ -> failwith "Cpdf.check_name not known"
 
 let get_xmp_info pdf name =
