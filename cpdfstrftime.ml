@@ -1,8 +1,30 @@
 (* C-Style strftime *)
 open Pdfutil
 
+type t =
+  {_tm_sec : int;
+   _tm_min : int;
+   _tm_hour : int;
+   _tm_mday : int;
+   _tm_mon : int;
+   _tm_year : int;
+   _tm_wday : int;
+   _tm_yday : int;
+   _tm_isdst : bool}
+
+let t_of_unix u =
+  {_tm_sec = u.Unix.tm_sec;
+   _tm_min = u.Unix.tm_min;
+   _tm_hour = u.Unix.tm_hour;
+   _tm_mday = u.Unix.tm_mday;
+   _tm_mon = u.Unix.tm_mon;
+   _tm_year = u.Unix.tm_year;
+   _tm_wday = u.Unix.tm_wday;
+   _tm_yday = u.Unix.tm_yday;
+   _tm_isdst = u.Unix.tm_isdst}
+
 let strf_A t =
-  match t.Unix.tm_wday with
+  match t._tm_wday with
   | 0 -> "Sunday" | 1 -> "Monday" | 2 -> "Tuesday"
   | 3 -> "Wednesday" | 4 -> "Thursday" | 5 -> "Friday"
   | 6 -> "Saturday"
@@ -12,7 +34,7 @@ let strf_a t =
   String.sub (strf_A t) 0 3
 
 let strf_B t =
-  match t.Unix.tm_mon with
+  match t._tm_mon with
   | 0 -> "January" | 1 -> "February" | 2 -> "March" | 3 -> "April"
   | 4 -> "May" | 5 -> "June" | 6 -> "July" | 7 -> "August"
   | 8 -> "September" | 9 -> "October" | 10 -> "November"
@@ -22,56 +44,56 @@ let strf_b t =
   String.sub (strf_B t) 0 3
 
 let strf_d t =
-  let s = string_of_int t.Unix.tm_mday in 
+  let s = string_of_int t._tm_mday in 
     if String.length s = 1 then "0" ^ s else s
 
 let strf_e t =
-  let s = string_of_int t.Unix.tm_mday in
+  let s = string_of_int t._tm_mday in
     if String.length s = 1 then " " ^ s else s
 
 let strf_H t =
-  let s = string_of_int t.Unix.tm_hour in
+  let s = string_of_int t._tm_hour in
     if String.length s = 1 then "0" ^ s else s
 
 let strf_I t =
-  let s = string_of_int (t.Unix.tm_hour mod 12) in
+  let s = string_of_int (t._tm_hour mod 12) in
     if String.length s = 1 then "0" ^ s else s
 
 let strf_j t =
-  let s = string_of_int t.Unix.tm_yday in
+  let s = string_of_int t._tm_yday in
     match String.length s with
     | 1 -> "00" ^ s
     | 2 -> "0" ^ s
     | _ -> s
 
 let strf_m t =
-  let s = string_of_int (t.Unix.tm_mon + 1) in
+  let s = string_of_int (t._tm_mon + 1) in
     if String.length s = 1 then "0" ^ s else s
 
 let strf_M t =
-  let s = string_of_int t.Unix.tm_min in
+  let s = string_of_int t._tm_min in
     if String.length s = 1 then "0" ^ s else s
 
 let strf_p t =
-  if t.Unix.tm_hour >= 12 then "p.m" else "a.m"
+  if t._tm_hour >= 12 then "p.m" else "a.m"
 
 let strf_S t =
-  let s = string_of_int t.Unix.tm_sec in
+  let s = string_of_int t._tm_sec in
     if String.length s = 1 then "0" ^ s else s
 
 let strf_T t =
   strf_H t ^ ":" ^ strf_M t ^ ":" ^ strf_S t
 
 let strf_u t =
-  match t.Unix.tm_wday with
+  match t._tm_wday with
   | 0 -> "7"
   | n -> string_of_int (n + 1)
 
 let strf_w t =
-  string_of_int t.Unix.tm_wday
+  string_of_int t._tm_wday
 
 let strf_Y t =
-  string_of_int (t.Unix.tm_year + 1900)
+  string_of_int (t._tm_year + 1900)
 
 let strf_percent _ = "%"
 
@@ -82,9 +104,64 @@ let strftime_pairs =
    "%p", strf_p; "%S", strf_S; "%T", strf_T; "%u", strf_u;
    "%w", strf_w; "%Y", strf_Y; "%%", strf_percent]
 
+(* On Posix, call out to 'date'. On Windows, read %DATE% and %TIME% with 'cmd
+ * /C echo %TIME%'. On failure, exception escapes to caller. *)
+let contents_of_file filename =
+  let ch = open_in_bin filename in
+  let s = really_input_string ch (in_channel_length ch) in
+    close_in ch;
+    s
+
+let return_date () =
+    match Sys.os_type with
+      "Unix" ->
+        (* Call the POSIX 'date' program, redirected to a temp file, and parse. *)
+        let tempfile = Filename.temp_file "cpdf" "strftime" in
+        let command = Filename.quote_command "date" ~stdout:tempfile ["+%S-%M-%H-%d-%m-%Y-%w-%j"] in
+        let outcode = Sys.command command in
+        if outcode > 0 then raise (Failure "Date command returned non-zero exit code") else
+          let r = contents_of_file tempfile in
+          let get_int o l = int_of_string (String.sub r o l) in
+            Sys.remove tempfile;
+            {_tm_sec = get_int 0 2;
+             _tm_min = get_int 3 2;
+             _tm_hour = get_int 6 2;
+             _tm_mday = get_int 9 2;
+             _tm_mon = get_int 12 2 - 1;
+             _tm_year = get_int 15 4 - 1900;
+             _tm_wday = get_int 20 1;
+             _tm_yday = get_int 22 3 - 1;
+             _tm_isdst = false}
+     | _ ->
+        (* Run 'cmd /C echo %TIME%' and 'cmd /C echo %DATE%' *)
+          {_tm_sec = 0;
+           _tm_min = 0;
+           _tm_hour = 0;
+           _tm_mday = 1;
+           _tm_mon = 0;
+           _tm_year = 0;
+           _tm_wday = 0;
+           _tm_yday = 0;
+           _tm_isdst = false}
+
+let current_time () =
+  (*t_of_unix (Unix.localtime (Unix.gettimeofday ()))*)
+  try return_date () with
+    e ->
+      Printf.eprintf "Failed to retrieve time due to %s\n" (Printexc.to_string e);
+      {_tm_sec = 0;
+       _tm_min = 0;
+       _tm_hour = 0;
+       _tm_mday = 1;
+       _tm_mon = 0;
+       _tm_year = 0;
+       _tm_wday = 0;
+       _tm_yday = 0;
+       _tm_isdst = false}
+
 let strftime ?time text =
   let time =
-    match time with None -> Unix.localtime (Unix.gettimeofday ()) | Some t -> t
+    match time with None -> current_time () | Some t -> t
   in
     let text = ref text in
       iter
@@ -92,4 +169,3 @@ let strftime ?time text =
            text := string_replace_all search (replace_fun time) !text)
         strftime_pairs;
       !text
-

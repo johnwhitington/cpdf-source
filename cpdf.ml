@@ -3703,15 +3703,15 @@ let make_xmp_date_from_components d =
     Printf.sprintf "%02i" d.offset_minutes
   in 
     Cpdfstrftime.strftime
-      ~time:{Unix.tm_sec = d.second;
-             Unix.tm_min = d.minute;
-             Unix.tm_hour = d.hour;
-             Unix.tm_mday = d.day;
-             Unix.tm_mon = d.month - 1;
-             Unix.tm_year = d.year - 1900;
-             Unix.tm_wday = 0;
-             Unix.tm_yday = 0;
-             Unix.tm_isdst = false}
+      ~time:{Cpdfstrftime._tm_sec = d.second;
+             Cpdfstrftime._tm_min = d.minute;
+             Cpdfstrftime._tm_hour = d.hour;
+             Cpdfstrftime._tm_mday = d.day;
+             Cpdfstrftime._tm_mon = d.month - 1;
+             Cpdfstrftime._tm_year = d.year - 1900;
+             Cpdfstrftime._tm_wday = 0;
+             Cpdfstrftime._tm_yday = 0;
+             Cpdfstrftime._tm_isdst = false}
       "%Y-%m-%dT%H:%M:%S"
   ^
     tzd
