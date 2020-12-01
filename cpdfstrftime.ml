@@ -12,17 +12,6 @@ type t =
    _tm_yday : int;
    _tm_isdst : bool}
 
-let t_of_unix u =
-  {_tm_sec = u.Unix.tm_sec;
-   _tm_min = u.Unix.tm_min;
-   _tm_hour = u.Unix.tm_hour;
-   _tm_mday = u.Unix.tm_mday;
-   _tm_mon = u.Unix.tm_mon;
-   _tm_year = u.Unix.tm_year;
-   _tm_wday = u.Unix.tm_wday;
-   _tm_yday = u.Unix.tm_yday;
-   _tm_isdst = u.Unix.tm_isdst}
-
 let strf_A t =
   match t._tm_wday with
   | 0 -> "Sunday" | 1 -> "Monday" | 2 -> "Tuesday"
@@ -104,13 +93,20 @@ let strftime_pairs =
    "%p", strf_p; "%S", strf_S; "%T", strf_T; "%u", strf_u;
    "%w", strf_w; "%Y", strf_Y; "%%", strf_percent]
 
-(* On Posix, call out to 'date'. On Windows, read %DATE% and %TIME% with 'cmd
- * /C echo %TIME%'. On failure, exception escapes to caller. *)
 let contents_of_file filename =
   let ch = open_in_bin filename in
   let s = really_input_string ch (in_channel_length ch) in
     close_in ch;
     s
+
+(* Platform-independent current time and date with no Unix module *)
+let debug_str s =
+  for x = 0 to String.length s - 1 do
+    Printf.printf "%i\t%C\n" x s.[x]
+  done
+
+let utf8_of_utf16le s =
+  implode (drop_evens (tl (tl (explode s))))
 
 let return_date () =
     match Sys.os_type with
@@ -133,19 +129,32 @@ let return_date () =
              _tm_yday = get_int 22 3 - 1;
              _tm_isdst = false}
      | _ ->
-        (* Run 'cmd /C echo %TIME%' and 'cmd /C echo %DATE%' *)
-          {_tm_sec = 0;
-           _tm_min = 0;
-           _tm_hour = 0;
-           _tm_mday = 1;
-           _tm_mon = 0;
-           _tm_year = 0;
-           _tm_wday = 0;
-           _tm_yday = 0;
+        (* Run 'wmic os get LocalDateTime' (exists on XP Pro or later, Vista or later). *)
+        let get_int r o l = int_of_string (String.sub r o l) in
+        let tempfile = Filename.temp_file "cpdf" "strftime" in
+        let command = Filename.quote_command "wmic.exe" ~stdout:tempfile ["os"; "get"; "LocalDateTime"] in
+        let outcode = Sys.command command in
+        if outcode > 0 then raise (Failure "wmic os get LocalDateTime command returned non-zero exit code") else
+          let r = contents_of_file tempfile in
+          let r = utf8_of_utf16le r in
+        (* Run 'wmic path win32_localtime get dayofweek' (exists on XP Pro or later, Vista or later). *)
+        let tempfile = Filename.temp_file "cpdf" "strftime" in
+        let command = Filename.quote_command "wmic.exe" ~stdout:tempfile ["path"; "win32_localtime"; "get"; "dayofweek"] in
+        let outcode = Sys.command command in
+        if outcode > 0 then raise (Failure "wmic os get LocalDateTime command returned non-zero exit code") else
+          let r2 = contents_of_file tempfile in
+          let r2 = utf8_of_utf16le r2 in
+          {_tm_sec = get_int r 41 2;
+           _tm_min = get_int r 39 2;
+           _tm_hour = get_int r 37 2;
+           _tm_mday = get_int r 35 2;
+           _tm_mon = get_int r 33 2;
+           _tm_year = get_int r 29 4;
+           _tm_wday = get_int r2 13 1;
+           _tm_yday = 0; (* FIXME Must calculate from DD MM YYYY using standard formulae *)
            _tm_isdst = false}
 
 let current_time () =
-  (*t_of_unix (Unix.localtime (Unix.gettimeofday ()))*)
   try return_date () with
     e ->
       Printf.eprintf "Failed to retrieve time due to %s\n" (Printexc.to_string e);
