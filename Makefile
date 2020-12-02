@@ -1,13 +1,12 @@
 # Build the cpdf command line tools and top level
-MODS = tjutil tjutf16 tjllist tjparserMonad tjjson \
-       xmlm \
+MODS = tjutil tjutf16 tjllist tjparserMonad tjjson xmlm \
        cpdfwriteJSON cpdfstrftime cpdfcoord cpdf cpdfcommand
 
 SOURCES = $(foreach x,$(MODS),$(x).ml $(x).mli) cpdfcommandrun.ml
 
 RESULT = cpdf
 ANNOTATE = true
-PACKS = unix camlpdf
+PACKS = camlpdf
 
 CFLAGS = -fPIC
 OCAMLFLAGS = -bin-annot
@@ -27,4 +26,3 @@ $(foreach x,$(MODS),$x.cmx) $(foreach x,$(MODS),$x.cmti)
 install : libinstall
 
 -include OCamlMakefile
-
