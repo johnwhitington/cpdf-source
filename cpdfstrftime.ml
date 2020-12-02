@@ -108,6 +108,12 @@ let debug_str s =
 let utf8_of_utf16le s =
   implode (drop_evens (tl (tl (explode s))))
 
+let year_day d m y =
+  let n1 = 275 * m / 9 in
+  let n2 = (m + 9) / 12 in
+  let n3 = 1 + (y - 4 * (y / 4) + 2) / 3 in
+    n1 - n2 * n3 + d - 30
+
 let return_date () =
   match Sys.os_type with
     "Unix" ->
@@ -128,7 +134,7 @@ let return_date () =
            _tm_wday = get_int 20 1;
            _tm_yday = get_int 22 3 - 1;
            _tm_isdst = false}
-   | "Windows" | "Cygwin" ->
+   | "Win32" | "Cygwin" ->
       (* Run 'wmic os get LocalDateTime' (exists on XP Pro or later, Vista or later). *)
       let get_int r o l = int_of_string (String.sub r o l) in
       let tempfile = Filename.temp_file "cpdf" "strftime" in
@@ -146,14 +152,17 @@ let return_date () =
         let r2 = contents_of_file tempfile in
         Sys.remove tempfile;
         let r2 = utf8_of_utf16le r2 in
+        let day = get_int r 35 2 in
+        let month = get_int r 33 2 in
+        let year = get_int r 29 4 in
         {_tm_sec = get_int r 41 2;
          _tm_min = get_int r 39 2;
          _tm_hour = get_int r 37 2;
-         _tm_mday = get_int r 35 2;
-         _tm_mon = get_int r 33 2;
-         _tm_year = get_int r 29 4;
+         _tm_mday = day;
+         _tm_mon = month;
+         _tm_year = year;
          _tm_wday = get_int r2 13 1;
-         _tm_yday = 0; (* FIXME Must calculate from DD MM YYYY using standard formulae *)
+         _tm_yday = year_day day month year;
          _tm_isdst = false}
   | _ -> failwith "Unknown Sys.os_type in Cpdfstrftime.return_date"
 
