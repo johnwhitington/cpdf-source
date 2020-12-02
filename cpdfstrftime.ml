@@ -159,10 +159,10 @@ let return_date () =
          _tm_min = get_int r 39 2;
          _tm_hour = get_int r 37 2;
          _tm_mday = day;
-         _tm_mon = month;
-         _tm_year = year;
+         _tm_mon = month - 1;
+         _tm_year = year - 1900;
          _tm_wday = get_int r2 13 1;
-         _tm_yday = year_day day month year;
+         _tm_yday = year_day day month year - 1;
          _tm_isdst = false}
   | _ -> failwith "Unknown Sys.os_type in Cpdfstrftime.return_date"
 
