@@ -2121,11 +2121,24 @@ and specs =
    ("-postpend-content",
     Arg.String setpostpend,
     " Postpend content to page");
-   ("-gs", Arg.String setgspath, " Path to gs executable");
-   ("-gs-malformed", Arg.Unit setgsmalformed, " Also try to reconstruct malformed files with gs");
-   ("-gs-quiet", Arg.Unit setgsquiet, " Make gs go into quiet mode");
-   ("-im", Arg.String setimpath, " Path to imagemagick executable");
-   ("-p2p", Arg.String setp2ppath, " Path to pnmtopng executable");
+   ("-gs",
+    Arg.String setgspath,
+    " Path to gs executable");
+   ("-gs-malformed",
+    Arg.Unit setgsmalformed,
+    " Also try to reconstruct malformed files with gs");
+   ("-gs-quiet",
+    Arg.Unit setgsquiet,
+    " Make gs go into quiet mode");
+   ("-im",
+    Arg.String setimpath,
+    " Path to imagemagick executable");
+   ("-p2p",
+     Arg.String setp2ppath,
+     " Path to pnmtopng executable");
+   ("-extract-images",
+     Arg.Unit (setop ExtractImages),
+     " Extract images to file");
    ("-squeeze", Arg.Unit setsqueeze, " Squeeze");
    ("-squeeze-log-to", Arg.String setsqueezelogto, " Squeeze log location");
    ("-squeeze-no-pagedata", Arg.Unit setsqueezepagedata, " Don't recompress pages");
@@ -2147,7 +2160,6 @@ and specs =
    ("-remove-unused-resources", Arg.Unit (setop RemoveUnusedResources), "");
    ("-stay-on-error", Arg.Unit setstayonerror, "");
    ("-extract-fontfile", Arg.Unit (setop ExtractFontFile), "");
-   ("-extract-images", Arg.Unit (setop ExtractImages), "");
    ("-csp1", Arg.Unit (setop CSP1), "");
    ("-csp2", Arg.Float setcsp2, "");
    ("-csp3", Arg.Unit (setop CSP3), "");
