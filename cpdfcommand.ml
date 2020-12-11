@@ -2791,7 +2791,6 @@ let write_stream name stream =
     close_out fh
 
 (* FIXME: File and command quoting check on unix, windows inc command.exe *)
-(* FIXME: Doesn't cope with images within form xobjects *)
 (* FIXME: Document it *)
 let write_image pdf resources name image =
   match Pdfimage.get_image_24bpp pdf resources image with
@@ -2838,7 +2837,21 @@ let extract_images_inner serial pdf resources stem pnum images =
   in
     iter2 (write_image pdf resources) names images
 
-let rec extract_images_form_xobject pdf serial form = ()
+let rec extract_images_form_xobject pdf serial stem pnum form =
+  let resources =
+    match Pdf.lookup_direct pdf "/Resources" form with
+      Some (Pdf.Dictionary d) -> Pdf.Dictionary d
+    | _ -> Pdf.Dictionary []
+  in
+    let images =
+      let xobjects =
+        match Pdf.lookup_direct pdf "/XObject" resources with
+        | Some (Pdf.Dictionary elts) -> map snd elts
+        | _ -> []
+      in
+        keep (fun o -> Pdf.lookup_direct pdf "/Subtype" o = Some (Pdf.Name "/Image")) xobjects
+    in
+      extract_images_inner serial pdf resources stem pnum images
 
 let extract_images pdf range stem =
   let pdf_pages = Pdfpage.pages_of_pagetree pdf in
@@ -2857,9 +2870,8 @@ let extract_images pdf range stem =
              in
                let images = keep (fun o -> Pdf.lookup_direct pdf "/Subtype" o = Some (Pdf.Name "/Image")) xobjects in
                let forms = keep (fun o -> Pdf.lookup_direct pdf "/Subtype" o = Some (Pdf.Name "/Form")) xobjects in
-                 Printf.printf "Found %i form xobjects on page %i\n" (length forms) pnum;
                  extract_images_inner serial pdf page.Pdfpage.resources stem pnum images;
-                 iter (extract_images_form_xobject pdf serial) forms)
+                 iter (extract_images_form_xobject pdf serial stem pnum) forms)
           pages
           (indx pages)
 
