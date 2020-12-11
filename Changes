@@ -72,4 +72,3 @@ o Linearization excised
 o Can encrypt or recrypt output of -split and -split-bookmarks now
 o -args replaces -control with better behaviour
 o Can scale a stamp to fit before stamping with -scale-stamp-to-fit
-
