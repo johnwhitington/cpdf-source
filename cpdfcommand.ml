@@ -2790,8 +2790,6 @@ let write_stream name stream =
     done;
     close_out fh
 
-(* FIXME: File and command quoting check on unix, windows inc command.exe *)
-(* FIXME: Document it *)
 let write_image pdf resources name image =
   match Pdfimage.get_image_24bpp pdf resources image with
   | Pdfimage.JPEG (stream, _) -> write_stream (name ^ ".jpg") stream
@@ -2807,7 +2805,7 @@ let write_image pdf resources name image =
             "" -> Printf.eprintf "Neither pnm2png nor imagemagick found. Specify with -p2p or -im\n"
           | _ ->
             begin match
-              Sys.command (args.path_to_im ^ " " ^ name ^ ".pnm" ^ " " ^ name ^ ".png")
+              Sys.command (args.path_to_im ^ " " ^ "\"" ^ name ^ ".pnm\"" ^ " " ^ "\"" ^ name ^ ".png\"")
             with
               0 -> Sys.remove (name ^ ".pnm");
             | _ -> 
