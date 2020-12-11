@@ -415,6 +415,8 @@ type args =
    mutable outline : bool;
    mutable linewidth : float;
    mutable path_to_ghostscript : string;
+   mutable path_to_im : string;
+   mutable path_to_p2p : string;
    mutable frombox : string option;
    mutable tobox : string option;
    mutable mediabox_if_missing : bool;
@@ -515,6 +517,8 @@ let args =
    outline = false;
    linewidth = 1.0;
    path_to_ghostscript = "";
+   path_to_im = "";
+   path_to_p2p = "";
    frombox = None;
    tobox = None;
    mediabox_if_missing = false;
@@ -638,9 +642,10 @@ let reset_arguments () =
   args.ocgrenamefrom <- "";
   args.ocgrenameto <- ""
   (* Do not reset original_filename or cpdflin or was_encrypted or
-   * was_decrypted_with_owner or recrypt or producer or creator or
-   * path_to_ghostscript or gs_malformed or gs_quiet, since we want these to work across
-   * ANDs. Or squeeze options: a little odd, but we want it to happen on eventual output. *)
+   * was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
+   * gs_malformed or gs_quiet, since we want these to work across ANDs. Or
+   * squeeze options: a little odd, but we want it to happen on eventual
+   * output. *)
 
 let get_pagespec () =
   match args.inputs with
@@ -1315,6 +1320,12 @@ let setimageresolution f =
 
 let setgspath p =
   args.path_to_ghostscript <- p
+
+let setimpath p =
+  args.path_to_im <- p
+
+let setp2ppath p =
+  args.path_to_p2p <- p
 
 let settextvertical () =
   args.orientation <- Cpdf.Vertical
@@ -2113,6 +2124,8 @@ and specs =
    ("-gs", Arg.String setgspath, " Path to gs executable");
    ("-gs-malformed", Arg.Unit setgsmalformed, " Also try to reconstruct malformed files with gs");
    ("-gs-quiet", Arg.Unit setgsquiet, " Make gs go into quiet mode");
+   ("-im", Arg.String setimpath, " Path to imagemagick executable");
+   ("-p2p", Arg.String setp2ppath, " Path to pnmtopng executable");
    ("-squeeze", Arg.Unit setsqueeze, " Squeeze");
    ("-squeeze-log-to", Arg.String setsqueezelogto, " Squeeze log location");
    ("-squeeze-no-pagedata", Arg.Unit setsqueezepagedata, " Don't recompress pages");
@@ -2770,12 +2783,6 @@ let pnm_to_channel_24 channel w h s =
         done
       done
 
-let null_device =
-  match Sys.os_type with
-  | "Win32" -> "nul"
-  | _ -> "/dev/null"
-
-(* cpdf -extract-images in.pdf 2-5 -o img%%% (FIXME: Add output spec. Document png stuff.) *)
 let write_stream name stream =
   let fh = open_out_bin name in
     for x = 0 to bytes_size stream - 1 do
@@ -2783,6 +2790,9 @@ let write_stream name stream =
     done;
     close_out fh
 
+(* FIXME: File and command quoting check on unix, windows inc command.exe *)
+(* FIXME: Doesn't cope with images within form xobjects *)
+(* FIXME: Document it *)
 let write_image pdf resources name image =
   match Pdfimage.get_image_24bpp pdf resources image with
   | Pdfimage.JPEG (stream, _) -> write_stream (name ^ ".jpg") stream
@@ -2792,16 +2802,44 @@ let write_image pdf resources name image =
       let fh = open_out_bin (name ^ ".pnm") in
         pnm_to_channel_24 fh w h stream;
         close_out fh;
-      (* If pnmtopng is present, convert the pnm to a PNG. *)
-      begin match
-        Sys.command ("pnmtopng -gamma 0.45 -quiet " ^ "\"" ^ name ^ ".pnm\"" ^ "> \"" ^ name ^ ".png\" 2>" ^ null_device)
-      with
-      | 0 -> Sys.remove (name ^ ".pnm")
-      | _ -> ()
-      end
-  | _ -> ()
+        begin match args.path_to_p2p with
+        | "" ->
+          begin match args.path_to_im with
+            "" -> Printf.eprintf "Neither pnm2png nor imagemagick found. Specify with -p2p or -im\n"
+          | _ ->
+            begin match
+              Sys.command (args.path_to_im ^ " " ^ name ^ ".pnm" ^ " " ^ name ^ ".png")
+            with
+              0 -> Sys.remove (name ^ ".pnm");
+            | _ -> 
+              Printf.eprintf "Call to imagemagick failed: did you specify -p2p correctly?\n";
+              Sys.remove (name ^ ".pnm")
+            end
+          end
+        | _ ->
+          begin match
+            Sys.command (args.path_to_p2p ^ " -gamma 0.45 -quiet " ^ "\"" ^ name ^ ".pnm\"" ^ "> \"" ^ name ^ ".png\"")
+          with
+          | 0 -> Sys.remove (name ^ ".pnm")
+          | _ ->
+              Printf.eprintf "Call to pnmtopng failed: did you specify -p2p correctly?\n";
+              Sys.remove (name ^ ".pnm")
+          end
+        end
+  | _ ->
+      Printf.eprintf "Unsupported image type when extracting image %s " name
 
-(* FIXME: Doesn't cope with images within form xobjects *)
+let extract_images_inner serial pdf resources stem pnum images =
+  let names = map
+    (fun _ ->
+       name_of_spec
+         [] pdf 0 (stem ^ "-p" ^ string_of_int pnum)
+         (let r = !serial in serial := !serial + 1; r) "" 0 0) (indx images)
+  in
+    iter2 (write_image pdf resources) names images
+
+let rec extract_images_form_xobject pdf serial form = ()
+
 let extract_images pdf range stem =
   let pdf_pages = Pdfpage.pages_of_pagetree pdf in
     let pages =
@@ -2809,26 +2847,21 @@ let extract_images pdf range stem =
         (function (i, pdf_pages) -> if mem i range then Some pdf_pages else None)
         (combine (indx pdf_pages) pdf_pages)
     in
-      iter2
-        (fun page pnum ->
-           let xobjects =
-             match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
-             | Some (Pdf.Dictionary elts) -> map snd elts
-             | _ -> []
-           in
-             let images =
-               keep (fun o -> Pdf.lookup_direct pdf "/Subtype" o = Some (Pdf.Name "/Image")) xobjects
+      let serial = ref 0 in
+        iter2
+          (fun page pnum ->
+             let xobjects =
+               match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
+               | Some (Pdf.Dictionary elts) -> map snd elts
+               | _ -> []
              in
-               if images <> [] then
-               (let names =
-                 map
-                   (function n ->
-                      let r = name_of_spec [] pdf 0 ("p" ^ string_of_int pnum ^ "_" ^ stem) n "" 0 0 in r)
-                   (indx images)
-               in
-                 iter2 (write_image pdf page.Pdfpage.resources) names images))
-        pages
-        (indx pages)
+               let images = keep (fun o -> Pdf.lookup_direct pdf "/Subtype" o = Some (Pdf.Name "/Image")) xobjects in
+               let forms = keep (fun o -> Pdf.lookup_direct pdf "/Subtype" o = Some (Pdf.Name "/Form")) xobjects in
+                 Printf.printf "Found %i form xobjects on page %i\n" (length forms) pnum;
+                 extract_images_inner serial pdf page.Pdfpage.resources stem pnum images;
+                 iter (extract_images_form_xobject pdf serial) forms)
+          pages
+          (indx pages)
 
 let getencryption pdf =
   match Pdfread.what_encryption pdf with

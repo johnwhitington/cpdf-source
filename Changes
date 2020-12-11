@@ -1,5 +1,6 @@
 Version 2.4 (to come)
 
+o New operation -extract-images
 o Optional Content Groups now preserved when merging / stamping pages
 o Listing, coalescing and modfying Optional Content Groups.
 o Vendored in tiny_json from Yoshihiro Imai via Jan Furuse
