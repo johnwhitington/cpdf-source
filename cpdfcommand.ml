@@ -3,7 +3,7 @@ let demo = false
 let noncomp = false
 let major_version = 2
 let minor_version = 4
-let version_date = "(devel, 11th December 2020)"
+let version_date = "(devel, 15th December 2020)"
 
 open Pdfutil
 open Pdfio
@@ -3537,7 +3537,7 @@ let go () =
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf args.op true in
             let range = parse_pagespec pdf pagespec in
-              Cpdf.output_page_info (get_single_pdf (Some PageInfo) true) range
+              Cpdf.output_page_info pdf range
       | _ -> error "list-bookmarks: bad command line"
       end
   | Some Metadata ->
