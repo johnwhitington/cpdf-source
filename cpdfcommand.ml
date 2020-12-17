@@ -4418,4 +4418,3 @@ let go_withargv argv =
 
 let go () =
   go_withargv Sys.argv
-
