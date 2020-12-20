@@ -2808,7 +2808,9 @@ let write_image pdf resources name image =
   | Pdfimage.JPEG2000 (stream, _) -> write_stream (name ^ ".jpx") stream
   | Pdfimage.JBIG2 (stream, _) -> write_stream (name ^ ".jbig2") stream
   | Pdfimage.Raw (w, h, Pdfimage.BPP24, stream) ->
-      let fh = open_out_bin (name ^ ".pnm") in
+      let pnm = name ^ ".pnm" in
+      let png = name ^ ".png" in
+      let fh = open_out_bin pnm in
         pnm_to_channel_24 fh w h stream;
         close_out fh;
         begin match args.path_to_p2p with
@@ -2817,22 +2819,22 @@ let write_image pdf resources name image =
             "" -> Printf.eprintf "Neither pnm2png nor imagemagick found. Specify with -p2p or -im\n"
           | _ ->
             begin match
-              Sys.command (args.path_to_im ^ " " ^ "\"" ^ name ^ ".pnm\"" ^ " " ^ "\"" ^ name ^ ".png\"")
+              Sys.command (Filename.quote_command args.path_to_im [pnm; png])
             with
-              0 -> Sys.remove (name ^ ".pnm");
+              0 -> Sys.remove pnm
             | _ -> 
               Printf.eprintf "Call to imagemagick failed: did you specify -p2p correctly?\n";
-              Sys.remove (name ^ ".pnm")
+              Sys.remove pnm
             end
           end
         | _ ->
           begin match
-            Sys.command (args.path_to_p2p ^ " -gamma 0.45 -quiet " ^ "\"" ^ name ^ ".pnm\"" ^ "> \"" ^ name ^ ".png\"")
+            Sys.command (Filename.quote_command args.path_to_p2p ~stdout:png ["-gamma"; "0.45"; "-quiet"; pnm])
           with
-          | 0 -> Sys.remove (name ^ ".pnm")
+          | 0 -> Sys.remove pnm
           | _ ->
               Printf.eprintf "Call to pnmtopng failed: did you specify -p2p correctly?\n";
-              Sys.remove (name ^ ".pnm")
+              Sys.remove pnm
           end
         end
   | _ ->
