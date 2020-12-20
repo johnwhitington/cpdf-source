@@ -451,7 +451,9 @@ type args =
    mutable jsonparsecontentstreams : bool;
    mutable jsonnostreamdata : bool;
    mutable ocgrenamefrom : string;
-   mutable ocgrenameto : string}
+   mutable ocgrenameto : string;
+   mutable dedup : bool;
+   mutable dedup_per_page : bool}
 
 let args =
   {op = None;
@@ -553,7 +555,9 @@ let args =
    jsonparsecontentstreams = false;
    jsonnostreamdata = false;
    ocgrenamefrom = "";
-   ocgrenameto = ""}
+   ocgrenameto = "";
+   dedup = false;
+   dedup_per_page = false}
 
 let reset_arguments () =
   args.op <- None;
@@ -640,7 +644,9 @@ let reset_arguments () =
   args.jsonparsecontentstreams <- false;
   args.jsonnostreamdata <- false;
   args.ocgrenamefrom <- "";
-  args.ocgrenameto <- ""
+  args.ocgrenameto <- "";
+  args.dedup <- false;
+  args.dedup_per_page <- false
   (* Do not reset original_filename or cpdflin or was_encrypted or
    * was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
    * gs_malformed or gs_quiet, since we want these to work across ANDs. Or
@@ -1497,6 +1503,12 @@ let setsqueezepagedata () =
 let setsqueezerecompress () =
   args.squeeze_recompress <- false
 
+let set_dedup () =
+  args.dedup <- true
+
+let set_dedup_per_page () =
+  args.dedup_per_page <- true
+
 let whingemalformed () =
   prerr_string "Command line must be of exactly the form\ncpdf <infile> -gs <path> -gs-malformed-force -o <outfile>\n";
   exit 1
@@ -2139,6 +2151,12 @@ and specs =
    ("-extract-images",
      Arg.Unit (setop ExtractImages),
      " Extract images to file");
+   ("-dedup",
+     Arg.Unit set_dedup,
+     " Deduplicate extracted images fully");
+   ("-dedup-perpage",
+     Arg.Unit set_dedup_per_page,
+     " Deduplicate extracted images per page only");
    ("-squeeze", Arg.Unit setsqueeze, " Squeeze");
    ("-squeeze-log-to", Arg.String setsqueezelogto, " Squeeze log location");
    ("-squeeze-no-pagedata", Arg.Unit setsqueezepagedata, " Don't recompress pages");
@@ -2840,6 +2858,8 @@ let write_image pdf resources name image =
   | _ ->
       Printf.eprintf "Unsupported image type when extracting image %s " name
 
+let written = ref []
+
 let extract_images_inner serial pdf resources stem pnum images =
   let names = map
     (fun _ ->
@@ -2861,11 +2881,16 @@ let rec extract_images_form_xobject pdf serial stem pnum form =
         | Some (Pdf.Dictionary elts) -> map snd elts
         | _ -> []
       in
-        keep (fun o -> Pdf.lookup_direct pdf "/Subtype" o = Some (Pdf.Name "/Image")) xobjects
+        (* Remove any already in !written. Add any remaining to !written, if !args.dedup or !args.dedup_page *)
+        let images = keep (fun o -> Pdf.lookup_direct pdf "/Subtype" o = Some (Pdf.Name "/Image")) xobjects in
+        let images, already_written = List.partition (function Pdf.Indirect n -> mem n !written | _ -> false) images in
+          written := (option_map (function Pdf.Indirect n -> Some n | _ -> None) images) @ !written;
+          images
     in
       extract_images_inner serial pdf resources stem pnum images
 
 let extract_images pdf range stem =
+  if args.dedup || args.dedup_per_page then written := [];
   let pdf_pages = Pdfpage.pages_of_pagetree pdf in
     let pages =
       option_map
@@ -2875,12 +2900,15 @@ let extract_images pdf range stem =
       let serial = ref 0 in
         iter2
           (fun page pnum ->
+             if args.dedup_per_page then written := [];
              let xobjects =
                match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
                | Some (Pdf.Dictionary elts) -> map snd elts
                | _ -> []
              in
                let images = keep (fun o -> Pdf.lookup_direct pdf "/Subtype" o = Some (Pdf.Name "/Image")) xobjects in
+               let images, already_written = List.partition (function Pdf.Indirect n -> mem n !written | _ -> false) images in
+                 written := (option_map (function Pdf.Indirect n -> Some n | _ -> None) images) @ !written;
                let forms = keep (fun o -> Pdf.lookup_direct pdf "/Subtype" o = Some (Pdf.Name "/Form")) xobjects in
                  extract_images_inner serial pdf page.Pdfpage.resources stem pnum images;
                  iter (extract_images_form_xobject pdf serial stem pnum) forms)
