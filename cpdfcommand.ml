@@ -2883,7 +2883,7 @@ let rec extract_images_form_xobject pdf serial stem pnum form =
       in
         (* Remove any already in !written. Add any remaining to !written, if !args.dedup or !args.dedup_page *)
         let images = keep (fun o -> Pdf.lookup_direct pdf "/Subtype" o = Some (Pdf.Name "/Image")) xobjects in
-        let images, already_written = List.partition (function Pdf.Indirect n -> mem n !written | _ -> false) images in
+        let already_written, images = List.partition (function Pdf.Indirect n -> mem n !written | _ -> false) images in
           written := (option_map (function Pdf.Indirect n -> Some n | _ -> None) images) @ !written;
           images
     in
@@ -2907,7 +2907,7 @@ let extract_images pdf range stem =
                | _ -> []
              in
                let images = keep (fun o -> Pdf.lookup_direct pdf "/Subtype" o = Some (Pdf.Name "/Image")) xobjects in
-               let images, already_written = List.partition (function Pdf.Indirect n -> mem n !written | _ -> false) images in
+               let already_written, images = List.partition (function Pdf.Indirect n -> mem n !written | _ -> false) images in
                  written := (option_map (function Pdf.Indirect n -> Some n | _ -> None) images) @ !written;
                let forms = keep (fun o -> Pdf.lookup_direct pdf "/Subtype" o = Some (Pdf.Name "/Form")) xobjects in
                  extract_images_inner serial pdf page.Pdfpage.resources stem pnum images;
