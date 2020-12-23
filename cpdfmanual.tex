@@ -2161,7 +2161,8 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 \noindent\small\verb!cpdf -image-resolution <minimum resolution> in.pdf [<range>]!
 
 \vspace{1.5mm}
-\noindent\small\verb!cpdf -extract-images in.pdf [<range>] [-im <path>] [-p2p <path] -o <path>!
+\noindent\small\verb!cpdf -extract-images in.pdf [<range>] [-im <path>] [-p2p <path>]!
+\noindent\small\verb!     [-dedup | -dedup-perpage] -o <path>!
 \end{framed}
 
 \section{Extracting images}
@@ -2169,7 +2170,8 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 Cpdf can extract the raster images to a given location. JPEG, JPEG2000 and JBIG2 images are extracted directly. Other images are written as PNGs, processed with either ImageMagick's ``magick'' command, or NetPBM's ``pnmtopng'' program, whichever is installed.
 
   \begin{framed}
-  \noindent\small\verb@cpdf -extract-images in.pdf [<range>] [-im <path>] [-p2p <path] -o <path>@
+  \noindent\small\verb@cpdf -extract-images in.pdf [<range>] [-im <path>] [-p2p <path]@
+  \noindent\small\verb@     [-dedup | -dedup-perpage] -o <path>@
   \end{framed}
 
 \noindent The \texttt{-im} or \texttt{-p2p} option is used to give the path to the external tool, one of which must be installed. The output specifer, e.g \verb!-o output/%%%! gives the number format for numbering the images. Output files are named serially from 0, and include the page number too. For example, output files might be called \texttt{output/000-p1.jpg}, \texttt{output/001-p1.png}, \texttt{output/002-p3.jpg} etc. Here is an example invocation:
@@ -2178,7 +2180,7 @@ Cpdf can extract the raster images to a given location. JPEG, JPEG2000 and JBIG2
   \noindent\small\verb@cpdf -extract-images in.pdf -im magick -o output/%%%@
   \end{framed}
 
-\noindent The \texttt{output} directory must already exist.
+\noindent The \texttt{output} directory must already exist. The \texttt{-dedup} option deduplicates images entirely; the \texttt{-dedup-perpage} option only per page.
 
 
   \section{Detecting Low-resolution Images}\label{imageres}
