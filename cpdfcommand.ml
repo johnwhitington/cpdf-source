@@ -3,7 +3,7 @@ let demo = false
 let noncomp = false
 let major_version = 2
 let minor_version = 4
-let version_date = "(devel, 21st December 2020)"
+let version_date = "(devel, 6th January 2020)"
 
 open Pdfutil
 open Pdfio
@@ -871,6 +871,8 @@ let anon_fun s =
           | (a, _, d, e, f, g)::t ->
                args.inputs <- (a, fixdashes s, d, e, f, g)::t
 
+(* If a password begins with a dash, we allow -pw=<password> too *)
+let setdashpassword = anon_fun
 
 (*let firstpage pdf =
   List.hd (Pdfpage.pages_of_pagetree pdf)*)
@@ -1512,6 +1514,8 @@ let set_dedup_per_page () =
 let whingemalformed () =
   prerr_string "Command line must be of exactly the form\ncpdf <infile> -gs <path> -gs-malformed-force -o <outfile>\n";
   exit 1
+
+
 
 let nothing () = ()
 
@@ -2191,6 +2195,7 @@ and specs =
    ("-fix-prince", Arg.Unit (setop RemoveUnusedResources), "");
    ("-extract-text", Arg.Unit (setop ExtractText), "");
    ("-extract-text-font-size", Arg.Float setextracttextfontsize, "");
+   ("-pw", Arg.String setdashpassword, "");
   ]
 
 and usage_msg =
