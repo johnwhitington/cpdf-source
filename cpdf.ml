@@ -4201,7 +4201,7 @@ and remove_images_page onlyremove boxes pdf page =
             form_xobjects';
         let image_xobjects' =
           match onlyremove with
-            None -> image_xobjects
+            None -> []
           | Some n -> option_map (function (n', _) as xobj -> if n = n' then None else Some xobj) image_xobjects
         in
             let newdict =
