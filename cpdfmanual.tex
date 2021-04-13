@@ -1,4 +1,6 @@
+%a. Suggest adding the section numbers to the titles of bookmarks in the outline of the User Manual to more closely mimic the table of contents. The table of contents is primarily an artifact for the printed version and not particularly convenient for the reader of the PDF version.
 %Document -pw
+%Document -prepend-content, -postpend-content
 \documentclass{book}
 \usepackage{palatino}
 \usepackage{microtype}
@@ -100,17 +102,17 @@ verbosity. Under Microsoft Windows, type \texttt{cpdf.exe} instead of \texttt{cp
   \begin{framed}
   \small
   \noindent\begin{verbatim}
-  -help                    --help                -version 
-  -o                       -idir <directory>     -recrypt
-  -stdout                  -stdin                -stdin-user <password>
-  -stdin-owner <password>  -producer <text>      -creator <text>
-  -change-id               -l                    -cpdflin <filename>
-  -keep-l                  -no-preserve-objstm   -create-objstm
-  -control <filename>      -args <filename>      -utf8
-  -stripped                -raw                  -no-embed-font
-  -create-pdf              -create-pdf-pages     -create-pdf-papersize
-  -gs                      -gs-malformed         -gs-force-malformed
-  -gs-quiet                -error-on-malformed\end{verbatim}\end{framed}
+  -help                    --help                   -version 
+  -o                       -i                       -idir <directory>
+  -recrypt                 -stdout                  -stdin
+  -stdin-user <password>   -stdin-owner <password>  -producer <text>
+  -creator <text>          -change-id               -l
+  -cpdflin <filename>      -keep-l                  -no-preserve-objstm
+  -create-objstm           -control <filename>      -args <filename>
+  -utf8                    -stripped                -raw
+  -no-embed-font           -create-pdf              -create-pdf-pages
+  -create-pdf-papersize    -gs                      -gs-malformed
+  -gs-malformed-force      -gs-quiet                -error-on-malformed\end{verbatim}\end{framed}
 
   The Coherent PDF tools provide a wide range of facilities for modifying PDF
 files created by other means. There is a single command-line program
@@ -448,7 +450,7 @@ progress is shown on \verb!stderr! (Standard Error):
 \small\verb$Malformed PDF reconstruction succeeded!$
 \end{framed}
 
-\noindent If \texttt{cpdf} cannot reconstruct a malformed file, it is able to use the \texttt{gs} program to try to reconstruct the program, if you have it installed. For example, if \texttt{gs} is installed and in your path, we might try:
+\noindent If \texttt{cpdf} cannot reconstruct a malformed file, it is able to use the \texttt{gs} program to try to reconstruct the PDF file, if you have it installed. For example, if \texttt{gs} is installed and in your path, we might try:
 
 \begin{framed}
 \noindent\small\verb!cpdf -gs gs -gs-malformed in.pdf -o out.pdf!\end{framed}
@@ -636,7 +638,7 @@ output file to be set.
     \noindent Split \texttt{a.pdf} to the files \texttt{out001.pdf}, \texttt{out002.pdf} etc.
 
     \vspace{2.5mm}
-    \verb!cpdf -split a.pdf 1 even -chunk 10 -o dir/out%%%.pdf!
+    \verb!cpdf a.pdf even AND -split -chunk 10 -o dir/out%%%.pdf!
 
     \vspace{2.5mm}
     \noindent Split the even pages of \texttt{a.pdf} to the files
@@ -1648,7 +1650,7 @@ For compatibility with previous versions of cpdf, special characters may be
 introduced manually with a backslash followed by the three-digit octal code of
 the character in the PDF WinAnsiEncoding Latin 1 Code. The full table is
 included in Appendix D of the Adobe PDF Reference Manual, which is available at
-\url{http://www.adobe.com/devnet/pdf/pdf_reference.html}.
+\url{https://wwwimages2.adobe.com/content/dam/acom/en/devnet/pdf/pdfs/PDF32000_2008.pdf}.
 
 For example, a German sharp s (\ss) may be introduced by \verb!\337!. 
 
