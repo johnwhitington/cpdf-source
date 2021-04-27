@@ -3768,9 +3768,13 @@ let xmp_date date =
                 end
             | _ -> raise Exit  
             end
-        | _ -> failwith (Printf.sprintf "xmp_date: Malformed date string (no year): %s" date)
+        | _ ->
+          Printf.eprintf "xmp_date: Malformed date string (no year): %s\n" date;
+          make_xmp_date_from_components d
         end
-    | _ -> failwith (Printf.sprintf "xmp_date: Malformed date string (no prefix): %s" date)
+    | _ ->
+        Printf.eprintf "xmp_date: Malformed date string (no prefix): %s\n" date;
+        make_xmp_date_from_components d
   with
     Exit -> make_xmp_date_from_components d
 
