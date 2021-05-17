@@ -1,6 +1,6 @@
 name="cpdf"
 description="High-level pdf tools based on CamlPDF"
-version="1.7"
+version="2.3"
 requires="camlpdf"
 archive(byte)="cpdf.cma"
 archive(native)="cpdf.cmxa"
