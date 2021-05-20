@@ -1536,6 +1536,9 @@ and specs =
    ("-idir",
        Arg.String set_input_dir,
        " Add a directory of files");
+   ("-pw",
+       Arg.String setdashpassword,
+       " Supply a password explicitly -pw=<password>");
    ("-stdin",
        Arg.Unit setstdin,
        " Read input from standard input");
@@ -2146,6 +2149,9 @@ and specs =
    ("-gs-quiet",
     Arg.Unit setgsquiet,
     " Make gs go into quiet mode");
+   ("-gs-malformed-force",
+     Arg.Unit whingemalformed,
+     " See manual for usage.");
    ("-im",
     Arg.String setimpath,
     " Path to imagemagick executable");
@@ -2161,23 +2167,48 @@ and specs =
    ("-dedup-perpage",
      Arg.Unit set_dedup_per_page,
      " Deduplicate extracted images per page only");
-   ("-squeeze", Arg.Unit setsqueeze, " Squeeze");
-   ("-squeeze-log-to", Arg.String setsqueezelogto, " Squeeze log location");
-   ("-squeeze-no-pagedata", Arg.Unit setsqueezepagedata, " Don't recompress pages");
-   ("-squeeze-no-recompress", Arg.Unit setsqueezerecompress, " Don't recompress streams");
-   (* Just for error reporting *)
-   ("-gs-malformed-force", Arg.Unit whingemalformed, "");
-   (* These items are not documented yet, but will be soon *)
-   ("-output-json", Arg.Unit (setop OutputJSON), "");
-   ("-output-json-parse-content-streams", Arg.Unit setjsonparsecontentstreams, "");
-   ("-output-json-no-stream-data", Arg.Unit setjsonnostreamdata, "");
-   ("-ocg-coalesce-on-name", Arg.Unit (setop OCGCoalesce), "");
-   ("-ocg-list", Arg.Unit (setop OCGList), "");
-   ("-ocg-rename", Arg.Unit (setop OCGRename), "");
-   ("-ocg-rename-from", Arg.String setocgrenamefrom, "");
-   ("-ocg-rename-to", Arg.String setocgrenameto, "");
-   ("-ocg-order-all", Arg.Unit (setop OCGOrderAll), "");
-   ("-stamp-as-xobject", Arg.String setstampasxobject, "");
+   ("-squeeze",
+     Arg.Unit setsqueeze,
+     " Squeeze");
+   ("-squeeze-log-to",
+     Arg.String setsqueezelogto,
+     " Squeeze log location");
+   ("-squeeze-no-pagedata",
+     Arg.Unit setsqueezepagedata,
+     " Don't recompress pages");
+   ("-squeeze-no-recompress",
+     Arg.Unit setsqueezerecompress,
+     " Don't recompress streams");
+   ("-output-json",
+     Arg.Unit (setop OutputJSON),
+     " Export PDF file as JSON data");
+   ("-output-json-parse-content-streams",
+     Arg.Unit setjsonparsecontentstreams,
+     " Parse content streams");
+   ("-output-json-no-stream-data",
+     Arg.Unit setjsonnostreamdata,
+     " Skip stream data for brevity");
+   ("-ocg-list",
+     Arg.Unit (setop OCGList),
+     " List optional content groups");
+   ("-ocg-rename",
+     Arg.Unit (setop OCGRename),
+     " Rename optional content group");
+   ("-ocg-rename-from",
+     Arg.String setocgrenamefrom,
+     " Rename from (with -ocg-rename)");
+   ("-ocg-rename-to",
+     Arg.String setocgrenameto,
+     " Rename to (with -ocg-rename)");
+   ("-ocg-order-all",
+     Arg.Unit (setop OCGOrderAll),
+     " Repair /Order so all OCGs listed ");
+   ("-ocg-coalesce-on-name",
+     Arg.Unit (setop OCGCoalesce),
+     " Coalesce OCGs with like name");
+   ("-stamp-as-xobject",
+     Arg.String setstampasxobject,
+     "Stamp a file as a form xobject in another");
    (* These items are undocumented *)
    ("-remove-unused-resources", Arg.Unit (setop RemoveUnusedResources), "");
    ("-stay-on-error", Arg.Unit setstayonerror, "");
@@ -2195,7 +2226,6 @@ and specs =
    ("-fix-prince", Arg.Unit (setop RemoveUnusedResources), "");
    ("-extract-text", Arg.Unit (setop ExtractText), "");
    ("-extract-text-font-size", Arg.Float setextracttextfontsize, "");
-   ("-pw", Arg.String setdashpassword, "");
   ]
 
 and usage_msg =
