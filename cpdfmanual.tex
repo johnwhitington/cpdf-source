@@ -1345,22 +1345,14 @@ the file using a different page range each time.
 
   \vspace{1.5mm}
   \noindent\small\begin{verbatim}cpdf ([-add-text <text-format> | -add-rectangle <size>])
-              [-font <fontname>]
-              [-font-size <size-in-points>]
-              [-color <color>]
-              [-line-spacing <number>]
-              [-outline]
-              [-linewidth <number>]
-              [-underneath]
-              [-relative-to-cropbox]
-              [-prerotate]
-              [-bates <number>]
-              [-bates-at-range <number>]
-              [-bates-pad-to <number>]
-              [-opacity <number>]
-              [-midline]
-              [-topline]
-              [-fast]
+              [-font <fontname>]          [-font-size <size-in-points>]
+              [-color <color>]            [-line-spacing <number>]
+              [-outline]                  [-linewidth <number>]
+              [-underneath]               [-relative-to-cropbox]
+              [-prerotate]                [-bates <number>]
+              [-bates-at-range <number>]  [-bates-pad-to <number>]
+              [-opacity <number>]         [-midline]
+              [-topline]                  [-fast]
               in.pdf [<range>] -o out.pdf\end{verbatim}
   \noindent See also positioning commands below.
 
@@ -1368,7 +1360,13 @@ the file using a different page range each time.
   \noindent\small\verb!cpdf -remove-text in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
-  \noindent\small\verb!cpdf -add-rectangle "x y" [<position>] [<colour>] in.pdf -o out.pdf!
+  \noindent\small\verb!cpdf -prepend-content <content> in.pdf [<range>] -o out.pdf!
+
+  \vspace{1.5mm}
+  \noindent\small\verb!cpdf -postpend-content <content> in.pdf [<range>] -o out.pdf!
+
+  \vspace{1.5mm}
+  \noindent\small\verb!cpdf -stamp-as-xobject stamp.pdf in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
   \noindent\small NB: See discussion of \texttt{-fast} in Section \ref{fast}.
@@ -1667,6 +1665,22 @@ A rectangle may be placed on one or more pages by using the \texttt{-add-rectang
 
 \noindent This can be used to blank out or highlight part of the document. The following positioning options work as you would expect: \texttt{-topleft}, \texttt{-top}, \texttt{-topright}, \texttt{-right}, \texttt{-bottomright}, \texttt{-bottom}, \texttt{-bottomleft}, \texttt{-left}, \texttt{-center}. When using the option \texttt{-pos-left "x y"}, the point (x, y) refers to the bottom-left of the rectangle. When using the option \texttt{-pos-right "x y"}, the point (x, y) refers to the bottom-right of the rectangle. When using the option \texttt{-pos-center "x y"}, the point (x, y) refers to the center of the rectangle. The options \texttt{-diagonal} and \texttt{-reverse-diagonal} have no meaning.\pagestyle{empty}\thispagestyle{fancy}
 
+\section{Low-level facilities}
+
+These two operations add content directly to the beginning or end of the page data for a page. You must understand the PDF page description language to use these.
+
+\begin{framed}
+  \noindent\small\verb!cpdf -prepend-content <content> in.pdf [<range>] -o out.pdf!\\
+
+\vspace{1.5mm}
+  \noindent\small\verb!cpdf -postpend-content <content> in.pdf [<range>] -o out.pdf!
+\end{framed}
+
+\noindent The \texttt{-stamp-as-xobject} operation puts a file in another as a Form XObject on the given pages. You can then use \texttt{-prepend-content} or \texttt{-postpend-content} to use it.
+
+\begin{framed}
+  \noindent\small\verb!cpdf -stamp-as-xobject stamp.pdf in.pdf [<range>] -o out.pdf!
+\end{framed}
 
 \chapter{Multipage Facilities}\pagestyle{fancy}\label{multipage}
   \begin{framed}
