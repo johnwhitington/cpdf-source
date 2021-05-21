@@ -1004,7 +1004,7 @@ The \texttt{-trim-marks} operation adds trim marks to a PDF file. The trim box m
 \index{encryption}
 \index{decryption}
   \begin{framed}
-    \small\noindent\verb!cpdf -encrypt <method> <owner> <user>!\\
+    \small\noindent\verb!cpdf -encrypt <method> [-pw=]<owner> [-pw=]<user>!\\
     \noindent\verb!     [-no-encrypt-metadata] <permissions> in.pdf -o out.pdf!
 
     \vspace{1.5mm}
@@ -1075,7 +1075,9 @@ password for when opening the file or for operations allowable with the user pas
     \small\verb!cpdf -encrypt AES256 fred "" -no-forms in.pdf -o out.pdf!
   \end{framed}
 \noindent In addition, the usual method can be used to give the existing owner
-password, if the document is already encrypted. 
+password, if the document is already encrypted.
+
+The optional \texttt{-pw=} preface may be given where a password might begin with a \texttt{-} and thus be confused with a command line option.
 
 When using AES encryption, the option is available to refrain from encrypting the
 metadata. Add \texttt{-no-encrypt-metadata} to the command line.
@@ -2325,6 +2327,93 @@ recommended when file size is the sole consideration.
   \end{framed}
 
 \label{listmisingfonts}
+
+\chapter{PDF and JSON}
+  {\small\begin{framed}
+  \noindent\verb!cpdf in.pdf -output-json -o out.json!\\
+  \noindent\verb!     [-output-json-parse-content-streams]!\\
+  \noindent\verb!     [-output-json-no-stream-data]!
+
+  \end{framed}}
+
+Output PDF as JSON data. Each object is written under its object number. The object number zero is used to store the trailer dictionary. Negative object numbers are reserved for future format expansion. Here is a small PDF so output:
+
+{\small\begin{verbatim}
+[ [ 0,
+    { "/Size": 4, "/Root": 4,
+      "/ID": ["<elided>", "<elided>"] } ],
+  [ 3,
+    { "/Type": "/Page", "/Parent": 1,
+      "/Resources": { "/Font": { "/F0": { "/Type": "/Font",
+                                          "/Subtype": "/Type1",
+                                          "/BaseFont": "/Times-Italic" } } },
+      "/MediaBox": [ 0, 0, 595.275591, 841.889764 ], "/Rotate": 0,
+      "/Contents": [ 2 ] } ],
+  [ 4, { "/Type": "/Catalog", "/Pages": 1 } ],
+  [ 1, { "/Type": "/Pages", "/Kids": [ 3 ], "/Count": 1 } ],
+  [ 2,
+    [ { "/Length": 49 },
+      "1 0 0 1 50 770 cm BT/F0 36 Tf(Hello, World!)Tj ET" ] ] ]
+\end{verbatim}}
+
+\noindent The option \texttt{-output-json-parse-content-streams} will also convert content streams to JSON, so our example content stream will be expanded:
+
+
+{\small\begin{verbatim}
+[ [ 1.000000, 0.000000, 0.000000, 1.000000, 50.000000, 770.000000,
+          "cm" ],
+        [ "BT" ], [ "/F0", 36.000000, "Tf" ], [ "Hello, World!", "Tj" ],
+        [ "ET" ] ] ] ] ]
+\end{verbatim}}
+
+\noindent The option \texttt{-output-json-no-stream-data} simply elides the stream data instead, leading to much smaller JSON files. 
+
+\chapter{Optional Content Groups}
+
+  {\small\begin{framed}
+  \noindent\verb!cpdf -ocg-list in.pdf!
+
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -ocg-rename -ocg-rename-from <a> -ocg-rename-to <b> in.pdf -o out.pdf!
+
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -ocg-order-all in.pdf -o out.pdf!
+
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -ocg-coalesce-on-name in.pdf -o out.pdf!
+
+  \end{framed}}
+
+
+In a PDF file, optional content groups are used to group graphical elements together, so they may appear or not, depending on the preference of the user. They are similar in some ways to layers in graphics illustration programs.
+
+  {\small\begin{framed}
+  \noindent\verb!cpdf -ocg-list in.pdf!
+  \end{framed}}
+
+\noindent List the optional content groups in the PDF, one per line, to standard output.
+  
+  {\small\begin{framed}
+  \noindent\verb!cpdf -ocg-rename -ocg-rename-from <a> -ocg-rename-to <b> in.pdf -o out.pdf!
+  \end{framed}}
+
+\noindent Rename an optional content group.
+
+
+
+  {\small\begin{framed}
+  \noindent\verb!cpdf -ocg-coalesce-on-name in.pdf -o out.pdf!
+  \end{framed}}
+
+
+\noindent Coalesce optional content groups. For example, if we merge or stamp two files both with an OCG called "Layer 1", we will have two different optional content groups. Running \texttt{-ocg-coalesce-on-name} will merge the two into a single optional content group.
+
+  {\small\begin{framed}
+  \noindent\verb!cpdf -ocg-order-all in.pdf -o out.pdf!
+  \end{framed}}
+
+\noindent Ensure that every optional content group appears in the order list.
+
 
 \chapter{Miscellaneous}
   {\small\begin{framed}
