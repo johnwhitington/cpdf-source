@@ -92,6 +92,195 @@ verbosity. Under Microsoft Windows, type \texttt{cpdf.exe} instead of \texttt{cp
 %\chapterstyle{hangnum}
 %\pagestyle{ruled}
 \pagestyle{fancy}
+
+\chapter*{Quickstart Examples}
+
+\section*{Basic Usage}
+
+\begin{framed}\noindent\texttt{cpdf in.pdf 1-3,6 -o out.pdf}\end{framed}
+
+\noindent Read \texttt{in.pdf}, select pages 1, 2, 3 and 6, and write those pages to \texttt{out.pdf}.
+
+
+\begin{framed}\noindent\texttt{cpdf in.pdf even -o out.pdf}\end{framed}
+                  
+\noindent Select the even pages (2, 4, 6...) from \texttt{in.pdf} and write those pages to \texttt{out.pdf}.
+
+\begin{framed}\noindent\texttt{cpdf -merge in.pdf in2.pdf AND -add-text "Copyright 2021" -o out.pdf}\end{framed}
+
+\noindent Using \texttt{AND} to perform several operations in order, here merging two files together and adding a copyright stamp to every page.
+
+\begin{framed}\noindent\texttt{cpdf -control control.txt}\end{framed}
+
+\noindent Read \texttt{control.txt} and use its contents as the command line arguments for \texttt{cpdf}.
+
+\section*{Merging and Splitting}
+
+\begin{framed}\noindent\texttt{cpdf -merge in.pdf in2.pdf -o out.pdf}\end{framed}
+
+\noindent Merge \texttt{in.pdf} and \texttt{in2.pdf} into one document, writing to \texttt{out.pdf}.
+
+\begin{framed}\noindent\texttt{cpdf -split in.pdf -o Chunk\%\%\%.pdf -chunk 10}\end{framed}
+
+\noindent Split \texttt{in.pdf} into ten-page chunks, writing them to \texttt{Chunk001.pdf}, \texttt{Chunk002.pdf} etc.
+
+\begin{framed}\noindent\texttt{cpdf -split-bookmarks 0 in.pdf -o @N.pdf}\end{framed}
+
+\noindent Split \texttt{in.pdf} on bookmark boundaries, writing each to a file whose name is the bookmark label.
+
+\section*{Pages}
+
+\begin{framed}\noindent\texttt{cpdf -scale-page "2 2" in.pdf -o out.pdf}\end{framed}
+
+\noindent Scale both the dimensions and contents of \texttt{in.pdf} by a factor of two in x and y directions.
+
+\begin{framed}\noindent\texttt{cpdf -scale-to-fit usletterportrait in.pdf -o out.pdf}\end{framed}
+
+\noindent Scale the pages in \texttt{in.pdf} to fit the US Letter page size, writing to \texttt{out.pdf}
+
+\begin{framed}\noindent\texttt{cpdf -shift "26pt 18mm" in.pdf -o out.pdf}\end{framed}
+
+\noindent Shift the contents of the page by 26 pts in the x direction, and 18 millimetres in the y direction, writing to \texttt{out.pdf}
+
+\begin{framed}\noindent\texttt{cpdf -rotate-contents 90 in.pdf -o out.pdf}\end{framed}
+
+\noindent Rotate the contents of the pages in \texttt{in.pdf} by ninety degrees and write to \texttt{out.pdf}.
+
+\begin{framed}\noindent\texttt{cpdf -crop "0 0 600pt 400pt" in.pdf -o out.pdf}\end{framed}
+
+\noindent Crop the pages in \texttt{in.pdf} to a 600 pts by 400 pts rectangle.
+
+
+\section*{Encryption and Decryption}
+
+\begin{framed}\noindent\texttt{cpdf -encrypt 128bit fred joe in.pdf -o out.pdf}\end{framed}
+
+\noindent Encrypt \texttt{in.pdf} using 128bit PDF encryption using the owner password \texttt{fred} and the user password \texttt{joe} and writing the encrypted file to \texttt{out.pdf}
+
+\begin{framed}\noindent\texttt{cpdf -decrypt in.pdf owner=fred -o out.pdf}\end{framed}
+
+\noindent Decrypt \texttt{in.pdf} using the owner password, writing to \texttt{out.pdf}.
+
+
+\section*{Compression}
+
+\begin{framed}\noindent\texttt{cpdf -compress in.pdf -o out.pdf}\end{framed}
+
+\noindent Compress the data streams in \texttt{in.pdf}, writing the result to \texttt{out.pdf}.
+
+\begin{framed}\noindent\texttt{cpdf -decompress in.pdf -o out.pdf}\end{framed}
+
+\noindent Decompress the data streams in \texttt{in.pdf}, writing to \texttt{out.pdf}.
+
+
+\section*{Bookmarks}
+
+\begin{framed}\noindent\texttt{cpdf -list-bookmarks in.pdf}\end{framed}
+
+\noindent List the bookmarks in \texttt{in.pdf}. This would produce:
+
+\begin{verbatim}
+0 "Part 1" 1 open
+1 "Part 1A" 2
+2 "Part 1B" 3
+0 "Part 2" 4
+1 "Part 2a" 5
+\end{verbatim}
+
+\begin{framed}\noindent\texttt{cpdf -add-bookmarks bookmarks.txt in.pdf -o out.pdf}\end{framed}
+
+\noindent Add bookmarks in the same form from a prepared file \texttt{bookmarks.txt} to \texttt{in.pdf}, writing to \texttt{out.pdf}.
+
+
+\section*{Presentations}
+
+\begin{framed}\noindent\texttt{cpdf -presentation in.pdf 2-end -trans Split -duration 10 -o out.pdf}\end{framed}
+
+\noindent Use the Split style to build a presentation from the PDF \texttt{in.pdf}, each slide staying 10 seconds on screen unless manually advanced. The first page, being a title does not move on automatically, and has no transition effect.
+
+\section*{Logos, Watermarks and Stamps}
+
+\begin{framed}\noindent\texttt{cpdf -stamp-on watermark.pdf in.pdf -o out.pdf}\end{framed}
+
+\noindent Stamp the file \texttt{watermark.pdf} on to each page of \texttt{in.pdf}, writing the result to \texttt{out.pdf}.
+
+\begin{framed}\noindent\texttt{cpdf -topleft 10 -font Courier\\ \phantom{\ \ \ \ } -add-text "Page \%Page\textbackslash nDate \%d-\%m-\%Y" in.pdf -o out.pdf}\end{framed}
+
+\noindent Add a page number and date to all the pages in \texttt{in.pdf} using the Courier font, writing to \texttt{out.pdf}.
+
+\section*{Multipage Facilities}
+
+\begin{framed}\noindent\texttt{cpdf -twoup-stack in.pdf -o out.pdf}\end{framed}
+
+\noindent Two up impose the file \texttt{in.pdf}, writing to \texttt{out.pdf}.
+
+\begin{framed}\noindent\texttt{cpdf -pad-after in.pdf 1,3,4 -o out.pdf}\end{framed}
+
+\noindent Add extra blank pages after pages one, three and four of a document.
+
+\section*{Annotations}
+
+\begin{framed}\noindent\texttt{cpdf -list-annotations in.pdf}\end{framed}
+
+\noindent List the annotations in a file \texttt{in.pdf} to standard output. This might produce:
+
+\noindent\begin{verbatim}
+--------------------------------
+Annotation text content 1
+--------------------------------
+
+--------------------------------
+Annotation text content 2
+--------------------------------
+\end{verbatim}
+
+\begin{framed}\noindent\texttt{cpdf -copy-annotations from.pdf in.pdf -o out.pdf}\end{framed}
+
+\noindent Copy the annotations from \texttt{from.pdf} to \texttt{in.pdf}, writing to \texttt{out.pdf}.
+
+\section*{Document Information and Metadata}
+
+\begin{framed}\noindent\texttt{cpdf -set-title "The New Title" in.pdf -o out.pdf}\end{framed}
+
+\noindent Set the document title of \texttt{in.pdf}. writing to \texttt{out.pdf}.
+
+\begin{framed}\noindent\texttt{cpdf -hide-toolbar true in.pdf -o out.pdf}\end{framed}
+
+\noindent Set the document \texttt{in.pdf} to open with the Acrobat Viewer's toolbar hidden, writing to \texttt{out.pdf}.
+
+\begin{framed}\noindent\texttt{cpdf -set-metadata metadata.xml in.pdf -o out.pdf}\end{framed}
+
+\noindent Set the metadata in a PDF \texttt{in.pdf} to the contents of the file \texttt{metadata.xml}, and write the output to \texttt{out.pdf}.
+
+\begin{framed}\noindent\texttt{cpdf -set-page-layout TwoColumnRight in.pdf -o out.pdf}\end{framed}
+
+\noindent Set the document \texttt{in.pdf} to open in Acrobat Viewer showing two columns of pages, starting on the right, putting the result in \texttt{out.pdf}.
+
+\begin{framed}\noindent\texttt{cpdf -set-page-mode FullScreen in.pdf -o out.pdf}\end{framed}
+
+\noindent Set the document \texttt{in.pdf} to open in Acrobat Viewer in full screen mode, putting the result in \texttt{out.pdf}.
+
+\section*{File Attachments}
+
+\begin{framed}\noindent\texttt{cpdf -attach-file sheet.xls in.pdf -o out.pdf}\end{framed}
+
+\noindent Attach the file \texttt{sheet.xls} to \texttt{in.pdf}, writing to \texttt{out.pdf}.
+
+\begin{framed}\noindent\texttt{cpdf -remove-files in.pdf -o out.pdf}\end{framed}
+
+\noindent Remove any attachments from \texttt{in.pdf}, writing to \texttt{out.pdf}.
+
+
+\section*{Miscellaneous}
+
+\begin{framed}\noindent\texttt{cpdf -blacktext in.pdf -o out.pdf}\end{framed}
+
+\noindent Blacken all the text in \texttt{in.pdf}, writing to \texttt{out.pdf}.
+
+\begin{framed}\noindent\texttt{cpdf -thinlines 2pt in.pdf -o out.pdf}\end{framed}
+
+\noindent Make sure all lines in \texttt{in.pdf} are at least 2 pts wide, writing to \texttt{out.pdf}.
+
 \chapter{Basic Usage}
 
 
@@ -1676,7 +1865,7 @@ These two operations add content directly to the beginning or end of the page da
   \noindent\small\verb!cpdf -postpend-content <content> in.pdf [<range>] -o out.pdf!
 \end{framed}
 
-\noindent The \texttt{-stamp-as-xobject} operation puts a file in another as a Form XObject on the given pages. You can then use \texttt{-prepend-content} or \texttt{-postpend-content} to use it.
+\noindent The \texttt{-fast} option may be added (see Chapter 1). The \texttt{-stamp-as-xobject} operation puts a file in another as a Form XObject on the given pages. You can then use \texttt{-prepend-content} or \texttt{-postpend-content} to use it.
 
 \begin{framed}
   \noindent\small\verb!cpdf -stamp-as-xobject stamp.pdf in.pdf [<range>] -o out.pdf!
