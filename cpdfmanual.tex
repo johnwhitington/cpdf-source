@@ -65,33 +65,7 @@ Version 2.4 (June 2021)
 registered trademarks of Adobe Systems Incorporated. Windows, Powerpoint and
 Excel are registered trademarks of Microsoft Corporation.
 
-% Letter
 \cleardoublepage
-\tableofcontents
-
-\cleardoublepage
-\chapter*{Typographical Conventions}
-Command lines to be typed are shown in \texttt{typewriter\hspace{-1mm} font} in a box.
-For example:
-\begin{framed}
-\small\verb!cpdf in.pdf -o out.pdf!
-\end{framed}
-\noindent When describing the general form of a command, rather than a particular
-example, square brackets \verb|[]| are used to enclose optional parts, and
-angled braces \verb!<>! to enclose general descriptions which may be
-substituted for particular instances. For example,
-\begin{framed}
-\small\verb!cpdf <operation> in.pdf [<range>] -o out.pdf!
-\end{framed}
-\noindent describes a command line which requires an operation and, optionally,
-a range. An exception is that we use \texttt{in.pdf} and \texttt{out.pdf}
-instead of \texttt{<input file>} and \texttt{<output file>} to reduce
-verbosity. Under Microsoft Windows, type \texttt{cpdf.exe} instead of \texttt{cpdf}.
-\cleardoublepage
-\mainmatter
-%\chapterstyle{hangnum}
-%\pagestyle{ruled}
-\pagestyle{fancy}
 
 \chapter*{Quickstart Examples}
 
@@ -106,7 +80,7 @@ verbosity. Under Microsoft Windows, type \texttt{cpdf.exe} instead of \texttt{cp
                   
 \noindent Select the even pages (2, 4, 6...) from \texttt{in.pdf} and write those pages to \texttt{out.pdf}.
 
-\begin{framed}\noindent\texttt{cpdf -merge in.pdf in2.pdf AND -add-text "Copyright 2021" -o out.pdf}\end{framed}
+\begin{framed}\noindent\texttt{cpdf -merge in.pdf in2.pdf AND -add-text "Copyright 2021"\\\phantom{\ \ \ \ } -o out.pdf}\end{framed}
 
 \noindent Using \texttt{AND} to perform several operations in order, here merging two files together and adding a copyright stamp to every page.
 
@@ -177,15 +151,7 @@ verbosity. Under Microsoft Windows, type \texttt{cpdf.exe} instead of \texttt{cp
 
 \begin{framed}\noindent\texttt{cpdf -list-bookmarks in.pdf}\end{framed}
 
-\noindent List the bookmarks in \texttt{in.pdf}. This would produce:
-
-\begin{verbatim}
-0 "Part 1" 1 open
-1 "Part 1A" 2
-2 "Part 1B" 3
-0 "Part 2" 4
-1 "Part 2a" 5
-\end{verbatim}
+\noindent List the bookmarks in \texttt{in.pdf}. 
 
 \begin{framed}\noindent\texttt{cpdf -add-bookmarks bookmarks.txt in.pdf -o out.pdf}\end{framed}
 
@@ -194,7 +160,7 @@ verbosity. Under Microsoft Windows, type \texttt{cpdf.exe} instead of \texttt{cp
 
 \section*{Presentations}
 
-\begin{framed}\noindent\texttt{cpdf -presentation in.pdf 2-end -trans Split -duration 10 -o out.pdf}\end{framed}
+\begin{framed}\noindent\texttt{cpdf -presentation in.pdf 2-end -trans Split -duration 10\\\phantom{\ \ \ \ } -o out.pdf}\end{framed}
 
 \noindent Use the Split style to build a presentation from the PDF \texttt{in.pdf}, each slide staying 10 seconds on screen unless manually advanced. The first page, being a title does not move on automatically, and has no transition effect.
 
@@ -222,17 +188,7 @@ verbosity. Under Microsoft Windows, type \texttt{cpdf.exe} instead of \texttt{cp
 
 \begin{framed}\noindent\texttt{cpdf -list-annotations in.pdf}\end{framed}
 
-\noindent List the annotations in a file \texttt{in.pdf} to standard output. This might produce:
-
-\noindent\begin{verbatim}
---------------------------------
-Annotation text content 1
---------------------------------
-
---------------------------------
-Annotation text content 2
---------------------------------
-\end{verbatim}
+\noindent List the annotations in a file \texttt{in.pdf} to standard output.
 
 \begin{framed}\noindent\texttt{cpdf -copy-annotations from.pdf in.pdf -o out.pdf}\end{framed}
 
@@ -280,6 +236,35 @@ Annotation text content 2
 \begin{framed}\noindent\texttt{cpdf -thinlines 2pt in.pdf -o out.pdf}\end{framed}
 
 \noindent Make sure all lines in \texttt{in.pdf} are at least 2 pts wide, writing to \texttt{out.pdf}.
+% Letter
+\cleardoublepage
+\tableofcontents
+
+\cleardoublepage
+\chapter*{Typographical Conventions}
+Command lines to be typed are shown in \texttt{typewriter\hspace{-1mm} font} in a box.
+For example:
+\begin{framed}
+\small\verb!cpdf in.pdf -o out.pdf!
+\end{framed}
+\noindent When describing the general form of a command, rather than a particular
+example, square brackets \verb|[]| are used to enclose optional parts, and
+angled braces \verb!<>! to enclose general descriptions which may be
+substituted for particular instances. For example,
+\begin{framed}
+\small\verb!cpdf <operation> in.pdf [<range>] -o out.pdf!
+\end{framed}
+\noindent describes a command line which requires an operation and, optionally,
+a range. An exception is that we use \texttt{in.pdf} and \texttt{out.pdf}
+instead of \texttt{<input file>} and \texttt{<output file>} to reduce
+verbosity. Under Microsoft Windows, type \texttt{cpdf.exe} instead of \texttt{cpdf}.
+\cleardoublepage
+\mainmatter
+%\chapterstyle{hangnum}
+%\pagestyle{ruled}
+\pagestyle{fancy}
+
+
 
 \chapter{Basic Usage}
 
