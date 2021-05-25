@@ -67,6 +67,14 @@ let parse_pagespec pdf spec =
   try Cpdf.parse_pagespec pdf spec with
     Failure x -> error x
 
+(* We allow an operation such as ScaleToFit on a range such as 'portrait' to be silently null to allow, for example:
+
+cpdf -scale-to-fit a4portrait in.pdf portrait AND -scale-to-fit a4landscape landscape -o out.pdf
+*)
+let parse_pagespec_allow_empty pdf spec =
+  try Cpdf.parse_pagespec pdf spec with
+    Pdf.PDFError ("Page range specifies no pages") -> []
+
 (* Operations. *)
 type op =
   | CopyFont of string
@@ -3530,7 +3538,7 @@ let go () =
       | (_, pagespec, u, o, _, _)::_, _ ->
           let pdf = get_single_pdf (Some (CopyFont fromfile)) false
           and frompdf = pdfread_pdf_of_file (optstring u) (optstring o) fromfile in
-            let range = parse_pagespec pdf pagespec in
+            let range = parse_pagespec_allow_empty pdf pagespec in
               let copyfontname =
                 match args.copyfontname with
                 | Some x -> x
@@ -3603,7 +3611,7 @@ let go () =
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf args.op true in
-            let range = parse_pagespec pdf pagespec in
+            let range = parse_pagespec_allow_empty pdf pagespec in
               Cpdf.output_page_info pdf range
       | _ -> error "list-bookmarks: bad command line"
       end
@@ -3615,7 +3623,7 @@ let go () =
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
         let pdf = get_single_pdf args.op true in
-          let range = parse_pagespec pdf pagespec in
+          let range = parse_pagespec_allow_empty pdf pagespec in
             Cpdf.list_bookmarks args.encoding range pdf (Pdfio.output_of_channel stdout);
             flush stdout
       | _ -> error "list-bookmarks: bad command line"
@@ -3625,7 +3633,7 @@ let go () =
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some Crop) false in
             let xywhlist = Cpdfcoord.parse_rectangles pdf args.rectangle in
-              let range = parse_pagespec pdf pagespec in
+              let range = parse_pagespec_allow_empty pdf pagespec in
                 let pdf = Cpdf.crop_pdf xywhlist pdf range in
                   write_pdf false pdf
       | _ -> error "crop: bad command line"
@@ -3635,7 +3643,7 @@ let go () =
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some Art) false in
             let xywhlist = Cpdfcoord.parse_rectangles pdf args.rectangle in
-              let range = parse_pagespec pdf pagespec in
+              let range = parse_pagespec_allow_empty pdf pagespec in
                 let pdf = Cpdf.crop_pdf ~box:"/ArtBox" xywhlist pdf range in
                   write_pdf false pdf
       | _ -> error "art: bad command line"
@@ -3645,7 +3653,7 @@ let go () =
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some Bleed) false in
             let xywhlist = Cpdfcoord.parse_rectangles pdf args.rectangle in
-              let range = parse_pagespec pdf pagespec in
+              let range = parse_pagespec_allow_empty pdf pagespec in
                 let pdf = Cpdf.crop_pdf ~box:"/BleedBox" xywhlist pdf range in
                   write_pdf false pdf
       | _ -> error "bleed: bad command line"
@@ -3655,7 +3663,7 @@ let go () =
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some Trim) false in
             let xywhlist = Cpdfcoord.parse_rectangles pdf args.rectangle in
-              let range = parse_pagespec pdf pagespec in
+              let range = parse_pagespec_allow_empty pdf pagespec in
                 let pdf = Cpdf.crop_pdf ~box:"/TrimBox" xywhlist pdf range in
                   write_pdf false pdf
       | _ -> error "trim: bad command line"
@@ -3665,7 +3673,7 @@ let go () =
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some MediaBox) false in
             let xywhlist = Cpdfcoord.parse_rectangles pdf args.rectangle in
-              let range = parse_pagespec pdf pagespec in
+              let range = parse_pagespec_allow_empty pdf pagespec in
                 let pdf = Cpdf.set_mediabox xywhlist pdf range in
                   write_pdf false pdf
       | _ -> error "set media box: bad command line"
@@ -3674,7 +3682,7 @@ let go () =
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some (HardBox box)) false in
-          let range = parse_pagespec pdf pagespec in
+          let range = parse_pagespec_allow_empty pdf pagespec in
             let pdf = Cpdf.hard_box pdf range box args.mediabox_if_missing args.fast in
               write_pdf false pdf
       | _ -> error "hard box: bad command line"
@@ -3683,7 +3691,7 @@ let go () =
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some CopyBox) false in
-            let range = parse_pagespec pdf pagespec in
+            let range = parse_pagespec_allow_empty pdf pagespec in
               let f, t =
                 begin match args.frombox, args.tobox with
                 | Some f, Some t -> f, t
@@ -3711,7 +3719,7 @@ let go () =
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some RemoveCrop) false in
-            let range = parse_pagespec pdf pagespec in
+            let range = parse_pagespec_allow_empty pdf pagespec in
               let pdf = Cpdf.remove_cropping_pdf pdf range in
                 write_pdf false pdf
       | _ -> error "remove-crop: bad command line"
@@ -3720,7 +3728,7 @@ let go () =
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some RemoveArt) false in
-            let range = parse_pagespec pdf pagespec in
+            let range = parse_pagespec_allow_empty pdf pagespec in
               let pdf = Cpdf.remove_art_pdf pdf range in
                 write_pdf false pdf
       | _ -> error "remove-crop: bad command line"
@@ -3729,7 +3737,7 @@ let go () =
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some RemoveTrim) false in
-            let range = parse_pagespec pdf pagespec in
+            let range = parse_pagespec_allow_empty pdf pagespec in
               let pdf = Cpdf.remove_trim_pdf pdf range in
                 write_pdf false pdf
       | _ -> error "remove-crop: bad command line"
@@ -3738,7 +3746,7 @@ let go () =
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some RemoveBleed) false in
-            let range = parse_pagespec pdf pagespec in
+            let range = parse_pagespec_allow_empty pdf pagespec in
               let pdf = Cpdf.remove_bleed_pdf pdf range in
                 write_pdf false pdf
       | _ -> error "remove-crop: bad command line"
@@ -3747,7 +3755,7 @@ let go () =
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some CopyCropBoxToMediaBox) false in
-            let range = parse_pagespec pdf pagespec in
+            let range = parse_pagespec_allow_empty pdf pagespec in
               let pdf = copy_cropbox_to_mediabox pdf range in
                 write_pdf false pdf
       | _ -> error "remove-crop: bad command line"
@@ -3756,7 +3764,7 @@ let go () =
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf args.op false in
-            let range = parse_pagespec pdf pagespec in
+            let range = parse_pagespec_allow_empty pdf pagespec in
               let rotate =
                 match args.op with
                 | Some (Rotate i) -> Cpdf.rotate_pdf i
@@ -3771,7 +3779,7 @@ let go () =
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf args.op false in
-            let range = parse_pagespec pdf pagespec in
+            let range = parse_pagespec_allow_empty pdf pagespec in
               let pdf = Cpdf.rotate_contents ~fast:args.fast a pdf range in
                 write_pdf false pdf
       | _ -> error "rotate-contents: bad command line"
@@ -3780,7 +3788,7 @@ let go () =
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf args.op false in
-            let range = parse_pagespec pdf pagespec in
+            let range = parse_pagespec_allow_empty pdf pagespec in
               let pdf = Cpdf.upright ~fast:args.fast range pdf in
                 write_pdf false pdf
       | _ -> error "rotate-contents: bad command line"
@@ -3789,7 +3797,7 @@ let go () =
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf args.op false in
-            let range = parse_pagespec pdf pagespec in
+            let range = parse_pagespec_allow_empty pdf pagespec in
               let pdf = 
                 if flip = VFlip
                   then Cpdf.vflip_pdf ~fast:args.fast pdf range
@@ -3845,12 +3853,12 @@ let go () =
       end
   | Some (OpenAtPage str) ->
       let pdf = get_single_pdf args.op false in
-      let range = parse_pagespec pdf str in
+      let range = parse_pagespec_allow_empty pdf str in
       let n = match range with [x] -> x | _ -> error "open_at_page: range does not specify single page" in
         write_pdf false (Cpdf.set_open_action pdf false n)
   | Some (OpenAtPageFit str) ->
       let pdf = get_single_pdf args.op false in
-      let range = parse_pagespec pdf str in
+      let range = parse_pagespec_allow_empty pdf str in
       let n = match range with [x] -> x | _ -> error "open_at_page: range does not specify single page" in
         write_pdf false (Cpdf.set_open_action pdf true n)
   | Some (SetMetadata metadata_file) ->
@@ -3926,7 +3934,7 @@ let go () =
       end
   | Some Presentation ->
       let pdf = get_single_pdf args.op false in
-        let range = parse_pagespec pdf (get_pagespec ()) in
+        let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           let pdf' =
             Cpdf.presentation
               range
@@ -3969,29 +3977,29 @@ let go () =
       end
   | Some (ThinLines w) ->
       let pdf = get_single_pdf args.op false in
-        let range = parse_pagespec pdf (get_pagespec ()) in
+        let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           write_pdf false (Cpdf.thinlines range w pdf)
   | Some BlackText ->
       let pdf = get_single_pdf args.op false in
-        let range = parse_pagespec pdf (get_pagespec ()) in
+        let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           write_pdf false (Cpdf.blacktext args.color range pdf)
   | Some BlackLines ->
       let pdf = get_single_pdf args.op false in
-        let range = parse_pagespec pdf (get_pagespec ()) in
+        let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           write_pdf false (Cpdf.blacklines args.color range pdf)
   | Some BlackFills ->
       let pdf = get_single_pdf args.op false in
-        let range = parse_pagespec pdf (get_pagespec ()) in
+        let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           write_pdf false (Cpdf.blackfills args.color range pdf)
   | Some RemoveAnnotations ->
       let pdf = get_single_pdf args.op false in
-        let range = parse_pagespec pdf (get_pagespec ()) in
+        let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           write_pdf false (Cpdf.remove_annotations range pdf)
   | Some (CopyAnnotations getfrom) ->
       begin match args.inputs with
       | [(k, _, u, o, _, _) as input] ->
         let input_pdf = get_pdf_from_input_kind input args.op k in
-          let range = parse_pagespec input_pdf (get_pagespec ()) in
+          let range = parse_pagespec_allow_empty input_pdf (get_pagespec ()) in
             let pdf =
               Cpdf.copy_annotations
                 range
@@ -4007,23 +4015,23 @@ let go () =
       Cpdf.list_annotations_more (get_single_pdf args.op true)
   | Some Shift ->
       let pdf = get_single_pdf args.op false in
-        let range = parse_pagespec pdf (get_pagespec ()) in
+        let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           let dxdylist = Cpdfcoord.parse_coordinates pdf args.coord in
             write_pdf false (Cpdf.shift_pdf ~fast:args.fast dxdylist pdf range)
   | Some Scale ->
       let pdf = get_single_pdf args.op false in
-        let range = parse_pagespec pdf (get_pagespec ()) in
+        let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           let sxsylist = Cpdfcoord.parse_coordinates pdf args.coord in
             write_pdf false (Cpdf.scale_pdf ~fast:args.fast sxsylist pdf range)
   | Some ScaleToFit ->
       let pdf = get_single_pdf args.op false in
-        let range = parse_pagespec pdf (get_pagespec ()) in
+        let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           let xylist = Cpdfcoord.parse_coordinates pdf args.coord
           and scale = args.scale in
             write_pdf false (Cpdf.scale_to_fit_pdf ~fast:args.fast args.position scale xylist args.op pdf range)
   | Some (ScaleContents scale) ->
       let pdf = get_single_pdf args.op false in
-        let range = parse_pagespec pdf (get_pagespec ()) in
+        let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           write_pdf false (Cpdf.scale_contents ~fast:args.fast args.position scale pdf range)
   | Some ListAttachedFiles ->
       let pdf = get_single_pdf args.op false in
@@ -4059,7 +4067,7 @@ let go () =
       end
   | Some PadBefore ->
       let pdf = get_single_pdf args.op false in
-        let range = parse_pagespec pdf (get_pagespec ()) in
+        let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           let padwith =
             match args.padwith with
               None -> None
@@ -4068,7 +4076,7 @@ let go () =
             write_pdf false (Cpdf.padbefore ?padwith range pdf)
   | Some PadAfter ->
       let pdf = get_single_pdf args.op false in
-        let range = parse_pagespec pdf (get_pagespec ()) in
+        let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           let padwith =
             match args.padwith with
               None -> None
@@ -4096,11 +4104,11 @@ let go () =
         write_pdf false (Cpdf.padmultiple (-n) pdf)
   | Some Draft ->
       let pdf = get_single_pdf args.op false in
-        let range = parse_pagespec pdf (get_pagespec ()) in
+        let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           write_pdf false (Cpdf.draft args.removeonly args.boxes range pdf)
   | Some (AddText text) ->
       let pdf = get_single_pdf args.op false in
-        let range = parse_pagespec pdf (get_pagespec ()) in
+        let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           let font =
             match args.font with
             | StandardFont f -> Some f
@@ -4123,11 +4131,11 @@ let go () =
                    args.extract_text_font_size args.coord pdf)
   | Some RemoveText ->
       let pdf = get_single_pdf args.op false in
-        let range = parse_pagespec pdf (get_pagespec ()) in
+        let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           write_pdf false (Cpdf.removetext range pdf)
   | Some AddRectangle ->
       let pdf = get_single_pdf args.op false in
-        let range = parse_pagespec pdf (get_pagespec ()) in
+        let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           write_pdf false
             (addrectangle
                args.fast (Cpdfcoord.parse_coordinate pdf args.coord)
@@ -4150,7 +4158,7 @@ let go () =
         | x -> pdfread_pdf_of_file None None x
       in
         let pdf = get_single_pdf args.op false in
-          let range = parse_pagespec pdf (get_pagespec ()) in
+          let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
             let pdf =
               Cpdf.stamp
                 args.relative_to_cropbox args.position args.topline args.midline args.fast
@@ -4164,7 +4172,7 @@ let go () =
         | x -> pdfread_pdf_of_file None None x
       in
         let pdf = get_single_pdf args.op false in
-          let range = parse_pagespec pdf (get_pagespec ()) in
+          let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
             let pdf =
               Cpdf.stamp
                 args.relative_to_cropbox args.position args.topline args.midline args.fast
@@ -4214,11 +4222,11 @@ let go () =
         end
       in
         let pdf = get_single_pdf args.op true in
-          let range = parse_pagespec pdf (get_pagespec ()) in
+          let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
             extract_images pdf range output_spec
   | Some (ImageResolution f) ->
       let pdf = get_single_pdf args.op true in
-        let range = parse_pagespec pdf (get_pagespec ()) in
+        let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
         let images = Cpdf.image_resolution pdf range f in
           iter
             (function (pagenum, xobject, w, h, wdpi, hdpi) ->
@@ -4228,7 +4236,7 @@ let go () =
             images
   | Some MissingFonts ->
       let pdf = get_single_pdf args.op true in
-        let range = parse_pagespec pdf (get_pagespec ()) in
+        let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           missing_fonts pdf range
   | Some CSP1 ->
       write_pdf false (Cpdf.custom_csp1 (get_single_pdf (Some CSP1) false)) 
@@ -4238,14 +4246,14 @@ let go () =
       begin match args.inputs with
       | [(InFile s, _, _, _, _, _)] ->
            let pdf = get_single_pdf args.op true in
-             let range = parse_pagespec pdf (get_pagespec ()) in
+             let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
                calculate_margins s pdf range
       | _ ->
          Printf.eprintf "CSP3: Too many input files or input not a file"
       end
   | Some ExtractText ->
       let pdf = get_single_pdf args.op true in
-        let range = parse_pagespec pdf (get_pagespec ()) in
+        let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           let text = Cpdf.extract_text args.extract_text_font_size pdf range in
             begin match args.out with
             | File filename ->
@@ -4280,7 +4288,7 @@ let go () =
         list_spot_colours pdf
   | Some RemoveClipping ->
       let pdf = get_single_pdf args.op false in
-        let range = parse_pagespec pdf (get_pagespec ()) in
+        let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           write_pdf false (Cpdf.remove_clipping pdf range)
   | Some CreateMetadata ->
       let pdf = get_single_pdf args.op false in
@@ -4305,19 +4313,19 @@ let go () =
         write_pdf false pdf
   | Some RemoveAllText ->
       let pdf = get_single_pdf args.op false in
-      let range = parse_pagespec pdf (get_pagespec ()) in
+      let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
         write_pdf false (Cpdf.remove_all_text range pdf)
   | Some ShowBoxes ->
       let pdf = get_single_pdf args.op false in
-      let range = parse_pagespec pdf (get_pagespec ()) in
+      let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
         write_pdf false (Cpdf.show_boxes pdf range)
   | Some TrimMarks ->
       let pdf = get_single_pdf args.op false in
-      let range = parse_pagespec pdf (get_pagespec ()) in
+      let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
         write_pdf false (Cpdf.trim_marks pdf range)
   | Some (Postpend s | Prepend s as x) ->
       let pdf = get_single_pdf args.op false in
-      let range = parse_pagespec pdf (get_pagespec ()) in
+      let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
       let before = match x with Prepend _ -> true | _ -> false in
         write_pdf false (Cpdf.append_page_content s before args.fast range pdf)
   | Some OutputJSON ->
@@ -4345,7 +4353,7 @@ let go () =
         | x -> pdfread_pdf_of_file None None x
       in
         let pdf = get_single_pdf args.op false in
-        let range = parse_pagespec pdf (get_pagespec ()) in
+        let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           let pdf, xobj_name =
             Cpdf.stamp_as_xobject pdf range stamp_pdf
           in
