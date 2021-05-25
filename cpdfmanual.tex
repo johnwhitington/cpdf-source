@@ -69,6 +69,8 @@ Excel are registered trademarks of Microsoft Corporation.
 
 \chapter*{Quickstart Examples}
 
+A sampling of just a few of the facilities provided by the Coherent PDF Command Line Tools.
+
 \section*{Basic Usage}
 
 \begin{framed}\noindent\texttt{cpdf in.pdf 1-3,6 -o out.pdf}\end{framed}
@@ -226,6 +228,42 @@ Excel are registered trademarks of Microsoft Corporation.
 
 \noindent Remove any attachments from \texttt{in.pdf}, writing to \texttt{out.pdf}.
 
+\section*{Working with Images}
+
+\begin{framed}\noindent\texttt{cpdf -image-resolution 600 in.pdf}\end{framed}
+
+\noindent Identify and list any image used at less than 600dpi.
+
+\begin{framed}\noindent\texttt{cpdf -extract-images in.pdf -im /usr/bin/magick -o output/\%\%\%}\end{framed}
+
+\noindent Extract images from \texttt{in.pdf} to directory \texttt{output} (with the help of imagemagick).
+
+
+\section*{Fonts}
+
+\begin{framed}\noindent\texttt{cpdf -list-fonts in.pdf}\end{framed}
+
+\noindent List the fonts in use, and what pages they are used on.
+
+\begin{framed}\noindent\texttt{cpdf -gs /usr/bin/gs -embed-missing-fonts in.pdf -o out.pdf}\end{framed}
+
+\noindent Embed missing fonts (with the help of GhostScript).
+
+\section*{PDF and JSON}
+
+\begin{framed}\noindent\texttt{cpdf in.pdf -output-json -output-json-parse-content-streams\\\phantom{\ \ \ \ } -o out.json}\end{framed}
+
+\noindent Write the PDF in JSON format to the given file, parsing its content streams into individual JSON objects too.
+
+\section*{Optional Content Groups}
+
+\begin{framed}\noindent\texttt{cpdf -ocg-list in.pdf}\end{framed}
+
+\noindent List the optional content groups by name.
+
+\begin{framed}\noindent\texttt{cpdf -ocg-coalesce-on-name in.pdf -o out.pdf}\end{framed}
+
+\noindent Coalesce optional content groups after merging or stamping two files with OCGs with like names.
 
 \section*{Miscellaneous}
 
