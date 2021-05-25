@@ -71,7 +71,7 @@ Excel are registered trademarks of Microsoft Corporation.
 
 A sampling of just a few of the facilities provided by the Coherent PDF Command Line Tools.
 
-\section*{Basic Usage}
+\section*{\hyperref[chap:1]{Basic Usage}}
 
 \begin{framed}\noindent\texttt{cpdf in.pdf 1-3,6 -o out.pdf}\end{framed}
 
@@ -90,7 +90,7 @@ A sampling of just a few of the facilities provided by the Coherent PDF Command 
 
 \noindent Read \texttt{control.txt} and use its contents as the command line arguments for \texttt{cpdf}.
 
-\section*{Merging and Splitting}
+\section*{\hyperref[chap:2]{Merging and Splitting}}
 
 \begin{framed}\noindent\texttt{cpdf -merge in.pdf in2.pdf -o out.pdf}\end{framed}
 
@@ -104,7 +104,7 @@ A sampling of just a few of the facilities provided by the Coherent PDF Command 
 
 \noindent Split \texttt{in.pdf} on bookmark boundaries, writing each to a file whose name is the bookmark label.
 
-\section*{Pages}
+\section*{\hyperref[chap:3]{Pages}}
 
 \begin{framed}\noindent\texttt{cpdf -scale-page "2 2" in.pdf -o out.pdf}\end{framed}
 
@@ -127,7 +127,7 @@ A sampling of just a few of the facilities provided by the Coherent PDF Command 
 \noindent Crop the pages in \texttt{in.pdf} to a 600 pts by 400 pts rectangle.
 
 
-\section*{Encryption and Decryption}
+\section*{\hyperref[chap:4]{Encryption and Decryption}}
 
 \begin{framed}\noindent\texttt{cpdf -encrypt 128bit fred joe in.pdf -o out.pdf}\end{framed}
 
@@ -138,7 +138,7 @@ A sampling of just a few of the facilities provided by the Coherent PDF Command 
 \noindent Decrypt \texttt{in.pdf} using the owner password, writing to \texttt{out.pdf}.
 
 
-\section*{Compression}
+\section*{\hyperref[chap:5]{Compression}}
 
 \begin{framed}\noindent\texttt{cpdf -compress in.pdf -o out.pdf}\end{framed}
 
@@ -149,7 +149,7 @@ A sampling of just a few of the facilities provided by the Coherent PDF Command 
 \noindent Decompress the data streams in \texttt{in.pdf}, writing to \texttt{out.pdf}.
 
 
-\section*{Bookmarks}
+\section*{\hyperref[chap:6]{Bookmarks}}
 
 \begin{framed}\noindent\texttt{cpdf -list-bookmarks in.pdf}\end{framed}
 
@@ -160,13 +160,13 @@ A sampling of just a few of the facilities provided by the Coherent PDF Command 
 \noindent Add bookmarks in the same form from a prepared file \texttt{bookmarks.txt} to \texttt{in.pdf}, writing to \texttt{out.pdf}.
 
 
-\section*{Presentations}
+\section*{\hyperref[chap:7]{Presentations}}
 
 \begin{framed}\noindent\texttt{cpdf -presentation in.pdf 2-end -trans Split -duration 10\\\phantom{\ \ \ \ } -o out.pdf}\end{framed}
 
 \noindent Use the Split style to build a presentation from the PDF \texttt{in.pdf}, each slide staying 10 seconds on screen unless manually advanced. The first page, being a title does not move on automatically, and has no transition effect.
 
-\section*{Logos, Watermarks and Stamps}
+\section*{\hyperref[chap:8]{Logos, Watermarks and Stamps}}
 
 \begin{framed}\noindent\texttt{cpdf -stamp-on watermark.pdf in.pdf -o out.pdf}\end{framed}
 
@@ -176,7 +176,7 @@ A sampling of just a few of the facilities provided by the Coherent PDF Command 
 
 \noindent Add a page number and date to all the pages in \texttt{in.pdf} using the Courier font, writing to \texttt{out.pdf}.
 
-\section*{Multipage Facilities}
+\section*{\hyperref[chap:9]{Multipage Facilities}}
 
 \begin{framed}\noindent\texttt{cpdf -twoup-stack in.pdf -o out.pdf}\end{framed}
 
@@ -186,7 +186,7 @@ A sampling of just a few of the facilities provided by the Coherent PDF Command 
 
 \noindent Add extra blank pages after pages one, three and four of a document.
 
-\section*{Annotations}
+\section*{\hyperref[chap:10]{Annotations}}
 
 \begin{framed}\noindent\texttt{cpdf -list-annotations in.pdf}\end{framed}
 
@@ -196,7 +196,7 @@ A sampling of just a few of the facilities provided by the Coherent PDF Command 
 
 \noindent Copy the annotations from \texttt{from.pdf} to \texttt{in.pdf}, writing to \texttt{out.pdf}.
 
-\section*{Document Information and Metadata}
+\section*{\hyperref[chap:11]{Document Information and Metadata}}
 
 \begin{framed}\noindent\texttt{cpdf -set-title "The New Title" in.pdf -o out.pdf}\end{framed}
 
@@ -218,7 +218,7 @@ A sampling of just a few of the facilities provided by the Coherent PDF Command 
 
 \noindent Set the document \texttt{in.pdf} to open in Acrobat Viewer in full screen mode, putting the result in \texttt{out.pdf}.
 
-\section*{File Attachments}
+\section*{\hyperref[chap:12]{File Attachments}}
 
 \begin{framed}\noindent\texttt{cpdf -attach-file sheet.xls in.pdf -o out.pdf}\end{framed}
 
@@ -228,7 +228,7 @@ A sampling of just a few of the facilities provided by the Coherent PDF Command 
 
 \noindent Remove any attachments from \texttt{in.pdf}, writing to \texttt{out.pdf}.
 
-\section*{Working with Images}
+\section*{\hyperref[chap:13]{Working with Images}}
 
 \begin{framed}\noindent\texttt{cpdf -image-resolution 600 in.pdf}\end{framed}
 
@@ -239,7 +239,7 @@ A sampling of just a few of the facilities provided by the Coherent PDF Command 
 \noindent Extract images from \texttt{in.pdf} to directory \texttt{output} (with the help of imagemagick).
 
 
-\section*{Fonts}
+\section*{\hyperref[chap:14]{Fonts}}
 
 \begin{framed}\noindent\texttt{cpdf -list-fonts in.pdf}\end{framed}
 
@@ -249,13 +249,13 @@ A sampling of just a few of the facilities provided by the Coherent PDF Command 
 
 \noindent Embed missing fonts (with the help of GhostScript).
 
-\section*{PDF and JSON}
+\section*{\hyperref[chap:15]{PDF and JSON}}
 
 \begin{framed}\noindent\texttt{cpdf in.pdf -output-json -output-json-parse-content-streams\\\phantom{\ \ \ \ } -o out.json}\end{framed}
 
 \noindent Write the PDF in JSON format to the given file, parsing its content streams into individual JSON objects too.
 
-\section*{Optional Content Groups}
+\section*{\hyperref[chap:16]{Optional Content Groups}}
 
 \begin{framed}\noindent\texttt{cpdf -ocg-list in.pdf}\end{framed}
 
@@ -265,7 +265,7 @@ A sampling of just a few of the facilities provided by the Coherent PDF Command 
 
 \noindent Coalesce optional content groups after merging or stamping two files with OCGs with like names.
 
-\section*{Miscellaneous}
+\section*{\hyperref[chap:misc]{Miscellaneous}}
 
 \begin{framed}\noindent\texttt{cpdf -blacktext in.pdf -o out.pdf}\end{framed}
 
@@ -304,7 +304,7 @@ verbosity. Under Microsoft Windows, type \texttt{cpdf.exe} instead of \texttt{cp
 
 
 
-\chapter{Basic Usage}
+\chapter{Basic Usage}\label{chap:1}
 
 
 \label{basicusage}
@@ -788,7 +788,7 @@ Cpdf can build a new PDF file, given a number of pages and a paper size. The def
 \noindent The standard paper sizes are listed in Section \ref{papersizes}, or you may specify the width and height directly, as described in the same chapter.
 
 
-\chapter{Merging and Splitting}
+\chapter{Merging and Splitting}\label{chap:2}
   \begin{framed}
   \small
   \noindent\begin{verbatim}
@@ -913,7 +913,7 @@ one of the output files.
 The encryption parameters described in Chapter \ref{encryption} may be added to the command line to encrypt each split PDF. Similarly, the \texttt{-recrypt} switch described in \ref{basicusage} may by given to re-encrypt each file with the existing encryption of the source PDF. 
 \pagestyle{empty}\thispagestyle{fancy}
 
-\chapter{Pages}
+\chapter{Pages}\label{chap:3}
 \pagestyle{fancy}
   \label{pages}
   \begin{framed}
@@ -1210,7 +1210,7 @@ Bleed box & Pink
 
 The \texttt{-trim-marks} operation adds trim marks to a PDF file. The trim box must be present.
 
-\chapter{Encryption and Decryption}
+\chapter{Encryption and Decryption}\label{chap:4}
 \pagestyle{fancy}
 \label{encryption}
 \index{encryption}
@@ -1301,7 +1301,7 @@ metadata. Add \texttt{-no-encrypt-metadata} to the command line.
   \end{framed}
   \noindent The user password cannot decrypt a file.
 
-\chapter{Compression}
+\chapter{Compression}\label{chap:5}
   \begin{framed}
      \small\noindent\verb!cpdf -decompress in.pdf -o out.pdf!
 
@@ -1357,7 +1357,7 @@ Final file size is 187200 bytes,  78.60% of original.
 There are two options which turn off parts of the squeezer. They are \texttt{-squeeze-no-recompress} for avoiding the reprocessing of malformed compressed sections, and \texttt{-squeeze-no-page-data} for avoiding the reprocessing of malformed page data.
 
 
-\chapter{Bookmarks}
+\chapter{Bookmarks}\label{chap:6}
   \begin{framed}
   \small\noindent\verb!cpdf -list-bookmarks [-utf8 | -raw] in.pdf!
 
@@ -1466,7 +1466,7 @@ As an alternative to extracting a bookmark file and manipulating the open-status
 
 
 
-\chapter{Presentations}
+\chapter{Presentations}\label{chap:7}
   \begin{framed}
   \small\noindent\begin{verbatim}
   cpdf -presentation in.pdf [<range>] -o out.pdf
@@ -1539,7 +1539,7 @@ on automatically, and has no transition effect.
 \noindent To use different options on different page ranges, run \cpdf\ multiple times on
 the file using a different page range each time.
 
-\chapter{Watermarks and Stamps}
+\chapter{Watermarks and Stamps}\label{chap:8}
 \label{stamps}
 \index{watermarks}
   \begin{framed}
@@ -1894,7 +1894,7 @@ These two operations add content directly to the beginning or end of the page da
   \noindent\small\verb!cpdf -stamp-as-xobject stamp.pdf in.pdf [<range>] -o out.pdf!
 \end{framed}
 
-\chapter{Multipage Facilities}\pagestyle{fancy}\label{multipage}
+\chapter{Multipage Facilities}\pagestyle{fancy}\label{multipage}\label{chap:9}
   \begin{framed}
     \small\noindent\verb!cpdf -twoup-stack [-fast] in.pdf -o out.pdf! 
 
@@ -1967,7 +1967,7 @@ In all three of these operations, one may specify \texttt{-pad-with} providing a
 
 \noindent The \texttt{-pad-multiple-before n} operation adds the padding pages at the beginning of the file  instead.
 
-\chapter{Annotations}
+\chapter{Annotations}\label{chap:10}
   \begin{framed}
   \small\noindent\verb!cpdf -list-annotations in.pdf [<range>]!
 
@@ -2015,7 +2015,7 @@ given page range.
     \vspace{2.5mm}
     \noindent Remove annotations from the first page of a file only.
   \end{framed}
-\chapter{Document Information and Metadata}
+\chapter{Document Information and Metadata}\label{chap:11}
 \index{document information}
 \index{metadata}
   \begin{framed}
@@ -2324,7 +2324,7 @@ startvalue: 1
 \end{verbatim}
 \end{framed}\pagestyle{empty}\thispagestyle{fancy}
 
-\chapter{File Attachments}\pagestyle{fancy}
+\chapter{File Attachments}\label{chap:12}\pagestyle{fancy}
 \index{attachments}
 \begin{framed}
   \small\noindent\verb!cpdf -attach-file <filename> [-to-page <page number>] in.pdf -o out.pdf!
@@ -2387,7 +2387,7 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
   \end{framed}
 
 
-\chapter{Working with Images}
+\chapter{Working with Images}\label{chap:13}
 \begin{framed}
 \noindent\small\verb!cpdf -image-resolution <minimum resolution> in.pdf [<range>]!
 
@@ -2448,7 +2448,7 @@ To remove a particular image, find its name using \texttt{-image-resolution} wit
 %might generate \texttt{img001.jpg}, \texttt{img002.png}, \texttt{img003.jpg} etc. from the images on pages two to six. The number of percentage characters in the output format indicate the width of the numbering system for the output file names.
 \pagestyle{empty}
 
-\chapter{Fonts}\pagestyle{fancy}
+\chapter{Fonts}\pagestyle{fancy}\label{chap:14}
  {\small \begin{framed}
 
   \small\noindent\verb!cpdf -list-fonts in.pdf!
@@ -2557,7 +2557,7 @@ recommended when file size is the sole consideration.
 
 \label{listmisingfonts}
 
-\chapter{PDF and JSON}
+\chapter{PDF and JSON}\label{chap:15}
   {\small\begin{framed}
   \noindent\verb!cpdf in.pdf -output-json -o out.json!\\
   \noindent\verb!     [-output-json-parse-content-streams]!\\
@@ -2597,7 +2597,7 @@ Output PDF as JSON data. Each object is written under its object number. The obj
 
 \noindent The option \texttt{-output-json-no-stream-data} simply elides the stream data instead, leading to much smaller JSON files. 
 
-\chapter{Optional Content Groups}
+\chapter{Optional Content Groups}\label{chap:16}
 
   {\small\begin{framed}
   \noindent\verb!cpdf -ocg-list in.pdf!
@@ -2644,7 +2644,7 @@ In a PDF file, optional content groups are used to group graphical elements toge
 \noindent Ensure that every optional content group appears in the order list.
 
 
-\chapter{Miscellaneous}
+\chapter{Miscellaneous}\label{chap:misc}
   {\small\begin{framed}
   \noindent\verb!cpdf -draft [-boxes] [-draft-remove-only <n>] in.pdf [<range>] -o out.pdf!
 
