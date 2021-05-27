@@ -43,7 +43,6 @@ let optstring = function
   | "" -> None
   | x -> Some x
 
-(* To prevent problems when piping on Windows *)
 let _ =
   set_binary_mode_in stdin true;
   set_binary_mode_out stdout true
@@ -782,9 +781,12 @@ let rec decrypt_if_necessary (_, _, user_pw, owner_pw, was_dec_with_owner, _) op
            if args.debugcrypt then Printf.printf "Failed to decrypt with user password: raising soft_error";
            soft_error "Failed to decrypt file: wrong password?"
 
+(* Duplicated from cpdf.ml -> fix *)
+let ppstub f n p = (f n p, n, Pdftransform.i_matrix)
+
 let nobble pdf =
   if not demo then pdf else
-    Cpdf.process_pages (Cpdf.nobble_page pdf) pdf (ilist 1 (Pdfpage.endpage pdf))
+    Cpdf.process_pages (ppstub (Cpdf.nobble_page pdf)) pdf (ilist 1 (Pdfpage.endpage pdf))
 
 (* Output Page Count *)
 let output_page_count pdf =
@@ -2237,7 +2239,7 @@ and specs =
   ]
 
 and usage_msg =
-"Syntax: cpdf <op> <op-specific arguments> [-o <output file>] <input files>\n\n\
+"Syntax: cpdf [<operation>] <input files> [-o <output file>]\n\n\
 This is a copyrighted, commercial program, and may NOT be freely copied.\n\n\
 Version " ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ " " ^ version_date ^ "\n\n\
 To buy, visit http://www.coherentpdf.com/\n\n\
@@ -2975,10 +2977,10 @@ let getencryption pdf =
 (* If a cropbox exists, make it the mediabox. If not, change nothing. *)
 let copy_cropbox_to_mediabox pdf range =
   Cpdf.process_pages
-    (fun _ page ->
+    (ppstub (fun _ page ->
        match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
        | Some pdfobject -> {page with Pdfpage.mediabox = Pdf.direct pdf pdfobject}
-       | None -> page)
+       | None -> page))
     pdf
     range
 
@@ -3146,7 +3148,7 @@ the contents of the mediabox will be used if the from fox is not available. If
 mediabox_is_missing is false, the page is unaltered. *)
 let copy_box f t mediabox_if_missing pdf range =
   Cpdf.process_pages
-    (fun _ page ->
+    (ppstub (fun _ page ->
        if f = "/MediaBox" then
          {page with Pdfpage.rest =
             (Pdf.add_dict_entry page.Pdfpage.rest t (page.Pdfpage.mediabox))}
@@ -3161,7 +3163,7 @@ let copy_box f t mediabox_if_missing pdf range =
          | None ->
              if mediabox_if_missing
                then {page with Pdfpage.rest = Pdf.add_dict_entry page.Pdfpage.rest t page.Pdfpage.mediabox}
-               else page)
+               else page))
     pdf
     range
 
@@ -3280,7 +3282,7 @@ let remove_unused_resources_page pdf n page =
           {page with Pdfpage.resources = Pdf.add_dict_entry page.Pdfpage.resources  "/XObject" xobjdict}
 
 let remove_unused_resources pdf =
-  Cpdf.process_pages (remove_unused_resources_page pdf) pdf (ilist 1 (Pdfpage.endpage pdf))
+  Cpdf.process_pages (ppstub (remove_unused_resources_page pdf)) pdf (ilist 1 (Pdfpage.endpage pdf))
 
 (* Extracts font to font.dat in CWD. *)
 let extract_fontfile pagenumber fontname pdf =
@@ -3382,7 +3384,7 @@ let addrectangle
           then Pdfpage.prepend_operators pdf ops ~fast:fast page
           else Pdfpage.postpend_operators pdf ops ~fast:fast page
   in
-    Cpdf.process_pages addrectangle_page pdf range
+    Cpdf.process_pages (ppstub addrectangle_page) pdf range
 
 let print_spot_colour n s =
   Printf.printf "%i %s\n" n s
@@ -3448,7 +3450,7 @@ let write_json output pdf =
   | Stdout ->
       CpdfwriteJSON.write stdout args.jsonparsecontentstreams args.jsonnostreamdata pdf
   | File filename ->
-      let f = open_out_bin filename in
+      let f = open_out filename in
         CpdfwriteJSON.write f args.jsonparsecontentstreams args.jsonnostreamdata pdf;
         close_out f
 

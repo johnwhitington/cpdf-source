@@ -590,15 +590,20 @@ let expand_date = function
   | "now" -> Cpdfstrftime.strftime "D:%Y%m%d%H%M%S"
   | x -> x
 
+(* For uses of process_pages which don't need to deal with matrices, this
+   function transforms into one which returns the identity matrix *)
+let ppstub f n p = (f n p, n, Pdftransform.i_matrix)
+
 let process_pages f pdf range =
   let pages = Pdfpage.pages_of_pagetree pdf in
-    let pages' =
-      map2
-        (fun n p -> if mem n range then f n p else p)
-        (ilist 1 (length pages))
-        pages
+    let pages', pagenumbers, matrices = (* new page objects, page number, matrix *)
+      split3
+        (map2
+          (fun n p -> if mem n range then f n p else (p, n, Pdftransform.i_matrix))
+          (ilist 1 (length pages))
+          pages)
     in
-      Pdfpage.change_pages true pdf pages'
+      Pdfpage.change_pages ~matrices:(combine pagenumbers matrices) true pdf pages'
 
 let iter_pages f pdf range =
   let pages = Pdfpage.pages_of_pagetree pdf in
@@ -1923,7 +1928,7 @@ let addtext
     if metrics then
       (ignore (iter_pages (fun a b -> ignore (addtext_page a b)) pdf pages); pdf)
     else
-      process_pages addtext_page pdf pages
+      process_pages (ppstub addtext_page) pdf pages
 
 (* Prev is a list of lists of characters *)
 let split_at_newline t =
@@ -2059,7 +2064,7 @@ let removetext range pdf =
              let ops = Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content in
                [Pdfops.stream_of_ops (remove_stamps [] ops)]}
       in
-        process_pages removetext_page pdf range
+        process_pages (ppstub removetext_page) pdf range
 
 (* \section{Padding with blank pages.} *)
 let insert_after pos page pages =
@@ -2388,7 +2393,7 @@ let shift_page ?(fast=false) dxdylist pdf pnum page =
         Pdfpage.prepend_operators pdf [transform_op] ~fast page
 
 let shift_pdf ?(fast=false) dxdylist pdf range =
-  process_pages (shift_page ~fast dxdylist pdf) pdf range
+  process_pages (ppstub (shift_page ~fast dxdylist pdf)) pdf range
 
 (* Change a page's media box so its minimum x and y are 0, making other
 operations simpler to think about. Any shift that is done is reflected in
@@ -2420,14 +2425,14 @@ let vflip_pdf ?(fast=false) pdf range =
     Pdftransform.matrix_of_op
       (Pdftransform.Scale ((0., ((miny +. maxy) /. 2.)), 1., -.1.))
   in
-    process_pages (flip_page ~fast transform_op pdf) pdf range
+    process_pages (ppstub (flip_page ~fast transform_op pdf)) pdf range
 
 let hflip_pdf ?(fast=false) pdf range =
   let transform_op minx _ maxx _ =
     Pdftransform.matrix_of_op
       (Pdftransform.Scale (((minx +. maxx) /. 2., 0.), -.1., 1.))
   in
-    process_pages (flip_page ~fast transform_op pdf) pdf range
+    process_pages (ppstub (flip_page ~fast transform_op pdf)) pdf range
 
 let stamp_shift_of_position topline midline sw sh w h p =
   let half x = x /. 2.
@@ -2806,7 +2811,7 @@ let set_mediabox xywhlist pdf range =
            [Pdf.Real x; Pdf.Real y;
             Pdf.Real (x +.  w); Pdf.Real (y +. h)])}
   in
-    process_pages crop_page pdf range
+    process_pages (ppstub crop_page) pdf range
 
 (* Just used by cpdflib for historical reasons *)
 let setBox box minx maxx miny maxy pdf range =
@@ -2817,7 +2822,7 @@ let setBox box minx maxx miny maxy pdf range =
            page.Pdfpage.rest box
            (Pdf.Array [Pdf.Real minx; Pdf.Real miny; Pdf.Real maxx; Pdf.Real maxy])}
   in
-    process_pages set_box_page pdf range
+    process_pages (ppstub set_box_page) pdf range
 
 (* \section{Cropping} *)
 let crop_pdf ?(box="/CropBox") xywhlist pdf range =
@@ -2832,7 +2837,7 @@ let crop_pdf ?(box="/CropBox") xywhlist pdf range =
                  [Pdf.Real x; Pdf.Real y;
                   Pdf.Real (x +.  w); Pdf.Real (y +. h)])))}
   in
-    process_pages crop_page pdf range
+    process_pages (ppstub crop_page) pdf range
 
 (* Clip a page to one of its boxes, or the media box if that box is not
  * present. This is a hard clip, done by using a clipping rectangle, so that
@@ -2840,7 +2845,7 @@ let crop_pdf ?(box="/CropBox") xywhlist pdf range =
  * *)
 let hard_box pdf range boxname mediabox_if_missing fast =
   process_pages
-    (fun pagenum page ->
+    (ppstub (fun pagenum page ->
        let minx, miny, maxx, maxy =
          if boxname = "/MediaBox" then
            Pdf.parse_rectangle page.Pdfpage.mediabox
@@ -2853,7 +2858,7 @@ let hard_box pdf range boxname mediabox_if_missing fast =
                  else error (Printf.sprintf "hard_box: box %s not found" boxname)
        in
          let ops = [Pdfops.Op_re (minx, miny, maxx -. minx, maxy -. miny); Pdfops.Op_W; Pdfops.Op_n] in
-           Pdfpage.prepend_operators pdf ops ~fast:fast page)
+           Pdfpage.prepend_operators pdf ops ~fast:fast page))
     pdf
     range
 
@@ -2863,7 +2868,7 @@ let remove_cropping_pdf pdf range =
        Pdfpage.rest =
          (Pdf.remove_dict_entry page.Pdfpage.rest "/CropBox")}
   in
-    process_pages remove_cropping_page pdf range
+    process_pages (ppstub remove_cropping_page) pdf range
 
 let remove_trim_pdf pdf range =
   let remove_trim_page _ page =
@@ -2871,7 +2876,7 @@ let remove_trim_pdf pdf range =
        Pdfpage.rest =
          (Pdf.remove_dict_entry page.Pdfpage.rest "/TrimBox")}
   in
-    process_pages remove_trim_page pdf range
+    process_pages (ppstub remove_trim_page) pdf range
 
 let remove_art_pdf pdf range =
   let remove_art_page _ page =
@@ -2879,7 +2884,7 @@ let remove_art_pdf pdf range =
        Pdfpage.rest =
          (Pdf.remove_dict_entry page.Pdfpage.rest "/ArtBox")}
   in
-    process_pages remove_art_page pdf range
+    process_pages (ppstub remove_art_page) pdf range
 
 let remove_bleed_pdf pdf range =
   let remove_bleed_page _ page =
@@ -2887,7 +2892,7 @@ let remove_bleed_pdf pdf range =
        Pdfpage.rest =
          (Pdf.remove_dict_entry page.Pdfpage.rest "/BleedBox")}
   in
-    process_pages remove_bleed_page pdf range
+    process_pages (ppstub remove_bleed_page) pdf range
 
 (* \section{Rotating pages} *)
 let rotate_pdf r pdf range =
@@ -2895,14 +2900,14 @@ let rotate_pdf r pdf range =
     {page with Pdfpage.rotate =
        Pdfpage.rotation_of_int r}
   in
-    process_pages rotate_page pdf range
+    process_pages (ppstub rotate_page) pdf range
 
 let rotate_pdf_by r pdf range =
   let rotate_page_by _ page =
     {page with Pdfpage.rotate =
        Pdfpage.rotation_of_int ((Pdfpage.int_of_rotation page.Pdfpage.rotate + r) mod 360)}
   in
-    process_pages rotate_page_by pdf range
+    process_pages (ppstub rotate_page_by) pdf range
 
 let rotate_page_contents ~fast rotpoint r pdf _ page =
   let rotation_point =
@@ -2925,7 +2930,7 @@ let rotate_page_contents ~fast rotpoint r pdf _ page =
         Pdfpage.prepend_operators pdf [transform_op] ~fast page
 
 let rotate_contents ?(fast=false) r pdf range =
-  process_pages (rotate_page_contents ~fast None r pdf) pdf range
+  process_pages (ppstub (rotate_page_contents ~fast None r pdf)) pdf range
 
 (* Return the pages from the pdf in the range, unordered. *)
 let select_pages range pdf =
@@ -2976,7 +2981,7 @@ let upright ?(fast=false) range pdf =
           let page = transform_contents ~fast tr pdf page in
             rectify_boxes ~fast pdf {page with Pdfpage.rotate = Pdfpage.Rotate0}
     in
-      process_pages (upright_page pdf) pdf range
+      process_pages (ppstub (upright_page pdf)) pdf range
 
 (* \section{Scale page data} *)
 let scale_pdf ?(fast=false) sxsylist pdf range =
@@ -2995,7 +3000,7 @@ let scale_pdf ?(fast=false) sxsylist pdf range =
            transform_annotations pdf matrix page.Pdfpage.rest;
            Pdfpage.prepend_operators pdf ~fast [transform_op] page
       in
-        process_pages scale_page pdf range
+        process_pages (ppstub scale_page) pdf range
 
 (* Scale to fit page of size x * y *)
 let scale_to_fit_pdf ?(fast=false) position input_scale xylist op pdf range =
@@ -3036,7 +3041,7 @@ let scale_to_fit_pdf ?(fast=false) position input_scale xylist op pdf range =
         Pdfpage.prepend_operators pdf [Pdfops.Op_cm matrix] ~fast
          (change_pattern_matrices_page pdf (Pdftransform.matrix_invert matrix) page)
   in
-    process_pages scale_page_to_fit pdf range
+    process_pages (ppstub scale_page_to_fit) pdf range
 
 
 (* Scale contents *)
@@ -3072,7 +3077,7 @@ let scale_page_contents ?(fast=false) scale position pdf _ page =
           Pdfpage.prepend_operators pdf [transform_op] ~fast page
 
 let scale_contents ?(fast=false) position scale pdf range =
-  process_pages (scale_page_contents ~fast scale position pdf) pdf range
+  process_pages (ppstub (scale_page_contents ~fast scale position pdf)) pdf range
 
 (* \section{List annotations} *)
 let get_annotation_string encoding pdf annot =
@@ -3941,7 +3946,7 @@ let blacktext (r, g, b) range pdf =
       process_xobjects pdf page (blacktext_ops (r, g, b));
       {page with Pdfpage.content = content'}
   in
-    process_pages blacktext_page pdf range
+    process_pages (ppstub blacktext_page) pdf range
 
 (* \section{Blacken lines} *)
 let blacklines_ops (r, g, b) pdf resources content =
@@ -3967,7 +3972,7 @@ let blacklines (r, g, b) range pdf =
       process_xobjects pdf page (blacklines_ops (r, g, b));
       {page with Pdfpage.content = content'}
   in
-    process_pages blacklines_page pdf range
+    process_pages (ppstub blacklines_page) pdf range
 
 (* \section{Blacken Fills} *)
 let blackfills_ops (r, g, b) pdf resources content =
@@ -3993,7 +3998,7 @@ let blackfills (r, g, b) range pdf =
       process_xobjects pdf page (blackfills_ops (r, g, b));
       {page with Pdfpage.content = content'}
   in
-    process_pages blackfills_page pdf range
+    process_pages (ppstub blackfills_page) pdf range
 
 (* \section{Set a minimum line width to avoid dropout} *)
 let thinlines range width pdf =
@@ -4068,7 +4073,7 @@ let thinlines range width pdf =
                 let content' = [Pdfops.stream_of_ops operators] in
                   {page with Pdfpage.content = content'} 
   in
-    process_pages thinpage pdf range
+    process_pages (ppstub thinpage) pdf range
 
 (* \section{Remove annotations} *)
 let remove_annotations range pdf =
@@ -4081,7 +4086,7 @@ let remove_annotations range pdf =
     else
       page
   in
-    process_pages remove_annotations_page pdf range
+    process_pages (ppstub remove_annotations_page) pdf range
 
 (* \section{Making draft documents} *)
 
@@ -4283,7 +4288,7 @@ let custom_csp1_page pdf _ page =
              Pdfpage.rest = Pdf.add_dict_entry page.Pdfpage.rest "/CropBox" new_mediabox}
 
 let custom_csp1 pdf =
-  process_pages (custom_csp1_page pdf) pdf (ilist 1 (Pdfpage.endpage pdf))
+  process_pages (ppstub (custom_csp1_page pdf)) pdf (ilist 1 (Pdfpage.endpage pdf))
 
 let custom_csp2 f pdf =
   let page = hd (Pdfpage.pages_of_pagetree pdf) in
@@ -4373,7 +4378,7 @@ let append_page_content_page fast s before pdf n page =
     pdf ops ~fast page
 
 let append_page_content s before fast range pdf =
-  process_pages (append_page_content_page fast s before pdf) pdf range
+  process_pages (ppstub (append_page_content_page fast s before pdf)) pdf range
 
 
 (* 1. Get list of indirects of all OCGs from the /OCProperties, and their textual names
@@ -4547,7 +4552,7 @@ let show_boxes_page fast pdf _ page =
       Pdfpage.postpend_operators pdf ops ~fast page
 
 let show_boxes ?(fast=false) pdf range =
-  process_pages (show_boxes_page fast pdf) pdf range
+  process_pages (ppstub (show_boxes_page fast pdf)) pdf range
 
 let allowance = 9.
 
@@ -4577,7 +4582,7 @@ let trim_marks_page fast pdf n page =
   | _, _ -> Printf.eprintf "warning: no /TrimBox found on page %i\n" n; page
 
 let trim_marks ?(fast=false) pdf range =
-  process_pages (trim_marks_page fast pdf) pdf range
+  process_pages (ppstub (trim_marks_page fast pdf)) pdf range
 
 let rec remove_all_text_ops pdf resources content =
   let is_textop = function
@@ -4641,7 +4646,7 @@ let remove_clipping pdf range =
       process_xobjects pdf page remove_clipping_ops;
       {page with Pdfpage.content = content'}
   in
-    process_pages remove_clipping_page pdf range
+    process_pages (ppstub remove_clipping_page) pdf range
 
 (* Image resolution *)
 type xobj =
