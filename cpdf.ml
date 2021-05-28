@@ -2998,9 +2998,9 @@ let scale_pdf ?(fast=false) sxsylist pdf range =
             change_pattern_matrices_page pdf (Pdftransform.matrix_invert matrix) page
           in
            transform_annotations pdf matrix page.Pdfpage.rest;
-           Pdfpage.prepend_operators pdf ~fast [transform_op] page
+           (Pdfpage.prepend_operators pdf ~fast [transform_op] page, pnum, matrix)
       in
-        process_pages (ppstub scale_page) pdf range
+        process_pages scale_page pdf range
 
 (* Scale to fit page of size x * y *)
 let scale_to_fit_pdf ?(fast=false) position input_scale xylist op pdf range =
