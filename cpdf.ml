@@ -2390,10 +2390,10 @@ let shift_page ?(fast=false) dxdylist pdf pnum page =
         change_pattern_matrices_page pdf (Pdftransform.mktranslate ~-.dx ~-.dy) page
       in
         transform_annotations pdf (Pdftransform.mktranslate dx dy) page.Pdfpage.rest;
-        Pdfpage.prepend_operators pdf [transform_op] ~fast page
+        (Pdfpage.prepend_operators pdf [transform_op] ~fast page, pnum, Pdftransform.mktranslate dx dy)
 
 let shift_pdf ?(fast=false) dxdylist pdf range =
-  process_pages (ppstub (shift_page ~fast dxdylist pdf)) pdf range
+  process_pages (shift_page ~fast dxdylist pdf) pdf range
 
 (* Change a page's media box so its minimum x and y are 0, making other
 operations simpler to think about. Any shift that is done is reflected in
@@ -2407,32 +2407,33 @@ let rectify_boxes ?(fast=false) pdf page =
     in
       let page = change_boxes f pdf page in
         if minx <> 0. || miny <> 0.
-          then shift_page ~fast [(-.minx),(-.miny)] pdf 1 page
+          then
+            begin let p, _, _ = shift_page ~fast [(-.minx),(-.miny)] pdf 1 page in p end
           else page
 
 (* \section{Flip pages} *)
-let flip_page ?(fast=false) transform_op pdf _ page =
+let flip_page ?(fast=false) transform_op pdf pnum page =
   let minx, miny, maxx, maxy =
     Pdf.parse_rectangle page.Pdfpage.mediabox
   in
     let tr = transform_op minx miny maxx maxy in
       let page = change_pattern_matrices_page pdf tr page in
         transform_annotations pdf tr page.Pdfpage.rest;
-        Pdfpage.prepend_operators pdf [Pdfops.Op_cm tr] ~fast page
+        (Pdfpage.prepend_operators pdf [Pdfops.Op_cm tr] ~fast page, pnum, tr)
 
 let vflip_pdf ?(fast=false) pdf range =
   let transform_op _ miny _ maxy =
     Pdftransform.matrix_of_op
       (Pdftransform.Scale ((0., ((miny +. maxy) /. 2.)), 1., -.1.))
   in
-    process_pages (ppstub (flip_page ~fast transform_op pdf)) pdf range
+    process_pages (flip_page ~fast transform_op pdf) pdf range
 
 let hflip_pdf ?(fast=false) pdf range =
   let transform_op minx _ maxx _ =
     Pdftransform.matrix_of_op
       (Pdftransform.Scale (((minx +. maxx) /. 2., 0.), -.1., 1.))
   in
-    process_pages (ppstub (flip_page ~fast transform_op pdf)) pdf range
+    process_pages (flip_page ~fast transform_op pdf) pdf range
 
 let stamp_shift_of_position topline midline sw sh w h p =
   let half x = x /. 2.
@@ -2909,7 +2910,7 @@ let rotate_pdf_by r pdf range =
   in
     process_pages (ppstub rotate_page_by) pdf range
 
-let rotate_page_contents ~fast rotpoint r pdf _ page =
+let rotate_page_contents ~fast rotpoint r pdf pnum page =
   let rotation_point =
     match rotpoint with
     | None ->
@@ -2927,10 +2928,10 @@ let rotate_page_contents ~fast rotpoint r pdf _ page =
       let transform_op = Pdfops.Op_cm tr in
       let page = change_pattern_matrices_page pdf tr2 page in
         transform_annotations pdf tr page.Pdfpage.rest;
-        Pdfpage.prepend_operators pdf [transform_op] ~fast page
+        (Pdfpage.prepend_operators pdf [transform_op] ~fast page, pnum, tr)
 
 let rotate_contents ?(fast=false) r pdf range =
-  process_pages (ppstub (rotate_page_contents ~fast None r pdf)) pdf range
+  process_pages (rotate_page_contents ~fast None r pdf) pdf range
 
 (* Return the pages from the pdf in the range, unordered. *)
 let select_pages range pdf =
@@ -2975,13 +2976,13 @@ let transform_contents ?(fast=false) tr pdf page =
 
 let upright ?(fast=false) range pdf =
   if allupright range pdf then pdf else
-    let upright_page _ _ page =
+    let upright_page _ pnum page =
       let tr = upright_transform page in
         let page = transform_boxes tr pdf page in
           let page = transform_contents ~fast tr pdf page in
-            rectify_boxes ~fast pdf {page with Pdfpage.rotate = Pdfpage.Rotate0}
+            (rectify_boxes ~fast pdf {page with Pdfpage.rotate = Pdfpage.Rotate0}, pnum, tr)
     in
-      process_pages (ppstub (upright_page pdf)) pdf range
+      process_pages (upright_page pdf) pdf range
 
 (* \section{Scale page data} *)
 let scale_pdf ?(fast=false) sxsylist pdf range =
@@ -3038,14 +3039,14 @@ let scale_to_fit_pdf ?(fast=false) position input_scale xylist op pdf range =
           pdf page
       in
         transform_annotations pdf matrix page.Pdfpage.rest;
-        Pdfpage.prepend_operators pdf [Pdfops.Op_cm matrix] ~fast
-         (change_pattern_matrices_page pdf (Pdftransform.matrix_invert matrix) page)
+        (Pdfpage.prepend_operators pdf [Pdfops.Op_cm matrix] ~fast
+         (change_pattern_matrices_page pdf (Pdftransform.matrix_invert matrix) page), pnum, matrix)
   in
-    process_pages (ppstub scale_page_to_fit) pdf range
+    process_pages scale_page_to_fit pdf range
 
 
 (* Scale contents *)
-let scale_page_contents ?(fast=false) scale position pdf _ page =
+let scale_page_contents ?(fast=false) scale position pdf pnum page =
   let (minx, miny, maxx, maxy) as box =
     (* Use cropbox if available *)
     Pdf.parse_rectangle
@@ -3074,10 +3075,10 @@ let scale_page_contents ?(fast=false) scale position pdf _ page =
         let transform_op = Pdfops.Op_cm transform in
           let page = change_pattern_matrices_page pdf transform page in
           transform_annotations pdf transform page.Pdfpage.rest;
-          Pdfpage.prepend_operators pdf [transform_op] ~fast page
+          (Pdfpage.prepend_operators pdf [transform_op] ~fast page, pnum, transform)
 
 let scale_contents ?(fast=false) position scale pdf range =
-  process_pages (ppstub (scale_page_contents ~fast scale position pdf)) pdf range
+  process_pages (scale_page_contents ~fast scale position pdf) pdf range
 
 (* \section{List annotations} *)
 let get_annotation_string encoding pdf annot =
