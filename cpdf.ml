@@ -4459,8 +4459,9 @@ let ocg_coalesce pdf =
         pdf.Pdf.root <- new_catalog;
         Pdf.objselfmap (Pdf.renumber_object_parsed pdf (hashtable_of_dictionary changes)) pdf
 
-let ocg_list pdf =
-  match Pdf.lookup_direct pdf "/OCProperties" (Pdf.catalog_of_pdf pdf) with
+let ocg_get_list pdf =
+  let l = ref [] in
+  begin match Pdf.lookup_direct pdf "/OCProperties" (Pdf.catalog_of_pdf pdf) with
     None -> ()
   | Some ocpdict ->
       match Pdf.lookup_direct pdf "/OCGs" ocpdict with
@@ -4469,10 +4470,15 @@ let ocg_list pdf =
             (function
                Pdf.Indirect i ->
                  (match Pdf.lookup_direct pdf "/Name" (Pdf.lookup_obj pdf i) with
-                    Some (Pdf.String s) -> Printf.printf "%s\n" s | _ -> ())
+                    Some (Pdf.String s) -> l := s::!l | _ -> ())
              | _ -> ())
             elts
       | _ -> ()
+  end;
+  rev !l
+
+let ocg_list pdf =
+  List.iter (Printf.printf "%s\n") (ocg_get_list pdf)
 
 let ocg_rename f t pdf =
   Pdf.objselfmap

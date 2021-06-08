@@ -459,6 +459,8 @@ val append_page_content : string -> bool -> bool -> int list -> Pdf.t -> Pdf.t
 
 val ocg_coalesce : Pdf.t -> unit
 
+val ocg_get_list : Pdf.t -> string list
+
 val ocg_list : Pdf.t -> unit
 
 val ocg_rename : string -> string -> Pdf.t -> unit
