@@ -3,7 +3,7 @@
 \usepackage{microtype}
 \usepackage{graphics}
 \usepackage{upquote}
-\usepackage[plainpages=false,pdfpagelabels,pdfborder=0 0 0,draft=false,hidelinks]{hyperref}
+\usepackage[plainpages=false,pdfpagelabels,pdfborder=0 0 0,draft=false,hidelinks,bookmarksnumbered]{hyperref}
 \usepackage{framed}
 \newcommand{\smallgap}{\bigskip}
 \newcommand{\cpdf}{\texttt{cpdf}}
@@ -67,6 +67,7 @@ Excel are registered trademarks of Microsoft Corporation.
 
 \cleardoublepage
 
+\pagestyle{plain}
 \chapter*{Quickstart Examples}
 
 A sampling of just a few of the facilities provided by the Coherent PDF Command Line Tools.
@@ -208,7 +209,7 @@ A sampling of just a few of the facilities provided by the Coherent PDF Command 
 
 \begin{framed}\noindent\texttt{cpdf -hide-toolbar true in.pdf -o out.pdf}\end{framed}
 
-\noindent Set the document \texttt{in.pdf} to open with the Acrobat Viewer's toolbar hidden, writing to \texttt{out.pdf}.
+\noindent Set the document \texttt{in.pdf} to open with the PDF Viewer's toolbar hidden, writing to \texttt{out.pdf}.
 
 \begin{framed}\noindent\texttt{cpdf -set-metadata metadata.xml in.pdf -o out.pdf}\end{framed}
 
@@ -216,11 +217,11 @@ A sampling of just a few of the facilities provided by the Coherent PDF Command 
 
 \begin{framed}\noindent\texttt{cpdf -set-page-layout TwoColumnRight in.pdf -o out.pdf}\end{framed}
 
-\noindent Set the document \texttt{in.pdf} to open in Acrobat Viewer showing two columns of pages, starting on the right, putting the result in \texttt{out.pdf}.
+\noindent Set the document \texttt{in.pdf} to open in PDF Viewer showing two columns of pages, starting on the right, putting the result in \texttt{out.pdf}.
 
 \begin{framed}\noindent\texttt{cpdf -set-page-mode FullScreen in.pdf -o out.pdf}\end{framed}
 
-\noindent Set the document \texttt{in.pdf} to open in Acrobat Viewer in full screen mode, putting the result in \texttt{out.pdf}.
+\noindent Set the document \texttt{in.pdf} to open in PDF Viewer in full screen mode, putting the result in \texttt{out.pdf}.
 
 \section*{\hyperref[chap:12]{File Attachments}}
 
@@ -251,7 +252,7 @@ A sampling of just a few of the facilities provided by the Coherent PDF Command 
 
 \begin{framed}\noindent\texttt{cpdf -gs /usr/bin/gs -embed-missing-fonts in.pdf -o out.pdf}\end{framed}
 
-\noindent Embed missing fonts (with the help of GhostScript).
+\noindent Embed missing fonts (with the help of Ghostscript).
 
 \section*{\hyperref[chap:15]{PDF and JSON}}
 
@@ -279,10 +280,13 @@ A sampling of just a few of the facilities provided by the Coherent PDF Command 
 
 \noindent Make sure all lines in \texttt{in.pdf} are at least 2 pts wide, writing to \texttt{out.pdf}.
 % Letter
+\pagestyle{empty}
 \cleardoublepage
-\tableofcontents
+\pagestyle{plain}
+\tableofcontents\clearpage\pagestyle{empty}
 
 \cleardoublepage
+\pagestyle{plain}
 \chapter*{Typographical Conventions}
 Command lines to be typed are shown in \texttt{typewriter\hspace{-1mm} font} in a box.
 For example:
@@ -300,7 +304,7 @@ substituted for particular instances. For example,
 a range. An exception is that we use \texttt{in.pdf} and \texttt{out.pdf}
 instead of \texttt{<input file>} and \texttt{<output file>} to reduce
 verbosity. Under Microsoft Windows, type \texttt{cpdf.exe} instead of \texttt{cpdf}.
-\cleardoublepage
+\clearpage\pagestyle{empty}\cleardoublepage
 \mainmatter
 %\chapterstyle{hangnum}
 %\pagestyle{ruled}
@@ -442,7 +446,7 @@ example:
 \noindent To re-encrypt the file with its existing encryption upon writing, which is required if only the user password was supplied, but allowed in any case, add the \texttt{-recrypt} option:
 
 \begin{framed}
-\small\verb!cpdf in.pdf user=fred reverse -recrypt -o out.pdf!
+\small\verb!cpdf in.pdf user=charles reverse -recrypt -o out.pdf!
 \end{framed}
 
 \noindent The password required (owner or user) depends upon the operation
@@ -1212,7 +1216,7 @@ Bleed box & Pink
 \end{tabular}
 \medskip
 
-The \texttt{-trim-marks} operation adds trim marks to a PDF file. The trim box must be present.
+\pagestyle{fancy}The \texttt{-trim-marks} operation adds trim marks to a PDF file. The trim box must be present.
 
 \chapter{Encryption and Decryption}\label{chap:4}
 \pagestyle{fancy}
@@ -1467,7 +1471,7 @@ As an alternative to extracting a bookmark file and manipulating the open-status
   \end{framed}
 
 \noindent A level of 0 will close all bookmarks, level 1 will open just the top level, closing all others etc. To open all of them, pick a sufficiently large level.
-
+\clearpage\pagestyle{empty}
 
 
 \chapter{Presentations}\label{chap:7}
@@ -2393,11 +2397,11 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 
 \chapter{Working with Images}\label{chap:13}
 \begin{framed}
-\noindent\small\verb!cpdf -image-resolution <minimum resolution> in.pdf [<range>]!
-
-\vspace{1.5mm}
 \noindent\small\verb!cpdf -extract-images in.pdf [<range>] [-im <path>] [-p2p <path>]!
 \noindent\small\verb!     [-dedup | -dedup-perpage] -o <path>!
+
+\vspace{1.5mm}
+\noindent\small\verb!cpdf -image-resolution <minimum resolution> in.pdf [<range>]!
 \end{framed}
 
 \section{Extracting images}
@@ -2416,7 +2420,6 @@ Cpdf can extract the raster images to a given location. JPEG, JPEG2000 and JBIG2
   \end{framed}
 
 \noindent The \texttt{output} directory must already exist. The \texttt{-dedup} option deduplicates images entirely; the \texttt{-dedup-perpage} option only per page.
-
 
   \section{Detecting Low-resolution Images}\label{imageres}
   To list all images in the given range of pages which fall below a given resolution (in dots-per-inch), use the \verb!-image-resolution! function:
@@ -2439,18 +2442,7 @@ Cpdf can extract the raster images to a given location. JPEG, JPEG2000 and JBIG2
 
 To remove a particular image, find its name using \texttt{-image-resolution} with a sufficiently high resolution (so as to list all images), and then apply the \texttt{-draft} and \texttt{-draft-remove-only} operations from Section \ref{draft}. 
 
-%  \section{Extracting Images}
-%  \begin{framed}
-%  \noindent\verb!cpdf -extract-images in.pdf [<range>] -o <string>!
-%  \end{framed} 
-%The Tools can extract images from PDF files to JPEG, JPEG2000, JBIG2 and PNM (Portable Any Map) files. Images which are already in JPEG/JPEG2000/JBIG2 format in the PDF are written in those formats, unaltered. All other images are decoded and written as PNM files (unless the decoding method is unknown). If the command line tool \textsf{pnm2png} is present, PNG files are output instead.
-
-%For example,
-%  \begin{framed}
-%    \small\verb!cpdf -extract-images in.pdf 2-6 -o img%%%!
-%  \end{framed}
-%might generate \texttt{img001.jpg}, \texttt{img002.png}, \texttt{img003.jpg} etc. from the images on pages two to six. The number of percentage characters in the output format indicate the width of the numbering system for the output file names.
-\pagestyle{empty}
+\pagestyle{fancy}
 
 \chapter{Fonts}\pagestyle{fancy}\label{chap:14}
  {\small \begin{framed}
@@ -2559,9 +2551,9 @@ recommended when file size is the sole consideration.
   \small\noindent\verb!cpdf -embed-missing-fonts -gs gs in.pdf -o out.pdf!
   \end{framed}
 
-\label{listmisingfonts}
+\label{listmisingfonts}\clearpage\pagestyle{empty}
 
-\chapter{PDF and JSON}\label{chap:15}
+\chapter{PDF and JSON}\label{chap:15}\pagestyle{fancy}
   {\small\begin{framed}
   \noindent\verb!cpdf in.pdf -output-json -o out.json!\\
   \noindent\verb!     [-output-json-parse-content-streams]!\\
@@ -2569,7 +2561,7 @@ recommended when file size is the sole consideration.
 
   \end{framed}}
 
-Output PDF as JSON data. Each object is written under its object number. The object number zero is used to store the trailer dictionary. Negative object numbers are reserved for future format expansion. Here is a small PDF so output:
+Output PDF as JSON data. Each object is written under its object number. The object number zero is used to store the trailer dictionary. Negative object numbers are reserved for future format expansion. Here is an example of the output for a small PDF:
 
 {\small\begin{verbatim}
 [ [ 0,
@@ -2601,7 +2593,8 @@ Output PDF as JSON data. Each object is written under its object number. The obj
 
 \noindent The option \texttt{-output-json-no-stream-data} simply elides the stream data instead, leading to much smaller JSON files. 
 
-\chapter{Optional Content Groups}\label{chap:16}
+\clearpage\pagestyle{empty}
+\chapter{Optional Content Groups}\label{chap:16}\pagestyle{fancy}
 
   {\small\begin{framed}
   \noindent\verb!cpdf -ocg-list in.pdf!
@@ -2647,8 +2640,8 @@ In a PDF file, optional content groups are used to group graphical elements toge
 
 \noindent Ensure that every optional content group appears in the order list.
 
-
-\chapter{Miscellaneous}\label{chap:misc}
+\clearpage\pagestyle{empty}
+\chapter{Miscellaneous}\label{chap:misc}\pagestyle{fancy}
   {\small\begin{framed}
   \noindent\verb!cpdf -draft [-boxes] [-draft-remove-only <n>] in.pdf [<range>] -o out.pdf!
 
@@ -2907,6 +2900,8 @@ YYYY-MM-DDThh:mm:ssTZD
 \texttt{ss} & second (00 to 59)\\
 \texttt{TZD} & time zone designator (\texttt{Z} or \texttt{+hh:mm} or \texttt{-hh::mm})
 \end{tabular}
+\pagestyle{fancy}
+
 
 \backmatter
 \pagestyle{fancy}
