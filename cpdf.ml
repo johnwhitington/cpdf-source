@@ -581,10 +581,10 @@ let pagelabel pdf num =
     num
     (Pdfpagelabels.complete (Pdfpagelabels.read pdf))
 
-let rec process_text text m =
+let rec process_text time text m =
   match m with
-  | [] -> Cpdfstrftime.strftime text
-  | (s, r)::t -> process_text (string_replace_all_lazy s r text) t
+  | [] -> Cpdfstrftime.strftime ~time text
+  | (s, r)::t -> process_text time (string_replace_all_lazy s r text) t
 
 let expand_date = function
   | "now" -> Cpdfstrftime.strftime "D:%Y%m%d%H%M%S"
@@ -1806,6 +1806,7 @@ let addtext
   underneath position hoffset voffset text pages orientation cropbox opacity
   justification filename extract_text_font_size shift pdf
 =
+  let time = Cpdfstrftime.current_time () in
   let endpage = Pdfpage.endpage pdf in
   let replace_pairs pdf filename bates batespad num page =
       [
@@ -1854,7 +1855,7 @@ let addtext
       in
         let unique_fontname = Pdf.unique_key "F" fontdict in
           let ops =
-            let text = process_text text (replace_pairs pdf filename bates batespad num page) in
+            let text = process_text time text (replace_pairs pdf filename bates batespad num page) in
               let calc_textwidth text =
                 match font with
                 | Some f ->
@@ -1882,7 +1883,7 @@ let addtext
                 let expanded_lines =
                   map
                     (function text ->
-                       process_text text (replace_pairs pdf filename bates batespad num page))
+                       process_text time text (replace_pairs pdf filename bates batespad num page))
                     lines
                 in
                 let textwidth = calc_textwidth text

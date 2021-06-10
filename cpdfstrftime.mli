@@ -15,5 +15,7 @@ type t =
    _tm_yday : int;
    _tm_isdst : bool}
 
+val current_time : unit -> t
+
 (** If time omitted, the current time is used. *)
 val strftime : ?time:t -> string -> string
