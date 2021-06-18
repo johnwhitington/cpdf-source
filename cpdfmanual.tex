@@ -2,6 +2,7 @@
 % Edit here to produce cpdfmanual.pdf, cpdflibmanual.pdf, pycpdfmanual.pdf etc.
 \usepackage{comment}\excludecomment{cpdflib}
 \usepackage{palatino}
+\usepackage{listings}
 \usepackage{microtype}
 \usepackage{graphics}
 \usepackage{upquote}
@@ -842,6 +843,14 @@ Cpdf can build a new PDF file, given a number of pages and a paper size. The def
 
 \noindent The standard paper sizes are listed in Section \ref{papersizes}, or you may specify the width and height directly, as described in the same chapter.
 
+\begin{cpdflib}
+\clearpage
+\section*{C Interface}
+\begin{small}\tt
+\lstinputlisting{splits/c01}
+\lstinputlisting{splits/c02}
+\end{small}
+\end{cpdflib}
 
 \chapter{Merging and Splitting}\label{chap:2}
   \begin{framed}
@@ -967,6 +976,14 @@ one of the output files.
 \index{encryption}
 The encryption parameters described in Chapter \ref{encryption} may be added to the command line to encrypt each split PDF. Similarly, the \texttt{-recrypt} switch described in \ref{basicusage} may by given to re-encrypt each file with the existing encryption of the source PDF. 
 \pagestyle{empty}\thispagestyle{fancy}
+
+\begin{cpdflib}
+\clearpage
+\section*{C Interface}
+\begin{small}\tt
+\lstinputlisting{splits/c03}
+\end{small}
+\end{cpdflib}
 
 \chapter{Pages}\label{chap:3}
 \pagestyle{fancy}
@@ -1265,6 +1282,14 @@ Bleed box & Pink
 
 \pagestyle{fancy}The \texttt{-trim-marks} operation adds trim marks to a PDF file. The trim box must be present.
 
+\begin{cpdflib}
+\clearpage
+\section*{C Interface}
+\begin{small}\tt
+\lstinputlisting{splits/c04}
+\end{small}
+\end{cpdflib}
+
 \chapter{Encryption and Decryption}\label{chap:4}
 \pagestyle{fancy}
 \label{encryption}
@@ -1356,6 +1381,14 @@ metadata. Add \texttt{-no-encrypt-metadata} to the command line.
   \end{framed}
   \noindent The user password cannot decrypt a file.
 
+\begin{cpdflib}
+\clearpage
+\section*{C Interface}
+\begin{small}\tt
+\lstinputlisting{splits/c05}
+\end{small}
+\end{cpdflib}
+
 \chapter{Compression}\label{chap:5}
   \begin{framed}
      \small\noindent\verb!cpdf -decompress in.pdf -o out.pdf!
@@ -1411,6 +1444,13 @@ Final file size is 187200 bytes,  78.60% of original.
 
 There are two options which turn off parts of the squeezer. They are \texttt{-squeeze-no-recompress} for avoiding the reprocessing of malformed compressed sections, and \texttt{-squeeze-no-page-data} for avoiding the reprocessing of malformed page data.
 
+\begin{cpdflib}
+\clearpage
+\section*{C Interface}
+\begin{small}\tt
+\lstinputlisting{splits/c06}
+\end{small}
+\end{cpdflib}
 
 \chapter{Bookmarks}\label{chap:6}
   \begin{framed}
@@ -1520,6 +1560,13 @@ As an alternative to extracting a bookmark file and manipulating the open-status
 \noindent A level of 0 will close all bookmarks, level 1 will open just the top level, closing all others etc. To open all of them, pick a sufficiently large level.
 \clearpage\pagestyle{empty}
 
+\begin{cpdflib}
+\clearpage
+\section*{C Interface}
+\begin{small}\tt
+\lstinputlisting{splits/c07}
+\end{small}
+\end{cpdflib}
 
 \chapter{Presentations}\label{chap:7}
   \begin{framed}
@@ -1593,6 +1640,15 @@ on automatically, and has no transition effect.
 
 \noindent To use different options on different page ranges, run \cpdf\ multiple times on
 the file using a different page range each time.
+
+\begin{cpdflib}
+\clearpage
+\section*{C Interface}
+\begin{small}\tt
+\lstinputlisting{splits/c08}
+\end{small}
+\end{cpdflib}
+
 
 \chapter{Watermarks and Stamps}\label{chap:8}
 \label{stamps}
@@ -1949,6 +2005,15 @@ These two operations add content directly to the beginning or end of the page da
   \noindent\small\verb!cpdf -stamp-as-xobject stamp.pdf in.pdf [<range>] -o out.pdf!
 \end{framed}
 
+\begin{cpdflib}
+\clearpage
+\section*{C Interface}
+\begin{small}\tt
+\lstinputlisting{splits/c09}
+\end{small}
+\end{cpdflib}
+
+
 \chapter{Multipage Facilities}\pagestyle{fancy}\label{multipage}\label{chap:9}
   \begin{framed}
     \small\noindent\verb!cpdf -twoup-stack [-fast] in.pdf -o out.pdf! 
@@ -2022,6 +2087,15 @@ In all three of these operations, one may specify \texttt{-pad-with} providing a
 
 \noindent The \texttt{-pad-multiple-before n} operation adds the padding pages at the beginning of the file  instead.
 
+\begin{cpdflib}
+\clearpage
+\section*{C Interface}
+\begin{small}\tt
+\lstinputlisting{splits/c10}
+\end{small}
+\end{cpdflib}
+
+
 \chapter{Annotations}\label{chap:10}
   \begin{framed}
   \small\noindent\verb!cpdf -list-annotations in.pdf [<range>]!
@@ -2070,6 +2144,16 @@ given page range.
     \vspace{2.5mm}
     \noindent Remove annotations from the first page of a file only.
   \end{framed}
+
+\begin{cpdflib}
+\clearpage
+\section*{C Interface}
+\begin{small}\tt
+\lstinputlisting{splits/c11}
+\end{small}
+\end{cpdflib}
+
+
 \chapter{Document Information and Metadata}\label{chap:11}
 \index{document information}
 \index{metadata}
@@ -2379,6 +2463,14 @@ startvalue: 1
 \end{verbatim}
 \end{framed}\pagestyle{empty}\thispagestyle{fancy}
 
+\begin{cpdflib}
+\clearpage
+\section*{C Interface}
+\begin{small}\tt
+\lstinputlisting{splits/c12}
+\end{small}
+\end{cpdflib}
+
 \chapter{File Attachments}\label{chap:12}\pagestyle{fancy}
 \index{attachments}
 \begin{framed}
@@ -2441,6 +2533,14 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
   \verb! / ? < > \ : * | " ^ + =!
   \end{framed}
 
+\begin{cpdflib}
+\clearpage
+\section*{C Interface}
+\begin{small}\tt
+\lstinputlisting{splits/c13}
+\end{small}
+\end{cpdflib}
+
 
 \chapter{Working with Images}\label{chap:13}
 \begin{framed}
@@ -2488,6 +2588,14 @@ Cpdf can extract the raster images to a given location. JPEG, JPEG2000 and JBIG2
 \section{Removing an Image}
 
 To remove a particular image, find its name using \texttt{-image-resolution} with a sufficiently high resolution (so as to list all images), and then apply the \texttt{-draft} and \texttt{-draft-remove-only} operations from Section \ref{draft}. 
+
+\begin{cpdflib}
+\clearpage
+\section*{C Interface}
+\begin{small}\tt
+\lstinputlisting{splits/c14}
+\end{small}
+\end{cpdflib}
 
 \pagestyle{fancy}
 
@@ -2600,6 +2708,14 @@ recommended when file size is the sole consideration.
 
 \label{listmisingfonts}\clearpage\pagestyle{empty}
 
+\begin{cpdflib}
+\clearpage
+\section*{C Interface}
+\begin{small}\tt
+\lstinputlisting{splits/c15}
+\end{small}
+\end{cpdflib}
+
 \chapter{PDF and JSON}\label{chap:15}\pagestyle{fancy}\index{JSON}
   {\small\begin{framed}
   \noindent\verb!cpdf in.pdf -output-json -o out.json!\\
@@ -2639,6 +2755,14 @@ Output PDF as JSON data. Each object is written under its object number. The obj
 \end{verbatim}}
 
 \noindent The option \texttt{-output-json-no-stream-data} simply elides the stream data instead, leading to much smaller JSON files. 
+
+\begin{cpdflib}
+\clearpage
+\section*{C Interface}
+\begin{small}\tt
+\lstinputlisting{splits/c16}
+\end{small}
+\end{cpdflib}
 
 \clearpage\pagestyle{empty}
 \chapter{Optional Content Groups}\label{chap:16}\pagestyle{fancy}\index{Optional Content Group}
@@ -2686,6 +2810,14 @@ In a PDF file, optional content groups are used to group graphical elements toge
   \end{framed}}
 
 \noindent Ensure that every optional content group appears in the order list.
+
+\begin{cpdflib}
+\clearpage
+\section*{C Interface}
+\begin{small}\tt
+\lstinputlisting{splits/c16}
+\end{small}
+\end{cpdflib}
 
 \clearpage\pagestyle{empty}
 \chapter{Miscellaneous}\label{chap:misc}\pagestyle{fancy}
@@ -2882,6 +3014,13 @@ The \texttt{-remove-clipping} operation removes any clipping paths on given page
   \noindent Remove clipping paths in \texttt{in.pdf}, writing to \texttt{out.pdf}. 
   \end{framed}
 
+\begin{cpdflib}
+\clearpage
+\section*{C Interface}
+\begin{small}\tt
+\lstinputlisting{splits/c18}
+\end{small}
+\end{cpdflib}
 
 \appendix
 \chapter{Dates}\pagestyle{empty}
