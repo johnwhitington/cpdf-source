@@ -1,0 +1,22 @@
+#!/bin/bash
+csplit -k -f splits/c cpdflibwrapper.h '/CHAPTER/' {18}
+mv splits/c00 splits/c00.tex
+mv splits/c01 splits/c01.tex
+mv splits/c02 splits/c02.tex
+mv splits/c03 splits/c03.tex
+mv splits/c04 splits/c04.tex
+mv splits/c05 splits/c05.tex
+mv splits/c06 splits/c06.tex
+mv splits/c07 splits/c07.tex
+mv splits/c08 splits/c08.tex
+mv splits/c09 splits/c09.tex
+mv splits/c10 splits/c10.tex
+mv splits/c11 splits/c11.tex
+mv splits/c12 splits/c12.tex
+mv splits/c13 splits/c13.tex
+mv splits/c14 splits/c14.tex
+mv splits/c15 splits/c15.tex
+mv splits/c16 splits/c16.tex
+mv splits/c17 splits/c17.tex
+mv splits/c18 splits/c18.tex
+mv splits/c19 splits/c19.tex

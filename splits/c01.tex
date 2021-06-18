@@ -1,0 +1,36 @@
+/* CHAPTER 0. Preliminaries */
+
+/* The function cpdf_startup(argv) must be called before using the library.  */
+void cpdf_startup(char **);
+
+/* Return the version of the cpdflib library as a string */
+char *cpdf_version();
+
+/*
+ * Some operations have a fast mode. The default is 'slow' mode, which works
+ * even on old-fashioned files. For more details, see section 1.13 of the
+ * CPDF manual. These functions set the mode globally.
+ */
+void cpdf_setFast();
+void cpdf_setSlow();
+
+/*
+ * Errors. cpdf_lastError and cpdf_lastErrorString hold information about the
+ * last error to have occurred. They should be consulted after each call. If
+ * cpdf_lastError is non-zero, there was an error, and cpdf_lastErrorString
+ * gives details. If cpdf_lastError is zero, there was no error on the most
+ * recent cpdf call.
+ */
+extern int cpdf_lastError;
+extern char *cpdf_lastErrorString;
+
+/* cpdf_clearError clears the current error state. */
+void cpdf_clearError(void);
+
+/*
+ * cpdf_onExit is a debug function which prints some information about
+ * resource usage. This can be used to detect if PDFs or ranges are being
+ * deallocated properly. Contrary to its name, it may be run at any time.
+ */
+void cpdf_onExit(void);
+
