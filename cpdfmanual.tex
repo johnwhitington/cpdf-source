@@ -1,4 +1,6 @@
 \documentclass{book}
+% Edit here to produce cpdfmanual.pdf, cpdflibmanual.pdf, pycpdfmanual.pdf etc.
+\usepackage{comment}\excludecomment{cpdflib}
 \usepackage{palatino}
 \usepackage{microtype}
 \usepackage{graphics}
@@ -16,7 +18,6 @@
 \fancyhead[lo]{\slshape\nouppercase{\leftmark}\hfill\thepage}
 \fancyhead[re]{\thepage\hfill\slshape\nouppercase{\leftmark}}
 \fancyfoot{}
-%\fancyfoot[LE,RO]{\thepage}
 \renewcommand{\headrulewidth}{0pt}
 \renewcommand{\footrulewidth}{0pt}
 \begin{document}
@@ -282,6 +283,52 @@ A sampling of just a few of the facilities provided by the Coherent PDF Command 
 % Letter
 \pagestyle{empty}
 \cleardoublepage
+
+\begin{cpdflib}
+\chapter{Example Program in C}
+
+This program loads a file \texttt{hello.pdf} from disk and writes out a document with the original included three times. Note the use of \texttt{cpdf\_startup}, \texttt{cpdf\_lastError} and \texttt{cpdf\_clearError}.
+
+\begin{small}
+\begin{verbatim}
+#include <stdbool.h>
+#include "cpdflibwrapper.h"
+
+int main (int argc, char ** argv)
+{
+  /* Initialise cpdf */
+  cpdf_startup(argv);
+
+  /* We will take the input hello.pdf and repeat it three times */
+  int mergepdf = cpdf_fromFile("hello.pdf", "");
+
+  /* Check the error state */
+  if (cpdf_lastError) return 1;
+
+  /* Clear the error state */
+  cpdf_clearError();
+
+  /* The array of PDFs to merge */
+  int pdfs[] = {mergepdf, mergepdf, mergepdf};
+
+  /* Merge them */
+  int merged = cpdf_mergeSimple(pdfs, 3);
+  
+  if (cpdf_lastError) return 1;
+
+  cpdf_clearError();
+
+  /* Write output */
+  cpdf_toFile(merged, "merged.pdf", false, false);
+
+  if (cpdf_lastError) return 1;
+
+  return 0;
+}
+\end{verbatim}
+\end{small}
+\end{cpdflib}
+
 \pagestyle{plain}
 \tableofcontents\clearpage\pagestyle{empty}
 
