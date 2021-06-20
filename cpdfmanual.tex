@@ -421,7 +421,7 @@ preceded by \verb!-i!. For example:
 after each input file. This is treated differently by each operation. For
 instance
   \begin{framed}
-  \small\verb!cpdf in.pdf 2-5 out.pdf!
+  \small\verb!cpdf in.pdf 2-5 -o out.pdf!
   \end{framed}
   \noindent extracts pages two, three, four and five from \texttt{in.pdf},
 writing the result to \texttt{out.pdf}, assuming that \texttt{in.pdf} contains
@@ -974,7 +974,7 @@ one of the output files.
 
 \section{Encrypting with Split and Split Bookmarks}
 \index{encryption}
-The encryption parameters described in Chapter \ref{encryption} may be added to the command line to encrypt each split PDF. Similarly, the \texttt{-recrypt} switch described in \ref{basicusage} may by given to re-encrypt each file with the existing encryption of the source PDF. 
+The encryption parameters described in Chapter \ref{encryption} may be added to the command line to encrypt each split PDF. Similarly, the \texttt{-recrypt} switch described in Chapter \ref{basicusage} may by given to re-encrypt each file with the existing encryption of the source PDF. 
 \pagestyle{empty}\thispagestyle{fancy}
 
 \begin{cpdflib}
@@ -1568,7 +1568,7 @@ As an alternative to extracting a bookmark file and manipulating the open-status
 \end{small}
 \end{cpdflib}
 
-\chapter{Presentations}\label{chap:7}
+\chapter{Presentations}\label{chap:7}\pagestyle{fancy}
   \begin{framed}
   \small\noindent\begin{verbatim}
   cpdf -presentation in.pdf [<range>] -o out.pdf
