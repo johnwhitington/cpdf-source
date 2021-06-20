@@ -5,10 +5,11 @@ o Optional Content Groups now preserved when merging / stamping pages
 o Listing, coalescing and modfying Optional Content Groups.
 o New -labels-progress option to improve page labels interface
 o New options -output-json et al. to export PDF files in JSON format
+o New options to manipulate Optional Content Groups
 o New option -stamp-as-xobject to add one PDF as an xobject in another
 o No longer depends on Bigarray or Unix modules
 o Appearance streams transformed when transforming annotations
-o Bookmark desitination positions transformed when transforming pages
+o Bookmark destination positions transformed when transforming pages
 
 Version 2.3 (patchlevel 1, December 2019)
 

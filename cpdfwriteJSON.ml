@@ -187,6 +187,9 @@ let json_of_pdf parse_content no_stream_data pdf =
       iter (fun n -> Pdfcodec.decode_pdfstream_until_unknown pdf (P.lookup_obj pdf n)) !content_streams;
     let pairs_parsed =
       if not parse_content then pairs else
+        (* FIXME. Here we must combine all the streams together, using a new
+           object number. This is so that the parsing can parse things split
+           across streams. *)
         map
           (fun (objnum, obj) ->
              if mem objnum !content_streams then
