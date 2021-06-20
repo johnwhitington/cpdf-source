@@ -3,7 +3,7 @@ let demo = false
 let noncomp = false
 let major_version = 2
 let minor_version = 4
-let version_date = "(devel, 16th February 2020)"
+let version_date = "(18th June 2021)"
 
 open Pdfutil
 open Pdfio
