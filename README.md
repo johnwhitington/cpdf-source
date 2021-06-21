@@ -2,7 +2,7 @@ cpdf-source
 ===========
 
 Free for non-commercial use. See LICENSE for details. Copyright Coherent
-Graphics Ltd 2013.
+Graphics Ltd 2021.
 
 This code builds two things:
 
@@ -39,8 +39,8 @@ opam install camlpdf
 To build
 --------
 
-If downloading from Github, obtain the correct source. This means choosing the tag for a
-particular version, such as "v2.1.1". The head of the master branch is
+If downloading from Github, obtain the correct source. This means choosing the
+tag for a particular version, such as "v2.4". The head of the master branch is
 unstable.
 
 1. Type `make` to make the cpdf executable and the library
