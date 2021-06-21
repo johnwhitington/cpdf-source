@@ -2218,7 +2218,7 @@ and specs =
      " Coalesce OCGs with like name");
    ("-stamp-as-xobject",
      Arg.String setstampasxobject,
-     "Stamp a file as a form xobject in another");
+     " Stamp a file as a form xobject in another");
    (* These items are undocumented *)
    ("-remove-unused-resources", Arg.Unit (setop RemoveUnusedResources), "");
    ("-stay-on-error", Arg.Unit setstayonerror, "");
