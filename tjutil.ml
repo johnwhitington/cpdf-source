@@ -42,4 +42,3 @@ let to_hex n =
   in
   if n < 0 then raise (Invalid_argument (!%"to_hex: (%d)" n))
   else string_of_chars @@ iter [] n
-

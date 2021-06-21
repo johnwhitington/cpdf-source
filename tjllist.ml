@@ -95,8 +95,3 @@ let of_function f =
   in
   
   fill ()
-
-      
-            
-  
-  

@@ -238,4 +238,3 @@ let write fh parse_content no_stream_data pdf =
     J.format formatter (json_of_pdf parse_content no_stream_data pdf);
     Format.pp_print_flush formatter ();
     output_string fh (Buffer.contents b)
-

@@ -162,4 +162,3 @@ let run_string p s =
 
 let run_function p f =
   run p init_state (of_function f)
-
