@@ -166,12 +166,34 @@ let json_of_op pdf no_stream_data = function
 (* parse_stream needs pdf and resources. These are for lexing of inline images,
  * looking up the colourspace. We do not need to worry about inherited
  * resources, though? For now, don't worry about inherited resources: check in
-* PDF standard. *)
+ * PDF standard. *)
+
 let parse_content_stream pdf resources bs =
   let ops = O.parse_stream pdf resources [bs] in
     J.Array (map (json_of_op pdf false) ops)
 
+(* We need to make sure each page only has one page content stream. Otherwise,
+   if not split on op boundaries, each one would fail to parse on its own. *)
+(* Future improvement. Don't blow up shared content streams. *)
+let precombine_page_content pdf =
+  let pages' =
+    map
+      (fun page ->
+         match page.Pdfpage.content with
+           [] | [_] -> page
+         | _ ->
+           let operators =
+             Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content
+           in
+             {page with Pdfpage.content = [Pdfops.stream_of_ops operators]}
+      )
+      (Pdfpage.pages_of_pagetree pdf)
+  in
+    Pdfpage.change_pages true pdf pages'
+
 let json_of_pdf parse_content no_stream_data pdf =
+  let pdf = if parse_content then precombine_page_content pdf else pdf in
+  Pdf.remove_unreferenced pdf;
   let trailerdict = (0, json_of_object pdf (fun x -> ()) no_stream_data pdf.P.trailerdict) in
   let content_streams = ref [] in
   let fcs n = content_streams := n::!content_streams in
@@ -187,15 +209,12 @@ let json_of_pdf parse_content no_stream_data pdf =
       iter (fun n -> Pdfcodec.decode_pdfstream_until_unknown pdf (P.lookup_obj pdf n)) !content_streams;
     let pairs_parsed =
       if not parse_content then pairs else
-        (* FIXME. Here we must combine all the streams together, using a new
-           object number. This is so that the parsing can parse things split
-           across streams. *)
         map
           (fun (objnum, obj) ->
              if mem objnum !content_streams then
                begin match obj with
                | J.Array [dict; J.String _] ->
-                   (* FIXME Proper resources here for reasons explained above *)
+                   (* FIXME Proper resources here for reasons explained above? *)
                    let streamdata =
                      match P.lookup_obj pdf objnum with
                      | P.Stream {contents = (_, P.Got b)} -> b
