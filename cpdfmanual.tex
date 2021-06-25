@@ -1,6 +1,6 @@
 \documentclass{book}
 % Edit here to produce cpdfmanual.pdf, cpdflibmanual.pdf, pycpdfmanual.pdf etc.
-\usepackage{comment}\excludecomment{cpdflib}
+\usepackage{comment}\includecomment{cpdflib}
 \usepackage{palatino}
 \usepackage{listings}
 \usepackage{microtype}
@@ -26,12 +26,17 @@
 \frontmatter
 \pagestyle{empty}
 
+
 \begin{flushright}
+
 
 {\sffamily \bfseries \Huge Coherent PDF
 
 \vspace{2mm}
-Command Line Toolkit}
+\begin{cpdflib}
+C API and 
+\end{cpdflib}
+Command Line Tools}
 
 \vspace{12mm}
 
@@ -286,7 +291,7 @@ A sampling of just a few of the facilities provided by the Coherent PDF Command 
 \cleardoublepage
 
 \begin{cpdflib}
-\chapter{Example Program in C}
+\chapter*{Example Program in C}
 
 This program loads a file \texttt{hello.pdf} from disk and writes out a document with the original included three times. Note the use of \texttt{cpdf\_startup}, \texttt{cpdf\_lastError} and \texttt{cpdf\_clearError}.
 
