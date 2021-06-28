@@ -63,6 +63,14 @@ The file `cpdfmanual.pdf` in this folder is the documentation for the command
 line tools. The documentation for the cpdf OCaml library is in `doc/html/cpdf/`
 in this folder once the library has been built.
 
+C API
+-----
+
+A C interface to cpdf is available, in source and binary form:
+
+[source]https://github.com/johnwhitington/cpdflib-source
+[binary]https://github.com/coherentgraphics/cpdflib-binary
+
 Contact
 -------
 
