@@ -68,9 +68,9 @@ C API
 
 A C interface to cpdf is available, in source and binary form:
 
-[source](https://github.com/johnwhitington/cpdflib-source)
+[https://github.com/johnwhitington/cpdflib-source](https://github.com/johnwhitington/cpdflib-source)
 
-[binary](https://github.com/coherentgraphics/cpdflib-binary)
+[https://github.com/coherentgraphics/cpdflib-binary](https://github.com/coherentgraphics/cpdflib-binary)
 
 Contact
 -------
