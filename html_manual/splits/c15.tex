@@ -1,0 +1,27 @@
+/* CHAPTER 14. Fonts. */
+
+/*
+ * Retrieving font information. First, call cpdf_startGetFontInfo(pdf). Now
+ * call cpdf_numberFonts to return the number of fonts. For each font, call
+ * one or more of cpdf_getFontPage, cpdf_getFontName, cpdf_getFontType, and
+ * cpdf_getFontEncoding giving a serial number 0..<number of fonts> - 1 to
+ * return information. Finally, call cpdf_endGetFontInfo to clean up.
+ */
+void cpdf_startGetFontInfo(int);
+int cpdf_numberFonts(void);
+int cpdf_getFontPage(int);
+char *cpdf_getFontName(int);
+char *cpdf_getFontType(int);
+char *cpdf_getFontEncoding(int);
+void cpdf_endGetFontInfo(void);
+
+/* cpdf_removeFonts(pdf) removes all font data from a file. */
+void cpdf_removeFonts(int);
+
+/*
+ * cpdf_copyFont(from, to, range, pagenumber, fontname) copies the given font
+ * from the given page in the 'from' PDF to every page in the 'to' PDF. The
+ * new font is stored under it's font name.
+ */
+void cpdf_copyFont(int, int, int, int, const char[]);
+

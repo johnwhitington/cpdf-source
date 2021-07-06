@@ -1,0 +1,54 @@
+/* CHAPTER 17. Miscellaneous */
+
+/*
+ * cpdf_draft(pdf, range, boxes) removes images on the given pages, replacing
+ * them with crossed boxes if 'boxes' is true
+ */
+void cpdf_draft(int, int, int);
+
+/*
+ * cpdf_removeAllText(pdf, range) removes all text from the given pages in a
+ * given document.
+ */
+void cpdf_removeAllText(int, int);
+
+/* cpdf_blackText(pdf, range) blackens all text on the given pages. */
+void cpdf_blackText(int, int);
+
+/* cpdf_blackLines(pdf, range) blackens all lines on the given pages. */
+void cpdf_blackLines(int, int);
+
+/* cpdf_blackFills(pdf, range) blackens all fills on the given pages. */
+void cpdf_blackFills(int, int);
+
+/*
+ * cpdf_thinLines(pdf, range, min_thickness) thickens every line less than
+ * min_thickness to min_thickness. Thickness given in points.
+ */
+void cpdf_thinLines(int, int, double);
+
+/* cpdf_copyId(from, to) copies the /ID from one document to another. */
+void cpdf_copyId(int, int);
+
+/* cpdf_removeId(pdf) removes a document's /ID. */
+void cpdf_removeId(int);
+
+/* cpdf_setVersion(pdf, version) sets the minor version number of a document. */
+void cpdf_setVersion(int, int);
+
+/* cpdf_setFullVersion(pdf, major_version, minor_version) sets the full version
+ * number of a document. */
+void cpdf_setFullVersion(int, int, int);
+
+/*
+ * cpdf_removeDictEntry(pdf, key) removes any dictionary entry with the given
+ * key anywhere in the document.
+ */
+void cpdf_removeDictEntry(int, const char[]);
+
+/*
+ * cpdf_removeClipping(pdf, range) removes all clipping from pages in the
+ * given range.
+ */
+void cpdf_removeClipping(int, int);
+

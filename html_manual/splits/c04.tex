@@ -1,0 +1,152 @@
+/* CHAPTER 3. Pages */
+
+/*
+ * cpdf_scalePages(pdf, range, x scale, y scale) scales the page dimensions
+ * and content by the given scale, about (0, 0). Other boxes (crop etc. are
+ * altered as appropriate)
+ */
+void cpdf_scalePages(int, int, double, double);
+
+/*
+ * cpdf_scaleToFit(pdf, range, width height, scale) scales the content to fit
+ * new page dimensions (width x height) multiplied by scale (typically 1.0).
+ * Other boxed (crop etc. are altered as appropriate)
+ */
+void cpdf_scaleToFit(int, int, double, double, double);
+
+/*
+ * cpdf_scaleToFitPaper(pdf, range, papersize, scale) scales the page content
+ * to fit the given page size, possibly multiplied by scale (typically 1.0)
+ */
+void cpdf_scaleToFitPaper(int, int, enum cpdf_papersize, double);
+
+/* Positions on the page. Used for scaling about a point, and adding text. */
+enum cpdf_anchor {
+  cpdf_posCentre,      /* Absolute centre */
+  cpdf_posLeft,        /* Absolute left */
+  cpdf_posRight,       /* Absolute right */
+  cpdf_top,            /* Top top centre of the page */
+  cpdf_topLeft,        /* The top left of the page */
+  cpdf_topRight,       /* The top right of the page */
+  cpdf_left,           /* The left hand side of the page, halfway
+                        * down */
+  cpdf_bottomLeft,     /* The bottom left of the page */
+  cpdf_bottom,         /* The bottom middle of the page */
+  cpdf_bottomRight,    /* The bottom right of the page */
+  cpdf_right,          /* The right hand side of the page, halfway
+                        * down */
+  cpdf_diagonal,       /* Diagonal, bottom left to top right */
+  cpdf_reverseDiagonal /* Diagonal, top left to bottom right */
+};
+
+/*
+ * A cpdf_position is an anchor (above) and zero or one or two parameters
+ * (cpdf_coord1, cpdf_coord2).
+ *
+ * cpdf_posCentre: Two parameters, x and y
+ *
+ * cpdf_posLeft: Two parameters, x and y
+ *
+ * cpdf_posRight: Two parameters, x and y
+ *
+ * cpdf_top: One parameter -- distance from top
+ *
+ * cpdf_topLeft: One parameter -- distance from top left
+ *
+ * cpdf_topRight: One parameter -- distance from top right
+ *
+ * cpdf_left: One parameter -- distance from left middle
+ *
+ * cpdf_bottomLeft: One parameter -- distance from bottom left
+ *
+ * cpdf_bottom: One parameter -- distance from bottom
+ *
+ * cpdf_bottomRight: One parameter -- distance from bottom right
+ *
+ * cpdf_right: One parameter -- distance from right
+ *
+ * cpdf_diagonal: Zero parameters
+ *
+ * cpdf_reverseDiagonal: Zero parameters
+ */
+struct cpdf_position {
+  int cpdf_anchor;    /* Position anchor */
+  double cpdf_coord1; /* Parameter one */
+  double cpdf_coord2; /* Parameter two */
+};
+
+/*
+ * cpdf_scaleContents(pdf, range, position, scale) scales the contents of the
+ * pages in the range about the point given by the cpdf_position, by the
+ * scale given.
+ */
+void cpdf_scaleContents(int, int, struct cpdf_position, double);
+
+/*
+ * cpdf_shiftContents(pdf, range, dx, dy) shifts the content of the pages in
+ * the range.
+ */
+void cpdf_shiftContents(int, int, double, double);
+
+/*
+ * cpdf_rotate(pdf, range, rotation) changes the viewing rotation to an
+ * absolute value. Appropriate rotations are 0, 90, 180, 270.
+ */
+void cpdf_rotate(int, int, int);
+
+/*
+ * cpdf_rotateBy(pdf, range, rotation) changes the viewing rotation by a
+ * given number of degrees. Appropriate values are 90, 180, 270.
+ */
+void cpdf_rotateBy(int, int, int);
+
+/*
+ * cpdf_rotateContents(pdf, range, angle) rotates the content about the
+ * centre of the page by the given number of degrees, in a clockwise
+ * direction.
+ */
+void cpdf_rotateContents(int, int, double);
+
+/*
+ * cpdf_upright(pdf, range) changes the viewing rotation of the pages in the
+ * range, counter-rotating the dimensions and content such that there is no
+ * visual change.
+ */
+void cpdf_upright(int, int);
+
+/* cpdf_hFlip(pdf, range) flips horizontally the pages in the range. */
+void cpdf_hFlip(int, int);
+
+/* cpdf_vFlip(pdf, range) flips vertically the pages in the range. */
+void cpdf_vFlip(int, int);
+
+/*
+ * cpdf_crop(pdf, range, x, y, w, h) crops a page, replacing any existing
+ * crop box. The dimensions are in points.
+ */
+void cpdf_crop(int, int, double, double, double, double);
+
+/* cpdf_removeCrop(pdf, range) removes any crop box from pages in the range. */
+void cpdf_removeCrop(int, int);
+
+/* cpdf_removeTrim(pdf, range) removes any crop box from pages in the range. */
+void cpdf_removeTrim(int, int);
+
+/* cpdf_removeArt(pdf, range) removes any crop box from pages in the range. */
+void cpdf_removeArt(int, int);
+
+/* cpdf_removeBleed(pdf, range) removes any crop box from pages in the range. */
+void cpdf_removeBleed(int, int);
+
+/*
+ * cpdf_trimMarks(pdf, range) adds trim marks to the given pages, if the
+ * trimbox exists.
+ */
+void cpdf_trimMarks(int, int);
+
+/* cpdf_showBoxes(pdf, range) shows the boxes on the given pages, for debug. */
+void cpdf_showBoxes(int, int);
+
+/* cpdf_hardBox make a given box a 'hard box' i.e clips it explicitly. */
+void cpdf_hardBox(int, int, const char[]);
+
