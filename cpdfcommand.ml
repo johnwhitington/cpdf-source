@@ -58,8 +58,7 @@ let error s =
   if not !stay_on_error then exit 2 else raise StayOnError
 
 let soft_error s =
-  Printf.eprintf "%s\n" s;
-  flush stderr;
+  Printf.eprintf "%s\n%!" s;
   if not !stay_on_error then exit 1 else raise StayOnError
 
 let parse_pagespec pdf spec =
@@ -796,7 +795,7 @@ let detect_duplicate_op op =
   match args.op with
     None | Some Shift -> ()
   | _ ->
-      Printf.eprintf "Operation %s already specified, so cannot specify operation %s.\nUse AND from Chapter 1 of the manual to chain commands together.\n"
+      Printf.eprintf "Operation %s already specified, so cannot specify operation %s.\nUse AND from Chapter 1 of the manual to chain commands together.\n%!"
       (string_of_op (unopt args.op)) (string_of_op op);
       exit 1
 
@@ -1321,7 +1320,7 @@ let setrevision n =
     (a, b, c, d, e, _)::more ->
       args.inputs <- (a, b, c, d, e, Some n) :: more
   | [] ->
-      Printf.eprintf "Warning. -revision ignored. Put it after the filename.\n"
+      Printf.eprintf "Warning. -revision ignored. Put it after the filename.\n%!"
 
 let setoutline () =
   args.outline <- true
@@ -2261,7 +2260,7 @@ let filesize name =
 (* Embed missing fonts with Ghostscript. *)
 let embed_missing_fonts fi fo =
   if args.path_to_ghostscript = "" then begin
-    Printf.eprintf "Please supply path to gs with -gs\n";
+    Printf.eprintf "Please supply path to gs with -gs\n%!";
     exit 2
   end;
     let gscall =
@@ -2271,15 +2270,15 @@ let embed_missing_fonts fi fo =
     in
       match Sys.command gscall with
       | 0 -> exit 0
-      | _ -> Printf.eprintf "Font embedding failed.\n"; exit 2
+      | _ -> Printf.eprintf "Font embedding failed.\n%!"; exit 2
 
 (* Mend PDF file with Ghostscript. We use this if a file is malformed and CPDF
  * cannot mend it. It is copied to a temporary file, fixed, then we return None or Some (pdf). *)
 let mend_pdf_file_with_ghostscript filename =
   if args.path_to_ghostscript = "" then begin
-    Printf.eprintf "Please supply path to gs with -gs\n";
+    Printf.eprintf "Please supply path to gs with -gs\n%!";
   end;
-  Printf.eprintf "CPDF could not mend. Attempting to mend file with gs\n";
+  Printf.eprintf "CPDF could not mend. Attempting to mend file with gs\n%!";
   flush stderr;
   let tmpout = Filename.temp_file "cpdf" ".pdf" in
     tempfiles := tmpout::!tempfiles;
@@ -2289,8 +2288,8 @@ let mend_pdf_file_with_ghostscript filename =
       " -dBATCH " ^ Filename.quote filename
     in
       match Sys.command gscall with
-      | 0 -> Printf.eprintf "Succeeded!\n"; flush stderr; tmpout
-      | _ -> Printf.eprintf "Could not fix malformed PDF file, even with gs\n"; flush stderr; exit 2
+      | 0 -> Printf.eprintf "Succeeded!\n%!"; flush stderr; tmpout
+      | _ -> Printf.eprintf "Could not fix malformed PDF file, even with gs\n%!"; flush stderr; exit 2
 
 exception StdInBytes of bytes
 
@@ -2316,7 +2315,7 @@ let rec get_single_pdf ?(decrypt=true) ?(fail=false) op read_lazy =
   let failout () =
     if fail then begin
       (* Reconstructed with ghostscript, but then we couldn't read it even then. Do not loop. *)
-      Printf.eprintf "Failed to read gs-reconstructed PDF even though gs succeeded\n";
+      Printf.eprintf "Failed to read gs-reconstructed PDF even though gs succeeded\n%!";
       exit 2
     end
   in
@@ -2324,12 +2323,12 @@ let rec get_single_pdf ?(decrypt=true) ?(fail=false) op read_lazy =
     begin match args.inputs with
       (InFile inname, _, _, _, _, _)::_ ->
         begin try ignore (close_in (open_in inname)) with _ ->
-          Printf.eprintf "File %s does not exist\n" inname;
+          Printf.eprintf "File %s does not exist\n%!" inname;
           exit 2
         end
     | _ -> ()
     end;
-    Printf.eprintf "get_single_pdf: failed to read malformed PDF file. Consider using -gs-malformed\n";
+    Printf.eprintf "get_single_pdf: failed to read malformed PDF file. Consider using -gs-malformed\n%!";
     exit 2
   in
   match args.inputs with
@@ -2399,7 +2398,7 @@ let rec get_pdf_from_input_kind ?(read_lazy=false) ?(decrypt=true) ?(fail=false)
   let failout () =
     if fail then begin
       (* Reconstructed with ghostscript, but then we couldn't read it even then. Do not loop. *)
-      Printf.eprintf "Failed to read gs-reconstructed PDF even though gs succeeded\n";
+      Printf.eprintf "Failed to read gs-reconstructed PDF even though gs succeeded\n%!";
       exit 2
     end
   in
@@ -2407,12 +2406,12 @@ let rec get_pdf_from_input_kind ?(read_lazy=false) ?(decrypt=true) ?(fail=false)
     begin match input with
       (InFile inname, _, _, _, _, _) ->
         begin try ignore (close_in (open_in inname)) with _ ->
-          Printf.eprintf "File %s does not exist\n" inname;
+          Printf.eprintf "File %s does not exist\n%!" inname;
           exit 2
         end
     | _ -> ()
     end;
-    Printf.eprintf "get_pdf_from_input_kind: failed to read malformed PDF file. Consider using -gs-malformed\n";
+    Printf.eprintf "get_pdf_from_input_kind: failed to read malformed PDF file. Consider using -gs-malformed\n%!";
     exit 2
   in
   match ik with
@@ -2628,7 +2627,7 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
             with
               End_of_file ->
                 begin try close_in temp_file; Sys.remove temp with
-                  e -> Printf.eprintf "Failed to remove temp file %s (%s)\n" temp (Printexc.to_string e)
+                  e -> Printf.eprintf "Failed to remove temp file %s (%s)\n%!" temp (Printexc.to_string e)
                 end;
                 flush stdout (*r For Windows *)
 
@@ -2879,14 +2878,14 @@ let write_image pdf resources name image =
         begin match args.path_to_p2p with
         | "" ->
           begin match args.path_to_im with
-            "" -> Printf.eprintf "Neither pnm2png nor imagemagick found. Specify with -p2p or -im\n"
+            "" -> Printf.eprintf "Neither pnm2png nor imagemagick found. Specify with -p2p or -im\n%!"
           | _ ->
             begin match
               Sys.command (Filename.quote_command args.path_to_im [pnm; png])
             with
               0 -> Sys.remove pnm
             | _ -> 
-              Printf.eprintf "Call to imagemagick failed: did you specify -p2p correctly?\n";
+              Printf.eprintf "Call to imagemagick failed: did you specify -p2p correctly?\n%!";
               Sys.remove pnm
             end
           end
@@ -2896,12 +2895,12 @@ let write_image pdf resources name image =
           with
           | 0 -> Sys.remove pnm
           | _ ->
-              Printf.eprintf "Call to pnmtopng failed: did you specify -p2p correctly?\n";
+              Printf.eprintf "Call to pnmtopng failed: did you specify -p2p correctly?\n%!";
               Sys.remove pnm
           end
         end
   | _ ->
-      Printf.eprintf "Unsupported image type when extracting image %s " name
+      Printf.eprintf "Unsupported image type when extracting image %s %!" name
 
 let written = ref []
 
@@ -3077,7 +3076,7 @@ let parse_whiteboxes filename =
             result
   with
     e ->
-      Printf.eprintf "%s\n" ("parse_whiteboxes " ^ Printexc.to_string e);
+      Printf.eprintf "%s\n%!" ("parse_whiteboxes " ^ Printexc.to_string e);
       raise (Failure "")
 
 (* Make start, end pairs from a sortedrange *)
@@ -3138,7 +3137,7 @@ let calculate_margins filename pdf (s, e) =
       (* Clean up temp files *)
       Sys.remove "margins.txt";
       Sys.remove "waste.txt"
-   | _ -> Printf.eprintf "Call to ghostscript failed."
+   | _ -> Printf.eprintf "Call to ghostscript failed.\n%!"
 
 let calculate_margins filename pdf range =
   iter (calculate_margins filename pdf) (startends_of_range (sort compare range))
@@ -3214,7 +3213,7 @@ let dump_attachment out pdf (_, embeddedfile) =
             for x = 0 to bytes_size efdata - 1 do output_byte fh (bget efdata x) done;
             close_out fh
         with
-          e -> Printf.eprintf "Failed to write attachment to %s\n" filename;
+          e -> Printf.eprintf "Failed to write attachment to %s\n%!" filename;
         end
   | _ -> ()
 
@@ -3709,7 +3708,7 @@ let go () =
         Pdf.iter_stream
           (function stream ->
              try Pdfcodec.decode_pdfstream_until_unknown pdf stream with
-               e -> Printf.eprintf "Decode failure: %s. Carrying on...\n" (Printexc.to_string e); ())
+               e -> Printf.eprintf "Decode failure: %s. Carrying on...\n%!" (Printexc.to_string e); ())
           pdf;
         write_pdf ~is_decompress:true false pdf
   | Some Compress ->
@@ -4251,7 +4250,7 @@ let go () =
              let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
                calculate_margins s pdf range
       | _ ->
-         Printf.eprintf "CSP3: Too many input files or input not a file"
+         Printf.eprintf "CSP3: Too many input files or input not a file\n%!"
       end
   | Some ExtractText ->
       let pdf = get_single_pdf args.op true in
@@ -4371,7 +4370,7 @@ let check_command_line () =
 
 let parse_argv () s specs anon_fun usage_msg =
   if args.debug then
-    Array.iter (Printf.eprintf "arg: %s\n") Sys.argv;
+    Array.iter (Printf.eprintf "arg: %s\n%!") Sys.argv;
   Arg.parse_argv ~current:(ref 0) s specs anon_fun usage_msg;
   check_command_line ()
 
@@ -4393,7 +4392,7 @@ let expand_args argv =
 
 let gs_malformed_force fi fo =
   if args.path_to_ghostscript = "" then begin
-    Printf.eprintf "Please supply path to gs with -gs\n";
+    Printf.eprintf "Please supply path to gs with -gs\n%!";
     exit 2
   end;
     let gscall =
@@ -4403,7 +4402,7 @@ let gs_malformed_force fi fo =
     in
       match Sys.command gscall with
       | 0 -> exit 0
-      | _ -> Printf.eprintf "Failed to mend file.\n"; exit 2
+      | _ -> Printf.eprintf "Failed to mend file.\n%!"; exit 2
 
 (* FIXME: Now we call this repeatedly from interactive programs, careful to
 ensure that all memory is cleaned. See clearance of filenames hashtable, for

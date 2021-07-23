@@ -1,4 +1,9 @@
-Version 2.4 (June 2021)
+2.5 (Upcoming)
+
+o Environment variable CPDF_REPRODUCIBLE_DATES for testing
+o Effectively make stderr unbuffered
+
+2.4 (June 2021)
 
 o New operation -extract-images
 o New operation -output-json et al. to export PDF files in JSON format
@@ -11,13 +16,13 @@ o Appearance streams transformed when transforming annotations
 o Bookmark destination positions transformed when transforming pages
 o No longer depends on Bigarray or Unix modules
 
-Version 2.3 (patchlevel 1, December 2019)
+2.3 (patchlevel 1, December 2019)
 
 o Fixed bug which prevented -info working on encrypted files
 o Allow -shift with -add-text for additional adjustment
 o Prepend and postpend directly to page content streams
 
-Version 2.3 (October 2019)
+2.3 (October 2019)
 
 o Directly set and remove Trim, Art, and Bleed boxes
 o Dump attachments to file
@@ -32,14 +37,14 @@ o Create PDF files from scatch
 o Remove single images by name
 o Add trim marks
 
-Version 2.2 (patchlevel 1)
+2.2 (patchlevel 1)
 
 o Fix for inability to read null objects in streams
 o Workaround for Adobe "Error 21" on re-saving encrypted files
 o More efficient bookmark operations on files with many pages
 o New operation -hard-box to clip contents to a given box
 
-Version 2.2 (March 2017)
+2.2 (March 2017)
 
 o Perform arithmetic on dimensions when specifying size or position
 o Add simple rectangles to PDF to blank things out
@@ -57,7 +62,7 @@ o -print-page-labels
 o -squeeze replaces smpdf
 o Preserve more sharing of data when doing merges and page alterations
 
-Version 2.1 (December 2014)
+2.1 (December 2014)
 
 o Encryption now much, much faster
 o Faster parsing of delayed object streams on large files

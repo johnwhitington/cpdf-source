@@ -587,7 +587,11 @@ let rec process_text time text m =
   | (s, r)::t -> process_text time (string_replace_all_lazy s r text) t
 
 let expand_date = function
-  | "now" -> Cpdfstrftime.strftime "D:%Y%m%d%H%M%S"
+  | "now" ->
+      begin match Sys.getenv_opt "CPDF_REPRODUCIBLE_DATES" with
+      | Some "true" -> Cpdfstrftime.strftime ~time:Cpdfstrftime.dummy "D:%Y%m%d%H%M%S" 
+      | _ -> Cpdfstrftime.strftime "D:%Y%m%d%H%M%S"
+      end
   | x -> x
 
 (* For uses of process_pages which don't need to deal with matrices, this
@@ -628,7 +632,7 @@ let protect fast pdf resources content =
       let qs = length (keep (eq Pdfops.Op_q) ops) in
       let bigqs = length (keep (eq Pdfops.Op_Q) ops) in
       let deficit = if qs > bigqs then qs - bigqs else 0 in
-        if deficit <> 0 then Printf.eprintf "Q Deficit was nonzero. Fixing. %i\n" deficit;
+        if deficit <> 0 then Printf.eprintf "Q Deficit was nonzero. Fixing. %i\n%!" deficit;
         deficit
   in
     let addstream ops = Pdf.addobj pdf (Pdfops.stream_of_ops ops) in
@@ -884,7 +888,7 @@ let list_attached_files pdf =
                       | Some (Pdf.String s) ->
                           begin match Pdf.lookup_direct pdf "/FS" annot with
                           | Some ((Pdf.Dictionary _) as d) ->
-                              Printf.eprintf "%s\n" (Pdfwrite.string_of_pdf d);
+                              (*Printf.eprintf "%s\n%!" (Pdfwrite.string_of_pdf d);*)
                               begin match Pdf.lookup_direct pdf "/EF" d with
                               |  Some ((Pdf.Dictionary _) as d) ->
                                    begin match Pdf.lookup_direct pdf "/F" d with
@@ -2260,7 +2264,7 @@ let change_pattern_matrices_resources pdf tr resources =
   end
     with
       Pdftransform.NonInvertable ->
-        Printf.eprintf "Warning: noninvertible matrix";
+        Printf.eprintf "Warning: noninvertible matrix\n%!";
         resources
 
 let change_pattern_matrices_page pdf tr page =
@@ -2371,14 +2375,14 @@ let transform_annotations pdf transform rest =
                                                  Hashtbl.add seen_nums i ();
                                                  transform_xobject_in_place pdf transform i
                                                end
-                                         | _ -> Printf.eprintf "Malformed /AP structure b"; ())
+                                         | _ -> Printf.eprintf "Malformed /AP structure b%\n!"; ())
                                       dict
-                                    | _ -> Printf.eprintf "Malformed /AP structure c"; ())
+                                    | _ -> Printf.eprintf "Malformed /AP structure c\n%!"; ())
                          dict
-                   | _ -> Printf.eprintf "Malformed /AP structure\n"; ()
+                   | _ -> Printf.eprintf "Malformed /AP structure\n%!"; ()
                    end;*)
                  Pdf.addobj_given_num pdf (i, annot)
-         | _ -> Printf.eprintf "transform_annotations: not indirect")
+         | _ -> Printf.eprintf "transform_annotations: not indirect\n%!")
         annots
    | _ -> ()
 
@@ -3776,11 +3780,11 @@ let xmp_date date =
             | _ -> raise Exit  
             end
         | _ ->
-          Printf.eprintf "xmp_date: Malformed date string (no year): %s\n" date;
+          Printf.eprintf "xmp_date: Malformed date string (no year): %s\n%!" date;
           make_xmp_date_from_components d
         end
     | _ ->
-        Printf.eprintf "xmp_date: Malformed date string (no prefix): %s\n" date;
+        Printf.eprintf "xmp_date: Malformed date string (no prefix): %s\n%!" date;
         make_xmp_date_from_components d
   with
     Exit -> make_xmp_date_from_components d
@@ -4587,7 +4591,9 @@ let trim_marks_page fast pdf n page =
          @ [Pdfops.Op_Q]
       in
         Pdfpage.postpend_operators pdf ops ~fast page
-  | _, _ -> Printf.eprintf "warning: no /TrimBox found on page %i\n" n; page
+  | _, _ ->
+      (*Printf.eprintf "warning: no /TrimBox found on page %i\n%!" n;*)
+      page
 
 let trim_marks ?(fast=false) pdf range =
   process_pages (ppstub (trim_marks_page fast pdf)) pdf range

@@ -12,6 +12,17 @@ type t =
    _tm_yday : int;
    _tm_isdst : bool}
 
+let dummy =
+  {_tm_sec = 0;
+   _tm_min = 0;
+   _tm_hour = 0;
+   _tm_mday = 1;
+   _tm_mon = 0;
+   _tm_year = 2000;
+   _tm_wday = 0;
+   _tm_yday = 0;
+   _tm_isdst = false}
+
 let strf_A t =
   match t._tm_wday with
   | 0 -> "Sunday" | 1 -> "Monday" | 2 -> "Tuesday"
@@ -169,7 +180,7 @@ let return_date () =
 let current_time () =
   try return_date () with
     e ->
-      Printf.eprintf "Failed to retrieve time due to %s\n" (Printexc.to_string e);
+      Printf.eprintf "Failed to retrieve time due to %s\n%!" (Printexc.to_string e);
       {_tm_sec = 0;
        _tm_min = 0;
        _tm_hour = 0;
