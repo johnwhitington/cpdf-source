@@ -1,0 +1,17 @@
+/* CHAPTER 5. Compression */
+
+/*
+ * cpdf_compress(pdf) compresses any uncompressed streams in the given PDF
+ * using the Flate algorithm.
+ */
+void cpdf_compress(int);
+
+/*
+ * cpdf_uncompress(pdf) uncompresses any streams in the given PDF, so long as
+ * the compression method is supported.
+ */
+void cpdf_decompress(int);
+
+/* cpdf_squeezeToMemory(pdf) squeezes a pdf in memory. */
+void cpdf_squeezeInMemory(int);
+

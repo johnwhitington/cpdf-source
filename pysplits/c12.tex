@@ -1,0 +1,303 @@
+/* CHAPTER 11. Document Information and Metadata */
+
+/*
+ * cpdf_isLinearized(filename) finds out if a document is linearized as
+ * quickly as possible without loading it.
+ */
+int cpdf_isLinearized(const char[]);
+
+/* cpdf_getVersion(pdf) returns the minor version number of a document. */
+int cpdf_getVersion(int);
+
+/* cpdf_getMajorVersion(pdf) returns the minor version number of a document. */
+int cpdf_getMajorVersion(int);
+
+/* cpdf_getTitle(pdf) returns the title of a document. */
+char *cpdf_getTitle(int);
+
+/* cpdf_getAuthor(pdf) returns the author of a document. */
+char *cpdf_getAuthor(int);
+
+/* cpdf_getSubject(pdf) returns the subject of a document. */
+char *cpdf_getSubject(int);
+
+/* cpdf_getKeywords(pdf) returns the keywords of a document. */
+char *cpdf_getKeywords(int);
+
+/* cpdf_getCreator(pdf) returns the creator of a document. */
+char *cpdf_getCreator(int);
+
+/* cpdf_getProducer(pdf) returns the producer of a document. */
+char *cpdf_getProducer(int);
+
+/* cpdf_getCreationDate(pdf) returns the creation date of a document. */
+char *cpdf_getCreationDate(int);
+
+/* cpdf_getModificationDate(pdf) returns the modification date of a document. */
+char *cpdf_getModificationDate(int);
+
+/* cpdf_getTitleXMP(pdf) returns the XMP title of a document. */
+char *cpdf_getTitleXMP(int);
+
+/* cpdf_getAuthorXMP(pdf) returns the XMP author of a document. */
+char *cpdf_getAuthorXMP(int);
+
+/* cpdf_getSubjectXMP(pdf) returns the XMP subject of a document. */
+char *cpdf_getSubjectXMP(int);
+
+/* cpdf_getKeywordsXMP(pdf) returns the XMP keywords of a document. */
+char *cpdf_getKeywordsXMP(int);
+
+/* cpdf_getCreatorXMP(pdf) returns the XMP creator of a document. */
+char *cpdf_getCreatorXMP(int);
+
+/* cpdf_getProducerXMP(pdf) returns the XMP producer of a document. */
+char *cpdf_getProducerXMP(int);
+
+/* cpdf_getCreationDateXMP(pdf) returns the XMP creation date of a document. */
+char *cpdf_getCreationDateXMP(int);
+
+/*
+ * cpdf_getModificationDateXMP(pdf) returns the XMP modification date of a
+ * document.
+ */
+char *cpdf_getModificationDateXMP(int);
+
+/* cpdf_setTitle(pdf) sets the title of a document. */
+void cpdf_setTitle(int, const char[]);
+
+/* cpdf_setAuthor(pdf) sets the author of a document. */
+void cpdf_setAuthor(int, const char[]);
+
+/* cpdf_setSubject(pdf) sets the subject of a document. */
+void cpdf_setSubject(int, const char[]);
+
+/* cpdf_setKeywords(pdf) sets the keywords of a document. */
+void cpdf_setKeywords(int, const char[]);
+
+/* cpdf_setCreator(pdf) sets the creator of a document. */
+void cpdf_setCreator(int, const char[]);
+
+/* cpdf_setProducer(pdf) sets the producer of a document. */
+void cpdf_setProducer(int, const char[]);
+
+/* cpdf_setCreationDate(pdf) sets the creation date of a document. */
+void cpdf_setCreationDate(int, const char[]);
+
+/* cpdf_setModificationDate(pdf) sets the modifcation date of a document. */
+void cpdf_setModificationDate(int, const char[]);
+
+/* cpdf_setTitleXMP(pdf) set the XMP title of a document. */
+void cpdf_setTitleXMP(int, const char[]);
+
+/* cpdf_setAuthorXMP(pdf) set the XMP author of a document. */
+void cpdf_setAuthorXMP(int, const char[]);
+
+/* cpdf_setSubjectXMP(pdf) set the XMP subject of a document. */
+void cpdf_setSubjectXMP(int, const char[]);
+
+/* cpdf_setKeywordsXMP(pdf) set the XMP keywords of a document. */
+void cpdf_setKeywordsXMP(int, const char[]);
+
+/* cpdf_setCreatorXMP(pdf) set the XMP creator of a document. */
+void cpdf_setCreatorXMP(int, const char[]);
+
+/* cpdf_setProducerXMP(pdf) set the XMP producer of a document. */
+void cpdf_setProducerXMP(int, const char[]);
+
+/* cpdf_setCreationDateXMP(pdf) set the XMP creation date of a document. */
+void cpdf_setCreationDateXMP(int, const char[]);
+
+/*
+ * cpdf_setModificationDateXMP(pdf) set the XMP modification date of a
+ * document.
+ */
+void cpdf_setModificationDateXMP(int, const char[]);
+
+/*
+ * Dates: Month 1-31, day 1-31, hours (0-23), minutes (0-59), seconds (0-59),
+ * hour_offset is the offset from UT in hours (-23 to 23); minute_offset is
+ * the offset from UT in minutes (-59 to 59).
+ */
+
+/*
+ * cpdf_getDateComponents(datestring, year, month, day, hour, minute, second,
+ * hour_offset, minute_offset) returns the components from a PDF date string.
+ */
+void cpdf_getDateComponents(const char[], int *, int *, int *, int *, int *,
+                            int *, int *, int *);
+
+/*
+ * cpdf_dateStringOfComponents(year, month, day, hour, minute, second,
+ * hour_offset, minute_offset) builds a PDF date string from individual
+ * components.
+ */
+char *cpdf_dateStringOfComponents(int, int, int, int, int, int, int, int);
+
+/*
+ * cpdf_getPageRotation(pdf, pagenumber) gets the viewing rotation for a
+ * given page.
+ */
+int cpdf_getPageRotation(int, int);
+
+/*
+ * cpdf_hasBox(pdf, pagenumber, boxname) returns true, if that page has the
+ * given box. E.g "/CropBox".
+ */
+int cpdf_hasBox(int, int, const char[]);
+
+/*
+ * These functions get a box given the document, page range, min x, max x,
+ * min y, max y in points. Only succeeds if such a box exists, as checked by
+ * cpdf_hasBox.
+ */
+void cpdf_getMediaBox(int, int, double *, double *, double *, double *);
+void cpdf_getCropBox(int, int, double *, double *, double *, double *);
+void cpdf_getTrimBox(int, int, double *, double *, double *, double *);
+void cpdf_getArtBox(int, int, double *, double *, double *, double *);
+void cpdf_getBleedBox(int, int, double *, double *, double *, double *);
+
+/*
+ * These functions set a box given the document, page range, min x, max x,
+ * min y, max y in points.
+ */
+void cpdf_setMediabox(int, int, double, double, double, double);
+void cpdf_setCropBox(int, int, double, double, double, double);
+void cpdf_setTrimBox(int, int, double, double, double, double);
+void cpdf_setArtBox(int, int, double, double, double, double);
+void cpdf_setBleedBox(int, int, double, double, double, double);
+
+/* cpdf_markTrapped(pdf) marks a document as trapped. */
+void cpdf_markTrapped(int);
+
+/* cpdf_markUntrapped(pdf) marks a document as untrapped. */
+void cpdf_markUntrapped(int);
+
+/* cpdf_markTrappedXMP(pdf) marks a document as trapped in XMP metadata. */
+void cpdf_markTrappedXMP(int);
+
+/* cpdf_markUntrappedXMP(pdf) marks a document as untrapped in XMP metadata. */
+void cpdf_markUntrappedXMP(int);
+
+/* Document Layouts. */
+enum cpdf_layout {
+  cpdf_singlePage,
+  cpdf_oneColumn,
+  cpdf_twoColumnLeft,
+  cpdf_twoColumnRight,
+  cpdf_twoPageLeft,
+  cpdf_twoPageRight
+};
+
+/* cpdf_setPageLayout(pdf, layout) sets the page layout for a document. */
+void cpdf_setPageLayout(int, enum cpdf_layout);
+
+/* Document page modes. */
+enum cpdf_pageMode {
+  cpdf_useNone,
+  cpdf_useOutlines,
+  cpdf_useThumbs,
+  cpdf_useOC,
+  cpdf_useAttachments
+};
+
+/* cpdf_setPageMode(pdf, mode) sets the page mode for a document. */
+void cpdf_setPageMode(int, enum cpdf_pageMode);
+
+/* cpdf_hideToolbar(pdf, flag) sets the hide toolbar flag. */
+void cpdf_hideToolbar(int, int);
+
+/* cpdf_hideMenubar(pdf, flag) sets the hide menu bar flag. */
+void cpdf_hideMenubar(int, int);
+
+/* cpdf_hideWindowUi(pdf, flag) sets the hide window UI flag. */
+void cpdf_hideWindowUi(int, int);
+
+/* cpdf_fitWindow(pdf, flag) sets the fit window flag. */
+void cpdf_fitWindow(int, int);
+
+/* cpdf_centerWindow(pdf, flag) sets the center window flag. */
+void cpdf_centerWindow(int, int);
+
+/* cpdf_displayDocTitle(pdf, flag) sets the display doc title flag. */
+void cpdf_displayDocTitle(int, int);
+
+/* cpdf_openAtPage(pdf, fit, pagenumber) sets the PDF to open, possibly with
+ * zoom-to-fit, at the given page number. */
+void cpdf_openAtPage(int, int, int);
+
+/*
+ * cpdf_setMetadataFromFile(pdf, filename) set the XMP metadata of a
+ * document, given a file name.
+ */
+void cpdf_setMetadataFromFile(int, const char[]);
+
+/*
+ * cpdf_setMetadataFromByteArray(pdf, data, length) set the XMP metadata from
+ * an array of bytes.
+ */
+void cpdf_setMetadataFromByteArray(int, void *, int);
+
+/*
+ * cpdf_getMetadata(pdf, &length) returns the XMP metadata and fills in
+ * length.
+ */
+void *cpdf_getMetadata(int, int *);
+
+/* cpdf_removeMetadata(pdf) removes the XMP metadata from a document. */
+void cpdf_removeMetadata(int);
+
+/*
+ * cpdf_createMetadata(pdf) builds fresh metadata as best it can from
+ * existing metadata in the document.
+ */
+void cpdf_createMetadata(int);
+
+/*
+ * cpdf_setMetadataDate(pdf, date) sets the metadata date for a PDF. The date
+ * is given in PDF date format -- cpdf will convert it to XMP format. The
+ * date 'now' means now.
+ */
+void cpdf_setMetadataDate(int, const char[]);
+
+/* Styles of page label */
+enum cpdf_pageLabelStyle {
+  cpdf_decimalArabic,    /* 1, 2, 3... */
+  cpdf_uppercaseRoman,   /* I, II, III... */
+  cpdf_lowercaseRoman,   /* i, ii, iii... */
+  cpdf_uppercaseLetters, /* A, B, C... */
+  cpdf_lowercaseLetters  /* a, b, c... */
+};
+
+/*
+ * Add page labels.
+ *
+ * cpdf_addPageLabels(pdf, style, prefix, offset, range, progress)
+ *
+ * The prefix is prefix text for each label. The range is the page range the
+ * labels apply to. Offset can be used to shift the numbering up or down.
+ */
+void cpdf_addPageLabels(int, enum cpdf_pageLabelStyle, const char[], int, int,
+                        int);
+
+/* cpdf_removePageLabels(pdf) removes the page labels from the document. */
+void cpdf_removePageLabels(int);
+
+/*
+ * cpdf_getPageLabelStringForPage(pdf, page number) calculates the full label
+ * string for a given page, and returns it.
+ */
+char *cpdf_getPageLabelStringForPage(int, int);
+
+/*
+ * Get page label data. Call cpdf_startGetPageLabels to find out how many
+ * there are, then use these serial numbers to get the style, prefix, offset
+ * and range. Call cpdf_endGetPageLabels to clean up.
+ */
+int cpdf_startGetPageLabels(int);
+enum cpdf_pageLabelStyle cpdf_getPageLabelStyle(int);
+char *cpdf_getPageLabelPrefix(int);
+int cpdf_getPageLabelOffset(int);
+int cpdf_getPageLabelRange(int);
+void cpdf_endGetPageLabels();
+

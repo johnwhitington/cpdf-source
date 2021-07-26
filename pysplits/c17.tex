@@ -1,0 +1,24 @@
+/* CHAPTER 16. Optional Content Groups */
+
+/* Begin retrieving optional content group names. The serial number 0..<n - 1>
+ * is returned. */
+int cpdf_startGetOCGList(int pdf);
+
+/* Retrieve an OCG name, given its serial number 0..<n - 1>. */
+char *cpdf_OCGListEntry(int i);
+
+/* End retrieval of optional content group names. */
+void cpdf_endGetOCGList(void);
+
+/* cpdf_OCGRename(pdf, from, to) will rename an optional content group. */
+void cpdf_OCGRename(int, const char[], const char[]);
+
+/* Ensure that every optional content group appears in the OCG order list. */
+void cpdf_OCGOrderAll(int);
+
+/* Coalesce optional content groups. For example, if we merge or stamp two
+ * files both with an OCG called "Layer 1", we will have two different optional
+ * content groups. This function will merge the two into a single optional
+ * content group. */
+void cpdf_OCGCoalesce(int);
+

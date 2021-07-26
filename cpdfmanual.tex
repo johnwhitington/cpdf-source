@@ -1,6 +1,6 @@
 \documentclass{book}
 % Edit here to produce cpdfmanual.pdf, cpdflibmanual.pdf, pycpdfmanual.pdf etc.
-\usepackage{comment}\excludecomment{cpdflib}
+\usepackage{comment}\excludecomment{cpdflib}\excludecomment{pycpdflib}
 \usepackage{palatino}
 \usepackage{listings}
 \usepackage{microtype}
@@ -36,6 +36,9 @@
 \begin{cpdflib}
 C API and 
 \end{cpdflib}
+\begin{pycpdflib}
+Python API and
+\end{pycpdflib}
 Command Line Tools}
 
 \vspace{12mm}
@@ -335,6 +338,18 @@ int main (int argc, char ** argv)
 \end{small}
 \end{cpdflib}
 
+\begin{cpdflib}
+\chapter*{Example Program in Python}
+
+This program loads a file \texttt{hello.pdf} from disk and writes out a
+document with the original included three times.
+
+\begin{small}
+\begin{verbatim}
+(PYTHON EXAMPLE HERE)
+\end{verbatim}
+\end{small}
+\end{cpdflib}
 \pagestyle{plain}
 \tableofcontents\clearpage\pagestyle{empty}
 
@@ -857,6 +872,15 @@ Cpdf can build a new PDF file, given a number of pages and a paper size. The def
 \end{small}
 \end{cpdflib}
 
+\begin{pycpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c01}
+\lstinputlisting{pysplits/c02}
+\end{small}
+\end{pycpdflib}
+
 \chapter{Merging and Splitting}\label{chap:2}
   \begin{framed}
   \small
@@ -989,6 +1013,14 @@ The encryption parameters described in Chapter \ref{encryption} may be added to 
 \lstinputlisting{splits/c03}
 \end{small}
 \end{cpdflib}
+
+\begin{pycpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c03}
+\end{small}
+\end{pycpdflib}
 
 \chapter{Pages}\label{chap:3}
 \pagestyle{fancy}
@@ -1295,6 +1327,14 @@ Bleed box & Pink
 \end{small}
 \end{cpdflib}
 
+\begin{pycpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c04}
+\end{small}
+\end{pycpdflib}
+
 \chapter{Encryption and Decryption}\label{chap:4}
 \pagestyle{fancy}
 \label{encryption}
@@ -1394,6 +1434,14 @@ metadata. Add \texttt{-no-encrypt-metadata} to the command line.
 \end{small}
 \end{cpdflib}
 
+\begin{pycpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c05}
+\end{small}
+\end{pycpdflib}
+
 \chapter{Compression}\label{chap:5}
   \begin{framed}
      \small\noindent\verb!cpdf -decompress in.pdf -o out.pdf!
@@ -1456,6 +1504,14 @@ There are two options which turn off parts of the squeezer. They are \texttt{-sq
 \lstinputlisting{splits/c06}
 \end{small}
 \end{cpdflib}
+
+\begin{pycpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c06}
+\end{small}
+\end{pycpdflib}
 
 \chapter{Bookmarks}\label{chap:6}
   \begin{framed}
@@ -1573,6 +1629,14 @@ As an alternative to extracting a bookmark file and manipulating the open-status
 \end{small}
 \end{cpdflib}
 
+\begin{pycpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c07}
+\end{small}
+\end{pycpdflib}
+
 \chapter{Presentations}\label{chap:7}\pagestyle{fancy}
   \begin{framed}
   \small\noindent\begin{verbatim}
@@ -1654,6 +1718,13 @@ the file using a different page range each time.
 \end{small}
 \end{cpdflib}
 
+\begin{pycpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c08}
+\end{small}
+\end{pycpdflib}
 
 \chapter{Watermarks and Stamps}\label{chap:8}
 \label{stamps}
@@ -2018,6 +2089,13 @@ These two operations add content directly to the beginning or end of the page da
 \end{small}
 \end{cpdflib}
 
+\begin{pycpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c09}
+\end{small}
+\end{pycpdflib}
 
 \chapter{Multipage Facilities}\pagestyle{fancy}\label{multipage}\label{chap:9}
   \begin{framed}
@@ -2100,6 +2178,13 @@ In all three of these operations, one may specify \texttt{-pad-with} providing a
 \end{small}
 \end{cpdflib}
 
+\begin{pycpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c10}
+\end{small}
+\end{pycpdflib}
 
 \chapter{Annotations}\label{chap:10}
   \begin{framed}
@@ -2158,6 +2243,13 @@ given page range.
 \end{small}
 \end{cpdflib}
 
+\begin{pycpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c11}
+\end{small}
+\end{pycpdflib}
 
 \chapter{Document Information and Metadata}\label{chap:11}
 \index{document information}
@@ -2475,6 +2567,14 @@ startvalue: 1
 \end{small}
 \end{cpdflib}
 
+\begin{pycpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c12}
+\end{small}
+\end{pycpdflib}
+
 \chapter{File Attachments}\label{chap:12}\pagestyle{fancy}
 \index{attachments}
 \begin{framed}
@@ -2545,6 +2645,14 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 \end{small}
 \end{cpdflib}
 
+\begin{pycpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c13}
+\end{small}
+\end{pycpdflib}
+
 
 \chapter{Working with Images}\label{chap:13}
 \begin{framed}
@@ -2601,6 +2709,13 @@ To remove a particular image, find its name using \texttt{-image-resolution} wit
 \end{small}
 \end{cpdflib}
 
+\begin{pycpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c14}
+\end{small}
+\end{pycpdflib}
 \pagestyle{fancy}
 
 \chapter{Fonts}\pagestyle{fancy}\label{chap:14}
@@ -2720,6 +2835,14 @@ recommended when file size is the sole consideration.
 \end{small}
 \end{cpdflib}
 
+\begin{pycpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c15}
+\end{small}
+\end{pycpdflib}
+
 \chapter{PDF and JSON}\label{chap:15}\pagestyle{fancy}\index{JSON}
   {\small\begin{framed}
   \noindent\verb!cpdf in.pdf -output-json -o out.json!\\
@@ -2767,6 +2890,14 @@ Output PDF as JSON data. Each object is written under its object number. The obj
 \lstinputlisting{splits/c16}
 \end{small}
 \end{cpdflib}
+
+\begin{pycpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c16}
+\end{small}
+\end{pycpdflib}
 
 \clearpage\pagestyle{empty}
 \chapter{Optional Content Groups}\label{chap:16}\pagestyle{fancy}\index{Optional Content Group}
@@ -2822,6 +2953,14 @@ In a PDF file, optional content groups are used to group graphical elements toge
 \lstinputlisting{splits/c16}
 \end{small}
 \end{cpdflib}
+
+\begin{pycpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c16}
+\end{small}
+\end{pycpdflib}
 
 \clearpage\pagestyle{empty}
 \chapter{Miscellaneous}\label{chap:misc}\pagestyle{fancy}
@@ -3025,6 +3164,14 @@ The \texttt{-remove-clipping} operation removes any clipping paths on given page
 \lstinputlisting{splits/c18}
 \end{small}
 \end{cpdflib}
+
+\begin{pycpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c18}
+\end{small}
+\end{pycpdflib}
 
 \appendix
 \chapter{Dates}\pagestyle{empty}
