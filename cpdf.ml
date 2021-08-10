@@ -435,38 +435,45 @@ let fixup_negatives endpage = function
       Pdfgenlex.LexInt (endpage + 1 + ~-(int_of_string (implode (tl (explode s)))))
   | x -> x
 
-let parse_pagespec_inner endpage pdf spec =
+let invert_range endpage r =
+  option_map (fun p -> if mem p r then None else Some p) (ilist 1 endpage)
+
+let rec parse_pagespec_inner endpage pdf spec =
   let spec = space_string spec in
     if endpage < 1 then raise (Pdf.PDFError "This PDF file has no pages and is therefore malformed") else
       let numbers =
         try
-          match rev (explode spec) with
-          | ['n'; 'e'; 'v'; 'e'] ->
-              keep even (ilist 1 endpage)
-          | ['d'; 'd'; 'o'] ->
-              keep odd (ilist 1 endpage)
-          | ['t'; 'i'; 'a'; 'r'; 't'; 'r'; 'o'; 'p'] ->
-              select_portrait pdf (ilist 1 endpage)
-          | ['e'; 'p'; 'a'; 'c'; 's'; 'd'; 'n'; 'a'; 'l'] ->
-              select_landscape pdf (ilist 1 endpage)
-          | 't'::'i'::'a'::'r'::'t'::'r'::'o'::'p'::more ->
-              select_portrait
-                pdf
-                (mk_numbers pdf endpage (map (fixup_negatives endpage) (Pdfgenlex.lex_string (implode (rev more)))))
-          | 'e'::'p'::'a'::'c'::'s'::'d'::'n'::'a'::'l'::more ->
-              select_landscape
-                pdf
-                (mk_numbers pdf endpage (map (fixup_negatives endpage) (Pdfgenlex.lex_string (implode (rev more)))))
-          | 'd'::'d'::'o'::more ->
-              keep
-                odd
-                (mk_numbers pdf endpage (map (fixup_negatives endpage) (Pdfgenlex.lex_string (implode (rev more)))))
-          | 'n'::'e'::'v'::'e'::more ->
-              keep
-                even
-                (mk_numbers pdf endpage (map (fixup_negatives endpage) (Pdfgenlex.lex_string (implode (rev more)))))
+          match explode spec with
+          | 'N'::'O'::'T'::r ->
+              invert_range endpage (parse_pagespec_inner endpage pdf (implode r))
           | _ ->
-              mk_numbers pdf endpage (map (fixup_negatives endpage) (Pdfgenlex.lex_string spec))
+            match rev (explode spec) with
+            | ['n'; 'e'; 'v'; 'e'] ->
+                keep even (ilist 1 endpage)
+            | ['d'; 'd'; 'o'] ->
+                keep odd (ilist 1 endpage)
+            | ['t'; 'i'; 'a'; 'r'; 't'; 'r'; 'o'; 'p'] ->
+                select_portrait pdf (ilist 1 endpage)
+            | ['e'; 'p'; 'a'; 'c'; 's'; 'd'; 'n'; 'a'; 'l'] ->
+                select_landscape pdf (ilist 1 endpage)
+            | 't'::'i'::'a'::'r'::'t'::'r'::'o'::'p'::more ->
+                select_portrait
+                  pdf
+                  (mk_numbers pdf endpage (map (fixup_negatives endpage) (Pdfgenlex.lex_string (implode (rev more)))))
+            | 'e'::'p'::'a'::'c'::'s'::'d'::'n'::'a'::'l'::more ->
+                select_landscape
+                  pdf
+                  (mk_numbers pdf endpage (map (fixup_negatives endpage) (Pdfgenlex.lex_string (implode (rev more)))))
+            | 'd'::'d'::'o'::more ->
+                keep
+                  odd
+                  (mk_numbers pdf endpage (map (fixup_negatives endpage) (Pdfgenlex.lex_string (implode (rev more)))))
+            | 'n'::'e'::'v'::'e'::more ->
+                keep
+                  even
+                  (mk_numbers pdf endpage (map (fixup_negatives endpage) (Pdfgenlex.lex_string (implode (rev more)))))
+            | _ ->
+                mk_numbers pdf endpage (map (fixup_negatives endpage) (Pdfgenlex.lex_string spec))
         with
           e -> raise PageSpecBadSyntax
       in

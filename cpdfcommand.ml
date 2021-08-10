@@ -4408,6 +4408,12 @@ let gs_malformed_force fi fo =
 ensure that all memory is cleaned. See clearance of filenames hashtable, for
 example. *)
 
+let process_env_vars () =
+  match Sys.getenv_opt "CPDF_DEBUG" with
+  | Some "true" -> args.debug <- true
+  | Some "false" -> args.debug <- false
+  | _ -> ()
+
 (* Main function. *)
 let go_withargv argv =
   (* Check for the standalone -gs-malformed-force special command line. This
@@ -4450,6 +4456,7 @@ let go_withargv argv =
            (*Printf.printf "AND:%b, %s\n" islast (Array.fold_left (fun x y -> x  ^ " " ^ y) "" s);
            flprint "\n";*)
            reset_arguments ();
+           process_env_vars ();
            parse_argv () s (align_specs specs) anon_fun usage_msg;
            parse_argv () (Array.of_list ("cpdf"::!control_args)) (align_specs specs) anon_fun usage_msg;
            let addrange pdf = AlreadyInMemory pdf, args.dashrange, "", "", ref false, None in
