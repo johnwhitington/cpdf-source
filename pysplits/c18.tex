@@ -1,54 +1,43 @@
-/* CHAPTER 17. Miscellaneous */
+# CHAPTER 17. Miscellaneous
 
-/*
- * cpdf_draft(pdf, range, boxes) removes images on the given pages, replacing
- * them with crossed boxes if 'boxes' is true
- */
-void cpdf_draft(int, int, int);
+def draft(pdf, r, boxes):
+    """draft(pdf, range, boxes) removes images on the given pages, replacing
+    them with crossed boxes if 'boxes' is true"""
 
-/*
- * cpdf_removeAllText(pdf, range) removes all text from the given pages in a
- * given document.
- */
-void cpdf_removeAllText(int, int);
+def removeAllText(pdf, r):
+    """removeAllText(pdf, range) removes all text from the given pages in a
+    given document."""
 
-/* cpdf_blackText(pdf, range) blackens all text on the given pages. */
-void cpdf_blackText(int, int);
+def blackText(pdf, r):
+    """blackText(pdf, range) blackens all text on the given pages."""
 
-/* cpdf_blackLines(pdf, range) blackens all lines on the given pages. */
-void cpdf_blackLines(int, int);
+def blackLines(pdf, r):
+    """blackLines(pdf, range) blackens all lines on the given pages."""
 
-/* cpdf_blackFills(pdf, range) blackens all fills on the given pages. */
-void cpdf_blackFills(int, int);
+def blackFills(pdf, r):
+    """blackFills(pdf, range) blackens all fills on the given pages."""
 
-/*
- * cpdf_thinLines(pdf, range, min_thickness) thickens every line less than
- * min_thickness to min_thickness. Thickness given in points.
- */
-void cpdf_thinLines(int, int, double);
+def thinLines(pdf, r, linewidth):
+    """thinLines(pdf, range, min_thickness) thickens every line less than
+    min_thickness to min_thickness. Thickness given in points."""
 
-/* cpdf_copyId(from, to) copies the /ID from one document to another. */
-void cpdf_copyId(int, int);
+def copyId(pdf, pdf2):
+    """copyId(from, to) copies the /ID from one document to another."""
 
-/* cpdf_removeId(pdf) removes a document's /ID. */
-void cpdf_removeId(int);
+def removeId(pdf):
+    """removeId(pdf) removes a document's /ID"""
 
-/* cpdf_setVersion(pdf, version) sets the minor version number of a document. */
-void cpdf_setVersion(int, int);
+def setVersion(pdf, version):
+    """setVersion(pdf, version) sets the minor version number of a document."""
 
-/* cpdf_setFullVersion(pdf, major_version, minor_version) sets the full version
- * number of a document. */
-void cpdf_setFullVersion(int, int, int);
+def setFullVersion(pdf, major, minor):
+    """setFullVersion(pdf, version) sets the major and minor version number of
+    a document."""
 
-/*
- * cpdf_removeDictEntry(pdf, key) removes any dictionary entry with the given
- * key anywhere in the document.
- */
-void cpdf_removeDictEntry(int, const char[]);
+def removeDictEntry(pdf, key):
+    """removeDictEntry(pdf, key) removes any dictionary entry with the given
+    key anywhere in the document"""
 
-/*
- * cpdf_removeClipping(pdf, range) removes all clipping from pages in the
- * given range.
- */
-void cpdf_removeClipping(int, int);
-
+def removeClipping(pdf, r):
+    """removeClipping(pdf, range) removes all clipping from pages in the given
+    range"""

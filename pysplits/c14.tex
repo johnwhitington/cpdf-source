@@ -1,20 +1,6 @@
-/* CHAPTER 13. Images. */
+# CHAPTER 13. Images
 
-/*
- * Get image data, including resolution at all points of use. Call
- * cpdf_startGetImageResolution(pdf, min_required_resolution) will begin the
- * process of obtaining data on all image uses below min_required_resolution,
- * returning the total number. So, to return all image uses, specify a very
- * high min_required_resolution. Then, call the other functions giving a
- * serial number 0..<total number> - 1, to retrieve the data. Finally, call
- * cpdf_endGetImageResolution to clean up.
- */
-int cpdf_startGetImageResolution(int, float);
-int cpdf_getImageResolutionPageNumber(int);
-char *cpdf_getImageResolutionImageName(int);
-int cpdf_getImageResolutionXPixels(int);
-int cpdf_getImageResolutionYPixels(int);
-double cpdf_getImageResolutionXRes(int);
-double cpdf_getImageResolutionYRes(int);
-void cpdf_endGetImageResolution(void);
-
+def getImageResolution(pdf, min_required_resolution):
+    """Return a list of all uses of images in the PDF which do not meet the
+    minimum required resolution in dpi as tuples of:
+    (pagenumber, name, x pixels, y pixels, x resolution, y resolution)"""

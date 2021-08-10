@@ -1,55 +1,24 @@
-/* CHAPTER 12. File Attachments */
+# CHAPTER 12. File Attachments
 
-/*
- * cpdf_attachFile(filename, pdf) attaches a file to the pdf. It is attached
- * at document level.
- */
-void cpdf_attachFile(const char[], int);
+def attachFile(filename, pdf):
+    """attachFile(filename, pdf) attaches a file to the pdf. It is attached at
+    document level."""
 
-/*
- * cpdf_attachFileToPage(filename, pdf, pagenumber) attaches a file, given
- * its file name, pdf, and the page number to which it should be attached.
- */
-void cpdf_attachFileToPage(const char[], int, int);
+def attachFileToPage(filename, pdf, pagenumber):
+    """attachFileToPage(filename, pdf, pagenumber) attaches a file, given its
+    file name, pdf, and the page number to which it should be attached."""
 
-/*
- * cpdf_attachFileFromMemory(memory, length, filename, pdf) attaches from
- * memory, just like cpdf_attachFile.
- */
-void cpdf_attachFileFromMemory(void *, int, const char[], int);
+def attachFileFromMemory(data, filename, pdf):
+    """attachFileFromMemory(memory, length, filename, pdf) attaches from
+    memory, just like attachFile."""
 
-/*
- * cpdf_attachFileToPageFromMemory(memory, length, filename, pdf, pagenumber)
- * attaches from memory, just like cpdf_attachFileToPage.
- */
-void cpdf_attachFileToPageFromMemory(void *, int, const char[], int, int);
+def attachFileToPageFromMemory(data, filename, pdf, pagenumber):
+    """attachFileToPageFromMemory(memory, length, filename, pdf, pagenumber)
+    attaches from memory, just like attachFileToPage."""
 
-/* Remove all page- and document-level attachments from a document */
-void cpdf_removeAttachedFiles(int);
+def removeAttachedFiles(pdf):
+    """Remove all page- and document-level attachments from a document"""
 
-/*
- * List information about attachments. Call cpdf_startGetAttachments(pdf)
- * first, then cpdf_numberGetAttachments to find out how many there are. Then
- * cpdf_getAttachmentName to return each one 0...(n - 1). Finally, call
- * cpdf_endGetAttachments to clean up.
- */
-void cpdf_startGetAttachments(int);
-
-/* Get the number of attachments. */
-int cpdf_numberGetAttachments(void);
-
-/* Get the name of the attachment. */
-char *cpdf_getAttachmentName(int);
-
-/* Gets the page number. 0 = document level. */
-int cpdf_getAttachmentPage(int);
-
-/*
- * cpdf_getAttachmentData(serial number, &length) returns a pointer to the
- * data, and its length.
- */
-void *cpdf_getAttachmentData(int, int *);
-
-/* Clean up after getting attachments. */
-void cpdf_endGetAttachments(void);
-
+def getAttachments(pdf):
+    """List information about attachements. Returns a list of tuples
+    (name, page number, byte array of data)"""

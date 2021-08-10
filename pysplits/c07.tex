@@ -1,70 +1,9 @@
-/* CHAPTER 6. Bookmarks */
+# CHAPTER 6. Bookmarks
 
-/*
- * cpdf_startGetBookmarkInfo(pdf) start the bookmark retrieval process for a
- * given PDF.
- */
-void cpdf_startGetBookmarkInfo(int);
+def getBookmarks(pdf):
+    """Get the bookmarks for a PDF as a list of tuples.
+    (level : int, page : int, text : string, openstatus : bool)"""
 
-/*
- * cpdf_numberBookmarks gets the number of bookmarks for the PDF given to
- * cpdf_startGetBookmarkInfo.
- */
-int cpdf_numberBookmarks(void);
-
-/*
- * cpdf_getBookmarkLevel(serial) get bookmark level for the given bookmark
- * (0...(n - 1)).
- */
-int cpdf_getBookmarkLevel(int);
-
-/*
- * cpdf_getBookmarkPage gets the bookmark target page for the given PDF
- * (which must be the same as the PDF passed to cpdf_startSetBookmarkInfo)
- * and bookmark (0...(n - 1)).
- */
-int cpdf_getBookmarkPage(int, int);
-
-/* cpdf_getBookmarkText returns the text of bookmark (0...(n - 1)). */
-char *cpdf_getBookmarkText(int);
-
-/* cpdf_getBookmarkOpenStatus(pdf) is true if the bookmark is open. */
-int cpdf_getBookmarkOpenStatus(int);
-
-/* cpdf_endGetBookmarkInfo ends the bookmark retrieval process, cleaning up. */
-void cpdf_endGetBookmarkInfo(void);
-
-/*
- * cpdf_startGetBookmarkInfo(n) start the bookmark setting process for n
- * bookmarks.
- */
-void cpdf_startSetBookmarkInfo(int);
-
-/*
- * cpdf_setBookmarkLevel(n, level) set bookmark level for the given bookmark
- * (0...(n - 1)).
- */
-void cpdf_setBookmarkLevel(int, int);
-
-/*
- * cpdf_setBookmarkPage(pdf, bookmark, targetpage) sets the bookmark target
- * page for the given PDF (which must be the same as the PDF to be passed to
- * cpdf_endSetBookmarkInfo) and bookmark (0...(n - 1)).
- */
-void cpdf_setBookmarkPage(int, int, int);
-
-/*
- * cpdf_setBookmarkOpenStatus(n, status) set the open status of a bookmark,
- * true or false.
- */
-void cpdf_setBookmarkOpenStatus(int, int);
-
-/* cpdf_setBookmarkText(n, text) sets the text of bookmark (0...(n - 1)). */
-void cpdf_setBookmarkText(int, const char[]);
-
-/*
- * cpdf_endSetBookmarkInfo(pdf) end the bookmark setting process, writing the
- * bookmarks to the given PDF.
- */
-void cpdf_endSetBookmarkInfo(int);
-
+def setBookmarks(pdf, marks):
+    """Set the bookmarks for a PDF as a list of tuples.
+    (level : int, page : int, text : string, openstatus : bool)"""

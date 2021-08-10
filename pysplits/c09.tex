@@ -1,175 +1,130 @@
-/* CHAPTER 8. Logos, Watermarks and Stamps */
+# CHAPTER 8. Logos, Watermarks and Stamps
 
-/*
- * cpdf_stampOn(stamp_pdf, pdf, range) stamps stamp_pdf on top of all the
- * pages in the document which are in the range. The stamp is placed with its
- * origin at the origin of the target document.
- */
-void cpdf_stampOn(int, int, int);
+def stampOn(pdf, pdf2, r):
+    """stampOn(stamp_pdf, pdf, range) stamps stamp_pdf on top of all the
+    pages in the document which are in the range. The stamp is placed with its
+    origin at the origin of the target document."""
 
-/*
- * cpdf_stampUnder(stamp_pdf, pdf, range) stamps stamp_pdf under all the
- * pages in the document which are in the range. The stamp is placed with its
- * origin at the origin of the target document.
- */
-void cpdf_stampUnder(int, int, int);
+def stampUnder(pdf, pdf2, r):
+    """stampUnder(stamp_pdf, pdf, range) stamps stamp_pdf under all the pages
+    in the document which are in the range. The stamp is placed with its origin
+    at the origin of the target document."""
 
-/*
- * cpdf_stampExtended(pdf, pdf2, range, isover, scale_stamp_to_fit, pos,
- * relative_to_cropbox) is a stamping function with extra features. - isover
- * true, pdf goes over pdf2, isover false, pdf goes under pdf2 -
- * scale_stamp_to_fit scales the stamp to fit the page - pos gives the
- * position to put the stamp - relative_to_cropbox: if true, pos is relative
- * to cropbox not mediabox.
- */
-void cpdf_stampExtended(int, int, int, int, int, struct cpdf_position, int);
+def stampExtended(pdf, pdf2, r, isover, scale_stamp_to_fit, pos,
+                  relative_to_cropbox):
+    """stampExtended(pdf, pdf2, range, isover, scale_stamp_to_fit, pos,
+    relative_to_cropbox) is a stamping function with extra features.
+     - isover True, pdf goes over pdf2, isover False, pdf goes under pdf2
+     - scale_stamp_to_fit scales the stamp to fit the page
+     - pos gives the position to put the stamp
+     - relative_to_cropbox: if True, pos is relative to cropbox not mediabox"""
 
-/*
- * cpdf_combinePages(under, over) combines the PDFs page-by-page, putting
- * each page of 'over' over each page of 'under'.
- */
-int cpdf_combinePages(int, int);
+def combinePages(pdf, pdf2):
+    """combinePages(under, over) combines the PDFs page-by-page, putting
+    each page of 'over' over each page of 'under'"""
 
-/* Adding text. Adds text to a PDF, if the characters exist in the font. */
+"""Fonts."""
+timesRoman
+timesBold
+timesItalic
+timesBoldItalic
+helvetica
+helveticaBold
+helveticaOblique
+helveticaBoldOblique
+courier
+courierBold
+courierOblique
+courierBoldOblique
 
-/*
- * Special codes
- *
- * %Page     Page number in arabic notation (1, 2, 3...)
- *
- * %roman    Page number in lower-case roman notation (i, ii, iii...)
- *
- * %Roman    Page number in upper-case roman notation (I, II, III...)
- *
- * %EndPage  Last page of document in arabic notation
- *
- * %Label    The page label of the page
- *
- * %EndLabel The page label of the last page
- *
- * %filename The full file name of the input document
- *
- * %a        Abbreviated weekday name (Sun, Mon etc.)
- *
- * %A        Full weekday name (Sunday, Monday etc.)
- *
- * %b        Abbreviated month name (Jan, Feb etc.)
- *
- * %B        Full month name (January, February etc.)
- *
- * %d        Day of the month (01-31)
- *
- * %e        Day of the month (1-31)
- *
- * %H        Hour in 24-hour clock (00-23)
- *
- * %I        Hour in 12-hour clock (01-12)
- *
- * %j        Day of the year (001-366)
- *
- * %m        Month of the year (01-12)
- *
- * %M        Minute of the hour (00-59)
- *
- * %p        "a.m" or "p.m"
- *
- * %S        Second of the minute (00-61)
- *
- * %T        Same as %H:%M:%S
- *
- * %u        Weekday (1-7, 1 = Monday)
- *
- * %w        Weekday (0-6, 0 = Monday)
- *
- * %Y        Year (0000-9999)
- *
- * %%        The % character
- */
+"""Jusitifications."""
+leftJustify
+centreJustify
+rightJustify
 
-/* The standard fonts */
-enum cpdf_font {
-  cpdf_timesRoman,           /* Times Roman */
-  cpdf_timesBold,            /* Times Bold */
-  cpdf_timesItalic,          /* Times Italic */
-  cpdf_timesBoldItalic,      /* Times Bold Italic */
-  cpdf_helvetica,            /* Helvetica */
-  cpdf_helveticaBold,        /* Helvetica Bold */
-  cpdf_helveticaOblique,     /* Helvetica Oblique */
-  cpdf_helveticaBoldOblique, /* Helvetica Bold Oblique */
-  cpdf_courier,              /* Courier */
-  cpdf_courierBold,          /* Courier Bold */
-  cpdf_courierOblique,       /* Courier Oblique */
-  cpdf_courierBoldOblique    /* Courier Bold Oblique */
-};
 
-/* Justifications for multi line text */
-enum cpdf_justification {
-  cpdf_leftJustify,   /* Left justify */
-  cpdf_CentreJustify, /* Centre justify */
-  cpdf_RightJustify   /* Right justify */
-};
+def addText(metrics, pdf, r, text, p, line_spacing, bates, font, size, red,
+            green, blue, underneath, relative_to_cropbox, outline, opacity,
+            justification, midline, topline, filename, line_width,
+            embed_fonts):
+    """Adding text. Adds text to a PDF, if the characters exist in the font.
 
-/* Add text */
-void cpdf_addText(int,                  /* If true, don't actually add text but
-                                         * collect metrics. */
-                  int,                  /* Document */
-                  int,                  /* Page Range */
-                  const char[],         /* The text to add */
-                  struct cpdf_position, /* Position to add text at */
-                  double,               /* Linespacing, 1.0 = normal */
-                  int,                  /* Starting Bates number */
-                  enum cpdf_font,       /* Font */
-                  double,               /* Font size in points */
-                  double,               /* Red component of colour, 0.0 - 1.0 */
-                  double, /* Green component of colour, 0.0 - 1.0 */
-                  double, /* Blue component of colour, 0.0 - 1.0 */
-                  int,    /* If true, text is added underneath rather
-                           * than on top */
-                  int,    /* If true, position is relative to crop box
-                           * not media box */
-                  int,    /* If true, text is outline rather than
-                           * filled */
-                  double, /* Opacity, 1.0 = opaque, 0.0 = wholly
-                           * transparent */
-                  enum cpdf_justification, /* Justification */
-                  int,          /* If true, position is relative to midline
-                                 * of text, not baseline */
-                  int,          /* If true, position is relative to topline
-                                 * of text, not baseline */
-                  const char[], /* filename that this document was read from
-                                 * (optional) */
-                  double,       /* line width */
-                  int           /* embed fonts */
-);
+         * metrics: If True, don't actually add text but collect metrics.
+         * pdf:	Document
+         * r: Page Range
+         * text: The text to add
+         * p: Position to add text at
+         * line_spacing: Linespacing, 1.0 = normal
+         * bates: Starting Bates number
+         * font: Font
+         * size: Font size in points
+         * red: Red component of colour, 0.0 - 1.0
+         * green: Green component of colour, 0.0 - 1.0
+         * blue: Blue component of colour, 0.0 - 1.0
+         * underneath: If True, text is added underneath rather than on top
+         * relative_to_cropbox: If True, position is relative to crop box not
+           media box
+         * outline: If True, text is outline rather than filled
+         * opacity: Opacity, 1.0 = opaque, 0.0 = wholly transparent
+         * justification: Justification
+         * midline: If True, position is relative to midline of text, not
+           baseline
+         * topline: If True, position is relative to topline of text, not
+           baseline
+         * filename: filename that this document was read from (optional)
+         * line_width: line width
+         * embed_fonts: embed fonts
 
-/* Add text, with most parameters default. */
-void cpdf_addTextSimple(int,                  /* Document */
-                        int,                  /* Page range */
-                        const char[],         /* The text to add */
-                        struct cpdf_position, /* Position to add text
-                                               * at */
-                        enum cpdf_font,       /* font */
-                        double);              /* font size */
+    Special codes
 
-/*
- * cpdf_removeText(pdf, range) will remove any text added by libcpdf from the
- * given pages.
- */
-void cpdf_removeText(int, int);
+      * %Page     Page number in arabic notation (1, 2, 3...)
+      * %roman    Page number in lower-case roman notation (i, ii, iii...)
+      * %Roman    Page number in upper-case roman notation (I, II, III...)
+      * %EndPage  Last page of document in arabic notation
+      * %Label    The page label of the page
+      * %EndLabel The page label of the last page
+      * %filename The full file name of the input document
+      * %a        Abbreviated weekday name (Sun, Mon etc.)
+      * %A        Full weekday name (Sunday, Monday etc.)
+      * %b        Abbreviated month name (Jan, Feb etc.)
+      * %B        Full month name (January, February etc.)
+      * %d        Day of the month (01-31)
+      * %e        Day of the month (1-31)
+      * %H        Hour in 24-hour clock (00-23)
+      * %I        Hour in 12-hour clock (01-12)
+      * %j        Day of the year (001-366)
+      * %m        Month of the year (01-12)
+      * %M        Minute of the hour (00-59)
+      * %p        "a.m" or "p.m"
+      * %S        Second of the minute (00-61)
+      * %T        Same as %H:%M:%S
+      * %u        Weekday (1-7, 1 = Monday)
+      * %w        Weekday (0-6, 0 = Monday)
+      * %Y        Year (0000-9999)
+      * %%        The % character"""
 
-/*
- * Return the width of a given string in the given font in thousandths of a
- * point.
- */
-int cpdf_textWidth(enum cpdf_font, const char[]);
+def addTextSimple(pdf, r, text, p, font, size):
+    """like addText, but with most parameters default
+         * pdf = the document
+         * r = the range
+         * p = the position
+         * font = the font
+         * size = the font size"""
 
-/* cpdf_addContent(content, before, range, pdf) adds page content before (if
- * true) or after (if false) the existing content to pages in the given range
- * in the given PDF. */
-void cpdf_addContent(const char[], int, int, int);
+def removeText(pdf, r):
+    """removeText(pdf, range) will remove any text added by libcpdf from the
+    given pages."""
 
-/* cpdf_stampAsXObject(pdf, range, stamp_pdf) stamps stamp_pdf onto the pages
- * in the given range in pdf as a shared Form XObject. The name of the
- * newly-created XObject is returned. */
-char *cpdf_stampAsXObject(int, int, int);
+def textWidth(font, string):
+    """Return the width of a given string in the given font in thousandths of a
+    point."""
 
+def addContent(content, before, pdf, r):
+    """addContent(content, before, range, pdf) adds page content before (if
+    True) or after (if False) the existing content to pages in the given range
+    in the given PDF."""
+
+def stampAsXObject(pdf, r, stamp_pdf):
+    """stampAsXObject(pdf, range, stamp_pdf) stamps stamp_pdf onto the pages
+    in the given range in pdf as a shared Form XObject. The name of the
+    newly-created XObject is returned."""

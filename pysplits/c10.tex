@@ -1,37 +1,30 @@
-/* CHAPTER 9. Multipage facilities */
+# CHAPTER 9. Mulitpage facilities
 
-/*
- * Impose a document two up. cpdf_twoUp does so by retaining the existing
- * page size, scaling pages down. cpdf_twoUpStack does so by doubling the
- * page size, to fit two pages on one.
- */
-void cpdf_twoUp(int);
-void cpdf_twoUpStack(int);
+def twoUp(pdf):
+    """Impose a document two up. twoUp does so by retaining the existing page
+    size, scaling pages down. twoUpStack does so by doubling the page size,
+    to fit two pages on one."""
 
-/*
- * cpdf_padBefore(pdf, range) adds a blank page before each page in the given
- * range.
- */
-void cpdf_padBefore(int, int);
+def twoUpStack(pdf):
+    """Impose a document two up. twoUp does so by retaining the existing page
+    size, scaling pages down. twoUpStack does so by doubling the page size,
+    to fit two pages on one."""
 
-/*
- * cpdf_padAfter(pdf, range) adds a blank page after each page in the given
- * range.
- */
-void cpdf_padAfter(int, int);
+def padBefore(pdf, r):
+    """padBefore(pdf, range) adds a blank page before each page in the given
+    range"""
 
-/* cpdf_pageEvery(pdf, n) adds a blank page after every n pages. */
-void cpdf_padEvery(int, int);
+def padAfter(pdf, r):
+    """padAfter(pdf, range) adds a blank page after each page in the given
+    range"""
 
-/*
- * cpdf_padMultiple(pdf, n) adds pages at the end to pad the file to a
- * multiple of n pages in length.
- */
-void cpdf_padMultiple(int, int);
+def padEvery(pdf, n):
+    """pageEvery(pdf, n) adds a blank page after every n pages"""
 
-/*
- * cpdf_padMultiple(pdf, n) adds pages at the beginning to pad the file to a
- * multiple of n pages in length.
- */
-void cpdf_padMultipleBefore(int, int);
+def padMultiple(pdf, n):
+    """padMultiple(pdf, n) adds pages at the end to pad the file to a multiple
+    of n pages in length."""
 
+def padMultipleBefore(pdf, n):
+    """padMultiple(pdf, n) adds pages at the beginning to pad the file to a
+    multiple of n pages in length."""

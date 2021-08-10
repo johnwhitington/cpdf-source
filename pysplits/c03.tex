@@ -1,31 +1,23 @@
-/* CHAPTER 2. Merging and Splitting */
+# CHAPTER 2. Merging and Splitting
 
-/*
- * cpdf_mergeSimple(pdfs, length) given an array of PDFs, and its length,
- * merges the files into a new one, which is returned.
- */
-int cpdf_mergeSimple(int *, int);
+def mergeSimple(pdfs):
+    """mergeSimple(pdfs), given a list of PDFs,
+    merges the files into a new one, which is returned."""
 
-/*
- * cpdf_merge(pdfs, len, retain_numbering, remove_duplicate_fonts) merges the
- * PDFs. If retain_numbering is true page labels are not rewritten. If
- * remove_duplicate_fonts is true, duplicate fonts are merged. This is useful
- * when the source documents for merging originate from the same source.
- */
-int cpdf_merge(int *, int, int, int);
+def merge(pdfs, retain_numbering, remove_duplicate_fonts):
+    """merge(pdfs, retain_numbering, remove_duplicate_fonts) merges
+    the list of PDFs. If retain_numbering is True page labels are not
+    rewritten. If remove_duplicate_fonts is True, duplicate fonts are merged.
+    This is useful when the source documents for merging originate from the
+    same source."""
 
-/*
- * cpdf_mergeSame(pdfs, len, retain_numbering, remove_duplicate_fonts,
- * ranges) is the same as cpdf_merge, except that it has an additional
- * argument - an array of page ranges. This is used to select the pages to
- * pick from each PDF. This avoids duplication of information when multiple
- * discrete parts of a source PDF are included.
- */
-int cpdf_mergeSame(int *, int, int, int, int *);
+def mergeSame(pdfs, retain_numbering, remove_duplicate_fonts, ranges):
+    """mergeSame(pdfs, retain_numbering, remove_duplicate_fonts, ranges)
+    is the same as merge, except that it has an additional argument
+    - an array of page ranges. This is used to select the pages to pick from
+    each PDF. This avoids duplication of information when multiple discrete
+    parts of a source PDF are included."""
 
-/*
- * cpdf_selectPages(pdf, range) returns a new document which just those pages
- * in the page range.
- */
-int cpdf_selectPages(int, int);
-
+def selectPages(pdf, r):
+    """ selectPages(pdf, range) returns a new document which just those pages
+    in the page range."""
