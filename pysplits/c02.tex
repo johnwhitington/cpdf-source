@@ -1,332 +1,209 @@
-/* CHAPTER 1. Basics */
+# CHAPTER 1. Basics
 
-/*
- * cpdf_fromFile(filename, userpw) loads a PDF file from a given file. Supply
- * a user password (possibly blank) in case the file is encrypted. It won't be
- * decrypted, but sometimes the password is needed just to load the file.
- */
-int cpdf_fromFile(const char[], const char[]);
+def fromFile(filename, userpw):
+    """ fromFile(filename, userpw) loads a PDF file from a given file.
+    Supply a user password (possibly blank) in case the file is encypted. It
+    won't be decrypted, but sometimes the password is needed just to load the
+    file."""
 
-/*
- * cpdf_fromFileLazy(pdf, userpw) loads a PDF from a file, doing only minimal
- * parsing. The objects will be read and parsed when they are actually
- * needed. Use this when the whole file won't be required. Also supply a user
- * password (possibly blank) in case the file is encrypted. It won't be
- * decrypted, but sometimes the password is needed just to load the file.
- */
-int cpdf_fromFileLazy(const char[], const char[]);
+def fromFileLazy(filename, userpw):
+    """ fromFileLazy(pdf, userpw) loads a PDF from a file, doing only
+    minimal parsing. The objects will be read and parsed when they are actually
+    needed.  Use this when the whole file won't be required. Also supply a user
+    password (possibly blank) in case the file is encypted. It won't be
+    decrypted, but sometimes the password is needed just to load the file."""
 
-/*
- * cpdf_fromMemory(data, length, userpw) loads a file from memory, given a
- * pointer and a length, and the user password.
- */
-int cpdf_fromMemory(void *, int, const char[]);
+def fromMemory(data, userpw):
+    """ fromMemory(data, length, userpw) loads a file from memory, given a
+    pointer and a length, and the user password."""
 
-/*
- * cpdf_fromMemory(data, length, userpw) loads a file from memory, given a
- * pointer and a length, and the user password, but lazily like
- * cpdf_fromFileLazy.
- */
-int cpdf_fromMemoryLazy(void *, int, const char[]);
+def fromMemoryLazy(data, userpw):
+    """ fromMemoryLazy(data, length, userpw) loads a file from memory, given a
+    pointer and a length, and the user password, but lazily like
+    fromFileLazy."""
 
-/*
- * cpdf_blankDocument(width, height, num_pages) creates a blank document with
- * pages of the given width (in points), height (in points), and number of
- * pages.
- */
-int cpdf_blankDocument(double, double, int);
+def blankDocument(w, h, pages):
+    """ blankDocument(width, height, num_pages) creates a blank document
+    with pages of the given width (in points), height (in points), and number
+    of pages."""
 
-/* Standard page sizes. */
-enum cpdf_papersize {
-  cpdf_a0portrait,        /* A0 portrait */
-  cpdf_a1portrait,        /* A1 portrait */
-  cpdf_a2portrait,        /* A2 portrait */
-  cpdf_a3portrait,        /* A3 portrait */
-  cpdf_a4portrait,        /* A4 portrait */
-  cpdf_a5portrait,        /* A5 portrait */
-  cpdf_a0landscape,       /* A0 landscape */
-  cpdf_a1landscape,       /* A1 landscape */
-  cpdf_a2landscape,       /* A2 landscape */
-  cpdf_a3landscape,       /* A3 landscape */
-  cpdf_a4landscape,       /* A4 landscape */
-  cpdf_a5landscape,       /* A5 landscape */
-  cpdf_usletterportrait,  /* US Letter portrait */
-  cpdf_usletterlandscape, /* US Letter landscape */
-  cpdf_uslegalportrait,   /* US Legal portrait */
-  cpdf_uslegallandscape   /* US Legal landscape */
-};
+"""Paper sizes."""
+a0portrait
+a1portrait
+a2portrait
+a3portrait
+a4portrait
+a5portrait
+a0landscape
+a1landscape
+a2landscape
+a3landscape
+a4landscape
+a5landscape
+usletterportrait
+usletterlandscape
+uslegalportrait
+uslegallandscape
 
-/*
- * cpdf_blankDocumentPaper(papersize, num_pages) makes a blank document given
- * a page size and number of pages.
- */
-int cpdf_blankDocumentPaper(enum cpdf_papersize, int);
+def blankDocumentPaper(papersize, pages):
+    """blankDocument(width, height, num_pages) creates a blank document
+    with pages of the given width (in points), height (in points), and number
+    of pages. """
 
-/* Remove a PDF from memory, given its number. */
-void cpdf_deletePdf(int);
+def ptOfCm(i):
+    """Convert a figure in centimetres to points (72 points to 1 inch)"""
 
-/*
- * Calling cpdf_replacePdf(a, b) places PDF b under number a. Number b is no
- * longer available.
- */
-void cpdf_replacePdf(int, int);
+def ptOfMm(i):
+    """Convert a figure in millimetres to points (72 points to 1 inch)"""
 
-/*
- * To enumerate the list of currently allocated PDFs, call
- * cpdf_startEnumeratePDFs which gives the number, n, of PDFs allocated, then
- * cpdf_enumeratePDFsInfo and cpdf_enumeratePDFsKey with index numbers from
- * 0...(n - 1). Call cpdf_endEnumeratePDFs to clean up.
- */
-int cpdf_startEnumeratePDFs(void);
-int cpdf_enumeratePDFsKey(int);
-char *cpdf_enumeratePDFsInfo(int);
-void cpdf_endEnumeratePDFs(void);
+def ptOfIn(i):
+    """Convert a figure in inches to points (72 points to 1 inch)"""
 
-/* Convert a figure in centimetres to points (72 points to 1 inch) */
-double cpdf_ptOfCm(double);
+def cmOfPt(i):
+    """Convert a figure in points to centimetres (72 points to 1 inch)"""
 
-/* Convert a figure in millimetres to points (72 points to 1 inch) */
-double cpdf_ptOfMm(double);
+def mmOfPt(i):
+    """Convert a figure in points to millimetres (72 points to 1 inch)"""
 
-/* Convert a figure in inches to points (72 points to 1 inch) */
-double cpdf_ptOfIn(double);
+def inOfPt(i):
+    """Convert a figure in points to inches (72 points to 1 inch)"""
 
-/* Convert a figure in points to centimetres (72 points to 1 inch) */
-double cpdf_cmOfPt(double);
+def parsePagespec(pdf, pagespec):
+    """parsePagespec(pdf, pagespec) parses a page specification with reference to
+    a given PDF (the PDF is supplied so that page ranges which reference pages
+    which do not exist are rejected)."""
 
-/* Convert a figure in points to millimetres (72 points to 1 inch) */
-double cpdf_mmOfPt(double);
+def validatePagespec(pagespec):
+    """validatePagespec(range) validates a page specification so far as is
+    possible in the absence of the actual document."""
 
-/* Convert a figure in points to inches (72 points to 1 inch) */
-double cpdf_inOfPt(double);
+def stringOfPagespec(pdf, r):
+    """stringOfPagespec(pdf, range) builds a page specification from a page
+    range. For example, the range containing 1,2,3,6,7,8 in a document of 8
+    pages might yield "1-3,6-end" """
 
-/*
- * A page range is a list of page numbers used to restrict operations to
- * certain pages. A page specification is a textual description of a page
- * range, such as "1-12,18-end". Here is the syntax:
- *
- * o A range must contain no spaces.
- *
- * o A dash (-) defines ranges, e.g. 1-5 or 6-3.
- *
- * o A comma (,) allows one to specify several ranges, e.g. 1-2,4-5.
- *
- * o The word end represents the last page number.
- *
- * o The words odd and even can be used in place of or at the end of a page
- * range to restrict to just the odd or even pages.
- *
- * o The words portrait and landscape can be used in place of or at the end of
- * a page range to restrict to just those pages which are portrait or
- * landscape. Note that the meaning of "portrait" and "landscape" does not
- * take account of any viewing rotation in place (use cpdf_upright first, if
- * required). A page with equal width and height is considered neither
- * portrait nor landscape.
- *
- * o The word reverse is the same as end-1.
- *
- * o The word all is the same as 1-end.
- *
- * o A tilde (~) defines a page number counting from the end of the document
- * rather than the beginning. Page ~1 is the last page, ~2 the penultimate
- * page etc.
- */
+def blankRange():
+    """blankRange() creates a range with no pages in."""
 
-/*
- * cpdf_parsePagespec(pdf, range) parses a page specification with reference
- * to a given PDF (the PDF is supplied so that page ranges which reference
- * pages which do not exist are rejected).
- */
-int cpdf_parsePagespec(int, const char[]);
+def pageRange(f, t):
+    """ pageRange(from, to) build a range from one page to another inclusive.
+    For example, pageRange(3,7) gives the range 3,4,5,6,7 """
 
-/*
- * cpdf_validatePagespec(range) validates a page specification so far as is
- * possible in the absence of the actual document. Result is true if valid.
- */
-int cpdf_validatePagespec(const char[]);
+def all(pdf):
+    """all(pdf) is the range containing all the pages in a given document."""
 
-/*
- * cpdf_stringOfPagespec(pdf, range) builds a page specification from a page
- * range. For example, the range containing 1,2,3,6,7,8 in a document of 8
- * pages might yield "1-3,6-end"
- */
-char *cpdf_stringOfPagespec(int, int);
+def even(r):
+    """even(range) makes a range which contains just the even pages of another
+    range"""
 
-/* cpdf_blankRange() creates a range with no pages in. */
-int cpdf_blankRange(void);
+def odd(r):
+    """odd(range) makes a range which contains just the odd pages of another
+    range"""
 
-/* cpdf_deleteRange(range) deletes a range. */
-void cpdf_deleteRange(int);
+def rangeUnion(a, b):
+    """rangeUnion(a, b) makes the union of two ranges giving a range containing
+    the pages in range a and range b."""
 
-/*
- * cpdf_range(from, to) builds a range from one page to another inclusive. For
- * example, cpdf_range(3,7) gives the range 3,4,5,6,7
- */
-int cpdf_range(int, int);
+def difference(a, b):
+    """difference(a, b) makes the difference of two ranges, giving a range
+    containing all the pages in a except for those which are also in b."""
 
-/* cpdf_all(pdf) is the range containing all the pages in a given document. */
-int cpdf_all(int);
+def removeDuplicates(r):
+    """removeDuplicates(range) deduplicates a range, making a new one."""
 
-/*
- * cpdf_even(range) makes a range which contains just the even pages of
- * another range.
- */
-int cpdf_even(int);
+def rangeLength(r):
+    """rangeLength gives the number of pages in a range."""
 
-/*
- * cpdf_odd(range) makes a range which contains just the odd pages of another
- * range.
- */
-int cpdf_odd(int);
+def rangeGet(r, n):
+    """rangeGet(range, n) gets the page number at position n in a range, where
+    n runs from 0 to rangeLength - 1."""
 
-/*
- * cpdf_rangeUnion(a, b) makes the union of two ranges giving a range
- * containing the pages in range a and range b.
- */
-int cpdf_rangeUnion(int, int);
+def rangeAdd(r, p):
+    """rangeAdd(range, page) adds the page to a range, if it is not already
+    there."""
 
-/*
- * cpdf_difference(a, b) makes the difference of two ranges, giving a range
- * containing all the pages in a except for those which are also in b.
- */
-int cpdf_difference(int, int);
+def isInRange(r, p):
+    """isInRange(range, page) returns True if the page is in the range, False
+    otherwise."""
 
-/* cpdf_removeDuplicates(range) deduplicates a range, making a new one. */
-int cpdf_removeDuplicates(int);
+def pages(pdf):
+    """pages(pdf) returns the number of pages in a PDF."""
 
-/* cpdf_rangeLength gives the number of pages in a range. */
-int cpdf_rangeLength(int);
+def pagesFast(userpw, filename):
+    """pagesFast(password, filename) returns the number of pages in a given
+    PDF, with given user encryption password. It tries to do this as fast as
+    possible, without loading the whole file."""
 
-/*
- * cpdf_rangeGet(range, n) gets the page number at position n in a range,
- * where n runs from 0 to rangeLength - 1.
- */
-int cpdf_rangeGet(int, int);
+def toFile(pdf, filename, linearize, make_id):
+    """toFile (pdf, filename, linearize, make_id) writes the file to a given
+    filename. If linearize is True, it will be linearized. If make_id is True,
+    it will be given a new ID."""
 
-/*
- * cpdf_rangeAdd(range, page) adds the page to a range, if it is not already
- * there.
- */
-int cpdf_rangeAdd(int, int);
+def toFileExt(pdf, filename, linearize, make_id, preserve_objstm,
+              generate_objstm, compress_objstm):
+    """toFileExt (pdf, filename, linearize, make_id, preserve_objstm,
+    generate_objstm, compress_objstm) writes the file to a given filename. If
+    make_id is True, it will be given a new ID.  If preserve_objstm is True,
+    existing object streams will be preserved. If generate_objstm is True,
+    object streams will be generated even if not originally present. If
+    compress_objstm is True, object streams will be compressed (what we usually
+    want). WARNING: the pdf argument will be invalid after this call and should
+    not be used again."""
 
-/*
- * cpdf_isInRange(range, page) returns true if the page is in the range,
- * false otherwise.
- */
-int cpdf_isInRange(int, int);
+def toMemory(pdf, linearize, make_id):
+    """Given a buffer of the correct size, toMemory (pdf, linearize,
+    make_id) writes it and returns the buffer as a byte array of type bytes."""
 
-/* cpdf_pages(pdf) returns the number of pages in a PDF. */
-int cpdf_pages(int);
+def isEncrypted(pdf):
+    """isEncrypted(pdf) returns True if a documented is encrypted, False
+    otherwise."""
 
-/*
- * cpdf_pagesFast(password, filename) returns the number of pages in a given
- * PDF, with given user encryption password. It tries to do this as fast as
- * possible, without loading the whole file.
- */
-int cpdf_pagesFast(const char[], const char[]);
+"""Permissions."""
+noEdit
+noPrint
+noCopy
+noAnnot
+noForms
+noExtract
+noAssemble
+noHqPrint
 
-/*
- * cpdf_toFile (pdf, filename, linearize, make_id) writes the file to a given
- * filename. If linearize is true, it will be linearized if a linearizer is
- * available. If make_id is true, it will be given a new ID.
- */
-void cpdf_toFile(int, const char[], int, int);
+"""Encryption Methods."""
+pdf40bit
+pdf128bit
+aes128bitfalse
+aes128bittrue
+aes256bitfalse
+aes256bittrue
+aes256bitisofalse
+aes256bitisotrue
 
-/*
- * cpdf_toFile (pdf, filename, linearize, make_id, preserve_objstm,
- * generate_objstm, compress_objstm) writes the file to a given filename. If
- * make_id is true, it will be given a new ID.  If preserve_objstm is true,
- * existing object streams will be preserved. If generate_objstm is true,
- * object streams will be generated even if not originally present. If
- * compress_objstm is true, object streams will be compressed (what we
- * usually want). WARNING: the pdf argument will be invalid after this call,
- * and should be discarded.
- */
-void cpdf_toFileExt(int, const char[], int, int, int, int, int);
+def toFileEncrypted(pdf, method, permissions, ownerpw, userpw, linearize,
+                    makeid, filename):
+    """toFileEncrypted(pdf, encryption_method, permissions, permission_length,
+    owner_password, user password, linearize, makeid, filename) writes a file
+    as encrypted."""
 
-/*
- * Given a buffer of the correct size, cpdf_toFileMemory (pdf, linearize,
- * make_id, &length) writes it and returns the buffer. The buffer length is
- * filled in &length.
- */
-void *cpdf_toMemory(int, int, int, int *);
+def toFileEncryptedExt(pdf, method, permissions, ownerpw, userpw, linearize,
+                       makeid, preserve_objstm, generate_objstm,
+                       compress_objstm, filename):
+    """toFileEncryptedExt(pdf, encryption_method, permissions,
+    permission_length, owner_password, user_password, linearize, makeid,
+    preserve_objstm, generate_objstm, compress_objstm, filename) WARNING: the
+    pdf argument will be invalid after this call, and should be discarded."""
 
-/*
- * cpdf_isEncrypted(pdf) returns true if a documented is encrypted, false
- * otherwise.
- */
-int cpdf_isEncrypted(int);
+def decryptPdf(pdf, userpw):
+    """decryptPdf(pdf, userpw) attempts to decrypt a PDF using the given user
+    password."""
 
-/*
- * cpdf_decryptPdf(pdf, userpw) attempts to decrypt a PDF using the given
- * user password. The error code is non-zero if the decryption fails.
- */
-void cpdf_decryptPdf(int, const char[]);
+def decryptPdfOwner(pdf, ownerpw):
+    """decryptPdfOwner(pdf, ownerpw) attempts to decrypt a PDF using the given
+    owner password."""
 
-/*
- * cpdf_decryptPdfOwner(pdf, ownerpw) attempts to decrypt a PDF using the
- * given owner password. The error code is non-zero if the decryption fails.
- */
-void cpdf_decryptPdfOwner(int, const char[]);
+def hasPermission(pdf, perm):
+    """hasPermission(pdf, permission) returns True if the given permission
+    (restriction) is present."""
 
-/*
- * File permissions. These are inverted, in the sense that the presence of
- * one of them indicates a restriction.
- */
-enum cpdf_permission {
-  cpdf_noEdit,     /* Cannot edit the document */
-  cpdf_noPrint,    /* Cannot print the document */
-  cpdf_noCopy,     /* Cannot copy the document */
-  cpdf_noAnnot,    /* Cannot annotate the document */
-  cpdf_noForms,    /* Cannot edit forms in the document */
-  cpdf_noExtract,  /* Cannot extract information */
-  cpdf_noAssemble, /* Cannot assemble into a bigger document */
-  cpdf_noHqPrint   /* Cannot print high quality */
-};
-
-/*
- * Encryption methods. Suffixes 'false' and 'true' indicates lack of or
- * presence of encryption for XMP metadata streams.
- */
-enum cpdf_encryptionMethod {
-  cpdf_pdf40bit,          /* 40 bit RC4 encryption */
-  cpdf_pdf128bit,         /* 128 bit RC4 encryption */
-  cpdf_aes128bitfalse,    /* 128 bit AES encryption, do not encrypt
-                           * metadata. */
-  cpdf_aes128bittrue,     /* 128 bit AES encryption, encrypt metadata */
-  cpdf_aes256bitfalse,    /* Deprecated. Do not use for new files */
-  cpdf_aes256bittrue,     /* Deprecated. Do not use for new files */
-  cpdf_aes256bitisofalse, /* 256 bit AES encryption, do not encrypt
-                           * metadata. */
-  cpdf_aes256bitisotrue   /* 256 bit AES encryption, encrypt metadata */
-};
-
-/*
- * cpdf_toFileEncrypted(pdf, encryption_method, permissions,
- * permission_length, owner_password, user password, linearize, makeid,
- * filename) writes a file as encrypted.
- */
-void cpdf_toFileEncrypted(int, int, int *, int, const char[], const char[], int,
-                          int, const char[]);
-
-/*
- * cpdf_toFileEncryptedExt(pdf, encryption_method, permissions,
- * permission_length, owner_password, user_password, linearize, makeid,
- * preserve_objstm, generate_objstm, compress_objstm, filename) WARNING: the
- * pdf argument will be invalid after this call, and should be discarded.
- */
-void cpdf_toFileEncryptedExt(int, int, int *, int, const char[], const char[],
-                             int, int, int, int, int, const char[]);
-
-/*
- * cpdf_hasPermission(pdf, permission) returns true if the given permission
- * (restriction) is present.
- */
-int cpdf_hasPermission(int, enum cpdf_permission);
-
-/*
- * cpdf_encryptionKind(pdf) return the encryption method currently in use on
- * a document.
- */
-enum cpdf_encryptionMethod cpdf_encryptionKind(int);
-
+def encryptionKind(pdf):
+    """encryptionMethod(pdf) return the encryption method currently in use on
+    a document."""
