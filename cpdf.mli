@@ -53,33 +53,6 @@ val iter_pages : (int -> Pdfpage.t -> unit) -> Pdf.t -> int list -> unit
 (** Same as [process_pages] but return the list of outputs of the map function. *)
 val map_pages : (int -> Pdfpage.t -> 'a) -> Pdf.t -> int list -> 'a list
 
-(** {2 Page specifications and ranges } *)
-
-(** Here are the rules for building input ranges:
-
-{ul
-{- A comma (,) allows one to specify several ranges, e.g. 1-2,4-5.}
-{- The word end represents the last page number. }
-{- The words odd and even can be used in place of or at the end of a page range to restrict to just the odd or even pages. }
-{- The word reverse is the same as end-1.}
-{- The word all is the same as 1-end.}
-{- A range must contain no spaces.}
-{- A tilde (~) defines a page number counting from the end of the document rather than the beginning. Page ~1 is the last page, ~2 the penultimate page etc.}
-}
-*)
-
-(** Parse a (valid) page specification to a page range *)
-val parse_pagespec : Pdf.t -> string -> int list
-
-(** Return a string for the given range. Knows how to identify all, odd, even,
-x-y ranges etc. *)
-val string_of_pagespec : Pdf.t -> int list -> string
-
-(** Is a page specification, in theory, valid? This is the most we can find out
-without supplying a PDF, and thus knowing how many pages there are in it. *)
-val validate_pagespec : string -> bool
-
-val parse_pagespec_without_pdf : string -> int list
 
 (** Compresses all streams in the PDF document which are uncompressed, using
 /FlateDecode, leaving out metadata.  If the PDF is encrypted, does nothing. *)

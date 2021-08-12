@@ -62,7 +62,7 @@ let soft_error s =
   if not !stay_on_error then exit 1 else raise StayOnError
 
 let parse_pagespec pdf spec =
-  try Cpdf.parse_pagespec pdf spec with
+  try Cpdfpagespec.parse_pagespec pdf spec with
     Failure x -> error x
 
 (* We allow an operation such as ScaleToFit on a range such as 'portrait' to be silently null to allow, for example:
@@ -70,7 +70,7 @@ let parse_pagespec pdf spec =
 cpdf -scale-to-fit a4portrait in.pdf portrait AND -scale-to-fit a4landscape landscape -o out.pdf
 *)
 let parse_pagespec_allow_empty pdf spec =
-  try Cpdf.parse_pagespec pdf spec with
+  try Cpdfpagespec.parse_pagespec pdf spec with
     Pdf.PDFError ("Page range specifies no pages") -> []
 
 (* Operations. *)
@@ -1124,7 +1124,7 @@ let setbates n =
 (* Calculate -bates automatically so that n is applied to the first page in the range *)  
 let setbatesrange n =
   let first_page =
-    let range = Cpdf.parse_pagespec_without_pdf (get_pagespec ()) in
+    let range = Cpdfpagespec.parse_pagespec_without_pdf (get_pagespec ()) in
       fold_left min max_int range
   in
     args.bates <- n + 1 - first_page
