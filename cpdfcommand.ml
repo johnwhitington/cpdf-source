@@ -379,7 +379,7 @@ type args =
    mutable fontsize : float;
    mutable color : float * float * float;
    mutable opacity : float;
-   mutable position : Cpdf.position;
+   mutable position : Cpdfposition.position;
    mutable underneath : bool;
    mutable linespacing : float;
    mutable midline : bool;
@@ -388,7 +388,7 @@ type args =
    mutable bates : int;
    mutable batespad : int option;
    mutable prerotate : bool;
-   mutable orientation : Cpdf.orientation;
+   mutable orientation : Cpdfposition.orientation;
    mutable relative_to_cropbox : bool;
    mutable keepversion : bool;
    mutable bycolumns : bool;
@@ -483,7 +483,7 @@ let args =
    fontsize = 12.;
    color = 0., 0., 0.;
    opacity = 1.;
-   position = Cpdf.TopLeft 100.;
+   position = Cpdfposition.TopLeft 100.;
    underneath = false;
    linespacing = 1.;
    midline = false;
@@ -492,7 +492,7 @@ let args =
    bates = 0;
    batespad = None;
    prerotate = false;
-   orientation = Cpdf.Horizontal;
+   orientation = Cpdfposition.Horizontal;
    relative_to_cropbox = false;
    keepversion = false;
    bycolumns = false;
@@ -587,7 +587,7 @@ let reset_arguments () =
   args.fontsize <- 12.;
   args.color <- 0., 0., 0.;
   args.opacity <- 1.;
-  args.position <- Cpdf.TopLeft 100.;
+  args.position <- Cpdfposition.TopLeft 100.;
   args.underneath <- false;
   args.linespacing <- 1.;
   args.midline <- false;
@@ -596,7 +596,7 @@ let reset_arguments () =
   args.bates <- 0;
   args.batespad <- None;
   args.prerotate <- false;
-  args.orientation <- Cpdf.Horizontal;
+  args.orientation <- Cpdfposition.Horizontal;
   args.relative_to_cropbox <- false;
   args.keepversion <- false;
   args.bycolumns <- false;
@@ -1047,11 +1047,11 @@ let setaddbookmarks s =
 let setstampon f =
   setop (StampOn f) ();
   (* Due to an earlier bad decision (default position), we have this nasty hack *)
-  if args.position = Cpdf.TopLeft 100. then args.position <- Cpdf.BottomLeft 0.
+  if args.position = Cpdfposition.TopLeft 100. then args.position <- Cpdfposition.BottomLeft 0.
 
 let setstampunder f =
   setop (StampUnder f) ();
-  if args.position = Cpdf.TopLeft 100. then args.position <- Cpdf.BottomLeft 0.
+  if args.position = Cpdfposition.TopLeft 100. then args.position <- Cpdfposition.BottomLeft 0.
 
 let setstampasxobject f =
   setop (StampAsXObject f) ()
@@ -1061,58 +1061,58 @@ let setcombinepages f =
 
 let setposcenter s =
   let x, y = Cpdfcoord.parse_coordinate empty s in
-    args.position <- Cpdf.PosCentre (x, y)
+    args.position <- Cpdfposition.PosCentre (x, y)
 
 let setposleft s =
   let x, y = Cpdfcoord.parse_coordinate empty s in
-    args.position <- Cpdf.PosLeft (x, y)
+    args.position <- Cpdfposition.PosLeft (x, y)
 
 let setposright s =
   let x, y = Cpdfcoord.parse_coordinate empty s in
-    args.position <- Cpdf.PosRight (x, y)
+    args.position <- Cpdfposition.PosRight (x, y)
 
 let settop n =
-  args.position <- Cpdf.Top (Cpdfcoord.parse_single_number empty n);
+  args.position <- Cpdfposition.Top (Cpdfcoord.parse_single_number empty n);
   args.justification <- Cpdf.CentreJustify
 
 let settopleft n =
-  args.position <- Cpdf.TopLeft (Cpdfcoord.parse_single_number empty n);
+  args.position <- Cpdfposition.TopLeft (Cpdfcoord.parse_single_number empty n);
   args.justification <- Cpdf.LeftJustify
 
 let settopright n =
-  args.position <- Cpdf.TopRight (Cpdfcoord.parse_single_number empty n);
+  args.position <- Cpdfposition.TopRight (Cpdfcoord.parse_single_number empty n);
   args.justification <- Cpdf.RightJustify
 
 let setleft n =
-  args.position <- Cpdf.Left (Cpdfcoord.parse_single_number empty n);
+  args.position <- Cpdfposition.Left (Cpdfcoord.parse_single_number empty n);
   args.justification <- Cpdf.LeftJustify
 
 let setbottomleft n =
-  args.position <- Cpdf.BottomLeft (Cpdfcoord.parse_single_number empty n);
+  args.position <- Cpdfposition.BottomLeft (Cpdfcoord.parse_single_number empty n);
   args.justification <- Cpdf.LeftJustify
 
 let setbottom n =
-  args.position <- Cpdf.Bottom (Cpdfcoord.parse_single_number empty n);
+  args.position <- Cpdfposition.Bottom (Cpdfcoord.parse_single_number empty n);
   args.justification <- Cpdf.CentreJustify
 
 let setbottomright n =
-  args.position <- Cpdf.BottomRight (Cpdfcoord.parse_single_number empty n);
+  args.position <- Cpdfposition.BottomRight (Cpdfcoord.parse_single_number empty n);
   args.justification <- Cpdf.RightJustify
 
 let setright n =
-  args.position <- Cpdf.Right (Cpdfcoord.parse_single_number empty n);
+  args.position <- Cpdfposition.Right (Cpdfcoord.parse_single_number empty n);
   args.justification <- Cpdf.RightJustify
 
 let setdiagonal n =
-  args.position <- Cpdf.Diagonal;
+  args.position <- Cpdfposition.Diagonal;
   args.justification <- Cpdf.CentreJustify
 
 let setreversediagonal n =
-  args.position <- Cpdf.ReverseDiagonal;
+  args.position <- Cpdfposition.ReverseDiagonal;
   args.justification <- Cpdf.CentreJustify
 
 let setcenter n =
-  args.position <- Cpdf.Centre;
+  args.position <- Cpdfposition.Centre;
   args.justification <- Cpdf.CentreJustify
 
 let setbatespad n =
@@ -1220,7 +1220,7 @@ let setscaletofitscale f =
 let setscalecontents f =
   detect_duplicate_op (ScaleContents f);
   args.op <- Some (ScaleContents f);
-  args.position <- Cpdf.Diagonal (* Will be center *)
+  args.position <- Cpdfposition.Diagonal (* Will be center *)
 
 let setsqueeze () =
   args.squeeze <- true;
@@ -1345,10 +1345,10 @@ let setp2ppath p =
   args.path_to_p2p <- p
 
 let settextvertical () =
-  args.orientation <- Cpdf.Vertical
+  args.orientation <- Cpdfposition.Vertical
 
 let settextverticaldown () =
-  args.orientation <- Cpdf.VerticalDown
+  args.orientation <- Cpdfposition.VerticalDown
 
 let setfrombox s =
   detect_duplicate_op CopyBox;
@@ -3351,12 +3351,12 @@ let addrectangle
         Pdf.parse_rectangle page.Pdfpage.mediabox
     in
     let x, y, _ =
-      Cpdf.calculate_position false w mediabox Cpdf.Horizontal position
+      Cpdfposition.calculate_position false w mediabox Cpdfposition.Horizontal position
     in
     let x, y =
       match position with
-        Cpdf.Top _ | Cpdf.TopLeft _ | Cpdf.TopRight _ -> (x, y -. h)
-      | Cpdf.Centre | Cpdf.PosCentre _ -> (x, y -. (h /. 2.))
+        Cpdfposition.Top _ | Cpdfposition.TopLeft _ | Cpdfposition.TopRight _ -> (x, y -. h)
+      | Cpdfposition.Centre | Cpdfposition.PosCentre _ -> (x, y -. (h /. 2.))
       | _ -> (x, y)
     in
     let ops =

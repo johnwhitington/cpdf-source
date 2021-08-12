@@ -1268,94 +1268,6 @@ let print_fonts pdf =
 
 (* \section{Superimpose text, page numbers etc.} *)
 
-type position =
-  | PosCentre of float * float
-  | PosLeft of float * float
-  | PosRight of float * float
-  | Top of float
-  | TopLeft of float
-  | TopRight of float
-  | Left of float
-  | BottomLeft of float
-  | Bottom of float
-  | BottomRight of float
-  | Right of float
-  | Diagonal
-  | ReverseDiagonal
-  | Centre
-
-let string_of_position = function
-  | PosCentre (a, b) -> Printf.sprintf "PosCentre %f %f" a b
-  | PosLeft (a, b) -> Printf.sprintf "PosLeft %f %f" a b
-  | PosRight (a, b) -> Printf.sprintf "PosRight %f %f" a b
-  | Top a -> Printf.sprintf "Top %f" a
-  | TopLeft a -> Printf.sprintf "TopLeft %f" a
-  | TopRight a -> Printf.sprintf "TopRight %f" a
-  | Left a -> Printf.sprintf "Left %f" a
-  | BottomLeft a -> Printf.sprintf "BottomLeft %f" a
-  | Bottom a -> Printf.sprintf "Bottom %f" a
-  | BottomRight a -> Printf.sprintf "BottomRight %f" a
-  | Right a -> Printf.sprintf "Right %f" a
-  | Diagonal -> "Diagonal"
-  | ReverseDiagonal -> "Reverse Diagonal"
-  | Centre -> "Centre"
-
-type orientation =
-  | Horizontal
-  | Vertical
-  | VerticalDown
-
-type justification = LeftJustify | CentreJustify | RightJustify
-
-(* Given the mediabox, calculate an absolute position for the text. *)
-let calculate_position ignore_d w (xmin, ymin, xmax, ymax) orientation pos =
-  let rot = if orientation = VerticalDown then rad_of_deg 270. else 0. in
-    match pos with
-    | Centre ->
-        (xmin +. xmax) /. 2. -. w /. 2.,
-        (ymin +. ymax) /. 2.,
-        rot
-    | Diagonal ->
-        let angle = atan ((ymax -. ymin) /. (xmax -. xmin))
-        in let cx, cy = (xmax +. xmin) /. 2., (ymax +. ymin) /. 2. in
-          let dl = w /. 2. in
-            let dx = dl *. cos angle
-            in let dy = dl *. sin angle in
-              cx -. dx, cy -. dy, angle
-    | ReverseDiagonal ->
-        let angle = atan ((ymax -. ymin) /. (xmax -. xmin))
-        in let cx, cy = (xmax +. xmin) /. 2., (ymax +. ymin) /. 2. in
-          let dl = w /. 2. in
-            let dx = dl *. cos angle
-            in let dy = dl *. sin angle in
-              cx -. dx, (ymax +. ymin) -. (cy -. dy), angle -. ((2. *. pi) -. ((pi -. (2. *. angle)) *. 2.) /. 2.) +. pi
-    | PosLeft (x, y) -> xmin +. x, ymin +. y, rot
-    | PosCentre (x, y) -> xmin +. x -. (w /. 2.), ymin +. y, rot
-    | PosRight (x, y) -> xmin +. x -. w, ymin +. y, rot
-    | Top d ->
-        let d = if ignore_d then 0. else d in
-          (xmin +. xmax) /. 2. -. w /. 2., ymax -. d, rot
-    | TopLeft d ->
-        let d = if ignore_d then 0. else d in
-          xmin +. d, ymax -. d, rot
-    | TopRight d ->
-        let d = if ignore_d then 0. else d in
-        xmax -. d -. w, ymax -. d, rot
-    | Left d ->
-        let d = if ignore_d then 0. else d in
-          xmin +. d, (ymax +. ymin) /. 2., rot
-    | BottomLeft d ->
-        let d = if ignore_d then 0. else d in
-          xmin +. d, ymin +. d, rot
-    | Bottom d ->
-        let d = if ignore_d then 0. else d in
-          (xmin +. xmax) /. 2. -. w /. 2., ymin +. d, rot
-    | BottomRight d ->
-        let d = if ignore_d then 0. else d in
-          xmax -. d -. w, ymin +. d, rot
-    | Right d ->
-        let d = if ignore_d then 0. else d in
-          xmax -. d -. w, (ymax +. ymin) /. 2., rot
 
 (* Process UTF8 text to /WinAnsiEncoding string. *)
 let winansi_of_utf8 s =
@@ -1445,33 +1357,37 @@ let ops longest_w metrics x y rotate hoffset voffset outline linewidth unique_fo
    Pdfops.Op_EMC;
    Pdfops.Op_Q]
 
+type justification = LeftJustify | CentreJustify | RightJustify
+
 (* Find the h-offset for justification based on the longest width, the current
 width, the justification and the position. *)
-let find_justification_offsets longest_w w position = function
-  | LeftJustify ->
-      begin match position with
-      | TopLeft _ | Left _ | PosLeft _ | BottomLeft _ -> 0.
-      | Top _ | PosCentre _ | Bottom _ | Centre -> (longest_w -. w) /. 2.
-      | TopRight _ | BottomRight _ | PosRight _ | Right _ -> longest_w -. w
-      | Diagonal -> 0.
-      | ReverseDiagonal -> 0.
-      end
-  | RightJustify ->
-      begin match position with
-      | TopLeft _ | Left _ | PosLeft _ | BottomLeft _ -> ~-.(longest_w -. w)
-      | Top _ | PosCentre _ | Bottom _ | Centre -> ~-.((longest_w -. w) /. 2.)
-      | TopRight _ | BottomRight _ | PosRight _ | Right _ -> 0.
-      | Diagonal -> 0.
-      | ReverseDiagonal -> 0.
-      end
-  | CentreJustify ->
-      begin match position with
-      | TopLeft _ | Left _ | PosLeft _ | BottomLeft _ -> ~-.((longest_w -. w) /. 2.)
-      | Top _ | PosCentre _ | Bottom _ | Centre -> 0.
-      | TopRight _ | BottomRight _ | PosRight _ | Right _ -> (longest_w -. w) /. 2.
-      | Diagonal -> 0.
-      | ReverseDiagonal -> 0.
-      end
+let find_justification_offsets longest_w w position j =
+  let open Cpdfposition in
+    match j with
+    | LeftJustify ->
+        begin match position with
+        | TopLeft _ | Left _ | PosLeft _ | BottomLeft _ -> 0.
+        | Top _ | PosCentre _ | Bottom _ | Centre -> (longest_w -. w) /. 2.
+        | TopRight _ | BottomRight _ | PosRight _ | Right _ -> longest_w -. w
+        | Diagonal -> 0.
+        | ReverseDiagonal -> 0.
+        end
+    | RightJustify ->
+        begin match position with
+        | TopLeft _ | Left _ | PosLeft _ | BottomLeft _ -> ~-.(longest_w -. w)
+        | Top _ | PosCentre _ | Bottom _ | Centre -> ~-.((longest_w -. w) /. 2.)
+        | TopRight _ | BottomRight _ | PosRight _ | Right _ -> 0.
+        | Diagonal -> 0.
+        | ReverseDiagonal -> 0.
+        end
+    | CentreJustify ->
+        begin match position with
+        | TopLeft _ | Left _ | PosLeft _ | BottomLeft _ -> ~-.((longest_w -. w) /. 2.)
+        | Top _ | PosCentre _ | Bottom _ | Centre -> 0.
+        | TopRight _ | BottomRight _ | PosRight _ | Right _ -> (longest_w -. w) /. 2.
+        | Diagonal -> 0.
+        | ReverseDiagonal -> 0.
+        end
 
 (* Lex an integer from the table *)
 let extract_num header s =
@@ -1599,6 +1515,8 @@ let extract_text extract_text_font_size pdf range =
   fold_left (fun x y -> x ^ (if x <> "" && y <> "" then "\n" else "") ^ y) ""
     (map_pages (extract_page_text extract_text_font_size pdf) pdf range)
 
+
+
 let addtext
   metrics lines linewidth outline fast colour fontname embed bates batespad fontsize font
   underneath position hoffset voffset text pages orientation cropbox opacity
@@ -1696,7 +1614,7 @@ let addtext
                     else
                       Pdf.parse_rectangle page.Pdfpage.mediabox
                   in
-                    let x, y, rotate = calculate_position false textwidth mediabox orientation position in
+                    let x, y, rotate = Cpdfposition.calculate_position false textwidth mediabox orientation position in
                       let hoffset, voffset =
                         if position = Diagonal || position = ReverseDiagonal
                           then -. (cos ((pi /. 2.) -. rotate) *. voffset), sin ((pi /. 2.) -. rotate) *. voffset
@@ -1785,6 +1703,7 @@ let
     let lines = map unescape_string (split_at_newline text) in
       let pdf = ref pdf in
         let voffset =
+          let open Cpdfposition in
           match position with
           | Bottom _ | BottomLeft _ | BottomRight _ ->
               ref (0. -. (linespacing *. fontsize *. (float (length lines) -. 1.)))
@@ -1824,7 +1743,7 @@ let
           iter
             (fun line ->
                let voff, hoff =
-                 if orientation = Vertical then 0., -.(!voffset) else !voffset, 0.
+                 if orientation = Cpdfposition.Vertical then 0., -.(!voffset) else !voffset, 0.
                in
                  pdf :=
                    addtext metrics lines linewidth outline fast colour fontname
@@ -2241,20 +2160,21 @@ let stamp_shift_of_position topline midline sw sh w h p =
     else if topline then sh
     else 0.
   in
-    match p with
-    | PosCentre (ox, oy) -> ox -. half sw, oy -. dy
-    | PosLeft (ox, oy) -> ox, oy -. dy
-    | PosRight (ox, oy) -> ox -. sw, oy -. dy
-    | Top o -> half w -. half sw, h -. o -. sh -. dy
-    | TopLeft o -> o, h -. sh -. o -. dy
-    | TopRight o -> w -. sw -. o, h -. sh -. o -. dy
-    | Left o -> o, half h -. half sh -. dy
-    | BottomLeft o -> o, o -. dy
-    | Bottom o -> half w -. half sw, o -. dy
-    | BottomRight o -> w -. sw -. o, o -. dy
-    | Right o -> w -. sw -. o, half h -. half sh -. dy
-    | Diagonal | ReverseDiagonal | Centre ->
-        half w -. half sw, half h -. half sh -. dy
+    let open Cpdfposition in
+      match p with
+      | PosCentre (ox, oy) -> ox -. half sw, oy -. dy
+      | PosLeft (ox, oy) -> ox, oy -. dy
+      | PosRight (ox, oy) -> ox -. sw, oy -. dy
+      | Top o -> half w -. half sw, h -. o -. sh -. dy
+      | TopLeft o -> o, h -. sh -. o -. dy
+      | TopRight o -> w -. sw -. o, h -. sh -. o -. dy
+      | Left o -> o, half h -. half sh -. dy
+      | BottomLeft o -> o, o -. dy
+      | Bottom o -> half w -. half sw, o -. dy
+      | BottomRight o -> w -. sw -. o, o -. dy
+      | Right o -> w -. sw -. o, half h -. half sh -. dy
+      | Diagonal | ReverseDiagonal | Centre ->
+          half w -. half sw, half h -. half sh -. dy
 
 (* Combine Pdfpage.rest items for two PDFs. For now, we combine /Annots, and
  * copy everything else from adict. What else should we combine? *)
@@ -2819,13 +2739,13 @@ let scale_to_fit_pdf ?(fast=false) position input_scale xylist op pdf range =
             let scale = fmin fx fy *. input_scale in
               let trans_x =
                 match position with
-                  Left _ -> 0.
-                | Right _ -> (x -. (maxx *. scale))
+                  Cpdfposition.Left _ -> 0.
+                | Cpdfposition.Right _ -> (x -. (maxx *. scale))
                 | _ -> (x -. (maxx *. scale)) /. 2.
               and trans_y =
                 match position with
-                | Top _ -> (y -. (maxy *. scale))
-                | Bottom _ -> 0.
+                | Cpdfposition.Top _ -> (y -. (maxy *. scale))
+                | Cpdfposition.Bottom _ -> 0.
                 | _ -> (y -. (maxy *. scale)) /. 2.
               in
                 (Pdftransform.matrix_of_transform
@@ -2853,8 +2773,9 @@ let scale_page_contents ?(fast=false) scale position pdf pnum page =
        | Some r -> r
        | None -> page.Pdfpage.mediabox)
   in
-    let sx, sy, _ = calculate_position true 0. box Horizontal position in
+    let sx, sy, _ = Cpdfposition.calculate_position true 0. box Horizontal position in
       let tx, ty =
+        let open Cpdfposition in
         match position with
         | Top t -> 0., -.t
         | TopLeft t -> t, -.t
@@ -3343,14 +3264,8 @@ let dc = "http://purl.org/dc/elements/1.1/"
 
 let rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 
-(* For OCaml < 4.00 *)
-let string_trim s =
-  implode
-    (rev (dropwhile
-       Pdf.is_whitespace (rev (dropwhile Pdf.is_whitespace (explode s)))))
-
 let combine_with_spaces strs =
-  string_trim
+  String.trim
     (fold_left (fun x y -> x ^ (if x <> "" then ", " else "") ^ y) "" strs)
 
 (* Collect all <li> elements inside a seq, bag, or alt. Combine with commas. If

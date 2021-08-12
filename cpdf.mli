@@ -14,23 +14,6 @@ exception HardError of string
 (** Two exceptions recommended for use with the library, though currently not
 raised by any function in this module. Cpdfcommand uses them extensively. *)
 
-(** Possible positions for adding text and other uses. See cpdfmanual.pdf *)
-type position =
-  | PosCentre of float * float
-  | PosLeft of float * float
-  | PosRight of float * float
-  | Top of float
-  | TopLeft of float
-  | TopRight of float
-  | Left of float
-  | BottomLeft of float
-  | Bottom of float
-  | BottomRight of float
-  | Right of float
-  | Diagonal
-  | ReverseDiagonal
-  | Centre
-
 (** {2 Debug} *)
 
 (** Debug: Print out a PDF in readable form to the terminal *)
@@ -174,7 +157,7 @@ val combine_pages : bool -> Pdf.t -> Pdf.t -> bool -> bool -> bool -> Pdf.t
 (** [stamp relative_to_cropbox position topline midline fast scale_to_fit isover range over pdf] stamps the first page of
 [over] over each page of the PDF. The arguments have the same meaning as in
 [combine_pages]. *)
-val stamp : bool -> position -> bool -> bool -> bool -> bool -> bool -> int list -> Pdf.t -> Pdf.t -> Pdf.t
+val stamp : bool -> Cpdfposition.position -> bool -> bool -> bool -> bool -> bool -> int list -> Pdf.t -> Pdf.t -> Pdf.t
 
 (** {2 Splitting PDFs} *)
 
@@ -194,31 +177,11 @@ val list_fonts : Pdf.t -> (int * string * string * string * string) list
 (** Expand the string "now" to a PDF date string, ignoring any other string *)
 val expand_date : string -> string
 
-
-(** Produce a debug string of a [position] *)
-val string_of_position : position -> string
-
-(** Orientation of the string on the page *)
-type orientation =
-  | Horizontal
-  | Vertical
-  | VerticalDown
-
 (** Justification of multiline text *)
 type justification =
   | LeftJustify
   | CentreJustify
   | RightJustify
-
-(** [calculate_position ignore_d w (xmin, ymin, xmax, ymax) orientation pos] calculates
-the absolute position of text given its width, bounding box, orientation and
-position. If [ignore_d] is true, the distance from the position (e.g 10 in
-TopLeft 10) is ignored (considered zero). *)
-val calculate_position :
-    bool ->
-    float ->
-    float * float * float * float ->
-    orientation -> position -> float * float * float
 
 (** Call [add_texts metrics linewidth outline fast fontname font bates batespad colour
 position linespacing fontsize underneath text pages orientation
@@ -234,13 +197,13 @@ val addtexts :
     int -> (* bates number *)
     int option -> (* bates padding width *)
     float * float * float -> (*colour*)
-    position -> (*position*)
+    Cpdfposition.position -> (*position*)
     float -> (*linespacing*)
     float -> (*fontsize*)
     bool -> (*underneath*)
     string ->(*text*)
     int list ->(*page range*)
-    orientation ->(*orientation*)
+    Cpdfposition.orientation ->(*orientation*)
     bool ->(*relative to cropbox?*)
     float ->(*opacity*)
     justification ->(*justification*)
@@ -323,10 +286,10 @@ val scale_pdf : ?fast:bool -> (float * float) list -> Pdf.t -> int list -> Pdf.t
 (** [scale_to_fit_pdf fast position input_scale x y op pdf range] scales a page to fit the
 page size given by (x, y) and by the [input_scale] (e.g 1.0 = scale to fit, 0.9
 = scale to fit leaving a border etc.). [op] is unused. *) 
-val scale_to_fit_pdf : ?fast:bool -> position -> float -> (float * float) list -> 'a -> Pdf.t -> int list -> Pdf.t
+val scale_to_fit_pdf : ?fast:bool -> Cpdfposition.position -> float -> (float * float) list -> 'a -> Pdf.t -> int list -> Pdf.t
 
 (** Scale the contents of a page by a given factor centred around a given point in a given range. *)
-val scale_contents : ?fast:bool -> position -> float -> Pdf.t -> int list -> Pdf.t
+val scale_contents : ?fast:bool -> Cpdfposition.position -> float -> Pdf.t -> int list -> Pdf.t
 
 val trim_marks : ?fast:bool -> Pdf.t -> int list -> Pdf.t
 
