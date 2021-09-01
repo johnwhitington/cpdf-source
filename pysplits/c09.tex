@@ -1,47 +1,25 @@
 # CHAPTER 8. Logos, Watermarks and Stamps
 
 def stampOn(pdf, pdf2, r):
-    """stampOn(stamp_pdf, pdf, range) stamps stamp_pdf on top of all the
-    pages in the document which are in the range. The stamp is placed with its
-    origin at the origin of the target document."""
+    """Stamps pdf on top of all the pages in pdf2 which are in the range. The
+    stamp is placed with its origin at the origin of the target document."""
 
 def stampUnder(pdf, pdf2, r):
-    """stampUnder(stamp_pdf, pdf, range) stamps stamp_pdf under all the pages
-    in the document which are in the range. The stamp is placed with its origin
-    at the origin of the target document."""
+    """Stamps pdf under under all the pages in pdf2 which are in the range. The
+    stamp is placed with its origin at the origin of the target document."""
 
 def stampExtended(pdf, pdf2, r, isover, scale_stamp_to_fit, pos,
                   relative_to_cropbox):
-    """stampExtended(pdf, pdf2, range, isover, scale_stamp_to_fit, pos,
-    relative_to_cropbox) is a stamping function with extra features.
+    """A stamping function with extra features:
+
      - isover True, pdf goes over pdf2, isover False, pdf goes under pdf2
      - scale_stamp_to_fit scales the stamp to fit the page
      - pos gives the position to put the stamp
-     - relative_to_cropbox: if True, pos is relative to cropbox not mediabox"""
+     - relative_to_cropbox: if True, pos is relative to crop box not media box"""
 
 def combinePages(pdf, pdf2):
-    """combinePages(under, over) combines the PDFs page-by-page, putting
-    each page of 'over' over each page of 'under'"""
-
-"""Fonts."""
-timesRoman
-timesBold
-timesItalic
-timesBoldItalic
-helvetica
-helveticaBold
-helveticaOblique
-helveticaBoldOblique
-courier
-courierBold
-courierOblique
-courierBoldOblique
-
-"""Jusitifications."""
-leftJustify
-centreJustify
-rightJustify
-
+    """Combines the PDFs page-by-page, putting each page of pdf2 over each page
+    of pdf."""
 
 def addText(metrics, pdf, r, text, p, line_spacing, bates, font, size, red,
             green, blue, underneath, relative_to_cropbox, outline, opacity,
@@ -105,26 +83,28 @@ def addText(metrics, pdf, r, text, p, line_spacing, bates, font, size, red,
 
 def addTextSimple(pdf, r, text, p, font, size):
     """like addText, but with most parameters default
+
          * pdf = the document
          * r = the range
+         * text = the text
          * p = the position
          * font = the font
          * size = the font size"""
 
 def removeText(pdf, r):
-    """removeText(pdf, range) will remove any text added by libcpdf from the
-    given pages."""
+    """Remove any text added by libcpdf from the given pages."""
+    r = range_of_list(r)
 
 def textWidth(font, string):
     """Return the width of a given string in the given font in thousandths of a
     point."""
 
 def addContent(content, before, pdf, r):
-    """addContent(content, before, range, pdf) adds page content before (if
-    True) or after (if False) the existing content to pages in the given range
-    in the given PDF."""
+    """Add page content before (if True) or after (if False) the existing
+    content to pages in the given range in the given PDF. Warning: this a low
+    level function requiring understanding of the PDF format."""
 
 def stampAsXObject(pdf, r, stamp_pdf):
-    """stampAsXObject(pdf, range, stamp_pdf) stamps stamp_pdf onto the pages
-    in the given range in pdf as a shared Form XObject. The name of the
-    newly-created XObject is returned."""
+    """Stamps stamp_pdf onto the pages in the given range in pdf as a shared
+    Form XObject. The name of the newly-created XObject is returned, for use
+    with addContent. """

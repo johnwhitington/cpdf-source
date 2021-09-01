@@ -1,30 +1,26 @@
 # CHAPTER 9. Mulitpage facilities
 
 def twoUp(pdf):
-    """Impose a document two up. twoUp does so by retaining the existing page
-    size, scaling pages down. twoUpStack does so by doubling the page size,
-    to fit two pages on one."""
+    """Impose a document two up by retaining the existing page
+    size, scaling pages down."""
 
 def twoUpStack(pdf):
-    """Impose a document two up. twoUp does so by retaining the existing page
-    size, scaling pages down. twoUpStack does so by doubling the page size,
+    """Impose a document two up by doubling the page size,
     to fit two pages on one."""
 
 def padBefore(pdf, r):
-    """padBefore(pdf, range) adds a blank page before each page in the given
-    range"""
+    """Adds a blank page before each page in the given range."""
 
 def padAfter(pdf, r):
-    """padAfter(pdf, range) adds a blank page after each page in the given
-    range"""
+    """Adds a blank page after each page in the given range."""
 
 def padEvery(pdf, n):
-    """pageEvery(pdf, n) adds a blank page after every n pages"""
+    """Adds a blank page after every n pages."""
 
 def padMultiple(pdf, n):
-    """padMultiple(pdf, n) adds pages at the end to pad the file to a multiple
-    of n pages in length."""
+    """Adds pages at the end to pad the file to a multiple of n pages in
+    length."""
 
 def padMultipleBefore(pdf, n):
-    """padMultiple(pdf, n) adds pages at the beginning to pad the file to a
+    """Adds pages at the beginning to pad the file to a
     multiple of n pages in length."""

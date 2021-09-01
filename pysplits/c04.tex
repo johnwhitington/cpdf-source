@@ -1,89 +1,70 @@
 # CHAPTER 3. Pages
 
 def scalePages(pdf, r, sx, sy):
-    """scalePages(pdf, range, x scale, y scale) scales the page dimensions
-    and content by the given scale, about (0, 0). Other boxes (crop etc. are
-    altered as appropriate)"""
+    """Scale the page dimensions and content of the given range of pages by
+    the given scale (sx, sy), about (0, 0). Other boxes (crop etc. are altered
+    as appropriate)."""
 
-def scaleToFit(pdf, r, sx, sy, scale_to_fit_scale):
-    """scaleToFit(pdf, range, width height, scale) scales the content to fit
-    new page dimensions (width x height) multiplied by scale (typically 1.0).
-    Other boxed (crop etc. are altered as appropriate)"""
+def scaleToFit(pdf, r, w, h, scale_to_fit_scale):
+    """Scales the pages in the range to fit new page dimensions (w and h)
+    multiplied by scale_to_fit_scale (typically 1.0).  Other boxes (crop etc.)
+    are altered as appropriate."""
 
 def scaleToFitPaper(pdf, r, papersize, scale_to_fit_scale):
-    """scaleToFitPaper(pdf, range, papersize, scale) scales the page content
-    to fit the given page size, possibly multiplied by scale (typically 1.0)"""
-
-"""Positions with two numbers in a tuple e.g (posLeft, 10.0, 20.0):"""
-posCentre = 0
-posLeft = 1
-posRight = 2
-"""Positions with one number in a tuple e.g (top, 5.0):"""
-top = 3
-topLeft = 4
-topRight = 5
-left = 6
-bottomLeft = 7
-bottomRight = 8
-right = 9
-"""Positions with no numbers e.g diagonal:"""
-diagonal = 10
-reverseDiagonal = 11
+    """Scales the given pages to fit the given page size, possibly multiplied
+    by scale_to_fit_scale (typically 1.0)"""
 
 def scaleContents(pdf, r, pos, scale):
-    """scaleContents(pdf, range, position, scale) scales the contents of the
-    pages in the range about the point given by the position, by the
-    scale given."""
+    """Scales the contents of the pages in the range about the point given by
+    the position, by the scale given."""
 
 def shiftContents(pdf, r, dx, dy):
-    """shiftContents(pdf, range, dx, dy) shifts the content of the pages in
-    the range."""
+    """Shift the content of the pages in the range by (dx, dy)."""
 
 def rotate(pdf, r, rotation):
-    """rotate(pdf, range, rotation) changes the viewing rotation to an
+    """Change the viewing rotation of the pages in the range to an
     absolute value. Appropriate rotations are 0, 90, 180, 270."""
 
 def rotateBy(pdf, r, rotation):
-    """rotateBy(pdf, range, rotation) changes the viewing rotation by a
+    """Change the viewing rotation of the pages in the range by a
     given number of degrees. Appropriate values are 90, 180, 270."""
 
 def rotateContents(pdf, r, rotation):
-    """rotateContents(pdf, range, angle) rotates the content about the centre
+    """Rotate the content about the centre
     of the page by the given number of degrees, in a clockwise direction."""
 
 def upright(pdf, r):
-    """upright(pdf, range) changes the viewing rotation of the pages in the
-    range, counter-rotating the dimensions and content such that there is no
-    visual change."""
+    """Change the viewing rotation of the pages in the range, counter-rotating
+    the dimensions and content such that there is no visual change."""
 
 def hFlip(pdf, r):
-    """hFlip(pdf, range) flips horizontally the pages in the range."""
+    """Flip horizontally the pages in the range."""
 
 def vFlip(pdf, r):
-    """vFlip(pdf, range) flips vertically the pages in the range."""
+    """Flip vertically the pages in the range."""
 
 def crop(pdf, r, x, y, w, h):
-    """crop(pdf, range, x, y, w, h) crops a page, replacing any existing
-    crop box. The dimensions are in points."""
+    """Crop a page to the box defined by (x, y, w, h), replacing any existing
+    crop box."""
 
 def removeCrop(pdf, r):
-    """removeCrop(pdf, range) removes any crop box from pages in the range."""
+    """Remove any crop box from pages in the range."""
 
 def removeTrim(pdf, r):
-    """removeTrim(pdf, range) removes any crop box from pages in the range."""
+    """Remove any trim box from pages in the range."""
 
 def removeArt(pdf, r):
-    """removeArt(pdf, range) removes any crop box from pages in the range."""
+    """Remove any art box from pages in the range."""
 
 def removeBleed(pdf, r):
-    """removeBleed(pdf, range) removes any crop box from pages in the range."""
+    """Remove any bleed box from pages in the range."""
 
 def trimMarks(pdf, r):
-    """trimMarks(pdf, range) adds trim marks to the given pages, if the trimbox
-    exists."""
+    """Add trim marks to the given pages, if the trimbox exists."""
 
 def showBoxes(pdf, r):
-    """showBoxes(pdf, range) shows the boxes on the given pages, for debug."""
+    """Show the boxes on the given pages, for debug."""
 
 def hardBox(pdf, r, boxname):
-    """hardBox make a given box a 'hard box' i.e clips it explicitly."""
+    """Make a given box a 'hard box' i.e clip it explicitly. Boxname could be,
+    for example "/TrimBox"."""

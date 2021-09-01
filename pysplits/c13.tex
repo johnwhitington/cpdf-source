@@ -1,24 +1,23 @@
 # CHAPTER 12. File Attachments
 
 def attachFile(filename, pdf):
-    """attachFile(filename, pdf) attaches a file to the pdf. It is attached at
-    document level."""
+    """Attach a file to the pdf. It is attached at document level."""
 
 def attachFileToPage(filename, pdf, pagenumber):
-    """attachFileToPage(filename, pdf, pagenumber) attaches a file, given its
-    file name, pdf, and the page number to which it should be attached."""
+    """Attach a file, given its file name, pdf, and the page number to which
+    it should be attached."""
 
 def attachFileFromMemory(data, filename, pdf):
-    """attachFileFromMemory(memory, length, filename, pdf) attaches from
-    memory, just like attachFile."""
+    """Attach a file from a byte array. It is attached at document level."""
 
 def attachFileToPageFromMemory(data, filename, pdf, pagenumber):
-    """attachFileToPageFromMemory(memory, length, filename, pdf, pagenumber)
-    attaches from memory, just like attachFileToPage."""
+    """Attach a file to a given pag from a byte array. It is attached at
+    document level."""
 
 def removeAttachedFiles(pdf):
-    """Remove all page- and document-level attachments from a document"""
+    """Remove all page- and document-level attachments from a document."""
 
 def getAttachments(pdf):
     """List information about attachements. Returns a list of tuples
-    (name, page number, byte array of data)"""
+    (name, page number, byte array of data). Page 0 = document-level
+    attachment."""

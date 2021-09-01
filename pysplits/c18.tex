@@ -1,43 +1,41 @@
 # CHAPTER 17. Miscellaneous
 
 def draft(pdf, r, boxes):
-    """draft(pdf, range, boxes) removes images on the given pages, replacing
-    them with crossed boxes if 'boxes' is true"""
+    """Remove images on the given pages, replacing
+    them with crossed boxes if 'boxes' is True."""
 
 def removeAllText(pdf, r):
-    """removeAllText(pdf, range) removes all text from the given pages in a
-    given document."""
+    """Remove all text from the given pages in a document."""
 
 def blackText(pdf, r):
-    """blackText(pdf, range) blackens all text on the given pages."""
+    """Blacken all text on the given pages."""
 
 def blackLines(pdf, r):
-    """blackLines(pdf, range) blackens all lines on the given pages."""
+    """Blacken all lines on the given pages."""
 
 def blackFills(pdf, r):
-    """blackFills(pdf, range) blackens all fills on the given pages."""
+    """Blacken all fills on the given pages."""
 
 def thinLines(pdf, r, linewidth):
-    """thinLines(pdf, range, min_thickness) thickens every line less than
-    min_thickness to min_thickness. Thickness given in points."""
+    """Thicken every line less than
+    linewidth to linewidth. Thickness given in points."""
 
 def copyId(pdf, pdf2):
-    """copyId(from, to) copies the /ID from one document to another."""
+    """Copy the /ID from one pdf to pdf2."""
 
 def removeId(pdf):
-    """removeId(pdf) removes a document's /ID"""
+    """Remove a document's /ID"""
 
 def setVersion(pdf, version):
-    """setVersion(pdf, version) sets the minor version number of a document."""
+    """Set the minor version number of a document."""
 
 def setFullVersion(pdf, major, minor):
-    """setFullVersion(pdf, version) sets the major and minor version number of
+    """Set the major and minor version number of
     a document."""
 
 def removeDictEntry(pdf, key):
-    """removeDictEntry(pdf, key) removes any dictionary entry with the given
-    key anywhere in the document"""
+    """Remove any dictionary entry with the given
+    key anywhere in the document."""
 
 def removeClipping(pdf, r):
-    """removeClipping(pdf, range) removes all clipping from pages in the given
-    range"""
+    """Remove all clipping from pages in the given range"""
