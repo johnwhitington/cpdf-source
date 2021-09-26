@@ -338,7 +338,7 @@ int main (int argc, char ** argv)
 \end{small}
 \end{cpdflib}
 
-\begin{cpdflib}
+\begin{pycpdflib}
 \chapter*{Example Program in Python}
 
 This program loads a file \texttt{hello.pdf} from disk and writes out a
@@ -346,10 +346,33 @@ document with the original included three times.
 
 \begin{small}
 \begin{verbatim}
-(PYTHON EXAMPLE HERE)
+#Merge example
+import pycpdflib
+
+#DLL loading depends on your own platform. These are the author's settings.
+if sys.platform.startswith('darwin'):
+    pycpdflib.loadDLL("/Users/john/repos/python-libcpdf/libpycpdf.so")
+elif sys.platform.startswith('linux'):
+    pycpdflib.loadDLL("../libpycpdf.so")
+elif sys.platform.startswith('win32') or sys.platform.startswith('cygwin'):
+    os.add_dll_directory("C:\\\\OCaml64/home/JohnWhitington/python-libcpdf/")
+    pycpdflib.loadDLL("libpycpdf.dll")
+
+#We will take the input hello.pdf and repeat it three times
+mergepdf = pycpdf.fromFile('hello.pdf', '')
+
+#The list of PDFs to merge
+pdfs = [mergepdf, mergepdf, mergepdf]
+
+#Merge them
+merged = pycpdflib.mergeSimple(pdfs)
+
+#Write output
+pycpdflib.toFile(merged, 'merged.pdf', False, False)
 \end{verbatim}
 \end{small}
-\end{cpdflib}
+\end{pycpdflib}
+
 \pagestyle{plain}
 \tableofcontents\clearpage\pagestyle{empty}
 

@@ -1,8 +1,8 @@
-"""Pycpdf: a python interface to cpdf.
+"""Pycpdflib: a python interface to cpdf.
 
 Before using the library, you must load the libpycpdf and libcpdf DLLs. This is
-achieved with the pycpdf.loadDLL function, given the filename or full path of
-the libpycpdf DLL.  On Windows, you may have to call os.add_dll_directory
+achieved with the pycpdflib.loadDLL function, given the filename or full path
+of the libpycpdf DLL.  On Windows, you may have to call os.add_dll_directory
 first. On MacOS, you may need to give the full path, and you may need to
 install libcpdf.so in a standard location /usr/local/lib/, or use the
 install_name_tool command to tell libpycpdf.so where to find libcpdf.so.
