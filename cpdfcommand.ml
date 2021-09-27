@@ -3899,9 +3899,9 @@ let go () =
               in
                 args.create_objstm <- args.preserve_objstm;
                 split_pdf
-                  enc args.original_filename args.chunksize args.linearize args.cpdflin
-                  args.preserve_objstm args.preserve_objstm (*yes--always create if preserving *)
-                  args.squeeze nobble output_spec pdf
+                  enc args.original_filename args.chunksize args.linearize ~cpdflin:args.cpdflin
+                  ~preserve_objstm:args.preserve_objstm ~create_objstm:args.preserve_objstm (*yes--always create if preserving *)
+                  ~squeeze:args.squeeze nobble output_spec pdf
         | _, Stdout -> error "Can't split to standard output"
         | _, NoOutputSpecified -> error "Split: No output format specified"
         | _ -> error "Split: bad parameters"
@@ -3929,7 +3929,7 @@ let go () =
               in
                 args.create_objstm <- args.preserve_objstm;
                 split_at_bookmarks
-                  enc args.original_filename args.squeeze nobble level output_spec pdf
+                  enc args.original_filename ~squeeze:args.squeeze nobble level output_spec pdf
         | Stdout -> error "Can't split to standard output"
         | NoOutputSpecified -> error "Split: No output format specified"
       end
