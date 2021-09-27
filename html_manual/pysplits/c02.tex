@@ -1,0 +1,174 @@
+# CHAPTER 1. Basics
+
+def fromFile(filename, userpw):
+    """ Load a PDF file from a given file.
+    Supply a user password (possibly blank) in case the file is encypted. It
+    won't be decrypted, but sometimes the password is needed just to load the
+    file."""
+
+def fromFileLazy(filename, userpw):
+    """ Loads a PDF from a file, doing only
+    minimal parsing. The objects will be read and parsed when they are actually
+    needed.  Use this when the whole file won't be required. Also supply a user
+    password (possibly blank) in case the file is encypted. It won't be
+    decrypted, but sometimes the password is needed just to load the file."""
+
+def fromMemory(data, userpw):
+    """ Load a file from a byte array and the user password (blank if none)."""
+
+def fromMemoryLazy(data, userpw):
+    """ Load a file from from a byte array and the user password (blank if
+    none), but lazily like fromFileLazy."""
+
+def blankDocument(w, h, pages):
+    """ Create a blank document
+    with pages of the given width (in points), height (in points), and number
+    of pages."""
+
+def blankDocumentPaper(papersize, pages):
+    """Create a blank document with pages of the given paper size, and number
+    of pages. """
+
+def ptOfCm(i):
+    """Convert a figure in centimetres to points (72 points to 1 inch)."""
+
+def ptOfMm(i):
+    """Convert a figure in millimetres to points (72 points to 1 inch)."""
+
+def ptOfIn(i):
+    """Convert a figure in inches to points (72 points to 1 inch)."""
+
+def cmOfPt(i):
+    """Convert a figure in points to centimetres (72 points to 1 inch)."""
+
+def mmOfPt(i):
+    """Convert a figure in points to millimetres (72 points to 1 inch)."""
+
+def inOfPt(i):
+    """Convert a figure in points to inches (72 points to 1 inch)."""
+
+def parsePagespec(pdf, pagespec):
+    """Parse a page specification such as "1-3,8-end" to a range with reference to
+    a given PDF (the PDF is supplied so that page ranges which reference pages
+    which do not exist are rejected)."""
+
+def validatePagespec(pagespec):
+    """Validate a page specification, returning True or False, so far as is
+    possible in the absence of the actual document."""
+
+def stringOfPagespec(pdf, r):
+    """Build a page specification from a page
+    range. For example, the range containing 1,2,3,6,7,8 in a document of 8
+    pages might yield "1-3,6-end" """
+
+def blankRange():
+    """Create a range with no pages in."""
+
+def pageRange(f, t):
+    """ Nuild a range from one page to another inclusive.
+    For example, pageRange(3,7) gives the range 3,4,5,6,7. """
+
+def all(pdf):
+    """The range containing all the pages in a given document."""
+
+def even(r):
+    """A range which contains just the even pages of another
+    range."""
+
+def odd(r):
+    """A range which contains just the odd pages of another
+    range."""
+
+def rangeUnion(a, b):
+    """The union of two ranges giving a range containing
+    the pages in range a and range b."""
+
+def difference(a, b):
+    """The difference of two ranges, giving a range
+    containing all the pages in a except for those which are also in b."""
+
+def removeDuplicates(r):
+    """Deduplicates a range, returning a new one."""
+
+def rangeLength(r):
+    """The number of pages in a range."""
+
+def rangeGet(r, n):
+    """Get the page number at position n in a range, where
+
+def rangeAdd(r, p):
+    """Add the page to a range, if it is not already
+    there."""
+
+def isInRange(r, p):
+    """Returns True if the page p is in the range r, False otherwise."""
+
+def pages(pdf):
+    """Return the number of pages in a PDF."""
+    r = libc.pycpdf_pages(pdf.pdf)
+    checkerror()
+    return r
+
+def pagesFast(userpw, filename):
+    """Return the number of pages in a given
+    PDF, with given user password. It tries to do this as fast as
+    possible, without loading the whole file."""
+
+def toFile(pdf, filename, linearize, make_id):
+    """Write the file to a given filename. If linearize is True, it will be
+    linearized, if supported by libcpdf. If make_id is True, it will be given a
+    new ID."""
+
+def toFileExt(pdf, filename, linearize, make_id, preserve_objstm,
+              generate_objstm, compress_objstm):
+    """Write the file to a given filename. If linearize is True, it will be
+    linearized, if supported by libcpdf. If make_id is True, it will be given a
+    new ID.  If preserve_objstm is True, existing object streams will be
+    preserved. If generate_objstm is True, object streams will be generated
+    even if not originally present. If compress_objstm is True, object streams
+    will be compressed (what we usually want). WARNING: the pdf argument will
+    be invalid after this call and should not be used again."""
+
+
+def toMemory(pdf, linearize, make_id):
+    """Write a file to memory, returning the buffer as a byte array of type
+    bytes."""
+
+def isEncrypted(pdf):
+    """Returns True if a documented is encrypted, False otherwise."""
+    r = libc.pycpdf_isEncrypted(pdf.pdf)
+    checkerror()
+    return r
+
+def toFileEncrypted(pdf, method, permissions, ownerpw, userpw, linearize,
+                    makeid, filename):
+    """Write the file to a given filename encrypted with the given encryption
+    method, permissions list, and owener and user passwords. If linearize is
+    True, it will be linearized, if supported by libcpdf. If make_id is True,
+    it will be given a new ID."""
+
+def toFileEncryptedExt(pdf, method, permissions, ownerpw, userpw, linearize,
+                       makeid, preserve_objstm, generate_objstm,
+                       compress_objstm, filename):
+    """Write the file to a given filename encrypted with the given encryption
+    method, permissions list, and owener and user passwords. If linearize is
+    True, it will be linearized, if supported by libcpdf. If make_id is True,
+    it will be given a new ID. If preserve_objstm is True, existing object
+    streams will be preserved. If generate_objstm is True, object streams will
+    be generated even if not originally present. If compress_objstm is True,
+    object streams will be compressed (what we usually want). WARNING: the pdf
+    argument will be invalid after this call and should not be used again."""
+
+def decryptPdf(pdf, userpw):
+    """Attempts to decrypt a PDF using the given user password. An exception is
+    raised in the event of a bad password."""
+
+def decryptPdfOwner(pdf, ownerpw):
+    """Attempts to decrypt a PDF using the given owner password. An exception
+    is raised in the event of a bad password."""
+
+def hasPermission(pdf, perm):
+    """Returns True if the given permission (restriction) is present."""
+
+def encryptionKind(pdf):
+    """Return the encryption method currently in use on a document."""

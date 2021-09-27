@@ -1,0 +1,110 @@
+# CHAPTER 8. Logos, Watermarks and Stamps
+
+def stampOn(pdf, pdf2, r):
+    """Stamps pdf on top of all the pages in pdf2 which are in the range. The
+    stamp is placed with its origin at the origin of the target document."""
+
+def stampUnder(pdf, pdf2, r):
+    """Stamps pdf under under all the pages in pdf2 which are in the range. The
+    stamp is placed with its origin at the origin of the target document."""
+
+def stampExtended(pdf, pdf2, r, isover, scale_stamp_to_fit, pos,
+                  relative_to_cropbox):
+    """A stamping function with extra features:
+
+     - isover True, pdf goes over pdf2, isover False, pdf goes under pdf2
+     - scale_stamp_to_fit scales the stamp to fit the page
+     - pos gives the position to put the stamp
+     - relative_to_cropbox: if True, pos is relative to crop box not media box"""
+
+def combinePages(pdf, pdf2):
+    """Combines the PDFs page-by-page, putting each page of pdf2 over each page
+    of pdf."""
+
+def addText(metrics, pdf, r, text, p, line_spacing, bates, font, size, red,
+            green, blue, underneath, relative_to_cropbox, outline, opacity,
+            justification, midline, topline, filename, line_width,
+            embed_fonts):
+    """Adding text. Adds text to a PDF, if the characters exist in the font.
+
+         * metrics: If True, don't actually add text but collect metrics.
+         * pdf:	Document
+         * r: Page Range
+         * text: The text to add
+         * p: Position to add text at
+         * line_spacing: Linespacing, 1.0 = normal
+         * bates: Starting Bates number
+         * font: Font
+         * size: Font size in points
+         * red: Red component of colour, 0.0 - 1.0
+         * green: Green component of colour, 0.0 - 1.0
+         * blue: Blue component of colour, 0.0 - 1.0
+         * underneath: If True, text is added underneath rather than on top
+         * relative_to_cropbox: If True, position is relative to crop box not
+           media box
+         * outline: If True, text is outline rather than filled
+         * opacity: Opacity, 1.0 = opaque, 0.0 = wholly transparent
+         * justification: Justification
+         * midline: If True, position is relative to midline of text, not
+           baseline
+         * topline: If True, position is relative to topline of text, not
+           baseline
+         * filename: filename that this document was read from (optional)
+         * line_width: line width
+         * embed_fonts: embed fonts
+
+    Special codes
+
+      * %Page     Page number in arabic notation (1, 2, 3...)
+      * %roman    Page number in lower-case roman notation (i, ii, iii...)
+      * %Roman    Page number in upper-case roman notation (I, II, III...)
+      * %EndPage  Last page of document in arabic notation
+      * %Label    The page label of the page
+      * %EndLabel The page label of the last page
+      * %filename The full file name of the input document
+      * %a        Abbreviated weekday name (Sun, Mon etc.)
+      * %A        Full weekday name (Sunday, Monday etc.)
+      * %b        Abbreviated month name (Jan, Feb etc.)
+      * %B        Full month name (January, February etc.)
+      * %d        Day of the month (01-31)
+      * %e        Day of the month (1-31)
+      * %H        Hour in 24-hour clock (00-23)
+      * %I        Hour in 12-hour clock (01-12)
+      * %j        Day of the year (001-366)
+      * %m        Month of the year (01-12)
+      * %M        Minute of the hour (00-59)
+      * %p        "a.m" or "p.m"
+      * %S        Second of the minute (00-61)
+      * %T        Same as %H:%M:%S
+      * %u        Weekday (1-7, 1 = Monday)
+      * %w        Weekday (0-6, 0 = Monday)
+      * %Y        Year (0000-9999)
+      * %%        The % character"""
+
+def addTextSimple(pdf, r, text, p, font, size):
+    """like addText, but with most parameters default
+
+         * pdf = the document
+         * r = the range
+         * text = the text
+         * p = the position
+         * font = the font
+         * size = the font size"""
+
+def removeText(pdf, r):
+    """Remove any text added by libcpdf from the given pages."""
+    r = range_of_list(r)
+
+def textWidth(font, string):
+    """Return the width of a given string in the given font in thousandths of a
+    point."""
+
+def addContent(content, before, pdf, r):
+    """Add page content before (if True) or after (if False) the existing
+    content to pages in the given range in the given PDF. Warning: this a low
+    level function requiring understanding of the PDF format."""
+
+def stampAsXObject(pdf, r, stamp_pdf):
+    """Stamps stamp_pdf onto the pages in the given range in pdf as a shared
+    Form XObject. The name of the newly-created XObject is returned, for use
+    with addContent. """

@@ -1,0 +1,265 @@
+# CHAPTER 11. Document Information and Metadata
+
+def isLinearized(filename):
+    """Finds out if a document is linearized as quickly
+    as possible without loading it."""
+
+def getVersion(pdf):
+    """Return the minor version number of a document."""
+
+def getMajorVersion(pdf):
+    """Return the minor version number of a document."""
+
+def getTitle(pdf):
+    """Return the title of a document."""
+
+def getAuthor(pdf):
+    """Return the subject of a document."""
+
+def getSubject(pdf):
+    """Return the subject of a document."""
+
+def getKeywords(pdf):
+    """Return the keywords of a document."""
+
+def getCreator(pdf):
+    """Return the creator of a document."""
+
+def getProducer(pdf):
+    """Return the producer of a document."""
+
+def getCreationDate(pdf):
+    """Return the creation date of a document."""
+
+def getModificationDate(pdf):
+    """Return the modification date of a document."""
+
+def getTitleXMP(pdf):
+    """Return the XMP title of a document."""
+
+def getAuthorXMP(pdf):
+    """Return the XMP author of a document."""
+
+def getSubjectXMP(pdf):
+    """Return the XMP subject of a document."""
+
+def getKeywordsXMP(pdf):
+    """Return the XMP keywords of a document."""
+
+def getCreatorXMP(pdf):
+    """Returs the XMP creator of a document."""
+
+def getProducerXMP(pdf):
+    """Return the XMP producer of a document."""
+
+def getCreationDateXMP(pdf):
+    """Return the XMP creation date of a document."""
+
+def getModificationDateXMP(pdf):
+    """Return the XMP modification date of a document."""
+
+def setTitle(pdf, s):
+    """Set the title of a document."""
+
+def setAuthor(pdf, s):
+    """Set the author of a document."""
+
+def setSubject(pdf, s):
+    """Set the subject of a document."""
+
+def setKeywords(pdf, s):
+    """Set the keywords of a document."""
+
+def setCreator(pdf, s):
+    """Set the creator of a document."""
+
+def setProducer(pdf, s):
+    """Set the producer of a document."""
+
+def setCreationDate(pdf, s):
+    """Set the creation date of a document."""
+
+def setModificationDate(pdf, s):
+    """Set the modifcation date of a document."""
+
+def setTitleXMP(pdf, s):
+    """Set the XMP title of a document."""
+
+def setAuthorXMP(pdf, s):
+    """Set the XMP author of a document."""
+
+def setSubjectXMP(pdf, s):
+    """Set the XMP subject of a document."""
+
+def setKeywordsXMP(pdf, s):
+    """Set the XMP keywords of a document."""
+
+def setCreatorXMP(pdf, s):
+    """Set the XMP creator of a document."""
+
+def setProducerXMP(pdf, s):
+    """Set the XMP producer of a document."""
+
+def setCreationDateXMP(pdf, s):
+    """Set the XMP creation date of a document."""
+
+def setModificationDateXMP(pdf, s):
+    """Set the XMP modification date of a document."""
+
+def getDateComponents(string):
+    """Return the components (year, month, day, hour, minute, second,
+    hour_offset, minute_offset) from a PDF date string.
+
+    Month 1-31, day 1-31, hours (0-23), minutes (0-59), seconds
+    (0-59), hour_offset is the offset from UT in hours (-23 to 23);
+    minute_offset is the offset from UT in minutes (-59 to 59)."""
+
+def dateStringOfComponents(cs):
+    """Build a PDF date string a (year, month, day, hour, minute, second,
+    hour_offset, minute_offset) tuple.
+    
+    Dates: Month 1-31, day 1-31, hours (0-23), minutes (0-59), seconds
+    (0-59), hour_offset is the offset from UT in hours (-23 to 23);
+    minute_offset is the offset from UT in minutes (-59 to 59)."""
+
+def getPageRotation(pdf, pagenumber):
+    """Get the viewing rotation for a given page."""
+
+def hasBox(pdf, pagenumber, boxname):
+    """Returns True, if the page has the given box. E.g "/CropBox" """
+
+def getMediaBox(pdf, pagenumber):
+    """Get a mediabox box given the document, page range, min x, max x,
+    min y, max y in points. Only suceeds if such a box exists, as checked by
+    hasBox"""
+
+def getCropBox(pdf, pagenumber):
+    """Get a crop box given the document, page range, min x, max x,
+    min y, max y in points. Only suceeds if such a box exists, as checked by
+    hasBox"""
+
+def getTrimBox(pdf, pagenumber):
+    """Get a trim box given the document, page range, min x, max x,
+    min y, max y in points. Only suceeds if such a box exists, as checked by
+    hasBox"""
+
+def getArtBox(pdf, pagenumber):
+    """Get an art box given the document, page range, min x, max x,
+    min y, max y in points. Only suceeds if such a box exists, as checked by
+    hasBox"""
+
+def getBleedBox(pdf, pagenumber):
+    """Get a bleed box given the document, page range, min x, max x,
+    min y, max y in points. Only suceeds if such a box exists, as checked by
+    hasBox"""
+
+def setMediaBox(pdf, r, minx, maxx, miny, maxy):
+    """Set the media box given the document, page range, min x, max x,
+    min y, max y in points."""
+
+def setCropBox(pdf, r, minx, maxx, miny, maxy):
+    """Set the crop box given the document, page range, min x, max x,
+    min y, max y in points."""
+
+def setTrimBox(pdf, r, minx, maxx, miny, maxy):
+    """Set the trim box given the document, page range, min x, max x,
+    min y, max y in points."""
+
+def setArtBox(pdf, r, minx, maxx, miny, maxy):
+    """Set the art box given the document, page range, min x, max x,
+    min y, max y in points."""
+
+def setBleedBox(pdf, r, minx, maxx, miny, maxy):
+    """Set the bleed box given the document, page range, min x, max x,
+    min y, max y in points."""
+
+def markTrapped(pdf):
+    """Mark a document as trapped."""
+
+def markUntrapped(pdf):
+    """Mark a document as untrapped."""
+
+def markTrappedXMP(pdf):
+    """Mark a document as trapped in XMP metadata."""
+
+def markUntrappedXMP(pdf):
+    """Mark a document as untrapped in XMP metadata."""
+
+def setPageLayout(pdf, layout):
+    """Set the page layout for a document."""
+
+def setPageMode(pdf, mode):
+    """Set the page mode for a document."""
+
+def hideToolbar(pdf, flag):
+    """Sets the hide toolbar flag."""
+
+def hideMenubar(pdf, flag):
+    """Set the hide menu bar flag."""
+
+def hideWindowUi(pdf, flag):
+    """Set the hide window UI flag."""
+
+def fitWindow(pdf, flag):
+    """Set the fit window flag."""
+
+def centerWindow(pdf, flag):
+    """Set the center window flag."""
+
+def displayDocTitle(pdf, flag):
+    """Set the display document title flag."""
+
+def openAtPage(pdf, fitflag, pagenumber):
+    """Set the PDF to open, possibly with zoom-to-fit, at the given page
+    number. """
+
+def setMetadataFromFile(pdf, filename):
+    """Set the XMP metadata of a document, given a file name."""
+
+def setMetadataFromByteArray(pdf, data):
+    """Set the XMP metadata from an array of bytes."""
+
+def getMetadata(pdf):
+    """Return the XMP metadata as a byte array of type bytes"""
+
+def removeMetadata(pdf):
+    """Remove the XMP metadata from a document"""
+
+def createMetadata(pdf):
+    """Builds fresh XMP metadata as good as possible from existing
+    metadata in the document."""
+
+def setMetadataDate(pdf, date):
+    """Set the metadata date for a PDF. The date is given in PDF date format --
+    cpdf will convert it to XMP format. The date 'now' means now."""
+
+def getPageLabels(pdf):
+    """Get page labels as a list of tuples (style, prefix, offset, startvalue)
+
+    For example, a document might have five pages of introduction with roman
+    numerals, followed by the rest of the pages in decimal arabic, numbered
+    from one. First label:
+
+    * labelstyle = LowercaseRoman
+    * labelprefix = ""
+    * startpage = 1
+    * startvalue = 1
+
+    Second label:
+
+    * labelstyle = DecimalArabic
+    * labelprefix = ""
+    * startpage = 6
+    * startvalue = 1 """
+
+def addPageLabels(pdf, label, progress):
+    """Add one group of page labels from a tuple (style, prefix, offset, range).
+
+    The prefix is prefix text for each label. The range is the page range the
+    labels apply to. Offset can be used to shift the numbering up or down."""
+
+def removePageLabels(pdf):
+    """Removes all page labels from the document."""
+
+def getPageLabelStringForPage(pdf, pagenumber):
+    """Calculate the full label string for a given page, and return it."""
