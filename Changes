@@ -1,5 +1,6 @@
 2.5 (Upcoming 2022)
 
+o TODO: Vendor in camlp-streams module before deprecation
 o Environment variable CPDF_REPRODUCIBLE_DATES for testing
 o Environment variable CPDF_DEBUG for -debug
 o Effectively make stderr unbuffered
