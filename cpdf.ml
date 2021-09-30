@@ -4422,7 +4422,7 @@ let rec image_resolution_page pdf page pagenum dpi (images : (int * string * xob
                         in
                           let page =
                             {Pdfpage.content = [content];
-                             Pdfpage.mediabox = Pdf.Null;
+                             Pdfpage.mediabox = Pdfpage.rectangle_of_paper Pdfpaper.a4;
                              Pdfpage.resources = resources;
                              Pdfpage.rotate = Pdfpage.Rotate0;
                              Pdfpage.rest = Pdf.Dictionary []}
