@@ -17,7 +17,7 @@ val continually : (unit -> 'a) -> 'a llist
 
 val from : int -> int llist
 
-val of_stream : 'a Stream.t -> 'a llist
+val of_stream : 'a Cpdfstream.t -> 'a llist
 val sllist : ?items:int -> string -> ('a -> string) -> 'a llist -> string
 val of_string : string -> char llist
 

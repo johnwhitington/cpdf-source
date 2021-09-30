@@ -65,9 +65,9 @@ let rec from n = Cons (n, lazy (from (n+1)))
 (* llist <--> stream *)
 let rec of_stream str =
   try
-    Cons (Stream.next str, lazy (of_stream str))
+    Cons (Cpdfstream.next str, lazy (of_stream str))
   with
-  | Stream.Failure -> Nil
+  | Cpdfstream.Failure -> Nil
 
 let sllist ?(items:int=20) delim show l =
   let fin = take items l in
@@ -78,7 +78,7 @@ let sllist ?(items:int=20) delim show l =
 
 (* string -> llist *)
 let of_string =
-  of_stream $ Stream.of_string
+  of_stream $ Cpdfstream.of_string
 
 let of_function f =
   let buf = Bytes.create 1024 in

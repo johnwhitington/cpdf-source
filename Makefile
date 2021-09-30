@@ -1,6 +1,7 @@
 # Build the cpdf command line tools and top level
-MODS = tjutil tjutf16 tjllist tjparserMonad tjjson xmlm \
-       cpdfwriteJSON cpdfstrftime cpdfcoord cpdfpagespec cpdfposition cpdf cpdfcommand
+MODS = cpdfstream tjutil tjutf16 tjllist tjparserMonad tjjson xmlm \
+       cpdfwriteJSON cpdfreadJSON cpdfstrftime cpdfcoord \
+       cpdfpagespec cpdfposition cpdf cpdfcommand
 
 SOURCES = $(foreach x,$(MODS),$(x).ml $(x).mli) cpdfcommandrun.ml
 

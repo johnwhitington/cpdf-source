@@ -150,7 +150,7 @@ let run p state ts =
 let init_state = (1, 0, ([],'_',[]))
 
 let run_ch p ch =
-  run p init_state (of_stream (Stream.of_channel ch))
+  run p init_state (of_stream (Cpdfstream.of_channel ch))
 
 let run_stdin p = run_ch p stdin
 
