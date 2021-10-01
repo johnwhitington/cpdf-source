@@ -238,7 +238,27 @@ let json_of_pdf parse_content no_stream_data pdf =
           (fun (objnum, jsonobj) -> J.Array [J.Number (soi objnum); jsonobj])
           pairs_parsed)
 
-(* FIXME Proper streaming to output, rather than making a big string first. *)
+let pdf_of_json json =
+  let major = 0 in
+  let minor = 1 in
+  let root = 2 in
+  let objmap = P.pdfobjmap_empty () in 
+  let objects =
+    {P.maxobjnum = 0;
+     P.parse = None;
+     P.pdfobjects = objmap;
+     P.object_stream_ids = Hashtbl.create 0}
+  in
+  let trailerdict = P.Null in
+    {P.major;
+     P.minor;
+     P.root;
+     P.objects;
+     P.trailerdict;
+     P.was_linearized = false;
+     P.saved_encryption = None}
+
+(* FIXME Proper streaming to output / from input, rather than making a big string first. *)
 let to_output o parse_content no_stream_data pdf =
   let b = Buffer.create 256 in
   let formatter = Format.formatter_of_buffer b in
@@ -246,4 +266,5 @@ let to_output o parse_content no_stream_data pdf =
     Format.pp_print_flush formatter ();
     o.Pdfio.output_string (Buffer.contents b)
 
-let of_input i = Pdf.empty ()
+let of_input i =
+  pdf_of_json (J.parse (Pdfio.string_of_bytes (Pdfio.bytes_of_input i 0 (i.Pdfio.in_channel_length))))
