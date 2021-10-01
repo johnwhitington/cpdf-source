@@ -1171,7 +1171,7 @@ let set_input s =
 let set_json_input s =
   args.original_filename <- s;
   let fh = open_in_bin s in
-  let pdf = CpdfJSON.of_input (Pdfio.input_of_channel fh) in
+  let pdf = Cpdfjson.of_input (Pdfio.input_of_channel fh) in
     close_in fh;
     args.inputs <- (AlreadyInMemory pdf, "all", "", "", ref false, None)::args.inputs
 
@@ -3457,10 +3457,10 @@ let write_json output pdf =
   | NoOutputSpecified ->
       error "-output-json: no output name specified"
   | Stdout ->
-      CpdfJSON.to_output (Pdfio.output_of_channel stdout) args.jsonparsecontentstreams args.jsonnostreamdata pdf
+      Cpdfjson.to_output (Pdfio.output_of_channel stdout) args.jsonparsecontentstreams args.jsonnostreamdata pdf
   | File filename ->
       let f = open_out filename in
-        CpdfJSON.to_output (Pdfio.output_of_channel f) args.jsonparsecontentstreams args.jsonnostreamdata pdf;
+        Cpdfjson.to_output (Pdfio.output_of_channel f) args.jsonparsecontentstreams args.jsonnostreamdata pdf;
         close_out f
 
 (* Main function *)

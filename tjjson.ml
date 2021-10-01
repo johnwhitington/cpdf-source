@@ -23,8 +23,8 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.*)
 
 open Tjutil
-open TjparserMonad
-module P = TjparserMonad
+open Tjparsermonad
+module P = Tjparsermonad
 
 type t =
   | String of string
