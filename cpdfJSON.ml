@@ -118,9 +118,15 @@ let op_of_json = function
          Pdftransform.d = opf d;
          Pdftransform.e = opf e;
          Pdftransform.f = opf f}
-   | j ->
-       Printf.eprintf "Unable to read op from %s\n" (J.show j);
-       failwith "op reading failed"
+  | J.Array [J.Array fls; y; J.String "d"] -> O.Op_d (map opf fls, opf y)
+  | J.Array [a; J.String "w"] -> O.Op_w (opf a)
+  | J.Array [a; J.String "J"] -> O.Op_J (opi a)
+  | J.Array [a; J.String "M"] -> O.Op_M (opf a)
+  | J.Array [J.String s; J.String "ri"] -> O.Op_ri s
+  | J.Array [a; J.String "i"] -> O.Op_i (opi a)
+  | j ->
+      Printf.eprintf "Unable to read op from %s\n" (J.show j);
+      failwith "op reading failed"
 
 let json_of_op pdf no_stream_data = function
   | O.Op_S -> J.Array [J.String "S"]
