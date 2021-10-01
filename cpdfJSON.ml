@@ -232,9 +232,10 @@ let json_of_pdf parse_content no_stream_data pdf =
           (fun (objnum, jsonobj) -> J.Array [J.Number (soi objnum); jsonobj])
           pairs_parsed)
 
-let write fh parse_content no_stream_data pdf =
+(* FIXME Proper streaming to output, rather than making a big string first. *)
+let to_output output parse_content no_stream_data pdf =
   let b = Buffer.create 256 in
   let formatter = Format.formatter_of_buffer b in
     J.format formatter (json_of_pdf parse_content no_stream_data pdf);
     Format.pp_print_flush formatter ();
-    output_string fh (Buffer.contents b)
+    output.Pdfio.output_string (Buffer.contents b)

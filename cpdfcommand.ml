@@ -3447,10 +3447,10 @@ let write_json output pdf =
   | NoOutputSpecified ->
       error "-output-json: no output name specified"
   | Stdout ->
-      CpdfwriteJSON.write stdout args.jsonparsecontentstreams args.jsonnostreamdata pdf
+      CpdfJSON.to_output (Pdfio.output_of_channel stdout) args.jsonparsecontentstreams args.jsonnostreamdata pdf
   | File filename ->
       let f = open_out filename in
-        CpdfwriteJSON.write f args.jsonparsecontentstreams args.jsonnostreamdata pdf;
+        CpdfJSON.to_output (Pdfio.output_of_channel f) args.jsonparsecontentstreams args.jsonnostreamdata pdf;
         close_out f
 
 (* Main function *)
