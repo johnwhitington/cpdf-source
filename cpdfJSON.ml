@@ -69,6 +69,59 @@ let rec json_of_object pdf fcs no_stream_data = function
       end;
       J.Number (soi i)
 
+let opf = function
+  | J.Object ["F", J.Number f] -> float_of_string f
+  | _ -> failwith "num: not a float"
+
+let opi = function
+  | J.Object ["I", J.Number i] -> int_of_string i
+  | _ -> failwith "num: not a float"
+
+let op_of_json = function
+  | J.Array [J.String "S"] -> O.Op_S
+  | J.Array [J.String "s"] -> O.Op_s
+  | J.Array [J.String "f"] -> O.Op_f
+  | J.Array [J.String "F"] -> O.Op_F
+  | J.Array [J.String "f*"] -> O.Op_f'
+  | J.Array [J.String "B"] -> O.Op_B
+  | J.Array [J.String "B*"] -> O.Op_B'
+  | J.Array [J.String "b"] -> O.Op_b
+  | J.Array [J.String "b*"] -> O.Op_b'
+  | J.Array [J.String "n"] -> O.Op_n
+  | J.Array [J.String "W"] -> O.Op_W
+  | J.Array [J.String "W*"] -> O.Op_W'
+  | J.Array [J.String "BT"] -> O.Op_BT
+  | J.Array [J.String "ET"] -> O.Op_ET
+  | J.Array [J.String "q"] -> O.Op_q
+  | J.Array [J.String "Q"] -> O.Op_Q
+  | J.Array [J.String "h"] -> O.Op_h
+  | J.Array [J.String "T*"] -> O.Op_T'
+  | J.Array [J.String "EMC"] -> O.Op_EMC
+  | J.Array [J.String "BX"] -> O.Op_BX
+  | J.Array [J.String "EX"] -> O.Op_EX
+  | J.Array [a; b; c; d; J.String "re"] -> O.Op_re (opf a, opf b, opf c, opf d)
+  | J.Array [a; b; c; d; J.String "k"] -> O.Op_k (opf a, opf b, opf c, opf d)
+  | J.Array [a; b; J.String "m"] -> O.Op_m (opf a, opf b)
+  | J.Array [a; b; J.String "l"] -> O.Op_l (opf a, opf b)
+  | J.Array [J.String s; J.String obj; J.String "BDC"] -> O.Op_BDC ("", Pdf.Null) (* FIXME read + write properly *)
+  | J.Array [J.String s; J.String "gs"] -> O.Op_gs s
+  | J.Array [J.String s; J.String "Do"] -> O.Op_Do s
+  | J.Array [J.String s; J.String "CS"] -> O.Op_CS s
+  (* rev the rest? *)
+  (* Op_SCN *)
+  | J.Array [i; J.String "j"] -> O.Op_j (opi i)
+  | J.Array [a; b; c; d; e; f; J.String "cm"] ->
+      O.Op_cm
+        {Pdftransform.a = opf a;
+         Pdftransform.b = opf b;
+         Pdftransform.c = opf c;
+         Pdftransform.d = opf d;
+         Pdftransform.e = opf e;
+         Pdftransform.f = opf f}
+   | j ->
+       Printf.eprintf "Unable to read op from %s\n" (J.show j);
+       failwith "op reading failed"
+
 let json_of_op pdf no_stream_data = function
   | O.Op_S -> J.Array [J.String "S"]
   | O.Op_s -> J.Array [J.String "s"]
