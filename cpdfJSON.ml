@@ -237,14 +237,14 @@ let json_of_pdf parse_content no_stream_data pdf =
           (fun (objnum, obj) ->
              if mem objnum !content_streams then
                begin match obj with
-               | J.Array [dict; J.String _] ->
+               | J.Object ["S", J.Array [dict; J.String _]] ->
                    (* FIXME Proper resources here for reasons explained above? *)
                    let streamdata =
                      match P.lookup_obj pdf objnum with
                      | P.Stream {contents = (_, P.Got b)} -> b
                      | _ -> failwith "JSON: stream not decoded"
                    in
-                     (objnum, J.Array [dict; parse_content_stream pdf (P.Dictionary []) streamdata])
+                     (objnum, J.Object ["S", J.Array [dict; parse_content_stream pdf (P.Dictionary []) streamdata]])
                | _ -> failwith "json_of_pdf: stream parsing inconsistency"
                end
              else
@@ -276,7 +276,12 @@ let pdf_of_json json =
          | _ -> failwith "json bad obj")
         objs
     in
-      (*List.iter (fun (i, o) -> flprint (soi i); flprint "\n"; flprint (Pdfwrite.string_of_pdf o); flprint "\n") objects;*)
+      (*List.
+      iter (fun (i, o) -> flprint (soi i); flprint "\n"; flprint (Pdfwrite.string_of_pdf o); flprint "\n") objects;*)
+  begin match Pdf.lookup_direct (Pdf.empty ()) "/CPDFJSONstreamdataincluded" !params with
+  | Some (Pdf.Boolean false) -> failwith "no stream data; cannot reconstruct PDF" 
+  | _ -> ()  
+  end;
   let major =
     match Pdf.lookup_direct (Pdf.empty ()) "/CPDFJSONmajorpdfversion" !params with 
       Some (Pdf.Integer i) -> i | _ -> failwith "bad major version"
