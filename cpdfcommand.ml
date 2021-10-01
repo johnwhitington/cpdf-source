@@ -1168,6 +1168,13 @@ let set_input s =
   args.original_filename <- s;
   args.inputs <- (InFile s, "all", "", "", ref false, None)::args.inputs
 
+let set_json_input s =
+  args.original_filename <- s;
+  let fh = open_in_bin s in
+  let pdf = CpdfJSON.of_input (Pdfio.input_of_channel fh) in
+    close_in fh;
+    args.inputs <- (AlreadyInMemory pdf, "all", "", "", ref false, None)::args.inputs
+
 let set_input_dir s =
   let names = sort compare (leafnames_of_dir s) in
     args.inputs <-
@@ -2197,6 +2204,9 @@ and specs =
    ("-output-json-no-stream-data",
      Arg.Unit setjsonnostreamdata,
      " Skip stream data for brevity");
+   ("-j",
+     Arg.String set_json_input,
+     "Load a PDF JSON file");
    ("-ocg-list",
      Arg.Unit (setop OCGList),
      " List optional content groups");

@@ -195,6 +195,12 @@ let json_of_pdf parse_content no_stream_data pdf =
   let pdf = if parse_content then precombine_page_content pdf else pdf in
   Pdf.remove_unreferenced pdf;
   let trailerdict = (0, json_of_object pdf (fun x -> ()) no_stream_data pdf.P.trailerdict) in
+  let parameters =
+    (-1, json_of_object pdf (fun x -> ()) false
+      (Pdf.Dictionary [("/CPDFJSONformatversion", Pdf.Integer 1);
+                       ("/CPDFJSONcontentparsed", Pdf.Boolean parse_content);
+                       ("/CPDFJSONstreamdataincluded", Pdf.Boolean (not no_stream_data))]))
+  in
   let content_streams = ref [] in
   let fcs n = content_streams := n::!content_streams in
   let pairs =
@@ -203,7 +209,7 @@ let json_of_pdf parse_content no_stream_data pdf =
         (fun i pdfobj ->
           ps := (i, json_of_object pdf fcs no_stream_data pdfobj)::!ps)
         pdf;
-      trailerdict::!ps
+      parameters::trailerdict::!ps
   in
     if parse_content then
       iter (fun n -> Pdfcodec.decode_pdfstream_until_unknown pdf (P.lookup_obj pdf n)) !content_streams;
@@ -233,9 +239,11 @@ let json_of_pdf parse_content no_stream_data pdf =
           pairs_parsed)
 
 (* FIXME Proper streaming to output, rather than making a big string first. *)
-let to_output output parse_content no_stream_data pdf =
+let to_output o parse_content no_stream_data pdf =
   let b = Buffer.create 256 in
   let formatter = Format.formatter_of_buffer b in
     J.format formatter (json_of_pdf parse_content no_stream_data pdf);
     Format.pp_print_flush formatter ();
-    output.Pdfio.output_string (Buffer.contents b)
+    o.Pdfio.output_string (Buffer.contents b)
+
+let of_input i = Pdf.empty ()
