@@ -107,23 +107,40 @@ let op_of_json = function
   | J.Array [J.String s; J.String "gs"] -> O.Op_gs s
   | J.Array [J.String s; J.String "Do"] -> O.Op_Do s
   | J.Array [J.String s; J.String "CS"] -> O.Op_CS s
-  (* rev the rest? *)
-  (* Op_SCN *)
   | J.Array [i; J.String "j"] -> O.Op_j (opi i)
   | J.Array [a; b; c; d; e; f; J.String "cm"] ->
       O.Op_cm
-        {Pdftransform.a = opf a;
-         Pdftransform.b = opf b;
-         Pdftransform.c = opf c;
-         Pdftransform.d = opf d;
-         Pdftransform.e = opf e;
-         Pdftransform.f = opf f}
+        {Pdftransform.a = opf a; Pdftransform.b = opf b; Pdftransform.c = opf c;
+         Pdftransform.d = opf d; Pdftransform.e = opf e; Pdftransform.f = opf f}
   | J.Array [J.Array fls; y; J.String "d"] -> O.Op_d (map opf fls, opf y)
   | J.Array [a; J.String "w"] -> O.Op_w (opf a)
   | J.Array [a; J.String "J"] -> O.Op_J (opi a)
   | J.Array [a; J.String "M"] -> O.Op_M (opf a)
   | J.Array [J.String s; J.String "ri"] -> O.Op_ri s
   | J.Array [a; J.String "i"] -> O.Op_i (opi a)
+  | J.Array [a; b; c; d; e; f; J.String "c"] -> O.Op_c (opf a, opf b, opf c, opf d, opf e, opf f)
+  | J.Array [a; b; c; d; J.String "v"] -> O.Op_v (opf a, opf b, opf c, opf d)
+  | J.Array [a; b; c; d; J.String "y"] -> O.Op_y (opf a, opf b, opf c, opf d)
+  | J.Array [a; J.String "Tc"] -> O.Op_Tc (opf a)
+  | J.Array [a; J.String "Tw"] -> O.Op_Tw (opf a)
+  | J.Array [a; J.String "Tz"] -> O.Op_Tz (opf a)
+  | J.Array [a; J.String "TL"] -> O.Op_TL (opf a)
+  | J.Array [J.String k; n; J.String "Tf"] -> O.Op_Tf (k, opf n)
+  | J.Array [a; J.String "Tr"] -> O.Op_Tr (opi a)
+  | J.Array [a; J.String "Ts"] -> O.Op_Ts (opf a)
+  | J.Array [a; b; J.String "Td"] -> O.Op_Td (opf a, opf b)
+  | J.Array [a; b; J.String "TD"] -> O.Op_TD (opf a, opf b)
+  | J.Array [a; b; c; d; e; f; J.String "Tm"] ->
+        O.Op_Tm
+          {Pdftransform.a = opf a; Pdftransform.b = opf b; Pdftransform.c = opf c;
+           Pdftransform.d = opf d; Pdftransform.e = opf e; Pdftransform.f = opf f}
+  | J.Array torev ->
+      begin match rev torev with
+      | J.String "SCN"::ns -> O.Op_SCN (map opf (rev ns))
+      | j ->
+          Printf.eprintf "Unable to read reversed op from %s\n" (J.show (J.Array j));
+          failwith "op reading failed"
+      end
   | j ->
       Printf.eprintf "Unable to read op from %s\n" (J.show j);
       failwith "op reading failed"
