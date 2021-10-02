@@ -27,17 +27,17 @@ it had been loaded. *)
 let pdfread_pdf_of_input ?revision a b c =
   try Pdfread.pdf_of_input ?revision a b c with
     Pdf.PDFError s when String.length s >=10 && String.sub s 0 10 = "Encryption" ->
-      raise (Cpdf.SoftError "Bad owner or user password when reading document")
+      raise (Cpdferror.SoftError "Bad owner or user password when reading document")
 
 let pdfread_pdf_of_channel_lazy ?revision ?source b c d =
   try Pdfread.pdf_of_channel_lazy ?revision ?source b c d with
     Pdf.PDFError s when String.length s >=10 && String.sub s 0 10 = "Encryption" ->
-      raise (Cpdf.SoftError "Bad owner or user password when reading document")
+      raise (Cpdferror.SoftError "Bad owner or user password when reading document")
 
 let pdfread_pdf_of_file ?revision a b c =
   try Pdfread.pdf_of_file ?revision a b c with
     Pdf.PDFError s when String.length s >=10 && String.sub s 0 10 = "Encryption" ->
-      raise (Cpdf.SoftError "Bad owner or user password when reading document")
+      raise (Cpdferror.SoftError "Bad owner or user password when reading document")
 
 let optstring = function
   | "" -> None
@@ -2352,7 +2352,7 @@ let rec get_single_pdf ?(decrypt=true) ?(fail=false) op read_lazy =
           else
             pdfread_pdf_of_file ?revision (optstring u) (optstring o) inname
         with
-        | Cpdf.SoftError _ as e -> raise e (* Bad owner or user password *)
+        | Cpdferror.SoftError _ as e -> raise e (* Bad owner or user password *)
         | _ ->
             if args.gs_malformed then
               begin
@@ -2446,7 +2446,7 @@ let rec get_pdf_from_input_kind ?(read_lazy=false) ?(decrypt=true) ?(fail=false)
               else
                 pdfread_pdf_of_file ?revision (optstring u) (optstring o) s
             with
-            | Cpdf.SoftError _ as e -> raise e (* Bad owner or user password *)
+            | Cpdferror.SoftError _ as e -> raise e (* Bad owner or user password *)
             | e ->
                 Printf.printf "%s\n" (Printexc.to_string e);
                 if args.gs_malformed then
@@ -4046,9 +4046,9 @@ let go () =
           write_pdf false (Cpdf.scale_contents ~fast:args.fast args.position scale pdf range)
   | Some ListAttachedFiles ->
       let pdf = get_single_pdf args.op false in
-        let attachments = Cpdf.list_attached_files pdf in
+        let attachments = Cpdfattach.list_attached_files pdf in
         iter
-          (fun a -> Printf.printf "%i %s\n" a.Cpdf.pagenumber a.Cpdf.name)
+          (fun a -> Printf.printf "%i %s\n" a.Cpdfattach.pagenumber a.Cpdfattach.name)
           attachments;
         flprint ""
   | Some DumpAttachedFiles ->
@@ -4059,7 +4059,7 @@ let go () =
         | Stdout -> error "Can't dump attachments to stdout"
         end
   | Some RemoveAttachedFiles ->
-      write_pdf false (Cpdf.remove_attached_files (get_single_pdf args.op false))
+      write_pdf false (Cpdfattach.remove_attached_files (get_single_pdf args.op false))
   | Some (AttachFile files) ->
       begin match args.inputs with
       | [(k, _, _, _, _, _) as input] ->
@@ -4072,7 +4072,7 @@ let go () =
                | Some s -> Some (int_of_string s)
               with _ -> error "Bad -to-page"
             in
-            let pdf = fold_left (Cpdf.attach_file args.keepversion topage) pdf (rev files) in
+            let pdf = fold_left (Cpdfattach.attach_file args.keepversion topage) pdf (rev files) in
               write_pdf false pdf
       | _ -> error "attach file: No input file specified"
       end
@@ -4499,8 +4499,8 @@ let go_withargv argv =
         if args.debug then raise e else exit 2
       else
         raise StayOnError
-  | Cpdf.SoftError s -> soft_error s
-  | Cpdf.HardError s -> error s
+  | Cpdferror.SoftError s -> soft_error s
+  | Cpdferror.HardError s -> error s
   | e ->
       prerr_string
         ("cpdf encountered an unexpected error. Technical Details follow:\n" ^

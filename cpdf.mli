@@ -9,11 +9,6 @@ all - the PDF string is output as-is. [UTF8] converts loslessly to UTF8.
 correspond to 7 bit ASCII. *)
 type encoding = Raw | UTF8 | Stripped
 
-exception SoftError of string
-exception HardError of string
-(** Two exceptions recommended for use with the library, though currently not
-raised by any function in this module. Cpdfcommand uses them extensively. *)
-
 (** {2 Debug} *)
 
 (** Debug: Print out a PDF in readable form to the terminal *)
@@ -90,21 +85,6 @@ adds a presentation on the pages in [range]. See cpdfmanual.pdf for details.
 *)
 val presentation : int list -> string option ->
     float option -> bool -> bool -> int -> float -> Pdf.t -> Pdf.t
-
-(** {2 File Attachments} *)
-(** [attach_file keepversion topage pdf filename] attaches the file in [filename] to the pdf, optionally to a page (rather than document-level). If keepversion is true, the PDF version number won't be altered. *)
-val attach_file : ?memory:Pdfio.bytes -> bool -> int option -> Pdf.t -> string -> Pdf.t
-
-(** Remove attached files. *)
-val remove_attached_files : Pdf.t -> Pdf.t
-
-type attachment =
-  {name : string;
-   pagenumber : int;
-   data : unit -> Pdfio.bytes}
-
-(** List attached files. Attachment name and page number. Page 0 is document level. *)
-val list_attached_files : Pdf.t -> attachment list
 
 (** {2 Bookmarks} *)
 
