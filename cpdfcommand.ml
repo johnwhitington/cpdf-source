@@ -76,9 +76,6 @@ let parse_pagespec_allow_empty pdf spec =
 (* Operations. *)
 type op =
   | CopyFont of string
-  | CSP1
-  | CSP2 of float
-  | CSP3
   | CountPages
   | Version
   | Encrypt
@@ -204,9 +201,6 @@ type op =
 
 let string_of_op = function
   | CopyFont _ -> "CopyFont"
-  | CSP1 -> "CSP1"
-  | CSP2 _ -> "CSP2"
-  | CSP3 -> "CSP3"
   | CountPages -> "CountPages"
   | Version -> "Version"
   | Encrypt -> "Encrypt"
@@ -723,11 +717,11 @@ let banned banlist = function
   | Merge | Split | SplitOnBookmarks _ | RotateContents _ | Rotate _
   | Rotateby _ | Upright | VFlip | HFlip ->
       mem Pdfcrypt.NoAssemble banlist
-  | CSP1|CSP3|TwoUp|TwoUpStack|RemoveBookmarks|AddRectangle|RemoveText|
+  | TwoUp|TwoUpStack|RemoveBookmarks|AddRectangle|RemoveText|
     Draft|Shift|Scale|ScaleToFit|RemoveAttachedFiles|
     RemoveAnnotations|RemoveFonts|Crop|RemoveCrop|Trim|RemoveTrim|Bleed|RemoveBleed|Art|RemoveArt|
     CopyCropBoxToMediaBox|CopyBox|MediaBox|HardBox _|SetTrapped|SetUntrapped|Presentation|
-    BlackText|BlackLines|BlackFills|CopyFont _|CSP2 _|StampOn _|StampUnder _|StampAsXObject _|
+    BlackText|BlackLines|BlackFills|CopyFont _|StampOn _|StampUnder _|StampAsXObject _|
     AddText _|ScaleContents _|AttachFile _|CopyAnnotations _| ThinLines _ | RemoveClipping | RemoveAllText
     | Prepend _ | Postpend _ ->
       mem Pdfcrypt.NoEdit banlist
@@ -1309,10 +1303,6 @@ let setpadmultiplebefore i =
 
 let setfast () =
   args.fast <- true
-
-let setcsp2 f =
-  detect_duplicate_op (CSP2 f);
-  args.op <- Some (CSP2 f)
 
 (* Explicitly add a range. Parse it and replace the top input file with the range. *)
 let setrange spec =
@@ -2232,9 +2222,6 @@ and specs =
    ("-remove-unused-resources", Arg.Unit (setop RemoveUnusedResources), "");
    ("-stay-on-error", Arg.Unit setstayonerror, "");
    ("-extract-fontfile", Arg.Unit (setop ExtractFontFile), "");
-   ("-csp1", Arg.Unit (setop CSP1), "");
-   ("-csp2", Arg.Float setcsp2, "");
-   ("-csp3", Arg.Unit (setop CSP3), "");
    ("-text-vertical", Arg.Unit settextvertical, "");
    ("-text-vertical-down", Arg.Unit settextverticaldown, "");
    ("-flat-kids", Arg.Unit setflatkids, "");
@@ -3102,55 +3089,6 @@ let rec startends_of_range_inner pairs ls =
 
 let startends_of_range x =
   startends_of_range_inner [] x
-
-
-(* Calculating margins *)
-let calculate_margins filename pdf (s, e) =
-  (* Call ghostscript *)
-  let gscall =
-   args.path_to_ghostscript ^
-   " -dSAFER -dNOPAUSE -dBATCH -sDEVICE=bbox -r1200"
-   ^ " -dFirstPage="
-   ^ string_of_int s
-   ^ " -dLastPage=" ^ string_of_int e
-   ^ " \"" ^ filename ^ "\"" ^ " > waste.txt 2> margins.txt"
-  in
-    match Sys.command gscall with
-    | 0 ->
-      (* Parse white boxes *)
-      let whiteboxes =
-        parse_whiteboxes "margins.txt"
-      (* Get media boxes *)
-      and mediaboxes =
-        take' (e - s + 1)
-          (drop' (s - 1)
-            (map
-              (function page ->
-                 (* Prefer the crop box *)
-                 match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
-                 | Some pdfobject -> Pdf.parse_rectangle (Pdf.direct pdf pdfobject)
-                 | None -> Pdf.parse_rectangle page.Pdfpage.mediabox)
-              (Pdfpage.pages_of_pagetree pdf)))
-      in
-        iter2
-          (fun (m_minx, m_miny, m_maxx, m_maxy) (w_minx, w_miny, w_maxx, w_maxy) ->
-             if w_minx = 0. && w_miny = 0. && w_maxx = 0. && w_maxy = 0. then
-               Printf.printf "100, 100, 100, 100\n"
-             else
-               let topmargin = ((m_maxy -. w_maxy) /. (m_maxy -. m_miny)) *. 100.
-               and bottommargin = ((w_miny -. m_miny) /. (m_maxy -. m_miny)) *. 100.
-               and leftmargin = ((w_minx -. m_minx) /. (m_maxx -. m_minx)) *. 100.
-               and rightmargin = ((m_maxx -. w_maxx) /. (m_maxx -. m_minx)) *. 100. in
-                Printf.printf "%f, %f, %f, %f\n" leftmargin rightmargin topmargin bottommargin)
-          mediaboxes
-          whiteboxes;
-      (* Clean up temp files *)
-      Sys.remove "margins.txt";
-      Sys.remove "waste.txt"
-   | _ -> Printf.eprintf "Call to ghostscript failed.\n%!"
-
-let calculate_margins filename pdf range =
-  iter (calculate_margins filename pdf) (startends_of_range (sort compare range))
 
 (* copy the contents of the box f to the box t. If mediabox_if_missing is set,
 the contents of the mediabox will be used if the from fox is not available. If
@@ -4249,19 +4187,6 @@ let go () =
       let pdf = get_single_pdf args.op true in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           missing_fonts pdf range
-  | Some CSP1 ->
-      write_pdf false (Cpdf.custom_csp1 (get_single_pdf (Some CSP1) false)) 
-  | Some (CSP2 f) ->
-      write_pdf false (Cpdf.custom_csp2 f (get_single_pdf (Some (CSP2 f)) false)) 
-  | Some CSP3 ->
-      begin match args.inputs with
-      | [(InFile s, _, _, _, _, _)] ->
-           let pdf = get_single_pdf args.op true in
-             let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-               calculate_margins s pdf range
-      | _ ->
-         Printf.eprintf "CSP3: Too many input files or input not a file\n%!"
-      end
   | Some ExtractText ->
       let pdf = get_single_pdf args.op true in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in

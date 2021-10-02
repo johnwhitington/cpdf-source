@@ -3739,63 +3739,6 @@ let draft onlyremove boxes range pdf =
 let set_version v pdf =
   pdf.Pdf.minor <- v
         
-(* Custom Code: CSP1 - four up duplication. Alter media box and crop-box. 4-up the data. *)
-let custom_csp1_page pdf _ page =
-  let minx, miny, maxx, maxy =
-    match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
-    | Some r -> Pdf.parse_rectangle r
-    | None -> Pdf.parse_rectangle page.Pdfpage.mediabox
-  in
-    let mx0 = -.minx
-    in let my0 = -.miny
-    in let dx = maxx -. minx
-    in let dy = maxy -. miny in
-      let content =
-        let ops = 
-          Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content
-        in
-          [Pdfops.Op_q;
-           Pdfops.Op_cm (Pdftransform.matrix_of_transform [Pdftransform.Translate (mx0, my0)])] @ ops @ [Pdfops.Op_Q] @
-          [Pdfops.Op_q;
-           Pdfops.Op_cm (Pdftransform.matrix_of_transform [Pdftransform.Translate (mx0 +. dx, my0 +. dy)])] @ ops @ [Pdfops.Op_Q] @
-          [Pdfops.Op_q;
-           Pdfops.Op_cm (Pdftransform.matrix_of_transform [Pdftransform.Translate (mx0, my0 +. dy)])] @ ops @ [Pdfops.Op_Q] @
-          [Pdfops.Op_q;
-           Pdfops.Op_cm (Pdftransform.matrix_of_transform [Pdftransform.Translate (mx0 +. dx, my0)])] @ ops @ [Pdfops.Op_Q]
-      in
-        let new_mediabox =
-          Pdf.Array
-            [Pdf.Real 0.;
-             Pdf.Real 0.;
-             Pdf.Real ((maxx -. minx) *. 2.);
-             Pdf.Real ((maxy -. miny) *. 2.)]
-        in
-          {page with
-             Pdfpage.content = [Pdfops.stream_of_ops content];
-             Pdfpage.mediabox = new_mediabox;
-             Pdfpage.rest = Pdf.add_dict_entry page.Pdfpage.rest "/CropBox" new_mediabox}
-
-let custom_csp1 pdf =
-  process_pages (ppstub (custom_csp1_page pdf)) pdf (ilist 1 (Pdfpage.endpage pdf))
-
-let custom_csp2 f pdf =
-  let page = hd (Pdfpage.pages_of_pagetree pdf) in
-    let m_minx, m_miny, m_maxx, m_maxy =
-      match page.Pdfpage.mediabox with
-      | Pdf.Array [a; b; c; d] ->
-          Pdf.getnum a, Pdf.getnum b, Pdf.getnum c, Pdf.getnum d
-      | _ -> 0., 0., 0., 0.
-    in
-      let c_minx, c_miny, c_maxx, c_maxy =
-        match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
-        | Some (Pdf.Array [a; b; c; d]) ->
-            Pdf.getnum a, Pdf.getnum b, Pdf.getnum c, Pdf.getnum d
-        | _ -> m_minx, m_miny, m_maxx, m_maxy
-      in
-        let x = (c_minx +. c_maxx) /. 2.
-        in let y = (c_miny +. c_maxy) /. 2. in
-          scale_contents (PosCentre (x, y)) (f /. 100.) pdf (ilist 1 (Pdfpage.endpage pdf))
-
 let blank_document width height pages =
   let pdf_pages =
     map (fun () -> Pdfpage.blankpage (Pdfpaper.make Pdfunits.PdfPoint width height)) (many () pages)
