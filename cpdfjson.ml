@@ -83,8 +83,19 @@ let rec op_of_json = function
   | J.Array [a; b; J.String "d0"] -> Op_d0 (opf a, opf b)
   | J.Array [a; b; c; d; e; f; J.String "d1"] -> Op_d1 (opf a, opf b, opf c, opf d, opf e, opf f)
   | J.Array [J.String s; J.String "cs"] -> Op_cs s 
+  | J.Array [a; J.String "G"] -> Op_G (opf a);
+  | J.Array [a; J.String "g"] -> Op_g (opf a);
+  | J.Array [a; b; c; J.String "RG"] -> Op_RG (opf a, opf b, opf c);
+  | J.Array [a; b; c; J.String "rg"] -> Op_rg (opf a, opf b, opf c);
+  | J.Array [a; b; c; d; J.String "K"] -> Op_K (opf a, opf b, opf c, opf d);
+  | J.Array [J.String s; J.String "sh"] -> Op_sh s;
+  | J.Array [J.String s; J.String "MP"] -> Op_MP s;
+  | J.Array [J.String s; J.String "BMC"] -> Op_BMC s;
+  | J.Array [J.String s; J.String "Unknown"] -> O.Op_Unknown s
+  | J.Array [J.String s; obj; J.String "DP"] -> O.Op_DP (s, object_of_json obj)
+  | J.Array [a; J.String b] -> O.InlineImage (object_of_json a, Pdfio.bytes_of_string b)
   | J.Array torev ->
-      (* sc *) (* SC *) (* scn *)
+      (* sc *) (* SC *) (* scn *) (* SCNName *) (* scmMame *) (* d *) (* TJ *) (* Unknown *)
       begin match rev torev with
       | J.String "SCN"::ns -> O.Op_SCN (map opf (rev ns))
       | j ->
@@ -257,7 +268,7 @@ let json_of_op pdf no_stream_data = function
   | O.Op_sh s -> J.Array [J.String s; J.String "sh"]
   | O.Op_MP s -> J.Array [J.String s; J.String "MP"]
   | O.Op_BMC s -> J.Array [J.String s; J.String "BMC"]
-  | O.Op_Unknown _ -> J.Array [J.String "Unknown"]
+  | O.Op_Unknown s -> J.Array [J.String s; J.String "Unknown"]
   | O.Op_SCNName (s, fs) ->
       J.Array (map (fun x -> J.Number (sof x)) fs @ [J.String s; J.String "SCNName"])
   | O.Op_scnName (s, fs) ->
