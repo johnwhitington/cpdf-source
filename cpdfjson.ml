@@ -11,64 +11,6 @@ let soi = string_of_int
 let string_of_float _ = failwith "use sof"
 let string_of_int _ = failwith "use soi"
 
-let rec object_of_json = function
-  | J.Null -> P.Null
-  | J.Bool b -> P.Boolean b
-  | J.Number n -> Pdf.Indirect (int_of_string n)
-  | J.String s -> P.String s
-  | J.Array objs -> P.Array (map object_of_json objs)
-  | J.Object ["I", J.Number i] -> P.Integer (int_of_string i)
-  | J.Object ["F", J.Number f] -> P.Real (float_of_string f)
-  | J.Object ["N", J.String n] -> P.Name n
-  | J.Object ["S", J.Array [dict; J.String data]] ->
-      P.Stream (ref (object_of_json dict, P.Got (Pdfio.bytes_of_string data)))
-  | J.Object elts -> P.Dictionary (map (fun (n, o) -> (n, object_of_json o)) elts)
-
-let rec json_of_object pdf fcs no_stream_data = function
-  | P.Null -> J.Null
-  | P.Boolean b -> J.Bool b
-  | P.Integer i -> J.Object [("I", J.Number (soi i))]
-  | P.Real r -> J.Object [("F", J.Number (sof r))]
-  | P.String s -> J.String s
-  | P.Name n -> J.Object [("N", J.String n)]
-  | P.Array objs -> J.Array (map (json_of_object pdf fcs no_stream_data) objs)
-  | P.Dictionary elts ->
-      iter
-        (function
-            ("/Contents", P.Indirect i) ->
-               begin match Pdf.lookup_obj pdf i with
-               | Pdf.Array is -> iter (function Pdf.Indirect i -> fcs i | _ -> ()) is
-               | _ -> fcs i
-               end
-          | ("/Contents", P.Array elts) -> iter (function P.Indirect i -> fcs i | _ -> ()) elts
-          | _ -> ())
-        elts;
-      J.Object (map (fun (k, v) -> (k, json_of_object pdf fcs no_stream_data v)) elts)
-  | P.Stream ({contents = (P.Dictionary dict as d, stream)} as mut) as thestream ->
-      P.getstream thestream;
-      let str =
-        begin match P.lookup_direct pdf "/FunctionType" d with
-        | Some _ ->
-            Pdfcodec.decode_pdfstream_until_unknown pdf thestream;
-            begin match !mut with (_, P.Got b) -> Pdfio.string_of_bytes b | _ -> "failure: decomp" end
-        | None ->
-            if no_stream_data then "<<stream data elided>>" else
-              match stream with P.Got b -> Pdfio.string_of_bytes b | P.ToGet _ -> "failure: toget"
-       end
-      in
-        json_of_object pdf fcs no_stream_data (P.Dictionary [("S", P.Array [P.Dictionary dict; P.String str])])
-  | P.Stream _ -> J.String "error: stream with not-a-dictionary"
-  | P.Indirect i ->
-      begin match P.lookup_obj pdf i with
-      | P.Stream {contents = (P.Dictionary dict as d, _)} ->
-          begin match P.lookup_direct pdf "/Subtype" d with
-          | Some (P.Name "/Form") -> fcs i
-          | _ -> ()
-          end
-      | _ -> ()
-      end;
-      J.Number (soi i)
-
 let opf = function
   | J.Object ["F", J.Number f] -> float_of_string f
   | _ -> failwith "num: not a float"
@@ -144,6 +86,67 @@ let op_of_json = function
   | j ->
       Printf.eprintf "Unable to read op from %s\n" (J.show j);
       failwith "op reading failed"
+
+let rec object_of_json = function
+  | J.Null -> P.Null
+  | J.Bool b -> P.Boolean b
+  | J.Number n -> Pdf.Indirect (int_of_string n)
+  | J.String s -> P.String s
+  | J.Array objs -> P.Array (map object_of_json objs)
+  | J.Object ["I", J.Number i] -> P.Integer (int_of_string i)
+  | J.Object ["F", J.Number f] -> P.Real (float_of_string f)
+  | J.Object ["N", J.String n] -> P.Name n
+  | J.Object ["S", J.Array [dict; J.String data]] ->
+      P.Stream (ref (object_of_json dict, P.Got (Pdfio.bytes_of_string data)))
+  | J.Object ["S", J.Array [dict; J.Array parsed_ops]] ->
+      Pdfops.stream_of_ops (List.map op_of_json parsed_ops)
+  | J.Object elts -> P.Dictionary (map (fun (n, o) -> (n, object_of_json o)) elts)
+
+let rec json_of_object pdf fcs no_stream_data = function
+  | P.Null -> J.Null
+  | P.Boolean b -> J.Bool b
+  | P.Integer i -> J.Object [("I", J.Number (soi i))]
+  | P.Real r -> J.Object [("F", J.Number (sof r))]
+  | P.String s -> J.String s
+  | P.Name n -> J.Object [("N", J.String n)]
+  | P.Array objs -> J.Array (map (json_of_object pdf fcs no_stream_data) objs)
+  | P.Dictionary elts ->
+      iter
+        (function
+            ("/Contents", P.Indirect i) ->
+               begin match Pdf.lookup_obj pdf i with
+               | Pdf.Array is -> iter (function Pdf.Indirect i -> fcs i | _ -> ()) is
+               | _ -> fcs i
+               end
+          | ("/Contents", P.Array elts) -> iter (function P.Indirect i -> fcs i | _ -> ()) elts
+          | _ -> ())
+        elts;
+      J.Object (map (fun (k, v) -> (k, json_of_object pdf fcs no_stream_data v)) elts)
+  | P.Stream ({contents = (P.Dictionary dict as d, stream)} as mut) as thestream ->
+      P.getstream thestream;
+      let str =
+        begin match P.lookup_direct pdf "/FunctionType" d with
+        | Some _ ->
+            Pdfcodec.decode_pdfstream_until_unknown pdf thestream;
+            begin match !mut with (_, P.Got b) -> Pdfio.string_of_bytes b | _ -> "failure: decomp" end
+        | None ->
+            if no_stream_data then "<<stream data elided>>" else
+              match stream with P.Got b -> Pdfio.string_of_bytes b | P.ToGet _ -> "failure: toget"
+       end
+      in
+        json_of_object pdf fcs no_stream_data (P.Dictionary [("S", P.Array [P.Dictionary dict; P.String str])])
+  | P.Stream _ -> J.String "error: stream with not-a-dictionary"
+  | P.Indirect i ->
+      begin match P.lookup_obj pdf i with
+      | P.Stream {contents = (P.Dictionary dict as d, _)} ->
+          begin match P.lookup_direct pdf "/Subtype" d with
+          | Some (P.Name "/Form") -> fcs i
+          | _ -> ()
+          end
+      | _ -> ()
+      end;
+      J.Number (soi i)
+
 
 let json_of_op pdf no_stream_data = function
   | O.Op_S -> J.Array [J.String "S"]
