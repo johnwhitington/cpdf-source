@@ -19,7 +19,7 @@ let opi = function
   | J.Object ["I", J.Number i] -> int_of_string i
   | _ -> failwith "num: not a float"
 
-let op_of_json = function
+let rec op_of_json = function
   | J.Array [J.String "S"] -> O.Op_S
   | J.Array [J.String "s"] -> O.Op_s
   | J.Array [J.String "f"] -> O.Op_f
@@ -76,7 +76,15 @@ let op_of_json = function
         O.Op_Tm
           {Pdftransform.a = opf a; Pdftransform.b = opf b; Pdftransform.c = opf c;
            Pdftransform.d = opf d; Pdftransform.e = opf e; Pdftransform.f = opf f}
+  | J.Array [J.String s; J.String "Tj"] -> Op_Tj s
+  | J.Array [obj; J.String "TJ"] -> Op_TJ (object_of_json obj)
+  | J.Array [J.String s; J.String "'"] -> Op_' s
+  | J.Array [a; b; J.String s; J.String "''"] -> Op_'' (opf a, opf b, s)
+  | J.Array [a; b; J.String "d0"] -> Op_d0 (opf a, opf b)
+  | J.Array [a; b; c; d; e; f; J.String "d1"] -> Op_d1 (opf a, opf b, opf c, opf d, opf e, opf f)
+  | J.Array [J.String s; J.String "cs"] -> Op_cs s 
   | J.Array torev ->
+      (* sc *) (* SC *) (* scn *)
       begin match rev torev with
       | J.String "SCN"::ns -> O.Op_SCN (map opf (rev ns))
       | j ->
@@ -87,7 +95,7 @@ let op_of_json = function
       Printf.eprintf "Unable to read op from %s\n" (J.show j);
       failwith "op reading failed"
 
-let rec object_of_json = function
+and object_of_json = function
   | J.Null -> P.Null
   | J.Bool b -> P.Boolean b
   | J.Number n -> Pdf.Indirect (int_of_string n)
