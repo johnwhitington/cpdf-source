@@ -299,8 +299,16 @@ let precombine_page_content pdf =
   in
     Pdfpage.change_pages true pdf pages'
 
-let json_of_pdf parse_content no_stream_data pdf =
+let json_of_pdf parse_content no_stream_data decompress_streams pdf =
   let pdf = if parse_content then precombine_page_content pdf else pdf in
+  if decompress_streams then
+    Pdf.objiter
+      (fun n obj ->
+        Printf.eprintf "obj %i\n" n;
+        match obj with
+        | Pdf.Stream _ -> Printf.eprintf "decompressing...\n"; Pdfcodec.decode_pdfstream_until_unknown pdf obj
+        | _ -> ())
+      pdf;
   Pdf.remove_unreferenced pdf;
   let trailerdict = (0, json_of_object pdf (fun x -> ()) no_stream_data pdf.P.trailerdict) in
   let parameters =
@@ -313,7 +321,10 @@ let json_of_pdf parse_content no_stream_data pdf =
                       ]))
   in
   let content_streams = ref [] in
-  let fcs n = content_streams := n::!content_streams in
+  let fcs n =
+    content_streams := n::!content_streams;
+    if parse_content then Pdfcodec.decode_pdfstream_until_unknown pdf (P.lookup_obj pdf n)
+  in
   let pairs =
     let ps = ref [] in
       P.objiter
@@ -322,8 +333,6 @@ let json_of_pdf parse_content no_stream_data pdf =
         pdf;
       parameters::trailerdict::!ps
   in
-    if parse_content then
-      iter (fun n -> Pdfcodec.decode_pdfstream_until_unknown pdf (P.lookup_obj pdf n)) !content_streams;
     let pairs_parsed =
       if not parse_content then pairs else
         map
@@ -350,8 +359,7 @@ let json_of_pdf parse_content no_stream_data pdf =
           pairs_parsed)
 
 let pdf_of_json json =
-  (*flprint (J.show json);
-  flprint "\n";*)
+  (*flprint (J.show json); flprint "\n";*)
   let objs = match json with J.Array objs -> objs | _ -> error "bad json top level" in
   let params = ref Pdf.Null in
   let trailerdict = ref Pdf.Null in
@@ -369,8 +377,7 @@ let pdf_of_json json =
          | _ -> error "json bad obj")
         objs
     in
-      (*List.
-      iter (fun (i, o) -> flprint (soi i); flprint "\n"; flprint (Pdfwrite.string_of_pdf o); flprint "\n") objects;*)
+  (*List.  iter (fun (i, o) -> flprint (soi i); flprint "\n"; flprint (Pdfwrite.string_of_pdf o); flprint "\n") objects;*)
   begin match Pdf.lookup_direct (Pdf.empty ()) "/CPDFJSONstreamdataincluded" !params with
   | Some (Pdf.Boolean false) -> error "no stream data; cannot reconstruct PDF" 
   | _ -> ()  
@@ -408,12 +415,13 @@ let pdf_of_json json =
      P.saved_encryption = None}
 
 (* FIXME Proper streaming to output / from input, rather than making a big string first. *)
-let to_output o parse_content no_stream_data pdf =
+let to_output o parse_content no_stream_data decompress_streams pdf =
   let b = Buffer.create 256 in
   let formatter = Format.formatter_of_buffer b in
-    J.format formatter (json_of_pdf parse_content no_stream_data pdf);
+    J.format formatter (json_of_pdf parse_content no_stream_data decompress_streams pdf);
     Format.pp_print_flush formatter ();
     o.Pdfio.output_string (Buffer.contents b)
 
+(* FIXME Proper streaming to output / from input, rather than making a big string first. *)
 let of_input i =
   pdf_of_json (J.parse (Pdfio.string_of_bytes (Pdfio.bytes_of_input i 0 (i.Pdfio.in_channel_length))))

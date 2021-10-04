@@ -450,6 +450,7 @@ type args =
    mutable removeonly : string option;
    mutable jsonparsecontentstreams : bool;
    mutable jsonnostreamdata : bool;
+   mutable jsondecompressstreams : bool;
    mutable ocgrenamefrom : string;
    mutable ocgrenameto : string;
    mutable dedup : bool;
@@ -554,6 +555,7 @@ let args =
    removeonly = None;
    jsonparsecontentstreams = false;
    jsonnostreamdata = false;
+   jsondecompressstreams = false;
    ocgrenamefrom = "";
    ocgrenameto = "";
    dedup = false;
@@ -643,6 +645,7 @@ let reset_arguments () =
   args.removeonly <- None;
   args.jsonparsecontentstreams <- false;
   args.jsonnostreamdata <- false;
+  args.jsondecompressstreams <- false;
   args.ocgrenamefrom <- "";
   args.ocgrenameto <- "";
   args.dedup <- false;
@@ -1499,6 +1502,9 @@ let setjsonparsecontentstreams () =
 let setjsonnostreamdata () =
   args.jsonnostreamdata <- true
 
+let setjsondecompressstreams () =
+  args.jsondecompressstreams <- true
+
 let setocgrenamefrom s =
   args.ocgrenamefrom <- s
 
@@ -2193,6 +2199,9 @@ and specs =
      " Parse content streams");
    ("-output-json-no-stream-data",
      Arg.Unit setjsonnostreamdata,
+     " Skip stream data for brevity");
+   ("-output-json-decompress-streams",
+     Arg.Unit setjsondecompressstreams,
      " Skip stream data for brevity");
    ("-j",
      Arg.String set_json_input,
@@ -3395,10 +3404,20 @@ let write_json output pdf =
   | NoOutputSpecified ->
       error "-output-json: no output name specified"
   | Stdout ->
-      Cpdfjson.to_output (Pdfio.output_of_channel stdout) args.jsonparsecontentstreams args.jsonnostreamdata pdf
+      Cpdfjson.to_output
+        (Pdfio.output_of_channel stdout)
+        args.jsonparsecontentstreams
+        args.jsonnostreamdata
+        args.jsondecompressstreams
+        pdf
   | File filename ->
       let f = open_out filename in
-        Cpdfjson.to_output (Pdfio.output_of_channel f) args.jsonparsecontentstreams args.jsonnostreamdata pdf;
+        Cpdfjson.to_output
+          (Pdfio.output_of_channel f)
+          args.jsonparsecontentstreams
+          args.jsonnostreamdata
+          args.jsondecompressstreams
+          pdf;
         close_out f
 
 (* Main function *)
