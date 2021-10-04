@@ -1,6 +1,5 @@
-(*FIXME failwiths -> Pdf.PDFError or similar *)
-(*FIXME flprintfs to eprintf *)
 open Pdfutil
+open Cpdferror
 
 module J = Tjjson
 module P = Pdf
@@ -8,16 +7,16 @@ module O = Pdfops
 
 let sof = Printf.sprintf "%f" (* To prevent "0." *)
 let soi = string_of_int
-let string_of_float _ = failwith "use sof"
-let string_of_int _ = failwith "use soi"
+let string_of_float _ = error "use sof"
+let string_of_int _ = error "use soi"
 
 let opf = function
   | J.Object ["F", J.Number f] -> float_of_string f
-  | _ -> failwith "num: not a float"
+  | _ -> error "num: not a float"
 
 let opi = function
   | J.Object ["I", J.Number i] -> int_of_string i
-  | _ -> failwith "num: not a float"
+  | _ -> error "num: not a float"
 
 let rec op_of_json = function
   | J.Array [J.String "S"] -> O.Op_S
@@ -93,18 +92,23 @@ let rec op_of_json = function
   | J.Array [J.String s; J.String "BMC"] -> Op_BMC s;
   | J.Array [J.String s; J.String "Unknown"] -> O.Op_Unknown s
   | J.Array [J.String s; obj; J.String "DP"] -> O.Op_DP (s, object_of_json obj)
-  | J.Array [a; J.String b] -> O.InlineImage (object_of_json a, Pdfio.bytes_of_string b)
+  | J.Array [a; J.String b; J.String "InlineImage"] ->
+      O.InlineImage (object_of_json a, Pdfio.bytes_of_string b)
   | J.Array torev ->
-      (* sc *) (* SC *) (* scn *) (* SCNName *) (* scmMame *) (* d *) (* TJ *) (* Unknown *)
       begin match rev torev with
       | J.String "SCN"::ns -> O.Op_SCN (map opf (rev ns))
+      | J.String "SC"::ns -> O.Op_SCN (map opf (rev ns))
+      | J.String "sc"::ns -> O.Op_SCN (map opf (rev ns))
+      | J.String "scn"::ns -> O.Op_SCN (map opf (rev ns))
+      | J.String "SCNName"::J.String s::ns -> O.Op_SCNName (s, map opf (rev ns))
+      | J.String "scnName"::J.String s::ns -> O.Op_scnName (s, map opf (rev ns))
       | j ->
           Printf.eprintf "Unable to read reversed op from %s\n" (J.show (J.Array j));
-          failwith "op reading failed"
+          error "op reading failed"
       end
   | j ->
       Printf.eprintf "Unable to read op from %s\n" (J.show j);
-      failwith "op reading failed"
+      error "op reading failed"
 
 and object_of_json = function
   | J.Null -> P.Null
@@ -165,7 +169,6 @@ let rec json_of_object pdf fcs no_stream_data = function
       | _ -> ()
       end;
       J.Number (soi i)
-
 
 let json_of_op pdf no_stream_data = function
   | O.Op_S -> J.Array [J.String "S"]
@@ -273,7 +276,7 @@ let json_of_op pdf no_stream_data = function
       J.Array (map (fun x -> J.Number (sof x)) fs @ [J.String s; J.String "SCNName"])
   | O.Op_scnName (s, fs) ->
       J.Array (map (fun x -> J.Number (sof x)) fs @ [J.String s; J.String "scnName"])
-  | O.InlineImage (dict, data) -> J.Array [json_of_object pdf (fun _ -> ()) no_stream_data dict; J.String (Pdfio.string_of_bytes data)]
+  | O.InlineImage (dict, data) -> J.Array [json_of_object pdf (fun _ -> ()) no_stream_data dict; J.String (Pdfio.string_of_bytes data); J.String "InlineImage"]
   | O.Op_DP (s, obj) -> J.Array [J.String s; json_of_object pdf (fun _ -> ()) no_stream_data obj; J.String "DP"]
 
 (* parse_stream needs pdf and resources. These are for lexing of inline images,
@@ -340,10 +343,10 @@ let json_of_pdf parse_content no_stream_data pdf =
                    let streamdata =
                      match P.lookup_obj pdf objnum with
                      | P.Stream {contents = (_, P.Got b)} -> b
-                     | _ -> failwith "JSON: stream not decoded"
+                     | _ -> error "JSON: stream not decoded"
                    in
                      (objnum, J.Object ["S", J.Array [dict; parse_content_stream pdf (P.Dictionary []) streamdata]])
-               | _ -> failwith "json_of_pdf: stream parsing inconsistency"
+               | _ -> error "json_of_pdf: stream parsing inconsistency"
                end
              else
                (objnum, obj))
@@ -357,7 +360,7 @@ let json_of_pdf parse_content no_stream_data pdf =
 let pdf_of_json json =
   (*flprint (J.show json);
   flprint "\n";*)
-  let objs = match json with J.Array objs -> objs | _ -> failwith "bad json top level" in
+  let objs = match json with J.Array objs -> objs | _ -> error "bad json top level" in
   let params = ref Pdf.Null in
   let trailerdict = ref Pdf.Null in
     let objects =
@@ -371,30 +374,30 @@ let pdf_of_json json =
                | n when n < 0 -> None
                | n ->  Some (n, object_of_json o)
                end
-         | _ -> failwith "json bad obj")
+         | _ -> error "json bad obj")
         objs
     in
       (*List.
       iter (fun (i, o) -> flprint (soi i); flprint "\n"; flprint (Pdfwrite.string_of_pdf o); flprint "\n") objects;*)
   begin match Pdf.lookup_direct (Pdf.empty ()) "/CPDFJSONstreamdataincluded" !params with
-  | Some (Pdf.Boolean false) -> failwith "no stream data; cannot reconstruct PDF" 
+  | Some (Pdf.Boolean false) -> error "no stream data; cannot reconstruct PDF" 
   | _ -> ()  
   end;
   let major =
     match Pdf.lookup_direct (Pdf.empty ()) "/CPDFJSONmajorpdfversion" !params with 
-      Some (Pdf.Integer i) -> i | _ -> failwith "bad major version"
+      Some (Pdf.Integer i) -> i | _ -> error "bad major version"
   in
   let minor =
     match Pdf.lookup_direct (Pdf.empty ()) "/CPDFJSONminorpdfversion" !params with 
-      Some (Pdf.Integer i) -> i | _ -> failwith "bad minor version"
+      Some (Pdf.Integer i) -> i | _ -> error "bad minor version"
   in
   (*flprint (Pdfwrite.string_of_pdf !trailerdict);*)
   let root =
     match !trailerdict with Pdf.Dictionary d ->
       begin match lookup "/Root" d with
-        Some (Pdf.Indirect i) -> i | _ -> failwith "bad root"
+        Some (Pdf.Indirect i) -> i | _ -> error "bad root"
       end
-    | _ -> failwith "bad root 2"
+    | _ -> error "bad root 2"
   in
   let objmap = P.pdfobjmap_empty () in
   List.iter (fun (k, v) -> Hashtbl.add objmap k (ref (P.Parsed v), 0)) objects;
