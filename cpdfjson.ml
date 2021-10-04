@@ -44,7 +44,7 @@ let rec op_of_json = function
   | J.Array [a; b; c; d; J.String "k"] -> O.Op_k (opf a, opf b, opf c, opf d)
   | J.Array [a; b; J.String "m"] -> O.Op_m (opf a, opf b)
   | J.Array [a; b; J.String "l"] -> O.Op_l (opf a, opf b)
-  | J.Array [J.String s; J.String obj; J.String "BDC"] -> O.Op_BDC ("", Pdf.Null) (* FIXME read + write properly *)
+  | J.Array [J.String s; obj; J.String "BDC"] -> O.Op_BDC (s, object_of_json obj)
   | J.Array [J.String s; J.String "gs"] -> O.Op_gs s
   | J.Array [J.String s; J.String "Do"] -> O.Op_Do s
   | J.Array [J.String s; J.String "CS"] -> O.Op_CS s
@@ -198,7 +198,7 @@ let json_of_op pdf no_stream_data = function
       J.Array [J.Number (sof c); J.Number (sof m); J.Number (sof y); J.Number (sof k); J.String "k"]
   | O.Op_m (a, b) -> J.Array [J.Number (sof a); J.Number (sof b); J.String "m"]
   | O.Op_l (a, b) -> J.Array [J.Number (sof a); J.Number (sof b); J.String "l"]
-  | O.Op_BDC (s, obj) -> J.Array [J.String s; J.String (Pdfwrite.string_of_pdf obj); J.String "BDC"]
+  | O.Op_BDC (s, obj) -> J.Array [J.String s; json_of_object pdf (fun _ -> ()) no_stream_data obj; J.String "BDC"]
   | O.Op_gs s -> J.Array [J.String s; J.String "gs"]
   | O.Op_Do s -> J.Array [J.String s; J.String "Do"]
   | O.Op_CS s -> J.Array [J.String s; J.String "CS"]
@@ -206,12 +206,8 @@ let json_of_op pdf no_stream_data = function
   | O.Op_j j -> J.Array [J.Number (soi j); J.String "j"] 
   | O.Op_cm t ->
       J.Array
-        [J.Number (sof t.Pdftransform.a);
-         J.Number (sof t.Pdftransform.b);
-         J.Number (sof t.Pdftransform.c);
-         J.Number (sof t.Pdftransform.d);
-         J.Number (sof t.Pdftransform.e);
-         J.Number (sof t.Pdftransform.f);
+        [J.Number (sof t.Pdftransform.a); J.Number (sof t.Pdftransform.b); J.Number (sof t.Pdftransform.c);
+         J.Number (sof t.Pdftransform.d); J.Number (sof t.Pdftransform.e); J.Number (sof t.Pdftransform.f);
          J.String "cm"]
   | O.Op_d (fl, y) ->
       J.Array [J.Array (map (fun x -> J.Number (sof x)) fl); J.Number (sof y); J.String "d"]
@@ -243,12 +239,8 @@ let json_of_op pdf no_stream_data = function
   | O.Op_TD (k, k') -> J.Array [J.Number (sof k); J.Number (sof k'); J.String "TD"]
   | O.Op_Tm t ->
       J.Array
-        [J.Number (sof t.Pdftransform.a);
-         J.Number (sof t.Pdftransform.b);
-         J.Number (sof t.Pdftransform.c);
-         J.Number (sof t.Pdftransform.d);
-         J.Number (sof t.Pdftransform.e);
-         J.Number (sof t.Pdftransform.f);
+        [J.Number (sof t.Pdftransform.a); J.Number (sof t.Pdftransform.b); J.Number (sof t.Pdftransform.c);
+         J.Number (sof t.Pdftransform.d); J.Number (sof t.Pdftransform.e); J.Number (sof t.Pdftransform.f);
          J.String "Tm"]
   | O.Op_Tj s -> J.Array [J.String s; J.String "Tj"]
   | O.Op_TJ pdfobject -> J.Array [json_of_object pdf (fun _ -> ()) no_stream_data pdfobject; J.String "TJ"]
