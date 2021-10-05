@@ -198,7 +198,7 @@ let lit_string =
 	  begin function
 	  | '\"' | '\\' | '/' as c -> return (string1 c)
 	  | 'b' -> return "\b"
-(*	  | 'f' -> return "\f"*)
+          | 'f' -> return "\x0c"
 	  | 'n' -> return "\n"
 	  | 'r' -> return "\r"
 	  | 't' -> return "\t"
