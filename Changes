@@ -1,6 +1,6 @@
 2.5 (Upcoming 2022)
 
-o Vendored in camlp-streams module before deprecation
+o Switch to Yojson
 o Can read as well as write PDFs in JSON format with -j
 o Environment variable CPDF_REPRODUCIBLE_DATES for testing
 o Environment variable CPDF_DEBUG for -debug

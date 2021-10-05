@@ -2986,23 +2986,23 @@ let output_info encoding pdf =
     Printf.printf "Trapped: %s\n" (getstring "/Trapped")
 
 type xmltree =
-    E of Xmlm.tag * xmltree list
+    E of Cpdfxmlm.tag * xmltree list
   | D of string
 
 let xmltree_of_bytes b =
-  let i = Xmlm.make_input (`String (0, string_of_bytes b)) in
+  let i = Cpdfxmlm.make_input (`String (0, string_of_bytes b)) in
     let el tag childs = E (tag, childs)
     and data d = D d in
-      Xmlm.input_doc_tree ~el ~data i
+      Cpdfxmlm.input_doc_tree ~el ~data i
 
 let bytes_of_xmltree t =
   let buf = Buffer.create 1024 in
-  let o = Xmlm.make_output (`Buffer buf) in
+  let o = Cpdfxmlm.make_output (`Buffer buf) in
   let frag = function
       E (tag, childs) -> `El (tag, childs)
     | D d -> `Data d
   in
-    Xmlm.output_doc_tree frag o t;
+    Cpdfxmlm.output_doc_tree frag o t;
     bytes_of_string (Buffer.contents buf)
 
 let rec string_of_xmltree = function

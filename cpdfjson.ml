@@ -426,6 +426,17 @@ let to_output o parse_content no_stream_data decompress_streams pdf =
     Format.pp_print_flush formatter ();
     o.Pdfio.output_string (Buffer.contents b)
 
+let example_pdf =
+  let page =
+    {(Pdfpage.blankpage Pdfpaper.a4) with
+        Pdfpage.content = [Pdfops.stream_of_ops []];
+        Pdfpage.resources = Pdf.Dictionary []}
+  in
+    let pdf, pageroot = Pdfpage.add_pagetree (many page 1) (Pdf.empty ()) in
+      Pdfpage.add_root pageroot [] pdf
+
 (* FIXME Proper streaming to output / from input, rather than making a big string first. *)
 let of_input i =
-  pdf_of_json (J.parse (Pdfio.string_of_bytes (Pdfio.bytes_of_input i 0 (i.Pdfio.in_channel_length))))
+  (*pdf_of_json*)
+  ignore (J.parse (Pdfio.string_of_bytes (Pdfio.bytes_of_input i 0 (i.Pdfio.in_channel_length))));
+  example_pdf
