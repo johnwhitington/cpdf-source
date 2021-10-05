@@ -120,7 +120,11 @@ and object_of_json = function
   | J.Object ["F", J.Number f] -> P.Real (float_of_string f)
   | J.Object ["N", J.String n] -> P.Name n
   | J.Object ["S", J.Array [dict; J.String data]] ->
-      P.Stream (ref (object_of_json dict, P.Got (Pdfio.bytes_of_string data)))
+      (* Fix up the length, in case it's been edited. *)
+      let d' =
+        P.add_dict_entry (object_of_json dict) "/Length" (P.Integer (String.length data))
+      in
+        P.Stream (ref (d', P.Got (Pdfio.bytes_of_string data)))
   | J.Object ["S", J.Array [dict; J.Array parsed_ops]] ->
       Pdfops.stream_of_ops (List.map op_of_json parsed_ops)
   | J.Object elts -> P.Dictionary (map (fun (n, o) -> (n, object_of_json o)) elts)
