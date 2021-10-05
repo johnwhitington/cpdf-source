@@ -1,7 +1,7 @@
 open Pdfutil
 open Cpdferror
 
-module J = Tjjson
+(*module J = Tjjson
 module P = Pdf
 module O = Pdfops
 
@@ -425,6 +425,9 @@ let to_output o parse_content no_stream_data decompress_streams pdf =
     J.format formatter (json_of_pdf parse_content no_stream_data decompress_streams pdf);
     Format.pp_print_flush formatter ();
     o.Pdfio.output_string (Buffer.contents b)
+*)
+
+let to_output _ _ _ _ _ = ()
 
 let example_pdf =
   let page =
@@ -438,5 +441,5 @@ let example_pdf =
 (* FIXME Proper streaming to output / from input, rather than making a big string first. *)
 let of_input i =
   (*pdf_of_json*)
-  ignore (J.parse (Pdfio.string_of_bytes (Pdfio.bytes_of_input i 0 (i.Pdfio.in_channel_length))));
+  (*ignore (J.parse (Pdfio.string_of_bytes (Pdfio.bytes_of_input i 0 (i.Pdfio.in_channel_length))));*)
   example_pdf

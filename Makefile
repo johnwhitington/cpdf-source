@@ -20,6 +20,10 @@ all : native-code native-code-library byte-code-library top htdoc
 clean ::
 	rm -rf doc foo foo2 out.pdf out2.pdf *.cmt *.cmti *.json
 
+DOC_FILES = cpdferror.mli cpdfjson.mli cpdfstrftime.mli cpdfcoord.mli \
+            cpdfattach.mli cpdfpagespec.mli cpdfposition.mli cpdf.mli \
+	    cpdfcommand.mli
+
 LIBINSTALL_FILES = cpdf.a cpdf.cma cpdf.cmxa \
 $(foreach x,$(MODS),$x.mli) $(foreach x,$(MODS),$x.cmi) \
 $(foreach x,$(MODS),$x.cmx) $(foreach x,$(MODS),$x.cmti)
