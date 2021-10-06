@@ -418,4 +418,8 @@ let to_output o parse_content no_stream_data decompress_streams pdf =
 (* FIXME Proper streaming to output / from input, rather than making a big string first. *)
 let of_input i =
   let content = Pdfio.string_of_bytes (Pdfio.bytes_of_input i 0 (i.Pdfio.in_channel_length)) in
-    pdf_of_json (J.from_string content)
+    let json =
+      try J.from_string content with
+        e -> error (Printexc.to_string e)
+    in
+      pdf_of_json json
