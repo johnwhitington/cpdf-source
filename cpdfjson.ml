@@ -1,104 +1,106 @@
 open Pdfutil
 open Cpdferror
 
-(*module J = Tjjson
-
-
+module J = Cpdfyojson.Safe
+module P = Pdf
+module O = Pdfops
 
 let opf = function
-  | J.Object ["F", J.Number f] -> float_of_string f
+  | `Assoc ["F", `Float f] -> f
+  | `Assoc ["F", `Int i] -> float_of_int i
   | _ -> error "num: not a float"
 
 let opi = function
-  | J.Object ["I", J.Number i] -> int_of_string i
-  | _ -> error "num: not a float"
+  | `Assoc ["I", `Int i] -> i
+  | `Assoc ["I", `Float f] -> int_of_float f
+  | _ -> error "num: not an integer"
 
 let rec op_of_json = function
-  | J.Array [J.String "S"] -> O.Op_S
-  | J.Array [J.String "s"] -> O.Op_s
-  | J.Array [J.String "f"] -> O.Op_f
-  | J.Array [J.String "F"] -> O.Op_F
-  | J.Array [J.String "f*"] -> O.Op_f'
-  | J.Array [J.String "B"] -> O.Op_B
-  | J.Array [J.String "B*"] -> O.Op_B'
-  | J.Array [J.String "b"] -> O.Op_b
-  | J.Array [J.String "b*"] -> O.Op_b'
-  | J.Array [J.String "n"] -> O.Op_n
-  | J.Array [J.String "W"] -> O.Op_W
-  | J.Array [J.String "W*"] -> O.Op_W'
-  | J.Array [J.String "BT"] -> O.Op_BT
-  | J.Array [J.String "ET"] -> O.Op_ET
-  | J.Array [J.String "q"] -> O.Op_q
-  | J.Array [J.String "Q"] -> O.Op_Q
-  | J.Array [J.String "h"] -> O.Op_h
-  | J.Array [J.String "T*"] -> O.Op_T'
-  | J.Array [J.String "EMC"] -> O.Op_EMC
-  | J.Array [J.String "BX"] -> O.Op_BX
-  | J.Array [J.String "EX"] -> O.Op_EX
-  | J.Array [a; b; c; d; J.String "re"] -> O.Op_re (opf a, opf b, opf c, opf d)
-  | J.Array [a; b; c; d; J.String "k"] -> O.Op_k (opf a, opf b, opf c, opf d)
-  | J.Array [a; b; J.String "m"] -> O.Op_m (opf a, opf b)
-  | J.Array [a; b; J.String "l"] -> O.Op_l (opf a, opf b)
-  | J.Array [J.String s; obj; J.String "BDC"] -> O.Op_BDC (s, object_of_json obj)
-  | J.Array [J.String s; J.String "gs"] -> O.Op_gs s
-  | J.Array [J.String s; J.String "Do"] -> O.Op_Do s
-  | J.Array [J.String s; J.String "CS"] -> O.Op_CS s
-  | J.Array [i; J.String "j"] -> O.Op_j (opi i)
-  | J.Array [a; b; c; d; e; f; J.String "cm"] ->
+  | `List [`String "S"] -> O.Op_S
+  | `List [`String "s"] -> O.Op_s
+  | `List [`String "f"] -> O.Op_f
+  | `List [`String "F"] -> O.Op_F
+  | `List [`String "f*"] -> O.Op_f'
+  | `List [`String "B"] -> O.Op_B
+  | `List [`String "B*"] -> O.Op_B'
+  | `List [`String "b"] -> O.Op_b
+  | `List [`String "b*"] -> O.Op_b'
+  | `List [`String "n"] -> O.Op_n
+  | `List [`String "W"] -> O.Op_W
+  | `List [`String "W*"] -> O.Op_W'
+  | `List [`String "BT"] -> O.Op_BT
+  | `List [`String "ET"] -> O.Op_ET
+  | `List [`String "q"] -> O.Op_q
+  | `List [`String "Q"] -> O.Op_Q
+  | `List [`String "h"] -> O.Op_h
+  | `List [`String "T*"] -> O.Op_T'
+  | `List [`String "EMC"] -> O.Op_EMC
+  | `List [`String "BX"] -> O.Op_BX
+  | `List [`String "EX"] -> O.Op_EX
+  | `List [a; b; c; d; `String "re"] -> O.Op_re (opf a, opf b, opf c, opf d)
+  | `List [a; b; c; d; `String "k"] -> O.Op_k (opf a, opf b, opf c, opf d)
+  | `List [a; b; `String "m"] -> O.Op_m (opf a, opf b)
+  | `List [a; b; `String "l"] -> O.Op_l (opf a, opf b)
+  | `List [`String s; obj; `String "BDC"] -> O.Op_BDC (s, object_of_json obj)
+  | `List [`String s; `String "gs"] -> O.Op_gs s
+  | `List [`String s; `String "Do"] -> O.Op_Do s
+  | `List [`String s; `String "CS"] -> O.Op_CS s
+  | `List [i; `String "j"] -> O.Op_j (opi i)
+  | `List [a; b; c; d; e; f; `String "cm"] ->
       O.Op_cm
         {Pdftransform.a = opf a; Pdftransform.b = opf b; Pdftransform.c = opf c;
          Pdftransform.d = opf d; Pdftransform.e = opf e; Pdftransform.f = opf f}
-  | J.Array [J.Array fls; y; J.String "d"] -> O.Op_d (map opf fls, opf y)
-  | J.Array [a; J.String "w"] -> O.Op_w (opf a)
-  | J.Array [a; J.String "J"] -> O.Op_J (opi a)
-  | J.Array [a; J.String "M"] -> O.Op_M (opf a)
-  | J.Array [J.String s; J.String "ri"] -> O.Op_ri s
-  | J.Array [a; J.String "i"] -> O.Op_i (opi a)
-  | J.Array [a; b; c; d; e; f; J.String "c"] -> O.Op_c (opf a, opf b, opf c, opf d, opf e, opf f)
-  | J.Array [a; b; c; d; J.String "v"] -> O.Op_v (opf a, opf b, opf c, opf d)
-  | J.Array [a; b; c; d; J.String "y"] -> O.Op_y (opf a, opf b, opf c, opf d)
-  | J.Array [a; J.String "Tc"] -> O.Op_Tc (opf a)
-  | J.Array [a; J.String "Tw"] -> O.Op_Tw (opf a)
-  | J.Array [a; J.String "Tz"] -> O.Op_Tz (opf a)
-  | J.Array [a; J.String "TL"] -> O.Op_TL (opf a)
-  | J.Array [J.String k; n; J.String "Tf"] -> O.Op_Tf (k, opf n)
-  | J.Array [a; J.String "Tr"] -> O.Op_Tr (opi a)
-  | J.Array [a; J.String "Ts"] -> O.Op_Ts (opf a)
-  | J.Array [a; b; J.String "Td"] -> O.Op_Td (opf a, opf b)
-  | J.Array [a; b; J.String "TD"] -> O.Op_TD (opf a, opf b)
-  | J.Array [a; b; c; d; e; f; J.String "Tm"] ->
+  | `List [`List fls; y; `String "d"] -> O.Op_d (map opf fls, opf y)
+  | `List [a; `String "w"] -> O.Op_w (opf a)
+  | `List [a; `String "J"] -> O.Op_J (opi a)
+  | `List [a; `String "M"] -> O.Op_M (opf a)
+  | `List [`String s; `String "ri"] -> O.Op_ri s
+  | `List [a; `String "i"] -> O.Op_i (opi a)
+  | `List [a; b; c; d; e; f; `String "c"] -> O.Op_c (opf a, opf b, opf c, opf d, opf e, opf f)
+  | `List [a; b; c; d; `String "v"] -> O.Op_v (opf a, opf b, opf c, opf d)
+  | `List [a; b; c; d; `String "y"] -> O.Op_y (opf a, opf b, opf c, opf d)
+  | `List [a; `String "Tc"] -> O.Op_Tc (opf a)
+  | `List [a; `String "Tw"] -> O.Op_Tw (opf a)
+  | `List [a; `String "Tz"] -> O.Op_Tz (opf a)
+  | `List [a; `String "TL"] -> O.Op_TL (opf a)
+  | `List [`String k; n; `String "Tf"] -> O.Op_Tf (k, opf n)
+  | `List [a; `String "Tr"] -> O.Op_Tr (opi a)
+  | `List [a; `String "Ts"] -> O.Op_Ts (opf a)
+  | `List [a; b; `String "Td"] -> O.Op_Td (opf a, opf b)
+  | `List [a; b; `String "TD"] -> O.Op_TD (opf a, opf b)
+  | `List [a; b; c; d; e; f; `String "Tm"] ->
         O.Op_Tm
           {Pdftransform.a = opf a; Pdftransform.b = opf b; Pdftransform.c = opf c;
            Pdftransform.d = opf d; Pdftransform.e = opf e; Pdftransform.f = opf f}
-  | J.Array [J.String s; J.String "Tj"] -> Op_Tj s
-  | J.Array [obj; J.String "TJ"] -> Op_TJ (object_of_json obj)
-  | J.Array [J.String s; J.String "'"] -> Op_' s
-  | J.Array [a; b; J.String s; J.String "''"] -> Op_'' (opf a, opf b, s)
-  | J.Array [a; b; J.String "d0"] -> Op_d0 (opf a, opf b)
-  | J.Array [a; b; c; d; e; f; J.String "d1"] -> Op_d1 (opf a, opf b, opf c, opf d, opf e, opf f)
-  | J.Array [J.String s; J.String "cs"] -> Op_cs s 
-  | J.Array [a; J.String "G"] -> Op_G (opf a);
-  | J.Array [a; J.String "g"] -> Op_g (opf a);
-  | J.Array [a; b; c; J.String "RG"] -> Op_RG (opf a, opf b, opf c);
-  | J.Array [a; b; c; J.String "rg"] -> Op_rg (opf a, opf b, opf c);
-  | J.Array [a; b; c; d; J.String "K"] -> Op_K (opf a, opf b, opf c, opf d);
-  | J.Array [J.String s; J.String "sh"] -> Op_sh s;
-  | J.Array [J.String s; J.String "MP"] -> Op_MP s;
-  | J.Array [J.String s; J.String "BMC"] -> Op_BMC s;
-  | J.Array [J.String s; J.String "Unknown"] -> O.Op_Unknown s
-  | J.Array [J.String s; obj; J.String "DP"] -> O.Op_DP (s, object_of_json obj)
-  | J.Array [a; J.String b; J.String "InlineImage"] ->
+  | `List [`String s; `String "Tj"] -> Op_Tj s
+  | `List [obj; `String "TJ"] -> Op_TJ (object_of_json obj)
+  | `List [`String s; `String "'"] -> Op_' s
+  | `List [a; b; `String s; `String "''"] -> Op_'' (opf a, opf b, s)
+  | `List [a; b; `String "d0"] -> Op_d0 (opf a, opf b)
+  | `List [a; b; c; d; e; f; `String "d1"] -> Op_d1 (opf a, opf b, opf c, opf d, opf e, opf f)
+  | `List [`String s; `String "cs"] -> Op_cs s 
+  | `List [a; `String "G"] -> Op_G (opf a);
+  | `List [a; `String "g"] -> Op_g (opf a);
+  | `List [a; b; c; `String "RG"] -> Op_RG (opf a, opf b, opf c);
+  | `List [a; b; c; `String "rg"] -> Op_rg (opf a, opf b, opf c);
+  | `List [a; b; c; d; `String "K"] -> Op_K (opf a, opf b, opf c, opf d);
+  | `List [`String s; `String "sh"] -> Op_sh s;
+  | `List [`String s; `String "MP"] -> Op_MP s;
+  | `List [`String s; `String "BMC"] -> Op_BMC s;
+  | `List [`String s; `String "Unknown"] -> O.Op_Unknown s
+  | `List [`String s; obj; `String "DP"] -> O.Op_DP (s, object_of_json obj)
+  | `List [a; `String b; `String "InlineImage"] ->
       O.InlineImage (object_of_json a, Pdfio.bytes_of_string b)
-  | J.Array torev ->
+  | `List torev ->
       begin match rev torev with
-      | J.String "SCN"::ns -> O.Op_SCN (map opf (rev ns))
-      | J.String "SC"::ns -> O.Op_SCN (map opf (rev ns))
-      | J.String "sc"::ns -> O.Op_SCN (map opf (rev ns))
-      | J.String "scn"::ns -> O.Op_SCN (map opf (rev ns))
-      | J.String "SCNName"::J.String s::ns -> O.Op_SCNName (s, map opf (rev ns))
-      | J.String "scnName"::J.String s::ns -> O.Op_scnName (s, map opf (rev ns))
+      | `String "SCN"::ns -> O.Op_SCN (map opf (rev ns))
+      | `String "SC"::ns -> O.Op_SCN (map opf (rev ns))
+      | `String "sc"::ns -> O.Op_SCN (map opf (rev ns))
+      | `String "scn"::ns -> O.Op_SCN (map opf (rev ns))
+      | `String "SCNName"::`String s::ns -> O.Op_SCNName (s, map opf (rev ns))
+      | `String "scnName"::`String s::ns -> O.Op_scnName (s, map opf (rev ns))
       | j ->
-          Printf.eprintf "Unable to read reversed op from %s\n" (J.show (J.Array j));
+          Printf.eprintf "Unable to read reversed op from %s\n" (J.show (`List j));
           error "op reading failed"
       end
   | j ->
@@ -106,43 +108,40 @@ let rec op_of_json = function
       error "op reading failed"
 
 and object_of_json = function
-  | J.Null -> P.Null
-  | J.Bool b -> P.Boolean b
-  | J.Number n -> Pdf.Indirect (int_of_string n)
-  | J.String s -> P.String s
-  | J.Array objs -> P.Array (map object_of_json objs)
-  | J.Object ["I", J.Number i] -> P.Integer (int_of_string i)
-  | J.Object ["F", J.Number f] -> P.Real (float_of_string f)
-  | J.Object ["N", J.String n] -> P.Name n
-  | J.Object ["S", J.Array [dict; J.String data]] ->
+  | `Null -> P.Null
+  | `Bool b -> P.Boolean b
+  | `Int n -> Pdf.Indirect n
+  | `String s -> P.String s
+  | `List objs -> P.Array (map object_of_json objs)
+  | `Assoc ["I", `Int i] -> P.Integer i
+  | `Assoc ["F", `Float f] -> P.Real f
+  | `Assoc ["N", `String n] -> P.Name n
+  | `Assoc ["S", `List [dict; `String data]] ->
       (* Fix up the length, in case it's been edited. *)
       let d' =
         P.add_dict_entry (object_of_json dict) "/Length" (P.Integer (String.length data))
       in
         P.Stream (ref (d', P.Got (Pdfio.bytes_of_string data)))
-  | J.Object ["S", J.Array [dict; J.Array parsed_ops]] ->
+  | `Assoc ["S", `List [dict; `List parsed_ops]] ->
       Pdfops.stream_of_ops (List.map op_of_json parsed_ops)
-  | J.Object elts -> P.Dictionary (map (fun (n, o) -> (n, object_of_json o)) elts)
-
-
-
+  | `Assoc elts -> P.Dictionary (map (fun (n, o) -> (n, object_of_json o)) elts)
+  | _ -> error "not recognised in object_of_json"
 
 let pdf_of_json json =
   (*flprint (J.show json); flprint "\n";*)
-  let objs = match json with J.Array objs -> objs | _ -> error "bad json top level" in
+  let objs = match json with `List objs -> objs | _ -> error "bad json top level" in
   let params = ref Pdf.Null in
   let trailerdict = ref Pdf.Null in
     let objects =
       option_map
         (function
-         | J.Array [J.Number n; o] ->
-             let objnum = int_of_string n in
-               begin match objnum with
-               | -1 -> params := object_of_json o; None 
-               | 0 -> trailerdict := object_of_json o; None
-               | n when n < 0 -> None
-               | n ->  Some (n, object_of_json o)
-               end
+         | `List [`Int objnum; o] ->
+             begin match objnum with
+             | -1 -> params := object_of_json o; None 
+             | 0 -> trailerdict := object_of_json o; None
+             | n when n < 0 -> None
+             | n ->  Some (n, object_of_json o)
+             end
          | _ -> error "json bad obj")
         objs
     in
@@ -182,19 +181,6 @@ let pdf_of_json json =
      P.trailerdict = !trailerdict;
      P.was_linearized = false;
      P.saved_encryption = None}
-
-(* FIXME Proper streaming to output / from input, rather than making a big string first. *)
-let to_output o parse_content no_stream_data decompress_streams pdf =
-  let b = Buffer.create 256 in
-  let formatter = Format.formatter_of_buffer b in
-    J.format formatter (json_of_pdf parse_content no_stream_data decompress_streams pdf);
-    Format.pp_print_flush formatter ();
-    o.Pdfio.output_string (Buffer.contents b)
-*)
-
-module J = Cpdfyojson
-module P = Pdf
-module O = Pdfops
 
 let rec json_of_object pdf fcs no_stream_data = function
   | P.Null -> `Null
@@ -344,12 +330,10 @@ let json_of_op pdf no_stream_data = function
   | O.Op_DP (s, obj) ->
       `List [`String s; json_of_object pdf (fun _ -> ()) no_stream_data obj; `String "DP"]
 
-
 (* parse_stream needs pdf and resources. These are for lexing of inline images,
  * looking up the colourspace. We do not need to worry about inherited
  * resources, though? For now, don't worry about inherited resources: check in
  * PDF standard. *)
-
 let parse_content_stream pdf resources bs =
   let ops = O.parse_stream pdf resources [bs] in
     `List (map (json_of_op pdf false) ops)
@@ -437,17 +421,7 @@ let to_output o parse_content no_stream_data decompress_streams pdf =
   let json = json_of_pdf parse_content no_stream_data decompress_streams pdf in
     o.Pdfio.output_string (J.pretty_to_string json)
 
-let example_pdf =
-  let page =
-    {(Pdfpage.blankpage Pdfpaper.a4) with
-        Pdfpage.content = [Pdfops.stream_of_ops []];
-        Pdfpage.resources = Pdf.Dictionary []}
-  in
-    let pdf, pageroot = Pdfpage.add_pagetree (many page 1) (Pdf.empty ()) in
-      Pdfpage.add_root pageroot [] pdf
-
 (* FIXME Proper streaming to output / from input, rather than making a big string first. *)
 let of_input i =
-  (*pdf_of_json*)
-  (*ignore (J.parse (Pdfio.string_of_bytes (Pdfio.bytes_of_input i 0 (i.Pdfio.in_channel_length))));*)
-  example_pdf
+  let content = Pdfio.string_of_bytes (Pdfio.bytes_of_input i 0 (i.Pdfio.in_channel_length)) in
+    pdf_of_json (J.from_string content)
