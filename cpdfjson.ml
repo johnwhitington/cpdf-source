@@ -117,7 +117,6 @@ and object_of_json = function
   | `Assoc ["F", `Float f] -> P.Real f
   | `Assoc ["N", `String n] -> P.Name n
   | `Assoc ["S", `List [dict; `String data]] ->
-      (* Fix up the length, in case it's been edited. *)
       let d' =
         P.add_dict_entry (object_of_json dict) "/Length" (P.Integer (String.length data))
       in
@@ -128,7 +127,6 @@ and object_of_json = function
   | _ -> error "not recognised in object_of_json"
 
 let pdf_of_json json =
-  (*flprint (J.show json); flprint "\n";*)
   let objs = match json with `List objs -> objs | _ -> error "bad json top level" in
   let params = ref Pdf.Null in
   let trailerdict = ref Pdf.Null in
@@ -145,7 +143,6 @@ let pdf_of_json json =
          | _ -> error "json bad obj")
         objs
     in
-  (*List.  iter (fun (i, o) -> flprint (soi i); flprint "\n"; flprint (Pdfwrite.string_of_pdf o); flprint "\n") objects;*)
   begin match Pdf.lookup_direct (Pdf.empty ()) "/CPDFJSONstreamdataincluded" !params with
   | Some (Pdf.Boolean false) -> error "no stream data; cannot reconstruct PDF" 
   | _ -> ()  
@@ -158,7 +155,6 @@ let pdf_of_json json =
     match Pdf.lookup_direct (Pdf.empty ()) "/CPDFJSONminorpdfversion" !params with 
       Some (Pdf.Integer i) -> i | _ -> error "bad minor version"
   in
-  (*flprint (Pdfwrite.string_of_pdf !trailerdict);*)
   let root =
     match !trailerdict with Pdf.Dictionary d ->
       begin match lookup "/Root" d with
@@ -167,28 +163,32 @@ let pdf_of_json json =
     | _ -> error "bad root 2"
   in
   let objmap = P.pdfobjmap_empty () in
-  List.iter (fun (k, v) -> Hashtbl.add objmap k (ref (P.Parsed v), 0)) objects;
-  let objects =
-    {P.maxobjnum = 0;
-     P.parse = None;
-     P.pdfobjects = objmap;
-     P.object_stream_ids = Hashtbl.create 0}
-  in
-    {P.major;
-     P.minor;
-     P.root;
-     P.objects;
-     P.trailerdict = !trailerdict;
-     P.was_linearized = false;
-     P.saved_encryption = None}
+    List.iter (fun (k, v) -> Hashtbl.add objmap k (ref (P.Parsed v), 0)) objects;
+    let objects =
+      {P.maxobjnum = 0;
+       P.parse = None;
+       P.pdfobjects = objmap;
+       P.object_stream_ids = Hashtbl.create 0}
+    in
+      {P.major;
+       P.minor;
+       P.root;
+       P.objects;
+       P.trailerdict = !trailerdict;
+       P.was_linearized = false;
+       P.saved_encryption = None}
+
+let mkfloat f = `Assoc [("F", `Float f)]
+let mkint i = `Assoc [("I", `Int i)]
+let mkname n = `Assoc [("N", `String n)]
 
 let rec json_of_object pdf fcs no_stream_data = function
   | P.Null -> `Null
   | P.Boolean b -> `Bool b
-  | P.Integer i -> `Assoc [("I", `Int i)]
-  | P.Real r -> `Assoc [("F", `Float r)]
+  | P.Integer i -> mkint i
+  | P.Real r -> mkfloat r
   | P.String s -> `String s
-  | P.Name n -> `Assoc [("N", `String n)]
+  | P.Name n -> mkname n
   | P.Array objs -> `List (map (json_of_object pdf fcs no_stream_data) objs)
   | P.Dictionary elts ->
       iter
@@ -250,81 +250,81 @@ let json_of_op pdf no_stream_data = function
   | O.Op_BX -> `List [`String "BX"]
   | O.Op_EX -> `List [`String "EX"]
   | O.Op_re (a, b, c, d) ->
-      `List [`Float a; `Float b; `Float c; `Float d; `String "re"]
+      `List [mkfloat a; mkfloat b; mkfloat c; mkfloat d; `String "re"]
   | O.Op_k (c, m, y, k) ->
-      `List [`Float c; `Float m; `Float y; `Float k; `String "k"]
-  | O.Op_m (a, b) -> `List [`Float a; `Float b; `String "m"]
-  | O.Op_l (a, b) -> `List [`Float a; `Float b; `String "l"]
+      `List [mkfloat c; mkfloat m; mkfloat y; mkfloat k; `String "k"]
+  | O.Op_m (a, b) -> `List [mkfloat a; mkfloat b; `String "m"]
+  | O.Op_l (a, b) -> `List [mkfloat a; mkfloat b; `String "l"]
   | O.Op_BDC (s, obj) -> `List [`String s; json_of_object pdf (fun _ -> ()) no_stream_data obj; `String "BDC"]
   | O.Op_gs s -> `List [`String s; `String "gs"]
   | O.Op_Do s -> `List [`String s; `String "Do"]
   | O.Op_CS s -> `List [`String s; `String "CS"]
-  | O.Op_SCN fs -> `List ((map (fun x -> `Float x) fs) @ [`String "SCN"])
-  | O.Op_j j -> `List [`Int j; `String "j"] 
+  | O.Op_SCN fs -> `List ((map (fun x -> mkfloat x) fs) @ [`String "SCN"])
+  | O.Op_j j -> `List [mkint j; `String "j"] 
   | O.Op_cm t ->
       `List
-        [`Float t.Pdftransform.a; `Float t.Pdftransform.b; `Float t.Pdftransform.c;
-         `Float t.Pdftransform.d; `Float t.Pdftransform.e; `Float t.Pdftransform.f;
+        [mkfloat t.Pdftransform.a; mkfloat t.Pdftransform.b; mkfloat t.Pdftransform.c;
+         mkfloat t.Pdftransform.d; mkfloat t.Pdftransform.e; mkfloat t.Pdftransform.f;
          `String "cm"]
   | O.Op_d (fl, y) ->
-      `List [`List (map (fun x -> `Float x) fl); `Float y; `String "d"]
-  | O.Op_w w -> `List [`Float w; `String "w"]
-  | O.Op_J j -> `List [`Int j; `String "J"]
-  | O.Op_M m -> `List [`Float m; `String "M"]
+      `List [`List (map (fun x -> mkfloat x) fl); mkfloat y; `String "d"]
+  | O.Op_w w -> `List [mkfloat w; `String "w"]
+  | O.Op_J j -> `List [mkint j; `String "J"]
+  | O.Op_M m -> `List [mkfloat m; `String "M"]
   | O.Op_ri s -> `List [`String s; `String "ri"]
-  | O.Op_i i -> `List [`Int i; `String "i"]
+  | O.Op_i i -> `List [mkint i; `String "i"]
   | O.Op_c (a, b, c, d, e, k) ->
       `List
-        [`Float a; `Float b; `Float c;
-         `Float d; `Float e; `Float k; `String "c"]
+        [mkfloat a; mkfloat b; mkfloat c;
+         mkfloat d; mkfloat e; mkfloat k; `String "c"]
   | O.Op_v (a, b, c, d) ->
       `List
-        [`Float a; `Float b; `Float c;
-         `Float d; `String "v"]
+        [mkfloat a; mkfloat b; mkfloat c;
+         mkfloat d; `String "v"]
   | O.Op_y (a, b, c, d) ->
       `List
-        [`Float a; `Float b; `Float c;
-         `Float d; `String "y"]
-  | O.Op_Tc c -> `List [`Float c; `String "Tc"]
-  | O.Op_Tw w -> `List [`Float w; `String "Tw"]
-  | O.Op_Tz z -> `List [`Float z; `String "Tz"]
-  | O.Op_TL l -> `List [`Float l; `String "TL"]
-  | O.Op_Tf (k, s) -> `List [`String k; `Float s; `String "Tf"]
-  | O.Op_Tr i -> `List [`Int i; `String "Tr"]
-  | O.Op_Ts k -> `List [`Float k; `String "Ts"]
-  | O.Op_Td (k, k') -> `List [`Float k; `Float k'; `String "Td"]
-  | O.Op_TD (k, k') -> `List [`Float k; `Float k'; `String "TD"]
+        [mkfloat a; mkfloat b; mkfloat c;
+         mkfloat d; `String "y"]
+  | O.Op_Tc c -> `List [mkfloat c; `String "Tc"]
+  | O.Op_Tw w -> `List [mkfloat w; `String "Tw"]
+  | O.Op_Tz z -> `List [mkfloat z; `String "Tz"]
+  | O.Op_TL l -> `List [mkfloat l; `String "TL"]
+  | O.Op_Tf (k, s) -> `List [`String k; mkfloat s; `String "Tf"]
+  | O.Op_Tr i -> `List [mkint i; `String "Tr"]
+  | O.Op_Ts k -> `List [mkfloat k; `String "Ts"]
+  | O.Op_Td (k, k') -> `List [mkfloat k; mkfloat k'; `String "Td"]
+  | O.Op_TD (k, k') -> `List [mkfloat k; mkfloat k'; `String "TD"]
   | O.Op_Tm t ->
       `List
-        [`Float t.Pdftransform.a; `Float t.Pdftransform.b; `Float t.Pdftransform.c;
-         `Float t.Pdftransform.d; `Float t.Pdftransform.e; `Float t.Pdftransform.f;
+        [mkfloat t.Pdftransform.a; mkfloat t.Pdftransform.b; mkfloat t.Pdftransform.c;
+         mkfloat t.Pdftransform.d; mkfloat t.Pdftransform.e; mkfloat t.Pdftransform.f;
          `String "Tm"]
   | O.Op_Tj s -> `List [`String s; `String "Tj"]
   | O.Op_TJ pdfobject -> `List [json_of_object pdf (fun _ -> ()) no_stream_data pdfobject; `String "TJ"]
   | O.Op_' s -> `List [`String s; `String "'"]
-  | O.Op_'' (k, k', s) -> `List [`Float k; `Float k'; `String s; `String "''"]
-  | O.Op_d0 (k, k') -> `List [`Float k; `Float k'; `String "d0"]
+  | O.Op_'' (k, k', s) -> `List [mkfloat k; mkfloat k'; `String s; `String "''"]
+  | O.Op_d0 (k, k') -> `List [mkfloat k; mkfloat k'; `String "d0"]
   | O.Op_d1 (a, b, c, d, e, k) ->
       `List
-        [`Float a; `Float b; `Float c;
-         `Float d; `Float e; `Float k; `String "d1"]
+        [mkfloat a; mkfloat b; mkfloat c;
+         mkfloat d; mkfloat e; mkfloat k; `String "d1"]
   | O.Op_cs s -> `List [`String s; `String "cs"]
-  | O.Op_SC fs -> `List (map (fun x -> `Float x) fs @ [`String "SC"])
-  | O.Op_sc fs -> `List (map (fun x -> `Float x) fs @ [`String "sc"])
-  | O.Op_scn fs -> `List (map (fun x -> `Float x) fs @ [`String "scn"])
-  | O.Op_G k -> `List [`Float k; `String "G"]
-  | O.Op_g k -> `List [`Float k; `String "g"]
-  | O.Op_RG (r, g, b) -> `List [`Float r; `Float g; `Float b; `String "RG"]
-  | O.Op_rg (r, g, b) -> `List [`Float r; `Float g; `Float b; `String "rg"]
-  | O.Op_K (c, m, y, k) -> `List [`Float c; `Float m; `Float y; `Float k; `String "K"]
+  | O.Op_SC fs -> `List (map (fun x -> mkfloat x) fs @ [`String "SC"])
+  | O.Op_sc fs -> `List (map (fun x -> mkfloat x) fs @ [`String "sc"])
+  | O.Op_scn fs -> `List (map (fun x -> mkfloat x) fs @ [`String "scn"])
+  | O.Op_G k -> `List [mkfloat k; `String "G"]
+  | O.Op_g k -> `List [mkfloat k; `String "g"]
+  | O.Op_RG (r, g, b) -> `List [mkfloat r; mkfloat g; mkfloat b; `String "RG"]
+  | O.Op_rg (r, g, b) -> `List [mkfloat r; mkfloat g; mkfloat b; `String "rg"]
+  | O.Op_K (c, m, y, k) -> `List [mkfloat c; mkfloat m; mkfloat y; mkfloat k; `String "K"]
   | O.Op_sh s -> `List [`String s; `String "sh"]
   | O.Op_MP s -> `List [`String s; `String "MP"]
   | O.Op_BMC s -> `List [`String s; `String "BMC"]
   | O.Op_Unknown s -> `List [`String s; `String "Unknown"]
   | O.Op_SCNName (s, fs) ->
-      `List (map (fun x -> `Float x) fs @ [`String s; `String "SCNName"])
+      `List (map (fun x -> mkfloat x) fs @ [`String s; `String "SCNName"])
   | O.Op_scnName (s, fs) ->
-      `List (map (fun x -> `Float x) fs @ [`String s; `String "scnName"])
+      `List (map (fun x -> mkfloat x) fs @ [`String s; `String "scnName"])
   | O.InlineImage (dict, data) ->
       `List [json_of_object pdf (fun _ -> ()) no_stream_data dict; `String (Pdfio.string_of_bytes data); `String "InlineImage"]
   | O.Op_DP (s, obj) ->
@@ -360,13 +360,7 @@ let precombine_page_content pdf =
 let json_of_pdf parse_content no_stream_data decompress_streams pdf =
   let pdf = if parse_content then precombine_page_content pdf else pdf in
   if decompress_streams then
-    Pdf.objiter
-      (fun n obj ->
-        Printf.eprintf "obj %i\n" n;
-        match obj with
-        | Pdf.Stream _ -> Printf.eprintf "decompressing...\n"; Pdfcodec.decode_pdfstream_until_unknown pdf obj
-        | _ -> ())
-      pdf;
+    Pdf.objiter (fun _ obj -> Pdfcodec.decode_pdfstream_until_unknown pdf obj) pdf;
   Pdf.remove_unreferenced pdf;
   let trailerdict = (0, json_of_object pdf (fun x -> ()) no_stream_data pdf.P.trailerdict) in
   let parameters =
