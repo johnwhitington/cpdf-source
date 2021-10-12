@@ -1,4 +1,3 @@
-(*FIXME add -output-json-precombine-contents *)
 (* cpdf command line tools *)
 let demo = false
 let noncomp = false
@@ -450,6 +449,7 @@ type args =
    mutable createpdf_pagesize : Pdfpaper.t;
    mutable removeonly : string option;
    mutable jsonparsecontentstreams : bool;
+   mutable jsonprecombinecontentstreams : bool;
    mutable jsonnostreamdata : bool;
    mutable jsondecompressstreams : bool;
    mutable ocgrenamefrom : string;
@@ -555,6 +555,7 @@ let args =
    createpdf_pagesize = Pdfpaper.a4;
    removeonly = None;
    jsonparsecontentstreams = false;
+   jsonprecombinecontentstreams = false;
    jsonnostreamdata = false;
    jsondecompressstreams = false;
    ocgrenamefrom = "";
@@ -645,6 +646,7 @@ let reset_arguments () =
   args.createpdf_pagesize <- Pdfpaper.a4;
   args.removeonly <- None;
   args.jsonparsecontentstreams <- false;
+  args.jsonprecombinecontentstreams <- false;
   args.jsonnostreamdata <- false;
   args.jsondecompressstreams <- false;
   args.ocgrenamefrom <- "";
@@ -753,7 +755,7 @@ let rec decrypt_if_necessary (_, _, user_pw, owner_pw, was_dec_with_owner, _) op
        * pages. This is pervented by permissions above, but in the case that the
        * owner password is blank (e.g christmas_tree_lights.pdf), we would end
        * up here. *)
-      soft_error "Combine pages: both files must be unencrypted for this operation."
+      soft_error "Combine pages: both files must be unencrypted for this operation, or add -decrypt-force"
     | _ -> 
       match Pdfcrypt.decrypt_pdf_owner owner_pw pdf with
       | Some pdf ->
@@ -773,7 +775,7 @@ let rec decrypt_if_necessary (_, _, user_pw, owner_pw, was_dec_with_owner, _) op
             if args.debugcrypt then Printf.printf "Managed to decrypt with user password\n";
             if operation_allowed pdf permissions op
               then pdf
-              else soft_error "User password cannot give permission for this operation"
+              else soft_error "User password cannot give permission for this operation. Supply owner or add -decrypt-force."
         | _ ->
            if args.debugcrypt then Printf.printf "Failed to decrypt with user password: raising soft_error";
            soft_error "Failed to decrypt file: wrong password?"
@@ -1500,6 +1502,9 @@ let setgsquiet () =
 let setjsonparsecontentstreams () =
   args.jsonparsecontentstreams <- true
 
+let setjsonprecombinecontentstreams () =
+  args.jsonprecombinecontentstreams <- true
+
 let setjsonnostreamdata () =
   args.jsonnostreamdata <- true
 
@@ -2194,6 +2199,9 @@ and specs =
    ("-output-json-parse-content-streams",
      Arg.Unit setjsonparsecontentstreams,
      " Parse content streams");
+   ("-output-json-precombine-content-streams",
+     Arg.Unit setjsonprecombinecontentstreams,
+     " Precombine content streams");
    ("-output-json-no-stream-data",
      Arg.Unit setjsonnostreamdata,
      " Skip stream data for brevity");
@@ -2549,7 +2557,7 @@ let really_write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf outna
             end
           else
             soft_error
-              "You must supply -recrypt here, or provide the owner password."
+              "You must supply -recrypt here, or add -decrypt-force, or provide the owner password."
         end
     end;
     begin
@@ -3409,7 +3417,7 @@ let write_json output pdf =
         ~parse_content:args.jsonparsecontentstreams
         ~no_stream_data:args.jsonnostreamdata
         ~decompress_streams:args.jsondecompressstreams
-        ~precombine_page_content:false (* FIXME add arg *)
+        ~precombine_page_content:args.jsonprecombinecontentstreams
         pdf
   | File filename ->
       let f = open_out filename in
@@ -3418,7 +3426,7 @@ let write_json output pdf =
           ~parse_content:args.jsonparsecontentstreams
           ~no_stream_data:args.jsonnostreamdata
           ~decompress_streams:args.jsondecompressstreams
-          ~precombine_page_content:false (* FIXME add arg *)
+          ~precombine_page_content:args.jsonprecombinecontentstreams
           pdf;
         close_out f
 
@@ -3467,7 +3475,7 @@ let go () =
                             inputs
                             pdfs)))
                     then
-                      soft_error "Merge requires the owner password for all encrypted files."
+                      soft_error "Merge requires the owner password for all encrypted files, or -decrypt-force."
                     else
                       let pdfs =
                         if args.merge_add_bookmarks then
