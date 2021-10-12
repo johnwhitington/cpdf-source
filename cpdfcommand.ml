@@ -1,4 +1,4 @@
-(* FIXME add -output-json-precombine-contents *)
+(*FIXME add -output-json-precombine-contents *)
 (* cpdf command line tools *)
 let demo = false
 let noncomp = false
@@ -1528,10 +1528,6 @@ let whingemalformed () =
   prerr_string "Command line must be of exactly the form\ncpdf <infile> -gs <path> -gs-malformed-force -o <outfile>\n";
   exit 1
 
-
-
-let nothing () = ()
-
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
   control_args := !control_args @ parse_control_file filename
@@ -1613,7 +1609,7 @@ and specs =
       Arg.String make_control_argv_and_parse,
       " Use a control file. Deprecated. Use -args.");
    ("-args",
-      Arg.Unit nothing,
+      Arg.Unit (fun () -> ()),
       " Get arguments from a file.");
    ("-merge",
        Arg.Unit (setop Merge),
@@ -1711,9 +1707,6 @@ and specs =
    ("-remove-artbox",
        Arg.Unit (setop RemoveArt),
        " Remove art box on specified pages");
-   ("-copy-cropbox-to-mediabox",
-       Arg.Unit (setop CopyCropBoxToMediaBox),
-       ""); (* Undocumented now, since /frombox, /tobox now used *)
    ("-frombox", Arg.String setfrombox, " Set box to copy from");
    ("-tobox", Arg.String settobox, " Set box to copy to");
    ("-mediabox-if-missing",
@@ -1728,6 +1721,9 @@ and specs =
    ("-decrypt",
       Arg.Unit (setop Decrypt),
       " Decrypt a file");
+   ("-decrypt-force",
+      Arg.Unit setdebugforce,
+      " Decrypt a file even without password");
    ("-no-edit", Arg.Unit set_no_edit, " No edits");
    ("-no-print", Arg.Unit set_no_print, " No printing");
    ("-no-copy", Arg.Unit set_no_copy, " No copying");
@@ -2242,6 +2238,9 @@ and specs =
    ("-fix-prince", Arg.Unit (setop RemoveUnusedResources), "");
    ("-extract-text", Arg.Unit (setop ExtractText), "");
    ("-extract-text-font-size", Arg.Float setextracttextfontsize, "");
+   ("-copy-cropbox-to-mediabox",
+       Arg.Unit (setop CopyCropBoxToMediaBox),
+       ""); (* Undocumented now, since /frombox, /tobox now used *)
   ]
 
 and usage_msg =
