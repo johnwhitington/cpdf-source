@@ -1,5 +1,6 @@
 2.5 (Upcoming 2022)
 
+o -debug-force now properly documented as -decrypt-force
 o Switch to Yojson
 o Can read as well as write PDFs in JSON format with -j
 o Environment variable CPDF_REPRODUCIBLE_DATES for testing

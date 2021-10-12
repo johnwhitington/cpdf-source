@@ -94,9 +94,9 @@ let rec op_of_json = function
   | `List torev ->
       begin match rev torev with
       | `String "SCN"::ns -> O.Op_SCN (map opf (rev ns))
-      | `String "SC"::ns -> O.Op_SCN (map opf (rev ns))
-      | `String "sc"::ns -> O.Op_SCN (map opf (rev ns))
-      | `String "scn"::ns -> O.Op_SCN (map opf (rev ns))
+      | `String "SC"::ns -> O.Op_SC (map opf (rev ns))
+      | `String "sc"::ns -> O.Op_sc (map opf (rev ns))
+      | `String "scn"::ns -> O.Op_scn (map opf (rev ns))
       | `String "SCNName"::`String s::ns -> O.Op_SCNName (s, map opf (rev ns))
       | `String "scnName"::`String s::ns -> O.Op_scnName (s, map opf (rev ns))
       | j ->
@@ -413,16 +413,18 @@ let json_of_pdf
           (fun (objnum, jsonobj) -> `List [`Int objnum; jsonobj])
           pairs_parsed)
 
-(* FIXME Proper streaming to output *)
 let to_output o ~parse_content ~no_stream_data ~decompress_streams ~precombine_page_content pdf =
   let json = json_of_pdf ~parse_content ~no_stream_data ~decompress_streams ~precombine_page_content pdf in
-    o.Pdfio.output_string (J.pretty_to_string json)
+    match o.Pdfio.out_caml_channel with
+    | Some ch -> J.pretty_to_channel ch json
+    | None -> o.Pdfio.output_string (J.pretty_to_string json)
 
-(* FIXME Proper streaming to output / from input, rather than making a big string first. *)
 let of_input i =
-  let content = Pdfio.string_of_bytes (Pdfio.bytes_of_input i 0 (i.Pdfio.in_channel_length)) in
-    let json =
-      try J.from_string content with
-        e -> error (Printexc.to_string e)
-    in
-      pdf_of_json json
+  try
+    match i.Pdfio.caml_channel with
+    | Some ch -> pdf_of_json (J.from_channel ch)
+    | None -> 
+        let content = Pdfio.string_of_bytes (Pdfio.bytes_of_input i 0 (i.Pdfio.in_channel_length)) in
+          pdf_of_json (J.from_string content)
+  with
+    e -> error (Printexc.to_string e)
