@@ -333,9 +333,10 @@ let parse_content_stream pdf resources bs =
     `List (map (json_of_op pdf false) ops)
 
 (* We need to make sure each page only has one page content stream. Otherwise,
-   if not split on op boundaries, each one would fail to parse on its own. *)
-(* Future improvement. Don't blow up shared content streams. *)
-let precombine_page_content pdf =
+   if not split on op boundaries, each one would fail to parse on its own. The
+   caller should really only do this on otherwise-failing files, since it could
+   blow up any shared content streams *)
+let do_precombine_page_content pdf =
   let pages' =
     map
       (fun page ->
@@ -351,8 +352,14 @@ let precombine_page_content pdf =
   in
     Pdfpage.change_pages true pdf pages'
 
-let json_of_pdf parse_content no_stream_data decompress_streams pdf =
-  let pdf = if parse_content then precombine_page_content pdf else pdf in
+let json_of_pdf
+  ~parse_content
+  ~no_stream_data
+  ~decompress_streams
+  ~precombine_page_content
+  pdf
+=
+  let pdf = if parse_content && precombine_page_content then do_precombine_page_content pdf else pdf in
   if decompress_streams then
     Pdf.objiter (fun _ obj -> Pdfcodec.decode_pdfstream_until_unknown pdf obj) pdf;
   Pdf.remove_unreferenced pdf;
@@ -405,8 +412,8 @@ let json_of_pdf parse_content no_stream_data decompress_streams pdf =
           pairs_parsed)
 
 (* FIXME Proper streaming to output *)
-let to_output o parse_content no_stream_data decompress_streams pdf =
-  let json = json_of_pdf parse_content no_stream_data decompress_streams pdf in
+let to_output o ~parse_content ~no_stream_data ~decompress_streams ~precombine_page_content pdf =
+  let json = json_of_pdf ~parse_content ~no_stream_data ~decompress_streams ~precombine_page_content pdf in
     o.Pdfio.output_string (J.pretty_to_string json)
 
 (* FIXME Proper streaming to output / from input, rather than making a big string first. *)

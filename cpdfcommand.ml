@@ -1,3 +1,4 @@
+(* FIXME add -output-json-precombine-contents *)
 (* cpdf command line tools *)
 let demo = false
 let noncomp = false
@@ -3406,17 +3407,19 @@ let write_json output pdf =
   | Stdout ->
       Cpdfjson.to_output
         (Pdfio.output_of_channel stdout)
-        args.jsonparsecontentstreams
-        args.jsonnostreamdata
-        args.jsondecompressstreams
+        ~parse_content:args.jsonparsecontentstreams
+        ~no_stream_data:args.jsonnostreamdata
+        ~decompress_streams:args.jsondecompressstreams
+        ~precombine_page_content:false (* FIXME add arg *)
         pdf
   | File filename ->
       let f = open_out filename in
         Cpdfjson.to_output
           (Pdfio.output_of_channel f)
-          args.jsonparsecontentstreams
-          args.jsonnostreamdata
-          args.jsondecompressstreams
+          ~parse_content:args.jsonparsecontentstreams
+          ~no_stream_data:args.jsonnostreamdata
+          ~decompress_streams:args.jsondecompressstreams
+          ~precombine_page_content:false (* FIXME add arg *)
           pdf;
         close_out f
 
