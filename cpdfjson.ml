@@ -202,11 +202,16 @@ let rec json_of_object pdf fcs no_stream_data = function
           | _ -> ())
         elts;
       `Assoc (map (fun (k, v) -> (k, json_of_object pdf fcs no_stream_data v)) elts)
-  | P.Stream ({contents = (P.Dictionary dict, stream)} as mut) as thestream ->
+  | P.Stream ({contents = (P.Dictionary dict as d, stream)} as mut) as thestream ->
       P.getstream thestream;
       let str =
-        if no_stream_data then "<<stream data elided>>" else
-          match !mut with (_, P.Got b) -> Pdfio.string_of_bytes b | _ -> error "failure: toget"
+        match P.lookup_direct pdf "/FunctionType" d with
+        | Some _ ->
+            Pdfcodec.decode_pdfstream_until_unknown pdf thestream;
+            begin match !mut with (_, P.Got b) -> Pdfio.string_of_bytes b | _ -> error "/FunctionType: failure: decomp" end
+        | None ->
+            if no_stream_data then "<<stream data elided>>" else
+              match !mut with (_, P.Got b) -> Pdfio.string_of_bytes b | _ -> error "failure: toget"
       in
         json_of_object pdf fcs no_stream_data (P.Dictionary [("S", P.Array [P.Dictionary dict; P.String str])])
   | P.Stream _ -> error "error: stream with not-a-dictionary"
