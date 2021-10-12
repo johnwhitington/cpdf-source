@@ -182,14 +182,14 @@ let mkfloat f = `Assoc [("F", `Float f)]
 let mkint i = `Assoc [("I", `Int i)]
 let mkname n = `Assoc [("N", `String n)]
 
-let rec json_of_object pdf fcs no_stream_data = function
+let rec json_of_object pdf fcs no_stream_data pcs = function
   | P.Null -> `Null
   | P.Boolean b -> `Bool b
   | P.Integer i -> mkint i
   | P.Real r -> mkfloat r
   | P.String s -> `String s
   | P.Name n -> mkname n
-  | P.Array objs -> `List (map (json_of_object pdf fcs no_stream_data) objs)
+  | P.Array objs -> `List (map (json_of_object pdf fcs no_stream_data pcs) objs)
   | P.Dictionary elts ->
       iter
         (function
@@ -201,19 +201,19 @@ let rec json_of_object pdf fcs no_stream_data = function
           | ("/Contents", P.Array elts) -> iter (function P.Indirect i -> fcs i | _ -> ()) elts
           | _ -> ())
         elts;
-      `Assoc (map (fun (k, v) -> (k, json_of_object pdf fcs no_stream_data v)) elts)
+      `Assoc (map (fun (k, v) -> (k, json_of_object pdf fcs no_stream_data pcs v)) elts)
   | P.Stream ({contents = (P.Dictionary dict as d, stream)} as mut) as thestream ->
       P.getstream thestream;
       let str =
-        match P.lookup_direct pdf "/FunctionType" d with
-        | Some _ ->
+        match P.lookup_direct pdf "/FunctionType" d, pcs with
+        | Some _, true ->
             Pdfcodec.decode_pdfstream_until_unknown pdf thestream;
             begin match !mut with (_, P.Got b) -> Pdfio.string_of_bytes b | _ -> error "/FunctionType: failure: decomp" end
-        | None ->
+        | _ ->
             if no_stream_data then "<<stream data elided>>" else
               match !mut with (_, P.Got b) -> Pdfio.string_of_bytes b | _ -> error "failure: toget"
       in
-        json_of_object pdf fcs no_stream_data (P.Dictionary [("S", P.Array [P.Dictionary dict; P.String str])])
+        json_of_object pdf fcs no_stream_data pcs (P.Dictionary [("S", P.Array [P.Dictionary dict; P.String str])])
   | P.Stream _ -> error "error: stream with not-a-dictionary"
   | P.Indirect i ->
       begin match P.lookup_obj pdf i with
@@ -254,7 +254,7 @@ let json_of_op pdf no_stream_data = function
       `List [mkfloat c; mkfloat m; mkfloat y; mkfloat k; `String "k"]
   | O.Op_m (a, b) -> `List [mkfloat a; mkfloat b; `String "m"]
   | O.Op_l (a, b) -> `List [mkfloat a; mkfloat b; `String "l"]
-  | O.Op_BDC (s, obj) -> `List [`String s; json_of_object pdf (fun _ -> ()) no_stream_data obj; `String "BDC"]
+  | O.Op_BDC (s, obj) -> `List [`String s; json_of_object pdf (fun _ -> ()) no_stream_data false obj; `String "BDC"]
   | O.Op_gs s -> `List [`String s; `String "gs"]
   | O.Op_Do s -> `List [`String s; `String "Do"]
   | O.Op_CS s -> `List [`String s; `String "CS"]
@@ -299,7 +299,7 @@ let json_of_op pdf no_stream_data = function
          mkfloat t.Pdftransform.d; mkfloat t.Pdftransform.e; mkfloat t.Pdftransform.f;
          `String "Tm"]
   | O.Op_Tj s -> `List [`String s; `String "Tj"]
-  | O.Op_TJ pdfobject -> `List [json_of_object pdf (fun _ -> ()) no_stream_data pdfobject; `String "TJ"]
+  | O.Op_TJ pdfobject -> `List [json_of_object pdf (fun _ -> ()) no_stream_data false pdfobject; `String "TJ"]
   | O.Op_' s -> `List [`String s; `String "'"]
   | O.Op_'' (k, k', s) -> `List [mkfloat k; mkfloat k'; `String s; `String "''"]
   | O.Op_d0 (k, k') -> `List [mkfloat k; mkfloat k'; `String "d0"]
@@ -325,9 +325,9 @@ let json_of_op pdf no_stream_data = function
   | O.Op_scnName (s, fs) ->
       `List (map (fun x -> mkfloat x) fs @ [`String s; `String "scnName"])
   | O.InlineImage (dict, data) ->
-      `List [json_of_object pdf (fun _ -> ()) no_stream_data dict; `String (Pdfio.string_of_bytes data); `String "InlineImage"]
+      `List [json_of_object pdf (fun _ -> ()) no_stream_data false dict; `String (Pdfio.string_of_bytes data); `String "InlineImage"]
   | O.Op_DP (s, obj) ->
-      `List [`String s; json_of_object pdf (fun _ -> ()) no_stream_data obj; `String "DP"]
+      `List [`String s; json_of_object pdf (fun _ -> ()) no_stream_data false obj; `String "DP"]
 
 (* parse_stream needs pdf and resources. These are for lexing of inline images,
  * looking up the colourspace. We do not need to worry about inherited
@@ -358,19 +358,16 @@ let do_precombine_page_content pdf =
     Pdfpage.change_pages true pdf pages'
 
 let json_of_pdf
-  ~parse_content
-  ~no_stream_data
-  ~decompress_streams
-  ~precombine_page_content
+  ~parse_content ~no_stream_data ~decompress_streams ~precombine_page_content
   pdf
 =
   let pdf = if parse_content && precombine_page_content then do_precombine_page_content pdf else pdf in
   if decompress_streams then
     Pdf.objiter (fun _ obj -> Pdfcodec.decode_pdfstream_until_unknown pdf obj) pdf;
   Pdf.remove_unreferenced pdf;
-  let trailerdict = (0, json_of_object pdf (fun x -> ()) no_stream_data pdf.P.trailerdict) in
+  let trailerdict = (0, json_of_object pdf (fun x -> ()) no_stream_data false pdf.P.trailerdict) in
   let parameters =
-    (-1, json_of_object pdf (fun x -> ()) false
+    (-1, json_of_object pdf (fun x -> ()) false false
       (Pdf.Dictionary [("/CPDFJSONformatversion", Pdf.Integer 2);
                        ("/CPDFJSONcontentparsed", Pdf.Boolean parse_content);
                        ("/CPDFJSONstreamdataincluded", Pdf.Boolean (not no_stream_data));
@@ -387,7 +384,7 @@ let json_of_pdf
     let ps = ref [] in
       P.objiter
         (fun i pdfobj ->
-          ps := (i, json_of_object pdf fcs no_stream_data pdfobj)::!ps)
+          ps := (i, json_of_object pdf fcs no_stream_data parse_content pdfobj)::!ps)
         pdf;
       parameters::trailerdict::!ps
   in
