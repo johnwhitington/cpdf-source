@@ -122,7 +122,16 @@ and object_of_json = function
       in
         P.Stream (ref (d', P.Got (Pdfio.bytes_of_string data)))
   | `Assoc ["S", `List [dict; `List parsed_ops]] ->
-      Pdfops.stream_of_ops (List.map op_of_json parsed_ops)
+      begin match 
+        Pdfops.stream_of_ops (List.map op_of_json parsed_ops)
+      with
+        | P.Stream {contents = (_, Pdf.Got data)} ->
+            let d' =
+              P.add_dict_entry (object_of_json dict) "/Length" (P.Integer (Pdfio.bytes_size data))
+            in
+              P.Stream (ref (d', Pdf.Got data))
+        | _ -> assert false
+      end
   | `Assoc elts -> P.Dictionary (map (fun (n, o) -> (n, object_of_json o)) elts)
   | _ -> error "not recognised in object_of_json"
 
@@ -220,7 +229,11 @@ let rec json_of_object pdf fcs no_stream_data pcs = function
       | P.Stream {contents = (P.Dictionary dict as d, _)} ->
           begin match P.lookup_direct pdf "/Subtype" d with
           | Some (P.Name "/Form") -> fcs i
-          | _ -> ()
+          | _ ->
+              begin match P.lookup_direct pdf "/Type" d with
+              | Some (P.Name "/Pattern") -> fcs i
+              | _ -> ()
+              end
           end
       | _ -> ()
       end;
@@ -330,9 +343,7 @@ let json_of_op pdf no_stream_data = function
       `List [`String s; json_of_object pdf (fun _ -> ()) no_stream_data false obj; `String "DP"]
 
 (* parse_stream needs pdf and resources. These are for lexing of inline images,
- * looking up the colourspace. We do not need to worry about inherited
- * resources, though? For now, don't worry about inherited resources: check in
- * PDF standard. *)
+ * looking up the colourspace. *)
 let parse_content_stream pdf resources bs =
   let ops = O.parse_stream pdf resources [bs] in
     `List (map (json_of_op pdf false) ops)
@@ -395,7 +406,6 @@ let json_of_pdf
              if mem objnum !content_streams then
                begin match obj with
                | `Assoc ["S", `List [dict; `String _]] ->
-                   (* FIXME Proper resources here for reasons explained above? *)
                    let streamdata =
                      match P.lookup_obj pdf objnum with
                      | P.Stream {contents = (_, P.Got b)} -> b
@@ -422,9 +432,12 @@ let to_output o ~parse_content ~no_stream_data ~decompress_streams ~precombine_p
 let of_input i =
   try
     match i.Pdfio.caml_channel with
-    | Some ch -> pdf_of_json (J.from_channel ch)
+    | Some ch ->
+        let r = pdf_of_json (J.from_channel ch) in
+          Pdfwrite.pdf_to_file r "debug.pdf";
+          r
     | None -> 
-        let content = Pdfio.string_of_bytes (Pdfio.bytes_of_input i 0 (i.Pdfio.in_channel_length)) in
+        let content = Pdfio.string_of_bytes (Pdfio.bytes_of_input i 0 i.Pdfio.in_channel_length) in
           pdf_of_json (J.from_string content)
   with
     e -> error (Printexc.to_string e)
