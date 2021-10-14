@@ -449,7 +449,6 @@ type args =
    mutable createpdf_pagesize : Pdfpaper.t;
    mutable removeonly : string option;
    mutable jsonparsecontentstreams : bool;
-   mutable jsonprecombinecontentstreams : bool;
    mutable jsonnostreamdata : bool;
    mutable jsondecompressstreams : bool;
    mutable ocgrenamefrom : string;
@@ -555,7 +554,6 @@ let args =
    createpdf_pagesize = Pdfpaper.a4;
    removeonly = None;
    jsonparsecontentstreams = false;
-   jsonprecombinecontentstreams = false;
    jsonnostreamdata = false;
    jsondecompressstreams = false;
    ocgrenamefrom = "";
@@ -646,7 +644,6 @@ let reset_arguments () =
   args.createpdf_pagesize <- Pdfpaper.a4;
   args.removeonly <- None;
   args.jsonparsecontentstreams <- false;
-  args.jsonprecombinecontentstreams <- false;
   args.jsonnostreamdata <- false;
   args.jsondecompressstreams <- false;
   args.ocgrenamefrom <- "";
@@ -1502,9 +1499,6 @@ let setgsquiet () =
 let setjsonparsecontentstreams () =
   args.jsonparsecontentstreams <- true
 
-let setjsonprecombinecontentstreams () =
-  args.jsonprecombinecontentstreams <- true
-
 let setjsonnostreamdata () =
   args.jsonnostreamdata <- true
 
@@ -2199,9 +2193,6 @@ and specs =
    ("-output-json-parse-content-streams",
      Arg.Unit setjsonparsecontentstreams,
      " Parse content streams");
-   ("-output-json-precombine-content-streams",
-     Arg.Unit setjsonprecombinecontentstreams,
-     " Precombine content streams");
    ("-output-json-no-stream-data",
      Arg.Unit setjsonnostreamdata,
      " Skip stream data for brevity");
@@ -3417,7 +3408,6 @@ let write_json output pdf =
         ~parse_content:args.jsonparsecontentstreams
         ~no_stream_data:args.jsonnostreamdata
         ~decompress_streams:args.jsondecompressstreams
-        ~precombine_page_content:args.jsonprecombinecontentstreams
         pdf
   | File filename ->
       let f = open_out filename in
@@ -3426,7 +3416,6 @@ let write_json output pdf =
           ~parse_content:args.jsonparsecontentstreams
           ~no_stream_data:args.jsonnostreamdata
           ~decompress_streams:args.jsondecompressstreams
-          ~precombine_page_content:args.jsonprecombinecontentstreams
           pdf;
         close_out f
 

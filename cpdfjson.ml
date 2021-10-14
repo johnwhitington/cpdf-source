@@ -287,10 +287,10 @@ let json_of_op pdf no_stream_data = function
   | O.Op_M m -> `List [mkfloat m; `String "M"]
   | O.Op_ri s -> `List [`String s; `String "ri"]
   | O.Op_i i -> `List [mkint i; `String "i"]
-  | O.Op_c (a, b, c, d, e, k) ->
+  | O.Op_c (a, b, c, d, e, f) ->
       `List
         [mkfloat a; mkfloat b; mkfloat c;
-         mkfloat d; mkfloat e; mkfloat k; `String "c"]
+         mkfloat d; mkfloat e; mkfloat f; `String "c"]
   | O.Op_v (a, b, c, d) ->
       `List
         [mkfloat a; mkfloat b; mkfloat c;
@@ -318,10 +318,10 @@ let json_of_op pdf no_stream_data = function
   | O.Op_' s -> `List [`String s; `String "'"]
   | O.Op_'' (k, k', s) -> `List [mkfloat k; mkfloat k'; `String s; `String "''"]
   | O.Op_d0 (k, k') -> `List [mkfloat k; mkfloat k'; `String "d0"]
-  | O.Op_d1 (a, b, c, d, e, k) ->
+  | O.Op_d1 (a, b, c, d, e, f) ->
       `List
         [mkfloat a; mkfloat b; mkfloat c;
-         mkfloat d; mkfloat e; mkfloat k; `String "d1"]
+         mkfloat d; mkfloat e; mkfloat f; `String "d1"]
   | O.Op_cs s -> `List [`String s; `String "cs"]
   | O.Op_SC fs -> `List (map (fun x -> mkfloat x) fs @ [`String "SC"])
   | O.Op_sc fs -> `List (map (fun x -> mkfloat x) fs @ [`String "sc"])
@@ -354,7 +354,7 @@ let parse_content_stream pdf resources bs =
    if not split on op boundaries, each one would fail to parse on its own. The
    caller should really only do this on otherwise-failing files, since it could
    blow up any shared content streams. *)
-let do_precombine_page_content pdf =
+let precombine_page_content pdf =
   let pages' =
     map
       (fun page ->
@@ -371,10 +371,10 @@ let do_precombine_page_content pdf =
     Pdfpage.change_pages true pdf pages'
 
 let json_of_pdf
-  ~parse_content ~no_stream_data ~decompress_streams ~precombine_page_content
+  ~parse_content ~no_stream_data ~decompress_streams
   pdf
 =
-  let pdf = if parse_content && precombine_page_content then do_precombine_page_content pdf else pdf in
+  let pdf = if parse_content then precombine_page_content pdf else pdf in
   if decompress_streams then
     Pdf.objiter (fun _ obj -> Pdfcodec.decode_pdfstream_until_unknown pdf obj) pdf;
   Pdf.remove_unreferenced pdf;
@@ -432,8 +432,8 @@ let json_of_pdf
           (fun (objnum, jsonobj) -> `List [`Int objnum; jsonobj])
           pairs_parsed)
 
-let to_output o ~parse_content ~no_stream_data ~decompress_streams ~precombine_page_content pdf =
-  let json = json_of_pdf ~parse_content ~no_stream_data ~decompress_streams ~precombine_page_content pdf in
+let to_output o ~parse_content ~no_stream_data ~decompress_streams pdf =
+  let json = json_of_pdf ~parse_content ~no_stream_data ~decompress_streams pdf in
     match o.Pdfio.out_caml_channel with
     | Some ch -> J.pretty_to_channel ch json
     | None -> o.Pdfio.output_string (J.pretty_to_string json)
