@@ -400,7 +400,7 @@ let json_of_pdf
         (fun i pdfobj ->
           ps := (i, json_of_object pdf fcs no_stream_data parse_content pdfobj)::!ps)
         pdf;
-      parameters::trailerdict::!ps
+      parameters::trailerdict::sort compare !ps
   in
     let pairs_parsed =
       if not parse_content then pairs else
