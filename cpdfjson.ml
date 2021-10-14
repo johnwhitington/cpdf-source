@@ -1,3 +1,5 @@
+(* FIXME investigate whether we need to look at inherited resources more *)
+(* FIXME document format at top of this file *)
 open Pdfutil
 open Cpdferror
 
@@ -348,10 +350,10 @@ let parse_content_stream pdf resources bs =
   let ops = O.parse_stream pdf resources [bs] in
     `List (map (json_of_op pdf false) ops)
 
-(* We need to make sure each page only has one page content stream. Otherwise,
+(* Make sure each page only has one page content stream. Otherwise,
    if not split on op boundaries, each one would fail to parse on its own. The
    caller should really only do this on otherwise-failing files, since it could
-   blow up any shared content streams *)
+   blow up any shared content streams. *)
 let do_precombine_page_content pdf =
   let pages' =
     map
@@ -411,7 +413,14 @@ let json_of_pdf
                      | P.Stream {contents = (_, P.Got b)} -> b
                      | _ -> error "JSON: stream not decoded"
                    in
-                     (objnum, `Assoc ["S", `List [dict; parse_content_stream pdf (P.Dictionary []) streamdata]])
+                     let dict =
+                       match dict with
+                       | `Assoc d ->
+                           `Assoc (option_map (function (("/Filter" | "/Length"), _) -> None | (a, b) -> Some (a, b)) d)
+                       | _ -> assert false
+                     in
+                       (objnum,
+                        `Assoc ["S", `List [dict; parse_content_stream pdf (P.Dictionary []) streamdata]])
                | _ -> error "json_of_pdf: stream parsing inconsistency"
                end
              else
