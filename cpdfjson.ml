@@ -215,16 +215,17 @@ let rec json_of_object pdf fcs no_stream_data pcs = function
       `Assoc (map (fun (k, v) -> (k, json_of_object pdf fcs no_stream_data pcs v)) elts)
   | P.Stream ({contents = (P.Dictionary dict as d, stream)} as mut) as thestream ->
       P.getstream thestream;
-      let str =
+      let str, dict' =
         match P.lookup_direct pdf "/FunctionType" d, pcs with
         | Some _, true ->
             Pdfcodec.decode_pdfstream_until_unknown pdf thestream;
-            begin match !mut with (_, P.Got b) -> Pdfio.string_of_bytes b | _ -> error "/FunctionType: failure: decomp" end
+            let dict = P.remove_dict_entry d "/Filter" in
+              begin match !mut with (_, P.Got b) -> (Pdfio.string_of_bytes b, dict) | _ -> error "/FunctionType: failure: decomp" end
         | _ ->
-            if no_stream_data then "<<stream data elided>>" else
-              match !mut with (_, P.Got b) -> Pdfio.string_of_bytes b | _ -> error "failure: toget"
+            if no_stream_data then ("<<stream data elided>>", d) else
+              match !mut with (_, P.Got b) -> (Pdfio.string_of_bytes b, d) | _ -> error "failure: toget"
       in
-        json_of_object pdf fcs no_stream_data pcs (P.Dictionary [("S", P.Array [P.Dictionary dict; P.String str])])
+        json_of_object pdf fcs no_stream_data pcs (P.Dictionary [("S", P.Array [dict'; P.String str])])
   | P.Stream _ -> error "error: stream with not-a-dictionary"
   | P.Indirect i ->
       begin match P.lookup_obj pdf i with
