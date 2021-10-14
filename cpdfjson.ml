@@ -433,9 +433,7 @@ let of_input i =
   try
     match i.Pdfio.caml_channel with
     | Some ch ->
-        let r = pdf_of_json (J.from_channel ch) in
-          Pdfwrite.pdf_to_file r "debug.pdf";
-          r
+        pdf_of_json (J.from_channel ch)
     | None -> 
         let content = Pdfio.string_of_bytes (Pdfio.bytes_of_input i 0 i.Pdfio.in_channel_length) in
           pdf_of_json (J.from_string content)
