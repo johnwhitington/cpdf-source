@@ -354,9 +354,6 @@ val remove_all_text : int list -> Pdf.t -> Pdf.t
 
 val process_xobjects : Pdf.t -> Pdfpage.t -> (Pdf.t -> Pdf.pdfobject -> Pdf.pdfobject list -> Pdf.pdfobject list) -> unit
 
-(** Nobble a page, given pdf, pagenumber and page *)
-val nobble_page : Pdf.t -> 'a -> Pdfpage.t -> Pdfpage.t
-
 val find_cpdflin : string option -> string
 
 val call_cpdflin : string -> string -> string -> string -> int

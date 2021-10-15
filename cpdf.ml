@@ -2244,56 +2244,6 @@ let combine_pages fast under over scaletofit swap equalize =
                    debug_pdf r "final.pdf";
                    r
 
-let nobble_page pdf _ page =
-  let minx, miny, maxx, maxy =
-    (* Use cropbox if available *)
-    Pdf.parse_rectangle
-      (match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
-       | Some r -> r
-       | None -> page.Pdfpage.mediabox)
-  in
-    let fontdict =
-      match Pdf.lookup_direct pdf "/Font" page.Pdfpage.resources with
-      | None -> Pdf.Dictionary []
-      | Some d -> d
-    in
-      let fontname = Pdf.unique_key "F" fontdict in
-    let width = maxx -. minx in let height = maxy -. miny in
-      let scalex =
-        (width *. 1000.) /. float (Pdfstandard14.textwidth false Pdftext.StandardEncoding Pdftext.Helvetica "DEMO")
-      in
-        let page' =
-          let font =
-            Pdf.Dictionary
-              [("/Type", Pdf.Name "/Font");
-               ("/Subtype", Pdf.Name "/Type1");
-               ("/BaseFont", Pdf.Name "/Helvetica")]
-          in let ops =
-            [Pdfops.Op_BMC "/CPDFSTAMP";
-             Pdfops.Op_cm
-               (Pdftransform.matrix_of_transform
-                  [Pdftransform.Translate (minx, miny +. height /. 2.)]);
-             Pdfops.Op_gs "/gs0";
-             Pdfops.Op_BT;
-             Pdfops.Op_Tf (fontname, scalex);
-             Pdfops.Op_Tj "DEMO";
-             Pdfops.Op_ET;
-             Pdfops.Op_EMC]
-          in
-            {(Pdfpage.blankpage Pdfpaper.a4) with
-                Pdfpage.mediabox = page.Pdfpage.mediabox;
-                Pdfpage.content = [Pdfops.stream_of_ops ops];
-                Pdfpage.resources =
-                  Pdf.Dictionary
-                    [("/Font", Pdf.Dictionary [(fontname, font)]);
-                     ("/ExtGState", Pdf.Dictionary
-                        ["/gs0",
-                        Pdf.Dictionary["/Type", Pdf.Name "/ExtGState"; "/ca", Pdf.Real 0.2]]);
-                    ]
-            }
-        in
-          do_stamp false false (BottomLeft 0.) false false false true pdf page' page (Pdf.empty ())
-
 (* \section{Set media box} *)
 let set_mediabox xywhlist pdf range =
   let crop_page pnum page =

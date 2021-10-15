@@ -1,5 +1,4 @@
 (* cpdf command line tools *)
-let demo = false
 let noncomp = false
 let major_version = 2
 let minor_version = 5
@@ -779,10 +778,6 @@ let rec decrypt_if_necessary (_, _, user_pw, owner_pw, was_dec_with_owner, _) op
 
 (* Duplicated from cpdf.ml -> fix *)
 let ppstub f n p = (f n p, n, Pdftransform.i_matrix)
-
-let nobble pdf =
-  if not demo then pdf else
-    Cpdf.process_pages (ppstub (Cpdf.nobble_page pdf)) pdf (ilist 1 (Pdfpage.endpage pdf))
 
 (* Output Page Count *)
 let output_page_count pdf =
@@ -2598,14 +2593,13 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
     | File outname ->
         begin match encryption with
           None ->
-            let pdf = nobble pdf in
-              if not is_decompress then
-                begin
-                  ignore (Cpdf.recompress_pdf pdf);
-                  if args.squeeze then Cpdf.squeeze ~pagedata:args.squeeze_pagedata ~recompress:args.squeeze_recompress ?logto:!logto pdf;
-                end;
-              Pdf.remove_unreferenced pdf;
-              really_write_pdf ~is_decompress mk_id pdf outname
+            if not is_decompress then
+              begin
+                ignore (Cpdf.recompress_pdf pdf);
+                if args.squeeze then Cpdf.squeeze ~pagedata:args.squeeze_pagedata ~recompress:args.squeeze_recompress ?logto:!logto pdf;
+              end;
+            Pdf.remove_unreferenced pdf;
+            really_write_pdf ~is_decompress mk_id pdf outname
         | Some _ ->
             really_write_pdf ~encryption ~is_decompress mk_id pdf outname
         end
@@ -2614,14 +2608,13 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
         let temp = Filename.temp_file "cpdfstdout" ".pdf" in
           begin match encryption with
             None -> 
-              let pdf = nobble pdf in
-                if not is_decompress then
-                  begin
-                    ignore (Cpdf.recompress_pdf pdf);
-                    if args.squeeze then Cpdf.squeeze ~pagedata:args.squeeze_pagedata ~recompress:args.squeeze_recompress ?logto:!logto pdf;
-                    Pdf.remove_unreferenced pdf
-                  end;
-                  really_write_pdf ~encryption ~is_decompress mk_id pdf temp;
+              if not is_decompress then
+                begin
+                  ignore (Cpdf.recompress_pdf pdf);
+                  if args.squeeze then Cpdf.squeeze ~pagedata:args.squeeze_pagedata ~recompress:args.squeeze_recompress ?logto:!logto pdf;
+                  Pdf.remove_unreferenced pdf
+                end;
+                really_write_pdf ~encryption ~is_decompress mk_id pdf temp;
           | Some _ ->
               really_write_pdf ~encryption ~is_decompress mk_id pdf temp
           end;
@@ -2727,12 +2720,12 @@ let stem s =
         (neq '.') (rev (explode (Filename.basename s))))))
 
 let fast_write_split_pdfs
-  enc splitlevel original_filename sq nobble spec main_pdf pagenums pdf_pages
+  enc splitlevel original_filename sq spec main_pdf pagenums pdf_pages
 =
   let marks = Pdfmarks.read_bookmarks main_pdf in
     iter2
       (fun number pagenums ->
-         let pdf = nobble (Pdfpage.pdf_of_pages main_pdf pagenums) in
+         let pdf = Pdfpage.pdf_of_pages main_pdf pagenums in
            let startpage, endpage = extremes pagenums in
              let name =
                name_of_spec
@@ -2758,7 +2751,7 @@ let bookmark_pages level pdf =
         (Pdfmarks.read_bookmarks pdf))
 
 let split_at_bookmarks
-  enc original_filename ~squeeze nobble level spec pdf
+  enc original_filename ~squeeze level spec pdf
 =
   let pdf_pages = Pdfpage.pages_of_pagetree pdf in
     let points = bookmark_pages level pdf in
@@ -2767,16 +2760,16 @@ let split_at_bookmarks
       in
         let pts = splitat points (indx pdf_pages) in
           fast_write_split_pdfs
-            enc level original_filename squeeze nobble spec pdf pts pdf_pages
+            enc level original_filename squeeze spec pdf pts pdf_pages
 
 let split_pdf
   enc original_filename
   chunksize linearize ~cpdflin ~preserve_objstm ~create_objstm ~squeeze
-  nobble spec pdf
+  spec pdf
 =
   let pdf_pages = Pdfpage.pages_of_pagetree pdf in
     fast_write_split_pdfs
-      enc 0 original_filename squeeze nobble spec pdf
+      enc 0 original_filename squeeze spec pdf
       (splitinto chunksize (indx pdf_pages)) pdf_pages
 
 
@@ -3867,7 +3860,7 @@ let go () =
                 split_pdf
                   enc args.original_filename args.chunksize args.linearize ~cpdflin:args.cpdflin
                   ~preserve_objstm:args.preserve_objstm ~create_objstm:args.preserve_objstm (*yes--always create if preserving *)
-                  ~squeeze:args.squeeze nobble output_spec pdf
+                  ~squeeze:args.squeeze output_spec pdf
         | _, Stdout -> error "Can't split to standard output"
         | _, NoOutputSpecified -> error "Split: No output format specified"
         | _ -> error "Split: bad parameters"
@@ -3895,7 +3888,7 @@ let go () =
               in
                 args.create_objstm <- args.preserve_objstm;
                 split_at_bookmarks
-                  enc args.original_filename ~squeeze:args.squeeze nobble level output_spec pdf
+                  enc args.original_filename ~squeeze:args.squeeze level output_spec pdf
         | Stdout -> error "Can't split to standard output"
         | NoOutputSpecified -> error "Split: No output format specified"
       end
@@ -4151,7 +4144,7 @@ let go () =
         (Cpdf.combine_pages args.fast (get_single_pdf args.op false) (pdfread_pdf_of_file None None over) false false true)
   | Some Encrypt ->
       let pdf = get_single_pdf args.op false in
-        let pdf = Cpdf.recompress_pdf <| nobble pdf
+        let pdf = Cpdf.recompress_pdf pdf
         and encryption =
           {Pdfwrite.encryption_method =
              (match args.crypt_method with
@@ -4384,8 +4377,6 @@ let go_withargv argv =
     exit 0
   | _ -> 
   Hashtbl.clear filenames;
-  if demo then
-    flprint "This demo is for evaluation only. http://www.coherentpdf.com/\n";
   if noncomp then
     begin
       prerr_string "For non-commercial use only\n";
