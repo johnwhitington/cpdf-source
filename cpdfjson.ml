@@ -1,5 +1,84 @@
-(* FIXME investigate whether we need to look at inherited resources more *)
-(* FIXME document format at top of this file *)
+(* Read and write PDF files in JSON format.
+
+The file is an array of arrays containing an object number followed by an
+object, one for each object in the file and two special ones:
+
+Object -1: CPDF's own data with the PDF version number, CPDF JSON format
+number, and flags used when writing (which may be required when reading):
+
+  o /CPDFJSONformatversion (integer, currently 2)
+  o /CPDFJSONcontentparsed (boolean, true if content streams have been parsed)
+  o /CPDFJSONstreamdataincluded (boolean, true if stream data included. Cannot
+  round-trip if false).
+  o /CPDFJSONmajorpdfversion (integer)
+  o /CPDFJSONminorpdfversion (integer)
+
+Object 0: The PDF's trailer dictionary
+
+Objects 1..n: The PDF's objects.
+
+  o PDF arrays, dictionaries, booleans, and strings are the same in JSON.
+  o Integers are written as {"I": 0}
+  o Floats are written as {"F": 0.0}
+  o Names are written as {"N": "/Pages"}
+  o Indirect references are integers
+  o Streams are {"S": [dict, data]}
+
+There are two subformats: parsing content streams or not.  Hello World in CPDF
+JSON without parsing content streams:
+
+[
+  [
+  -1, { "/CPDFJSONformatversion": { "I": 2 },
+  "/CPDFJSONcontentparsed": false, "/CPDFJSONstreamdataincluded": true,
+  "/CPDFJSONmajorpdfversion": { "I": 1 },
+  "/CPDFJSONminorpdfversion": { "I": 1 } } ], [
+  0, { "/Size": { "I": 4 }, "/Root": 4,
+  "/ID": [ "èÎ25\u001e³/°q:OÊ°u", "èÎ25\u001e³/°q:OÊ°u" ] } ], [
+  1, { "/Type": { "N": "/Pages" }, "/Kids": [ 3 ], "/Count": { "I": 1 } } ],
+  [
+  2, {
+  "S": [
+    { "/Length": { "I": 49 } },
+    "1 0 0 1 50 770 cm BT/F0 36 Tf(Hello, World!)Tj ET"
+  ] } ], [
+  3, { "/Type": { "N": "/Page" }, "/Parent": 1,
+  "/Resources": {
+    "/Font": {
+      "/F0": {
+        "/Type": { "N": "/Font" },
+        "/Subtype": { "N": "/Type1" },
+        "/BaseFont": { "N": "/Times-Italic" }
+      }
+    }
+  },
+  "/MediaBox": [
+    { "I": 0 }, { "I": 0 }, { "F": 595.2755905510001 }, { "F": 841.88976378 }
+  ], "/Rotate": { "I": 0 }, "/Contents": [ 2 ] } ], [
+  4, { "/Type": { "N": "/Catalog" }, "/Pages": 1 } ]
+]
+
+Alternative object number 2 when parsing of object streams in operation:
+
+2, {
+"S": [
+  {}, [
+  [
+  { "F": 1.0 }, { "F": 0.0 }, { "F": 0.0 }, { "F": 1.0 }, { "F": 50.0 }, {
+  "F": 770.0 }, "cm" ], [ "BT" ], [ "/F0", { "F": 36.0 }, "Tf" ], [
+  "Hello, World!", "Tj" ], [ "ET" ] ]
+] } ], [
+
+When parsing content streams:
+
+  o Each operation is an array
+  o The 'operation' for inline images is "InlineImage"
+
+CPDF currently never preserves object streams, and only outputs unencrypted files.
+
+When reloading a JSON file, CPDF knows how to correct /Length entries in
+streams, so you need not worry about them.  *)
+
 open Pdfutil
 open Cpdferror
 
@@ -352,9 +431,7 @@ let parse_content_stream pdf resources bs =
     `List (map (json_of_op pdf false) ops)
 
 (* Make sure each page only has one page content stream. Otherwise,
-   if not split on op boundaries, each one would fail to parse on its own. The
-   caller should really only do this on otherwise-failing files, since it could
-   blow up any shared content streams. *)
+   if not split on op boundaries, each one would fail to parse on its own. *)
 let precombine_page_content pdf =
   let pages' =
     map
