@@ -1,4 +1,5 @@
 (* cpdf command line tools *)
+let demo = false
 let noncomp = false
 let major_version = 2
 let minor_version = 5
@@ -4377,6 +4378,8 @@ let go_withargv argv =
     exit 0
   | _ -> 
   Hashtbl.clear filenames;
+  if demo then
+    flprint "This demo is for evaluation only. http://www.coherentpdf.com/\n";    
   if noncomp then
     begin
       prerr_string "For non-commercial use only\n";
