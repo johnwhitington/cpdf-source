@@ -454,7 +454,8 @@ type args =
    mutable ocgrenamefrom : string;
    mutable ocgrenameto : string;
    mutable dedup : bool;
-   mutable dedup_per_page : bool}
+   mutable dedup_per_page : bool;
+   mutable collate : bool}
 
 let args =
   {op = None;
@@ -559,7 +560,8 @@ let args =
    ocgrenamefrom = "";
    ocgrenameto = "";
    dedup = false;
-   dedup_per_page = false}
+   dedup_per_page = false;
+   collate = false;}
 
 let reset_arguments () =
   args.op <- None;
@@ -649,7 +651,8 @@ let reset_arguments () =
   args.ocgrenamefrom <- "";
   args.ocgrenameto <- "";
   args.dedup <- false;
-  args.dedup_per_page <- false
+  args.dedup_per_page <- false;
+  args.collate <- false
   (* Do not reset original_filename or cpdflin or was_encrypted or
    * was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
    * gs_malformed or gs_quiet, since we want these to work across ANDs. Or
@@ -953,8 +956,6 @@ let centerwindow b =
 let displaydoctitle b =
   try setop (DisplayDocTitle (bool_of_string b)) () with
     _ -> failwith "DisplayDocTitle: must use true or false"
-
-
 
 let setsplitbookmarks i = setop (SplitOnBookmarks i) ()
 let setstdout () = args.out <- Stdout
@@ -1519,6 +1520,9 @@ let set_dedup () =
 let set_dedup_per_page () =
   args.dedup_per_page <- true
 
+let setcollate () =
+  args.collate <- true
+
 let whingemalformed () =
   prerr_string "Command line must be of exactly the form\ncpdf <infile> -gs <path> -gs-malformed-force -o <outfile>\n";
   exit 1
@@ -1561,6 +1565,9 @@ and specs =
    ("-range",
       Arg.String setrange,
       " Explicitly add a range");
+   ("-collate",
+      Arg.Unit setcollate,
+      " Collate ranges when merging");
    ("-revision",
       Arg.Int setrevision,
       "");
@@ -3413,6 +3420,21 @@ let write_json output pdf =
           pdf;
         close_out f
 
+let collate (names, pdfs, ranges) =
+  let ois = map ref (combine3 names pdfs ranges) in
+  let nis = ref [] in
+    while flatten (map (fun {contents = (_, _, r)} -> r) ois) <> [] do
+      iter
+        (fun ({contents = (name, pdf, range)} as r) ->
+           match range with
+           | [] -> ()
+           | h::t ->
+               nis := (name, pdf, [h])::!nis;
+               r := (name, pdf, t))
+        ois
+    done;
+    split3 (rev !nis)
+
 (* Main function *)
 let go () =
   match args.op with
@@ -3471,10 +3493,14 @@ let go () =
                       in
                       (* If args.keep_this_id is set, change the ID to the one from the kept one *)
                       let rangenums = map2 parse_pagespec pdfs ranges in
+                        (* At this point, we have the information for collation. *)
+                        let names = map string_of_input_kind names in
+                        let names, pdfs, rangenums =
+                          (if args.collate then collate else Fun.id) (names, pdfs, rangenums)
+                        in
                         let outpdf =
                           Pdfmerge.merge_pdfs
-                            args.retain_numbering args.remove_duplicate_fonts
-                          (map string_of_input_kind names) pdfs rangenums
+                            args.retain_numbering args.remove_duplicate_fonts names pdfs rangenums
                         in
                           write_pdf false outpdf
                   end
@@ -4350,10 +4376,6 @@ let gs_malformed_force fi fo =
       match Sys.command gscall with
       | 0 -> exit 0
       | _ -> Printf.eprintf "Failed to mend file.\n%!"; exit 2
-
-(* FIXME: Now we call this repeatedly from interactive programs, careful to
-ensure that all memory is cleaned. See clearance of filenames hashtable, for
-example. *)
 
 let process_env_vars () =
   match Sys.getenv_opt "CPDF_DEBUG" with
