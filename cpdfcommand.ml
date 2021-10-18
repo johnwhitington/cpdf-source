@@ -85,6 +85,7 @@ type op =
   | CombinePages of string
   | TwoUp
   | TwoUpStack
+  | Impose of bool
   | RemoveBookmarks
   | AddBookmarks of string
   | AddText of string
@@ -200,6 +201,7 @@ type op =
   | StampAsXObject of string
 
 let string_of_op = function
+  | Impose _ -> "Impose"
   | CopyFont _ -> "CopyFont"
   | CountPages -> "CountPages"
   | Version -> "Version"
@@ -455,7 +457,14 @@ type args =
    mutable ocgrenameto : string;
    mutable dedup : bool;
    mutable dedup_per_page : bool;
-   mutable collate : bool}
+   mutable collate : bool;
+   mutable impose_columns : bool;
+   mutable impose_rtl : bool;
+   mutable impose_btt : bool;
+   mutable impose_center : bool;
+   mutable impose_margin : float;
+   mutable impose_spacing : float;
+   mutable impose_linewidth : float}
 
 let args =
   {op = None;
@@ -561,7 +570,14 @@ let args =
    ocgrenameto = "";
    dedup = false;
    dedup_per_page = false;
-   collate = false;}
+   collate = false;
+   impose_columns = false;
+   impose_rtl = false;
+   impose_btt = false;
+   impose_center = false;
+   impose_margin = 0.;
+   impose_spacing = 0.;
+   impose_linewidth = 0.}
 
 let reset_arguments () =
   args.op <- None;
@@ -652,7 +668,14 @@ let reset_arguments () =
   args.ocgrenameto <- "";
   args.dedup <- false;
   args.dedup_per_page <- false;
-  args.collate <- false
+  args.collate <- false;
+  args.impose_columns <- false;
+  args.impose_rtl <- false;
+  args.impose_btt <- false;
+  args.impose_center <- false;
+  args.impose_margin <- 0.;
+  args.impose_spacing <- 0.;
+  args.impose_linewidth <- 0.
   (* Do not reset original_filename or cpdflin or was_encrypted or
    * was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
    * gs_malformed or gs_quiet, since we want these to work across ANDs. Or
@@ -721,7 +744,7 @@ let banned banlist = function
   | Decrypt | Encrypt | CombinePages _ -> true (* Never allowed *)
   | AddBookmarks _ | PadBefore | PadAfter | PadEvery _ | PadMultiple _ | PadMultipleBefore _
   | Merge | Split | SplitOnBookmarks _ | RotateContents _ | Rotate _
-  | Rotateby _ | Upright | VFlip | HFlip ->
+  | Rotateby _ | Upright | VFlip | HFlip | Impose _ ->
       mem Pdfcrypt.NoAssemble banlist
   | TwoUp|TwoUpStack|RemoveBookmarks|AddRectangle|RemoveText|
     Draft|Shift|Scale|ScaleToFit|RemoveAttachedFiles|
@@ -1523,6 +1546,35 @@ let set_dedup_per_page () =
 let setcollate () =
   args.collate <- true
 
+let setimposecolumns () =
+  args.impose_columns <- true
+
+let setimposertl () =
+  args.impose_rtl <- true
+
+let setimposebtt () =
+  args.impose_btt <- true
+
+let setimposecenter () =
+  args.impose_center <- true
+
+let setimpose s =
+  setop (Impose true) ();
+  args.coord <- s
+
+let setimposexy s =
+  setop (Impose false) ();
+  args.coord <- s
+
+let setimposemargin f =
+  args.impose_margin <- f
+
+let setimposespacing f =
+  args.impose_spacing <- f
+
+let setimposelinewidth f =
+  args.impose_linewidth <- f
+
 let whingemalformed () =
   prerr_string "Command line must be of exactly the form\ncpdf <infile> -gs <path> -gs-malformed-force -o <outfile>\n";
   exit 1
@@ -1908,6 +1960,33 @@ and specs =
    ("-twoup-stack",
       Arg.Unit (setop TwoUpStack),
       " Stack 2 pages onto one twice the size");
+   ("-impose",
+      Arg.String setimpose,
+      " Impose onto given page size");
+   ("-impose-xy",
+      Arg.String setimposexy,
+      " Impose x by y (zero means unlimited)");
+   ("-impose-columns",
+      Arg.Unit setimposecolumns,
+      " Impose in columns rather than rows");
+   ("-impose-rtl",
+      Arg.Unit setimposertl,
+      " Impose right-to-left on rows");
+   ("-impose-btt",
+      Arg.Unit setimposebtt,
+      " Impose bottom-to-top on columns");
+   ("-impose-center",
+      Arg.Unit setimposecenter,
+      " Center last partly-empty row or column");
+   ("-impose-margin",
+      Arg.Float setimposemargin,
+      " Add margin around whole imposed page");
+   ("-impose-spacing",
+      Arg.Float setimposespacing,
+      " Add spacing around each imposed page");
+   ("-impose-linewidth",
+      Arg.Float setimposelinewidth,
+      " Imposition divider line width (0=none)");
    ("-pad-before",
       Arg.Unit (setop PadBefore),
       " Add a blank page before the given pages");
@@ -2911,8 +2990,6 @@ let copy_cropbox_to_mediabox pdf range =
        | None -> page))
     pdf
     range
-
-
 
 (* copy the contents of the box f to the box t. If mediabox_if_missing is set,
 the contents of the mediabox will be used if the from fox is not available. If
@@ -3953,6 +4030,8 @@ let go () =
       write_pdf false (Cpdf.twoup args.fast (get_single_pdf args.op false))
   | Some TwoUpStack ->
       write_pdf false (Cpdf.twoup_stack args.fast (get_single_pdf args.op false))
+  | Some Impose x ->
+      write_pdf false (get_single_pdf args.op false)
   | Some (StampOn over) ->
       let overpdf =
         match over with
