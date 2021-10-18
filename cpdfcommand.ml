@@ -3043,62 +3043,6 @@ let missing_fonts pdf range =
     pdf
     range
 
-let lines_of_channel c =
-  let ls = ref [] in
-    try
-      while true do ls =| input_line c done; []
-    with
-      End_of_file -> rev !ls
-
-(* parse the results of the standard error part of gs -sDEVICE=bbox *)
-let parse_whiteboxes filename =
-  try
-    let fh = open_in filename in
-      let lines = lines_of_channel fh in
-        let lines =
-          keep
-            (function l ->
-               match explode l with
-               | '%'::'%'::_ -> true | _ -> false)
-            lines
-        in
-        let hires_lines = drop_odds lines in
-          let result =
-            map
-              (fun line ->
-                 let line = implode (drop (explode line) 20) in
-                   match Pdfgenlex.lex_string line with
-                   | [a; b; c; d] ->
-                        let getfloat = function
-                          | Pdfgenlex.LexInt i -> float i
-                          | Pdfgenlex.LexReal f -> f
-                          | _ -> raise (Failure "parse_whiteboxes")
-                        in
-                          getfloat a, getfloat b, getfloat c, getfloat d
-                   | x -> raise (Failure ("bad lex on line " ^ line ^ "made tokens " ^ Pdfgenlex.string_of_tokens x)))
-              hires_lines
-          in
-            close_in fh;
-            result
-  with
-    e ->
-      Printf.eprintf "%s\n%!" ("parse_whiteboxes " ^ Printexc.to_string e);
-      raise (Failure "")
-
-(* Make start, end pairs from a sortedrange *)
-let rec startends_of_range_inner pairs ls =
-  match pairs, ls with
-  | _, [] -> rev pairs
-  | [], (h::t) ->
-      startends_of_range_inner [(h, h)] t
-  | ((s, e)::ps), (h::t) when h = e + 1 ->
-      startends_of_range_inner ((s, h)::ps) t
-  | ps, (h::t) ->
-      startends_of_range_inner ((h, h)::ps) t
-
-let startends_of_range x =
-  startends_of_range_inner [] x
-
 (* copy the contents of the box f to the box t. If mediabox_if_missing is set,
 the contents of the mediabox will be used if the from fox is not available. If
 mediabox_is_missing is false, the page is unaltered. *)
