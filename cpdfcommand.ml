@@ -3327,8 +3327,6 @@ let collate (names, pdfs, ranges) =
     done;
     split3 (rev !nis)
 
-let impose fit columns rtl btt center margin spacing linewidth pdf = pdf
-
 (* Main function *)
 let go () =
   match args.op with
@@ -4033,10 +4031,11 @@ let go () =
   | Some TwoUpStack ->
       write_pdf false (Cpdf.twoup_stack args.fast (get_single_pdf args.op false))
   | Some Impose fit ->
-      write_pdf false
-        (impose fit args.impose_columns args.impose_rtl args.impose_btt args.impose_center
-                    args.impose_margin args.impose_spacing args.impose_linewidth
-                (get_single_pdf args.op false))
+      let pdf = get_single_pdf args.op false in
+      let x, y = Cpdfcoord.parse_coordinate pdf args.coord in
+        write_pdf false
+          (Cpdf.impose x y fit args.impose_columns args.impose_rtl args.impose_btt args.impose_center
+                      args.impose_margin args.impose_spacing args.impose_linewidth args.fast pdf)
   | Some (StampOn over) ->
       let overpdf =
         match over with

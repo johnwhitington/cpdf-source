@@ -2733,46 +2733,7 @@ let copy_annotations range frompdf topdf =
             Pdfpage.change_pages true !pdf (rev !pages)
     | _ -> assert false
 
-(* \section{N-up} *)
-
-(* Given a number to fit and a mediabox, return a list of transforms for the
-2 pages. *)
-let twoup_transforms mediabox =
-  let width, height =
-    match Pdf.parse_rectangle mediabox with
-      xmin, ymin, xmax, ymax -> xmax -. xmin, ymax -. ymin
-  in
-    let width_exceeds_height = width > height in
-      let rotate = Pdftransform.Rotate ((0., 0.), rad_of_deg 90.) 
-      in let sc =
-        if width_exceeds_height
-          then fmin (height /. width) ((width /. 2.) /. height)
-          else fmin (width /. height) ((height /. 2.) /. width)
-      in
-        let scale = Pdftransform.Scale ((0., 0.), sc, sc) in
-          let tr0, tr1 =
-            if width_exceeds_height then
-              Pdftransform.Translate (height *. sc, 0.),
-              Pdftransform.Translate (height *. sc *. 2., 0.)
-            else
-              Pdftransform.Translate (height *. sc, 0.),
-              Pdftransform.Translate (height *. sc, width *. sc)
-          in
-            let t0 = Pdftransform.matrix_of_transform [tr0; rotate; scale]
-            in let t1 = Pdftransform.matrix_of_transform [tr1; rotate; scale] in
-              [t0; t1]
-
-let twoup_stack_transforms mediabox =
-  let width, height =
-    match Pdf.parse_rectangle mediabox with
-      xmin, ymin, xmax, ymax -> xmax -. xmin, ymax -. ymin
-  in
-    let rotate = Pdftransform.Rotate ((0., 0.), rad_of_deg 90.) 
-    in let tr0 = Pdftransform.Translate (height, 0.)
-    in let tr1 = Pdftransform.Translate (height, width) in
-      let t0 = Pdftransform.matrix_of_transform [tr0; rotate]
-      in let t1 = Pdftransform.matrix_of_transform [tr1; rotate] in
-        [t0; t1]
+(* Imposition *)
 
 (* Union two rest dictionaries from the same PDF. *)
 let combine_pdf_rests pdf a b =
@@ -2785,7 +2746,7 @@ let combine_pdf_rests pdf a b =
     | Pdf.Dictionary entries -> entries
     | _ -> []
   in
-    let keys_to_combine = ["/Annots"] in
+    let keys_to_combine = ["/Annots"] in (* FIXME Check to see if anything else needed here *)
       let combine_entries key =
         let a_entries =
           match Pdf.lookup_direct pdf key a with
@@ -2805,23 +2766,37 @@ let combine_pdf_rests pdf a b =
         let unknown_keys_b = lose (fun (k, _) -> mem k keys_to_combine) b_entries in
         let combined_known_entries = option_map combine_entries keys_to_combine in
           Pdf.Dictionary (unknown_keys_a @ unknown_keys_b @ combined_known_entries)
-          
+
+(* Calculate the transformation matrices for a single imposed output page. *)
+let impose_transforms n x y column rtl btt center margin spacing linewidth mediabox =
+  let width, height =
+    match Pdf.parse_rectangle mediabox with
+      xmin, ymin, xmax, ymax -> xmax -. xmin, ymax -. ymin
+  in
+  let trs = ref [] in
+  let x = int_of_float x in
+  let y = int_of_float y in
+  for row = y - 1 downto 0 do
+    for col = 0 to x - 1 do
+      trs :=
+        Pdftransform.matrix_of_transform
+          [Pdftransform.Translate (width *. float_of_int col, height *. float_of_int row)]::!trs;
+    done
+  done;
+  rev !trs
+
 (* Combine two pages into one throughout the document. The pages have already
-had their objects renumbered so as not to clash.*)
-let twoup_pages_inner isstack fast pdf = function
+had their objects renumbered so as not to clash. *)
+let impose_pages n x y columns rtl btt center margin spacing linewidth mediabox' fast pdf = function
   | [] -> assert false
   | (h::_) as pages ->
      let transforms = 
-       take (((if isstack then twoup_stack_transforms else twoup_transforms) h.Pdfpage.mediabox)) (length pages)
+       take (impose_transforms n x y columns rtl btt center margin spacing linewidth h.Pdfpage.mediabox) (length pages)
      in
        (* Change the pattern matrices before combining resources *)
        let pages, h =
-         let r =
-           map2
-             (fun p t -> change_pattern_matrices_page pdf t p)
-             pages transforms
-         in
-           r, List.hd r
+         let r = map2 (fun p t -> change_pattern_matrices_page pdf t p) pages transforms in
+           (r, List.hd r)
        in
      let resources' = pair_reduce (combine_pdf_resources pdf) (map (fun p -> p.Pdfpage.resources) pages) in
      let rest' = pair_reduce (combine_pdf_rests pdf) (map (fun p -> p.Pdfpage.rest) pages) in
@@ -2829,9 +2804,7 @@ let twoup_pages_inner isstack fast pdf = function
           let transform_stream clipbox contents transform =
             let clipops =
               let minx, miny, maxx, maxy = Pdf.parse_rectangle clipbox in
-              [Pdfops.Op_re (minx, miny, maxx -. minx, maxy -. miny);
-               Pdfops.Op_W;
-               Pdfops.Op_n]
+                [Pdfops.Op_re (minx, miny, maxx -. minx, maxy -. miny); Pdfops.Op_W; Pdfops.Op_n]
             in
               (* If fast, no q/Q protection and no parsing of operators. *)
               if fast then
@@ -2856,34 +2829,38 @@ let twoup_pages_inner isstack fast pdf = function
               pages
               transforms)
        in
-         {Pdfpage.mediabox =
-           if isstack then
-            let width, height =
-              match Pdf.parse_rectangle h.Pdfpage.mediabox with
-                xmin, ymin, xmax, ymax -> xmax -. xmin, ymax -. ymin
-            in
-              Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real height; Pdf.Real (width *. 2.)]
-           else
-             h.Pdfpage.mediabox;
+         {Pdfpage.mediabox = mediabox';
           Pdfpage.rotate = h.Pdfpage.rotate;
           Pdfpage.content = content';
           Pdfpage.resources = resources';
-          Pdfpage.rest = if isstack then Pdf.remove_dict_entry rest' "/CropBox" else rest'}
+          Pdfpage.rest = rest'}
 
-let f_twoup f_pages pdf =
+(* FIXME impose to use cropbox by default? See what happens with cropbox above. Clarify? Also point to hardbox. *)
+let impose ~x ~y ~fit ~columns ~rtl ~btt ~center ~margin ~spacing ~linewidth ~fast pdf =
+  Printf.printf
+    "impose: x = %f, y = %f, fit = %b, columns = %b, rtl = %b, btt = %b, center = %b, margin = %f, spacing = %f, linewidth = %f, fast = %b\n"
+    x y fit columns rtl btt center margin spacing linewidth fast;
+  let n = int_of_float x * int_of_float y in
+  let firstpage = hd (Pdfpage.pages_of_pagetree pdf) in
+  let mediabox' =
+    if fit then Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real x; Pdf.Real y] else
+      let _, _, w, h = Pdf.parse_rectangle firstpage.Pdfpage.mediabox in
+        Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real (w *. x); Pdf.Real (h *. y)]
+  in
   let pagenums = ilist 1 (Pdfpage.endpage pdf) in
   let pdf = upright pagenums pdf in
-    let pages = Pdfpage.pages_of_pagetree pdf in
-      let pagesets = splitinto 2 pages in
-        let renumbered = map (Pdfpage.renumber_pages pdf) pagesets in
-          let pages' = map (f_pages pdf) renumbered in
-            let changes = map (fun x -> (x, (x + 1) / 2)) pagenums in
-              (*print_changes changes;*)
-              Pdfpage.change_pages ~changes true pdf pages'
+  let pages = Pdfpage.pages_of_pagetree pdf in
+  let pagesets = splitinto n pages in
+  let renumbered = map (Pdfpage.renumber_pages pdf) pagesets in
+  let pages' = map (impose_pages n x y columns rtl btt center margin spacing linewidth mediabox' fast pdf) renumbered in
+  let changes = map (fun x -> (x, (x + (n - 1)) / n)) pagenums in
+    Pdfpage.change_pages ~changes true pdf pages'
 
-let twoup fast pdf = f_twoup (twoup_pages_inner false fast) pdf
+(* FIXME *)
+let twoup fast pdf = pdf (*f_twoup (twoup_pages_inner false fast) pdf*)
 
-let twoup_stack fast pdf = f_twoup (twoup_pages_inner true fast) pdf
+(* FIXME *)
+let twoup_stack fast pdf = pdf (*f_twoup (twoup_pages_inner true fast) pdf*)
 
 (* \section{Output info} *)
 let get_info raw pdf =

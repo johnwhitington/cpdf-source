@@ -305,6 +305,8 @@ val remove_annotations : int list -> Pdf.t -> Pdf.t
 
 (** {2 Imposition} *)
 
+val impose : x:float -> y:float -> fit:bool -> columns:bool -> rtl:bool -> btt:bool -> center:bool -> margin:float -> spacing:float -> linewidth:float -> fast:bool -> Pdf.t -> Pdf.t
+
 (** The twoup_stack operation puts two logical pages on each physical page,
 rotating them 90 degrees to do so. The new mediabox is thus larger. Bool true
 (fast) if assume well-formed ISO content streams. *)
