@@ -2860,22 +2860,32 @@ let impose_pages n x y columns rtl btt center margin spacing linewidth mediabox'
 
 (* FIXME impose to use cropbox by default? See what happens with cropbox above. Clarify? Also point to hardbox. *)
 let impose ~x ~y ~fit ~columns ~rtl ~btt ~center ~margin ~spacing ~linewidth ~fast pdf =
-  Printf.printf
+  (*Printf.printf
     "impose: x = %f, y = %f, fit = %b, columns = %b, rtl = %b, btt = %b, center = %b, margin = %f, spacing = %f, linewidth = %f, fast = %b\n"
-    x y fit columns rtl btt center margin spacing linewidth fast;
-  let n = int_of_float x * int_of_float y in
+    x y fit columns rtl btt center margin spacing linewidth fast;*)
+  let endpage = Pdfpage.endpage pdf in
+  let ix = int_of_float x in
+  let iy = int_of_float y in
+  let n, ix, iy =
+      if ix = 0 && iy = 0 then error "impose-xy: both dimensions cannot be zero" else
+      if ix = 0 then (endpage, endpage, 1)
+      else if iy = 0 then (endpage, 1, endpage)
+      else (ix * iy, ix, iy)
+  in
   let firstpage = hd (Pdfpage.pages_of_pagetree pdf) in
   let mediabox' =
     if fit then Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real x; Pdf.Real y] else
       let _, _, w, h = Pdf.parse_rectangle firstpage.Pdfpage.mediabox in
-        Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real (w *. x); Pdf.Real (h *. y)]
+        if x = 0.0 then Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real (w *. float_of_int endpage); Pdf.Real h]
+        else if y = 0.0 then Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real w; Pdf.Real (h *. float_of_int endpage)]
+        else Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real (w *. x); Pdf.Real (h *. y)]
   in
-  let pagenums = ilist 1 (Pdfpage.endpage pdf) in
+  let pagenums = ilist 1 endpage in
   let pdf = upright pagenums pdf in
   let pages = Pdfpage.pages_of_pagetree pdf in
   let pagesets = splitinto n pages in
   let renumbered = map (Pdfpage.renumber_pages pdf) pagesets in
-  let pages' = map (impose_pages n x y columns rtl btt center margin spacing linewidth mediabox' fast pdf) renumbered in
+  let pages' = map (impose_pages n (float_of_int ix) (float_of_int iy) columns rtl btt center margin spacing linewidth mediabox' fast pdf) renumbered in
   let changes = map (fun x -> (x, (x + (n - 1)) / n)) pagenums in
     Pdfpage.change_pages ~changes true pdf pages'
 

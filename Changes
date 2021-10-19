@@ -1,7 +1,9 @@
 2.5 (Upcoming 2022)
 
-o -debug-force now properly documented as -decrypt-force
-o Switch to Yojson
+o New operation -impose for document imposition
+o New option -collate to collate page during merges
+o Option -debug-force now properly documented as -decrypt-force
+o Switch to Yojson for faster/better JSON input/output
 o Can read as well as write PDFs in JSON format with -j
 o Environment variable CPDF_REPRODUCIBLE_DATES for testing
 o Environment variable CPDF_DEBUG for -debug

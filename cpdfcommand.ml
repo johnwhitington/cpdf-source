@@ -4033,6 +4033,7 @@ let go () =
   | Some Impose fit ->
       let pdf = get_single_pdf args.op false in
       let x, y = Cpdfcoord.parse_coordinate pdf args.coord in
+        if not fit && (x < 0.0 || y < 0.0) then error "Negative imposition parameters not allowed." else
         write_pdf false
           (Cpdf.impose x y fit args.impose_columns args.impose_rtl args.impose_btt args.impose_center
                       args.impose_margin args.impose_spacing args.impose_linewidth args.fast pdf)
