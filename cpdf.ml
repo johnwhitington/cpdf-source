@@ -2778,7 +2778,10 @@ let impose_transforms n fx fy columns rtl btt center margin spacing linewidth me
   let extra_x = ref 0. in
   let extra_y = ref 0. in
   let addtr px py =
-    trs := Pdftransform.matrix_of_transform [Pdftransform.Translate (px +. !extra_x, py +. !extra_y)]::!trs
+    let ex, ey =
+      (if rtl then ~-.(!extra_x) else !extra_x), (if btt then ~-.(!extra_y) else !extra_y)
+    in
+      trs := Pdftransform.matrix_of_transform [Pdftransform.Translate (px +. ex, py +. ey)]::!trs
   in
   let x = int_of_float fx in
   let y = int_of_float fy in
@@ -2787,7 +2790,7 @@ let impose_transforms n fx fy columns rtl btt center margin spacing linewidth me
   in
   if columns then
     for col = 0 to x - 1 do
-      if center && !len < y then if !extra_y = 0. then extra_y := (height *. float_of_int (y - !len)) /. 2.;
+      if center && !len < y then if !extra_y = 0. then extra_y := ~-.(height *. float_of_int (y - !len)) /. 2.;
       for row = y - 1 downto 0 do
         let row, col = order row col in
          if !len > 0 then addtr (width *. float_of_int col) (height *. float_of_int row);
