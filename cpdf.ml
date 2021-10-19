@@ -2768,21 +2768,35 @@ let combine_pdf_rests pdf a b =
           Pdf.Dictionary (unknown_keys_a @ unknown_keys_b @ combined_known_entries)
 
 (* Calculate the transformation matrices for a single imposed output page. *)
-let impose_transforms n x y column rtl btt center margin spacing linewidth mediabox =
+let impose_transforms n x y columns rtl btt center margin spacing linewidth mediabox =
   let width, height =
     match Pdf.parse_rectangle mediabox with
       xmin, ymin, xmax, ymax -> xmax -. xmin, ymax -. ymin
   in
   let trs = ref [] in
+  let addtr px py =
+    trs := Pdftransform.matrix_of_transform [Pdftransform.Translate (px, py)]::!trs
+  in
   let x = int_of_float x in
   let y = int_of_float y in
-  for row = y - 1 downto 0 do
+  let order row col =
+    (if btt then y - row - 1 else row),
+    (if rtl then x - col - 1 else col)
+  in
+  if columns then
     for col = 0 to x - 1 do
-      trs :=
-        Pdftransform.matrix_of_transform
-          [Pdftransform.Translate (width *. float_of_int col, height *. float_of_int row)]::!trs;
+      for row = y - 1 downto 0 do
+        let row, col = order row col in
+          addtr (width *. float_of_int col) (height *. float_of_int row)
+      done
     done
-  done;
+  else
+    for row = y - 1 downto 0 do
+      for col = 0 to x - 1 do
+        let row, col = order row col in
+          addtr (width *. float_of_int col) (height *. float_of_int row)
+      done
+    done;
   rev !trs
 
 (* Combine two pages into one throughout the document. The pages have already
