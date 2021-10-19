@@ -2768,33 +2768,39 @@ let combine_pdf_rests pdf a b =
           Pdf.Dictionary (unknown_keys_a @ unknown_keys_b @ combined_known_entries)
 
 (* Calculate the transformation matrices for a single imposed output page. *)
-let impose_transforms n x y columns rtl btt center margin spacing linewidth mediabox =
+let impose_transforms n fx fy columns rtl btt center margin spacing linewidth mediabox len =
   let width, height =
     match Pdf.parse_rectangle mediabox with
       xmin, ymin, xmax, ymax -> xmax -. xmin, ymax -. ymin
   in
   let trs = ref [] in
+  let len = ref len in
+  let extra_x = ref 0. in
+  let extra_y = ref 0. in
   let addtr px py =
-    trs := Pdftransform.matrix_of_transform [Pdftransform.Translate (px, py)]::!trs
+    trs := Pdftransform.matrix_of_transform [Pdftransform.Translate (px +. !extra_x, py +. !extra_y)]::!trs
   in
-  let x = int_of_float x in
-  let y = int_of_float y in
+  let x = int_of_float fx in
+  let y = int_of_float fy in
   let order row col =
-    (if btt then y - row - 1 else row),
-    (if rtl then x - col - 1 else col)
+    ((if btt then y - row - 1 else row), (if rtl then x - col - 1 else col))
   in
   if columns then
     for col = 0 to x - 1 do
+      if center && !len < y then if !extra_y = 0. then extra_y := (height *. float_of_int (y - !len)) /. 2.;
       for row = y - 1 downto 0 do
         let row, col = order row col in
-          addtr (width *. float_of_int col) (height *. float_of_int row)
+         if !len > 0 then addtr (width *. float_of_int col) (height *. float_of_int row);
+         len := !len - 1
       done
     done
   else
     for row = y - 1 downto 0 do
+      if center && !len < x then if !extra_x = 0. then extra_x := (width *. float_of_int (x - !len)) /. 2.;
       for col = 0 to x - 1 do
         let row, col = order row col in
-          addtr (width *. float_of_int col) (height *. float_of_int row)
+          if !len > 0 then addtr (width *. float_of_int col) (height *. float_of_int row);
+          len := !len - 1
       done
     done;
   rev !trs
@@ -2805,7 +2811,7 @@ let impose_pages n x y columns rtl btt center margin spacing linewidth mediabox'
   | [] -> assert false
   | (h::_) as pages ->
      let transforms = 
-       take (impose_transforms n x y columns rtl btt center margin spacing linewidth h.Pdfpage.mediabox) (length pages)
+       impose_transforms n x y columns rtl btt center margin spacing linewidth h.Pdfpage.mediabox (length pages)
      in
        (* Change the pattern matrices before combining resources *)
        let pages, h =
