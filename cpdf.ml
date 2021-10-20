@@ -2486,7 +2486,6 @@ let scale_to_fit_pdf ?(fast=false) position input_scale xylist op pdf range =
   in
     process_pages scale_page_to_fit pdf range
 
-
 (* Scale contents *)
 let scale_page_contents ?(fast=false) scale position pdf pnum page =
   let (minx, miny, maxx, maxy) as box =
@@ -2889,11 +2888,41 @@ let impose ~x ~y ~fit ~columns ~rtl ~btt ~center ~margin ~spacing ~linewidth ~fa
   let changes = map (fun x -> (x, (x + (n - 1)) / n)) pagenums in
     Pdfpage.change_pages ~changes true pdf pages'
 
-(* FIXME *)
-let twoup fast pdf = pdf (*f_twoup (twoup_pages_inner false fast) pdf*)
+(* Legacy -twoup-stack. Imposes 2x1 on a page twice the size then rotates. *)
+let twoup_stack fast pdf =
+  let pdf =
+    impose
+      ~x:2. ~y:1. ~fit:false ~columns:false ~rtl:false ~btt:false ~center:false
+      ~margin:0. ~spacing:0. ~linewidth:0. ~fast pdf
+  in
+   let all = ilist 1 (Pdfpage.endpage pdf) in
+    upright ~fast all (rotate_pdf ~-90 pdf all)
 
-(* FIXME *)
-let twoup_stack fast pdf = pdf (*f_twoup (twoup_pages_inner true fast) pdf*)
+(* Legacy -two-up. Rotates the pages and shrinks them so as to fit 2x1 on a page the same size. *)
+let twoup fast pdf =
+  let firstpage = hd (Pdfpage.pages_of_pagetree pdf) in
+  let width, height =
+    match Pdf.parse_rectangle firstpage.Pdfpage.mediabox with
+      xmin, ymin, xmax, ymax -> xmax -. xmin, ymax -. ymin
+  in
+    let width_exceeds_height = width > height in
+      let sc =
+        if width_exceeds_height
+          then fmin (height /. width) ((width /. 2.) /. height)
+          else fmin (width /. height) ((height /. 2.) /. width)
+      in
+        let endpage = Pdfpage.endpage pdf in
+        let all = ilist 1 endpage in
+        let pdf = scale_pdf ~fast (many (sc, sc) endpage) pdf all in
+        let pdf =
+          impose
+            ~x:2. ~y:1. ~fit:false ~columns:false ~rtl:false ~btt:false ~center:true
+            ~margin:0. ~spacing:0. ~linewidth:0. ~fast pdf
+        in
+        let endpage = Pdfpage.endpage pdf in
+        let all = ilist 1 endpage in
+        let pdf = upright all (rotate_pdf ~-90 pdf all) in
+          scale_to_fit_pdf ~fast Cpdfposition.Diagonal 1. (many (width, height) endpage) () pdf all
 
 (* \section{Output info} *)
 let get_info raw pdf =
