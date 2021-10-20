@@ -2828,16 +2828,24 @@ let impose_pages n x y columns rtl btt center margin spacing linewidth mediabox'
               let minx, miny, maxx, maxy = Pdf.parse_rectangle clipbox in
                 [Pdfops.Op_re (minx, miny, maxx -. minx, maxy -. miny); Pdfops.Op_W; Pdfops.Op_n]
             in
-              (* If fast, no q/Q protection and no parsing of operators. *)
+            let rectops =
+              if linewidth = 0. then [] else
+                let minx, miny, maxx, maxy = Pdf.parse_rectangle clipbox in
+                let l2 = linewidth /. 2. in
+                [Pdfops.Op_q; Pdfops.Op_G 0.; Pdfops.Op_w linewidth; Pdfops.Op_cm transform;
+                 Pdfops.Op_re (minx +. l2, miny +. l2, maxx -. minx -. l2 -. l2, maxy -. miny -. l2 -. l2);
+                 Pdfops.Op_s; Pdfops.Op_Q]
+            in
+              (* If fast, no mismatched q/Q protection and no parsing of operators. *)
               if fast then
                 let before = Pdfops.stream_of_ops (Pdfops.Op_q::Pdfops.Op_cm transform::clipops) in
-                let after = Pdfops.stream_of_ops [Pdfops.Op_Q] in
+                let after = Pdfops.stream_of_ops ([Pdfops.Op_Q] @ rectops) in
                 [before] @ contents @ [after]
               else
               (* If slow, use protect from Pdfpage. *)
               let ops = Pdfpage.protect pdf resources' contents @ Pdfops.parse_operators pdf resources' contents in
                 [Pdfops.stream_of_ops
-                  ([Pdfops.Op_q] @ [Pdfops.Op_cm transform] @ clipops @ ops @ [Pdfops.Op_Q])]
+                  ([Pdfops.Op_q] @ [Pdfops.Op_cm transform] @ clipops @ ops @ [Pdfops.Op_Q] @ rectops)]
           in
             flatten
               (map2
