@@ -2806,6 +2806,7 @@ let impose_transforms fx fy columns rtl btt center margin spacing linewidth medi
   in
   let x = int_of_float fx in
   let y = int_of_float fy in
+  let final_full_cols = !len mod x in
   let order row col =
     ((if btt then y - row - 1 else row), (if rtl then x - col - 1 else col))
   in
@@ -2820,13 +2821,13 @@ let impose_transforms fx fy columns rtl btt center margin spacing linewidth medi
     done
   else
     for row = y - 1 downto 0 do
-      (* For centering, calculate effective 'row'/'col' to pass to addtr here, to get extra fit spacing right. *)
       if center && !len < x then if !cent_extra_x = 0. then cent_extra_x := (width *. float_of_int (x - !len)) /. 2.;
       for col = 0 to x - 1 do
+        let original_col = col in
         let row, col = order row col in
           let adjusted_col =
-            let final_empty_cols = 5 in let final_full_cols = 1 in (* FIXME *)
-              if center && !len <= final_full_cols then col + (x - 1 - 1 - (final_empty_cols / 2)) else col
+            let final_empty_cols = x - final_full_cols in
+              if center && !len <= final_full_cols then original_col + (x - 1 - 1 - (final_empty_cols / 2)) else original_col
           in
           if !len > 0 then addtr row adjusted_col (width *. float_of_int col) (height *. float_of_int row);
           len := !len - 1
