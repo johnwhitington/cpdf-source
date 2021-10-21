@@ -2767,7 +2767,19 @@ let combine_pdf_rests pdf a b =
           Pdf.Dictionary (unknown_keys_a @ unknown_keys_b @ combined_known_entries)
 
 (* Calculate the transformation matrices for a single imposed output page. *)
-let impose_transforms fx fy columns rtl btt center margin spacing linewidth mediabox len =
+let make_margin output_mediabox margin tr =
+  if margin = 0. then tr else
+    let width, height =
+      match Pdf.parse_rectangle output_mediabox with
+        xmin, ymin, xmax, ymax -> xmax -. xmin, ymax -. ymin
+    in
+    if margin > width /. 2. || margin > height /. 2. then error "margin would fill whole page!" else
+      let factor =  (width -. margin -. margin) /. width in
+      let scale = Pdftransform.matrix_of_op (Pdftransform.Scale ((0., 0.), factor, factor)) in
+      let shift = Pdftransform.matrix_of_op (Pdftransform.Translate (margin, margin)) in
+        (Pdftransform.matrix_compose shift (Pdftransform.matrix_compose scale tr))
+
+let impose_transforms fx fy columns rtl btt center margin spacing linewidth mediabox output_mediabox len =
   let width, height =
     match Pdf.parse_rectangle mediabox with
       xmin, ymin, xmax, ymax -> xmax -. xmin, ymax -. ymin
@@ -2805,15 +2817,15 @@ let impose_transforms fx fy columns rtl btt center margin spacing linewidth medi
           len := !len - 1
       done
     done;
-  rev !trs
+  map (make_margin output_mediabox margin) (rev !trs)
 
 (* Combine two pages into one throughout the document. The pages have already
 had their objects renumbered so as not to clash. *)
-let impose_pages x y columns rtl btt center margin spacing linewidth mediabox' fast pdf = function
+let impose_pages x y columns rtl btt center margin spacing linewidth output_mediabox fast pdf = function
   | [] -> assert false
   | (h::_) as pages ->
      let transforms = 
-       impose_transforms x y columns rtl btt center margin spacing linewidth h.Pdfpage.mediabox (length pages)
+       impose_transforms x y columns rtl btt center margin spacing linewidth h.Pdfpage.mediabox output_mediabox (length pages)
      in
        (* Change the pattern matrices before combining resources *)
        let pages, h =
@@ -2859,7 +2871,7 @@ let impose_pages x y columns rtl btt center margin spacing linewidth mediabox' f
               pages
               transforms)
        in
-         {Pdfpage.mediabox = mediabox';
+         {Pdfpage.mediabox = output_mediabox;
           Pdfpage.rotate = h.Pdfpage.rotate;
           Pdfpage.content = content';
           Pdfpage.resources = resources';
