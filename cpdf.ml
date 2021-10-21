@@ -2774,25 +2774,35 @@ let make_margin output_mediabox margin tr =
         xmin, ymin, xmax, ymax -> xmax -. xmin, ymax -. ymin
     in
     if margin > width /. 2. || margin > height /. 2. then error "margin would fill whole page!" else
-      let factor =  (width -. margin -. margin) /. width in
+      let hfactor = (width -. margin -. margin) /. width in
+      let vfactor = (height -. margin -. margin) /. height in
+      let factor = fmin hfactor vfactor in
       let scale = Pdftransform.matrix_of_op (Pdftransform.Scale ((0., 0.), factor, factor)) in
-      let shift = Pdftransform.matrix_of_op (Pdftransform.Translate (margin, margin)) in
+      let shift =
+        Pdftransform.matrix_of_op (Pdftransform.Translate ((width -. width *. factor) /. 2.,
+                                                           (height -. height *. factor) /. 2.))
+      in
         (Pdftransform.matrix_compose shift (Pdftransform.matrix_compose scale tr))
 
-let impose_transforms fx fy columns rtl btt center margin spacing linewidth mediabox output_mediabox len =
+let impose_transforms fx fy columns rtl btt center margin spacing linewidth mediabox output_mediabox fit_extra_hspace fit_extra_vspace len =
   let width, height =
     match Pdf.parse_rectangle mediabox with
       xmin, ymin, xmax, ymax -> xmax -. xmin, ymax -. ymin
   in
   let trs = ref [] in
   let len = ref len in
-  let extra_x = ref 0. in
-  let extra_y = ref 0. in
-  let addtr px py =
+  let cent_extra_x = ref 0. in
+  let cent_extra_y = ref 0. in
+  let addtr row col px py =
     let ex, ey =
-      (if rtl then ~-.(!extra_x) else !extra_x), (if btt then ~-.(!extra_y) else !extra_y)
+      (if rtl then ~-.(!cent_extra_x) else !cent_extra_x), (if btt then ~-.(!cent_extra_y) else !cent_extra_y)
     in
-      trs := Pdftransform.matrix_of_transform [Pdftransform.Translate (px +. ex, py +. ey)]::!trs
+      let total_fit_extra_hspace = fit_extra_hspace *. (float_of_int col +. 1.) in
+      let total_fit_extra_vspace = fit_extra_vspace *. (float_of_int row +. 1.) in
+      trs :=
+        Pdftransform.matrix_of_transform
+          [Pdftransform.Translate (px +. ex +. total_fit_extra_hspace, py +. ey +. total_fit_extra_vspace)]
+        ::!trs
   in
   let x = int_of_float fx in
   let y = int_of_float fy in
@@ -2801,19 +2811,24 @@ let impose_transforms fx fy columns rtl btt center margin spacing linewidth medi
   in
   if columns then
     for col = 0 to x - 1 do
-      if center && !len < y then if !extra_y = 0. then extra_y := ~-.(height *. float_of_int (y - !len)) /. 2.;
+      if center && !len < y then if !cent_extra_y = 0. then cent_extra_y := ~-.(height *. float_of_int (y - !len)) /. 2.;
       for row = y - 1 downto 0 do
         let row, col = order row col in
-         if !len > 0 then addtr (width *. float_of_int col) (height *. float_of_int row);
+         if !len > 0 then addtr row col (width *. float_of_int col) (height *. float_of_int row);
          len := !len - 1
       done
     done
   else
     for row = y - 1 downto 0 do
-      if center && !len < x then if !extra_x = 0. then extra_x := (width *. float_of_int (x - !len)) /. 2.;
+      (* For centering, calculate effective 'row'/'col' to pass to addtr here, to get extra fit spacing right. *)
+      if center && !len < x then if !cent_extra_x = 0. then cent_extra_x := (width *. float_of_int (x - !len)) /. 2.;
       for col = 0 to x - 1 do
         let row, col = order row col in
-          if !len > 0 then addtr (width *. float_of_int col) (height *. float_of_int row);
+          let adjusted_col =
+            let final_empty_cols = 5 in let final_full_cols = 1 in (* FIXME *)
+              if center && !len <= final_full_cols then col + (x - 1 - 1 - (final_empty_cols / 2)) else col
+          in
+          if !len > 0 then addtr row adjusted_col (width *. float_of_int col) (height *. float_of_int row);
           len := !len - 1
       done
     done;
@@ -2821,11 +2836,11 @@ let impose_transforms fx fy columns rtl btt center margin spacing linewidth medi
 
 (* Combine two pages into one throughout the document. The pages have already
 had their objects renumbered so as not to clash. *)
-let impose_pages x y columns rtl btt center margin spacing linewidth output_mediabox fast pdf = function
+let impose_pages x y columns rtl btt center margin spacing linewidth output_mediabox fast fit_extra_hspace fit_extra_vspace pdf = function
   | [] -> assert false
   | (h::_) as pages ->
      let transforms = 
-       impose_transforms x y columns rtl btt center margin spacing linewidth h.Pdfpage.mediabox output_mediabox (length pages)
+       impose_transforms x y columns rtl btt center margin spacing linewidth h.Pdfpage.mediabox output_mediabox fit_extra_hspace fit_extra_vspace (length pages)
      in
        (* Change the pattern matrices before combining resources *)
        let pages, h =
@@ -2878,27 +2893,30 @@ let impose_pages x y columns rtl btt center margin spacing linewidth output_medi
           Pdfpage.rest = rest'}
 
 let impose ~x ~y ~fit ~columns ~rtl ~btt ~center ~margin ~spacing ~linewidth ~fast pdf =
-  (*Printf.printf
-    "impose: x = %f, y = %f, fit = %b, columns = %b, rtl = %b, btt = %b,
-    center = %b, margin = %f, spacing = %f, linewidth = %f, fast = %b\n"
-    x y fit columns rtl btt center margin spacing linewidth fast;*)
   let endpage = Pdfpage.endpage pdf in
   let firstpage = hd (Pdfpage.pages_of_pagetree pdf) in
   let _, _, w, h = Pdf.parse_rectangle firstpage.Pdfpage.mediabox in
   let ix = int_of_float x in
   let iy = int_of_float y in
-  let n, ix, iy =
+  let n, ix, iy, fit_extra_hspace, fit_extra_vspace =
       if fit then
         (* +. 0.001 ensures a page always fits on itself, or on another page of same height or width. *)
         let across = int_of_float (floor (x /. w +. 0.001)) in
         let down = int_of_float (floor (y /. h +. 0.001)) in
           if across < 1 || down < 1 then error "Not even a single page would fit." else
-          (across * down, across, down)
+          let excess_hspace = x -. float_of_int across *. w in
+          let excess_vspace = y -. float_of_int down *. h in
+            Printf.printf "across = %i, down =%i, excess_hspace = %f, excess_hspace = %f\n" across down excess_hspace excess_vspace;
+            (across * down,
+             across,
+             down,
+             excess_hspace /. (float_of_int across +. 1.),
+             excess_vspace /. (float_of_int down +. 1.))
       else
         if ix = 0 && iy = 0 then error "impose-xy: both dimensions cannot be zero" else
-        if ix = 0 then (endpage, endpage, 1)
-        else if iy = 0 then (endpage, 1, endpage)
-        else (ix * iy, ix, iy)
+        if ix = 0 then (endpage, endpage, 1, 0., 0.)
+        else if iy = 0 then (endpage, 1, endpage, 0., 0.)
+        else (ix * iy, ix, iy, 0., 0.)
   in
   let mediabox' =
     if fit then Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real x; Pdf.Real y] else
@@ -2913,7 +2931,8 @@ let impose ~x ~y ~fit ~columns ~rtl ~btt ~center ~margin ~spacing ~linewidth ~fa
   let renumbered = map (Pdfpage.renumber_pages pdf) pagesets in
   let pages' =
      map
-       (impose_pages (float_of_int ix) (float_of_int iy) columns rtl btt center margin spacing linewidth mediabox' fast pdf)
+       (impose_pages (float_of_int ix) (float_of_int iy) columns rtl btt
+        center margin spacing linewidth mediabox' fast fit_extra_hspace fit_extra_vspace pdf)
        renumbered
   in
   let changes = map (fun x -> (x, (x + (n - 1)) / n)) pagenums in

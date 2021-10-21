@@ -2283,7 +2283,7 @@ and specs =
      " Skip stream data for brevity");
    ("-j",
      Arg.String set_json_input,
-     "Load a PDF JSON file");
+     " Load a PDF JSON file");
    ("-ocg-list",
      Arg.Unit (setop OCGList),
      " List optional content groups");
