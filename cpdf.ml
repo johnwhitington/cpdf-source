@@ -2977,14 +2977,17 @@ let twoup fast pdf =
         let endpage = Pdfpage.endpage pdf in
         let all = ilist 1 endpage in
         let pdf = scale_pdf ~fast (many (sc, sc) endpage) pdf all in
+        Pdfwrite.pdf_to_file pdf "scaled.pdf";
         let pdf =
           impose
             ~x:2. ~y:1. ~fit:false ~columns:false ~rtl:false ~btt:false ~center:true
             ~margin:0. ~spacing:0. ~linewidth:0. ~fast pdf
         in
+        Pdfwrite.pdf_to_file pdf "imposed.pdf";
         let endpage = Pdfpage.endpage pdf in
         let all = ilist 1 endpage in
         let pdf = upright all (rotate_pdf ~-90 pdf all) in
+          Pdfwrite.pdf_to_file pdf "uprighted.pdf";
           scale_to_fit_pdf ~fast Cpdfposition.Diagonal 1. (many (width, height) endpage) () pdf all
 
 (* \section{Output info} *)
