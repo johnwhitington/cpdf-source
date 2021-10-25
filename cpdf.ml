@@ -2809,6 +2809,7 @@ let impose_transforms fx fy columns rtl btt center margin spacing linewidth medi
   let x = int_of_float fx in
   let y = int_of_float fy in
   let final_full_cols = !len mod x in
+  let final_full_rows = !len mod y in
   let order row col =
     ((if btt then y - row - 1 else row), (if rtl then x - col - 1 else col))
   in
@@ -2816,9 +2817,14 @@ let impose_transforms fx fy columns rtl btt center margin spacing linewidth medi
     for col = 0 to x - 1 do
       if center && !len < y then if !cent_extra_y = 0. then cent_extra_y := ~-.(height *. float_of_int (y - !len)) /. 2.;
       for row = y - 1 downto 0 do
+        let original_row = row in
         let row, col = order row col in
-         if !len > 0 then addtr x y row col (width *. float_of_int col) (height *. float_of_int row);
-         len := !len - 1
+         let adjusted_row =
+           let final_empty_rows = y - final_full_rows in
+             if center && !len <= final_full_rows then original_row + (y - 1 - 1 - (final_empty_rows / 2)) else original_row
+         in
+           if !len > 0 then addtr x y adjusted_row col (width *. float_of_int col) (height *. float_of_int row);
+           len := !len - 1
       done
     done
   else
@@ -2831,8 +2837,8 @@ let impose_transforms fx fy columns rtl btt center margin spacing linewidth medi
             let final_empty_cols = x - final_full_cols in
               if center && !len <= final_full_cols then original_col + (x - 1 - 1 - (final_empty_cols / 2)) else original_col
           in
-          if !len > 0 then addtr x y row adjusted_col (width *. float_of_int col) (height *. float_of_int row);
-          len := !len - 1
+            if !len > 0 then addtr x y row adjusted_col (width *. float_of_int col) (height *. float_of_int row);
+            len := !len - 1
       done
     done;
   map (make_margin output_mediabox margin) (rev !trs)
@@ -2909,7 +2915,7 @@ let impose ~x ~y ~fit ~columns ~rtl ~btt ~center ~margin ~spacing ~linewidth ~fa
           if across < 1 || down < 1 then error "Not even a single page would fit." else
           let excess_hspace = x -. float_of_int across *. w in
           let excess_vspace = y -. float_of_int down *. h in
-            Printf.printf "across = %i, down =%i, excess_hspace = %f, excess_hspace = %f\n" across down excess_hspace excess_vspace;
+            (*Printf.printf "across = %i, down =%i, excess_hspace = %f, excess_hspace = %f\n" across down excess_hspace excess_vspace;*)
             (across * down,
              across,
              down,
@@ -2951,7 +2957,7 @@ let twoup_stack fast pdf =
    let all = ilist 1 (Pdfpage.endpage pdf) in
     upright ~fast all (rotate_pdf ~-90 pdf all)
 
-(* Legacy -two-up. Rotate the pages and shrinks them so as to fit 2x1 on a page the same size. *)
+(* Legacy -two-up. Rotate the pages and shrink them so as to fit 2x1 on a page the same size. *)
 let twoup fast pdf =
   let firstpage = hd (Pdfpage.pages_of_pagetree pdf) in
   let width, height =
