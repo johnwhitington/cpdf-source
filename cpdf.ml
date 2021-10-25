@@ -2764,7 +2764,10 @@ let combine_pdf_rests pdf a b =
         let unknown_keys_a = lose (fun (k, _) -> mem k keys_to_combine) a_entries in
         let unknown_keys_b = lose (fun (k, _) -> mem k keys_to_combine) b_entries in
         let combined_known_entries = option_map combine_entries keys_to_combine in
-          Pdf.Dictionary (unknown_keys_a @ unknown_keys_b @ combined_known_entries)
+          fold_left
+            (fun dict (k, v) -> Pdf.add_dict_entry dict k v)
+            (Pdf.Dictionary [])
+            (unknown_keys_a @ unknown_keys_b @ combined_known_entries)
 
 (* Calculate the transformation matrices for a single imposed output page. *)
 
@@ -2903,7 +2906,24 @@ let impose_pages fit x y columns rtl btt center margin spacing linewidth output_
           Pdfpage.resources = resources';
           Pdfpage.rest = rest'}
 
+let make_space ~fast spacing pdf =
+  let margin = spacing /. 2. in
+  let endpage = Pdfpage.endpage pdf in
+  let all = ilist 1 endpage in
+  let firstpage = hd (Pdfpage.pages_of_pagetree pdf) in
+  let width =
+    match Pdf.parse_rectangle firstpage.Pdfpage.mediabox with
+      xmin, _, xmax, _ -> xmax -. xmin
+  in
+  let sc = (width -. spacing) /. width in
+    shift_pdf
+      ~fast
+      (many (margin, margin) endpage)
+      (scale_contents ~fast (Cpdfposition.BottomLeft 0.) sc pdf all)
+      all
+
 let impose ~x ~y ~fit ~columns ~rtl ~btt ~center ~margin ~spacing ~linewidth ~fast pdf =
+  let pdf = if fit then make_space ~fast spacing pdf else pdf in 
   let endpage = Pdfpage.endpage pdf in
   let firstpage = hd (Pdfpage.pages_of_pagetree pdf) in
   let _, _, w, h = Pdf.parse_rectangle firstpage.Pdfpage.mediabox in
