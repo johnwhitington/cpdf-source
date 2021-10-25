@@ -2906,24 +2906,30 @@ let impose_pages fit x y columns rtl btt center margin spacing linewidth output_
           Pdfpage.resources = resources';
           Pdfpage.rest = rest'}
 
-let make_space ~fast spacing pdf =
+(* For fit, we scale contents, move to middle and retain page size. For xy, we
+   expand mediabox and move contents to middle. *)
+let make_space fit ~fast spacing pdf =
   let margin = spacing /. 2. in
   let endpage = Pdfpage.endpage pdf in
   let all = ilist 1 endpage in
   let firstpage = hd (Pdfpage.pages_of_pagetree pdf) in
-  let width =
+  let width, height =
     match Pdf.parse_rectangle firstpage.Pdfpage.mediabox with
-      xmin, _, xmax, _ -> xmax -. xmin
+      xmin, ymin, xmax, ymax -> (xmax -. xmin, ymax -. ymin)
   in
-  let sc = (width -. spacing) /. width in
+  if fit then
     shift_pdf
       ~fast
       (many (margin, margin) endpage)
-      (scale_contents ~fast (Cpdfposition.BottomLeft 0.) sc pdf all)
+      (scale_contents ~fast (Cpdfposition.BottomLeft 0.) ((width -. spacing) /. width) pdf all)
       all
+  else
+    set_mediabox
+      (many (0., 0., width +. spacing, height +. spacing) endpage)
+      (shift_pdf ~fast (many (margin, margin) endpage) pdf all) all
 
 let impose ~x ~y ~fit ~columns ~rtl ~btt ~center ~margin ~spacing ~linewidth ~fast pdf =
-  let pdf = if fit then make_space ~fast spacing pdf else pdf in 
+  let pdf = make_space fit ~fast spacing pdf in 
   let endpage = Pdfpage.endpage pdf in
   let firstpage = hd (Pdfpage.pages_of_pagetree pdf) in
   let _, _, w, h = Pdf.parse_rectangle firstpage.Pdfpage.mediabox in
