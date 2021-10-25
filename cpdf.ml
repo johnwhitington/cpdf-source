@@ -2798,10 +2798,9 @@ let impose_transforms fx fy columns rtl btt center margin spacing linewidth medi
       (if rtl then ~-.(!cent_extra_x) else !cent_extra_x), (if btt then ~-.(!cent_extra_y) else !cent_extra_y)
     in
       let spacecol = if rtl then x - col - 1 else col in
-      let spacerow = if btt then y - row - 1 else row in
       let total_fit_extra_hspace = fit_extra_hspace *. (float_of_int spacecol +. 1.) in
-      let total_fit_extra_vspace = fit_extra_vspace *. (float_of_int spacerow +. 1.) in
-      (*Printf.printf "col = %i, px = %f, ex = %f, fit_extra_hspace = %f, total_fit_extra_vspace = %f\n" col px cex fit_extra_hspace total_fit_extra_hspace;*)
+      let total_fit_extra_vspace = fit_extra_vspace *. (float_of_int row +. 1.) in
+      (*Printf.printf "row = %i, py = %f, ey = %f, fit_extra_vspace = %f, total_fit_extra_vspace = %f\n" row py cey fit_extra_vspace total_fit_extra_vspace;*)
       trs :=
         Pdftransform.matrix_of_transform
           [Pdftransform.Translate (px +. cex +. total_fit_extra_hspace, py +. cey +. total_fit_extra_vspace)]
