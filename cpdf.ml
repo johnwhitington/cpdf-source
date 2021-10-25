@@ -2767,6 +2767,8 @@ let combine_pdf_rests pdf a b =
           Pdf.Dictionary (unknown_keys_a @ unknown_keys_b @ combined_known_entries)
 
 (* Calculate the transformation matrices for a single imposed output page. *)
+
+(* make margins by scaling for a fitted impose. *)
 let make_margin output_mediabox margin tr =
   if margin = 0. then tr else
     let width, height =
@@ -2784,7 +2786,7 @@ let make_margin output_mediabox margin tr =
       in
         (Pdftransform.matrix_compose shift (Pdftransform.matrix_compose scale tr))
 
-let impose_transforms fx fy columns rtl btt center margin spacing linewidth mediabox output_mediabox fit_extra_hspace fit_extra_vspace len =
+let impose_transforms fit fx fy columns rtl btt center margin spacing linewidth mediabox output_mediabox fit_extra_hspace fit_extra_vspace len =
   let width, height =
     match Pdf.parse_rectangle mediabox with
       xmin, ymin, xmax, ymax -> xmax -. xmin, ymax -. ymin
@@ -2841,15 +2843,15 @@ let impose_transforms fx fy columns rtl btt center margin spacing linewidth medi
             len := !len - 1
       done
     done;
-  map (make_margin output_mediabox margin) (rev !trs)
+  map (if fit then make_margin output_mediabox margin else Fun.id) (rev !trs)
 
 (* Combine two pages into one throughout the document. The pages have already
 had their objects renumbered so as not to clash. *)
-let impose_pages x y columns rtl btt center margin spacing linewidth output_mediabox fast fit_extra_hspace fit_extra_vspace pdf = function
+let impose_pages fit x y columns rtl btt center margin spacing linewidth output_mediabox fast fit_extra_hspace fit_extra_vspace pdf = function
   | [] -> assert false
   | (h::_) as pages ->
      let transforms = 
-       impose_transforms x y columns rtl btt center margin spacing linewidth h.Pdfpage.mediabox output_mediabox fit_extra_hspace fit_extra_vspace (length pages)
+       impose_transforms fit x y columns rtl btt center margin spacing linewidth h.Pdfpage.mediabox output_mediabox fit_extra_hspace fit_extra_vspace (length pages)
      in
        (* Change the pattern matrices before combining resources *)
        let pages, h =
@@ -2929,23 +2931,25 @@ let impose ~x ~y ~fit ~columns ~rtl ~btt ~center ~margin ~spacing ~linewidth ~fa
   in
   let mediabox' =
     if fit then Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real x; Pdf.Real y] else
-      if x = 0.0 then Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real (w *. float_of_int endpage); Pdf.Real h]
-      else if y = 0.0 then Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real w; Pdf.Real (h *. float_of_int endpage)]
-      else Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real (w *. x); Pdf.Real (h *. y)]
+      let m2 = margin *. 2. in
+      if x = 0.0 then Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real (w *. float_of_int endpage +. m2); Pdf.Real (h +. m2)]
+      else if y = 0.0 then Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real (w +. m2); Pdf.Real (h *. float_of_int endpage +. m2)]
+      else Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real (w *. x +. m2); Pdf.Real (h *. y +. m2)]
   in
   let pagenums = ilist 1 endpage in
   let pdf = upright pagenums pdf in
   let pages = Pdfpage.pages_of_pagetree pdf in
   let pagesets = splitinto n pages in
   let renumbered = map (Pdfpage.renumber_pages pdf) pagesets in
-  let pages' =
+  let pages =
      map
-       (impose_pages (float_of_int ix) (float_of_int iy) columns rtl btt
+       (impose_pages fit (float_of_int ix) (float_of_int iy) columns rtl btt
         center margin spacing linewidth mediabox' fast fit_extra_hspace fit_extra_vspace pdf)
        renumbered
   in
   let changes = map (fun x -> (x, (x + (n - 1)) / n)) pagenums in
-    Pdfpage.change_pages ~changes true pdf pages'
+  let pdf = Pdfpage.change_pages ~changes true pdf pages in
+  if fit then pdf else shift_pdf ~fast (many (margin, margin) (length pages)) pdf (ilist 1 (Pdfpage.endpage pdf))
 
 (* Legacy -twoup-stack. Impose 2x1 on a page twice the size then rotate. *)
 let twoup_stack fast pdf =
