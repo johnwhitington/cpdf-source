@@ -2793,15 +2793,18 @@ let impose_transforms fx fy columns rtl btt center margin spacing linewidth medi
   let len = ref len in
   let cent_extra_x = ref 0. in
   let cent_extra_y = ref 0. in
-  let addtr row col px py =
-    let ex, ey =
+  let addtr x y row col px py =
+    let cex, cey =
       (if rtl then ~-.(!cent_extra_x) else !cent_extra_x), (if btt then ~-.(!cent_extra_y) else !cent_extra_y)
     in
-      let total_fit_extra_hspace = fit_extra_hspace *. (float_of_int col +. 1.) in
-      let total_fit_extra_vspace = fit_extra_vspace *. (float_of_int row +. 1.) in
+      let spacecol = if rtl then x - col - 1 else col in
+      let spacerow = if btt then y - row - 1 else row in
+      let total_fit_extra_hspace = fit_extra_hspace *. (float_of_int spacecol +. 1.) in
+      let total_fit_extra_vspace = fit_extra_vspace *. (float_of_int spacerow +. 1.) in
+      (*Printf.printf "col = %i, px = %f, ex = %f, fit_extra_hspace = %f, total_fit_extra_vspace = %f\n" col px cex fit_extra_hspace total_fit_extra_hspace;*)
       trs :=
         Pdftransform.matrix_of_transform
-          [Pdftransform.Translate (px +. ex +. total_fit_extra_hspace, py +. ey +. total_fit_extra_vspace)]
+          [Pdftransform.Translate (px +. cex +. total_fit_extra_hspace, py +. cey +. total_fit_extra_vspace)]
         ::!trs
   in
   let x = int_of_float fx in
@@ -2815,7 +2818,7 @@ let impose_transforms fx fy columns rtl btt center margin spacing linewidth medi
       if center && !len < y then if !cent_extra_y = 0. then cent_extra_y := ~-.(height *. float_of_int (y - !len)) /. 2.;
       for row = y - 1 downto 0 do
         let row, col = order row col in
-         if !len > 0 then addtr row col (width *. float_of_int col) (height *. float_of_int row);
+         if !len > 0 then addtr x y row col (width *. float_of_int col) (height *. float_of_int row);
          len := !len - 1
       done
     done
@@ -2829,7 +2832,7 @@ let impose_transforms fx fy columns rtl btt center margin spacing linewidth medi
             let final_empty_cols = x - final_full_cols in
               if center && !len <= final_full_cols then original_col + (x - 1 - 1 - (final_empty_cols / 2)) else original_col
           in
-          if !len > 0 then addtr row adjusted_col (width *. float_of_int col) (height *. float_of_int row);
+          if !len > 0 then addtr x y row adjusted_col (width *. float_of_int col) (height *. float_of_int row);
           len := !len - 1
       done
     done;
