@@ -1,5 +1,6 @@
 2.5 (Upcoming 2022)
 
+o Bookmarks now available in JSON format
 o New operations -impose and -impose-xy for document imposition
 o New option -collate to collate pages when merging
 o Option -debug-force now properly documented as -decrypt-force
