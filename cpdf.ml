@@ -468,7 +468,10 @@ let combine_pdf_resources pdf a b =
         let unknown_keys_a = lose (fun (k, _) -> mem k resource_keys) a_entries in
         let unknown_keys_b = lose (fun (k, _) -> mem k resource_keys) b_entries in
         let combined_known_entries = option_map combine_entries resource_keys in
-          Pdf.Dictionary (unknown_keys_a @ unknown_keys_b @ combined_known_entries)
+          fold_left
+            (fun dict (k, v) -> Pdf.add_dict_entry dict k v)
+            (Pdf.Dictionary [])
+            (unknown_keys_a @ unknown_keys_b @ combined_known_entries)
 
 (* \section{Build PDF Presentations} *)
 let change_page_effect t d horizontal inward direction effect_duration page =
@@ -2810,7 +2813,7 @@ let combine_pdf_rests pdf a b =
     | Pdf.Dictionary entries -> entries
     | _ -> []
   in
-    let keys_to_combine = ["/Annots"] in (* FIXME Check to see if anything else needed here *)
+    let keys_to_combine = ["/Annots"] in
       let combine_entries key =
         let a_entries =
           match Pdf.lookup_direct pdf key a with
