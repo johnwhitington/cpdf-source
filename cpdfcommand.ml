@@ -2981,15 +2981,6 @@ let getencryption pdf =
   | Some (Pdfwrite.AES256bitISO true) -> "256bit AES ISO, Metadata encrypted"
   | Some (Pdfwrite.AES256bitISO false) -> "256bit AES ISO, Metadata not encrypted"
 
-(* If a cropbox exists, make it the mediabox. If not, change nothing. *)
-let copy_cropbox_to_mediabox pdf range =
-  Cpdf.process_pages
-    (ppstub (fun _ page ->
-       match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
-       | Some pdfobject -> {page with Pdfpage.mediabox = Pdf.direct pdf pdfobject}
-       | None -> page))
-    pdf
-    range
 
 (* copy the contents of the box f to the box t. If mediabox_if_missing is set,
 the contents of the mediabox will be used if the from fox is not available. If
@@ -3572,7 +3563,7 @@ let go () =
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some CopyCropBoxToMediaBox) false in
             let range = parse_pagespec_allow_empty pdf pagespec in
-              let pdf = copy_cropbox_to_mediabox pdf range in
+              let pdf = Cpdf.copy_cropbox_to_mediabox pdf range in
                 write_pdf false pdf
       | _ -> error "remove-crop: bad command line"
       end

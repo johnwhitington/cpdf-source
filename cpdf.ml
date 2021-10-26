@@ -120,6 +120,7 @@ let decompress_pdf pdf =
     (Pdf.iter_stream (Pdfcodec.decode_pdfstream_until_unknown pdf) pdf);
     pdf
 
+
 (* Equality on PDF objects *)
 let pdfobjeq pdf x y =
   let x = Pdf.lookup_obj pdf x 
@@ -434,6 +435,16 @@ let protect fast pdf resources content =
     let q = addstream [Pdfops.Op_q] in
     let qs = addstream (many Pdfops.Op_Q deficit @ [Pdfops.Op_Q]) in
       [Pdf.Indirect q] @ content @ [Pdf.Indirect qs]
+
+(* If a cropbox exists, make it the mediabox. If not, change nothing. *)
+let copy_cropbox_to_mediabox pdf range =
+  process_pages
+    (ppstub (fun _ page ->
+       match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
+       | Some pdfobject -> {page with Pdfpage.mediabox = Pdf.direct pdf pdfobject}
+       | None -> page))
+    pdf
+    range
 
 (* Union two resource dictionaries from the same PDF. *)
 let combine_pdf_resources pdf a b =
@@ -2304,7 +2315,7 @@ let hard_box pdf range boxname mediabox_if_missing fast =
                  else error (Printf.sprintf "hard_box: box %s not found" boxname)
        in
          let ops = [Pdfops.Op_re (minx, miny, maxx -. minx, maxy -. miny); Pdfops.Op_W; Pdfops.Op_n] in
-           Pdfpage.prepend_operators pdf ops ~fast:fast page))
+           Pdfpage.prepend_operators pdf ops ~fast page))
     pdf
     range
 
@@ -2932,31 +2943,23 @@ let impose_pages fit x y columns rtl btt center margin output_mediabox fast fit_
      let resources' = pair_reduce (combine_pdf_resources pdf) (map (fun p -> p.Pdfpage.resources) pages) in
      let rest' = pair_reduce (combine_pdf_rests pdf) (map (fun p -> p.Pdfpage.rest) pages) in
        let content' =
-          let transform_stream clipbox contents transform =
-            let clipops =
-              let minx, miny, maxx, maxy = Pdf.parse_rectangle clipbox in
-                [Pdfops.Op_re (minx, miny, maxx -. minx, maxy -. miny); Pdfops.Op_W; Pdfops.Op_n]
-            in
-              (* If fast, no mismatched q/Q protection and no parsing of operators. *)
-              if fast then
-                let before = Pdfops.stream_of_ops (Pdfops.Op_q::Pdfops.Op_cm transform::clipops) in
-                let after = Pdfops.stream_of_ops [Pdfops.Op_Q] in
-                [before] @ contents @ [after]
-              else
-              (* If slow, use protect from Pdfpage. *)
-              let ops = Pdfpage.protect pdf resources' contents @ Pdfops.parse_operators pdf resources' contents in
-                [Pdfops.stream_of_ops
-                  ([Pdfops.Op_q] @ [Pdfops.Op_cm transform] @ clipops @ ops @ [Pdfops.Op_Q])]
+          let transform_stream transform contents =
+            (* If fast, no mismatched q/Q protection and no parsing of operators. *)
+            if fast then
+              let before = Pdfops.stream_of_ops [Pdfops.Op_q; Pdfops.Op_cm transform] in
+              let after = Pdfops.stream_of_ops [Pdfops.Op_Q] in
+              [before] @ contents @ [after]
+            else
+            (* If slow, use protect from Pdfpage. *)
+            let ops = Pdfpage.protect pdf resources' contents @ Pdfops.parse_operators pdf resources' contents in
+              [Pdfops.stream_of_ops
+                ([Pdfops.Op_q] @ [Pdfops.Op_cm transform] @ ops @ [Pdfops.Op_Q])]
           in
             flatten
               (map2
               (fun p t ->
                  transform_annotations pdf t p.Pdfpage.rest;
-                 transform_stream
-                   (match Pdf.lookup_direct pdf "/CropBox" p.Pdfpage.rest with
-                      None -> p.Pdfpage.mediabox
-                    | Some box -> box)
-                   p.Pdfpage.content t)
+                 transform_stream t p.Pdfpage.content)
               pages
               transforms)
        in
@@ -2967,26 +2970,28 @@ let impose_pages fit x y columns rtl btt center margin output_mediabox fast fit_
           Pdfpage.rest = rest'}
 
 (* For fit, we scale contents, move to middle and retain page size. For xy, we
-   expand mediabox and move contents to middle. *)
+   expand mediabox and move contents to middle. This function also does the hard boxing. *)
 let make_space fit ~fast spacing pdf =
-  let margin = spacing /. 2. in
   let endpage = Pdfpage.endpage pdf in
   let all = ilist 1 endpage in
+  let pdf = hard_box pdf all "/MediaBox" false fast in
+  if spacing = 0. then pdf else
+  let margin = spacing /. 2. in
   let firstpage = hd (Pdfpage.pages_of_pagetree pdf) in
   let width, height =
     match Pdf.parse_rectangle firstpage.Pdfpage.mediabox with
       xmin, ymin, xmax, ymax -> (xmax -. xmin, ymax -. ymin)
   in
   if fit then
-    shift_pdf
+    (shift_pdf
       ~fast
       (many (margin, margin) endpage)
       (scale_contents ~fast (Cpdfposition.BottomLeft 0.) ((width -. spacing) /. width) pdf all)
-      all
+      all)
   else
-    set_mediabox
+    (set_mediabox
       (many (0., 0., width +. spacing, height +. spacing) endpage)
-      (shift_pdf ~fast (many (margin, margin) endpage) pdf all) all
+      (shift_pdf ~fast (many (margin, margin) endpage) pdf all) all)
 
 (* We add the border as a thick unfilled rectangle just inside the page edge,
    only if its linewidth is > 0 since, for us, 0 means none, not single-pixel
@@ -3000,9 +3005,13 @@ let add_border linewidth ~fast pdf =
       false false (ilist 1 (Pdfpage.endpage pdf)) pdf
 
 let impose ~x ~y ~fit ~columns ~rtl ~btt ~center ~margin ~spacing ~linewidth ~fast pdf =
+  let endpage = Pdfpage.endpage pdf in
+  let pagenums = ilist 1 endpage in
+  let pdf = copy_cropbox_to_mediabox pdf pagenums in
+  let pdf = remove_cropping_pdf pdf pagenums in
+  let pdf = upright pagenums pdf in
   let pdf = add_border linewidth ~fast pdf in
   let pdf = make_space fit ~fast spacing pdf in 
-  let endpage = Pdfpage.endpage pdf in
   let firstpage = hd (Pdfpage.pages_of_pagetree pdf) in
   let _, _, w, h = Pdf.parse_rectangle firstpage.Pdfpage.mediabox in
   let ix = int_of_float x in
@@ -3034,8 +3043,6 @@ let impose ~x ~y ~fit ~columns ~rtl ~btt ~center ~margin ~spacing ~linewidth ~fa
       else if y = 0.0 then Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real (w +. m2); Pdf.Real (h *. float_of_int endpage +. m2)]
       else Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real (w *. x +. m2); Pdf.Real (h *. y +. m2)]
   in
-  let pagenums = ilist 1 endpage in
-  let pdf = upright pagenums pdf in
   let pages = Pdfpage.pages_of_pagetree pdf in
   let pagesets = splitinto n pages in
   let renumbered = map (Pdfpage.renumber_pages pdf) pagesets in

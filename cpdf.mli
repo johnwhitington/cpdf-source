@@ -39,6 +39,8 @@ val recompress_pdf : Pdf.t -> Pdf.t
 (** Decompresses all streams in a PDF document, assuming it isn't encrypted. *)
 val decompress_pdf : Pdf.t -> Pdf.t
 
+val copy_cropbox_to_mediabox : Pdf.t -> int list -> Pdf.t
+
 (** {2 Metadata and settings} *)
 
 (** [copy_id keepversion copyfrom copyto] copies the ID, if any, from
