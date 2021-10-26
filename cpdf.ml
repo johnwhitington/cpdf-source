@@ -2933,7 +2933,9 @@ let impose_pages fit x y columns rtl btt center margin output_mediabox fast fit_
   | [] -> assert false
   | (h::_) as pages ->
      let transforms = 
-       impose_transforms fit x y columns rtl btt center margin h.Pdfpage.mediabox output_mediabox fit_extra_hspace fit_extra_vspace (length pages)
+       impose_transforms
+         fit x y columns rtl btt center margin h.Pdfpage.mediabox
+         output_mediabox fit_extra_hspace fit_extra_vspace (length pages)
      in
        (* Change the pattern matrices before combining resources *)
        let pages, h =
@@ -2946,22 +2948,17 @@ let impose_pages fit x y columns rtl btt center margin output_mediabox fast fit_
           let transform_stream transform contents =
             (* If fast, no mismatched q/Q protection and no parsing of operators. *)
             if fast then
-              let before = Pdfops.stream_of_ops [Pdfops.Op_q; Pdfops.Op_cm transform] in
-              let after = Pdfops.stream_of_ops [Pdfops.Op_Q] in
-              [before] @ contents @ [after]
+              [Pdfops.stream_of_ops [Pdfops.Op_q; Pdfops.Op_cm transform]] @ contents @ [Pdfops.stream_of_ops [Pdfops.Op_Q]]
             else
             (* If slow, use protect from Pdfpage. *)
             let ops = Pdfpage.protect pdf resources' contents @ Pdfops.parse_operators pdf resources' contents in
-              [Pdfops.stream_of_ops
-                ([Pdfops.Op_q] @ [Pdfops.Op_cm transform] @ ops @ [Pdfops.Op_Q])]
+              [Pdfops.stream_of_ops ([Pdfops.Op_q] @ [Pdfops.Op_cm transform] @ ops @ [Pdfops.Op_Q])]
           in
             flatten
               (map2
-              (fun p t ->
-                 transform_annotations pdf t p.Pdfpage.rest;
-                 transform_stream t p.Pdfpage.content)
-              pages
-              transforms)
+                (fun p t -> transform_annotations pdf t p.Pdfpage.rest; transform_stream t p.Pdfpage.content)
+                pages
+                transforms)
        in
          {Pdfpage.mediabox = output_mediabox;
           Pdfpage.rotate = h.Pdfpage.rotate;
