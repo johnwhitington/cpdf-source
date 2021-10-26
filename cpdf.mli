@@ -195,6 +195,16 @@ val addtexts :
     Pdf.t ->(*pdf*)
     Pdf.t
 
+val addrectangle :
+    bool ->
+    float * float ->
+    float * float * float ->
+    bool ->
+    float ->
+    float ->
+    Cpdfposition.position ->
+    bool -> bool -> int list -> Pdf.t -> Pdf.t
+
 val metrics_howmany : unit -> int
 val metrics_text : int -> string
 val metrics_x : int -> float

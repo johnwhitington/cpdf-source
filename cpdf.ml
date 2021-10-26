@@ -2732,6 +2732,71 @@ let copy_annotations range frompdf topdf =
             Pdfpage.change_pages true !pdf (rev !pages)
     | _ -> assert false
 
+let addrectangle
+  fast (w, h) colour outline linewidth opacity position relative_to_cropbox
+  underneath range pdf
+=
+  let addrectangle_page _ page =
+    let resources', unique_extgstatename =
+      if opacity < 1.0 then
+        let dict =
+          match Pdf.lookup_direct pdf "/ExtGState" page.Pdfpage.resources with
+          | Some d -> d
+          | None -> Pdf.Dictionary []
+        in
+          let unique_extgstatename = Pdf.unique_key "gs" dict in
+            let dict' =
+              Pdf.add_dict_entry dict unique_extgstatename
+                (Pdf.Dictionary [("/ca", Pdf.Real opacity); ("/CA", Pdf.Real opacity)])
+            in
+              Pdf.add_dict_entry page.Pdfpage.resources "/ExtGState" dict', Some unique_extgstatename
+      else
+        page.Pdfpage.resources, None
+    in
+    let mediabox =
+      if relative_to_cropbox then
+        match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
+        | Some pdfobject -> Pdf.parse_rectangle (Pdf.direct pdf pdfobject)
+        | None -> Pdf.parse_rectangle page.Pdfpage.mediabox
+      else
+        Pdf.parse_rectangle page.Pdfpage.mediabox
+    in
+    let x, y, _ =
+      Cpdfposition.calculate_position false w mediabox Cpdfposition.Horizontal position
+    in
+    let x, y =
+      match position with
+        Cpdfposition.Top _ | Cpdfposition.TopLeft _ | Cpdfposition.TopRight _ -> (x, y -. h)
+      | Cpdfposition.Centre | Cpdfposition.PosCentre _ -> (x, y -. (h /. 2.))
+      | _ -> (x, y)
+    in
+    let ops =
+      [
+       Pdfops.Op_q;
+       Pdfops.Op_BMC "/CPDFSTAMP";
+       (match colour with (r, g, b) -> Pdfops.Op_rg (r, g, b));
+       (match colour with (r, g, b) -> Pdfops.Op_RG (r, g, b))
+      ]
+      @
+     (if outline then [Pdfops.Op_w linewidth] else [])
+     @
+     (match unique_extgstatename with None -> [] | Some n -> [Pdfops.Op_gs n])
+     @
+     [
+       Pdfops.Op_re (x, y, w, h);
+       (if outline then Pdfops.Op_s else Pdfops.Op_f);
+       Pdfops.Op_EMC;
+       Pdfops.Op_Q
+      ]
+    in
+      let page = {page with Pdfpage.resources = resources'} in
+        if underneath
+          then Pdfpage.prepend_operators pdf ops ~fast:fast page
+          else Pdfpage.postpend_operators pdf ops ~fast:fast page
+  in
+    process_pages (ppstub addrectangle_page) pdf range
+
+
 (* Imposition *)
 
 (* Union two rest dictionaries from the same PDF. *)
@@ -2789,7 +2854,7 @@ let make_margin output_mediabox margin tr =
       in
         (Pdftransform.matrix_compose shift (Pdftransform.matrix_compose scale tr))
 
-let impose_transforms fit fx fy columns rtl btt center margin spacing linewidth mediabox output_mediabox fit_extra_hspace fit_extra_vspace len =
+let impose_transforms fit fx fy columns rtl btt center margin mediabox output_mediabox fit_extra_hspace fit_extra_vspace len =
   let width, height =
     match Pdf.parse_rectangle mediabox with
       xmin, ymin, xmax, ymax -> xmax -. xmin, ymax -. ymin
@@ -2850,11 +2915,11 @@ let impose_transforms fit fx fy columns rtl btt center margin spacing linewidth 
 
 (* Combine two pages into one throughout the document. The pages have already
 had their objects renumbered so as not to clash. *)
-let impose_pages fit x y columns rtl btt center margin spacing linewidth output_mediabox fast fit_extra_hspace fit_extra_vspace pdf = function
+let impose_pages fit x y columns rtl btt center margin output_mediabox fast fit_extra_hspace fit_extra_vspace pdf = function
   | [] -> assert false
   | (h::_) as pages ->
      let transforms = 
-       impose_transforms fit x y columns rtl btt center margin spacing linewidth h.Pdfpage.mediabox output_mediabox fit_extra_hspace fit_extra_vspace (length pages)
+       impose_transforms fit x y columns rtl btt center margin h.Pdfpage.mediabox output_mediabox fit_extra_hspace fit_extra_vspace (length pages)
      in
        (* Change the pattern matrices before combining resources *)
        let pages, h =
@@ -2869,24 +2934,16 @@ let impose_pages fit x y columns rtl btt center margin spacing linewidth output_
               let minx, miny, maxx, maxy = Pdf.parse_rectangle clipbox in
                 [Pdfops.Op_re (minx, miny, maxx -. minx, maxy -. miny); Pdfops.Op_W; Pdfops.Op_n]
             in
-            let rectops =
-              if linewidth = 0. then [] else
-                let minx, miny, maxx, maxy = Pdf.parse_rectangle clipbox in
-                let l2 = linewidth /. 2. in
-                [Pdfops.Op_q; Pdfops.Op_G 0.; Pdfops.Op_w linewidth; Pdfops.Op_cm transform;
-                 Pdfops.Op_re (minx +. l2, miny +. l2, maxx -. minx -. l2 -. l2, maxy -. miny -. l2 -. l2);
-                 Pdfops.Op_s; Pdfops.Op_Q]
-            in
               (* If fast, no mismatched q/Q protection and no parsing of operators. *)
               if fast then
                 let before = Pdfops.stream_of_ops (Pdfops.Op_q::Pdfops.Op_cm transform::clipops) in
-                let after = Pdfops.stream_of_ops ([Pdfops.Op_Q] @ rectops) in
+                let after = Pdfops.stream_of_ops [Pdfops.Op_Q] in
                 [before] @ contents @ [after]
               else
               (* If slow, use protect from Pdfpage. *)
               let ops = Pdfpage.protect pdf resources' contents @ Pdfops.parse_operators pdf resources' contents in
                 [Pdfops.stream_of_ops
-                  ([Pdfops.Op_q] @ [Pdfops.Op_cm transform] @ clipops @ ops @ [Pdfops.Op_Q] @ rectops)]
+                  ([Pdfops.Op_q] @ [Pdfops.Op_cm transform] @ clipops @ ops @ [Pdfops.Op_Q])]
           in
             flatten
               (map2
@@ -2928,7 +2985,19 @@ let make_space fit ~fast spacing pdf =
       (many (0., 0., width +. spacing, height +. spacing) endpage)
       (shift_pdf ~fast (many (margin, margin) endpage) pdf all) all
 
+(* We add the border as a thick unfilled rectangle just inside the page edge,
+   only if its linewidth is > 0 since, for us, 0 means none, not single-pixel
+   like in PDF. *)
+let add_border linewidth ~fast pdf =
+  if linewidth = 0. then pdf else
+  let firstpage = hd (Pdfpage.pages_of_pagetree pdf) in
+  let _, _, w, h = Pdf.parse_rectangle firstpage.Pdfpage.mediabox in
+    addrectangle
+      fast (w -. linewidth, h -. linewidth) (0., 0., 0.) true linewidth 1. (Cpdfposition.BottomLeft (linewidth /. 2.))
+      false false (ilist 1 (Pdfpage.endpage pdf)) pdf
+
 let impose ~x ~y ~fit ~columns ~rtl ~btt ~center ~margin ~spacing ~linewidth ~fast pdf =
+  let pdf = add_border linewidth ~fast pdf in
   let pdf = make_space fit ~fast spacing pdf in 
   let endpage = Pdfpage.endpage pdf in
   let firstpage = hd (Pdfpage.pages_of_pagetree pdf) in
@@ -2970,7 +3039,7 @@ let impose ~x ~y ~fit ~columns ~rtl ~btt ~center ~margin ~spacing ~linewidth ~fa
   let pages =
      map
        (impose_pages fit (float_of_int ix) (float_of_int iy) columns rtl btt
-        center margin spacing linewidth mediabox' fast fit_extra_hspace fit_extra_vspace pdf)
+        center margin mediabox' fast fit_extra_hspace fit_extra_vspace pdf)
        renumbered
   in
   let changes = map (fun x -> (x, (x + (n - 1)) / n)) pagenums in

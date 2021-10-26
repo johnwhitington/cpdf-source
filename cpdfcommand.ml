@@ -3170,69 +3170,6 @@ let extract_fontfile pagenumber fontname pdf =
                 end
             | _ -> failwith "unsupported or unfound font"
 
-let addrectangle
-  fast (w, h) colour outline linewidth opacity position relative_to_cropbox
-  underneath range pdf
-=
-  let addrectangle_page _ page =
-    let resources', unique_extgstatename =
-      if opacity < 1.0 then
-        let dict =
-          match Pdf.lookup_direct pdf "/ExtGState" page.Pdfpage.resources with
-          | Some d -> d
-          | None -> Pdf.Dictionary []
-        in
-          let unique_extgstatename = Pdf.unique_key "gs" dict in
-            let dict' =
-              Pdf.add_dict_entry dict unique_extgstatename
-                (Pdf.Dictionary [("/ca", Pdf.Real opacity); ("/CA", Pdf.Real opacity)])
-            in
-              Pdf.add_dict_entry page.Pdfpage.resources "/ExtGState" dict', Some unique_extgstatename
-      else
-        page.Pdfpage.resources, None
-    in
-    let mediabox =
-      if relative_to_cropbox then
-        match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
-        | Some pdfobject -> Pdf.parse_rectangle (Pdf.direct pdf pdfobject)
-        | None -> Pdf.parse_rectangle page.Pdfpage.mediabox
-      else
-        Pdf.parse_rectangle page.Pdfpage.mediabox
-    in
-    let x, y, _ =
-      Cpdfposition.calculate_position false w mediabox Cpdfposition.Horizontal position
-    in
-    let x, y =
-      match position with
-        Cpdfposition.Top _ | Cpdfposition.TopLeft _ | Cpdfposition.TopRight _ -> (x, y -. h)
-      | Cpdfposition.Centre | Cpdfposition.PosCentre _ -> (x, y -. (h /. 2.))
-      | _ -> (x, y)
-    in
-    let ops =
-      [
-       Pdfops.Op_q;
-       Pdfops.Op_BMC "/CPDFSTAMP";
-       (match colour with (r, g, b) -> Pdfops.Op_rg (r, g, b));
-       (match colour with (r, g, b) -> Pdfops.Op_RG (r, g, b))
-      ]
-      @
-     (if outline then [Pdfops.Op_w linewidth] else [])
-     @
-     (match unique_extgstatename with None -> [] | Some n -> [Pdfops.Op_gs n])
-     @
-     [
-       Pdfops.Op_re (x, y, w, h);
-       (if outline then Pdfops.Op_s else Pdfops.Op_f);
-       Pdfops.Op_EMC;
-       Pdfops.Op_Q
-      ]
-    in
-      let page = {page with Pdfpage.resources = resources'} in
-        if underneath
-          then Pdfpage.prepend_operators pdf ops ~fast:fast page
-          else Pdfpage.postpend_operators pdf ops ~fast:fast page
-  in
-    Cpdf.process_pages (ppstub addrectangle_page) pdf range
 
 let print_spot_colour n s =
   Printf.printf "%i %s\n" n s
@@ -4016,7 +3953,7 @@ let go () =
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           write_pdf false
-            (addrectangle
+            (Cpdf.addrectangle
                args.fast (Cpdfcoord.parse_coordinate pdf args.coord)
                args.color args.outline args.linewidth args.opacity args.position
                args.relative_to_cropbox args.underneath range pdf)
