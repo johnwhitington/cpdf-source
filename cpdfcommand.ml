@@ -678,7 +678,7 @@ let reset_arguments () =
   args.impose_margin <- 0.;
   args.impose_spacing <- 0.;
   args.impose_linewidth <- 0.;
-  args.bookmarks_json <- true
+  args.bookmarks_json <- false
   (* Do not reset original_filename or cpdflin or was_encrypted or
    * was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
    * gs_malformed or gs_quiet, since we want these to work across ANDs. Or
@@ -3448,7 +3448,7 @@ let go () =
       | (_, pagespec, _, _, _, _)::_, _ ->
         let pdf = get_single_pdf args.op true in
           let range = parse_pagespec_allow_empty pdf pagespec in
-            Cpdf.list_bookmarks args.encoding range pdf (Pdfio.output_of_channel stdout);
+            Cpdf.list_bookmarks args.bookmarks_json args.encoding range pdf (Pdfio.output_of_channel stdout);
             flush stdout
       | _ -> error "list-bookmarks: bad command line"
       end

@@ -101,7 +101,7 @@ val add_bookmarks : bool -> Pdfio.input -> Pdf.t -> Pdf.t
 
 (** [list_bookmarks encoding range pdf output] lists the bookmarks to the given
 output in the format specified in cpdfmanual.pdf *)
-val list_bookmarks : encoding -> int list -> Pdf.t -> Pdfio.output -> unit
+val list_bookmarks : json:bool -> encoding -> int list -> Pdf.t -> Pdfio.output -> unit
 
 (** {2 XML Metadata} *)
 

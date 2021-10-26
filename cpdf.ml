@@ -833,8 +833,30 @@ let output_string_of_target pdf fastrefnums x =
         "\"" ^ Pdfwrite.string_of_pdf a ^ "\"" 
   | x -> "\"" ^ Pdfwrite.string_of_pdf x ^ "\""
 
+let json_of_target pdf fastrefnums x =
+  match Pdfdest.pdfobject_of_destination x with
+  | Pdf.Array (_::more) ->
+      let a =
+        Pdf.Array (Pdf.Integer (Pdfpage.pagenumber_of_target ~fastrefnums pdf x)::more)
+      in
+        Cpdfjson.json_of_object pdf (fun _ -> ()) false false a
+  | x -> Cpdfjson.json_of_object pdf (fun _ -> ()) false false x
+
+let output_json_marks ch calculate_page_number pdf fastrefnums marks =
+  let module J = Cpdfyojson.Safe in
+  let json_of_mark m =
+    `Assoc
+       [("level", `Int m.Pdfmarks.level);
+        ("text", `String m.Pdfmarks.text);
+        ("page", `Int (calculate_page_number m));
+        ("open", `Bool m.Pdfmarks.isopen);
+        ("target", json_of_target pdf fastrefnums m.Pdfmarks.target)]
+  in
+  let json = `List (map json_of_mark marks) in
+    J.pretty_to_channel ch json
+
 (* List the bookmarks, optionally deunicoding the text, in the given range to the given output *)
-let list_bookmarks encoding range pdf output =
+let list_bookmarks ~json encoding range pdf output =
   let process_stripped escaped =
     let b = Buffer.create 200 in
       iter
@@ -889,16 +911,19 @@ let list_bookmarks encoding range pdf output =
              * we add one. Pdfpage.pagenumber_of_target has been modified to support this.*)
             Pdfpage.pagenumber_of_target ~fastrefnums pdf mark.Pdfmarks.target
           in
-            iter
-              (function mark ->
-                 output.Pdfio.output_string
-                   (Printf.sprintf "%i \"%s\" %i%s %s\n"
-                     mark.Pdfmarks.level
-                     (process_string mark.Pdfmarks.text)
-                     (calculate_page_number mark)
-                     (if mark.Pdfmarks.isopen then " open" else "")
-                     (output_string_of_target pdf fastrefnums mark.Pdfmarks.target)))
-              inrange
+            if json then
+              output_json_marks stdout calculate_page_number pdf fastrefnums inrange
+            else
+              iter
+                (function mark ->
+                   output.Pdfio.output_string
+                     (Printf.sprintf "%i \"%s\" %i%s %s\n"
+                       mark.Pdfmarks.level
+                       (process_string mark.Pdfmarks.text)
+                       (calculate_page_number mark)
+                       (if mark.Pdfmarks.isopen then " open" else "")
+                       (output_string_of_target pdf fastrefnums mark.Pdfmarks.target)))
+                inrange
 
 (* o is the stamp, u is the main pdf page *)
 
