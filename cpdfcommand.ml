@@ -464,7 +464,8 @@ type args =
    mutable impose_center : bool;
    mutable impose_margin : float;
    mutable impose_spacing : float;
-   mutable impose_linewidth : float}
+   mutable impose_linewidth : float;
+   mutable bookmarks_json : bool}
 
 let args =
   {op = None;
@@ -577,7 +578,8 @@ let args =
    impose_center = false;
    impose_margin = 0.;
    impose_spacing = 0.;
-   impose_linewidth = 0.}
+   impose_linewidth = 0.;
+   bookmarks_json = false}
 
 let reset_arguments () =
   args.op <- None;
@@ -675,7 +677,8 @@ let reset_arguments () =
   args.impose_center <- false;
   args.impose_margin <- 0.;
   args.impose_spacing <- 0.;
-  args.impose_linewidth <- 0.
+  args.impose_linewidth <- 0.;
+  args.bookmarks_json <- true
   (* Do not reset original_filename or cpdflin or was_encrypted or
    * was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
    * gs_malformed or gs_quiet, since we want these to work across ANDs. Or
@@ -1060,6 +1063,14 @@ let setopacity o =
 
 let setaddbookmarks s =
   setop (AddBookmarks s) ()
+
+let setaddbookmarksjson s =
+  setop (AddBookmarks s) ();
+  args.bookmarks_json <- true
+
+let setlistbookmarksjson s =
+  setop ListBookmarks ();
+  args.bookmarks_json <- true
 
 let setstampon f =
   setop (StampOn f) ();
@@ -1801,12 +1812,18 @@ and specs =
    ("-list-bookmarks",
       Arg.Unit (setop ListBookmarks),
       " List Bookmarks");
+   ("-list-bookmarks-json",
+      Arg.Unit setlistbookmarksjson,
+      " List Bookmarks in JSON format");
    ("-remove-bookmarks",
       Arg.Unit (setop RemoveBookmarks),
       " Remove bookmarks from a file");
    ("-add-bookmarks",
       Arg.String setaddbookmarks,
       " Add bookmarks from the given file");
+   ("-add-bookmarks-json",
+      Arg.String setaddbookmarksjson,
+      " Add bookmarks from the given file in JSON format");
    ("-bookmarks-open-to-level",
       Arg.Int setbookmarksopentolevel,
       " Open bookmarks to this level (0 = all closed)");
