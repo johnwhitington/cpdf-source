@@ -3967,7 +3967,7 @@ let go () =
                args.relative_to_cropbox args.underneath range pdf)
   | Some (AddBookmarks file) ->
       write_pdf false
-        (Cpdf.add_bookmarks true (Pdfio.input_of_channel (open_in_bin file))
+        (Cpdf.add_bookmarks ~json:args.bookmarks_json true (Pdfio.input_of_channel (open_in_bin file))
           (get_single_pdf args.op false))
   | Some RemoveBookmarks ->
       write_pdf false (Pdfmarks.remove_bookmarks (get_single_pdf args.op false))

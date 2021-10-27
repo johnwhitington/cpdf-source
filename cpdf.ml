@@ -631,6 +631,20 @@ let bookmark_of_data pdf i s i' isopen optionaldest =
      Pdfmarks.target = target;
      Pdfmarks.isopen = isopen}
 
+let parse_bookmark_file_json verify pdf input =
+  try
+    let marks =
+      []
+    in
+      if verify then
+        if verify_bookmarks pdf 0 (Pdfpage.endpage pdf) marks then marks else
+          error "Bad bookmark file (References non-existant pages or is malformed)"
+      else
+        marks
+  with
+    e ->
+      error (Printf.sprintf "Malformed JSON bookmark file (%s)" (Printexc.to_string e)) 
+
 let parse_bookmark_file verify pdf input =
   let currline = ref 0 in
   try
@@ -669,8 +683,9 @@ let parse_bookmark_file verify pdf input =
            (Printexc.to_string e))
 
 
-let add_bookmarks verify input pdf =
-  let parsed = parse_bookmark_file verify pdf input in
+let add_bookmarks ~json verify input pdf =
+  let parsed =
+    (if json then parse_bookmark_file_json else parse_bookmark_file) verify pdf input in
     (*iter (fun b -> flprint (Pdfmarks.string_of_bookmark b); flprint "\n") parsed;*)
     Pdfmarks.add_bookmarks parsed pdf 
 
@@ -855,7 +870,7 @@ let output_json_marks ch calculate_page_number pdf fastrefnums marks =
   let json = `List (map json_of_mark marks) in
     J.pretty_to_channel ch json
 
-(* List the bookmarks, optionally deunicoding the text, in the given range to the given output *)
+(* List the bookmarks in the given range to the given output *)
 let list_bookmarks ~json encoding range pdf output =
   let process_stripped escaped =
     let b = Buffer.create 200 in
