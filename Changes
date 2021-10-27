@@ -1,5 +1,6 @@
 2.5 (Upcoming 2022)
 
+o Basic merging of AcroForms
 o Output bookmarks in JSON format with -list-bookmarks-json
 o Load bookmarks in JSON format with -add-bookmarks-json
 o New operations -impose and -impose-xy for document imposition
