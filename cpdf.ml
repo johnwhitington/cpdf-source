@@ -2640,64 +2640,6 @@ let get_annotations encoding pdf =
         pages
         (ilist 1 (length pages))) 
 
-let list_annotations_more pdf =
-  let pages = Pdfpage.pages_of_pagetree pdf in
-    iter2
-      (fun page pagenumber ->
-         iter
-           (function annot ->
-              let print_annot annot =
-                let annot_type_string =
-                  match annot.Pdfannot.subtype with
-                  | Pdfannot.Stamp -> "Stamp"
-                  | Pdfannot.Text -> "Text"
-                  | Pdfannot.Link -> "Link"
-                  | Pdfannot.FreeText -> "FreeText"
-                  | Pdfannot.Line -> "Line"
-                  | Pdfannot.Square -> "Square"
-                  | Pdfannot.Circle -> "Circle"
-                  | Pdfannot.Polygon -> "Polygon"
-                  | Pdfannot.PolyLine -> "PolyLine"
-                  | Pdfannot.Highlight -> "Highlight"
-                  | Pdfannot.Underline -> "Underline"
-                  | Pdfannot.Squiggly -> "Squiggly"
-                  | Pdfannot.StrikeOut -> "StrikeOut"
-                  | Pdfannot.Caret -> "Caret"
-                  | Pdfannot.Ink -> "Ink"
-                  | Pdfannot.Popup _ -> "Popup"
-                  | Pdfannot.FileAttachment -> "FileAttachment"
-                  | Pdfannot.Sound -> "Sound"
-                  | Pdfannot.Movie -> "Movie"
-                  | Pdfannot.Widget -> "Widget"
-                  | Pdfannot.Screen -> "Screen"
-                  | Pdfannot.PrinterMark -> "PrinterMark"
-                  | Pdfannot.TrapNet -> "TrapNet"
-                  | Pdfannot.Watermark -> "Watermark"
-                  | Pdfannot.ThreeDee -> "ThreeDee"
-                  | Pdfannot.Unknown -> "Unknown"
-                in let subject =
-                  match annot.Pdfannot.subject with
-                  | Some s -> s
-                  | None -> ""
-                in let contents =
-                  match annot.Pdfannot.annot_contents with
-                  | Some s -> s
-                  | None -> ""
-                in
-                  Printf.printf "Page: %i\n" pagenumber;
-                  Printf.printf "Subtype: %s\n" annot_type_string;
-                  Printf.printf "Subject: %s\n" subject;
-                  Printf.printf "Contents: %s\n" contents;
-              in
-                match annot.Pdfannot.subtype with
-                | Pdfannot.Popup annot -> print_annot annot
-                | _ -> print_annot annot
-           )
-           (Pdfannot.annotations_of_page pdf page))
-      pages
-      (ilist 1 (length pages));
-      flprint "" (* flush *)
-
 (* Equalise the page lengths of two PDFs by chopping or extending the first one.
 *)
 let equalise_lengths a b =

@@ -107,7 +107,6 @@ type op =
   | DumpAttachedFiles
   | RemoveAnnotations
   | ListAnnotations
-  | ListAnnotationsMore
   | CopyAnnotations of string
   | Merge
   | Split
@@ -233,7 +232,6 @@ let string_of_op = function
   | DumpAttachedFiles -> "DumpAttachedFiles"
   | RemoveAnnotations -> "RemoveAnnotations"
   | ListAnnotations -> "ListAnnotations"
-  | ListAnnotationsMore -> "ListAnnotationsMore"
   | CopyAnnotations _ -> "CopyAnnotations"
   | Merge -> "Merge"
   | Split -> "Split"
@@ -465,7 +463,7 @@ type args =
    mutable impose_margin : float;
    mutable impose_spacing : float;
    mutable impose_linewidth : float;
-   mutable bookmarks_json : bool}
+   mutable format_json : bool}
 
 let args =
   {op = None;
@@ -579,7 +577,7 @@ let args =
    impose_margin = 0.;
    impose_spacing = 0.;
    impose_linewidth = 0.;
-   bookmarks_json = false}
+   format_json = false}
 
 let reset_arguments () =
   args.op <- None;
@@ -678,7 +676,7 @@ let reset_arguments () =
   args.impose_margin <- 0.;
   args.impose_spacing <- 0.;
   args.impose_linewidth <- 0.;
-  args.bookmarks_json <- false
+  args.format_json <- false
   (* Do not reset original_filename or cpdflin or was_encrypted or
    * was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
    * gs_malformed or gs_quiet, since we want these to work across ANDs. Or
@@ -727,7 +725,7 @@ bans list in the input file, the operation cannot proceed. Other operations
 cannot proceed at all without owner password. *)
 let banned banlist = function
   | Fonts | Info | Metadata | PageInfo | Revisions | CountPages
-  | ListAttachedFiles | ListAnnotationsMore | ListAnnotations
+  | ListAttachedFiles | ListAnnotations
   | ListBookmarks | ImageResolution _ | MissingFonts
   | PrintPageLabels | Clean | Compress | Decompress
   | RemoveUnusedResources | ChangeId | CopyId _ | ListSpotColours | Version
@@ -1066,11 +1064,15 @@ let setaddbookmarks s =
 
 let setaddbookmarksjson s =
   setop (AddBookmarks s) ();
-  args.bookmarks_json <- true
+  args.format_json <- true
 
-let setlistbookmarksjson s =
+let setlistbookmarksjson () =
   setop ListBookmarks ();
-  args.bookmarks_json <- true
+  args.format_json <- true
+
+let setlistannotationsjson () =
+  setop ListBookmarks ();
+  args.format_json <- true
 
 let setstampon f =
   setop (StampOn f) ();
@@ -2025,6 +2027,9 @@ and specs =
    ("-list-annotations",
       Arg.Unit (setop ListAnnotations),
       " List annotations");
+   ("-list-annotations-json",
+      Arg.Unit setlistannotationsjson,
+      " List annotations in JSON format");
    ("-copy-annotations",
       Arg.String setcopyannotations,
       " Copy annotations from given file");
@@ -3448,7 +3453,7 @@ let go () =
       | (_, pagespec, _, _, _, _)::_, _ ->
         let pdf = get_single_pdf args.op true in
           let range = parse_pagespec_allow_empty pdf pagespec in
-            Cpdf.list_bookmarks args.bookmarks_json args.encoding range pdf (Pdfio.output_of_channel stdout);
+            Cpdf.list_bookmarks args.format_json args.encoding range pdf (Pdfio.output_of_channel stdout);
             flush stdout
       | _ -> error "list-bookmarks: bad command line"
       end
@@ -3835,8 +3840,6 @@ let go () =
       end
   | Some ListAnnotations ->
       Cpdf.list_annotations args.encoding (get_single_pdf args.op true)
-  | Some ListAnnotationsMore ->
-      Cpdf.list_annotations_more (get_single_pdf args.op true)
   | Some Shift ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
@@ -3967,7 +3970,7 @@ let go () =
                args.relative_to_cropbox args.underneath range pdf)
   | Some (AddBookmarks file) ->
       write_pdf false
-        (Cpdf.add_bookmarks ~json:args.bookmarks_json true (Pdfio.input_of_channel (open_in_bin file))
+        (Cpdf.add_bookmarks ~json:args.format_json true (Pdfio.input_of_channel (open_in_bin file))
           (get_single_pdf args.op false))
   | Some RemoveBookmarks ->
       write_pdf false (Pdfmarks.remove_bookmarks (get_single_pdf args.op false))
