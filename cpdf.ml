@@ -640,7 +640,7 @@ let mark_of_json pdf = function
             ("open", `Bool openstatus);
             ("target", target)] ->
        {Pdfmarks.level = level;
-        Pdfmarks.text = text;
+        Pdfmarks.text = Pdftext.pdfdocstring_of_utf8 text;
         Pdfmarks.target = target_of_json_target pdf pagenumber target;
         Pdfmarks.isopen = openstatus}
   | _ -> error "malformed mark in mark_of_json"
@@ -886,7 +886,7 @@ let output_json_marks ch calculate_page_number pdf fastrefnums marks =
   let json_of_mark m =
     `Assoc
        [("level", `Int m.Pdfmarks.level);
-        ("text", `String m.Pdfmarks.text);
+        ("text", `String (Pdftext.utf8_of_pdfdocstring m.Pdfmarks.text));
         ("page", `Int (calculate_page_number m));
         ("open", `Bool m.Pdfmarks.isopen);
         ("target", json_of_target pdf fastrefnums m.Pdfmarks.target)]
