@@ -599,51 +599,75 @@ let debug_bookmark_string s =
 
 (* If optionaldest = [Pdfgenlex.LexString s], we parse the string, convert the
  * integer to an indirect of the real page target, and then put it in. *)
+let target_of_markfile_obj pdf i' pdfobj =
+  (*Printf.printf "Parsed %s\n" (Pdfwrite.string_of_pdf pdfobj);*)
+  match pdfobj with
+    Pdf.Array (Pdf.Integer x::more) ->
+      let pageobjnum = Pdfpage.page_object_number pdf i' in
+        begin match pageobjnum with
+          None ->
+            raise (Pdf.PDFError "bookmark_of_data: page obj num not found")
+        | Some p ->
+            Pdfdest.read_destination pdf (Pdf.Array (Pdf.Indirect p::more))
+        end
+  (* Need to deal with "null", "(string)", and "<<other thing like action" *) 
+  | Pdf.Null -> Pdfdest.NullDestination
+  | Pdf.String s -> Pdfdest.read_destination pdf (Pdf.String s)
+  | x -> Pdfdest.Action x
+
+let target_of_markfile_target pdf i' = function
+  | [Pdfgenlex.LexString s] ->
+      let pdfobj = Pdfread.parse_single_object s in
+        target_of_markfile_obj pdf i' pdfobj
+  | _ -> Pdfpage.target_of_pagenumber pdf i'
+
 let bookmark_of_data pdf i s i' isopen optionaldest =
-  let target =
-    match optionaldest with
-    | [Pdfgenlex.LexString s] ->
-        let pdfobj =
-          Pdfread.parse_single_object s
-        in
-          (*Printf.printf "Parsed %s\n" (Pdfwrite.string_of_pdf pdfobj);*)
-          begin match pdfobj with
-            Pdf.Array (Pdf.Integer x::more) ->
-              let pageobjnum = Pdfpage.page_object_number pdf i' in
-                begin match pageobjnum with
-                  None ->
-                    raise (Pdf.PDFError "bookmark_of_data: page obj num not found")
-                | Some p ->
-                    Pdfdest.read_destination pdf (Pdf.Array (Pdf.Indirect p::more))
-                end
-          (* Need to deal with "null", "(string)", and "<<other thing like action" *) 
-          | Pdf.Null -> Pdfdest.NullDestination
-          | Pdf.String s -> Pdfdest.read_destination pdf (Pdf.String s)
-          | x -> Pdfdest.Action x
-          end
-    | _ -> Pdfpage.target_of_pagenumber pdf i'
-  in
     (*debug_bookmark_string s;
     debug_bookmark_string (implode (fixup_characters [] (explode s)));
     debug_bookmark_string (Pdftext.pdfdocstring_of_utf8 (implode (fixup_characters [] (explode s))));*)
     {Pdfmarks.level = i;
      Pdfmarks.text = Pdftext.pdfdocstring_of_utf8 (implode (fixup_characters [] (explode s)));
-     Pdfmarks.target = target;
+     Pdfmarks.target = target_of_markfile_target pdf i' optionaldest;
      Pdfmarks.isopen = isopen}
 
-let parse_bookmark_file_json verify pdf input =
-  try
-    let marks =
-      []
-    in
-      if verify then
-        if verify_bookmarks pdf 0 (Pdfpage.endpage pdf) marks then marks else
-          error "Bad bookmark file (References non-existant pages or is malformed)"
-      else
-        marks
-  with
-    e ->
-      error (Printf.sprintf "Malformed JSON bookmark file (%s)" (Printexc.to_string e)) 
+let target_of_json_target pdf pagenumber target = 
+  target_of_markfile_obj pdf pagenumber (Cpdfjson.object_of_json target)
+
+let mark_of_json pdf = function
+  | `Assoc [("level", `Int level);
+            ("text", `String text);
+            ("page", `Int pagenumber);
+            ("open", `Bool openstatus);
+            ("target", target)] ->
+       {Pdfmarks.level = level;
+        Pdfmarks.text = text;
+        Pdfmarks.target = target_of_json_target pdf pagenumber target;
+        Pdfmarks.isopen = openstatus}
+  | _ -> error "malformed mark in mark_of_json"
+
+let marks_of_json pdf = function
+  | `List ms -> map (mark_of_json pdf) ms
+  | _ -> error "top level of JSON boomark file not a list"
+
+let parse_bookmark_file_json verify pdf i =
+  let module J = Cpdfyojson.Safe in
+    try
+      let json =
+        match i.Pdfio.caml_channel with
+        | Some ch -> J.from_channel ch
+        | None ->
+          let content = Pdfio.string_of_bytes (Pdfio.bytes_of_input i 0 i.Pdfio.in_channel_length) in
+            J.from_string content
+      in
+      let marks = marks_of_json pdf json in
+        if verify then
+          if verify_bookmarks pdf 0 (Pdfpage.endpage pdf) marks then marks else
+            error "Bad bookmark file (References non-existant pages or is malformed)"
+        else
+          marks
+    with
+      e ->
+        error (Printf.sprintf "Malformed JSON bookmark file (%s)" (Printexc.to_string e)) 
 
 let parse_bookmark_file verify pdf input =
   let currline = ref 0 in
