@@ -4237,14 +4237,19 @@ let remove_all_text range pdf =
         pagenums;
       Pdfpage.change_pages true !pdf (rev !pages')
 
+(* 1. Extend remove_dict_entry with search term
+   2. Implement replace_dict_entry by analogy to remove_dict_entry *)
+let rec remove_dict_entry_single_object f pdf = function
+  | (Pdf.Dictionary d) -> f (Pdf.recurse_dict (remove_dict_entry_single_object f pdf) d)
+  | (Pdf.Stream {contents = (Pdf.Dictionary dict, data)}) ->
+      f (Pdf.Stream {contents = (Pdf.recurse_dict (remove_dict_entry_single_object f pdf) dict, data)})
+  | Pdf.Array a -> Pdf.recurse_array (remove_dict_entry_single_object f pdf) a
+  | x -> x
+
 let remove_dict_entry pdf key =
-  Pdf.objselfmap
-    (function
-       (Pdf.Dictionary _ as d) | (Pdf.Stream _ as d) ->
-         Pdf.remove_dict_entry d key
-     | x -> x)
-    pdf;
-  pdf.Pdf.trailerdict <- Pdf.remove_dict_entry pdf.Pdf.trailerdict key
+  let f d = Pdf.remove_dict_entry d key in
+    Pdf.objselfmap (remove_dict_entry_single_object f pdf) pdf;
+    pdf.Pdf.trailerdict <- remove_dict_entry_single_object f pdf pdf.Pdf.trailerdict
 
 let replace_dict_entry pdf key value search = ()
 
