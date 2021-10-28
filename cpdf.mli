@@ -301,7 +301,7 @@ val padmultiple : int -> Pdf.t -> Pdf.t
 (** {2 Annotations} *)
 
 (** List the annotations to standard output in a given encoding. See cpdfmanual.pdf for the format details. *)
-val list_annotations : encoding -> Pdf.t -> unit
+val list_annotations : json:bool -> encoding -> Pdf.t -> unit
 
 (** Return the annotations as a (pagenumber, content) list *)
 val get_annotations : encoding -> Pdf.t -> (int * string) list

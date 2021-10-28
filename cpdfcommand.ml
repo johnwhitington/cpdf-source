@@ -1071,7 +1071,7 @@ let setlistbookmarksjson () =
   args.format_json <- true
 
 let setlistannotationsjson () =
-  setop ListBookmarks ();
+  setop ListAnnotations ();
   args.format_json <- true
 
 let setstampon f =
@@ -3839,7 +3839,7 @@ let go () =
       | _ -> error "copy-annotations: No input file specified"
       end
   | Some ListAnnotations ->
-      Cpdf.list_annotations args.encoding (get_single_pdf args.op true)
+      Cpdf.list_annotations ~json:args.format_json args.encoding (get_single_pdf args.op true)
   | Some Shift ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in

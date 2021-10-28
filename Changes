@@ -1,7 +1,6 @@
 2.5 (Upcoming 2022)
 
 o Output annotations in JSON form with -list-annotations-json
-o Load annotations in JSON form with -add-annotations-json
 o Basic merging of AcroForms
 o Output bookmarks in JSON format with -list-bookmarks-json
 o Load bookmarks in JSON format with -add-bookmarks-json
