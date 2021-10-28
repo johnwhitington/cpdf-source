@@ -389,6 +389,8 @@ val stamp_as_xobject : Pdf.t -> int list -> Pdf.t -> Pdf.t * string
 
 val remove_dict_entry : Pdf.t -> string -> unit
 
+val replace_dict_entry : Pdf.t -> string -> string -> string option -> unit
+
 val remove_clipping : Pdf.t -> int list -> Pdf.t 
 
 val image_resolution : Pdf.t -> int list -> float -> (int * string * int * int * float * float) list

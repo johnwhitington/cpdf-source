@@ -2621,15 +2621,20 @@ let list_page_annotations encoding pdf num page =
       iter (print_annotation encoding pdf num) (map (Pdf.direct pdf) annots)
   | _ -> ()
 
-let annotations_json_page pdf page =
+let annotations_json_page pdf page pagenum =
   match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
   | Some (Pdf.Array annots) ->
-      map (Cpdfjson.json_of_object pdf (fun _ -> ()) false false) (map (Pdf.direct pdf) annots)
+      map
+        (fun annot ->
+           `List [`Int pagenum; Cpdfjson.json_of_object pdf (fun _ -> ()) false false annot])
+        (map (Pdf.direct pdf) annots)
   | _ -> []
 
 let list_annotations_json pdf =
   let module J = Cpdfyojson.Safe in
-  let json = `List (flatten (map (annotations_json_page pdf) (Pdfpage.pages_of_pagetree pdf))) in
+  let pages = Pdfpage.pages_of_pagetree pdf in
+  let pagenums = indx pages in
+  let json = `List (flatten (map2 (annotations_json_page pdf) pages pagenums)) in
     J.pretty_to_channel stdout json
 
 let list_annotations ~json encoding pdf =
@@ -4240,6 +4245,8 @@ let remove_dict_entry pdf key =
      | x -> x)
     pdf;
   pdf.Pdf.trailerdict <- Pdf.remove_dict_entry pdf.Pdf.trailerdict key
+
+let replace_dict_entry pdf key value search = ()
 
 let remove_clipping_ops pdf resources content =
   let ops = Pdfops.parse_operators pdf resources content in

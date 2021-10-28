@@ -180,6 +180,7 @@ type op =
   | PrintPageLabels
   | Revisions
   | RemoveDictEntry of string
+  | ReplaceDictEntry of string
   | ListSpotColours
   | RemoveClipping
   | SetMetadataDate of string
@@ -299,6 +300,7 @@ let string_of_op = function
   | PrintPageLabels -> "PrintPageLabels"
   | Revisions -> "Revisions"
   | RemoveDictEntry _ -> "RemoveDictEntry"
+  | ReplaceDictEntry _ -> "ReplaceDictEntry"
   | ListSpotColours -> "ListSpotColours"
   | RemoveClipping -> "RemoveClipping"
   | Trim -> "Trim"
@@ -463,7 +465,9 @@ type args =
    mutable impose_margin : float;
    mutable impose_spacing : float;
    mutable impose_linewidth : float;
-   mutable format_json : bool}
+   mutable format_json : bool;
+   mutable replace_dict_entry_value : string;
+   mutable dict_entry_search : string option}
 
 let args =
   {op = None;
@@ -577,7 +581,9 @@ let args =
    impose_margin = 0.;
    impose_spacing = 0.;
    impose_linewidth = 0.;
-   format_json = false}
+   format_json = false;
+   replace_dict_entry_value = "";
+   dict_entry_search = None}
 
 let reset_arguments () =
   args.op <- None;
@@ -676,7 +682,9 @@ let reset_arguments () =
   args.impose_margin <- 0.;
   args.impose_spacing <- 0.;
   args.impose_linewidth <- 0.;
-  args.format_json <- false
+  args.format_json <- false;
+  args.replace_dict_entry_value <- "";
+  args.dict_entry_search <- None
   (* Do not reset original_filename or cpdflin or was_encrypted or
    * was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
    * gs_malformed or gs_quiet, since we want these to work across ANDs. Or
@@ -735,7 +743,7 @@ let banned banlist = function
   | RemoveId | OpenAtPageFit _ | OpenAtPage _ | SetPageLayout _
   | ShowBoxes | TrimMarks | CreateMetadata | SetMetadataDate _ | SetVersion _
   | SetAuthor _|SetTitle _|SetSubject _|SetKeywords _|SetCreate _
-  | SetModify _|SetCreator _|SetProducer _|RemoveDictEntry _ | SetMetadata _
+  | SetModify _|SetCreator _|SetProducer _|RemoveDictEntry _ | ReplaceDictEntry _ | SetMetadata _
   | ExtractText | ExtractImages | ExtractFontFile
   | AddPageLabels | RemovePageLabels | OutputJSON | OCGCoalesce
   | OCGRename | OCGList | OCGOrderAll
@@ -1588,6 +1596,15 @@ let setimposespacing f =
 let setimposelinewidth f =
   args.impose_linewidth <- f
 
+let setreplacedictentry s =
+  setop (ReplaceDictEntry s) ()
+
+let setreplacedictentryvalue s =
+  args.replace_dict_entry_value <- s
+
+let setdictentrysearch s =
+  args.dict_entry_search <- Some s
+
 let whingemalformed () =
   prerr_string "Command line must be of exactly the form\ncpdf <infile> -gs <path> -gs-malformed-force -o <outfile>\n";
   exit 1
@@ -2228,6 +2245,15 @@ and specs =
    ("-remove-dict-entry",
     Arg.String setremovedictentry,
     " Remove an entry from all dictionaries");
+   ("-replace-dict-entry",
+    Arg.String setreplacedictentry,
+    " Remove an entry from all dictionaries");
+   ("-replace-dict-entry-value",
+    Arg.String setreplacedictentryvalue,
+    " Replacement value for -replace-dict-entry");
+   ("-dict-entry-search",
+    Arg.String setdictentrysearch,
+    " Search string for -remove-dict-entry and -replace-dict-entry");
    ("-producer",
     Arg.String setproduceraswego,
     " Change the /Producer entry in the /Info dictionary");
@@ -4103,6 +4129,10 @@ let go () =
   | Some (RemoveDictEntry key) ->
       let pdf = get_single_pdf args.op true in
         Cpdf.remove_dict_entry pdf key;
+        write_pdf false pdf
+  | Some (ReplaceDictEntry key) ->
+      let pdf = get_single_pdf args.op true in
+        Cpdf.replace_dict_entry pdf key args.replace_dict_entry_value args.dict_entry_search;
         write_pdf false pdf
   | Some ListSpotColours ->
       let pdf = get_single_pdf args.op false in
