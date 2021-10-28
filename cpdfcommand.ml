@@ -3453,7 +3453,7 @@ let go () =
       | (_, pagespec, _, _, _, _)::_, _ ->
         let pdf = get_single_pdf args.op true in
           let range = parse_pagespec_allow_empty pdf pagespec in
-            Cpdf.list_bookmarks args.format_json args.encoding range pdf (Pdfio.output_of_channel stdout);
+            Cpdf.list_bookmarks ~json:args.format_json args.encoding range pdf (Pdfio.output_of_channel stdout);
             flush stdout
       | _ -> error "list-bookmarks: bad command line"
       end
@@ -3983,8 +3983,8 @@ let go () =
       let x, y = Cpdfcoord.parse_coordinate pdf args.coord in
         if not fit && (x < 0.0 || y < 0.0) then error "Negative imposition parameters not allowed." else
         write_pdf false
-          (Cpdf.impose x y fit args.impose_columns args.impose_rtl args.impose_btt args.impose_center
-                      args.impose_margin args.impose_spacing args.impose_linewidth args.fast pdf)
+          (Cpdf.impose ~x ~y ~fit ~columns:args.impose_columns ~rtl:args.impose_rtl ~btt:args.impose_btt ~center:args.impose_center
+                      ~margin:args.impose_margin ~spacing:args.impose_spacing ~linewidth:args.impose_linewidth ~fast:args.fast pdf)
   | Some (StampOn over) ->
       let overpdf =
         match over with
