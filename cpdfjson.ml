@@ -6,12 +6,12 @@ object, one for each object in the file and two special ones:
 Object -1: CPDF's own data with the PDF version number, CPDF JSON format
 number, and flags used when writing (which may be required when reading):
 
-  o /CPDFJSONformatversion (integer, currently 2)
+  o /CPDFJSONformatversion (CPDFJSON integer (see below), currently 2)
   o /CPDFJSONcontentparsed (boolean, true if content streams have been parsed)
   o /CPDFJSONstreamdataincluded (boolean, true if stream data included. Cannot
   round-trip if false).
-  o /CPDFJSONmajorpdfversion (integer)
-  o /CPDFJSONminorpdfversion (integer)
+  o /CPDFJSONmajorpdfversion (CPDFJSON integer)
+  o /CPDFJSONminorpdfversion (CPDFJSON integer)
 
 Object 0: The PDF's trailer dictionary
 
@@ -23,6 +23,11 @@ Objects 1..n: The PDF's objects.
   o Names are written as {"N": "/Pages"}
   o Indirect references are integers
   o Streams are {"S": [dict, data]}
+
+  o Strings are converted from PDFDocEncoding to UTF8 before being encoded in
+  JSON. When they are read back the process is JSON encoded --> UTF8 -->
+  PDFDocEncoding. This process is to allow easier editing of strings. This
+  does not happen to strings within text operators in parsed content streams. 
 
 There are two subformats: parsing content streams or not.  Hello World in CPDF
 JSON without parsing content streams:
@@ -448,10 +453,33 @@ let precombine_page_content pdf =
   in
     Pdfpage.change_pages true pdf pages'
 
+(* PDF strings (except /ID in the trailer dictionary) are either PDFDocEncoding
+or UTF16BE. Many times the UTF16BE can all be represented in PDFDocEncoding.
+In this case, there are just lots of \000 bytes getting in the way making the
+JSON hard to edit. So we preprocess such simple UTF16BE strings into
+PDFDocEncoding. *)
+let preprocess_string s =
+  if Pdftext.is_unicode s
+    then Pdftext.pdfdocstring_of_utf8 (Pdftext.utf8_of_pdfdocstring s)
+    else s
+
+let rec ppstring_single_object pdf = function
+  | Pdf.Dictionary d -> Pdf.recurse_dict (ppstring_single_object pdf) d
+  | (Pdf.Stream {contents = (Pdf.Dictionary dict, data)}) ->
+      Pdf.Stream {contents = (Pdf.recurse_dict (ppstring_single_object pdf) dict, data)}
+  | Pdf.Array a -> Pdf.recurse_array (ppstring_single_object pdf) a
+  | Pdf.String s -> Pdf.String (preprocess_string s)
+  | x -> x
+
+let preprocess_strings pdf =
+    Pdf.objselfmap (ppstring_single_object pdf) pdf;
+    pdf.Pdf.trailerdict <- ppstring_single_object pdf pdf.Pdf.trailerdict
+
 let json_of_pdf
   ~parse_content ~no_stream_data ~decompress_streams
   pdf
 =
+  preprocess_strings pdf;
   let pdf = if parse_content then precombine_page_content pdf else pdf in
   if decompress_streams then
     Pdf.objiter (fun _ obj -> Pdfcodec.decode_pdfstream_until_unknown pdf obj) pdf;
