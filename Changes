@@ -1,5 +1,6 @@
 2.5 (Upcoming 2022)
 
+o New -print-dict-entry operation prints values for a given key
 o Extend -remove-dict-entry to allow search
 o New -replace-dict-entry function to search & replace e.g URLs
 o Output annotations in JSON form with -list-annotations-json

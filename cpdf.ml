@@ -4239,19 +4239,50 @@ let remove_all_text range pdf =
 
 (* 1. Extend remove_dict_entry with search term
    2. Implement replace_dict_entry by analogy to remove_dict_entry *)
-let rec remove_dict_entry_single_object f pdf = function
-  | (Pdf.Dictionary d) -> f (Pdf.recurse_dict (remove_dict_entry_single_object f pdf) d)
+let rec dict_entry_single_object f pdf = function
+  | (Pdf.Dictionary d) -> f (Pdf.recurse_dict (dict_entry_single_object f pdf) d)
   | (Pdf.Stream {contents = (Pdf.Dictionary dict, data)}) ->
-      f (Pdf.Stream {contents = (Pdf.recurse_dict (remove_dict_entry_single_object f pdf) dict, data)})
-  | Pdf.Array a -> Pdf.recurse_array (remove_dict_entry_single_object f pdf) a
+      f (Pdf.Stream {contents = (Pdf.recurse_dict (dict_entry_single_object f pdf) dict, data)})
+  | Pdf.Array a -> Pdf.recurse_array (dict_entry_single_object f pdf) a
   | x -> x
 
-let remove_dict_entry pdf key =
-  let f d = Pdf.remove_dict_entry d key in
-    Pdf.objselfmap (remove_dict_entry_single_object f pdf) pdf;
-    pdf.Pdf.trailerdict <- remove_dict_entry_single_object f pdf pdf.Pdf.trailerdict
+(* FIXME are we sure that functional values can never appear in the equality here? *)
+let remove_dict_entry pdf key search =
+  let f d =
+    match search with
+    | None -> Pdf.remove_dict_entry d key
+    | Some s ->
+        match Pdf.lookup_direct pdf key d with
+        | Some v when v = s -> Pdf.remove_dict_entry d key
+        | _ -> d
+  in
+    Pdf.objselfmap (dict_entry_single_object f pdf) pdf;
+    pdf.Pdf.trailerdict <- dict_entry_single_object f pdf pdf.Pdf.trailerdict
 
-let replace_dict_entry pdf key value search = ()
+let replace_dict_entry pdf key value search =
+  let f d =
+    match search with
+    | None -> Pdf.replace_dict_entry d key value
+    | Some s ->
+        match Pdf.lookup_direct pdf key d with
+        | Some v when v = s -> Pdf.replace_dict_entry d key value
+        | _ -> d
+  in
+    Pdf.objselfmap (dict_entry_single_object f pdf) pdf;
+    pdf.Pdf.trailerdict <- dict_entry_single_object f pdf pdf.Pdf.trailerdict
+
+(* FIXME no need to self map here, since nothing changes *)
+let print_dict_entry pdf key =
+  let f d =
+    match Pdf.lookup_direct pdf key d with
+    | Some v ->
+        (* We use a double newline as a separator. *)
+        Printf.printf "%s\n\n" (Cpdfyojson.Safe.to_string (Cpdfjson.json_of_object pdf (fun _ -> ()) false false v));
+        d
+    | None -> d
+  in
+    Pdf.objselfmap (dict_entry_single_object f pdf) pdf;
+    pdf.Pdf.trailerdict <- dict_entry_single_object f pdf pdf.Pdf.trailerdict
 
 let remove_clipping_ops pdf resources content =
   let ops = Pdfops.parse_operators pdf resources content in

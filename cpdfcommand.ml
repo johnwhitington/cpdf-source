@@ -181,6 +181,7 @@ type op =
   | Revisions
   | RemoveDictEntry of string
   | ReplaceDictEntry of string
+  | PrintDictEntry of string
   | ListSpotColours
   | RemoveClipping
   | SetMetadataDate of string
@@ -201,6 +202,7 @@ type op =
   | StampAsXObject of string
 
 let string_of_op = function
+  | PrintDictEntry _ -> "PrintDictEntry"
   | Impose _ -> "Impose"
   | CopyFont _ -> "CopyFont"
   | CountPages -> "CountPages"
@@ -466,8 +468,8 @@ type args =
    mutable impose_spacing : float;
    mutable impose_linewidth : float;
    mutable format_json : bool;
-   mutable replace_dict_entry_value : string;
-   mutable dict_entry_search : string option}
+   mutable replace_dict_entry_value : Pdf.pdfobject;
+   mutable dict_entry_search : Pdf.pdfobject option}
 
 let args =
   {op = None;
@@ -582,7 +584,7 @@ let args =
    impose_spacing = 0.;
    impose_linewidth = 0.;
    format_json = false;
-   replace_dict_entry_value = "";
+   replace_dict_entry_value = Pdf.Null;
    dict_entry_search = None}
 
 let reset_arguments () =
@@ -683,7 +685,7 @@ let reset_arguments () =
   args.impose_spacing <- 0.;
   args.impose_linewidth <- 0.;
   args.format_json <- false;
-  args.replace_dict_entry_value <- "";
+  args.replace_dict_entry_value <- Pdf.Null;
   args.dict_entry_search <- None
   (* Do not reset original_filename or cpdflin or was_encrypted or
    * was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -743,7 +745,7 @@ let banned banlist = function
   | RemoveId | OpenAtPageFit _ | OpenAtPage _ | SetPageLayout _
   | ShowBoxes | TrimMarks | CreateMetadata | SetMetadataDate _ | SetVersion _
   | SetAuthor _|SetTitle _|SetSubject _|SetKeywords _|SetCreate _
-  | SetModify _|SetCreator _|SetProducer _|RemoveDictEntry _ | ReplaceDictEntry _ | SetMetadata _
+  | SetModify _|SetCreator _|SetProducer _|RemoveDictEntry _ | ReplaceDictEntry _ | PrintDictEntry _ | SetMetadata _
   | ExtractText | ExtractImages | ExtractFontFile
   | AddPageLabels | RemovePageLabels | OutputJSON | OCGCoalesce
   | OCGRename | OCGList | OCGOrderAll
@@ -1599,11 +1601,22 @@ let setimposelinewidth f =
 let setreplacedictentry s =
   setop (ReplaceDictEntry s) ()
 
+let setprintdictentry s =
+  setop (PrintDictEntry s) ()
+
 let setreplacedictentryvalue s =
-  args.replace_dict_entry_value <- s
+  try
+    let pdfobj = Cpdfjson.object_of_json (Cpdfyojson.Safe.from_string s) in
+      args.replace_dict_entry_value <- pdfobj
+  with
+    e -> error (Printf.sprintf "Failed to parse replacement value: %s\n" (Printexc.to_string e))
 
 let setdictentrysearch s =
-  args.dict_entry_search <- Some s
+  try
+    let pdfobj = Cpdfjson.object_of_json (Cpdfyojson.Safe.from_string s) in
+      args.dict_entry_search <- Some pdfobj
+  with
+    e -> error (Printf.sprintf "Failed to parse search term: %s\n" (Printexc.to_string e))
 
 let whingemalformed () =
   prerr_string "Command line must be of exactly the form\ncpdf <infile> -gs <path> -gs-malformed-force -o <outfile>\n";
@@ -2254,6 +2267,9 @@ and specs =
    ("-dict-entry-search",
     Arg.String setdictentrysearch,
     " Search string for -remove-dict-entry and -replace-dict-entry");
+   ("-print-dict-entry",
+    Arg.String setprintdictentry,
+    " Print dictionary values of a given key");
    ("-producer",
     Arg.String setproduceraswego,
     " Change the /Producer entry in the /Info dictionary");
@@ -4128,12 +4144,15 @@ let go () =
           (map Pdfpagelabels.string_of_pagelabel (Pdfpagelabels.read pdf))
   | Some (RemoveDictEntry key) ->
       let pdf = get_single_pdf args.op true in
-        Cpdf.remove_dict_entry pdf key;
+        Cpdf.remove_dict_entry pdf key args.dict_entry_search;
         write_pdf false pdf
   | Some (ReplaceDictEntry key) ->
       let pdf = get_single_pdf args.op true in
         Cpdf.replace_dict_entry pdf key args.replace_dict_entry_value args.dict_entry_search;
         write_pdf false pdf
+  | Some (PrintDictEntry key) ->
+      let pdf = get_single_pdf args.op true in
+        Cpdf.print_dict_entry pdf key
   | Some ListSpotColours ->
       let pdf = get_single_pdf args.op false in
         list_spot_colours pdf

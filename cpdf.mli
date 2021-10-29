@@ -387,9 +387,11 @@ val ocg_order_all : Pdf.t -> unit
 
 val stamp_as_xobject : Pdf.t -> int list -> Pdf.t -> Pdf.t * string
 
-val remove_dict_entry : Pdf.t -> string -> unit
+val remove_dict_entry : Pdf.t -> string -> Pdf.pdfobject option -> unit
 
-val replace_dict_entry : Pdf.t -> string -> string -> string option -> unit
+val replace_dict_entry : Pdf.t -> string -> Pdf.pdfobject -> Pdf.pdfobject option -> unit
+
+val print_dict_entry : Pdf.t -> string -> unit
 
 val remove_clipping : Pdf.t -> int list -> Pdf.t 
 
