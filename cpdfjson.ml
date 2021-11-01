@@ -453,22 +453,12 @@ let precombine_page_content pdf =
   in
     Pdfpage.change_pages true pdf pages'
 
-(* PDF strings (except /ID in the trailer dictionary) are either PDFDocEncoding
-or UTF16BE. Many times the UTF16BE can all be represented in PDFDocEncoding.
-In this case, there are just lots of \000 bytes getting in the way making the
-JSON hard to edit. So we preprocess such simple UTF16BE strings into
-PDFDocEncoding. *)
-let preprocess_string s =
-  if Pdftext.is_unicode s
-    then Pdftext.pdfdocstring_of_utf8 (Pdftext.utf8_of_pdfdocstring s)
-    else s
-
 let rec ppstring_single_object pdf = function
   | Pdf.Dictionary d -> Pdf.recurse_dict (ppstring_single_object pdf) d
   | (Pdf.Stream {contents = (Pdf.Dictionary dict, data)}) ->
       Pdf.Stream {contents = (Pdf.recurse_dict (ppstring_single_object pdf) dict, data)}
   | Pdf.Array a -> Pdf.recurse_array (ppstring_single_object pdf) a
-  | Pdf.String s -> Pdf.String (preprocess_string s)
+  | Pdf.String s -> Pdf.String (Pdftext.simplify_utf16be s)
   | x -> x
 
 let preprocess_strings pdf =
