@@ -1119,17 +1119,15 @@ let print_fonts pdf =
 
 (* \section{Superimpose text, page numbers etc.} *)
 
-
-(* Process UTF8 text to /WinAnsiEncoding string. *)
-let winansi_of_utf8 s =
-  (*flprint "winansi_of_utf8:";
-  iter (Printf.printf "%C ") (explode s);
-  flprint "\n";*)
-  let extractor = Pdftext.charcode_extractor_of_encoding Pdftext.WinAnsiEncoding
-  and codepoints = Pdftext.codepoints_of_utf8 s in
-    (*flprint "codepoints after Pdftext.codepoints_of_utf8\n";
-    iter (Printf.printf "%i ") codepoints;
-    flprint "\ndone\n";*)
+(* Process UTF8 text to /WinAnsiEncoding string (for standard 14) or whatever
+   is in the font (for existing fonts). *)
+let charcodes_of_utf8 s =
+  let encoding =
+    (* FIXME: read from font *)
+    Pdftext.WinAnsiEncoding
+  in
+  let extractor = Pdftext.charcode_extractor_of_encoding encoding in
+  let codepoints = Pdftext.codepoints_of_utf8 s in
     implode (map char_of_int (option_map extractor codepoints))
 
 (* Process codepoints back to UTF8, assuming it came from UTF8 to start with *)
@@ -1550,7 +1548,7 @@ let
   Printf.printf "relative-to-cropbox = %b" cropbox;
   flprint "\n";*)
   ops_metrics := [];
-  let text = winansi_of_utf8 text in
+  let text = charcodes_of_utf8 text in
     let lines = map unescape_string (split_at_newline text) in
       let pdf = ref pdf in
         let voffset =
