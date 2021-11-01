@@ -2074,15 +2074,13 @@ If your command line allows for the inclusion of unicode characters, the input
 text will be considered as UTF8 by \verb!cpdf!. Special characters which exist
 in the PDF WinAnsiEncoding Latin 1 code (such as many accented characters) will
 be reproduced in the PDF. This does not mean, however, that every special
-character can be reproduced. You must experiment.
+character can be reproduced -- it must exist in the font.
 
-For compatibility with previous versions of cpdf, special characters may be
+(For compatibility with previous versions of cpdf, special characters may be
 introduced manually with a backslash followed by the three-digit octal code of
 the character in the PDF WinAnsiEncoding Latin 1 Code. The full table is
 included in Appendix D of the Adobe PDF Reference Manual, which is available at
-\url{https://wwwimages2.adobe.com/content/dam/acom/en/devnet/pdf/pdfs/PDF32000_2008.pdf}.
-
-For example, a German sharp s (\ss) may be introduced by \verb!\337!. 
+\url{https://wwwimages2.adobe.com/content/dam/acom/en/devnet/pdf/pdfs/PDF32000_2008.pdf}. For example, a German sharp s (\ss) may be introduced by \verb!\337!.)
 
 \section{Stamping Graphics}
 
