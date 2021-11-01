@@ -200,8 +200,10 @@ type op =
   | OCGRename
   | OCGOrderAll
   | StampAsXObject of string
+  | PrintFontEncoding of string
 
 let string_of_op = function
+  | PrintFontEncoding _ -> "PrintFontEncoding"
   | PrintDictEntry _ -> "PrintDictEntry"
   | Impose _ -> "Impose"
   | CopyFont _ -> "CopyFont"
@@ -748,7 +750,7 @@ let banned banlist = function
   | SetModify _|SetCreator _|SetProducer _|RemoveDictEntry _ | ReplaceDictEntry _ | PrintDictEntry _ | SetMetadata _
   | ExtractText | ExtractImages | ExtractFontFile
   | AddPageLabels | RemovePageLabels | OutputJSON | OCGCoalesce
-  | OCGRename | OCGList | OCGOrderAll
+  | OCGRename | OCGList | OCGOrderAll | PrintFontEncoding _ 
      -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
@@ -1618,6 +1620,9 @@ let setdictentrysearch s =
   with
     e -> error (Printf.sprintf "Failed to parse search term: %s\n" (Printexc.to_string e))
 
+let setprintfontencoding s =
+  setop (PrintFontEncoding s) ()
+
 let whingemalformed () =
   prerr_string "Command line must be of exactly the form\ncpdf <infile> -gs <path> -gs-malformed-force -o <outfile>\n";
   exit 1
@@ -2369,6 +2374,12 @@ and specs =
    ("-stamp-as-xobject",
      Arg.String setstampasxobject,
      " Stamp a file as a form xobject in another");
+   ("-print-font-encoding",
+     Arg.String setprintfontencoding,
+     " Print the encoding for a given font");
+   ("-print-font-encoding-page",
+     Arg.Int setfontpage,
+     " Set page for -print-font-encoding");
    (* These items are undocumented *)
    ("-remove-unused-resources", Arg.Unit (setop RemoveUnusedResources), "");
    ("-stay-on-error", Arg.Unit setstayonerror, "");
@@ -3319,6 +3330,8 @@ let collate (names, pdfs, ranges) =
     done;
     split3 (rev !nis)
 
+let print_font_encoding pdf fontname pagenumber = ()
+
 (* Main function *)
 let go () =
   match args.op with
@@ -4230,6 +4243,9 @@ let go () =
             Printf.printf "%s\n" xobj_name;
             flush stdout;
             write_pdf false pdf
+  | Some (PrintFontEncoding fontname) ->
+      let pdf = get_single_pdf args.op true in
+        print_font_encoding pdf fontname args.copyfontpage
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)
