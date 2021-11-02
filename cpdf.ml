@@ -1551,7 +1551,7 @@ let
         make_font embed (Pdftext.string_of_standard_font f)
     | None -> 
         let firstpage =
-          List.nth (Pdfpage.pages_of_pagetree pdf) (hd pages + 1)
+          List.nth (Pdfpage.pages_of_pagetree pdf) (hd pages - 1)
         in
         match Pdf.lookup_direct pdf "/Font" firstpage.Pdfpage.resources with
         | Some fontdict ->
