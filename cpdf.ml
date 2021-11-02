@@ -1121,8 +1121,8 @@ let print_fonts pdf =
 
 (* Process UTF8 text to /WinAnsiEncoding string (for standard 14) or whatever
    is in the font (for existing fonts). *)
-let charcodes_of_utf8 encoding s =
-  let extractor = Pdftext.charcode_extractor_of_encoding encoding in
+let charcodes_of_utf8 pdf font s =
+  let extractor = Pdftext.charcode_extractor_of_font pdf font in
   let codepoints = Pdftext.codepoints_of_utf8 s in
     implode (map char_of_int (option_map extractor codepoints))
 
@@ -1515,7 +1515,7 @@ let unescape_string s =
   implode (unescape_chars [] (explode s))
 
 let
-  addtexts metrics linewidth outline fast fontname font embed bates batespad colour position linespacing
+  addtexts metrics linewidth outline fast fontname (font : Pdftext.standard_font option) embed bates batespad colour position linespacing
   fontsize underneath text pages orientation cropbox opacity justification
   midline topline filename extract_text_font_size shift pdf
 =
@@ -1545,30 +1545,23 @@ let
   Printf.printf "relative-to-cropbox = %b" cropbox;
   flprint "\n";*)
   ops_metrics := [];
-
-  let encoding =
+  let fontpdfobj =
     match font with
     | Some f ->
-        if embed then Pdftext.WinAnsiEncoding else Pdftext.StandardEncoding
+        make_font embed (Pdftext.string_of_standard_font f)
     | None -> 
-        let font =
-          let firstpage =
-            List.nth (Pdfpage.pages_of_pagetree pdf) (hd pages + 1)
-          in
-          match Pdf.lookup_direct pdf "/Font" firstpage.Pdfpage.resources with
-          | Some fontdict ->
-              begin match Pdf.lookup_direct pdf fontname fontdict with
-              | Some font -> Pdftext.read_font pdf font
-              | _ -> failwith "addtext: font not found A"
-              end
-          | _ -> failwith "addtext: font not found B"
+        let firstpage =
+          List.nth (Pdfpage.pages_of_pagetree pdf) (hd pages + 1)
         in
-          match font with
-          | Pdftext.StandardFont (_, encoding)
-          | Pdftext.SimpleFont {encoding} -> encoding
-          | Pdftext.CIDKeyedFont _ -> Pdftext.WinAnsiEncoding
+        match Pdf.lookup_direct pdf "/Font" firstpage.Pdfpage.resources with
+        | Some fontdict ->
+            begin match Pdf.lookup_direct pdf fontname fontdict with
+            | Some font -> font
+            | _ -> failwith "addtext: font not found A"
+            end
+        | _ -> failwith "addtext: font not found B"
   in
-  let text = charcodes_of_utf8 encoding text in
+  let text = charcodes_of_utf8 pdf fontpdfobj text in
     let lines = map unescape_string (split_at_newline text) in
       let pdf = ref pdf in
         let voffset =
