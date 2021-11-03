@@ -1,6 +1,6 @@
 2.5 (Upcoming 2022)
 
-o New operation -print-font-encoding
+o New operation -print-font-table gives (charcode, unicode, glyph name) triples
 o Can now search for a font by real name with -font
 o Text added in existing fonts is now encoding-aware (plus new raw mode)
 o New -print-dict-entry operation prints values for a given key

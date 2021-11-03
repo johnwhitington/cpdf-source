@@ -2377,12 +2377,12 @@ and specs =
    ("-stamp-as-xobject",
      Arg.String setstampasxobject,
      " Stamp a file as a form xobject in another");
-   ("-print-font-encoding",
+   ("-print-font-table",
      Arg.String setprintfontencoding,
-     " Print the encoding for a given font");
-   ("-print-font-encoding-page",
+     " Print the /ToUnicode table for a given font, if present.");
+   ("-print-font-table-page",
      Arg.Int setfontpage,
-     " Set page for -print-font-encoding");
+     " Set page for -print-font-table");
    (* These items are undocumented *)
    ("-remove-unused-resources", Arg.Unit (setop RemoveUnusedResources), "");
    ("-stay-on-error", Arg.Unit setstayonerror, "");
@@ -3333,7 +3333,34 @@ let collate (names, pdfs, ranges) =
     done;
     split3 (rev !nis)
 
-let print_font_encoding pdf fontname pagenumber = ()
+let print_font_encoding pdf fontname pagenumber =
+  let page = try List.nth (Pdfpage.pages_of_pagetree pdf) (pagenumber - 1) with e -> error "page not found" in
+    match Pdf.lookup_direct pdf "/Font" page.Pdfpage.resources with
+    | Some fontdict ->
+        let font =
+          begin match Pdf.lookup_direct pdf fontname fontdict with
+          | Some font -> font
+          | None ->
+             (* For each item in the fontdict, follow its value and find the basename. If it matches, return that font *)
+             let font = ref None in
+             iter
+               (fun (k, v) ->
+                  match Pdf.lookup_direct pdf "/BaseFont" v with
+                  | Some (Pdf.Name n) when n = fontname -> font := Some v
+                  | _ -> ())
+               (match fontdict with Pdf.Dictionary d -> d | _ -> []);
+             match !font with Some f -> f | None -> failwith (Printf.sprintf "print_font_encoding: font %s not found" fontname)
+          end
+        in
+          let extractor = Pdftext.text_extractor_of_font pdf font in
+            for x = 0 to 255 do
+              let str = string_of_char (char_of_int x) in
+              Printf.printf "%i = %s = %s\n"
+                x
+                (Pdftext.utf8_of_codepoints (Pdftext.codepoints_of_text extractor str))
+                (fold_left ( ^ ) "" (Pdftext.glyphnames_of_text extractor str))
+            done
+    | _ -> failwith "addtext: font not found for width"
 
 (* Main function *)
 let go () =
