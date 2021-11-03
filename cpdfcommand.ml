@@ -1032,12 +1032,15 @@ let setattachfile s =
   | Some _ -> detect_duplicate_op (AttachFile [s])
 
 let setfont f =
+  let convert f = (* convert from written PDF representation to internal PDF string e.g # sequences *)
+    match Pdfread.lex_name (Pdfio.input_of_string f) with Pdfgenlex.LexName s -> s | _ -> assert false
+  in
   args.font <-
     begin match Pdftext.standard_font_of_name ("/" ^ f) with
     | Some x -> StandardFont x
-    | None -> OtherFont f
+    | None -> OtherFont (convert f)
     end;
-  args.fontname <- f
+  args.fontname <- convert f
 
 let setextracttextfontsize f =
   args.extract_text_font_size <- Some f

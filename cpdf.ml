@@ -1077,26 +1077,22 @@ let print_metadata pdf =
         Printf.printf "%c" (char_of_int (bget data x))
       done
 
-
-
-(* \section{Print font data} *)
+(* List fonts *)
 let list_font pdf page (name, dict) =
   let subtype =
     match Pdf.lookup_direct pdf "/Subtype" dict with
-    | Some (Pdf.Name n) -> n
+    | Some (Pdf.Name n) -> Pdfwrite.string_of_pdf (Pdf.Name n)
     | _ -> ""
   in let basefont =
     match Pdf.lookup_direct pdf "/BaseFont" dict with
-    | Some (Pdf.Name n) -> n
+    | Some (Pdf.Name n) -> Pdfwrite.string_of_pdf (Pdf.Name n)
     | _ -> ""
   in let encoding =
    match Pdf.lookup_direct pdf "/Encoding" dict with
-    | Some (Pdf.Name n) -> n
+    | Some (Pdf.Name n) -> Pdfwrite.string_of_pdf (Pdf.Name n)
     | _ -> ""
   in 
-    (*i Printf.printf
-      "%i %s %s %s %s\n" i*)
-      page, name, subtype, basefont, encoding
+    (page, name, subtype, basefont, encoding)
 
 let list_fonts pdf =
   let pages = Pdfpage.pages_of_pagetree pdf in
@@ -1115,7 +1111,6 @@ let string_of_font (p, n, s, b, e) =
 let print_fonts pdf =
   flprint
     (fold_left ( ^ ) "" (map string_of_font (list_fonts pdf)))
-
 
 (* \section{Superimpose text, page numbers etc.} *)
 
@@ -1434,9 +1429,18 @@ let addtext
                       | Some fontdict ->
                           begin match Pdf.lookup_direct pdf fontname fontdict with
                           | Some font -> font
-                          | _ -> failwith "addtext: font not found A"
+                          | None ->
+                             (* For each item in the fontdict, follow its value and find the basename. If it matches, return that font *)
+                             let font = ref None in
+                             iter
+                               (fun (k, v) ->
+                                  match Pdf.lookup_direct pdf "/BaseFont" v with
+                                  | Some (Pdf.Name n) when n = fontname -> font := Some v
+                                  | _ -> ())
+                               (match fontdict with Pdf.Dictionary d -> d | _ -> []);
+                             match !font with Some f -> f | None -> failwith (Printf.sprintf "addtext: font %s not found" fontname)
                           end
-                      | _ -> failwith "addtext: font not found B"
+                      | _ -> failwith "addtext: font not found for width"
                     in
                       let rawwidth = width_of_text (Pdftext.read_font pdf font) text in
                         (rawwidth *. fontsize) /. 1000.
@@ -1545,6 +1549,7 @@ let
   Printf.printf "relative-to-cropbox = %b" cropbox;
   flprint "\n";*)
   ops_metrics := [];
+  let realfontname = ref fontname in
   let fontpdfobj =
     match font with
     | Some f ->
@@ -1557,9 +1562,19 @@ let
         | Some fontdict ->
             begin match Pdf.lookup_direct pdf fontname fontdict with
             | Some font -> font
-            | _ -> failwith "addtext: font not found A"
+            | _ ->
+               (* For each item in the fontdict, follow its value and find the basename. If it matches, return that font *)
+               let font = ref None in
+               iter
+                 (fun (k, v) ->
+                    match Pdf.lookup_direct pdf "/BaseFont" v with
+                    | Some (Pdf.Name n) when n = fontname ->
+                        font := Some v; realfontname := k
+                    | _ -> ())
+                 (match fontdict with Pdf.Dictionary d -> d | _ -> []);
+               match !font with Some f -> f | None -> failwith (Printf.sprintf "addtext: font %s not found" fontname)
             end
-        | _ -> failwith "addtext: font not found B"
+        | _ -> failwith "addtext: font dictionary not present"
   in
   let text = if raw then text else charcodes_of_utf8 pdf fontpdfobj text in
     let lines = map unescape_string (split_at_newline text) in
@@ -1608,7 +1623,7 @@ let
                  if orientation = Cpdfposition.Vertical then 0., -.(!voffset) else !voffset, 0.
                in
                  pdf :=
-                   addtext metrics lines linewidth outline fast colour fontname
+                   addtext metrics lines linewidth outline fast colour !realfontname
                    embed bates batespad fontsize font underneath position hoff voff line
                    pages orientation cropbox opacity justification filename
                    extract_text_font_size shift
