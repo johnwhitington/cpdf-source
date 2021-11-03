@@ -3532,7 +3532,13 @@ let go () =
   | Some Metadata ->
       Cpdf.print_metadata (get_single_pdf (Some Metadata) true)
   | Some Fonts ->
-      Cpdf.print_fonts (get_single_pdf (Some Fonts) true)
+      begin match args.inputs, args.out with
+      | (_, pagespec, _, _, _, _)::_, _ ->
+          let pdf = get_single_pdf (Some Fonts) true in
+          let range = parse_pagespec_allow_empty pdf pagespec in
+            Cpdf.print_fonts pdf range
+      | _ -> error "-list-fonts: bad command line"
+      end
   | Some ListBookmarks ->
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->

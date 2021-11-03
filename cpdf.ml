@@ -1094,23 +1094,27 @@ let list_font pdf page (name, dict) =
   in 
     (page, name, subtype, basefont, encoding)
 
-let list_fonts pdf =
+let list_fonts pdf range =
   let pages = Pdfpage.pages_of_pagetree pdf in
     flatten
       (map
         (fun (num, page) ->
-           match Pdf.lookup_direct pdf "/Font" page.Pdfpage.resources with
-           | Some (Pdf.Dictionary fontdict) ->
-               map (list_font pdf num) fontdict
-           | _ -> [])
+           if mem num range then
+             begin match Pdf.lookup_direct pdf "/Font" page.Pdfpage.resources with
+             | Some (Pdf.Dictionary fontdict) ->
+                 map (list_font pdf num) fontdict
+             | _ -> []
+             end
+           else
+             [])
         (combine (ilist 1 (length pages)) pages))
 
 let string_of_font (p, n, s, b, e) =
   Printf.sprintf "%i %s %s %s %s\n" p n s b e
 
-let print_fonts pdf =
+let print_fonts pdf range =
   flprint
-    (fold_left ( ^ ) "" (map string_of_font (list_fonts pdf)))
+    (fold_left ( ^ ) "" (map string_of_font (list_fonts pdf range)))
 
 (* \section{Superimpose text, page numbers etc.} *)
 
