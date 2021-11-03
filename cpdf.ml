@@ -1122,7 +1122,7 @@ let print_fonts pdf =
 (* Process UTF8 text to /WinAnsiEncoding string (for standard 14) or whatever
    is in the font (for existing fonts). *)
 let charcodes_of_utf8 pdf font s =
-  let extractor = Pdftext.charcode_extractor_of_font pdf font in
+  let extractor = Pdftext.charcode_extractor_of_font ~debug:true pdf font in
   let codepoints = Pdftext.codepoints_of_utf8 s in
     implode (map char_of_int (option_map extractor codepoints))
 
@@ -1517,7 +1517,7 @@ let unescape_string s =
 let
   addtexts metrics linewidth outline fast fontname (font : Pdftext.standard_font option) embed bates batespad colour position linespacing
   fontsize underneath text pages orientation cropbox opacity justification
-  midline topline filename extract_text_font_size shift pdf
+  midline topline filename extract_text_font_size shift ?(raw=false) pdf
 =
   if pages = [] then error "addtexts: empty page range" else
   (*flprint "addtexts:\n";
@@ -1561,7 +1561,7 @@ let
             end
         | _ -> failwith "addtext: font not found B"
   in
-  let text = charcodes_of_utf8 pdf fontpdfobj text in
+  let text = if raw then text else charcodes_of_utf8 pdf fontpdfobj text in
     let lines = map unescape_string (split_at_newline text) in
       let pdf = ref pdf in
         let voffset =

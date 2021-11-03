@@ -1,6 +1,6 @@
 2.5 (Upcoming 2022)
 
-o Text added in existing fonts is now encoding-aware
+o Text added in existing fonts is now encoding-aware (plus new raw mode)
 o New operation -print-font-encoding
 o New -print-dict-entry operation prints values for a given key
 o Extend -remove-dict-entry to allow search

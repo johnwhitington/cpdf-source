@@ -194,6 +194,7 @@ val addtexts :
     string ->(*filename*)
     float option -> (*extract_text_font_size*)
     string -> (* shift *)
+    ?raw:bool -> (* raw *)
     Pdf.t ->(*pdf*)
     Pdf.t
 

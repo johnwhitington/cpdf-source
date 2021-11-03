@@ -4010,7 +4010,7 @@ let go () =
                    args.linespacing args.fontsize args.underneath text range
                    args.orientation args.relative_to_cropbox args.opacity
                    args.justification args.midline args.topline filename
-                   args.extract_text_font_size args.coord pdf)
+                   args.extract_text_font_size args.coord ~raw:(args.encoding = Raw) pdf)
   | Some RemoveText ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
