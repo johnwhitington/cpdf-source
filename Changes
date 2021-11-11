@@ -1,5 +1,6 @@
 2.5 (Upcoming 2022)
 
+o The -list-fonts operation now obeys the range
 o New operation -print-font-table gives (charcode, unicode, glyph name) triples
 o Can now search for a font by real name with -font
 o Text added in existing fonts is now encoding-aware (plus new raw mode)

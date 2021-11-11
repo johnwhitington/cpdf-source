@@ -1,0 +1,2 @@
+./compressor ../pdfglyphlist.source.ml ../pdfglyphlist.ml
+./compressor ../pdfafmdata.source.ml ../pdfafmdata.ml
