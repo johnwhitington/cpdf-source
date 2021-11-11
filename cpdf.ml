@@ -1121,9 +1121,17 @@ let print_fonts pdf range =
 (* Process UTF8 text to /WinAnsiEncoding string (for standard 14) or whatever
    is in the font (for existing fonts). *)
 let charcodes_of_utf8 pdf font s =
-  let extractor = Pdftext.charcode_extractor_of_font ~debug:true pdf font in
+  let extractor = Pdftext.charcode_extractor_of_font ~debug:false pdf font in
   let codepoints = Pdftext.codepoints_of_utf8 s in
-    implode (map char_of_int (option_map extractor codepoints))
+    let charcodes =
+      option_map
+        (fun codepoint ->
+           match extractor codepoint with
+           | Some cc -> Some cc
+           | None -> Printf.eprintf "Warning: character not found in font for unicode codepoint 0x%X\n" codepoint; None)
+        codepoints
+    in
+    implode (map char_of_int charcodes)
 
 (* Process codepoints back to UTF8, assuming it came from UTF8 to start with *)
 let utf8_of_winansi s =
