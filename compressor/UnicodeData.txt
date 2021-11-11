@@ -1,4 +1,4 @@
-0000;<control>;Cc;0;BN;;;;;N;NULL;;;;
+0000;<control>;Cc;0;BN;a;b;c;d;N;NULL;e;f;g;
 0001;<control>;Cc;0;BN;;;;;N;START OF HEADING;;;;
 0002;<control>;Cc;0;BN;;;;;N;START OF TEXT;;;;
 0003;<control>;Cc;0;BN;;;;;N;END OF TEXT;;;;
