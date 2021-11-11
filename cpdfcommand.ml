@@ -3353,12 +3353,37 @@ let print_font_encoding pdf fontname pagenumber =
           end
         in
           let extractor = Pdftext.text_extractor_of_font pdf font in
+          let unicodedata = Cpdfunicodedata.unicodedata () in
+          let unicodetable = Hashtbl.create 16000 in
+           iter
+            (fun x ->
+               Hashtbl.add
+                 unicodetable
+                 (int_of_string ("0x" ^ x.Cpdfunicodedata.code_value))
+                 (x.Cpdfunicodedata.code_value,
+                  x.Cpdfunicodedata.general_category,
+                  x.Cpdfunicodedata.character_name,
+                  x.Cpdfunicodedata.iso_10646_comment_field))
+            unicodedata;
             for x = 0 to 255 do
               let str = string_of_char (char_of_int x) in
-              Printf.printf "%i = %s = %s\n"
-                x
-                (Pdftext.utf8_of_codepoints (Pdftext.codepoints_of_text extractor str))
-                (fold_left ( ^ ) "" (Pdftext.glyphnames_of_text extractor str))
+              let codepoints = Pdftext.codepoints_of_text extractor str in
+              let unicodenumber, unicodename, is_control =
+                match codepoints with
+                | [c] ->
+                    begin try
+                      let codeval, category, character_name, comment = Hashtbl.find unicodetable c in
+                        codeval, character_name, category = "Cc"
+                    with
+                      Not_found -> "", "", false
+                    end
+                | _ -> "***multiple", "***multiple", false
+              in
+              let utf8 = if is_control then "<nonprintable>" else Pdftext.utf8_of_codepoints codepoints in
+              let glyphnames = fold_left ( ^ ) "" (Pdftext.glyphnames_of_text extractor str) in
+                if glyphnames <> ".notdef" then
+                  Printf.printf
+                    "%i = U+%s (%s - %s) = %s\n" x unicodenumber utf8 unicodename glyphnames
             done
     | _ -> failwith "addtext: font not found for width"
 
