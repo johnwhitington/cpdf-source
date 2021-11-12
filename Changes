@@ -21,6 +21,7 @@ o Environment variable CPDF_REPRODUCIBLE_DATES for testing
 o Environment variable CPDF_DEBUG for -debug
 o Effectively make stderr unbuffered
 o Prepend NOT to a page range to invert it
+o Split functionality into separate modules, but retain cpdf.ml for interface
 
 2.4 (June 2021)
 

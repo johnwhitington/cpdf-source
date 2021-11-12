@@ -1,4 +1,6 @@
 open Pdfutil
+open Cpdferror
+open Pdfio
 
 (* Embed missing fonts with Ghostscript. *)
 let embed_missing_fonts path_to_ghostscript gs_quiet fi fo =
@@ -128,3 +130,130 @@ let missing_fonts pdf range =
        | _ -> ())
     pdf
     range
+
+let print_font_table pdf fontname pagenumber =
+  let page = try List.nth (Pdfpage.pages_of_pagetree pdf) (pagenumber - 1) with e -> error "page not found" in
+    match Pdf.lookup_direct pdf "/Font" page.Pdfpage.resources with
+    | Some fontdict ->
+        let font =
+          begin match Pdf.lookup_direct pdf fontname fontdict with
+          | Some font -> font
+          | None ->
+             (* For each item in the fontdict, follow its value and find the basename. If it matches, return that font *)
+             let font = ref None in
+             iter
+               (fun (k, v) ->
+                  match Pdf.lookup_direct pdf "/BaseFont" v with
+                  | Some (Pdf.Name n) when n = fontname -> font := Some v
+                  | _ -> ())
+               (match fontdict with Pdf.Dictionary d -> d | _ -> []);
+             match !font with Some f -> f | None -> failwith (Printf.sprintf "print_font_encoding: font %s not found" fontname)
+          end
+        in
+          let pdftextfont = Pdftext.read_font pdf font in
+          let charset =
+            match pdftextfont with
+            | Pdftext.SimpleFont {Pdftext.fontdescriptor = Some {Pdftext.charset = Some cs}} -> Some cs
+            | _ -> None
+          in
+          let extractor = Pdftext.text_extractor_of_font pdf font in
+          let unicodedata = Cpdfunicodedata.unicodedata () in
+          let unicodetable = Hashtbl.create 16000 in
+           iter
+            (fun x ->
+               Hashtbl.add
+                 unicodetable
+                 (int_of_string ("0x" ^ x.Cpdfunicodedata.code_value))
+                 (x.Cpdfunicodedata.code_value,
+                  x.Cpdfunicodedata.general_category,
+                  x.Cpdfunicodedata.character_name,
+                  x.Cpdfunicodedata.iso_10646_comment_field))
+            unicodedata;
+            for x = 0 to 255 do
+              let str =
+                  (if Pdftext.is_identity_h pdftextfont then "\000" else "")
+                ^ string_of_char (char_of_int x)
+              in
+              let codepoints = Pdftext.codepoints_of_text extractor str in
+              let unicodenumber, unicodename, is_control =
+                match codepoints with
+                | [c] ->
+                    begin try
+                      let codeval, category, character_name, comment = Hashtbl.find unicodetable c in
+                        codeval, character_name, category = "Cc"
+                    with
+                      Not_found -> "", "", false
+                    end
+                | _ -> "***multiple", "***multiple", false
+              in
+              let utf8 = if is_control then "<nonprintable>" else Pdftext.utf8_of_codepoints codepoints in
+              let glyphnames = fold_left ( ^ ) "" (Pdftext.glyphnames_of_text extractor str) in
+              let is_in_charset s = match charset with None -> true | Some cs -> mem s cs in
+                if glyphnames <> ".notdef" && is_in_charset glyphnames then
+                  Printf.printf
+                    "%i = U+%s (%s - %s) = %s\n" x unicodenumber utf8 unicodename glyphnames
+            done
+    | _ -> failwith "addtext: font not found for width"
+
+(* Extracts font to font.dat in CWD. *)
+let extract_fontfile pagenumber fontname pdf =
+  let resources = (select pagenumber (Pdfpage.pages_of_pagetree pdf)).Pdfpage.resources in
+    match Pdf.lookup_direct pdf "/Font" resources with
+    | None -> failwith "extract_fontfile: font not found"
+    | Some fonts ->
+        let fontobj = Pdf.lookup_fail "no /Fonts" pdf fontname fonts in
+          let font = Pdftext.read_font pdf fontobj in
+            match font with
+            | Pdftext.CIDKeyedFont (_, {Pdftext.cid_fontdescriptor = {Pdftext.fontfile = Some fontfile}}, _)
+            | Pdftext.SimpleFont {Pdftext.fontdescriptor = Some {Pdftext.fontfile = Some fontfile}} ->
+                begin let objnum =
+                  match fontfile with
+                  | Pdftext.FontFile i -> i
+                  | Pdftext.FontFile2 i -> i
+                  | Pdftext.FontFile3 i -> i
+                in
+                  match Pdf.lookup_obj pdf objnum with
+                  | Pdf.Stream s as obj ->
+                      Pdfcodec.decode_pdfstream pdf obj;
+                      begin match s with
+                      | {contents = (_, Pdf.Got bytes)} ->
+                           let fh = open_out_bin "font.dat" in
+                             for x = 0 to bytes_size bytes - 1 do output_byte fh (bget bytes x) done;
+                             close_out fh;
+                             (* Now try to read using Pdfcff module *)
+                             (*let font = Pdftruetype.to_type3 pdf font in*)
+                               (*let extractor = Pdftext.text_extractor_of_font pdf fontobj in*)
+                                 (*flprint "glyph names for incodes 0,1,2,3...";
+                                 iter print_string (Pdftext.glyphnames_of_text extractor "\000\001\002\003\004\005\006\007");
+                                 flprint "\n";*)
+                                 ()
+                      | _ -> failwith "extract_fontfile"
+                      end
+                  | _ -> failwith "extract_fontfile"
+                end
+            | _ -> failwith "unsupported or unfound font"
+
+
+(* Remove Embedded fonts. This is done by removing the Font Descriptor. *)
+let remove_fontdescriptor pdf = function
+  | Pdf.Dictionary d as font ->
+      begin match lookup "/Type" d with
+      | Some (Pdf.Name "/Font") ->
+         (match Pdf.lookup_direct pdf "/FontDescriptor" font with
+         | Some fontdes ->
+             let fontdescriptor' =
+               Pdf.remove_dict_entry
+                (Pdf.remove_dict_entry
+                  (Pdf.remove_dict_entry fontdes "/FontFile")
+                   "/FontFile2")
+                 "/FontFile3"
+             in
+               Pdf.add_dict_entry font "/FontDescriptor" (Pdf.Indirect (Pdf.addobj pdf fontdescriptor'))
+         | _ -> font)
+      | _ -> font
+      end
+  | x -> x
+
+let remove_fonts pdf =
+  Pdf.objiter (fun k v -> ignore (Pdf.addobj_given_num pdf (k, remove_fontdescriptor pdf v))) pdf;
+  pdf
