@@ -12,7 +12,8 @@
 {- The word all is the same as 1-end.}
 {- A range must contain no spaces.}
 {- A tilde (~) defines a page number counting from the end of the document rather than the beginning. Page ~1 is the last page, ~2 the penultimate page etc.}
-{- Prepending NOT to a whole page range inverts it.}
+{- Prepending NOT to a whole page range inverts it, once the whole is parsed. }
+{- Appending DUP2 to a whole page range duplicates each page twice (or 3, or 4 etc. times), once the whole is parsed. }
 }
 *)
 

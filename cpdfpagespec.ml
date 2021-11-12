@@ -92,7 +92,11 @@ let fixup_negatives endpage = function
 let invert_range endpage r =
   option_map (fun p -> if mem p r then None else Some p) (ilist 1 endpage)
 
+let duplicate_range n r =
+  flatten (map (fun x -> many x n) r)
+
 let rec parse_pagespec_inner endpage pdf spec =
+  let spec = if spec = "" then "all" else spec in
   let spec = space_string spec in
     if endpage < 1 then raise (Pdf.PDFError "This PDF file has no pages and is therefore malformed") else
       let numbers =
@@ -100,6 +104,14 @@ let rec parse_pagespec_inner endpage pdf spec =
           match explode spec with
           | 'N'::'O'::'T'::r ->
               invert_range endpage (parse_pagespec_inner endpage pdf (implode r))
+          | x::'D'::'U'::'P'::r ->
+              duplicate_range (int_of_string (implode [x])) (parse_pagespec_inner endpage pdf (implode r))
+          | x::y::'D'::'U'::'P'::r ->
+              duplicate_range (int_of_string (implode [x; y])) (parse_pagespec_inner endpage pdf (implode r))
+          | x::y::z::'D'::'U'::'P'::r ->
+              duplicate_range (int_of_string (implode [x; y; z])) (parse_pagespec_inner endpage pdf (implode r))
+          | x::y::z::a::'D'::'U'::'P'::r ->
+              duplicate_range (int_of_string (implode [x; y; z; a])) (parse_pagespec_inner endpage pdf (implode r))
           | _ ->
             match rev (explode spec) with
             | ['n'; 'e'; 'v'; 'e'] ->
