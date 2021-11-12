@@ -3352,8 +3352,9 @@ let print_font_encoding pdf fontname pagenumber =
              match !font with Some f -> f | None -> failwith (Printf.sprintf "print_font_encoding: font %s not found" fontname)
           end
         in
+          let pdftextfont = Pdftext.read_font pdf font in
           let charset =
-            match Pdftext.read_font pdf font with
+            match pdftextfont with
             | Pdftext.SimpleFont {Pdftext.fontdescriptor = Some {Pdftext.charset = Some cs}} -> Some cs
             | _ -> None
           in
@@ -3371,7 +3372,10 @@ let print_font_encoding pdf fontname pagenumber =
                   x.Cpdfunicodedata.iso_10646_comment_field))
             unicodedata;
             for x = 0 to 255 do
-              let str = string_of_char (char_of_int x) in
+              let str =
+                  (if Pdftext.is_identity_h pdftextfont then "\000" else "")
+                ^ string_of_char (char_of_int x)
+              in
               let codepoints = Pdftext.codepoints_of_text extractor str in
               let unicodenumber, unicodename, is_control =
                 match codepoints with
