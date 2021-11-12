@@ -2032,9 +2032,6 @@ and specs =
    ("-impose-btt",
       Arg.Unit setimposebtt,
       " Impose bottom-to-top on columns");
-   ("-impose-center",
-      Arg.Unit setimposecenter,
-      " Center last partly-empty row or column");
    ("-impose-margin",
       Arg.Float setimposemargin,
       " Add margin around whole imposed page");

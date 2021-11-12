@@ -2930,6 +2930,7 @@ let make_margin output_mediabox margin tr =
       in
         (Pdftransform.matrix_compose shift (Pdftransform.matrix_compose scale tr))
 
+(* FIXME fixup -center for next release. For now it has been disabled. *)
 let impose_transforms fit fx fy columns rtl btt center margin mediabox output_mediabox fit_extra_hspace fit_extra_vspace len =
   let width, height =
     match Pdf.parse_rectangle mediabox with
