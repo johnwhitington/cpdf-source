@@ -4488,3 +4488,164 @@ let image_resolution pdf range dpi =
   image_results := [];
   image_resolution pdf range dpi;
   rev !image_results
+
+(* copy the contents of the box f to the box t. If mediabox_if_missing is set,
+the contents of the mediabox will be used if the from fox is not available. If
+mediabox_is_missing is false, the page is unaltered. *)
+let copy_box f t mediabox_if_missing pdf range =
+  process_pages
+    (ppstub (fun _ page ->
+       if f = "/MediaBox" then
+         {page with Pdfpage.rest =
+            (Pdf.add_dict_entry page.Pdfpage.rest t (page.Pdfpage.mediabox))}
+       else
+         match Pdf.lookup_direct pdf f page.Pdfpage.rest with
+         | Some pdfobject ->
+             if t = "/MediaBox"
+               then {page with
+                       Pdfpage.mediabox = Pdf.direct pdf pdfobject}
+               else {page with Pdfpage.rest =
+                       (Pdf.add_dict_entry page.Pdfpage.rest t (Pdf.direct pdf pdfobject))}
+         | None ->
+             if mediabox_if_missing
+               then {page with Pdfpage.rest = Pdf.add_dict_entry page.Pdfpage.rest t page.Pdfpage.mediabox}
+               else page))
+    pdf
+    range
+
+let dump_attachment out pdf (_, embeddedfile) =
+  match Pdf.lookup_direct pdf "/F" embeddedfile with
+  | Some (Pdf.String s) ->
+      let efdata =
+        begin match Pdf.lookup_direct pdf "/EF" embeddedfile with
+        | Some d ->
+            let stream =
+              match Pdf.lookup_direct pdf "/F" d with
+              | Some s -> s
+              | None -> error "Bad embedded file stream"
+            in
+              Pdfcodec.decode_pdfstream_until_unknown pdf stream;
+              begin match stream with Pdf.Stream {contents = (_, Pdf.Got b)} -> b | _ -> error "Bad embedded file stream" end
+        | _ -> error "Bad embedded file stream"
+        end
+      in
+        let s = remove_unsafe_characters s in
+        let filename = if out = "" then s else out ^ Filename.dir_sep ^ s in
+        begin try
+          let fh = open_out_bin filename in
+            for x = 0 to bytes_size efdata - 1 do output_byte fh (bget efdata x) done;
+            close_out fh
+        with
+          e -> Printf.eprintf "Failed to write attachment to %s\n%!" filename;
+        end
+  | _ -> ()
+
+let dump_attached_document pdf out =
+  let root = Pdf.lookup_obj pdf pdf.Pdf.root in
+    let names =
+      match Pdf.lookup_direct pdf "/Names" root with Some n -> n | _ -> Pdf.Dictionary []
+    in
+      match Pdf.lookup_direct pdf "/EmbeddedFiles" names with
+      | Some x ->
+          iter (dump_attachment out pdf) (Pdf.contents_of_nametree pdf x)
+      | None -> () 
+
+let dump_attached_page pdf out page =
+  let annots =
+    match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
+    | Some (Pdf.Array l) -> l
+    | _ -> []
+  in
+    let efannots =
+      keep
+        (fun annot ->
+           match Pdf.lookup_direct pdf "/Subtype" annot with
+           | Some (Pdf.Name "/FileAttachment") -> true
+           | _ -> false)
+        annots
+    in
+      let fsannots = option_map (Pdf.lookup_direct pdf "/FS") efannots in
+        iter (dump_attachment out pdf) (map (fun x -> 0, x) fsannots)
+
+(* Dump both document-level and page-level attached files to file, using their file names *)
+let dump_attached_files pdf out =
+  try
+    dump_attached_document pdf out;
+    iter (dump_attached_page pdf out) (Pdfpage.pages_of_pagetree pdf)
+  with
+    e -> error (Printf.sprintf "Couldn't dump attached files: %s\n" (Printexc.to_string e))
+
+let remove_unused_resources_page pdf n page =
+  let xobjects, all_names =
+    match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
+    | Some (Pdf.Dictionary d) -> Pdf.Dictionary d, map fst d
+    | _ -> Pdf.Dictionary [], []
+  in
+    let names_to_keep =
+      option_map
+        (function Pdfops.Op_Do n -> Some n | _ -> None)
+        (Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content)
+    in
+      let names_to_remove = lose (mem' names_to_keep) all_names in
+        let xobjdict = fold_left (Pdf.remove_dict_entry) xobjects names_to_remove in
+          {page with Pdfpage.resources = Pdf.add_dict_entry page.Pdfpage.resources  "/XObject" xobjdict}
+
+let remove_unused_resources pdf =
+  process_pages (ppstub (remove_unused_resources_page pdf)) pdf (ilist 1 (Pdfpage.endpage pdf))
+
+let print_spot_colour n s =
+  Printf.printf "%i %s\n" n s
+
+let list_spot_colours pdf =
+  Pdf.objiter
+    (fun _ obj ->
+       match obj with
+         Pdf.Array (Pdf.Name "/Separation"::x::_) ->
+           begin match Pdf.direct pdf x with
+             Pdf.Name col -> Printf.printf "%s\n" col
+           | _ -> ()
+           end
+       | _ -> ())
+    pdf
+
+(* Indent bookmarks in each file by one and add a title bookmark pointing to the first page. *)
+let add_bookmark_title filename use_title pdf =
+  let title =
+    if use_title then
+      match get_info_utf8 pdf "/Title", get_xmp_info pdf "/Title" with
+        "", x | x, "" | _, x -> x
+    else
+      Filename.basename filename
+  in
+  let marks = Pdfmarks.read_bookmarks pdf in
+  let page1objnum =
+    match Pdfpage.page_object_number pdf 1 with
+      None -> error "add_bookmark_title: page not found"
+    | Some x -> x
+  in
+  let newmarks =
+      {Pdfmarks.level = 0;
+       Pdfmarks.text = title;
+       Pdfmarks.target = Pdfdest.XYZ (Pdfdest.PageObject page1objnum, None, None, None);
+       Pdfmarks.isopen = false}
+    ::map (function m -> {m with Pdfmarks.level = m.Pdfmarks.level + 1}) marks
+  in
+    Pdfmarks.add_bookmarks newmarks pdf
+
+let bookmarks_open_to_level n pdf =
+  let marks = Pdfmarks.read_bookmarks pdf in
+  let newmarks =
+    map
+      (fun m -> {m with Pdfmarks.isopen = m.Pdfmarks.level < n})
+      marks
+  in
+    Pdfmarks.add_bookmarks newmarks pdf
+
+let create_pdf pages pagesize =
+  let page =
+    {(Pdfpage.blankpage pagesize) with
+        Pdfpage.content = [Pdfops.stream_of_ops []];
+        Pdfpage.resources = Pdf.Dictionary []}
+  in
+    let pdf, pageroot = Pdfpage.add_pagetree (many page pages) (Pdf.empty ()) in
+      Pdfpage.add_root pageroot [] pdf

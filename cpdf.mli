@@ -397,3 +397,18 @@ val print_dict_entry : Pdf.t -> string -> unit
 val remove_clipping : Pdf.t -> int list -> Pdf.t 
 
 val image_resolution : Pdf.t -> int list -> float -> (int * string * int * int * float * float) list
+
+val copy_box : string -> string -> bool -> Pdf.t -> int list -> Pdf.t
+
+val dump_attached_files : Pdf.t -> string -> unit
+
+val add_bookmark_title : string -> bool -> Pdf.t -> Pdf.t
+
+val remove_unused_resources : Pdf.t -> Pdf.t
+
+val list_spot_colours : Pdf.t -> unit
+
+val bookmarks_open_to_level : int -> Pdf.t -> Pdf.t
+
+val create_pdf : int -> Pdfpaper.t -> Pdf.t
+
