@@ -3352,6 +3352,11 @@ let print_font_encoding pdf fontname pagenumber =
              match !font with Some f -> f | None -> failwith (Printf.sprintf "print_font_encoding: font %s not found" fontname)
           end
         in
+          let charset =
+            match Pdftext.read_font pdf font with
+            | Pdftext.SimpleFont {Pdftext.fontdescriptor = Some {Pdftext.charset = Some cs}} -> Some cs
+            | _ -> None
+          in
           let extractor = Pdftext.text_extractor_of_font pdf font in
           let unicodedata = Cpdfunicodedata.unicodedata () in
           let unicodetable = Hashtbl.create 16000 in
@@ -3381,7 +3386,8 @@ let print_font_encoding pdf fontname pagenumber =
               in
               let utf8 = if is_control then "<nonprintable>" else Pdftext.utf8_of_codepoints codepoints in
               let glyphnames = fold_left ( ^ ) "" (Pdftext.glyphnames_of_text extractor str) in
-                if glyphnames <> ".notdef" then
+              let is_in_charset s = match charset with None -> true | Some cs -> mem s cs in
+                if glyphnames <> ".notdef" && is_in_charset glyphnames then
                   Printf.printf
                     "%i = U+%s (%s - %s) = %s\n" x unicodenumber utf8 unicodename glyphnames
             done
