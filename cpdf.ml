@@ -4649,3 +4649,211 @@ let create_pdf pages pagesize =
   in
     let pdf, pageroot = Pdfpage.add_pagetree (many page pages) (Pdf.empty ()) in
       Pdfpage.add_root pageroot [] pdf
+
+(* Remove characters which might not make good filenames. *)
+let remove_unsafe_characters encoding s =
+  if encoding = Raw then s else
+    let chars =
+      lose
+        (function x ->
+           match x with
+           '/' | '?' | '<' | '>' | '\\' | ':' | '*' | '|' | '\"' | '^' | '+' | '=' -> true
+           | x when int_of_char x < 32 || (int_of_char x > 126 && encoding <> Stripped) -> true
+           | _ -> false)
+        (explode s)
+    in
+      match chars with
+      | '.'::more -> implode more
+      | chars -> implode chars
+
+let get_bookmark_name encoding pdf marks splitlevel n _ =
+  let refnums = Pdf.page_reference_numbers pdf in
+  let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
+  match keep (function m -> n = Pdfpage.pagenumber_of_target ~fastrefnums pdf m.Pdfmarks.target && m.Pdfmarks.level <= splitlevel) marks with
+  | {Pdfmarks.text = title}::_ -> remove_unsafe_characters encoding title
+  | _ -> ""
+
+(* @F means filename without extension *)
+(* @N means sequence number with no padding *)
+(* @S means start page of this section *)
+(* @E means end page of this section *)
+(* @B means bookmark name at start page *)
+let process_others encoding marks pdf splitlevel filename sequence startpage endpage s =
+  let rec find_ats p = function
+    '@'::r -> find_ats (p + 1) r
+  | r -> (p, r)
+  in
+  let string_of_int_width w i =
+    if w < 0 then raise (Pdf.PDFError "width of field too narrow")
+    else if w > 8 then raise (Pdf.PDFError "width of field too broad") else
+      let formats =
+        [|format_of_string "%i";
+          format_of_string "%i";
+          format_of_string "%02i";
+          format_of_string "%03i";
+          format_of_string "%04i";
+          format_of_string "%05i";
+          format_of_string "%06i";
+          format_of_string "%07i";
+          format_of_string "%08i"|]
+      in
+        Printf.sprintf formats.(w) i
+  in
+    let rec procss prev = function
+      | [] -> rev prev
+      | '@'::'F'::t -> procss (rev (explode filename) @ prev) t
+      | '@'::'N'::t ->
+          let width, rest = find_ats 0 t in
+            procss (rev (explode (string_of_int_width width sequence)) @ prev) rest
+      | '@'::'S'::t ->
+          let width, rest = find_ats 0 t in
+            procss (rev (explode (string_of_int_width width startpage)) @ prev) rest
+      | '@'::'E'::t ->
+          let width, rest = find_ats 0 t in
+            procss (rev (explode (string_of_int_width width endpage)) @ prev) rest
+      | '@'::'B'::t -> procss (rev (explode (get_bookmark_name encoding pdf marks splitlevel startpage pdf)) @ prev) t
+      | h::t -> procss (h::prev) t
+    in
+       implode (procss [] (explode s))
+
+let name_of_spec encoding marks (pdf : Pdf.t) splitlevel spec n filename startpage endpage =
+  let fill l n =
+    let chars = explode (string_of_int n) in
+      if length chars > l
+        then implode (drop chars (length chars - l))
+        else implode ((many '0' (l - length chars)) @ chars)
+  in
+    let chars = explode spec in
+      let before, including = cleavewhile (neq '%') chars in
+        let percents, after = cleavewhile (eq '%') including in
+          if percents = []
+            then
+              process_others encoding marks pdf splitlevel filename n startpage endpage spec
+            else
+              process_others encoding marks pdf splitlevel filename n startpage endpage
+              (implode before ^ fill (length percents) n ^ implode after)
+
+(* Extract Images. *)
+let pnm_to_channel_24 channel w h s =
+  let white () = output_char channel ' ' 
+  and newline () = output_char channel '\n'
+  and output_string = Pervasives.output_string channel in
+    output_string "P6";
+    white ();
+    output_string (string_of_int w);
+    white ();
+    output_string (string_of_int h);
+    white ();
+    output_string "255";
+    newline ();
+    let pos = ref 0 in
+      for y = 1 to h do
+        for x = 1 to w * 3 do
+          output_byte channel (bget s !pos);
+          incr pos
+        done
+      done
+
+let write_stream name stream =
+  let fh = open_out_bin name in
+    for x = 0 to bytes_size stream - 1 do
+      output_byte fh (bget stream x)
+    done;
+    close_out fh
+
+let write_image path_to_p2p path_to_im pdf resources name image =
+  match Pdfimage.get_image_24bpp pdf resources image with
+  | Pdfimage.JPEG (stream, _) -> write_stream (name ^ ".jpg") stream
+  | Pdfimage.JPEG2000 (stream, _) -> write_stream (name ^ ".jpx") stream
+  | Pdfimage.JBIG2 (stream, _) -> write_stream (name ^ ".jbig2") stream
+  | Pdfimage.Raw (w, h, Pdfimage.BPP24, stream) ->
+      let pnm = name ^ ".pnm" in
+      let png = name ^ ".png" in
+      let fh = open_out_bin pnm in
+        pnm_to_channel_24 fh w h stream;
+        close_out fh;
+        begin match path_to_p2p with
+        | "" ->
+          begin match path_to_im with
+            "" -> Printf.eprintf "Neither pnm2png nor imagemagick found. Specify with -p2p or -im\n%!"
+          | _ ->
+            begin match
+              Sys.command (Filename.quote_command path_to_im [pnm; png])
+            with
+              0 -> Sys.remove pnm
+            | _ -> 
+              Printf.eprintf "Call to imagemagick failed: did you specify -p2p correctly?\n%!";
+              Sys.remove pnm
+            end
+          end
+        | _ ->
+          begin match
+            Sys.command (Filename.quote_command path_to_p2p ~stdout:png ["-gamma"; "0.45"; "-quiet"; pnm])
+          with
+          | 0 -> Sys.remove pnm
+          | _ ->
+              Printf.eprintf "Call to pnmtopng failed: did you specify -p2p correctly?\n%!";
+              Sys.remove pnm
+          end
+        end
+  | _ ->
+      Printf.eprintf "Unsupported image type when extracting image %s %!" name
+
+let written = ref []
+
+let extract_images_inner path_to_p2p path_to_im encoding serial pdf resources stem pnum images =
+  let names = map
+    (fun _ ->
+       name_of_spec
+         encoding [] pdf 0 (stem ^ "-p" ^ string_of_int pnum)
+         (let r = !serial in serial := !serial + 1; r) "" 0 0) (indx images)
+  in
+    iter2 (write_image path_to_p2p path_to_im pdf resources) names images
+
+let rec extract_images_form_xobject path_to_p2p path_to_im encoding dedup dedup_per_page pdf serial stem pnum form =
+  let resources =
+    match Pdf.lookup_direct pdf "/Resources" form with
+      Some (Pdf.Dictionary d) -> Pdf.Dictionary d
+    | _ -> Pdf.Dictionary []
+  in
+    let images =
+      let xobjects =
+        match Pdf.lookup_direct pdf "/XObject" resources with
+        | Some (Pdf.Dictionary elts) -> map snd elts
+        | _ -> []
+      in
+        (* Remove any already in !written. Add any remaining to !written, if !args.dedup or !args.dedup_page *)
+        let images = keep (fun o -> Pdf.lookup_direct pdf "/Subtype" o = Some (Pdf.Name "/Image")) xobjects in
+        let already_written, images = List.partition (function Pdf.Indirect n -> mem n !written | _ -> false) images in
+          if dedup || dedup_per_page then
+            written := (option_map (function Pdf.Indirect n -> Some n | _ -> None) images) @ !written;
+          images
+    in
+      extract_images_inner path_to_p2p path_to_im encoding serial pdf resources stem pnum images
+
+let extract_images path_to_p2p path_to_im encoding dedup dedup_per_page pdf range stem =
+  if dedup || dedup_per_page then written := [];
+  let pdf_pages = Pdfpage.pages_of_pagetree pdf in
+    let pages =
+      option_map
+        (function (i, pdf_pages) -> if mem i range then Some pdf_pages else None)
+        (combine (indx pdf_pages) pdf_pages)
+    in
+      let serial = ref 0 in
+        iter2
+          (fun page pnum ->
+             if dedup_per_page then written := [];
+             let xobjects =
+               match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
+               | Some (Pdf.Dictionary elts) -> map snd elts
+               | _ -> []
+             in
+               let images = keep (fun o -> Pdf.lookup_direct pdf "/Subtype" o = Some (Pdf.Name "/Image")) xobjects in
+               let already_written, images = List.partition (function Pdf.Indirect n -> mem n !written | _ -> false) images in
+               if dedup || dedup_per_page then
+                 written := (option_map (function Pdf.Indirect n -> Some n | _ -> None) images) @ !written;
+               let forms = keep (fun o -> Pdf.lookup_direct pdf "/Subtype" o = Some (Pdf.Name "/Form")) xobjects in
+                 extract_images_inner path_to_p2p path_to_im encoding serial pdf page.Pdfpage.resources stem pnum images;
+                 iter (extract_images_form_xobject path_to_p2p path_to_im encoding dedup dedup_per_page pdf serial stem pnum) forms)
+          pages
+          (indx pages)

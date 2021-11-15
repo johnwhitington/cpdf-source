@@ -412,3 +412,10 @@ val bookmarks_open_to_level : int -> Pdf.t -> Pdf.t
 
 val create_pdf : int -> Pdfpaper.t -> Pdf.t
 
+val name_of_spec : encoding ->
+           Pdfmarks.t list ->
+           Pdf.t -> int -> string -> int -> string -> int -> int -> string
+
+val extract_images : string ->
+           string ->
+           encoding -> bool -> bool -> Pdf.t -> int list -> string -> unit
