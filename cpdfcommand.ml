@@ -377,7 +377,7 @@ type args =
    mutable font : font;
    mutable fontname : string;
    mutable fontsize : float;
-   mutable color : float * float * float;
+   mutable color : Cpdf.color;
    mutable opacity : float;
    mutable position : Cpdfposition.position;
    mutable underneath : bool;
@@ -493,7 +493,7 @@ let args =
    font = StandardFont Pdftext.TimesRoman;
    fontname = "Times-Roman";
    fontsize = 12.;
-   color = 0., 0., 0.;
+   color = Cpdf.RGB (0., 0., 0.);
    opacity = 1.;
    position = Cpdfposition.TopLeft 100.;
    underneath = false;
@@ -609,7 +609,7 @@ let reset_arguments () =
   args.font <- StandardFont Pdftext.TimesRoman;
   args.fontname <- "Times-Roman";
   args.fontsize <- 12.;
-  args.color <- 0., 0., 0.;
+  args.color <- Cpdf.RGB (0., 0., 0.);
   args.opacity <- 1.;
   args.position <- Cpdfposition.TopLeft 100.;
   args.underneath <- false;
@@ -1050,11 +1050,11 @@ let setaddtext s =
 
 let parse_color s =
   match String.lowercase s with
-  | "white" -> 1., 1., 1.
-  | "black" -> 0., 0., 0.
-  | "red" -> 1., 0., 0.
-  | "green" -> 0., 1., 0.
-  | "blue" -> 0., 0., 1.
+  | "white" -> Cpdf.RGB (1., 1., 1.)
+  | "black" -> Cpdf.RGB (0., 0., 0.)
+  | "red" -> Cpdf.RGB (1., 0., 0.)
+  | "green" -> Cpdf.RGB (0., 1., 0.)
+  | "blue" -> Cpdf.RGB (0., 0., 1.)
   | _ ->
       let getnum = function
         | Pdfgenlex.LexInt i -> float i
@@ -1062,7 +1062,9 @@ let parse_color s =
         | _ -> error "Bad color"
       in
         match Pdfgenlex.lex_string s with
-        | [a;b;c] -> getnum a, getnum b, getnum c
+        | [g] -> Cpdf.Grey (getnum g)
+        | [r;g;b] -> Cpdf.RGB (getnum r, getnum g, getnum b)
+        | [c; y; m; k] -> Cpdf.CYMK (getnum c, getnum y, getnum m, getnum k)
         | _ -> error "Bad color"
 
 let setcolor s =

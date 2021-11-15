@@ -9,6 +9,11 @@ all - the PDF string is output as-is. [UTF8] converts loslessly to UTF8.
 correspond to 7 bit ASCII. *)
 type encoding = Raw | UTF8 | Stripped
 
+type color =
+  Grey of float
+| RGB of float * float * float
+| CYMK of float * float * float * float
+
 (** {2 Debug} *)
 
 (** Debug: Print out a PDF in readable form to the terminal *)
@@ -178,7 +183,7 @@ val addtexts :
     bool -> (* embed font *)
     int -> (* bates number *)
     int option -> (* bates padding width *)
-    float * float * float -> (*colour*)
+    color -> (*colour*)
     Cpdfposition.position -> (*position*)
     float -> (*linespacing*)
     float -> (*fontsize*)
@@ -201,7 +206,7 @@ val addtexts :
 val addrectangle :
     bool ->
     float * float ->
-    float * float * float ->
+    color ->
     bool ->
     float ->
     float ->
@@ -346,13 +351,13 @@ val add_page_labels :
 val thinlines : int list -> float -> Pdf.t -> Pdf.t
 
 (** Make all text on certain pages black. *)
-val blacktext : float * float * float -> int list -> Pdf.t -> Pdf.t
+val blacktext : color -> int list -> Pdf.t -> Pdf.t
 
 (** Make all lines on certain pages black. *)
-val blacklines : float * float * float -> int list -> Pdf.t -> Pdf.t
+val blacklines : color -> int list -> Pdf.t -> Pdf.t
 
 (** Make all fills on certain pages black. *)
-val blackfills : float * float * float -> int list -> Pdf.t -> Pdf.t
+val blackfills : color -> int list -> Pdf.t -> Pdf.t
 
 (** Remove images from a PDF, optionally adding crossed boxes. *)
 val draft : string option -> bool -> int list -> Pdf.t -> Pdf.t
@@ -419,3 +424,5 @@ val name_of_spec : encoding ->
 val extract_images : string ->
            string ->
            encoding -> bool -> bool -> Pdf.t -> int list -> string -> unit
+
+

@@ -3,6 +3,11 @@ open Pdfutil
 open Pdfio
 open Cpdferror
 
+type color =
+  Grey of float
+| RGB of float * float * float
+| CYMK of float * float * float * float
+
 let debug = ref false
 
 let xmp_template =
@@ -1183,6 +1188,16 @@ let metrics_rot n =
 
 let metrics_baseline_adjustment () = !ops_baseline_adjustment
 
+let colour_op = function
+  | RGB (r, g, b) -> Pdfops.Op_rg (r, g, b)
+  | Grey g -> Pdfops.Op_g g
+  | CYMK (c, y, m, k) -> Pdfops.Op_k (c, y, m, k)
+
+let colour_op_stroke = function
+  | RGB (r, g, b) -> Pdfops.Op_RG (r, g, b)
+  | Grey g -> Pdfops.Op_G g
+  | CYMK (c, y, m, k) -> Pdfops.Op_K (c, y, m, k)
+
 let ops longest_w metrics x y rotate hoffset voffset outline linewidth unique_fontname unique_extgstatename colour fontsize text =
   if metrics then
     ops_metrics :=
@@ -1197,9 +1212,7 @@ let ops longest_w metrics x y rotate hoffset voffset outline linewidth unique_fo
    Pdfops.Op_BT;
    ] @
    (if outline then [Pdfops.Op_w linewidth; Pdfops.Op_Tr 1] else [Pdfops.Op_Tr 0]) @
-   [
-   (match colour with (r, g, b) -> Pdfops.Op_rg (r, g, b));
-   (match colour with (r, g, b) -> Pdfops.Op_RG (r, g, b))]
+   [colour_op colour; colour_op_stroke colour]
    @
    (match unique_extgstatename with None -> [] | Some n -> [Pdfops.Op_gs n])
    @
@@ -2850,8 +2863,8 @@ let addrectangle
       [
        Pdfops.Op_q;
        Pdfops.Op_BMC "/CPDFSTAMP";
-       (match colour with (r, g, b) -> Pdfops.Op_rg (r, g, b));
-       (match colour with (r, g, b) -> Pdfops.Op_RG (r, g, b))
+       colour_op colour;
+       colour_op_stroke colour;
       ]
       @
      (if outline then [Pdfops.Op_w linewidth] else [])
@@ -3061,7 +3074,7 @@ let add_border linewidth ~fast pdf =
   let firstpage = hd (Pdfpage.pages_of_pagetree pdf) in
   let _, _, w, h = Pdf.parse_rectangle firstpage.Pdfpage.mediabox in
     addrectangle
-      fast (w -. linewidth, h -. linewidth) (0., 0., 0.) true linewidth 1. (Cpdfposition.BottomLeft (linewidth /. 2.))
+      fast (w -. linewidth, h -. linewidth) (RGB (0., 0., 0.)) true linewidth 1. (Cpdfposition.BottomLeft (linewidth /. 2.))
       false false (ilist 1 (Pdfpage.endpage pdf)) pdf
 
 let impose ~x ~y ~fit ~columns ~rtl ~btt ~center ~margin ~spacing ~linewidth ~fast pdf =
@@ -3579,7 +3592,7 @@ let create_metadata pdf =
     <ops minus any text positioning or text rendering ones>
     \end{verbatim}
 *)
-let blacktext_ops (r, g, b) pdf resources content =
+let blacktext_ops colour pdf resources content =
   let not_text = function
     | Pdfops.Op_Tj _ | Pdfops.Op_TJ _
     | Pdfops.Op_' _ | Pdfops.Op_'' (_, _, _)
@@ -3603,7 +3616,7 @@ let blacktext_ops (r, g, b) pdf resources content =
       | Pdfops.Op_BT::more ->
           incr textlevel;
           remove_colourops
-            (Pdfops.Op_rg (r, g, b)::Pdfops.Op_BT::prev)
+            (colour_op colour::Pdfops.Op_BT::prev)
             more
       | Pdfops.Op_ET::more ->
           decr textlevel;
@@ -3643,25 +3656,25 @@ let blacktext_ops (r, g, b) pdf resources content =
 
 (* Blacken a form xobject, writing it to the same object. *)
 
-let blacktext (r, g, b) range pdf =
+let blacktext c range pdf =
   let blacktext_page _ page =
     let content' =
-      blacktext_ops (r, g, b) pdf page.Pdfpage.resources page.Pdfpage.content
+      blacktext_ops c pdf page.Pdfpage.resources page.Pdfpage.content
     in
-      process_xobjects pdf page (blacktext_ops (r, g, b));
+      process_xobjects pdf page (blacktext_ops c);
       {page with Pdfpage.content = content'}
   in
     process_pages (ppstub blacktext_page) pdf range
 
 (* \section{Blacken lines} *)
-let blacklines_ops (r, g, b) pdf resources content =
+let blacklines_ops c pdf resources content =
   let rec blacken_strokeops prev = function
     | [] -> rev prev
     | Pdfops.Op_CS _::t ->
         blacken_strokeops (Pdfops.Op_CS "/DeviceRGB"::prev) t
     | (Pdfops.Op_SC _ | Pdfops.Op_SCN _ | Pdfops.Op_SCNName _ | Pdfops.Op_G _
        | Pdfops.Op_RG _ | Pdfops.Op_K _)::t ->
-           blacken_strokeops (Pdfops.Op_RG (r, g, b)::prev) t
+           blacken_strokeops (colour_op_stroke c::prev) t
     | h::t -> blacken_strokeops (h::prev) t
   and operators =
     Pdfops.parse_operators pdf resources content
@@ -3669,25 +3682,25 @@ let blacklines_ops (r, g, b) pdf resources content =
     let operators' = blacken_strokeops [] operators in
       [Pdfops.stream_of_ops operators']
 
-let blacklines (r, g, b) range pdf =
+let blacklines c range pdf =
   let blacklines_page _ page =
     let content' =
-      blacklines_ops (r, g, b) pdf page.Pdfpage.resources page.Pdfpage.content
+      blacklines_ops c pdf page.Pdfpage.resources page.Pdfpage.content
     in
-      process_xobjects pdf page (blacklines_ops (r, g, b));
+      process_xobjects pdf page (blacklines_ops c);
       {page with Pdfpage.content = content'}
   in
     process_pages (ppstub blacklines_page) pdf range
 
 (* \section{Blacken Fills} *)
-let blackfills_ops (r, g, b) pdf resources content =
+let blackfills_ops c pdf resources content =
   let rec blacken_fillops prev = function
     | [] -> rev prev
     | Pdfops.Op_cs _::t ->
         blacken_fillops (Pdfops.Op_cs "/DeviceRGB"::prev) t
     | (Pdfops.Op_sc _ | Pdfops.Op_scn _ | Pdfops.Op_scnName _ | Pdfops.Op_g _
        | Pdfops.Op_rg _ | Pdfops.Op_k _)::t ->
-           blacken_fillops (Pdfops.Op_rg (r, g, b)::prev) t
+           blacken_fillops (colour_op c::prev) t
     | h::t -> blacken_fillops (h::prev) t
   and operators =
     Pdfops.parse_operators pdf resources content
@@ -3695,12 +3708,12 @@ let blackfills_ops (r, g, b) pdf resources content =
     let operators' = blacken_fillops [] operators in
       [Pdfops.stream_of_ops operators']
 
-let blackfills (r, g, b) range pdf =
+let blackfills c range pdf =
   let blackfills_page _ page =
     let content' =
-      blackfills_ops (r, g, b) pdf page.Pdfpage.resources page.Pdfpage.content
+      blackfills_ops c pdf page.Pdfpage.resources page.Pdfpage.content
     in
-      process_xobjects pdf page (blackfills_ops (r, g, b));
+      process_xobjects pdf page (blackfills_ops c);
       {page with Pdfpage.content = content'}
   in
     process_pages (ppstub blackfills_page) pdf range
@@ -4857,3 +4870,5 @@ let extract_images path_to_p2p path_to_im encoding dedup dedup_per_page pdf rang
                  iter (extract_images_form_xobject path_to_p2p path_to_im encoding dedup dedup_per_page pdf serial stem pnum) forms)
           pages
           (indx pages)
+
+

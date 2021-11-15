@@ -1,5 +1,6 @@
 2.5 (Upcoming 2022)
 
+o When adding text or graphics, may choose CYMK or Grey instead of RGB
 o Append e.g DUP2 to a page range to make 1,2,3 --> 1,1,2,2,3,3 etc.
 o The -list-fonts operation now obeys the range
 o New operation -print-font-table gives (charcode, unicode, glyph name) triples
