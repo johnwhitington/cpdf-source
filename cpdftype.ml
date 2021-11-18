@@ -56,16 +56,18 @@ let initial_state () =
 
 (* Split text into lines, resolve all hglue stretches to 0, remove Newlines. *)
 let layout_element s xpos_max fo = function
-  | _ -> ()
+  | e -> fo e
 
 let layout lmargin rmargin papersize i =
-  i
-  (*let o = ref [] in
+  let width =
+    Pdfunits.convert 72. (Pdfpaper.unit papersize) Pdfunits.PdfPoint (Pdfpaper.width papersize)
+  in
+  let o = ref [] in
   let s = initial_state () in
   let xpos_max = Pdfpaper.width papersize -. lmargin in
-  s.xpos <- lmargin;
-  iter (layout_element s xpos_max (fun e -> o := e::!o)) i;
-  rev !o*)
+    s.xpos <- lmargin;
+    iter (layout_element s xpos_max (fun e -> o := e::!o)) i;
+    rev !o
 
 (* Resolve all hglue stretches, insert NewPage as needed. *)
 let paginate tmargin bmargin papersize i = i
@@ -81,9 +83,10 @@ let make_resources fontobjnums =
 let typeset lmargin rmargin tmargin bmargin papersize pdf i =
   let i = layout lmargin rmargin papersize i in
   let i = paginate tmargin bmargin papersize i in
-  let height = Pdfpaper.height papersize -. tmargin in
+  let height = Pdfunits.convert 72. (Pdfpaper.unit papersize) Pdfunits.PdfPoint (Pdfpaper.height papersize) in
   let s = initial_state () in
   s.xpos <- lmargin;
+  s.ypos <- tmargin;
   let ops = ref [] in
   let fonts = ref [] in
   let thispagefontnums = ref [] in
@@ -97,7 +100,6 @@ let typeset lmargin rmargin tmargin bmargin papersize pdf i =
          Pdfpage.rotate = Pdfpage.Rotate0;
          Pdfpage.rest = Pdf.Dictionary []}
       in
-        Printf.printf "Writing a page\n";
         pages := page :: !pages
   in
   let typeset_element = function
@@ -115,10 +117,12 @@ let typeset lmargin rmargin tmargin bmargin papersize pdf i =
               | None -> failwith "font not found"
         in
           ops :=
-            Pdfops.Op_ET
+            Pdfops.Op_Q
+            ::Pdfops.Op_ET
             ::Pdfops.Op_Tj charcodestring
             ::Pdfops.Op_BT
             ::Pdfops.Op_cm (Pdftransform.mktranslate s.xpos (height -. s.ypos))
+            ::Pdfops.Op_q
             ::!ops
     | Font (f, fontsize) ->
         let name, objnum =
@@ -136,7 +140,7 @@ let typeset lmargin rmargin tmargin bmargin papersize pdf i =
     | HGlue {glen} ->
         s.xpos <- s.xpos +. glen
     | VGlue {glen} ->
-        s.ypos <- s.ypos -. glen
+        s.ypos <- s.ypos +. glen
     | NewLine ->
         s.xpos <- 0. 
     | NewPage ->
@@ -151,7 +155,7 @@ let typeset lmargin rmargin tmargin bmargin papersize pdf i =
 
 let example_pdf () =
   let pdf = Pdf.empty () in
-  let pages = typeset 50. 50. 50. 50. Pdfpaper.a4 pdf example in
+  let pages = typeset 20. 20. 20. 20. Pdfpaper.a4 pdf example in
     let pdf, pageroot = Pdfpage.add_pagetree pages pdf in
       Pdfpage.add_root pageroot [] pdf
 
