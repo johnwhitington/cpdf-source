@@ -41,6 +41,7 @@ let example =
    NewLine;
    newpara 10.;
    indent 72.;
+   Font (Pdftext.StandardFont (Pdftext.TimesItalic, Pdftext.WinAnsiEncoding), 10.);
    Text (of_utf8 "The second paragraph");
    NewPage]
 
