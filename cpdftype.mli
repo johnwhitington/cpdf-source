@@ -1,16 +1,14 @@
-type text = int list
-
 type glue =
   {glen : float;
-   stretch : float}
+   gstretch : float}
 
 type element =
-  Text of text
+  Text of string
 | HGlue of glue
 | VGlue of glue
 | NewLine
 | NewPage
-| Font of Pdftext.font * float
+| Font of (Pdftext.font * float)
 
 type t = element list
 

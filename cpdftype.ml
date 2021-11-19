@@ -1,76 +1,110 @@
 (* A typesetter for cpdf. A list of elements is manipulated zero or more times
    to lay it out, paginate it, and so on. It is then typeset to produce a list
    of pages *)
-open Pdfutil
 
-(* Text is represented as a list of unicode code points *)
-type text = int list
+(* FIXME We need to make Pdfstandard14 width calculations much more efficient
+   by caching so that we are not making a table up for each character! *)
+(* FIXME We need to reintroduce kerning in Pdfstandard14. *)
+open Pdfutil
 
 (* Glue *)
 type glue =
   {glen : float;
-   stretch : float}
+   gstretch : float}
 
 (* Main type *)
 type element =
-  Text of text
+  Text of string (* WinAnsiEncoding *)
 | HGlue of glue
 | VGlue of glue
 | NewLine
 | NewPage
-| Font of Pdftext.font * float
+| Font of (Pdftext.font * float)
 
 let string_of_element = function
-  | Text t -> Pdftext.utf8_of_codepoints t
+  | Text t -> t
   | HGlue _ -> "HGLUE"
   | VGlue _ -> "VGLUE"
   | NewLine -> "NewLine"
   | NewPage -> "NewPage"
   | Font _ -> "Font"
 
-let indent x = HGlue {glen = x; stretch = 0.}
-let newpara x = VGlue {glen = x; stretch = 0.}
+let indent x = HGlue {glen = x; gstretch = 0.}
+let newpara x = VGlue {glen = x; gstretch = 0.}
 
 type t = element list
 
-let of_utf8 = Pdftext.codepoints_of_utf8
+let of_utf8 (f, fontsize) t =
+  let pdf = Pdf.empty () in
+  let fontdict = Pdftext.write_font pdf f in
+  let extractor = Pdftext.charcode_extractor_of_font pdf (Pdf.Indirect fontdict) in
+  let charcodes = Pdftext.codepoints_of_utf8 t in
+  charcodes |> option_map extractor |> map char_of_int |> implode
+
+let times_roman_12 = (Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding), 12.)
+let times_italic_10 = (Pdftext.StandardFont (Pdftext.TimesItalic, Pdftext.WinAnsiEncoding), 10.)
+let times_bold_10 = (Pdftext.StandardFont (Pdftext.TimesBold, Pdftext.WinAnsiEncoding), 10.)
 
 let example =
-  [Font (Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding), 12.);
-   Text (of_utf8 "Jackdaws love my Sphinx of Quartz. And this, this is the second sentence to provoke a line-break. We need rather more text than one might think in this diminutive font.");
+  [Font times_roman_12;
+   newpara 12.; (* set up top of page correctly *)
+   Text (of_utf8 times_roman_12 "Jackdaws love my Sphinx of Quartz. And this, this is the second sentence to provoke a line-break. We need rather more text than one might think in this diminutive font.");
    NewLine;
-   newpara 10.;
-   indent 72.;
-   Font (Pdftext.StandardFont (Pdftext.TimesItalic, Pdftext.WinAnsiEncoding), 10.);
-   Text (of_utf8 "The second paragraph");
+   Text (of_utf8 times_roman_12 "After the newline... ");
+   newpara (12. *. 1.3);
+   indent 32.;
+   Font times_italic_10;
+   Text (of_utf8 times_italic_10 "The second paragraph");
    NewPage;
-   Font (Pdftext.StandardFont (Pdftext.TimesBold, Pdftext.WinAnsiEncoding), 10.);
-   Text (of_utf8 "A little too bold");
+   newpara 10.; (* set up top of page *)
+   Font times_bold_10;
+   Text (of_utf8 times_bold_10 "A little too bold");
   ]
 
 type state =
   {mutable font : Pdftext.font option;
+   mutable fontsize : float;
+   mutable width_table : float array; (* Widths for charcodes 0..255 *)
    mutable xpos : float;
    mutable ypos : float}
 
 let initial_state () =
   {font = None;
+   fontsize = 0.;
+   width_table = [||];
    xpos = 0.;
    ypos = 0.}
 
-(* Split text into lines, resolve all hglue stretches to 0, remove Newlines. *)
-let layout_element s xpos_max fo = function
-  | e -> fo e
+let font_widths f fontsize =
+  let w = fontsize *. (600. /. 1000.) in
+    Array.make 256 w
 
+(* For now, split each text element into words, and lay them out ragged right.
+   Words longer than a whole line just fall off the margin. Turn text newlines
+   into real newlines. *)
 let layout lmargin rmargin papersize i =
   let width =
     Pdfunits.convert 72. (Pdfpaper.unit papersize) Pdfunits.PdfPoint (Pdfpaper.width papersize)
   in
   let o = ref [] in
   let s = initial_state () in
-  let xpos_max = Pdfpaper.width papersize -. lmargin in
+  let xpos_max = width -. lmargin in
     s.xpos <- lmargin;
-    iter (layout_element s xpos_max (fun e -> o := e::!o)) i;
+    let rec layout_element = function
+    | Font (f, fontsize) ->
+        s.width_table <- font_widths f fontsize;
+        o := Font (f, fontsize) :: !o
+    | Text text ->
+        o := Text text :: !o
+        (* 1. If it all fits, just pass on, adding to xpos *)
+        (* 2. If not, layout one line, splitting on words, and add a newline and recurse. *)
+    | HGlue {glen} as glue ->
+        s.xpos <- s.xpos +. glen;
+        o := glue :: !o;
+        if s.xpos >= xpos_max then layout_element NewLine
+    | x -> o := x :: !o
+    in
+    iter layout_element i;
     rev !o
 
 (* Resolve all hglue stretches, insert NewPage as needed. *)
@@ -106,28 +140,16 @@ let typeset lmargin rmargin tmargin bmargin papersize pdf i =
       in
         pages := page :: !pages
   in
-  let typeset_element = function
+  let rec typeset_element = function
     | Text cps ->
-        let charcodestring =
-          match s.font with
-          | None -> failwith "font not set up"
-          | Some f ->
-              match List.assoc_opt f !fonts with
-              | Some objnum ->
-                  let extractor =
-                    Pdftext.charcode_extractor_of_font pdf (Pdf.lookup_obj pdf objnum)
-                  in
-                    implode (map char_of_int (option_map extractor cps))
-              | None -> failwith "font not found"
-        in
-          ops :=
-            Pdfops.Op_Q
-            ::Pdfops.Op_ET
-            ::Pdfops.Op_Tj charcodestring
-            ::Pdfops.Op_BT
-            ::Pdfops.Op_cm (Pdftransform.mktranslate s.xpos (height -. s.ypos))
-            ::Pdfops.Op_q
-            ::!ops
+        ops :=
+          Pdfops.Op_Q
+          ::Pdfops.Op_ET
+          ::Pdfops.Op_Tj cps
+          ::Pdfops.Op_BT
+          ::Pdfops.Op_cm (Pdftransform.mktranslate s.xpos (height -. s.ypos))
+          ::Pdfops.Op_q
+          ::!ops
     | Font (f, fontsize) ->
         let name, objnum =
           match List.assoc_opt f !fonts with
@@ -139,6 +161,7 @@ let typeset lmargin rmargin tmargin bmargin papersize pdf i =
                 (n, num)
         in
           s.font <- Some f;
+          s.fontsize <- fontsize;
           thispagefontnums := objnum :: !thispagefontnums;
           ops := Pdfops.Op_Tf (name, fontsize)::!ops
     | HGlue {glen} ->
@@ -146,7 +169,8 @@ let typeset lmargin rmargin tmargin bmargin papersize pdf i =
     | VGlue {glen} ->
         s.ypos <- s.ypos +. glen
     | NewLine ->
-        s.xpos <- 0. 
+        s.xpos <- lmargin;
+        typeset_element (VGlue {glen = s.fontsize *. 1.3; gstretch = 0.})
     | NewPage ->
         write_page ();
         thispagefontnums := [];

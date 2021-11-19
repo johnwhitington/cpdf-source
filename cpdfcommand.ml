@@ -2909,6 +2909,25 @@ let collate (names, pdfs, ranges) =
     done;
     split3 (rev !nis)
 
+let of_utf8 (f, fontsize) t =
+  let pdf = Pdf.empty () in
+  let fontdict = Pdftext.write_font pdf f in
+  let extractor = Pdftext.charcode_extractor_of_font pdf (Pdf.Indirect fontdict) in
+  let charcodes = Pdftext.codepoints_of_utf8 t in
+  implode (map char_of_int (option_map extractor charcodes))
+
+let typeset text =
+  let pdf = Pdf.empty () in
+  let f = (Pdftext.StandardFont (Pdftext.Courier, Pdftext.WinAnsiEncoding), 12.) in
+  let pages =
+    Cpdftype.typeset
+      20. 20. 20. 20. Pdfpaper.a4 pdf
+      [Cpdftype.Font f;
+       Text (of_utf8 f (string_of_bytes text))]
+ in
+    let pdf, pageroot = Pdfpage.add_pagetree pages pdf in
+      Pdfpage.add_root pageroot [] pdf
+
 (* Main function *)
 let go () =
   match args.op with
@@ -3832,7 +3851,9 @@ let go () =
   | Some TableOfContents ->
       Printf.printf "Making a table of contents...\n"
   | Some (Typeset filename) ->
-      Printf.printf "Typesetting a text file...\n"
+      let text = Pdfio.bytes_of_input_channel (open_in filename) in
+      let pdf = typeset text in
+        write_pdf false pdf
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)
