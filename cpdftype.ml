@@ -37,13 +37,16 @@ let of_utf8 = Pdftext.codepoints_of_utf8
 
 let example =
   [Font (Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding), 12.);
-   Text (of_utf8 "Jackdaws love my Sphinx of Quartz. And this, this is the second sentence to provoke a line-break.");
+   Text (of_utf8 "Jackdaws love my Sphinx of Quartz. And this, this is the second sentence to provoke a line-break. We need rather more text than one might think in this diminutive font.");
    NewLine;
    newpara 10.;
    indent 72.;
    Font (Pdftext.StandardFont (Pdftext.TimesItalic, Pdftext.WinAnsiEncoding), 10.);
    Text (of_utf8 "The second paragraph");
-   NewPage]
+   NewPage;
+   Font (Pdftext.StandardFont (Pdftext.TimesBold, Pdftext.WinAnsiEncoding), 10.);
+   Text (of_utf8 "A little too bold");
+  ]
 
 type state =
   {mutable font : Pdftext.font option;
@@ -146,9 +149,10 @@ let typeset lmargin rmargin tmargin bmargin papersize pdf i =
         s.xpos <- 0. 
     | NewPage ->
         write_page ();
+        thispagefontnums := [];
         ops := [];
-        s.xpos <- 0.;
-        s.ypos <- 0.
+        s.xpos <- lmargin;
+        s.ypos <- tmargin
   in
     iter typeset_element i;
     write_page ();
