@@ -201,6 +201,8 @@ type op =
   | OCGOrderAll
   | StampAsXObject of string
   | PrintFontEncoding of string
+  | TableOfContents
+  | Typeset of string
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -329,6 +331,8 @@ let string_of_op = function
   | OCGRename -> "OCGRename"
   | OCGOrderAll -> "OCGOrderAll"
   | StampAsXObject _ -> "StampAsXObject"
+  | TableOfContents -> "TableOfContents"
+  | Typeset _ -> "Typeset"
 
 (* Inputs: filename, pagespec. *)
 type input_kind =
@@ -750,7 +754,7 @@ let banned banlist = function
   | SetModify _|SetCreator _|SetProducer _|RemoveDictEntry _ | ReplaceDictEntry _ | PrintDictEntry _ | SetMetadata _
   | ExtractText | ExtractImages | ExtractFontFile
   | AddPageLabels | RemovePageLabels | OutputJSON | OCGCoalesce
-  | OCGRename | OCGList | OCGOrderAll | PrintFontEncoding _ 
+  | OCGRename | OCGList | OCGOrderAll | PrintFontEncoding _ | TableOfContents | Typeset _
      -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
@@ -1625,6 +1629,9 @@ let setdictentrysearch s =
 let setprintfontencoding s =
   setop (PrintFontEncoding s) ()
 
+let settypeset s =
+  setop (Typeset s) ()
+
 let whingemalformed () =
   prerr_string "Command line must be of exactly the form\ncpdf <infile> -gs <path> -gs-malformed-force -o <outfile>\n";
   exit 1
@@ -2379,6 +2386,12 @@ and specs =
    ("-print-font-table-page",
      Arg.Int setfontpage,
      " Set page for -print-font-table");
+   ("-table-of-contents",
+     Arg.Unit (setop TableOfContents),
+     " Typeset a table of contents from bookmarks");
+   ("-typeset",
+     Arg.String settypeset,
+     " Typeset a text file as a PDF");
    (* These items are undocumented *)
    ("-remove-unused-resources", Arg.Unit (setop RemoveUnusedResources), "");
    ("-stay-on-error", Arg.Unit setstayonerror, "");
@@ -3816,6 +3829,10 @@ let go () =
   | Some (PrintFontEncoding fontname) ->
       let pdf = get_single_pdf args.op true in
         Cpdffont.print_font_table pdf fontname args.copyfontpage
+  | Some TableOfContents ->
+      Printf.printf "Making a table of contents...\n"
+  | Some (Typeset filename) ->
+      Printf.printf "Typesetting a text file...\n"
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)
