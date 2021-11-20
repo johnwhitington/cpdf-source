@@ -9,6 +9,8 @@ type element =
 | NewLine
 | NewPage
 | Font of (Pdftext.font * float)
+| BeginDest of Pdfdest.t
+| EndDest
 
 type t = element list
 

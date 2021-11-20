@@ -5,6 +5,8 @@
 (* FIXME We need to make Pdfstandard14 width calculations much more efficient
    by caching so that we are not making a table up for each character! *)
 (* FIXME We need to reintroduce kerning in Pdfstandard14. *)
+(* FIXME Fix up charcode / text extractors to take fonts not fontdicts *)
+
 open Pdfutil
 
 (* Glue *)
@@ -20,6 +22,8 @@ type element =
 | NewLine
 | NewPage
 | Font of (Pdftext.font * float)
+| BeginDest of Pdfdest.t
+| EndDest
 
 let string_of_element = function
   | Text t -> t
@@ -28,6 +32,8 @@ let string_of_element = function
   | NewLine -> "NewLine"
   | NewPage -> "NewPage"
   | Font _ -> "Font"
+  | BeginDest _ -> "BeginDest"
+  | EndDest -> "EndDest"
 
 let indent x = HGlue {glen = x; gstretch = 0.}
 let newpara x = VGlue {glen = x; gstretch = 0.}
@@ -38,8 +44,10 @@ let of_utf8 (f, fontsize) t =
   let pdf = Pdf.empty () in
   let fontdict = Pdftext.write_font pdf f in
   let extractor = Pdftext.charcode_extractor_of_font pdf (Pdf.Indirect fontdict) in
-  let charcodes = Pdftext.codepoints_of_utf8 t in
-  charcodes |> option_map extractor |> map char_of_int |> implode
+       Pdftext.codepoints_of_utf8 t
+    |> option_map extractor
+    |> map char_of_int
+    |> implode
 
 let times_roman_12 = (Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding), 12.)
 let times_italic_10 = (Pdftext.StandardFont (Pdftext.TimesItalic, Pdftext.WinAnsiEncoding), 10.)
@@ -58,7 +66,9 @@ let example =
    NewPage;
    newpara 10.; (* set up top of page *)
    Font times_bold_10;
+   BeginDest Pdfdest.NullDestination; 
    Text (of_utf8 times_bold_10 "A little too bold");
+   EndDest
   ]
 
 type state =
@@ -66,22 +76,30 @@ type state =
    mutable fontsize : float;
    mutable width_table : float array; (* Widths for charcodes 0..255 *)
    mutable xpos : float;
-   mutable ypos : float}
+   mutable ypos : float;
+   mutable dest : Pdfdest.t option}
 
 let initial_state () =
   {font = None;
    fontsize = 0.;
    width_table = [||];
    xpos = 0.;
-   ypos = 0.}
+   ypos = 0.;
+   dest = None}
 
 let font_widths f fontsize =
   let w = fontsize *. (600. /. 1000.) in
     Array.make 256 w
 
-(* For now, split each text element into words, and lay them out ragged right.
-   Words longer than a whole line just fall off the margin. Turn text newlines
-   into real newlines. *)
+(* For now, split each text element into words, and lay them out ragged right
+   on one long page. Words longer than a whole line just fall off the margin.
+   Turn text newlines into real newlines. *)
+let width_of_string ws s =
+  fold_left ( +. ) 0. (map (fun s -> ws.(int_of_char s)) (explode s))
+
+let split_text space_left ws t =
+  (t, false, "", 0.)
+
 let layout lmargin rmargin papersize i =
   let width =
     Pdfunits.convert 72. (Pdfpaper.unit papersize) Pdfunits.PdfPoint (Pdfpaper.width papersize)
@@ -95,9 +113,13 @@ let layout lmargin rmargin papersize i =
         s.width_table <- font_widths f fontsize;
         o := Font (f, fontsize) :: !o
     | Text text ->
-        o := Text text :: !o
-        (* 1. If it all fits, just pass on, adding to xpos *)
-        (* 2. If not, layout one line, splitting on words, and add a newline and recurse. *)
+        let this_line, needs_newline, remaining_text, space_used =
+          split_text (xpos_max -. s.xpos) s.width_table text
+        in
+          o := Text this_line :: !o;
+          s.xpos <- s.xpos +. width_of_string s.width_table this_line;
+          if needs_newline then layout_element NewLine;
+          if remaining_text <> "" then layout_element (Text remaining_text)
     | HGlue {glen} as glue ->
         s.xpos <- s.xpos +. glen;
         o := glue :: !o;
@@ -150,6 +172,7 @@ let typeset lmargin rmargin tmargin bmargin papersize pdf i =
           ::Pdfops.Op_cm (Pdftransform.mktranslate s.xpos (height -. s.ypos))
           ::Pdfops.Op_q
           ::!ops
+        (* If a destination, add the rectangle to the pile of rectangles for this annotation. *)
     | Font (f, fontsize) ->
         let name, objnum =
           match List.assoc_opt f !fonts with
@@ -177,6 +200,11 @@ let typeset lmargin rmargin tmargin bmargin papersize pdf i =
         ops := [];
         s.xpos <- lmargin;
         s.ypos <- tmargin
+    | BeginDest dest ->
+        s.dest <- Some dest
+    | EndDest ->
+        (* Collect together the rectangles for this annotation, merge? and output *)
+        s.dest <- None
   in
     iter typeset_element i;
     write_page ();
