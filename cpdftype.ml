@@ -25,15 +25,17 @@ type element =
 | BeginDest of Pdfdest.t
 | EndDest
 
-let string_of_element = function
+let to_string_elt = function
   | Text t -> t
-  | HGlue _ -> "HGLUE"
+  | HGlue {glen} -> "HGLUE" ^ string_of_float glen
   | VGlue _ -> "VGLUE"
   | NewLine -> "NewLine"
   | NewPage -> "NewPage"
   | Font _ -> "Font"
   | BeginDest _ -> "BeginDest"
   | EndDest -> "EndDest"
+
+let to_string es = fold_left (fun a b -> a ^ "\n" ^ b) "" (map to_string_elt es)
 
 let indent x = HGlue {glen = x; gstretch = 0.}
 let newpara x = VGlue {glen = x; gstretch = 0.}
@@ -216,5 +218,5 @@ let example_pdf () =
     let pdf, pageroot = Pdfpage.add_pagetree pages pdf in
       Pdfpage.add_root pageroot [] pdf
 
-let _ =
-  Pdfwrite.pdf_to_file (example_pdf ()) "out.pdf"
+(*let _ =
+  Pdfwrite.pdf_to_file (example_pdf ()) "out.pdf"*)

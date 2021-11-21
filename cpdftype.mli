@@ -14,4 +14,6 @@ type element =
 
 type t = element list
 
+val to_string : t -> string
+
 val typeset : float -> float -> float -> float -> Pdfpaper.t -> Pdf.t -> t -> Pdfpage.t list

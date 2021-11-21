@@ -2913,8 +2913,10 @@ let of_utf8 (f, fontsize) t =
   let pdf = Pdf.empty () in
   let fontdict = Pdftext.write_font pdf f in
   let extractor = Pdftext.charcode_extractor_of_font pdf (Pdf.Indirect fontdict) in
-  let charcodes = Pdftext.codepoints_of_utf8 t in
-  implode (map char_of_int (option_map extractor charcodes))
+       Pdftext.codepoints_of_utf8 t
+    |> option_map extractor
+    |> map char_of_int
+    |> implode
 
 let typeset text =
   let pdf = Pdf.empty () in
@@ -2927,6 +2929,38 @@ let typeset text =
  in
     let pdf, pageroot = Pdfpage.add_pagetree pages pdf in
       Pdfpage.add_root pageroot [] pdf
+
+let typeset_table_of_contents pdf =
+  let f = (Pdftext.StandardFont (Pdftext.Courier, Pdftext.WinAnsiEncoding), 10.) in
+  let firstpage = hd (Pdfpage.pages_of_pagetree pdf) in
+  let firstpage_papersize =
+    let width, height =
+      match Pdf.parse_rectangle firstpage.Pdfpage.mediabox with
+        xmin, ymin, xmax, ymax -> (xmax -. xmin, ymax -. ymin)
+    in
+      Pdfpaper.make Pdfunits.PdfPoint width height
+  in
+  let lines =
+    map
+      (fun mark ->
+         [Cpdftype.BeginDest mark.Pdfmarks.target;
+          Cpdftype.HGlue {Cpdftype.glen = float mark.Pdfmarks.level *. 20.; Cpdftype.gstretch = 0.};
+          Cpdftype.Text (of_utf8 f mark.Pdfmarks.text);
+          Cpdftype.EndDest;
+          Cpdftype.NewLine])
+      (Pdfmarks.read_bookmarks pdf)
+  in
+  print_string (Cpdftype.to_string (flatten lines));
+  let toc_pages =
+    Cpdftype.typeset 50. 50. 50. 50. firstpage_papersize pdf
+      ([Cpdftype.Font f] @ flatten lines)
+  in
+   let original_pages = Pdfpage.pages_of_pagetree pdf in
+    let changes =
+      let toc_pages_len = length toc_pages in
+        map (fun n -> (n, n + toc_pages_len)) (indx original_pages)
+    in
+      Pdfpage.change_pages ~changes true pdf (toc_pages @ original_pages)
 
 (* Main function *)
 let go () =
@@ -3849,7 +3883,9 @@ let go () =
       let pdf = get_single_pdf args.op true in
         Cpdffont.print_font_table pdf fontname args.copyfontpage
   | Some TableOfContents ->
-      Printf.printf "Making a table of contents...\n"
+      let pdf = get_single_pdf args.op false in
+      let pdf = typeset_table_of_contents pdf in
+        write_pdf false pdf
   | Some (Typeset filename) ->
       let text = Pdfio.bytes_of_input_channel (open_in filename) in
       let pdf = typeset text in
