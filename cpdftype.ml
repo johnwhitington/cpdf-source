@@ -6,7 +6,6 @@
    by caching so that we are not making a table up for each character! *)
 (* FIXME We need to reintroduce kerning in Pdfstandard14. *)
 (* FIXME Fix up charcode / text extractors to take fonts not fontdicts *)
-
 open Pdfutil
 
 (* Glue *)
@@ -37,41 +36,7 @@ let to_string_elt = function
 
 let to_string es = fold_left (fun a b -> a ^ "\n" ^ b) "" (map to_string_elt es)
 
-let indent x = HGlue {glen = x; gstretch = 0.}
-let newpara x = VGlue {glen = x; gstretch = 0.}
-
 type t = element list
-
-let of_utf8 (f, fontsize) t =
-  let pdf = Pdf.empty () in
-  let fontdict = Pdftext.write_font pdf f in
-  let extractor = Pdftext.charcode_extractor_of_font pdf (Pdf.Indirect fontdict) in
-       Pdftext.codepoints_of_utf8 t
-    |> option_map extractor
-    |> map char_of_int
-    |> implode
-
-let times_roman_12 = (Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding), 12.)
-let times_italic_10 = (Pdftext.StandardFont (Pdftext.TimesItalic, Pdftext.WinAnsiEncoding), 10.)
-let times_bold_10 = (Pdftext.StandardFont (Pdftext.TimesBold, Pdftext.WinAnsiEncoding), 10.)
-
-let example =
-  [Font times_roman_12;
-   newpara 12.; (* set up top of page correctly *)
-   Text (of_utf8 times_roman_12 "Jackdaws love my Sphinx of Quartz. And this, this is the second sentence to provoke a line-break. We need rather more text than one might think in this diminutive font.");
-   NewLine;
-   Text (of_utf8 times_roman_12 "After the newline... ");
-   newpara (12. *. 1.3);
-   indent 32.;
-   Font times_italic_10;
-   Text (of_utf8 times_italic_10 "The second paragraph");
-   NewPage;
-   newpara 10.; (* set up top of page *)
-   Font times_bold_10;
-   BeginDest Pdfdest.NullDestination; 
-   Text (of_utf8 times_bold_10 "A little too bold");
-   EndDest
-  ]
 
 type state =
   {mutable font : Pdftext.font option;
@@ -159,8 +124,33 @@ let layout lmargin rmargin papersize i =
     iter layout_element i;
     rev !o
 
-(* Resolve all hglue stretches, insert NewPage as needed. *)
-let paginate tmargin bmargin papersize i = i
+(* Paginate, simply line-based. When ypos + lineheight exceeds max_ypos, we insert a page break. *)
+let paginate tmargin bmargin papersize i =
+  let height = Pdfunits.convert 72. (Pdfpaper.unit papersize) Pdfunits.PdfPoint (Pdfpaper.height papersize) in
+  let o = ref [] in
+  let s = initial_state () in
+  s.ypos <- tmargin;
+  let max_ypos = height -. tmargin -. bmargin in
+  let rec process = function
+   | VGlue {glen} as glue ->
+       s.ypos <- s.ypos +. glen;
+       o := glue :: !o;
+       if s.ypos > max_ypos then process NewPage
+   | NewLine ->
+       s.ypos <- s.ypos +. s.fontsize *. 1.3;
+       o := NewLine::!o;
+       if s.ypos > max_ypos then process NewPage
+   | Font (f, fs) ->
+       s.font <- Some f;
+       s.fontsize <- fs;
+       o := Font (f, fs)::!o
+   | NewPage ->
+       s.ypos <- tmargin;
+       o := NewPage::!o
+   | x -> o := x::!o
+  in
+    iter process i;
+    rev !o
 
 let make_resources fontobjnums =
   Pdf.Dictionary
@@ -234,6 +224,7 @@ let typeset lmargin rmargin tmargin bmargin papersize pdf i =
         write_page ();
         thispagefontnums := [];
         ops := [];
+        if s.font <> None then typeset_element (Font (unopt s.font, s.fontsize));
         s.xpos <- lmargin;
         s.ypos <- tmargin
     | BeginDest dest ->
@@ -245,12 +236,3 @@ let typeset lmargin rmargin tmargin bmargin papersize pdf i =
     iter typeset_element i;
     write_page ();
     rev !pages
-
-let example_pdf () =
-  let pdf = Pdf.empty () in
-  let pages = typeset 20. 20. 20. 20. Pdfpaper.a4 pdf example in
-    let pdf, pageroot = Pdfpage.add_pagetree pages pdf in
-      Pdfpage.add_root pageroot [] pdf
-
-(*let _ =
-  Pdfwrite.pdf_to_file (example_pdf ()) "out.pdf"*)
