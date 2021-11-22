@@ -126,7 +126,11 @@ let layout lmargin rmargin papersize i =
         s.xpos <- s.xpos +. glen;
         o := glue :: !o;
         if s.xpos >= xpos_max then layout_element NewLine
-    | x -> o := x :: !o
+    | NewLine ->
+        s.xpos <- lmargin;
+        o := NewLine :: !o
+    | x ->
+        o := x :: !o
     in
     iter layout_element i;
     rev !o
@@ -144,7 +148,11 @@ let make_resources fontobjnums =
    creates a page when that page has content. *)
 let typeset lmargin rmargin tmargin bmargin papersize pdf i =
   let i = layout lmargin rmargin papersize i in
+  print_endline "***after layout:\n\n";
+  print_endline (to_string i);
   let i = paginate tmargin bmargin papersize i in
+  print_endline "***after pagination:\n\n";
+  print_endline (to_string i);
   let height = Pdfunits.convert 72. (Pdfpaper.unit papersize) Pdfunits.PdfPoint (Pdfpaper.height papersize) in
   let s = initial_state () in
   s.xpos <- lmargin;
