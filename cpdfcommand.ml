@@ -2950,6 +2950,8 @@ let typeset text =
       Pdfpage.add_root pageroot [] pdf
 
 let typeset_table_of_contents pdf =
+  let marks = Pdfmarks.read_bookmarks pdf in
+  if marks = [] then (Printf.eprintf "No bookmarks, not making table of contents\n%!"; pdf) else
   let f = (Pdftext.StandardFont (Pdftext.Courier, Pdftext.WinAnsiEncoding), 10.) in
   let firstpage = hd (Pdfpage.pages_of_pagetree pdf) in
   let firstpage_papersize =
