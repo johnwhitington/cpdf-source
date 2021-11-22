@@ -2630,11 +2630,11 @@ let scale_page_contents ?(fast=false) scale position pdf pnum page =
         match position with
         | Top t -> 0., -.t
         | TopLeft t -> t, -.t
-        | TopRight t -> 0., -.t
+        | TopRight t -> -.t, -.t
         | Left t -> t, 0.
         | BottomLeft t -> t, t
         | Bottom t -> 0., t
-        | BottomRight t -> -.t, -.t
+        | BottomRight t -> -.t, t
         | Right t -> -.t, 0.
         | _ -> 0., 0. (* centre it... FIXME: We will add a center position, eventually, for text and this... *)
     in
