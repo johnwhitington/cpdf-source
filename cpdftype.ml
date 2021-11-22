@@ -97,11 +97,31 @@ let font_widths f fontsize =
    on one long page. Words longer than a whole line just fall off the margin.
    Turn text newlines into real newlines. *)
 let width_of_string ws s =
-  fold_left ( +. ) 0. (map (fun s -> ws.(int_of_char s)) (explode s))
+  fold_left ( +. ) 0. (map (fun s -> ws.(int_of_char s)) s) (* FIXME efficiency *)
 
-(* Takes ws, the width table and text, and returns (this_line, needs_newline, remaining_text) *)
-let split_text space_left ws t =
-  (t, false, "")
+(* Split into words on spaces. Find how many words (at least one, to make
+   progress) fit into the available space. We set needs_newline if the next
+   word would overflow. Return (text, needs_newline, remaining_text) *)
+(* FIXME efficiency *)
+let split_text space_left widths t =
+  let chars = ref (explode t) in
+  let words = ref [] in
+  let space_left = ref space_left in
+  let return needs_newline =
+    (implode (flatten (rev !words)), needs_newline, implode !chars)
+  in
+    try
+      while !chars <> [] do
+        let word, rest = cleavewhile (neq ' ') !chars in
+          let w = width_of_string widths word in 
+          if !words = [] || w < !space_left
+            then (words := (word @ [' '])::!words; space_left := !space_left -. w -. width_of_string widths [' '])
+            else raise Exit;
+          chars := if rest = [] then [] else tl rest;
+      done;
+      return false
+    with
+      Exit -> return true
 
 let layout lmargin rmargin papersize i =
   let width =
@@ -116,13 +136,16 @@ let layout lmargin rmargin papersize i =
         s.width_table <- font_widths f fontsize;
         o := Font (f, fontsize) :: !o
     | Text text ->
-        let this_line, needs_newline, remaining_text =
-          split_text (xpos_max -. s.xpos) s.width_table text
-        in
-          o := Text this_line :: !o;
-          s.xpos <- s.xpos +. width_of_string s.width_table this_line;
-          if needs_newline then layout_element NewLine;
-          if remaining_text <> "" then layout_element (Text remaining_text)
+        if text = "" then () else
+          begin
+            let this_line, needs_newline, remaining_text =
+              split_text (xpos_max -. s.xpos) s.width_table text
+            in
+              o := Text this_line :: !o;
+              s.xpos <- s.xpos +. width_of_string s.width_table (explode this_line);
+              if needs_newline then layout_element NewLine;
+              if remaining_text <> "" then layout_element (Text remaining_text)
+          end
     | HGlue {glen} as glue ->
         s.xpos <- s.xpos +. glen;
         o := glue :: !o;
@@ -148,6 +171,8 @@ let make_resources fontobjnums =
    dictionaries. New page only
    creates a page when that page has content. *)
 let typeset lmargin rmargin tmargin bmargin papersize pdf i =
+  print_endline "***input:\n\n";
+  print_endline (to_string i);
   let i = layout lmargin rmargin papersize i in
   print_endline "***after layout:\n\n";
   print_endline (to_string i);
