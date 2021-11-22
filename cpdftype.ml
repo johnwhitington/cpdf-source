@@ -99,8 +99,9 @@ let font_widths f fontsize =
 let width_of_string ws s =
   fold_left ( +. ) 0. (map (fun s -> ws.(int_of_char s)) (explode s))
 
+(* Takes ws, the width table and text, and returns (this_line, needs_newline, remaining_text) *)
 let split_text space_left ws t =
-  (t, false, "", 0.)
+  (t, false, "")
 
 let layout lmargin rmargin papersize i =
   let width =
@@ -115,7 +116,7 @@ let layout lmargin rmargin papersize i =
         s.width_table <- font_widths f fontsize;
         o := Font (f, fontsize) :: !o
     | Text text ->
-        let this_line, needs_newline, remaining_text, space_used =
+        let this_line, needs_newline, remaining_text =
           split_text (xpos_max -. s.xpos) s.width_table text
         in
           o := Text this_line :: !o;

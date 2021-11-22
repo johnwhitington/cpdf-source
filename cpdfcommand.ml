@@ -2918,6 +2918,9 @@ let of_utf8 (f, fontsize) t =
     |> map char_of_int
     |> implode
 
+let of_pdfdocencoding (f, fontsize) t =
+  of_utf8 (f, fontsize) (Pdftext.utf8_of_pdfdocstring t)
+
 let typeset text =
   let pdf = Pdf.empty () in
   let f = (Pdftext.StandardFont (Pdftext.Courier, Pdftext.WinAnsiEncoding), 12.) in
@@ -2945,7 +2948,7 @@ let typeset_table_of_contents pdf =
       (fun mark ->
          [Cpdftype.BeginDest mark.Pdfmarks.target;
           Cpdftype.HGlue {Cpdftype.glen = float mark.Pdfmarks.level *. 20.; Cpdftype.gstretch = 0.};
-          Cpdftype.Text (of_utf8 f mark.Pdfmarks.text);
+          Cpdftype.Text (of_pdfdocencoding f mark.Pdfmarks.text);
           Cpdftype.EndDest;
           Cpdftype.NewLine])
       (Pdfmarks.read_bookmarks pdf)
