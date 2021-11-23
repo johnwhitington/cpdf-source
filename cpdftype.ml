@@ -156,6 +156,10 @@ let make_resources fontobjnums =
   Pdf.Dictionary
     [("/Font", Pdf.Dictionary (map (fun fo -> ("/F" ^ string_of_int fo, Pdf.Indirect fo)) fontobjnums))]
 
+let make_annotations annots =
+  if annots = [] then Pdf.Dictionary [] else
+    Pdf.Dictionary ["/Annots", Pdf.Array annots]
+
 (* At this stage, just Font and Text and HGlue 0. and VGlue 0. and Newline and
    NewPage elements. Split on NewPages, typeset each page, add font
    dictionaries. New page only
@@ -176,6 +180,8 @@ let typeset lmargin rmargin tmargin bmargin papersize pdf i =
   let ops = ref [] in
   let fonts = ref [] in
   let thispagefontnums = ref [] in
+  let thispageannotations = ref [] in
+  let thisdestrectangles = ref [] in
   let pages = ref [] in
   let write_page () =
     if !ops <> [] then
@@ -184,7 +190,7 @@ let typeset lmargin rmargin tmargin bmargin papersize pdf i =
          Pdfpage.mediabox = Pdfpage.rectangle_of_paper papersize;
          Pdfpage.resources = make_resources !thispagefontnums;
          Pdfpage.rotate = Pdfpage.Rotate0;
-         Pdfpage.rest = Pdf.Dictionary []}
+         Pdfpage.rest = make_annotations !thispageannotations}
       in
         pages := page :: !pages
   in
@@ -197,8 +203,12 @@ let typeset lmargin rmargin tmargin bmargin papersize pdf i =
           ::Pdfops.Op_BT
           ::Pdfops.Op_cm (Pdftransform.mktranslate s.xpos (height -. s.ypos))
           ::Pdfops.Op_q
-          ::!ops
+          ::!ops;
         (* If a destination, add the rectangle to the pile of rectangles for this annotation. *)
+        if s.dest <> None then
+          thisdestrectangles :=
+            let minx, miny = s.xpos, height -. s.ypos in
+            (minx, miny, minx +. width_of_string s.width_table (explode cps), miny +. s.fontsize)::!thisdestrectangles
     | Font (f, fontsize) ->
         let name, objnum =
           match List.assoc_opt f !fonts with
@@ -209,6 +219,7 @@ let typeset lmargin rmargin tmargin bmargin papersize pdf i =
                 fonts := (f, num) :: !fonts;
                 (n, num)
         in
+          s.width_table <- font_widths f fontsize;
           s.font <- Some f;
           s.fontsize <- fontsize;
           thispagefontnums := objnum :: !thispagefontnums;
@@ -223,6 +234,7 @@ let typeset lmargin rmargin tmargin bmargin papersize pdf i =
     | NewPage ->
         write_page ();
         thispagefontnums := [];
+        thispageannotations := [];
         ops := [];
         if s.font <> None then typeset_element (Font (unopt s.font, s.fontsize));
         s.xpos <- lmargin;
@@ -230,8 +242,18 @@ let typeset lmargin rmargin tmargin bmargin papersize pdf i =
     | BeginDest dest ->
         s.dest <- Some dest
     | EndDest ->
-        (* Collect together the rectangles for this annotation, merge? and output *)
-        s.dest <- None
+        if !thisdestrectangles <> [] && s.dest <> None then
+          let annot (minx, miny, maxx, maxy) =
+            Pdf.Dictionary
+              [("/Type", Pdf.Name "/Annot");
+               ("/Subtype", Pdf.Name "/Link");
+               ("/Border", Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real 1.]);
+               ("/Rect", Pdf.Array [Pdf.Real minx; Pdf.Real miny; Pdf.Real maxx; Pdf.Real maxy]);
+               ("/Dest", Pdfdest.pdfobject_of_destination (unopt s.dest))]
+          in
+            thispageannotations := map annot !thisdestrectangles @ !thispageannotations;
+        s.dest <- None;
+        thisdestrectangles := []
   in
     iter typeset_element i;
     write_page ();

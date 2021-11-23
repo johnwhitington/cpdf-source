@@ -3,7 +3,7 @@ let demo = false
 let noncomp = false
 let major_version = 2
 let minor_version = 5
-let version_date = "(devel, 15th Nov 2021)"
+let version_date = "(devel, 22nd Nov 2021)"
 
 open Pdfutil
 open Pdfio
@@ -2953,6 +2953,7 @@ let typeset_table_of_contents pdf =
   let marks = Pdfmarks.read_bookmarks pdf in
   if marks = [] then (Printf.eprintf "No bookmarks, not making table of contents\n%!"; pdf) else
   let f = (Pdftext.StandardFont (Pdftext.Courier, Pdftext.WinAnsiEncoding), 10.) in
+  let big = (Pdftext.StandardFont (Pdftext.Courier, Pdftext.WinAnsiEncoding), 20.) in
   let firstpage = hd (Pdfpage.pages_of_pagetree pdf) in
   let firstpage_papersize =
     let width, height =
@@ -2971,10 +2972,13 @@ let typeset_table_of_contents pdf =
           Cpdftype.NewLine])
       (Pdfmarks.read_bookmarks pdf)
   in
-  print_string (Cpdftype.to_string (flatten lines));
   let toc_pages =
     Cpdftype.typeset 50. 50. 50. 50. firstpage_papersize pdf
-      ([Cpdftype.Font f] @ flatten lines)
+      ([Cpdftype.Font big;
+        Cpdftype.Text "Table of Contents";
+        Cpdftype.NewLine;
+        Cpdftype.VGlue {glen = 20.; gstretch = 0.};
+        Cpdftype.Font f] @ flatten lines)
   in
    let original_pages = Pdfpage.pages_of_pagetree pdf in
     let changes =
