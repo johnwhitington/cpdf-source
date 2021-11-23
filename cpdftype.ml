@@ -80,7 +80,13 @@ let split_text space_left widths t =
         let word, rest = cleavewhile (neq ' ') !chars in
           let w = width_of_string widths word in 
           if !words = [] || w < !space_left
-            then (words := (word @ [' '])::!words; space_left := !space_left -. w -. width_of_string widths [' '])
+            then
+              let is_last_word = rest = [] in
+              let new_word = if is_last_word then word else word @ [' '] in
+                begin
+                  words := new_word::!words;
+                  space_left := !space_left -. w -. (if is_last_word then 0. else width_of_string widths [' '])
+                end
             else raise Exit;
           chars := if rest = [] then [] else tl rest;
       done;
@@ -165,14 +171,12 @@ let make_annotations annots =
    dictionaries. New page only
    creates a page when that page has content. *)
 let typeset lmargin rmargin tmargin bmargin papersize pdf i =
-  print_endline "***input:\n\n";
-  print_endline (to_string i);
+  let debug = false in
+  if debug then (print_endline "***input:\n\n"; print_endline (to_string i));
   let i = layout lmargin rmargin papersize i in
-  print_endline "***after layout:\n\n";
-  print_endline (to_string i);
+  if debug then (print_endline "***after layout:\n\n"; print_endline (to_string i));
   let i = paginate tmargin bmargin papersize i in
-  print_endline "***after pagination:\n\n";
-  print_endline (to_string i);
+  if debug then (print_endline "***after pagination:\n\n"; print_endline (to_string i));
   let height = Pdfunits.convert 72. (Pdfpaper.unit papersize) Pdfunits.PdfPoint (Pdfpaper.height papersize) in
   let s = initial_state () in
   s.xpos <- lmargin;
@@ -247,7 +251,7 @@ let typeset lmargin rmargin tmargin bmargin papersize pdf i =
             Pdf.Dictionary
               [("/Type", Pdf.Name "/Annot");
                ("/Subtype", Pdf.Name "/Link");
-               ("/Border", Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real 1.]);
+               ("/Border", Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real 0.]);
                ("/Rect", Pdf.Array [Pdf.Real minx; Pdf.Real miny; Pdf.Real maxx; Pdf.Real maxy]);
                ("/Dest", Pdfdest.pdfobject_of_destination (unopt s.dest))]
           in
