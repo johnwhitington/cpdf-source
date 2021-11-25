@@ -1924,6 +1924,11 @@ let transform_rect transform rect =
       let maxy = fmax (fmax y0 y1) (fmax y2 y3) in
         Pdf.Array [Pdf.Real minx; Pdf.Real miny; Pdf.Real maxx; Pdf.Real maxy]
 
+(*let transform_quadpoints transform quadpoints =*)
+
+(* FIXME: We probably discovered this was wrong and that it isn't needed, and
+   removed it. But check this before actually removing the commented code
+   entirely. *)
 (* This is used to transform the BBox inside a form xobject representing an
  * annotation appearance.*)
 (*let transform_xobject_in_place pdf transform i =
