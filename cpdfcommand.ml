@@ -475,7 +475,8 @@ type args =
    mutable impose_linewidth : float;
    mutable format_json : bool;
    mutable replace_dict_entry_value : Pdf.pdfobject;
-   mutable dict_entry_search : Pdf.pdfobject option}
+   mutable dict_entry_search : Pdf.pdfobject option;
+   mutable toc_title : string}
 
 let args =
   {op = None;
@@ -591,7 +592,8 @@ let args =
    impose_linewidth = 0.;
    format_json = false;
    replace_dict_entry_value = Pdf.Null;
-   dict_entry_search = None}
+   dict_entry_search = None;
+   toc_title = "Table of Contents"}
 
 let reset_arguments () =
   args.op <- None;
@@ -692,7 +694,8 @@ let reset_arguments () =
   args.impose_linewidth <- 0.;
   args.format_json <- false;
   args.replace_dict_entry_value <- Pdf.Null;
-  args.dict_entry_search <- None
+  args.dict_entry_search <- None;
+  args.toc_title <- "Table of Contents"
   (* Do not reset original_filename or cpdflin or was_encrypted or
    * was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
    * gs_malformed or gs_quiet, since we want these to work across ANDs. Or
@@ -1632,6 +1635,9 @@ let setprintfontencoding s =
 let settypeset s =
   setop (Typeset s) ()
 
+let settableofcontentstitle s =
+  args.toc_title <- s
+
 let whingemalformed () =
   prerr_string "Command line must be of exactly the form\ncpdf <infile> -gs <path> -gs-malformed-force -o <outfile>\n";
   exit 1
@@ -2389,6 +2395,9 @@ and specs =
    ("-table-of-contents",
      Arg.Unit (setop TableOfContents),
      " Typeset a table of contents from bookmarks");
+   ("-table-of-contents-title",
+     Arg.String settableofcontentstitle,
+     " Set (or clear if empty) the TOC title");
    ("-typeset",
      Arg.String settypeset,
      " Typeset a text file as a PDF");
@@ -2975,7 +2984,7 @@ let typeset_table_of_contents pdf =
   let toc_pages =
     Cpdftype.typeset 50. 50. 50. 50. firstpage_papersize pdf
       ([Cpdftype.Font big;
-        Cpdftype.Text "Table of Contents";
+        Cpdftype.Text args.toc_title;
         Cpdftype.NewLine;
         Cpdftype.VGlue {glen = 20.; gstretch = 0.};
         Cpdftype.Font f] @ flatten lines)
