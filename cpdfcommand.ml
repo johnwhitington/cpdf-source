@@ -2958,11 +2958,12 @@ let typeset text =
     let pdf, pageroot = Pdfpage.add_pagetree pages pdf in
       Pdfpage.add_root pageroot [] pdf
 
-let typeset_table_of_contents pdf =
+(* FIXME: Calculate margins based on page size (+ cropbox!) *)
+let typeset_table_of_contents ~font pdf =
   let marks = Pdfmarks.read_bookmarks pdf in
   if marks = [] then (Printf.eprintf "No bookmarks, not making table of contents\n%!"; pdf) else
-  let f = (Pdftext.StandardFont (Pdftext.Courier, Pdftext.WinAnsiEncoding), 10.) in
-  let big = (Pdftext.StandardFont (Pdftext.Courier, Pdftext.WinAnsiEncoding), 20.) in
+  let f = (Pdftext.StandardFont (font, Pdftext.WinAnsiEncoding), args.fontsize) in
+  let big = (Pdftext.StandardFont (font, Pdftext.WinAnsiEncoding), args.fontsize *. 2.) in
   let firstpage = hd (Pdfpage.pages_of_pagetree pdf) in
   let firstpage_papersize =
     let width, height =
@@ -2975,7 +2976,7 @@ let typeset_table_of_contents pdf =
     map
       (fun mark ->
          [Cpdftype.BeginDest mark.Pdfmarks.target;
-          Cpdftype.HGlue {Cpdftype.glen = float mark.Pdfmarks.level *. 20.; Cpdftype.gstretch = 0.};
+          Cpdftype.HGlue {Cpdftype.glen = float mark.Pdfmarks.level *. args.fontsize *. 2.; Cpdftype.gstretch = 0.};
           Cpdftype.Text (of_pdfdocencoding f mark.Pdfmarks.text);
           Cpdftype.EndDest;
           Cpdftype.NewLine])
@@ -2986,7 +2987,7 @@ let typeset_table_of_contents pdf =
       ([Cpdftype.Font big;
         Cpdftype.Text args.toc_title;
         Cpdftype.NewLine;
-        Cpdftype.VGlue {glen = 20.; gstretch = 0.};
+        Cpdftype.VGlue {glen = args.fontsize *. 2.; gstretch = 0.};
         Cpdftype.Font f] @ flatten lines)
   in
    let original_pages = Pdfpage.pages_of_pagetree pdf in
@@ -3918,7 +3919,10 @@ let go () =
         Cpdffont.print_font_table pdf fontname args.copyfontpage
   | Some TableOfContents ->
       let pdf = get_single_pdf args.op false in
-      let pdf = typeset_table_of_contents pdf in
+      let font =
+        match args.font with StandardFont f -> f | _ -> error "TOC requires standard font only"
+      in
+      let pdf = typeset_table_of_contents ~font pdf in
         write_pdf false pdf
   | Some (Typeset filename) ->
       let text = Pdfio.bytes_of_input_channel (open_in filename) in
