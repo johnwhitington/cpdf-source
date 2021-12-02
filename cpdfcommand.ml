@@ -2937,7 +2937,7 @@ let rec of_utf8_with_newlines t =
       (function
        | '\n' ->
            let c = Buffer.contents buf in
-             if c <> "" then items := Cpdftype.Text c::!items;
+             if c <> "" then items := Cpdftype.Text (explode c)::!items;
              items := Cpdftype.NewLine::!items;
              Buffer.clear buf
        | x ->
@@ -2945,7 +2945,7 @@ let rec of_utf8_with_newlines t =
       t;
     (* Do last one *)
     let c = Buffer.contents buf in
-      if c <> "" then items := Text c::!items;
+      if c <> "" then items := Text (explode c)::!items;
     rev !items
 
 let typeset text =
@@ -2977,7 +2977,7 @@ let typeset_table_of_contents ~font pdf =
       (fun mark ->
          [Cpdftype.BeginDest mark.Pdfmarks.target;
           Cpdftype.HGlue {Cpdftype.glen = float mark.Pdfmarks.level *. args.fontsize *. 2.; Cpdftype.gstretch = 0.};
-          Cpdftype.Text (of_pdfdocencoding f mark.Pdfmarks.text);
+          Cpdftype.Text (explode (of_pdfdocencoding f mark.Pdfmarks.text));
           Cpdftype.EndDest;
           Cpdftype.NewLine])
       (Pdfmarks.read_bookmarks pdf)
@@ -2985,7 +2985,7 @@ let typeset_table_of_contents ~font pdf =
   let toc_pages =
     Cpdftype.typeset 50. 50. 50. 50. firstpage_papersize pdf
       ([Cpdftype.Font big;
-        Cpdftype.Text args.toc_title;
+        Cpdftype.Text (explode args.toc_title);
         Cpdftype.NewLine;
         Cpdftype.VGlue {glen = args.fontsize *. 2.; gstretch = 0.};
         Cpdftype.Font f] @ flatten lines)

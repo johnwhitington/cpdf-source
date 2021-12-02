@@ -3,7 +3,7 @@ type glue =
    gstretch : float}
 
 type element =
-  Text of string
+  Text of char list
 | HGlue of glue
 | VGlue of glue
 | NewLine

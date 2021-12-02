@@ -15,7 +15,7 @@ type glue =
 
 (* Main type *)
 type element =
-  Text of string (* WinAnsiEncoding *)
+  Text of char list (* charcodes 0..255 *)
 | HGlue of glue
 | VGlue of glue
 | NewLine
@@ -25,7 +25,7 @@ type element =
 | EndDest
 
 let to_string_elt = function
-  | Text t -> t
+  | Text t -> implode t
   | HGlue {glen} -> "HGLUE" ^ string_of_float glen
   | VGlue _ -> "VGLUE"
   | NewLine -> "NewLine"
@@ -69,11 +69,11 @@ let width_of_string ws s =
    word would overflow. Return (text, needs_newline, remaining_text) *)
 (* FIXME efficiency *)
 let split_text space_left widths t =
-  let chars = ref (explode t) in
+  let chars = ref t in
   let words = ref [] in
   let space_left = ref space_left in
   let return needs_newline =
-    (implode (flatten (rev !words)), needs_newline, implode !chars)
+    (flatten (rev !words), needs_newline, !chars)
   in
     try
       while !chars <> [] do
@@ -107,15 +107,15 @@ let layout lmargin rmargin papersize i =
         s.width_table <- font_widths f fontsize;
         o := Font (f, fontsize) :: !o
     | Text text ->
-        if text = "" then () else
+        if text = [] then () else
           begin
             let this_line, needs_newline, remaining_text =
               split_text (xpos_max -. s.xpos) s.width_table text
             in
               o := Text this_line :: !o;
-              s.xpos <- s.xpos +. width_of_string s.width_table (explode this_line);
+              s.xpos <- s.xpos +. width_of_string s.width_table this_line;
               if needs_newline then layout_element NewLine;
-              if remaining_text <> "" then layout_element (Text remaining_text)
+              if remaining_text <> [] then layout_element (Text remaining_text)
           end
     | HGlue {glen} as glue ->
         s.xpos <- s.xpos +. glen;
@@ -203,7 +203,7 @@ let typeset lmargin rmargin tmargin bmargin papersize pdf i =
         ops :=
           Pdfops.Op_Q
           ::Pdfops.Op_ET
-          ::Pdfops.Op_Tj cps
+          ::Pdfops.Op_Tj (implode cps)
           ::Pdfops.Op_BT
           ::Pdfops.Op_cm (Pdftransform.mktranslate s.xpos (height -. s.ypos))
           ::Pdfops.Op_q
@@ -212,7 +212,7 @@ let typeset lmargin rmargin tmargin bmargin papersize pdf i =
         if s.dest <> None then
           thisdestrectangles :=
             let minx, miny = s.xpos, height -. s.ypos in
-            (minx, miny, minx +. width_of_string s.width_table (explode cps), miny +. s.fontsize)::!thisdestrectangles
+            (minx, miny, minx +. width_of_string s.width_table cps, miny +. s.fontsize)::!thisdestrectangles
     | Font (f, fontsize) ->
         let name, objnum =
           match List.assoc_opt f !fonts with
