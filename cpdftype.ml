@@ -58,16 +58,17 @@ let font_widths f fontsize =
   let w = fontsize *. (600. /. 1000.) in
     Array.make 256 w
 
+let width_of_string ws s =
+  let w = ref 0. in
+    iter (fun s -> w := !w +. ws.(int_of_char s)) s;
+    !w
+
 (* For now, split each text element into words, and lay them out ragged right
    on one long page. Words longer than a whole line just fall off the margin.
    Turn text newlines into real newlines. *)
-let width_of_string ws s =
-  fold_left ( +. ) 0. (map (fun s -> ws.(int_of_char s)) s) (* FIXME efficiency *)
-
 (* Split into words on spaces. Find how many words (at least one, to make
    progress) fit into the available space. We set needs_newline if the next
    word would overflow. Return (text, needs_newline, remaining_text) *)
-(* FIXME efficiency *)
 let split_text space_left widths t =
   let chars = ref t in
   let words = ref [] in
