@@ -1,11 +1,6 @@
 (* A typesetter for cpdf. A list of elements is manipulated zero or more times
    to lay it out, paginate it, and so on. It is then typeset to produce a list
    of pages *)
-
-(* FIXME We need to make Pdfstandard14 width calculations much more efficient
-   by caching so that we are not making a table up for each character! *)
-(* FIXME We need to reintroduce kerning in Pdfstandard14. *)
-(* FIXME Fix up charcode / text extractors to take fonts not fontdicts *)
 open Pdfutil
 
 (* Glue *)
@@ -55,8 +50,15 @@ let initial_state () =
    dest = None}
 
 let font_widths f fontsize =
-  let w = fontsize *. (600. /. 1000.) in
-    Array.make 256 w
+  let stdfont =
+    match f with Pdftext.StandardFont (sf, _) -> sf | _ -> failwith "not a standard font"
+  in
+    Array.init
+      256
+      (fun x ->
+           fontsize
+        *. float_of_int (Pdfstandard14.textwidth false Pdftext.WinAnsiEncoding stdfont (string_of_char (char_of_int x)))
+        /. 1000.)
 
 let width_of_string ws s =
   let w = ref 0. in

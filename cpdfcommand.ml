@@ -2919,13 +2919,10 @@ let collate (names, pdfs, ranges) =
     split3 (rev !nis)
 
 let of_utf8 (f, fontsize) t =
-  let pdf = Pdf.empty () in
-  let fontdict = Pdftext.write_font pdf f in
-  let extractor = Pdftext.charcode_extractor_of_font pdf (Pdf.Indirect fontdict) in
-       Pdftext.codepoints_of_utf8 t
-    |> option_map extractor
-    |> map char_of_int
-    |> implode
+     Pdftext.codepoints_of_utf8 t
+  |> option_map (Pdftext.charcode_extractor_of_font_real f)
+  |> map char_of_int
+  |> implode
 
 let of_pdfdocencoding (f, fontsize) t =
   of_utf8 (f, fontsize) (Pdftext.utf8_of_pdfdocstring t)
@@ -2948,9 +2945,13 @@ let rec of_utf8_with_newlines t =
       if c <> "" then items := Text (explode c)::!items;
     rev !items
 
+(* FIXME margins, hyphenation of too-long words, efficiency *)
 let typeset text =
   let pdf = Pdf.empty () in
-  let f = (Pdftext.StandardFont (Pdftext.Courier, Pdftext.WinAnsiEncoding), 12.) in
+  let f = 
+    (begin match args.font with StandardFont sf -> Pdftext.StandardFont (sf, Pdftext.WinAnsiEncoding) | _ -> failwith "typeset bad font" end,
+     args.fontsize)
+  in
   let pages =
     Cpdftype.typeset
       20. 20. 20. 20. Pdfpaper.a4 pdf ([Cpdftype.Font f] @ of_utf8_with_newlines (string_of_bytes text))
@@ -2973,13 +2974,22 @@ let typeset_table_of_contents ~font pdf =
       Pdfpaper.make Pdfunits.PdfPoint width height
   in
   let lines =
+    let refnums = Pdf.page_reference_numbers pdf in
+    let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
     map
       (fun mark ->
-         [Cpdftype.BeginDest mark.Pdfmarks.target;
-          Cpdftype.HGlue {Cpdftype.glen = float mark.Pdfmarks.level *. args.fontsize *. 2.; Cpdftype.gstretch = 0.};
-          Cpdftype.Text (explode (of_pdfdocencoding f mark.Pdfmarks.text));
-          Cpdftype.EndDest;
-          Cpdftype.NewLine])
+         let label =
+           let labels = Pdfpagelabels.read pdf in
+           let pnum = Pdfpage.pagenumber_of_target ~fastrefnums pdf mark.Pdfmarks.target in
+             try Pdfpagelabels.pagelabeltext_of_pagenumber pnum labels with Not_found -> string_of_int pnum
+         in
+           [Cpdftype.BeginDest mark.Pdfmarks.target;
+            Cpdftype.HGlue {Cpdftype.glen = float mark.Pdfmarks.level *. args.fontsize *. 2.; Cpdftype.gstretch = 0.};
+            Cpdftype.Text (explode (of_pdfdocencoding f mark.Pdfmarks.text ^ " " ^ of_pdfdocencoding f label));
+            (*Cpdftype.Text [' '];
+            Cpdftype.Text (explode (of_pdfdocencoding f label));*)
+            Cpdftype.EndDest;
+            Cpdftype.NewLine])
       (Pdfmarks.read_bookmarks pdf)
   in
   let toc_pages =

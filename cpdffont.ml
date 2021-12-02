@@ -156,7 +156,7 @@ let print_font_table pdf fontname pagenumber =
             | Pdftext.SimpleFont {Pdftext.fontdescriptor = Some {Pdftext.charset = Some cs}} -> Some cs
             | _ -> None
           in
-          let extractor = Pdftext.text_extractor_of_font pdf font in
+          let extractor = Pdftext.text_extractor_of_font_real pdftextfont in
           let unicodedata = Cpdfunicodedata.unicodedata () in
           let unicodetable = Hashtbl.create 16000 in
            iter

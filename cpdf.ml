@@ -1125,8 +1125,8 @@ let print_fonts pdf range =
 
 (* Process UTF8 text to /WinAnsiEncoding string (for standard 14) or whatever
    is in the font (for existing fonts). *)
-let charcodes_of_utf8 pdf font s =
-  let extractor = Pdftext.charcode_extractor_of_font ~debug:false pdf font in
+let charcodes_of_utf8 font s =
+  let extractor = Pdftext.charcode_extractor_of_font_real ~debug:false font in
   let codepoints = Pdftext.codepoints_of_utf8 s in
     let charcodes =
       option_map
@@ -1141,12 +1141,8 @@ let charcodes_of_utf8 pdf font s =
 (* Process codepoints back to UTF8, assuming it came from UTF8 to start with *)
 let utf8_of_winansi s =
   let text_extractor =
-    Pdftext.text_extractor_of_font
-      (Pdf.empty ())
-      (Pdf.Dictionary
-        [("/BaseFont", Pdf.Name "/TimesRoman");
-         ("/Subtype", Pdf.Name "/Type1");
-         ("/Encoding", Pdf.Name "/WinAnsiEncoding")]) 
+    Pdftext.text_extractor_of_font_real
+      (Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding))
   in
     let codepoints = Pdftext.codepoints_of_text text_extractor s in
       Pdftext.utf8_of_codepoints codepoints
@@ -1601,7 +1597,7 @@ let
             end
         | _ -> failwith "addtext: font dictionary not present"
   in
-  let text = if raw then text else charcodes_of_utf8 pdf fontpdfobj text in
+  let text = if raw then text else charcodes_of_utf8 (Pdftext.read_font pdf fontpdfobj) text in
     let lines = map unescape_string (split_at_newline text) in
       let pdf = ref pdf in
         let voffset =
