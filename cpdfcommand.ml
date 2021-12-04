@@ -2973,13 +2973,13 @@ let typeset_table_of_contents ~font pdf =
     in
       Pdfpaper.make Pdfunits.PdfPoint width height
   in
+  let labels = Pdfpagelabels.read pdf in
   let lines =
     let refnums = Pdf.page_reference_numbers pdf in
     let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
     map
       (fun mark ->
          let label =
-           let labels = Pdfpagelabels.read pdf in
            let pnum = Pdfpage.pagenumber_of_target ~fastrefnums pdf mark.Pdfmarks.target in
              try Pdfpagelabels.pagelabeltext_of_pagenumber pnum labels with Not_found -> string_of_int pnum
          in
@@ -3000,12 +3000,19 @@ let typeset_table_of_contents ~font pdf =
         Cpdftype.VGlue {glen = args.fontsize *. 2.; gstretch = 0.};
         Cpdftype.Font f] @ flatten lines)
   in
-   let original_pages = Pdfpage.pages_of_pagetree pdf in
-    let changes =
-      let toc_pages_len = length toc_pages in
-        map (fun n -> (n, n + toc_pages_len)) (indx original_pages)
-    in
-      Pdfpage.change_pages ~changes true pdf (toc_pages @ original_pages)
+  let original_pages = Pdfpage.pages_of_pagetree pdf in
+  let toc_pages_len = length toc_pages in
+  let changes = map (fun n -> (n, n + toc_pages_len)) (indx original_pages) in
+  let pdf = Pdfpage.change_pages ~changes true pdf (toc_pages @ original_pages) in
+  let label =
+    {Pdfpagelabels.labelstyle = NoLabelPrefixOnly;
+     Pdfpagelabels.labelprefix = None;
+     Pdfpagelabels.startpage = 1;
+     Pdfpagelabels.startvalue = 1}
+  in
+  let labels' = label::map (fun l -> {l with Pdfpagelabels.startpage = l.Pdfpagelabels.startpage + toc_pages_len}) labels in
+    Pdfpagelabels.write pdf labels';
+    pdf
 
 (* Main function *)
 let go () =
