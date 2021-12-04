@@ -2960,6 +2960,11 @@ let typeset text =
       Pdfpage.add_root pageroot [] pdf
 
 (* FIXME: Calculate margins based on page size (+ cropbox!) *)
+let rec split_toc_title a = function
+  | '\\'::'n'::r -> rev a :: split_toc_title [] r
+  | x::xs -> split_toc_title (x::a) xs
+  | [] -> [rev a]
+
 let typeset_table_of_contents ~font pdf =
   let marks = Pdfmarks.read_bookmarks pdf in
   if marks = [] then (Printf.eprintf "No bookmarks, not making table of contents\n%!"; pdf) else
@@ -2993,12 +2998,16 @@ let typeset_table_of_contents ~font pdf =
       (Pdfmarks.read_bookmarks pdf)
   in
   let toc_pages =
+    let title =
+      flatten
+        (map
+          (fun l -> [Cpdftype.Text l; Cpdftype.NewLine])
+          (split_toc_title [] (explode args.toc_title)))
+    in
     Cpdftype.typeset 50. 50. 50. 50. firstpage_papersize pdf
-      ([Cpdftype.Font big;
-        Cpdftype.Text (explode args.toc_title);
-        Cpdftype.NewLine;
-        Cpdftype.VGlue {glen = args.fontsize *. 2.; gstretch = 0.};
-        Cpdftype.Font f] @ flatten lines)
+      ([Cpdftype.Font big] @ title @
+        [Cpdftype.VGlue {glen = args.fontsize *. 2.; gstretch = 0.};
+         Cpdftype.Font f] @ flatten lines)
   in
   let original_pages = Pdfpage.pages_of_pagetree pdf in
   let toc_pages_len = length toc_pages in
