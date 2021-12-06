@@ -2995,7 +2995,9 @@ let typeset_table_of_contents ~font pdf =
          in
            [Cpdftype.BeginDest mark.Pdfmarks.target;
             Cpdftype.HGlue {Cpdftype.glen = float mark.Pdfmarks.level *. args.fontsize *. 2.; Cpdftype.gstretch = 0.};
-            Cpdftype.Text (explode (of_pdfdocencoding f mark.Pdfmarks.text ^ " " ^ of_pdfdocencoding f label));
+            Cpdftype.Text (explode (of_pdfdocencoding f mark.Pdfmarks.text));
+            Cpdftype.HGlue {Cpdftype.glen = 100.; Cpdftype.gstretch = 0.};
+            Cpdftype.Text (explode (of_pdfdocencoding f label));
             (*Cpdftype.Text [' '];
             Cpdftype.Text (explode (of_pdfdocencoding f label));*)
             Cpdftype.EndDest;

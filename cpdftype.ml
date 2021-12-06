@@ -57,7 +57,8 @@ let font_widths f fontsize =
       256
       (fun x ->
            fontsize
-        *. float_of_int (Pdfstandard14.textwidth false Pdftext.WinAnsiEncoding stdfont (string_of_char (char_of_int x)))
+        *. float_of_int
+             (Pdfstandard14.textwidth false Pdftext.WinAnsiEncoding stdfont (string_of_char (char_of_int x)))
         /. 1000.)
 
 let width_of_string ws s =
@@ -174,7 +175,6 @@ let make_annotations annots =
    dictionaries. New page only
    creates a page when that page has content. *)
 let typeset lmargin rmargin tmargin bmargin papersize pdf i =
-  Printf.printf "l = %f, r = %f, b = %f, t = %f\n" lmargin rmargin tmargin bmargin;
   let debug = false in
   if debug then (print_endline "***input:\n\n"; print_endline (to_string i));
   let i = layout lmargin rmargin papersize i in
@@ -214,9 +214,11 @@ let typeset lmargin rmargin tmargin bmargin papersize pdf i =
           ::!ops;
         (* If a destination, add the rectangle to the pile of rectangles for this annotation. *)
         if s.dest <> None then
-          thisdestrectangles :=
+          begin
             let minx, miny = s.xpos, height -. s.ypos in
-            (minx, miny, minx +. width_of_string s.width_table cps, miny +. s.fontsize)::!thisdestrectangles
+              thisdestrectangles := (minx, miny, minx +. width_of_string s.width_table cps, miny +. s.fontsize)::!thisdestrectangles
+          end;
+        s.xpos <- s.xpos +. width_of_string s.width_table cps
     | Font (f, fontsize) ->
         let name, objnum =
           match List.assoc_opt f !fonts with
