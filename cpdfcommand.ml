@@ -2918,47 +2918,6 @@ let collate (names, pdfs, ranges) =
     done;
     split3 (rev !nis)
 
-let of_utf8 (f, fontsize) t =
-     Pdftext.codepoints_of_utf8 t
-  |> option_map (Pdftext.charcode_extractor_of_font_real f)
-  |> map char_of_int
-  |> implode
-
-let of_pdfdocencoding (f, fontsize) t =
-  of_utf8 (f, fontsize) (Pdftext.utf8_of_pdfdocstring t)
-
-let rec of_utf8_with_newlines t =
-  let items = ref [] in
-  let buf = Buffer.create 256 in
-    String.iter
-      (function
-       | '\n' ->
-           let c = Buffer.contents buf in
-             if c <> "" then items := Cpdftype.Text (explode c)::!items;
-             items := Cpdftype.NewLine::!items;
-             Buffer.clear buf
-       | x ->
-           Buffer.add_char buf x)
-      t;
-    (* Do last one *)
-    let c = Buffer.contents buf in
-      if c <> "" then items := Text (explode c)::!items;
-    rev !items
-
-(* FIXME margins, hyphenation of too-long words, efficiency *)
-let typeset text =
-  let pdf = Pdf.empty () in
-  let f = 
-    (begin match args.font with StandardFont sf -> Pdftext.StandardFont (sf, Pdftext.WinAnsiEncoding) | _ -> failwith "typeset bad font" end,
-     args.fontsize)
-  in
-  let pages =
-    Cpdftype.typeset
-      20. 20. 20. 20. Pdfpaper.a4 pdf ([Cpdftype.Font f] @ of_utf8_with_newlines (string_of_bytes text))
-  in
-    let pdf, pageroot = Pdfpage.add_pagetree pages pdf in
-      Pdfpage.add_root pageroot [] pdf
-
 (* Main function *)
 let go () =
   match args.op with
@@ -3888,7 +3847,10 @@ let go () =
         write_pdf false pdf
   | Some (Typeset filename) ->
       let text = Pdfio.bytes_of_input_channel (open_in filename) in
-      let pdf = typeset text in
+      let font =
+        match args.font with StandardFont f -> f | _ -> error "text to PDF: not a standard font"
+      in
+      let pdf = Cpdftexttopdf.typeset ~font ~fontsize:args.fontsize text in
         write_pdf false pdf
 
 (* Advise the user if a combination of command line flags makes little sense,

@@ -93,4 +93,3 @@ let typeset_table_of_contents ~font ~fontsize ~title pdf =
   let labels' = label::map (fun l -> {l with Pdfpagelabels.startpage = l.Pdfpagelabels.startpage + toc_pages_len}) labels in
     Pdfpagelabels.write pdf labels';
     pdf
-
