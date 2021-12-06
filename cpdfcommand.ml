@@ -2971,12 +2971,17 @@ let typeset_table_of_contents ~font pdf =
   let f = (Pdftext.StandardFont (font, Pdftext.WinAnsiEncoding), args.fontsize) in
   let big = (Pdftext.StandardFont (font, Pdftext.WinAnsiEncoding), args.fontsize *. 2.) in
   let firstpage = hd (Pdfpage.pages_of_pagetree pdf) in
-  let firstpage_papersize =
-    let width, height =
+  let firstpage_papersize, pmaxx, pmaxy =
+    let width, height, xmax, ymax =
       match Pdf.parse_rectangle firstpage.Pdfpage.mediabox with
-        xmin, ymin, xmax, ymax -> (xmax -. xmin, ymax -. ymin)
+        xmin, ymin, xmax, ymax -> xmax -. xmin, ymax -. ymin, xmax, ymax
     in
-      Pdfpaper.make Pdfunits.PdfPoint width height
+      Pdfpaper.make Pdfunits.PdfPoint width height, xmax, ymax
+  in
+  let firstpage_cropbox =
+    match Pdf.lookup_direct pdf "/CropBox" firstpage.Pdfpage.rest with
+    | Some r -> Some (Pdf.parse_rectangle r)
+    | None -> None
   in
   let labels = Pdfpagelabels.read pdf in
   let lines =
@@ -3004,10 +3009,27 @@ let typeset_table_of_contents ~font pdf =
           (fun l -> [Cpdftype.Text l; Cpdftype.NewLine])
           (split_toc_title [] (explode args.toc_title)))
     in
-    Cpdftype.typeset 50. 50. 50. 50. firstpage_papersize pdf
-      ([Cpdftype.Font big] @ title @
-        [Cpdftype.VGlue {glen = args.fontsize *. 2.; gstretch = 0.};
-         Cpdftype.Font f] @ flatten lines)
+    let lm, rm, tm, bm =
+      match firstpage_cropbox with
+      | None -> (50., 50., 50., 50.)
+      | Some (cminx, cminy, cmaxx, cmaxy) ->
+          (cminx +. 50., (pmaxx -. cmaxx) +. 50., cminy +. 50., (pmaxy -. cmaxy) +. 50.)
+    in
+      Cpdftype.typeset lm rm tm bm firstpage_papersize pdf
+        ([Cpdftype.Font big] @ title @
+          [Cpdftype.VGlue {glen = args.fontsize *. 2.; gstretch = 0.};
+           Cpdftype.Font f] @ flatten lines)
+  in
+  let toc_pages =
+    match firstpage_cropbox with
+    | Some (a, b, c, d) ->
+        let rect =
+          Pdf.Array [Pdf.Real a; Pdf.Real b; Pdf.Real c; Pdf.Real d]
+        in
+          map
+            (fun p -> {p with Pdfpage.rest = Pdf.add_dict_entry p.Pdfpage.rest "/CropBox" rect})
+            toc_pages
+    | None -> toc_pages
   in
   let original_pages = Pdfpage.pages_of_pagetree pdf in
   let toc_pages_len = length toc_pages in

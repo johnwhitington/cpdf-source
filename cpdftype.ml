@@ -139,7 +139,7 @@ let paginate tmargin bmargin papersize i =
   let o = ref [] in
   let s = initial_state () in
   s.ypos <- tmargin;
-  let max_ypos = height -. tmargin -. bmargin in
+  let max_ypos = height -. bmargin in
   let rec process = function
    | VGlue {glen} as glue ->
        s.ypos <- s.ypos +. glen;
@@ -174,6 +174,7 @@ let make_annotations annots =
    dictionaries. New page only
    creates a page when that page has content. *)
 let typeset lmargin rmargin tmargin bmargin papersize pdf i =
+  Printf.printf "l = %f, r = %f, b = %f, t = %f\n" lmargin rmargin tmargin bmargin;
   let debug = false in
   if debug then (print_endline "***input:\n\n"; print_endline (to_string i));
   let i = layout lmargin rmargin papersize i in
