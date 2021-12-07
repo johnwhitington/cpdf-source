@@ -1,23 +1,31 @@
 open Pdfutil
 
-let rec split_toc_title a = function
-  | '\\'::'n'::r -> rev a :: split_toc_title [] r
-  | x::xs -> split_toc_title (x::a) xs
+(* We allow \n in titles. *)
+let rec split_toc_title_inner a = function
+  | '\\'::'n'::r -> rev a :: split_toc_title_inner [] r
+  | x::xs -> split_toc_title_inner (x::a) xs
   | [] -> [rev a]
 
-let of_utf8 (f, fontsize) t =
+let split_toc_title = split_toc_title_inner []
+
+(* Cpdftype codepoints from a font and UTF8 *)
+let of_utf8 f t =
      Pdftext.codepoints_of_utf8 t
   |> option_map (Pdftext.charcode_extractor_of_font_real f)
   |> map char_of_int
-  |> implode
 
-let of_pdfdocencoding (f, fontsize) t =
-  of_utf8 (f, fontsize) (Pdftext.utf8_of_pdfdocstring t)
+(* Cpdftype codepoints from a font and PDFDocEndoding string *)
+let of_pdfdocencoding f t =
+  of_utf8 f (Pdftext.utf8_of_pdfdocstring t)
 
+(* Typeset a table of contents with given font, font size and title. Mediabox
+   (and CropBox) copied from first page of existing PDF. Margin of 50pts inside
+   CropBox. Font size of title twice body font size. Null page labels added for
+   TOC, others bumped up and so preserved. *)
 let typeset_table_of_contents ~font ~fontsize ~title pdf =
   let marks = Pdfmarks.read_bookmarks pdf in
   if marks = [] then (Printf.eprintf "No bookmarks, not making table of contents\n%!"; pdf) else
-  let f = (Pdftext.StandardFont (font, Pdftext.WinAnsiEncoding), fontsize) in
+  let f, fs = (Pdftext.StandardFont (font, Pdftext.WinAnsiEncoding), fontsize) in
   let big = (Pdftext.StandardFont (font, Pdftext.WinAnsiEncoding), fontsize *. 2.) in
   let firstpage = hd (Pdfpage.pages_of_pagetree pdf) in
   let firstpage_papersize, pmaxx, pmaxy =
@@ -44,9 +52,9 @@ let typeset_table_of_contents ~font ~fontsize ~title pdf =
          in
            [Cpdftype.BeginDest mark.Pdfmarks.target;
             Cpdftype.HGlue {Cpdftype.glen = float mark.Pdfmarks.level *. fontsize *. 2.; Cpdftype.gstretch = 0.};
-            Cpdftype.Text (explode (of_pdfdocencoding f mark.Pdfmarks.text));
+            Cpdftype.Text (of_pdfdocencoding f mark.Pdfmarks.text);
             Cpdftype.HGlue {Cpdftype.glen = 100.; Cpdftype.gstretch = 0.};
-            Cpdftype.Text (explode (of_pdfdocencoding f label));
+            Cpdftype.Text (of_pdfdocencoding f label);
             Cpdftype.EndDest;
             Cpdftype.NewLine])
       (Pdfmarks.read_bookmarks pdf)
@@ -56,7 +64,7 @@ let typeset_table_of_contents ~font ~fontsize ~title pdf =
       flatten
         (map
           (fun l -> [Cpdftype.Text l; Cpdftype.NewLine])
-          (split_toc_title [] (explode title)))
+          (split_toc_title (of_utf8 f title)))
     in
     let lm, rm, tm, bm =
       match firstpage_cropbox with
@@ -67,7 +75,7 @@ let typeset_table_of_contents ~font ~fontsize ~title pdf =
       Cpdftype.typeset lm rm tm bm firstpage_papersize pdf
         ([Cpdftype.Font big] @ title @
           [Cpdftype.VGlue {glen = fontsize *. 2.; gstretch = 0.};
-           Cpdftype.Font f] @ flatten lines)
+           Cpdftype.Font (f, fs)] @ flatten lines)
   in
   let toc_pages =
     match firstpage_cropbox with
