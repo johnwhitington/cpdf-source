@@ -476,7 +476,8 @@ type args =
    mutable format_json : bool;
    mutable replace_dict_entry_value : Pdf.pdfobject;
    mutable dict_entry_search : Pdf.pdfobject option;
-   mutable toc_title : string}
+   mutable toc_title : string;
+   mutable toc_bookmark : bool}
 
 let args =
   {op = None;
@@ -593,7 +594,8 @@ let args =
    format_json = false;
    replace_dict_entry_value = Pdf.Null;
    dict_entry_search = None;
-   toc_title = "Table of Contents"}
+   toc_title = "Table of Contents";
+   toc_bookmark = true}
 
 let reset_arguments () =
   args.op <- None;
@@ -695,7 +697,8 @@ let reset_arguments () =
   args.format_json <- false;
   args.replace_dict_entry_value <- Pdf.Null;
   args.dict_entry_search <- None;
-  args.toc_title <- "Table of Contents"
+  args.toc_title <- "Table of Contents";
+  args.toc_bookmark <- true
   (* Do not reset original_filename or cpdflin or was_encrypted or
    * was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
    * gs_malformed or gs_quiet, since we want these to work across ANDs. Or
@@ -1638,6 +1641,9 @@ let settypeset s =
 let settableofcontentstitle s =
   args.toc_title <- s
 
+let settocnobookmark () =
+  args.toc_bookmark <- false
+
 let whingemalformed () =
   prerr_string "Command line must be of exactly the form\ncpdf <infile> -gs <path> -gs-malformed-force -o <outfile>\n";
   exit 1
@@ -2395,9 +2401,12 @@ and specs =
    ("-table-of-contents",
      Arg.Unit (setop TableOfContents),
      " Typeset a table of contents from bookmarks");
-   ("-table-of-contents-title",
+   ("-toc-title",
      Arg.String settableofcontentstitle,
      " Set (or clear if empty) the TOC title");
+   ("-toc-no-bookmark",
+     Arg.Unit settocnobookmark,
+     " Don't add the table of contents to the bookmarks");
    ("-typeset",
      Arg.String settypeset,
      " Typeset a text file as a PDF");
@@ -3843,7 +3852,7 @@ let go () =
       let font =
         match args.font with StandardFont f -> f | _ -> error "TOC requires standard font only"
       in
-      let pdf = Cpdftoc.typeset_table_of_contents ~font ~fontsize:args.fontsize ~title:args.toc_title pdf in
+      let pdf = Cpdftoc.typeset_table_of_contents ~font ~fontsize:args.fontsize ~title:args.toc_title ~bookmark:args.toc_bookmark pdf in
         write_pdf false pdf
   | Some (Typeset filename) ->
       let text = Pdfio.bytes_of_input_channel (open_in filename) in

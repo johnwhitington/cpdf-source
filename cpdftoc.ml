@@ -22,7 +22,7 @@ let of_pdfdocencoding f t =
    (and CropBox) copied from first page of existing PDF. Margin of 50pts inside
    CropBox. Font size of title twice body font size. Null page labels added for
    TOC, others bumped up and so preserved. *)
-let typeset_table_of_contents ~font ~fontsize ~title pdf =
+let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
   let marks = Pdfmarks.read_bookmarks pdf in
   if marks = [] then (Printf.eprintf "No bookmarks, not making table of contents\n%!"; pdf) else
   let f, fs = (Pdftext.StandardFont (font, Pdftext.WinAnsiEncoding), fontsize) in
@@ -100,4 +100,15 @@ let typeset_table_of_contents ~font ~fontsize ~title pdf =
   in
   let labels' = label::map (fun l -> {l with Pdfpagelabels.startpage = l.Pdfpagelabels.startpage + toc_pages_len}) labels in
     Pdfpagelabels.write pdf labels';
-    pdf
+    if bookmark then
+      let marks = Pdfmarks.read_bookmarks pdf in
+      let refnums = Pdf.page_reference_numbers pdf in
+      let newmark =
+        {Pdfmarks.level = 0;
+         Pdfmarks.text = Pdftext.pdfdocstring_of_utf8 title;
+         Pdfmarks.target = Pdfdest.XYZ (Pdfdest.PageObject (hd refnums), None, None, None);
+         Pdfmarks.isopen = false}
+      in
+        Pdfmarks.add_bookmarks (newmark::marks) pdf
+    else
+      pdf
