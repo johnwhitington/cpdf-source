@@ -19,6 +19,7 @@ let rec of_utf8_with_newlines t =
              if c <> "" then items := Cpdftype.Text (explode c)::!items;
              items := Cpdftype.NewLine::!items;
              Buffer.clear buf
+       | '\r' -> ()
        | x ->
            Buffer.add_char buf x)
       t;
