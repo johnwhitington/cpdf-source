@@ -1,12 +1,18 @@
 open Pdfutil
 
-(* We allow \n in titles. *)
+(* We allow \n in titles. Split for typesetter. *)
 let rec split_toc_title_inner a = function
   | '\\'::'n'::r -> rev a :: split_toc_title_inner [] r
   | x::xs -> split_toc_title_inner (x::a) xs
   | [] -> [rev a]
 
 let split_toc_title = split_toc_title_inner []
+
+(* And for new bookmark for TOC, change \\n to \n *)
+let rec real_newline = function
+  | '\\'::'n'::r -> '\n'::real_newline r
+  | x::r -> x::real_newline r
+  | [] -> []
 
 (* Cpdftype codepoints from a font and UTF8 *)
 let of_utf8 f t =
@@ -105,7 +111,7 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
       let refnums = Pdf.page_reference_numbers pdf in
       let newmark =
         {Pdfmarks.level = 0;
-         Pdfmarks.text = Pdftext.pdfdocstring_of_utf8 title;
+         Pdfmarks.text = Pdftext.pdfdocstring_of_utf8 (implode (real_newline (explode title)));
          Pdfmarks.target = Pdfdest.XYZ (Pdfdest.PageObject (hd refnums), None, None, None);
          Pdfmarks.isopen = false}
       in
