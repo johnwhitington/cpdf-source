@@ -453,6 +453,9 @@ let precombine_page_content pdf =
   in
     Pdfpage.change_pages true pdf pages'
 
+(* FIXME make this optional? And maybe move into actual JSON reader, instead of
+   preprocessing PDF, so it helps us when writing, say, the output of
+   -print-dict-entry? *)
 let rec ppstring_single_object pdf = function
   | Pdf.Dictionary d -> Pdf.recurse_dict (ppstring_single_object pdf) d
   | (Pdf.Stream {contents = (Pdf.Dictionary dict, data)}) ->
