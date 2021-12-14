@@ -1,6 +1,9 @@
 (* A typesetter for cpdf. A list of elements is manipulated zero or more times
    to lay it out, paginate it, and so on. It is then typeset to produce a list
-   of pages *)
+   of pages.
+
+   For now, this is just an experiment for -table-of-contents and -typeset. To
+   be continued... *)
 open Pdfutil
 
 (* Glue *)

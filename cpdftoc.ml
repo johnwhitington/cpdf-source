@@ -25,7 +25,7 @@ let of_pdfdocencoding f t =
   of_utf8 f (Pdftext.utf8_of_pdfdocstring t)
 
 (* Typeset a table of contents with given font, font size and title. Mediabox
-   (and CropBox) copied from first page of existing PDF. Margin of 50pts inside
+   (and CropBox) copied from first page of existing PDF. Margin of 10% inside
    CropBox. Font size of title twice body font size. Null page labels added for
    TOC, others bumped up and so preserved. *)
 let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
@@ -34,17 +34,22 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
   let f, fs = (Pdftext.StandardFont (font, Pdftext.WinAnsiEncoding), fontsize) in
   let big = (Pdftext.StandardFont (font, Pdftext.WinAnsiEncoding), fontsize *. 2.) in
   let firstpage = hd (Pdfpage.pages_of_pagetree pdf) in
-  let firstpage_papersize, pmaxx, pmaxy, margin =
+  let width, firstpage_papersize, pmaxx, pmaxy, margin =
     let width, height, xmax, ymax =
       match Pdf.parse_rectangle firstpage.Pdfpage.mediabox with
         xmin, ymin, xmax, ymax -> xmax -. xmin, ymax -. ymin, xmax, ymax
     in
-      Pdfpaper.make Pdfunits.PdfPoint width height, xmax, ymax, fmin width height *. 0.1
+      width, Pdfpaper.make Pdfunits.PdfPoint width height, xmax, ymax, fmin width height *. 0.1
   in
   let firstpage_cropbox =
     match Pdf.lookup_direct pdf "/CropBox" firstpage.Pdfpage.rest with
     | Some r -> Some (Pdf.parse_rectangle r)
     | None -> None
+  in
+  let width =
+    match firstpage_cropbox with
+    | Some (xmin, _, xmax, _) -> xmax -. xmin
+    | None -> width 
   in
   let labels = Pdfpagelabels.read pdf in
   let lines =
@@ -52,15 +57,28 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
     let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
     map
       (fun mark ->
+         let indent = float mark.Pdfmarks.level *. fontsize *. 2. in 
+         let text = of_pdfdocencoding f mark.Pdfmarks.text in
          let label =
-           let pnum = Pdfpage.pagenumber_of_target ~fastrefnums pdf mark.Pdfmarks.target in
-             try Pdfpagelabels.pagelabeltext_of_pagenumber pnum labels with Not_found -> string_of_int pnum
+           let pde =
+             let pnum = Pdfpage.pagenumber_of_target ~fastrefnums pdf mark.Pdfmarks.target in
+               try Pdfpagelabels.pagelabeltext_of_pagenumber pnum labels with Not_found -> string_of_int pnum
+           in
+             of_pdfdocencoding f pde
+         in
+         let widths = Cpdftype.font_widths f fontsize in
+         let space =
+              width
+           -. margin *. 2.
+           -. Cpdftype.width_of_string widths text
+           -. Cpdftype.width_of_string widths label
+           -. indent
          in
            [Cpdftype.BeginDest mark.Pdfmarks.target;
-            Cpdftype.HGlue {Cpdftype.glen = float mark.Pdfmarks.level *. fontsize *. 2.; Cpdftype.gstretch = 0.};
-            Cpdftype.Text (of_pdfdocencoding f mark.Pdfmarks.text);
-            Cpdftype.HGlue {Cpdftype.glen = 100.; Cpdftype.gstretch = 0.};
-            Cpdftype.Text (of_pdfdocencoding f label);
+            Cpdftype.HGlue {Cpdftype.glen = indent; Cpdftype.gstretch = 0.};
+            Cpdftype.Text text;
+            Cpdftype.HGlue {Cpdftype.glen = space; Cpdftype.gstretch = 0.};
+            Cpdftype.Text label;
             Cpdftype.EndDest;
             Cpdftype.NewLine])
       (Pdfmarks.read_bookmarks pdf)
