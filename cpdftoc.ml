@@ -34,12 +34,12 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
   let f, fs = (Pdftext.StandardFont (font, Pdftext.WinAnsiEncoding), fontsize) in
   let big = (Pdftext.StandardFont (font, Pdftext.WinAnsiEncoding), fontsize *. 2.) in
   let firstpage = hd (Pdfpage.pages_of_pagetree pdf) in
-  let firstpage_papersize, pmaxx, pmaxy =
+  let firstpage_papersize, pmaxx, pmaxy, margin =
     let width, height, xmax, ymax =
       match Pdf.parse_rectangle firstpage.Pdfpage.mediabox with
         xmin, ymin, xmax, ymax -> xmax -. xmin, ymax -. ymin, xmax, ymax
     in
-      Pdfpaper.make Pdfunits.PdfPoint width height, xmax, ymax
+      Pdfpaper.make Pdfunits.PdfPoint width height, xmax, ymax, fmin width height *. 0.1
   in
   let firstpage_cropbox =
     match Pdf.lookup_direct pdf "/CropBox" firstpage.Pdfpage.rest with
@@ -74,9 +74,9 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
     in
     let lm, rm, tm, bm =
       match firstpage_cropbox with
-      | None -> (50., 50., 50., 50.)
+      | None -> (margin, margin, margin, margin)
       | Some (cminx, cminy, cmaxx, cmaxy) ->
-          (cminx +. 50., (pmaxx -. cmaxx) +. 50., cminy +. 50., (pmaxy -. cmaxy) +. 50.)
+          (cminx +. margin, (pmaxx -. cmaxx) +. margin, cminy +. margin, (pmaxy -. cmaxy) +. margin)
     in
       Cpdftype.typeset lm rm tm bm firstpage_papersize pdf
         ([Cpdftype.Font big] @ title @
