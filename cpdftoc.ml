@@ -97,7 +97,7 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
           (cminx +. margin, (pmaxx -. cmaxx) +. margin, cminy +. margin, (pmaxy -. cmaxy) +. margin)
     in
       Cpdftype.typeset lm rm tm bm firstpage_papersize pdf
-        ([Cpdftype.Font big] @ title @
+        ([Cpdftype.Font big; Cpdftype.BeginDocument] @ title @
           [Cpdftype.VGlue {glen = fontsize *. 2.; gstretch = 0.};
            Cpdftype.Font (f, fs)] @ flatten lines)
   in

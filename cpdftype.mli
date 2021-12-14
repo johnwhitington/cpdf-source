@@ -11,6 +11,7 @@ type element =
 | Font of (Pdftext.font * float)
 | BeginDest of Pdfdest.t
 | EndDest
+| BeginDocument
 
 type t = element list
 

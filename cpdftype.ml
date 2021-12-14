@@ -21,6 +21,7 @@ type element =
 | Font of (Pdftext.font * float)
 | BeginDest of Pdfdest.t
 | EndDest
+| BeginDocument
 
 let to_string_elt = function
   | Text t -> implode t
@@ -31,6 +32,7 @@ let to_string_elt = function
   | Font _ -> "Font"
   | BeginDest _ -> "BeginDest"
   | EndDest -> "EndDest"
+  | BeginDocument -> "BeginDocument"
 
 let to_string es = fold_left (fun a b -> a ^ "\n" ^ b) "" (map to_string_elt es)
 
@@ -251,7 +253,9 @@ let typeset lmargin rmargin tmargin bmargin papersize pdf i =
         ops := [];
         if s.font <> None then typeset_element (Font (unopt s.font, s.fontsize));
         s.xpos <- lmargin;
-        s.ypos <- tmargin
+        s.ypos <- tmargin +. s.fontsize
+    | BeginDocument ->
+        s.ypos <- tmargin +. s.fontsize
     | BeginDest dest ->
         s.dest <- Some dest
     | EndDest ->
