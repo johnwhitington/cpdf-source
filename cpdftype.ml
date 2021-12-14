@@ -160,8 +160,11 @@ let paginate tmargin bmargin papersize i =
        s.fontsize <- fs;
        o := Font (f, fs)::!o
    | NewPage ->
-       s.ypos <- tmargin;
+       s.ypos <- tmargin +. s.fontsize;
        o := NewPage::!o
+   | BeginDocument ->
+       s.ypos <- tmargin +. s.fontsize;
+       o := BeginDocument::!o
    | x -> o := x::!o
   in
     iter process i;
