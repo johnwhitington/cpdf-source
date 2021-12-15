@@ -1,31 +1,40 @@
 2.5 (Upcoming 2022)
 
-o Annotation /QuadPoints processed in addition to /Rect
+New features:
+
+o Can read as well as write PDFs in JSON format with -j
 o New operation -typeset typesets a text file as a PDF
 o New operation -table-of-contents makes table of contents from bookmarks
-o When adding text or graphics, may choose CYMK or Grey instead of RGB
-o Append e.g DUP2 to a page range to make 1,2,3 --> 1,1,2,2,3,3 etc.
-o The -list-fonts operation now obeys the range
 o New operation -print-font-table gives (charcode, unicode, glyph name) triples
-o Can now search for a font by real name with -font
-o Text added in existing fonts is now encoding-aware (plus new raw mode)
 o New -print-dict-entry operation prints values for a given key
-o Extend -remove-dict-entry to allow search
 o New -replace-dict-entry function to search & replace e.g URLs
+o Append e.g DUP2 to a page range to make 1,2,3 --> 1,1,2,2,3,3 etc.
+o Prepend NOT to a page range to invert it
 o Output annotations in JSON form with -list-annotations-json
-o Basic merging of AcroForms
 o Output bookmarks in JSON format with -list-bookmarks-json
 o Load bookmarks in JSON format with -add-bookmarks-json
 o New operations -impose and -impose-xy for document imposition
 o New option -collate to collate pages when merging
+o Text added in existing fonts is now encoding-aware (plus new raw mode)
 o Option -debug-force now properly documented as -decrypt-force
+
+Extended features:
+
+o Extend -remove-dict-entry to allow search
+o Annotation /QuadPoints processed in addition to /Rect when transformin pages
+o When adding text or graphics, may choose CYMK or Grey instead of RGB
+o The -list-fonts operation now obeys the range
+o Can now search for a font by real name with -font
+o Basic merging of AcroForms when merging documents
+
+Internal changes:
+
 o Switch to Yojson for faster/better JSON input/output
-o Can read as well as write PDFs in JSON format with -j
 o Environment variable CPDF_REPRODUCIBLE_DATES for testing
 o Environment variable CPDF_DEBUG for -debug
 o Effectively make stderr unbuffered
-o Prepend NOT to a page range to invert it
 o Split functionality into separate modules, but retain cpdf.ml for interface
+
 
 2.4 (June 2021)
 
@@ -40,11 +49,13 @@ o Appearance streams transformed when transforming annotations
 o Bookmark destination positions transformed when transforming pages
 o No longer depends on Bigarray or Unix modules
 
+
 2.3 (patchlevel 1, December 2019)
 
 o Fixed bug which prevented -info working on encrypted files
 o Allow -shift with -add-text for additional adjustment
 o Prepend and postpend directly to page content streams
+
 
 2.3 (October 2019)
 
@@ -61,12 +72,14 @@ o Create PDF files from scatch
 o Remove single images by name
 o Add trim marks
 
+
 2.2 (patchlevel 1)
 
 o Fix for inability to read null objects in streams
 o Workaround for Adobe "Error 21" on re-saving encrypted files
 o More efficient bookmark operations on files with many pages
 o New operation -hard-box to clip contents to a given box
+
 
 2.2 (March 2017)
 
@@ -85,6 +98,7 @@ o -bates-at-range and -bates-pad-to
 o -print-page-labels
 o -squeeze replaces smpdf
 o Preserve more sharing of data when doing merges and page alterations
+
 
 2.1 (December 2014)
 
