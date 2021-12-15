@@ -921,7 +921,8 @@ let anon_fun s =
       with
         Not_found ->
           match args.inputs with
-          | [] -> ()
+          | [] ->
+              Printf.eprintf "Warning: range ignored\n%!"
           | (a, _, d, e, f, g)::t ->
                args.inputs <- (a, fixdashes s, d, e, f, g)::t
 
