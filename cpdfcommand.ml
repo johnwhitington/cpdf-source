@@ -477,7 +477,8 @@ type args =
    mutable replace_dict_entry_value : Pdf.pdfobject;
    mutable dict_entry_search : Pdf.pdfobject option;
    mutable toc_title : string;
-   mutable toc_bookmark : bool}
+   mutable toc_bookmark : bool;
+   mutable idir_only_pdfs : bool}
 
 let args =
   {op = None;
@@ -595,7 +596,8 @@ let args =
    replace_dict_entry_value = Pdf.Null;
    dict_entry_search = None;
    toc_title = "Table of Contents";
-   toc_bookmark = true}
+   toc_bookmark = true;
+   idir_only_pdfs = false}
 
 let reset_arguments () =
   args.op <- None;
@@ -698,7 +700,8 @@ let reset_arguments () =
   args.replace_dict_entry_value <- Pdf.Null;
   args.dict_entry_search <- None;
   args.toc_title <- "Table of Contents";
-  args.toc_bookmark <- true
+  args.toc_bookmark <- true;
+  args.idir_only_pdfs <- false
   (* Do not reset original_filename or cpdflin or was_encrypted or
    * was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
    * gs_malformed or gs_quiet, since we want these to work across ANDs. Or
@@ -1231,6 +1234,16 @@ let set_json_input s =
 
 let set_input_dir s =
   let names = sort compare (leafnames_of_dir s) in
+  let names =
+    if args.idir_only_pdfs then
+      option_map
+        (fun x ->
+          if String.length x > 4 && String.lowercase_ascii (String.sub x (String.length x - 4) 4) = ".pdf"
+            then Some x else None)
+        names
+    else
+      names
+  in
     args.inputs <-
       (rev
         (map
@@ -1644,6 +1657,9 @@ let settableofcontentstitle s =
 let settocnobookmark () =
   args.toc_bookmark <- false
 
+let setidironlypdfs () =
+  args.idir_only_pdfs <- true
+
 let whingemalformed () =
   prerr_string "Command line must be of exactly the form\ncpdf <infile> -gs <path> -gs-malformed-force -o <outfile>\n";
   exit 1
@@ -1665,6 +1681,9 @@ and specs =
    ("-idir",
        Arg.String set_input_dir,
        " Add a directory of files");
+   ("-idir-only-pdfs",
+       Arg.Unit setidironlypdfs,
+       " Have -idir ignore files not ending in .pdf");
    ("-pw",
        Arg.String setdashpassword,
        " Supply a password explicitly -pw=<password>");
