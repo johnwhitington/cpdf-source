@@ -1,5 +1,6 @@
 2.5 (Upcoming 2022)
 
+o Annotation /QuadPoints processed in addition to /Rect
 o New operation -typeset typesets a text file as a PDF
 o New operation -table-of-contents makes table of contents from bookmarks
 o When adding text or graphics, may choose CYMK or Grey instead of RGB

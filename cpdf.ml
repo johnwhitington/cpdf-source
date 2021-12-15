@@ -1920,84 +1920,56 @@ let transform_rect transform rect =
       let maxy = fmax (fmax y0 y1) (fmax y2 y3) in
         Pdf.Array [Pdf.Real minx; Pdf.Real miny; Pdf.Real maxx; Pdf.Real maxy]
 
-(*let transform_quadpoints transform quadpoints =*)
+let transform_quadpoint_single transform = function
+  | [x1; y1; x2; y2; x3; y3; x4; y4] ->
+      let x1, y1, x2, y2, x3, y3, x4, y4 =
+        Pdf.getnum x1, Pdf.getnum y1,
+        Pdf.getnum x2, Pdf.getnum y2,
+        Pdf.getnum x3, Pdf.getnum y3,
+        Pdf.getnum x4, Pdf.getnum y4
+      in
+        let (x1, y1) = Pdftransform.transform_matrix transform (x1, y1) in
+        let (x2, y2) = Pdftransform.transform_matrix transform (x2, y2) in
+        let (x3, y3) = Pdftransform.transform_matrix transform (x3, y3) in
+        let (x4, y4) = Pdftransform.transform_matrix transform (x4, y4) in
+          map (fun x -> Pdf.Real x) [x1; y1; x2; y2; x3; y3; x4; y4]
+  | qp ->
+     Printf.eprintf "Malformed /QuadPoints format: must be a multiple of 8 entries\n";
+     qp
 
-(* FIXME: We probably discovered this was wrong and that it isn't needed, and
-   removed it. But check this before actually removing the commented code
-   entirely. *)
-(* This is used to transform the BBox inside a form xobject representing an
- * annotation appearance.*)
-(*let transform_xobject_in_place pdf transform i =
-  Printf.printf "transforming xobject %i as part of annotation\n" i;
-  let obj = Pdf.lookup_obj pdf i in
-    match Pdf.lookup_direct pdf "/BBox" obj with
-    | Some bbox ->
-        Printf.printf "Found bbox %s\n" (Pdfwrite.string_of_pdf bbox);
-        let obj = Pdf.add_dict_entry obj "/BBox" (transform_rect transform bbox) in
-          Pdf.addobj_given_num pdf (i, obj)
-    | None -> ()*)
+let transform_quadpoints transform = function
+| Pdf.Array qps ->
+    Pdf.Array (flatten (map (transform_quadpoint_single transform) (splitinto 8 qps)))
+| qp ->
+    Printf.eprintf "Unknown or malformed /QuadPoints format %s\n" (Pdfwrite.string_of_pdf qp);
+    qp
 
-(* Apply transformations to any annotations in /Annots (i.e their /Rect entries) *)
+(* Apply transformations to any annotations in /Annots (i.e their /Rect and /QuadPoints entries) *)
 let transform_annotations pdf transform rest =
-  (*Printf.printf "in transform_annotations with transform %s\n" (Pdftransform.string_of_matrix transform);*)
   match Pdf.lookup_direct pdf "/Annots" rest with
   | Some (Pdf.Array annots) ->
       (* Always indirect references, so alter in place *)
       iter
         (function
          | Pdf.Indirect i ->
-             (*Printf.printf "Found an annotation to modify...\n";*)
              let annot = Pdf.lookup_obj pdf i in
-               let rect' =
-                 match Pdf.lookup_direct pdf "/Rect" annot with
-                   Some rect -> transform_rect transform rect
-                 | None -> raise (Pdf.PDFError "transform_annotations: no rect")
+             let rect' =
+               match Pdf.lookup_direct pdf "/Rect" annot with
+               | Some rect -> transform_rect transform rect
+               | None -> raise (Pdf.PDFError "transform_annotations: no rect")
                in
-                 (*let ap' =
-                   match Pdf.lookup_direct pdf "/AP" annot with
-                     None -> None
-                   | Some dict -> Some dict
-                 in*)
-                 let annot = Pdf.add_dict_entry annot "/Rect" rect' in 
-                   (*begin match ap' with
-                     None -> ()
-                   | Some (Pdf.Dictionary dict) ->
-                       (* Each entry in the dictionary is either
-                        * a) an indirect reference to a stream Form XObject
-                        * b) a direct or indirect dictionary with some entries,
-                        *    each of which is an indirect reference to a stream. *)
-                       (* We do this in place. *)
-                       (* Make sure we never do an object more than once -- is this possible in a valid PDF anyway? *)
-                       let seen_nums = Hashtbl.create 128 in
-                       List.iter
-                         (fun (k, v) ->
-                           match v with
-                             Pdf.Indirect i ->
-                               if Hashtbl.find_opt seen_nums i = None then
-                                 begin
-                                   Printf.printf "%i not in hash table\n" i;
-                                   Hashtbl.add seen_nums i ();
-                                   transform_xobject_in_place pdf transform i
-                                 end
-                           | _ -> let dict = Pdf.lookup_direct pdf k (Pdf.Dictionary dict) in
-                                    match dict with Some (Pdf.Dictionary dict) ->
-                                    List.iter
-                                      (fun (_, v) ->
-                                         match v with
-                                           Pdf.Indirect i ->
-                                             if Hashtbl.find_opt seen_nums i = None then
-                                               begin
-                                                 Printf.printf "%i not in hash table\n" i;
-                                                 Hashtbl.add seen_nums i ();
-                                                 transform_xobject_in_place pdf transform i
-                                               end
-                                         | _ -> Printf.eprintf "Malformed /AP structure b%\n!"; ())
-                                      dict
-                                    | _ -> Printf.eprintf "Malformed /AP structure c\n%!"; ())
-                         dict
-                   | _ -> Printf.eprintf "Malformed /AP structure\n%!"; ()
-                   end;*)
-                 Pdf.addobj_given_num pdf (i, annot)
+             let quadpoints' =
+               match Pdf.lookup_direct pdf "/QuadPoints" annot with
+               | Some qp -> Some (transform_quadpoints transform qp)
+               | None -> None
+               in
+             let annot = Pdf.add_dict_entry annot "/Rect" rect' in
+             let annot =
+               match quadpoints' with
+               | Some qp -> Pdf.add_dict_entry annot "/QuadPoints" qp 
+               | None -> annot
+             in
+               Pdf.addobj_given_num pdf (i, annot)
          | _ -> Printf.eprintf "transform_annotations: not indirect\n%!")
         annots
    | _ -> ()
