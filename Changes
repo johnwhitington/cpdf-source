@@ -21,7 +21,7 @@ o Option -debug-force now properly documented as -decrypt-force
 Extended features:
 
 o Extend -remove-dict-entry to allow search
-o Annotation /QuadPoints processed in addition to /Rect when transformin pages
+o Annotation /QuadPoints processed in addition to /Rect when transforming pages
 o When adding text or graphics, may choose CYMK or Grey instead of RGB
 o The -list-fonts operation now obeys the range
 o Can now search for a font by real name with -font
