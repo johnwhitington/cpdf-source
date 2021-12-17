@@ -85,14 +85,6 @@ val output_info : encoding -> Pdf.t -> unit
 (** Output to standard output information from any XMP metadata stream in a PDF. *)
 val output_xmp_info : encoding -> Pdf.t -> unit
 
-(** {2 Presentations} *)
-
-(** [presentation range t d horizontal inward direction effect_duration pdf]
-adds a presentation on the pages in [range]. See cpdfmanual.pdf for details.
-*)
-val presentation : int list -> string option ->
-    float option -> bool -> bool -> int -> float -> Pdf.t -> Pdf.t
-
 (** {2 Bookmarks} *)
 
 (** [parse_bookmark_file verify pdf input] parses the bookmark file in [input].

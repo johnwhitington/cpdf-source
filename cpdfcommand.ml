@@ -3441,7 +3441,7 @@ let go () =
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           let pdf' =
-            Cpdf.presentation
+            Cpdfpresent.presentation
               range
               args.transition args.duration args.horizontal
               args.inward args.direction args.effect_duration pdf
