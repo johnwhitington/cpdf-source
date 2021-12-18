@@ -16,7 +16,6 @@ o Output bookmarks in JSON format with -list-bookmarks-json
 o Load bookmarks in JSON format with -add-bookmarks-json
 o New option -collate to collate pages when merging
 o Text added in existing fonts is now encoding-aware (plus new raw mode)
-o Option -debug-force now properly documented as -decrypt-force
 
 Extended features:
 
@@ -27,6 +26,7 @@ o The -list-fonts operation now obeys the range
 o Can now search for a font by real name with -font
 o Basic merging of AcroForms when merging documents
 o Add -idir-only-pdfs to restrict -idir to just files ending in .pdf
+o Option -debug-force now properly documented as -decrypt-force
 
 Internal changes:
 
