@@ -2834,8 +2834,8 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
           None ->
             if not is_decompress then
               begin
-                ignore (Cpdf.recompress_pdf pdf);
-                if args.squeeze then Cpdf.squeeze ~pagedata:args.squeeze_pagedata ~recompress:args.squeeze_recompress ?logto:!logto pdf;
+                ignore (Cpdfsqueeze.recompress_pdf pdf);
+                if args.squeeze then Cpdfsqueeze.squeeze ~pagedata:args.squeeze_pagedata ~recompress:args.squeeze_recompress ?logto:!logto pdf;
               end;
             Pdf.remove_unreferenced pdf;
             really_write_pdf ~is_decompress mk_id pdf outname
@@ -2849,8 +2849,8 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
             None -> 
               if not is_decompress then
                 begin
-                  ignore (Cpdf.recompress_pdf pdf);
-                  if args.squeeze then Cpdf.squeeze ~pagedata:args.squeeze_pagedata ~recompress:args.squeeze_recompress ?logto:!logto pdf;
+                  ignore (Cpdfsqueeze.recompress_pdf pdf);
+                  if args.squeeze then Cpdfsqueeze.squeeze ~pagedata:args.squeeze_pagedata ~recompress:args.squeeze_recompress ?logto:!logto pdf;
                   Pdf.remove_unreferenced pdf
                 end;
                 really_write_pdf ~encryption ~is_decompress mk_id pdf temp;
@@ -2889,7 +2889,7 @@ let fast_write_split_pdfs
                  (stem original_filename) startpage endpage
              in
                Pdf.remove_unreferenced pdf;
-               if sq then Cpdf.squeeze ~pagedata:args.squeeze_pagedata ~recompress:args.squeeze_recompress ?logto:!logto pdf;
+               if sq then Cpdfsqueeze.squeeze ~pagedata:args.squeeze_pagedata ~recompress:args.squeeze_recompress ?logto:!logto pdf;
                really_write_pdf ~encryption:enc (not (enc = None)) pdf name)
       (indx pagenums)
       pagenums
@@ -3261,7 +3261,7 @@ let go () =
       let pdf = get_single_pdf (Some Compress) false in
         if args.remove_duplicate_streams then
           Pdfmerge.remove_duplicate_fonts pdf;
-        write_pdf false (Cpdf.recompress_pdf pdf)
+        write_pdf false (Cpdfsqueeze.recompress_pdf pdf)
   | Some RemoveCrop ->
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
@@ -3736,7 +3736,7 @@ let go () =
         (Cpdf.combine_pages args.fast (get_single_pdf args.op false) (pdfread_pdf_of_file None None over) false false true)
   | Some Encrypt ->
       let pdf = get_single_pdf args.op false in
-        let pdf = Cpdf.recompress_pdf pdf
+        let pdf = Cpdfsqueeze.recompress_pdf pdf
         and encryption =
           {Pdfwrite.encryption_method =
              (match args.crypt_method with

@@ -36,14 +36,6 @@ val iter_pages : (int -> Pdfpage.t -> unit) -> Pdf.t -> int list -> unit
 (** Same as [process_pages] but return the list of outputs of the map function. *)
 val map_pages : (int -> Pdfpage.t -> 'a) -> Pdf.t -> int list -> 'a list
 
-
-(** Compresses all streams in the PDF document which are uncompressed, using
-/FlateDecode, leaving out metadata.  If the PDF is encrypted, does nothing. *)
-val recompress_pdf : Pdf.t -> Pdf.t
-
-(** Decompresses all streams in a PDF document, assuming it isn't encrypted. *)
-val decompress_pdf : Pdf.t -> Pdf.t
-
 val copy_cropbox_to_mediabox : Pdf.t -> int list -> Pdf.t
 
 (** {2 Metadata and settings} *)
@@ -344,8 +336,6 @@ val blackfills : color -> int list -> Pdf.t -> Pdf.t
 (** Remove images from a PDF, optionally adding crossed boxes. *)
 val draft : string option -> bool -> int list -> Pdf.t -> Pdf.t
 
-(** Squeeze a PDF *)
-val squeeze : ?logto:string -> ?pagedata:bool -> ?recompress:bool -> Pdf.t -> unit
 
 val remove_all_text : int list -> Pdf.t -> Pdf.t 
 
