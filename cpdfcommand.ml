@@ -3576,7 +3576,7 @@ let go () =
               None -> None
             | Some filename -> Some (pdfread_pdf_of_file None None filename)
           in
-            write_pdf false (Cpdf.padbefore ?padwith range pdf)
+            write_pdf false (Cpdfpad.padbefore ?padwith range pdf)
   | Some PadAfter ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
@@ -3585,7 +3585,7 @@ let go () =
               None -> None
             | Some filename -> Some (pdfread_pdf_of_file None None filename)
           in
-            write_pdf false (Cpdf.padafter ?padwith range pdf)
+            write_pdf false (Cpdfpad.padafter ?padwith range pdf)
   | Some (PadEvery n) ->
       let pdf = get_single_pdf args.op false in
         let range =
@@ -3598,13 +3598,13 @@ let go () =
               None -> None
             | Some filename -> Some (pdfread_pdf_of_file None None filename)
           in
-            write_pdf false (Cpdf.padafter ?padwith range pdf)
+            write_pdf false (Cpdfpad.padafter ?padwith range pdf)
   | Some (PadMultiple n) ->
       let pdf = get_single_pdf args.op false in
-        write_pdf false (Cpdf.padmultiple n pdf)
+        write_pdf false (Cpdfpad.padmultiple n pdf)
   | Some (PadMultipleBefore n) ->
       let pdf = get_single_pdf args.op false in
-        write_pdf false (Cpdf.padmultiple (-n) pdf)
+        write_pdf false (Cpdfpad.padmultiple (-n) pdf)
   | Some Draft ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
