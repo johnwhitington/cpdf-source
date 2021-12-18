@@ -73,6 +73,7 @@ let parse_pagespec_allow_empty pdf spec =
   try Cpdfpagespec.parse_pagespec pdf spec with
     Pdf.PDFError ("Page range specifies no pages") -> []
 
+
 (* Operations. *)
 type op =
   | CopyFont of string
@@ -707,6 +708,47 @@ let reset_arguments () =
    * gs_malformed or gs_quiet, since we want these to work across ANDs. Or
    * squeeze options: a little odd, but we want it to happen on eventual
    * output. *)
+
+(* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
+installed at a system place *)
+let find_cpdflin provided =
+  match provided with
+    Some x -> x
+  | None ->
+      let dotslash = match Sys.os_type with "Win32" -> "" | _ -> "./" in
+      if Sys.file_exists "cpdflin" then (dotslash ^ "cpdflin") else
+      if Sys.file_exists "cpdflin.exe" then (dotslash ^ "cpdflin.exe") else
+        match Sys.os_type with
+          "Win32" -> "cpdflin.exe"
+        | _ -> "cpdflin"
+
+(* Call cpdflin, given the (temp) input name, the output name, and the location
+of the cpdflin binary. Returns the exit code. *)
+let call_cpdflin cpdflin temp output best_password =
+  let command =
+    cpdflin ^ " --linearize " ^ " --password=" ^ best_password ^ " " ^
+    Filename.quote temp ^ " " ^ Filename.quote output 
+  in
+    match Sys.os_type with
+      "Win32" ->
+        (* On windows, don't use LD_LIBRARY_PATH - it will happen automatically *)
+        if args.debug then prerr_endline command;
+        Sys.command command
+    | _ ->
+        (* On other platforms, if -cpdflin was provided, or cpdflin was in the
+        current folder, set up LD_LIBRARY_PATH: *)
+        match cpdflin with
+          "cpdflin" ->
+            if args.debug then prerr_endline command;
+            Sys.command command
+        | _ ->
+            let command = 
+              "DYLD_FALLBACK_LIBRARY_PATH=" ^ Filename.dirname cpdflin ^ " " ^
+              "LD_LIBRARY_PATH=" ^ Filename.dirname cpdflin ^ " " ^
+              command
+            in
+              if args.debug then prerr_endline command;
+              Sys.command command
 
 let get_pagespec () =
   match args.inputs with
@@ -2745,7 +2787,7 @@ let really_write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf outna
     end;
     begin
       if will_linearize then
-        let cpdflin = Cpdf.find_cpdflin args.cpdflin in
+        let cpdflin = find_cpdflin args.cpdflin in
           match args.inputs with
             [] -> raise (Pdf.PDFError "no input in recryption")
           | (_, _, user_pw, owner_pw, _, _)::_ ->
@@ -2753,7 +2795,7 @@ let really_write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf outna
                 if owner_pw <> "" then owner_pw else user_pw
               in
                 let code =
-                  Cpdf.call_cpdflin cpdflin outname' outname best_password
+                  call_cpdflin cpdflin outname' outname best_password
                 in
                   if code > 0 then
                     begin
@@ -3837,18 +3879,18 @@ let go () =
         write_json args.out pdf
   | Some OCGCoalesce ->
       let pdf = get_single_pdf args.op false in
-        Cpdf.ocg_coalesce pdf;
+        Cpdfocg.ocg_coalesce pdf;
         write_pdf false pdf
   | Some OCGList ->
       let pdf = get_single_pdf args.op true in
-        Cpdf.ocg_list pdf
+        Cpdfocg.ocg_list pdf
   | Some OCGRename ->
       let pdf = get_single_pdf args.op false in
-        Cpdf.ocg_rename args.ocgrenamefrom args.ocgrenameto pdf;
+        Cpdfocg.ocg_rename args.ocgrenamefrom args.ocgrenameto pdf;
         write_pdf false pdf
   | Some OCGOrderAll ->
       let pdf = get_single_pdf args.op false in
-        Cpdf.ocg_order_all pdf;
+        Cpdfocg.ocg_order_all pdf;
         write_pdf false pdf
   | Some (StampAsXObject stamp) ->
       let stamp_pdf =

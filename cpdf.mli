@@ -353,25 +353,11 @@ val remove_all_text : int list -> Pdf.t -> Pdf.t
 
 val process_xobjects : Pdf.t -> Pdfpage.t -> (Pdf.t -> Pdf.pdfobject -> Pdf.pdfobject list -> Pdf.pdfobject list) -> unit
 
-val find_cpdflin : string option -> string
-
-val call_cpdflin : string -> string -> string -> string -> int
-
 val debug : bool ref
 
 val extract_text : float option -> Pdf.t -> int list -> string 
 
 val append_page_content : string -> bool -> bool -> int list -> Pdf.t -> Pdf.t
-
-val ocg_coalesce : Pdf.t -> unit
-
-val ocg_get_list : Pdf.t -> string list
-
-val ocg_list : Pdf.t -> unit
-
-val ocg_rename : string -> string -> Pdf.t -> unit
-
-val ocg_order_all : Pdf.t -> unit
 
 val stamp_as_xobject : Pdf.t -> int list -> Pdf.t -> Pdf.t * string
 
