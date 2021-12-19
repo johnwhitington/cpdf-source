@@ -417,7 +417,7 @@ type args =
    mutable retain_numbering : bool;
    mutable remove_duplicate_fonts : bool;
    mutable remove_duplicate_streams : bool;
-   mutable encoding : Cpdf.encoding;
+   mutable encoding : Cpdfmetadata.encoding;
    mutable scale : float;
    mutable copyfontpage : int;
    mutable copyfontname : string option;
@@ -536,7 +536,7 @@ let args =
    retain_numbering = false;
    remove_duplicate_fonts = false;
    remove_duplicate_streams = false;
-   encoding = Cpdf.Stripped;
+   encoding = Cpdfmetadata.Stripped;
    scale = 1.;
    copyfontpage = 1;
    copyfontname = None;
@@ -655,7 +655,7 @@ let reset_arguments () =
   args.retain_numbering <- false;
   args.remove_duplicate_fonts <- false;
   args.remove_duplicate_streams <- false;
-  args.encoding <- Cpdf.Stripped;
+  args.encoding <- Cpdfmetadata.Stripped;
   args.scale <- 1.;
   args.copyfontpage <- 1;
   args.copyfontname <- None;
@@ -1779,13 +1779,13 @@ and specs =
        Arg.Unit setrecrypt,
        " Keep this file's encryption when writing");
    ("-raw",
-      Arg.Unit (setencoding Cpdf.Raw),
+      Arg.Unit (setencoding Cpdfmetadata.Raw),
       " Do not process text");
    ("-stripped",
-      Arg.Unit (setencoding Cpdf.Stripped),
+      Arg.Unit (setencoding Cpdfmetadata.Stripped),
       " Process text by simple stripping to ASCII");
    ("-utf8",
-      Arg.Unit (setencoding Cpdf.UTF8),
+      Arg.Unit (setencoding Cpdfmetadata.UTF8),
       " Process text by conversion to UTF8 Unicode");
    ("-fast",
       Arg.Unit setfast,
@@ -2724,15 +2724,15 @@ let unescape_octals s =
   implode (unescape_octals [] (explode s))
 
 let process s = 
-  if args.encoding <> Cpdf.Raw
+  if args.encoding <> Cpdfmetadata.Raw
     then Pdftext.pdfdocstring_of_utf8 s
     else unescape_octals s
 
 let set_producer s pdf =
-  ignore (Cpdf.set_pdf_info ("/Producer", Pdf.String (process s), 0) pdf)
+  ignore (Cpdfmetadata.set_pdf_info ("/Producer", Pdf.String (process s), 0) pdf)
 
 let set_creator s pdf =
-  ignore (Cpdf.set_pdf_info ("/Creator", Pdf.String (process s), 0) pdf)
+  ignore (Cpdfmetadata.set_pdf_info ("/Creator", Pdf.String (process s), 0) pdf)
 
 let really_write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf outname =
   if args.producer <> None then set_producer (unopt args.producer) pdf;
@@ -3146,8 +3146,8 @@ let go () =
         if inname <> "" then
           Printf.printf "Linearized: %b\n" (Pdfread.is_linearized (Pdfio.input_of_channel (open_in_bin inname)));
         let pdf = decrypt_if_necessary input (Some Info) pdf in
-          Cpdf.output_info args.encoding pdf;
-          Cpdf.output_xmp_info args.encoding pdf
+          Cpdfmetadata.output_info args.encoding pdf;
+          Cpdfmetadata.output_xmp_info args.encoding pdf
   | Some PageInfo ->
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
@@ -3157,7 +3157,7 @@ let go () =
       | _ -> error "list-bookmarks: bad command line"
       end
   | Some Metadata ->
-      Cpdf.print_metadata (get_single_pdf (Some Metadata) true)
+      Cpdfmetadata.print_metadata (get_single_pdf (Some Metadata) true)
   | Some Fonts ->
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
@@ -3357,14 +3357,14 @@ let go () =
           | SetCreate _ | SetModify _ | SetCreator _ | SetProducer _
           | SetTrapped | SetUntrapped) as op) ->
       let key, value, version  =
-        let f s = if args.encoding <> Cpdf.Raw then Pdftext.pdfdocstring_of_utf8 s else unescape_octals s in
+        let f s = if args.encoding <> Cpdfmetadata.Raw then Pdftext.pdfdocstring_of_utf8 s else unescape_octals s in
           match op with
           | SetAuthor s -> "/Author", Pdf.String (f s), 0
           | SetTitle s -> "/Title", Pdf.String (f s), 1
           | SetSubject s -> "/Subject", Pdf.String (f s), 1
           | SetKeywords s -> "/Keywords", Pdf.String (f s), 1
-          | SetCreate s -> "/CreationDate", Pdf.String (Cpdf.expand_date s), 0
-          | SetModify s -> "/ModDate", Pdf.String (Cpdf.expand_date s), 0
+          | SetCreate s -> "/CreationDate", Pdf.String (Cpdfmetadata.expand_date s), 0
+          | SetModify s -> "/ModDate", Pdf.String (Cpdfmetadata.expand_date s), 0
           | SetCreator s -> "/Creator", Pdf.String (f s), 0
           | SetProducer s -> "/Producer", Pdf.String (f s), 0
           | SetTrapped -> "/Trapped", Pdf.Boolean true, 3
@@ -3374,12 +3374,12 @@ let go () =
         let pdf = get_single_pdf args.op false in
           let version = if args.keepversion then pdf.Pdf.minor else version in
             write_pdf false
-              (Cpdf.set_pdf_info 
+              (Cpdfmetadata.set_pdf_info 
                  ~xmp_also:args.alsosetxml
                  ~xmp_just_set:args.justsetxml
                  (key, value, version) pdf)
   | Some (SetMetadataDate date) ->
-      write_pdf false (Cpdf.set_metadata_date (get_single_pdf args.op false) date)
+      write_pdf false (Cpdfmetadata.set_metadata_date (get_single_pdf args.op false) date)
   | Some ((HideToolbar _ | HideMenubar _ | HideWindowUI _
           | FitWindow _ | CenterWindow _ | DisplayDocTitle _) as op) ->
       begin match args.out with
@@ -3396,20 +3396,20 @@ let go () =
         in
       let pdf = get_single_pdf args.op false in
      let version = if args.keepversion then pdf.Pdf.minor else version in
-          write_pdf false (Cpdf.set_viewer_preference (key, value, version) pdf)
+          write_pdf false (Cpdfmetadata.set_viewer_preference (key, value, version) pdf)
       end
   | Some (OpenAtPage str) ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf str in
       let n = match range with [x] -> x | _ -> error "open_at_page: range does not specify single page" in
-        write_pdf false (Cpdf.set_open_action pdf false n)
+        write_pdf false (Cpdfmetadata.set_open_action pdf false n)
   | Some (OpenAtPageFit str) ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf str in
       let n = match range with [x] -> x | _ -> error "open_at_page: range does not specify single page" in
-        write_pdf false (Cpdf.set_open_action pdf true n)
+        write_pdf false (Cpdfmetadata.set_open_action pdf true n)
   | Some (SetMetadata metadata_file) ->
-      write_pdf false (Cpdf.set_metadata args.keepversion metadata_file (get_single_pdf args.op false))
+      write_pdf false (Cpdfmetadata.set_metadata args.keepversion metadata_file (get_single_pdf args.op false))
   | Some (SetVersion v) ->
       let pdf = get_single_pdf args.op false in
       let pdf =
@@ -3419,9 +3419,9 @@ let go () =
       in
          write_pdf false pdf
   | Some (SetPageLayout s) ->
-      write_pdf false (Cpdf.set_page_layout (get_single_pdf args.op false) s)
+      write_pdf false (Cpdfmetadata.set_page_layout (get_single_pdf args.op false) s)
   | Some (SetPageMode s) ->
-      write_pdf false (Cpdf.set_page_mode (get_single_pdf args.op false) s)
+      write_pdf false (Cpdfmetadata.set_page_mode (get_single_pdf args.op false) s)
   | Some Split ->
       begin match args.inputs, args.out with
         | [(f, ranges, _, _, _, _)], File output_spec ->
@@ -3514,7 +3514,7 @@ let go () =
       begin match args.inputs with
       | [(k, _, u, o, _, _) as input] ->
           let pdf =
-            Cpdf.copy_id
+            Cpdfmetadata.copy_id
               args.keepversion
               (pdfread_pdf_of_file (optstring u) (optstring o) getfrom)
               (get_pdf_from_input_kind input args.op k)
@@ -3765,7 +3765,7 @@ let go () =
       args.recrypt <- false;
       write_pdf false (get_single_pdf args.op false)
   | Some RemoveMetadata ->
-      write_pdf false (Cpdf.remove_metadata (get_single_pdf args.op false))
+      write_pdf false (Cpdfmetadata.remove_metadata (get_single_pdf args.op false))
   | Some ExtractImages ->
       let output_spec =
         begin match args.out with
@@ -3838,7 +3838,7 @@ let go () =
           write_pdf false (Cpdf.remove_clipping pdf range)
   | Some CreateMetadata ->
       let pdf = get_single_pdf args.op false in
-        write_pdf false (Cpdf.create_metadata pdf)
+        write_pdf false (Cpdfmetadata.create_metadata pdf)
   | Some EmbedMissingFonts ->
       let fi =
         match args.inputs with

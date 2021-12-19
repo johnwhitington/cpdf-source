@@ -1,7 +1,7 @@
 # Build the cpdf command line tools and top level
 MODS = cpdfyojson cpdfxmlm \
        cpdfunicodedata cpdferror cpdfjson cpdfstrftime cpdfcoord cpdfattach \
-       cpdfpagespec cpdfposition cpdf cpdfpresent cpdffont cpdftype \
+       cpdfpagespec cpdfposition cpdfpresent cpdfmetadata cpdf cpdffont cpdftype \
        cpdftexttopdf cpdftoc cpdfpad cpdfocg cpdfsqueeze cpdfcommand
 
 SOURCES = $(foreach x,$(MODS),$(x).ml $(x).mli) cpdfcommandrun.ml

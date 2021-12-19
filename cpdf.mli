@@ -1,13 +1,6 @@
 (** Coherent PDF Tools Core Routines *)
 open Pdfutil
 
-(** {2 Types and Exceptions} *)
-
-(** Possible output encodings for some function. [Raw] does no processing at
-all - the PDF string is output as-is. [UTF8] converts loslessly to UTF8.
-[Stripped] extracts the unicode codepoints and returns only those which
-correspond to 7 bit ASCII. *)
-type encoding = Raw | UTF8 | Stripped
 
 type color =
   Grey of float
@@ -38,45 +31,6 @@ val map_pages : (int -> Pdfpage.t -> 'a) -> Pdf.t -> int list -> 'a list
 
 val copy_cropbox_to_mediabox : Pdf.t -> int list -> Pdf.t
 
-(** {2 Metadata and settings} *)
-
-(** [copy_id keepversion copyfrom copyto] copies the ID, if any, from
-[copyfrom] to [copyto]. If [keepversion] is true, the PDF version of [copyto]
-won't be affected. *)
-val copy_id : bool -> Pdf.t -> Pdf.t -> Pdf.t
-
-(** [set_pdf_info (key, value, version)] sets the entry [key] in the /Info directory, updating
-the PDF minor version to [version].*)
-val set_pdf_info : ?xmp_also:bool -> ?xmp_just_set:bool -> (string * Pdf.pdfobject * int) -> Pdf.t -> Pdf.t
-
-val get_xmp_info : Pdf.t -> string -> string
-
-(** [set_pdf_info (key, value, version)] sets the entry [key] in the
-/ViewerPreferences directory, updating the PDF minor version to [version].*)
-val set_viewer_preference : (string * Pdf.pdfobject * int) -> Pdf.t -> Pdf.t
-
-(** Set the page layout to the given name (sans slash) e.g SinglePage *)
-val set_page_layout : Pdf.t -> string -> Pdf.t
-
-(** Set the page layout to the given name (sans slash) e.g SinglePage *)
-val set_page_mode : Pdf.t -> string -> Pdf.t
-
-(** Set the open action. If the boolean is true, /Fit will be used, otherwise /XYZ *)
-val set_open_action : Pdf.t -> bool -> int -> Pdf.t
-
-(** Set the PDF version number *)
-val set_version : int -> Pdf.t -> unit
-
-(** Given a PDF, returns a function which can lookup a given dictionary entry
-from the /Info dictionary, returning it as a UTF8 string *)
-val get_info_utf8 : Pdf.t -> string -> string
-
-(** Output to standard output general information about a PDF. *)
-val output_info : encoding -> Pdf.t -> unit
-
-(** Output to standard output information from any XMP metadata stream in a PDF. *)
-val output_xmp_info : encoding -> Pdf.t -> unit
-
 (** {2 Bookmarks} *)
 
 (** [parse_bookmark_file verify pdf input] parses the bookmark file in [input].
@@ -90,30 +44,9 @@ val add_bookmarks : json:bool -> bool -> Pdfio.input -> Pdf.t -> Pdf.t
 
 (** [list_bookmarks encoding range pdf output] lists the bookmarks to the given
 output in the format specified in cpdfmanual.pdf *)
-val list_bookmarks : json:bool -> encoding -> int list -> Pdf.t -> Pdfio.output -> unit
+val list_bookmarks : json:bool -> Cpdfmetadata.encoding -> int list -> Pdf.t -> Pdfio.output -> unit
 
-(** {2 XML Metadata} *)
 
-(** [set_metadata keepversion filename pdf] sets the XML metadata of a PDF to the contents of [filename]. If [keepversion] is true, the PDF version will not be altered. *) 
-val set_metadata : bool -> string -> Pdf.t -> Pdf.t
-
-(** The same, but the content comes from [bytes]. *)
-val set_metadata_from_bytes : bool -> Pdfio.bytes -> Pdf.t -> Pdf.t
-
-(** Remove the metadata from a file *)
-val remove_metadata : Pdf.t -> Pdf.t
-
-(** Extract metadata to a [Pdfio.bytes] *)
-val get_metadata : Pdf.t -> Pdfio.bytes option
-
-(** Print metadate to stdout *)
-val print_metadata : Pdf.t -> unit
-
-(** Set the metadata date *)
-val set_metadata_date : Pdf.t -> string -> Pdf.t
-
-(** Create XMP metadata from scratch *)
-val create_metadata : Pdf.t -> Pdf.t
 
 (** {2 Stamping} *)
 
@@ -144,9 +77,6 @@ val print_fonts : Pdf.t -> int list -> unit
 val list_fonts : Pdf.t -> int list -> (int * string * string * string * string) list
 
 (** {2 Adding text} *)
-
-(** Expand the string "now" to a PDF date string, ignoring any other string *)
-val expand_date : string -> string
 
 (** Justification of multiline text *)
 type justification =
@@ -281,10 +211,10 @@ val show_boxes : ?fast:bool -> Pdf.t -> int list -> Pdf.t
 (** {2 Annotations} *)
 
 (** List the annotations to standard output in a given encoding. See cpdfmanual.pdf for the format details. *)
-val list_annotations : json:bool -> encoding -> Pdf.t -> unit
+val list_annotations : json:bool -> Cpdfmetadata.encoding -> Pdf.t -> unit
 
 (** Return the annotations as a (pagenumber, content) list *)
-val get_annotations : encoding -> Pdf.t -> (int * string) list
+val get_annotations : Cpdfmetadata.encoding -> Pdf.t -> (int * string) list
 
 (** Copy the annotations on a given set of pages from a to b. b is returned. *)
 val copy_annotations : int list -> Pdf.t -> Pdf.t -> Pdf.t
@@ -375,12 +305,12 @@ val bookmarks_open_to_level : int -> Pdf.t -> Pdf.t
 
 val create_pdf : int -> Pdfpaper.t -> Pdf.t
 
-val name_of_spec : encoding ->
+val name_of_spec : Cpdfmetadata.encoding ->
            Pdfmarks.t list ->
            Pdf.t -> int -> string -> int -> string -> int -> int -> string
 
 val extract_images : string ->
            string ->
-           encoding -> bool -> bool -> Pdf.t -> int list -> string -> unit
+           Cpdfmetadata.encoding -> bool -> bool -> Pdf.t -> int list -> string -> unit
 
 
