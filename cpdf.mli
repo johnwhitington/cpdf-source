@@ -293,7 +293,7 @@ val image_resolution : Pdf.t -> int list -> float -> (int * string * int * int *
 
 val copy_box : string -> string -> bool -> Pdf.t -> int list -> Pdf.t
 
-val dump_attached_files : Pdf.t -> string -> unit
+
 
 val add_bookmark_title : string -> bool -> Pdf.t -> Pdf.t
 

@@ -408,27 +408,11 @@ let list_bookmarks ~json encoding range pdf output =
 
 (* \section{Split at bookmarks} *)
 
-(* Returns empty string on failure. Should only be used in conjunction with
-split at bookmarks code, so should never fail, by definiton. *)
-let remove_unsafe_characters s =
-  let chars =
-    lose
-      (function x ->
-         match x with
-         '/' | '?' | '<' | '>' | '\\' | ':' | '*' | '|' | '\"' | '^' | '+' | '=' -> true
-         | x when int_of_char x < 32 || int_of_char x > 126 -> true
-         | _ -> false)
-      (explode s)
-  in
-    match chars with
-    | '.'::more -> implode more
-    | chars -> implode chars
-
 let get_bookmark_name pdf marks splitlevel n _ =
   let refnums = Pdf.page_reference_numbers pdf in
   let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
   match keep (function m -> n = Pdfpage.pagenumber_of_target ~fastrefnums pdf m.Pdfmarks.target && m.Pdfmarks.level <= splitlevel) marks with
-  | {Pdfmarks.text = title}::_ -> remove_unsafe_characters title
+  | {Pdfmarks.text = title}::_ -> Cpdfattach.remove_unsafe_characters Cpdfmetadata.UTF8 title
   | _ -> ""
 
 (* Find the stem of a filename *)
@@ -3266,68 +3250,6 @@ let copy_box f t mediabox_if_missing pdf range =
     pdf
     range
 
-let dump_attachment out pdf (_, embeddedfile) =
-  match Pdf.lookup_direct pdf "/F" embeddedfile with
-  | Some (Pdf.String s) ->
-      let efdata =
-        begin match Pdf.lookup_direct pdf "/EF" embeddedfile with
-        | Some d ->
-            let stream =
-              match Pdf.lookup_direct pdf "/F" d with
-              | Some s -> s
-              | None -> error "Bad embedded file stream"
-            in
-              Pdfcodec.decode_pdfstream_until_unknown pdf stream;
-              begin match stream with Pdf.Stream {contents = (_, Pdf.Got b)} -> b | _ -> error "Bad embedded file stream" end
-        | _ -> error "Bad embedded file stream"
-        end
-      in
-        let s = remove_unsafe_characters s in
-        let filename = if out = "" then s else out ^ Filename.dir_sep ^ s in
-        begin try
-          let fh = open_out_bin filename in
-            for x = 0 to bytes_size efdata - 1 do output_byte fh (bget efdata x) done;
-            close_out fh
-        with
-          e -> Printf.eprintf "Failed to write attachment to %s\n%!" filename;
-        end
-  | _ -> ()
-
-let dump_attached_document pdf out =
-  let root = Pdf.lookup_obj pdf pdf.Pdf.root in
-    let names =
-      match Pdf.lookup_direct pdf "/Names" root with Some n -> n | _ -> Pdf.Dictionary []
-    in
-      match Pdf.lookup_direct pdf "/EmbeddedFiles" names with
-      | Some x ->
-          iter (dump_attachment out pdf) (Pdf.contents_of_nametree pdf x)
-      | None -> () 
-
-let dump_attached_page pdf out page =
-  let annots =
-    match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
-    | Some (Pdf.Array l) -> l
-    | _ -> []
-  in
-    let efannots =
-      keep
-        (fun annot ->
-           match Pdf.lookup_direct pdf "/Subtype" annot with
-           | Some (Pdf.Name "/FileAttachment") -> true
-           | _ -> false)
-        annots
-    in
-      let fsannots = option_map (Pdf.lookup_direct pdf "/FS") efannots in
-        iter (dump_attachment out pdf) (map (fun x -> 0, x) fsannots)
-
-(* Dump both document-level and page-level attached files to file, using their file names *)
-let dump_attached_files pdf out =
-  try
-    dump_attached_document pdf out;
-    iter (dump_attached_page pdf out) (Pdfpage.pages_of_pagetree pdf)
-  with
-    e -> error (Printf.sprintf "Couldn't dump attached files: %s\n" (Printexc.to_string e))
-
 let remove_unused_resources_page pdf n page =
   let xobjects, all_names =
     match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
@@ -3388,27 +3310,11 @@ let create_pdf pages pagesize =
     let pdf, pageroot = Pdfpage.add_pagetree (many page pages) (Pdf.empty ()) in
       Pdfpage.add_root pageroot [] pdf
 
-(* Remove characters which might not make good filenames. *)
-let remove_unsafe_characters encoding s =
-  if encoding = Cpdfmetadata.Raw then s else
-    let chars =
-      lose
-        (function x ->
-           match x with
-           '/' | '?' | '<' | '>' | '\\' | ':' | '*' | '|' | '\"' | '^' | '+' | '=' -> true
-           | x when int_of_char x < 32 || (int_of_char x > 126 && encoding <> Cpdfmetadata.Stripped) -> true
-           | _ -> false)
-        (explode s)
-    in
-      match chars with
-      | '.'::more -> implode more
-      | chars -> implode chars
-
 let get_bookmark_name encoding pdf marks splitlevel n _ =
   let refnums = Pdf.page_reference_numbers pdf in
   let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
   match keep (function m -> n = Pdfpage.pagenumber_of_target ~fastrefnums pdf m.Pdfmarks.target && m.Pdfmarks.level <= splitlevel) marks with
-  | {Pdfmarks.text = title}::_ -> remove_unsafe_characters encoding title
+  | {Pdfmarks.text = title}::_ -> Cpdfattach.remove_unsafe_characters encoding title
   | _ -> ""
 
 (* @F means filename without extension *)

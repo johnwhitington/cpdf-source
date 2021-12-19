@@ -3588,8 +3588,8 @@ let go () =
   | Some DumpAttachedFiles ->
       let pdf = get_single_pdf args.op false in
         begin match args.out with
-        | NoOutputSpecified -> Cpdf.dump_attached_files pdf ""
-        | File n -> Cpdf.dump_attached_files pdf n
+        | NoOutputSpecified -> Cpdfattach.dump_attached_files pdf ""
+        | File n -> Cpdfattach.dump_attached_files pdf n
         | Stdout -> error "Can't dump attachments to stdout"
         end
   | Some RemoveAttachedFiles ->
