@@ -3831,7 +3831,7 @@ let go () =
         Cpdf.print_dict_entry pdf key
   | Some ListSpotColours ->
       let pdf = get_single_pdf args.op false in
-        Cpdf.list_spot_colours pdf
+        Cpdfspot.list_spot_colours pdf
   | Some RemoveClipping ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in

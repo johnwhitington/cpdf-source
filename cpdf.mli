@@ -299,8 +299,6 @@ val add_bookmark_title : string -> bool -> Pdf.t -> Pdf.t
 
 val remove_unused_resources : Pdf.t -> Pdf.t
 
-val list_spot_colours : Pdf.t -> unit
-
 val bookmarks_open_to_level : int -> Pdf.t -> Pdf.t
 
 val create_pdf : int -> Pdfpaper.t -> Pdf.t

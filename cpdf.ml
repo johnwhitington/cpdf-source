@@ -3346,21 +3346,6 @@ let remove_unused_resources_page pdf n page =
 let remove_unused_resources pdf =
   process_pages (ppstub (remove_unused_resources_page pdf)) pdf (ilist 1 (Pdfpage.endpage pdf))
 
-let print_spot_colour n s =
-  Printf.printf "%i %s\n" n s
-
-let list_spot_colours pdf =
-  Pdf.objiter
-    (fun _ obj ->
-       match obj with
-         Pdf.Array (Pdf.Name "/Separation"::x::_) ->
-           begin match Pdf.direct pdf x with
-             Pdf.Name col -> Printf.printf "%s\n" col
-           | _ -> ()
-           end
-       | _ -> ())
-    pdf
-
 (* Indent bookmarks in each file by one and add a title bookmark pointing to the first page. *)
 let add_bookmark_title filename use_title pdf =
   let title =
