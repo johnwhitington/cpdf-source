@@ -3806,7 +3806,7 @@ let go () =
   | Some AddPageLabels ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
-          Cpdf.add_page_labels
+          Cpdfpagelabels.add_page_labels
             pdf args.labelsprogress args.labelstyle args.labelprefix args.labelstartval range;
           write_pdf false pdf
   | Some RemovePageLabels ->

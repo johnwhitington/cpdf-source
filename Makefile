@@ -2,7 +2,7 @@
 MODS = cpdfyojson cpdfxmlm \
        cpdfunicodedata cpdferror cpdfjson cpdfstrftime cpdfcoord cpdfattach \
        cpdfpagespec cpdfposition cpdfpresent cpdfmetadata cpdf cpdffont cpdftype \
-       cpdftexttopdf cpdftoc cpdfpad cpdfocg cpdfsqueeze cpdfspot cpdfcommand
+       cpdftexttopdf cpdftoc cpdfpad cpdfocg cpdfsqueeze cpdfspot cpdfpagelabels cpdfcreate cpdfcommand
 
 SOURCES = $(foreach x,$(MODS),$(x).ml $(x).mli) cpdfcommandrun.ml
 
