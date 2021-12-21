@@ -1,13 +1,7 @@
 (** Coherent PDF Tools Core Routines *)
 open Pdfutil
 
-type color =
-  Grey of float
-| RGB of float * float * float
-| CYMK of float * float * float * float
-
 (** {2 Working with pages} *)
-
 
 val copy_cropbox_to_mediabox : Pdf.t -> int list -> Pdf.t
 
@@ -25,68 +19,6 @@ val combine_pages : bool -> Pdf.t -> Pdf.t -> bool -> bool -> bool -> Pdf.t
 [over] over each page of the PDF. The arguments have the same meaning as in
 [combine_pages]. *)
 val stamp : bool -> Cpdfposition.position -> bool -> bool -> bool -> bool -> bool -> int list -> Pdf.t -> Pdf.t -> Pdf.t
-
-(** {2 Adding text} *)
-
-(** Justification of multiline text *)
-type justification =
-  | LeftJustify
-  | CentreJustify
-  | RightJustify
-
-(** Call [add_texts metrics linewidth outline fast fontname font bates batespad colour
-position linespacing fontsize underneath text pages orientation
-relative_to_cropbox midline_adjust topline filename pdf]. For details see cpdfmanual.pdf *)
-val addtexts :
-    bool -> (*metrics*)
-    float -> (*linewidth*)
-    bool -> (*outline*)
-    bool -> (*fast*)
-    string -> (*fontname*)
-    Pdftext.standard_font option -> (*font*)
-    bool -> (* embed font *)
-    int -> (* bates number *)
-    int option -> (* bates padding width *)
-    color -> (*colour*)
-    Cpdfposition.position -> (*position*)
-    float -> (*linespacing*)
-    float -> (*fontsize*)
-    bool -> (*underneath*)
-    string ->(*text*)
-    int list ->(*page range*)
-    Cpdfposition.orientation ->(*orientation*)
-    bool ->(*relative to cropbox?*)
-    float ->(*opacity*)
-    justification ->(*justification*)
-    bool ->(*midline adjust?*)
-    bool ->(*topline adjust?*)
-    string ->(*filename*)
-    float option -> (*extract_text_font_size*)
-    string -> (* shift *)
-    ?raw:bool -> (* raw *)
-    Pdf.t ->(*pdf*)
-    Pdf.t
-
-val addrectangle :
-    bool ->
-    float * float ->
-    color ->
-    bool ->
-    float ->
-    float ->
-    Cpdfposition.position ->
-    bool -> bool -> int list -> Pdf.t -> Pdf.t
-
-val metrics_howmany : unit -> int
-val metrics_text : int -> string
-val metrics_x : int -> float
-val metrics_y : int -> float
-val metrics_rot : int -> float
-val metrics_baseline_adjustment : unit -> float
-(** These functions returns some details about the text if [addtexts] is called with [metrics] true. The integer arguments are  1 for the first one, 2 for the second etc. Call [metrics_howmany] first to find out how many. *)
-
-(** Remove text from the given pages. *)
-val removetext : int list -> Pdf.t -> Pdf.t
 
 (**  {2 Page geometry} *)
 
@@ -173,13 +105,13 @@ val twoup : bool -> Pdf.t -> Pdf.t
 val thinlines : int list -> float -> Pdf.t -> Pdf.t
 
 (** Make all text on certain pages black. *)
-val blacktext : color -> int list -> Pdf.t -> Pdf.t
+val blacktext : Cpdfaddtext.color -> int list -> Pdf.t -> Pdf.t
 
 (** Make all lines on certain pages black. *)
-val blacklines : color -> int list -> Pdf.t -> Pdf.t
+val blacklines : Cpdfaddtext.color -> int list -> Pdf.t -> Pdf.t
 
 (** Make all fills on certain pages black. *)
-val blackfills : color -> int list -> Pdf.t -> Pdf.t
+val blackfills : Cpdfaddtext.color -> int list -> Pdf.t -> Pdf.t
 
 (** Remove images from a PDF, optionally adding crossed boxes. *)
 val draft : string option -> bool -> int list -> Pdf.t -> Pdf.t
@@ -189,8 +121,6 @@ val remove_all_text : int list -> Pdf.t -> Pdf.t
 (**/**)
 
 val process_xobjects : Pdf.t -> Pdfpage.t -> (Pdf.t -> Pdf.pdfobject -> Pdf.pdfobject list -> Pdf.pdfobject list) -> unit
-
-val extract_text : float option -> Pdf.t -> int list -> string 
 
 val append_page_content : string -> bool -> bool -> int list -> Pdf.t -> Pdf.t
 

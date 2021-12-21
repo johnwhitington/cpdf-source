@@ -382,14 +382,14 @@ type args =
    mutable font : font;
    mutable fontname : string;
    mutable fontsize : float;
-   mutable color : Cpdf.color;
+   mutable color : Cpdfaddtext.color;
    mutable opacity : float;
    mutable position : Cpdfposition.position;
    mutable underneath : bool;
    mutable linespacing : float;
    mutable midline : bool;
    mutable topline : bool;
-   mutable justification : Cpdf.justification;
+   mutable justification : Cpdfaddtext.justification;
    mutable bates : int;
    mutable batespad : int option;
    mutable prerotate : bool;
@@ -501,14 +501,14 @@ let args =
    font = StandardFont Pdftext.TimesRoman;
    fontname = "Times-Roman";
    fontsize = 12.;
-   color = Cpdf.RGB (0., 0., 0.);
+   color = Cpdfaddtext.RGB (0., 0., 0.);
    opacity = 1.;
    position = Cpdfposition.TopLeft 100.;
    underneath = false;
    linespacing = 1.;
    midline = false;
    topline = false;
-   justification = Cpdf.LeftJustify;
+   justification = Cpdfaddtext.LeftJustify;
    bates = 0;
    batespad = None;
    prerotate = false;
@@ -620,14 +620,14 @@ let reset_arguments () =
   args.font <- StandardFont Pdftext.TimesRoman;
   args.fontname <- "Times-Roman";
   args.fontsize <- 12.;
-  args.color <- Cpdf.RGB (0., 0., 0.);
+  args.color <- Cpdfaddtext.RGB (0., 0., 0.);
   args.opacity <- 1.;
   args.position <- Cpdfposition.TopLeft 100.;
   args.underneath <- false;
   args.linespacing <- 1.;
   args.midline <- false;
   args.topline <- false;
-  args.justification <- Cpdf.LeftJustify;
+  args.justification <- Cpdfaddtext.LeftJustify;
   args.bates <- 0;
   args.batespad <- None;
   args.prerotate <- false;
@@ -1106,11 +1106,11 @@ let setaddtext s =
 
 let parse_color s =
   match String.lowercase s with
-  | "white" -> Cpdf.RGB (1., 1., 1.)
-  | "black" -> Cpdf.RGB (0., 0., 0.)
-  | "red" -> Cpdf.RGB (1., 0., 0.)
-  | "green" -> Cpdf.RGB (0., 1., 0.)
-  | "blue" -> Cpdf.RGB (0., 0., 1.)
+  | "white" -> Cpdfaddtext.RGB (1., 1., 1.)
+  | "black" -> Cpdfaddtext.RGB (0., 0., 0.)
+  | "red" -> Cpdfaddtext.RGB (1., 0., 0.)
+  | "green" -> Cpdfaddtext.RGB (0., 1., 0.)
+  | "blue" -> Cpdfaddtext.RGB (0., 0., 1.)
   | _ ->
       let getnum = function
         | Pdfgenlex.LexInt i -> float i
@@ -1118,9 +1118,9 @@ let parse_color s =
         | _ -> error "Bad color"
       in
         match Pdfgenlex.lex_string s with
-        | [g] -> Cpdf.Grey (getnum g)
-        | [r;g;b] -> Cpdf.RGB (getnum r, getnum g, getnum b)
-        | [c; y; m; k] -> Cpdf.CYMK (getnum c, getnum y, getnum m, getnum k)
+        | [g] -> Cpdfaddtext.Grey (getnum g)
+        | [r;g;b] -> Cpdfaddtext.RGB (getnum r, getnum g, getnum b)
+        | [c; y; m; k] -> Cpdfaddtext.CYMK (getnum c, getnum y, getnum m, getnum k)
         | _ -> error "Bad color"
 
 let setcolor s =
@@ -1173,47 +1173,47 @@ let setposright s =
 
 let settop n =
   args.position <- Cpdfposition.Top (Cpdfcoord.parse_single_number empty n);
-  args.justification <- Cpdf.CentreJustify
+  args.justification <- Cpdfaddtext.CentreJustify
 
 let settopleft n =
   args.position <- Cpdfposition.TopLeft (Cpdfcoord.parse_single_number empty n);
-  args.justification <- Cpdf.LeftJustify
+  args.justification <- Cpdfaddtext.LeftJustify
 
 let settopright n =
   args.position <- Cpdfposition.TopRight (Cpdfcoord.parse_single_number empty n);
-  args.justification <- Cpdf.RightJustify
+  args.justification <- Cpdfaddtext.RightJustify
 
 let setleft n =
   args.position <- Cpdfposition.Left (Cpdfcoord.parse_single_number empty n);
-  args.justification <- Cpdf.LeftJustify
+  args.justification <- Cpdfaddtext.LeftJustify
 
 let setbottomleft n =
   args.position <- Cpdfposition.BottomLeft (Cpdfcoord.parse_single_number empty n);
-  args.justification <- Cpdf.LeftJustify
+  args.justification <- Cpdfaddtext.LeftJustify
 
 let setbottom n =
   args.position <- Cpdfposition.Bottom (Cpdfcoord.parse_single_number empty n);
-  args.justification <- Cpdf.CentreJustify
+  args.justification <- Cpdfaddtext.CentreJustify
 
 let setbottomright n =
   args.position <- Cpdfposition.BottomRight (Cpdfcoord.parse_single_number empty n);
-  args.justification <- Cpdf.RightJustify
+  args.justification <- Cpdfaddtext.RightJustify
 
 let setright n =
   args.position <- Cpdfposition.Right (Cpdfcoord.parse_single_number empty n);
-  args.justification <- Cpdf.RightJustify
+  args.justification <- Cpdfaddtext.RightJustify
 
 let setdiagonal n =
   args.position <- Cpdfposition.Diagonal;
-  args.justification <- Cpdf.CentreJustify
+  args.justification <- Cpdfaddtext.CentreJustify
 
 let setreversediagonal n =
   args.position <- Cpdfposition.ReverseDiagonal;
-  args.justification <- Cpdf.CentreJustify
+  args.justification <- Cpdfaddtext.CentreJustify
 
 let setcenter n =
   args.position <- Cpdfposition.Centre;
-  args.justification <- Cpdf.CentreJustify
+  args.justification <- Cpdfaddtext.CentreJustify
 
 let setbatespad n =
   args.batespad <- Some n
@@ -1489,13 +1489,13 @@ let setscalestamptofit () =
   args.scale_stamp_to_fit <- true
 
 let setjustifyleft () =
-  args.justification <- Cpdf.LeftJustify
+  args.justification <- Cpdfaddtext.LeftJustify
 
 let setjustifyright () =
-  args.justification <- Cpdf.RightJustify
+  args.justification <- Cpdfaddtext.RightJustify
 
 let setjustifycenter () =
-  args.justification <- Cpdf.CentreJustify
+  args.justification <- Cpdfaddtext.CentreJustify
 
 let setremoveduplicatestreams () =
   args.remove_duplicate_streams <- true
@@ -3666,7 +3666,7 @@ let go () =
               | _ -> ""
             in
               write_pdf false
-                (Cpdf.addtexts
+                (Cpdfaddtext.addtexts
                    false args.linewidth args.outline args.fast args.fontname
                    font args.embedfonts args.bates args.batespad args.color args.position
                    args.linespacing args.fontsize args.underneath text range
@@ -3676,12 +3676,12 @@ let go () =
   | Some RemoveText ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-          write_pdf false (Cpdf.removetext range pdf)
+          write_pdf false (Cpdfaddtext.removetext range pdf)
   | Some AddRectangle ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           write_pdf false
-            (Cpdf.addrectangle
+            (Cpdfaddtext.addrectangle
                args.fast (Cpdfcoord.parse_coordinate pdf args.coord)
                args.color args.outline args.linewidth args.opacity args.position
                args.relative_to_cropbox args.underneath range pdf)
@@ -3792,7 +3792,7 @@ let go () =
   | Some ExtractText ->
       let pdf = get_single_pdf args.op true in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-          let text = Cpdf.extract_text args.extract_text_font_size pdf range in
+          let text = Cpdfaddtext.extract_text args.extract_text_font_size pdf range in
             begin match args.out with
             | File filename ->
                 let fh = open_out_bin filename in
