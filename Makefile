@@ -1,8 +1,10 @@
 # Build the cpdf command line tools and top level
 MODS = cpdfyojson cpdfxmlm \
-       cpdfunicodedata cpdferror cpdfdebug cpdfjson cpdfstrftime cpdfcoord cpdfattach \
-       cpdfpagespec cpdfposition cpdfpresent cpdfmetadata cpdfbookmarks cpdfpage cpdfaddtext cpdf cpdfimage cpdffont cpdftype \
-       cpdftexttopdf cpdftoc cpdfpad cpdfocg cpdfsqueeze cpdfspot cpdfpagelabels cpdfcreate cpdfannot cpdfcommand
+       cpdfunicodedata cpdferror cpdfdebug cpdfjson cpdfstrftime cpdfcoord \
+       cpdfattach cpdfpagespec cpdfposition cpdfpresent cpdfmetadata \
+       cpdfbookmarks cpdfpage cpdfaddtext cpdf cpdfimage cpdffont cpdftype \
+       cpdftexttopdf cpdftoc cpdfpad cpdfocg cpdfsqueeze cpdfspot \
+       cpdfpagelabels cpdfcreate cpdfannot cpdfcommand
 
 SOURCES = $(foreach x,$(MODS),$(x).ml $(x).mli) cpdfcommandrun.ml
 
@@ -19,7 +21,8 @@ OCAMLLDFLAGS = -g
 all : native-code native-code-library byte-code-library top htdoc
 
 clean ::
-	rm -rf doc foo foo2 out.pdf out2.pdf foo.pdf decomp.pdf *.cmt *.cmti *.json test/*.pdf debug/*.pdf *.ps
+	rm -rf doc foo foo2 out.pdf out2.pdf foo.pdf decomp.pdf *.cmt *.cmti \
+	*.json test/*.pdf debug/*.pdf *.ps
 
 DOC_FILES = cpdferror.mli cpdfjson.mli cpdfstrftime.mli cpdfcoord.mli \
             cpdfattach.mli cpdfpagespec.mli cpdfposition.mli cpdf.mli \
