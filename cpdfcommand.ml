@@ -2883,7 +2883,7 @@ let fast_write_split_pdfs
          let pdf = Pdfpage.pdf_of_pages main_pdf pagenums in
            let startpage, endpage = extremes pagenums in
              let name =
-               Cpdf.name_of_spec
+               Cpdfbookmarks.name_of_spec
                  args.encoding marks main_pdf splitlevel spec number
                  (stem original_filename) startpage endpage
              in
@@ -3774,7 +3774,7 @@ let go () =
       in
         let pdf = get_single_pdf args.op true in
           let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-            Cpdf.extract_images args.path_to_p2p args.path_to_im args.encoding args.dedup args.dedup_per_page pdf range output_spec
+            Cpdfimage.extract_images args.path_to_p2p args.path_to_im args.encoding args.dedup args.dedup_per_page pdf range output_spec
   | Some (ImageResolution f) ->
       let pdf = get_single_pdf args.op true in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in

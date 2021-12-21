@@ -292,3 +292,70 @@ let split_on_bookmarks pdf level =
   in let pdf_pages = Pdfpage.pages_of_pagetree pdf in
     let ranges = splitat points (indx pdf_pages) in
       map (fun rs -> Pdfpage.pdf_of_pages pdf rs) ranges
+
+let get_bookmark_name encoding pdf marks splitlevel n _ =
+  let refnums = Pdf.page_reference_numbers pdf in
+  let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
+  match keep (function m -> n = Pdfpage.pagenumber_of_target ~fastrefnums pdf m.Pdfmarks.target && m.Pdfmarks.level <= splitlevel) marks with
+  | {Pdfmarks.text = title}::_ -> Cpdfattach.remove_unsafe_characters encoding title
+  | _ -> ""
+
+(* @F means filename without extension *)
+(* @N means sequence number with no padding *)
+(* @S means start page of this section *)
+(* @E means end page of this section *)
+(* @B means bookmark name at start page *)
+let process_others encoding marks pdf splitlevel filename sequence startpage endpage s =
+  let rec find_ats p = function
+    '@'::r -> find_ats (p + 1) r
+  | r -> (p, r)
+  in
+  let string_of_int_width w i =
+    if w < 0 then raise (Pdf.PDFError "width of field too narrow")
+    else if w > 8 then raise (Pdf.PDFError "width of field too broad") else
+      let formats =
+        [|format_of_string "%i";
+          format_of_string "%i";
+          format_of_string "%02i";
+          format_of_string "%03i";
+          format_of_string "%04i";
+          format_of_string "%05i";
+          format_of_string "%06i";
+          format_of_string "%07i";
+          format_of_string "%08i"|]
+      in
+        Printf.sprintf formats.(w) i
+  in
+    let rec procss prev = function
+      | [] -> rev prev
+      | '@'::'F'::t -> procss (rev (explode filename) @ prev) t
+      | '@'::'N'::t ->
+          let width, rest = find_ats 0 t in
+            procss (rev (explode (string_of_int_width width sequence)) @ prev) rest
+      | '@'::'S'::t ->
+          let width, rest = find_ats 0 t in
+            procss (rev (explode (string_of_int_width width startpage)) @ prev) rest
+      | '@'::'E'::t ->
+          let width, rest = find_ats 0 t in
+            procss (rev (explode (string_of_int_width width endpage)) @ prev) rest
+      | '@'::'B'::t -> procss (rev (explode (get_bookmark_name encoding pdf marks splitlevel startpage pdf)) @ prev) t
+      | h::t -> procss (h::prev) t
+    in
+       implode (procss [] (explode s))
+
+let name_of_spec encoding marks (pdf : Pdf.t) splitlevel spec n filename startpage endpage =
+  let fill l n =
+    let chars = explode (string_of_int n) in
+      if length chars > l
+        then implode (drop chars (length chars - l))
+        else implode ((many '0' (l - length chars)) @ chars)
+  in
+    let chars = explode spec in
+      let before, including = cleavewhile (neq '%') chars in
+        let percents, after = cleavewhile (eq '%') including in
+          if percents = []
+            then
+              process_others encoding marks pdf splitlevel filename n startpage endpage spec
+            else
+              process_others encoding marks pdf splitlevel filename n startpage endpage
+              (implode before ^ fill (length percents) n ^ implode after)

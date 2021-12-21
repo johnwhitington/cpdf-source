@@ -145,11 +145,3 @@ val remove_unused_resources : Pdf.t -> Pdf.t
 val bookmarks_open_to_level : int -> Pdf.t -> Pdf.t
 
 val create_pdf : int -> Pdfpaper.t -> Pdf.t
-
-val name_of_spec : Cpdfmetadata.encoding ->
-           Pdfmarks.t list ->
-           Pdf.t -> int -> string -> int -> string -> int -> int -> string
-
-val extract_images : string ->
-           string ->
-           Cpdfmetadata.encoding -> bool -> bool -> Pdf.t -> int list -> string -> unit
