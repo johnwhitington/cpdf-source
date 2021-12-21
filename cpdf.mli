@@ -121,8 +121,6 @@ val process_xobjects : Pdf.t -> Pdfpage.t -> (Pdf.t -> Pdf.pdfobject -> Pdf.pdfo
 
 val append_page_content : string -> bool -> bool -> int list -> Pdf.t -> Pdf.t
 
-val stamp_as_xobject : Pdf.t -> int list -> Pdf.t -> Pdf.t * string
-
 val remove_dict_entry : Pdf.t -> string -> Pdf.pdfobject option -> unit
 
 val replace_dict_entry : Pdf.t -> string -> Pdf.pdfobject -> Pdf.pdfobject option -> unit

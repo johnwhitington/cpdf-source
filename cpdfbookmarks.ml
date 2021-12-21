@@ -393,3 +393,28 @@ let bookmarks_open_to_level n pdf =
   in
     Pdfmarks.add_bookmarks newmarks pdf
 
+(* Alter bookmark destinations given a hash table of (old page reference
+ * number, new page reference number) pairings *)
+let change_destination t = function
+   Pdfdest.XYZ (Pdfdest.PageObject p, a, b, c) ->
+     Pdfdest.XYZ (Pdfdest.PageObject (Hashtbl.find t p), a, b, c)
+ | Pdfdest.Fit (Pdfdest.PageObject p) ->
+     Pdfdest.Fit (Pdfdest.PageObject (Hashtbl.find t p))
+ | Pdfdest.FitH (Pdfdest.PageObject p, x) ->
+     Pdfdest.FitH (Pdfdest.PageObject (Hashtbl.find t p), x)
+ | Pdfdest.FitV (Pdfdest.PageObject p, x) ->
+     Pdfdest.FitV (Pdfdest.PageObject (Hashtbl.find t p), x)
+ | Pdfdest.FitR (Pdfdest.PageObject p, a, b, c, d) ->
+     Pdfdest.FitR (Pdfdest.PageObject (Hashtbl.find t p), a, b, c, d)
+ | Pdfdest.FitB (Pdfdest.PageObject p) ->
+     Pdfdest.Fit (Pdfdest.PageObject (Hashtbl.find t p))
+ | Pdfdest.FitBH (Pdfdest.PageObject p, x) ->
+     Pdfdest.FitBH (Pdfdest.PageObject (Hashtbl.find t p), x)
+ | Pdfdest.FitBV (Pdfdest.PageObject p, x) ->
+     Pdfdest.FitBV (Pdfdest.PageObject (Hashtbl.find t p), x)
+ | x -> x
+
+let change_bookmark t m =
+  {m with Pdfmarks.target =
+    try change_destination t m.Pdfmarks.target with Not_found -> m.Pdfmarks.target}
+
