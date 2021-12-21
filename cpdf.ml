@@ -1965,38 +1965,6 @@ let remove_unused_resources_page pdf n page =
 let remove_unused_resources pdf =
   Cpdfpage.process_pages (ppstub (remove_unused_resources_page pdf)) pdf (ilist 1 (Pdfpage.endpage pdf))
 
-(* Indent bookmarks in each file by one and add a title bookmark pointing to the first page. *)
-let add_bookmark_title filename use_title pdf =
-  let title =
-    if use_title then
-      match Cpdfmetadata.get_info_utf8 pdf "/Title", Cpdfmetadata.get_xmp_info pdf "/Title" with
-        "", x | x, "" | _, x -> x
-    else
-      Filename.basename filename
-  in
-  let marks = Pdfmarks.read_bookmarks pdf in
-  let page1objnum =
-    match Pdfpage.page_object_number pdf 1 with
-      None -> error "add_bookmark_title: page not found"
-    | Some x -> x
-  in
-  let newmarks =
-      {Pdfmarks.level = 0;
-       Pdfmarks.text = title;
-       Pdfmarks.target = Pdfdest.XYZ (Pdfdest.PageObject page1objnum, None, None, None);
-       Pdfmarks.isopen = false}
-    ::map (function m -> {m with Pdfmarks.level = m.Pdfmarks.level + 1}) marks
-  in
-    Pdfmarks.add_bookmarks newmarks pdf
-
-let bookmarks_open_to_level n pdf =
-  let marks = Pdfmarks.read_bookmarks pdf in
-  let newmarks =
-    map
-      (fun m -> {m with Pdfmarks.isopen = m.Pdfmarks.level < n})
-      marks
-  in
-    Pdfmarks.add_bookmarks newmarks pdf
 
 let create_pdf pages pagesize =
   let page =
@@ -2006,5 +1974,3 @@ let create_pdf pages pagesize =
   in
     let pdf, pageroot = Pdfpage.add_pagetree (many page pages) (Pdf.empty ()) in
       Pdfpage.add_root pageroot [] pdf
-
-

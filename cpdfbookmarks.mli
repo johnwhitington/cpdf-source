@@ -16,3 +16,6 @@ val list_bookmarks : json:bool -> Cpdfmetadata.encoding -> int list -> Pdf.t -> 
 val name_of_spec : Cpdfmetadata.encoding ->
            Pdfmarks.t list ->
            Pdf.t -> int -> string -> int -> string -> int -> int -> string
+
+val add_bookmark_title : string -> bool -> Pdf.t -> Pdf.t
+val bookmarks_open_to_level : int -> Pdf.t -> Pdf.t

@@ -3038,7 +3038,7 @@ let go () =
                       let pdfs =
                         if args.merge_add_bookmarks then
                           map2
-                            (fun filename pdf -> Cpdf.add_bookmark_title filename args.merge_add_bookmarks_use_titles pdf)
+                            (fun filename pdf -> Cpdfbookmarks.add_bookmark_title filename args.merge_add_bookmarks_use_titles pdf)
                             (map (function InFile s -> s | StdIn -> "" | AlreadyInMemory _ -> "") names)
                             pdfs
                         else
@@ -3852,7 +3852,7 @@ let go () =
         Cpdffont.embed_missing_fonts args.path_to_ghostscript args.gs_quiet fi fo
   | Some (BookmarksOpenToLevel n) ->
       let pdf = get_single_pdf args.op false in
-        write_pdf false (Cpdf.bookmarks_open_to_level n pdf)
+        write_pdf false (Cpdfbookmarks.bookmarks_open_to_level n pdf)
   | Some CreatePDF ->
       let pdf = Cpdf.create_pdf args.createpdf_pages args.createpdf_pagesize in
         write_pdf false pdf

@@ -138,10 +138,9 @@ val image_resolution : Pdf.t -> int list -> float -> (int * string * int * int *
 
 val copy_box : string -> string -> bool -> Pdf.t -> int list -> Pdf.t
 
-val add_bookmark_title : string -> bool -> Pdf.t -> Pdf.t
 
 val remove_unused_resources : Pdf.t -> Pdf.t
 
-val bookmarks_open_to_level : int -> Pdf.t -> Pdf.t
+
 
 val create_pdf : int -> Pdfpaper.t -> Pdf.t
