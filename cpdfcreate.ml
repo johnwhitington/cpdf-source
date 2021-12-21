@@ -1,3 +1,5 @@
+open Pdfutil 
+
 let blank_document width height pages =
   let pdf_pages =
     map (fun () -> Pdfpage.blankpage (Pdfpaper.make Pdfunits.PdfPoint width height)) (many () pages)

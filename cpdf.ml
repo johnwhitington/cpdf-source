@@ -8,34 +8,6 @@ type color =
 | RGB of float * float * float
 | CYMK of float * float * float * float
 
-let debug = ref false
-
-(* Get the number of pages in file. Doesn't need decryption. *)
-let endpage_io ?revision i user_pw owner_pw =
-  let pdf = Pdfread.pdf_of_input_lazy ?revision user_pw owner_pw i in
-    Pdfpage.endpage pdf
-
-let print_pdf_objs pdf =
-  Printf.printf "Trailerdict: %s\n" (Pdfwrite.string_of_pdf pdf.Pdf.trailerdict);
-  Printf.printf "Root: %i\n" pdf.Pdf.root;
-  begin match Pdf.lookup_direct pdf "/Root" pdf.Pdf.trailerdict with
-  | Some catalog -> 
-      Printf.printf "Catalog: %s\n" (Pdfwrite.string_of_pdf catalog);
-      begin match Pdf.lookup_direct pdf "/Pages" catalog with
-      | Some pages ->
-          Printf.printf "Pages: %s\n" (Pdfwrite.string_of_pdf pages)
-      | None ->
-          flprint "no catalog\n"
-      end
-  | None ->
-       flprint "No catalog!\n"
-  end;
-  Pdf.objiter
-    (fun n obj ->
-       Printf.printf "%i 0 obj:\n\n" n;
-       Printf.printf "%s\n" (Pdfwrite.string_of_pdf obj))
-    pdf
-
 (* Return page label at pdf page num, or page number in arabic if no label *) 
 let pagelabel pdf num =
   Pdfpagelabels.pagelabeltext_of_pagenumber

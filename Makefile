@@ -1,6 +1,6 @@
 # Build the cpdf command line tools and top level
 MODS = cpdfyojson cpdfxmlm \
-       cpdfunicodedata cpdferror cpdfjson cpdfstrftime cpdfcoord cpdfattach \
+       cpdfunicodedata cpdferror cpdfdebug cpdfjson cpdfstrftime cpdfcoord cpdfattach \
        cpdfpagespec cpdfposition cpdfpresent cpdfmetadata cpdf cpdffont cpdftype \
        cpdftexttopdf cpdftoc cpdfpad cpdfocg cpdfsqueeze cpdfspot cpdfpagelabels cpdfcreate cpdfcommand
 

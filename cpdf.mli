@@ -1,22 +1,12 @@
 (** Coherent PDF Tools Core Routines *)
 open Pdfutil
 
-
 type color =
   Grey of float
 | RGB of float * float * float
 | CYMK of float * float * float * float
 
-(** {2 Debug} *)
-
-(** Debug: Print out a PDF in readable form to the terminal *)
-val print_pdf_objs : Pdf.t -> unit
-
 (** {2 Working with pages} *)
-
-(** Like [Pdfpage.endpage], but from an input and possible password - does the
-minimal work to find the number of pages. *)
-val endpage_io : ?revision:int -> Pdfio.input -> string option -> string option -> int
 
 (** Given a function from page number and page to page, a document, and a list
 of page numbers to apply it to, apply the function to all those pages. *)
@@ -45,8 +35,6 @@ val add_bookmarks : json:bool -> bool -> Pdfio.input -> Pdf.t -> Pdf.t
 (** [list_bookmarks encoding range pdf output] lists the bookmarks to the given
 output in the format specified in cpdfmanual.pdf *)
 val list_bookmarks : json:bool -> Cpdfmetadata.encoding -> int list -> Pdf.t -> Pdfio.output -> unit
-
-
 
 (** {2 Stamping} *)
 
@@ -207,7 +195,6 @@ val trim_marks : ?fast:bool -> Pdf.t -> int list -> Pdf.t
 
 val show_boxes : ?fast:bool -> Pdf.t -> int list -> Pdf.t
 
-
 (** {2 Annotations} *)
 
 (** List the annotations to standard output in a given encoding. See cpdfmanual.pdf for the format details. *)
@@ -252,14 +239,11 @@ val blackfills : color -> int list -> Pdf.t -> Pdf.t
 (** Remove images from a PDF, optionally adding crossed boxes. *)
 val draft : string option -> bool -> int list -> Pdf.t -> Pdf.t
 
-
 val remove_all_text : int list -> Pdf.t -> Pdf.t 
 
 (**/**)
 
 val process_xobjects : Pdf.t -> Pdfpage.t -> (Pdf.t -> Pdf.pdfobject -> Pdf.pdfobject list -> Pdf.pdfobject list) -> unit
-
-val debug : bool ref
 
 val extract_text : float option -> Pdf.t -> int list -> string 
 
@@ -279,8 +263,6 @@ val image_resolution : Pdf.t -> int list -> float -> (int * string * int * int *
 
 val copy_box : string -> string -> bool -> Pdf.t -> int list -> Pdf.t
 
-
-
 val add_bookmark_title : string -> bool -> Pdf.t -> Pdf.t
 
 val remove_unused_resources : Pdf.t -> Pdf.t
@@ -296,5 +278,3 @@ val name_of_spec : Cpdfmetadata.encoding ->
 val extract_images : string ->
            string ->
            Cpdfmetadata.encoding -> bool -> bool -> Pdf.t -> int list -> string -> unit
-
-
