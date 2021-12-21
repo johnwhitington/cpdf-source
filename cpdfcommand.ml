@@ -3649,7 +3649,7 @@ let go () =
   | Some Draft ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-          write_pdf false (Cpdf.draft args.removeonly args.boxes range pdf)
+          write_pdf false (Cpdfdraft.draft args.removeonly args.boxes range pdf)
   | Some (AddText text) ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
@@ -3778,7 +3778,7 @@ let go () =
   | Some (ImageResolution f) ->
       let pdf = get_single_pdf args.op true in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-        let images = Cpdf.image_resolution pdf range f in
+        let images = Cpdfimage.image_resolution pdf range f in
           iter
             (function (pagenum, xobject, w, h, wdpi, hdpi) ->
                 if wdpi < f || hdpi < f then
@@ -3854,7 +3854,7 @@ let go () =
       let pdf = get_single_pdf args.op false in
         write_pdf false (Cpdfbookmarks.bookmarks_open_to_level n pdf)
   | Some CreatePDF ->
-      let pdf = Cpdf.create_pdf args.createpdf_pages args.createpdf_pagesize in
+      let pdf = Cpdfcreate.blank_document_paper args.createpdf_pagesize args.createpdf_pages in
         write_pdf false pdf
   | Some RemoveAllText ->
       let pdf = get_single_pdf args.op false in

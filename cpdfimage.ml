@@ -125,3 +125,151 @@ let extract_images path_to_p2p path_to_im encoding dedup dedup_per_page pdf rang
                  iter (extract_images_form_xobject path_to_p2p path_to_im encoding dedup dedup_per_page pdf serial stem pnum) forms)
           pages
           (indx pages)
+
+(* Image resolution *)
+type xobj =
+  | Image of int * int (* width, height *)
+  | Form of Pdftransform.transform_matrix * Pdf.pdfobject * Pdf.pdfobject (* Will add actual data later. *)
+
+let image_results = ref []
+
+let add_image_result i =
+  image_results := i::!image_results
+
+(* Given a page and a list of (pagenum, name, thing) *)
+let rec image_resolution_page pdf page pagenum dpi (images : (int * string * xobj) list) =
+  try
+    let pageops = Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content
+    and transform = ref [ref Pdftransform.i_matrix] in
+      iter
+        (function
+         | Pdfops.Op_cm matrix ->
+             begin match !transform with
+             | [] -> raise (Failure "no transform")
+             | _ -> (hd !transform) := Pdftransform.matrix_compose !(hd !transform) matrix
+             end
+         | Pdfops.Op_Do xobject ->
+             let trans (x, y) =
+               match !transform with
+               | [] -> raise (Failure "no transform")
+               | _ -> Pdftransform.transform_matrix !(hd !transform) (x, y)
+             in
+               let o = trans (0., 0.)
+               and x = trans (1., 0.)
+               and y = trans (0., 1.)
+               in
+                 (*i Printf.printf "o = %f, %f, x = %f, %f, y = %f, %f\n" (fst o) (snd o) (fst x) (snd x) (fst y) (snd y); i*)
+                 let rec lookup_image k = function
+                   | [] -> assert false
+                   | (_, a, _) as h::_ when a = k -> h
+                   | _::t -> lookup_image k t 
+                 in
+                   begin match lookup_image xobject images with
+                   | (pagenum, name, Form (xobj_matrix, content, resources)) ->
+                        let content =
+                          (* Add in matrix etc. *)
+                          let total_matrix = Pdftransform.matrix_compose xobj_matrix !(hd !transform) in
+                            let ops =
+                              Pdfops.Op_cm total_matrix::
+                              Pdfops.parse_operators pdf resources [content]
+                            in
+                              Pdfops.stream_of_ops ops
+                        in
+                          let page =
+                            {Pdfpage.content = [content];
+                             Pdfpage.mediabox = Pdfpage.rectangle_of_paper Pdfpaper.a4;
+                             Pdfpage.resources = resources;
+                             Pdfpage.rotate = Pdfpage.Rotate0;
+                             Pdfpage.rest = Pdf.Dictionary []}
+                          in
+                            let newpdf = Pdfpage.change_pages false pdf [page] in
+                              image_resolution newpdf [pagenum] dpi
+                   | (pagenum, name, Image (w, h)) ->
+                       let lx = Pdfunits.convert 0. Pdfunits.PdfPoint Pdfunits.Inch (distance_between o x)
+                       and ly = Pdfunits.convert 0. Pdfunits.PdfPoint Pdfunits.Inch (distance_between o y) in
+                         let wdpi = float w /. lx
+                         and hdpi = float h /. ly in
+                           add_image_result (pagenum, xobject, w, h, wdpi, hdpi)
+                           (*Printf.printf "%i, %s, %i, %i, %f, %f\n" pagenum xobject w h wdpi hdpi*)
+                         (*i else
+                           Printf.printf "S %i, %s, %i, %i, %f, %f\n" pagenum xobject (int_of_float w) (int_of_float h) wdpi hdpi i*)
+                   end
+         | Pdfops.Op_q ->
+             begin match !transform with
+             | [] -> raise (Failure "Unbalanced q/Q ops")
+             | h::t ->
+                 let h' = ref Pdftransform.i_matrix in
+                   h' := !h;
+                   transform := h'::h::t
+             end
+         | Pdfops.Op_Q ->
+             begin match !transform with
+             | [] -> raise (Failure "Unbalanced q/Q ops")
+             | _ -> transform := tl !transform
+             end
+         | _ -> ())
+        pageops
+    with
+      e -> Printf.printf "Error %s\n" (Printexc.to_string e); flprint "\n"
+
+and image_resolution pdf range dpi =
+  let images = ref [] in
+    Cpdfpage.iter_pages
+      (fun pagenum page ->
+         (* 1. Get all image names and their native resolutions from resources as string * int * int *)
+         match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
+          | Some (Pdf.Dictionary xobjects) ->
+              iter
+                (function (name, xobject) ->
+                   match Pdf.lookup_direct pdf "/Subtype" xobject with
+                   | Some (Pdf.Name "/Image") ->
+                       let width =
+                         match Pdf.lookup_direct pdf "/Width" xobject with
+                         | Some x -> Pdf.getnum x
+                         | None -> 1.
+                       and height =
+                         match Pdf.lookup_direct pdf "/Height" xobject with
+                         | Some x -> Pdf.getnum x
+                         | None -> 1.
+                       in
+                         images := (pagenum, name, Image (int_of_float width, int_of_float height))::!images
+                   | Some (Pdf.Name "/Form") ->
+                       let resources =
+                         match Pdf.lookup_direct pdf "/Resources" xobject with
+                         | None -> page.Pdfpage.resources (* Inherit from page or form above. *)
+                         | Some r -> r
+                       and contents =
+                         xobject 
+                       and matrix =
+                         match Pdf.lookup_direct pdf "/Matrix" xobject with
+                         | Some (Pdf.Array [a; b; c; d; e; f]) ->
+                             {Pdftransform.a = Pdf.getnum a; Pdftransform.b = Pdf.getnum b; Pdftransform.c = Pdf.getnum c;
+                              Pdftransform.d = Pdf.getnum d; Pdftransform.e = Pdf.getnum e; Pdftransform.f = Pdf.getnum f}
+                         | _ -> Pdftransform.i_matrix
+                       in
+                         images := (pagenum, name, Form (matrix, contents, resources))::!images
+                   | _ -> ()
+                )
+                xobjects
+          | _ -> ())
+      pdf
+      range;
+      (* Now, split into differing pages, and call [image_resolution_page] on each one *)
+      let pagesplits =
+        map
+          (function (a, _, _)::_ as ls -> (a, ls) | _ -> assert false)
+          (collate (fun (a, _, _) (b, _, _) -> compare a b) (rev !images))
+      and pages =
+        Pdfpage.pages_of_pagetree pdf
+      in
+        iter
+          (function (pagenum, images) ->
+             let page = select pagenum pages in
+               image_resolution_page pdf page pagenum dpi images)
+          pagesplits
+
+let image_resolution pdf range dpi =
+  image_results := [];
+  image_resolution pdf range dpi;
+  rev !image_results
+

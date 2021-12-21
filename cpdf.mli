@@ -113,9 +113,6 @@ val blacklines : Cpdfaddtext.color -> int list -> Pdf.t -> Pdf.t
 (** Make all fills on certain pages black. *)
 val blackfills : Cpdfaddtext.color -> int list -> Pdf.t -> Pdf.t
 
-(** Remove images from a PDF, optionally adding crossed boxes. *)
-val draft : string option -> bool -> int list -> Pdf.t -> Pdf.t
-
 val remove_all_text : int list -> Pdf.t -> Pdf.t 
 
 (**/**)
@@ -134,13 +131,6 @@ val print_dict_entry : Pdf.t -> string -> unit
 
 val remove_clipping : Pdf.t -> int list -> Pdf.t 
 
-val image_resolution : Pdf.t -> int list -> float -> (int * string * int * int * float * float) list
-
 val copy_box : string -> string -> bool -> Pdf.t -> int list -> Pdf.t
 
-
 val remove_unused_resources : Pdf.t -> Pdf.t
-
-
-
-val create_pdf : int -> Pdfpaper.t -> Pdf.t
