@@ -1,7 +1,7 @@
 (* compressor <infile> <outfile> [<compress>] substitutes data files specified
    by __DATA:<filename>\n into the <infile> template, writing to <outfile>. The
-   data is printed in way which meets OCaml's syntax. It is optionally
-   compressed by zlib. *)
+   data is printed in way which meets OCaml's syntax. It is compressed by zlib.
+*)
 open Pdfutil
 
 let contents_of_file filename =
