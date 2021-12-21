@@ -8,33 +8,8 @@ type color =
 
 (** {2 Working with pages} *)
 
-(** Given a function from page number and page to page, a document, and a list
-of page numbers to apply it to, apply the function to all those pages. *)
-val process_pages : (int -> Pdfpage.t -> Pdfpage.t * int * Pdftransform.transform_matrix) ->
-                    Pdf.t -> int list -> Pdf.t
-
-(** Same as [process_pages], but iterate rather than map. *)
-val iter_pages : (int -> Pdfpage.t -> unit) -> Pdf.t -> int list -> unit
-
-(** Same as [process_pages] but return the list of outputs of the map function. *)
-val map_pages : (int -> Pdfpage.t -> 'a) -> Pdf.t -> int list -> 'a list
 
 val copy_cropbox_to_mediabox : Pdf.t -> int list -> Pdf.t
-
-(** {2 Bookmarks} *)
-
-(** [parse_bookmark_file verify pdf input] parses the bookmark file in [input].
-Details of the bookmark file format can be found in cpdfmanual.pdf *)
-val parse_bookmark_file : bool -> Pdf.t -> Pdfio.input -> Pdfmarks.t list
-
-(** [add_bookmarks verify input pdf] adds bookmarks from the bookmark file
-give. If [verify] is given, bookmarks will be verified to ensure, for example,
-that they are not out of the page range. *) 
-val add_bookmarks : json:bool -> bool -> Pdfio.input -> Pdf.t -> Pdf.t
-
-(** [list_bookmarks encoding range pdf output] lists the bookmarks to the given
-output in the format specified in cpdfmanual.pdf *)
-val list_bookmarks : json:bool -> Cpdfmetadata.encoding -> int list -> Pdf.t -> Pdfio.output -> unit
 
 (** {2 Stamping} *)
 
@@ -50,19 +25,6 @@ val combine_pages : bool -> Pdf.t -> Pdf.t -> bool -> bool -> bool -> Pdf.t
 [over] over each page of the PDF. The arguments have the same meaning as in
 [combine_pages]. *)
 val stamp : bool -> Cpdfposition.position -> bool -> bool -> bool -> bool -> bool -> int list -> Pdf.t -> Pdf.t -> Pdf.t
-
-(** {2 Splitting PDFs} *)
-
-(** Split a PDF on bookmarks of a given level or below. Level 0 is top level. *)
-val split_on_bookmarks : Pdf.t -> int -> Pdf.t list
-
-(** {2 Listing fonts} *)
-
-(** Print font list to stdout *)
-val print_fonts : Pdf.t -> int list -> unit
-
-(** Return font list. Page number, name, subtype, basefont, encoding.  *)
-val list_fonts : Pdf.t -> int list -> (int * string * string * string * string) list
 
 (** {2 Adding text} *)
 
@@ -128,9 +90,6 @@ val removetext : int list -> Pdf.t -> Pdf.t
 
 (**  {2 Page geometry} *)
 
-(** Print page info (Mediabox etc) to standard output. *)
-val output_page_info : Pdf.t -> int list -> unit
-
 (** True if a given page in a PDF has a given box *)
 val hasbox : Pdf.t -> int -> string -> bool
 
@@ -194,20 +153,6 @@ val scale_contents : ?fast:bool -> Cpdfposition.position -> float -> Pdf.t -> in
 val trim_marks : ?fast:bool -> Pdf.t -> int list -> Pdf.t
 
 val show_boxes : ?fast:bool -> Pdf.t -> int list -> Pdf.t
-
-(** {2 Annotations} *)
-
-(** List the annotations to standard output in a given encoding. See cpdfmanual.pdf for the format details. *)
-val list_annotations : json:bool -> Cpdfmetadata.encoding -> Pdf.t -> unit
-
-(** Return the annotations as a (pagenumber, content) list *)
-val get_annotations : Cpdfmetadata.encoding -> Pdf.t -> (int * string) list
-
-(** Copy the annotations on a given set of pages from a to b. b is returned. *)
-val copy_annotations : int list -> Pdf.t -> Pdf.t -> Pdf.t
-
-(** Remove the annotations on given pages. *)
-val remove_annotations : int list -> Pdf.t -> Pdf.t
 
 (** {2 Imposition} *)
 

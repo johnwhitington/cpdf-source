@@ -656,6 +656,5 @@ let set_open_action pdf fit pagenumber =
                     {pdf with Pdf.root = catalognum; Pdf.trailerdict = trailerdict'}
           | None -> error "bad root"
 
-
 let set_version v pdf =
   pdf.Pdf.minor <- v

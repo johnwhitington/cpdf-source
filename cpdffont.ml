@@ -112,7 +112,7 @@ let missing_font pdf page (name, dict) =
       Printf.printf "%i, %s, %s, %s, %s\n" page name subtype basefont encoding
 
 let missing_fonts pdf range =
-  Cpdf.iter_pages
+  Cpdfpage.iter_pages
     (fun num page ->
        match Pdf.lookup_direct pdf "/Font" page.Pdfpage.resources with
        | Some (Pdf.Dictionary fontdict) ->
@@ -257,3 +257,43 @@ let remove_fontdescriptor pdf = function
 let remove_fonts pdf =
   Pdf.objiter (fun k v -> ignore (Pdf.addobj_given_num pdf (k, remove_fontdescriptor pdf v))) pdf;
   pdf
+
+(* List fonts *)
+let list_font pdf page (name, dict) =
+  let subtype =
+    match Pdf.lookup_direct pdf "/Subtype" dict with
+    | Some (Pdf.Name n) -> Pdfwrite.string_of_pdf (Pdf.Name n)
+    | _ -> ""
+  in let basefont =
+    match Pdf.lookup_direct pdf "/BaseFont" dict with
+    | Some (Pdf.Name n) -> Pdfwrite.string_of_pdf (Pdf.Name n)
+    | _ -> ""
+  in let encoding =
+   match Pdf.lookup_direct pdf "/Encoding" dict with
+    | Some (Pdf.Name n) -> Pdfwrite.string_of_pdf (Pdf.Name n)
+    | _ -> ""
+  in 
+    (page, name, subtype, basefont, encoding)
+
+let list_fonts pdf range =
+  let pages = Pdfpage.pages_of_pagetree pdf in
+    flatten
+      (map
+        (fun (num, page) ->
+           if mem num range then
+             begin match Pdf.lookup_direct pdf "/Font" page.Pdfpage.resources with
+             | Some (Pdf.Dictionary fontdict) ->
+                 map (list_font pdf num) fontdict
+             | _ -> []
+             end
+           else
+             [])
+        (combine (ilist 1 (length pages)) pages))
+
+let string_of_font (p, n, s, b, e) =
+  Printf.sprintf "%i %s %s %s %s\n" p n s b e
+
+let print_fonts pdf range =
+  flprint
+    (fold_left ( ^ ) "" (map string_of_font (list_fonts pdf range)))
+

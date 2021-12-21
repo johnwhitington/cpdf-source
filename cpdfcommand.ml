@@ -3152,7 +3152,7 @@ let go () =
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf args.op true in
             let range = parse_pagespec_allow_empty pdf pagespec in
-              Cpdf.output_page_info pdf range
+              Cpdfpage.output_page_info pdf range
       | _ -> error "list-bookmarks: bad command line"
       end
   | Some Metadata ->
@@ -3162,7 +3162,7 @@ let go () =
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some Fonts) true in
           let range = parse_pagespec_allow_empty pdf pagespec in
-            Cpdf.print_fonts pdf range
+            Cpdffont.print_fonts pdf range
       | _ -> error "-list-fonts: bad command line"
       end
   | Some ListBookmarks ->
@@ -3170,7 +3170,7 @@ let go () =
       | (_, pagespec, _, _, _, _)::_, _ ->
         let pdf = get_single_pdf args.op true in
           let range = parse_pagespec_allow_empty pdf pagespec in
-            Cpdf.list_bookmarks ~json:args.format_json args.encoding range pdf (Pdfio.output_of_channel stdout);
+            Cpdfbookmarks.list_bookmarks ~json:args.format_json args.encoding range pdf (Pdfio.output_of_channel stdout);
             flush stdout
       | _ -> error "list-bookmarks: bad command line"
       end
@@ -3540,14 +3540,14 @@ let go () =
   | Some RemoveAnnotations ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-          write_pdf false (Cpdf.remove_annotations range pdf)
+          write_pdf false (Cpdfannot.remove_annotations range pdf)
   | Some (CopyAnnotations getfrom) ->
       begin match args.inputs with
       | [(k, _, u, o, _, _) as input] ->
         let input_pdf = get_pdf_from_input_kind input args.op k in
           let range = parse_pagespec_allow_empty input_pdf (get_pagespec ()) in
             let pdf =
-              Cpdf.copy_annotations
+              Cpdfannot.copy_annotations
                 range
                 (pdfread_pdf_of_file (optstring u) (optstring o) getfrom)
                 input_pdf
@@ -3556,7 +3556,7 @@ let go () =
       | _ -> error "copy-annotations: No input file specified"
       end
   | Some ListAnnotations ->
-      Cpdf.list_annotations ~json:args.format_json args.encoding (get_single_pdf args.op true)
+      Cpdfannot.list_annotations ~json:args.format_json args.encoding (get_single_pdf args.op true)
   | Some Shift ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
@@ -3687,7 +3687,7 @@ let go () =
                args.relative_to_cropbox args.underneath range pdf)
   | Some (AddBookmarks file) ->
       write_pdf false
-        (Cpdf.add_bookmarks ~json:args.format_json true (Pdfio.input_of_channel (open_in_bin file))
+        (Cpdfbookmarks.add_bookmarks ~json:args.format_json true (Pdfio.input_of_channel (open_in_bin file))
           (get_single_pdf args.op false))
   | Some RemoveBookmarks ->
       write_pdf false (Pdfmarks.remove_bookmarks (get_single_pdf args.op false))

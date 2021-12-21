@@ -23,30 +23,6 @@ let rec process_text time text m =
    function transforms into one which returns the identity matrix *)
 let ppstub f n p = (f n p, n, Pdftransform.i_matrix)
 
-let process_pages f pdf range =
-  let pages = Pdfpage.pages_of_pagetree pdf in
-    let pages', pagenumbers, matrices = (* new page objects, page number, matrix *)
-      split3
-        (map2
-          (fun n p -> if mem n range then f n p else (p, n, Pdftransform.i_matrix))
-          (ilist 1 (length pages))
-          pages)
-    in
-      Pdfpage.change_pages ~matrices:(combine pagenumbers matrices) true pdf pages'
-
-let iter_pages f pdf range =
-  let pages = Pdfpage.pages_of_pagetree pdf in
-    iter2
-      (fun n p -> if mem n range then f n p)
-      (ilist 1 (length pages))
-      pages
-
-let map_pages f pdf range =
-  let pages = Pdfpage.pages_of_pagetree pdf in
-    option_map2
-      (fun n p -> if mem n range then Some (f n p) else None)
-      (ilist 1 (length pages))
-      pages
 
 (* Add stack operators to a content stream to ensure it is composeable. On
 -fast, we don't check for Q deficit, assuming PDF is ISO. *)
@@ -67,7 +43,7 @@ let protect fast pdf resources content =
 
 (* If a cropbox exists, make it the mediabox. If not, change nothing. *)
 let copy_cropbox_to_mediabox pdf range =
-  process_pages
+  Cpdfpage.process_pages
     (ppstub (fun _ page ->
        match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
        | Some pdfobject -> {page with Pdfpage.mediabox = Pdf.direct pdf pdfobject}
@@ -113,333 +89,6 @@ let combine_pdf_resources pdf a b =
             (Pdf.Dictionary [])
             (unknown_keys_a @ unknown_keys_b @ combined_known_entries)
 
-(* \section{Remove bookmarks} *)
-
-(* \section{Add bookmarks} *)
-let read_lines input =
-  let lines = ref [] in
-   try
-     while true do
-       let c = read_line input in
-         lines =| c
-    done; []
-   with
-     _ -> rev !lines
-
-(* Verify a list of bookmarks. Positive jumps of > 1 not allowed, no numbers
-smaller than 0. *)
-let rec verify_bookmarks pdf lastlevel fastrefnums endpage = function
-  | [] -> true
-  | {Pdfmarks.level = level; Pdfmarks.target = target}::more ->
-      let page = Pdfpage.pagenumber_of_target pdf ~fastrefnums target in
-        level < lastlevel + 2 &&
-        level >= 0 &&
-        page <= endpage &&
-        page >= 0 &&
-        verify_bookmarks pdf level fastrefnums endpage more
-
-let verify_bookmarks pdf lastlevel endpage marks =
-  let refnums = Pdf.page_reference_numbers pdf in
-  let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
-    match marks with
-    | [] -> true
-    | m::more -> m.Pdfmarks.level = 0 && verify_bookmarks pdf lastlevel fastrefnums endpage more
-
-(* Parse a line of the bookmarks file. *)
-
-(* Un-escape things which are escaped. Quotes, newlines and backslashes *)
-let rec fixup_characters prev = function
-  | [] -> rev prev
-  | '\\'::'\\'::t -> fixup_characters ('\\'::prev) t
-  | '\\'::'"'::t -> fixup_characters ('"'::prev) t
-  | '\\'::'n'::t -> fixup_characters ('\n'::prev) t
-  | h::t -> fixup_characters (h::prev) t
-
-let debug_bookmark_string s =
-  Printf.printf "STR: %s\n" s
-
-(* If optionaldest = [Pdfgenlex.LexString s], we parse the string, convert the
- * integer to an indirect of the real page target, and then put it in. *)
-let target_of_markfile_obj pdf i' pdfobj =
-  (*Printf.printf "Parsed %s\n" (Pdfwrite.string_of_pdf pdfobj);*)
-  match pdfobj with
-    Pdf.Array (Pdf.Integer x::more) ->
-      let pageobjnum = Pdfpage.page_object_number pdf i' in
-        begin match pageobjnum with
-          None ->
-            raise (Pdf.PDFError "bookmark_of_data: page obj num not found")
-        | Some p ->
-            Pdfdest.read_destination pdf (Pdf.Array (Pdf.Indirect p::more))
-        end
-  (* Need to deal with "null", "(string)", and "<<other thing like action" *) 
-  | Pdf.Null -> Pdfdest.NullDestination
-  | Pdf.String s -> Pdfdest.read_destination pdf (Pdf.String s)
-  | x -> Pdfdest.Action x
-
-let target_of_markfile_target pdf i' = function
-  | [Pdfgenlex.LexString s] ->
-      let pdfobj = Pdfread.parse_single_object s in
-        target_of_markfile_obj pdf i' pdfobj
-  | _ -> Pdfpage.target_of_pagenumber pdf i'
-
-let bookmark_of_data pdf i s i' isopen optionaldest =
-    (*debug_bookmark_string s;
-    debug_bookmark_string (implode (fixup_characters [] (explode s)));
-    debug_bookmark_string (Pdftext.pdfdocstring_of_utf8 (implode (fixup_characters [] (explode s))));*)
-    {Pdfmarks.level = i;
-     Pdfmarks.text = Pdftext.pdfdocstring_of_utf8 (implode (fixup_characters [] (explode s)));
-     Pdfmarks.target = target_of_markfile_target pdf i' optionaldest;
-     Pdfmarks.isopen = isopen}
-
-let target_of_json_target pdf pagenumber target = 
-  target_of_markfile_obj pdf pagenumber (Cpdfjson.object_of_json target)
-
-let mark_of_json pdf = function
-  | `Assoc [("level", `Int level);
-            ("text", `String text);
-            ("page", `Int pagenumber);
-            ("open", `Bool openstatus);
-            ("target", target)] ->
-       {Pdfmarks.level = level;
-        Pdfmarks.text = Pdftext.pdfdocstring_of_utf8 text;
-        Pdfmarks.target = target_of_json_target pdf pagenumber target;
-        Pdfmarks.isopen = openstatus}
-  | _ -> error "malformed mark in mark_of_json"
-
-let marks_of_json pdf = function
-  | `List ms -> map (mark_of_json pdf) ms
-  | _ -> error "top level of JSON boomark file not a list"
-
-let parse_bookmark_file_json verify pdf i =
-  let module J = Cpdfyojson.Safe in
-    try
-      let json =
-        match i.Pdfio.caml_channel with
-        | Some ch -> J.from_channel ch
-        | None ->
-          let content = Pdfio.string_of_bytes (Pdfio.bytes_of_input i 0 i.Pdfio.in_channel_length) in
-            J.from_string content
-      in
-      let marks = marks_of_json pdf json in
-        if verify then
-          if verify_bookmarks pdf 0 (Pdfpage.endpage pdf) marks then marks else
-            error "Bad bookmark file (References non-existant pages or is malformed)"
-        else
-          marks
-    with
-      e ->
-        error (Printf.sprintf "Malformed JSON bookmark file (%s)" (Printexc.to_string e)) 
-
-let parse_bookmark_file verify pdf input =
-  let currline = ref 0 in
-  try
-    let lines = Pdfio.read_lines input in
-      let currline = ref 0 in
-      let bookmarks = ref [] in
-        iter
-          (function line ->
-             match
-               incr currline;
-               Pdfgenlex.lex_string line
-             with
-             | Pdfgenlex.LexInt i::Pdfgenlex.LexString s::Pdfgenlex.LexInt i'::Pdfgenlex.LexName "open"::optionaldest ->
-                 bookmarks =| bookmark_of_data pdf i s i' true optionaldest
-             | Pdfgenlex.LexInt i::Pdfgenlex.LexString s::Pdfgenlex.LexInt i'::optionaldest ->
-                 bookmarks =| bookmark_of_data pdf i s i' false optionaldest
-             | [] -> () (* ignore blank lines *)
-             | _ ->
-                 error ("Bad bookmark file, line " ^ (string_of_int !currline)))
-          lines;
-        let bookmarks = rev !bookmarks in
-          if verify then
-            if verify_bookmarks pdf 0 (Pdfpage.endpage pdf) bookmarks
-                then bookmarks
-                else
-                  error
-                    "Bad bookmark file (References non-existant pages or is malformed)"
-            else
-              bookmarks
-  with
-    e ->
-      error
-        (Printf.sprintf 
-           "Bad bookmark file (syntax) at line %i (error was %s)"
-           !currline
-           (Printexc.to_string e))
-
-
-let add_bookmarks ~json verify input pdf =
-  let parsed =
-    (if json then parse_bookmark_file_json else parse_bookmark_file) verify pdf input in
-    (*iter (fun b -> flprint (Pdfmarks.string_of_bookmark b); flprint "\n") parsed;*)
-    Pdfmarks.add_bookmarks parsed pdf 
-
-(* List bookmarks *)
-let output_string_of_target pdf fastrefnums x =
-  match Pdfdest.pdfobject_of_destination x with
-  | Pdf.Array (_::more) ->
-      let a =
-        Pdf.Array (Pdf.Integer (Pdfpage.pagenumber_of_target ~fastrefnums pdf x)::more)
-      in
-        "\"" ^ Pdfwrite.string_of_pdf a ^ "\"" 
-  | x -> "\"" ^ Pdfwrite.string_of_pdf x ^ "\""
-
-let json_of_target pdf fastrefnums x =
-  match Pdfdest.pdfobject_of_destination x with
-  | Pdf.Array (_::more) ->
-      let a =
-        Pdf.Array (Pdf.Integer (Pdfpage.pagenumber_of_target ~fastrefnums pdf x)::more)
-      in
-        Cpdfjson.json_of_object pdf (fun _ -> ()) false false a
-  | x -> Cpdfjson.json_of_object pdf (fun _ -> ()) false false x
-
-let output_json_marks ch calculate_page_number pdf fastrefnums marks =
-  let module J = Cpdfyojson.Safe in
-  let json_of_mark m =
-    `Assoc
-       [("level", `Int m.Pdfmarks.level);
-        ("text", `String (Pdftext.utf8_of_pdfdocstring m.Pdfmarks.text));
-        ("page", `Int (calculate_page_number m));
-        ("open", `Bool m.Pdfmarks.isopen);
-        ("target", json_of_target pdf fastrefnums m.Pdfmarks.target)]
-  in
-  let json = `List (map json_of_mark marks) in
-    J.pretty_to_channel ch json
-
-(* List the bookmarks in the given range to the given output *)
-let list_bookmarks ~json encoding range pdf output =
-  let process_stripped escaped =
-    let b = Buffer.create 200 in
-      iter
-        (fun x ->
-           if x <= 127 then Buffer.add_char b (char_of_int x))
-        escaped;
-      Buffer.contents b
-  in
-  let process_string s =
-    let rec replace c x y = function
-    | [] -> []
-    | h::t when h = c -> x::y::replace c x y t
-    | h::t -> h::replace c x y t
-    in
-      (* Convert to UTF8, raw, or stripped, and escape backslashed and quotation marks *)
-      let codepoints = Pdftext.codepoints_of_pdfdocstring s in
-        let escaped =
-          let bs = int_of_char '\\'
-          and nl = int_of_char '\n'
-          and n = int_of_char 'n'
-          and q = int_of_char '\"' in
-            replace q bs q (replace nl bs n (replace bs bs bs codepoints))
-        in
-          match encoding with
-          | Cpdfmetadata.UTF8 -> Pdftext.utf8_of_codepoints escaped
-          | Cpdfmetadata.Stripped -> process_stripped escaped
-          | Cpdfmetadata.Raw -> s
-    in
-      let bookmarks = Pdfmarks.read_bookmarks pdf in
-      let refnums = Pdf.page_reference_numbers pdf in
-      let rangetable = hashset_of_list range in
-      let range_is_all = range = ilist 1 (Pdfpage.endpage pdf) in
-      let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
-        (* Find the pagenumber of each bookmark target. If it is in the range,
-         * keep that bookmark. Also keep the bookmark if its target is the null
-         * destination. *)
-        let inrange =
-          keep
-            (function x ->
-               range_is_all || 
-               x.Pdfmarks.target = Pdfdest.NullDestination ||
-               (match x.Pdfmarks.target with Pdfdest.NamedDestinationElsewhere _ -> true | _ -> false) ||
-               Hashtbl.mem rangetable (Pdfpage.pagenumber_of_target ~fastrefnums pdf x.Pdfmarks.target)) bookmarks
-        in
-          let calculate_page_number mark =
-            (* Some buggy PDFs use integers for page numbers instead of page
-             * object references. Adobe Reader and Preview seem to support
-             * this, for presumably historical reasons. So if we see a
-             * OtherDocPageNumber (which is what Pdfdest parses these as,
-             * because that's what they are legitimately, we use this as the
-             * page number. It is zero based, though, and we are one-based, so
-             * we add one. Pdfpage.pagenumber_of_target has been modified to support this.*)
-            Pdfpage.pagenumber_of_target ~fastrefnums pdf mark.Pdfmarks.target
-          in
-            if json then
-              output_json_marks stdout calculate_page_number pdf fastrefnums inrange
-            else
-              iter
-                (function mark ->
-                   output.Pdfio.output_string
-                     (Printf.sprintf "%i \"%s\" %i%s %s\n"
-                       mark.Pdfmarks.level
-                       (process_string mark.Pdfmarks.text)
-                       (calculate_page_number mark)
-                       (if mark.Pdfmarks.isopen then " open" else "")
-                       (output_string_of_target pdf fastrefnums mark.Pdfmarks.target)))
-                inrange
-
-(* o is the stamp, u is the main pdf page *)
-
-(* \section{Split at bookmarks} *)
-
-let get_bookmark_name pdf marks splitlevel n _ =
-  let refnums = Pdf.page_reference_numbers pdf in
-  let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
-  match keep (function m -> n = Pdfpage.pagenumber_of_target ~fastrefnums pdf m.Pdfmarks.target && m.Pdfmarks.level <= splitlevel) marks with
-  | {Pdfmarks.text = title}::_ -> Cpdfattach.remove_unsafe_characters Cpdfmetadata.UTF8 title
-  | _ -> ""
-
-(* Find the stem of a filename *)
-(*let stem s =
-  implode (rev (tail_no_fail (dropwhile (neq '.') (rev (explode (Filename.basename s))))))*)
-
-(* Return list, in order, a *set* of page numbers of bookmarks at a given level *)
-let bookmark_pages level pdf =
-  let refnums = Pdf.page_reference_numbers pdf in
-  let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
-  setify_preserving_order
-    (option_map
-      (function l when l.Pdfmarks.level = level -> Some (Pdfpage.pagenumber_of_target ~fastrefnums pdf l.Pdfmarks.target) | _ -> None)
-      (Pdfmarks.read_bookmarks pdf))
-
-(* Called from cpdflib.ml - different from above *)
-let split_on_bookmarks pdf level =
-  let points = lose (eq 0) (map pred (bookmark_pages level pdf))
-  in let pdf_pages = Pdfpage.pages_of_pagetree pdf in
-    let ranges = splitat points (indx pdf_pages) in
-      map (fun rs -> Pdfpage.pdf_of_pages pdf rs) ranges
-
-(* Output information for each page *)
-let output_page_info pdf range =
-  let pages = Pdfpage.pages_of_pagetree pdf
-  and labels = Pdfpagelabels.read pdf in
-    let getbox page box =
-      if box = "/MediaBox" then
-        match page.Pdfpage.mediabox with
-        | Pdf.Array [a; b; c; d] ->
-           Printf.sprintf "%f %f %f %f"
-             (Pdf.getnum a) (Pdf.getnum b) (Pdf.getnum c) (Pdf.getnum d)
-        | _ -> ""
-      else
-        match Pdf.lookup_direct pdf box page.Pdfpage.rest with
-        | Some (Pdf.Array [a; b; c; d]) ->
-           Printf.sprintf "%f %f %f %f"
-             (Pdf.getnum a) (Pdf.getnum b) (Pdf.getnum c) (Pdf.getnum d)
-        | _ -> ""
-    and rotation page =
-      Pdfpage.int_of_rotation page.Pdfpage.rotate
-    in
-      iter
-        (fun pnum ->
-           let page = select pnum pages in
-             Printf.printf "Page %i:\n" pnum;
-             Printf.printf "Label: %s\n"
-               (try Pdfpagelabels.pagelabeltext_of_pagenumber pnum labels with Not_found -> "");
-             Printf.printf "MediaBox: %s\n" (getbox page "/MediaBox");
-             Printf.printf "CropBox: %s\n" (getbox page "/CropBox");
-             Printf.printf "BleedBox: %s\n" (getbox page "/BleedBox");
-             Printf.printf "TrimBox: %s\n" (getbox page "/TrimBox");
-             Printf.printf "ArtBox: %s\n" (getbox page "/ArtBox");
-             Printf.printf "Rotation: %i\n" (rotation page))
-        range
 
 (* Does the page have a defined box e.g "/CropBox" *)
 let hasbox pdf page boxname =
@@ -449,47 +98,6 @@ let hasbox pdf page boxname =
         match Pdf.lookup_direct pdf boxname p.Pdfpage.rest with
         | Some _ -> true
         | _ -> false
-
-
-
-(* List fonts *)
-let list_font pdf page (name, dict) =
-  let subtype =
-    match Pdf.lookup_direct pdf "/Subtype" dict with
-    | Some (Pdf.Name n) -> Pdfwrite.string_of_pdf (Pdf.Name n)
-    | _ -> ""
-  in let basefont =
-    match Pdf.lookup_direct pdf "/BaseFont" dict with
-    | Some (Pdf.Name n) -> Pdfwrite.string_of_pdf (Pdf.Name n)
-    | _ -> ""
-  in let encoding =
-   match Pdf.lookup_direct pdf "/Encoding" dict with
-    | Some (Pdf.Name n) -> Pdfwrite.string_of_pdf (Pdf.Name n)
-    | _ -> ""
-  in 
-    (page, name, subtype, basefont, encoding)
-
-let list_fonts pdf range =
-  let pages = Pdfpage.pages_of_pagetree pdf in
-    flatten
-      (map
-        (fun (num, page) ->
-           if mem num range then
-             begin match Pdf.lookup_direct pdf "/Font" page.Pdfpage.resources with
-             | Some (Pdf.Dictionary fontdict) ->
-                 map (list_font pdf num) fontdict
-             | _ -> []
-             end
-           else
-             [])
-        (combine (ilist 1 (length pages)) pages))
-
-let string_of_font (p, n, s, b, e) =
-  Printf.sprintf "%i %s %s %s %s\n" p n s b e
-
-let print_fonts pdf range =
-  flprint
-    (fold_left ( ^ ) "" (map string_of_font (list_fonts pdf range)))
 
 (* \section{Superimpose text, page numbers etc.} *)
 
@@ -744,9 +352,7 @@ let extract_page_text only_fontsize pdf _ page =
 (* For each page, extract all the ops with text in them, and concatenate it all together *)
 let extract_text extract_text_font_size pdf range =
   fold_left (fun x y -> x ^ (if x <> "" && y <> "" then "\n" else "") ^ y) ""
-    (map_pages (extract_page_text extract_text_font_size pdf) pdf range)
-
-
+    (Cpdfpage.map_pages (extract_page_text extract_text_font_size pdf) pdf range)
 
 let addtext
   metrics lines linewidth outline fast colour fontname embed bates batespad fontsize font
@@ -883,9 +489,9 @@ let addtext
                 else Pdfpage.postpend_operators pdf ops ~fast:fast page
   in
     if metrics then
-      (ignore (iter_pages (fun a b -> ignore (addtext_page a b)) pdf pages); pdf)
+      (ignore (Cpdfpage.iter_pages (fun a b -> ignore (addtext_page a b)) pdf pages); pdf)
     else
-      process_pages (ppstub addtext_page) pdf pages
+      Cpdfpage.process_pages (ppstub addtext_page) pdf pages
 
 (* Prev is a list of lists of characters *)
 let split_at_newline t =
@@ -1050,8 +656,7 @@ let removetext range pdf =
              let ops = Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content in
                [Pdfops.stream_of_ops (remove_stamps [] ops)]}
       in
-        process_pages (ppstub removetext_page) pdf range
-
+        Cpdfpage.process_pages (ppstub removetext_page) pdf range
 
 (* \section{Shift page data} *)
 let make_mediabox (xmin, ymin, xmax, ymax) =
@@ -1255,7 +860,7 @@ let shift_page ?(fast=false) dxdylist pdf pnum page =
         (Pdfpage.prepend_operators pdf [transform_op] ~fast page, pnum, Pdftransform.mktranslate dx dy)
 
 let shift_pdf ?(fast=false) dxdylist pdf range =
-  process_pages (shift_page ~fast dxdylist pdf) pdf range
+  Cpdfpage.process_pages (shift_page ~fast dxdylist pdf) pdf range
 
 (* Change a page's media box so its minimum x and y are 0, making other
 operations simpler to think about. Any shift that is done is reflected in
@@ -1288,14 +893,14 @@ let vflip_pdf ?(fast=false) pdf range =
     Pdftransform.matrix_of_op
       (Pdftransform.Scale ((0., ((miny +. maxy) /. 2.)), 1., -.1.))
   in
-    process_pages (flip_page ~fast transform_op pdf) pdf range
+    Cpdfpage.process_pages (flip_page ~fast transform_op pdf) pdf range
 
 let hflip_pdf ?(fast=false) pdf range =
   let transform_op minx _ maxx _ =
     Pdftransform.matrix_of_op
       (Pdftransform.Scale (((minx +. maxx) /. 2., 0.), -.1., 1.))
   in
-    process_pages (flip_page ~fast transform_op pdf) pdf range
+    Cpdfpage.process_pages (flip_page ~fast transform_op pdf) pdf range
 
 let stamp_shift_of_position topline midline sw sh w h p =
   let half x = x /. 2.
@@ -1625,7 +1230,7 @@ let set_mediabox xywhlist pdf range =
            [Pdf.Real x; Pdf.Real y;
             Pdf.Real (x +.  w); Pdf.Real (y +. h)])}
   in
-    process_pages (ppstub crop_page) pdf range
+    Cpdfpage.process_pages (ppstub crop_page) pdf range
 
 (* Just used by cpdflib for historical reasons *)
 let setBox box minx maxx miny maxy pdf range =
@@ -1636,7 +1241,7 @@ let setBox box minx maxx miny maxy pdf range =
            page.Pdfpage.rest box
            (Pdf.Array [Pdf.Real minx; Pdf.Real miny; Pdf.Real maxx; Pdf.Real maxy])}
   in
-    process_pages (ppstub set_box_page) pdf range
+    Cpdfpage.process_pages (ppstub set_box_page) pdf range
 
 (* \section{Cropping} *)
 let crop_pdf ?(box="/CropBox") xywhlist pdf range =
@@ -1651,14 +1256,14 @@ let crop_pdf ?(box="/CropBox") xywhlist pdf range =
                  [Pdf.Real x; Pdf.Real y;
                   Pdf.Real (x +.  w); Pdf.Real (y +. h)])))}
   in
-    process_pages (ppstub crop_page) pdf range
+    Cpdfpage.process_pages (ppstub crop_page) pdf range
 
 (* Clip a page to one of its boxes, or the media box if that box is not
  * present. This is a hard clip, done by using a clipping rectangle, so that
  * the page may then be used as a stamp without extraneous material reapearing.
  * *)
 let hard_box pdf range boxname mediabox_if_missing fast =
-  process_pages
+  Cpdfpage.process_pages
     (ppstub (fun pagenum page ->
        let minx, miny, maxx, maxy =
          if boxname = "/MediaBox" then
@@ -1682,7 +1287,7 @@ let remove_cropping_pdf pdf range =
        Pdfpage.rest =
          (Pdf.remove_dict_entry page.Pdfpage.rest "/CropBox")}
   in
-    process_pages (ppstub remove_cropping_page) pdf range
+    Cpdfpage.process_pages (ppstub remove_cropping_page) pdf range
 
 let remove_trim_pdf pdf range =
   let remove_trim_page _ page =
@@ -1690,7 +1295,7 @@ let remove_trim_pdf pdf range =
        Pdfpage.rest =
          (Pdf.remove_dict_entry page.Pdfpage.rest "/TrimBox")}
   in
-    process_pages (ppstub remove_trim_page) pdf range
+    Cpdfpage.process_pages (ppstub remove_trim_page) pdf range
 
 let remove_art_pdf pdf range =
   let remove_art_page _ page =
@@ -1698,7 +1303,7 @@ let remove_art_pdf pdf range =
        Pdfpage.rest =
          (Pdf.remove_dict_entry page.Pdfpage.rest "/ArtBox")}
   in
-    process_pages (ppstub remove_art_page) pdf range
+    Cpdfpage.process_pages (ppstub remove_art_page) pdf range
 
 let remove_bleed_pdf pdf range =
   let remove_bleed_page _ page =
@@ -1706,7 +1311,7 @@ let remove_bleed_pdf pdf range =
        Pdfpage.rest =
          (Pdf.remove_dict_entry page.Pdfpage.rest "/BleedBox")}
   in
-    process_pages (ppstub remove_bleed_page) pdf range
+    Cpdfpage.process_pages (ppstub remove_bleed_page) pdf range
 
 (* \section{Rotating pages} *)
 let rotate_pdf r pdf range =
@@ -1714,14 +1319,14 @@ let rotate_pdf r pdf range =
     {page with Pdfpage.rotate =
        Pdfpage.rotation_of_int r}
   in
-    process_pages (ppstub rotate_page) pdf range
+    Cpdfpage.process_pages (ppstub rotate_page) pdf range
 
 let rotate_pdf_by r pdf range =
   let rotate_page_by _ page =
     {page with Pdfpage.rotate =
        Pdfpage.rotation_of_int ((Pdfpage.int_of_rotation page.Pdfpage.rotate + r) mod 360)}
   in
-    process_pages (ppstub rotate_page_by) pdf range
+    Cpdfpage.process_pages (ppstub rotate_page_by) pdf range
 
 let rotate_page_contents ~fast rotpoint r pdf pnum page =
   let rotation_point =
@@ -1744,7 +1349,7 @@ let rotate_page_contents ~fast rotpoint r pdf pnum page =
         (Pdfpage.prepend_operators pdf [transform_op] ~fast page, pnum, tr)
 
 let rotate_contents ?(fast=false) r pdf range =
-  process_pages (rotate_page_contents ~fast None r pdf) pdf range
+  Cpdfpage.process_pages (rotate_page_contents ~fast None r pdf) pdf range
 
 (* Return the pages from the pdf in the range, unordered. *)
 let select_pages range pdf =
@@ -1795,7 +1400,7 @@ let upright ?(fast=false) range pdf =
           let page = transform_contents ~fast tr pdf page in
             (rectify_boxes ~fast pdf {page with Pdfpage.rotate = Pdfpage.Rotate0}, pnum, tr)
     in
-      process_pages (upright_page pdf) pdf range
+      Cpdfpage.process_pages (upright_page pdf) pdf range
 
 (* \section{Scale page data} *)
 let scale_pdf ?(fast=false) sxsylist pdf range =
@@ -1814,7 +1419,7 @@ let scale_pdf ?(fast=false) sxsylist pdf range =
            transform_annotations pdf matrix page.Pdfpage.rest;
            (Pdfpage.prepend_operators pdf ~fast [transform_op] page, pnum, matrix)
       in
-        process_pages scale_page pdf range
+        Cpdfpage.process_pages scale_page pdf range
 
 (* Scale to fit page of size x * y *)
 let scale_to_fit_pdf ?(fast=false) position input_scale xylist op pdf range =
@@ -1855,7 +1460,7 @@ let scale_to_fit_pdf ?(fast=false) position input_scale xylist op pdf range =
         (Pdfpage.prepend_operators pdf [Pdfops.Op_cm matrix] ~fast
          (change_pattern_matrices_page pdf (Pdftransform.matrix_invert matrix) page), pnum, matrix)
   in
-    process_pages scale_page_to_fit pdf range
+    Cpdfpage.process_pages scale_page_to_fit pdf range
 
 (* Scale contents *)
 let scale_page_contents ?(fast=false) scale position pdf pnum page =
@@ -1891,177 +1496,8 @@ let scale_page_contents ?(fast=false) scale position pdf pnum page =
           (Pdfpage.prepend_operators pdf [transform_op] ~fast page, pnum, transform)
 
 let scale_contents ?(fast=false) position scale pdf range =
-  process_pages (scale_page_contents ~fast scale position pdf) pdf range
+  Cpdfpage.process_pages (scale_page_contents ~fast scale position pdf) pdf range
 
-(* \section{List annotations} *)
-let get_annotation_string encoding pdf annot =
-  match Pdf.lookup_direct pdf "/Contents" annot with
-  | Some (Pdf.String s) -> Cpdfmetadata.encode_output encoding s
-  | _ -> ""
-
-let print_annotation encoding pdf num s =
-  let s = get_annotation_string encoding pdf s in
-  match s with
-  | "" -> ()
-  | s ->
-    flprint (Printf.sprintf "Page %d: " num);
-    flprint s;
-    flprint "\n"
-
-let list_page_annotations encoding pdf num page =
-  match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
-  | Some (Pdf.Array annots) ->
-      iter (print_annotation encoding pdf num) (map (Pdf.direct pdf) annots)
-  | _ -> ()
-
-let annotations_json_page pdf page pagenum =
-  match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
-  | Some (Pdf.Array annots) ->
-      map
-        (fun annot ->
-           `List [`Int pagenum; Cpdfjson.json_of_object pdf (fun _ -> ()) false false annot])
-        (map (Pdf.direct pdf) annots)
-  | _ -> []
-
-let list_annotations_json pdf =
-  let module J = Cpdfyojson.Safe in
-  let pages = Pdfpage.pages_of_pagetree pdf in
-  let pagenums = indx pages in
-  let json = `List (flatten (map2 (annotations_json_page pdf) pages pagenums)) in
-    J.pretty_to_channel stdout json
-
-let list_annotations ~json encoding pdf =
-  let range = Cpdfpagespec.parse_pagespec pdf "all" in
-  if json
-    then list_annotations_json pdf
-    else iter_pages (list_page_annotations encoding pdf) pdf range
-
-let get_annotations encoding pdf =
-  let pages = Pdfpage.pages_of_pagetree pdf in
-    flatten
-      (map2
-       (fun page pagenumber ->
-         match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
-         | Some (Pdf.Array annots) ->
-             let strings =
-               map (get_annotation_string encoding pdf) (map (Pdf.direct pdf) annots)
-             in
-               combine (many pagenumber (length strings)) strings
-         | _ -> [])
-        pages
-        (ilist 1 (length pages))) 
-
-(* Equalise the page lengths of two PDFs by chopping or extending the first one.
-*)
-let equalise_lengths a b =
-  let a' =
-    if Pdfpage.endpage a < Pdfpage.endpage b then
-      Pdfpage.change_pages false a
-        (Pdfpage.pages_of_pagetree a @
-           many (Pdfpage.blankpage Pdfpaper.a4) (Pdfpage.endpage b - Pdfpage.endpage a))
-    else if Pdfpage.endpage a > Pdfpage.endpage b then
-      Pdfpage.change_pages false a
-        (take (Pdfpage.pages_of_pagetree a) (Pdfpage.endpage b))
-    else a 
-  in
-    a', b
-
-(* Copy annotations *)
-
-(* FIXME: Why does this chop the files to the same length? Should be able to
-apply annotations from a longer file to a shorter? *)
-
-(* Rewrite any annotation destinations to point to pages in the
-destination file. This prevents pages being copied, and ensures the links are
-correct Any Indirect link inside a /Dest is rewritten if in the table. If not
-inside a /Dest, nothing is rewritten. *)
-let rec renumber_in_dest table indest = function
-    Pdf.Indirect i -> 
-      begin
-        try Pdf.Indirect (Hashtbl.find table i) with _ -> Pdf.Indirect i
-      end
-  | Pdf.Array a ->
-      Pdf.recurse_array (renumber_in_dest table indest) a
-  | Pdf.Dictionary d ->
-      Pdf.Dictionary
-        (map
-          (function
-             ("/Dest", v) -> ("/Dest", renumber_in_dest table true v)
-           | (k, v) -> (k, renumber_in_dest table indest v))
-          d)
-  | x -> x 
-
-let renumber_in_object pdf objnum table =
-  Pdf.addobj_given_num
-    pdf (objnum, (renumber_in_dest table false (Pdf.lookup_obj pdf objnum)))
-
-let copy_annotations_page topdf frompdf frompage topage =
-  match Pdf.lookup_direct frompdf "/Annots" frompage.Pdfpage.rest with
-    Some (Pdf.Array frompage_annots as annots) ->
-      let table =
-        hashtable_of_dictionary
-          (combine
-             (Pdf.page_reference_numbers frompdf)
-             (Pdf.page_reference_numbers topdf))
-      in
-        iter
-         (function
-            (* FIXME: We assume they are indirects. Must also do direct, though rare.*)
-            Pdf.Indirect x ->
-              (*Printf.printf "Copying annotation %s which is\n%s\n"
-                (Pdfwrite.string_of_pdf (Pdf.Indirect x))
-                (Pdfwrite.string_of_pdf (Pdf.direct frompdf (Pdf.Indirect
-                x)));*)
-              renumber_in_object frompdf x table
-          | _ -> ())
-         frompage_annots;
-        let objects_to_copy = Pdf.objects_referenced [] [] frompdf annots in
-          iter
-            (fun n ->
-               ignore (Pdf.addobj_given_num topdf (n, Pdf.lookup_obj frompdf n)))
-            objects_to_copy;
-          let topage_annots =
-            match Pdf.lookup_direct frompdf "/Annots" topage.Pdfpage.rest with
-            | Some (Pdf.Array annots) -> annots
-            | _ -> []
-          in
-            let merged_dict = Pdf.Array (frompage_annots @ topage_annots) in
-              let topage' =
-                {topage with Pdfpage.rest =
-                   Pdf.add_dict_entry topage.Pdfpage.rest "/Annots" merged_dict}
-              in
-                topdf, topage'
-  | Some x -> topdf, topage
-  | None -> topdf, topage
-
-let copy_annotations range frompdf topdf =
-  let frompdf, topdf = equalise_lengths frompdf topdf in
-    match Pdf.renumber_pdfs [frompdf; topdf] with 
-    | [frompdf; topdf] ->
-        let frompdf_pages = Pdfpage.pages_of_pagetree frompdf in
-        let topdf_pages = Pdfpage.pages_of_pagetree topdf in
-          let pdf = ref topdf
-          and pages = ref []
-          and pnum = ref 1
-          and frompdf_pages = ref frompdf_pages
-          and topdf_pages = ref topdf_pages in
-            (* Go through, updating pdf and collecting new pages. *)
-            while not (isnull !frompdf_pages) do
-              let frompdf_page = hd !frompdf_pages
-              and topdf_page = hd !topdf_pages in
-                let pdf', page =
-                  if mem !pnum range
-                    then copy_annotations_page !pdf frompdf frompdf_page topdf_page
-                    else !pdf, topdf_page
-                in
-                  pdf := pdf';
-                  pages =| page;
-                  incr pnum;
-                  frompdf_pages := tl !frompdf_pages;
-                  topdf_pages := tl !topdf_pages
-            done;
-            Pdfpage.change_pages true !pdf (rev !pages)
-    | _ -> assert false
 
 let addrectangle
   fast (w, h) colour outline linewidth opacity position relative_to_cropbox
@@ -2125,7 +1561,7 @@ let addrectangle
           then Pdfpage.prepend_operators pdf ops ~fast:fast page
           else Pdfpage.postpend_operators pdf ops ~fast:fast page
   in
-    process_pages (ppstub addrectangle_page) pdf range
+    Cpdfpage.process_pages (ppstub addrectangle_page) pdf range
 
 
 (* Imposition *)
@@ -2497,7 +1933,7 @@ let blacktext c range pdf =
       process_xobjects pdf page (blacktext_ops c);
       {page with Pdfpage.content = content'}
   in
-    process_pages (ppstub blacktext_page) pdf range
+    Cpdfpage.process_pages (ppstub blacktext_page) pdf range
 
 (* \section{Blacken lines} *)
 let blacklines_ops c pdf resources content =
@@ -2523,7 +1959,7 @@ let blacklines c range pdf =
       process_xobjects pdf page (blacklines_ops c);
       {page with Pdfpage.content = content'}
   in
-    process_pages (ppstub blacklines_page) pdf range
+    Cpdfpage.process_pages (ppstub blacklines_page) pdf range
 
 (* \section{Blacken Fills} *)
 let blackfills_ops c pdf resources content =
@@ -2549,7 +1985,7 @@ let blackfills c range pdf =
       process_xobjects pdf page (blackfills_ops c);
       {page with Pdfpage.content = content'}
   in
-    process_pages (ppstub blackfills_page) pdf range
+    Cpdfpage.process_pages (ppstub blackfills_page) pdf range
 
 (* \section{Set a minimum line width to avoid dropout} *)
 let thinlines range width pdf =
@@ -2624,20 +2060,8 @@ let thinlines range width pdf =
                 let content' = [Pdfops.stream_of_ops operators] in
                   {page with Pdfpage.content = content'} 
   in
-    process_pages (ppstub thinpage) pdf range
+    Cpdfpage.process_pages (ppstub thinpage) pdf range
 
-(* \section{Remove annotations} *)
-let remove_annotations range pdf =
-  let remove_annotations_page pagenum page =
-    if mem pagenum range then
-      let rest' =
-        Pdf.remove_dict_entry page.Pdfpage.rest "/Annots"
-      in
-        {page with Pdfpage.rest = rest'}
-    else
-      page
-  in
-    process_pages (ppstub remove_annotations_page) pdf range
 
 (* \section{Making draft documents} *)
 
@@ -2809,7 +2233,7 @@ let append_page_content_page fast s before pdf n page =
     pdf ops ~fast page
 
 let append_page_content s before fast range pdf =
-  process_pages (ppstub (append_page_content_page fast s before pdf)) pdf range
+  Cpdfpage.process_pages (ppstub (append_page_content_page fast s before pdf)) pdf range
 
 (* Add rectangles on top of pages to show Media, Crop, Art, Trim, Bleed boxes.
  *
@@ -2855,7 +2279,9 @@ let show_boxes_page fast pdf _ page =
       Pdfpage.postpend_operators pdf ops ~fast page
 
 let show_boxes ?(fast=false) pdf range =
-  process_pages (ppstub (show_boxes_page fast pdf)) pdf range
+  Cpdfpage.process_pages (ppstub (show_boxes_page fast pdf)) pdf range
+
+
 
 let allowance = 9.
 
@@ -2887,7 +2313,7 @@ let trim_marks_page fast pdf n page =
       page
 
 let trim_marks ?(fast=false) pdf range =
-  process_pages (ppstub (trim_marks_page fast pdf)) pdf range
+  Cpdfpage.process_pages (ppstub (trim_marks_page fast pdf)) pdf range
 
 let rec remove_all_text_ops pdf resources content =
   let is_textop = function
@@ -2989,7 +2415,7 @@ let remove_clipping pdf range =
       process_xobjects pdf page remove_clipping_ops;
       {page with Pdfpage.content = content'}
   in
-    process_pages (ppstub remove_clipping_page) pdf range
+    Cpdfpage.process_pages (ppstub remove_clipping_page) pdf range
 
 (* Image resolution *)
 type xobj =
@@ -3079,7 +2505,7 @@ let rec image_resolution_page pdf page pagenum dpi (images : (int * string * xob
 
 and image_resolution pdf range dpi =
   let images = ref [] in
-    iter_pages
+    Cpdfpage.iter_pages
       (fun pagenum page ->
          (* 1. Get all image names and their native resolutions from resources as string * int * int *)
          match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
@@ -3142,7 +2568,7 @@ let image_resolution pdf range dpi =
 the contents of the mediabox will be used if the from fox is not available. If
 mediabox_is_missing is false, the page is unaltered. *)
 let copy_box f t mediabox_if_missing pdf range =
-  process_pages
+  Cpdfpage.process_pages
     (ppstub (fun _ page ->
        if f = "/MediaBox" then
          {page with Pdfpage.rest =
@@ -3178,7 +2604,7 @@ let remove_unused_resources_page pdf n page =
           {page with Pdfpage.resources = Pdf.add_dict_entry page.Pdfpage.resources  "/XObject" xobjdict}
 
 let remove_unused_resources pdf =
-  process_pages (ppstub (remove_unused_resources_page pdf)) pdf (ilist 1 (Pdfpage.endpage pdf))
+  Cpdfpage.process_pages (ppstub (remove_unused_resources_page pdf)) pdf (ilist 1 (Pdfpage.endpage pdf))
 
 (* Indent bookmarks in each file by one and add a title bookmark pointing to the first page. *)
 let add_bookmark_title filename use_title pdf =
@@ -3413,5 +2839,3 @@ let extract_images path_to_p2p path_to_im encoding dedup dedup_per_page pdf rang
                  iter (extract_images_form_xobject path_to_p2p path_to_im encoding dedup dedup_per_page pdf serial stem pnum) forms)
           pages
           (indx pages)
-
-
