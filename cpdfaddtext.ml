@@ -643,5 +643,40 @@ let addrectangle
           else Pdfpage.postpend_operators pdf ops ~fast:fast page
   in
     Cpdfpage.process_pages (ppstub addrectangle_page) pdf range
+open Pdfutil
 
+let rec remove_all_text_ops pdf resources content =
+  let is_textop = function
+    Pdfops.Op_Tj _ | Pdfops.Op_' _ | Pdfops.Op_'' _ | Pdfops.Op_TJ _ -> true
+  | _ -> false
+  in
+    let content' =
+      let ops = Pdfops.parse_operators pdf resources content in
+        Pdfops.stream_of_ops
+          (option_map (function x -> if is_textop x then None else Some x) ops) 
+    in
+      [content']
 
+let remove_all_text_page pdf p =
+  let resources = p.Pdfpage.resources in
+  let content = p.Pdfpage.content in
+    Cpdfutil.process_xobjects pdf p remove_all_text_ops;
+    {p with Pdfpage.content = remove_all_text_ops pdf resources content}, pdf
+
+let remove_all_text range pdf =
+  let pages = Pdfpage.pages_of_pagetree pdf in
+    let pagenums = indx pages in
+    let pdf = ref pdf in
+    let pages' = ref [] in
+      iter2 
+        (fun p pagenum ->
+          let p', pdf' =
+            if mem pagenum range
+              then remove_all_text_page !pdf p
+              else p, !pdf
+          in
+            pdf := pdf';
+            pages' =| p')
+        pages
+        pagenums;
+      Pdfpage.change_pages true !pdf (rev !pages')

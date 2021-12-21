@@ -117,39 +117,6 @@ let change_boxes f pdf page =
                  make_mediabox (f (Pdf.parse_rectangle page.Pdfpage.mediabox));
                Pdfpage.rest = rest'}
 
-let process_xobject f pdf resources i =
-  let xobj = Pdf.lookup_obj pdf i in
-    match Pdf.lookup_direct pdf "/Subtype" xobj with
-    | None -> raise (Pdf.PDFError "No /Subtype in Xobject") 
-    | Some (Pdf.Name "/Form") ->
-        Pdf.getstream xobj;
-        begin match xobj with
-        | Pdf.Stream ({contents = Pdf.Dictionary dict, Pdf.Got bytes} as rf) ->
-            begin match f pdf resources [Pdf.Stream rf] with
-            | [Pdf.Stream {contents = (Pdf.Dictionary dict', data)}] ->
-                let dict' =
-                  Pdf.remove_dict_entry
-                    (Pdf.Dictionary (mergedict dict dict'))
-                    "/Filter"
-                in
-                  rf := (dict', data)
-            | _ -> assert false
-            end
-        | _ -> assert false (* getstream would have complained already *)
-        end
-    | Some _ -> ()
-
-let process_xobjects pdf page f =
-  match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
-  | Some (Pdf.Dictionary elts) ->
-      iter
-        (fun (k, v) ->
-          match v with
-          | Pdf.Indirect i -> process_xobject f pdf page.Pdfpage.resources i
-          | _ -> raise (Pdf.PDFError "process_xobject"))
-        elts
-  | _ -> ()
-
 (* The content transformed by altering any use of [Op_cm]. But we must also
 alter any /Matrix entries in pattern dictionaries *)
 let change_pattern_matrices_resources pdf tr resources =
@@ -1180,7 +1147,7 @@ let blacktext c range pdf =
     let content' =
       blacktext_ops c pdf page.Pdfpage.resources page.Pdfpage.content
     in
-      process_xobjects pdf page (blacktext_ops c);
+      Cpdfutil.process_xobjects pdf page (blacktext_ops c);
       {page with Pdfpage.content = content'}
   in
     Cpdfpage.process_pages (ppstub blacktext_page) pdf range
@@ -1206,7 +1173,7 @@ let blacklines c range pdf =
     let content' =
       blacklines_ops c pdf page.Pdfpage.resources page.Pdfpage.content
     in
-      process_xobjects pdf page (blacklines_ops c);
+      Cpdfutil.process_xobjects pdf page (blacklines_ops c);
       {page with Pdfpage.content = content'}
   in
     Cpdfpage.process_pages (ppstub blacklines_page) pdf range
@@ -1232,7 +1199,7 @@ let blackfills c range pdf =
     let content' =
       blackfills_ops c pdf page.Pdfpage.resources page.Pdfpage.content
     in
-      process_xobjects pdf page (blackfills_ops c);
+      Cpdfutil.process_xobjects pdf page (blackfills_ops c);
       {page with Pdfpage.content = content'}
   in
     Cpdfpage.process_pages (ppstub blackfills_page) pdf range
@@ -1404,42 +1371,6 @@ let trim_marks_page fast pdf n page =
 let trim_marks ?(fast=false) pdf range =
   Cpdfpage.process_pages (ppstub (trim_marks_page fast pdf)) pdf range
 
-let rec remove_all_text_ops pdf resources content =
-  let is_textop = function
-    Pdfops.Op_Tj _ | Pdfops.Op_' _ | Pdfops.Op_'' _ | Pdfops.Op_TJ _ -> true
-  | _ -> false
-  in
-    let content' =
-      let ops = Pdfops.parse_operators pdf resources content in
-        Pdfops.stream_of_ops
-          (option_map (function x -> if is_textop x then None else Some x) ops) 
-    in
-      [content']
-
-let remove_all_text_page pdf p =
-  let resources = p.Pdfpage.resources in
-  let content = p.Pdfpage.content in
-    process_xobjects pdf p remove_all_text_ops;
-    {p with Pdfpage.content = remove_all_text_ops pdf resources content}, pdf
-
-let remove_all_text range pdf =
-  let pages = Pdfpage.pages_of_pagetree pdf in
-    let pagenums = indx pages in
-    let pdf = ref pdf in
-    let pages' = ref [] in
-      iter2 
-        (fun p pagenum ->
-          let p', pdf' =
-            if mem pagenum range
-              then remove_all_text_page !pdf p
-              else p, !pdf
-          in
-            pdf := pdf';
-            pages' =| p')
-        pages
-        pagenums;
-      Pdfpage.change_pages true !pdf (rev !pages')
-
 (* 1. Extend remove_dict_entry with search term
    2. Implement replace_dict_entry by analogy to remove_dict_entry *)
 let rec dict_entry_single_object f pdf = function
@@ -1501,7 +1432,7 @@ let remove_clipping pdf range =
     let content' =
       remove_clipping_ops pdf page.Pdfpage.resources page.Pdfpage.content
     in
-      process_xobjects pdf page remove_clipping_ops;
+      Cpdfutil.process_xobjects pdf page remove_clipping_ops;
       {page with Pdfpage.content = content'}
   in
     Cpdfpage.process_pages (ppstub remove_clipping_page) pdf range

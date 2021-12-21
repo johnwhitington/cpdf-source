@@ -113,11 +113,7 @@ val blacklines : Cpdfaddtext.color -> int list -> Pdf.t -> Pdf.t
 (** Make all fills on certain pages black. *)
 val blackfills : Cpdfaddtext.color -> int list -> Pdf.t -> Pdf.t
 
-val remove_all_text : int list -> Pdf.t -> Pdf.t 
-
 (**/**)
-
-val process_xobjects : Pdf.t -> Pdfpage.t -> (Pdf.t -> Pdf.pdfobject -> Pdf.pdfobject list -> Pdf.pdfobject list) -> unit
 
 val append_page_content : string -> bool -> bool -> int list -> Pdf.t -> Pdf.t
 

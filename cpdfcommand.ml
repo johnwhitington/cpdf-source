@@ -3859,7 +3859,7 @@ let go () =
   | Some RemoveAllText ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-        write_pdf false (Cpdf.remove_all_text range pdf)
+        write_pdf false (Cpdfaddtext.remove_all_text range pdf)
   | Some ShowBoxes ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in

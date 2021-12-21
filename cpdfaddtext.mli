@@ -70,3 +70,4 @@ val metrics_baseline_adjustment : unit -> float
 val removetext : int list -> Pdf.t -> Pdf.t
 
 val extract_text : float option -> Pdf.t -> int list -> string 
+val remove_all_text : int list -> Pdf.t -> Pdf.t 
