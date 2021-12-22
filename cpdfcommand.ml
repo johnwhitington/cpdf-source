@@ -3069,7 +3069,7 @@ let go () =
       begin match args.inputs, args.out with
       | _::_, _ ->
          let pdf = get_single_pdf (Some RemoveUnusedResources) false in
-           let outpdf = Cpdf.remove_unused_resources pdf in
+           let outpdf = Cpdftweak.remove_unused_resources pdf in
              write_pdf true outpdf
       | _ -> error "RemoveUnusedResources: bad command line"
       end
@@ -3180,7 +3180,7 @@ let go () =
           let pdf = get_single_pdf (Some Crop) false in
             let xywhlist = Cpdfcoord.parse_rectangles pdf args.rectangle in
               let range = parse_pagespec_allow_empty pdf pagespec in
-                let pdf = Cpdf.crop_pdf xywhlist pdf range in
+                let pdf = Cpdfpage.crop_pdf xywhlist pdf range in
                   write_pdf false pdf
       | _ -> error "crop: bad command line"
       end
@@ -3190,7 +3190,7 @@ let go () =
           let pdf = get_single_pdf (Some Art) false in
             let xywhlist = Cpdfcoord.parse_rectangles pdf args.rectangle in
               let range = parse_pagespec_allow_empty pdf pagespec in
-                let pdf = Cpdf.crop_pdf ~box:"/ArtBox" xywhlist pdf range in
+                let pdf = Cpdfpage.crop_pdf ~box:"/ArtBox" xywhlist pdf range in
                   write_pdf false pdf
       | _ -> error "art: bad command line"
       end
@@ -3200,7 +3200,7 @@ let go () =
           let pdf = get_single_pdf (Some Bleed) false in
             let xywhlist = Cpdfcoord.parse_rectangles pdf args.rectangle in
               let range = parse_pagespec_allow_empty pdf pagespec in
-                let pdf = Cpdf.crop_pdf ~box:"/BleedBox" xywhlist pdf range in
+                let pdf = Cpdfpage.crop_pdf ~box:"/BleedBox" xywhlist pdf range in
                   write_pdf false pdf
       | _ -> error "bleed: bad command line"
       end
@@ -3210,7 +3210,7 @@ let go () =
           let pdf = get_single_pdf (Some Trim) false in
             let xywhlist = Cpdfcoord.parse_rectangles pdf args.rectangle in
               let range = parse_pagespec_allow_empty pdf pagespec in
-                let pdf = Cpdf.crop_pdf ~box:"/TrimBox" xywhlist pdf range in
+                let pdf = Cpdfpage.crop_pdf ~box:"/TrimBox" xywhlist pdf range in
                   write_pdf false pdf
       | _ -> error "trim: bad command line"
       end
@@ -3244,7 +3244,7 @@ let go () =
                 | _ -> error "Copy box: no tobox or no frombox specified"
                 end
               in
-                let pdf = Cpdf.copy_box f t args.mediabox_if_missing pdf range in
+                let pdf = Cpdfpage.copy_box f t args.mediabox_if_missing pdf range in
                   write_pdf false pdf
       | _ -> error "Copy Box: bad command line"
       end
@@ -3346,8 +3346,8 @@ let go () =
             let range = parse_pagespec_allow_empty pdf pagespec in
               let pdf = 
                 if flip = VFlip
-                  then Cpdf.vflip_pdf ~fast:args.fast pdf range
-                  else Cpdf.hflip_pdf ~fast:args.fast pdf range
+                  then Cpdfpage.vflip_pdf ~fast:args.fast pdf range
+                  else Cpdfpage.hflip_pdf ~fast:args.fast pdf range
               in
                 write_pdf false pdf
       | _ -> error "flip: bad command line"
@@ -3524,19 +3524,19 @@ let go () =
   | Some (ThinLines w) ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-          write_pdf false (Cpdf.thinlines range w pdf)
+          write_pdf false (Cpdftweak.thinlines range w pdf)
   | Some BlackText ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-          write_pdf false (Cpdf.blacktext args.color range pdf)
+          write_pdf false (Cpdftweak.blacktext args.color range pdf)
   | Some BlackLines ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-          write_pdf false (Cpdf.blacklines args.color range pdf)
+          write_pdf false (Cpdftweak.blacklines args.color range pdf)
   | Some BlackFills ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-          write_pdf false (Cpdf.blackfills args.color range pdf)
+          write_pdf false (Cpdftweak.blackfills args.color range pdf)
   | Some RemoveAnnotations ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
@@ -3711,7 +3711,7 @@ let go () =
         let pdf = get_single_pdf args.op false in
           let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
             let pdf =
-              Cpdf.stamp
+              Cpdfpage.stamp
                 args.relative_to_cropbox args.position args.topline args.midline args.fast
                 args.scale_stamp_to_fit true range overpdf pdf
             in
@@ -3725,14 +3725,14 @@ let go () =
         let pdf = get_single_pdf args.op false in
           let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
             let pdf =
-              Cpdf.stamp
+              Cpdfpage.stamp
                 args.relative_to_cropbox args.position args.topline args.midline args.fast
                 args.scale_stamp_to_fit false range underpdf pdf
             in
               write_pdf false pdf
   | Some (CombinePages over) ->
       write_pdf false
-        (Cpdf.combine_pages args.fast (get_single_pdf args.op false) (pdfread_pdf_of_file None None over) false false true)
+        (Cpdfpage.combine_pages args.fast (get_single_pdf args.op false) (pdfread_pdf_of_file None None over) false false true)
   | Some Encrypt ->
       let pdf = get_single_pdf args.op false in
         let pdf = Cpdfsqueeze.recompress_pdf pdf
@@ -3819,22 +3819,22 @@ let go () =
           (map Pdfpagelabels.string_of_pagelabel (Pdfpagelabels.read pdf))
   | Some (RemoveDictEntry key) ->
       let pdf = get_single_pdf args.op true in
-        Cpdf.remove_dict_entry pdf key args.dict_entry_search;
+        Cpdftweak.remove_dict_entry pdf key args.dict_entry_search;
         write_pdf false pdf
   | Some (ReplaceDictEntry key) ->
       let pdf = get_single_pdf args.op true in
-        Cpdf.replace_dict_entry pdf key args.replace_dict_entry_value args.dict_entry_search;
+        Cpdftweak.replace_dict_entry pdf key args.replace_dict_entry_value args.dict_entry_search;
         write_pdf false pdf
   | Some (PrintDictEntry key) ->
       let pdf = get_single_pdf args.op true in
-        Cpdf.print_dict_entry pdf key
+        Cpdftweak.print_dict_entry pdf key
   | Some ListSpotColours ->
       let pdf = get_single_pdf args.op false in
         Cpdfspot.list_spot_colours pdf
   | Some RemoveClipping ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-          write_pdf false (Cpdf.remove_clipping pdf range)
+          write_pdf false (Cpdftweak.remove_clipping pdf range)
   | Some CreateMetadata ->
       let pdf = get_single_pdf args.op false in
         write_pdf false (Cpdfmetadata.create_metadata pdf)
@@ -3863,16 +3863,16 @@ let go () =
   | Some ShowBoxes ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-        write_pdf false (Cpdf.show_boxes pdf range)
+        write_pdf false (Cpdfpage.show_boxes pdf range)
   | Some TrimMarks ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-        write_pdf false (Cpdf.trim_marks pdf range)
+        write_pdf false (Cpdfpage.trim_marks pdf range)
   | Some (Postpend s | Prepend s as x) ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
       let before = match x with Prepend _ -> true | _ -> false in
-        write_pdf false (Cpdf.append_page_content s before args.fast range pdf)
+        write_pdf false (Cpdftweak.append_page_content s before args.fast range pdf)
   | Some OutputJSON ->
       let pdf = get_single_pdf args.op false in
         write_json args.out pdf
