@@ -3033,7 +3033,15 @@ In a PDF file, optional content groups are used to group graphical elements toge
   \noindent\verb!cpdf -list-spot-colors in.pdf!
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf -remove-dict-entry <dictionary key> in.pdf -o out.pdf!
+  \noindent\verb!cpdf -print-dict-entry <key> in.pdf!
+
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -remove-dict-entry <key> [-dict-entry-search <term>]!\\
+  \noindent\verb!      in.pdf -o out.pdf!
+
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -replace-dict-entry <key> -replace-dict-entry-value <value>!\\
+  \noindent\verb!     [-dict-entry-search <term>] in.pdf -o out.pdf!
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -remove-clipping [<range>] in.pdf -o out.pdf!
@@ -3168,17 +3176,52 @@ This operation lists the name of any ``separation'' color space in the given PDF
   \noindent List the spot colors, one per line in \texttt{in.pdf}, writing to \texttt{stdout}.
   \end{framed}
 
-\section{Removing Dictionary Entries}
+\section{PDF Dictionary Entries}
 \label{removedictentry}
 This is for editing data within the PDF's internal representation. Use with caution.
+
+To print a dictionary entry:
+
+  \begin{framed}
+  \small\noindent\verb!cpdf -print-dict-entry /URI in.pdf -o out.pdf!
+
+  \vspace{2.5mm}
+  \noindent Print all URLs in annotation hyperlinks \texttt{in.pdf}. 
+  \end{framed}
+
+To remove a dictionary entry:
 
   \begin{framed}
   \small\noindent\verb!cpdf -remove-dict-entry /One in.pdf -o out.pdf!
 
   \vspace{2.5mm}
   \noindent Remove the entry for \texttt{/One} in every dictionary \texttt{in.pdf}, writing to \texttt{out.pdf}. 
+
+  \vspace{2.5mm}
+
+  \small\noindent\verb!cpdf -remove-dict-entry /One -dict-entry-search "1" in.pdf -o out.pdf!
+
+  \vspace{2.5mm}
+  \noindent Replace the entry for \texttt{/One} in every dictionary \texttt{in.pdf} if the key's value is the given value, writing to \texttt{out.pdf}. 
   \end{framed}
 
+To replace a dictionary entry:
+
+  \begin{framed}
+  \small\noindent\verb!cpdf -replace-dict-entry /One -replace-dict-entry-value "2"!\\
+  \small\noindent\verb!     in.pdf -o out.pdf!
+
+  \vspace{2.5mm}
+  \noindent Remove the entry for \texttt{/One} in every dictionary \texttt{in.pdf}, writing to \texttt{out.pdf}. 
+
+  \vspace{2.5mm}
+
+  \small\noindent\verb!cpdf -replace-dict-entry /One -dict-entry-search "1"!\\
+  \small\noindent\verb!     -replace-dict-entry-value "2" in.pdf -o out.pdf!
+
+  \vspace{2.5mm}
+  \noindent Remove the entry for \texttt{/One} in every dictionary \texttt{in.pdf} if the key's value is the given value, writing to \texttt{out.pdf}. 
+  \end{framed}
 
 \section{Removing Clipping}
 
