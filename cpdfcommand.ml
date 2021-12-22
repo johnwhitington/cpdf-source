@@ -3220,7 +3220,7 @@ let go () =
           let pdf = get_single_pdf (Some MediaBox) false in
             let xywhlist = Cpdfcoord.parse_rectangles pdf args.rectangle in
               let range = parse_pagespec_allow_empty pdf pagespec in
-                let pdf = Cpdf.set_mediabox xywhlist pdf range in
+                let pdf = Cpdfpage.set_mediabox xywhlist pdf range in
                   write_pdf false pdf
       | _ -> error "set media box: bad command line"
       end
@@ -3229,7 +3229,7 @@ let go () =
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some (HardBox box)) false in
           let range = parse_pagespec_allow_empty pdf pagespec in
-            let pdf = Cpdf.hard_box pdf range box args.mediabox_if_missing args.fast in
+            let pdf = Cpdfpage.hard_box pdf range box args.mediabox_if_missing args.fast in
               write_pdf false pdf
       | _ -> error "hard box: bad command line"
       end
@@ -3266,7 +3266,7 @@ let go () =
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some RemoveCrop) false in
             let range = parse_pagespec_allow_empty pdf pagespec in
-              let pdf = Cpdf.remove_cropping_pdf pdf range in
+              let pdf = Cpdfpage.remove_cropping_pdf pdf range in
                 write_pdf false pdf
       | _ -> error "remove-crop: bad command line"
       end
@@ -3275,7 +3275,7 @@ let go () =
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some RemoveArt) false in
             let range = parse_pagespec_allow_empty pdf pagespec in
-              let pdf = Cpdf.remove_art_pdf pdf range in
+              let pdf = Cpdfpage.remove_art_pdf pdf range in
                 write_pdf false pdf
       | _ -> error "remove-crop: bad command line"
       end
@@ -3284,7 +3284,7 @@ let go () =
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some RemoveTrim) false in
             let range = parse_pagespec_allow_empty pdf pagespec in
-              let pdf = Cpdf.remove_trim_pdf pdf range in
+              let pdf = Cpdfpage.remove_trim_pdf pdf range in
                 write_pdf false pdf
       | _ -> error "remove-crop: bad command line"
       end
@@ -3293,7 +3293,7 @@ let go () =
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some RemoveBleed) false in
             let range = parse_pagespec_allow_empty pdf pagespec in
-              let pdf = Cpdf.remove_bleed_pdf pdf range in
+              let pdf = Cpdfpage.remove_bleed_pdf pdf range in
                 write_pdf false pdf
       | _ -> error "remove-crop: bad command line"
       end
@@ -3302,7 +3302,7 @@ let go () =
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some CopyCropBoxToMediaBox) false in
             let range = parse_pagespec_allow_empty pdf pagespec in
-              let pdf = Cpdf.copy_cropbox_to_mediabox pdf range in
+              let pdf = Cpdfpage.copy_cropbox_to_mediabox pdf range in
                 write_pdf false pdf
       | _ -> error "remove-crop: bad command line"
       end
@@ -3313,8 +3313,8 @@ let go () =
             let range = parse_pagespec_allow_empty pdf pagespec in
               let rotate =
                 match args.op with
-                | Some (Rotate i) -> Cpdf.rotate_pdf i
-                | Some (Rotateby i) -> Cpdf.rotate_pdf_by i
+                | Some (Rotate i) -> Cpdfpage.rotate_pdf i
+                | Some (Rotateby i) -> Cpdfpage.rotate_pdf_by i
                 | _ -> assert false
               in
                 let pdf = rotate pdf range in
@@ -3326,7 +3326,7 @@ let go () =
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf args.op false in
             let range = parse_pagespec_allow_empty pdf pagespec in
-              let pdf = Cpdf.rotate_contents ~fast:args.fast a pdf range in
+              let pdf = Cpdfpage.rotate_contents ~fast:args.fast a pdf range in
                 write_pdf false pdf
       | _ -> error "rotate-contents: bad command line"
       end
@@ -3335,7 +3335,7 @@ let go () =
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf args.op false in
             let range = parse_pagespec_allow_empty pdf pagespec in
-              let pdf = Cpdf.upright ~fast:args.fast range pdf in
+              let pdf = Cpdfpage.upright ~fast:args.fast range pdf in
                 write_pdf false pdf
       | _ -> error "rotate-contents: bad command line"
       end
@@ -3561,22 +3561,22 @@ let go () =
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           let dxdylist = Cpdfcoord.parse_coordinates pdf args.coord in
-            write_pdf false (Cpdf.shift_pdf ~fast:args.fast dxdylist pdf range)
+            write_pdf false (Cpdfpage.shift_pdf ~fast:args.fast dxdylist pdf range)
   | Some Scale ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           let sxsylist = Cpdfcoord.parse_coordinates pdf args.coord in
-            write_pdf false (Cpdf.scale_pdf ~fast:args.fast sxsylist pdf range)
+            write_pdf false (Cpdfpage.scale_pdf ~fast:args.fast sxsylist pdf range)
   | Some ScaleToFit ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           let xylist = Cpdfcoord.parse_coordinates pdf args.coord
           and scale = args.scale in
-            write_pdf false (Cpdf.scale_to_fit_pdf ~fast:args.fast args.position scale xylist args.op pdf range)
+            write_pdf false (Cpdfpage.scale_to_fit_pdf ~fast:args.fast args.position scale xylist args.op pdf range)
   | Some (ScaleContents scale) ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-          write_pdf false (Cpdf.scale_contents ~fast:args.fast args.position scale pdf range)
+          write_pdf false (Cpdfpage.scale_contents ~fast:args.fast args.position scale pdf range)
   | Some ListAttachedFiles ->
       let pdf = get_single_pdf args.op false in
         let attachments = Cpdfattach.list_attached_files pdf in
@@ -3659,7 +3659,7 @@ let go () =
             | OtherFont f -> None (* it's in fontname *)
           in
             let pdf =
-              if args.prerotate then Cpdf.upright ~fast:args.fast range pdf else pdf
+              if args.prerotate then Cpdfpage.upright ~fast:args.fast range pdf else pdf
             and filename =
               match args.inputs with
               | (InFile inname, _, _, _, _, _)::_ -> inname
@@ -3692,15 +3692,15 @@ let go () =
   | Some RemoveBookmarks ->
       write_pdf false (Pdfmarks.remove_bookmarks (get_single_pdf args.op false))
   | Some TwoUp ->
-      write_pdf false (Cpdf.twoup args.fast (get_single_pdf args.op false))
+      write_pdf false (Cpdfimpose.twoup args.fast (get_single_pdf args.op false))
   | Some TwoUpStack ->
-      write_pdf false (Cpdf.twoup_stack args.fast (get_single_pdf args.op false))
+      write_pdf false (Cpdfimpose.twoup_stack args.fast (get_single_pdf args.op false))
   | Some Impose fit ->
       let pdf = get_single_pdf args.op false in
       let x, y = Cpdfcoord.parse_coordinate pdf args.coord in
         if not fit && (x < 0.0 || y < 0.0) then error "Negative imposition parameters not allowed." else
         write_pdf false
-          (Cpdf.impose ~x ~y ~fit ~columns:args.impose_columns ~rtl:args.impose_rtl ~btt:args.impose_btt ~center:args.impose_center
+          (Cpdfimpose.impose ~x ~y ~fit ~columns:args.impose_columns ~rtl:args.impose_rtl ~btt:args.impose_btt ~center:args.impose_center
                       ~margin:args.impose_margin ~spacing:args.impose_spacing ~linewidth:args.impose_linewidth ~fast:args.fast pdf)
   | Some (StampOn over) ->
       let overpdf =
