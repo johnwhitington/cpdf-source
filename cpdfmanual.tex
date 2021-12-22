@@ -459,6 +459,12 @@ preceded by \verb!-i!. For example:
   \end{framed}
   \noindent The files in the directory \verb!myfiles! are considered in alphabetical order. They must all be PDF files. If the names of the files are numeric, leading zeroes will be required for the order to be correct (e.g \verb!001.pdf!, \verb!002.pdf! etc).
 
+To restrict cpdf to files ending in \texttt{.pdf} (in upper or lower or mixed case) add the option \texttt{-idir-only-pdfs} \textit{before} \texttt{-idir}:
+  \begin{framed}
+  \small\verb!cpdf -merge -idir-only-pdfs -idir myfiles -o out.pdf!
+  \end{framed}
+
+
   \section{Input Ranges}
   An \index{input range} \index{range} \textit{input range} may be specified
 after each input file. This is treated differently by each operation. For
@@ -482,7 +488,8 @@ at least five pages.
     \item The word \texttt{all} is the same as \texttt{1-end}.
     \item A range must contain no spaces.
     \item A tilde (\texttt{\~{}}) defines a page number counting from the end of the document rather than the beginning. Page \texttt{\~{}1} is the last page, \texttt{\~{}2} the penultimate page etc.
-    \item Prepending \texttt{NOT} to a whole page range inverts it.
+    \item Prepending \texttt{NOT} to a whole page range inverts it. 
+    \item Prepending \verb!<n>!\texttt{DUP} to a whole page range duplicates each page of the range \verb!<n>! times.
   \end{itemize}
  
   \noindent For example:
@@ -515,6 +522,12 @@ at least five pages.
 
   \vspace{2.5mm}
   \noindent Extract the last three pages of a document, in order.
+
+  \vspace{2.5mm}
+  \verb!cpdf in.pdf 2DUP1-10 -o out.pdf!
+
+  \vspace{2.5mm}
+  \noindent Produce the pages 1,1,2,2,....10,10.
 
   \end{framed}
 
