@@ -926,8 +926,8 @@ Cpdf can build a new PDF file, given a number of pages and a paper size. The def
   \small
   \noindent\begin{verbatim}
 cpdf -merge in1.pdf [<range>] in2.pdf [<range>] [<more names/ranges>]
-     [-retain-numbering] [-remove-duplicate-fonts]
-     [-merge-add-bookmarks] [-merge-add-bookmarks-use-titles] 
+     [-collate] [-retain-numbering] [-remove-duplicate-fonts]
+     [-merge-add-bookmarks [-merge-add-bookmarks-use-titles]]
      -o out.pdf\end{verbatim}
 
   \vspace{1.5mm}
@@ -956,8 +956,10 @@ the input pages in the order specified on the command line. Actually, the
 
 \noindent Merge maintains bookmarks, named destinations, and name dictionaries.
 
-Forms and other objects which cannot be merged are retained if they are from
+PDF features which cannot be merged are retained if they are from
 the document which first exhibits that feature.
+
+The \texttt{-collate} option collates pages: that is to say, it takes the first page from the first document and its range, then the first page from the second document and its range and so on. When all first pages have been taken, it begins on the second from each range, and so on.
 
 The \texttt{-retain-numbering} option keeps the PDF page numbering labels of
 each document intact, rather than renumbering the output pages from 1.
