@@ -2001,8 +2001,7 @@ specifies the size in points:
 
   \subsection{Colors}
 \index{color}
-  The \texttt{-color} option takes an RGB color, where red, green and blue
-components range between 0 and 1. The following values are predefined:
+  The \texttt{-color} option takes an RGB (3 values), CYMK (4 values), or Grey (1 value) color. Components range between 0 and 1. The following RGB colors are predefined:
 
   \vspace{2mm}
   \begin{tabular}{ll}
@@ -2019,6 +2018,12 @@ components range between 0 and 1. The following values are predefined:
     
     \vspace{1.5mm}
     \small\verb!cpdf -add-text "Hullo" -color "0.5 0.5 0.5" in.pdf -o out.pdf!
+
+    \vspace{1.5mm}
+    \small\verb!cpdf -add-text "Hullo" -color "0.75" in.pdf -o out.pdf!
+
+    \vspace{1.5mm}
+    \small\verb!cpdf -add-text "Hullo" -color "0.5 0.5 0.4 0.9" in.pdf -o out.pdf!
   \end{framed}
 
 \noindent Partly-transparent text may be specified using the \verb!-opacity! option. Wholly opaque is 1 and wholly transparent is 0. For example:
