@@ -192,75 +192,75 @@ let output_json_marks ch calculate_page_number pdf fastrefnums marks =
   let json = `List (map json_of_mark marks) in
     J.pretty_to_channel ch json
 
+let process_string encoding s =
+  let rec replace c x y = function
+  | [] -> []
+  | h::t when h = c -> x::y::replace c x y t
+  | h::t -> h::replace c x y t
+  in
+    (* Convert to UTF8, raw, or stripped, and escape backslashed and quotation marks *)
+    let codepoints = Pdftext.codepoints_of_pdfdocstring s in
+      let escaped =
+        let bs = int_of_char '\\'
+        and nl = int_of_char '\n'
+        and n = int_of_char 'n'
+        and q = int_of_char '\"' in
+          replace q bs q (replace nl bs n (replace bs bs bs codepoints))
+      in
+        let process_stripped escaped =
+          let b = Buffer.create 200 in
+            iter
+              (fun x ->
+                 if x <= 127 then Buffer.add_char b (char_of_int x))
+              escaped;
+            Buffer.contents b
+        in
+        match encoding with
+        | Cpdfmetadata.UTF8 -> Pdftext.utf8_of_codepoints escaped
+        | Cpdfmetadata.Stripped -> process_stripped escaped
+        | Cpdfmetadata.Raw -> s
+
 (* List the bookmarks in the given range to the given output *)
 let list_bookmarks ~json encoding range pdf output =
-  let process_stripped escaped =
-    let b = Buffer.create 200 in
-      iter
-        (fun x ->
-           if x <= 127 then Buffer.add_char b (char_of_int x))
-        escaped;
-      Buffer.contents b
-  in
-  let process_string s =
-    let rec replace c x y = function
-    | [] -> []
-    | h::t when h = c -> x::y::replace c x y t
-    | h::t -> h::replace c x y t
+  let bookmarks = Pdfmarks.read_bookmarks pdf in
+  let refnums = Pdf.page_reference_numbers pdf in
+  let rangetable = hashset_of_list range in
+  let range_is_all = range = ilist 1 (Pdfpage.endpage pdf) in
+  let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
+    (* Find the pagenumber of each bookmark target. If it is in the range,
+     * keep that bookmark. Also keep the bookmark if its target is the null
+     * destination. *)
+    let inrange =
+      keep
+        (function x ->
+           range_is_all || 
+           x.Pdfmarks.target = Pdfdest.NullDestination ||
+           (match x.Pdfmarks.target with Pdfdest.NamedDestinationElsewhere _ -> true | _ -> false) ||
+           Hashtbl.mem rangetable (Pdfpage.pagenumber_of_target ~fastrefnums pdf x.Pdfmarks.target)) bookmarks
     in
-      (* Convert to UTF8, raw, or stripped, and escape backslashed and quotation marks *)
-      let codepoints = Pdftext.codepoints_of_pdfdocstring s in
-        let escaped =
-          let bs = int_of_char '\\'
-          and nl = int_of_char '\n'
-          and n = int_of_char 'n'
-          and q = int_of_char '\"' in
-            replace q bs q (replace nl bs n (replace bs bs bs codepoints))
-        in
-          match encoding with
-          | Cpdfmetadata.UTF8 -> Pdftext.utf8_of_codepoints escaped
-          | Cpdfmetadata.Stripped -> process_stripped escaped
-          | Cpdfmetadata.Raw -> s
-    in
-      let bookmarks = Pdfmarks.read_bookmarks pdf in
-      let refnums = Pdf.page_reference_numbers pdf in
-      let rangetable = hashset_of_list range in
-      let range_is_all = range = ilist 1 (Pdfpage.endpage pdf) in
-      let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
-        (* Find the pagenumber of each bookmark target. If it is in the range,
-         * keep that bookmark. Also keep the bookmark if its target is the null
-         * destination. *)
-        let inrange =
-          keep
-            (function x ->
-               range_is_all || 
-               x.Pdfmarks.target = Pdfdest.NullDestination ||
-               (match x.Pdfmarks.target with Pdfdest.NamedDestinationElsewhere _ -> true | _ -> false) ||
-               Hashtbl.mem rangetable (Pdfpage.pagenumber_of_target ~fastrefnums pdf x.Pdfmarks.target)) bookmarks
-        in
-          let calculate_page_number mark =
-            (* Some buggy PDFs use integers for page numbers instead of page
-             * object references. Adobe Reader and Preview seem to support
-             * this, for presumably historical reasons. So if we see a
-             * OtherDocPageNumber (which is what Pdfdest parses these as,
-             * because that's what they are legitimately, we use this as the
-             * page number. It is zero based, though, and we are one-based, so
-             * we add one. Pdfpage.pagenumber_of_target has been modified to support this.*)
-            Pdfpage.pagenumber_of_target ~fastrefnums pdf mark.Pdfmarks.target
-          in
-            if json then
-              output_json_marks stdout calculate_page_number pdf fastrefnums inrange
-            else
-              iter
-                (function mark ->
-                   output.Pdfio.output_string
-                     (Printf.sprintf "%i \"%s\" %i%s %s\n"
-                       mark.Pdfmarks.level
-                       (process_string mark.Pdfmarks.text)
-                       (calculate_page_number mark)
-                       (if mark.Pdfmarks.isopen then " open" else "")
-                       (output_string_of_target pdf fastrefnums mark.Pdfmarks.target)))
-                inrange
+      let calculate_page_number mark =
+        (* Some buggy PDFs use integers for page numbers instead of page
+         * object references. Adobe Reader and Preview seem to support
+         * this, for presumably historical reasons. So if we see a
+         * OtherDocPageNumber (which is what Pdfdest parses these as,
+         * because that's what they are legitimately, we use this as the
+         * page number. It is zero based, though, and we are one-based, so
+         * we add one. Pdfpage.pagenumber_of_target has been modified to support this.*)
+        Pdfpage.pagenumber_of_target ~fastrefnums pdf mark.Pdfmarks.target
+      in
+        if json then
+          output_json_marks stdout calculate_page_number pdf fastrefnums inrange
+        else
+          iter
+            (function mark ->
+               output.Pdfio.output_string
+                 (Printf.sprintf "%i \"%s\" %i%s %s\n"
+                   mark.Pdfmarks.level
+                   (process_string encoding mark.Pdfmarks.text)
+                   (calculate_page_number mark)
+                   (if mark.Pdfmarks.isopen then " open" else "")
+                   (output_string_of_target pdf fastrefnums mark.Pdfmarks.target)))
+            inrange
 
 (* o is the stamp, u is the main pdf page *)
 

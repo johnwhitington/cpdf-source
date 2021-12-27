@@ -1563,6 +1563,9 @@ There are two options which turn off parts of the squeezer. They are \texttt{-sq
   \small\noindent\verb!cpdf -list-bookmarks [-utf8 | -raw] in.pdf!
 
   \vspace{1.5mm}
+  \small\noindent\verb!cpdf -list-bookmarks-json in.pdf!
+
+  \vspace{1.5mm}
   \small\noindent\verb!cpdf -remove-bookmarks in.pdf -o out.pdf!
 
   \vspace{1.5mm}
@@ -1607,6 +1610,24 @@ By default, \cpdf\ converts unicode to ASCII text, dropping characters outside
 the ASCII range. To prevent this, and return unicode UTF8 output, add the
 \texttt{-utf8} option to the command. To prevent any processing, use the
 \texttt{-raw} option. See Section \ref{textencodings} for more information. A newline in a bookmark is represented as \texttt{"\textbackslash n"}.
+
+By using \texttt{-list-bookmarks-json} instead, the bookmarks are formatted as a JSON array, in order, of dictionaries formatted thus:
+
+\begin{verbatim}
+{ "level": 0,
+  "text": "1 Basic Usage",
+  "page": 17,
+  "open": false,
+  "target":
+    [ { "I": 17 },
+      { "N": "/XYZ" },
+      { "F": 85.039 },
+      { "F": 609.307 },
+      null ]
+}
+\end{verbatim}
+
+See chapter 15 for more details of cpdf's JSON formatting. Bookmark text in JSON bookmarks, however, is in UTF8 for ease of use.
 
 \subsection{Destinations}
 
