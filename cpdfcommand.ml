@@ -871,9 +871,6 @@ let rec decrypt_if_necessary (_, _, user_pw, owner_pw, was_dec_with_owner, _) op
            if args.debugcrypt then Printf.printf "Failed to decrypt with user password: raising soft_error";
            soft_error "Failed to decrypt file: wrong password?"
 
-(* Duplicated from cpdf.ml -> fix *)
-let ppstub f n p = (f n p, n, Pdftransform.i_matrix)
-
 (* Output Page Count *)
 let output_page_count pdf =
   Printf.printf "%i\n" (Pdfpage.endpage pdf)

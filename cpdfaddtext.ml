@@ -6,10 +6,6 @@ type color =
 | RGB of float * float * float
 | CYMK of float * float * float * float
 
-(* For uses of process_pages which don't need to deal with matrices, this
-   function transforms into one which returns the identity matrix *)
-let ppstub f n p = (f n p, n, Pdftransform.i_matrix)
-
 (* \section{Superimpose text, page numbers etc.} *)
 
 (* Process UTF8 text to /WinAnsiEncoding string (for standard 14) or whatever
@@ -413,7 +409,7 @@ let addtext
     if metrics then
       (ignore (Cpdfpage.iter_pages (fun a b -> ignore (addtext_page a b)) pdf pages); pdf)
     else
-      Cpdfpage.process_pages (ppstub addtext_page) pdf pages
+      Cpdfpage.process_pages (Cpdfutil.ppstub addtext_page) pdf pages
 
 (* Prev is a list of lists of characters *)
 let split_at_newline t =
@@ -578,7 +574,7 @@ let removetext range pdf =
              let ops = Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content in
                [Pdfops.stream_of_ops (remove_stamps [] ops)]}
       in
-        Cpdfpage.process_pages (ppstub removetext_page) pdf range
+        Cpdfpage.process_pages (Cpdfutil.ppstub removetext_page) pdf range
 
 let addrectangle
   fast (w, h) colour outline linewidth opacity position relative_to_cropbox
@@ -642,7 +638,7 @@ let addrectangle
           then Pdfpage.prepend_operators pdf ops ~fast:fast page
           else Pdfpage.postpend_operators pdf ops ~fast:fast page
   in
-    Cpdfpage.process_pages (ppstub addrectangle_page) pdf range
+    Cpdfpage.process_pages (Cpdfutil.ppstub addrectangle_page) pdf range
 open Pdfutil
 
 let rec remove_all_text_ops pdf resources content =

@@ -1,9 +1,5 @@
 open Pdfutil
 
-(* For uses of process_pages which don't need to deal with matrices, this
-   function transforms into one which returns the identity matrix *)
-let ppstub f n p = (f n p, n, Pdftransform.i_matrix)
-
 (* \section{List annotations} *)
 let get_annotation_string encoding pdf annot =
   match Pdf.lookup_direct pdf "/Contents" annot with
@@ -185,4 +181,4 @@ let remove_annotations range pdf =
     else
       page
   in
-    Cpdfpage.process_pages (ppstub remove_annotations_page) pdf range
+    Cpdfpage.process_pages (Cpdfutil.ppstub remove_annotations_page) pdf range
