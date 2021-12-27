@@ -410,17 +410,18 @@ verbosity. Under Microsoft Windows, type \texttt{cpdf.exe} instead of \texttt{cp
   \begin{framed}
   \small
   \noindent\begin{verbatim}
-  -help                    --help                   -version 
-  -o                       -i                       -idir <directory>
-  -recrypt                 -stdout                  -stdin
-  -stdin-user <password>   -stdin-owner <password>  -producer <text>
-  -creator <text>          -change-id               -l
-  -cpdflin <filename>      -keep-l                  -no-preserve-objstm
-  -create-objstm           -control <filename>      -args <filename>
-  -utf8                    -stripped                -raw
-  -no-embed-font           -create-pdf              -create-pdf-pages
-  -create-pdf-papersize    -gs                      -gs-malformed
-  -gs-malformed-force      -gs-quiet                -error-on-malformed\end{verbatim}\end{framed}
+  -help                   --help                   -version 
+  -o                      -i                       -idir <directory>
+  -recrypt                -decrypt-force           -stdout
+  -stdin                  -stdin-user <password>   -stdin-owner <password>  
+  -producer <text>        -creator <text>          -change-id
+  -l                      -cpdflin <filename>      -keep-l
+  -no-preserve-objstm     -create-objstm           -control <filename>
+  -args <filename>        -utf8                    -stripped
+  -raw                    -no-embed-font           -create-pdf
+  -create-pdf-pages       -create-pdf-papersize    -gs
+  -gs-malformed           -gs-malformed-force      -gs-quiet
+  -error-on-malformed\end{verbatim}\end{framed}
 
   The Coherent PDF tools provide a wide range of facilities for modifying PDF
 files created by other means. There is a single command-line program
@@ -557,6 +558,8 @@ example:
 \noindent The password required (owner or user) depends upon the operation
 being performed. Separate facilities are provided to decrypt and encrypt files
 (See Section \ref{crypt}).
+
+When appropriate passwords are not available, the option \texttt{-decrypt-force} may be added to the command line to process the file regardless.
 
   \section{Standard Input and Standard Output}
 \index{standard input} \index{standard output}
@@ -1382,7 +1385,7 @@ Bleed box & Pink
     \noindent\verb!     [-no-encrypt-metadata] <permissions> in.pdf -o out.pdf!
 
     \vspace{1.5mm}
-    \noindent\verb!cpdf -decrypt in.pdf owner=<owner password> -o out.pdf!
+    \noindent\verb!cpdf -decrypt [-decrypt-force] in.pdf owner=<owner password> -o out.pdf!
   \end{framed}
   \label{crypt}
   \section{Introduction}
@@ -1462,6 +1465,9 @@ metadata. Add \texttt{-no-encrypt-metadata} to the command line.
     \small\verb!cpdf -decrypt in.pdf owner=fred -o out.pdf!
   \end{framed}
   \noindent The user password cannot decrypt a file.
+
+When appropriate passwords are not available, the option \texttt{-decrypt-force} may be added to the command line to process the file regardless.
+
 
 \begin{cpdflib}
 \clearpage
