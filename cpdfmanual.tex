@@ -807,7 +807,7 @@ shortcuts which speed up processing, but would fail on badly-produced files. The
 \small\verb!-stamp-on -stamp-under -combine-pages!\\
 
 \noindent Chapter \ref{multipage}\\
-\noindent\verb!-twoup -twoup-stack!
+\noindent\verb!-impose -impose-xy -twoup -twoup-stack!
 \end{framed}
 
 \noindent If problems occur, refrain from using \verb!-fast!.
@@ -2203,12 +2203,6 @@ These two operations add content directly to the beginning or end of the page da
 
 \chapter{Multipage Facilities}\pagestyle{fancy}\label{multipage}\label{chap:9}
   \begin{framed}
-    \small\noindent\verb!cpdf -twoup-stack [-fast] in.pdf -o out.pdf! 
-
-    \vspace{1.5mm}
-    \small\noindent\verb!cpdf -twoup [-fast] in.pdf -o out.pdf! 
-
-    \vspace{1.5mm}
     \small\noindent\verb!cpdf -pad-before in.pdf [<range>] [-pad-with pad.pdf] -o out.pdf!
 
     \vspace{1.5mm}
@@ -2222,14 +2216,21 @@ These two operations add content directly to the beginning or end of the page da
 
     \vspace{1.5mm}
     \small\noindent\verb!cpdf -pad-multiple-before [<integer>] in.pdf -o out.pdf!
-  \end{framed}
-  \section{Two-up}
-\index{two-up}
-    This facility puts multiple logical pages on a single physical page.  The \texttt{-twoup-stack} operation puts two logical pages on each physical
-page, rotating them 90 degrees to do so. The new mediabox is thus larger. The \texttt{-twoup} operation does the same, but scales the new sides down so
-that the media box is unchanged.
 
-NB: See discussion of \texttt{-fast} in Section \ref{fast}.
+    \vspace{1.5mm}
+    \small\noindent\verb!cpdf [-impose <pagesize> | impose-xy <x y>]!\\
+    \small\noindent\verb!     [-impose-columns] [-impose-rtl] [-impose-btt]!\\
+    \small\noindent\verb!     [-impose-margin <margin>] [-impose-spacing <spacing>]!\\
+    \small\noindent\verb!     [-impose-linewidth <width>]!\\
+    \small\noindent\verb!     in.pdf -o out.pdf!
+
+    \vspace{1.5mm}
+    \small\noindent\verb!cpdf -twoup-stack [-fast] in.pdf -o out.pdf! 
+
+    \vspace{1.5mm}
+    \small\noindent\verb!cpdf -twoup [-fast] in.pdf -o out.pdf! 
+
+  \end{framed}
 
   \section{Inserting Blank Pages}
 \index{blank pages!inserting}
@@ -2273,6 +2274,42 @@ In all three of these operations, one may specify \texttt{-pad-with} providing a
  
 
 \noindent The \texttt{-pad-multiple-before n} operation adds the padding pages at the beginning of the file  instead.
+
+\section{Imposition}
+
+\index{two-up,imposition,impose}
+
+Imposition is the act of putting two or more pages of an input document onto each page of the output document. There are two operations provided by \texttt{cpdf}:
+
+\begin{itemize}
+\item the \texttt{-impose} operation which, given a page size fits multiple pages into it; and
+\item the \texttt{-impose-xy} operation which, given an $x$ and $y$ value, builds an output page which fits $x$ input pages horizontally and $y$ input pages vertically. \end{itemize}
+
+(explain -impose with example)
+
+(explain -impose-xy with example)
+
+(list options: -impose-columns] [-impose-rtl]
+     [-impose-btt] [-impose-margin <margin>] [-impose-spacing <spacing>])
+
+NB: See discussion of \texttt{-fast} in Section \ref{fast}.
+
+Two other ways of putting multiple pages on a single page remain from earlier versions of \texttt{cpdf} which lacked a general imposition operation.  The \texttt{-twoup-stack} operation puts two logical pages on each physical
+page, rotating them 90 degrees to do so. The new mediabox is thus larger. The \texttt{-twoup} operation does the same, but scales the new sides down so
+that the media box is unchanged.
+
+  \begin{framed}
+    \small\verb!cpdf -two-up in.pdf -o out.pdf!
+ 
+    \vspace{2.5mm}
+    \noindent Impose a document two-up, keeping the existing page size.
+
+    \small\verb!cpdf -two-up-stack in.pdf -o out.pdf!
+ 
+    \vspace{2.5mm}
+    \noindent Impose a document two-up on a larger page by rotation. 
+  \end{framed}
+ 
 
 \begin{cpdflib}
 \clearpage
