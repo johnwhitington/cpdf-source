@@ -1574,6 +1574,9 @@ There are two options which turn off parts of the squeezer. They are \texttt{-sq
   \vspace{1.5mm}
   \small\noindent\verb!cpdf -bookmarks-open-to-level <n> in.pdf -o out.pdf!
 
+  \vspace{1.5mm}
+  \small\noindent\verb!cpdf -table-of-contents [-toc-title] [-toc-no-bookmark]!\\
+  \small\noindent\verb!     [-font <font>] [-font-size <size>] in.pdf -o out.pdf!
 
   \end{framed}
 \index{bookmarks}
@@ -1685,6 +1688,37 @@ As an alternative to extracting a bookmark file and manipulating the open-status
   \end{framed}
 
 \noindent A level of 0 will close all bookmarks, level 1 will open just the top level, closing all others etc. To open all of them, pick a sufficiently large level.
+
+
+\section{Making a Table of Contents}
+
+Cpdf can automatically generate a table of contents from existing bookmarks, adding it to the beginning of the document.
+
+  \begin{framed}
+   \small\verb!cpdf -table-of-contents in.pdf -o out.pdf!
+  \end{framed}
+
+The page(s) added will have the same dimensions, media and crop boxes as the first page of the original file. The default title is ``Table of Contents'', though this may be changed:
+
+  \begin{framed}
+   \small\verb!cpdf -table-of-contents -toc-title "Contents" in.pdf -o out.pdf!
+  \end{framed}
+
+An empty title removes the title. The sequence \texttt{\textbackslash n} may be used to split the title into lines. The default font is 12pt Times Roman (and 24pt for the title). The base font and size may be changed with \texttt{-font} and \texttt{-font-size} (see chapter 8 for full details):
+
+  \begin{framed}
+   \small\verb!cpdf -table-of-contents -font "Courier-Bold" -font-size 8!\\
+   \small\verb!        in.pdf -o out.pdf!
+  \end{framed}
+
+By default, an entry for the new table of contents will be added to the document's bookmarks. To suppress this behaviour, add \texttt{-toc-no-bookmark}:
+
+  \begin{framed}
+   \small\verb!cpdf -table-of-contents -toc-no-bookmark in.pdf -o out.pdf!
+  \end{framed}
+
+
+
 \clearpage\pagestyle{empty}
 
 \begin{cpdflib}
@@ -1702,6 +1736,7 @@ As an alternative to extracting a bookmark file and manipulating the open-status
 \lstinputlisting{pysplits/c07}
 \end{small}
 \end{pycpdflib}
+
 
 \chapter{Presentations}\label{chap:7}\pagestyle{fancy}
   \begin{framed}
