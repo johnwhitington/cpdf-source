@@ -2285,12 +2285,29 @@ Imposition is the act of putting two or more pages of an input document onto eac
 \item the \texttt{-impose} operation which, given a page size fits multiple pages into it; and
 \item the \texttt{-impose-xy} operation which, given an $x$ and $y$ value, builds an output page which fits $x$ input pages horizontally and $y$ input pages vertically. \end{itemize}
 
-(explain -impose with example)
+  \begin{framed}
+    \small\verb!cpdf -impose a0landscape in.pdf -o out.pdf!
+ 
+    \vspace{2.5mm}
+    \noindent Impose as many pages as will fit on to new A0 landscape pages. 
+  \end{framed}
 
-(explain -impose-xy with example)
+  \begin{framed}
+    \small\verb!cpdf -impose-xy "3 4" in.pdf -o out.pdf!
+ 
+    \vspace{2.5mm}
+    \noindent Impose 3 across and 4 down on to new pages of 3 times the width and 4 times the height of the input ones. 
+  \end{framed}
 
-(list options: -impose-columns] [-impose-rtl]
-     [-impose-btt] [-impose-margin <margin>] [-impose-spacing <spacing>])
+The following options may be used to modify the output:
+
+\begin{itemize}
+\item \texttt{-impose-columns} Lay the pages out in columns rather than rows.
+\item \texttt{-impose-rtl} Lay the pages out right-to-left. When \texttt{-impose-columns} is in effect FIXME.
+\item \texttt{-impose-btt} Lay the pages out bottom-to-top. When \texttt{-impose-columns} is in effect FIXME.
+\item \texttt{-impose-margin <margin>} Add a margin around the edge of the page of the given width.
+\item \texttt{-impose-spacing <spacing>} Add spacing between each row and column FIXME what happens with -impose and fitting is this a spacing minimum?
+\end{itemize}
 
 NB: See discussion of \texttt{-fast} in Section \ref{fast}.
 
