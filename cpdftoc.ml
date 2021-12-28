@@ -85,10 +85,13 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
   in
   let toc_pages =
     let title =
-      flatten
-        (map
-          (fun l -> [Cpdftype.Text l; Cpdftype.NewLine])
-          (split_toc_title (of_utf8 f title)))
+      let glue = Cpdftype.VGlue {glen = fontsize *. 2.; gstretch = 0.} in
+        if title = "" then [] else
+          flatten
+            (map
+              (fun l -> [Cpdftype.Text l; Cpdftype.NewLine])
+              (split_toc_title (of_utf8 f title)))
+          @ [glue]
     in
     let lm, rm, tm, bm =
       match firstpage_cropbox with
@@ -98,8 +101,7 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
     in
       Cpdftype.typeset lm rm tm bm firstpage_papersize pdf
         ([Cpdftype.Font big; Cpdftype.BeginDocument] @ title @
-          [Cpdftype.VGlue {glen = fontsize *. 2.; gstretch = 0.};
-           Cpdftype.Font (f, fs)] @ flatten lines)
+          [Cpdftype.Font (f, fs)] @ flatten lines)
   in
   let toc_pages =
     match firstpage_cropbox with
