@@ -2221,7 +2221,7 @@ These two operations add content directly to the beginning or end of the page da
     \small\noindent\verb!cpdf [-impose <pagesize> | impose-xy <x y>]!\\
     \small\noindent\verb!     [-impose-columns] [-impose-rtl] [-impose-btt]!\\
     \small\noindent\verb!     [-impose-margin <margin>] [-impose-spacing <spacing>]!\\
-    \small\noindent\verb!     [-impose-linewidth <width>]!\\
+    \small\noindent\verb!     [-impose-linewidth <width>] [-fast]!\\
     \small\noindent\verb!     in.pdf -o out.pdf!
 
     \vspace{1.5mm}
@@ -2303,13 +2303,13 @@ The following options may be used to modify the output:
 
 \begin{itemize}
 \item \texttt{-impose-columns} Lay the pages out in columns rather than rows.
-\item \texttt{-impose-rtl} Lay the pages out right-to-left. When \texttt{-impose-columns} is in effect FIXME.
-\item \texttt{-impose-btt} Lay the pages out bottom-to-top. When \texttt{-impose-columns} is in effect FIXME.
-\item \texttt{-impose-margin <margin>} Add a margin around the edge of the page of the given width.
-\item \texttt{-impose-spacing <spacing>} Add spacing between each row and column FIXME what happens with -impose and fitting is this a spacing minimum?
+\item \texttt{-impose-rtl} Lay the pages out right-to-left.
+\item \texttt{-impose-btt} Lay the pages out bottom-to-top.
+\item \texttt{-impose-margin <margin>} Add a margin around the edge of the page of the given width. When using \texttt{-impose-xy} the page size increases; with \texttt{-impose} the pages are scaled.
+\item \texttt{-impose-spacing <spacing>} Add spacing between each row and column. When using \texttt{-impose-xy} the page size increases; with \texttt{-impose} the pages are scaled.
 \end{itemize}
 
-NB: See discussion of \texttt{-fast} in Section \ref{fast}.
+To impose with rotated pages, for example to put two A4 portrait pages two-up on an A3 landscape page, rotate them prior to imposition.
 
 Two other ways of putting multiple pages on a single page remain from earlier versions of \texttt{cpdf} which lacked a general imposition operation.  The \texttt{-twoup-stack} operation puts two logical pages on each physical
 page, rotating them 90 degrees to do so. The new mediabox is thus larger. The \texttt{-twoup} operation does the same, but scales the new sides down so
@@ -2327,6 +2327,8 @@ that the media box is unchanged.
     \noindent Impose a document two-up on a larger page by rotation. 
   \end{framed}
  
+NB: For all imposition options, see also discussion of \texttt{-fast} in Section \ref{fast}.
+
 
 \begin{cpdflib}
 \clearpage
