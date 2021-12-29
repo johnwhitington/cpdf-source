@@ -2877,6 +2877,9 @@ To remove a particular image, find its name using \texttt{-image-resolution} wit
   \small\noindent\verb!cpdf -list-fonts in.pdf!
 
   \vspace{1.5mm}
+  \noindent\verb!cpdf -print-font-table <font name> -print-font-table-page <n> in.pdf!
+  
+  \vspace{1.5mm}
   \noindent\verb!cpdf -copy-font fromfile.pdf -copy-font-page <int>!\\
   \noindent\verb!     -copy-font-name <name> in.pdf [<range>] -o out.pdf!
 
@@ -2923,6 +2926,47 @@ one-per-line to standard output. For example:
 name, the third the type of font (Type1, TrueType etc), the fourth the PDF font
 name, the fifth the PDF font encoding.
 
+\section{Listing characters in a font}
+
+We can use \texttt{cpdf} to find out which characters are available in a given font, and to print the map between character codes, unicode codepoints, and Adobe glyph names. This is presently a best-effort service, and does not cover all font/encoding types.
+
+We find the name of the font by using \texttt{-list-fonts}:
+
+{\small\begin{verbatim}
+$ ./cpdf -list-fonts cpdfmanual.pdf 1
+1 /F46 /Type1 /XYPLPB+NimbusSanL-Bold 
+1 /F49 /Type1 /MCBERL+URWPalladioL-Roma 
+\end{verbatim}}
+
+We may then print the table, giving either the font's name (e.g \texttt{/F46}) or basename (e.g \texttt{/XYPLPB+NimbusSanL-Bold}):
+
+{\small\begin{verbatim}
+$ ./cpdf -print-font-table /XYPLPB+NimbusSanL-Bold
+         -print-font-table-page 1 cpdfmanual.pdf
+67 = U+0043 (C - LATIN CAPITAL LETTER C) = /C
+68 = U+0044 (D - LATIN CAPITAL LETTER D) = /D
+70 = U+0046 (F - LATIN CAPITAL LETTER F) = /F
+71 = U+0047 (G - LATIN CAPITAL LETTER G) = /G
+76 = U+004C (L - LATIN CAPITAL LETTER L) = /L
+80 = U+0050 (P - LATIN CAPITAL LETTER P) = /P
+84 = U+0054 (T - LATIN CAPITAL LETTER T) = /T
+97 = U+0061 (a - LATIN SMALL LETTER A) = /a
+99 = U+0063 (c - LATIN SMALL LETTER C) = /c
+100 = U+0064 (d - LATIN SMALL LETTER D) = /d
+101 = U+0065 (e - LATIN SMALL LETTER E) = /e
+104 = U+0068 (h - LATIN SMALL LETTER H) = /h
+105 = U+0069 (i - LATIN SMALL LETTER I) = /i
+108 = U+006C (l - LATIN SMALL LETTER L) = /l
+109 = U+006D (m - LATIN SMALL LETTER M) = /m
+110 = U+006E (n - LATIN SMALL LETTER N) = /n
+111 = U+006F (o - LATIN SMALL LETTER O) = /o
+112 = U+0070 (p - LATIN SMALL LETTER P) = /p
+114 = U+0072 (r - LATIN SMALL LETTER R) = /r
+115 = U+0073 (s - LATIN SMALL LETTER S) = /s
+116 = U+0074 (t - LATIN SMALL LETTER T) = /t
+\end{verbatim}}
+
+The first column is the character code, the second the Unicode codepoint, the character itself and its Unicode name, and the third the Adobe glyph name.
 
 \section{Copying Fonts}
 \label{copyfont}
