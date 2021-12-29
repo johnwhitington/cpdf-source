@@ -2136,7 +2136,7 @@ If your command line allows for the inclusion of unicode characters, the input
 text will be considered as UTF8 by \verb!cpdf!. Special characters which exist
 in the PDF WinAnsiEncoding Latin 1 code (such as many accented characters) will
 be reproduced in the PDF. This does not mean, however, that every special
-character can be reproduced -- it must exist in the font.
+character can be reproduced -- it must exist in the font. When using a custom font, cpdf will attempt to convert from UTF8 to the encoding of that font automatically.
 
 (For compatibility with previous versions of cpdf, special characters may be
 introduced manually with a backslash followed by the three-digit octal code of
@@ -2946,8 +2946,7 @@ the name \verb!/F10! on page 1 (this information can be found with
 
 \noindent Text in this font can then be added by giving \verb!-font /GHLIGA+c128!. Be
 aware that due to the vagaries of PDF font handling concerning which characters
-are present in the source font, not all characters may be available, or the
-encoding (mapping from input codes to glyphs) may be non-obvious.
+are present in the source font, not all characters may be available, or cpdf may not be able to work out the conversion from UTF8 to the font's own encoding. You may add -raw to the command line to avoid any conversion, but the encoding (mapping from input codes to glyphs) may be non-obvious and require knowledge of the PDF format to divine.
 
 \section{Removing Fonts}
 \label{removefont}
