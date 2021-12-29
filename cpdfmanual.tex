@@ -2299,6 +2299,10 @@ Imposition is the act of putting two or more pages of an input document onto eac
     \noindent Impose 3 across and 4 down on to new pages of 3 times the width and 4 times the height of the input ones. 
   \end{framed}
 
+The $x$ value for \texttt{-impose-xy} may be set to zero to indicate an infinitely-wide page; the $y$ value to indicate an infinitely-long one.
+
+In both cases, the pages in the input file are assumed to be of the same dimensions.
+
 The following options may be used to modify the output:
 
 \begin{itemize}
@@ -2307,6 +2311,8 @@ The following options may be used to modify the output:
 \item \texttt{-impose-btt} Lay the pages out bottom-to-top.
 \item \texttt{-impose-margin <margin>} Add a margin around the edge of the page of the given width. When using \texttt{-impose-xy} the page size increases; with \texttt{-impose} the pages are scaled.
 \item \texttt{-impose-spacing <spacing>} Add spacing between each row and column. When using \texttt{-impose-xy} the page size increases; with \texttt{-impose} the pages are scaled.
+\item \texttt{-impose-linewidth <width>} Add a border around each input page. With \texttt{-impose} the pages are scaled after the border is added, so you must account for this yourself.
+
 \end{itemize}
 
 To impose with rotated pages, for example to put two A4 portrait pages two-up on an A3 landscape page, rotate them prior to imposition.
