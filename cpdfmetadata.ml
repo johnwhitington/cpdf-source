@@ -337,7 +337,7 @@ let set_pdf_info_xml kind fieldname value xmldata pdf =
   let dtd, tree = xmltree_of_bytes xmldata in
   let str =
     match value with
-      Pdf.String s -> s
+      Pdf.String s -> Pdftext.utf8_of_pdfdocstring s
     | Pdf.Boolean true -> "True"
     | Pdf.Boolean false -> "False"
     | _ -> failwith "set_pdf_info_xml: not a string"
