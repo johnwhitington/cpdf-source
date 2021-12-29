@@ -28,13 +28,16 @@ let rec of_utf8_with_newlines t =
       if c <> "" then items := Text (explode c)::!items;
     rev !items
 
-(* FIXME margins, hyphenation of too-long words, efficiency *)
-let typeset ~font ~fontsize text =
+let typeset ~papersize ~font ~fontsize text =
   let pdf = Pdf.empty () in
+  let margin =
+    Pdfunits.convert 72. (Pdfpaper.unit papersize) (Pdfunits.PdfPoint) (Pdfpaper.width papersize) /. 15.
+  in
   let f = (Pdftext.StandardFont (font, Pdftext.WinAnsiEncoding), fontsize) in
   let pages =
     Cpdftype.typeset
-      20. 20. 20. 20. Pdfpaper.a4 pdf ([Cpdftype.Font f; Cpdftype.BeginDocument] @ of_utf8_with_newlines (Pdfio.string_of_bytes text))
+      margin margin margin margin papersize pdf
+      ([Cpdftype.Font f; Cpdftype.BeginDocument] @ of_utf8_with_newlines (Pdfio.string_of_bytes text))
   in
     let pdf, pageroot = Pdfpage.add_pagetree pages pdf in
       Pdfpage.add_root pageroot [] pdf

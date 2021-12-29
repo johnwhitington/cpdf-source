@@ -3917,7 +3917,7 @@ let go () =
       let font =
         match args.font with StandardFont f -> f | _ -> error "text to PDF: not a standard font"
       in
-      let pdf = Cpdftexttopdf.typeset ~font ~fontsize:args.fontsize text in
+      let pdf = Cpdftexttopdf.typeset ~papersize:args.createpdf_pagesize ~font ~fontsize:args.fontsize text in
         write_pdf false pdf
 
 (* Advise the user if a combination of command line flags makes little sense,

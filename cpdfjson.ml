@@ -465,8 +465,9 @@ let rec ppstring_single_object pdf = function
   | x -> x
 
 let preprocess_strings pdf =
-    Pdf.objselfmap (ppstring_single_object pdf) pdf;
-    pdf.Pdf.trailerdict <- ppstring_single_object pdf pdf.Pdf.trailerdict
+    Pdf.objselfmap (ppstring_single_object pdf) pdf
+    (* Skip the trailer dictionary since may mess up /ID if it happens to begin with UTF16BE BOM *)
+    (*pdf.Pdf.trailerdict <- ppstring_single_object pdf pdf.Pdf.trailerdict*)
 
 let json_of_pdf
   ~parse_content ~no_stream_data ~decompress_streams
