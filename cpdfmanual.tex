@@ -418,8 +418,7 @@ verbosity. Under Microsoft Windows, type \texttt{cpdf.exe} instead of \texttt{cp
   -l                      -cpdflin <filename>      -keep-l
   -no-preserve-objstm     -create-objstm           -control <filename>
   -args <filename>        -utf8                    -stripped
-  -raw                    -no-embed-font           -create-pdf
-  -create-pdf-pages       -create-pdf-papersize    -gs
+  -raw                    -no-embed-font           -gs
   -gs-malformed           -gs-malformed-force      -gs-quiet
   -error-on-malformed\end{verbatim}\end{framed}
 
@@ -890,18 +889,6 @@ processing. The default unless specified in the documentation for an individual 
 \section{Font Embedding}
 \index{font!embedding}
 Use the \texttt{-no-embed-font} to avoid embedding the Standard 14 Font metrics when adding text with \texttt{-add-text}.
-
-\section{Creating a new PDF}
-\index{create new PDF}
-
-Cpdf can build a new PDF file, given a number of pages and a paper size. The default is one page, A4 portrait.
-
-\begin{framed}
- \small\verb?cpdf -create-pdf -create-pdf-pages 20?\\
- \noindent\small\verb?        -create-pdf-papersize usletterportrait -o out.pdf?
-\end{framed}
-
-\noindent The standard paper sizes are listed in Section \ref{papersizes}, or you may specify the width and height directly, as described in the same chapter.
 
 \begin{cpdflib}
 \clearpage
@@ -3111,6 +3098,55 @@ In a PDF file, optional content groups are used to group graphical elements toge
   \end{framed}}
 
 \noindent Ensure that every optional content group appears in the order list.
+
+\begin{cpdflib}
+\clearpage
+\section*{C Interface}
+\begin{small}\tt
+\lstinputlisting{splits/c17}
+\end{small}
+\end{cpdflib}
+
+\begin{pycpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c17}
+\end{small}
+\end{pycpdflib}
+
+\clearpage\pagestyle{empty}
+\chapter{Creating New PDFs}\label{chap:17}\pagestyle{fancy}\index{Create}
+
+  {\small\begin{framed}
+  \noindent\verb!cpdf -create-pdf [-create-pdf-pages <n>]!\\
+  \noindent\verb!     [-create-pdf-papersize <paper size>] -o out.pdf!
+
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -typeset <text file> -o out.pdf!
+
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -ocg-order-all in.pdf -o out.pdf!
+
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -ocg-coalesce-on-name in.pdf -o out.pdf!
+
+  \end{framed}}
+
+\section{A new blank PDF}
+\index{create new PDF}
+
+Cpdf can build a new PDF file, given a number of pages and a paper size. The default is one page, A4 portrait.
+
+\begin{framed}
+ \small\verb?cpdf -create-pdf -create-pdf-pages 20?\\
+ \noindent\small\verb?        -create-pdf-papersize usletterportrait -o out.pdf?
+\end{framed}
+
+\noindent The standard paper sizes are listed in Section \ref{papersizes}, or you may specify the width and height directly, as described in the same chapter.
+
+\section{Convert a text file to PDF}
+
 
 \begin{cpdflib}
 \clearpage
