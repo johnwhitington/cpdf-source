@@ -3166,20 +3166,15 @@ In a PDF file, optional content groups are used to group graphical elements toge
   \noindent\verb!     [-create-pdf-papersize <paper size>] -o out.pdf!
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf -typeset <text file> -o out.pdf!
-
-  \vspace{1.5mm}
-  \noindent\verb!cpdf -ocg-order-all in.pdf -o out.pdf!
-
-  \vspace{1.5mm}
-  \noindent\verb!cpdf -ocg-coalesce-on-name in.pdf -o out.pdf!
+  \noindent\verb!cpdf -typeset <text file> [-create-pdf-papersize <size>]!\\
+  \noindent\verb!     [-font <font>] [-font-size <size>] -o out.pdf!
 
   \end{framed}}
 
 \section{A new blank PDF}
 \index{create new PDF}
 
-Cpdf can build a new PDF file, given a number of pages and a paper size. The default is one page, A4 portrait.
+We can build a new PDF file, given a number of pages and a paper size. The default is one page, A4 portrait.
 
 \begin{framed}
  \small\verb?cpdf -create-pdf -create-pdf-pages 20?\\
@@ -3190,6 +3185,14 @@ Cpdf can build a new PDF file, given a number of pages and a paper size. The def
 
 \section{Convert a text file to PDF}
 
+A basic text to PDF convertor is included in \texttt{cpdf}. It takes a UTF8 text file (ASCII is a subset of UTF8) and typesets it ragged-right, splitting on whitespace. Both Windows and Unix line endings are allowed. 
+
+\begin{framed}
+ \small\verb?cpdf -typeset file.txt -create-pdf-papersize a3portrait?\\
+ \noindent\small\verb?        -font Courier -font-size 10 -o out.pdf?
+\end{framed}
+
+\noindent The standard paper sizes are listed in Section \ref{papersizes}, or you may specify the width and height directly, as described in the same chapter. The standard fonts are listed in chapter~\ref{chap:8}. The default font is TimesRoman and the default size is 12.
 
 \begin{cpdflib}
 \clearpage
