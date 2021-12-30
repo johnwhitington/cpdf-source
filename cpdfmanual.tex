@@ -3054,41 +3054,107 @@ recommended when file size is the sole consideration.
   {\small\begin{framed}
   \noindent\verb!cpdf in.pdf -output-json -o out.json!\\
   \noindent\verb!     [-output-json-parse-content-streams]!\\
-  \noindent\verb!     [-output-json-no-stream-data]!
+  \noindent\verb!     [-output-json-no-stream-data]!\\
+  \noindent\verb!     [-output-json-decompress-streams]!\\
+  \noindent\verb!     [-output-json-clean-strings]!
 
+\vspace{1.5mm}
+
+  \noindent\verb!cpdf -j in.json -o out.pdf!
   \end{framed}}
+
+In addition to reading and writing PDF files in the original Adobe format, \texttt{cpdf} can read and write them in its own CPDFJSON format, for somewhat easier extraction of information, modification of PDF files, and so on.
+
+\section{Converting PDF to JSON}
+
+The file is an array of arrays containing an object number followed by an
+object, one for each object in the file and two special ones:
+
+\begin{itemize}
+\item Object -1: CPDF's own data with the PDF version number, CPDF JSON format
+number, and flags used when writing (which may be required when reading):
+
+\begin{itemize}
+  \item \texttt{/CPDFJSONformatversion} (CPDFJSON integer (see below), currently 2)
+  \item \texttt{/CPDFJSONcontentparsed} (boolean, true if content streams have been parsed)
+  \item \texttt{/CPDFJSONstreamdataincluded} (boolean, true if stream data included. Cannot
+  round-trip if false).
+  \item \texttt{/CPDFJSONmajorpdfversion} (CPDFJSON integer)
+  \item \texttt{/CPDFJSONminorpdfversion} (CPDFJSON integer)
+\end{itemize}
+
+\item Object 0: The PDF's trailer dictionary
+
+\item Objects 1..n: The PDF's objects.
+\end{itemize}
+
+\noindent Objects are formatted thus:
+
+\begin{itemize}
+  \item PDF arrays, dictionaries, booleans, and strings are the same in JSON.
+  \item Integers are written as \texttt{\{"I":\ 0\}}
+  \item Floats are written as \texttt{\{"F":\ 0.0\}}
+  \item Names are written as \texttt{\{"N":\ "/Pages"\}}
+  \item Indirect references are integers
+  \item Streams are \texttt{\{"S":\ [dict, data]\}}
+  \item Strings are converted from UTF16BE/PDFDocEncoding to UTF8 before being
+  encoded in JSON. This process is fully reversible: it is to allow
+  easier editing of strings. This does not happen to strings within text
+  operators in parsed content streams, nor to /ID values in the
+  trailerdictionary, since neither is UTF16BE/PdfDocEncoding to begin with. 
+\end{itemize}
 
 Output PDF as JSON data. Each object is written under its object number. The object number zero is used to store the trailer dictionary. Negative object numbers are reserved for future format expansion. Here is an example of the output for a small PDF:
 
 {\small\begin{verbatim}
-[ [ 0,
-    { "/Size": 4, "/Root": 4,
-      "/ID": ["<elided>", "<elided>"] } ],
-  [ 3,
-    { "/Type": "/Page", "/Parent": 1,
-      "/Resources": { "/Font": { "/F0": { "/Type": "/Font",
-                                          "/Subtype": "/Type1",
-                                          "/BaseFont": "/Times-Italic" } } },
-      "/MediaBox": [ 0, 0, 595.275591, 841.889764 ], "/Rotate": 0,
-      "/Contents": [ 2 ] } ],
-  [ 4, { "/Type": "/Catalog", "/Pages": 1 } ],
-  [ 1, { "/Type": "/Pages", "/Kids": [ 3 ], "/Count": 1 } ],
-  [ 2,
-    [ { "/Length": 49 },
-      "1 0 0 1 50 770 cm BT/F0 36 Tf(Hello, World!)Tj ET" ] ] ]
-\end{verbatim}}
+[
+  [
+  -1, { "/CPDFJSONformatversion": { "I": 2 },
+  "/CPDFJSONcontentparsed": false, "/CPDFJSONstreamdataincluded": true,
+  "/CPDFJSONmajorpdfversion": { "I": 1 },
+  "/CPDFJSONminorpdfversion": { "I": 1 } } ], [
+  0, { "/Size": { "I": 4 }, "/Root": 4,
+  "/ID" : [ "FIXME", "FIXME"] } ], [
+  1, { "/Type": { "N": "/Pages" }, "/Kids": [ 3 ], "/Count": { "I": 1 } } ],
+  [
+  2, {
+  "S": [
+    { "/Length": { "I": 49 } },
+    "1 0 0 1 50 770 cm BT/F0 36 Tf(Hello, World!)Tj ET"
+  ] } ], [
+  3, { "/Type": { "N": "/Page" }, "/Parent": 1,
+  "/Resources": {
+    "/Font": {
+      "/F0": {
+        "/Type": { "N": "/Font" },
+        "/Subtype": { "N": "/Type1" },
+        "/BaseFont": { "N": "/Times-Italic" }
+      }
+    }
+  },
+  "/MediaBox": [
+    { "I": 0 }, { "I": 0 }, { "F": 595.2755905510001 }, { "F": 841.88976378 }
+  ], "/Rotate": { "I": 0 }, "/Contents": [ 2 ] } ], [
+  4, { "/Type": { "N": "/Catalog" }, "/Pages": 1 } ]
+]\end{verbatim}}
 
 \noindent The option \texttt{-output-json-parse-content-streams} will also convert content streams to JSON, so our example content stream will be expanded:
 
 
 {\small\begin{verbatim}
-[ [ 1.000000, 0.000000, 0.000000, 1.000000, 50.000000, 770.000000,
-          "cm" ],
-        [ "BT" ], [ "/F0", 36.000000, "Tf" ], [ "Hello, World!", "Tj" ],
-        [ "ET" ] ] ] ] ]
+2, {
+"S": [
+  {}, [
+  [
+  { "F": 1.0 }, { "F": 0.0 }, { "F": 0.0 }, { "F": 1.0 }, { "F": 50.0 }, {
+  "F": 770.0 }, "cm" ], [ "BT" ], [ "/F0", { "F": 36.0 }, "Tf" ], [
+  "Hello, World!", "Tj" ], [ "ET" ] ]
+] } ], [
 \end{verbatim}}
 
 \noindent The option \texttt{-output-json-no-stream-data} simply elides the stream data instead, leading to much smaller JSON files. 
+
+\section{Converting JSON to PDF}
 
 \begin{cpdflib}
 \clearpage
