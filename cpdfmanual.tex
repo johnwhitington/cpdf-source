@@ -3067,7 +3067,13 @@ In addition to reading and writing PDF files in the original Adobe format, \text
 
 \section{Converting PDF to JSON}
 
-The file is an array of arrays containing an object number followed by an
+We convert a PDF file to JSON format like this:
+
+  \begin{framed}
+  \small\noindent\verb!cpdf -output-json in.pdf -o out.json!
+  \end{framed}
+
+The resultant JSON file is an array of arrays containing an object number followed by an
 object, one for each object in the file and two special ones:
 
 \begin{itemize}
@@ -3091,7 +3097,7 @@ number, and flags used when writing (which may be required when reading):
 \noindent Objects are formatted thus:
 
 \begin{itemize}
-  \item PDF arrays, dictionaries, booleans, and strings are the same in JSON.
+  \item PDF arrays, dictionaries, booleans, and strings are the same as in JSON.
   \item Integers are written as \texttt{\{"I":\ 0\}}
   \item Floats are written as \texttt{\{"F":\ 0.0\}}
   \item Names are written as \texttt{\{"N":\ "/Pages"\}}
@@ -3101,40 +3107,50 @@ number, and flags used when writing (which may be required when reading):
   encoded in JSON. This process is fully reversible: it is to allow
   easier editing of strings. This does not happen to strings within text
   operators in parsed content streams, nor to /ID values in the
-  trailerdictionary, since neither is UTF16BE/PdfDocEncoding to begin with. 
+  trailer dictionary, since neither is UTF16BE/PDFDocEncoding to begin with. 
 \end{itemize}
 
-Output PDF as JSON data. Each object is written under its object number. The object number zero is used to store the trailer dictionary. Negative object numbers are reserved for future format expansion. Here is an example of the output for a small PDF:
+\noindent Here is an example of the output for a small PDF:
 
 {\small\begin{verbatim}
 [
   [
-  -1, { "/CPDFJSONformatversion": { "I": 2 },
-  "/CPDFJSONcontentparsed": false, "/CPDFJSONstreamdataincluded": true,
-  "/CPDFJSONmajorpdfversion": { "I": 1 },
-  "/CPDFJSONminorpdfversion": { "I": 1 } } ], [
-  0, { "/Size": { "I": 4 }, "/Root": 4,
-  "/ID" : [ "FIXME", "FIXME"] } ], [
-  1, { "/Type": { "N": "/Pages" }, "/Kids": [ 3 ], "/Count": { "I": 1 } } ],
+    -1,
+    { "/CPDFJSONformatversion": { "I": 2 },
+      "/CPDFJSONcontentparsed": false,
+      "/CPDFJSONstreamdataincluded": true,
+      "/CPDFJSONmajorpdfversion": { "I": 1 },
+      "/CPDFJSONminorpdfversion": { "I": 1 } }
+  ],
   [
-  2, {
-  "S": [
-    { "/Length": { "I": 49 } },
-    "1 0 0 1 50 770 cm BT/F0 36 Tf(Hello, World!)Tj ET"
-  ] } ], [
-  3, { "/Type": { "N": "/Page" }, "/Parent": 1,
-  "/Resources": {
-    "/Font": {
-      "/F0": {
-        "/Type": { "N": "/Font" },
-        "/Subtype": { "N": "/Type1" },
-        "/BaseFont": { "N": "/Times-Italic" }
+    0,
+    { "/Size": { "I": 4 }, "/Root": 4,
+      "/ID" : [ <elided>, <elided>] } ],
+  [
+    1, { "/Type": { "N": "/Pages" }, "/Kids": [ 3 ], "/Count": { "I": 1 } }
+  ],
+  [
+    2,
+    {"S": [{ "/Length": { "I": 49 } },
+     "1 0 0 1 50 770 cm BT/F0 36 Tf(Hello, World!)Tj ET"] }
+  ],
+  [
+    3, { "/Type": { "N": "/Page" }, "/Parent": 1,
+    "/Resources": {
+      "/Font": {
+        "/F0": {
+          "/Type": { "N": "/Font" },
+          "/Subtype": { "N": "/Type1" },
+          "/BaseFont": { "N": "/Times-Italic" }
+        }
       }
-    }
-  },
-  "/MediaBox": [
-    { "I": 0 }, { "I": 0 }, { "F": 595.2755905510001 }, { "F": 841.88976378 }
-  ], "/Rotate": { "I": 0 }, "/Contents": [ 2 ] } ], [
+    },
+    "/MediaBox":
+      [{ "I": 0 }, { "I": 0 },
+       { "F": 595.2755905510001 }, { "F": 841.88976378 }],
+    "/Rotate": { "I": 0 },
+    "/Contents": [ 2 ] } ],
+[
   4, { "/Type": { "N": "/Catalog" }, "/Pages": 1 } ]
 ]\end{verbatim}}
 
@@ -3152,9 +3168,22 @@ Output PDF as JSON data. Each object is written under its object number. The obj
 ] } ], [
 \end{verbatim}}
 
-\noindent The option \texttt{-output-json-no-stream-data} simply elides the stream data instead, leading to much smaller JSON files. 
+\noindent The option \texttt{-output-json-no-stream-data} simply elides the stream data instead, 
+leading to much smaller JSON files. 
+
+The option \texttt{-output-json-decompress-streams} keeps the streams intact, and decompresses them.
+
+The option \texttt{-output-json-clean-strings} converts any UTF16BE strings with no high bytes to PDFDocEncoding prior to output, so that editing them is easier. 
 
 \section{Converting JSON to PDF}
+
+We can load a JSON PDF file with the \texttt{-j} option in place of a PDF file anywhere in a normal \texttt{cpdf} command. A range may be applied, just like any other file. 
+
+  \begin{framed}
+  \small\noindent\verb!cpdf -j in.json -o out.pdf!
+  \end{framed}
+
+It is not required that \texttt{/Length} entries in CPDFJSON stream dictionaries be correctly updated when the JSON file is edited: \texttt{cpdf} will fix them when loading.
 
 \begin{cpdflib}
 \clearpage
