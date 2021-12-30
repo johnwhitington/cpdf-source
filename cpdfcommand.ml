@@ -462,6 +462,7 @@ type args =
    mutable jsonparsecontentstreams : bool;
    mutable jsonnostreamdata : bool;
    mutable jsondecompressstreams : bool;
+   mutable jsoncleanstrings : bool;
    mutable ocgrenamefrom : string;
    mutable ocgrenameto : string;
    mutable dedup : bool;
@@ -581,6 +582,7 @@ let args =
    jsonparsecontentstreams = false;
    jsonnostreamdata = false;
    jsondecompressstreams = false;
+   jsoncleanstrings = false;
    ocgrenamefrom = "";
    ocgrenameto = "";
    dedup = false;
@@ -685,6 +687,7 @@ let reset_arguments () =
   args.jsonparsecontentstreams <- false;
   args.jsonnostreamdata <- false;
   args.jsondecompressstreams <- false;
+  args.jsoncleanstrings <- false;
   args.ocgrenamefrom <- "";
   args.ocgrenameto <- "";
   args.dedup <- false;
@@ -1614,6 +1617,9 @@ let setjsonnostreamdata () =
 let setjsondecompressstreams () =
   args.jsondecompressstreams <- true
 
+let setjsoncleanstrings () =
+  args.jsoncleanstrings <- true
+
 let setocgrenamefrom s =
   args.ocgrenamefrom <- s
 
@@ -2426,6 +2432,9 @@ and specs =
    ("-output-json-decompress-streams",
      Arg.Unit setjsondecompressstreams,
      " Skip stream data for brevity");
+   ("-output-json-clean-strings",
+     Arg.Unit setjsoncleanstrings,
+     " Convert UTF16BE strings to PDFDocEncoding when possible");
    ("-j",
      Arg.String set_json_input,
      " Load a PDF JSON file");
@@ -2959,6 +2968,7 @@ let write_json output pdf =
         ~parse_content:args.jsonparsecontentstreams
         ~no_stream_data:args.jsonnostreamdata
         ~decompress_streams:args.jsondecompressstreams
+        ~clean_strings:args.jsoncleanstrings
         pdf
   | File filename ->
       let f = open_out filename in
@@ -2967,6 +2977,7 @@ let write_json output pdf =
           ~parse_content:args.jsonparsecontentstreams
           ~no_stream_data:args.jsonnostreamdata
           ~decompress_streams:args.jsondecompressstreams
+          ~clean_strings:args.jsoncleanstrings
           pdf;
         close_out f
 

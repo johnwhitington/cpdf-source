@@ -184,7 +184,7 @@ let output_json_marks ch calculate_page_number pdf fastrefnums marks =
   let json_of_mark m =
     `Assoc
        [("level", `Int m.Pdfmarks.level);
-        ("text", `String (Pdftext.utf8_of_pdfdocstring m.Pdfmarks.text));
+        ("text", `String (Pdftext.utf8_of_pdfdocstring (Pdftext.simplify_utf16be m.Pdfmarks.text)));
         ("page", `Int (calculate_page_number m));
         ("open", `Bool m.Pdfmarks.isopen);
         ("target", json_of_target pdf fastrefnums m.Pdfmarks.target)]

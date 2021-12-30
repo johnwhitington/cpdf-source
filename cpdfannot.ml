@@ -26,7 +26,7 @@ let annotations_json_page pdf page pagenum =
   | Some (Pdf.Array annots) ->
       map
         (fun annot ->
-           `List [`Int pagenum; Cpdfjson.json_of_object pdf (fun _ -> ()) false false annot])
+           `List [`Int pagenum; Cpdfjson.json_of_object ~clean_strings:true pdf (fun _ -> ()) false false annot])
         (map (Pdf.direct pdf) annots)
   | _ -> []
 

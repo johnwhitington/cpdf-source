@@ -23,11 +23,12 @@ Objects 1..n: The PDF's objects.
   o Names are written as {"N": "/Pages"}
   o Indirect references are integers
   o Streams are {"S": [dict, data]}
-
-  o Strings are converted from PDFDocEncoding to UTF8 before being encoded in
-  JSON. When they are read back the process is JSON encoded --> UTF8 -->
-  PDFDocEncoding. This process is to allow easier editing of strings. This
-  does not happen to strings within text operators in parsed content streams. 
+  o Strings are converted from UTF16BE/PDFDocEncoding to UTF8 before being
+  encoded in JSON. When they are read back the process is JSON encoded --> UTF8
+  --> UTF16BE/PDFDocEncoding. This process is fully reversible: it is to allow
+  easier editing of strings. This does not happen to strings within text
+  operators in parsed content streams, nor to /ID values in the
+  trailerdictionary, since neither is UTF16BE/PdfDocEncoding to begin with. 
 
 There are two subformats: parsing content streams or not.  Hello World in CPDF
 JSON without parsing content streams:
@@ -81,7 +82,7 @@ When parsing content streams:
 
 CPDF currently never preserves object streams, and only outputs unencrypted files.
 
-When reloading a JSON file, CPDF knows how to correct /Length entries in
+When reloading a JSON file, CPDF knows how to correct or add /Length entries in
 streams, so you need not worry about them.  *)
 
 open Pdfutil
@@ -277,12 +278,12 @@ let mkfloat f = `Assoc [("F", `Float f)]
 let mkint i = `Assoc [("I", `Int i)]
 let mkname n = `Assoc [("N", `String n)]
 
-let rec json_of_object pdf fcs no_stream_data pcs = function
+let rec json_of_object ?(clean_strings=false) pdf fcs no_stream_data pcs = function
   | P.Null -> `Null
   | P.Boolean b -> `Bool b
   | P.Integer i -> mkint i
   | P.Real r -> mkfloat r
-  | P.String s -> `String s
+  | P.String s -> `String (if clean_strings then Pdftext.simplify_utf16be s else s)
   | P.Name n -> mkname n
   | P.Array objs -> `List (map (json_of_object pdf fcs no_stream_data pcs) objs)
   | P.Dictionary elts ->
@@ -453,9 +454,8 @@ let precombine_page_content pdf =
   in
     Pdfpage.change_pages true pdf pages'
 
-(* FIXME make this optional? And maybe move into actual JSON reader, instead of
-   preprocessing PDF, so it helps us when writing, say, the output of
-   -print-dict-entry? *)
+(* Convert any strings in UTF16BE which could actually be in PDFDocEncoding
+   (due to having no high bytes) to make editing JSON easier. *)
 let rec ppstring_single_object pdf = function
   | Pdf.Dictionary d -> Pdf.recurse_dict (ppstring_single_object pdf) d
   | (Pdf.Stream {contents = (Pdf.Dictionary dict, data)}) ->
@@ -464,16 +464,16 @@ let rec ppstring_single_object pdf = function
   | Pdf.String s -> Pdf.String (Pdftext.simplify_utf16be s)
   | x -> x
 
+(* Do all objects, but skip the trailer dictionary since may mess up /ID if it
+   happens to begin with UTF16BE BOM *)
 let preprocess_strings pdf =
     Pdf.objselfmap (ppstring_single_object pdf) pdf
-    (* Skip the trailer dictionary since may mess up /ID if it happens to begin with UTF16BE BOM *)
-    (*pdf.Pdf.trailerdict <- ppstring_single_object pdf pdf.Pdf.trailerdict*)
 
 let json_of_pdf
-  ~parse_content ~no_stream_data ~decompress_streams
+  ~parse_content ~no_stream_data ~decompress_streams ~clean_strings
   pdf
 =
-  preprocess_strings pdf;
+  if clean_strings then preprocess_strings pdf;
   let pdf = if parse_content then precombine_page_content pdf else pdf in
   if decompress_streams then
     Pdf.objiter (fun _ obj -> Pdfcodec.decode_pdfstream_until_unknown pdf obj) pdf;
@@ -532,8 +532,8 @@ let json_of_pdf
           (fun (objnum, jsonobj) -> `List [`Int objnum; jsonobj])
           pairs_parsed)
 
-let to_output o ~parse_content ~no_stream_data ~decompress_streams pdf =
-  let json = json_of_pdf ~parse_content ~no_stream_data ~decompress_streams pdf in
+let to_output o ~parse_content ~no_stream_data ~decompress_streams ?(clean_strings=false) pdf =
+  let json = json_of_pdf ~parse_content ~no_stream_data ~decompress_streams ~clean_strings pdf in
     match o.Pdfio.out_caml_channel with
     | Some ch -> J.pretty_to_channel ch json
     | None -> o.Pdfio.output_string (J.pretty_to_string json)

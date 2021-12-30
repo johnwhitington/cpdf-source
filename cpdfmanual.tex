@@ -1559,6 +1559,9 @@ There are two options which turn off parts of the squeezer. They are \texttt{-sq
   \small\noindent\verb!cpdf -add-bookmarks <bookmark file> in.pdf -o out.pdf!
 
   \vspace{1.5mm}
+  \small\noindent\verb!cpdf -add-bookmarks-json <bookmark file> in.pdf -o out.pdf!
+
+  \vspace{1.5mm}
   \small\noindent\verb!cpdf -bookmarks-open-to-level <n> in.pdf -o out.pdf!
 
   \vspace{1.5mm}
@@ -1665,6 +1668,14 @@ contains the output from \texttt{-list-bookmarks} above, then the command
 will be given if the bookmarks file is not in the correct form (in particular,
 the numbers in the first column which specify the level must form a proper
 tree with no entry being more than one greater than the last).
+
+Bookmarks in JSON format (see above) may be added with \texttt{-add-bookmarks-json}:
+
+  \begin{framed}
+   \small\verb!cpdf -add-bookmarks-json bookmarks.json in.pdf -o out.pdf!
+  \end{framed}
+
+Remember that strings in JSON bookmark files are in UTF8, rather than as native PDF strings.
 
 \section{Opening bookmarks}
 \index{bookmarks!opening at level}

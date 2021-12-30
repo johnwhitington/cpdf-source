@@ -274,7 +274,7 @@ let print_dict_entry pdf key =
     match Pdf.lookup_direct pdf key d with
     | Some v ->
         (* We use a double newline as a separator. *)
-        Printf.printf "%s\n\n" (Cpdfyojson.Safe.to_string (Cpdfjson.json_of_object pdf (fun _ -> ()) false false v));
+        Printf.printf "%s\n\n" (Cpdfyojson.Safe.to_string (Cpdfjson.json_of_object ~clean_strings:true pdf (fun _ -> ()) false false v));
         d
     | None -> d
   in
