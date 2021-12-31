@@ -80,7 +80,7 @@ Excel are registered trademarks of Microsoft Corporation.
 \pagestyle{plain}
 \chapter*{Quickstart Examples}
 
-A sampling of just a few of the facilities provided by the Coherent PDF Command Line Tools.
+Just a few of the facilities provided by the Coherent PDF Command Line Tools. See each chapter for more commands and full details.
 
 \section*{\hyperref[chap:1]{Chapter 1: Basic Usage}}
 
@@ -270,6 +270,10 @@ A sampling of just a few of the facilities provided by the Coherent PDF Command 
 
 \noindent Write the PDF in JSON format to the given file, parsing its content streams into individual JSON objects too.
 
+\begin{framed}\noindent\texttt{cpdf -j in.json -o out.pdf}\end{framed}
+
+\noindent Load a PDF in JSON format, writing to an output PDF.
+
 \section*{\hyperref[chap:16]{Chapter 16: Optional Content Groups}}
 
 \begin{framed}\noindent\texttt{cpdf -ocg-list in.pdf}\end{framed}
@@ -281,6 +285,21 @@ A sampling of just a few of the facilities provided by the Coherent PDF Command 
 \noindent Coalesce optional content groups after merging or stamping two files with OCGs with like names.
 
 \section*{\hyperref[chap:17]{Chapter 17: Creating New PDFs}}
+
+\begin{framed}
+ \small\verb?cpdf -create-pdf -create-pdf-pages 20?\\
+ \noindent\small\verb?        -create-pdf-papersize usletterportrait -o out.pdf?
+\end{framed}
+
+\noindent Create a US Letter PDF of twenty pages.
+
+\begin{framed}
+ \small\verb?cpdf -typeset file.txt -create-pdf-papersize a3portrait?\\
+ \noindent\small\verb?        -font Courier -font-size 10 -o out.pdf?
+\end{framed}
+
+\noindent Typeset a text file as PDF on A3 paper with Courier 10 point font.
+
 
 \section*{\hyperref[chap:misc]{Chapter M: Miscellaneous}}
 
