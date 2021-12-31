@@ -2376,13 +2376,16 @@ NB: For all imposition options, see also discussion of \texttt{-fast} in Section
   \small\noindent\verb!cpdf -list-annotations in.pdf [<range>]!
 
   \vspace{1.5mm}
+  \small\noindent\verb!cpdf -list-annotations-json in.pdf [<range>]!
+
+  \vspace{1.5mm}
   \small\noindent\verb!cpdf -copy-annotations from.pdf to.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
   \small\noindent\verb!cpdf -remove-annotations in.pdf [<range>] -o out.pdf!
   \end{framed}
 
-  \section{List Annotations}
+  \section{Listing Annotations}
 \index{annotations!listing}
   The \texttt{-list-annotations} operation prints the textual content of any
 annotations on the selected pages to standard output. Each annotation is preceded by the page number and followed by a newline. See Section \ref{textencodings} for more information on text encodings in the output of this operation.
@@ -2393,7 +2396,36 @@ annotations on the selected pages to standard output. Each annotation is precede
     \noindent Print annotations from \texttt{in.pdf}, redirecting output to \texttt{annots.txt}.
   \end{framed}
 
-  \section{Copy Annotations}
+More information can be obtained by listing annotations in JSON format:
+
+  \begin{framed}
+    \small\verb!cpdf -list-annotations in.pdf > annots.txt!
+    
+    \vspace{2.5mm}
+    \noindent Print annotations from \texttt{in.pdf}, redirecting output to \texttt{annots.txt}.
+  \end{framed}
+
+This produces an array of (page number, CPDFJSON) pairs giving the PDF structure of each annotation. Destination pages for page links will have page numbers in place of internal PDF page links, and certain indirect objects are made direct but the content is otherwise unaltered. Here is an example entry for an annotation on page 10:
+
+{\small\begin{verbatim}
+  [
+  10,
+  { "/H": { "N": "/I" },
+    "/Border": [ { "I": 0 }, { "I": 0 }, { "I": 0 } ],
+    "/Rect": [
+      { "F": 89.88023 }, { "F": 409.98401 }, { "F": 323.90561 }, {
+        "F": 423.32059 } ],
+    "/Subtype": { "N": "/Link" },
+    "/Type": { "N": "/Annot" },
+    "/A": {
+      "/S": { "N": "/URI" },
+      "/URI": "http://www.google.com/" },
+    "/StructParent": { "I": 10 } } ]
+\end{verbatim}}
+
+A future version of \texttt{cpdf} will allow these JSON annotations to be edited and re-loaded into a PDF file.
+
+  \section{Copying Annotations}
 \index{annotations!copying}
   The \texttt{-copy-annotations} operation copies the annotations in the given
 page range from one file (the file specified immediately after the option) to
@@ -2408,7 +2440,7 @@ onto the PDF file \texttt{to.pdf}, writing the result to \texttt{results.pdf}.
 
   \end{framed}
 
-  \section{Remove Annotations}
+  \section{Removing Annotations}
 \index{annotations!removing}
   The \texttt{-remove-annotations} operation removes all annotations from the
 given page range.
