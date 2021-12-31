@@ -2,10 +2,9 @@ open Pdfutil
 open Pdfio
 open Cpdferror
 
-(* \section{Blacken text} *)
+(* Blacken text *)
 
 (*
-   \begin{verbatim}
     Algorithm: Change
      BT
      <ops>
@@ -18,7 +17,6 @@ open Cpdferror
     <ops minus any color, shading or gs operators>
     ET
     <ops minus any text positioning or text rendering ones>
-    \end{verbatim}
 *)
 let blacktext_ops colour pdf resources content =
   let not_text = function
@@ -94,7 +92,7 @@ let blacktext c range pdf =
   in
     Cpdfpage.process_pages (Cpdfutil.ppstub blacktext_page) pdf range
 
-(* \section{Blacken lines} *)
+(* Blacken lines *)
 let blacklines_ops c pdf resources content =
   let rec blacken_strokeops prev = function
     | [] -> rev prev
@@ -120,7 +118,7 @@ let blacklines c range pdf =
   in
     Cpdfpage.process_pages (Cpdfutil.ppstub blacklines_page) pdf range
 
-(* \section{Blacken Fills} *)
+(* Blacken Fills *)
 let blackfills_ops c pdf resources content =
   let rec blacken_fillops prev = function
     | [] -> rev prev
@@ -146,7 +144,7 @@ let blackfills c range pdf =
   in
     Cpdfpage.process_pages (Cpdfutil.ppstub blackfills_page) pdf range
 
-(* \section{Set a minimum line width to avoid dropout} *)
+(* Set a minimum line width to avoid dropout *)
 let thinlines range width pdf =
   let thinpage _ page =
     let operators =

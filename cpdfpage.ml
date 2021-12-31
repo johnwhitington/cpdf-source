@@ -97,7 +97,7 @@ let shift_page ?(fast=false) dxdylist pdf pnum page =
 let shift_pdf ?(fast=false) dxdylist pdf range =
   process_pages (shift_page ~fast dxdylist pdf) pdf range
 
-(* \section{Shift page data} *)
+(* Shift page data *)
 let make_mediabox (xmin, ymin, xmax, ymax) =
   Pdf.Array
     [Pdf.Real xmin; Pdf.Real ymin; Pdf.Real xmax; Pdf.Real ymax]
@@ -183,7 +183,7 @@ let scale_page_contents ?(fast=false) scale position pdf pnum page =
 let scale_contents ?(fast=false) position scale pdf range =
   process_pages (scale_page_contents ~fast scale position pdf) pdf range
 
-(* \section{Set media box} *)
+(* Set media box *)
 let set_mediabox xywhlist pdf range =
   let crop_page pnum page =
     let x, y, w, h = List.nth xywhlist (pnum - 1) in
@@ -287,7 +287,7 @@ let upright ?(fast=false) range pdf =
     in
       process_pages (upright_page pdf) pdf range
 
-(* \section{Rotating pages} *)
+(* Rotating pages *)
 let rotate_pdf r pdf range =
   let rotate_page _ page =
     {page with Pdfpage.rotate =
@@ -325,7 +325,7 @@ let rotate_page_contents ~fast rotpoint r pdf pnum page =
 let rotate_contents ?(fast=false) r pdf range =
   process_pages (rotate_page_contents ~fast None r pdf) pdf range
 
-(* \section{Scale page data} *)
+(* Scale page data *)
 let scale_pdf ?(fast=false) sxsylist pdf range =
   let scale_page pnum page =
     let sx, sy = List.nth sxsylist (pnum - 1) in
@@ -413,7 +413,7 @@ let hasbox pdf page boxname =
 
 
 
-(* \section{Flip pages} *)
+(* Flip pages *)
 let flip_page ?(fast=false) transform_op pdf pnum page =
   let minx, miny, maxx, maxy =
     Pdf.parse_rectangle page.Pdfpage.mediabox
@@ -658,7 +658,7 @@ let setBox box minx maxx miny maxy pdf range =
   in
     process_pages (Cpdfutil.ppstub set_box_page) pdf range
 
-(* \section{Cropping} *)
+(* Cropping *)
 let crop_pdf ?(box="/CropBox") xywhlist pdf range =
   let crop_page pagenum page =
     {page with

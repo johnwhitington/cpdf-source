@@ -56,7 +56,7 @@ let xmp_template =
 
 <?xpacket end='r'?>|}
 
-(* \section{Set or replace metadata} *)
+(* Set or replace metadata *)
 let set_metadata_from_bytes keepversion data pdf =
   let metadata_stream =
     Pdf.Stream
@@ -94,9 +94,7 @@ let set_metadata keepversion filename pdf =
       done;
       set_metadata_from_bytes keepversion data pdf
 
-
-
-(* \section{Remove metadata} *)
+(* Remove metadata *)
 let remove_metadata pdf =
   match Pdf.lookup_direct pdf "/Root" pdf.Pdf.trailerdict with
   | None -> error "malformed file" 
@@ -108,6 +106,7 @@ let remove_metadata pdf =
                Pdf.add_dict_entry pdf.Pdf.trailerdict "/Root" (Pdf.Indirect rootnum);
              Pdf.root =
                rootnum}
+
 (* Print metadata *)
 let get_metadata pdf =
   match Pdf.lookup_direct pdf "/Root" pdf.Pdf.trailerdict with
@@ -353,8 +352,7 @@ let set_pdf_info_xml_many changes value xmldata pdf =
       changes;
     !xmldata
 
-
-(* \section{Set an entry in the /Info dictionary} *)
+(* Set an entry in the /Info dictionary *)
 
 (* We must parse the date to get its components, then use strftime to build the
  * new string in XMP format *)
@@ -528,7 +526,7 @@ let set_metadata_date pdf date =
           pdf
 
 
-(* \section{Copy an /ID from one file to another} *)
+(* Copy an /ID from one file to another *)
 let copy_id keepversion copyfrom copyto =
   match Pdf.lookup_direct copyfrom "/ID" copyfrom.Pdf.trailerdict with
   | None -> copyto (* error "Source PDF file has no /ID entry to copy from" *)
@@ -559,7 +557,7 @@ let create_metadata pdf =
     (replacements pdf);
   set_metadata_from_bytes false (bytes_of_string !xmp) pdf
 
-(* \section{Set viewer preferences} *)
+(* Set viewer preferences *)
 let set_viewer_preference (key, value, version) pdf =
   match Pdf.lookup_direct pdf "/Root" pdf.Pdf.trailerdict with
   | Some catalog ->
@@ -584,9 +582,7 @@ let set_viewer_preference (key, value, version) pdf =
                   Pdf.trailerdict = trailerdict'}
   | None -> error "bad root"
 
-
-
-(* \section{Set page layout} *)
+(* Set page layout *)
 let set_page_layout pdf s =
   match s with
   | "SinglePage" | "OneColumn" | "TwoColumnLeft"
@@ -607,8 +603,7 @@ let set_page_layout pdf s =
       end
   | _ -> error "Unknown page layout"
 
-
-(* \section{Set page mode} *)
+(* Set page mode *)
 let set_page_mode pdf s =
   match s with
   | "UseNone" | "UseOutlines" | "UseThumbs"

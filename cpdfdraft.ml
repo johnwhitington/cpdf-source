@@ -1,7 +1,7 @@
 open Pdfutil
 open Pdfio
 
-(* \section{Making draft documents} *)
+(* Making draft documents *)
 
 (* Predicate on an xobject: true if an image xobject. *)
 let isimage pdf (_, xobj) =

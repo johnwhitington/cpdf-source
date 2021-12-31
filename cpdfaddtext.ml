@@ -6,7 +6,7 @@ type color =
 | RGB of float * float * float
 | CYMK of float * float * float * float
 
-(* \section{Superimpose text, page numbers etc.} *)
+(* Superimpose text, page numbers etc. *)
 
 (* Process UTF8 text to /WinAnsiEncoding string (for standard 14) or whatever
    is in the font (for existing fonts). *)

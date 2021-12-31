@@ -206,7 +206,7 @@ let list_attached_files pdf =
   in
     toplevel @ pagelevel
 
-(* \section{Remove Attached files} *)
+(* Remove Attached files *)
 let remove_attached_files_on_pages pdf =
   let remove_from_page page =
     {page with Pdfpage.rest =
@@ -301,4 +301,3 @@ let dump_attached_files pdf out =
     iter (dump_attached_page pdf out) (Pdfpage.pages_of_pagetree pdf)
   with
     e -> error (Printf.sprintf "Couldn't dump attached files: %s\n" (Printexc.to_string e))
-

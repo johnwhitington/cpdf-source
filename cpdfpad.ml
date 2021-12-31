@@ -1,6 +1,6 @@
 open Pdfutil
 
-(* \section{Padding with blank pages.} *)
+(* Padding with blank pages. *)
 let insert_after pos page pages =
   let before, after = cleave pages pos in
     before @ [page] @ after
