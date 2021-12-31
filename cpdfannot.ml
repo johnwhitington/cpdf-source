@@ -1,6 +1,6 @@
 open Pdfutil
 
-(* \section{List annotations} *)
+(* List annotations *)
 let get_annotation_string encoding pdf annot =
   match Pdf.lookup_direct pdf "/Contents" annot with
   | Some (Pdf.String s) -> Cpdfmetadata.encode_output encoding s
@@ -21,12 +21,22 @@ let list_page_annotations encoding pdf num page =
       iter (print_annotation encoding pdf num) (map (Pdf.direct pdf) annots)
   | _ -> ()
 
+(* In the future, we will allow round-tripping of JSON annotations, but this
+   will be complicated. For now, we just turn some indirect things into direct
+   things, so that the output contains all the pertinent information, not for
+   round-tripping, but for mere extraction. *)
+let make_direct pdf annot =
+  match Pdf.lookup_direct pdf "/A" annot with
+  | None -> annot
+  | Some d -> Pdf.add_dict_entry annot "/A" d
+
 let annotations_json_page pdf page pagenum =
   match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
   | Some (Pdf.Array annots) ->
       map
         (fun annot ->
-           `List [`Int pagenum; Cpdfjson.json_of_object ~clean_strings:true pdf (fun _ -> ()) false false annot])
+            let annot = make_direct pdf annot in
+             `List [`Int pagenum; Cpdfjson.json_of_object ~clean_strings:true pdf (fun _ -> ()) false false annot])
         (map (Pdf.direct pdf) annots)
   | _ -> []
 
@@ -43,6 +53,7 @@ let list_annotations ~json encoding pdf =
     then list_annotations_json pdf
     else Cpdfpage.iter_pages (list_page_annotations encoding pdf) pdf range
 
+(* Return annotations *)
 let get_annotations encoding pdf =
   let pages = Pdfpage.pages_of_pagetree pdf in
     flatten
@@ -170,7 +181,7 @@ let copy_annotations range frompdf topdf =
             Pdfpage.change_pages true !pdf (rev !pages)
     | _ -> assert false
 
-(* \section{Remove annotations} *)
+(* Remove annotations *)
 let remove_annotations range pdf =
   let remove_annotations_page pagenum page =
     if mem pagenum range then
