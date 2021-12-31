@@ -30,6 +30,31 @@ let make_direct pdf annot =
   | None -> annot
   | Some d -> Pdf.add_dict_entry annot "/A" d
 
+let rewrite_destination calculate_pagenumber d =
+  match d with
+  | Pdf.Array (Pdf.Indirect i::r) ->
+      Pdf.Array (Pdf.Indirect (calculate_pagenumber (Pdfdest.Fit (Pdfdest.PageObject i)))::r)
+  | x -> x
+
+let rewrite_destinations pdf annot =
+  let refnums = Pdf.page_reference_numbers pdf in
+  let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
+  let calculate_pagenumber =  Pdfpage.pagenumber_of_target ~fastrefnums pdf in
+    (* Deal with /Dest in annotation *)
+    match Pdf.lookup_direct pdf "/Dest" annot with
+    | Some d -> Pdf.add_dict_entry annot "/Dest" (rewrite_destination calculate_pagenumber d)
+    | None ->
+        (* Deal with /A --> /D dest when /A --> /S = /GoTo *)
+        match Pdf.lookup_direct pdf "/A" annot with
+        | Some action ->
+            begin match Pdf.lookup_direct pdf "/D" action with
+            | Some d ->
+                Pdf.add_dict_entry
+                  annot "/A" (Pdf.add_dict_entry action "/D" (rewrite_destination calculate_pagenumber d))
+            | None -> annot
+            end
+       | None -> annot
+
 let annotations_json_page pdf page pagenum =
   match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
   | Some (Pdf.Array annots) ->

@@ -1,7 +1,7 @@
 open Pdfutil
 open Cpdferror
 
-(* \section{Add bookmarks} *)
+(* Add bookmarks *)
 let read_lines input =
   let lines = ref [] in
    try
@@ -264,7 +264,7 @@ let list_bookmarks ~json encoding range pdf output =
 
 (* o is the stamp, u is the main pdf page *)
 
-(* \section{Split at bookmarks} *)
+(* Split at bookmarks *)
 
 let get_bookmark_name pdf marks splitlevel n _ =
   let refnums = Pdf.page_reference_numbers pdf in
@@ -272,10 +272,6 @@ let get_bookmark_name pdf marks splitlevel n _ =
   match keep (function m -> n = Pdfpage.pagenumber_of_target ~fastrefnums pdf m.Pdfmarks.target && m.Pdfmarks.level <= splitlevel) marks with
   | {Pdfmarks.text = title}::_ -> Cpdfattach.remove_unsafe_characters Cpdfmetadata.UTF8 title
   | _ -> ""
-
-(* Find the stem of a filename *)
-(*let stem s =
-  implode (rev (tail_no_fail (dropwhile (neq '.') (rev (explode (Filename.basename s))))))*)
 
 (* Return list, in order, a *set* of page numbers of bookmarks at a given level *)
 let bookmark_pages level pdf =
