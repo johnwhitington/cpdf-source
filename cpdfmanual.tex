@@ -282,7 +282,7 @@ A sampling of just a few of the facilities provided by the Coherent PDF Command 
 
 \section*{\hyperref[chap:17]{Chapter 17: Creating New PDFs}}
 
-\section*{\hyperref[chap:misc]{Chapter X: Miscellaneous}}
+\section*{\hyperref[chap:misc]{Chapter M: Miscellaneous}}
 
 \begin{framed}\noindent\texttt{cpdf -blacktext in.pdf -o out.pdf}\end{framed}
 
@@ -3319,6 +3319,8 @@ A basic text to PDF convertor is included in \texttt{cpdf}. It takes a UTF8 text
 \end{pycpdflib}
 
 \clearpage\pagestyle{empty}
+\setcounter{chapter}{12}
+\renewcommand{\thechapter}{\Alph{chapter}}%
 \chapter{Miscellaneous}\label{chap:misc}\pagestyle{fancy}
   {\small\begin{framed}
   \noindent\verb!cpdf -draft [-boxes] [-draft-remove-only <n>] in.pdf [<range>] -o out.pdf!
