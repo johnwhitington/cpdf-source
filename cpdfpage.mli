@@ -103,3 +103,5 @@ val trim_marks : ?fast:bool -> Pdf.t -> int list -> Pdf.t
 val show_boxes : ?fast:bool -> Pdf.t -> int list -> Pdf.t
 
 val copy_box : string -> string -> bool -> Pdf.t -> int list -> Pdf.t
+
+val allupright : int list -> Pdf.t -> bool

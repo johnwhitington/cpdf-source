@@ -480,7 +480,8 @@ type args =
    mutable dict_entry_search : Pdf.pdfobject option;
    mutable toc_title : string;
    mutable toc_bookmark : bool;
-   mutable idir_only_pdfs : bool}
+   mutable idir_only_pdfs : bool;
+   mutable no_warn_rotate : bool}
 
 let args =
   {op = None;
@@ -600,7 +601,8 @@ let args =
    dict_entry_search = None;
    toc_title = "Table of Contents";
    toc_bookmark = true;
-   idir_only_pdfs = false}
+   idir_only_pdfs = false;
+   no_warn_rotate = false}
 
 let reset_arguments () =
   args.op <- None;
@@ -707,10 +709,10 @@ let reset_arguments () =
   args.toc_bookmark <- true;
   args.idir_only_pdfs <- false
   (* Do not reset original_filename or cpdflin or was_encrypted or
-   * was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
-   * gs_malformed or gs_quiet, since we want these to work across ANDs. Or
-   * squeeze options: a little odd, but we want it to happen on eventual
-   * output. *)
+   was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
+   gs_malformed or gs_quiet or no-warn-rotate, since we want these to work
+   across ANDs. Or squeeze options: a little odd, but we want it to happen on
+   eventual output. *)
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -1705,6 +1707,9 @@ let settocnobookmark () =
 let setidironlypdfs () =
   args.idir_only_pdfs <- true
 
+let setnowarnrotate () =
+  args.no_warn_rotate <- true
+
 let whingemalformed () =
   prerr_string "Command line must be of exactly the form\ncpdf <infile> -gs <path> -gs-malformed-force -o <outfile>\n";
   exit 1
@@ -1849,6 +1854,12 @@ and specs =
    ("-upright",
        Arg.Unit (setop Upright),
        " Make pages upright");
+   ("-prerotate",
+      Arg.Unit setprerotate,
+      " Calls -upright on pages before modifying them, if required");
+   ("-no-warn-rotate",
+      Arg.Unit setnowarnrotate,
+      " Do not warn on pages of PDFs which are not upright");
    ("-hflip",
        Arg.Unit (setop HFlip),
        " Flip pages horizontally");
@@ -2090,9 +2101,7 @@ and specs =
    ("-embed-missing-fonts",
       Arg.Unit (setop EmbedMissingFonts),
       " Embed missing fonts by calling gs");
-   ("-prerotate",
-      Arg.Unit setprerotate,
-      " Calls -upright on pages before adding text");
+
    ("-twoup",
       Arg.Unit (setop TwoUp),
       " Put 2 pages onto one");
@@ -2996,6 +3005,15 @@ let collate (names, pdfs, ranges) =
     done;
     split3 (rev !nis)
 
+let warn_prerotate range pdf =
+  if not (Cpdfpage.allupright range pdf) then
+    Printf.eprintf "Some pages in the range have non-zero rotation or non (0,0)-based mediabox. \
+                    Consider adding -prerotate or pre-processing with -upright. \
+                    To silence this warning use -no-warn-rotate\n%!"
+
+let prerotate range pdf =
+  Cpdfpage.upright ~fast:args.fast range pdf
+
 (* Main function *)
 let go () =
   match args.op with
@@ -3667,7 +3685,7 @@ let go () =
             | OtherFont f -> None (* it's in fontname *)
           in
             let pdf =
-              if args.prerotate then Cpdfpage.upright ~fast:args.fast range pdf else pdf
+              if args.prerotate then prerotate range pdf else pdf
             and filename =
               match args.inputs with
               | (InFile inname, _, _, _, _, _)::_ -> inname
