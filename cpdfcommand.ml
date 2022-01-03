@@ -3006,7 +3006,7 @@ let collate (names, pdfs, ranges) =
     split3 (rev !nis)
 
 let warn_prerotate range pdf =
-  if not (Cpdfpage.allupright range pdf) then
+  if not args.prerotate && not (Cpdfpage.allupright range pdf) then
     Printf.eprintf "Some pages in the range have non-zero rotation or non (0,0)-based mediabox. \
                     Consider adding -prerotate or pre-processing with -upright. \
                     To silence this warning use -no-warn-rotate\n%!"
@@ -3684,6 +3684,7 @@ let go () =
             | StandardFont f -> Some f
             | OtherFont f -> None (* it's in fontname *)
           in
+            warn_prerotate range pdf;
             let pdf =
               if args.prerotate then prerotate range pdf else pdf
             and filename =
@@ -3757,8 +3758,16 @@ let go () =
             in
               write_pdf false pdf
   | Some (CombinePages over) ->
-      write_pdf false
-        (Cpdfpage.combine_pages args.fast (get_single_pdf args.op false) (pdfread_pdf_of_file None None over) false false true)
+      let underpdf = get_single_pdf args.op false in
+      let overpdf = pdfread_pdf_of_file None None over in
+        warn_prerotate (parse_pagespec underpdf "all") underpdf;
+        warn_prerotate (parse_pagespec overpdf "all") overpdf;
+        write_pdf false
+          (Cpdfpage.combine_pages
+             args.fast
+               (prerotate (parse_pagespec underpdf "all") underpdf)
+               (prerotate (parse_pagespec overpdf "all") overpdf)
+               false false true)
   | Some Encrypt ->
       let pdf = get_single_pdf args.op false in
         let pdf = Cpdfsqueeze.recompress_pdf pdf

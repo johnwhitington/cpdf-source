@@ -131,21 +131,6 @@ let change_boxes f pdf page =
                  make_mediabox (f (Pdf.parse_rectangle page.Pdfpage.mediabox));
                Pdfpage.rest = rest'}
 
-(* Change a page's media box so its minimum x and y are 0, making other
-operations simpler to think about. Any shift that is done is reflected in
-other boxes (clip etc.) *)
-let rectify_boxes ?(fast=false) pdf page =
-  let minx, miny, _, _ =
-    Pdf.parse_rectangle page.Pdfpage.mediabox
-  in
-    let f (iminx, iminy, imaxx, imaxy) =
-      iminx -. minx, iminy -. miny, imaxx -. minx, imaxy -. miny
-    in
-      let page = change_boxes f pdf page in
-        if minx <> 0. || miny <> 0.
-          then
-            begin let p, _, _ = shift_page ~fast [(-.minx),(-.miny)] pdf 1 page in p end
-          else page
 
 (* Scale contents *)
 let scale_page_contents ?(fast=false) scale position pdf pnum page =
@@ -276,6 +261,22 @@ let transform_contents ?(fast=false) tr pdf page =
     let page = Cpdfutil.change_pattern_matrices_page pdf (Pdftransform.matrix_invert tr) page in
       Cpdfutil.transform_annotations pdf tr page.Pdfpage.rest;
       Pdfpage.prepend_operators pdf [transform_op] ~fast page
+
+(* Change a page's media box so its minimum x and y are 0, making other
+operations simpler to think about. Any shift that is done is reflected in
+other boxes (clip etc.) *)
+let rectify_boxes ?(fast=false) pdf page =
+  let minx, miny, _, _ =
+    Pdf.parse_rectangle page.Pdfpage.mediabox
+  in
+    let f (iminx, iminy, imaxx, imaxy) =
+      iminx -. minx, iminy -. miny, imaxx -. minx, imaxy -. miny
+    in
+      let page = change_boxes f pdf page in
+        if minx <> 0. || miny <> 0.
+          then
+            begin let p, _, _ = shift_page ~fast [(-.minx),(-.miny)] pdf 1 page in p end
+          else page
 
 let upright ?(fast=false) range pdf =
   if allupright range pdf then pdf else
