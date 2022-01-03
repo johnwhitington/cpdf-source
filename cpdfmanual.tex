@@ -1106,8 +1106,6 @@ The encryption parameters described in Chapter \ref{encryption} may be added to 
   \vspace{1.5mm}
   \small\noindent\verb!cpdf -rotate-contents <angle> [-fast] in.pdf [<range>] -o out.pdf!
 
-  \vspace{1.5mm}
-  \small\noindent\verb!cpdf -upright [-fast] in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
   \small\noindent\verb!cpdf -hflip [-fast] in.pdf [<range>] -o out.pdf!
@@ -1867,7 +1865,8 @@ the file using a different page range each time.
   \noindent\small\verb!     in.pdf [<range>] [-fast] -o out.pdf!
 
   \vspace{1.5mm}
-  \noindent\small\verb!cpdf -combine-pages over.pdf under.pdf [-fast] -o out.pdf!
+  \noindent\small\verb!cpdf -combine-pages over.pdf under.pdf!\\
+  \noindent\small\verb!     [-fast] [-prerotate] [-no-warn-rotate] -o out.pdf!
 
   \vspace{1.5mm}
   \noindent\small\begin{verbatim}cpdf ([-add-text <text-format> | -add-rectangle <size>])
@@ -1875,10 +1874,11 @@ the file using a different page range each time.
               [-color <color>]            [-line-spacing <number>]
               [-outline]                  [-linewidth <number>]
               [-underneath]               [-relative-to-cropbox]
-              [-prerotate]                [-bates <number>]
-              [-bates-at-range <number>]  [-bates-pad-to <number>]
-              [-opacity <number>]         [-midline]
-              [-topline]                  [-fast]
+              [-prerotate]                [-no-warn-rotate]
+              [-bates <number>]           [-bates-at-range <number>]
+              [-bates-pad-to <number>]    [-opacity <number>]
+              [-midline]                  [-topline]
+              [-fast]
               in.pdf [<range>] -o out.pdf\end{verbatim}
   \noindent See also positioning commands below.
 
@@ -2043,8 +2043,8 @@ The starting point can be set with the \texttt{-bates} option. For example:
   \end{framed}
 
 \noindent No attempt is made to take account of the page rotation when interpreting the
-position, so \texttt{-prerotate} must be added to the command line if the file
-contains pages with a non-zero viewing rotation. This is equivalent to
+position, so \texttt{-prerotate} may be added to the command line if the file
+contains pages with a non-zero viewing rotation (to silence the rotation warning, add \texttt{-no-warn-rotate} instead) This is equivalent to
 pre-processing the document with \texttt{-upright}.
    
 The \texttt{-relative-to-cropbox} modifier can be added to the command line to
