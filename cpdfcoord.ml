@@ -215,7 +215,7 @@ let parse_rectangle pdf s =
     | [x; y; w; h] -> x, y, w, h
     | _ -> error ("Bad rectangle specification " ^ s)
   with
-    _ -> error ("Bad rectangle specification " ^ s)
+    e -> error ("Bad rectangle specification " ^ s ^ " : " ^ Printexc.to_string e)
 
 let parse_rectangles pdf s =
   try
@@ -227,7 +227,7 @@ let parse_rectangles pdf s =
          | _ -> error ("Bad rectangle specification " ^ s))
         groups
   with
-    _ -> error ("Bad rectangle specification " ^ s)
+    e -> error ("Bad rectangle specification " ^ s ^ " : " ^ Printexc.to_string e)
 
 let parse_coordinate pdf s =
   try
