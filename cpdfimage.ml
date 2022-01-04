@@ -50,7 +50,7 @@ let write_image path_to_p2p path_to_im pdf resources name image =
             with
               0 -> Sys.remove pnm
             | _ -> 
-              Printf.eprintf "Call to imagemagick failed: did you specify -p2p correctly?\n%!";
+              Printf.eprintf "Call to imagemagick failed: did you specify -p2p or -im correctly?\n%!";
               Sys.remove pnm
             end
           end
