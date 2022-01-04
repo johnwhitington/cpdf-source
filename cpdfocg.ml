@@ -96,7 +96,7 @@ let ocg_get_list pdf =
   rev !l
 
 let ocg_list pdf =
-  List.iter (Printf.printf "%s\n") (ocg_get_list pdf)
+  List.iter (Printf.printf "%s\n") (map Pdftext.utf8_of_pdfdocstring (ocg_get_list pdf))
 
 let ocg_rename f t pdf =
   Pdf.objselfmap

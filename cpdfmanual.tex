@@ -2395,7 +2395,7 @@ NB: For all imposition options, see also discussion of \texttt{-fast} in Section
   \section{Listing Annotations}
 \index{annotations!listing}
   The \texttt{-list-annotations} operation prints the textual content of any
-annotations on the selected pages to standard output. Each annotation is preceded by the page number and followed by a newline. See Section \ref{textencodings} for more information on text encodings in the output of this operation.
+annotations on the selected pages to standard output. Each annotation is preceded by the page number and followed by a newline. The output of this operation is always UTF8.
   \begin{framed}
     \small\verb!cpdf -list-annotations in.pdf > annots.txt!
     
@@ -3285,7 +3285,7 @@ In a PDF file, optional content groups are used to group graphical elements toge
   \noindent\verb!cpdf -ocg-list in.pdf!
   \end{framed}}
 
-\noindent List the optional content groups in the PDF, one per line, to standard output.
+\noindent List the optional content groups in the PDF, one per line, to standard output. UTF8.
   
   {\small\begin{framed}
   \noindent\verb!cpdf -ocg-rename -ocg-rename-from <a> -ocg-rename-to <b> in.pdf -o out.pdf!

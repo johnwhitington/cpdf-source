@@ -136,7 +136,7 @@ let list_attached_files pdf =
                       | Some ((Pdf.Dictionary _) as d) ->
                           begin match Pdf.lookup_direct pdf "/F" d with
                           | Some stream ->
-                              {name = x;
+                              {name = Pdftext.utf8_of_pdfdocstring x;
                                pagenumber = 0;
                                data =
                                  (fun () ->
@@ -174,7 +174,7 @@ let list_attached_files pdf =
                                    begin match Pdf.lookup_direct pdf "/F" d with
                                    | Some stream ->
                                        Some
-                                        {name = s;
+                                        {name = Pdftext.utf8_of_pdfdocstring s;
                                          pagenumber = pagenumber;
                                          data =
                                            (fun () ->
@@ -190,7 +190,7 @@ let list_attached_files pdf =
                                    end
                               | _ ->
                                   Some
-                                    {name = s;
+                                    {name = Pdftext.utf8_of_pdfdocstring s;
                                      pagenumber = pagenumber;
                                      data = (fun () -> raise (Pdf.PDFError "no attachment data"))}
                               end
