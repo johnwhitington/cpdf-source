@@ -9,7 +9,7 @@ o New operations -impose and -impose-xy for document imposition
 o New operation -print-font-table gives (charcode, unicode, glyph name) triples
 o New -print-dict-entry operation prints values for a given key
 o New -replace-dict-entry function to search & replace e.g URLs
-o Append e.g DUP2 to a page range to make 1,2,3 --> 1,1,2,2,3,3 etc.
+o Prepend e.g 2DUP to a page range to make 1,2,3 --> 1,1,2,2,3,3 etc.
 o Prepend NOT to a page range to invert it
 o Output annotations in JSON form with -list-annotations-json
 o Output bookmarks in JSON format with -list-bookmarks-json

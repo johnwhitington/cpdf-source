@@ -924,7 +924,7 @@ let setmethod s =
   if args.op = None then args.op <- Some Encrypt; (* Could be additional to -split *)
   match s with
   | "40bit" | "128bit" | "AES" | "AES256" | "AES256ISO" -> args.crypt_method <- s
-  | _ -> error "Unsupported encryption method"
+  | _ -> error ("Unsupported encryption method " ^ s)
 
 let setowner s =
   args.owner <- s

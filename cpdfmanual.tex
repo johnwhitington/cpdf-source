@@ -810,9 +810,9 @@ If the malformity lies inside an individual page of the PDF, rather than in its 
 \noindent The command line for \texttt{-gs-malformed-force} must be of \textit{precisely} this form. Sometimes, on the other hand, we might wish \texttt{cpdf} to fail immediately on any malformed file, rather than try its own reconstruction process. The option \texttt{-error-on-malformed} achieves this.
 
 
-Sometimes files can be technically well-formed but use inefficient PDF
+Sometimes (old, pre-ISO standardisation) files can be technically well-formed but use inefficient PDF
 constructs.  If you are sure the input files you are using are
-impeccably formed, the \texttt{-fast} option may be added to the command line (or, if
+well formed, the \texttt{-fast} option may be added to the command line (or, if
 using \texttt{AND}, to each section of the command line). This will use certain
 shortcuts which speed up processing, but would fail on badly-produced files. The \verb!-fast! option may be used with:
 
@@ -1104,6 +1104,9 @@ The encryption parameters described in Chapter \ref{encryption} may be added to 
   \small\noindent\verb!cpdf -rotateby <angle> in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
+  \small\noindent\verb!cpdf -upright [-fast] in.pdf [<range>] -o out.pdf!
+
+  \vspace{1.5mm}
   \small\noindent\verb!cpdf -rotate-contents <angle> [-fast] in.pdf [<range>] -o out.pdf!
 
 
@@ -1281,6 +1284,14 @@ ninety degrees clockwise. Does not change the page dimensions.
    \noindent The \texttt{-upright} operation does whatever combination of
 \texttt{-rotate} and \texttt{-rotate-contents} is required to change the
 rotation of the document to zero without altering its appearance. In addition, it makes sure the media box has its origin at (0,0), changing other boxes to compensate. This is important because some operations in CPDF (such as scale-to-fit), and in other PDF-processing programs, work properly only when the origin is (0, 0).
+
+  \begin{framed}
+  \small\verb!cpdf -upright in.pdf -o out.pdf!
+
+  \vspace{2.5mm}
+
+  \noindent Make pages upright.
+  \end{framed}
 
   \section{Flipping Pages}
 \index{flip pages}
