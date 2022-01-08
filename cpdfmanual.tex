@@ -301,7 +301,7 @@ Just a few of the facilities provided by the Coherent PDF Command Line Tools. Se
 \noindent Typeset a text file as PDF on A3 paper with Courier 10 point font.
 
 
-\section*{\hyperref[chap:misc]{Chapter M: Miscellaneous}}
+\section*{\hyperref[chap:misc]{Chapter 18: Miscellaneous}}
 
 \begin{framed}\noindent\texttt{cpdf -blacktext in.pdf -o out.pdf}\end{framed}
 
@@ -3388,8 +3388,9 @@ A basic text to PDF convertor is included in \texttt{cpdf}. It takes a UTF8 text
 \end{pycpdflib}
 
 \clearpage\pagestyle{empty}
-\setcounter{chapter}{12}
-\renewcommand{\thechapter}{\Alph{chapter}}%
+%We wanted to call this "Chapter M", but the following commands messed up the PDF bookmarks, so this chapter will simply have to float for now, until we can return to this problem.
+%\setcounter{chapter}{12}
+%\renewcommand{\thechapter}{\Alph{chapter}}%
 \chapter{Miscellaneous}\label{chap:misc}\pagestyle{fancy}
   {\small\begin{framed}
   \noindent\verb!cpdf -draft [-boxes] [-draft-remove-only <n>] in.pdf [<range>] -o out.pdf!
