@@ -118,8 +118,6 @@ let impose_transforms fit fx fy columns rtl btt center margin mediabox output_me
     done;
   map (if fit then make_margin output_mediabox margin else Fun.id) (rev !trs)
 
-(* Combine two pages into one throughout the document. The pages have already
-had their objects renumbered so as not to clash. *)
 let impose_pages fit x y columns rtl btt center margin output_mediabox fast fit_extra_hspace fit_extra_vspace pdf = function
   | [] -> assert false
   | (h::_) as pages ->

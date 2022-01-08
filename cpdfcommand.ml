@@ -1272,6 +1272,7 @@ let set_input s =
 
 let set_json_input s =
   args.original_filename <- s;
+  args.create_objstm <- true;
   let fh = open_in_bin s in
   let pdf = Cpdfjson.of_input (Pdfio.input_of_channel fh) in
     close_in fh;
