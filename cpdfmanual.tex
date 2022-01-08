@@ -504,7 +504,7 @@ at least five pages.
     \item A comma (\texttt{,}) allows one to specify several ranges, e.g. \texttt{1-2,4-5}.
     \item The word \texttt{end} represents the last page number.
     \item The words \texttt{odd} and \texttt{even} can be used in place of or at the end of a page range to restrict to just the odd or even pages.
-    \item The words \texttt{portrait} and \texttt{landscape} can be used in place of or at the end of a page range to restrict to just those pages which are portrait or landscape. Note that the meaning of ``portrait'' and ``landscape'' does not take account of any viewing rotation in place (use \texttt{-upright} first, if required). A page with equal width and height is considered neither portrait nor landscape.
+    \item The words \texttt{portrait} and \texttt{landscape} can be used in place of or at the end of a page range to restrict to just those pages which are portrait or landscape. Note that the meaning of ``portrait'' and ``landscape'' does not take account of any viewing rotation in place (use \texttt{-upright} from chapter 3 first, if required). A page with equal width and height is considered neither portrait nor landscape.
     \item The word \texttt{reverse} is the same as \texttt{end-1}.
     \item The word \texttt{all} is the same as \texttt{1-end}.
     \item A range must contain no spaces.
@@ -1197,7 +1197,7 @@ Y factors given. This scales both the page contents, and the page size itself. I
   \noindent Scale a file's pages to fit A4 portrait, scaling the page 90\% of its possible size.
   \end{framed}
 
-\noindent NB: \texttt{-scale-to-fit} operates with respect to the media box not the crop box. If necessary, set the media box to be equal to the crop box first. In addition, \texttt{-scale-to-fit} presently requires that the origin of the media box be (0, 0). This can be assured by preprocessing with \texttt{-upright}.
+\noindent NB: \texttt{-scale-to-fit} operates with respect to the media box not the crop box. If necessary, set the media box to be equal to the crop box first. In addition, \texttt{-scale-to-fit} presently requires that the origin of the media box be (0, 0). This can be assured by preprocessing with \texttt{-upright} (described elsewhere in this chapter).
 
 The \texttt{-scale-contents} operation scales the contents about the center
   of the crop box (or, if absent, the media box), leaving the page dimensions
@@ -1242,7 +1242,7 @@ the binding margin).
 There are two ways of rotating pages: (1)~setting a value in the PDF file which
 asks the viewer (e.g. Acrobat) to rotate the page on-the-fly when viewing it
 (use \texttt{-rotate} or \texttt{-rotateby}) and (2)~actually rotating the page
-contents and/or the page dimensions (use \texttt{-upright} afterwards or
+contents and/or the page dimensions (use \texttt{-upright} (described elsewhere in this chapter) afterwards or
 \texttt{-rotate-contents} to just rotate the page contents).
 
   The possible values for \texttt{-rotate} and \texttt{-rotate-by} are 0, 90,
@@ -1286,7 +1286,7 @@ rotation of the document to zero without altering its appearance. In addition, i
 \index{flip pages}
   The \texttt{-hflip} and \texttt{-vflip} operations flip the contents of the
 chosen pages horizontally or vertically. No account is taken of the current
-page rotation when considering what "horizontally" and "vertically" mean, so you may like to use \texttt{-upright} first.
+page rotation when considering what "horizontally" and "vertically" mean, so you may like to use \texttt{-upright} (see above) first.
   \begin{framed}
     \small\verb!cpdf -hflip in.pdf even -o out.pdf!
 
@@ -1924,7 +1924,7 @@ as the length of the ``under'' file. For instance:
 
 \noindent Page attributes (such as the display rotation) are taken from the ``under''
 file. For best results, remove any rotation differences in the two files using
-\texttt{-upright} first.
+\texttt{-upright} (see above) first.
 
 \noindent The \texttt{-relative-to-cropbox} option takes the positioning command to be relative to the crop box of each page rather than the media box.
 
@@ -2045,7 +2045,7 @@ The starting point can be set with the \texttt{-bates} option. For example:
 \noindent No attempt is made to take account of the page rotation when interpreting the
 position, so \texttt{-prerotate} may be added to the command line if the file
 contains pages with a non-zero viewing rotation (to silence the rotation warning, add \texttt{-no-warn-rotate} instead) This is equivalent to
-pre-processing the document with \texttt{-upright}.
+pre-processing the document with \texttt{-upright} (see chapter 3).
    
 The \texttt{-relative-to-cropbox} modifier can be added to the command line to
 make these measurements relative to the crop box instead of the media box.
