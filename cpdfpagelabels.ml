@@ -1,6 +1,5 @@
 open Pdfutil
 
-
 (* Split the given range (which is in order) into multiple contiguous ones. *)
 let rec ranges_of_range curr prev = function
   | [] -> begin match curr with [] -> rev prev | _ -> rev (rev curr::prev) end
@@ -46,4 +45,3 @@ let add_page_labels pdf progress style prefix startval range =
         ranges
         startval_additions;
         Pdfpagelabels.write pdf !labels
-
