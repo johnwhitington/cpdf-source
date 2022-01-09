@@ -40,7 +40,7 @@ To build
 --------
 
 If downloading from Github, obtain the correct source. This means choosing the
-tag for a particular version, such as "v2.4". The head of the master branch is
+tag for a particular version, such as "v2.5". The head of the master branch is
 unstable.
 
 1. Type `make` to make the cpdf executable and the library
