@@ -24,6 +24,17 @@ let of_utf8 f t =
 let of_pdfdocencoding f t =
   of_utf8 f (Pdftext.utf8_of_pdfdocstring t)
 
+(* Remove characters until it is below the length. Then remove three more and
+   add dots for an ellipsis *)
+let rec shorten_text_inner widths l t =
+  if t = [] then t else
+  if Cpdftype.width_of_string widths t > l then shorten_text_inner widths l (rev (tl (rev t)))
+  else t
+
+let shorten_text widths l t =
+  let short = shorten_text_inner widths l t in
+    if short = t then t else short @ ['.'; '.'; '.']
+
 (* Typeset a table of contents with given font, font size and title. Mediabox
    (and CropBox) copied from first page of existing PDF. Margin of 10% inside
    CropBox. Font size of title twice body font size. Null page labels added for
@@ -68,13 +79,9 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
              of_pdfdocencoding f pde
          in
          let widths = Cpdftype.font_widths f fontsize in
-         let space =
-              width
-           -. margin *. 2.
-           -. Cpdftype.width_of_string widths text
-           -. Cpdftype.width_of_string widths label
-           -. indent
-         in
+         let textgap = width -. margin *. 2. -. indent -. Cpdftype.width_of_string widths label in
+         let text = shorten_text widths (textgap -. fontsize *. 3.) text in
+         let space = textgap -. Cpdftype.width_of_string widths text in
            [Cpdftype.BeginDest mark.Pdfmarks.target;
             Cpdftype.HGlue {Cpdftype.glen = indent; Cpdftype.gstretch = 0.};
             Cpdftype.Text text;
