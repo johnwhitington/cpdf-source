@@ -510,7 +510,7 @@ at least five pages.
     \item A range must contain no spaces.
     \item A tilde (\texttt{\~{}}) defines a page number counting from the end of the document rather than the beginning. Page \texttt{\~{}1} is the last page, \texttt{\~{}2} the penultimate page etc.
     \item Prepending \texttt{NOT} to a whole page range inverts it. 
-    \item Prepending \verb!<n>!\texttt{DUP} to a whole page range duplicates each page of the range \verb!<n>! times.
+    \item Prepending \verb!<n>!\texttt{DUP} to a whole page range duplicates each page of the range \verb!<n>! times.\index{page!duplicate}
   \end{itemize}
  
   \noindent For example:
@@ -881,7 +881,7 @@ the command line
 escaped (i.e. written \verb!\\!).
 
 \section{Text Encodings}
-\index{text encodings}
+\index{text!encodings}
 \label{textencodings}
 
 Some \texttt{cpdf} commands write text to standard output, or read text from
@@ -974,7 +974,7 @@ the input pages in the order specified on the command line. Actually, the
 PDF features which cannot be merged are retained if they are from
 the document which first exhibits that feature.
 
-The \texttt{-collate} option collates pages: that is to say, it takes the first page from the first document and its range, then the first page from the second document and its range and so on. When all first pages have been taken, it begins on the second from each range, and so on.
+The \texttt{-collate} option collates pages: that is to say, it takes the first page from the first document and its range, then the first page from the second document and its range and so on. When all first pages have been taken, it begins on the second from each range, and so on.\index{pages!collate}\index{collation}
 
 The \texttt{-retain-numbering} option keeps the PDF page numbering labels of
 each document intact, rather than renumbering the output pages from 1.
@@ -1606,7 +1606,7 @@ There are two options which turn off parts of the squeezer. They are \texttt{-sq
   \small\noindent\verb!     [-font <font>] [-font-size <size>] in.pdf -o out.pdf!
 
   \end{framed}
-\index{bookmarks}
+\index{bookmarks}\index{JSON!add bookmarks from}
 \index{document outline}
   PDF bookmarks (properly called the \textit{document outline}) represent a tree
 of references to parts of the file, typically displayed at the side of the
@@ -1616,7 +1616,7 @@ add operations is the same, so you can feed the output of one into the other,
 for instance to copy bookmarks.
 
   \section{List Bookmarks}
-\index{bookmarks!listing}
+\index{bookmarks!listing}\index{JSON!list bookmarks as}
   The \texttt{-list-bookmarks} operation prints (to standard output) the
 bookmarks in a file. The first column gives the level of the tree at which a
 particular bookmark is. Then the text of the bookmark in quotes. Then the page
@@ -2314,7 +2314,7 @@ In all three of these operations, one may specify \texttt{-pad-with} providing a
 
 \section{Imposition}
 
-\index{two-up,imposition,impose}
+\index{two-up}\index{imposition}
 
 Imposition is the act of putting two or more pages of an input document onto each page of the output document. There are two operations provided by \texttt{cpdf}:
 
@@ -2404,7 +2404,7 @@ NB: For all imposition options, see also discussion of \texttt{-fast} in Section
   \end{framed}
 
   \section{Listing Annotations}
-\index{annotations!listing}
+\index{annotations!listing}\index{JSON!list annotations as}
   The \texttt{-list-annotations} operation prints the textual content of any
 annotations on the selected pages to standard output. Each annotation is preceded by the page number and followed by a newline. The output of this operation is always UTF8.
   \begin{framed}
@@ -3009,7 +3009,7 @@ name, the third the type of font (Type1, TrueType etc), the fourth the PDF font
 name, the fifth the PDF font encoding.
 
 \section{Listing characters in a font}
-
+\index{font!print table for}
 We can use \texttt{cpdf} to find out which characters are available in a given font, and to print the map between character codes, unicode codepoints, and Adobe glyph names. This is presently a best-effort service, and does not cover all font/encoding types.
 
 We find the name of the font by using \texttt{-list-fonts}:
@@ -3121,7 +3121,7 @@ recommended when file size is the sole consideration.
 \end{small}
 \end{pycpdflib}
 
-\chapter{PDF and JSON}\label{chap:15}\pagestyle{fancy}\index{JSON}
+\chapter{PDF and JSON}\label{chap:15}\pagestyle{fancy}\index{JSON}\index{JSON!output to}\index{JSON!input from}
   {\small\begin{framed}
   \noindent\verb!cpdf in.pdf -output-json -o out.json!\\
   \noindent\verb!     [-output-json-parse-content-streams]!\\
@@ -3361,7 +3361,7 @@ We can build a new PDF file, given a number of pages and a paper size. The defau
 \noindent The standard paper sizes are listed in Section \ref{papersizes}, or you may specify the width and height directly, as described in the same chapter.
 
 \section{Convert a text file to PDF}
-
+\index{text!convert to PDF}
 A basic text to PDF convertor is included in \texttt{cpdf}. It takes a UTF8 text file (ASCII is a subset of UTF8) and typesets it ragged-right, splitting on whitespace. Both Windows and Unix line endings are allowed. 
 
 \begin{framed}
@@ -3572,6 +3572,10 @@ This operation lists the name of any ``separation'' color space in the given PDF
 \section{PDF Dictionary Entries}
 \label{removedictentry}
 This is for editing data within the PDF's internal representation. Use with caution.
+
+\index{dictionary!print entry}
+\index{dictionary!remove entry}
+\index{dictionary!replace entry}
 
 To print a dictionary entry:
 
