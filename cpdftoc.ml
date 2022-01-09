@@ -60,6 +60,7 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
          let indent = float mark.Pdfmarks.level *. fontsize *. 2. in 
          let text = of_pdfdocencoding f mark.Pdfmarks.text in
          let label =
+           if mark.Pdfmarks.target = NullDestination then [' '] else 
            let pde =
              let pnum = Pdfpage.pagenumber_of_target ~fastrefnums pdf mark.Pdfmarks.target in
                try Pdfpagelabels.pagelabeltext_of_pagenumber pnum labels with Not_found -> string_of_int pnum
