@@ -2,7 +2,7 @@ cpdf-source
 ===========
 
 Free for non-commercial use. See LICENSE for details. Copyright Coherent
-Graphics Ltd 2021.
+Graphics Ltd 2022.
 
 This code builds two things:
 
@@ -55,13 +55,13 @@ Alternatively, the library and command-line binary can be installed by
 opam install cpdf
 ```
 
-
 Documentation
 -------------
 
 The file `cpdfmanual.pdf` in this folder is the documentation for the command
 line tools. The documentation for the cpdf OCaml library is in `doc/html/cpdf/`
 in this folder once the library has been built.
+
 
 C API
 -----
@@ -71,6 +71,13 @@ A C interface to cpdf is available, in source and binary form:
 [https://github.com/johnwhitington/cpdflib-source](https://github.com/johnwhitington/cpdflib-source)
 
 [https://github.com/coherentgraphics/cpdflib-binary](https://github.com/coherentgraphics/cpdflib-binary)
+
+Python API
+----------
+
+A Python interface to cpdf is available:
+
+[https://pypi.org/project/pycpdflib/](https://pypi.org/project/pycpdflib/)
 
 Contact
 -------
