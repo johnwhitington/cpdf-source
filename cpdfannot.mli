@@ -1,4 +1,4 @@
-(** {2 Annotations} *)
+(** Annotations *)
 
 (** List the annotations to standard output in a given encoding. See cpdfmanual.pdf for the format details. *)
 val list_annotations : json:bool -> Cpdfmetadata.encoding -> Pdf.t -> unit

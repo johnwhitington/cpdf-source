@@ -1,3 +1,5 @@
+(** Lossless compression *)
+
 (** Compresses all streams in the PDF document which are uncompressed, using
 /FlateDecode, leaving out metadata.  If the PDF is encrypted, does nothing. *)
 val recompress_pdf : Pdf.t -> Pdf.t

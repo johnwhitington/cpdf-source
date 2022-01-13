@@ -1,4 +1,4 @@
-(** {2 Working with pages} *)
+(** Working with pages *)
 
 (** Print page info (Mediabox etc) to standard output. *)
 val output_page_info : Pdf.t -> int list -> unit
@@ -14,14 +14,22 @@ val iter_pages : (int -> Pdfpage.t -> unit) -> Pdf.t -> int list -> unit
 (** Same as [process_pages] but return the list of outputs of the map function. *)
 val map_pages : (int -> Pdfpage.t -> 'a) -> Pdf.t -> int list -> 'a list
 
+(** Clip a page to one of its boxes, or the media box if that box is not
+ present. This is a hard clip, done by using a clipping rectangle, so that the
+ page may then be used as a stamp without extraneous material reapearing. *)
 val hard_box : Pdf.t -> int list -> string -> bool -> bool -> Pdf.t
 
 (** Shift a PDF in x and y (in pts) in the given pages. List of (x, y) pairs is
 for all pages in pdf. *)
 val shift_pdf : ?fast:bool -> (float * float) list -> Pdf.t -> int list -> Pdf.t
 
+(** Change a page's media box so its minimum x and y are 0, making other
+operations simpler to think about. Any shift that is done is reflected in
+other boxes (clip etc.) *)
 val rectify_boxes : ?fast:bool -> Pdf.t -> Pdfpage.t -> Pdfpage.t
 
+(** Change the media box and other known boxes by a function which takes
+xmin, xmax, ymin, ymax as input. *)
 val change_boxes : (float * float * float * float -> float * float * float * float) ->
            Pdf.t -> Pdfpage.t -> Pdfpage.t 
 
@@ -98,10 +106,14 @@ val vflip_pdf : ?fast:bool -> Pdf.t -> int list -> Pdf.t
 (** Flip the given pages horizontally *)
 val hflip_pdf : ?fast:bool -> Pdf.t -> int list -> Pdf.t
 
+(** Add trim marks. *)
 val trim_marks : ?fast:bool -> Pdf.t -> int list -> Pdf.t
 
+(** Show the page boxes for debug. *)
 val show_boxes : ?fast:bool -> Pdf.t -> int list -> Pdf.t
 
+(** Copy one box to another in the given pages. *)
 val copy_box : string -> string -> bool -> Pdf.t -> int list -> Pdf.t
 
+(** True if all pages are "upright" i.e no rotation and (0,0)-based. *)
 val allupright : int list -> Pdf.t -> bool

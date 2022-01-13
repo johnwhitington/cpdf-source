@@ -1,4 +1,4 @@
-(** {2 Padding} *)
+(** Padding *)
 
 (** Put blank pages before the given page numbers *)
 val padbefore : ?padwith:Pdf.t -> int list -> Pdf.t -> Pdf.t
