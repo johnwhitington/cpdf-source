@@ -1,5 +1,9 @@
+(** UnicodeData.txt in parsed form *)
+
+(** The source, compressed. *)
 val unicodedata_source : string
 
+(** The type of a single entry from UnicodeData.txt *)
 type t =
   {code_value : string;
    character_name : string;
@@ -17,4 +21,6 @@ type t =
    lowercase_mapping : string;
    titlecase_mapping : string}
 
+(** The unicode data. We pass a unit because it is parsed upon demand and
+    memoised. *)
 val unicodedata : unit -> t list
