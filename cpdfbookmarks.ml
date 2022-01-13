@@ -413,4 +413,3 @@ let change_destination t = function
 let change_bookmark t m =
   {m with Pdfmarks.target =
     try change_destination t m.Pdfmarks.target with Not_found -> m.Pdfmarks.target}
-

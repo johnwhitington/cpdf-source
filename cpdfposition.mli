@@ -1,3 +1,5 @@
+(** Positions *)
+
 (** Possible positions for adding text and other uses. See cpdfmanual.pdf *)
 type position =
     PosCentre of float * float

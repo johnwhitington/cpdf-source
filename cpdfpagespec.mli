@@ -1,4 +1,4 @@
-(** {2 Page specifications and ranges } *)
+(** Page specifications and ranges *)
 
 (** Here are the rules for building input ranges:
 

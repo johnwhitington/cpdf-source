@@ -1,3 +1,4 @@
+(** Metadata *)
 
 (** {2 Types and Exceptions} *)
 
@@ -7,6 +8,7 @@ all - the PDF string is output as-is. [UTF8] converts loslessly to UTF8.
 correspond to 7 bit ASCII. *)
 type encoding = Raw | UTF8 | Stripped
 
+(** Encode a string using a given encoding. *) 
 val encode_output : encoding -> string -> string
 
 (** {2 Metadata and settings} *)
@@ -20,6 +22,7 @@ val copy_id : bool -> Pdf.t -> Pdf.t -> Pdf.t
 the PDF minor version to [version].*)
 val set_pdf_info : ?xmp_also:bool -> ?xmp_just_set:bool -> (string * Pdf.pdfobject * int) -> Pdf.t -> Pdf.t
 
+(** Get XMP information for a given key. *)
 val get_xmp_info : Pdf.t -> string -> string
 
 (** [set_pdf_info (key, value, version)] sets the entry [key] in the
@@ -71,4 +74,5 @@ val print_metadata : Pdf.t -> unit
 (** Set the metadata date *)
 val set_metadata_date : Pdf.t -> string -> Pdf.t
 
+(** Expands the date ["now"] to the date now. Leaves any other string alone. *) 
 val expand_date : string -> string
