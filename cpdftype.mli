@@ -1,3 +1,5 @@
+(** Experimental typesetter for cpdf *)
+
 type glue =
   {glen : float;
    gstretch : float}

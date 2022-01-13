@@ -1,4 +1,4 @@
-(** {2 Making new documents} *)
+(** Making new documents *)
 
 (** Make a blank document given x and y page dimensions in points and a number of pages *)
 val blank_document : float -> float -> int -> Pdf.t

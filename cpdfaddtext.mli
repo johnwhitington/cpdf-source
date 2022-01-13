@@ -1,4 +1,4 @@
-(** {2 Adding text} *)
+(** Adding text *)
 
 type color =
   Grey of float
@@ -48,6 +48,7 @@ val addtexts :
     Pdf.t ->(*pdf*)
     Pdf.t
 
+(* Add a rectangle to the page *) 
 val addrectangle :
     bool ->
     float * float ->
@@ -69,5 +70,8 @@ val metrics_baseline_adjustment : unit -> float
 (** Remove text from the given pages. *)
 val removetext : int list -> Pdf.t -> Pdf.t
 
+(** Extract text *)
 val extract_text : float option -> Pdf.t -> int list -> string 
+
+(** Remove text *)
 val remove_all_text : int list -> Pdf.t -> Pdf.t 
