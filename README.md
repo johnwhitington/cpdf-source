@@ -9,7 +9,10 @@ This code builds two things:
 a) The CPDF PDF Command Line Tools, which are a popular commercial command line
 tool for editing PDF files.
 
-b) cpdf as an OCaml library.
+b) cpdf as an OCaml library, for which presently-scanty documentation is here:
+
+[https://coherentpdf.com/cpdf/](https://coherentpdf.com/cpdf/)
+
 
 Prerequisites to build
 ----------------------
