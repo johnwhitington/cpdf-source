@@ -476,7 +476,9 @@ let json_of_pdf
   if clean_strings then preprocess_strings pdf;
   let pdf = if parse_content then precombine_page_content pdf else pdf in
   if decompress_streams then
-    Pdf.objiter (fun _ obj -> Pdfcodec.decode_pdfstream_until_unknown pdf obj) pdf;
+    Pdf.objiter
+      (fun _ obj -> match obj with Pdf.Stream _ -> Pdfcodec.decode_pdfstream_until_unknown pdf obj | _ -> ())
+      pdf;
   Pdf.remove_unreferenced pdf;
   let trailerdict = (0, json_of_object pdf (fun x -> ()) no_stream_data false pdf.P.trailerdict) in
   let parameters =
