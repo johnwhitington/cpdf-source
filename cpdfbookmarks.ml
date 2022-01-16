@@ -262,7 +262,10 @@ let list_bookmarks ~json encoding range pdf output =
                    (output_string_of_target pdf fastrefnums mark.Pdfmarks.target)))
             inrange
 
-(* o is the stamp, u is the main pdf page *)
+let get_bookmarks_json pdf =
+  let o, br = Pdfio.input_output_of_bytes (20 * 1024) in
+    list_bookmarks ~json:true Cpdfmetadata.UTF8 (ilist 1 (Pdfpage.endpage pdf)) pdf o;
+    Pdfio.extract_bytes_from_input_output o br
 
 (* Split at bookmarks *)
 
