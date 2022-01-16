@@ -94,6 +94,13 @@ let get_annotations encoding pdf =
         pages
         (ilist 1 (length pages))) 
 
+let get_annotations_json pdf =
+  let module J = Cpdfyojson.Safe in
+  let pages = Pdfpage.pages_of_pagetree pdf in
+  let pagenums = indx pages in
+  let json = `List (flatten (map2 (annotations_json_page pdf) pages pagenums)) in
+    Pdfio.bytes_of_string (J.to_string json)
+
 (* Equalise the page lengths of two PDFs by chopping or extending the first one.
 *)
 let equalise_lengths a b =
