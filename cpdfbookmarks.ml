@@ -179,7 +179,7 @@ let json_of_target pdf fastrefnums x =
         Cpdfjson.json_of_object pdf (fun _ -> ()) false false a
   | x -> Cpdfjson.json_of_object pdf (fun _ -> ()) false false x
 
-let output_json_marks ch calculate_page_number pdf fastrefnums marks =
+let output_json_marks output calculate_page_number pdf fastrefnums marks =
   let module J = Cpdfyojson.Safe in
   let json_of_mark m =
     `Assoc
@@ -190,7 +190,7 @@ let output_json_marks ch calculate_page_number pdf fastrefnums marks =
         ("target", json_of_target pdf fastrefnums m.Pdfmarks.target)]
   in
   let json = `List (map json_of_mark marks) in
-    J.pretty_to_channel ch json
+    output.Pdfio.output_string (J.pretty_to_string json)
 
 let process_string encoding s =
   let rec replace c x y = function
@@ -249,7 +249,7 @@ let list_bookmarks ~json encoding range pdf output =
         Pdfpage.pagenumber_of_target ~fastrefnums pdf mark.Pdfmarks.target
       in
         if json then
-          output_json_marks stdout calculate_page_number pdf fastrefnums inrange
+          output_json_marks output calculate_page_number pdf fastrefnums inrange
         else
           iter
             (function mark ->
