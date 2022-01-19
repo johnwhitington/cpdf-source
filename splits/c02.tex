@@ -29,13 +29,6 @@ int cpdf_fromMemory(void *, int, const char[]);
  */
 int cpdf_fromMemoryLazy(void *, int, const char[]);
 
-/*
- * cpdf_blankDocument(width, height, num_pages) creates a blank document with
- * pages of the given width (in points), height (in points), and number of
- * pages.
- */
-int cpdf_blankDocument(double, double, int);
-
 /* Standard page sizes. */
 enum cpdf_papersize {
   cpdf_a0portrait,        /* A0 portrait */
@@ -55,12 +48,6 @@ enum cpdf_papersize {
   cpdf_uslegalportrait,   /* US Legal portrait */
   cpdf_uslegallandscape   /* US Legal landscape */
 };
-
-/*
- * cpdf_blankDocumentPaper(papersize, num_pages) makes a blank document given
- * a page size and number of pages.
- */
-int cpdf_blankDocumentPaper(enum cpdf_papersize, int);
 
 /* Remove a PDF from memory, given its number. */
 void cpdf_deletePdf(int);
@@ -233,7 +220,7 @@ int cpdf_pagesFast(const char[], const char[]);
 void cpdf_toFile(int, const char[], int, int);
 
 /*
- * cpdf_toFile (pdf, filename, linearize, make_id, preserve_objstm,
+ * cpdf_toFileExt (pdf, filename, linearize, make_id, preserve_objstm,
  * generate_objstm, compress_objstm) writes the file to a given filename. If
  * make_id is true, it will be given a new ID.  If preserve_objstm is true,
  * existing object streams will be preserved. If generate_objstm is true,
@@ -245,9 +232,8 @@ void cpdf_toFile(int, const char[], int, int);
 void cpdf_toFileExt(int, const char[], int, int, int, int, int);
 
 /*
- * Given a buffer of the correct size, cpdf_toFileMemory (pdf, linearize,
- * make_id, &length) writes it and returns the buffer. The buffer length is
- * filled in &length.
+ * cpdf_toFileMemory (pdf, linearize, make_id, &length) writes a PDF file it
+ * and returns the buffer. The buffer length is filled in &length.
  */
 void *cpdf_toMemory(int, int, int, int *);
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-csplit -k -f splits/c cpdflibwrapper.h '/CHAPTER/' {18}
+csplit -k -f splits/c ../cpdflib-source/cpdflibwrapper.h '/CHAPTER/' {18}
 mv splits/c00 splits/c00.tex
 mv splits/c01 splits/c01.tex
 mv splits/c02 splits/c02.tex
