@@ -254,7 +254,7 @@ let remove_dict_entry pdf key search =
 let replace_dict_entry pdf key value search =
   let f d =
     match search with
-    | None -> Pdf.replace_dict_entry d key value
+    | None -> begin try Pdf.replace_dict_entry d key value with _ -> d end
     | Some s ->
         match Pdf.lookup_direct pdf key d with
         | Some v when v = s -> Pdf.replace_dict_entry d key value
