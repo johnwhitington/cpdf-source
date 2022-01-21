@@ -1005,8 +1005,7 @@ file. The directory (folder) \texttt{dir} must exist.
 \noindent If the output format does not provide enough numbers for the files generated,
 the result is unspecified. The following format operators may be used:
 
-\begin{table}[h]
-\centering
+\begin{center}
 \begin{tabular}{rl}
   \verb!%, %%, %%% etc.! & Sequence number padded to the number of percent signs\\
   \texttt{@F} & Original filename without extension \\
@@ -1015,7 +1014,7 @@ the result is unspecified. The following format operators may be used:
   \texttt{@E} & End page of this chunk \\
   \texttt{@B} & Bookmark name at this page \\
 \end{tabular}
-\end{table}
+\end{center}
 
 \noindent Numbers padded to a fixed width field by zeroes may be obtained for \texttt{@S} and \texttt{@E} by following them with more \texttt{@} signs e.g \texttt{@E@@@} for a fixed width of three.
 
