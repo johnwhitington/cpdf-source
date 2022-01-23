@@ -20,25 +20,6 @@ def fromMemoryLazy(data, userpw):
     """ Load a file from from a byte array and the user password (blank if
     none), but lazily like fromFileLazy."""
 
-def blankDocument(w, h, pages):
-    """ Create a blank document
-    with pages of the given width (in points), height (in points), and number
-    of pages."""
-
-def textToPDF(w, h, font, fontsize, filename):
-    """textToPDF(w, h, font, fontsize, filename) typesets a UTF8 text file
-    ragged right on a page of size w * h in points in the given font and font
-    size."""
-
-def textToPDFPaper(papersize, font, fontsize, filename):
-    """textToPDF(papersize font, fontsize, filename) typesets a UTF8 text file
-    ragged right on a page of the given size in the given font and font
-    size."""
-
-def blankDocumentPaper(papersize, pages):
-    """Create a blank document with pages of the given paper size, and number
-    of pages. """
-
 def ptOfCm(i):
     """Convert a figure in centimetres to points (72 points to 1 inch)."""
 

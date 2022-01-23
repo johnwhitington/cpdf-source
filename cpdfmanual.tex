@@ -1,6 +1,6 @@
 \documentclass{book}
 % Edit here to produce cpdfmanual.pdf, cpdflibmanual.pdf, pycpdfmanual.pdf etc.
-\usepackage{comment}\excludecomment{cpdflib}\excludecomment{pycpdflib}
+\usepackage{comment}\excludecomment{cpdflib}\includecomment{pycpdflib}
 \usepackage{palatino}
 \usepackage{listings}
 \usepackage{microtype}
@@ -3266,7 +3266,7 @@ It is not required that \texttt{/Length} entries in CPDFJSON stream dictionaries
 \end{pycpdflib}
 
 \clearpage\pagestyle{empty}
-\chapter{Optional Content Groups}\label{chap:16}\pagestyle{fancy}\index{Optional Content Group}
+\chapter{Optional Content Groups}\label{chap:16}\pagestyle{fancy}\index{optional content group}
 
   {\small\begin{framed}
   \noindent\verb!cpdf -ocg-list in.pdf!
