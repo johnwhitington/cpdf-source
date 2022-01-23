@@ -23,12 +23,7 @@ Objects 1..n: The PDF's objects.
   o Names are written as {"N": "/Pages"}
   o Indirect references are integers
   o Streams are {"S": [dict, data]}
-  o Strings are converted from UTF16BE/PDFDocEncoding to UTF8 before being
-  encoded in JSON. When they are read back the process is JSON encoded --> UTF8
-  --> UTF16BE/PDFDocEncoding. This process is fully reversible: it is to allow
-  easier editing of strings. This does not happen to strings within text
-  operators in parsed content streams, nor to /ID values in the
-  trailerdictionary, since neither is UTF16BE/PdfDocEncoding to begin with. 
+  o Strings are converted into JSON strings in a way which is fully reversible. 
 
 There are two subformats: parsing content streams or not.  Hello World in CPDF
 JSON without parsing content streams:

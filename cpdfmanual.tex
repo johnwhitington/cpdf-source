@@ -2414,13 +2414,13 @@ annotations on the selected pages to standard output. Each annotation is precede
 More information can be obtained by listing annotations in JSON format:
 
   \begin{framed}
-    \small\verb!cpdf -list-annotations in.pdf > annots.txt!
+    \small\verb!cpdf -list-annotations-json in.pdf > annots.json!
     
     \vspace{2.5mm}
-    \noindent Print annotations from \texttt{in.pdf}, redirecting output to \texttt{annots.txt}.
+    \noindent Print annotations from \texttt{in.pdf} in JSON format, redirecting output to \texttt{annots.json}.
   \end{framed}
 
-This produces an array of (page number, CPDFJSON) pairs giving the PDF structure of each annotation. Destination pages for page links will have page numbers in place of internal PDF page links, and certain indirect objects are made direct but the content is otherwise unaltered. Here is an example entry for an annotation on page 10:
+This produces an array of (page number, annotation) pairs giving the PDF structure of each annotation. Destination pages for page links will have page numbers in place of internal PDF page links, and certain indirect objects are made direct but the content is otherwise unaltered. Here is an example entry for an annotation on page 10:
 
 {\small\begin{verbatim}
   [
@@ -3171,11 +3171,7 @@ number, and flags used when writing (which may be required when reading):
   \item Names are written as \texttt{\{"N":\ "/Pages"\}}
   \item Indirect references are integers
   \item Streams are \texttt{\{"S":\ [dict, data]\}}
-  \item Strings are converted from UTF16BE/PDFDocEncoding to UTF8 before being
-  encoded in JSON. This process is fully reversible: it is to allow
-  easier editing of strings. This does not happen to strings within text
-  operators in parsed content streams, nor to /ID values in the
-  trailer dictionary, since neither is UTF16BE/PDFDocEncoding to begin with. 
+  \item Strings are converted to JSON string format in a way which, when reversed, results in the original string.
 \end{itemize}
 
 \noindent Here is an example of the output for a small PDF:
