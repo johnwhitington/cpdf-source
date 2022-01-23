@@ -37,5 +37,21 @@ def removeDictEntry(pdf, key):
     """Remove any dictionary entry with the given
     key anywhere in the document."""
 
+def removeDictEntrySearch(pdf, key, searchterm):
+    """Remove any dictionary entry with the given
+    key anywhere in the document, if its value matches the given search term."""
+
+def replaceDictEntry(pdf, key, newvalue):
+    """Replace any dictionary entry with the given
+    key anywhere in the document using the new value given."""
+
+def replaceDictEntrySearch(pdf, key, newvalue, searchterm):
+    """Replace any dictionary entry with the given key anywhere in the
+    document, if its value matches the given search term, with the new value
+    given."""
+
+def getDictEntries(pdf, key):
+    """Return JSON of any dict entries with the given key."""
+
 def removeClipping(pdf, r):
     """Remove all clipping from pages in the given range"""

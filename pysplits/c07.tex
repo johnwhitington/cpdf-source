@@ -7,3 +7,14 @@ def getBookmarks(pdf):
 def setBookmarks(pdf, marks):
     """Set the bookmarks for a PDF as a list of tuples of the form:
     (level : int, page : int, text : string, openstatus : bool)"""
+
+def getBookmarksJSON(pdf):
+    """Get the bookmarks in JSON format."""
+
+def setBookmarksJSON(pdf, data):
+    """setBookmarksJSON(pdf, data) sets the bookmarks from JSON bookmark data."""
+
+def tableOfContents(pdf, font, fontsize, title, bookmark):
+    """tableOfContents(pdf, font, fontsize, title, bookmark) typesets a table
+    of contents from existing bookmarks and prepends it to the document. If
+    bookmark is set, the table of contents gets its own bookmark."""
