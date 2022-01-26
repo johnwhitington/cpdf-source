@@ -1,54 +1,23 @@
-/* CHAPTER 17. Miscellaneous */
+/* CHAPTER 17. Creating New PDFs */
+
+/* cpdf_blankDocument(width, height, num_pages) creates a blank document with
+ * pages of the given width (in points), height (in points), and number of
+ * pages.
+ */
+int cpdf_blankDocument(double, double, int);
 
 /*
- * cpdf_draft(pdf, range, boxes) removes images on the given pages, replacing
- * them with crossed boxes if 'boxes' is true
+ * cpdf_blankDocumentPaper(papersize, num_pages) makes a blank document given
+ * a page size and number of pages.
  */
-void cpdf_draft(int, int, int);
+int cpdf_blankDocumentPaper(enum cpdf_papersize, int);
 
-/*
- * cpdf_removeAllText(pdf, range) removes all text from the given pages in a
- * given document.
- */
-void cpdf_removeAllText(int, int);
+/* cpdf_textToPDF(w, h, font, fontsize, filename) typesets a UTF8 text file
+ * ragged right on a page of size w * h in points in the given font and font
+ * size. */
+int cpdf_textToPDF(double, double, int, double, const char[]);
 
-/* cpdf_blackText(pdf, range) blackens all text on the given pages. */
-void cpdf_blackText(int, int);
-
-/* cpdf_blackLines(pdf, range) blackens all lines on the given pages. */
-void cpdf_blackLines(int, int);
-
-/* cpdf_blackFills(pdf, range) blackens all fills on the given pages. */
-void cpdf_blackFills(int, int);
-
-/*
- * cpdf_thinLines(pdf, range, min_thickness) thickens every line less than
- * min_thickness to min_thickness. Thickness given in points.
- */
-void cpdf_thinLines(int, int, double);
-
-/* cpdf_copyId(from, to) copies the /ID from one document to another. */
-void cpdf_copyId(int, int);
-
-/* cpdf_removeId(pdf) removes a document's /ID. */
-void cpdf_removeId(int);
-
-/* cpdf_setVersion(pdf, version) sets the minor version number of a document. */
-void cpdf_setVersion(int, int);
-
-/* cpdf_setFullVersion(pdf, major_version, minor_version) sets the full version
- * number of a document. */
-void cpdf_setFullVersion(int, int, int);
-
-/*
- * cpdf_removeDictEntry(pdf, key) removes any dictionary entry with the given
- * key anywhere in the document.
- */
-void cpdf_removeDictEntry(int, const char[]);
-
-/*
- * cpdf_removeClipping(pdf, range) removes all clipping from pages in the
- * given range.
- */
-void cpdf_removeClipping(int, int);
+/* cpdf_textToPDF(papersize font, fontsize, filename) typesets a UTF8 text file
+ * ragged right on a page of the given size in the given font and font size. */
+int cpdf_textToPDFPaper(int, int, double, const char[]);
 

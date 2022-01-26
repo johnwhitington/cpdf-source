@@ -1,5 +1,14 @@
 /* CHAPTER 9. Multipage facilities */
 
+/* cpdf_impose(pdf, x, y, fit, columns, rtl, btt, center, margin, spacing,
+ * linewidth) imposes a PDF. There are two modes: imposing x * y, or imposing
+ * to fit a page of size x * y. This is controlled by fit. Columns imposes by
+ * columns rather than rows. rtl is right-to-left, btt bottom-to-top. Center is
+ * unused for now. Margin is the margin around the output, spacing the spacing
+ * between imposed inputs. */
+void cpdf_impose(int, double, double, int, int, int, int, int, double, double,
+                 double);
+
 /*
  * Impose a document two up. cpdf_twoUp does so by retaining the existing
  * page size, scaling pages down. cpdf_twoUpStack does so by doubling the

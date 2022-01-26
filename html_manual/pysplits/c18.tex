@@ -1,41 +1,20 @@
-# CHAPTER 17. Miscellaneous
+# CHAPTER 17. Creating New PDFs
 
-def draft(pdf, r, boxes):
-    """Remove images on the given pages, replacing
-    them with crossed boxes if 'boxes' is True."""
+def blankDocument(w, h, pages):
+    """ Create a blank document
+    with pages of the given width (in points), height (in points), and number
+    of pages."""
 
-def removeAllText(pdf, r):
-    """Remove all text from the given pages in a document."""
+def blankDocumentPaper(papersize, pages):
+    """Create a blank document with pages of the given paper size, and number
+    of pages. """
 
-def blackText(pdf, r):
-    """Blacken all text on the given pages."""
+def textToPDF(w, h, font, fontsize, filename):
+    """textToPDF(w, h, font, fontsize, filename) typesets a UTF8 text file
+    ragged right on a page of size w * h in points in the given font and font
+    size."""
 
-def blackLines(pdf, r):
-    """Blacken all lines on the given pages."""
-
-def blackFills(pdf, r):
-    """Blacken all fills on the given pages."""
-
-def thinLines(pdf, r, linewidth):
-    """Thicken every line less than
-    linewidth to linewidth. Thickness given in points."""
-
-def copyId(pdf, pdf2):
-    """Copy the /ID from one pdf to pdf2."""
-
-def removeId(pdf):
-    """Remove a document's /ID"""
-
-def setVersion(pdf, version):
-    """Set the minor version number of a document."""
-
-def setFullVersion(pdf, major, minor):
-    """Set the major and minor version number of
-    a document."""
-
-def removeDictEntry(pdf, key):
-    """Remove any dictionary entry with the given
-    key anywhere in the document."""
-
-def removeClipping(pdf, r):
-    """Remove all clipping from pages in the given range"""
+def textToPDFPaper(papersize, font, fontsize, filename):
+    """textToPDF(papersize font, fontsize, filename) typesets a UTF8 text file
+    ragged right on a page of the given size in the given font and font
+    size."""

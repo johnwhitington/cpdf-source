@@ -1,6 +1,17 @@
 # CHAPTER 15. PDF and JSON
 
-def outputJSON(filename, parse_content, no_stream_data, pdf):
+def outputJSON(filename, parse_content, no_stream_data, decompress_streams, pdf):
     """Output a PDF in JSON format to the given filename. If parse_content is
-    True, page content is parsed. If no_stream_data is True, all stream data is
-    suppressed entirely."""
+    True, page content is parsed. If decompress_streams is True, streams are
+    decompressed. If no_stream_data is True, all stream data is suppressed
+    entirely."""
+
+def outputJSONMemory(pdf, parse_content, no_stream_data, decompress_streams):
+    """outputJSONMemory(pdf, parse_content, no_stream_data, decompress_stream)
+    is like outputJSON, but it write to a buffer in memory)."""
+
+def fromJSON(filename):
+    """Load a PDF from a JSON file given its filename."""
+
+def fromJSONMemory(data):
+    """ Load a PDF from JSON data in memory."""
