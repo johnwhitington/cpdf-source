@@ -1,3 +1,7 @@
+2.5.1 (January 2022)
+
+o Fix a regression where standard fonts could not be chosen
+
 2.5 (January 2022)
 
 New features:
