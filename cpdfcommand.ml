@@ -1095,7 +1095,11 @@ let setfont f =
     | Some x -> StandardFont x
     | None -> OtherFont (convert f)
     end;
-  args.fontname <- convert f
+  args.fontname <-
+    begin match Pdftext.standard_font_of_name ("/" ^ f) with
+    | Some x -> f
+    | None -> convert f
+    end
 
 let setextracttextfontsize f =
   args.extract_text_font_size <- Some f
