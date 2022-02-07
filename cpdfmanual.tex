@@ -1,6 +1,6 @@
 \documentclass{book}
 % Edit here to produce cpdfmanual.pdf, cpdflibmanual.pdf, pycpdfmanual.pdf etc.
-\usepackage{comment}\excludecomment{cpdflib}\excludecomment{pycpdflib}
+\usepackage{comment}\excludecomment{cpdflib}\excludecomment{pycpdflib}\excludecomment{dotnetcpdflib}
 \usepackage{palatino}
 \usepackage{listings}
 \usepackage{microtype}
@@ -39,6 +39,9 @@ C API and
 \begin{pycpdflib}
 Python API and
 \end{pycpdflib}
+\begin{dotnetcpdflib}
+.NET API and
+\end{dotnetcpdflib}
 Command Line Tools}
 
 \vspace{12mm}
@@ -393,6 +396,107 @@ pycpdflib.toFile(merged, 'merged.pdf', False, False)
 \end{verbatim}
 \end{small}
 \end{pycpdflib}
+
+\begin{dotnetcpdflib}
+\chapter*{Example Program in C\#}
+
+This program loads a file \texttt{hello.pdf} from disk and writes out a
+document with the original included three times.
+
+\begin{small}
+\begin{verbatim}
+#Merge example
+import pycpdflib
+
+#DLL loading depends on your own platform. These are the author's settings.
+if sys.platform.startswith('darwin'):
+    pycpdflib.loadDLL("/Users/john/repos/python-libcpdf/libpycpdf.so")
+elif sys.platform.startswith('linux'):
+    pycpdflib.loadDLL("../libpycpdf.so")
+elif sys.platform.startswith('win32') or sys.platform.startswith('cygwin'):
+    os.add_dll_directory("C:\\\\OCaml64/home/JohnWhitington/python-libcpdf/")
+    pycpdflib.loadDLL("libpycpdf.dll")
+
+#We will take the input hello.pdf and repeat it three times
+mergepdf = pycpdf.fromFile('hello.pdf', '')
+
+#The list of PDFs to merge
+pdfs = [mergepdf, mergepdf, mergepdf]
+
+#Merge them
+merged = pycpdflib.mergeSimple(pdfs)
+
+#Write output
+pycpdflib.toFile(merged, 'merged.pdf', False, False)
+\end{verbatim}
+\end{small}
+
+\chapter*{Example Program in VB.NET}
+
+This program loads a file \texttt{hello.pdf} from disk and writes out a
+document with the original included three times.
+
+\begin{small}
+\begin{verbatim}
+#Merge example
+import pycpdflib
+
+#DLL loading depends on your own platform. These are the author's settings.
+if sys.platform.startswith('darwin'):
+    pycpdflib.loadDLL("/Users/john/repos/python-libcpdf/libpycpdf.so")
+elif sys.platform.startswith('linux'):
+    pycpdflib.loadDLL("../libpycpdf.so")
+elif sys.platform.startswith('win32') or sys.platform.startswith('cygwin'):
+    os.add_dll_directory("C:\\\\OCaml64/home/JohnWhitington/python-libcpdf/")
+    pycpdflib.loadDLL("libpycpdf.dll")
+
+#We will take the input hello.pdf and repeat it three times
+mergepdf = pycpdf.fromFile('hello.pdf', '')
+
+#The list of PDFs to merge
+pdfs = [mergepdf, mergepdf, mergepdf]
+
+#Merge them
+merged = pycpdflib.mergeSimple(pdfs)
+
+#Write output
+pycpdflib.toFile(merged, 'merged.pdf', False, False)
+\end{verbatim}
+\end{small}
+
+\chapter*{Example Program in F\#}
+
+This program loads a file \texttt{hello.pdf} from disk and writes out a
+document with the original included three times.
+
+\begin{small}
+\begin{verbatim}
+#Merge example
+import pycpdflib
+
+#DLL loading depends on your own platform. These are the author's settings.
+if sys.platform.startswith('darwin'):
+    pycpdflib.loadDLL("/Users/john/repos/python-libcpdf/libpycpdf.so")
+elif sys.platform.startswith('linux'):
+    pycpdflib.loadDLL("../libpycpdf.so")
+elif sys.platform.startswith('win32') or sys.platform.startswith('cygwin'):
+    os.add_dll_directory("C:\\\\OCaml64/home/JohnWhitington/python-libcpdf/")
+    pycpdflib.loadDLL("libpycpdf.dll")
+
+#We will take the input hello.pdf and repeat it three times
+mergepdf = pycpdf.fromFile('hello.pdf', '')
+
+#The list of PDFs to merge
+pdfs = [mergepdf, mergepdf, mergepdf]
+
+#Merge them
+merged = pycpdflib.mergeSimple(pdfs)
+
+#Write output
+pycpdflib.toFile(merged, 'merged.pdf', False, False)
+\end{verbatim}
+\end{small}
+\end{dotnetcpdflib}
 
 \pagestyle{plain}
 \tableofcontents\clearpage\pagestyle{empty}
@@ -927,6 +1031,15 @@ Use the \texttt{-no-embed-font} to avoid embedding the Standard 14 Font metrics 
 \end{small}
 \end{pycpdflib}
 
+\begin{dotnetcpdflib}
+\clearpage
+\section*{.NET Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c01}
+\lstinputlisting{pysplits/c02}
+\end{small}
+\end{dotnetcpdflib}
+
 \chapter{Merging and Splitting}\label{chap:2}
   \begin{framed}
   \small
@@ -1075,6 +1188,14 @@ The encryption parameters described in Chapter \ref{encryption} may be added to 
 \lstinputlisting{pysplits/c03}
 \end{small}
 \end{pycpdflib}
+
+\begin{dotnetcpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c03}
+\end{small}
+\end{dotnetcpdflib}
 
 \chapter{Pages}\label{chap:3}
 \pagestyle{fancy}
@@ -1398,6 +1519,14 @@ Bleed box & Pink
 \end{small}
 \end{pycpdflib}
 
+\begin{dotnetcpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c03}
+\end{small}
+\end{dotnetcpdflib}
+
 \chapter{Encryption and Decryption}\label{chap:4}
 \pagestyle{fancy}
 \label{encryption}
@@ -1508,6 +1637,14 @@ When appropriate passwords are not available, the option \texttt{-decrypt-force}
 \end{small}
 \end{pycpdflib}
 
+\begin{dotnetcpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c03}
+\end{small}
+\end{dotnetcpdflib}
+
 \chapter{Compression}\label{chap:5}
   \begin{framed}
      \small\noindent\verb!cpdf -decompress in.pdf -o out.pdf!
@@ -1578,6 +1715,14 @@ There are two options which turn off parts of the squeezer. They are \texttt{-sq
 \lstinputlisting{pysplits/c06}
 \end{small}
 \end{pycpdflib}
+
+\begin{dotnetcpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c03}
+\end{small}
+\end{dotnetcpdflib}
 
 \chapter{Bookmarks}\label{chap:6}
   \begin{framed}
@@ -1769,6 +1914,14 @@ By default, an entry for the new table of contents will be added to the document
 \end{small}
 \end{pycpdflib}
 
+\begin{dotnetcpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c03}
+\end{small}
+\end{dotnetcpdflib}
+
 
 \chapter{Presentations}\label{chap:7}\pagestyle{fancy}
   \begin{framed}
@@ -1858,6 +2011,14 @@ the file using a different page range each time.
 \lstinputlisting{pysplits/c08}
 \end{small}
 \end{pycpdflib}
+
+\begin{dotnetcpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c03}
+\end{small}
+\end{dotnetcpdflib}
 
 \chapter{Watermarks and Stamps}\label{chap:8}
 \label{stamps}
@@ -2235,6 +2396,14 @@ These two operations add content directly to the beginning or end of the page da
 \end{small}
 \end{pycpdflib}
 
+\begin{dotnetcpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c03}
+\end{small}
+\end{dotnetcpdflib}
+
 \chapter{Multipage Facilities}\pagestyle{fancy}\label{multipage}\label{chap:9}
   \begin{framed}
     \small\noindent\verb!cpdf -pad-before in.pdf [<range>] [-pad-with pad.pdf] -o out.pdf!
@@ -2386,6 +2555,14 @@ NB: For all imposition options, see also discussion of \texttt{-fast} in Section
 \end{small}
 \end{pycpdflib}
 
+\begin{dotnetcpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c03}
+\end{small}
+\end{dotnetcpdflib}
+
 \chapter{Annotations}\label{chap:10}
   \begin{framed}
   \small\noindent\verb!cpdf -list-annotations in.pdf [<range>]!
@@ -2482,6 +2659,14 @@ given page range.
 \lstinputlisting{pysplits/c11}
 \end{small}
 \end{pycpdflib}
+
+\begin{dotnetcpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c03}
+\end{small}
+\end{dotnetcpdflib}
 
 \chapter{Document Information and Metadata}\label{chap:11}
 \index{document information}
@@ -2807,6 +2992,14 @@ startvalue: 1
 \end{small}
 \end{pycpdflib}
 
+\begin{dotnetcpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c03}
+\end{small}
+\end{dotnetcpdflib}
+
 \chapter{File Attachments}\label{chap:12}\pagestyle{fancy}
 \index{attachments}
 \begin{framed}
@@ -2885,6 +3078,14 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 \end{small}
 \end{pycpdflib}
 
+\begin{dotnetcpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c03}
+\end{small}
+\end{dotnetcpdflib}
+
 
 \chapter{Working with Images}\label{chap:13}
 \begin{framed}
@@ -2949,6 +3150,14 @@ To remove a particular image, find its name using \texttt{-image-resolution} wit
 \end{small}
 \end{pycpdflib}
 \pagestyle{fancy}
+
+\begin{dotnetcpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c03}
+\end{small}
+\end{dotnetcpdflib}
 
 \chapter{Fonts}\pagestyle{fancy}\label{chap:14}
  {\small \begin{framed}
@@ -3118,6 +3327,14 @@ recommended when file size is the sole consideration.
 \end{small}
 \end{pycpdflib}
 
+\begin{dotnetcpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c03}
+\end{small}
+\end{dotnetcpdflib}
+
 \chapter{PDF and JSON}\label{chap:15}\pagestyle{fancy}\index{JSON}\index{JSON!output to}\index{JSON!input from}
   {\small\begin{framed}
   \noindent\verb!cpdf in.pdf -output-json -o out.json!\\
@@ -3265,6 +3482,14 @@ It is not required that \texttt{/Length} entries in CPDFJSON stream dictionaries
 \end{small}
 \end{pycpdflib}
 
+\begin{dotnetcpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c03}
+\end{small}
+\end{dotnetcpdflib}
+
 \clearpage\pagestyle{empty}
 \chapter{Optional Content Groups}\label{chap:16}\pagestyle{fancy}\index{optional content group}
 
@@ -3328,6 +3553,14 @@ In a PDF file, optional content groups are used to group graphical elements toge
 \end{small}
 \end{pycpdflib}
 
+\begin{dotnetcpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c03}
+\end{small}
+\end{dotnetcpdflib}
+
 \clearpage\pagestyle{empty}
 \chapter{Creating New PDFs}\label{chap:17}\pagestyle{fancy}\index{Create}
 
@@ -3379,6 +3612,14 @@ A basic text to PDF convertor is included in \texttt{cpdf}. It takes a UTF8 text
 \lstinputlisting{pysplits/c18}
 \end{small}
 \end{pycpdflib}
+
+\begin{dotnetcpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c03}
+\end{small}
+\end{dotnetcpdflib}
 
 \clearpage\pagestyle{empty}
 %We wanted to call this "Chapter M", but the following commands messed up the PDF bookmarks, so this chapter will simply have to float for now, until we can return to this problem.
@@ -3640,6 +3881,14 @@ The \texttt{-remove-clipping} operation removes any clipping paths on given page
 \lstinputlisting{pysplits/c19}
 \end{small}
 \end{pycpdflib}
+
+\begin{dotnetcpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c03}
+\end{small}
+\end{dotnetcpdflib}
 
 \appendix
 \chapter{Dates}\pagestyle{empty}
