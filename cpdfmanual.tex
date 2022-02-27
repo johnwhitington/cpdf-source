@@ -405,31 +405,36 @@ document with the original included three times.
 
 \begin{small}
 \begin{verbatim}
-#Merge example
-import pycpdflib
+//Merge example
+using System;
+using System.Collections.Generic;
+using CoherentGraphics;
 
-#DLL loading depends on your own platform. These are the author's settings.
-if sys.platform.startswith('darwin'):
-    pycpdflib.loadDLL("/Users/john/repos/python-libcpdf/libpycpdf.so")
-elif sys.platform.startswith('linux'):
-    pycpdflib.loadDLL("../libpycpdf.so")
-elif sys.platform.startswith('win32') or sys.platform.startswith('cygwin'):
-    os.add_dll_directory("C:\\\\OCaml64/home/JohnWhitington/python-libcpdf/")
-    pycpdflib.loadDLL("libpycpdf.dll")
+public static void Main(string[] args)
+{
+  // Initialise cpdf
+  Cpdf.startup();
 
-#We will take the input hello.pdf and repeat it three times
-mergepdf = pycpdf.fromFile('hello.pdf', '')
+  // We will take the input hello.pdf and repeat it three times
+  using (Cpdf.Pdf mergepdf = Cpdf.fromFile("hello.pdf", ""))
+  {
+    // The list of PDFs to merge
+    List<Cpdf.Pdf> pdfs = new List<Cpdf.Pdf> {mergepdf, mergepdf, mergepdf};
 
-#The list of PDFs to merge
-pdfs = [mergepdf, mergepdf, mergepdf]
+    // Merge them
+    Cpdf.Pdf merged = Cpdf.mergeSimple(pdfs);
 
-#Merge them
-merged = pycpdflib.mergeSimple(pdfs)
-
-#Write output
-pycpdflib.toFile(merged, 'merged.pdf', False, False)
+    // Write output
+    Cpdf.toFile(merged, "merged.pdf", false, false);
+    
+    // Dispose of merged PDF
+    merged.Dispose();
+  }
+}
 \end{verbatim}
 \end{small}
+
+\noindent Note the use of \texttt{using} and \texttt{Dispose()} to ensure the PDFs are thrown away when no longer required.
 
 \chapter*{Example Program in VB.NET}
 
@@ -438,64 +443,36 @@ document with the original included three times.
 
 \begin{small}
 \begin{verbatim}
-#Merge example
-import pycpdflib
+' Merge example
+imports System
+imports System.Collections.Generic
+imports CoherentGraphics
 
-#DLL loading depends on your own platform. These are the author's settings.
-if sys.platform.startswith('darwin'):
-    pycpdflib.loadDLL("/Users/john/repos/python-libcpdf/libpycpdf.so")
-elif sys.platform.startswith('linux'):
-    pycpdflib.loadDLL("../libpycpdf.so")
-elif sys.platform.startswith('win32') or sys.platform.startswith('cygwin'):
-    os.add_dll_directory("C:\\\\OCaml64/home/JohnWhitington/python-libcpdf/")
-    pycpdflib.loadDLL("libpycpdf.dll")
+Sub Main(args as String())
+  ' Initialise cpdf
+  Cpdf.startup()
 
-#We will take the input hello.pdf and repeat it three times
-mergepdf = pycpdf.fromFile('hello.pdf', '')
+  ' We will take the input hello.pdf and repeat it three times
+  Using mergepdf As Cpdf.Pdf = Cpdf.fromFile("hello.pdf", "")
+    ' The list of PDFs to merge
+    Dim pdfs As List(Of Cpdf.Pdf) =
+      new List(Of Cpdf.Pdf)({mergepdf, mergepdf, mergepdf})
 
-#The list of PDFs to merge
-pdfs = [mergepdf, mergepdf, mergepdf]
+    ' Merge them
+    Dim merged As Cpdf.Pdf = Cpdf.mergeSimple(pdfs)
 
-#Merge them
-merged = pycpdflib.mergeSimple(pdfs)
+    ' Write output
+    Cpdf.toFile(merged, "merged.pdf", false, false)
 
-#Write output
-pycpdflib.toFile(merged, 'merged.pdf', False, False)
+    ' Dispose of merged PDF
+    merged.Dispose()
+  End Using
+End Sub
 \end{verbatim}
 \end{small}
 
-\chapter*{Example Program in F\#}
+\noindent Note the use of \texttt{Using} and \texttt{Dispose()} to ensure the PDFs are thrown away when no longer required.
 
-This program loads a file \texttt{hello.pdf} from disk and writes out a
-document with the original included three times.
-
-\begin{small}
-\begin{verbatim}
-#Merge example
-import pycpdflib
-
-#DLL loading depends on your own platform. These are the author's settings.
-if sys.platform.startswith('darwin'):
-    pycpdflib.loadDLL("/Users/john/repos/python-libcpdf/libpycpdf.so")
-elif sys.platform.startswith('linux'):
-    pycpdflib.loadDLL("../libpycpdf.so")
-elif sys.platform.startswith('win32') or sys.platform.startswith('cygwin'):
-    os.add_dll_directory("C:\\\\OCaml64/home/JohnWhitington/python-libcpdf/")
-    pycpdflib.loadDLL("libpycpdf.dll")
-
-#We will take the input hello.pdf and repeat it three times
-mergepdf = pycpdf.fromFile('hello.pdf', '')
-
-#The list of PDFs to merge
-pdfs = [mergepdf, mergepdf, mergepdf]
-
-#Merge them
-merged = pycpdflib.mergeSimple(pdfs)
-
-#Write output
-pycpdflib.toFile(merged, 'merged.pdf', False, False)
-\end{verbatim}
-\end{small}
 \end{dotnetcpdflib}
 
 \pagestyle{plain}
