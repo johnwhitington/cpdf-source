@@ -30,7 +30,7 @@ void cpdf_stampExtended(int, int, int, int, int, struct cpdf_position, int);
  */
 int cpdf_combinePages(int, int);
 
-/* Adding text. Adds text to a PDF, if the characters exist in the font. */
+/* Adding text. */
 
 /*
  * Special codes
@@ -163,7 +163,7 @@ void cpdf_removeText(int, int);
  */
 int cpdf_textWidth(enum cpdf_font, const char[]);
 
-/* cpdf_addContent(content, before, range, pdf) adds page content before (if
+/* cpdf_addContent(content, before, pdf, range) adds page content before (if
  * true) or after (if false) the existing content to pages in the given range
  * in the given PDF. */
 void cpdf_addContent(const char[], int, int, int);
