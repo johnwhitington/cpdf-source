@@ -14,6 +14,26 @@ void cpdf_scalePages(int, int, double, double);
  */
 void cpdf_scaleToFit(int, int, double, double, double);
 
+/* Standard page sizes. */
+enum cpdf_papersize {
+  cpdf_a0portrait,        /* A0 portrait */
+  cpdf_a1portrait,        /* A1 portrait */
+  cpdf_a2portrait,        /* A2 portrait */
+  cpdf_a3portrait,        /* A3 portrait */
+  cpdf_a4portrait,        /* A4 portrait */
+  cpdf_a5portrait,        /* A5 portrait */
+  cpdf_a0landscape,       /* A0 landscape */
+  cpdf_a1landscape,       /* A1 landscape */
+  cpdf_a2landscape,       /* A2 landscape */
+  cpdf_a3landscape,       /* A3 landscape */
+  cpdf_a4landscape,       /* A4 landscape */
+  cpdf_a5landscape,       /* A5 landscape */
+  cpdf_usletterportrait,  /* US Letter portrait */
+  cpdf_usletterlandscape, /* US Letter landscape */
+  cpdf_uslegalportrait,   /* US Legal portrait */
+  cpdf_uslegallandscape   /* US Legal landscape */
+};
+
 /*
  * cpdf_scaleToFitPaper(pdf, range, papersize, scale) scales the page content
  * to fit the given page size, possibly multiplied by scale (typically 1.0)
