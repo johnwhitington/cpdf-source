@@ -1,0 +1,557 @@
+CHAPTER 11. Document Information and Metadata
+
+Cpdf.isLinearized(String)
+
+
+Finds out if a document is linearized as
+quickly as possible without loading it.
+
+
+Cpdf.getVersion(Cpdf.Pdf)
+
+
+Returns the minor version number of a document.
+
+
+Cpdf.getMajorVersion(Cpdf.Pdf)
+
+
+Returns the minor version number of a document.
+
+
+Cpdf.getTitle(Cpdf.Pdf)
+
+
+Returns the title of a document.
+
+
+Cpdf.getAuthor(Cpdf.Pdf)
+
+
+Returns the author of a document.
+
+
+Cpdf.getSubject(Cpdf.Pdf)
+
+
+Returns the subject of a document.
+
+
+Cpdf.getKeywords(Cpdf.Pdf)
+
+
+Returns the keywords of a document.
+
+
+Cpdf.getCreator(Cpdf.Pdf)
+
+
+Returns the creator of a document.
+
+
+Cpdf.getProducer(Cpdf.Pdf)
+
+
+Returns the producer of a document.
+
+
+Cpdf.getCreationDate(Cpdf.Pdf)
+
+
+Returns the creation date of a document.
+
+
+Cpdf.getModificationDate(Cpdf.Pdf)
+
+
+Returns the modification date of a document.
+
+
+Cpdf.getTitleXMP(Cpdf.Pdf)
+
+
+Returns the XMP title of a document.
+
+
+Cpdf.getAuthorXMP(Cpdf.Pdf)
+
+
+Returns the XMP author of a document.
+
+
+Cpdf.getSubjectXMP(Cpdf.Pdf)
+
+
+Returns the XMP subject of a document.
+
+
+Cpdf.getKeywordsXMP(Cpdf.Pdf)
+
+
+Returns the XMP keywords of a document.
+
+
+Cpdf.getCreatorXMP(Cpdf.Pdf)
+
+
+Returns the XMP creator of a document.
+
+
+Cpdf.getProducerXMP(Cpdf.Pdf)
+
+
+Returns the XMP producer of a document.
+
+
+Cpdf.getCreationDateXMP(Cpdf.Pdf)
+
+
+Returns the XMP creation date of a document.
+
+
+Cpdf.getModificationDateXMP(Cpdf.Pdf)
+
+
+Returns the XMP modification date of a document.
+
+
+Cpdf.setTitle(Cpdf.Pdf, String)
+
+
+Sets the title of a document.
+
+
+Cpdf.setAuthor(Cpdf.Pdf, String)
+
+
+Sets the author of a document.
+
+
+Cpdf.setSubject(Cpdf.Pdf, String)
+
+
+Sets the subject of a document.
+
+
+Cpdf.setKeywords(Cpdf.Pdf, String)
+
+
+Sets the keywords of a document.
+
+
+Cpdf.setCreator(Cpdf.Pdf, String)
+
+
+Sets the creator of a document.
+
+
+Cpdf.setProducer(Cpdf.Pdf, String)
+
+
+Sets the producer of a document.
+
+
+Cpdf.setCreationDate(Cpdf.Pdf, String)
+
+
+Sets the creation date of a document.
+
+
+Cpdf.setModificationDate(Cpdf.Pdf, String)
+
+
+Sets the modification date of a document.
+
+
+Cpdf.setTitleXMP(Cpdf.Pdf, String)
+
+
+Sets the XMP title of a document.
+
+
+Cpdf.setAuthorXMP(Cpdf.Pdf, String)
+
+
+Sets the XMP author of a document.
+
+
+Cpdf.setSubjectXMP(Cpdf.Pdf, String)
+
+
+Sets the XMP subject of a document.
+
+
+Cpdf.setKeywordsXMP(Cpdf.Pdf, String)
+
+
+Sets the XMP keywords of a document.
+
+
+Cpdf.setCreatorXMP(Cpdf.Pdf, String)
+
+
+Sets the XMP creator of a document.
+
+
+Cpdf.setProducerXMP(Cpdf.Pdf, String)
+
+
+Sets the XMP producer of a document.
+
+
+Cpdf.setCreationDateXMP(Cpdf.Pdf, String)
+
+
+Sets the XMP creation date of a document.
+
+
+Cpdf.setModificationDateXMP(Cpdf.Pdf, String)
+
+
+Sets the XMP modification date of a document.
+
+
+Cpdf.getDateComponents(String, Int32@, Int32@, Int32@, Int32@, Int32@, Int32@, Int32@, Int32@)
+
+
+Returns the components from a PDF date string.
+
+
+Cpdf.dateStringOfComponents(Int32, Int32, Int32, Int32, Int32, Int32, Int32, Int32)
+
+
+Builds a PDF date string from individual
+components.
+
+
+Cpdf.getPageRotation(Cpdf.Pdf, Int32)
+
+
+Gets the viewing rotation for a
+given page.
+
+
+Cpdf.hasBox(Cpdf.Pdf, Int32, String)
+
+
+Returns true, if that page has the
+given box. E.g "/CropBox".
+
+
+Cpdf.getMediaBox(Cpdf.Pdf, Int32, Double@, Double@, Double@, Double@)
+
+
+These functions get a box given the document, page number, min x, max x, 
+min y, max y in points. Only succeeds if such a box exists, as checked by
+hasBox.
+
+
+Cpdf.getCropBox(Cpdf.Pdf, Int32, Double@, Double@, Double@, Double@)
+
+
+These functions get a box given the document, page number, min x, max x, 
+min y, max y in points. Only succeeds if such a box exists, as checked by
+hasBox.
+
+
+Cpdf.getTrimBox(Cpdf.Pdf, Int32, Double@, Double@, Double@, Double@)
+
+
+These functions get a box given the document, page number, min x, max x, 
+min y, max y in points. Only succeeds if such a box exists, as checked by
+hasBox.
+
+
+Cpdf.getArtBox(Cpdf.Pdf, Int32, Double@, Double@, Double@, Double@)
+
+
+These functions get a box given the document, page number, min x, max x, 
+min y, max y in points. Only succeeds if such a box exists, as checked by
+hasBox.
+
+
+Cpdf.getBleedBox(Cpdf.Pdf, Int32, Double@, Double@, Double@, Double@)
+
+
+These functions get a box given the document, page number, min x, max x, 
+min y, max y in points. Only succeeds if such a box exists, as checked by
+hasBox.
+
+
+Cpdf.setMediabox(Cpdf.Pdf, List{Int32}, Double, Double, Double, Double)
+
+
+These functions set a box given the document, page range, min x, max x, 
+min y, max y in points.
+
+
+Cpdf.setCropBox(Cpdf.Pdf, List{Int32}, Double, Double, Double, Double)
+
+
+These functions set a box given the document, page range, min x, max x, 
+min y, max y in points.
+
+
+Cpdf.setTrimBox(Cpdf.Pdf, List{Int32}, Double, Double, Double, Double)
+
+
+These functions set a box given the document, page range, min x, max x, 
+min y, max y in points.
+
+
+Cpdf.setArtBox(Cpdf.Pdf, List{Int32}, Double, Double, Double, Double)
+
+
+These functions set a box given the document, page range, min x, max x, 
+min y, max y in points.
+
+
+Cpdf.setBleedBox(Cpdf.Pdf, List{Int32}, Double, Double, Double, Double)
+
+
+These functions set a box given the document, page range, min x, max x, 
+min y, max y in points.
+
+
+Cpdf.markTrapped(Cpdf.Pdf)
+
+
+Marks a document as trapped.
+
+
+Cpdf.markUntrapped(Cpdf.Pdf)
+
+
+Marks a document as untrapped.
+
+
+Cpdf.markTrappedXMP(Cpdf.Pdf)
+
+
+Marks a document as trapped in XMP metadata.
+
+
+Cpdf.markUntrappedXMP(Cpdf.Pdf)
+
+
+Marks a document as untrapped in XMP metadata.
+
+
+Cpdf.Layout
+
+Layouts
+
+Cpdf.Layout.SinglePage
+
+Single page
+
+Cpdf.Layout.OneColumn
+
+One column
+
+Cpdf.Layout.TwoColumnLeft
+
+Two column left
+
+Cpdf.Layout.TwoColumnRight
+
+Two column right
+
+Cpdf.Layout.TwoPageLeft
+
+Two page left
+
+Cpdf.Layout.TwoPageRight
+
+Two page right
+
+Cpdf.setPageLayout(Cpdf.Pdf, Cpdf.Layout)
+
+
+Sets the page layout for a document.
+
+
+Cpdf.PageMode
+
+Page modes
+
+Cpdf.PageMode.UseNone
+
+Use none
+
+Cpdf.PageMode.UseOutlines
+
+Use outlines
+
+Cpdf.PageMode.UseThumbs
+
+Use thumbs
+
+Cpdf.PageMode.UseOC
+
+Use OC
+
+Cpdf.PageMode.UseAttachments
+
+Use attachments
+
+Cpdf.setPageMode(Cpdf.Pdf, Cpdf.PageMode)
+
+
+Sets the page mode for a document.
+
+
+Cpdf.hideToolbar(Cpdf.Pdf, Boolean)
+
+
+Sets the hide toolbar flag.
+
+
+Cpdf.hideMenubar(Cpdf.Pdf, Boolean)
+
+
+Sets the hide menubar flag.
+
+
+Cpdf.hideWindowUi(Cpdf.Pdf, Boolean)
+
+
+Sets the hide window UI flag.
+
+
+Cpdf.fitWindow(Cpdf.Pdf, Boolean)
+
+
+Sets the fit window flag.
+
+
+Cpdf.centerWindow(Cpdf.Pdf, Boolean)
+
+
+Sets the center window flag.
+
+
+Cpdf.displayDocTitle(Cpdf.Pdf, Boolean)
+
+
+Sets the display doc title flag.
+
+
+Cpdf.openAtPage(Cpdf.Pdf, Boolean, Int32)
+
+
+Sets the PDF to open, possibly with
+zoom-to-fit, at the given page number.
+
+
+Cpdf.setMetadataFromFile(Cpdf.Pdf, String)
+
+
+Sets the XMP metadata of a
+document, given a file name.
+
+
+Cpdf.setMetadataFromByteArray(Cpdf.Pdf, Byte[])
+
+
+Sets the XMP metadata from
+an array of bytes.
+
+
+Cpdf.removeMetadata(Cpdf.Pdf)
+
+
+Removes the XMP metadata from a document.
+
+
+Cpdf.getMetadata(Cpdf.Pdf)
+
+
+Returns the XMP metadata from a document.
+
+
+Cpdf.createMetadata(Cpdf.Pdf)
+
+
+Builds fresh metadata as best it can from
+existing metadata in the document.
+
+
+Cpdf.setMetadataDate(Cpdf.Pdf, String)
+
+
+Sets the metadata date for a PDF. The date
+is given in PDF date format -- cpdf will convert it to XMP format. The
+date 'now' means now.
+
+
+Cpdf.PageLabelStyle
+
+Page label styles
+
+Cpdf.PageLabelStyle.DecimalArabic
+
+1, 2, 3...
+
+Cpdf.PageLabelStyle.UppercaseRoman
+
+I, II, III...
+
+Cpdf.PageLabelStyle.LowercaseRoman
+
+i, ii, iii...
+
+Cpdf.PageLabelStyle.UppercaseLetters
+
+A, B, C...
+
+Cpdf.PageLabelStyle.LowercaseLetters
+
+a, b, c...
+
+Cpdf.addPageLabels(Cpdf.Pdf, Cpdf.PageLabelStyle, String, Int32, List{Int32}, Boolean)
+
+
+Adds page labels. The prefix is prefix text for each label. The range is the page range the
+labels apply to. Offset can be used to shift the numbering up or down.
+
+
+Cpdf.removePageLabels(Cpdf.Pdf)
+
+
+Removes the page labels from the document.
+
+
+Cpdf.getPageLabelStringForPage(Cpdf.Pdf, Int32)
+
+
+Calculates the full label
+string for a given page, and returns it.
+
+
+Cpdf.startGetPageLabels(Cpdf.Pdf)
+
+
+
+Cpdf.getPageLabelStyle(Int32)
+
+
+
+Cpdf.getPageLabelPrefix(Int32)
+
+
+
+Cpdf.getPageLabelOffset(Int32)
+
+
+
+Cpdf.getPageLabelRange(Int32)
+
+
+
+Cpdf.endGetPageLabels
+
+
+
+Cpdf.dummych12
+

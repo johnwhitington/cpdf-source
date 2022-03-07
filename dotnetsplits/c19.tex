@@ -1,0 +1,108 @@
+CHAPTER 18. Miscellaneous
+
+Cpdf.draft(Cpdf.Pdf, List{Int32}, Boolean)
+
+
+Removes images on the given pages, replacing
+them with crossed boxes if 'boxes' is true.
+
+
+Cpdf.removeAllText(Cpdf.Pdf, List{Int32})
+
+
+Removes all text from the given pages in a
+given document.
+
+
+Cpdf.blackText(Cpdf.Pdf, List{Int32})
+
+
+Blackens all text on the given pages.
+
+
+Cpdf.blackLines(Cpdf.Pdf, List{Int32})
+
+
+Blackens all lines on the given pages.
+
+
+Cpdf.blackFills(Cpdf.Pdf, List{Int32})
+
+
+Blackens all fills on the given pages.
+
+
+Cpdf.thinLines(Cpdf.Pdf, List{Int32}, Double)
+
+
+Thickens every line less than
+min_thickness to min_thickness. Thickness given in points.
+
+
+Cpdf.copyId(Cpdf.Pdf, Cpdf.Pdf)
+
+
+Copies the /ID from one document to another.
+
+
+Cpdf.removeId(Cpdf.Pdf)
+
+
+Removes a document's /ID.
+
+
+Cpdf.setVersion(Cpdf.Pdf, Int32)
+
+
+Sets the minor version number of a document.
+
+
+Cpdf.setFullVersion(Cpdf.Pdf, Int32, Int32)
+
+
+Sets the full version
+number of a document.
+
+
+Cpdf.removeDictEntry(Cpdf.Pdf, String)
+
+
+Removes any dictionary entry with the given
+key anywhere in the document.
+
+
+Cpdf.removeDictEntrySearch(Cpdf.Pdf, String, String)
+
+
+Removes any dictionary entry
+with the given key whose value matches the given search term.
+
+
+Cpdf.replaceDictEntry(Cpdf.Pdf, String, String)
+
+
+Replaces the value associated with
+the given key.
+
+
+Cpdf.replaceDictEntrySearch(Cpdf.Pdf, String, String, String)
+
+
+Replaces the value
+associated with the given key if the existing value matches the search term.
+
+
+Cpdf.removeClipping(Cpdf.Pdf, List{Int32})
+
+
+Removes all clipping from pages in the
+given range.
+
+
+Cpdf.getDictEntries(Cpdf.Pdf, String)
+
+
+Returns a JSON array containing any
+and all values associated with the given key, and fills in its length.
+
+

@@ -1,0 +1,287 @@
+CHAPTER 3. Pages
+
+Cpdf.scalePages(Cpdf.Pdf, List{Int32}, Double, Double)
+
+
+Scales the page dimensions
+and content by the given scale, about (0, 0). Other boxes (crop etc. are
+altered as appropriate)
+
+
+Cpdf.scaleToFit(Cpdf.Pdf, List{Int32}, Double, Double, Double)
+
+
+Scales the content to fit
+new page dimensions (width x height) multiplied by scale (typically 1.0).
+Other boxes (crop etc. are altered as appropriate)
+
+
+Cpdf.Papersize
+
+Built-in paper sizes
+
+Cpdf.Papersize.A0portrait
+
+A0 Portrait paper
+
+Cpdf.Papersize.A1portrait
+
+A1 Portrait paper
+
+Cpdf.Papersize.A2portrait
+
+A2 Portrait paper
+
+Cpdf.Papersize.A3portrait
+
+A3 Portrait paper
+
+Cpdf.Papersize.A4portrait
+
+A4 Portrait paper
+
+Cpdf.Papersize.A5portrait
+
+A5 Portrait paper
+
+Cpdf.Papersize.A0landscape
+
+A0 Landscape paper
+
+Cpdf.Papersize.A1landscape
+
+A1 Landscape paper
+
+Cpdf.Papersize.A2landscape
+
+A2 Landscape paper
+
+Cpdf.Papersize.A3landscape
+
+A3 Landscape paper
+
+Cpdf.Papersize.A4landscape
+
+A4 Landscape paper
+
+Cpdf.Papersize.A5landscape
+
+A5 Landscape paper
+
+Cpdf.Papersize.Usletterportrait
+
+US Letter Portrait paper
+
+Cpdf.Papersize.Usletterlandscape
+
+US Letter Landscape paper
+
+Cpdf.Papersize.Uslegalportrait
+
+US Legal Portrait paper
+
+Cpdf.Papersize.Uslegallandscape
+
+US Legal Landscape paper
+
+Cpdf.scaleToFitPaper(Cpdf.Pdf, List{Int32}, Cpdf.Papersize, Double)
+
+
+Scales the page content
+to fit the given page size, possibly multiplied by scale (typically 1.0)
+
+
+Cpdf.Anchor
+
+Position anchors
+
+Cpdf.Anchor.PosCentre
+
+Absolute centre
+
+Cpdf.Anchor.PosLeft
+
+Absolute left
+
+Cpdf.Anchor.PosRight
+
+Absolute right
+
+Cpdf.Anchor.Top
+
+The top centre of the page
+
+Cpdf.Anchor.TopLeft
+
+The top left of the page
+
+Cpdf.Anchor.TopRight
+
+The top right of the page
+
+Cpdf.Anchor.Left
+
+The left hand side of the page, halfway down
+
+Cpdf.Anchor.BottomLeft
+
+The bottom left of the page
+
+Cpdf.Anchor.Bottom
+
+The bottom middle of the page
+
+Cpdf.Anchor.BottomRight
+
+The bottom right of the page
+
+Cpdf.Anchor.Right
+
+The right hand side of the page, halfway down
+
+Cpdf.Anchor.Diagonal
+
+Diagonal, bottom left to top right
+
+Cpdf.Anchor.ReverseDiagonal
+
+Diagonal, top left to bottom right
+
+Cpdf.Position
+
+
+
+Cpdf.Position.anchor
+
+Position anchor
+
+Cpdf.Position.coord1
+
+Parameter one
+
+Cpdf.Position.coord2
+
+Parameter two
+
+Cpdf.Position.#ctor(Cpdf.Anchor)
+
+Build a position with zero parameters
+
+Cpdf.Position.#ctor(Cpdf.Anchor, Double)
+
+Build a position with one parameter
+
+Cpdf.Position.#ctor(Cpdf.Anchor, Double, Double)
+
+Build a position with two parameters
+
+Cpdf.scaleContents(Cpdf.Pdf, List{Int32}, Cpdf.Position, Double)
+
+
+Scales the contents of the
+pages in the range about the point given by the position, by the
+scale given.
+
+
+Cpdf.shiftContents(Cpdf.Pdf, List{Int32}, Double, Double)
+
+
+Shifts the content of the pages in
+the range.
+
+
+Cpdf.rotate(Cpdf.Pdf, List{Int32}, Int32)
+
+
+Changes the viewing rotation to an
+absolute value. Appropriate rotations are 0, 90, 180, 270.
+
+
+Cpdf.rotateBy(Cpdf.Pdf, List{Int32}, Int32)
+
+
+Rotates the content about the
+centre of the page by the given number of degrees, in a clockwise
+direction.
+
+
+Cpdf.rotateContents(Cpdf.Pdf, List{Int32}, Double)
+
+
+Rotates the content about the
+centre of the page by the given number of degrees, in a clockwise
+direction.
+
+
+Cpdf.upright(Cpdf.Pdf, List{Int32})
+
+
+Changes the viewing rotation of the pages in the
+range, counter-rotating the dimensions and content such that there is no
+visual change.
+
+
+Cpdf.hFlip(Cpdf.Pdf, List{Int32})
+
+
+Flips horizontally the pages in the range.
+
+
+Cpdf.vFlip(Cpdf.Pdf, List{Int32})
+
+
+Flips vertically the pages in the range.
+
+
+Cpdf.crop(Cpdf.Pdf, List{Int32}, Double, Double, Double, Double)
+
+
+Crops a page, replacing any existing
+crop box. The dimensions are in points.
+
+
+Cpdf.removeCrop(Cpdf.Pdf, List{Int32})
+
+
+Removes any crop box from pages in the range.
+
+
+Cpdf.removeTrim(Cpdf.Pdf, List{Int32})
+
+
+Removes any trim box from pages in the range.
+
+
+Cpdf.removeArt(Cpdf.Pdf, List{Int32})
+
+
+Removes any art box from pages in the range.
+
+
+Cpdf.removeBleed(Cpdf.Pdf, List{Int32})
+
+
+Removes any bleed box from pages in the range.
+
+
+Cpdf.trimMarks(Cpdf.Pdf, List{Int32})
+
+
+Adds trim marks to the given pages, if the
+trimbox exists.
+
+
+Cpdf.showBoxes(Cpdf.Pdf, List{Int32})
+
+
+Shows the boxes on the given pages, for debug.
+
+
+Cpdf.hardBox(Cpdf.Pdf, List{Int32}, String)
+
+
+Makes a given box a 'hard box' i.e clips it explicitly.
+
+
+Cpdf.dummych4
+

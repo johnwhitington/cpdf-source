@@ -1,0 +1,31 @@
+CHAPTER 15. PDF and JSON
+
+Cpdf.outputJSON(String, Boolean, Boolean, Boolean, Cpdf.Pdf)
+
+
+Outputs a PDF
+in JSON format to the given filename. If parse_content is true, page content
+is parsed. If no_stream_data is true, all stream data is suppressed entirely.
+
+
+Cpdf.outputJSONMemory(Cpdf.Pdf, Boolean, Boolean, Boolean)
+
+
+Like
+outputJSON, but it writes to a byte array in memory.
+
+
+Cpdf.fromJSON(String)
+
+
+Loads a PDF from a JSON file given its filename.
+
+
+Cpdf.fromJSONMemory(Byte[])
+
+
+Loads a PDF from a JSON file in memory
+
+
+Cpdf.dummych16
+
