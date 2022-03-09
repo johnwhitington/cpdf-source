@@ -2,17 +2,17 @@ CHAPTER 1. Basics
 
 Cpdf.fromFile(String, String)
 
-Loads a PDF file from a given file. Supply
-a user password (possibly blank) in case the file is encrypted. It won't be
-decrypted, but sometimes the password is needed just to load the file.
+Loads a PDF file from a given file. Supply a user password (possibly blank) in
+case the file is encrypted. It won't be decrypted, but sometimes the password
+is needed just to load the file.
 
 Cpdf.fromFileLazy(String, String)
 
-Loads a PDF from a file, doing only minimal
-parsing. The objects will be read and parsed when they are actually
-needed. Use this when the whole file won't be required. Also supply a user
-password (possibly blank) in case the file is encrypted. It won't be
-decrypted, but sometimes the password is needed just to load the file.
+Loads a PDF from a file, doing only minimal parsing. The objects will be read
+and parsed when they are actually needed. Use this when the whole file won't be
+required. Also supply a user password (possibly blank) in case the file is
+encrypted. It won't be decrypted, but sometimes the password is needed just to
+load the file.
 
 Cpdf.fromMemory(Byte[], String)
 
@@ -20,38 +20,22 @@ Loads a file from memory given any user password.
 
 Cpdf.fromMemoryLazy(IntPtr, Int32, String)
 
-Loads a file from memory, given a
-pointer and a length, and the user password, but lazily like
-fromFileLazy. The caller must use AllocHGlobal / Marshal.Copy / FreeHGlobal
-itself. It must not free the memory until the PDF is also gone.
+Loads a file from memory, given a pointer and a length, and the user password,
+but lazily like fromFileLazy. The caller must use AllocHGlobal / Marshal.Copy /
+FreeHGlobal itself. It must not free the memory until the PDF is also gone.
 
 Cpdf.startEnumeratePDFs
 
-To enumerate the list of currently allocated PDFs, call
-startEnumeratePDFs which gives the number, n, of PDFs allocated, then
-enumeratePDFsInfo and enumeratePDFsKey with index numbers from
-0...(n - 1). Call endEnumeratePDFs to clean up.
-
 Cpdf.enumeratePDFsKey(Int32)
-
-To enumerate the list of currently allocated PDFs, call
-startEnumeratePDFs which gives the number, n, of PDFs allocated, then
-enumeratePDFsInfo and enumeratePDFsKey with index numbers from
-0...(n - 1). Call endEnumeratePDFs to clean up.
 
 Cpdf.enumeratePDFsInfo(Int32)
 
-To enumerate the list of currently allocated PDFs, call
-startEnumeratePDFs which gives the number, n, of PDFs allocated, then
-enumeratePDFsInfo and enumeratePDFsKey with index numbers from
-0...(n - 1). Call endEnumeratePDFs to clean up.
-
 Cpdf.endEnumeratePDFs
 
-To enumerate the list of currently allocated PDFs, call
-startEnumeratePDFs which gives the number, n, of PDFs allocated, then
-enumeratePDFsInfo and enumeratePDFsKey with index numbers from
-0...(n - 1). Call endEnumeratePDFs to clean up.
+To enumerate the list of currently allocated PDFs, call startEnumeratePDFs
+which gives the number, n, of PDFs allocated, then enumeratePDFsInfo and
+enumeratePDFsKey with index numbers from 0...(n - 1). Call endEnumeratePDFs to
+clean up.
 
 Cpdf.ptOfCm(Double)
 
@@ -79,20 +63,18 @@ Converts a figure in points to inches (72 points to 1 inch)
 
 Cpdf.parsePagespec(Cpdf.Pdf, String)
 
-Parses a page specification with reference
-to a given PDF (the PDF is supplied so that page ranges which reference
-pages which do not exist are rejected).
+Parses a page specification with reference to a given PDF (the PDF is supplied
+so that page ranges which reference pages which do not exist are rejected).
 
 Cpdf.validatePagespec(String)
 
-Validates a page specification so far as is
-possible in the absence of the actual document. Result is true if valid.
+Validates a page specification so far as is possible in the absence of the
+actual document. Result is true if valid.
 
 Cpdf.stringOfPagespec(Cpdf.Pdf, List{Int32})
 
-Builds a page specification from a page
-range. For example, the range containing 1, 2, 3, 6, 7, 8 in a document of 8
-pages might yield "1-3, 6-end"
+Builds a page specification from a page range. For example, the range
+containing 1, 2, 3, 6, 7, 8 in a document of 8 pages might yield "1-3, 6-end"
 
 Cpdf.blankRange
 
@@ -100,8 +82,8 @@ Creates a range with no pages in.
 
 Cpdf.range(Int32, Int32)
 
-Builds a range from one page to another inclusive. For
-example, range(3, 7) gives the range 3, 4, 5, 6, 7
+Builds a range from one page to another inclusive. For example, range(3, 7)
+gives the range 3, 4, 5, 6, 7
 
 Cpdf.all(Cpdf.Pdf)
 
@@ -109,23 +91,21 @@ The range containing all the pages in a given document.
 
 Cpdf.even(List{Int32})
 
-Makes a range which contains just the even pages of
-another range.
+Makes a range which contains just the even pages of another range.
 
 Cpdf.odd(List{Int32})
 
-Makes a range which contains just the odd pages of another
-range.
+Makes a range which contains just the odd pages of another range.
 
 Cpdf.rangeUnion(List{Int32}, List{Int32})
 
-Makes the union of two ranges giving a range
-containing the pages in range a and range b.
+Makes the union of two ranges giving a range containing the pages in range a
+and range b.
 
 Cpdf.difference(List{Int32}, List{Int32})
 
-Makes the difference of two ranges, giving a range
-containing all the pages in a except for those which are also in b.
+Makes the difference of two ranges, giving a range containing all the pages in
+a except for those which are also in b.
 
 Cpdf.removeDuplicates(List{Int32})
 
@@ -156,45 +136,41 @@ Returns the number of pages in a PDF.
 
 Cpdf.pagesFast(String, String)
 
-Returns the number of pages in a given
-PDF, with given user password. It tries to do this as fast as
-possible, without loading the whole file.
+Returns the number of pages in a given PDF, with given user password. It tries
+to do this as fast as possible, without loading the whole file.
 
 Cpdf.toFile(Cpdf.Pdf, String, Boolean, Boolean)
 
-Writes the file to a given
-filename. If linearize is true, it will be linearized if a linearizer is
-available. If make_id is true, it will be given a new ID.
+Writes the file to a given filename. If linearize is true, it will be
+linearized if a linearizer is available. If make_id is true, it will be given a
+new ID.
 
 Cpdf.toFileExt(Cpdf.Pdf, String, Boolean, Boolean, Boolean, Boolean, Boolean)
 
-Writes the file to a given filename. If
-make_id is true, it will be given a new ID.  If preserve_objstm is true, 
-existing object streams will be preserved. If generate_objstm is true, 
-object streams will be generated even if not originally present. If
-compress_objstm is true, object streams will be compressed (what we
-usually want). WARNING: the pdf argument will be invalid after this call, 
-and should be not be used again.
+Writes the file to a given filename. If make_id is true, it will be given a new
+ID.  If preserve_objstm is true, existing object streams will be preserved. If
+generate_objstm is true, object streams will be generated even if not
+originally present. If compress_objstm is true, object streams will be
+compressed (what we usually want). WARNING: the pdf argument will be invalid
+after this call, and should be not be used again.
 
 Cpdf.toMemory(Cpdf.Pdf, Boolean, Boolean)
 
-Writes a PDF file 
-and returns as an array of bytes.
+Writes a PDF file and returns as an array of bytes.
 
 Cpdf.isEncrypted(Cpdf.Pdf)
 
-Returns true if a documented is encrypted, false
-otherwise.
+Returns true if a documented is encrypted, false otherwise.
 
 Cpdf.decryptPdf(Cpdf.Pdf, String)
 
-Attempts to decrypt a PDF using the given
-user password. An exception is raised if the decryption fails.
+Attempts to decrypt a PDF using the given user password. An exception is raised
+if the decryption fails.
 
 Cpdf.decryptPdfOwner(Cpdf.Pdf, String)
 
-Attempts to decrypt a PDF using the
-given owner password. Raises an exception if the decryption fails.
+Attempts to decrypt a PDF using the given owner password. Raises an exception
+if the decryption fails.
 
 Cpdf.Permission
 
@@ -268,14 +244,16 @@ Cpdf.EncryptionMethod.Aes256bitiosotrue
 
 256 bit AES encryption, encrypt metadata
 
-Cpdf.toFileEncrypted(Cpdf.Pdf, Cpdf.EncryptionMethod, List{Cpdf.Permission}, String, String, Boolean, Boolean, String)
+Cpdf.toFileEncrypted(Cpdf.Pdf, Cpdf.EncryptionMethod, List{Cpdf.Permission},
+String, String, Boolean, Boolean, String)
 
 Writes a file as encrypted.
 
-Cpdf.toFileEncryptedExt(Cpdf.Pdf, Cpdf.EncryptionMethod, List{Cpdf.Permission}, String, String, Boolean, Boolean, Boolean, Boolean, Boolean, String)
+Cpdf.toFileEncryptedExt(Cpdf.Pdf, Cpdf.EncryptionMethod, List{Cpdf.Permission},
+String, String, Boolean, Boolean, Boolean, Boolean, Boolean, String)
 
-Writes a file as encrypted with extra parameters. WARNING: the
-pdf argument will be invalid after this call, and should not be used again.
+Writes a file as encrypted with extra parameters. WARNING: the pdf argument
+will be invalid after this call, and should not be used again.
 
 Cpdf.hasPermission(Cpdf.Pdf, Cpdf.Permission)
 
@@ -286,6 +264,3 @@ Cpdf.encryptionKind(Cpdf.Pdf)
 
 Returns the encryption method currently in use on
 a document.
-
-Cpdf.dummych2
-

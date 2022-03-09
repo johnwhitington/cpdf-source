@@ -2,18 +2,16 @@ CHAPTER 12. File Attachments
 
 Cpdf.attachFile(String, Cpdf.Pdf)
 
-Attaches a file to the pdf. It is attached
-at document level.
+Attaches a file to the pdf. It is attached at document level.
 
 Cpdf.attachFileToPage(String, Cpdf.Pdf, Int32)
 
-Attaches a file, given
-its file name, pdf, and the page number to which it should be attached.
+Attaches a file, given its file name, pdf, and the page number to which it
+should be attached.
 
 Cpdf.attachFileFromMemory(Byte[], String, Cpdf.Pdf)
 
-Attaches data from
-memory, just like attachFile.
+Attaches data from memory, just like attachFile.
 
 Cpdf.attachFileToPageFromMemory(Byte[], String, Cpdf.Pdf, Int32)
 
@@ -25,17 +23,12 @@ Removes all page- and document-level attachments from a document.
 
 Cpdf.startGetAttachments(Cpdf.Pdf)
 
-Lists information about attachments. Call startGetAttachments(pdf)
-first, then numberGetAttachments to find out how many there are. Then
-getAttachmentName etc. to return each one 0...(n - 1). Finally, call
-endGetAttachments to clean up.
-
 Cpdf.numberGetAttachments
 
-Lists information about attachments. Call startGetAttachments(pdf)
-first, then numberGetAttachments to find out how many there are. Then
-getAttachmentName etc. to return each one 0...(n - 1). Finally, call
-endGetAttachments to clean up.
+Lists information about attachments. Call startGetAttachments(pdf) first, then
+numberGetAttachments to find out how many there are. Then getAttachmentName
+etc. to return each one 0...(n - 1). Finally, call endGetAttachments to clean
+up.
 
 Cpdf.getAttachmentName(Int32)
 
@@ -52,6 +45,3 @@ Gets the attachment data itself.
 Cpdf.endGetAttachments
 
 Cleans up after getting attachments.
-
-Cpdf.dummych13
-

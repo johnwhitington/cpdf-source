@@ -2,28 +2,27 @@ CHAPTER 8. Logos, Watermarks and Stamps
 
 Cpdf.stampOn(Cpdf.Pdf, Cpdf.Pdf, List{Int32})
 
-Stamps stamp_pdf on top of all the
-pages in the document which are in the range. The stamp is placed with its
-origin at the origin of the target document.
+Stamps stamp_pdf on top of all the pages in the document which are in the
+range. The stamp is placed with its origin at the origin of the target
+document.
 
 Cpdf.stampUnder(Cpdf.Pdf, Cpdf.Pdf, List{Int32})
 
-Stamps stamp_pdf under all the
-pages in the document which are in the range. The stamp is placed with its
-origin at the origin of the target document.
+Stamps stamp_pdf under all the pages in the document which are in the range.
+The stamp is placed with its origin at the origin of the target document.
 
-Cpdf.stampExtended(Cpdf.Pdf, Cpdf.Pdf, List{Int32}, Boolean, Boolean, Cpdf.Position, Boolean)
+Cpdf.stampExtended(Cpdf.Pdf, Cpdf.Pdf, List{Int32}, Boolean, Boolean,
+Cpdf.Position, Boolean)
 
-A stamping function with extra features. - isover
-true, pdf goes over pdf2, isover false, pdf goes under pdf2 -
-scale_stamp_to_fit scales the stamp to fit the page - pos gives the
-position to put the stamp - relative_to_cropbox: if true, pos is relative
-to cropbox not mediabox.
+A stamping function with extra features. - isover true, pdf goes over pdf2,
+isover false, pdf goes under pdf2 - scale_stamp_to_fit scales the stamp to fit
+the page - pos gives the position to put the stamp - relative_to_cropbox: if
+true, pos is relative to cropbox not mediabox.
 
 Cpdf.combinePages(Cpdf.Pdf, Cpdf.Pdf)
 
-Combines the PDFs page-by-page, putting
-each page of 'over' over each page of 'under'.
+Combines the PDFs page-by-page, putting each page of 'over' over each page of
+'under'.
 
 Cpdf.Font
 
@@ -93,18 +92,20 @@ Cpdf.Justification.RightJustify
 
 Right justify
 
-Cpdf.addText(Boolean, Cpdf.Pdf, List{Int32}, String, Cpdf.Position, Double, Int32, Cpdf.Font, Double, Double, Double, Double, Boolean, Boolean, Boolean, Double, Cpdf.Justification, Boolean, Boolean, String, Double, Boolean)
+Cpdf.addText(Boolean, Cpdf.Pdf, List{Int32}, String, Cpdf.Position, Double,
+Int32, Cpdf.Font, Double, Double, Double, Double, Boolean, Boolean, Boolean,
+Double, Cpdf.Justification, Boolean, Boolean, String, Double, Boolean)
 
 Adds text to the pages in the given range.
 
-Cpdf.addTextSimple(Cpdf.Pdf, List{Int32}, String, Cpdf.Position, Cpdf.Font, Double)
+Cpdf.addTextSimple(Cpdf.Pdf, List{Int32}, String, Cpdf.Position, Cpdf.Font,
+Double)
 
 Adds text with most parameters default.
 
 Cpdf.removeText(Cpdf.Pdf, List{Int32})
 
-Removes any text added by cpdf from the
-given pages.
+Removes any text added by cpdf from the given pages.
 
 Cpdf.textWidth(Cpdf.Font, String)
 
@@ -113,15 +114,10 @@ point.
 
 Cpdf.addContent(String, Boolean, Cpdf.Pdf, List{Int32})
 
-Adds page content before (if
-true) or after (if false) the existing content to pages in the given range
-in the given PDF.
+Adds page content before (if true) or after (if false) the existing content to
+pages in the given range in the given PDF.
 
 Cpdf.stampAsXObject(Cpdf.Pdf, List{Int32}, Cpdf.Pdf)
 
-Stamps stamp_pdf onto the pages
-in the given range in pdf as a shared Form XObject. The name of the
-newly-created XObject is returned.
-
-Cpdf.dummych9
-
+Stamps stamp_pdf onto the pages in the given range in pdf as a shared Form
+XObject. The name of the newly-created XObject is returned.

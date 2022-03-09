@@ -2,27 +2,21 @@ CHAPTER 2. Merging and Splitting
 
 Cpdf.mergeSimple(List{Cpdf.Pdf})
 
-Given a list of PDFs, 
-merges the files into a new one, which is returned.
+Given a list of PDFs, merges the files into a new one, which is returned.
 
 Cpdf.merge(List{Cpdf.Pdf}, Boolean, Boolean)
 
-Merges the
-PDFs. If retain_numbering is true page labels are not rewritten. If
-remove_duplicate_fonts is true, duplicate fonts are merged. This is useful
-when the source documents for merging originate from the same source.
+Merges the PDFs. If retain_numbering is true page labels are not rewritten. If
+remove_duplicate_fonts is true, duplicate fonts are merged. This is useful when
+the source documents for merging originate from the same source.
 
 Cpdf.mergeSame(List{Cpdf.Pdf}, Boolean, Boolean, List{List{Int32}})
 
-The same as merge, except that it has an additional
-argument - a list of page ranges. This is used to select the pages to
-pick from each PDF. This avoids duplication of information when multiple
-discrete parts of a source PDF are included.
+The same as merge, except that it has an additional argument - a list of page
+ranges. This is used to select the pages to pick from each PDF. This avoids
+duplication of information when multiple discrete parts of a source PDF are
+included.
 
 Cpdf.selectPages(Cpdf.Pdf, List{Int32})
 
-Returns a new document which just those pages
-in the page range.
-
-Cpdf.dummych3
-
+Returns a new document which just those pages in the page range.
