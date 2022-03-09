@@ -2,43 +2,31 @@ CHAPTER 16. Optional Content Groups
 
 Cpdf.startGetOCGList(Cpdf.Pdf)
 
-
 Begins retrieving optional content group names. The serial number 0..n - 1
 is returned.
 
-
 Cpdf.OCGListEntry(Int32)
-
 
 Retrieves an OCG name, given its serial number 0..n - 1.
 
-
 Cpdf.endGetOCGList
-
 
 Ends retrieval of optional content group names.
 
-
 Cpdf.OCGRename(Cpdf.Pdf, String, String)
-
 
 Renames an optional content group.
 
-
 Cpdf.OCGOrderAll(Cpdf.Pdf)
-
 
 Ensures that every optional content group appears in the OCG order list.
 
-
 Cpdf.OCGCoalesce(Cpdf.Pdf)
-
 
 Coalesces optional content groups. For example, if we merge or stamp two
 files both with an OCG called "Layer 1", we will have two different optional
 content groups. This function will merge the two into a single optional
 content group.
-
 
 Cpdf.dummych17
 
