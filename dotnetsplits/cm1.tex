@@ -1,2 +1,28 @@
-(INITIAL INSTRUCTIONS)
-======================
+CPDF .NET Library
+=================
+
+Before using the library, you must make sure your project or build environment
+has access to the cpdf DLL, which is not part of the .NET assembly. You can add
+it to a Visual Studio project as a file, set to copy-to-output-folder. Or, you
+can install it in a standard location. The DLL must be named as follows, for
+.NET to be able to find it:
+
+Windows: cpdf.dll
+MacOS: libcpdf.dylib
+Linux: libcpdf.so
+
+The following documentation is automatically extracted from the XML comments
+present in the assembly. You can use Intellisense to view them within Visual
+Studio - the documentation here is for completeness.
+
+A 'range' is a list of integers specifying page numbers.
+
+Text arguments and results are in UTF8. Data is of type bytes[].
+
+Any function may raise the exception CPDFError, carrying a string describing
+the error.
+
+There is no automatic garbage collection of PDFs. Use the Using keyword and/or
+the Dispose method on objects of type Cpdf.Pdf to explicitly deallocate PDFs.
+
+
