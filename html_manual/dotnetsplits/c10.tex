@@ -1,0 +1,40 @@
+CHAPTER 9. Multipage facilities
+
+Cpdf.impose(Cpdf.Pdf, Double, Double, Boolean, Boolean, Boolean, Boolean,
+Boolean, Double, Double, Double)
+
+Imposes a PDF. There are two modes: imposing x * y, or imposing to fit a page
+of size x * y. This is controlled by fit. Columns imposes by columns rather
+than rows. rtl is right-to-left, btt bottom-to-top. Center is unused for now.
+Margin is the margin around the output, spacing the spacing between imposed
+inputs.
+
+Cpdf.twoUp(Cpdf.Pdf)
+
+Imposes a document two up. twoUpStack does so by doubling the page size, to fit
+two pages on one.
+
+Cpdf.twoUpStack(Cpdf.Pdf)
+
+Impose a document two up. twoUpStack does so by doubling the page size, to fit
+two pages on one.
+
+Cpdf.padBefore(Cpdf.Pdf, List{Int32})
+
+Adds a blank page before each page in the given range.
+
+Cpdf.padAfter(Cpdf.Pdf, List{Int32})
+
+Adds a blank page after each page in the given range.
+
+Cpdf.padEvery(Cpdf.Pdf, Int32)
+
+Adds a blank page after every n pages.
+
+Cpdf.padMultiple(Cpdf.Pdf, Int32)
+
+Adds pages at the end to pad the file to a multiple of n pages in length.
+
+Cpdf.padMultipleBefore(Cpdf.Pdf, Int32)
+
+Adds pages at the beginning to pad the file to a multiple of n pages in length.

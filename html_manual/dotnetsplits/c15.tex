@@ -1,0 +1,30 @@
+CHAPTER 14. Fonts.
+
+Cpdf.startGetFontInfo(Cpdf.Pdf)
+
+Cpdf.numberFonts
+
+Cpdf.getFontPage(Int32)
+
+Cpdf.getFontName(Int32)
+
+Cpdf.getFontType(Int32)
+
+Cpdf.getFontEncoding(Int32)
+
+Cpdf.endGetFontInfo
+
+Retrieves font information. First, call startGetFontInfo(pdf). Now call
+numberFonts to return the number of fonts. For each font, call one or more of
+getFontPage, getFontName, getFontType, and getFontEncoding giving a serial
+number 0..n - 1 to return information. Finally, call endGetFontInfo to clean
+up.
+
+Cpdf.removeFonts(Cpdf.Pdf)
+
+Removes all font data from a file.
+
+Cpdf.copyFont(Cpdf.Pdf, Cpdf.Pdf, List{Int32}, Int32, String)
+
+Copies the given font from the given page in the 'from' PDF to every page in
+the 'to' PDF. The new font is stored under its font name.
