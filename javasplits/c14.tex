@@ -1,0 +1,25 @@
+CHAPTER 13. Images.
+
+Cpdf.startGetImageResolution(Cpdf.Pdf, Double)
+
+Cpdf.getImageResolutionPageNumber(Int32)
+
+Cpdf.getImageResolutionImageName(Int32)
+
+Cpdf.getImageResolutionXPixels(Int32)
+
+Cpdf.getImageResolutionYPixels(Int32)
+
+Cpdf.getImageResolutionXRes(Int32)
+
+Cpdf.getImageResolutionYRes(Int32)
+
+Cpdf.endGetImageResolution
+
+Gets image data, including resolution at all points of use. Call
+startGetImageResolution(pdf, min_required_resolution) will begin the
+process of obtaining data on all image uses below min_required_resolution, 
+returning the total number. So, to return all image uses, specify a very
+high min_required_resolution. Then, call the other functions giving a
+serial number 0..n - 1, to retrieve the data. Finally, call
+endGetImageResolution to clean up.

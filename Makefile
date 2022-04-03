@@ -23,7 +23,7 @@ all : native-code native-code-library byte-code-library top htdoc
 
 clean ::
 	rm -rf doc foo foo2 out.pdf out2.pdf foo.pdf decomp.pdf *.cmt *.cmti \
-	*.json test/*.pdf debug/*.pdf *.ps
+	*.json test/*.pdf debug/*.pdf *.ps *.aux *.idx *.log *.out *.toc
 
 DOC_FILES = cpdfunicodedata.mli cpdferror.mli cpdfdebug.mli cpdfjson.mli \
             cpdfstrftime.mli cpdfcoord.mli cpdfattach.mli cpdfpagespec.mli \
