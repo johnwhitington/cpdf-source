@@ -1026,7 +1026,7 @@ cpdf -merge in1.pdf [<range>] in2.pdf [<range>] [<more names/ranges>]
   \noindent\verb!cpdf -split in.pdf -o <format> [-chunk <chunksize>]!
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf -split-bookmarks <level> in.pdf -o <format>!
+  \noindent\verb!cpdf -split-bookmarks <level> in.pdf [-utf8] -o <format>!
   \end{framed}
 
   \vspace{12mm}
@@ -1140,6 +1140,8 @@ one of the output files.
   \centering
   \verb! / ? < > \ : * | " ^ + =!
   \end{framed}
+
+  To prevent this process, and convert bookmark names to UTF8 instead, add \texttt{-utf8} to the command.
 
 \section{Encrypting with Split and Split Bookmarks}
 \index{encryption}

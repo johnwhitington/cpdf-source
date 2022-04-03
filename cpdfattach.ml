@@ -4,6 +4,7 @@ open Cpdferror
 
 (* Remove characters which might not make good filenames. *)
 let remove_unsafe_characters encoding s =
+  if encoding = Cpdfmetadata.UTF8 then Pdftext.utf8_of_pdfdocstring s else (* For @B bookmarks splitting. *)
   if encoding = Cpdfmetadata.Raw then s else
     let chars =
       lose

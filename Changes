@@ -1,3 +1,7 @@
+2.6 (next version, to come)
+
+o Allow -utf8 with -split-bookmarks -o @B.pdf to produce UTF8 filenames
+
 2.5.1 (January 2022)
 
 o Fix a regression where standard fonts could not be chosen
