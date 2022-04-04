@@ -1,25 +1,28 @@
-CHAPTER 13. Images.
+/* CHAPTER 13. Images. */
 
-Cpdf.startGetImageResolution(Cpdf.Pdf, Double)
+/** Gets image data, including resolution at all points of use. Call
+{@link #startGetImageResolution(pdf, double) startGetImageResolution(pdf,
+min_required_resolution)} to begin the process of obtaining data on all
+image uses below <code>min_required_resolution</code>, returning the total
+number. So, to return all image uses, specify a very high
+<code>min_required_resolution</code>. Then, call the other functions giving
+a serial number <code>0...n - 1</code>, to retrieve the data. Finally, call
+{@link #endGetImageResolution() endGetImageResolution} to clean up. */
+public native int startGetImageResolution(Pdf pdf, double res)
+    throws CpdfError;
 
-Cpdf.getImageResolutionPageNumber(Int32)
+public native int getImageResolutionPageNumber(int serial)
+    throws CpdfError;
 
-Cpdf.getImageResolutionImageName(Int32)
+public native String getImageResolutionImageName(int serial)
+    throws CpdfError;
 
-Cpdf.getImageResolutionXPixels(Int32)
+public native int getImageResolutionXPixels(int serial) throws CpdfError;
 
-Cpdf.getImageResolutionYPixels(Int32)
+public native int getImageResolutionYPixels(int serial) throws CpdfError;
 
-Cpdf.getImageResolutionXRes(Int32)
+public native double getImageResolutionXRes(int serial) throws CpdfError;
 
-Cpdf.getImageResolutionYRes(Int32)
+public native double getImageResolutionYRes(int serial) throws CpdfError;
 
-Cpdf.endGetImageResolution
-
-Gets image data, including resolution at all points of use. Call
-startGetImageResolution(pdf, min_required_resolution) will begin the
-process of obtaining data on all image uses below min_required_resolution, 
-returning the total number. So, to return all image uses, specify a very
-high min_required_resolution. Then, call the other functions giving a
-serial number 0..n - 1, to retrieve the data. Finally, call
-endGetImageResolution to clean up.
+public native void endGetImageResolution() throws CpdfError;

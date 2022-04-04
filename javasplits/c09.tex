@@ -1,123 +1,120 @@
-CHAPTER 8. Logos, Watermarks and Stamps
+/* CHAPTER 8. Logos, Watermarks and Stamps */
 
-Cpdf.stampOn(Cpdf.Pdf, Cpdf.Pdf, List{Int32})
+/** Stamps another PDF on top of all the pages in the document which are in
+the range. The stamp is placed with its origin at the origin of the target
+document.
+@param stamp_pdf stamp PDF document
+@param pdf PDF document
+@param range page range */
+public native void stampOn(Pdf stamp_pdf, Pdf pdf, Range range)
+    throws CpdfError;
 
-Stamps stamp_pdf on top of all the pages in the document which are in the
+/** Stamps another PDF under all the pages in the document which are in the
 range. The stamp is placed with its origin at the origin of the target
 document.
+@param stamp_pdf stamp PDF document
+@param pdf PDF document
+@param range page range */
+public native void stampUnder(Pdf stamp_pdf, Pdf pdf, Range range)
+    throws CpdfError;
 
-Cpdf.stampUnder(Cpdf.Pdf, Cpdf.Pdf, List{Int32})
+/** A stamping function with extra features.
+@param pdf first PDF document
+@param pdf2 second PDF document
+@param range page range
+@param isover if <code>true</code>, <code>pdf</code> goes over
+<code>pdf2</code> otherwise under
+@param scale_stamp_to_fit if <code>true</code> scales the stamp to fit
+the page.
+@param anchor position anchor, such as {@link #posCentre posCentre}
+@param p1 position parameter one
+@param p2 position parameter two
+@param relative_to_cropbox if <code>true</code>, the position is relative
+to the crop box rather than the media box. */
+public native void stampExtended(Pdf pdf, Pdf pdf2, Range range,
+                                 boolean isover,
+                                 boolean scale_stamp_to_fit, int anchor,
+                                 double p1, double p2,
+                                 boolean relative_to_cropbox)
+    throws CpdfError;
 
-Stamps stamp_pdf under all the pages in the document which are in the range.
-The stamp is placed with its origin at the origin of the target document.
+/** Combines the two PDFs page-by-page, putting each page of 'over' over
+each page of 'under'. */
+public native Pdf combinePages(Pdf under, Pdf over) throws CpdfError;
 
-Cpdf.stampExtended(Cpdf.Pdf, Cpdf.Pdf, List{Int32}, Boolean, Boolean,
-Cpdf.Position, Boolean)
+/** Adds text to the pages in the given range.
+@param metrics if <code>true</code>, only collect metrics
+@param pdf PDF document
+@param range page range
+@param text the text to stamp, including any special codes
+@param anchor position anchor, such as {@link #posCentre posCentre}
+@param p1 position parameter one
+@param p2 position parameter two
+@param linespacing line spacing
+@param bates starting bates number
+@param font font, such as {@link #timesRoman timesRoman}
+@param fontsize font size
+@param r red component of colour
+@param g green component of colour
+@param b blue component of colour
+@param underneath if <code>true</code>, text goes under page
+@param cropbox if <code>true</code>,
+relative to cropbox rather than media box
+@param outline text is outline
+@param opacity opacity
+@param justification justification,
+such as {@link #leftJustify leftJustify}
+@param midline position is relative to midline not baseline
+@param topline position is relative to topline not baseline
+@param filename file name, if requied by special code in text
+@param linewidth line width
+@param embed_fonts if true, embed fonts
+*/
+public void addText(boolean metrics, Pdf pdf, Range range, String text,
+                    int anchor, double p1, double p2, double linespacing,
+                    int bates, int font, double fontsize, double r,
+                    double g, double b, boolean underneath,
+                    boolean cropbox, boolean outline, double opacity,
+                    int justification, boolean midline, boolean topline,
+                    String filename, double linewidth, boolean embed_fonts)
+    throws CpdfError;
 
-A stamping function with extra features. - isover true, pdf goes over pdf2,
-isover false, pdf goes under pdf2 - scale_stamp_to_fit scales the stamp to fit
-the page - pos gives the position to put the stamp - relative_to_cropbox: if
-true, pos is relative to cropbox not mediabox.
+/** Adds text with most parameters default.
+@param pdf PDF document
+@param range page range
+@param text the text to stamp, including any special codes
+@param anchor position anchor, such as {@link #posCentre posCentre}
+@param p1 position parameter one
+@param p2 position parameter two
+@param font font, such as {@link #timesRoman timesRoman}
+@param fontsize font size
+*/
+public void addTextSimple(Pdf pdf, Range range, String text, int anchor,
+                          double p1, double p2, int font, double fontsize)
+    throws CpdfError;
 
-Cpdf.combinePages(Cpdf.Pdf, Cpdf.Pdf)
+/** Removes any text added by Jcpdf from the given pages. */
+public native void removeText(Pdf pdf, Range range) throws CpdfError;
 
-Combines the PDFs page-by-page, putting each page of 'over' over each page of
-'under'.
+/** Returns the width of a given string in the given font in thousandths of
+a point.
+@param font font, such as {@link #timesRoman timesRoman}
+@param text text*/
+public int textWidth(int font, String text) throws CpdfError;
 
-Cpdf.Font
+/** Adds page content before or after the existing content to pages in the
+given range in the given PDF.
+@param s page content to add
+@param before if <code>true</code> new content goes before, else after
+@param pdf PDF document
+@param range page range */
+public void addContent(String s, boolean before, Pdf pdf, Range range)
+    throws CpdfError;
 
-Standard fonts
-
-Cpdf.Font.TimesRoman
-
-Times Roman
-
-Cpdf.Font.TimesBold
-
-Times Bold
-
-Cpdf.Font.TimesItalic
-
-Times Italic
-
-Cpdf.Font.TimesBoldItalic
-
-Times Bold Italic
-
-Cpdf.Font.Helvetica
-
-Helvetica
-
-Cpdf.Font.HelveticaBold
-
-Helvetica Bold
-
-Cpdf.Font.HelveticaOblique
-
-Helvetica Oblique
-
-Cpdf.Font.HelveticaBoldOblique
-
-Helvetica Bold Oblique
-
-Cpdf.Font.Courier
-
-Courier
-
-Cpdf.Font.CourierBold
-
-Courier Bold
-
-Cpdf.Font.CourierOblique
-
-Courier Oblique
-
-Cpdf.Font.CourierBoldOblique
-
-Courier Bold Oblique
-
-Cpdf.Justification
-
-Justifications
-
-Cpdf.Justification.LeftJustify
-
-Left justify
-
-Cpdf.Justification.CentreJustify
-
-Centre justify
-
-Cpdf.Justification.RightJustify
-
-Right justify
-
-Cpdf.addText(Boolean, Cpdf.Pdf, List{Int32}, String, Cpdf.Position, Double,
-Int32, Cpdf.Font, Double, Double, Double, Double, Boolean, Boolean, Boolean,
-Double, Cpdf.Justification, Boolean, Boolean, String, Double, Boolean)
-
-Adds text to the pages in the given range.
-
-Cpdf.addTextSimple(Cpdf.Pdf, List{Int32}, String, Cpdf.Position, Cpdf.Font,
-Double)
-
-Adds text with most parameters default.
-
-Cpdf.removeText(Cpdf.Pdf, List{Int32})
-
-Removes any text added by cpdf from the given pages.
-
-Cpdf.textWidth(Cpdf.Font, String)
-
-Returns the width of a given string in the given font in thousandths of a
-point.
-
-Cpdf.addContent(String, Boolean, Cpdf.Pdf, List{Int32})
-
-Adds page content before (if true) or after (if false) the existing content to
-pages in the given range in the given PDF.
-
-Cpdf.stampAsXObject(Cpdf.Pdf, List{Int32}, Cpdf.Pdf)
-
-Stamps stamp_pdf onto the pages in the given range in pdf as a shared Form
+/** Stamps a PDF onto the pages in the given range in pdf as a shared Form
 XObject. The name of the newly-created XObject is returned.
+@param pdf PDF document
+@param range page range
+@param stamp_pdf PDF document to stamp */
+public native String stampAsXObject(Pdf pdf, Range range, Pdf stamp_pdf)
+    throws CpdfError;

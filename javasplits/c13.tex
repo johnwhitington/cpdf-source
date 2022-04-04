@@ -1,47 +1,54 @@
-CHAPTER 12. File Attachments
+/* CHAPTER 12. File Attachments */
 
-Cpdf.attachFile(String, Cpdf.Pdf)
+/** Attaches a file to the PDF. It is attached at document level.
+@param filename file name
+@param pdf PDF document */
+public void attachFile(String filename, Pdf pdf) throws CpdfError;
 
-Attaches a file to the pdf. It is attached at document level.
+/** Attaches a file to a page of the PDF. Given its file name, pdf, and the
+page number to which it should be attached.
+@param filename file name
+@param pdf PDF document
+@param pagenumber page number to attach to */
+public void attachFileToPage(String filename, Pdf pdf, int pagenumber)
+    throws CpdfError;
 
-Cpdf.attachFileToPage(String, Cpdf.Pdf, Int32)
+/** Attaches data from memory to a document.
+@param data attachment itself
+@param filename file name to use to describe attachment
+@param pdf PDF document */
+public void attachFileFromMemory(byte[] data, String filename, Pdf pdf)
+    throws CpdfError;
 
-Attaches a file, given its file name, pdf, and the page number to which it
-should be attached.
+/** Attaches data to a page from memory.
+@param data attachment itself
+@param filename file name to use to describe attachment
+@param pdf PDF document */
+public void attachFileToPageFromMemory(byte[] data, String filename,
+                                       Pdf pdf, int pagenumber)
+    throws CpdfError;
 
-Cpdf.attachFileFromMemory(Byte[], String, Cpdf.Pdf)
+/** Removes all page- and document-level attachments from a document. */
+public native void removeAttachedFiles(Pdf pdf) throws CpdfError;
 
-Attaches data from memory, just like attachFile.
+/** Lists information about attachments. Call
+{@link #startGetAttachments(pdf) startGetAttachments} first, then {@link
+#numberGetAttachments() numberGetAttachments} to find out how many there are.
+Then {@link #getAttachmentName(int) getAttachmentName}, {@link
+#getAttachmentPage(int) getAttachmentPage}, or {@link #getAttachmentData(int)
+getAttachmentData}. to return each one <code>0...(n - 1)</code>. Finally, call
+{@link #endGetAttachments() #endGetAttachments} to clean up. */
+public native void startGetAttachments(Pdf pdf) throws CpdfError;
 
-Cpdf.attachFileToPageFromMemory(Byte[], String, Cpdf.Pdf, Int32)
+public native int numberGetAttachments() throws CpdfError;
 
-Attaches to a page from memory, just like attachFileToPage.
+/** Gets the name of an attachment, given a serial number. */
+public native String getAttachmentName(int serial) throws CpdfError;
 
-Cpdf.removeAttachedFiles(Cpdf.Pdf)
+/** Gets the page number, given a serial number. 0 = document level. */
+public native int getAttachmentPage(int serial) throws CpdfError;
 
-Removes all page- and document-level attachments from a document.
+/** Gets the attachment data itself, given a serial number. */
+public native byte[] getAttachmentData(int serial) throws CpdfError;
 
-Cpdf.startGetAttachments(Cpdf.Pdf)
-
-Cpdf.numberGetAttachments
-
-Lists information about attachments. Call startGetAttachments(pdf) first, then
-numberGetAttachments to find out how many there are. Then getAttachmentName
-etc. to return each one 0...(n - 1). Finally, call endGetAttachments to clean
-up.
-
-Cpdf.getAttachmentName(Int32)
-
-Gets the name of an attachment.
-
-Cpdf.getAttachmentPage(Int32)
-
-Gets the page number. 0 = document level.
-
-Cpdf.getAttachmentData(Int32)
-
-Gets the attachment data itself.
-
-Cpdf.endGetAttachments
-
-Cleans up after getting attachments.
+public native void endGetAttachments() throws CpdfError; 

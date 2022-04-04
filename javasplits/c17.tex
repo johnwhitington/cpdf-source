@@ -1,28 +1,28 @@
-CHAPTER 16. Optional Content Groups
+/* CHAPTER 16. Optional Content Groups */
 
-Cpdf.startGetOCGList(Cpdf.Pdf)
+/** Begins retrieving optional content group names. The serial number
+<code>0..n - 1</code> is returned. */
+public native int startGetOCGList(Pdf pdf) throws CpdfError;
 
-Begins retrieving optional content group names. The serial number 0..n - 1 is
-returned.
+/** Retrieves an entry in the optional content group list, given the serial
+number <code>0..n - 1</code>. */
+public native String OCGListEntry(int serial) throws CpdfError;
 
-Cpdf.OCGListEntry(Int32)
+/** Ends retrieval of optional content group names. */
+public native void endGetOCGList() throws CpdfError;
 
-Retrieves an OCG name, given its serial number 0..n - 1.
+/** Renames an optional content group.
+@param pdf PDF document
+@param f name to rename from
+@param t name to rename to */
+public native void OCGRename(Pdf pdf, String f, String t) throws CpdfError;
 
-Cpdf.endGetOCGList
+/** Ensures that every optional content group appears in the OCG order
+list. */
+public native void OCGOrderAll(Pdf pdf) throws CpdfError;
 
-Ends retrieval of optional content group names.
-
-Cpdf.OCGRename(Cpdf.Pdf, String, String)
-
-Renames an optional content group.
-
-Cpdf.OCGOrderAll(Cpdf.Pdf)
-
-Ensures that every optional content group appears in the OCG order list.
-
-Cpdf.OCGCoalesce(Cpdf.Pdf)
-
-Coalesces optional content groups. For example, if we merge or stamp two files
-both with an OCG called "Layer 1", we will have two different optional content
-groups. This function will merge the two into a single optional content group.
+/** Coalesces optional content groups. For example, if we merge or stamp
+two files both with an OCG called "Layer 1", we will have two different
+optional content groups. This function will merge the two into a single
+optional content group. */
+public native void OCGCoalesce(Pdf pdf) throws CpdfError;
