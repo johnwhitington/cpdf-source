@@ -4,7 +4,7 @@
 \excludecomment{cpdflib}
 \excludecomment{pycpdflib}
 \excludecomment{dotnetcpdflib}
-\includecomment{jcpdflib}
+\excludecomment{jcpdflib}
 \usepackage{palatino}
 \usepackage{listings}
 \usepackage{microtype}
@@ -486,32 +486,41 @@ document with the original included three times.
 \begin{small}
 \begin{verbatim}
 //Merge example
-using System;
-using System.Collections.Generic;
-using CoherentGraphics;
+import Jcpdf
 
-// Initialise cpdf
-Cpdf.startup();
-
-// We will take the input hello.pdf and repeat it three times
-using (Cpdf.Pdf mergepdf = Cpdf.fromFile("hello.pdf", ""))
+public static void main(String[] args)
 {
-  // The list of PDFs to merge
-  List<Cpdf.Pdf> pdfs = new List<Cpdf.Pdf> {mergepdf, mergepdf, mergepdf};
-
-  // Merge them
-  Cpdf.Pdf merged = Cpdf.mergeSimple(pdfs);
-
-  // Write output
-  Cpdf.toFile(merged, "merged.pdf", false, false);
-  
-  // Dispose of merged PDF
-  merged.Dispose();
+   // Initialise cpdf
+   Jcpdf jcpdf = new Jcpdf();
+   try
+   {
+     jcpdf.startup();
+   }
+   catch (Jcpdf.CpdfError e)
+   {
+     System.out.println("Error during cpdf startup");
+   }
+   // We will take the input hello.pdf and repeat it three times
+   try (Jcpdf.Pdf mergepdf = jcpdf.fromFile("hello.pdf", ""))
+   {
+     // The array of PDFs to merge
+     Jcpdf.Pdf[] pdfs = {mergepdf, mergepdf, mergepdf};
+     // Merge them
+     Jcpdf.Pdf merged = jcpdf.mergeSimple(pdfs);
+     // Write output
+     jcpdf.toFile(merged, "merged.pdf", false, false);
+     // Dispose of merged PDF
+     merged.close();
+   }
+   catch (Jcpdf.CpdfError e)
+   {
+     System.out.println("Error during cpdf operation");
+   }
 }
 \end{verbatim}
 \end{small}
 
-\noindent Note the use of \texttt{using} and \texttt{Dispose()} to ensure the PDFs are thrown away when no longer required.
+\noindent Note the use of \texttt{try} and \texttt{close()} to ensure the PDFs are thrown away when no longer required.
 \end{jcpdflib}
 
 \pagestyle{plain}
