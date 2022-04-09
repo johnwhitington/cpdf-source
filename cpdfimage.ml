@@ -5,7 +5,7 @@ open Pdfio
 let pnm_to_channel_24 channel w h s =
   let white () = output_char channel ' ' 
   and newline () = output_char channel '\n'
-  and output_string = Pervasives.output_string channel in
+  and output_string = Stdlib.output_string channel in
     output_string "P6";
     white ();
     output_string (string_of_int w);

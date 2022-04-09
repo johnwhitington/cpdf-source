@@ -15,8 +15,8 @@ PACKS = camlpdf
 
 CFLAGS = -fPIC
 OCAMLFLAGS = -bin-annot
-OCAMLNCFLAGS = -g -safe-string -w -3
-OCAMLBCFLAGS = -g -safe-string -w -3
+OCAMLNCFLAGS = -g -safe-string
+OCAMLBCFLAGS = -g -safe-string
 OCAMLLDFLAGS = -g
 
 all : native-code native-code-library byte-code-library top htdoc

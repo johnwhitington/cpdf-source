@@ -1113,7 +1113,7 @@ let setaddtext s =
   setop (AddText s) ()
 
 let parse_color s =
-  match String.lowercase s with
+  match String.lowercase_ascii s with
   | "white" -> Cpdfaddtext.RGB (1., 1., 1.)
   | "black" -> Cpdfaddtext.RGB (0., 0., 0.)
   | "red" -> Cpdfaddtext.RGB (1., 0., 0.)
