@@ -1,0 +1,12 @@
+/* CHAPTER 5. Compression */
+
+/** Compresses any uncompressed streams in the given PDF using the Flate
+algorithm. */
+public native void compress(Pdf pdf) throws CpdfError;
+
+/** Decompresses any streams in the given PDF, so long as the compression
+method is supported. */
+public native void decompress(Pdf pdf) throws CpdfError;
+
+/** Squeezes a pdf in memory. */
+public native void squeezeInMemory(Pdf pdf) throws CpdfError;

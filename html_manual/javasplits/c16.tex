@@ -1,0 +1,28 @@
+/* CHAPTER 15. PDF and JSON */
+
+/** Outputs a PDF in JSON format to the given filename.
+@param filename file name
+@param parse_content parse page content
+@param no_stream_data all stream data is suppressed entirely
+@param decompress_streams streams are decompressed
+@param pdf PDF document */
+public void outputJSON(String filename, boolean parse_content,
+                       boolean no_stream_data, boolean decompress_streams,
+                       Pdf pdf)
+    throws CpdfError; 
+
+/** Like outputJSON, but it writes to a byte array in memory.
+@param pdf PDF document
+@param parse_content parse page content
+@param no_stream_data all stream data is suppressed entirely
+@param decompress_streams streams are decompressed */
+public native byte[] outputJSONMemory(Pdf pdf, boolean parse_content,
+                                      boolean no_stream_data,
+                                      boolean decompress_streams)
+    throws CpdfError;
+
+/** Loads a PDF from a JSON file given its filename. */
+public Pdf fromJSON(String filename) throws CpdfError;
+
+/** Loads a PDF from a JSON file in memory. */
+public native Pdf fromJSONMemory(byte[] data) throws CpdfError;

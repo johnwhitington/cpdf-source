@@ -1,0 +1,91 @@
+/* CHAPTER 18. Miscellaneous */
+
+/** Removes images on the given pages, replacing them with crossed boxes if
+<code>boxes</code> is <code>true</code>.
+@param pdf PDF document
+@param range page range
+@param boxes add crossed boxes */
+public native void draft(Pdf pdf, Range range, boolean boxes)
+    throws CpdfError;
+
+/** Removes all text from the given pages in a given document. */
+public native void removeAllText(Pdf pdf, Range range) throws CpdfError;
+
+/** Blackens all text on the given pages. */
+public native void blackText(Pdf pdf, Range range) throws CpdfError;
+
+/** Blackens all lines on the given pages. */
+public native void blackLines(Pdf pdf, Range range) throws CpdfError;
+
+/** Blackens all fills on the given pages. */
+public native void blackFills(Pdf pdf, Range range) throws CpdfError;
+
+/** Thickens every line less than <code>min_thickness</code> to
+<code>min_thickness</code>. Thickness given in points.
+@param pdf PDF document
+@param range page range
+@param min_thickness minimum thickness */
+public native void thinLines(Pdf pdf, Range range, double min_thickness)
+    throws CpdfError;
+
+/** Copies the <code>/ID</code> from one document to another.
+@param pdf PDF document to copy from
+@param pdf2 PDF document to copy to */
+public native void copyId(Pdf pdf, Pdf pdf2) throws CpdfError;
+
+/** Removes a document's <code>/ID</code>. */
+public native void removeId(Pdf pdf) throws CpdfError;
+
+/** Sets the minor version number of a document.
+@param pdf PDF document
+@param version minor version number */
+public native void setVersion(Pdf pdf, int version) throws CpdfError;
+
+/** Sets the full version number of a document.
+@param pdf PDF document
+@param major major version number
+@param minor minor version nuber */
+public native void setFullVersion(Pdf pdf, int major, int minor)
+    throws CpdfError;
+
+/** Removes any dictionary entry with the given key anywhere in the
+document.
+@param pdf PDF document
+@param key key to remove */
+public native void removeDictEntry(Pdf pdf, String key) throws CpdfError;
+
+/** Removes any dictionary entry with the given key whose value matches the
+given search term.
+@param pdf PDF document
+@param key key to remove
+@param searchterm search term */
+public native void removeDictEntrySearch(Pdf pdf, String key,
+                                         String searchterm)
+    throws CpdfError;
+
+/** Replaces the value associated with the given key.
+@param pdf PDF document
+@param key key whose value to replace
+@param newvalue value to replace with */
+public native void replaceDictEntry(Pdf pdf, String key, String newvalue)
+    throws CpdfError;
+
+/** Replaces the value associated with the given key if the existing value
+matches the search term.
+@param pdf PDF document
+@param key key whose value to replace
+@param newvalue value to replace with
+@param searchterm search term */
+public native void replaceDictEntrySearch(Pdf pdf, String key,
+                                          String newvalue,
+                                          String searchterm)
+    throws CpdfError;
+
+/** Removes all clipping from pages in the given range. */
+public native void removeClipping(Pdf pdf, Range range) throws CpdfError;
+
+/** Returns a JSON array containing any and all values associated with
+the given key, and fills in its length.
+@param pdf PDF document
+@param key key to search for */
+public native byte[] getDictEntries(Pdf pdf, String key) throws CpdfError;

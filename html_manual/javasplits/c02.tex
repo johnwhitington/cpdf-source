@@ -1,0 +1,256 @@
+/* CHAPTER 1. Basics */
+
+/** Loads a PDF document from a file. Supply
+a user password (possibly blank) in case the file is encrypted. It won't be
+decrypted, but sometimes the password is needed just to load the file.
+@param filename file name
+@param userpw user password */
+public Pdf fromFile(String filename, String userpw) throws CpdfError;
+
+/** Loads a PDF document from a file, doing only minimal
+parsing. The objects will be read and parsed when they are actually
+needed. Use this when the whole file won't be required. Also supply a user
+password (possibly blank) in case the file is encrypted. It won't be
+decrypted, but sometimes the password is needed just to load the file.
+
+@param filename file name
+@param userpw user password */
+public Pdf fromFileLazy(String filename, String userpw) throws CpdfError;
+
+/** Loads a PDF document from memory. Supply
+a user password (possibly blank) in case the file is encrypted. It won't be
+decrypted, but sometimes the password is needed just to load the file.
+
+@param data byte array containing the PDF file
+@param userpw user password */
+public Pdf fromMemory(byte[] data, String userpw) throws CpdfError;
+
+/** Loads a file from memory and the user
+password, but lazily like {@link #fromFileLazy(String, String)
+fromFileLazy}. The caller must use {@link #fromMemoryLazyRelease(byte[])
+fromMemoryLazyRelease} to free the memory. It must not free the memory
+until the PDF is also gone. */
+public Pdf fromMemoryLazy(byte[] data, String userpw) throws CpdfError;
+
+/** Releases memory returned from
+<code>{@link #fromMemoryLazy(byte[], String) fromMemoryLazy}</code>
+@param data byte array previously passed to {@link #fromMemoryLazy(byte[],
+String) fromMemoryLazy} */
+public native void fromMemoryLazyRelease(byte[] data) throws CpdfError;
+
+/** Begins enumerating currently allocated PDFs.
+
+<p>To enumerate the list of currently allocated PDFs, call
+{@link #startEnumeratePDFs() startEnumeratePDFs} which gives the number, 
+<code>n</code>, of PDFs allocated, then {@link #enumeratePDFsInfo(int)
+enumeratePDFsInfo} and {@link #enumeratePDFsKey(int) enumeratePDFsKey} with
+index numbers from <code>0...(n - 1)</code>. Call
+{@link #endEnumeratePDFs() endEnumeratePDFs} to clean up. */
+public native int startEnumeratePDFs() throws CpdfError;
+
+/** Returns the key for a given PDF number. */
+public native int enumeratePDFsKey(int n) throws CpdfError;
+
+/** Returns the info for a given PDF number. */
+public native String enumeratePDFsInfo(int n) throws CpdfError;
+
+/** Ends enumeration of currently allocated PDFs. */
+public native void endEnumeratePDFs() throws CpdfError;
+
+/** Converts a figure in centimetres to points. (72 points to 1 inch) */
+public native double ptOfCm(double f) throws CpdfError;
+
+/** Converts a figure in millimetres to points. (72 points to 1 inch) */
+public native double ptOfMm(double f) throws CpdfError;
+
+/** Converts a figure in inches to points (72. points to 1 inch) */
+public native double ptOfIn(double f) throws CpdfError;
+
+/** Converts a figure in points to centimetres. (72 points to 1 inch) */
+public native double cmOfPt(double f) throws CpdfError;
+
+/** Converts a figure in points to millimetres. (72 points to 1 inch) */
+public native double mmOfPt(double f) throws CpdfError;
+
+/** Converts a figure in points to millimetres. (72 points to 1 inch) */
+public native double inOfPt(double f) throws CpdfError;
+
+/** Parses a page specification such as <code>1,2,6-end</code> with
+reference to a given PDF. (The PDF is supplied so that page ranges which
+reference pages which do not exist are rejected).
+
+@param pdf PDF document
+@param pagespec page specification */
+public native Range parsePagespec(Pdf pdf, String pagespec)
+    throws CpdfError;
+
+/** Validates a page specification so far as is possible in the absence of
+the actual document. Result is <code>true</code> if valid. */
+public native boolean validatePagespec(String pagespec) throws CpdfError;
+
+/** Builds a page specification from a page range. For example, the range
+containing 1,2,3,6,7,8 in a document of 8 pages might yield
+<code>"1-3,6-end"</code>
+
+@param pdf PDF document
+@param r page range
+*/
+public String stringOfPagespec(Pdf pdf, Range r) throws CpdfError;
+
+/** The range containing no pages. */
+public native Range blankRange() throws CpdfError;
+
+/** The page range containing all page numbers from one page number to
+another.
+@param from page number to begin at (inclusive)
+@param to page number to end at (inclusive) */
+public native Range range(int from, int to) throws CpdfError;
+
+/** The page range contaning all pages in a given document. */
+public native Range all(Pdf pdf) throws CpdfError;
+
+/** The page range containing all odd-numbered pages from an existing
+range. */
+public native Range odd(Range r) throws CpdfError;
+
+/** The page range containing all even-numbered pages from an existing
+range. */
+public native Range even(Range r) throws CpdfError;
+
+/** The union of two ranges - all those pages in either. */
+public native Range rangeUnion(Range r, Range s) throws CpdfError;
+
+/** The range containing all pages in the first given range which are not
+in the second. */
+public native Range difference(Range r, Range s) throws CpdfError;
+
+/** Remove duplicates from a range, returning a new one. */
+public native Range removeDuplicates(Range r) throws CpdfError;
+
+/** The length of a range. */
+public native int rangeLength(Range r) throws CpdfError;
+
+/** Gets a page number from a range at the given offset. */
+public native int rangeGet(Range r, int n) throws CpdfError;
+
+/** Adds a page number to a range, returning a new one. */
+public native Range rangeAdd(Range r, int n) throws CpdfError;
+
+/** Tests to see if a given number is in a page range. */
+public native boolean isInRange(Range r, int n) throws CpdfError;
+
+/** Returns the number of pages in a PDF. */
+public native int pages(Pdf pdf) throws CpdfError;
+
+/** Returns the number of pages in a given
+PDF, with given user password. It tries to do this as fast as
+possible, without loading the whole file.
+@param userpw user password
+@param filename file name */
+public int pagesFast(String userpw, String filename) throws CpdfError;
+
+/** Writes the PDF document to a given filename. If <code>linearize</code>
+is <code>true</code>, it will be linearized if a linearizer is available.
+If <code>make_id</code> is <code>true</code>, it will be given a new ID.
+@param pdf PDF document
+@param filename file name
+@param linearize linearize
+@param make_id make new ID
+*/
+public void toFile(Pdf pdf, String filename, boolean linearize,
+                   boolean make_id)
+    throws CpdfError;
+
+/** Writes the PDF document to a given filename, with extra parameters. If
+<code>make_id</code> is true, it will be given a new ID. If
+<code>preserve_objstm</code> is true, existing object streams will be
+preserved. If <code>generate_objstm</code> is true, object streams will be
+generated even if not originally present. If <code>compress_objstm</code>
+is true, object streams will be compressed (what we usually want).
+WARNING: the pdf argument will be invalid after this call, and should not
+be used again.
+@param pdf PDF document
+@param filename file name
+@param linearize linearize
+@param make_id make new ID
+@param preserve_objstm preserve object streams
+@param create_objstm create new object streams
+@param compress_objstm compress object streams
+*/
+public void toFileExt(Pdf pdf, String filename, boolean linearize,
+                      boolean make_id, boolean preserve_objstm,
+                      boolean create_objstm, boolean compress_objstm)
+    throws CpdfError;
+
+/** Writes a PDF document and returns it as an array of bytes.
+@param pdf PDF document
+@param linearize linearize
+@param make_id make new ID
+*/
+public native byte[] toMemory(Pdf pdf, boolean linearize, boolean make_id)
+    throws CpdfError;
+
+/** Returns <code>true</code> if a document is encrypted,
+<code>false</code> otherwise. */
+public native boolean isEncrypted(Pdf pdf) throws CpdfError;
+
+/** Attempts to decrypt a PDF using the given
+user password. An exception is raised if the decryption fails.
+@param pdf PDF document
+@param userpw user password */
+public void decryptPdf(Pdf pdf, String userpw) throws CpdfError;
+
+/** Attempts to decrypt a PDF using the given owner password. Raises an
+exception if the decryption fails.
+@param pdf PDF document
+@param ownerpw owner password */
+public void decryptPdfOwner(Pdf pdf, String ownerpw) throws CpdfError;
+
+/** Writes a PDF document as encrypted. The encryption method and
+permissions are drawn from Jcpdf's fields, documented above.
+@param pdf PDF document
+@param encryption_method encryption method, e.g
+  {@link #aes256bitisofalse aes256bitisofalse} 
+@param permissions array of permissions e.g {@link #noEdit noEdit}
+@param owner_password owner password
+@param user_password user password
+@param linearize linearize
+@param makeid make new ID
+@param filename file name */
+public void toFileEncrypted(Pdf pdf, int encryption_method,
+                            int[] permissions, String owner_password,
+                            String user_password, boolean linearize,
+                            boolean makeid, String filename)
+    throws CpdfError;
+
+/** Writes a file as encrypted with extra parameters. WARNING: the pdf
+argument will be invalid after this call, and should not be used again.
+
+@param pdf PDF document
+@param encryption_method encryption method, e.g
+  {@link #aes256bitisofalse aes256bitisofalse} 
+@param permissions array of permissions e.g {@link #noEdit noEdit}
+@param owner_password owner password
+@param user_password user password
+@param linearize linearize
+@param makeid make new ID
+@param preserve_objstm preserve existing object streams
+@param generate_objstm generate new object streams
+@param compress_objstm compress object streams
+@param filename file name */
+public void toFileEncryptedExt(Pdf pdf, int encryption_method,
+                               int[] permissions, String owner_password,
+                               String user_password, boolean linearize,
+                               boolean makeid, boolean preserve_objstm,
+                               boolean generate_objstm,
+                               boolean compress_objstm, String filename)
+    throws CpdfError;
+
+/** Returns <code>true</code> if the given permission (restriction) such as
+{@link #noEdit noEdit} is present. */
+public native boolean hasPermission(Pdf pdf, int permission)
+    throws CpdfError;
+
+/** Returns the encryption method currently in use on a document, such as
+{@link #aes256bitisofalse aes256bitisofalse}. */
+public native int encryptionKind(Pdf pdf) throws CpdfError;

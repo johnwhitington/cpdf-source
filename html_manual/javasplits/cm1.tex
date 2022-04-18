@@ -1,0 +1,32 @@
+Jcpdf: Java interface to the cpdf PDF tools
+===========================================
+
+The DLLs "libcpdf" and "libjcpdf" are required.
+
+Before using the library, you must make sure your project or build environment
+has access to the cpdf DLL, which is not part of the Java .jar. You can add as
+am external requirement in your Java IDE. Or, you can install it in a standard
+location, such as the Windows system folder.
+
+On Windows, The DLL libcpdf.dll must be renamed to cpdf.dll, for Jcpdf to be
+able to find it.
+
+Follow the instructions at the end of Chapter 1 to write your first program. In
+addition, the Jcpdf package provides documentation with each function, which
+you can view in your IDE.
+
+Usage
+-----
+
+Create an instance of the library with, for example:
+
+Jcpdf.jcpdf = new Jcpdf()
+
+You must call startup() to initialise the library prior to calling any other
+function.
+
+PDFs are of type Jcpdf.Pdf. Page ranges are of type Jcpdf.Range. Both PDFs and
+ranges are not automatically garbage-collected. Use try or the close() method
+to dispose of them.
+
+Exceptions are of type Jcpdf.CpdfError and may be raised by any function.

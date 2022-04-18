@@ -1,0 +1,44 @@
+/* CHAPTER 9. Multipage facilities */
+
+/** Imposes a PDF.
+@param pdf PDF document
+@param x x parameter
+@param y y parameter
+@param fit <code>true</code>: impose to fit a page of size x by y;
+<code>false</code>: impose x by y 
+@param columns imposes by columns rather than rows
+@param rtl impose right-to-left
+@param btt impose bottom-to-top
+@param center unused for now
+@param margin margin around the output
+@param spacing spacing between imposed inputs */
+public native void impose(Pdf pdf, double x, double y, boolean fit,
+                          boolean columns, boolean rtl, boolean btt,
+                          boolean center, double margin, double spacing,
+                          double linewidth)
+    throws CpdfError;
+
+/** Imposes a document two up. twoUp does so by shrinking the page size, to
+fit two pages on one. */
+public native void twoUp(Pdf pdf) throws CpdfError;
+
+/** Imposes a document two up. twoUpStack does so by doubling the page
+size, to fit two pages on one. */
+public native void twoUpStack(Pdf pdf) throws CpdfError;
+
+/** Adds a blank page before each page in the given range. */
+public native void padBefore(Pdf pdf, Range range) throws CpdfError;
+
+/** Adds a blank page after each page in the given range. */
+public native void padAfter(Pdf pdf, Range range) throws CpdfError;
+
+/** Adds a blank page after every n pages. */
+public native void padEvery(Pdf pdf, int n) throws CpdfError;
+
+/** Adds pages at the end to pad the file to a multiple of n pages in
+length. */
+public native void padMultiple(Pdf pdf, int n) throws CpdfError;
+
+/** Adds pages at the beginning to pad the file to a multiple of n pages in
+length. */
+public native void padMultipleBefore(Pdf pdf, int n) throws CpdfError;
