@@ -126,6 +126,7 @@ let year_day d m y =
     n1 - n2 * n3 + d - 30
 
 let return_date () =
+  match Sys.backend_type with Sys.Other "js_of_ocaml" -> dummy | _ ->
   match Sys.os_type with
     "Unix" ->
       (* Call the POSIX 'date' program, redirected to a temp file, and parse. *)
