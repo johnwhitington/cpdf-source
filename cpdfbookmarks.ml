@@ -376,7 +376,7 @@ let add_bookmark_title filename use_title pdf =
   in
   let newmarks =
       {Pdfmarks.level = 0;
-       Pdfmarks.text = title;
+       Pdfmarks.text = Pdftext.pdfdocstring_of_utf8 title;
        Pdfmarks.target = Pdfdest.XYZ (Pdfdest.PageObject page1objnum, None, None, None);
        Pdfmarks.isopen = false}
     ::map (function m -> {m with Pdfmarks.level = m.Pdfmarks.level + 1}) marks
