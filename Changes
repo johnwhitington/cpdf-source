@@ -1,6 +1,7 @@
 2.6 (next version, to come)
 
 o Allow -utf8 with -split-bookmarks -o @B.pdf to produce UTF8 filenames
+o -merge-add-bookmarks now works with unicode filenames
 
 2.5.1 (January 2022)
 
