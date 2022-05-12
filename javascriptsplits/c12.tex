@@ -1,0 +1,287 @@
+/* CHAPTER 11. Document Information and Metadata */
+
+/** Finds out if a document is linearized as quickly as possible without
+loading it. */
+public boolean isLinearized(String filename) throws CpdfError;
+
+/** Returns the minor version number of a document. */
+public native int getVersion(Pdf pdf) throws CpdfError;
+
+/** Returns the major version number of a document. */
+public native int getMajorVersion(Pdf pdf) throws CpdfError;
+
+/** Returns the title of a document. */
+public String getTitle(Pdf pdf) throws CpdfError;
+
+/** Returns the author of a document. */
+public String getAuthor(Pdf pdf) throws CpdfError;
+
+/** Returns the subject of a document. */
+public String getSubject(Pdf pdf) throws CpdfError;
+
+/** Returns the keywords of a document. */
+public String getKeywords(Pdf pdf) throws CpdfError;
+
+/** Returns the creator of a document. */
+public String getCreator(Pdf pdf) throws CpdfError;
+
+/** Returns the producer of a document. */
+public String getProducer(Pdf pdf) throws CpdfError;
+
+/** Returns the creation date of a document. */
+public String getCreationDate(Pdf pdf) throws CpdfError;
+
+/** Returns the modification date of a document. */
+public String getModificationDate(Pdf pdf) throws CpdfError;
+
+/** Returns the XMP title of a document. */
+public String getTitleXMP(Pdf pdf) throws CpdfError;
+
+/** Returns the XMP author of a document. */
+public String getAuthorXMP(Pdf pdf) throws CpdfError;
+
+/** Returns the XMP subject of a document. */
+public String getSubjectXMP(Pdf pdf) throws CpdfError;
+
+/** Returns the XMP keywords of a document. */
+public String getKeywordsXMP(Pdf pdf) throws CpdfError;
+
+/** Returns the XMP creator of a document. */
+public String getCreatorXMP(Pdf pdf) throws CpdfError;
+
+/** Returns the XMP producer of a document. */
+public String getProducerXMP(Pdf pdf) throws CpdfError;
+
+/** Returns the XMP creation date of a document. */
+public String getCreationDateXMP(Pdf pdf) throws CpdfError;
+
+/** Returns the XMP modification date of a document. */
+public String getModificationDateXMP(Pdf pdf) throws CpdfError;
+
+/** Sets the title of a document. */
+public void setTitle(Pdf pdf, String str) throws CpdfError;
+
+/** Sets the author of a document. */
+public void setAuthor(Pdf pdf, String str) throws CpdfError;
+
+/** Sets the subject of a document. */
+public void setSubject(Pdf pdf, String str) throws CpdfError;
+
+/** Sets the keywords of a document. */
+public void setKeywords(Pdf pdf, String str) throws CpdfError;
+
+/** Sets the creator of a document. */
+public void setCreator(Pdf pdf, String str) throws CpdfError;
+
+/** Sets the producer of a document. */
+public void setProducer(Pdf pdf, String str) throws CpdfError;
+
+/** Sets the creation date of a document. */
+public void setCreationDate(Pdf pdf, String str) throws CpdfError;
+
+/** Sets the modification date of a document. */
+public void setModificationDate(Pdf pdf, String str) throws CpdfError;
+
+/** Sets the XMP title of a document. */
+public void setTitleXMP(Pdf pdf, String str) throws CpdfError;
+
+/** Sets the XMP author of a document. */
+public void setAuthorXMP(Pdf pdf, String str) throws CpdfError;
+
+/** Sets the XMP subject of a document. */
+public void setSubjectXMP(Pdf pdf, String str) throws CpdfError;
+
+/** Sets the XMP keywords of a document. */
+public void setKeywordsXMP(Pdf pdf, String str) throws CpdfError;
+
+/** Sets the XMP creator of a document. */
+public void setCreatorXMP(Pdf pdf, String str) throws CpdfError;
+
+/** Sets the XMP producer of a document. */
+public void setProducerXMP(Pdf pdf, String str) throws CpdfError;
+
+/** Sets the XMP creation date of a document. */
+public void setCreationDateXMP(Pdf pdf, String str) throws CpdfError;
+
+/** Sets the XMP modification date of a document. */
+public void setModificationDateXMP(Pdf pdf, String str) throws CpdfError;
+
+/** Returns the components from a PDF date string in an array of length 8.
+@param datestring date string
+@param r return array */
+public native void getDateComponents(String datestring, int[] r)
+    throws CpdfError;
+
+/** Builds a PDF date string from individual components. */
+public native String dateStringOfComponents(int year, int month, int day,
+                                            int hour, int minute,
+                                            int second, int hour_offset,
+                                            int minute_offset)
+    throws CpdfError;
+
+/** Gets the viewing rotation for a given page. */
+public native int getPageRotation(Pdf pdf, int pagenumber)
+    throws CpdfError;
+
+/** Returns <code>true</code> if the given page has the given box. E.g
+"/CropBox".
+@param pdf PDF document
+@param pagenumber page number
+@param boxname box name, e.g "/CropBox" */
+public native boolean hasBox(Pdf pdf, int pagenumber, String boxname)
+    throws CpdfError;
+
+/** These functions get a box given the document. The values are returned
+in a given array of length 4: min x, max x, min y, max y in points. Only
+succeeds if such a box exists, as checked by {@link #hasBox(Pdf, int,
+String) hasBox}. */
+public native void getMediaBox(Pdf pdf, int pagenumber, double[] r)
+    throws CpdfError;
+
+public native void getCropBox(Pdf pdf, int pagenumber, double[] r)
+    throws CpdfError;
+
+public native void getBleedBox(Pdf pdf, int pagenumber, double[] r)
+    throws CpdfError;
+
+public native void getArtBox(Pdf pdf, int pagenumber, double[] r)
+    throws CpdfError;
+
+public native void getTrimBox(Pdf pdf, int pagenumber, double[] r)
+    throws CpdfError;
+
+/** These functions set a box given the document page range, min x, max x,
+min y, max y in points. */
+public native void setMediabox(Pdf pdf, Range range, double minx,
+                               double maxx, double miny, double maxy)
+    throws CpdfError;
+
+public native void setCropBox(Pdf pdf, Range range, double minx,
+                              double maxx, double miny, double maxy)
+    throws CpdfError;
+
+public native void setTrimBox(Pdf pdf, Range range, double minx,
+                              double maxx, double miny, double maxy)
+    throws CpdfError;
+
+public native void setArtBox(Pdf pdf, Range range, double minx,
+                             double maxx, double miny, double maxy)
+    throws CpdfError;
+
+public native void setBleedBox(Pdf pdf, Range range, double minx,
+                               double maxx, double miny, double maxy)
+    throws CpdfError;
+
+/** Marks a document as trapped. */
+public native void markTrapped(Pdf pdf) throws CpdfError;
+
+/** Marks a document as untrapped. */
+public native void markUntrapped(Pdf pdf) throws CpdfError;
+
+/** Marks a document as trapped in XMP metadata. */
+public native void markTrappedXMP(Pdf pdf) throws CpdfError;
+
+/** Marks a document as untrapped in XMP metadata. */
+public native void markUntrappedXMP(Pdf pdf) throws CpdfError;
+
+/** Sets the page layout for a document, such as {@link #singlePage
+singlePage} */
+public native void setPageLayout(Pdf pdf, int layout) throws CpdfError;
+
+/** Sets the page mode for a document, such as {@link #useNone useNone} */
+public native void setPageMode(Pdf pdf, int mode) throws CpdfError;
+
+/** Sets the hide toolbar flag. */
+public native void hideToolbar(Pdf pdf, boolean flag) throws CpdfError;
+
+/** Sets the hide menubar flag. */
+public native void hideMenubar(Pdf pdf, boolean flag) throws CpdfError;
+
+/** Sets the hide window UI flag. */
+public native void hideWindowUi(Pdf pdf, boolean flag) throws CpdfError;
+
+/** Sets the fit window flag. */
+public native void fitWindow(Pdf pdf, boolean flag) throws CpdfError;
+
+/** Sets the center window flag. */
+public native void centerWindow(Pdf pdf, boolean flag) throws CpdfError;
+
+/** Sets the display document title flag. */
+public native void displayDocTitle(Pdf pdf, boolean flag) throws CpdfError;
+
+/** Sets the PDF to open, possibly with zoom-to-fit, at the given page
+number.
+@param pdf PDF document
+@param fit if <code>true</code> zoom to fit
+@param pagenumber page number */
+public native void openAtPage(Pdf pdf, boolean fit, int pagenumber)
+    throws CpdfError;
+
+/** Sets the XMP metadata of a document, given a file name. */
+public void setMetadataFromFile(Pdf pdf, String filename) throws CpdfError;
+
+/** Sets the XMP metadata from an array of bytes. */
+public native void setMetadataFromByteArray(Pdf pdf, byte[] data)
+    throws CpdfError;
+
+/** Removes the XMP metadata from a document. */
+public native void removeMetadata(Pdf pdf) throws CpdfError;
+
+/** Returns the XMP metadata from a document. */
+public native byte[] getMetadata(Pdf pdf) throws CpdfError;
+
+/** Builds fresh XMP metadata as best it can from
+existing metadata in the document. */
+public native void createMetadata(Pdf pdf) throws CpdfError;
+
+/** Sets the metadata date for a PDF. The date is given in PDF date format.
+Jcpdf will convert it to XMP format. The date "now" means now. */
+public native void setMetadataDate(Pdf pdf, String date) throws CpdfError;
+
+/** Adds page labels to a document.
+@param pdf PDF document
+@param style label style, such as {@link #decimalArabic decimalArabic}
+@param prefix text for each label
+@param offset can be used to shift the numbering up or down
+@param range page range
+@param progress if <code>true</code>, labels progress */
+public void addPageLabels(Pdf pdf, int style, String prefix, int offset,
+                          Range range, boolean progress)
+    throws CpdfError
+
+/** Removes the page labels from the document. */
+public native void removePageLabels(Pdf pdf) throws CpdfError;
+
+/** Calculates the full label string for a given page, and returns it. */
+public String getPageLabelStringForPage(Pdf pdf, int pagenumber)
+    throws CpdfError
+
+/** Gets page label data. Call {@link #startGetPageLabels(Pdf)
+startGetPageLabels} to find out how many there are, then use these serial
+numbers to get the style, prefix, offset and start value (note not a
+range). Call {@link #endGetPageLabels() endGetPageLabels} to clean up.
+
+<p>For example, a document might have five pages of introduction with roman
+numerals, followed by the rest of the pages in decimal arabic, numbered
+from one:
+
+<p>labelstyle = LowercaseRoman<br/>
+labelprefix = ""<br/>
+startpage = 1<br/>
+startvalue = 1<br/>
+
+<p>labelstyle = DecimalArabic<br/>
+labelprefix = ""<br/>
+startpage = 6<br/>
+startvalue = 1<br> */
+public native int startGetPageLabels(Pdf pdf) throws CpdfError;
+
+public native void endGetPageLabels() throws CpdfError;
+
+public native int getPageLabelOffset(int n) throws CpdfError;
+
+public native int getPageLabelStyle(int n) throws CpdfError;
+
+public native int getPageLabelRange(int n) throws CpdfError;
+
+public String getPageLabelPrefix(int n) throws CpdfError;

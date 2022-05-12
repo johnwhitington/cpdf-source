@@ -1,0 +1,24 @@
+/* CHAPTER 0. Preliminaries */
+
+/** Initialises the library. Must be called before any other function. */
+public native void startup() throws CpdfError;
+
+/** Returns a string giving the version number of the Jcpdf library. */
+public native String version() throws CpdfError;
+
+/** Sets fast mode. Some operations have a fast mode. The default is 'slow'
+mode, which works even on old-fashioned files. For more details, see
+section 1.13 of the CPDF manual. This functions sets the mode to fast
+globally. */
+public native void setFast() throws CpdfError;
+
+/** Sets slow mode. Some operations have a fast mode. The default is 'slow'
+mode, which works even on old-fashioned files. For more details, see
+section 1.13 of the CPDF manual. This functions sets the mode to slow
+globally. */
+public native void setSlow() throws CpdfError;
+
+/** Prints some information about
+resource usage. This can be used to detect if PDFs or ranges are being
+deallocated properly. Contrary to its name, it may be run at any time. */
+public native void onExit();
