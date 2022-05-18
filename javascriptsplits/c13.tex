@@ -1,54 +1,41 @@
-/* CHAPTER 12. File Attachments */
+// CHAPTER 12. File Attachments
+    
+/** Attaches a file to the pdf. It is attached at document level. */
+function attachFile(filename, pdf)
 
-/** Attaches a file to the PDF. It is attached at document level.
-@param filename file name
-@param pdf PDF document */
-public void attachFile(String filename, Pdf pdf) throws CpdfError;
+/** Attaches a file, given its file name, pdf, and the page number
+to which it should be attached. */
+function attachFileToPage(filename, pdf, pagenumber)
 
-/** Attaches a file to a page of the PDF. Given its file name, pdf, and the
-page number to which it should be attached.
-@param filename file name
-@param pdf PDF document
-@param pagenumber page number to attach to */
-public void attachFileToPage(String filename, Pdf pdf, int pagenumber)
-    throws CpdfError;
+/** Attaches data from memory, just like attachFile. */
+function attachFileFromMemory(data, filename, pdf)
 
-/** Attaches data from memory to a document.
-@param data attachment itself
-@param filename file name to use to describe attachment
-@param pdf PDF document */
-public void attachFileFromMemory(byte[] data, String filename, Pdf pdf)
-    throws CpdfError;
-
-/** Attaches data to a page from memory.
-@param data attachment itself
-@param filename file name to use to describe attachment
-@param pdf PDF document */
-public void attachFileToPageFromMemory(byte[] data, String filename,
-                                       Pdf pdf, int pagenumber)
-    throws CpdfError;
+/** Attaches to a page from memory, just like attachFileToPage. */
+function attachFileToPageFromMemory(data, filename, pdf, pagenumber)
 
 /** Removes all page- and document-level attachments from a document. */
-public native void removeAttachedFiles(Pdf pdf) throws CpdfError;
+function removeAttachedFiles(pdf)
 
-/** Lists information about attachments. Call
-{@link #startGetAttachments(pdf) startGetAttachments} first, then {@link
-#numberGetAttachments() numberGetAttachments} to find out how many there are.
-Then {@link #getAttachmentName(int) getAttachmentName}, {@link
-#getAttachmentPage(int) getAttachmentPage}, or {@link #getAttachmentData(int)
-getAttachmentData}. to return each one <code>0...(n - 1)</code>. Finally, call
-{@link #endGetAttachments() #endGetAttachments} to clean up. */
-public native void startGetAttachments(Pdf pdf) throws CpdfError;
+/** Lists information about attachments. Call startGetAttachments(pdf) first,
+then numberGetAttachments to find out how many there are. Then
+getAttachmentName etc. to return each one 0...(n - 1). Finally, call
+endGetAttachments to clean up. */
+function startGetAttachments(pdf)
 
-public native int numberGetAttachments() throws CpdfError;
+/** Lists information about attachments. Call startGetAttachments(pdf) first,
+then numberGetAttachments to find out how many there are. Then
+getAttachmentName etc. to return each one 0...(n - 1). Finally, call
+endGetAttachments to clean up. */
+function numberGetAttachments()
 
-/** Gets the name of an attachment, given a serial number. */
-public native String getAttachmentName(int serial) throws CpdfError;
+/** Gets the name of an attachment. */
+function getAttachmentName(n)
 
-/** Gets the page number, given a serial number. 0 = document level. */
-public native int getAttachmentPage(int serial) throws CpdfError;
+/** Gets the page number. 0 = document level. */
+function getAttachmentPage(n)
 
-/** Gets the attachment data itself, given a serial number. */
-public native byte[] getAttachmentData(int serial) throws CpdfError;
+/** Gets the attachment data itself. */
+function getAttachmentData(n)
 
-public native void endGetAttachments() throws CpdfError; 
+/** Cleans up after getting attachments. */
+function endGetAttachments()

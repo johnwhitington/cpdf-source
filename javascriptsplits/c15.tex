@@ -1,38 +1,21 @@
-/* CHAPTER 14. Fonts. */
+// CHAPTER 14. Fonts.
 
-/** Retrieves font information. First, call {@link #startGetFontInfo(Pdf)
-startGetFontInfo}. Now call {@link #numberFonts() numberFonts} to return
-the number of fonts. For each font, call one or more of
-{@link #getFontPage(int) getFontPage}, {@link #getFontName(int)
-getFontName}, {@link #getFontType(int) getFontType}, and
-{@link #getFontEncoding(int) getFontEncoding} giving a serial number
-<code>0...n - 1</code> to return information. Finally, call
-{@link #endGetFontInfo() endGetFontInfo} to clean up. */
-public native void startGetFontInfo(Pdf pdf) throws CpdfError;
-
-public native int numberFonts() throws CpdfError;
-
-public native String getFontName(int serial) throws CpdfError;
-
-public native int getFontPage(int serial) throws CpdfError;
-
-public native String getFontType(int setial) throws CpdfError;
-
-public native String getFontEncoding(int serial) throws CpdfError;
-
-public native void endGetFontInfo() throws CpdfError;
+/** Retrieves font information. First, call startGetFontInfo(pdf). Now call
+numberFonts to return the number of fonts. For each font, call one or more of
+getFontPage, getFontName, getFontType, and getFontEncoding giving a serial
+number 0..n - 1 to return information. Finally, call endGetFontInfo to clean
+up. */
+function startGetFontInfo(pdf)
+function numberFonts()
+function getFontPage(n)
+function getFontName(n)
+function getFontType(n)
+function getFontEncoding(n)
+function endGetFontInfo()
 
 /** Removes all font data from a file. */
-public native void removeFonts(Pdf pdf) throws CpdfError;
+function removeFonts(pdf)
 
-/** Copies the given font
-from the given page in the 'from' PDF to every page in the 'to' PDF. The
-new font is stored under its font name.
-@param from_pdf PDF document to copy from
-@param to_pdf PDF document to copy to
-@param range page range
-@param pagenumber page number of the page to copy from
-@param fontname font name */
-public native void copyFont(Pdf from_pdf, Pdf to_pdf, Range range,
-                            int pagenumber, String fontname)
-    throws CpdfError;
+/** Copies the given font from the given page in the 'from' PDF to every page
+in the 'to' PDF. The new font is stored under its font name. */
+function copyFont(docfrom, docto, range, pagenumber, fontname)

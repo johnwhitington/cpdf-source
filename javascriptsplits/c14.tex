@@ -1,28 +1,17 @@
-/* CHAPTER 13. Images. */
+//CHAPTER 13. Images
 
 /** Gets image data, including resolution at all points of use. Call
-{@link #startGetImageResolution(pdf, double) startGetImageResolution(pdf,
-min_required_resolution)} to begin the process of obtaining data on all
-image uses below <code>min_required_resolution</code>, returning the total
-number. So, to return all image uses, specify a very high
-<code>min_required_resolution</code>. Then, call the other functions giving
-a serial number <code>0...n - 1</code>, to retrieve the data. Finally, call
-{@link #endGetImageResolution() endGetImageResolution} to clean up. */
-public native int startGetImageResolution(Pdf pdf, double res)
-    throws CpdfError;
-
-public native int getImageResolutionPageNumber(int serial)
-    throws CpdfError;
-
-public native String getImageResolutionImageName(int serial)
-    throws CpdfError;
-
-public native int getImageResolutionXPixels(int serial) throws CpdfError;
-
-public native int getImageResolutionYPixels(int serial) throws CpdfError;
-
-public native double getImageResolutionXRes(int serial) throws CpdfError;
-
-public native double getImageResolutionYRes(int serial) throws CpdfError;
-
-public native void endGetImageResolution() throws CpdfError;
+startGetImageResolution(pdf, min_required_resolution) to begin the process of
+obtaining data on all image uses below min_required_resolution, returning the
+total number. So, to return all image uses, specify a very high
+min_required_resolution. Then, call the other functions giving a serial number
+0..n - 1, to retrieve the data. Finally, call endGetImageResolution to clean
+up. */
+function startGetImageResolution(pdf, min_required_resolution)
+function getImageResolutionPageNumber(n)
+function getImageResolutionImageName(n)
+function getImageResolutionXPixels(n)
+function getImageResolutionYPixels(n)
+function getImageResolutionXRes(n)
+function getImageResolutionYRes(n)
+function endGetImageResolution()

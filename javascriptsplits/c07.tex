@@ -1,68 +1,54 @@
-/* CHAPTER 6. Bookmarks */
+// CHAPTER 6. Bookmarks
 
 /** Starts the bookmark retrieval process for a given PDF. */
-public native void startGetBookmarkInfo(Pdf pdf) throws CpdfError;
+function startGetBookmarkInfo(pdf)
 
-/** Gets the number of bookmarks for the PDF given to {@link
-#startGetBookmarkInfo(Pdf) startGetBookmarkInfo}. */
-public native int numberBookmarks() throws CpdfError;
+/** Gets the number of bookmarks for the PDF given to startGetBookmarkInfo. */
+function numberBookmarks()
 
-/** Gets the bookmark level for the given bookmark
-<code>0...(n - 1)</code>. */
-public native int getBookmarkLevel(int serial) throws CpdfError;
+/** Gets the bookmark level for the given bookmark (0...(n - 1)). */
+function getBookmarkLevel(n)
 
-/** Gets the bookmark target page for the given PDF (which must be the
-same as the PDF passed to  {@link #startGetBookmarkInfo(Pdf)
-startGetBookmarkInfo}) and bookmark <code>0...(n - 1)</code>. */
-public native int getBookmarkPage(Pdf pdf, int serial) throws CpdfError;
+/** Gets the bookmark target page for the given PDF (which must be the same
+as the PDF passed to startSetBookmarkInfo) and bookmark (0...(n - 1)). */
+function getBookmarkPage(pdf, n)
 
-/** Returns the text of bookmark <code>0...(n - 1))</code> */
-public String getBookmarkText(int serial) throws CpdfError;
+/** Returns the text of bookmark (0...(n - 1)). */
+function getBookmarkText(n)
 
-/** Returns <code>true</code> if the bookmark is open. */
-public native boolean getBookmarkOpenStatus(int serial) throws CpdfError;
+/** True if the bookmark is open. */
+function getBookmarkOpenStatus(n)
 
 /** Ends the bookmark retrieval process, cleaning up. */
-public native void endGetBookmarkInfo() throws CpdfError;
+function endGetBookmarkInfo()
 
 /** Starts the bookmark setting process for n bookmarks. */
-public native void startSetBookmarkInfo(int n) throws CpdfError;
+function startSetBookmarkInfo(n)
 
-/** Set bookmark level for the given bookmark <code>0...(n - 1)</code>. */
-public native void setBookmarkLevel(int serial, int level)
-    throws CpdfError;
+/** Set bookmark level for the given bookmark (0...(n - 1)). */
+function setBookmarkLevel(a, b)
 
-/** Sets the bookmark target page for the given PDF (which must be the same
-as the PDF to be passed to {@link #endSetBookmarkInfo(Pdf)
-endSetBookmarkInfo}) and bookmark <code>0...(n - 1)</code>. */
-public native void setBookmarkPage(Pdf pdf, int serial, int pagenum)
-    throws CpdfError;
+/** Sets the bookmark target page for the given PDF (which must be the same as
+the PDF to be passed to endSetBookmarkInfo) and bookmark (0...(n - 1)). */
+function setBookmarkPage(pdf, a, b)
 
-/** Sets the open status of bookmark <code>0...(n - 1)</code>. */
-public native void setBookmarkOpenStatus(int serial, boolean open)
-    throws CpdfError;
+/** Sets the open status of bookmark (0...(n - 1)). */
+function setBookmarkOpenStatus(a, b)
 
-/** Sets the text of bookmark <code>0...(n - 1)</code>. */
-public void setBookmarkText(int serial, String text) throws CpdfError;
+/** Sets the text of bookmark (0...(n - 1)). */
+function setBookmarkText(n, t)
 
 /** Ends the bookmark setting process, writing the bookmarks to the given
 PDF. */
-public native void endSetBookmarkInfo(Pdf pdf) throws CpdfError;
+function endSetBookmarkInfo(pdf)
 
 /** Returns the bookmark data in JSON format. */
-public native byte[] getBookmarksJSON(Pdf pdf) throws CpdfError;
+function getBookmarksJSON(pdf)
 
 /** Sets the bookmarks from JSON bookmark data. */
-public native void setBookmarksJSON(Pdf pdf, byte[] data) throws CpdfError;
+function setBookmarksJSON(pdf, data)
 
 /** Typesets a table of contents from existing bookmarks and prepends it to
-the document.
-@param pdf PDF document
-@param font font, such as {@link #timesRoman timesRoman}
-@param fontsize font size
-@param title table of contents title
-@param bookmark if <code>true</code>, the table of contents gets its own
+the document. If bookmark is set, the table of contents gets its own
 bookmark. */
-public void tableOfContents(Pdf pdf, int font, double fontsize,
-                            String title, boolean bookmark)
-    throws CpdfError;
+function tableOfContents(pdf, font, fontsize, title, bookmark)

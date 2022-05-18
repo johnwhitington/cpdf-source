@@ -1,134 +1,67 @@
-/* CHAPTER 3. Pages */
+// CHAPTER 3. Pages
 
-/** Scales the page dimensions
-and content by the given scale, about (0, 0). Other boxes (crop etc. are
-altered as appropriate).
-@param pdf PDF document
-@param range page range
-@param sx X scale
-@param sy Y scale*/
-public native void scalePages(Pdf pdf, Range range, double sx, double sy)
-    throws CpdfError;
+/** Scales the page dimensions and content by the given scale, about (0, 0).
+Other boxes (crop etc. are altered as appropriate) */
+function scalePages(pdf, range, sx, sy)
 
-/** Scales the content to fit new page dimensions (width x height)
-multiplied by scale (typically 1.0). Other boxes (crop etc. are altered as
-appropriate).
-@param pdf PDF document
-@param range page range
-@param w width in points
-@param h height in points
-@param scale scale (typically 1.0)
-*/
-public native void scaleToFit(Pdf pdf, Range range, double w, double h,
-                              double scale)
-    throws CpdfError;
+/** Scales the content to fit new page dimensions (width x height) multiplied
+by scale (typically 1.0). Other boxes (crop etc. are altered as appropriate). */
+function scaleToFit(pdf, range, sx, sy, scale)
 
-/** Scales the page content to fit the given page size, possibly multiplied
-by scale (typically 1.0).
-@param pdf PDF document
-@param range page range
-@param papersize paper size, such as {@link #a4portrait a0portrait}
-@param scale scale (typically 1.0)
-*/
-public native void scaleToFitPaper(Pdf pdf, Range range, int papersize,
-                                   double scale)
-    throws CpdfError;
+/** Scales the page content to fit the given page size, possibly multiplied by
+scale (typically 1.0) */
+function scaleToFitPaper(pdf, range, papersize, s)
 
 /** Scales the contents of the pages in the range about the point given by
-the <code>anchor</code>, <code>p1</code> and <code>p2</code> by the scale
-given. See the documentation for the chosen anchor.
-@param pdf PDF document
-@param range page range
-@param anchor position anchor, such as {@link #posCentre posCentre}
-@param p1 position parameter 1
-@param p2 position parameter 2
-@param scale scale
-*/
-public native void scaleContents(Pdf pdf, Range range, int anchor,
-                                 double p1, double p2, double scale)
-    throws CpdfError;
+the position, by the scale given. */
+function scaleContents(pdf, range, position, scale)
 
-/** Shifts the content of the pages in the range.
-@param pdf PDF document
-@param range page range
-@param dx X shift
-@param dy Y shift
-*/
-public native void shiftContents(Pdf pdf, Range range, double dx,
-                                 double dy)
-    throws CpdfError;
+/** Shifts the content of the pages in the range. */
+function shiftContents(pdf, range, dx, dy)
 
-/** Changes the viewing rotation to an absolute value. Appropriate
-rotations are 0, 90, 180, 270.
-@param pdf PDF document
-@param range page range
-@param angle viewing rotation
-*/
-public native void rotate(Pdf pdf, Range range, int angle)
-    throws CpdfError;
-
-/** Changes the viewing rotation by a relative value. Appropriate
-rotations are 0, 90, 180, 270.
-@param pdf PDF document
-@param range page range
-@param angle viewing rotation
-*/
-public native void rotateBy(Pdf pdf, Range range, int angle)
-    throws CpdfError;
+/** Changes the viewing rotation to an absolute value. Appropriate rotations
+are 0, 90, 180, 270. */
+function rotate(pdf, range, rotation)
 
 /** Rotates the content about the centre of the page by the given number of
-degrees, in a clockwise direction.
-@param pdf PDF document
-@param range page range
-@param angle angle in degrees
-*/
-public native void rotateContents(Pdf pdf, Range range, double angle)
-    throws CpdfError;
+degrees, in a clockwise direction. */
+function rotateBy(pdf, range, rotation)
 
-/** Changes the viewing rotation of the pages in the range,
-counter-rotating the dimensions and content such that there is no visual
-change. */
-public native void upright(Pdf pdf, Range range) throws CpdfError;
+/** Rotates the content about the centre of the page by the given number of
+degrees, in a clockwise direction. */
+function rotateContents(pdf, range, angle)
+
+/** Changes the viewing rotation of the pages in the range, counter-rotating
+the dimensions and content such that there is no visual change. */
+function upright(pdf, range)
 
 /** Flips horizontally the pages in the range. */
-public native void hFlip(Pdf pdf, Range range) throws CpdfError;
+function hFlip(pdf, range)
 
 /** Flips vertically the pages in the range. */
-public native void vFlip(Pdf pdf, Range range) throws CpdfError;
+function vFlip(pdf, range)
 
 /** Crops a page, replacing any existing crop box. The dimensions are in
-points.
-@param pdf PDF document
-@param range page range
-@param x minimum X
-@param y minimum Y
-@param w width
-@param h height */
-public native void crop(Pdf pdf, Range range, double x, double y, double w,
-                        double h)
-    throws CpdfError;
+points. */
+function crop(pdf, range, x, y, w, h)
 
 /** Removes any crop box from pages in the range. */
-public native void removeCrop(Pdf pdf, Range range) throws CpdfError;
+function removeCrop(pdf, range)
 
 /** Removes any trim box from pages in the range. */
-public native void removeTrim(Pdf pdf, Range range) throws CpdfError;
+function removeTrim(pdf, range)
 
 /** Removes any art box from pages in the range. */
-public native void removeArt(Pdf pdf, Range range) throws CpdfError;
+function removeArt(pdf, range)
 
 /** Removes any bleed box from pages in the range. */
-public native void removeBleed(Pdf pdf, Range range) throws CpdfError;
+function removeBleed(pdf, range)
 
 /** Adds trim marks to the given pages, if the trimbox exists. */
-public native void trimMarks(Pdf pdf, Range range) throws CpdfError;
+function trimMarks(pdf, range)
 
 /** Shows the boxes on the given pages, for debug. */
-public native void showBoxes(Pdf pdf, Range range) throws CpdfError;
+function showBoxes(pdf, range)
 
-/** Makes a given box a 'hard box' i.e clips it explicitly.
-@param pdf PDF document
-@param range page range
-@param box box name e.g "/CropBox" */
-public native void hardBox(Pdf pdf, Range range, String box)
-    throws CpdfError;
+/** Makes a given box a 'hard box' i.e clips it explicitly. */
+function hardBox(pdf, range, boxname)

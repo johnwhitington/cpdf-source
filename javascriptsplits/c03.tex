@@ -1,33 +1,19 @@
-/* CHAPTER 2. Merging and Splitting */
+// CHAPTER 2. Merging and Splitting
 
-/** Given an array of PDFs, merges the documents into a new one, which is
-returned. */
-public native Pdf mergeSimple(Pdf[] pdfs) throws CpdfError;
+/** Given a list of PDFs, merges the files into a new one, which is returned. */
+function mergeSimple(pdfs)
 
-/** Merges the PDFs. If <code>retain_numbering</code> is true page labels
-are not rewritten. If <code>remove_duplicate_fonts</code> is true,
-duplicate fonts are merged. This is useful when the source documents for
-merging originate from the same source.
-@param pdfs array of PDF documents
-@param retain_numbering retain page numbering in output
-@param remove_duplicate_fonts remove duplicate font data by merging */
-public native Pdf merge(Pdf[] pdfs, boolean retain_numbering,
-                        boolean remove_duplicate_fonts)
-    throws CpdfError;
+/** Merges the PDFs. If retain_numbering is true page labels are not
+rewritten. If remove_duplicate_fonts is true, duplicate fonts are merged.
+This is useful when the source documents for merging originate from the same
+source. */
+function merge(pdfs, retain_numbering, remove_duplicate_fonts)
 
-/** Merges PDFs when one or more are drawn from the same document. It has
-an additional argument - a list of page ranges. This is used to select the
-pages to pick from each PDF. This avoids duplication of information when
-multiple discrete parts of a source PDF are included.
-@param pdfs array of PDF documents
-@param retain_numbering retain page numbering in output
-@param remove_duplicate_fonts remove duplicate font data by merging
-@param ranges array of ranges, one for each PDF*/
-public native Pdf mergeSame(Pdf[] pdfs, boolean retain_numbering,
-                            boolean remove_duplicate_fonts, Range[] ranges)
-    throws CpdfError;
+/** The same as merge, except that it has an additional argument - a list of
+page ranges. This is used to select the pages to pick from each PDF. This
+avoids duplication of information when multiple discrete parts of a source PDF
+are included. */
+function mergeSame(pdfs, retain_numbering, remove_duplicate_fonts, ranges)
 
-/** Returns a new document with just those pages in the page range.
- *  @param pdf PDF document
- *  @param range range*/
-public native Pdf selectPages(Pdf pdf, Range range) throws CpdfError;
+/** Returns a new document with just those pages in the page range. */
+function selectPages(pdf, r)
