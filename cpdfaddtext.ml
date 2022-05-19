@@ -491,8 +491,9 @@ let
             end
         | _ -> failwith "addtext: font dictionary not present"
   in
-  let text = if raw then text else charcodes_of_utf8 (Pdftext.read_font pdf fontpdfobj) text in
+    (* 19th May 2022. Reversed the phase order (split first, then get charcodes. This allows \n in custom fonts. *)
     let lines = map unescape_string (split_at_newline text) in
+    let lines = map (fun text -> if raw then text else charcodes_of_utf8 (Pdftext.read_font pdf fontpdfobj) text) lines in
       let pdf = ref pdf in
         let voffset =
           let open Cpdfposition in
