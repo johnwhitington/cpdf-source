@@ -1,4 +1,49 @@
-// Enumerations and data structures
+cpdf.js: A JavaScript interface to cpdf
+=======================================
+
+For development server-side with node: cpdf.js / cpdflib.js
+
+(Minified versions cpdf.min.js and cpdflib.min.js)
+
+Load with "const cpdf = require('cpdf.js')" if installed in npm, or "const cpdf
+= require('./cpdf.js')" to load from current directory.
+
+For development client-side with the browser : cpdf.browser.js
+
+(Minified version for deployment : cpdf.browser.min.js)
+
+Load with <script src="cpdf.browser.js"></script> or similar.
+
+
+Concurrency
+===========
+
+cpdf.js is synchronous and non-re-entrant.
+
+
+Data types
+==========
+
+Arguments are integers, floating point numbers, strings, or arrays of type
+UInt8Array. Page ranges are represented by arrays of numbers.
+
+
+Memory Management
+=================
+
+A PDF n must be explicitly deallocated with deletePdf(n).
+
+
+Errors
+======
+
+Any function may raise an exception, containing a string describing the problem. 
+
+
+Enumerations and data structures
+================================
+
+These are used throughout cpdf.js, but are collected here for reference.
 
 
 // Permissions
@@ -149,7 +194,8 @@ var reversediagonal = 12;
 
 /** Positions on the page. Used for scaling about a point, and adding text.
 
-A position is an anchor and zero or one or two parameters. Constructors are provided.
+A position is an anchor and zero or one or two parameters, built with the
+Position function.
 
 posCentre: Two parameters, x and y
 posLeft: Two parameters, x and y
@@ -164,6 +210,7 @@ bottomRight: One parameter - distance from bottom right
 right: One parameter - distance from right
 diagonal: Zero parameters
 reverseDiagonal: Zero parameters */
+
 function Position(anchor, p1, p2)
 
 
