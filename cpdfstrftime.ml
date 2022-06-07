@@ -125,8 +125,26 @@ let year_day d m y =
   let n3 = 1 + (y - 4 * (y / 4) + 2) / 3 in
     n1 - n2 * n3 + d - 30
 
+(* OCAML *)
+let js_date () = dummy
+
+(* JS *)
+(*
+let js_date () =
+  let d = Unix.localtime (Unix.time ()) in
+  {_tm_sec = d.tm_sec;
+   _tm_min = d.tm_min;
+   _tm_hour = d.tm_hour;
+   _tm_mday = d.tm_mday;
+   _tm_mon = d.tm_mon;
+   _tm_year = d.tm_year;
+   _tm_wday = d.tm_wday;
+   _tm_yday = d.tm_yday;
+   _tm_isdst = d.tm_isdst}
+*)
+
 let return_date () =
-  match Sys.backend_type with Sys.Other "js_of_ocaml" -> dummy | _ ->
+  match Sys.backend_type with Sys.Other "js_of_ocaml" -> js_date () | _ ->
   match Sys.os_type with
     "Unix" ->
       (* Call the POSIX 'date' program, redirected to a temp file, and parse. *)
