@@ -133,8 +133,8 @@ let combine_pdf_resources pdf a b =
             (Pdf.Dictionary [])
             (unknown_keys_a @ unknown_keys_b @ combined_known_entries)
 
-let transform_rect transform rect =
-  let minx, miny, maxx, maxy = Pdf.parse_rectangle rect in
+let transform_rect pdf transform rect =
+  let minx, miny, maxx, maxy = Pdf.parse_rectangle pdf rect in
     let (x0, y0) = Pdftransform.transform_matrix transform (minx, miny) in
     let (x1, y1) = Pdftransform.transform_matrix transform (maxx, maxy) in
     let (x2, y2) = Pdftransform.transform_matrix transform (minx, maxy) in
@@ -145,13 +145,13 @@ let transform_rect transform rect =
       let maxy = fmax (fmax y0 y1) (fmax y2 y3) in
         Pdf.Array [Pdf.Real minx; Pdf.Real miny; Pdf.Real maxx; Pdf.Real maxy]
 
-let transform_quadpoint_single transform = function
+let transform_quadpoint_single pdf transform = function
   | [x1; y1; x2; y2; x3; y3; x4; y4] ->
       let x1, y1, x2, y2, x3, y3, x4, y4 =
-        Pdf.getnum x1, Pdf.getnum y1,
-        Pdf.getnum x2, Pdf.getnum y2,
-        Pdf.getnum x3, Pdf.getnum y3,
-        Pdf.getnum x4, Pdf.getnum y4
+        Pdf.getnum pdf x1, Pdf.getnum pdf y1,
+        Pdf.getnum pdf x2, Pdf.getnum pdf y2,
+        Pdf.getnum pdf x3, Pdf.getnum pdf y3,
+        Pdf.getnum pdf x4, Pdf.getnum pdf y4
       in
         let (x1, y1) = Pdftransform.transform_matrix transform (x1, y1) in
         let (x2, y2) = Pdftransform.transform_matrix transform (x2, y2) in
@@ -162,9 +162,9 @@ let transform_quadpoint_single transform = function
      Printf.eprintf "Malformed /QuadPoints format: must be a multiple of 8 entries\n";
      qp
 
-let transform_quadpoints transform = function
+let transform_quadpoints pdf transform = function
 | Pdf.Array qps ->
-    Pdf.Array (flatten (map (transform_quadpoint_single transform) (splitinto 8 qps)))
+    Pdf.Array (flatten (map (transform_quadpoint_single pdf transform) (splitinto 8 qps)))
 | qp ->
     Printf.eprintf "Unknown or malformed /QuadPoints format %s\n" (Pdfwrite.string_of_pdf qp);
     qp
@@ -180,12 +180,12 @@ let transform_annotations pdf transform rest =
              let annot = Pdf.lookup_obj pdf i in
              let rect' =
                match Pdf.lookup_direct pdf "/Rect" annot with
-               | Some rect -> transform_rect transform rect
+               | Some rect -> transform_rect pdf transform rect
                | None -> raise (Pdf.PDFError "transform_annotations: no rect")
                in
              let quadpoints' =
                match Pdf.lookup_direct pdf "/QuadPoints" annot with
-               | Some qp -> Some (transform_quadpoints transform qp)
+               | Some qp -> Some (transform_quadpoints pdf transform qp)
                | None -> None
                in
              let annot = Pdf.add_dict_entry annot "/Rect" rect' in

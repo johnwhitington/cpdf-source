@@ -19,8 +19,8 @@ let rec splitat_commas toks =
   | some, [] -> [some]
   | _::_ as before, _::rest -> before::splitat_commas rest 
 
-let is_dimension comparison {Pdfpage.mediabox = box} =
-  let minx, miny, maxx, maxy = Pdf.parse_rectangle box in
+let is_dimension pdf comparison {Pdfpage.mediabox = box} =
+  let minx, miny, maxx, maxy = Pdf.parse_rectangle pdf box in
     comparison (maxx -. minx) (maxy -. miny)
 
 let select_dimensions comparison pdf candidates =
@@ -34,7 +34,7 @@ let select_dimensions comparison pdf candidates =
     in
       option_map2
         (fun pagenum page ->
-          if is_dimension comparison page then Some pagenum else None)
+          if is_dimension pdf comparison page then Some pagenum else None)
         pagenums
         kept_pages
 

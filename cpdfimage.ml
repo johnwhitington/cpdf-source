@@ -225,11 +225,11 @@ and image_resolution pdf range dpi =
                    | Some (Pdf.Name "/Image") ->
                        let width =
                          match Pdf.lookup_direct pdf "/Width" xobject with
-                         | Some x -> Pdf.getnum x
+                         | Some x -> Pdf.getnum pdf x
                          | None -> 1.
                        and height =
                          match Pdf.lookup_direct pdf "/Height" xobject with
-                         | Some x -> Pdf.getnum x
+                         | Some x -> Pdf.getnum pdf x
                          | None -> 1.
                        in
                          images := (pagenum, name, Image (int_of_float width, int_of_float height))::!images
@@ -243,8 +243,8 @@ and image_resolution pdf range dpi =
                        and matrix =
                          match Pdf.lookup_direct pdf "/Matrix" xobject with
                          | Some (Pdf.Array [a; b; c; d; e; f]) ->
-                             {Pdftransform.a = Pdf.getnum a; Pdftransform.b = Pdf.getnum b; Pdftransform.c = Pdf.getnum c;
-                              Pdftransform.d = Pdf.getnum d; Pdftransform.e = Pdf.getnum e; Pdftransform.f = Pdf.getnum f}
+                             {Pdftransform.a = Pdf.getnum pdf a; Pdftransform.b = Pdf.getnum pdf b; Pdftransform.c = Pdf.getnum pdf c;
+                              Pdftransform.d = Pdf.getnum pdf d; Pdftransform.e = Pdf.getnum pdf e; Pdftransform.f = Pdf.getnum pdf f}
                          | _ -> Pdftransform.i_matrix
                        in
                          images := (pagenum, name, Form (matrix, contents, resources))::!images

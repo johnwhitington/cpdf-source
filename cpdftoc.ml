@@ -47,14 +47,14 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
   let firstpage = hd (Pdfpage.pages_of_pagetree pdf) in
   let width, firstpage_papersize, pmaxx, pmaxy, margin =
     let width, height, xmax, ymax =
-      match Pdf.parse_rectangle firstpage.Pdfpage.mediabox with
+      match Pdf.parse_rectangle pdf firstpage.Pdfpage.mediabox with
         xmin, ymin, xmax, ymax -> xmax -. xmin, ymax -. ymin, xmax, ymax
     in
       width, Pdfpaper.make Pdfunits.PdfPoint width height, xmax, ymax, fmin width height *. 0.1
   in
   let firstpage_cropbox =
     match Pdf.lookup_direct pdf "/CropBox" firstpage.Pdfpage.rest with
-    | Some r -> Some (Pdf.parse_rectangle r)
+    | Some r -> Some (Pdf.parse_rectangle pdf r)
     | None -> None
   in
   let width =

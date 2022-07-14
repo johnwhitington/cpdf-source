@@ -373,10 +373,10 @@ let addtext
                   let mediabox =
                     if cropbox then
                       match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
-                      | Some pdfobject -> Pdf.parse_rectangle (Pdf.direct pdf pdfobject)
-                      | None -> Pdf.parse_rectangle page.Pdfpage.mediabox
+                      | Some pdfobject -> Pdf.parse_rectangle pdf (Pdf.direct pdf pdfobject)
+                      | None -> Pdf.parse_rectangle pdf page.Pdfpage.mediabox
                     else
-                      Pdf.parse_rectangle page.Pdfpage.mediabox
+                      Pdf.parse_rectangle pdf page.Pdfpage.mediabox
                   in
                     let x, y, rotate = Cpdfposition.calculate_position false textwidth mediabox orientation position in
                       let hoffset, voffset =
@@ -601,10 +601,10 @@ let addrectangle
     let mediabox =
       if relative_to_cropbox then
         match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
-        | Some pdfobject -> Pdf.parse_rectangle (Pdf.direct pdf pdfobject)
-        | None -> Pdf.parse_rectangle page.Pdfpage.mediabox
+        | Some pdfobject -> Pdf.parse_rectangle pdf (Pdf.direct pdf pdfobject)
+        | None -> Pdf.parse_rectangle pdf page.Pdfpage.mediabox
       else
-        Pdf.parse_rectangle page.Pdfpage.mediabox
+        Pdf.parse_rectangle pdf page.Pdfpage.mediabox
     in
     let x, y, _ =
       Cpdfposition.calculate_position false w mediabox Cpdfposition.Horizontal position

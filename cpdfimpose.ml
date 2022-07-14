@@ -41,10 +41,10 @@ let combine_pdf_rests pdf a b =
 (* Calculate the transformation matrices for a single imposed output page. *)
 
 (* make margins by scaling for a fitted impose. *)
-let make_margin output_mediabox margin tr =
+let make_margin pdf output_mediabox margin tr =
   if margin = 0. then tr else
     let width, height =
-      match Pdf.parse_rectangle output_mediabox with
+      match Pdf.parse_rectangle pdf output_mediabox with
         xmin, ymin, xmax, ymax -> xmax -. xmin, ymax -. ymin
     in
     if margin > width /. 2. || margin > height /. 2. then error "margin would fill whole page!" else
@@ -59,9 +59,9 @@ let make_margin output_mediabox margin tr =
         (Pdftransform.matrix_compose shift (Pdftransform.matrix_compose scale tr))
 
 (* FIXME fixup -center for next release. For now it has been disabled. *)
-let impose_transforms fit fx fy columns rtl btt center margin mediabox output_mediabox fit_extra_hspace fit_extra_vspace len =
+let impose_transforms pdf fit fx fy columns rtl btt center margin mediabox output_mediabox fit_extra_hspace fit_extra_vspace len =
   let width, height =
-    match Pdf.parse_rectangle mediabox with
+    match Pdf.parse_rectangle pdf mediabox with
       xmin, ymin, xmax, ymax -> xmax -. xmin, ymax -. ymin
   in
   let trs = ref [] in
@@ -116,14 +116,14 @@ let impose_transforms fit fx fy columns rtl btt center margin mediabox output_me
             len := !len - 1
       done
     done;
-  map (if fit then make_margin output_mediabox margin else Fun.id) (rev !trs)
+  map (if fit then make_margin pdf output_mediabox margin else Fun.id) (rev !trs)
 
 let impose_pages fit x y columns rtl btt center margin output_mediabox fast fit_extra_hspace fit_extra_vspace pdf = function
   | [] -> assert false
   | (h::_) as pages ->
      let transforms = 
        impose_transforms
-         fit x y columns rtl btt center margin h.Pdfpage.mediabox
+         pdf fit x y columns rtl btt center margin h.Pdfpage.mediabox
          output_mediabox fit_extra_hspace fit_extra_vspace (length pages)
      in
        (* Change the pattern matrices before combining resources *)
@@ -165,7 +165,7 @@ let make_space fit ~fast spacing pdf =
   let margin = spacing /. 2. in
   let firstpage = hd (Pdfpage.pages_of_pagetree pdf) in
   let width, height =
-    match Pdf.parse_rectangle firstpage.Pdfpage.mediabox with
+    match Pdf.parse_rectangle pdf firstpage.Pdfpage.mediabox with
       xmin, ymin, xmax, ymax -> (xmax -. xmin, ymax -. ymin)
   in
   if fit then
@@ -185,7 +185,7 @@ let make_space fit ~fast spacing pdf =
 let add_border linewidth ~fast pdf =
   if linewidth = 0. then pdf else
   let firstpage = hd (Pdfpage.pages_of_pagetree pdf) in
-  let _, _, w, h = Pdf.parse_rectangle firstpage.Pdfpage.mediabox in
+  let _, _, w, h = Pdf.parse_rectangle pdf firstpage.Pdfpage.mediabox in
     Cpdfaddtext.addrectangle
       fast (w -. linewidth, h -. linewidth) (RGB (0., 0., 0.)) true linewidth 1. (Cpdfposition.BottomLeft (linewidth /. 2.))
       false false (ilist 1 (Pdfpage.endpage pdf)) pdf
@@ -199,7 +199,7 @@ let impose ~x ~y ~fit ~columns ~rtl ~btt ~center ~margin ~spacing ~linewidth ~fa
   let pdf = add_border linewidth ~fast pdf in
   let pdf = make_space fit ~fast spacing pdf in 
   let firstpage = hd (Pdfpage.pages_of_pagetree pdf) in
-  let _, _, w, h = Pdf.parse_rectangle firstpage.Pdfpage.mediabox in
+  let _, _, w, h = Pdf.parse_rectangle pdf firstpage.Pdfpage.mediabox in
   let ix = int_of_float x in
   let iy = int_of_float y in
   let n, ix, iy, fit_extra_hspace, fit_extra_vspace =
@@ -256,7 +256,7 @@ let twoup_stack fast pdf =
 let twoup fast pdf =
   let firstpage = hd (Pdfpage.pages_of_pagetree pdf) in
   let width, height =
-    match Pdf.parse_rectangle firstpage.Pdfpage.mediabox with
+    match Pdf.parse_rectangle pdf firstpage.Pdfpage.mediabox with
       xmin, ymin, xmax, ymax -> xmax -. xmin, ymax -. ymin
   in
     let width_exceeds_height = width > height in

@@ -10,13 +10,13 @@ let output_page_info pdf range =
         match page.Pdfpage.mediabox with
         | Pdf.Array [a; b; c; d] ->
            Printf.sprintf "%f %f %f %f"
-             (Pdf.getnum a) (Pdf.getnum b) (Pdf.getnum c) (Pdf.getnum d)
+             (Pdf.getnum pdf a) (Pdf.getnum pdf b) (Pdf.getnum pdf c) (Pdf.getnum pdf d)
         | _ -> ""
       else
         match Pdf.lookup_direct pdf box page.Pdfpage.rest with
         | Some (Pdf.Array [a; b; c; d]) ->
            Printf.sprintf "%f %f %f %f"
-             (Pdf.getnum a) (Pdf.getnum b) (Pdf.getnum c) (Pdf.getnum d)
+             (Pdf.getnum pdf a) (Pdf.getnum pdf b) (Pdf.getnum pdf c) (Pdf.getnum pdf d)
         | _ -> ""
     and rotation page =
       Pdfpage.int_of_rotation page.Pdfpage.rotate
@@ -69,13 +69,13 @@ let hard_box pdf range boxname mediabox_if_missing fast =
     (Cpdfutil.ppstub (fun pagenum page ->
        let minx, miny, maxx, maxy =
          if boxname = "/MediaBox" then
-           Pdf.parse_rectangle page.Pdfpage.mediabox
+           Pdf.parse_rectangle pdf page.Pdfpage.mediabox
          else
            match Pdf.lookup_direct pdf boxname page.Pdfpage.rest with
-           | Some a -> Pdf.parse_rectangle a
+           | Some a -> Pdf.parse_rectangle pdf a
            | _ ->
                if mediabox_if_missing
-                 then Pdf.parse_rectangle page.Pdfpage.mediabox
+                 then Pdf.parse_rectangle pdf page.Pdfpage.mediabox
                  else error (Printf.sprintf "hard_box: box %s not found" boxname)
        in
          let ops = [Pdfops.Op_re (minx, miny, maxx -. minx, maxy -. miny); Pdfops.Op_W; Pdfops.Op_n] in
@@ -120,7 +120,7 @@ let change_boxes f pdf page =
             fold_left
               (fun e (k, v) ->
                  let v =
-                   make_mediabox (f (Pdf.parse_rectangle v))
+                   make_mediabox (f (Pdf.parse_rectangle pdf v))
                  in
                    Pdf.replace_dict_entry e k v)
               page.Pdfpage.rest
@@ -128,7 +128,7 @@ let change_boxes f pdf page =
           in
             {page with
                Pdfpage.mediabox =
-                 make_mediabox (f (Pdf.parse_rectangle page.Pdfpage.mediabox));
+                 make_mediabox (f (Pdf.parse_rectangle pdf page.Pdfpage.mediabox));
                Pdfpage.rest = rest'}
 
 
@@ -137,6 +137,7 @@ let scale_page_contents ?(fast=false) scale position pdf pnum page =
   let (minx, miny, maxx, maxy) as box =
     (* Use cropbox if available *)
     Pdf.parse_rectangle
+      pdf
       (match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
        | Some r -> r
        | None -> page.Pdfpage.mediabox)
@@ -234,16 +235,16 @@ to save time. *)
 let allupright range pdf =
   let page_is_upright page =
     page.Pdfpage.rotate = Pdfpage.Rotate0 &&
-      (let (minx, miny, _, _) = Pdf.parse_rectangle page.Pdfpage.mediabox in
+      (let (minx, miny, _, _) = Pdf.parse_rectangle pdf page.Pdfpage.mediabox in
          minx < 0.001 && miny < 0.001 && minx > ~-.0.001 && miny > ~-.0.001)
   in
     not (mem false (map page_is_upright (select_pages range pdf)))
 
-let upright_transform page =
+let upright_transform pdf page =
   let rotate =
     Pdfpage.int_of_rotation page.Pdfpage.rotate
   and cx, cy =
-    let minx, miny, maxx, maxy = Pdf.parse_rectangle page.Pdfpage.mediabox in
+    let minx, miny, maxx, maxy = Pdf.parse_rectangle pdf page.Pdfpage.mediabox in
       (minx +. maxx) /. 2., (miny +. maxy) /. 2.
   in
     Pdftransform.mkrotate (cx, cy) (rad_of_deg (~-.(float rotate)))
@@ -267,7 +268,7 @@ operations simpler to think about. Any shift that is done is reflected in
 other boxes (clip etc.) *)
 let rectify_boxes ?(fast=false) pdf page =
   let minx, miny, _, _ =
-    Pdf.parse_rectangle page.Pdfpage.mediabox
+    Pdf.parse_rectangle pdf page.Pdfpage.mediabox
   in
     let f (iminx, iminy, imaxx, imaxy) =
       iminx -. minx, iminy -. miny, imaxx -. minx, imaxy -. miny
@@ -281,7 +282,7 @@ let rectify_boxes ?(fast=false) pdf page =
 let upright ?(fast=false) range pdf =
   if allupright range pdf then pdf else
     let upright_page _ pnum page =
-      let tr = upright_transform page in
+      let tr = upright_transform pdf page in
         let page = transform_boxes tr pdf page in
           let page = transform_contents ~fast tr pdf page in
             (rectify_boxes ~fast pdf {page with Pdfpage.rotate = Pdfpage.Rotate0}, pnum, tr)
@@ -307,7 +308,7 @@ let rotate_page_contents ~fast rotpoint r pdf pnum page =
   let rotation_point =
     match rotpoint with
     | None ->
-        let minx, miny, maxx, maxy = Pdf.parse_rectangle page.Pdfpage.mediabox in
+        let minx, miny, maxx, maxy = Pdf.parse_rectangle pdf page.Pdfpage.mediabox in
           (minx +. maxx) /. 2.,  (miny +. maxy) /. 2.
     | Some point -> point
   in
@@ -353,6 +354,7 @@ let scale_to_fit_pdf ?(fast=false) position input_scale xylist op pdf range =
       let (minx, miny, maxx, maxy) =
         (* Use cropbox if available *)
         Pdf.parse_rectangle
+          pdf
           (match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
           | Some r -> r
           | None -> page.Pdfpage.mediabox)
@@ -417,7 +419,7 @@ let hasbox pdf page boxname =
 (* Flip pages *)
 let flip_page ?(fast=false) transform_op pdf pnum page =
   let minx, miny, maxx, maxy =
-    Pdf.parse_rectangle page.Pdfpage.mediabox
+    Pdf.parse_rectangle pdf page.Pdfpage.mediabox
   in
     let tr = transform_op minx miny maxx maxy in
       let page = Cpdfutil.change_pattern_matrices_page pdf tr page in
@@ -484,9 +486,11 @@ let do_stamp relative_to_cropbox fast position topline midline scale_to_fit isov
   (* Scale page stamp o to fit page u *)
   let sxmin, symin, sxmax, symax =
     Pdf.parse_rectangle
+      pdf
       (match Pdf.lookup_direct pdf "/CropBox" o.Pdfpage.rest with | Some r -> r | None -> o.Pdfpage.mediabox)
   in let txmin, tymin, txmax, tymax =
     Pdf.parse_rectangle
+      pdf
       (match Pdf.lookup_direct pdf "/CropBox" u.Pdfpage.rest with | Some r -> r | None -> u.Pdfpage.mediabox)
   in
     let o =
@@ -688,11 +692,11 @@ let crop_pdf ?(box="/CropBox") xywhlist pdf range =
 let get_rectangle pdf page box =
   if box = "/MediaBox" then
     match page.Pdfpage.mediabox with
-      Pdf.Array [a; b; c; d] as r -> Some (Pdf.parse_rectangle r)
+      Pdf.Array [a; b; c; d] as r -> Some (Pdf.parse_rectangle pdf r)
     | _ -> None
   else
     match Pdf.lookup_direct pdf box page.Pdfpage.rest with
-      Some (Pdf.Array [a; b; c; d] as r) -> Some (Pdf.parse_rectangle r)
+      Some (Pdf.Array [a; b; c; d] as r) -> Some (Pdf.parse_rectangle pdf r)
     | _ -> None
 
 let show_boxes_page fast pdf _ page =

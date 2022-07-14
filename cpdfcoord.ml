@@ -26,25 +26,25 @@ let cropbox pdf page =
   | Some pdfobject -> Pdf.direct pdf pdfobject
   | None -> page.Pdfpage.mediabox
 
-let width box = let minx, miny, maxx, maxy = Pdf.parse_rectangle box in maxx -. minx
-let height box = let minx, miny, maxx, maxy = Pdf.parse_rectangle box in maxy -. miny
-let minx box = let minx, miny, maxx, maxy = Pdf.parse_rectangle box in minx
-let miny box = let minx, miny, maxx, maxy = Pdf.parse_rectangle box in miny
-let maxx box = let minx, miny, maxx, maxy = Pdf.parse_rectangle box in maxx
-let maxy box = let minx, miny, maxx, maxy = Pdf.parse_rectangle box in maxy
+let width pdf box = let minx, miny, maxx, maxy = Pdf.parse_rectangle pdf box in maxx -. minx
+let height pdf box = let minx, miny, maxx, maxy = Pdf.parse_rectangle pdf box in maxy -. miny
+let minx pdf box = let minx, miny, maxx, maxy = Pdf.parse_rectangle pdf box in minx
+let miny pdf box = let minx, miny, maxx, maxy = Pdf.parse_rectangle pdf box in miny
+let maxx pdf box = let minx, miny, maxx, maxy = Pdf.parse_rectangle pdf box in maxx
+let maxy pdf box = let minx, miny, maxx, maxy = Pdf.parse_rectangle pdf box in maxy
 
-let find_page_width pdf page = width page.Pdfpage.mediabox
-let find_page_height pdf page = height page.Pdfpage.mediabox
-let find_page_crop_width pdf page = width (cropbox pdf page)
-let find_page_crop_height pdf page = height (cropbox pdf page)
-let find_page_minx pdf page = minx page.Pdfpage.mediabox
-let find_page_miny pdf page = miny page.Pdfpage.mediabox
-let find_page_maxx pdf page = maxx page.Pdfpage.mediabox
-let find_page_maxy pdf page = maxy page.Pdfpage.mediabox
-let find_page_crop_minx pdf page = minx (cropbox pdf page)
-let find_page_crop_miny pdf page = miny (cropbox pdf page)
-let find_page_crop_maxx pdf page = maxx (cropbox pdf page)
-let find_page_crop_maxy pdf page = maxy (cropbox pdf page)
+let find_page_width pdf page = width pdf page.Pdfpage.mediabox
+let find_page_height pdf page = height pdf page.Pdfpage.mediabox
+let find_page_crop_width pdf page = width pdf (cropbox pdf page)
+let find_page_crop_height pdf page = height pdf (cropbox pdf page)
+let find_page_minx pdf page = minx pdf page.Pdfpage.mediabox
+let find_page_miny pdf page = miny pdf page.Pdfpage.mediabox
+let find_page_maxx pdf page = maxx pdf page.Pdfpage.mediabox
+let find_page_maxy pdf page = maxy pdf page.Pdfpage.mediabox
+let find_page_crop_minx pdf page = minx pdf (cropbox pdf page)
+let find_page_crop_miny pdf page = miny pdf (cropbox pdf page)
+let find_page_crop_maxx pdf page = maxx pdf (cropbox pdf page)
+let find_page_crop_maxy pdf page = maxy pdf (cropbox pdf page)
 
 let find_page_characteristic pdf page = function
   | "PW" -> find_page_width pdf page

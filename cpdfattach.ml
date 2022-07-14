@@ -96,7 +96,7 @@ let attach_file ?memory keepversion topage pdf file =
                       | _ -> []
                     in
                       let rect =
-                        let minx, miny, maxx, maxy = Pdf.parse_rectangle page.Pdfpage.mediabox in
+                        let minx, miny, maxx, maxy = Pdf.parse_rectangle pdf page.Pdfpage.mediabox in
                           Pdf.Array [Pdf.Real 18.; Pdf.Real (maxy -. 45.); Pdf.Real 45.; Pdf.Real (maxy -. 18.)]
                       in
                         let filespecobj = Pdf.addobj pdf filespec in

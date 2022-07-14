@@ -203,7 +203,7 @@ let thinlines range width pdf =
                       | None -> []
                       | Some gdict ->
                           match Pdf.lookup_direct pdf "/LW" gdict with
-                          | Some s -> (try [Pdfops.Op_w (Pdf.getnum s)] with _ -> [])
+                          | Some s -> (try [Pdfops.Op_w (Pdf.getnum pdf s)] with _ -> [])
                           | None -> []
                 in
                   replace_operators (opw @ ((Pdfops.Op_gs gsname)::prev)) more
