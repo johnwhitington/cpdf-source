@@ -1,5 +1,7 @@
 open Pdfutil
 
+(* FIXME: All of this should probably be pushed down into CamlPDF *)
+
 (* For uses of process_pages which don't need to deal with matrices, this
    function transforms into one which returns the identity matrix *)
 let ppstub f n p = (f n p, n, Pdftransform.i_matrix)
@@ -169,7 +171,9 @@ let transform_quadpoints pdf transform = function
     Printf.eprintf "Unknown or malformed /QuadPoints format %s\n" (Pdfwrite.string_of_pdf qp);
     qp
 
-(* Apply transformations to any annotations in /Annots (i.e their /Rect and /QuadPoints entries) *)
+(* Apply transformations to any annotations in /Annots (i.e their /Rect and
+/QuadPoints entries). Also as a best-effort service, altering other
+coordinates, like the endpoints /L in a line annotation. *)
 let transform_annotations pdf transform rest =
   match Pdf.lookup_direct pdf "/Annots" rest with
   | Some (Pdf.Array annots) ->
@@ -188,14 +192,23 @@ let transform_annotations pdf transform rest =
                | Some qp -> Some (transform_quadpoints pdf transform qp)
                | None -> None
                in
+             let line' =
+               match Pdf.lookup_direct pdf "/L" annot with
+               | Some rect -> Some (transform_rect pdf transform rect)
+               | _ -> None
+             in
              let annot = Pdf.add_dict_entry annot "/Rect" rect' in
              let annot =
                match quadpoints' with
                | Some qp -> Pdf.add_dict_entry annot "/QuadPoints" qp 
                | None -> annot
              in
+             let annot =
+               match line' with
+               | Some l -> Pdf.add_dict_entry annot "/L" l
+               | None -> annot
+             in
                Pdf.addobj_given_num pdf (i, annot)
          | _ -> Printf.eprintf "transform_annotations: not indirect\n%!")
         annots
    | _ -> ()
-
