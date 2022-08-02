@@ -19,7 +19,18 @@ OCAMLNCFLAGS = -g -safe-string
 OCAMLBCFLAGS = -g -safe-string
 OCAMLLDFLAGS = -g
 
-all : native-code native-code-library byte-code-library top htdoc
+TARGETS := byte-code-library top htdoc
+
+LIBINSTALL_FILES = cpdf.cma \
+$(foreach x,$(MODS),$x.mli) $(foreach x,$(MODS),$x.cmi) \
+$(foreach x,$(MODS),$x.cmti)
+
+ifneq ($(shell ocamlopt -version),)
+  TARGETS += native-code native-code-library
+  LIBINSTALL_FILES += cpdf.a cpdf.cmxa $(foreach x,$(PDFMODS),$x.cmx)
+endif
+
+all : $(TARGETS)
 
 clean ::
 	rm -rf doc foo foo2 out.pdf out2.pdf foo.pdf decomp.pdf *.cmt *.cmti \
@@ -33,10 +44,6 @@ DOC_FILES = cpdfunicodedata.mli cpdferror.mli cpdfdebug.mli cpdfjson.mli \
 	    cpdfpad.mli cpdfocg.mli cpdfsqueeze.mli cpdfdraft.mli \
             cpdfspot.mli cpdfpagelabels.mli cpdfcreate.mli cpdfannot.mli \
 	    cpdfxobject.mli cpdfimpose.mli cpdftweak.mli cpdfcommand.mli
-
-LIBINSTALL_FILES = cpdf.a cpdf.cma cpdf.cmxa \
-$(foreach x,$(MODS),$x.mli) $(foreach x,$(MODS),$x.cmi) \
-$(foreach x,$(MODS),$x.cmx) $(foreach x,$(MODS),$x.cmti)
 
 install : libinstall
 
