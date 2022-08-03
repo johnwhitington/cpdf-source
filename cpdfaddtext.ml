@@ -266,6 +266,56 @@ let rec process_text time text m =
   | [] -> Cpdfstrftime.strftime ~time text
   | (s, r)::t -> process_text time (string_replace_all_lazy s r text) t
 
+(* Find any %URL, sub in the text and return the new text together with a list
+   of ordered (line num, URL, startpos, endpos) data.
+   This will be used after any other %Specials have been processed, so that the
+   positions do not change. *)
+let testurlline = "text before %URL[click here|https://www.coherentpdf.com/] rest of text "
+let testurllinemultiple = testurlline ^ testurlline
+let testlines = [testurllinemultiple; testurllinemultiple]
+
+(* text|url]abc -> text, url, abc *)
+let extract_url line =
+  let text, rest = cleavewhile (neq '|') line in
+    if rest = [] then error "bad URL syntax in text" else
+    let url, rest = cleavewhile (neq ']') (tl rest) in
+      if rest = [] then error "bad URL syntax in text" else
+      (text, url, tl rest)
+
+let get_urls_line line =
+  let line = explode line in
+  let urls = ref [] in
+  let pos = ref 0 in
+  let outline = ref [] in
+  let rec loop = function
+    | '%'::'U'::'R'::'L'::'['::t ->
+        let text, url, rest = extract_url t in
+          outline := rev text @ !outline;
+          urls := (implode url, !pos, !pos + length text)::!urls;
+          pos += length text;
+          loop rest
+    | h::t ->
+        outline := h::!outline;
+        pos += 1;
+        loop t
+    | [] -> ()
+  in
+    loop line;
+    (implode (rev !outline), rev !urls)
+
+let get_urls lines =
+  let urls = ref [] in
+  let linesout = ref [] in
+  let linenum = ref 0 in
+    List.iter
+      (fun l ->
+        let lineout, lineurls = get_urls_line l in
+          linesout := lineout::!linesout;
+          urls := rev (map (fun (a, b, c) -> (!linenum, a, b, c)) lineurls) @ !urls;
+          linenum += 1)
+      lines;
+    (rev !linesout, rev !urls)
+
 (* Return page label at pdf page num, or page number in arabic if no label *) 
 let pagelabel pdf num =
   Pdfpagelabels.pagelabeltext_of_pagenumber
@@ -365,6 +415,9 @@ let addtext
                     (function text ->
                        process_text time text (replace_pairs pdf filename bates batespad num page))
                     lines
+                in
+                let expanded_lines, urls =
+                  get_urls expanded_lines
                 in
                 let textwidth = calc_textwidth text
                 and allwidths = map calc_textwidth expanded_lines in
