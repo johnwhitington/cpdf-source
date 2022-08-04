@@ -282,6 +282,7 @@ let extract_url line =
       if rest = [] then error "bad URL syntax in text" else
       (text, url, tl rest)
 
+(* multiple %URL[a|b] *)
 let get_urls_line line =
   let line = explode line in
   let urls = ref [] in
@@ -303,6 +304,8 @@ let get_urls_line line =
     loop line;
     (implode (rev !outline), rev !urls)
 
+ 
+(* Get all URLs for all lines *)
 let get_urls lines =
   let urls = ref [] in
   let linesout = ref [] in
@@ -375,7 +378,7 @@ let addtext
         | Some d -> d
       in
         let unique_fontname = Pdf.unique_key "F" fontdict in
-          let ops =
+          let ops, urls =
             let text = process_text time text (replace_pairs pdf filename bates batespad num page) in
               let calc_textwidth text =
                 match font with
@@ -440,10 +443,12 @@ let addtext
                         match font with
                         | Some f ->
                             ops longest_w metrics (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
-                            unique_fontname unique_extgstatename colour fontsize text
+                            unique_fontname unique_extgstatename colour fontsize text,
+                            urls
                         | None ->
                             ops longest_w metrics (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
-                            fontname None colour fontsize text 
+                            fontname None colour fontsize text,
+                            urls
           in
             let newresources =
               match font with
@@ -454,7 +459,33 @@ let addtext
                     Pdf.add_dict_entry resources' "/Font" newfontdict
               | None -> page.Pdfpage.resources
           in
-            let page = {page with Pdfpage.resources = newresources} in
+            (* Build annotations from URL data (get_urls and some sense of metrics) *)
+            let annot (minx, miny, maxx, maxy) url =
+              Pdf.Dictionary
+                [("/Subtype", Pdf.Name "/Link");
+                 ("/Rect", Pdf.Array [Pdf.Real minx; Pdf.Real miny; Pdf.Real maxx; Pdf.Real maxy]);
+                 ("/BS", Pdf.Dictionary [("/W", Pdf.Integer 0)]);
+                 ("/A", Pdf.Dictionary [("/URI", Pdf.String url);
+                                        ("/Type", Pdf.Name "/Action");
+                                        ("/S", Pdf.Name "/URI")])]
+            in
+            let annots =
+              map (fun (linenum, url, s, e) -> Pdf.Indirect (Pdf.addobj pdf (annot (0., 0., 100., 100.) url))) urls
+            in
+            let newrest =
+              if annots = [] then page.Pdfpage.rest else
+                let existing =
+                  match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
+                  | Some (Pdf.Array a) -> a
+                  | _ -> []
+                in
+                  Pdf.add_dict_entry page.Pdfpage.rest "/Annots" (Pdf.Array (annots @ existing))
+            in
+            let page =
+              {page with
+                 Pdfpage.resources = newresources;
+                 Pdfpage.rest = newrest}
+            in
               if underneath
                 then Pdfpage.prepend_operators pdf ops ~fast:fast page
                 else Pdfpage.postpend_operators pdf ops ~fast:fast page
