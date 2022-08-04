@@ -380,6 +380,7 @@ let addtext
         let unique_fontname = Pdf.unique_key "F" fontdict in
           let ops, urls =
             let text = process_text time text (replace_pairs pdf filename bates batespad num page) in
+            let text = hd (fst (get_urls [text])) in
               let calc_textwidth text =
                 match font with
                 | Some f ->
@@ -419,7 +420,7 @@ let addtext
                        process_text time text (replace_pairs pdf filename bates batespad num page))
                     lines
                 in
-                let expanded_lines, urls =
+                let expanded_lines, urls = (* process URLs for justification too *)
                   get_urls expanded_lines
                 in
                 let textwidth = calc_textwidth text
