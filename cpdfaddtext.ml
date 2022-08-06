@@ -270,9 +270,6 @@ let rec process_text time text m =
    of ordered (line num, URL, startpos, endpos) data.
    This will be used after any other %Specials have been processed, so that the
    positions do not change. *)
-let testurlline = "text before %URL[click here|https://www.coherentpdf.com/] rest of text "
-let testurllinemultiple = testurlline ^ testurlline
-let testlines = [testurllinemultiple; testurllinemultiple]
 
 (* text|url]abc -> text, url, abc *)
 let extract_url line =
@@ -304,20 +301,8 @@ let get_urls_line line =
     loop line;
     (implode (rev !outline), rev !urls)
 
- 
-(* Get all URLs for all lines *)
-let get_urls lines =
-  let urls = ref [] in
-  let linesout = ref [] in
-  let linenum = ref 0 in
-    List.iter
-      (fun l ->
-        let lineout, lineurls = get_urls_line l in
-          linesout := lineout::!linesout;
-          urls := rev (map (fun (a, b, c) -> (!linenum, a, b, c)) lineurls) @ !urls;
-          linenum += 1)
-      lines;
-    (rev !linesout, rev !urls)
+(* Find a coordinate for an annotation given its position in a line of text. Positions 0..(l - 1). *)
+
 
 (* Return page label at pdf page num, or page number in arabic if no label *) 
 let pagelabel pdf num =
@@ -377,10 +362,6 @@ let addtext
         | None -> Pdf.Dictionary []
         | Some d -> d
       in
-        let unique_fontname = Pdf.unique_key "F" fontdict in
-          let ops, urls =
-            let text = process_text time text (replace_pairs pdf filename bates batespad num page) in
-            let text = hd (fst (get_urls [text])) in
               let calc_textwidth text =
                 match font with
                 | Some f ->
@@ -414,14 +395,19 @@ let addtext
                       let rawwidth = width_of_text (Pdftext.read_font pdf font) text in
                         (rawwidth *. fontsize) /. 1000.
               in
+        let unique_fontname = Pdf.unique_key "F" fontdict in
+          let ops, urls, x, y, hoffset, voffset =
+            let text = process_text time text (replace_pairs pdf filename bates batespad num page) in
+            let text, urls = get_urls_line text in
+
                 let expanded_lines =
                   map
                     (function text ->
                        process_text time text (replace_pairs pdf filename bates batespad num page))
                     lines
                 in
-                let expanded_lines, urls = (* process URLs for justification too *)
-                  get_urls expanded_lines
+                let expanded_lines = (* process URLs for justification too *)
+                  map (fun line -> fst (get_urls_line line)) expanded_lines
                 in
                 let textwidth = calc_textwidth text
                 and allwidths = map calc_textwidth expanded_lines in
@@ -445,11 +431,11 @@ let addtext
                         | Some f ->
                             ops longest_w metrics (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
                             unique_fontname unique_extgstatename colour fontsize text,
-                            urls
+                            urls, x, y, hoffset, voffset
                         | None ->
                             ops longest_w metrics (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
                             fontname None colour fontsize text,
-                            urls
+                            urls, x, y, hoffset, voffset
           in
             let newresources =
               match font with
@@ -465,13 +451,24 @@ let addtext
               Pdf.Dictionary
                 [("/Subtype", Pdf.Name "/Link");
                  ("/Rect", Pdf.Array [Pdf.Real minx; Pdf.Real miny; Pdf.Real maxx; Pdf.Real maxy]);
-                 ("/BS", Pdf.Dictionary [("/W", Pdf.Integer 0)]);
+                 ("/BS", Pdf.Dictionary [("/W", Pdf.Integer 1)]);
                  ("/A", Pdf.Dictionary [("/URI", Pdf.String url);
                                         ("/Type", Pdf.Name "/Action");
                                         ("/S", Pdf.Name "/URI")])]
             in
             let annots =
-              map (fun (linenum, url, s, e) -> Pdf.Indirect (Pdf.addobj pdf (annot (0., 0., 100., 100.) url))) urls
+              (* FIXME All kinds of offsets / shifts to add here *)
+              let annot_coord is_end text pos =
+                let pos = pos + 1 in
+                let before = take (explode text) (if is_end then pos else pos - 1) in
+                calc_textwidth (implode before)
+              in
+                map (fun (url, s, e) ->
+                       let sx = annot_coord false text s in
+                       let ex = annot_coord true text e -. sx in
+                       let x, y = x -. hoffset, y -. voffset in
+                       let height = fontsize in
+                         Pdf.Indirect (Pdf.addobj pdf (annot (x +. sx, y, x +. ex, y +. height) url))) urls
             in
             let newrest =
               if annots = [] then page.Pdfpage.rest else
