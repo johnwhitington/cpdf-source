@@ -405,7 +405,7 @@ let addtext
                         (rawwidth *. fontsize) /. 1000.
               in
         let unique_fontname = Pdf.unique_key "F" fontdict in
-          let ops, urls, x, y, hoffset, voffset, text =
+          let ops, urls, x, y, hoffset, voffset, text, joffset =
             let text = process_text time text (replace_pairs pdf filename bates batespad num page) in
             let text, urls = get_urls_line text in
 
@@ -440,11 +440,11 @@ let addtext
                         | Some f ->
                             ops longest_w metrics (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
                             unique_fontname unique_extgstatename colour fontsize text,
-                            urls, x, y, hoffset, voffset, text
+                            urls, x, y, hoffset, voffset, text, joffset
                         | None ->
                             ops longest_w metrics (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
                             fontname None colour fontsize text,
-                            urls, x, y, hoffset, voffset, text
+                            urls, x, y, hoffset, voffset, text, joffset
           in
             let newresources =
               match font with
@@ -473,7 +473,7 @@ let addtext
                 map (fun (url, s, e) ->
                        let sx = annot_coord text s in
                        let ex = annot_coord text e in
-                       let x, y = x -. hoffset, y -. voffset in
+                       let x, y = x -. hoffset -. joffset, y -. voffset in
                        let height =
                          match cap_height fontname with
                          | Some c -> (c *. fontsize) /. 1000.
