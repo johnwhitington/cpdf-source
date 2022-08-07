@@ -460,7 +460,7 @@ let addtext
               Pdf.Dictionary
                 [("/Subtype", Pdf.Name "/Link");
                  ("/Rect", Pdf.Array [Pdf.Real minx; Pdf.Real miny; Pdf.Real maxx; Pdf.Real maxy]);
-                 ("/BS", Pdf.Dictionary [("/W", Pdf.Integer 1)]);
+                 ("/BS", Pdf.Dictionary [("/W", Pdf.Integer 0)]);
                  ("/A", Pdf.Dictionary [("/URI", Pdf.String url);
                                         ("/Type", Pdf.Name "/Action");
                                         ("/S", Pdf.Name "/URI")])]
