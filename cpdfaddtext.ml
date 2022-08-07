@@ -169,6 +169,18 @@ let extract_widths chars_and_widths =
             _ -> 0)
       (ilist 0 255)
 
+(* For finding the height for URL links, we try to find the Cap Height for the
+   font. For now, this will only work for built-in fonts. We fall back to using
+   the font size alone if we cannot get the cap height. *)
+let cap_height fontname =
+  try
+    let font = unopt (Pdftext.standard_font_of_name ("/" ^ fontname)) in
+    let header, _, _, _ = Pdfstandard14.afm_data font in
+      let capheight = try extract_num header "CapHeight" with _ -> Pdf.Integer 0 in
+        Some (match capheight with Pdf.Integer i -> float_of_int i | Pdf.Real r -> r | _ -> 0.)
+  with
+    _ -> None
+
 let make_font embed fontname =
   let font = unopt (Pdftext.standard_font_of_name ("/" ^ fontname)) in
   let header, width_data, _, chars_and_widths = Pdfstandard14.afm_data font in
@@ -301,9 +313,6 @@ let get_urls_line line =
     loop line;
     (implode (rev !outline), rev !urls)
 
-(* Find a coordinate for an annotation given its position in a line of text. Positions 0..(l - 1). *)
-
-
 (* Return page label at pdf page num, or page number in arabic if no label *) 
 let pagelabel pdf num =
   Pdfpagelabels.pagelabeltext_of_pagenumber
@@ -396,7 +405,7 @@ let addtext
                         (rawwidth *. fontsize) /. 1000.
               in
         let unique_fontname = Pdf.unique_key "F" fontdict in
-          let ops, urls, x, y, hoffset, voffset =
+          let ops, urls, x, y, hoffset, voffset, text =
             let text = process_text time text (replace_pairs pdf filename bates batespad num page) in
             let text, urls = get_urls_line text in
 
@@ -431,11 +440,11 @@ let addtext
                         | Some f ->
                             ops longest_w metrics (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
                             unique_fontname unique_extgstatename colour fontsize text,
-                            urls, x, y, hoffset, voffset
+                            urls, x, y, hoffset, voffset, text
                         | None ->
                             ops longest_w metrics (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
                             fontname None colour fontsize text,
-                            urls, x, y, hoffset, voffset
+                            urls, x, y, hoffset, voffset, text
           in
             let newresources =
               match font with
@@ -457,17 +466,19 @@ let addtext
                                         ("/S", Pdf.Name "/URI")])]
             in
             let annots =
-              (* FIXME All kinds of offsets / shifts to add here *)
-              let annot_coord is_end text pos =
-                let pos = pos + 1 in
-                let before = take (explode text) (if is_end then pos else pos - 1) in
-                calc_textwidth (implode before)
+              let annot_coord text pos =
+                let before = take (explode text) pos in
+                  calc_textwidth (implode before)
               in
                 map (fun (url, s, e) ->
-                       let sx = annot_coord false text s in
-                       let ex = annot_coord true text e -. sx in
+                       let sx = annot_coord text s in
+                       let ex = annot_coord text e in
                        let x, y = x -. hoffset, y -. voffset in
-                       let height = fontsize in
+                       let height =
+                         match cap_height fontname with
+                         | Some c -> (c *. fontsize) /. 1000.
+                         | None -> fontsize
+                       in
                          Pdf.Indirect (Pdf.addobj pdf (annot (x +. sx, y, x +. ex, y +. height) url))) urls
             in
             let newrest =
