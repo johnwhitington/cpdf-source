@@ -1,0 +1,22 @@
+#!/bin/bash
+csplit -k -f javascriptsplits/c ../cpdf.js/cpdfdocs.js '/CHAPTER/' {18}
+mv javascriptsplits/c00 javascriptsplits/c00.tex
+mv javascriptsplits/c01 javascriptsplits/c01.tex
+mv javascriptsplits/c02 javascriptsplits/c02.tex
+mv javascriptsplits/c03 javascriptsplits/c03.tex
+mv javascriptsplits/c04 javascriptsplits/c04.tex
+mv javascriptsplits/c05 javascriptsplits/c05.tex
+mv javascriptsplits/c06 javascriptsplits/c06.tex
+mv javascriptsplits/c07 javascriptsplits/c07.tex
+mv javascriptsplits/c08 javascriptsplits/c08.tex
+mv javascriptsplits/c09 javascriptsplits/c09.tex
+mv javascriptsplits/c10 javascriptsplits/c10.tex
+mv javascriptsplits/c11 javascriptsplits/c11.tex
+mv javascriptsplits/c12 javascriptsplits/c12.tex
+mv javascriptsplits/c13 javascriptsplits/c13.tex
+mv javascriptsplits/c14 javascriptsplits/c14.tex
+mv javascriptsplits/c15 javascriptsplits/c15.tex
+mv javascriptsplits/c16 javascriptsplits/c16.tex
+mv javascriptsplits/c17 javascriptsplits/c17.tex
+mv javascriptsplits/c18 javascriptsplits/c18.tex
+mv javascriptsplits/c19 javascriptsplits/c19.tex
