@@ -1,9 +1,9 @@
-cpdf.js: A JavaScript interface to cpdf
-=======================================
+// CHAPTER -1: Introduction
 
-For development server-side with node: cpdf.js / cpdflib.js
+Use
+---
 
-(Minified versions cpdf.min.js and cpdflib.min.js)
+For development server-side with node: cpdf.js (minified version cpdf.min.js)
 
 Load with "const cpdf = require('cpdf.js')" if installed in npm, or "const cpdf
 = require('./cpdf.js')" to load from current directory.
@@ -16,307 +16,27 @@ Load with <script src="cpdf.browser.js"></script> or similar.
 
 
 Concurrency
-===========
+-----------
 
 cpdf.js is synchronous and non-re-entrant.
 
 
 Data types
-==========
+----------
 
-Arguments are integers, floating point numbers, strings, or arrays of type
-UInt8Array. Page ranges are represented by arrays of numbers.
+Arguments are numbers, strings, or arrays (of type UInt8Array for data). Page
+ranges are represented by arrays of numbers.
 
 
 Memory Management
-=================
+-----------------
 
-A PDF n must be explicitly deallocated with deletePdf(n).
+A PDF p must be explicitly deallocated with deletePdf(p).
 
 
 Errors
-======
+------
 
 Any function may raise an exception, containing a string describing the problem. 
 
 
-Enumerations and data structures
-================================
-
-These are used throughout cpdf.js, but are collected here for reference.
-
-
-// Permissions
-
-/** Cannot edit the document */
-var noEdit = 0;
-
-/** Cannot print the document */
-var noPrint = 1;
-
-/** Cannot copy the document */
-var noCopy = 2;
-
-/** Cannot annotate the document */
-var noAnnot = 3;
-
-/** Cannot edit forms in the document */
-var noForms = 4;
-
-/** Cannot extract information */
-var noExtract = 5;
-
-/** Cannot assemble into a bigger document */
-var noAssemble = 6;
-
-/** Cannot print high quality */
-var noHqPrint = 7;
-
-
-// Encryption types
-
-/** 40 bit RC4 encryption */
-var pdf40bit = 0;
-
-/** 128 bit RC4 encryption */
-var pdf128bit = 1;
-
-/** 128 bit AES encryption, do not encrypt metadata */
-var aes128bitfalse = 2;
-
-/** 128 bit AES encryption, encrypt metadata */
-var aes128bittrue = 3;
-
-/** Deprecated. Do not use for new files */
-var aes256bitfalse = 4;
-
-/** Deprecated. Do not use for new files */
-var aes256bittrue = 5;
-
-/** 256 bit AES encryption, do not encrypt metadata */
-var aes256bitisofalse = 6;
-
-/** 256 bit AES encryption, encrypt metadata */
-var aes256bitisotrue = 7;
-
-
-// Paper sizes
-
-/** A0 Portrait paper */
-var a0portrait = 0;
-
-/** A1 Portrait paper */
-var a1portrait = 1;
-
-/** A2 Portrait paper */
-var a2portrait = 2;
-
-/** A3 Portrait paper */
-var a3portrait = 3;
-
-/** A4 Portrait paper */
-var a4portrait = 4;
-
-/** A5 Portrait paper */
-var a5portrait = 5;
-
-/** A0 Landscape paper */
-var a0landscape = 6;
-
-/** A1 Landscape paper */
-var a1landscape = 7;
-
-/** A2 Landscape paper */
-var a2landscape = 8;
-
-/** A3 Landscape paper */
-var a3landscape = 9;
-
-/** A4 Landscape paper */
-var a4landscape = 10;
-
-/** A5 Landscape paper */
-var a5landscape = 11;
-
-/** US Letter Portrait paper */
-var usletterportrait = 12;
-
-/** US Letter Landscape paper */
-var usletterlandscape = 13;
-
-/** US Legal Portrait paper */
-var uslegalportrait = 14;
-
-/** US Legal Landscape paper */
-var uslegallandscape = 15;
-
-
-// Positions
-
-/** Absolute centre */
-var posCentre = 0;
-
-/** Absolute left */
-var posLeft = 1;
-
-/** Absolute right */
-var posRight = 2;
-
-/** The top centre of the page */
-var top = 3;
-
-/** The top left of the page */
-var topLeft = 4;
-
-/** The top right of the page */
-var topRight = 5;
-
-/** The left hand side of the page, halfway down */
-var left = 6;
-
-/** The bottom left of the page */
-var bottomLeft = 7;
-
-/** The bottom middle of the page */
-var bottom = 8;
-
-/** The bottom right of the page */
-var bottomRight = 9;
-
-/** The right hand side of the page, halfway down */
-var right = 10;
-
-/** Diagonal, bottom left to top right */
-var diagonal = 11;
-
-/** Diagonal, top left to bottom right */
-var reversediagonal = 12;
-
-/** Positions on the page. Used for scaling about a point, and adding text.
-
-A position is an anchor and zero or one or two parameters, built with the
-Position function.
-
-posCentre: Two parameters, x and y
-posLeft: Two parameters, x and y
-posRight: Two parameters, x and y
-top: One parameter - distance from top
-topLeft: One parameter - distance from top left
-topRight: One parameter - distance from top right
-left: One parameter - distance from left middle
-bottomLeft: One parameter - distance from bottom left
-bottom: One parameter - distance from bottom
-bottomRight: One parameter - distance from bottom right
-right: One parameter - distance from right
-diagonal: Zero parameters
-reverseDiagonal: Zero parameters */
-
-function Position(anchor, p1, p2)
-
-
-// Fonts
-
-/** Times Roman */
-var timesRoman = 0;
-
-/** Times Bold */
-var timesBold = 1;
-
-/** Times Italic */
-var timesItalic = 2;
-
-/** Times Bold Italic */
-var timesBoldItalic = 3;
-
-/** Helvetica */
-var helvetica = 4;
-
-/** Helvetica Bold */
-var helveticaBold = 5;
-
-/** Helvetica Oblique */
-var helveticaOblique = 6;
-
-/** Helvetica Bold Oblique */
-var helveticaBoldOblique = 7;
-
-/** Courier */
-var courier = 8;
-
-/** Courier Bold */
-var courierBold = 9;
-
-/** Courier Oblique */
-var courierOblique = 10;
-
-/** Courier Bold Oblique */
-var courierBoldOblique = 11;
-
-
-// Justification types
-
-/** Left justify */
-var leftJustify = 0;
-
-/** Centre justify */
-var centreJustify = 1;
-
-/** Right justify */
-var rightJustify = 2;
-
-
-/// Page layouts
-
-/** Single page */
-var singlePage = 0;
-
-/** One column */
-var oneColumn = 1;
-
-/** Two column left */
-var twoColumnLeft = 2;
-
-/** Two column right */
-var twoColumnRight = 3;
-
-/** Two page left */
-var twoPageLeft = 4;
-
-/** Two page right */
-var twoPageRight = 5;
-
-
-// Page modes
-
-/** Use none */
-var useNone = 0;
-
-/** Use outlines */
-var useOutlines = 1;
-
-/** Use thumbs */
-var useThumbs = 2;
-
-/** Use OC */
-var useOC = 3;
-
-/** Use attachments */
-var useAttachments = 4;
-
-
-// Page label styles
-
-/** 1, 2, 3... */
-var decimalArabic = 0;
-
-/** I, II, III... */
-var uppercaseRoman = 1;
-
-/** i, ii, iii... */
-var lowercaseRoman = 2;
-
-/** A, B, C... */
-var uppercaseLetters = 3;
-
-/** a, b, c... */
-var lowercaseLetters = 4;

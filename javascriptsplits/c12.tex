@@ -1,260 +1,593 @@
 // CHAPTER 11. Document Information and Metadata
 
 /** Finds out if a document is linearized as quickly as possible without
-loading it. */
-function isLinearized(filename)
+loading it.
+@arg {string} filename file name
+@result {boolean} true if linearized */
+function isLinearized(filename) {}
 
-/** Returns the minor version number of a document. */
-function getVersion(pdf)
+/** Finds out if a document in memory is linearized as quickly as possible without
+loading it.
+@arg {Uint8Array} PDF file as a byte array
+@result {boolean} true if linearized */
+function isLinearizedMemory(data) {}
 
-/** Returns the major version number of a document. */
-function getMajorVersion(pdf)
+/** Returns the minor version number of a document.
+@arg {pdf} pdf PDF document
+@return {number} version number */
+function getVersion(pdf) {}
 
-/** Returns the title of a document. */
-function getTitle(pdf)
+/** Returns the major version number of a document.
+@arg {pdf} pdf PDF document
+@return {number} major version number */
+function getMajorVersion(pdf) {}
 
-/** Returns the author of a document. */
-function getAuthor(pdf)
+/** Returns the title of a document.
+@arg {pdf} pdf PDF document
+@return {string} title */
+function getTitle(pdf) {}
 
-/** Returns the subject of a document. */
-function getSubject(pdf)
+/** Returns the author of a document.
+@arg {pdf} pdf PDF document
+@return {string} author */
+function getAuthor(pdf) {}
 
-/** Returns the keywords of a document. */
-function getKeywords(pdf)
+/** Returns the subject of a document.
+@arg {pdf} pdf PDF document
+@return {string} subject */
+function getSubject(pdf) {}
 
-/** Returns the creator of a document. */
-function getCreator(pdf)
+/** Returns the keywords of a document.
+@arg {pdf} pdf PDF document
+@return {string} keywords */
+function getKeywords(pdf) {}
 
-/** Returns the producer of a document. */
-function getProducer(pdf)
+/** Returns the creator of a document.
+@arg {pdf} pdf PDF document
+@return {string} creator */
+function getCreator(pdf) {}
 
-/** Returns the creation date of a document. */
-function getCreationDate(pdf)
+/** Returns the producer of a document.
+@arg {pdf} pdf PDF document
+@return {string} producer */
+function getProducer(pdf) {}
 
-/** Returns the modification date of a document. */
-function getModificationDate(pdf)
+/** Returns the creation date of a document.
+@arg {pdf} pdf PDF document
+@return {string} creation date */
+function getCreationDate(pdf) {}
 
-/** Returns the XMP title of a document. */
-function getTitleXMP(pdf)
+/** Returns the modification date of a document.
+@arg {pdf} pdf PDF document
+@return {string} modification date */
+function getModificationDate(pdf) {}
 
-/** Returns the XMP author of a document. */
-function getAuthorXMP(pdf)
+/** Returns the XMP title of a document.
+@arg {pdf} pdf PDF document
+@return {string} XMP title */
+function getTitleXMP(pdf) {}
 
-/** Returns the XMP subject of a document. */
-function getSubjectXMP(pdf)
+/** Returns the XMP author of a document.
+@arg {pdf} pdf PDF document
+@return {string} XMP author */
+function getAuthorXMP(pdf) {}
 
-/** Returns the XMP keywords of a document. */
-function getKeywordsXMP(pdf)
+/** Returns the XMP subject of a document.
+@arg {pdf} pdf PDF document
+@return {string} XMP subject */
+function getSubjectXMP(pdf) {}
 
-/** Returns the XMP creator of a document. */
-function getCreatorXMP(pdf)
+/** Returns the XMP keywords of a document.
+@arg {pdf} pdf PDF document
+@return {string} XMP keywords */
+function getKeywordsXMP(pdf) {}
 
-/** Returns the XMP producer of a document. */
-function getProducerXMP(pdf)
+/** Returns the XMP creator of a document.
+@arg {pdf} pdf PDF document
+@return {string} XMP creator */
+function getCreatorXMP(pdf) {}
 
-/** Returns the XMP creation date of a document. */
-function getCreationDateXMP(pdf)
+/** Returns the XMP producer of a document.
+@arg {pdf} pdf PDF document
+@return {string} XMP producer */
+function getProducerXMP(pdf) {}
 
-/** Returns the XMP modification date of a document. */
-function getModificationDateXMP(pdf)
+/** Returns the XMP creation date of a document.
+@arg {pdf} pdf PDF document
+@return {string} XMP creation date */
+function getCreationDateXMP(pdf) {}
 
-/** Sets the title of a document. */
-function setTitle(pdf, s)
+/** Returns the XMP modification date of a document.
+@arg {pdf} pdf PDF document
+@return {string} XMP modification date */
+function getModificationDateXMP(pdf) {}
 
-/** Sets the author of a document. */
-function setAuthor(pdf, s)
+/** Sets the title of a document.
+@arg {pdf} pdf PDF document
+@arg {string} s title */
+function setTitle(pdf, s) {}
 
-/** Sets the subject of a document. */
-function setSubject(pdf, s)
+/** Sets the author of a document.
+@arg {pdf} pdf PDF document
+@arg {string} s author */
+function setAuthor(pdf, s) {}
 
-/** Sets the keywords of a document. */
-function setKeywords(pdf, s)
+/** Sets the subject of a document.
+@arg {pdf} pdf PDF document
+@arg {string} s subject */
+function setSubject(pdf, s) {}
 
-/** Sets the creator of a document. */
-function setCreator(pdf, s)
+/** Sets the keywords of a document.
+@arg {pdf} pdf PDF document
+@arg {string} s keywords */
+function setKeywords(pdf, s) {}
 
-/** Sets the producer of a document. */
-function setProducer(pdf, s)
+/** Sets the creator of a document.
+@arg {pdf} pdf PDF document
+@arg {string} s creator */
+function setCreator(pdf, s) {}
 
-/** Sets the creation date of a document. */
-function setCreationDate(pdf, s)
+/** Sets the producer of a document.
+@arg {pdf} pdf PDF document
+@arg {string} s producer */
+function setProducer(pdf, s) {}
 
-/** Sets the modification date of a document. */
-function setModificationDate(pdf, s)
+/** Sets the creation date of a document.
+@arg {pdf} pdf PDF document
+@arg {string} s creation date */
+function setCreationDate(pdf, s) {}
 
-/** Sets the XMP title of a document. */
-function setTitleXMP(pdf, s)
+/** Sets the modification date of a document.
+@arg {pdf} pdf PDF document
+@arg {string} s modification date */
+function setModificationDate(pdf, s) {}
 
-/** Sets the XMP author of a document. */
-function setAuthorXMP(pdf, s)
+/** Sets the XMP title of a document.
+@arg {pdf} pdf PDF document
+@arg {string} s XMP title */
+function setTitleXMP(pdf, s) {}
 
-/** Sets the XMP author of a document. */
-function setSubjectXMP(pdf, s)
+/** Sets the XMP author of a document.
+@arg {pdf} pdf PDF document
+@arg {string} s XMP author */
+function setAuthorXMP(pdf, s) {}
 
-/** Sets the XMP keywords of a document. */
-function setKeywordsXMP(pdf, s)
+/** Sets the XMP author of a document.
+@arg {pdf} pdf PDF document
+@arg {string} s XMP subject */
+function setSubjectXMP(pdf, s) {}
 
-/** Sets the XMP creator of a document. */
-function setCreatorXMP(pdf, s)
+/** Sets the XMP keywords of a document.
+@arg {pdf} pdf PDF document
+@arg {string} s XMP keywords */
+function setKeywordsXMP(pdf, s) {}
 
-/** Sets the XMP producer of a document. */
-function setProducerXMP(pdf, s)
+/** Sets the XMP creator of a document.
+@arg {pdf} pdf PDF document
+@arg {string} s XMP creator */
+function setCreatorXMP(pdf, s) {}
 
-/** Sets the XMP creation date of a document. */
-function setCreationDateXMP(pdf, s)
+/** Sets the XMP producer of a document.
+@arg {pdf} pdf PDF document
+@arg {string} s XMP producer */
+function setProducerXMP(pdf, s) {}
 
-/** Sets the XMP modification date of a document. */
-function setModificationDateXMP(pdf, s)
+/** Sets the XMP creation date of a document.
+@arg {pdf} pdf PDF document
+@arg {string} s XMP creation date */
+function setCreationDateXMP(pdf, s) {}
 
-/** Returns the components from a PDF date string. */
-function getDateComponents(string)
+/** Sets the XMP modification date of a document.
+@arg {pdf} pdf PDF document
+@arg {string} s XMP modification date */
+function setModificationDateXMP(pdf, s) {}
 
-/** Builds a PDF date string from individual components. */
-function dateStringOfComponents(y, m, d, h, min, sec, hour_offset, minute_offset)
+/** Returns the components from a PDF date string.
+@arg {string} string date string
+@return {"array of numbers"} date components */
+function getDateComponents(string) {}
 
-/** Gets the viewing rotation for a given page. */
-function getPageRotation(pdf, page)
+/** Builds a PDF date string from individual components.
+@arg {number} y year
+@arg {number} m month
+@arg {number} d day
+@arg {number} h hour
+@arg {number} min minute
+@arg {number} sec second
+@arg {number} hour_offset hour offset
+@arg {number} minute_offset minute offset
+@return {string} date string */
+function dateStringOfComponents(y, m, d, h, min, sec, hour_offset, minute_offset) {}
 
-/** Returns true, if that page has the given box. E.g "/CropBox". */
-function hasBox(pdf, page, box)
+/** Gets the viewing rotation for a given page.
+@arg {pdf} pdf PDF document
+@arg {number} page page number
+@result {number} page rotation */
+function getPageRotation(pdf, page) {}
+
+/** Returns true if that page has the given box. E.g "/CropBox".
+@arg {pdf} pdf PDF document
+@arg {number} page page number
+@arg {string} box box name
+@result {boolean} true if box present */
+function hasBox(pdf, page, box) {}
 
 /** These functions get a box given the document, page number, min x, max x,
 min y, max y in points. Only succeeds if such a box exists, as checked by
-hasBox. */
-function getMediaBox(pdf, pagenumber)
+hasBox.
+@arg {pdf} pdf PDF document
+@arg {number} pagenumber page number
+@return {"array of numbers"} media box */
+function getMediaBox(pdf, pagenumber) {}
 
 /** These functions get a box given the document, page number, min x, max x,
 min y, max y in points. Only succeeds if such a box exists, as checked by
-hasBox. */
-function getCropBox(pdf, pagenumber)
+hasBox.
+@arg {pdf} pdf PDF document
+@arg {number} pagenumber page number
+@return {"array of numbers"} crop box */
+function getCropBox(pdf, pagenumber) {}
 
 /** These functions get a box given the document, page number, min x, max x,
 min y, max y in points. Only succeeds if such a box exists, as checked by
-hasBox. */
-function getArtBox(pdf, pagenumber)
+hasBox.
+@arg {pdf} pdf PDF document
+@arg {number} pagenumber page number
+@return {"array of numbers"} art box */
+function getArtBox(pdf, pagenumber) {}
 
 /** These functions get a box given the document, page number, min x, max x,
 min y, max y in points. Only succeeds if such a box exists, as checked by
-hasBox. */
-function getBleedBox(pdf, pagenumber)
+hasBox.
+@arg {pdf} pdf PDF document
+@arg {number} pagenumber page number
+@return {"array of numbers"} bleed box */
+function getBleedBox(pdf, pagenumber) {}
 
 /** These functions get a box given the document, page number, min x, max x,
 min y, max y in points. Only succeeds if such a box exists, as checked by
-hasBox. */
-function getTrimBox(pdf, pagenumber)
+hasBox.
+@arg {pdf} pdf PDF document
+@arg {number} pagenumber page number
+@return {"array of numbers"} trim box */
+function getTrimBox(pdf, pagenumber) {}
 
 /** These functions set a box given the document, page range, min x, max x,
-min y, max y in points. */
-function setMediabox(pdf, range, minx, maxx, miny, maxy)
+min y, max y in points.
+@arg {pdf} pdf PDF document
+@arg {range} range page range
+@arg {number} minx min x
+@arg {number} maxx max x
+@arg {number} minx min y
+@arg {number} maxx max y */
+function setMediabox(pdf, range, minx, maxx, miny, maxy) {}
 
 /** These functions set a box given the document, page range, min x, max x,
-min y, max y in points. */
-function setCropBox(pdf, range, minx, maxx, miny, maxy)
+min y, max y in points.
+@arg {pdf} pdf PDF document
+@arg {range} range page range
+@arg {number} minx min x
+@arg {number} maxx max x
+@arg {number} minx min y
+@arg {number} maxx max y */
+function setCropBox(pdf, range, minx, maxx, miny, maxy) {}
 
 /** These functions set a box given the document, page range, min x, max x,
-min y, max y in points. */
-function setTrimBox(pdf, range, minx, maxx, miny, maxy)
+min y, max y in points.
+@arg {pdf} pdf PDF document
+@arg {range} range page range
+@arg {number} minx min x
+@arg {number} maxx max x
+@arg {number} minx min y
+@arg {number} maxx max y */
+function setTrimBox(pdf, range, minx, maxx, miny, maxy) {}
 
 /** These functions set a box given the document, page range, min x, max x,
-min y, max y in points. */
-function setBleedBox(pdf, range, minx, maxx, miny, maxy)
+min y, max y in points.
+@arg {pdf} pdf PDF document
+@arg {range} range page range
+@arg {number} minx min x
+@arg {number} maxx max x
+@arg {number} minx min y
+@arg {number} maxx max y */
+function setBleedBox(pdf, range, minx, maxx, miny, maxy) {}
 
 /** These functions set a box given the document, page range, min x, max x,
-min y, max y in points. */
-function setArtBox(pdf, range, minx, maxx, miny, maxy)
+min y, max y in points.
+@arg {pdf} pdf PDF document
+@arg {range} range page range
+@arg {number} minx min x
+@arg {number} maxx max x
+@arg {number} minx min y
+@arg {number} maxx max y */
+function setArtBox(pdf, range, minx, maxx, miny, maxy) {}
 
-/** Marks a document as trapped. */
-function markTrapped(pdf)
+/** Marks a document as trapped.
+@arg {pdf} pdf PDF document */
+function markTrapped(pdf) {}
 
-/** Marks a document as untrapped. */
-function markUntrapped(pdf)
+/** Marks a document as untrapped.
+@arg {pdf} pdf PDF document */
+function markUntrapped(pdf) {}
 
-/** Marks a document as trapped in XMP metadata. */
-function markTrappedXMP(pdf)
+/** Marks a document as trapped in XMP metadata.
+@arg {pdf} pdf PDF document */
+function markTrappedXMP(pdf) {}
 
-/** Marks a document as untrapped in XMP metadata. */
-function markUntrappedXMP(pdf)
+/** Marks a document as untrapped in XMP metadata.
+@arg {pdf} pdf PDF document */
+function markUntrappedXMP(pdf) {}
 
+/** Single page */
+var singlePage = 0;
 
-/** Sets the page layout for a document. */
-function setPageLayout(pdf, layout)
+/** One column */
+var oneColumn = 1;
 
-/** Sets the page mode for a document. */
-function setPageMode(pdf, mode)
+/** Two column left */
+var twoColumnLeft = 2;
 
-/** Sets the hide toolbar flag. */
-function hideToolbar(pdf, flag)
+/** Two column right */
+var twoColumnRight = 3;
 
-/** Sets the hide menubar flag. */
-function hideMenubar(pdf, flag)
+/** Two page left */
+var twoPageLeft = 4;
 
-/** Sets the hide window UI flag. */
-function hideWindowUi(pdf, flag)
+/** Two page right */
+var twoPageRight = 5;
+  
+/** Sets the page layout for a document.
+@arg {pdf} pdf PDF document
+@arg {layout} layout page layout */
+function setPageLayout(pdf, layout) {}
 
-/** Sets the fit window flag. */
-function fitWindow(pdf, flag)
+/** Use none */
+var useNone = 0;
 
-/** Sets the center window flag. */
-function centerWindow(pdf, flag)
+/** Use outlines */
+var useOutlines = 1;
 
-/** Sets the display doc title flag. */
-function displayDocTitle(pdf, flag)
+/** Use thumbs */
+var useThumbs = 2;
+
+/** Use OC */
+var useOC = 3;
+
+/** Use attachments */
+var useAttachments = 4;
+
+/** Sets the page mode for a document.
+@arg {pdf} pdf PDF document
+@arg {mode} mode page mode */
+function setPageMode(pdf, mode) {}
+
+/** Sets the hide toolbar flag.
+@arg {pdf} pdf PDF document
+@arg {boolean} flag hide toolbar */
+function hideToolbar(pdf, flag) {}
+
+/** Sets the hide menubar flag.
+@arg {pdf} pdf PDF document
+@arg {boolean} flag hide menubar */
+function hideMenubar(pdf, flag) {}
+
+/** Sets the hide window UI flag.
+@arg {pdf} pdf PDF document
+@arg {boolean} flag hide UI */
+function hideWindowUi(pdf, flag) {}
+
+/** Sets the fit window flag.
+@arg {pdf} pdf PDF document
+@arg {boolean} flag fit window */
+function fitWindow(pdf, flag) {}
+
+/** Sets the center window flag.
+@arg {pdf} pdf PDF document
+@arg {boolean} flag center window */
+function centerWindow(pdf, flag) {}
+
+/** Sets the display doc title flag.
+@arg {pdf} pdf PDF document
+@arg {boolean} flag display doc title */
+function displayDocTitle(pdf, flag) {}
 
 /** Sets the PDF to open, possibly with zoom-to-fit, at the given page
-number. */
-function openAtPage(pdf, fit, pagenumber)
+number.
+@arg {pdf} pdf PDF document
+@arg {boolean} fit zoom-to-fit
+@arg {number} pagenumber page number */
+function openAtPage(pdf, fit, pagenumber) {}
 
-/** Sets the XMP metadata of a document, given a file name. */
-function setMetadataFromFile(pdf, filename)
+/** Sets the XMP metadata of a document, given a file name.
+@arg {pdf} pdf PDF document
+@arg {string} filename file name */
+function setMetadataFromFile(pdf, filename) {}
 
-/** Sets the XMP metadata from an array of bytes. */
-function setMetadataFromByteArray(pdf, data)
+/** Sets the XMP metadata from an array of bytes.
+@arg {pdf} pdf PDF document
+@arg {Uint8Array} data XMP metadata as an array of bytes */
+function setMetadataFromByteArray(pdf, data) {}
 
-/** Removes the XMP metadata from a document. */
-function removeMetadata(pdf)
+/** Removes the XMP metadata from a document.
+@arg {pdf} pdf PDF document */
+function removeMetadata(pdf) {}
 
-/** Returns the XMP metadata from a document. */
-function getMetadata(pdf)
+/** Returns the XMP metadata from a document.
+@arg {pdf} pdf PDF document
+@result {Uint8Array} XMP metadata as a byte array */
+function getMetadata(pdf) {}
 
 /** Builds fresh XMP metadata as best it can from existing metadata in the
-document. */
-function createMetadata(pdf)
+document.
+@arg {pdf} pdf PDF document */
+function createMetadata(pdf) {}
 
 /** Sets the metadata date for a PDF. The date is given in PDF date format --
 cpdf will convert it to XMP format. The date 'now' means now. */
-function setMetadataDate(pdf, date)
+function setMetadataDate(pdf, date) {}
+
+/** 1, 2, 3... */
+var decimalArabic = 0;
+
+/** I, II, III... */
+var uppercaseRoman = 1;
+
+/** i, ii, iii... */
+var lowercaseRoman = 2;
+
+/** A, B, C... */
+var uppercaseLetters = 3;
+
+/** a, b, c... */
+var lowercaseLetters = 4;
 
 /** Adds page labels. The prefix is prefix text for each label. The range is
 the page range the labels apply to. Offset can be used to shift the numbering
-up or down. */
-function addPageLabels(pdf, style, prefix, offset, range, progress)
+up or down.
+@arg {pdf} pdf PDF document
+@arg {style} style page label style
+@arg {string} prefix label prefix
+@arg {number} offset offset
+@arg {range} range page range
+@arg {boolean} progress labels progress */
+function addPageLabels(pdf, style, prefix, offset, range, progress) {}
 
-/** Removes the page labels from the document. */
-function removePageLabels(pdf)
+/** Removes the page labels from the document.
+@arg {pdf} pdf PDF document */
+function removePageLabels(pdf) {}
 
-/** Calculates the full label string for a given page, and returns it. */
-function getPageLabelStringForPage(pdf, pagenumber)
+/** Calculates the full label string for a given page, and returns it.
+@arg {pdf} pdf PDF document
+@arg {number} pagenumber page number
+@result {string} page label string */
+function getPageLabelStringForPage(pdf, pagenumber) {}
 
 /** Gets page label data. Call startGetPageLabels to find out how many
 there are, then use these serial numbers to get the style, prefix, offset
-and start value (note not a range). Call endGetPageLabels to clean up.
+and start value (note not a range). Call endGetPageLabels to clean up.<br/><br/>
 
 For example, a document might have five pages of introduction with roman
 numerals, followed by the rest of the pages in decimal arabic, numbered from
-one:
+one:<br/><br/>
 
-labelstyle = LowercaseRoman
-labelprefix = ""
-startpage = 1
-startvalue = 1
+labelstyle = LowercaseRoman<br/>
+labelprefix = ""<br/>
+startpage = 1<br/>
+startvalue = 1<br/></br>
 
-labelstyle = DecimalArabic
-labelprefix = ""
-startpage = 6
-startvalue = 1 */
-function startGetPageLabels(pdf)
-function getPageLabelStyle(n)
-function getPageLabelPrefix(n)
-function getPageLabelOffset(n)
-function getPageLabelRange(n)
-function endGetPageLabels()
+labelstyle = DecimalArabic<br/>
+labelprefix = ""<br/>
+startpage = 6<br/>
+startvalue = 1<br/>
+
+@arg {pdf} pdf PDF document
+@result {number} number of page labels */
+function startGetPageLabels(pdf) {}
+
+/** Gets page label data. Call startGetPageLabels to find out how many
+there are, then use these serial numbers to get the style, prefix, offset
+and start value (note not a range). Call endGetPageLabels to clean up.<br/><br/>
+
+For example, a document might have five pages of introduction with roman
+numerals, followed by the rest of the pages in decimal arabic, numbered from
+one:<br/><br/>
+
+labelstyle = LowercaseRoman<br/>
+labelprefix = ""<br/>
+startpage = 1<br/>
+startvalue = 1<br/></br>
+
+labelstyle = DecimalArabic<br/>
+labelprefix = ""<br/>
+startpage = 6<br/>
+startvalue = 1<br/>
+
+@arg {number} n serial number
+@result {"label style"} page label style */
+function getPageLabelStyle(n) {}
+
+/** Gets page label data. Call startGetPageLabels to find out how many
+there are, then use these serial numbers to get the style, prefix, offset
+and start value (note not a range). Call endGetPageLabels to clean up.<br/><br/>
+
+For example, a document might have five pages of introduction with roman
+numerals, followed by the rest of the pages in decimal arabic, numbered from
+one:<br/><br/>
+
+labelstyle = LowercaseRoman<br/>
+labelprefix = ""<br/>
+startpage = 1<br/>
+startvalue = 1<br/></br>
+
+labelstyle = DecimalArabic<br/>
+labelprefix = ""<br/>
+startpage = 6<br/>
+startvalue = 1<br/>
+
+@arg {number} n serial number
+@result {string} page label prefix */
+function getPageLabelPrefix(n) {}
+
+/** Gets page label data. Call startGetPageLabels to find out how many
+there are, then use these serial numbers to get the style, prefix, offset
+and start value (note not a range). Call endGetPageLabels to clean up.<br/><br/>
+
+For example, a document might have five pages of introduction with roman
+numerals, followed by the rest of the pages in decimal arabic, numbered from
+one:<br/><br/>
+
+labelstyle = LowercaseRoman<br/>
+labelprefix = ""<br/>
+startpage = 1<br/>
+startvalue = 1<br/></br>
+
+labelstyle = DecimalArabic<br/>
+labelprefix = ""<br/>
+startpage = 6<br/>
+startvalue = 1<br/>
+
+@arg {number} n serial number
+@result {number} page label offset */
+function getPageLabelOffset(n) {}
+
+/** Gets page label data. Call startGetPageLabels to find out how many
+there are, then use these serial numbers to get the style, prefix, offset
+and start value (note not a range). Call endGetPageLabels to clean up.<br/><br/>
+
+For example, a document might have five pages of introduction with roman
+numerals, followed by the rest of the pages in decimal arabic, numbered from
+one:<br/><br/>
+
+labelstyle = LowercaseRoman<br/>
+labelprefix = ""<br/>
+startpage = 1<br/>
+startvalue = 1<br/></br>
+
+labelstyle = DecimalArabic<br/>
+labelprefix = ""<br/>
+startpage = 6<br/>
+startvalue = 1<br/>
+
+@arg {number} n serial number
+@result {number} page label range */
+function getPageLabelRange(n) {}
+
+/** Gets page label data. Call startGetPageLabels to find out how many
+there are, then use these serial numbers to get the style, prefix, offset
+and start value (note not a range). Call endGetPageLabels to clean up.<br/><br/>
+
+For example, a document might have five pages of introduction with roman
+numerals, followed by the rest of the pages in decimal arabic, numbered from
+one:<br/><br/>
+
+labelstyle = LowercaseRoman<br/>
+labelprefix = ""<br/>
+startpage = 1<br/>
+startvalue = 1<br/></br>
+
+labelstyle = DecimalArabic<br/>
+labelprefix = ""<br/>
+startpage = 6<br/>
+startvalue = 1<br/> */
+function endGetPageLabels() {}
+

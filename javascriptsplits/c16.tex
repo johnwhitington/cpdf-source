@@ -2,14 +2,29 @@
 
 /** Outputs a PDF in JSON format to the given filename. If parse_content is
 true, page content is parsed. If no_stream_data is true, all stream data is
-suppressed entirely. If decompress_streams is true, streams are decompressed. */
-function outputJSON(filename, parse_content, no_stream_data, decompress_streams, pdf)
+suppressed entirely. If decompress_streams is true, streams are decompressed.
+@arg {string} filename file name
+@arg {boolean} parse_content parse page content
+@arg {boolean} no_stream_data suppress stream data
+@arg {boolean} decompress_streams decompress streams
+@arg {pdf} pdf PDF document */
+function outputJSON(filename, parse_content, no_stream_data, decompress_streams, pdf) {}
 
-/** Like outputJSON, but it writes to a byte array in memory. */
-function outputJSONMemory(parse_content, no_stream_data, decompress_streams, pdf)
+/** Like outputJSON, but it writes to a byte array in memory.
+@arg {boolean} parse_content parse page content
+@arg {boolean} no_stream_data suppress stream data
+@arg {boolean} decompress_streams decompress streams
+@arg {pdf} pdf PDF document
+@return {Uint8Array} JSON data as a byte array */
+function outputJSONMemory(parse_content, no_stream_data, decompress_streams, pdf) {}
 
-/** Loads a PDF from a JSON file given its filename. */
-function fromJSON(filename)
+/** Loads a PDF from a JSON file given its filename.
+@arg {string} filename file name
+@return {pdf} PDF document */
+function fromJSON(filename) {}
 
-/** Loads a PDF from a JSON file in memory. */
-function fromJSONMemory(data)
+/** Loads a PDF from a JSON file in memory. 
+@arg {Uint8Array} data JSON data as a byte array
+@return {pdf} PDF document */
+function fromJSONMemory(data) {}
+

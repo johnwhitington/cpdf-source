@@ -4,18 +4,71 @@
 numberFonts to return the number of fonts. For each font, call one or more of
 getFontPage, getFontName, getFontType, and getFontEncoding giving a serial
 number 0..n - 1 to return information. Finally, call endGetFontInfo to clean
-up. */
-function startGetFontInfo(pdf)
-function numberFonts()
-function getFontPage(n)
-function getFontName(n)
-function getFontType(n)
-function getFontEncoding(n)
-function endGetFontInfo()
+up.
+@ {pdf} pdf PDF document */
+function startGetFontInfo(pdf) {}
 
-/** Removes all font data from a file. */
-function removeFonts(pdf)
+/** Retrieves font information. First, call startGetFontInfo(pdf). Now call
+numberFonts to return the number of fonts. For each font, call one or more of
+getFontPage, getFontName, getFontType, and getFontEncoding giving a serial
+number 0..n - 1 to return information. Finally, call endGetFontInfo to clean
+up.
+@result {number} number of fonts */
+function numberFonts() {}
+
+/** Retrieves font information. First, call startGetFontInfo(pdf). Now call
+numberFonts to return the number of fonts. For each font, call one or more of
+getFontPage, getFontName, getFontType, and getFontEncoding giving a serial
+number 0..n - 1 to return information. Finally, call endGetFontInfo to clean
+up.
+@arg {number} n serial number
+@return {number} page number */
+function getFontPage(n) {}
+
+/** Retrieves font information. First, call startGetFontInfo(pdf). Now call
+numberFonts to return the number of fonts. For each font, call one or more of
+getFontPage, getFontName, getFontType, and getFontEncoding giving a serial
+number 0..n - 1 to return information. Finally, call endGetFontInfo to clean
+up.
+@arg {number} n serial number
+@return {string} font name */
+function getFontName(n) {}
+
+/** Retrieves font information. First, call startGetFontInfo(pdf). Now call
+numberFonts to return the number of fonts. For each font, call one or more of
+getFontPage, getFontName, getFontType, and getFontEncoding giving a serial
+number 0..n - 1 to return information. Finally, call endGetFontInfo to clean
+up.
+@arg {number} n serial number
+@return {string} font type */
+function getFontType(n) {}
+
+/** Retrieves font information. First, call startGetFontInfo(pdf). Now call
+numberFonts to return the number of fonts. For each font, call one or more of
+getFontPage, getFontName, getFontType, and getFontEncoding giving a serial
+number 0..n - 1 to return information. Finally, call endGetFontInfo to clean
+up.
+@arg {number} n serial number
+@return {string} font encoding */
+function getFontEncoding(n) {}
+
+/** Retrieves font information. First, call startGetFontInfo(pdf). Now call
+numberFonts to return the number of fonts. For each font, call one or more of
+getFontPage, getFontName, getFontType, and getFontEncoding giving a serial
+number 0..n - 1 to return information. Finally, call endGetFontInfo to clean
+up. */
+function endGetFontInfo() {}
+
+/** Removes all font data from a file.
+@arg {pdf} pdf PDF document */
+function removeFonts(pdf) {}
 
 /** Copies the given font from the given page in the 'from' PDF to every page
-in the 'to' PDF. The new font is stored under its font name. */
-function copyFont(docfrom, docto, range, pagenumber, fontname)
+in the range of the 'to' PDF. The new font is stored under its font name.
+@arg {pdf} docfrom source document
+@arg {pdf} docto destination document
+@arg {range} page range
+@arg {number} pagenumber source page number
+@arg {string} fontname font name */
+function copyFont(docfrom, docto, range, pagenumber, fontname) {}
+

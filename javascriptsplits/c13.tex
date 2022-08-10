@@ -1,41 +1,63 @@
 // CHAPTER 12. File Attachments
     
-/** Attaches a file to the pdf. It is attached at document level. */
-function attachFile(filename, pdf)
+/** Attaches a file to the pdf. It is attached at document level.
+@arg {string} filename file name
+@arg {pdf} pdf PDF document */
+function attachFile(filename, pdf) {}
 
 /** Attaches a file, given its file name, pdf, and the page number
-to which it should be attached. */
-function attachFileToPage(filename, pdf, pagenumber)
+to which it should be attached.
+@arg {string} filename file name
+@arg {pdf} pdf PDF document
+@arg {number} pagenumber page number */
+function attachFileToPage(filename, pdf, pagenumber) {}
 
-/** Attaches data from memory, just like attachFile. */
-function attachFileFromMemory(data, filename, pdf)
+/** Attaches data from memory, just like attachFile.
+@arg {Uint8Array} data file as a byte array
+@arg {string} filename file name to call it in the PDF
+@arg {pdf} pdf PDF document */
+function attachFileFromMemory(data, filename, pdf) {}
 
-/** Attaches to a page from memory, just like attachFileToPage. */
-function attachFileToPageFromMemory(data, filename, pdf, pagenumber)
+/** Attaches to a page from memory, just like attachFileToPage.
+@arg {Uint8Array} data file as a byte array
+@arg {string} filename file name to call it in the PDF
+@arg {pdf} pdf PDF document
+@arg {number} pagenumber page number */
+function attachFileToPageFromMemory(data, filename, pdf, pagenumber) {}
 
-/** Removes all page- and document-level attachments from a document. */
-function removeAttachedFiles(pdf)
+/** Removes all page- and document-level attachments from a document.
+@arg {pdf} pdf PDF document */
+function removeAttachedFiles(pdf) {}
 
 /** Lists information about attachments. Call startGetAttachments(pdf) first,
 then numberGetAttachments to find out how many there are. Then
 getAttachmentName etc. to return each one 0...(n - 1). Finally, call
-endGetAttachments to clean up. */
-function startGetAttachments(pdf)
+endGetAttachments to clean up.
+@arg {pdf} pdf PDF document */
+function startGetAttachments(pdf) {}
 
 /** Lists information about attachments. Call startGetAttachments(pdf) first,
 then numberGetAttachments to find out how many there are. Then
 getAttachmentName etc. to return each one 0...(n - 1). Finally, call
-endGetAttachments to clean up. */
-function numberGetAttachments()
+endGetAttachments to clean up.
+@return {number} number of attachments */
+function numberGetAttachments() {}
 
-/** Gets the name of an attachment. */
-function getAttachmentName(n)
+/** Gets the name of an attachment.
+@arg {number} n serial number
+@return {string} attachment name */
+function getAttachmentName(n) {}
 
-/** Gets the page number. 0 = document level. */
-function getAttachmentPage(n)
+/** Gets the page number. 0 = document level.
+@arg {number} n serial number
+@return {number} attachment page */
+function getAttachmentPage(n) {}
 
-/** Gets the attachment data itself. */
-function getAttachmentData(n)
+/** Gets the attachment data itself.
+@arg {number} n serial number
+@return {Uint8Array} attachment data */
+function getAttachmentData(n) {}
 
 /** Cleans up after getting attachments. */
-function endGetAttachments()
+function endGetAttachments() {}
+

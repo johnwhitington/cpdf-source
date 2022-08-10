@@ -6,12 +6,84 @@ obtaining data on all image uses below min_required_resolution, returning the
 total number. So, to return all image uses, specify a very high
 min_required_resolution. Then, call the other functions giving a serial number
 0..n - 1, to retrieve the data. Finally, call endGetImageResolution to clean
+up.
+@arg {pdf} pdf PDF document
+@arg {number} min_required_resolution minimum required resolution
+@return {number} number of uses */
+function startGetImageResolution(pdf, min_required_resolution) {}
+
+/** Gets image data, including resolution at all points of use. Call
+startGetImageResolution(pdf, min_required_resolution) to begin the process of
+obtaining data on all image uses below min_required_resolution, returning the
+total number. So, to return all image uses, specify a very high
+min_required_resolution. Then, call the other functions giving a serial number
+0..n - 1, to retrieve the data. Finally, call endGetImageResolution to clean
+up.
+@arg {number} n serial number
+@return {number} page number */
+function getImageResolutionPageNumber(n) {}
+
+/** Gets image data, including resolution at all points of use. Call
+startGetImageResolution(pdf, min_required_resolution) to begin the process of
+obtaining data on all image uses below min_required_resolution, returning the
+total number. So, to return all image uses, specify a very high
+min_required_resolution. Then, call the other functions giving a serial number
+0..n - 1, to retrieve the data. Finally, call endGetImageResolution to clean
+up.
+@arg {number} n serial number
+@return {string} image name */
+function getImageResolutionImageName(n) {}
+
+/** Gets image data, including resolution at all points of use. Call
+startGetImageResolution(pdf, min_required_resolution) to begin the process of
+obtaining data on all image uses below min_required_resolution, returning the
+total number. So, to return all image uses, specify a very high
+min_required_resolution. Then, call the other functions giving a serial number
+0..n - 1, to retrieve the data. Finally, call endGetImageResolution to clean
+up.
+@arg {number} n serial number
+@return {number} X pixels */
+function getImageResolutionXPixels(n) {}
+
+/** Gets image data, including resolution at all points of use. Call
+startGetImageResolution(pdf, min_required_resolution) to begin the process of
+obtaining data on all image uses below min_required_resolution, returning the
+total number. So, to return all image uses, specify a very high
+min_required_resolution. Then, call the other functions giving a serial number
+0..n - 1, to retrieve the data. Finally, call endGetImageResolution to clean
+up.
+@arg {number} n serial number
+@return {number} Y pixels */
+function getImageResolutionYPixels(n) {}
+
+/** Gets image data, including resolution at all points of use. Call
+startGetImageResolution(pdf, min_required_resolution) to begin the process of
+obtaining data on all image uses below min_required_resolution, returning the
+total number. So, to return all image uses, specify a very high
+min_required_resolution. Then, call the other functions giving a serial number
+0..n - 1, to retrieve the data. Finally, call endGetImageResolution to clean
+up.
+@arg {number} n serial number
+@return {number} X Res */
+function getImageResolutionXRes(n) {}
+
+/** Gets image data, including resolution at all points of use. Call
+startGetImageResolution(pdf, min_required_resolution) to begin the process of
+obtaining data on all image uses below min_required_resolution, returning the
+total number. So, to return all image uses, specify a very high
+min_required_resolution. Then, call the other functions giving a serial number
+0..n - 1, to retrieve the data. Finally, call endGetImageResolution to clean
+up.
+@arg {number} n serial number
+@return {number} Y Res */
+function getImageResolutionYRes(n) {}
+
+/** Gets image data, including resolution at all points of use. Call
+startGetImageResolution(pdf, min_required_resolution) to begin the process of
+obtaining data on all image uses below min_required_resolution, returning the
+total number. So, to return all image uses, specify a very high
+min_required_resolution. Then, call the other functions giving a serial number
+0..n - 1, to retrieve the data. Finally, call endGetImageResolution to clean
 up. */
-function startGetImageResolution(pdf, min_required_resolution)
-function getImageResolutionPageNumber(n)
-function getImageResolutionImageName(n)
-function getImageResolutionXPixels(n)
-function getImageResolutionYPixels(n)
-function getImageResolutionXRes(n)
-function getImageResolutionYRes(n)
-function endGetImageResolution()
+function endGetImageResolution() {}
+

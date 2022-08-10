@@ -1,23 +1,32 @@
 // CHAPTER 16. Optional Content Groups
 
-/** Begins retrieving optional content group names. The serial number 0..n - 1
-is returned. */
-function startGetOCGList(pdf)
+/** Begins retrieving optional content group names. The number of entries is returned.
+@arg {pdf} pdf PDF document
+@return {number} number of entries */
+function startGetOCGList(pdf) {}
 
-/** Retrieves an OCG name, given its serial number 0..n - 1. */
-function ocgListEntry(n)
+/** Retrieves an OCG name, given its serial number 0..n - 1.
+@arg {number} n serial number
+@return {string} OCG name */
+function ocgListEntry(n) {}
 
 /** Ends retrieval of optional content group names. */
-function endGetOCGList()
+function endGetOCGList() {}
 
-/** Renames an optional content group. */
-function ocgRename(pdf, name_from, name_to)
+/** Renames an optional content group.
+@arg {pdf} pdf PDF document
+@arg {string} name_from source name
+@arg {string} name_to destination name */
+function ocgRename(pdf, name_from, name_to) {}
 
-/** Ensures that every optional content group appears in the OCG order list. */
-function ocgOrderAll(pdf)
+/** Ensures that every optional content group appears in the OCG order list.
+@arg {pdf} pdf PDF document */
+function ocgOrderAll(pdf) {}
 
 /** Coalesces optional content groups. For example, if we merge or stamp two
 files both with an OCG called "Layer 1", we will have two different optional
 content groups. This function will merge the two into a single optional
-content group. */
-function ocgCoalesce(pdf)
+content group.
+@arg {pdf} pdf PDF document */
+function ocgCoalesce(pdf) {}
+

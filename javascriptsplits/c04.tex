@@ -1,67 +1,233 @@
 // CHAPTER 3. Pages
 
 /** Scales the page dimensions and content by the given scale, about (0, 0).
-Other boxes (crop etc. are altered as appropriate) */
-function scalePages(pdf, range, sx, sy)
+Other boxes (crop etc. are altered as appropriate)
+@arg {pdf} pdf PDF document
+@arg {range} range page range
+@arg {number} sx x scale
+@arg {number} sy y scale */
+function scalePages(pdf, range, sx, sy) {}
 
 /** Scales the content to fit new page dimensions (width x height) multiplied
-by scale (typically 1.0). Other boxes (crop etc. are altered as appropriate). */
-function scaleToFit(pdf, range, sx, sy, scale)
+by scale (typically 1.0). Other boxes (crop etc. are altered as appropriate).
+@arg {pdf} pdf PDF document
+@arg {range} range page range
+@arg {number} sx x scale
+@arg {number} sy y scale
+@arg {number} scale scale */
+function scaleToFit(pdf, range, sx, sy, scale) {}
+
+/** A0 Portrait paper */
+var a0portrait = 0;
+
+/** A1 Portrait paper */
+var a1portrait = 1;
+
+/** A2 Portrait paper */
+var a2portrait = 2;
+
+/** A3 Portrait paper */
+var a3portrait = 3;
+
+/** A4 Portrait paper */
+var a4portrait = 4;
+
+/** A5 Portrait paper */
+var a5portrait = 5;
+
+/** A0 Landscape paper */
+var a0landscape = 6;
+
+/** A1 Landscape paper */
+var a1landscape = 7;
+
+/** A2 Landscape paper */
+var a2landscape = 8;
+
+/** A3 Landscape paper */
+var a3landscape = 9;
+
+/** A4 Landscape paper */
+var a4landscape = 10;
+
+/** A5 Landscape paper */
+var a5landscape = 11;
+
+/** US Letter Portrait paper */
+var usletterportrait = 12;
+
+/** US Letter Landscape paper */
+var usletterlandscape = 13;
+
+/** US Legal Portrait paper */
+var uslegalportrait = 14;
+
+/** US Legal Landscape paper */
+var uslegallandscape = 15;
 
 /** Scales the page content to fit the given page size, possibly multiplied by
-scale (typically 1.0) */
-function scaleToFitPaper(pdf, range, papersize, s)
+scale (typically 1.0)
+@arg {pdf} pdf PDF document
+@arg {range} range page range
+@arg {"paper size"} papersize paper size
+@arg {number} s scale */
+function scaleToFitPaper(pdf, range, papersize, s) {}
+
+/** Positions on the page. Used for scaling about a point, and adding text.
+
+A position is an anchor and zero or one or two parameters.
+
+posCentre: Two parameters, x and y<br/>
+posLeft: Two parameters, x and y<br/>
+posRight: Two parameters, x and y<br/>
+top: One parameter - distance from top<br/>
+topLeft: One parameter - distance from top left<br/>
+topRight: One parameter - distance from top right<br/>
+left: One parameter - distance from left middle<br/>
+bottomLeft: One parameter - distance from bottom left<br/>
+bottom: One parameter - distance from bottom<br/>
+bottomRight: One parameter - distance from bottom right<br/>
+right: One parameter - distance from right<br/>
+diagonal: Zero parameters<br/>
+reverseDiagonal: Zero parameters */
+
+/** Absolute centre */
+var posCentre = 0;
+
+/** Absolute left */
+var posLeft = 1;
+
+/** Absolute right */
+var posRight = 2;
+
+/** The top centre of the page */
+var top = 3;
+
+/** The top left of the page */
+var topLeft = 4;
+
+/** The top right of the page */
+var topRight = 5;
+
+/** The left hand side of the page, halfway down */
+var left = 6;
+
+/** The bottom left of the page */
+var bottomLeft = 7;
+
+/** The bottom middle of the page */
+var bottom = 8;
+
+/** The bottom right of the page */
+var bottomRight = 9;
+
+/** The right hand side of the page, halfway down */
+var right = 10;
+
+/** Diagonal, bottom left to top right */
+var diagonal = 11;
+
+/** Diagonal, top left to bottom right */
+var reversediagonal = 12;
 
 /** Scales the contents of the pages in the range about the point given by
-the position, by the scale given. */
-function scaleContents(pdf, range, position, scale)
+the position, by the scale given.
+@arg {pdf} pdf PDF document
+@arg {range} range page range
+@arg {anchor} anchor anchor to scale contents about
+@arg {number} p1 position argument 1
+@arg {number} p2 position argument 2
+@arg {number} scale scale */
+function scaleContents(pdf, range, anchor, p1, p2, scale) {}
 
-/** Shifts the content of the pages in the range. */
-function shiftContents(pdf, range, dx, dy)
+/** Shifts the content of the pages in the range.
+@arg {pdf} pdf PDF document
+@arg {range} range page range
+@arg {number} dx x shift
+@arg {number} dy y shift */
+function shiftContents(pdf, range, dx, dy) {}
 
 /** Changes the viewing rotation to an absolute value. Appropriate rotations
-are 0, 90, 180, 270. */
-function rotate(pdf, range, rotation)
+are 0, 90, 180, 270.
+@arg {pdf} pdf PDF document
+@arg {range} range page range
+@arg {number} rotation rotation */
+function rotate(pdf, range, rotation) {}
 
 /** Rotates the content about the centre of the page by the given number of
-degrees, in a clockwise direction. */
-function rotateBy(pdf, range, rotation)
+degrees, in a clockwise direction. Appropriate rotations
+are 0, 90, 180, 270.
+@arg {pdf} pdf PDF document
+@arg {range} range page range
+@arg {number} rotation rotation */
+function rotateBy(pdf, range, rotation) {}
 
 /** Rotates the content about the centre of the page by the given number of
-degrees, in a clockwise direction. */
-function rotateContents(pdf, range, angle)
+degrees, in a clockwise direction.
+@arg {pdf} pdf PDF document
+@arg {range} range page range
+@arg {number} angle angle */
+function rotateContents(pdf, range, angle) {}
 
 /** Changes the viewing rotation of the pages in the range, counter-rotating
-the dimensions and content such that there is no visual change. */
-function upright(pdf, range)
+the dimensions and content such that there is no visual change.
+@arg {pdf} pdf PDF document
+@arg {range} range page range */
+function upright(pdf, range) {}
 
-/** Flips horizontally the pages in the range. */
-function hFlip(pdf, range)
+/** Flips horizontally the pages in the range.
+@arg {pdf} pdf PDF document
+@arg {range} range page range */
+function hFlip(pdf, range) {}
 
-/** Flips vertically the pages in the range. */
-function vFlip(pdf, range)
+/** Flips vertically the pages in the range.
+@arg {pdf} pdf PDF document
+@arg {range} range page range */
+function vFlip(pdf, range) {}
 
 /** Crops a page, replacing any existing crop box. The dimensions are in
-points. */
-function crop(pdf, range, x, y, w, h)
+points.
+@arg {pdf} pdf PDF document
+@arg {range} range page range
+@arg {number} x x position
+@arg {number} y y position
+@arg {number} w width
+@arg {number} h height */
+function crop(pdf, range, x, y, w, h) {}
 
-/** Removes any crop box from pages in the range. */
-function removeCrop(pdf, range)
+/** Removes any crop box from pages in the range.
+@arg {pdf} pdf PDF document
+@arg {range} range page range */
+function removeCrop(pdf, range) {}
 
-/** Removes any trim box from pages in the range. */
-function removeTrim(pdf, range)
+/** Removes any trim box from pages in the range.
+@arg {pdf} pdf PDF document
+@arg {range} range page range */
+function removeTrim(pdf, range) {}
 
-/** Removes any art box from pages in the range. */
-function removeArt(pdf, range)
+/** Removes any art box from pages in the range.
+@arg {pdf} pdf PDF document
+@arg {range} range page range */
+function removeArt(pdf, range) {}
 
-/** Removes any bleed box from pages in the range. */
-function removeBleed(pdf, range)
+/** Removes any bleed box from pages in the range.
+@arg {pdf} pdf PDF document
+@arg {range} range page range */
+function removeBleed(pdf, range) {}
 
-/** Adds trim marks to the given pages, if the trimbox exists. */
-function trimMarks(pdf, range)
+/** Adds trim marks to the given pages, if the trimbox exists.
+@arg {pdf} pdf PDF document
+@arg {range} range page range */
+function trimMarks(pdf, range) {}
 
-/** Shows the boxes on the given pages, for debug. */
-function showBoxes(pdf, range)
+/** Shows the boxes on the given pages, for debug.
+@arg {pdf} pdf PDF document
+@arg {range} range page range */
+function showBoxes(pdf, range) {}
 
-/** Makes a given box a 'hard box' i.e clips it explicitly. */
-function hardBox(pdf, range, boxname)
+/** Makes a given box a 'hard box' i.e clips it explicitly.
+@arg {pdf} pdf PDF document
+@arg {range} range page range
+@arg {string} boxname box name */
+function hardBox(pdf, range, boxname) {}
+
