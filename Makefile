@@ -34,8 +34,7 @@ all : $(TARGETS)
 
 clean ::
 	rm -rf doc foo foo2 out.pdf out2.pdf foo.pdf decomp.pdf *.cmt *.cmti \
-	*.json test/*.pdf debug/*.pdf *.ps *.aux *.idx *.log *.out *.toc *.cut \
-	cpdf.top.dSYM
+	*.json test/*.pdf debug/*.pdf *.ps *.aux *.idx *.log *.out *.toc *.cut
 
 DOC_FILES = cpdfunicodedata.mli cpdferror.mli cpdfdebug.mli cpdfjson.mli \
             cpdfstrftime.mli cpdfcoord.mli cpdfattach.mli cpdfpagespec.mli \
