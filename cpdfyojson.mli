@@ -1,25 +1,14 @@
 # 1 "yojson.cppo.mli"
 (**
-   The Yojson library provides runtime functions for reading and writing JSON
-   data from OCaml. It addresses a few shortcomings of its predecessor
-   json-wheel and is about twice as fast (2.7x reading, 1.3x writing; results
-   may vary).
-   The design goals of Yojson are the following:
-   - Reducing inter-package dependencies by the use of polymorphic
-   variants for the JSON tree type.
-   - Allowing type-aware serializers/deserializers 
-   to read and write directly without going through a generic JSON tree,
-   for efficiency purposes.
-   Readers and writers of all JSON syntaxic elements are provided
-   but are undocumented and meant to be used by generated OCaml code.
-   - Distinguishing between ints and floats.
-   - Providing optional extensions of the JSON syntax.
-   These extensions include comments, arbitrary strings,
-   optional quotes around field names, tuples and variants.
-   
-   @author Martin Jambon
-   @see <http://json.org> JSON specification
- *)
+   The Yojson library provides several types for representing JSON values, with different use cases.
+
+   - The {{!basic}Basic} JSON type,
+   - The {{!safe}Safe} JSON type, a superset of JSON with safer support for integers,
+   - The {{!raw}Raw} JSON type, a superset of JSON, safer but less integrated with OCaml types.
+
+Each of these different types have their own module.
+
+*)
 
 (** {1 Shared types and functions} *)
 
@@ -27,8 +16,12 @@
 val version : string
 
 exception Json_error of string
+(** Exception used:
+    - in JSON readers, if parsing fails;
+    - in JSON writers and pretty printing, if [float] value is not allowed in standard JSON. *)
 
 val json_error : string -> 'a
+(** @raise Json_error *)
 
 type lexer_state = {
   buf : Buffer.t;
@@ -74,8 +67,8 @@ exception End_of_input
 (* end undocumented section *)
 (**/**)
 
-# 27 "yojson.cppo.mli"
-(** {1 Basic JSON tree type} *)
+# 16 "yojson.cppo.mli"
+(** {1:basic Basic JSON tree type} *)
 
 module Basic :
 sig
@@ -145,6 +138,7 @@ All possible cases defined in Yojson:
 val to_string :
   ?buf:Buffer.t ->
   ?len:int ->
+  ?suf:string ->
   ?std:bool ->
   t -> string
   (** Write a compact JSON value to a string.
@@ -152,87 +146,95 @@ val to_string :
       [Buffer.create]. The buffer is cleared of all contents
       before starting and right before returning.
       @param len initial length of the output buffer.
+      @param suf appended to the output as a suffix,
+      defaults to empty string.
       @param std use only standard JSON syntax,
       i.e. convert tuples and variants into standard JSON (if applicable),
       refuse to print NaN and infinities,
       require the root node to be either an object or an array.
       Default is [false].
+      @raise Json_error if [float] value is not allowed in standard JSON.
   *)
 
 val to_channel :
   ?buf:Buffer.t ->
   ?len:int ->
+  ?suf:string ->
   ?std:bool ->
   out_channel -> t -> unit
   (** Write a compact JSON value to a channel.
-      @param buf allows to reuse an existing buffer created with
-      [Buffer.create] on the same channel.
-      [buf] is flushed right
-      before [to_channel] returns but the [out_channel] is
-      not flushed automatically.
+      Note: the [out_channel] is not flushed by this function.
 
-      See [to_string] for the role of the other optional arguments. *)
+      See [to_string] for the role of the optional arguments and raised exceptions. *)
 
 val to_output :
   ?buf:Buffer.t ->
   ?len:int ->
+  ?suf:string ->
   ?std:bool ->
   < output : string -> int -> int -> int; .. > -> t -> unit
   (** Write a compact JSON value to an OO channel.
-      @param buf allows to reuse an existing buffer created with
-      [Buffer.add_channel] on the same channel.
-      [buf] is flushed right
-      before [to_output] returns but the channel itself is
-      not flushed automatically.
 
-      See [to_string] for the role of the other optional arguments. *)
+      See [to_string] for the role of the optional arguments and raised exceptions. *)
 
 val to_file :
   ?len:int ->
   ?std:bool ->
+  ?suf:string ->
   string -> t -> unit
   (** Write a compact JSON value to a file.
-      See [to_string] for the role of the optional arguments. *)
+      See [to_string] for the role of the optional arguments and raised exceptions.
+      @param suf is a suffix appended to the output Newline by default
+      for POSIX compliance. *)
 
 val to_buffer :
+  ?suf:string ->
   ?std:bool ->
   Buffer.t -> t -> unit
   (** Write a compact JSON value to an existing buffer.
-      See [to_string] for the role of the optional argument. *)
+      See [to_string] for the role of the optional argument and raised exceptions. *)
 
-val stream_to_string :
+val seq_to_string :
   ?buf:Buffer.t ->
   ?len:int ->
+  ?suf:string ->
   ?std:bool ->
-  t Stream.t -> string
-  (** Write a newline-separated sequence of compact one-line JSON values to
+  t Seq.t -> string
+  (** Write a sequence of [suf]-suffixed compact one-line JSON values to
       a string.
-      See [to_string] for the role of the optional arguments. *)
+      @param suf is the suffix ouf each value written. Newline by default.
+      See [to_string] for the role of the optional arguments and raised exceptions. *)
 
-val stream_to_channel :
+val seq_to_channel :
   ?buf:Buffer.t ->
   ?len:int ->
+  ?suf:string ->
   ?std:bool ->
-  out_channel -> t Stream.t -> unit
-  (** Write a newline-separated sequence of compact one-line JSON values to
+  out_channel -> t Seq.t -> unit
+  (** Write a sequence of [suf]-suffixed compact one-line JSON values to
       a channel.
-      See [to_channel] for the role of the optional arguments. *)
+      @param suf is the suffix of each value written. Newline by default.
+      See [to_channel] for the role of the optional arguments and raised exceptions. *)
 
-val stream_to_file :
+val seq_to_file :
   ?len:int ->
+  ?suf:string ->
   ?std:bool ->
-  string -> t Stream.t -> unit
-  (** Write a newline-separated sequence of compact one-line JSON values to
+  string -> t Seq.t -> unit
+  (** Write a sequence of [suf]-suffixed compact one-line JSON values to
       a file.
-      See [to_string] for the role of the optional arguments. *)
+      @param suf is the suffix of each value written. Newline by default.
+      See [to_string] for the role of the optional arguments and raised exceptions. *)
 
-val stream_to_buffer :
+val seq_to_buffer :
+  ?suf:string ->
   ?std:bool ->
   Buffer.t ->
-  t Stream.t -> unit
-  (** Write a newline-separated sequence of compact one-line JSON values to
+  t Seq.t -> unit
+  (** Write a sequence of [suf]-suffixed compact one-line JSON values to
       an existing buffer.
-      See [to_string] for the role of the optional arguments. *)
+      @param suf is the suffix of each value written. Newline by default.
+      See [to_string] for the role of the optional arguments and raised exceptions. *)
 
 val write_t : Buffer.t -> t -> unit
 (** Write the given JSON value to the given buffer.
@@ -251,24 +253,22 @@ val sort : t -> t
 
 val write_null : Buffer.t -> unit -> unit
 val write_bool : Buffer.t -> bool -> unit
-# 113 "write.mli"
+# 122 "write.mli"
 val write_int : Buffer.t -> int -> unit
-# 116 "write.mli"
+# 125 "write.mli"
 val write_float : Buffer.t -> float -> unit
 val write_std_float : Buffer.t -> float -> unit
-val write_float_fast : Buffer.t -> float -> unit
-val write_std_float_fast : Buffer.t -> float -> unit
 val write_float_prec : int -> Buffer.t -> float -> unit
 val write_std_float_prec : int -> Buffer.t -> float -> unit
-# 124 "write.mli"
+# 131 "write.mli"
 val write_string : Buffer.t -> string -> unit
 
 
-# 137 "write.mli"
+# 144 "write.mli"
 val write_assoc : Buffer.t -> (string * t) list -> unit
 val write_list : Buffer.t -> t list -> unit
 
-# 148 "write.mli"
+# 155 "write.mli"
 val write_json : Buffer.t -> t -> unit
 val write_std_json : Buffer.t -> t -> unit
 
@@ -294,26 +294,29 @@ val equal : t -> t -> bool
 val pretty_print : ?std:bool -> Format.formatter -> t -> unit
   (** Pretty-print into a {!Format.formatter}.
       See [to_string] for the role of the optional [std] argument.
+      @raise Json_error if [float] value is not allowed in standard JSON.
 
       @since 1.3.1 *)
 
 val pretty_to_string : ?std:bool -> t -> string
   (** Pretty-print into a string.
       See [to_string] for the role of the optional [std] argument.
+      See [pretty_print] for raised exceptions.
   *)
 
 val pretty_to_channel : ?std:bool -> out_channel -> t -> unit
   (** Pretty-print to a channel.
       See [to_string] for the role of the optional [std] argument.
+      See [pretty_print] for raised exceptions.
   *)
 # 1 "read.mli"
 val prettify : ?std:bool -> string -> string
   (** Combined parser and pretty-printer.
-      See [to_string] for the role of the optional [std] argument. *)
+      See [to_string] for the role of the optional [std] argument and raised exceptions. *)
 
 val compact : ?std:bool -> string -> string
   (** Combined parser and printer.
-      See [to_string] for the role of the optional [std] argument. *)
+      See [to_string] for the role of the optional [std] argument and raised exceptions. *)
 
 (** {2 JSON readers} *)
 
@@ -331,6 +334,7 @@ val from_string :
       @param fname data file name to be used in error messages. It does
       not have to be a real file.
       @param lnum number of the first line of input. Default is 1.
+      @raise Json_error if parsing fails.
   *)
 
 val from_channel :
@@ -339,7 +343,7 @@ val from_channel :
   ?lnum:int ->
   in_channel -> t
   (** Read a JSON value from a channel.
-      See [from_string] for the meaning of the optional arguments. *)
+      See [from_string] for the meaning of the optional arguments and raised exceptions. *)
 
 val from_file :
   ?buf:Buffer.t ->
@@ -347,7 +351,7 @@ val from_file :
   ?lnum:int ->
   string -> t
   (** Read a JSON value from a file.
-      See [from_string] for the meaning of the optional arguments. *)
+      See [from_string] for the meaning of the optional arguments and raised exceptions. *)
 
 
 type lexer_state = Lexer_state.t = {
@@ -374,90 +378,90 @@ val from_lexbuf :
   Lexing.lexbuf -> t
   (** Read a JSON value from a lexbuf.
       A valid initial [lexer_state] can be created with [init_lexer].
-      See [from_string] for the meaning of the optional arguments.
+      See [from_string] for the meaning of the optional arguments and raised exceptions.
 
       @param stream indicates whether more data may follow. The default value
       is false and indicates that only JSON whitespace can be found between
       the end of the JSON value and the end of the input. *)
 
-val stream_from_string :
+val seq_from_string :
   ?buf:Buffer.t ->
   ?fname:string ->
   ?lnum:int ->
-  string -> t Stream.t
+  string -> t Seq.t
   (** Input a sequence of JSON values from a string.
       Whitespace between JSON values is fine but not required.
-      See [from_string] for the meaning of the optional arguments. *)
+      See [from_string] for the meaning of the optional arguments and raised exceptions. *)
 
-val stream_from_channel :
+val seq_from_channel :
   ?buf:Buffer.t ->
   ?fin:(unit -> unit) ->
   ?fname:string ->
   ?lnum:int ->
-  in_channel -> t Stream.t
+  in_channel -> t Seq.t
   (** Input a sequence of JSON values from a channel.
       Whitespace between JSON values is fine but not required.
       @param fin finalization function executed once when the end of the
-      stream is reached either because there is no more input or because
+      sequence is reached either because there is no more input or because
       the input could not be parsed, raising an exception.
       @raise Finally When the parsing and the finalizer both raised, [Finally (exn, fin_exn)]
       is raised, [exn] being the parsing exception and [fin_exn] the finalizer one.
 
-      See [from_string] for the meaning of the other optional arguments. *)
+      See [from_string] for the meaning of the other optional arguments and other raised exceptions. *)
 
-val stream_from_file :
+val seq_from_file :
   ?buf:Buffer.t ->
   ?fname:string ->
   ?lnum:int ->
-  string -> t Stream.t
+  string -> t Seq.t
   (** Input a sequence of JSON values from a file.
       Whitespace between JSON values is fine but not required.
 
-      See [from_string] for the meaning of the optional arguments. *)
+      See [from_string] for the meaning of the optional arguments and raised exceptions. *)
 
-val stream_from_lexbuf :
+val seq_from_lexbuf :
   lexer_state ->
   ?fin:(unit -> unit) ->
-  Lexing.lexbuf -> t Stream.t
+  Lexing.lexbuf -> t Seq.t
   (** Input a sequence of JSON values from a lexbuf.
       A valid initial [lexer_state] can be created with [init_lexer].
       Whitespace between JSON values is fine but not required.
       @raise Finally When the parsing and the finalizer both raised, [Finally (exn, fin_exn)]
       is raised, [exn] being the parsing exception and [fin_exn] the finalizer one.
 
-      See [stream_from_channel] for the meaning of the optional [fin]
-      argument. *)
+      See [seq_from_channel] for the meaning of the optional [fin]
+      argument and other raised exceptions. *)
 
 
 type json_line = [ `Json of t | `Exn of exn ]
     (** The type of values resulting from a parsing attempt of a JSON value. *)
 
-val linestream_from_channel :
+val lineseq_from_channel :
   ?buf:Buffer.t ->
   ?fin:(unit -> unit) ->
   ?fname:string ->
   ?lnum:int ->
-  in_channel -> json_line Stream.t
+  in_channel -> json_line Seq.t
   (** Input a sequence of JSON values, one per line, from a channel.
       Exceptions raised when reading malformed lines are caught
       and represented using [`Exn].
 
-      See [stream_from_channel] for the meaning of the optional [fin]
+      See [seq_from_channel] for the meaning of the optional [fin]
       argument.
-      See [from_string] for the meaning of the other optional arguments. *)
+      See [from_string] for the meaning of the other optional arguments and raised exceptions. *)
 
-val linestream_from_file :
+val lineseq_from_file :
   ?buf:Buffer.t ->
   ?fname:string ->
   ?lnum:int ->
-  string -> json_line Stream.t
+  string -> json_line Seq.t
   (** Input a sequence of JSON values, one per line, from a file.
       Exceptions raised when reading malformed lines are caught
       and represented using [`Exn].
 
-      See [stream_from_channel] for the meaning of the optional [fin]
+      See [seq_from_channel] for the meaning of the optional [fin]
       argument.
-      See [from_string] for the meaning of the other optional arguments. *)
+      See [from_string] for the meaning of the other optional arguments and raised exceptions. *)
 
 val read_t : lexer_state -> Lexing.lexbuf -> t
 (** Read a JSON value from the given lexer_state and lexing buffer and return it.
@@ -570,16 +574,10 @@ val read_json : lexer_state -> Lexing.lexbuf -> t
 val skip_json : lexer_state -> Lexing.lexbuf -> unit
 val buffer_json : lexer_state -> Lexing.lexbuf -> unit
 
-val validate_json : 'path -> t -> 'error option
-  (* always returns [None].
-     Provided so that atdgen users can write:
-
-       type t <ocaml module="Yojson.Safe"> = abstract
-  *)
-
 (* end undocumented section *)
 (**/**)
-# 48 "yojson.cppo.mli"
+# 37 "yojson.cppo.mli"
+(** This module provides combinators for extracting fields from JSON values. *)
 module Util :
 sig
 # 1 "util.mli"
@@ -654,84 +652,99 @@ exception Undefined of string * t
       of bounds. *)
 
 val keys : t -> string list
-  (** Returns all the key names in the given JSON object *)
+  (** Returns all the key names in the given JSON object.
+      @raise Type_error if argument is not a JSON object. *)
 
 val values : t -> t list
-  (** Return all the value in the given JSON object *)
+  (** Return all the value in the given JSON object.
+      @raise Type_error if argument is not a JSON object. *)
 
 val combine : t -> t -> t
-  (** Combine two JSON Objects together *)
+  (** Combine two JSON objects together.
+      @raise Invalid_argument if either argument is not a JSON object. *)
 
 val member : string -> t -> t
   (** [member k obj] returns the value associated with the key [k] in the JSON
-      object [obj], or [`Null] if [k] is not present in [obj]. *)
+      object [obj], or [`Null] if [k] is not present in [obj].
+      @raise Type_error if [obj] is not a JSON object. *)
 
 val index : int -> t -> t
   (** [index i arr] returns the value at index [i] in the JSON array [arr].
       Negative indices count from the end of the list (so -1 is the last
-      element). *)
+      element).
+      @raise Type_error if [arr] is not a JSON array.
+      @raise Undefined if index is out of bounds. *)
 
 val map : (t -> t) -> t -> t
   (** [map f arr] calls the function [f] on each element of the JSON array
-      [arr], and returns a JSON array containing the results. *)
+      [arr], and returns a JSON array containing the results.
+      @raise Type_error if [arr] is not an JSON array. *)
 
 val to_assoc : t -> (string * t) list
-  (** Extract the items of a JSON object or raise [Type_error]. *)
+  (** Extract the items of a JSON object.
+      @raise Type_error if argument is not a JSON object. *)
 
 val to_option : (t -> 'a) -> t -> 'a option
   (** Return [None] if the JSON value is null or map the JSON value
       to [Some] value using the provided function. *)
 
 val to_bool : t -> bool
-  (** Extract a boolean value or raise [Type_error]. *)
+  (** Extract a boolean value.
+      @raise Type_error if argument is not a JSON boolean. *)
 
 val to_bool_option : t -> bool option
   (** Extract [Some] boolean value,
-      return [None] if the value is null,
-      or raise [Type_error] otherwise. *)
+      return [None] if the value is null.
+      @raise Type_error if argument is neither. *)
 
 val to_number : t -> float
-  (** Extract a number or raise [Type_error]. *)
+  (** Extract a number.
+      @raise Type_error if argument is not a JSON number. *)
 
 val to_number_option : t -> float option
   (** Extract [Some] number,
-      return [None] if the value is null,
-      or raise [Type_error] otherwise. *)
+      return [None] if the value is null.
+      @raise Type_error if argument is neither. *)
 
 val to_float : t -> float
-  (** Extract a float value or raise [Type_error].
-      [to_number] is generally preferred as it also works with int literals. *)
+  (** Extract a float value.
+      [to_number] is generally preferred as it also works with int literals.
+      @raise Type_error if argument is not a JSON float. *)
 
 val to_float_option : t -> float option
   (** Extract [Some] float value,
-      return [None] if the value is null,
-      or raise [Type_error] otherwise.
+      return [None] if the value is null.
       [to_number_option] is generally preferred as it also works
-      with int literals. *)
+      with int literals.
+      @raise Type_error if argument is neither. *)
 
 val to_int : t -> int
-  (** Extract an int from a JSON int or raise [Type_error]. *)
+  (** Extract an int from a JSON int.
+      @raise Type_error if argument is not a JSON int. *)
 
 val to_int_option : t -> int option
   (** Extract [Some] int from a JSON int,
-      return [None] if the value is null,
-      or raise [Type_error] otherwise. *)
+      return [None] if the value is null.
+      @raise Type_error if argument is neither. *)
 
 val to_list : t -> t list
-  (** Extract a list from JSON array or raise [Type_error]. *)
+  (** Extract a list from JSON array.
+      @raise Type_error if argument is not a JSON array. *)
 
 val to_string : t -> string
-  (** Extract a string from a JSON string or raise [Type_error]. *)
+  (** Extract a string from a JSON string.
+      @raise Type_error if argument is not a JSON string. *)
 
 val to_string_option : t -> string option
   (** Extract [Some] string from a JSON string,
-      return [None] if the value is null,
-      or raise [Type_error] otherwise. *)
+      return [None] if the value is null.
+      @raise Type_error if argument is neither. *)
 
 val convert_each : (t -> 'a) -> t -> 'a list
   (** The conversion functions above cannot be used with [map], because they do
       not return JSON values. This convenience function [convert_each to_f arr]
-      is equivalent to [List.map to_f (to_list arr)]. *)
+      is equivalent to [List.map to_f (to_list arr)].
+      @raise Type_error if [arr] is not a JSON array. *)
 
 
 (** {3 Exception-free filters} *)
@@ -781,12 +794,12 @@ val filter_number : t list -> float list
 
 val filter_string : t list -> string list
   (** Expects JSON strings and unwraps them. *)
-# 51 "yojson.cppo.mli"
+# 41 "yojson.cppo.mli"
 end
-# 55 "yojson.cppo.mli"
+# 45 "yojson.cppo.mli"
 end
 
-(** {1 Multipurpose JSON tree type} *)
+(** {1:safe Multipurpose JSON tree type} *)
 
 module Safe :
 sig
@@ -794,7 +807,8 @@ sig
    This module supports a specific syntax for variants and tuples
    in addition to the standard JSON nodes.
    Arbitrary integers are supported and represented as a decimal string 
-   using [`Intlit] when they cannot be represented using OCaml's int type.
+   using [`Intlit] when they cannot be represented using OCaml's int type
+   (31 or 63 bits depending on the platform).
 
    This module is recommended for intensive use 
    or OCaml-friendly use of JSON.
@@ -896,6 +910,7 @@ v}
 val to_string :
   ?buf:Buffer.t ->
   ?len:int ->
+  ?suf:string ->
   ?std:bool ->
   t -> string
   (** Write a compact JSON value to a string.
@@ -903,87 +918,95 @@ val to_string :
       [Buffer.create]. The buffer is cleared of all contents
       before starting and right before returning.
       @param len initial length of the output buffer.
+      @param suf appended to the output as a suffix,
+      defaults to empty string.
       @param std use only standard JSON syntax,
       i.e. convert tuples and variants into standard JSON (if applicable),
       refuse to print NaN and infinities,
       require the root node to be either an object or an array.
       Default is [false].
+      @raise Json_error if [float] value is not allowed in standard JSON.
   *)
 
 val to_channel :
   ?buf:Buffer.t ->
   ?len:int ->
+  ?suf:string ->
   ?std:bool ->
   out_channel -> t -> unit
   (** Write a compact JSON value to a channel.
-      @param buf allows to reuse an existing buffer created with
-      [Buffer.create] on the same channel.
-      [buf] is flushed right
-      before [to_channel] returns but the [out_channel] is
-      not flushed automatically.
+      Note: the [out_channel] is not flushed by this function.
 
-      See [to_string] for the role of the other optional arguments. *)
+      See [to_string] for the role of the optional arguments and raised exceptions. *)
 
 val to_output :
   ?buf:Buffer.t ->
   ?len:int ->
+  ?suf:string ->
   ?std:bool ->
   < output : string -> int -> int -> int; .. > -> t -> unit
   (** Write a compact JSON value to an OO channel.
-      @param buf allows to reuse an existing buffer created with
-      [Buffer.add_channel] on the same channel.
-      [buf] is flushed right
-      before [to_output] returns but the channel itself is
-      not flushed automatically.
 
-      See [to_string] for the role of the other optional arguments. *)
+      See [to_string] for the role of the optional arguments and raised exceptions. *)
 
 val to_file :
   ?len:int ->
   ?std:bool ->
+  ?suf:string ->
   string -> t -> unit
   (** Write a compact JSON value to a file.
-      See [to_string] for the role of the optional arguments. *)
+      See [to_string] for the role of the optional arguments and raised exceptions.
+      @param suf is a suffix appended to the output Newline by default
+      for POSIX compliance. *)
 
 val to_buffer :
+  ?suf:string ->
   ?std:bool ->
   Buffer.t -> t -> unit
   (** Write a compact JSON value to an existing buffer.
-      See [to_string] for the role of the optional argument. *)
+      See [to_string] for the role of the optional argument and raised exceptions. *)
 
-val stream_to_string :
+val seq_to_string :
   ?buf:Buffer.t ->
   ?len:int ->
+  ?suf:string ->
   ?std:bool ->
-  t Stream.t -> string
-  (** Write a newline-separated sequence of compact one-line JSON values to
+  t Seq.t -> string
+  (** Write a sequence of [suf]-suffixed compact one-line JSON values to
       a string.
-      See [to_string] for the role of the optional arguments. *)
+      @param suf is the suffix ouf each value written. Newline by default.
+      See [to_string] for the role of the optional arguments and raised exceptions. *)
 
-val stream_to_channel :
+val seq_to_channel :
   ?buf:Buffer.t ->
   ?len:int ->
+  ?suf:string ->
   ?std:bool ->
-  out_channel -> t Stream.t -> unit
-  (** Write a newline-separated sequence of compact one-line JSON values to
+  out_channel -> t Seq.t -> unit
+  (** Write a sequence of [suf]-suffixed compact one-line JSON values to
       a channel.
-      See [to_channel] for the role of the optional arguments. *)
+      @param suf is the suffix of each value written. Newline by default.
+      See [to_channel] for the role of the optional arguments and raised exceptions. *)
 
-val stream_to_file :
+val seq_to_file :
   ?len:int ->
+  ?suf:string ->
   ?std:bool ->
-  string -> t Stream.t -> unit
-  (** Write a newline-separated sequence of compact one-line JSON values to
+  string -> t Seq.t -> unit
+  (** Write a sequence of [suf]-suffixed compact one-line JSON values to
       a file.
-      See [to_string] for the role of the optional arguments. *)
+      @param suf is the suffix of each value written. Newline by default.
+      See [to_string] for the role of the optional arguments and raised exceptions. *)
 
-val stream_to_buffer :
+val seq_to_buffer :
+  ?suf:string ->
   ?std:bool ->
   Buffer.t ->
-  t Stream.t -> unit
-  (** Write a newline-separated sequence of compact one-line JSON values to
+  t Seq.t -> unit
+  (** Write a sequence of [suf]-suffixed compact one-line JSON values to
       an existing buffer.
-      See [to_string] for the role of the optional arguments. *)
+      @param suf is the suffix of each value written. Newline by default.
+      See [to_string] for the role of the optional arguments and raised exceptions. *)
 
 val write_t : Buffer.t -> t -> unit
 (** Write the given JSON value to the given buffer.
@@ -1002,32 +1025,30 @@ val sort : t -> t
 
 val write_null : Buffer.t -> unit -> unit
 val write_bool : Buffer.t -> bool -> unit
-# 113 "write.mli"
+# 122 "write.mli"
 val write_int : Buffer.t -> int -> unit
-# 116 "write.mli"
+# 125 "write.mli"
 val write_float : Buffer.t -> float -> unit
 val write_std_float : Buffer.t -> float -> unit
-val write_float_fast : Buffer.t -> float -> unit
-val write_std_float_fast : Buffer.t -> float -> unit
 val write_float_prec : int -> Buffer.t -> float -> unit
 val write_std_float_prec : int -> Buffer.t -> float -> unit
-# 124 "write.mli"
+# 131 "write.mli"
 val write_string : Buffer.t -> string -> unit
 
-# 128 "write.mli"
+# 135 "write.mli"
 val write_intlit : Buffer.t -> string -> unit
 
-# 137 "write.mli"
+# 144 "write.mli"
 val write_assoc : Buffer.t -> (string * t) list -> unit
 val write_list : Buffer.t -> t list -> unit
-# 140 "write.mli"
+# 147 "write.mli"
 val write_tuple : Buffer.t -> t list -> unit
 val write_std_tuple : Buffer.t -> t list -> unit
-# 144 "write.mli"
+# 151 "write.mli"
 val write_variant : Buffer.t -> string -> t option -> unit
 val write_std_variant : Buffer.t -> string -> t option -> unit
 
-# 148 "write.mli"
+# 155 "write.mli"
 val write_json : Buffer.t -> t -> unit
 val write_std_json : Buffer.t -> t -> unit
 
@@ -1039,26 +1060,29 @@ val write_std_json : Buffer.t -> t -> unit
 val pretty_print : ?std:bool -> Format.formatter -> t -> unit
   (** Pretty-print into a {!Format.formatter}.
       See [to_string] for the role of the optional [std] argument.
+      @raise Json_error if [float] value is not allowed in standard JSON.
 
       @since 1.3.1 *)
 
 val pretty_to_string : ?std:bool -> t -> string
   (** Pretty-print into a string.
       See [to_string] for the role of the optional [std] argument.
+      See [pretty_print] for raised exceptions.
   *)
 
 val pretty_to_channel : ?std:bool -> out_channel -> t -> unit
   (** Pretty-print to a channel.
       See [to_string] for the role of the optional [std] argument.
+      See [pretty_print] for raised exceptions.
   *)
 # 1 "read.mli"
 val prettify : ?std:bool -> string -> string
   (** Combined parser and pretty-printer.
-      See [to_string] for the role of the optional [std] argument. *)
+      See [to_string] for the role of the optional [std] argument and raised exceptions. *)
 
 val compact : ?std:bool -> string -> string
   (** Combined parser and printer.
-      See [to_string] for the role of the optional [std] argument. *)
+      See [to_string] for the role of the optional [std] argument and raised exceptions. *)
 
 (** {2 JSON readers} *)
 
@@ -1076,6 +1100,7 @@ val from_string :
       @param fname data file name to be used in error messages. It does
       not have to be a real file.
       @param lnum number of the first line of input. Default is 1.
+      @raise Json_error if parsing fails.
   *)
 
 val from_channel :
@@ -1084,7 +1109,7 @@ val from_channel :
   ?lnum:int ->
   in_channel -> t
   (** Read a JSON value from a channel.
-      See [from_string] for the meaning of the optional arguments. *)
+      See [from_string] for the meaning of the optional arguments and raised exceptions. *)
 
 val from_file :
   ?buf:Buffer.t ->
@@ -1092,7 +1117,7 @@ val from_file :
   ?lnum:int ->
   string -> t
   (** Read a JSON value from a file.
-      See [from_string] for the meaning of the optional arguments. *)
+      See [from_string] for the meaning of the optional arguments and raised exceptions. *)
 
 
 type lexer_state = Lexer_state.t = {
@@ -1119,90 +1144,90 @@ val from_lexbuf :
   Lexing.lexbuf -> t
   (** Read a JSON value from a lexbuf.
       A valid initial [lexer_state] can be created with [init_lexer].
-      See [from_string] for the meaning of the optional arguments.
+      See [from_string] for the meaning of the optional arguments and raised exceptions.
 
       @param stream indicates whether more data may follow. The default value
       is false and indicates that only JSON whitespace can be found between
       the end of the JSON value and the end of the input. *)
 
-val stream_from_string :
+val seq_from_string :
   ?buf:Buffer.t ->
   ?fname:string ->
   ?lnum:int ->
-  string -> t Stream.t
+  string -> t Seq.t
   (** Input a sequence of JSON values from a string.
       Whitespace between JSON values is fine but not required.
-      See [from_string] for the meaning of the optional arguments. *)
+      See [from_string] for the meaning of the optional arguments and raised exceptions. *)
 
-val stream_from_channel :
+val seq_from_channel :
   ?buf:Buffer.t ->
   ?fin:(unit -> unit) ->
   ?fname:string ->
   ?lnum:int ->
-  in_channel -> t Stream.t
+  in_channel -> t Seq.t
   (** Input a sequence of JSON values from a channel.
       Whitespace between JSON values is fine but not required.
       @param fin finalization function executed once when the end of the
-      stream is reached either because there is no more input or because
+      sequence is reached either because there is no more input or because
       the input could not be parsed, raising an exception.
       @raise Finally When the parsing and the finalizer both raised, [Finally (exn, fin_exn)]
       is raised, [exn] being the parsing exception and [fin_exn] the finalizer one.
 
-      See [from_string] for the meaning of the other optional arguments. *)
+      See [from_string] for the meaning of the other optional arguments and other raised exceptions. *)
 
-val stream_from_file :
+val seq_from_file :
   ?buf:Buffer.t ->
   ?fname:string ->
   ?lnum:int ->
-  string -> t Stream.t
+  string -> t Seq.t
   (** Input a sequence of JSON values from a file.
       Whitespace between JSON values is fine but not required.
 
-      See [from_string] for the meaning of the optional arguments. *)
+      See [from_string] for the meaning of the optional arguments and raised exceptions. *)
 
-val stream_from_lexbuf :
+val seq_from_lexbuf :
   lexer_state ->
   ?fin:(unit -> unit) ->
-  Lexing.lexbuf -> t Stream.t
+  Lexing.lexbuf -> t Seq.t
   (** Input a sequence of JSON values from a lexbuf.
       A valid initial [lexer_state] can be created with [init_lexer].
       Whitespace between JSON values is fine but not required.
       @raise Finally When the parsing and the finalizer both raised, [Finally (exn, fin_exn)]
       is raised, [exn] being the parsing exception and [fin_exn] the finalizer one.
 
-      See [stream_from_channel] for the meaning of the optional [fin]
-      argument. *)
+      See [seq_from_channel] for the meaning of the optional [fin]
+      argument and other raised exceptions. *)
 
 
 type json_line = [ `Json of t | `Exn of exn ]
     (** The type of values resulting from a parsing attempt of a JSON value. *)
 
-val linestream_from_channel :
+val lineseq_from_channel :
   ?buf:Buffer.t ->
   ?fin:(unit -> unit) ->
   ?fname:string ->
   ?lnum:int ->
-  in_channel -> json_line Stream.t
+  in_channel -> json_line Seq.t
   (** Input a sequence of JSON values, one per line, from a channel.
       Exceptions raised when reading malformed lines are caught
       and represented using [`Exn].
 
-      See [stream_from_channel] for the meaning of the optional [fin]
+      See [seq_from_channel] for the meaning of the optional [fin]
       argument.
-      See [from_string] for the meaning of the other optional arguments. *)
+      See [from_string] for the meaning of the other optional arguments and raised exceptions. *)
 
-val linestream_from_file :
+val lineseq_from_file :
   ?buf:Buffer.t ->
   ?fname:string ->
   ?lnum:int ->
-  string -> json_line Stream.t
+  string -> json_line Seq.t
   (** Input a sequence of JSON values, one per line, from a file.
       Exceptions raised when reading malformed lines are caught
       and represented using [`Exn].
 
-      See [stream_from_channel] for the meaning of the optional [fin]
+      See [seq_from_channel] for the meaning of the optional [fin]
       argument.
-      See [from_string] for the meaning of the other optional arguments. *)
+      See [from_string] for the meaning of the other optional arguments and raised exceptions. *)
 
 val read_t : lexer_state -> Lexing.lexbuf -> t
 (** Read a JSON value from the given lexer_state and lexing buffer and return it.
@@ -1315,16 +1340,10 @@ val read_json : lexer_state -> Lexing.lexbuf -> t
 val skip_json : lexer_state -> Lexing.lexbuf -> unit
 val buffer_json : lexer_state -> Lexing.lexbuf -> unit
 
-val validate_json : 'path -> t -> 'error option
-  (* always returns [None].
-     Provided so that atdgen users can write:
-
-       type t <ocaml module="Yojson.Safe"> = abstract
-  *)
-
 (* end undocumented section *)
 (**/**)
-# 83 "yojson.cppo.mli"
+# 74 "yojson.cppo.mli"
+(** This module provides combinators for extracting fields from JSON values. *)
 module Util :
 sig
 # 1 "util.mli"
@@ -1399,84 +1418,99 @@ exception Undefined of string * t
       of bounds. *)
 
 val keys : t -> string list
-  (** Returns all the key names in the given JSON object *)
+  (** Returns all the key names in the given JSON object.
+      @raise Type_error if argument is not a JSON object. *)
 
 val values : t -> t list
-  (** Return all the value in the given JSON object *)
+  (** Return all the value in the given JSON object.
+      @raise Type_error if argument is not a JSON object. *)
 
 val combine : t -> t -> t
-  (** Combine two JSON Objects together *)
+  (** Combine two JSON objects together.
+      @raise Invalid_argument if either argument is not a JSON object. *)
 
 val member : string -> t -> t
   (** [member k obj] returns the value associated with the key [k] in the JSON
-      object [obj], or [`Null] if [k] is not present in [obj]. *)
+      object [obj], or [`Null] if [k] is not present in [obj].
+      @raise Type_error if [obj] is not a JSON object. *)
 
 val index : int -> t -> t
   (** [index i arr] returns the value at index [i] in the JSON array [arr].
       Negative indices count from the end of the list (so -1 is the last
-      element). *)
+      element).
+      @raise Type_error if [arr] is not a JSON array.
+      @raise Undefined if index is out of bounds. *)
 
 val map : (t -> t) -> t -> t
   (** [map f arr] calls the function [f] on each element of the JSON array
-      [arr], and returns a JSON array containing the results. *)
+      [arr], and returns a JSON array containing the results.
+      @raise Type_error if [arr] is not an JSON array. *)
 
 val to_assoc : t -> (string * t) list
-  (** Extract the items of a JSON object or raise [Type_error]. *)
+  (** Extract the items of a JSON object.
+      @raise Type_error if argument is not a JSON object. *)
 
 val to_option : (t -> 'a) -> t -> 'a option
   (** Return [None] if the JSON value is null or map the JSON value
       to [Some] value using the provided function. *)
 
 val to_bool : t -> bool
-  (** Extract a boolean value or raise [Type_error]. *)
+  (** Extract a boolean value.
+      @raise Type_error if argument is not a JSON boolean. *)
 
 val to_bool_option : t -> bool option
   (** Extract [Some] boolean value,
-      return [None] if the value is null,
-      or raise [Type_error] otherwise. *)
+      return [None] if the value is null.
+      @raise Type_error if argument is neither. *)
 
 val to_number : t -> float
-  (** Extract a number or raise [Type_error]. *)
+  (** Extract a number.
+      @raise Type_error if argument is not a JSON number. *)
 
 val to_number_option : t -> float option
   (** Extract [Some] number,
-      return [None] if the value is null,
-      or raise [Type_error] otherwise. *)
+      return [None] if the value is null.
+      @raise Type_error if argument is neither. *)
 
 val to_float : t -> float
-  (** Extract a float value or raise [Type_error].
-      [to_number] is generally preferred as it also works with int literals. *)
+  (** Extract a float value.
+      [to_number] is generally preferred as it also works with int literals.
+      @raise Type_error if argument is not a JSON float. *)
 
 val to_float_option : t -> float option
   (** Extract [Some] float value,
-      return [None] if the value is null,
-      or raise [Type_error] otherwise.
+      return [None] if the value is null.
       [to_number_option] is generally preferred as it also works
-      with int literals. *)
+      with int literals.
+      @raise Type_error if argument is neither. *)
 
 val to_int : t -> int
-  (** Extract an int from a JSON int or raise [Type_error]. *)
+  (** Extract an int from a JSON int.
+      @raise Type_error if argument is not a JSON int. *)
 
 val to_int_option : t -> int option
   (** Extract [Some] int from a JSON int,
-      return [None] if the value is null,
-      or raise [Type_error] otherwise. *)
+      return [None] if the value is null.
+      @raise Type_error if argument is neither. *)
 
 val to_list : t -> t list
-  (** Extract a list from JSON array or raise [Type_error]. *)
+  (** Extract a list from JSON array.
+      @raise Type_error if argument is not a JSON array. *)
 
 val to_string : t -> string
-  (** Extract a string from a JSON string or raise [Type_error]. *)
+  (** Extract a string from a JSON string.
+      @raise Type_error if argument is not a JSON string. *)
 
 val to_string_option : t -> string option
   (** Extract [Some] string from a JSON string,
-      return [None] if the value is null,
-      or raise [Type_error] otherwise. *)
+      return [None] if the value is null.
+      @raise Type_error if argument is neither. *)
 
 val convert_each : (t -> 'a) -> t -> 'a list
   (** The conversion functions above cannot be used with [map], because they do
       not return JSON values. This convenience function [convert_each to_f arr]
-      is equivalent to [List.map to_f (to_list arr)]. *)
+      is equivalent to [List.map to_f (to_list arr)].
+      @raise Type_error if [arr] is not a JSON array. *)
 
 
 (** {3 Exception-free filters} *)
@@ -1526,9 +1560,9 @@ val filter_number : t list -> float list
 
 val filter_string : t list -> string list
   (** Expects JSON strings and unwraps them. *)
-# 86 "yojson.cppo.mli"
+# 78 "yojson.cppo.mli"
 end
-# 93 "yojson.cppo.mli"
+# 85 "yojson.cppo.mli"
 end
 
 (** {1 JSON tree type with literal int/float/string leaves} *)
@@ -1619,6 +1653,7 @@ val equal : t -> t -> bool
 val to_string :
   ?buf:Buffer.t ->
   ?len:int ->
+  ?suf:string ->
   ?std:bool ->
   t -> string
   (** Write a compact JSON value to a string.
@@ -1626,87 +1661,95 @@ val to_string :
       [Buffer.create]. The buffer is cleared of all contents
       before starting and right before returning.
       @param len initial length of the output buffer.
+      @param suf appended to the output as a suffix,
+      defaults to empty string.
       @param std use only standard JSON syntax,
       i.e. convert tuples and variants into standard JSON (if applicable),
       refuse to print NaN and infinities,
       require the root node to be either an object or an array.
       Default is [false].
+      @raise Json_error if [float] value is not allowed in standard JSON.
   *)
 
 val to_channel :
   ?buf:Buffer.t ->
   ?len:int ->
+  ?suf:string ->
   ?std:bool ->
   out_channel -> t -> unit
   (** Write a compact JSON value to a channel.
-      @param buf allows to reuse an existing buffer created with
-      [Buffer.create] on the same channel.
-      [buf] is flushed right
-      before [to_channel] returns but the [out_channel] is
-      not flushed automatically.
+      Note: the [out_channel] is not flushed by this function.
 
-      See [to_string] for the role of the other optional arguments. *)
+      See [to_string] for the role of the optional arguments and raised exceptions. *)
 
 val to_output :
   ?buf:Buffer.t ->
   ?len:int ->
+  ?suf:string ->
   ?std:bool ->
   < output : string -> int -> int -> int; .. > -> t -> unit
   (** Write a compact JSON value to an OO channel.
-      @param buf allows to reuse an existing buffer created with
-      [Buffer.add_channel] on the same channel.
-      [buf] is flushed right
-      before [to_output] returns but the channel itself is
-      not flushed automatically.
 
-      See [to_string] for the role of the other optional arguments. *)
+      See [to_string] for the role of the optional arguments and raised exceptions. *)
 
 val to_file :
   ?len:int ->
   ?std:bool ->
+  ?suf:string ->
   string -> t -> unit
   (** Write a compact JSON value to a file.
-      See [to_string] for the role of the optional arguments. *)
+      See [to_string] for the role of the optional arguments and raised exceptions.
+      @param suf is a suffix appended to the output Newline by default
+      for POSIX compliance. *)
 
 val to_buffer :
+  ?suf:string ->
   ?std:bool ->
   Buffer.t -> t -> unit
   (** Write a compact JSON value to an existing buffer.
-      See [to_string] for the role of the optional argument. *)
+      See [to_string] for the role of the optional argument and raised exceptions. *)
 
-val stream_to_string :
+val seq_to_string :
   ?buf:Buffer.t ->
   ?len:int ->
+  ?suf:string ->
   ?std:bool ->
-  t Stream.t -> string
-  (** Write a newline-separated sequence of compact one-line JSON values to
+  t Seq.t -> string
+  (** Write a sequence of [suf]-suffixed compact one-line JSON values to
       a string.
-      See [to_string] for the role of the optional arguments. *)
+      @param suf is the suffix ouf each value written. Newline by default.
+      See [to_string] for the role of the optional arguments and raised exceptions. *)
 
-val stream_to_channel :
+val seq_to_channel :
   ?buf:Buffer.t ->
   ?len:int ->
+  ?suf:string ->
   ?std:bool ->
-  out_channel -> t Stream.t -> unit
-  (** Write a newline-separated sequence of compact one-line JSON values to
+  out_channel -> t Seq.t -> unit
+  (** Write a sequence of [suf]-suffixed compact one-line JSON values to
       a channel.
-      See [to_channel] for the role of the optional arguments. *)
+      @param suf is the suffix of each value written. Newline by default.
+      See [to_channel] for the role of the optional arguments and raised exceptions. *)
 
-val stream_to_file :
+val seq_to_file :
   ?len:int ->
+  ?suf:string ->
   ?std:bool ->
-  string -> t Stream.t -> unit
-  (** Write a newline-separated sequence of compact one-line JSON values to
+  string -> t Seq.t -> unit
+  (** Write a sequence of [suf]-suffixed compact one-line JSON values to
       a file.
-      See [to_string] for the role of the optional arguments. *)
+      @param suf is the suffix of each value written. Newline by default.
+      See [to_string] for the role of the optional arguments and raised exceptions. *)
 
-val stream_to_buffer :
+val seq_to_buffer :
+  ?suf:string ->
   ?std:bool ->
   Buffer.t ->
-  t Stream.t -> unit
-  (** Write a newline-separated sequence of compact one-line JSON values to
+  t Seq.t -> unit
+  (** Write a sequence of [suf]-suffixed compact one-line JSON values to
       an existing buffer.
-      See [to_string] for the role of the optional arguments. *)
+      @param suf is the suffix of each value written. Newline by default.
+      See [to_string] for the role of the optional arguments and raised exceptions. *)
 
 val write_t : Buffer.t -> t -> unit
 (** Write the given JSON value to the given buffer.
@@ -1726,24 +1769,24 @@ val sort : t -> t
 val write_null : Buffer.t -> unit -> unit
 val write_bool : Buffer.t -> bool -> unit
 
-# 128 "write.mli"
+# 135 "write.mli"
 val write_intlit : Buffer.t -> string -> unit
-# 131 "write.mli"
+# 138 "write.mli"
 val write_floatlit : Buffer.t -> string -> unit
-# 134 "write.mli"
+# 141 "write.mli"
 val write_stringlit : Buffer.t -> string -> unit
 
-# 137 "write.mli"
+# 144 "write.mli"
 val write_assoc : Buffer.t -> (string * t) list -> unit
 val write_list : Buffer.t -> t list -> unit
-# 140 "write.mli"
+# 147 "write.mli"
 val write_tuple : Buffer.t -> t list -> unit
 val write_std_tuple : Buffer.t -> t list -> unit
-# 144 "write.mli"
+# 151 "write.mli"
 val write_variant : Buffer.t -> string -> t option -> unit
 val write_std_variant : Buffer.t -> string -> t option -> unit
 
-# 148 "write.mli"
+# 155 "write.mli"
 val write_json : Buffer.t -> t -> unit
 val write_std_json : Buffer.t -> t -> unit
 
@@ -1755,26 +1798,29 @@ val write_std_json : Buffer.t -> t -> unit
 val pretty_print : ?std:bool -> Format.formatter -> t -> unit
   (** Pretty-print into a {!Format.formatter}.
       See [to_string] for the role of the optional [std] argument.
+      @raise Json_error if [float] value is not allowed in standard JSON.
 
       @since 1.3.1 *)
 
 val pretty_to_string : ?std:bool -> t -> string
   (** Pretty-print into a string.
       See [to_string] for the role of the optional [std] argument.
+      See [pretty_print] for raised exceptions.
   *)
 
 val pretty_to_channel : ?std:bool -> out_channel -> t -> unit
   (** Pretty-print to a channel.
       See [to_string] for the role of the optional [std] argument.
+      See [pretty_print] for raised exceptions.
   *)
 # 1 "read.mli"
 val prettify : ?std:bool -> string -> string
   (** Combined parser and pretty-printer.
-      See [to_string] for the role of the optional [std] argument. *)
+      See [to_string] for the role of the optional [std] argument and raised exceptions. *)
 
 val compact : ?std:bool -> string -> string
   (** Combined parser and printer.
-      See [to_string] for the role of the optional [std] argument. *)
+      See [to_string] for the role of the optional [std] argument and raised exceptions. *)
 
 (** {2 JSON readers} *)
 
@@ -1792,6 +1838,7 @@ val from_string :
       @param fname data file name to be used in error messages. It does
       not have to be a real file.
       @param lnum number of the first line of input. Default is 1.
+      @raise Json_error if parsing fails.
   *)
 
 val from_channel :
@@ -1800,7 +1847,7 @@ val from_channel :
   ?lnum:int ->
   in_channel -> t
   (** Read a JSON value from a channel.
-      See [from_string] for the meaning of the optional arguments. *)
+      See [from_string] for the meaning of the optional arguments and raised exceptions. *)
 
 val from_file :
   ?buf:Buffer.t ->
@@ -1808,7 +1855,7 @@ val from_file :
   ?lnum:int ->
   string -> t
   (** Read a JSON value from a file.
-      See [from_string] for the meaning of the optional arguments. *)
+      See [from_string] for the meaning of the optional arguments and raised exceptions. *)
 
 
 type lexer_state = Lexer_state.t = {
@@ -1835,90 +1882,90 @@ val from_lexbuf :
   Lexing.lexbuf -> t
   (** Read a JSON value from a lexbuf.
       A valid initial [lexer_state] can be created with [init_lexer].
-      See [from_string] for the meaning of the optional arguments.
+      See [from_string] for the meaning of the optional arguments and raised exceptions.
 
       @param stream indicates whether more data may follow. The default value
       is false and indicates that only JSON whitespace can be found between
       the end of the JSON value and the end of the input. *)
 
-val stream_from_string :
+val seq_from_string :
   ?buf:Buffer.t ->
   ?fname:string ->
   ?lnum:int ->
-  string -> t Stream.t
+  string -> t Seq.t
   (** Input a sequence of JSON values from a string.
       Whitespace between JSON values is fine but not required.
-      See [from_string] for the meaning of the optional arguments. *)
+      See [from_string] for the meaning of the optional arguments and raised exceptions. *)
 
-val stream_from_channel :
+val seq_from_channel :
   ?buf:Buffer.t ->
   ?fin:(unit -> unit) ->
   ?fname:string ->
   ?lnum:int ->
-  in_channel -> t Stream.t
+  in_channel -> t Seq.t
   (** Input a sequence of JSON values from a channel.
       Whitespace between JSON values is fine but not required.
       @param fin finalization function executed once when the end of the
-      stream is reached either because there is no more input or because
+      sequence is reached either because there is no more input or because
       the input could not be parsed, raising an exception.
       @raise Finally When the parsing and the finalizer both raised, [Finally (exn, fin_exn)]
       is raised, [exn] being the parsing exception and [fin_exn] the finalizer one.
 
-      See [from_string] for the meaning of the other optional arguments. *)
+      See [from_string] for the meaning of the other optional arguments and other raised exceptions. *)
 
-val stream_from_file :
+val seq_from_file :
   ?buf:Buffer.t ->
   ?fname:string ->
   ?lnum:int ->
-  string -> t Stream.t
+  string -> t Seq.t
   (** Input a sequence of JSON values from a file.
       Whitespace between JSON values is fine but not required.
 
-      See [from_string] for the meaning of the optional arguments. *)
+      See [from_string] for the meaning of the optional arguments and raised exceptions. *)
 
-val stream_from_lexbuf :
+val seq_from_lexbuf :
   lexer_state ->
   ?fin:(unit -> unit) ->
-  Lexing.lexbuf -> t Stream.t
+  Lexing.lexbuf -> t Seq.t
   (** Input a sequence of JSON values from a lexbuf.
       A valid initial [lexer_state] can be created with [init_lexer].
       Whitespace between JSON values is fine but not required.
       @raise Finally When the parsing and the finalizer both raised, [Finally (exn, fin_exn)]
       is raised, [exn] being the parsing exception and [fin_exn] the finalizer one.
 
-      See [stream_from_channel] for the meaning of the optional [fin]
-      argument. *)
+      See [seq_from_channel] for the meaning of the optional [fin]
+      argument and other raised exceptions. *)
 
 
 type json_line = [ `Json of t | `Exn of exn ]
     (** The type of values resulting from a parsing attempt of a JSON value. *)
 
-val linestream_from_channel :
+val lineseq_from_channel :
   ?buf:Buffer.t ->
   ?fin:(unit -> unit) ->
   ?fname:string ->
   ?lnum:int ->
-  in_channel -> json_line Stream.t
+  in_channel -> json_line Seq.t
   (** Input a sequence of JSON values, one per line, from a channel.
       Exceptions raised when reading malformed lines are caught
       and represented using [`Exn].
 
-      See [stream_from_channel] for the meaning of the optional [fin]
+      See [seq_from_channel] for the meaning of the optional [fin]
       argument.
-      See [from_string] for the meaning of the other optional arguments. *)
+      See [from_string] for the meaning of the other optional arguments and raised exceptions. *)
 
-val linestream_from_file :
+val lineseq_from_file :
   ?buf:Buffer.t ->
   ?fname:string ->
   ?lnum:int ->
-  string -> json_line Stream.t
+  string -> json_line Seq.t
   (** Input a sequence of JSON values, one per line, from a file.
       Exceptions raised when reading malformed lines are caught
       and represented using [`Exn].
 
-      See [stream_from_channel] for the meaning of the optional [fin]
+      See [seq_from_channel] for the meaning of the optional [fin]
       argument.
-      See [from_string] for the meaning of the other optional arguments. *)
+      See [from_string] for the meaning of the other optional arguments and raised exceptions. *)
 
 val read_t : lexer_state -> Lexing.lexbuf -> t
 (** Read a JSON value from the given lexer_state and lexing buffer and return it.
@@ -2031,19 +2078,12 @@ val read_json : lexer_state -> Lexing.lexbuf -> t
 val skip_json : lexer_state -> Lexing.lexbuf -> unit
 val buffer_json : lexer_state -> Lexing.lexbuf -> unit
 
-val validate_json : 'path -> t -> 'error option
-  (* always returns [None].
-     Provided so that atdgen users can write:
-
-       type t <ocaml module="Yojson.Safe"> = abstract
-  *)
-
 (* end undocumented section *)
 (**/**)
-# 121 "yojson.cppo.mli"
+# 113 "yojson.cppo.mli"
 end
 
-(** {1 Supertype of all JSON tree types} *)
+(** {1:raw Supertype of all JSON tree types} *)
 
 # 1 "type.ml"
 (** {3 Type of the JSON tree} *)
@@ -2125,14 +2165,13 @@ val equal : t -> t -> bool
       duplicate keys which will be considered equal as long as they are in the
       same input order.
     *)
-# 135 "yojson.cppo.mli"
-type json_max = t
 # 1 "write.mli"
 (** {2 JSON writers} *)
 
 val to_string :
   ?buf:Buffer.t ->
   ?len:int ->
+  ?suf:string ->
   ?std:bool ->
   t -> string
   (** Write a compact JSON value to a string.
@@ -2140,87 +2179,95 @@ val to_string :
       [Buffer.create]. The buffer is cleared of all contents
       before starting and right before returning.
       @param len initial length of the output buffer.
+      @param suf appended to the output as a suffix,
+      defaults to empty string.
       @param std use only standard JSON syntax,
       i.e. convert tuples and variants into standard JSON (if applicable),
       refuse to print NaN and infinities,
       require the root node to be either an object or an array.
       Default is [false].
+      @raise Json_error if [float] value is not allowed in standard JSON.
   *)
 
 val to_channel :
   ?buf:Buffer.t ->
   ?len:int ->
+  ?suf:string ->
   ?std:bool ->
   out_channel -> t -> unit
   (** Write a compact JSON value to a channel.
-      @param buf allows to reuse an existing buffer created with
-      [Buffer.create] on the same channel.
-      [buf] is flushed right
-      before [to_channel] returns but the [out_channel] is
-      not flushed automatically.
+      Note: the [out_channel] is not flushed by this function.
 
-      See [to_string] for the role of the other optional arguments. *)
+      See [to_string] for the role of the optional arguments and raised exceptions. *)
 
 val to_output :
   ?buf:Buffer.t ->
   ?len:int ->
+  ?suf:string ->
   ?std:bool ->
   < output : string -> int -> int -> int; .. > -> t -> unit
   (** Write a compact JSON value to an OO channel.
-      @param buf allows to reuse an existing buffer created with
-      [Buffer.add_channel] on the same channel.
-      [buf] is flushed right
-      before [to_output] returns but the channel itself is
-      not flushed automatically.
 
-      See [to_string] for the role of the other optional arguments. *)
+      See [to_string] for the role of the optional arguments and raised exceptions. *)
 
 val to_file :
   ?len:int ->
   ?std:bool ->
+  ?suf:string ->
   string -> t -> unit
   (** Write a compact JSON value to a file.
-      See [to_string] for the role of the optional arguments. *)
+      See [to_string] for the role of the optional arguments and raised exceptions.
+      @param suf is a suffix appended to the output Newline by default
+      for POSIX compliance. *)
 
 val to_buffer :
+  ?suf:string ->
   ?std:bool ->
   Buffer.t -> t -> unit
   (** Write a compact JSON value to an existing buffer.
-      See [to_string] for the role of the optional argument. *)
+      See [to_string] for the role of the optional argument and raised exceptions. *)
 
-val stream_to_string :
+val seq_to_string :
   ?buf:Buffer.t ->
   ?len:int ->
+  ?suf:string ->
   ?std:bool ->
-  t Stream.t -> string
-  (** Write a newline-separated sequence of compact one-line JSON values to
+  t Seq.t -> string
+  (** Write a sequence of [suf]-suffixed compact one-line JSON values to
       a string.
-      See [to_string] for the role of the optional arguments. *)
+      @param suf is the suffix ouf each value written. Newline by default.
+      See [to_string] for the role of the optional arguments and raised exceptions. *)
 
-val stream_to_channel :
+val seq_to_channel :
   ?buf:Buffer.t ->
   ?len:int ->
+  ?suf:string ->
   ?std:bool ->
-  out_channel -> t Stream.t -> unit
-  (** Write a newline-separated sequence of compact one-line JSON values to
+  out_channel -> t Seq.t -> unit
+  (** Write a sequence of [suf]-suffixed compact one-line JSON values to
       a channel.
-      See [to_channel] for the role of the optional arguments. *)
+      @param suf is the suffix of each value written. Newline by default.
+      See [to_channel] for the role of the optional arguments and raised exceptions. *)
 
-val stream_to_file :
+val seq_to_file :
   ?len:int ->
+  ?suf:string ->
   ?std:bool ->
-  string -> t Stream.t -> unit
-  (** Write a newline-separated sequence of compact one-line JSON values to
+  string -> t Seq.t -> unit
+  (** Write a sequence of [suf]-suffixed compact one-line JSON values to
       a file.
-      See [to_string] for the role of the optional arguments. *)
+      @param suf is the suffix of each value written. Newline by default.
+      See [to_string] for the role of the optional arguments and raised exceptions. *)
 
-val stream_to_buffer :
+val seq_to_buffer :
+  ?suf:string ->
   ?std:bool ->
   Buffer.t ->
-  t Stream.t -> unit
-  (** Write a newline-separated sequence of compact one-line JSON values to
+  t Seq.t -> unit
+  (** Write a sequence of [suf]-suffixed compact one-line JSON values to
       an existing buffer.
-      See [to_string] for the role of the optional arguments. *)
+      @param suf is the suffix of each value written. Newline by default.
+      See [to_string] for the role of the optional arguments and raised exceptions. *)
 
 val write_t : Buffer.t -> t -> unit
 (** Write the given JSON value to the given buffer.
@@ -2239,36 +2286,34 @@ val sort : t -> t
 
 val write_null : Buffer.t -> unit -> unit
 val write_bool : Buffer.t -> bool -> unit
-# 113 "write.mli"
+# 122 "write.mli"
 val write_int : Buffer.t -> int -> unit
-# 116 "write.mli"
+# 125 "write.mli"
 val write_float : Buffer.t -> float -> unit
 val write_std_float : Buffer.t -> float -> unit
-val write_float_fast : Buffer.t -> float -> unit
-val write_std_float_fast : Buffer.t -> float -> unit
 val write_float_prec : int -> Buffer.t -> float -> unit
 val write_std_float_prec : int -> Buffer.t -> float -> unit
-# 124 "write.mli"
+# 131 "write.mli"
 val write_string : Buffer.t -> string -> unit
 
-# 128 "write.mli"
+# 135 "write.mli"
 val write_intlit : Buffer.t -> string -> unit
-# 131 "write.mli"
+# 138 "write.mli"
 val write_floatlit : Buffer.t -> string -> unit
-# 134 "write.mli"
+# 141 "write.mli"
 val write_stringlit : Buffer.t -> string -> unit
 
-# 137 "write.mli"
+# 144 "write.mli"
 val write_assoc : Buffer.t -> (string * t) list -> unit
 val write_list : Buffer.t -> t list -> unit
-# 140 "write.mli"
+# 147 "write.mli"
 val write_tuple : Buffer.t -> t list -> unit
 val write_std_tuple : Buffer.t -> t list -> unit
-# 144 "write.mli"
+# 151 "write.mli"
 val write_variant : Buffer.t -> string -> t option -> unit
 val write_std_variant : Buffer.t -> string -> t option -> unit
 
-# 148 "write.mli"
+# 155 "write.mli"
 val write_json : Buffer.t -> t -> unit
 val write_std_json : Buffer.t -> t -> unit
 
@@ -2280,16 +2325,18 @@ val write_std_json : Buffer.t -> t -> unit
 val pretty_print : ?std:bool -> Format.formatter -> t -> unit
   (** Pretty-print into a {!Format.formatter}.
       See [to_string] for the role of the optional [std] argument.
+      @raise Json_error if [float] value is not allowed in standard JSON.
 
       @since 1.3.1 *)
 
 val pretty_to_string : ?std:bool -> t -> string
   (** Pretty-print into a string.
       See [to_string] for the role of the optional [std] argument.
+      See [pretty_print] for raised exceptions.
   *)
 
 val pretty_to_channel : ?std:bool -> out_channel -> t -> unit
   (** Pretty-print to a channel.
       See [to_string] for the role of the optional [std] argument.
+      See [pretty_print] for raised exceptions.
   *)
-

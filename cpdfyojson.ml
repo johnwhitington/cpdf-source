@@ -1,30 +1,3 @@
-(* Copyright (c) 2010-2012, Martin Jambon All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-Redistributions of source code must retain the above copyright notice, this
-list of conditions and the following disclaimer.
-
-Redistributions in binary form must reproduce the above copyright notice, this
-list of conditions and the following disclaimer in the documentation and/or
-other materials provided with the distribution.
-
-Neither the name of nor the names of its contributors may be used to endorse or
-promote products derived from this software without specific prior written
-permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
-ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. *)
-
 # 1 "common.ml"
 let version = "%%VERSION%%"
 
@@ -99,13 +72,6 @@ let code_of_surrogate_pair i j =
 
 let utf8_of_surrogate_pair buf i j =
   utf8_of_code buf (code_of_surrogate_pair i j)
-
-let is_object_or_array x =
-  match x with
-      `List _
-    | `Assoc _ -> true
-    | _ -> false
-
 
 type lexer_state = {
   buf : Buffer.t;
@@ -211,8 +177,6 @@ All possible cases defined in Yojson:
   comments, so it would be complicated to document only the
   cases that are preserved by cppo in the type definition.
 *)
-# 12 "yojson.cppo.ml"
-type json_max = t
 # 1 "write.ml"
 (* included: type.ml *)
 
@@ -331,24 +295,9 @@ let float_needs_period s =
     false
 
 (*
-  Both write_float_fast and write_float guarantee
-  that a sufficient number of digits are printed in order to
-  allow reversibility.
-
-  The _fast version is faster but often produces unnecessarily long numbers.
+  Guarantees that a sufficient number of digits are printed in order to allow
+  reversibility.
 *)
-let write_float_fast ob x =
-  match classify_float x with
-    FP_nan ->
-      Buffer.add_string ob "NaN"
-  | FP_infinite ->
-      Buffer.add_string ob (if x > 0. then "Infinity" else "-Infinity")
-  | _ ->
-      let s = Printf.sprintf "%.17g" x in
-      Buffer.add_string ob s;
-      if float_needs_period s then
-        Buffer.add_string ob ".0"
-
 let write_float ob x =
   match classify_float x with
     FP_nan ->
@@ -391,6 +340,7 @@ let write_normal_float_prec significant_figures ob x =
   if float_needs_period s then
     Buffer.add_string ob ".0"
 
+(* used by atdgen *)
 let write_float_prec significant_figures ob x =
   match classify_float x with
     FP_nan ->
@@ -405,22 +355,6 @@ let json_string_of_float x =
   write_float ob x;
   Buffer.contents ob
 
-
-let write_std_float_fast ob x =
-  match classify_float x with
-    FP_nan ->
-      json_error "NaN value not allowed in standard JSON"
-  | FP_infinite ->
-      json_error
-        (if x > 0. then
-           "Infinity value not allowed in standard JSON"
-         else
-           "-Infinity value not allowed in standard JSON")
-  | _ ->
-      let s = Printf.sprintf "%.17g" x in
-      Buffer.add_string ob s;
-      if float_needs_period s then
-        Buffer.add_string ob ".0"
 
 let write_std_float ob x =
   match classify_float x with
@@ -442,6 +376,7 @@ let write_std_float ob x =
       if float_needs_period s then
         Buffer.add_string ob ".0"
 
+(* used by atdgen *)
 let write_std_float_prec significant_figures ob x =
   match classify_float x with
     FP_nan ->
@@ -506,35 +441,35 @@ let rec write_json ob (x : t) =
       `Null -> write_null ob ()
     | `Bool b -> write_bool ob b
     
-# 293 "write.ml"
+# 264 "write.ml"
     | `Int i -> write_int ob i
     
-# 296 "write.ml"
+# 267 "write.ml"
     | `Intlit s -> Buffer.add_string ob s
     
-# 299 "write.ml"
+# 270 "write.ml"
     | `Float f -> write_float ob f
     
-# 302 "write.ml"
+# 273 "write.ml"
     | `Floatlit s -> Buffer.add_string ob s
     
-# 305 "write.ml"
+# 276 "write.ml"
     | `String s -> write_string ob s
     
-# 308 "write.ml"
+# 279 "write.ml"
     | `Stringlit s -> Buffer.add_string ob s
     
-# 310 "write.ml"
+# 281 "write.ml"
     | `Assoc l -> write_assoc ob l
     | `List l -> write_list ob l
     
-# 313 "write.ml"
+# 284 "write.ml"
     | `Tuple l -> write_tuple ob l
     
-# 316 "write.ml"
+# 287 "write.ml"
     | `Variant (s, o) -> write_variant ob s o
 
-# 319 "write.ml"
+# 290 "write.ml"
 and write_assoc ob l =
   let f_elt ob (s, x) =
     write_string ob s;
@@ -550,13 +485,13 @@ and write_list ob l =
   iter2 write_json f_sep ob l;
   Buffer.add_char ob ']'
 
-# 335 "write.ml"
+# 306 "write.ml"
 and write_tuple ob l =
   Buffer.add_char ob '(';
   iter2 write_json f_sep ob l;
   Buffer.add_char ob ')'
 
-# 342 "write.ml"
+# 313 "write.ml"
 and write_variant ob s o =
   Buffer.add_char ob '<';
   write_string ob s;
@@ -568,7 +503,7 @@ and write_variant ob s o =
   );
   Buffer.add_char ob '>'
 
-# 354 "write.ml"
+# 325 "write.ml"
 let write_t = write_json
 
 let rec write_std_json ob (x : t) =
@@ -576,35 +511,35 @@ let rec write_std_json ob (x : t) =
       `Null -> write_null ob ()
     | `Bool b -> write_bool ob b
     
-# 361 "write.ml"
+# 332 "write.ml"
     | `Int i -> write_int ob i
     
-# 364 "write.ml"
+# 335 "write.ml"
     | `Intlit s -> Buffer.add_string ob s
     
-# 367 "write.ml"
+# 338 "write.ml"
     | `Float f -> write_std_float ob f
     
-# 370 "write.ml"
+# 341 "write.ml"
     | `Floatlit s -> Buffer.add_string ob s
     
-# 373 "write.ml"
+# 344 "write.ml"
     | `String s -> write_string ob s
     
-# 376 "write.ml"
+# 347 "write.ml"
     | `Stringlit s -> Buffer.add_string ob s
     
-# 378 "write.ml"
+# 349 "write.ml"
     | `Assoc l -> write_std_assoc ob l
     | `List l -> write_std_list ob l
     
-# 381 "write.ml"
+# 352 "write.ml"
     | `Tuple l -> write_std_tuple ob l
     
-# 384 "write.ml"
+# 355 "write.ml"
     | `Variant (s, o) -> write_std_variant ob s o
 
-# 387 "write.ml"
+# 358 "write.ml"
 and write_std_assoc ob l =
   let f_elt ob (s, x) =
     write_string ob s;
@@ -625,7 +560,7 @@ and write_std_tuple ob l =
   iter2 write_std_json f_sep ob l;
   Buffer.add_char ob ']'
 
-# 408 "write.ml"
+# 379 "write.ml"
 and write_std_variant ob s o =
   match o with
       None -> write_string ob s
@@ -637,19 +572,15 @@ and write_std_variant ob s o =
         Buffer.add_char ob ']'
 
 
-# 420 "write.ml"
-let to_buffer ?(std = false) ob x =
-  if std then (
-    if not (is_object_or_array x) then
-      json_error "Root is not an object or array"
-    else
-      write_std_json ob x
-  )
+# 391 "write.ml"
+let to_buffer ?(suf = "") ?(std = false) ob x =
+  if std then
+    write_std_json ob x
   else
-    write_json ob x
+    write_json ob x;
+  Buffer.add_string ob suf
 
-
-let to_string ?buf ?(len = 256) ?std x =
+let to_string ?buf ?(len = 256) ?(suf = "") ?std x =
   let ob =
     match buf with
         None -> Buffer.create len
@@ -657,43 +588,44 @@ let to_string ?buf ?(len = 256) ?std x =
           Buffer.clear ob;
           ob
   in
-  to_buffer ?std ob x;
+  to_buffer ~suf ?std ob x;
   let s = Buffer.contents ob in
   Buffer.clear ob;
   s
 
-let to_channel ?buf ?(len=4096) ?std oc x =
+let to_channel ?buf ?(len=4096) ?(suf = "") ?std oc x =
   let ob =
     match buf with
         None -> Buffer.create len
-      | Some ob -> ob
+      | Some ob -> Buffer.clear ob; ob
   in
-  to_buffer ?std ob x;
-  Buffer.output_buffer oc ob
+  to_buffer ~suf ?std ob x;
+  Buffer.output_buffer oc ob;
+  Buffer.clear ob
 
-let to_output ?buf ?(len=4096) ?std out x =
+let to_output ?buf ?(len=4096) ?(suf = "") ?std out x =
   let ob =
     match buf with
         None -> Buffer.create len
-      | Some ob -> ob
+      | Some ob -> Buffer.clear ob; ob
   in
-  to_buffer ?std ob x;
+  to_buffer ~suf ?std ob x;
   out#output (Buffer.contents ob) 0 (Buffer.length ob);
-  ()
+  Buffer.clear ob
 
-let to_file ?len ?std file x =
+let to_file ?len ?std ?(suf = "\n") file x =
   let oc = open_out file in
   try
-    to_channel ?len ?std oc x;
+    to_channel ?len ~suf ?std oc x;
     close_out oc
   with e ->
     close_out_noerr oc;
     raise e
 
-let stream_to_buffer ?std ob st =
-  Stream.iter (to_buffer ?std ob) st
+let seq_to_buffer ?(suf = "\n") ?std ob st =
+  Seq.iter (to_buffer ~suf ?std ob) st
 
-let stream_to_string ?buf ?(len = 256) ?std st =
+let seq_to_string ?buf ?(len = 256) ?(suf = "\n") ?std st =
   let ob =
     match buf with
         None -> Buffer.create len
@@ -701,23 +633,27 @@ let stream_to_string ?buf ?(len = 256) ?std st =
           Buffer.clear ob;
           ob
   in
-  stream_to_buffer ?std ob st;
+  seq_to_buffer ~suf ?std ob st;
   let s = Buffer.contents ob in
   Buffer.clear ob;
   s
 
-let stream_to_channel ?buf ?(len=2096) ?std oc st =
+let seq_to_channel ?buf ?(len=2096) ?(suf = "\n") ?std oc seq =
   let ob =
     match buf with
         None -> Buffer.create len
-      | Some ob -> ob
+      | Some ob -> Buffer.clear ob; ob
   in
-  stream_to_buffer ?std ob st
+  Seq.iter (fun json ->
+    to_buffer ~suf ?std ob json;
+    Buffer.output_buffer oc ob;
+    Buffer.clear ob;
+  ) seq
 
-let stream_to_file ?len ?std file st =
+let seq_to_file ?len ?(suf = "\n") ?std file st =
   let oc = open_out file in
   try
-    stream_to_channel ?len ?std oc st;
+    seq_to_channel ?len ~suf ?std oc st;
     close_out oc
   with e ->
     close_out_noerr oc;
@@ -731,18 +667,18 @@ let rec sort = function
   | `List l ->
       `List (List.rev (List.rev_map sort l))
   
-# 513 "write.ml"
+# 485 "write.ml"
   | `Tuple l ->
       `Tuple (List.rev (List.rev_map sort l))
   
-# 517 "write.ml"
+# 489 "write.ml"
   | `Variant (k, Some v) as x ->
       let v' = sort v in
       if v == v' then x
       else
         `Variant (k, Some v')
   
-# 523 "write.ml"
+# 495 "write.ml"
   | x -> x
 # 1 "monomorphic.ml"
 let rec pp fmt =
@@ -909,66 +845,173 @@ let rec equal a b =
     
 # 155 "monomorphic.ml"
     | _ -> false
-# 15 "yojson.cppo.ml"
+# 14 "yojson.cppo.ml"
 module Pretty =
 struct
+# 1 "pretty.ml"
+(*
+   Pretty-print JSON data in an attempt to maximize readability.
 
-# 2 "pretty.ml"
+   1. What fits on one line stays on one line.
+   2. What doesn't fit on one line gets printed more vertically so as to not
+      exceed a reasonable page width, if possible.
+
+   Arrays containing only simple elements ("atoms") are pretty-printed with
+   end-of-line wrapping like ordinary text:
+
+     [
+        "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello",
+        "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello"
+     ]
+
+   Other arrays are printed either horizontally or vertically depending
+   on whether they fit on a single line:
+
+     [ { "hello": "world" }, { "hello": "world" }, { "hello": "world" } ]
+
+   or
+
+     [
+       { "hello": "world" },
+       { "hello": "world" },
+       { "hello": "world" },
+       { "hello": "world" }
+     ]
+*)
+
 let pp_list sep ppx out l =
   let pp_sep out () = Format.fprintf out "%s@ " sep in
   Format.pp_print_list ~pp_sep ppx out l
 
-let rec format std (out:Format.formatter) (x : t) : unit =
+let is_atom (x: [> t]) =
+  match x with
+  | `Null
+  | `Bool _
+  | `Int _
+  | `Float _
+  | `String _
+  | `Intlit _
+  | `Floatlit _
+  | `Stringlit _
+  | `List []
+  | `Assoc []
+  | `Tuple []
+  | `Variant (_, None) -> true
+  | `List _
+  | `Assoc _
+  | `Tuple _
+  | `Variant (_, Some _) -> false
+
+let is_atom_list l =
+  List.for_all is_atom l
+
+(*
+   inside_box: indicates that we're already within a box that imposes
+   a certain style and we shouldn't create a new one. This is used for
+   printing field values like this:
+
+     foo: [
+       bar
+     ]
+
+   rather than something else like
+
+     foo:
+       [
+         bar
+       ]
+*)
+let rec format ~inside_box std (out:Format.formatter) (x:t) : unit =
   match x with
     | `Null -> Format.pp_print_string out "null"
     | `Bool x -> Format.pp_print_bool out x
+    
+# 78 "pretty.ml"
     | `Int x -> Format.pp_print_string out (json_string_of_int x)
+    
+# 81 "pretty.ml"
     | `Float x ->
         let s =
           if std then std_json_string_of_float x
           else json_string_of_float x
         in
         Format.pp_print_string out s
+    
+# 89 "pretty.ml"
     | `String s -> Format.pp_print_string out (json_string_of_string s)
-    | `Intlit s
-    | `Floatlit s
+    
+# 92 "pretty.ml"
+    | `Intlit s -> Format.pp_print_string out s
+    
+# 95 "pretty.ml"
+    | `Floatlit s -> Format.pp_print_string out s
+    
+# 98 "pretty.ml"
     | `Stringlit s -> Format.pp_print_string out s
+    
+# 100 "pretty.ml"
     | `List [] -> Format.pp_print_string out "[]"
-    | `List l -> Format.fprintf out "[@;<1 0>@[<hov>%a@]@;<1 -2>]" (pp_list "," (format std)) l
+    | `List l ->
+      if not inside_box then Format.fprintf out "@[<hv2>";
+      if is_atom_list l then
+        (* use line wrapping like we would do for a paragraph of text *)
+        Format.fprintf out "[@;<1 0>@[<hov>%a@]@;<1 -2>]"
+          (pp_list "," (format ~inside_box:false std)) l
+      else
+        (* print the elements horizontally if they fit on the line,
+           otherwise print them in a column *)
+        Format.fprintf out "[@;<1 0>@[<hv>%a@]@;<1 -2>]"
+          (pp_list "," (format ~inside_box:false std)) l;
+      if not inside_box then Format.fprintf out "@]";
     | `Assoc [] -> Format.pp_print_string out "{}"
     | `Assoc l ->
-      Format.fprintf out "{@;<1 0>%a@;<1 -2>}" (pp_list "," (format_field std)) l
+      if not inside_box then Format.fprintf out "@[<hv2>";
+      Format.fprintf out "{@;<1 0>%a@;<1 -2>}" (pp_list "," (format_field std)) l;
+      if not inside_box then Format.fprintf out "@]";
+    
+# 119 "pretty.ml"
     | `Tuple l ->
         if std then
-          format std out (`List l)
+          format ~inside_box std out (`List l)
         else
           if l = [] then
             Format.pp_print_string out "()"
-          else
-            Format.fprintf out "(@,%a@;<0 -2>)" (pp_list "," (format std)) l
-
+          else (
+            if not inside_box then Format.fprintf out "@[<hov2>";
+            Format.fprintf out "(@,%a@;<0 -2>)" (pp_list "," (format ~inside_box:false std)) l;
+            if not inside_box then Format.fprintf out "@]";
+          )
+    
+# 132 "pretty.ml"
     | `Variant (s, None) ->
         if std then
-          format std out (`String s)
+          
+# 135 "pretty.ml"
+          let representation = `String s in
+          
+# 139 "pretty.ml"
+          format ~inside_box std out representation
         else
           Format.fprintf out "<%s>" (json_string_of_string s)
 
     | `Variant (s, Some x) ->
         if std then
-          format std out (`List [ `String s; x ])
+          
+# 146 "pretty.ml"
+          let representation = `String s in
+          
+# 150 "pretty.ml"
+          format ~inside_box std out (`List [ representation; x ])
         else
           let op = json_string_of_string s in
-          Format.fprintf out "<@[<hv2>%s: %a@]>" op (format std) x
+          Format.fprintf out "<@[<hv2>%s: %a@]>" op (format ~inside_box:true std) x
 
+# 156 "pretty.ml"
 and format_field std out (name, x) =
-  Format.fprintf out "@[<hv2>%s: %a@]" (json_string_of_string name) (format std) x
+  Format.fprintf out "@[<hv2>%s: %a@]" (json_string_of_string name) (format ~inside_box:true std) x
 
 let pp ?(std = false) out x =
-  if std && not (is_object_or_array x) then
-    json_error
-      "Root is not an object or array as requested by the JSON standard"
-  else
-    Format.fprintf out "@[<hv2>%a@]" (format std) (x :> t)
+  Format.fprintf out "@[<hv2>%a@]" (format ~inside_box:true std) (x :> t)
 
 let to_string ?std x =
   Format.asprintf "%a" (pp ?std) x
@@ -976,20 +1019,20 @@ let to_string ?std x =
 let to_channel ?std oc x =
   let fmt = Format.formatter_of_out_channel oc in
   Format.fprintf fmt "%a@?" (pp ?std) x
-# 18 "yojson.cppo.ml"
+# 17 "yojson.cppo.ml"
 end
 
 # 2 "write2.ml"
-let pretty_print ?std out (x : t) =
-  Pretty.pp ?std out (x :> json_max)
+let pretty_print ?std out x =
+  Pretty.pp ?std out x
 
-let pretty_to_string ?std (x : t) =
-  Pretty.to_string ?std (x :> json_max)
+let pretty_to_string ?std x =
+  Pretty.to_string ?std x
 
-let pretty_to_channel ?std oc (x : t) =
-  Pretty.to_channel ?std oc (x :> json_max)
+let pretty_to_channel ?std oc x =
+  Pretty.to_channel ?std oc x
 
-# 29 "yojson.cppo.ml"
+# 28 "yojson.cppo.ml"
 module Basic =
 struct
 # 1 "type.ml"
@@ -1161,24 +1204,9 @@ let float_needs_period s =
     false
 
 (*
-  Both write_float_fast and write_float guarantee
-  that a sufficient number of digits are printed in order to
-  allow reversibility.
-
-  The _fast version is faster but often produces unnecessarily long numbers.
+  Guarantees that a sufficient number of digits are printed in order to allow
+  reversibility.
 *)
-let write_float_fast ob x =
-  match classify_float x with
-    FP_nan ->
-      Buffer.add_string ob "NaN"
-  | FP_infinite ->
-      Buffer.add_string ob (if x > 0. then "Infinity" else "-Infinity")
-  | _ ->
-      let s = Printf.sprintf "%.17g" x in
-      Buffer.add_string ob s;
-      if float_needs_period s then
-        Buffer.add_string ob ".0"
-
 let write_float ob x =
   match classify_float x with
     FP_nan ->
@@ -1221,6 +1249,7 @@ let write_normal_float_prec significant_figures ob x =
   if float_needs_period s then
     Buffer.add_string ob ".0"
 
+(* used by atdgen *)
 let write_float_prec significant_figures ob x =
   match classify_float x with
     FP_nan ->
@@ -1235,22 +1264,6 @@ let json_string_of_float x =
   write_float ob x;
   Buffer.contents ob
 
-
-let write_std_float_fast ob x =
-  match classify_float x with
-    FP_nan ->
-      json_error "NaN value not allowed in standard JSON"
-  | FP_infinite ->
-      json_error
-        (if x > 0. then
-           "Infinity value not allowed in standard JSON"
-         else
-           "-Infinity value not allowed in standard JSON")
-  | _ ->
-      let s = Printf.sprintf "%.17g" x in
-      Buffer.add_string ob s;
-      if float_needs_period s then
-        Buffer.add_string ob ".0"
 
 let write_std_float ob x =
   match classify_float x with
@@ -1272,6 +1285,7 @@ let write_std_float ob x =
       if float_needs_period s then
         Buffer.add_string ob ".0"
 
+(* used by atdgen *)
 let write_std_float_prec significant_figures ob x =
   match classify_float x with
     FP_nan ->
@@ -1336,20 +1350,20 @@ let rec write_json ob (x : t) =
       `Null -> write_null ob ()
     | `Bool b -> write_bool ob b
     
-# 293 "write.ml"
+# 264 "write.ml"
     | `Int i -> write_int ob i
     
-# 299 "write.ml"
+# 270 "write.ml"
     | `Float f -> write_float ob f
     
-# 305 "write.ml"
+# 276 "write.ml"
     | `String s -> write_string ob s
     
-# 310 "write.ml"
+# 281 "write.ml"
     | `Assoc l -> write_assoc ob l
     | `List l -> write_list ob l
 
-# 319 "write.ml"
+# 290 "write.ml"
 and write_assoc ob l =
   let f_elt ob (s, x) =
     write_string ob s;
@@ -1367,7 +1381,7 @@ and write_list ob l =
 
 
 
-# 354 "write.ml"
+# 325 "write.ml"
 let write_t = write_json
 
 let rec write_std_json ob (x : t) =
@@ -1375,20 +1389,20 @@ let rec write_std_json ob (x : t) =
       `Null -> write_null ob ()
     | `Bool b -> write_bool ob b
     
-# 361 "write.ml"
+# 332 "write.ml"
     | `Int i -> write_int ob i
     
-# 367 "write.ml"
+# 338 "write.ml"
     | `Float f -> write_std_float ob f
     
-# 373 "write.ml"
+# 344 "write.ml"
     | `String s -> write_string ob s
     
-# 378 "write.ml"
+# 349 "write.ml"
     | `Assoc l -> write_std_assoc ob l
     | `List l -> write_std_list ob l
 
-# 387 "write.ml"
+# 358 "write.ml"
 and write_std_assoc ob l =
   let f_elt ob (s, x) =
     write_string ob s;
@@ -1411,19 +1425,15 @@ and write_std_tuple ob l =
 
 
 
-# 420 "write.ml"
-let to_buffer ?(std = false) ob x =
-  if std then (
-    if not (is_object_or_array x) then
-      json_error "Root is not an object or array"
-    else
-      write_std_json ob x
-  )
+# 391 "write.ml"
+let to_buffer ?(suf = "") ?(std = false) ob x =
+  if std then
+    write_std_json ob x
   else
-    write_json ob x
+    write_json ob x;
+  Buffer.add_string ob suf
 
-
-let to_string ?buf ?(len = 256) ?std x =
+let to_string ?buf ?(len = 256) ?(suf = "") ?std x =
   let ob =
     match buf with
         None -> Buffer.create len
@@ -1431,43 +1441,44 @@ let to_string ?buf ?(len = 256) ?std x =
           Buffer.clear ob;
           ob
   in
-  to_buffer ?std ob x;
+  to_buffer ~suf ?std ob x;
   let s = Buffer.contents ob in
   Buffer.clear ob;
   s
 
-let to_channel ?buf ?(len=4096) ?std oc x =
+let to_channel ?buf ?(len=4096) ?(suf = "") ?std oc x =
   let ob =
     match buf with
         None -> Buffer.create len
-      | Some ob -> ob
+      | Some ob -> Buffer.clear ob; ob
   in
-  to_buffer ?std ob x;
-  Buffer.output_buffer oc ob
+  to_buffer ~suf ?std ob x;
+  Buffer.output_buffer oc ob;
+  Buffer.clear ob
 
-let to_output ?buf ?(len=4096) ?std out x =
+let to_output ?buf ?(len=4096) ?(suf = "") ?std out x =
   let ob =
     match buf with
         None -> Buffer.create len
-      | Some ob -> ob
+      | Some ob -> Buffer.clear ob; ob
   in
-  to_buffer ?std ob x;
+  to_buffer ~suf ?std ob x;
   out#output (Buffer.contents ob) 0 (Buffer.length ob);
-  ()
+  Buffer.clear ob
 
-let to_file ?len ?std file x =
+let to_file ?len ?std ?(suf = "\n") file x =
   let oc = open_out file in
   try
-    to_channel ?len ?std oc x;
+    to_channel ?len ~suf ?std oc x;
     close_out oc
   with e ->
     close_out_noerr oc;
     raise e
 
-let stream_to_buffer ?std ob st =
-  Stream.iter (to_buffer ?std ob) st
+let seq_to_buffer ?(suf = "\n") ?std ob st =
+  Seq.iter (to_buffer ~suf ?std ob) st
 
-let stream_to_string ?buf ?(len = 256) ?std st =
+let seq_to_string ?buf ?(len = 256) ?(suf = "\n") ?std st =
   let ob =
     match buf with
         None -> Buffer.create len
@@ -1475,23 +1486,27 @@ let stream_to_string ?buf ?(len = 256) ?std st =
           Buffer.clear ob;
           ob
   in
-  stream_to_buffer ?std ob st;
+  seq_to_buffer ~suf ?std ob st;
   let s = Buffer.contents ob in
   Buffer.clear ob;
   s
 
-let stream_to_channel ?buf ?(len=2096) ?std oc st =
+let seq_to_channel ?buf ?(len=2096) ?(suf = "\n") ?std oc seq =
   let ob =
     match buf with
         None -> Buffer.create len
-      | Some ob -> ob
+      | Some ob -> Buffer.clear ob; ob
   in
-  stream_to_buffer ?std ob st
+  Seq.iter (fun json ->
+    to_buffer ~suf ?std ob json;
+    Buffer.output_buffer oc ob;
+    Buffer.clear ob;
+  ) seq
 
-let stream_to_file ?len ?std file st =
+let seq_to_file ?len ?(suf = "\n") ?std file st =
   let oc = open_out file in
   try
-    stream_to_channel ?len ?std oc st;
+    seq_to_channel ?len ~suf ?std oc st;
     close_out oc
   with e ->
     close_out_noerr oc;
@@ -1505,8 +1520,138 @@ let rec sort = function
   | `List l ->
       `List (List.rev (List.rev_map sort l))
   
-# 523 "write.ml"
+# 495 "write.ml"
   | x -> x
+# 35 "yojson.cppo.ml"
+module Pretty =
+struct
+# 1 "pretty.ml"
+(*
+   Pretty-print JSON data in an attempt to maximize readability.
+
+   1. What fits on one line stays on one line.
+   2. What doesn't fit on one line gets printed more vertically so as to not
+      exceed a reasonable page width, if possible.
+
+   Arrays containing only simple elements ("atoms") are pretty-printed with
+   end-of-line wrapping like ordinary text:
+
+     [
+        "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello",
+        "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello"
+     ]
+
+   Other arrays are printed either horizontally or vertically depending
+   on whether they fit on a single line:
+
+     [ { "hello": "world" }, { "hello": "world" }, { "hello": "world" } ]
+
+   or
+
+     [
+       { "hello": "world" },
+       { "hello": "world" },
+       { "hello": "world" },
+       { "hello": "world" }
+     ]
+*)
+
+let pp_list sep ppx out l =
+  let pp_sep out () = Format.fprintf out "%s@ " sep in
+  Format.pp_print_list ~pp_sep ppx out l
+
+let is_atom (x: [> t]) =
+  match x with
+  | `Null
+  | `Bool _
+  | `Int _
+  | `Float _
+  | `String _
+  | `Intlit _
+  | `Floatlit _
+  | `Stringlit _
+  | `List []
+  | `Assoc []
+  | `Tuple []
+  | `Variant (_, None) -> true
+  | `List _
+  | `Assoc _
+  | `Tuple _
+  | `Variant (_, Some _) -> false
+
+let is_atom_list l =
+  List.for_all is_atom l
+
+(*
+   inside_box: indicates that we're already within a box that imposes
+   a certain style and we shouldn't create a new one. This is used for
+   printing field values like this:
+
+     foo: [
+       bar
+     ]
+
+   rather than something else like
+
+     foo:
+       [
+         bar
+       ]
+*)
+let rec format ~inside_box std (out:Format.formatter) (x:t) : unit =
+  match x with
+    | `Null -> Format.pp_print_string out "null"
+    | `Bool x -> Format.pp_print_bool out x
+    
+# 78 "pretty.ml"
+    | `Int x -> Format.pp_print_string out (json_string_of_int x)
+    
+# 81 "pretty.ml"
+    | `Float x ->
+        let s =
+          if std then std_json_string_of_float x
+          else json_string_of_float x
+        in
+        Format.pp_print_string out s
+    
+# 89 "pretty.ml"
+    | `String s -> Format.pp_print_string out (json_string_of_string s)
+    
+# 100 "pretty.ml"
+    | `List [] -> Format.pp_print_string out "[]"
+    | `List l ->
+      if not inside_box then Format.fprintf out "@[<hv2>";
+      if is_atom_list l then
+        (* use line wrapping like we would do for a paragraph of text *)
+        Format.fprintf out "[@;<1 0>@[<hov>%a@]@;<1 -2>]"
+          (pp_list "," (format ~inside_box:false std)) l
+      else
+        (* print the elements horizontally if they fit on the line,
+           otherwise print them in a column *)
+        Format.fprintf out "[@;<1 0>@[<hv>%a@]@;<1 -2>]"
+          (pp_list "," (format ~inside_box:false std)) l;
+      if not inside_box then Format.fprintf out "@]";
+    | `Assoc [] -> Format.pp_print_string out "{}"
+    | `Assoc l ->
+      if not inside_box then Format.fprintf out "@[<hv2>";
+      Format.fprintf out "{@;<1 0>%a@;<1 -2>}" (pp_list "," (format_field std)) l;
+      if not inside_box then Format.fprintf out "@]";
+
+# 156 "pretty.ml"
+and format_field std out (name, x) =
+  Format.fprintf out "@[<hv2>%s: %a@]" (json_string_of_string name) (format ~inside_box:true std) x
+
+let pp ?(std = false) out x =
+  Format.fprintf out "@[<hv2>%a@]" (format ~inside_box:true std) (x :> t)
+
+let to_string ?std x =
+  Format.asprintf "%a" (pp ?std) x
+
+let to_channel ?std oc x =
+  let fmt = Format.formatter_of_out_channel oc in
+  Format.fprintf fmt "%a@?" (pp ?std) x
+# 38 "yojson.cppo.ml"
+end
 # 1 "monomorphic.ml"
 let rec pp fmt =
   function
@@ -1606,14 +1751,14 @@ let rec equal a b =
     | _ -> false
 
 # 2 "write2.ml"
-let pretty_print ?std out (x : t) =
-  Pretty.pp ?std out (x :> json_max)
+let pretty_print ?std out x =
+  Pretty.pp ?std out x
 
-let pretty_to_string ?std (x : t) =
-  Pretty.to_string ?std (x :> json_max)
+let pretty_to_string ?std x =
+  Pretty.to_string ?std x
 
-let pretty_to_channel ?std oc (x : t) =
-  Pretty.to_channel ?std oc (x :> json_max)
+let pretty_to_channel ?std oc x =
+  Pretty.to_channel ?std oc x
 
 # 1 "lib/read.mll"
  
@@ -1771,7 +1916,7 @@ let pretty_to_channel ?std oc (x : t) =
 
   let map_lexeme f lexbuf =
     let len = lexbuf.lex_curr_pos - lexbuf.lex_start_pos in
-    f (Bytes.to_string lexbuf.lex_buffer) lexbuf.lex_start_pos len
+    f (Bytes.sub_string lexbuf.lex_buffer lexbuf.lex_start_pos len) 0 len
 
   type variant_kind = [ `Edgy_bracket | `Square_bracket | `Double_quote ]
   type tuple_kind = [ `Parenthesis | `Square_bracket ]
@@ -6510,30 +6655,30 @@ and __ocaml_lex_junk_rec lexbuf __ocaml_lex_state =
 
   exception Finally of exn * exn
 
-  let stream_from_lexbuf v ?(fin = fun () -> ()) lexbuf =
+  let seq_from_lexbuf v ?(fin = fun () -> ()) lexbuf =
     let stream = Some true in
-    let f i =
-      try Some (from_lexbuf v ?stream lexbuf)
+    let rec f () =
+      try Seq.Cons (from_lexbuf v ?stream lexbuf, f)
       with
           End_of_input ->
             fin ();
-            None
+            Seq.Nil
         | e ->
             (try fin () with fin_e -> raise (Finally (e, fin_e)));
             raise e
     in
-    Stream.from f
+    f
 
-  let stream_from_string ?buf ?fname ?lnum s =
+  let seq_from_string ?buf ?fname ?lnum s =
     let v = init_lexer ?buf ?fname ?lnum () in
-    stream_from_lexbuf v (Lexing.from_string s)
+    seq_from_lexbuf v (Lexing.from_string s)
 
-  let stream_from_channel ?buf ?fin ?fname ?lnum ic =
+  let seq_from_channel ?buf ?fin ?fname ?lnum ic =
     let lexbuf = Lexing.from_channel ic in
     let v = init_lexer ?buf ?fname ?lnum () in
-    stream_from_lexbuf v ?fin lexbuf
+    seq_from_lexbuf v ?fin lexbuf
 
-  let stream_from_file ?buf ?fname ?lnum file =
+  let seq_from_file ?buf ?fname ?lnum file =
     let ic = open_in file in
     let fin () = close_in ic in
     let fname =
@@ -6543,29 +6688,28 @@ and __ocaml_lex_junk_rec lexbuf __ocaml_lex_state =
     in
     let lexbuf = Lexing.from_channel ic in
     let v = init_lexer ?buf ?fname ?lnum () in
-    stream_from_lexbuf v ~fin lexbuf
+    seq_from_lexbuf v ~fin lexbuf
 
   type json_line = [ `Json of t | `Exn of exn ]
 
-  let linestream_from_channel
+  let lineseq_from_channel
       ?buf ?(fin = fun () -> ()) ?fname ?lnum:(lnum0 = 1) ic =
     let buf =
       match buf with
           None -> Some (Buffer.create 256)
         | Some _ -> buf
     in
-    let f i =
+    let rec f lnum = fun () ->
       try
         let line = input_line ic in
-        let lnum = lnum0 + i in
-        Some (`Json (from_string ?buf ?fname ~lnum line))
+        Seq.Cons (`Json (from_string ?buf ?fname ~lnum line), f (lnum + 1))
       with
-          End_of_file -> fin (); None
-        | e -> Some (`Exn e)
+          End_of_file -> fin (); Seq.Nil
+        | e -> Seq.Cons (`Exn e, f (lnum + 1))
     in
-    Stream.from f
+    f lnum0
 
-  let linestream_from_file ?buf ?fname ?lnum file =
+  let lineseq_from_file ?buf ?fname ?lnum file =
     let ic = open_in file in
     let fin () = close_in ic in
     let fname =
@@ -6573,7 +6717,7 @@ and __ocaml_lex_junk_rec lexbuf __ocaml_lex_state =
           None -> Some file
         | x -> x
     in
-    linestream_from_channel ?buf ~fin ?fname ?lnum ic
+    lineseq_from_channel ?buf ~fin ?fname ?lnum ic
 
   let prettify ?std s =
     pretty_to_string ?std (from_string s)
@@ -6581,11 +6725,9 @@ and __ocaml_lex_junk_rec lexbuf __ocaml_lex_state =
   let compact ?std s =
     to_string (from_string s)
 
-  let validate_json _path _value = None
 
-
-# 3411 "lib/read.ml"
-# 39 "yojson.cppo.ml"
+# 3408 "lib/read.ml"
+# 42 "yojson.cppo.ml"
 module Util =
 struct
 # 1 "util.ml"
@@ -6793,9 +6935,9 @@ let combine (first : t) (second : t) =
   match (first, second) with
   | (`Assoc a, `Assoc b) -> (`Assoc (a @ b) :  t)
   | (a, b) -> raise (Invalid_argument "Expected two objects, check inputs")
-# 42 "yojson.cppo.ml"
+# 45 "yojson.cppo.ml"
 end
-# 46 "yojson.cppo.ml"
+# 49 "yojson.cppo.ml"
 end
 
 module Safe =
@@ -6993,24 +7135,9 @@ let float_needs_period s =
     false
 
 (*
-  Both write_float_fast and write_float guarantee
-  that a sufficient number of digits are printed in order to
-  allow reversibility.
-
-  The _fast version is faster but often produces unnecessarily long numbers.
+  Guarantees that a sufficient number of digits are printed in order to allow
+  reversibility.
 *)
-let write_float_fast ob x =
-  match classify_float x with
-    FP_nan ->
-      Buffer.add_string ob "NaN"
-  | FP_infinite ->
-      Buffer.add_string ob (if x > 0. then "Infinity" else "-Infinity")
-  | _ ->
-      let s = Printf.sprintf "%.17g" x in
-      Buffer.add_string ob s;
-      if float_needs_period s then
-        Buffer.add_string ob ".0"
-
 let write_float ob x =
   match classify_float x with
     FP_nan ->
@@ -7053,6 +7180,7 @@ let write_normal_float_prec significant_figures ob x =
   if float_needs_period s then
     Buffer.add_string ob ".0"
 
+(* used by atdgen *)
 let write_float_prec significant_figures ob x =
   match classify_float x with
     FP_nan ->
@@ -7067,22 +7195,6 @@ let json_string_of_float x =
   write_float ob x;
   Buffer.contents ob
 
-
-let write_std_float_fast ob x =
-  match classify_float x with
-    FP_nan ->
-      json_error "NaN value not allowed in standard JSON"
-  | FP_infinite ->
-      json_error
-        (if x > 0. then
-           "Infinity value not allowed in standard JSON"
-         else
-           "-Infinity value not allowed in standard JSON")
-  | _ ->
-      let s = Printf.sprintf "%.17g" x in
-      Buffer.add_string ob s;
-      if float_needs_period s then
-        Buffer.add_string ob ".0"
 
 let write_std_float ob x =
   match classify_float x with
@@ -7104,6 +7216,7 @@ let write_std_float ob x =
       if float_needs_period s then
         Buffer.add_string ob ".0"
 
+(* used by atdgen *)
 let write_std_float_prec significant_figures ob x =
   match classify_float x with
     FP_nan ->
@@ -7168,29 +7281,29 @@ let rec write_json ob (x : t) =
       `Null -> write_null ob ()
     | `Bool b -> write_bool ob b
     
-# 293 "write.ml"
+# 264 "write.ml"
     | `Int i -> write_int ob i
     
-# 296 "write.ml"
+# 267 "write.ml"
     | `Intlit s -> Buffer.add_string ob s
     
-# 299 "write.ml"
+# 270 "write.ml"
     | `Float f -> write_float ob f
     
-# 305 "write.ml"
+# 276 "write.ml"
     | `String s -> write_string ob s
     
-# 310 "write.ml"
+# 281 "write.ml"
     | `Assoc l -> write_assoc ob l
     | `List l -> write_list ob l
     
-# 313 "write.ml"
+# 284 "write.ml"
     | `Tuple l -> write_tuple ob l
     
-# 316 "write.ml"
+# 287 "write.ml"
     | `Variant (s, o) -> write_variant ob s o
 
-# 319 "write.ml"
+# 290 "write.ml"
 and write_assoc ob l =
   let f_elt ob (s, x) =
     write_string ob s;
@@ -7206,13 +7319,13 @@ and write_list ob l =
   iter2 write_json f_sep ob l;
   Buffer.add_char ob ']'
 
-# 335 "write.ml"
+# 306 "write.ml"
 and write_tuple ob l =
   Buffer.add_char ob '(';
   iter2 write_json f_sep ob l;
   Buffer.add_char ob ')'
 
-# 342 "write.ml"
+# 313 "write.ml"
 and write_variant ob s o =
   Buffer.add_char ob '<';
   write_string ob s;
@@ -7224,7 +7337,7 @@ and write_variant ob s o =
   );
   Buffer.add_char ob '>'
 
-# 354 "write.ml"
+# 325 "write.ml"
 let write_t = write_json
 
 let rec write_std_json ob (x : t) =
@@ -7232,29 +7345,29 @@ let rec write_std_json ob (x : t) =
       `Null -> write_null ob ()
     | `Bool b -> write_bool ob b
     
-# 361 "write.ml"
+# 332 "write.ml"
     | `Int i -> write_int ob i
     
-# 364 "write.ml"
+# 335 "write.ml"
     | `Intlit s -> Buffer.add_string ob s
     
-# 367 "write.ml"
+# 338 "write.ml"
     | `Float f -> write_std_float ob f
     
-# 373 "write.ml"
+# 344 "write.ml"
     | `String s -> write_string ob s
     
-# 378 "write.ml"
+# 349 "write.ml"
     | `Assoc l -> write_std_assoc ob l
     | `List l -> write_std_list ob l
     
-# 381 "write.ml"
+# 352 "write.ml"
     | `Tuple l -> write_std_tuple ob l
     
-# 384 "write.ml"
+# 355 "write.ml"
     | `Variant (s, o) -> write_std_variant ob s o
 
-# 387 "write.ml"
+# 358 "write.ml"
 and write_std_assoc ob l =
   let f_elt ob (s, x) =
     write_string ob s;
@@ -7275,7 +7388,7 @@ and write_std_tuple ob l =
   iter2 write_std_json f_sep ob l;
   Buffer.add_char ob ']'
 
-# 408 "write.ml"
+# 379 "write.ml"
 and write_std_variant ob s o =
   match o with
       None -> write_string ob s
@@ -7287,19 +7400,15 @@ and write_std_variant ob s o =
         Buffer.add_char ob ']'
 
 
-# 420 "write.ml"
-let to_buffer ?(std = false) ob x =
-  if std then (
-    if not (is_object_or_array x) then
-      json_error "Root is not an object or array"
-    else
-      write_std_json ob x
-  )
+# 391 "write.ml"
+let to_buffer ?(suf = "") ?(std = false) ob x =
+  if std then
+    write_std_json ob x
   else
-    write_json ob x
+    write_json ob x;
+  Buffer.add_string ob suf
 
-
-let to_string ?buf ?(len = 256) ?std x =
+let to_string ?buf ?(len = 256) ?(suf = "") ?std x =
   let ob =
     match buf with
         None -> Buffer.create len
@@ -7307,43 +7416,44 @@ let to_string ?buf ?(len = 256) ?std x =
           Buffer.clear ob;
           ob
   in
-  to_buffer ?std ob x;
+  to_buffer ~suf ?std ob x;
   let s = Buffer.contents ob in
   Buffer.clear ob;
   s
 
-let to_channel ?buf ?(len=4096) ?std oc x =
+let to_channel ?buf ?(len=4096) ?(suf = "") ?std oc x =
   let ob =
     match buf with
         None -> Buffer.create len
-      | Some ob -> ob
+      | Some ob -> Buffer.clear ob; ob
   in
-  to_buffer ?std ob x;
-  Buffer.output_buffer oc ob
+  to_buffer ~suf ?std ob x;
+  Buffer.output_buffer oc ob;
+  Buffer.clear ob
 
-let to_output ?buf ?(len=4096) ?std out x =
+let to_output ?buf ?(len=4096) ?(suf = "") ?std out x =
   let ob =
     match buf with
         None -> Buffer.create len
-      | Some ob -> ob
+      | Some ob -> Buffer.clear ob; ob
   in
-  to_buffer ?std ob x;
+  to_buffer ~suf ?std ob x;
   out#output (Buffer.contents ob) 0 (Buffer.length ob);
-  ()
+  Buffer.clear ob
 
-let to_file ?len ?std file x =
+let to_file ?len ?std ?(suf = "\n") file x =
   let oc = open_out file in
   try
-    to_channel ?len ?std oc x;
+    to_channel ?len ~suf ?std oc x;
     close_out oc
   with e ->
     close_out_noerr oc;
     raise e
 
-let stream_to_buffer ?std ob st =
-  Stream.iter (to_buffer ?std ob) st
+let seq_to_buffer ?(suf = "\n") ?std ob st =
+  Seq.iter (to_buffer ~suf ?std ob) st
 
-let stream_to_string ?buf ?(len = 256) ?std st =
+let seq_to_string ?buf ?(len = 256) ?(suf = "\n") ?std st =
   let ob =
     match buf with
         None -> Buffer.create len
@@ -7351,23 +7461,27 @@ let stream_to_string ?buf ?(len = 256) ?std st =
           Buffer.clear ob;
           ob
   in
-  stream_to_buffer ?std ob st;
+  seq_to_buffer ~suf ?std ob st;
   let s = Buffer.contents ob in
   Buffer.clear ob;
   s
 
-let stream_to_channel ?buf ?(len=2096) ?std oc st =
+let seq_to_channel ?buf ?(len=2096) ?(suf = "\n") ?std oc seq =
   let ob =
     match buf with
         None -> Buffer.create len
-      | Some ob -> ob
+      | Some ob -> Buffer.clear ob; ob
   in
-  stream_to_buffer ?std ob st
+  Seq.iter (fun json ->
+    to_buffer ~suf ?std ob json;
+    Buffer.output_buffer oc ob;
+    Buffer.clear ob;
+  ) seq
 
-let stream_to_file ?len ?std file st =
+let seq_to_file ?len ?(suf = "\n") ?std file st =
   let oc = open_out file in
   try
-    stream_to_channel ?len ?std oc st;
+    seq_to_channel ?len ~suf ?std oc st;
     close_out oc
   with e ->
     close_out_noerr oc;
@@ -7381,19 +7495,189 @@ let rec sort = function
   | `List l ->
       `List (List.rev (List.rev_map sort l))
   
-# 513 "write.ml"
+# 485 "write.ml"
   | `Tuple l ->
       `Tuple (List.rev (List.rev_map sort l))
   
-# 517 "write.ml"
+# 489 "write.ml"
   | `Variant (k, Some v) as x ->
       let v' = sort v in
       if v == v' then x
       else
         `Variant (k, Some v')
   
-# 523 "write.ml"
+# 495 "write.ml"
   | x -> x
+# 62 "yojson.cppo.ml"
+module Pretty =
+struct
+# 1 "pretty.ml"
+(*
+   Pretty-print JSON data in an attempt to maximize readability.
+
+   1. What fits on one line stays on one line.
+   2. What doesn't fit on one line gets printed more vertically so as to not
+      exceed a reasonable page width, if possible.
+
+   Arrays containing only simple elements ("atoms") are pretty-printed with
+   end-of-line wrapping like ordinary text:
+
+     [
+        "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello",
+        "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello"
+     ]
+
+   Other arrays are printed either horizontally or vertically depending
+   on whether they fit on a single line:
+
+     [ { "hello": "world" }, { "hello": "world" }, { "hello": "world" } ]
+
+   or
+
+     [
+       { "hello": "world" },
+       { "hello": "world" },
+       { "hello": "world" },
+       { "hello": "world" }
+     ]
+*)
+
+let pp_list sep ppx out l =
+  let pp_sep out () = Format.fprintf out "%s@ " sep in
+  Format.pp_print_list ~pp_sep ppx out l
+
+let is_atom (x: [> t]) =
+  match x with
+  | `Null
+  | `Bool _
+  | `Int _
+  | `Float _
+  | `String _
+  | `Intlit _
+  | `Floatlit _
+  | `Stringlit _
+  | `List []
+  | `Assoc []
+  | `Tuple []
+  | `Variant (_, None) -> true
+  | `List _
+  | `Assoc _
+  | `Tuple _
+  | `Variant (_, Some _) -> false
+
+let is_atom_list l =
+  List.for_all is_atom l
+
+(*
+   inside_box: indicates that we're already within a box that imposes
+   a certain style and we shouldn't create a new one. This is used for
+   printing field values like this:
+
+     foo: [
+       bar
+     ]
+
+   rather than something else like
+
+     foo:
+       [
+         bar
+       ]
+*)
+let rec format ~inside_box std (out:Format.formatter) (x:t) : unit =
+  match x with
+    | `Null -> Format.pp_print_string out "null"
+    | `Bool x -> Format.pp_print_bool out x
+    
+# 78 "pretty.ml"
+    | `Int x -> Format.pp_print_string out (json_string_of_int x)
+    
+# 81 "pretty.ml"
+    | `Float x ->
+        let s =
+          if std then std_json_string_of_float x
+          else json_string_of_float x
+        in
+        Format.pp_print_string out s
+    
+# 89 "pretty.ml"
+    | `String s -> Format.pp_print_string out (json_string_of_string s)
+    
+# 92 "pretty.ml"
+    | `Intlit s -> Format.pp_print_string out s
+    
+# 100 "pretty.ml"
+    | `List [] -> Format.pp_print_string out "[]"
+    | `List l ->
+      if not inside_box then Format.fprintf out "@[<hv2>";
+      if is_atom_list l then
+        (* use line wrapping like we would do for a paragraph of text *)
+        Format.fprintf out "[@;<1 0>@[<hov>%a@]@;<1 -2>]"
+          (pp_list "," (format ~inside_box:false std)) l
+      else
+        (* print the elements horizontally if they fit on the line,
+           otherwise print them in a column *)
+        Format.fprintf out "[@;<1 0>@[<hv>%a@]@;<1 -2>]"
+          (pp_list "," (format ~inside_box:false std)) l;
+      if not inside_box then Format.fprintf out "@]";
+    | `Assoc [] -> Format.pp_print_string out "{}"
+    | `Assoc l ->
+      if not inside_box then Format.fprintf out "@[<hv2>";
+      Format.fprintf out "{@;<1 0>%a@;<1 -2>}" (pp_list "," (format_field std)) l;
+      if not inside_box then Format.fprintf out "@]";
+    
+# 119 "pretty.ml"
+    | `Tuple l ->
+        if std then
+          format ~inside_box std out (`List l)
+        else
+          if l = [] then
+            Format.pp_print_string out "()"
+          else (
+            if not inside_box then Format.fprintf out "@[<hov2>";
+            Format.fprintf out "(@,%a@;<0 -2>)" (pp_list "," (format ~inside_box:false std)) l;
+            if not inside_box then Format.fprintf out "@]";
+          )
+    
+# 132 "pretty.ml"
+    | `Variant (s, None) ->
+        if std then
+          
+# 135 "pretty.ml"
+          let representation = `String s in
+          
+# 139 "pretty.ml"
+          format ~inside_box std out representation
+        else
+          Format.fprintf out "<%s>" (json_string_of_string s)
+
+    | `Variant (s, Some x) ->
+        if std then
+          
+# 146 "pretty.ml"
+          let representation = `String s in
+          
+# 150 "pretty.ml"
+          format ~inside_box std out (`List [ representation; x ])
+        else
+          let op = json_string_of_string s in
+          Format.fprintf out "<@[<hv2>%s: %a@]>" op (format ~inside_box:true std) x
+
+# 156 "pretty.ml"
+and format_field std out (name, x) =
+  Format.fprintf out "@[<hv2>%s: %a@]" (json_string_of_string name) (format ~inside_box:true std) x
+
+let pp ?(std = false) out x =
+  Format.fprintf out "@[<hv2>%a@]" (format ~inside_box:true std) (x :> t)
+
+let to_string ?std x =
+  Format.asprintf "%a" (pp ?std) x
+
+let to_channel ?std oc x =
+  let fmt = Format.formatter_of_out_channel oc in
+  Format.fprintf fmt "%a@?" (pp ?std) x
+# 65 "yojson.cppo.ml"
+end
 # 1 "monomorphic.ml"
 let rec pp fmt =
   function
@@ -7543,14 +7827,14 @@ let rec equal a b =
     | _ -> false
 
 # 2 "write2.ml"
-let pretty_print ?std out (x : t) =
-  Pretty.pp ?std out (x :> json_max)
+let pretty_print ?std out x =
+  Pretty.pp ?std out x
 
-let pretty_to_string ?std (x : t) =
-  Pretty.to_string ?std (x :> json_max)
+let pretty_to_string ?std x =
+  Pretty.to_string ?std x
 
-let pretty_to_channel ?std oc (x : t) =
-  Pretty.to_channel ?std oc (x :> json_max)
+let pretty_to_channel ?std oc x =
+  Pretty.to_channel ?std oc x
 
 # 1 "lib/read.mll"
  
@@ -7708,7 +7992,7 @@ let pretty_to_channel ?std oc (x : t) =
 
   let map_lexeme f lexbuf =
     let len = lexbuf.lex_curr_pos - lexbuf.lex_start_pos in
-    f (Bytes.to_string lexbuf.lex_buffer) lexbuf.lex_start_pos len
+    f (Bytes.sub_string lexbuf.lex_buffer lexbuf.lex_start_pos len) 0 len
 
   type variant_kind = [ `Edgy_bracket | `Square_bracket | `Double_quote ]
   type tuple_kind = [ `Parenthesis | `Square_bracket ]
@@ -12511,30 +12795,30 @@ and __ocaml_lex_junk_rec lexbuf __ocaml_lex_state =
 
   exception Finally of exn * exn
 
-  let stream_from_lexbuf v ?(fin = fun () -> ()) lexbuf =
+  let seq_from_lexbuf v ?(fin = fun () -> ()) lexbuf =
     let stream = Some true in
-    let f i =
-      try Some (from_lexbuf v ?stream lexbuf)
+    let rec f () =
+      try Seq.Cons (from_lexbuf v ?stream lexbuf, f)
       with
           End_of_input ->
             fin ();
-            None
+            Seq.Nil
         | e ->
             (try fin () with fin_e -> raise (Finally (e, fin_e)));
             raise e
     in
-    Stream.from f
+    f
 
-  let stream_from_string ?buf ?fname ?lnum s =
+  let seq_from_string ?buf ?fname ?lnum s =
     let v = init_lexer ?buf ?fname ?lnum () in
-    stream_from_lexbuf v (Lexing.from_string s)
+    seq_from_lexbuf v (Lexing.from_string s)
 
-  let stream_from_channel ?buf ?fin ?fname ?lnum ic =
+  let seq_from_channel ?buf ?fin ?fname ?lnum ic =
     let lexbuf = Lexing.from_channel ic in
     let v = init_lexer ?buf ?fname ?lnum () in
-    stream_from_lexbuf v ?fin lexbuf
+    seq_from_lexbuf v ?fin lexbuf
 
-  let stream_from_file ?buf ?fname ?lnum file =
+  let seq_from_file ?buf ?fname ?lnum file =
     let ic = open_in file in
     let fin () = close_in ic in
     let fname =
@@ -12544,29 +12828,28 @@ and __ocaml_lex_junk_rec lexbuf __ocaml_lex_state =
     in
     let lexbuf = Lexing.from_channel ic in
     let v = init_lexer ?buf ?fname ?lnum () in
-    stream_from_lexbuf v ~fin lexbuf
+    seq_from_lexbuf v ~fin lexbuf
 
   type json_line = [ `Json of t | `Exn of exn ]
 
-  let linestream_from_channel
+  let lineseq_from_channel
       ?buf ?(fin = fun () -> ()) ?fname ?lnum:(lnum0 = 1) ic =
     let buf =
       match buf with
           None -> Some (Buffer.create 256)
         | Some _ -> buf
     in
-    let f i =
+    let rec f lnum = fun () ->
       try
         let line = input_line ic in
-        let lnum = lnum0 + i in
-        Some (`Json (from_string ?buf ?fname ~lnum line))
+        Seq.Cons (`Json (from_string ?buf ?fname ~lnum line), f (lnum + 1))
       with
-          End_of_file -> fin (); None
-        | e -> Some (`Exn e)
+          End_of_file -> fin (); Seq.Nil
+        | e -> Seq.Cons (`Exn e, f (lnum + 1))
     in
-    Stream.from f
+    f lnum0
 
-  let linestream_from_file ?buf ?fname ?lnum file =
+  let lineseq_from_file ?buf ?fname ?lnum file =
     let ic = open_in file in
     let fin () = close_in ic in
     let fname =
@@ -12574,7 +12857,7 @@ and __ocaml_lex_junk_rec lexbuf __ocaml_lex_state =
           None -> Some file
         | x -> x
     in
-    linestream_from_channel ?buf ~fin ?fname ?lnum ic
+    lineseq_from_channel ?buf ~fin ?fname ?lnum ic
 
   let prettify ?std s =
     pretty_to_string ?std (from_string s)
@@ -12582,11 +12865,9 @@ and __ocaml_lex_junk_rec lexbuf __ocaml_lex_state =
   let compact ?std s =
     to_string (from_string s)
 
-  let validate_json _path _value = None
 
-
-# 3411 "lib/read.ml"
-# 62 "yojson.cppo.ml"
+# 3408 "lib/read.ml"
+# 69 "yojson.cppo.ml"
 module Util =
 struct
 # 1 "util.ml"
@@ -12794,9 +13075,9 @@ let combine (first : t) (second : t) =
   match (first, second) with
   | (`Assoc a, `Assoc b) -> (`Assoc (a @ b) :  t)
   | (a, b) -> raise (Invalid_argument "Expected two objects, check inputs")
-# 65 "yojson.cppo.ml"
-end
 # 72 "yojson.cppo.ml"
+end
+# 79 "yojson.cppo.ml"
 end
 
 module Raw =
@@ -12976,24 +13257,9 @@ let float_needs_period s =
     false
 
 (*
-  Both write_float_fast and write_float guarantee
-  that a sufficient number of digits are printed in order to
-  allow reversibility.
-
-  The _fast version is faster but often produces unnecessarily long numbers.
+  Guarantees that a sufficient number of digits are printed in order to allow
+  reversibility.
 *)
-let write_float_fast ob x =
-  match classify_float x with
-    FP_nan ->
-      Buffer.add_string ob "NaN"
-  | FP_infinite ->
-      Buffer.add_string ob (if x > 0. then "Infinity" else "-Infinity")
-  | _ ->
-      let s = Printf.sprintf "%.17g" x in
-      Buffer.add_string ob s;
-      if float_needs_period s then
-        Buffer.add_string ob ".0"
-
 let write_float ob x =
   match classify_float x with
     FP_nan ->
@@ -13036,6 +13302,7 @@ let write_normal_float_prec significant_figures ob x =
   if float_needs_period s then
     Buffer.add_string ob ".0"
 
+(* used by atdgen *)
 let write_float_prec significant_figures ob x =
   match classify_float x with
     FP_nan ->
@@ -13050,22 +13317,6 @@ let json_string_of_float x =
   write_float ob x;
   Buffer.contents ob
 
-
-let write_std_float_fast ob x =
-  match classify_float x with
-    FP_nan ->
-      json_error "NaN value not allowed in standard JSON"
-  | FP_infinite ->
-      json_error
-        (if x > 0. then
-           "Infinity value not allowed in standard JSON"
-         else
-           "-Infinity value not allowed in standard JSON")
-  | _ ->
-      let s = Printf.sprintf "%.17g" x in
-      Buffer.add_string ob s;
-      if float_needs_period s then
-        Buffer.add_string ob ".0"
 
 let write_std_float ob x =
   match classify_float x with
@@ -13087,6 +13338,7 @@ let write_std_float ob x =
       if float_needs_period s then
         Buffer.add_string ob ".0"
 
+(* used by atdgen *)
 let write_std_float_prec significant_figures ob x =
   match classify_float x with
     FP_nan ->
@@ -13151,26 +13403,26 @@ let rec write_json ob (x : t) =
       `Null -> write_null ob ()
     | `Bool b -> write_bool ob b
     
-# 296 "write.ml"
+# 267 "write.ml"
     | `Intlit s -> Buffer.add_string ob s
     
-# 302 "write.ml"
+# 273 "write.ml"
     | `Floatlit s -> Buffer.add_string ob s
     
-# 308 "write.ml"
+# 279 "write.ml"
     | `Stringlit s -> Buffer.add_string ob s
     
-# 310 "write.ml"
+# 281 "write.ml"
     | `Assoc l -> write_assoc ob l
     | `List l -> write_list ob l
     
-# 313 "write.ml"
+# 284 "write.ml"
     | `Tuple l -> write_tuple ob l
     
-# 316 "write.ml"
+# 287 "write.ml"
     | `Variant (s, o) -> write_variant ob s o
 
-# 319 "write.ml"
+# 290 "write.ml"
 and write_assoc ob l =
   let f_elt ob (s, x) =
     write_string ob s;
@@ -13186,13 +13438,13 @@ and write_list ob l =
   iter2 write_json f_sep ob l;
   Buffer.add_char ob ']'
 
-# 335 "write.ml"
+# 306 "write.ml"
 and write_tuple ob l =
   Buffer.add_char ob '(';
   iter2 write_json f_sep ob l;
   Buffer.add_char ob ')'
 
-# 342 "write.ml"
+# 313 "write.ml"
 and write_variant ob s o =
   Buffer.add_char ob '<';
   write_string ob s;
@@ -13204,7 +13456,7 @@ and write_variant ob s o =
   );
   Buffer.add_char ob '>'
 
-# 354 "write.ml"
+# 325 "write.ml"
 let write_t = write_json
 
 let rec write_std_json ob (x : t) =
@@ -13212,26 +13464,26 @@ let rec write_std_json ob (x : t) =
       `Null -> write_null ob ()
     | `Bool b -> write_bool ob b
     
-# 364 "write.ml"
+# 335 "write.ml"
     | `Intlit s -> Buffer.add_string ob s
     
-# 370 "write.ml"
+# 341 "write.ml"
     | `Floatlit s -> Buffer.add_string ob s
     
-# 376 "write.ml"
+# 347 "write.ml"
     | `Stringlit s -> Buffer.add_string ob s
     
-# 378 "write.ml"
+# 349 "write.ml"
     | `Assoc l -> write_std_assoc ob l
     | `List l -> write_std_list ob l
     
-# 381 "write.ml"
+# 352 "write.ml"
     | `Tuple l -> write_std_tuple ob l
     
-# 384 "write.ml"
+# 355 "write.ml"
     | `Variant (s, o) -> write_std_variant ob s o
 
-# 387 "write.ml"
+# 358 "write.ml"
 and write_std_assoc ob l =
   let f_elt ob (s, x) =
     write_string ob s;
@@ -13252,7 +13504,7 @@ and write_std_tuple ob l =
   iter2 write_std_json f_sep ob l;
   Buffer.add_char ob ']'
 
-# 408 "write.ml"
+# 379 "write.ml"
 and write_std_variant ob s o =
   match o with
       None -> write_string ob s
@@ -13264,19 +13516,15 @@ and write_std_variant ob s o =
         Buffer.add_char ob ']'
 
 
-# 420 "write.ml"
-let to_buffer ?(std = false) ob x =
-  if std then (
-    if not (is_object_or_array x) then
-      json_error "Root is not an object or array"
-    else
-      write_std_json ob x
-  )
+# 391 "write.ml"
+let to_buffer ?(suf = "") ?(std = false) ob x =
+  if std then
+    write_std_json ob x
   else
-    write_json ob x
+    write_json ob x;
+  Buffer.add_string ob suf
 
-
-let to_string ?buf ?(len = 256) ?std x =
+let to_string ?buf ?(len = 256) ?(suf = "") ?std x =
   let ob =
     match buf with
         None -> Buffer.create len
@@ -13284,43 +13532,44 @@ let to_string ?buf ?(len = 256) ?std x =
           Buffer.clear ob;
           ob
   in
-  to_buffer ?std ob x;
+  to_buffer ~suf ?std ob x;
   let s = Buffer.contents ob in
   Buffer.clear ob;
   s
 
-let to_channel ?buf ?(len=4096) ?std oc x =
+let to_channel ?buf ?(len=4096) ?(suf = "") ?std oc x =
   let ob =
     match buf with
         None -> Buffer.create len
-      | Some ob -> ob
+      | Some ob -> Buffer.clear ob; ob
   in
-  to_buffer ?std ob x;
-  Buffer.output_buffer oc ob
+  to_buffer ~suf ?std ob x;
+  Buffer.output_buffer oc ob;
+  Buffer.clear ob
 
-let to_output ?buf ?(len=4096) ?std out x =
+let to_output ?buf ?(len=4096) ?(suf = "") ?std out x =
   let ob =
     match buf with
         None -> Buffer.create len
-      | Some ob -> ob
+      | Some ob -> Buffer.clear ob; ob
   in
-  to_buffer ?std ob x;
+  to_buffer ~suf ?std ob x;
   out#output (Buffer.contents ob) 0 (Buffer.length ob);
-  ()
+  Buffer.clear ob
 
-let to_file ?len ?std file x =
+let to_file ?len ?std ?(suf = "\n") file x =
   let oc = open_out file in
   try
-    to_channel ?len ?std oc x;
+    to_channel ?len ~suf ?std oc x;
     close_out oc
   with e ->
     close_out_noerr oc;
     raise e
 
-let stream_to_buffer ?std ob st =
-  Stream.iter (to_buffer ?std ob) st
+let seq_to_buffer ?(suf = "\n") ?std ob st =
+  Seq.iter (to_buffer ~suf ?std ob) st
 
-let stream_to_string ?buf ?(len = 256) ?std st =
+let seq_to_string ?buf ?(len = 256) ?(suf = "\n") ?std st =
   let ob =
     match buf with
         None -> Buffer.create len
@@ -13328,23 +13577,27 @@ let stream_to_string ?buf ?(len = 256) ?std st =
           Buffer.clear ob;
           ob
   in
-  stream_to_buffer ?std ob st;
+  seq_to_buffer ~suf ?std ob st;
   let s = Buffer.contents ob in
   Buffer.clear ob;
   s
 
-let stream_to_channel ?buf ?(len=2096) ?std oc st =
+let seq_to_channel ?buf ?(len=2096) ?(suf = "\n") ?std oc seq =
   let ob =
     match buf with
         None -> Buffer.create len
-      | Some ob -> ob
+      | Some ob -> Buffer.clear ob; ob
   in
-  stream_to_buffer ?std ob st
+  Seq.iter (fun json ->
+    to_buffer ~suf ?std ob json;
+    Buffer.output_buffer oc ob;
+    Buffer.clear ob;
+  ) seq
 
-let stream_to_file ?len ?std file st =
+let seq_to_file ?len ?(suf = "\n") ?std file st =
   let oc = open_out file in
   try
-    stream_to_channel ?len ?std oc st;
+    seq_to_channel ?len ~suf ?std oc st;
     close_out oc
   with e ->
     close_out_noerr oc;
@@ -13358,19 +13611,181 @@ let rec sort = function
   | `List l ->
       `List (List.rev (List.rev_map sort l))
   
-# 513 "write.ml"
+# 485 "write.ml"
   | `Tuple l ->
       `Tuple (List.rev (List.rev_map sort l))
   
-# 517 "write.ml"
+# 489 "write.ml"
   | `Variant (k, Some v) as x ->
       let v' = sort v in
       if v == v' then x
       else
         `Variant (k, Some v')
   
-# 523 "write.ml"
+# 495 "write.ml"
   | x -> x
+# 90 "yojson.cppo.ml"
+module Pretty =
+struct
+# 1 "pretty.ml"
+(*
+   Pretty-print JSON data in an attempt to maximize readability.
+
+   1. What fits on one line stays on one line.
+   2. What doesn't fit on one line gets printed more vertically so as to not
+      exceed a reasonable page width, if possible.
+
+   Arrays containing only simple elements ("atoms") are pretty-printed with
+   end-of-line wrapping like ordinary text:
+
+     [
+        "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello",
+        "hello", "hello", "hello", "hello", "hello", "hello", "hello", "hello"
+     ]
+
+   Other arrays are printed either horizontally or vertically depending
+   on whether they fit on a single line:
+
+     [ { "hello": "world" }, { "hello": "world" }, { "hello": "world" } ]
+
+   or
+
+     [
+       { "hello": "world" },
+       { "hello": "world" },
+       { "hello": "world" },
+       { "hello": "world" }
+     ]
+*)
+
+let pp_list sep ppx out l =
+  let pp_sep out () = Format.fprintf out "%s@ " sep in
+  Format.pp_print_list ~pp_sep ppx out l
+
+let is_atom (x: [> t]) =
+  match x with
+  | `Null
+  | `Bool _
+  | `Int _
+  | `Float _
+  | `String _
+  | `Intlit _
+  | `Floatlit _
+  | `Stringlit _
+  | `List []
+  | `Assoc []
+  | `Tuple []
+  | `Variant (_, None) -> true
+  | `List _
+  | `Assoc _
+  | `Tuple _
+  | `Variant (_, Some _) -> false
+
+let is_atom_list l =
+  List.for_all is_atom l
+
+(*
+   inside_box: indicates that we're already within a box that imposes
+   a certain style and we shouldn't create a new one. This is used for
+   printing field values like this:
+
+     foo: [
+       bar
+     ]
+
+   rather than something else like
+
+     foo:
+       [
+         bar
+       ]
+*)
+let rec format ~inside_box std (out:Format.formatter) (x:t) : unit =
+  match x with
+    | `Null -> Format.pp_print_string out "null"
+    | `Bool x -> Format.pp_print_bool out x
+    
+# 92 "pretty.ml"
+    | `Intlit s -> Format.pp_print_string out s
+    
+# 95 "pretty.ml"
+    | `Floatlit s -> Format.pp_print_string out s
+    
+# 98 "pretty.ml"
+    | `Stringlit s -> Format.pp_print_string out s
+    
+# 100 "pretty.ml"
+    | `List [] -> Format.pp_print_string out "[]"
+    | `List l ->
+      if not inside_box then Format.fprintf out "@[<hv2>";
+      if is_atom_list l then
+        (* use line wrapping like we would do for a paragraph of text *)
+        Format.fprintf out "[@;<1 0>@[<hov>%a@]@;<1 -2>]"
+          (pp_list "," (format ~inside_box:false std)) l
+      else
+        (* print the elements horizontally if they fit on the line,
+           otherwise print them in a column *)
+        Format.fprintf out "[@;<1 0>@[<hv>%a@]@;<1 -2>]"
+          (pp_list "," (format ~inside_box:false std)) l;
+      if not inside_box then Format.fprintf out "@]";
+    | `Assoc [] -> Format.pp_print_string out "{}"
+    | `Assoc l ->
+      if not inside_box then Format.fprintf out "@[<hv2>";
+      Format.fprintf out "{@;<1 0>%a@;<1 -2>}" (pp_list "," (format_field std)) l;
+      if not inside_box then Format.fprintf out "@]";
+    
+# 119 "pretty.ml"
+    | `Tuple l ->
+        if std then
+          format ~inside_box std out (`List l)
+        else
+          if l = [] then
+            Format.pp_print_string out "()"
+          else (
+            if not inside_box then Format.fprintf out "@[<hov2>";
+            Format.fprintf out "(@,%a@;<0 -2>)" (pp_list "," (format ~inside_box:false std)) l;
+            if not inside_box then Format.fprintf out "@]";
+          )
+    
+# 132 "pretty.ml"
+    | `Variant (s, None) ->
+        if std then
+          
+# 137 "pretty.ml"
+          let representation = `Stringlit s in
+          
+# 139 "pretty.ml"
+          format ~inside_box std out representation
+        else
+          Format.fprintf out "<%s>" (json_string_of_string s)
+
+    | `Variant (s, Some x) ->
+        if std then
+          
+# 148 "pretty.ml"
+          let representation = `Stringlit s in
+          
+# 150 "pretty.ml"
+          format ~inside_box std out (`List [ representation; x ])
+        else
+          let op = json_string_of_string s in
+          Format.fprintf out "<@[<hv2>%s: %a@]>" op (format ~inside_box:true std) x
+
+# 156 "pretty.ml"
+and format_field std out (name, x) =
+  Format.fprintf out "@[<hv2>%s: %a@]" (json_string_of_string name) (format ~inside_box:true std) x
+
+let pp ?(std = false) out x =
+  Format.fprintf out "@[<hv2>%a@]" (format ~inside_box:true std) (x :> t)
+
+let to_string ?std x =
+  Format.asprintf "%a" (pp ?std) x
+
+let to_channel ?std oc x =
+  let fmt = Format.formatter_of_out_channel oc in
+  Format.fprintf fmt "%a@?" (pp ?std) x
+# 93 "yojson.cppo.ml"
+end
 # 1 "monomorphic.ml"
 let rec pp fmt =
   function
@@ -13511,14 +13926,14 @@ let rec equal a b =
     | _ -> false
 
 # 2 "write2.ml"
-let pretty_print ?std out (x : t) =
-  Pretty.pp ?std out (x :> json_max)
+let pretty_print ?std out x =
+  Pretty.pp ?std out x
 
-let pretty_to_string ?std (x : t) =
-  Pretty.to_string ?std (x :> json_max)
+let pretty_to_string ?std x =
+  Pretty.to_string ?std x
 
-let pretty_to_channel ?std oc (x : t) =
-  Pretty.to_channel ?std oc (x :> json_max)
+let pretty_to_channel ?std oc x =
+  Pretty.to_channel ?std oc x
 
 # 1 "lib/read.mll"
  
@@ -13668,7 +14083,7 @@ let pretty_to_channel ?std oc (x : t) =
 
   let map_lexeme f lexbuf =
     let len = lexbuf.lex_curr_pos - lexbuf.lex_start_pos in
-    f (Bytes.to_string lexbuf.lex_buffer) lexbuf.lex_start_pos len
+    f (Bytes.sub_string lexbuf.lex_buffer lexbuf.lex_start_pos len) 0 len
 
   type variant_kind = [ `Edgy_bracket | `Square_bracket | `Double_quote ]
   type tuple_kind = [ `Parenthesis | `Square_bracket ]
@@ -18470,30 +18885,30 @@ and __ocaml_lex_junk_rec lexbuf __ocaml_lex_state =
 
   exception Finally of exn * exn
 
-  let stream_from_lexbuf v ?(fin = fun () -> ()) lexbuf =
+  let seq_from_lexbuf v ?(fin = fun () -> ()) lexbuf =
     let stream = Some true in
-    let f i =
-      try Some (from_lexbuf v ?stream lexbuf)
+    let rec f () =
+      try Seq.Cons (from_lexbuf v ?stream lexbuf, f)
       with
           End_of_input ->
             fin ();
-            None
+            Seq.Nil
         | e ->
             (try fin () with fin_e -> raise (Finally (e, fin_e)));
             raise e
     in
-    Stream.from f
+    f
 
-  let stream_from_string ?buf ?fname ?lnum s =
+  let seq_from_string ?buf ?fname ?lnum s =
     let v = init_lexer ?buf ?fname ?lnum () in
-    stream_from_lexbuf v (Lexing.from_string s)
+    seq_from_lexbuf v (Lexing.from_string s)
 
-  let stream_from_channel ?buf ?fin ?fname ?lnum ic =
+  let seq_from_channel ?buf ?fin ?fname ?lnum ic =
     let lexbuf = Lexing.from_channel ic in
     let v = init_lexer ?buf ?fname ?lnum () in
-    stream_from_lexbuf v ?fin lexbuf
+    seq_from_lexbuf v ?fin lexbuf
 
-  let stream_from_file ?buf ?fname ?lnum file =
+  let seq_from_file ?buf ?fname ?lnum file =
     let ic = open_in file in
     let fin () = close_in ic in
     let fname =
@@ -18503,29 +18918,28 @@ and __ocaml_lex_junk_rec lexbuf __ocaml_lex_state =
     in
     let lexbuf = Lexing.from_channel ic in
     let v = init_lexer ?buf ?fname ?lnum () in
-    stream_from_lexbuf v ~fin lexbuf
+    seq_from_lexbuf v ~fin lexbuf
 
   type json_line = [ `Json of t | `Exn of exn ]
 
-  let linestream_from_channel
+  let lineseq_from_channel
       ?buf ?(fin = fun () -> ()) ?fname ?lnum:(lnum0 = 1) ic =
     let buf =
       match buf with
           None -> Some (Buffer.create 256)
         | Some _ -> buf
     in
-    let f i =
+    let rec f lnum = fun () ->
       try
         let line = input_line ic in
-        let lnum = lnum0 + i in
-        Some (`Json (from_string ?buf ?fname ~lnum line))
+        Seq.Cons (`Json (from_string ?buf ?fname ~lnum line), f (lnum + 1))
       with
-          End_of_file -> fin (); None
-        | e -> Some (`Exn e)
+          End_of_file -> fin (); Seq.Nil
+        | e -> Seq.Cons (`Exn e, f (lnum + 1))
     in
-    Stream.from f
+    f lnum0
 
-  let linestream_from_file ?buf ?fname ?lnum file =
+  let lineseq_from_file ?buf ?fname ?lnum file =
     let ic = open_in file in
     let fin () = close_in ic in
     let fname =
@@ -18533,7 +18947,7 @@ and __ocaml_lex_junk_rec lexbuf __ocaml_lex_state =
           None -> Some file
         | x -> x
     in
-    linestream_from_channel ?buf ~fin ?fname ?lnum ic
+    lineseq_from_channel ?buf ~fin ?fname ?lnum ic
 
   let prettify ?std s =
     pretty_to_string ?std (from_string s)
@@ -18541,9 +18955,7 @@ and __ocaml_lex_junk_rec lexbuf __ocaml_lex_state =
   let compact ?std s =
     to_string (from_string s)
 
-  let validate_json _path _value = None
 
-
-# 3411 "lib/read.ml"
-# 91 "yojson.cppo.ml"
+# 3408 "lib/read.ml"
+# 102 "yojson.cppo.ml"
 end

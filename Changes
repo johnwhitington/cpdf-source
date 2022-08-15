@@ -7,6 +7,10 @@ o Allow -utf8 with -split-bookmarks -o @B.pdf to produce UTF8 filenames
 o -merge-add-bookmarks now works with unicode filenames
 o Better transformation of some annotation types
 
+Fixes:
+
+o Updated Yojson to remove dependency on Stream, ready for OCaml 5
+
 2.5.1 (January 2022)
 
 o Fix a regression where standard fonts could not be chosen
