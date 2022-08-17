@@ -530,7 +530,7 @@ public static void main(String[] args)
 \end{jcpdflib}
 
 \begin{jscpdflib}
-\chapter*{Example Program in Java}
+\chapter*{Example Program in JavaScript}
 
 This program loads a file \texttt{hello.pdf} from disk and writes out a
 document with the original included three times.
@@ -538,41 +538,26 @@ document with the original included three times.
 \begin{small}
 \begin{verbatim}
 //Merge example
-import com.coherentpdf.Jcpdf
 
-public static void main(String[] args)
-{
-   // Initialise cpdf
-   Jcpdf jcpdf = new Jcpdf();
-   try
-   {
-     jcpdf.startup();
-   }
-   catch (Jcpdf.CpdfError e)
-   {
-     System.out.println("Error during cpdf startup");
-   }
-   // We will take the input hello.pdf and repeat it three times
-   try (Jcpdf.Pdf mergepdf = jcpdf.fromFile("hello.pdf", ""))
-   {
-     // The array of PDFs to merge
-     Jcpdf.Pdf[] pdfs = {mergepdf, mergepdf, mergepdf};
-     // Merge them
-     Jcpdf.Pdf merged = jcpdf.mergeSimple(pdfs);
-     // Write output
-     jcpdf.toFile(merged, "merged.pdf", false, false);
-     // Dispose of merged PDF
-     merged.close();
-   }
-   catch (Jcpdf.CpdfError e)
-   {
-     System.out.println("Error during cpdf operation");
-   }
-}
+//Load coherentpdf.js
+const coherentpdf = require('./coherentpdf.js');
+
+//Load the file hello.pdf from the current directory
+var pdf = coherentpdf.fromFile('hello.pdf', '');
+
+//Merge three copies of it
+var merged = coherentpdf.mergeSimple([pdf, pdf, pdf]);
+
+//Write to merged.pdf
+coherentpdf.toFile(merged, 'merged.pdf', false, false);
+
+//Clean up the two PDFs
+coherentpdf.deletePdf(pdf);
+coherentpdf.deletePdf(merged);
 \end{verbatim}
 \end{small}
 
-\noindent Note the use of \texttt{try} and \texttt{close()} to ensure the PDFs are thrown away when no longer required.
+\noindent To be run in node. A browser example is included in the distribution of coherentpdf.js.
 \end{jscpdflib}
 
 \pagestyle{plain}

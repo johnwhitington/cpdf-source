@@ -4,15 +4,19 @@
 Use
 ---
 
-cpdf.js can be used from both node and the browser.
+coherentpdf.js can be used from both node and the browser.
 
-For development server-side with node: `cpdf.js` (minified version
-`cpdf.min.js`) Load with `const cpdf = require('cpdf.js')` if installed in npm,
-or `const cpdf = require('./cpdf.js')` to load from current directory.
+The file `cpdflibtest.js` uses every function in coherentpdf.js. Call `./run`
+to run it in node.
 
-For development client-side with the browser : `cpdf.browser.js` (minified
-version for deployment : `cpdf.browser.min.js`). Load with `<script
-src="cpdf.browser.js"></script>` or similar.
+For development server-side with node: `coherentpdf.js` (minified version
+`coherentpdf.min.js`). Load with `const coherentpdf = require('coherentpdf')`
+if installed in npm, or `const coherentpdf = require('./coherentpdf.js')` to
+load from current directory.
+
+For development client-side with the browser : `coherentpdf.browser.js`
+(minified version for deployment : `coherentpdf.browser.min.js`). Load with
+`<script src="coherentpdf.browser.js"></script>` or similar.
 
 
 Data types
@@ -37,6 +41,6 @@ Any function may raise an exception, containing a string describing the problem.
 Concurrency
 -----------
 
-cpdf.js is synchronous and non-re-entrant. In the browser, best used in a worker.
+coherentpdf.js is synchronous and non-re-entrant. In the browser, best used in a worker.
 **/
 
