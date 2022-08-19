@@ -1,0 +1,56 @@
+// CHAPTER 9. Multipage facilities
+
+/** Imposes a PDF. There are two modes: imposing x * y, or imposing to fit a
+page of size x * y. This is controlled by fit. Columns imposes by columns
+rather than rows. rtl is right-to-left, btt bottom-to-top. Center is unused
+for now. Margin is the margin around the output, spacing the spacing between
+imposed inputs.
+@arg {pdf} pdf PDF document
+@arg {number} x (explained above)
+@arg {number} y (explained above)
+@arg {boolean} fit (explained above)
+@arg {boolean} rtl impose right to left
+@arg {boolean} btt impose bottom to top
+@arg {boolean} center unused
+@arg {number} margin margin around output pages
+@arg {number} spacing spacing between imposed pages
+@arg {number} linewidth line width */
+function impose(pdf, x, y, fit, columns, rtl, btt, center, margin, spacing, linewidth) {}
+
+/** Imposes a document two up. twoUp does so by shrinking the page size, to fit
+two pages on one.
+@arg {pdf} pdf PDF document */
+function twoUp(pdf) {}
+
+/** Impose a document two up. twoUpStack does so by doubling the page size,
+to fit two pages on one.
+@arg {pdf} pdf PDF document */
+function twoUpStack(pdf) {}
+
+/** Adds a blank page before each page in the given range.
+@arg {pdf} pdf PDF document
+@arg {range} range page range */
+function padBefore(pdf, range) {}
+
+/** Adds a blank page after every n pages.
+@arg {pdf} pdf PDF document
+@arg {range} range page range */
+function padAfter(pdf, range) {}
+
+/** Adds a blank page after every n pages.
+@arg {pdf} pdf PDF document
+@arg {number} interval */
+function padEvery(pdf, n) {}
+
+/** Adds pages at the end to pad the file to a multiple of n pages in
+length.
+@arg {pdf} pdf PDF document
+@arg {number} multiple to pad to */
+function padMultiple(pdf, n) {}
+
+/** Adds pages at the beginning to pad the file to a multiple of n pages in
+length.
+@arg {pdf} pdf PDF document
+@arg {number} multiple to pad to */
+function padMultipleBefore(pdf, n) {}
+

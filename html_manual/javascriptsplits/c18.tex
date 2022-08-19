@@ -1,0 +1,54 @@
+// CHAPTER 17. Creating new PDFs
+
+/** Creates a blank document with pages of the given width (in points), height
+(in points), and number of pages.
+@arg {number} w page width
+@arg {number} h page height
+@arg {number} number of pages
+@return {pdf} PDF document */
+function blankDocument(w, h, pages) {}
+
+/** Makes a blank document given a page size and number of pages.
+@arg {"paper size"} papersize paper size
+@arg {number} pages number of pages
+@return {pdf} PDF document */
+function blankDocumentPaper(papersize, pages) {}
+
+/** Typesets a UTF8 text file ragged right on a page of size w * h in points
+in the given font and font size.
+@arg {number} w page width
+@arg {number} h page height
+@arg {font} font font
+@arg {number} fontsize font size
+@arg {string} filename file name
+@result {pdf} PDF document */
+function textToPDF(w, h, font, fontsize, filename) {}
+
+/** Typesets a UTF8 text file ragged right on a page of size w * h in points
+in the given font and font size.
+@arg {number} w page width
+@arg {number} h page height
+@arg {font} font font
+@arg {number} fontsize font size
+@arg {Uint8Array} data text
+@result {pdf} PDF document */
+function textToPDFMemory(w, h, font, fontsize, data) {}
+
+/** Typesets a UTF8 text file ragged right on a page of the given size in the
+given font and font size.
+@arg {"paper size"} papersize paper size
+@arg {font} font font
+@arg {number} fontsize font size
+@arg {string} filename file name
+@result {pdf} PDF document */
+function textToPDFPaper(papersize, font, fontsize, filename) {}
+
+/** Typesets a UTF8 text file ragged right on a page of the given size in the
+given font and font size.
+@arg {"paper size"} papersize paper size
+@arg {font} font font
+@arg {number} fontsize font size
+@arg {Uint8Array} data text
+@result {pdf} PDF document */
+function textToPDFPaperMemory(papersize, font, fontsize, data) {}
+

@@ -1,0 +1,368 @@
+// CHAPTER 1. Basics
+
+/** Loads a PDF file from a given file. Supply a user password (possibly blank)
+in case the file is encrypted. It won't be decrypted, but sometimes the
+password is needed just to load the file.
+@arg {string} filename File name
+@arg {string} userpw User password, or blank if none */
+function fromFile(filename, userpw) {}
+
+/** Loads a PDF from a file, doing only minimal parsing. The objects will be
+read and parsed when they are actually needed. Use this when the whole file
+won't be required. Also supply a user password (possibly blank) in case the
+file is encrypted. It won't be decrypted, but sometimes the password is needed
+just to load the file.
+@arg {string} filename File name
+@arg {string} userpw User password, or blank if none */
+function fromFileLazy(filename, userpw) {}
+
+/** Loads a file from memory given any user password.
+@arg {Uint8Array} data PDF document as an array of bytes
+@arg {string} userpw User password, or blank if none */
+function fromMemory(data, userpw) {}
+
+/** Loads a file from memory, given a pointer and a length, and the user
+password, but lazily like fromFileLazy.
+@arg {Uint8Array} data PDF document as an array of bytes
+@arg {string} userpw User password, or blank if none */
+function fromMemoryLazy(data, userpw) {}
+
+/** To enumerate the list of currently allocated PDFs, call startEnumeratePDFs
+which gives the number, n, of PDFs allocated, then enumeratePDFsInfo and
+enumeratePDFsKey with index numbers from 0...(n - 1). Call endEnumeratePDFs to
+clean up.
+@return {number} number of PDFs */
+function startEnumeratePDFs() {}
+
+/** To enumerate the list of currently allocated PDFs, call startEnumeratePDFs
+which gives the number, n, of PDFs allocated, then enumeratePDFsInfo and
+enumeratePDFsKey with index numbers from 0...(n - 1). Call endEnumeratePDFs to
+clean up.
+@arg {n} index number
+@return {number} PDF key */
+function enumeratePDFsKey(n) {}
+
+/** To enumerate the list of currently allocated PDFs, call startEnumeratePDFs
+which gives the number, n, of PDFs allocated, then enumeratePDFsInfo and
+enumeratePDFsKey with index numbers from 0...(n - 1). Call endEnumeratePDFs to
+clean up.
+@arg {n} index number
+@return {number} PDF information */
+function enumeratePDFsInfo(n) {}
+
+/** To enumerate the list of currently allocated PDFs, call startEnumeratePDFs
+which gives the number, n, of PDFs allocated, then enumeratePDFsInfo and
+enumeratePDFsKey with index numbers from 0...(n - 1). Call endEnumeratePDFs to
+clean up. */
+function endEnumeratePDFs() {}
+
+/** Converts a figure in centimetres to points (72 points to 1 inch)
+@arg {number} i figure in centimetres
+@return {number} figure in points */
+function ptOfCm(i) {}
+
+/** Converts a figure in millimetres to points (72 points to 1 inch)
+@arg {number} i figure in millimetres
+@return {number} figure in points */
+function ptOfMm(i) {}
+
+/** Converts a figure in inches to points (72 points to 1 inch)
+@arg {number} i figure in inches
+@return {number} figure in points */
+function ptOfIn(i) {}
+
+/** Converts a figure in points to centimetres (72 points to 1 inch)
+@arg {number} i figure in points
+@return {number} figure in centimetres */
+function cmOfPt(i) {}
+
+/** Converts a figure in points to millimetres (72 points to 1 inch)
+@arg {number} i figure in points
+@return {number} figure in millimetres */
+function mmOfPt(i) {}
+
+/** Converts a figure in points to inches (72 points to 1 inch)
+@arg {number} i figure in points 
+@return {number} figure in inches */
+function inOfPt(i) {}
+
+/** Parses a page specification with reference to a given PDF (the PDF is
+supplied so that page ranges which reference pages which do not exist are
+rejected).
+@arg {pdf} pdf PDF document
+@arg {string} pagespec Page specification
+@return {array} page range */
+function parsePagespec(pdf, pagespec) {}
+
+/** Validates a page specification so far as is possible in the absence of
+the actual document. Result is true if valid.
+@arg {string} pagespec Page specification
+@return {boolean} validity or otherwise of page specification */
+function validatePagespec(pagespec) {}
+
+/** Builds a page specification from a page range. For example, the range
+containing 1,2,3,6,7,8 in a document of 8 pages might yield "1-3,6-end"
+@arg {pdf} pdf PDF document
+@arg {array} r Page range
+@return {string} Page specifcation */
+function stringOfPagespec(pdf, r) {}
+
+/** Creates a range with no pages in.
+@return {array} Page range */
+function blankRange() {}
+
+/** Builds a range from one page to another inclusive. For example, range(3,7)
+gives the range 3,4,5,6,7
+@arg {number} f begining of page range
+@arg {number} t end of page range
+@return {array} page range */
+function range(f, t) {}
+
+/** The range containing all the pages in a given document.
+@arg {pdf} pdf PDF document
+@return {array} page range */
+function all(pdf) {}
+
+/** Makes a range which contains just the even pages of another range.
+@arg {array} r_in page range
+@return {array} page range */
+function even(r_in) {}
+
+/** Makes a range which contains just the odd pages of another range.
+@arg {array} r_in page range
+@return {array} page range */
+function odd(r_in) {}
+
+/** Makes the union of two ranges giving a range containing the pages in range
+a and range b.
+@arg {array} a page range
+@arg {array} b page range
+@return {array} page range */
+function rangeUnion(a, b) {}
+
+/** Makes the difference of two ranges, giving a range containing all the
+pages in a except for those which are also in b.
+@arg {array} a page range
+@arg {array} b page range
+@return {array} page range */
+function difference(a, b) {}
+
+/** Deduplicates a range, making a new one.
+@arg {array} a page range
+@return {array} page range */
+function removeDuplicates(a) {}
+
+/** Gives the number of pages in a range.
+@arg {array} r page range
+@return {number} length */
+function rangeLength(r) {}
+
+/** Gets the page number at position n in a range, where n runs from 0 to
+rangeLength - 1.
+@arg {array} r page range
+@arg {number} n position
+@return {number} page at given position */
+function rangeGet(r, n) {}
+
+/** Adds the page to a range, if it is not already there.
+@arg {array} r page range
+@arg {number} page page number */
+function rangeAdd(r, page) {}
+
+/** Returns true if the page is in the range, false otherwise.
+@arg {array} r page range
+@arg {number} page page number
+@return {boolean} true if page in range, false otherwise */
+function isInRange(r, page) {}
+
+/** Returns the number of pages in a PDF.
+@arg {pdf} pdf PDF document
+@return {number} number of pages */
+function pages(pdf) {}
+
+/** Returns the number of pages in a given PDF, with given user password. It
+tries to do this as fast as possible, without loading the whole file.
+@arg {string} password user password
+@arg {string} filename file name
+@return {number} number of pages */
+function pagesFast(password, filename) {}
+
+/** Returns the number of pages in a given PDF, with given user password. It
+tries to do this as fast as possible, without loading the whole file.
+@arg {string} password user password
+@arg {Uint8Array} data PDF file as a byte array
+@return {number} number of pages */
+function pagesFastMemory(password, data) {}
+
+/** Writes the file to a given filename. If linearize is true, it will be
+linearized if a linearizer is available. If make_id is true, it will be
+given a new ID.
+@arg {pdf} pdf PDF document
+@arg {string} filename file name
+@arg {boolean} linearize linearize if a linearizer is available
+@arg {boolean} make_id make a new /ID */
+function toFile(pdf, filename, linearize, make_id) {}
+
+/** Writes the file to a given filename. If make_id is true, it will be given
+a new ID.  If preserve_objstm is true, existing object streams will be
+preserved. If generate_objstm is true, object streams will be generated even if
+not originally present. If compress_objstm is true, object streams will be
+compressed (what we usually want). WARNING: the pdf argument will be invalid
+after this call, and should be not be used again.
+@arg {pdf} pdf PDF document
+@arg {string} filename file name
+@arg {boolean} linearize linearize if a linearizer is available
+@arg {boolean} preserve_objstm preserve existing object streams
+@arg {boolean} generate_objstm create new object streams
+@arg {boolean} compress_objstm compress new object streams */
+function toFileExt(pdf, filename, linearize, make_id, preserve_objstm, generate_objstm, compress_objstm) {}
+
+/** Writes a PDF file and returns as an array of bytes.
+@arg {pdf} pdf PDF document
+@arg {boolean} linearize linearize if a linearizer is available
+@arg {boolean} make_id make a new /ID
+@result {Uint8Array} PDF document as an array of bytes */
+function toMemory(pdf, linearize, make_id) {}
+
+/** Writes the file to memory. If make_id is true, it will be given
+a new ID.  If preserve_objstm is true, existing object streams will be
+preserved. If generate_objstm is true, object streams will be generated even if
+not originally present. If compress_objstm is true, object streams will be
+compressed (what we usually want). WARNING: the pdf argument will be invalid
+after this call, and should be not be used again.
+@arg {pdf} pdf PDF document
+@arg {boolean} linearize linearize if a linearizer is available
+@arg {boolean} preserve_objstm preserve existing object streams
+@arg {boolean} generate_objstm create new object streams
+@arg {boolean} compress_objstm compress new object streams
+@result {Uint8Array} PDF file as a byte array */
+function toMemoryExt(pdf, linearize, make_id, preserve_objstm, generate_objstm, compress_objstm) {}
+
+/** Returns true if a document is encrypted, false otherwise.
+@arg {pdf} pdf PDF document
+@return {boolean} true if document encrypted, false otherwise */
+function isEncrypted(pdf) {}
+
+/** Attempts to decrypt a PDF using the given user password. An exception is
+raised if the decryption fails.
+@arg {pdf} pdf PDF document
+@arg {string} userpw user password, or empty if none */
+function decryptPdf(pdf, userpw) {}
+
+/** Attempts to decrypt a PDF using the given owner password. Raises an
+exception if the decryption fails.
+@arg {pdf} pdf PDF document
+@arg {string} ownerpw owner password, or empty if none */
+function decryptPdfOwner(pdf, ownerpw) {}
+
+/** Cannot edit the document */
+var noEdit = 0;
+
+/** Cannot print the document */
+var noPrint = 1;
+
+/** Cannot copy the document */
+var noCopy = 2;
+
+/** Cannot annotate the document */
+var noAnnot = 3;
+
+/** Cannot edit forms in the document */
+var noForms = 4;
+
+/** Cannot extract information */
+var noExtract = 5;
+
+/** Cannot assemble into a bigger document */
+var noAssemble = 6;
+
+/** Cannot print high quality */
+var noHqPrint = 7;
+
+/** 40 bit RC4 encryption */
+var pdf40bit = 0;
+
+/** 128 bit RC4 encryption */
+var pdf128bit = 1;
+
+/** 128 bit AES encryption, do not encrypt metadata */
+var aes128bitfalse = 2;
+
+/** 128 bit AES encryption, encrypt metadata */
+var aes128bittrue = 3;
+
+/** Deprecated. Do not use for new files */
+var aes256bitfalse = 4;
+
+/** Deprecated. Do not use for new files */
+var aes256bittrue = 5;
+
+/** 256 bit AES encryption, do not encrypt metadata */
+var aes256bitisofalse = 6;
+
+/** 256 bit AES encryption, encrypt metadata */
+var aes256bitisotrue = 7;
+
+/** Writes a file as encrypted.
+@arg {pdf} pdf PDF document
+@arg {"encryption method"} encryption_method encryption method
+@arg {"permission array"} array of permissions
+@arg {string} ownerpw owner password
+@arg {string} userpw user password
+@arg {boolean} linearize linearize if a linearizer is available
+@arg {boolean} makeid make a new /ID
+@arg {string} filename file name */
+function toFileEncrypted(pdf, encryption_method, permissions, ownerpw, userpw, linearize, makeid, filename) {}
+
+/** Writes to memory as encrypted.
+@arg {pdf} pdf PDF document
+@arg {"encryption method"} encryption_method encryption method
+@arg {"permission array"} array of permissions
+@arg {string} ownerpw owner password
+@arg {string} userpw user password
+@arg {boolean} linearize linearize if a linearizer is available
+@arg {boolean} makeid make a new /ID
+@return {Uint8Array} PDF file as a byte array */
+function toMemoryEncrypted(pdf, encryption_method, permissions, ownerpw, userpw, linearize, makeid) {}
+
+/** Writes a file as encrypted with extra parameters. WARNING: the pdf argument
+will be invalid after this call, and should not be used again.
+@arg {pdf} pdf PDF document
+@arg {"encryption method"} encryption_method encryption method
+@arg {"permission array"} array of permissions
+@arg {string} ownerpw owner password
+@arg {string} userpw user password
+@arg {boolean} linearize linearize if a linearizer is available
+@arg {boolean} makeid make a new /ID
+@arg {boolean} preserve_objstm preserve existing object streams
+@arg {boolean} generate_objstm generate new object streams
+@arg {boolean} compress_objstm compress object streams
+@arg {string} filename file name */
+function toFileEncryptedExt(pdf, encryption_method, permissions, ownerpw, userpw, linearize, makeid, preserve_objstm, generate_objstm, compress_objstm, filename) {}
+
+/** Writes a file as encrypted with extra parameters. WARNING: the pdf argument
+will be invalid after this call, and should not be used again.
+@arg {pdf} pdf PDF document
+@arg {"encryption method"} encryption_method encryption method
+@arg {"permission array"} array of permissions
+@arg {string} ownerpw owner password
+@arg {string} userpw user password
+@arg {boolean} linearize linearize if a linearizer is available
+@arg {boolean} makeid make a new /ID
+@arg {boolean} preserve_objstm preserve existing object streams
+@arg {boolean} generate_objstm generate new object streams
+@arg {boolean} compress_objstm compress object streams
+@return {Uint8Array} PDF file as a byte array */
+function toMemoryEncryptedExt(pdf, encryption_method, permissions, ownerpw, userpw, linearize, makeid, preserve_objstm, generate_objstm, compress_objstm) {}
+
+/** Returns true if the given permission (restriction) is present.
+@arg {pdf} pdf PDF document
+@arg {permission} permission permission
+@return {boolean} true if permission present */
+function hasPermission(pdf, permission) {}
+
+/** Returns the encryption method currently in use on a document.
+@arg {pdf} pdf PDF document
+@return {"encryption method"} encryption method */
+function encryptionKind(pdf) {}
+

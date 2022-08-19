@@ -1,0 +1,25 @@
+// CHAPTER 0. Preliminaries
+
+/** Returns a string giving the version number of the CPDF library.
+@returns {string} version */
+function version() {}
+
+/** Some operations have a fast mode. The default is 'slow' mode, which works
+even on old-fashioned files. For more details, see section 1.13 of the CPDF
+manual. This function sets the mode to fast globally. */
+function setFast() {}
+
+/** Some operations have a fast mode. The default is 'slow' mode, which works
+even on old-fashioned files. For more details, see section 1.13 of the CPDF
+manual. This function sets the mode to slow globally. */
+function setSlow() {}
+
+/** Delete a PDF so the memory representing it may be recovered.
+@arg {pdf} pdf PDF document to delete */
+function deletePdf(pdf) {}
+
+/* A debug function which prints some information about resource usage. This
+can be used to detect if PDFs or ranges are being deallocated properly.
+Contrary to its name, it may be run at any time. */
+function onexit() {}
+

@@ -1,0 +1,46 @@
+// CHAPTER -1: Introduction
+
+/**
+Use
+---
+
+coherentpdf.js can be used from both node and the browser.
+
+The file `cpdflibtest.js` uses every function in coherentpdf.js. Call `./run`
+to run it in node.
+
+For development server-side with node: `coherentpdf.js` (minified version
+`coherentpdf.min.js`). Load with `const coherentpdf = require('coherentpdf')`
+if installed in npm, or `const coherentpdf = require('./coherentpdf.js')` to
+load from current directory.
+
+For development client-side with the browser : `coherentpdf.browser.js`
+(minified version for deployment : `coherentpdf.browser.min.js`). Load with
+`<script src="coherentpdf.browser.js"></script>` or similar.
+
+
+Data types
+----------
+
+Arguments are numbers, strings, or arrays (of type UInt8Array for data). Page
+ranges are represented by arrays of numbers.
+
+
+Memory Management
+-----------------
+
+A PDF p must be explicitly deallocated with deletePdf(p).
+
+
+Errors
+------
+
+Any function may raise an exception, containing a string describing the problem. 
+
+
+Concurrency
+-----------
+
+coherentpdf.js is synchronous and non-re-entrant. In the browser, best used in a worker.
+**/
+

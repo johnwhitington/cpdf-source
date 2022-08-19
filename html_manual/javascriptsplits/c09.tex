@@ -1,0 +1,150 @@
+// CHAPTER 8. Logos, Watermarks and Stamps
+   
+/** Stamps stamp_pdf on all the pages in the document which are in the
+range. The stamp is placed with its origin at the origin of the target
+document.
+@arg {pdf} stamp_pdf stamp
+@arg {pdf} pdf PDF document
+@arg {range} range page range */
+function stampOn(stamp_pdf, pdf, range) {}
+
+/** Stamps stamp_pdf under all the pages in the document which are in the
+range. The stamp is placed with its origin at the origin of the target
+document.
+@arg {pdf} stamp_pdf stamp
+@arg {pdf} pdf PDF document
+@arg {range} range page range */
+function stampUnder(stamp_pdf, pdf, range) {}
+
+/** A stamping function with extra features. 
+@arg {pdf} pdf first PDF document
+@arg {pdf} pdf second PDF document
+@arg {boolean} isover pdf goes over pdf2, otherwise under
+@arg {boolean} scale_stamp_to_fit scales the stamp to fit the page
+@arg {anchor} anchor for position of stamp
+@arg {number} p1 position argument 1
+@arg {number} p2 position argument 2
+@arg {boolean} relative_to_cropbox pos is relative to cropbox not mediabox. */
+function stampExtended(pdf, pdf2, range, isover, scale_stamp_to_fit, position, relative_to_cropbox) {}
+
+/** Combines the PDFs page-by-page, putting each page of 'over' over each page
+of 'under'.
+@arg {pdf} under PDF document
+@arg {pdf} over PDF document
+@result {pdf} resultant PDF document */
+function combinePages(under, over) {}
+
+/** Times Roman */
+var timesRoman = 0;
+
+/** Times Bold */
+var timesBold = 1;
+
+/** Times Italic */
+var timesItalic = 2;
+
+/** Times Bold Italic */
+var timesBoldItalic = 3;
+
+/** Helvetica */
+var helvetica = 4;
+
+/** Helvetica Bold */
+var helveticaBold = 5;
+
+/** Helvetica Oblique */
+var helveticaOblique = 6;
+
+/** Helvetica Bold Oblique */
+var helveticaBoldOblique = 7;
+
+/** Courier */
+var courier = 8;
+
+/** Courier Bold */
+var courierBold = 9;
+
+/** Courier Oblique */
+var courierOblique = 10;
+
+/** Courier Bold Oblique */
+var courierBoldOblique = 11;
+
+/** Left justify */
+var leftJustify = 0;
+
+/** Centre justify */
+var centreJustify = 1;
+
+/** Right justify */
+var rightJustify = 2;
+
+/** Adds text to the pages in the given range.
+@arg {boolean} metrics collect metrics only
+@arg {pdf} pdf PDF document
+@arg {range} range page range
+@arg {string} text text to add \\n for newline
+@arg {anchor} anchor anchor to add text at
+@arg {number} p1 position argument 1
+@arg {number} p2 position argument 2
+@arg {number} linespacing line spacing
+@arg {number} bates starting bates number
+@arg {font} font font
+@arg {number} fontsize font size
+@arg {number} r red component of colour 0..1
+@arg {number} g green component of colour 0..1
+@arg {number} b blue component of colour 0..1
+@arg {boolean} underneath put text under the page rather than over
+@arg {boolean} relative_to_cropbox position is relative to crop box not media box
+@arg {boolean} outline text is outline
+@arg {number} opacity opacity 0..1
+@arg {justification} justification justification
+@arg {boolean} midline position is relative to midline not baseline
+@arg {boolean} topline position is relative to topline not baseline
+@arg {string} filename file name
+@arg {number} linewidth line width
+@arg {boolean} embed_fonts add font information
+*/
+function addText(metrics, pdf, range, text, anchor, p1, p2, linespacing,
+                 bates, font, fontsize, r, g, b, underneath, relative_to_cropbox, outline,
+                 opacity, justification, midline, topline, filename, linewidth, embed_fonts) {}
+
+/** Adds text with most parameters default.
+@arg {pdf} pdf PDF document
+@arg {range} range page range
+@arg {string} text text to add. \\n for newline
+@arg {anchor} anchor anchor to add text at
+@arg {number} p1 position argument 1
+@arg {number} p2 position argument 2
+@arg {font} font font
+@arg {number} fontsize font size */
+function addTextSimple(pdf, range, text, anchor, p1, p2, font, fontsize) {}
+
+/** Removes any text added by cpdf from the given pages.
+@arg {pdf} pdf PDF document
+@arg {range} range page range */
+function removeText(pdf, range) {}
+
+/** Returns the width of a given string in the given font in thousandths of a
+point.
+@arg {font} font font
+@arg {string} text text
+@result {number} width */
+function textWidth(font, text) {}
+
+/** Adds page content before (if true) or after (if false) the existing
+content to pages in the given range in the given PDF.
+@arg {string} content content to add
+@arg {boolean} before rather than after
+@arg {pdf} pdf PDF document
+@arg {range} range page range */
+function addContent(content, before, pdf, range) {}
+
+/** Stamps stamp_pdf onto the pages in the given range in pdf as a shared Form
+XObject. The name of the newly-created XObject is returned.
+@arg {pdf} pdf PDF document
+@arg {range} range page range
+@arg {pdf} stamp_pdf stamp pdf
+@result {string} name of XObject */
+function stampAsXObject(pdf, range, stamp_pdf) {}
+
