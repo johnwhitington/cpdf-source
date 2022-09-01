@@ -1842,7 +1842,7 @@ and specs =
       " -scale-to-fit \"x y\" scales to page size (x, y)");
    ("-scale-contents",
       Arg.Float setscalecontents,
-      "  Scale Contents by the given factor");
+      "  Scale contents by the given factor");
    ("-scale-to-fit-scale",
       Arg.Float setscaletofitscale,
       " -scale-to-fit-scale (1.0 = 100%)");
