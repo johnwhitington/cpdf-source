@@ -380,6 +380,8 @@ type args =
    mutable direction : int;
    mutable effect_duration : float;
    mutable font : font;
+   mutable fontfile : string option;
+   mutable fontencoding : Pdftext.encoding;
    mutable fontname : string;
    mutable fontsize : float;
    mutable color : Cpdfaddtext.color;
@@ -501,6 +503,8 @@ let args =
    direction = 0;
    effect_duration = 1.;
    font = StandardFont Pdftext.TimesRoman;
+   fontfile = None;
+   fontencoding = Pdftext.WinAnsiEncoding;
    fontname = "Times-Roman";
    fontsize = 12.;
    color = Cpdfaddtext.RGB (0., 0., 0.);
@@ -622,6 +626,8 @@ let reset_arguments () =
   args.direction <- 0;
   args.effect_duration <- 1.;
   args.font <- StandardFont Pdftext.TimesRoman;
+  args.fontfile <- None;
+  args.fontencoding <- Pdftext.WinAnsiEncoding;
   args.fontname <- "Times-Roman";
   args.fontsize <- 12.;
   args.color <- Cpdfaddtext.RGB (0., 0., 0.);
@@ -1717,6 +1723,17 @@ let setidironlypdfs () =
 let setnowarnrotate () =
   args.no_warn_rotate <- true
 
+let setfontttf s =
+  args.fontfile <- Some s 
+
+let setfontttfencoding s =
+  args.fontencoding <-
+    match s with
+    | "MacRomanEncoding" -> Pdftext.MacRomanEncoding
+    | "WinAnsiEncoding" -> Pdftext.WinAnsiEncoding
+    | "StandardEncoding" -> Pdftext.StandardEncoding
+    | _ -> error "Unknown encoding"
+
 let whingemalformed () =
   prerr_string "Command line must be of exactly the form\ncpdf <infile> -gs <path> -gs-malformed-force -o <outfile>\n";
   exit 1
@@ -2021,6 +2038,12 @@ and specs =
    ("-font",
       Arg.String setfont,
       " Set the font");
+   ("-font-ttf",
+      Arg.String setfontttf,
+      " Load a TrueType font");
+   ("-font-ttf-encoding",
+      Arg.String setfontttfencoding,
+      " Set the encoding for the TrueType font");
    ("-font-size",
       Arg.Float setfontsize,
       " Set the font size");

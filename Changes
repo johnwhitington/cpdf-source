@@ -1,8 +1,12 @@
 2.6 (next version, to come)
 
+New features:
+
+o Embed TrueType fonts for -add-text with -font-ttf
+o Add links to parts of text with -add-text as %URL[|].
+
 Extended features:
 
-o Add links to parts of text with -add-text as %URL[|].
 o Allow -utf8 with -split-bookmarks -o @B.pdf to produce UTF8 filenames
 o -merge-add-bookmarks now works with unicode filenames
 o Better transformation of some annotation types
