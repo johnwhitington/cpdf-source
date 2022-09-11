@@ -21,7 +21,7 @@ let glyphlist_table = Pdfglyphlist.reverse_glyph_hashes ()
   
 let encoding_table = Pdftext.reverse_table_of_encoding encoding
 
-let () =
+(*let () =
   iter
     (fun u ->
        Printf.printf "unicode %i --> " u;
@@ -105,8 +105,9 @@ let fontfile =
     {contents =
        (Pdf.Dictionary [("/Length", Pdf.Integer len); ("/Length1", Pdf.Integer len)],
         Pdf.Got (Pdfio.bytes_of_string fontstr))}
+*)
 
-let objects =
+(*let objects =
   [(1, Pdfread.parse_single_object "<</Type/Catalog/Pages 2 0 R>>");
    (2, Pdfread.parse_single_object "<</Type/Pages/Kids[3 0 R]/Count 1>>");
    (3, Pdfread.parse_single_object "<</Type/Page/Resources<</Font <</TT1 5 0 R>>>>/Parent 2 0 R/MediaBox[0 0 595 842]/Rotate 0/Contents[4 0 R]>>");
@@ -141,4 +142,4 @@ let pdf =
     pdf
 
 let () =
-  Pdfwrite.pdf_to_file pdf "subset.pdf"
+  Pdfwrite.pdf_to_file pdf "subset.pdf"*)
