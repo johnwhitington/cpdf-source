@@ -53,7 +53,7 @@ let colour_op_stroke = function
   | Grey g -> Pdfops.Op_G g
   | CYMK (c, y, m, k) -> Pdfops.Op_K (c, y, m, k)
 
-let ops longest_w metrics x y rotate hoffset voffset outline linewidth unique_fontname unique_extgstatename colour fontsize text =
+let ops longest_w x y rotate hoffset voffset outline linewidth unique_fontname unique_extgstatename colour fontsize text =
   [Pdfops.Op_q;
   Pdfops.Op_BMC "/CPDFSTAMP";
    Pdfops.Op_cm
@@ -290,7 +290,7 @@ let pagelabel pdf num =
     (Pdfpagelabels.complete (Pdfpagelabels.read pdf))
 
 let addtext
-  metrics lines linewidth outline fast colour fontname embed bates batespad fontsize font
+  lines linewidth outline fast colour fontname embed bates batespad fontsize font
   underneath position hoffset voffset text pages orientation cropbox opacity
   justification filename extract_text_font_size shift pdf
 =
@@ -408,11 +408,11 @@ let addtext
                       in
                         match font with
                         | Some f ->
-                            ops longest_w metrics (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
+                            ops longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
                             unique_fontname unique_extgstatename colour fontsize text,
                             urls, x, y, hoffset, voffset, text, joffset
                         | None ->
-                            ops longest_w metrics (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
+                            ops longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
                             fontname None colour fontsize text,
                             urls, x, y, hoffset, voffset, text, joffset
           in
@@ -469,10 +469,7 @@ let addtext
                 then Pdfpage.prepend_operators pdf ops ~fast:fast page
                 else Pdfpage.postpend_operators pdf ops ~fast:fast page
   in
-    if metrics then
-      (ignore (Cpdfpage.iter_pages (fun a b -> ignore (addtext_page a b)) pdf pages); pdf)
-    else
-      Cpdfpage.process_pages (Cpdfutil.ppstub addtext_page) pdf pages
+    Cpdfpage.process_pages (Cpdfutil.ppstub addtext_page) pdf pages
 
 (* Prev is a list of lists of characters *)
 let split_at_newline t =
@@ -497,35 +494,11 @@ let unescape_string s =
   implode (unescape_chars [] (explode s))
 
 let
-  addtexts metrics linewidth outline fast fontname (font : Pdftext.standard_font option) embed bates batespad colour position linespacing
+  addtexts linewidth outline fast fontname (font : Pdftext.standard_font option) embed bates batespad colour position linespacing
   fontsize underneath text pages orientation cropbox opacity justification
   midline topline filename extract_text_font_size shift ?(raw=false) pdf
 =
   if pages = [] then error "addtexts: empty page range" else
-  (*flprint "addtexts:\n";
-  iter (Printf.printf "%C ") (explode text);
-  flprint "\n";
-  Printf.printf "\nCpdf.addtexts: metrics = %b" metrics;
-  flprint "\n";*)
-  (*Printf.printf "linewidth = %f\n" linewidth;
-  Printf.printf "outline = %b\n" outline;
-  Printf.printf "fast = %b\n" fast;
-  Printf.printf "fontname = %s\n" fontname;
-  Printf.printf "winansi text = %s\n" text;
-  Printf.printf "position = %s\n" (string_of_position position);
-  Printf.printf "bates = %i\n" bates;
-  Printf.printf "linespacing = %f\n" linespacing;
-  Printf.printf "fontsize = %f\n" fontsize;
-  Printf.printf "underneath = %b\n" underneath;
-  Printf.printf "font = %s\n" begin match font with None -> "None" | Some x -> Pdftext.string_of_standard_font x end;
-  Printf.printf "justification = %s\n"
-  begin match justification with LeftJustify -> "left" | RightJustify -> "right" | CentreJustify -> "centre" end;
-  Printf.printf "midline = %b\n" midline;
-  begin match colour with r, g, b -> Printf.printf "%f, %f, %f\n" r g b end;
-  Printf.printf "opacity = %f\n" opacity;
-  flprint "\n";
-  Printf.printf "relative-to-cropbox = %b" cropbox;
-  flprint "\n";*)
   let realfontname = ref fontname in
   let fontpdfobj =
     match font with
@@ -596,7 +569,7 @@ let
                  if orientation = Cpdfposition.Vertical then 0., -.(!voffset) else !voffset, 0.
                in
                  pdf :=
-                   addtext metrics lines linewidth outline fast colour !realfontname
+                   addtext lines linewidth outline fast colour !realfontname
                    embed bates batespad fontsize font underneath position hoff voff line
                    pages orientation cropbox opacity justification filename
                    extract_text_font_size shift

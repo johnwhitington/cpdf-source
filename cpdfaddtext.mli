@@ -15,11 +15,10 @@ type justification =
   | CentreJustify
   | RightJustify
 
-(** Call [add_texts metrics linewidth outline fast fontname font bates batespad colour
+(** Call [add_texts linewidth outline fast fontname font bates batespad colour
 position linespacing fontsize underneath text pages orientation
 relative_to_cropbox midline_adjust topline filename pdf]. For details see cpdfmanual.pdf *)
 val addtexts :
-    bool -> (*metrics - defunct*)
     float -> (*linewidth*)
     bool -> (*outline*)
     bool -> (*fast*)

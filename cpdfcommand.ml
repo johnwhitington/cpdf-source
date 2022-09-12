@@ -3724,7 +3724,7 @@ let go () =
             in
               write_pdf false
                 (Cpdfaddtext.addtexts
-                   false args.linewidth args.outline args.fast args.fontname
+                   args.linewidth args.outline args.fast args.fontname
                    font args.embedfonts args.bates args.batespad args.color args.position
                    args.linespacing args.fontsize args.underneath text range
                    args.orientation args.relative_to_cropbox args.opacity
