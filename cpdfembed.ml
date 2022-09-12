@@ -1,4 +1,4 @@
-(* Truetype font embedding example *)
+(* Embed a font *)
 open Pdfutil
 
 (* For the first stage of our embedder, we are only allowing Latin, and we don't actually subset.
@@ -30,7 +30,12 @@ let pdfcode_of_unicode_codepoint encoding_table glyphlist_table u =
 let calc_accepted_unicodepoints encoding_table glyphlist_table codepoints =
   setify
     (option_map
-       (fun u -> match pdfcode_of_unicode_codepoint encoding_table glyphlist_table u with Some _ -> Some u | None -> None)
+       (fun u ->
+          match
+            pdfcode_of_unicode_codepoint encoding_table glyphlist_table u
+          with
+          | Some _ -> Some u
+          | None -> None)
        codepoints)
 
 let fontnum = ref 0
@@ -51,35 +56,47 @@ let embed_truetype pdf ~fontfile ~fontname ~text ~encoding =
   let encoding_table = Pdftext.reverse_table_of_encoding encoding in
   let accepted_unicodepoints =
     map
-      (fun u -> (u, pdfcode_of_unicode_codepoint encoding_table glyphlist_table u))
-      (calc_accepted_unicodepoints encoding_table glyphlist_table unicodepoints)
+      (fun u ->
+        (u, pdfcode_of_unicode_codepoint encoding_table glyphlist_table u))
+      (calc_accepted_unicodepoints
+         encoding_table glyphlist_table unicodepoints)
   in
-  let f =
-    Cpdftruetype.parse ~subset:accepted_unicodepoints fontfile
-  in
+  let f = Cpdftruetype.parse ~subset:accepted_unicodepoints fontfile in
   let widths =
-    Pdf.Array (map (fun x -> Pdf.Integer x) (Array.to_list f.Cpdftruetype.widths))
+    Pdf.Array
+      (map (fun x -> Pdf.Integer x)
+      (Array.to_list f.Cpdftruetype.widths))
   in
   let name_1 = basename () in
   let fontfile =
     let len = Pdfio.bytes_size fontfile in
     Pdf.Stream
       {contents =
-         (Pdf.Dictionary [("/Length", Pdf.Integer len); ("/Length1", Pdf.Integer len)],
+         (Pdf.Dictionary
+            [("/Length", Pdf.Integer len); ("/Length1", Pdf.Integer len)],
           Pdf.Got fontfile)}
   in
   let fontfile_num = Pdf.addobj pdf fontfile in
+  let module TT = Cpdftruetype in
   let fontdescriptor =
     Pdfread.parse_single_object
-      (Printf.sprintf "<</Type/FontDescriptor/FontName/%s+%s/Flags %i/FontBBox[%i %i %i %i]/ItalicAngle %i/Ascent %i/Descent %i/CapHeight %i/StemV %i/XHeight %i/AvgWidth %i/MaxWidth %i/FontFile2 %i 0 R>>"
-      name_1 fontname f.Cpdftruetype.flags f.Cpdftruetype.minx f.Cpdftruetype.miny f.Cpdftruetype.maxx f.Cpdftruetype.maxy f.Cpdftruetype.italicangle
-      f.Cpdftruetype.ascent f.Cpdftruetype.descent f.Cpdftruetype.capheight f.Cpdftruetype.stemv f.Cpdftruetype.xheight f.Cpdftruetype.avgwidth f.Cpdftruetype.maxwidth fontfile_num)
+      (Printf.sprintf
+         "<</Type/FontDescriptor/FontName/%s+%s/Flags %i/FontBBox[%i %i %i %i] \
+            /ItalicAngle %i/Ascent %i/Descent %i/CapHeight %i/StemV %i/XHeight \
+            %i/AvgWidth %i/MaxWidth %i/FontFile2 %i 0 R>>"
+         name_1 fontname f.TT.flags f.TT.minx f.TT.miny f.TT.maxx f.TT.maxy
+         f.TT.italicangle f.TT.ascent f.TT.descent f.TT.capheight f.TT.stemv
+         f.TT.xheight f.TT.avgwidth f.TT.maxwidth fontfile_num)
   in
   let fontdesc_num = Pdf.addobj pdf fontdescriptor in
   let font =
     Pdf.add_dict_entry
       (Pdfread.parse_single_object
-        (Printf.sprintf "<</Type/Font/Subtype/TrueType/BaseFont/%s+%s/FontDescriptor %i 0 R/Encoding%s/FirstChar %i/LastChar %i>>" name_1 fontname fontdesc_num (string_of_encoding encoding) f.Cpdftruetype.firstchar f.Cpdftruetype.lastchar))
+        (Printf.sprintf
+           "<</Type/Font/Subtype/TrueType/BaseFont/%s+%s/FontDescriptor %i 0 R\
+              /Encoding%s/FirstChar %i/LastChar %i>>"
+           name_1 fontname fontdesc_num (string_of_encoding encoding)
+           f.TT.firstchar f.TT.lastchar))
       "/Widths"
       widths
   in
