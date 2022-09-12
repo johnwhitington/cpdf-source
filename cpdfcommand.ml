@@ -384,6 +384,7 @@ type args =
    mutable fontencoding : Pdftext.encoding;
    mutable fontname : string;
    mutable fontsize : float;
+   mutable fontttfmore : bool;
    mutable color : Cpdfaddtext.color;
    mutable opacity : float;
    mutable position : Cpdfposition.position;
@@ -507,6 +508,7 @@ let args =
    fontencoding = Pdftext.WinAnsiEncoding;
    fontname = "Times-Roman";
    fontsize = 12.;
+   fontttfmore = false;
    color = Cpdfaddtext.RGB (0., 0., 0.);
    opacity = 1.;
    position = Cpdfposition.TopLeft 100.;
@@ -630,6 +632,7 @@ let reset_arguments () =
   args.fontencoding <- Pdftext.WinAnsiEncoding;
   args.fontname <- "Times-Roman";
   args.fontsize <- 12.;
+  args.fontttfmore <- false;
   args.color <- Cpdfaddtext.RGB (0., 0., 0.);
   args.opacity <- 1.;
   args.position <- Cpdfposition.TopLeft 100.;
@@ -1726,6 +1729,9 @@ let setnowarnrotate () =
 let setfontttf s =
   args.fontfile <- Some (Pdfio.bytes_of_string (contents_of_file s))
 
+let setfontttfmore () =
+  args.fontttfmore <- true
+
 let setfontttfencoding s =
   args.fontencoding <-
     match s with
@@ -2044,6 +2050,9 @@ and specs =
    ("-font-ttf-encoding",
       Arg.String setfontttfencoding,
       " Set the encoding for the TrueType font");
+   ("-font-ttf-more",
+      Arg.Unit setfontttfmore,
+      " Signal that more text is coming for this font");
    ("-font-size",
       Arg.Float setfontsize,
       " Set the font size");
