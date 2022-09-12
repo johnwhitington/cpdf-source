@@ -43,32 +43,6 @@ let width_of_text font text =
        end
   | _ -> 0.
 
-type ops_metrics =
-  {metrics_text : string;
-   metrics_x : float;
-   metrics_y : float;
-   metrics_rot : float}
-   
-let ops_metrics : ops_metrics list ref = ref []
-
-let ops_baseline_adjustment = ref 0.
-
-let metrics_howmany () = length !ops_metrics
-
-let metrics_text n =
-  utf8_of_winansi (select n !ops_metrics).metrics_text
-
-let metrics_x n =
-  (select n !ops_metrics).metrics_x
-
-let metrics_y n =
-  (select n !ops_metrics).metrics_y
-
-let metrics_rot n =
-  (select n !ops_metrics).metrics_rot
-
-let metrics_baseline_adjustment () = !ops_baseline_adjustment
-
 let colour_op = function
   | RGB (r, g, b) -> Pdfops.Op_rg (r, g, b)
   | Grey g -> Pdfops.Op_g g
@@ -80,10 +54,6 @@ let colour_op_stroke = function
   | CYMK (c, y, m, k) -> Pdfops.Op_K (c, y, m, k)
 
 let ops longest_w metrics x y rotate hoffset voffset outline linewidth unique_fontname unique_extgstatename colour fontsize text =
-  if metrics then
-    ops_metrics :=
-      {metrics_text = text; metrics_x = x -. hoffset; metrics_y = y -. voffset; metrics_rot = rotate}
-      ::!ops_metrics;
   [Pdfops.Op_q;
   Pdfops.Op_BMC "/CPDFSTAMP";
    Pdfops.Op_cm
@@ -556,7 +526,6 @@ let
   flprint "\n";
   Printf.printf "relative-to-cropbox = %b" cropbox;
   flprint "\n";*)
-  ops_metrics := [];
   let realfontname = ref fontname in
   let fontpdfobj =
     match font with
@@ -607,10 +576,8 @@ let
                   let baseline_adjustment =
                     (fontsize *. float (Pdfstandard14.baseline_adjustment font)) /. 1000.
                   in
-                    ops_baseline_adjustment := baseline_adjustment;
                     voffset := !voffset +. baseline_adjustment
-              | _ ->
-                 ops_baseline_adjustment := 0.
+              | _ -> ()
             end
           else
           if topline then
@@ -619,13 +586,10 @@ let
                   let baseline_adjustment =
                     (fontsize *. float (Pdfstandard14.baseline_adjustment font) *. 2.0) /. 1000.
                   in
-                    ops_baseline_adjustment := baseline_adjustment;
                     voffset := !voffset +. baseline_adjustment
-              | _ ->
-                 ops_baseline_adjustment := 0.
+              | _ -> ()
             end
           else
-            ops_baseline_adjustment := 0.;
           iter
             (fun line ->
                let voff, hoff =
@@ -639,7 +603,6 @@ let
                    !pdf;
                  voffset := !voffset +. (linespacing *. fontsize))
             lines;
-            ops_metrics := rev !ops_metrics;
             !pdf
 
 let removetext range pdf =
@@ -733,7 +696,6 @@ let addrectangle
           else Pdfpage.postpend_operators pdf ops ~fast:fast page
   in
     Cpdfpage.process_pages (Cpdfutil.ppstub addrectangle_page) pdf range
-open Pdfutil
 
 let rec remove_all_text_ops pdf resources content =
   let is_textop = function

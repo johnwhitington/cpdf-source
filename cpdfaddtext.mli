@@ -19,7 +19,7 @@ type justification =
 position linespacing fontsize underneath text pages orientation
 relative_to_cropbox midline_adjust topline filename pdf]. For details see cpdfmanual.pdf *)
 val addtexts :
-    bool -> (*metrics*)
+    bool -> (*metrics - defunct*)
     float -> (*linewidth*)
     bool -> (*outline*)
     bool -> (*fast*)
@@ -59,19 +59,11 @@ val addrectangle :
     Cpdfposition.position ->
     bool -> bool -> int list -> Pdf.t -> Pdf.t
 
-val metrics_howmany : unit -> int
-val metrics_text : int -> string
-val metrics_x : int -> float
-val metrics_y : int -> float
-val metrics_rot : int -> float
-val metrics_baseline_adjustment : unit -> float
-(** These functions returns some details about the text if [addtexts] is called with [metrics] true. The integer arguments are  1 for the first one, 2 for the second etc. Call [metrics_howmany] first to find out how many. *)
-
-(** Remove text from the given pages. *)
+(** Remove text added by Cpdfaddtext from the given pages. *)
 val removetext : int list -> Pdf.t -> Pdf.t
 
 (** Extract text *)
 val extract_text : float option -> Pdf.t -> int list -> string 
 
-(** Remove text *)
+(** Remove all text from the given pages *)
 val remove_all_text : int list -> Pdf.t -> Pdf.t 

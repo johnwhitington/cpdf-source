@@ -380,7 +380,7 @@ type args =
    mutable direction : int;
    mutable effect_duration : float;
    mutable font : font;
-   mutable fontfile : string option;
+   mutable fontfile : Pdfio.bytes option;
    mutable fontencoding : Pdftext.encoding;
    mutable fontname : string;
    mutable fontsize : float;
@@ -1724,7 +1724,7 @@ let setnowarnrotate () =
   args.no_warn_rotate <- true
 
 let setfontttf s =
-  args.fontfile <- Some s 
+  args.fontfile <- Some (Pdfio.bytes_of_string (contents_of_file s))
 
 let setfontttfencoding s =
   args.fontencoding <-
