@@ -4,3 +4,8 @@
 val embed_truetype :
   Pdf.t -> fontfile:Pdfio.bytes -> fontname:string -> text:string ->
   encoding:Pdftext.encoding -> int
+
+(* Eventually, we will just have this, and a subsetting function. Then we will
+   use Pdftext.write_font to write it. *)
+val font_of_truetype :
+  fontfile:Pdfio.bytes -> fontname:string -> encoding:Pdftext.encoding -> Pdftext.font
