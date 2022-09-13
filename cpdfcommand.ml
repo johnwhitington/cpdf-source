@@ -3985,16 +3985,22 @@ let go () =
   | Some TableOfContents ->
       let pdf = get_single_pdf args.op false in
       let font =
-        match args.font with StandardFont f -> f | _ -> error "TOC requires standard font only"
+        match args.font with
+        | StandardFont f -> Pdftext.StandardFont (f, Pdftext.WinAnsiEncoding)
+        | _ -> error "TOC requires standard font only"
       in
       let pdf = Cpdftoc.typeset_table_of_contents ~font ~fontsize:args.fontsize ~title:args.toc_title ~bookmark:args.toc_bookmark pdf in
         write_pdf false pdf
   | Some (Typeset filename) ->
       let text = Pdfio.bytes_of_input_channel (open_in filename) in
       let font =
-        match args.font with StandardFont f -> f | _ -> error "text to PDF: not a standard font"
+        match args.font with
+        | StandardFont f -> Pdftext.StandardFont (f, Pdftext.WinAnsiEncoding)
+        | _ -> error "text to PDF: not a standard font"
       in
-      let pdf = Cpdftexttopdf.typeset ~papersize:args.createpdf_pagesize ~font ~fontsize:args.fontsize text in
+      let pdf =
+        Cpdftexttopdf.typeset ~papersize:args.createpdf_pagesize ~font ~fontsize:args.fontsize text
+      in
         write_pdf false pdf
 
 (* Advise the user if a combination of command line flags makes little sense,

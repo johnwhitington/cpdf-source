@@ -103,7 +103,7 @@ let embed_truetype pdf ~fontfile ~fontname ~text ~encoding =
   in
     Pdf.addobj pdf font
 
-(* For now, to get a Pdftext.font, we build it with the function above using an empty (i.e. full) subset, put it in an empty PDF and then read it back. This will be fixed later. *)
+(* For now, to get a Pdftext.font, put it in an empty PDF and then read it back. This will be fixed later. We just need it so that existing code which uses a charcode extractor can be reused. *)
 let font_of_truetype ~fontfile ~fontname ~encoding =
   let pdf = Pdf.empty () in
   let fontobjnum = embed_truetype pdf ~fontfile ~fontname ~text:"" ~encoding in

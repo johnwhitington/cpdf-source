@@ -31,13 +31,14 @@ let rec of_utf8_with_newlines t =
 let typeset ~papersize ~font ~fontsize text =
   let pdf = Pdf.empty () in
   let margin =
-    Pdfunits.convert 72. (Pdfpaper.unit papersize) (Pdfunits.PdfPoint) (Pdfpaper.width papersize) /. 15.
+    Pdfunits.convert
+      72. (Pdfpaper.unit papersize) (Pdfunits.PdfPoint) (Pdfpaper.width papersize) /. 15.
   in
-  let f = (Pdftext.StandardFont (font, Pdftext.WinAnsiEncoding), fontsize) in
   let pages =
     Cpdftype.typeset
       margin margin margin margin papersize pdf
-      ([Cpdftype.Font f; Cpdftype.BeginDocument] @ of_utf8_with_newlines (Pdfio.string_of_bytes text))
+      ([Cpdftype.Font (font, fontsize); Cpdftype.BeginDocument] @
+       of_utf8_with_newlines (Pdfio.string_of_bytes text))
   in
     let pdf, pageroot = Pdfpage.add_pagetree pages pdf in
       Pdfpage.add_root pageroot [] pdf
