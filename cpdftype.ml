@@ -55,16 +55,17 @@ let initial_state () =
    dest = None}
 
 let font_widths f fontsize =
-  let stdfont =
-    match f with Pdftext.StandardFont (sf, _) -> sf | _ -> failwith "not a standard font"
-  in
-    Array.init
-      256
-      (fun x ->
-           fontsize
-        *. float_of_int
-             (Pdfstandard14.textwidth false Pdftext.WinAnsiEncoding stdfont (string_of_char (char_of_int x)))
-        /. 1000.)
+  match f with
+  | Pdftext.StandardFont (sf, _) ->
+      Array.init
+        256
+        (fun x ->
+             fontsize
+          *. float_of_int
+               (Pdfstandard14.textwidth false Pdftext.WinAnsiEncoding sf (string_of_char (char_of_int x)))
+          /. 1000.)
+  | Pdftext.SimpleFont {fontmetrics = Some m} -> m
+  | _ -> raise (Pdf.PDFError "Cpdftype: Unsupported font")
 
 let width_of_string ws s =
   let w = ref 0. in

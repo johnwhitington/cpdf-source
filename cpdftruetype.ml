@@ -21,7 +21,7 @@ type t =
    widths : int array;
    subset : Pdfio.bytes}
 
-let dbg = ref true (* text-based debug *)
+let dbg = ref false (* text-based debug *)
 
 (* 32-bit signed fixed-point number (16.16) returned as two ints *)
 let read_fixed b =
@@ -189,20 +189,20 @@ let read_hmtx_table numOfLongHorMetrics b =
 
 let calculate_widths firstchar lastchar subset (cmapdata : (int, int) Hashtbl.t) (hmtxdata : int array) =
   if lastchar < firstchar then failwith "lastchar < firschar" else
-  List.iter (fun (a, b) -> Printf.printf "%i -> %i\n" a b) (sort compare (list_of_hashtbl cmapdata));
+  if !dbg then List.iter (fun (a, b) -> Printf.printf "%i -> %i\n" a b) (sort compare (list_of_hashtbl cmapdata));
   Array.init
     (lastchar - firstchar + 1)
     (fun pos ->
        let code = pos + firstchar in
-         Printf.printf "code %i --> " code;
+       if !dbg then Printf.printf "code %i --> " code;
        if not (mem code subset) then 0 else
        try
          let glyphnum = Hashtbl.find cmapdata code in
-           Printf.printf "glyph number %i --> " glyphnum;
+         if !dbg then Printf.printf "glyph number %i --> " glyphnum;
            let width = hmtxdata.(glyphnum) in
-             Printf.printf "width %i\n" width;
+           if !dbg then Printf.printf "width %i\n" width;
              width
-       with e -> Printf.printf "no width for %i\n" code; 0)
+       with e -> if !dbg then Printf.printf "no width for %i\n" code; 0)
 
 let calculate_maxwidth hmtxdata =
   hd (sort (fun a b -> compare b a) (Array.to_list hmtxdata))

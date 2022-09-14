@@ -360,6 +360,7 @@ let output_pdfs : Pdf.t list ref = ref []
 
 type font =
   | StandardFont of Pdftext.standard_font
+  | FontToEmbed of Pdfio.bytes * Pdftext.encoding
   | OtherFont of string
 
 type args =
@@ -380,8 +381,6 @@ type args =
    mutable direction : int;
    mutable effect_duration : float;
    mutable font : font;
-   mutable fontfile : Pdfio.bytes option;
-   mutable fontencoding : Pdftext.encoding;
    mutable fontname : string;
    mutable fontsize : float;
    mutable fontttfmore : bool;
@@ -504,8 +503,6 @@ let args =
    direction = 0;
    effect_duration = 1.;
    font = StandardFont Pdftext.TimesRoman;
-   fontfile = None;
-   fontencoding = Pdftext.WinAnsiEncoding;
    fontname = "Times-Roman";
    fontsize = 12.;
    fontttfmore = false;
@@ -628,8 +625,6 @@ let reset_arguments () =
   args.direction <- 0;
   args.effect_duration <- 1.;
   args.font <- StandardFont Pdftext.TimesRoman;
-  args.fontfile <- None;
-  args.fontencoding <- Pdftext.WinAnsiEncoding;
   args.fontname <- "Times-Roman";
   args.fontsize <- 12.;
   args.fontttfmore <- false;
@@ -1727,18 +1722,25 @@ let setnowarnrotate () =
   args.no_warn_rotate <- true
 
 let setfontttf s =
-  args.fontfile <- Some (Pdfio.bytes_of_string (contents_of_file s))
+  args.font <- FontToEmbed (Pdfio.bytes_of_string (contents_of_file s), Pdftext.WinAnsiEncoding);
+  args.fontname <- Filename.basename s
 
 let setfontttfmore () =
   args.fontttfmore <- true
 
 let setfontttfencoding s =
-  args.fontencoding <-
+  let e =
     match s with
     | "MacRomanEncoding" -> Pdftext.MacRomanEncoding
     | "WinAnsiEncoding" -> Pdftext.WinAnsiEncoding
     | "StandardEncoding" -> Pdftext.StandardEncoding
     | _ -> error "Unknown encoding"
+  in
+    match args.font with
+    | FontToEmbed (b, _) ->
+        args.font <- FontToEmbed (b, e)
+    | _ ->
+        error "Must specift -font-ttf before -font-ttf-encoding"
 
 let whingemalformed () =
   prerr_string "Command line must be of exactly the form\ncpdf <infile> -gs <path> -gs-malformed-force -o <outfile>\n";
@@ -3722,6 +3724,7 @@ let go () =
             match args.font with
             | StandardFont f -> Some f
             | OtherFont f -> None (* it's in fontname *)
+            | FontToEmbed (_, _) -> error "-add-text can't use TTF fonts yet"
           in
             warn_prerotate range pdf;
             let pdf =
@@ -3987,7 +3990,8 @@ let go () =
       let font =
         match args.font with
         | StandardFont f -> Pdftext.StandardFont (f, Pdftext.WinAnsiEncoding)
-        | _ -> error "TOC requires standard font only"
+        | FontToEmbed (fontfile, encoding) -> Cpdfembed.font_of_truetype ~fontfile ~fontname:args.fontname ~encoding
+        | _ -> error "TOC: not a standard or embedded font"
       in
       let pdf = Cpdftoc.typeset_table_of_contents ~font ~fontsize:args.fontsize ~title:args.toc_title ~bookmark:args.toc_bookmark pdf in
         write_pdf false pdf
@@ -3996,7 +4000,8 @@ let go () =
       let font =
         match args.font with
         | StandardFont f -> Pdftext.StandardFont (f, Pdftext.WinAnsiEncoding)
-        | _ -> error "text to PDF: not a standard font"
+        | FontToEmbed (fontfile, encoding) -> Cpdfembed.font_of_truetype ~fontfile ~fontname:args.fontname ~encoding
+        | _ -> error "text to PDF: not a standard or embedded font"
       in
       let pdf =
         Cpdftexttopdf.typeset ~papersize:args.createpdf_pagesize ~font ~fontsize:args.fontsize text
