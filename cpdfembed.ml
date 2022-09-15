@@ -63,11 +63,6 @@ let embed_truetype pdf ~fontfile ~fontname ~text ~encoding =
          encoding_table glyphlist_table unicodepoints)
   in
   let f = Cpdftruetype.parse ~subset:accepted_unicodepoints fontfile in
-  let widths =
-    Pdf.Array
-      (map (fun x -> Pdf.Integer x)
-      (Array.to_list f.Cpdftruetype.widths))
-  in
   let name_1 = basename () in
   let fontfile =
     let len = Pdfio.bytes_size fontfile in
@@ -79,6 +74,31 @@ let embed_truetype pdf ~fontfile ~fontname ~text ~encoding =
   in
   let fontfile_num = Pdf.addobj pdf fontfile in
   let module TT = Cpdftruetype in
+  let open Pdftext in
+  SimpleFont
+    {fonttype = Truetype;
+     basefont = Printf.sprintf "/%s+%s" name_1 fontname;
+     fontmetrics = None;
+     firstchar = f.TT.firstchar;
+     lastchar = f.TT.lastchar;
+     widths = f.TT.widths;
+     fontdescriptor = Some
+       {ascent = float_of_int f.TT.ascent;
+        descent = float_of_int f.TT.descent;
+        avgwidth = float_of_int f.TT.avgwidth;
+        maxwidth = float_of_int f.TT.maxwidth;
+        flags = f.TT.flags;
+        italicangle = float_of_int f.TT.italicangle;
+        capheight = float_of_int f.TT.capheight;
+        xheight = float_of_int f.TT.xheight;
+        stemv = float_of_int f.TT.stemv;
+        fontbbox = (float_of_int f.TT.minx, float_of_int f.TT.miny,
+                    float_of_int f.TT.maxx, float_of_int f.TT.maxy);
+        fontfile = Some (FontFile2 fontfile_num);
+        charset = None;
+        tounicode = None};
+     encoding} 
+  (*
   let fontdescriptor =
     Pdfread.parse_single_object
       (Printf.sprintf
@@ -101,10 +121,4 @@ let embed_truetype pdf ~fontfile ~fontname ~text ~encoding =
       "/Widths"
       widths
   in
-    Pdf.addobj pdf font
-
-(* For now, to get a Pdftext.font, put it in an empty PDF and then read it back. This will be fixed later. We just need it so that existing code which uses a charcode extractor can be reused. *)
-let font_of_truetype ~fontfile ~fontname ~encoding =
-  let pdf = Pdf.empty () in
-  let fontobjnum = embed_truetype pdf ~fontfile ~fontname ~text:"" ~encoding in
-  Pdftext.read_font pdf (Pdf.lookup_obj pdf fontobjnum)
+    Pdf.addobj pdf font*)
