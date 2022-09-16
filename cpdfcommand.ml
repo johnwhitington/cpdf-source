@@ -1723,7 +1723,7 @@ let setnowarnrotate () =
 
 let setfontttf s =
   args.font <- FontToEmbed (Pdfio.bytes_of_string (contents_of_file s), Pdftext.WinAnsiEncoding);
-  args.fontname <- Filename.basename s
+  args.fontname <- Filename.remove_extension (Filename.basename s)
 
 let setfontttfmore () =
   args.fontttfmore <- true

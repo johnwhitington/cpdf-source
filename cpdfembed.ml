@@ -75,10 +75,17 @@ let embed_truetype pdf ~fontfile ~fontname ~text ~encoding =
   let fontfile_num = Pdf.addobj pdf fontfile in
   let module TT = Cpdftruetype in
   let open Pdftext in
+  let fontmetrics =
+    let a = Array.make 256 0. in
+      for x = f.TT.firstchar to f.TT.lastchar do
+        a.(x) <- float_of_int (f.TT.widths.(x - f.TT.firstchar))
+      done;
+      a
+  in
   SimpleFont
     {fonttype = Truetype;
      basefont = Printf.sprintf "/%s+%s" name_1 fontname;
-     fontmetrics = None;
+     fontmetrics = Some fontmetrics;
      firstchar = f.TT.firstchar;
      lastchar = f.TT.lastchar;
      widths = f.TT.widths;
@@ -98,27 +105,3 @@ let embed_truetype pdf ~fontfile ~fontname ~text ~encoding =
         charset = None;
         tounicode = None};
      encoding} 
-  (*
-  let fontdescriptor =
-    Pdfread.parse_single_object
-      (Printf.sprintf
-         "<</Type/FontDescriptor/FontName/%s+%s/Flags %i/FontBBox[%i %i %i %i] \
-            /ItalicAngle %i/Ascent %i/Descent %i/CapHeight %i/StemV %i/XHeight \
-            %i/AvgWidth %i/MaxWidth %i/FontFile2 %i 0 R>>"
-         name_1 fontname f.TT.flags f.TT.minx f.TT.miny f.TT.maxx f.TT.maxy
-         f.TT.italicangle f.TT.ascent f.TT.descent f.TT.capheight f.TT.stemv
-         f.TT.xheight f.TT.avgwidth f.TT.maxwidth fontfile_num)
-  in
-  let fontdesc_num = Pdf.addobj pdf fontdescriptor in
-  let font =
-    Pdf.add_dict_entry
-      (Pdfread.parse_single_object
-        (Printf.sprintf
-           "<</Type/Font/Subtype/TrueType/BaseFont/%s+%s/FontDescriptor %i 0 R\
-              /Encoding%s/FirstChar %i/LastChar %i>>"
-           name_1 fontname fontdesc_num (string_of_encoding encoding)
-           f.TT.firstchar f.TT.lastchar))
-      "/Widths"
-      widths
-  in
-    Pdf.addobj pdf font*)
