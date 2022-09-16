@@ -1,3 +1,9 @@
+(* Notes on ttf fonts:
+
+  FIXME: baseline / midline adjustments need to be added for ttf fonts.
+  FIXME: calc_textwidth
+
+*)
 open Pdfutil
 open Cpdferror
 
@@ -290,7 +296,7 @@ let pagelabel pdf num =
     (Pdfpagelabels.complete (Pdfpagelabels.read pdf))
 
 let addtext
-  lines linewidth outline fast colour fontname embed bates batespad fontsize font
+  lines linewidth outline fast colour fontname embed bates batespad fontsize (font : Pdftext.font option)
   underneath position hoffset voffset text pages orientation cropbox opacity
   justification filename extract_text_font_size shift pdf
 =
@@ -343,7 +349,7 @@ let addtext
       in
               let calc_textwidth text =
                 match font with
-                | Some f ->
+                | Some (Pdftext.StandardFont (f, _)) ->
                     let rawwidth =
                       Pdfstandard14.textwidth
                         false
@@ -494,7 +500,7 @@ let unescape_string s =
   implode (unescape_chars [] (explode s))
 
 let
-  addtexts linewidth outline fast fontname (font : Pdftext.standard_font option) embed bates batespad colour position linespacing
+  addtexts linewidth outline fast fontname (font : Pdftext.font option) embed bates batespad colour position linespacing
   fontsize underneath text pages orientation cropbox opacity justification
   midline topline filename extract_text_font_size shift ?(raw=false) pdf
 =
@@ -502,8 +508,10 @@ let
   let realfontname = ref fontname in
   let fontpdfobj =
     match font with
-    | Some f ->
+    | Some (StandardFont (f, _)) ->
         make_font embed (Pdftext.string_of_standard_font f)
+    | Some _ ->
+        failwith "unknown font in addtext"
     | None -> 
         let firstpage =
           List.nth (Pdfpage.pages_of_pagetree pdf) (hd pages - 1)
@@ -545,7 +553,7 @@ let
         in
           if midline then
             begin match font with
-              | Some font ->
+              | Some (Pdftext.StandardFont (font, _)) ->
                   let baseline_adjustment =
                     (fontsize *. float (Pdfstandard14.baseline_adjustment font)) /. 1000.
                   in
@@ -555,7 +563,7 @@ let
           else
           if topline then
             begin match font with
-              | Some font ->
+              | Some (Pdftext.StandardFont (font, _)) ->
                   let baseline_adjustment =
                     (fontsize *. float (Pdfstandard14.baseline_adjustment font) *. 2.0) /. 1000.
                   in

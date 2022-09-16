@@ -3721,9 +3721,10 @@ let go () =
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           let font =
             match args.font with
-            | StandardFont f -> Some f
+            | StandardFont f -> Some (Pdftext.StandardFont (f, Pdftext.WinAnsiEncoding))
             | OtherFont f -> None (* it's in fontname *)
-            | FontToEmbed (_, _) -> error "-add-text can't use TTF fonts yet"
+            | FontToEmbed (fontfile, encoding) ->
+                Some (Cpdfembed.embed_truetype pdf ~fontfile ~fontname:args.fontname ~text:"" ~encoding)
           in
             warn_prerotate range pdf;
             let pdf =

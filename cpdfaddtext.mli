@@ -23,7 +23,7 @@ val addtexts :
     bool -> (*outline*)
     bool -> (*fast*)
     string -> (*fontname*)
-    Pdftext.standard_font option -> (*font*)
+    Pdftext.font option -> (*font*)
     bool -> (* embed font *)
     int -> (* bates number *)
     int option -> (* bates padding width *)
