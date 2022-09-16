@@ -64,7 +64,8 @@ let font_widths f fontsize =
           *. float_of_int
                (Pdfstandard14.textwidth false Pdftext.WinAnsiEncoding sf (string_of_char (char_of_int x)))
           /. 1000.)
-  | Pdftext.SimpleFont {fontmetrics = Some m} -> m
+  | Pdftext.SimpleFont {fontmetrics = Some m} ->
+      Array.map (fun x -> fontsize *. x /. 1000. ) m
   | _ -> raise (Pdf.PDFError "Cpdftype: Unsupported font")
 
 let width_of_string ws s =

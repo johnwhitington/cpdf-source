@@ -2142,7 +2142,6 @@ and specs =
    ("-embed-missing-fonts",
       Arg.Unit (setop EmbedMissingFonts),
       " Embed missing fonts by calling gs");
-
    ("-twoup",
       Arg.Unit (setop TwoUp),
       " Put 2 pages onto one");
