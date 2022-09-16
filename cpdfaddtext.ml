@@ -560,7 +560,10 @@ let
                     (fontsize *. float (Pdfstandard14.baseline_adjustment font)) /. 1000.
                   in
                     voffset := !voffset +. baseline_adjustment
-              | _ -> ()
+              | Some (Pdftext.SimpleFont {fontdescriptor = Some {capheight}})  ->
+                  voffset := !voffset +. capheight /. 2.
+              | _ ->
+                  Printf.eprintf "Unable to find midline adjustment in this font\n"
             end
           else
           if topline then
@@ -570,7 +573,10 @@ let
                     (fontsize *. float (Pdfstandard14.baseline_adjustment font) *. 2.0) /. 1000.
                   in
                     voffset := !voffset +. baseline_adjustment
-              | _ -> ()
+              | Some (Pdftext.SimpleFont {fontdescriptor = Some {capheight}})  ->
+                  voffset := !voffset +. capheight
+              | _ ->
+                  Printf.eprintf "Unable to find midline adjustment in this font\n"
             end
           else
           iter
