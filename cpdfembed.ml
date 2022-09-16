@@ -50,7 +50,6 @@ let string_of_encoding = function
   | Pdftext.StandardEncoding -> "/StandardEncoding"
   | _ -> failwith "unknown encoding"
 
-(* FIXME add "" = full subset *)
 let embed_truetype pdf ~fontfile ~fontname ~text ~encoding =
   let unicodepoints = Pdftext.codepoints_of_utf8 text in
   let glyphlist_table = Pdfglyphlist.reverse_glyph_hashes () in 

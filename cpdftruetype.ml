@@ -195,7 +195,7 @@ let calculate_widths firstchar lastchar subset (cmapdata : (int, int) Hashtbl.t)
     (fun pos ->
        let code = pos + firstchar in
        if !dbg then Printf.printf "code %i --> " code;
-       if not (mem code subset) then 0 else
+       if subset <> [] && not (mem code subset) then 0 else
        try
          let glyphnum = Hashtbl.find cmapdata code in
          if !dbg then Printf.printf "glyph number %i --> " glyphnum;
