@@ -3989,8 +3989,8 @@ let go () =
       let font =
         match args.font with
         | StandardFont f -> Pdftext.StandardFont (f, Pdftext.WinAnsiEncoding)
-        (* FIXME we don't have text here, so we don't really want embed_truetype: separate functions again? *)
-        | FontToEmbed (fontfile, encoding) -> Cpdfembed.embed_truetype pdf ~fontfile ~fontname:args.fontname ~text:"" ~encoding
+        | FontToEmbed (fontfile, encoding) ->
+            Cpdfembed.embed_truetype pdf ~fontfile ~fontname:args.fontname ~text:"" ~encoding
         | _ -> error "TOC: not a standard or embedded font"
       in
       let pdf = Cpdftoc.typeset_table_of_contents ~font ~fontsize:args.fontsize ~title:args.toc_title ~bookmark:args.toc_bookmark pdf in
@@ -4000,8 +4000,8 @@ let go () =
       let font =
         match args.font with
         | StandardFont f -> Pdftext.StandardFont (f, Pdftext.WinAnsiEncoding)
-        (* We don't have the PDF yet to do the embeddeding of the font. FIXME: next up - do we need separate functions? *)
-        | FontToEmbed (fontfile, encoding) -> Cpdfembed.embed_truetype (Pdf.empty ()) ~fontfile ~fontname:args.fontname ~text:"" ~encoding
+        | FontToEmbed (fontfile, encoding) ->
+            Cpdfembed.embed_truetype (Pdf.empty ()) ~fontfile ~fontname:args.fontname ~text:"" ~encoding
         | _ -> error "text to PDF: not a standard or embedded font"
       in
       let pdf =
