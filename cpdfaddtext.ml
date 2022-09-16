@@ -1,9 +1,3 @@
-(* Notes on ttf fonts:
-
-  FIXME: baseline / midline adjustments need to be added for ttf fonts.
-  FIXME: calc_textwidth
-
-*)
 open Pdfutil
 open Cpdferror
 
@@ -297,7 +291,7 @@ let pagelabel pdf num =
 
 let addtext
   lines linewidth outline fast colour fontname embed bates batespad fontsize (font : Pdftext.font option)
-  underneath position hoffset voffset text pages orientation cropbox opacity
+  fontpdfobj underneath position hoffset voffset text pages orientation cropbox opacity
   justification filename extract_text_font_size shift pdf
 =
   let time = Cpdfstrftime.current_time () in
@@ -358,6 +352,9 @@ let addtext
                         text
                     in
                       (float rawwidth *. fontsize) /. 1000.
+                | Some font ->
+                    let rawwidth = width_of_text font text in
+                      (rawwidth *. fontsize) /. 1000.
                 | None -> 
                     let font =
                       match Pdf.lookup_direct pdf "/Font" page.Pdfpage.resources with
@@ -424,9 +421,14 @@ let addtext
           in
             let newresources =
               match font with
-              | Some _ ->
+              | Some (Pdftext.StandardFont _) ->
                   let newfontdict =
                     Pdf.add_dict_entry fontdict unique_fontname (make_font embed fontname)
+                  in
+                    Pdf.add_dict_entry resources' "/Font" newfontdict
+              | Some f ->
+                  let newfontdict =
+                    Pdf.add_dict_entry fontdict unique_fontname fontpdfobj
                   in
                     Pdf.add_dict_entry resources' "/Font" newfontdict
               | None -> page.Pdfpage.resources
@@ -510,8 +512,8 @@ let
     match font with
     | Some (StandardFont (f, _)) ->
         make_font embed (Pdftext.string_of_standard_font f)
-    | Some _ ->
-        failwith "unknown font in addtext"
+    | Some f ->
+        Pdf.Indirect (Pdftext.write_font pdf f)
     | None -> 
         let firstpage =
           List.nth (Pdfpage.pages_of_pagetree pdf) (hd pages - 1)
@@ -578,7 +580,7 @@ let
                in
                  pdf :=
                    addtext lines linewidth outline fast colour !realfontname
-                   embed bates batespad fontsize font underneath position hoff voff line
+                   embed bates batespad fontsize font fontpdfobj underneath position hoff voff line
                    pages orientation cropbox opacity justification filename
                    extract_text_font_size shift
                    !pdf;
