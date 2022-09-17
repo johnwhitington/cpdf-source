@@ -21,7 +21,7 @@ type t =
    widths : int array;
    subset : Pdfio.bytes}
 
-let dbg = ref false (* text-based debug *)
+let dbg = ref true (* text-based debug *)
 
 (* 32-bit signed fixed-point number (16.16) returned as two ints *)
 let read_fixed b =
@@ -141,10 +141,10 @@ let read_loca_table indexToLocFormat numGlyphs b =
           fix_empties arr; arr
     | _ -> raise (Pdf.PDFError "Unknown indexToLocFormat in read_loca_table")
 
+(* FIXME length checking *)
 let read_os2_table b blength =
   let version = read_ushort b in
   if !dbg then Printf.printf "OS/2 table blength = %i bytes, version number = %i\n" blength version;
-  if version < 2 then failwith "read_os2_table: version number too low" else
   let xAvgCharWidth = read_short b in
   discard_bytes b 64; (* discard 14 entries usWeightClass...fsLastCharIndex *)
   (* -- end of original OS/2 Version 0 Truetype table. Must check length before reading now. *)
@@ -154,8 +154,8 @@ let read_os2_table b blength =
   (* -- end of OpenType version 0 table *)
   discard_bytes b 8; (* discard ulCodePageRange1, ulCodePageRange2 *)
   (* -- end of OpenType version 1 table *)
-  let sxHeight = read_short b in
-  let sCapHeight = read_short b in
+  let sxHeight = if version < 2 then 0 else read_short b in
+  let sCapHeight = if version < 2 then 0 else read_short b in
     (sTypoAscender, sTypoDescender, sCapHeight, sxHeight, xAvgCharWidth)
 
 let read_post_table b =
