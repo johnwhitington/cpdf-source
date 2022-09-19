@@ -44,12 +44,6 @@ let basename () =
   incr fontnum;
   "AAAAA" ^ string_of_char (char_of_int (!fontnum + 65))
 
-let string_of_encoding = function
-  | Pdftext.WinAnsiEncoding -> "/WinAnsiEncoding"
-  | Pdftext.MacRomanEncoding -> "/MacRomanEncoding"
-  | Pdftext.StandardEncoding -> "/StandardEncoding"
-  | _ -> failwith "unknown encoding"
-
 let embed_truetype pdf ~fontfile ~fontname ~text ~encoding =
   let unicodepoints = Pdftext.codepoints_of_utf8 text in
   let glyphlist_table = Pdfglyphlist.reverse_glyph_hashes () in 
