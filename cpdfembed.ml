@@ -55,7 +55,7 @@ let embed_truetype pdf ~fontfile ~fontname ~text ~encoding =
       (calc_accepted_unicodepoints
          encoding_table glyphlist_table unicodepoints)
   in
-  let f = Cpdftruetype.parse ~subset:accepted_unicodepoints fontfile in
+  let f = Cpdftruetype.parse ~subset:accepted_unicodepoints fontfile ~encoding in
   let name_1 = basename () in
   let fontfile =
     let len = Pdfio.bytes_size fontfile in

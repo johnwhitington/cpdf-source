@@ -21,4 +21,4 @@ type t =
 (* Parse the font, given the list of Unicode codepoints required for the subset
    and optionally their PDF codepoint too. Returns the information required for
    embedding this font in a PDF. *)
-val parse : ?subset:(int * int option) list -> Pdfio.bytes -> t
+val parse : ?subset:(int * int option) list -> Pdfio.bytes -> encoding:Pdftext.encoding -> t

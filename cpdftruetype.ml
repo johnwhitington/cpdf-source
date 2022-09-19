@@ -186,14 +186,25 @@ let read_hmtx_table numOfLongHorMetrics b =
     numOfLongHorMetrics
     (fun _ -> let r = read_ushort b in ignore (read_short b); r)
 
-let calculate_widths firstchar lastchar subset (cmapdata : (int, int) Hashtbl.t) (hmtxdata : int array) =
+(* For widths, we need the unicode code, not the unencoded byte *)
+let unicode_codepoint_of_pdfcode encoding_table glyphlist_table p =
+  try
+    hd (Hashtbl.find glyphlist_table (Hashtbl.find encoding_table p))
+  with
+    Not_found -> 0
+
+let calculate_widths encoding firstchar lastchar subset (cmapdata : (int, int) Hashtbl.t) (hmtxdata : int array) =
   if lastchar < firstchar then failwith "lastchar < firschar" else
   if !dbg then List.iter (fun (a, b) -> Printf.printf "%i -> %i\n" a b) (sort compare (list_of_hashtbl cmapdata));
+  let encoding_table = Pdftext.table_of_encoding encoding in
+  let glyphlist_table = Pdfglyphlist.glyph_hashes () in
   Array.init
     (lastchar - firstchar + 1)
     (fun pos ->
        let code = pos + firstchar in
        if !dbg then Printf.printf "code %i --> " code;
+       let code = unicode_codepoint_of_pdfcode encoding_table glyphlist_table code in
+       if !dbg then Printf.printf "unicode %i --> " code;
        if subset <> [] && not (mem code subset) then 0 else
        try
          let glyphnum = Hashtbl.find cmapdata code in
@@ -206,7 +217,7 @@ let calculate_widths firstchar lastchar subset (cmapdata : (int, int) Hashtbl.t)
 let calculate_maxwidth hmtxdata =
   hd (sort (fun a b -> compare b a) (Array.to_list hmtxdata))
 
-let parse ?(subset=[]) data =
+let parse ?(subset=[]) data ~encoding =
   let subset = map fst subset in
   let mk_b byte_offset = bitbytes_of_input (let i = input_of_bytes data in i.seek_in byte_offset; i) in
   let b = mk_b 0 in
@@ -320,7 +331,7 @@ let parse ?(subset=[]) data =
               | (_, _, o, _)::_ -> read_hmtx_table numOfLongHorMetrics (mk_b (i32toi o))
               | [] -> raise (Pdf.PDFError "No hmtx table found in TrueType font")
             in
-            let widths = calculate_widths firstchar lastchar subset !glyphcodes hmtxdata in
+            let widths = calculate_widths encoding firstchar lastchar subset !glyphcodes hmtxdata in
             let maxwidth = calculate_maxwidth hmtxdata in
             let stemv = calculate_stemv () in
             let b = mk_b (i32toi locaoffset) in
