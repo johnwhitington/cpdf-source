@@ -1,13 +1,7 @@
 open Pdfutil
 
-let of_utf8 (f, fontsize) t =
-     Pdftext.codepoints_of_utf8 t
-  |> option_map (Pdftext.charcode_extractor_of_font_real f)
-  |> map char_of_int
-  |> implode
-
-let of_pdfdocencoding (f, fontsize) t =
-  of_utf8 (f, fontsize) (Pdftext.utf8_of_pdfdocstring t)
+(* FIXME Make this use the charcode extractor for the font, because cpdftype
+   assumes charcodes. *)
 
 let rec of_utf8_with_newlines t =
   let items = ref [] in
