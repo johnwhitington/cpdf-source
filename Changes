@@ -2,7 +2,7 @@
 
 New features:
 
-o Embed TrueType fonts with -font-ttf
+o Embed TrueType fonts with -font-ttf for -add-text et al.
 o Add links to parts of text with -add-text as %URL[|].
 
 Extended features:
