@@ -3724,7 +3724,7 @@ let go () =
             | StandardFont f -> Some (Pdftext.StandardFont (f, Pdftext.WinAnsiEncoding))
             | OtherFont f -> None (* it's in fontname *)
             | FontToEmbed (fontfile, encoding) ->
-                Some (Cpdfembed.embed_truetype pdf ~fontfile ~fontname:args.fontname ~text:"" ~encoding)
+                Some (Cpdfembed.embed_truetype pdf ~fontfile ~fontname:args.fontname ~codepoints:[] ~encoding)
           in
             warn_prerotate range pdf;
             let pdf =
@@ -3991,7 +3991,7 @@ let go () =
         match args.font with
         | StandardFont f -> Pdftext.StandardFont (f, Pdftext.WinAnsiEncoding)
         | FontToEmbed (fontfile, encoding) ->
-            Cpdfembed.embed_truetype pdf ~fontfile ~fontname:args.fontname ~text:"" ~encoding
+            Cpdfembed.embed_truetype pdf ~fontfile ~fontname:args.fontname ~codepoints:[] ~encoding
         | _ -> error "TOC: not a standard or embedded font"
       in
       let pdf = Cpdftoc.typeset_table_of_contents ~font ~fontsize:args.fontsize ~title:args.toc_title ~bookmark:args.toc_bookmark pdf in
@@ -4002,7 +4002,7 @@ let go () =
         match args.font with
         | StandardFont f -> Pdftext.StandardFont (f, Pdftext.WinAnsiEncoding)
         | FontToEmbed (fontfile, encoding) ->
-            Cpdfembed.embed_truetype (Pdf.empty ()) ~fontfile ~fontname:args.fontname ~text:"" ~encoding
+            Cpdfembed.embed_truetype (Pdf.empty ()) ~fontfile ~fontname:args.fontname ~codepoints:[] ~encoding
         | _ -> error "text to PDF: not a standard or embedded font"
       in
       let pdf =

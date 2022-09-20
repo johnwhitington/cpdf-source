@@ -44,8 +44,7 @@ let basename () =
   incr fontnum;
   "AAAAA" ^ string_of_char (char_of_int (!fontnum + 65))
 
-let embed_truetype pdf ~fontfile ~fontname ~text ~encoding =
-  let unicodepoints = Pdftext.codepoints_of_utf8 text in
+let embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding =
   let glyphlist_table = Pdfglyphlist.reverse_glyph_hashes () in 
   let encoding_table = Pdftext.reverse_table_of_encoding encoding in
   let accepted_unicodepoints =
@@ -53,7 +52,7 @@ let embed_truetype pdf ~fontfile ~fontname ~text ~encoding =
       (fun u ->
         (u, pdfcode_of_unicode_codepoint encoding_table glyphlist_table u))
       (calc_accepted_unicodepoints
-         encoding_table glyphlist_table unicodepoints)
+         encoding_table glyphlist_table codepoints)
   in
   let f = Cpdftruetype.parse ~subset:accepted_unicodepoints fontfile ~encoding in
   let name_1 = basename () in

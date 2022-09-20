@@ -1,6 +1,5 @@
-(* Embed a TrueType font for the given set of UTF8 characters in the given
-   encoding, adding it as an object to the PDF, and returning the number of
-   that object. *)
+(* Embed a TrueType font for the given set of unicode codepoints in the given
+   encoding, adding the fontfile to the PDF and returning the font object. *)
 val embed_truetype :
-  Pdf.t -> fontfile:Pdfio.bytes -> fontname:string -> text:string ->
+  Pdf.t -> fontfile:Pdfio.bytes -> fontname:string -> codepoints:int list ->
   encoding:Pdftext.encoding -> Pdftext.font
