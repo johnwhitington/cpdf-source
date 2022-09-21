@@ -65,8 +65,6 @@ let read_format_6_encoding_table b =
   let firstCode = read_ushort b in
   let entryCount = read_ushort b in
   let t = null_hash () in
-    (* FIXME: This format can address glyphs > 255, but we don't support that
-    elsewhere yet --- but we read the whole format table nonethless *)
     try
       for x = firstCode to firstCode + entryCount - 1 do
         Hashtbl.add t x (read_ushort b)
