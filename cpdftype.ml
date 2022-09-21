@@ -56,13 +56,13 @@ let initial_state () =
 
 let font_widths f fontsize =
   match f with
-  | Pdftext.StandardFont (sf, _) ->
+  | Pdftext.StandardFont (sf, encoding) ->
       Array.init
         256
         (fun x ->
              fontsize
           *. float_of_int
-               (Pdfstandard14.textwidth false Pdftext.WinAnsiEncoding sf (string_of_char (char_of_int x)))
+               (Pdfstandard14.textwidth false encoding sf (string_of_char (char_of_int x)))
           /. 1000.)
   | Pdftext.SimpleFont {fontmetrics = Some m} ->
       Array.map (fun x -> fontsize *. x /. 1000. ) m
