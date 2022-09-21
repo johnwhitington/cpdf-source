@@ -28,6 +28,8 @@ let rec of_utf8_with_newlines charcode_extractor t =
       if c <> [] then items := Text (charcodes_of_codepoints c)::!items;
       rev !items
 
+(* The optional pdf argument is for providing a pre-embedded font - this will
+   be removed when we re-embed subsetted? *)
 let typeset ?pdf ~papersize ~font ~fontsize text =
   let charcode_extractor = Pdftext.charcode_extractor_of_font_real font in
   let pdf = match pdf with None -> Pdf.empty () | Some pdf -> pdf in
