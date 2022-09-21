@@ -1,6 +1,6 @@
 open Pdfutil
 
-let rec of_utf8_with_newlines charcode_extractor t =
+let rec of_utf8_with_newlines used charcode_extractor t =
   let items = ref [] in
   let buf = ref [] in
   let codepoints = Pdftext.codepoints_of_utf8 t in
@@ -8,7 +8,7 @@ let rec of_utf8_with_newlines charcode_extractor t =
     option_map
       (fun u ->
          match charcode_extractor u with
-         | Some c -> Some (char_of_int c)
+         | Some c -> Hashtbl.replace used c (); Some (char_of_int c)
          | None -> Printf.printf "No glyph for unicode U+%04X in this font\n" u; None)
       cs
   in
@@ -37,11 +37,14 @@ let typeset ?pdf ~papersize ~font ~fontsize text =
     Pdfunits.convert
       72. (Pdfpaper.unit papersize) (Pdfunits.PdfPoint) (Pdfpaper.width papersize) /. 15.
   in
+  let used = null_hash () in
   let pages =
     Cpdftype.typeset
       margin margin margin margin papersize pdf
       ([Cpdftype.Font (font, fontsize); Cpdftype.BeginDocument] @
-       of_utf8_with_newlines charcode_extractor (Pdfio.string_of_bytes text))
+       of_utf8_with_newlines used charcode_extractor (Pdfio.string_of_bytes text))
   in
+    let codes = map fst (list_of_hashtbl used) in
+      Printf.printf "%i codes used\n" (length codes);
     let pdf, pageroot = Pdfpage.add_pagetree pages pdf in
       Pdfpage.add_root pageroot [] pdf
