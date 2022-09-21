@@ -142,7 +142,7 @@ let scale_page_contents ?(fast=false) scale position pdf pnum page =
        | Some r -> r
        | None -> page.Pdfpage.mediabox)
   in
-    let sx, sy, _ = Cpdfposition.calculate_position true 0. box Horizontal position in
+    let sx, sy, _ = Cpdfposition.calculate_position true 0. box position in
       let tx, ty =
         let open Cpdfposition in
         match position with

@@ -34,7 +34,7 @@ val addtexts :
     bool -> (*underneath*)
     string ->(*text*)
     int list ->(*page range*)
-    Cpdfposition.orientation ->(*orientation*)
+    'a ->(*orientation*)
     bool ->(*relative to cropbox?*)
     float ->(*opacity*)
     justification ->(*justification*)

@@ -32,14 +32,9 @@ let string_of_position = function
   | ReverseDiagonal -> "Reverse Diagonal"
   | Centre -> "Centre"
 
-type orientation =
-  | Horizontal
-  | Vertical
-  | VerticalDown
-
 (* Given the mediabox, calculate an absolute position for the text. *)
-let calculate_position ignore_d w (xmin, ymin, xmax, ymax) orientation pos =
-  let rot = if orientation = VerticalDown then rad_of_deg 270. else 0. in
+let calculate_position ignore_d w (xmin, ymin, xmax, ymax) pos =
+  let rot = 0. in
     match pos with
     | Centre ->
         (xmin +. xmax) /. 2. -. w /. 2.,

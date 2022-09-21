@@ -1,3 +1,4 @@
+(* Superimpose text, page numbers etc. *)
 open Pdfutil
 open Cpdferror
 
@@ -6,10 +7,7 @@ type color =
 | RGB of float * float * float
 | CYMK of float * float * float * float
 
-(* Superimpose text, page numbers etc. *)
-
-(* Process UTF8 text to /WinAnsiEncoding string (for standard 14) or whatever
-   is in the font (for existing fonts). *)
+(* Process UTF8 text to charcodes, given a font. *)
 let charcodes_of_utf8 font s =
   let extractor = Pdftext.charcode_extractor_of_font_real ~debug:false font in
   let codepoints = Pdftext.codepoints_of_utf8 s in
@@ -22,15 +20,6 @@ let charcodes_of_utf8 font s =
         codepoints
     in
     implode (map char_of_int charcodes)
-
-(* Process codepoints back to UTF8, assuming it came from UTF8 to start with *)
-let utf8_of_winansi s =
-  let text_extractor =
-    Pdftext.text_extractor_of_font_real
-      (Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding))
-  in
-    let codepoints = Pdftext.codepoints_of_text text_extractor s in
-      Pdftext.utf8_of_codepoints codepoints
 
 (* Get the width of some text in the given font *)
 let width_of_text font text =
@@ -151,7 +140,13 @@ let cap_height fontname =
   with
     _ -> None
 
-let make_font embed fontname =
+let rec string_of_encoding = function
+  | Pdftext.StandardEncoding -> "StandardEncoding"
+  | Pdftext.MacRomanEncoding -> "MacRomanEncoding"
+  | Pdftext.WinAnsiEncoding -> "WinAnsiEncoding"
+  | _ -> error "unknown encoding"
+
+let make_font embed encoding fontname =
   let font = unopt (Pdftext.standard_font_of_name ("/" ^ fontname)) in
   let header, width_data, _, chars_and_widths = Pdfstandard14.afm_data font in
     let widths = extract_widths (list_of_hashtbl chars_and_widths) in
@@ -174,9 +169,6 @@ let make_font embed fontname =
            ("/CapHeight", capheight);
            ("/StemV", Pdf.Integer stemv)]
       in
-        (* With -no-embed-font, we use the standard encoding, and just the
-         * minimal stuff. Without -no-embed-font, we switch to WinAnsiEncoding,
-         * and fill out everything except the font file instead *)
         if embed then
           Pdf.Dictionary
             [("/Type", Pdf.Name "/Font");
@@ -290,7 +282,8 @@ let pagelabel pdf num =
     (Pdfpagelabels.complete (Pdfpagelabels.read pdf))
 
 let addtext
-  lines linewidth outline fast colour fontname embed bates batespad fontsize (font : Pdftext.font option)
+  lines linewidth outline fast colour fontname encoding embed bates batespad fontsize
+  (font : Pdftext.font option)
   fontpdfobj underneath position hoffset voffset text pages orientation cropbox opacity
   justification filename extract_text_font_size shift pdf
 =
@@ -345,11 +338,7 @@ let addtext
                 match font with
                 | Some (Pdftext.StandardFont (f, _)) ->
                     let rawwidth =
-                      Pdfstandard14.textwidth
-                        false
-                        (if embed then Pdftext.WinAnsiEncoding else Pdftext.StandardEncoding)
-                        f
-                        text
+                      Pdfstandard14.textwidth false encoding f text
                     in
                       (float rawwidth *. fontsize) /. 1000.
                 | Some font ->
@@ -403,7 +392,7 @@ let addtext
                     else
                       Pdf.parse_rectangle pdf page.Pdfpage.mediabox
                   in
-                    let x, y, rotate = Cpdfposition.calculate_position false textwidth mediabox orientation position in
+                    let x, y, rotate = Cpdfposition.calculate_position false textwidth mediabox position in
                       let hoffset, voffset =
                         if position = Diagonal || position = ReverseDiagonal
                           then -. (cos ((pi /. 2.) -. rotate) *. voffset), sin ((pi /. 2.) -. rotate) *. voffset
@@ -423,7 +412,7 @@ let addtext
               match font with
               | Some (Pdftext.StandardFont _) ->
                   let newfontdict =
-                    Pdf.add_dict_entry fontdict unique_fontname (make_font embed fontname)
+                    Pdf.add_dict_entry fontdict unique_fontname (make_font embed encoding fontname)
                   in
                     Pdf.add_dict_entry resources' "/Font" newfontdict
               | Some f ->
@@ -510,8 +499,8 @@ let
   let realfontname = ref fontname in
   let fontpdfobj =
     match font with
-    | Some (StandardFont (f, _)) ->
-        make_font embed (Pdftext.string_of_standard_font f)
+    | Some (StandardFont (f, encoding)) ->
+        make_font embed encoding (Pdftext.string_of_standard_font f)
     | Some f ->
         Pdf.Indirect (Pdftext.write_font pdf f)
     | None -> 
@@ -577,22 +566,25 @@ let
                   voffset := !voffset +. capheight
               | _ ->
                   Printf.eprintf "Unable to find midline adjustment in this font\n"
-            end
-          else
-          iter
-            (fun line ->
-               let voff, hoff =
-                 if orientation = Cpdfposition.Vertical then 0., -.(!voffset) else !voffset, 0.
-               in
-                 pdf :=
-                   addtext lines linewidth outline fast colour !realfontname
-                   embed bates batespad fontsize font fontpdfobj underneath position hoff voff line
-                   pages orientation cropbox opacity justification filename
-                   extract_text_font_size shift
-                   !pdf;
-                 voffset := !voffset +. (linespacing *. fontsize))
-            lines;
-            !pdf
+            end;
+          let encoding =
+            match font with
+            | Some (Pdftext.StandardFont (_, e)) -> e
+            | Some (Pdftext.SimpleFont {encoding}) -> encoding
+            | _ -> Pdftext.WinAnsiEncoding
+          in
+            iter
+              (fun line ->
+                 let voff, hoff = !voffset, 0. in
+                   pdf :=
+                     addtext lines linewidth outline fast colour !realfontname encoding
+                     embed bates batespad fontsize font fontpdfobj underneath position hoff voff line
+                     pages orientation cropbox opacity justification filename
+                     extract_text_font_size shift
+                     !pdf;
+                   voffset := !voffset +. (linespacing *. fontsize))
+              lines;
+              !pdf
 
 let removetext range pdf =
   (* Could fail on nesting, or other marked content inside our marked content.*)
@@ -652,7 +644,7 @@ let addrectangle
         Pdf.parse_rectangle pdf page.Pdfpage.mediabox
     in
     let x, y, _ =
-      Cpdfposition.calculate_position false w mediabox Cpdfposition.Horizontal position
+      Cpdfposition.calculate_position false w mediabox position
     in
     let x, y =
       match position with

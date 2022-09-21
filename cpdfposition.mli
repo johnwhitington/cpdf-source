@@ -20,9 +20,6 @@ type position =
 (** Produce a debug string of a [position] *)
 val string_of_position : position -> string
 
-(** Orientation of the string on the page *)
-type orientation = Horizontal | Vertical | VerticalDown
-
 (** [calculate_position ignore_d w (xmin, ymin, xmax, ymax) orientation pos] calculates
 the absolute position of text given its width, bounding box, orientation and
 position. If [ignore_d] is true, the distance from the position (e.g 10 in
@@ -31,4 +28,4 @@ val calculate_position :
   bool ->
   float ->
   float * float * float * float ->
-  orientation -> position -> float * float * float
+  position -> float * float * float

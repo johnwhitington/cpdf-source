@@ -396,7 +396,6 @@ type args =
    mutable bates : int;
    mutable batespad : int option;
    mutable prerotate : bool;
-   mutable orientation : Cpdfposition.orientation;
    mutable relative_to_cropbox : bool;
    mutable keepversion : bool;
    mutable bycolumns : bool;
@@ -519,7 +518,6 @@ let args =
    bates = 0;
    batespad = None;
    prerotate = false;
-   orientation = Cpdfposition.Horizontal;
    relative_to_cropbox = false;
    keepversion = false;
    bycolumns = false;
@@ -642,7 +640,6 @@ let reset_arguments () =
   args.bates <- 0;
   args.batespad <- None;
   args.prerotate <- false;
-  args.orientation <- Cpdfposition.Horizontal;
   args.relative_to_cropbox <- false;
   args.keepversion <- false;
   args.bycolumns <- false;
@@ -1471,12 +1468,6 @@ let setimpath p =
 
 let setp2ppath p =
   args.path_to_p2p <- p
-
-let settextvertical () =
-  args.orientation <- Cpdfposition.Vertical
-
-let settextverticaldown () =
-  args.orientation <- Cpdfposition.VerticalDown
 
 let setfrombox s =
   detect_duplicate_op CopyBox;
@@ -2527,8 +2518,6 @@ and specs =
    ("-remove-unused-resources", Arg.Unit (setop RemoveUnusedResources), "");
    ("-stay-on-error", Arg.Unit setstayonerror, "");
    ("-extract-fontfile", Arg.Unit (setop ExtractFontFile), "");
-   ("-text-vertical", Arg.Unit settextvertical, "");
-   ("-text-vertical-down", Arg.Unit settextverticaldown, "");
    ("-flat-kids", Arg.Unit setflatkids, "");
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit setdebugcrypt, "");
@@ -3736,7 +3725,7 @@ let go () =
                    args.linewidth args.outline args.fast args.fontname
                    font args.embedfonts args.bates args.batespad args.color args.position
                    args.linespacing args.fontsize args.underneath text range
-                   args.orientation args.relative_to_cropbox args.opacity
+                   () args.relative_to_cropbox args.opacity
                    args.justification args.midline args.topline filename
                    args.extract_text_font_size args.coord ~raw:(args.encoding = Raw) pdf)
   | Some RemoveText ->
