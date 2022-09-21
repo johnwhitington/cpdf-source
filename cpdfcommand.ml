@@ -360,7 +360,7 @@ let output_pdfs : Pdf.t list ref = ref []
 
 type font =
   | StandardFont of Pdftext.standard_font
-  | FontToEmbed of Pdfio.bytes * Pdftext.encoding
+  | FontToEmbed of Pdfio.bytes
   | OtherFont of string
 
 type args =
@@ -382,6 +382,7 @@ type args =
    mutable effect_duration : float;
    mutable font : font;
    mutable fontname : string;
+   mutable fontencoding : Pdftext.encoding;
    mutable fontsize : float;
    mutable fontttfmore : bool;
    mutable color : Cpdfaddtext.color;
@@ -505,6 +506,7 @@ let args =
    font = StandardFont Pdftext.TimesRoman;
    fontname = "Times-Roman";
    fontsize = 12.;
+   fontencoding = Pdftext.WinAnsiEncoding;
    fontttfmore = false;
    color = Cpdfaddtext.RGB (0., 0., 0.);
    opacity = 1.;
@@ -627,6 +629,7 @@ let reset_arguments () =
   args.font <- StandardFont Pdftext.TimesRoman;
   args.fontname <- "Times-Roman";
   args.fontsize <- 12.;
+  args.fontencoding <- Pdftext.WinAnsiEncoding;
   args.fontttfmore <- false;
   args.color <- Cpdfaddtext.RGB (0., 0., 0.);
   args.opacity <- 1.;
@@ -1722,25 +1725,19 @@ let setnowarnrotate () =
   args.no_warn_rotate <- true
 
 let setfontttf s =
-  args.font <- FontToEmbed (Pdfio.bytes_of_string (contents_of_file s), Pdftext.WinAnsiEncoding);
+  args.font <- FontToEmbed (Pdfio.bytes_of_string (contents_of_file s));
   args.fontname <- Filename.remove_extension (Filename.basename s)
 
 let setfontttfmore () =
   args.fontttfmore <- true
 
 let setfontttfencoding s =
-  let e =
+  args.fontencoding <-
     match s with
     | "MacRomanEncoding" -> Pdftext.MacRomanEncoding
     | "WinAnsiEncoding" -> Pdftext.WinAnsiEncoding
     | "StandardEncoding" -> Pdftext.StandardEncoding
     | _ -> error "Unknown encoding"
-  in
-    match args.font with
-    | FontToEmbed (b, _) ->
-        args.font <- FontToEmbed (b, e)
-    | _ ->
-        error "Must specift -font-ttf before -font-ttf-encoding"
 
 let whingemalformed () =
   prerr_string "Command line must be of exactly the form\ncpdf <infile> -gs <path> -gs-malformed-force -o <outfile>\n";
@@ -2046,18 +2043,18 @@ and specs =
    ("-font",
       Arg.String setfont,
       " Set the font");
-   ("-font-ttf",
-      Arg.String setfontttf,
-      " Load a TrueType font");
-   ("-font-ttf-encoding",
-      Arg.String setfontttfencoding,
-      " Set the encoding for the TrueType font");
-   ("-font-ttf-more",
-      Arg.Unit setfontttfmore,
-      " Signal that more text is coming for this font");
    ("-font-size",
       Arg.Float setfontsize,
       " Set the font size");
+   ("-font-encoding",
+      Arg.String setfontttfencoding,
+      " Set the encoding for the TrueType font");
+   ("-font-ttf",
+      Arg.String setfontttf,
+      " Load a TrueType font");
+   ("-font-ttf-more",
+      Arg.Unit setfontttfmore,
+      " Signal that more text is coming for this font");
    ("-no-embed-font",
       Arg.Unit setnoembedfont,
       " Do not embed fonts");
@@ -3721,10 +3718,10 @@ let go () =
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           let font =
             match args.font with
-            | StandardFont f -> Some (Pdftext.StandardFont (f, Pdftext.WinAnsiEncoding))
+            | StandardFont f -> Some (Pdftext.StandardFont (f, args.fontencoding))
             | OtherFont f -> None (* it's in fontname *)
-            | FontToEmbed (fontfile, encoding) ->
-                Some (Cpdfembed.embed_truetype pdf ~fontfile ~fontname:args.fontname ~codepoints:[] ~encoding)
+            | FontToEmbed fontfile ->
+                Some (Cpdfembed.embed_truetype pdf ~fontfile ~fontname:args.fontname ~codepoints:[] ~encoding:args.fontencoding)
           in
             warn_prerotate range pdf;
             let pdf =
@@ -3989,9 +3986,9 @@ let go () =
       let pdf = get_single_pdf args.op false in
       let font =
         match args.font with
-        | StandardFont f -> Pdftext.StandardFont (f, Pdftext.WinAnsiEncoding)
-        | FontToEmbed (fontfile, encoding) ->
-            Cpdfembed.embed_truetype pdf ~fontfile ~fontname:args.fontname ~codepoints:[] ~encoding
+        | StandardFont f -> Pdftext.StandardFont (f, args.fontencoding)
+        | FontToEmbed fontfile ->
+            Cpdfembed.embed_truetype pdf ~fontfile ~fontname:args.fontname ~codepoints:[] ~encoding:args.fontencoding
         | _ -> error "TOC: not a standard or embedded font"
       in
       let pdf = Cpdftoc.typeset_table_of_contents ~font ~fontsize:args.fontsize ~title:args.toc_title ~bookmark:args.toc_bookmark pdf in
@@ -4001,9 +3998,9 @@ let go () =
       let pdf = Pdf.empty () in
       let font =
         match args.font with
-        | StandardFont f -> Pdftext.StandardFont (f, Pdftext.WinAnsiEncoding)
-        | FontToEmbed (fontfile, encoding) ->
-            Cpdfembed.embed_truetype pdf ~fontfile ~fontname:args.fontname ~codepoints:[] ~encoding
+        | StandardFont f -> Pdftext.StandardFont (f, args.fontencoding)
+        | FontToEmbed fontfile ->
+            Cpdfembed.embed_truetype pdf ~fontfile ~fontname:args.fontname ~codepoints:[] ~encoding:args.fontencoding
         | _ -> error "text to PDF: not a standard or embedded font"
       in
       let pdf =
