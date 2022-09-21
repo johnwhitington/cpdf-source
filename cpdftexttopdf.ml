@@ -28,9 +28,9 @@ let rec of_utf8_with_newlines charcode_extractor t =
       if c <> [] then items := Text (charcodes_of_codepoints c)::!items;
       rev !items
 
-let typeset ~papersize ~font ~fontsize text =
+let typeset ?pdf ~papersize ~font ~fontsize text =
   let charcode_extractor = Pdftext.charcode_extractor_of_font_real font in
-  let pdf = Pdf.empty () in
+  let pdf = match pdf with None -> Pdf.empty () | Some pdf -> pdf in
   let margin =
     Pdfunits.convert
       72. (Pdfpaper.unit papersize) (Pdfunits.PdfPoint) (Pdfpaper.width papersize) /. 15.

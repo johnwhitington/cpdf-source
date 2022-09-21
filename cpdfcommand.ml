@@ -3998,15 +3998,16 @@ let go () =
         write_pdf false pdf
   | Some (Typeset filename) ->
       let text = Pdfio.bytes_of_input_channel (open_in filename) in
+      let pdf = Pdf.empty () in
       let font =
         match args.font with
         | StandardFont f -> Pdftext.StandardFont (f, Pdftext.WinAnsiEncoding)
         | FontToEmbed (fontfile, encoding) ->
-            Cpdfembed.embed_truetype (Pdf.empty ()) ~fontfile ~fontname:args.fontname ~codepoints:[] ~encoding
+            Cpdfembed.embed_truetype pdf ~fontfile ~fontname:args.fontname ~codepoints:[] ~encoding
         | _ -> error "text to PDF: not a standard or embedded font"
       in
       let pdf =
-        Cpdftexttopdf.typeset ~papersize:args.createpdf_pagesize ~font ~fontsize:args.fontsize text
+        Cpdftexttopdf.typeset ~pdf:pdf ~papersize:args.createpdf_pagesize ~font ~fontsize:args.fontsize text
       in
         write_pdf false pdf
 
