@@ -15,14 +15,16 @@ let rec real_newline = function
   | [] -> []
 
 (* Cpdftype codepoints from a font and UTF8 *)
-let of_utf8 f t =
-     Pdftext.codepoints_of_utf8 t
+let of_utf8 used f t =
+  let codepoints = Pdftext.codepoints_of_utf8 t in
+     iter (fun u -> Hashtbl.replace used u ()) codepoints;
+     codepoints
   |> option_map (Pdftext.charcode_extractor_of_font_real f)
   |> map char_of_int
 
 (* Cpdftype codepoints from a font and PDFDocEndoding string *)
-let of_pdfdocencoding f t =
-  of_utf8 f (Pdftext.utf8_of_pdfdocstring t)
+let of_pdfdocencoding used f t =
+  of_utf8 used f (Pdftext.utf8_of_pdfdocstring t)
 
 (* Remove characters until it is below the length. Then remove three more and
    add dots for an ellipsis *)
@@ -63,20 +65,21 @@ let typeset_table_of_contents ?embedinfo ~font ~fontsize ~title ~bookmark pdf =
     | None -> width 
   in
   let labels = Pdfpagelabels.read pdf in
+  let used = null_hash () in
   let lines =
     let refnums = Pdf.page_reference_numbers pdf in
     let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
     map
       (fun mark ->
          let indent = float mark.Pdfmarks.level *. fontsize *. 2. in 
-         let text = of_pdfdocencoding f mark.Pdfmarks.text in
+         let text = of_pdfdocencoding used f mark.Pdfmarks.text in
          let label =
-           if mark.Pdfmarks.target = NullDestination then [' '] else 
+           if mark.Pdfmarks.target = NullDestination then of_pdfdocencoding used f " " else 
            let pde =
              let pnum = Pdfpage.pagenumber_of_target ~fastrefnums pdf mark.Pdfmarks.target in
                try Pdfpagelabels.pagelabeltext_of_pagenumber pnum labels with Not_found -> string_of_int pnum
            in
-             of_pdfdocencoding f pde
+             of_pdfdocencoding used f pde
          in
          let widths = Cpdftype.font_widths f fontsize in
          let textgap = width -. margin *. 2. -. indent -. Cpdftype.width_of_string widths label in
@@ -98,7 +101,7 @@ let typeset_table_of_contents ?embedinfo ~font ~fontsize ~title ~bookmark pdf =
           flatten
             (map
               (fun l -> [Cpdftype.Text l; Cpdftype.NewLine])
-              (split_toc_title (of_utf8 f title)))
+              (split_toc_title (of_utf8 used f title)))
           @ [glue]
     in
     let lm, rm, tm, bm =
@@ -107,7 +110,8 @@ let typeset_table_of_contents ?embedinfo ~font ~fontsize ~title ~bookmark pdf =
       | Some (cminx, cminy, cmaxx, cmaxy) ->
           (cminx +. margin, (pmaxx -. cmaxx) +. margin, cminy +. margin, (pmaxy -. cmaxy) +. margin)
     in
-    let codepoints = [] in
+    let codepoints = map fst (list_of_hashtbl used) in
+    Printf.printf "%i codes used\n" (length codepoints);
     let font =
       match embedinfo with
       | None -> font
