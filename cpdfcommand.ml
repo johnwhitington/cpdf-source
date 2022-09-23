@@ -3973,27 +3973,29 @@ let go () =
         Cpdffont.print_font_table pdf fontname args.copyfontpage
   | Some TableOfContents ->
       let pdf = get_single_pdf args.op false in
-      let font =
+      let font, embedinfo =
         match args.font with
-        | StandardFont f -> Pdftext.StandardFont (f, args.fontencoding)
+        | StandardFont f -> (Pdftext.StandardFont (f, args.fontencoding), None)
         | FontToEmbed fontfile ->
-            Cpdfembed.embed_truetype pdf ~fontfile ~fontname:args.fontname ~codepoints:[] ~encoding:args.fontencoding
+            Cpdfembed.embed_truetype pdf ~fontfile ~fontname:args.fontname ~codepoints:[] ~encoding:args.fontencoding,
+            (Some (pdf, fontfile, args.fontname, args.fontencoding))
         | _ -> error "TOC: not a standard or embedded font"
       in
-      let pdf = Cpdftoc.typeset_table_of_contents ~font ~fontsize:args.fontsize ~title:args.toc_title ~bookmark:args.toc_bookmark pdf in
+      let pdf = Cpdftoc.typeset_table_of_contents ?embedinfo ~font ~fontsize:args.fontsize ~title:args.toc_title ~bookmark:args.toc_bookmark pdf in
         write_pdf false pdf
   | Some (Typeset filename) ->
       let text = Pdfio.bytes_of_input_channel (open_in filename) in
       let pdf = Pdf.empty () in
-      let font =
+      let font, embedinfo =
         match args.font with
-        | StandardFont f -> Pdftext.StandardFont (f, args.fontencoding)
+        | StandardFont f -> (Pdftext.StandardFont (f, args.fontencoding), None)
         | FontToEmbed fontfile ->
-            Cpdfembed.embed_truetype pdf ~fontfile ~fontname:args.fontname ~codepoints:[] ~encoding:args.fontencoding
+            Cpdfembed.embed_truetype pdf ~fontfile ~fontname:args.fontname ~codepoints:[] ~encoding:args.fontencoding,
+            (Some (pdf, fontfile, args.fontname, args.fontencoding))
         | _ -> error "text to PDF: not a standard or embedded font"
       in
       let pdf =
-        Cpdftexttopdf.typeset ~pdf:pdf ~papersize:args.createpdf_pagesize ~font ~fontsize:args.fontsize text
+        Cpdftexttopdf.typeset ?embedinfo ~papersize:args.createpdf_pagesize ~font ~fontsize:args.fontsize text
       in
         write_pdf false pdf
 

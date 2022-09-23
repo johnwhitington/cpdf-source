@@ -39,11 +39,11 @@ let shorten_text widths l t =
    (and CropBox) copied from first page of existing PDF. Margin of 10% inside
    CropBox. Font size of title twice body font size. Null page labels added for
    TOC, others bumped up and so preserved. *)
-let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
+let typeset_table_of_contents ?embedinfo ~font ~fontsize ~title ~bookmark pdf =
   let marks = Pdfmarks.read_bookmarks pdf in
   if marks = [] then (Printf.eprintf "No bookmarks, not making table of contents\n%!"; pdf) else
   let f, fs = (font, fontsize) in
-  let big = (font, fontsize *. 2.) in
+  let _, bfs as big = (font, fontsize *. 2.) in
   let firstpage = hd (Pdfpage.pages_of_pagetree pdf) in
   let width, firstpage_papersize, pmaxx, pmaxy, margin =
     let width, height, xmax, ymax =
@@ -107,9 +107,16 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
       | Some (cminx, cminy, cmaxx, cmaxy) ->
           (cminx +. margin, (pmaxx -. cmaxx) +. margin, cminy +. margin, (pmaxy -. cmaxy) +. margin)
     in
+    let codepoints = [] in
+    let font =
+      match embedinfo with
+      | None -> font
+      | Some (pdf, fontfile, fontname, encoding) ->
+        Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding
+    in
       Cpdftype.typeset lm rm tm bm firstpage_papersize pdf
-        ([Cpdftype.Font big; Cpdftype.BeginDocument] @ title @
-          [Cpdftype.Font (f, fs)] @ flatten lines)
+        ([Cpdftype.Font (font, bfs); Cpdftype.BeginDocument] @ title @
+          [Cpdftype.Font (font, fs)] @ flatten lines)
   in
   let toc_pages =
     match firstpage_cropbox with
