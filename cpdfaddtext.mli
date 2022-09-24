@@ -19,6 +19,7 @@ type justification =
 position linespacing fontsize underneath text pages orientation
 relative_to_cropbox midline_adjust topline filename pdf]. For details see cpdfmanual.pdf *)
 val addtexts :
+    ?embedinfo:(Pdf.t * Pdfio.bytes * string * Pdftext.encoding) ->
     float -> (*linewidth*)
     bool -> (*outline*)
     bool -> (*fast*)

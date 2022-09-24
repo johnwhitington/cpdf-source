@@ -42,7 +42,8 @@ let colour_op_stroke = function
   | Grey g -> Pdfops.Op_G g
   | CYMK (c, y, m, k) -> Pdfops.Op_K (c, y, m, k)
 
-let ops longest_w x y rotate hoffset voffset outline linewidth unique_fontname unique_extgstatename colour fontsize text =
+let ops used longest_w x y rotate hoffset voffset outline linewidth unique_fontname unique_extgstatename colour fontsize text =
+  String.iter (fun x -> Hashtbl.replace used x ()) text;
   [Pdfops.Op_q;
   Pdfops.Op_BMC "/CPDFSTAMP";
    Pdfops.Op_cm
@@ -282,12 +283,11 @@ let pagelabel pdf num =
     (Pdfpagelabels.complete (Pdfpagelabels.read pdf))
 
 let addtext
-  lines linewidth outline fast colour fontname encoding embed bates batespad fontsize
+  time used lines linewidth outline fast colour fontname encoding embed bates batespad fontsize
   (font : Pdftext.font option)
   fontpdfobj underneath position hoffset voffset text pages orientation cropbox opacity
   justification filename extract_text_font_size shift pdf
 =
-  let time = Cpdfstrftime.current_time () in
   let endpage = Pdfpage.endpage pdf in
   let replace_pairs pdf filename bates batespad num page =
       [
@@ -400,11 +400,11 @@ let addtext
                       in
                         match font with
                         | Some f ->
-                            ops longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
+                            ops used longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
                             unique_fontname unique_extgstatename colour fontsize text,
                             urls, x, y, hoffset, voffset, text, joffset
                         | None ->
-                            ops longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
+                            ops used longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
                             fontname None colour fontsize text,
                             urls, x, y, hoffset, voffset, text, joffset
           in
@@ -491,10 +491,12 @@ let unescape_string s =
   implode (unescape_chars [] (explode s))
 
 let
-  addtexts linewidth outline fast fontname (font : Pdftext.font option) embed bates batespad colour position linespacing
+  addtexts ?embedinfo linewidth outline fast fontname (font : Pdftext.font option) embed bates batespad colour position linespacing
   fontsize underneath text pages orientation cropbox opacity justification
   midline topline filename extract_text_font_size shift ?(raw=false) pdf
 =
+  let time = Cpdfstrftime.current_time () in
+  let used = null_hash () in
   if pages = [] then error "addtexts: empty page range" else
   let realfontname = ref fontname in
   let fontpdfobj =
@@ -577,13 +579,15 @@ let
               (fun line ->
                  let voff, hoff = !voffset, 0. in
                    pdf :=
-                     addtext lines linewidth outline fast colour !realfontname encoding
+                     addtext time used lines linewidth outline fast colour !realfontname encoding
                      embed bates batespad fontsize font fontpdfobj underneath position hoff voff line
                      pages orientation cropbox opacity justification filename
                      extract_text_font_size shift
                      !pdf;
                    voffset := !voffset +. (linespacing *. fontsize))
               lines;
+              let charcodes = map fst (list_of_hashtbl used) in
+              Printf.printf "%i charcodes used\n" (length charcodes);
               !pdf
 
 let removetext range pdf =
