@@ -2043,9 +2043,6 @@ and specs =
    ("-font-ttf",
       Arg.String setfontttf,
       " Load a TrueType font");
-   ("-font-ttf-more",
-      Arg.Unit setfontttfmore,
-      " Signal that more text is coming for this font");
    ("-no-embed-font",
       Arg.Unit setnoembedfont,
       " Do not embed fonts");
