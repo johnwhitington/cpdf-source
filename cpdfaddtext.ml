@@ -138,14 +138,18 @@ let extract_widths chars_and_widths =
 (* For finding the height for URL links, we try to find the Cap Height for the
    font. For now, this will only work for built-in fonts. We fall back to using
    the font size alone if we cannot get the cap height. *)
-let cap_height fontname =
-  try
-    let font = unopt (Pdftext.standard_font_of_name ("/" ^ fontname)) in
-    let header, _, _, _ = Pdfstandard14.afm_data font in
-      let capheight = try extract_num header "CapHeight" with _ -> Pdf.Integer 0 in
-        Some (match capheight with Pdf.Integer i -> float_of_int i | Pdf.Real r -> r | _ -> 0.)
-  with
-    _ -> None
+let cap_height font fontname =
+  match font with
+  | Some (Pdftext.SimpleFont {fontdescriptor = Some {capheight}}) ->
+      Some capheight
+  | _ ->
+      try
+        let font = unopt (Pdftext.standard_font_of_name ("/" ^ fontname)) in
+        let header, _, _, _ = Pdfstandard14.afm_data font in
+          let capheight = try extract_num header "CapHeight" with _ -> Pdf.Integer 0 in
+            Some (match capheight with Pdf.Integer i -> float_of_int i | Pdf.Real r -> r | _ -> 0.)
+      with
+        _ -> None
 
 let rec string_of_encoding = function
   | Pdftext.StandardEncoding -> "StandardEncoding"
@@ -448,7 +452,7 @@ let addtext
                        let ex = annot_coord text e in
                        let x, y = x -. hoffset -. joffset, y -. voffset in
                        let height =
-                         match cap_height fontname with
+                         match cap_height font fontname with
                          | Some c -> (c *. fontsize) /. 1000.
                          | None -> fontsize
                        in
