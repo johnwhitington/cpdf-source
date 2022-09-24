@@ -21,6 +21,12 @@ let charcodes_of_utf8 font s =
     in
     implode (map char_of_int charcodes)
 
+let unicode_codepoint_of_pdfcode encoding_table glyphlist_table p =
+  try
+    hd (Hashtbl.find glyphlist_table (Hashtbl.find encoding_table p))
+  with
+    Not_found -> 0
+
 (* Get the width of some text in the given font *)
 let width_of_text font text =
   match font with
@@ -586,8 +592,19 @@ let
                      !pdf;
                    voffset := !voffset +. (linespacing *. fontsize))
               lines;
-              let charcodes = map fst (list_of_hashtbl used) in
-              Printf.printf "%i charcodes used\n" (length charcodes);
+              begin match embedinfo with
+              | None -> ()
+              | Some (_, fontfile, fontname, encoding) ->
+                  let charcodes = map fst (list_of_hashtbl used) in
+                  let encoding_table = Pdftext.table_of_encoding encoding in
+                  let glyphlist_table = Pdfglyphlist.glyph_hashes () in
+                  let codepoints =
+                    map (fun c -> unicode_codepoint_of_pdfcode encoding_table glyphlist_table (int_of_char c)) charcodes
+                  in
+                  let objnum = match fontpdfobj with Pdf.Indirect i -> i | _ -> failwith "bad fontpdfobj" in
+                  let font = Cpdfembed.embed_truetype !pdf ~fontfile ~fontname ~codepoints ~encoding in
+                    ignore (Pdftext.write_font ~objnum !pdf font)
+                  end;
               !pdf
 
 let removetext range pdf =

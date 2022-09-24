@@ -3,11 +3,10 @@ NONDOC = cpdfyojson cpdfxmlm cpdfutil
 
 DOC = cpdfunicodedata cpdferror cpdfdebug cpdfjson cpdfstrftime cpdfcoord \
       cpdfattach cpdfpagespec cpdfposition cpdfpresent cpdfmetadata \
-      cpdfbookmarks cpdfpage cpdfaddtext cpdfimage cpdffont cpdftype \
-      cpdfpad cpdfocg cpdfsqueeze cpdfdraft cpdfspot \
+      cpdfbookmarks cpdfpage cpdftruetype cpdfembed cpdfaddtext cpdfimage \
+      cpdffont cpdftype cpdfpad cpdfocg cpdfsqueeze cpdfdraft cpdfspot \
       cpdfpagelabels cpdfcreate cpdfannot cpdfxobject cpdfimpose cpdftweak \
-      cpdftruetype cpdfembed cpdftexttopdf cpdftoc\
-      cpdfcommand
+      cpdftexttopdf cpdftoc cpdfcommand
 
 MODS = $(NONDOC) $(DOC)
 
@@ -31,7 +30,7 @@ $(foreach x,$(MODS),$x.cmti)
 
 ifneq ($(shell ocamlopt -version),)
   TARGETS += native-code native-code-library
-  LIBINSTALL_FILES += cpdf.a cpdf.cmxa $(foreach x,$(PDFMODS),$x.cmx)
+  LIBINSTALL_FILES += cpdf.a cpdf.cmxa $(foreach x,$(MODS),$x.cmx)
 endif
 
 all : $(TARGETS)

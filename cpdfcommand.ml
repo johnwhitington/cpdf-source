@@ -3705,12 +3705,13 @@ let go () =
   | Some (AddText text) ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-          let font =
+          let font, embedinfo =
             match args.font with
-            | StandardFont f -> Some (Pdftext.StandardFont (f, args.fontencoding))
-            | OtherFont f -> None (* it's in fontname *)
+            | StandardFont f -> Some (Pdftext.StandardFont (f, args.fontencoding)), None
+            | OtherFont f -> None, None (* it's in fontname *)
             | FontToEmbed fontfile ->
-                Some (Cpdfembed.embed_truetype pdf ~fontfile ~fontname:args.fontname ~codepoints:[] ~encoding:args.fontencoding)
+                Some (Cpdfembed.embed_truetype pdf ~fontfile ~fontname:args.fontname ~codepoints:[] ~encoding:args.fontencoding),
+                Some (pdf, fontfile, args.fontname, args.fontencoding)
           in
             warn_prerotate range pdf;
             let pdf =
@@ -3722,7 +3723,7 @@ let go () =
             in
               write_pdf false
                 (Cpdfaddtext.addtexts
-                   args.linewidth args.outline args.fast args.fontname
+                   ?embedinfo args.linewidth args.outline args.fast args.fontname
                    font args.embedfonts args.bates args.batespad args.color args.position
                    args.linespacing args.fontsize args.underneath text range
                    () args.relative_to_cropbox args.opacity
