@@ -2,7 +2,12 @@
 open Pdfutil
 open Cpdferror
 
+(* Keep a record of charcodes used for font subsetting. *)
 let used = null_hash ()
+
+(* If we have used a TTF font, put its name and object number here. Then we
+   know we put it there, and can avoid writing it anew across ANDS. *)
+let glob_pdfobjnum = null_hash ()
 
 type color =
   Grey of float
@@ -515,7 +520,13 @@ let
     | Some (StandardFont (f, encoding)) ->
         make_font embed encoding (Pdftext.string_of_standard_font f)
     | Some f ->
-        Pdf.Indirect (Pdftext.write_font pdf f)
+        begin match Hashtbl.find glob_pdfobjnum fontname with
+        | exception Not_found ->
+            let i = Pdftext.write_font pdf f in
+              Hashtbl.add glob_pdfobjnum fontname i; Pdf.Indirect i
+        | i ->
+            Pdf.Indirect i
+        end
     | None -> 
         let firstpage =
           List.nth (Pdfpage.pages_of_pagetree pdf) (hd pages - 1)
