@@ -54,6 +54,9 @@ let read_f2dot14 b =
 let discard_bytes b n =
   for x = 1 to n do ignore (getval_31 b 8) done
 
+let pdf_unit unitsPerEm x =
+  int_of_float (float_of_int x *. 1000. /. float_of_int unitsPerEm)
+
 let string_of_tag t =
   Printf.sprintf "%c%c%c%c"
     (char_of_int (i32toi (Int32.shift_right t 24)))
@@ -139,20 +142,20 @@ let read_loca_table indexToLocFormat numGlyphs b =
           fix_empties arr; arr
     | _ -> raise (Pdf.PDFError "Unknown indexToLocFormat in read_loca_table")
 
-let read_os2_table b blength =
+let read_os2_table unitsPerEm b blength =
   let version = read_ushort b in
   if !dbg then Printf.printf "OS/2 table blength = %i bytes, version number = %i\n" blength version;
-  let xAvgCharWidth = read_short b in
+  let xAvgCharWidth = pdf_unit unitsPerEm (read_short b) in
   discard_bytes b 64; (* discard 14 entries usWeightClass...fsLastCharIndex *)
   (* -- end of original OS/2 Version 0 Truetype table. Must check length before reading now. *)
-  let sTypoAscender = if blength > 68 then read_short b else 0 in
-  let sTypoDescender = if blength > 68 then read_short b else 0 in
+  let sTypoAscender = if blength > 68 then pdf_unit unitsPerEm (read_short b) else 0 in
+  let sTypoDescender = if blength > 68 then pdf_unit unitsPerEm (read_short b) else 0 in
   discard_bytes b 6; (* discard sTypoLineGap...usWinDescent *)
   (* -- end of OpenType version 0 table *)
   discard_bytes b 8; (* discard ulCodePageRange1, ulCodePageRange2 *)
   (* -- end of OpenType version 1 table *)
-  let sxHeight = if version < 2 then 0 else read_short b in
-  let sCapHeight = if version < 2 then 0 else read_short b in
+  let sxHeight = if version < 2 then 0 else pdf_unit unitsPerEm (read_short b) in
+  let sCapHeight = if version < 2 then 0 else pdf_unit unitsPerEm (read_short b) in
     (sTypoAscender, sTypoDescender, sCapHeight, sxHeight, xAvgCharWidth)
 
 let read_post_table b =
@@ -173,7 +176,7 @@ let calculate_limits subset =
   if subset = [] then (0, 255) else
     extremes (sort compare subset)
 
-let calculate_stemv () = 80
+let calculate_stemv () = 0
 
 let read_hhea_table b =
   discard_bytes b 34;
@@ -190,9 +193,6 @@ let unicode_codepoint_of_pdfcode encoding_table glyphlist_table p =
     hd (Hashtbl.find glyphlist_table (Hashtbl.find encoding_table p))
   with
     Not_found -> 0
-
-let pdf_unit unitsPerEm x =
-  int_of_float (float_of_int x *. 1000. /. float_of_int unitsPerEm)
 
 let calculate_widths unitsPerEm encoding firstchar lastchar subset (cmapdata : (int, int) Hashtbl.t) (hmtxdata : int array) =
   if lastchar < firstchar then failwith "lastchar < firschar" else
@@ -215,8 +215,8 @@ let calculate_widths unitsPerEm encoding firstchar lastchar subset (cmapdata : (
              pdf_unit unitsPerEm width
        with e -> if !dbg then Printf.printf "no width for %i\n" code; 0)
 
-let calculate_maxwidth hmtxdata =
-  hd (sort (fun a b -> compare b a) (Array.to_list hmtxdata))
+let calculate_maxwidth unitsPerEm hmtxdata =
+  pdf_unit unitsPerEm (hd (sort (fun a b -> compare b a) (Array.to_list hmtxdata)))
 
 let parse ?(subset=[]) data ~encoding =
   let subset = map fst subset in
@@ -240,6 +240,24 @@ let parse ?(subset=[]) data ~encoding =
             tag (string_of_tag tag) checkSum offset ttlength;
             tables =| (tag, checkSum, offset, ttlength);
         done;
+          let headoffset, headlength =
+            match keep (function (t, _, _, _) -> string_of_tag t = "head") !tables with
+            | (_, _, o, l)::_ -> o, l
+            | [] -> raise (Pdf.PDFError "No maxp table found in TrueType font")
+          in
+            let b = mk_b (i32toi headoffset) in
+              discard_bytes b 18;
+              let unitsPerEm = read_ushort b in
+              discard_bytes b 16;
+              let minx = pdf_unit unitsPerEm (read_fword b) in
+              let miny = pdf_unit unitsPerEm (read_fword b) in
+              let maxx = pdf_unit unitsPerEm (read_fword b) in
+              let maxy = pdf_unit unitsPerEm (read_fword b) in
+              discard_bytes b 6;
+              let indexToLocFormat = read_short b in
+              let _ (*glyphDataFormat*) = read_short b in
+                if !dbg then Printf.printf "head table: indexToLocFormat is %i\n" indexToLocFormat;
+                if !dbg then Printf.printf "box %i %i %i %i\n" minx miny maxx maxy;
         let os2 =
           match keep (function (t, _, _, _) -> string_of_tag t = "OS/2") !tables with
           | (_, _, o, l)::_ -> Some (o, l)
@@ -248,7 +266,7 @@ let parse ?(subset=[]) data ~encoding =
         let ascent, descent, capheight, xheight, avgwidth =
           match os2 with
           | None -> raise (Pdf.PDFError "No os/2 table found in truetype font")
-          | Some (o, l) -> let b = mk_b (i32toi o) in read_os2_table b (i32toi l)
+          | Some (o, l) -> let b = mk_b (i32toi o) in read_os2_table unitsPerEm b (i32toi l)
         in
         let italicangle =
           match keep (function (t, _, _, _) -> string_of_tag t = "post") !tables with
@@ -299,24 +317,7 @@ let parse ?(subset=[]) data ~encoding =
             let major, minor = read_fixed b in
             let numGlyphs = read_ushort b in
               if !dbg then Printf.printf "maxp table version %i.%i: This font has %i glyphs\n" major minor numGlyphs;
-          let headoffset, headlength =
-            match keep (function (t, _, _, _) -> string_of_tag t = "head") !tables with
-            | (_, _, o, l)::_ -> o, l
-            | [] -> raise (Pdf.PDFError "No maxp table found in TrueType font")
-          in
-            let b = mk_b (i32toi headoffset) in
-              discard_bytes b 18;
-              let unitsPerEm = read_ushort b in
-              discard_bytes b 16;
-              let minx = read_fword b in
-              let miny = read_fword b in
-              let maxx = read_fword b in
-              let maxy = read_fword b in
-              discard_bytes b 6;
-              let indexToLocFormat = read_short b in
-              let _ (*glyphDataFormat*) = read_short b in
-                if !dbg then Printf.printf "head table: indexToLocFormat is %i\n" indexToLocFormat;
-                if !dbg then Printf.printf "box %i %i %i %i\n" minx miny maxx maxy;
+
           let locaoffset, localength =
             match keep (function (t, _, _, _) -> string_of_tag t = "loca") !tables with
             | (_, _, o, l)::_ -> o, l
@@ -335,7 +336,7 @@ let parse ?(subset=[]) data ~encoding =
               | [] -> raise (Pdf.PDFError "No hmtx table found in TrueType font")
             in
             let widths = calculate_widths unitsPerEm encoding firstchar lastchar subset !glyphcodes hmtxdata in
-            let maxwidth = calculate_maxwidth hmtxdata in
+            let maxwidth = calculate_maxwidth unitsPerEm hmtxdata in
             let stemv = calculate_stemv () in
             let b = mk_b (i32toi locaoffset) in
             let offsets = read_loca_table indexToLocFormat numGlyphs b in
