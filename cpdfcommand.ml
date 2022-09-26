@@ -449,7 +449,7 @@ type args =
    mutable was_decrypted_with_owner : bool;
    mutable creator : string option;
    mutable producer : string option;
-   mutable embedfonts : bool;
+   mutable embedstd14 : string option;
    mutable extract_text_font_size : float option;
    mutable padwith : string option;
    mutable alsosetxml : bool;
@@ -571,7 +571,7 @@ let args =
    was_decrypted_with_owner = false;
    producer = None;
    creator = None;
-   embedfonts = true;
+   embedstd14 = None;
    extract_text_font_size = None;
    padwith = None;
    alsosetxml = false;
@@ -680,7 +680,7 @@ let reset_arguments () =
   args.labelprefix <- None;
   args.labelstartval <- 1;
   args.labelsprogress <- false;
-  args.embedfonts <- true;
+  args.embedstd14 <- None;
   args.extract_text_font_size <- None;
   args.padwith <- None;
   args.alsosetxml <- false;
@@ -1571,8 +1571,8 @@ let setsqueezelogto s =
 let setstayonerror () =
   set stay_on_error
 
-let setnoembedfont () =
-  args.embedfonts <- false
+let setembedstd14 s =
+  args.embedstd14 <- Some s
 
 let sethardbox box =
   detect_duplicate_op (HardBox box);
@@ -2043,9 +2043,9 @@ and specs =
    ("-font-ttf",
       Arg.String setfontttf,
       " Load a TrueType font");
-   ("-no-embed-font",
-      Arg.Unit setnoembedfont,
-      " Do not embed fonts");
+   ("-embed-std14",
+      Arg.String setembedstd14,
+      " Embed standard 14 fonts");
    ("-color",
       Arg.String setcolor,
       " Set the color");
@@ -3721,7 +3721,7 @@ let go () =
               write_pdf false
                 (Cpdfaddtext.addtexts
                    ?embedinfo args.linewidth args.outline args.fast args.fontname
-                   font args.embedfonts args.bates args.batespad args.color args.position
+                   font false (*args.embedstd14*) args.bates args.batespad args.color args.position
                    args.linespacing args.fontsize args.underneath text range
                    () args.relative_to_cropbox args.opacity
                    args.justification args.midline args.topline filename
