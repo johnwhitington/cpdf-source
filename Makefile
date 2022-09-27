@@ -3,10 +3,10 @@ NONDOC = cpdfyojson cpdfxmlm cpdfutil
 
 DOC = cpdfunicodedata cpdferror cpdfdebug cpdfjson cpdfstrftime cpdfcoord \
       cpdfattach cpdfpagespec cpdfposition cpdfpresent cpdfmetadata \
-      cpdfbookmarks cpdfpage cpdftruetype cpdfembed cpdfaddtext cpdfimage \
-      cpdffont cpdftype cpdfpad cpdfocg cpdfsqueeze cpdfdraft cpdfspot \
-      cpdfpagelabels cpdfcreate cpdfannot cpdfxobject cpdfimpose cpdftweak \
-      cpdftexttopdf cpdftoc cpdfcommand
+      cpdfbookmarks cpdfpage cpdftruetype cpdfremovetext cpdfextracttext \
+      cpdfembed cpdfaddtext cpdfimage cpdffont cpdftype cpdfpad cpdfocg \
+      cpdfsqueeze cpdfdraft cpdfspot cpdfpagelabels cpdfcreate cpdfannot \
+      cpdfxobject cpdfimpose cpdftweak cpdftexttopdf cpdftoc cpdfcommand
 
 MODS = $(NONDOC) $(DOC)
 

@@ -3757,7 +3757,7 @@ let go () =
   | Some RemoveText ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-          write_pdf false (Cpdfaddtext.removetext range pdf)
+          write_pdf false (Cpdfremovetext.removetext range pdf)
   | Some AddRectangle ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
@@ -3881,7 +3881,7 @@ let go () =
   | Some ExtractText ->
       let pdf = get_single_pdf args.op true in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-          let text = Cpdfaddtext.extract_text args.extract_text_font_size pdf range in
+          let text = Cpdfextracttext.extract_text args.extract_text_font_size pdf range in
             begin match args.out with
             | File filename ->
                 let fh = open_out_bin filename in
@@ -3948,7 +3948,7 @@ let go () =
   | Some RemoveAllText ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-        write_pdf false (Cpdfaddtext.remove_all_text range pdf)
+        write_pdf false (Cpdfremovetext.remove_all_text range pdf)
   | Some ShowBoxes ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in

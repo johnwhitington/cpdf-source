@@ -56,12 +56,3 @@ val addrectangle :
     float ->
     Cpdfposition.position ->
     bool -> bool -> int list -> Pdf.t -> Pdf.t
-
-(** Remove text added by Cpdfaddtext from the given pages. *)
-val removetext : int list -> Pdf.t -> Pdf.t
-
-(** Extract text *)
-val extract_text : float option -> Pdf.t -> int list -> string 
-
-(** Remove all text from the given pages *)
-val remove_all_text : int list -> Pdf.t -> Pdf.t 
