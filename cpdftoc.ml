@@ -111,7 +111,6 @@ let typeset_table_of_contents ?embedinfo ~font ~fontsize ~title ~bookmark pdf =
           (cminx +. margin, (pmaxx -. cmaxx) +. margin, cminy +. margin, (pmaxy -. cmaxy) +. margin)
     in
     let codepoints = map fst (list_of_hashtbl used) in
-    Printf.printf "%i codes used\n" (length codepoints);
     let font =
       match embedinfo with
       | None -> font
