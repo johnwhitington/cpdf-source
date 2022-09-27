@@ -3047,6 +3047,14 @@ let warn_prerotate range pdf =
 let prerotate range pdf =
   Cpdfpage.upright ~fast:args.fast range pdf
 
+let embed_font pdf =
+  match args.font with
+  | StandardFont f -> Some (Pdftext.StandardFont (f, args.fontencoding)), None
+  | OtherFont f -> None, None (* it's in fontname *)
+  | FontToEmbed fontfile ->
+      Some (Cpdfembed.embed_truetype pdf ~fontfile ~fontname:args.fontname ~codepoints:[] ~encoding:args.fontencoding),
+      Some (pdf, fontfile, args.fontname, args.fontencoding)
+
 (* Main function *)
 let go () =
   match args.op with
@@ -3712,14 +3720,7 @@ let go () =
   | Some (AddText text) ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-          let font, embedinfo =
-            match args.font with
-            | StandardFont f -> Some (Pdftext.StandardFont (f, args.fontencoding)), None
-            | OtherFont f -> None, None (* it's in fontname *)
-            | FontToEmbed fontfile ->
-                Some (Cpdfembed.embed_truetype pdf ~fontfile ~fontname:args.fontname ~codepoints:[] ~encoding:args.fontencoding),
-                Some (pdf, fontfile, args.fontname, args.fontencoding)
-          in
+          let font, embedinfo = embed_font pdf in
             warn_prerotate range pdf;
             let pdf =
               if args.prerotate then prerotate range pdf else pdf
@@ -3981,30 +3982,14 @@ let go () =
         Cpdffont.print_font_table pdf fontname args.copyfontpage
   | Some TableOfContents ->
       let pdf = get_single_pdf args.op false in
-      let font, embedinfo =
-        match args.font with
-        | StandardFont f -> (Pdftext.StandardFont (f, args.fontencoding), None)
-        | FontToEmbed fontfile ->
-            Cpdfembed.embed_truetype pdf ~fontfile ~fontname:args.fontname ~codepoints:[] ~encoding:args.fontencoding,
-            (Some (pdf, fontfile, args.fontname, args.fontencoding))
-        | _ -> error "TOC: not a standard or embedded font"
-      in
-      let pdf = Cpdftoc.typeset_table_of_contents ?embedinfo ~font ~fontsize:args.fontsize ~title:args.toc_title ~bookmark:args.toc_bookmark pdf in
+      let font, embedinfo = embed_font pdf in
+      let pdf = Cpdftoc.typeset_table_of_contents ?embedinfo ~font:(unopt font) ~fontsize:args.fontsize ~title:args.toc_title ~bookmark:args.toc_bookmark pdf in
         write_pdf false pdf
   | Some (Typeset filename) ->
       let text = Pdfio.bytes_of_input_channel (open_in filename) in
       let pdf = Pdf.empty () in
-      let font, embedinfo =
-        match args.font with
-        | StandardFont f -> (Pdftext.StandardFont (f, args.fontencoding), None)
-        | FontToEmbed fontfile ->
-            Cpdfembed.embed_truetype pdf ~fontfile ~fontname:args.fontname ~codepoints:[] ~encoding:args.fontencoding,
-            (Some (pdf, fontfile, args.fontname, args.fontencoding))
-        | _ -> error "text to PDF: not a standard or embedded font"
-      in
-      let pdf =
-        Cpdftexttopdf.typeset ?embedinfo ~papersize:args.createpdf_pagesize ~font ~fontsize:args.fontsize text
-      in
+      let font, embedinfo = embed_font pdf in
+      let pdf = Cpdftexttopdf.typeset ?embedinfo ~papersize:args.createpdf_pagesize ~font:(unopt font) ~fontsize:args.fontsize text in
         write_pdf false pdf
 
 (* Advise the user if a combination of command line flags makes little sense,
