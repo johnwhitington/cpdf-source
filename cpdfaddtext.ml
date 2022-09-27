@@ -171,12 +171,8 @@ let rec string_of_encoding = function
   | Pdftext.WinAnsiEncoding -> "WinAnsiEncoding"
   | _ -> error "unknown encoding"
 
-let make_font embed encoding fontname =
-  Pdf.Dictionary
-    [("/Type", Pdf.Name "/Font");
-     ("/Subtype", Pdf.Name "/TrueType");
-     ("/Encoding", Pdf.Name ("/" ^ string_of_encoding encoding));
-     ("/BaseFont", Pdf.Name ("/" ^ fontname))]
+let make_font embed pdf font =
+  Pdf.Indirect (Pdftext.write_font pdf font)
 
 let extract_page_text only_fontsize pdf _ page =
   let text_extractor = ref None in
@@ -401,9 +397,9 @@ let addtext
           in
             let newresources =
               match font with
-              | Some (Pdftext.StandardFont _) ->
+              | Some (Pdftext.StandardFont _ as font) ->
                   let newfontdict =
-                    Pdf.add_dict_entry fontdict unique_fontname (make_font embed encoding fontname)
+                    Pdf.add_dict_entry fontdict unique_fontname (make_font embed pdf font)
                   in
                     Pdf.add_dict_entry resources' "/Font" newfontdict
               | Some f ->
@@ -491,8 +487,8 @@ let
   let realfontname = ref fontname in
   let fontpdfobj =
     match font with
-    | Some (StandardFont (f, encoding)) ->
-        make_font embed encoding (Pdftext.string_of_standard_font f)
+    | Some (StandardFont _ as font) ->
+        make_font embed pdf font
     | Some f ->
         begin match Hashtbl.find glob_pdfobjnum fontname with
         | exception Not_found ->
