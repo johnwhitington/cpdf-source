@@ -3049,7 +3049,21 @@ let prerotate range pdf =
 
 let embed_font pdf =
   match args.font with
-  | StandardFont f -> Some (Pdftext.StandardFont (f, args.fontencoding)), None
+  | StandardFont f ->
+      (* FIXME proper error handling *)
+      begin match args.embedstd14 with
+      | Some dirname -> 
+        let fontfile, fontname =
+          let filename = hd (List.assoc f fontnames) in
+            Printf.printf "%s %s\n" (Filename.concat dirname filename) (Filename.remove_extension filename);
+            Pdfio.bytes_of_string (contents_of_file (Filename.concat dirname filename)),
+            Filename.remove_extension filename
+        in
+          let font = Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints:[] ~encoding:args.fontencoding in
+            Some font, Some (pdf, fontfile, args.fontname, args.fontencoding)
+      | None -> 
+          Some (Pdftext.StandardFont (f, args.fontencoding)), None
+      end
   | OtherFont f -> None, None (* it's in fontname *)
   | FontToEmbed fontfile ->
       Some (Cpdfembed.embed_truetype pdf ~fontfile ~fontname:args.fontname ~codepoints:[] ~encoding:args.fontencoding),
