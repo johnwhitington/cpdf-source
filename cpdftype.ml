@@ -174,7 +174,7 @@ let paginate tmargin bmargin papersize i =
 
 let make_resources fontobjnums =
   Pdf.Dictionary
-    [("/Font", Pdf.Dictionary (map (fun fo -> ("/F" ^ string_of_int fo, Pdf.Indirect fo)) fontobjnums))]
+    [("/Font", Pdf.Dictionary (map (fun fo -> ("/F" ^ string_of_int fo, Pdf.Indirect fo)) (setify fontobjnums)))]
 
 let make_annotations annots =
   if annots = [] then Pdf.Dictionary [] else
