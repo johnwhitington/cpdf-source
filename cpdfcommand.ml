@@ -19,6 +19,22 @@ let initial_file_size = ref 0
 let empty = Pdf.empty ()
 let emptypage = Pdfpage.blankpage Pdfpaper.a4
 
+let fontnames =
+  [(Pdftext.TimesRoman, ["NimbusRoman-Regular.ttf"]);
+   (Pdftext.TimesBold, ["NimbusRoman-Bold.ttf"]);
+   (Pdftext.TimesItalic, ["NimbusRoman-Italic.ttf"]);
+   (Pdftext.TimesBoldItalic, ["NimbusRoman-BoldItalic.ttf"]);
+   (Pdftext.Helvetica, ["NimbusSans-Regular.ttf"]);
+   (Pdftext.HelveticaBold, ["NimbusSans-Bold.ttf"]);
+   (Pdftext.HelveticaOblique, ["NimbusSans-Italic.ttf"]);
+   (Pdftext.HelveticaBoldOblique, ["NimbusSans-BoldItalic.ttf"]);
+   (Pdftext.Courier, ["NimbusMonoPS-Regular.ttf"]);
+   (Pdftext.CourierBold, ["NimbusMonoPS-Bold.ttf"]);
+   (Pdftext.CourierOblique, ["NimbusMonoPS-Italic.ttf"]);
+   (Pdftext.CourierBoldOblique, ["NimbusMonoPS-BoldItalic.ttf"]);
+   (Pdftext.Symbol, ["StandardSymbolsPS.ttf"]);
+   (Pdftext.ZapfDingbats, ["D050000L.ttf"])]
+
 (* Wrap up the file reading functions to exit with code 1 when an encryption
 problem occurs. This happens when object streams are in an encrypted document
 and so it can't be read without the right password... The existing error
@@ -384,7 +400,7 @@ type args =
    mutable fontname : string;
    mutable fontencoding : Pdftext.encoding;
    mutable fontsize : float;
-   mutable fontttfmore : bool;
+   mutable embedstd14 : string option;
    mutable color : Cpdfaddtext.color;
    mutable opacity : float;
    mutable position : Cpdfposition.position;
@@ -449,7 +465,6 @@ type args =
    mutable was_decrypted_with_owner : bool;
    mutable creator : string option;
    mutable producer : string option;
-   mutable embedstd14 : string option;
    mutable extract_text_font_size : float option;
    mutable padwith : string option;
    mutable alsosetxml : bool;
@@ -506,7 +521,6 @@ let args =
    fontname = "Times-Roman";
    fontsize = 12.;
    fontencoding = Pdftext.WinAnsiEncoding;
-   fontttfmore = false;
    color = Cpdfaddtext.RGB (0., 0., 0.);
    opacity = 1.;
    position = Cpdfposition.TopLeft 100.;
@@ -628,7 +642,6 @@ let reset_arguments () =
   args.fontname <- "Times-Roman";
   args.fontsize <- 12.;
   args.fontencoding <- Pdftext.WinAnsiEncoding;
-  args.fontttfmore <- false;
   args.color <- Cpdfaddtext.RGB (0., 0., 0.);
   args.opacity <- 1.;
   args.position <- Cpdfposition.TopLeft 100.;
@@ -1718,9 +1731,6 @@ let setnowarnrotate () =
 let setfontttf s =
   args.font <- FontToEmbed (Pdfio.bytes_of_string (contents_of_file s));
   args.fontname <- Filename.remove_extension (Filename.basename s)
-
-let setfontttfmore () =
-  args.fontttfmore <- true
 
 let setfontttfencoding s =
   args.fontencoding <-
