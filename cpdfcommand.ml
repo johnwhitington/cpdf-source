@@ -3053,14 +3053,17 @@ let embed_font pdf =
       (* FIXME proper error handling *)
       begin match args.embedstd14 with
       | Some dirname -> 
-        let fontfile, fontname =
+        begin try
+          let fontfile, fontname =
           let filename = hd (List.assoc f fontnames) in
-            Printf.printf "%s %s\n" (Filename.concat dirname filename) (Filename.remove_extension filename);
             Pdfio.bytes_of_string (contents_of_file (Filename.concat dirname filename)),
             Filename.remove_extension filename
-        in
+          in
           let font = Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints:[] ~encoding:args.fontencoding in
             Some font, Some (pdf, fontfile, fontname, args.fontencoding)
+        with
+          e -> error (Printf.sprintf "Can't load font for embedding: %s\n" (Printexc.to_string e))
+        end
       | None -> 
           Some (Pdftext.StandardFont (f, args.fontencoding)), None
       end
