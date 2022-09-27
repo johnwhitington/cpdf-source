@@ -172,44 +172,11 @@ let rec string_of_encoding = function
   | _ -> error "unknown encoding"
 
 let make_font embed encoding fontname =
-  let font = unopt (Pdftext.standard_font_of_name ("/" ^ fontname)) in
-  let header, width_data, _, chars_and_widths = Pdfstandard14.afm_data font in
-    let widths = extract_widths (list_of_hashtbl chars_and_widths) in
-    let flags = Pdfstandard14.flags_of_standard_font font in
-    let fontbbox = extract_fontbbox header "FontBBox" in
-    let italicangle = extract_num header "ItalicAngle" in
-    let ascent = try extract_num header "Ascender" with _ -> Pdf.Integer 0 in
-    let descent = try extract_num header "Descender" with _ -> Pdf.Integer 0 in
-    let capheight = try extract_num header "CapHeight" with _ -> Pdf.Integer 0 in
-    let stemv = Pdfstandard14.stemv_of_standard_font font in
-      let fontdescriptor =
-        Pdf.Dictionary
-          [("/Type", Pdf.Name "/FontDescriptor");
-           ("/FontName", Pdf.Name ("/" ^ fontname));
-           ("/Flags", Pdf.Integer flags);
-           ("/FontBBox", Pdf.Array fontbbox);
-           ("/ItalicAngle", italicangle);
-           ("/Ascent", ascent);
-           ("/Descent", descent);
-           ("/CapHeight", capheight);
-           ("/StemV", Pdf.Integer stemv)]
-      in
-        if embed then
-          Pdf.Dictionary
-            [("/Type", Pdf.Name "/Font");
-             ("/Subtype", Pdf.Name "/Type1");
-             ("/BaseFont", Pdf.Name ("/" ^ fontname));          
-             ("/Encoding", Pdf.Name "/WinAnsiEncoding");
-             ("/FirstChar", Pdf.Integer 0);
-             ("/LastChar", Pdf.Integer 255);
-             ("/Widths", Pdf.Array (map (fun x -> Pdf.Integer x) widths));
-             ("/FontDescriptor", fontdescriptor)]
-        else
-          Pdf.Dictionary
-            [("/Type", Pdf.Name "/Font");
-             ("/Subtype", Pdf.Name "/Type1");
-             ("/Encoding", Pdf.Name "/WinAnsiEncoding");
-             ("/BaseFont", Pdf.Name ("/" ^ fontname))]
+  Pdf.Dictionary
+    [("/Type", Pdf.Name "/Font");
+     ("/Subtype", Pdf.Name "/TrueType");
+     ("/Encoding", Pdf.Name ("/" ^ string_of_encoding encoding));
+     ("/BaseFont", Pdf.Name ("/" ^ fontname))]
 
 let extract_page_text only_fontsize pdf _ page =
   let text_extractor = ref None in
