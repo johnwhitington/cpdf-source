@@ -3721,9 +3721,9 @@ let go () =
               write_pdf false
                 (Cpdfaddtext.addtexts
                    ?embedinfo args.linewidth args.outline args.fast args.fontname
-                   font false (*args.embedstd14*) args.bates args.batespad args.color args.position
+                   font args.bates args.batespad args.color args.position
                    args.linespacing args.fontsize args.underneath text range
-                   () args.relative_to_cropbox args.opacity
+                   args.relative_to_cropbox args.opacity
                    args.justification args.midline args.topline filename
                    args.extract_text_font_size args.coord ~raw:(args.encoding = Raw) pdf)
   | Some RemoveText ->

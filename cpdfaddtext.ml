@@ -23,7 +23,9 @@ let charcodes_of_utf8 font s =
         (fun codepoint ->
            match extractor codepoint with
            | Some cc -> Some cc
-           | None -> Printf.eprintf "Warning: character not found in font for unicode codepoint 0x%X\n" codepoint; None)
+           | None ->
+               Printf.eprintf "Warning: character not found in font for unicode codepoint 0x%X\n" codepoint;
+               None)
         codepoints
     in
     implode (map char_of_int charcodes)
@@ -150,8 +152,8 @@ let extract_widths chars_and_widths =
       (ilist 0 255)
 
 (* For finding the height for URL links, we try to find the Cap Height for the
-   font. For now, this will only work for built-in fonts. We fall back to using
-   the font size alone if we cannot get the cap height. *)
+   font. We fall back to using the font size alone if we cannot get the cap
+   height. *)
 let cap_height font fontname =
   match font with
   | Some (Pdftext.SimpleFont {fontdescriptor = Some {capheight}}) ->
@@ -164,15 +166,6 @@ let cap_height font fontname =
             Some (match capheight with Pdf.Integer i -> float_of_int i | Pdf.Real r -> r | _ -> 0.)
       with
         _ -> None
-
-let rec string_of_encoding = function
-  | Pdftext.StandardEncoding -> "StandardEncoding"
-  | Pdftext.MacRomanEncoding -> "MacRomanEncoding"
-  | Pdftext.WinAnsiEncoding -> "WinAnsiEncoding"
-  | _ -> error "unknown encoding"
-
-let make_font embed pdf font =
-  Pdf.Indirect (Pdftext.write_font pdf font)
 
 let extract_page_text only_fontsize pdf _ page =
   let text_extractor = ref None in
@@ -270,10 +263,9 @@ let pagelabel pdf num =
     (Pdfpagelabels.complete (Pdfpagelabels.read pdf))
 
 let addtext
-  time lines linewidth outline fast colour fontname encoding embed bates batespad fontsize
-  (font : Pdftext.font option)
-  fontpdfobj underneath position hoffset voffset text pages orientation cropbox opacity
-  justification filename extract_text_font_size shift pdf
+  time lines linewidth outline fast colour fontname encoding bates batespad
+  fontsize font fontpdfobj underneath position hoffset voffset text pages
+  cropbox opacity justification filename extract_text_font_size shift pdf
 =
   let endpage = Pdfpage.endpage pdf in
   let replace_pairs pdf filename bates batespad num page =
@@ -399,7 +391,7 @@ let addtext
               match font with
               | Some (Pdftext.StandardFont _ as font) ->
                   let newfontdict =
-                    Pdf.add_dict_entry fontdict unique_fontname (make_font embed pdf font)
+                    Pdf.add_dict_entry fontdict unique_fontname (Pdf.Indirect (Pdftext.write_font pdf font))
                   in
                     Pdf.add_dict_entry resources' "/Font" newfontdict
               | Some f ->
@@ -478,17 +470,18 @@ let unescape_string s =
   implode (unescape_chars [] (explode s))
 
 let
-  addtexts ?embedinfo linewidth outline fast fontname (font : Pdftext.font option) embed bates batespad colour position linespacing
-  fontsize underneath text pages orientation cropbox opacity justification
-  midline topline filename extract_text_font_size shift ?(raw=false) pdf
+  addtexts ?embedinfo linewidth outline fast fontname font bates batespad
+  colour position linespacing fontsize underneath text pages cropbox opacity
+  justification midline topline filename extract_text_font_size shift
+  ?(raw=false) pdf
 =
   let time = Cpdfstrftime.current_time () in
   if pages = [] then error "addtexts: empty page range" else
   let realfontname = ref fontname in
   let fontpdfobj =
     match font with
-    | Some (StandardFont _ as font) ->
-        make_font embed pdf font
+    | Some (Pdftext.StandardFont _ as font) ->
+        Pdf.Indirect (Pdftext.write_font pdf font)
     | Some f ->
         begin match Hashtbl.find glob_pdfobjnum fontname with
         | exception Not_found ->
@@ -572,9 +565,8 @@ let
                  let voff, hoff = !voffset, 0. in
                    pdf :=
                      addtext time lines linewidth outline fast colour !realfontname encoding
-                     embed bates batespad fontsize font fontpdfobj underneath position hoff voff line
-                     pages orientation cropbox opacity justification filename
-                     extract_text_font_size shift
+                     bates batespad fontsize font fontpdfobj underneath position hoff voff line
+                     pages cropbox opacity justification filename extract_text_font_size shift
                      !pdf;
                    voffset := !voffset +. (linespacing *. fontsize))
               lines;
