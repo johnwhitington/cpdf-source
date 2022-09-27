@@ -3060,7 +3060,7 @@ let embed_font pdf =
             Filename.remove_extension filename
         in
           let font = Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints:[] ~encoding:args.fontencoding in
-            Some font, Some (pdf, fontfile, args.fontname, args.fontencoding)
+            Some font, Some (pdf, fontfile, fontname, args.fontencoding)
       | None -> 
           Some (Pdftext.StandardFont (f, args.fontencoding)), None
       end
