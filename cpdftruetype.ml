@@ -23,6 +23,9 @@ type t =
 
 let dbg = ref false (* text-based debug *)
 
+let required_tables =
+  ["head"; "hhea"; "loca"; "cmap"; "maxp"; "cvt "; "glyf"; "prep"; "hmtx"; "fpgm"]
+
 (* 32-bit signed fixed-point number (16.16) returned as two ints *)
 let read_fixed b =
   let a = getval_31 b 16 in
