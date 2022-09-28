@@ -44,10 +44,6 @@ let read_byte b = getval_31 b 8
 (* Signed short *)
 let read_short b = sign_extend 16 (getval_31 b 16)
 
-(* fword *)
-let read_fword = read_short
-let read_ufword = read_ushort
-
 (* f2dot14 - 2 bit signed integer part, 14 bit unsigned fraction *)
 let read_f2dot14 b =
   let v = read_ushort b in
@@ -239,6 +235,18 @@ let remove_unneeded_tables tables d =
     (fun (tag, checkSum, offset, ttlength) -> 
        Printf.printf "tag = %li = %s, offset = %li\n" tag (string_of_tag tag) offset)
     (rev !tablesout);
+  (* Reduce offsets by the reduction in header table size *)
+  let header_size_reduction = i32ofi (16 * (Array.length tables - length !tablesout)) in
+  let tables =
+    map
+      (fun (tag, checksum, offset, ttlength) -> (tag, checksum, i32sub offset header_size_reduction, ttlength))
+      (rev !tablesout)
+  in
+  Printf.printf "***Reduced:\n";
+  iter
+    (fun (tag, checkSum, offset, ttlength) -> 
+       Printf.printf "tag = %li = %s, offset = %li\n" tag (string_of_tag tag) offset)
+    tables;
   (* Write new header *)
   (* Copy tables from original file based on their offset and imputed length *)
   d
@@ -274,10 +282,10 @@ let parse ?(subset=[]) data ~encoding =
               discard_bytes b 18;
               let unitsPerEm = read_ushort b in
               discard_bytes b 16;
-              let minx = pdf_unit unitsPerEm (read_fword b) in
-              let miny = pdf_unit unitsPerEm (read_fword b) in
-              let maxx = pdf_unit unitsPerEm (read_fword b) in
-              let maxy = pdf_unit unitsPerEm (read_fword b) in
+              let minx = pdf_unit unitsPerEm (read_short b) in
+              let miny = pdf_unit unitsPerEm (read_short b) in
+              let maxx = pdf_unit unitsPerEm (read_short b) in
+              let maxy = pdf_unit unitsPerEm (read_short b) in
               discard_bytes b 6;
               let indexToLocFormat = read_short b in
               let _ (*glyphDataFormat*) = read_short b in
