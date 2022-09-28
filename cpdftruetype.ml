@@ -193,7 +193,7 @@ let unicode_codepoint_of_pdfcode encoding_table glyphlist_table p =
   with
     Not_found -> 0
 
-let calculate_widths unitsPerEm encoding firstchar lastchar subset (cmapdata : (int, int) Hashtbl.t) (hmtxdata : int array) =
+let calculate_widths unitsPerEm encoding firstchar lastchar subset cmapdata hmtxdata =
   if lastchar < firstchar then failwith "lastchar < firschar" else
   if !dbg then List.iter (fun (a, b) -> Printf.printf "%i -> %i\n" a b) (sort compare (list_of_hashtbl cmapdata));
   let encoding_table = Pdftext.table_of_encoding encoding in
@@ -217,7 +217,7 @@ let calculate_widths unitsPerEm encoding firstchar lastchar subset (cmapdata : (
 let calculate_maxwidth unitsPerEm hmtxdata =
   pdf_unit unitsPerEm (hd (sort (fun a b -> compare b a) (Array.to_list hmtxdata)))
 
-let remove_unneeded_tables tables d =
+let remove_unneeded_tables major minor tables d =
   let tables = Array.of_list (sort (fun (_, _, o, _) (_, _, o', _) -> compare o o') tables) in
   let tablesout = ref [] in
   let cut = ref 0l in
@@ -247,9 +247,12 @@ let remove_unneeded_tables tables d =
     (fun (tag, checkSum, offset, ttlength) -> 
        Printf.printf "tag = %li = %s, offset = %li\n" tag (string_of_tag tag) offset)
     tables;
-  (* Write new header *)
-  (* Copy tables from original file based on their offset and imputed length *)
-  d
+  let bs = make_write_bitstream () in
+  putval bs 16 (i32ofi major);
+  putval bs 16 (i32ofi minor);
+  (* write table header *)
+  (* write each table *)
+  bytes_of_write_bitstream bs
 
 let parse ?(subset=[]) data ~encoding =
   let subset = map fst subset in
@@ -347,9 +350,9 @@ let parse ?(subset=[]) data ~encoding =
             | [] -> raise (Pdf.PDFError "No maxp table found in TrueType font")
           in
           let b = mk_b (i32toi maxpoffset) in
-            let major, minor = read_fixed b in
+            let mmajor, mminor = read_fixed b in
             let numGlyphs = read_ushort b in
-              if !dbg then Printf.printf "maxp table version %i.%i: This font has %i glyphs\n" major minor numGlyphs;
+              if !dbg then Printf.printf "maxp table version %i.%i: This font has %i glyphs\n" mmajor mminor numGlyphs;
 
           let locaoffset, localength =
             match keep (function (t, _, _, _) -> string_of_tag t = "loca") !tables with
@@ -373,7 +376,7 @@ let parse ?(subset=[]) data ~encoding =
             let stemv = calculate_stemv () in
             let b = mk_b (i32toi locaoffset) in
             let offsets = read_loca_table indexToLocFormat numGlyphs b in
-            let subset = remove_unneeded_tables !tables data in
+            let subset = remove_unneeded_tables major minor !tables data in
               {flags; minx; miny; maxx; maxy; italicangle; ascent; descent;
               capheight; stemv; xheight; avgwidth; maxwidth; firstchar; lastchar;
               widths; subset}
