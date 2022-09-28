@@ -221,6 +221,28 @@ let calculate_widths unitsPerEm encoding firstchar lastchar subset (cmapdata : (
 let calculate_maxwidth unitsPerEm hmtxdata =
   pdf_unit unitsPerEm (hd (sort (fun a b -> compare b a) (Array.to_list hmtxdata)))
 
+let remove_unneeded_tables tables d =
+  let tables = Array.of_list (sort (fun (_, _, o, _) (_, _, o', _) -> compare o o') tables) in
+  let tablesout = ref [] in
+  let cut = ref 0l in
+  Printf.printf "***Input:\n";
+  Array.iteri
+    (fun i (tag, checkSum, offset, ttlength) ->
+      Printf.printf "tag = %li = %s, offset = %li\n" tag (string_of_tag tag) offset;
+      if mem (string_of_tag tag) required_tables then
+         tablesout := (tag, checkSum, i32sub offset !cut, ttlength)::!tablesout
+      else
+        cut := i32add !cut (match tables.(i + 1) with (_, _, offset', _) -> i32sub offset' offset))
+    tables;
+  Printf.printf "***Output:\n";
+  iter
+    (fun (tag, checkSum, offset, ttlength) -> 
+       Printf.printf "tag = %li = %s, offset = %li\n" tag (string_of_tag tag) offset)
+    (rev !tablesout);
+  (* Write new header *)
+  (* Copy tables from original file based on their offset and imputed length *)
+  d
+
 let parse ?(subset=[]) data ~encoding =
   let subset = map fst subset in
   let mk_b byte_offset = bitbytes_of_input (let i = input_of_bytes data in i.seek_in byte_offset; i) in
@@ -343,7 +365,7 @@ let parse ?(subset=[]) data ~encoding =
             let stemv = calculate_stemv () in
             let b = mk_b (i32toi locaoffset) in
             let offsets = read_loca_table indexToLocFormat numGlyphs b in
-            let subset = data in
+            let subset = remove_unneeded_tables !tables data in
               {flags; minx; miny; maxx; maxy; italicangle; ascent; descent;
               capheight; stemv; xheight; avgwidth; maxwidth; firstchar; lastchar;
               widths; subset}
