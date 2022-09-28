@@ -3746,14 +3746,17 @@ let go () =
               | (InFile inname, _, _, _, _, _)::_ -> inname
               | _ -> ""
             in
-              write_pdf false
-                (Cpdfaddtext.addtexts
-                   ?embedinfo args.linewidth args.outline args.fast args.fontname
-                   font args.bates args.batespad args.color args.position
-                   args.linespacing args.fontsize args.underneath text range
-                   args.relative_to_cropbox args.opacity
-                   args.justification args.midline args.topline filename
-                   args.extract_text_font_size args.coord ~raw:(args.encoding = Raw) pdf)
+              let fontname =
+                match embedinfo with Some (_, _, fontname, _) -> fontname | None -> args.fontname
+              in
+                write_pdf false
+                  (Cpdfaddtext.addtexts
+                     ?embedinfo args.linewidth args.outline args.fast fontname
+                     font args.bates args.batespad args.color args.position
+                     args.linespacing args.fontsize args.underneath text range
+                     args.relative_to_cropbox args.opacity
+                     args.justification args.midline args.topline filename
+                     args.extract_text_font_size args.coord ~raw:(args.encoding = Raw) pdf)
   | Some RemoveText ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
