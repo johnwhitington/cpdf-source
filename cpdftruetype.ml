@@ -221,10 +221,10 @@ let remove_unneeded_tables major minor tables data =
   let tables = Array.of_list (sort (fun (_, _, o, _) (_, _, o', _) -> compare o o') tables) in
   let tablesout = ref [] in
   let cut = ref 0l in
-  Printf.printf "***Input:\n";
+  if !dbg then Printf.printf "***Input:\n";
   Array.iteri
     (fun i (tag, checkSum, offset, ttlength) ->
-      Printf.printf "tag = %li = %s, offset = %li\n" tag (string_of_tag tag) offset;
+      if !dbg then Printf.printf "tag = %li = %s, offset = %li\n" tag (string_of_tag tag) offset;
       if mem (string_of_tag tag) required_tables then
          tablesout := (tag, checkSum, i32sub offset !cut, ttlength)::!tablesout
       else
@@ -238,10 +238,10 @@ let remove_unneeded_tables major minor tables data =
         (fun (tag, checksum, offset, ttlength) -> (tag, checksum, i32sub offset header_size_reduction, ttlength))
         (rev !tablesout))
   in
-  Printf.printf "***Reduced:\n";
+  if !dbg then Printf.printf "***Reduced:\n";
   Array.iter
     (fun (tag, checkSum, offset, ttlength) -> 
-       Printf.printf "tag = %li = %s, offset = %li\n" tag (string_of_tag tag) offset)
+      if !dbg then Printf.printf "tag = %li = %s, offset = %li\n" tag (string_of_tag tag) offset)
     newtables;
   let bs = make_write_bitstream () in
   (* table directory *)
@@ -283,7 +283,7 @@ let remove_unneeded_tables major minor tables data =
   let mk_b byte_offset = bitbytes_of_input (let i = input_of_bytes data in i.seek_in byte_offset; i) in
   Array.iter
     (fun (tag, _, _, _) ->
-      Printf.printf "Writing %s table\n" (string_of_tag tag);
+      if !dbg then Printf.printf "Writing %s table\n" (string_of_tag tag);
       match findtag tag with
       | (og_off, Some len) ->
           let b = mk_b (i32toi og_off) in
@@ -296,7 +296,7 @@ let remove_unneeded_tables major minor tables data =
               _ -> ())
     newtables;
   let bytes = bytes_of_write_bitstream bs in
-    Printf.printf "Made subset font of length %i bytes\n" (bytes_size bytes);
+    if !dbg then Printf.printf "Made subset font of length %i bytes\n" (bytes_size bytes);
     (*let o = open_out_bin "fontout.ttf" in
       output_string o (string_of_bytes bytes);
       close_out o;*)
