@@ -217,7 +217,7 @@ let calculate_widths unitsPerEm encoding firstchar lastchar subset cmapdata hmtx
 let calculate_maxwidth unitsPerEm hmtxdata =
   pdf_unit unitsPerEm (hd (sort (fun a b -> compare b a) (Array.to_list hmtxdata)))
 
-let remove_unneeded_tables major minor tables d =
+let remove_unneeded_tables major minor tables data =
   let tables = Array.of_list (sort (fun (_, _, o, _) (_, _, o', _) -> compare o o') tables) in
   let tablesout = ref [] in
   let cut = ref 0l in
@@ -230,29 +230,78 @@ let remove_unneeded_tables major minor tables d =
       else
         cut := i32add !cut (match tables.(i + 1) with (_, _, offset', _) -> i32sub offset' offset))
     tables;
-  Printf.printf "***Output:\n";
-  iter
-    (fun (tag, checkSum, offset, ttlength) -> 
-       Printf.printf "tag = %li = %s, offset = %li\n" tag (string_of_tag tag) offset)
-    (rev !tablesout);
   (* Reduce offsets by the reduction in header table size *)
   let header_size_reduction = i32ofi (16 * (Array.length tables - length !tablesout)) in
-  let tables =
-    map
-      (fun (tag, checksum, offset, ttlength) -> (tag, checksum, i32sub offset header_size_reduction, ttlength))
-      (rev !tablesout)
+  let newtables =
+    Array.of_list
+      (map
+        (fun (tag, checksum, offset, ttlength) -> (tag, checksum, i32sub offset header_size_reduction, ttlength))
+        (rev !tablesout))
   in
   Printf.printf "***Reduced:\n";
-  iter
+  Array.iter
     (fun (tag, checkSum, offset, ttlength) -> 
        Printf.printf "tag = %li = %s, offset = %li\n" tag (string_of_tag tag) offset)
-    tables;
+    newtables;
   let bs = make_write_bitstream () in
+  (* table directory *)
+  let numtables = Array.length newtables in
   putval bs 16 (i32ofi major);
   putval bs 16 (i32ofi minor);
-  (* write table header *)
-  (* write each table *)
-  bytes_of_write_bitstream bs
+  putval bs 16 (i32ofi numtables); (* numTables *)
+  putval bs 16 (i32ofi (16 * pow2lt numtables)); (* searchRange *)
+  putval bs 16 (i32ofi (int_of_float (log (float_of_int (pow2lt numtables))))); (* entrySelector *)
+  putval bs 16 (i32ofi (numtables * 16)); (* rangeShift *)
+  Array.iter
+    (fun (tag, checkSum, offset, ttlength) ->
+      putval bs 32 tag;
+      putval bs 32 checkSum;
+      putval bs 32 offset;
+      putval bs 32 ttlength)
+    newtables;
+  (* find each table in original data, calculating the length from the next offset.
+     On the last, copy until we run out of data *)
+  let findtag tag =
+    let off = ref 0l in
+    let len = ref None in
+    begin try
+      for x = 0 to Array.length tables - 1 do
+        let t, _, offset, _ = tables.(x) in
+          if t = tag then
+            begin
+              off := offset; 
+              if x < Array.length tables - 1 then
+                len := Some (let _, _, nextoffset, _ = tables.(x + 1) in i32sub nextoffset offset);
+              raise Exit
+            end
+      done;
+      failwith "failed to find table"
+    with
+      Exit -> (!off, !len)
+    end
+  in
+  let mk_b byte_offset = bitbytes_of_input (let i = input_of_bytes data in i.seek_in byte_offset; i) in
+  Array.iter
+    (fun (tag, _, _, _) ->
+      Printf.printf "Writing %s table\n" (string_of_tag tag);
+      match findtag tag with
+      | (og_off, Some len) ->
+          let b = mk_b (i32toi og_off) in
+            for x = 0 to i32toi len - 1 do putval bs 8 (getval_32 b 8) done
+      | (og_off, None) ->
+          let b = mk_b (i32toi og_off) in
+            try
+              while true do putval bs 8 (getval_32 b 8) done
+            with
+              _ -> ())
+    newtables;
+  let bytes = bytes_of_write_bitstream bs in
+    Printf.printf "Made subset font of length %i bytes\n" (bytes_size bytes);
+    let o = open_out_bin "fontout.ttf" in
+      output_string o (string_of_bytes bytes);
+      close_out o;
+
+    bytes
 
 let parse ?(subset=[]) data ~encoding =
   let subset = map fst subset in
@@ -353,7 +402,6 @@ let parse ?(subset=[]) data ~encoding =
             let mmajor, mminor = read_fixed b in
             let numGlyphs = read_ushort b in
               if !dbg then Printf.printf "maxp table version %i.%i: This font has %i glyphs\n" mmajor mminor numGlyphs;
-
           let locaoffset, localength =
             match keep (function (t, _, _, _) -> string_of_tag t = "loca") !tables with
             | (_, _, o, l)::_ -> o, l
