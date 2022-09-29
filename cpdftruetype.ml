@@ -297,10 +297,9 @@ let remove_unneeded_tables major minor tables data =
     newtables;
   let bytes = bytes_of_write_bitstream bs in
     Printf.printf "Made subset font of length %i bytes\n" (bytes_size bytes);
-    let o = open_out_bin "fontout.ttf" in
+    (*let o = open_out_bin "fontout.ttf" in
       output_string o (string_of_bytes bytes);
-      close_out o;
-
+      close_out o;*)
     bytes
 
 let parse ?(subset=[]) data ~encoding =
