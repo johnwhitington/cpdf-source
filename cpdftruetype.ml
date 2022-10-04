@@ -131,22 +131,28 @@ let read_loca_table indexToLocFormat numGlyphs b =
   | 1 -> Array.init (numGlyphs + 1) (function _ -> read_ulong b)
   | _ -> raise (Pdf.PDFError "Unknown indexToLocFormat in read_loca_table")
 
-let write_loca_table subset encoding cmap indexToLocFormat bs arr =
-  let missing_char_glyph_loca = arr.(0) in
-  let is_included u =
-    true
-  in
-    Array.iter
-     (fun x ->
+let write_loca_table subset cmap indexToLocFormat bs arr =
+  let locnums = null_hash () in
+    iter
+      (fun u ->
+         let locnum = Hashtbl.find cmap u in
+           Printf.printf "Unicode %i is at location number %i\n" u locnum;
+           Hashtbl.add locnums locnum ())
+      subset;
+    let last = ref 0l in
+    Array.iteri
+     (fun i x ->
         match indexToLocFormat with
         | 0 ->
-            if is_included x
-              then putval bs 16 (i32div x 2l)
-              else putval bs 16 (i32div missing_char_glyph_loca 2l)
+            begin match Hashtbl.find locnums i with
+            | () -> putval bs 16 (i32div x 2l); last := i32div x 2l
+            | exception Not_found -> putval bs 16 !last
+            end
         | 1 ->
-            if is_included x
-              then putval bs 32 x
-              else putval bs 32 missing_char_glyph_loca
+            begin match Hashtbl.find locnums i with
+            | () -> putval bs 32 x; last := x
+            | exception Not_found -> putval bs 32 !last
+            end
         | _ -> raise (Pdf.PDFError "Unknown indexToLocFormat in write_loca_table"))
      arr
 
@@ -294,7 +300,7 @@ let remove_unneeded_tables major minor tables indexToLocFormat subset encoding c
     (fun (tag, _, _, _) ->
       if !dbg then Printf.printf "Writing %s table\n" (string_of_tag tag);
       if string_of_tag tag = "loca" then
-        write_loca_table subset encoding cmap indexToLocFormat bs loca
+        write_loca_table subset cmap indexToLocFormat bs loca
       else
         match findtag tag with
         | (og_off, Some len) ->
