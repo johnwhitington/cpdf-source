@@ -1,24 +1,6 @@
 (* Embed a font *)
 open Pdfutil
 
-(* For the first stage of our embedder, we are only allowing Latin, and we don't actually subset.
-  a) Get a list of Unicode codepoints;
-  b) See which of them are in the glyph list;
-  c) See which of those are in (StdEncoding|MacRomanEncoding|WinAnsiEncoding), and get their codes;
-  d) Build a font to do just those;
-  (* FUTURE *)
-  2) Allow characters not in the standard encodings by builing one or more secondary subsets *)
-
-(*let () =
-  iter
-    (fun u ->
-       Printf.printf "unicode %i --> " u;
-       let glyphname = Hashtbl.find glyphlist_table [u] in
-         Printf.printf "glyph name %s --> " glyphname;
-         let pdfcode = Hashtbl.find encoding_table glyphname in
-         Printf.printf "pdf code %i\n" pdfcode)
-    unicodepoints *)
-
 let pdfcode_of_unicode_codepoint encoding_table glyphlist_table u =
   try
     Some (Hashtbl.find encoding_table (Hashtbl.find glyphlist_table [u]))
