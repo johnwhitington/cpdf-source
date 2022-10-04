@@ -356,7 +356,7 @@ let remove_unneeded_tables major minor tables indexToLocFormat subset encoding c
       close_out o;
     bytes
 
-let parse ?(subset=[]) data ~encoding =
+let parse ?(subset=[]) data encoding =
   let mk_b byte_offset = bitbytes_of_input (let i = input_of_bytes data in i.seek_in byte_offset; i) in
   let b = mk_b 0 in
   let major, minor = read_fixed b in

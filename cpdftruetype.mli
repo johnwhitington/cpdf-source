@@ -1,4 +1,6 @@
-(* Parse a TrueType font *)
+(* Parse and subset TrueType fonts *)
+
+(* The type of a single parsed font, including everything needed to build a PDF font. *)
 type t =
   {flags : int;
    minx : int;
@@ -19,7 +21,9 @@ type t =
    subset : Pdfio.bytes;
    tounicode : Pdfio.bytes option}
 
-(* Parse the font, given the list of Unicode codepoints required for the subset
-   and optionally their PDF codepoint too. Returns the information required for
-   embedding this font in a PDF. *)
-val parse : ?subset:int list -> Pdfio.bytes -> encoding:Pdftext.encoding -> t list
+(* Parse the given TrueType font file. It will return one or more fonts. The
+   first, a plain Latin font in the given encoding. Others are for the
+   additional characters in the font. For subsetting, or to return a full
+   font-pack, you should supply a subset (a list of unicode codepoints whose
+   corresponding glyphs are required). *)
+val parse : ?subset:int list -> Pdfio.bytes -> Pdftext.encoding -> t list

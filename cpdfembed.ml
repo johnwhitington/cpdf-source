@@ -48,7 +48,7 @@ let embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding =
   let accepted_unicodepoints =
     calc_accepted_unicodepoints encoding_table glyphlist_table codepoints
   in
-  let f = hd (Cpdftruetype.parse ~subset:accepted_unicodepoints fontfile ~encoding) in
+  let f = hd (Cpdftruetype.parse ~subset:accepted_unicodepoints fontfile encoding) in
   let name_1 = basename () in
   let module TT = Cpdftruetype in
   let fontfile =
