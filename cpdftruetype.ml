@@ -19,9 +19,45 @@ type t =
    firstchar : int;
    lastchar : int;
    widths : int array;
-   subset : Pdfio.bytes}
+   subset : Pdfio.bytes;
+   tounicode : Pdfio.bytes option}
 
 let dbg = ref false (* text-based debug *)
+
+let tounicode_preamble =
+"/CIDInit /ProcSet findresource begin\n\
+12 dict begin\n\
+begincmap\n\
+/CIDSystemInfo <<\n\
+  /Registry (Adobe)\n\
+  /Ordering (UCS)\n\
+  /Supplement 0\n\
+>> def\n\
+/CMapName /Adobe-Identity-UCS def\n\
+/CMapType 2 def\n\
+1 begincodespacerange\n\
+<00><FF>\n\
+endcodespacerange\n"
+
+let tounicode_postamble =
+"endbfrange\n\
+endcmap\n\
+CMapName currentdict /CMap defineresource pop\n\
+end\n\
+end\n"
+
+let tounicode_map (s : int) (us : int list) =
+  let b = Buffer.create 1024 in
+  let s = ref s in
+  Buffer.add_string b (Printf.sprintf "%i beginbfrange\n" (length us));
+  iter
+    (fun u -> Buffer.add_string b (Printf.sprintf "<%02x><%02x><%04x>" !s !s u);
+     s := !s + 1)
+    us;
+  Buffer.contents b
+
+let tounicode s us =
+  bytes_of_string (tounicode_preamble ^ tounicode_map s us ^ tounicode_postamble)
 
 let required_tables =
   ["head"; "hhea"; "loca"; "cmap"; "maxp"; "cvt "; "glyf"; "prep"; "hmtx"; "fpgm"]
@@ -441,6 +477,6 @@ let parse ?(subset=[]) data ~encoding =
             let b = mk_b (i32toi locaoffset) in
             let loca = read_loca_table indexToLocFormat numGlyphs b in
             let subset = remove_unneeded_tables major minor !tables indexToLocFormat subset encoding !glyphcodes loca data in
-              {flags; minx; miny; maxx; maxy; italicangle; ascent; descent;
+              [{flags; minx; miny; maxx; maxy; italicangle; ascent; descent;
               capheight; stemv; xheight; avgwidth; maxwidth; firstchar; lastchar;
-              widths; subset}
+              widths; subset; tounicode = None}]

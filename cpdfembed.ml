@@ -6,9 +6,7 @@ open Pdfutil
   b) See which of them are in the glyph list;
   c) See which of those are in (StdEncoding|MacRomanEncoding|WinAnsiEncoding), and get their codes;
   d) Build a font to do just those;
-  e) We put missing glyph or similar for any character not in the encoding
   (* FUTURE *)
-  1) Actually subset the font to save size
   2) Allow characters not in the standard encodings by builing one or more secondary subsets *)
 
 (*let () =
@@ -50,7 +48,7 @@ let embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding =
   let accepted_unicodepoints =
     calc_accepted_unicodepoints encoding_table glyphlist_table codepoints
   in
-  let f = Cpdftruetype.parse ~subset:accepted_unicodepoints fontfile ~encoding in
+  let f = hd (Cpdftruetype.parse ~subset:accepted_unicodepoints fontfile ~encoding) in
   let name_1 = basename () in
   let module TT = Cpdftruetype in
   let fontfile =
