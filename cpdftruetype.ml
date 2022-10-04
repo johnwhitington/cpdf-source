@@ -23,8 +23,9 @@ type t =
 
 let dbg = ref false (* text-based debug *)
 
+(* Don't list loca or glyf here, because we do them manually... *)
 let required_tables =
-  ["head"; "hhea"; "loca"; "cmap"; "maxp"; "cvt "; "glyf"; "prep"; "hmtx"; "fpgm"]
+  ["head"; "hhea"; "cmap"; "maxp"; "cvt "; "prep"; "hmtx"; "fpgm"]
 
 (* 32-bit signed fixed-point number (16.16) returned as two ints *)
 let read_fixed b =
@@ -130,7 +131,7 @@ let read_loca_table indexToLocFormat numGlyphs b =
     for x = 1 to Array.length arr - 1 do
       if arr.(x) = arr.(x - 1) then arr.(x - 1) <- -1l
     done;
-    if arr <> [||] then arr.(Array.length arr - 1) <- -1l
+    (*if arr <> [||] then arr.(Array.length arr - 1) <- -1l*)
   in
     match indexToLocFormat with
     | 0 ->
@@ -140,6 +141,19 @@ let read_loca_table indexToLocFormat numGlyphs b =
         let arr = Array.init (numGlyphs + 1) (function _ -> read_ulong b) in
           fix_empties arr; arr
     | _ -> raise (Pdf.PDFError "Unknown indexToLocFormat in read_loca_table")
+
+let write_loca_table indexToLocFormat bs arr =
+  let arr = Array.copy arr in
+  for x = 1 to Array.length arr do
+    if arr.(x) = -1l then arr.(x) <- arr.(x - 1)
+  done;
+  Array.iter
+   (fun x ->
+      match indexToLocFormat with
+      | 0 -> putval bs 16 (i32div x 2l)
+      | 1 -> putval bs 32 x
+      | _ -> raise (Pdf.PDFError "Unknown indexToLocFormat in write_loca_table"))
+   arr
 
 let read_os2_table unitsPerEm b blength =
   let version = read_ushort b in
