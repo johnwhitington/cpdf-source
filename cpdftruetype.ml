@@ -23,9 +23,8 @@ type t =
 
 let dbg = ref false (* text-based debug *)
 
-(* Don't list loca or glyf here, because we do them manually... *)
 let required_tables =
-  ["head"; "hhea"; "cmap"; "maxp"; "cvt "; "prep"; "hmtx"; "fpgm"]
+  ["head"; "hhea"; "loca"; "cmap"; "maxp"; "cvt "; "glyf"; "prep"; "hmtx"; "fpgm"]
 
 (* 32-bit signed fixed-point number (16.16) returned as two ints *)
 let read_fixed b =
@@ -127,31 +126,21 @@ let read_encoding_table fmt length version b =
   | n -> raise (Pdf.PDFError "read_encoding_table: format %i not known\n%!")
 
 let read_loca_table indexToLocFormat numGlyphs b =
-  let fix_empties arr =
-    for x = 1 to Array.length arr - 1 do
-      if arr.(x) = arr.(x - 1) then arr.(x - 1) <- -1l
-    done;
-    (*if arr <> [||] then arr.(Array.length arr - 1) <- -1l*)
-  in
-    match indexToLocFormat with
-    | 0 ->
-        let arr = Array.init (numGlyphs + 1) (function _ -> i32ofi (read_ushort b * 2)) in
-          fix_empties arr; arr
-    | 1 ->
-        let arr = Array.init (numGlyphs + 1) (function _ -> read_ulong b) in
-          fix_empties arr; arr
-    | _ -> raise (Pdf.PDFError "Unknown indexToLocFormat in read_loca_table")
+  match indexToLocFormat with
+  | 0 -> Array.init (numGlyphs + 1) (function _ -> i32ofi (read_ushort b * 2))
+  | 1 -> Array.init (numGlyphs + 1) (function _ -> read_ulong b)
+  | _ -> raise (Pdf.PDFError "Unknown indexToLocFormat in read_loca_table")
 
 let write_loca_table indexToLocFormat bs arr =
-  let arr = Array.copy arr in
-  for x = 1 to Array.length arr do
-    if arr.(x) = -1l then arr.(x) <- arr.(x - 1)
-  done;
   Array.iter
    (fun x ->
       match indexToLocFormat with
-      | 0 -> putval bs 16 (i32div x 2l)
-      | 1 -> putval bs 32 x
+      | 0 ->
+          Printf.printf "%li\n" (i32div x 2l);
+          putval bs 16 (i32div x 2l)
+      | 1 ->
+          Printf.printf "%li\n" x;
+          putval bs 32 x
       | _ -> raise (Pdf.PDFError "Unknown indexToLocFormat in write_loca_table"))
    arr
 
@@ -231,7 +220,7 @@ let calculate_widths unitsPerEm encoding firstchar lastchar subset cmapdata hmtx
 let calculate_maxwidth unitsPerEm hmtxdata =
   pdf_unit unitsPerEm (hd (sort (fun a b -> compare b a) (Array.to_list hmtxdata)))
 
-let remove_unneeded_tables major minor tables data =
+let remove_unneeded_tables major minor tables indexToLocFormat loca data =
   let tables = Array.of_list (sort (fun (_, _, o, _) (_, _, o', _) -> compare o o') tables) in
   let tablesout = ref [] in
   let cut = ref 0l in
@@ -298,22 +287,25 @@ let remove_unneeded_tables major minor tables data =
   Array.iter
     (fun (tag, _, _, _) ->
       if !dbg then Printf.printf "Writing %s table\n" (string_of_tag tag);
-      match findtag tag with
-      | (og_off, Some len) ->
-          let b = mk_b (i32toi og_off) in
-            for x = 0 to i32toi len - 1 do putval bs 8 (getval_32 b 8) done
-      | (og_off, None) ->
-          let b = mk_b (i32toi og_off) in
-            try
-              while true do putval bs 8 (getval_32 b 8) done
-            with
-              _ -> ())
+      if string_of_tag tag = "loca" then
+        write_loca_table indexToLocFormat bs loca
+      else
+        match findtag tag with
+        | (og_off, Some len) ->
+            let b = mk_b (i32toi og_off) in
+              for x = 0 to i32toi len - 1 do putval bs 8 (getval_32 b 8) done
+        | (og_off, None) ->
+            let b = mk_b (i32toi og_off) in
+              try
+                while true do putval bs 8 (getval_32 b 8) done
+              with
+                _ -> ())
     newtables;
   let bytes = bytes_of_write_bitstream bs in
     if !dbg then Printf.printf "Made subset font of length %i bytes\n" (bytes_size bytes);
-    (*let o = open_out_bin "fontout.ttf" in
+    let o = open_out_bin "fontout.ttf" in
       output_string o (string_of_bytes bytes);
-      close_out o;*)
+      close_out o;
     bytes
 
 let parse ?(subset=[]) data ~encoding =
@@ -436,8 +428,8 @@ let parse ?(subset=[]) data ~encoding =
             let maxwidth = calculate_maxwidth unitsPerEm hmtxdata in
             let stemv = calculate_stemv () in
             let b = mk_b (i32toi locaoffset) in
-            let offsets = read_loca_table indexToLocFormat numGlyphs b in
-            let subset = remove_unneeded_tables major minor !tables data in
+            let loca = read_loca_table indexToLocFormat numGlyphs b in
+            let subset = remove_unneeded_tables major minor !tables indexToLocFormat loca data in
               {flags; minx; miny; maxx; maxy; italicangle; ascent; descent;
               capheight; stemv; xheight; avgwidth; maxwidth; firstchar; lastchar;
               widths; subset}
