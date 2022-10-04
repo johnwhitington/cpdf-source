@@ -201,7 +201,7 @@ let extract_fontfile pagenumber fontname pdf =
     match Pdf.lookup_direct pdf "/Font" resources with
     | None -> failwith "extract_fontfile: font not found"
     | Some fonts ->
-        let fontobj = Pdf.lookup_fail "no /Fonts" pdf fontname fonts in
+        let fontobj = Pdf.lookup_fail ("no font " ^ fontname) pdf fontname fonts in
           let font = Pdftext.read_font pdf fontobj in
             match font with
             | Pdftext.CIDKeyedFont (_, {Pdftext.cid_fontdescriptor = {Pdftext.fontfile = Some fontfile}}, _)

@@ -299,9 +299,9 @@ let remove_unneeded_tables major minor tables indexToLocFormat subset encoding c
   Array.iter
     (fun (tag, _, _, _) ->
       if !dbg then Printf.printf "Writing %s table\n" (string_of_tag tag);
-      if string_of_tag tag = "loca" then
+      (*if string_of_tag tag = "loca" then
         write_loca_table subset cmap indexToLocFormat bs loca
-      else
+      else*)
         match findtag tag with
         | (og_off, Some len) ->
             let b = mk_b (i32toi og_off) in
