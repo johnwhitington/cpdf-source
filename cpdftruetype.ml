@@ -131,18 +131,24 @@ let read_loca_table indexToLocFormat numGlyphs b =
   | 1 -> Array.init (numGlyphs + 1) (function _ -> read_ulong b)
   | _ -> raise (Pdf.PDFError "Unknown indexToLocFormat in read_loca_table")
 
-let write_loca_table indexToLocFormat bs arr =
-  Array.iter
-   (fun x ->
-      match indexToLocFormat with
-      | 0 ->
-          Printf.printf "%li\n" (i32div x 2l);
-          putval bs 16 (i32div x 2l)
-      | 1 ->
-          Printf.printf "%li\n" x;
-          putval bs 32 x
-      | _ -> raise (Pdf.PDFError "Unknown indexToLocFormat in write_loca_table"))
-   arr
+let write_loca_table subset encoding cmap indexToLocFormat bs arr =
+  let missing_char_glyph_loca = arr.(0) in
+  let is_included u =
+    true
+  in
+    Array.iter
+     (fun x ->
+        match indexToLocFormat with
+        | 0 ->
+            if is_included x
+              then putval bs 16 (i32div x 2l)
+              else putval bs 16 (i32div missing_char_glyph_loca 2l)
+        | 1 ->
+            if is_included x
+              then putval bs 32 x
+              else putval bs 32 missing_char_glyph_loca
+        | _ -> raise (Pdf.PDFError "Unknown indexToLocFormat in write_loca_table"))
+     arr
 
 let read_os2_table unitsPerEm b blength =
   let version = read_ushort b in
@@ -198,7 +204,7 @@ let unicode_codepoint_of_pdfcode encoding_table glyphlist_table p =
 
 let calculate_widths unitsPerEm encoding firstchar lastchar subset cmapdata hmtxdata =
   if lastchar < firstchar then failwith "lastchar < firschar" else
-  if !dbg then List.iter (fun (a, b) -> Printf.printf "%i -> %i\n" a b) (sort compare (list_of_hashtbl cmapdata));
+  (*if !dbg then List.iter (fun (a, b) -> Printf.printf "%i -> %i\n" a b) (sort compare (list_of_hashtbl cmapdata));*)
   let encoding_table = Pdftext.table_of_encoding encoding in
   let glyphlist_table = Pdfglyphlist.glyph_hashes () in
   Array.init
@@ -220,7 +226,7 @@ let calculate_widths unitsPerEm encoding firstchar lastchar subset cmapdata hmtx
 let calculate_maxwidth unitsPerEm hmtxdata =
   pdf_unit unitsPerEm (hd (sort (fun a b -> compare b a) (Array.to_list hmtxdata)))
 
-let remove_unneeded_tables major minor tables indexToLocFormat loca data =
+let remove_unneeded_tables major minor tables indexToLocFormat subset encoding cmap loca data =
   let tables = Array.of_list (sort (fun (_, _, o, _) (_, _, o', _) -> compare o o') tables) in
   let tablesout = ref [] in
   let cut = ref 0l in
@@ -288,7 +294,7 @@ let remove_unneeded_tables major minor tables indexToLocFormat loca data =
     (fun (tag, _, _, _) ->
       if !dbg then Printf.printf "Writing %s table\n" (string_of_tag tag);
       if string_of_tag tag = "loca" then
-        write_loca_table indexToLocFormat bs loca
+        write_loca_table subset encoding cmap indexToLocFormat bs loca
       else
         match findtag tag with
         | (og_off, Some len) ->
@@ -309,7 +315,6 @@ let remove_unneeded_tables major minor tables indexToLocFormat loca data =
     bytes
 
 let parse ?(subset=[]) data ~encoding =
-  let subset = map fst subset in
   let mk_b byte_offset = bitbytes_of_input (let i = input_of_bytes data in i.seek_in byte_offset; i) in
   let b = mk_b 0 in
   let major, minor = read_fixed b in
@@ -429,7 +434,7 @@ let parse ?(subset=[]) data ~encoding =
             let stemv = calculate_stemv () in
             let b = mk_b (i32toi locaoffset) in
             let loca = read_loca_table indexToLocFormat numGlyphs b in
-            let subset = remove_unneeded_tables major minor !tables indexToLocFormat loca data in
+            let subset = remove_unneeded_tables major minor !tables indexToLocFormat subset encoding !glyphcodes loca data in
               {flags; minx; miny; maxx; maxy; italicangle; ascent; descent;
               capheight; stemv; xheight; avgwidth; maxwidth; firstchar; lastchar;
               widths; subset}

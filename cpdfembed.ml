@@ -48,11 +48,7 @@ let embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding =
   let glyphlist_table = Pdfglyphlist.reverse_glyph_hashes () in 
   let encoding_table = Pdftext.reverse_table_of_encoding encoding in
   let accepted_unicodepoints =
-    map
-      (fun u ->
-        (u, pdfcode_of_unicode_codepoint encoding_table glyphlist_table u))
-      (calc_accepted_unicodepoints
-         encoding_table glyphlist_table codepoints)
+    calc_accepted_unicodepoints encoding_table glyphlist_table codepoints
   in
   let f = Cpdftruetype.parse ~subset:accepted_unicodepoints fontfile ~encoding in
   let name_1 = basename () in
