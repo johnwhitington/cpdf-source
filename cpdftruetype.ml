@@ -193,8 +193,27 @@ let write_loca_table subset cmap indexToLocFormat bs arr =
         | _ -> raise (Pdf.PDFError "Unknown indexToLocFormat in write_loca_table"))
      arr
 
-let write_glyf_table subset cmap bs =
-  ()
+(* Write the notdef glyf, and any others in the subset *)
+let write_glyf_table subset cmap bs mk_b glyfoffset loca =
+  let locnums = null_hash () in
+    Hashtbl.add locnums 0 (); (* .notdef *)
+    iter
+      (fun u ->
+         let locnum = Hashtbl.find cmap u in
+           Printf.printf "Unicode %i is at location number %i\n" u locnum;
+           Hashtbl.add locnums locnum ())
+      subset;
+  let locnums = sort compare (map fst (list_of_hashtbl locnums)) in
+    Printf.printf "We want glyfs for locations: "; iter (Printf.printf "%i ") locnums; Printf.printf "\n";
+    let byteranges = map (fun x -> (loca.(x), loca.(x + 1))) locnums in
+    Printf.printf "Byte ranges: "; iter (fun (a, b) -> Printf.printf "(%li, %li) " a b) byteranges; Printf.printf "\n";
+  let write_bytes bs a l =
+    let b = mk_b (i32toi (i32add glyfoffset a)) in
+      for x = 1 to i32toi l do putval bs 8 (getval_32 b 8) done
+  in
+    iter
+      (fun (a, b) -> write_bytes bs a (i32sub b a))
+      byteranges
 
 let read_os2_table unitsPerEm b blength =
   let version = read_ushort b in
@@ -272,7 +291,7 @@ let calculate_widths unitsPerEm encoding firstchar lastchar subset cmapdata hmtx
 let calculate_maxwidth unitsPerEm hmtxdata =
   pdf_unit unitsPerEm (hd (sort (fun a b -> compare b a) (Array.to_list hmtxdata)))
 
-let remove_unneeded_tables major minor tables indexToLocFormat subset encoding cmap loca data =
+let remove_unneeded_tables major minor tables indexToLocFormat subset encoding cmap loca mk_b glyfoffset data =
   let tables = Array.of_list (sort (fun (_, _, o, _) (_, _, o', _) -> compare o o') tables) in
   let tablesout = ref [] in
   let cut = ref 0l in
@@ -339,10 +358,10 @@ let remove_unneeded_tables major minor tables indexToLocFormat subset encoding c
   Array.iter
     (fun (tag, _, _, _) ->
       if !dbg then Printf.printf "Writing %s table\n" (string_of_tag tag);
-      if string_of_tag tag = "loca" then
+      if string_of_tag tag = "loca" && subset <> [] then
         write_loca_table subset cmap indexToLocFormat bs loca
-      else if string_of_tag tag = "glyf" then
-        write_glyf_table subset cmap bs
+      else if string_of_tag tag = "glyf" && subset <> [] then
+        write_glyf_table subset cmap bs mk_b glyfoffset loca
       else
         match findtag tag with
         | (og_off, Some len) ->
@@ -482,7 +501,12 @@ let parse ?(subset=[]) data encoding =
             let stemv = calculate_stemv () in
             let b = mk_b (i32toi locaoffset) in
             let loca = read_loca_table indexToLocFormat numGlyphs b in
-            let subset = remove_unneeded_tables major minor !tables indexToLocFormat subset encoding !glyphcodes loca data in
+            let glyfoffset, glyflength =
+              match keep (function (t, _, _, _) -> string_of_tag t = "glyf") !tables with
+              | (_, _, o, l)::_ -> o, l
+              | [] -> raise (Pdf.PDFError "No glyf table found in TrueType font")
+            in
+            let subset = remove_unneeded_tables major minor !tables indexToLocFormat subset encoding !glyphcodes loca mk_b glyfoffset data in
               [{flags; minx; miny; maxx; maxy; italicangle; ascent; descent;
               capheight; stemv; xheight; avgwidth; maxwidth; firstchar; lastchar;
               widths; subset; tounicode = None}]
