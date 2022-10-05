@@ -46,18 +46,17 @@ CMapName currentdict /CMap defineresource pop\n\
 end\n\
 end\n"
 
-let tounicode_map (s : int) (us : int list) =
+let tounicode_map s us =
   let b = Buffer.create 1024 in
   let s = ref s in
+  Buffer.add_string b tounicode_preamble;
   Buffer.add_string b (Printf.sprintf "%i beginbfrange\n" (length us));
   iter
     (fun u -> Buffer.add_string b (Printf.sprintf "<%02x><%02x><%04x>" !s !s u);
      s := !s + 1)
     us;
-  Buffer.contents b
-
-let tounicode s us =
-  bytes_of_string (tounicode_preamble ^ tounicode_map s us ^ tounicode_postamble)
+  Buffer.add_string b tounicode_postamble;
+  bytes_of_string (Buffer.contents b)
 
 let required_tables =
   ["head"; "hhea"; "loca"; "cmap"; "maxp"; "cvt "; "glyf"; "prep"; "hmtx"; "fpgm"]
@@ -191,6 +190,9 @@ let write_loca_table subset cmap indexToLocFormat bs arr =
             end
         | _ -> raise (Pdf.PDFError "Unknown indexToLocFormat in write_loca_table"))
      arr
+
+let write_glyf_table subset cmap bs =
+  ()
 
 let read_os2_table unitsPerEm b blength =
   let version = read_ushort b in
@@ -335,9 +337,11 @@ let remove_unneeded_tables major minor tables indexToLocFormat subset encoding c
   Array.iter
     (fun (tag, _, _, _) ->
       if !dbg then Printf.printf "Writing %s table\n" (string_of_tag tag);
-      (*if string_of_tag tag = "loca" then
+      if string_of_tag tag = "loca" then
         write_loca_table subset cmap indexToLocFormat bs loca
-      else*)
+      else if string_of_tag tag = "glyf" then
+        write_glyf_table subset cmap bs
+      else
         match findtag tag with
         | (og_off, Some len) ->
             let b = mk_b (i32toi og_off) in
