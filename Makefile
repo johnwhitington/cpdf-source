@@ -37,7 +37,8 @@ all : $(TARGETS)
 
 clean ::
 	rm -rf doc foo foo2 out.pdf out2.pdf foo.pdf decomp.pdf *.cmt *.cmti \
-	*.json test/*.pdf debug/*.pdf *.ps *.aux *.idx *.log *.out *.toc *.cut
+	*.json test/*.pdf debug/*.pdf *.ps *.aux *.idx *.log *.out *.toc *.cut \
+	*.ttf
 
 DOC_FILES = $(foreach x,$(DOC),$(x).mli )
 

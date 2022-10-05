@@ -2,6 +2,8 @@
 open Pdfutil
 open Pdfio
 
+(* ./cpdf -font-ttf ~/repos/pdfs/fonts/NotoSans-Bold.ttf -add-text foo hello.pdf -o out.pdf *)
+
 type t =
   {flags : int;
    minx : int;
