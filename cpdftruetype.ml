@@ -24,7 +24,7 @@ type t =
    subset : Pdfio.bytes;
    tounicode : Pdfio.bytes option}
 
-let dbg = ref false (* text-based debug *)
+let dbg = ref true (* text-based debug *)
 
 let tounicode_preamble =
 "/CIDInit /ProcSet findresource begin\n\
@@ -168,30 +168,30 @@ let read_loca_table indexToLocFormat numGlyphs b =
   | 1 -> Array.init (numGlyphs + 1) (function _ -> read_ulong b)
   | _ -> raise (Pdf.PDFError "Unknown indexToLocFormat in read_loca_table")
 
-let write_loca_table subset cmap indexToLocFormat bs arr =
+let write_loca_table subset cmap indexToLocFormat bs loca =
   let locnums = null_hash () in
+    Hashtbl.add locnums 0 (); (* .notdef *)
     iter
       (fun u ->
          let locnum = Hashtbl.find cmap u in
            Printf.printf "Unicode %i is at location number %i\n" u locnum;
            Hashtbl.add locnums locnum ())
       subset;
-    let last = ref 0l in
+    let pos = ref 0l in
+    let len = ref 0l in
     Array.iteri
-     (fun i x ->
+     (fun i _ ->
+        let position =
+          match Hashtbl.find locnums i with
+          | () -> pos := i32add !pos !len; len := 0l; let r = !pos in len := i32sub loca.(i + 1) loca.(i); r
+          | exception Not_found -> !pos
+        in
+        Printf.printf "For location %i, writing offset %li in glyph table\n" i position;
         match indexToLocFormat with
-        | 0 ->
-            begin match Hashtbl.find locnums i with
-            | () -> putval bs 16 (i32div x 2l); last := i32div x 2l
-            | exception Not_found -> putval bs 16 !last
-            end
-        | 1 ->
-            begin match Hashtbl.find locnums i with
-            | () -> putval bs 32 x; last := x
-            | exception Not_found -> putval bs 32 !last
-            end
+        | 0 -> putval bs 16 (i32div position 2l)
+        | 1 -> putval bs 32 position
         | _ -> raise (Pdf.PDFError "Unknown indexToLocFormat in write_loca_table"))
-     arr
+     loca
 
 (* Write the notdef glyf, and any others in the subset *)
 let write_glyf_table subset cmap bs mk_b glyfoffset loca =
@@ -208,6 +208,7 @@ let write_glyf_table subset cmap bs mk_b glyfoffset loca =
     let byteranges = map (fun x -> (loca.(x), loca.(x + 1))) locnums in
     Printf.printf "Byte ranges: "; iter (fun (a, b) -> Printf.printf "(%li, %li) " a b) byteranges; Printf.printf "\n";
   let write_bytes bs a l =
+    Printf.printf "glyf: write_bytes %li %li\n" a l;
     let b = mk_b (i32toi (i32add glyfoffset a)) in
       for x = 1 to i32toi l do putval bs 8 (getval_32 b 8) done
   in
@@ -354,7 +355,6 @@ let remove_unneeded_tables major minor tables indexToLocFormat subset encoding c
       Exit -> (!off, !len)
     end
   in
-  let mk_b byte_offset = bitbytes_of_input (let i = input_of_bytes data in i.seek_in byte_offset; i) in
   Array.iter
     (fun (tag, _, _, _) ->
       if !dbg then Printf.printf "Writing %s table\n" (string_of_tag tag);
