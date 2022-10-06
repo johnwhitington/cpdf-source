@@ -173,48 +173,60 @@ let write_loca_table subset cmap indexToLocFormat bs loca =
     Hashtbl.add locnums 0 (); (* .notdef *)
     iter
       (fun u ->
-         let locnum = Hashtbl.find cmap u + 1 in
-           Printf.printf "Unicode %i is at location number %i\n" u locnum;
+         let locnum = Hashtbl.find cmap u in
+           if !dbg then Printf.printf "write_loca_table: Unicode %i is at location number %i\n" u locnum;
            Hashtbl.add locnums locnum ())
       subset;
-    let pos = ref 0l in
-    let len = ref 0l in
+  let write_entry loc position =
+    match indexToLocFormat with
+    | 0 -> putval bs 16 (i32div position 2l)
+    | 1 -> putval bs 32 position
+    | _ -> raise (Pdf.PDFError "Unknown indexToLocFormat in write_loca_table")
+  in
+  let pos = ref 0l in
+  let pairs =
+    map
+      (fun loc ->
+         let len = i32sub loca.(loc + 1) loca.(loc) in
+         let r = (loc, !pos) in
+           pos := i32add !pos len;
+           r)
+      (sort compare (map fst (list_of_hashtbl locnums)))
+  in
+    let pairs = Array.of_list (pairs @ [(Array.length loca - 1, !pos)]) in
     Array.iteri
-     (fun i _ ->
-        let position =
-          match Hashtbl.find locnums i with
-          | () -> pos := i32add !pos !len; len := 0l; let r = !pos in len := i32sub loca.(i + 1) loca.(i); r
-          | exception Not_found -> !pos
-        in
-        Printf.printf "For location %i, writing offset %li in glyph table\n" i position;
-        match indexToLocFormat with
-        | 0 -> putval bs 16 (i32div position 2l)
-        | 1 -> putval bs 32 position
-        | _ -> raise (Pdf.PDFError "Unknown indexToLocFormat in write_loca_table"))
-     loca
+      (fun i (loc, off) ->
+         if i <> Array.length pairs - 1 then
+           begin
+             write_entry loc off;
+             let loc', off' = pairs.(i + 1) in
+             for x = 0 to loc' - loc - 2 do write_entry (loc + x) off' done
+           end
+         else
+           write_entry loc off)
+      pairs
 
 (* Write the notdef glyf, and any others in the subset *)
 let write_glyf_table subset cmap bs mk_b glyfoffset loca =
+  if !dbg then Printf.printf "***write_glyf_table\n";
   let locnums = null_hash () in
     Hashtbl.add locnums 0 (); (* .notdef *)
     iter
       (fun u ->
          let locnum = Hashtbl.find cmap u in
-           Printf.printf "Unicode %i is at location number %i\n" u locnum;
+         if !dbg then Printf.printf "write_glyf_table: Unicode %i is at location number %i\n" u locnum;
            Hashtbl.add locnums locnum ())
       subset;
   let locnums = sort compare (map fst (list_of_hashtbl locnums)) in
-    Printf.printf "We want glyfs for locations: "; iter (Printf.printf "%i ") locnums; Printf.printf "\n";
+  if !dbg then (Printf.printf "We want glyfs for locations: "; iter (Printf.printf "%i ") locnums; Printf.printf "\n");
     let byteranges = map (fun x -> (loca.(x), loca.(x + 1))) locnums in
-    Printf.printf "Byte ranges: "; iter (fun (a, b) -> Printf.printf "(%li, %li) " a b) byteranges; Printf.printf "\n";
+    if !dbg then (Printf.printf "Byte ranges: "; iter (fun (a, b) -> Printf.printf "(%li, %li) " a b) byteranges; Printf.printf "\n");
   let write_bytes bs a l =
-    Printf.printf "glyf: write_bytes %li %li\n" a l;
+    if !dbg then Printf.printf "glyf: write_bytes %li %li\n" a l;
     let b = mk_b (i32toi (i32add glyfoffset a)) in
       for x = 1 to i32toi l do putval bs 8 (getval_32 b 8) done
   in
-    iter
-      (fun (a, b) -> write_bytes bs a (i32sub b a))
-      byteranges
+    iter (fun (a, b) -> write_bytes bs a (i32sub b a)) byteranges
 
 let read_os2_table unitsPerEm b blength =
   let version = read_ushort b in
@@ -307,16 +319,17 @@ let remove_unneeded_tables major minor tables indexToLocFormat subset encoding c
     tables;
   (* Reduce offsets by the reduction in header table size *)
   let header_size_reduction = i32ofi (16 * (Array.length tables - length !tablesout)) in
-  let new_glyf_length =
-    let bs = make_write_bitstream () in
-      write_glyf_table subset cmap bs mk_b glyfoffset loca;
-      i32ofi (bytes_size (bytes_of_write_bitstream bs))
-  in
   let newtables =
     Array.of_list
       (map
         (fun (tag, checksum, offset, ttlength) ->
-          let ttlength = if string_of_tag tag = "glyf" then new_glyf_length else ttlength in
+          let ttlength =
+            if string_of_tag tag = "glyf" && subset <> [] then
+              let bs = make_write_bitstream () in
+                write_glyf_table subset cmap bs mk_b glyfoffset loca;
+                i32ofi (bytes_size (bytes_of_write_bitstream bs))
+            else ttlength
+          in
             (tag, checksum, i32sub offset header_size_reduction, ttlength))
         (rev !tablesout))
   in
