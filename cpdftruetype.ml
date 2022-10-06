@@ -2,7 +2,7 @@
 open Pdfutil
 open Pdfio
 
-(* ./cpdf -font-ttf ~/repos/pdfs/fonts/NotoSans-Bold.ttf -add-text foo hello.pdf -o out.pdf *)
+(* ./cpdf -font-ttf ~/repos/pdfs/fonts/NimbusRoman-Regular.ttf -add-text foo hello.pdf -o out.pdf *)
 
 type t =
   {flags : int;
@@ -24,7 +24,7 @@ type t =
    subset : Pdfio.bytes;
    tounicode : Pdfio.bytes option}
 
-let dbg = ref false (* text-based debug *)
+let dbg = ref true (* text-based debug *)
 
 let tounicode_preamble =
 "/CIDInit /ProcSet findresource begin\n\
@@ -221,12 +221,17 @@ let write_glyf_table subset cmap bs mk_b glyfoffset loca =
   if !dbg then (Printf.printf "We want glyfs for locations: "; iter (Printf.printf "%i ") locnums; Printf.printf "\n");
     let byteranges = map (fun x -> (loca.(x), loca.(x + 1))) locnums in
     if !dbg then (Printf.printf "Byte ranges: "; iter (fun (a, b) -> Printf.printf "(%li, %li) " a b) byteranges; Printf.printf "\n");
+  let len = List.fold_left i32add 0l (map (fun (a, b) -> i32sub b a) byteranges) in
+  Printf.printf "THE LENGTH is %li\n" len;
   let write_bytes bs a l =
     if !dbg then Printf.printf "glyf: write_bytes %li %li\n" a l;
     let b = mk_b (i32toi (i32add glyfoffset a)) in
       for x = 1 to i32toi l do putval bs 8 (getval_32 b 8) done
   in
-    iter (fun (a, b) -> write_bytes bs a (i32sub b a)) byteranges
+    iter (fun (a, b) -> write_bytes bs a (i32sub b a)) byteranges;
+    let padding = 4 - i32toi len mod 4 in
+    Printf.printf "padding = %i bytes\n" padding;
+    for x = 1 to padding do putval bs 8 0l done
 
 let read_os2_table unitsPerEm b blength =
   let version = read_ushort b in
@@ -319,6 +324,7 @@ let remove_unneeded_tables major minor tables indexToLocFormat subset encoding c
     tables;
   (* Reduce offsets by the reduction in header table size *)
   let header_size_reduction = i32ofi (16 * (Array.length tables - length !tablesout)) in
+  let glyf_table_size_reduction = ref 0l in
   let newtables =
     Array.of_list
       (map
@@ -327,12 +333,20 @@ let remove_unneeded_tables major minor tables indexToLocFormat subset encoding c
             if string_of_tag tag = "glyf" && subset <> [] then
               let bs = make_write_bitstream () in
                 write_glyf_table subset cmap bs mk_b glyfoffset loca;
-                i32ofi (bytes_size (bytes_of_write_bitstream bs))
+                let newlen = i32ofi (bytes_size (bytes_of_write_bitstream bs)) in
+                  glyf_table_size_reduction := i32sub ttlength newlen;
+                  newlen
             else ttlength
           in
-            (tag, checksum, i32sub offset header_size_reduction, ttlength))
+            let offset' =
+              i32sub
+                (i32sub offset header_size_reduction)
+                (if string_of_tag tag = "glyf" then 0l else !glyf_table_size_reduction)
+            in
+              (tag, checksum, offset', ttlength))
         (rev !tablesout))
   in
+  Printf.printf "glyf_table_size_reduction = %li\n" !glyf_table_size_reduction;
   if !dbg then Printf.printf "***Reduced:\n";
   Array.iter
     (fun (tag, checkSum, offset, ttlength) -> 
