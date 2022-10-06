@@ -24,7 +24,7 @@ type t =
    subset : Pdfio.bytes;
    tounicode : Pdfio.bytes option}
 
-let dbg = ref true (* text-based debug *)
+let dbg = ref false (* text-based debug *)
 
 let tounicode_preamble =
 "/CIDInit /ProcSet findresource begin\n\
@@ -173,7 +173,7 @@ let write_loca_table subset cmap indexToLocFormat bs loca =
     Hashtbl.add locnums 0 (); (* .notdef *)
     iter
       (fun u ->
-         let locnum = Hashtbl.find cmap u in
+         let locnum = Hashtbl.find cmap u + 1 in
            Printf.printf "Unicode %i is at location number %i\n" u locnum;
            Hashtbl.add locnums locnum ())
       subset;
@@ -307,10 +307,17 @@ let remove_unneeded_tables major minor tables indexToLocFormat subset encoding c
     tables;
   (* Reduce offsets by the reduction in header table size *)
   let header_size_reduction = i32ofi (16 * (Array.length tables - length !tablesout)) in
+  let new_glyf_length =
+    let bs = make_write_bitstream () in
+      write_glyf_table subset cmap bs mk_b glyfoffset loca;
+      i32ofi (bytes_size (bytes_of_write_bitstream bs))
+  in
   let newtables =
     Array.of_list
       (map
-        (fun (tag, checksum, offset, ttlength) -> (tag, checksum, i32sub offset header_size_reduction, ttlength))
+        (fun (tag, checksum, offset, ttlength) ->
+          let ttlength = if string_of_tag tag = "glyf" then new_glyf_length else ttlength in
+            (tag, checksum, i32sub offset header_size_reduction, ttlength))
         (rev !tablesout))
   in
   if !dbg then Printf.printf "***Reduced:\n";
