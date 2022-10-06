@@ -24,7 +24,7 @@ type t =
    subset : Pdfio.bytes;
    tounicode : Pdfio.bytes option}
 
-let dbg = ref true (* text-based debug *)
+let dbg = ref false (* text-based debug *)
 
 let tounicode_preamble =
 "/CIDInit /ProcSet findresource begin\n\
@@ -222,7 +222,6 @@ let write_glyf_table subset cmap bs mk_b glyfoffset loca =
     let byteranges = map (fun x -> (loca.(x), loca.(x + 1))) locnums in
     if !dbg then (Printf.printf "Byte ranges: "; iter (fun (a, b) -> Printf.printf "(%li, %li) " a b) byteranges; Printf.printf "\n");
   let len = List.fold_left i32add 0l (map (fun (a, b) -> i32sub b a) byteranges) in
-  Printf.printf "THE LENGTH is %li\n" len;
   let write_bytes bs a l =
     if !dbg then Printf.printf "glyf: write_bytes %li %li\n" a l;
     let b = mk_b (i32toi (i32add glyfoffset a)) in
@@ -230,7 +229,6 @@ let write_glyf_table subset cmap bs mk_b glyfoffset loca =
   in
     iter (fun (a, b) -> write_bytes bs a (i32sub b a)) byteranges;
     let padding = 4 - i32toi len mod 4 in
-    Printf.printf "padding = %i bytes\n" padding;
     for x = 1 to padding do putval bs 8 0l done
 
 let read_os2_table unitsPerEm b blength =
@@ -309,6 +307,9 @@ let calculate_widths unitsPerEm encoding firstchar lastchar subset cmapdata hmtx
 let calculate_maxwidth unitsPerEm hmtxdata =
   pdf_unit unitsPerEm (hd (sort (fun a b -> compare b a) (Array.to_list hmtxdata)))
 
+let padword n =
+  i32ofi (4 - i32toi n mod 4 + i32toi n)
+
 let remove_unneeded_tables major minor tables indexToLocFormat subset encoding cmap loca mk_b glyfoffset data =
   let tables = Array.of_list (sort (fun (_, _, o, _) (_, _, o', _) -> compare o o') tables) in
   let tablesout = ref [] in
@@ -334,7 +335,7 @@ let remove_unneeded_tables major minor tables indexToLocFormat subset encoding c
               let bs = make_write_bitstream () in
                 write_glyf_table subset cmap bs mk_b glyfoffset loca;
                 let newlen = i32ofi (bytes_size (bytes_of_write_bitstream bs)) in
-                  glyf_table_size_reduction := i32sub ttlength newlen;
+                  glyf_table_size_reduction := i32sub (padword ttlength) newlen;
                   newlen
             else ttlength
           in
@@ -346,7 +347,6 @@ let remove_unneeded_tables major minor tables indexToLocFormat subset encoding c
               (tag, checksum, offset', ttlength))
         (rev !tablesout))
   in
-  Printf.printf "glyf_table_size_reduction = %li\n" !glyf_table_size_reduction;
   if !dbg then Printf.printf "***Reduced:\n";
   Array.iter
     (fun (tag, checkSum, offset, ttlength) -> 
