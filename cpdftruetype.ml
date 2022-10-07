@@ -2,7 +2,7 @@
 open Pdfutil
 open Pdfio
 
-(* ./cpdf -font-ttf ~/repos/pdfs/fonts/NimbusRoman-Regular.ttf -add-text foo hello.pdf -o out.pdf *)
+(* ./cpdf -font-ttf ~/repos/pdfs/fonts/NimbusRoman-Regular.ttf -add-text 'Hello, World!' hello.pdf -o out.pdf *)
 
 type t =
   {flags : int;
@@ -24,7 +24,7 @@ type t =
    subset : Pdfio.bytes;
    tounicode : Pdfio.bytes option}
 
-let dbg = ref false (* text-based debug *)
+let dbg = ref true (* text-based debug *)
 
 let tounicode_preamble =
 "/CIDInit /ProcSet findresource begin\n\
@@ -229,7 +229,8 @@ let write_glyf_table subset cmap bs mk_b glyfoffset loca =
   in
     iter (fun (a, b) -> write_bytes bs a (i32sub b a)) byteranges;
     let padding = 4 - i32toi len mod 4 in
-    for x = 1 to padding do putval bs 8 0l done
+    for x = 1 to padding do putval bs 8 0l done;
+    len
 
 let read_os2_table unitsPerEm b blength =
   let version = read_ushort b in
@@ -284,7 +285,7 @@ let unicode_codepoint_of_pdfcode encoding_table glyphlist_table p =
     Not_found -> 0
 
 let calculate_widths unitsPerEm encoding firstchar lastchar subset cmapdata hmtxdata =
-  if lastchar < firstchar then failwith "lastchar < firschar" else
+  if lastchar < firstchar then failwith "lastchar < firstchar" else
   (*if !dbg then List.iter (fun (a, b) -> Printf.printf "%i -> %i\n" a b) (sort compare (list_of_hashtbl cmapdata));*)
   let encoding_table = Pdftext.table_of_encoding encoding in
   let glyphlist_table = Pdfglyphlist.glyph_hashes () in
@@ -292,15 +293,15 @@ let calculate_widths unitsPerEm encoding firstchar lastchar subset cmapdata hmtx
     (lastchar - firstchar + 1)
     (fun pos ->
        let code = pos + firstchar in
-       if !dbg then Printf.printf "code %i --> " code;
+       (*if !dbg then Printf.printf "code %i --> " code;*)
        let code = unicode_codepoint_of_pdfcode encoding_table glyphlist_table code in
-       if !dbg then Printf.printf "unicode %i --> " code;
+       (*if !dbg then Printf.printf "unicode %i --> " code;*)
        if subset <> [] && not (mem code subset) then 0 else
        try
          let glyphnum = Hashtbl.find cmapdata code in
-         if !dbg then Printf.printf "glyph number %i --> " glyphnum;
+         (*if !dbg then Printf.printf "glyph number %i --> " glyphnum;*)
            let width = hmtxdata.(glyphnum) in
-           if !dbg then Printf.printf "width %i\n" width;
+           (*if !dbg then Printf.printf "width %i\n" width;*)
              pdf_unit unitsPerEm width
        with e -> if !dbg then Printf.printf "no width for %i\n" code; 0)
 
@@ -308,7 +309,9 @@ let calculate_maxwidth unitsPerEm hmtxdata =
   pdf_unit unitsPerEm (hd (sort (fun a b -> compare b a) (Array.to_list hmtxdata)))
 
 let padword n =
-  i32ofi (4 - i32toi n mod 4 + i32toi n)
+  let r = i32ofi (4 - i32toi n mod 4 + i32toi n) in
+    Printf.printf "n = %li, padword n = %li\n" n r;
+    r
 
 let remove_unneeded_tables major minor tables indexToLocFormat subset encoding cmap loca mk_b glyfoffset data =
   let tables = Array.of_list (sort (fun (_, _, o, _) (_, _, o', _) -> compare o o') tables) in
@@ -333,9 +336,10 @@ let remove_unneeded_tables major minor tables indexToLocFormat subset encoding c
           let ttlength =
             if string_of_tag tag = "glyf" && subset <> [] then
               let bs = make_write_bitstream () in
-                write_glyf_table subset cmap bs mk_b glyfoffset loca;
-                let newlen = i32ofi (bytes_size (bytes_of_write_bitstream bs)) in
-                  glyf_table_size_reduction := i32sub (padword ttlength) newlen;
+                let newlen = write_glyf_table subset cmap bs mk_b glyfoffset loca in
+                let paddedlen = i32ofi (bytes_size (bytes_of_write_bitstream bs)) in
+                  Printf.printf "new glyf table length = %li\n" newlen;
+                  glyf_table_size_reduction := i32sub (padword ttlength) paddedlen;
                   newlen
             else ttlength
           in
@@ -350,7 +354,7 @@ let remove_unneeded_tables major minor tables indexToLocFormat subset encoding c
   if !dbg then Printf.printf "***Reduced:\n";
   Array.iter
     (fun (tag, checkSum, offset, ttlength) -> 
-      if !dbg then Printf.printf "tag = %li = %s, offset = %li\n" tag (string_of_tag tag) offset)
+      if !dbg then Printf.printf "tag = %li = %s, offset = %li, length = %li\n" tag (string_of_tag tag) offset ttlength)
     newtables;
   let bs = make_write_bitstream () in
   (* table directory *)
@@ -395,7 +399,7 @@ let remove_unneeded_tables major minor tables indexToLocFormat subset encoding c
       if string_of_tag tag = "loca" && subset <> [] then
         write_loca_table subset cmap indexToLocFormat bs loca
       else if string_of_tag tag = "glyf" && subset <> [] then
-        write_glyf_table subset cmap bs mk_b glyfoffset loca
+        ignore (write_glyf_table subset cmap bs mk_b glyfoffset loca)
       else
         match findtag tag with
         | (og_off, Some len) ->
