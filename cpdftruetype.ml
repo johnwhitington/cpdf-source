@@ -150,14 +150,26 @@ let read_format_4_encoding_table b =
     done;
     t
 
+let print_encoding_table (table : (int, int) Hashtbl.t) =
+  let l = list_of_hashtbl table in
+  Printf.printf "There are %i characters in this font\n" (length l);
+  iter
+    (fun (c, gi) -> Printf.printf "Char %04X is at glyph index %i\n" c gi)
+    l
+
 let read_encoding_table fmt length version b =
   match fmt with
   | 0 ->
+      Printf.printf "read_encoding_table: format 0\n";
       let t = null_hash () in
         for x = 0 to 255 do Hashtbl.add t x (read_byte b) done;
         t
-  | 4 -> read_format_4_encoding_table b
-  | 6 -> read_format_6_encoding_table b
+  | 4 ->
+      Printf.printf "read_encoding_table: format 4\n";
+      read_format_4_encoding_table b
+  | 6 ->
+      Printf.printf "read_encoding_table: format 6\n";
+      read_format_6_encoding_table b
   | n -> raise (Pdf.PDFError "read_encoding_table: format %i not known\n%!")
 
 let read_loca_table indexToLocFormat numGlyphs b =
@@ -482,9 +494,7 @@ let parse ?(subset=[]) data encoding =
         let glyphcodes = ref (null_hash ()) in
           begin match cmap with
           | None ->
-              let t = null_hash () in
-                for x = 0 to 255 do Hashtbl.add t x x done;
-                glyphcodes := t
+              for x = 0 to 255 do Hashtbl.add !glyphcodes x x done
           | Some (cmapoffset, cmaplength) -> 
               let b = mk_b (i32toi cmapoffset) in
                 let cmap_version = read_ushort b in
@@ -503,7 +513,9 @@ let parse ?(subset=[]) data encoding =
                         let version = read_ushort b in
                           if !dbg then Printf.printf "subtable has format %i, length %i, version %i\n" fmt lngth version;
                           let got_glyphcodes = read_encoding_table fmt length version b in
-                            glyphcodes := got_glyphcodes
+                            print_encoding_table got_glyphcodes;
+                            Hashtbl.iter (Hashtbl.add !glyphcodes) got_glyphcodes;
+                            Printf.printf "Retrieved %i cmap entries in total\n" (length (list_of_hashtbl !glyphcodes))
                   done;
           end;
           let maxpoffset, maxplength =
