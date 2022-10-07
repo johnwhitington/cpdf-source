@@ -2,8 +2,6 @@
 open Pdfutil
 open Pdfio
 
-(* ./cpdf -font-ttf ~/repos/pdfs/fonts/NimbusRoman-Regular.ttf -add-text 'Hello, World!' hello.pdf -o out.pdf *)
-
 type t =
   {flags : int;
    minx : int;
@@ -24,7 +22,7 @@ type t =
    subset : Pdfio.bytes;
    tounicode : Pdfio.bytes option}
 
-let dbg = ref true (* text-based debug *)
+let dbg = ref false
 
 let tounicode_preamble =
 "/CIDInit /ProcSet findresource begin\n\
@@ -310,8 +308,7 @@ let calculate_maxwidth unitsPerEm hmtxdata =
 
 let padword n =
   let n = i32toi n in
-  let r = if n mod 4 = 0 then n else 4 - n mod 4 + n in
-    Printf.printf "n = %i, padword n = %i\n" n r;
+  let r = n + (if n mod 4 = 0 then 0 else 4 - n mod 4) in
     i32ofi r
 
 let remove_unneeded_tables major minor tables indexToLocFormat subset encoding cmap loca mk_b glyfoffset data =
@@ -339,7 +336,7 @@ let remove_unneeded_tables major minor tables indexToLocFormat subset encoding c
               let bs = make_write_bitstream () in
                 let newlen = write_glyf_table subset cmap bs mk_b glyfoffset loca in
                 let paddedlen = i32ofi (bytes_size (bytes_of_write_bitstream bs)) in
-                  Printf.printf "new glyf table length = %li\n" newlen;
+                  if !dbg then Printf.printf "new glyf table length = %li\n" newlen;
                   glyf_table_size_reduction := i32sub (padword ttlength) paddedlen;
                   newlen
             else ttlength
