@@ -309,9 +309,10 @@ let calculate_maxwidth unitsPerEm hmtxdata =
   pdf_unit unitsPerEm (hd (sort (fun a b -> compare b a) (Array.to_list hmtxdata)))
 
 let padword n =
-  let r = i32ofi (4 - i32toi n mod 4 + i32toi n) in
-    Printf.printf "n = %li, padword n = %li\n" n r;
-    r
+  let n = i32toi n in
+  let r = if n mod 4 = 0 then n else 4 - n mod 4 + n in
+    Printf.printf "n = %i, padword n = %i\n" n r;
+    i32ofi r
 
 let remove_unneeded_tables major minor tables indexToLocFormat subset encoding cmap loca mk_b glyfoffset data =
   let tables = Array.of_list (sort (fun (_, _, o, _) (_, _, o', _) -> compare o o') tables) in
