@@ -50,7 +50,8 @@ let embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding =
       done;
       a
   in
-  SimpleFont
+  [(codepoints,
+   SimpleFont
     {fonttype = Truetype;
      basefont = Printf.sprintf "/%s+%s" name_1 fontname;
      fontmetrics = Some fontmetrics;
@@ -72,4 +73,4 @@ let embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding =
         fontfile = Some (FontFile2 fontfile_num);
         charset = None;
         tounicode = None};
-     encoding} 
+     encoding})]

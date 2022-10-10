@@ -115,7 +115,7 @@ let typeset_table_of_contents ?embedinfo ~font ~fontsize ~title ~bookmark pdf =
       match embedinfo with
       | None -> font
       | Some (pdf, fontfile, fontname, encoding) ->
-        Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding
+        snd (hd (Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding))
     in
       Cpdftype.typeset lm rm tm bm firstpage_papersize pdf
         ([Cpdftype.Font (font, bfs); Cpdftype.BeginDocument] @ title @

@@ -161,15 +161,15 @@ let print_encoding_table (table : (int, int) Hashtbl.t) =
 let read_encoding_table fmt length version b =
   match fmt with
   | 0 ->
-      Printf.printf "read_encoding_table: format 0\n";
+      (*Printf.printf "read_encoding_table: format 0\n";*)
       let t = null_hash () in
         for x = 0 to 255 do Hashtbl.add t x (read_byte b) done;
         t
   | 4 ->
-      Printf.printf "read_encoding_table: format 4\n";
+      (*Printf.printf "read_encoding_table: format 4\n";*)
       read_format_4_encoding_table b
   | 6 ->
-      Printf.printf "read_encoding_table: format 6\n";
+      (*Printf.printf "read_encoding_table: format 6\n";*)
       read_format_6_encoding_table b
   | n -> raise (Pdf.PDFError "read_encoding_table: format %i not known\n%!")
 
@@ -324,7 +324,7 @@ let padword n =
   let r = n + (if n mod 4 = 0 then 0 else 4 - n mod 4) in
     i32ofi r
 
-let remove_unneeded_tables major minor tables indexToLocFormat subset encoding cmap loca mk_b glyfoffset data =
+let subset_font major minor tables indexToLocFormat subset encoding cmap loca mk_b glyfoffset data =
   let tables = Array.of_list (sort (fun (_, _, o, _) (_, _, o', _) -> compare o o') tables) in
   let tablesout = ref [] in
   let cut = ref 0l in
@@ -514,9 +514,9 @@ let parse ?(subset=[]) data encoding =
                         let version = read_ushort b in
                           if !dbg then Printf.printf "subtable has format %i, length %i, version %i\n" fmt lngth version;
                           let got_glyphcodes = read_encoding_table fmt length version b in
-                            print_encoding_table got_glyphcodes;
+                            (*print_encoding_table got_glyphcodes; *)
                             Hashtbl.iter (Hashtbl.add !glyphcodes) got_glyphcodes;
-                            Printf.printf "Retrieved %i cmap entries in total\n" (length (list_of_hashtbl !glyphcodes))
+                            (*Printf.printf "Retrieved %i cmap entries in total\n" (length (list_of_hashtbl !glyphcodes))*)
                   done;
           end;
           let maxpoffset, maxplength =
@@ -555,11 +555,21 @@ let parse ?(subset=[]) data encoding =
               | (_, _, o, l)::_ -> o, l
               | [] -> raise (Pdf.PDFError "No glyf table found in TrueType font")
             in
-            let main_subset = remove_unneeded_tables major minor !tables indexToLocFormat (tl subset) encoding !glyphcodes loca mk_b glyfoffset data in
-            let second_subset = remove_unneeded_tables major minor !tables indexToLocFormat [hd subset] encoding !glyphcodes loca mk_b glyfoffset data in
+            let main_subset =
+              subset_font major minor !tables indexToLocFormat (if subset = [] then [] else tl subset)
+              encoding !glyphcodes loca mk_b glyfoffset data
+            in
+            let second_subset =
+              subset_font major minor !tables indexToLocFormat (if subset = [] then [] else [hd subset])
+              encoding !glyphcodes loca mk_b glyfoffset data
+            in
+            let subset_tounicode = 
+              if subset = [] then None else Some (tounicode_map 0 [hd subset])
+            in
+              begin match subset_tounicode with Some x -> Printf.printf "%S\n" (string_of_bytes x) | None -> () end;
               [{flags; minx; miny; maxx; maxy; italicangle; ascent; descent;
                 capheight; stemv; xheight; avgwidth; maxwidth; firstchar; lastchar;
-                widths; subset_fontfile = main_subset; subset = tl subset; tounicode = None};
+                widths; subset_fontfile = main_subset; subset = if subset = [] then [] else tl subset; tounicode = None};
                {flags; minx; miny; maxx; maxy; italicangle; ascent; descent;
                 capheight; stemv; xheight; avgwidth; maxwidth; firstchar; lastchar;
-                widths; subset_fontfile = second_subset; subset = [hd subset]; tounicode = None}]
+                widths; subset_fontfile = second_subset; subset = if subset = [] then [] else [hd subset]; tounicode = subset_tounicode}]
