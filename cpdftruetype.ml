@@ -21,43 +21,9 @@ type t =
    widths : int array;
    subset_fontfile : Pdfio.bytes;
    subset : int list;
-   tounicode : Pdfio.bytes option}
+   tounicode : (int, string) Hashtbl.t option}
 
 let dbg = ref false
-
-let tounicode_preamble =
-"/CIDInit /ProcSet findresource begin\n\
-12 dict begin\n\
-begincmap\n\
-/CIDSystemInfo <<\n\
-  /Registry (Adobe)\n\
-  /Ordering (UCS)\n\
-  /Supplement 0\n\
->> def\n\
-/CMapName /Adobe-Identity-UCS def\n\
-/CMapType 2 def\n\
-1 begincodespacerange\n\
-<00><FF>\n\
-endcodespacerange\n"
-
-let tounicode_postamble =
-"endbfrange\n\
-endcmap\n\
-CMapName currentdict /CMap defineresource pop\n\
-end\n\
-end\n"
-
-let tounicode_map s us =
-  let b = Buffer.create 1024 in
-  let s = ref s in
-  Buffer.add_string b tounicode_preamble;
-  Buffer.add_string b (Printf.sprintf "%i beginbfrange\n" (length us));
-  iter
-    (fun u -> Buffer.add_string b (Printf.sprintf "<%02x><%02x><%04x>" !s !s u);
-     s := !s + 1)
-    us;
-  Buffer.add_string b tounicode_postamble;
-  bytes_of_string (Buffer.contents b)
 
 let required_tables =
   ["head"; "hhea"; "loca"; "cmap"; "maxp"; "cvt "; "glyf"; "prep"; "hmtx"; "fpgm"]
@@ -563,13 +529,13 @@ let parse ?(subset=[]) data encoding =
               subset_font major minor !tables indexToLocFormat (if subset = [] then [] else [hd subset])
               encoding !glyphcodes loca mk_b glyfoffset data
             in
-            let subset_tounicode = 
+            (*let subset_tounicode = 
               if subset = [] then None else Some (tounicode_map 0 [hd subset])
-            in
-              begin match subset_tounicode with Some x -> Printf.printf "%S\n" (string_of_bytes x) | None -> () end;
+            in*)
+              (*begin match subset_tounicode with Some x -> Printf.printf "%S\n" (string_of_bytes x) | None -> () end;*)
               [{flags; minx; miny; maxx; maxy; italicangle; ascent; descent;
                 capheight; stemv; xheight; avgwidth; maxwidth; firstchar; lastchar;
                 widths; subset_fontfile = main_subset; subset = if subset = [] then [] else tl subset; tounicode = None};
                {flags; minx; miny; maxx; maxy; italicangle; ascent; descent;
                 capheight; stemv; xheight; avgwidth; maxwidth; firstchar; lastchar;
-                widths; subset_fontfile = second_subset; subset = if subset = [] then [] else [hd subset]; tounicode = subset_tounicode}]
+                widths; subset_fontfile = second_subset; subset = if subset = [] then [] else [hd subset]; tounicode = None}]

@@ -20,7 +20,7 @@ type t =
    widths : int array;
    subset_fontfile : Pdfio.bytes;
    subset : int list;
-   tounicode : Pdfio.bytes option}
+   tounicode : (int, string) Hashtbl.t option}
 
 (* Parse the given TrueType font file. It will return one or more fonts. The
    first, a plain Latin font in the given encoding. Others are for the

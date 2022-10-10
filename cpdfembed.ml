@@ -24,13 +24,7 @@ let basename () =
   incr fontnum;
   "AAAAA" ^ string_of_char (char_of_int (!fontnum + 65))
 
-let embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding =
-  let glyphlist_table = Pdfglyphlist.reverse_glyph_hashes () in 
-  let encoding_table = Pdftext.reverse_table_of_encoding encoding in
-  let accepted_unicodepoints =
-    calc_accepted_unicodepoints encoding_table glyphlist_table codepoints
-  in
-  let f = hd (Cpdftruetype.parse ~subset:accepted_unicodepoints fontfile encoding) in
+let make_single_font ~fontname ~encoding pdf f = 
   let name_1 = basename () in
   let module TT = Cpdftruetype in
   let fontfile =
@@ -50,7 +44,7 @@ let embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding =
       done;
       a
   in
-  [(codepoints,
+  (f.TT.subset,
    SimpleFont
     {fonttype = Truetype;
      basefont = Printf.sprintf "/%s+%s" name_1 fontname;
@@ -72,5 +66,14 @@ let embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding =
                     float_of_int f.TT.maxx, float_of_int f.TT.maxy);
         fontfile = Some (FontFile2 fontfile_num);
         charset = None;
-        tounicode = None};
-     encoding})]
+        tounicode = f.TT.tounicode};
+     encoding})
+
+let embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding =
+  let glyphlist_table = Pdfglyphlist.reverse_glyph_hashes () in 
+  let encoding_table = Pdftext.reverse_table_of_encoding encoding in
+  let accepted_unicodepoints =
+    calc_accepted_unicodepoints encoding_table glyphlist_table codepoints
+  in
+  let fs = Cpdftruetype.parse ~subset:accepted_unicodepoints fontfile encoding in
+    map (make_single_font ~fontname ~encoding pdf) fs
