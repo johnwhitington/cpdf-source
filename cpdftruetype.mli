@@ -18,7 +18,8 @@ type t =
    firstchar : int;
    lastchar : int;
    widths : int array;
-   subset : Pdfio.bytes;
+   subset_fontfile : Pdfio.bytes;
+   subset : int list;
    tounicode : Pdfio.bytes option}
 
 (* Parse the given TrueType font file. It will return one or more fonts. The

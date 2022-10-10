@@ -19,7 +19,8 @@ type t =
    firstchar : int;
    lastchar : int;
    widths : int array;
-   subset : Pdfio.bytes;
+   subset_fontfile : Pdfio.bytes;
+   subset : int list;
    tounicode : Pdfio.bytes option}
 
 let dbg = ref false
@@ -554,7 +555,11 @@ let parse ?(subset=[]) data encoding =
               | (_, _, o, l)::_ -> o, l
               | [] -> raise (Pdf.PDFError "No glyf table found in TrueType font")
             in
-            let subset = remove_unneeded_tables major minor !tables indexToLocFormat subset encoding !glyphcodes loca mk_b glyfoffset data in
+            let main_subset = remove_unneeded_tables major minor !tables indexToLocFormat (tl subset) encoding !glyphcodes loca mk_b glyfoffset data in
+            let second_subset = remove_unneeded_tables major minor !tables indexToLocFormat [hd subset] encoding !glyphcodes loca mk_b glyfoffset data in
               [{flags; minx; miny; maxx; maxy; italicangle; ascent; descent;
-              capheight; stemv; xheight; avgwidth; maxwidth; firstchar; lastchar;
-              widths; subset; tounicode = None}]
+                capheight; stemv; xheight; avgwidth; maxwidth; firstchar; lastchar;
+                widths; subset_fontfile = main_subset; subset = tl subset; tounicode = None};
+               {flags; minx; miny; maxx; maxy; italicangle; ascent; descent;
+                capheight; stemv; xheight; avgwidth; maxwidth; firstchar; lastchar;
+                widths; subset_fontfile = second_subset; subset = [hd subset]; tounicode = None}]

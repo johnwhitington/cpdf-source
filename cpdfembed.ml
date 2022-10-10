@@ -34,12 +34,12 @@ let embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding =
   let name_1 = basename () in
   let module TT = Cpdftruetype in
   let fontfile =
-    let len = Pdfio.bytes_size f.TT.subset in
+    let len = Pdfio.bytes_size f.TT.subset_fontfile in
     Pdf.Stream
       {contents =
          (Pdf.Dictionary
             [("/Length", Pdf.Integer len); ("/Length1", Pdf.Integer len)],
-          Pdf.Got f.TT.subset)}
+          Pdf.Got f.TT.subset_fontfile)}
   in
   let fontfile_num = Pdf.addobj pdf fontfile in
   let open Pdftext in
