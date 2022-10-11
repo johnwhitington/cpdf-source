@@ -529,13 +529,16 @@ let parse ?(subset=[]) data encoding =
               subset_font major minor !tables indexToLocFormat (if subset = [] then [] else [hd subset])
               encoding !glyphcodes loca mk_b glyfoffset data
             in
-            (*let subset_tounicode = 
-              if subset = [] then None else Some (tounicode_map 0 [hd subset])
-            in*)
-              (*begin match subset_tounicode with Some x -> Printf.printf "%S\n" (string_of_bytes x) | None -> () end;*)
+              let second_tounicode =
+                if subset = [] then None else
+                  let h = null_hash () in
+                    Hashtbl.add h 0 (string_of_int (hd subset));
+                    Some h
+              in
               [{flags; minx; miny; maxx; maxy; italicangle; ascent; descent;
                 capheight; stemv; xheight; avgwidth; maxwidth; firstchar; lastchar;
                 widths; subset_fontfile = main_subset; subset = if subset = [] then [] else tl subset; tounicode = None};
                {flags; minx; miny; maxx; maxy; italicangle; ascent; descent;
                 capheight; stemv; xheight; avgwidth; maxwidth; firstchar; lastchar;
-                widths; subset_fontfile = second_subset; subset = if subset = [] then [] else [hd subset]; tounicode = None}]
+                widths; subset_fontfile = second_subset; subset = if subset = [] then [] else [hd subset];
+                tounicode = second_tounicode}]
