@@ -1,6 +1,8 @@
 (* Embed a font *)
 open Pdfutil
 
+type t = Pdftext.font list * (int, int * int) Hashtbl.t
+
 let pdfcode_of_unicode_codepoint encoding_table glyphlist_table u =
   try
     Some (Hashtbl.find encoding_table (Hashtbl.find glyphlist_table [u]))
@@ -69,11 +71,22 @@ let make_single_font ~fontname ~encoding pdf f =
         tounicode = f.TT.tounicode};
      encoding})
 
+let make_fontpack_hashtable fs =
+  let indexes = indx0 fs in
+  let table = null_hash () in
+  iter2
+    (fun i (subset, f) ->
+      let charcode_extractor = Pdftext.charcode_extractor_of_font_real f in
+        iter
+          (fun u -> Hashtbl.add table u (i, unopt (charcode_extractor u)))
+          subset)
+    indexes fs;
+  table
+
 let embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding =
   let glyphlist_table = Pdfglyphlist.reverse_glyph_hashes () in 
   let encoding_table = Pdftext.reverse_table_of_encoding encoding in
-  let accepted_unicodepoints =
-    calc_accepted_unicodepoints encoding_table glyphlist_table codepoints
-  in
+  let accepted_unicodepoints = calc_accepted_unicodepoints encoding_table glyphlist_table codepoints in
   let fs = Cpdftruetype.parse ~subset:accepted_unicodepoints fontfile encoding in
-    map (make_single_font ~fontname ~encoding pdf) fs
+  let subsets_and_their_fonts =  map (make_single_font ~fontname ~encoding pdf) fs in
+    (map snd subsets_and_their_fonts, make_fontpack_hashtable subsets_and_their_fonts)
