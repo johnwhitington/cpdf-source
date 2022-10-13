@@ -3059,7 +3059,7 @@ let embed_font pdf =
             Pdfio.bytes_of_string (contents_of_file (Filename.concat dirname filename)),
             Filename.remove_extension filename
           in
-          let font = snd (hd (Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints:[] ~encoding:args.fontencoding)) in
+          let font = hd (fst (Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints:[] ~encoding:args.fontencoding)) in
             Some font, Some (pdf, fontfile, fontname, args.fontencoding)
         with
           e -> error (Printf.sprintf "Can't load font for embedding: %s\n" (Printexc.to_string e))
@@ -3069,7 +3069,7 @@ let embed_font pdf =
       end
   | OtherFont f -> None, None (* it's in fontname *)
   | FontToEmbed fontfile ->
-      Some (snd (hd (Cpdfembed.embed_truetype pdf ~fontfile ~fontname:args.fontname ~codepoints:[] ~encoding:args.fontencoding))),
+      Some (hd (fst (Cpdfembed.embed_truetype pdf ~fontfile ~fontname:args.fontname ~codepoints:[] ~encoding:args.fontencoding))),
       Some (pdf, fontfile, args.fontname, args.fontencoding)
 
 (* Main function *)

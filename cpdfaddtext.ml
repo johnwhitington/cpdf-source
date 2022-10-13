@@ -535,7 +535,7 @@ let
                     map (fun c -> unicode_codepoint_of_pdfcode encoding_table glyphlist_table (int_of_char c)) charcodes
                   in
                   let objnum = match fontpdfobj with Pdf.Indirect i -> i | _ -> failwith "bad fontpdfobj" in
-                  let font = snd (hd (Cpdfembed.embed_truetype !pdf ~fontfile ~fontname ~codepoints ~encoding)) in
+                  let font = hd (fst (Cpdfembed.embed_truetype !pdf ~fontfile ~fontname ~codepoints ~encoding)) in
                     ignore (Pdftext.write_font ~objnum !pdf font)
                   end;
               !pdf

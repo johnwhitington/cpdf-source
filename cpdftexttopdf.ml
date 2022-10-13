@@ -44,7 +44,7 @@ let typeset ?embedinfo ~papersize ~font ~fontsize text =
     match embedinfo with
     | None -> font
     | Some (pdf, fontfile, fontname, encoding) ->
-        snd (hd (Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding))
+        hd (fst (Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding))
   in
   let pages =
     Cpdftype.typeset
