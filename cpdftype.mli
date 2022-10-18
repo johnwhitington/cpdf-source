@@ -10,7 +10,7 @@ type element =
 | VGlue of glue
 | NewLine
 | NewPage
-| Font of (Cpdfembed.t * float)
+| Font of (Pdftext.font * float)
 | BeginDest of Pdfdest.t
 | EndDest
 | BeginDocument
