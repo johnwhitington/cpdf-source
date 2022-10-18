@@ -2,6 +2,8 @@
 open Pdfutil
 open Pdfio
 
+let fontpack_experiment = false
+
 type t =
   {flags : int;
    minx : int;
@@ -499,7 +501,7 @@ let parse ?(subset=[]) data encoding =
             | (_, _, o, l)::_ -> o, l
             | [] -> raise (Pdf.PDFError "No loca table found in TrueType font")
           in
-            let subset_1 = if subset = [] then [] else tl subset in
+            let subset_1 = if subset = [] then [] else if fontpack_experiment then tl subset else subset in
             let subset_2 = if subset = [] then [] else [hd subset] in
             let flags = calculate_flags italicangle in
             let firstchar_1, lastchar_1 = calculate_limits subset_1 in
@@ -541,8 +543,9 @@ let parse ?(subset=[]) data encoding =
               in
               [{flags; minx; miny; maxx; maxy; italicangle; ascent; descent;
                 capheight; stemv; xheight; avgwidth; maxwidth; firstchar = firstchar_1; lastchar = lastchar_1;
-                widths = widths_1; subset_fontfile = main_subset; subset = subset_1; tounicode = None};
-               {flags; minx; miny; maxx; maxy; italicangle; ascent; descent;
+                widths = widths_1; subset_fontfile = main_subset; subset = subset_1; tounicode = None}]
+              @ if fontpack_experiment then
+               [{flags; minx; miny; maxx; maxy; italicangle; ascent; descent;
                 capheight; stemv; xheight; avgwidth; maxwidth; firstchar = firstchar_2; lastchar = lastchar_2;
                 widths = widths_2; subset_fontfile = second_subset; subset = subset_2;
-                tounicode = second_tounicode}]
+                tounicode = second_tounicode}] else []

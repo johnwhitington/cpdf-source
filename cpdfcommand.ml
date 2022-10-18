@@ -3048,29 +3048,37 @@ let prerotate range pdf =
   Cpdfpage.upright ~fast:args.fast range pdf
 
 let embed_font pdf =
-  match args.font with
-  | StandardFont f ->
-      (* FIXME proper error handling *)
-      begin match args.embedstd14 with
-      | Some dirname -> 
-        begin try
-          let fontfile, fontname =
-          let filename = hd (List.assoc f fontnames) in
-            Pdfio.bytes_of_string (contents_of_file (Filename.concat dirname filename)),
-            Filename.remove_extension filename
-          in
-          let font = hd (fst (Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints:[] ~encoding:args.fontencoding)) in
-            Some font, Some (pdf, fontfile, fontname, args.fontencoding)
-        with
-          e -> error (Printf.sprintf "Can't load font for embedding: %s\n" (Printexc.to_string e))
+  let fontpack_of_standardfont sf =
+    let te = Pdftext.text_extractor_of_font_real sf in
+    let table = null_hash () in
+    for x = 0 to 255 do
+      let u = hd (Pdftext.codepoints_of_text te (string_of_char (char_of_int x))) in
+        Hashtbl.add table u (0, x)
+    done;
+    ([sf], table)
+  in
+    match args.font with
+    | StandardFont f ->
+        (* FIXME proper error handling for missing file etc. *)
+        begin match args.embedstd14 with
+        | Some dirname -> 
+          begin try
+            let fontfile, fontname =
+            let filename = hd (List.assoc f fontnames) in
+              Pdfio.bytes_of_string (contents_of_file (Filename.concat dirname filename)),
+              Filename.remove_extension filename
+            in
+            Cpdfembed.EmbedInfo {fontfile; fontname; fontencoding = args.fontencoding}
+          with
+            e -> error (Printf.sprintf "Can't load font for embedding: %s\n" (Printexc.to_string e))
+          end
+        | None -> 
+            PreMadeFontPack (fontpack_of_standardfont (Pdftext.StandardFont (f, args.fontencoding)))
         end
-      | None -> 
-          Some (Pdftext.StandardFont (f, args.fontencoding)), None
-      end
-  | OtherFont f -> None, None (* it's in fontname *)
-  | FontToEmbed fontfile ->
-      Some (hd (fst (Cpdfembed.embed_truetype pdf ~fontfile ~fontname:args.fontname ~codepoints:[] ~encoding:args.fontencoding))),
-      Some (pdf, fontfile, args.fontname, args.fontencoding)
+    | OtherFont f ->
+        ExistingNamedFont f
+    | FontToEmbed fontfile ->
+        EmbedInfo {fontfile; fontname = args.fontname; fontencoding = args.fontencoding}
 
 (* Main function *)
 let go () =
@@ -3737,7 +3745,7 @@ let go () =
   | Some (AddText text) ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-          let font, embedinfo = embed_font pdf in
+          let cpdffont = embed_font pdf in
             warn_prerotate range pdf;
             let pdf =
               if args.prerotate then prerotate range pdf else pdf
