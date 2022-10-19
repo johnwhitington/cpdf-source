@@ -2,6 +2,12 @@
    encoding, adding the fontfiles to the PDF and returning a list of font objects,
    together with a unicode codepoint --> (font number in list, charcode) table *)
 
+(* FIXME: Really we want to create an interactive fontpack which creates fonts
+   when needed, but delays the actual production of the subset truetype data
+   until later. This will mean we don't need to pre-calculate the USED set. For
+   now, we just hack Cpdftoc, cpdfaddtext and cpdftextofpdf to pre-calculate
+   the subset. *)
+
 type t = Pdftext.font list * (int, int * int) Hashtbl.t
 
 type cpdffont =

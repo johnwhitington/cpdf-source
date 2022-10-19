@@ -41,7 +41,15 @@ let shorten_text widths l t =
    (and CropBox) copied from first page of existing PDF. Margin of 10% inside
    CropBox. Font size of title twice body font size. Null page labels added for
    TOC, others bumped up and so preserved. *)
-let typeset_table_of_contents ?embedinfo ~font ~fontsize ~title ~bookmark pdf =
+let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
+  let codepoints = [] (* FIXME *) in
+    let font =
+      match font with
+      | Cpdfembed.PreMadeFontPack t -> hd (fst t)
+      | Cpdfembed.EmbedInfo {fontfile; fontname; encoding} ->
+        hd (fst (Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding))
+      | Cpdfembed.ExistingNamedFont _ -> raise (Pdf.PDFError "Cannot use existing font with -table-of-contents")
+    in
   let marks = Pdfmarks.read_bookmarks pdf in
   if marks = [] then (Printf.eprintf "No bookmarks, not making table of contents\n%!"; pdf) else
   let f, fs = (font, fontsize) in
@@ -110,13 +118,7 @@ let typeset_table_of_contents ?embedinfo ~font ~fontsize ~title ~bookmark pdf =
       | Some (cminx, cminy, cmaxx, cmaxy) ->
           (cminx +. margin, (pmaxx -. cmaxx) +. margin, cminy +. margin, (pmaxy -. cmaxy) +. margin)
     in
-    let codepoints = map fst (list_of_hashtbl used) in
-    let font =
-      match embedinfo with
-      | None -> font
-      | Some (pdf, fontfile, fontname, encoding) ->
-        hd (fst (Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding))
-    in
+
       Cpdftype.typeset lm rm tm bm firstpage_papersize pdf
         ([Cpdftype.Font (font, bfs); Cpdftype.BeginDocument] @ title @
           [Cpdftype.Font (font, fs)] @ flatten lines)

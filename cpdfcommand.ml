@@ -4007,14 +4007,13 @@ let go () =
       let pdf = get_single_pdf args.op true in
         Cpdffont.print_font_table pdf fontname args.copyfontpage
   | Some TableOfContents ->
-      (*let pdf = get_single_pdf args.op false in
+      let pdf = get_single_pdf args.op false in
       let cpdffont = embed_font () in
       let pdf =
         Cpdftoc.typeset_table_of_contents
-          cpdffont ~fontsize:args.fontsize ~title:args.toc_title ~bookmark:args.toc_bookmark pdf
+          ~font:cpdffont ~fontsize:args.fontsize ~title:args.toc_title ~bookmark:args.toc_bookmark pdf
       in
-        write_pdf false pdf*)
-      ()
+        write_pdf false pdf
   | Some (Typeset filename) ->
       let text = Pdfio.bytes_of_input_channel (open_in filename) in
       let cpdffont = embed_font () in
