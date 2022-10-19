@@ -3068,7 +3068,7 @@ let embed_font () =
               Pdfio.bytes_of_string (contents_of_file (Filename.concat dirname filename)),
               Filename.remove_extension filename
             in
-            Cpdfembed.EmbedInfo {fontfile; fontname; fontencoding = args.fontencoding}
+            Cpdfembed.EmbedInfo {fontfile; fontname; encoding = args.fontencoding}
           with
             e -> error (Printf.sprintf "Can't load font for embedding: %s\n" (Printexc.to_string e))
           end
@@ -3078,7 +3078,7 @@ let embed_font () =
     | OtherFont f ->
         ExistingNamedFont f
     | FontToEmbed fontfile ->
-        EmbedInfo {fontfile; fontname = args.fontname; fontencoding = args.fontencoding}
+        EmbedInfo {fontfile; fontname = args.fontname; encoding = args.fontencoding}
 
 (* Main function *)
 let go () =

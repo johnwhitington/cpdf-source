@@ -1,7 +1,7 @@
 (* Embed a font *)
 open Pdfutil
 
-type t = Pdftext.font list * (int, int * int) Hashtbl.t
+type t = Pdftext.font list * (int, int * int) Hashtbl.t (* Table returns font number and charcode for given unicode codepoint *)
 
 type cpdffont =
   PreMadeFontPack of t
