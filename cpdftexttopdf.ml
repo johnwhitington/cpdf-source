@@ -42,7 +42,7 @@ let typeset ~papersize ~font ~fontsize text =
     | Cpdfembed.EmbedInfo {fontfile; fontname; encoding} ->
         let embedded = Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding in
          (hd (fst embedded), embedded)
-    | Cpdfembed.ExistingNamedFont _ -> raise (Pdf.PDFError "Can't use existing named font for text-to-PDF")
+    | Cpdfembed.ExistingNamedFont -> raise (Pdf.PDFError "Can't use existing named font for text-to-PDF")
   in
   let instrs = of_utf8_with_newlines fontpack (Pdfio.string_of_bytes text) in
   let margin =

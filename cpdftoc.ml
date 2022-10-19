@@ -48,7 +48,7 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
       | Cpdfembed.PreMadeFontPack t -> hd (fst t)
       | Cpdfembed.EmbedInfo {fontfile; fontname; encoding} ->
         hd (fst (Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding))
-      | Cpdfembed.ExistingNamedFont _ -> raise (Pdf.PDFError "Cannot use existing font with -table-of-contents")
+      | Cpdfembed.ExistingNamedFont -> raise (Pdf.PDFError "Cannot use existing font with -table-of-contents")
     in
   let marks = Pdfmarks.read_bookmarks pdf in
   if marks = [] then (Printf.eprintf "No bookmarks, not making table of contents\n%!"; pdf) else

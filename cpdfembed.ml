@@ -6,7 +6,7 @@ type t = Pdftext.font list * (int, int * int) Hashtbl.t (* Table returns font nu
 type cpdffont =
   PreMadeFontPack of t
 | EmbedInfo of {fontfile : Pdfio.bytes; fontname : string; encoding : Pdftext.encoding}
-| ExistingNamedFont of string
+| ExistingNamedFont
 
 let get_char (fonts, table) u =
   match Hashtbl.find table u with

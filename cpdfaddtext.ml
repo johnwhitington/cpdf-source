@@ -435,7 +435,7 @@ let
     | Cpdfembed.EmbedInfo {fontfile; fontname; encoding} -> 
         let embedded = Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints:[] ~encoding in
           Some (hd (fst embedded))
-    | Cpdfembed.ExistingNamedFont _ -> None
+    | Cpdfembed.ExistingNamedFont -> None
   in
   let fontpdfobj =
     match font with

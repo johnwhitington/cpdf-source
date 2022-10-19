@@ -3076,7 +3076,7 @@ let embed_font () =
             PreMadeFontPack (fontpack_of_standardfont (Pdftext.StandardFont (f, args.fontencoding)))
         end
     | OtherFont f ->
-        ExistingNamedFont f
+        ExistingNamedFont
     | FontToEmbed fontfile ->
         EmbedInfo {fontfile; fontname = args.fontname; encoding = args.fontencoding}
 
