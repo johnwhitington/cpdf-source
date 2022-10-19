@@ -5,12 +5,6 @@ let used_characters t =
   let codepoints = Pdftext.codepoints_of_utf8 t in
     setify codepoints
 
-(* Just first font, expand later. Move into cpdfembed? *)
-let get_char (fonts, table) u =
-  match Hashtbl.find table u with
-  | (n, charcode) -> Some charcode
-  | exception Not_found -> None
-
 let rec of_utf8_with_newlines fontpack t =
   let items = ref [] in
   let buf = ref [] in
@@ -18,8 +12,8 @@ let rec of_utf8_with_newlines fontpack t =
   let charcodes_of_codepoints cs =
     option_map
       (fun u ->
-         match get_char fontpack u with
-         | Some c -> Some (char_of_int c)
+         match Cpdfembed.get_char fontpack u with
+         | Some (c, _, _) -> Some (char_of_int c)
          | None -> Printf.printf "No glyph for unicode U+%04X in this font\n" u; None)
       cs
   in

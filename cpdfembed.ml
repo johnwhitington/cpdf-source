@@ -8,6 +8,11 @@ type cpdffont =
 | EmbedInfo of {fontfile : Pdfio.bytes; fontname : string; encoding : Pdftext.encoding}
 | ExistingNamedFont of string
 
+let get_char (fonts, table) u =
+  match Hashtbl.find table u with
+  | (n, charcode) -> Some (charcode, n, List.nth fonts n)
+  | exception Not_found -> None
+
 let pdfcode_of_unicode_codepoint encoding_table glyphlist_table u =
   try
     Some (Hashtbl.find encoding_table (Hashtbl.find glyphlist_table [u]))

@@ -9,6 +9,8 @@ type cpdffont =
 | EmbedInfo of {fontfile : Pdfio.bytes; fontname : string; encoding : Pdftext.encoding}
 | ExistingNamedFont of string
 
+val get_char : t -> int -> (int * int * Pdftext.font) option
+
 val embed_truetype :
   Pdf.t -> fontfile:Pdfio.bytes -> fontname:string -> codepoints:int list ->
   encoding:Pdftext.encoding -> t
