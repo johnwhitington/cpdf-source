@@ -6,7 +6,7 @@ type t = Pdftext.font list * (int, int * int) Hashtbl.t
 
 type cpdffont =
   PreMadeFontPack of t
-| EmbedInfo of {fontfile : Pdfio.bytes; fontname : string; fontencoding : Pdftext.encoding}
+| EmbedInfo of {fontfile : Pdfio.bytes; fontname : string; encoding : Pdftext.encoding}
 | ExistingNamedFont of string
 
 val embed_truetype :

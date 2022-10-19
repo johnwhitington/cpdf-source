@@ -3047,7 +3047,7 @@ let warn_prerotate range pdf =
 let prerotate range pdf =
   Cpdfpage.upright ~fast:args.fast range pdf
 
-let embed_font pdf =
+let embed_font () =
   let fontpack_of_standardfont sf =
     let te = Pdftext.text_extractor_of_font_real sf in
     let table = null_hash () in
@@ -3743,7 +3743,7 @@ let go () =
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           write_pdf false (Cpdfdraft.draft args.removeonly args.boxes range pdf)
   | Some (AddText text) ->
-      let pdf = get_single_pdf args.op false in
+      (*let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           let cpdffont = embed_font pdf in
             warn_prerotate range pdf;
@@ -3754,17 +3754,15 @@ let go () =
               | (InFile inname, _, _, _, _, _)::_ -> inname
               | _ -> ""
             in
-              let fontname =
-                match embedinfo with Some (_, _, fontname, _) -> fontname | None -> args.fontname
-              in
-                write_pdf false
-                  (Cpdfaddtext.addtexts
-                     ?embedinfo args.linewidth args.outline args.fast fontname
-                     font args.bates args.batespad args.color args.position
-                     args.linespacing args.fontsize args.underneath text range
-                     args.relative_to_cropbox args.opacity
-                     args.justification args.midline args.topline filename
-                     args.extract_text_font_size args.coord ~raw:(args.encoding = Raw) pdf)
+              write_pdf false
+                (Cpdfaddtext.addtexts
+                   cpdffont args.linewidth args.outline args.fast args.fontname
+                   font args.bates args.batespad args.color args.position
+                   args.linespacing args.fontsize args.underneath text range
+                   args.relative_to_cropbox args.opacity
+                   args.justification args.midline args.topline filename
+                   args.extract_text_font_size args.coord ~raw:(args.encoding = Raw) pdf)*)
+      ()
   | Some RemoveText ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
@@ -4009,15 +4007,18 @@ let go () =
       let pdf = get_single_pdf args.op true in
         Cpdffont.print_font_table pdf fontname args.copyfontpage
   | Some TableOfContents ->
-      let pdf = get_single_pdf args.op false in
-      let font, embedinfo = embed_font pdf in
-      let pdf = Cpdftoc.typeset_table_of_contents ?embedinfo ~font:(unopt font) ~fontsize:args.fontsize ~title:args.toc_title ~bookmark:args.toc_bookmark pdf in
-        write_pdf false pdf
+      (*let pdf = get_single_pdf args.op false in
+      let cpdffont = embed_font () in
+      let pdf =
+        Cpdftoc.typeset_table_of_contents
+          cpdffont ~fontsize:args.fontsize ~title:args.toc_title ~bookmark:args.toc_bookmark pdf
+      in
+        write_pdf false pdf*)
+      ()
   | Some (Typeset filename) ->
       let text = Pdfio.bytes_of_input_channel (open_in filename) in
-      let pdf = Pdf.empty () in
-      let font, embedinfo = embed_font pdf in
-      let pdf = Cpdftexttopdf.typeset ?embedinfo ~papersize:args.createpdf_pagesize ~font:(unopt font) ~fontsize:args.fontsize text in
+      let cpdffont = embed_font () in
+      let pdf = Cpdftexttopdf.typeset ~font:cpdffont ~papersize:args.createpdf_pagesize ~fontsize:args.fontsize text in
         write_pdf false pdf
 
 (* Advise the user if a combination of command line flags makes little sense,
