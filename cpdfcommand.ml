@@ -3743,9 +3743,9 @@ let go () =
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           write_pdf false (Cpdfdraft.draft args.removeonly args.boxes range pdf)
   | Some (AddText text) ->
-      (*let pdf = get_single_pdf args.op false in
+      let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-          let cpdffont = embed_font pdf in
+          let cpdffont = embed_font () in
             warn_prerotate range pdf;
             let pdf =
               if args.prerotate then prerotate range pdf else pdf
@@ -3756,13 +3756,12 @@ let go () =
             in
               write_pdf false
                 (Cpdfaddtext.addtexts
-                   cpdffont args.linewidth args.outline args.fast args.fontname
-                   font args.bates args.batespad args.color args.position
+                   args.linewidth args.outline args.fast args.fontname
+                   cpdffont args.bates args.batespad args.color args.position
                    args.linespacing args.fontsize args.underneath text range
                    args.relative_to_cropbox args.opacity
                    args.justification args.midline args.topline filename
-                   args.extract_text_font_size args.coord ~raw:(args.encoding = Raw) pdf)*)
-      ()
+                   args.extract_text_font_size args.coord ~raw:(args.encoding = Raw) pdf)
   | Some RemoveText ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in

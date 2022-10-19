@@ -421,7 +421,7 @@ let unescape_string s =
   implode (unescape_chars [] (explode s))
 
 let
-  addtexts ?embedinfo linewidth outline fast fontname font bates batespad
+  addtexts linewidth outline fast fontname (cpdffont : Cpdfembed.cpdffont) bates batespad
   colour position linespacing fontsize underneath text pages cropbox opacity
   justification midline topline filename extract_text_font_size shift
   ?(raw=false) pdf
@@ -429,6 +429,14 @@ let
   let time = Cpdfstrftime.current_time () in
   if pages = [] then error "addtexts: empty page range" else
   let realfontname = ref fontname in
+  let font =
+    match cpdffont with
+    | Cpdfembed.PreMadeFontPack f -> Some (hd (fst f))
+    | Cpdfembed.EmbedInfo {fontfile; fontname; encoding} -> 
+        let embedded = Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints:[] ~encoding in
+          Some (hd (fst embedded))
+    | Cpdfembed.ExistingNamedFont _ -> None
+  in
   let fontpdfobj =
     match font with
     | Some (Pdftext.StandardFont _ as font) ->
@@ -521,9 +529,8 @@ let
                      !pdf;
                    voffset := !voffset +. (linespacing *. fontsize))
               lines;
-              begin match embedinfo with
-              | None -> ()
-              | Some (_, fontfile, fontname, encoding) ->
+              begin match cpdffont with
+              | Cpdfembed.EmbedInfo {fontfile; fontname; encoding} ->
                   let charcodes =
                     match Hashtbl.find used fontname with
                     | exception Not_found -> []
@@ -537,7 +544,8 @@ let
                   let objnum = match fontpdfobj with Pdf.Indirect i -> i | _ -> failwith "bad fontpdfobj" in
                   let font = hd (fst (Cpdfembed.embed_truetype !pdf ~fontfile ~fontname ~codepoints ~encoding)) in
                     ignore (Pdftext.write_font ~objnum !pdf font)
-                  end;
+              | _ -> ()
+              end;
               !pdf
 
 
