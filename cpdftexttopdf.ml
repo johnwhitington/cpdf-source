@@ -15,7 +15,7 @@ let rec of_utf8_with_newlines fontpack fontsize t =
       (fun u ->
          match Cpdfembed.get_char fontpack u with
          | Some (c, n, f) ->
-             Printf.printf "Charcode %i, font number %i\n" c n;
+             (*Printf.printf "Charcode %i, font number %i\n" c n;*)
              begin if n <> !currfont then
                begin
                  if !currtext <> [] then items := Cpdftype.Text (rev !currtext)::!items;
@@ -65,7 +65,9 @@ let typeset ~papersize ~font ~fontsize text =
       72. (Pdfpaper.unit papersize) (Pdfunits.PdfPoint) (Pdfpaper.width papersize) /. 15.
   in
   let instrs = [Cpdftype.Font (font, fontsize); Cpdftype.BeginDocument] @ instrs in
-  Printf.printf "to_string: %s\n" (Cpdftype.to_string instrs);
+  (*Printf.printf "to_string: %s\n" (Cpdftype.to_string instrs);*)
   let pages = Cpdftype.typeset margin margin margin margin papersize pdf instrs in
     let pdf, pageroot = Pdfpage.add_pagetree pages pdf in
-      Pdfpage.add_root pageroot [] pdf
+      let pdf = Pdfpage.add_root pageroot [] pdf in
+        (*Pdfwrite.debug_whole_pdf pdf;*)
+        pdf
