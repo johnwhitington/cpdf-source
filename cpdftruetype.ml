@@ -2,7 +2,7 @@
 open Pdfutil
 open Pdfio
 
-let fontpack_experiment = false
+let fontpack_experiment = true
 
 type t =
   {flags : int;
