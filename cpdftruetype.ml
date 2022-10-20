@@ -538,7 +538,9 @@ let parse ?(subset=[]) data encoding =
               let second_tounicode =
                 if subset = [] then None else
                   let h = null_hash () in
-                    Hashtbl.add h 0 (string_of_int (hd subset));
+                  let s = (implode (tl (tl (explode (Pdftext.utf16be_of_codepoints [hd subset]))))) in
+                    Printf.printf "String for tounicode = %S\n" s;
+                    Hashtbl.add h 0 s;
                     Some h
               in
               [{flags; minx; miny; maxx; maxy; italicangle; ascent; descent;
