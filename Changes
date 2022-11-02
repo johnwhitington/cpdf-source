@@ -3,7 +3,7 @@
 New features:
 
 o Embed TrueType fonts with -font-ttf for -add-text et al.
-o Embed the 14 standard fonts
+o Embed the 14 standard fonts if requested
 o Add links to parts of text with -add-text as %URL[|].
 
 Extended features:
@@ -15,6 +15,7 @@ o Better transformation of some annotation types
 Fixes:
 
 o Updated Yojson to remove dependency on Stream, ready for OCaml 5
+o -typeset was opening files in text mode, instead of binary
 
 
 2.5.1 (January 2022)
