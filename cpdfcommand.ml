@@ -2608,7 +2608,7 @@ let rec get_single_pdf ?(decrypt=true) ?(fail=false) op read_lazy =
   let warn_gs () =
     begin match args.inputs with
       (InFile inname, _, _, _, _, _)::_ ->
-        begin try ignore (close_in (open_in inname)) with _ ->
+        begin try ignore (close_in (open_in_bin inname)) with _ ->
           Printf.eprintf "File %s does not exist\n%!" inname;
           exit 2
         end
@@ -2691,7 +2691,7 @@ let rec get_pdf_from_input_kind ?(read_lazy=false) ?(decrypt=true) ?(fail=false)
   let warn_gs () =
     begin match input with
       (InFile inname, _, _, _, _, _) ->
-        begin try ignore (close_in (open_in inname)) with _ ->
+        begin try ignore (close_in (open_in_bin inname)) with _ ->
           Printf.eprintf "File %s does not exist\n%!" inname;
           exit 2
         end
@@ -4014,7 +4014,7 @@ let go () =
       in
         write_pdf false pdf
   | Some (Typeset filename) ->
-      let text = Pdfio.bytes_of_input_channel (open_in filename) in
+      let text = Pdfio.bytes_of_input_channel (open_in_bin filename) in
       let cpdffont = embed_font () in
       let pdf = Cpdftexttopdf.typeset ~font:cpdffont ~papersize:args.createpdf_pagesize ~fontsize:args.fontsize text in
         write_pdf false pdf
