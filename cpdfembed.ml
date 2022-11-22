@@ -20,7 +20,8 @@ let pdfcode_of_unicode_codepoint encoding_table glyphlist_table u =
     Not_found -> None
 
 let calc_accepted_unicodepoints encoding_table glyphlist_table codepoints =
-  setify
+  sort (fun a b -> compare b a) (* FIXME: Remove once subset experiment gone *)
+  (setify
     (option_map
        (fun u ->
           match
@@ -28,7 +29,7 @@ let calc_accepted_unicodepoints encoding_table glyphlist_table codepoints =
           with
           | Some _ -> Some u
           | None -> None)
-       codepoints)
+       codepoints))
 
 let fontnum = ref 0
 

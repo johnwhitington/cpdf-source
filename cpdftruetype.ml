@@ -25,7 +25,7 @@ type t =
    subset : int list;
    tounicode : (int, string) Hashtbl.t option}
 
-let dbg = ref false
+let dbg = ref true
 
 let required_tables =
   ["head"; "hhea"; "loca"; "cmap"; "maxp"; "cvt "; "glyf"; "prep"; "hmtx"; "fpgm"]
@@ -120,24 +120,33 @@ let read_format_4_encoding_table b =
     t
 
 let print_encoding_table (table : (int, int) Hashtbl.t) =
-  let l = list_of_hashtbl table in
+  let unicodedata = Cpdfunicodedata.unicodedata () in
+  let unicodetable = Hashtbl.create 16000 in
+   iter
+    (fun x ->
+       Hashtbl.add unicodetable x.Cpdfunicodedata.code_value x.Cpdfunicodedata.character_name)
+    unicodedata;
+  let l = sort compare (list_of_hashtbl table) in
   Printf.printf "There are %i characters in this font\n" (length l);
   iter
-    (fun (c, gi) -> Printf.printf "Char %04X is at glyph index %i\n" c gi)
+    (fun (c, gi) ->
+      let str = Printf.sprintf "%04X" c in
+      Printf.printf "Char %s (%s) is at glyph index %i\n" str (Hashtbl.find unicodetable str) gi)
     l
 
 let read_encoding_table fmt length version b =
   match fmt with
   | 0 ->
-      (*Printf.printf "read_encoding_table: format 0\n";*)
+      if !dbg then Printf.printf "read_encoding_table: format 0\n";
       let t = null_hash () in
         for x = 0 to 255 do Hashtbl.add t x (read_byte b) done;
+        print_encoding_table t;
         t
   | 4 ->
-      (*Printf.printf "read_encoding_table: format 4\n";*)
+      if !dbg then Printf.printf "read_encoding_table: format 4\n";
       read_format_4_encoding_table b
   | 6 ->
-      (*Printf.printf "read_encoding_table: format 6\n";*)
+      if !dbg then Printf.printf "read_encoding_table: format 6\n";
       read_format_6_encoding_table b
   | n -> raise (Pdf.PDFError "read_encoding_table: format %i not known\n%!")
 
@@ -399,6 +408,9 @@ let subset_font major minor tables indexToLocFormat subset encoding cmap loca mk
     bytes
 
 let parse ?(subset=[]) data encoding =
+  Printf.printf "********SUBSET is ";
+  iter (Printf.printf "%i ") subset;
+  Printf.printf "\n";
   let mk_b byte_offset = bitbytes_of_input (let i = input_of_bytes data in i.seek_in byte_offset; i) in
   let b = mk_b 0 in
   let major, minor = read_fixed b in
@@ -503,6 +515,11 @@ let parse ?(subset=[]) data encoding =
           in
             let subset_1 = if subset = [] then [] else if fontpack_experiment then tl subset else subset in
             let subset_2 = if subset = [] then [] else [hd subset] in
+            if !dbg && subset <> [] then
+              begin
+                Printf.printf "***********Chars for experimental main WinAnsiEncoding set: %i %i\n" (hd subset_1) (hd (tl subset_1));
+                Printf.printf "***********Chars for experimental higher set: %i\n" (hd subset_2);
+              end;
             let flags = calculate_flags italicangle in
             let firstchar_1, lastchar_1 = calculate_limits subset_1 in
             let firstchar_2, lastchar_2 = calculate_limits subset_2 in
