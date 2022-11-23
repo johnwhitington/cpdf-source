@@ -301,6 +301,12 @@ let padword n =
   let r = n + (if n mod 4 = 0 then 0 else 4 - n mod 4) in
     i32ofi r
 
+let fonumr = ref (-1)
+
+let fonum () = 
+  fonumr += 1;
+  !fonumr
+
 let subset_font major minor tables indexToLocFormat subset encoding cmap loca mk_b glyfoffset data =
   let tables = Array.of_list (sort (fun (_, _, o, _) (_, _, o', _) -> compare o o') tables) in
   let tablesout = ref [] in
@@ -402,7 +408,7 @@ let subset_font major minor tables indexToLocFormat subset encoding cmap loca mk
     newtables;
   let bytes = bytes_of_write_bitstream bs in
     if !dbg then Printf.printf "Made subset font of length %i bytes\n" (bytes_size bytes);
-    let o = open_out_bin "fontout.ttf" in
+    let o = open_out_bin ("fontout" ^ string_of_int (fonum ()) ^ ".ttf") in
       output_string o (string_of_bytes bytes);
       close_out o;
     bytes
@@ -522,7 +528,7 @@ let parse ?(subset=[]) data encoding =
               end;
             let flags = calculate_flags italicangle in
             let firstchar_1, lastchar_1 = calculate_limits subset_1 in
-            let firstchar_2, lastchar_2 = calculate_limits subset_2 in
+            let firstchar_2, lastchar_2 = (0, length subset_2 - 1) in
             let numOfLongHorMetrics =
               match keep (function (t, _, _, _) -> string_of_tag t = "hhea") !tables with
               | (_, _, o, l)::_ -> let b = mk_b (i32toi o) in read_hhea_table b
