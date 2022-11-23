@@ -303,9 +303,7 @@ let padword n =
 
 let fonumr = ref (-1)
 
-let fonum () = 
-  fonumr += 1;
-  !fonumr
+let fonum () = fonumr += 1; !fonumr
 
 let subset_font major minor tables indexToLocFormat subset encoding cmap loca mk_b glyfoffset data =
   let tables = Array.of_list (sort (fun (_, _, o, _) (_, _, o', _) -> compare o o') tables) in
@@ -406,12 +404,15 @@ let subset_font major minor tables indexToLocFormat subset encoding cmap loca mk
               with
                 _ -> ())
     newtables;
-  let bytes = bytes_of_write_bitstream bs in
-    if !dbg then Printf.printf "Made subset font of length %i bytes\n" (bytes_size bytes);
-    let o = open_out_bin ("fontout" ^ string_of_int (fonum ()) ^ ".ttf") in
-      output_string o (string_of_bytes bytes);
-      close_out o;
-    bytes
+  let obs = bytes_of_write_bitstream bs in
+    if !dbg then
+      begin
+        Printf.printf "Made subset font of length %i bytes\n" (bytes_size obs);
+        let o = open_out_bin ("fontout" ^ string_of_int (fonum ()) ^ ".ttf") in
+          output_string o (string_of_bytes obs);
+          close_out o
+      end;
+    obs
 
 let parse ?(subset=[]) data encoding =
   Printf.printf "********SUBSET is ";
