@@ -2,7 +2,7 @@
 open Pdfutil
 open Pdfio
 
-let fontpack_experiment = true
+let fontpack_experiment = false
 
 type t =
   {flags : int;
@@ -135,6 +135,7 @@ let print_encoding_table (table : (int, int) Hashtbl.t) =
     l
 
 let read_encoding_table fmt length version b =
+  Printf.printf "********** format %i table has length, version %i, %i\n" fmt length version;
   match fmt with
   | 0 ->
       if !dbg then Printf.printf "read_encoding_table: format 0\n";
@@ -144,10 +145,10 @@ let read_encoding_table fmt length version b =
         t
   | 4 ->
       if !dbg then Printf.printf "read_encoding_table: format 4\n";
-      read_format_4_encoding_table b
+      read_format_4_encoding_table b;
   | 6 ->
       if !dbg then Printf.printf "read_encoding_table: format 6\n";
-      read_format_6_encoding_table b
+      read_format_6_encoding_table b;
   | n -> raise (Pdf.PDFError "read_encoding_table: format %i not known\n%!")
 
 let read_loca_table indexToLocFormat numGlyphs b =
@@ -489,6 +490,7 @@ let parse ?(subset=[]) data encoding =
                 let num_encoding_tables = read_ushort b in
                   if !dbg then Printf.printf "cmap version %i. There are %i encoding tables\n"
                     cmap_version num_encoding_tables;
+                  (* FIXME Need a proper scheme for selecting the table. For now, just read format 4, and ignore others. *)
                   for x = 1 to num_encoding_tables do
                     let platform_id = read_ushort b in
                     let encoding_id = read_ushort b in
@@ -500,10 +502,9 @@ let parse ?(subset=[]) data encoding =
                         let lngth = read_ushort b in
                         let version = read_ushort b in
                           if !dbg then Printf.printf "subtable has format %i, length %i, version %i\n" fmt lngth version;
-                          let got_glyphcodes = read_encoding_table fmt length version b in
-                            (*print_encoding_table got_glyphcodes; *)
-                            Hashtbl.iter (Hashtbl.add !glyphcodes) got_glyphcodes;
-                            (*Printf.printf "Retrieved %i cmap entries in total\n" (length (list_of_hashtbl !glyphcodes))*)
+                            let got_glyphcodes = read_encoding_table fmt lngth version b in
+                              if fmt = 4 then print_encoding_table got_glyphcodes;
+                              if fmt = 4 then Hashtbl.iter (Hashtbl.add !glyphcodes) got_glyphcodes
                   done;
           end;
           let maxpoffset, maxplength =
