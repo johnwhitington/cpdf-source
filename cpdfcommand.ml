@@ -220,6 +220,7 @@ type op =
   | PrintFontEncoding of string
   | TableOfContents
   | Typeset of string
+  | Draw
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -350,6 +351,7 @@ let string_of_op = function
   | StampAsXObject _ -> "StampAsXObject"
   | TableOfContents -> "TableOfContents"
   | Typeset _ -> "Typeset"
+  | Draw -> "Draw"
 
 (* Inputs: filename, pagespec. *)
 type input_kind =
@@ -842,7 +844,7 @@ let banned banlist = function
     CopyCropBoxToMediaBox|CopyBox|MediaBox|HardBox _|SetTrapped|SetUntrapped|Presentation|
     BlackText|BlackLines|BlackFills|CopyFont _|StampOn _|StampUnder _|StampAsXObject _|
     AddText _|ScaleContents _|AttachFile _|CopyAnnotations _| ThinLines _ | RemoveClipping | RemoveAllText
-    | Prepend _ | Postpend _ ->
+    | Prepend _ | Postpend _ | Draw ->
       mem Pdfcrypt.NoEdit banlist
 
 let operation_allowed pdf banlist op =
@@ -1744,6 +1746,15 @@ let whingemalformed () =
   prerr_string "Command line must be of exactly the form\ncpdf <infile> -gs <path> -gs-malformed-force -o <outfile>\n";
   exit 1
 
+type drawops =
+  | Rect of float * float * float * float (* x, y, w, h *)
+
+let drawops = ref []
+
+(* Add rect to list of drawing commands *)
+let addrect s =
+  drawops := Rect (100., 100., 200., 300.)::!drawops
+
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
   control_args := !control_args @ parse_control_file filename
@@ -2521,6 +2532,9 @@ and specs =
    ("-typeset",
      Arg.String settypeset,
      " Typeset a text file as a PDF");
+   (* Creating new PDF content *)
+   ("-draw", Arg.Unit (setop Draw), " Begin drawing");
+   ("-rect", Arg.String addrect, " Draw rectangle");
    (* These items are undocumented *)
    ("-remove-unused-resources", Arg.Unit (setop RemoveUnusedResources), "");
    ("-stay-on-error", Arg.Unit setstayonerror, "");
@@ -3079,6 +3093,17 @@ let embed_font () =
         ExistingNamedFont
     | FontToEmbed fontfile ->
         EmbedInfo {fontfile; fontname = args.fontname; encoding = args.fontencoding}
+
+
+let ops_of_drawop = function
+  | Rect (x, y, w, h) -> [Pdfops.Op_re (x, y, w, h); Pdfops.Op_f]
+
+let ops_of_drawops drawops = flatten (map ops_of_drawop drawops)
+
+(* Draw all the accumulated operators *)
+let draw range pdf =
+  let s = Pdfops.string_of_ops (ops_of_drawops (rev !drawops)) in
+    Cpdftweak.append_page_content s false args.fast range pdf
 
 (* Main function *)
 let go () =
@@ -4018,6 +4043,10 @@ let go () =
       let cpdffont = embed_font () in
       let pdf = Cpdftexttopdf.typeset ~font:cpdffont ~papersize:args.createpdf_pagesize ~fontsize:args.fontsize text in
         write_pdf false pdf
+  | Some Draw ->
+      let pdf = get_single_pdf args.op false in
+      let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
+        write_pdf false (draw range pdf)
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)
