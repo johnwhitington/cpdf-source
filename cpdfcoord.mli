@@ -2,6 +2,9 @@
 
 (** See cpdfmanual.pdf for examples of things these functions can parse, such as page sizes. *)
 
+(** Read a single rectangles from a string. *)
+val parse_rectangle : Pdf.t -> string -> (float * float * float * float)
+
 (** Read a list of rectangles from a string. *)
 val parse_rectangles : Pdf.t -> string -> (float * float * float * float) list
 

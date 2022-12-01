@@ -1746,14 +1746,36 @@ let whingemalformed () =
   prerr_string "Command line must be of exactly the form\ncpdf <infile> -gs <path> -gs-malformed-force -o <outfile>\n";
   exit 1
 
+(* Drawing operations. Just the parsed command line ops. We convert to actual PDF operations later. *)
+type drawops_colspec =
+   NoCol
+ | RGB of float * float * float
+
 type drawops =
   | Rect of float * float * float * float (* x, y, w, h *)
+  | To of float * float
+  | Line of float * float
+  | Fill of drawops_colspec
+  | Stroke of drawops_colspec
+  | EndPath
 
 let drawops = ref []
 
 (* Add rect to list of drawing commands *)
 let addrect s =
-  drawops := Rect (100., 100., 200., 300.)::!drawops
+  let x, y, w, h = Cpdfcoord.parse_rectangle (Pdf.empty ()) s in
+  drawops := Rect (x, y, w, h)::!drawops
+
+let addto s =
+  let x, y = Cpdfcoord.parse_coordinate (Pdf.empty ()) s in
+    drawops := To (x, y)::!drawops
+
+let addline s =
+  let x, y = Cpdfcoord.parse_coordinate (Pdf.empty ()) s in
+    drawops := Line (x, y)::!drawops
+
+let endpath () =
+  drawops := EndPath::!drawops
 
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
@@ -2535,6 +2557,9 @@ and specs =
    (* Creating new PDF content *)
    ("-draw", Arg.Unit (setop Draw), " Begin drawing");
    ("-rect", Arg.String addrect, " Draw rectangle");
+   ("-to", Arg.String addto, " Move to");
+   ("-line", Arg.String addline, " Line to");
+   ("-end", Arg.Unit endpath, " End path");
    (* These items are undocumented *)
    ("-remove-unused-resources", Arg.Unit (setop RemoveUnusedResources), "");
    ("-stay-on-error", Arg.Unit setstayonerror, "");
@@ -3094,9 +3119,27 @@ let embed_font () =
     | FontToEmbed fontfile ->
         EmbedInfo {fontfile; fontname = args.fontname; encoding = args.fontencoding}
 
+type state =
+  {mutable fill : drawops_colspec;
+   mutable stroke : drawops_colspec}
+
+let state =
+  {fill = NoCol;
+   stroke = NoCol}
 
 let ops_of_drawop = function
-  | Rect (x, y, w, h) -> [Pdfops.Op_re (x, y, w, h); Pdfops.Op_f]
+  | Rect (x, y, w, h) -> [Pdfops.Op_re (x, y, w, h)]
+  | To (x, y) -> [Pdfops.Op_m (x, y)]
+  | Line (x, y) -> [Pdfops.Op_l (x, y)]
+  | Fill x -> (* FIXME: do col *) state.fill <- x; []
+  | Stroke x -> (* FIXME: do col *) state.stroke <- x; []
+  | EndPath ->
+      begin match state.fill, state.stroke with
+      | NoCol, NoCol -> []
+      | NoCol, _ -> [Pdfops.Op_S]
+      | _, NoCol -> [Pdfops.Op_f]
+      | _, _ -> [Pdfops.Op_B']
+      end
 
 let ops_of_drawops drawops = flatten (map ops_of_drawop drawops)
 
