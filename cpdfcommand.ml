@@ -3137,11 +3137,21 @@ let embed_font () =
 
 type state =
   {mutable fill : drawops_colspec;
-   mutable stroke : drawops_colspec}
+   mutable stroke : drawops_colspec;
+   mutable linewidth : float;
+   mutable linecap : int;
+   mutable linejoin : int;
+   mutable miterlimit : float;
+   mutable dashpattern : float list * float}
 
 let state =
   {fill = NoCol;
-   stroke = RGB (0., 0., 0.)}
+   stroke = RGB (0., 0., 0.);
+   linewidth = 1.;
+   linecap = 0;
+   linejoin = 0;
+   miterlimit = 10.;
+   dashpattern = ([], 0.)}
 
 let ops_of_drawop = function
   | Rect (x, y, w, h) -> [Pdfops.Op_re (x, y, w, h)]
