@@ -1750,6 +1750,8 @@ let whingemalformed () =
 type drawops_colspec =
    NoCol
  | RGB of float * float * float
+ | Grey of float
+ | CYMK of float * float * float * float
 
 type drawops =
   | Rect of float * float * float * float (* x, y, w, h *)
@@ -1761,7 +1763,19 @@ type drawops =
 
 let drawops = ref []
 
-(* Add rect to list of drawing commands *)
+let col_of_string s =  
+  match parse_color s with
+  | Cpdfaddtext.RGB (r, g, b) -> RGB (r, g, b)
+  | Cpdfaddtext.Grey g -> Grey g
+  | Cpdfaddtext.CYMK (c, y, m, k) -> CYMK (c, y, m, k)
+  | exception _ -> NoCol
+
+let setstroke s =
+  drawops := Stroke (col_of_string s)::!drawops
+
+let setfill s =
+  drawops := Fill (col_of_string s)::!drawops
+
 let addrect s =
   let x, y, w, h = Cpdfcoord.parse_rectangle (Pdf.empty ()) s in
   drawops := Rect (x, y, w, h)::!drawops
@@ -2559,6 +2573,8 @@ and specs =
    ("-rect", Arg.String addrect, " Draw rectangle");
    ("-to", Arg.String addto, " Move to");
    ("-line", Arg.String addline, " Line to");
+   ("-stroke", Arg.String setstroke, " Set stroke colour");
+   ("-fill", Arg.String setfill, " Set fill colour");
    ("-end", Arg.Unit endpath, " End path");
    (* These items are undocumented *)
    ("-remove-unused-resources", Arg.Unit (setop RemoveUnusedResources), "");
@@ -3125,14 +3141,28 @@ type state =
 
 let state =
   {fill = NoCol;
-   stroke = NoCol}
+   stroke = RGB (0., 0., 0.)}
 
 let ops_of_drawop = function
   | Rect (x, y, w, h) -> [Pdfops.Op_re (x, y, w, h)]
   | To (x, y) -> [Pdfops.Op_m (x, y)]
   | Line (x, y) -> [Pdfops.Op_l (x, y)]
-  | Fill x -> (* FIXME: do col *) state.fill <- x; []
-  | Stroke x -> (* FIXME: do col *) state.stroke <- x; []
+  | Fill x ->
+      state.fill <- x;
+      begin match x with
+      | RGB (r, g, b) -> [Op_rg (r, g, b)]
+      | Grey g -> [Op_g g]
+      | CYMK (c, y, m, k) -> [Op_k (c, y, m, k)]
+      | NoCol -> []
+      end
+  | Stroke x ->
+      state.stroke <- x;
+      begin match x with
+      | RGB (r, g, b) -> [Op_RG (r, g, b)]
+      | Grey g -> [Op_G g]
+      | CYMK (c, y, m, k) -> [Op_K (c, y, m, k)]
+      | NoCol -> []
+      end
   | EndPath ->
       begin match state.fill, state.stroke with
       | NoCol, NoCol -> []
