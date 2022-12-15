@@ -10,6 +10,11 @@ type drawops =
   | Line of float * float
   | Fill of drawops_colspec
   | Stroke of drawops_colspec
+  | SetLineThickness of float
+  | SetLineCap of int
+  | SetLineJoin of int
+  | SetMiterLimit of float
+  | SetDashPattern of float list * float
   | EndPath
 
 type state =

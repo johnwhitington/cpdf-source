@@ -12,6 +12,11 @@ type drawops =
   | Line of float * float
   | Fill of drawops_colspec
   | Stroke of drawops_colspec
+  | SetLineThickness of float
+  | SetLineCap of int
+  | SetLineJoin of int
+  | SetMiterLimit of float
+  | SetDashPattern of float list * float
   | EndPath
 
 type state =
@@ -59,6 +64,21 @@ let ops_of_drawop = function
       | _, NoCol -> [Pdfops.Op_f]
       | _, _ -> [Pdfops.Op_B']
       end
+  | SetLineThickness t ->
+      state.linewidth <- t;
+      [Pdfops.Op_w t]
+  | SetLineCap c ->
+      state.linecap <- c;
+      [Pdfops.Op_J c]
+  | SetLineJoin j ->
+      state.linejoin <- j;
+      [Pdfops.Op_j j]
+  | SetMiterLimit m ->
+      state.miterlimit <- m;
+      [Pdfops.Op_M m]
+  | SetDashPattern (x, y) ->
+      state.dashpattern <- (x, y);
+      [Pdfops.Op_d (x, y)]
 
 let ops_of_drawops drawops = flatten (map ops_of_drawop drawops)
 

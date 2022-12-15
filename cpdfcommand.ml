@@ -1778,6 +1778,16 @@ let addline s =
 let endpath () =
   drawops := Cpdfdraw.EndPath::!drawops
 
+let setthickness s = ()
+
+let setcap s = ()
+
+let setjoin s = ()
+
+let setmiter s = ()
+
+let setdash s = ()
+
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
   control_args := !control_args @ parse_control_file filename
@@ -2563,6 +2573,11 @@ and specs =
    ("-stroke", Arg.String setstroke, " Set stroke colour");
    ("-fill", Arg.String setfill, " Set fill colour");
    ("-end", Arg.Unit endpath, " End path");
+   ("-thick", Arg.String setthickness, " Set stroke thickness");
+   ("-cap", Arg.String setcap, " Set cap");
+   ("-join", Arg.String setjoin, " Set join");
+   ("-miter", Arg.String setmiter, " Set miter limit");
+   ("-dash", Arg.String setdash, " Set dash pattern");
    (* These items are undocumented *)
    ("-remove-unused-resources", Arg.Unit (setop RemoveUnusedResources), "");
    ("-stay-on-error", Arg.Unit setstayonerror, "");
