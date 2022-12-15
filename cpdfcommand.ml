@@ -1778,15 +1778,47 @@ let addline s =
 let endpath () =
   drawops := Cpdfdraw.EndPath::!drawops
 
-let setthickness s = ()
+let setthickness s =
+  try
+    drawops := Cpdfdraw.SetLineThickness (float_of_string s)::!drawops
+  with
+    _ -> error "Thickness must be a number"
 
-let setcap s = ()
+let setcap s =
+  let num =
+    match s with
+    | "butt" -> 0
+    | "round" -> 1
+    | "square" -> 2
+    | _ -> error "Unknown cap type"
+  in
+    drawops := Cpdfdraw.SetLineCap num::!drawops
 
-let setjoin s = ()
+let setjoin s =
+  let num =
+    match s with
+    | "miter" -> 0
+    | "round" -> 1
+    | "bevel" -> 2
+    | _ -> error "Unknown join type"
+  in
+    drawops := Cpdfdraw.SetLineJoin num::!drawops
 
-let setmiter s = ()
+let setmiter s = 
+  try
+    drawops := Cpdfdraw.SetMiterLimit (float_of_string s)::!drawops
+  with
+    _ -> error "Miter limit must be a number"
 
-let setdash s = ()
+let setdash s =
+  try
+  let x, y =
+    let nums = map float_of_string (String.split_on_char ' ' s) in
+      all_but_last nums, last nums
+  in
+    drawops := Cpdfdraw.SetDashPattern (x, y)::!drawops
+  with
+   _ -> error "Dash pattern elements must one or more numbers"
 
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
