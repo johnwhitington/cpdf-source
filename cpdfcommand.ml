@@ -1747,49 +1747,36 @@ let whingemalformed () =
   exit 1
 
 (* Drawing operations. Just the parsed command line ops. We convert to actual PDF operations later. *)
-type drawops_colspec =
-   NoCol
- | RGB of float * float * float
- | Grey of float
- | CYMK of float * float * float * float
-
-type drawops =
-  | Rect of float * float * float * float (* x, y, w, h *)
-  | To of float * float
-  | Line of float * float
-  | Fill of drawops_colspec
-  | Stroke of drawops_colspec
-  | EndPath
 
 let drawops = ref []
 
 let col_of_string s =  
   match parse_color s with
-  | Cpdfaddtext.RGB (r, g, b) -> RGB (r, g, b)
-  | Cpdfaddtext.Grey g -> Grey g
-  | Cpdfaddtext.CYMK (c, y, m, k) -> CYMK (c, y, m, k)
-  | exception _ -> NoCol
+  | Cpdfaddtext.RGB (r, g, b) -> Cpdfdraw.RGB (r, g, b)
+  | Cpdfaddtext.Grey g -> Cpdfdraw.Grey g
+  | Cpdfaddtext.CYMK (c, y, m, k) -> Cpdfdraw.CYMK (c, y, m, k)
+  | exception _ -> Cpdfdraw.NoCol
 
 let setstroke s =
-  drawops := Stroke (col_of_string s)::!drawops
+  drawops := Cpdfdraw.Stroke (col_of_string s)::!drawops
 
 let setfill s =
-  drawops := Fill (col_of_string s)::!drawops
+  drawops := Cpdfdraw.Fill (col_of_string s)::!drawops
 
 let addrect s =
   let x, y, w, h = Cpdfcoord.parse_rectangle (Pdf.empty ()) s in
-  drawops := Rect (x, y, w, h)::!drawops
+  drawops := Cpdfdraw.Rect (x, y, w, h)::!drawops
 
 let addto s =
   let x, y = Cpdfcoord.parse_coordinate (Pdf.empty ()) s in
-    drawops := To (x, y)::!drawops
+    drawops := Cpdfdraw.To (x, y)::!drawops
 
 let addline s =
   let x, y = Cpdfcoord.parse_coordinate (Pdf.empty ()) s in
-    drawops := Line (x, y)::!drawops
+    drawops := Cpdfdraw.Line (x, y)::!drawops
 
 let endpath () =
-  drawops := EndPath::!drawops
+  drawops := Cpdfdraw.EndPath::!drawops
 
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
@@ -3135,59 +3122,6 @@ let embed_font () =
     | FontToEmbed fontfile ->
         EmbedInfo {fontfile; fontname = args.fontname; encoding = args.fontencoding}
 
-type state =
-  {mutable fill : drawops_colspec;
-   mutable stroke : drawops_colspec;
-   mutable linewidth : float;
-   mutable linecap : int;
-   mutable linejoin : int;
-   mutable miterlimit : float;
-   mutable dashpattern : float list * float}
-
-let state =
-  {fill = NoCol;
-   stroke = RGB (0., 0., 0.);
-   linewidth = 1.;
-   linecap = 0;
-   linejoin = 0;
-   miterlimit = 10.;
-   dashpattern = ([], 0.)}
-
-let ops_of_drawop = function
-  | Rect (x, y, w, h) -> [Pdfops.Op_re (x, y, w, h)]
-  | To (x, y) -> [Pdfops.Op_m (x, y)]
-  | Line (x, y) -> [Pdfops.Op_l (x, y)]
-  | Fill x ->
-      state.fill <- x;
-      begin match x with
-      | RGB (r, g, b) -> [Op_rg (r, g, b)]
-      | Grey g -> [Op_g g]
-      | CYMK (c, y, m, k) -> [Op_k (c, y, m, k)]
-      | NoCol -> []
-      end
-  | Stroke x ->
-      state.stroke <- x;
-      begin match x with
-      | RGB (r, g, b) -> [Op_RG (r, g, b)]
-      | Grey g -> [Op_G g]
-      | CYMK (c, y, m, k) -> [Op_K (c, y, m, k)]
-      | NoCol -> []
-      end
-  | EndPath ->
-      begin match state.fill, state.stroke with
-      | NoCol, NoCol -> []
-      | NoCol, _ -> [Pdfops.Op_S]
-      | _, NoCol -> [Pdfops.Op_f]
-      | _, _ -> [Pdfops.Op_B']
-      end
-
-let ops_of_drawops drawops = flatten (map ops_of_drawop drawops)
-
-(* Draw all the accumulated operators *)
-let draw range pdf =
-  let s = Pdfops.string_of_ops (ops_of_drawops (rev !drawops)) in
-    Cpdftweak.append_page_content s false args.fast range pdf
-
 (* Main function *)
 let go () =
   match args.op with
@@ -4129,7 +4063,7 @@ let go () =
   | Some Draw ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-        write_pdf false (draw range pdf)
+        write_pdf false (Cpdfdraw.draw args.fast range pdf (rev !drawops))
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)
