@@ -1758,10 +1758,10 @@ let col_of_string s =
   | exception _ -> Cpdfdraw.NoCol
 
 let setstroke s =
-  drawops := Cpdfdraw.Stroke (col_of_string s)::!drawops
+  drawops := Cpdfdraw.SetStroke (col_of_string s)::!drawops
 
 let setfill s =
-  drawops := Cpdfdraw.Fill (col_of_string s)::!drawops
+  drawops := Cpdfdraw.SetFill (col_of_string s)::!drawops
 
 let addrect s =
   let x, y, w, h = Cpdfcoord.parse_rectangle (Pdf.empty ()) s in
@@ -1775,8 +1775,23 @@ let addline s =
   let x, y = Cpdfcoord.parse_coordinate (Pdf.empty ()) s in
     drawops := Cpdfdraw.Line (x, y)::!drawops
 
-let endpath () =
-  drawops := Cpdfdraw.EndPath::!drawops
+let stroke () =
+  drawops := Cpdfdraw.Stroke::!drawops
+
+let fill () =
+  drawops := Cpdfdraw.Fill::!drawops
+
+let fillevenodd () =
+  drawops := Cpdfdraw.FillEvenOdd::!drawops
+
+let strokefill () =
+  drawops := Cpdfdraw.FillStroke::!drawops
+
+let strokefillevenodd () =
+  drawops := Cpdfdraw.FillStrokeEvenOdd::!drawops
+
+let closepath () =
+  drawops := Cpdfdraw.ClosePath::!drawops
 
 let setthickness s =
   try
@@ -1819,6 +1834,20 @@ let setdash s =
     drawops := Cpdfdraw.SetDashPattern (x, y)::!drawops
   with
    _ -> error "Dash pattern elements must one or more numbers"
+
+let push () =
+  drawops := Cpdfdraw.Push::!drawops
+
+let pop () =
+  drawops := Cpdfdraw.Pop::!drawops
+
+let setmatrix s =
+  match map float_of_string (String.split_on_char ' ' s) with
+  | [a; b; c; d; e; f] ->
+      drawops := Cpdfdraw.Matrix {Pdftransform.a = a; Pdftransform.b = b; Pdftransform.c = c;
+                                  Pdftransform.d = d; Pdftransform.e = e; Pdftransform.f = f}::!drawops
+  | _ -> error "Matrix must have six numbers"
+  | exception _ -> error "Matrix elements must be numbers"
 
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
@@ -2602,14 +2631,22 @@ and specs =
    ("-rect", Arg.String addrect, " Draw rectangle");
    ("-to", Arg.String addto, " Move to");
    ("-line", Arg.String addline, " Line to");
-   ("-stroke", Arg.String setstroke, " Set stroke colour");
-   ("-fill", Arg.String setfill, " Set fill colour");
-   ("-end", Arg.Unit endpath, " End path");
+   ("-strokecol", Arg.String setstroke, " Set stroke colour");
+   ("-fillcol", Arg.String setfill, " Set fill colour");
+   ("-stroke", Arg.Unit stroke, " Stroke");
+   ("-fill", Arg.Unit fill, " Fill");
+   ("-filleo", Arg.Unit fill, " Fill, even odd");
+   ("-strokefill", Arg.Unit strokefill, " Stroke and fill");
+   ("-strokefilleo", Arg.Unit strokefillevenodd, " Stroke and fill, even odd");
+   ("-close", Arg.Unit closepath, " Close path");
    ("-thick", Arg.String setthickness, " Set stroke thickness");
    ("-cap", Arg.String setcap, " Set cap");
    ("-join", Arg.String setjoin, " Set join");
    ("-miter", Arg.String setmiter, " Set miter limit");
    ("-dash", Arg.String setdash, " Set dash pattern");
+   ("-push", Arg.Unit push, " Push graphics stack");
+   ("-pop", Arg.Unit pop, " Pop graphics stack");
+   ("-matrix", Arg.String setmatrix, " Append to graphics matrix");
    (* These items are undocumented *)
    ("-remove-unused-resources", Arg.Unit (setop RemoveUnusedResources), "");
    ("-stay-on-error", Arg.Unit setstayonerror, "");
