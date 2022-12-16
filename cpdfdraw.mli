@@ -24,5 +24,7 @@ type drawops =
   | Stroke
   | FillStroke
   | FillStrokeEvenOdd
+  | SoftXObject of drawops list
+  | HardXObject of drawops list
 
 val draw : bool -> int list -> Pdf.t -> drawops list -> Pdf.t

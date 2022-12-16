@@ -1746,9 +1746,18 @@ let whingemalformed () =
   prerr_string "Command line must be of exactly the form\ncpdf <infile> -gs <path> -gs-malformed-force -o <outfile>\n";
   exit 1
 
-(* Drawing operations. Just the parsed command line ops. We convert to actual PDF operations later. *)
+(* Drawing operations. FIXME: Clear this around ANDs? *)
+let drawops =
+  let t = Hashtbl.create 10 in
+    Hashtbl.add t "_" [];
+    t
 
-let drawops = ref []
+(* For now, re-using a save name is undefined, and nesting them is undefined too. To fix in both cases. *)
+let currstash = ref "_"
+
+let addop o =
+  let v = Hashtbl.find drawops !currstash in
+    Hashtbl.replace drawops !currstash (o::v)
 
 let col_of_string s =  
   match parse_color s with
@@ -1758,44 +1767,44 @@ let col_of_string s =
   | exception _ -> Cpdfdraw.NoCol
 
 let setstroke s =
-  drawops := Cpdfdraw.SetStroke (col_of_string s)::!drawops
+  addop (Cpdfdraw.SetStroke (col_of_string s))
 
 let setfill s =
-  drawops := Cpdfdraw.SetFill (col_of_string s)::!drawops
+  addop (Cpdfdraw.SetFill (col_of_string s))
 
 let addrect s =
   let x, y, w, h = Cpdfcoord.parse_rectangle (Pdf.empty ()) s in
-  drawops := Cpdfdraw.Rect (x, y, w, h)::!drawops
+    addop (Cpdfdraw.Rect (x, y, w, h))
 
 let addto s =
   let x, y = Cpdfcoord.parse_coordinate (Pdf.empty ()) s in
-    drawops := Cpdfdraw.To (x, y)::!drawops
+    addop (Cpdfdraw.To (x, y))
 
 let addline s =
   let x, y = Cpdfcoord.parse_coordinate (Pdf.empty ()) s in
-    drawops := Cpdfdraw.Line (x, y)::!drawops
+    addop (Cpdfdraw.Line (x, y))
 
 let stroke () =
-  drawops := Cpdfdraw.Stroke::!drawops
+  addop Cpdfdraw.Stroke
 
 let fill () =
-  drawops := Cpdfdraw.Fill::!drawops
+  addop Cpdfdraw.Fill
 
 let fillevenodd () =
-  drawops := Cpdfdraw.FillEvenOdd::!drawops
+  addop Cpdfdraw.FillEvenOdd
 
 let strokefill () =
-  drawops := Cpdfdraw.FillStroke::!drawops
+  addop Cpdfdraw.FillStroke
 
 let strokefillevenodd () =
-  drawops := Cpdfdraw.FillStrokeEvenOdd::!drawops
+  addop Cpdfdraw.FillStrokeEvenOdd
 
 let closepath () =
-  drawops := Cpdfdraw.ClosePath::!drawops
+  addop Cpdfdraw.ClosePath
 
 let setthickness s =
   try
-    drawops := Cpdfdraw.SetLineThickness (float_of_string s)::!drawops
+    addop (Cpdfdraw.SetLineThickness (float_of_string s))
   with
     _ -> error "Thickness must be a number"
 
@@ -1807,7 +1816,7 @@ let setcap s =
     | "square" -> 2
     | _ -> error "Unknown cap type"
   in
-    drawops := Cpdfdraw.SetLineCap num::!drawops
+    addop (Cpdfdraw.SetLineCap num)
 
 let setjoin s =
   let num =
@@ -1817,37 +1826,76 @@ let setjoin s =
     | "bevel" -> 2
     | _ -> error "Unknown join type"
   in
-    drawops := Cpdfdraw.SetLineJoin num::!drawops
+    addop (Cpdfdraw.SetLineJoin num)
 
 let setmiter s = 
   try
-    drawops := Cpdfdraw.SetMiterLimit (float_of_string s)::!drawops
+    addop (Cpdfdraw.SetMiterLimit (float_of_string s))
   with
     _ -> error "Miter limit must be a number"
+
+let readfloats s = map float_of_string (String.split_on_char ' ' s)
 
 let setdash s =
   try
   let x, y =
-    let nums = map float_of_string (String.split_on_char ' ' s) in
-      all_but_last nums, last nums
+    let nums = readfloats s in all_but_last nums, last nums
   in
-    drawops := Cpdfdraw.SetDashPattern (x, y)::!drawops
+    addop (Cpdfdraw.SetDashPattern (x, y))
   with
    _ -> error "Dash pattern elements must one or more numbers"
 
 let push () =
-  drawops := Cpdfdraw.Push::!drawops
+  addop Cpdfdraw.Push
 
 let pop () =
-  drawops := Cpdfdraw.Pop::!drawops
+  addop Cpdfdraw.Pop
 
 let setmatrix s =
-  match map float_of_string (String.split_on_char ' ' s) with
+  match readfloats s with
   | [a; b; c; d; e; f] ->
-      drawops := Cpdfdraw.Matrix {Pdftransform.a = a; Pdftransform.b = b; Pdftransform.c = c;
-                                  Pdftransform.d = d; Pdftransform.e = e; Pdftransform.f = f}::!drawops
+      addop (Cpdfdraw.Matrix {Pdftransform.a = a; Pdftransform.b = b; Pdftransform.c = c;
+                              Pdftransform.d = d; Pdftransform.e = e; Pdftransform.f = f})
   | _ -> error "Matrix must have six numbers"
   | exception _ -> error "Matrix elements must be numbers"
+
+let setmtranslate s =
+  match readfloats s with
+  | [a; b] -> addop (Cpdfdraw.Matrix (Pdftransform.matrix_of_transform [Pdftransform.Translate (a, b)]))
+  | _ | exception _ -> error "-mtranslate takes two numbers"
+
+let setmrotate s =
+  match readfloats s with
+  | [a; b; c] -> addop (Cpdfdraw.Matrix (Pdftransform.matrix_of_transform [Pdftransform.Rotate ((a, b), c)]))
+  | _ | exception _ -> error "-mrotate takes three numbers"
+
+let setmscale s =
+  match readfloats s with
+  | [a; b; c; d] -> addop (Cpdfdraw.Matrix (Pdftransform.matrix_of_transform [Pdftransform.Scale ((a, b), c, d)]))
+  | _ | exception _ -> error "-mtranslate takes four numbers"
+
+let setmshearx s =
+  match readfloats s with
+  | [a; b; c] -> addop (Cpdfdraw.Matrix (Pdftransform.matrix_of_transform [Pdftransform.ShearX ((a, b), c)]))
+  | _ | exception _ -> error "-mshearx takes three numbers"
+
+let setmsheary s = 
+  match readfloats s with
+  | [a; b; c] -> addop (Cpdfdraw.Matrix (Pdftransform.matrix_of_transform [Pdftransform.ShearY ((a, b), c)]))
+  | _ | exception _ -> error "-msheary takes three numbers"
+
+let savexobj s =
+  Hashtbl.add drawops s [];
+  currstash := s
+
+let endsave s =
+  currstash := "_"
+
+let usexobj s =
+  try
+    addop (Cpdfdraw.SoftXObject (rev (Hashtbl.find drawops s)))
+  with
+    _ -> error (Printf.sprintf "Could not find stashed graphics %s\n" s)
 
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
@@ -2647,6 +2695,14 @@ and specs =
    ("-push", Arg.Unit push, " Push graphics stack");
    ("-pop", Arg.Unit pop, " Pop graphics stack");
    ("-matrix", Arg.String setmatrix, " Append to graphics matrix");
+   ("-mtrans", Arg.String setmtranslate, " Translate the graphics matrix");
+   ("-mrot", Arg.String setmrotate, " Rotate the graphics matrix");
+   ("-mscale", Arg.String setmscale, " Scale the graphics matrix");
+   ("-mshearx", Arg.String setmshearx, " Shear the graphics matrix in X");
+   ("-msheary", Arg.String setmshearx, " Shear the graphics matrix in Y");
+   ("-save", Arg.String savexobj, " Begin to save graphics operators");
+   ("-endsave", Arg.String endsave, " End saving of graphics operators");
+   ("-use", Arg.String usexobj, " Use a saved sequence of graphics operators");
    (* These items are undocumented *)
    ("-remove-unused-resources", Arg.Unit (setop RemoveUnusedResources), "");
    ("-stay-on-error", Arg.Unit setstayonerror, "");
@@ -4147,7 +4203,7 @@ let go () =
   | Some Draw ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-        write_pdf false (Cpdfdraw.draw args.fast range pdf (rev !drawops))
+        write_pdf false (Cpdfdraw.draw args.fast range pdf (rev (Hashtbl.find drawops "_")))
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)

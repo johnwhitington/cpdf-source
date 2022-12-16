@@ -26,8 +26,10 @@ type drawops =
   | Stroke
   | FillStroke
   | FillStrokeEvenOdd
+  | SoftXObject of drawops list
+  | HardXObject of drawops list
 
-let ops_of_drawop = function
+let rec ops_of_drawop = function
   | Push -> [Pdfops.Op_q]
   | Pop -> [Pdfops.Op_Q]
   | Matrix m -> [Pdfops.Op_cm m] 
@@ -59,8 +61,11 @@ let ops_of_drawop = function
   | SetLineJoin j -> [Pdfops.Op_j j]
   | SetMiterLimit m -> [Pdfops.Op_M m]
   | SetDashPattern (x, y) -> [Pdfops.Op_d (x, y)]
+  | SoftXObject l | HardXObject l ->
+      [Pdfops.Op_q] @ ops_of_drawops l @ [Pdfops.Op_Q]
 
-let ops_of_drawops drawops = flatten (map ops_of_drawop drawops)
+and ops_of_drawops drawops =
+  flatten (map ops_of_drawop drawops)
 
 (* Draw all the accumulated operators *)
 let draw fast range pdf drawops =
