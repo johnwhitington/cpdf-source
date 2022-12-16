@@ -17,6 +17,9 @@ type drawops =
   | SetLineJoin of int
   | SetMiterLimit of float
   | SetDashPattern of float list * float
+  | Matrix of Pdftransform.transform_matrix
+  | Push
+  | Pop
   | EndPath
 
 type state =
@@ -28,7 +31,7 @@ type state =
    mutable miterlimit : float;
    mutable dashpattern : float list * float}
 
-let state =
+let initial_state () =
   {fill = NoCol;
    stroke = RGB (0., 0., 0.);
    linewidth = 1.;
@@ -37,12 +40,30 @@ let state =
    miterlimit = 10.;
    dashpattern = ([], 0.)}
 
+let state =
+  ref [initial_state ()]
+
+let currstate () =
+  match !state with s::_ -> s | [] -> assert false
+
+let pushstate () =
+  match !state with s::t -> state := {s with fill = s.fill}::s::t | [] -> assert false
+
+let popstate () =
+  match !state with [s] -> () | s::t -> state := t | [] -> assert false
+
+let cleanstate () =
+  state := [initial_state ()]
+
 let ops_of_drawop = function
+  | Push -> pushstate (); [Pdfops.Op_q]
+  | Pop -> popstate (); [Pdfops.Op_Q]
+  | Matrix m -> [Pdfops.Op_cm m] 
   | Rect (x, y, w, h) -> [Pdfops.Op_re (x, y, w, h)]
   | To (x, y) -> [Pdfops.Op_m (x, y)]
   | Line (x, y) -> [Pdfops.Op_l (x, y)]
   | Fill x ->
-      state.fill <- x;
+      (currstate ()).fill <- x;
       begin match x with
       | RGB (r, g, b) -> [Op_rg (r, g, b)]
       | Grey g -> [Op_g g]
@@ -50,7 +71,7 @@ let ops_of_drawop = function
       | NoCol -> []
       end
   | Stroke x ->
-      state.stroke <- x;
+      (currstate ()).stroke <- x;
       begin match x with
       | RGB (r, g, b) -> [Op_RG (r, g, b)]
       | Grey g -> [Op_G g]
@@ -58,26 +79,26 @@ let ops_of_drawop = function
       | NoCol -> []
       end
   | EndPath ->
-      begin match state.fill, state.stroke with
+      begin match (currstate ()).fill, (currstate ()).stroke with
       | NoCol, NoCol -> []
       | NoCol, _ -> [Pdfops.Op_S]
       | _, NoCol -> [Pdfops.Op_f]
       | _, _ -> [Pdfops.Op_B']
       end
   | SetLineThickness t ->
-      state.linewidth <- t;
+      (currstate ()).linewidth <- t;
       [Pdfops.Op_w t]
   | SetLineCap c ->
-      state.linecap <- c;
+      (currstate ()).linecap <- c;
       [Pdfops.Op_J c]
   | SetLineJoin j ->
-      state.linejoin <- j;
+      (currstate ()).linejoin <- j;
       [Pdfops.Op_j j]
   | SetMiterLimit m ->
-      state.miterlimit <- m;
+      (currstate ()).miterlimit <- m;
       [Pdfops.Op_M m]
   | SetDashPattern (x, y) ->
-      state.dashpattern <- (x, y);
+      (currstate ()).dashpattern <- (x, y);
       [Pdfops.Op_d (x, y)]
 
 let ops_of_drawops drawops = flatten (map ops_of_drawop drawops)
@@ -85,4 +106,5 @@ let ops_of_drawops drawops = flatten (map ops_of_drawop drawops)
 (* Draw all the accumulated operators *)
 let draw fast range pdf drawops =
   let s = Pdfops.string_of_ops (ops_of_drawops drawops) in
+    cleanstate ();
     Cpdftweak.append_page_content s false fast range pdf

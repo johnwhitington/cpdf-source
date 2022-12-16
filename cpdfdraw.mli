@@ -15,6 +15,9 @@ type drawops =
   | SetLineJoin of int
   | SetMiterLimit of float
   | SetDashPattern of float list * float
+  | Matrix of Pdftransform.transform_matrix
+  | Push
+  | Pop
   | EndPath
 
 type state =
