@@ -5,7 +5,8 @@ type drawops_colspec =
  | CYMK of float * float * float * float
 
 type drawops =
-  | Rect of float * float * float * float (* x, y, w, h *)
+  | Rect of float * float * float * float
+  | Bezier of float * float * float * float * float * float
   | To of float * float
   | Line of float * float
   | ClosePath

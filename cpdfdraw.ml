@@ -7,7 +7,8 @@ type drawops_colspec =
  | CYMK of float * float * float * float
 
 type drawops =
-  | Rect of float * float * float * float (* x, y, w, h *)
+  | Rect of float * float * float * float
+  | Bezier of float * float * float * float * float * float
   | To of float * float
   | Line of float * float
   | ClosePath
@@ -34,6 +35,7 @@ let rec ops_of_drawop = function
   | Pop -> [Pdfops.Op_Q]
   | Matrix m -> [Pdfops.Op_cm m] 
   | Rect (x, y, w, h) -> [Pdfops.Op_re (x, y, w, h)]
+  | Bezier (a, b, c, d, e, f) -> [Pdfops.Op_c (a, b, c, d, e, f)]
   | To (x, y) -> [Pdfops.Op_m (x, y)]
   | Line (x, y) -> [Pdfops.Op_l (x, y)]
   | SetFill x ->

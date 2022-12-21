@@ -1759,6 +1759,8 @@ let addop o =
   let v = Hashtbl.find drawops !currstash in
     Hashtbl.replace drawops !currstash (o::v)
 
+let readfloats s = map float_of_string (String.split_on_char ' ' s)
+
 let col_of_string s =  
   match parse_color s with
   | Cpdfaddtext.RGB (r, g, b) -> Cpdfdraw.RGB (r, g, b)
@@ -1783,6 +1785,27 @@ let addto s =
 let addline s =
   let x, y = Cpdfcoord.parse_coordinate (Pdf.empty ()) s in
     addop (Cpdfdraw.Line (x, y))
+
+let addbezier s =
+  match readfloats s with
+  | [a; b; c; d; e; f] -> addop (Cpdfdraw.Bezier (a, b, c, d, e, f))
+  | _ -> error "-bez requires siz numbers"
+  | exception _ -> error "malformed -bez"
+
+let addcircle s =
+  match readfloats s with
+  | [x; y; r] ->
+      let _, _, segs = hd (snd (Pdfshapes.circle x y r)) in
+        (match segs with
+         | Pdfgraphics.Bezier ((a, b), _, _, _)::_ -> addop (Cpdfdraw.To (a, b))
+         | _ -> assert false);
+        iter
+          (function
+           | Pdfgraphics.Bezier (_, (c, d), (e, f), (g, h)) -> addop (Cpdfdraw.Bezier (c, d, e, f, g, h))
+           | Pdfgraphics.Straight _ -> assert false)
+          segs
+  | _ -> error "-circle requires three numbers"
+  | exception _ -> error "malformed -circle"
 
 let stroke () =
   addop Cpdfdraw.Stroke
@@ -1834,14 +1857,12 @@ let setmiter s =
   with
     _ -> error "Miter limit must be a number"
 
-let readfloats s = map float_of_string (String.split_on_char ' ' s)
-
 let setdash s =
   try
-  let x, y =
-    let nums = readfloats s in all_but_last nums, last nums
-  in
-    addop (Cpdfdraw.SetDashPattern (x, y))
+    let x, y =
+      let nums = readfloats s in all_but_last nums, last nums
+    in
+      addop (Cpdfdraw.SetDashPattern (x, y))
   with
    _ -> error "Dash pattern elements must one or more numbers"
 
@@ -2678,7 +2699,9 @@ and specs =
    ("-draw", Arg.Unit (setop Draw), " Begin drawing");
    ("-rect", Arg.String addrect, " Draw rectangle");
    ("-to", Arg.String addto, " Move to");
-   ("-line", Arg.String addline, " Line to");
+   ("-line", Arg.String addline, " Add line to");
+   ("-bez", Arg.String addbezier, " Add Bezier curve to path");
+   ("-circle", Arg.String addcircle, " Add circle to path");
    ("-strokecol", Arg.String setstroke, " Set stroke colour");
    ("-fillcol", Arg.String setfill, " Set fill colour");
    ("-stroke", Arg.Unit stroke, " Stroke");
