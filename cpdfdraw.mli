@@ -25,6 +25,8 @@ type drawops =
   | Stroke
   | FillStroke
   | FillStrokeEvenOdd
+  | Clip
+  | ClipEvenOdd
   | SoftXObject of drawops list
   | HardXObject of drawops list
 

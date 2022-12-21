@@ -27,6 +27,8 @@ type drawops =
   | Stroke
   | FillStroke
   | FillStrokeEvenOdd
+  | Clip
+  | ClipEvenOdd
   | SoftXObject of drawops list
   | HardXObject of drawops list
 
@@ -58,7 +60,9 @@ let rec ops_of_drawop = function
   | Stroke -> [Pdfops.Op_S]
   | FillStroke -> [Pdfops.Op_B]
   | FillStrokeEvenOdd -> [Pdfops.Op_B']
-  | SetLineThickness t -> [Pdfops.Op_w t]
+  | Clip -> [Pdfops.Op_W; Pdfops.Op_n]
+  | ClipEvenOdd -> [Pdfops.Op_W']
+  | SetLineThickness t -> [Pdfops.Op_w t; Pdfops.Op_n]
   | SetLineCap c -> [Pdfops.Op_J c]
   | SetLineJoin j -> [Pdfops.Op_j j]
   | SetMiterLimit m -> [Pdfops.Op_M m]

@@ -1822,6 +1822,12 @@ let strokefill () =
 let strokefillevenodd () =
   addop Cpdfdraw.FillStrokeEvenOdd
 
+let clip () =
+  addop Cpdfdraw.Clip
+
+let clipevenodd () =
+  addop Cpdfdraw.ClipEvenOdd
+
 let closepath () =
   addop Cpdfdraw.ClosePath
 
@@ -2706,9 +2712,11 @@ and specs =
    ("-fillcol", Arg.String setfill, " Set fill colour");
    ("-stroke", Arg.Unit stroke, " Stroke");
    ("-fill", Arg.Unit fill, " Fill");
-   ("-filleo", Arg.Unit fill, " Fill, even odd");
+   ("-filleo", Arg.Unit fillevenodd, " Fill, even odd");
    ("-strokefill", Arg.Unit strokefill, " Stroke and fill");
    ("-strokefilleo", Arg.Unit strokefillevenodd, " Stroke and fill, even odd");
+   ("-clip", Arg.Unit clip, " Clip");
+   ("-clipeo", Arg.Unit clipevenodd, " Clip, even odd");
    ("-close", Arg.Unit closepath, " Close path");
    ("-thick", Arg.String setthickness, " Set stroke thickness");
    ("-cap", Arg.String setcap, " Set cap");
