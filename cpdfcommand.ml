@@ -1899,7 +1899,7 @@ let setmrotate s =
 let setmscale s =
   match readfloats s with
   | [a; b; c; d] -> addop (Cpdfdraw.Matrix (Pdftransform.matrix_of_transform [Pdftransform.Scale ((a, b), c, d)]))
-  | _ | exception _ -> error "-mtranslate takes four numbers"
+  | _ | exception _ -> error "-mscale takes four numbers"
 
 let setmshearx s =
   match readfloats s with
@@ -1925,10 +1925,27 @@ let usexobj s =
     _ -> error (Printf.sprintf "Could not find stashed graphics %s\n" s)
 
 let addjpeg n =
-  let objnum =
-    0
+  let name, filename =
+    match String.split_on_char '=' n with
+    | [name; filename] -> name, filename
+    | _ -> error "addjpeg: bad file specification"
   in
-    addop (Cpdfdraw.ImageXObject (n, objnum))
+    try
+      let data = Pdfio.bytes_of_string (contents_of_file filename) in
+      let w, h = Pdfjpeg.jpeg_dimensions data in
+      let d = 
+        ["/Length", Pdf.Integer (Pdfio.bytes_size data);
+         "/Filter", Pdf.Name "/DCTDecode";
+         "/BitsPerComponent", Pdf.Integer 8;
+         "/ColorSpace", Pdf.Name "/DeviceRGB";
+         "/Subtype", Pdf.Name "/Image";
+         "/Width", Pdf.Integer w;
+         "/Height", Pdf.Integer h]
+      in
+      let obj = Pdf.Stream {contents = (Pdf.Dictionary d , Pdf.Got data)} in
+        addop (Cpdfdraw.ImageXObject (name, obj))
+    with
+      _ -> error "addjpeg: could not load JPEG"
 
 let addimage s =
   addop (Cpdfdraw.Image s)

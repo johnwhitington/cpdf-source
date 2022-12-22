@@ -35,15 +35,15 @@ type drawops =
   | SoftXObject of drawops list
   | HardXObject of drawops list
   | Image of string
-  | ImageXObject of string * int
+  | ImageXObject of string * Pdf.pdfobject
 
-(* Hash table of (human name, (resources name, object number)) for image xobjects *)
+(* Hash table of (human name, (resources name, object)) for image xobjects *)
 let images = null_hash ()
 
 (* Fresh XObject names. If we are stamping over another page, manage clashes later. *)
 let fresh_xobj_name () = "/Img0"
 
-let rec ops_of_drawop = function
+let rec ops_of_drawop pdf = function
   | Push -> [Pdfops.Op_q]
   | Pop -> [Pdfops.Op_Q]
   | Matrix m -> [Pdfops.Op_cm m] 
@@ -79,17 +79,37 @@ let rec ops_of_drawop = function
   | SetMiterLimit m -> [Pdfops.Op_M m]
   | SetDashPattern (x, y) -> [Pdfops.Op_d (x, y)]
   | SoftXObject l | HardXObject l ->
-      [Pdfops.Op_q] @ ops_of_drawops l @ [Pdfops.Op_Q]
+      [Pdfops.Op_q] @ ops_of_drawops pdf l @ [Pdfops.Op_Q]
   | Image s -> [Pdfops.Op_Do (try fst (Hashtbl.find images s) with _ -> Cpdferror.error ("Image not found: " ^ s))]
-  | ImageXObject (s, i) ->
-      Hashtbl.add images s (fresh_xobj_name (), i); 
+  | ImageXObject (s, obj) ->
+      Hashtbl.add images s (fresh_xobj_name (), Pdf.addobj pdf obj); 
       []
 
-and ops_of_drawops drawops =
-  flatten (map ops_of_drawop drawops)
+and ops_of_drawops pdf drawops =
+  flatten (map (ops_of_drawop pdf) drawops)
 
-(* Draw all the accumulated operators. FIXME: Manage name clashes in Xobjects etc,
-by using something more robust than append_page_content! *)
+(* Draw all the accumulated operators. FIXME: Manage name clashes in Xobjects *)
 let draw fast range pdf drawops =
-  let s = Pdfops.string_of_ops (ops_of_drawops drawops) in
-    Cpdftweak.append_page_content s false fast range pdf
+  let s = Pdfops.string_of_ops (ops_of_drawops pdf drawops) in
+  let pdf = Cpdftweak.append_page_content s false fast range pdf in
+  let images = list_of_hashtbl images in
+  let resources = map (fun (_, (n, o)) -> (n, Pdf.Indirect o)) images in
+    match images with [] -> pdf | _ ->
+      let pages = Pdfpage.pages_of_pagetree pdf in
+      let pages =
+        map
+          (fun p ->
+            let new_resources =
+              let existing =
+                begin match Pdf.lookup_direct pdf "/XObject" p.Pdfpage.resources with
+                | Some (Pdf.Dictionary d) -> d
+                | _ -> []
+                end
+              in
+                let new_xobjects = fold_right (fun (k, v) d -> add k v d) resources existing in
+                  Pdf.add_dict_entry p.Pdfpage.resources "/XObject" (Pdf.Dictionary new_xobjects)
+            in
+             {p with resources = new_resources})
+          pages
+      in
+      Pdfpage.change_pages true pdf pages

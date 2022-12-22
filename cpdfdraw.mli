@@ -33,6 +33,6 @@ type drawops =
   | SoftXObject of drawops list
   | HardXObject of drawops list
   | Image of string
-  | ImageXObject of string * int
+  | ImageXObject of string * Pdf.pdfobject
 
 val draw : bool -> int list -> Pdf.t -> drawops list -> Pdf.t
