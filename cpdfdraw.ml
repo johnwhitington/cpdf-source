@@ -1,10 +1,13 @@
 open Pdfutil
 
-type drawops_colspec =
+type colspec =
    NoCol
  | RGB of float * float * float
  | Grey of float
  | CYMK of float * float * float * float
+
+type image =
+  JPEG
 
 type drawops =
   | Rect of float * float * float * float
@@ -12,8 +15,8 @@ type drawops =
   | To of float * float
   | Line of float * float
   | ClosePath
-  | SetFill of drawops_colspec
-  | SetStroke of drawops_colspec
+  | SetFill of colspec
+  | SetStroke of colspec
   | SetLineThickness of float
   | SetLineCap of int
   | SetLineJoin of int
@@ -31,6 +34,14 @@ type drawops =
   | ClipEvenOdd
   | SoftXObject of drawops list
   | HardXObject of drawops list
+  | Image of string
+  | ImageXObject of string * int
+
+(* Hash table of (human name, (resources name, object number)) for image xobjects *)
+let images = null_hash ()
+
+(* Fresh XObject names. If we are stamping over another page, manage clashes later. *)
+let fresh_xobj_name () = "/Img0"
 
 let rec ops_of_drawop = function
   | Push -> [Pdfops.Op_q]
@@ -69,11 +80,16 @@ let rec ops_of_drawop = function
   | SetDashPattern (x, y) -> [Pdfops.Op_d (x, y)]
   | SoftXObject l | HardXObject l ->
       [Pdfops.Op_q] @ ops_of_drawops l @ [Pdfops.Op_Q]
+  | Image s -> [Pdfops.Op_Do (try fst (Hashtbl.find images s) with _ -> Cpdferror.error ("Image not found: " ^ s))]
+  | ImageXObject (s, i) ->
+      Hashtbl.add images s (fresh_xobj_name (), i); 
+      []
 
 and ops_of_drawops drawops =
   flatten (map ops_of_drawop drawops)
 
-(* Draw all the accumulated operators *)
+(* Draw all the accumulated operators. FIXME: Manage name clashes in Xobjects etc,
+by using something more robust than append_page_content! *)
 let draw fast range pdf drawops =
   let s = Pdfops.string_of_ops (ops_of_drawops drawops) in
     Cpdftweak.append_page_content s false fast range pdf

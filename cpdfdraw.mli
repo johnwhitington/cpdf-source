@@ -1,8 +1,11 @@
-type drawops_colspec =
+type colspec =
    NoCol
  | RGB of float * float * float
  | Grey of float
  | CYMK of float * float * float * float
+
+type image =
+  JPEG
 
 type drawops =
   | Rect of float * float * float * float
@@ -10,8 +13,8 @@ type drawops =
   | To of float * float
   | Line of float * float
   | ClosePath
-  | SetFill of drawops_colspec
-  | SetStroke of drawops_colspec
+  | SetFill of colspec
+  | SetStroke of colspec
   | SetLineThickness of float
   | SetLineCap of int
   | SetLineJoin of int
@@ -29,5 +32,7 @@ type drawops =
   | ClipEvenOdd
   | SoftXObject of drawops list
   | HardXObject of drawops list
+  | Image of string
+  | ImageXObject of string * int
 
 val draw : bool -> int list -> Pdf.t -> drawops list -> Pdf.t

@@ -1924,6 +1924,15 @@ let usexobj s =
   with
     _ -> error (Printf.sprintf "Could not find stashed graphics %s\n" s)
 
+let addjpeg n =
+  let objnum =
+    0
+  in
+    addop (Cpdfdraw.ImageXObject (n, objnum))
+
+let addimage s =
+  addop (Cpdfdraw.Image s)
+
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
   control_args := !control_args @ parse_control_file filename
@@ -2734,6 +2743,8 @@ and specs =
    ("-save", Arg.String savexobj, " Begin to save graphics operators");
    ("-endsave", Arg.String endsave, " End saving of graphics operators");
    ("-use", Arg.String usexobj, " Use a saved sequence of graphics operators");
+   ("-jpeg", Arg.String addjpeg, " Load a JPEG from file and name it");
+   ("-image", Arg.String addimage, " Draw an image which has already been loaded");
    (* These items are undocumented *)
    ("-remove-unused-resources", Arg.Unit (setop RemoveUnusedResources), "");
    ("-stay-on-error", Arg.Unit setstayonerror, "");
