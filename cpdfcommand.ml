@@ -1932,7 +1932,7 @@ let addjpeg n =
   in
     try
       let data = Pdfio.bytes_of_string (contents_of_file filename) in
-      let w, h = Pdfjpeg.jpeg_dimensions data in
+      let w, h = Cpdfjpeg.jpeg_dimensions data in
       let d = 
         ["/Length", Pdf.Integer (Pdfio.bytes_size data);
          "/Filter", Pdf.Name "/DCTDecode";
