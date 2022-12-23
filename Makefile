@@ -7,7 +7,7 @@ DOC = cpdfunicodedata cpdferror cpdfdebug cpdfjson cpdfstrftime cpdfcoord \
       cpdfembed cpdfaddtext cpdfimage cpdffont cpdftype cpdfpad cpdfocg \
       cpdfsqueeze cpdfdraft cpdfspot cpdfpagelabels cpdfcreate cpdfannot \
       cpdfxobject cpdfimpose cpdftweak cpdftexttopdf cpdftoc cpdfjpeg \
-      cpdfdraw cpdfcommand
+      cpdfpng cpdfdraw cpdfcommand
 
 MODS = $(NONDOC) $(DOC)
 
@@ -41,7 +41,7 @@ clean ::
 	*.json test/*.pdf debug/*.pdf *.ps *.aux *.idx *.log *.out *.toc *.cut \
 	*.ttf *.ttx
 
-DOC_FILES = $(foreach x,$(DOC),$(x).mli )
+DOC_FILES = $(foreach x,$(DOC),$(x).mli)
 
 install : libinstall
 
