@@ -1947,6 +1947,31 @@ let addjpeg n =
     with
       _ -> error "addjpeg: could not load JPEG"
 
+let addpng n =
+  let name, filename =
+    match String.split_on_char '=' n with
+    | [name; filename] -> name, filename
+    | _ -> error "addjpeg: bad file specification"
+  in
+    let data = Pdfio.input_of_string (contents_of_file filename) in
+    let png = Cpdfpng.read_png data in
+     let d =
+       ["/Length", Pdf.Integer (Pdfio.bytes_size png.idat);
+        "/Filter", Pdf.Name "/FlateDecode";
+        "/Subtype", Pdf.Name "/Image";
+        "/BitsPerComponent", Pdf.Integer 8;
+        "/ColorSpace", Pdf.Name "/DeviceRGB";
+        "/DecodeParms", Pdf.Dictionary
+                         ["/BitsPerComponent", Pdf.Integer 8;
+                          "/Colors", Pdf.Integer 3;
+                          "/Columns", Pdf.Integer png.width;
+                          "/Predictor", Pdf.Integer 15];
+        "/Width", Pdf.Integer png.width;
+        "/Height", Pdf.Integer png.height]
+     in
+     let obj = Pdf.Stream {contents = (Pdf.Dictionary d , Pdf.Got png.idat)} in
+       addop (Cpdfdraw.ImageXObject (name, obj))
+
 let addimage s =
   addop (Cpdfdraw.Image s)
 
@@ -2761,6 +2786,7 @@ and specs =
    ("-endsave", Arg.String endsave, " End saving of graphics operators");
    ("-use", Arg.String usexobj, " Use a saved sequence of graphics operators");
    ("-jpeg", Arg.String addjpeg, " Load a JPEG from file and name it");
+   ("-png", Arg.String addpng, " Load a PNG from file and name it");
    ("-image", Arg.String addimage, " Draw an image which has already been loaded");
    (* These items are undocumented *)
    ("-remove-unused-resources", Arg.Unit (setop RemoveUnusedResources), "");
