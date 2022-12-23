@@ -7,8 +7,6 @@ type t =
    height : int;
    idat : bytes}
 
-exception BadPNG of string
-
 let string_of_tag t =
   Printf.sprintf "%c%c%c%c"
     (char_of_int (i32toi (Int32.shift_right t 24)))
@@ -31,40 +29,46 @@ let read_data l i =
 
 let read_chunk i =
   let chunklen = read_unsigned_4byte i in
-  Printf.printf "chunklen = %li\n" chunklen;
   let chunktype = read_unsigned_4byte i in
-  Printf.printf "chunktype = %s\n" (string_of_tag chunktype);
   let chunkdata = read_data chunklen i in
   let _ (* crc *) = read_unsigned_4byte i in
     (string_of_tag chunktype, chunkdata) 
+
+let concat_bytes ss =
+  let total_length = fold_left ( + ) 0 (map bytes_size ss) in
+    let s' = mkbytes total_length in
+      let p = ref 0 in
+        iter
+          (fun s ->
+             for x = 0 to bytes_size s - 1 do bset_unsafe s' !p (bget s x); incr p done)
+          ss;
+        s'
 
 let read_png i =
   try
     i.seek_in 8;
     let ihdr, ihdrdata = read_chunk i in
     if ihdr <> "IHDR" then raise (Pdf.PDFError "read_png: first table not IHDR") else
-    let width = 0 in
-    let height = 0 in
-    let bitdepth = 0 in
-    let colortype = 0 in
-    let compressionmethod = 0 in
-    let filtermethod = 0 in
-    let interlacemethod = 0 in
-    let idat = ref None in
+    let hdr = input_of_bytes ihdrdata in
+    let width = read_unsigned_4byte hdr in
+    let height = read_unsigned_4byte hdr in
+    let bitdepth = hdr.input_byte () in
+    if bitdepth <> 8 then failwith "read_png: bit depth not 8" else
+    let colortype = hdr.input_byte () in
+    if colortype <> 2 then failwith "read_png: only 24 bit non-alpha PNGs" else
+    let _ (*compressionmethod*) = hdr.input_byte () in
+    let _ (*filtermethod*) = hdr.input_byte () in
+    let interlacemethod = hdr.input_byte () in
+    if interlacemethod <> 0 then failwith "read_png: interlaced PDFs not supported" else
+    let idat = ref [] in
       begin try
         while true do
           let chunkname, chunkdata = read_chunk i in
-            if chunkname = "IDAT" then
-              idat := Some chunkdata
+            if chunkname = "IDAT" then idat := chunkdata::!idat
         done
       with
         _ -> ()
       end;
-      {width; height; idat = unopt !idat}
+      {width = i32toi width; height = i32toi height; idat = concat_bytes (rev !idat)}
   with
     e -> raise (Pdf.PDFError (Printf.sprintf "read_png: failed on %s" (Printexc.to_string e)))
-
-let _ =
-  read_png
-    (input_of_string
-      (Pdfutil.contents_of_file "/Users/john/Desktop/cpdfdraw/Untitled.png"))
