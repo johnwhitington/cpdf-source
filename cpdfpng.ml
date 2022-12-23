@@ -16,13 +16,24 @@ let string_of_tag t =
     (char_of_int (i32toi (Int32.logand 0x000000FFl (Int32.shift_right t 8))))
     (char_of_int (i32toi (Int32.logand 0x000000FFl t)))
 
-let read_unsigned_4byte i = 0l
+let read_unsigned_4byte i =
+  let a = i32ofi (i.input_byte ()) in
+  let b = i32ofi (i.input_byte ()) in
+  let c = i32ofi (i.input_byte ()) in
+  let d = i32ofi (i.input_byte ()) in
+    lor32 (lor32 (lsl32 a 24) (lsl32 b 16)) (lor32 (lsl32 c 8) d)
 
-let read_data l i = bytes_of_string ""
+let read_data l i =
+  let l = i32toi l in
+  let b = mkbytes l in 
+    setinit i b 0 l;
+    b
 
 let read_chunk i =
   let chunklen = read_unsigned_4byte i in
+  Printf.printf "chunklen = %li\n" chunklen;
   let chunktype = read_unsigned_4byte i in
+  Printf.printf "chunktype = %s\n" (string_of_tag chunktype);
   let chunkdata = read_data chunklen i in
   let _ (* crc *) = read_unsigned_4byte i in
     (string_of_tag chunktype, chunkdata) 
