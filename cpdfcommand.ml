@@ -1957,7 +1957,11 @@ let jpeg_of_input i =
   let w = match Pdf.lookup_direct pdf "/Width" obj with Some x -> Pdf.getnum pdf x | _ -> assert false in
   let h = match Pdf.lookup_direct pdf "/Height" obj with Some x -> Pdf.getnum pdf x | _ -> assert false in
   let page =
-    {Pdfpage.content = [];
+    {Pdfpage.content =
+      [Pdfops.stream_of_ops
+      [Pdfops.Op_cm (Pdftransform.matrix_of_transform [Pdftransform.Translate (0., 0.);
+                                                       Pdftransform.Scale ((0., 0.), w, h)]);
+       Pdfops.Op_Do "/Im0"]];
      Pdfpage.mediabox = Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real w; Pdf.Real h];
      Pdfpage.resources =
        Pdf.Dictionary
