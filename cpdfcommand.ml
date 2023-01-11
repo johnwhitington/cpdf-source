@@ -1950,10 +1950,10 @@ let addjpeg n =
     with
       _ -> error "addjpeg: could not load JPEG"
 
-let jpeg_of_input i =
+let image_of_input fobj i =
   let pdf = Pdf.empty () in
   let data = Pdfio.bytes_of_input i 0 i.Pdfio.in_channel_length in
-  let obj = obj_of_jpeg_data data in
+  let obj = fobj data in
   let w = match Pdf.lookup_direct pdf "/Width" obj with Some x -> Pdf.getnum pdf x | _ -> assert false in
   let h = match Pdf.lookup_direct pdf "/Height" obj with Some x -> Pdf.getnum pdf x | _ -> assert false in
   let page =
@@ -1976,34 +1976,36 @@ let set_input_jpeg s =
   args.original_filename <- s;
   args.create_objstm <- true;
   let fh = open_in_bin s in
-  let pdf = jpeg_of_input (Pdfio.input_of_channel fh) in
+  let pdf = image_of_input obj_of_jpeg_data (Pdfio.input_of_channel fh) in
     close_in fh;
     args.inputs <- (AlreadyInMemory pdf, "all", "", "", ref false, None)::args.inputs
+
+let obj_of_png_data data =
+  let png = Cpdfpng.read_png (Pdfio.input_of_bytes data) in
+  let d =
+    ["/Length", Pdf.Integer (Pdfio.bytes_size png.idat);
+     "/Filter", Pdf.Name "/FlateDecode";
+     "/Subtype", Pdf.Name "/Image";
+     "/BitsPerComponent", Pdf.Integer 8;
+     "/ColorSpace", Pdf.Name "/DeviceRGB";
+     "/DecodeParms", Pdf.Dictionary
+                      ["/BitsPerComponent", Pdf.Integer 8;
+                       "/Colors", Pdf.Integer 3;
+                       "/Columns", Pdf.Integer png.width;
+                       "/Predictor", Pdf.Integer 15];
+     "/Width", Pdf.Integer png.width;
+     "/Height", Pdf.Integer png.height]
+  in
+    Pdf.Stream {contents = (Pdf.Dictionary d , Pdf.Got png.idat)}
 
 let addpng n =
   let name, filename =
     match String.split_on_char '=' n with
     | [name; filename] -> name, filename
-    | _ -> error "addjpeg: bad file specification"
+    | _ -> error "addpng: bad file specification"
   in
-    let data = Pdfio.input_of_string (contents_of_file filename) in
-    let png = Cpdfpng.read_png data in
-     let d =
-       ["/Length", Pdf.Integer (Pdfio.bytes_size png.idat);
-        "/Filter", Pdf.Name "/FlateDecode";
-        "/Subtype", Pdf.Name "/Image";
-        "/BitsPerComponent", Pdf.Integer 8;
-        "/ColorSpace", Pdf.Name "/DeviceRGB";
-        "/DecodeParms", Pdf.Dictionary
-                         ["/BitsPerComponent", Pdf.Integer 8;
-                          "/Colors", Pdf.Integer 3;
-                          "/Columns", Pdf.Integer png.width;
-                          "/Predictor", Pdf.Integer 15];
-        "/Width", Pdf.Integer png.width;
-        "/Height", Pdf.Integer png.height]
-     in
-     let obj = Pdf.Stream {contents = (Pdf.Dictionary d , Pdf.Got png.idat)} in
-       addop (Cpdfdraw.ImageXObject (name, obj))
+    let data = bytes_of_string (contents_of_file filename) in
+      addop (Cpdfdraw.ImageXObject (name, obj_of_png_data data))
 
 let png_of_input i = Pdf.empty ()
 
@@ -2011,7 +2013,7 @@ let set_input_png s =
   args.original_filename <- s;
   args.create_objstm <- true;
   let fh = open_in_bin s in
-  let pdf = jpeg_of_input (Pdfio.input_of_channel fh) in
+  let pdf = image_of_input obj_of_png_data (Pdfio.input_of_channel fh) in
     close_in fh;
     args.inputs <- (AlreadyInMemory pdf, "all", "", "", ref false, None)::args.inputs
 
