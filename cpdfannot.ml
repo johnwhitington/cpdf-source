@@ -65,17 +65,19 @@ let annotations_json_page pdf page pagenum =
         (map (Pdf.direct pdf) annots)
   | _ -> []
 
-let list_annotations_json pdf =
+let list_annotations_json range pdf =
   let module J = Cpdfyojson.Safe in
   let pages = Pdfpage.pages_of_pagetree pdf in
   let pagenums = indx pages in
+  let pairs = combine pages pagenums in
+  let pairs = option_map (fun (p, n) -> if mem n range then Some (p, n) else None) pairs in
+  let pages, pagenums = split pairs in
   let json = `List (flatten (map2 (annotations_json_page pdf) pages pagenums)) in
     J.pretty_to_channel stdout json
 
-let list_annotations ~json encoding pdf =
-  let range = Cpdfpagespec.parse_pagespec pdf "all" in
+let list_annotations ~json range encoding pdf =
   if json
-    then list_annotations_json pdf
+    then list_annotations_json range pdf
     else Cpdfpage.iter_pages (list_page_annotations encoding pdf) pdf range
 
 (* Return annotations *)

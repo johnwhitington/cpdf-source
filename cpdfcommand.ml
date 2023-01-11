@@ -3966,7 +3966,9 @@ let go () =
       | _ -> error "copy-annotations: No input file specified"
       end
   | Some ListAnnotations ->
-      Cpdfannot.list_annotations ~json:args.format_json args.encoding (get_single_pdf args.op true)
+      let pdf = get_single_pdf args.op true in
+      let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
+        Cpdfannot.list_annotations ~json:args.format_json range args.encoding pdf
   | Some Shift ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
