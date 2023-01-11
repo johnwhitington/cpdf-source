@@ -1295,6 +1295,7 @@ let set_input s =
   args.original_filename <- s;
   args.inputs <- (InFile s, "all", "", "", ref false, None)::args.inputs
 
+
 let set_json_input s =
   args.original_filename <- s;
   args.create_objstm <- true;
@@ -1924,6 +1925,19 @@ let usexobj s =
   with
     _ -> error (Printf.sprintf "Could not find stashed graphics %s\n" s)
 
+let obj_of_jpeg_data data =
+  let w, h = Cpdfjpeg.jpeg_dimensions data in
+  let d = 
+    ["/Length", Pdf.Integer (Pdfio.bytes_size data);
+     "/Filter", Pdf.Name "/DCTDecode";
+     "/BitsPerComponent", Pdf.Integer 8;
+     "/ColorSpace", Pdf.Name "/DeviceRGB";
+     "/Subtype", Pdf.Name "/Image";
+     "/Width", Pdf.Integer w;
+     "/Height", Pdf.Integer h]
+  in
+    Pdf.Stream {contents = (Pdf.Dictionary d, Pdf.Got data)}
+
 let addjpeg n =
   let name, filename =
     match String.split_on_char '=' n with
@@ -1932,20 +1946,35 @@ let addjpeg n =
   in
     try
       let data = Pdfio.bytes_of_string (contents_of_file filename) in
-      let w, h = Cpdfjpeg.jpeg_dimensions data in
-      let d = 
-        ["/Length", Pdf.Integer (Pdfio.bytes_size data);
-         "/Filter", Pdf.Name "/DCTDecode";
-         "/BitsPerComponent", Pdf.Integer 8;
-         "/ColorSpace", Pdf.Name "/DeviceRGB";
-         "/Subtype", Pdf.Name "/Image";
-         "/Width", Pdf.Integer w;
-         "/Height", Pdf.Integer h]
-      in
-      let obj = Pdf.Stream {contents = (Pdf.Dictionary d , Pdf.Got data)} in
-        addop (Cpdfdraw.ImageXObject (name, obj))
+        addop (Cpdfdraw.ImageXObject (name, obj_of_jpeg_data data))
     with
       _ -> error "addjpeg: could not load JPEG"
+
+let jpeg_of_input i =
+  let pdf = Pdf.empty () in
+  let data = Pdfio.bytes_of_input i 0 i.Pdfio.in_channel_length in
+  let obj = obj_of_jpeg_data data in
+  let w = match Pdf.lookup_direct pdf "/Width" obj with Some x -> Pdf.getnum pdf x | _ -> assert false in
+  let h = match Pdf.lookup_direct pdf "/Height" obj with Some x -> Pdf.getnum pdf x | _ -> assert false in
+  let page =
+    {Pdfpage.content = [];
+     Pdfpage.mediabox = Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real w; Pdf.Real h];
+     Pdfpage.resources =
+       Pdf.Dictionary
+         ["/XObject", Pdf.Dictionary ["/Im0", Pdf.Indirect (Pdf.addobj pdf obj)]];
+     Pdfpage.rotate = Pdfpage.Rotate0;
+     Pdfpage.rest = Pdf.Dictionary []}
+  in
+  let pdf, pageroot = Pdfpage.add_pagetree [page] pdf in
+    Pdfpage.add_root pageroot [] pdf
+
+let set_input_jpeg s =
+  args.original_filename <- s;
+  args.create_objstm <- true;
+  let fh = open_in_bin s in
+  let pdf = jpeg_of_input (Pdfio.input_of_channel fh) in
+    close_in fh;
+    args.inputs <- (AlreadyInMemory pdf, "all", "", "", ref false, None)::args.inputs
 
 let addpng n =
   let name, filename =
@@ -1972,6 +2001,16 @@ let addpng n =
      let obj = Pdf.Stream {contents = (Pdf.Dictionary d , Pdf.Got png.idat)} in
        addop (Cpdfdraw.ImageXObject (name, obj))
 
+let png_of_input i = Pdf.empty ()
+
+let set_input_png s =
+  args.original_filename <- s;
+  args.create_objstm <- true;
+  let fh = open_in_bin s in
+  let pdf = jpeg_of_input (Pdfio.input_of_channel fh) in
+    close_in fh;
+    args.inputs <- (AlreadyInMemory pdf, "all", "", "", ref false, None)::args.inputs
+
 let addimage s =
   addop (Cpdfdraw.Image s)
 
@@ -1989,6 +2028,12 @@ and specs =
    ("-i",
        Arg.String set_input,
        " Add an input file");
+   ("-png",
+       Arg.String set_input_png,
+       " Load from a PNG file, converting to PDF");
+   ("-jpeg",
+       Arg.String set_input_jpeg,
+       " Load from a JPEG file, converting to PDF");
    ("-idir",
        Arg.String set_input_dir,
        " Add a directory of files");
@@ -2785,8 +2830,8 @@ and specs =
    ("-save", Arg.String savexobj, " Begin to save graphics operators");
    ("-endsave", Arg.String endsave, " End saving of graphics operators");
    ("-use", Arg.String usexobj, " Use a saved sequence of graphics operators");
-   ("-jpeg", Arg.String addjpeg, " Load a JPEG from file and name it");
-   ("-png", Arg.String addpng, " Load a PNG from file and name it");
+   ("-draw-jpeg", Arg.String addjpeg, " Load a JPEG from file and name it");
+   ("-draw-png", Arg.String addpng, " Load a PNG from file and name it");
    ("-image", Arg.String addimage, " Draw an image which has already been loaded");
    (* These items are undocumented *)
    ("-remove-unused-resources", Arg.Unit (setop RemoveUnusedResources), "");

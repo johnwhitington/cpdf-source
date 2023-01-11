@@ -3,8 +3,6 @@ type t =
    height : int;
    idat : Pdfio.bytes}
 
-exception BadPNG of string
-
 (* Read a non-interlaced, non-transparent 24 bit PNG for inclusion in a PDF
    file. Raises BadPNG on failure. *)
 val read_png : Pdfio.input -> t
