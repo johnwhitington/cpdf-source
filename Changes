@@ -7,6 +7,7 @@ o Embed TrueType fonts with -font-ttf for -add-text et al.
 o Embed the 14 standard fonts if requested
 o Add links to parts of text with -add-text as %URL[|].
 o Convert JPEGs and PNGs to PDFs with -jpeg and -png
+o Export fully, import, and round-trip annotations via JSON
 
 Extended features:
 
@@ -14,6 +15,7 @@ o Allow -utf8 with -split-bookmarks -o @B.pdf to produce UTF8 filenames
 o -merge-add-bookmarks now works with unicode filenames
 o Better transformation of some annotation types
 o -list-annotations[-json] now respects page range
+o Merge now rewrites clashing name tree entries
 
 Fixes:
 
