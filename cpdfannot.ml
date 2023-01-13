@@ -24,13 +24,19 @@ let list_page_annotations encoding pdf num page =
 let rewrite_destination calculate_pagenumber d =
   match d with
   | Pdf.Array (Pdf.Indirect i::r) ->
-      Pdf.Array (Pdf.Indirect (calculate_pagenumber (Pdfdest.Fit (Pdfdest.PageObject i)))::r)
+      Pdf.Array (Pdf.Integer (calculate_pagenumber (Pdfdest.Fit (Pdfdest.PageObject i)))::r)
   | x -> x
 
 let rewrite_destinations pdf annot =
   let refnums = Pdf.page_reference_numbers pdf in
   let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
   let calculate_pagenumber =  Pdfpage.pagenumber_of_target ~fastrefnums pdf in
+    (* Deal with /P in annotation *)
+    let annot =
+      match Pdf.indirect_number pdf "/P" annot with
+      | Some i -> Pdf.add_dict_entry annot "/P" (Pdf.Integer (calculate_pagenumber (Pdfdest.Fit (Pdfdest.PageObject i))))
+      | None -> annot
+    in
     (* Deal with /Dest in annotation *)
     match Pdf.lookup_direct pdf "/Dest" annot with
     | Some d -> Pdf.add_dict_entry annot "/Dest" (rewrite_destination calculate_pagenumber d)
@@ -53,8 +59,9 @@ let annotations_json_page pdf page pagenum =
   | Some (Pdf.Array annots) ->
       map
         (fun annot ->
-           extra := Pdf.objects_referenced [] [] pdf annot @ !extra;
-           `List [`Int pagenum; Cpdfjson.json_of_object ~clean_strings:true pdf (fun _ -> ()) false false annot])
+           let annot = rewrite_destinations pdf annot in
+             extra := Pdf.objects_referenced [] [] pdf annot @ !extra;
+             `List [`Int pagenum; Cpdfjson.json_of_object ~clean_strings:true pdf (fun _ -> ()) false false annot])
         (map (Pdf.direct pdf) annots)
   | _ -> []
 
@@ -69,6 +76,7 @@ let list_annotations_json range pdf =
   let json = `List (flatten (map2 (annotations_json_page pdf) pages pagenums)) in
   let extra = setify !extra in
     Printf.printf "%i extra objects needed\n" (length extra);
+    iter (fun i -> Printf.printf "Object %i = %s\n" i (Pdfwrite.string_of_pdf (Pdf.lookup_obj pdf i))) extra;
     J.pretty_to_channel stdout json
 
 let list_annotations ~json range encoding pdf =
