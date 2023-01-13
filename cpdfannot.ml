@@ -21,15 +21,6 @@ let list_page_annotations encoding pdf num page =
       iter (print_annotation encoding pdf num) (map (Pdf.direct pdf) annots)
   | _ -> ()
 
-(* In the future, we will allow round-tripping of JSON annotations, but this
-   will be complicated. For now, we just turn some indirect things into direct
-   things, so that the output contains all the pertinent information, not for
-   round-tripping, but for mere extraction. *)
-let make_direct pdf annot =
-  match Pdf.lookup_direct pdf "/A" annot with
-  | None -> annot
-  | Some d -> Pdf.add_dict_entry annot "/A" d
-
 let rewrite_destination calculate_pagenumber d =
   match d with
   | Pdf.Array (Pdf.Indirect i::r) ->
@@ -55,17 +46,20 @@ let rewrite_destinations pdf annot =
             end
        | None -> annot
 
+let extra = ref []
+
 let annotations_json_page pdf page pagenum =
   match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
   | Some (Pdf.Array annots) ->
       map
         (fun annot ->
-            let annot = make_direct pdf annot in
-             `List [`Int pagenum; Cpdfjson.json_of_object ~clean_strings:true pdf (fun _ -> ()) false false annot])
+           extra := Pdf.objects_referenced [] [] pdf annot @ !extra;
+           `List [`Int pagenum; Cpdfjson.json_of_object ~clean_strings:true pdf (fun _ -> ()) false false annot])
         (map (Pdf.direct pdf) annots)
   | _ -> []
 
 let list_annotations_json range pdf =
+  extra := [];
   let module J = Cpdfyojson.Safe in
   let pages = Pdfpage.pages_of_pagetree pdf in
   let pagenums = indx pages in
@@ -73,6 +67,8 @@ let list_annotations_json range pdf =
   let pairs = option_map (fun (p, n) -> if mem n range then Some (p, n) else None) pairs in
   let pages, pagenums = split pairs in
   let json = `List (flatten (map2 (annotations_json_page pdf) pages pagenums)) in
+  let extra = setify !extra in
+    Printf.printf "%i extra objects needed\n" (length extra);
     J.pretty_to_channel stdout json
 
 let list_annotations ~json range encoding pdf =
@@ -102,6 +98,9 @@ let get_annotations_json pdf =
   let pagenums = indx pages in
   let json = `List (flatten (map2 (annotations_json_page pdf) pages pagenums)) in
     Pdfio.bytes_of_string (J.to_string json)
+
+(** Set annotations from JSON. Existing annotations will be removed. *)
+let set_annotations_json pdf json = ()
 
 (* Equalise the page lengths of two PDFs by chopping or extending the first one.
 *)
