@@ -125,6 +125,7 @@ type op =
   | RemoveAnnotations
   | ListAnnotations
   | CopyAnnotations of string
+  | SetAnnotations of string
   | Merge
   | Split
   | SplitOnBookmarks of int
@@ -258,6 +259,7 @@ let string_of_op = function
   | RemoveAnnotations -> "RemoveAnnotations"
   | ListAnnotations -> "ListAnnotations"
   | CopyAnnotations _ -> "CopyAnnotations"
+  | SetAnnotations _ -> "SetAnnotations"
   | Merge -> "Merge"
   | Split -> "Split"
   | SplitOnBookmarks _ -> "SplitOnBookmarks"
@@ -841,7 +843,7 @@ let banned banlist = function
   | TwoUp|TwoUpStack|RemoveBookmarks|AddRectangle|RemoveText|
     Draft|Shift|Scale|ScaleToFit|RemoveAttachedFiles|
     RemoveAnnotations|RemoveFonts|Crop|RemoveCrop|Trim|RemoveTrim|Bleed|RemoveBleed|Art|RemoveArt|
-    CopyCropBoxToMediaBox|CopyBox|MediaBox|HardBox _|SetTrapped|SetUntrapped|Presentation|
+    CopyCropBoxToMediaBox|CopyBox|MediaBox|HardBox _|SetTrapped|SetAnnotations _|SetUntrapped|Presentation|
     BlackText|BlackLines|BlackFills|CopyFont _|StampOn _|StampUnder _|StampAsXObject _|
     AddText _|ScaleContents _|AttachFile _|CopyAnnotations _| ThinLines _ | RemoveClipping | RemoveAllText
     | Prepend _ | Postpend _ | Draw ->
@@ -1084,6 +1086,8 @@ let setcopyid s = setop (CopyId s) ()
 let setthinlines s = setop (ThinLines (Cpdfcoord.parse_single_number empty s)) ()
 
 let setcopyannotations s = setop (CopyAnnotations s) ()
+
+let setsetannotations s = setop (SetAnnotations s) ()
 
 let setshift s =
   setop Shift ();
@@ -2479,6 +2483,9 @@ and specs =
    ("-remove-annotations",
       Arg.Unit (setop RemoveAnnotations),
       " Remove annotations");
+   ("-set-annotations",
+      Arg.String setsetannotations,
+      " Set annotations from JSON file");
    ("-list-fonts",
        Arg.Unit (setop Fonts),
        " Output font list");
@@ -3965,6 +3972,11 @@ let go () =
             write_pdf false pdf
       | _ -> error "copy-annotations: No input file specified"
       end
+  | Some (SetAnnotations json) ->
+      let data = Pdfio.input_of_channel (open_in_bin json) in
+      let pdf = get_single_pdf args.op false in
+        Cpdfannot.set_annotations_json pdf data;
+        write_pdf false pdf
   | Some ListAnnotations ->
       let pdf = get_single_pdf args.op true in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in

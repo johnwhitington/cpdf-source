@@ -20,4 +20,4 @@ val remove_annotations : int list -> Pdf.t -> Pdf.t
 val get_annotations_json : Pdf.t -> Pdfio.bytes
 
 (** Set annotations from JSON. Existing annotations will be removed. *)
-val set_annotations_json : Pdf.t -> Pdfio.bytes -> unit
+val set_annotations_json : Pdf.t -> Pdfio.input -> unit
