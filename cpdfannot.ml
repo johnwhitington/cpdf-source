@@ -54,6 +54,11 @@ let rewrite_destinations pdf annot =
 
 let extra = ref []
 
+let serial = ref ~-1
+
+let getserial () =
+  serial +=1; !serial
+
 let annotations_json_page pdf page pagenum =
   match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
   | Some (Pdf.Array annots) ->
@@ -61,22 +66,31 @@ let annotations_json_page pdf page pagenum =
         (fun annot ->
            let annot = rewrite_destinations pdf annot in
              extra := Pdf.objects_referenced [] [] pdf annot @ !extra;
-             `List [`Int pagenum; Cpdfjson.json_of_object ~clean_strings:true pdf (fun _ -> ()) false false annot])
+             `List [`Int pagenum; `Int (getserial ()); Cpdfjson.json_of_object ~clean_strings:true pdf (fun _ -> ()) false false annot])
         (map (Pdf.direct pdf) annots)
   | _ -> []
 
+(* FIXME: Rewrite any /Parent entries in /Popup annotations to have annot serial number not annot object number *)
+let process_extra_object pdf obj = obj
+
 let list_annotations_json range pdf =
   extra := [];
+  serial := ~-1;
   let module J = Cpdfyojson.Safe in
   let pages = Pdfpage.pages_of_pagetree pdf in
   let pagenums = indx pages in
   let pairs = combine pages pagenums in
   let pairs = option_map (fun (p, n) -> if mem n range then Some (p, n) else None) pairs in
   let pages, pagenums = split pairs in
-  let json = `List (flatten (map2 (annotations_json_page pdf) pages pagenums)) in
-  let extra = setify !extra in
-    Printf.printf "%i extra objects needed\n" (length extra);
-    iter (fun i -> Printf.printf "Object %i = %s\n" i (Pdfwrite.string_of_pdf (Pdf.lookup_obj pdf i))) extra;
+  let json = flatten (map2 (annotations_json_page pdf) pages pagenums) in
+  let extra =
+    map
+      (fun n ->
+        let obj = process_extra_object pdf (Pdf.lookup_obj pdf n) in
+          `List [`Int ~-n; Cpdfjson.json_of_object ~clean_strings:true pdf (fun _ -> ()) false false obj])
+      (setify !extra)
+  in
+    let json = `List (json @ extra) in
     J.pretty_to_channel stdout json
 
 let list_annotations ~json range encoding pdf =
