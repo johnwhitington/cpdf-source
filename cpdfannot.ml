@@ -73,7 +73,7 @@ let annotations_json_page pdf page pagenum =
              end;
              let annot = Pdf.direct pdf annot in
              let annot = rewrite_destinations pdf annot in
-               extra := Pdf.objects_referenced [] [] pdf annot @ !extra;
+               extra := annot::!extra;
                `List [`Int pagenum; `Int serial; Cpdfjson.json_of_object ~clean_strings:true pdf (fun _ -> ()) false false annot])
         annots
   | _ -> []
@@ -117,9 +117,8 @@ let list_annotations_json range pdf =
   let extra =
     map
       (fun n ->
-        let obj = (*process_extra_object !objnum_to_serial_map pdf*) (Pdf.lookup_obj pdf n) in
-          `List [`Int ~-n; Cpdfjson.json_of_object ~clean_strings:true pdf (fun _ -> ()) false false obj])
-      (setify !extra)
+         `List [`Int ~-n; Cpdfjson.json_of_object ~clean_strings:true pdf (fun _ -> ()) false false (Pdf.lookup_obj pdf n)])
+      (setify (flatten (map (Pdf.objects_referenced [] [] pdf) !extra)))
   in
     let json = `List (json @ extra) in
     J.pretty_to_channel stdout json
