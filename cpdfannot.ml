@@ -80,17 +80,32 @@ let annotations_json_page pdf page pagenum =
 
 (* Rewrite any /Parent entries in /Popup annotations to have annot serial number, not object number, and all /Popup entries in parent annotations similarly. *)
 let postprocess_json_pdf objnum_to_serial_map pdf obj =
+  let obj =
+    match obj with
+    | Pdf.Dictionary d ->
+        (* These things seem to be to do with digital signatures, which aren't
+           going to survive round-tripping of annotations anyway, and drag in
+           all sorts of extra objects we don't want, so we remove them. *)
+        let d = remove "/Lock" (remove "/V" d) in Pdf.Dictionary d
+    | _ -> obj
+  in
   match obj with
   | Pdf.Dictionary d ->
       let obj =
-      begin match lookup "/Subtype" d, lookup "/Parent" d with
-      | Some (Pdf.Name "/Popup"), Some (Pdf.Indirect i) ->
-          begin match lookup i objnum_to_serial_map with
-          | Some s -> Pdf.add_dict_entry obj "/Parent" (Pdf.Integer s)
-          | None -> Printf.eprintf "Warning: Cpdfannot.process_extra_object: could not find serial number\n"; obj
-          end
-      | _ -> obj
-      end
+        begin match lookup "/Subtype" d, lookup "/Parent" d with
+        | Some (Pdf.Name "/Popup"), Some (Pdf.Indirect i) ->
+            begin match lookup i objnum_to_serial_map with
+            | Some s -> Pdf.add_dict_entry obj "/Parent" (Pdf.Integer s)
+            | None -> Printf.eprintf "Warning: Cpdfannot.process_extra_object: could not find serial number\n"; obj
+            end
+        | _ -> 
+            (* If not a popup annoation, remove /Parent. It drags in lots of
+               extra objects (the whole page tree!) with a widget
+               annotation, and we are unlikely to be able to round-trip them
+               anyway. One day, if we can match FDF properly, it might be
+               possible, but not now. *)
+            Pdf.remove_dict_entry obj "/Parent"
+        end
       in
         begin match obj with
         | Pdf.Dictionary d ->
