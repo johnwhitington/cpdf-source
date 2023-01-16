@@ -120,6 +120,7 @@ let list_annotations_json range pdf =
          `List [`Int ~-n; Cpdfjson.json_of_object ~clean_strings:true pdf (fun _ -> ()) false false (Pdf.lookup_obj pdf n)])
       (setify (flatten (map (Pdf.objects_referenced [] [] pdf) !extra)))
   in
+    Printf.printf "EXTRA: %i objects\n" (length extra);
     let json = `List (json @ extra) in
     J.pretty_to_channel stdout json
 
