@@ -78,7 +78,7 @@ let bookmark_of_data pdf i s i' isopen optionaldest =
      Pdfmarks.isopen = isopen}
 
 let target_of_json_target pdf pagenumber target = 
-  target_of_markfile_obj pdf pagenumber (Cpdfjson.object_of_json target)
+  target_of_markfile_obj pdf pagenumber (Cpdfjson.object_of_json ~utf8:false target)
 
 let mark_of_json pdf = function
   | `Assoc [("level", `Int level);
@@ -176,8 +176,8 @@ let json_of_target pdf fastrefnums x =
       let a =
         Pdf.Array (Pdf.Integer (Pdfpage.pagenumber_of_target ~fastrefnums pdf x)::more)
       in
-        Cpdfjson.json_of_object pdf (fun _ -> ()) ~no_stream_data:false ~parse_content:false a
-  | x -> Cpdfjson.json_of_object pdf (fun _ -> ()) ~no_stream_data:false ~parse_content:false x
+        Cpdfjson.json_of_object pdf (fun _ -> ()) ~utf8:false ~no_stream_data:false ~parse_content:false a
+  | x -> Cpdfjson.json_of_object pdf (fun _ -> ()) ~utf8:false ~no_stream_data:false ~parse_content:false x
 
 let output_json_marks output calculate_page_number pdf fastrefnums marks =
   let module J = Cpdfyojson.Safe in

@@ -269,7 +269,7 @@ let print_dict_entry pdf key =
     match Pdf.lookup_direct pdf key d with
     | Some v ->
         (* We use a double newline as a separator. *)
-        Printf.printf "%s\n\n" (Cpdfyojson.Safe.to_string (Cpdfjson.json_of_object ~clean_strings:true pdf (fun _ -> ()) ~no_stream_data:false ~parse_content:false v));
+        Printf.printf "%s\n\n" (Cpdfyojson.Safe.to_string (Cpdfjson.json_of_object ~utf8:false ~clean_strings:true pdf (fun _ -> ()) ~no_stream_data:false ~parse_content:false v));
         d
     | None -> d
   in
@@ -281,7 +281,7 @@ let get_dict_entries pdf key =
   let es = ref [] in
   let f d =
     match Pdf.lookup_direct pdf key d with
-    | Some v -> es := Cpdfjson.json_of_object ~clean_strings:true pdf (fun _ -> ()) ~no_stream_data:false ~parse_content:false v::!es; d
+    | Some v -> es := Cpdfjson.json_of_object ~utf8:false ~clean_strings:true pdf (fun _ -> ()) ~no_stream_data:false ~parse_content:false v::!es; d
     | None -> d
   in
     Pdf.objselfmap (dict_entry_single_object f pdf) pdf;
