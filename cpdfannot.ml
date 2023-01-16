@@ -74,7 +74,7 @@ let annotations_json_page pdf page pagenum =
              let annot = Pdf.direct pdf annot in
              let annot = rewrite_destinations pdf annot in
                extra := annot::!extra;
-               `List [`Int pagenum; `Int serial; Cpdfjson.json_of_object ~clean_strings:true pdf (fun _ -> ()) false false annot])
+               `List [`Int pagenum; `Int serial; Cpdfjson.json_of_object ~clean_strings:true pdf (fun _ -> ()) ~no_stream_data:false ~parse_content:false annot])
         annots
   | _ -> []
 
@@ -127,7 +127,7 @@ let postprocess_json pdf objnum_to_serial_map json =
     | `List [`Int pagenum; `Int serial; jo] ->
         let pdfobj = Cpdfjson.object_of_json jo in
         let fixed = postprocess_json_pdf objnum_to_serial_map pdf pdfobj in
-          `List [`Int pagenum; `Int serial; Cpdfjson.json_of_object ~clean_strings:true pdf (fun _ -> ()) false false fixed]
+        `List [`Int pagenum; `Int serial; Cpdfjson.json_of_object ~clean_strings:true pdf (fun _ -> ()) ~no_stream_data:false ~parse_content:false fixed]
     | _ -> assert false)
    json
 
@@ -149,13 +149,13 @@ let list_annotations_json range pdf =
   let extra =
     map
       (fun n ->
-         `List [`Int ~-n; Cpdfjson.json_of_object ~clean_strings:true pdf (fun _ -> ()) false false (Pdf.lookup_obj pdf n)])
+         `List [`Int ~-n; Cpdfjson.json_of_object ~clean_strings:true pdf (fun _ -> ()) ~no_stream_data:false ~parse_content:false (Pdf.lookup_obj pdf n)])
       (setify (flatten (map (Pdf.objects_referenced [] [] pdf) extra)))
   in
   let header =
     `List
      [`Int 0;
-      Cpdfjson.json_of_object ~clean_strings:true pdf (fun _ -> ()) false false
+      Cpdfjson.json_of_object ~clean_strings:true pdf (fun _ -> ()) ~no_stream_data:false ~parse_content:false
         (Pdf.Dictionary ["/CPDFJSONannotformatversion", Pdf.Integer 1])]
   in
   let json = `List ([header] @ json @ extra) in

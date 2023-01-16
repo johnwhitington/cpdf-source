@@ -1,17 +1,22 @@
 (* Read and write PDF files in JSON format.
 
+Format version 3: adds UTF8 option
+
 The file is an array of arrays containing an object number followed by an
 object, one for each object in the file and two special ones:
 
 Object -1: CPDF's own data with the PDF version number, CPDF JSON format
 number, and flags used when writing (which may be required when reading):
 
-  o /CPDFJSONformatversion (CPDFJSON integer (see below), currently 2)
+  o /CPDFJSONformatversion (CPDFJSON integer (see below), currently 3)
   o /CPDFJSONcontentparsed (boolean, true if content streams have been parsed)
   o /CPDFJSONstreamdataincluded (boolean, true if stream data included. Cannot
   round-trip if false).
   o /CPDFJSONmajorpdfversion (CPDFJSON integer)
   o /CPDFJSONminorpdfversion (CPDFJSON integer)
+  o /CPDFJSONisUTF8 (Optional. Format 3. If true, strings are converted to UTF8
+  before conversion to JSON, and converted back to PDFDocEncoding/UTF16BE during
+  converstion to PDF.
 
 Object 0: The PDF's trailer dictionary
 
@@ -273,14 +278,14 @@ let mkfloat f = `Assoc [("F", `Float f)]
 let mkint i = `Assoc [("I", `Int i)]
 let mkname n = `Assoc [("N", `String n)]
 
-let rec json_of_object ?(clean_strings=false) pdf fcs no_stream_data pcs = function
+let rec json_of_object ?(utf8=false) ?(clean_strings=false) pdf fcs ~no_stream_data ~parse_content = function
   | P.Null -> `Null
   | P.Boolean b -> `Bool b
   | P.Integer i -> mkint i
   | P.Real r -> mkfloat r
   | P.String s -> `String (if clean_strings then Pdftext.simplify_utf16be s else s)
   | P.Name n -> mkname n
-  | P.Array objs -> `List (map (json_of_object pdf fcs no_stream_data pcs) objs)
+  | P.Array objs -> `List (map (json_of_object pdf fcs ~no_stream_data ~parse_content) objs)
   | P.Dictionary elts ->
       iter
         (function
@@ -292,11 +297,11 @@ let rec json_of_object ?(clean_strings=false) pdf fcs no_stream_data pcs = funct
           | ("/Contents", P.Array elts) -> iter (function P.Indirect i -> fcs i | _ -> ()) elts
           | _ -> ())
         elts;
-      `Assoc (map (fun (k, v) -> (k, json_of_object pdf fcs no_stream_data pcs v)) elts)
+      `Assoc (map (fun (k, v) -> (k, json_of_object pdf fcs ~no_stream_data ~parse_content v)) elts)
   | P.Stream ({contents = (P.Dictionary dict as d, stream)} as mut) as thestream ->
       P.getstream thestream;
       let str, dict' =
-        match P.lookup_direct pdf "/FunctionType" d, pcs with
+        match P.lookup_direct pdf "/FunctionType" d, parse_content with
         | Some _, true ->
             Pdfcodec.decode_pdfstream_until_unknown pdf thestream;
             let dict = P.remove_dict_entry d "/Filter" in
@@ -305,7 +310,7 @@ let rec json_of_object ?(clean_strings=false) pdf fcs no_stream_data pcs = funct
             if no_stream_data then ("<<stream data elided>>", d) else
               match !mut with (_, P.Got b) -> (Pdfio.string_of_bytes b, d) | _ -> error "failure: toget"
       in
-        json_of_object pdf fcs no_stream_data pcs (P.Dictionary [("S", P.Array [dict'; P.String str])])
+        json_of_object pdf fcs ~no_stream_data ~parse_content (P.Dictionary [("S", P.Array [dict'; P.String str])])
   | P.Stream _ -> error "error: stream with not-a-dictionary"
   | P.Indirect i ->
       begin match P.lookup_obj pdf i with
@@ -350,7 +355,7 @@ let json_of_op pdf no_stream_data = function
       `List [mkfloat c; mkfloat m; mkfloat y; mkfloat k; `String "k"]
   | O.Op_m (a, b) -> `List [mkfloat a; mkfloat b; `String "m"]
   | O.Op_l (a, b) -> `List [mkfloat a; mkfloat b; `String "l"]
-  | O.Op_BDC (s, obj) -> `List [`String s; json_of_object pdf (fun _ -> ()) no_stream_data false obj; `String "BDC"]
+  | O.Op_BDC (s, obj) -> `List [`String s; json_of_object pdf (fun _ -> ()) ~no_stream_data ~parse_content:false obj; `String "BDC"]
   | O.Op_gs s -> `List [`String s; `String "gs"]
   | O.Op_Do s -> `List [`String s; `String "Do"]
   | O.Op_CS s -> `List [`String s; `String "CS"]
@@ -395,7 +400,7 @@ let json_of_op pdf no_stream_data = function
          mkfloat t.Pdftransform.d; mkfloat t.Pdftransform.e; mkfloat t.Pdftransform.f;
          `String "Tm"]
   | O.Op_Tj s -> `List [`String s; `String "Tj"]
-  | O.Op_TJ pdfobject -> `List [json_of_object pdf (fun _ -> ()) no_stream_data false pdfobject; `String "TJ"]
+  | O.Op_TJ pdfobject -> `List [json_of_object pdf (fun _ -> ()) ~no_stream_data ~parse_content:false pdfobject; `String "TJ"]
   | O.Op_' s -> `List [`String s; `String "'"]
   | O.Op_'' (k, k', s) -> `List [mkfloat k; mkfloat k'; `String s; `String "''"]
   | O.Op_d0 (k, k') -> `List [mkfloat k; mkfloat k'; `String "d0"]
@@ -421,9 +426,9 @@ let json_of_op pdf no_stream_data = function
   | O.Op_scnName (s, fs) ->
       `List (map (fun x -> mkfloat x) fs @ [`String s; `String "scnName"])
   | O.InlineImage (dict, data) ->
-      `List [json_of_object pdf (fun _ -> ()) no_stream_data false dict; `String (Pdfio.string_of_bytes data); `String "InlineImage"]
+      `List [json_of_object pdf (fun _ -> ()) ~no_stream_data ~parse_content:false dict; `String (Pdfio.string_of_bytes data); `String "InlineImage"]
   | O.Op_DP (s, obj) ->
-      `List [`String s; json_of_object pdf (fun _ -> ()) no_stream_data false obj; `String "DP"]
+      `List [`String s; json_of_object pdf (fun _ -> ()) ~no_stream_data ~parse_content:false obj; `String "DP"]
 
 (* parse_stream needs pdf and resources. These are for lexing of inline images,
  * looking up the colourspace. *)
@@ -475,9 +480,9 @@ let json_of_pdf
       (fun _ obj -> match obj with Pdf.Stream _ -> Pdfcodec.decode_pdfstream_until_unknown pdf obj | _ -> ())
       pdf;
   Pdf.remove_unreferenced pdf;
-  let trailerdict = (0, json_of_object pdf (fun x -> ()) no_stream_data false pdf.P.trailerdict) in
+  let trailerdict = (0, json_of_object pdf (fun x -> ()) ~no_stream_data ~parse_content:false pdf.P.trailerdict) in
   let parameters =
-    (-1, json_of_object pdf (fun x -> ()) false false
+    (-1, json_of_object pdf (fun x -> ()) ~no_stream_data:false ~parse_content:false
       (Pdf.Dictionary [("/CPDFJSONformatversion", Pdf.Integer 2);
                        ("/CPDFJSONcontentparsed", Pdf.Boolean parse_content);
                        ("/CPDFJSONstreamdataincluded", Pdf.Boolean (not no_stream_data));
@@ -494,7 +499,7 @@ let json_of_pdf
     let ps = ref [] in
       P.objiter
         (fun i pdfobj ->
-          ps := (i, json_of_object pdf fcs no_stream_data parse_content pdfobj)::!ps)
+          ps := (i, json_of_object pdf fcs ~no_stream_data ~parse_content pdfobj)::!ps)
         pdf;
       parameters::trailerdict::sort compare !ps
   in
@@ -529,7 +534,7 @@ let json_of_pdf
           (fun (objnum, jsonobj) -> `List [`Int objnum; jsonobj])
           pairs_parsed)
 
-let to_output o ~parse_content ~no_stream_data ~decompress_streams ?(clean_strings=false) pdf =
+let to_output o ?(utf8=false) ~parse_content ~no_stream_data ~decompress_streams ?(clean_strings=false) pdf =
   let json = json_of_pdf ~parse_content ~no_stream_data ~decompress_streams ~clean_strings pdf in
     match o.Pdfio.out_caml_channel with
     | Some ch -> J.pretty_to_channel ch json
