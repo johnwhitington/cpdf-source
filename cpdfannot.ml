@@ -59,23 +59,53 @@ let serial = ref ~-1
 let getserial () =
   serial +=1; !serial
 
+let objnum_to_serial_map = ref []
+
 let annotations_json_page pdf page pagenum =
   match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
   | Some (Pdf.Array annots) ->
       map
         (fun annot ->
-           let annot = rewrite_destinations pdf annot in
-             extra := Pdf.objects_referenced [] [] pdf annot @ !extra;
-             `List [`Int pagenum; `Int (getserial ()); Cpdfjson.json_of_object ~clean_strings:true pdf (fun _ -> ()) false false annot])
-        (map (Pdf.direct pdf) annots)
+           let serial = getserial () in
+             begin match annot with
+             | Pdf.Indirect i -> objnum_to_serial_map := (i, serial)::!objnum_to_serial_map
+             | _ -> Printf.eprintf "annotations must be indirect\n"
+             end;
+             let annot = Pdf.direct pdf annot in
+             let annot = rewrite_destinations pdf annot in
+               extra := Pdf.objects_referenced [] [] pdf annot @ !extra;
+               `List [`Int pagenum; `Int serial; Cpdfjson.json_of_object ~clean_strings:true pdf (fun _ -> ()) false false annot])
+        annots
   | _ -> []
 
-(* FIXME: Rewrite any /Parent entries in /Popup annotations to have annot serial number not annot object number *)
-let process_extra_object pdf obj = obj
+(* Rewrite any /Parent entries in /Popup annotations to have annot serial number, not object number *)
+let postprocess_json_pdf objnum_to_serial_map pdf obj =
+  match obj with
+  | Pdf.Dictionary d ->
+      begin match lookup "/Subtype" d, lookup "/Parent" d with
+      | Some (Pdf.Name "/Popup"), Some (Pdf.Indirect i) ->
+          begin match lookup i objnum_to_serial_map with
+          | Some s -> Pdf.add_dict_entry obj "/Parent" (Pdf.Integer s)
+          | None -> Printf.eprintf "Warning: Cpdfannot.process_extra_object: could not find serial number\n"; obj
+          end
+      | _ -> obj
+      end
+  | x -> x
+
+let postprocess_json pdf objnum_to_serial_map json =
+  map
+   (function
+    | `List [`Int pagenum; `Int serial; jo] ->
+        let pdfobj = Cpdfjson.object_of_json jo in
+        let fixed = postprocess_json_pdf objnum_to_serial_map pdf pdfobj in
+          `List [`Int pagenum; `Int serial; Cpdfjson.json_of_object ~clean_strings:true pdf (fun _ -> ()) false false fixed]
+    | _ -> assert false)
+   json
 
 let list_annotations_json range pdf =
   extra := [];
   serial := ~-1;
+  objnum_to_serial_map := [];
   let module J = Cpdfyojson.Safe in
   let pages = Pdfpage.pages_of_pagetree pdf in
   let pagenums = indx pages in
@@ -83,10 +113,11 @@ let list_annotations_json range pdf =
   let pairs = option_map (fun (p, n) -> if mem n range then Some (p, n) else None) pairs in
   let pages, pagenums = split pairs in
   let json = flatten (map2 (annotations_json_page pdf) pages pagenums) in
+  let json = postprocess_json pdf !objnum_to_serial_map json in
   let extra =
     map
       (fun n ->
-        let obj = process_extra_object pdf (Pdf.lookup_obj pdf n) in
+        let obj = (*process_extra_object !objnum_to_serial_map pdf*) (Pdf.lookup_obj pdf n) in
           `List [`Int ~-n; Cpdfjson.json_of_object ~clean_strings:true pdf (fun _ -> ()) false false obj])
       (setify !extra)
   in
