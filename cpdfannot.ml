@@ -78,10 +78,11 @@ let annotations_json_page pdf page pagenum =
         annots
   | _ -> []
 
-(* Rewrite any /Parent entries in /Popup annotations to have annot serial number, not object number *)
+(* Rewrite any /Parent entries in /Popup annotations to have annot serial number, not object number, and all /Popup entries in parent annotations similarly. *)
 let postprocess_json_pdf objnum_to_serial_map pdf obj =
   match obj with
   | Pdf.Dictionary d ->
+      let obj =
       begin match lookup "/Subtype" d, lookup "/Parent" d with
       | Some (Pdf.Name "/Popup"), Some (Pdf.Indirect i) ->
           begin match lookup i objnum_to_serial_map with
@@ -90,6 +91,19 @@ let postprocess_json_pdf objnum_to_serial_map pdf obj =
           end
       | _ -> obj
       end
+      in
+        begin match obj with
+        | Pdf.Dictionary d ->
+            begin match lookup "/Popup" d with
+            | Some (Pdf.Indirect i) ->
+                begin match lookup i objnum_to_serial_map with
+                | Some s -> Pdf.add_dict_entry obj "/Popup" (Pdf.Integer s)
+                | None -> Printf.eprintf "Warning: Cpdfannot.process_extra_object: could not find serial number 2\n"; obj
+                end
+            | _ -> obj
+            end
+        | _ -> obj
+        end
   | x -> x
 
 let postprocess_json pdf objnum_to_serial_map json =
@@ -114,11 +128,14 @@ let list_annotations_json range pdf =
   let pages, pagenums = split pairs in
   let json = flatten (map2 (annotations_json_page pdf) pages pagenums) in
   let json = postprocess_json pdf !objnum_to_serial_map json in
+  let extra = map (postprocess_json_pdf !objnum_to_serial_map pdf) !extra in
+  (*Printf.printf "%i extra roots to explore\n" (length extra);
+  iter (fun x -> Printf.eprintf "%s\n\n" (Pdfwrite.string_of_pdf x)) extra;*)
   let extra =
     map
       (fun n ->
          `List [`Int ~-n; Cpdfjson.json_of_object ~clean_strings:true pdf (fun _ -> ()) false false (Pdf.lookup_obj pdf n)])
-      (setify (flatten (map (Pdf.objects_referenced [] [] pdf) !extra)))
+      (setify (flatten (map (Pdf.objects_referenced [] [] pdf) extra)))
   in
     Printf.printf "EXTRA: %i objects\n" (length extra);
     let json = `List (json @ extra) in
