@@ -194,7 +194,7 @@ let rec op_of_json = function
       Printf.eprintf "Unable to read op from %s\n" (J.show j);
       error "op reading failed"
 
-and object_of_json = function
+and object_of_json ?(utf8=false) = function
   | `Null -> P.Null
   | `Bool b -> P.Boolean b
   | `Int n -> Pdf.Indirect n
