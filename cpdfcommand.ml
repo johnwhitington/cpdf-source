@@ -1705,14 +1705,14 @@ let setprintdictentry s =
 
 let setreplacedictentryvalue s =
   try
-    let pdfobj = Cpdfjson.object_of_json ~utf8:false (Cpdfyojson.Safe.from_string s) in
+    let pdfobj = Cpdfjson.object_of_json ~utf8:(args.encoding = Cpdfmetadata.UTF8) (Cpdfyojson.Safe.from_string s) in
       args.replace_dict_entry_value <- pdfobj
   with
     e -> error (Printf.sprintf "Failed to parse replacement value: %s\n" (Printexc.to_string e))
 
 let setdictentrysearch s =
   try
-    let pdfobj = Cpdfjson.object_of_json ~utf8:false (Cpdfyojson.Safe.from_string s) in
+    let pdfobj = Cpdfjson.object_of_json ~utf8:(args.encoding = Cpdfmetadata.UTF8) (Cpdfyojson.Safe.from_string s) in
       args.dict_entry_search <- Some pdfobj
   with
     e -> error (Printf.sprintf "Failed to parse search term: %s\n" (Printexc.to_string e))
@@ -3332,7 +3332,7 @@ let write_json output pdf =
   | Stdout ->
       Cpdfjson.to_output
         (Pdfio.output_of_channel stdout)
-        ~utf8:false
+        ~utf8:(args.encoding = Cpdfmetadata.UTF8)
         ~parse_content:args.jsonparsecontentstreams
         ~no_stream_data:args.jsonnostreamdata
         ~decompress_streams:args.jsondecompressstreams
@@ -3342,7 +3342,7 @@ let write_json output pdf =
       let f = open_out filename in
         Cpdfjson.to_output
           (Pdfio.output_of_channel f)
-          ~utf8:false
+          ~utf8:(args.encoding = Cpdfmetadata.UTF8)
           ~parse_content:args.jsonparsecontentstreams
           ~no_stream_data:args.jsonnostreamdata
           ~decompress_streams:args.jsondecompressstreams
@@ -4258,7 +4258,7 @@ let go () =
         write_pdf false pdf
   | Some (PrintDictEntry key) ->
       let pdf = get_single_pdf args.op true in
-        Cpdftweak.print_dict_entry pdf key
+        Cpdftweak.print_dict_entry ~utf8:(args.encoding = Cpdfmetadata.UTF8) pdf key
   | Some ListSpotColours ->
       let pdf = get_single_pdf args.op false in
         Cpdfspot.list_spot_colours pdf

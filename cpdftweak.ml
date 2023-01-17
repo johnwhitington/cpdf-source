@@ -264,12 +264,12 @@ let replace_dict_entry pdf key value search =
     pdf.Pdf.trailerdict <- dict_entry_single_object f pdf pdf.Pdf.trailerdict
 
 (* FIXME no need to self map here, since nothing changes *)
-let print_dict_entry pdf key =
+let print_dict_entry ~utf8 pdf key =
   let f d =
     match Pdf.lookup_direct pdf key d with
     | Some v ->
         (* We use a double newline as a separator. *)
-        Printf.printf "%s\n\n" (Cpdfyojson.Safe.to_string (Cpdfjson.json_of_object ~utf8:false ~clean_strings:true pdf (fun _ -> ()) ~no_stream_data:false ~parse_content:false v));
+        Printf.printf "%s\n\n" (Cpdfyojson.Safe.to_string (Cpdfjson.json_of_object ~utf8 ~clean_strings:true pdf (fun _ -> ()) ~no_stream_data:false ~parse_content:false v));
         d
     | None -> d
   in
@@ -277,11 +277,11 @@ let print_dict_entry pdf key =
     pdf.Pdf.trailerdict <- dict_entry_single_object f pdf pdf.Pdf.trailerdict
 
 (* For cpdflib. *)
-let get_dict_entries pdf key =
+let get_dict_entries ~utf8 pdf key =
   let es = ref [] in
   let f d =
     match Pdf.lookup_direct pdf key d with
-    | Some v -> es := Cpdfjson.json_of_object ~utf8:false ~clean_strings:true pdf (fun _ -> ()) ~no_stream_data:false ~parse_content:false v::!es; d
+    | Some v -> es := Cpdfjson.json_of_object ~utf8 ~clean_strings:true pdf (fun _ -> ()) ~no_stream_data:false ~parse_content:false v::!es; d
     | None -> d
   in
     Pdf.objselfmap (dict_entry_single_object f pdf) pdf;

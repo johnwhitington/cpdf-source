@@ -22,10 +22,10 @@ val remove_dict_entry : Pdf.t -> string -> Pdf.pdfobject option -> unit
 val replace_dict_entry : Pdf.t -> string -> Pdf.pdfobject -> Pdf.pdfobject option -> unit
 
 (** Print a dictionary entry. *)
-val print_dict_entry : Pdf.t -> string -> unit
+val print_dict_entry : utf8:bool -> Pdf.t -> string -> unit
 
 (** Get dictionary entries in JSON format *)
-val get_dict_entries : Pdf.t -> string -> Pdfio.bytes
+val get_dict_entries : utf8:bool -> Pdf.t -> string -> Pdfio.bytes
 
 (** Remove clipping. *)
 val remove_clipping : Pdf.t -> int list -> Pdf.t 
