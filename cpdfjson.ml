@@ -239,7 +239,7 @@ let pdf_of_json json =
          | `List [`Int objnum; o] ->
              begin match objnum with
              | -1 -> params := object_of_json ~utf8:false o; read_utf8 (); None 
-             | 0 -> trailerdict := object_of_json ~utf8:!utf8 o; None
+             | 0 -> trailerdict := object_of_json ~utf8:false o; None (* utf8 false since /IDs are not PdfDocencoding, so don't get transformed *)
              | n when n < 0 -> None
              | n ->  Some (n, object_of_json ~utf8:!utf8 o)
              end
@@ -476,7 +476,7 @@ let rec ppstring_single_object pdf = function
 (* Do all objects, but skip the trailer dictionary since may mess up /ID if it
    happens to begin with UTF16BE BOM *)
 let preprocess_strings pdf =
-    Pdf.objselfmap (ppstring_single_object pdf) pdf
+  Pdf.objselfmap (ppstring_single_object pdf) pdf
 
 let json_of_pdf
   ~utf8 ~parse_content ~no_stream_data ~decompress_streams ~clean_strings
@@ -489,7 +489,8 @@ let json_of_pdf
       (fun _ obj -> match obj with Pdf.Stream _ -> Pdfcodec.decode_pdfstream_until_unknown pdf obj | _ -> ())
       pdf;
   Pdf.remove_unreferenced pdf;
-  let trailerdict = (0, json_of_object ~utf8 pdf (fun x -> ()) ~no_stream_data ~parse_content:false pdf.P.trailerdict) in
+  (* Not UTF8, because /ID strings are not actually in PDFDocEncoding *)
+  let trailerdict = (0, json_of_object ~utf8:false pdf (fun x -> ()) ~no_stream_data ~parse_content:false pdf.P.trailerdict) in
   let parameters =
     (-1, json_of_object ~utf8 pdf (fun x -> ()) ~no_stream_data:false ~parse_content:false
       (Pdf.Dictionary [("/CPDFJSONformatversion", Pdf.Integer 3);
