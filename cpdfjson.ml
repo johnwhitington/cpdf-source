@@ -200,7 +200,7 @@ and object_of_json ~utf8 = function
   | `Null -> P.Null
   | `Bool b -> P.Boolean b
   | `Int n -> Pdf.Indirect n
-  | `String s -> P.String s
+  | `String s -> if utf8 then P.String (Pdftext.pdfdocstring_of_utf8 s) else P.String s
   | `List objs -> P.Array (map (object_of_json ~utf8) objs)
   | `Assoc ["I", `Int i] -> P.Integer i
   | `Assoc ["F", `Float f] -> P.Real f
@@ -290,7 +290,7 @@ let rec json_of_object ~utf8 ?(clean_strings=false) pdf fcs ~no_stream_data ~par
   | P.Boolean b -> `Bool b
   | P.Integer i -> mkint i
   | P.Real r -> mkfloat r
-  | P.String s -> `String (if clean_strings then Pdftext.simplify_utf16be s else s)
+  | P.String s -> `String (if clean_strings then Pdftext.simplify_utf16be s else if utf8 then Pdftext.utf8_of_pdfdocstring s else s)
   | P.Name n -> mkname n
   | P.Array objs -> `List (map (json_of_object ~utf8 pdf fcs ~no_stream_data ~parse_content) objs)
   | P.Dictionary elts ->
