@@ -317,7 +317,9 @@ let rec json_of_object ~utf8 ?(clean_strings=false) pdf fcs ~no_stream_data ~par
             if no_stream_data then ("<<stream data elided>>", d) else
               match !mut with (_, P.Got b) -> (Pdfio.string_of_bytes b, d) | _ -> error "failure: toget"
       in
-        json_of_object ~utf8 pdf fcs ~no_stream_data ~parse_content (P.Dictionary [("S", P.Array [dict'; P.String str])])
+        (* We don't want to allow UTF8 processing of the stream here, so generate JSON without recursion. *)
+        let dictjson = json_of_object ~utf8 pdf fcs ~no_stream_data ~parse_content dict' in
+          `Assoc [("S", `List [dictjson; `String str])]
   | P.Stream _ -> error "error: stream with not-a-dictionary"
   | P.Indirect i ->
       begin match P.lookup_obj pdf i with
@@ -490,9 +492,10 @@ let json_of_pdf
   let trailerdict = (0, json_of_object ~utf8 pdf (fun x -> ()) ~no_stream_data ~parse_content:false pdf.P.trailerdict) in
   let parameters =
     (-1, json_of_object ~utf8 pdf (fun x -> ()) ~no_stream_data:false ~parse_content:false
-      (Pdf.Dictionary [("/CPDFJSONformatversion", Pdf.Integer 2);
+      (Pdf.Dictionary [("/CPDFJSONformatversion", Pdf.Integer 3);
                        ("/CPDFJSONcontentparsed", Pdf.Boolean parse_content);
                        ("/CPDFJSONstreamdataincluded", Pdf.Boolean (not no_stream_data));
+                       ("/CPDFJSONisUTF8", Pdf.Boolean utf8);
                        ("/CPDFJSONmajorpdfversion", Pdf.Integer pdf.Pdf.major);
                        ("/CPDFJSONminorpdfversion", Pdf.Integer pdf.Pdf.minor);
                       ]))
