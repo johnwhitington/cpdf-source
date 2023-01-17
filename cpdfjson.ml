@@ -1,6 +1,8 @@
 (* Read and write PDF files in JSON format.
 
-Format version 3: adds UTF8 option
+Format version 3: adds UTF8 option for strings for easier editing
+Format version 2: adds object -1 with format data, roundtripping
+Format version 1: no format specifier, output only
 
 The file is an array of arrays containing an object number followed by an
 object, one for each object in the file and two special ones:
@@ -16,7 +18,7 @@ number, and flags used when writing (which may be required when reading):
   o /CPDFJSONminorpdfversion (CPDFJSON integer)
   o /CPDFJSONisUTF8 (Optional. Format 3. If true, strings are converted to UTF8
   before conversion to JSON, and converted back to PDFDocEncoding/UTF16BE during
-  converstion to PDF.
+  converstion to PDF.)
 
 Object 0: The PDF's trailer dictionary
 
