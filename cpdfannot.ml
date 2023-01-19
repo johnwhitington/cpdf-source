@@ -149,13 +149,24 @@ let list_annotations_json range pdf =
   let extra =
     map
       (fun n ->
-         `List [`Int ~-n; Cpdfjson.json_of_object ~utf8:true ~clean_strings:true pdf (fun _ -> ()) ~no_stream_data:false ~parse_content:false (Pdf.lookup_obj pdf n)])
-      (setify (flatten (map (Pdf.objects_referenced [] [] pdf) extra)))
+         `List
+           [`Int ~-n;
+            Cpdfjson.json_of_object ~utf8:true ~clean_strings:true pdf (fun _ -> ())
+              ~no_stream_data:false ~parse_content:false (Pdf.lookup_obj pdf n)])
+      (setify
+        (flatten
+          (map 
+            (fun x ->
+               let r = Pdf.objects_referenced [] [] pdf x in
+                 (*Printf.printf "%i extra for annot %s\n" (length r)
+                 (Pdfwrite.string_of_pdf x);*) r)
+          extra)))
   in
   let header =
     `List
      [`Int 0;
-      Cpdfjson.json_of_object ~utf8:true ~clean_strings:true pdf (fun _ -> ()) ~no_stream_data:false ~parse_content:false
+      Cpdfjson.json_of_object ~utf8:true ~clean_strings:true pdf (fun _ -> ())
+        ~no_stream_data:false ~parse_content:false
         (Pdf.Dictionary ["/CPDFJSONannotformatversion", Pdf.Integer 1])]
   in
   let json = `List ([header] @ json @ extra) in
