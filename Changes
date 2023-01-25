@@ -23,6 +23,8 @@ Fixes:
 
 o Updated Yojson to remove dependency on Stream, ready for OCaml 5
 o -typeset was opening files in text mode, instead of binary
+o Preserve /GoTo actions in bookmarks when merging and optionally
+  when extracting bookmarks
 
 
 2.5.1 (January 2022)
