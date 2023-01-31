@@ -1794,7 +1794,7 @@ When appropriate passwords are not available, the option \texttt{-decrypt-force}
      
      \vspace{1.5mm}
      \noindent\verb!cpdf -squeeze in.pdf [-squeeze-log-to <filename>]!\\
-     \noindent\verb!     [-squeeze-no-recompress] [-squeeze-no-page-data] -o out.pdf!   
+     \noindent\verb!     [-squeeze-no-recompress] [-squeeze-no-pagedata] -o out.pdf!   
    \end{framed}
   \cpdf\ provides basic facilities for decompressing and compressing PDF streams, and for reprocessing the whole file to `squeeze' it.
   \section{Decompressing a Document}
@@ -1838,7 +1838,7 @@ Final file size is 187200 bytes,  78.60% of original.
 
 \noindent The \texttt{-squeeze-log-to <filename>} option writes the log to the given file instead of to standard output. Log contents is appended to the end of the log file, preserving existing contents.
 
-There are two options which turn off parts of the squeezer. They are \texttt{-squeeze-no-recompress} for avoiding the reprocessing of malformed compressed sections, and \texttt{-squeeze-no-page-data} for avoiding the reprocessing of malformed page data.
+There are two options which turn off parts of the squeezer. They are \texttt{-squeeze-no-recompress} for avoiding the reprocessing of malformed compressed sections, and \texttt{-squeeze-no-pagedata} for avoiding the reprocessing of malformed page data.
 
 \begin{cpdflib}
 \clearpage
