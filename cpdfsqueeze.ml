@@ -89,35 +89,38 @@ the page tree!) are also needed - we must merge them with the ones from the
 xobject itself. However, it it safe for now -- in the unlikely event that the
 resources actually need to be available, the parse will fail, the squeeze of
 this object will fail, and we bail out. *)
+(* FIXME: XObjects inside xobjects? *)
 let xobjects_done = ref []
 
 let squeeze_form_xobject pdf objnum =
   if mem objnum !xobjects_done then () else
-    xobjects_done := objnum :: !xobjects_done;
-    let obj = Pdf.lookup_obj pdf objnum in
-      match Pdf.lookup_direct pdf "/Subtype" obj with
-        Some (Pdf.Name "/Form") ->
-          let resources =
-            match Pdf.lookup_direct pdf "/Resources" obj with
-              Some d -> d
-            | None -> Pdf.Dictionary []
-          in
-            begin match
-              Pdfops.stream_of_ops
-                (Pdfops.parse_operators pdf resources [Pdf.Indirect objnum])
-            with
-              Pdf.Stream {contents = (_, Pdf.Got data)} ->
-                (* Put replacement data in original stream, and overwrite /Length *)
-                begin match obj with
-                  Pdf.Stream ({contents = (d, _)} as str) ->
-                    str :=
-                      (Pdf.add_dict_entry d "/Length" (Pdf.Integer (bytes_size data)),
-                       Pdf.Got data)
-                | _ -> failwith "squeeze_form_xobject"
-                end
-            | _ -> failwith "squeeze_form_xobject"
-            end
-      | _ -> ()
+    begin
+      xobjects_done := objnum :: !xobjects_done;
+      let obj = Pdf.lookup_obj pdf objnum in
+        match Pdf.lookup_direct pdf "/Subtype" obj with
+          Some (Pdf.Name "/Form") ->
+            let resources =
+              match Pdf.lookup_direct pdf "/Resources" obj with
+                Some d -> d
+              | None -> Pdf.Dictionary []
+            in
+              begin match
+                Pdfops.stream_of_ops
+                  (Pdfops.parse_operators pdf resources [Pdf.Indirect objnum])
+              with
+                Pdf.Stream {contents = (_, Pdf.Got data)} ->
+                  (* Put replacement data in original stream, and overwrite /Length *)
+                  begin match obj with
+                    Pdf.Stream ({contents = (d, _)} as str) ->
+                      str :=
+                        (Pdf.add_dict_entry d "/Length" (Pdf.Integer (bytes_size data)),
+                         Pdf.Got data)
+                  | _ -> failwith "squeeze_form_xobject"
+                  end
+              | _ -> failwith "squeeze_form_xobject"
+              end
+        | _ -> ()
+    end
 
 (* For a list of indirects representing content streams, make sure that none of
 them are duplicated in the PDF. This indicates sharing, which parsing and
