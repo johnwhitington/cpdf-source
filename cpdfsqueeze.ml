@@ -36,7 +36,6 @@ let decompress_pdf pdf =
     (Pdf.iter_stream (Pdfcodec.decode_pdfstream_until_unknown pdf) pdf);
     pdf
 
-
 (* Equality on PDF objects *)
 let pdfobjeq pdf x y =
   let x = Pdf.lookup_obj pdf x 
@@ -235,10 +234,16 @@ let squeeze ?logto ?(pagedata=true) ?(recompress=true) pdf =
         end;
       if recompress then
         begin
+          ignore (decompress_pdf pdf);
           log (Printf.sprintf "Recompressing document\n");
+          let n = !Pdfcodec.flate_level in
           Pdfcodec.flate_level := 9;
-          ignore (recompress_pdf pdf)
+          ignore (recompress_pdf pdf);
+          Pdfcodec.flate_level := n
         end
+      else
+        (* Re-compress processed pagedata, even if recompress not set *)
+        if pagedata then ignore (recompress_pdf pdf)
     with
       e ->
         raise

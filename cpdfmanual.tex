@@ -1838,7 +1838,7 @@ Final file size is 187200 bytes,  78.60% of original.
 
 \noindent The \texttt{-squeeze-log-to <filename>} option writes the log to the given file instead of to standard output. Log contents is appended to the end of the log file, preserving existing contents.
 
-There are two options which turn off parts of the squeezer. They are \texttt{-squeeze-no-recompress} for avoiding the reprocessing of malformed compressed sections, and \texttt{-squeeze-no-pagedata} for avoiding the reprocessing of malformed page data.
+There are two options which turn off parts of the squeezer. They are \texttt{-squeeze-no-recompress} for avoiding the reprocessing of compressed sections (especially useful if they are malformed), and \texttt{-squeeze-no-pagedata} for avoiding the reprocessing of page data (ditto). These two options also make the process much faster at the cost of a little less compression. Experiment.
 
 \begin{cpdflib}
 \clearpage
