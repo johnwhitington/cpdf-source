@@ -18,13 +18,14 @@ o -list-annotations[-json] now respects page range
 o Merge now merges structure trees (tagged PDF)
 o Merge now rewrites clashing name tree entries
 o UTF8 option for JSON output
+o Preserve /GoTo actions in bookmarks when merging and optionally
+  when extracting bookmarks
 
 Fixes:
 
 o Updated Yojson to remove dependency on Stream, ready for OCaml 5
 o -typeset was opening files in text mode, instead of binary
-o Preserve /GoTo actions in bookmarks when merging and optionally
-  when extracting bookmarks
+o Fixed behaviour of -squeeze-no-pagedata / -squeeze-no-recompress 
 
 
 2.5.1 (January 2022)
