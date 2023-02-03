@@ -237,9 +237,9 @@ let squeeze ?logto ?(pagedata=true) ?(recompress=true) pdf =
           ignore (decompress_pdf pdf);
           log (Printf.sprintf "Recompressing document\n");
           let n = !Pdfcodec.flate_level in
-          Pdfcodec.flate_level := 9;
-          ignore (recompress_pdf pdf);
-          Pdfcodec.flate_level := n
+            Pdfcodec.flate_level := 9;
+            ignore (recompress_pdf pdf);
+            Pdfcodec.flate_level := n
         end
       else
         (* Re-compress processed pagedata, even if recompress not set *)
