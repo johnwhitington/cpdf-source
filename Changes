@@ -17,9 +17,9 @@ o Better transformation of some annotation types
 o -list-annotations[-json] now respects page range
 o Merge now merges structure trees (tagged PDF)
 o Merge now rewrites clashing name tree entries
+o Preserve /GoTo actions in bookmarks when merging
 o UTF8 option for JSON output
-o Preserve /GoTo actions in bookmarks when merging and optionally
-  when extracting bookmarks
+o Malformed file reading support extended to PDFs with xref streams (*)
 
 Fixes:
 
