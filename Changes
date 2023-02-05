@@ -19,13 +19,13 @@ o Merge now merges structure trees (tagged PDF)
 o Merge now rewrites clashing name tree entries
 o Preserve /GoTo actions in bookmarks when merging
 o UTF8 option for JSON output
-o Malformed file reading support extended to PDFs with xref streams (*)
 
 Fixes:
 
 o Updated Yojson to remove dependency on Stream, ready for OCaml 5
 o -typeset was opening files in text mode, instead of binary
 o Fixed behaviour of -squeeze-no-pagedata / -squeeze-no-recompress 
+o More malformed flate streams supported
 
 
 2.5.1 (January 2022)
