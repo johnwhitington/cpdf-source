@@ -674,7 +674,6 @@ let reset_arguments () =
   args.no_hq_print <- false;
   args.debug <- false;
   args.debugcrypt <- false;
-  args.debugforce <- false;
   args.boxes <- false;
   args.encrypt_metadata <- true;
   args.retain_numbering <- false;
@@ -733,7 +732,7 @@ let reset_arguments () =
    was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
    gs_malformed or gs_quiet or no-warn-rotate, since we want these to work
    across ANDs. Or squeeze options: a little odd, but we want it to happen on
-   eventual output. *)
+   eventual output. Or -debug-force (from v2.6). *)
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
