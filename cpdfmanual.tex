@@ -752,6 +752,8 @@ being performed. Separate facilities are provided to decrypt and encrypt files
 
 When appropriate passwords are not available, the option \texttt{-decrypt-force} may be added to the command line to process the file regardless.
 
+For decryption with AES256, passwords may be Unicode. However, the password, should it contain non-ASCII characters, must be normalized by applying the SASLPrep profile (RFC 4013) of the stringprep algorithm (RFC 3454) using the Normalize and BiDi options. It must then be converted to UTF8 and truncated to 127 bytes. Cpdf does not perform this pre-processing - it takes its passwords from the command line without processing.
+
   \section{Standard Input and Standard Output}
 \index{standard input} \index{standard output}
   Thus far, we have assumed that the input PDF will be read from a file on
