@@ -25,7 +25,7 @@ Fixes:
 o Updated Yojson to remove dependency on Stream, ready for OCaml 5
 o -typeset was opening files in text mode, instead of binary
 o Fixed behaviour of -squeeze-no-pagedata / -squeeze-no-recompress 
-o More malformed flate streams supported
+o Significant improvements to malformed file reading
 
 
 2.5.1 (January 2022)
