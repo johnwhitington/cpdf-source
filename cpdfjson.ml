@@ -16,9 +16,6 @@ number, and flags used when writing (which may be required when reading):
   round-trip if false).
   o /CPDFJSONmajorpdfversion (CPDFJSON integer)
   o /CPDFJSONminorpdfversion (CPDFJSON integer)
-  o /CPDFJSONisUTF8 (Optional. Format 3. If true, strings are converted to UTF8
-  before conversion to JSON, and converted back to PDFDocEncoding/UTF16BE during
-  converstion to PDF.)
 
 Object 0: The PDF's trailer dictionary
 
@@ -30,7 +27,17 @@ Objects 1..n: The PDF's objects.
   o Names are written as {"N": "/Pages"}
   o Indirect references are integers
   o Streams are {"S": [dict, data]}
-  o Strings are converted into JSON strings in a way which is fully reversible. 
+  o Strings are converted into JSON strings in a way which is fully reversible.
+    In original (utf8=false) mode, the bytes of the string in PDF representation
+    are converted into UTF8, rather than the string itself being converted. In
+    UTF8 mode (utf8=true), instead:
+      - If a String contains only PDFDocEncoding characters, is is converted
+        to UTF8, and stored as {"U" : "..."}
+      - If a String has a BOM and successfully converts to UTF8, it is converted
+        to UTF8, and stored as {"V" : "..."}
+      - If a String has a BOM but fails to convert, or has no BOM, it is stored
+        in original mode, as an unmarked string.
+    In all cases, this process is still reversible.
 
 There are two subformats: parsing content streams or not.  Hello World in CPDF
 JSON without parsing content streams:
@@ -285,12 +292,15 @@ let mkfloat f = `Assoc [("F", `Float f)]
 let mkint i = `Assoc [("I", `Int i)]
 let mkname n = `Assoc [("N", `String n)]
 
+let json_string_of_pdfstring_utf8 =
+  Pdftext.utf8_of_pdfdocstring
+
 let rec json_of_object ~utf8 ?(clean_strings=false) pdf fcs ~no_stream_data ~parse_content = function
   | P.Null -> `Null
   | P.Boolean b -> `Bool b
   | P.Integer i -> mkint i
   | P.Real r -> mkfloat r
-  | P.String s -> `String (if clean_strings then Pdftext.simplify_utf16be s else if utf8 then Pdftext.utf8_of_pdfdocstring s else s)
+  | P.String s -> `String (if clean_strings then Pdftext.simplify_utf16be s else if utf8 then json_string_of_pdfstring_utf8 s else s)
   | P.Name n -> mkname n
   | P.Array objs -> `List (map (json_of_object ~utf8 pdf fcs ~no_stream_data ~parse_content) objs)
   | P.Dictionary elts ->
@@ -489,8 +499,7 @@ let json_of_pdf
       (fun _ obj -> match obj with Pdf.Stream _ -> Pdfcodec.decode_pdfstream_until_unknown pdf obj | _ -> ())
       pdf;
   Pdf.remove_unreferenced pdf;
-  (* Not UTF8, because /ID strings are not actually in PDFDocEncoding *)
-  let trailerdict = (0, json_of_object ~utf8:false pdf (fun x -> ()) ~no_stream_data ~parse_content:false pdf.P.trailerdict) in
+  let trailerdict = (0, json_of_object ~utf8 pdf (fun x -> ()) ~no_stream_data ~parse_content:false pdf.P.trailerdict) in
   let parameters =
     (-1, json_of_object ~utf8 pdf (fun x -> ()) ~no_stream_data:false ~parse_content:false
       (Pdf.Dictionary [("/CPDFJSONformatversion", Pdf.Integer 3);
