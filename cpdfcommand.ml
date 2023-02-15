@@ -196,7 +196,6 @@ type op =
   | AddPageLabels
   | RemovePageLabels
   | PrintPageLabels
-  | Revisions
   | RemoveDictEntry of string
   | ReplaceDictEntry of string
   | PrintDictEntry of string
@@ -324,7 +323,6 @@ let string_of_op = function
   | AddPageLabels -> "AddPageLabels"
   | RemovePageLabels -> "RemovePageLabels"
   | PrintPageLabels -> "PrintPageLabels"
-  | Revisions -> "Revisions"
   | RemoveDictEntry _ -> "RemoveDictEntry"
   | ReplaceDictEntry _ -> "ReplaceDictEntry"
   | ListSpotColours -> "ListSpotColours"
@@ -816,7 +814,7 @@ performed is checked to see if it's allowable under the permissions regime. *)
 bans list in the input file, the operation cannot proceed. Other operations
 cannot proceed at all without owner password. *)
 let banned banlist = function
-  | Fonts | Info | Metadata | PageInfo | Revisions | CountPages
+  | Fonts | Info | Metadata | PageInfo | CountPages
   | ListAttachedFiles | ListAnnotations
   | ListBookmarks | ImageResolution _ | MissingFonts
   | PrintPageLabels | Clean | Compress | Decompress
@@ -2578,9 +2576,6 @@ and specs =
    ("-pages",
       Arg.Unit (setop CountPages),
       " Count pages");
-   ("-revisions",
-      Arg.Unit (setop Revisions),
-      "");
    ("-list-attached-files",
       Arg.Unit (setop ListAttachedFiles),
       " List attached files");
@@ -3534,18 +3529,6 @@ let go () =
            output_page_count pdf
       | _ -> raise (Arg.Bad "CountPages: must have a single input file only")
       end
-  | Some Revisions ->
-      let input =
-        match args.inputs with
-          (InFile inname, _, _, _, _, _)::_ -> Pdfio.input_of_channel (open_in_bin inname)
-        | (StdIn, _, _, _, _, _)::_ -> Pdfio.input_of_channel stdin
-        | _ -> raise (Arg.Bad "Revisions: must be a filename or stdin")
-      in
-        begin try
-          Printf.printf "%i\n%!" (Pdfread.revisions input) 
-        with
-          _ -> soft_error "Malformed XRef table. Cannot determine number of revisions."
-        end
   | Some Clean ->
       let pdf' = get_single_pdf (Some Clean) false in
         write_pdf false pdf'
