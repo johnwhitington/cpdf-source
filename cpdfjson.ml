@@ -292,15 +292,24 @@ let mkfloat f = `Assoc [("F", `Float f)]
 let mkint i = `Assoc [("I", `Int i)]
 let mkname n = `Assoc [("N", `String n)]
 
-let json_string_of_pdfstring_utf8 =
-  Pdftext.utf8_of_pdfdocstring
+(* A reversible encoding which marks strings which have been converted to UTF8
+("V" = was a bom, "U" = no bom). If a string can't be converted, it is
+preserved unmarked. *)
+let json_string_of_pdfstring_utf8 s =
+  if Pdftext.is_unicode s then
+    begin try `Assoc [("V", `String (Pdftext.utf8_of_pdfdocstring s))] with _ -> `String s end
+  else
+    begin try `Assoc [("U", `String (Pdftext.utf8_of_pdfdocstring s))] with _ -> `String s end
 
 let rec json_of_object ~utf8 ?(clean_strings=false) pdf fcs ~no_stream_data ~parse_content = function
   | P.Null -> `Null
   | P.Boolean b -> `Bool b
   | P.Integer i -> mkint i
   | P.Real r -> mkfloat r
-  | P.String s -> `String (if clean_strings then Pdftext.simplify_utf16be s else if utf8 then json_string_of_pdfstring_utf8 s else s)
+  | P.String s -> 
+      if clean_strings then `String (Pdftext.simplify_utf16be s)
+      else if utf8 then json_string_of_pdfstring_utf8 s
+      else `String s
   | P.Name n -> mkname n
   | P.Array objs -> `List (map (json_of_object ~utf8 pdf fcs ~no_stream_data ~parse_content) objs)
   | P.Dictionary elts ->
