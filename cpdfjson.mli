@@ -16,4 +16,4 @@ val of_input : Pdfio.input -> Pdf.t
 val json_of_object : utf8:bool -> ?clean_strings:bool -> Pdf.t -> (int -> unit) -> no_stream_data:bool -> parse_content:bool -> Pdf.pdfobject -> Cpdfyojson.Safe.t
 
 (** Convert a single CPDFJSON object to a PDF object *)
-val object_of_json : utf8:bool -> Cpdfyojson.Safe.t -> Pdf.pdfobject
+val object_of_json : Cpdfyojson.Safe.t -> Pdf.pdfobject

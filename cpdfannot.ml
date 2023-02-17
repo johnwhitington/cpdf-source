@@ -125,7 +125,7 @@ let postprocess_json pdf objnum_to_serial_map json =
   map
    (function
     | `List [`Int pagenum; `Int serial; jo] ->
-        let pdfobj = Cpdfjson.object_of_json ~utf8:true jo in
+        let pdfobj = Cpdfjson.object_of_json jo in
         let fixed = postprocess_json_pdf objnum_to_serial_map pdf pdfobj in
         `List [`Int pagenum; `Int serial; Cpdfjson.json_of_object ~utf8:true ~clean_strings:true pdf (fun _ -> ()) ~no_stream_data:false ~parse_content:false fixed]
     | _ -> assert false)

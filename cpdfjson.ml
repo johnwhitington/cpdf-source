@@ -119,7 +119,7 @@ let opi = function
   | `Assoc ["I", `Float f] -> int_of_float f
   | _ -> error "num: not an integer"
 
-let rec op_of_json utf8 = function
+let rec op_of_json = function
   | `List [`String "S"] -> O.Op_S
   | `List [`String "s"] -> O.Op_s
   | `List [`String "f"] -> O.Op_f
@@ -145,7 +145,7 @@ let rec op_of_json utf8 = function
   | `List [a; b; c; d; `String "k"] -> O.Op_k (opf a, opf b, opf c, opf d)
   | `List [a; b; `String "m"] -> O.Op_m (opf a, opf b)
   | `List [a; b; `String "l"] -> O.Op_l (opf a, opf b)
-  | `List [`String s; obj; `String "BDC"] -> O.Op_BDC (s, object_of_json ~utf8 obj)
+  | `List [`String s; obj; `String "BDC"] -> O.Op_BDC (s, object_of_json obj)
   | `List [`String s; `String "gs"] -> O.Op_gs s
   | `List [`String s; `String "Do"] -> O.Op_Do s
   | `List [`String s; `String "CS"] -> O.Op_CS s
@@ -177,7 +177,7 @@ let rec op_of_json utf8 = function
           {Pdftransform.a = opf a; Pdftransform.b = opf b; Pdftransform.c = opf c;
            Pdftransform.d = opf d; Pdftransform.e = opf e; Pdftransform.f = opf f}
   | `List [`String s; `String "Tj"] -> Op_Tj s
-  | `List [obj; `String "TJ"] -> Op_TJ (object_of_json ~utf8 obj)
+  | `List [obj; `String "TJ"] -> Op_TJ (object_of_json obj)
   | `List [`String s; `String "'"] -> Op_' s
   | `List [a; b; `String s; `String "''"] -> Op_'' (opf a, opf b, s)
   | `List [a; b; `String "d0"] -> Op_d0 (opf a, opf b)
@@ -192,9 +192,9 @@ let rec op_of_json utf8 = function
   | `List [`String s; `String "MP"] -> Op_MP s;
   | `List [`String s; `String "BMC"] -> Op_BMC s;
   | `List [`String s; `String "Unknown"] -> O.Op_Unknown s
-  | `List [`String s; obj; `String "DP"] -> O.Op_DP (s, object_of_json ~utf8 obj)
+  | `List [`String s; obj; `String "DP"] -> O.Op_DP (s, object_of_json obj)
   | `List [a; `String b; `String "InlineImage"] ->
-      O.InlineImage (object_of_json ~utf8 a, Pdfio.bytes_of_string b)
+      O.InlineImage (object_of_json a, Pdfio.bytes_of_string b)
   | `List torev ->
       begin match rev torev with
       | `String "SCN"::ns -> O.Op_SCN (map opf (rev ns))
@@ -211,52 +211,47 @@ let rec op_of_json utf8 = function
       Printf.eprintf "Unable to read op from %s\n" (J.show j);
       error "op reading failed"
 
-and object_of_json ~utf8 = function
+and object_of_json = function
   | `Null -> P.Null
   | `Bool b -> P.Boolean b
   | `Int n -> Pdf.Indirect n
-  | `String s -> if utf8 then P.String (Pdftext.pdfdocstring_of_utf8 s) else P.String s
-  | `List objs -> P.Array (map (object_of_json ~utf8) objs)
+  | `String s -> P.String s
+  | `List objs -> P.Array (map object_of_json objs)
   | `Assoc ["I", `Int i] -> P.Integer i
   | `Assoc ["F", `Float f] -> P.Real f
   | `Assoc ["N", `String n] -> P.Name n
   | `Assoc ["S", `List [dict; `String data]] ->
       let d' =
-        P.add_dict_entry (object_of_json ~utf8 dict) "/Length" (P.Integer (String.length data))
+        P.add_dict_entry (object_of_json dict) "/Length" (P.Integer (String.length data))
       in
         P.Stream (ref (d', P.Got (Pdfio.bytes_of_string data)))
   | `Assoc ["S", `List [dict; `List parsed_ops]] ->
       begin match 
-        Pdfops.stream_of_ops (List.map (op_of_json utf8) parsed_ops)
+        Pdfops.stream_of_ops (List.map op_of_json parsed_ops)
       with
         | P.Stream {contents = (_, Pdf.Got data)} ->
             let d' =
-              P.add_dict_entry (object_of_json ~utf8 dict) "/Length" (P.Integer (Pdfio.bytes_size data))
+              P.add_dict_entry (object_of_json dict) "/Length" (P.Integer (Pdfio.bytes_size data))
             in
               P.Stream (ref (d', Pdf.Got data))
         | _ -> assert false
       end
-  | `Assoc elts -> P.Dictionary (map (fun (n, o) -> (n, object_of_json ~utf8 o)) elts)
+  | `Assoc elts -> P.Dictionary (map (fun (n, o) -> (n, object_of_json o)) elts)
   | _ -> error "not recognised in object_of_json"
 
 let pdf_of_json json =
   let objs = match json with `List objs -> objs | _ -> error "bad json top level" in
   let params = ref Pdf.Null in
-  let utf8 = ref false in
-  let read_utf8 () =
-    match Pdf.lookup_direct (Pdf.empty ()) "/CPDFJSONisUTF8" !params with 
-      Some (Pdf.Boolean b) -> utf8 := b | _ -> ()
-  in
   let trailerdict = ref Pdf.Null in
     let objects =
       option_map
         (function
          | `List [`Int objnum; o] ->
              begin match objnum with
-             | -1 -> params := object_of_json ~utf8:false o; read_utf8 (); None 
-             | 0 -> trailerdict := object_of_json ~utf8:false o; None (* utf8 false since /IDs are not PdfDocencoding, so don't get transformed *)
+             | -1 -> params := object_of_json o; None 
+             | 0 -> trailerdict := object_of_json o; None
              | n when n < 0 -> None
-             | n ->  Some (n, object_of_json ~utf8:!utf8 o)
+             | n ->  Some (n, object_of_json o)
              end
          | _ -> error "json bad obj")
         objs
@@ -300,23 +295,15 @@ let mkfloat f = `Assoc [("F", `Float f)]
 let mkint i = `Assoc [("I", `Int i)]
 let mkname n = `Assoc [("N", `String n)]
 
-(* A reversible encoding which marks strings which have been converted to UTF8
-("V" = was a bom, "U" = no bom). If a string can't be converted, it is
-preserved unmarked. *)
-let json_string_of_pdfstring_utf8 s =
-  if Pdftext.is_unicode s then
-    begin try `Assoc [("V", `String (Pdftext.utf8_of_pdfdocstring s))] with _ -> `String s end
-  else
-    begin try `Assoc [("U", `String (Pdftext.utf8_of_pdfdocstring s))] with _ -> `String s end
-
 let rec json_of_object ~utf8 ?(clean_strings=false) pdf fcs ~no_stream_data ~parse_content = function
   | P.Null -> `Null
   | P.Boolean b -> `Bool b
   | P.Integer i -> mkint i
   | P.Real r -> mkfloat r
   | P.String s -> 
-      if clean_strings then `String (Pdftext.simplify_utf16be s)
-      else if utf8 then json_string_of_pdfstring_utf8 s
+      if utf8 then
+        begin try `Assoc [("U", `String (Pdftext.utf8_of_pdfdocstring s))] with _ -> `String s end
+      else if clean_strings then `String (Pdftext.simplify_utf16be s)
       else `String s
   | P.Name n -> mkname n
   | P.Array objs -> `List (map (json_of_object ~utf8 pdf fcs ~no_stream_data ~parse_content) objs)
@@ -522,7 +509,6 @@ let json_of_pdf
       (Pdf.Dictionary [("/CPDFJSONformatversion", Pdf.Integer 3);
                        ("/CPDFJSONcontentparsed", Pdf.Boolean parse_content);
                        ("/CPDFJSONstreamdataincluded", Pdf.Boolean (not no_stream_data));
-                       ("/CPDFJSONisUTF8", Pdf.Boolean utf8);
                        ("/CPDFJSONmajorpdfversion", Pdf.Integer pdf.Pdf.major);
                        ("/CPDFJSONminorpdfversion", Pdf.Integer pdf.Pdf.minor);
                       ]))

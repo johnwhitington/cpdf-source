@@ -1702,14 +1702,14 @@ let setprintdictentry s =
 
 let setreplacedictentryvalue s =
   try
-    let pdfobj = Cpdfjson.object_of_json ~utf8:(args.encoding = Cpdfmetadata.UTF8) (Cpdfyojson.Safe.from_string s) in
+    let pdfobj = Cpdfjson.object_of_json (Cpdfyojson.Safe.from_string s) in
       args.replace_dict_entry_value <- pdfobj
   with
     e -> error (Printf.sprintf "Failed to parse replacement value: %s\n" (Printexc.to_string e))
 
 let setdictentrysearch s =
   try
-    let pdfobj = Cpdfjson.object_of_json ~utf8:(args.encoding = Cpdfmetadata.UTF8) (Cpdfyojson.Safe.from_string s) in
+    let pdfobj = Cpdfjson.object_of_json (Cpdfyojson.Safe.from_string s) in
       args.dict_entry_search <- Some pdfobj
   with
     e -> error (Printf.sprintf "Failed to parse search term: %s\n" (Printexc.to_string e))

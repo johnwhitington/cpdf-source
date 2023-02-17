@@ -78,7 +78,7 @@ let bookmark_of_data pdf i s i' isopen optionaldest =
      Pdfmarks.isopen = isopen}
 
 let target_of_json_target pdf pagenumber target = 
-  target_of_markfile_obj pdf pagenumber (Cpdfjson.object_of_json ~utf8:false target)
+  target_of_markfile_obj pdf pagenumber (Cpdfjson.object_of_json target)
 
 let mark_of_json pdf = function
   | `Assoc [("level", `Int level);
