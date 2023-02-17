@@ -217,6 +217,10 @@ and object_of_json = function
   | `Int n -> Pdf.Indirect n
   | `String s -> P.String s
   | `List objs -> P.Array (map object_of_json objs)
+  | `Assoc ["U", `String u] ->
+      begin try P.String (Pdftext.pdfdocstring_of_utf8 u) with
+        _ -> Printf.eprintf "Could not read UTF8 string %S\n" u; P.String u
+      end
   | `Assoc ["I", `Int i] -> P.Integer i
   | `Assoc ["F", `Float f] -> P.Real f
   | `Assoc ["N", `String n] -> P.Name n
