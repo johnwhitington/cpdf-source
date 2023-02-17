@@ -31,13 +31,21 @@ Objects 1..n: The PDF's objects.
     In original (utf8=false) mode, the bytes of the string in PDF representation
     are converted into UTF8, rather than the string itself being converted. In
     UTF8 mode (utf8=true), instead:
-      - If a String contains only PDFDocEncoding characters, is is converted
+      1 If a String contains only PDFDocEncoding characters, is is converted
+        to UTF8, and stored as {"U" : "..."}.
+      2 If a String has a BOM and successfully converts to UTF8, it is converted
         to UTF8, and stored as {"U" : "..."}
-      - If a String has a BOM and successfully converts to UTF8, it is converted
-        to UTF8, and stored as {"V" : "..."}
-      - If a String has a BOM but fails to convert, or has no BOM, it is stored
+      3 If a String has a BOM but fails to convert, or has no BOM, it is stored
         in original mode, as an unmarked string.
-    In all cases, this process is still reversible.
+    In all cases, this process is still reversible:
+      1. We try to convert back from UTF8 to PDFDocEncoding - this will always work
+         on an unchanged string. If the string has changed, and we cannot convert to
+         PDFDocEncoding, we convert back to UTF16 with a BOM.
+      2. Same as (1) - if unaltered, will be UTF16, if altered, could be PDFDocEncoding
+         or UTF16
+      3. As in non-UTF-mode, reversible as we know.
+    We need to mark strings as {"U" : ...} or not to preseve the distinction between
+    PDFDocEncoding / UTF16BE on the one hand, and byte strings on the other.
 
 There are two subformats: parsing content streams or not.  Hello World in CPDF
 JSON without parsing content streams:
