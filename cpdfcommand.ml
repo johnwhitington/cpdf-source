@@ -3369,37 +3369,28 @@ let prerotate range pdf =
   Cpdfpage.upright ~fast:args.fast range pdf
 
 let embed_font () =
-  let fontpack_of_standardfont sf =
-    let te = Pdftext.text_extractor_of_font_real sf in
-    let table = null_hash () in
-    for x = 0 to 255 do
-      let u = hd (Pdftext.codepoints_of_text te (string_of_char (char_of_int x))) in
-        Hashtbl.add table u (0, x)
-    done;
-    ([sf], table)
-  in
-    match args.font with
-    | StandardFont f ->
-        (* FIXME proper error handling for missing file etc. *)
-        begin match args.embedstd14 with
-        | Some dirname -> 
-          begin try
-            let fontfile, fontname =
-            let filename = hd (List.assoc f fontnames) in
-              Pdfio.bytes_of_string (contents_of_file (Filename.concat dirname filename)),
-              Filename.remove_extension filename
-            in
-            Cpdfembed.EmbedInfo {fontfile; fontname; encoding = args.fontencoding}
-          with
-            e -> error (Printf.sprintf "Can't load font for embedding: %s\n" (Printexc.to_string e))
-          end
-        | None -> 
-            PreMadeFontPack (fontpack_of_standardfont (Pdftext.StandardFont (f, args.fontencoding)))
+  match args.font with
+  | StandardFont f ->
+      (* FIXME proper error handling for missing file etc. *)
+      begin match args.embedstd14 with
+      | Some dirname -> 
+        begin try
+          let fontfile, fontname =
+          let filename = hd (List.assoc f fontnames) in
+            Pdfio.bytes_of_string (contents_of_file (Filename.concat dirname filename)),
+            Filename.remove_extension filename
+          in
+          Cpdfembed.EmbedInfo {fontfile; fontname; encoding = args.fontencoding}
+        with
+          e -> error (Printf.sprintf "Can't load font for embedding: %s\n" (Printexc.to_string e))
         end
-    | OtherFont f ->
-        ExistingNamedFont
-    | FontToEmbed fontfile ->
-        EmbedInfo {fontfile; fontname = args.fontname; encoding = args.fontencoding}
+      | None -> 
+          PreMadeFontPack (Cpdfembed.fontpack_of_standardfont (Pdftext.StandardFont (f, args.fontencoding)))
+      end
+  | OtherFont f ->
+      ExistingNamedFont
+  | FontToEmbed fontfile ->
+      EmbedInfo {fontfile; fontname = args.fontname; encoding = args.fontencoding}
 
 (* Main function *)
 let go () =

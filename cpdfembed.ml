@@ -8,6 +8,15 @@ type cpdffont =
 | EmbedInfo of {fontfile : Pdfio.bytes; fontname : string; encoding : Pdftext.encoding}
 | ExistingNamedFont
 
+let fontpack_of_standardfont sf =
+  let te = Pdftext.text_extractor_of_font_real sf in
+  let table = null_hash () in
+  for x = 0 to 255 do
+    let u = hd (Pdftext.codepoints_of_text te (string_of_char (char_of_int x))) in
+      Hashtbl.add table u (0, x)
+  done;
+  ([sf], table)
+
 let get_char (fonts, table) u =
   match Hashtbl.find table u with
   | (n, charcode) -> Some (charcode, n, List.nth fonts n)

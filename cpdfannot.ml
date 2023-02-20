@@ -200,7 +200,7 @@ let get_annotations_json pdf =
   let json = `List (flatten (map2 (annotations_json_page pdf) pages pagenums)) in
     Pdfio.bytes_of_string (J.to_string json)
 
-(** Set annotations from JSON. Existing annotations will be removed. *)
+(** Set annotations from JSON. Existing annotations? *)
 let set_annotations_json pdf json = ()
 
 (* Equalise the page lengths of two PDFs by chopping or extending the first one.
