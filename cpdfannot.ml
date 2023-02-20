@@ -98,13 +98,14 @@ let postprocess_json_pdf objnum_to_serial_map pdf obj =
             | Some s -> Pdf.add_dict_entry obj "/Parent" (Pdf.Integer s)
             | None -> Printf.eprintf "Warning: Cpdfannot.process_extra_object: could not find serial number\n"; obj
             end
-        | _ -> 
-            (* If not a popup annoation, remove /Parent. It drags in lots of
+        | _ -> () 
+            (*(* If not a popup annotation, remove /Parent. It drags in lots of
                extra objects (the whole page tree!) with a widget
                annotation, and we are unlikely to be able to round-trip them
                anyway. One day, if we can match FDF properly, it might be
                possible, but not now. *)
-            Pdf.remove_dict_entry obj "/Parent"
+            Pdf.remove_dict_entry obj "/Parent"*)
+            
         end
       in
         begin match obj with

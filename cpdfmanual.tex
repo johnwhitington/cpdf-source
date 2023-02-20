@@ -14,6 +14,7 @@
 \excludecomment{dotnetcpdflib}
 \excludecomment{jcpdflib}
 \excludecomment{jscpdflib}
+\usepackage{alltt}
 \usepackage{palatino}
 \usepackage{listings}
 \usepackage{microtype}
@@ -4312,6 +4313,19 @@ YYYY-MM-DDThh:mm:ssTZD
 \texttt{TZD} & time zone designator (\texttt{Z} or \texttt{+hh:mm} or \texttt{-hh::mm})
 \end{tabular}
 \pagestyle{fancy}
+
+
+\section{CPDF Change Log}
+{\footnotesize\begin{alltt}
+\input{Changes}
+\end{alltt}}
+
+\section{CamlPDF Change Log}
+(CamlPDF is the library CPDF is based upon)
+
+{\footnotesize\begin{alltt}
+\input{../camlpdf/Changes}
+\end{alltt}}
 
 
 \backmatter
