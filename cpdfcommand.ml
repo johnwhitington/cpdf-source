@@ -3392,8 +3392,13 @@ let embed_font () =
   | FontToEmbed fontfile ->
       EmbedInfo {fontfile; fontname = args.fontname; encoding = args.fontencoding}
 
+let check_bookmarks_mistake () =
+  if args.merge_add_bookmarks_use_titles && not args.merge_add_bookmarks then
+    Printf.eprintf "Warning: -merge-add-bookmarks-use-titles is for use with -merge-add-bookmarks\n"
+
 (* Main function *)
 let go () =
+  check_bookmarks_mistake ();
   match args.op with
   | Some Version ->
       flprint
