@@ -749,8 +749,8 @@ let find_cpdflin provided =
 of the cpdflin binary. Returns the exit code. *)
 let call_cpdflin cpdflin temp output best_password =
   let command =
-    cpdflin ^ " --linearize " ^ " --password=" ^ best_password ^ " " ^
-    Filename.quote temp ^ " " ^ Filename.quote output 
+    Filename.quote_command cpdflin
+      ["--linearize"; ("--password=" ^ best_password); temp; output]
   in
     match Sys.os_type with
       "Win32" ->
@@ -766,8 +766,8 @@ let call_cpdflin cpdflin temp output best_password =
             Sys.command command
         | _ ->
             let command = 
-              "DYLD_FALLBACK_LIBRARY_PATH=" ^ Filename.dirname cpdflin ^ " " ^
-              "LD_LIBRARY_PATH=" ^ Filename.dirname cpdflin ^ " " ^
+              "DYLD_FALLBACK_LIBRARY_PATH=" ^ Filename.quote (Filename.dirname cpdflin) ^ " " ^
+              "LD_LIBRARY_PATH=" ^ Filename.quote (Filename.dirname cpdflin) ^ " " ^
               command
             in
               if args.debug then prerr_endline command;
@@ -2888,9 +2888,9 @@ let mend_pdf_file_with_ghostscript filename =
   let tmpout = Filename.temp_file "cpdf" ".pdf" in
     tempfiles := tmpout::!tempfiles;
     let gscall =
-      args.path_to_ghostscript ^
-      " -dNOPAUSE " ^ (if args.gs_quiet then "-dQUIET" else "") ^ " -sDEVICE=pdfwrite -sOUTPUTFILE=" ^ Filename.quote tmpout ^
-      " -dBATCH " ^ Filename.quote filename
+      Filename.quote_command args.path_to_ghostscript
+        ((if args.gs_quiet then ["-dQUIET"] else []) @
+        ["-dNOPAUSE"; "-sDEVICE=pdfwrite"; "-sOUTPUTFILE=" ^ tmpout; "-dBATCH"; filename])
     in
       match Sys.command gscall with
       | 0 -> Printf.eprintf "Succeeded!\n%!"; flush stderr; tmpout
@@ -4369,9 +4369,9 @@ let gs_malformed_force fi fo =
     exit 2
   end;
     let gscall =
-      args.path_to_ghostscript ^
-      " -dNOPAUSE " ^ (if args.gs_quiet then "-dQUIET" else "") ^ " -sDEVICE=pdfwrite -sOUTPUTFILE=" ^ Filename.quote fo ^
-      " -dBATCH " ^ Filename.quote fi
+      Filename.quote_command args.path_to_ghostscript
+        ((if args.gs_quiet then ["-dQUIET"] else []) @
+        ["-dNOPAUSE"; "-sDEVICE=pdfwrite"; "-sOUTPUTFILE=" ^ fo; "-dBATCH"; fi])
     in
       match Sys.command gscall with
       | 0 -> exit 0
