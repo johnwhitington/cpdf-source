@@ -1397,6 +1397,9 @@ The encryption parameters described in Chapter \ref{encryption} may be added to 
   \texttt{uslegalportrait} & \texttt{uslegallandscape} &
   \end{tabular}
 }
+
+Note that this also works when four numbers are required: for example, when setting the mediabox "0 0 a3landscape" will suffice.
+
   \section{Scale Pages}
 \index{scale pages}
   The \texttt{-scale-page} operation scales each page in the range by the X and
@@ -3051,6 +3054,8 @@ at which the command is executed. Note also that \texttt{-producer} and \texttt{
 option is added---in which case, it is unprocessed, save for the replacement of any octal escape sequence such as \texttt{\textbackslash 017}, which is replaced by a character of its value (here, 15).
 
 To set also any field in the XMP metadata, add \texttt{-also-set-xmp}. The field must exist already. To set only the field (not the document information dictionary), add \texttt{-just-set-xmp} instead.
+
+To delete existing non-XMP metadata in line with PDF 2.0, use \texttt{-remove-dict-entry "/Info"} as described in chapter \ref{chap:misc}.
 
   \section{XMP Metadata}
 \index{metadata!XMP}\index{XMP metadata}
