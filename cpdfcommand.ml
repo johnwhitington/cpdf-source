@@ -3396,9 +3396,17 @@ let check_bookmarks_mistake () =
   if args.merge_add_bookmarks_use_titles && not args.merge_add_bookmarks then
     Printf.eprintf "Warning: -merge-add-bookmarks-use-titles is for use with -merge-add-bookmarks\n"
 
+let check_clashing_output_name () =
+  match args.out with
+  | File s ->
+      if (List.exists (function (InFile s', _, _, _, _, _) when s = s' -> true | _ -> false) args.inputs) then
+        Printf.eprintf "Warning: output file name clashes with input file name. Malformed file may result.\n"
+  | _ -> ()
+
 (* Main function *)
 let go () =
   check_bookmarks_mistake ();
+  check_clashing_output_name ();
   match args.op with
   | Some Version ->
       flprint
