@@ -19,6 +19,7 @@ o Merge now merges structure trees (tagged PDF)
 o Merge now rewrites clashing name tree entries
 o Preserve /GoTo actions in bookmarks when merging
 o UTF8 option for JSON output
+o -info now shows object stream and /ID data
 
 Fixes:
 

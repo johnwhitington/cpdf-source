@@ -3549,6 +3549,12 @@ let go () =
         Printf.printf "Permissions: %s\n" (getpermissions pdf);
         if inname <> "" then
           Printf.printf "Linearized: %b\n" (Pdfread.is_linearized (Pdfio.input_of_channel (open_in_bin inname)));
+        Printf.printf "Object streams: %b\n" (length (list_of_hashtbl pdf.Pdf.objects.Pdf.object_stream_ids) > 0);
+        Printf.printf "ID: %s\n"
+          (match
+             Pdf.lookup_direct pdf "/ID" pdf.Pdf.trailerdict with
+             | Some (Pdf.Array [Pdf.String s; Pdf.String s']) -> Printf.sprintf "%s %s" (Pdfwrite.make_hex_pdf_string s) (Pdfwrite.make_hex_pdf_string s');
+             | _ -> "None");
         let pdf = decrypt_if_necessary input (Some Info) pdf in
           Cpdfmetadata.output_info args.encoding pdf;
           Cpdfmetadata.output_xmp_info args.encoding pdf
