@@ -1,4 +1,4 @@
-# Build the cpdf command line tools and top level
+# Build the cpdf command line tools
 NONDOC = cpdfyojson cpdfxmlm cpdfutil
 
 DOC = cpdfunicodedata cpdferror cpdfdebug cpdfjson cpdfstrftime cpdfcoord \
@@ -23,7 +23,7 @@ OCAMLNCFLAGS = -g -safe-string
 OCAMLBCFLAGS = -g -safe-string
 OCAMLLDFLAGS = -g
 
-TARGETS := byte-code-library top htdoc
+TARGETS := byte-code-library htdoc
 
 LIBINSTALL_FILES = cpdf.cma \
 $(foreach x,$(MODS),$x.mli) $(foreach x,$(MODS),$x.cmi) \
