@@ -3376,7 +3376,18 @@ let warn_prerotate range pdf =
 let prerotate range pdf =
   Cpdfpage.upright ~fast:args.fast range pdf
 
-let show_composition json pdf = ()
+let show_composition filesize json pdf =
+  let perc x = int_of_float (float_of_int x /. float_of_int filesize *. 100.) in
+  let fonts = ref 0 in
+  let images = ref 0 in
+  let page_data = ref 0 in
+  let xmp_metadata = ref 0 in
+    Printf.printf "Fonts: %i bytes (%i%%)\n" !fonts (perc !fonts);
+    Printf.printf "Images: %i bytes (%i%%)\n" !images (perc !images);
+    Printf.printf "Page data: %i bytes (%i%%)\n" !page_data (perc !page_data);
+    Printf.printf "XMP metadata: %i bytes (%i%%)\n" !xmp_metadata (perc !xmp_metadata);
+    let r = !fonts + !images + !page_data + !xmp_metadata in
+    Printf.printf "Unclassified: %i bytes (%i%%)\n" r (perc (filesize - r))
 
 let embed_font () =
   match args.font with
@@ -4360,7 +4371,12 @@ let go () =
         write_pdf false (Cpdfdraw.draw args.fast range pdf (rev (Hashtbl.find drawops "_")))
   | Some (Composition json) ->
       let pdf = get_single_pdf args.op false in
-        show_composition json pdf
+      let filesize =
+        match args.inputs with
+        | (InFile inname, _, _, _, _, _)::_ -> filesize inname
+        | _ -> 0
+      in
+        show_composition filesize json pdf
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)
