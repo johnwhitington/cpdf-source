@@ -221,6 +221,7 @@ type op =
   | TableOfContents
   | Typeset of string
   | Draw
+  | Composition of bool
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -352,6 +353,7 @@ let string_of_op = function
   | TableOfContents -> "TableOfContents"
   | Typeset _ -> "Typeset"
   | Draw -> "Draw"
+  | Composition _ -> "Composition"
 
 (* Inputs: filename, pagespec. *)
 type input_kind =
@@ -828,7 +830,7 @@ let banned banlist = function
   | SetModify _|SetCreator _|SetProducer _|RemoveDictEntry _ | ReplaceDictEntry _ | PrintDictEntry _ | SetMetadata _
   | ExtractText | ExtractImages | ExtractFontFile
   | AddPageLabels | RemovePageLabels | OutputJSON | OCGCoalesce
-  | OCGRename | OCGList | OCGOrderAll | PrintFontEncoding _ | TableOfContents | Typeset _
+  | OCGRename | OCGList | OCGOrderAll | PrintFontEncoding _ | TableOfContents | Typeset _ | Composition _
      -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
@@ -866,7 +868,7 @@ let rec decrypt_if_necessary (_, _, user_pw, owner_pw, was_dec_with_owner, _) op
   if not (Pdfcrypt.is_encrypted pdf) then pdf else
     match op with Some (CombinePages _) ->
       (* This is a hack because we don't have support for recryption on combine
-       * pages. This is pervented by permissions above, but in the case that the
+       * pages. This is prevented by permissions above, but in the case that the
        * owner password is blank (e.g christmas_tree_lights.pdf), we would end
        * up here. *)
       soft_error "Combine pages: both files must be unencrypted for this operation, or add -decrypt-force"
@@ -2804,6 +2806,12 @@ and specs =
    ("-typeset",
      Arg.String settypeset,
      " Typeset a text file as a PDF");
+   ("-composition",
+     Arg.Unit (setop (Composition false)),
+     " Show composition of PDF");
+   ("-composition-json",
+     Arg.Unit (setop (Composition true)),
+     " Show composition of PDF in JSON format");
    (* Creating new PDF content *)
    ("-draw", Arg.Unit (setop Draw), " Begin drawing");
    ("-rect", Arg.String addrect, " Draw rectangle");
@@ -3367,6 +3375,8 @@ let warn_prerotate range pdf =
 
 let prerotate range pdf =
   Cpdfpage.upright ~fast:args.fast range pdf
+
+let show_composition json pdf = ()
 
 let embed_font () =
   match args.font with
@@ -4348,6 +4358,9 @@ let go () =
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
         write_pdf false (Cpdfdraw.draw args.fast range pdf (rev (Hashtbl.find drawops "_")))
+  | Some (Composition json) ->
+      let pdf = get_single_pdf args.op false in
+        show_composition json pdf
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)
