@@ -3376,12 +3376,14 @@ let warn_prerotate range pdf =
 let prerotate range pdf =
   Cpdfpage.upright ~fast:args.fast range pdf
 
-let find_composition_fonts pdf i obj marked =
+let find_composition_images pdf i obj marked =
   match Pdf.lookup_direct pdf "/Subtype" obj with
   | Some (Pdf.Name "/Image") ->
       Hashtbl.add marked i ();
       String.length (Pdfwrite.string_of_pdf_including_data obj);
   | _ -> 0
+
+let find_composition_fonts pdf i obj marked = 0
 
 let find_composition_content_streams pdf i obj marked =
   match Pdf.lookup_direct pdf "/Type" obj with
@@ -3402,23 +3404,39 @@ let find_composition_content_streams pdf i obj marked =
           !l
   | _ -> 0
 
+let find_composition_structure_info pdf i obj marked = 0
+
+let find_composition_link_annotations pdf i obj marked = 0
+
+let find_composition_embedded_files pdf i obj marked = 0
+
 let find_composition pdf =
   let marked = null_hash () in
   let images = ref 0 in
+  let fonts = ref 0 in
   let content_streams = ref 0 in
+  let structure_info = ref 0 in
+  let link_annotations = ref 0 in
+  let embedded_files = ref 0 in
     Pdf.objiter
       (fun i obj ->
          match Hashtbl.find marked i with _ -> () | exception Not_found ->
-           images += find_composition_fonts pdf i obj marked;
-           content_streams += find_composition_content_streams pdf i obj marked)
+           images += find_composition_images pdf i obj marked;
+           fonts += find_composition_fonts pdf i obj marked;
+           content_streams += find_composition_content_streams pdf i obj marked;
+           structure_info += find_composition_structure_info pdf i obj marked;
+           link_annotations += find_composition_link_annotations pdf i obj marked;
+           embedded_files += find_composition_embedded_files pdf i obj marked)
       pdf;
-    (!images, !content_streams)
+    (!images, !fonts, !content_streams, !structure_info, !link_annotations, !embedded_files)
 
 (* First go: images, fonts, content streams, structure info, link annotations, embedded files *)
 let show_composition_json filesize pdf =
   let perc x = float_of_int x /. float_of_int filesize *. 100. in
-  let images, content_streams = find_composition pdf in
-  let r = images + content_streams in
+  let images, fonts, content_streams, structure_info, link_annotations, embedded_files =
+    find_composition pdf
+  in
+  let r = images + fonts + content_streams + structure_info + link_annotations + embedded_files in
     `List [`Tuple [`String "Images"; `Int images; `Float (perc images)];
            `Tuple [`String "Content streams"; `Int content_streams; `Float (perc content_streams)];
            `Tuple [`String "Unclassified"; `Int (filesize - r); `Float (perc (filesize - r))]]
