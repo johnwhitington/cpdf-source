@@ -3376,28 +3376,29 @@ let warn_prerotate range pdf =
 let prerotate range pdf =
   Cpdfpage.upright ~fast:args.fast range pdf
 
-let find_images pdf =
-  let imageobjs = ref [] in
-  let size = ref 0 in
+let find_composition pdf =
+  let marked = null_hash () in
+  let images = ref 0 in
+  let content_streams = ref 0 in
   Pdf.objiter
     (fun i obj ->
+       match Hashtbl.find marked i with _ -> () | exception Not_found ->
        match Pdf.lookup_direct pdf "/Subtype" obj with
        | Some (Pdf.Name "/Image") ->
-           size += String.length (Pdfwrite.string_of_pdf_including_data obj);
-           imageobjs =| i
+           images += String.length (Pdfwrite.string_of_pdf_including_data obj);
+           Hashtbl.add marked i ()
        | _ -> ())
     pdf;
-  (!size, !imageobjs)
+  (!images, !content_streams)
 
 (* First go: images, fonts, content streams, structure info, link annotations, embedded files *)
 let show_composition_json filesize pdf =
   let perc x = float_of_int x /. float_of_int filesize *. 100. in
-  let marked = null_hash () in
-  let images, objs = find_images pdf in
-    iter (fun o -> Hashtbl.add marked o ()) objs;
-    let r = images in
-      `List [`Tuple [`String "Images"; `Int images; `Float (perc images)];
-             `Tuple [`String "Unclassified"; `Int (filesize - r); `Float (perc (filesize - r))]]
+  let images, content_streams = find_composition pdf in
+  let r = images + content_streams in
+    `List [`Tuple [`String "Images"; `Int images; `Float (perc images)];
+           `Tuple [`String "Content streams"; `Int content_streams; `Float (perc content_streams)];
+           `Tuple [`String "Unclassified"; `Int (filesize - r); `Float (perc (filesize - r))]]
 
 let show_composition filesize json pdf =
   let module J = Cpdfyojson.Safe in
