@@ -3376,17 +3376,33 @@ let warn_prerotate range pdf =
 let prerotate range pdf =
   Cpdfpage.upright ~fast:args.fast range pdf
 
+(* Size of a single object *)
+let object_size o = 0
+
+let find_images pdf =
+  let imageobjs = ref [] in
+  let size = ref 0 in
+  Pdf.objiter
+    (fun i obj ->
+       match Pdf.lookup_direct pdf "/Subtype" obj with
+       | Some (Pdf.Name "/Image") ->
+           size += object_size obj;
+           imageobjs =| i
+       | _ -> ())
+    pdf;
+  (!size, !imageobjs)
+
 let show_composition filesize json pdf =
   let perc x = int_of_float (float_of_int x /. float_of_int filesize *. 100.) in
-  let fonts = ref 0 in
-  let images = ref 0 in
-  let page_data = ref 0 in
-  let xmp_metadata = ref 0 in
-    Printf.printf "Fonts: %i bytes (%i%%)\n" !fonts (perc !fonts);
-    Printf.printf "Images: %i bytes (%i%%)\n" !images (perc !images);
-    Printf.printf "Page data: %i bytes (%i%%)\n" !page_data (perc !page_data);
+  let marked = null_hash () in
+  let images, objs = find_images pdf in
+    iter (fun o -> Hashtbl.add marked o ()) objs;
+    (*Printf.printf "Fonts: %i bytes (%i%%)\n" !fonts (perc !fonts);*)
+    Printf.printf "Images: %i bytes (%i%%)\n" images (perc images);
+    (*Printf.printf "Page data: %i bytes (%i%%)\n" !page_data (perc !page_data);
     Printf.printf "XMP metadata: %i bytes (%i%%)\n" !xmp_metadata (perc !xmp_metadata);
-    let r = !fonts + !images + !page_data + !xmp_metadata in
+    let r = !fonts + !images + !page_data + !xmp_metadata in*)
+    let r = images in
     Printf.printf "Unclassified: %i bytes (%i%%)\n" r (perc (filesize - r))
 
 let embed_font () =
