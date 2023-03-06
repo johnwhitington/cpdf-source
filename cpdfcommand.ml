@@ -3376,20 +3376,43 @@ let warn_prerotate range pdf =
 let prerotate range pdf =
   Cpdfpage.upright ~fast:args.fast range pdf
 
+let find_composition_fonts pdf i obj marked =
+  match Pdf.lookup_direct pdf "/Subtype" obj with
+  | Some (Pdf.Name "/Image") ->
+      Hashtbl.add marked i ();
+      String.length (Pdfwrite.string_of_pdf_including_data obj);
+  | _ -> 0
+
+let find_composition_content_streams pdf i obj marked =
+  match Pdf.lookup_direct pdf "/Type" obj with
+  | Some (Pdf.Name "/Page") ->
+      let cs =
+        begin match Pdf.lookup_direct pdf "/Contents" obj with
+        | Some (Pdf.Indirect i) -> [i]
+        | Some (Pdf.Array is) -> option_map (function Pdf.Indirect i -> Some i | _ -> None) is
+        | _ -> []
+        end
+      in
+        let l = ref 0 in
+          iter
+            (fun i ->
+               Hashtbl.add marked i ();
+               l += String.length (Pdfwrite.string_of_pdf_including_data (Pdf.lookup_obj pdf i)))
+            cs;
+          !l
+  | _ -> 0
+
 let find_composition pdf =
   let marked = null_hash () in
   let images = ref 0 in
   let content_streams = ref 0 in
-  Pdf.objiter
-    (fun i obj ->
-       match Hashtbl.find marked i with _ -> () | exception Not_found ->
-       match Pdf.lookup_direct pdf "/Subtype" obj with
-       | Some (Pdf.Name "/Image") ->
-           images += String.length (Pdfwrite.string_of_pdf_including_data obj);
-           Hashtbl.add marked i ()
-       | _ -> ())
-    pdf;
-  (!images, !content_streams)
+    Pdf.objiter
+      (fun i obj ->
+         match Hashtbl.find marked i with _ -> () | exception Not_found ->
+           images += find_composition_fonts pdf i obj marked;
+           content_streams += find_composition_content_streams pdf i obj marked)
+      pdf;
+    (!images, !content_streams)
 
 (* First go: images, fonts, content streams, structure info, link annotations, embedded files *)
 let show_composition_json filesize pdf =
