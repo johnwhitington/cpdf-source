@@ -41,7 +41,7 @@ let width_of_text font text =
   match font with
   | Pdftext.SimpleFont {Pdftext.fontmetrics = Some fontmetrics} ->
        begin try
-         fold_left ( +. ) 0. (map (fun c -> fontmetrics.(int_of_char c)) (explode text))
+         fsum (map (fun c -> fontmetrics.(int_of_char c)) (explode text))
        with
          _ -> 0.
        end

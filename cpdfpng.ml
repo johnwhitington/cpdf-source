@@ -35,7 +35,7 @@ let read_chunk i =
     (string_of_tag chunktype, chunkdata) 
 
 let concat_bytes ss =
-  let total_length = fold_left ( + ) 0 (map bytes_size ss) in
+  let total_length = sum (map bytes_size ss) in
     let s' = mkbytes total_length in
       let p = ref 0 in
         iter
