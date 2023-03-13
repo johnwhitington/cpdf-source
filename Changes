@@ -21,6 +21,7 @@ o Merge now rewrites clashing name tree entries
 o Preserve /GoTo actions in bookmarks when merging
 o UTF8 option for JSON output
 o -info now shows object stream and /ID data
+o Use page labels like <iii> and <A-2> in page specifications
 
 Fixes:
 
