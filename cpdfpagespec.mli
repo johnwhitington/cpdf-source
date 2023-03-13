@@ -3,6 +3,7 @@
 (** Here are the rules for building input ranges:
 
 {ul
+{- Page numbers can be given plain, like 1 or 2, or as page labels, like <1> or <iii> (backslash to escape intended angle bracket)}
 {- A dash (-) defines ranges e.g 1-5 or 6-3.}
 {- A comma (,) allows one to specify several ranges, e.g. 1-2,4-5.}
 {- The word end represents the last page number.}

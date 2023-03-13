@@ -95,8 +95,30 @@ let invert_range endpage r =
 let duplicate_range n r =
   flatten (map (fun x -> many x n) r)
 
+(* e.g <1> -> 1, <iii> -> x, </>> -> > etc. *)
+let resolve_pagelabels pdf spec =
+  let labels =
+    let labs = Pdfpagelabels.read pdf in
+      map
+        (fun pnum -> (Pdfpagelabels.pagelabeltext_of_pagenumber pnum labs, pnum))
+        (ilist 1 (Pdfpage.endpage pdf))
+  in
+  (*iter (fun (s, l) -> Printf.printf "%s = %i\n" s l) labels;*)
+  let rec resolve_pagelabels_inner = function
+    | '<'::t ->
+        let pagelabel, rest = cleavewhile (neq '>') t in
+        let resolved = explode (string_of_int (begin match lookup (implode pagelabel) labels with Some x -> x | None -> 0 end)) in
+          if rest = [] then resolved else resolved @ resolve_pagelabels_inner (tl rest)
+    | '\\'::('<' | '>' as c)::t -> c::resolve_pagelabels_inner t
+    | '>'::t -> raise PageSpecBadSyntax
+    | h::t -> h::resolve_pagelabels_inner t
+    | [] -> []
+  in
+    resolve_pagelabels_inner spec
+
 let rec parse_pagespec_inner endpage pdf spec =
   let spec = if spec = "" then "all" else spec in
+  let spec = implode (resolve_pagelabels pdf (explode spec)) in
   let spec = space_string spec in
     if endpage < 1 then raise (Pdf.PDFError "This PDF file has no pages and is therefore malformed") else
       let numbers =
