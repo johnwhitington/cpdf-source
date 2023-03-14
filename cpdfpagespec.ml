@@ -95,7 +95,7 @@ let invert_range endpage r =
 let duplicate_range n r =
   flatten (map (fun x -> many x n) r)
 
-(* e.g <1> -> 1, <iii> -> x, </>> -> > etc. *)
+(* e.g [1] -> 1, [iii] -> x, [/]] -> ] etc. *)
 let resolve_pagelabels pdf spec =
   let labels =
     let labs = Pdfpagelabels.read pdf in
@@ -104,13 +104,21 @@ let resolve_pagelabels pdf spec =
         (ilist 1 (Pdfpage.endpage pdf))
   in
   (*iter (fun (s, l) -> Printf.printf "%s = %i\n" s l) labels;*)
+  let rec readuntilclose a t =
+    match t with
+    | ']'::t -> rev a, t
+    | '\\'::('[' | ']' as c)::t -> readuntilclose (c::a) t
+    | '['::t -> raise PageSpecBadSyntax
+    | x::t -> readuntilclose (x::a) t
+    | [] -> rev a, []
+  in
   let rec resolve_pagelabels_inner = function
-    | '<'::t ->
-        let pagelabel, rest = cleavewhile (neq '>') t in
+    | '['::t ->
+        let pagelabel, rest = readuntilclose [] t in
         let resolved = explode (string_of_int (begin match lookup (implode pagelabel) labels with Some x -> x | None -> 0 end)) in
-          if rest = [] then resolved else resolved @ resolve_pagelabels_inner (tl rest)
-    | '\\'::('<' | '>' as c)::t -> c::resolve_pagelabels_inner t
-    | '>'::t -> raise PageSpecBadSyntax
+          resolved @ resolve_pagelabels_inner rest
+    | '\\'::('[' | ']' as c)::t -> c::resolve_pagelabels_inner t
+    | ']'::t -> raise PageSpecBadSyntax
     | h::t -> h::resolve_pagelabels_inner t
     | [] -> []
   in
@@ -118,7 +126,7 @@ let resolve_pagelabels pdf spec =
 
 let rec parse_pagespec_inner endpage pdf spec =
   let spec = if spec = "" then "all" else spec in
-  (*let spec = implode (resolve_pagelabels pdf (explode spec)) in*)
+  let spec = implode (resolve_pagelabels pdf (explode spec)) in
   let spec = space_string spec in
     if endpage < 1 then raise (Pdf.PDFError "This PDF file has no pages and is therefore malformed") else
       let numbers =
