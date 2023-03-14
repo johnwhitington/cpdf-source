@@ -7,7 +7,7 @@ o Embed TrueType fonts with -font-ttf for -add-text et al.
 o Embed the 14 standard fonts if requested
 o Add links to parts of text with -add-text as %URL[|].
 o Convert JPEGs and PNGs to PDFs with -jpeg and -png
-o Export fully, import, and round-trip annotations via JSON
+o Export fully, import, and thereby round-trip annotations via JSON
 o Show composition of PDF with -composition and -composition-json
 
 Extended features:
@@ -22,6 +22,7 @@ o Preserve /GoTo actions in bookmarks when merging
 o UTF8 option for JSON output
 o -info now shows object stream and /ID data
 o Use page labels like <iii> and <A-2> in page specifications
+o More options for viewer preference control
 
 Fixes:
 
@@ -29,6 +30,7 @@ o Updated Yojson to remove dependency on Stream, ready for OCaml 5
 o -typeset was opening files in text mode, instead of binary
 o Fixed behaviour of -squeeze-no-pagedata / -squeeze-no-recompress 
 o Significant improvements to malformed file reading
+o Allow DUP page specifications to use larger numbers
 
 2.5.1 (January 2022)
 
