@@ -333,7 +333,7 @@ ifndef REAL_OCAMLFIND
   ifdef PACKS
     ifndef CREATE_LIB
       ifdef THREADS
-	PACKS += threads
+        PACKS += threads
       endif
     endif
     empty :=
@@ -683,7 +683,7 @@ ifndef REAL_OCAMLC
     ALL_LDFLAGS := $(THREAD_FLAG) $(ALL_LDFLAGS)
     ifndef CREATE_LIB
       ifndef REAL_OCAMLFIND
-        ALL_LDFLAGS := $(ALL_LDFLAGS)
+        ALL_LDFLAGS := unix.cma threads.cma $(ALL_LDFLAGS)
       endif
     endif
   endif
@@ -729,7 +729,7 @@ else
     ALL_LDFLAGS := $(THREAD_FLAG) $(ALL_LDFLAGS)
     ifndef CREATE_LIB
       ifndef REAL_OCAMLFIND
-        ALL_LDFLAGS := $(ALL_LDFLAGS)
+        ALL_LDFLAGS := unix.cmxa threads.cmxa $(ALL_LDFLAGS)
       endif
     endif
   endif
@@ -738,7 +738,7 @@ endif
 export MAKE_DEPS
 
 ifdef ANNOTATE
-  ANNOT_FLAG := -annot
+  ANNOT_FLAG := -annot -bin-annot
 else
 endif
 
@@ -1129,7 +1129,8 @@ endif
 			$(QUIET)if [ $(NOIDLHEADER) ]; then touch $*.h; fi
 
 %.$(EXT_OBJ):	%.c
-			$(OCAMLC) -c -cc "$(CC)" -ccopt "$(CFLAGS) \
+			$(REAL_OCAMLFIND) $(REAL_OCAMLC) $(THREAD_FLAG) $(OCAML_FIND_PACKAGES) \
+				-c -cc "$(CC)" $(INCFLAGS) -ccopt "$(CFLAGS) \
 				$(CPPFLAGS) $(CPPFLAGS_WIN32) \
 				$(CFLAGS_WIN32) $(CINCFLAGS) $(CFLAG_O)$@ " $<
 
