@@ -118,7 +118,7 @@ let resolve_pagelabels pdf spec =
 
 let rec parse_pagespec_inner endpage pdf spec =
   let spec = if spec = "" then "all" else spec in
-  let spec = implode (resolve_pagelabels pdf (explode spec)) in
+  (*let spec = implode (resolve_pagelabels pdf (explode spec)) in*)
   let spec = space_string spec in
     if endpage < 1 then raise (Pdf.PDFError "This PDF file has no pages and is therefore malformed") else
       let numbers =
@@ -134,6 +134,10 @@ let rec parse_pagespec_inner endpage pdf spec =
               duplicate_range (int_of_string (implode [x; y; z])) (parse_pagespec_inner endpage pdf (implode r))
           | x::y::z::a::'D'::'U'::'P'::r ->
               duplicate_range (int_of_string (implode [x; y; z; a])) (parse_pagespec_inner endpage pdf (implode r))
+          | x::y::z::a::b::'D'::'U'::'P'::r ->
+              duplicate_range (int_of_string (implode [x; y; z; a; b])) (parse_pagespec_inner endpage pdf (implode r))
+          | x::y::z::a::b::c::'D'::'U'::'P'::r ->
+              duplicate_range (int_of_string (implode [x; y; z; a; b; c])) (parse_pagespec_inner endpage pdf (implode r))
           | _ ->
             match rev (explode spec) with
             | ['n'; 'e'; 'v'; 'e'] ->
