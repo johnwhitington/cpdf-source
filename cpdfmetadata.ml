@@ -165,6 +165,16 @@ let getstring encoding pdf =
   | Stripped -> get_info false pdf
   | UTF8 -> get_info_utf8 pdf
 
+let get_catalog_item name pdf =
+  match Pdf.lookup_direct pdf "/Root" pdf.Pdf.trailerdict with
+  | Some catalog ->
+      begin try
+        implode (tl (explode (Pdfwrite.string_of_pdf (unopt (Pdf.lookup_direct pdf name catalog)))))
+      with
+        _ -> ""
+      end
+  | _ -> ""
+
 let output_info encoding pdf =
   let getstring = getstring encoding pdf in
     Printf.printf "Version: %i.%i\n" pdf.Pdf.major pdf.Pdf.minor;
@@ -177,7 +187,9 @@ let output_info encoding pdf =
     Printf.printf "Producer: %s\n" (getstring "/Producer");
     Printf.printf "Created: %s\n" (getstring "/CreationDate");
     Printf.printf "Modified: %s\n" (getstring "/ModDate");
-    Printf.printf "Trapped: %s\n" (getstring "/Trapped")
+    Printf.printf "Trapped: %s\n" (getstring "/Trapped");
+    Printf.printf "PageMode: %s\n" (get_catalog_item "/PageMode" pdf);
+    Printf.printf "PageLayout: %s\n" (get_catalog_item "/PageLayout" pdf)
 
 type xmltree =
     E of Cpdfxmlm.tag * xmltree list
