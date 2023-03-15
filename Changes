@@ -9,6 +9,7 @@ o Add links to parts of text with -add-text as %URL[|].
 o Convert JPEGs and PNGs to PDFs with -jpeg and -png
 o Export fully, import, and thereby round-trip annotations via JSON
 o Show composition of PDF with -composition and -composition-json
+o Use page labels like <iii> and <A-2> in page specifications
 
 Extended features:
 
@@ -20,9 +21,9 @@ o Merge now merges structure trees (tagged PDF)
 o Merge now rewrites clashing name tree entries
 o Preserve /GoTo actions in bookmarks when merging
 o UTF8 option for JSON output
-o -info now shows object stream and /ID data
-o Use page labels like <iii> and <A-2> in page specifications
+o -info now shows object stream, /ID data, page mode and layout
 o More options for viewer preference control
+o Export some PNGs directly, rather than via an external program
 
 Fixes:
 
