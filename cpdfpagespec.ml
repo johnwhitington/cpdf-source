@@ -115,7 +115,9 @@ let resolve_pagelabels pdf spec =
   let rec resolve_pagelabels_inner = function
     | '['::t ->
         let pagelabel, rest = readuntilclose [] t in
-        let resolved = explode (string_of_int (begin match lookup (implode pagelabel) labels with Some x -> x | None -> 0 end)) in
+        let resolved =
+          explode (string_of_int (begin match lookup (implode pagelabel) labels with Some x -> x | None -> raise PageSpecBadSyntax end))
+        in
           resolved @ resolve_pagelabels_inner rest
     | '\\'::('[' | ']' as c)::t -> c::resolve_pagelabels_inner t
     | ']'::t -> raise PageSpecBadSyntax
