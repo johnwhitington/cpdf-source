@@ -100,7 +100,7 @@ let resolve_pagelabels pdf spec =
   let labels =
     let labs = Pdfpagelabels.read pdf in
       map
-        (fun pnum -> (Pdfpagelabels.pagelabeltext_of_pagenumber pnum labs, pnum))
+        (fun pnum -> (begin try Pdfpagelabels.pagelabeltext_of_pagenumber pnum labs with Not_found -> "" end, pnum))
         (ilist 1 (Pdfpage.endpage pdf))
   in
   (*iter (fun (s, l) -> Printf.printf "%s = %i\n" s l) labels;*)
