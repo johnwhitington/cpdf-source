@@ -72,3 +72,58 @@ let read_png i =
       {width = i32toi width; height = i32toi height; idat = concat_bytes (rev !idat)}
   with
     e -> raise (Pdf.PDFError (Printf.sprintf "read_png: failed on %s" (Printexc.to_string e)))
+
+let (>>) = Int32.shift_right_logical
+let (&)  = Int32.logand
+let (^)  = Int32.logxor
+
+let crc_table =
+  let elem n =
+    let c = ref (Int32.of_int n) in
+    for _ = 0 to 7 do
+      c := (!c >> 1) ^ (0xedb88320l & (Int32.succ (Int32.lognot (!c & 1l))))
+    done; !c
+  in Array.init 256 elem
+
+let update_crc crc buf len =
+  let c = ref crc in
+  for n = 0 to len - 1 do
+    let e = Int32.of_int (int_of_char buf.[n]) in
+    c := crc_table.(Int32.to_int ((!c ^ e) & 0xffl)) ^ (!c >> 8)
+  done; !c
+
+let png_crc buf len =
+  Int32.lognot (update_crc 0xffffffffl buf len)
+
+let write_crc o ctype cdata =
+  o.output_byte 0;
+  o.output_byte 0;
+  o.output_byte 0;
+  o.output_byte 0
+
+let write_chunk o ctype data =
+  for x = 0 to 4 do o.output_byte (int_of_char ctype.[x]) done;
+  o.output_string (Bytes.unsafe_to_string data);
+  write_crc o ctype data
+
+let write_word b p n =
+  Bytes.set b p ' ';
+  Bytes.set b (p + 1) ' ';
+  Bytes.set b (p + 2) ' ';
+  Bytes.set b (p + 3) ' '
+
+let write_png png o =
+  if bytes_size png.idat > 2147483647 then raise (Invalid_argument "write_png: too large") else
+  (* Signature *)
+  o.output_string "\137\080\078\071\013\010\026\010";
+  let ihdr = Bytes.create 13 in
+  write_word ihdr 0 png.width;
+  write_word ihdr 4 png.height;
+  Bytes.set ihdr 8 (char_of_int 8); (* bit depth *)
+  Bytes.set ihdr 9 (char_of_int 2); (* colour type *)
+  Bytes.set ihdr 10 (char_of_int 0); (* compression method *)
+  Bytes.set ihdr 11 (char_of_int 0); (* filter method *)
+  Bytes.set ihdr 12 (char_of_int 0); (* interlace method *)
+  write_chunk o "IHDR" ihdr;
+  write_chunk o "IDAT" (Bytes.unsafe_of_string (Pdfio.string_of_bytes png.idat));
+  write_chunk o "IEND" (Bytes.create 0)
