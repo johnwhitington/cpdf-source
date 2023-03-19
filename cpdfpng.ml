@@ -47,7 +47,7 @@ let write_crc o ctype cdata =
     o.output_byte d
 
 let write_chunk o ctype data =
-  for x = 0 to 4 do o.output_byte (int_of_char ctype.[x]) done;
+  for x = 0 to 3 do o.output_byte (int_of_char ctype.[x]) done;
   o.output_string (Bytes.unsafe_to_string data);
   write_crc o ctype (Bytes.unsafe_to_string data)
 
@@ -137,6 +137,11 @@ let read_png i =
       with
         _ -> ()
       end;
-      {width = i32toi width; height = i32toi height; idat = concat_bytes (rev !idat)}
+      let r =
+        {width = i32toi width; height = i32toi height; idat = concat_bytes (rev !idat)}
+      in
+        let ch = open_out_bin "out.png" in
+          write_png r (Pdfio.output_of_channel ch);
+          r
   with
     e -> raise (Pdf.PDFError (Printf.sprintf "read_png: failed on %s" (Printexc.to_string e)))
