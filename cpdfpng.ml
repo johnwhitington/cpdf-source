@@ -10,36 +10,33 @@ type t =
    idat : bytes}
 
 (* Writing *)
-let crc_table =
+let table =
   let f n =
-    let c = ref (i32ofi n) in
+    let a = ref (i32ofi n) in
       for _ = 0 to 7 do
-        c := lxor32 (lsr32 !c 1) (land32 0xedb88320l (i32succ (lnot32 (land32 !c 1l))))
+        a := lxor32 (lsr32 !a 1) (land32 0xedb88320l (i32succ (lnot32 (land32 !a 1l))))
       done;
-      !c
+      !a
   in
     Array.init 256 f
 
-let update_crc crc buf len =
-  let c = ref crc in
+let update crc buf len =
+  let a = ref crc in
     for n = 0 to len - 1 do
       let e = i32ofi (int_of_char buf.[n]) in
-        c := lxor32 crc_table.(i32toi (land32 (lxor32 !c e) 0xffl)) (lsr32 !c 8)
+        a := lxor32 table.(i32toi (land32 (lxor32 !a e) 0xffl)) (lsr32 !a 8)
     done;
-    !c
-
-let png_crc buf len =
-  lnot32 (update_crc 0xffffffffl buf len)
+    !a
 
 let bytes_of_word x =
-  i32toi (Int32.shift_right x 24),
-  i32toi (land32 0x000000FFl (Int32.shift_right x 16)),
-  i32toi (land32 0x000000FFl (Int32.shift_right x 8)),
+  i32toi (sr32 x 24),
+  i32toi (land32 0x000000FFl (sr32 x 16)),
+  i32toi (land32 0x000000FFl (sr32 x 8)),
   i32toi (land32 0x000000FFl x)
 
 let write_crc o ctype cdata =
-  let crc = update_crc 0xffffffffl ctype 4 in
-  let crc = update_crc crc cdata (String.length cdata) in
+  let crc = update 0xffffffffl ctype 4 in
+  let crc = update crc cdata (String.length cdata) in
   let a, b, c, d = bytes_of_word crc in
     o.output_byte a;
     o.output_byte b;
@@ -77,10 +74,10 @@ let write_png png o =
 (* Reading *)
 let string_of_tag t =
   Printf.sprintf "%c%c%c%c"
-    (char_of_int (i32toi (Int32.shift_right t 24)))
-    (char_of_int (i32toi (Int32.logand 0x000000FFl (Int32.shift_right t 16))))
-    (char_of_int (i32toi (Int32.logand 0x000000FFl (Int32.shift_right t 8))))
-    (char_of_int (i32toi (Int32.logand 0x000000FFl t)))
+    (char_of_int (i32toi (sr32 t 24)))
+    (char_of_int (i32toi (land32 0x000000FFl (sr32 t 16))))
+    (char_of_int (i32toi (land32 0x000000FFl (sr32 t 8))))
+    (char_of_int (i32toi (land32 0x000000FFl t)))
 
 let read_unsigned_4byte i =
   let a = i32ofi (i.input_byte ()) in
