@@ -44,6 +44,11 @@ let write_crc o ctype cdata =
     o.output_byte d
 
 let write_chunk o ctype data =
+  let a, b, c, d = bytes_of_word (i32ofi (Bytes.length data)) in
+  o.output_byte a;
+  o.output_byte b;
+  o.output_byte c;
+  o.output_byte d;
   for x = 0 to 3 do o.output_byte (int_of_char ctype.[x]) done;
   o.output_string (Bytes.unsafe_to_string data);
   write_crc o ctype (Bytes.unsafe_to_string data)
@@ -73,11 +78,12 @@ let write_png png o =
 
 (* Reading *)
 let string_of_tag t =
-  Printf.sprintf "%c%c%c%c"
-    (char_of_int (i32toi (sr32 t 24)))
-    (char_of_int (i32toi (land32 0x000000FFl (sr32 t 16))))
-    (char_of_int (i32toi (land32 0x000000FFl (sr32 t 8))))
-    (char_of_int (i32toi (land32 0x000000FFl t)))
+  Printf.printf "%li\n" t;
+  let a = (char_of_int (i32toi (sr32 t 24))) in
+  let b = (char_of_int (i32toi (land32 0x000000FFl (sr32 t 16)))) in
+  let c = (char_of_int (i32toi (land32 0x000000FFl (sr32 t 8)))) in
+  let d = (char_of_int (i32toi (land32 0x000000FFl t))) in
+  Printf.sprintf "%c%c%c%c" a b c d
 
 let read_unsigned_4byte i =
   let a = i32ofi (i.input_byte ()) in
@@ -87,6 +93,7 @@ let read_unsigned_4byte i =
     lor32 (lor32 (lsl32 a 24) (lsl32 b 16)) (lor32 (lsl32 c 8) d)
 
 let read_data l i =
+  Printf.printf "read_data: %li bytes\n" l;
   let l = i32toi l in
   let b = mkbytes l in 
     setinit i b 0 l;
@@ -94,9 +101,12 @@ let read_data l i =
 
 let read_chunk i =
   let chunklen = read_unsigned_4byte i in
+  Printf.printf "chunklen: %li\n" chunklen;
   let chunktype = read_unsigned_4byte i in
+  Printf.printf "chunktype: %S\n" (string_of_tag chunktype);
   let chunkdata = read_data chunklen i in
   let _ (* crc *) = read_unsigned_4byte i in
+  flprint "5";
     (string_of_tag chunktype, chunkdata) 
 
 let concat_bytes ss =
@@ -112,11 +122,15 @@ let concat_bytes ss =
 let read_png i =
   try
     i.seek_in 8;
+    flprint "A";
     let ihdr, ihdrdata = read_chunk i in
+    flprint "B";
     if ihdr <> "IHDR" then raise (Pdf.PDFError "read_png: first table not IHDR") else
     let hdr = input_of_bytes ihdrdata in
     let width = read_unsigned_4byte hdr in
     let height = read_unsigned_4byte hdr in
+    Printf.printf "width = %li, height = %li\n" width height;
+    flprint "C";
     let bitdepth = hdr.input_byte () in
     if bitdepth <> 8 then failwith "read_png: bit depth not 8" else
     let colortype = hdr.input_byte () in
@@ -125,6 +139,7 @@ let read_png i =
     let _ (*filtermethod*) = hdr.input_byte () in
     let interlacemethod = hdr.input_byte () in
     if interlacemethod <> 0 then failwith "read_png: interlaced PDFs not supported" else
+    flprint "D";
     let idat = ref [] in
       begin try
         while true do
@@ -138,7 +153,7 @@ let read_png i =
         {width = i32toi width; height = i32toi height; idat = concat_bytes (rev !idat)}
       in
         let ch = open_out_bin "out.png" in
-          write_png r (Pdfio.output_of_channel ch);
+          (*write_png r (Pdfio.output_of_channel ch);*)
           r
   with
     e -> raise (Pdf.PDFError (Printf.sprintf "read_png: failed on %s" (Printexc.to_string e)))
