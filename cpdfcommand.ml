@@ -3198,7 +3198,7 @@ let really_write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf outna
 
 let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
   if args.debugcrypt then Printf.printf "write_pdf\n";
-  if args.create_objstm && not args.keepversion
+  if args.create_objstm && not (args.keepversion || pdf.Pdf.major > 1)
     then pdf.Pdf.minor <- max pdf.Pdf.minor 5;
     match args.out with
     | NoOutputSpecified ->
@@ -3864,7 +3864,7 @@ let go () =
           | _ -> assert false
       in
         let pdf = get_single_pdf args.op false in
-          let version = if args.keepversion then pdf.Pdf.minor else version in
+          let version = if args.keepversion || pdf.Pdf.major > 1 then pdf.Pdf.minor else version in
             write_pdf false
               (Cpdfmetadata.set_pdf_info 
                  ~xmp_also:args.alsosetxml
@@ -3887,7 +3887,7 @@ let go () =
           | _ -> assert false
         in
       let pdf = get_single_pdf args.op false in
-     let version = if args.keepversion then pdf.Pdf.minor else version in
+     let version = if args.keepversion || pdf.Pdf.major > 1 then pdf.Pdf.minor else version in
           write_pdf false (Cpdfmetadata.set_viewer_preference (key, value, version) pdf)
       end
   | Some (OpenAtPage str) ->
@@ -3980,7 +3980,7 @@ let go () =
               args.transition args.duration args.horizontal
               args.inward args.direction args.effect_duration pdf
           in
-            pdf.Pdf.minor <- if args.keepversion then pdf.Pdf.minor else max pdf.Pdf.minor 1;
+            pdf.Pdf.minor <- if args.keepversion || pdf.Pdf.major > 1 then pdf.Pdf.minor else max pdf.Pdf.minor 1;
             write_pdf false pdf'
   | Some ChangeId ->
       if args.recrypt then
@@ -4262,7 +4262,7 @@ let go () =
                 "40bit" -> 1 | "128bit" -> 4 | "AES" -> 6 | "AES256" | "AES256ISO" -> 7 | _ -> 0
               in
                 let newversion = if args.create_objstm then 5 else newversion in
-                  pdf.Pdf.minor <- max pdf.Pdf.minor newversion
+                  if pdf.Pdf.major = 1 then pdf.Pdf.minor <- max pdf.Pdf.minor newversion
             end;
             write_pdf ~encryption:(Some encryption) false pdf
   | Some Decrypt ->

@@ -84,7 +84,7 @@ let set_metadata_from_bytes keepversion data pdf =
                Pdf.trailerdict = trailerdict;
                Pdf.root = rootnum;
                Pdf.minor =
-                 if keepversion then pdf.Pdf.minor else max 4 pdf.Pdf.minor}
+                 if pdf.Pdf.major > 1 || keepversion then pdf.Pdf.minor else max 4 pdf.Pdf.minor}
 
 let set_metadata keepversion filename pdf =
   let ch = open_in_bin filename in
@@ -488,8 +488,7 @@ let set_pdf_info ?(xmp_also=false) ?(xmp_just_set=false) (key, value, version) p
           begin
             pdf.Pdf.trailerdict <-
               Pdf.add_dict_entry pdf.Pdf.trailerdict "/Info" (Pdf.Indirect objnum);
-            pdf.Pdf.minor <-
-              max pdf.Pdf.minor version
+            if pdf.Pdf.major = 1 then pdf.Pdf.minor <- max pdf.Pdf.minor version
           end;
         if xmp_also then
           begin match get_metadata pdf with
@@ -546,7 +545,7 @@ let copy_id keepversion copyfrom copyto =
       copyto.Pdf.trailerdict <-
         Pdf.add_dict_entry copyto.Pdf.trailerdict "/ID" id;
       copyto.Pdf.minor <-
-        if keepversion then copyto.Pdf.minor else max copyto.Pdf.minor 1;
+        if copyto.Pdf.major > 1 || keepversion then copyto.Pdf.minor else max copyto.Pdf.minor 1;
       copyto
 
 let replacements pdf =

@@ -81,7 +81,7 @@ let attach_file ?memory keepversion topage pdf file =
                       let rootdict' = Pdf.add_dict_entry rootdict "/Names" namedict' in
                       let rootnum = Pdf.addobj pdf rootdict' in
                         {pdf with
-                           Pdf.minor = if keepversion then pdf.Pdf.minor else max pdf.Pdf.minor 4;
+                           Pdf.minor = if keepversion || pdf.Pdf.major > 1 then pdf.Pdf.minor else max pdf.Pdf.minor 4;
                            Pdf.root = rootnum;
                            Pdf.trailerdict =
                              Pdf.add_dict_entry
@@ -114,7 +114,7 @@ let attach_file ?memory keepversion topage pdf file =
                               let pages' = replace_number pagenumber page' pages in
                                 let pdf = Pdfpage.change_pages true pdf pages' in
                                   {pdf with
-                                     Pdf.minor = if keepversion then pdf.Pdf.minor else max pdf.Pdf.minor 4}
+                                     Pdf.minor = if keepversion || pdf.Pdf.major > 1 then pdf.Pdf.minor else max pdf.Pdf.minor 4}
 
 type attachment =
   {name : string;
