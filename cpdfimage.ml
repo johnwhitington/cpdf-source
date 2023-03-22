@@ -22,6 +22,7 @@ let pnm_to_channel_24 channel w h s =
         done
       done
 
+(* FIXME do this all at once *)
 let write_stream name stream =
   let fh = open_out_bin name in
     for x = 0 to bytes_size stream - 1 do
@@ -29,43 +30,75 @@ let write_stream name stream =
     done;
     close_out fh
 
+(* Detect images we can write directly as PNGs, to avoid going through pnm2png or imagemagick.
+This is when BPC = 8, colourspace = DeviceRGB or CalRGB, compression is /FlateDecode. *)
+let write_image_png pdf resources name dict =
+  (*Printf.printf "%s\n" (Pdfwrite.string_of_pdf (Pdf.direct pdf dict));*)
+  match
+    Pdfimage.colspace pdf dict resources,
+    Pdfimage.bpc pdf dict,
+    Pdf.lookup_direct pdf "/Filter" dict
+  with
+  | (Pdfspace.DeviceRGB | Pdfspace.CalRGB _),
+    Some (Pdf.Integer 8),
+    Some (Pdf.Name "/FlateDecode" | Pdf.Array [Pdf.Name "/FlateDecode"]) ->
+      (*Printf.printf "Direct to png...\n";*)
+      Pdf.getstream (Pdf.direct pdf dict);
+      let ch = open_out_bin (name ^ ".png") in
+      let o = Pdfio.output_of_channel ch in
+      let width = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer x) -> x | _ -> raise Exit in
+      let height = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer x) -> x | _ -> raise Exit in
+      let idat = match Pdf.direct pdf dict with Pdf.Stream {contents = (_, Got bytes)} -> bytes | _ -> raise Exit in
+        (*Printf.printf "all ok...\n";*)
+        Cpdfpng.write_png {width; height; idat} o;
+        close_out ch;
+        true
+  | _ -> false
+
 let write_image path_to_p2p path_to_im pdf resources name image =
-  match Pdfimage.get_image_24bpp pdf resources image with
-  | Pdfimage.JPEG (stream, _) -> write_stream (name ^ ".jpg") stream
-  | Pdfimage.JPEG2000 (stream, _) -> write_stream (name ^ ".jpx") stream
-  | Pdfimage.JBIG2 (stream, _) -> write_stream (name ^ ".jbig2") stream
-  | Pdfimage.Raw (w, h, Pdfimage.BPP24, stream) ->
-      let pnm = name ^ ".pnm" in
-      let png = name ^ ".png" in
-      let fh = open_out_bin pnm in
-        pnm_to_channel_24 fh w h stream;
-        close_out fh;
-        begin match path_to_p2p with
-        | "" ->
-          begin match path_to_im with
-            "" -> Printf.eprintf "Neither pnm2png nor imagemagick found. Specify with -p2p or -im\n%!"
+  let main () =
+    begin match Pdfimage.get_image_24bpp pdf resources image with
+    | Pdfimage.JPEG (stream, _) -> write_stream (name ^ ".jpg") stream
+    | Pdfimage.JPEG2000 (stream, _) -> write_stream (name ^ ".jpx") stream
+    | Pdfimage.JBIG2 (stream, _) -> write_stream (name ^ ".jbig2") stream
+    | Pdfimage.Raw (w, h, Pdfimage.BPP24, stream) ->
+        let pnm = name ^ ".pnm" in
+        let png = name ^ ".png" in
+        let fh = open_out_bin pnm in
+          pnm_to_channel_24 fh w h stream;
+          close_out fh;
+          begin match path_to_p2p with
+          | "" ->
+            begin match path_to_im with
+              "" -> Printf.eprintf "Neither pnm2png nor imagemagick found. Specify with -p2p or -im\n%!"
+            | _ ->
+              begin match
+                Sys.command (Filename.quote_command path_to_im [pnm; png])
+              with
+                0 -> Sys.remove pnm
+              | _ -> 
+                Printf.eprintf "Call to imagemagick failed: did you specify -p2p or -im correctly?\n%!";
+                Sys.remove pnm
+              end
+            end
           | _ ->
             begin match
-              Sys.command (Filename.quote_command path_to_im [pnm; png])
+              Sys.command (Filename.quote_command path_to_p2p ~stdout:png ["-gamma"; "0.45"; "-quiet"; pnm])
             with
-              0 -> Sys.remove pnm
-            | _ -> 
-              Printf.eprintf "Call to imagemagick failed: did you specify -p2p or -im correctly?\n%!";
-              Sys.remove pnm
+            | 0 -> Sys.remove pnm
+            | _ ->
+                Printf.eprintf "Call to pnmtopng failed: did you specify -p2p correctly?\n%!";
+                Sys.remove pnm
             end
           end
-        | _ ->
-          begin match
-            Sys.command (Filename.quote_command path_to_p2p ~stdout:png ["-gamma"; "0.45"; "-quiet"; pnm])
-          with
-          | 0 -> Sys.remove pnm
-          | _ ->
-              Printf.eprintf "Call to pnmtopng failed: did you specify -p2p correctly?\n%!";
-              Sys.remove pnm
-          end
-        end
-  | _ ->
-      Printf.eprintf "Unsupported image type when extracting image %s %!" name
+    | _ ->
+        Printf.eprintf "Unsupported image type when extracting image %s %!" name
+    end
+  in
+    match write_image_png pdf resources name image with
+    | true -> ()
+    | exception x -> Printf.printf "Failed to write PNG directly (%s)\n" (Printexc.to_string x); main ()
+    | _ -> main ()
 
 let written = ref []
 
