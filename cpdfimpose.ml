@@ -146,7 +146,7 @@ let impose_pages fit x y columns rtl btt center margin output_mediabox fast fit_
           in
             flatten
               (map2
-                (fun p t -> Cpdfutil.transform_annotations pdf t p.Pdfpage.rest; transform_stream t p.Pdfpage.content)
+                (fun p t -> Pdfannot.transform_annotations pdf t p.Pdfpage.rest; transform_stream t p.Pdfpage.content)
                 pages
                 transforms)
        in
