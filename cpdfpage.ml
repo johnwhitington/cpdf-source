@@ -88,9 +88,9 @@ let shift_page ?(fast=false) dxdylist pdf pnum page =
     let transform_op =
       Pdfops.Op_cm (Pdftransform.matrix_of_op (Pdftransform.Translate (dx, dy)))
     in
-      let page =
+      (*let page =
         Cpdfutil.change_pattern_matrices_page pdf (Pdftransform.mktranslate ~-.dx ~-.dy) page
-      in
+      in*)
         Cpdfutil.transform_annotations pdf (Pdftransform.mktranslate dx dy) page.Pdfpage.rest;
         (Pdfpage.prepend_operators pdf [transform_op] ~fast page, pnum, Pdftransform.mktranslate dx dy)
 
@@ -162,7 +162,7 @@ let scale_page_contents ?(fast=false) scale position pdf pnum page =
            Pdftransform.Scale ((sx, sy), scale, scale)]
       in
         let transform_op = Pdfops.Op_cm transform in
-          let page = Cpdfutil.change_pattern_matrices_page pdf transform page in
+          (*let page = Cpdfutil.change_pattern_matrices_page pdf transform page in*)
           Cpdfutil.transform_annotations pdf transform page.Pdfpage.rest;
           (Pdfpage.prepend_operators pdf [transform_op] ~fast page, pnum, transform)
 
@@ -259,7 +259,7 @@ let transform_boxes tr pdf page =
 
 let transform_contents ?(fast=false) tr pdf page =
   let transform_op = Pdfops.Op_cm tr in
-    let page = Cpdfutil.change_pattern_matrices_page pdf (Pdftransform.matrix_invert tr) page in
+    (*let page = Cpdfutil.change_pattern_matrices_page pdf (Pdftransform.matrix_invert tr) page in*)
       Cpdfutil.transform_annotations pdf tr page.Pdfpage.rest;
       Pdfpage.prepend_operators pdf [transform_op] ~fast page
 
@@ -315,12 +315,12 @@ let rotate_page_contents ~fast rotpoint r pdf pnum page =
     let tr =
       Pdftransform.matrix_of_op
         (Pdftransform.Rotate (rotation_point, -.(rad_of_deg r)))
-    in let tr2 =
+    (*in let tr2 =
       Pdftransform.matrix_of_op
-        (Pdftransform.Rotate (rotation_point, rad_of_deg r))
+        (Pdftransform.Rotate (rotation_point, rad_of_deg r))*)
     in    
       let transform_op = Pdfops.Op_cm tr in
-      let page = Cpdfutil.change_pattern_matrices_page pdf tr2 page in
+      (*let page = Cpdfutil.change_pattern_matrices_page pdf tr2 page in*)
         Cpdfutil.transform_annotations pdf tr page.Pdfpage.rest;
         (Pdfpage.prepend_operators pdf [transform_op] ~fast page, pnum, tr)
 
@@ -338,8 +338,8 @@ let scale_pdf ?(fast=false) sxsylist pdf range =
         and matrix = Pdftransform.matrix_of_op (Pdftransform.Scale ((0., 0.), sx, sy)) in
           let transform_op =
             Pdfops.Op_cm matrix
-          and page =
-            Cpdfutil.change_pattern_matrices_page pdf (Pdftransform.matrix_invert matrix) page
+          (*and page =
+            Cpdfutil.change_pattern_matrices_page pdf (Pdftransform.matrix_invert matrix) page*)
           in
            Cpdfutil.transform_annotations pdf matrix page.Pdfpage.rest;
            (Pdfpage.prepend_operators pdf ~fast [transform_op] page, pnum, matrix)
@@ -384,7 +384,7 @@ let scale_to_fit_pdf ?(fast=false) position input_scale xylist op pdf range =
       in
         Cpdfutil.transform_annotations pdf matrix page.Pdfpage.rest;
         (Pdfpage.prepend_operators pdf [Pdfops.Op_cm matrix] ~fast
-         (Cpdfutil.change_pattern_matrices_page pdf (Pdftransform.matrix_invert matrix) page), pnum, matrix)
+         ((*Cpdfutil.change_pattern_matrices_page pdf (Pdftransform.matrix_invert matrix)*) page), pnum, matrix)
   in
     process_pages scale_page_to_fit pdf range
 
@@ -422,7 +422,7 @@ let flip_page ?(fast=false) transform_op pdf pnum page =
     Pdf.parse_rectangle pdf page.Pdfpage.mediabox
   in
     let tr = transform_op minx miny maxx maxy in
-      let page = Cpdfutil.change_pattern_matrices_page pdf tr page in
+      (*let page = Cpdfutil.change_pattern_matrices_page pdf tr page in*)
         Cpdfutil.transform_annotations pdf tr page.Pdfpage.rest;
         (Pdfpage.prepend_operators pdf [Pdfops.Op_cm tr] ~fast page, pnum, tr)
 
@@ -515,7 +515,7 @@ let do_stamp relative_to_cropbox fast position topline midline scale_to_fit isov
                   in
                     Cpdfutil.transform_annotations pdf matrix o.Pdfpage.rest;
                     let r = Pdfpage.prepend_operators pdf [Pdfops.Op_cm matrix] ~fast o in
-                      Cpdfutil.change_pattern_matrices_page pdf matrix r
+                      (*Cpdfutil.change_pattern_matrices_page pdf matrix*) r
       else
         let sw = sxmax -. sxmin and sh = symax -. symin
         and w = txmax -. txmin and h = tymax -. tymin in
@@ -527,7 +527,7 @@ let do_stamp relative_to_cropbox fast position topline midline scale_to_fit isov
             in
               Cpdfutil.transform_annotations pdf matrix o.Pdfpage.rest;
               let r = Pdfpage.prepend_operators pdf [Pdfops.Op_cm matrix] ~fast o in
-                Cpdfutil.change_pattern_matrices_page pdf matrix r
+                (*Cpdfutil.change_pattern_matrices_page pdf matrix*) r
     in
       {u with
          Pdfpage.content =

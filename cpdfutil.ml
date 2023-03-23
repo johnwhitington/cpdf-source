@@ -40,7 +40,7 @@ let process_xobjects pdf page f =
         elts
   | _ -> ()
 
-(* The content transformed by altering any use of [Op_cm]. But we must also
+(*(* The content transformed by altering any use of [Op_cm]. But we must also
 alter any /Matrix entries in pattern dictionaries *)
 let change_pattern_matrices_resources pdf tr resources =
   try
@@ -95,7 +95,7 @@ let change_pattern_matrices_page pdf tr page =
              | _ -> raise (Pdf.PDFError "change_pattern_matrices_page"))
           elts;
         page
-    | _ -> page
+    | _ -> page*)
 
 (* Union two resource dictionaries from the same PDF. *)
 let combine_pdf_resources pdf a b =
