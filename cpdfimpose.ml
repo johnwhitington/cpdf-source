@@ -132,7 +132,7 @@ let impose_pages fit x y columns rtl btt center margin output_mediabox fast fit_
            (r, List.hd r)*)
          pages, List.hd pages
        in
-     let resources' = pair_reduce (Cpdfutil.combine_pdf_resources pdf) (map (fun p -> p.Pdfpage.resources) pages) in
+     let resources' = pair_reduce (Pdfpage.combine_pdf_resources pdf) (map (fun p -> p.Pdfpage.resources) pages) in
      let rest' = pair_reduce (combine_pdf_rests pdf) (map (fun p -> p.Pdfpage.rest) pages) in
        let content' =
           let transform_stream transform contents =

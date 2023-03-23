@@ -66,7 +66,7 @@ let map_pages f pdf range =
  * *)
 let hard_box pdf range boxname mediabox_if_missing fast =
   process_pages
-    (Cpdfutil.ppstub (fun pagenum page ->
+    (Pdfpage.ppstub (fun pagenum page ->
        let minx, miny, maxx, maxy =
          if boxname = "/MediaBox" then
            Pdf.parse_rectangle pdf page.Pdfpage.mediabox
@@ -179,12 +179,12 @@ let set_mediabox xywhlist pdf range =
            [Pdf.Real x; Pdf.Real y;
             Pdf.Real (x +.  w); Pdf.Real (y +. h)])}
   in
-    process_pages (Cpdfutil.ppstub crop_page) pdf range
+    process_pages (Pdfpage.ppstub crop_page) pdf range
 
 (* If a cropbox exists, make it the mediabox. If not, change nothing. *)
 let copy_cropbox_to_mediabox pdf range =
   process_pages
-    (Cpdfutil.ppstub (fun _ page ->
+    (Pdfpage.ppstub (fun _ page ->
        match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
        | Some pdfobject -> {page with Pdfpage.mediabox = Pdf.direct pdf pdfobject}
        | None -> page))
@@ -197,7 +197,7 @@ let remove_cropping_pdf pdf range =
        Pdfpage.rest =
          (Pdf.remove_dict_entry page.Pdfpage.rest "/CropBox")}
   in
-    process_pages (Cpdfutil.ppstub remove_cropping_page) pdf range
+    process_pages (Pdfpage.ppstub remove_cropping_page) pdf range
 
 let remove_trim_pdf pdf range =
   let remove_trim_page _ page =
@@ -205,7 +205,7 @@ let remove_trim_pdf pdf range =
        Pdfpage.rest =
          (Pdf.remove_dict_entry page.Pdfpage.rest "/TrimBox")}
   in
-    process_pages (Cpdfutil.ppstub remove_trim_page) pdf range
+    process_pages (Pdfpage.ppstub remove_trim_page) pdf range
 
 let remove_art_pdf pdf range =
   let remove_art_page _ page =
@@ -213,7 +213,7 @@ let remove_art_pdf pdf range =
        Pdfpage.rest =
          (Pdf.remove_dict_entry page.Pdfpage.rest "/ArtBox")}
   in
-    process_pages (Cpdfutil.ppstub remove_art_page) pdf range
+    process_pages (Pdfpage.ppstub remove_art_page) pdf range
 
 let remove_bleed_pdf pdf range =
   let remove_bleed_page _ page =
@@ -221,7 +221,7 @@ let remove_bleed_pdf pdf range =
        Pdfpage.rest =
          (Pdf.remove_dict_entry page.Pdfpage.rest "/BleedBox")}
   in
-    process_pages (Cpdfutil.ppstub remove_bleed_page) pdf range
+    process_pages (Pdfpage.ppstub remove_bleed_page) pdf range
 
 (* Upright functionality *)
 
@@ -295,14 +295,14 @@ let rotate_pdf r pdf range =
     {page with Pdfpage.rotate =
        Pdfpage.rotation_of_int r}
   in
-    process_pages (Cpdfutil.ppstub rotate_page) pdf range
+    process_pages (Pdfpage.ppstub rotate_page) pdf range
 
 let rotate_pdf_by r pdf range =
   let rotate_page_by _ page =
     {page with Pdfpage.rotate =
        Pdfpage.rotation_of_int ((Pdfpage.int_of_rotation page.Pdfpage.rotate + r) mod 360)}
   in
-    process_pages (Cpdfutil.ppstub rotate_page_by) pdf range
+    process_pages (Pdfpage.ppstub rotate_page_by) pdf range
 
 let rotate_page_contents ~fast rotpoint r pdf pnum page =
   let rotation_point =
@@ -537,7 +537,7 @@ let do_stamp relative_to_cropbox fast position topline midline scale_to_fit isov
          Pdfpage.rest =
            combine_page_items pdf u.Pdfpage.rest o.Pdfpage.rest; 
          Pdfpage.resources =
-           Cpdfutil.combine_pdf_resources pdf u.Pdfpage.resources o.Pdfpage.resources}
+           Pdfpage.combine_pdf_resources pdf u.Pdfpage.resources o.Pdfpage.resources}
 
 let stamp relative_to_cropbox position topline midline fast scale_to_fit isover range over pdf =
   let prefix = Pdfpage.shortest_unused_prefix pdf in
@@ -661,7 +661,7 @@ let setBox box minx maxx miny maxy pdf range =
            page.Pdfpage.rest box
            (Pdf.Array [Pdf.Real minx; Pdf.Real miny; Pdf.Real maxx; Pdf.Real maxy])}
   in
-    process_pages (Cpdfutil.ppstub set_box_page) pdf range
+    process_pages (Pdfpage.ppstub set_box_page) pdf range
 
 (* Cropping *)
 let crop_pdf ?(box="/CropBox") xywhlist pdf range =
@@ -676,7 +676,7 @@ let crop_pdf ?(box="/CropBox") xywhlist pdf range =
                  [Pdf.Real x; Pdf.Real y;
                   Pdf.Real (x +.  w); Pdf.Real (y +. h)])))}
   in
-    process_pages (Cpdfutil.ppstub crop_page) pdf range
+    process_pages (Pdfpage.ppstub crop_page) pdf range
 
 (* Add rectangles on top of pages to show Media, Crop, Art, Trim, Bleed boxes.
  *
@@ -722,7 +722,7 @@ let show_boxes_page fast pdf _ page =
       Pdfpage.postpend_operators pdf ops ~fast page
 
 let show_boxes ?(fast=false) pdf range =
-  process_pages (Cpdfutil.ppstub (show_boxes_page fast pdf)) pdf range
+  process_pages (Pdfpage.ppstub (show_boxes_page fast pdf)) pdf range
 
 let allowance = 9.
 
@@ -754,14 +754,14 @@ let trim_marks_page fast pdf n page =
       page
 
 let trim_marks ?(fast=false) pdf range =
-  process_pages (Cpdfutil.ppstub (trim_marks_page fast pdf)) pdf range
+  process_pages (Pdfpage.ppstub (trim_marks_page fast pdf)) pdf range
 
 (* copy the contents of the box f to the box t. If mediabox_if_missing is set,
 the contents of the mediabox will be used if the from fox is not available. If
 mediabox_is_missing is false, the page is unaltered. *)
 let copy_box f t mediabox_if_missing pdf range =
   process_pages
-    (Cpdfutil.ppstub (fun _ page ->
+    (Pdfpage.ppstub (fun _ page ->
        if f = "/MediaBox" then
          {page with Pdfpage.rest =
             (Pdf.add_dict_entry page.Pdfpage.rest t (page.Pdfpage.mediabox))}

@@ -326,4 +326,4 @@ let remove_annotations range pdf =
     else
       page
   in
-    Cpdfpage.process_pages (Cpdfutil.ppstub remove_annotations_page) pdf range
+    Cpdfpage.process_pages (Pdfpage.ppstub remove_annotations_page) pdf range

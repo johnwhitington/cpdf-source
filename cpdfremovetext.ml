@@ -26,7 +26,7 @@ let removetext range pdf =
              let ops = Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content in
                [Pdfops.stream_of_ops (remove_stamps [] ops)]}
       in
-        Cpdfpage.process_pages (Cpdfutil.ppstub removetext_page) pdf range
+        Cpdfpage.process_pages (Pdfpage.ppstub removetext_page) pdf range
 
 let rec remove_all_text_ops pdf resources content =
   let is_textop = function
@@ -43,7 +43,7 @@ let rec remove_all_text_ops pdf resources content =
 let remove_all_text_page pdf p =
   let resources = p.Pdfpage.resources in
   let content = p.Pdfpage.content in
-    Cpdfutil.process_xobjects pdf p remove_all_text_ops;
+    Pdfpage.process_xobjects pdf p remove_all_text_ops;
     {p with Pdfpage.content = remove_all_text_ops pdf resources content}, pdf
 
 let remove_all_text range pdf =

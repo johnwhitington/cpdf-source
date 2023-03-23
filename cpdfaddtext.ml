@@ -396,7 +396,7 @@ let addtext
                 then Pdfpage.prepend_operators pdf ops ~fast:fast page
                 else Pdfpage.postpend_operators pdf ops ~fast:fast page
   in
-    Cpdfpage.process_pages (Cpdfutil.ppstub addtext_page) pdf pages
+    Cpdfpage.process_pages (Pdfpage.ppstub addtext_page) pdf pages
 
 (* Prev is a list of lists of characters *)
 let split_at_newline t =
@@ -611,4 +611,4 @@ let addrectangle
           then Pdfpage.prepend_operators pdf ops ~fast:fast page
           else Pdfpage.postpend_operators pdf ops ~fast:fast page
   in
-    Cpdfpage.process_pages (Cpdfutil.ppstub addrectangle_page) pdf range
+    Cpdfpage.process_pages (Pdfpage.ppstub addrectangle_page) pdf range

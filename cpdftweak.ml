@@ -87,10 +87,10 @@ let blacktext c range pdf =
     let content' =
       blacktext_ops c pdf page.Pdfpage.resources page.Pdfpage.content
     in
-      Cpdfutil.process_xobjects pdf page (blacktext_ops c);
+      Pdfpage.process_xobjects pdf page (blacktext_ops c);
       {page with Pdfpage.content = content'}
   in
-    Cpdfpage.process_pages (Cpdfutil.ppstub blacktext_page) pdf range
+    Cpdfpage.process_pages (Pdfpage.ppstub blacktext_page) pdf range
 
 (* Blacken lines *)
 let blacklines_ops c pdf resources content =
@@ -113,10 +113,10 @@ let blacklines c range pdf =
     let content' =
       blacklines_ops c pdf page.Pdfpage.resources page.Pdfpage.content
     in
-      Cpdfutil.process_xobjects pdf page (blacklines_ops c);
+      Pdfpage.process_xobjects pdf page (blacklines_ops c);
       {page with Pdfpage.content = content'}
   in
-    Cpdfpage.process_pages (Cpdfutil.ppstub blacklines_page) pdf range
+    Cpdfpage.process_pages (Pdfpage.ppstub blacklines_page) pdf range
 
 (* Blacken Fills *)
 let blackfills_ops c pdf resources content =
@@ -139,10 +139,10 @@ let blackfills c range pdf =
     let content' =
       blackfills_ops c pdf page.Pdfpage.resources page.Pdfpage.content
     in
-      Cpdfutil.process_xobjects pdf page (blackfills_ops c);
+      Pdfpage.process_xobjects pdf page (blackfills_ops c);
       {page with Pdfpage.content = content'}
   in
-    Cpdfpage.process_pages (Cpdfutil.ppstub blackfills_page) pdf range
+    Cpdfpage.process_pages (Pdfpage.ppstub blackfills_page) pdf range
 
 (* Set a minimum line width to avoid dropout *)
 let thinlines range width pdf =
@@ -217,7 +217,7 @@ let thinlines range width pdf =
                 let content' = [Pdfops.stream_of_ops operators] in
                   {page with Pdfpage.content = content'} 
   in
-    Cpdfpage.process_pages (Cpdfutil.ppstub thinpage) pdf range
+    Cpdfpage.process_pages (Pdfpage.ppstub thinpage) pdf range
 
 (* Parse the new content to make sure syntactically ok, append
  * as required. Rewrite the content *)
@@ -229,7 +229,7 @@ let append_page_content_page fast s before pdf n page =
     pdf ops ~fast page
 
 let append_page_content s before fast range pdf =
-  Cpdfpage.process_pages (Cpdfutil.ppstub (append_page_content_page fast s before pdf)) pdf range
+  Cpdfpage.process_pages (Pdfpage.ppstub (append_page_content_page fast s before pdf)) pdf range
 
 let rec dict_entry_single_object f pdf = function
   | (Pdf.Dictionary d) -> f (Pdf.recurse_dict (dict_entry_single_object f pdf) d)
@@ -303,10 +303,10 @@ let remove_clipping pdf range =
     let content' =
       remove_clipping_ops pdf page.Pdfpage.resources page.Pdfpage.content
     in
-      Cpdfutil.process_xobjects pdf page remove_clipping_ops;
+      Pdfpage.process_xobjects pdf page remove_clipping_ops;
       {page with Pdfpage.content = content'}
   in
-    Cpdfpage.process_pages (Cpdfutil.ppstub remove_clipping_page) pdf range
+    Cpdfpage.process_pages (Pdfpage.ppstub remove_clipping_page) pdf range
 
 let remove_unused_resources_page pdf n page =
   let xobjects, all_names =
@@ -324,4 +324,4 @@ let remove_unused_resources_page pdf n page =
           {page with Pdfpage.resources = Pdf.add_dict_entry page.Pdfpage.resources  "/XObject" xobjdict}
 
 let remove_unused_resources pdf =
-  Cpdfpage.process_pages (Cpdfutil.ppstub (remove_unused_resources_page pdf)) pdf (ilist 1 (Pdfpage.endpage pdf))
+  Cpdfpage.process_pages (Pdfpage.ppstub (remove_unused_resources_page pdf)) pdf (ilist 1 (Pdfpage.endpage pdf))
