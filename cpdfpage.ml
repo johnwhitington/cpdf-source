@@ -83,7 +83,26 @@ let hard_box pdf range boxname mediabox_if_missing fast =
     pdf
     range
 
+(* Convert a page to a Form XObject *)
+let xobject_of_page pdf page =
+  let concatted_streams =
+    let streams = map (Pdf.direct pdf) page.Pdfpage.content in
+      iter (Pdfcodec.decode_pdfstream pdf) streams;
+      let bytess =
+        map (function Pdf.Stream {contents = (_, Got x)} -> x | _ -> raise (Pdf.PDFError "xobject_of_page")) streams
+      in
+        Pdfops.concat_bytess bytess
+  in
+    Pdf.Stream
+      {contents =
+        (Pdf.Dictionary [("/Type", Pdf.Name "/XObject");
+                         ("/Subtype", Pdf.Name "/Form");
+                         ("/Resources", page.Pdfpage.resources);
+                         ("/BBox", page.Pdfpage.mediabox)],
+         Got concatted_streams)}
+
 let shift_page ?(fast=false) dxdylist pdf pnum page =
+  let xobj = xobject_of_page pdf page in
   let dx, dy = List.nth dxdylist (pnum - 1) in
     let transform_op =
       Pdfops.Op_cm (Pdftransform.matrix_of_op (Pdftransform.Translate (dx, dy)))
