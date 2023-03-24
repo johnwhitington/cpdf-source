@@ -32,6 +32,7 @@ o -typeset was opening files in text mode, instead of binary
 o Fixed behaviour of -squeeze-no-pagedata / -squeeze-no-recompress 
 o Significant improvements to malformed file reading
 o Allow DUP page specifications to use larger numbers
+o Reworked functions transforming pages to better preserve patterns
 
 2.5.1 (January 2022)
 

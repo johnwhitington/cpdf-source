@@ -202,7 +202,8 @@ let squeeze_all_content_streams pdf =
                   with
                     (* No /Contents, which is ok. Or a parsing failure due to
                      uninherited resources. FIXME: Add support for inherited
-                     resources. *)
+                     resources. NB 24th March 2023 we tried this, and sizes went up
+                     on many files and down on none! So reverted. *)
                     Not_found -> ()
                   end
             | _ -> ())
