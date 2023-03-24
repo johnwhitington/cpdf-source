@@ -103,6 +103,7 @@ let xobject_of_page ~fast pdf page =
 
 let shift_page ?(fast=false) dxdylist pdf pnum page =
   let xobj = xobject_of_page ~fast pdf page in
+  let xobjnum = Pdf.addobj pdf xobj in
   let dx, dy = List.nth dxdylist (pnum - 1) in
     let transform_op =
       Pdfops.Op_cm (Pdftransform.matrix_of_op (Pdftransform.Translate (dx, dy)))
