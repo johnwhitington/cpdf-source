@@ -128,9 +128,8 @@ let impose_pages fit x y columns rtl btt center margin output_mediabox fast fit_
      in
        (* Change the pattern matrices before combining resources *)
        let pages, h =
-         (*let r = map2 (fun p t -> Cpdfutil.change_pattern_matrices_page pdf t p) pages transforms in
-           (r, List.hd r)*)
-         pages, List.hd pages
+         let r = map2 (fun p t -> Cpdfpage.change_pattern_matrices_page pdf t p) pages transforms in
+           (r, List.hd r)
        in
      let resources' = pair_reduce (Pdfpage.combine_pdf_resources pdf) (map (fun p -> p.Pdfpage.resources) pages) in
      let rest' = pair_reduce (combine_pdf_rests pdf) (map (fun p -> p.Pdfpage.rest) pages) in
