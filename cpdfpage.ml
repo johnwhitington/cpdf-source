@@ -844,4 +844,3 @@ let copy_box f t mediabox_if_missing pdf range =
                else page))
     pdf
     range
-
