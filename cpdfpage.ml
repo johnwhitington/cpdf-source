@@ -229,7 +229,7 @@ let scale_page_contents ?(fast=false) scale position pdf pnum page =
            Pdftransform.Scale ((sx, sy), scale, scale)]
       in
         let transform_op = Pdfops.Op_cm transform in
-          let page = change_pattern_matrices_page pdf transform page in
+          let page = change_pattern_matrices_page pdf (Pdftransform.matrix_invert transform) page in
           Pdfannot.transform_annotations pdf transform page.Pdfpage.rest;
           (Pdfpage.prepend_operators pdf [transform_op] ~fast page, pnum, transform)
 
@@ -481,15 +481,13 @@ let hasbox pdf page boxname =
         | Some _ -> true
         | _ -> false
 
-
-
 (* Flip pages *)
 let flip_page ?(fast=false) transform_op pdf pnum page =
   let minx, miny, maxx, maxy =
     Pdf.parse_rectangle pdf page.Pdfpage.mediabox
   in
     let tr = transform_op minx miny maxx maxy in
-      let page = change_pattern_matrices_page pdf tr page in
+      let page = change_pattern_matrices_page pdf (Pdftransform.matrix_invert tr) page in
         Pdfannot.transform_annotations pdf tr page.Pdfpage.rest;
         (Pdfpage.prepend_operators pdf [Pdfops.Op_cm tr] ~fast page, pnum, tr)
 
@@ -582,7 +580,7 @@ let do_stamp relative_to_cropbox fast position topline midline scale_to_fit isov
                   in
                     Pdfannot.transform_annotations pdf matrix o.Pdfpage.rest;
                     let r = Pdfpage.prepend_operators pdf [Pdfops.Op_cm matrix] ~fast o in
-                      change_pattern_matrices_page pdf matrix r
+                      change_pattern_matrices_page pdf (Pdftransform.matrix_invert matrix) r
       else
         let sw = sxmax -. sxmin and sh = symax -. symin
         and w = txmax -. txmin and h = tymax -. tymin in
@@ -594,7 +592,7 @@ let do_stamp relative_to_cropbox fast position topline midline scale_to_fit isov
             in
               Pdfannot.transform_annotations pdf matrix o.Pdfpage.rest;
               let r = Pdfpage.prepend_operators pdf [Pdfops.Op_cm matrix] ~fast o in
-                change_pattern_matrices_page pdf matrix r
+                change_pattern_matrices_page pdf (Pdftransform.matrix_invert matrix) r
     in
       {u with
          Pdfpage.content =
