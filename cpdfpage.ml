@@ -4,6 +4,7 @@ open Cpdferror
 (* When we transfor a page by wrapping in an [Op_cm], we must also
 invert any /Matrix entries in pattern dictionaries, including inside xobjects *)
 let rec change_pattern_matrices_resources pdf tr resources =
+  Printf.printf "R: change_pattern_matrices_resources: %s\n" (Pdftransform.string_of_matrix tr);
   try
     begin match Pdf.lookup_direct pdf "/XObject" resources with
     | Some (Pdf.Dictionary elts) ->
@@ -24,7 +25,7 @@ let rec change_pattern_matrices_resources pdf tr resources =
               let old_pattern = Pdf.direct pdf p in
                 let new_pattern =
                   let existing_tr = Pdf.parse_matrix pdf "/Matrix" old_pattern in
-                    let new_tr = Pdftransform.matrix_compose (Pdftransform.matrix_invert tr) existing_tr in
+                    let new_tr = Pdftransform.matrix_compose (Pdftransform.matrix_invert tr) existing_tr in (*FIXME awlogo.pdf*)
                       Pdf.add_dict_entry old_pattern "/Matrix" (Pdf.make_matrix new_tr)
                 in
                   name, Pdf.Indirect (Pdf.addobj pdf new_pattern))
@@ -39,6 +40,7 @@ let rec change_pattern_matrices_resources pdf tr resources =
       resources
 
 and change_pattern_matrices_xobject pdf tr k v i =
+  Printf.printf "X: change_pattern_matrices_resources: %s\n" (Pdftransform.string_of_matrix tr);
   match Pdf.lookup_direct pdf "/Subtype" v with
   | Some (Pdf.Name "/Form") ->
       Printf.printf "Processing form xobject %s for patterns\n" k;
@@ -54,6 +56,7 @@ and change_pattern_matrices_xobject pdf tr k v i =
   | _ -> ()
 
 let change_pattern_matrices_page pdf tr page =
+  Printf.printf "P: change_pattern_matrices_resources: %s\n" (Pdftransform.string_of_matrix tr);
   let page =
     {page with Pdfpage.resources = change_pattern_matrices_resources pdf tr page.Pdfpage.resources}
   in
