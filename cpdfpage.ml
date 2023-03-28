@@ -4,7 +4,6 @@ open Cpdferror
 (* When we transfor a page by wrapping in an [Op_cm], we must also
 invert any /Matrix entries in pattern dictionaries, including inside xobjects *)
 let rec change_pattern_matrices_resources pdf tr resources =
-  Printf.printf "R: change_pattern_matrices_resources: %s\n" (Pdftransform.string_of_matrix tr);
   try
     begin match Pdf.lookup_direct pdf "/XObject" resources with
     | Some (Pdf.Dictionary elts) ->
@@ -25,7 +24,7 @@ let rec change_pattern_matrices_resources pdf tr resources =
               let old_pattern = Pdf.direct pdf p in
                 let new_pattern =
                   let existing_tr = Pdf.parse_matrix pdf "/Matrix" old_pattern in
-                    let new_tr = Pdftransform.matrix_compose (Pdftransform.matrix_invert tr) existing_tr in (*FIXME awlogo.pdf*)
+                    let new_tr = Pdftransform.matrix_compose tr existing_tr in
                       Pdf.add_dict_entry old_pattern "/Matrix" (Pdf.make_matrix new_tr)
                 in
                   name, Pdf.Indirect (Pdf.addobj pdf new_pattern))
@@ -40,7 +39,6 @@ let rec change_pattern_matrices_resources pdf tr resources =
       resources
 
 and change_pattern_matrices_xobject pdf tr k v i =
-  Printf.printf "X: change_pattern_matrices_resources: %s\n" (Pdftransform.string_of_matrix tr);
   match Pdf.lookup_direct pdf "/Subtype" v with
   | Some (Pdf.Name "/Form") ->
       Printf.printf "Processing form xobject %s for patterns\n" k;
@@ -56,7 +54,6 @@ and change_pattern_matrices_xobject pdf tr k v i =
   | _ -> ()
 
 let change_pattern_matrices_page pdf tr page =
-  Printf.printf "P: change_pattern_matrices_resources: %s\n" (Pdftransform.string_of_matrix tr);
   let page =
     {page with Pdfpage.resources = change_pattern_matrices_resources pdf tr page.Pdfpage.resources}
   in
@@ -155,14 +152,11 @@ let hard_box pdf range boxname mediabox_if_missing fast =
 
 let shift_page ?(fast=false) dxdylist pdf pnum page =
   let dx, dy = List.nth dxdylist (pnum - 1) in
-    let transform_op =
-      Pdfops.Op_cm (Pdftransform.matrix_of_op (Pdftransform.Translate (dx, dy)))
-    in
-      let page =
-        change_pattern_matrices_page pdf (Pdftransform.mktranslate ~-.dx ~-.dy) page
-      in
-        Pdfannot.transform_annotations pdf (Pdftransform.mktranslate dx dy) page.Pdfpage.rest;
-        (Pdfpage.prepend_operators pdf [transform_op] ~fast page, pnum, Pdftransform.mktranslate dx dy)
+    let transform_op = Pdfops.Op_cm (Pdftransform.matrix_of_op (Pdftransform.Translate (dx, dy))) in
+    let tr = Pdftransform.mktranslate dx dy in
+    let page = change_pattern_matrices_page pdf tr page in
+      Pdfannot.transform_annotations pdf tr page.Pdfpage.rest;
+      (Pdfpage.prepend_operators pdf [transform_op] ~fast page, pnum, tr)
 
 let shift_pdf ?(fast=false) dxdylist pdf range =
   process_pages (shift_page ~fast dxdylist pdf) pdf range
@@ -232,7 +226,7 @@ let scale_page_contents ?(fast=false) scale position pdf pnum page =
            Pdftransform.Scale ((sx, sy), scale, scale)]
       in
         let transform_op = Pdfops.Op_cm transform in
-          let page = change_pattern_matrices_page pdf (Pdftransform.matrix_invert transform) page in
+          let page = change_pattern_matrices_page pdf transform page in
           Pdfannot.transform_annotations pdf transform page.Pdfpage.rest;
           (Pdfpage.prepend_operators pdf [transform_op] ~fast page, pnum, transform)
 
@@ -329,7 +323,7 @@ let transform_boxes tr pdf page =
 
 let transform_contents ?(fast=false) tr pdf page =
   let transform_op = Pdfops.Op_cm tr in
-    let page = change_pattern_matrices_page pdf (Pdftransform.matrix_invert tr) page in
+    let page = change_pattern_matrices_page pdf tr page in
       Pdfannot.transform_annotations pdf tr page.Pdfpage.rest;
       Pdfpage.prepend_operators pdf [transform_op] ~fast page
 
@@ -383,16 +377,12 @@ let rotate_page_contents ~fast rotpoint r pdf pnum page =
     | Some point -> point
   in
     let tr =
-      Pdftransform.matrix_of_op
-        (Pdftransform.Rotate (rotation_point, -.(rad_of_deg r)))
-    in let tr2 =
-      Pdftransform.matrix_of_op
-        (Pdftransform.Rotate (rotation_point, rad_of_deg r))
-    in    
-      let transform_op = Pdfops.Op_cm tr in
-      let page = change_pattern_matrices_page pdf tr2 page in
-        Pdfannot.transform_annotations pdf tr page.Pdfpage.rest;
-        (Pdfpage.prepend_operators pdf [transform_op] ~fast page, pnum, tr)
+      Pdftransform.matrix_of_op (Pdftransform.Rotate (rotation_point, -.(rad_of_deg r)))
+    in
+    let transform_op = Pdfops.Op_cm tr in
+    let page = change_pattern_matrices_page pdf tr page in
+      Pdfannot.transform_annotations pdf tr page.Pdfpage.rest;
+      (Pdfpage.prepend_operators pdf [transform_op] ~fast page, pnum, tr)
 
 let rotate_contents ?(fast=false) r pdf range =
   process_pages (rotate_page_contents ~fast None r pdf) pdf range
@@ -409,7 +399,7 @@ let scale_pdf ?(fast=false) sxsylist pdf range =
           let transform_op =
             Pdfops.Op_cm matrix
           and page =
-            change_pattern_matrices_page pdf (Pdftransform.matrix_invert matrix) page
+            change_pattern_matrices_page pdf matrix page
           in
            Pdfannot.transform_annotations pdf matrix page.Pdfpage.rest;
            (Pdfpage.prepend_operators pdf ~fast [transform_op] page, pnum, matrix)
@@ -454,7 +444,7 @@ let scale_to_fit_pdf ?(fast=false) position input_scale xylist op pdf range =
       in
         Pdfannot.transform_annotations pdf matrix page.Pdfpage.rest;
         (Pdfpage.prepend_operators pdf [Pdfops.Op_cm matrix] ~fast
-         (change_pattern_matrices_page pdf (Pdftransform.matrix_invert matrix) page), pnum, matrix)
+         (change_pattern_matrices_page pdf matrix page), pnum, matrix)
   in
     process_pages scale_page_to_fit pdf range
 
@@ -490,7 +480,7 @@ let flip_page ?(fast=false) transform_op pdf pnum page =
     Pdf.parse_rectangle pdf page.Pdfpage.mediabox
   in
     let tr = transform_op minx miny maxx maxy in
-      let page = change_pattern_matrices_page pdf (Pdftransform.matrix_invert tr) page in
+      let page = change_pattern_matrices_page pdf tr page in
         Pdfannot.transform_annotations pdf tr page.Pdfpage.rest;
         (Pdfpage.prepend_operators pdf [Pdfops.Op_cm tr] ~fast page, pnum, tr)
 
@@ -583,7 +573,7 @@ let do_stamp relative_to_cropbox fast position topline midline scale_to_fit isov
                   in
                     Pdfannot.transform_annotations pdf matrix o.Pdfpage.rest;
                     let r = Pdfpage.prepend_operators pdf [Pdfops.Op_cm matrix] ~fast o in
-                      change_pattern_matrices_page pdf (Pdftransform.matrix_invert matrix) r
+                      change_pattern_matrices_page pdf matrix r
       else
         let sw = sxmax -. sxmin and sh = symax -. symin
         and w = txmax -. txmin and h = tymax -. tymin in
@@ -595,7 +585,7 @@ let do_stamp relative_to_cropbox fast position topline midline scale_to_fit isov
             in
               Pdfannot.transform_annotations pdf matrix o.Pdfpage.rest;
               let r = Pdfpage.prepend_operators pdf [Pdfops.Op_cm matrix] ~fast o in
-                change_pattern_matrices_page pdf (Pdftransform.matrix_invert matrix) r
+                change_pattern_matrices_page pdf matrix r
     in
       {u with
          Pdfpage.content =
