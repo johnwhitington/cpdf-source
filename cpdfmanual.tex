@@ -4187,10 +4187,10 @@ To remove a dictionary entry:
   \noindent Replace the entry for \texttt{/One} in every dictionary \texttt{in.pdf} if the key's value is the given value, writing to \texttt{out.pdf}. 
   \end{framed}
 
-To replace a dictionary entry:
+To replace a dictionary entry, give the replacement value in CPDFJSON format:
 
   \begin{framed}
-  \small\noindent\verb!cpdf -replace-dict-entry /One -replace-dict-entry-value "2"!\\
+  \small\noindent\verb!cpdf -replace-dict-entry /One -replace-dict-entry-value "\{I : 2\}"!\\
   \small\noindent\verb!     in.pdf -o out.pdf!
 
   \vspace{2.5mm}
@@ -4198,8 +4198,8 @@ To replace a dictionary entry:
 
   \vspace{2.5mm}
 
-  \small\noindent\verb!cpdf -replace-dict-entry /One -dict-entry-search "1"!\\
-  \small\noindent\verb!     -replace-dict-entry-value "2" in.pdf -o out.pdf!
+  \small\noindent\verb!cpdf -replace-dict-entry /One -dict-entry-search "\{I : 1\}"!\\
+  \small\noindent\verb!     -replace-dict-entry-value "\{I : 2\}" in.pdf -o out.pdf!
 
   \vspace{2.5mm}
   \noindent Remove the entry for \texttt{/One} in every dictionary \texttt{in.pdf} if the key's value is the given value, writing to \texttt{out.pdf}. 
