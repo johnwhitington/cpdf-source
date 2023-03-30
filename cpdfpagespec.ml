@@ -205,7 +205,7 @@ endpage of the PDF (which we don't have). Pass 100 as the endpage, doubling on
 page range exception, bailng out above 500000. *)
 let rec validate_pagespec_inner n spec =
   try
-    ignore (parse_pagespec_inner n (Pdf.empty ()) spec); true
+    ignore (parse_pagespec_inner n (Pdfpage.minimum_valid_pdf ()) spec); true
   with
   | PageSpecUnknownPage _ -> if n < 500000 then validate_pagespec_inner (n * 2) spec else false
   | PageSpecBadSyntax | _ -> false
@@ -215,7 +215,7 @@ let validate_pagespec spec =
 
 let rec parse_pagespec_without_pdf_inner n spec =
   try
-    parse_pagespec_inner n (Pdf.empty ()) spec
+    parse_pagespec_inner n (Pdfpage.minimum_valid_pdf ()) spec
   with
     PageSpecUnknownPage _ ->
       if n < 500000
