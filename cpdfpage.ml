@@ -2,41 +2,36 @@ open Pdfutil
 open Cpdferror
 
 (* When we transfor a page by wrapping in an [Op_cm], we must also
-invert any /Matrix entries in pattern dictionaries, including inside xobjects *)
+change any /Matrix entries in pattern dictionaries, including inside xobjects *)
 let rec change_pattern_matrices_resources pdf tr resources =
-  try
-    begin match Pdf.lookup_direct pdf "/XObject" resources with
-    | Some (Pdf.Dictionary elts) ->
-        iter
-          (fun (k, v) -> 
-             match v with
-             | Pdf.Indirect i -> change_pattern_matrices_xobject pdf tr k v i
-             | _ -> raise (Pdf.PDFError "change_pattern_matrices_page"))
-          elts
-    | _ -> ()
-    end;
-    begin match Pdf.lookup_direct pdf "/Pattern" resources with
-    | Some (Pdf.Dictionary patterns) ->
-        let entries =
-          map
-            (fun (name, p) ->
-              Printf.printf "Changing matrices of pattern %s\n" name;
-              let old_pattern = Pdf.direct pdf p in
-                let new_pattern =
-                  let existing_tr = Pdf.parse_matrix pdf "/Matrix" old_pattern in
-                    let new_tr = Pdftransform.matrix_compose tr existing_tr in
-                      Pdf.add_dict_entry old_pattern "/Matrix" (Pdf.make_matrix new_tr)
-                in
-                  name, Pdf.Indirect (Pdf.addobj pdf new_pattern))
-            patterns
-         in
-           Pdf.add_dict_entry resources "/Pattern" (Pdf.Dictionary entries)
-    | _ -> resources
-    end
-  with
-    Pdftransform.NonInvertable ->
-      Printf.eprintf "Warning: noninvertible matrix\n%!";
-      resources
+  begin match Pdf.lookup_direct pdf "/XObject" resources with
+  | Some (Pdf.Dictionary elts) ->
+      iter
+        (fun (k, v) -> 
+           match v with
+           | Pdf.Indirect i -> change_pattern_matrices_xobject pdf tr k v i
+           | _ -> raise (Pdf.PDFError "change_pattern_matrices_page"))
+        elts
+  | _ -> ()
+  end;
+  begin match Pdf.lookup_direct pdf "/Pattern" resources with
+  | Some (Pdf.Dictionary patterns) ->
+      let entries =
+        map
+          (fun (name, p) ->
+            Printf.printf "Changing matrices of pattern %s\n" name;
+            let old_pattern = Pdf.direct pdf p in
+              let new_pattern =
+                let existing_tr = Pdf.parse_matrix pdf "/Matrix" old_pattern in
+                  let new_tr = Pdftransform.matrix_compose tr existing_tr in
+                    Pdf.add_dict_entry old_pattern "/Matrix" (Pdf.make_matrix new_tr)
+              in
+                name, Pdf.Indirect (Pdf.addobj pdf new_pattern))
+          patterns
+       in
+         Pdf.add_dict_entry resources "/Pattern" (Pdf.Dictionary entries)
+  | _ -> resources
+  end
 
 and change_pattern_matrices_xobject pdf tr k v i =
   match Pdf.lookup_direct pdf "/Subtype" v with
@@ -643,7 +638,7 @@ let stamp relative_to_cropbox position topline midline fast scale_to_fit isover 
                     let new_marks = map (Cpdfbookmarks.change_bookmark changetable) marks in
                       Pdfmarks.add_bookmarks new_marks changed
 
-(* Combine pages from two PDFs. For now, assume equal length. *)
+(* Combine pages from two PDFs. For now, assume equal length. FIXME: Why? *)
 
 (* If [over] has more pages than [under], chop the excess. If the converse, pad
 [over] to the same length *)
