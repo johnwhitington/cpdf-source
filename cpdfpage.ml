@@ -1,9 +1,9 @@
 open Pdfutil
 open Cpdferror
 
-(* When we transfor a page by wrapping in an [Op_cm], we must also
-change any /Matrix entries in pattern dictionaries, including inside xobjects *)
-let rec change_pattern_matrices_resources pdf tr resources =
+(* When we transform a page by wrapping in an [Op_cm], we must also
+change any /Matrix entries in (some) pattern dictionaries, including inside xobjects *)
+let rec change_pattern_matrices_resources pdf tr resources names_used_with_scn =
   begin match Pdf.lookup_direct pdf "/XObject" resources with
   | Some (Pdf.Dictionary elts) ->
       iter
@@ -19,14 +19,17 @@ let rec change_pattern_matrices_resources pdf tr resources =
       let entries =
         map
           (fun (name, p) ->
-            Printf.printf "Changing matrices of pattern %s\n" name;
-            let old_pattern = Pdf.direct pdf p in
-              let new_pattern =
-                let existing_tr = Pdf.parse_matrix pdf "/Matrix" old_pattern in
-                  let new_tr = Pdftransform.matrix_compose tr existing_tr in
-                    Pdf.add_dict_entry old_pattern "/Matrix" (Pdf.make_matrix new_tr)
-              in
-                name, Pdf.Indirect (Pdf.addobj pdf new_pattern))
+            match Hashtbl.find names_used_with_scn name with
+            | exception Not_found -> (name, p)
+            | _ ->
+                Printf.printf "Changing matrices of pattern %s\n" name;
+                let old_pattern = Pdf.direct pdf p in
+                  let new_pattern =
+                    let existing_tr = Pdf.parse_matrix pdf "/Matrix" old_pattern in
+                      let new_tr = Pdftransform.matrix_compose tr existing_tr in
+                        Pdf.add_dict_entry old_pattern "/Matrix" (Pdf.make_matrix new_tr)
+                  in
+                    name, Pdf.Indirect (Pdf.addobj pdf new_pattern))
           patterns
        in
          Pdf.add_dict_entry resources "/Pattern" (Pdf.Dictionary entries)
@@ -41,16 +44,32 @@ and change_pattern_matrices_xobject pdf tr k v i =
         begin match Pdf.lookup_direct pdf "/Resources" form_xobject with
         | Some resources ->
             let form_xobject' =
-              Pdf.add_dict_entry form_xobject "/Resources" (change_pattern_matrices_resources pdf tr resources)  
+              Pdf.add_dict_entry form_xobject "/Resources" (change_pattern_matrices_resources pdf tr resources (null_hash ()) (*FIXME*))  
             in
               Pdf.addobj_given_num pdf (i, form_xobject')
         | _ -> ()
         end
   | _ -> ()
 
+(* FIXME will we end up parsing page ops twice? Pass them to this instead, optionally re: -fast. *)
+let patterns_used pdf content resources =
+  let used = null_hash () in
+  match Pdf.lookup_direct pdf "/Pattern" resources with
+  | None -> used
+  | Some _ ->
+      let ops = Pdfops.parse_operators pdf resources content in
+        iter
+          (function Pdfops.Op_scnName (x, []) | Pdfops.Op_SCNName (x, []) -> Hashtbl.replace used x () | _ -> ())
+          ops;
+        used
+
 let change_pattern_matrices_page pdf tr page =
+  let used = patterns_used pdf page.Pdfpage.content page.Pdfpage.resources in
+  Printf.printf "Patterns for translation, due to being used as cs / CS";
+  Hashtbl.iter (fun x _ -> Printf.printf "%s " x) used;
+  Printf.printf "\n";
   let page =
-    {page with Pdfpage.resources = change_pattern_matrices_resources pdf tr page.Pdfpage.resources}
+    {page with Pdfpage.resources = change_pattern_matrices_resources pdf tr page.Pdfpage.resources used}
   in
     match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
     | Some (Pdf.Dictionary elts) ->
