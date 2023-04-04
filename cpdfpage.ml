@@ -3,13 +3,26 @@ open Cpdferror
 
 (* When we transform a page by wrapping in an [Op_cm], we must also
 change any /Matrix entries in (some) pattern dictionaries, including inside xobjects *)
+let patterns_used pdf content resources =
+  let used = null_hash () in
+  match Pdf.lookup_direct pdf "/Pattern" resources with
+  | None -> used
+  | Some _ ->
+      let ops = Pdfops.parse_operators pdf resources content in
+        iter
+          (function Pdfops.Op_scnName (x, []) | Pdfops.Op_SCNName (x, []) -> Hashtbl.replace used x () | _ -> ())
+          ops;
+        used
+
 let rec change_pattern_matrices_resources pdf tr resources names_used_with_scn =
   begin match Pdf.lookup_direct pdf "/XObject" resources with
   | Some (Pdf.Dictionary elts) ->
       iter
         (fun (k, v) -> 
            match v with
-           | Pdf.Indirect i -> change_pattern_matrices_xobject pdf tr k v i
+           | Pdf.Indirect i ->
+               Printf.printf "Processing form xobject %s for patterns\n" k;
+               change_pattern_matrices_xobject pdf tr v i
            | _ -> raise (Pdf.PDFError "change_pattern_matrices_page"))
         elts
   | _ -> ()
@@ -36,51 +49,28 @@ let rec change_pattern_matrices_resources pdf tr resources names_used_with_scn =
   | _ -> resources
   end
 
-and change_pattern_matrices_xobject pdf tr k v i =
-  match Pdf.lookup_direct pdf "/Subtype" v with
+and change_pattern_matrices_xobject pdf tr xobj xobjnum =
+  match Pdf.lookup_direct pdf "/Subtype" xobj with
   | Some (Pdf.Name "/Form") ->
-      Printf.printf "Processing form xobject %s for patterns\n" k;
-      let form_xobject = Pdf.lookup_obj pdf i in
-        begin match Pdf.lookup_direct pdf "/Resources" form_xobject with
-        | Some resources ->
-            let form_xobject' =
-              Pdf.add_dict_entry form_xobject "/Resources" (change_pattern_matrices_resources pdf tr resources (null_hash ()) (*FIXME*))  
-            in
-              Pdf.addobj_given_num pdf (i, form_xobject')
-        | _ -> ()
-        end
+      Pdfcodec.decode_pdfstream pdf xobj;
+      let resources = match Pdf.lookup_direct pdf "/Resources" xobj with Some d -> d | None -> Pdf.Dictionary [] in
+      let used = patterns_used pdf [xobj] resources in
+      begin match Pdf.lookup_direct pdf "/Resources" xobj with
+      | Some resources ->
+          let xobj' =
+            Pdf.add_dict_entry xobj "/Resources" (change_pattern_matrices_resources pdf tr resources used)  
+          in
+            Pdf.addobj_given_num pdf (xobjnum, xobj')
+      | _ -> ()
+      end
   | _ -> ()
-
-(* FIXME will we end up parsing page ops twice? Pass them to this instead, optionally re: -fast. *)
-let patterns_used pdf content resources =
-  let used = null_hash () in
-  match Pdf.lookup_direct pdf "/Pattern" resources with
-  | None -> used
-  | Some _ ->
-      let ops = Pdfops.parse_operators pdf resources content in
-        iter
-          (function Pdfops.Op_scnName (x, []) | Pdfops.Op_SCNName (x, []) -> Hashtbl.replace used x () | _ -> ())
-          ops;
-        used
 
 let change_pattern_matrices_page pdf tr page =
   let used = patterns_used pdf page.Pdfpage.content page.Pdfpage.resources in
-  Printf.printf "Patterns for translation, due to being used as cs / CS";
-  Hashtbl.iter (fun x _ -> Printf.printf "%s " x) used;
-  Printf.printf "\n";
-  let page =
+    Printf.printf "Patterns for translation, due to being used as cs / CS";
+    Hashtbl.iter (fun x _ -> Printf.printf "%s " x) used;
+    Printf.printf "\n";
     {page with Pdfpage.resources = change_pattern_matrices_resources pdf tr page.Pdfpage.resources used}
-  in
-    match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
-    | Some (Pdf.Dictionary elts) ->
-        iter
-          (fun (k, v) -> 
-             match v with
-             | Pdf.Indirect i -> change_pattern_matrices_xobject pdf tr k v i
-             | _ -> raise (Pdf.PDFError "change_pattern_matrices_page"))
-          elts;
-        page
-    | _ -> page
 
 (* Output information for each page *)
 let output_page_info pdf range =
