@@ -50,6 +50,7 @@ let rec change_pattern_matrices_resources pdf tr resources names_used_with_scn =
   end
 
 and change_pattern_matrices_xobject pdf tr xobj xobjnum =
+  let xobj = Pdf.direct pdf xobj in
   match Pdf.lookup_direct pdf "/Subtype" xobj with
   | Some (Pdf.Name "/Form") ->
       Pdfcodec.decode_pdfstream pdf xobj;
