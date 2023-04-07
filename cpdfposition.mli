@@ -6,12 +6,12 @@ type position =
   | PosLeft of float * float
   | PosRight of float * float
   | Top of float
-  | TopLeft of float
-  | TopRight of float
+  | TopLeft of float * float
+  | TopRight of float * float
   | Left of float
-  | BottomLeft of float
+  | BottomLeft of float * float
   | Bottom of float
-  | BottomRight of float
+  | BottomRight of float * float
   | Right of float
   | Diagonal
   | ReverseDiagonal

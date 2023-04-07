@@ -527,7 +527,7 @@ let args =
    fontencoding = Pdftext.WinAnsiEncoding;
    color = Cpdfaddtext.RGB (0., 0., 0.);
    opacity = 1.;
-   position = Cpdfposition.TopLeft 100.;
+   position = Cpdfposition.TopLeft (100., 100.);
    underneath = false;
    linespacing = 1.;
    midline = false;
@@ -648,7 +648,7 @@ let reset_arguments () =
   args.fontencoding <- Pdftext.WinAnsiEncoding;
   args.color <- Cpdfaddtext.RGB (0., 0., 0.);
   args.opacity <- 1.;
-  args.position <- Cpdfposition.TopLeft 100.;
+  args.position <- Cpdfposition.TopLeft (100., 100.);
   args.underneath <- false;
   args.linespacing <- 1.;
   args.midline <- false;
@@ -1177,11 +1177,11 @@ let setlistannotationsjson () =
 let setstampon f =
   setop (StampOn f) ();
   (* Due to an earlier bad decision (default position), we have this nasty hack *)
-  if args.position = Cpdfposition.TopLeft 100. then args.position <- Cpdfposition.BottomLeft 0.
+  if args.position = Cpdfposition.TopLeft (100., 100.) then args.position <- Cpdfposition.BottomLeft (0., 0.)
 
 let setstampunder f =
   setop (StampUnder f) ();
-  if args.position = Cpdfposition.TopLeft 100. then args.position <- Cpdfposition.BottomLeft 0.
+  if args.position = Cpdfposition.TopLeft (100., 100.) then args.position <- Cpdfposition.BottomLeft (0., 0.)
 
 let setstampasxobject f =
   setop (StampAsXObject f) ()
@@ -1206,28 +1206,48 @@ let settop n =
   args.justification <- Cpdfaddtext.CentreJustify
 
 let settopleft n =
-  args.position <- Cpdfposition.TopLeft (Cpdfcoord.parse_single_number empty n);
-  args.justification <- Cpdfaddtext.LeftJustify
+  let coord =
+    match Cpdfcoord.parse_coordinate empty n with
+    | (a, b) -> Cpdfposition.TopLeft (a, b)
+    | exception _ -> Cpdfposition.TopLeft (Cpdfcoord.parse_single_number empty n, 0.)
+  in
+    args.position <- coord;
+    args.justification <- Cpdfaddtext.LeftJustify
 
 let settopright n =
-  args.position <- Cpdfposition.TopRight (Cpdfcoord.parse_single_number empty n);
-  args.justification <- Cpdfaddtext.RightJustify
+  let coord =
+    match Cpdfcoord.parse_coordinate empty n with
+    | (a, b) -> Cpdfposition.TopRight (a, b)
+    | exception _ -> Cpdfposition.TopRight (Cpdfcoord.parse_single_number empty n, 0.)
+  in
+    args.position <- coord;
+    args.justification <- Cpdfaddtext.RightJustify
 
 let setleft n =
   args.position <- Cpdfposition.Left (Cpdfcoord.parse_single_number empty n);
   args.justification <- Cpdfaddtext.LeftJustify
 
 let setbottomleft n =
-  args.position <- Cpdfposition.BottomLeft (Cpdfcoord.parse_single_number empty n);
-  args.justification <- Cpdfaddtext.LeftJustify
+  let coord =
+    match Cpdfcoord.parse_coordinate empty n with
+    | (a, b) -> Cpdfposition.BottomLeft (a, b)
+    | exception _ -> Cpdfposition.BottomLeft (Cpdfcoord.parse_single_number empty n, 0.)
+  in
+    args.position <- coord;
+    args.justification <- Cpdfaddtext.LeftJustify
 
 let setbottom n =
   args.position <- Cpdfposition.Bottom (Cpdfcoord.parse_single_number empty n);
   args.justification <- Cpdfaddtext.CentreJustify
 
 let setbottomright n =
-  args.position <- Cpdfposition.BottomRight (Cpdfcoord.parse_single_number empty n);
-  args.justification <- Cpdfaddtext.RightJustify
+  let coord =
+    match Cpdfcoord.parse_coordinate empty n with
+    | (a, b) -> Cpdfposition.BottomRight (a, b)
+    | exception _ -> Cpdfposition.BottomRight (Cpdfcoord.parse_single_number empty n, 0.)
+  in
+    args.position <- coord;
+    args.justification <- Cpdfaddtext.RightJustify
 
 let setright n =
   args.position <- Cpdfposition.Right (Cpdfcoord.parse_single_number empty n);

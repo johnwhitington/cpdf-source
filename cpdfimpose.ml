@@ -172,7 +172,7 @@ let make_space fit ~fast spacing pdf =
     (Cpdfpage.shift_pdf
       ~fast
       (many (margin, margin) endpage)
-      (Cpdfpage.scale_contents ~fast (Cpdfposition.BottomLeft 0.) ((width -. spacing) /. width) pdf all)
+      (Cpdfpage.scale_contents ~fast (Cpdfposition.BottomLeft (0., 0.)) ((width -. spacing) /. width) pdf all)
       all)
   else
     (Cpdfpage.set_mediabox
@@ -187,7 +187,7 @@ let add_border linewidth ~fast pdf =
   let firstpage = hd (Pdfpage.pages_of_pagetree pdf) in
   let _, _, w, h = Pdf.parse_rectangle pdf firstpage.Pdfpage.mediabox in
     Cpdfaddtext.addrectangle
-      fast (w -. linewidth, h -. linewidth) (RGB (0., 0., 0.)) true linewidth 1. (Cpdfposition.BottomLeft (linewidth /. 2.))
+      fast (w -. linewidth, h -. linewidth) (RGB (0., 0., 0.)) true linewidth 1. (Cpdfposition.BottomLeft (linewidth /. 2., linewidth /. 2.))
       false false (ilist 1 (Pdfpage.endpage pdf)) pdf
 
 let impose ~x ~y ~fit ~columns ~rtl ~btt ~center ~margin ~spacing ~linewidth ~fast pdf =

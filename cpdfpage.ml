@@ -216,12 +216,12 @@ let scale_page_contents ?(fast=false) scale position pdf pnum page =
         let open Cpdfposition in
         match position with
         | Top t -> 0., -.t
-        | TopLeft t -> t, -.t
-        | TopRight t -> -.t, -.t
+        | TopLeft (a, b) -> a, -.b
+        | TopRight (a, b) -> -.a, -.b
         | Left t -> t, 0.
-        | BottomLeft t -> t, t
+        | BottomLeft (a, b) -> a, b
         | Bottom t -> 0., t
-        | BottomRight t -> -.t, t
+        | BottomRight (a, b) -> -.a, b
         | Right t -> -.t, 0.
         | _ -> 0., 0. (* centre it... FIXME: We will add a center position, eventually, for text and this... *)
     in
@@ -516,12 +516,12 @@ let stamp_shift_of_position topline midline sw sh w h p =
       | PosLeft (ox, oy) -> ox, oy -. dy
       | PosRight (ox, oy) -> ox -. sw, oy -. dy
       | Top o -> half w -. half sw, h -. o -. sh -. dy
-      | TopLeft o -> o, h -. sh -. o -. dy
-      | TopRight o -> w -. sw -. o, h -. sh -. o -. dy
+      | TopLeft (a, b) -> a, h -. sh -. b -. dy
+      | TopRight (a, b) -> w -. sw -. a, h -. sh -. b -. dy
       | Left o -> o, half h -. half sh -. dy
-      | BottomLeft o -> o, o -. dy
+      | BottomLeft (a, b) -> a, b -. dy
       | Bottom o -> half w -. half sw, o -. dy
-      | BottomRight o -> w -. sw -. o, o -. dy
+      | BottomRight (a, b) -> w -. sw -. a, b -. dy
       | Right o -> w -. sw -. o, half h -. half sh -. dy
       | Diagonal | ReverseDiagonal | Centre ->
           half w -. half sw, half h -. half sh -. dy
@@ -701,7 +701,7 @@ let combine_pages fast under over scaletofit swap equalize =
             map2
               (fun o u ->
                  do_stamp
-                   false fast (BottomLeft 0.) false false scaletofit (not swap) merged o u over)
+                   false fast (BottomLeft (0., 0.)) false false scaletofit (not swap) merged o u over)
               over_pages under_pages
           in
             (* Build the changes. 123456 -> 123123 *)
