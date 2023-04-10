@@ -2,6 +2,8 @@
 
 val change_pattern_matrices_page : Pdf.t -> Pdftransform.transform_matrix -> Pdfpage.t -> Pdfpage.t
 
+val change_softmask_matrices_page : Pdf.t -> Pdftransform.transform_matrix -> Pdfpage.t -> unit
+
 (** Print page info (Mediabox etc) to standard output. *)
 val output_page_info : Pdf.t -> int list -> unit
 

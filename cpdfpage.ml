@@ -1,8 +1,17 @@
 open Pdfutil
 open Cpdferror
 
+(* FIXME: Need to take account of inherited resources (among Xobjects and their children - pages
+   are regularized upon loading). Would be nice to see a failing example first though.
+   FIXME: What would happen if a pattern was used in a transforming and non-transforming way - we
+   would have to depulicate - again, no failing example available.
+   FIXME: combine change_annotation_matrices, change_pattern_matrices and change_softmask_matrices
+   into one *)
+
 (* When we transform a page by wrapping in an [Op_cm], we must also
-change any /Matrix entries in (some) pattern dictionaries, including inside xobjects *)
+change any /Matrix entries in (some) pattern dictionaries, including inside
+xobjects. We only change the ones used with scn, to avoid pattern dictionaries
+used in other ways, which must not be transformed. *)
 let patterns_used pdf content resources =
   let used = null_hash () in
   match Pdf.lookup_direct pdf "/Pattern" resources with
@@ -72,6 +81,10 @@ let change_pattern_matrices_page pdf tr page =
     Hashtbl.iter (fun x _ -> Printf.printf "%s " x) used;
     Printf.printf "\n";
     {page with Pdfpage.resources = change_pattern_matrices_resources pdf tr page.Pdfpage.resources used}
+
+(* Transparency group soft masks appear to need altering with the inverse of the transformation matrix. We
+find them all, deduplicate, and then process in place. *)
+let change_softmask_matrices_page pdf tr page = ()
 
 (* Output information for each page *)
 let output_page_info pdf range =
