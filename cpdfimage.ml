@@ -218,8 +218,8 @@ let rec image_resolution_page pdf page pagenum dpi (images : (int * string * xob
                             let newpdf = Pdfpage.change_pages false pdf [page] in
                               image_resolution newpdf [pagenum] dpi
                    | (pagenum, name, Image (w, h)) ->
-                       let lx = Pdfunits.convert 0. Pdfunits.PdfPoint Pdfunits.Inch (distance_between o x)
-                       and ly = Pdfunits.convert 0. Pdfunits.PdfPoint Pdfunits.Inch (distance_between o y) in
+                       let lx = Pdfunits.points (distance_between o x) Pdfunits.Inch in
+                       let ly = Pdfunits.points (distance_between o y) Pdfunits.Inch in
                          let wdpi = float w /. lx
                          and hdpi = float h /. ly in
                            add_image_result (pagenum, xobject, w, h, wdpi, hdpi)

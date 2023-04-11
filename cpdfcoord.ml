@@ -15,11 +15,10 @@ let cm x = (x /. 2.54) *. 72.
 let inch x = x *. 72.
 
 let points_of_papersize p =
-  let unit = Pdfpaper.unit p
-  and w = Pdfpaper.width p
-  and h = Pdfpaper.height p in
-    let c  = Pdfunits.convert 0. unit Pdfunits.PdfPoint in
-      c w, c h
+  let u = Pdfpaper.unit p in
+  let w = Pdfunits.points (Pdfpaper.width p) u in
+  let h = Pdfunits.points (Pdfpaper.height p) u in
+    w, h
 
 let cropbox pdf page =
   match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with

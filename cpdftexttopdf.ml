@@ -61,8 +61,7 @@ let typeset ~papersize ~font ~fontsize text =
   in
   let instrs = of_utf8_with_newlines fontpack fontsize (Pdfio.string_of_bytes text) in
   let margin =
-    Pdfunits.convert
-      72. (Pdfpaper.unit papersize) (Pdfunits.PdfPoint) (Pdfpaper.width papersize) /. 15.
+    Pdfunits.points (Pdfpaper.width papersize) (Pdfpaper.unit papersize) /. 15.
   in
   let instrs = [Cpdftype.Font (font, fontsize); Cpdftype.BeginDocument] @ instrs in
   (*Printf.printf "to_string: %s\n" (Cpdftype.to_string instrs);*)

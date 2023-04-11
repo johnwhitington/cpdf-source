@@ -106,9 +106,7 @@ let split_text space_left widths t =
       Exit -> return true
 
 let layout lmargin rmargin papersize i =
-  let width =
-    Pdfunits.convert 72. (Pdfpaper.unit papersize) Pdfunits.PdfPoint (Pdfpaper.width papersize)
-  in
+  let width = Pdfunits.points (Pdfpaper.width papersize) (Pdfpaper.unit papersize) in
   let o = ref [] in
   let s = initial_state () in
   let xpos_max = width -. lmargin in
@@ -143,7 +141,7 @@ let layout lmargin rmargin papersize i =
 
 (* Paginate, simply line-based. When ypos + lineheight exceeds max_ypos, we insert a page break. *)
 let paginate tmargin bmargin papersize i =
-  let height = Pdfunits.convert 72. (Pdfpaper.unit papersize) Pdfunits.PdfPoint (Pdfpaper.height papersize) in
+  let height = Pdfunits.points (Pdfpaper.height papersize) (Pdfpaper.unit papersize) in
   let o = ref [] in
   let s = initial_state () in
   s.ypos <- tmargin;
@@ -191,7 +189,7 @@ let typeset lmargin rmargin tmargin bmargin papersize pdf i =
   if debug then (print_endline "***after layout:\n\n"; print_endline (to_string i));
   let i = paginate tmargin bmargin papersize i in
   if debug then (print_endline "***after pagination:\n\n"; print_endline (to_string i));
-  let height = Pdfunits.convert 72. (Pdfpaper.unit papersize) Pdfunits.PdfPoint (Pdfpaper.height papersize) in
+  let height = Pdfunits.points (Pdfpaper.height papersize) (Pdfpaper.unit papersize) in
   let s = initial_state () in
   s.xpos <- lmargin;
   s.ypos <- tmargin;
