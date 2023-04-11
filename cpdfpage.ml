@@ -4,18 +4,14 @@ open Cpdferror
 (* FIXME: Need to take account of inherited resources (among Xobjects and their children - pages
    are regularized upon loading). Would be nice to see a failing example first though.
    FIXME: What would happen if a pattern was used in a transforming and non-transforming way - we
-   would have to dedupulicate - again, no failing example available.
-   FIXME: combine change_annotation_matrices, change_pattern_matrices and change_softmask_matrices
-   into one *)
+   would have to dedupulicate - again, no failing example available. *)
 
 (* Transparency group soft masks appear to need altering with the inverse of
    the transformation matrix. We find them all, deduplicate, and then process
    in place. *)
 
-(* FIXME sub-xobjects! *)
 (* For each xobject, look in /Resources -> /ExtGState -> /G, and get object number. *)
 let rec change_softmask_matrices_xobject pdf xobject =
-  Printf.printf "change_softmask_matrices_xobject: %s\n" (Pdfwrite.string_of_pdf xobject);
   let objnums = ref [] in
     begin match xobject with
     | Pdf.Indirect i ->
@@ -24,16 +20,14 @@ let rec change_softmask_matrices_xobject pdf xobject =
           | Some d ->
               begin match Pdf.lookup_direct pdf "/ExtGState" d with
               | Some (Pdf.Dictionary extgstates) ->
-                  Printf.printf "Found %i extgstates to examine\n" (length extgstates);
                   iter
                     (function extgstate ->
                        match Pdf.direct pdf extgstate with
                        | Pdf.Dictionary d ->
-                           begin match lookup "/SMask" d with
+                           begin match Pdf.lookup_direct pdf "/SMask" (Pdf.Dictionary d) with
                            | Some (Pdf.Dictionary d) ->
                                begin match lookup "/G" d with
                                | Some (Pdf.Indirect i) ->
-                                   Printf.printf "Collecting objnum %i\n" i;
                                    objnums := i::!objnums
                                | _ -> ()
                                end
@@ -67,7 +61,6 @@ let change_softmask_matrices_page pdf tr page =
     | Some (Pdf.Dictionary d) -> d
     | _ -> []
   in
-    Printf.printf "** page has %i xobjects to process\n" (length xobjects);
     let objnums = setify (flatten (map (change_softmask_matrices_xobject pdf) (map snd xobjects))) in
       iter
         (fun objnum ->
@@ -100,7 +93,7 @@ let rec change_pattern_matrices_resources pdf tr resources names_used_with_scn =
         (fun (k, v) -> 
            match v with
            | Pdf.Indirect i ->
-               Printf.printf "Processing form xobject %s for patterns\n" k;
+               (*Printf.printf "Processing form xobject %s for patterns\n" k;*)
                change_pattern_matrices_xobject pdf tr v i
            | _ -> raise (Pdf.PDFError "change_pattern_matrices_page"))
         elts
@@ -114,7 +107,7 @@ let rec change_pattern_matrices_resources pdf tr resources names_used_with_scn =
             match Hashtbl.find names_used_with_scn name with
             | exception Not_found -> (name, p)
             | _ ->
-                Printf.printf "Changing matrices of pattern %s\n" name;
+                (*Printf.printf "Changing matrices of pattern %s\n" name;*)
                 let old_pattern = Pdf.direct pdf p in
                   let new_pattern =
                     let existing_tr = Pdf.parse_matrix pdf "/Matrix" old_pattern in
@@ -148,9 +141,9 @@ and change_pattern_matrices_xobject pdf tr xobj xobjnum =
 let change_pattern_matrices_page pdf tr page =
   change_softmask_matrices_page pdf tr page;
   let used = patterns_used pdf page.Pdfpage.content page.Pdfpage.resources in
-    Printf.printf "Patterns for translation, due to being used as cs / CS";
+    (*Printf.printf "Patterns for translation, due to being used as cs / CS";
     Hashtbl.iter (fun x _ -> Printf.printf "%s " x) used;
-    Printf.printf "\n";
+    Printf.printf "\n";*)
     {page with Pdfpage.resources = change_pattern_matrices_resources pdf tr page.Pdfpage.resources used}
 
 (* Concatenate inverse matrix to each /Matrix entry in those object numbers. *)
