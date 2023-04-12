@@ -1525,9 +1525,6 @@ let setrelativetocropbox () =
 let setprerotate () =
   args.prerotate <- true
 
-let setflatkids () =
-  Pdfpage.flat_pagetrees := true
-
 let settopage s =
   args.topage <- Some s
 
@@ -2872,7 +2869,6 @@ and specs =
    ("-remove-unused-resources", Arg.Unit (setop RemoveUnusedResources), "");
    ("-stay-on-error", Arg.Unit setstayonerror, "");
    ("-extract-fontfile", Arg.Unit (setop ExtractFontFile), "");
-   ("-flat-kids", Arg.Unit setflatkids, "");
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit setdebugcrypt, "");
    ("-debug-force", Arg.Unit setdebugforce, "");
@@ -3532,7 +3528,7 @@ let go () =
                     (* FIXME Here, if the output file is different from the
                     input file, and we're just extracting pages, might we use a
                     lazy read? *)
-                    if hd ranges <> "all" || !Pdfpage.flat_pagetrees then
+                    if hd ranges <> "all" then
                       let range = parse_pagespec pdf (hd ranges) in
                         let newpdf = Pdfpage.pdf_of_pages ~retain_numbering:args.retain_numbering pdf range in
                           write_pdf false newpdf
