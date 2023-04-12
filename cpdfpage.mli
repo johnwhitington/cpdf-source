@@ -43,8 +43,6 @@ val scale_contents : ?fast:bool -> Cpdfposition.position -> float -> Pdf.t -> in
 (** [set_mediabox xywhlist pdf range] sets the media box on the given pages. *)
 val set_mediabox : (float * float * float * float) list -> Pdf.t -> int list -> Pdf.t
 
-val copy_cropbox_to_mediabox : Pdf.t -> int list -> Pdf.t
-
 (** Remove any cropping from the given pages. *)
 val remove_cropping_pdf : Pdf.t -> int list -> Pdf.t
 

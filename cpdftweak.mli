@@ -29,6 +29,3 @@ val get_dict_entries : utf8:bool -> Pdf.t -> string -> Pdfio.bytes
 
 (** Remove clipping. *)
 val remove_clipping : Pdf.t -> int list -> Pdf.t 
-
-(** Remove unused resources. *)
-val remove_unused_resources : Pdf.t -> Pdf.t

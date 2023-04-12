@@ -325,16 +325,6 @@ let set_mediabox xywhlist pdf range =
   in
     process_pages (Pdfpage.ppstub crop_page) pdf range
 
-(* If a cropbox exists, make it the mediabox. If not, change nothing. *)
-let copy_cropbox_to_mediabox pdf range =
-  process_pages
-    (Pdfpage.ppstub (fun _ page ->
-       match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
-       | Some pdfobject -> {page with Pdfpage.mediabox = Pdf.direct pdf pdfobject}
-       | None -> page))
-    pdf
-    range
-
 let remove_cropping_pdf pdf range =
   let remove_cropping_page _ page =
     {page with

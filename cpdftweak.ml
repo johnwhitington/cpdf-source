@@ -307,21 +307,3 @@ let remove_clipping pdf range =
       {page with Pdfpage.content = content'}
   in
     Cpdfpage.process_pages (Pdfpage.ppstub remove_clipping_page) pdf range
-
-let remove_unused_resources_page pdf n page =
-  let xobjects, all_names =
-    match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
-    | Some (Pdf.Dictionary d) -> Pdf.Dictionary d, map fst d
-    | _ -> Pdf.Dictionary [], []
-  in
-    let names_to_keep =
-      option_map
-        (function Pdfops.Op_Do n -> Some n | _ -> None)
-        (Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content)
-    in
-      let names_to_remove = lose (mem' names_to_keep) all_names in
-        let xobjdict = fold_left (Pdf.remove_dict_entry) xobjects names_to_remove in
-          {page with Pdfpage.resources = Pdf.add_dict_entry page.Pdfpage.resources  "/XObject" xobjdict}
-
-let remove_unused_resources pdf =
-  Cpdfpage.process_pages (Pdfpage.ppstub (remove_unused_resources_page pdf)) pdf (ilist 1 (Pdfpage.endpage pdf))

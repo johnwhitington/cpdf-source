@@ -147,7 +147,6 @@ type op =
   | RemoveArt
   | RemoveTrim
   | RemoveBleed
-  | CopyCropBoxToMediaBox
   | CopyBox
   | MediaBox
   | HardBox of string
@@ -188,7 +187,6 @@ type op =
   | ExtractImages
   | ImageResolution of float
   | MissingFonts
-  | RemoveUnusedResources
   | ExtractFontFile
   | ExtractText
   | OpenAtPage of string
@@ -275,7 +273,6 @@ let string_of_op = function
   | Decompress -> "Decompress"
   | Crop -> "Crop"
   | RemoveCrop -> "RemoveCrop"
-  | CopyCropBoxToMediaBox -> "CopyCropBoxToMediaBox"
   | CopyBox -> "CopyBox"
   | MediaBox -> "MediaBox"
   | HardBox _ -> "HardBox"
@@ -316,7 +313,6 @@ let string_of_op = function
   | ExtractImages -> "ExtractImages"
   | ImageResolution _ -> "ImageResolution"
   | MissingFonts -> "MissingFonts"
-  | RemoveUnusedResources -> "RemoveUnusedResources"
   | ExtractFontFile -> "ExtractFontFile"
   | ExtractText -> "ExtractText"
   | OpenAtPage _ -> "OpenAtPage"
@@ -820,7 +816,7 @@ let banned banlist = function
   | ListAttachedFiles | ListAnnotations
   | ListBookmarks | ImageResolution _ | MissingFonts
   | PrintPageLabels | Clean | Compress | Decompress
-  | RemoveUnusedResources | ChangeId | CopyId _ | ListSpotColours | Version
+  | ChangeId | CopyId _ | ListSpotColours | Version
   | DumpAttachedFiles | RemoveMetadata | EmbedMissingFonts | BookmarksOpenToLevel _ | CreatePDF
   | SetPageMode _ | HideToolbar _ | HideMenubar _ | HideWindowUI _
   | FitWindow _ | CenterWindow _ | DisplayDocTitle _
@@ -842,7 +838,7 @@ let banned banlist = function
   | TwoUp|TwoUpStack|RemoveBookmarks|AddRectangle|RemoveText|
     Draft|Shift|Scale|ScaleToFit|RemoveAttachedFiles|
     RemoveAnnotations|RemoveFonts|Crop|RemoveCrop|Trim|RemoveTrim|Bleed|RemoveBleed|Art|RemoveArt|
-    CopyCropBoxToMediaBox|CopyBox|MediaBox|HardBox _|SetTrapped|SetAnnotations _|SetUntrapped|Presentation|
+    CopyBox|MediaBox|HardBox _|SetTrapped|SetAnnotations _|SetUntrapped|Presentation|
     BlackText|BlackLines|BlackFills|CopyFont _|StampOn _|StampUnder _|StampAsXObject _|
     AddText _|ScaleContents _|AttachFile _|CopyAnnotations _| ThinLines _ | RemoveClipping | RemoveAllText
     | Prepend _ | Postpend _ | Draw ->
@@ -2866,19 +2862,15 @@ and specs =
    ("-draw-png", Arg.String addpng, " Load a PNG from file and name it");
    ("-image", Arg.String addimage, " Draw an image which has already been loaded");
    (* These items are undocumented *)
-   ("-remove-unused-resources", Arg.Unit (setop RemoveUnusedResources), "");
-   ("-stay-on-error", Arg.Unit setstayonerror, "");
-   ("-extract-fontfile", Arg.Unit (setop ExtractFontFile), "");
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit setdebugcrypt, "");
    ("-debug-force", Arg.Unit setdebugforce, "");
    ("-debug-malformed", Arg.Set Pdfread.debug_always_treat_malformed, "");
-   ("-fix-prince", Arg.Unit (setop RemoveUnusedResources), "");
+   ("-stay-on-error", Arg.Unit setstayonerror, "");
+   (* These items are unfinished *)
+   ("-extract-fontfile", Arg.Unit (setop ExtractFontFile), "");
    ("-extract-text", Arg.Unit (setop ExtractText), "");
    ("-extract-text-font-size", Arg.Float setextracttextfontsize, "");
-   ("-copy-cropbox-to-mediabox",
-       Arg.Unit (setop CopyCropBoxToMediaBox),
-       ""); (* Undocumented now, since /frombox, /tobox now used *)
   ]
 
 and usage_msg =
@@ -3581,14 +3573,6 @@ let go () =
               error "Must specify one output and at least one input"
           | _ -> assert false
       end
-  | Some RemoveUnusedResources ->
-      begin match args.inputs, args.out with
-      | _::_, _ ->
-         let pdf = get_single_pdf (Some RemoveUnusedResources) false in
-           let outpdf = Cpdftweak.remove_unused_resources pdf in
-             write_pdf true outpdf
-      | _ -> error "RemoveUnusedResources: bad command line"
-      end
   | Some (CopyFont fromfile) ->
       begin match args.inputs, args.out with
       | (_, pagespec, u, o, _, _)::_, _ ->
@@ -3804,15 +3788,6 @@ let go () =
           let pdf = get_single_pdf (Some RemoveBleed) false in
             let range = parse_pagespec_allow_empty pdf pagespec in
               let pdf = Cpdfpage.remove_bleed_pdf pdf range in
-                write_pdf false pdf
-      | _ -> error "remove-crop: bad command line"
-      end
-  | Some CopyCropBoxToMediaBox ->
-      begin match args.inputs, args.out with
-      | (_, pagespec, _, _, _, _)::_, _ ->
-          let pdf = get_single_pdf (Some CopyCropBoxToMediaBox) false in
-            let range = parse_pagespec_allow_empty pdf pagespec in
-              let pdf = Cpdfpage.copy_cropbox_to_mediabox pdf range in
                 write_pdf false pdf
       | _ -> error "remove-crop: bad command line"
       end
