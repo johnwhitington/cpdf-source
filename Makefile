@@ -7,7 +7,7 @@ DOC = cpdfunicodedata cpdferror cpdfdebug cpdfjson cpdfstrftime cpdfcoord \
       cpdfembed cpdfaddtext cpdffont cpdftype cpdfpad cpdfocg \
       cpdfsqueeze cpdfdraft cpdfspot cpdfpagelabels cpdfcreate cpdfannot \
       cpdfxobject cpdfimpose cpdftweak cpdftexttopdf cpdftoc cpdfjpeg \
-      cpdfpng cpdfimage cpdfdraw cpdfcommand
+      cpdfpng cpdfimage cpdfdraw cpdfcomposition cpdfcommand
 
 MODS = $(NONDOC) $(DOC)
 
