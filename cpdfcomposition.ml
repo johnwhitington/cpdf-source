@@ -1,16 +1,36 @@
 open Pdfutil
 
+let size pdf i =
+  String.length (Pdfwrite.string_of_pdf_including_data (Pdf.lookup_obj pdf i))
+
+(* FIXME Add soft masks *)
 let find_composition_images pdf i obj marked =
+  match Hashtbl.find marked i with () -> 0 | exception Not_found -> 
   match Pdf.lookup_direct pdf "/Subtype" obj with
   | Some (Pdf.Name "/Image") ->
       Hashtbl.add marked i ();
-      String.length (Pdfwrite.string_of_pdf_including_data obj);
+      String.length (Pdfwrite.string_of_pdf_including_data obj)
   | _ -> 0
 
-let find_composition_fonts pdf i obj marked = 0
+(* If it has /Font, find all objects referenced from it, and add
+any not already marked to the count *)
+let find_composition_fonts pdf i obj marked =
+  match Hashtbl.find marked i with () -> 0 | exception Not_found -> 
+  let l = ref 0 in
+  match Pdf.lookup_direct pdf "/Type" obj with
+  | Some (Pdf.Name "/Font") ->
+      iter
+        (fun i ->
+           match Hashtbl.find marked i with
+           | () -> ()
+           | exception Not_found -> l += size pdf i; Hashtbl.add marked i ())
+        (Pdf.objects_referenced [] [] pdf (Pdf.Indirect i));
+     !l
+  | _ -> 0
 
-(* Also includes xobjects *)
+(* FIXME: Add xobjects *)
 let find_composition_content_streams pdf i obj marked =
+  match Hashtbl.find marked i with () -> 0 | exception Not_found -> 
   match Pdf.lookup_direct pdf "/Type" obj with
   | Some (Pdf.Name "/Page") ->
       let cs =
@@ -23,8 +43,9 @@ let find_composition_content_streams pdf i obj marked =
         let l = ref 0 in
           iter
             (fun i ->
-               Hashtbl.add marked i ();
-               l += String.length (Pdfwrite.string_of_pdf_including_data (Pdf.lookup_obj pdf i)))
+              match Hashtbl.find marked i with
+              | () -> ()
+              | exception Not_found -> Hashtbl.add marked i (); l += size pdf i)
             cs;
           !l
   | _ -> 0
@@ -46,12 +67,13 @@ let find_composition pdf =
     Pdf.objiter
       (fun i obj ->
          match Hashtbl.find marked i with _ -> () | exception Not_found ->
+           embedded_files += find_composition_embedded_files pdf i obj marked;
            images += find_composition_images pdf i obj marked;
-           fonts += find_composition_fonts pdf i obj marked;
            content_streams += find_composition_content_streams pdf i obj marked;
            structure_info += find_composition_structure_info pdf i obj marked;
            link_annotations += find_composition_link_annotations pdf i obj marked;
-           embedded_files += find_composition_embedded_files pdf i obj marked)
+           fonts += find_composition_fonts pdf i obj marked)
+
       pdf;
     (!images, !fonts, !content_streams, !structure_info, !link_annotations, !embedded_files)
 
@@ -76,5 +98,9 @@ let show_composition filesize json pdf =
   if json then (flprint (J.pretty_to_string j); flprint "\n") else
     match j with
     | `List js ->
-        iter (function `Tuple [`String a; `Int b; `Float c] -> Printf.printf "%s: %i bytes (%.2f%%)\n" a b c | _ -> ()) js
+        iter
+          (function
+           | `Tuple [`String a; `Int b; `Float c] -> Printf.printf "%s: %i bytes (%.2f%%)\n" a b c
+           | _ -> ())
+        js
     | _ -> ()
