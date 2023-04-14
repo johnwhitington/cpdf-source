@@ -3,12 +3,12 @@ open Pdfutil
 let size pdf i =
   String.length (Pdfwrite.string_of_pdf_including_data (Pdf.lookup_obj pdf i))
 
-(* FIXME Add soft masks *)
 let find_composition_images pdf i obj marked =
   match Hashtbl.find marked i with () -> 0 | exception Not_found -> 
   match Pdf.lookup_direct pdf "/Subtype" obj with
   | Some (Pdf.Name "/Image") ->
       Hashtbl.add marked i ();
+      (*Printf.printf "obj = %s\n" (Pdfwrite.string_of_pdf obj);*)
       String.length (Pdfwrite.string_of_pdf_including_data obj)
   | _ -> 0
 
@@ -29,7 +29,6 @@ let find_composition_fonts pdf i obj marked =
      !l
   | _ -> 0
 
-(* FIXME: Add xobjects *)
 let find_composition_content_streams pdf i obj marked =
   match Hashtbl.find marked i with () -> 0 | exception Not_found -> 
   match Pdf.lookup_direct pdf "/Type" obj with
@@ -54,7 +53,12 @@ let find_composition_content_streams pdf i obj marked =
               | exception Not_found -> Hashtbl.add marked i (); l += size pdf i)
             cs;
           !l
-  | _ -> 0
+  | _ ->
+      match Pdf.lookup_direct pdf "/Subtype" obj with
+      | Some (Pdf.Name "/Form") ->
+          Hashtbl.add marked i ();
+          size pdf i
+      | _ -> 0
 
 let find_composition_structure_info pdf i obj marked = 0
 
@@ -72,15 +76,17 @@ let find_composition pdf =
   let embedded_files = ref 0 in
     Pdf.objiter
       (fun i obj ->
-        (*Printf.printf "Marked objects at beginning: ";
+        (*Printf.printf "Looking at object %i\n" i;
+        Printf.printf "Which is %s\n" (Pdfwrite.string_of_pdf (Pdf.lookup_obj pdf i));
+        Printf.printf "Marked objects at beginning: ";
         Hashtbl.iter (fun k () -> Printf.printf "%i " k) marked;
         Printf.printf "\n";*)
          match Hashtbl.find marked i with _ -> () | exception Not_found ->
-           (*embedded_files += find_composition_embedded_files pdf i obj marked;
-           images += find_composition_images pdf i obj marked;*)
+           embedded_files += find_composition_embedded_files pdf i obj marked;
+           images += find_composition_images pdf i obj marked;
            content_streams += find_composition_content_streams pdf i obj marked;
-           (*structure_info += find_composition_structure_info pdf i obj marked;
-           link_annotations += find_composition_link_annotations pdf i obj marked;*)
+           structure_info += find_composition_structure_info pdf i obj marked;
+           link_annotations += find_composition_link_annotations pdf i obj marked;
            fonts += find_composition_fonts pdf i obj marked)
 
       pdf;
