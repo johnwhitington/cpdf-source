@@ -7,7 +7,6 @@ let find_composition_structure_info pdf marked =
       | Some x ->
           let l = ref [] in
           let objs = Pdf.objects_referenced ["/Pg"] [] pdf x in
-            Printf.printf "Found %i struct tree items\n" (length objs);
             iter
               (fun i ->
                  match Hashtbl.find marked i with
@@ -122,7 +121,6 @@ let compressed_xref_table_size pdf =
   if Hashtbl.length pdf.Pdf.objects.Pdf.object_stream_ids = 0 then 20 * Pdf.objcard pdf else
     compressed_size pdf (map fst (list_of_hashtbl pdf.Pdf.objects.Pdf.object_stream_ids))
 
-(* First go: images, fonts, content streams, structure info, link annotations, embedded files *)
 let show_composition_json filesize pdf =
   let perc x = float_of_int x /. float_of_int filesize *. 100. in
   let o_images, o_fonts, o_content_streams, o_structure_info, o_embedded_files = find_composition pdf in
