@@ -1,41 +1,36 @@
 open Pdfutil
 
-let size pdf i =
-  String.length (Pdfwrite.string_of_pdf_including_data (Pdf.lookup_obj pdf i))
-
 let find_composition_structure_info pdf marked =
   match Pdf.lookup_obj pdf pdf.Pdf.root with
   | Pdf.Dictionary d ->
       begin match lookup "/StructTreeRoot" d with
       | Some x ->
-          let l = ref 0 in
+          let l = ref [] in
           let objs = Pdf.objects_referenced ["/Pg"] [] pdf x in
             Printf.printf "Found %i struct tree items\n" (length objs);
             iter
               (fun i ->
                  match Hashtbl.find marked i with
                  | () -> ()
-                 | exception Not_found -> l += size pdf i; Hashtbl.add marked i ())
+                 | exception Not_found -> l := i::!l; Hashtbl.add marked i ())
               objs;
             !l
-      | _ -> 0
+      | _ -> []
       end
-  | _ -> 0
+  | _ -> []
 
 let find_composition_images pdf i obj marked =
-  match Hashtbl.find marked i with () -> 0 | exception Not_found -> 
+  match Hashtbl.find marked i with () -> [] | exception Not_found -> 
   match Pdf.lookup_direct pdf "/Subtype" obj with
   | Some (Pdf.Name "/Image") ->
-      Hashtbl.add marked i ();
-      (*Printf.printf "obj = %s\n" (Pdfwrite.string_of_pdf obj);*)
-      String.length (Pdfwrite.string_of_pdf_including_data obj)
-  | _ -> 0
+      Hashtbl.add marked i (); [i]
+  | _ -> []
 
 (* If it has /Font, find all objects referenced from it, and add
 any not already marked to the count *)
 let find_composition_fonts pdf i obj marked =
-  match Hashtbl.find marked i with () -> 0 | exception Not_found -> 
-  let l = ref 0 in
+  match Hashtbl.find marked i with () -> [] | exception Not_found -> 
+  let l = ref [] in
   match Pdf.lookup_direct pdf "/Type" obj with
   | Some (Pdf.Name "/Font") ->
       iter
@@ -43,13 +38,13 @@ let find_composition_fonts pdf i obj marked =
            (*Printf.printf "Object %i\n%s\n" i (Pdfwrite.string_of_pdf (Pdf.lookup_obj pdf i));*)
            match Hashtbl.find marked i with
            | () -> ()
-           | exception Not_found -> l += size pdf i; Hashtbl.add marked i ())
+           | exception Not_found -> l := i::!l; Hashtbl.add marked i ())
         (Pdf.objects_referenced [] [] pdf (Pdf.Indirect i));
      !l
-  | _ -> 0
+  | _ -> []
 
 let find_composition_content_streams pdf i obj marked =
-  match Hashtbl.find marked i with () -> 0 | exception Not_found -> 
+  match Hashtbl.find marked i with () -> [] | exception Not_found -> 
   match Pdf.lookup_direct pdf "/Type" obj with
   | Some (Pdf.Name "/Page") ->
       (*Printf.printf "Found a page...%s\n" (Pdfwrite.string_of_pdf (Pdf.direct pdf obj));*)
@@ -63,30 +58,30 @@ let find_composition_content_streams pdf i obj marked =
         | _ -> []
       in
         (*Printf.printf "Found %i content streams\n" (length cs);*)
-        let l = ref 0 in
+        let l = ref [] in
           iter
             (fun i ->
               (*Printf.printf "Considering content stream %i\n" i;*)
               match Hashtbl.find marked i with
               | () -> ()
-              | exception Not_found -> Hashtbl.add marked i (); l += size pdf i)
+              | exception Not_found -> Hashtbl.add marked i (); l := i::!l)
             cs;
           !l
   | _ ->
       match Pdf.lookup_direct pdf "/Subtype" obj with
       | Some (Pdf.Name "/Form") ->
           Hashtbl.add marked i ();
-          size pdf i
-      | _ -> 0
+          [i]
+      | _ -> []
 
-let find_composition_embedded_files pdf i obj marked = 0
+let find_composition_embedded_files pdf i obj marked = []
 
 let find_composition pdf =
   let marked = null_hash () in
-  let images = ref 0 in
-  let fonts = ref 0 in
-  let content_streams = ref 0 in
-  let embedded_files = ref 0 in
+  let images = ref [] in
+  let fonts = ref [] in
+  let content_streams = ref [] in
+  let embedded_files = ref [] in
     Pdf.objiter
       (fun i obj ->
         (*Printf.printf "Looking at object %i\n" i;
@@ -95,18 +90,44 @@ let find_composition pdf =
         Hashtbl.iter (fun k () -> Printf.printf "%i " k) marked;
         Printf.printf "\n";*)
          match Hashtbl.find marked i with _ -> () | exception Not_found ->
-           embedded_files += find_composition_embedded_files pdf i obj marked;
-           images += find_composition_images pdf i obj marked;
-           content_streams += find_composition_content_streams pdf i obj marked;
-           fonts += find_composition_fonts pdf i obj marked)
+           embedded_files := find_composition_embedded_files pdf i obj marked @ !embedded_files;
+           images := find_composition_images pdf i obj marked @ !images;
+           content_streams := find_composition_content_streams pdf i obj marked @ !content_streams;
+           fonts := find_composition_fonts pdf i obj marked @ !fonts)
       pdf;
     let structure_info = find_composition_structure_info pdf marked in
     (!images, !fonts, !content_streams, structure_info, !embedded_files)
 
+let size pdf i =
+  String.length (Pdfwrite.string_of_pdf_including_data (Pdf.lookup_obj pdf i))
+
+let compressed_size pdf objnums =
+  if objnums = [] then 0 else
+  (* If there were object streams, assume objects were in them, and compressed with FlateDecode *)
+  if Hashtbl.length pdf.Pdf.objects.Pdf.object_stream_ids = 0 then
+    sum (map (size pdf) (setify objnums))
+  else
+    let b = Buffer.create 262144 in
+    let streams = ref 0 in
+      iter
+        (fun i ->
+           match Pdf.lookup_obj pdf i with
+           | Pdf.Stream _ -> streams += size pdf i
+           | obj -> Buffer.add_string b (Pdfwrite.string_of_pdf_including_data obj))
+         objnums;
+      !streams + Pdfio.bytes_size (Pdfcodec.encode_flate (Pdfio.bytes_of_string (Buffer.contents b)))
+
 (* First go: images, fonts, content streams, structure info, link annotations, embedded files *)
 let show_composition_json filesize pdf =
   let perc x = float_of_int x /. float_of_int filesize *. 100. in
-  let images, fonts, content_streams, structure_info, embedded_files = find_composition pdf in
+  let o_images, o_fonts, o_content_streams, o_structure_info, o_embedded_files = find_composition pdf in
+  let images, fonts, content_streams, structure_info, embedded_files =
+      compressed_size pdf o_images,
+      compressed_size pdf o_fonts,
+      compressed_size pdf o_content_streams,
+      compressed_size pdf o_structure_info,
+      compressed_size pdf o_embedded_files
+  in
   let r = images + fonts + content_streams + structure_info + embedded_files in
     `List [`Tuple [`String "Images"; `Int images; `Float (perc images)];
            `Tuple [`String "Fonts"; `Int fonts; `Float (perc fonts)];
