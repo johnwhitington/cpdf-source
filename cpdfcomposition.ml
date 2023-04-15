@@ -117,23 +117,30 @@ let compressed_size pdf objnums =
          objnums;
       !streams + Pdfio.bytes_size (Pdfcodec.encode_flate (Pdfio.bytes_of_string (Buffer.contents b)))
 
+(* If no object streams, calculate the size of the xref table. If streams, the xref stream total *)
+let compressed_xref_table_size pdf = 
+  if Hashtbl.length pdf.Pdf.objects.Pdf.object_stream_ids = 0 then 20 * Pdf.objcard pdf else
+    compressed_size pdf (map fst (list_of_hashtbl pdf.Pdf.objects.Pdf.object_stream_ids))
+
 (* First go: images, fonts, content streams, structure info, link annotations, embedded files *)
 let show_composition_json filesize pdf =
   let perc x = float_of_int x /. float_of_int filesize *. 100. in
   let o_images, o_fonts, o_content_streams, o_structure_info, o_embedded_files = find_composition pdf in
-  let images, fonts, content_streams, structure_info, embedded_files =
+  let images, fonts, content_streams, structure_info, embedded_files, xref_table =
       compressed_size pdf o_images,
       compressed_size pdf o_fonts,
       compressed_size pdf o_content_streams,
       compressed_size pdf o_structure_info,
-      compressed_size pdf o_embedded_files
+      compressed_size pdf o_embedded_files,
+      compressed_xref_table_size pdf
   in
-  let r = images + fonts + content_streams + structure_info + embedded_files in
+  let r = images + fonts + content_streams + structure_info + embedded_files + xref_table in
     `List [`Tuple [`String "Images"; `Int images; `Float (perc images)];
            `Tuple [`String "Fonts"; `Int fonts; `Float (perc fonts)];
            `Tuple [`String "Content streams"; `Int content_streams; `Float (perc content_streams)];
            `Tuple [`String "Structure Info"; `Int structure_info; `Float (perc structure_info)];
            `Tuple [`String "Embedded Files"; `Int embedded_files; `Float (perc embedded_files)];
+           `Tuple [`String "XRef Table"; `Int xref_table; `Float (perc xref_table)];
            `Tuple [`String "Unclassified"; `Int (filesize - r); `Float (perc (filesize - r))]]
 
 let show_composition filesize json pdf =
