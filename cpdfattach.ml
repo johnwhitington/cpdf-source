@@ -302,3 +302,48 @@ let dump_attached_files pdf out =
     iter (dump_attached_page pdf out) (Pdfpage.pages_of_pagetree pdf)
   with
     e -> error (Printf.sprintf "Couldn't dump attached files: %s\n" (Printexc.to_string e))
+
+let size_attachment pdf (_, embeddedfile) =
+  match Pdf.lookup_direct pdf "/F" embeddedfile with
+  | Some (Pdf.String s) ->
+      begin match Pdf.lookup_direct pdf "/EF" embeddedfile with
+      | Some d ->
+          let stream =
+            match Pdf.lookup_direct pdf "/F" d with
+            | Some s -> s
+            | None -> error "Bad embedded file stream"
+          in
+            begin match stream with Pdf.Stream {contents = (_, Pdf.Got b)} -> bytes_size b | _ -> error "Bad embedded file stream" end
+      | _ -> error "Bad embedded file stream"
+      end
+  | _ -> 0
+
+let size_page_files pdf page =
+  let annots =
+    match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
+    | Some (Pdf.Array l) -> l
+    | _ -> []
+  in
+    let efannots =
+      keep
+        (fun annot ->
+           match Pdf.lookup_direct pdf "/Subtype" annot with
+           | Some (Pdf.Name "/FileAttachment") -> true
+           | _ -> false)
+        annots
+    in
+      let fsannots = option_map (Pdf.lookup_direct pdf "/FS") efannots in
+        map (size_attachment pdf) (map (fun x -> 0, x) fsannots)
+
+let size_document_files pdf =
+  let root = Pdf.lookup_obj pdf pdf.Pdf.root in
+    let names =
+      match Pdf.lookup_direct pdf "/Names" root with Some n -> n | _ -> Pdf.Dictionary []
+    in
+      match Pdf.lookup_direct pdf "/EmbeddedFiles" names with
+      | Some x ->
+          sum (map (size_attachment pdf) (Pdf.contents_of_nametree pdf x))
+      | None -> 0 
+
+let size_attached_files pdf =
+  size_document_files pdf + sum (flatten (map (size_page_files pdf) (Pdfpage.pages_of_pagetree pdf)))

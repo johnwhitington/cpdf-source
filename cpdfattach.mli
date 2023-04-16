@@ -22,3 +22,6 @@ val list_attached_files : Pdf.t -> attachment list
 
 (** Dump attached files to a given directory. *)
 val dump_attached_files : Pdf.t -> string -> unit
+
+(** Total size in bytes of all attached files. *)
+val size_attached_files : Pdf.t -> int

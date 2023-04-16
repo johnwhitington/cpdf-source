@@ -73,14 +73,11 @@ let find_composition_content_streams pdf i obj marked =
           [i]
       | _ -> []
 
-let find_composition_embedded_files pdf i obj marked = []
-
 let find_composition pdf =
   let marked = null_hash () in
   let images = ref [] in
   let fonts = ref [] in
   let content_streams = ref [] in
-  let embedded_files = ref [] in
     Pdf.objiter
       (fun i obj ->
         (*Printf.printf "Looking at object %i\n" i;
@@ -89,13 +86,12 @@ let find_composition pdf =
         Hashtbl.iter (fun k () -> Printf.printf "%i " k) marked;
         Printf.printf "\n";*)
          match Hashtbl.find marked i with _ -> () | exception Not_found ->
-           embedded_files := find_composition_embedded_files pdf i obj marked @ !embedded_files;
            images := find_composition_images pdf i obj marked @ !images;
            content_streams := find_composition_content_streams pdf i obj marked @ !content_streams;
            fonts := find_composition_fonts pdf i obj marked @ !fonts)
       pdf;
     let structure_info = find_composition_structure_info pdf marked in
-    (!images, !fonts, !content_streams, structure_info, !embedded_files)
+    (!images, !fonts, !content_streams, structure_info)
 
 let size pdf i =
   String.length (Pdfwrite.string_of_pdf_including_data (Pdf.lookup_obj pdf i))
@@ -123,21 +119,21 @@ let compressed_xref_table_size pdf =
 
 let show_composition_json filesize pdf =
   let perc x = float_of_int x /. float_of_int filesize *. 100. in
-  let o_images, o_fonts, o_content_streams, o_structure_info, o_embedded_files = find_composition pdf in
-  let images, fonts, content_streams, structure_info, embedded_files, xref_table =
+  let o_images, o_fonts, o_content_streams, o_structure_info = find_composition pdf in
+  let images, fonts, content_streams, structure_info, attached_files, xref_table =
       compressed_size pdf o_images,
       compressed_size pdf o_fonts,
       compressed_size pdf o_content_streams,
       compressed_size pdf o_structure_info,
-      compressed_size pdf o_embedded_files,
+      Cpdfattach.size_attached_files pdf,
       compressed_xref_table_size pdf
   in
-  let r = images + fonts + content_streams + structure_info + embedded_files + xref_table in
+  let r = images + fonts + content_streams + structure_info + attached_files + xref_table in
     `List [`Tuple [`String "Images"; `Int images; `Float (perc images)];
            `Tuple [`String "Fonts"; `Int fonts; `Float (perc fonts)];
            `Tuple [`String "Content streams"; `Int content_streams; `Float (perc content_streams)];
            `Tuple [`String "Structure Info"; `Int structure_info; `Float (perc structure_info)];
-           `Tuple [`String "Embedded Files"; `Int embedded_files; `Float (perc embedded_files)];
+           `Tuple [`String "Attached Files"; `Int attached_files; `Float (perc attached_files)];
            `Tuple [`String "XRef Table"; `Int xref_table; `Float (perc xref_table)];
            `Tuple [`String "Unclassified"; `Int (filesize - r); `Float (perc (filesize - r))]]
 
