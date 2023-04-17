@@ -168,10 +168,23 @@ let getstring encoding pdf =
 let get_catalog_item name pdf =
   match Pdf.lookup_direct pdf "/Root" pdf.Pdf.trailerdict with
   | Some catalog ->
-      begin try
-        implode (tl (explode (Pdfwrite.string_of_pdf (unopt (Pdf.lookup_direct pdf name catalog)))))
-      with
-        _ -> ""
+      begin match Pdf.lookup_direct pdf name catalog with
+      | Some (Pdf.Name x) when x <> "" -> implode (tl (explode x))
+      | _ -> ""
+      end
+  | _ -> ""
+
+let get_viewer_pref_item name pdf =
+  match Pdf.lookup_direct pdf "/Root" pdf.Pdf.trailerdict with
+  | Some catalog ->
+      begin match Pdf.lookup_direct pdf "/ViewerPreferences" catalog with
+      | Some d ->
+          begin match Pdf.lookup_direct pdf name d with
+          | Some (Pdf.Name x) when x <> "" -> implode (tl (explode x))
+          | Some (Pdf.Boolean b) -> string_of_bool b
+          | _ -> ""
+          end
+      | None -> ""
       end
   | _ -> ""
 
@@ -189,7 +202,14 @@ let output_info encoding pdf =
     Printf.printf "Modified: %s\n" (getstring "/ModDate");
     Printf.printf "Trapped: %s\n" (getstring "/Trapped");
     Printf.printf "PageMode: %s\n" (get_catalog_item "/PageMode" pdf);
-    Printf.printf "PageLayout: %s\n" (get_catalog_item "/PageLayout" pdf)
+    Printf.printf "PageLayout: %s\n" (get_catalog_item "/PageLayout" pdf);
+    Printf.printf "HideToolbar: %s\n" (get_viewer_pref_item "/HideToolbar" pdf);
+    Printf.printf "HideMenubar: %s\n" (get_viewer_pref_item "/HideMenubar" pdf);
+    Printf.printf "HideWindowUI: %s\n" (get_viewer_pref_item "/HideWindowUI" pdf);
+    Printf.printf "FitWindow: %s\n" (get_viewer_pref_item "/FitWindow" pdf);
+    Printf.printf "CenterWindow: %s\n" (get_viewer_pref_item "/CenterWindow" pdf);
+    Printf.printf "DisplayDocTitle: %s\n" (get_viewer_pref_item "/DisplayDocTitle" pdf);
+    Printf.printf "NonFullScreenPageMode: %s\n" (get_viewer_pref_item "/NonFullScreenPageMode" pdf);
 
 type xmltree =
     E of Cpdfxmlm.tag * xmltree list
