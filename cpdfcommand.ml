@@ -171,6 +171,7 @@ type op =
   | ListBookmarks
   | SetPageLayout of string
   | SetPageMode of string
+  | SetNonFullScreenPageMode of string
   | HideToolbar of bool
   | HideMenubar of bool
   | HideWindowUI of bool
@@ -297,6 +298,7 @@ let string_of_op = function
   | ListBookmarks -> "ListBookmarks"
   | SetPageLayout _ -> "SetPageLayout"
   | SetPageMode _ -> "SetPageMode"
+  | SetNonFullScreenPageMode _ -> "SetNonFullScreenPageMode" 
   | HideToolbar _ -> "HideToolbar"
   | HideMenubar _ -> "HideMenubar"
   | HideWindowUI _ -> "HideWindowUI"
@@ -818,7 +820,7 @@ let banned banlist = function
   | PrintPageLabels | Clean | Compress | Decompress
   | ChangeId | CopyId _ | ListSpotColours | Version
   | DumpAttachedFiles | RemoveMetadata | EmbedMissingFonts | BookmarksOpenToLevel _ | CreatePDF
-  | SetPageMode _ | HideToolbar _ | HideMenubar _ | HideWindowUI _
+  | SetPageMode _ | SetNonFullScreenPageMode _ | HideToolbar _ | HideMenubar _ | HideWindowUI _
   | FitWindow _ | CenterWindow _ | DisplayDocTitle _
   | RemoveId | OpenAtPageFit _ | OpenAtPage _ | SetPageLayout _
   | ShowBoxes | TrimMarks | CreateMetadata | SetMetadataDate _ | SetVersion _
@@ -1039,6 +1041,7 @@ let setmetadata s = setop (SetMetadata s) ()
 let setversion i = setop (SetVersion i) ()
 let setpagelayout s = setop (SetPageLayout s) ()
 let setpagemode s = setop (SetPageMode s) ()
+let setnonfullscreenpagemode s = setop (SetNonFullScreenPageMode s) ()
 
 let hidetoolbar b =
   try setop (HideToolbar (bool_of_string b)) () with
@@ -2552,6 +2555,9 @@ and specs =
    ("-set-page-mode",
       Arg.String setpagemode,
       " Set page mode upon document opening");
+   ("-set-non-full-page-mode",
+      Arg.String setnonfullscreenpagemode,
+      " Set non full screen page mode if page mode is FullScreen");
    ("-open-at-page",
       Arg.String setopenatpage,
       " Set initial page");
@@ -3832,6 +3838,8 @@ let go () =
       write_pdf false (Cpdfmetadata.set_page_layout (get_single_pdf args.op false) s)
   | Some (SetPageMode s) ->
       write_pdf false (Cpdfmetadata.set_page_mode (get_single_pdf args.op false) s)
+  | Some (SetNonFullScreenPageMode s) ->
+      write_pdf false (Cpdfmetadata.set_non_full_screen_page_mode (get_single_pdf args.op false) s)
   | Some Split ->
       begin match args.inputs, args.out with
         | [(f, ranges, _, _, _, _)], File output_spec ->

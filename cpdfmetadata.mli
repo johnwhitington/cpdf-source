@@ -32,8 +32,11 @@ val set_viewer_preference : (string * Pdf.pdfobject * int) -> Pdf.t -> Pdf.t
 (** Set the page layout to the given name (sans slash) e.g SinglePage *)
 val set_page_layout : Pdf.t -> string -> Pdf.t
 
-(** Set the page layout to the given name (sans slash) e.g SinglePage *)
+(** Set the page mode to the given name (sans slash) e.g UseThumbs *)
 val set_page_mode : Pdf.t -> string -> Pdf.t
+
+(** Set the non full screen page mode to the given name (sans slash) e.g UseThumbs *)
+val set_non_full_screen_page_mode : Pdf.t -> string -> Pdf.t
 
 (** Set the open action. If the boolean is true, /Fit will be used, otherwise /XYZ *)
 val set_open_action : Pdf.t -> bool -> int -> Pdf.t

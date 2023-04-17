@@ -655,6 +655,32 @@ let set_page_mode pdf s =
       end
   | _ -> error "Unknown page mode"
 
+let set_non_full_screen_page_mode pdf s =
+  match s with
+  | "UseNone" | "UseOutlines" | "UseThumbs"
+  | "UseOC" | "UseAttachments" ->
+      begin match Pdf.lookup_direct pdf "/Root" pdf.Pdf.trailerdict with
+      | Some catalog ->
+          let viewerprefs =
+            match Pdf.lookup_direct pdf "/ViewerPreferences" catalog with
+            | Some d -> d
+            | None -> Pdf.Dictionary []
+          in
+            let viewerprefsnum =
+              Pdf.addobj pdf (Pdf.add_dict_entry viewerprefs "/NonFullScreenPageMode" (Pdf.Name ("/" ^ s)))
+            in
+            let catalog' = Pdf.add_dict_entry catalog "/ViewerPreferences" (Pdf.Indirect viewerprefsnum)in
+            let catalognum = Pdf.addobj pdf catalog' in
+              let trailerdict' =
+                Pdf.add_dict_entry pdf.Pdf.trailerdict "/Root" (Pdf.Indirect catalognum)
+              in
+                {pdf with
+                  Pdf.root = catalognum;
+                  Pdf.trailerdict = trailerdict'}
+      | None -> error "bad root"
+      end
+  | _ -> error "Unknown non full screen page mode"
+
 (* Set open action *)
 let set_open_action pdf fit pagenumber =
   if pagenumber > Pdfpage.endpage pdf || pagenumber < 0 then
