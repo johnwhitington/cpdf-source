@@ -39,7 +39,7 @@ val set_page_mode : Pdf.t -> string -> Pdf.t
 val set_non_full_screen_page_mode : Pdf.t -> string -> Pdf.t
 
 (** Set the open action. If the boolean is true, /Fit will be used, otherwise /XYZ *)
-val set_open_action : Pdf.t -> bool -> int -> Pdf.t
+val set_open_action : Pdf.t -> ?dest:string -> bool -> int -> Pdf.t
 
 (** Set the PDF version number *)
 val set_version : int -> Pdf.t -> unit

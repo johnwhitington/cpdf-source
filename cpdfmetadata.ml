@@ -682,16 +682,30 @@ let set_non_full_screen_page_mode pdf s =
   | _ -> error "Unknown non full screen page mode"
 
 (* Set open action *)
-let set_open_action pdf fit pagenumber =
+let set_open_action pdf ?dest fit pagenumber =
   if pagenumber > Pdfpage.endpage pdf || pagenumber < 0 then
     raise (error "set_open_action: invalid page number")
   else
     let pageobjectnumber = select pagenumber (Pdf.page_reference_numbers pdf) in
       let destination =
-        if fit then
-          Pdf.Array [Pdf.Indirect pageobjectnumber; Pdf.Name "/Fit"]
-        else
-          Pdf.Array [Pdf.Indirect pageobjectnumber; Pdf.Name "/XYZ"; Pdf.Null; Pdf.Null; Pdf.Null]
+        match dest with
+        | Some s ->
+            begin match Pdfread.parse_single_object s with
+            | Pdf.Array (Pdf.Integer pagenum::more) ->
+                begin try
+                  let pageobjectnumber = select pagenum (Pdf.page_reference_numbers pdf) in
+                    Pdf.Array (Pdf.Indirect pageobjectnumber::more)
+                with
+                  _ -> raise (Pdf.PDFError "bad page number in custom destination")
+                end
+            | _ | exception _ ->
+              raise (Pdf.PDFError "Bad destination syntax")
+            end
+        | None ->
+            if fit then
+              Pdf.Array [Pdf.Indirect pageobjectnumber; Pdf.Name "/Fit"]
+            else
+              Pdf.Array [Pdf.Indirect pageobjectnumber; Pdf.Name "/XYZ"; Pdf.Null; Pdf.Null; Pdf.Null]
       in
         let open_action =
           Pdf.Dictionary [("/D", destination); ("/S", Pdf.Name "/GoTo")]

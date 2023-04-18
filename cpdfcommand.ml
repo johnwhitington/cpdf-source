@@ -192,6 +192,7 @@ type op =
   | ExtractText
   | OpenAtPage of string
   | OpenAtPageFit of string
+  | OpenAtPageCustom of string
   | AddPageLabels
   | RemovePageLabels
   | PrintPageLabels
@@ -319,6 +320,7 @@ let string_of_op = function
   | ExtractText -> "ExtractText"
   | OpenAtPage _ -> "OpenAtPage"
   | OpenAtPageFit _ -> "OpenAtPageFit"
+  | OpenAtPageCustom _ -> "OpenAtPageCustom"
   | AddPageLabels -> "AddPageLabels"
   | RemovePageLabels -> "RemovePageLabels"
   | PrintPageLabels -> "PrintPageLabels"
@@ -822,7 +824,7 @@ let banned banlist = function
   | DumpAttachedFiles | RemoveMetadata | EmbedMissingFonts | BookmarksOpenToLevel _ | CreatePDF
   | SetPageMode _ | SetNonFullScreenPageMode _ | HideToolbar _ | HideMenubar _ | HideWindowUI _
   | FitWindow _ | CenterWindow _ | DisplayDocTitle _
-  | RemoveId | OpenAtPageFit _ | OpenAtPage _ | SetPageLayout _
+  | RemoveId | OpenAtPageFit _ | OpenAtPage _ | OpenAtPageCustom _ | SetPageLayout _
   | ShowBoxes | TrimMarks | CreateMetadata | SetMetadataDate _ | SetVersion _
   | SetAuthor _|SetTitle _|SetSubject _|SetKeywords _|SetCreate _
   | SetModify _|SetCreator _|SetProducer _|RemoveDictEntry _ | ReplaceDictEntry _ | PrintDictEntry _ | SetMetadata _
@@ -1565,6 +1567,10 @@ let setopenatpage n =
 let setopenatpagefit n =
   detect_duplicate_op (OpenAtPageFit n);
   args.op <- Some (OpenAtPageFit n)
+
+let setopenatpagecustom n =
+  detect_duplicate_op (OpenAtPageCustom n);
+  args.op <- Some (OpenAtPageCustom n)
 
 let setlabelstyle s =
   let style =
@@ -2564,6 +2570,9 @@ and specs =
    ("-open-at-page-fit",
       Arg.String setopenatpagefit,
       " Set inital page, scaling to fit");
+   ("-open-at-page-custom",
+      Arg.String setopenatpagecustom,
+      " Set inital page, with custom scaling");
    ("-set-metadata",
       Arg.String setmetadata,
       " Set metadata to the contents of a file");
@@ -3822,8 +3831,11 @@ let go () =
   | Some (OpenAtPageFit str) ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf str in
-      let n = match range with [x] -> x | _ -> error "open_at_page: range does not specify single page" in
+      let n = match range with [x] -> x | _ -> error "open_at_page_fit: range does not specify single page" in
         write_pdf false (Cpdfmetadata.set_open_action pdf true n)
+  | Some (OpenAtPageCustom dest) ->
+      let pdf = get_single_pdf args.op false in
+        write_pdf false (Cpdfmetadata.set_open_action ~dest pdf true 1)
   | Some (SetMetadata metadata_file) ->
       write_pdf false (Cpdfmetadata.set_metadata args.keepversion metadata_file (get_single_pdf args.op false))
   | Some (SetVersion v) ->
