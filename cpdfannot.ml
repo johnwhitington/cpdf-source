@@ -209,11 +209,20 @@ let set_annotations_json pdf i =
   (* Find largest negative objnumber. Then add number of annot objects. *)
   match json with
   | `List entries ->
+      (* Renumber the PDF so everything has bigger object numbers than that. *)
       let maxobjnum =
-        fold_left max min_int (map (fun e -> match e with `List (`Int i::_) -> abs i | _ -> error "Bad annots JSON entry") entries)
+        fold_left
+          max
+          min_int
+          (map (fun e -> match e with `List (`Int i::_) -> abs i | _ -> error "Bad annots entry") entries)
       in
-        (* Renumber the PDF so everything has bigger object numbers than that. *)
-        Printf.printf "maxobjnum = %i\n" maxobjnum;
+      let pdf_objnums =
+        map fst (list_of_hashtbl pdf.Pdf.objects.Pdf.pdfobjects)
+      in
+      let change_table =
+        hashtable_of_dictionary (map2 (fun f t -> (f, t)) pdf_objnums (ilist (maxobjnum + 1) (maxobjnum + length pdf_objnums)))
+      in
+      let pdf = Pdf.renumber change_table pdf in
         ()
   | _ -> error "Bad Annotations JSON file"
 
