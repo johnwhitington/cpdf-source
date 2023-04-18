@@ -223,6 +223,9 @@ let set_annotations_json pdf i =
         hashtable_of_dictionary (map2 (fun f t -> (f, t)) pdf_objnums (ilist (maxobjnum + 1) (maxobjnum + length pdf_objnums)))
       in
       let pdf = Pdf.renumber change_table pdf in
+        (* 1. Rewrite all serial numbers in all places (annots and extra objects?) *)
+        (* 2. Add all the negative numbered objects straight to the file *)
+        (* 3. Add all the actual annotations to the /Annots array on each page *)
         ()
   | _ -> error "Bad Annotations JSON file"
 
