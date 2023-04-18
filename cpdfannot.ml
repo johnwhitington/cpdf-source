@@ -1,4 +1,5 @@
 open Pdfutil
+open Cpdferror
 
 (* List annotations *)
 let get_annotation_string encoding pdf annot =
@@ -200,8 +201,21 @@ let get_annotations_json pdf =
   let json = `List (flatten (map2 (annotations_json_page pdf) pages pagenums)) in
     Pdfio.bytes_of_string (J.to_string json)
 
-(** Set annotations from JSON. Existing annotations? *)
-let set_annotations_json pdf json = ()
+(** Set annotations from JSON, keeping any existing ones. *)
+let set_annotations_json pdf i =
+  let module J = Cpdfyojson.Safe in
+  let content = Pdfio.string_of_bytes (Pdfio.bytes_of_input i 0 i.Pdfio.in_channel_length) in
+  let json = J.from_string content in
+  (* Find largest negative objnumber. Then add number of annot objects. *)
+  match json with
+  | `List entries ->
+      let maxobjnum =
+        fold_left max min_int (map (fun e -> match e with `List (`Int i::_) -> abs i | _ -> error "Bad annots JSON entry") entries)
+      in
+        (* Renumber the PDF so everything has bigger object numbers than that. *)
+        Printf.printf "maxobjnum = %i\n" maxobjnum;
+        ()
+  | _ -> error "Bad Annotations JSON file"
 
 (* Equalise the page lengths of two PDFs by chopping or extending the first one.
 *)
