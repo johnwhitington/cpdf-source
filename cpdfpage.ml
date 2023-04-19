@@ -146,8 +146,6 @@ let change_pattern_matrices_page pdf tr page =
     Printf.printf "\n";*)
     {page with Pdfpage.resources = change_pattern_matrices_resources pdf tr page.Pdfpage.resources used}
 
-(* Concatenate inverse matrix to each /Matrix entry in those object numbers. *)
-
 (* Output information for each page *)
 let output_page_info pdf range =
   let pages = Pdfpage.pages_of_pagetree pdf
