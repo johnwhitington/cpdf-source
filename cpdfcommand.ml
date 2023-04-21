@@ -3975,15 +3975,13 @@ let go () =
   | Some (CopyAnnotations getfrom) ->
       begin match args.inputs with
       | [(k, _, u, o, _, _) as input] ->
-        let input_pdf = get_pdf_from_input_kind input args.op k in
+          let input_pdf = get_pdf_from_input_kind input args.op k in
           let range = parse_pagespec_allow_empty input_pdf (get_pagespec ()) in
-            let pdf =
-              Cpdfannot.copy_annotations
-                range
-                (pdfread_pdf_of_file (optstring u) (optstring o) getfrom)
-                input_pdf
-          in
-            write_pdf false pdf
+            Cpdfannot.copy_annotations
+              range
+              (pdfread_pdf_of_file (optstring u) (optstring o) getfrom)
+              input_pdf;
+            write_pdf false input_pdf
       | _ -> error "copy-annotations: No input file specified"
       end
   | Some (SetAnnotations json) ->
