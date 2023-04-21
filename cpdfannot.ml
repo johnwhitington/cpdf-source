@@ -150,7 +150,7 @@ let get_annotations_json pdf =
 (** Set annotations from JSON, keeping any existing ones. *)
 let set_annotations_json pdf i =
   let module J = Cpdfyojson.Safe in
-  let content = Pdfio.string_of_bytes (Pdfio.bytes_of_input i 0 i.Pdfio.in_channel_length) in
+  let content = Pdfio.string_of_input i in
   let json = J.from_string content in
   (* Find largest negative objnumber. Then add number of annot objects. *)
   match json with
@@ -169,11 +169,17 @@ let set_annotations_json pdf i =
       let change_table =
         hashtable_of_dictionary (map2 (fun f t -> (f, t)) pdf_objnums (ilist (maxobjnum + 1) (maxobjnum + length pdf_objnums)))
       in
-      let pdf = Pdf.renumber change_table pdf in
-        (* 1. Rewrite all serial numbers in all places (annots and extra objects?) *)
-        (* 2. Add all the negative numbered objects straight to the file *)
-        (* 3. Add all the actual annotations to the /Annots array on each page *)
-        ()
+      let pdf' = Pdf.renumber change_table pdf in
+        pdf.root <- pdf'.root;
+        pdf.objects <- pdf'.objects;
+        pdf.trailerdict <- pdf'.trailerdict;
+        (* 1. Extract the extra objects, and add them to the file *)
+        let extras = 
+          ()
+        in
+          (* 2. Extract the annotation objects, and rewrite their destinations from page numbers to pages, add them to file *)
+          (* 3. Add the annots entries to each file *)
+          ()
   | _ -> error "Bad Annotations JSON file"
 
 let copy_annotations range frompdf topdf = ()

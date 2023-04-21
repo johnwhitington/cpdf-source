@@ -103,7 +103,7 @@ let parse_bookmark_file_json verify pdf i =
         match i.Pdfio.caml_channel with
         | Some ch -> J.from_channel ch
         | None ->
-          let content = Pdfio.string_of_bytes (Pdfio.bytes_of_input i 0 i.Pdfio.in_channel_length) in
+          let content = Pdfio.string_of_input i in
             J.from_string content
       in
       let marks = marks_of_json pdf json in

@@ -573,7 +573,7 @@ let of_input i =
     | Some ch ->
         pdf_of_json (J.from_channel ch)
     | None -> 
-        let content = Pdfio.string_of_bytes (Pdfio.bytes_of_input i 0 i.Pdfio.in_channel_length) in
+        let content = Pdfio.string_of_input i in
           pdf_of_json (J.from_string content)
   with
     e -> error (Printexc.to_string e)
