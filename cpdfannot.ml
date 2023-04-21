@@ -55,7 +55,7 @@ let rewrite_destinations pdf annot =
 
 let extra = ref []
 
-let serial = ref ~-1
+let serial = ref 0
 
 let getserial () =
   serial +=1; !serial
@@ -75,11 +75,17 @@ let annotations_json_page pdf page pagenum =
              let annot = Pdf.direct pdf annot in
              let annot = rewrite_destinations pdf annot in
                extra := annot::!extra;
-               `List [`Int pagenum; `Int serial; Cpdfjson.json_of_object ~utf8:true ~clean_strings:true pdf (fun _ -> ()) ~no_stream_data:false ~parse_content:false annot])
+               `List
+                 [`Int pagenum;
+                  `Int serial;
+                   Cpdfjson.json_of_object ~utf8:true ~clean_strings:true pdf (fun _ -> ())
+                     ~no_stream_data:false ~parse_content:false annot])
         annots
   | _ -> []
 
-(* Rewrite any /Parent entries in /Popup annotations to have annot serial number, not object number, and all /Popup entries in parent annotations similarly. *)
+(* Rewrite any /Parent entries in /Popup annotations to have annot serial
+   number, not object number, and all /Popup entries in parent annotations
+   similarly. *)
 let postprocess_json_pdf objnum_to_serial_map pdf obj =
   let obj =
     match obj with
@@ -128,13 +134,18 @@ let postprocess_json pdf objnum_to_serial_map json =
     | `List [`Int pagenum; `Int serial; jo] ->
         let pdfobj = Cpdfjson.object_of_json jo in
         let fixed = postprocess_json_pdf objnum_to_serial_map pdf pdfobj in
-        `List [`Int pagenum; `Int serial; Cpdfjson.json_of_object ~utf8:true ~clean_strings:true pdf (fun _ -> ()) ~no_stream_data:false ~parse_content:false fixed]
+        `List
+          [`Int pagenum;
+           `Int serial;
+           Cpdfjson.json_of_object
+             ~utf8:true ~clean_strings:true pdf (fun _ -> ())
+             ~no_stream_data:false ~parse_content:false fixed]
     | _ -> assert false)
    json
 
 let list_annotations_json range pdf =
   extra := [];
-  serial := ~-1;
+  serial := 0;
   objnum_to_serial_map := [];
   let module J = Cpdfyojson.Safe in
   let pages = Pdfpage.pages_of_pagetree pdf in
@@ -214,7 +225,7 @@ let set_annotations_json pdf i =
         fold_left
           max
           min_int
-          (map (fun e -> match e with `List (`Int i::_) -> abs i | _ -> error "Bad annots entry") entries)
+          (map (fun e -> match e with `List [_; `Int i; _] -> i | `List [`Int i; _] -> abs i | _ -> error "Bad annots entry") entries)
       in
       let pdf_objnums =
         map fst (list_of_hashtbl pdf.Pdf.objects.Pdf.pdfobjects)
