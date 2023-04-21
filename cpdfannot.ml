@@ -22,40 +22,37 @@ let list_page_annotations encoding pdf num page =
       iter (print_annotation encoding pdf num) (map (Pdf.direct pdf) annots)
   | _ -> ()
 
-let rewrite_destination calculate_pagenumber d =
+let rewrite_destination f d =
   match d with
   | Pdf.Array (Pdf.Indirect i::r) ->
-      Pdf.Array (Pdf.Integer (calculate_pagenumber (Pdfdest.Fit (Pdfdest.PageObject i)))::r)
+      Pdf.Array (Pdf.Integer (f i)::r)
   | x -> x
 
-let rewrite_destinations pdf annot =
-  let refnums = Pdf.page_reference_numbers pdf in
-  let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
-  let calculate_pagenumber =  Pdfpage.pagenumber_of_target ~fastrefnums pdf in
-    (* Deal with /P in annotation *)
-    let annot =
-      match Pdf.indirect_number pdf "/P" annot with
-      | Some i -> Pdf.add_dict_entry annot "/P" (Pdf.Integer (calculate_pagenumber (Pdfdest.Fit (Pdfdest.PageObject i))))
-      | None -> annot
-    in
-    (* Deal with /Dest in annotation *)
-    match Pdf.lookup_direct pdf "/Dest" annot with
-    | Some d -> Pdf.add_dict_entry annot "/Dest" (rewrite_destination calculate_pagenumber d)
-    | None ->
-        (* Deal with /A --> /D dest when /A --> /S = /GoTo *)
-        match Pdf.lookup_direct pdf "/A" annot with
-        | Some action ->
-            begin match Pdf.lookup_direct pdf "/D" action with
-            | Some d ->
-                Pdf.add_dict_entry
-                  annot "/A" (Pdf.add_dict_entry action "/D" (rewrite_destination calculate_pagenumber d))
-            | None -> annot
-            end
-       | None -> annot
+let rewrite_destinations f pdf annot =
+  (* Deal with /P in annotation *)
+  let annot =
+    match Pdf.indirect_number pdf "/P" annot with
+    | Some i -> Pdf.add_dict_entry annot "/P" (Pdf.Integer (f i))
+    | None -> annot
+  in
+  (* Deal with /Dest in annotation *)
+  match Pdf.lookup_direct pdf "/Dest" annot with
+  | Some d -> Pdf.add_dict_entry annot "/Dest" (rewrite_destination f d)
+  | None ->
+      (* Deal with /A --> /D dest when /A --> /S = /GoTo *)
+      match Pdf.lookup_direct pdf "/A" annot with
+      | Some action ->
+          begin match Pdf.lookup_direct pdf "/D" action with
+          | Some d ->
+              Pdf.add_dict_entry
+                annot "/A" (Pdf.add_dict_entry action "/D" (rewrite_destination f d))
+          | None -> annot
+          end
+     | None -> annot
 
 let extra = ref []
 
-let annotations_json_page pdf page pagenum =
+let annotations_json_page calculate_pagenumber pdf page pagenum =
   match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
   | Some (Pdf.Array annots) ->
       option_map
@@ -63,7 +60,11 @@ let annotations_json_page pdf page pagenum =
            begin match annot with
            | Pdf.Indirect objnum ->
                let annot = Pdf.direct pdf annot in
-               let annot = rewrite_destinations pdf annot in
+               let annot =
+                 rewrite_destinations
+                   (fun i -> calculate_pagenumber (Pdfdest.Fit (Pdfdest.PageObject i)))
+                   pdf annot
+               in
                  extra := annot::!extra;
                  Some (`List
                    [`Int pagenum;
@@ -76,6 +77,9 @@ let annotations_json_page pdf page pagenum =
   | _ -> []
 
 let list_annotations_json range pdf =
+  let refnums = Pdf.page_reference_numbers pdf in
+  let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
+  let calculate_pagenumber =  Pdfpage.pagenumber_of_target ~fastrefnums pdf in
   extra := [];
   let module J = Cpdfyojson.Safe in
   let pages = Pdfpage.pages_of_pagetree pdf in
@@ -83,7 +87,7 @@ let list_annotations_json range pdf =
   let pairs = combine pages pagenums in
   let pairs = option_map (fun (p, n) -> if mem n range then Some (p, n) else None) pairs in
   let pages, pagenums = split pairs in
-  let json = flatten (map2 (annotations_json_page pdf) pages pagenums) in
+  let json = flatten (map2 (annotations_json_page calculate_pagenumber pdf) pages pagenums) in
   (*Printf.printf "%i extra roots to explore\n" (length extra);
   iter (fun x -> Printf.eprintf "%s\n\n" (Pdfwrite.string_of_pdf x)) extra;*)
   let extra =
@@ -134,10 +138,13 @@ let get_annotations encoding pdf =
         (ilist 1 (length pages))) 
 
 let get_annotations_json pdf =
+  let refnums = Pdf.page_reference_numbers pdf in
+  let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
+  let calculate_pagenumber =  Pdfpage.pagenumber_of_target ~fastrefnums pdf in
   let module J = Cpdfyojson.Safe in
   let pages = Pdfpage.pages_of_pagetree pdf in
   let pagenums = indx pages in
-  let json = `List (flatten (map2 (annotations_json_page pdf) pages pagenums)) in
+  let json = `List (flatten (map2 (annotations_json_page calculate_pagenumber pdf) pages pagenums)) in
     Pdfio.bytes_of_string (J.to_string json)
 
 (** Set annotations from JSON, keeping any existing ones. *)
@@ -183,7 +190,8 @@ let equalise_lengths a b =
   in
     a', b
 
-(* Copy annotations *)
+(* Copy annotations. FIXME: This code is deprecated in favour of extracting annotations to JSON
+and then re-adding. *)
 
 (* FIXME: Why does this chop the files to the same length? Should be able to
 apply annotations from a longer file to a shorter? *)
