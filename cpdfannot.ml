@@ -157,14 +157,15 @@ let set_annotations_json pdf i =
   | `List entries ->
       (* Renumber the PDF so everything has bigger object numbers than that. *)
       let maxobjnum =
-        fold_left
-          max
-          min_int
-          (map (fun e -> match e with `List [_; `Int i; _] -> i | `List [`Int i; _] -> abs i | _ -> error "Bad annots entry") entries)
+        fold_left max min_int
+          (map
+            (function
+             | `List [_; `Int i; _] -> i
+             | `List [`Int i; _] -> abs i
+             | _ -> error "Bad annots entry")
+           entries)
       in
-      let pdf_objnums =
-        map fst (list_of_hashtbl pdf.Pdf.objects.Pdf.pdfobjects)
-      in
+      let pdf_objnums = map fst (list_of_hashtbl pdf.Pdf.objects.Pdf.pdfobjects) in
       let change_table =
         hashtable_of_dictionary (map2 (fun f t -> (f, t)) pdf_objnums (ilist (maxobjnum + 1) (maxobjnum + length pdf_objnums)))
       in
