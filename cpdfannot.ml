@@ -55,98 +55,28 @@ let rewrite_destinations pdf annot =
 
 let extra = ref []
 
-let serial = ref 0
-
-let getserial () =
-  serial +=1; !serial
-
-let objnum_to_serial_map = ref []
-
 let annotations_json_page pdf page pagenum =
   match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
   | Some (Pdf.Array annots) ->
-      map
+      option_map
         (fun annot ->
-           let serial = getserial () in
-             begin match annot with
-             | Pdf.Indirect i -> objnum_to_serial_map := (i, serial)::!objnum_to_serial_map
-             | _ -> Printf.eprintf "annotations must be indirect\n"
-             end;
-             let annot = Pdf.direct pdf annot in
-             let annot = rewrite_destinations pdf annot in
-               extra := annot::!extra;
-               `List
-                 [`Int pagenum;
-                  `Int serial;
-                   Cpdfjson.json_of_object ~utf8:true ~clean_strings:true pdf (fun _ -> ())
-                     ~no_stream_data:false ~parse_content:false annot])
+           begin match annot with
+           | Pdf.Indirect objnum ->
+               let annot = Pdf.direct pdf annot in
+               let annot = rewrite_destinations pdf annot in
+                 extra := annot::!extra;
+                 Some (`List
+                   [`Int pagenum;
+                    `Int objnum;
+                     Cpdfjson.json_of_object ~utf8:true ~clean_strings:true pdf (fun _ -> ())
+                       ~no_stream_data:false ~parse_content:false annot])
+           | _ -> Printf.eprintf "Warning: annotations must be indirect\n"; None
+           end)
         annots
   | _ -> []
 
-(* Rewrite any /Parent entries in /Popup annotations to have annot serial
-   number, not object number, and all /Popup entries in parent annotations
-   similarly. *)
-let postprocess_json_pdf objnum_to_serial_map pdf obj =
-  let obj =
-    match obj with
-    | Pdf.Dictionary d ->
-        (* These things seem to be to do with digital signatures, which aren't
-           going to survive round-tripping of annotations anyway, and drag in
-           all sorts of extra objects we don't want, so we remove them. *)
-        let d = remove "/Lock" (remove "/V" d) in Pdf.Dictionary d
-    | _ -> obj
-  in
-  match obj with
-  | Pdf.Dictionary d ->
-      let obj =
-        begin match lookup "/Subtype" d, lookup "/Parent" d with
-        | Some (Pdf.Name "/Popup"), Some (Pdf.Indirect i) ->
-            begin match lookup i objnum_to_serial_map with
-            | Some s -> Pdf.add_dict_entry obj "/Parent" (Pdf.Integer s)
-            | None -> Printf.eprintf "Warning: Cpdfannot.process_extra_object: could not find serial number\n"; obj
-            end
-        | _ ->
-            (* If not a popup annotation, remove /Parent. It drags in lots of
-               extra objects (the whole page tree!) with a widget
-               annotation, and we are unlikely to be able to round-trip them
-               anyway. One day, if we can match FDF properly, it might be
-               possible, but not now. *)
-            Pdf.remove_dict_entry obj "/Parent"
-        end
-      in
-        begin match obj with
-        | Pdf.Dictionary d ->
-            begin match lookup "/Popup" d with
-            | Some (Pdf.Indirect i) ->
-                begin match lookup i objnum_to_serial_map with
-                | Some s -> Pdf.add_dict_entry obj "/Popup" (Pdf.Integer s)
-                | None -> Printf.eprintf "Warning: Cpdfannot.process_extra_object: could not find serial number 2\n"; obj
-                end
-            | _ -> obj
-            end
-        | _ -> obj
-        end
-  | x -> x
-
-let postprocess_json pdf objnum_to_serial_map json =
-  map
-   (function
-    | `List [`Int pagenum; `Int serial; jo] ->
-        let pdfobj = Cpdfjson.object_of_json jo in
-        let fixed = postprocess_json_pdf objnum_to_serial_map pdf pdfobj in
-        `List
-          [`Int pagenum;
-           `Int serial;
-           Cpdfjson.json_of_object
-             ~utf8:true ~clean_strings:true pdf (fun _ -> ())
-             ~no_stream_data:false ~parse_content:false fixed]
-    | _ -> assert false)
-   json
-
 let list_annotations_json range pdf =
   extra := [];
-  serial := 0;
-  objnum_to_serial_map := [];
   let module J = Cpdfyojson.Safe in
   let pages = Pdfpage.pages_of_pagetree pdf in
   let pagenums = indx pages in
@@ -154,15 +84,13 @@ let list_annotations_json range pdf =
   let pairs = option_map (fun (p, n) -> if mem n range then Some (p, n) else None) pairs in
   let pages, pagenums = split pairs in
   let json = flatten (map2 (annotations_json_page pdf) pages pagenums) in
-  let json = postprocess_json pdf !objnum_to_serial_map json in
-  let extra = map (postprocess_json_pdf !objnum_to_serial_map pdf) !extra in
   (*Printf.printf "%i extra roots to explore\n" (length extra);
   iter (fun x -> Printf.eprintf "%s\n\n" (Pdfwrite.string_of_pdf x)) extra;*)
   let extra =
     map
       (fun n ->
          `List
-           [`Int ~-n;
+           [`Int n;
             Cpdfjson.json_of_object ~utf8:true ~clean_strings:true pdf (fun _ -> ())
               ~no_stream_data:false ~parse_content:false (Pdf.lookup_obj pdf n)])
       (setify
@@ -172,7 +100,7 @@ let list_annotations_json range pdf =
                let r = Pdf.objects_referenced [] [] pdf x in
                  (*Printf.printf "%i extra for annot %s\n" (length r)
                  (Pdfwrite.string_of_pdf x);*) r)
-          extra)))
+          !extra)))
   in
   let header =
     `List
