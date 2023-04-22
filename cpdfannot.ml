@@ -137,13 +137,16 @@ let get_annotations encoding pdf =
         pages
         (ilist 1 (length pages))) 
 
-let get_annotations_json pdf =
+let get_annotations_json pdf range =
   let refnums = Pdf.page_reference_numbers pdf in
   let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
   let calculate_pagenumber =  Pdfpage.pagenumber_of_target ~fastrefnums pdf in
   let module J = Cpdfyojson.Safe in
   let pages = Pdfpage.pages_of_pagetree pdf in
   let pagenums = indx pages in
+  let pairs = combine pagenums pages in
+  let pairs_in_range = option_map (fun (pn, p) -> if mem pn range then Some (pn, p) else None) pairs in
+  let pagenums, pages = split pairs_in_range in
   let json = `List (flatten (map2 (annotations_json_page calculate_pagenumber pdf) pages pagenums)) in
     Pdfio.bytes_of_string (J.to_string json)
 
@@ -182,7 +185,8 @@ let set_annotations_json pdf i =
           ()
   | _ -> error "Bad Annotations JSON file"
 
-let copy_annotations range frompdf topdf = ()
+let copy_annotations range frompdf topdf =
+  set_annotations_json topdf (Pdfio.input_of_bytes (get_annotations_json frompdf range))
 
 (* Remove annotations *)
 let remove_annotations range pdf =
