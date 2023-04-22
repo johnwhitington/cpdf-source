@@ -3992,7 +3992,10 @@ let go () =
   | Some ListAnnotations ->
       let pdf = get_single_pdf args.op true in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-        Cpdfannot.list_annotations ~json:args.format_json range args.encoding pdf
+        if args.format_json then
+          flprint (Pdfio.string_of_bytes (Cpdfannot.get_annotations_json pdf range))
+        else
+          Cpdfannot.list_annotations range args.encoding pdf
   | Some Shift ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
