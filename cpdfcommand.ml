@@ -3164,7 +3164,7 @@ let really_write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf outna
                   ~generate_objstm:args.create_objstm
                   ~compress_objstm:(not is_decompress)
                   ~recrypt:(Some best_password)
-                  false None mk_id pdf outname'
+                  None mk_id pdf outname'
         end
       else
         begin
@@ -3176,7 +3176,7 @@ let really_write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf outna
                 ~preserve_objstm:args.preserve_objstm
                 ~generate_objstm:args.create_objstm
                 ~compress_objstm:(not is_decompress)
-                false encryption mk_id pdf outname'
+                encryption mk_id pdf outname'
             end
           else
             soft_error

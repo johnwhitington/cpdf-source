@@ -5,7 +5,7 @@ open Pdfio
 let report_pdf_size pdf =
   Pdf.remove_unreferenced pdf;
   Pdfwrite.pdf_to_file_options ~preserve_objstm:false ~generate_objstm:false
-  ~compress_objstm:false false None false pdf "temp.pdf";
+  ~compress_objstm:false None false pdf "temp.pdf";
   let fh = open_in_bin "temp.pdf" in
     Printf.printf "Size %i bytes\n" (in_channel_length fh);
     flush stdout;
