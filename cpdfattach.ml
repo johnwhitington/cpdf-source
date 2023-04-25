@@ -169,7 +169,7 @@ let list_attached_files pdf =
                       | Some (Pdf.String s) ->
                           begin match Pdf.lookup_direct pdf "/FS" annot with
                           | Some ((Pdf.Dictionary _) as d) ->
-                              (*Printf.eprintf "%s\n%!" (Pdfwrite.string_of_pdf d);*)
+                              (*Pdfe.log (Printf.sprintf "%s\n" (Pdfwrite.string_of_pdf d));*)
                               begin match Pdf.lookup_direct pdf "/EF" d with
                               |  Some ((Pdf.Dictionary _) as d) ->
                                    begin match Pdf.lookup_direct pdf "/F" d with
@@ -264,7 +264,7 @@ let dump_attachment out pdf (_, embeddedfile) =
             for x = 0 to bytes_size efdata - 1 do output_byte fh (bget efdata x) done;
             close_out fh
         with
-          e -> Printf.eprintf "Failed to write attachment to %s\n%!" filename;
+          e -> Pdfe.log (Printf.sprintf "Failed to write attachment to %s\n" filename);
         end
   | _ -> ()
 

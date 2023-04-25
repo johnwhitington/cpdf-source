@@ -199,7 +199,7 @@ let return_date () =
 let current_time () =
   try return_date () with
     e ->
-      Printf.eprintf "Failed to retrieve time due to %s\n%!" (Printexc.to_string e);
+      Pdfe.log (Printf.sprintf "Failed to retrieve time due to %s\n" (Printexc.to_string e));
       {_tm_sec = 0;
        _tm_min = 0;
        _tm_hour = 0;

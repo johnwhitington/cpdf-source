@@ -5,7 +5,7 @@ open Pdfio
 (* Embed missing fonts with Ghostscript. *)
 let embed_missing_fonts path_to_ghostscript gs_quiet fi fo =
   if path_to_ghostscript = "" then begin
-    Printf.eprintf "Please supply path to gs with -gs\n%!";
+    Pdfe.log "Please supply path to gs with -gs\n";
     exit 2
   end;
     let gscall =
@@ -19,7 +19,7 @@ let embed_missing_fonts path_to_ghostscript gs_quiet fi fo =
     in
       match Sys.command gscall with
       | 0 -> exit 0
-      | _ -> Printf.eprintf "Font embedding failed.\n%!"; exit 2
+      | _ -> Pdfe.log "Font embedding failed.\n"; exit 2
 
 (* Copy a font from [frompdf] with name [fontname] on page [fontpage] to [pdf] on all pages in [range] *)
 let copy_font frompdf fontname fontpage range pdf =

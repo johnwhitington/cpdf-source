@@ -149,7 +149,7 @@ let read_encoding_table fmt length version b =
   | 6 ->
       if !dbg then Printf.printf "read_encoding_table: format 6\n";
       read_format_6_encoding_table b;
-  | n -> raise (Pdf.PDFError "read_encoding_table: format %i not known\n%!")
+  | n -> raise (Pdf.PDFError "read_encoding_table: format %i not known\n")
 
 let read_loca_table indexToLocFormat numGlyphs b =
   match indexToLocFormat with

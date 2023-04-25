@@ -24,7 +24,7 @@ let charcodes_of_utf8 font s =
            match extractor codepoint with
            | Some cc -> Some cc
            | None ->
-               Printf.eprintf "Warning: character not found in font for unicode codepoint 0x%X\n" codepoint;
+               Pdfe.log (Printf.sprintf "Warning: character not found in font for unicode codepoint 0x%X\n" codepoint);
                None)
         codepoints
     in
@@ -498,7 +498,7 @@ let
               | Some (Pdftext.SimpleFont {fontdescriptor = Some {capheight}})  ->
                   voffset := !voffset +. capheight /. 2.
               | _ ->
-                  Printf.eprintf "Unable to find midline adjustment in this font\n"
+                  Pdfe.log "Unable to find midline adjustment in this font\n"
             end
           else
           if topline then
@@ -511,7 +511,7 @@ let
               | Some (Pdftext.SimpleFont {fontdescriptor = Some {capheight}})  ->
                   voffset := !voffset +. capheight
               | _ ->
-                  Printf.eprintf "Unable to find midline adjustment in this font\n"
+                  Pdfe.log "Unable to find midline adjustment in this font\n"
             end;
           let encoding =
             match font with

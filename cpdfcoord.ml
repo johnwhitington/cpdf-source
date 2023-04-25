@@ -3,8 +3,7 @@ open Pdfutil
 let emptypage = Pdfpage.blankpage Pdfpaper.a4
 
 let error s =
-  prerr_string (s ^ "\nUse -help for help.\n");
-  flush stderr;
+  Pdfe.log (s ^ "\nUse -help for help.\n");
   exit 2
 
 (* Unit conversions to points. *)

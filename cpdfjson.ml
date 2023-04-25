@@ -204,11 +204,11 @@ let rec op_of_json = function
       | `String "SCNName"::`String s::ns -> O.Op_SCNName (s, map opf (rev ns))
       | `String "scnName"::`String s::ns -> O.Op_scnName (s, map opf (rev ns))
       | j ->
-          Printf.eprintf "Unable to read reversed op from %s\n" (J.show (`List j));
+          Pdfe.log (Printf.sprintf "Unable to read reversed op from %s\n" (J.show (`List j)));
           error "op reading failed"
       end
   | j ->
-      Printf.eprintf "Unable to read op from %s\n" (J.show j);
+      Pdfe.log (Printf.sprintf "Unable to read op from %s\n" (J.show j));
       error "op reading failed"
 
 and object_of_json = function
@@ -219,7 +219,7 @@ and object_of_json = function
   | `List objs -> P.Array (map object_of_json objs)
   | `Assoc ["U", `String u] ->
       begin try P.String (Pdftext.pdfdocstring_of_utf8 u) with
-        _ -> Printf.eprintf "Could not read UTF8 string %S\n" u; P.String u
+        _ -> Pdfe.log (Printf.sprintf "Could not read UTF8 string %S\n" u); P.String u
       end
   | `Assoc ["I", `Int i] -> P.Integer i
   | `Assoc ["F", `Float f] -> P.Real f

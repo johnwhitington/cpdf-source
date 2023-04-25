@@ -487,11 +487,11 @@ let xmp_date date =
             | _ -> raise Exit  
             end
         | _ ->
-          Printf.eprintf "xmp_date: Malformed date string (no year): %s\n%!" date;
+          Pdfe.log (Printf.sprintf "xmp_date: Malformed date string (no year): %s\n" date);
           make_xmp_date_from_components d
         end
     | _ ->
-        Printf.eprintf "xmp_date: Malformed date string (no prefix): %s\n%!" date;
+        Pdfe.log (Printf.sprintf "xmp_date: Malformed date string (no prefix): %s\n" date);
         make_xmp_date_from_components d
   with
     Exit -> make_xmp_date_from_components d

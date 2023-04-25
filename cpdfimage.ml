@@ -70,14 +70,14 @@ let write_image path_to_p2p path_to_im pdf resources name image =
           begin match path_to_p2p with
           | "" ->
             begin match path_to_im with
-              "" -> Printf.eprintf "Neither pnm2png nor imagemagick found. Specify with -p2p or -im\n%!"
+              "" -> Pdfe.log "Neither pnm2png nor imagemagick found. Specify with -p2p or -im\n"
             | _ ->
               begin match
                 Sys.command (Filename.quote_command path_to_im [pnm; png])
               with
                 0 -> Sys.remove pnm
               | _ -> 
-                Printf.eprintf "Call to imagemagick failed: did you specify -p2p or -im correctly?\n%!";
+                Pdfe.log "Call to imagemagick failed: did you specify -p2p or -im correctly?\n";
                 Sys.remove pnm
               end
             end
@@ -87,17 +87,17 @@ let write_image path_to_p2p path_to_im pdf resources name image =
             with
             | 0 -> Sys.remove pnm
             | _ ->
-                Printf.eprintf "Call to pnmtopng failed: did you specify -p2p correctly?\n%!";
+                Pdfe.log "Call to pnmtopng failed: did you specify -p2p correctly?\n";
                 Sys.remove pnm
             end
           end
     | _ ->
-        Printf.eprintf "Unsupported image type when extracting image %s %!" name
+        Pdfe.log (Printf.sprintf "Unsupported image type when extracting image %s " name)
     end
   in
     match write_image_png pdf resources name image with
     | true -> ()
-    | exception x -> Printf.printf "Failed to write PNG directly (%s)\n" (Printexc.to_string x); main ()
+    | exception x -> Pdfe.log (Printf.sprintf "Failed to write PNG directly (%s)\n" (Printexc.to_string x)); main ()
     | _ -> main ()
 
 let written = ref []

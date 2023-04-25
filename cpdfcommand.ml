@@ -69,12 +69,11 @@ exception StayOnError
 
 (* Fatal error reporting. *)
 let error s =
-  prerr_string (s ^ "\nUse -help for help.\n");
-  flush stderr;
+  Pdfe.log (s ^ "\nUse -help for help.\n");
   if not !stay_on_error then exit 2 else raise StayOnError
 
 let soft_error s =
-  Printf.eprintf "%s\n%!" s;
+  Pdfe.log (Printf.sprintf "%s\n" s);
   if not !stay_on_error then exit 1 else raise StayOnError
 
 let parse_pagespec pdf spec =
@@ -757,14 +756,14 @@ let call_cpdflin cpdflin temp output best_password =
     match Sys.os_type with
       "Win32" ->
         (* On windows, don't use LD_LIBRARY_PATH - it will happen automatically *)
-        if args.debug then prerr_endline command;
+        if args.debug then Pdfe.log (command ^ "\n");
         Sys.command command
     | _ ->
         (* On other platforms, if -cpdflin was provided, or cpdflin was in the
         current folder, set up LD_LIBRARY_PATH: *)
         match cpdflin with
           "cpdflin" ->
-            if args.debug then prerr_endline command;
+            if args.debug then Pdfe.log (command ^ "\n");
             Sys.command command
         | _ ->
             let command = 
@@ -772,7 +771,7 @@ let call_cpdflin cpdflin temp output best_password =
               "LD_LIBRARY_PATH=" ^ Filename.quote (Filename.dirname cpdflin) ^ " " ^
               command
             in
-              if args.debug then prerr_endline command;
+              if args.debug then Pdfe.log (command ^ "\n");
               Sys.command command
 
 let get_pagespec () =
@@ -904,8 +903,8 @@ let detect_duplicate_op op =
   match args.op with
     None | Some Shift -> ()
   | _ ->
-      Printf.eprintf "Operation %s already specified, so cannot specify operation %s.\nUse AND from Chapter 1 of the manual to chain commands together.\n%!"
-      (string_of_op (unopt args.op)) (string_of_op op);
+      Pdfe.log (Printf.sprintf "Operation %s already specified, so cannot specify operation %s.\nUse AND from Chapter 1 of the manual to chain commands together.\n"
+      (string_of_op (unopt args.op)) (string_of_op op));
       exit 1
 
 let setop op () =
@@ -986,7 +985,7 @@ let anon_fun s =
         Not_found ->
           match args.inputs with
           | [] ->
-              Printf.eprintf "Warning: range '%s' ignored\n%!" s
+              Pdfe.log (Printf.sprintf "Warning: range '%s' ignored\n" s)
           | (a, _, d, e, f, g)::t ->
                args.inputs <- (a, fixdashes s, d, e, f, g)::t
 
@@ -1485,7 +1484,7 @@ let setrevision n =
     (a, b, c, d, e, _)::more ->
       args.inputs <- (a, b, c, d, e, Some n) :: more
   | [] ->
-      Printf.eprintf "Warning. -revision ignored. Put it after the filename.\n%!"
+      Pdfe.log "Warning. -revision ignored. Put it after the filename.\n"
 
 let setoutline () =
   args.outline <- true
@@ -1769,7 +1768,7 @@ let setfontttfencoding s =
     | _ -> error "Unknown encoding"
 
 let whingemalformed () =
-  prerr_string "Command line must be of exactly the form\ncpdf <infile> -gs <path> -gs-malformed-force -o <outfile>\n";
+  Pdfe.log "Command line must be of exactly the form\ncpdf <infile> -gs <path> -gs-malformed-force -o <outfile>\n";
   exit 1
 
 (* Drawing operations. FIXME: Clear this around ANDs? *)
@@ -2044,6 +2043,9 @@ let set_input_png s =
 
 let addimage s =
   addop (Cpdfdraw.Image s)
+
+let setstderrtostdout () =
+  Pdfe.logger := (fun s -> print_string s; flush stdout)
 
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
@@ -2881,6 +2883,7 @@ and specs =
    ("-debug-crypt", Arg.Unit setdebugcrypt, "");
    ("-debug-force", Arg.Unit setdebugforce, "");
    ("-debug-malformed", Arg.Set Pdfread.debug_always_treat_malformed, "");
+   ("-debug-stderr-to-stdout", Arg.Unit setstderrtostdout, "");
    ("-stay-on-error", Arg.Unit setstayonerror, "");
    (* These items are unfinished *)
    ("-extract-fontfile", Arg.Unit (setop ExtractFontFile), "");
@@ -2911,21 +2914,22 @@ let filesize name =
 (* Mend PDF file with Ghostscript. We use this if a file is malformed and CPDF
  * cannot mend it. It is copied to a temporary file, fixed, then we return None or Some (pdf). *)
 let mend_pdf_file_with_ghostscript filename =
-  if args.path_to_ghostscript = "" then begin
-    Printf.eprintf "Please supply path to gs with -gs\n%!";
-  end;
-  Printf.eprintf "CPDF could not mend. Attempting to mend file with gs\n%!";
-  flush stderr;
-  let tmpout = Filename.temp_file "cpdf" ".pdf" in
-    tempfiles := tmpout::!tempfiles;
-    let gscall =
-      Filename.quote_command args.path_to_ghostscript
-        ((if args.gs_quiet then ["-dQUIET"] else []) @
-        ["-dNOPAUSE"; "-sDEVICE=pdfwrite"; "-sOUTPUTFILE=" ^ tmpout; "-dBATCH"; filename])
-    in
-      match Sys.command gscall with
-      | 0 -> Printf.eprintf "Succeeded!\n%!"; flush stderr; tmpout
-      | _ -> Printf.eprintf "Could not fix malformed PDF file, even with gs\n%!"; flush stderr; exit 2
+  match args.path_to_ghostscript with
+  | "" ->
+      Pdfe.log "Please supply path to gs with -gs\n";
+      exit 2
+  | _ ->
+      Pdfe.log "CPDF could not mend. Attempting to mend file with gs\n";
+      let tmpout = Filename.temp_file "cpdf" ".pdf" in
+        tempfiles := tmpout::!tempfiles;
+        let gscall =
+          Filename.quote_command args.path_to_ghostscript
+            ((if args.gs_quiet then ["-dQUIET"] else []) @
+            ["-dNOPAUSE"; "-sDEVICE=pdfwrite"; "-sOUTPUTFILE=" ^ tmpout; "-dBATCH"; filename])
+        in
+          match Sys.command gscall with
+          | 0 -> Pdfe.log "Succeeded!\n"; tmpout
+          | _ -> Pdfe.log "Could not fix malformed PDF file, even with gs\n"; exit 2
 
 exception StdInBytes of bytes
 
@@ -2951,7 +2955,7 @@ let rec get_single_pdf ?(decrypt=true) ?(fail=false) op read_lazy =
   let failout () =
     if fail then begin
       (* Reconstructed with ghostscript, but then we couldn't read it even then. Do not loop. *)
-      Printf.eprintf "Failed to read gs-reconstructed PDF even though gs succeeded\n%!";
+      Pdfe.log "Failed to read gs-reconstructed PDF even though gs succeeded\n";
       exit 2
     end
   in
@@ -2959,12 +2963,12 @@ let rec get_single_pdf ?(decrypt=true) ?(fail=false) op read_lazy =
     begin match args.inputs with
       (InFile inname, _, _, _, _, _)::_ ->
         begin try ignore (close_in (open_in_bin inname)) with _ ->
-          Printf.eprintf "File %s does not exist\n%!" inname;
+          Pdfe.log (Printf.sprintf "File %s does not exist\n" inname);
           exit 2
         end
     | _ -> ()
     end;
-    Printf.eprintf "get_single_pdf: failed to read malformed PDF file. Consider using -gs-malformed\n%!";
+    Pdfe.log "get_single_pdf: failed to read malformed PDF file. Consider using -gs-malformed\n";
     exit 2
   in
   match args.inputs with
@@ -3034,7 +3038,7 @@ let rec get_pdf_from_input_kind ?(read_lazy=false) ?(decrypt=true) ?(fail=false)
   let failout () =
     if fail then begin
       (* Reconstructed with ghostscript, but then we couldn't read it even then. Do not loop. *)
-      Printf.eprintf "Failed to read gs-reconstructed PDF even though gs succeeded\n%!";
+      Pdfe.log "Failed to read gs-reconstructed PDF even though gs succeeded\n";
       exit 2
     end
   in
@@ -3042,12 +3046,12 @@ let rec get_pdf_from_input_kind ?(read_lazy=false) ?(decrypt=true) ?(fail=false)
     begin match input with
       (InFile inname, _, _, _, _, _) ->
         begin try ignore (close_in (open_in_bin inname)) with _ ->
-          Printf.eprintf "File %s does not exist\n%!" inname;
+          Pdfe.log (Printf.sprintf "File %s does not exist\n" inname);
           exit 2
         end
     | _ -> ()
     end;
-    Printf.eprintf "get_pdf_from_input_kind: failed to read malformed PDF file. Consider using -gs-malformed\n%!";
+    Pdfe.log "get_pdf_from_input_kind: failed to read malformed PDF file. Consider using -gs-malformed\n";
     exit 2
   in
   match ik with
@@ -3138,7 +3142,7 @@ let really_write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf outna
   then
     set_producer "cpdf non-commercial use only. To buy: http://coherentpdf.com/" pdf;
   if args.creator <> None then set_creator (unopt args.creator) pdf;
-  if args.debugcrypt then Printf.printf "really_write_pdf\n%!";
+  if args.debugcrypt then Printf.printf "really_write_pdf\n";
   let will_linearize =
     args.linearize || args.keeplinearize && pdf.Pdf.was_linearized
   in
@@ -3262,7 +3266,7 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
             with
               End_of_file ->
                 begin try close_in temp_file; Sys.remove temp with
-                  e -> Printf.eprintf "Failed to remove temp file %s (%s)\n%!" temp (Printexc.to_string e)
+                  e -> Pdfe.log (Printf.sprintf "Failed to remove temp file %s (%s)\n" temp (Printexc.to_string e))
                 end;
                 flush stdout (*r For Windows *)
 
@@ -3393,9 +3397,9 @@ let collate (names, pdfs, ranges) =
 
 let warn_prerotate range pdf =
   if not args.prerotate && not (Cpdfpage.allupright range pdf) then
-    Printf.eprintf "Some pages in the range have non-zero rotation or non (0,0)-based mediabox. \
-                    Consider adding -prerotate or pre-processing with -upright. \
-                    To silence this warning use -no-warn-rotate\n%!"
+    Pdfe.log "Some pages in the range have non-zero rotation or non (0,0)-based mediabox. \
+              Consider adding -prerotate or pre-processing with -upright. \
+              To silence this warning use -no-warn-rotate\n"
 
 let prerotate range pdf =
   Cpdfpage.upright ~fast:args.fast range pdf
@@ -3426,13 +3430,13 @@ let embed_font () =
 
 let check_bookmarks_mistake () =
   if args.merge_add_bookmarks_use_titles && not args.merge_add_bookmarks then
-    Printf.eprintf "Warning: -merge-add-bookmarks-use-titles is for use with -merge-add-bookmarks\n"
+    Pdfe.log "Warning: -merge-add-bookmarks-use-titles is for use with -merge-add-bookmarks\n"
 
 let check_clashing_output_name () =
   match args.out with
   | File s ->
       if (List.exists (function (InFile s', _, _, _, _, _) when s = s' -> true | _ -> false) args.inputs) then
-        Printf.eprintf "Warning: output file name clashes with input file name. Malformed file may result.\n"
+        Pdfe.log "Warning: output file name clashes with input file name. Malformed file may result.\n"
   | _ -> ()
 
 (* Main function *)
@@ -3688,7 +3692,7 @@ let go () =
         Pdf.iter_stream
           (function stream ->
              try Pdfcodec.decode_pdfstream_until_unknown pdf stream with
-               e -> Printf.eprintf "Decode failure: %s. Carrying on...\n%!" (Printexc.to_string e); ())
+               e -> Pdfe.log (Printf.sprintf "Decode failure: %s. Carrying on...\n" (Printexc.to_string e)); ())
           pdf;
         write_pdf ~is_decompress:true false pdf
   | Some Compress ->
@@ -4386,7 +4390,7 @@ let check_command_line () =
 
 let parse_argv () s specs anon_fun usage_msg =
   if args.debug then
-    Array.iter (Printf.eprintf "arg: %s\n%!") Sys.argv;
+    Array.iter (fun s -> Pdfe.log (Printf.sprintf "arg: %s\n" s)) Sys.argv;
   Arg.parse_argv ~current:(ref 0) s specs anon_fun usage_msg;
   check_command_line ()
 
@@ -4408,7 +4412,7 @@ let expand_args argv =
 
 let gs_malformed_force fi fo =
   if args.path_to_ghostscript = "" then begin
-    Printf.eprintf "Please supply path to gs with -gs\n%!";
+    Pdfe.log "Please supply path to gs with -gs\n";
     exit 2
   end;
     let gscall =
@@ -4418,7 +4422,7 @@ let gs_malformed_force fi fo =
     in
       match Sys.command gscall with
       | 0 -> exit 0
-      | _ -> Printf.eprintf "Failed to mend file.\n%!"; exit 2
+      | _ -> Pdfe.log "Failed to mend file.\n"; exit 2
 
 let process_env_vars () =
   match Sys.getenv_opt "CPDF_DEBUG" with
@@ -4447,9 +4451,8 @@ let go_withargv argv =
     flprint "This demo is for evaluation only. http://www.coherentpdf.com/\n";    
   if noncomp then
     begin
-      prerr_string "For non-commercial use only\n";
-      prerr_string "To purchase a license visit http://www.coherentpdf.com/\n\n";
-      flush stderr
+      Pdfe.log "For non-commercial use only\n";
+      Pdfe.log "To purchase a license visit http://www.coherentpdf.com/\n\n";
     end;
   try
     (* Pre-expand -args *)
@@ -4480,23 +4483,20 @@ let go_withargv argv =
       exit 0
   with
   | Arg.Bad s ->
-      prerr_string
+      Pdfe.log
         (implode (takewhile (neq '\n') (explode s)) ^ " Use -help for help.\n\n");
-      flush stderr;
       if not !stay_on_error then exit 2 else raise StayOnError
   | Arg.Help _ ->
       Arg.usage (align_specs specs) usage_msg;
       flush stderr (*r for Windows *)
   | Sys_error s as e ->
-      prerr_string (s ^ "\n\n");
-      flush stderr;
+      Pdfe.log (s ^ "\n\n");
       if not !stay_on_error then
         (if args.debug then raise e else exit 2)
       else raise StayOnError
   | Pdf.PDFError s as e ->
-      prerr_string
+      Pdfe.log
         ("cpdf encountered an error. Technical details follow:\n\n" ^ s ^ "\n\n");
-      flush stderr;
       if not !stay_on_error then
         if args.debug then raise e else exit 2
       else
@@ -4504,10 +4504,9 @@ let go_withargv argv =
   | Cpdferror.SoftError s -> soft_error s
   | Cpdferror.HardError s -> error s
   | e ->
-      prerr_string
+      Pdfe.log
         ("cpdf encountered an unexpected error. Technical Details follow:\n" ^
          Printexc.to_string e ^ "\n\n");
-      flush stderr;
       if not !stay_on_error then
         (if args.debug then raise e else exit 2) else raise StayOnError
 

@@ -51,7 +51,7 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
       | Cpdfembed.ExistingNamedFont -> raise (Pdf.PDFError "Cannot use existing font with -table-of-contents")
     in
   let marks = Pdfmarks.read_bookmarks pdf in
-  if marks = [] then (Printf.eprintf "No bookmarks, not making table of contents\n%!"; pdf) else
+  if marks = [] then (Pdfe.log "No bookmarks, not making table of contents\n"; pdf) else
   let f, fs = (font, fontsize) in
   let _, bfs as big = (font, fontsize *. 2.) in
   let firstpage = hd (Pdfpage.pages_of_pagetree pdf) in

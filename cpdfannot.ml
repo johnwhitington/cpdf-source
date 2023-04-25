@@ -75,7 +75,7 @@ let annotations_json_page calculate_pagenumber pdf page pagenum =
                     `Int objnum;
                      Cpdfjson.json_of_object ~utf8:true ~clean_strings:true pdf (fun _ -> ())
                        ~no_stream_data:false ~parse_content:false annot])
-           | _ -> Printf.eprintf "Warning: annotations must be indirect\n"; None
+           | _ -> Pdfe.log "Warning: annotations must be indirect\n"; None
            end)
         annots
   | _ -> []
@@ -93,7 +93,7 @@ let get_annotations_json pdf range =
   let pages, pagenums = split pairs in
   let json = flatten (map2 (annotations_json_page calculate_pagenumber pdf) pages pagenums) in
   (*Printf.printf "%i extra roots to explore\n" (length extra);
-  iter (fun x -> Printf.eprintf "%s\n\n" (Pdfwrite.string_of_pdf x)) extra;*)
+  iter (fun x -> Pdfe.log "%s\n\n" (Pdfwrite.string_of_pdf x)) extra;*)
   let extra =
     map
       (fun n ->

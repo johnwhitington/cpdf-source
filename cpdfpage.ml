@@ -525,7 +525,7 @@ let protect fast pdf resources content =
       let qs = length (keep (eq Pdfops.Op_q) ops) in
       let bigqs = length (keep (eq Pdfops.Op_Q) ops) in
       let deficit = if qs > bigqs then qs - bigqs else 0 in
-        if deficit <> 0 then Printf.eprintf "Q Deficit was nonzero. Fixing. %i\n%!" deficit;
+        if deficit <> 0 then Pdfe.log (Printf.sprintf "Q Deficit was nonzero. Fixing. %i\n" deficit);
         deficit
   in
     let addstream ops = Pdf.addobj pdf (Pdfops.stream_of_ops ops) in
@@ -876,7 +876,7 @@ let trim_marks_page fast pdf n page =
       in
         Pdfpage.postpend_operators pdf ops ~fast page
   | _, _ ->
-      (*Printf.eprintf "warning: no /TrimBox found on page %i\n%!" n;*)
+      (*Pdfe.log (Printf.sprintf "warning: no /TrimBox found on page %i\n" n);*)
       page
 
 let trim_marks ?(fast=false) pdf range =
