@@ -34,5 +34,12 @@ type drawops =
   | HardXObject of drawops list
   | Image of string
   | ImageXObject of string * Pdf.pdfobject
+  | NewPage
+  | Opacity of float
+  | SOpacity of float
+  | Text of string
+  | Block of unit (* to fix *)
+  | URL of string
+  | EndURL
 
 val draw : bool -> int list -> Pdf.t -> drawops list -> Pdf.t

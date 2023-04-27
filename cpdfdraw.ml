@@ -36,6 +36,13 @@ type drawops =
   | HardXObject of drawops list
   | Image of string
   | ImageXObject of string * Pdf.pdfobject
+  | NewPage
+  | Opacity of float
+  | SOpacity of float
+  | Text of string
+  | Block of unit (* to fix *)
+  | URL of string
+  | EndURL
 
 (* Hash table of (human name, (resources name, object)) for image xobjects *)
 let images = null_hash ()
@@ -84,6 +91,7 @@ let rec ops_of_drawop pdf = function
   | ImageXObject (s, obj) ->
       Hashtbl.add images s (fresh_xobj_name (), Pdf.addobj pdf obj); 
       []
+  | NewPage -> Pdfe.log ("NewPage remaining in graphic stream"); assert false
 
 and ops_of_drawops pdf drawops =
   flatten (map (ops_of_drawop pdf) drawops)

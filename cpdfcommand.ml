@@ -2044,6 +2044,27 @@ let set_input_png s =
 let addimage s =
   addop (Cpdfdraw.Image s)
 
+let addnewpage s =
+  addop Cpdfdraw.NewPage
+
+let addopacity f =
+  addop (Cpdfdraw.Opacity f)
+
+let addsopacity f =
+  addop (Cpdfdraw.SOpacity f)
+
+let addtext s =
+  addop (Cpdfdraw.Text s)
+
+let addblock s =
+  addop (Cpdfdraw.Block ())
+
+let addurl s =
+  addop (Cpdfdraw.URL s)
+
+let addendurl () =
+  addop Cpdfdraw.EndURL
+
 let setstderrtostdout () =
   Pdfe.logger := (fun s -> print_string s; flush stdout)
 
@@ -2878,6 +2899,16 @@ and specs =
    ("-draw-jpeg", Arg.String addjpeg, " Load a JPEG from file and name it");
    ("-draw-png", Arg.String addpng, " Load a PNG from file and name it");
    ("-image", Arg.String addimage, " Draw an image which has already been loaded");
+   ("-newpage", Arg.Unit addnewpage, " Move to a fresh page");
+   ("-opacity", Arg.Float addopacity, " Set opacity");
+   ("-sopacity", Arg.Float addsopacity, " Set stroke opacity");
+   ("-text", Arg.String addtext, " Draw text and move position. ");
+   ("-block", Arg.String addblock, " Set up text block");
+   ("-url", Arg.String addurl, " Begin URL");
+   ("-endurl", Arg.Unit addendurl, " End URL");
+   (* Getting information before or whilst drawing *)
+   (*("-textwidth", ...., "Get width of line of text");
+   ("-blocklines", ...., "Get number of lines of text block");*)
    (* These items are undocumented *)
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit setdebugcrypt, "");
