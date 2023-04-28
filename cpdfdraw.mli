@@ -39,7 +39,8 @@ type drawops =
   | SOpacity of float
   | Font of Pdftext.standard_font * float
   | Text of string
-  | Block of unit (* to fix *)
+  | Newline
+  | SetLeading of float
   | URL of string
   | EndURL
 

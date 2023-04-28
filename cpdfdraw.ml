@@ -41,7 +41,8 @@ type drawops =
   | SOpacity of float
   | Font of Pdftext.standard_font * float
   | Text of string
-  | Block of unit (* to fix *)
+  | Newline
+  | SetLeading of float
   | URL of string
   | EndURL
 
@@ -136,6 +137,10 @@ let rec ops_of_drawop pdf = function
         implode (map char_of_int (option_map (Pdftext.charcode_extractor_of_font_real !current_font) (Pdftext.codepoints_of_utf8 s)))
       in
         [Pdfops.Op_BT; Pdfops.Op_Tj charcodes; Pdfops.Op_ET]
+  | SetLeading f ->
+      [Pdfops.Op_TL f]
+  | Newline ->
+      [Pdfops.Op_T']
 
 and ops_of_drawops pdf drawops =
   flatten (map (ops_of_drawop pdf) drawops)

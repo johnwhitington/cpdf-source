@@ -2056,16 +2056,20 @@ let addsopacity f =
 let addtext s =
   let font = match args.font with StandardFont s -> s | _ -> error "-text: not a standard font" in
     addop (Cpdfdraw.Font (font, args.fontsize));
+    addop (Cpdfdraw.SetLeading (args.fontsize *. 1.2));
     addop (Cpdfdraw.Text s)
-
-let addblock s =
-  addop (Cpdfdraw.Block ())
 
 let addurl s =
   addop (Cpdfdraw.URL s)
 
 let addendurl () =
   addop Cpdfdraw.EndURL
+
+let addleading f =
+  addop (Cpdfdraw.SetLeading f)
+
+let addnewline () =
+  addop Cpdfdraw.Newline
 
 let setstderrtostdout () =
   Pdfe.logger := (fun s -> print_string s; flush stdout)
@@ -2905,12 +2909,12 @@ and specs =
    ("-opacity", Arg.Float addopacity, " Set opacity");
    ("-sopacity", Arg.Float addsopacity, " Set stroke opacity");
    ("-text", Arg.String addtext, " Draw text and move position. ");
-   ("-block", Arg.String addblock, " Set up text block");
    ("-url", Arg.String addurl, " Begin URL");
    ("-endurl", Arg.Unit addendurl, " End URL");
+   ("-leading", Arg.Float addleading, " Set leading");
+   ("-nl", Arg.Unit addnewline, " New line");
    (* Getting information before or whilst drawing *)
-   (*("-textwidth", ...., "Get width of line of text");
-   ("-blocklines", ...., "Get number of lines of text block");*)
+   (*("-textwidth", ...., "Get width of line of text");*)
    (* These items are undocumented *)
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit setdebugcrypt, "");
