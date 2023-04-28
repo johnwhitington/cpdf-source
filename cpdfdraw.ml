@@ -64,6 +64,8 @@ let fontnum = ref 0
 
 let fonts = null_hash ()
 
+let current_font = ref (Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding))
+
 let fresh_font_name pdf f =
   fontnum += 1;
   let n = "/F" ^ string_of_int !fontnum in
@@ -130,7 +132,10 @@ let rec ops_of_drawop pdf = function
       let n = fresh_font_name pdf (Pdftext.StandardFont (s, Pdftext.WinAnsiEncoding)) in
         [Pdfops.Op_Tf (n, f)]
   | Text s ->
-      [Pdfops.Op_BT; Pdfops.Op_Tj s; Pdfops.Op_ET] (* FIXME: convert to actual char codes based on font in use, obvs *)
+      let charcodes =
+        implode (map char_of_int (option_map (Pdftext.charcode_extractor_of_font_real !current_font) (Pdftext.codepoints_of_utf8 s)))
+      in
+        [Pdfops.Op_BT; Pdfops.Op_Tj charcodes; Pdfops.Op_ET]
 
 and ops_of_drawops pdf drawops =
   flatten (map (ops_of_drawop pdf) drawops)
@@ -167,7 +172,6 @@ let draw fast range pdf drawops =
                 let new_xobjects = fold_right (fun (k, v) d -> add k v d) image_resources existing_xobjects in
                 let new_gss = fold_right (fun (k, v) d -> add k v d) gss_resources existing_gss in
                 let new_fonts = fold_right (fun (k, v) d -> add k v d) font_resources existing_fonts in
-                let r =
                   Pdf.add_dict_entry
                     (Pdf.add_dict_entry
                       (Pdf.add_dict_entry p.Pdfpage.resources "/XObject" (Pdf.Dictionary new_xobjects))
@@ -175,9 +179,6 @@ let draw fast range pdf drawops =
                       (Pdf.Dictionary new_gss))
                     "/Font"
                     (Pdf.Dictionary new_fonts)
-                in
-                  Printf.printf "final: %s\n" (Pdfwrite.string_of_pdf r);
-                  r
             in
              {p with resources = new_resources})
           pages
