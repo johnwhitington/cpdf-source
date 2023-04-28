@@ -37,7 +37,7 @@ type drawops =
   | NewPage
   | Opacity of float
   | SOpacity of float
-  | Font of string * float
+  | Font of Pdftext.standard_font * float
   | Text of string
   | Block of unit (* to fix *)
   | URL of string

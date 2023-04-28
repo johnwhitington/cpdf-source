@@ -39,7 +39,7 @@ type drawops =
   | NewPage
   | Opacity of float
   | SOpacity of float
-  | Font of string * float
+  | Font of Pdftext.standard_font * float
   | Text of string
   | Block of unit (* to fix *)
   | URL of string
@@ -60,7 +60,15 @@ let fresh_gs_name () =
 
 let current_url = ref None
 
-let fresh_font_name () = "/F0"
+let fontnum = ref 0
+
+let fonts = null_hash ()
+
+let fresh_font_name pdf f =
+  fontnum += 1;
+  let n = "/F" ^ string_of_int !fontnum in
+    Hashtbl.add fonts n (Pdf.Indirect (Pdftext.write_font pdf f));
+    n
 
 let rec ops_of_drawop pdf = function
   | Push -> [Pdfops.Op_q]
@@ -119,7 +127,8 @@ let rec ops_of_drawop pdf = function
       current_url := None;
       []
   | Font (s, f) ->
-      [Pdfops.Op_Tf (s, f)]
+      let n = fresh_font_name pdf (Pdftext.StandardFont (s, Pdftext.WinAnsiEncoding)) in
+        [Pdfops.Op_Tf (n, f)]
   | Text s ->
       [Pdfops.Op_BT; Pdfops.Op_Tj s; Pdfops.Op_ET] (* FIXME: convert to actual char codes based on font in use, obvs *)
 

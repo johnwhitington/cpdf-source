@@ -2054,8 +2054,9 @@ let addsopacity f =
   addop (Cpdfdraw.SOpacity f)
 
 let addtext s =
-  addop (Cpdfdraw.Font ("/F0", 36.));
-  addop (Cpdfdraw.Text s)
+  let font = match args.font with StandardFont s -> s | _ -> error "-text: not a standard font" in
+    addop (Cpdfdraw.Font (font, args.fontsize));
+    addop (Cpdfdraw.Text s)
 
 let addblock s =
   addop (Cpdfdraw.Block ())
