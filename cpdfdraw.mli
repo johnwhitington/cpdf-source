@@ -37,6 +37,7 @@ type drawops =
   | NewPage
   | Opacity of float
   | SOpacity of float
+  | Font of string * float
   | Text of string
   | Block of unit (* to fix *)
   | URL of string

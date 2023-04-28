@@ -2054,6 +2054,7 @@ let addsopacity f =
   addop (Cpdfdraw.SOpacity f)
 
 let addtext s =
+  addop (Cpdfdraw.Font ("/F0", 36.));
   addop (Cpdfdraw.Text s)
 
 let addblock s =

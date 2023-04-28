@@ -39,6 +39,7 @@ type drawops =
   | NewPage
   | Opacity of float
   | SOpacity of float
+  | Font of string * float
   | Text of string
   | Block of unit (* to fix *)
   | URL of string
@@ -56,6 +57,10 @@ let gsnum = ref ~-1
 let fresh_gs_name () =
   gsnum += 1;
   "/gs" ^ string_of_int !gsnum
+
+let current_url = ref None
+
+let fresh_font_name () = "/F0"
 
 let rec ops_of_drawop pdf = function
   | Push -> [Pdfops.Op_q]
@@ -107,6 +112,16 @@ let rec ops_of_drawop pdf = function
       let n = fresh_gs_name () in
         Hashtbl.add gss n (Pdf.Dictionary [("/CA", Pdf.Real v)]);
         [Pdfops.Op_gs n]
+  | URL s ->
+      current_url := Some s;
+      []
+  | EndURL ->
+      current_url := None;
+      []
+  | Font (s, f) ->
+      [Pdfops.Op_Tf (s, f)]
+  | Text s ->
+      [Pdfops.Op_BT; Pdfops.Op_Tj s; Pdfops.Op_ET] (* FIXME: convert to actual char codes based on font in use, obvs *)
 
 and ops_of_drawops pdf drawops =
   flatten (map (ops_of_drawop pdf) drawops)
