@@ -46,9 +46,16 @@ type drawops =
 
 (* Hash table of (human name, (resources name, object)) for image xobjects *)
 let images = null_hash ()
+let gss = null_hash ()
 
 (* Fresh XObject names. If we are stamping over another page, manage clashes later. *)
 let fresh_xobj_name () = "/Img0"
+
+let gsnum = ref ~-1
+
+let fresh_gs_name () =
+  gsnum += 1;
+  "/gs" ^ string_of_int !gsnum
 
 let rec ops_of_drawop pdf = function
   | Push -> [Pdfops.Op_q]
@@ -92,30 +99,49 @@ let rec ops_of_drawop pdf = function
       Hashtbl.add images s (fresh_xobj_name (), Pdf.addobj pdf obj); 
       []
   | NewPage -> Pdfe.log ("NewPage remaining in graphic stream"); assert false
+  | Opacity v ->
+      let n = fresh_gs_name () in
+        Hashtbl.add gss n (Pdf.Dictionary [("/ca", Pdf.Real v)]);
+        [Pdfops.Op_gs n]
+  | SOpacity v ->
+      let n = fresh_gs_name () in
+        Hashtbl.add gss n (Pdf.Dictionary [("/CA", Pdf.Real v)]);
+        [Pdfops.Op_gs n]
 
 and ops_of_drawops pdf drawops =
   flatten (map (ops_of_drawop pdf) drawops)
 
-(* Draw all the accumulated operators. FIXME: Manage name clashes in Xobjects *)
+(* Draw all the accumulated operators. FIXME: Manage name clashes in Xobjects etc. *)
 let draw fast range pdf drawops =
   let s = Pdfops.string_of_ops (ops_of_drawops pdf drawops) in
   let pdf = Cpdftweak.append_page_content s false fast range pdf in
   let images = list_of_hashtbl images in
-  let resources = map (fun (_, (n, o)) -> (n, Pdf.Indirect o)) images in
-    match images with [] -> pdf | _ ->
+  let image_resources = map (fun (_, (n, o)) -> (n, Pdf.Indirect o)) images in
+  let gss_resources = list_of_hashtbl gss in
+  Printf.printf "%i gss_resources\n" (length gss_resources);
+    match images, gss_resources with [], [] -> pdf | _ ->
       let pages = Pdfpage.pages_of_pagetree pdf in
       let pages =
         map
           (fun p ->
             let new_resources =
-              let existing =
-                begin match Pdf.lookup_direct pdf "/XObject" p.Pdfpage.resources with
+              let existing_xobjects =
+                match Pdf.lookup_direct pdf "/XObject" p.Pdfpage.resources with
                 | Some (Pdf.Dictionary d) -> d
                 | _ -> []
-                end
               in
-                let new_xobjects = fold_right (fun (k, v) d -> add k v d) resources existing in
-                  Pdf.add_dict_entry p.Pdfpage.resources "/XObject" (Pdf.Dictionary new_xobjects)
+              let existing_gss =
+                match Pdf.lookup_direct pdf "/ExtGState" p.Pdfpage.resources with
+                | Some (Pdf.Dictionary d) -> d
+                | _ -> []
+              in
+                let new_xobjects = fold_right (fun (k, v) d -> add k v d) image_resources existing_xobjects in
+                let new_gss = fold_right (fun (k, v) d -> add k v d) gss_resources existing_gss in
+                let r =
+                  Pdf.add_dict_entry (Pdf.add_dict_entry p.Pdfpage.resources "/XObject" (Pdf.Dictionary new_xobjects)) "/ExtGState" (Pdf.Dictionary new_gss)
+                in
+                  Printf.printf "final: %s\n" (Pdfwrite.string_of_pdf r);
+                  r
             in
              {p with resources = new_resources})
           pages
