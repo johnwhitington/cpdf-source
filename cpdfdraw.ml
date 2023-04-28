@@ -142,8 +142,8 @@ let draw fast range pdf drawops =
   let images = list_of_hashtbl images in
   let image_resources = map (fun (_, (n, o)) -> (n, Pdf.Indirect o)) images in
   let gss_resources = list_of_hashtbl gss in
-  Printf.printf "%i gss_resources\n" (length gss_resources);
-    match images, gss_resources with [], [] -> pdf | _ ->
+  let font_resources = list_of_hashtbl fonts in
+    match images, gss_resources, font_resources with [], [], [] -> pdf | _ ->
       let pages = Pdfpage.pages_of_pagetree pdf in
       let pages =
         map
@@ -159,10 +159,22 @@ let draw fast range pdf drawops =
                 | Some (Pdf.Dictionary d) -> d
                 | _ -> []
               in
+              let existing_fonts =
+                match Pdf.lookup_direct pdf "/Font" p.Pdfpage.resources with
+                | Some (Pdf.Dictionary d) -> d
+                | _ -> []
+              in
                 let new_xobjects = fold_right (fun (k, v) d -> add k v d) image_resources existing_xobjects in
                 let new_gss = fold_right (fun (k, v) d -> add k v d) gss_resources existing_gss in
+                let new_fonts = fold_right (fun (k, v) d -> add k v d) font_resources existing_fonts in
                 let r =
-                  Pdf.add_dict_entry (Pdf.add_dict_entry p.Pdfpage.resources "/XObject" (Pdf.Dictionary new_xobjects)) "/ExtGState" (Pdf.Dictionary new_gss)
+                  Pdf.add_dict_entry
+                    (Pdf.add_dict_entry
+                      (Pdf.add_dict_entry p.Pdfpage.resources "/XObject" (Pdf.Dictionary new_xobjects))
+                      "/ExtGState"
+                      (Pdf.Dictionary new_gss))
+                    "/Font"
+                    (Pdf.Dictionary new_fonts)
                 in
                   Printf.printf "final: %s\n" (Pdfwrite.string_of_pdf r);
                   r
