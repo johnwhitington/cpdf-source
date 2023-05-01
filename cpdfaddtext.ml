@@ -213,33 +213,33 @@ let pagelabel pdf num =
     num
     (Pdfpagelabels.complete (Pdfpagelabels.read pdf))
 
+let replace_pairs pdf endpage extract_text_font_size filename bates batespad num page =
+    [
+     "%PageDiv2", (fun () -> string_of_int ((num + 1) / 2));
+     "%Page", (fun () -> string_of_int num);
+     "%Roman", (fun () -> roman_upper num);
+     "%roman", (fun () -> roman_lower num);
+     "%filename", (fun () -> filename);
+     "%Label", (fun () -> pagelabel pdf num);
+     "%EndPage", (fun () -> string_of_int endpage);
+     "%EndLabel", (fun () -> pagelabel pdf endpage);
+     "%ExtractedText", (fun () -> Cpdfextracttext.extract_page_text extract_text_font_size pdf num page);
+     "%Bates",
+        (fun () ->
+          (let numstring = string_of_int (bates + num - 1) in
+           match batespad with
+             None -> numstring
+           | Some w ->
+               if String.length numstring >= w
+                 then numstring
+                 else implode (many '0' (w - String.length numstring)) ^ numstring))]
+
 let addtext
   time lines linewidth outline fast colour fontname encoding bates batespad
   fontsize font fontpdfobj underneath position hoffset voffset text pages
   cropbox opacity justification filename extract_text_font_size shift pdf
 =
   let endpage = Pdfpage.endpage pdf in
-  let replace_pairs pdf filename bates batespad num page =
-      [
-       "%PageDiv2", (fun () -> string_of_int ((num + 1) / 2));
-       "%Page", (fun () -> string_of_int num);
-       "%Roman", (fun () -> roman_upper num);
-       "%roman", (fun () -> roman_lower num);
-       "%filename", (fun () -> filename);
-       "%Label", (fun () -> pagelabel pdf num);
-       "%EndPage", (fun () -> string_of_int endpage);
-       "%EndLabel", (fun () -> pagelabel pdf endpage);
-       "%ExtractedText", (fun () -> Cpdfextracttext.extract_page_text extract_text_font_size pdf num page);
-       "%Bates",
-          (fun () ->
-            (let numstring = string_of_int (bates + num - 1) in
-             match batespad with
-               None -> numstring
-             | Some w ->
-                 if String.length numstring >= w
-                   then numstring
-                   else implode (many '0' (w - String.length numstring)) ^ numstring))]
-  in
   let shifts = Cpdfcoord.parse_coordinates pdf shift in
   let addtext_page num page =
     let shift_x, shift_y = List.nth shifts (num - 1) in
@@ -298,13 +298,13 @@ let addtext
               in
         let unique_fontname = Pdf.unique_key "F" fontdict in
           let ops, urls, x, y, hoffset, voffset, text, joffset =
-            let text = process_text time text (replace_pairs pdf filename bates batespad num page) in
+            let text = process_text time text (replace_pairs pdf endpage extract_text_font_size filename bates batespad num page) in
             let text, urls = get_urls_line text in
 
                 let expanded_lines =
                   map
                     (function text ->
-                       process_text time text (replace_pairs pdf filename bates batespad num page))
+                       process_text time text (replace_pairs pdf endpage extract_text_font_size filename bates batespad num page))
                     lines
                 in
                 let expanded_lines = (* process URLs for justification too *)

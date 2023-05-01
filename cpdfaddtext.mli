@@ -45,6 +45,17 @@ val addtexts :
     Pdf.t ->(*pdf*)
     Pdf.t
 
+val replace_pairs :
+  Pdf.t ->
+  int ->
+  float option ->
+  string ->
+  int ->
+  int option -> int -> Pdfpage.t -> (string * (unit -> string)) list
+
+val process_text :
+  Cpdfstrftime.t -> string -> (string * (unit -> string)) list -> string
+
 (* Add a rectangle to the page *) 
 val addrectangle :
     bool ->
