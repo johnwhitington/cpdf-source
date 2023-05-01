@@ -1771,7 +1771,7 @@ let whingemalformed () =
   Pdfe.log "Command line must be of exactly the form\ncpdf <infile> -gs <path> -gs-malformed-force -o <outfile>\n";
   exit 1
 
-(* Drawing operations. FIXME: Clear this around ANDs? *)
+(* Drawing operations. *)
 let drawops =
   let t = Hashtbl.create 10 in
     Hashtbl.add t "_" [];
@@ -4544,6 +4544,7 @@ let go_withargv argv =
            (*Printf.printf "AND:%b, %s\n" islast (Array.fold_left (fun x y -> x  ^ " " ^ y) "" s);
            flprint "\n";*)
            reset_arguments ();
+           Hashtbl.clear drawops;
            process_env_vars ();
            parse_argv () s (align_specs specs) anon_fun usage_msg;
            parse_argv () (Array.of_list ("cpdf"::!control_args)) (align_specs specs) anon_fun usage_msg;
