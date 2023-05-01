@@ -80,9 +80,15 @@ let fresh_font_name pdf f =
     Hashtbl.add fonts n (Pdf.Indirect (Pdftext.write_font pdf f));
     n
 
-let process_specials s = s 
+let time = ref Cpdfstrftime.dummy
 
-let rec ops_of_drawop pdf = function
+let process_specials pdf endpage filename bates batespad num page s =
+  let pairs =
+    Cpdfaddtext.replace_pairs pdf endpage None filename bates batespad num page
+  in
+    Cpdfaddtext.process_text !time s pairs
+
+let rec ops_of_drawop pdf endpage filename bates batespad num page = function
   | Push -> [Pdfops.Op_q]
   | Pop -> [Pdfops.Op_Q]
   | Matrix m -> [Pdfops.Op_cm m] 
@@ -118,7 +124,7 @@ let rec ops_of_drawop pdf = function
   | SetMiterLimit m -> [Pdfops.Op_M m]
   | SetDashPattern (x, y) -> [Pdfops.Op_d (x, y)]
   | SoftXObject l | HardXObject l ->
-      [Pdfops.Op_q] @ ops_of_drawops pdf l @ [Pdfops.Op_Q]
+      [Pdfops.Op_q] @ ops_of_drawops pdf endpage filename bates batespad num page l @ [Pdfops.Op_Q]
   | Image s -> [Pdfops.Op_Do (try fst (Hashtbl.find images s) with _ -> Cpdferror.error ("Image not found: " ^ s))]
   | ImageXObject (s, obj) ->
       Hashtbl.add images s (fresh_xobj_name (), Pdf.addobj pdf obj); 
@@ -144,8 +150,9 @@ let rec ops_of_drawop pdf = function
   | BT -> [Pdfops.Op_BT]
   | ET -> [Pdfops.Op_ET]
   | Text s ->
+      let s = process_specials pdf endpage filename bates batespad num page s in
       let charcodes =
-        implode (map char_of_int (option_map (Pdftext.charcode_extractor_of_font_real !current_font) (Pdftext.codepoints_of_utf8 (process_specials s))))
+        implode (map char_of_int (option_map (Pdftext.charcode_extractor_of_font_real !current_font) (Pdftext.codepoints_of_utf8 s)))
       in
         [Pdfops.Op_Tj charcodes]
   | Leading f -> [Pdfops.Op_TL f]
@@ -156,12 +163,13 @@ let rec ops_of_drawop pdf = function
   | Rise f -> [Pdfops.Op_Ts f]
   | Newline -> [Pdfops.Op_T']
 
-and ops_of_drawops pdf drawops =
-  flatten (map (ops_of_drawop pdf) drawops)
+and ops_of_drawops pdf endpage filename bates batespad num page drawops =
+  flatten (map (ops_of_drawop pdf endpage filename bates batespad num page) drawops)
 
-(* Draw all the accumulated operators. FIXME: Manage name clashes in Xobjects etc. *)
+(* Draw all the accumulated operators. *)
 let draw fast range pdf drawops =
-  let s = Pdfops.string_of_ops (ops_of_drawops pdf drawops) in
+  time := Cpdfstrftime.current_time ();
+  let s = Pdfops.string_of_ops (ops_of_drawops pdf 1 "" 0 None 1 (Pdfpage.blankpage Pdfpaper.a4) drawops) in
   let pdf = Cpdftweak.append_page_content s false fast range pdf in
   let images = list_of_hashtbl images in
   let image_resources = map (fun (_, (n, o)) -> (n, Pdf.Indirect o)) images in
