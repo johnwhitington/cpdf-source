@@ -80,6 +80,8 @@ let fresh_font_name pdf f =
     Hashtbl.add fonts n (Pdf.Indirect (Pdftext.write_font pdf f));
     n
 
+let process_specials s = s 
+
 let rec ops_of_drawop pdf = function
   | Push -> [Pdfops.Op_q]
   | Pop -> [Pdfops.Op_Q]
@@ -143,7 +145,7 @@ let rec ops_of_drawop pdf = function
   | ET -> [Pdfops.Op_ET]
   | Text s ->
       let charcodes =
-        implode (map char_of_int (option_map (Pdftext.charcode_extractor_of_font_real !current_font) (Pdftext.codepoints_of_utf8 s)))
+        implode (map char_of_int (option_map (Pdftext.charcode_extractor_of_font_real !current_font) (Pdftext.codepoints_of_utf8 (process_specials s))))
       in
         [Pdfops.Op_Tj charcodes]
   | Leading f -> [Pdfops.Op_TL f]
