@@ -38,9 +38,16 @@ type drawops =
   | Opacity of float
   | SOpacity of float
   | Font of Pdftext.standard_font * float
+  | BT
+  | ET
   | Text of string
   | Newline
-  | SetLeading of float
+  | Leading of float
+  | CharSpace of float
+  | WordSpace of float
+  | TextScale of float
+  | RenderMode of int
+  | Rise of float
   | URL of string
   | EndURL
 

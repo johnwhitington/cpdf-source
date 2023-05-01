@@ -2056,8 +2056,31 @@ let addsopacity f =
 let addtext s =
   let font = match args.font with StandardFont s -> s | _ -> error "-text: not a standard font" in
     addop (Cpdfdraw.Font (font, args.fontsize));
-    addop (Cpdfdraw.SetLeading (args.fontsize *. 1.2));
     addop (Cpdfdraw.Text s)
+
+let addleading f =
+  addop (Cpdfdraw.Leading f)
+
+let addbt () =
+  addop Cpdfdraw.BT
+
+let addet () =
+  addop Cpdfdraw.ET
+
+let addcharspace f =
+  addop (Cpdfdraw.CharSpace f)
+
+let addwordspace f =
+  addop (Cpdfdraw.WordSpace f)
+
+let addtextscale f =
+  addop (Cpdfdraw.TextScale f)
+
+let addrendermode i =
+  addop (Cpdfdraw.RenderMode i)
+
+let addrise f =
+  addop (Cpdfdraw.Rise f)
 
 let addurl s =
   addop (Cpdfdraw.URL s)
@@ -2066,7 +2089,7 @@ let addendurl () =
   addop Cpdfdraw.EndURL
 
 let addleading f =
-  addop (Cpdfdraw.SetLeading f)
+  addop (Cpdfdraw.Leading f)
 
 let addnewline () =
   addop Cpdfdraw.Newline
@@ -2908,10 +2931,17 @@ and specs =
    ("-newpage", Arg.Unit addnewpage, " Move to a fresh page");
    ("-opacity", Arg.Float addopacity, " Set opacity");
    ("-sopacity", Arg.Float addsopacity, " Set stroke opacity");
+   ("-bt", Arg.Unit addbt, " Begin text");
+   ("-et", Arg.Unit addet, " End text");
    ("-text", Arg.String addtext, " Draw text and move position. ");
    ("-url", Arg.String addurl, " Begin URL");
    ("-endurl", Arg.Unit addendurl, " End URL");
    ("-leading", Arg.Float addleading, " Set leading");
+   ("-charspace", Arg.Float addcharspace, " Set character spacing");
+   ("-wordspace", Arg.Float addwordspace, " Set word space");
+   ("-textscale", Arg.Float addtextscale, " Set text scale");
+   ("-rendermode", Arg.Int addrendermode, " Set text rendering mode");
+   ("-rise", Arg.Float addrise, " Set text rise");
    ("-nl", Arg.Unit addnewline, " New line");
    (* Getting information before or whilst drawing *)
    (*("-textwidth", ...., "Get width of line of text");*)

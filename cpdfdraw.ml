@@ -40,9 +40,16 @@ type drawops =
   | Opacity of float
   | SOpacity of float
   | Font of Pdftext.standard_font * float
+  | BT
+  | ET
   | Text of string
   | Newline
-  | SetLeading of float
+  | Leading of float
+  | CharSpace of float
+  | WordSpace of float
+  | TextScale of float
+  | RenderMode of int
+  | Rise of float
   | URL of string
   | EndURL
 
@@ -132,15 +139,20 @@ let rec ops_of_drawop pdf = function
   | Font (s, f) ->
       let n = fresh_font_name pdf (Pdftext.StandardFont (s, Pdftext.WinAnsiEncoding)) in
         [Pdfops.Op_Tf (n, f)]
+  | BT -> [Pdfops.Op_BT]
+  | ET -> [Pdfops.Op_ET]
   | Text s ->
       let charcodes =
         implode (map char_of_int (option_map (Pdftext.charcode_extractor_of_font_real !current_font) (Pdftext.codepoints_of_utf8 s)))
       in
-        [Pdfops.Op_BT; Pdfops.Op_Tj charcodes; Pdfops.Op_ET]
-  | SetLeading f ->
-      [Pdfops.Op_TL f]
-  | Newline ->
-      [Pdfops.Op_T']
+        [Pdfops.Op_Tj charcodes]
+  | Leading f -> [Pdfops.Op_TL f]
+  | CharSpace f -> [Pdfops.Op_Tc f]
+  | WordSpace f -> [Pdfops.Op_Tw f]
+  | TextScale f -> [Pdfops.Op_Tz f]
+  | RenderMode i -> [Pdfops.Op_Tr i]
+  | Rise f -> [Pdfops.Op_Ts f]
+  | Newline -> [Pdfops.Op_T']
 
 and ops_of_drawops pdf drawops =
   flatten (map (ops_of_drawop pdf) drawops)
