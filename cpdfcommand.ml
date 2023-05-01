@@ -1784,6 +1784,16 @@ let addop o =
   let v = Hashtbl.find drawops !currstash in
     Hashtbl.replace drawops !currstash (o::v)
 
+let tdeep = ref 0
+
+let addbt () =
+  addop Cpdfdraw.BT;
+  tdeep +=1
+
+let addet () =
+  addop Cpdfdraw.ET;
+  tdeep -=1
+
 let readfloats s = map float_of_string (String.split_on_char ' ' s)
 
 let col_of_string s =  
@@ -2061,11 +2071,6 @@ let addtext s =
 let addleading f =
   addop (Cpdfdraw.Leading f)
 
-let addbt () =
-  addop Cpdfdraw.BT
-
-let addet () =
-  addop Cpdfdraw.ET
 
 let addcharspace f =
   addop (Cpdfdraw.CharSpace f)
@@ -4437,6 +4442,7 @@ let go () =
       let pdf = Cpdftexttopdf.typeset ~font:cpdffont ~papersize:args.createpdf_pagesize ~fontsize:args.fontsize text in
         write_pdf false pdf
   | Some Draw ->
+      if !tdeep <> 0 then error "Unmatched -bt / -et" else
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
         write_pdf false (Cpdfdraw.draw args.fast range pdf (rev (Hashtbl.find drawops "_")))
