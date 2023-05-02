@@ -3,8 +3,7 @@ open Pdfutil
 let emptypage = Pdfpage.blankpage Pdfpaper.a4
 
 let error s =
-  Pdfe.log (s ^ "\nUse -help for help.\n");
-  exit 2
+  raise (Pdf.PDFError s)
 
 (* Unit conversions to points. *)
 let mm x = ((x /. 10.) /. 2.54) *. 72.
