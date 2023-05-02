@@ -4455,7 +4455,15 @@ let go () =
       let pdf = Cpdftexttopdf.typeset ~font:cpdffont ~papersize:args.createpdf_pagesize ~fontsize:args.fontsize text in
         write_pdf false pdf
   | Some (TextWidth s) ->
-      Printf.printf "%i\n" (1000)
+      let rawwidth =
+        match args.font with
+        | StandardFont f ->
+            Pdfstandard14.textwidth false WinAnsiEncoding f s
+        | _ ->
+            error "-text-width only works for the standard 14 fonts"
+      in
+        let w = (float rawwidth *. args.fontsize) /. 1000. in
+          Printf.printf "%f\n" w
   | Some Draw ->
       if !tdeep <> 0 then error "Unmatched -bt / -et" else
       let pdf = get_single_pdf args.op false in
