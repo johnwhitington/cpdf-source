@@ -219,6 +219,7 @@ type op =
   | PrintFontEncoding of string
   | TableOfContents
   | Typeset of string
+  | TextWidth of string
   | Draw
   | Composition of bool
 
@@ -351,6 +352,7 @@ let string_of_op = function
   | StampAsXObject _ -> "StampAsXObject"
   | TableOfContents -> "TableOfContents"
   | Typeset _ -> "Typeset"
+  | TextWidth _ -> "TextWidth"
   | Draw -> "Draw"
   | Composition _ -> "Composition"
 
@@ -830,6 +832,7 @@ let banned banlist = function
   | ExtractText | ExtractImages | ExtractFontFile
   | AddPageLabels | RemovePageLabels | OutputJSON | OCGCoalesce
   | OCGRename | OCGList | OCGOrderAll | PrintFontEncoding _ | TableOfContents | Typeset _ | Composition _
+  | TextWidth _
      -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
@@ -2107,6 +2110,9 @@ let addnewline () =
 let setstderrtostdout () =
   Pdfe.logger := (fun s -> print_string s; flush stdout)
 
+let settextwidth s =
+  args.op <- Some (TextWidth s)
+
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
   control_args := !control_args @ parse_control_file filename
@@ -2902,6 +2908,9 @@ and specs =
    ("-composition-json",
      Arg.Unit (setop (Composition true)),
      " Show composition of PDF in JSON format");
+   ("-text-width",
+     Arg.String settextwidth,
+     " Find width of a line of text");
    (* Creating new PDF content *)
    ("-draw", Arg.Unit (setop Draw), " Begin drawing");
    ("-rect", Arg.String addrect, " Draw rectangle");
@@ -2954,8 +2963,6 @@ and specs =
    ("-rendermode", Arg.Int addrendermode, " Set text rendering mode");
    ("-rise", Arg.Float addrise, " Set text rise");
    ("-nl", Arg.Unit addnewline, " New line");
-   (* Getting information before or whilst drawing *)
-   (*("-textwidth", ...., "Get width of line of text");*)
    (* These items are undocumented *)
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit setdebugcrypt, "");
@@ -4447,6 +4454,8 @@ let go () =
       let cpdffont = embed_font () in
       let pdf = Cpdftexttopdf.typeset ~font:cpdffont ~papersize:args.createpdf_pagesize ~fontsize:args.fontsize text in
         write_pdf false pdf
+  | Some (TextWidth s) ->
+      Printf.printf "%i\n" (1000)
   | Some Draw ->
       if !tdeep <> 0 then error "Unmatched -bt / -et" else
       let pdf = get_single_pdf args.op false in
