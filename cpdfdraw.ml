@@ -43,6 +43,7 @@ type drawops =
   | BT
   | ET
   | Text of string
+  | SpecialText of string
   | Newline
   | Leading of float
   | CharSpace of float
@@ -150,6 +151,11 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
   | BT -> [Pdfops.Op_BT]
   | ET -> [Pdfops.Op_ET]
   | Text s ->
+      let charcodes =
+        implode (map char_of_int (option_map (Pdftext.charcode_extractor_of_font_real !current_font) (Pdftext.codepoints_of_utf8 s)))
+      in
+        [Pdfops.Op_Tj charcodes]
+  | SpecialText s ->
       let s = process_specials pdf endpage filename bates batespad num page s in
       let charcodes =
         implode (map char_of_int (option_map (Pdftext.charcode_extractor_of_font_real !current_font) (Pdftext.codepoints_of_utf8 s)))
@@ -167,10 +173,23 @@ and ops_of_drawops pdf endpage filename bates batespad num page drawops =
   flatten (map (ops_of_drawop pdf endpage filename bates batespad num page) drawops)
 
 (* Draw all the accumulated operators. *)
-let draw fast range pdf drawops =
+let draw ~filename ~bates ~batespad fast range pdf drawops =
   time := Cpdfstrftime.current_time ();
-  let s = Pdfops.string_of_ops (ops_of_drawops pdf 1 "" 0 None 1 (Pdfpage.blankpage Pdfpaper.a4) drawops) in
-  let pdf = Cpdftweak.append_page_content s false fast range pdf in
+  let endpage = Pdfpage.endpage pdf in
+  let pages = Pdfpage.pages_of_pagetree pdf in
+  let ss =
+    map2
+      (fun n p -> Pdfops.string_of_ops (ops_of_drawops pdf endpage filename bates batespad n p drawops))
+      (ilist 1 endpage)
+      pages
+  in
+  let pdf = ref pdf in
+    iter2
+      (fun n s ->
+        if mem n range then (Printf.printf "Adding ops to page %i\n" n; pdf := Cpdftweak.append_page_content s false fast [n] !pdf))
+      (ilist 1 endpage)
+      ss;
+  let pdf = !pdf in
   let images = list_of_hashtbl images in
   let image_resources = map (fun (_, (n, o)) -> (n, Pdf.Indirect o)) images in
   let gss_resources = list_of_hashtbl gss in

@@ -2068,6 +2068,11 @@ let addtext s =
     addop (Cpdfdraw.Font (font, args.fontsize));
     addop (Cpdfdraw.Text s)
 
+let addspecialtext s =
+  let font = match args.font with StandardFont s -> s | _ -> error "-text: not a standard font" in
+    addop (Cpdfdraw.Font (font, args.fontsize));
+    addop (Cpdfdraw.SpecialText s)
+
 let addleading f =
   addop (Cpdfdraw.Leading f)
 
@@ -2938,7 +2943,8 @@ and specs =
    ("-sopacity", Arg.Float addsopacity, " Set stroke opacity");
    ("-bt", Arg.Unit addbt, " Begin text");
    ("-et", Arg.Unit addet, " End text");
-   ("-text", Arg.String addtext, " Draw text and move position. ");
+   ("-text", Arg.String addtext, " Draw text ");
+   ("-stext", Arg.String addspecialtext, " Draw text with %specials");
    ("-url", Arg.String addurl, " Begin URL");
    ("-endurl", Arg.Unit addendurl, " End URL");
    ("-leading", Arg.Float addleading, " Set leading");
@@ -4445,7 +4451,7 @@ let go () =
       if !tdeep <> 0 then error "Unmatched -bt / -et" else
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-        write_pdf false (Cpdfdraw.draw args.fast range pdf (rev (Hashtbl.find drawops "_")))
+        write_pdf false (Cpdfdraw.draw ~filename:args.original_filename ~bates:args.bates ~batespad:args.batespad args.fast range pdf (rev (Hashtbl.find drawops "_")))
   | Some (Composition json) ->
       let pdf = get_single_pdf args.op false in
       let filesize =
@@ -4544,14 +4550,15 @@ let go_withargv argv =
            (*Printf.printf "AND:%b, %s\n" islast (Array.fold_left (fun x y -> x  ^ " " ^ y) "" s);
            flprint "\n";*)
            reset_arguments ();
-           Hashtbl.clear drawops;
            process_env_vars ();
            parse_argv () s (align_specs specs) anon_fun usage_msg;
            parse_argv () (Array.of_list ("cpdf"::!control_args)) (align_specs specs) anon_fun usage_msg;
            let addrange pdf = AlreadyInMemory pdf, args.dashrange, "", "", ref false, None in
              args.inputs <- rev (map addrange !output_pdfs) @ rev args.inputs;
              output_pdfs := [];
-             go ())
+             go ();
+             Hashtbl.clear drawops
+             )
          sets;
       flush stdout; (*r for Windows *)
       exit 0

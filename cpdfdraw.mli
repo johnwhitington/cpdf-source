@@ -41,6 +41,7 @@ type drawops =
   | BT
   | ET
   | Text of string
+  | SpecialText of string
   | Newline
   | Leading of float
   | CharSpace of float
@@ -51,4 +52,7 @@ type drawops =
   | URL of string
   | EndURL
 
-val draw : bool -> int list -> Pdf.t -> drawops list -> Pdf.t
+val draw : filename:string ->
+           bates:int ->
+           batespad:int option ->
+           bool -> int list -> Pdf.t -> drawops list -> Pdf.t
