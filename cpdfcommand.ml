@@ -2947,7 +2947,6 @@ and specs =
    ("-draw-jpeg", Arg.String addjpeg, " Load a JPEG from file and name it");
    ("-draw-png", Arg.String addpng, " Load a PNG from file and name it");
    ("-image", Arg.String addimage, " Draw an image which has already been loaded");
-   ("-newpage", Arg.Unit addnewpage, " Move to a fresh page");
    ("-opacity", Arg.Float addopacity, " Set opacity");
    ("-sopacity", Arg.Float addsopacity, " Set stroke opacity");
    ("-bt", Arg.Unit addbt, " Begin text");
@@ -2963,6 +2962,7 @@ and specs =
    ("-rendermode", Arg.Int addrendermode, " Set text rendering mode");
    ("-rise", Arg.Float addrise, " Set text rise");
    ("-nl", Arg.Unit addnewline, " New line");
+   ("-newpage", Arg.Unit addnewpage, " Move to a fresh page");
    (* These items are undocumented *)
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit setdebugcrypt, "");

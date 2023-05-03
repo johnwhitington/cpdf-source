@@ -81,6 +81,10 @@ let fresh_font_name pdf f =
     Hashtbl.add fonts n (Pdf.Indirect (Pdftext.write_font pdf f));
     n
 
+(* This will remove fonts, images etc, for moving on to the next page *)
+let reset_state () =
+  ()
+
 let time = ref Cpdfstrftime.dummy
 
 let process_specials pdf endpage filename bates batespad num page s =
@@ -173,8 +177,7 @@ and ops_of_drawops pdf endpage filename bates batespad num page drawops =
   flatten (map (ops_of_drawop pdf endpage filename bates batespad num page) drawops)
 
 (* Draw all the accumulated operators. *)
-let draw ~filename ~bates ~batespad fast range pdf drawops =
-  time := Cpdfstrftime.current_time ();
+let draw_single ~filename ~bates ~batespad fast range pdf drawops =
   let endpage = Pdfpage.endpage pdf in
   let pages = Pdfpage.pages_of_pagetree pdf in
   let ss =
@@ -230,3 +233,20 @@ let draw ~filename ~bates ~batespad fast range pdf drawops =
           pages
       in
       Pdfpage.change_pages true pdf pages
+
+let draw ~filename ~bates ~batespad fast range pdf drawops =
+  time := Cpdfstrftime.current_time ();
+  let pdf = ref pdf in
+  let range = ref range in
+  let chunks = ref (split_around (eq NewPage) drawops) in
+    while !chunks <> [] do
+      reset_state ();
+      pdf := draw_single ~filename ~bates ~batespad fast !range !pdf (hd !chunks);
+      chunks := tl !chunks;
+      if !chunks <> [] then begin
+        let endpage = Pdfpage.endpage !pdf in
+          pdf := Cpdfpad.padafter [endpage] !pdf;
+          range := [endpage + 1]
+      end
+    done;
+    !pdf
