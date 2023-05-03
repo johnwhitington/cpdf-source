@@ -1777,8 +1777,29 @@ let whingemalformed () =
 (* Drawing operations. *)
 let drawops = ref []
 
+let saved_ops =
+  Hashtbl.create 16
+
+let we_are_saving = ref None
+
+let startxobj n =
+  we_are_saving := Some n;
+  Hashtbl.add saved_ops n []
+
 let addop o =
-  drawops := o::!drawops
+  match !we_are_saving with
+  | Some n ->
+      Hashtbl.replace saved_ops n (o::Hashtbl.find saved_ops n)
+  | None ->
+      drawops := o::!drawops
+
+let endxobj () =
+  match !we_are_saving with
+  | Some n ->
+      we_are_saving := None;
+      addop (Cpdfdraw.FormXObject (rev (Hashtbl.find saved_ops n)))
+  | None ->
+      error "misplaced -endxobj"
 
 let tdeep = ref 0
 
@@ -1942,13 +1963,8 @@ let setmsheary s =
   | [a; b; c] -> addop (Cpdfdraw.Matrix (Pdftransform.matrix_of_transform [Pdftransform.ShearY ((a, b), c)]))
   | _ | exception _ -> error "-msheary takes three numbers"
 
-let saved_ops = ref []
-
-let setxobj s =
-  saved_ops := []
-
 let usexobj s =
-  addop (Cpdfdraw.Use "/X1")
+  addop (Cpdfdraw.Use s)
 
 let obj_of_jpeg_data data =
   let w, h = Cpdfjpeg.jpeg_dimensions data in
@@ -2929,7 +2945,8 @@ and specs =
    ("-mscale", Arg.String setmscale, " Scale the graphics matrix");
    ("-mshearx", Arg.String setmshearx, " Shear the graphics matrix in X");
    ("-msheary", Arg.String setmshearx, " Shear the graphics matrix in Y");
-   ("-xobj", Arg.String setxobj, " Save a sequence of graphics operators");
+   ("-xobj", Arg.String startxobj, " Beign saving a sequence of graphics operators");
+   ("-endxobj", Arg.Unit endxobj, " End saving a sequence of graphics operators");
    ("-use", Arg.String usexobj, " Use a saved sequence of graphics operators");
    ("-draw-jpeg", Arg.String addjpeg, " Load a JPEG from file and name it");
    ("-draw-png", Arg.String addpng, " Load a PNG from file and name it");

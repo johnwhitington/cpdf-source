@@ -54,9 +54,13 @@ type drawops =
   | URL of string
   | EndURL
 
-(* Hash table of (human name, (resources name, object)) for image xobjects *)
+(* Per page resources *)
 let images = null_hash ()
 let gss = null_hash ()
+let current_url = ref None
+let fonts = null_hash ()
+
+let current_font = ref (Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding))
 
 (* Fresh XObject names. If we are stamping over another page, manage clashes later. *)
 let fresh_xobj_name () = "/Img0"
@@ -67,13 +71,7 @@ let fresh_gs_name () =
   gsnum += 1;
   "/gs" ^ string_of_int !gsnum
 
-let current_url = ref None
-
 let fontnum = ref 0
-
-let fonts = null_hash ()
-
-let current_font = ref (Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding))
 
 let fresh_font_name pdf f =
   fontnum += 1;
@@ -81,7 +79,7 @@ let fresh_font_name pdf f =
     Hashtbl.add fonts n (Pdf.Indirect (Pdftext.write_font pdf f));
     n
 
-(* This will remove fonts, images etc, for moving on to the next page *)
+(* FIXME This will remove fonts, images etc, for moving on to the next page *)
 let reset_state () =
   ()
 
@@ -128,8 +126,7 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
   | SetLineJoin j -> [Pdfops.Op_j j]
   | SetMiterLimit m -> [Pdfops.Op_M m]
   | SetDashPattern (x, y) -> [Pdfops.Op_d (x, y)]
-  (*| Use l ->
-      [Pdfops.Op_q] @ ops_of_drawops pdf endpage filename bates batespad num page l @ [Pdfops.Op_Q]*)
+  | Use n -> [Pdfops.Op_Do n]
   | Image s -> [Pdfops.Op_Do (try fst (Hashtbl.find images s) with _ -> Cpdferror.error ("Image not found: " ^ s))]
   | ImageXObject (s, obj) ->
       Hashtbl.add images s (fresh_xobj_name (), Pdf.addobj pdf obj); 
