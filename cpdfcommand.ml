@@ -4468,7 +4468,9 @@ let go () =
       if !tdeep <> 0 then error "Unmatched -bt / -et" else
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-        write_pdf false (Cpdfdraw.draw ~filename:args.original_filename ~bates:args.bates ~batespad:args.batespad args.fast range pdf (rev (Hashtbl.find drawops "_")))
+        write_pdf
+          false
+          (Cpdfdraw.draw ~filename:args.original_filename ~bates:args.bates ~batespad:args.batespad args.fast range pdf (rev (Hashtbl.find drawops "_")))
   | Some (Composition json) ->
       let pdf = get_single_pdf args.op false in
       let filesize =
@@ -4574,7 +4576,8 @@ let go_withargv argv =
              args.inputs <- rev (map addrange !output_pdfs) @ rev args.inputs;
              output_pdfs := [];
              go ();
-             Hashtbl.clear drawops
+             Hashtbl.clear drawops;
+             Hashtbl.add drawops "_" []
              )
          sets;
       flush stdout; (*r for Windows *)
