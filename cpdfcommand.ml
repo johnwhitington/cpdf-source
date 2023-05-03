@@ -1797,7 +1797,7 @@ let endxobj () =
   match !we_are_saving with
   | Some n ->
       we_are_saving := None;
-      addop (Cpdfdraw.FormXObject (rev (Hashtbl.find saved_ops n)))
+      addop (Cpdfdraw.FormXObject (n, rev (Hashtbl.find saved_ops n)))
   | None ->
       error "misplaced -endxobj"
 

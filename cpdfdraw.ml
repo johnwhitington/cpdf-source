@@ -32,7 +32,7 @@ type drawops =
   | FillStrokeEvenOdd
   | Clip
   | ClipEvenOdd
-  | FormXObject of drawops list
+  | FormXObject of string * drawops list
   | Use of string
   | ImageXObject of string * Pdf.pdfobject
   | Image of string
@@ -59,8 +59,11 @@ let images = null_hash ()
 let gss = null_hash ()
 let current_url = ref None
 let fonts = null_hash ()
+let form_xobjects = null_hash ()
 
-let current_font = ref (Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding))
+
+let current_font =
+  ref (Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding))
 
 (* Fresh XObject names. If we are stamping over another page, manage clashes later. *)
 let fresh_xobj_name () = "/Img0"
@@ -126,6 +129,7 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
   | SetLineJoin j -> [Pdfops.Op_j j]
   | SetMiterLimit m -> [Pdfops.Op_M m]
   | SetDashPattern (x, y) -> [Pdfops.Op_d (x, y)]
+  | FormXObject (n, ops) -> create_form_xobject pdf endpage filename bates batespad num page n ops; []
   | Use n -> [Pdfops.Op_Do n]
   | Image s -> [Pdfops.Op_Do (try fst (Hashtbl.find images s) with _ -> Cpdferror.error ("Image not found: " ^ s))]
   | ImageXObject (s, obj) ->
@@ -173,6 +177,22 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
 and ops_of_drawops pdf endpage filename bates batespad num page drawops =
   flatten (map (ops_of_drawop pdf endpage filename bates batespad num page) drawops)
 
+and create_form_xobject pdf endpage filename bates batespad num page n ops =
+  let data =
+    Pdfio.bytes_of_string (Pdfops.string_of_ops (ops_of_drawops pdf endpage filename bates batespad num page ops))
+  in
+  let obj =
+    Pdf.Stream
+      {contents =
+          (Pdf.Dictionary
+             [("/Length", Pdf.Integer (Pdfio.bytes_size data));
+              ("/Subtype", Pdf.Name "/Form");
+              ("/BBox", Pdf.Array [Pdf.Integer 0; Pdf.Integer 0; Pdf.Integer 1000; Pdf.Integer 1000]) (* FIXME*)
+             ],
+           Pdf.Got data)}
+  in
+    Hashtbl.add form_xobjects n (Pdf.addobj pdf obj)
+
 (* Draw all the accumulated operators. *)
 let draw_single ~filename ~bates ~batespad fast range pdf drawops =
   let endpage = Pdfpage.endpage pdf in
@@ -194,7 +214,8 @@ let draw_single ~filename ~bates ~batespad fast range pdf drawops =
   let image_resources = map (fun (_, (n, o)) -> (n, Pdf.Indirect o)) images in
   let gss_resources = list_of_hashtbl gss in
   let font_resources = list_of_hashtbl fonts in
-    match images, gss_resources, font_resources with [], [], [] -> pdf | _ ->
+  let form_resources = map (fun (n, o) -> (n, Pdf.Indirect o)) (list_of_hashtbl form_xobjects) in 
+  match images, gss_resources, font_resources, form_resources with [], [], [], [] -> pdf | _ ->
       let pages = Pdfpage.pages_of_pagetree pdf in
       let pages =
         map
@@ -215,7 +236,7 @@ let draw_single ~filename ~bates ~batespad fast range pdf drawops =
                 | Some (Pdf.Dictionary d) -> d
                 | _ -> []
               in
-                let new_xobjects = fold_right (fun (k, v) d -> add k v d) image_resources existing_xobjects in
+                let new_xobjects = fold_right (fun (k, v) d -> add k v d) (form_resources @ image_resources) existing_xobjects in
                 let new_gss = fold_right (fun (k, v) d -> add k v d) gss_resources existing_gss in
                 let new_fonts = fold_right (fun (k, v) d -> add k v d) font_resources existing_fonts in
                   Pdf.add_dict_entry
