@@ -32,10 +32,10 @@ type drawops =
   | FillStrokeEvenOdd
   | Clip
   | ClipEvenOdd
-  | SoftXObject of drawops list
-  | HardXObject of drawops list
-  | Image of string
+  | FormXObject of drawops list
+  | Use of string
   | ImageXObject of string * Pdf.pdfobject
+  | Image of string
   | NewPage
   | Opacity of float
   | SOpacity of float
@@ -128,8 +128,8 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
   | SetLineJoin j -> [Pdfops.Op_j j]
   | SetMiterLimit m -> [Pdfops.Op_M m]
   | SetDashPattern (x, y) -> [Pdfops.Op_d (x, y)]
-  | SoftXObject l | HardXObject l ->
-      [Pdfops.Op_q] @ ops_of_drawops pdf endpage filename bates batespad num page l @ [Pdfops.Op_Q]
+  (*| Use l ->
+      [Pdfops.Op_q] @ ops_of_drawops pdf endpage filename bates batespad num page l @ [Pdfops.Op_Q]*)
   | Image s -> [Pdfops.Op_Do (try fst (Hashtbl.find images s) with _ -> Cpdferror.error ("Image not found: " ^ s))]
   | ImageXObject (s, obj) ->
       Hashtbl.add images s (fresh_xobj_name (), Pdf.addobj pdf obj); 

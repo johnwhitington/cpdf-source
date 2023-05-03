@@ -30,10 +30,10 @@ type drawops =
   | FillStrokeEvenOdd
   | Clip
   | ClipEvenOdd
-  | SoftXObject of drawops list
-  | HardXObject of drawops list
-  | Image of string
+  | FormXObject of drawops list
+  | Use of string
   | ImageXObject of string * Pdf.pdfobject
+  | Image of string
   | NewPage
   | Opacity of float
   | SOpacity of float

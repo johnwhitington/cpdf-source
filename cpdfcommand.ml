@@ -1775,17 +1775,10 @@ let whingemalformed () =
   exit 1
 
 (* Drawing operations. *)
-let drawops =
-  let t = Hashtbl.create 10 in
-    Hashtbl.add t "_" [];
-    t
-
-(* For now, re-using a save name is undefined, and nesting them is undefined too. To fix in both cases. *)
-let currstash = ref "_"
+let drawops = ref []
 
 let addop o =
-  let v = Hashtbl.find drawops !currstash in
-    Hashtbl.replace drawops !currstash (o::v)
+  drawops := o::!drawops
 
 let tdeep = ref 0
 
@@ -1949,18 +1942,13 @@ let setmsheary s =
   | [a; b; c] -> addop (Cpdfdraw.Matrix (Pdftransform.matrix_of_transform [Pdftransform.ShearY ((a, b), c)]))
   | _ | exception _ -> error "-msheary takes three numbers"
 
-let savexobj s =
-  Hashtbl.add drawops s [];
-  currstash := s
+let saved_ops = ref []
 
-let endsave s =
-  currstash := "_"
+let setxobj s =
+  saved_ops := []
 
 let usexobj s =
-  try
-    addop (Cpdfdraw.SoftXObject (rev (Hashtbl.find drawops s)))
-  with
-    _ -> error (Printf.sprintf "Could not find stashed graphics %s\n" s)
+  addop (Cpdfdraw.Use "/X1")
 
 let obj_of_jpeg_data data =
   let w, h = Cpdfjpeg.jpeg_dimensions data in
@@ -2941,8 +2929,7 @@ and specs =
    ("-mscale", Arg.String setmscale, " Scale the graphics matrix");
    ("-mshearx", Arg.String setmshearx, " Shear the graphics matrix in X");
    ("-msheary", Arg.String setmshearx, " Shear the graphics matrix in Y");
-   ("-save", Arg.String savexobj, " Begin to save graphics operators");
-   ("-endsave", Arg.String endsave, " End saving of graphics operators");
+   ("-xobj", Arg.String setxobj, " Save a sequence of graphics operators");
    ("-use", Arg.String usexobj, " Use a saved sequence of graphics operators");
    ("-draw-jpeg", Arg.String addjpeg, " Load a JPEG from file and name it");
    ("-draw-png", Arg.String addpng, " Load a PNG from file and name it");
@@ -4470,7 +4457,7 @@ let go () =
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
         write_pdf
           false
-          (Cpdfdraw.draw ~filename:args.original_filename ~bates:args.bates ~batespad:args.batespad args.fast range pdf (rev (Hashtbl.find drawops "_")))
+          (Cpdfdraw.draw ~filename:args.original_filename ~bates:args.bates ~batespad:args.batespad args.fast range pdf (rev !drawops))
   | Some (Composition json) ->
       let pdf = get_single_pdf args.op false in
       let filesize =
@@ -4575,10 +4562,7 @@ let go_withargv argv =
            let addrange pdf = AlreadyInMemory pdf, args.dashrange, "", "", ref false, None in
              args.inputs <- rev (map addrange !output_pdfs) @ rev args.inputs;
              output_pdfs := [];
-             go ();
-             Hashtbl.clear drawops;
-             Hashtbl.add drawops "_" []
-             )
+             go ())
          sets;
       flush stdout; (*r for Windows *)
       exit 0
