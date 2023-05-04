@@ -4,9 +4,6 @@ type colspec =
  | Grey of float
  | CYMK of float * float * float * float
 
-type image =
-  JPEG
-
 type drawops =
   | Rect of float * float * float * float
   | Bezier of float * float * float * float * float * float

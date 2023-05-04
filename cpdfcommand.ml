@@ -2954,13 +2954,13 @@ and specs =
    ("-msheary", Arg.String setmshearx, " Shear the graphics matrix in Y");
    ("-xobj-bbox", Arg.String xobjbbox, " Specify the bounding box for xobjects");
    ("-xobj", Arg.String startxobj, " Begin saving a sequence of graphics operators");
-   ("-endxobj", Arg.Unit endxobj, " End saving a sequence of graphics operators");
+   ("-end-xobj", Arg.Unit endxobj, " End saving a sequence of graphics operators");
    ("-use", Arg.String usexobj, " Use a saved sequence of graphics operators");
    ("-draw-jpeg", Arg.String addjpeg, " Load a JPEG from file and name it");
    ("-draw-png", Arg.String addpng, " Load a PNG from file and name it");
    ("-image", Arg.String addimage, " Draw an image which has already been loaded");
-   ("-opacity", Arg.Float addopacity, " Set opacity");
-   ("-sopacity", Arg.Float addsopacity, " Set stroke opacity");
+   ("-fill-opacity", Arg.Float addopacity, " Set opacity");
+   ("-stroke-opacity", Arg.Float addsopacity, " Set stroke opacity");
    ("-bt", Arg.Unit addbt, " Begin text");
    ("-et", Arg.Unit addet, " End text");
    ("-text", Arg.String addtext, " Draw text ");

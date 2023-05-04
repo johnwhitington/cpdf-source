@@ -7,8 +7,8 @@ o Embed TrueType fonts with -font-ttf for -add-text et al.
 o Embed the 14 standard fonts if requested
 o Add links to parts of text with -add-text as %URL[|].
 o Convert JPEGs and PNGs to PDFs with -jpeg and -png
-o Export fully, import, and thereby round-trip annotations via JSON
-o Show composition of PDF with -composition and -composition-json
+o Export, import, and thereby round-trip annotations via JSON
+o Show composition of PDF with -composition[-json]
 o Use page labels like <iii> and <A-2> in page specifications
 
 Extended features:

@@ -6,9 +6,6 @@ type colspec =
  | Grey of float
  | CYMK of float * float * float * float
 
-type image =
-  JPEG
-
 type drawops =
   | Rect of float * float * float * float
   | Bezier of float * float * float * float * float * float
@@ -196,7 +193,12 @@ let read_resource pdf n p =
   | Some (Pdf.Dictionary d) -> d
   | _ -> []
 
+(* FIXME *)
+let minimum_resource_number pdf range =
+  100
+
 let draw_single ~filename ~bates ~batespad fast range pdf drawops =
+  res.num <- minimum_resource_number pdf range;
   let endpage = Pdfpage.endpage pdf in
   let pages = Pdfpage.pages_of_pagetree pdf in
   let ss =
