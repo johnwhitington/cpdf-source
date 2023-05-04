@@ -191,7 +191,11 @@ and create_form_xobject a b c d pdf endpage filename bates batespad num page n o
   in
     Hashtbl.add res.form_xobjects n (Pdf.addobj pdf obj)
 
-(* Draw all the accumulated operators. *)
+let read_resource pdf n p =
+  match Pdf.lookup_direct pdf n p.Pdfpage.resources with
+  | Some (Pdf.Dictionary d) -> d
+  | _ -> []
+
 let draw_single ~filename ~bates ~batespad fast range pdf drawops =
   let endpage = Pdfpage.endpage pdf in
   let pages = Pdfpage.pages_of_pagetree pdf in
@@ -213,42 +217,26 @@ let draw_single ~filename ~bates ~batespad fast range pdf drawops =
   let gss_resources = list_of_hashtbl res.extgstates in
   let font_resources = map (fun (n, o) -> (n, Pdf.Indirect o)) (list_of_hashtbl res.fonts) in
   let form_resources = map (fun (n, o) -> (n, Pdf.Indirect o)) (list_of_hashtbl res.form_xobjects) in 
-  match images, gss_resources, font_resources, form_resources with [], [], [], [] -> pdf | _ ->
-      let pages = Pdfpage.pages_of_pagetree pdf in
-      let pages =
-        map
-          (fun p ->
-            let new_resources =
-              let existing_xobjects =
-                match Pdf.lookup_direct pdf "/XObject" p.Pdfpage.resources with
-                | Some (Pdf.Dictionary d) -> d
-                | _ -> []
-              in
-              let existing_gss =
-                match Pdf.lookup_direct pdf "/ExtGState" p.Pdfpage.resources with
-                | Some (Pdf.Dictionary d) -> d
-                | _ -> []
-              in
-              let existing_fonts =
-                match Pdf.lookup_direct pdf "/Font" p.Pdfpage.resources with
-                | Some (Pdf.Dictionary d) -> d
-                | _ -> []
-              in
-                let new_xobjects = fold_right (fun (k, v) d -> add k v d) (form_resources @ image_resources) existing_xobjects in
-                let new_gss = fold_right (fun (k, v) d -> add k v d) gss_resources existing_gss in
-                let new_fonts = fold_right (fun (k, v) d -> add k v d) font_resources existing_fonts in
-                  Pdf.add_dict_entry
-                    (Pdf.add_dict_entry
-                      (Pdf.add_dict_entry p.Pdfpage.resources "/XObject" (Pdf.Dictionary new_xobjects))
-                      "/ExtGState"
-                      (Pdf.Dictionary new_gss))
-                    "/Font"
-                    (Pdf.Dictionary new_fonts)
-            in
-             {p with resources = new_resources})
-          pages
-      in
-      Pdfpage.change_pages true pdf pages
+  let pages =
+    map
+      (fun p ->
+        let new_resources =
+          let update = fold_right (fun (k, v) d -> add k v d) in
+          let new_xobjects = update (form_resources @ image_resources) (read_resource pdf "/XObject" p) in
+          let new_gss = update gss_resources (read_resource pdf "/ExtGState" p) in
+          let new_fonts = update font_resources (read_resource pdf "/Font" p) in
+            Pdf.add_dict_entry
+              (Pdf.add_dict_entry
+                (Pdf.add_dict_entry p.Pdfpage.resources "/XObject" (Pdf.Dictionary new_xobjects))
+                "/ExtGState"
+                (Pdf.Dictionary new_gss))
+              "/Font"
+              (Pdf.Dictionary new_fonts)
+        in
+         {p with resources = new_resources})
+      (Pdfpage.pages_of_pagetree pdf)
+  in
+    Pdfpage.change_pages true pdf pages
 
 let draw ~filename ~bates ~batespad fast range pdf drawops =
   res.time <- Cpdfstrftime.current_time ();
