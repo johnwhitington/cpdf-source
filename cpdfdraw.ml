@@ -149,6 +149,7 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
       let o = Pdftext.write_font pdf (Pdftext.StandardFont (s, Pdftext.WinAnsiEncoding)) in
       let n = fresh_name "/F" in
         Hashtbl.add res.fonts n o;
+        res.current_font <- (Pdftext.StandardFont (s, Pdftext.WinAnsiEncoding));
         [Pdfops.Op_Tf (n, f)]
   | BT -> [Pdfops.Op_BT]
   | ET -> [Pdfops.Op_ET]
