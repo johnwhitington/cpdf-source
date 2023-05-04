@@ -55,43 +55,39 @@ type drawops =
   | EndURL
 
 (* Per page resources *)
-let images = null_hash ()
-let gss = null_hash ()
-let current_url = ref None
-let fonts = null_hash ()
-let form_xobjects = null_hash ()
+type res = 
+  {images : (string, (string * int)) Hashtbl.t; (* (name, (pdf name, objnum)) *)
+   extgstates : (string, Pdf.pdfobject) Hashtbl.t; (* pdf name, pdf object *)
+   fonts : (string, int) Hashtbl.t; (* (pdf name, objnum)) *)
+   form_xobjects : (string, int) Hashtbl.t; (* (pdf name, objnum)) *)
+   mutable time : Cpdfstrftime.t;
+   mutable current_url : string option;
+   mutable current_font : Pdftext.font;
+   mutable num : int}
 
-let current_font =
-  ref (Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding))
+let res =
+  {images = null_hash ();
+   extgstates = null_hash ();
+   fonts = null_hash ();
+   form_xobjects = null_hash ();
+   time = Cpdfstrftime.dummy;
+   current_url = None;
+   current_font = Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding);
+   num = 0}
 
-(* Fresh XObject names. If we are stamping over another page, manage clashes later. *)
-let fresh_xobj_name () = "/Img0"
+let fresh_name s =
+  res.num <- res.num + 1;
+  s ^ string_of_int res.num
 
-let gsnum = ref ~-1
-
-let fresh_gs_name () =
-  gsnum += 1;
-  "/gs" ^ string_of_int !gsnum
-
-let fontnum = ref 0
-
-let fresh_font_name pdf f =
-  fontnum += 1;
-  let n = "/F" ^ string_of_int !fontnum in
-    Hashtbl.add fonts n (Pdf.Indirect (Pdftext.write_font pdf f));
-    n
-
-(* FIXME This will remove fonts, images etc, for moving on to the next page *)
+(* At end of page, we keep things for which we have indirects - we may use them on another page. *)
 let reset_state () =
-  ()
-
-let time = ref Cpdfstrftime.dummy
+  Hashtbl.clear res.extgstates
 
 let process_specials pdf endpage filename bates batespad num page s =
   let pairs =
     Cpdfaddtext.replace_pairs pdf endpage None filename bates batespad num page
   in
-    Cpdfaddtext.process_text !time s pairs
+    Cpdfaddtext.process_text res.time s pairs
 
 let rec ops_of_drawop pdf endpage filename bates batespad num page = function
   | Push -> [Pdfops.Op_q]
@@ -130,39 +126,41 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
   | SetDashPattern (x, y) -> [Pdfops.Op_d (x, y)]
   | FormXObject (a, b, c, d, n, ops) -> create_form_xobject a b c d pdf endpage filename bates batespad num page n ops; []
   | Use n -> [Pdfops.Op_Do n]
-  | Image s -> [Pdfops.Op_Do (try fst (Hashtbl.find images s) with _ -> Cpdferror.error ("Image not found: " ^ s))]
+  | Image s -> [Pdfops.Op_Do (try fst (Hashtbl.find res.images s) with _ -> Cpdferror.error ("Image not found: " ^ s))]
   | ImageXObject (s, obj) ->
-      Hashtbl.add images s (fresh_xobj_name (), Pdf.addobj pdf obj); 
+      Hashtbl.add res.images s (fresh_name "/XObj", Pdf.addobj pdf obj); 
       []
   | NewPage -> Pdfe.log ("NewPage remaining in graphic stream"); assert false
   | Opacity v ->
-      let n = fresh_gs_name () in
-        Hashtbl.add gss n (Pdf.Dictionary [("/ca", Pdf.Real v)]);
+      let n = fresh_name "/gs" in
+        Hashtbl.add res.extgstates n (Pdf.Dictionary [("/ca", Pdf.Real v)]);
         [Pdfops.Op_gs n]
   | SOpacity v ->
-      let n = fresh_gs_name () in
-        Hashtbl.add gss n (Pdf.Dictionary [("/CA", Pdf.Real v)]);
+      let n = fresh_name "/gs" in
+        Hashtbl.add res.extgstates n (Pdf.Dictionary [("/CA", Pdf.Real v)]);
         [Pdfops.Op_gs n]
   | URL s ->
-      current_url := Some s;
+      res.current_url <- Some s;
       []
   | EndURL ->
-      current_url := None;
+      res.current_url <- None;
       []
   | Font (s, f) ->
-      let n = fresh_font_name pdf (Pdftext.StandardFont (s, Pdftext.WinAnsiEncoding)) in
+      let o = Pdftext.write_font pdf (Pdftext.StandardFont (s, Pdftext.WinAnsiEncoding)) in
+      let n = fresh_name "/F" in
+        Hashtbl.add res.fonts n o;
         [Pdfops.Op_Tf (n, f)]
   | BT -> [Pdfops.Op_BT]
   | ET -> [Pdfops.Op_ET]
   | Text s ->
       let charcodes =
-        implode (map char_of_int (option_map (Pdftext.charcode_extractor_of_font_real !current_font) (Pdftext.codepoints_of_utf8 s)))
+        implode (map char_of_int (option_map (Pdftext.charcode_extractor_of_font_real res.current_font) (Pdftext.codepoints_of_utf8 s)))
       in
         [Pdfops.Op_Tj charcodes]
   | SpecialText s ->
       let s = process_specials pdf endpage filename bates batespad num page s in
       let charcodes =
-        implode (map char_of_int (option_map (Pdftext.charcode_extractor_of_font_real !current_font) (Pdftext.codepoints_of_utf8 s)))
+        implode (map char_of_int (option_map (Pdftext.charcode_extractor_of_font_real res.current_font) (Pdftext.codepoints_of_utf8 s)))
       in
         [Pdfops.Op_Tj charcodes]
   | Leading f -> [Pdfops.Op_TL f]
@@ -190,7 +188,7 @@ and create_form_xobject a b c d pdf endpage filename bates batespad num page n o
              ],
            Pdf.Got data)}
   in
-    Hashtbl.add form_xobjects n (Pdf.addobj pdf obj)
+    Hashtbl.add res.form_xobjects n (Pdf.addobj pdf obj)
 
 (* Draw all the accumulated operators. *)
 let draw_single ~filename ~bates ~batespad fast range pdf drawops =
@@ -209,11 +207,11 @@ let draw_single ~filename ~bates ~batespad fast range pdf drawops =
       (ilist 1 endpage)
       ss;
   let pdf = !pdf in
-  let images = list_of_hashtbl images in
+  let images = list_of_hashtbl res.images in
   let image_resources = map (fun (_, (n, o)) -> (n, Pdf.Indirect o)) images in
-  let gss_resources = list_of_hashtbl gss in
-  let font_resources = list_of_hashtbl fonts in
-  let form_resources = map (fun (n, o) -> (n, Pdf.Indirect o)) (list_of_hashtbl form_xobjects) in 
+  let gss_resources = list_of_hashtbl res.extgstates in
+  let font_resources = map (fun (n, o) -> (n, Pdf.Indirect o)) (list_of_hashtbl res.fonts) in
+  let form_resources = map (fun (n, o) -> (n, Pdf.Indirect o)) (list_of_hashtbl res.form_xobjects) in 
   match images, gss_resources, font_resources, form_resources with [], [], [], [] -> pdf | _ ->
       let pages = Pdfpage.pages_of_pagetree pdf in
       let pages =
@@ -252,7 +250,7 @@ let draw_single ~filename ~bates ~batespad fast range pdf drawops =
       Pdfpage.change_pages true pdf pages
 
 let draw ~filename ~bates ~batespad fast range pdf drawops =
-  time := Cpdfstrftime.current_time ();
+  res.time <- Cpdfstrftime.current_time ();
   let pdf = ref pdf in
   let range = ref range in
   let chunks = ref (split_around (eq NewPage) drawops) in
