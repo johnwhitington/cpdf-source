@@ -32,7 +32,7 @@ type drawops =
   | FillStrokeEvenOdd
   | Clip
   | ClipEvenOdd
-  | FormXObject of string * drawops list
+  | FormXObject of float * float * float * float * string * drawops list
   | Use of string
   | ImageXObject of string * Pdf.pdfobject
   | Image of string
@@ -60,7 +60,6 @@ let gss = null_hash ()
 let current_url = ref None
 let fonts = null_hash ()
 let form_xobjects = null_hash ()
-
 
 let current_font =
   ref (Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding))
@@ -129,7 +128,7 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
   | SetLineJoin j -> [Pdfops.Op_j j]
   | SetMiterLimit m -> [Pdfops.Op_M m]
   | SetDashPattern (x, y) -> [Pdfops.Op_d (x, y)]
-  | FormXObject (n, ops) -> create_form_xobject pdf endpage filename bates batespad num page n ops; []
+  | FormXObject (a, b, c, d, n, ops) -> create_form_xobject a b c d pdf endpage filename bates batespad num page n ops; []
   | Use n -> [Pdfops.Op_Do n]
   | Image s -> [Pdfops.Op_Do (try fst (Hashtbl.find images s) with _ -> Cpdferror.error ("Image not found: " ^ s))]
   | ImageXObject (s, obj) ->
@@ -177,7 +176,7 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
 and ops_of_drawops pdf endpage filename bates batespad num page drawops =
   flatten (map (ops_of_drawop pdf endpage filename bates batespad num page) drawops)
 
-and create_form_xobject pdf endpage filename bates batespad num page n ops =
+and create_form_xobject a b c d pdf endpage filename bates batespad num page n ops =
   let data =
     Pdfio.bytes_of_string (Pdfops.string_of_ops (ops_of_drawops pdf endpage filename bates batespad num page ops))
   in
@@ -187,7 +186,7 @@ and create_form_xobject pdf endpage filename bates batespad num page n ops =
           (Pdf.Dictionary
              [("/Length", Pdf.Integer (Pdfio.bytes_size data));
               ("/Subtype", Pdf.Name "/Form");
-              ("/BBox", Pdf.Array [Pdf.Integer 0; Pdf.Integer 0; Pdf.Integer 1000; Pdf.Integer 1000]) (* FIXME*)
+              ("/BBox", Pdf.Array [Pdf.Real a; Pdf.Real b; Pdf.Real c; Pdf.Real d])
              ],
            Pdf.Got data)}
   in

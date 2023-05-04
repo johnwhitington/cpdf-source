@@ -30,7 +30,7 @@ type drawops =
   | FillStrokeEvenOdd
   | Clip
   | ClipEvenOdd
-  | FormXObject of string * drawops list
+  | FormXObject of float * float * float * float * string * drawops list
   | Use of string
   | ImageXObject of string * Pdf.pdfobject
   | Image of string

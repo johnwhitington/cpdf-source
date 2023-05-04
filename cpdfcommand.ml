@@ -503,7 +503,8 @@ type args =
    mutable toc_title : string;
    mutable toc_bookmark : bool;
    mutable idir_only_pdfs : bool;
-   mutable no_warn_rotate : bool}
+   mutable no_warn_rotate : bool;
+   mutable xobj_bbox : float * float * float * float}
 
 let args =
   {op = None;
@@ -624,7 +625,8 @@ let args =
    toc_title = "Table of Contents";
    toc_bookmark = true;
    idir_only_pdfs = false;
-   no_warn_rotate = false}
+   no_warn_rotate = false;
+   xobj_bbox = (0., 0., 1000., 1000.)}
 
 let reset_arguments () =
   args.op <- None;
@@ -728,7 +730,8 @@ let reset_arguments () =
   args.dict_entry_search <- None;
   args.toc_title <- "Table of Contents";
   args.toc_bookmark <- true;
-  args.idir_only_pdfs <- false
+  args.idir_only_pdfs <- false;
+  args.xobj_bbox <- (0., 0., 1000., 1000.)
   (* Do not reset original_filename or cpdflin or was_encrypted or
    was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
    gs_malformed or gs_quiet or no-warn-rotate, since we want these to work
@@ -1786,6 +1789,9 @@ let startxobj n =
   we_are_saving := Some n;
   Hashtbl.add saved_ops n []
 
+let xobjbbox s =
+  args.xobj_bbox <- Cpdfcoord.parse_rectangle (Pdf.empty ()) s 
+
 let addop o =
   match !we_are_saving with
   | Some n ->
@@ -1797,7 +1803,8 @@ let endxobj () =
   match !we_are_saving with
   | Some n ->
       we_are_saving := None;
-      addop (Cpdfdraw.FormXObject (n, rev (Hashtbl.find saved_ops n)))
+      let a, b, c, d = args.xobj_bbox in
+        addop (Cpdfdraw.FormXObject (a, b, c, d, n, rev (Hashtbl.find saved_ops n)))
   | None ->
       error "misplaced -endxobj"
 
@@ -2945,7 +2952,8 @@ and specs =
    ("-mscale", Arg.String setmscale, " Scale the graphics matrix");
    ("-mshearx", Arg.String setmshearx, " Shear the graphics matrix in X");
    ("-msheary", Arg.String setmshearx, " Shear the graphics matrix in Y");
-   ("-xobj", Arg.String startxobj, " Beign saving a sequence of graphics operators");
+   ("-xobj-bbox", Arg.String xobjbbox, " Specify the bounding box for xobjects");
+   ("-xobj", Arg.String startxobj, " Begin saving a sequence of graphics operators");
    ("-endxobj", Arg.Unit endxobj, " End saving a sequence of graphics operators");
    ("-use", Arg.String usexobj, " Use a saved sequence of graphics operators");
    ("-draw-jpeg", Arg.String addjpeg, " Load a JPEG from file and name it");
