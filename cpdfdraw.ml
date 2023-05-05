@@ -221,14 +221,20 @@ let minimum_resource_number pdf range =
     | [] -> 0
     | n::_ -> n + 1
 
+let contains_specials drawops =
+  List.exists (function SpecialText _ -> true | _ -> false) drawops
+
 let draw_single ~filename ~bates ~batespad fast range pdf drawops =
   res.num <- minimum_resource_number pdf range;
   let endpage = Pdfpage.endpage pdf in
   let pages = Pdfpage.pages_of_pagetree pdf in
+  let str =
+    if contains_specials drawops then None else Some (Pdfops.string_of_ops (ops_of_drawops pdf endpage filename bates batespad 0 (hd pages) drawops))
+  in
   let ss =
     map2
       (fun n p ->
-         if mem n range then Pdfops.string_of_ops (ops_of_drawops pdf endpage filename bates batespad n p drawops) else "")
+         if mem n range then (match str with Some x -> x | None -> Pdfops.string_of_ops (ops_of_drawops pdf endpage filename bates batespad n p drawops)) else "")
       (ilist 1 endpage)
       pages
   in
