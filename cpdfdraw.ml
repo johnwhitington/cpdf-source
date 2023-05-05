@@ -54,8 +54,8 @@ type drawops =
 (* Per page resources *)
 type res = 
   {images : (string, (string * int)) Hashtbl.t; (* (name, (pdf name, objnum)) *)
-   extgstates : (string, Pdf.pdfobject) Hashtbl.t; (* pdf name, pdf object *)
-   fonts : (string, int) Hashtbl.t; (* (pdf name, objnum)) *)
+   extgstates : ((string * float), string) Hashtbl.t; (* (kind, value), name *)
+   fonts : (Pdftext.font, (string * int)) Hashtbl.t; (* (font, (objnum, pdf name)) *)
    form_xobjects : (string, (string * int)) Hashtbl.t; (* (name, (pdf name, objnum)) *)
    mutable time : Cpdfstrftime.t;
    mutable current_url : string option;
@@ -85,6 +85,16 @@ let process_specials pdf endpage filename bates batespad num page s =
     Cpdfaddtext.replace_pairs pdf endpage None filename bates batespad num page
   in
     Cpdfaddtext.process_text res.time s pairs
+
+let charcodes_of_utf8 s =
+  implode (map char_of_int (option_map (Pdftext.charcode_extractor_of_font_real res.current_font) (Pdftext.codepoints_of_utf8 s)))
+
+let extgstate kind v =
+  try Hashtbl.find res.extgstates (kind, v) with
+    Not_found ->
+      let n = fresh_name "/gs" in
+        Hashtbl.add res.extgstates (kind, v) n;
+        n
 
 let rec ops_of_drawop pdf endpage filename bates batespad num page = function
   | Push -> [Pdfops.Op_q]
@@ -128,14 +138,8 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
       Hashtbl.add res.images s (fresh_name "/XObj", Pdf.addobj pdf obj); 
       []
   | NewPage -> Pdfe.log ("NewPage remaining in graphic stream"); assert false
-  | Opacity v ->
-      let n = fresh_name "/gs" in
-        Hashtbl.add res.extgstates n (Pdf.Dictionary [("/ca", Pdf.Real v)]);
-        [Pdfops.Op_gs n]
-  | SOpacity v ->
-      let n = fresh_name "/gs" in
-        Hashtbl.add res.extgstates n (Pdf.Dictionary [("/CA", Pdf.Real v)]);
-        [Pdfops.Op_gs n]
+  | Opacity v -> [Pdfops.Op_gs (extgstate "/ca" v)]
+  | SOpacity v -> [Pdfops.Op_gs (extgstate "/CA" v)]
   | URL s ->
       res.current_url <- Some s;
       []
@@ -143,24 +147,23 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
       res.current_url <- None;
       []
   | Font (s, f) ->
-      let o = Pdftext.write_font pdf (Pdftext.StandardFont (s, Pdftext.WinAnsiEncoding)) in
-      let n = fresh_name "/F" in
-        Hashtbl.add res.fonts n o;
-        res.current_font <- (Pdftext.StandardFont (s, Pdftext.WinAnsiEncoding));
+      let font = Pdftext.StandardFont (s, Pdftext.WinAnsiEncoding) in
+      let (n, _) =
+        try Hashtbl.find res.fonts font with
+          Not_found ->
+            let o = Pdftext.write_font pdf font in
+            let n = fresh_name "/F" in
+              Hashtbl.add res.fonts font (n, o);
+              (n, o)
+      in
+        res.current_font <- font;
         [Pdfops.Op_Tf (n, f)]
   | BT -> [Pdfops.Op_BT]
   | ET -> [Pdfops.Op_ET]
-  | Text s ->
-      let charcodes =
-        implode (map char_of_int (option_map (Pdftext.charcode_extractor_of_font_real res.current_font) (Pdftext.codepoints_of_utf8 s)))
-      in
-        [Pdfops.Op_Tj charcodes]
+  | Text s -> [Pdfops.Op_Tj (charcodes_of_utf8 s)]
   | SpecialText s ->
       let s = process_specials pdf endpage filename bates batespad num page s in
-      let charcodes =
-        implode (map char_of_int (option_map (Pdftext.charcode_extractor_of_font_real res.current_font) (Pdftext.codepoints_of_utf8 s)))
-      in
-        [Pdfops.Op_Tj charcodes]
+        [Pdfops.Op_Tj (charcodes_of_utf8 s)]
   | Leading f -> [Pdfops.Op_TL f]
   | CharSpace f -> [Pdfops.Op_Tc f]
   | WordSpace f -> [Pdfops.Op_Tw f]
@@ -237,8 +240,8 @@ let draw_single ~filename ~bates ~batespad fast range pdf drawops =
       ss;
   let pdf = !pdf in
   let image_resources = map (fun (_, (n, o)) -> (n, Pdf.Indirect o)) (list_of_hashtbl res.images) in
-  let gss_resources = list_of_hashtbl res.extgstates in
-  let font_resources = map (fun (n, o) -> (n, Pdf.Indirect o)) (list_of_hashtbl res.fonts) in
+  let gss_resources = map (fun ((kind, v), n) -> (kind, Pdf.Real v)) (list_of_hashtbl res.extgstates) in
+  let font_resources = map (fun (_, (n, o)) -> (n, Pdf.Indirect o)) (list_of_hashtbl res.fonts) in
   let form_resources = map (fun (_, (n, o)) -> (n, Pdf.Indirect o)) (list_of_hashtbl res.form_xobjects) in 
   let pages =
     map
