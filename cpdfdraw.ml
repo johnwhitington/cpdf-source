@@ -193,9 +193,30 @@ let read_resource pdf n p =
   | Some (Pdf.Dictionary d) -> d
   | _ -> []
 
-(* FIXME *)
 let minimum_resource_number pdf range =
-  100
+  let pages = Pdfpage.pages_of_pagetree pdf in
+  let pages_in_range =
+    option_map2 (fun p n -> if mem n range then Some p else None) pages (indx pages) in
+  let number_of_name s =
+    match implode (rev (takewhile (function '0'..'9' -> true | _ -> false) (rev (explode s)))) with
+    | "" -> None
+    | s -> Some (int_of_string s)
+  in
+  let resource_names_page p =
+    let names n =
+      match Pdf.lookup_direct pdf n p.Pdfpage.resources with
+      | Some (Pdf.Dictionary d) -> map fst d
+      | _ -> []
+    in
+      names "/XObject" @ names "/ExtGState" @ names "/Font"
+  in
+    match
+      sort
+        (fun a b -> compare b a)
+        (option_map number_of_name (flatten (map resource_names_page pages_in_range)))
+    with
+    | [] -> 0
+    | n::_ -> n + 1
 
 let draw_single ~filename ~bates ~batespad fast range pdf drawops =
   res.num <- minimum_resource_number pdf range;
