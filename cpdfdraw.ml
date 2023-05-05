@@ -56,7 +56,7 @@ type res =
   {images : (string, (string * int)) Hashtbl.t; (* (name, (pdf name, objnum)) *)
    extgstates : (string, Pdf.pdfobject) Hashtbl.t; (* pdf name, pdf object *)
    fonts : (string, int) Hashtbl.t; (* (pdf name, objnum)) *)
-   form_xobjects : (string, int) Hashtbl.t; (* (pdf name, objnum)) *)
+   form_xobjects : (string, (string * int)) Hashtbl.t; (* (name, (pdf name, objnum)) *)
    mutable time : Cpdfstrftime.t;
    mutable current_url : string option;
    mutable current_font : Pdftext.font;
@@ -122,7 +122,7 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
   | SetMiterLimit m -> [Pdfops.Op_M m]
   | SetDashPattern (x, y) -> [Pdfops.Op_d (x, y)]
   | FormXObject (a, b, c, d, n, ops) -> create_form_xobject a b c d pdf endpage filename bates batespad num page n ops; []
-  | Use n -> [Pdfops.Op_Do n]
+  | Use n -> [Pdfops.Op_Do (try fst (Hashtbl.find res.form_xobjects n) with _ -> Cpdferror.error ("Form XObject not found: " ^ n))]
   | Image s -> [Pdfops.Op_Do (try fst (Hashtbl.find res.images s) with _ -> Cpdferror.error ("Image not found: " ^ s))]
   | ImageXObject (s, obj) ->
       Hashtbl.add res.images s (fresh_name "/XObj", Pdf.addobj pdf obj); 
@@ -186,7 +186,7 @@ and create_form_xobject a b c d pdf endpage filename bates batespad num page n o
              ],
            Pdf.Got data)}
   in
-    Hashtbl.add res.form_xobjects n (Pdf.addobj pdf obj)
+    Hashtbl.add res.form_xobjects n (fresh_name "/Fm", (Pdf.addobj pdf obj))
 
 let read_resource pdf n p =
   match Pdf.lookup_direct pdf n p.Pdfpage.resources with
@@ -203,7 +203,8 @@ let draw_single ~filename ~bates ~batespad fast range pdf drawops =
   let pages = Pdfpage.pages_of_pagetree pdf in
   let ss =
     map2
-      (fun n p -> Pdfops.string_of_ops (ops_of_drawops pdf endpage filename bates batespad n p drawops))
+      (fun n p ->
+         if mem n range then Pdfops.string_of_ops (ops_of_drawops pdf endpage filename bates batespad n p drawops) else "")
       (ilist 1 endpage)
       pages
   in
@@ -214,11 +215,10 @@ let draw_single ~filename ~bates ~batespad fast range pdf drawops =
       (ilist 1 endpage)
       ss;
   let pdf = !pdf in
-  let images = list_of_hashtbl res.images in
-  let image_resources = map (fun (_, (n, o)) -> (n, Pdf.Indirect o)) images in
+  let image_resources = map (fun (_, (n, o)) -> (n, Pdf.Indirect o)) (list_of_hashtbl res.images) in
   let gss_resources = list_of_hashtbl res.extgstates in
   let font_resources = map (fun (n, o) -> (n, Pdf.Indirect o)) (list_of_hashtbl res.fonts) in
-  let form_resources = map (fun (n, o) -> (n, Pdf.Indirect o)) (list_of_hashtbl res.form_xobjects) in 
+  let form_resources = map (fun (_, (n, o)) -> (n, Pdf.Indirect o)) (list_of_hashtbl res.form_xobjects) in 
   let pages =
     map
       (fun p ->
