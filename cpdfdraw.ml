@@ -57,6 +57,7 @@ type res =
    extgstates : ((string * float), string) Hashtbl.t; (* (kind, value), name *)
    fonts : (Pdftext.font, (string * int)) Hashtbl.t; (* (font, (objnum, pdf name)) *)
    form_xobjects : (string, (string * int)) Hashtbl.t; (* (name, (pdf name, objnum)) *)
+   mutable page_names : string list;
    mutable time : Cpdfstrftime.t;
    mutable current_url : string option;
    mutable current_font : Pdftext.font;
@@ -67,6 +68,7 @@ let res =
    extgstates = null_hash ();
    fonts = null_hash ();
    form_xobjects = null_hash ();
+   page_names = [];
    time = Cpdfstrftime.dummy;
    current_url = None;
    current_font = Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding);
@@ -76,9 +78,11 @@ let fresh_name s =
   res.num <- res.num + 1;
   s ^ string_of_int res.num
 
-(* At end of page, we keep things for which we have indirects - we may use them on another page. *)
+(* At end of page, we keep things for which we have indirects - but ExtGStates
+   aren't indirect, so they go. *)
 let reset_state () =
-  Hashtbl.clear res.extgstates
+  Hashtbl.clear res.extgstates;
+  res.page_names <- []
 
 let process_specials pdf endpage filename bates batespad num page s =
   let pairs =
@@ -132,8 +136,14 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
   | SetMiterLimit m -> [Pdfops.Op_M m]
   | SetDashPattern (x, y) -> [Pdfops.Op_d (x, y)]
   | FormXObject (a, b, c, d, n, ops) -> create_form_xobject a b c d pdf endpage filename bates batespad num page n ops; []
-  | Use n -> [Pdfops.Op_Do (try fst (Hashtbl.find res.form_xobjects n) with _ -> Cpdferror.error ("Form XObject not found: " ^ n))]
-  | Image s -> [Pdfops.Op_Do (try fst (Hashtbl.find res.images s) with _ -> Cpdferror.error ("Image not found: " ^ s))]
+  | Use n ->
+      let pdfname = try fst (Hashtbl.find res.form_xobjects n) with _ -> Cpdferror.error ("Form XObject not found: " ^ n) in
+        res.page_names <- pdfname::res.page_names;
+        [Pdfops.Op_Do pdfname]
+  | Image s ->
+      let pdfname = try fst (Hashtbl.find res.images s) with _ -> Cpdferror.error ("Image not found: " ^ s) in
+        res.page_names <- pdfname::res.page_names;
+        [Pdfops.Op_Do pdfname]
   | ImageXObject (s, obj) ->
       Hashtbl.add res.images s (fresh_name "/XObj", Pdf.addobj pdf obj); 
       []
@@ -157,6 +167,7 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
               (n, o)
       in
         res.current_font <- font;
+        res.page_names <- n::res.page_names;
         [Pdfops.Op_Tf (n, f)]
   | BT -> [Pdfops.Op_BT]
   | ET -> [Pdfops.Op_ET]
@@ -245,18 +256,18 @@ let draw_single ~filename ~bates ~batespad fast range pdf drawops =
       (ilist 1 endpage)
       ss;
   let pdf = !pdf in
-  let image_resources = map (fun (_, (n, o)) -> (n, Pdf.Indirect o)) (list_of_hashtbl res.images) in
   let gss_resources = map (fun ((kind, v), n) -> (kind, Pdf.Real v)) (list_of_hashtbl res.extgstates) in
-  let font_resources = map (fun (_, (n, o)) -> (n, Pdf.Indirect o)) (list_of_hashtbl res.fonts) in
-  let form_resources = map (fun (_, (n, o)) -> (n, Pdf.Indirect o)) (list_of_hashtbl res.form_xobjects) in 
+  let select_resources t =
+    option_map (fun (_, (n, o)) -> if mem n res.page_names then Some (n, Pdf.Indirect o) else None) (list_of_hashtbl t)
+  in
   let pages =
     map
       (fun p ->
         let new_resources =
           let update = fold_right (fun (k, v) d -> add k v d) in
-          let new_xobjects = update (form_resources @ image_resources) (read_resource pdf "/XObject" p) in
           let new_gss = update gss_resources (read_resource pdf "/ExtGState" p) in
-          let new_fonts = update font_resources (read_resource pdf "/Font" p) in
+          let new_xobjects = update (select_resources res.form_xobjects @ select_resources res.images) (read_resource pdf "/XObject" p) in
+          let new_fonts = update (select_resources res.fonts) (read_resource pdf "/Font" p) in
             Pdf.add_dict_entry
               (Pdf.add_dict_entry
                 (Pdf.add_dict_entry p.Pdfpage.resources "/XObject" (Pdf.Dictionary new_xobjects))
