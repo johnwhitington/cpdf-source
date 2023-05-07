@@ -268,13 +268,17 @@ let draw_single ~filename ~bates ~batespad fast range pdf drawops =
           let new_gss = update gss_resources (read_resource pdf "/ExtGState" p) in
           let new_xobjects = update (select_resources res.form_xobjects @ select_resources res.images) (read_resource pdf "/XObject" p) in
           let new_fonts = update (select_resources res.fonts) (read_resource pdf "/Font" p) in
-            Pdf.add_dict_entry
-              (Pdf.add_dict_entry
-                (Pdf.add_dict_entry p.Pdfpage.resources "/XObject" (Pdf.Dictionary new_xobjects))
-                "/ExtGState"
-                (Pdf.Dictionary new_gss))
-              "/Font"
-              (Pdf.Dictionary new_fonts)
+          let add_if_non_empty dict name newdict =
+            if newdict = Pdf.Dictionary [] then dict else
+              Pdf.add_dict_entry dict name newdict
+          in
+            add_if_non_empty
+            (add_if_non_empty
+              (add_if_non_empty p.Pdfpage.resources "/XObject" (Pdf.Dictionary new_xobjects))
+              "/ExtGState"
+              (Pdf.Dictionary new_gss))
+            "/Font"
+            (Pdf.Dictionary new_fonts)
         in
          {p with resources = new_resources})
       (Pdfpage.pages_of_pagetree pdf)
