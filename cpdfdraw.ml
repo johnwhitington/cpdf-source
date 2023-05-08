@@ -186,6 +186,9 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
 and ops_of_drawops pdf endpage filename bates batespad num page drawops =
   flatten (map (ops_of_drawop pdf endpage filename bates batespad num page) drawops)
 
+(* 1. We want resources to be created locally to the xobject, not on the page so it may be shared between pages.
+     a. make sure none are added to the page
+     b. make sure we collect them and add them to the xobject *)
 and create_form_xobject a b c d pdf endpage filename bates batespad num page n ops =
   let data =
     Pdfio.bytes_of_string (Pdfops.string_of_ops (ops_of_drawops pdf endpage filename bates batespad num page ops))
