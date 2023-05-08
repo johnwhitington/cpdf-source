@@ -80,8 +80,15 @@ let resstack =
 let res () =
   hd !resstack
 
+let rescopy r =
+  {r with
+    images = Hashtbl.copy r.images;
+    fonts = Hashtbl.copy r.fonts;
+    extgstates = Hashtbl.copy r.extgstates;
+    form_xobjects = Hashtbl.copy r.form_xobjects}
+
 let respush () =
-  resstack := (res ())::!resstack
+  resstack := (rescopy (res ()))::!resstack
 
 let respop () =
   resstack := tl !resstack
@@ -108,7 +115,7 @@ let charcodes_of_utf8 s =
 let extgstate kind v =
   try Hashtbl.find (res ()).extgstates (kind, v) with
     Not_found ->
-      let n = fresh_name "/gs" in
+      let n = fresh_name "/G" in
         Hashtbl.add (res ()).extgstates (kind, v) n;
         n
 
@@ -183,7 +190,7 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
         (res ()).page_names <- pdfname::(res ()).page_names;
         [Pdfops.Op_Do pdfname]
   | ImageXObject (s, obj) ->
-      Hashtbl.add (res ()).images s (fresh_name "/XObj", Pdf.addobj pdf obj); 
+      Hashtbl.add (res ()).images s (fresh_name "/I", Pdf.addobj pdf obj); 
       []
   | NewPage -> Pdfe.log ("NewPage remaining in graphic stream"); assert false
   | Opacity v -> [Pdfops.Op_gs (extgstate "/ca" v)]
@@ -241,8 +248,8 @@ and create_form_xobject a b c d pdf endpage filename bates batespad num page n o
              ],
            Pdf.Got data)}
   in
-    Hashtbl.add (res ()).form_xobjects n (fresh_name "/Fm", (Pdf.addobj pdf obj));
-    respop ()
+    respop ();
+    Hashtbl.add (res ()).form_xobjects n (fresh_name "/X", (Pdf.addobj pdf obj))
 
 let minimum_resource_number pdf range =
   let pages = Pdfpage.pages_of_pagetree pdf in
