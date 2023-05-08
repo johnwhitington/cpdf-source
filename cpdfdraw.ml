@@ -80,6 +80,12 @@ let resstack =
 let res () =
   hd !resstack
 
+let respush () =
+  resstack := (res ())::!resstack
+
+let respop () =
+  resstack := tl !resstack
+
 let fresh_name s =
   (res ()).num <- (res ()).num + 1;
   s ^ string_of_int (res ()).num
@@ -192,10 +198,8 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
 and ops_of_drawops pdf endpage filename bates batespad num page drawops =
   flatten (map (ops_of_drawop pdf endpage filename bates batespad num page) drawops)
 
-(* 1. We want resources to be created locally to the xobject, not on the page so it may be shared between pages.
-     a. make sure none are added to the page
-     b. make sure we collect them and add them to the xobject *)
 and create_form_xobject a b c d pdf endpage filename bates batespad num page n ops =
+  respush ();
   let data =
     Pdfio.bytes_of_string (Pdfops.string_of_ops (ops_of_drawops pdf endpage filename bates batespad num page ops))
   in
@@ -209,7 +213,8 @@ and create_form_xobject a b c d pdf endpage filename bates batespad num page n o
              ],
            Pdf.Got data)}
   in
-    Hashtbl.add (res ()).form_xobjects n (fresh_name "/Fm", (Pdf.addobj pdf obj))
+    Hashtbl.add (res ()).form_xobjects n (fresh_name "/Fm", (Pdf.addobj pdf obj));
+    respop ()
 
 let read_resource pdf n p =
   match Pdf.lookup_direct pdf n p.Pdfpage.resources with
