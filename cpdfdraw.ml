@@ -236,7 +236,7 @@ let contains_specials drawops =
   List.exists (function SpecialText _ -> true | _ -> false) drawops
 
 let draw_single ~filename ~bates ~batespad fast range pdf drawops =
-  res.num <- minimum_resource_number pdf range;
+  res.num <- max res.num (minimum_resource_number pdf range);
   let endpage = Pdfpage.endpage pdf in
   let pages = Pdfpage.pages_of_pagetree pdf in
   let str =
@@ -261,8 +261,9 @@ let draw_single ~filename ~bates ~batespad fast range pdf drawops =
     option_map (fun (_, (n, o)) -> if mem n res.page_names then Some (n, Pdf.Indirect o) else None) (list_of_hashtbl t)
   in
   let pages =
-    map
-      (fun p ->
+    map2
+      (fun n p ->
+        if not (mem n range) then p else 
         let new_resources =
           let update = fold_right (fun (k, v) d -> add k v d) in
           let new_gss = update gss_resources (read_resource pdf "/ExtGState" p) in
@@ -281,6 +282,7 @@ let draw_single ~filename ~bates ~batespad fast range pdf drawops =
             (Pdf.Dictionary new_fonts)
         in
          {p with resources = new_resources})
+      (ilist 1 endpage)
       (Pdfpage.pages_of_pagetree pdf)
   in
     Pdfpage.change_pages true pdf pages
