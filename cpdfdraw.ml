@@ -112,6 +112,32 @@ let extgstate kind v =
         Hashtbl.add (res ()).extgstates (kind, v) n;
         n
 
+let read_resource pdf n res =
+  match Pdf.lookup_direct pdf n res with
+  | Some (Pdf.Dictionary d) -> d
+  | _ -> []
+
+let update_resources pdf old_resources =
+  let gss_resources = map (fun ((kind, v), n) -> (kind, Pdf.Real v)) (list_of_hashtbl (res ()).extgstates) in
+  let select_resources t =
+    option_map (fun (_, (n, o)) -> if mem n (res ()).page_names then Some (n, Pdf.Indirect o) else None) (list_of_hashtbl t)
+  in
+  let update = fold_right (fun (k, v) d -> add k v d) in
+  let new_gss = update gss_resources (read_resource pdf "/ExtGState" old_resources) in
+  let new_xobjects = update (select_resources (res ()).form_xobjects @ select_resources (res ()).images) (read_resource pdf "/XObject" old_resources) in
+  let new_fonts = update (select_resources (res ()).fonts) (read_resource pdf "/Font" old_resources) in
+  let add_if_non_empty dict name newdict =
+    if newdict = Pdf.Dictionary [] then dict else
+      Pdf.add_dict_entry dict name newdict
+  in
+    add_if_non_empty
+    (add_if_non_empty
+      (add_if_non_empty old_resources "/XObject" (Pdf.Dictionary new_xobjects))
+      "/ExtGState"
+      (Pdf.Dictionary new_gss))
+    "/Font"
+    (Pdf.Dictionary new_fonts)
+
 let rec ops_of_drawop pdf endpage filename bates batespad num page = function
   | Push -> [Pdfops.Op_q]
   | Pop -> [Pdfops.Op_Q]
@@ -200,6 +226,7 @@ and ops_of_drawops pdf endpage filename bates batespad num page drawops =
 
 and create_form_xobject a b c d pdf endpage filename bates batespad num page n ops =
   respush ();
+  reset_state ();
   let data =
     Pdfio.bytes_of_string (Pdfops.string_of_ops (ops_of_drawops pdf endpage filename bates batespad num page ops))
   in
@@ -209,17 +236,13 @@ and create_form_xobject a b c d pdf endpage filename bates batespad num page n o
           (Pdf.Dictionary
              [("/Length", Pdf.Integer (Pdfio.bytes_size data));
               ("/Subtype", Pdf.Name "/Form");
+              ("/Resources", update_resources pdf (Pdf.Dictionary []));
               ("/BBox", Pdf.Array [Pdf.Real a; Pdf.Real b; Pdf.Real c; Pdf.Real d])
              ],
            Pdf.Got data)}
   in
     Hashtbl.add (res ()).form_xobjects n (fresh_name "/Fm", (Pdf.addobj pdf obj));
     respop ()
-
-let read_resource pdf n p =
-  match Pdf.lookup_direct pdf n p.Pdfpage.resources with
-  | Some (Pdf.Dictionary d) -> d
-  | _ -> []
 
 let minimum_resource_number pdf range =
   let pages = Pdfpage.pages_of_pagetree pdf in
@@ -254,48 +277,28 @@ let draw_single ~filename ~bates ~batespad fast range pdf drawops =
   let endpage = Pdfpage.endpage pdf in
   let pages = Pdfpage.pages_of_pagetree pdf in
   let str =
-    if contains_specials drawops then None else Some (Pdfops.string_of_ops (ops_of_drawops pdf endpage filename bates batespad 0 (hd pages) drawops))
+    if contains_specials drawops
+      then None
+      else Some (Pdfops.string_of_ops (ops_of_drawops pdf endpage filename bates batespad 0 (hd pages) drawops))
   in
   let ss =
     map2
       (fun n p ->
-         if mem n range then (match str with Some x -> x | None -> Pdfops.string_of_ops (ops_of_drawops pdf endpage filename bates batespad n p drawops)) else "")
+         if mem n range
+           then (match str with Some x -> x | None -> Pdfops.string_of_ops (ops_of_drawops pdf endpage filename bates batespad n p drawops))
+           else "")
       (ilist 1 endpage)
       pages
   in
   let pdf = ref pdf in
     iter2
-      (fun n s ->
-        if mem n range then pdf := Cpdftweak.append_page_content s false fast [n] !pdf)
+      (fun n s -> if mem n range then pdf := Cpdftweak.append_page_content s false fast [n] !pdf)
       (ilist 1 endpage)
       ss;
   let pdf = !pdf in
-  let gss_resources = map (fun ((kind, v), n) -> (kind, Pdf.Real v)) (list_of_hashtbl (res ()).extgstates) in
-  let select_resources t =
-    option_map (fun (_, (n, o)) -> if mem n (res ()).page_names then Some (n, Pdf.Indirect o) else None) (list_of_hashtbl t)
-  in
   let pages =
     map2
-      (fun n p ->
-        if not (mem n range) then p else 
-        let new_resources =
-          let update = fold_right (fun (k, v) d -> add k v d) in
-          let new_gss = update gss_resources (read_resource pdf "/ExtGState" p) in
-          let new_xobjects = update (select_resources (res ()).form_xobjects @ select_resources (res ()).images) (read_resource pdf "/XObject" p) in
-          let new_fonts = update (select_resources (res ()).fonts) (read_resource pdf "/Font" p) in
-          let add_if_non_empty dict name newdict =
-            if newdict = Pdf.Dictionary [] then dict else
-              Pdf.add_dict_entry dict name newdict
-          in
-            add_if_non_empty
-            (add_if_non_empty
-              (add_if_non_empty p.Pdfpage.resources "/XObject" (Pdf.Dictionary new_xobjects))
-              "/ExtGState"
-              (Pdf.Dictionary new_gss))
-            "/Font"
-            (Pdf.Dictionary new_fonts)
-        in
-         {p with resources = new_resources})
+      (fun n p -> if not (mem n range) then p else {p with Pdfpage.resources = update_resources pdf p.Pdfpage.resources})
       (ilist 1 endpage)
       (Pdfpage.pages_of_pagetree pdf)
   in
