@@ -2,8 +2,8 @@
 
 New features:
 
-o Create new PDF graphics with -draw
-o Embed TrueType fonts with -font-ttf for -add-text et al.
+o Create new PDF documents or draw on existing ones with -draw
+o Embed Google/URW TrueType fonts with -font-ttf.
 o Embed the 14 standard fonts if requested
 o Add links to parts of text with -add-text as %URL[|].
 o Convert JPEGs and PNGs to PDFs with -jpeg and -png
