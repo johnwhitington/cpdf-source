@@ -46,8 +46,6 @@ type drawops =
   | TextScale of float
   | RenderMode of int
   | Rise of float
-  | URL of string
-  | EndURL
 
 val draw : filename:string ->
            bates:int ->

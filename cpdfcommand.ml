@@ -2097,12 +2097,6 @@ let addrendermode i =
 let addrise f =
   addop (Cpdfdraw.Rise f)
 
-let addurl s =
-  addop (Cpdfdraw.URL s)
-
-let addendurl () =
-  addop Cpdfdraw.EndURL
-
 let addleading f =
   addop (Cpdfdraw.Leading f)
 
@@ -2956,8 +2950,6 @@ and specs =
    ("-et", Arg.Unit addet, " End text");
    ("-text", Arg.String addtext, " Draw text ");
    ("-stext", Arg.String addspecialtext, " Draw text with %specials");
-   ("-url", Arg.String addurl, " Begin URL");
-   ("-endurl", Arg.Unit addendurl, " End URL");
    ("-leading", Arg.Float addleading, " Set leading");
    ("-charspace", Arg.Float addcharspace, " Set character spacing");
    ("-wordspace", Arg.Float addwordspace, " Set word space");

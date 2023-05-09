@@ -48,8 +48,6 @@ type drawops =
   | TextScale of float
   | RenderMode of int
   | Rise of float
-  | URL of string
-  | EndURL
 
 (* Per page resources *)
 type res = 
@@ -59,7 +57,6 @@ type res =
    form_xobjects : (string, (string * int)) Hashtbl.t; (* (name, (pdf name, objnum)) *)
    mutable page_names : string list;
    mutable time : Cpdfstrftime.t;
-   mutable current_url : string option;
    mutable current_font : Pdftext.font;
    mutable num : int}
 
@@ -70,7 +67,6 @@ let empty_res =
    form_xobjects = null_hash ();
    page_names = [];
    time = Cpdfstrftime.dummy;
-   current_url = None;
    current_font = Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding);
    num = 0}
 
@@ -199,12 +195,6 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
   | NewPage -> Pdfe.log ("NewPage remaining in graphic stream"); assert false
   | Opacity v -> [Pdfops.Op_gs (extgstate "/ca" v)]
   | SOpacity v -> [Pdfops.Op_gs (extgstate "/CA" v)]
-  | URL s ->
-      (res ()).current_url <- Some s;
-      []
-  | EndURL ->
-      (res ()).current_url <- None;
-      []
   | Font (s, f) ->
       let font = Pdftext.StandardFont (s, Pdftext.WinAnsiEncoding) in
       let (n, _) =
