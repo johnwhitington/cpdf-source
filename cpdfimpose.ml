@@ -140,7 +140,8 @@ let impose_pages fit x y columns rtl btt center margin output_mediabox fast fit_
               [Pdfops.stream_of_ops [Pdfops.Op_q; Pdfops.Op_cm transform]] @ contents @ [Pdfops.stream_of_ops [Pdfops.Op_Q]]
             else
             (* If slow, use protect from Pdfpage. *)
-            let ops = Pdfpage.protect pdf resources' contents @ Pdfops.parse_operators pdf resources' contents in
+            let ours = Pdfops.parse_operators pdf resources' contents in 
+            let ops = Pdfpage.protect ours @ ours in
               [Pdfops.stream_of_ops ([Pdfops.Op_q] @ [Pdfops.Op_cm transform] @ ops @ [Pdfops.Op_Q])]
           in
             flatten

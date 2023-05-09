@@ -1777,7 +1777,7 @@ let whingemalformed () =
   exit 1
 
 (* Drawing operations. *)
-let drawops = ref [("main", [])]
+let drawops = ref [("_MAIN", [])]
 
 let startxobj n =
   drawops := (n, [])::!drawops
@@ -1797,17 +1797,27 @@ let endxobj () =
       let a, b, c, d = args.xobj_bbox in
         addop (Cpdfdraw.FormXObject (a, b, c, d, n, rev ops))
   | [] ->
-      error "too many -endxobj"
-
-let tdeep = ref 0
+      error "too many -endxobj or -et"
 
 let addbt () =
-  addop Cpdfdraw.BT;
-  tdeep +=1
+  drawops := ("_TEXT", [])::!drawops
 
 let addet () =
-  addop Cpdfdraw.ET;
-  tdeep -=1
+  match !drawops with
+  | ("_TEXT", ops)::t ->
+      drawops := t;
+      addop (Cpdfdraw.TextSection (rev ops))
+  | _ -> error "not in a text section at -et"
+
+let push () =
+  drawops := ("_PUSH", [])::!drawops
+
+let pop () =
+  match !drawops with
+  | ("_PUSH", ops)::t ->
+      drawops := t;
+      addop (Cpdfdraw.Qq (rev ops))
+  | _ -> error "not in a Q section at -q"
 
 let readfloats s = map float_of_string (String.split_on_char ' ' s)
 
@@ -1922,11 +1932,6 @@ let setdash s =
   with
    _ -> error "Dash pattern elements must one or more numbers"
 
-let push () =
-  addop Cpdfdraw.Push
-
-let pop () =
-  addop Cpdfdraw.Pop
 
 let setmatrix s =
   match readfloats s with
@@ -4460,10 +4465,9 @@ let go () =
         let w = (float rawwidth *. args.fontsize) /. 1000. in
           Printf.printf "%f\n" w
   | Some Draw ->
-      if !tdeep <> 0 then error "Unmatched -bt / -et" else
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-      let ops = match !drawops with [("main", ops)] -> rev ops | _ -> error "not enough -endxobj" in
+      let ops = match !drawops with [("_MAIN", ops)] -> rev ops | _ -> error "not enough -endxobj or -et" in
         write_pdf
           false
           (Cpdfdraw.draw ~filename:args.original_filename ~bates:args.bates ~batespad:args.batespad args.fast range pdf ops)

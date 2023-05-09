@@ -20,8 +20,7 @@ type drawops =
   | SetMiterLimit of float
   | SetDashPattern of float list * float
   | Matrix of Pdftransform.transform_matrix
-  | Push
-  | Pop
+  | Qq of drawops list
   | Fill
   | FillEvenOdd
   | Stroke
@@ -37,8 +36,7 @@ type drawops =
   | Opacity of float
   | SOpacity of float
   | Font of Pdftext.standard_font * float
-  | BT
-  | ET
+  | TextSection of drawops list
   | Text of string
   | SpecialText of string
   | Newline
@@ -146,8 +144,7 @@ let update_resources pdf old_resources =
     (Pdf.Dictionary new_fonts)
 
 let rec ops_of_drawop pdf endpage filename bates batespad num page = function
-  | Push -> [Pdfops.Op_q]
-  | Pop -> [Pdfops.Op_Q]
+  | Qq ops -> [Pdfops.Op_q] @ ops_of_drawops pdf endpage filename bates batespad num page ops @ [Pdfops.Op_Q]
   | Matrix m -> [Pdfops.Op_cm m] 
   | Rect (x, y, w, h) -> [Pdfops.Op_re (x, y, w, h)]
   | Bezier (a, b, c, d, e, f) -> [Pdfops.Op_c (a, b, c, d, e, f)]
@@ -208,8 +205,7 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
         (res ()).current_font <- font;
         (res ()).page_names <- n::(res ()).page_names;
         [Pdfops.Op_Tf (n, f)]
-  | BT -> [Pdfops.Op_BT]
-  | ET -> [Pdfops.Op_ET]
+  | TextSection ops -> [Pdfops.Op_BT] @ ops_of_drawops pdf endpage filename bates batespad num page ops @ [Pdfops.Op_ET]
   | Text s -> [Pdfops.Op_Tj (charcodes_of_utf8 s)]
   | SpecialText s ->
       let s = process_specials pdf endpage filename bates batespad num page s in

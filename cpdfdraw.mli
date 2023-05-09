@@ -18,8 +18,7 @@ type drawops =
   | SetMiterLimit of float
   | SetDashPattern of float list * float
   | Matrix of Pdftransform.transform_matrix
-  | Push
-  | Pop
+  | Qq of drawops list
   | Fill
   | FillEvenOdd
   | Stroke
@@ -35,8 +34,7 @@ type drawops =
   | Opacity of float
   | SOpacity of float
   | Font of Pdftext.standard_font * float
-  | BT
-  | ET
+  | TextSection of drawops list
   | Text of string
   | SpecialText of string
   | Newline
