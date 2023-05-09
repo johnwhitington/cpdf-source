@@ -91,7 +91,11 @@ let respush () =
   resstack := (rescopy (res ()))::!resstack
 
 let respop () =
-  resstack := tl !resstack
+  let n = (hd !resstack).num in
+    resstack := tl !resstack;
+    (* not necessary, since names are isolated in the xobject, but it makes
+       manual debugging of PDF files easier if we don't re-use numbers *)
+    (res ()).num <- max n (res ()).num
 
 let fresh_name s =
   (res ()).num <- (res ()).num + 1;

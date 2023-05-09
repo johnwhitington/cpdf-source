@@ -88,7 +88,6 @@ let parse_pagespec_allow_empty pdf spec =
   try Cpdfpagespec.parse_pagespec pdf spec with
     Pdf.PDFError ("Page range specifies no pages") -> []
 
-
 (* Operations. *)
 type op =
   | CopyFont of string
@@ -1778,35 +1777,27 @@ let whingemalformed () =
   exit 1
 
 (* Drawing operations. *)
-let drawops = ref []
-
-let saved_ops =
-  Hashtbl.create 16
-
-let we_are_saving = ref None
+let drawops = ref [("main", [])]
 
 let startxobj n =
-  we_are_saving := Some n;
-  Hashtbl.add saved_ops n []
+  drawops := (n, [])::!drawops
 
 let xobjbbox s =
   args.xobj_bbox <- Cpdfcoord.parse_rectangle (Pdf.empty ()) s 
 
 let addop o =
-  match !we_are_saving with
-  | Some n ->
-      Hashtbl.replace saved_ops n (o::Hashtbl.find saved_ops n)
-  | None ->
-      drawops := o::!drawops
+  match !drawops with
+  | (n, ops)::t -> drawops := (n, (o::ops))::t
+  | [] -> error "no drawops"
 
 let endxobj () =
-  match !we_are_saving with
-  | Some n ->
-      we_are_saving := None;
+  match !drawops with
+  | (n, ops)::t ->
+      drawops := t;
       let a, b, c, d = args.xobj_bbox in
-        addop (Cpdfdraw.FormXObject (a, b, c, d, n, rev (Hashtbl.find saved_ops n)))
-  | None ->
-      error "misplaced -endxobj"
+        addop (Cpdfdraw.FormXObject (a, b, c, d, n, rev ops))
+  | [] ->
+      error "too many -endxobj"
 
 let tdeep = ref 0
 
@@ -4480,9 +4471,10 @@ let go () =
       if !tdeep <> 0 then error "Unmatched -bt / -et" else
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
+      let ops = match !drawops with [("main", ops)] -> rev ops | _ -> error "not enough -endxobj" in
         write_pdf
           false
-          (Cpdfdraw.draw ~filename:args.original_filename ~bates:args.bates ~batespad:args.batespad args.fast range pdf (rev !drawops))
+          (Cpdfdraw.draw ~filename:args.original_filename ~bates:args.bates ~batespad:args.batespad args.fast range pdf ops)
   | Some (Composition json) ->
       let pdf = get_single_pdf args.op false in
       let filesize =
