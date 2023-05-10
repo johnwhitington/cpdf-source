@@ -1797,7 +1797,7 @@ let endxobj () =
       let a, b, c, d = args.xobj_bbox in
         addop (Cpdfdraw.FormXObject (a, b, c, d, n, rev ops))
   | [] ->
-      error "too many -endxobj or -et"
+      error "too many -end-xobj or -et"
 
 let addbt () =
   drawops := ("_TEXT", [])::!drawops
@@ -1817,7 +1817,7 @@ let pop () =
   | ("_PUSH", ops)::t ->
       drawops := t;
       addop (Cpdfdraw.Qq (rev ops))
-  | _ -> error "not in a Q section at -q"
+  | _ -> error "not in a pushed section at -pop"
 
 let readfloats s = map float_of_string (String.split_on_char ' ' s)
 
@@ -1849,7 +1849,7 @@ let addline s =
 let addbezier s =
   match readfloats s with
   | [a; b; c; d; e; f] -> addop (Cpdfdraw.Bezier (a, b, c, d, e, f))
-  | _ -> error "-bez requires siz numbers"
+  | _ -> error "-bez requires six numbers"
   | exception _ -> error "malformed -bez"
 
 let addcircle s =
@@ -1944,12 +1944,12 @@ let setmatrix s =
 let setmtranslate s =
   match readfloats s with
   | [a; b] -> addop (Cpdfdraw.Matrix (Pdftransform.matrix_of_transform [Pdftransform.Translate (a, b)]))
-  | _ | exception _ -> error "-mtranslate takes two numbers"
+  | _ | exception _ -> error "-mtrans takes two numbers"
 
 let setmrotate s =
   match readfloats s with
   | [a; b; c] -> addop (Cpdfdraw.Matrix (Pdftransform.matrix_of_transform [Pdftransform.Rotate ((a, b), c)]))
-  | _ | exception _ -> error "-mrotate takes three numbers"
+  | _ | exception _ -> error "-mrot takes three numbers"
 
 let setmscale s =
   match readfloats s with
@@ -2912,7 +2912,6 @@ and specs =
    ("-text-width",
      Arg.String settextwidth,
      " Find width of a line of text");
-   (* Creating new PDF content *)
    ("-draw", Arg.Unit (setop Draw), " Begin drawing");
    ("-rect", Arg.String addrect, " Draw rectangle");
    ("-to", Arg.String addto, " Move to");
