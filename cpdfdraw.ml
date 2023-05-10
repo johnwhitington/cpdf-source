@@ -306,10 +306,12 @@ let draw ~filename ~bates ~batespad fast range pdf drawops =
   (res ()).time <- Cpdfstrftime.current_time ();
   let pdf = ref pdf in
   let range = ref range in
+  (* Double up a trailing NewPage so it actually does something... *)
+  let drawops = match rev drawops with NewPage::t -> rev (NewPage::NewPage::t) | l -> l in
   let chunks = ref (split_around (eq NewPage) drawops) in
     while !chunks <> [] do
       reset_state ();
-      pdf := draw_single ~filename ~bates ~batespad fast !range !pdf (hd !chunks);
+      if hd !chunks <> [] then pdf := draw_single ~filename ~bates ~batespad fast !range !pdf (hd !chunks);
       chunks := tl !chunks;
       if !chunks <> [] then begin
         let endpage = Pdfpage.endpage !pdf in
