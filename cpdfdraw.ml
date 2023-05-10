@@ -58,7 +58,7 @@ type res =
    mutable current_font : Pdftext.font;
    mutable num : int}
 
-let empty_res =
+let empty_res () =
   {images = null_hash ();
    extgstates = null_hash ();
    fonts = null_hash ();
@@ -69,7 +69,7 @@ let empty_res =
    num = 0}
 
 let resstack =
-  ref [empty_res]
+  ref [empty_res ()]
 
 let res () =
   hd !resstack
@@ -302,6 +302,7 @@ let draw_single ~filename ~bates ~batespad fast range pdf drawops =
     Pdfpage.change_pages true pdf pages
 
 let draw ~filename ~bates ~batespad fast range pdf drawops =
+  resstack := [empty_res ()];
   (res ()).time <- Cpdfstrftime.current_time ();
   let pdf = ref pdf in
   let range = ref range in

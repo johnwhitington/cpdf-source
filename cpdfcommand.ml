@@ -4568,6 +4568,7 @@ let go_withargv argv =
            (*Printf.printf "AND:%b, %s\n" islast (Array.fold_left (fun x y -> x  ^ " " ^ y) "" s);
            flprint "\n";*)
            reset_arguments ();
+           drawops := [("_MAIN", [])];
            process_env_vars ();
            parse_argv () s (align_specs specs) anon_fun usage_msg;
            parse_argv () (Array.of_list ("cpdf"::!control_args)) (align_specs specs) anon_fun usage_msg;
