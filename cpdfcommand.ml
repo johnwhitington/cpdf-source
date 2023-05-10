@@ -1786,6 +1786,7 @@ let xobjbbox s =
   args.xobj_bbox <- Cpdfcoord.parse_rectangle (Pdf.empty ()) s 
 
 let addop o =
+  begin match args.op with Some Draw -> () | _ -> error "Need to be in drawing mode for this." end; 
   match !drawops with
   | (n, ops)::t -> drawops := (n, (o::ops))::t
   | [] -> error "no drawops"
@@ -2074,12 +2075,14 @@ let addsopacity f =
   addop (Cpdfdraw.SOpacity f)
 
 let addtext s =
+  begin match !drawops with _::_::_ -> () | _ -> error "-text must be in a -bt / -et section" end;
   let font = match args.font with StandardFont s -> s | _ -> error "-text: not a standard font" in
     addop (Cpdfdraw.Font (font, args.fontsize));
     addop (Cpdfdraw.Text s)
 
 let addspecialtext s =
-  let font = match args.font with StandardFont s -> s | _ -> error "-text: not a standard font" in
+  begin match !drawops with _::_::_ -> () | _ -> error "-stext must be in a -bt / -et section" end;
+  let font = match args.font with StandardFont s -> s | _ -> error "-stext: not a standard font" in
     addop (Cpdfdraw.Font (font, args.fontsize));
     addop (Cpdfdraw.SpecialText s)
 
@@ -4466,7 +4469,7 @@ let go () =
   | Some Draw ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-      let ops = match !drawops with [("_MAIN", ops)] -> rev ops | _ -> error "not enough -endxobj or -et" in
+      let ops = match !drawops with [("_MAIN", ops)] -> rev ops | _ -> error "not enough -end-xobj or -et" in
         write_pdf
           false
           (Cpdfdraw.draw ~filename:args.original_filename ~bates:args.bates ~batespad:args.batespad args.fast range pdf ops)
