@@ -47,6 +47,27 @@ type drawops =
   | RenderMode of int
   | Rise of float
 
+let rec string_of_drawop = function
+  | Qq o -> "Qq (" ^ string_of_drawops o ^ ")"
+  | FormXObject (_, _, _, _, _, o) -> "FormXObject (" ^ string_of_drawops o ^ ")"
+  | TextSection o -> "TextSection (" ^ string_of_drawops o ^ ")"
+  | Rect _ -> "Rect" | Bezier _ -> "Bezier" | To _ -> "To" | Line _ -> "Line"
+  | ClosePath -> "ClosePath" | SetFill _ -> "SetFill" | SetStroke _ -> "SetStroke"
+  | SetLineThickness _ -> "SetLineThickness" | SetLineCap _ -> "SetLineCap"
+  | SetLineJoin _ -> "SetLineJoin" | SetMiterLimit _ -> "SetMiterLimit"
+  | SetDashPattern _ -> "SetDashPattern" | Matrix _ -> "SetMatrix"
+  | Fill -> "Fill" | FillEvenOdd -> "FillEvenOdd" | Stroke -> "Stroke"
+  | FillStroke -> "FillStroke" | FillStrokeEvenOdd -> "FillStrokeEvenOdd"
+  | Clip -> "Clip" | ClipEvenOdd -> "ClipEvenOdd" | Use _ -> "Use"
+  | ImageXObject _ -> "ImageXObject" | Image _ -> "Image" | NewPage -> "NewPage"
+  | Opacity _ -> "Opacity" | SOpacity _ -> "SOpacity" | Font _ -> "Font" | Text _ -> "Text"
+  | SpecialText _ -> "SpecialText" | Newline -> "Newline" | Leading _ -> "Leading"
+  | CharSpace _ -> "CharSpace" | WordSpace _ -> "WordSpace" | TextScale _ -> "TextScale"
+  | RenderMode _ -> "RenderMode" | Rise _ -> "Rise"
+
+and string_of_drawops l =
+  fold_left (fun x y -> x ^ " " ^ y) "" (map string_of_drawop l)
+
 (* Per page resources *)
 type res = 
   {images : (string, (string * int)) Hashtbl.t; (* (name, (pdf name, objnum)) *)
@@ -177,7 +198,9 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
   | SetLineJoin j -> [Pdfops.Op_j j]
   | SetMiterLimit m -> [Pdfops.Op_M m]
   | SetDashPattern (x, y) -> [Pdfops.Op_d (x, y)]
-  | FormXObject (a, b, c, d, n, ops) -> create_form_xobject a b c d pdf endpage filename bates batespad num page n ops; []
+  | FormXObject (a, b, c, d, n, ops) ->
+      create_form_xobject a b c d pdf endpage filename bates batespad num page n ops;
+      []
   | Use n ->
       let pdfname = try fst (Hashtbl.find (res ()).form_xobjects n) with _ -> Cpdferror.error ("Form XObject not found: " ^ n) in
         (res ()).page_names <- pdfname::(res ()).page_names;
