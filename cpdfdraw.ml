@@ -313,7 +313,7 @@ let draw_single ~filename ~bates ~batespad fast range pdf drawops =
   in
   let pdf = ref pdf in
     iter2
-      (fun n s -> if mem n range then pdf := Cpdftweak.append_page_content s false fast [n] !pdf)
+      (fun n s -> Printf.printf "Page %i\n%!" n; if mem n range then pdf := Cpdftweak.append_page_content s false fast [n] !pdf)
       (ilist 1 endpage)
       ss;
   let pdf = !pdf in
