@@ -1378,15 +1378,6 @@ let set_remove_duplicate_fonts () =
 let setencoding enc () =
   args.encoding <- enc
 
-let setlinespacing f =
-  args.linespacing <- f
-
-let setmidline () =
-  args.midline <- true
-
-let settopline () =
-  args.topline <- true
-
 let setscaletofitscale f =
   args.scale <- f
 
@@ -1497,9 +1488,6 @@ let setoutline () =
 let setlinewidth l =
   args.linewidth <- l
 
-let setunderneath () =
-  args.underneath <- true
-
 let setimageresolution f =
   detect_duplicate_op (ImageResolution f);
   args.op <- Some (ImageResolution f)
@@ -1524,9 +1512,6 @@ let settobox s =
 let setmediaboxifmissing () =
   args.mediabox_if_missing <- true
 
-let setrelativetocropbox () =
-  args.relative_to_cropbox <- true
-
 let setprerotate () =
   args.prerotate <- true
 
@@ -1535,15 +1520,6 @@ let settopage s =
 
 let setscalestamptofit () =
   args.scale_stamp_to_fit <- true
-
-let setjustifyleft () =
-  args.justification <- Cpdfaddtext.LeftJustify
-
-let setjustifyright () =
-  args.justification <- Cpdfaddtext.RightJustify
-
-let setjustifycenter () =
-  args.justification <- Cpdfaddtext.CentreJustify
 
 let setremoveduplicatestreams () =
   args.remove_duplicate_streams <- true
@@ -2082,30 +2058,6 @@ let addspecialtext s =
     addop (Cpdfdraw.Font (font, args.fontsize));
     addop (Cpdfdraw.SpecialText s)
 
-let addleading f =
-  addop (Cpdfdraw.Leading f)
-
-let addcharspace f =
-  addop (Cpdfdraw.CharSpace f)
-
-let addwordspace f =
-  addop (Cpdfdraw.WordSpace f)
-
-let addtextscale f =
-  addop (Cpdfdraw.TextScale f)
-
-let addrendermode i =
-  addop (Cpdfdraw.RenderMode i)
-
-let addrise f =
-  addop (Cpdfdraw.Rise f)
-
-let addleading f =
-  addop (Cpdfdraw.Leading f)
-
-let addnewline () =
-  addop Cpdfdraw.Newline
-
 let setstderrtostdout () =
   Pdfe.logger := (fun s -> print_string s; flush stdout)
 
@@ -2485,28 +2437,28 @@ and specs =
       Arg.Unit setcenter,
       " Place text in the center of the page");
    ("-justify-left",
-      Arg.Unit setjustifyleft,
+      Arg.Unit (fun () -> args.justification <- Cpdfaddtext.LeftJustify),
       " Justify multiline text left");
    ("-justify-right",
-      Arg.Unit setjustifyright,
+      Arg.Unit (fun () -> args.justification <- Cpdfaddtext.RightJustify),
       " Justify multiline text right");
    ("-justify-center",
-      Arg.Unit setjustifycenter,
+      Arg.Unit (fun () -> args.justification <- Cpdfaddtext.CentreJustify),
       " Justify multiline text center");
    ("-underneath",
-      Arg.Unit setunderneath,
+      Arg.Unit (fun () -> args.underneath <- true),
       " Text stamp is underneath content");
    ("-line-spacing",
-      Arg.Float setlinespacing,
+      Arg.Float (fun f -> args.linespacing <- f),
       " Line spacing (1 is normal)");
    ("-midline",
-      Arg.Unit setmidline,
+      Arg.Unit (fun () -> args.midline <- true),
       " Adjust text to midline rather than baseline");
    ("-topline",
-      Arg.Unit settopline,
+      Arg.Unit (fun () -> args.topline <- true),
       " Adjust text to topline rather than baseline");
    ("-relative-to-cropbox",
-      Arg.Unit setrelativetocropbox,
+      Arg.Unit (fun () -> args.relative_to_cropbox <- true),
       " Add text relative to Crop Box not Media Box");
    ("-embed-missing-fonts",
       Arg.Unit (setop EmbedMissingFonts),
@@ -2952,13 +2904,13 @@ and specs =
    ("-et", Arg.Unit addet, " End text");
    ("-text", Arg.String addtext, " Draw text ");
    ("-stext", Arg.String addspecialtext, " Draw text with %specials");
-   ("-leading", Arg.Float addleading, " Set leading");
-   ("-charspace", Arg.Float addcharspace, " Set character spacing");
-   ("-wordspace", Arg.Float addwordspace, " Set word space");
-   ("-textscale", Arg.Float addtextscale, " Set text scale");
-   ("-rendermode", Arg.Int addrendermode, " Set text rendering mode");
-   ("-rise", Arg.Float addrise, " Set text rise");
-   ("-nl", Arg.Unit addnewline, " New line");
+   ("-leading", Arg.Float (fun f -> addop (Cpdfdraw.Leading f)), " Set leading");
+   ("-charspace", Arg.Float (fun f -> addop (Cpdfdraw.CharSpace f)), " Set character spacing");
+   ("-wordspace", Arg.Float (fun f -> addop (Cpdfdraw.WordSpace f)), " Set word space");
+   ("-textscale", Arg.Float (fun f -> addop (Cpdfdraw.TextScale f)), " Set text scale");
+   ("-rendermode", Arg.Int (fun i -> addop (Cpdfdraw.RenderMode i)), " Set text rendering mode");
+   ("-rise", Arg.Float (fun f -> addop (Cpdfdraw.Rise f)), " Set text rise");
+   ("-nl", Arg.Unit (fun () -> addop Cpdfdraw.Newline), " New line");
    ("-newpage", Arg.Unit addnewpage, " Move to a fresh page");
    (* These items are undocumented *)
    ("-debug", Arg.Unit setdebug, "");
