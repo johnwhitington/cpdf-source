@@ -45,7 +45,9 @@ type drawops =
   | RenderMode of int
   | Rise of float
 
-val draw : filename:string ->
+val draw : ?fast:bool ->
+           ?underneath:bool ->
+           filename:string ->
            bates:int ->
            batespad:int option ->
            bool -> int list -> Pdf.t -> drawops list -> Pdf.t

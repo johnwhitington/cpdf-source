@@ -293,39 +293,37 @@ let minimum_resource_number pdf range =
 let contains_specials drawops =
   List.exists (function SpecialText _ -> true | _ -> false) drawops
 
-let draw_single ~filename ~bates ~batespad fast range pdf drawops =
+let draw_single ~fast ~underneath ~filename ~bates ~batespad fast range pdf drawops =
   (res ()).num <- max (res ()).num (minimum_resource_number pdf range);
   let endpage = Pdfpage.endpage pdf in
   let pages = Pdfpage.pages_of_pagetree pdf in
-  let str =
+  let ops =
     if contains_specials drawops
       then None
-      else Some (Pdfops.string_of_ops (ops_of_drawops pdf endpage filename bates batespad 0 (hd pages) drawops))
+      else Some (ops_of_drawops pdf endpage filename bates batespad 0 (hd pages) drawops)
   in
   let ss =
     map2
       (fun n p ->
          if mem n range
-           then (match str with Some x -> x | None -> Pdfops.string_of_ops (ops_of_drawops pdf endpage filename bates batespad n p drawops))
-           else "")
+           then (match ops with Some x -> x | None -> ops_of_drawops pdf endpage filename bates batespad n p drawops)
+           else [])
       (ilist 1 endpage)
       pages
   in
-  let pdf = ref pdf in
-    iter2
-      (fun n s -> Printf.printf "Page %i\n%!" n; if mem n range then pdf := Cpdftweak.append_page_content s false fast [n] !pdf)
-      (ilist 1 endpage)
-      ss;
-  let pdf = !pdf in
   let pages =
-    map2
-      (fun n p -> if not (mem n range) then p else {p with Pdfpage.resources = update_resources pdf p.Pdfpage.resources})
+    map3
+      (fun n p ops ->
+        if not (mem n range) then p else
+          let page = {p with Pdfpage.resources = update_resources pdf p.Pdfpage.resources} in
+            (if underneath then Pdfpage.prepend_operators else Pdfpage.postpend_operators) pdf ops ~fast page)
       (ilist 1 endpage)
       (Pdfpage.pages_of_pagetree pdf)
+      ss
   in
     Pdfpage.change_pages true pdf pages
 
-let draw ~filename ~bates ~batespad fast range pdf drawops =
+let draw ?(fast=false) ?(underneath=false) ~filename ~bates ~batespad fast range pdf drawops =
   resstack := [empty_res ()];
   (res ()).time <- Cpdfstrftime.current_time ();
   let pdf = ref pdf in
@@ -335,7 +333,7 @@ let draw ~filename ~bates ~batespad fast range pdf drawops =
   let chunks = ref (split_around (eq NewPage) drawops) in
     while !chunks <> [] do
       reset_state ();
-      if hd !chunks <> [] then pdf := draw_single ~filename ~bates ~batespad fast !range !pdf (hd !chunks);
+      if hd !chunks <> [] then pdf := draw_single ~fast ~underneath ~filename ~bates ~batespad fast !range !pdf (hd !chunks);
       chunks := tl !chunks;
       if !chunks <> [] then begin
         let endpage = Pdfpage.endpage !pdf in
