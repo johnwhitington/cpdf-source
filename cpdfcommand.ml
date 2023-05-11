@@ -1832,14 +1832,14 @@ let addbezier s =
 let addcircle s =
   match readfloats s with
   | [x; y; r] ->
-      let _, _, segs = hd (snd (Pdfshapes.circle x y r)) in
+      let _, _, segs = hd (snd (Cpdfshape.circle x y r)) in
         (match segs with
-         | Pdfgraphics.Bezier ((a, b), _, _, _)::_ -> addop (Cpdfdraw.To (a, b))
+         | Cpdfgraphics.Bezier ((a, b), _, _, _)::_ -> addop (Cpdfdraw.To (a, b))
          | _ -> assert false);
         iter
           (function
-           | Pdfgraphics.Bezier (_, (c, d), (e, f), (g, h)) -> addop (Cpdfdraw.Bezier (c, d, e, f, g, h))
-           | Pdfgraphics.Straight _ -> assert false)
+           | Cpdfgraphics.Bezier (_, (c, d), (e, f), (g, h)) -> addop (Cpdfdraw.Bezier (c, d, e, f, g, h))
+           | Cpdfgraphics.Straight _ -> assert false)
           segs
   | _ -> error "-circle requires three numbers"
   | exception _ -> error "malformed -circle"
