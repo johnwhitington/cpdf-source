@@ -307,7 +307,7 @@ let draw ~filename ~bates ~batespad fast range pdf drawops =
   let pdf = ref pdf in
   let range = ref range in
   (* Double up a trailing NewPage so it actually does something... *)
-  let drawops = match rev drawops with NewPage::t -> rev (NewPage::NewPage::t) | l -> l in
+  let drawops = match rev drawops with NewPage::t -> rev (NewPage::NewPage::t) | _ -> drawops in
   let chunks = ref (split_around (eq NewPage) drawops) in
     while !chunks <> [] do
       reset_state ();
