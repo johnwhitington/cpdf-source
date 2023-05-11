@@ -1,4 +1,5 @@
 open Pdfutil
+open Cpdferror
 
 type colspec =
    NoCol
@@ -93,7 +94,7 @@ let resstack =
   ref [empty_res ()]
 
 let res () =
-  hd !resstack
+  try hd !resstack with _ -> error "graphics stack empty"
 
 let rescopy r =
   {r with
@@ -106,7 +107,7 @@ let respush () =
   resstack := (rescopy (res ()))::!resstack
 
 let respop () =
-  let n = (hd !resstack).num in
+  let n = (res ()).num in
     resstack := tl !resstack;
     (* not necessary, since names are isolated in the xobject, but it makes
        manual debugging of PDF files easier if we don't re-use numbers *)
@@ -202,11 +203,11 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
       create_form_xobject a b c d pdf endpage filename bates batespad num page n ops;
       []
   | Use n ->
-      let pdfname = try fst (Hashtbl.find (res ()).form_xobjects n) with _ -> Cpdferror.error ("Form XObject not found: " ^ n) in
+      let pdfname = try fst (Hashtbl.find (res ()).form_xobjects n) with _ -> error ("Form XObject not found: " ^ n) in
         (res ()).page_names <- pdfname::(res ()).page_names;
         [Pdfops.Op_Do pdfname]
   | Image s ->
-      let pdfname = try fst (Hashtbl.find (res ()).images s) with _ -> Cpdferror.error ("Image not found: " ^ s) in
+      let pdfname = try fst (Hashtbl.find (res ()).images s) with _ -> error ("Image not found: " ^ s) in
         (res ()).page_names <- pdfname::(res ()).page_names;
         [Pdfops.Op_Do pdfname]
   | ImageXObject (s, obj) ->

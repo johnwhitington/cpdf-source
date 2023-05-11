@@ -1893,9 +1893,7 @@ let closepath () =
   addop Cpdfdraw.ClosePath
 
 let setthickness s =
-  try
-    addop (Cpdfdraw.SetLineThickness (float_of_string s))
-  with
+  try addop (Cpdfdraw.SetLineThickness (float_of_string s)) with
     _ -> error "Thickness must be a number"
 
 let setcap s =
@@ -1919,9 +1917,7 @@ let setjoin s =
     addop (Cpdfdraw.SetLineJoin num)
 
 let setmiter s = 
-  try
-    addop (Cpdfdraw.SetMiterLimit (float_of_string s))
-  with
+  try addop (Cpdfdraw.SetMiterLimit (float_of_string s)) with
     _ -> error "Miter limit must be a number"
 
 let setdash s =
@@ -2088,7 +2084,6 @@ let addspecialtext s =
 
 let addleading f =
   addop (Cpdfdraw.Leading f)
-
 
 let addcharspace f =
   addop (Cpdfdraw.CharSpace f)
