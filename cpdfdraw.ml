@@ -198,7 +198,7 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
   | FillStroke -> [Pdfops.Op_B]
   | FillStrokeEvenOdd -> [Pdfops.Op_B']
   | Clip -> [Pdfops.Op_W; Pdfops.Op_n]
-  | ClipEvenOdd -> [Pdfops.Op_W']
+  | ClipEvenOdd -> [Pdfops.Op_W'; Pdfops.Op_n]
   | SetLineThickness t -> [Pdfops.Op_w t]
   | SetLineCap c -> [Pdfops.Op_J c]
   | SetLineJoin j -> [Pdfops.Op_j j]
