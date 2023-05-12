@@ -145,7 +145,7 @@ let read_resource pdf n res =
   | _ -> []
 
 let update_resources pdf old_resources =
-  let gss_resources = map (fun ((kind, v), n) -> (kind, Pdf.Real v)) (list_of_hashtbl (res ()).extgstates) in
+  let gss_resources = map (fun ((kind, v), n) -> (n, Pdf.Dictionary [(kind, Pdf.Real v)])) (list_of_hashtbl (res ()).extgstates) in
   let select_resources t =
     option_map (fun (_, (n, o)) -> if mem n (res ()).page_names then Some (n, Pdf.Indirect o) else None) (list_of_hashtbl t)
   in
