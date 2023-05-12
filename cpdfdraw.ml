@@ -72,7 +72,7 @@ let rec string_of_drawop = function
 and string_of_drawops l =
   fold_left (fun x y -> x ^ " " ^ y) "" (map string_of_drawop l)
 
-(* Per page resources *)
+(* Per page / xobject resources *)
 type res = 
   {images : (string, (string * int)) Hashtbl.t; (* (name, (pdf name, objnum)) *)
    extgstates : ((string * float), string) Hashtbl.t; (* (kind, value), name *)
