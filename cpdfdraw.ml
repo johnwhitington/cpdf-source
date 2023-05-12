@@ -290,8 +290,13 @@ let minimum_resource_number pdf range =
     | [] -> 0
     | n::_ -> n + 1
 
-let contains_specials drawops =
-  List.exists (function SpecialText _ -> true | _ -> false) drawops
+let rec contains_specials_drawop = function
+  | SpecialText _ -> true
+  | Qq l | TextSection l | FormXObject (_, _, _, _, _, l) -> contains_specials l
+  | _ -> false
+
+and contains_specials l =
+  List.exists contains_specials_drawop l
 
 let draw_single ~fast ~underneath ~filename ~bates ~batespad fast range pdf drawops =
   (res ()).num <- max (res ()).num (minimum_resource_number pdf range);
