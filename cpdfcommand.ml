@@ -1829,6 +1829,18 @@ let addbezier s =
   | _ -> error "-bez requires six numbers"
   | exception _ -> error "malformed -bez"
 
+let addbezier23 s =
+  match readfloats s with
+  | [a; b; c; d] -> addop (Cpdfdraw.Bezier23 (a, b, c, d))
+  | _ -> error "-bez23 requires four numbers"
+  | exception _ -> error "malformed -bez23"
+
+let addbezier13 s =
+  match readfloats s with
+  | [a; b; c; d] -> addop (Cpdfdraw.Bezier13 (a, b, c, d))
+  | _ -> error "-bez13 requires four numbers"
+  | exception _ -> error "malformed -bez13"
+
 let addcircle s =
   match readfloats s with
   | [x; y; r] ->
@@ -2867,6 +2879,8 @@ and specs =
    ("-to", Arg.String addto, " Move to");
    ("-line", Arg.String addline, " Add line to");
    ("-bez", Arg.String addbezier, " Add Bezier curve to path");
+   ("-bez23", Arg.String addbezier23, " Add Bezier v-op to path");
+   ("-bez13", Arg.String addbezier13, " Add Bezier y-op to path");
    ("-circle", Arg.String addcircle, " Add circle to path");
    ("-strokecol", Arg.String setstroke, " Set stroke colour");
    ("-fillcol", Arg.String setfill, " Set fill colour");

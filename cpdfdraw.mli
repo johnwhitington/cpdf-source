@@ -7,6 +7,8 @@ type colspec =
 type drawops =
   | Rect of float * float * float * float
   | Bezier of float * float * float * float * float * float
+  | Bezier23 of float * float * float * float
+  | Bezier13 of float * float * float * float
   | To of float * float
   | Line of float * float
   | ClosePath

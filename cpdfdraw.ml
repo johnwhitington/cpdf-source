@@ -10,6 +10,8 @@ type colspec =
 type drawops =
   | Rect of float * float * float * float
   | Bezier of float * float * float * float * float * float
+  | Bezier23 of float * float * float * float
+  | Bezier13 of float * float * float * float
   | To of float * float
   | Line of float * float
   | ClosePath
@@ -52,7 +54,8 @@ let rec string_of_drawop = function
   | Qq o -> "Qq (" ^ string_of_drawops o ^ ")"
   | FormXObject (_, _, _, _, _, o) -> "FormXObject (" ^ string_of_drawops o ^ ")"
   | TextSection o -> "TextSection (" ^ string_of_drawops o ^ ")"
-  | Rect _ -> "Rect" | Bezier _ -> "Bezier" | To _ -> "To" | Line _ -> "Line"
+  | Rect _ -> "Rect" | Bezier _ -> "Bezier" | Bezier23 _ -> "Bezier23"
+  | Bezier13 _ -> "Bezier13" | To _ -> "To" | Line _ -> "Line"
   | ClosePath -> "ClosePath" | SetFill _ -> "SetFill" | SetStroke _ -> "SetStroke"
   | SetLineThickness _ -> "SetLineThickness" | SetLineCap _ -> "SetLineCap"
   | SetLineJoin _ -> "SetLineJoin" | SetMiterLimit _ -> "SetMiterLimit"
@@ -170,6 +173,8 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
   | Matrix m -> [Pdfops.Op_cm m] 
   | Rect (x, y, w, h) -> [Pdfops.Op_re (x, y, w, h)]
   | Bezier (a, b, c, d, e, f) -> [Pdfops.Op_c (a, b, c, d, e, f)]
+  | Bezier23 (a, b, c, d) -> [Pdfops.Op_v (a, b, c, d)]
+  | Bezier13 (a, b, c, d) -> [Pdfops.Op_y (a, b, c, d)]
   | To (x, y) -> [Pdfops.Op_m (x, y)]
   | Line (x, y) -> [Pdfops.Op_l (x, y)]
   | SetFill x ->
