@@ -186,7 +186,7 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
       | CYMK (c, y, m, k) -> [Op_K (c, y, m, k)]
       | NoCol -> []
       end
-  | ClosePath
+  | ClosePath -> [Pdfops.Op_h]
   | Fill -> [Pdfops.Op_f]
   | FillEvenOdd -> [Pdfops.Op_f']
   | Stroke -> [Pdfops.Op_S]
@@ -194,7 +194,7 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
   | FillStrokeEvenOdd -> [Pdfops.Op_B']
   | Clip -> [Pdfops.Op_W; Pdfops.Op_n]
   | ClipEvenOdd -> [Pdfops.Op_W']
-  | SetLineThickness t -> [Pdfops.Op_w t; Pdfops.Op_n]
+  | SetLineThickness t -> [Pdfops.Op_w t]
   | SetLineCap c -> [Pdfops.Op_J c]
   | SetLineJoin j -> [Pdfops.Op_j j]
   | SetMiterLimit m -> [Pdfops.Op_M m]

@@ -990,7 +990,7 @@ let anon_fun s =
         Not_found ->
           match args.inputs with
           | [] ->
-              Pdfe.log (Printf.sprintf "Warning: range '%s' ignored\n" s)
+              Pdfe.log (Printf.sprintf "Warning: '%s' ignored\n" s)
           | (a, _, d, e, f, g)::t ->
                args.inputs <- (a, fixdashes s, d, e, f, g)::t
 
