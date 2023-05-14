@@ -2,14 +2,14 @@ cpdf-source
 ===========
 
 Free for non-commercial use. See LICENSE for details. Copyright Coherent
-Graphics Ltd 2022.
+Graphics Ltd 2023.
 
 This code builds two things:
 
 a) The CPDF PDF Command Line Tools, which are a popular commercial command line
 tool for editing PDF files.
 
-b) cpdf as an OCaml library, for which presently-scanty documentation is here:
+b) cpdf as an OCaml library, for which documentation is here:
 
 [https://coherentpdf.com/cpdf/](https://coherentpdf.com/cpdf/)
 
@@ -81,6 +81,13 @@ Python API
 A Python interface to cpdf is available:
 
 [https://pypi.org/project/pycpdflib/](https://pypi.org/project/pycpdflib/)
+
+Acknowledgments
+---------------
+
+The file [cpdfxmlm.ml](cpdfxmlm.ml) was written by Daniel Bünzli.
+
+The file [cpdfyojson.ml](cpdfyojson.ml) was written by Martin Jambon and others.
 
 Contact
 -------
