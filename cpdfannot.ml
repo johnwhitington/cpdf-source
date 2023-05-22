@@ -149,8 +149,7 @@ let set_annotations_json pdf i =
         fold_left max min_int
           (map
             (function
-             | `List [_; `Int i; _] -> i
-             | `List [`Int i; _] -> abs i
+             | `List [_; `Int i; _] | `List [`Int i; _] -> i
              | _ -> error "Bad annots entry")
            entries)
       in
@@ -162,13 +161,46 @@ let set_annotations_json pdf i =
         pdf.root <- pdf'.root;
         pdf.objects <- pdf'.objects;
         pdf.trailerdict <- pdf'.trailerdict;
-        (* 1. Extract the extra objects, and add them to the file *)
-        let extras = 
-          ()
-        in
-          (* 2. Extract the annotation objects, and rewrite their destinations from page numbers to pages, add them to file *)
-          (* 3. Add the annots entries to each file *)
-          ()
+        let extras = option_map (function `List [`Int i; o] -> Some (i, o) | _ -> None) entries in
+        let annots = option_map (function `List [`Int pagenum; `Int i; o] -> Some (pagenum, i, o) | _ -> None) entries in
+          iter (fun (i, o) -> Pdf.addobj_given_num pdf (i, Cpdfjson.object_of_json o)) extras;
+          let pageobjnummap =
+            let refnums = Pdf.page_reference_numbers pdf in
+              combine (indx refnums) refnums
+          in
+          let pages = Pdfpage.pages_of_pagetree pdf in
+          let annotsforeachpage =
+            collate compare (sort compare annots)
+          in
+          let newpages =
+            map2
+              (fun pagenum page ->
+                 (* Get annots from annotsforeachpage - if any, add to /Annots in page *)
+                 let forthispage = flatten (keep (function (p, _, _)::t when p = pagenum -> true | _ -> false) annotsforeachpage) in
+                   iter
+                     (fun (pnum, i, o) ->
+                        let pageobjnum = match lookup pnum pageobjnummap with Some x -> x | None -> 0 in
+                        let obj = Cpdfjson.object_of_json o in
+                        let f = fun pnum -> if pageobjnum = 0 then pnum else pageobjnum in
+                        let rewrittenobj = rewrite_destinations f pdf obj in
+                          Pdf.addobj_given_num pdf (i, rewrittenobj))
+                     forthispage;
+                   if forthispage = [] then page else
+                     let annots =
+                       match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
+                       | Some (Pdf.Array annots) -> annots
+                       | _ -> []
+                     in
+                     let newannots = map (fun (_, i, _) -> Pdf.Indirect i) forthispage in
+                       {page with Pdfpage.rest = Pdf.add_dict_entry page.Pdfpage.rest "/Annots" (Pdf.Array (annots @ newannots))})
+              (indx pages)
+              pages
+          in
+            let pdf' = Pdfpage.change_pages true pdf newpages in
+              pdf.root <- pdf'.root;
+              pdf.objects <- pdf'.objects;
+              pdf.trailerdict <- pdf'.trailerdict
+
   | _ -> error "Bad Annotations JSON file"
 
 let copy_annotations range frompdf topdf =
