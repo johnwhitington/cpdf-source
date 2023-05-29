@@ -92,6 +92,7 @@ let get_annotations_json pdf range =
   let pairs = option_map (fun (p, n) -> if mem n range then Some (p, n) else None) pairs in
   let pages, pagenums = split pairs in
   let json = flatten (map2 (annotations_json_page calculate_pagenumber pdf) pages pagenums) in
+  let jsonobjnums : int list = map (function `List [_; `Int n; _] -> n | _ -> assert false) json in
   (*Printf.printf "%i extra roots to explore\n" (length extra);
   iter (fun x -> Pdfe.log "%s\n\n" (Pdfwrite.string_of_pdf x)) extra;*)
   let extra =
@@ -109,6 +110,11 @@ let get_annotations_json pdf range =
                  (*Printf.printf "%i extra for annot %s\n" (length r)
                  (Pdfwrite.string_of_pdf x);*) r)
           !extra)))
+  in
+  let extra =
+    option_map
+      (function `List [`Int n; _] as json -> if mem n jsonobjnums then None else Some json | _ -> assert false)
+      extra
   in
   let header =
     `List
