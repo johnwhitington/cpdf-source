@@ -54,6 +54,12 @@ let rewrite_destinations f pdf annot =
           end
      | None -> annot
 
+(* We exclude the same annotations as the XFDF spec does *)
+let excluded pdf annot =
+  match Pdf.lookup_direct pdf "/Subtype" annot with
+  | Some (Pdf.Name ("/Movie" | "/Widget" | "/Screen" | "/PrinterMark" | "/TrapNet")) -> true
+  | _ -> false
+
 let extra = ref []
 
 let annotations_json_page calculate_pagenumber pdf page pagenum =
@@ -64,6 +70,7 @@ let annotations_json_page calculate_pagenumber pdf page pagenum =
            begin match annot with
            | Pdf.Indirect objnum ->
                let annot = Pdf.direct pdf annot in
+               if excluded pdf annot then None else
                let annot =
                  rewrite_destinations
                    (fun i -> calculate_pagenumber (Pdfdest.Fit (Pdfdest.PageObject i)))
