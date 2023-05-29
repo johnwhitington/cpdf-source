@@ -834,7 +834,7 @@ let banned banlist = function
   | ExtractText | ExtractImages | ExtractFontFile
   | AddPageLabels | RemovePageLabels | OutputJSON | OCGCoalesce
   | OCGRename | OCGList | OCGOrderAll | PrintFontEncoding _ | TableOfContents | Typeset _ | Composition _
-  | TextWidth _
+  | TextWidth _ | SetAnnotations _ | CopyAnnotations _
      -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
@@ -846,9 +846,9 @@ let banned banlist = function
   | TwoUp|TwoUpStack|RemoveBookmarks|AddRectangle|RemoveText|
     Draft|Shift|Scale|ScaleToFit|RemoveAttachedFiles|
     RemoveAnnotations|RemoveFonts|Crop|RemoveCrop|Trim|RemoveTrim|Bleed|RemoveBleed|Art|RemoveArt|
-    CopyBox|MediaBox|HardBox _|SetTrapped|SetAnnotations _|SetUntrapped|Presentation|
+    CopyBox|MediaBox|HardBox _|SetTrapped|SetUntrapped|Presentation|
     BlackText|BlackLines|BlackFills|CopyFont _|StampOn _|StampUnder _|StampAsXObject _|
-    AddText _|ScaleContents _|AttachFile _|CopyAnnotations _| ThinLines _ | RemoveClipping | RemoveAllText
+    AddText _|ScaleContents _|AttachFile _| ThinLines _ | RemoveClipping | RemoveAllText
     | Prepend _ | Postpend _ | Draw ->
       mem Pdfcrypt.NoEdit banlist
 
