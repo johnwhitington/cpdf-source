@@ -59,6 +59,9 @@ let excluded pdf annot =
   match Pdf.lookup_direct pdf "/Subtype" annot with
   | Some (Pdf.Name ("/Movie" | "/Widget" | "/Screen" | "/PrinterMark" | "/TrapNet")) -> true
   | _ -> false
+(* Printf.printf "Skipping %s\n" n; true
+  | Some (Pdf.Name x) ->
+      Printf.printf "Including %s\n" x; false*)
 
 let extra = ref []
 
@@ -100,8 +103,8 @@ let get_annotations_json pdf range =
   let pages, pagenums = split pairs in
   let json = flatten (map2 (annotations_json_page calculate_pagenumber pdf) pages pagenums) in
   let jsonobjnums : int list = map (function `List [_; `Int n; _] -> n | _ -> assert false) json in
-  (*Printf.printf "%i extra roots to explore\n" (length extra);
-  iter (fun x -> Pdfe.log "%s\n\n" (Pdfwrite.string_of_pdf x)) extra;*)
+  (*Printf.eprintf "%i extra roots to explore\n" (length !extra);
+  iter (fun x -> Pdfe.log (Printf.sprintf "%s\n\n" (Pdfwrite.string_of_pdf x))) !extra;*)
   let extra =
     map
       (fun n ->
@@ -113,9 +116,11 @@ let get_annotations_json pdf range =
         (flatten
           (map 
             (fun x ->
+               let x = Pdf.remove_dict_entry x "/Popup" in
+               let x = Pdf.remove_dict_entry x "/Parent" in
                let r = Pdf.objects_referenced [] [] pdf x in
-                 (*Printf.printf "%i extra for annot %s\n" (length r)
-                 (Pdfwrite.string_of_pdf x);*) r)
+                 (*Printf.eprintf "%i extra for annot %s\n" (length r) (Pdfwrite.string_of_pdf x);*)
+                 r)
           !extra)))
   in
   let extra =
