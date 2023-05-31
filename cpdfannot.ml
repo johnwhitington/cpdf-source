@@ -1,3 +1,4 @@
+(** A loose JSON equivalent of XFDF. *)
 open Pdfutil
 open Cpdferror
 
