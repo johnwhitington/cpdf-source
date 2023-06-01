@@ -2336,7 +2336,7 @@ font size and color.
     \texttt{\%M} & Minute of the hour (00--59)\\
     \texttt{\%p} & "a.m" or "p.m"\\
     \texttt{\%S} & Second of the minute (00--61)\\
-    \texttt{\%T} & Same as \%H:\%M:\%S\\
+    \texttt{\%T} & Same as \texttt{\%H:\%M:\%S}\\
     \texttt{\%u} & Weekday (1--7, 1 = Sunday)\\
     \texttt{\%w} & Weekday (0--6, 0 = Sunday)\\
     \texttt{\%Y} & Year (0000--9999)\\
@@ -2956,6 +2956,10 @@ given page range.
     \vspace{1.5mm}
     \small\noindent\verb!cpdf -remove-page-labels in.pdf -o out.pdf!\\
     \small\noindent\verb!cpdf -print-page-labels in.pdf!
+
+    \vspace{1.5mm}
+    \small\noindent\verb!cpdf -composition in.pdf!\\
+    \small\noindent\verb!cpdf -composition-json in.pdf!
   \end{framed}
  
 \section{Reading Document Information}
@@ -3224,6 +3228,38 @@ startpage: 9
 startvalue: 1
 \end{verbatim}
 \end{framed}\pagestyle{empty}\thispagestyle{fancy}
+
+\section{Composition of a PDF}
+
+The \texttt{-composition} and \texttt{-composition-json} operations show how much space in a PDF is used by each kind of data. Here is the output of \texttt{-composition} for this manual:
+
+\begin{framed}\small\begin{verbatim}$ cpdf -composition cpdfmanual.pdf
+Images: 0 bytes (0.00%)
+Fonts: 144731 bytes (46.72%)
+Content streams: 132767 bytes (42.85%)
+Structure Info: 0 bytes (0.00%)
+Attached Files: 0 bytes (0.00%)
+XRef Table: 21082 bytes (6.80%)
+Unclassified: 11229 bytes (3.62%)
+\end{verbatim}
+\end{framed}\pagestyle{empty}\thispagestyle{fancy}
+
+\noindent And here it is in JSON format:
+
+\begin{framed}\small\begin{verbatim}$ cpdf -composition-json cpdfmanual.pdf
+[
+  ("Images", 0, 0.0),
+  ("Fonts", 144731, 46.71620256351494),
+  ("Content streams", 132767, 42.854468398271194),
+  ("Structure Info", 0, 0.0),
+  ("Attached Files", 0, 0.0),
+  ("XRef Table", 21082, 6.8048378194306816),
+  ("Unclassified", 11229, 3.6244912187831857)
+]
+\end{verbatim}
+\end{framed}\pagestyle{empty}\thispagestyle{fancy}
+
+\noindent Note that, due to small inaccuracies in the method, it is possible for the \texttt{Unclassified} number to be negative.
 
 \begin{cpdflib}
 \clearpage
