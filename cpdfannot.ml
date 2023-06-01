@@ -96,7 +96,6 @@ let get_annotations_json pdf range =
   let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
   let calculate_pagenumber =  Pdfpage.pagenumber_of_target ~fastrefnums pdf in
   extra := [];
-  let module J = Cpdfyojson.Safe in
   let pages = Pdfpage.pages_of_pagetree pdf in
   let pagenums = indx pages in
   let pairs = combine pages pagenums in
@@ -137,7 +136,7 @@ let get_annotations_json pdf range =
         (Pdf.Dictionary ["/CPDFJSONannotformatversion", Pdf.Integer 1])]
   in
   let json = `List ([header] @ json @ extra) in
-    Pdfio.bytes_of_string (J.pretty_to_string json)
+    Pdfio.bytes_of_string (Cpdfyojson.Safe.pretty_to_string json)
 
 (* Return annotations *)
 let get_annotations encoding pdf =
