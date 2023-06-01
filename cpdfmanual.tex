@@ -276,9 +276,9 @@ Just a few of the facilities provided by the Coherent PDF Command Line Tools. Se
 
 \noindent List the fonts in use, and what pages they are used on.
 
-\begin{framed}\noindent\texttt{cpdf -gs /usr/bin/gs -embed-missing-fonts in.pdf -o out.pdf}\end{framed}
+\begin{framed}\noindent\texttt{cpdf -list-missing-fonts in.pdf}\end{framed}
 
-\noindent Embed missing fonts (with the help of Ghostscript).
+\noindent List missing fonts.
 
 \section*{\hyperref[chap:15]{Chapter 15: PDF and JSON}}
 
@@ -961,7 +961,7 @@ progress is shown on \verb!stderr! (Standard Error):
 \small\verb$Malformed PDF reconstruction succeeded!$
 \end{framed}
 
-\noindent If \texttt{cpdf} cannot reconstruct a malformed file, it is able to use the \texttt{gs} program to try to reconstruct the PDF file, if you have it installed. For example, if \texttt{gs} is installed and in your path, we might try:
+\noindent In the unlikely event that \texttt{cpdf} cannot reconstruct a malformed file, it is able to use the \texttt{gs} program to try to reconstruct the PDF file, if you have it installed. For example, if \texttt{gs} is installed and in your path, we might try:
 
 \begin{framed}
 \noindent\small\verb!cpdf -gs gs -gs-malformed in.pdf -o out.pdf!\end{framed}
@@ -973,8 +973,7 @@ If the malformity lies inside an individual page of the PDF, rather than in its 
 \begin{framed}
 \noindent\small\verb!cpdf in.pdf -gs gs -gs-malformed-force -o out.pdf [-gs-quiet]!\end{framed}
 
-\noindent The command line for \texttt{-gs-malformed-force} must be of \textit{precisely} this form. Sometimes, on the other hand, we might wish \texttt{cpdf} to fail immediately on any malformed file, rather than try its own reconstruction process. The option \texttt{-error-on-malformed} achieves this.
-
+\noindent The command line for \texttt{-gs-malformed-force} must be of \textit{precisely} this form. Sometimes, on the other hand, we might wish \texttt{cpdf} to fail immediately on any malformed file, rather than try its own reconstruction process. The option \texttt{-error-on-malformed} achieves this. \textit{Note: Use of these commands with \texttt{-gs} is a last resort; they may strip some metadata from PDF files.}
 
 Sometimes (old, pre-ISO standardisation) files can be technically well-formed but use inefficient PDF
 constructs.  If you are sure the input files you are using are
@@ -3597,6 +3596,8 @@ recommended when file size is the sole consideration.
   \begin{framed}
   \small\noindent\verb!cpdf -embed-missing-fonts -gs gs in.pdf -o out.pdf!
   \end{framed}
+
+\noindent\textit{Note: putting a PDF file through \texttt{gs} in this manner may not be lossless: some metadata may not be preserved.}
 
 \label{listmisingfonts}\clearpage\pagestyle{empty}
 
