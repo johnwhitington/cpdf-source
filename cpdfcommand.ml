@@ -1917,7 +1917,6 @@ let setdash s =
   with
    _ -> error "Dash pattern elements must one or more numbers"
 
-
 let setmatrix s =
   match readfloats s with
   | [a; b; c; d; e; f] ->
@@ -1990,24 +1989,16 @@ let image_of_input fobj i =
       [Pdfops.stream_of_ops
       [Pdfops.Op_cm (Pdftransform.matrix_of_transform [Pdftransform.Translate (0., 0.);
                                                        Pdftransform.Scale ((0., 0.), w, h)]);
-       Pdfops.Op_Do "/Im0"]];
+       Pdfops.Op_Do "/I0"]];
      Pdfpage.mediabox = Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real w; Pdf.Real h];
      Pdfpage.resources =
        Pdf.Dictionary
-         ["/XObject", Pdf.Dictionary ["/Im0", Pdf.Indirect (Pdf.addobj pdf obj)]];
+         ["/XObject", Pdf.Dictionary ["/I0", Pdf.Indirect (Pdf.addobj pdf obj)]];
      Pdfpage.rotate = Pdfpage.Rotate0;
      Pdfpage.rest = Pdf.Dictionary []}
   in
   let pdf, pageroot = Pdfpage.add_pagetree [page] pdf in
     Pdfpage.add_root pageroot [] pdf
-
-let set_input_jpeg s =
-  args.original_filename <- s;
-  args.create_objstm <- true;
-  let fh = open_in_bin s in
-  let pdf = image_of_input obj_of_jpeg_data (Pdfio.input_of_channel fh) in
-    close_in fh;
-    args.inputs <- (AlreadyInMemory pdf, "all", "", "", ref false, None)::args.inputs
 
 let obj_of_png_data data =
   let png = Cpdfpng.read_png (Pdfio.input_of_bytes data) in
@@ -2036,15 +2027,19 @@ let addpng n =
     let data = bytes_of_string (contents_of_file filename) in
       addop (Cpdfdraw.ImageXObject (name, obj_of_png_data data))
 
-let png_of_input i = Pdf.empty ()
+let set_input_image f s =
+  try
+    let fh = open_in_bin s in
+    let pdf = image_of_input f (Pdfio.input_of_channel fh) in
+      try close_in fh with _ -> ();
+      args.original_filename <- s;
+      args.create_objstm <- true;
+      args.inputs <- (AlreadyInMemory pdf, "all", "", "", ref false, None)::args.inputs
+  with
+    Sys_error _ -> error "Image file not found"
 
-let set_input_png s =
-  args.original_filename <- s;
-  args.create_objstm <- true;
-  let fh = open_in_bin s in
-  let pdf = image_of_input obj_of_png_data (Pdfio.input_of_channel fh) in
-    close_in fh;
-    args.inputs <- (AlreadyInMemory pdf, "all", "", "", ref false, None)::args.inputs
+let set_input_png = set_input_image obj_of_png_data
+let set_input_jpeg = set_input_image obj_of_jpeg_data
 
 let addimage s =
   addop (Cpdfdraw.Image s)
