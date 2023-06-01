@@ -2031,7 +2031,7 @@ let set_input_image f s =
   try
     let fh = open_in_bin s in
     let pdf = image_of_input f (Pdfio.input_of_channel fh) in
-      try close_in fh with _ -> ();
+      begin try close_in fh with _ -> () end;
       args.original_filename <- s;
       args.create_objstm <- true;
       args.inputs <- (AlreadyInMemory pdf, "all", "", "", ref false, None)::args.inputs

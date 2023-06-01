@@ -3954,6 +3954,12 @@ In a PDF file, optional content groups are used to group graphical elements toge
   \noindent\verb!cpdf -typeset <text file> [-create-pdf-papersize <size>]!\\
   \noindent\verb!     [-font <font>] [-font-size <size>] -o out.pdf!
 
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -jpeg <filename> -o out.pdf]!
+
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -png <filename> -o out.pdf!
+
   \end{framed}}
 
 \section{A new blank PDF}
@@ -3962,8 +3968,8 @@ In a PDF file, optional content groups are used to group graphical elements toge
 We can build a new PDF file, given a number of pages and a paper size. The default is one page, A4 portrait.
 
 \begin{framed}
- \small\verb?cpdf -create-pdf -create-pdf-pages 20?\\
- \noindent\small\verb?        -create-pdf-papersize usletterportrait -o out.pdf?
+ \noindent\small\verb?cpdf -create-pdf -create-pdf-pages 20?\\
+ \noindent\small\verb?     -create-pdf-papersize usletterportrait -o out.pdf?
 \end{framed}
 
 \noindent The standard paper sizes are listed in Section \ref{papersizes}, or you may specify the width and height directly, as described in the same chapter.
@@ -3973,11 +3979,32 @@ We can build a new PDF file, given a number of pages and a paper size. The defau
 A basic text to PDF convertor is included in \texttt{cpdf}. It takes a UTF8 text file (ASCII is a subset of UTF8) and typesets it ragged-right, splitting on whitespace. Both Windows and Unix line endings are allowed. 
 
 \begin{framed}
- \small\verb?cpdf -typeset file.txt -create-pdf-papersize a3portrait?\\
- \noindent\small\verb?        -font Courier -font-size 10 -o out.pdf?
+ \noindent\small\verb?cpdf -typeset file.txt -create-pdf-papersize a3portrait?\\
+ \noindent\small\verb?     -font Courier -font-size 10 -o out.pdf?
 \end{framed}
 
 \noindent The standard paper sizes are listed in Section \ref{papersizes}, or you may specify the width and height directly, as described in the same chapter. The standard fonts are listed in chapter~\ref{chap:8}. The default font is TimesRoman and the default size is 12.
+
+\section{Make a PDF from a PNG or JPEG image}
+\index{image!convert to PDF}
+
+Simple facilities for making PDFs from PNG and JPEG images are included in \texttt{cpdf}. The resulting file can be written out, or used for further operations.
+
+For PNG files, the file must be 24bit RGB with no transparency and no interlacing.
+
+\begin{framed}
+ \noindent\small\verb?cpdf -png image.png -o out.pdf?\\
+ \noindent\small\verb?cpdf -png image.png AND -add-text "My Image" -o out.pdf?
+\end{framed}
+
+\noindent Almost any JPEG file may be used:
+
+\begin{framed}
+ \noindent\small\verb?cpdf -jpeg image.jpg -o out.pdf?
+\end{framed}
+
+\noindent The output file will have one point of width or height for each pixel in the input.
+
 
 \begin{cpdflib}
 \clearpage
