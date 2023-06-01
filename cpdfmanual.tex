@@ -7,6 +7,7 @@
 \excludecomment{dotnetcpdflib}
 \excludecomment{jcpdflib}
 \excludecomment{jscpdflib}
+%Our packages
 \usepackage{alltt}
 \usepackage{palatino}
 \usepackage{listings}
@@ -666,15 +667,17 @@ at least five pages.
 \index{reversing}
   Here are the rules for building input ranges:
   \begin{itemize}
+    \item A number represents a page number
+    \item A page label may be used in place of a number e.g \texttt{[iii]} represents the first page found which is labelled \texttt{iii}.
+    \item A tilde (\texttt{\~{}}) defines a page number counting from the end of the document rather than the beginning. Page \texttt{\~{}1} is the last page, \texttt{\~{}2} the penultimate page etc.
     \item A dash (\texttt{-}) defines ranges, e.g. \texttt{1-5} or \texttt{6-3}.
     \item A comma (\texttt{,}) allows one to specify several ranges, e.g. \texttt{1-2,4-5}.
-    \item The word \texttt{end} represents the last page number.
+    \item The word \texttt{end} represents the last page.
     \item The words \texttt{odd} and \texttt{even} can be used in place of or at the end of a page range to restrict to just the odd or even pages.
     \item The words \texttt{portrait} and \texttt{landscape} can be used in place of or at the end of a page range to restrict to just those pages which are portrait or landscape. Note that the meaning of ``portrait'' and ``landscape'' does not take account of any viewing rotation in place (use \texttt{-upright} from chapter 3 first, if required). A page with equal width and height is considered neither portrait nor landscape.
     \item The word \texttt{reverse} is the same as \texttt{end-1}.
     \item The word \texttt{all} is the same as \texttt{1-end}.
     \item A range must contain no spaces.
-    \item A tilde (\texttt{\~{}}) defines a page number counting from the end of the document rather than the beginning. Page \texttt{\~{}1} is the last page, \texttt{\~{}2} the penultimate page etc.
     \item Prepending \texttt{NOT} to a whole page range inverts it. 
     \item Prepending \verb!<n>!\texttt{DUP} to a whole page range duplicates each page of the range \verb!<n>! times.\index{page!duplicate}
   \end{itemize}
@@ -968,7 +971,7 @@ progress is shown on \verb!stderr! (Standard Error):
 
 \noindent To suppress the output of \texttt{gs} use the \texttt{-gs-quiet} option.
 
-If the malformity lies inside an individual page of the PDF, rather than in its gross structure, cpdf may appear to succeed in reconstruction, only to fail when processing a page (e.g when adding text). To force the use of \texttt{gs} to pre-process such files so cpdf cannot fail on them, use \texttt{-gs\--malformed\--force}:
+If the malformity lies inside an individual page of the PDF, rather than in its gross structure, \texttt{cpdf} may appear to succeed in reconstruction, only to fail when processing a page (e.g when adding text). To force the use of \texttt{gs} to pre-process such files so cpdf cannot fail on them, use \texttt{-gs\--malformed\--force}:
 
 \begin{framed}
 \noindent\small\verb!cpdf in.pdf -gs gs -gs-malformed-force -o out.pdf [-gs-quiet]!\end{framed}
@@ -2353,7 +2356,7 @@ The starting point can be set with the \texttt{-bates} option. For example:
 
   \subsection{Position}
   \label{position}
-  The position of the text may be specified either in absolute terms:
+  The position of the text may be specified in absolute terms:
   \begin{framed}
     \small\verb!-pos-center "200 200"!
   
@@ -2374,17 +2377,21 @@ The starting point can be set with the \texttt{-bates} option. For example:
 
   \end{framed}
 
-  \noindent Positions relative to certain common points can be set:
+  \noindent Position may be set relative to certain common points:
 
   \begin{framed}
     \noindent\begin{tabular}{ll}
       \small\verb!-top 10! & Center of baseline 10 pts down from the top center \\
       \small\verb!-topleft 10! & Left of baseline 10 pts down and in from top left \\
+      \small\verb!-topleft "10 20"! & Left of baseline 10 pts down and 20 pts in from top left \\
       \small\verb!-topright 10! & Right of baseline 10 pts down and left from top right\\
+      \small\verb!-topright "10 20"! & Right of baseline 10 pts down and 20 pts left from top right\\
       \small\verb!-left 10! & Left of baseline 10 pts in from center left \\
       \small\verb!-bottomleft 10! & Left of baseline 10 pts in and up from bottom left \\
+      \small\verb!-bottomleft "10 20"! & Left of baseline 10 pts in and 20 pts up from bottom left \\
       \small\verb!-bottom 10! & Center of baseline 10 pts up from bottom center\\
       \small\verb!-bottomright 10! & Right of baseline 10 pts up and in from bottom right \\
+      \small\verb!-bottomright "10 20"! & Right of baseline 10 pts up and 20 pts in from bottom right \\
       \small\verb!-right 10! & Right of baseline 10 pts in from the center right \\
       \small\verb!-diagonal! & Diagonal, bottom left to top right, centered on page\\
       \small\verb!-reverse-diagonal! & Diagonal, top left to bottom right, centered on page\\    
