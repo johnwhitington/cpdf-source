@@ -157,10 +157,7 @@ let get_annotations encoding pdf =
 
 (** Set annotations from JSON, keeping any existing ones. *)
 let set_annotations_json pdf i =
-  let module J = Cpdfyojson.Safe in
-  let content = Pdfio.string_of_input i in
-  let json = J.from_string content in
-  match json with
+  match Cpdfyojson.Safe.from_string (Pdfio.string_of_input i) with
   | `List entries ->
       (* Renumber the PDF so everything has bigger object numbers than that. *)
       let maxobjnum =

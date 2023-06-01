@@ -60,7 +60,7 @@ Command Line Tools}
 \vspace{12mm}
 
 {\Huge User Manual}\\
-Version 2.5 (January 2022)
+Version 2.6 (August 2023)
 
 \vspace{25mm}
 
@@ -84,7 +84,7 @@ Version 2.5 (January 2022)
 \noindent For bug reports, feature requests and comments, email\\ \texttt{contact@coherentgraphics.co.uk}
 
 \vspace*{\fill}
-\noindent\copyright 2022 Coherent Graphics Limited. All rights reserved. ISBN 978-0957671140
+\noindent\copyright Coherent Graphics Limited. All rights reserved. ISBN 978-0957671140
 
 \smallgap 
 \noindent Adobe, Acrobat, and Adobe PDF are
@@ -1708,6 +1708,9 @@ person:
   \noindent Add these options to the command line to prevent each operation.
 
   \vspace{2mm}
+\noindent\textit{Note: Adobe Acrobat and Adobe Reader may show slightly different permissions in info dialogues -- this is a result of policy changes and not a bug in \textup{cpdf}. You may need to experiment.}
+
+  \vspace{2mm}
 
   \section{Encrypting a Document}
   To encrypt a document, the owner and user passwords must be given (here, \texttt{fred} and \texttt{charles} respectively):
@@ -2827,7 +2830,6 @@ This produces an array of (page number, annotation) pairs giving the PDF structu
     "/StructParent": { "I": 10 } } ]
 \end{verbatim}}
 
-A future version of \texttt{cpdf} will allow these JSON annotations to be edited and re-loaded into a PDF file.
 
   \section{Copying Annotations}
 \index{annotations!copying}
