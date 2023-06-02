@@ -2587,7 +2587,7 @@ and specs =
    ("-set-page-mode",
       Arg.String setpagemode,
       " Set page mode upon document opening");
-   ("-set-non-full-page-mode",
+   ("-set-non-full-screen-page-mode",
       Arg.String setnonfullscreenpagemode,
       " Set non full screen page mode if page mode is FullScreen");
    ("-open-at-page",
@@ -2595,10 +2595,10 @@ and specs =
       " Set initial page");
    ("-open-at-page-fit",
       Arg.String setopenatpagefit,
-      " Set inital page, scaling to fit");
+      " Set initial page, scaling to fit");
    ("-open-at-page-custom",
       Arg.String setopenatpagecustom,
-      " Set inital page, with custom scaling");
+      " Set initial page, with custom scaling");
    ("-set-metadata",
       Arg.String setmetadata,
       " Set metadata to the contents of a file");

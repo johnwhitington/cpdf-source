@@ -1956,6 +1956,7 @@ See chapter 15 for more details of cpdf's JSON formatting. Bookmark text in JSON
 
 \subsection{Destinations}
 
+\label{destinations}
 The destination is an extended description of where the bookmark should point to (i.e it can be more detailed than just giving the page). For example, it may point to a section heading halfway down a page. Here are the possibilities:
 
 \medskip
@@ -2927,7 +2928,8 @@ given page range.
     \small\noindent\verb!cpdf -set-page-layout <layout> in.pdf -o out.pdf!
 
     \vspace{1.5mm}
-    \small\noindent\verb!cpdf -set-page-mode <mode> in.pdf -o out.pdf!
+    \small\noindent\verb!cpdf -set-page-mode <mode> in.pdf -o out.pdf!\\
+    \small\noindent\verb!cpdf -set-non-full-screen-page-mode <mode> in.pdf -o out.pdf!
 
     \vspace{1.5mm} 
     \small\noindent\verb!cpdf -hide-toolbar <true | false> in.pdf -o out.pdf!\\
@@ -2939,7 +2941,8 @@ given page range.
     
     \vspace{1.5mm}
     \small\noindent\verb!cpdf -open-at-page <page number> in.pdf -o out.pdf!\\
-    \noindent\verb!cpdf -open-at-page-fit <page number> in.pdf -o out.pdf!
+    \noindent\verb!cpdf -open-at-page-fit <page number> in.pdf -o out.pdf!\\
+    \noindent\verb!cpdf -open-at-page-custom <destination> in.pdf -o out.pdf!
 
     \vspace{1.5mm}
     \small\noindent\verb!cpdf -set-metadata <metadata-file> in.pdf -o out.pdf!
@@ -3151,6 +3154,13 @@ document when first opened. The possible (case-sensitive) values are:
     \small\verb!cpdf -set-page-mode FullScreen in.pdf -o out.pdf!
   \end{framed}
   
+  \noindent If full screen mode is selected for document opening, we can also set a mode to be used when the user exits from full-screen mode:
+  \begin{framed}
+    \small\verb!cpdf -set-non-full-screen-page-mode UseAttachments in.pdf -o out.pdf!
+  \end{framed}
+
+  \noindent As would be expected, \texttt{FullScreen} is not allowed here.
+  
   \subsection{Display Options}
 \vspace{2mm}
   {\small\begin{tabular}{ll}
@@ -3178,6 +3188,12 @@ document when first opened. The possible (case-sensitive) values are:
   \end{framed}
 
 \noindent (Here, we used \texttt{end} to open at the last page. Any page specification describing a single page is ok here.)
+
+Alternatively, we may specify a full destination, of the kind described on page \pageref{destinations}:
+  \begin{framed}
+    \small\verb!cpdf -open-at-page-custom "[3 /FitR 100 100 300 300]" in.pdf -o out.pdf!
+  \end{framed}
+
 
 \section{Page Labels}
 \index{page!labels}
