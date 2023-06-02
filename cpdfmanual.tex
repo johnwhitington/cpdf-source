@@ -2794,6 +2794,10 @@ NB: For all imposition options, see also discussion of \texttt{-fast} in Section
   \small\noindent\verb!cpdf -list-annotations-json in.pdf [<range>]!
 
   \vspace{1.5mm}
+  \small\noindent\verb!cpdf -set-annotations-json <filename> [-underneath]!\\
+  \noindent\verb!     in.pdf [<range>] -o out.pdf!
+
+  \vspace{1.5mm}
   \small\noindent\verb!cpdf -copy-annotations from.pdf to.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
@@ -2811,7 +2815,7 @@ annotations on the selected pages to standard output. Each annotation is precede
     \noindent Print annotations from \texttt{in.pdf}, redirecting output to \texttt{annots.txt}.
   \end{framed}
 
-More information can be obtained by listing annotations in JSON format:
+\noindent More information can be obtained by listing annotations in JSON format:
 
   \begin{framed}
     \small\verb!cpdf -list-annotations-json in.pdf > annots.json!
@@ -2820,11 +2824,11 @@ More information can be obtained by listing annotations in JSON format:
     \noindent Print annotations from \texttt{in.pdf} in JSON format, redirecting output to \texttt{annots.json}.
   \end{framed}
 
-This produces an array of (page number, annotation) pairs giving the PDF structure of each annotation. Destination pages for page links will have page numbers in place of internal PDF page links, and certain indirect objects are made direct but the content is otherwise unaltered. Here is an example entry for an annotation on page 10:
+\noindent This produces an array of (page number, object number, annotation) triples giving the PDF structure of each annotation. Destination pages for page links will have page numbers in place of internal PDF page links, but the content is otherwise unaltered. Here is an example entry for an annotation with object number 102 on page 10:
 
 {\small\begin{verbatim}
   [
-  10,
+  10, 102
   { "/H": { "N": "/I" },
     "/Border": [ { "I": 0 }, { "I": 0 }, { "I": 0 } ],
     "/Rect": [
@@ -2834,9 +2838,26 @@ This produces an array of (page number, annotation) pairs giving the PDF structu
     "/Type": { "N": "/Annot" },
     "/A": {
       "/S": { "N": "/URI" },
-      "/URI": "http://www.google.com/" },
-    "/StructParent": { "I": 10 } } ]
+      "/URI": { "U" : "http://www.google.com/" },
+    "/StructParent": { "I": 10 } }
+  ]
 \end{verbatim}}
+
+\noindent Extra objects have omit the page number, being just a pair of the object number and annotation. The UTF8 variant of the CPDFJSON format described on page \pageref{cpdfjson}.
+
+\section{Setting annotations}
+
+We can also set annotations from a JSON file, either modified from the output of \texttt{-list-annotations-json} or produced manually:
+
+  \begin{framed}
+    \small\verb!cpdf -set-annotations annots.json in.pdf -o out.pdf !
+    
+    \vspace{2.5mm}
+    \noindent Add the annotations in \texttt{annots.json} on top of any already present in \texttt{in.pdf}, writing to \texttt{out.pdf}.
+
+  \end{framed}
+
+\noindent If replacing rather than adding annotations, use \texttt{-remove-annotations} first to clear the existing ones.
 
 
   \section{Copying Annotations}
@@ -2853,6 +2874,8 @@ The result is then written an output file, specified in the usual way.
 onto the PDF file \texttt{to.pdf}, writing the result to \texttt{results.pdf}.
 
   \end{framed}
+
+\noindent It exists for historical reasons, and is no different from listing and setting the annotations using \texttt{-list-annotations-json} and \texttt{-set-annotations}. 
 
   \section{Removing Annotations}
 \index{annotations!removing}
@@ -3707,13 +3730,15 @@ recommended when file size is the sole consideration.
   \noindent\verb!     [-output-json-parse-content-streams]!\\
   \noindent\verb!     [-output-json-no-stream-data]!\\
   \noindent\verb!     [-output-json-decompress-streams]!\\
-  \noindent\verb!     [-output-json-clean-strings]!
+  \noindent\verb!     [-output-json-clean-strings]!\\
+  \noindent\verb!     [-utf8]!
 
 \vspace{1.5mm}
 
   \noindent\verb!cpdf -j in.json -o out.pdf!
   \end{framed}}
 
+\label{cpdfjson}
 In addition to reading and writing PDF files in the original Adobe format, \texttt{cpdf} can read and write them in its own CPDFJSON format, for somewhat easier extraction of information, modification of PDF files, and so on.
 
 \section{Converting PDF to JSON}
@@ -3754,7 +3779,7 @@ number, and flags used when writing (which may be required when reading):
   \item Names are written as \texttt{\{"N":\ "/Pages"\}}
   \item Indirect references are integers
   \item Streams are \texttt{\{"S":\ [dict, data]\}}
-  \item Strings are converted to JSON string format in a way which, when reversed, results in the original string.
+  \item Strings are converted to JSON string format in a way which, when reversed, results in the original string. For best results when editing files, use the \texttt{-utf8} option. The string representation is again reversible, but easier to edit. Unicode strings are written as \texttt{\{"U":\ "the text"\}}.
 \end{itemize}
 
 \noindent Here is an example of the output for a small PDF:
@@ -3815,12 +3840,11 @@ number, and flags used when writing (which may be required when reading):
 ] } ], [
 \end{verbatim}}
 
-\noindent The option \texttt{-output-json-no-stream-data} simply elides the stream data instead, 
-leading to much smaller JSON files. 
+\noindent The option \texttt{-output-json-no-stream-data} simply elides the stream data instead, leading to much smaller JSON files. But these may not be round-tripped back into PDF, of course.
 
 The option \texttt{-output-json-decompress-streams} keeps the streams intact, and decompresses them.
 
-The option \texttt{-output-json-clean-strings} converts any UTF16BE strings with no high bytes to PDFDocEncoding prior to output, so that editing them is easier. 
+The option \texttt{-output-json-clean-strings} converts any UTF16BE strings with no high bytes to PDFDocEncoding prior to output, so that editing them is easier. \textit{Note: this is deprecated as of version 2.6 in favour of \texttt{\textup{-utf8}}}.
 
 \section{Converting JSON to PDF}
 
