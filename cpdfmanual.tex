@@ -2225,6 +2225,7 @@ the file using a different page range each time.
   \vspace{1.5mm}
   \noindent\small\begin{verbatim}cpdf ([-add-text <text-format> | -add-rectangle <size>])
               [-font <fontname>]          [-font-size <size-in-points>]
+              [-font-ttf <filename>]      [-embed-std14]
               [-color <color>]            [-line-spacing <number>]
               [-outline]                  [-linewidth <number>]
               [-underneath]               [-relative-to-cropbox]
@@ -2417,7 +2418,7 @@ than its baseline. Similarly, the \texttt{-topline} option may be used to specif
 
   \subsection{Font and Size}
 \index{font}
-  The font may be set with the \texttt{-font} option. The 14 Standard PDF fonts are available:
+  The 14 standard PDF fonts may be set with the \texttt{-font} option. They are:
 
   \vspace{2mm}
   \begin{tabular}{l}
@@ -2442,7 +2443,18 @@ than its baseline. Similarly, the \texttt{-topline} option may be used to specif
   \begin{framed}
     \small\verb!cpdf -add-text "-%Page-" -font "Times-Italic" in.pdf -o out.pdf!
   \end{framed}
-  \noindent See Section \ref{copyfont} for how to use other fonts. The font size can be altered with the \texttt{-font-size} option, which
+
+FIXME: How to provide font files for -embed-std14
+FIXME: Which font packs we provide
+FIXME: Which characters are available in Latin1, and Google fonts
+
+  \noindent Adding \texttt{-embed-std14} to the command will embed subsetted font files in the PDF for any of the Standard 14 fonts used.
+
+  Other TrueType fonts may be introduced with the \texttt{-font-ttf} option, giving the file name of the font.
+
+See Section \ref{copyfont} for how to use other fonts.
+
+The font size can be altered with the \texttt{-font-size} option, which
 specifies the size in points:
   \begin{framed}
     \small\verb!cpdf -add-text "-%Page-" -font-size 36 in.pdf -o out.pdf!
