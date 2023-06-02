@@ -4099,6 +4099,81 @@ For PNG files, the file must be 24bit RGB with no transparency and no interlacin
 \end{jscpdflib}
 
 \clearpage\pagestyle{empty}
+\chapter{Drawing on PDFs}\label{chap:18}\pagestyle{fancy}\index{Draw}
+
+FIXME -underneath, URLs don't work, add -text-width
+
+  {\small\begin{framed}
+
+   \noindent\verb!cpdf in.pdf -draw <draw operations> -o out.pdf!\\
+
+   \vspace{1.5mm}
+   \noindent\verb!-rect! Draw rectangle\\
+   \noindent\verb!-to! Move to\\
+   \noindent\verb!-line! Add line to\\
+   \noindent\verb!-bez! Add Bezier curve to path\\
+   \noindent\verb!-bez23! Add Bezier v-op to path\\
+   \noindent\verb!-bez13! Add Bezier y-op to path\\
+   \noindent\verb!-circle! Add circle to path\\
+   \noindent\verb!-strokecol! Set stroke colour\\
+   \noindent\verb!-fillcol! Set fill colour\\
+   \noindent\verb!-stroke! Stroke path\\
+   \noindent\verb!-fill! Fill path\\
+   \noindent\verb!-filleo! Fill path, even odd\\
+   \noindent\verb!-strokefill! Stroke and fill path\\
+   \noindent\verb!-strokefilleo! Stroke and fill path, even odd\\
+   \noindent\verb!-clip! Clip\\
+   \noindent\verb!-clipeo! Clip, even odd\\
+   \noindent\verb!-close! Close path\\
+   \noindent\verb!-thick! Set stroke thickness\\
+   \noindent\verb!-cap! Set cap\\
+   \noindent\verb!-join! Set join\\
+   \noindent\verb!-miter! Set miter limit\\
+   \noindent\verb!-dash! Set dash pattern\\
+   \noindent\verb!-push! Push graphics stack\\
+   \noindent\verb!-pop! Pop graphics stack\\
+   \noindent\verb!-matrix! Append to graphics matrix\\
+   \noindent\verb!-mtrans! Translate the graphics matrix\\
+   \noindent\verb!-mrot! Rotate the graphics matrix\\
+   \noindent\verb!-mscale! Scale the graphics matrix\\
+   \noindent\verb!-mshearx! Shear the graphics matrix in X\\
+   \noindent\verb!-msheary! Shear the graphics matrix in Y\\
+   \noindent\verb!-xobj-bbox! Specify the bounding box for xobjects\\
+   \noindent\verb!-xobj! Begin saving a sequence of graphics operators\\
+   \noindent\verb!-end-xobj! End saving a sequence of graphics operators\\
+   \noindent\verb!-use! Use a saved sequence of graphics operators\\
+   \noindent\verb!-draw-jpeg! Load a JPEG from file and name it\\
+   \noindent\verb!-draw-png! Load a PNG from file and name it\\
+   \noindent\verb!-image! Draw an image which has already been loaded\\
+   \noindent\verb!-fill-opacity! Set opacity\\
+   \noindent\verb!-stroke-opacity! Set stroke opacity\\
+   \noindent\verb!-bt! Begin text\\
+   \noindent\verb!-et! End text\\
+   \noindent\verb!-text! Draw text\\
+   \noindent\verb!-stext! Draw text with \%specials\\
+   \noindent\verb!-leading! Set leading\\
+   \noindent\verb!-charspace! Set character spacing\\
+   \noindent\verb!-wordspace! Set word space\\
+   \noindent\verb!-textscale! Set text scale\\
+   \noindent\verb!-rendermode! Set text rendering mode\\
+   \noindent\verb!-rise! Set text rise\\
+   \noindent\verb!-nl! New line\\
+   \noindent\verb!-newpage! Move to a fresh page
+
+  \end{framed}}
+
+\section{A new blank PDF}
+\index{create new PDF}
+
+We can build a new PDF file, given a number of pages and a paper size. The default is one page, A4 portrait.
+
+\begin{framed}
+ \noindent\small\verb?cpdf -create-pdf -create-pdf-pages 20?\\
+ \noindent\small\verb?     -create-pdf-papersize usletterportrait -o out.pdf?
+\end{framed}
+
+ 
+\clearpage\pagestyle{empty}
 %We wanted to call this "Chapter M", but the following commands messed up the PDF bookmarks, so this chapter will simply have to float for now, until we can return to this problem.
 %\setcounter{chapter}{12}
 %\renewcommand{\thechapter}{\Alph{chapter}}%

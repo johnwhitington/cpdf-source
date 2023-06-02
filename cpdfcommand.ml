@@ -2879,11 +2879,11 @@ and specs =
    ("-circle", Arg.String addcircle, " Add circle to path");
    ("-strokecol", Arg.String setstroke, " Set stroke colour");
    ("-fillcol", Arg.String setfill, " Set fill colour");
-   ("-stroke", Arg.Unit stroke, " Stroke");
-   ("-fill", Arg.Unit fill, " Fill");
-   ("-filleo", Arg.Unit fillevenodd, " Fill, even odd");
-   ("-strokefill", Arg.Unit strokefill, " Stroke and fill");
-   ("-strokefilleo", Arg.Unit strokefillevenodd, " Stroke and fill, even odd");
+   ("-stroke", Arg.Unit stroke, " Stroke path");
+   ("-fill", Arg.Unit fill, " Fill path");
+   ("-filleo", Arg.Unit fillevenodd, " Fill path, even odd");
+   ("-strokefill", Arg.Unit strokefill, " Stroke and fill path");
+   ("-strokefilleo", Arg.Unit strokefillevenodd, " Stroke and fill path, even odd");
    ("-clip", Arg.Unit clip, " Clip");
    ("-clipeo", Arg.Unit clipevenodd, " Clip, even odd");
    ("-close", Arg.Unit closepath, " Close path");
@@ -2911,7 +2911,7 @@ and specs =
    ("-stroke-opacity", Arg.Float addsopacity, " Set stroke opacity");
    ("-bt", Arg.Unit addbt, " Begin text");
    ("-et", Arg.Unit addet, " End text");
-   ("-text", Arg.String addtext, " Draw text ");
+   ("-text", Arg.String addtext, " Draw text");
    ("-stext", Arg.String addspecialtext, " Draw text with %specials");
    ("-leading", Arg.Float (fun f -> addop (Cpdfdraw.Leading f)), " Set leading");
    ("-charspace", Arg.Float (fun f -> addop (Cpdfdraw.CharSpace f)), " Set character spacing");
