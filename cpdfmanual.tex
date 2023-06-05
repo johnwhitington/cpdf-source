@@ -4103,7 +4103,7 @@ For PNG files, the file must be 24bit RGB with no transparency and no interlacin
 
   {\small\begin{framed}
 
-   \noindent\verb!cpdf in.pdf -draw <draw operations> [-underneath] -o out.pdf!\\
+   \noindent\verb!cpdf in.pdf [<range>] -draw <draw operations> [-underneath] -o out.pdf!\\
    \noindent\verb!cpdf -text-width <text> [-font <font>] [-fontsize <fontsize>]!\\
 
    \vspace{1.5mm}
@@ -4190,26 +4190,110 @@ For PNG files, the file must be 24bit RGB with no transparency and no interlacin
 
 \section{Basics}
 
+We can draw on an existing PDF (or a new one created with \texttt{-create-pdf} from the previous chapter) using the \texttt{-draw} operation. This provides commands for drawing vector graphics, simple text and adding images. For example:
+
+\begin{framed}
+ \noindent\small\verb?cpdf -create-pdf AND -draw -bt -text Hello -et -o out.pdf?\\
+ \noindent\small\verb?cpdf in.pdf -draw -bt -text Hello -et -o out.pdf?
+\end{framed}
+
+\noindent The first example builds a new A4 portrait PDF with one page, and writes Hello in the default 12pt Times Roman font at the bottom left. The second does the same, but for every page of an existing PDF.
+
+Coordinates in a PDF file have the origin $(0, 0)$ at the bottom-left of the page.
+
 \section{Building and showing paths}
+  {\small\begin{framed}
+   \noindent\verb!-rect! Draw rectangle\\
+   \noindent\verb!-to! Move to\\
+   \noindent\verb!-line! Add line to\\
+   \noindent\verb!-bez! Add Bezier curve to path\\
+   \noindent\verb!-bez23! Add Bezier v-op to path\\
+   \noindent\verb!-bez13! Add Bezier y-op to path\\
+   \noindent\verb!-circle! Add circle to path\\
+   \noindent\verb!-strokecol! Set stroke colour\\
+   \noindent\verb!-fillcol! Set fill colour\\
+   \noindent\verb!-stroke! Stroke path\\
+   \noindent\verb!-fill! Fill path\\
+   \noindent\verb!-filleo! Fill path, even odd\\
+   \noindent\verb!-strokefill! Stroke and fill path\\
+   \noindent\verb!-strokefilleo! Stroke and fill path, even odd\\
+   \noindent\verb!-close! Close path
+  \end{framed}}
 
 \section{Clipping with paths}
+  {\small\begin{framed}
+   \noindent\verb!-clip! Clip\\
+   \noindent\verb!-clipeo! Clip, even odd\\
+  \end{framed}}
+
 
 \section{Path parameters}
+  {\small\begin{framed}
+   \noindent\verb!-thick! Set stroke thickness\\
+   \noindent\verb!-cap! Set cap\\
+   \noindent\verb!-join! Set join\\
+   \noindent\verb!-miter! Set miter limit\\
+   \noindent\verb!-dash! Set dash pattern
+  \end{framed}}
 
 \section{The graphics stack and matrices}
+  {\small\begin{framed}
+   \noindent\verb!-push! Push graphics stack\\
+   \noindent\verb!-pop! Pop graphics stack\\
+   \noindent\verb!-matrix! Append to graphics matrix\\
+   \noindent\verb!-mtrans! Translate the graphics matrix\\
+   \noindent\verb!-mrot! Rotate the graphics matrix\\
+   \noindent\verb!-mscale! Scale the graphics matrix\\
+   \noindent\verb!-mshearx! Shear the graphics matrix in X\\
+   \noindent\verb!-msheary! Shear the graphics matrix in Y
+  \end{framed}}
 
 \section{Re-use with XObjects}
+  {\small\begin{framed}
+   \vspace{1.5mm}
+   \noindent\verb!-xobj-bbox! Specify the bounding box for xobjects\\
+   \noindent\verb!-xobj! Begin saving a sequence of graphics operators\\
+   \noindent\verb!-end-xobj! End saving a sequence of graphics operators\\
+   \noindent\verb!-use! Use a saved sequence of graphics operators
+  \end{framed}}
 
 \section{Images}
+  {\small\begin{framed}
+   \noindent\verb!-draw-jpeg! Load a JPEG from file and name it\\
+   \noindent\verb!-draw-png! Load a PNG from file and name it\\
+   \noindent\verb!-image! Draw an image which has already been loaded
+  \end{framed}}
 
 \section{Transparency}
-
+  {\small\begin{framed}
+   \noindent\verb!-fill-opacity! Set opacity\\
+   \noindent\verb!-stroke-opacity! Set stroke opacity
+  \end{framed}}
 \section{Text}
+
+  {\small\begin{framed}
+   \noindent\verb!-bt! Begin text\\
+   \noindent\verb!-et! End text\\
+   \noindent\verb!-text! Draw text\\
+   \noindent\verb!-stext! Draw text with \%specials\\
+   \noindent\verb!-leading! Set leading\\
+   \noindent\verb!-charspace! Set character spacing\\
+   \noindent\verb!-wordspace! Set word space\\
+   \noindent\verb!-textscale! Set text scale\\
+   \noindent\verb!-rendermode! Set text rendering mode\\
+   \noindent\verb!-rise! Set text rise\\
+   \noindent\verb!-nl! New line\end{framed}}
 
 URLs don't work in special text.
 
 \section{The next page}
 
+  {\small\begin{framed}
+   \vspace{1.5mm}
+   \noindent\verb!-newpage! Move to a fresh page
+  \end{framed}}
+
+The drawing operation \texttt{-newpage} creates a fresh page of the same dimensions as the last page of the document, and sets the drawing range to just that page.
  
 \clearpage\pagestyle{empty}
 %We wanted to call this "Chapter M", but the following commands messed up the PDF bookmarks, so this chapter will simply have to float for now, until we can return to this problem.
