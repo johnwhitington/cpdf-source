@@ -12,7 +12,7 @@
 \usepackage{palatino}
 \usepackage{listings}
 \usepackage{microtype}
-\usepackage{graphics}
+\usepackage{graphicx}
 \usepackage{upquote}
 \usepackage[plainpages=false,pdfpagelabels,pdfborder=0 0 0,draft=false,hidelinks,bookmarksnumbered]{hyperref}
 \usepackage{framed}
@@ -4115,8 +4115,6 @@ For PNG files, the file must be 24bit RGB with no transparency and no interlacin
    \noindent\verb!-bez23! Add Bezier v-op to path\\
    \noindent\verb!-bez13! Add Bezier y-op to path\\
    \noindent\verb!-circle! Add circle to path\\
-   \noindent\verb!-strokecol! Set stroke colour\\
-   \noindent\verb!-fillcol! Set fill colour\\
    \noindent\verb!-stroke! Stroke path\\
    \noindent\verb!-fill! Fill path\\
    \noindent\verb!-filleo! Fill path, even odd\\
@@ -4131,6 +4129,8 @@ For PNG files, the file must be 24bit RGB with no transparency and no interlacin
 
    \vspace{1.5mm}
    \noindent \textsc{Path parameters}\\
+   \noindent\verb!-strokecol! Set stroke colour\\
+   \noindent\verb!-fillcol! Set fill colour\\
    \noindent\verb!-thick! Set stroke thickness\\
    \noindent\verb!-cap! Set cap\\
    \noindent\verb!-join! Set join\\
@@ -4202,16 +4202,15 @@ We can draw on an existing PDF (or a new one created with \texttt{-create-pdf} f
 Coordinates in a PDF file have the origin $(0, 0)$ at the bottom-left of the page.
 
 \section{Building and showing paths}
+
   {\small\begin{framed}
    \noindent\verb!-rect! Draw rectangle\\
-   \noindent\verb!-to! Move to\\
-   \noindent\verb!-line! Add line to\\
+   \noindent\verb!-to "x y"! Move to\\
+   \noindent\verb!-line "x y"! Add line to\\
    \noindent\verb!-bez! Add Bezier curve to path\\
    \noindent\verb!-bez23! Add Bezier v-op to path\\
    \noindent\verb!-bez13! Add Bezier y-op to path\\
    \noindent\verb!-circle! Add circle to path\\
-   \noindent\verb!-strokecol! Set stroke colour\\
-   \noindent\verb!-fillcol! Set fill colour\\
    \noindent\verb!-stroke! Stroke path\\
    \noindent\verb!-fill! Fill path\\
    \noindent\verb!-filleo! Fill path, even odd\\
@@ -4220,6 +4219,48 @@ Coordinates in a PDF file have the origin $(0, 0)$ at the bottom-left of the pag
    \noindent\verb!-close! Close path
   \end{framed}}
 
+\noindent  To draw line art, we build paths and then stroke or fill them. For example:
+
+\begin{framed}
+ \noindent\small\verb?cpdf -create-pdf AND -draw -to "100 100" -line "400 400" -stroke?\\
+ \noindent\small\verb?     -line "400 100" -draw "100 100" -stroke?\\
+ \noindent\small\verb?     -o out.pdf?
+\end{framed}
+
+\noindent We use \texttt{-to} to start the path at a given coordinate, \texttt{-line} to extend the path with each line, and then \texttt{-stroke} to stroke the path. This creates the following PDF:
+
+\bigskip
+\fbox{\includegraphics[width=0.3\textwidth]{manualimages/line.pdf}}
+\bigskip
+
+\noindent Alternatively, we may use \texttt{-close} to draw the final line back to the starting point:
+
+\begin{framed}
+ \noindent\small\verb?cpdf -create-pdf AND -draw -to "100 100" -line "400 400" -stroke?\\
+ \noindent\small\verb?     -line "400 100" -close -stroke?\\
+ \noindent\small\verb?     -o out.pdf?
+\end{framed}
+
+\noindent We can fill our path with \texttt{-fill}:
+
+\begin{framed}
+ \noindent\small\verb?cpdf -create-pdf AND -draw -to "100 100" -line "400 400" -stroke?\\
+ \noindent\small\verb?     -line "400 100" -close -fill?\\
+ \noindent\small\verb?     -o out.pdf?
+\end{framed}
+
+\noindent Now we have a filled triangle:
+
+\bigskip
+\fbox{\includegraphics[width=0.3\textwidth]{manualimages/fill.pdf}}
+\bigskip
+
+\noindent The operations \texttt{-filleo}, \texttt{-strokefill} and \texttt{-strokefilleo} provide alternative combinations of stroke, fill, and winding rule.
+
+%rect
+
+%bez, circle
+
 \section{Clipping with paths}
   {\small\begin{framed}
    \noindent\verb!-clip! Clip\\
@@ -4227,8 +4268,11 @@ Coordinates in a PDF file have the origin $(0, 0)$ at the bottom-left of the pag
   \end{framed}}
 
 
+
 \section{Path parameters}
   {\small\begin{framed}
+   \noindent\verb!-strokecol! Set stroke colour\\
+   \noindent\verb!-fillcol! Set fill colour\\
    \noindent\verb!-thick! Set stroke thickness\\
    \noindent\verb!-cap! Set cap\\
    \noindent\verb!-join! Set join\\
