@@ -4380,6 +4380,24 @@ Lines may have dash patterns. A dash pattern consists of one or more numbers. Al
    \noindent\verb!-fill-opacity! Set opacity\\
    \noindent\verb!-stroke-opacity! Set stroke opacity
   \end{framed}}
+
+We can set fill and stroke transparencies, between 0 (fully transparent) and 1 (fully opaque):
+
+\begin{framed}
+ \noindent\small\verb?cpdf -create-pdf AND -draw -fill-opacity 0.5"?\\
+ \noindent\small\verb?-circle "250 300 150" -fill -circle "350 300 150" -fill?\\
+ \noindent\small\verb?-o out.pdf?
+\end{framed}
+
+\noindent Here is the result:
+
+\bigskip
+\fbox{\includegraphics[width=0.3\textwidth]{manualimages/trans.pdf}}
+\bigskip
+
+\noindent Notice that we used \texttt{-fill} twice, to ensure each circle was in a different path. If they had been part of the same path, the effect would be different.
+
+
 \section{Text}
 
   {\small\begin{framed}
