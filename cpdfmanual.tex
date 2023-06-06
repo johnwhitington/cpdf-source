@@ -4199,7 +4199,7 @@ We can draw on an existing PDF (or a new one created with \texttt{-create-pdf} f
 
 \noindent The first example builds a new A4 portrait PDF with one page, and writes Hello in the default 12pt Times Roman font at the bottom left. The second does the same, but for every page of an existing PDF.
 
-Coordinates in a PDF file have the origin $(0, 0)$ at the bottom-left of the page.
+Coordinates in a PDF file have the origin $(0, 0)$ at the bottom-left of the page. All units are in points (1/72 inch).
 
 \section{Building and showing paths}
 
@@ -4289,21 +4289,63 @@ To avoid calculating the Bezier curves for a circle manually, \texttt{cpdf} can 
 \section{Clipping with paths}
   {\small\begin{framed}
    \noindent\verb!-clip! Clip\\
-   \noindent\verb!-clipeo! Clip, even odd\\
+   \noindent\verb!-clipeo! Clip, even odd
   \end{framed}}
-
-
 
 \section{Path parameters}
   {\small\begin{framed}
-   \noindent\verb!-strokecol! Set stroke colour\\
-   \noindent\verb!-fillcol! Set fill colour\\
-   \noindent\verb!-thick! Set stroke thickness\\
-   \noindent\verb!-cap! Set cap\\
-   \noindent\verb!-join! Set join\\
-   \noindent\verb!-miter! Set miter limit\\
-   \noindent\verb!-dash! Set dash pattern
+   \noindent\verb!-strokecol "g" | "r g b" | "c y m k"! Set stroke colour\\
+   \noindent\verb!-fillcol "g" | "r g b" | "c y m k"! Set fill colour\\
+   \noindent\verb!-thick n! Set stroke thickness\\
+   \noindent\verb!-cap butt | round | square! Set cap\\
+   \noindent\verb!-join miter | round | bevel! Set join\\
+   \noindent\verb!-miter n! Set miter limit\\
+   \noindent\verb!-dash <pattern>! Set dash pattern
   \end{framed}}
+
+We can set stroke and fill colours for our paths, either as greyscale (one component), RGB (three components) or CYMK (four components):
+
+\begin{framed}
+ \noindent\small\verb?cpdf -create-pdf AND -draw -circle "200 200 100" -thick 20?\\
+ \noindent\small\verb?     -strokecol 0.5 -fillcol "0.2 0.7 0.2" -stroke -o out.pdf?
+\end{framed}
+
+\noindent Here is the result:
+
+\bigskip
+\fbox{\includegraphics[width=0.3\textwidth]{manualimages/colfill.pdf}}
+\bigskip
+
+\noindent We can set line caps and joins with \texttt{-cap}, \texttt{-join}:
+
+\begin{framed}
+ \noindent\small\verb?cpdf -create-pdf AND -draw -to "100 100"?\\
+ \noindent\small\verb?-join round -cap round -thick 40?\\
+ \noindent\small\verb?-line "200 200" -line "220 100" -stroke?\\
+ \noindent\small\verb?-o out.pdf?
+\end{framed}
+
+\noindent Then we see:
+
+\bigskip
+\fbox{\includegraphics[width=0.3\textwidth]{manualimages/capjoins.pdf}}
+\bigskip
+
+\noindent The miter limit (see PDF reference for details) may be set with \texttt{-miter}.
+
+Lines may have dash patterns. A dash pattern consists of one or more numbers. All save the last form the list of dash lengths and gap lengths. The last is the phase, which defines how far along the pattern we start. For example, using a dash pattern of "30 20 0" i.e black 30, white 20, phase 0:
+
+\begin{framed}
+ \noindent\small\verb?cpdf -create-pdf AND -draw -to "100 100"?\\
+ \noindent\small\verb?-dash "30 20 0" -thick 20 -line "400 300" -stroke?\\
+ \noindent\small\verb?-o out.pdf?
+\end{framed}
+
+\noindent Here is the result:
+
+\bigskip
+\fbox{\includegraphics[width=0.3\textwidth]{manualimages/dash.pdf}}
+\bigskip
 
 \section{The graphics stack and matrices}
   {\small\begin{framed}
