@@ -4204,13 +4204,13 @@ Coordinates in a PDF file have the origin $(0, 0)$ at the bottom-left of the pag
 \section{Building and showing paths}
 
   {\small\begin{framed}
-   \noindent\verb!-rect! Draw rectangle\\
+   \noindent\verb!-rect "x y w h"! Draw rectangle\\
    \noindent\verb!-to "x y"! Move to\\
-   \noindent\verb!-line "x y"! Add line to\\
-   \noindent\verb!-bez! Add Bezier curve to path\\
-   \noindent\verb!-bez23! Add Bezier v-op to path\\
-   \noindent\verb!-bez13! Add Bezier y-op to path\\
-   \noindent\verb!-circle! Add circle to path\\
+   \noindent\verb!-line "x y"! Add line to path\\
+   \noindent\verb!-bez "x1 y1 x2 y2 x3 y3"! Add Bezier curve to path\\
+   \noindent\verb!-bez23 "x2 y2 x3 y3"! Add Bezier v-op to path\\
+   \noindent\verb!-bez13 "x1 y1 x3 y3"! Add Bezier y-op to path\\
+   \noindent\verb!-circle "x y r"! Add circle to path\\
    \noindent\verb!-stroke! Stroke path\\
    \noindent\verb!-fill! Fill path\\
    \noindent\verb!-filleo! Fill path, even odd\\
@@ -4241,7 +4241,7 @@ Coordinates in a PDF file have the origin $(0, 0)$ at the bottom-left of the pag
  \noindent\small\verb?     -o out.pdf?
 \end{framed}
 
-\noindent We can fill our path with \texttt{-fill}:
+\noindent We can have multiple such subpaths in a path, by closing and carrying on. We can fill our path with \texttt{-fill}:
 
 \begin{framed}
  \noindent\small\verb?cpdf -create-pdf AND -draw -to "100 100" -line "400 400" -stroke?\\
@@ -4257,9 +4257,34 @@ Coordinates in a PDF file have the origin $(0, 0)$ at the bottom-left of the pag
 
 \noindent The operations \texttt{-filleo}, \texttt{-strokefill} and \texttt{-strokefilleo} provide alternative combinations of stroke, fill, and winding rule.
 
-%rect
+We can save time when drawing rectangles by using the \texttt{-rect} operation, which takes the lower left coordinate, width and height. There is no need to explicitly close the rectangle.
 
-%bez, circle
+\begin{framed}
+ \noindent\small\verb?cpdf -create-pdf AND -draw -rect "200 300 400 500" -stroke?\\
+ \noindent\small\verb?     -o out.pdf?
+\end{framed}
+
+\noindent We can build bezier curves using \texttt{-bez}, \texttt{-bez23} and \texttt{-bez13}. The first adds a bezier path using six coordinates - for the control points first, and then for the end point (the start point is the current coordinate):
+
+\begin{framed}
+ \noindent\small\verb?cpdf -create-pdf AND -draw -to "100 100" -bez "400 600 600 400 300 300"?\\
+ \noindent\small\verb?     -stroke -o out.pdf?
+\end{framed}
+
+\noindent Here is the result:
+
+\bigskip
+\fbox{\includegraphics[width=0.3\textwidth]{manualimages/bez.pdf}}
+\bigskip
+
+\noindent The operation \texttt{-bez23} is a shorthand used when the first control point is equal to the current point. The operation \texttt{-bez13} is a shorthand used when the second control point is equal to the final point.
+
+To avoid calculating the Bezier curves for a circle manually, \texttt{cpdf} can generate them automatically when given the centre and radius:
+
+\begin{framed}
+ \noindent\small\verb?cpdf -create-pdf AND -draw -circle "200 200 100"?\\
+ \noindent\small\verb?     -stroke -o out.pdf?
+\end{framed}
 
 \section{Clipping with paths}
   {\small\begin{framed}
@@ -4337,8 +4362,16 @@ URLs don't work in special text.
    \noindent\verb!-newpage! Move to a fresh page
   \end{framed}}
 
-The drawing operation \texttt{-newpage} creates a fresh page of the same dimensions as the last page of the document, and sets the drawing range to just that page.
- 
+The drawing operation \texttt{-newpage} creates a fresh page of the same dimensions as the last page of the document, and sets the drawing range to just that page. For example:
+
+\begin{framed}
+ \noindent\small\verb?cpdf -create-pdf AND -draw -bt -text "Page 1" -et?\\
+ \noindent\small\verb?     -newpage -bt -text "Page 2" -et?\\
+ \noindent\small\verb?     -o out.pdf?
+\end{framed}
+
+\noindent This will create a two page PDF with "Page 1" written on page one and "Page 2" written on page two.
+
 \clearpage\pagestyle{empty}
 %We wanted to call this "Chapter M", but the following commands messed up the PDF bookmarks, so this chapter will simply have to float for now, until we can return to this problem.
 %\setcounter{chapter}{12}
