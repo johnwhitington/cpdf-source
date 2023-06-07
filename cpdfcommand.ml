@@ -1140,13 +1140,13 @@ let setaddtext s =
   setop (AddText s) ()
 
 let parse_color s =
-  match String.lowercase_ascii s with
-  | "white" -> Cpdfaddtext.RGB (1., 1., 1.)
-  | "black" -> Cpdfaddtext.RGB (0., 0., 0.)
-  | "red" -> Cpdfaddtext.RGB (1., 0., 0.)
-  | "green" -> Cpdfaddtext.RGB (0., 1., 0.)
-  | "blue" -> Cpdfaddtext.RGB (0., 0., 1.)
-  | _ ->
+  match lookup (String.lowercase_ascii s) Cpdfcolours.colours with
+  | Some c ->
+      let r = float_of_int ((c land 0xFF0000) lsr 16) /. 255. in
+      let g = float_of_int ((c land 0x00FF00) lsr 8) /. 255. in
+      let b = float_of_int (c land 0x0000FF) /. 255. in
+        Cpdfaddtext.RGB (r, g, b)
+  | None ->
       let getnum = function
         | Pdfgenlex.LexInt i -> float i
         | Pdfgenlex.LexReal f -> f
@@ -1154,7 +1154,7 @@ let parse_color s =
       in
         match Pdfgenlex.lex_string s with
         | [g] -> Cpdfaddtext.Grey (getnum g)
-        | [r;g;b] -> Cpdfaddtext.RGB (getnum r, getnum g, getnum b)
+        | [r; g; b] -> Cpdfaddtext.RGB (getnum r, getnum g, getnum b)
         | [c; y; m; k] -> Cpdfaddtext.CYMK (getnum c, getnum y, getnum m, getnum k)
         | _ -> error "Bad color"
 

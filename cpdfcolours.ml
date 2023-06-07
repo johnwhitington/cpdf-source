@@ -3,7 +3,7 @@ open Pdfutil
 
 let colours =
   map
-    (fun (a, b) -> (b, a)) 
+    (fun (a, b) -> (String.lowercase_ascii b, a)) 
     [(0xF0F8FF, "AliceBlue");
      (0xFAEBD7, "AntiqueWhite");
      (0x00FFFF, "Aqua");
