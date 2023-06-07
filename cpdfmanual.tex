@@ -4292,6 +4292,19 @@ To avoid calculating the Bezier curves for a circle manually, \texttt{cpdf} can 
    \noindent\verb!-clipeo! Clip, even odd
   \end{framed}}
 
+\noindent We can use a path to form a clipping region for subsequent content using \texttt{-clip} or \texttt{-clipeo}. For example: 
+
+\begin{framed}
+ \noindent\small\verb?cpdf -create-pdf AND -draw -circle "300 300 100" -clip?\\
+ \noindent\small\verb?     -circle "300 350 100" -fill -o out.pdf?\\
+\end{framed}
+
+\noindent Here is the result:
+
+\bigskip
+\fbox{\includegraphics[width=0.3\textwidth]{manualimages/clip.pdf}}
+\bigskip
+
 \section{Path parameters}
   {\small\begin{framed}
    \noindent\verb!-strokecol "g" | "r g b" | "c y m k"! Set stroke colour\\
@@ -4347,17 +4360,46 @@ Lines may have dash patterns. A dash pattern consists of one or more numbers. Al
 \fbox{\includegraphics[width=0.3\textwidth]{manualimages/dash.pdf}}
 \bigskip
 
+%FIXME specify the angles etc. properly - what units?
 \section{The graphics stack and matrices}
   {\small\begin{framed}
    \noindent\verb!-push! Push graphics stack\\
    \noindent\verb!-pop! Pop graphics stack\\
-   \noindent\verb!-matrix! Append to graphics matrix\\
-   \noindent\verb!-mtrans! Translate the graphics matrix\\
-   \noindent\verb!-mrot! Rotate the graphics matrix\\
-   \noindent\verb!-mscale! Scale the graphics matrix\\
-   \noindent\verb!-mshearx! Shear the graphics matrix in X\\
-   \noindent\verb!-msheary! Shear the graphics matrix in Y
+   \noindent\verb!-matrix "a b c d e f"! Append to graphics matrix\\
+   \noindent\verb!-mtrans "tx ty"! Translate the graphics matrix\\
+   \noindent\verb!-mrot "x y a"! Rotate the graphics matrix\\
+   \noindent\verb!-mscale "sx sy"! Scale the graphics matrix\\
+   \noindent\verb!-mshearx "x y a"! Shear the graphics matrix in X\\
+   \noindent\verb!-msheary "x y a"! Shear the graphics matrix in Y
   \end{framed}}
+
+PDF maintains a stack of graphics state, which we can manipulate with \texttt{-push} which stores the current state, then modify the state for our own purposes, and then use \texttt{-pop} to restore the previous state. Such invocations may be nested. Here is a simple example:
+ 
+\begin{framed}
+ \noindent\small\verb?cpdf -create-pdf AND -draw -circle "200 200 100" -fillcol red -fill?\\
+ \noindent\small\verb?     -push -fillcol blue -circle "300 300 100" -fill?\\
+ \noindent\small\verb?     -pop -circle "400 400 100" -fill  -o out.pdf?
+\end{framed}
+
+\noindent When we use \texttt{-pop} the colour returns to the saved one:
+
+\bigskip
+\fbox{\includegraphics[width=0.3\textwidth]{manualimages/pop.pdf}}
+\bigskip
+
+\noindent One very common use for a \texttt{-push}/\texttt{-pop} pair is to isolate the effects of an operation which modifies the current transformation matrix. These operations are used to translate, rotate, scale and so on. For example: 
+
+\begin{framed}
+ \noindent\small\verb?cpdf -create-pdf AND -draw -circle "200 200 100" -stroke -push?\\
+ \noindent\small\verb?     -mrot "0 0 -0.3" -mscale "0 0 1.5 2" -circle "200 200 100" -stroke?\\
+ \noindent\small\verb?      -pop -circle "200 200 50" -fill -o out.pdf?
+\end{framed}
+
+This is the result. See how the graphics transformation is undone when \texttt{-push} is invoked:
+
+\bigskip
+\fbox{\includegraphics[width=0.3\textwidth]{manualimages/matrix.pdf}}
+\bigskip
 
 \section{Re-use with XObjects}
   {\small\begin{framed}
@@ -4367,6 +4409,22 @@ Lines may have dash patterns. A dash pattern consists of one or more numbers. Al
    \noindent\verb!-end-xobj! End saving a sequence of graphics operators\\
    \noindent\verb!-use! Use a saved sequence of graphics operators
   \end{framed}}
+
+In our examples, we have sometimes had to write the same operations multiple times. To avoid this, PDF has a mechanism called an XObject. This allows us to save a set of operations for re-use in different contexts, or on different pages. For example, here we store an XObject which just strokes a circle. We then \texttt{-use} it once, and alter the colour and transformation matrix and \texttt{-use} it again.
+
+\begin{framed}
+ \noindent\small\verb?cpdf -create-pdf AND -draw -xobj-bbox "0 0 200 200" -xobj A?\\
+ \noindent\small\verb?     -circle "100 100 50" -stroke -end-xobj?\\
+ \noindent\small\verb?     -use A -strokecol red -mtrans "20 20" -use A -o out.pdf?
+\end{framed}
+
+\noindent Note that we must specify a bounding box for the XObject with \texttt{-xobj-bbox}. Here is the result:
+
+\bigskip
+\fbox{\includegraphics[width=0.3\textwidth]{manualimages/xobj.pdf}}
+\bigskip
+
+\noindent XObjects may be nested.
 
 \section{Images}
   {\small\begin{framed}
@@ -4423,6 +4481,8 @@ URLs don't work in special text.
   \end{framed}}
 
 The drawing operation \texttt{-newpage} creates a fresh page of the same dimensions as the last page of the document, and sets the drawing range to just that page. For example:
+
+%FIXME: Re-use an xobject across pages
 
 \begin{framed}
  \noindent\small\verb?cpdf -create-pdf AND -draw -bt -text "Page 1" -et?\\
