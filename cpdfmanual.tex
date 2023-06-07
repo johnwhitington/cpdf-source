@@ -4428,10 +4428,25 @@ In our examples, we have sometimes had to write the same operations multiple tim
 
 \section{Images}
   {\small\begin{framed}
-   \noindent\verb!-draw-jpeg! Load a JPEG from file and name it\\
-   \noindent\verb!-draw-png! Load a PNG from file and name it\\
-   \noindent\verb!-image! Draw an image which has already been loaded
+   \noindent\verb!-draw-jpeg <name>=<filename>! Load a JPEG from file and name it\\
+   \noindent\verb!-draw-png <name>=<filename>! Load a PNG from file and name it\\
+   \noindent\verb!-image <name>! Draw an image which has already been loaded
   \end{framed}}
+
+We can include a 24bit non-transparent and non-interlaced PNG, or any JPEG by using \texttt{-draw-jpeg} or \texttt{-draw-png} to load it and assign it a name. We can then use \texttt{-image} to use it at any point:
+
+\begin{framed}
+ \noindent\small\verb?cpdf -create-pdf AND -draw -draw-png A=sheet.png?\\
+ \noindent\small\verb?     -mscale "0 0 400 294" -image A -o out.pdf?
+\end{framed}
+
+\noindent Here is the result:
+
+\bigskip
+\fbox{\includegraphics[width=0.3\textwidth]{manualimages/png.pdf}}
+\bigskip
+
+\noindent You can see we had to scale by the width and height of the image to draw it at the size we expect.
 
 \section{Transparency}
   {\small\begin{framed}
@@ -4442,7 +4457,7 @@ In our examples, we have sometimes had to write the same operations multiple tim
 We can set fill and stroke transparencies, between 0 (fully transparent) and 1 (fully opaque):
 
 \begin{framed}
- \noindent\small\verb?cpdf -create-pdf AND -draw -fill-opacity 0.5"?\\
+ \noindent\small\verb?cpdf -create-pdf AND -draw -fill-opacity 0.5?\\
  \noindent\small\verb?-circle "250 300 150" -fill -circle "350 300 150" -fill?\\
  \noindent\small\verb?-o out.pdf?
 \end{framed}
@@ -4462,6 +4477,8 @@ We can set fill and stroke transparencies, between 0 (fully transparent) and 1 (
    \noindent\verb!-bt! Begin text\\
    \noindent\verb!-et! End text\\
    \noindent\verb!-text! Draw text\\
+   \noindent\verb!-font! Set font\\
+   \noindent\verb!-font-size! Set font size\\
    \noindent\verb!-stext! Draw text with \%specials\\
    \noindent\verb!-leading! Set leading\\
    \noindent\verb!-charspace! Set character spacing\\
@@ -4471,7 +4488,31 @@ We can set fill and stroke transparencies, between 0 (fully transparent) and 1 (
    \noindent\verb!-rise! Set text rise\\
    \noindent\verb!-nl! New line\end{framed}}
 
-URLs don't work in special text.
+We can draw text in a \textit{text section}, which must start with \texttt{-bt} and end with \texttt{-et}. For example:
+
+\begin{framed}
+ \noindent\small\verb?cpdf -create-pdf AND -draw -mtrans "50 50" -font Helvetica -font-size 144?\\
+ \noindent\small\verb?     -bt -text "Hello" -et -o out.pdf?
+\end{framed}
+
+\noindent Here is the result:
+
+\bigskip
+\fbox{\includegraphics[width=0.3\textwidth]{manualimages/text.pdf}}
+\bigskip
+
+\noindent If we use \texttt{-stext} instead of \texttt{-text} the usual special values from Chapter 8 (with the exception of URL links) may be used:
+
+\begin{framed}
+ \noindent\small\verb?cpdf -create-pdf AND -draw -mtrans "50 50" -font-size 144?\\
+ \noindent\small\verb?     -bt -stext "Page %Page" -et -o out.pdf?
+\end{framed}
+
+\noindent Now we see:
+
+\bigskip
+\fbox{\includegraphics[width=0.3\textwidth]{manualimages/stext.pdf}}
+\bigskip
 
 \section{The next page}
 
@@ -4481,8 +4522,6 @@ URLs don't work in special text.
   \end{framed}}
 
 The drawing operation \texttt{-newpage} creates a fresh page of the same dimensions as the last page of the document, and sets the drawing range to just that page. For example:
-
-%FIXME: Re-use an xobject across pages
 
 \begin{framed}
  \noindent\small\verb?cpdf -create-pdf AND -draw -bt -text "Page 1" -et?\\
