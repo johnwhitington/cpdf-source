@@ -2462,20 +2462,10 @@ specifies the size in points:
 
   \subsection{Colors}
 \index{color}
-  The \texttt{-color} option takes an RGB (3 values), CYMK (4 values), or Grey (1 value) color. Components range between 0 and 1. The following RGB colors are predefined:
-
-  \vspace{2mm}
-  \begin{tabular}{ll}
-    \textbf{Color} & \textbf{R, G, B} \\ \hline
-     white & 1, 1, 1\\
-     black & 0, 0, 0\\
-     red & 1, 0, 0\\
-     green & 0, 1, 0\\
-     blue & 0, 0, 1\\
-  \end{tabular}
+  The \texttt{-color} option takes an RGB (3 values), CYMK (4 values), or Grey (1 value) color. Components range between 0 and 1. All the standard web colours \url{https://www.w3.org/wiki/CSS/Properties/color/keywords} are provided as RGB components, and may be selected by name.
 
   \begin{framed}
-    \small\verb!cpdf -add-text "Hullo" -color "red" in.pdf -o out.pdf!
+    \small\verb!cpdf -add-text "Hullo" -color darkgrey in.pdf -o out.pdf!
     
     \vspace{1.5mm}
     \small\verb!cpdf -add-text "Hullo" -color "0.5 0.5 0.5" in.pdf -o out.pdf!
@@ -4307,8 +4297,8 @@ To avoid calculating the Bezier curves for a circle manually, \texttt{cpdf} can 
 
 \section{Path parameters}
   {\small\begin{framed}
-   \noindent\verb!-strokecol "g" | "r g b" | "c y m k"! Set stroke colour\\
-   \noindent\verb!-fillcol "g" | "r g b" | "c y m k"! Set fill colour\\
+   \noindent\verb!-strokecol "g" | "r g b" | "c y m k" | <namedcolour>! Set stroke colour\\
+   \noindent\verb!-fillcol "g" | "r g b" | "c y m k" | <namedcolour>! Set fill colour\\
    \noindent\verb!-thick n! Set stroke thickness\\
    \noindent\verb!-cap butt | round | square! Set cap\\
    \noindent\verb!-join miter | round | bevel! Set join\\
@@ -4316,7 +4306,7 @@ To avoid calculating the Bezier curves for a circle manually, \texttt{cpdf} can 
    \noindent\verb!-dash <pattern>! Set dash pattern
   \end{framed}}
 
-We can set stroke and fill colours for our paths, either as greyscale (one component), RGB (three components) or CYMK (four components):
+We can set stroke and fill colours for our paths, either as greyscale (one component), RGB (three components) or CYMK (four components), or by naming a colour as described in Chapter 8:
 
 \begin{framed}
  \noindent\small\verb?cpdf -create-pdf AND -draw -circle "200 200 100" -thick 20?\\
