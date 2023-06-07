@@ -1214,7 +1214,9 @@ let settopleft n =
   let coord =
     match Cpdfcoord.parse_coordinate empty n with
     | (a, b) -> Cpdfposition.TopLeft (a, b)
-    | exception _ -> Cpdfposition.TopLeft (Cpdfcoord.parse_single_number empty n, 0.)
+    | exception _ ->
+        let x = Cpdfcoord.parse_single_number empty n in
+          Cpdfposition.TopLeft (x, x)
   in
     args.position <- coord;
     args.justification <- Cpdfaddtext.LeftJustify
@@ -1223,7 +1225,9 @@ let settopright n =
   let coord =
     match Cpdfcoord.parse_coordinate empty n with
     | (a, b) -> Cpdfposition.TopRight (a, b)
-    | exception _ -> Cpdfposition.TopRight (Cpdfcoord.parse_single_number empty n, 0.)
+    | exception _ ->
+        let x = Cpdfcoord.parse_single_number empty n in
+          Cpdfposition.TopRight (x, x)
   in
     args.position <- coord;
     args.justification <- Cpdfaddtext.RightJustify
@@ -1236,7 +1240,9 @@ let setbottomleft n =
   let coord =
     match Cpdfcoord.parse_coordinate empty n with
     | (a, b) -> Cpdfposition.BottomLeft (a, b)
-    | exception _ -> Cpdfposition.BottomLeft (Cpdfcoord.parse_single_number empty n, 0.)
+    | exception _ ->
+        let x = Cpdfcoord.parse_single_number empty n in
+          Cpdfposition.BottomLeft (x, x)
   in
     args.position <- coord;
     args.justification <- Cpdfaddtext.LeftJustify
@@ -1249,7 +1255,9 @@ let setbottomright n =
   let coord =
     match Cpdfcoord.parse_coordinate empty n with
     | (a, b) -> Cpdfposition.BottomRight (a, b)
-    | exception _ -> Cpdfposition.BottomRight (Cpdfcoord.parse_single_number empty n, 0.)
+    | exception _ ->
+        let x = Cpdfcoord.parse_single_number empty n in
+          Cpdfposition.BottomRight (x, x)
   in
     args.position <- coord;
     args.justification <- Cpdfaddtext.RightJustify
