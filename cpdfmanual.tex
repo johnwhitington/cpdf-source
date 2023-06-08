@@ -4100,7 +4100,7 @@ For PNG files, the file must be 24bit RGB with no transparency and no interlacin
    \noindent \textsc{Building and showing paths}\\
    \noindent\verb!-rect! Draw rectangle\\
    \noindent\verb!-to! Move to\\
-   \noindent\verb!-line! Add line to\\
+   \noindent\verb!-line! Add line to path\\
    \noindent\verb!-bez! Add Bezier curve to path\\
    \noindent\verb!-bez23! Add Bezier v-op to path\\
    \noindent\verb!-bez13! Add Bezier y-op to path\\
@@ -4189,8 +4189,6 @@ We can draw on an existing PDF (or a new one created with \texttt{-create-pdf} f
 
 \noindent The first example builds a new A4 portrait PDF with one page, and writes Hello in the default 12pt Times Roman font at the bottom left. The second does the same, but for every page of an existing PDF.
 
-Coordinates in a PDF file have the origin $(0, 0)$ at the bottom-left of the page. All units are in points (1/72 inch).
-
 \section{Building and showing paths}
 
   {\small\begin{framed}
@@ -4217,7 +4215,7 @@ Coordinates in a PDF file have the origin $(0, 0)$ at the bottom-left of the pag
  \noindent\small\verb?     -o out.pdf?
 \end{framed}
 
-\noindent We use \texttt{-to} to start the path at a given coordinate, \texttt{-line} to extend the path with each line, and then \texttt{-stroke} to stroke the path. This creates the following PDF:
+\noindent We use \texttt{-to} to start the path at a given coordinate, \texttt{-line} to extend the path with each line, and then \texttt{-stroke} to stroke the path. Coordinates in a PDF file have the origin $(0, 0)$ at the bottom-left of the page. All units are in points (1/72 inch). This creates the following PDF:
 
 \bigskip
 \fbox{\includegraphics[width=0.3\textwidth]{manualimages/line.pdf}}
@@ -4299,10 +4297,10 @@ To avoid calculating the Bezier curves for a circle manually, \texttt{cpdf} can 
   {\small\begin{framed}
    \noindent\verb!-strokecol "g" | "r g b" | "c y m k" | <namedcolour>! Set stroke colour\\
    \noindent\verb!-fillcol "g" | "r g b" | "c y m k" | <namedcolour>! Set fill colour\\
-   \noindent\verb!-thick n! Set stroke thickness\\
+   \noindent\verb!-thick <n>! Set stroke thickness\\
    \noindent\verb!-cap butt | round | square! Set cap\\
    \noindent\verb!-join miter | round | bevel! Set join\\
-   \noindent\verb!-miter n! Set miter limit\\
+   \noindent\verb!-miter <n>! Set miter limit\\
    \noindent\verb!-dash <pattern>! Set dash pattern
   \end{framed}}
 
@@ -4323,9 +4321,9 @@ We can set stroke and fill colours for our paths, either as greyscale (one compo
 
 \begin{framed}
  \noindent\small\verb?cpdf -create-pdf AND -draw -to "100 100"?\\
- \noindent\small\verb?-join round -cap round -thick 40?\\
- \noindent\small\verb?-line "200 200" -line "220 100" -stroke?\\
- \noindent\small\verb?-o out.pdf?
+ \noindent\small\verb?     -join round -cap round -thick 40?\\
+ \noindent\small\verb?     -line "200 200" -line "220 100" -stroke?\\
+ \noindent\small\verb?     -o out.pdf?
 \end{framed}
 
 \noindent Then we see:
@@ -4340,8 +4338,8 @@ Lines may have dash patterns. A dash pattern consists of one or more numbers. Al
 
 \begin{framed}
  \noindent\small\verb?cpdf -create-pdf AND -draw -to "100 100"?\\
- \noindent\small\verb?-dash "30 20 0" -thick 20 -line "400 300" -stroke?\\
- \noindent\small\verb?-o out.pdf?
+ \noindent\small\verb?     -dash "30 20 0" -thick 20 -line "400 300" -stroke?\\
+ \noindent\small\verb?     -o out.pdf?
 \end{framed}
 
 \noindent Here is the result:
@@ -4382,10 +4380,10 @@ PDF maintains a stack of graphics state, which we can manipulate with \texttt{-p
 \begin{framed}
  \noindent\small\verb?cpdf -create-pdf AND -draw -circle "200 200 100" -stroke -push?\\
  \noindent\small\verb?     -mrot "0 0 -0.3" -mscale "0 0 1.5 2" -circle "200 200 100" -stroke?\\
- \noindent\small\verb?      -pop -circle "200 200 50" -fill -o out.pdf?
+ \noindent\small\verb?     -pop -circle "200 200 50" -fill -o out.pdf?
 \end{framed}
 
-This is the result. See how the graphics transformation is undone when \texttt{-push} is invoked:
+\noindent This is the result. See how the graphics transformation is undone when \texttt{-push} is invoked:
 
 \bigskip
 \fbox{\includegraphics[width=0.3\textwidth]{manualimages/matrix.pdf}}
@@ -4394,10 +4392,10 @@ This is the result. See how the graphics transformation is undone when \texttt{-
 \section{Re-use with XObjects}
   {\small\begin{framed}
    \vspace{1.5mm}
-   \noindent\verb!-xobj-bbox! Specify the bounding box for xobjects\\
-   \noindent\verb!-xobj! Begin saving a sequence of graphics operators\\
+   \noindent\verb!-xobj-bbox "x y w h"! Specify the bounding box for xobjects\\
+   \noindent\verb!-xobj <name>! Begin saving a sequence of graphics operators\\
    \noindent\verb!-end-xobj! End saving a sequence of graphics operators\\
-   \noindent\verb!-use! Use a saved sequence of graphics operators
+   \noindent\verb!-use <name>! Use a saved sequence of graphics operators
   \end{framed}}
 
 In our examples, we have sometimes had to write the same operations multiple times. To avoid this, PDF has a mechanism called an XObject. This allows us to save a set of operations for re-use in different contexts, or on different pages. For example, here we store an XObject which just strokes a circle. We then \texttt{-use} it once, and alter the colour and transformation matrix and \texttt{-use} it again.
@@ -4440,16 +4438,16 @@ We can include a 24bit non-transparent and non-interlaced PNG, or any JPEG by us
 
 \section{Transparency}
   {\small\begin{framed}
-   \noindent\verb!-fill-opacity! Set opacity\\
-   \noindent\verb!-stroke-opacity! Set stroke opacity
+   \noindent\verb!-fill-opacity <n>! Set opacity\\
+   \noindent\verb!-stroke-opacity <n>! Set stroke opacity
   \end{framed}}
 
 We can set fill and stroke transparencies, between 0 (fully transparent) and 1 (fully opaque):
 
 \begin{framed}
  \noindent\small\verb?cpdf -create-pdf AND -draw -fill-opacity 0.5?\\
- \noindent\small\verb?-circle "250 300 150" -fill -circle "350 300 150" -fill?\\
- \noindent\small\verb?-o out.pdf?
+ \noindent\small\verb?     -circle "250 300 150" -fill -circle "350 300 150" -fill?\\
+ \noindent\small\verb?     -o out.pdf?
 \end{framed}
 
 \noindent Here is the result:
@@ -4466,16 +4464,16 @@ We can set fill and stroke transparencies, between 0 (fully transparent) and 1 (
   {\small\begin{framed}
    \noindent\verb!-bt! Begin text\\
    \noindent\verb!-et! End text\\
-   \noindent\verb!-text! Draw text\\
-   \noindent\verb!-font! Set font\\
-   \noindent\verb!-font-size! Set font size\\
-   \noindent\verb!-stext! Draw text with \%specials\\
-   \noindent\verb!-leading! Set leading\\
-   \noindent\verb!-charspace! Set character spacing\\
-   \noindent\verb!-wordspace! Set word space\\
-   \noindent\verb!-textscale! Set text scale\\
-   \noindent\verb!-rendermode! Set text rendering mode\\
-   \noindent\verb!-rise! Set text rise\\
+   \noindent\verb!-text <text>! Draw text\\
+   \noindent\verb!-stext <text>! Draw text with \%specials\\
+   \noindent\verb!-font <fontname>! Set font\\
+   \noindent\verb!-font-size <n>! Set font size\\
+   \noindent\verb!-leading <n>! Set leading\\
+   \noindent\verb!-charspace <n>! Set character spacing\\
+   \noindent\verb!-wordspace <n>! Set word space\\
+   \noindent\verb!-textscale <n>! Set text scale\\
+   \noindent\verb!-rendermode <n>! Set text rendering mode\\
+   \noindent\verb!-rise <n>! Set text rise\\
    \noindent\verb!-nl! New line\end{framed}}
 
 We can draw text in a \textit{text section}, which must start with \texttt{-bt} and end with \texttt{-et}. For example:
@@ -4509,7 +4507,7 @@ We can draw text in a \textit{text section}, which must start with \texttt{-bt} 
 \begin{framed}
  \noindent\small\verb?cpdf -create-pdf AND -draw -mtrans "10 20" -font-size 72?\\
  \noindent\small\verb?     -bt -text "Different " -font Times-BoldItalic -text "fonts"?\\
- \noindent\small\verb?     -font-size 36 -text " and sizes" -et -o out.pdf?\\
+ \noindent\small\verb?     -font-size 36 -text " and sizes" -et -o out.pdf?
 \end{framed}
 
 \noindent Here is the result:
@@ -4518,13 +4516,13 @@ We can draw text in a \textit{text section}, which must start with \texttt{-bt} 
 \fbox{\includegraphics[width=0.3\textwidth]{manualimages/fonts.pdf}}
 \bigskip
 
-\noindent We can alter the character space, word space, horizontal scaling (100 = no scaling, <100 shrink, >100 stretch), and text rise:
+\noindent We can alter the character space, word space, horizontal scaling (100 = no scaling, less than 100 shrink, more than 100 stretch), and text rise:
 
 \begin{framed}
  \noindent\small\verb?cpdf -create-pdf AND -draw -mtrans "10 20" -font-size 72?\\
  \noindent\small\verb?     -bt -textscale 75 -charspace 5 -wordspace 20 -text "Different "?\\
  \noindent\small\verb?     -font Times-BoldItalic -text "fonts" -font-size 36 -rise 40?\\
- \noindent\small\verb?     -text " and sizes" -et -o out.pdf?\\
+ \noindent\small\verb?     -text " and sizes" -et -o out.pdf? 
 \end{framed}
 
 \noindent Now we see:
