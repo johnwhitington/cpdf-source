@@ -4504,6 +4504,85 @@ We can draw text in a \textit{text section}, which must start with \texttt{-bt} 
 \fbox{\includegraphics[width=0.3\textwidth]{manualimages/stext.pdf}}
 \bigskip
 
+\noindent We can use \texttt{-text} multiple times, interspersing operators which change the text state, such as font and font size:
+
+\begin{framed}
+ \noindent\small\verb?cpdf -create-pdf AND -draw -mtrans "10 20" -font-size 72?\\
+ \noindent\small\verb?     -bt -text "Different " -font Times-BoldItalic -text "fonts"?\\
+ \noindent\small\verb?     -font-size 36 -text " and sizes" -et -o out.pdf?\\
+\end{framed}
+
+\noindent Here is the result:
+
+\bigskip
+\fbox{\includegraphics[width=0.3\textwidth]{manualimages/fonts.pdf}}
+\bigskip
+
+\noindent We can alter the character space, word space, horizontal scaling (100 = no scaling, <100 shrink, >100 stretch), and text rise:
+
+\begin{framed}
+ \noindent\small\verb?cpdf -create-pdf AND -draw -mtrans "10 20" -font-size 72?\\
+ \noindent\small\verb?     -bt -textscale 75 -charspace 5 -wordspace 20 -text "Different "?\\
+ \noindent\small\verb?     -font Times-BoldItalic -text "fonts" -font-size 36 -rise 40?\\
+ \noindent\small\verb?     -text " and sizes" -et -o out.pdf?\\
+\end{framed}
+
+\noindent Now we see:
+
+\bigskip
+\fbox{\includegraphics[width=0.3\textwidth]{manualimages/fontparams.pdf}}
+\bigskip
+
+\noindent Text may appear on multiple lines. We set up the line spacing with \texttt{-leading} then make new lines with \texttt{-nl}:
+
+\begin{framed}
+ \noindent\small\verb?cpdf -create-pdf AND -draw -mtrans "100 200" -font-size 50?\\
+ \noindent\small\verb?     -leading 55 -bt -text "This is" -nl -text "on multiple"?\\
+ \noindent\small\verb?     -nl -text "lines" -et -o out.pdf?
+\end{framed}
+
+\noindent Now we have:
+
+\bigskip
+\fbox{\includegraphics[width=0.3\textwidth]{manualimages/lines.pdf}}
+\bigskip
+
+\noindent When composing text, we may need to find the width of a piece of text to see where to break it, or for right alignment. We can use \texttt{-textwidth} for this:
+
+\begin{framed}
+ \noindent\small\verb?cpdf -font Times-Roman -font-size 20 -text-width "Hello"?
+\end{framed}
+
+\noindent The result is in points.
+
+We can change the text rendering mode to show outline text or, in this example, to use text as a clipping region:
+
+\begin{framed}
+ \noindent\small\verb?cpdf -create-pdf AND -draw -rendermode 7 -mtrans "100 200" -font-size 50?\\
+ \noindent\small\verb?     -leading 55 -bt -text "This is" -nl -text "on multiple"?\\
+ \noindent\small\verb?     -nl -text "lines" -et -circle "100 0 100" -fill -o out.pdf?
+\end{framed}
+
+\bigskip
+\fbox{\includegraphics[width=0.3\textwidth]{manualimages/textclip.pdf}}
+\bigskip
+
+
+\noindent Here are the text rendering modes:
+
+\bigskip
+\begin{tabular}{ll}
+0 & Fill text (default)\\
+1 & Stroke text\\
+2 & Fill, then stroke text\\
+3 & Neither fill nor stroke (invisible)\\
+4 & Fill text and add to path for clipping\\
+5 & Stroke text and add to path for clipping\\
+6 & Fill, then stroke text and add to path for clipping\\
+7 & Add text to path for clipping
+\end{tabular}
+\bigskip
+
 \section{The next page}
 
   {\small\begin{framed}
@@ -4520,6 +4599,7 @@ The drawing operation \texttt{-newpage} creates a fresh page of the same dimensi
 \end{framed}
 
 \noindent This will create a two page PDF with "Page 1" written on page one and "Page 2" written on page two.
+
 
 \clearpage\pagestyle{empty}
 %We wanted to call this "Chapter M", but the following commands messed up the PDF bookmarks, so this chapter will simply have to float for now, until we can return to this problem.
