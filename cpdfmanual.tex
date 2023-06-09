@@ -319,7 +319,21 @@ Just a few of the facilities provided by the Coherent PDF Command Line Tools. Se
 
 \section*{\hyperref[chap:18]{Chapter 18: Drawing on PDFs}}
 
+\begin{framed}
+ \noindent\small\verb?cpdf -create-pdf AND -draw -to "100 100" -line "400 400" -stroke?\\
+ \noindent\small\verb?     -line "400 100" -close -fill?\\
+ \noindent\small\verb?     -o out.pdf?
+\end{framed}
 
+\noindent Create a new PDF and draw a filled triangle on it.
+
+\begin{framed}
+ \noindent\small\verb?cpdf -create-pdf AND -draw -mtrans "100 200" -font-size 50?\\
+ \noindent\small\verb?     -leading 55 -bt -text "This is" -nl -text "on multiple"?\\
+ \noindent\small\verb?     -nl -text "lines" -et -o out.pdf?
+\end{framed}
+
+\noindent Create a new PDF and draw three lines of text on it.
 
 \section*{\hyperref[chap:misc]{Chapter 19: Miscellaneous}}
 
