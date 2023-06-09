@@ -4355,10 +4355,10 @@ Lines may have dash patterns. A dash pattern consists of one or more numbers. Al
    \noindent\verb!-pop! Pop graphics stack\\
    \noindent\verb!-matrix "a b c d e f"! Append to graphics matrix\\
    \noindent\verb!-mtrans "tx ty"! Translate the graphics matrix\\
-   \noindent\verb!-mrot "x y a"! Rotate the graphics matrix\\
-   \noindent\verb!-mscale "sx sy"! Scale the graphics matrix\\
-   \noindent\verb!-mshearx "x y a"! Shear the graphics matrix in X\\
-   \noindent\verb!-msheary "x y a"! Shear the graphics matrix in Y
+   \noindent\verb!-mrot "x y a"! Rotate the graphics matrix counterclockwise around \texttt{(x, y)} by angle \texttt{a}\\
+   \noindent\verb!-mscale "x y sx sy"! Scale the graphics matrix around \texttt{x, y}\\
+   \noindent\verb!-mshearx "x y a"! Shear the graphics matrix in X around \texttt{(x, y)} by angle \texttt{a}\\
+   \noindent\verb!-msheary "x y a"! Shear the graphics matrix in Y around \texttt{(x, y)} by angle \texttt{a}
   \end{framed}}
 
 PDF maintains a stack of graphics state, which we can manipulate with \texttt{-push} which stores the current state, then modify the state for our own purposes, and then use \texttt{-pop} to restore the previous state. Such invocations may be nested. Here is a simple example:
@@ -4388,6 +4388,8 @@ PDF maintains a stack of graphics state, which we can manipulate with \texttt{-p
 \bigskip
 \fbox{\includegraphics[width=0.3\textwidth]{manualimages/matrix.pdf}}
 \bigskip
+
+\noindent This is important because, in the absence of \texttt{-push} and \texttt{-pop} there would be no way to reverse the effect of a graphics matrix modification except to manually calculate its inverse and apply it.
 
 \section{Re-use with XObjects}
   {\small\begin{framed}
