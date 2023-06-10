@@ -2307,7 +2307,7 @@ as the length of the ``under'' file. For instance:
 file. For best results, remove any rotation differences in the two files using
 \texttt{-upright} (see above) first.
 
-\noindent The \texttt{-relative-to-cropbox} option takes the positioning command to be relative to the crop box of each page rather than the media box.
+The \texttt{-relative-to-cropbox} option takes the positioning command to be relative to the crop box of each page rather than the media box.
 
   \section{Stamp Text, Dates and Times.}
 \index{date}
@@ -2434,11 +2434,7 @@ contains pages with a non-zero viewing rotation (to silence the rotation warning
 pre-processing the document with \texttt{-upright} (see chapter 3).
    
 The \texttt{-relative-to-cropbox} modifier can be added to the command line to
-make these measurements relative to the crop box instead of the media box.
-
-The default position is equivalent to \texttt{-topleft 100}.
-
-The \texttt{-midline} option may be added to specify that the positioning
+make these measurements relative to the crop box instead of the media box. The \texttt{-midline} option may be added to specify that the positioning
 commands above are to be considered relative to the midline of the text, rather
 than its baseline. Similarly, the \texttt{-topline} option may be used to specify that the position is taken relative to the top of the text.
 
@@ -2570,7 +2566,7 @@ the character in the PDF WinAnsiEncoding Latin 1 Code. The full table is
 included in Appendix D of the Adobe PDF Reference Manual, which is available at
 \url{https://wwwimages2.adobe.com/content/dam/acom/en/devnet/pdf/pdfs/PDF32000_2008.pdf}. For example, a German sharp s (\ss) may be introduced by \verb!\337!. \textit{This functionality was withdrawn as of version 2.6})
 
-\section{Stamping Graphics}
+\section{Stamping Rectangles}
 
 A rectangle may be placed on one or more pages by using the \texttt{-add-rectangle <size>} command. Most of the options discussed above for text placement apply in the same way. For example:
 
