@@ -1978,7 +1978,7 @@ By using \texttt{-list-bookmarks-json} instead, the bookmarks are formatted as a
 }
 \end{verbatim}
 
-See chapter 15 for more details of cpdf's JSON formatting. Bookmark text in JSON bookmarks, however, is in UTF8 for ease of use.
+\noindent See Chapter 15 for more details of cpdf's JSON formatting. There are two differences here: bookmark text is always UTF8, and the numbers for \texttt{level} and \texttt{page} are plain, rather than begin surrounded with \texttt{ \{ "I": \}}.
 
 \subsection{Destinations}
 
@@ -2034,7 +2034,7 @@ Bookmarks in JSON format (see above) may be added with \texttt{-add-bookmarks-js
    \small\verb!cpdf -add-bookmarks-json bookmarks.json in.pdf -o out.pdf!
   \end{framed}
 
-Remember that strings in JSON bookmark files are in UTF8, rather than as native PDF strings.
+\noindent Remember that strings in JSON bookmark files are in UTF8.
 
 \section{Opening bookmarks}
 \index{bookmarks!opening at level}
@@ -2055,20 +2055,20 @@ Cpdf can automatically generate a table of contents from existing bookmarks, add
    \small\verb!cpdf -table-of-contents in.pdf -o out.pdf!
   \end{framed}
 
-The page(s) added will have the same dimensions, media and crop boxes as the first page of the original file. The default title is ``Table of Contents'', though this may be changed:
+\noindent The page(s) added will have the same dimensions, media and crop boxes as the first page of the original file. The default title is ``Table of Contents'', though this may be changed:
 
   \begin{framed}
    \small\verb!cpdf -table-of-contents -toc-title "Contents" in.pdf -o out.pdf!
   \end{framed}
 
-An empty title removes the title. The sequence \texttt{\textbackslash n} may be used to split the title into lines. The default font is 12pt Times Roman (and 24pt for the title). The base font and size may be changed with \texttt{-font} and \texttt{-font-size} (see chapter 8 for full details):
+\noindent An empty title removes the title. The sequence \texttt{\textbackslash n} may be used to split the title into lines. The default font is 12pt Times Roman (and 24pt for the title). The base font and size may be changed with \texttt{-font} and \texttt{-font-size} (see chapter 8 for full details):
 
   \begin{framed}
    \small\verb!cpdf -table-of-contents -font "Courier-Bold" -font-size 8!\\
    \small\verb!        in.pdf -o out.pdf!
   \end{framed}
 
-By default, an entry for the new table of contents will be added to the document's bookmarks. To suppress this behaviour, add \texttt{-toc-no-bookmark}:
+\noindent By default, an entry for the new table of contents will be added to the document's bookmarks. To suppress this behaviour, add \texttt{-toc-no-bookmark}:
 
   \begin{framed}
    \small\verb!cpdf -table-of-contents -toc-no-bookmark in.pdf -o out.pdf!
