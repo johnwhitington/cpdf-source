@@ -97,7 +97,7 @@ Excel are registered trademarks of Microsoft Corporation.
 \pagestyle{plain}
 \chapter*{Quickstart Examples}
 
-Just a few of the facilities provided by the Coherent PDF Command Line Tools. See each chapter for more commands and full details.
+These examples demonstrate just a few of the facilities provided by the Coherent PDF Command Line Tools. See each chapter for more commands and full details.
 
 \section*{\hyperref[chap:1]{Chapter 1: Basic Usage}}
 
@@ -110,7 +110,7 @@ Just a few of the facilities provided by the Coherent PDF Command Line Tools. Se
                   
 \noindent Select the even pages (2, 4, 6...) from \texttt{in.pdf} and write those pages to \texttt{out.pdf}.
 
-\begin{framed}\noindent\texttt{cpdf -merge in.pdf in2.pdf AND -add-text "Copyright 2021"\\\phantom{\ \ \ \ } -o out.pdf}\end{framed}
+\begin{framed}\noindent\texttt{cpdf -merge in.pdf in2.pdf AND -add-text "Copyright 2023"\\\phantom{\ \ \ \ } -o out.pdf}\end{framed}
 
 \noindent Using \texttt{AND} to perform several operations in order, here merging two files together and adding a copyright stamp to every page.
 
@@ -183,7 +183,7 @@ Just a few of the facilities provided by the Coherent PDF Command Line Tools. Se
 
 \section*{\hyperref[chap:6]{Chapter 6: Bookmarks}}
 
-\begin{framed}\noindent\texttt{cpdf -list-bookmarks in.pdf}\end{framed}
+\begin{framed}\noindent\texttt{cpdf -list-bookmarks -utf8 in.pdf}\end{framed}
 
 \noindent List the bookmarks in \texttt{in.pdf}. 
 
@@ -191,6 +191,8 @@ Just a few of the facilities provided by the Coherent PDF Command Line Tools. Se
 
 \noindent Add bookmarks in the same form from a prepared file \texttt{bookmarks.txt} to \texttt{in.pdf}, writing to \texttt{out.pdf}.
 
+\medskip
+\noindent(JSON alternatives also available.)
 
 \section*{\hyperref[chap:7]{Chapter 7: Presentations}}
 
@@ -210,7 +212,7 @@ Just a few of the facilities provided by the Coherent PDF Command Line Tools. Se
 
 \section*{\hyperref[chap:9]{Chapter 9: Multipage Facilities}}
 
-\begin{framed}\noindent\texttt{cpdf -twoup-stack in.pdf -o out.pdf}\end{framed}
+\begin{framed}\noindent\texttt{cpdf -impose-xy "2 1" in.pdf -o out.pdf}\end{framed}
 
 \noindent Two up impose the file \texttt{in.pdf}, writing to \texttt{out.pdf}.
 
@@ -220,17 +222,17 @@ Just a few of the facilities provided by the Coherent PDF Command Line Tools. Se
 
 \section*{\hyperref[chap:10]{Chapter 10: Annotations}}
 
-\begin{framed}\noindent\texttt{cpdf -list-annotations in.pdf}\end{framed}
+\begin{framed}\noindent\texttt{cpdf -list-annotations-json in.pdf > out.json}\end{framed}
 
-\noindent List the annotations in a file \texttt{in.pdf} to standard output.
+\noindent List the annotations in a file \texttt{in.pdf} to standard output, redirecting to file \texttt{out.json}.
 
-\begin{framed}\noindent\texttt{cpdf -copy-annotations from.pdf in.pdf -o out.pdf}\end{framed}
+\begin{framed}\noindent\texttt{cpdf -set-annotations-json out.json in.pdf -o out.pdf}\end{framed}
 
-\noindent Copy the annotations from \texttt{from.pdf} to \texttt{in.pdf}, writing to \texttt{out.pdf}.
+\noindent Add the annotations from a JSON annotations file to \texttt{in.pdf}, writing to \texttt{out.pdf}.
 
 \section*{\hyperref[chap:11]{Chapter 11: Document Information and Metadata}}
 
-\begin{framed}\noindent\texttt{cpdf -set-title "The New Title" in.pdf -o out.pdf}\end{framed}
+\begin{framed}\noindent\texttt{cpdf -set-title "The New Title" -also-set-xmp in.pdf -o out.pdf}\end{framed}
 
 \noindent Set the document title of \texttt{in.pdf}. writing to \texttt{out.pdf}.
 
@@ -259,6 +261,10 @@ Just a few of the facilities provided by the Coherent PDF Command Line Tools. Se
 \begin{framed}\noindent\texttt{cpdf -remove-files in.pdf -o out.pdf}\end{framed}
 
 \noindent Remove any attachments from \texttt{in.pdf}, writing to \texttt{out.pdf}.
+
+\begin{framed}\noindent\texttt{cpdf -dump-attachments in.pdf -o /home/fred/attachments}\end{framed}
+
+\noindent Dump attachments to file, given the directory to put them in.
 
 \section*{\hyperref[chap:13]{Chapter 13: Working with Images}}
 
@@ -3472,7 +3478,7 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 
 \section{Extracting images}
 
-Cpdf can extract the raster images to a given location. JPEG, JPEG2000 and JBIG2 images are extracted directly. Other images are written as PNGs, processed with either ImageMagick's ``magick'' command, or NetPBM's ``pnmtopng'' program, whichever is installed.
+Cpdf can extract the raster images to a given location. JPEG and JPEG2000 images are extracted directly. Other images are written as PNGs, processed with either ImageMagick's ``magick'' command, or NetPBM's ``pnmtopng'' program, whichever is installed. JBIG2 image extraction is not yet supported.
 
   \begin{framed}
   \noindent\small\verb@cpdf -extract-images in.pdf [<range>] [-im <path>] [-p2p <path]@
