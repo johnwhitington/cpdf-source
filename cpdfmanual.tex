@@ -2686,16 +2686,16 @@ instance, to add a clean page between chapters of a document.)
   \end{framed}
   \noindent The dimensions of the padded page are derived from the boxes (media box, crop box etc.) of the page after or before which the padding is to be applied.
 
-  The \verb!-pad-every n! operation places a blank page after every n pages, excluding any last one. For example\ldots
+  The \verb!-pad-every n! operation places a blank page after every n pages, excluding any last one. For example on a 9 page document this command adds a blank page after pages 3 and 6:
   \begin{framed}
     \small\verb!cpdf -pad-every 3 in.pdf -o out.pdf!
  
     \vspace{2.5mm}
     \noindent Add a blank page after every three pages
   \end{framed}
-  \noindent\ldots on a 9 page document adds a blank page after pages 3 and 6.
+  
 
-In all three of these operations, one may specify \texttt{-pad-with} providing a (usually one-page)  PDF file to be used instead of a blank page. For example, a page saying ``This page left intentionally blank''.
+\noindent In all three of these operations, one may specify \texttt{-pad-with} providing a (usually one-page)  PDF file to be used instead of a blank page. For example, a page saying ``This page left intentionally blank''.
 
   The \verb!-pad-multiple n! operation adds blank pages so the document has a multiple of \verb!n! pages. For example:
   \begin{framed}
@@ -2732,9 +2732,7 @@ Imposition is the act of putting two or more pages of an input document onto eac
     \noindent Impose 3 across and 4 down on to new pages of 3 times the width and 4 times the height of the input ones. 
   \end{framed}
 
-The $x$ value for \texttt{-impose-xy} may be set to zero to indicate an infinitely-wide page; the $y$ value to indicate an infinitely-long one.
-
-In both cases, the pages in the input file are assumed to be of the same dimensions.
+\noindent The $x$ value for \texttt{-impose-xy} may be set to zero to indicate an infinitely-wide page; the $y$ value to indicate an infinitely-long one. In both cases, the pages in the input file are assumed to be of the same dimensions.
 
 The following options may be used to modify the output:
 
@@ -2748,7 +2746,7 @@ The following options may be used to modify the output:
 
 \end{itemize}
 
-To impose with rotated pages, for example to put two A4 portrait pages two-up on an A3 landscape page, rotate them prior to imposition.
+\noindent To impose with rotated pages, for example to put two A4 portrait pages two-up on an A3 landscape page, rotate them prior to imposition.
 
 Two other ways of putting multiple pages on a single page remain from earlier versions of \texttt{cpdf} which lacked a general imposition operation.  The \texttt{-twoup-stack} operation puts two logical pages on each physical
 page, rotating them 90 degrees to do so. The new mediabox is thus larger. The \texttt{-twoup} operation does the same, but scales the new sides down so
@@ -2767,7 +2765,7 @@ that the media box is unchanged.
     \noindent Impose a document two-up on a larger page by rotation. 
   \end{framed}
  
-NB: For all imposition options, see also discussion of \texttt{-fast} in Section \ref{fast}.
+\noindent NB: For all imposition options, see also discussion of \texttt{-fast} in Section \ref{fast}.
 
 
 \begin{cpdflib}
