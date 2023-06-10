@@ -1196,9 +1196,7 @@ the input pages in the order specified on the command line. Actually, the
 
   \end{framed}
 
-\noindent Merge maintains and merges bookmarks, named destinations, annotations, tagged PDF information, and so on.
-
-PDF features which cannot be merged are retained if they are from
+\noindent Merge maintains and merges bookmarks, named destinations, annotations, tagged PDF information, and so on. PDF features which cannot be merged are retained if they are from
 the document which first exhibits that feature.
 
 The \texttt{-collate} option collates pages: that is to say, it takes the first page from the first document and its range, then the first page from the second document and its range and so on. When all first pages have been taken, it begins on the second from each range, and so on.\index{pages!collate}\index{collation}
@@ -1265,7 +1263,7 @@ and so on. So \texttt{-split-bookmarks 1} creates breaks on level 0 and level
 \texttt{out002.pdf} on bookmark boundaries.
 
   \end{framed}
-\noindent Now, there may be many bookmarks on a single page (for instance, if
+\noindent There may be many bookmarks on a single page (for instance, if
 paragraphs are bookmarked or there are two subsections on one page). The splits
 calculated by \texttt{-split-bookmarks} ensure that each page appears in only
 one of the output files.
