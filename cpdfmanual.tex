@@ -1,3 +1,4 @@
+%FIXME: FIXMEs
 \documentclass{book}
 % Edit here to produce cpdfmanual.pdf, cpdflibmanual.pdf, pycpdfmanual.pdf,
 % dotnetcpdflibmanual.pdf, jcpdflibmanual.pdf jscpdflibmanual.pdf etc.
@@ -992,20 +993,20 @@ progress is shown on \verb!stderr! (Standard Error):
 \begin{framed}
 \noindent\small\verb!cpdf -gs gs -gs-malformed in.pdf -o out.pdf!\end{framed}
 
-\noindent To suppress the output of \texttt{gs} use the \texttt{-gs-quiet} option.
-
-If the malformity lies inside an individual page of the PDF, rather than in its gross structure, \texttt{cpdf} may appear to succeed in reconstruction, only to fail when processing a page (e.g when adding text). To force the use of \texttt{gs} to pre-process such files so cpdf cannot fail on them, use \texttt{-gs\--malformed\--force}:
+To suppress the output of \texttt{gs} use the \texttt{-gs-quiet} option. If the malformity lies inside an individual page of the PDF, rather than in its gross structure, \texttt{cpdf} may appear to succeed in reconstruction, only to fail when processing a page (e.g when adding text). To force the use of \texttt{gs} to pre-process such files so cpdf cannot fail on them, use \texttt{-gs\--malformed\--force}:
 
 \begin{framed}
 \noindent\small\verb!cpdf in.pdf -gs gs -gs-malformed-force -o out.pdf [-gs-quiet]!\end{framed}
 
-\noindent The command line for \texttt{-gs-malformed-force} must be of \textit{precisely} this form. Sometimes, on the other hand, we might wish \texttt{cpdf} to fail immediately on any malformed file, rather than try its own reconstruction process. The option \texttt{-error-on-malformed} achieves this. \textit{Note: Use of these commands with \texttt{-gs} is a last resort; they may strip some metadata from PDF files.}
+\noindent The command line for \texttt{-gs-malformed-force} must be of \textit{precisely} this form. Sometimes, on the other hand, we might wish \texttt{cpdf} to fail immediately on any malformed file, rather than try its own reconstruction process. The option \texttt{-error-on-malformed} achieves this.
 
-Sometimes (old, pre-ISO standardisation) files can be technically well-formed but use inefficient PDF
-constructs.  If you are sure the input files you are using are
-well formed, the \texttt{-fast} option may be added to the command line (or, if
+
+\begin{framed}\textit{Note: Use of these commands with \texttt{-gs} is a last resort; they may strip some metadata from PDF files.}\end{framed}
+
+Sometimes old, pre-ISO standardisation files can be technically well-formed but use inefficient PDF constructs.  If you are sure the input files you are using are
+modern ISO-compliant PDFs, the \texttt{-fast} option may be added to the command line (or, if
 using \texttt{AND}, to each section of the command line). This will use certain
-shortcuts which speed up processing, but would fail on badly-produced files. The \verb!-fast! option may be used with:
+shortcuts which speed up processing, but would fail on a minority of pre-ISO files. The \verb!-fast! option may be used with:
 
 \begin{framed}
 \small\noindent Chapter \ref{pages}\\
@@ -1026,13 +1027,13 @@ shortcuts which speed up processing, but would fail on badly-produced files. The
 \section{Error Handling}
 \index{error handling}
 When \cpdf\ encounters an error, it exits with code 2. An error message is
-displayed on \texttt{stderr} (Standard Error). In normal usage, this means it's
+displayed on \texttt{stderr} (Standard Error). In normal usage, this means it is
 displayed on the screen. When a bad or inappropriate password is given, the exit code is 1.
 
 \section{Control Files}
 \index{control file}
 \begin{framed}
-  \noindent\small\verb!cpdf -control <filename>!\\
+  \noindent\small\verb!cpdf -control <filename>! \textit{deprecated}\\
   \noindent\small\verb!cpdf -args <filename>!
 \end{framed}
 
@@ -1046,9 +1047,9 @@ may be used to introduce a genuine quotation mark in such an argument.
 Several \verb!-control! arguments may be specified, and may be mixed in with
 conventional command-line arguments. The commands in each control file are
 considered in the order in which they are given, after all conventional
-arguments have been processed. It is recommended to use \texttt{-args} in all new applications. However, \texttt{-control} will be supported for legacy applications.
+arguments have been processed.
 
-To avoid interference between \texttt{-control} and \texttt{AND}, a new mechanism has been added. Using \texttt{-args} in place of \texttt{-control} will perform direct textual substitution of the file into the command line, prior to any other processing.
+It is recommended to use \texttt{-args} in all new applications. However, \texttt{-control} will be supported for legacy applications. Using \texttt{-args} in place of \texttt{-control} will perform direct textual substitution of the file into the command line, prior to any other processing.
 
 
 \section{String Arguments}
@@ -1098,8 +1099,11 @@ the command line or configuration files. These are:
 bit ASCII by dropping any high characters, or \verb!-raw! to perform no
 processing. The default unless specified in the documentation for an individual operation is \verb!-stripped!.
 
+In modern usage, \texttt{-utf8} is almost always the sensible option.
+
 \section{Font Embedding}
 \index{font!embedding}
+%FIXME: Check and fix when -font-ttf done
 Use the \texttt{-no-embed-font} to avoid embedding the Standard 14 Font metrics when adding text with \texttt{-add-text}.
 
 \begin{cpdflib}
