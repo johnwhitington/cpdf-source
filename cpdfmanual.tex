@@ -1637,7 +1637,7 @@ Bleed box & Pink
 \end{tabular}
 \medskip
 
-\noindent The \texttt{-trim-marks} operation adds trim marks to a PDF file. The trim box must be present.
+\noindent  The \texttt{-trim-marks} operation adds trim marks to a PDF file. The trim box must be present.
 
 \begin{cpdflib}
 \clearpage
@@ -1756,7 +1756,7 @@ common. In this event, PDF viewers will typically not prompt for a
 password for when opening the file or for operations allowable with the user password.
   \begin{framed}
     \vspace{1.5mm}
-    \small\verb!cpdf -encrypt AES256 fred "" -no-forms in.pdf -o out.pdf!
+    \small\verb!cpdf -encrypt AES256ISO fred "" -no-forms in.pdf -o out.pdf!
   \end{framed}
 \noindent In addition, the usual method can be used to give the existing owner
 password, if the document is already encrypted.
@@ -1867,7 +1867,7 @@ Recompressing document
 Final file size is 187200 bytes,  78.60% of original.
 \end{verbatim}
 
-\noindent The \texttt{-squeeze-log-to <filename>} option writes the log to the given file instead of to standard output. Log contents is appended to the end of the log file, preserving existing contents.
+\noindent The \texttt{-squeeze-log-to <filename>} option writes the log to the given file instead of to standard output. Log content is appended to the end of the log file, preserving existing contents.
 
 There are two options which turn off parts of the squeezer. They are \texttt{-squeeze-no-recompress} for avoiding the reprocessing of compressed sections (especially useful if they are malformed), and \texttt{-squeeze-no-pagedata} for avoiding the reprocessing of page data (ditto). These two options also make the process much faster at the cost of a little less compression. Experiment.
 
