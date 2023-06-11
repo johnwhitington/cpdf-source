@@ -3769,7 +3769,7 @@ We convert a PDF file to JSON format like this:
   \small\noindent\verb!cpdf -output-json in.pdf -o out.json!
   \end{framed}
 
-The resultant JSON file is an array of arrays containing an object number followed by an
+\noindent The resultant JSON file is an array of arrays containing an object number followed by an
 object, one for each object in the file and two special ones:
 
 \begin{itemize}
@@ -4120,8 +4120,8 @@ For PNG files, the file must be 24bit RGB with no transparency and no interlacin
    \noindent\verb!-to! Move to\\
    \noindent\verb!-line! Add line to path\\
    \noindent\verb!-bez! Add Bezier curve to path\\
-   \noindent\verb!-bez23! Add Bezier v-op to path\\
-   \noindent\verb!-bez13! Add Bezier y-op to path\\
+   \noindent\verb!-bez23! Add Bezier curve to path\\
+   \noindent\verb!-bez13! Add Bezier curve to path\\
    \noindent\verb!-circle! Add circle to path\\
    \noindent\verb!-stroke! Stroke path\\
    \noindent\verb!-fill! Fill path\\
@@ -4214,8 +4214,8 @@ We can draw on an existing PDF (or a new one created with \texttt{-create-pdf} f
    \noindent\verb!-to "x y"! Move to\\
    \noindent\verb!-line "x y"! Add line to path\\
    \noindent\verb!-bez "x1 y1 x2 y2 x3 y3"! Add Bezier curve to path\\
-   \noindent\verb!-bez23 "x2 y2 x3 y3"! Add Bezier v-op to path\\
-   \noindent\verb!-bez13 "x1 y1 x3 y3"! Add Bezier y-op to path\\
+   \noindent\verb!-bez23 "x2 y2 x3 y3"! Add Bezier curve to path\\
+   \noindent\verb!-bez13 "x1 y1 x3 y3"! Add Bezier curve to path\\
    \noindent\verb!-circle "x y r"! Add circle to path\\
    \noindent\verb!-stroke! Stroke path\\
    \noindent\verb!-fill! Fill path\\
@@ -4374,7 +4374,7 @@ Lines may have dash patterns. A dash pattern consists of one or more numbers. Al
    \noindent\verb!-matrix "a b c d e f"! Append to graphics matrix\\
    \noindent\verb!-mtrans "tx ty"! Translate the graphics matrix\\
    \noindent\verb!-mrot "x y a"! Rotate the graphics matrix counterclockwise around \texttt{(x, y)} by angle \texttt{a}\\
-   \noindent\verb!-mscale "x y sx sy"! Scale the graphics matrix around \texttt{x, y}\\
+   \noindent\verb!-mscale "x y sx sy"! Scale the graphics matrix around \texttt{(x, y)}\\
    \noindent\verb!-mshearx "x y a"! Shear the graphics matrix in X around \texttt{(x, y)} by angle \texttt{a}\\
    \noindent\verb!-msheary "x y a"! Shear the graphics matrix in Y around \texttt{(x, y)} by angle \texttt{a}
   \end{framed}}
@@ -4565,7 +4565,7 @@ We can draw text in a \textit{text section}, which must start with \texttt{-bt} 
 \fbox{\includegraphics[width=0.3\textwidth]{manualimages/lines.pdf}}
 \bigskip
 
-\noindent When composing text, we may need to find the width of a piece of text to see where to break it, or for right alignment. We can use \texttt{-textwidth} for this:
+\noindent When composing text, we may need to find the width of a piece of text to see where to break it, or for right alignment. We can use \texttt{-text-width} for this:
 
 \begin{framed}
  \noindent\small\verb?cpdf -font Times-Roman -font-size 20 -text-width "Hello"?
