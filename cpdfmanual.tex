@@ -3619,7 +3619,7 @@ $ ./cpdf -list-fonts cpdfmanual.pdf 1
 1 /F49 /Type1 /MCBERL+URWPalladioL-Roma 
 \end{verbatim}}
 
-We may then print the table, giving either the font's name (e.g \texttt{/F46}) or basename (e.g \texttt{/XYPLPB+NimbusSanL-Bold}):
+\noindent We may then print the table, giving either the font's name (e.g \texttt{/F46}) or basename (e.g \texttt{/XYPLPB+NimbusSanL-Bold}):
 
 {\small\begin{verbatim}
 $ ./cpdf -print-font-table /XYPLPB+NimbusSanL-Bold
@@ -3647,7 +3647,7 @@ $ ./cpdf -print-font-table /XYPLPB+NimbusSanL-Bold
 116 = U+0074 (t - LATIN SMALL LETTER T) = /t
 \end{verbatim}}
 
-The first column is the character code, the second the Unicode codepoint, the character itself and its Unicode name, and the third the Adobe glyph name.
+\noindent The first column is the character code, the second the Unicode codepoint, the character itself and its Unicode name, and the third the Adobe glyph name.
 
 \section{Copying Fonts}
 \label{copyfont}
@@ -4806,12 +4806,9 @@ This operation lists the name of any ``separation'' color space in the given PDF
 \section{PDF Dictionary Entries}
 \label{removedictentry}
 This is for editing data within the PDF's internal representation. Use with caution.
-
 \index{dictionary!print entry}
 \index{dictionary!remove entry}
-\index{dictionary!replace entry}
-
-To print a dictionary entry:
+\index{dictionary!replace entry}To print a dictionary entry:
 
   \begin{framed}
   \small\noindent\verb!cpdf -print-dict-entry /URI in.pdf -o out.pdf!
@@ -4820,7 +4817,7 @@ To print a dictionary entry:
   \noindent Print all URLs in annotation hyperlinks \texttt{in.pdf}. 
   \end{framed}
 
-To remove a dictionary entry:
+\noindent To remove a dictionary entry:
 
   \begin{framed}
   \small\noindent\verb!cpdf -remove-dict-entry /One in.pdf -o out.pdf!
@@ -4836,7 +4833,7 @@ To remove a dictionary entry:
   \noindent Replace the entry for \texttt{/One} in every dictionary \texttt{in.pdf} if the key's value is the given value, writing to \texttt{out.pdf}. 
   \end{framed}
 
-To replace a dictionary entry, give the replacement value in CPDFJSON format:
+\noindent To replace a dictionary entry, give the replacement value in CPDFJSON format:
 
   \begin{framed}
   \small\noindent\verb!cpdf -replace-dict-entry /One -replace-dict-entry-value "\{I : 2\}"!\\
