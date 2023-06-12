@@ -79,7 +79,14 @@ let read_format_6_encoding_table b =
     with
       e -> failwith ("bad format 6 table: " ^ Printexc.to_string e ^ "\n")
 
-(* fixme might need indexToLocFormat here, to undo the "clever" formula. *)
+let read_magic_formula b glyphIndexArrayStart seg segCount ro c sc =
+  let position = seg - segCount + ro / 2 + (c - sc) in
+  let saved = b.pos_in () in
+    b.seek_in (glyphIndexArrayStart + position);
+    let result = b.input_byte () in
+      b.seek_in saved;
+      result
+
 let read_format_4_encoding_table b =
   let t = null_hash () in
   let segCountX2 = read_ushort b in
@@ -92,6 +99,7 @@ let read_format_4_encoding_table b =
   let startCodes = Array.init segCount (fun _ -> read_ushort b) in
   let idDelta = Array.init segCount (fun _ -> read_ushort b) in
   let idRangeOffset = Array.init segCount (fun _ -> read_ushort b) in
+  let glyphIndexArrayStart = b.input.pos_in () in
     if !dbg then
     begin
     Printf.printf "segCount = %i, searchRange = %i, entrySelector = %i, rangeShift = %i\n" segCount searchRange entrySelector rangeShift;
@@ -113,8 +121,10 @@ let read_format_4_encoding_table b =
           if ro = 0 then
             Hashtbl.add t c ((c + del) mod 65536)
           else
-            let sum = (c - sc) + del in
-              ()
+            let v = read_magic_formula b.input glyphIndexArrayStart seg segCount ro c sc in
+              if v = 0
+                then Hashtbl.add t c ((c + del) mod 65536)
+                else Hashtbl.add t c ((v + del) mod 65536)
         done
     done;
     t
@@ -127,12 +137,12 @@ let print_encoding_table (table : (int, int) Hashtbl.t) =
        Hashtbl.add unicodetable x.Cpdfunicodedata.code_value x.Cpdfunicodedata.character_name)
     unicodedata;
   let l = sort compare (list_of_hashtbl table) in
-  Printf.printf "There are %i characters in this font\n" (length l);
+  Printf.printf "There are %i characters in this font\n" (length l)(*;
   iter
     (fun (c, gi) ->
       let str = Printf.sprintf "%04X" c in
       Printf.printf "Char %s (%s) is at glyph index %i\n" str (Hashtbl.find unicodetable str) gi)
-    l
+    l*)
 
 let read_encoding_table fmt length version b =
   Printf.printf "********** format %i table has length, version %i, %i\n" fmt length version;
