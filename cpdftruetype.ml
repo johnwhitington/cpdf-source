@@ -83,7 +83,7 @@ let read_magic_formula b glyphIndexArrayStart seg segCount ro c sc =
   if !dbg then Printf.printf "read_magic_formula: seg = %i, setCount = %i, ro = %i, c = %i, sc = %i\n" seg segCount ro c sc;
   let position = seg - segCount + ro / 2 + (c - sc) in
     if !dbg then Printf.printf "position is %i\n" position;
-    b.input.seek_in (glyphIndexArrayStart + position);
+    b.input.seek_in (glyphIndexArrayStart + position * 2);
     b.bit <- 0;
     b.bitsread <- 0;
     b.currbyte <- 0;
@@ -129,7 +129,7 @@ let read_format_4_encoding_table b =
               Hashtbl.add t c ((c + del) mod 65536)
             else
               begin
-              flprint "format 4 magic required\n";
+              if !dbg then flprint "format 4 magic required\n";
               let v = read_magic_formula b glyphIndexArrayStart seg segCount ro c sc in
                 if !dbg then Printf.printf "Value %i returned\n" v;
                 if v = 0
@@ -148,15 +148,15 @@ let print_encoding_table format (table : (int, int) Hashtbl.t) =
        Hashtbl.add unicodetable x.Cpdfunicodedata.code_value x.Cpdfunicodedata.character_name)
     unicodedata;
   let l = sort compare (list_of_hashtbl table) in
-  Printf.printf "Format table %i: There are %i characters in this font\n" format (length l);
+  if !dbg then Printf.printf "Format table %i: There are %i characters in this font\n" format (length l);
   iter
     (fun (c, gi) ->
       let str = Printf.sprintf "%04X" c in
-       Printf.printf "Char %s (%s) is at glyph index %i\n" str (try Hashtbl.find unicodetable str with Not_found -> "Not_found") gi)
+        if !dbg then Printf.printf "Char %s (%s) is at glyph index %i\n" str (try Hashtbl.find unicodetable str with Not_found -> "Not_found") gi)
     l
 
 let read_encoding_table fmt length version b =
-  Printf.printf "********** format %i table has length, version %i, %i\n" fmt length version;
+  if !dbg then Printf.printf "********** format %i table has length, version %i, %i\n" fmt length version;
   match fmt with
   | 0 ->
       if !dbg then Printf.printf "read_encoding_table: format 0\n";
