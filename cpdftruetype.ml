@@ -25,7 +25,7 @@ type t =
    subset : int list;
    tounicode : (int, string) Hashtbl.t option}
 
-let dbg = ref true
+let dbg = ref false
 
 let required_tables =
   ["head"; "hhea"; "loca"; "cmap"; "maxp"; "cvt "; "glyf"; "prep"; "hmtx"; "fpgm"]
@@ -551,8 +551,9 @@ let parse ?(subset=[]) data encoding =
               | (_, _, o, _)::_ -> read_hmtx_table numOfLongHorMetrics (mk_b (i32toi o))
               | [] -> raise (Pdf.PDFError "No hmtx table found in TrueType font")
             in
+            Printf.printf "firstchar_1, lastchar_1, firstchar_2, lastchar_2 = %i, %i, %i%, %i\n" firstchar_1 lastchar_1 firstchar_2 lastchar_2;
             let widths_1 = calculate_widths unitsPerEm encoding firstchar_1 lastchar_1 subset_1 !glyphcodes hmtxdata in
-            let widths_2 = calculate_widths unitsPerEm encoding firstchar_2 lastchar_2 subset_2 !glyphcodes hmtxdata in
+            (*let widths_2 = calculate_widths unitsPerEm encoding firstchar_2 lastchar_2 subset_2 !glyphcodes hmtxdata in*)
             let maxwidth = calculate_maxwidth unitsPerEm hmtxdata in
             let stemv = calculate_stemv () in
             let b = mk_b (i32toi locaoffset) in
@@ -566,23 +567,23 @@ let parse ?(subset=[]) data encoding =
               subset_font major minor !tables indexToLocFormat subset_1
               encoding !glyphcodes loca mk_b glyfoffset data
             in
-            let second_subset =
+            (*let second_subset =
               subset_font major minor !tables indexToLocFormat subset_2
               encoding !glyphcodes loca mk_b glyfoffset data
-            in
-              let second_tounicode =
+            in*)
+              (*let second_tounicode =
                 if subset = [] then None else
                   let h = null_hash () in
                   let s = (implode (tl (tl (explode (Pdftext.utf16be_of_codepoints [hd subset]))))) in
                     Printf.printf "String for tounicode = %S\n" s;
                     Hashtbl.add h 0 s;
                     Some h
-              in
+              in*)
               [{flags; minx; miny; maxx; maxy; italicangle; ascent; descent;
                 capheight; stemv; xheight; avgwidth; maxwidth; firstchar = firstchar_1; lastchar = lastchar_1;
                 widths = widths_1; subset_fontfile = main_subset; subset = subset_1; tounicode = None}]
-              @ if fontpack_experiment then
+              (*@ if fontpack_experiment then
                [{flags; minx; miny; maxx; maxy; italicangle; ascent; descent;
                 capheight; stemv; xheight; avgwidth; maxwidth; firstchar = firstchar_2; lastchar = lastchar_2;
                 widths = widths_2; subset_fontfile = second_subset; subset = subset_2;
-                tounicode = second_tounicode}] else []
+                tounicode = second_tounicode}] else []*)
