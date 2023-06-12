@@ -4,6 +4,8 @@ open Pdfio
 
 let fontpack_experiment = false
 
+let dbg = ref false
+
 type t =
   {flags : int;
    minx : int;
@@ -24,8 +26,6 @@ type t =
    subset_fontfile : Pdfio.bytes;
    subset : int list;
    tounicode : (int, string) Hashtbl.t option}
-
-let dbg = ref false
 
 let required_tables =
   ["head"; "hhea"; "loca"; "cmap"; "maxp"; "cvt "; "glyf"; "prep"; "hmtx"; "fpgm"]
@@ -121,10 +121,13 @@ let read_format_4_encoding_table b =
           if ro = 0 then
             Hashtbl.add t c ((c + del) mod 65536)
           else
+            begin
+            flprint "format 4 magic required\n";
             let v = read_magic_formula b.input glyphIndexArrayStart seg segCount ro c sc in
               if v = 0
                 then Hashtbl.add t c ((c + del) mod 65536)
                 else Hashtbl.add t c ((v + del) mod 65536)
+            end
         done
     done;
     t
@@ -426,9 +429,12 @@ let subset_font major minor tables indexToLocFormat subset encoding cmap loca mk
     obs
 
 let parse ?(subset=[]) data encoding =
-  Printf.printf "********SUBSET is ";
-  iter (Printf.printf "%i ") subset;
-  Printf.printf "\n";
+  if !dbg then
+    begin
+      Printf.printf "********SUBSET is ";
+      iter (Printf.printf "%i ") subset;
+      Printf.printf "\n"
+    end;
   let mk_b byte_offset = bitbytes_of_input (let i = input_of_bytes data in i.seek_in byte_offset; i) in
   let b = mk_b 0 in
   let major, minor = read_fixed b in
@@ -551,7 +557,7 @@ let parse ?(subset=[]) data encoding =
               | (_, _, o, _)::_ -> read_hmtx_table numOfLongHorMetrics (mk_b (i32toi o))
               | [] -> raise (Pdf.PDFError "No hmtx table found in TrueType font")
             in
-            Printf.printf "firstchar_1, lastchar_1, firstchar_2, lastchar_2 = %i, %i, %i%, %i\n" firstchar_1 lastchar_1 firstchar_2 lastchar_2;
+            (*Printf.printf "firstchar_1, lastchar_1, firstchar_2, lastchar_2 = %i, %i, %i%, %i\n" firstchar_1 lastchar_1 firstchar_2 lastchar_2;*)
             let widths_1 = calculate_widths unitsPerEm encoding firstchar_1 lastchar_1 subset_1 !glyphcodes hmtxdata in
             (*let widths_2 = calculate_widths unitsPerEm encoding firstchar_2 lastchar_2 subset_2 !glyphcodes hmtxdata in*)
             let maxwidth = calculate_maxwidth unitsPerEm hmtxdata in
