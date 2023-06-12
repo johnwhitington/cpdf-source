@@ -4,7 +4,7 @@ open Pdfio
 
 let fontpack_experiment = false
 
-let dbg = ref false
+let dbg = ref true
 
 type t =
   {flags : int;
@@ -80,12 +80,14 @@ let read_format_6_encoding_table b =
       e -> failwith ("bad format 6 table: " ^ Printexc.to_string e ^ "\n")
 
 let read_magic_formula b glyphIndexArrayStart seg segCount ro c sc =
+  if !dbg then Printf.printf "read_magic_formula: seg = %i, setCount = %i, ro = %i, c = %i, sc = %i\n" seg segCount ro c sc;
   let position = seg - segCount + ro / 2 + (c - sc) in
-  let saved = b.pos_in () in
-    b.seek_in (glyphIndexArrayStart + position);
-    let result = b.input_byte () in
-      b.seek_in saved;
-      result
+    if !dbg then Printf.printf "position is %i\n" position;
+    b.input.seek_in (glyphIndexArrayStart + position);
+    b.bit <- 0;
+    b.bitsread <- 0;
+    b.currbyte <- 0;
+    read_short b
 
 let read_format_4_encoding_table b =
   let t = null_hash () in
@@ -100,6 +102,7 @@ let read_format_4_encoding_table b =
   let idDelta = Array.init segCount (fun _ -> read_ushort b) in
   let idRangeOffset = Array.init segCount (fun _ -> read_ushort b) in
   let glyphIndexArrayStart = b.input.pos_in () in
+    if !dbg then Printf.printf "glyphIndexArrayStart = %i\n" glyphIndexArrayStart;
     if !dbg then
     begin
     Printf.printf "segCount = %i, searchRange = %i, entrySelector = %i, rangeShift = %i\n" segCount searchRange entrySelector rangeShift;
@@ -113,26 +116,31 @@ let read_format_4_encoding_table b =
     print_ints (Array.to_list idRangeOffset);
     end;
     for seg = 0 to segCount - 1 do
+      if !dbg then Printf.printf "Segment %i\n" seg;
       let ec = endCodes.(seg) in
       let sc = startCodes.(seg) in
       let del = idDelta.(seg) in
       let ro = idRangeOffset.(seg) in
+        if !dbg then Printf.printf "sc = %i, ec = %i, del = %i, ro = %i\n" sc ec del ro;
         for c = sc to ec do
-          if ro = 0 then
-            Hashtbl.add t c ((c + del) mod 65536)
-          else
-            begin
-            flprint "format 4 magic required\n";
-            let v = read_magic_formula b.input glyphIndexArrayStart seg segCount ro c sc in
-              if v = 0
-                then Hashtbl.add t c ((c + del) mod 65536)
-                else Hashtbl.add t c ((v + del) mod 65536)
-            end
+          if !dbg then Printf.printf "Code %i\n" c;
+          if c != 0xFFFF then
+            if ro = 0 then
+              Hashtbl.add t c ((c + del) mod 65536)
+            else
+              begin
+              flprint "format 4 magic required\n";
+              let v = read_magic_formula b glyphIndexArrayStart seg segCount ro c sc in
+                if !dbg then Printf.printf "Value %i returned\n" v;
+                if v = 0
+                  then Hashtbl.add t c (let r = (c + del) mod 65536 in if !dbg then Printf.printf "into hash %i\n" r; r)
+                  else Hashtbl.add t c (let r = (v + del) mod 65536 in if !dbg then Printf.printf "into hash %i\n" r; r)
+              end
         done
     done;
     t
 
-let print_encoding_table (table : (int, int) Hashtbl.t) =
+let print_encoding_table format (table : (int, int) Hashtbl.t) =
   let unicodedata = Cpdfunicodedata.unicodedata () in
   let unicodetable = Hashtbl.create 16000 in
    iter
@@ -140,12 +148,12 @@ let print_encoding_table (table : (int, int) Hashtbl.t) =
        Hashtbl.add unicodetable x.Cpdfunicodedata.code_value x.Cpdfunicodedata.character_name)
     unicodedata;
   let l = sort compare (list_of_hashtbl table) in
-  Printf.printf "There are %i characters in this font\n" (length l)(*;
+  Printf.printf "Format table %i: There are %i characters in this font\n" format (length l);
   iter
     (fun (c, gi) ->
       let str = Printf.sprintf "%04X" c in
-      Printf.printf "Char %s (%s) is at glyph index %i\n" str (Hashtbl.find unicodetable str) gi)
-    l*)
+       Printf.printf "Char %s (%s) is at glyph index %i\n" str (try Hashtbl.find unicodetable str with Not_found -> "Not_found") gi)
+    l
 
 let read_encoding_table fmt length version b =
   Printf.printf "********** format %i table has length, version %i, %i\n" fmt length version;
@@ -154,7 +162,7 @@ let read_encoding_table fmt length version b =
       if !dbg then Printf.printf "read_encoding_table: format 0\n";
       let t = null_hash () in
         for x = 0 to 255 do Hashtbl.add t x (read_byte b) done;
-        print_encoding_table t;
+        (*print_encoding_table 0 t;*)
         t
   | 4 ->
       if !dbg then Printf.printf "read_encoding_table: format 4\n";
@@ -519,7 +527,7 @@ let parse ?(subset=[]) data encoding =
                         let version = read_ushort b in
                           if !dbg then Printf.printf "subtable has format %i, length %i, version %i\n" fmt lngth version;
                             let got_glyphcodes = read_encoding_table fmt lngth version b in
-                              if fmt = 4 then print_encoding_table got_glyphcodes;
+                              if fmt = 4 then print_encoding_table 4 got_glyphcodes;
                               if fmt = 4 then Hashtbl.iter (Hashtbl.add !glyphcodes) got_glyphcodes
                   done;
           end;
