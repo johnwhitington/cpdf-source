@@ -451,6 +451,11 @@ let subset_font major minor tables indexToLocFormat subset encoding cmap loca mk
 let _ =
   Pdfe.logger := (fun s -> print_string s; flush stdout)
 
+let write_font filename data =
+  let fh = open_out_bin filename in
+    output_string fh (Pdfio.string_of_bytes data);
+    close_out fh
+
 let parse ?(subset=[]) data encoding =
   if !dbg then
     begin
@@ -624,6 +629,8 @@ let parse ?(subset=[]) data encoding =
               in
                 Printf.printf "\nMain subset:\n";
                 debug_t one;
+                write_font "one.ttf" one.subset_fontfile;
                 Printf.printf "\nHigher subset:\n";
                 debug_t two;
+                write_font "two.ttf" two.subset_fontfile;
                 [one; two]
