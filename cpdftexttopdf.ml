@@ -1,10 +1,5 @@
 open Pdfutil
 
-(* Return set of unicode characters in this text *)
-let used_characters t =
-  let codepoints = Pdftext.codepoints_of_utf8 t in
-    setify codepoints
-
 let rec of_utf8_with_newlines fontpack fontsize t =
   let items = ref [] in
   let currfont = ref 0 in
@@ -50,23 +45,21 @@ let rec of_utf8_with_newlines fontpack fontsize t =
 
 let typeset ~papersize ~font ~fontsize text =
   let pdf = Pdf.empty () in
-  let codepoints = used_characters (Pdfio.string_of_bytes text) in
-  let font, fontpack =
+  let codepoints = Pdftext.codepoints_of_utf8 (Pdfio.string_of_bytes text) in
+  let fontpack =
     match font with
-    | Cpdfembed.PreMadeFontPack t -> (hd (fst t), t)
+    | Cpdfembed.PreMadeFontPack t -> t
     | Cpdfembed.EmbedInfo {fontfile; fontname; encoding} ->
-        let embedded = Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding in
-         (hd (fst embedded), embedded)
-    | Cpdfembed.ExistingNamedFont -> raise (Pdf.PDFError "Can't use existing named font for text-to-PDF")
+        Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding
+    | Cpdfembed.ExistingNamedFont ->
+        raise (Pdf.PDFError "Can't use existing named font for text-to-PDF")
   in
   let instrs = of_utf8_with_newlines fontpack fontsize (Pdfio.string_of_bytes text) in
   let margin =
     Pdfunits.points (Pdfpaper.width papersize) (Pdfpaper.unit papersize) /. 15.
   in
-  let instrs = [Cpdftype.Font (font, fontsize); Cpdftype.BeginDocument] @ instrs in
-  (*Printf.printf "to_string: %s\n" (Cpdftype.to_string instrs);*)
+  let firstfont = hd (keep (function Cpdftype.Font _ -> true | _ -> false) instrs) in 
+  let instrs = [firstfont; Cpdftype.BeginDocument] @ instrs in
   let pages = Cpdftype.typeset margin margin margin margin papersize pdf instrs in
     let pdf, pageroot = Pdfpage.add_pagetree pages pdf in
-      let pdf = Pdfpage.add_root pageroot [] pdf in
-        (*Pdfwrite.debug_whole_pdf pdf;*)
-        pdf
+      Pdfpage.add_root pageroot [] pdf
