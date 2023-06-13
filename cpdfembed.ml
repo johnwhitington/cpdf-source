@@ -74,20 +74,22 @@ let make_single_font ~fontname ~encoding pdf f =
      encoding})
 
 let make_fontpack_hashtable fs =
-  Printf.printf "make_fontpack_hashtable\n";
   let indexes = indx0 fs in
   let table = null_hash () in
   iter2
     (fun i (subset, f) ->
       let charcode_extractor = Pdftext.charcode_extractor_of_font_real f in
         iter
-          (fun u -> Hashtbl.add table u (i, unopt (charcode_extractor u)))
+          (fun u ->
+            match charcode_extractor u with
+            | Some x -> Hashtbl.add table u (i, x)
+            | None -> Printf.printf "charcode_extractor could not find char in make_fontpack_hashtable\n")
           subset)
     indexes fs;
-  Printf.printf "end of make_fontpack_hashtable\n";
   table
 
 let embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding =
   let fs = Cpdftruetype.parse ~subset:codepoints fontfile encoding in
   let subsets_and_their_fonts =  map (make_single_font ~fontname ~encoding pdf) fs in
+    Printf.printf "embed_truetype finished\n";
     (map snd subsets_and_their_fonts, make_fontpack_hashtable subsets_and_their_fonts)

@@ -58,6 +58,7 @@ let typeset ~papersize ~font ~fontsize text =
   let margin =
     Pdfunits.points (Pdfpaper.width papersize) (Pdfpaper.unit papersize) /. 15.
   in
+  Printf.printf "**** made instructions for page\n";
   let firstfont = hd (keep (function Cpdftype.Font _ -> true | _ -> false) instrs) in 
   let instrs = [firstfont; Cpdftype.BeginDocument] @ instrs in
   let pages = Cpdftype.typeset margin margin margin margin papersize pdf instrs in
