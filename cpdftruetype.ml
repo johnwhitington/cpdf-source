@@ -2,8 +2,6 @@
 open Pdfutil
 open Pdfio
 
-let fontpack_experiment = true
-
 let dbg = ref false
 
 type t =
@@ -518,7 +516,6 @@ let parse ?(subset=[]) data encoding =
                 let num_encoding_tables = read_ushort b in
                   if !dbg then Printf.printf "cmap version %i. There are %i encoding tables\n"
                     cmap_version num_encoding_tables;
-                  (* FIXME Need a proper scheme for selecting the table. For now, just read format 4, and ignore others. *)
                   for x = 1 to num_encoding_tables do
                     let platform_id = read_ushort b in
                     let encoding_id = read_ushort b in
@@ -549,7 +546,7 @@ let parse ?(subset=[]) data encoding =
             | (_, _, o, l)::_ -> o, l
             | [] -> raise (Pdf.PDFError "No loca table found in TrueType font")
           in
-            let subset_1 = if subset = [] then [] else if fontpack_experiment then tl subset else subset in
+            let subset_1 = if subset = [] then [] else tl subset in
             let subset_2 = if subset = [] then [] else [hd subset] in
             if !dbg && subset <> [] then
               begin
@@ -600,8 +597,8 @@ let parse ?(subset=[]) data encoding =
               [{flags; minx; miny; maxx; maxy; italicangle; ascent; descent;
                 capheight; stemv; xheight; avgwidth; maxwidth; firstchar = firstchar_1; lastchar = lastchar_1;
                 widths = widths_1; subset_fontfile = main_subset; subset = subset_1; tounicode = None}]
-              @ if fontpack_experiment then
+              @
                [{flags; minx; miny; maxx; maxy; italicangle; ascent; descent;
                 capheight; stemv; xheight; avgwidth; maxwidth; firstchar = firstchar_2; lastchar = lastchar_2;
                 widths = widths_2; subset_fontfile = second_subset; subset = subset_2;
-                tounicode = second_tounicode}] else []
+                tounicode = second_tounicode}]
