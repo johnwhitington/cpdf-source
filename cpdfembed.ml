@@ -74,6 +74,7 @@ let make_single_font ~fontname ~encoding pdf f =
      encoding})
 
 let make_fontpack_hashtable fs =
+  Printf.printf "make_fontpack_hashtable\n";
   let indexes = indx0 fs in
   let table = null_hash () in
   iter2
@@ -83,6 +84,7 @@ let make_fontpack_hashtable fs =
           (fun u -> Hashtbl.add table u (i, unopt (charcode_extractor u)))
           subset)
     indexes fs;
+  Printf.printf "end of make_fontpack_hashtable\n";
   table
 
 let embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding =

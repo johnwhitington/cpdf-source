@@ -439,7 +439,7 @@ let _ =
   Pdfe.logger := (fun s -> print_string s; flush stdout)
 
 let parse ?(subset=[]) data encoding =
-  (*if !dbg then*)
+  if !dbg then
     begin
       Printf.printf "********Cpdftruetype.parse SUBSET is ";
       iter (Printf.printf "U+%04X ") subset;
@@ -546,16 +546,16 @@ let parse ?(subset=[]) data encoding =
             | (_, _, o, l)::_ -> o, l
             | [] -> raise (Pdf.PDFError "No loca table found in TrueType font")
           in
-            let subset_1 = if subset = [] then [] else tl subset in
-            let subset_2 = if subset = [] then [] else [hd subset] in
-            if !dbg && subset <> [] then
+            let subset_1 = [hd subset] in (* N *)
+            let subset_2 = tl subset in (* BACKWARDS E *)
+            (*if !dbg && subset <> [] then*)
               begin
-                Printf.printf "***********Chars for experimental main WinAnsiEncoding set: %i %i\n" (hd subset_1) (hd (tl subset_1));
-                Printf.printf "***********Chars for experimental higher set: %i\n" (hd subset_2);
+                Printf.printf "***********Chars for main WinAnsiEncoding subset: U+%04X\n" (hd subset_1);
+                Printf.printf "***********Chars for higher subset: U+%04X\n" (hd subset_2);
               end;
             let flags = calculate_flags italicangle in
             let firstchar_1, lastchar_1 = calculate_limits subset_1 in
-            let firstchar_2, lastchar_2 = (0, max 0 (length subset_2 - 1)) in
+            let firstchar_2, lastchar_2 = (0, length subset_2 - 1) in
             let numOfLongHorMetrics =
               match keep (function (t, _, _, _) -> string_of_tag t = "hhea") !tables with
               | (_, _, o, l)::_ -> let b = mk_b (i32toi o) in read_hhea_table b
@@ -578,10 +578,12 @@ let parse ?(subset=[]) data encoding =
               | (_, _, o, l)::_ -> o, l
               | [] -> raise (Pdf.PDFError "No glyf table found in TrueType font")
             in
+            Printf.printf "Calculate main subset\n";
             let main_subset =
               subset_font major minor !tables indexToLocFormat subset_1
               encoding !glyphcodes loca mk_b glyfoffset data
             in
+            Printf.printf "Calculate higher subset\n";
             let second_subset =
               subset_font major minor !tables indexToLocFormat subset_2
               encoding !glyphcodes loca mk_b glyfoffset data
@@ -594,6 +596,7 @@ let parse ?(subset=[]) data encoding =
                     Hashtbl.add h 0 s;
                     Some h
               in
+              Printf.printf "returning the font pack. Job done.\n";
               [{flags; minx; miny; maxx; maxy; italicangle; ascent; descent;
                 capheight; stemv; xheight; avgwidth; maxwidth; firstchar = firstchar_1; lastchar = lastchar_1;
                 widths = widths_1; subset_fontfile = main_subset; subset = subset_1; tounicode = None}]
