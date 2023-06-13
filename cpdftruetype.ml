@@ -314,15 +314,15 @@ let calculate_widths unitsPerEm encoding firstchar lastchar subset cmapdata hmtx
     (lastchar - firstchar + 1)
     (fun pos ->
        let code = pos + firstchar in
-       (*if !dbg then Printf.printf "code %i --> " code;*)
+       (*if !dbg then*) Printf.printf "code %i --> " code;
        let code = unicode_codepoint_of_pdfcode encoding_table glyphlist_table code in
-       (*if !dbg then Printf.printf "unicode %i --> " code;*)
+       (*if !dbg then*) Printf.printf "unicode %i --> " code;
        if subset <> [] && not (mem code subset) then 0 else
        try
          let glyphnum = Hashtbl.find cmapdata code in
-         (*if !dbg then Printf.printf "glyph number %i --> " glyphnum;*)
+         (*if !dbg then*) Printf.printf "glyph number %i --> " glyphnum;
            let width = hmtxdata.(glyphnum) in
-           (*if !dbg then Printf.printf "width %i\n" width;*)
+           (*if !dbg then*) Printf.printf "width %i\n" width;
              pdf_unit unitsPerEm width
        with e -> if !dbg then Printf.printf "no width for %i\n" code; 0)
 
@@ -581,6 +581,7 @@ let parse ?(subset=[]) data encoding =
             in
             Printf.printf "firstchar_1, lastchar_1, firstchar_2, lastchar_2 = %i, %i, %i%, %i\n" firstchar_1 lastchar_1 firstchar_2 lastchar_2;
             let widths_1 = calculate_widths unitsPerEm encoding firstchar_1 lastchar_1 subset_1 !glyphcodes hmtxdata in
+            (* FIXME: Encoding here is wrong, we must build it directly like the /ToUnicode *)
             let widths_2 = calculate_widths unitsPerEm encoding firstchar_2 lastchar_2 subset_2 !glyphcodes hmtxdata in
             let maxwidth = calculate_maxwidth unitsPerEm hmtxdata in
             let stemv = calculate_stemv () in
