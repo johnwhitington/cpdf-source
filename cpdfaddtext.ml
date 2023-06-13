@@ -431,8 +431,11 @@ let
   let realfontname = ref fontname in
   let font =
     match cpdffont with
-    | Cpdfembed.PreMadeFontPack f -> Some (hd (fst f))
-    | Cpdfembed.EmbedInfo {fontfile; fontname; encoding} -> 
+    | Cpdfembed.PreMadeFontPack f ->
+        (*Printf.printf "Cpdfaddtext.addtexts: PreMadeFontPack\n";*)
+        Some (hd (fst f))
+    | Cpdfembed.EmbedInfo {fontfile; fontname; encoding} ->
+        (*Printf.printf "Cpdfaddtext.addtexts: EmbedInfo\n";*)
         let embedded = Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints:[] ~encoding in
           Some (hd (fst embedded))
     | Cpdfembed.ExistingNamedFont -> None

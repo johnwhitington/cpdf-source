@@ -4,6 +4,25 @@
 primitives (circles, regular polygons etc). *)
 open Pdfutil
 
+type fpoint = float * float
+
+type winding_rule = EvenOdd | NonZero
+
+type segment =
+  | Straight of fpoint * fpoint
+  | Bezier of fpoint * fpoint * fpoint * fpoint
+
+(* Each segment list may be marked as a hole or not. *)
+type hole = Hole | Not_hole
+
+(* A [subpath] is either closed or open. *)
+type closure = Closed | Open
+
+(* A [subpath] is the pair of a hole and a list of segments. *)
+type subpath = hole * closure * segment list
+
+(* A path is made from a number of subpaths. *)
+type path = winding_rule * subpath list
 (* \section{Common geometric functions} *)
 
 (* The factor by which we multiply the radius to find the length of the bezier
@@ -52,13 +71,13 @@ let quarter s (cx, cy) r =
     match
       map (Pdftransform.transform transform) standard_quarter_points
     with
-    | [p; q; r; s] -> Cpdfgraphics.Bezier(p, q, r, s)
+    | [p; q; r; s] -> Bezier(p, q, r, s)
     | _ -> raise (Pdf.PDFError ("Shapes.quarter: inconsistency"))
 
 (* The anticlockwise variant. *)
 let quarter_anticlockwise s c r =
   match quarter s c r with
-  | Cpdfgraphics.Bezier(p, q, r, s) -> Cpdfgraphics.Bezier(s, r, q, p)
+  | Bezier(p, q, r, s) -> Bezier(s, r, q, p)
   | _ -> raise (Pdf.PDFError "Shapes.quarter_anticlockwise: inconsistency")
 
 (* Some of the following functions generate what is supposed to be a connected
@@ -71,8 +90,8 @@ let rec joinsegs segments =
   match segments with
   | [] -> []
   | [x] -> [x]
-  | Cpdfgraphics.Bezier(_, _, _, d) as s::Cpdfgraphics.Bezier(_, b', c', d')::rest ->
-      s::joinsegs (Cpdfgraphics.Bezier(d, b', c', d')::rest)
+  | Bezier(_, _, _, d) as s::Bezier(_, b', c', d')::rest ->
+      s::joinsegs (Bezier(d, b', c', d')::rest)
   | _ -> raise (Pdf.PDFError "PDFShapes.joinsegs: Segment not supported")
 
 (* This version sets the start and end points to p1 and p2 respectively. Used
@@ -80,11 +99,11 @@ for ensuring round joins join correctly to the rails they connect *)
 let joinsegs_ends p1 p2 segments =
   match joinsegs segments with
   | [] -> []
-  | [Cpdfgraphics.Bezier(a, b, c, d)] -> [Cpdfgraphics.Bezier(p1, b, c, p2)]
+  | [Bezier(a, b, c, d)] -> [Bezier(p1, b, c, p2)]
   | segs ->
     match extremes_and_middle segs with
-    | Cpdfgraphics.Bezier(_, b, c, d), m, Cpdfgraphics.Bezier(a', b', c', _) ->
-        Cpdfgraphics.Bezier(p1, b, c, d)::m @ [Cpdfgraphics.Bezier(a', b', c', p2)]
+    | Bezier(_, b, c, d), m, Bezier(a', b', c', _) ->
+        Bezier(p1, b, c, d)::m @ [Bezier(a', b', c', p2)]
     | _ -> raise (Pdf.PDFError "PDFShapes.joinsegs_ends: Segment not supported")
 
 (* The shorter arc made from bezier curves from [p1] to [p2] with centre [c].
@@ -127,9 +146,9 @@ are of equal length, the one chosen is undefined. *)
 
 (* Approximate a circle using four bezier curves.*)
 let circle x y r =
-  Cpdfgraphics.NonZero,
-    [(Cpdfgraphics.Not_hole,
-      Cpdfgraphics.Closed,
+  NonZero,
+    [(Not_hole,
+      Closed,
      joinsegs
        [quarter 0. (x, y) r;
        quarter (pi /. 2.) (x, y) r;
@@ -137,10 +156,10 @@ let circle x y r =
        quarter (3. *. pi /. 2.) (x, y) r ])]
 
 let rectangle x y w h =
-  (Cpdfgraphics.EvenOdd,
-    ([(Cpdfgraphics.Not_hole,
-       Cpdfgraphics.Closed,
-      [Cpdfgraphics.Straight ((x, y), (x +. w, y));
-       Cpdfgraphics.Straight ((x +. w, y), (x +. w, y +. h));
-       Cpdfgraphics.Straight ((x +. w, y +. h), (x, y +. h));
-       Cpdfgraphics.Straight ((x, y +. h), (x, y))])]))
+  (EvenOdd,
+    ([(Not_hole,
+       Closed,
+      [Straight ((x, y), (x +. w, y));
+       Straight ((x +. w, y), (x +. w, y +. h));
+       Straight ((x +. w, y +. h), (x, y +. h));
+       Straight ((x, y +. h), (x, y))])]))
