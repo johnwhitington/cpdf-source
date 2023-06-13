@@ -22,24 +22,6 @@ let get_char (fonts, table) u =
   | (n, charcode) -> Some (charcode, n, List.nth fonts n)
   | exception Not_found -> None
 
-let pdfcode_of_unicode_codepoint encoding_table glyphlist_table u =
-  try
-    Some (Hashtbl.find encoding_table (Hashtbl.find glyphlist_table [u]))
-  with
-    Not_found -> None
-
-let calc_accepted_unicodepoints encoding_table glyphlist_table codepoints =
-  sort (fun a b -> compare b a) (* FIXME: Remove once subset experiment gone *)
-  (setify
-    (option_map
-       (fun u ->
-          match
-            pdfcode_of_unicode_codepoint encoding_table glyphlist_table u
-          with
-          | Some _ -> Some u
-          | None -> None)
-       codepoints))
-
 let fontnum = ref 0
 
 let basename () =
@@ -104,9 +86,6 @@ let make_fontpack_hashtable fs =
   table
 
 let embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding =
-  let glyphlist_table = Pdfglyphlist.reverse_glyph_hashes () in 
-  let encoding_table = Pdftext.reverse_table_of_encoding encoding in
-  let accepted_unicodepoints = calc_accepted_unicodepoints encoding_table glyphlist_table codepoints in
-  let fs = Cpdftruetype.parse ~subset:accepted_unicodepoints fontfile encoding in
+  let fs = Cpdftruetype.parse ~subset:codepoints fontfile encoding in
   let subsets_and_their_fonts =  map (make_single_font ~fontname ~encoding pdf) fs in
     (map snd subsets_and_their_fonts, make_fontpack_hashtable subsets_and_their_fonts)

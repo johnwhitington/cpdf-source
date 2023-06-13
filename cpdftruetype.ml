@@ -443,8 +443,8 @@ let _ =
 let parse ?(subset=[]) data encoding =
   (*if !dbg then*)
     begin
-      Printf.printf "********SUBSET is ";
-      iter (Printf.printf "%i ") subset;
+      Printf.printf "********Cpdftruetype.parse SUBSET is ";
+      iter (Printf.printf "U+%04X ") subset;
       Printf.printf "\n"
     end;
   let mk_b byte_offset = bitbytes_of_input (let i = input_of_bytes data in i.seek_in byte_offset; i) in

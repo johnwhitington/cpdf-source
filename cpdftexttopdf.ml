@@ -45,7 +45,7 @@ let rec of_utf8_with_newlines fontpack fontsize t =
 
 let typeset ~papersize ~font ~fontsize text =
   let pdf = Pdf.empty () in
-  let codepoints = Pdftext.codepoints_of_utf8 (Pdfio.string_of_bytes text) in
+  let codepoints = setify (Pdftext.codepoints_of_utf8 (Pdfio.string_of_bytes text)) in
   let fontpack =
     match font with
     | Cpdfembed.PreMadeFontPack t -> t
