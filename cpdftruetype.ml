@@ -25,6 +25,19 @@ type t =
    subset : int list;
    tounicode : (int, string) Hashtbl.t option}
 
+let debug_t t =
+  Printf.printf "firstchar: %i\n" t.firstchar;
+  Printf.printf "lastchar: %i\n" t.lastchar;
+  Printf.printf "widths:"; Array.iter (Printf.printf " %i") t.widths; Printf.printf "\n";
+  Printf.printf "fontfile of length %i\n" (Pdfio.bytes_size t.subset_fontfile);
+  Printf.printf "subset:"; iter (Printf.printf " U+%04X") t.subset; Printf.printf "\n";
+  Printf.printf "tounicode:";
+  begin match t.tounicode with
+  | None -> Printf.printf "None";
+  | Some table -> Hashtbl.iter (fun k v -> Printf.printf "%i --> %s\n" k v) table
+  end;
+  Printf.printf "\n"
+
 let required_tables =
   ["head"; "hhea"; "loca"; "cmap"; "maxp"; "cvt "; "glyf"; "prep"; "hmtx"; "fpgm"]
 
@@ -591,17 +604,25 @@ let parse ?(subset=[]) data encoding =
               let second_tounicode =
                 if subset = [] then None else
                   let h = null_hash () in
-                  let s = (implode (tl (tl (explode (Pdftext.utf16be_of_codepoints [hd subset]))))) in
+                  let s = (implode (tl (tl (explode (Pdftext.utf16be_of_codepoints (tl subset)))))) in
                     Printf.printf "String for tounicode = %S\n" s;
                     Hashtbl.add h 0 s;
                     Some h
               in
-              Printf.printf "returning the font pack. Job done.\n";
-              [{flags; minx; miny; maxx; maxy; italicangle; ascent; descent;
+              Printf.printf "returning the fonts. Job done.\n";
+              let one = 
+                {flags; minx; miny; maxx; maxy; italicangle; ascent; descent;
                 capheight; stemv; xheight; avgwidth; maxwidth; firstchar = firstchar_1; lastchar = lastchar_1;
-                widths = widths_1; subset_fontfile = main_subset; subset = subset_1; tounicode = None}]
-              @
-               [{flags; minx; miny; maxx; maxy; italicangle; ascent; descent;
+                widths = widths_1; subset_fontfile = main_subset; subset = subset_1; tounicode = None}
+              in
+              let two =
+               {flags; minx; miny; maxx; maxy; italicangle; ascent; descent;
                 capheight; stemv; xheight; avgwidth; maxwidth; firstchar = firstchar_2; lastchar = lastchar_2;
                 widths = widths_2; subset_fontfile = second_subset; subset = subset_2;
-                tounicode = second_tounicode}]
+                tounicode = second_tounicode}
+              in
+                Printf.printf "\nMain subset:\n";
+                debug_t one;
+                Printf.printf "\nHigher subset:\n";
+                debug_t two;
+                [one; two]
