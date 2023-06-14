@@ -195,7 +195,7 @@ let write_loca_table subset cmap indexToLocFormat bs loca =
     iter
       (fun u ->
          let locnum = Hashtbl.find cmap u in
-           if !dbg then Printf.printf "write_loca_table: Unicode %i is at location number %i\n" u locnum;
+           if !dbg then Printf.printf "write_loca_table: Unicode U+%04X is at location number %i\n" u locnum;
            Hashtbl.add locnums locnum ())
       subset;
   let write_entry loc position =
