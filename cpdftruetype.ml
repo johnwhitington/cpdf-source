@@ -2,7 +2,7 @@
 open Pdfutil
 open Pdfio
 
-let dbg = ref false
+let dbg = ref true
 
 type t =
   {flags : int;
@@ -235,7 +235,7 @@ let write_glyf_table subset cmap bs mk_b glyfoffset loca =
     iter
       (fun u ->
          let locnum = Hashtbl.find cmap u in
-         if !dbg then Printf.printf "write_glyf_table: Unicode %i is at location number %i\n" u locnum;
+         if !dbg then Printf.printf "write_glyf_table: Unicode U+%04X is at location number %i\n" u locnum;
            Hashtbl.add locnums locnum ())
       subset;
   let locnums = sort compare (map fst (list_of_hashtbl locnums)) in
@@ -464,15 +464,9 @@ let write_font filename data =
     output_string fh (Pdfio.string_of_bytes data);
     close_out fh
 
-(* We don't really need this, but it makes debugging easier... *)
-let partition_preserving_order p l =
-  let t, f = ref [], ref [] in
-    iter (fun x -> if p x then t := x::!t else f := x::!f) l;
-    rev !t, rev !f
-
 let find_main encoding subset =
   let encoding_table = Pdftext.table_of_encoding encoding in
-    partition_preserving_order
+    List.partition
       (fun u -> try ignore (Hashtbl.find encoding_table u); true with Not_found -> false)
       subset
 
