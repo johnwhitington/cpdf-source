@@ -311,15 +311,15 @@ let calculate_widths unitsPerEm encoding firstchar lastchar subset cmapdata hmtx
     (lastchar - firstchar + 1)
     (fun pos ->
        let code = pos + firstchar in
-       (*if !dbg then*) Printf.printf "code %i --> " code;
+       if !dbg then Printf.printf "code %i --> " code;
        let code = unicode_codepoint_of_pdfcode encoding_table glyphlist_table code in
-       (*if !dbg then*) Printf.printf "unicode %i --> " code;
+       if !dbg then Printf.printf "unicode %i --> " code;
        if subset <> [] && not (mem code subset) then 0 else
        try
          let glyphnum = Hashtbl.find cmapdata code in
-         (*if !dbg then*) Printf.printf "glyph number %i --> " glyphnum;
+           if !dbg then Printf.printf "glyph number %i --> " glyphnum;
            let width = hmtxdata.(glyphnum) in
-           (*if !dbg then*) Printf.printf "width %i\n" width;
+           if !dbg then Printf.printf "width %i\n" width;
              pdf_unit unitsPerEm width
        with e -> if !dbg then Printf.printf "no width for %i\n" code; 0)
 
@@ -329,9 +329,9 @@ let calculate_width_higher unitsPerEm firstchar lastchar subset cmapdata hmtxdat
    (lastchar - firstchar + 1)
    (fun pos ->
       let glyphnum = Hashtbl.find cmapdata subset.(pos) in
-      (*if !dbg then*) Printf.printf "glyph number %i --> " glyphnum;
+      if !dbg then Printf.printf "glyph number %i --> " glyphnum;
         let width = hmtxdata.(glyphnum) in
-        (*if !dbg then*) Printf.printf "width %i\n" width;
+        if !dbg then Printf.printf "width %i\n" width;
           pdf_unit unitsPerEm width)
 
 let calculate_maxwidth unitsPerEm hmtxdata =
@@ -464,6 +464,10 @@ let write_font filename data =
     output_string fh (Pdfio.string_of_bytes data);
     close_out fh
 
+let find_main encoding subset =
+  let encoding_table = Pdftext.table_of_encoding encoding in
+    List.partition (fun u -> try ignore (Hashtbl.find encoding_table u); true with Not_found -> false) subset
+
 let parse ?(subset=[]) data encoding =
   if !dbg then
     begin
@@ -572,12 +576,14 @@ let parse ?(subset=[]) data encoding =
             | (_, _, o, l)::_ -> o, l
             | [] -> raise (Pdf.PDFError "No loca table found in TrueType font")
           in
-            let subset_1 = [hd subset] in (* N *)
-            let subset_2 = tl subset in (* BACKWARDS E *)
+            let subset_1, subset_2 = find_main encoding subset in
             (*if !dbg && subset <> [] then*)
               begin
-                Printf.printf "***********Chars for main WinAnsiEncoding subset: U+%04X\n" (hd subset_1);
-                Printf.printf "***********Chars for higher subset: U+%04X\n" (hd subset_2);
+                Printf.printf "***********Chars for main WinAnsiEncoding subset:\n";
+                iter (Printf.printf "U+%04X ") subset_1;
+                Printf.printf "\n***********Chars for higher subset:\n";
+                iter (Printf.printf "U+%04X ") subset_2;
+                Printf.printf "\n";
               end;
             let flags_1 = calculate_flags false italicangle in
             let flags_2 = calculate_flags true italicangle in
