@@ -274,14 +274,11 @@ let read_post_table b =
   let italicangle, n = read_fixed b in
     italicangle
 
-(* Eventually:
-Set bit 6 for non symbolic. (nb bit 1 is actualy bit 0 etc.)
-Set bit 7 if italicangle <> 0
-Set bit 2 if serif ?
-Set bit 1 if fixed pitch (calculate from widths) *)
-let calculate_flags italicangle =
+(* (nb bit 1 is actualy bit 0 etc.) *)
+let calculate_flags symbolic italicangle =
   let italic = if italicangle <> 0 then 1 else 0 in 
-    32 lor italic lsl 6
+  let symbolic, nonsymbolic = if symbolic then 1, 0 else 0, 1 in
+    32 lor (italic lsl 6) lor (symbolic lsl 3) lor (nonsymbolic lsl 5)
 
 let calculate_limits subset =
   if subset = [] then (0, 255) else
@@ -325,6 +322,17 @@ let calculate_widths unitsPerEm encoding firstchar lastchar subset cmapdata hmtx
            (*if !dbg then*) Printf.printf "width %i\n" width;
              pdf_unit unitsPerEm width
        with e -> if !dbg then Printf.printf "no width for %i\n" code; 0)
+
+let calculate_width_higher unitsPerEm firstchar lastchar subset cmapdata hmtxdata =
+ let subset = Array.of_list subset in
+ Array.init
+   (lastchar - firstchar + 1)
+   (fun pos ->
+      let glyphnum = Hashtbl.find cmapdata subset.(pos) in
+      (*if !dbg then*) Printf.printf "glyph number %i --> " glyphnum;
+        let width = hmtxdata.(glyphnum) in
+        (*if !dbg then*) Printf.printf "width %i\n" width;
+          pdf_unit unitsPerEm width)
 
 let calculate_maxwidth unitsPerEm hmtxdata =
   pdf_unit unitsPerEm (hd (sort (fun a b -> compare b a) (Array.to_list hmtxdata)))
@@ -571,7 +579,8 @@ let parse ?(subset=[]) data encoding =
                 Printf.printf "***********Chars for main WinAnsiEncoding subset: U+%04X\n" (hd subset_1);
                 Printf.printf "***********Chars for higher subset: U+%04X\n" (hd subset_2);
               end;
-            let flags = calculate_flags italicangle in
+            let flags_1 = calculate_flags false italicangle in
+            let flags_2 = calculate_flags true italicangle in
             let firstchar_1, lastchar_1 = calculate_limits subset_1 in
             let firstchar_2, lastchar_2 = (0, length subset_2 - 1) in
             let numOfLongHorMetrics =
@@ -586,8 +595,7 @@ let parse ?(subset=[]) data encoding =
             in
             Printf.printf "firstchar_1, lastchar_1, firstchar_2, lastchar_2 = %i, %i, %i%, %i\n" firstchar_1 lastchar_1 firstchar_2 lastchar_2;
             let widths_1 = calculate_widths unitsPerEm encoding firstchar_1 lastchar_1 subset_1 !glyphcodes hmtxdata in
-            (* FIXME: Encoding here is wrong, we must build it directly like the /ToUnicode *)
-            let widths_2 = calculate_widths unitsPerEm encoding firstchar_2 lastchar_2 subset_2 !glyphcodes hmtxdata in
+            let widths_2 = calculate_width_higher unitsPerEm firstchar_2 lastchar_2 subset_2 !glyphcodes hmtxdata in
             let maxwidth = calculate_maxwidth unitsPerEm hmtxdata in
             let stemv = calculate_stemv () in
             let b = mk_b (i32toi locaoffset) in
@@ -617,12 +625,12 @@ let parse ?(subset=[]) data encoding =
               in
               Printf.printf "returning the fonts. Job done.\n";
               let one = 
-                {flags; minx; miny; maxx; maxy; italicangle; ascent; descent;
+                {flags = flags_1; minx; miny; maxx; maxy; italicangle; ascent; descent;
                 capheight; stemv; xheight; avgwidth; maxwidth; firstchar = firstchar_1; lastchar = lastchar_1;
                 widths = widths_1; subset_fontfile = main_subset; subset = subset_1; tounicode = None}
               in
               let two =
-               {flags; minx; miny; maxx; maxy; italicangle; ascent; descent;
+               {flags = flags_2; minx; miny; maxx; maxy; italicangle; ascent; descent;
                 capheight; stemv; xheight; avgwidth; maxwidth; firstchar = firstchar_2; lastchar = lastchar_2;
                 widths = widths_2; subset_fontfile = second_subset; subset = subset_2;
                 tounicode = second_tounicode}
