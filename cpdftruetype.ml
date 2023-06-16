@@ -325,14 +325,14 @@ let calculate_widths unitsPerEm encoding firstchar lastchar subset cmapdata hmtx
 
 let calculate_width_higher unitsPerEm firstchar lastchar subset cmapdata hmtxdata =
  let subset = Array.of_list subset in
- Array.init
-   (lastchar - firstchar + 1)
-   (fun pos ->
-      let glyphnum = Hashtbl.find cmapdata subset.(pos) in
-      if !dbg then Printf.printf "glyph number %i --> " glyphnum;
-        let width = hmtxdata.(glyphnum) in
-        if !dbg then Printf.printf "width %i\n" width;
-          pdf_unit unitsPerEm width)
+   Array.init
+     (lastchar - firstchar + 1)
+     (fun pos ->
+        let glyphnum = Hashtbl.find cmapdata subset.(pos) in
+        if !dbg then Printf.printf "glyph number %i --> " glyphnum;
+          let width = hmtxdata.(glyphnum) in
+          if !dbg then Printf.printf "width %i\n" width;
+            pdf_unit unitsPerEm width)
 
 let calculate_maxwidth unitsPerEm hmtxdata =
   pdf_unit unitsPerEm (hd (sort (fun a b -> compare b a) (Array.to_list hmtxdata)))
@@ -624,9 +624,14 @@ let parse ?(subset=[]) data encoding =
               let second_tounicode =
                 if subset = [] then None else
                   let h = null_hash () in
-                  let s = (implode (tl (tl (explode (Pdftext.utf16be_of_codepoints (tl subset)))))) in
-                    Printf.printf "String for tounicode = %S\n" s;
-                    Hashtbl.add h 0 s;
+                  (*let s = (implode (tl (tl (explode (Pdftext.utf16be_of_codepoints (tl subset)))))) in*)
+                    (*Printf.printf "String for tounicode = %S\n" s;*)
+                    List.iter2
+                      (fun n u ->
+                         let s = implode (tl (tl (explode (Pdftext.utf16be_of_codepoints [u])))) in
+                           Hashtbl.add h n s)
+                      (indx subset_2)
+                      subset_2;
                     Some h
               in
               Printf.printf "returning the fonts. Job done.\n";
