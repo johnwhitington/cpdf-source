@@ -464,9 +464,17 @@ let write_font filename data =
     output_string fh (Pdfio.string_of_bytes data);
     close_out fh
 
+(* We don't really need this, but it makes debugging easier... *)
+let partition_preserving_order p l =
+  let t, f = ref [], ref [] in
+    iter (fun x -> if p x then t := x::!t else f := x::!f) l;
+    rev !t, rev !f
+
 let find_main encoding subset =
   let encoding_table = Pdftext.table_of_encoding encoding in
-    List.partition (fun u -> try ignore (Hashtbl.find encoding_table u); true with Not_found -> false) subset
+    partition_preserving_order
+      (fun u -> try ignore (Hashtbl.find encoding_table u); true with Not_found -> false)
+      subset
 
 let parse ?(subset=[]) data encoding =
   if !dbg then
@@ -624,13 +632,11 @@ let parse ?(subset=[]) data encoding =
               let second_tounicode =
                 if subset = [] then None else
                   let h = null_hash () in
-                  (*let s = (implode (tl (tl (explode (Pdftext.utf16be_of_codepoints (tl subset)))))) in*)
-                    (*Printf.printf "String for tounicode = %S\n" s;*)
                     List.iter2
                       (fun n u ->
                          let s = implode (tl (tl (explode (Pdftext.utf16be_of_codepoints [u])))) in
                            Hashtbl.add h n s)
-                      (indx subset_2)
+                      (indx0 subset_2)
                       subset_2;
                     Some h
               in
