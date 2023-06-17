@@ -654,7 +654,7 @@ The operation \texttt{-help / --help} prints each operation and option together 
   \begin{framed}
   \noindent\small\verb!cpdf in.pdf -o out.pdf!
   \end{framed}
-  \noindent which copies \texttt{in.pdf} to \texttt{out.pdf}. The input and
+  \noindent This copies \texttt{in.pdf} to \texttt{out.pdf}. The input and
 output may be the same file. Of course, we should like to do more interesting
 things to the PDF file than that!
 
@@ -992,7 +992,7 @@ progress is shown on \verb!stderr! (Standard Error):
 \begin{framed}
 \noindent\small\verb!cpdf -gs gs -gs-malformed in.pdf -o out.pdf!\end{framed}
 
-To suppress the output of \texttt{gs} use the \texttt{-gs-quiet} option. If the malformity lies inside an individual page of the PDF, rather than in its gross structure, \texttt{cpdf} may appear to succeed in reconstruction, only to fail when processing a page (e.g when adding text). To force the use of \texttt{gs} to pre-process such files so cpdf cannot fail on them, use \texttt{-gs\--malformed\--force}:
+\noindent To suppress the output of \texttt{gs} use the \texttt{-gs-quiet} option. If the malformity lies inside an individual page of the PDF, rather than in its gross structure, \texttt{cpdf} may appear to succeed in reconstruction, only to fail when processing a page (e.g when adding text). To force the use of \texttt{gs} to pre-process such files so cpdf cannot fail on them, use \texttt{-gs\--malformed\--force}:
 
 \begin{framed}
 \noindent\small\verb!cpdf in.pdf -gs gs -gs-malformed-force -o out.pdf [-gs-quiet]!\end{framed}
@@ -1002,7 +1002,7 @@ To suppress the output of \texttt{gs} use the \texttt{-gs-quiet} option. If the 
 
 \begin{framed}\noindent\textit{Note: Use of these commands with \texttt{-gs} is a last resort; they may strip some metadata from PDF files.}\end{framed}
 
-Sometimes old, pre-ISO standardisation files can be technically well-formed but use inefficient PDF constructs.  If you are sure the input files you are using are
+\noindent Sometimes old, pre-ISO standardisation files can be technically well-formed but use inefficient PDF constructs.  If you are sure the input files you are using are
 modern ISO-compliant PDFs, the \texttt{-fast} option may be added to the command line (or, if
 using \texttt{AND}, to each section of the command line). This will use certain
 shortcuts which speed up processing, but would fail on a minority of pre-ISO files. The \verb!-fast! option may be used with:
@@ -1281,7 +1281,7 @@ one of the output files.
   \verb! / ? < > \ : * | " ^ + =!
   \end{framed}
 
-  To prevent this process, and convert bookmark names to UTF8 instead, add \texttt{-utf8} to the command.
+\noindent To prevent this process, and convert bookmark names to UTF8 instead, add \texttt{-utf8} to the command.
 
 \section{Encrypting with Split and Split Bookmarks}
 \index{encryption}
