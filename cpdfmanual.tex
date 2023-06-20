@@ -3417,11 +3417,12 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
     \noindent\small\verb!cpdf -dump-attachments in.pdf -o /home/fred/attachments!
   \end{framed}
 
-\noindent  Unless the \texttt{-raw} option is given, the filenames are stripped of dubious special characters before writing. It is converted from unicode to 7 bit ASCII, and the following characters are removed, in addition to any character with ASCII code less than 32:
+\noindent  Unless either the \texttt{-raw} or \texttt{-utf8} option is given, the filenames are stripped of dubious special characters before writing. It is converted from unicode to 7 bit ASCII, and the following characters are removed, in addition to any character with ASCII code less than 32:
   \begin{framed}
   \centering
   \verb! / ? < > \ : * | " ^ + =!
   \end{framed}
+
 
 \begin{cpdflib}
 \clearpage
