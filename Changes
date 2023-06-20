@@ -23,7 +23,6 @@ o Preserve /GoTo actions in bookmarks when merging
 o UTF8 option for JSON output
 o -info now shows object stream, /ID data, page mode and layout
 o More options for viewer preference control
-o Export some PNGs directly, rather than via an external program
 o More default colours, by using the CSS colour list
 
 Fixes:
