@@ -115,9 +115,9 @@ These examples demonstrate just a few of the facilities provided by the Coherent
 
 \noindent Using \texttt{AND} to perform several operations in order, here merging two files together and adding a copyright stamp to every page.
 
-\begin{framed}\noindent\texttt{cpdf -args control.txt}\end{framed}
+\begin{framed}\noindent\texttt{cpdf -args args.txt}\end{framed}
 
-\noindent Read \texttt{control.txt} and use its contents as the command line arguments for \texttt{cpdf}.
+\noindent Read \texttt{args.txt} and use its contents as the command line arguments for \texttt{cpdf}.
 
 \section*{\hyperref[chap:2]{Chapter 2: Merging and Splitting}}
 
@@ -129,7 +129,7 @@ These examples demonstrate just a few of the facilities provided by the Coherent
 
 \noindent Split \texttt{in.pdf} into ten-page chunks, writing them to \texttt{Chunk001.pdf}, \texttt{Chunk002.pdf} etc.
 
-\begin{framed}\noindent\texttt{cpdf -split-bookmarks 0 in.pdf -o @B.pdf}\end{framed}
+\begin{framed}\noindent\texttt{cpdf -split-bookmarks 0 in.pdf -utf8 -o @B.pdf}\end{framed}
 
 \noindent Split \texttt{in.pdf} on bookmark boundaries, writing each to a file whose name is the bookmark label.
 
@@ -190,10 +190,7 @@ These examples demonstrate just a few of the facilities provided by the Coherent
 
 \begin{framed}\noindent\texttt{cpdf -add-bookmarks bookmarks.txt in.pdf -o out.pdf}\end{framed}
 
-\noindent Add bookmarks in the same form from a prepared file \texttt{bookmarks.txt} to \texttt{in.pdf}, writing to \texttt{out.pdf}.
-
-\medskip
-\noindent(JSON alternatives also available.)
+\noindent Add bookmarks in the same form from a prepared file \texttt{bookmarks.txt} to \texttt{in.pdf}, writing to \texttt{out.pdf}. JSON alternatives are also available.
 
 \section*{\hyperref[chap:7]{Chapter 7: Presentations}}
 
@@ -233,9 +230,13 @@ These examples demonstrate just a few of the facilities provided by the Coherent
 
 \section*{\hyperref[chap:11]{Chapter 11: Document Information and Metadata}}
 
+\begin{framed}\noindent\texttt{cpdf -info -utf8 in.pdf -o out.pdf}\end{framed}
+
+\noindent List document metadata for  \texttt{in.pdf}.
+
 \begin{framed}\noindent\texttt{cpdf -set-title "The New Title" -also-set-xmp in.pdf -o out.pdf}\end{framed}
 
-\noindent Set the document title of \texttt{in.pdf}. writing to \texttt{out.pdf}.
+\noindent Set the document title of \texttt{in.pdf}, writing to \texttt{out.pdf}.
 
 \begin{framed}\noindent\texttt{cpdf -hide-toolbar true in.pdf -o out.pdf}\end{framed}
 
@@ -350,7 +351,7 @@ These examples demonstrate just a few of the facilities provided by the Coherent
 
 \begin{framed}\noindent\texttt{cpdf -thinlines 2pt in.pdf -o out.pdf}\end{framed}
 
-\noindent Make sure all lines in \texttt{in.pdf} are at least 2 pts wide, writing to \texttt{out.pdf}.
+\noindent Make sure all lines in \texttt{in.pdf} are at least 2pts wide, writing to \texttt{out.pdf}.
 % Letter
 \pagestyle{empty}
 \cleardoublepage
