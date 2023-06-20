@@ -4753,8 +4753,10 @@ function removes that unneeded data.
   \begin{framed}
   \small\noindent\verb!cpdf -clean in.pdf -o out.pdf!
   \end{framed}
- 
-  \section{Change PDF Version Number}
+
+\noindent NB: This operation is deprecated. This work is now done by default upon writing any file.
+
+   \section{Change PDF Version Number}
 \index{version number}
    \label{setversion}
    To change the pdf version number, use the \texttt{-set-version} operation,
@@ -4827,10 +4829,11 @@ This is for editing data within the PDF's internal representation. Use with caut
 
   \vspace{2.5mm}
 
-  \small\noindent\verb!cpdf -remove-dict-entry /One -dict-entry-search "1" in.pdf -o out.pdf!
+  \small\noindent\verb!cpdf -remove-dict-entry /One -dict-entry-search "\{I : 1\}"!\\
+  \small\noindent\verb!     in.pdf -o out.pdf!
 
   \vspace{2.5mm}
-  \noindent Replace the entry for \texttt{/One} in every dictionary \texttt{in.pdf} if the key's value is the given value, writing to \texttt{out.pdf}. 
+  \noindent Replace the entry for \texttt{/One} in every dictionary \texttt{in.pdf} if the key's value is the given CPDFJSON value, writing to \texttt{out.pdf}. 
   \end{framed}
 
 \noindent To replace a dictionary entry, give the replacement value in CPDFJSON format:
