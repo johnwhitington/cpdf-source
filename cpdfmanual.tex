@@ -4231,7 +4231,7 @@ We can draw on an existing PDF (or a new one created with \texttt{-create-pdf} f
 
 \begin{framed}
  \noindent\small\verb?cpdf -create-pdf AND -draw -to "100 100" -line "400 400" -stroke?\\
- \noindent\small\verb?     -line "400 100" -draw "100 100" -stroke?\\
+ \noindent\small\verb?     -line "400 100" -line "100 100" -stroke?\\
  \noindent\small\verb?     -o out.pdf?
 \end{framed}
 
@@ -4244,7 +4244,7 @@ We can draw on an existing PDF (or a new one created with \texttt{-create-pdf} f
 \noindent Alternatively, we may use \texttt{-close} to draw the final line back to the starting point:
 
 \begin{framed}
- \noindent\small\verb?cpdf -create-pdf AND -draw -to "100 100" -line "400 400" -stroke?\\
+ \noindent\small\verb?cpdf -create-pdf AND -draw -to "100 100" -line "400 400"?\\
  \noindent\small\verb?     -line "400 100" -close -stroke?\\
  \noindent\small\verb?     -o out.pdf?
 \end{framed}
@@ -4252,7 +4252,7 @@ We can draw on an existing PDF (or a new one created with \texttt{-create-pdf} f
 \noindent We can have multiple such subpaths in a path, by closing and carrying on. We can fill our path with \texttt{-fill}:
 
 \begin{framed}
- \noindent\small\verb?cpdf -create-pdf AND -draw -to "100 100" -line "400 400" -stroke?\\
+ \noindent\small\verb?cpdf -create-pdf AND -draw -to "100 100" -line "400 400"?\\
  \noindent\small\verb?     -line "400 100" -close -fill?\\
  \noindent\small\verb?     -o out.pdf?
 \end{framed}
@@ -4268,7 +4268,7 @@ We can draw on an existing PDF (or a new one created with \texttt{-create-pdf} f
 We can save time when drawing rectangles by using the \texttt{-rect} operation, which takes the lower left coordinate, width and height. There is no need to explicitly close the rectangle.
 
 \begin{framed}
- \noindent\small\verb?cpdf -create-pdf AND -draw -rect "200 300 400 500" -stroke?\\
+ \noindent\small\verb?cpdf -create-pdf AND -draw -rect "200 300 200 300" -stroke?\\
  \noindent\small\verb?     -o out.pdf?
 \end{framed}
 
@@ -4304,7 +4304,7 @@ To avoid calculating the Bezier curves for a circle manually, \texttt{cpdf} can 
 
 \begin{framed}
  \noindent\small\verb?cpdf -create-pdf AND -draw -circle "300 300 100" -clip?\\
- \noindent\small\verb?     -circle "300 350 100" -fill -o out.pdf?\\
+ \noindent\small\verb?     -circle "300 350 100" -fill -o out.pdf?
 \end{framed}
 
 \noindent Here is the result:
@@ -4328,7 +4328,7 @@ We can set stroke and fill colours for our paths, either as greyscale (one compo
 
 \begin{framed}
  \noindent\small\verb?cpdf -create-pdf AND -draw -circle "200 200 100" -thick 20?\\
- \noindent\small\verb?     -strokecol 0.5 -fillcol "0.2 0.7 0.2" -stroke -o out.pdf?
+ \noindent\small\verb?     -strokecol 0.5 -fillcol "0.2 0.7 0.2" -strokefill -o out.pdf?
 \end{framed}
 
 \noindent Here is the result:
