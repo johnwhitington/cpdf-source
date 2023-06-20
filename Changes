@@ -1,4 +1,4 @@
-2.6 (next version, to come)
+2.6 (August 2023)
 
 New features:
 
@@ -33,6 +33,7 @@ o Fixed behaviour of -squeeze-no-pagedata / -squeeze-no-recompress
 o Significant improvements to malformed file reading
 o Allow DUP page specifications to use larger numbers
 o Reworked functions transforming pages to better preserve patterns
+
 
 2.5.1 (January 2022)
 
