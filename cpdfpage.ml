@@ -1,7 +1,7 @@
 open Pdfutil
 open Cpdferror
 
-(* FIXME: Need to take account of inherited resources (among Xobjects and their children - pages
+(*(* FIXME: Need to take account of inherited resources (among Xobjects and their children - pages
    are regularized upon loading). Would be nice to see a failing example first though.
    FIXME: What would happen if a pattern was used in a transforming and non-transforming way - we
    would have to dedupulicate - again, no failing example available. *)
@@ -69,7 +69,7 @@ let change_softmask_matrices_page pdf tr page =
            let matrix' = Pdftransform.matrix_compose (Pdftransform.matrix_invert tr) matrix in
            let dict = Pdf.add_dict_entry dict "/Matrix" (Pdf.make_matrix matrix') in
              Pdf.addobj_given_num pdf (objnum, dict))
-        objnums
+        objnums*)
 
 (* When we transform a page by wrapping in an [Op_cm], we must also
 change any /Matrix entries in (some) pattern dictionaries, including inside
@@ -139,7 +139,7 @@ and change_pattern_matrices_xobject pdf tr xobj xobjnum =
   | _ -> ()
 
 let change_pattern_matrices_page pdf tr page =
-  change_softmask_matrices_page pdf tr page;
+  (*change_softmask_matrices_page pdf tr page;*)
   let used = patterns_used pdf page.Pdfpage.content page.Pdfpage.resources in
     (*Printf.printf "Patterns for translation, due to being used as cs / CS";
     Hashtbl.iter (fun x _ -> Printf.printf "%s " x) used;
