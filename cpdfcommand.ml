@@ -3288,7 +3288,7 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
             if not is_decompress then
               begin
                 ignore (Cpdfsqueeze.recompress_pdf pdf);
-                if args.squeeze then Cpdfsqueeze.squeeze ~pagedata:args.squeeze_pagedata ~recompress:args.squeeze_recompress ?logto:!logto pdf;
+                if args.squeeze then Cpdfsqueeze.squeeze ~pagedata:args.squeeze_pagedata ?logto:!logto pdf;
               end;
             Pdf.remove_unreferenced pdf;
             really_write_pdf ~is_decompress mk_id pdf outname
@@ -3303,7 +3303,7 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
               if not is_decompress then
                 begin
                   ignore (Cpdfsqueeze.recompress_pdf pdf);
-                  if args.squeeze then Cpdfsqueeze.squeeze ~pagedata:args.squeeze_pagedata ~recompress:args.squeeze_recompress ?logto:!logto pdf;
+                  if args.squeeze then Cpdfsqueeze.squeeze ~pagedata:args.squeeze_pagedata ?logto:!logto pdf;
                   Pdf.remove_unreferenced pdf
                 end;
                 really_write_pdf ~encryption ~is_decompress mk_id pdf temp;
@@ -3342,7 +3342,7 @@ let fast_write_split_pdfs
                  (stem original_filename) startpage endpage
              in
                Pdf.remove_unreferenced pdf;
-               if sq then Cpdfsqueeze.squeeze ~pagedata:args.squeeze_pagedata ~recompress:args.squeeze_recompress ?logto:!logto pdf;
+               if sq then Cpdfsqueeze.squeeze ~pagedata:args.squeeze_pagedata ?logto:!logto pdf;
                really_write_pdf ~encryption:enc (not (enc = None)) pdf name)
       (indx pagenums)
       pagenums

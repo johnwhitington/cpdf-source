@@ -8,4 +8,4 @@ val recompress_pdf : Pdf.t -> Pdf.t
 val decompress_pdf : Pdf.t -> Pdf.t
 
 (** Squeeze a PDF *)
-val squeeze : ?logto:string -> ?pagedata:bool -> ?recompress:bool -> Pdf.t -> unit
+val squeeze : ?logto:string -> ?pagedata:bool -> Pdf.t -> unit

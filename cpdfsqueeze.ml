@@ -210,7 +210,7 @@ let squeeze_all_content_streams pdf =
         pdf
 
 (* We run squeeze enough times for the number of objects to not change *)
-let squeeze ?logto ?(pagedata=true) ?(recompress=true) pdf =
+let squeeze ?logto ?(pagedata=true) pdf =
   let log x =
     match logto with
       None -> print_string x; flush stdout
@@ -233,11 +233,8 @@ let squeeze ?logto ?(pagedata=true) ?(recompress=true) pdf =
           log (Printf.sprintf "Squeezing page data and xobjects\n");
           squeeze_all_content_streams pdf;
         end;
-      if recompress then
-        begin
-          log (Printf.sprintf "Recompressing document\n");
-          ignore (recompress_pdf pdf);
-        end
+        log (Printf.sprintf "Recompressing document\n");
+        ignore (recompress_pdf pdf);
     with
       e ->
         raise
@@ -245,4 +242,3 @@ let squeeze ?logto ?(pagedata=true) ?(recompress=true) pdf =
              (Printf.sprintf
                 "Squeeze failed. No output written.\n Proximate error was:\n %s"
                 (Printexc.to_string e)))
-
