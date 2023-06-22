@@ -3,7 +3,9 @@ open Pdfutil
 open Pdfio
 
 (* FIXME No need for bitstream - everything is byte based, so we can use a normal input *)
-
+(* FIXME Don't create a second font unless we have to *)
+(* FIXME Create third, fourth etc. font when we need to *)
+(* FIXME Get rid of double-calling of this code to 1) make font then 2) collect chars then 3) subset it i.e the subset = [] stuff *)
 let dbg = ref true
 
 type t =
@@ -261,7 +263,23 @@ let write_glyf_table subset cmap bs mk_b glyfoffset loca =
     len
 
 let write_cmap_table subset cmap bs =
-  0l
+  if !dbg then Printf.printf "***write_cmap_table\n";
+  let glyphindexes = [130; 131; 132] in
+  putval bs 16 0l; (* table version number *)
+  putval bs 16 1l; (* number of encoding tables *)
+  putval bs 16 1l; (* platform ID *)
+  putval bs 16 1l; (* platform encoding ID *)
+  putval bs 32 12l; (* subtable offset = 12 bytes from beginning of table *)
+  putval bs 16 6l; (* Table format 6 *)
+  putval bs 16 (i32ofi (10 + 2 * length glyphindexes)); (* subtable length *)
+  putval bs 16 0l;
+  putval bs 16 33l; (* first character code *)
+  putval bs 16 (i32ofi (length glyphindexes)); (* number of character codes *)
+  iter (fun gi -> putval bs 16 (i32ofi gi)) glyphindexes; (* glyph indexes *)
+  let len = i32ofi (22 + 2 * length glyphindexes) in
+  let padding = 4 - i32toi len mod 4 in
+  for x = 1 to padding do putval bs 8 0l done;
+  len
 
 let read_os2_table unitsPerEm b blength =
   let version = read_ushort b in
