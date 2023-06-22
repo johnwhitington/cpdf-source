@@ -2,6 +2,8 @@
 open Pdfutil
 open Pdfio
 
+(* FIXME No need for bitstream - everything is byte based, so we can use a normal input *)
+
 let dbg = ref false
 
 type t =
@@ -595,7 +597,7 @@ let parse ?(subset=[]) data encoding =
             let flags_1 = calculate_flags false italicangle in
             let flags_2 = calculate_flags true italicangle in
             let firstchar_1, lastchar_1 = calculate_limits subset_1 in
-            let firstchar_2, lastchar_2 = (0, length subset_2 - 1) in
+            let firstchar_2, lastchar_2 = (33, length subset_2 + 33 - 1) in
             let numOfLongHorMetrics =
               match keep (function (t, _, _, _) -> string_of_tag t = "hhea") !tables with
               | (_, _, o, l)::_ -> let b = mk_b (i32toi o) in read_hhea_table b
@@ -635,7 +637,7 @@ let parse ?(subset=[]) data encoding =
                       (fun n u ->
                          let s = implode (tl (tl (explode (Pdftext.utf16be_of_codepoints [u])))) in
                            Hashtbl.add h n s)
-                      (indx0 subset_2)
+                      (map (( + ) 33) (indx0 subset_2))
                       subset_2;
                     Some h
               in
