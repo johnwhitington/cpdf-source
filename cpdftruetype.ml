@@ -4,7 +4,7 @@ open Pdfio
 
 (* FIXME No need for bitstream - everything is byte based, so we can use a normal input *)
 
-let dbg = ref false
+let dbg = ref true
 
 type t =
   {flags : int;
@@ -260,6 +260,9 @@ let write_glyf_table subset cmap bs mk_b glyfoffset loca =
     for x = 1 to padding do putval bs 8 0l done;
     len
 
+let write_cmap_table subset cmap bs =
+  0l
+
 let read_os2_table unitsPerEm b blength =
   let version = read_ushort b in
   if !dbg then Printf.printf "OS/2 table blength = %i bytes, version number = %i\n" blength version;
@@ -369,6 +372,7 @@ let subset_font major minor tables indexToLocFormat subset encoding cmap loca mk
   (* Reduce offsets by the reduction in header table size *)
   let header_size_reduction = i32ofi (16 * (Array.length tables - length !tablesout)) in
   let glyf_table_size_reduction = ref 0l in
+  let cmap_table_size_reduction = ref 0l in
   let newtables =
     Array.of_list
       (map
@@ -381,12 +385,23 @@ let subset_font major minor tables indexToLocFormat subset encoding cmap loca mk
                   if !dbg then Printf.printf "new glyf table length = %li\n" newlen;
                   glyf_table_size_reduction := i32sub (padword ttlength) paddedlen;
                   newlen
-            else ttlength
+              else if string_of_tag tag = "cmap" && subset <> [] then
+                let bs = make_write_bitstream () in
+                  let newlen = write_cmap_table subset cmap bs in
+                  let paddedlen = i32ofi (bytes_size (bytes_of_write_bitstream bs)) in
+                    if !dbg then Printf.printf "new cmap table length = %li\n" newlen;
+                    cmap_table_size_reduction := i32sub (padword ttlength) paddedlen;
+                    newlen
+              else
+                ttlength
           in
+            (* Don't reduce by a table size reduction we have just set, but otherwise do. *)
             let offset' =
               i32sub
                 (i32sub offset header_size_reduction)
-                (if string_of_tag tag = "glyf" then 0l else !glyf_table_size_reduction)
+                (if string_of_tag tag = "glyf" then !cmap_table_size_reduction else
+                 if string_of_tag tag = "cmap" then !glyf_table_size_reduction else
+                   i32add !cmap_table_size_reduction !glyf_table_size_reduction)
             in
               (tag, checksum, offset', ttlength))
         (rev !tablesout))
