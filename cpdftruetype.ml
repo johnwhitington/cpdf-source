@@ -2,7 +2,7 @@
 open Pdfutil
 open Pdfio
 
-let dbg = ref true
+let dbg = ref false
 
 type t =
   {flags : int;
@@ -26,17 +26,22 @@ type t =
    tounicode : (int, string) Hashtbl.t option}
 
 let debug_t t =
-  Printf.printf "firstchar: %i\n" t.firstchar;
-  Printf.printf "lastchar: %i\n" t.lastchar;
-  Printf.printf "widths:"; Array.iter (Printf.printf " %i") t.widths; Printf.printf "\n";
-  Printf.printf "fontfile of length %i\n" (Pdfio.bytes_size t.subset_fontfile);
-  Printf.printf "subset:"; iter (Printf.printf " U+%04X") t.subset; Printf.printf "\n";
-  Printf.printf "tounicode:";
-  begin match t.tounicode with
-  | None -> Printf.printf "None";
-  | Some table -> Hashtbl.iter (fun k v -> Printf.printf "%i --> %s\n" k v) table
-  end;
-  Printf.printf "\n"
+  let hex u =
+    let b = Buffer.create 32 in
+    String.iter (fun x -> Buffer.add_string b (Printf.sprintf "%02X" (int_of_char x))) u;
+    Buffer.contents b
+  in
+    Printf.printf "firstchar: %i\n" t.firstchar;
+    Printf.printf "lastchar: %i\n" t.lastchar;
+    Printf.printf "widths:"; Array.iter (Printf.printf " %i") t.widths; Printf.printf "\n";
+    Printf.printf "fontfile of length %i\n" (Pdfio.bytes_size t.subset_fontfile);
+    Printf.printf "subset:"; iter (Printf.printf " U+%04X") t.subset; Printf.printf "\n";
+    Printf.printf "tounicode:\n";
+    begin match t.tounicode with
+    | None -> Printf.printf "None";
+    | Some table -> iter (fun (k, v) -> Printf.printf "%i --> U+%s\n" k (hex v)) (sort compare (list_of_hashtbl table))
+    end;
+    Printf.printf "\n"
 
 let required_tables =
   ["head"; "hhea"; "loca"; "cmap"; "maxp"; "cvt "; "glyf"; "prep"; "hmtx"; "fpgm"]
