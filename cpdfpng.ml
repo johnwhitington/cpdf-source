@@ -64,7 +64,7 @@ let write_word b x n =
     Bytes.set b (x + 3) (char_of_int s)
 
 let write_png png o =
-  if bytes_size png.idat > 2147483647 then raise (Invalid_argument "write_png: too large") else
+  if bytes_size png.idat > 1073741823 then raise (Invalid_argument "write_png: too large") else
   if Array.length !tbl = 0 then mktbl ();
   o.output_string "\137\080\078\071\013\010\026\010";
   let ihdr = Bytes.make 13 '\000' in
