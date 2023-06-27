@@ -4064,6 +4064,8 @@ let go () =
   | Some ScaleToFit ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
+          warn_prerotate range pdf;
+          let pdf = if args.prerotate then prerotate range pdf else pdf in
           let xylist = Cpdfcoord.parse_coordinates pdf args.coord
           and scale = args.scale in
             write_pdf false (Cpdfpage.scale_to_fit_pdf ~fast:args.fast args.position scale xylist args.op pdf range)

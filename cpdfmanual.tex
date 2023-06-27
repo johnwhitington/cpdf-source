@@ -1337,7 +1337,7 @@ The encryption parameters described in Chapter \ref{encryption} may be added to 
    
   \vspace{1.5mm}
   \small\noindent\verb!cpdf -scale-to-fit "<x size> <y size>" [-fast]!\\
-        \noindent\verb!     [-scale-to-fit-scale <scale>]!\\    
+        \noindent\verb!     [-scale-to-fit-scale <scale>] [-prerotate]!\\    
         \noindent\verb!     in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
@@ -1454,7 +1454,7 @@ Y factors given. This scales both the page contents, and the page size itself. I
   \noindent Scale a file's pages to fit A4 portrait, scaling the page 90\% of its possible size.
   \end{framed}
 
-\noindent NB: \texttt{-scale-to-fit} operates with respect to the media box not the crop box. If necessary, set the media box to be equal to the crop box first. In addition, \texttt{-scale-to-fit} presently requires that the origin of the media box be (0, 0). This can be assured by preprocessing with \texttt{-upright} (described elsewhere in this chapter).
+\noindent NB: \texttt{-scale-to-fit} operates with respect to the media box not the crop box. If necessary, set the media box to be equal to the crop box first. In addition, \texttt{-scale-to-fit} presently requires that the origin of the media box be (0, 0). This can be assured by preprocessing with \texttt{-upright} (described elsewhere in this chapter) or by adding the \texttt{-prerotate} option to the command.
 
 The \texttt{-scale-contents} operation scales the contents about the center
   of the crop box (or, if absent, the media box), leaving the page dimensions
