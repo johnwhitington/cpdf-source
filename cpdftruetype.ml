@@ -562,7 +562,7 @@ let parse ?(subset=[]) data encoding =
         in
         let ascent, descent, capheight, xheight, avgwidth =
           match os2 with
-          | None -> raise (Pdf.PDFError "No os/2 table found in truetype font")
+          | None -> (0, 0, 0, 0, 0) (* FIXME raise (Pdf.PDFError "No os/2 table found in truetype font") *)
           | Some (o, l) -> let b = mk_b (i32toi o) in read_os2_table unitsPerEm b (i32toi l)
         in
         let italicangle =
