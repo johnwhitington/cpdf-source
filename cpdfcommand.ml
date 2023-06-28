@@ -3,7 +3,7 @@ let demo = false
 let noncomp = false
 let major_version = 2
 let minor_version = 6
-let version_date = "(beta, 27th Jun 2023)"
+let version_date = "(28th Jun 2023)"
 
 open Pdfutil
 open Pdfio
@@ -81,7 +81,6 @@ let parse_pagespec pdf spec =
     Failure x -> error x
 
 (* We allow an operation such as ScaleToFit on a range such as 'portrait' to be silently null to allow, for example:
-
 cpdf -scale-to-fit a4portrait in.pdf portrait AND -scale-to-fit a4landscape landscape -o out.pdf
 *)
 let parse_pagespec_allow_empty pdf spec =
@@ -3592,7 +3591,6 @@ let go () =
       | _ -> error "remove fonts: bad command line"
       end
   | Some ExtractFontFile ->
-      (*Graphics.open_graph " 1600x1050";*)
       begin match args.inputs, args.out with
       | (_, pagespec, u, o, _, _)::_, _ ->
           let pdf = get_single_pdf (Some ExtractFontFile) false in
