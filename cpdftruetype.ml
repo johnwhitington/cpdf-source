@@ -6,6 +6,7 @@ open Pdfio
 (* FIXME Don't create a second font unless we have to *)
 (* FIXME Create third, fourth etc. font when we need to *)
 (* FIXME Get rid of double-calling of this code to 1) make font then 2) collect chars then 3) subset it i.e the subset = [] stuff *)
+(* FIXME Check WinAnsiEncoding actually does the right thing, and covers all possible characters in that set *)
 let dbg = ref true
 
 type t =
@@ -264,7 +265,9 @@ let write_glyf_table subset cmap bs mk_b glyfoffset loca =
 
 let write_cmap_table subset cmap bs =
   if !dbg then Printf.printf "***write_cmap_table\n";
-  let glyphindexes = [130; 131; 132] in
+  let glyphindexes =
+    map (Hashtbl.find cmap) subset
+  in
   putval bs 16 0l; (* table version number *)
   putval bs 16 1l; (* number of encoding tables *)
   putval bs 16 1l; (* platform ID *)
@@ -306,7 +309,7 @@ let read_post_table b =
 let calculate_flags symbolic italicangle =
   let italic = if italicangle <> 0 then 1 else 0 in 
   let symbolic, nonsymbolic = if symbolic then 1, 0 else 0, 1 in
-    32 lor (italic lsl 6) lor (symbolic lsl 3) lor (nonsymbolic lsl 5)
+    (italic lsl 6) lor (symbolic lsl 2) lor (nonsymbolic lsl 5)
 
 let calculate_limits subset =
   if subset = [] then (0, 255) else
@@ -403,7 +406,7 @@ let subset_font major minor tables indexToLocFormat subset encoding cmap loca mk
                   if !dbg then Printf.printf "new glyf table length = %li\n" newlen;
                   glyf_table_size_reduction := i32sub (padword ttlength) paddedlen;
                   newlen
-              else if string_of_tag tag = "cmap" && subset <> [] then
+              else if string_of_tag tag = "cmap" && subset <> [] && encoding = Pdftext.ImplicitInFontFile then
                 let bs = make_write_bitstream () in
                   let newlen = write_cmap_table subset cmap bs in
                   let paddedlen = i32ofi (bytes_size (bytes_of_write_bitstream bs)) in
@@ -473,7 +476,7 @@ let subset_font major minor tables indexToLocFormat subset encoding cmap loca mk
         write_loca_table subset cmap indexToLocFormat bs loca
       else if string_of_tag tag = "glyf" && subset <> [] then
         ignore (write_glyf_table subset cmap bs mk_b glyfoffset loca)
-      else if string_of_tag tag = "cmap" && subset <> [] then
+      else if string_of_tag tag = "cmap" && subset <> [] && encoding = Pdftext.ImplicitInFontFile then
         ignore (write_cmap_table subset cmap bs)
       else
         match findtag tag with
@@ -663,7 +666,7 @@ let parse ?(subset=[]) data encoding =
             Printf.printf "Calculate higher subset\n";
             let second_subset =
               subset_font major minor !tables indexToLocFormat subset_2
-              encoding !glyphcodes loca mk_b glyfoffset data
+              Pdftext.ImplicitInFontFile !glyphcodes loca mk_b glyfoffset data
             in
               let second_tounicode =
                 if subset = [] then None else
