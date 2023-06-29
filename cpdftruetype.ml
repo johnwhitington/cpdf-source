@@ -473,6 +473,8 @@ let subset_font major minor tables indexToLocFormat subset encoding cmap loca mk
         write_loca_table subset cmap indexToLocFormat bs loca
       else if string_of_tag tag = "glyf" && subset <> [] then
         ignore (write_glyf_table subset cmap bs mk_b glyfoffset loca)
+      else if string_of_tag tag = "cmap" && subset <> [] then
+        ignore (write_cmap_table subset cmap bs)
       else
         match findtag tag with
         | (og_off, Some len) ->
