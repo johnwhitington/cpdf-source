@@ -9,6 +9,10 @@ open Pdfio
 (* FIXME Check WinAnsiEncoding actually does the right thing, and covers all possible characters in that set *)
 let dbg = ref true
 
+(* FIXME: remove *)
+let _ =
+  Pdfe.logger := (fun s -> print_string s; flush stdout)
+
 type t =
   {flags : int;
    minx : int;
@@ -199,6 +203,48 @@ let read_loca_table indexToLocFormat numGlyphs b =
   | 1 -> Array.init (numGlyphs + 1) (function _ -> read_ulong b)
   | _ -> raise (Pdf.PDFError "Unknown indexToLocFormat in read_loca_table")
 
+let read_os2_table unitsPerEm b blength =
+  let version = read_ushort b in
+  if !dbg then Printf.printf "OS/2 table blength = %i bytes, version number = %i\n" blength version;
+  let xAvgCharWidth = pdf_unit unitsPerEm (read_short b) in
+  discard_bytes b 64; (* discard 14 entries usWeightClass...fsLastCharIndex *)
+  (* -- end of original OS/2 Version 0 Truetype table. Must check length before reading now. *)
+  let sTypoAscender = if blength > 68 then pdf_unit unitsPerEm (read_short b) else 0 in
+  let sTypoDescender = if blength > 68 then pdf_unit unitsPerEm (read_short b) else 0 in
+  discard_bytes b 6; (* discard sTypoLineGap...usWinDescent *)
+  (* -- end of OpenType version 0 table *)
+  discard_bytes b 8; (* discard ulCodePageRange1, ulCodePageRange2 *)
+  (* -- end of OpenType version 1 table *)
+  let sxHeight = if version < 2 then 0 else pdf_unit unitsPerEm (read_short b) in
+  let sCapHeight = if version < 2 then 0 else pdf_unit unitsPerEm (read_short b) in
+    (sTypoAscender, sTypoDescender, sCapHeight, sxHeight, xAvgCharWidth)
+
+let read_post_table b =
+  discard_bytes b 4; (* discard version *)
+  let italicangle, n = read_fixed b in
+    italicangle
+
+(* (nb bit 1 is actualy bit 0 etc.) *)
+let calculate_flags symbolic italicangle =
+  let italic = if italicangle <> 0 then 1 else 0 in 
+  let symbolic, nonsymbolic = if symbolic then 1, 0 else 0, 1 in
+    (italic lsl 6) lor (symbolic lsl 2) lor (nonsymbolic lsl 5)
+
+let calculate_limits subset =
+  if subset = [] then (0, 255) else
+    extremes (sort compare subset)
+
+let calculate_stemv () = 0
+
+let read_hhea_table b =
+  discard_bytes b 34;
+  read_ushort b (* numOfLongHorMetrics *)
+
+let read_hmtx_table numOfLongHorMetrics b =
+  Array.init
+    numOfLongHorMetrics
+    (fun _ -> let r = read_ushort b in ignore (read_short b); r)
+
 let write_loca_table subset cmap indexToLocFormat bs loca =
   let locnums = null_hash () in
     Hashtbl.add locnums 0 (); (* .notdef *)
@@ -290,56 +336,14 @@ let write_cmap_table subset cmap bs =
   for x = 1 to padding do putval bs 8 0l done;
   len
 
-let read_os2_table unitsPerEm b blength =
-  let version = read_ushort b in
-  if !dbg then Printf.printf "OS/2 table blength = %i bytes, version number = %i\n" blength version;
-  let xAvgCharWidth = pdf_unit unitsPerEm (read_short b) in
-  discard_bytes b 64; (* discard 14 entries usWeightClass...fsLastCharIndex *)
-  (* -- end of original OS/2 Version 0 Truetype table. Must check length before reading now. *)
-  let sTypoAscender = if blength > 68 then pdf_unit unitsPerEm (read_short b) else 0 in
-  let sTypoDescender = if blength > 68 then pdf_unit unitsPerEm (read_short b) else 0 in
-  discard_bytes b 6; (* discard sTypoLineGap...usWinDescent *)
-  (* -- end of OpenType version 0 table *)
-  discard_bytes b 8; (* discard ulCodePageRange1, ulCodePageRange2 *)
-  (* -- end of OpenType version 1 table *)
-  let sxHeight = if version < 2 then 0 else pdf_unit unitsPerEm (read_short b) in
-  let sCapHeight = if version < 2 then 0 else pdf_unit unitsPerEm (read_short b) in
-    (sTypoAscender, sTypoDescender, sCapHeight, sxHeight, xAvgCharWidth)
-
-let read_post_table b =
-  discard_bytes b 4; (* discard version *)
-  let italicangle, n = read_fixed b in
-    italicangle
-
-(* (nb bit 1 is actualy bit 0 etc.) *)
-let calculate_flags symbolic italicangle =
-  let italic = if italicangle <> 0 then 1 else 0 in 
-  let symbolic, nonsymbolic = if symbolic then 1, 0 else 0, 1 in
-    (italic lsl 6) lor (symbolic lsl 2) lor (nonsymbolic lsl 5)
-
-let calculate_limits subset =
-  if subset = [] then (0, 255) else
-    extremes (sort compare subset)
-
-let calculate_stemv () = 0
-
-let read_hhea_table b =
-  discard_bytes b 34;
-  read_ushort b (* numOfLongHorMetrics *)
-
-let read_hmtx_table numOfLongHorMetrics b =
-  Array.init
-    numOfLongHorMetrics
-    (fun _ -> let r = read_ushort b in ignore (read_short b); r)
-
-(* For widths, we need the unicode code, not the unencoded byte *)
-let unicode_codepoint_of_pdfcode encoding_table glyphlist_table p =
-  try
-    hd (Hashtbl.find glyphlist_table (Hashtbl.find encoding_table p))
-  with
-    Not_found -> 0
-
 let calculate_widths unitsPerEm encoding firstchar lastchar subset cmapdata hmtxdata =
+  (* For widths, we need the unicode code, not the unencoded byte *)
+  let unicode_codepoint_of_pdfcode encoding_table glyphlist_table p =
+    try
+      hd (Hashtbl.find glyphlist_table (Hashtbl.find encoding_table p))
+    with
+      Not_found -> 0
+  in
   if lastchar < firstchar then failwith "lastchar < firstchar" else
   (*if !dbg then List.iter (fun (a, b) -> Printf.printf "%i -> %i\n" a b) (sort compare (list_of_hashtbl cmapdata));*)
   let encoding_table = Pdftext.table_of_encoding encoding in
@@ -507,10 +511,6 @@ let subset_font major minor tables indexToLocFormat subset encoding cmap loca mk
           close_out o
       end;
     obs
-
-(* FIXME: remove *)
-let _ =
-  Pdfe.logger := (fun s -> print_string s; flush stdout)
 
 let write_font filename data =
   let fh = open_out_bin filename in
