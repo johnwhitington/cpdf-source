@@ -386,10 +386,12 @@ let subset_font major minor tables indexToLocFormat subset encoding cmap loca mk
     (fun i (tag, checkSum, offset, ttlength) ->
       if !dbg then Printf.printf "tag = %li = %s, offset = %li\n" tag (string_of_tag tag) offset;
       if mem (string_of_tag tag) required_tables then
-         tablesout := (tag, checkSum, i32sub offset !cut, ttlength)::!tablesout
+        tablesout := (tag, checkSum, i32sub offset !cut, ttlength)::!tablesout
       else
-        cut := i32add !cut (match tables.(i + 1) with (_, _, offset', _) -> i32sub offset' offset))
+        if i < Array.length tables - 1 then
+          cut := i32add !cut (match tables.(i + 1) with (_, _, offset', _) -> i32sub offset' offset))
     tables;
+  Printf.printf "*********** after iteri\n";
   (* Reduce offsets by the reduction in header table size *)
   let header_size_reduction = i32ofi (16 * (Array.length tables - length !tablesout)) in
   let glyf_table_size_reduction = ref 0l in
