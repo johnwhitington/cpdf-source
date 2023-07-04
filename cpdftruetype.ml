@@ -208,10 +208,11 @@ let write_loca_table subset cmap indexToLocFormat bs loca =
            if !dbg then Printf.printf "write_loca_table: Unicode U+%04X is at location number %i\n" u locnum;
            Hashtbl.add locnums locnum ())
       subset;
+  let len = ref 0 in
   let write_entry loc position =
     match indexToLocFormat with
-    | 0 -> putval bs 16 (i32div position 2l)
-    | 1 -> putval bs 32 position
+    | 0 -> len += 2; putval bs 16 (i32div position 2l)
+    | 1 -> len += 4; putval bs 32 position
     | _ -> raise (Pdf.PDFError "Unknown indexToLocFormat in write_loca_table")
   in
   let pos = ref 0l in
@@ -235,7 +236,10 @@ let write_loca_table subset cmap indexToLocFormat bs loca =
            end
          else
            write_entry loc off)
-      pairs
+      pairs;
+    let padding = if !len mod 4 = 0 then 0 else 4 - !len mod 4 in
+    Printf.printf "***loca table - adding %i bytes of padding\n" padding;
+    for x = 1 to padding do putval bs 8 0l done
 
 (* Write the notdef glyf, and any others in the subset *)
 let write_glyf_table subset cmap bs mk_b glyfoffset loca =
@@ -259,7 +263,8 @@ let write_glyf_table subset cmap bs mk_b glyfoffset loca =
       for x = 1 to i32toi l do putval bs 8 (getval_32 b 8) done
   in
     iter (fun (a, b) -> write_bytes bs a (i32sub b a)) byteranges;
-    let padding = 4 - i32toi len mod 4 in
+    let padding = if i32toi len mod 4 = 0 then 0 else 4 - i32toi len mod 4 in
+    Printf.printf "***glyf table - adding %i bytes of padding\n" padding;
     for x = 1 to padding do putval bs 8 0l done;
     len
 
@@ -280,7 +285,8 @@ let write_cmap_table subset cmap bs =
   putval bs 16 (i32ofi (length glyphindexes)); (* number of character codes *)
   iter (fun gi -> putval bs 16 (i32ofi gi)) glyphindexes; (* glyph indexes *)
   let len = i32ofi (22 + 2 * length glyphindexes) in
-  let padding = 4 - i32toi len mod 4 in
+  let padding = if i32toi len mod 4 = 0 then 0 else 4 - i32toi len mod 4 in
+  Printf.printf "***cmap table - adding %i bytes of padding\n" padding;
   for x = 1 to padding do putval bs 8 0l done;
   len
 
