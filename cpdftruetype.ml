@@ -1,7 +1,8 @@
-(* Truetype font parsing and subsetting *)
+(* Make one or more subsets from a TrueType font *)
 open Pdfutil
 open Pdfio
 
+(* FIXME Missing characters in Bear example *)
 (* FIXME No need for bitstream - everything is byte based, so we can use a normal input *)
 (* FIXME Don't create a second font unless we have to *)
 (* FIXME Create third, fourth etc. font when we need to *)
@@ -11,10 +12,10 @@ open Pdfio
 (* FIXME Rationalise padding code *)
 (* FIXME Document the mechanisms we use *)
 (* FIXME Proper table choice mechanism *)
-let dbg = ref false
+let dbg = ref true
 
-(*let _ =
-  Pdfe.logger := (fun s -> print_string s; flush stdout)*)
+let _ =
+  Pdfe.logger := (fun s -> print_string s; flush stdout)
 
 type t =
   {flags : int;
