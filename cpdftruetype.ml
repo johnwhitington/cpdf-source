@@ -245,9 +245,16 @@ let read_hhea_table b =
   read_ushort b (* numOfLongHorMetrics *)
 
 let read_hmtx_table numOfLongHorMetrics b =
+  Printf.printf "**** numOfLongHorMetrics = %i\n" numOfLongHorMetrics;
+  let r = 
   Array.init
     numOfLongHorMetrics
     (fun _ -> let r = read_ushort b in ignore (read_short b); r)
+  in
+   for x = 0 to numOfLongHorMetrics - 1 do
+     Printf.printf "longHorMetrics %i = %i\n" x r.(x)
+   done;
+   r
 
 let write_loca_table subset cmap indexToLocFormat bs loca =
   let locnums = null_hash () in
@@ -360,7 +367,8 @@ let calculate_widths unitsPerEm encoding firstchar lastchar subset cmapdata hmtx
        try
          let glyphnum = Hashtbl.find cmapdata code in
            if !dbg then Printf.printf "glyph number %i --> " glyphnum;
-           let width = hmtxdata.(glyphnum) in
+           (* If it fails, we are a monospaced font. Pick the last hmtxdata entry. *)
+           let width = try hmtxdata.(glyphnum) with _ -> hmtxdata.(Array.length hmtxdata - 1) in
            if !dbg then Printf.printf "width %i\n" width;
              pdf_unit unitsPerEm width
        with e -> if !dbg then Printf.printf "no width for %i\n" code; 0)
@@ -372,7 +380,9 @@ let calculate_width_higher unitsPerEm firstchar lastchar subset cmapdata hmtxdat
      (fun pos ->
         let glyphnum = Hashtbl.find cmapdata subset.(pos) in
         if !dbg then Printf.printf "glyph number %i --> " glyphnum;
-          let width = hmtxdata.(glyphnum) in
+          Printf.printf "hmtxdata length = %i\n" (Array.length hmtxdata);
+          (* If it fails, we are a monospaced font. Pick the last hmtxdata entry. *)
+          let width = try hmtxdata.(glyphnum) with _ -> hmtxdata.(Array.length hmtxdata - 1) in
           if !dbg then Printf.printf "width %i\n" width;
             pdf_unit unitsPerEm width)
 
@@ -706,3 +716,7 @@ let parse ?(subset=[]) data encoding =
                 debug_t two;
                 write_font "two.ttf" two.subset_fontfile;*)
                 [one; two]
+
+let parse ?(subset=[]) data encoding =
+  try parse ~subset data encoding with
+    e -> raise (Cpdferror.error ("Failed to parse TrueType font: " ^ Printexc.to_string e))
