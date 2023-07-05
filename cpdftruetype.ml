@@ -8,6 +8,9 @@ open Pdfio
 (* FIXME Get rid of double-calling of this code to 1) make font then 2) collect chars then 3) subset it i.e the subset = [] stuff *)
 (* FIXME Check WinAnsiEncoding actually does the right thing, and covers all possible characters in that set *)
 (* FIXME Subset names better than AAAAAB *)
+(* FIXME Rationalise padding code *)
+(* FIXME Document the mechanisms we use *)
+(* FIXME Proper table choice mechanism *)
 let dbg = ref false
 
 (*let _ =
