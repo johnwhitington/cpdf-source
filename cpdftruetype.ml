@@ -322,7 +322,7 @@ let write_cmap_table subset cmap bs =
   putval bs 16 0l; (* table version number *)
   putval bs 16 1l; (* number of encoding tables *)
   putval bs 16 1l; (* platform ID *)
-  putval bs 16 1l; (* platform encoding ID *)
+  putval bs 16 0l; (* platform encoding ID *)
   putval bs 32 12l; (* subtable offset = 12 bytes from beginning of table *)
   putval bs 16 6l; (* Table format 6 *)
   putval bs 16 (i32ofi (10 + 2 * length glyphindexes)); (* subtable length *)
@@ -518,10 +518,11 @@ let write_font filename data =
     close_out fh
 
 let find_main encoding subset =
-  let encoding_table = Pdftext.table_of_encoding encoding in
+  cleave subset 3 
+  (*let encoding_table = Pdftext.table_of_encoding encoding in
     List.partition
       (fun u -> try ignore (Hashtbl.find encoding_table u); true with Not_found -> false)
-      subset
+      subset*)
 
 let parse ?(subset=[]) data encoding =
   if !dbg then
