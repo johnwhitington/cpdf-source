@@ -7,11 +7,11 @@ open Pdfio
 (* FIXME Create third, fourth etc. font when we need to *)
 (* FIXME Get rid of double-calling of this code to 1) make font then 2) collect chars then 3) subset it i.e the subset = [] stuff *)
 (* FIXME Check WinAnsiEncoding actually does the right thing, and covers all possible characters in that set *)
-let dbg = ref true
+(* FIXME Subset names better than AAAAAB *)
+let dbg = ref false
 
-(* FIXME: remove *)
-let _ =
-  Pdfe.logger := (fun s -> print_string s; flush stdout)
+(*let _ =
+  Pdfe.logger := (fun s -> print_string s; flush stdout)*)
 
 type t =
   {flags : int;
@@ -284,7 +284,6 @@ let write_loca_table subset cmap indexToLocFormat bs loca =
            write_entry loc off)
       pairs;
     let padding = if !len mod 4 = 0 then 0 else 4 - !len mod 4 in
-    Printf.printf "***loca table - adding %i bytes of padding\n" padding;
     for x = 1 to padding do putval bs 8 0l done
 
 (* Write the notdef glyf, and any others in the subset *)
@@ -310,7 +309,6 @@ let write_glyf_table subset cmap bs mk_b glyfoffset loca =
   in
     iter (fun (a, b) -> write_bytes bs a (i32sub b a)) byteranges;
     let padding = if i32toi len mod 4 = 0 then 0 else 4 - i32toi len mod 4 in
-    Printf.printf "***glyf table - adding %i bytes of padding\n" padding;
     for x = 1 to padding do putval bs 8 0l done;
     len
 
@@ -332,7 +330,6 @@ let write_cmap_table subset cmap bs =
   iter (fun gi -> putval bs 16 (i32ofi gi)) glyphindexes; (* glyph indexes *)
   let len = i32ofi (22 + 2 * length glyphindexes) in
   let padding = if i32toi len mod 4 = 0 then 0 else 4 - i32toi len mod 4 in
-  Printf.printf "***cmap table - adding %i bytes of padding\n" padding;
   for x = 1 to padding do putval bs 8 0l done;
   len
 
@@ -401,8 +398,6 @@ let subset_font major minor tables indexToLocFormat subset encoding cmap loca mk
         if i < Array.length tables - 1 then
           cut := i32add !cut (match tables.(i + 1) with (_, _, offset', _) -> i32sub offset' offset))
     tables;
-  Printf.printf "*********** after iteri\n";
-  (* Reduce offsets by the reduction in header table size *)
   let header_size_reduction = i32ofi (16 * (Array.length tables - length !tablesout)) in
   let glyf_table_size_reduction = ref 0l in
   let cmap_table_size_reduction = ref 0l in
@@ -633,7 +628,7 @@ let parse ?(subset=[]) data encoding =
             | [] -> raise (Pdf.PDFError "No loca table found in TrueType font")
           in
             let subset_1, subset_2 = find_main encoding subset in
-            (*if !dbg && subset <> [] then*)
+            if !dbg && subset <> [] then
               begin
                 Printf.printf "***********Chars for main WinAnsiEncoding subset:\n";
                 iter (Printf.printf "U+%04X ") subset_1;
@@ -655,7 +650,7 @@ let parse ?(subset=[]) data encoding =
               | (_, _, o, _)::_ -> read_hmtx_table numOfLongHorMetrics (mk_b (i32toi o))
               | [] -> raise (Pdf.PDFError "No hmtx table found in TrueType font")
             in
-            Printf.printf "firstchar_1, lastchar_1, firstchar_2, lastchar_2 = %i, %i, %i%, %i\n" firstchar_1 lastchar_1 firstchar_2 lastchar_2;
+            (*Printf.printf "firstchar_1, lastchar_1, firstchar_2, lastchar_2 = %i, %i, %i%, %i\n" firstchar_1 lastchar_1 firstchar_2 lastchar_2;*)
             let widths_1 = calculate_widths unitsPerEm encoding firstchar_1 lastchar_1 subset_1 !glyphcodes hmtxdata in
             let widths_2 = calculate_width_higher unitsPerEm firstchar_2 lastchar_2 subset_2 !glyphcodes hmtxdata in
             let maxwidth = calculate_maxwidth unitsPerEm hmtxdata in
@@ -667,12 +662,12 @@ let parse ?(subset=[]) data encoding =
               | (_, _, o, l)::_ -> o, l
               | [] -> raise (Pdf.PDFError "No glyf table found in TrueType font")
             in
-            Printf.printf "Calculate main subset\n";
+            (*Printf.printf "Calculate main subset\n";*)
             let main_subset =
               subset_font major minor !tables indexToLocFormat subset_1
               encoding !glyphcodes loca mk_b glyfoffset data
             in
-            Printf.printf "Calculate higher subset\n";
+            (*Printf.printf "Calculate higher subset\n";*)
             let second_subset =
               subset_font major minor !tables indexToLocFormat subset_2
               Pdftext.ImplicitInFontFile !glyphcodes loca mk_b glyfoffset data
@@ -688,7 +683,7 @@ let parse ?(subset=[]) data encoding =
                       subset_2;
                     Some h
               in
-              Printf.printf "returning the fonts. Job done.\n";
+              (*Printf.printf "returning the fonts. Job done.\n";*)
               let one = 
                 {flags = flags_1; minx; miny; maxx; maxy; italicangle; ascent; descent;
                 capheight; stemv; xheight; avgwidth; maxwidth; firstchar = firstchar_1; lastchar = lastchar_1;
@@ -700,10 +695,10 @@ let parse ?(subset=[]) data encoding =
                 widths = widths_2; subset_fontfile = second_subset; subset = subset_2;
                 tounicode = second_tounicode}
               in
-                Printf.printf "\nMain subset:\n";
+                (*Printf.printf "\nMain subset:\n";
                 debug_t one;
                 write_font "one.ttf" one.subset_fontfile;
                 Printf.printf "\nHigher subset:\n";
                 debug_t two;
-                write_font "two.ttf" two.subset_fontfile;
+                write_font "two.ttf" two.subset_fontfile;*)
                 [one; two]

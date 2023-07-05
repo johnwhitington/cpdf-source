@@ -10,7 +10,7 @@ let rec of_utf8_with_newlines fontpack fontsize t =
       (fun u ->
          match Cpdfembed.get_char fontpack u with
          | Some (c, n, f) ->
-             Printf.printf "Charcode %i, font number %i\n" c n;
+             (*Printf.printf "Charcode %i, font number %i\n" c n;*)
              begin if n <> !currfont then
                begin
                  if !currtext <> [] then items := Cpdftype.Text (rev !currtext)::!items;

@@ -91,5 +91,4 @@ let make_fontpack_hashtable fs =
 let embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding =
   let fs = Cpdftruetype.parse ~subset:codepoints fontfile encoding in
   let subsets_and_their_fonts =  map (make_single_font ~fontname ~encoding pdf) fs in
-    Printf.printf "embed_truetype finished\n";
     (map snd subsets_and_their_fonts, make_fontpack_hashtable subsets_and_their_fonts)
