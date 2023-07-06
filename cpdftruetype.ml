@@ -5,8 +5,7 @@ open Pdfio
 (* FIXME Proper widths for .notdef, and warn on .notdef being produced *)
 (* FIXME Add suport for composite glyphs *)
 (* FIXME No need for bitstream - everything is byte based, so we can use a normal input *)
-(* FIXME Get rid of double-calling of this code to 1) make font then 2) collect chars then 3) subset it i.e the subset = [] stuff *)
-(* FIXME Subset names better than AAAAAB *)
+(* FIXME Get rid of double-calling 1) make font then 2) collect chars then 3) subset it i.e the subset = [] stuff *)
 (* FIXME All uses - add text / drawing / texttopdf / table of contents *)
 (* FIXME Work across AND? *)
 let dbg = ref false
