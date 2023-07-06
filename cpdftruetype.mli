@@ -27,4 +27,4 @@ type t =
    additional characters in the font. For subsetting, or to return a full
    font-pack, you should supply a subset (a list of unicode codepoints whose
    corresponding glyphs are required). *)
-val parse : ?subset:int list -> Pdfio.bytes -> Pdftext.encoding -> t list
+val parse : subset:int list -> Pdfio.bytes -> Pdftext.encoding -> int list * t list

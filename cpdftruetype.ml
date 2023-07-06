@@ -2,16 +2,13 @@
 open Pdfutil
 open Pdfio
 
-(* FIXME Missing characters in Bear example *)
+(* FIXME Add suport for composite glyphs *)
 (* FIXME No need for bitstream - everything is byte based, so we can use a normal input *)
-(* FIXME Don't create a second font unless we have to *)
-(* FIXME Create third, fourth etc. font when we need to *)
 (* FIXME Get rid of double-calling of this code to 1) make font then 2) collect chars then 3) subset it i.e the subset = [] stuff *)
-(* FIXME Check WinAnsiEncoding actually does the right thing, and covers all possible characters in that set *)
 (* FIXME Subset names better than AAAAAB *)
-(* FIXME Rationalise padding code *)
-(* FIXME Document the mechanisms we use *)
 (* FIXME Proper table choice mechanism *)
+(* FIXME All uses - add text / drawing / texttopdf / table of contents *)
+(* FIXME Work across AND? *)
 let dbg = ref true
 
 let _ =
@@ -86,6 +83,12 @@ let read_f2dot14 b =
 let discard_bytes b n =
   for x = 1 to n do ignore (getval_31 b 8) done
 
+let padding n =
+  if n mod 4 = 0 then 0 else 4 - n mod 4
+
+let padding32 n =
+  i32ofi (padding (i32toi n))
+
 let pdf_unit unitsPerEm x =
   int_of_float (float_of_int x *. 1000. /. float_of_int unitsPerEm +. 0.5)
 
@@ -100,71 +103,38 @@ let read_format_6_encoding_table b =
   let firstCode = read_ushort b in
   let entryCount = read_ushort b in
   let t = null_hash () in
-    try
-      for x = firstCode to firstCode + entryCount - 1 do
-        Hashtbl.add t x (read_ushort b)
-      done;
-      t
-    with
-      e -> failwith ("bad format 6 table: " ^ Printexc.to_string e ^ "\n")
+    for x = firstCode to firstCode + entryCount - 1 do
+      Hashtbl.add t x (read_ushort b)
+    done;
+    t
 
 let read_magic_formula b glyphIndexArrayStart seg segCount ro c sc =
-  if !dbg then Printf.printf "read_magic_formula: seg = %i, setCount = %i, ro = %i, c = %i, sc = %i\n" seg segCount ro c sc;
-  let position = seg - segCount + ro / 2 + (c - sc) in
-    if !dbg then Printf.printf "position is %i\n" position;
-    b.input.seek_in (glyphIndexArrayStart + position * 2);
-    b.bit <- 0;
-    b.bitsread <- 0;
-    b.currbyte <- 0;
-    read_short b
+  b.input.seek_in (glyphIndexArrayStart + (seg - segCount + ro / 2 + (c - sc)) * 2);
+  b.bit <- 0;
+  b.bitsread <- 0;
+  b.currbyte <- 0;
+  read_short b
 
 let read_format_4_encoding_table b =
   let t = null_hash () in
   let segCountX2 = read_ushort b in
   let segCount = segCountX2 / 2 in
-  let searchRange = read_ushort b in
-  let entrySelector = read_ushort b in
-  let rangeShift = read_ushort b in
+  let _ (* searchRange *) = read_ushort b in
+  let _ (* entrySelector *) = read_ushort b in
+  let _ (* rangeShift *) = read_ushort b in
   let endCodes = Array.init segCount (fun _ -> read_ushort b) in
   let _ (* reservedPad *) = read_ushort b in
   let startCodes = Array.init segCount (fun _ -> read_ushort b) in
   let idDelta = Array.init segCount (fun _ -> read_ushort b) in
   let idRangeOffset = Array.init segCount (fun _ -> read_ushort b) in
   let glyphIndexArrayStart = b.input.pos_in () in
-    if !dbg then Printf.printf "glyphIndexArrayStart = %i\n" glyphIndexArrayStart;
-    if !dbg then
-    begin
-    Printf.printf "segCount = %i, searchRange = %i, entrySelector = %i, rangeShift = %i\n" segCount searchRange entrySelector rangeShift;
-    Printf.printf "endCodes\n";
-    print_ints (Array.to_list endCodes);
-    Printf.printf "startCodes\n";
-    print_ints (Array.to_list startCodes);
-    Printf.printf "idDelta\n";
-    print_ints (Array.to_list idDelta);
-    Printf.printf "idRangeOffset\n";
-    print_ints (Array.to_list idRangeOffset);
-    end;
     for seg = 0 to segCount - 1 do
-      if !dbg then Printf.printf "Segment %i\n" seg;
-      let ec = endCodes.(seg) in
-      let sc = startCodes.(seg) in
-      let del = idDelta.(seg) in
-      let ro = idRangeOffset.(seg) in
-        if !dbg then Printf.printf "sc = %i, ec = %i, del = %i, ro = %i\n" sc ec del ro;
+      let ec, sc, del, ro = endCodes.(seg), startCodes.(seg), idDelta.(seg), idRangeOffset.(seg) in
         for c = sc to ec do
-          if !dbg then Printf.printf "Code %i\n" c;
           if c != 0xFFFF then
-            if ro = 0 then
-              Hashtbl.add t c ((c + del) mod 65536)
-            else
-              begin
-              if !dbg then flprint "format 4 magic required\n";
+            if ro = 0 then Hashtbl.add t c ((c + del) mod 65536) else
               let v = read_magic_formula b glyphIndexArrayStart seg segCount ro c sc in
-                if !dbg then Printf.printf "Value %i returned\n" v;
-                if v = 0
-                  then Hashtbl.add t c (let r = (c + del) mod 65536 in if !dbg then Printf.printf "into hash %i\n" r; r)
-                  else Hashtbl.add t c (let r = (v + del) mod 65536 in if !dbg then Printf.printf "into hash %i\n" r; r)
-              end
+                Hashtbl.add t c (((if v = 0 then c else v) + del) mod 65536)
         done
     done;
     t
@@ -245,25 +215,21 @@ let read_hhea_table b =
   read_ushort b (* numOfLongHorMetrics *)
 
 let read_hmtx_table numOfLongHorMetrics b =
-  Printf.printf "**** numOfLongHorMetrics = %i\n" numOfLongHorMetrics;
-  let r = 
   Array.init
     numOfLongHorMetrics
     (fun _ -> let r = read_ushort b in ignore (read_short b); r)
-  in
-   for x = 0 to numOfLongHorMetrics - 1 do
-     Printf.printf "longHorMetrics %i = %i\n" x r.(x)
-   done;
-   r
 
 let write_loca_table subset cmap indexToLocFormat bs loca =
   let locnums = null_hash () in
     Hashtbl.add locnums 0 (); (* .notdef *)
     iter
       (fun u ->
-         let locnum = Hashtbl.find cmap u in
+         try
+           let locnum = Hashtbl.find cmap u in
            if !dbg then Printf.printf "write_loca_table: Unicode U+%04X is at location number %i\n" u locnum;
-           Hashtbl.add locnums locnum ())
+           Hashtbl.add locnums locnum ()
+         with
+           Not_found -> ())
       subset;
   let len = ref 0 in
   let write_entry loc position =
@@ -294,8 +260,7 @@ let write_loca_table subset cmap indexToLocFormat bs loca =
          else
            write_entry loc off)
       pairs;
-    let padding = if !len mod 4 = 0 then 0 else 4 - !len mod 4 in
-    for x = 1 to padding do putval bs 8 0l done
+    for x = 1 to padding !len do putval bs 8 0l done
 
 (* Write the notdef glyf, and any others in the subset *)
 let write_glyf_table subset cmap bs mk_b glyfoffset loca =
@@ -304,9 +269,12 @@ let write_glyf_table subset cmap bs mk_b glyfoffset loca =
     Hashtbl.add locnums 0 (); (* .notdef *)
     iter
       (fun u ->
-         let locnum = Hashtbl.find cmap u in
-         if !dbg then Printf.printf "write_glyf_table: Unicode U+%04X is at location number %i\n" u locnum;
-           Hashtbl.add locnums locnum ())
+         try
+           let locnum = Hashtbl.find cmap u in
+             if !dbg then Printf.printf "write_glyf_table: Unicode U+%04X is at location number %i\n" u locnum;
+             Hashtbl.add locnums locnum ()
+           with
+             Not_found -> ())
       subset;
   let locnums = sort compare (map fst (list_of_hashtbl locnums)) in
   if !dbg then (Printf.printf "We want glyfs for locations: "; iter (Printf.printf "%i ") locnums; Printf.printf "\n");
@@ -319,14 +287,13 @@ let write_glyf_table subset cmap bs mk_b glyfoffset loca =
       for x = 1 to i32toi l do putval bs 8 (getval_32 b 8) done
   in
     iter (fun (a, b) -> write_bytes bs a (i32sub b a)) byteranges;
-    let padding = if i32toi len mod 4 = 0 then 0 else 4 - i32toi len mod 4 in
-    for x = 1 to padding do putval bs 8 0l done;
+    for x = 1 to padding (i32toi len) do putval bs 8 0l done;
     len
 
 let write_cmap_table subset cmap bs =
   if !dbg then Printf.printf "***write_cmap_table\n";
   let glyphindexes =
-    map (Hashtbl.find cmap) subset
+    map (fun code -> try Hashtbl.find cmap code with Not_found -> 0) subset
   in
   putval bs 16 0l; (* table version number *)
   putval bs 16 1l; (* number of encoding tables *)
@@ -340,8 +307,7 @@ let write_cmap_table subset cmap bs =
   putval bs 16 (i32ofi (length glyphindexes)); (* number of character codes *)
   iter (fun gi -> putval bs 16 (i32ofi gi)) glyphindexes; (* glyph indexes *)
   let len = i32ofi (22 + 2 * length glyphindexes) in
-  let padding = if i32toi len mod 4 = 0 then 0 else 4 - i32toi len mod 4 in
-  for x = 1 to padding do putval bs 8 0l done;
+  for x = 1 to padding (i32toi len) do putval bs 8 0l done;
   len
 
 let calculate_widths unitsPerEm encoding firstchar lastchar subset cmapdata hmtxdata =
@@ -352,7 +318,7 @@ let calculate_widths unitsPerEm encoding firstchar lastchar subset cmapdata hmtx
     with
       Not_found -> 0
   in
-  if lastchar < firstchar then failwith "lastchar < firstchar" else
+  if lastchar < firstchar then Cpdferror.error "lastchar < firstchar" else
   (*if !dbg then List.iter (fun (a, b) -> Printf.printf "%i -> %i\n" a b) (sort compare (list_of_hashtbl cmapdata));*)
   let encoding_table = Pdftext.table_of_encoding encoding in
   let glyphlist_table = Pdfglyphlist.glyph_hashes () in
@@ -378,21 +344,19 @@ let calculate_width_higher unitsPerEm firstchar lastchar subset cmapdata hmtxdat
    Array.init
      (lastchar - firstchar + 1)
      (fun pos ->
-        let glyphnum = Hashtbl.find cmapdata subset.(pos) in
-        if !dbg then Printf.printf "glyph number %i --> " glyphnum;
-          Printf.printf "hmtxdata length = %i\n" (Array.length hmtxdata);
-          (* If it fails, we are a monospaced font. Pick the last hmtxdata entry. *)
-          let width = try hmtxdata.(glyphnum) with _ -> hmtxdata.(Array.length hmtxdata - 1) in
-          if !dbg then Printf.printf "width %i\n" width;
-            pdf_unit unitsPerEm width)
+        try
+          let glyphnum = Hashtbl.find cmapdata subset.(pos) in
+          if !dbg then Printf.printf "glyph number %i --> " glyphnum;
+            (* If it fails, we are a monospaced font. Pick the last hmtxdata entry. *)
+            let width = try hmtxdata.(glyphnum) with _ -> hmtxdata.(Array.length hmtxdata - 1) in
+            if !dbg then Printf.printf "width %i\n" width;
+              pdf_unit unitsPerEm width
+        with
+          Not_found -> 0)
 
 let calculate_maxwidth unitsPerEm hmtxdata =
   pdf_unit unitsPerEm (hd (sort (fun a b -> compare b a) (Array.to_list hmtxdata)))
 
-let padword n =
-  let n = i32toi n in
-  let r = n + (if n mod 4 = 0 then 0 else 4 - n mod 4) in
-    i32ofi r
 
 let fonumr = ref (-1)
 
@@ -425,14 +389,14 @@ let subset_font major minor tables indexToLocFormat subset encoding cmap loca mk
                 let newlen = write_glyf_table subset cmap bs mk_b glyfoffset loca in
                 let paddedlen = i32ofi (bytes_size (bytes_of_write_bitstream bs)) in
                   if !dbg then Printf.printf "new glyf table length = %li\n" newlen;
-                  glyf_table_size_reduction := i32sub (padword ttlength) paddedlen;
+                  glyf_table_size_reduction := i32sub (i32add ttlength (padding32 ttlength)) paddedlen;
                   newlen
               else if string_of_tag tag = "cmap" && subset <> [] && encoding = Pdftext.ImplicitInFontFile then
-                let bs = make_write_bitstream () in
+                let bs = make_write_bitstream () in~/Dropbox/cpdfwork/ttf/10000fonts/AEROPLAN.TTF
                   let newlen = write_cmap_table subset cmap bs in
                   let paddedlen = i32ofi (bytes_size (bytes_of_write_bitstream bs)) in
                     if !dbg then Printf.printf "new cmap table length = %li\n" newlen;
-                    cmap_table_size_reduction := i32sub (padword ttlength) paddedlen;
+                    cmap_table_size_reduction := i32sub (i32add ttlength (padding32 ttlength)) paddedlen;
                     newlen
               else
                 ttlength
@@ -485,7 +449,7 @@ let subset_font major minor tables indexToLocFormat subset encoding cmap loca mk
               raise Exit
             end
       done;
-      failwith "failed to find table"
+      Cpdferror.error "failed to find table"
     with
       Exit -> (!off, !len)
     end
@@ -533,7 +497,7 @@ let find_main encoding subset =
       (fun u -> try ignore (Hashtbl.find encoding_table u); true with Not_found -> false)
       subset*)
 
-let parse ?(subset=[]) data encoding =
+let parse ~subset data encoding =
   if !dbg then
     begin
       Printf.printf "********Cpdftruetype.parse SUBSET is ";
@@ -617,14 +581,14 @@ let parse ?(subset=[]) data encoding =
                     let subtable_offset = read_ulong b in
                       if !dbg then Printf.printf "subtable %i. platform_id = %i, encoding_id = %i, subtable_offset = %li\n"
                         x platform_id encoding_id subtable_offset;
-                      let b = mk_b (i32toi cmapoffset + i32toi subtable_offset) in
-                        let fmt = read_ushort b in
-                        let lngth = read_ushort b in
-                        let version = read_ushort b in
-                          if !dbg then Printf.printf "subtable has format %i, length %i, version %i\n" fmt lngth version;
-                            let got_glyphcodes = read_encoding_table fmt lngth version b in
-                              if fmt = 4 then print_encoding_table 4 got_glyphcodes;
-                              if fmt = 4 then Hashtbl.iter (Hashtbl.add !glyphcodes) got_glyphcodes
+                    let b = mk_b (i32toi cmapoffset + i32toi subtable_offset) in
+                    let fmt = read_ushort b in
+                    let lngth = read_ushort b in
+                    let version = read_ushort b in
+                      if !dbg then Printf.printf "subtable has format %i, length %i, version %i\n" fmt lngth version;
+                    let got_glyphcodes = read_encoding_table fmt lngth version b in
+                      (*if fmt = 4 then print_encoding_table 4 got_glyphcodes;*)
+                      if fmt = 4 then Hashtbl.iter (Hashtbl.add !glyphcodes) got_glyphcodes
                   done;
           end;
           let maxpoffset, maxplength =
@@ -715,8 +679,8 @@ let parse ?(subset=[]) data encoding =
                 Printf.printf "\nHigher subset:\n";
                 debug_t two;
                 write_font "two.ttf" two.subset_fontfile;*)
-                [one; two]
+                (subset, [one; two])
 
-let parse ?(subset=[]) data encoding =
+(*let parse ~subset data encoding =
   try parse ~subset data encoding with
-    e -> raise (Cpdferror.error ("Failed to parse TrueType font: " ^ Printexc.to_string e))
+    e -> raise (Cpdferror.error ("Failed to parse TrueType font: " ^ Printexc.to_string e))*)
