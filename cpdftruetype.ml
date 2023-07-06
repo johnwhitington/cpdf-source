@@ -2,14 +2,14 @@
 open Pdfutil
 open Pdfio
 
+(* FIXME Proper widths for .notdef, and warn on .notdef being produced *)
 (* FIXME Add suport for composite glyphs *)
 (* FIXME No need for bitstream - everything is byte based, so we can use a normal input *)
 (* FIXME Get rid of double-calling of this code to 1) make font then 2) collect chars then 3) subset it i.e the subset = [] stuff *)
 (* FIXME Subset names better than AAAAAB *)
-(* FIXME Proper table choice mechanism *)
 (* FIXME All uses - add text / drawing / texttopdf / table of contents *)
 (* FIXME Work across AND? *)
-let dbg = ref true
+let dbg = ref false
 
 let _ =
   Pdfe.logger := (fun s -> print_string s; flush stdout)
@@ -151,7 +151,9 @@ let print_encoding_table format (table : (int, int) Hashtbl.t) =
   iter
     (fun (c, gi) ->
       let str = Printf.sprintf "%04X" c in
-        if !dbg then Printf.printf "Char %s (%s) is at glyph index %i\n" str (try Hashtbl.find unicodetable str with Not_found -> "Not_found") gi)
+        if !dbg then
+          Printf.printf "Char %s (%s) is at glyph index %i\n"
+          str (try Hashtbl.find unicodetable str with Not_found -> "Not_found") gi)
     l
 
 let read_encoding_table fmt length version b =
@@ -392,7 +394,7 @@ let subset_font major minor tables indexToLocFormat subset encoding cmap loca mk
                   glyf_table_size_reduction := i32sub (i32add ttlength (padding32 ttlength)) paddedlen;
                   newlen
               else if string_of_tag tag = "cmap" && subset <> [] && encoding = Pdftext.ImplicitInFontFile then
-                let bs = make_write_bitstream () in~/Dropbox/cpdfwork/ttf/10000fonts/AEROPLAN.TTF
+                let bs = make_write_bitstream () in
                   let newlen = write_cmap_table subset cmap bs in
                   let paddedlen = i32ofi (bytes_size (bytes_of_write_bitstream bs)) in
                     if !dbg then Printf.printf "new cmap table length = %li\n" newlen;
@@ -491,11 +493,14 @@ let write_font filename data =
     close_out fh
 
 let find_main encoding subset =
-  cleave subset 3 
-  (*let encoding_table = Pdftext.table_of_encoding encoding in
+  (*(take subset 3, [drop subset 3])*)
+  let encoding_table = Pdftext.table_of_encoding encoding in
+  let first, rest =
     List.partition
       (fun u -> try ignore (Hashtbl.find encoding_table u); true with Not_found -> false)
-      subset*)
+      subset
+  in
+    (first, splitinto 224 rest)
 
 let parse ~subset data encoding =
   if !dbg then
@@ -549,7 +554,7 @@ let parse ~subset data encoding =
         in
         let ascent, descent, capheight, xheight, avgwidth =
           match os2 with
-          | None -> (0, 0, 0, 0, 0) (* FIXME raise (Pdf.PDFError "No os/2 table found in truetype font") *)
+          | None -> raise (Pdf.PDFError "No os/2 table found in truetype font")
           | Some (o, l) -> let b = mk_b (i32toi o) in read_os2_table unitsPerEm b (i32toi l)
         in
         let italicangle =
@@ -588,7 +593,7 @@ let parse ~subset data encoding =
                       if !dbg then Printf.printf "subtable has format %i, length %i, version %i\n" fmt lngth version;
                     let got_glyphcodes = read_encoding_table fmt lngth version b in
                       (*if fmt = 4 then print_encoding_table 4 got_glyphcodes;*)
-                      if fmt = 4 then Hashtbl.iter (Hashtbl.add !glyphcodes) got_glyphcodes
+                      (*if fmt = 4 then *)Hashtbl.iter (Hashtbl.add !glyphcodes) got_glyphcodes
                   done;
           end;
           let maxpoffset, maxplength =
@@ -605,19 +610,19 @@ let parse ~subset data encoding =
             | (_, _, o, l)::_ -> o, l
             | [] -> raise (Pdf.PDFError "No loca table found in TrueType font")
           in
-            let subset_1, subset_2 = find_main encoding subset in
-            if !dbg && subset <> [] then
+            let subset_1, subsets_2 = find_main encoding subset in
+            (*if !dbg && subset <> [] then
               begin
                 Printf.printf "***********Chars for main WinAnsiEncoding subset:\n";
                 iter (Printf.printf "U+%04X ") subset_1;
                 Printf.printf "\n***********Chars for higher subset:\n";
                 iter (Printf.printf "U+%04X ") subset_2;
                 Printf.printf "\n";
-              end;
+              end;*)
             let flags_1 = calculate_flags false italicangle in
             let flags_2 = calculate_flags true italicangle in
             let firstchar_1, lastchar_1 = calculate_limits subset_1 in
-            let firstchar_2, lastchar_2 = (33, length subset_2 + 33 - 1) in
+            let firstchars_2, lastchars_2 = split (map (fun subset -> (33, length subset + 33 - 1)) subsets_2) in
             let numOfLongHorMetrics =
               match keep (function (t, _, _, _) -> string_of_tag t = "hhea") !tables with
               | (_, _, o, l)::_ -> let b = mk_b (i32toi o) in read_hhea_table b
@@ -628,9 +633,12 @@ let parse ~subset data encoding =
               | (_, _, o, _)::_ -> read_hmtx_table numOfLongHorMetrics (mk_b (i32toi o))
               | [] -> raise (Pdf.PDFError "No hmtx table found in TrueType font")
             in
-            (*Printf.printf "firstchar_1, lastchar_1, firstchar_2, lastchar_2 = %i, %i, %i%, %i\n" firstchar_1 lastchar_1 firstchar_2 lastchar_2;*)
             let widths_1 = calculate_widths unitsPerEm encoding firstchar_1 lastchar_1 subset_1 !glyphcodes hmtxdata in
-            let widths_2 = calculate_width_higher unitsPerEm firstchar_2 lastchar_2 subset_2 !glyphcodes hmtxdata in
+            let widths_2 =
+              map3
+                (fun f l s -> calculate_width_higher unitsPerEm f l s !glyphcodes hmtxdata)
+                firstchars_2 lastchars_2 subsets_2
+            in
             let maxwidth = calculate_maxwidth unitsPerEm hmtxdata in
             let stemv = calculate_stemv () in
             let b = mk_b (i32toi locaoffset) in
@@ -640,47 +648,53 @@ let parse ~subset data encoding =
               | (_, _, o, l)::_ -> o, l
               | [] -> raise (Pdf.PDFError "No glyf table found in TrueType font")
             in
-            (*Printf.printf "Calculate main subset\n";*)
             let main_subset =
               subset_font major minor !tables indexToLocFormat subset_1
               encoding !glyphcodes loca mk_b glyfoffset data
             in
-            (*Printf.printf "Calculate higher subset\n";*)
-            let second_subset =
-              subset_font major minor !tables indexToLocFormat subset_2
-              Pdftext.ImplicitInFontFile !glyphcodes loca mk_b glyfoffset data
+            let seconds_subsets =
+              map
+                (fun subset ->
+                   subset_font
+                     major minor !tables indexToLocFormat subset Pdftext.ImplicitInFontFile
+                     !glyphcodes loca mk_b glyfoffset data)
+                subsets_2
             in
-              let second_tounicode =
-                if subset = [] then None else
-                  let h = null_hash () in
-                    List.iter2
-                      (fun n u ->
-                         let s = implode (tl (tl (explode (Pdftext.utf16be_of_codepoints [u])))) in
-                           Hashtbl.add h n s)
-                      (map (( + ) 33) (indx0 subset_2))
-                      subset_2;
-                    Some h
-              in
-              (*Printf.printf "returning the fonts. Job done.\n";*)
-              let one = 
-                {flags = flags_1; minx; miny; maxx; maxy; italicangle; ascent; descent;
-                capheight; stemv; xheight; avgwidth; maxwidth; firstchar = firstchar_1; lastchar = lastchar_1;
-                widths = widths_1; subset_fontfile = main_subset; subset = subset_1; tounicode = None}
-              in
-              let two =
-               {flags = flags_2; minx; miny; maxx; maxy; italicangle; ascent; descent;
-                capheight; stemv; xheight; avgwidth; maxwidth; firstchar = firstchar_2; lastchar = lastchar_2;
-                widths = widths_2; subset_fontfile = second_subset; subset = subset_2;
-                tounicode = second_tounicode}
-              in
-                (*Printf.printf "\nMain subset:\n";
-                debug_t one;
-                write_font "one.ttf" one.subset_fontfile;
-                Printf.printf "\nHigher subset:\n";
-                debug_t two;
-                write_font "two.ttf" two.subset_fontfile;*)
-                (subset, [one; two])
+            let seconds_tounicodes =
+              map
+                (fun subset ->
+                   if subset = [] then None else
+                      let h = null_hash () in
+                        List.iter2
+                          (fun n u ->
+                             let s = implode (tl (tl (explode (Pdftext.utf16be_of_codepoints [u])))) in
+                               Hashtbl.add h n s)
+                          (map (( + ) 33) (indx0 subset))
+                          subset;
+                        Some h)
+                  subsets_2
+            in
+            let one = 
+              {flags = flags_1; minx; miny; maxx; maxy; italicangle; ascent; descent;
+              capheight; stemv; xheight; avgwidth; maxwidth; firstchar = firstchar_1; lastchar = lastchar_1;
+              widths = widths_1; subset_fontfile = main_subset; subset = subset_1; tounicode = None}
+            in
+            let twos =
+              map6
+               (fun firstchar lastchar widths subset_fontfile subset tounicode ->
+                 {flags = flags_2; minx; miny; maxx; maxy; italicangle; ascent; descent;
+                  capheight; stemv; xheight; avgwidth; maxwidth; firstchar; lastchar;
+                  widths; subset_fontfile; subset; tounicode})
+               firstchars_2 lastchars_2 widths_2 seconds_subsets subsets_2 seconds_tounicodes
+            in
+              (*Printf.printf "\nMain subset:\n";
+              debug_t one;
+              write_font "one.ttf" one.subset_fontfile;
+              Printf.printf "\nHigher subset:\n";
+              debug_t two;
+              write_font "two.ttf" (hd twos).subset_fontfile;*)
+              one::twos
 
-(*let parse ~subset data encoding =
+let parse ~subset data encoding =
   try parse ~subset data encoding with
-    e -> raise (Cpdferror.error ("Failed to parse TrueType font: " ^ Printexc.to_string e))*)
+    e -> raise (Cpdferror.error ("Failed to parse TrueType font: " ^ Printexc.to_string e))
