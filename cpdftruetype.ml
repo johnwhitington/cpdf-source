@@ -7,9 +7,7 @@ open Pdfio
 (* FIXME Get rid of double-calling 1) make font then 2) collect chars then 3) subset it i.e the subset = [] stuff *)
 (* FIXME Make it work with -draw  *)
 (* FIXME Base on bytes not bits *)
-(* FIXME proper error handling for missing file in cpdfcommand.embed_font *)
 (* FIXME Make sure -embed-std14 works for all commands *)
-(* FIXME Clarify and document or deprecate -no-embed-fonts *)
 let dbg = ref false
 
 let _ =

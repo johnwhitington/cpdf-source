@@ -631,9 +631,8 @@ verbosity. Under Microsoft Windows, type \texttt{cpdf.exe} instead of \texttt{cp
 -l                      -cpdflin <filename>      -keep-l
 -no-preserve-objstm     -create-objstm           -control <filename>
 -args <filename>        -utf8                    -stripped
--raw                    -no-embed-font           -gs
--gs-malformed           -gs-malformed-force      -gs-quiet
--error-on-malformed\end{verbatim}\end{framed}
+-raw                    -gs                      -gs-malformed
+-gs-malformed-force     -gs-quiet                -error-on-malformed\end{verbatim}\end{framed}
 
   The Coherent PDF tools provide a wide range of facilities for modifying PDF
 files created by other means. There is a single command-line program
@@ -1100,11 +1099,6 @@ bit ASCII by dropping any high characters, or \verb!-raw! to perform no
 processing. The default unless specified in the documentation for an individual operation is \verb!-stripped!.
 
 In modern usage, \texttt{-utf8} is almost always the sensible option.
-
-\section{Font Embedding}
-\index{font!embedding}
-%FIXME: Check and fix when -font-ttf done
-Use the \texttt{-no-embed-font} to avoid embedding the Standard 14 Font metrics when adding text with \texttt{-add-text}.
 
 \begin{cpdflib}
 \clearpage
