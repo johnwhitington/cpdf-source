@@ -38,7 +38,7 @@ type drawops =
   | NewPage
   | Opacity of float
   | SOpacity of float
-  | Font of Pdftext.standard_font * float
+  | Font of Cpdfembed.cpdffont * float
   | TextSection of drawops list
   | Text of string
   | SpecialText of string
@@ -80,7 +80,7 @@ type res =
    form_xobjects : (string, (string * int)) Hashtbl.t; (* (name, (pdf name, objnum)) *)
    mutable page_names : string list;
    mutable time : Cpdfstrftime.t;
-   mutable current_font : Pdftext.font;
+   mutable current_fontpack : Cpdfembed.cpdffont;
    mutable num : int}
 
 let empty_res () =
@@ -90,7 +90,10 @@ let empty_res () =
    form_xobjects = null_hash ();
    page_names = [];
    time = Cpdfstrftime.dummy;
-   current_font = Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding);
+   current_fontpack =
+     Cpdfembed.PreMadeFontPack
+       (Cpdfembed.fontpack_of_standardfont
+         (Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding)));
    num = 0}
 
 let resstack =
@@ -133,7 +136,12 @@ let process_specials pdf endpage filename bates batespad num page s =
     Cpdfaddtext.process_text (res ()).time s pairs
 
 let charcodes_of_utf8 s =
-  implode (map char_of_int (option_map (Pdftext.charcode_extractor_of_font_real (res ()).current_font) (Pdftext.codepoints_of_utf8 s)))
+  match (res ()).current_fontpack with
+  | PreMadeFontPack fontpack ->
+      let codepoints = Pdftext.codepoints_of_utf8 s in
+      let charcodes = option_map (Cpdfembed.get_char fontpack) codepoints in
+        implode (map (fun (c, _, _) -> char_of_int c) charcodes)
+  | _ -> failwith "charcodes_of_utf8: unknown font"
 
 let extgstate kind v =
   try Hashtbl.find (res ()).extgstates (kind, v) with
@@ -222,7 +230,8 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
   | Opacity v -> [Pdfops.Op_gs (extgstate "/ca" v)]
   | SOpacity v -> [Pdfops.Op_gs (extgstate "/CA" v)]
   | Font (s, f) ->
-      let font = Pdftext.StandardFont (s, Pdftext.WinAnsiEncoding) in
+      []
+      (*let font = Pdftext.StandardFont (s, Pdftext.WinAnsiEncoding) in
       let (n, _) =
         try Hashtbl.find (res ()).fonts font with
           Not_found ->
@@ -233,7 +242,7 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
       in
         (res ()).current_font <- font;
         (res ()).page_names <- n::(res ()).page_names;
-        [Pdfops.Op_Tf (n, f)]
+        [Pdfops.Op_Tf (n, f)]*)
   | TextSection ops -> [Pdfops.Op_BT] @ ops_of_drawops pdf endpage filename bates batespad num page ops @ [Pdfops.Op_ET]
   | Text s -> [Pdfops.Op_Tj (charcodes_of_utf8 s)]
   | SpecialText s ->

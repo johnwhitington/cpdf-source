@@ -2060,16 +2060,37 @@ let addopacity f =
 let addsopacity f =
   addop (Cpdfdraw.SOpacity f)
 
+let embed_font () =
+  match args.font with
+  | StandardFont f ->
+      begin match args.embedstd14 with
+      | Some dirname -> 
+        begin try
+          let fontfile, fontname =
+          let filename = hd (List.assoc f fontnames) in
+            Pdfio.bytes_of_string (contents_of_file (Filename.concat dirname filename)),
+            Filename.remove_extension filename
+          in
+          Cpdfembed.EmbedInfo {fontfile; fontname; encoding = args.fontencoding}
+        with
+          e -> error (Printf.sprintf "Can't load font for embedding: %s\n" (Printexc.to_string e))
+        end
+      | None -> 
+          PreMadeFontPack (Cpdfembed.fontpack_of_standardfont (Pdftext.StandardFont (f, args.fontencoding)))
+      end
+  | OtherFont f ->
+      ExistingNamedFont
+  | FontToEmbed fontfile ->
+      EmbedInfo {fontfile; fontname = args.fontname; encoding = args.fontencoding}
+
 let addtext s =
   begin match !drawops with _::_::_ -> () | _ -> error "-text must be in a -bt / -et section" end;
-  let font = match args.font with StandardFont s -> s | _ -> error "-text: not a standard font" in
-    addop (Cpdfdraw.Font (font, args.fontsize));
+    addop (Cpdfdraw.Font (embed_font (), args.fontsize));
     addop (Cpdfdraw.Text s)
 
 let addspecialtext s =
   begin match !drawops with _::_::_ -> () | _ -> error "-stext must be in a -bt / -et section" end;
-  let font = match args.font with StandardFont s -> s | _ -> error "-stext: not a standard font" in
-    addop (Cpdfdraw.Font (font, args.fontsize));
+    addop (Cpdfdraw.Font (embed_font (), args.fontsize));
     addop (Cpdfdraw.SpecialText s)
 
 let setstderrtostdout () =
@@ -3453,30 +3474,6 @@ let warn_prerotate range pdf =
 
 let prerotate range pdf =
   Cpdfpage.upright ~fast:args.fast range pdf
-
-let embed_font () =
-  match args.font with
-  | StandardFont f ->
-      (* FIXME proper error handling for missing file etc. *)
-      begin match args.embedstd14 with
-      | Some dirname -> 
-        begin try
-          let fontfile, fontname =
-          let filename = hd (List.assoc f fontnames) in
-            Pdfio.bytes_of_string (contents_of_file (Filename.concat dirname filename)),
-            Filename.remove_extension filename
-          in
-          Cpdfembed.EmbedInfo {fontfile; fontname; encoding = args.fontencoding}
-        with
-          e -> error (Printf.sprintf "Can't load font for embedding: %s\n" (Printexc.to_string e))
-        end
-      | None -> 
-          PreMadeFontPack (Cpdfembed.fontpack_of_standardfont (Pdftext.StandardFont (f, args.fontencoding)))
-      end
-  | OtherFont f ->
-      ExistingNamedFont
-  | FontToEmbed fontfile ->
-      EmbedInfo {fontfile; fontname = args.fontname; encoding = args.fontencoding}
 
 let check_bookmarks_mistake () =
   if args.merge_add_bookmarks_use_titles && not args.merge_add_bookmarks then

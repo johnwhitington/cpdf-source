@@ -4,10 +4,10 @@ open Pdfio
 
 (* FIXME Proper widths for .notdef, and warn on .notdef being produced *)
 (* FIXME Add suport for composite glyphs *)
-(* FIXME No need for bitstream - everything is byte based, so we can use a normal input *)
 (* FIXME Get rid of double-calling 1) make font then 2) collect chars then 3) subset it i.e the subset = [] stuff *)
-(* FIXME All uses - add text / drawing / texttopdf / table of contents *)
-(* FIXME Work across AND? *)
+(* FIXME Make it work with -draw  *)
+(* FIXME Base on bytes not bits *)
+(* FIXME proper error handling for missing file in cpdfcommand.embed_font *)
 let dbg = ref false
 
 let _ =
@@ -43,7 +43,7 @@ let debug_t t =
     Printf.printf "firstchar: %i\n" t.firstchar;
     Printf.printf "lastchar: %i\n" t.lastchar;
     Printf.printf "widths:"; Array.iter (Printf.printf " %i") t.widths; Printf.printf "\n";
-    Printf.printf "fontfile of length %i\n" (Pdfio.bytes_size t.subset_fontfile);
+    Printf.printf "fontfile of length %i\n" (bytes_size t.subset_fontfile);
     Printf.printf "subset:"; iter (Printf.printf " U+%04X") t.subset; Printf.printf "\n";
     Printf.printf "tounicode:\n";
     begin match t.tounicode with
@@ -162,7 +162,6 @@ let read_encoding_table fmt length version b =
       if !dbg then Printf.printf "read_encoding_table: format 0\n";
       let t = null_hash () in
         for x = 0 to 255 do Hashtbl.add t x (read_byte b) done;
-        (*print_encoding_table 0 t;*)
         t
   | 4 ->
       if !dbg then Printf.printf "read_encoding_table: format 4\n";
@@ -476,23 +475,14 @@ let subset_font major minor tables indexToLocFormat subset encoding cmap loca mk
               with
                 _ -> ())
     newtables;
-  let obs = bytes_of_write_bitstream bs in
-    if !dbg then
-      begin
-        Printf.printf "Made subset font of length %i bytes\n" (bytes_size obs);
-        let o = open_out_bin ("fontout" ^ string_of_int (fonum ()) ^ ".ttf") in
-          output_string o (string_of_bytes obs);
-          close_out o
-      end;
-    obs
+  bytes_of_write_bitstream bs
 
 let write_font filename data =
   let fh = open_out_bin filename in
-    output_string fh (Pdfio.string_of_bytes data);
+    output_string fh (string_of_bytes data);
     close_out fh
 
 let find_main encoding subset =
-  (*(take subset 3, [drop subset 3])*)
   let encoding_table = Pdftext.table_of_encoding encoding in
   let first, rest =
     List.partition
@@ -502,12 +492,6 @@ let find_main encoding subset =
     (first, splitinto 224 rest)
 
 let parse ~subset data encoding =
-  if !dbg then
-    begin
-      Printf.printf "********Cpdftruetype.parse SUBSET is ";
-      iter (Printf.printf "U+%04X ") subset;
-      Printf.printf "\n"
-    end;
   let mk_b byte_offset = bitbytes_of_input (let i = input_of_bytes data in i.seek_in byte_offset; i) in
   let b = mk_b 0 in
   let major, minor = read_fixed b in
@@ -591,8 +575,7 @@ let parse ~subset data encoding =
                     let version = read_ushort b in
                       if !dbg then Printf.printf "subtable has format %i, length %i, version %i\n" fmt lngth version;
                     let got_glyphcodes = read_encoding_table fmt lngth version b in
-                      (*if fmt = 4 then print_encoding_table 4 got_glyphcodes;*)
-                      (*if fmt = 4 then *)Hashtbl.iter (Hashtbl.add !glyphcodes) got_glyphcodes
+                      Hashtbl.iter (Hashtbl.add !glyphcodes) got_glyphcodes
                   done;
           end;
           let maxpoffset, maxplength =
@@ -610,14 +593,6 @@ let parse ~subset data encoding =
             | [] -> raise (Pdf.PDFError "No loca table found in TrueType font")
           in
             let subset_1, subsets_2 = find_main encoding subset in
-            (*if !dbg && subset <> [] then
-              begin
-                Printf.printf "***********Chars for main WinAnsiEncoding subset:\n";
-                iter (Printf.printf "U+%04X ") subset_1;
-                Printf.printf "\n***********Chars for higher subset:\n";
-                iter (Printf.printf "U+%04X ") subset_2;
-                Printf.printf "\n";
-              end;*)
             let flags_1 = calculate_flags false italicangle in
             let flags_2 = calculate_flags true italicangle in
             let firstchar_1, lastchar_1 = calculate_limits subset_1 in

@@ -35,7 +35,7 @@ type drawops =
   | NewPage
   | Opacity of float
   | SOpacity of float
-  | Font of Pdftext.standard_font * float
+  | Font of Cpdfembed.cpdffont * float
   | TextSection of drawops list
   | Text of string
   | SpecialText of string
