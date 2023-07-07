@@ -229,9 +229,12 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
   | NewPage -> Pdfe.log ("NewPage remaining in graphic stream"); assert false
   | Opacity v -> [Pdfops.Op_gs (extgstate "/ca" v)]
   | SOpacity v -> [Pdfops.Op_gs (extgstate "/CA" v)]
-  | Font (s, f) ->
-      []
-      (*let font = Pdftext.StandardFont (s, Pdftext.WinAnsiEncoding) in
+  | Font (fontpack, size) ->
+      let font =
+        match fontpack with
+        | PreMadeFontPack (f::_, _) -> f
+        | _ -> failwith "-font-ttf not impl"
+      in
       let (n, _) =
         try Hashtbl.find (res ()).fonts font with
           Not_found ->
@@ -240,9 +243,9 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
               Hashtbl.add (res ()).fonts font (n, o);
               (n, o)
       in
-        (res ()).current_font <- font;
+        (res ()).current_fontpack <- fontpack;
         (res ()).page_names <- n::(res ()).page_names;
-        [Pdfops.Op_Tf (n, f)]*)
+        [Pdfops.Op_Tf (n, size)]
   | TextSection ops -> [Pdfops.Op_BT] @ ops_of_drawops pdf endpage filename bates batespad num page ops @ [Pdfops.Op_ET]
   | Text s -> [Pdfops.Op_Tj (charcodes_of_utf8 s)]
   | SpecialText s ->
