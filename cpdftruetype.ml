@@ -48,7 +48,10 @@ let debug_t t =
     Printf.printf "tounicode:\n";
     begin match t.tounicode with
     | None -> Printf.printf "None";
-    | Some table -> iter (fun (k, v) -> Printf.printf "%i --> U+%s\n" k (hex v)) (sort compare (list_of_hashtbl table))
+    | Some table ->
+        iter
+          (fun (k, v) -> Printf.printf "%i --> U+%s\n" k (hex v))
+          (sort compare (list_of_hashtbl table))
     end;
     Printf.printf "\n"
 
@@ -271,15 +274,19 @@ let write_glyf_table subset cmap bs mk_b glyfoffset loca =
       (fun u ->
          try
            let locnum = Hashtbl.find cmap u in
-             if !dbg then Printf.printf "write_glyf_table: Unicode U+%04X is at location number %i\n" u locnum;
+             if !dbg then Printf.printf "write_glyf_table: Unicode U+%04X is at loc num %i\n" u locnum;
              Hashtbl.add locnums locnum ()
-           with
-             Not_found -> ())
+         with
+           Not_found -> ())
       subset;
   let locnums = sort compare (map fst (list_of_hashtbl locnums)) in
-  if !dbg then (Printf.printf "We want glyfs for locations: "; iter (Printf.printf "%i ") locnums; Printf.printf "\n");
+  if !dbg then
+    (Printf.printf "We want glyfs for locations: ";
+     iter (Printf.printf "%i ") locnums; Printf.printf "\n");
     let byteranges = map (fun x -> (loca.(x), loca.(x + 1))) locnums in
-    if !dbg then (Printf.printf "Byte ranges: "; iter (fun (a, b) -> Printf.printf "(%li, %li) " a b) byteranges; Printf.printf "\n");
+    if !dbg then
+      (Printf.printf "Byte ranges: ";
+      iter (fun (a, b) -> Printf.printf "(%li, %li) " a b) byteranges; Printf.printf "\n");
   let len = List.fold_left i32add 0l (map (fun (a, b) -> i32sub b a) byteranges) in
   let write_bytes bs a l =
     if !dbg then Printf.printf "glyf: write_bytes %li %li\n" a l;
@@ -415,7 +422,9 @@ let subset_font major minor tables indexToLocFormat subset encoding cmap loca mk
   if !dbg then Printf.printf "***Reduced:\n";
   Array.iter
     (fun (tag, checkSum, offset, ttlength) -> 
-      if !dbg then Printf.printf "tag = %li = %s, offset = %li, length = %li\n" tag (string_of_tag tag) offset ttlength)
+      if !dbg then
+         Printf.printf
+           "tag = %li = %s, offset = %li, length = %li\n" tag (string_of_tag tag) offset ttlength)
     newtables;
   let bs = make_write_bitstream () in
   (* table directory *)
@@ -607,7 +616,9 @@ let parse ~subset data encoding =
               | (_, _, o, _)::_ -> read_hmtx_table numOfLongHorMetrics (mk_b (i32toi o))
               | [] -> raise (Pdf.PDFError "No hmtx table found in TrueType font")
             in
-            let widths_1 = calculate_widths unitsPerEm encoding firstchar_1 lastchar_1 subset_1 !glyphcodes hmtxdata in
+            let widths_1 =
+              calculate_widths unitsPerEm encoding firstchar_1 lastchar_1 subset_1 !glyphcodes hmtxdata
+            in
             let widths_2 =
               map3
                 (fun f l s -> calculate_width_higher unitsPerEm f l s !glyphcodes hmtxdata)
