@@ -2,12 +2,12 @@
 open Pdfutil
 open Pdfio
 
-(* FIXME Proper widths for .notdef, and warn on .notdef being produced *)
-(* FIXME Add suport for composite glyphs *)
 (* FIXME Make sure -add-text and -table-of-contents call subset once only *)
 (* FIXME Make it work with -draw *)
-(* FIXME Base on bytes not bits *)
+(* FIXME Proper widths for .notdef, and warn on .notdef being produced *)
+(* FIXME Add suport for composite glyphs *)
 (* FIXME Make sure -embed-std14 works for all commands *)
+(* FIXME Base on bytes not bits *)
 let dbg = ref false
 
 let _ =
@@ -60,8 +60,8 @@ let required_tables =
 
 let read_fixed b =
   let a = getval_31 b 16 in
-    let b = getval_31 b 16 in
-      a, b
+  let b = getval_31 b 16 in
+    a, b
 
 let read_ushort b = getval_31 b 16
 
@@ -234,18 +234,18 @@ let write_loca_table subset cmap indexToLocFormat bs loca =
       (sort compare (map fst (list_of_hashtbl locnums)))
   in
     let pairs = Array.of_list (pairs @ [(Array.length loca - 1, !pos)]) in
-    Array.iteri
-      (fun i (loc, off) ->
-         if i <> Array.length pairs - 1 then
-           begin
-             write_entry loc off;
-             let loc', off' = pairs.(i + 1) in
-             for x = 0 to loc' - loc - 2 do write_entry (loc + x) off' done
-           end
-         else
-           write_entry loc off)
-      pairs;
-    for x = 1 to padding !len do putval bs 8 0l done
+      Array.iteri
+        (fun i (loc, off) ->
+           if i <> Array.length pairs - 1 then
+             begin
+               write_entry loc off;
+               let loc', off' = pairs.(i + 1) in
+               for x = 0 to loc' - loc - 2 do write_entry (loc + x) off' done
+             end
+           else
+             write_entry loc off)
+        pairs;
+      for x = 1 to padding !len do putval bs 8 0l done
 
 (* Write the notdef glyf, and any others in the subset *)
 let write_glyf_table subset cmap bs mk_b glyfoffset loca =
