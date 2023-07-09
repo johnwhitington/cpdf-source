@@ -2,12 +2,13 @@
 open Pdfutil
 open Pdfio
 
-(* FIXME Make sure -add-text and -table-of-contents call subset once only *)
+(* FIXME Make sure -add-text calls subset once only *)
 (* FIXME Make it work with -draw *)
+(* FIXME Check proper use of fontpacks and maximal sharing in -toc -typeset -add-text -draw *)
 (* FIXME Proper widths for .notdef, and warn on .notdef being produced *)
 (* FIXME Add suport for composite glyphs *)
 (* FIXME Make sure -embed-std14 works for all commands *)
-(* FIXME Base on bytes not bits *)
+(* FIXME Base on bytes not bits - all uses of mk_b *)
 let dbg = ref false
 
 let _ =
@@ -160,7 +161,9 @@ let read_encoding_table fmt length version b =
         t
   | 4 -> read_format_4_encoding_table b;
   | 6 -> read_format_6_encoding_table b;
-  | n -> raise (Pdf.PDFError "read_encoding_table: format %i not known\n")
+  | n ->
+      Pdfe.log (Printf.sprintf "read_encoding_table: format %i not known\n" n);
+      null_hash ()
 
 let read_loca_table indexToLocFormat numGlyphs b =
   match indexToLocFormat with
