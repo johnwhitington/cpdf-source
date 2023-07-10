@@ -16,7 +16,10 @@ let rec real_newline = function
 
 (* Run of Font / Text elements from a fontpack and UTF8 text *)
 let of_utf8 fontpack t =
+  let font = ref 0 in
   []
+  (* Use the fontpack to find which font is required, then return runs
+  of [Font (font, size); Text t] in a list *)
   (*   Pdftext.codepoints_of_utf8 t
   |> option_map (Pdftext.charcode_extractor_of_font_real f)
   |> map char_of_int*)
