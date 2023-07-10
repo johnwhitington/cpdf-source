@@ -6,16 +6,11 @@
    be continued... *)
 open Pdfutil
 
-(* Glue *)
-type glue =
-  {glen : float;
-   gstretch : float}
-
 (* Main type *)
 type element =
   Text of char list (* charcodes 0..255 *)
-| HGlue of glue
-| VGlue of glue
+| HGlue of float
+| VGlue of float
 | NewLine
 | NewPage
 | Font of (Pdftext.font * float)
@@ -25,7 +20,7 @@ type element =
 
 let to_string_elt = function
   | Text t -> implode t
-  | HGlue {glen} -> "HGLUE" ^ string_of_float glen
+  | HGlue len -> "HGLUE" ^ string_of_float len
   | VGlue _ -> "VGLUE"
   | NewLine -> "NewLine"
   | NewPage -> "NewPage"
@@ -126,8 +121,8 @@ let layout lmargin rmargin papersize i =
               if needs_newline then layout_element NewLine;
               if remaining_text <> [] then layout_element (Text remaining_text)
           end
-    | HGlue {glen} as glue ->
-        s.xpos <- s.xpos +. glen;
+    | HGlue len as glue ->
+        s.xpos <- s.xpos +. len;
         o := glue :: !o;
         if s.xpos >= xpos_max then layout_element NewLine
     | NewLine ->
@@ -147,8 +142,8 @@ let paginate tmargin bmargin papersize i =
   s.ypos <- tmargin;
   let max_ypos = height -. bmargin in
   let rec process = function
-   | VGlue {glen} as glue ->
-       s.ypos <- s.ypos +. glen;
+   | VGlue len as glue ->
+       s.ypos <- s.ypos +. len;
        o := glue :: !o;
        if s.ypos > max_ypos then process NewPage
    | NewLine ->
@@ -242,13 +237,13 @@ let typeset lmargin rmargin tmargin bmargin papersize pdf i =
           s.fontsize <- fontsize;
           thispagefontnums := objnum :: !thispagefontnums;
           ops := Pdfops.Op_Tf (name, fontsize)::!ops
-    | HGlue {glen} ->
-        s.xpos <- s.xpos +. glen
-    | VGlue {glen} ->
-        s.ypos <- s.ypos +. glen
+    | HGlue len ->
+        s.xpos <- s.xpos +. len
+    | VGlue len ->
+        s.ypos <- s.ypos +. len
     | NewLine ->
         s.xpos <- lmargin;
-        typeset_element (VGlue {glen = s.fontsize *. 1.3; gstretch = 0.})
+        typeset_element (VGlue (s.fontsize *. 1.3))
     | NewPage ->
         write_page ();
         thispagefontnums := [];

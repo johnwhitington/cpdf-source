@@ -111,9 +111,9 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
          let text = shorten_text widths (textgap -. fontsize *. 3.) text in
          let space = textgap -. Cpdftype.width_of_string widths text in
            [Cpdftype.BeginDest mark.Pdfmarks.target;
-            Cpdftype.HGlue {Cpdftype.glen = indent; Cpdftype.gstretch = 0.};
+            Cpdftype.HGlue indent;
             Cpdftype.Text text;
-            Cpdftype.HGlue {Cpdftype.glen = space; Cpdftype.gstretch = 0.};
+            Cpdftype.HGlue space;
             Cpdftype.Text label;
             Cpdftype.EndDest;
             Cpdftype.NewLine])
@@ -121,7 +121,7 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
   in
   let toc_pages =
     let title =
-      let glue = Cpdftype.VGlue {glen = fontsize *. 2.; gstretch = 0.} in
+      let glue = Cpdftype.VGlue (fontsize *. 2.) in
         if title = "" then [] else
           flatten
             (map

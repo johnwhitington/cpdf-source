@@ -1,13 +1,8 @@
 (** Experimental typesetter for cpdf *)
-
-type glue =
-  {glen : float;
-   gstretch : float}
-
 type element =
   Text of char list
-| HGlue of glue
-| VGlue of glue
+| HGlue of float
+| VGlue of float
 | NewLine
 | NewPage
 | Font of (Pdftext.font * float)
