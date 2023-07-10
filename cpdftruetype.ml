@@ -2,9 +2,6 @@
 open Pdfutil
 open Pdfio
 
-(* FIXME Make sure -add-text calls subset once only *)
-(* FIXME Make it work with -draw *)
-(* FIXME Check proper use of fontpacks and maximal sharing in -toc -typeset -add-text -draw *)
 (* FIXME Proper widths for .notdef, and warn on .notdef being produced *)
 (* FIXME Add suport for composite glyphs *)
 (* FIXME Make sure -embed-std14 works for all commands *)

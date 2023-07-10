@@ -2,13 +2,6 @@
 open Pdfutil
 open Cpdferror
 
-(* Keep a record of charcodes used for font subsetting. *)
-let used = null_hash ()
-
-(* If we have used a TTF font, put its name and object number here. Then we
-   know we put it there, and can avoid writing it anew across ANDS. *)
-let glob_pdfobjnum = null_hash ()
-
 type color =
   Grey of float
 | RGB of float * float * float
@@ -58,32 +51,24 @@ let colour_op_stroke = function
   | CYMK (c, y, m, k) -> Pdfops.Op_K (c, y, m, k)
 
 let ops fontname longest_w x y rotate hoffset voffset outline linewidth unique_fontname unique_extgstatename colour fontsize text =
-  begin match Hashtbl.find used fontname with
-    | exception Not_found ->
-        let thisused = null_hash () in
-          String.iter (fun x -> Hashtbl.replace thisused x ()) text;
-          Hashtbl.add used fontname thisused
-    | thisused ->
-        String.iter (fun x -> Hashtbl.replace thisused x ()) text;
-  end;
-    [Pdfops.Op_q;
-    Pdfops.Op_BMC "/CPDFSTAMP";
-     Pdfops.Op_cm
-       (Pdftransform.matrix_of_transform
-         [Pdftransform.Translate (x -. hoffset, y -. voffset);
-          Pdftransform.Rotate ((0., 0.), rotate)]);
-     Pdfops.Op_BT;
-     ] @
-     (if outline then [Pdfops.Op_w linewidth; Pdfops.Op_Tr 1] else [Pdfops.Op_Tr 0]) @
-     [colour_op colour; colour_op_stroke colour]
-     @
-     (match unique_extgstatename with None -> [] | Some n -> [Pdfops.Op_gs n])
-     @
-     [Pdfops.Op_Tf (unique_fontname, fontsize);
-     Pdfops.Op_Tj text;
-     Pdfops.Op_ET;
-     Pdfops.Op_EMC;
-     Pdfops.Op_Q]
+  [Pdfops.Op_q;
+  Pdfops.Op_BMC "/CPDFSTAMP";
+   Pdfops.Op_cm
+     (Pdftransform.matrix_of_transform
+       [Pdftransform.Translate (x -. hoffset, y -. voffset);
+        Pdftransform.Rotate ((0., 0.), rotate)]);
+   Pdfops.Op_BT;
+   ] @
+   (if outline then [Pdfops.Op_w linewidth; Pdfops.Op_Tr 1] else [Pdfops.Op_Tr 0]) @
+   [colour_op colour; colour_op_stroke colour]
+   @
+   (match unique_extgstatename with None -> [] | Some n -> [Pdfops.Op_gs n])
+   @
+   [Pdfops.Op_Tf (unique_fontname, fontsize);
+   Pdfops.Op_Tj text;
+   Pdfops.Op_ET;
+   Pdfops.Op_EMC;
+   Pdfops.Op_Q]
 
 type justification = LeftJustify | CentreJustify | RightJustify
 
@@ -234,6 +219,16 @@ let replace_pairs pdf endpage extract_text_font_size filename bates batespad num
                  then numstring
                  else implode (many '0' (w - String.length numstring)) ^ numstring))]
 
+let expand_lines text time pdf endpage extract_text_font_size filename bates batespad num page lines =
+  let expanded_lines =
+    map
+      (function text ->
+         process_text time text (replace_pairs pdf endpage extract_text_font_size filename bates batespad num page))
+      lines
+  in
+    (* process URLs for justification too *)
+    map (fun line -> fst (get_urls_line line)) expanded_lines
+
 let addtext
   time lines linewidth outline fast colour fontname encoding bates batespad
   fontsize font fontpdfobj underneath position hoffset voffset text pages
@@ -264,79 +259,70 @@ let addtext
         | None -> Pdf.Dictionary []
         | Some d -> d
       in
-              let calc_textwidth text =
-                match font with
-                | Some (Pdftext.StandardFont (f, _)) ->
-                    let rawwidth =
-                      Pdfstandard14.textwidth false encoding f text
-                    in
-                      (float rawwidth *. fontsize) /. 1000.
-                | Some font ->
-                    let rawwidth = width_of_text font text in
-                      (rawwidth *. fontsize) /. 1000.
-                | None -> 
-                    let font =
-                      match Pdf.lookup_direct pdf "/Font" page.Pdfpage.resources with
-                      | Some fontdict ->
-                          begin match Pdf.lookup_direct pdf fontname fontdict with
-                          | Some font -> font
-                          | None ->
-                             (* For each item in the fontdict, follow its value and find the basename. If it matches, return that font *)
-                             let font = ref None in
-                             iter
-                               (fun (k, v) ->
-                                  match Pdf.lookup_direct pdf "/BaseFont" v with
-                                  | Some (Pdf.Name n) when n = fontname -> font := Some v
-                                  | _ -> ())
-                               (match fontdict with Pdf.Dictionary d -> d | _ -> []);
-                             match !font with Some f -> f | None -> failwith (Printf.sprintf "addtext: font %s not found" fontname)
-                          end
-                      | _ -> failwith "addtext: font not found for width"
-                    in
-                      let rawwidth = width_of_text (Pdftext.read_font pdf font) text in
-                        (rawwidth *. fontsize) /. 1000.
+        let calc_textwidth text =
+          match font with
+          | Some (Pdftext.StandardFont (f, _)) ->
+              let rawwidth =
+                Pdfstandard14.textwidth false encoding f text
               in
+                (float rawwidth *. fontsize) /. 1000.
+          | Some font ->
+              let rawwidth = width_of_text font text in
+                (rawwidth *. fontsize) /. 1000.
+          | None -> 
+              let font =
+                match Pdf.lookup_direct pdf "/Font" page.Pdfpage.resources with
+                | Some fontdict ->
+                    begin match Pdf.lookup_direct pdf fontname fontdict with
+                    | Some font -> font
+                    | None ->
+                       (* For each item in the fontdict, follow its value and find the basename. If it matches, return that font *)
+                       let font = ref None in
+                       iter
+                         (fun (k, v) ->
+                            match Pdf.lookup_direct pdf "/BaseFont" v with
+                            | Some (Pdf.Name n) when n = fontname -> font := Some v
+                            | _ -> ())
+                         (match fontdict with Pdf.Dictionary d -> d | _ -> []);
+                       match !font with Some f -> f | None -> failwith (Printf.sprintf "addtext: font %s not found" fontname)
+                    end
+                | _ -> failwith "addtext: font not found for width"
+              in
+                let rawwidth = width_of_text (Pdftext.read_font pdf font) text in
+                  (rawwidth *. fontsize) /. 1000.
+        in
         let unique_fontname = Pdf.unique_key "F" fontdict in
           let ops, urls, x, y, hoffset, voffset, text, joffset =
             let text = process_text time text (replace_pairs pdf endpage extract_text_font_size filename bates batespad num page) in
             let text, urls = get_urls_line text in
-
-                let expanded_lines =
-                  map
-                    (function text ->
-                       process_text time text (replace_pairs pdf endpage extract_text_font_size filename bates batespad num page))
-                    lines
-                in
-                let expanded_lines = (* process URLs for justification too *)
-                  map (fun line -> fst (get_urls_line line)) expanded_lines
-                in
-                let textwidth = calc_textwidth text
-                and allwidths = map calc_textwidth expanded_lines in
-                  let longest_w = last (sort compare allwidths) in
-                  let joffset = find_justification_offsets longest_w textwidth position justification in
-                  let mediabox =
-                    if cropbox then
-                      match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
-                      | Some pdfobject -> Pdf.parse_rectangle pdf (Pdf.direct pdf pdfobject)
-                      | None -> Pdf.parse_rectangle pdf page.Pdfpage.mediabox
-                    else
-                      Pdf.parse_rectangle pdf page.Pdfpage.mediabox
+            let expanded_lines = expand_lines text time pdf endpage extract_text_font_size filename bates batespad num page lines in
+            let textwidth = calc_textwidth text
+            and allwidths = map calc_textwidth expanded_lines in
+              let longest_w = last (sort compare allwidths) in
+              let joffset = find_justification_offsets longest_w textwidth position justification in
+              let mediabox =
+                if cropbox then
+                  match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
+                  | Some pdfobject -> Pdf.parse_rectangle pdf (Pdf.direct pdf pdfobject)
+                  | None -> Pdf.parse_rectangle pdf page.Pdfpage.mediabox
+                else
+                  Pdf.parse_rectangle pdf page.Pdfpage.mediabox
+              in
+                let x, y, rotate = Cpdfposition.calculate_position false textwidth mediabox position in
+                  let hoffset, voffset =
+                    if position = Diagonal || position = ReverseDiagonal
+                      then -. (cos ((pi /. 2.) -. rotate) *. voffset), sin ((pi /. 2.) -. rotate) *. voffset
+                      else hoffset, voffset 
                   in
-                    let x, y, rotate = Cpdfposition.calculate_position false textwidth mediabox position in
-                      let hoffset, voffset =
-                        if position = Diagonal || position = ReverseDiagonal
-                          then -. (cos ((pi /. 2.) -. rotate) *. voffset), sin ((pi /. 2.) -. rotate) *. voffset
-                          else hoffset, voffset 
-                      in
-                        match font with
-                        | Some f ->
-                            ops fontname longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
-                            unique_fontname unique_extgstatename colour fontsize text,
-                            urls, x, y, hoffset, voffset, text, joffset
-                        | None ->
-                            ops fontname longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
-                            fontname None colour fontsize text,
-                            urls, x, y, hoffset, voffset, text, joffset
+                    match font with
+                    | Some f ->
+                        ops fontname longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
+                        unique_fontname unique_extgstatename colour fontsize text,
+                        urls, x, y, hoffset, voffset, text, joffset
+                    | None ->
+                        ops fontname longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
+                        fontname None colour fontsize text,
+                        urls, x, y, hoffset, voffset, text, joffset
           in
             let newresources =
               match font with
@@ -426,8 +412,19 @@ let
   justification midline topline filename extract_text_font_size shift
   ?(raw=false) pdf
 =
-  let time = Cpdfstrftime.current_time () in
   if pages = [] then error "addtexts: empty page range" else
+  let time = Cpdfstrftime.current_time () in
+  let endpage = Pdfpage.endpage pdf in
+  let ps = Pdfpage.pages_of_pagetree pdf in
+  let used = null_hash () in
+  let lines = map unescape_string (split_at_newline text) in
+  iter2
+    (fun num page ->
+       let expanded_lines = expand_lines text time pdf endpage extract_text_font_size filename bates batespad num page lines in
+         let codepoints = map Pdftext.codepoints_of_utf8 expanded_lines in
+         iter (iter (fun x -> Hashtbl.replace used x ())) codepoints)
+    pages
+    (map (fun x -> List.nth ps (x - 1)) pages);
   let realfontname = ref fontname in
   let font =
     match cpdffont with
@@ -436,7 +433,7 @@ let
         Some (hd (fst f))
     | Cpdfembed.EmbedInfo {fontfile; fontname; encoding} ->
         (*Printf.printf "Cpdfaddtext.addtexts: EmbedInfo\n";*)
-        let embedded = Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints:[] ~encoding in
+        let embedded = Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints:(map fst (list_of_hashtbl used)) ~encoding in
           Some (hd (fst embedded))
     | Cpdfembed.ExistingNamedFont -> None
   in
@@ -445,13 +442,7 @@ let
     | Some (Pdftext.StandardFont _ as font) ->
         Pdf.Indirect (Pdftext.write_font pdf font)
     | Some f ->
-        begin match Hashtbl.find glob_pdfobjnum fontname with
-        | exception Not_found ->
-            let i = Pdftext.write_font pdf f in
-              Hashtbl.add glob_pdfobjnum fontname i; Pdf.Indirect i
-        | i ->
-            Pdf.Indirect i
-        end
+        Pdf.Indirect (Pdftext.write_font pdf f)
     | None -> 
         let firstpage =
           List.nth (Pdfpage.pages_of_pagetree pdf) (hd pages - 1)
@@ -532,23 +523,14 @@ let
                      !pdf;
                    voffset := !voffset +. (linespacing *. fontsize))
               lines;
-              begin match cpdffont with
+              (*begin match cpdffont with
               | Cpdfembed.EmbedInfo {fontfile; fontname; encoding} ->
-                  let charcodes =
-                    match Hashtbl.find used fontname with
-                    | exception Not_found -> []
-                    | thisused -> map fst (list_of_hashtbl thisused)
-                  in
-                  let encoding_table = Pdftext.table_of_encoding encoding in
-                  let glyphlist_table = Pdfglyphlist.glyph_hashes () in
-                  let codepoints =
-                    map (fun c -> unicode_codepoint_of_pdfcode encoding_table glyphlist_table (int_of_char c)) charcodes
-                  in
+                  let codepoints = map fst (list_of_hashtbl used) in
                   let objnum = match fontpdfobj with Pdf.Indirect i -> i | _ -> failwith "bad fontpdfobj" in
                   let font = hd (fst (Cpdfembed.embed_truetype !pdf ~fontfile ~fontname ~codepoints ~encoding)) in
                     ignore (Pdftext.write_font ~objnum !pdf font)
               | _ -> ()
-              end;
+              end;*)
               !pdf
 
 
