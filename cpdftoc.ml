@@ -14,11 +14,12 @@ let rec real_newline = function
   | x::r -> x::real_newline r
   | [] -> []
 
-(* Cpdftype codepoints from a font and UTF8 *)
-let of_utf8 f t =
-     Pdftext.codepoints_of_utf8 t
+(* Run of Font / Text elements from a fontpack and UTF8 text *)
+let of_utf8 fontpack t =
+  []
+  (*   Pdftext.codepoints_of_utf8 t
   |> option_map (Pdftext.charcode_extractor_of_font_real f)
-  |> map char_of_int
+  |> map char_of_int*)
 
 (* Cpdftype codepoints from a font and PDFDocEndoding string *)
 let of_pdfdocencoding f t =
@@ -38,6 +39,7 @@ let shorten_text widths l t =
 (* Calculate the used codepoints *)
 let used pdf fastrefnums labels title marks =
   let codepoints = null_hash () in
+  Hashtbl.add codepoints (int_of_char '.') ();
   let addtext t =
     iter
       (fun c -> Hashtbl.replace codepoints c ())
@@ -66,15 +68,13 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
   let refnums = Pdf.page_reference_numbers pdf in
   let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
   let codepoints = map fst (list_of_hashtbl (used pdf fastrefnums labels title marks)) in
-    let font =
-      match font with
-      | Cpdfembed.PreMadeFontPack t -> hd (fst t)
-      | Cpdfembed.EmbedInfo {fontfile; fontname; encoding} ->
-        hd (fst (Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding))
-      | Cpdfembed.ExistingNamedFont -> raise (Pdf.PDFError "Cannot use existing font with -table-of-contents")
-    in
-  let f, fs = (font, fontsize) in
-  let _, bfs as big = (font, fontsize *. 2.) in
+  let fontpack =
+    match font with
+    | Cpdfembed.PreMadeFontPack t -> t
+    | Cpdfembed.EmbedInfo {fontfile; fontname; encoding} ->
+       Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding
+    | Cpdfembed.ExistingNamedFont -> raise (Pdf.PDFError "Cannot use existing font with -table-of-contents")
+  in
   let firstpage = hd (Pdfpage.pages_of_pagetree pdf) in
   let width, firstpage_papersize, pmaxx, pmaxy, margin =
     let width, height, xmax, ymax =
@@ -88,34 +88,34 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
     | Some r -> Some (Pdf.parse_rectangle pdf r)
     | None -> None
   in
-  let width =
+  (*let width =
     match firstpage_cropbox with
     | Some (xmin, _, xmax, _) -> xmax -. xmin
     | None -> width 
-  in
+  in*)
   let lines =
     map
       (fun mark ->
          let indent = float mark.Pdfmarks.level *. fontsize *. 2. in 
-         let text = of_pdfdocencoding f mark.Pdfmarks.text in
-         let label =
-           if mark.Pdfmarks.target = NullDestination then of_pdfdocencoding f "" else 
+         let textruns = of_pdfdocencoding fontpack mark.Pdfmarks.text in
+         let labelruns =
+           if mark.Pdfmarks.target = NullDestination then of_pdfdocencoding fontpack "" else 
            let pde =
              let pnum = Pdfpage.pagenumber_of_target ~fastrefnums pdf mark.Pdfmarks.target in
                try Pdfpagelabels.pagelabeltext_of_pagenumber pnum labels with Not_found -> string_of_int pnum
            in
-             of_pdfdocencoding f pde
+             of_pdfdocencoding fontpack pde
          in
-         let widths = Cpdftype.font_widths f fontsize in
-         let textgap = width -. margin *. 2. -. indent -. Cpdftype.width_of_string widths label in
-         let text = shorten_text widths (textgap -. fontsize *. 3.) text in
-         let space = textgap -. Cpdftype.width_of_string widths text in
+         (*let widths = Cpdftype.font_widths f fontsize in
+         let textgap = width -. margin *. 2. -. indent -. Cpdftype.width_of_string widths label in*)
+         (*let text = shorten_text widths (textgap -. fontsize *. 3.) text in*) (*FIXME add back in, but in unicode not codepoints! *)
+         let space = 0. (*textgap -. Cpdftype.width_of_string widths text*) in
            [Cpdftype.BeginDest mark.Pdfmarks.target;
-            Cpdftype.HGlue indent;
-            Cpdftype.Text text;
-            Cpdftype.HGlue space;
-            Cpdftype.Text label;
-            Cpdftype.EndDest;
+            Cpdftype.HGlue indent]
+           @ textruns @
+           [Cpdftype.HGlue space]
+           @ labelruns @
+           [Cpdftype.EndDest;
             Cpdftype.NewLine])
       (Pdfmarks.read_bookmarks pdf)
   in
@@ -126,7 +126,7 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
           flatten
             (map
               (fun l -> [Cpdftype.Text l; Cpdftype.NewLine])
-              (split_toc_title (of_utf8 f title)))
+              (split_toc_title (of_utf8 fontpack title)))
           @ [glue]
     in
     let lm, rm, tm, bm =
@@ -135,9 +135,11 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
       | Some (cminx, cminy, cmaxx, cmaxy) ->
           (cminx +. margin, (pmaxx -. cmaxx) +. margin, cminy +. margin, (pmaxy -. cmaxy) +. margin)
     in
-      Cpdftype.typeset lm rm tm bm firstpage_papersize pdf
-        ([Cpdftype.Font (font, bfs); Cpdftype.BeginDocument] @ title @
-          [Cpdftype.Font (font, fs)] @ flatten lines)
+      let firstfont =
+        hd (keep (function Cpdftype.Font _ -> true | _ -> false) (title @ flatten lines)) (*FIXME when title ok *)
+      in
+        Cpdftype.typeset lm rm tm bm firstpage_papersize pdf
+          ([firstfont; Cpdftype.BeginDocument] @ title @ flatten lines)
   in
   let toc_pages =
     match firstpage_cropbox with
