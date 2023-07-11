@@ -15,18 +15,19 @@ let rec real_newline = function
   | [] -> []
 
 (* Run of Font / Text elements from a fontpack and UTF8 text *)
-let of_utf8 fontpack t =
-  let font = ref 0 in
-  []
+let of_utf8 fontpack fontsize t =
   (* Use the fontpack to find which font is required, then return runs
   of [Font (font, size); Text t] in a list *)
-  (*   Pdftext.codepoints_of_utf8 t
-  |> option_map (Pdftext.charcode_extractor_of_font_real f)
-  |> map char_of_int*)
+  let codepoints = Pdftext.codepoints_of_utf8 t in
+  (* 1. Text to (charcode, font, fontnum) *)
+  let fonted = option_map (Cpdfembed.get_char fontpack) codepoints in
+  (* 2. FIXME Collate them *)
+  (* 3. Produce the runs, converting to char *)
+  flatten (map (function (charcode, fontnum, font) -> [Cpdftype.Font (font, fontsize); Cpdftype.Text [char_of_int charcode]]) fonted)
 
 (* Cpdftype codepoints from a font and PDFDocEndoding string *)
-let of_pdfdocencoding f t =
-  of_utf8 f (Pdftext.utf8_of_pdfdocstring t)
+let of_pdfdocencoding fontpack fontsize t =
+  of_utf8 fontpack fontsize (Pdftext.utf8_of_pdfdocstring t)
 
 (* Remove characters until it is below the length. Then remove three more and
    add dots for an ellipsis *)
@@ -100,14 +101,14 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
     map
       (fun mark ->
          let indent = float mark.Pdfmarks.level *. fontsize *. 2. in 
-         let textruns = of_pdfdocencoding fontpack mark.Pdfmarks.text in
+         let textruns = of_pdfdocencoding fontpack fontsize mark.Pdfmarks.text in
          let labelruns =
-           if mark.Pdfmarks.target = NullDestination then of_pdfdocencoding fontpack "" else 
+           if mark.Pdfmarks.target = NullDestination then of_pdfdocencoding fontpack fontsize "" else 
            let pde =
              let pnum = Pdfpage.pagenumber_of_target ~fastrefnums pdf mark.Pdfmarks.target in
                try Pdfpagelabels.pagelabeltext_of_pagenumber pnum labels with Not_found -> string_of_int pnum
            in
-             of_pdfdocencoding fontpack pde
+             of_pdfdocencoding fontpack fontsize pde
          in
          (*let widths = Cpdftype.font_widths f fontsize in
          let textgap = width -. margin *. 2. -. indent -. Cpdftype.width_of_string widths label in*)
@@ -123,15 +124,15 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
       (Pdfmarks.read_bookmarks pdf)
   in
   let toc_pages =
-    let title =
+    (*let title =
       let glue = Cpdftype.VGlue (fontsize *. 2.) in
         if title = "" then [] else
           flatten
             (map
               (fun l -> [Cpdftype.Text l; Cpdftype.NewLine])
-              (split_toc_title (of_utf8 fontpack title)))
+              (split_toc_title (of_utf8 fontpack (fontsize *. 2.) title)))
           @ [glue]
-    in
+    in*)
     let lm, rm, tm, bm =
       match firstpage_cropbox with
       | None -> (margin, margin, margin, margin)
@@ -139,10 +140,10 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
           (cminx +. margin, (pmaxx -. cmaxx) +. margin, cminy +. margin, (pmaxy -. cmaxy) +. margin)
     in
       let firstfont =
-        hd (keep (function Cpdftype.Font _ -> true | _ -> false) (title @ flatten lines)) (*FIXME when title ok *)
+        hd (keep (function Cpdftype.Font _ -> true | _ -> false) ((*title @ *)flatten lines)) (*FIXME when title ok *)
       in
         Cpdftype.typeset lm rm tm bm firstpage_papersize pdf
-          ([firstfont; Cpdftype.BeginDocument] @ title @ flatten lines)
+          ([firstfont; Cpdftype.BeginDocument] @ (*title @*) flatten lines)
   in
   let toc_pages =
     match firstpage_cropbox with

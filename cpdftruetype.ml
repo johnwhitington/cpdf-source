@@ -5,8 +5,8 @@ open Pdfio
 (* FIXME Base on bytes not bits - all uses of mk_b *)
 let dbg = ref false
 
-let _ =
-  Pdfe.logger := (fun s -> print_string s; flush stdout)
+(*let _ =
+  Pdfe.logger := (fun s -> print_string s; flush stdout)*)
 
 type t =
   {flags : int;
