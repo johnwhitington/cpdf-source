@@ -245,6 +245,38 @@ let write_loca_table subset cmap indexToLocFormat bs loca =
         pairs;
       for x = 1 to padding !len do putval bs 8 0l done
 
+(* Expand the subset of locations to include composites *)
+let expand_composites_one mk_b loca glyfoffset locations =
+  let rec read_components b =
+    let componentFlags = read_ushort b in
+    let glyphIndex = read_ushort b in
+      (* Skip the rest of this component *)
+      if componentFlags land 0x0001 > 0 then discard_bytes b 4 else discard_bytes b 2;
+      (if componentFlags land 0x0008 > 0 then discard_bytes b 2
+      else if componentFlags land 0x0040 > 0 then discard_bytes b 4
+      else if componentFlags land 0x0080 > 0 then discard_bytes b 8);
+      if componentFlags land 0x0020 > 0 then glyphIndex::read_components b else [glyphIndex]
+  in
+  let expanded = 
+    map
+      (fun l ->
+         let b = mk_b (i32toi (i32add glyfoffset loca.(l))) in
+         let numberOfContours = read_short b in
+         if numberOfContours < 0 then
+           begin
+             discard_bytes b 8; (* xMin, xMax, yMin, yMax *)
+             l::read_components b
+           end
+         else
+         [l])
+      locations
+  in
+    sort compare (setify (flatten expanded))
+
+let rec expand_composites mk_b loca glyfoffset locations =
+  let expanded = expand_composites_one mk_b loca glyfoffset locations in
+    if expanded = locations then expanded else expand_composites mk_b loca glyfoffset expanded
+
 (* Write the notdef glyf, and any others in the subset *)
 let write_glyf_table subset cmap bs mk_b glyfoffset loca =
   if !dbg then Printf.printf "***write_glyf_table\n";
@@ -259,8 +291,8 @@ let write_glyf_table subset cmap bs mk_b glyfoffset loca =
          with
            Not_found -> ())
       subset;
-  let locnums = sort compare (map fst (list_of_hashtbl locnums)) in
-  if !dbg then
+  let locnums = expand_composites mk_b loca glyfoffset (sort compare (map fst (list_of_hashtbl locnums))) in
+  (*if !dbg then*)
     (Printf.printf "We want glyfs for locations: ";
      iter (Printf.printf "%i ") locnums; Printf.printf "\n");
     let byteranges = map (fun x -> (loca.(x), loca.(x + 1))) locnums in
@@ -645,12 +677,12 @@ let parse ~subset data encoding =
                     widths; subset_fontfile; subset; tounicode})
                  firstchars_2 lastchars_2 widths_2 seconds_subsets subsets_2 seconds_tounicodes
               in
-                (*Printf.printf "\nMain subset:\n";
+                Printf.printf "\nMain subset:\n";
                 debug_t one;
                 write_font "one.ttf" one.subset_fontfile;
                 Printf.printf "\nHigher subset:\n";
                 debug_t (hd twos);
-                write_font "two.ttf" (hd twos).subset_fontfile;*)
+                write_font "two.ttf" (hd twos).subset_fontfile;
                 one::twos
 
 let parse ~subset data encoding =
