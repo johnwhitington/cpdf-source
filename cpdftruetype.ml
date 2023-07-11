@@ -289,7 +289,7 @@ let write_glyf_table subset cmap bs mk_b glyfoffset loca =
          with
            Not_found -> ())
       subset;
-  let locnums = expand_composites mk_b loca glyfoffset (sort compare (map fst (list_of_hashtbl locnums))) in
+  let locnums = (*expand_composites mk_b loca glyfoffset*) (sort compare (map fst (list_of_hashtbl locnums))) in
   (*if !dbg then*)
     (Printf.printf "We want glyfs for locations: ";
      iter (Printf.printf "%i ") locnums; Printf.printf "\n");
@@ -680,7 +680,7 @@ let parse ~subset data encoding =
                 write_font "one.ttf" one.subset_fontfile;
                 (*Printf.printf "\nHigher subset:\n";
                 debug_t (hd twos);*)
-                write_font "two.ttf" (hd twos).subset_fontfile;
+                if twos <> [] then write_font "two.ttf" (hd twos).subset_fontfile;
                 one::twos
 
 let parse ~subset data encoding =

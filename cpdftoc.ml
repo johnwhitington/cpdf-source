@@ -14,16 +14,33 @@ let rec real_newline = function
   | x::r -> x::real_newline r
   | [] -> []
 
+let rec collate_runs cfn a = function
+  | [] -> rev (map rev a)
+  | (charcode, fontnum, font) as h::t ->
+      match a with
+      | [] -> collate_runs fontnum [[h]] t
+      | this::rest ->
+          if fontnum = cfn
+            then collate_runs cfn ((h::this)::rest) t
+            else collate_runs fontnum ([h]::this::rest) t
+
+let collate_runs = function
+  | [] -> []
+  | (_, fontnum, _)::_ as l -> collate_runs fontnum [] l
+
 (* Run of Font / Text elements from a fontpack and UTF8 text *)
 let of_utf8 fontpack fontsize t =
-  (* Use the fontpack to find which font is required, then return runs
-  of [Font (font, size); Text t] in a list *)
   let codepoints = Pdftext.codepoints_of_utf8 t in
-  (* 1. Text to (charcode, font, fontnum) *)
   let fonted = option_map (Cpdfembed.get_char fontpack) codepoints in
-  (* 2. FIXME Collate them *)
-  (* 3. Produce the runs, converting to char *)
-  flatten (map (function (charcode, fontnum, font) -> [Cpdftype.Font (font, fontsize); Cpdftype.Text [char_of_int charcode]]) fonted)
+  let collated = collate_runs fonted in
+    flatten
+      (map
+        (function
+         | [] -> []
+         | (_, _, font) as h::t ->
+             let charcodes = map (fun (c, _, _) -> char_of_int c) (h::t) in
+               [Cpdftype.Font (font, fontsize); Cpdftype.Text charcodes])
+        collated)
 
 (* Cpdftype codepoints from a font and PDFDocEndoding string *)
 let of_pdfdocencoding fontpack fontsize t =
