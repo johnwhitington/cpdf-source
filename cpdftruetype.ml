@@ -2,7 +2,6 @@
 open Pdfutil
 open Pdfio
 
-(* FIXME Add suport for composite glyphs *)
 (* FIXME Base on bytes not bits - all uses of mk_b *)
 let dbg = ref false
 
@@ -250,7 +249,6 @@ let expand_composites_one mk_b loca glyfoffset locations =
   let rec read_components b =
     let componentFlags = read_ushort b in
     let glyphIndex = read_ushort b in
-      (* Skip the rest of this component *)
       if componentFlags land 0x0001 > 0 then discard_bytes b 4 else discard_bytes b 2;
       (if componentFlags land 0x0008 > 0 then discard_bytes b 2
       else if componentFlags land 0x0040 > 0 then discard_bytes b 4
@@ -296,7 +294,7 @@ let write_glyf_table subset cmap bs mk_b glyfoffset loca =
     (Printf.printf "We want glyfs for locations: ";
      iter (Printf.printf "%i ") locnums; Printf.printf "\n");
     let byteranges = map (fun x -> (loca.(x), loca.(x + 1))) locnums in
-    if !dbg then
+    (*if !dbg then*)
       (Printf.printf "Byte ranges: ";
       iter (fun (a, b) -> Printf.printf "(%li, %li) " a b) byteranges; Printf.printf "\n");
   let len = List.fold_left i32add 0l (map (fun (a, b) -> i32sub b a) byteranges) in
