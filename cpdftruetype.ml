@@ -294,7 +294,7 @@ let write_glyf_table subset cmap bs mk_b glyfoffset loca =
     (Printf.printf "We want glyfs for locations: ";
      iter (Printf.printf "%i ") locnums; Printf.printf "\n");
     let byteranges = map (fun x -> (loca.(x), loca.(x + 1))) locnums in
-    (*if !dbg then*)
+  if !dbg then
       (Printf.printf "Byte ranges: ";
       iter (fun (a, b) -> Printf.printf "(%li, %li) " a b) byteranges; Printf.printf "\n");
   let len = List.fold_left i32add 0l (map (fun (a, b) -> i32sub b a) byteranges) in
@@ -675,11 +675,11 @@ let parse ~subset data encoding =
                     widths; subset_fontfile; subset; tounicode})
                  firstchars_2 lastchars_2 widths_2 seconds_subsets subsets_2 seconds_tounicodes
               in
-                Printf.printf "\nMain subset:\n";
-                debug_t one;
+                (*Printf.printf "\nMain subset:\n";
+                debug_t one;*)
                 write_font "one.ttf" one.subset_fontfile;
-                Printf.printf "\nHigher subset:\n";
-                debug_t (hd twos);
+                (*Printf.printf "\nHigher subset:\n";
+                debug_t (hd twos);*)
                 write_font "two.ttf" (hd twos).subset_fontfile;
                 one::twos
 
