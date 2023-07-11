@@ -2,9 +2,7 @@
 open Pdfutil
 open Pdfio
 
-(* FIXME Proper widths for .notdef, and warn on .notdef being produced *)
 (* FIXME Add suport for composite glyphs *)
-(* FIXME Make sure -embed-std14 works for all commands *)
 (* FIXME Base on bytes not bits - all uses of mk_b *)
 let dbg = ref false
 
@@ -318,7 +316,7 @@ let calculate_widths unitsPerEm encoding firstchar lastchar subset cmapdata hmtx
        if !dbg then Printf.printf "code %i --> " code;
        let code = unicode_codepoint_of_pdfcode encoding_table glyphlist_table code in
        if !dbg then Printf.printf "unicode %i --> " code;
-       if not (mem code subset) then 0 else
+       if not (mem code subset) then hmtxdata.(0) else
        try
          let glyphnum = Hashtbl.find cmapdata code in
            if !dbg then Printf.printf "glyph number %i --> " glyphnum;
@@ -326,7 +324,7 @@ let calculate_widths unitsPerEm encoding firstchar lastchar subset cmapdata hmtx
            let width = try hmtxdata.(glyphnum) with _ -> hmtxdata.(Array.length hmtxdata - 1) in
            if !dbg then Printf.printf "width %i\n" width;
              pdf_unit unitsPerEm width
-       with e -> if !dbg then Printf.printf "no width for %i\n" code; 0)
+       with e -> if !dbg then Printf.printf "no width for %i\n" code; hmtxdata.(0))
 
 let calculate_width_higher unitsPerEm firstchar lastchar subset cmapdata hmtxdata =
  let subset = Array.of_list subset in
@@ -341,7 +339,7 @@ let calculate_width_higher unitsPerEm firstchar lastchar subset cmapdata hmtxdat
             if !dbg then Printf.printf "width %i\n" width;
               pdf_unit unitsPerEm width
         with
-          Not_found -> 0)
+          Not_found -> hmtxdata.(0))
 
 let calculate_maxwidth unitsPerEm hmtxdata =
   pdf_unit unitsPerEm (hd (sort (fun a b -> compare b a) (Array.to_list hmtxdata)))
