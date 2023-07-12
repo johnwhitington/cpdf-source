@@ -2,8 +2,6 @@
 open Pdfutil
 open Pdfio
 
-(* FIXME revisit widths for mono font - the new code returning the notdef width is making the notdef width turn up in /Widths, where missing entries should be 0! *)
-
 let dbg =
   (* Pdfe.logger := (fun s -> print_string s; flush stdout) *)
   ref false
@@ -346,7 +344,7 @@ let calculate_widths unitsPerEm encoding firstchar lastchar subset cmapdata hmtx
        if !dbg then Printf.printf "code %i --> " code;
        let code = unicode_codepoint_of_pdfcode encoding_table glyphlist_table code in
        if !dbg then Printf.printf "unicode %i --> " code;
-       if not (mem code subset) then hmtxdata.(0) else
+       if not (mem code subset) then 0 else
        try
          let glyphnum = Hashtbl.find cmapdata code in
            if !dbg then Printf.printf "glyph number %i --> " glyphnum;
