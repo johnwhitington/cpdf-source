@@ -2,11 +2,10 @@
 open Pdfutil
 open Pdfio
 
-(* FIXME Base on bytes not bits - all uses of mk_b *)
-let dbg = ref false
-
-(*let _ =
-  Pdfe.logger := (fun s -> print_string s; flush stdout)*)
+let dbg =
+  (*let _ =
+      Pdfe.logger := (fun s -> print_string s; flush stdout)*)
+  ref false
 
 type t =
   {flags : int;
@@ -129,7 +128,7 @@ let read_format_4_encoding_table b =
     done;
     t
 
-let print_encoding_table format (table : (int, int) Hashtbl.t) =
+let print_encoding_table fmt table =
   let unicodedata = Cpdfunicodedata.unicodedata () in
   let unicodetable = Hashtbl.create 16000 in
    iter
@@ -137,7 +136,7 @@ let print_encoding_table format (table : (int, int) Hashtbl.t) =
        Hashtbl.add unicodetable x.Cpdfunicodedata.code_value x.Cpdfunicodedata.character_name)
     unicodedata;
   let l = sort compare (list_of_hashtbl table) in
-  if !dbg then Printf.printf "Format table %i: There are %i characters in this font\n" format (length l);
+  if !dbg then Printf.printf "Format table %i: There are %i characters in this font\n" fmt (length l);
   iter
     (fun (c, gi) ->
       let str = Printf.sprintf "%04X" c in
@@ -297,7 +296,7 @@ let write_glyf_table subset cmap bs mk_b glyfoffset loca =
   if !dbg then
       (Printf.printf "Byte ranges: ";
       iter (fun (a, b) -> Printf.printf "(%li, %li) " a b) byteranges; Printf.printf "\n");
-  let len = List.fold_left i32add 0l (map (fun (a, b) -> i32sub b a) byteranges) in
+  let len = fold_left i32add 0l (map (fun (a, b) -> i32sub b a) byteranges) in
   let write_bytes bs a l =
     if !dbg then Printf.printf "glyf: write_bytes %li %li\n" a l;
     let b = mk_b (i32toi (i32add glyfoffset a)) in
@@ -336,7 +335,7 @@ let calculate_widths unitsPerEm encoding firstchar lastchar subset cmapdata hmtx
       Not_found -> 0
   in
   if lastchar < firstchar then Cpdferror.error "lastchar < firstchar" else
-  (*if !dbg then List.iter (fun (a, b) -> Printf.printf "%i -> %i\n" a b) (sort compare (list_of_hashtbl cmapdata));*)
+  (*if !dbg then iter (fun (a, b) -> Printf.printf "%i -> %i\n" a b) (sort compare (list_of_hashtbl cmapdata));*)
   let encoding_table = Pdftext.table_of_encoding encoding in
   let glyphlist_table = Pdfglyphlist.glyph_hashes () in
   Array.init
@@ -653,7 +652,7 @@ let parse ~subset data encoding =
                   (fun subset ->
                      if subset = [] then None else
                         let h = null_hash () in
-                          List.iter2
+                          iter2
                             (fun n u ->
                                let s = implode (tl (tl (explode (Pdftext.utf16be_of_codepoints [u])))) in
                                  Hashtbl.add h n s)
@@ -664,8 +663,9 @@ let parse ~subset data encoding =
               in
               let one = 
                 {flags = flags_1; minx; miny; maxx; maxy; italicangle; ascent; descent;
-                capheight; stemv; xheight; avgwidth; maxwidth; firstchar = firstchar_1; lastchar = lastchar_1;
-                widths = widths_1; subset_fontfile = main_subset; subset = subset_1; tounicode = None}
+                 capheight; stemv; xheight; avgwidth; maxwidth; firstchar = firstchar_1;
+                 lastchar = lastchar_1; widths = widths_1; subset_fontfile = main_subset;
+                 subset = subset_1; tounicode = None}
               in
               let twos =
                 map6
@@ -675,11 +675,9 @@ let parse ~subset data encoding =
                     widths; subset_fontfile; subset; tounicode})
                  firstchars_2 lastchars_2 widths_2 seconds_subsets subsets_2 seconds_tounicodes
               in
-                (*Printf.printf "\nMain subset:\n";
-                debug_t one;*)
+                (*Printf.printf "\nMain subset:\n"; debug_t one;*)
                 write_font "one.ttf" one.subset_fontfile;
-                (*Printf.printf "\nHigher subset:\n";
-                debug_t (hd twos);*)
+                (*Printf.printf "\nHigher subset:\n"; debug_t (hd twos);*)
                 if twos <> [] then write_font "two.ttf" (hd twos).subset_fontfile;
                 one::twos
 

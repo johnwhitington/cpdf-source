@@ -109,11 +109,11 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
     | Some r -> Some (Pdf.parse_rectangle pdf r)
     | None -> None
   in
-  (*let width =
+  let width =
     match firstpage_cropbox with
     | Some (xmin, _, xmax, _) -> xmax -. xmin
     | None -> width 
-  in*)
+  in
   let lines =
     map
       (fun mark ->
@@ -141,15 +141,15 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
       (Pdfmarks.read_bookmarks pdf)
   in
   let toc_pages =
-    (*let title =
+    let title =
       let glue = Cpdftype.VGlue (fontsize *. 2.) in
         if title = "" then [] else
           flatten
             (map
-              (fun l -> [Cpdftype.Text l; Cpdftype.NewLine])
-              (split_toc_title (of_utf8 fontpack (fontsize *. 2.) title)))
+              (fun l -> l @ [Cpdftype.NewLine])
+              (map (of_utf8 fontpack (fontsize *. 2.)) (map implode (split_toc_title (explode title)))))
           @ [glue]
-    in*)
+    in
     let lm, rm, tm, bm =
       match firstpage_cropbox with
       | None -> (margin, margin, margin, margin)
@@ -157,10 +157,10 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
           (cminx +. margin, (pmaxx -. cmaxx) +. margin, cminy +. margin, (pmaxy -. cmaxy) +. margin)
     in
       let firstfont =
-        hd (keep (function Cpdftype.Font _ -> true | _ -> false) ((*title @ *)flatten lines)) (*FIXME when title ok *)
+        hd (keep (function Cpdftype.Font _ -> true | _ -> false) (title @ flatten lines))
       in
         Cpdftype.typeset lm rm tm bm firstpage_papersize pdf
-          ([firstfont; Cpdftype.BeginDocument] @ (*title @*) flatten lines)
+          ([firstfont; Cpdftype.BeginDocument] @ title @ flatten lines)
   in
   let toc_pages =
     match firstpage_cropbox with
