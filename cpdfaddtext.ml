@@ -232,8 +232,9 @@ let expand_lines text time pdf endpage extract_text_font_size filename bates bat
 let addtext
   time lines linewidth outline fast colour fontname encoding bates batespad
   fontsize font fontpdfobj underneath position hoffset voffset text pages
-  cropbox opacity justification filename extract_text_font_size shift pdf
+  cropbox opacity justification filename extract_text_font_size shift raw pdf
 =
+  let lines = map (fun text -> if raw then text else charcodes_of_utf8 (Pdftext.read_font pdf fontpdfobj) text) lines in
   let endpage = Pdfpage.endpage pdf in
   let shifts = Cpdfcoord.parse_coordinates pdf shift in
   let addtext_page num page =
@@ -467,7 +468,6 @@ let
   in
     (* 19th May 2022. Reversed the phase order (split first, then get charcodes. This allows \n in custom fonts. *)
     let lines = map unescape_string (split_at_newline text) in
-    let lines = map (fun text -> if raw then text else charcodes_of_utf8 (Pdftext.read_font pdf fontpdfobj) text) lines in
       let pdf = ref pdf in
         let voffset =
           let open Cpdfposition in
@@ -520,7 +520,7 @@ let
                      addtext time lines linewidth outline fast colour !realfontname encoding
                      bates batespad fontsize font fontpdfobj underneath position hoff voff line
                      pages cropbox opacity justification filename extract_text_font_size shift
-                     !pdf;
+                     raw !pdf;
                    voffset := !voffset +. (linespacing *. fontsize))
               lines;
               begin match cpdffont with
