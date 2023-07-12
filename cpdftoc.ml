@@ -55,14 +55,23 @@ let of_pdfdocencoding fontpack fontsize t =
 
 (* Remove characters until it is below the length. Then remove three more and
    add dots for an ellipsis *)
-let rec shorten_text_inner widths l t =
-  if t = [] then t else
-  if Cpdftype.width_of_string widths t > l then shorten_text_inner widths l (rev (tl (rev t)))
-  else t
+let rec shorten_text_inner l t =
+  match rev t with
+  | Cpdftype.Text text::Cpdftype.Font (f, fs)::more ->
+      if Cpdftype.width_of_string (Cpdftype.font_widths f fs) text > l then
+        shorten_text_inner l (rev (Cpdftype.Text (all_but_last text)::Cpdftype.Font (f, fs)::more))
+      else
+        t
+  | _ -> t
 
-let shorten_text widths l t =
-  let short = shorten_text_inner widths l t in
-    if short = t then t else short @ ['.'; '.'; '.']
+let shorten_text fontpack fontsize l t =
+  let short = shorten_text_inner l t in
+    if short = t then t else
+      let charcode, _, dotfont =
+        unopt (Cpdfembed.get_char fontpack (int_of_char '.'))
+      in
+      let charcode = char_of_int charcode in
+        short @ [Cpdftype.Font (dotfont, fontsize); Cpdftype.Text [charcode; charcode; charcode]]
 
 (* Calculate the used codepoints *)
 let used pdf fastrefnums labels title marks =
@@ -135,7 +144,7 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
              of_pdfdocencoding fontpack fontsize pde
          in
          let textgap = width -. margin *. 2. -. indent -. width_of_runs labelruns in
-         (*let text = shorten_text widths (textgap -. fontsize *. 3.) text in*) (*FIXME add back in, but in unicode not codepoints! *)
+         let textruns = shorten_text fontpack fontsize (textgap -. fontsize *. 3.) textruns in
          let space = textgap -. width_of_runs textruns in
            [Cpdftype.BeginDest mark.Pdfmarks.target;
             Cpdftype.HGlue indent]
