@@ -234,7 +234,6 @@ let addtext
   fontsize fontpack font fontpdfobj underneath position hoffset voffset text pages
   cropbox opacity justification filename extract_text_font_size shift raw pdf
 =
-  let lines = map (fun text -> if raw then text else charcodes_of_utf8 (Pdftext.read_font pdf fontpdfobj) text) lines in
   let endpage = Pdfpage.endpage pdf in
   let shifts = Cpdfcoord.parse_coordinates pdf shift in
   let addtext_page num page =
@@ -260,6 +259,7 @@ let addtext
         | None -> Pdf.Dictionary []
         | Some d -> d
       in
+        (* FIXME If a fontpack is available, we need to calculate the width from the codepoints in preference. *)
         let calc_textwidth text =
           match font with
           | Some (Pdftext.StandardFont (f, _)) ->
@@ -296,6 +296,8 @@ let addtext
           let ops, urls, x, y, hoffset, voffset, text, joffset =
             let text = process_text time text (replace_pairs pdf endpage extract_text_font_size filename bates batespad num page) in
             let text, urls = get_urls_line text in
+            (* FIXME Here we need to get (font, fontnum, charcode) triples if we have a fontpack, or fake if not. *)
+            let lines = map (fun text -> if raw then text else charcodes_of_utf8 (Pdftext.read_font pdf fontpdfobj) text) lines in
             let expanded_lines = expand_lines text time pdf endpage extract_text_font_size filename bates batespad num page lines in
             let textwidth = calc_textwidth text
             and allwidths = map calc_textwidth expanded_lines in
@@ -315,6 +317,7 @@ let addtext
                       then -. (cos ((pi /. 2.) -. rotate) *. voffset), sin ((pi /. 2.) -. rotate) *. voffset
                       else hoffset, voffset 
                   in
+                    (* FIXME Here we need to pass the fontpack if available to the ops function. Can the ops function do all it needs just with this? *)
                     match font with
                     | Some f ->
                         ops fontname longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
@@ -430,10 +433,8 @@ let
   let font, fontpack =
     match cpdffont with
     | Cpdfembed.PreMadeFontPack f ->
-        (*Printf.printf "Cpdfaddtext.addtexts: PreMadeFontPack\n";*)
         Some (hd (fst f)), Some f
     | Cpdfembed.EmbedInfo {fontfile; fontname; encoding} ->
-        (*Printf.printf "Cpdfaddtext.addtexts: EmbedInfo\n";*)
         let embedded = Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints:(map fst (list_of_hashtbl used)) ~encoding in
           Some (hd (fst embedded)), Some embedded 
     | Cpdfembed.ExistingNamedFont -> None, None
@@ -466,7 +467,6 @@ let
             end
         | _ -> failwith "addtext: font dictionary not present"
   in
-    (* 19th May 2022. Reversed the phase order (split first, then get charcodes. This allows \n in custom fonts. *)
     let lines = map unescape_string (split_at_newline text) in
       let pdf = ref pdf in
         let voffset =
@@ -523,6 +523,7 @@ let
                      raw !pdf;
                    voffset := !voffset +. (linespacing *. fontsize))
               lines;
+              (* FIXME Here we need to embed all the fonts, not just one *)
               begin match cpdffont with
               | Cpdfembed.EmbedInfo {fontfile; fontname; encoding} ->
                   let codepoints = map fst (list_of_hashtbl used) in
