@@ -28,6 +28,13 @@ let collate_runs = function
   | [] -> []
   | (_, fontnum, _)::_ as l -> collate_runs fontnum [] l
 
+let rec width_of_runs runs =
+  match runs with
+  | Cpdftype.Font (f, fontsize)::Cpdftype.Text t::more ->
+      Cpdftype.width_of_string (Cpdftype.font_widths f fontsize) t +. width_of_runs more
+  | [] -> 0.
+  | _ -> failwith "width_of_runs"
+
 (* Run of Font / Text elements from a fontpack and UTF8 text *)
 let of_utf8 fontpack fontsize t =
   let codepoints = Pdftext.codepoints_of_utf8 t in
@@ -127,10 +134,9 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
            in
              of_pdfdocencoding fontpack fontsize pde
          in
-         (*let widths = Cpdftype.font_widths f fontsize in
-         let textgap = width -. margin *. 2. -. indent -. Cpdftype.width_of_string widths label in*)
+         let textgap = width -. margin *. 2. -. indent -. width_of_runs labelruns in
          (*let text = shorten_text widths (textgap -. fontsize *. 3.) text in*) (*FIXME add back in, but in unicode not codepoints! *)
-         let space = 0. (*textgap -. Cpdftype.width_of_string widths text*) in
+         let space = textgap -. width_of_runs textruns in
            [Cpdftype.BeginDest mark.Pdfmarks.target;
             Cpdftype.HGlue indent]
            @ textruns @

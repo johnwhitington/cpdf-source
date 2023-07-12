@@ -3,8 +3,7 @@ open Pdfutil
 open Pdfio
 
 let dbg =
-  (*let _ =
-      Pdfe.logger := (fun s -> print_string s; flush stdout)*)
+  (* Pdfe.logger := (fun s -> print_string s; flush stdout) *)
   ref false
 
 type t =
