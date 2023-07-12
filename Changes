@@ -3,9 +3,9 @@
 New features:
 
 o Create new PDF documents or draw on existing ones with -draw
-o Embed Google/URW TrueType fonts with -font-ttf.
+o Embed TrueType fonts with -font-ttf
 o Embed the 14 standard fonts if requested
-o Add links to parts of text with -add-text as %URL[|].
+o Add links to parts of text with -add-text as %URL[|]
 o Convert JPEGs and PNGs to PDFs with -jpeg and -png
 o Export, import, and thereby round-trip annotations via JSON
 o Show composition of PDF with -composition[-json]
