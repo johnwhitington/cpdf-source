@@ -523,14 +523,14 @@ let
                      !pdf;
                    voffset := !voffset +. (linespacing *. fontsize))
               lines;
-              (*begin match cpdffont with
+              begin match cpdffont with
               | Cpdfembed.EmbedInfo {fontfile; fontname; encoding} ->
                   let codepoints = map fst (list_of_hashtbl used) in
                   let objnum = match fontpdfobj with Pdf.Indirect i -> i | _ -> failwith "bad fontpdfobj" in
                   let font = hd (fst (Cpdfembed.embed_truetype !pdf ~fontfile ~fontname ~codepoints ~encoding)) in
                     ignore (Pdftext.write_font ~objnum !pdf font)
               | _ -> ()
-              end;*)
+              end;
               !pdf
 
 

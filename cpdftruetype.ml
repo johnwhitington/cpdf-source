@@ -2,6 +2,8 @@
 open Pdfutil
 open Pdfio
 
+(* FIXME revisit widths for mono font - the new code returning the notdef width is making the notdef width turn up in /Widths, where missing entries should be 0! *)
+
 let dbg =
   (* Pdfe.logger := (fun s -> print_string s; flush stdout) *)
   ref false
@@ -288,7 +290,7 @@ let write_glyf_table subset cmap bs mk_b glyfoffset loca =
            Not_found -> ())
       subset;
   let locnums = (*expand_composites mk_b loca glyfoffset*) (sort compare (map fst (list_of_hashtbl locnums))) in
-  (*if !dbg then*)
+  if !dbg then
     (Printf.printf "We want glyfs for locations: ";
      iter (Printf.printf "%i ") locnums; Printf.printf "\n");
     let byteranges = map (fun x -> (loca.(x), loca.(x + 1))) locnums in
