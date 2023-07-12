@@ -4,6 +4,9 @@
 
    For now, this is just an experiment for -table-of-contents and -typeset. To
    be continued... *)
+
+(* TODO: Move fontpacks into here, and text runs up ourselves, as a preprocessing step or utility function? *)
+(* TODO: Precompute widths and store with fonts, for speed *)
 open Pdfutil
 
 (* Main type *)
