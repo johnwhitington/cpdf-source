@@ -231,7 +231,7 @@ let expand_lines text time pdf endpage extract_text_font_size filename bates bat
 
 let addtext
   time lines linewidth outline fast colour fontname encoding bates batespad
-  fontsize font fontpdfobj underneath position hoffset voffset text pages
+  fontsize fontpack font fontpdfobj underneath position hoffset voffset text pages
   cropbox opacity justification filename extract_text_font_size shift raw pdf
 =
   let lines = map (fun text -> if raw then text else charcodes_of_utf8 (Pdftext.read_font pdf fontpdfobj) text) lines in
@@ -427,16 +427,16 @@ let
     pages
     (map (fun x -> List.nth ps (x - 1)) pages);
   let realfontname = ref fontname in
-  let font =
+  let font, fontpack =
     match cpdffont with
     | Cpdfembed.PreMadeFontPack f ->
         (*Printf.printf "Cpdfaddtext.addtexts: PreMadeFontPack\n";*)
-        Some (hd (fst f))
+        Some (hd (fst f)), Some f
     | Cpdfembed.EmbedInfo {fontfile; fontname; encoding} ->
         (*Printf.printf "Cpdfaddtext.addtexts: EmbedInfo\n";*)
         let embedded = Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints:(map fst (list_of_hashtbl used)) ~encoding in
-          Some (hd (fst embedded))
-    | Cpdfembed.ExistingNamedFont -> None
+          Some (hd (fst embedded)), Some embedded 
+    | Cpdfembed.ExistingNamedFont -> None, None
   in
   let fontpdfobj =
     match font with
@@ -518,7 +518,7 @@ let
                  let voff, hoff = !voffset, 0. in
                    pdf :=
                      addtext time lines linewidth outline fast colour !realfontname encoding
-                     bates batespad fontsize font fontpdfobj underneath position hoff voff line
+                     bates batespad fontsize fontpack font fontpdfobj underneath position hoff voff line
                      pages cropbox opacity justification filename extract_text_font_size shift
                      raw !pdf;
                    voffset := !voffset +. (linespacing *. fontsize))
