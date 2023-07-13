@@ -2321,7 +2321,7 @@ font size and color.
     \noindent\small\verb!cpdf -remove-text in.pdf -o out.pdf!
   \end{framed}
 
-  \subsection{Page Numbers}
+  \subsection{Page Numbers and other Special Codes}
 \index{page!numbers}
   There are various special codes to include the page number in the text:
 
@@ -2463,12 +2463,11 @@ than its baseline. Similarly, the \texttt{-topline} option may be used to specif
 FIXME: How to provide font files for -embed-std14
 FIXME: Which font packs we provide
 FIXME: Which characters are available in Latin1, and Google fonts
+FIXME: How to choose font encoding
 
   \noindent Adding \texttt{-embed-std14} to the command will embed subsetted font files in the PDF for any of the Standard 14 fonts used.
 
-  Other TrueType fonts may be introduced with the \texttt{-font-ttf} option, giving the file name of the font.
-
-See Section \ref{copyfont} for how to use other fonts.
+Other TrueType fonts may be introduced with the \texttt{-font-ttf} option, giving the file name of the font. See Section \ref{copyfont} for how to use an existing font from the source document.
 
 The font size can be altered with the \texttt{-font-size} option, which
 specifies the size in points:
