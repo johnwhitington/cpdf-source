@@ -136,17 +136,21 @@ let process_specials pdf endpage filename bates batespad num page s =
   in
     Cpdfaddtext.process_text (res ()).time s pairs
 
-(* FIXME: implement for other kinds of font *)
 let runs_of_utf8 s =
-  match (res ()).current_fontpack with
-  | ((f::_, _) as fontpack) ->
-      let codepoints = Pdftext.codepoints_of_utf8 s in
-      let charcodes = option_map (Cpdfembed.get_char fontpack) codepoints in
-      let fontname =
-        fst (Hashtbl.find (res ()).fonts f)
-      in
-        [Pdfops.Op_Tf (fontname, (res ()).font_size); Pdfops.Op_Tj (implode (map (fun (c, _, _) -> char_of_int c) charcodes))]
-  | _ -> failwith "charcodes_of_utf8: unknown font"
+  let fontpack = (res ()).current_fontpack in
+  let codepoints = Pdftext.codepoints_of_utf8 s in
+  let triples = option_map (Cpdfembed.get_char fontpack) codepoints in
+  let collated = Cpdfembed.collate_runs triples in
+    flatten
+     (map
+       (fun l ->
+         if l = [] then [] else
+           let f = match l with (_, _, f)::_ -> f | _ -> assert false in
+           let fontname = fst (Hashtbl.find (res ()).fonts f) in
+           let charcodes = map (fun (c, _, _) -> char_of_int c) l in
+             [Pdfops.Op_Tf (fontname, (res ()).font_size);
+              Pdfops.Op_Tj (implode charcodes)])
+      collated)
 
 let extgstate kind v =
   try Hashtbl.find (res ()).extgstates (kind, v) with
@@ -239,9 +243,9 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
         match cpdffont with
         | PreMadeFontPack fp -> fp
         | EmbedInfo {fontfile; fontname; encoding} ->
-            Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints:[int_of_char 'a'] ~encoding
+            Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints:[int_of_char 'H'] ~encoding
         | ExistingNamedFont ->
-            error "-draw does not support using an exsiting named font"
+            error "-draw does not support using an existing named font"
       in
       let ns =
         map

@@ -92,3 +92,18 @@ let embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding =
   let fs = Cpdftruetype.parse ~subset:codepoints fontfile encoding in
   let subsets_and_their_fonts = map (make_single_font ~fontname ~encoding pdf) fs in
     (map snd subsets_and_their_fonts, make_fontpack_hashtable subsets_and_their_fonts)
+
+let rec collate_runs cfn a = function
+  | [] -> rev (map rev a)
+  | (charcode, fontnum, font) as h::t ->
+      match a with
+      | [] -> collate_runs fontnum [[h]] t
+      | this::rest ->
+          if fontnum = cfn
+            then collate_runs cfn ((h::this)::rest) t
+            else collate_runs fontnum ([h]::this::rest) t
+
+let collate_runs = function
+  | [] -> []
+  | (_, fontnum, _)::_ as l -> collate_runs fontnum [] l
+

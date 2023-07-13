@@ -16,3 +16,5 @@ val get_char : t -> int -> (int * int * Pdftext.font) option
 val embed_truetype :
   Pdf.t -> fontfile:Pdfio.bytes -> fontname:string -> codepoints:int list ->
   encoding:Pdftext.encoding -> t
+
+val collate_runs : ('a * 'b * 'c) list -> ('a * 'b * 'c) list list

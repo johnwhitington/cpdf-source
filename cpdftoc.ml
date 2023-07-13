@@ -14,20 +14,6 @@ let rec real_newline = function
   | x::r -> x::real_newline r
   | [] -> []
 
-let rec collate_runs cfn a = function
-  | [] -> rev (map rev a)
-  | (charcode, fontnum, font) as h::t ->
-      match a with
-      | [] -> collate_runs fontnum [[h]] t
-      | this::rest ->
-          if fontnum = cfn
-            then collate_runs cfn ((h::this)::rest) t
-            else collate_runs fontnum ([h]::this::rest) t
-
-let collate_runs = function
-  | [] -> []
-  | (_, fontnum, _)::_ as l -> collate_runs fontnum [] l
-
 let rec width_of_runs runs =
   match runs with
   | Cpdftype.Font (f, fontsize)::Cpdftype.Text t::more ->
@@ -39,7 +25,7 @@ let rec width_of_runs runs =
 let of_utf8 fontpack fontsize t =
   let codepoints = Pdftext.codepoints_of_utf8 t in
   let fonted = option_map (Cpdfembed.get_char fontpack) codepoints in
-  let collated = collate_runs fonted in
+  let collated = Cpdfembed.collate_runs fonted in
     flatten
       (map
         (function
