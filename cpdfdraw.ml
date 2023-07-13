@@ -80,7 +80,8 @@ type res =
    form_xobjects : (string, (string * int)) Hashtbl.t; (* (name, (pdf name, objnum)) *)
    mutable page_names : string list;
    mutable time : Cpdfstrftime.t;
-   mutable current_fontpack : Cpdfembed.cpdffont;
+   mutable current_fontpack : Cpdfembed.t;
+   mutable font_size : float;
    mutable num : int}
 
 let empty_res () =
@@ -91,9 +92,9 @@ let empty_res () =
    page_names = [];
    time = Cpdfstrftime.dummy;
    current_fontpack =
-     Cpdfembed.PreMadeFontPack
-       (Cpdfembed.fontpack_of_standardfont
-         (Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding)));
+     (Cpdfembed.fontpack_of_standardfont
+       (Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding)));
+   font_size = 12.;
    num = 0}
 
 let resstack =
@@ -135,12 +136,16 @@ let process_specials pdf endpage filename bates batespad num page s =
   in
     Cpdfaddtext.process_text (res ()).time s pairs
 
-let charcodes_of_utf8 s =
+(* FIXME: implement for other kinds of font *)
+let runs_of_utf8 s =
   match (res ()).current_fontpack with
-  | PreMadeFontPack fontpack ->
+  | ((f::_, _) as fontpack) ->
       let codepoints = Pdftext.codepoints_of_utf8 s in
       let charcodes = option_map (Cpdfembed.get_char fontpack) codepoints in
-        implode (map (fun (c, _, _) -> char_of_int c) charcodes)
+      let fontname =
+        fst (Hashtbl.find (res ()).fonts f)
+      in
+        [Pdfops.Op_Tf (fontname, (res ()).font_size); Pdfops.Op_Tj (implode (map (fun (c, _, _) -> char_of_int c) charcodes))]
   | _ -> failwith "charcodes_of_utf8: unknown font"
 
 let extgstate kind v =
@@ -229,28 +234,33 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
   | NewPage -> Pdfe.log ("NewPage remaining in graphic stream"); assert false
   | Opacity v -> [Pdfops.Op_gs (extgstate "/ca" v)]
   | SOpacity v -> [Pdfops.Op_gs (extgstate "/CA" v)]
-  | Font (fontpack, size) ->
-      let font =
-        match fontpack with
-        | PreMadeFontPack (f::_, _) -> f
-        | _ -> failwith "-font-ttf not impl"
+  | Font (cpdffont, size) ->
+      let fontpack =
+        match cpdffont with
+        | PreMadeFontPack fp -> fp
+        | EmbedInfo {fontfile; fontname; encoding} ->
+            Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints:[int_of_char 'a'] ~encoding
+        | ExistingNamedFont ->
+            error "-draw does not support using an exsiting named font"
       in
-      let (n, _) =
-        try Hashtbl.find (res ()).fonts font with
-          Not_found ->
-            let o = Pdftext.write_font pdf font in
-            let n = fresh_name "/F" in
-              Hashtbl.add (res ()).fonts font (n, o);
-              (n, o)
+      let ns =
+        map
+          (fun font ->
+            try fst (Hashtbl.find (res ()).fonts font) with
+              Not_found ->
+                let o = Pdftext.write_font pdf font in
+                let n = fresh_name "/F" in
+                  Hashtbl.add (res ()).fonts font (n, o);
+                  n)
+          (fst fontpack)
       in
         (res ()).current_fontpack <- fontpack;
-        (res ()).page_names <- n::(res ()).page_names;
-        [Pdfops.Op_Tf (n, size)]
+        (res ()).page_names <- ns @ (res ()).page_names;
+        (res ()).font_size <- size;
+        []
   | TextSection ops -> [Pdfops.Op_BT] @ ops_of_drawops pdf endpage filename bates batespad num page ops @ [Pdfops.Op_ET]
-  | Text s -> [Pdfops.Op_Tj (charcodes_of_utf8 s)]
-  | SpecialText s ->
-      let s = process_specials pdf endpage filename bates batespad num page s in
-        [Pdfops.Op_Tj (charcodes_of_utf8 s)]
+  | Text s -> runs_of_utf8 s
+  | SpecialText s -> runs_of_utf8 (process_specials pdf endpage filename bates batespad num page s)
   | Leading f -> [Pdfops.Op_TL f]
   | CharSpace f -> [Pdfops.Op_Tc f]
   | WordSpace f -> [Pdfops.Op_Tw f]
