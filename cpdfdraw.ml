@@ -104,15 +104,15 @@ let empty_res () =
 let resstack =
   ref [empty_res ()]
 
-let res () =
-  try hd !resstack with _ -> error "graphics stack empty"
-
 let rescopy r =
   {r with
     images = Hashtbl.copy r.images;
     fonts = Hashtbl.copy r.fonts;
     extgstates = Hashtbl.copy r.extgstates;
     form_xobjects = Hashtbl.copy r.form_xobjects}
+
+let res () =
+  try hd !resstack with _ -> error "graphics stack empty"
 
 let respush () =
   resstack := (rescopy (res ()))::!resstack
@@ -341,6 +341,12 @@ let rec contains_specials_drawop = function
 and contains_specials l =
   List.exists contains_specials_drawop l
 
+let save_whole_stack () =
+  map (fun r -> rescopy r) !resstack
+
+let restore_whole_stack r =
+  resstack := r
+
 let draw_single ~fast ~underneath ~filename ~bates ~batespad fast range pdf drawops =
   (res ()).num <- max (res ()).num (minimum_resource_number pdf range);
   let endpage = Pdfpage.endpage pdf in
@@ -350,8 +356,10 @@ let draw_single ~fast ~underneath ~filename ~bates ~batespad fast range pdf draw
       then None
       else
         begin
-          ignore (ops_of_drawops true pdf endpage filename bates batespad 0 (hd pages) drawops);
-          Some (ops_of_drawops false pdf endpage filename bates batespad 0 (hd pages) drawops)
+          let r = save_whole_stack () in
+            ignore (ops_of_drawops true pdf endpage filename bates batespad 0 (hd pages) drawops);
+            restore_whole_stack r;
+            Some (ops_of_drawops false pdf endpage filename bates batespad 0 (hd pages) drawops)
         end
   in
   let ss =
@@ -362,8 +370,10 @@ let draw_single ~fast ~underneath ~filename ~bates ~batespad fast range pdf draw
              (match ops with
               | Some x -> x
               | None ->
-                  ignore (ops_of_drawops true pdf endpage filename bates batespad n p drawops);
-                  ops_of_drawops false pdf endpage filename bates batespad n p drawops)
+                  let r = save_whole_stack () in
+                    ignore (ops_of_drawops true pdf endpage filename bates batespad n p drawops);
+                    restore_whole_stack r;
+                    ops_of_drawops false pdf endpage filename bates batespad n p drawops)
            else [])
       (ilist 1 endpage)
       pages
