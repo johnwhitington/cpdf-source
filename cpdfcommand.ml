@@ -2085,12 +2085,12 @@ let embed_font () =
 
 let addtext s =
   begin match !drawops with _::_::_ -> () | _ -> error "-text must be in a -bt / -et section" end;
-    addop (Cpdfdraw.Font (embed_font (), args.fontsize));
+    addop (Cpdfdraw.FontPack (embed_font (), args.fontsize, null_hash ()));
     addop (Cpdfdraw.Text s)
 
 let addspecialtext s =
   begin match !drawops with _::_::_ -> () | _ -> error "-stext must be in a -bt / -et section" end;
-    addop (Cpdfdraw.Font (embed_font (), args.fontsize));
+    addop (Cpdfdraw.FontPack (embed_font (), args.fontsize, null_hash ()));
     addop (Cpdfdraw.SpecialText s)
 
 let setstderrtostdout () =

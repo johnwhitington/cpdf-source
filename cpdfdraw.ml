@@ -38,7 +38,7 @@ type drawops =
   | NewPage
   | Opacity of float
   | SOpacity of float
-  | Font of Cpdfembed.cpdffont * float
+  | FontPack of Cpdfembed.cpdffont * float * (int, unit) Hashtbl.t
   | TextSection of drawops list
   | Text of string
   | SpecialText of string
@@ -64,7 +64,7 @@ let rec string_of_drawop = function
   | FillStroke -> "FillStroke" | FillStrokeEvenOdd -> "FillStrokeEvenOdd"
   | Clip -> "Clip" | ClipEvenOdd -> "ClipEvenOdd" | Use _ -> "Use"
   | ImageXObject _ -> "ImageXObject" | Image _ -> "Image" | NewPage -> "NewPage"
-  | Opacity _ -> "Opacity" | SOpacity _ -> "SOpacity" | Font _ -> "Font" | Text _ -> "Text"
+  | Opacity _ -> "Opacity" | SOpacity _ -> "SOpacity" | FontPack _ -> "FontPack" | Text _ -> "Text"
   | SpecialText _ -> "SpecialText" | Newline -> "Newline" | Leading _ -> "Leading"
   | CharSpace _ -> "CharSpace" | WordSpace _ -> "WordSpace" | TextScale _ -> "TextScale"
   | RenderMode _ -> "RenderMode" | Rise _ -> "Rise"
@@ -81,8 +81,13 @@ type res =
    mutable page_names : string list;
    mutable time : Cpdfstrftime.t;
    mutable current_fontpack : Cpdfembed.t;
+   mutable current_fontpack_codepoints : (int, unit) Hashtbl.t;
    mutable font_size : float;
    mutable num : int}
+
+let default_fontpack =
+  Cpdfembed.fontpack_of_standardfont
+    (Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding))
 
 let empty_res () =
   {images = null_hash ();
@@ -91,9 +96,8 @@ let empty_res () =
    form_xobjects = null_hash ();
    page_names = [];
    time = Cpdfstrftime.dummy;
-   current_fontpack =
-     (Cpdfembed.fontpack_of_standardfont
-       (Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding)));
+   current_fontpack = default_fontpack;
+   current_fontpack_codepoints = null_hash ();
    font_size = 12.;
    num = 0}
 
@@ -185,8 +189,8 @@ let update_resources pdf old_resources =
     "/Font"
     (Pdf.Dictionary new_fonts)
 
-let rec ops_of_drawop pdf endpage filename bates batespad num page = function
-  | Qq ops -> [Pdfops.Op_q] @ ops_of_drawops pdf endpage filename bates batespad num page ops @ [Pdfops.Op_Q]
+let rec ops_of_drawop dryrun pdf endpage filename bates batespad num page = function
+  | Qq ops -> [Pdfops.Op_q] @ ops_of_drawops dryrun pdf endpage filename bates batespad num page ops @ [Pdfops.Op_Q]
   | Matrix m -> [Pdfops.Op_cm m] 
   | Rect (x, y, w, h) -> [Pdfops.Op_re (x, y, w, h)]
   | Bezier (a, b, c, d, e, f) -> [Pdfops.Op_c (a, b, c, d, e, f)]
@@ -222,7 +226,7 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
   | SetMiterLimit m -> [Pdfops.Op_M m]
   | SetDashPattern (x, y) -> [Pdfops.Op_d (x, y)]
   | FormXObject (a, b, c, d, n, ops) ->
-      create_form_xobject a b c d pdf endpage filename bates batespad num page n ops;
+      create_form_xobject dryrun a b c d pdf endpage filename bates batespad num page n ops;
       []
   | Use n ->
       let pdfname = try fst (Hashtbl.find (res ()).form_xobjects n) with _ -> error ("Form XObject not found: " ^ n) in
@@ -238,12 +242,15 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
   | NewPage -> Pdfe.log ("NewPage remaining in graphic stream"); assert false
   | Opacity v -> [Pdfops.Op_gs (extgstate "/ca" v)]
   | SOpacity v -> [Pdfops.Op_gs (extgstate "/CA" v)]
-  | Font (cpdffont, size) ->
+  | FontPack (cpdffont, size, codepoints) ->
+      if dryrun then (res ()).current_fontpack_codepoints <- codepoints;
       let fontpack =
         match cpdffont with
         | PreMadeFontPack fp -> fp
         | EmbedInfo {fontfile; fontname; encoding} ->
-            Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints:[int_of_char 'H'] ~encoding
+            let codepoints = map fst (list_of_hashtbl codepoints) in
+              if codepoints = [] then default_fontpack else 
+                Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding
         | ExistingNamedFont ->
             error "-draw does not support using an existing named font"
       in
@@ -252,7 +259,7 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
           (fun font ->
             try fst (Hashtbl.find (res ()).fonts font) with
               Not_found ->
-                let o = Pdftext.write_font pdf font in
+                let o = if dryrun then 0 else Pdftext.write_font pdf font in
                 let n = fresh_name "/F" in
                   Hashtbl.add (res ()).fonts font (n, o);
                   n)
@@ -262,9 +269,14 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
         (res ()).page_names <- ns @ (res ()).page_names;
         (res ()).font_size <- size;
         []
-  | TextSection ops -> [Pdfops.Op_BT] @ ops_of_drawops pdf endpage filename bates batespad num page ops @ [Pdfops.Op_ET]
-  | Text s -> runs_of_utf8 s
-  | SpecialText s -> runs_of_utf8 (process_specials pdf endpage filename bates batespad num page s)
+  | TextSection ops -> [Pdfops.Op_BT] @ ops_of_drawops dryrun pdf endpage filename bates batespad num page ops @ [Pdfops.Op_ET]
+  | Text s ->
+      if dryrun then iter (fun c -> Hashtbl.replace (res ()).current_fontpack_codepoints c ()) (Pdftext.codepoints_of_utf8 s);
+      runs_of_utf8 s
+  | SpecialText s ->
+      let s = process_specials pdf endpage filename bates batespad num page s in
+      if dryrun then iter (fun c -> Hashtbl.replace (res ()).current_fontpack_codepoints c ()) (Pdftext.codepoints_of_utf8 s);
+        runs_of_utf8 s
   | Leading f -> [Pdfops.Op_TL f]
   | CharSpace f -> [Pdfops.Op_Tc f]
   | WordSpace f -> [Pdfops.Op_Tw f]
@@ -273,14 +285,14 @@ let rec ops_of_drawop pdf endpage filename bates batespad num page = function
   | Rise f -> [Pdfops.Op_Ts f]
   | Newline -> [Pdfops.Op_T']
 
-and ops_of_drawops pdf endpage filename bates batespad num page drawops =
-  flatten (map (ops_of_drawop pdf endpage filename bates batespad num page) drawops)
+and ops_of_drawops dryrun pdf endpage filename bates batespad num page drawops =
+  flatten (map (ops_of_drawop dryrun pdf endpage filename bates batespad num page) drawops)
 
-and create_form_xobject a b c d pdf endpage filename bates batespad num page n ops =
+and create_form_xobject dryrun a b c d pdf endpage filename bates batespad num page n ops =
   respush ();
   reset_state ();
   let data =
-    Pdfio.bytes_of_string (Pdfops.string_of_ops (ops_of_drawops pdf endpage filename bates batespad num page ops))
+    Pdfio.bytes_of_string (Pdfops.string_of_ops (ops_of_drawops dryrun pdf endpage filename bates batespad num page ops))
   in
   let obj =
     Pdf.Stream
@@ -294,7 +306,7 @@ and create_form_xobject a b c d pdf endpage filename bates batespad num page n o
            Pdf.Got data)}
   in
     respop ();
-    Hashtbl.add (res ()).form_xobjects n (fresh_name "/X", (Pdf.addobj pdf obj))
+    Hashtbl.add (res ()).form_xobjects n (fresh_name "/X", (if dryrun then 0 else Pdf.addobj pdf obj))
 
 let minimum_resource_number pdf range =
   let pages = Pdfpage.pages_of_pagetree pdf in
@@ -336,13 +348,22 @@ let draw_single ~fast ~underneath ~filename ~bates ~batespad fast range pdf draw
   let ops =
     if contains_specials drawops
       then None
-      else Some (ops_of_drawops pdf endpage filename bates batespad 0 (hd pages) drawops)
+      else
+        begin
+          ignore (ops_of_drawops true pdf endpage filename bates batespad 0 (hd pages) drawops);
+          Some (ops_of_drawops false pdf endpage filename bates batespad 0 (hd pages) drawops)
+        end
   in
   let ss =
     map2
       (fun n p ->
          if mem n range
-           then (match ops with Some x -> x | None -> ops_of_drawops pdf endpage filename bates batespad n p drawops)
+           then
+             (match ops with
+              | Some x -> x
+              | None ->
+                  ignore (ops_of_drawops true pdf endpage filename bates batespad n p drawops);
+                  ops_of_drawops false pdf endpage filename bates batespad n p drawops)
            else [])
       (ilist 1 endpage)
       pages
