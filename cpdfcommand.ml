@@ -2100,7 +2100,7 @@ let loadttf n =
   let name, filename =
     match String.split_on_char '=' n with
     | [name; filename] -> name, filename
-    | _ -> error "addjpeg: bad file specification"
+    | _ -> error "loadttf: bad file specification. Should be <name>=<filename>"
   in
     try
       let fontfile = Pdfio.bytes_of_string (contents_of_file filename) in
