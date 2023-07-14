@@ -1745,22 +1745,7 @@ let setidironlypdfs () =
 let setnowarnrotate () =
   args.no_warn_rotate <- true
 
-let loadttf n =
-  let name, filename =
-    match String.split_on_char '=' n with
-    | [name; filename] -> name, filename
-    | _ -> error "addjpeg: bad file specification"
-  in
-    try
-      let fontfile = Pdfio.bytes_of_string (contents_of_file filename) in
-      let fontname = Filename.remove_extension (Filename.basename filename) in 
-        Hashtbl.replace
-          ttfs
-          name
-          (fontname, Cpdfembed.EmbedInfo {fontfile; fontname; encoding = args.fontencoding})
-    with
-      _ -> error "addjpeg: could not load JPEG"
-    
+
 let setfontttf s =
   args.font <- EmbeddedFont s
 
@@ -1790,6 +1775,7 @@ let addop o =
   match !drawops with
   | (n, ops)::t -> drawops := (n, (o::ops))::t
   | [] -> error "no drawops"
+
 
 let endxobj () =
   match !drawops with
@@ -2105,14 +2091,31 @@ let embed_font () =
       with
         Not_found -> error (Printf.sprintf "Font %s not found" name)
 
+let loadttf n =
+  let name, filename =
+    match String.split_on_char '=' n with
+    | [name; filename] -> name, filename
+    | _ -> error "addjpeg: bad file specification"
+  in
+    try
+      let fontfile = Pdfio.bytes_of_string (contents_of_file filename) in
+      let fontname = Filename.remove_extension (Filename.basename filename) in 
+        Hashtbl.replace
+          ttfs
+          name
+          (fontname, Cpdfembed.EmbedInfo {fontfile; fontname; encoding = args.fontencoding});
+        addop (Cpdfdraw.FontPack (fontname, embed_font (), null_hash ()));
+    with
+      _ -> error "addjpeg: could not load JPEG"
+    
 let addtext s =
   begin match !drawops with _::_::_ -> () | _ -> error "-text must be in a -bt / -et section" end;
-    addop (Cpdfdraw.FontPack (embed_font (), args.fontsize, null_hash ()));
+    addop (Cpdfdraw.Font (args.fontname, args.fontsize));
     addop (Cpdfdraw.Text s)
 
 let addspecialtext s =
   begin match !drawops with _::_::_ -> () | _ -> error "-stext must be in a -bt / -et section" end;
-    addop (Cpdfdraw.FontPack (embed_font (), args.fontsize, null_hash ()));
+    addop (Cpdfdraw.Font (args.fontname, args.fontsize));
     addop (Cpdfdraw.SpecialText s)
 
 let setstderrtostdout () =

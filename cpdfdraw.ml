@@ -38,7 +38,8 @@ type drawops =
   | NewPage
   | Opacity of float
   | SOpacity of float
-  | FontPack of Cpdfembed.cpdffont * float * (int, unit) Hashtbl.t
+  | FontPack of string * Cpdfembed.cpdffont * (int, unit) Hashtbl.t
+  | Font of string * float
   | TextSection of drawops list
   | Text of string
   | SpecialText of string
@@ -64,9 +65,10 @@ let rec string_of_drawop = function
   | FillStroke -> "FillStroke" | FillStrokeEvenOdd -> "FillStrokeEvenOdd"
   | Clip -> "Clip" | ClipEvenOdd -> "ClipEvenOdd" | Use _ -> "Use"
   | ImageXObject _ -> "ImageXObject" | Image _ -> "Image" | NewPage -> "NewPage"
-  | Opacity _ -> "Opacity" | SOpacity _ -> "SOpacity" | FontPack _ -> "FontPack" | Text _ -> "Text"
-  | SpecialText _ -> "SpecialText" | Newline -> "Newline" | Leading _ -> "Leading"
-  | CharSpace _ -> "CharSpace" | WordSpace _ -> "WordSpace" | TextScale _ -> "TextScale"
+  | Opacity _ -> "Opacity" | SOpacity _ -> "SOpacity" | FontPack _ -> "FontPack"
+  | Font _ -> "Font" | Text _ -> "Text" | SpecialText _ -> "SpecialText"
+  | Newline -> "Newline" | Leading _ -> "Leading" | CharSpace _ -> "CharSpace"
+  | WordSpace _ -> "WordSpace" | TextScale _ -> "TextScale"
   | RenderMode _ -> "RenderMode" | Rise _ -> "Rise"
 
 and string_of_drawops l =
@@ -88,6 +90,8 @@ type res =
 let default_fontpack =
   Cpdfembed.fontpack_of_standardfont
     (Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding))
+
+let fontpacks = null_hash ()
 
 let empty_res () =
   {images = null_hash ();
@@ -190,7 +194,11 @@ let update_resources pdf old_resources =
     (Pdf.Dictionary new_fonts)
 
 let rec ops_of_drawop dryrun pdf endpage filename bates batespad num page = function
-  | Qq ops -> [Pdfops.Op_q] @ ops_of_drawops dryrun pdf endpage filename bates batespad num page ops @ [Pdfops.Op_Q]
+  | Qq ops ->
+      respush (); (* FIXME Is this right or not vis-a-vis fonts? *)
+      let r = [Pdfops.Op_q] @ ops_of_drawops dryrun pdf endpage filename bates batespad num page ops @ [Pdfops.Op_Q] in
+      respop ();
+      r
   | Matrix m -> [Pdfops.Op_cm m] 
   | Rect (x, y, w, h) -> [Pdfops.Op_re (x, y, w, h)]
   | Bezier (a, b, c, d, e, f) -> [Pdfops.Op_c (a, b, c, d, e, f)]
@@ -242,7 +250,7 @@ let rec ops_of_drawop dryrun pdf endpage filename bates batespad num page = func
   | NewPage -> Pdfe.log ("NewPage remaining in graphic stream"); assert false
   | Opacity v -> [Pdfops.Op_gs (extgstate "/ca" v)]
   | SOpacity v -> [Pdfops.Op_gs (extgstate "/CA" v)]
-  | FontPack (cpdffont, size, codepoints) ->
+  | FontPack (identifier, cpdffont, codepoints) ->
       if dryrun then (res ()).current_fontpack_codepoints <- codepoints;
       let fontpack =
         match cpdffont with
@@ -254,6 +262,7 @@ let rec ops_of_drawop dryrun pdf endpage filename bates batespad num page = func
         | ExistingNamedFont ->
             error "-draw does not support using an existing named font"
       in
+      Hashtbl.add fontpacks identifier fontpack;
       let ns =
         map
           (fun font ->
@@ -265,10 +274,12 @@ let rec ops_of_drawop dryrun pdf endpage filename bates batespad num page = func
                   n)
           (fst fontpack)
       in
-        (res ()).current_fontpack <- fontpack;
         (res ()).page_names <- ns @ (res ()).page_names;
-        (res ()).font_size <- size;
         []
+  | Font (identifier, size) ->
+      (res ()).current_fontpack <- Hashtbl.find fontpacks identifier;
+      (res ()).font_size <- size;
+      []
   | TextSection ops -> [Pdfops.Op_BT] @ ops_of_drawops dryrun pdf endpage filename bates batespad num page ops @ [Pdfops.Op_ET]
   | Text s ->
       if dryrun then iter (fun c -> Hashtbl.replace (res ()).current_fontpack_codepoints c ()) (Pdftext.codepoints_of_utf8 s);
@@ -392,6 +403,7 @@ let draw_single ~fast ~underneath ~filename ~bates ~batespad fast range pdf draw
 
 let draw ?(fast=false) ?(underneath=false) ~filename ~bates ~batespad fast range pdf drawops =
   resstack := [empty_res ()];
+  Hashtbl.clear fontpacks;
   (res ()).time <- Cpdfstrftime.current_time ();
   let pdf = ref pdf in
   let range = ref range in

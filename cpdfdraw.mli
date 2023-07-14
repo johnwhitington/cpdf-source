@@ -35,7 +35,8 @@ type drawops =
   | NewPage
   | Opacity of float
   | SOpacity of float
-  | FontPack of Cpdfembed.cpdffont * float * (int, unit) Hashtbl.t
+  | FontPack of string * Cpdfembed.cpdffont * (int, unit) Hashtbl.t
+  | Font of string * float
   | TextSection of drawops list
   | Text of string
   | SpecialText of string
