@@ -2096,6 +2096,7 @@ let setfont f =
   begin match args.op with Some Draw -> addop (Cpdfdraw.FontPack (f, embed_font (), null_hash ())) | _ -> () end
 
 let loadttf n =
+  Printf.printf "loadttf: %s\n" n;
   let name, filename =
     match String.split_on_char '=' n with
     | [name; filename] -> name, filename
@@ -2128,6 +2129,10 @@ let setstderrtostdout () =
 
 let settextwidth s =
   args.op <- Some (TextWidth s)
+
+let setdraw () =
+  args.op <- Some Draw;
+  addop (Cpdfdraw.FontPack (args.fontname, embed_font (), null_hash ()))
 
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
@@ -2930,7 +2935,7 @@ and specs =
    ("-text-width",
      Arg.String settextwidth,
      " Find width of a line of text");
-   ("-draw", Arg.Unit (setop Draw), " Begin drawing");
+   ("-draw", Arg.Unit setdraw, " Begin drawing");
    ("-rect", Arg.String addrect, " Draw rectangle");
    ("-to", Arg.String addto, " Move to");
    ("-line", Arg.String addline, " Add line to");
@@ -4463,8 +4468,7 @@ let go () =
   | Some Draw ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-      (* Whatever the font is going in to -draw, add its fontpack. *)
-      addop (Cpdfdraw.FontPack (args.fontname, embed_font (), null_hash ()));
+
       let ops = match !drawops with [("_MAIN", ops)] -> rev ops | _ -> error "not enough -end-xobj or -et" in
         write_pdf
           false

@@ -1,6 +1,8 @@
 open Pdfutil
 open Cpdferror
 
+(* FIXME Use hashtbl.replace everywhere? *)
+
 type colspec =
    NoCol
  | RGB of float * float * float
@@ -195,10 +197,7 @@ let update_resources pdf old_resources =
 
 let rec ops_of_drawop dryrun pdf endpage filename bates batespad num page = function
   | Qq ops ->
-      respush (); (* FIXME Is this right or not vis-a-vis fonts? *)
-      let r = [Pdfops.Op_q] @ ops_of_drawops dryrun pdf endpage filename bates batespad num page ops @ [Pdfops.Op_Q] in
-      respop ();
-      r
+      [Pdfops.Op_q] @ ops_of_drawops dryrun pdf endpage filename bates batespad num page ops @ [Pdfops.Op_Q]
   | Matrix m -> [Pdfops.Op_cm m] 
   | Rect (x, y, w, h) -> [Pdfops.Op_re (x, y, w, h)]
   | Bezier (a, b, c, d, e, f) -> [Pdfops.Op_c (a, b, c, d, e, f)]
