@@ -65,8 +65,8 @@ let rec string_of_drawop = function
   | FillStroke -> "FillStroke" | FillStrokeEvenOdd -> "FillStrokeEvenOdd"
   | Clip -> "Clip" | ClipEvenOdd -> "ClipEvenOdd" | Use _ -> "Use"
   | ImageXObject _ -> "ImageXObject" | Image _ -> "Image" | NewPage -> "NewPage"
-  | Opacity _ -> "Opacity" | SOpacity _ -> "SOpacity" | FontPack _ -> "FontPack"
-  | Font _ -> "Font" | Text _ -> "Text" | SpecialText _ -> "SpecialText"
+  | Opacity _ -> "Opacity" | SOpacity _ -> "SOpacity" | FontPack (n, _, _) -> "FontPack " ^ n ^ " "
+  | Font (f, _) -> "Font " ^ f ^ " " | Text _ -> "Text" | SpecialText _ -> "SpecialText"
   | Newline -> "Newline" | Leading _ -> "Leading" | CharSpace _ -> "CharSpace"
   | WordSpace _ -> "WordSpace" | TextScale _ -> "TextScale"
   | RenderMode _ -> "RenderMode" | Rise _ -> "Rise"
@@ -251,6 +251,7 @@ let rec ops_of_drawop dryrun pdf endpage filename bates batespad num page = func
   | Opacity v -> [Pdfops.Op_gs (extgstate "/ca" v)]
   | SOpacity v -> [Pdfops.Op_gs (extgstate "/CA" v)]
   | FontPack (identifier, cpdffont, codepoints) ->
+      Printf.printf "Cpdfdraw: storing fontpack %s\n" identifier;
       if dryrun then (res ()).current_fontpack_codepoints <- codepoints;
       let fontpack =
         match cpdffont with
@@ -277,6 +278,7 @@ let rec ops_of_drawop dryrun pdf endpage filename bates batespad num page = func
         (res ()).page_names <- ns @ (res ()).page_names;
         []
   | Font (identifier, size) ->
+      Printf.printf "Changing to stored font %s\n" identifier;
       (res ()).current_fontpack <- Hashtbl.find fontpacks identifier;
       (res ()).font_size <- size;
       []
@@ -402,6 +404,7 @@ let draw_single ~fast ~underneath ~filename ~bates ~batespad fast range pdf draw
     Pdfpage.change_pages true pdf pages
 
 let draw ?(fast=false) ?(underneath=false) ~filename ~bates ~batespad fast range pdf drawops =
+  Printf.printf "%s\n" (string_of_drawops drawops); 
   resstack := [empty_res ()];
   Hashtbl.clear fontpacks;
   (res ()).time <- Cpdfstrftime.current_time ();

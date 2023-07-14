@@ -1114,23 +1114,6 @@ let setattachfile s =
       setop (AttachFile [s]) ()
   | Some _ -> detect_duplicate_op (AttachFile [s])
 
-let setfont f =
-  let convert f = (* convert from written PDF representation to internal PDF string e.g # sequences *)
-    match Pdfread.lex_name (Pdfio.input_of_string f) with Pdfgenlex.LexName s -> s | _ -> assert false
-  in
-  args.font <-
-    begin match Pdftext.standard_font_of_name ("/" ^ f) with
-    | Some x -> StandardFont x
-    | None ->
-        if f <> "" && hd (explode f) <> '/' then error "Custom font names must begin with /";
-        OtherFont (convert f)
-    end;
-  args.fontname <-
-    begin match Pdftext.standard_font_of_name ("/" ^ f) with
-    | Some x -> f
-    | None -> convert f
-    end
-
 let setextracttextfontsize f =
   args.extract_text_font_size <- Some f
 
@@ -1777,6 +1760,8 @@ let addop o =
   | [] -> error "no drawops"
 
 
+
+
 let endxobj () =
   match !drawops with
   | (n, ops)::t ->
@@ -2091,6 +2076,25 @@ let embed_font () =
       with
         Not_found -> error (Printf.sprintf "Font %s not found" name)
 
+let setfont f =
+  let convert f = (* convert from written PDF representation to internal PDF string e.g # sequences *)
+    match Pdfread.lex_name (Pdfio.input_of_string f) with Pdfgenlex.LexName s -> s | _ -> assert false
+  in
+  args.font <-
+    begin match Pdftext.standard_font_of_name ("/" ^ f) with
+    | Some x -> StandardFont x
+    | None ->
+        if f <> "" && hd (explode f) <> '/' then error "Custom font names must begin with /";
+        OtherFont (convert f)
+    end;
+  args.fontname <-
+    begin match Pdftext.standard_font_of_name ("/" ^ f) with
+    | Some x -> f
+    | None -> convert f
+    end;
+  (* If drawing, add the font pack as an op. *)
+  begin match args.op with Some Draw -> addop (Cpdfdraw.FontPack (f, embed_font (), null_hash ())) | _ -> () end
+
 let loadttf n =
   let name, filename =
     match String.split_on_char '=' n with
@@ -2104,7 +2108,8 @@ let loadttf n =
           ttfs
           name
           (fontname, Cpdfembed.EmbedInfo {fontfile; fontname; encoding = args.fontencoding});
-        addop (Cpdfdraw.FontPack (fontname, embed_font (), null_hash ()));
+        (* If drawing, add the font pack as an op. *)
+        begin match args.op with Some Draw -> addop (Cpdfdraw.FontPack (fontname, embed_font (), null_hash ())) | _ -> () end
     with
       _ -> error "addjpeg: could not load JPEG"
     
@@ -4458,6 +4463,8 @@ let go () =
   | Some Draw ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
+      (* Whatever the font is going in to -draw, add its fontpack. *)
+      addop (Cpdfdraw.FontPack (args.fontname, embed_font (), null_hash ()));
       let ops = match !drawops with [("_MAIN", ops)] -> rev ops | _ -> error "not enough -end-xobj or -et" in
         write_pdf
           false
