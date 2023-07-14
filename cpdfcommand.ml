@@ -379,8 +379,10 @@ let output_pdfs : Pdf.t list ref = ref []
 
 type font =
   | StandardFont of Pdftext.standard_font
-  | FontToEmbed of Pdfio.bytes
+  | EmbeddedFont of string
   | OtherFont of string
+
+let ttfs = null_hash ()
 
 type args =
   {mutable op : op option;
@@ -1743,9 +1745,24 @@ let setidironlypdfs () =
 let setnowarnrotate () =
   args.no_warn_rotate <- true
 
+let loadttf n =
+  let name, filename =
+    match String.split_on_char '=' n with
+    | [name; filename] -> name, filename
+    | _ -> error "addjpeg: bad file specification"
+  in
+    try
+      let fontfile = Pdfio.bytes_of_string (contents_of_file filename) in
+      let fontname = Filename.remove_extension (Filename.basename filename) in 
+        Hashtbl.replace
+          ttfs
+          name
+          (fontname, Cpdfembed.EmbedInfo {fontfile; fontname; encoding = args.fontencoding})
+    with
+      _ -> error "addjpeg: could not load JPEG"
+    
 let setfontttf s =
-  args.font <- FontToEmbed (Pdfio.bytes_of_string (contents_of_file s));
-  args.fontname <- Filename.remove_extension (Filename.basename s)
+  args.font <- EmbeddedFont s
 
 let setfontttfencoding s =
   args.fontencoding <-
@@ -2080,8 +2097,13 @@ let embed_font () =
       end
   | OtherFont f ->
       ExistingNamedFont
-  | FontToEmbed fontfile ->
-      EmbedInfo {fontfile; fontname = args.fontname; encoding = args.fontencoding}
+  | EmbeddedFont name ->
+      try
+        let fontname, font = Hashtbl.find ttfs name in
+          args.fontname <- fontname;
+          font
+      with
+        Not_found -> error (Printf.sprintf "Font %s not found" name)
 
 let addtext s =
   begin match !drawops with _::_::_ -> () | _ -> error "-text must be in a -bt / -et section" end;
@@ -2408,12 +2430,15 @@ and specs =
    ("-font-size",
       Arg.Float setfontsize,
       " Set the font size");
+   ("-load-ttf",
+      Arg.String loadttf,
+      " Use a TrueType font");
    ("-font-encoding",
       Arg.String setfontttfencoding,
       " Set the encoding for the TrueType font");
    ("-font-ttf",
       Arg.String setfontttf,
-      " Load a TrueType font");
+      " Use a TrueType font");
    ("-embed-std14",
       Arg.String setembedstd14,
       " Embed standard 14 fonts");
