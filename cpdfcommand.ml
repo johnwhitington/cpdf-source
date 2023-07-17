@@ -2048,7 +2048,7 @@ let addsopacity f =
 let embed_font_inner font =
   match font with
   | StandardFont f ->
-      Printf.printf "embed_font: StandardFont\n";
+    (*  Printf.printf "embed_font: StandardFont\n";*)
       begin match args.embedstd14 with
       | Some dirname -> 
         begin try
@@ -2067,7 +2067,7 @@ let embed_font_inner font =
   | OtherFont f ->
       ExistingNamedFont
   | EmbeddedFont name ->
-      Printf.printf "embed_font: TTF\n";
+      (*Printf.printf "embed_font: TTF\n";*)
       try
         let fontname, font = Hashtbl.find ttfs name in
           args.fontname <- fontname;
