@@ -1728,10 +1728,6 @@ let setidironlypdfs () =
 let setnowarnrotate () =
   args.no_warn_rotate <- true
 
-let setfontttf s =
-  let fontname, _ = Hashtbl.find ttfs s in
-    args.font <- EmbeddedFont s;
-    args.fontname <- fontname
 
 let setfontttfencoding s =
   args.fontencoding <-
@@ -2046,9 +2042,10 @@ let addopacity f =
 let addsopacity f =
   addop (Cpdfdraw.SOpacity f)
 
-let embed_font () =
-  match args.font with
+let embed_font_inner font =
+  match font with
   | StandardFont f ->
+      Printf.printf "embed_font: StandardFont\n";
       begin match args.embedstd14 with
       | Some dirname -> 
         begin try
@@ -2067,6 +2064,7 @@ let embed_font () =
   | OtherFont f ->
       ExistingNamedFont
   | EmbeddedFont name ->
+      Printf.printf "embed_font: TTF\n";
       try
         let fontname, font = Hashtbl.find ttfs name in
           args.fontname <- fontname;
@@ -2074,24 +2072,32 @@ let embed_font () =
       with
         Not_found -> error (Printf.sprintf "Font %s not found" name)
 
+let embed_font () = embed_font_inner args.font
+
 let setfont f =
-  let convert f = (* convert from written PDF representation to internal PDF string e.g # sequences *)
-    match Pdfread.lex_name (Pdfio.input_of_string f) with Pdfgenlex.LexName s -> s | _ -> assert false
-  in
-  args.font <-
-    begin match Pdftext.standard_font_of_name ("/" ^ f) with
-    | Some x -> StandardFont x
-    | None ->
-        if f <> "" && hd (explode f) <> '/' then error "Custom font names must begin with /";
-        OtherFont (convert f)
-    end;
-  args.fontname <-
-    begin match Pdftext.standard_font_of_name ("/" ^ f) with
-    | Some x -> f
-    | None -> convert f
-    end;
-  (* If drawing, add the font pack as an op. *)
-  begin match args.op with Some Draw -> addop (Cpdfdraw.FontPack (f, embed_font (), null_hash ())) | _ -> () end
+  try
+    let fontname, _ = Hashtbl.find ttfs f in
+      args.font <- EmbeddedFont f;
+      args.fontname <- fontname
+  with
+    Not_found ->
+      let convert f = (* convert from written PDF representation to internal PDF string e.g # sequences *)
+        match Pdfread.lex_name (Pdfio.input_of_string f) with Pdfgenlex.LexName s -> s | _ -> assert false
+      in
+      args.font <-
+        begin match Pdftext.standard_font_of_name ("/" ^ f) with
+        | Some x -> StandardFont x
+        | None ->
+            if f <> "" && hd (explode f) <> '/' then error "Custom font names must begin with /";
+            OtherFont (convert f)
+        end;
+      args.fontname <-
+        begin match Pdftext.standard_font_of_name ("/" ^ f) with
+        | Some x -> f
+        | None -> convert f
+        end;
+      (* If drawing, add the font pack as an op. *)
+      begin match args.op with Some Draw -> addop (Cpdfdraw.FontPack (f, embed_font (), null_hash ())) | _ -> () end
 
 let loadttf n =
   Printf.printf "loadttf: %s\n" n;
@@ -2108,7 +2114,8 @@ let loadttf n =
           name
           (fontname, Cpdfembed.EmbedInfo {fontfile; fontname; encoding = args.fontencoding});
         (* If drawing, add the font pack as an op. *)
-        begin match args.op with Some Draw -> addop (Cpdfdraw.FontPack (fontname, embed_font (), null_hash ())) | _ -> () end
+        begin match args.op with
+          Some Draw -> addop (Cpdfdraw.FontPack (fontname, embed_font_inner (EmbeddedFont name), null_hash ())) | _ -> () end
     with
       _ -> error "addjpeg: could not load JPEG"
     
@@ -2447,9 +2454,6 @@ and specs =
    ("-font-encoding",
       Arg.String setfontttfencoding,
       " Set the encoding for the TrueType font");
-   ("-font-ttf",
-      Arg.String setfontttf,
-      " Use a TrueType font");
    ("-embed-std14",
       Arg.String setembedstd14,
       " Embed standard 14 fonts");

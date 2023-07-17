@@ -1,8 +1,6 @@
 open Pdfutil
 open Cpdferror
 
-(* FIXME Use hashtbl.replace everywhere? *)
-
 type colspec =
    NoCol
  | RGB of float * float * float
@@ -84,7 +82,7 @@ type res =
    form_xobjects : (string, (string * int)) Hashtbl.t; (* (name, (pdf name, objnum)) *)
    mutable page_names : string list;
    mutable time : Cpdfstrftime.t;
-   mutable current_fontpack : Cpdfembed.t;
+   mutable current_fontpack : string * Cpdfembed.t;
    mutable current_fontpack_codepoints : (int, unit) Hashtbl.t;
    mutable font_size : float;
    mutable num : int}
@@ -102,7 +100,7 @@ let empty_res () =
    form_xobjects = null_hash ();
    page_names = [];
    time = Cpdfstrftime.dummy;
-   current_fontpack = default_fontpack;
+   current_fontpack = ("Times-Roman", default_fontpack);
    current_fontpack_codepoints = null_hash ();
    font_size = 12.;
    num = 0}
@@ -147,13 +145,14 @@ let process_specials pdf endpage filename bates batespad num page s =
     Cpdfaddtext.process_text (res ()).time s pairs
 
 let runs_of_utf8 s =
-  let fontpack = (res ()).current_fontpack in
+  let identifier, fontpack = (res ()).current_fontpack in
+  Printf.printf "runs_of_utf8: %s\n" identifier;
   let codepoints = Pdftext.codepoints_of_utf8 s in
-  (*Printf.printf "%i codepoints\n" (length codepoints);*)
+  Printf.printf "%i codepoints\n" (length codepoints);
   let triples = option_map (Cpdfembed.get_char fontpack) codepoints in
-  (*Printf.printf "%i triples\n" (length triples);*)
+  Printf.printf "%i triples\n" (length triples);
   let collated = Cpdfembed.collate_runs triples in
-    (*Printf.printf "Collated of length %i\n" (length collated);*)
+    Printf.printf "Collated of length %i\n" (length collated);
     flatten
      (map
        (fun l ->
@@ -169,7 +168,7 @@ let extgstate kind v =
   try Hashtbl.find (res ()).extgstates (kind, v) with
     Not_found ->
       let n = fresh_name "/G" in
-        Hashtbl.add (res ()).extgstates (kind, v) n;
+        Hashtbl.replace (res ()).extgstates (kind, v) n;
         n
 
 let read_resource pdf n res =
@@ -247,46 +246,54 @@ let rec ops_of_drawop dryrun pdf endpage filename bates batespad num page = func
         (res ()).page_names <- pdfname::(res ()).page_names;
         [Pdfops.Op_Do pdfname]
   | ImageXObject (s, obj) ->
-      Hashtbl.add (res ()).images s (fresh_name "/I", Pdf.addobj pdf obj); 
+      Hashtbl.replace (res ()).images s (fresh_name "/I", Pdf.addobj pdf obj); 
       []
   | NewPage -> Pdfe.log ("NewPage remaining in graphic stream"); assert false
   | Opacity v -> [Pdfops.Op_gs (extgstate "/ca" v)]
   | SOpacity v -> [Pdfops.Op_gs (extgstate "/CA" v)]
   | FontPack (identifier, cpdffont, codepoints) ->
-      begin match Hashtbl.find fontpacks identifier with
-      | fontpack -> ()
-          (*Printf.printf "Cpdfdraw: using existing fontpack %s\n" identifier*)
-      | exception Not_found ->
-          (*Printf.printf "Cpdfdraw: storing new fontpack %s\n" identifier;*)
-          let fontpack =
-            match cpdffont with
-            | PreMadeFontPack fp -> fp
-            | EmbedInfo {fontfile; fontname; encoding} ->
-                let codepoints = map fst (list_of_hashtbl codepoints) in
-                  if codepoints = [] then default_fontpack else 
-                    Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding
-            | ExistingNamedFont ->
-                error "-draw does not support using an existing named font"
-          in
-            Hashtbl.add fontpacks identifier (fontpack, codepoints);
-            let ns =
-              map
-                (fun font ->
-                  try fst (Hashtbl.find (res ()).fonts font) with
-                    Not_found ->
-                      let o = if dryrun then 0 else Pdftext.write_font pdf font in
-                      let n = fresh_name "/F" in
-                        Hashtbl.add (res ()).fonts font (n, o);
-                        n)
-                (fst fontpack)
+      Printf.printf "FontPack op: %s\n" identifier;
+      let fontpack =
+        match Hashtbl.find fontpacks identifier with
+        | (fontpack, _) ->
+            Printf.printf "Cpdfdraw FontPack op: using existing fontpack %s\n" identifier;
+            fontpack
+        | exception Not_found ->
+            Printf.printf "Cpdfdraw FontPack op: storing new fontpack %s\n" identifier;
+            let fontpack =
+              match cpdffont with
+              | PreMadeFontPack fp ->
+                  Printf.printf "it's a pre-made font pack\n"; 
+                  fp
+              | EmbedInfo {fontfile; fontname; encoding} ->
+                  let codepoints = map fst (list_of_hashtbl codepoints) in
+                    Printf.printf "%i codepoints to embed\n" (length codepoints);
+                    if codepoints = [] then default_fontpack else 
+                      Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding
+              | ExistingNamedFont ->
+                  error "-draw does not support using an existing named font"
             in
-              (res ()).page_names <- ns @ (res ()).page_names
-      end;
-      []
+              Hashtbl.replace fontpacks identifier (fontpack, codepoints);
+              fontpack
+      in
+        let ns =
+          map
+            (fun font ->
+              try fst (Hashtbl.find (res ()).fonts font) with
+                Not_found ->
+                  let o = if dryrun then 0 else Pdftext.write_font pdf font in
+                  let n = fresh_name "/F" in
+                    Printf.printf "Adding font %s as %s\n" identifier n;
+                    Hashtbl.replace (res ()).fonts font (n, o);
+                    n)
+            (fst fontpack)
+        in
+          (res ()).page_names <- ns @ (res ()).page_names;
+          []
   | Font (identifier, size) ->
-      (*Printf.printf "Changing to stored font %s\n" identifier;*)
+      Printf.printf "Cpdfdraw Font op: Changing to stored font %s\n" identifier;
       let fontpack, codepoints = Hashtbl.find fontpacks identifier in
-        (res ()).current_fontpack <- fontpack;
+        (res ()).current_fontpack <- (identifier, fontpack);
         if dryrun then (res ()).current_fontpack_codepoints <- codepoints;
         (res ()).font_size <- size;
         []
@@ -327,7 +334,7 @@ and create_form_xobject dryrun a b c d pdf endpage filename bates batespad num p
            Pdf.Got data)}
   in
     respop ();
-    Hashtbl.add (res ()).form_xobjects n (fresh_name "/X", (if dryrun then 0 else Pdf.addobj pdf obj))
+    Hashtbl.replace (res ()).form_xobjects n (fresh_name "/X", (if dryrun then 0 else Pdf.addobj pdf obj))
 
 let minimum_resource_number pdf range =
   let pages = Pdfpage.pages_of_pagetree pdf in
@@ -381,6 +388,7 @@ let draw_single ~fast ~underneath ~filename ~bates ~batespad fast range pdf draw
             ignore (ops_of_drawops true pdf endpage filename bates batespad 0 (hd pages) drawops);
             restore_whole_stack r;
             Hashtbl.clear fontpacks;
+            Printf.printf "--------------------------\n";
             Some (ops_of_drawops false pdf endpage filename bates batespad 0 (hd pages) drawops)
         end
   in
