@@ -149,8 +149,11 @@ let process_specials pdf endpage filename bates batespad num page s =
 let runs_of_utf8 s =
   let fontpack = (res ()).current_fontpack in
   let codepoints = Pdftext.codepoints_of_utf8 s in
+  (*Printf.printf "%i codepoints\n" (length codepoints);*)
   let triples = option_map (Cpdfembed.get_char fontpack) codepoints in
+  (*Printf.printf "%i triples\n" (length triples);*)
   let collated = Cpdfembed.collate_runs triples in
+    (*Printf.printf "Collated of length %i\n" (length collated);*)
     flatten
      (map
        (fun l ->
@@ -250,37 +253,43 @@ let rec ops_of_drawop dryrun pdf endpage filename bates batespad num page = func
   | Opacity v -> [Pdfops.Op_gs (extgstate "/ca" v)]
   | SOpacity v -> [Pdfops.Op_gs (extgstate "/CA" v)]
   | FontPack (identifier, cpdffont, codepoints) ->
-      Printf.printf "Cpdfdraw: storing fontpack %s\n" identifier;
-      if dryrun then (res ()).current_fontpack_codepoints <- codepoints;
-      let fontpack =
-        match cpdffont with
-        | PreMadeFontPack fp -> fp
-        | EmbedInfo {fontfile; fontname; encoding} ->
-            let codepoints = map fst (list_of_hashtbl codepoints) in
-              if codepoints = [] then default_fontpack else 
-                Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding
-        | ExistingNamedFont ->
-            error "-draw does not support using an existing named font"
-      in
-      Hashtbl.add fontpacks identifier fontpack;
-      let ns =
-        map
-          (fun font ->
-            try fst (Hashtbl.find (res ()).fonts font) with
-              Not_found ->
-                let o = if dryrun then 0 else Pdftext.write_font pdf font in
-                let n = fresh_name "/F" in
-                  Hashtbl.add (res ()).fonts font (n, o);
-                  n)
-          (fst fontpack)
-      in
-        (res ()).page_names <- ns @ (res ()).page_names;
-        []
-  | Font (identifier, size) ->
-      Printf.printf "Changing to stored font %s\n" identifier;
-      (res ()).current_fontpack <- Hashtbl.find fontpacks identifier;
-      (res ()).font_size <- size;
+      begin match Hashtbl.find fontpacks identifier with
+      | fontpack -> ()
+          (*Printf.printf "Cpdfdraw: using existing fontpack %s\n" identifier*)
+      | exception Not_found ->
+          (*Printf.printf "Cpdfdraw: storing new fontpack %s\n" identifier;*)
+          let fontpack =
+            match cpdffont with
+            | PreMadeFontPack fp -> fp
+            | EmbedInfo {fontfile; fontname; encoding} ->
+                let codepoints = map fst (list_of_hashtbl codepoints) in
+                  if codepoints = [] then default_fontpack else 
+                    Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding
+            | ExistingNamedFont ->
+                error "-draw does not support using an existing named font"
+          in
+            Hashtbl.add fontpacks identifier (fontpack, codepoints);
+            let ns =
+              map
+                (fun font ->
+                  try fst (Hashtbl.find (res ()).fonts font) with
+                    Not_found ->
+                      let o = if dryrun then 0 else Pdftext.write_font pdf font in
+                      let n = fresh_name "/F" in
+                        Hashtbl.add (res ()).fonts font (n, o);
+                        n)
+                (fst fontpack)
+            in
+              (res ()).page_names <- ns @ (res ()).page_names
+      end;
       []
+  | Font (identifier, size) ->
+      (*Printf.printf "Changing to stored font %s\n" identifier;*)
+      let fontpack, codepoints = Hashtbl.find fontpacks identifier in
+        (res ()).current_fontpack <- fontpack;
+        if dryrun then (res ()).current_fontpack_codepoints <- codepoints;
+        (res ()).font_size <- size;
+        []
   | TextSection ops -> [Pdfops.Op_BT] @ ops_of_drawops dryrun pdf endpage filename bates batespad num page ops @ [Pdfops.Op_ET]
   | Text s ->
       if dryrun then iter (fun c -> Hashtbl.replace (res ()).current_fontpack_codepoints c ()) (Pdftext.codepoints_of_utf8 s);
@@ -371,6 +380,7 @@ let draw_single ~fast ~underneath ~filename ~bates ~batespad fast range pdf draw
           let r = save_whole_stack () in
             ignore (ops_of_drawops true pdf endpage filename bates batespad 0 (hd pages) drawops);
             restore_whole_stack r;
+            Hashtbl.clear fontpacks;
             Some (ops_of_drawops false pdf endpage filename bates batespad 0 (hd pages) drawops)
         end
   in
@@ -385,6 +395,7 @@ let draw_single ~fast ~underneath ~filename ~bates ~batespad fast range pdf draw
                   let r = save_whole_stack () in
                     ignore (ops_of_drawops true pdf endpage filename bates batespad n p drawops);
                     restore_whole_stack r;
+                    Hashtbl.clear fontpacks;
                     ops_of_drawops false pdf endpage filename bates batespad n p drawops)
            else [])
       (ilist 1 endpage)
