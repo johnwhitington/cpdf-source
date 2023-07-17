@@ -2103,7 +2103,7 @@ let setfont f =
       begin match args.op with Some Draw -> addop (Cpdfdraw.FontPack (f, embed_font (), null_hash ())) | _ -> () end
 
 let loadttf n =
-  Printf.printf "loadttf: %s\n" n;
+  (*Printf.printf "loadttf: %s\n" n;*)
   let name, filename =
     match String.split_on_char '=' n with
     | [name; filename] -> name, filename
