@@ -384,6 +384,8 @@ type font =
 
 let ttfs = null_hash ()
 
+let fontpack_initialised = ref false
+
 type args =
   {mutable op : op option;
    mutable preserve_objstm : bool;
@@ -731,12 +733,13 @@ let reset_arguments () =
   args.toc_title <- "Table of Contents";
   args.toc_bookmark <- true;
   args.idir_only_pdfs <- false;
-  args.xobj_bbox <- (0., 0., 1000., 1000.)
+  args.xobj_bbox <- (0., 0., 1000., 1000.);
   (* Do not reset original_filename or cpdflin or was_encrypted or
    was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
    gs_malformed or gs_quiet or no-warn-rotate, since we want these to work
    across ANDs. Or squeeze options: a little odd, but we want it to happen on
    eventual output. Or -debug-force (from v2.6). *)
+  clear fontpack_initialised
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -1728,7 +1731,6 @@ let setidironlypdfs () =
 let setnowarnrotate () =
   args.no_warn_rotate <- true
 
-
 let setfontttfencoding s =
   args.fontencoding <-
     match s with
@@ -1751,6 +1753,7 @@ let xobjbbox s =
   args.xobj_bbox <- Cpdfcoord.parse_rectangle (Pdf.empty ()) s 
 
 let addop o =
+  begin match o with Cpdfdraw.FontPack _ -> set fontpack_initialised | _ -> () end;
   begin match args.op with Some Draw -> () | _ -> error "Need to be in drawing mode for this." end; 
   match !drawops with
   | (n, ops)::t -> drawops := (n, (o::ops))::t
@@ -2118,14 +2121,23 @@ let loadttf n =
           Some Draw -> addop (Cpdfdraw.FontPack (fontname, embed_font_inner (EmbeddedFont name), null_hash ())) | _ -> () end
     with
       _ -> error "addjpeg: could not load JPEG"
-    
+
+let add_default_fontpack () =
+  if not !fontpack_initialised then
+    begin
+      addop (Cpdfdraw.FontPack (args.fontname, embed_font (), null_hash ()));
+      set fontpack_initialised
+    end
+   
 let addtext s =
   begin match !drawops with _::_::_ -> () | _ -> error "-text must be in a -bt / -et section" end;
+    add_default_fontpack ();
     addop (Cpdfdraw.Font (args.fontname, args.fontsize));
     addop (Cpdfdraw.Text s)
 
 let addspecialtext s =
   begin match !drawops with _::_::_ -> () | _ -> error "-stext must be in a -bt / -et section" end;
+    add_default_fontpack ();
     addop (Cpdfdraw.Font (args.fontname, args.fontsize));
     addop (Cpdfdraw.SpecialText s)
 
@@ -2136,8 +2148,7 @@ let settextwidth s =
   args.op <- Some (TextWidth s)
 
 let setdraw () =
-  args.op <- Some Draw;
-  addop (Cpdfdraw.FontPack (args.fontname, embed_font (), null_hash ()))
+  args.op <- Some Draw
 
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
