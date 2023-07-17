@@ -1728,9 +1728,10 @@ let setidironlypdfs () =
 let setnowarnrotate () =
   args.no_warn_rotate <- true
 
-
 let setfontttf s =
-  args.font <- EmbeddedFont s
+  let fontname, _ = Hashtbl.find ttfs s in
+    args.font <- EmbeddedFont s;
+    args.fontname <- fontname
 
 let setfontttfencoding s =
   args.fontencoding <-
@@ -1758,9 +1759,6 @@ let addop o =
   match !drawops with
   | (n, ops)::t -> drawops := (n, (o::ops))::t
   | [] -> error "no drawops"
-
-
-
 
 let endxobj () =
   match !drawops with
