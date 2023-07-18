@@ -50,7 +50,7 @@ let colour_op_stroke = function
   | Grey g -> Pdfops.Op_G g
   | CYMK (c, y, m, k) -> Pdfops.Op_K (c, y, m, k)
 
-let ops fontname longest_w x y rotate hoffset voffset outline linewidth unique_fontname unique_extgstatename colour fontsize text =
+let ops fontpack fontname longest_w x y rotate hoffset voffset outline linewidth unique_fontname unique_extgstatename colour fontsize text =
   [Pdfops.Op_q;
   Pdfops.Op_BMC "/CPDFSTAMP";
    Pdfops.Op_cm
@@ -302,8 +302,7 @@ let addtext
           let ops, urls, x, y, hoffset, voffset, text, joffset =
             let text = process_text time text (replace_pairs pdf endpage extract_text_font_size filename bates batespad num page) in
             let text, urls = get_urls_line text in
-            (* FIXME Here we need to get (font, fontnum, charcode) triples if we have a fontpack, or fake if not. *)
-            let lines = map (fun text -> if raw then text else charcodes_of_utf8 (Pdftext.read_font pdf fontpdfobj) text) lines in
+            let lines = map (fun text -> if raw || fontpack <> None then text else charcodes_of_utf8 (Pdftext.read_font pdf fontpdfobj) text) lines in
             let expanded_lines = expand_lines text time pdf endpage extract_text_font_size filename bates batespad num page lines in
             let textwidth = calc_textwidth text
             and allwidths = map calc_textwidth expanded_lines in
@@ -323,30 +322,42 @@ let addtext
                       then -. (cos ((pi /. 2.) -. rotate) *. voffset), sin ((pi /. 2.) -. rotate) *. voffset
                       else hoffset, voffset 
                   in
-                    (* FIXME Here we need to pass the fontpack if available to the ops function. Can the ops function do all it needs just with this? *)
                     match font with
                     | Some f ->
-                        ops fontname longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
+                        ops fontpack fontname longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
                         unique_fontname unique_extgstatename colour fontsize text,
                         urls, x, y, hoffset, voffset, text, joffset
                     | None ->
-                        ops fontname longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
+                        ops fontpack fontname longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
                         fontname None colour fontsize text,
                         urls, x, y, hoffset, voffset, text, joffset
           in
             let newresources =
-              match font with
-              | Some (Pdftext.StandardFont _ as font) ->
+              match fontpack with
+              | Some fontpack ->
                   let newfontdict =
-                    Pdf.add_dict_entry fontdict unique_fontname (Pdf.Indirect (Pdftext.write_font pdf font))
+                    let fd = ref fontdict in
+                      iter
+                        (fun i ->
+                          (* FIXME make properly unique *)
+                          fd := Pdf.add_dict_entry !fd ("/F" ^ fontname ^ string_of_int i) (Pdf.Indirect i))
+                        fontpackpdfobjs;
+                      !fd
                   in
                     Pdf.add_dict_entry resources' "/Font" newfontdict
-              | Some f ->
-                  let newfontdict =
-                    Pdf.add_dict_entry fontdict unique_fontname fontpdfobj
-                  in
-                    Pdf.add_dict_entry resources' "/Font" newfontdict
-              | None -> page.Pdfpage.resources
+              | None ->
+                  match font with
+                  | Some (Pdftext.StandardFont _ as font) ->
+                      let newfontdict =
+                        Pdf.add_dict_entry fontdict unique_fontname (Pdf.Indirect (Pdftext.write_font pdf font))
+                      in
+                        Pdf.add_dict_entry resources' "/Font" newfontdict
+                  | Some f ->
+                      let newfontdict =
+                        Pdf.add_dict_entry fontdict unique_fontname fontpdfobj
+                      in
+                        Pdf.add_dict_entry resources' "/Font" newfontdict
+                  | None -> page.Pdfpage.resources
           in
             (* Build annotations from URL data (get_urls and some sense of metrics) *)
             let annot (minx, miny, maxx, maxy) url =
