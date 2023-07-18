@@ -50,25 +50,36 @@ let colour_op_stroke = function
   | Grey g -> Pdfops.Op_G g
   | CYMK (c, y, m, k) -> Pdfops.Op_K (c, y, m, k)
 
-let ops fontpack fontname longest_w x y rotate hoffset voffset outline linewidth unique_fontname unique_extgstatename colour fontsize text =
-  [Pdfops.Op_q;
-  Pdfops.Op_BMC "/CPDFSTAMP";
-   Pdfops.Op_cm
-     (Pdftransform.matrix_of_transform
-       [Pdftransform.Translate (x -. hoffset, y -. voffset);
-        Pdftransform.Rotate ((0., 0.), rotate)]);
-   Pdfops.Op_BT;
-   ] @
-   (if outline then [Pdfops.Op_w linewidth; Pdfops.Op_Tr 1] else [Pdfops.Op_Tr 0]) @
-   [colour_op colour; colour_op_stroke colour]
-   @
-   (match unique_extgstatename with None -> [] | Some n -> [Pdfops.Op_gs n])
-   @
-   [Pdfops.Op_Tf (unique_fontname, fontsize);
-   Pdfops.Op_Tj text;
-   Pdfops.Op_ET;
-   Pdfops.Op_EMC;
-   Pdfops.Op_Q]
+let ops fontpack fontpackpdfobjs fontname longest_w x y rotate hoffset voffset outline linewidth unique_fontname unique_extgstatename colour fontsize text =
+  let textops =
+    match fontpack with
+    | Some fontpack ->
+        let codepoints = Pdftext.codepoints_of_utf8 text in
+        let triples = option_map (Cpdfembed.get_char fontpack) codepoints in
+        let collated = Cpdfembed.collate_runs triples in
+          flatten
+            (map
+              (fun l ->
+                let (_, fontnum, _) = hd l in
+                  [Pdfops.Op_Tf ("/F" ^ fontname ^ string_of_int (List.nth fontpackpdfobjs fontnum), fontsize);
+                   Pdfops.Op_Tj (implode (map (fun (charcode, _, _) -> char_of_int charcode) l))]
+              )
+              collated)
+    | None ->
+        [Pdfops.Op_Tf (unique_fontname, fontsize); Pdfops.Op_Tj text]
+  in
+    [Pdfops.Op_q;
+     Pdfops.Op_BMC "/CPDFSTAMP";
+      Pdfops.Op_cm
+        (Pdftransform.matrix_of_transform
+          [Pdftransform.Translate (x -. hoffset, y -. voffset);
+           Pdftransform.Rotate ((0., 0.), rotate)]);
+      Pdfops.Op_BT]
+    @ (if outline then [Pdfops.Op_w linewidth; Pdfops.Op_Tr 1] else [Pdfops.Op_Tr 0])
+    @ [colour_op colour; colour_op_stroke colour]
+    @ (match unique_extgstatename with None -> [] | Some n -> [Pdfops.Op_gs n])
+    @ textops
+    @ [Pdfops.Op_ET; Pdfops.Op_EMC; Pdfops.Op_Q]
 
 type justification = LeftJustify | CentreJustify | RightJustify
 
@@ -324,11 +335,11 @@ let addtext
                   in
                     match font with
                     | Some f ->
-                        ops fontpack fontname longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
+                        ops fontpack fontpackpdfobjs fontname longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
                         unique_fontname unique_extgstatename colour fontsize text,
                         urls, x, y, hoffset, voffset, text, joffset
                     | None ->
-                        ops fontpack fontname longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
+                        ops fontpack fontpackpdfobjs fontname longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
                         fontname None colour fontsize text,
                         urls, x, y, hoffset, voffset, text, joffset
           in
@@ -339,7 +350,6 @@ let addtext
                     let fd = ref fontdict in
                       iter
                         (fun i ->
-                          (* FIXME make properly unique *)
                           fd := Pdf.add_dict_entry !fd ("/F" ^ fontname ^ string_of_int i) (Pdf.Indirect i))
                         fontpackpdfobjs;
                       !fd
