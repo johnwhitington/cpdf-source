@@ -231,7 +231,7 @@ let expand_lines text time pdf endpage extract_text_font_size filename bates bat
 
 let addtext
   time lines linewidth outline fast colour fontname encoding bates batespad
-  fontsize fontpack font fontpdfobj underneath position hoffset voffset text pages
+  fontsize fontpack font fontpdfobj fontpackpdfobjs underneath position hoffset voffset text pages 
   cropbox opacity justification filename extract_text_font_size shift raw pdf
 =
   let endpage = Pdfpage.endpage pdf in
@@ -513,27 +513,25 @@ let
             | Some (Pdftext.SimpleFont {encoding}) -> encoding
             | _ -> Pdftext.WinAnsiEncoding
           in
-            iter
-              (fun line ->
-                 let voff, hoff = !voffset, 0. in
-                   pdf :=
-                     addtext time lines linewidth outline fast colour !realfontname encoding
-                     bates batespad fontsize fontpack font fontpdfobj underneath position hoff voff line
-                     pages cropbox opacity justification filename extract_text_font_size shift
-                     raw !pdf;
-                   voffset := !voffset +. (linespacing *. fontsize))
-              lines;
-              (* FIXME Here we need to embed all the fonts, not just one *)
-              begin match cpdffont with
+            let fontpackpdfobjs =
+              match cpdffont with
               | Cpdfembed.EmbedInfo {fontfile; fontname; encoding} ->
                   let codepoints = map fst (list_of_hashtbl used) in
-                  let objnum = match fontpdfobj with Pdf.Indirect i -> i | _ -> failwith "bad fontpdfobj" in
-                  let font = hd (fst (Cpdfembed.embed_truetype !pdf ~fontfile ~fontname ~codepoints ~encoding)) in
-                    ignore (Pdftext.write_font ~objnum !pdf font)
-              | _ -> ()
-              end;
-              !pdf
-
+                  let fonts = fst (Cpdfembed.embed_truetype !pdf ~fontfile ~fontname ~codepoints ~encoding) in
+                    map (Pdftext.write_font !pdf) fonts
+              | _ -> []
+            in
+              iter
+                (fun line ->
+                   let voff, hoff = !voffset, 0. in
+                     pdf :=
+                       addtext time lines linewidth outline fast colour !realfontname encoding
+                       bates batespad fontsize fontpack font fontpdfobj fontpackpdfobjs underneath
+                       position hoff voff line pages cropbox opacity justification filename
+                       extract_text_font_size shift raw !pdf;
+                     voffset := !voffset +. (linespacing *. fontsize))
+                lines;
+                !pdf
 
 let addrectangle
   fast (w, h) colour outline linewidth opacity position relative_to_cropbox

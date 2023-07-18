@@ -6,6 +6,8 @@ let dbg =
   (* Pdfe.logger := (fun s -> print_string s; flush stdout) *)
   ref false
 
+let test_subsetting = true
+
 type t =
   {flags : int;
    minx : int;
@@ -496,13 +498,14 @@ let write_font filename data =
     close_out fh
 
 let find_main encoding subset =
-  let encoding_table = Pdftext.table_of_encoding encoding in
-  let first, rest =
-    List.partition
-      (fun u -> try ignore (Hashtbl.find encoding_table u); true with Not_found -> false)
-      subset
-  in
-    (first, splitinto 224 rest)
+  if test_subsetting then (take subset 3, [drop subset 3]) else
+    let encoding_table = Pdftext.table_of_encoding encoding in
+    let first, rest =
+      List.partition
+        (fun u -> try ignore (Hashtbl.find encoding_table u); true with Not_found -> false)
+        subset
+    in
+      (first, splitinto 224 rest)
 
 let parse ~subset data encoding =
   let mk_b byte_offset = bitbytes_of_input (let i = input_of_bytes data in i.seek_in byte_offset; i) in

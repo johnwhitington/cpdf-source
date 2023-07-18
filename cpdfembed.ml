@@ -106,4 +106,3 @@ let rec collate_runs cfn a = function
 let collate_runs = function
   | [] -> []
   | (_, fontnum, _)::_ as l -> collate_runs fontnum [] l
-
