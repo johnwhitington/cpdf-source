@@ -50,7 +50,7 @@ let colour_op_stroke = function
   | Grey g -> Pdfops.Op_G g
   | CYMK (c, y, m, k) -> Pdfops.Op_K (c, y, m, k)
 
-let ops fontpack fontpackpdfobjs fontname longest_w x y rotate hoffset voffset outline linewidth unique_fontname unique_extgstatename colour fontsize text =
+let ops fontpack fontpackpdfobjs fontname longest_w x y rotate hoffset voffset outline linewidth unique_fontname unique_fontnames unique_extgstatename colour fontsize text =
   let textops =
     match fontpack with
     | Some fontpack ->
@@ -61,9 +61,8 @@ let ops fontpack fontpackpdfobjs fontname longest_w x y rotate hoffset voffset o
             (map
               (fun l ->
                 let (_, fontnum, _) = hd l in
-                  [Pdfops.Op_Tf ("/F" ^ fontname ^ string_of_int (List.nth fontpackpdfobjs fontnum), fontsize);
-                   Pdfops.Op_Tj (implode (map (fun (charcode, _, _) -> char_of_int charcode) l))]
-              )
+                  [Pdfops.Op_Tf (List.nth unique_fontnames fontnum, fontsize);
+                   Pdfops.Op_Tj (implode (map (fun (charcode, _, _) -> char_of_int charcode) l))])
               collated)
     | None ->
         [Pdfops.Op_Tf (unique_fontname, fontsize); Pdfops.Op_Tj text]
@@ -310,6 +309,16 @@ let addtext
                   (rawwidth *. fontsize) /. 1000.
         in
         let unique_fontname = Pdf.unique_key "F" fontdict in
+        let fd = ref fontdict in
+        let unique_fontnames =
+          match fontpack with None -> [] | Some fontpack ->
+            map
+              (fun _ ->
+                let key = Pdf.unique_key "F" !fd in
+                  fd := Pdf.add_dict_entry !fd key Pdf.Null;
+                  key)
+              (indx0 (fst fontpack))
+        in
           let ops, urls, x, y, hoffset, voffset, text, joffset =
             let text = process_text time text (replace_pairs pdf endpage extract_text_font_size filename bates batespad num page) in
             let text, urls = get_urls_line text in
@@ -336,11 +345,11 @@ let addtext
                     match font with
                     | Some f ->
                         ops fontpack fontpackpdfobjs fontname longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
-                        unique_fontname unique_extgstatename colour fontsize text,
+                        unique_fontname unique_fontnames unique_extgstatename colour fontsize text,
                         urls, x, y, hoffset, voffset, text, joffset
                     | None ->
                         ops fontpack fontpackpdfobjs fontname longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
-                        fontname None colour fontsize text,
+                        fontname unique_fontnames None colour fontsize text,
                         urls, x, y, hoffset, voffset, text, joffset
           in
             let newresources =
@@ -348,10 +357,11 @@ let addtext
               | Some fontpack ->
                   let newfontdict =
                     let fd = ref fontdict in
-                      iter
-                        (fun i ->
-                          fd := Pdf.add_dict_entry !fd ("/F" ^ fontname ^ string_of_int i) (Pdf.Indirect i))
-                        fontpackpdfobjs;
+                      iter2
+                        (fun i n ->
+                          fd := Pdf.add_dict_entry !fd (List.nth unique_fontnames n) (Pdf.Indirect i))
+                        fontpackpdfobjs
+                        (indx0 fontpackpdfobjs);
                       !fd
                   in
                     Pdf.add_dict_entry resources' "/Font" newfontdict
