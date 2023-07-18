@@ -1731,6 +1731,7 @@ let setidironlypdfs () =
 let setnowarnrotate () =
   args.no_warn_rotate <- true
 
+(* Unused for now *)
 let setfontttfencoding s =
   args.fontencoding <-
     match s with
@@ -2462,9 +2463,6 @@ and specs =
    ("-load-ttf",
       Arg.String loadttf,
       " Use a TrueType font");
-   ("-font-encoding",
-      Arg.String setfontttfencoding,
-      " Set the encoding for the TrueType font");
    ("-embed-std14",
       Arg.String setembedstd14,
       " Embed standard 14 fonts");

@@ -1,4 +1,3 @@
-%FIXME: FIXMEs
 \documentclass{book}
 % Edit here to produce cpdfmanual.pdf, cpdflibmanual.pdf, pycpdfmanual.pdf,
 % dotnetcpdflibmanual.pdf, jcpdflibmanual.pdf jscpdflibmanual.pdf etc.
@@ -15,7 +14,7 @@
 \usepackage{microtype}
 \usepackage{graphicx}
 \usepackage{upquote}
-\usepackage[plainpages=false,pdfpagelabels,pdfborder=0 0 0,draft=false,hidelinks,bookmarksnumbered]{hyperref}
+\PassOptionsToPackage{hyphens}{url}\usepackage[plainpages=false,pdfpagelabels,pdfborder=0 0 0,draft=false,hidelinks,bookmarksnumbered]{hyperref}
 \usepackage{framed}
 \newcommand{\smallgap}{\bigskip}
 \newcommand{\cpdf}{\texttt{cpdf}}
@@ -2244,17 +2243,20 @@ the file using a different page range each time.
 
   \vspace{1.5mm}
   \noindent\small\begin{verbatim}cpdf ([-add-text <text-format> | -add-rectangle <size>])
-              [-font <fontname>]          [-font-size <size-in-points>]
-              [-font-ttf <filename>]      [-embed-std14]
-              [-color <color>]            [-line-spacing <number>]
-              [-outline]                  [-linewidth <number>]
-              [-underneath]               [-relative-to-cropbox]
-              [-prerotate]                [-no-warn-rotate]
-              [-bates <number>]           [-bates-at-range <number>]
-              [-bates-pad-to <number>]    [-opacity <number>]
-              [-midline]                  [-topline]
-              [-fast]
-              in.pdf [<range>] -o out.pdf\end{verbatim}
+      [-font <fontname>]          [-font-size <size-in-points>]
+      [-load-ttf <name>=<file>]   [-embed-std14]
+      [-font-enconding
+      [-color <color>]            [-line-spacing <number>]
+      [-outline]                  [-linewidth <number>]
+      [-underneath]               [-relative-to-cropbox]
+      [-prerotate]                [-no-warn-rotate]
+      [-bates <number>]           [-bates-at-range <number>]
+      [-bates-pad-to <number>]    [-opacity <number>]
+      [-midline]                  [-topline]
+      [-fast]
+      in.pdf [<range>] -o out.pdf\end{verbatim}
+
+  \vspace{1.5mm}
   \noindent See also positioning commands below.
 
   \vspace{1.5mm}
@@ -2434,7 +2436,7 @@ than its baseline. Similarly, the \texttt{-topline} option may be used to specif
 
   \subsection{Font and Size}
 \index{font}
-  The 14 standard PDF fonts may be set with the \texttt{-font} option. They are:
+  The standard PDF fonts may be set with the \texttt{-font} option. They are:
 
   \vspace{2mm}
   \begin{tabular}{l}
@@ -2449,9 +2451,7 @@ than its baseline. Similarly, the \texttt{-topline} option may be used to specif
   Courier\\
   Courier-Bold\\
   Courier-Oblique\\
-  Courier-BoldOblique\\
-  Symbol\\
-  ZapfDingbats
+  Courier-BoldOblique
   \end{tabular}
  \vspace{2mm}
 
@@ -2460,20 +2460,23 @@ than its baseline. Similarly, the \texttt{-topline} option may be used to specif
     \noindent\small\verb!cpdf -add-text "-%Page-" -font "Times-Italic" in.pdf -o out.pdf!
   \end{framed}
 
-FIXME: How to provide font files for -embed-std14
-FIXME: Which font packs we provide
-FIXME: Which characters are available in Latin1, and Google fonts
-FIXME: How to choose font encoding
-
-  \noindent Adding \texttt{-embed-std14} to the command will embed subsetted font files in the PDF for any of the Standard 14 fonts used.
-
-Other TrueType fonts may be introduced with the \texttt{-font-ttf} option, giving the file name of the font. See Section \ref{copyfont} for how to use an existing font from the source document.
-
-The font size can be altered with the \texttt{-font-size} option, which
+\noindent The font size can be altered with the \texttt{-font-size} option, which
 specifies the size in points:
   \begin{framed}
     \noindent\small\verb!cpdf -add-text "-%Page-" -font-size 36 in.pdf -o out.pdf!
   \end{framed}
+
+  \noindent Adding \texttt{-embed-std14 <directory>}, given a directory holding the GhostScript/URW free fonts, will embed subsetted font files in the PDF for any of the Standard fonts used. These free fonts can be downloaded from \url{https://github.com/ArtifexSoftware/urw-base35-fonts}. This is important, for example, for PDF/A documents, which must have their fonts embedded.
+
+The standard fonts cover only the Latin characters, and are limiting. Other TrueType fonts may be introduced with the \texttt{-load-ttf} option, giving a name for, and the file name of the font. For example:
+
+  \begin{framed}
+    \noindent\small\verb!cpdf -load-ttf A=NotoSans-Black.ttf -font A "-%Page-" -o out.pdf!
+  \end{framed}
+
+\noindent Here we have used the Noto Sans font from Google. This and other Google fonts contain characters for a huge number of scripts, and are available free from \url{https://fonts.google.com/noto/}. But you may use any TrueType font.
+
+See Section \ref{copyfont} for how to use an existing font from the source document.
 
   \subsection{Colors}
 \index{color}
@@ -4362,7 +4365,6 @@ Lines may have dash patterns. A dash pattern consists of one or more numbers. Al
 \fbox{\includegraphics[width=0.3\textwidth]{manualimages/dash.pdf}}
 \bigskip
 
-%FIXME specify the angles etc. properly - what units?
 \section{The graphics stack and matrices}
   {\small\begin{framed}
    \noindent\verb!-push! Push graphics stack\\
