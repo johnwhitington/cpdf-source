@@ -11,6 +11,7 @@ type cpdffont =
 
 val fontpack_of_standardfont : Pdftext.font -> t
 
+(* Returns (charcode, fontnumber, font) *) 
 val get_char : t -> int -> (int * int * Pdftext.font) option
 
 val embed_truetype :

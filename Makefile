@@ -4,7 +4,7 @@ NONDOC = cpdfyojson cpdfxmlm
 DOC = cpdfunicodedata cpdferror cpdfdebug cpdfjson cpdfstrftime cpdfcoord \
       cpdfattach cpdfpagespec cpdfposition cpdfpresent cpdfmetadata \
       cpdfbookmarks cpdfpage cpdftruetype cpdfremovetext cpdfextracttext \
-      cpdfembed cpdfaddtext cpdffont cpdftype cpdfpad cpdfocg \
+      cpdfembed cpdffont cpdftype cpdfaddtext cpdfpad cpdfocg \
       cpdfsqueeze cpdfdraft cpdfspot cpdfpagelabels cpdfcreate cpdfannot \
       cpdfxobject cpdfimpose cpdftweak cpdftexttopdf cpdftoc cpdfjpeg \
       cpdfpng cpdfimage cpdfdraw cpdfcomposition cpdfshape \

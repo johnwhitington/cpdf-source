@@ -259,8 +259,14 @@ let addtext
         | None -> Pdf.Dictionary []
         | Some d -> d
       in
-        (* FIXME If a fontpack is available, we need to calculate the width from the codepoints in preference. *)
         let calc_textwidth text =
+          match fontpack with
+          | Some fontpack ->
+              let widthss = map (fun font -> Cpdftype.font_widths font fontsize) (fst fontpack) in
+              let triples = option_map (Cpdfembed.get_char fontpack) (Pdftext.codepoints_of_utf8 text) in
+              let widths = map (fun (charcode, fontnum, _) -> (List.nth widthss fontnum).(charcode)) triples in
+                fsum widths
+          | None ->
           match font with
           | Some (Pdftext.StandardFont (f, _)) ->
               let rawwidth =
