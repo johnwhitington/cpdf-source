@@ -14,10 +14,17 @@ let rec real_newline = function
   | x::r -> x::real_newline r
   | [] -> []
 
+let width_table_cache = null_hash ()
+
 let rec width_of_runs runs =
   match runs with
   | Cpdftype.Font (f, fontsize)::Cpdftype.Text t::more ->
-      Cpdftype.width_of_string (Cpdftype.font_widths f fontsize) t +. width_of_runs more
+      let width_table =
+        match Hashtbl.find width_table_cache (f, fontsize) with
+        | w -> w
+        | exception Not_found -> let ws = Cpdftype.font_widths f fontsize in Hashtbl.add width_table_cache (f, fontsize) ws; ws
+      in
+        Cpdftype.width_of_string width_table t +. width_of_runs more
   | [] -> 0.
   | _ -> failwith "width_of_runs"
 
@@ -44,7 +51,12 @@ let of_pdfdocencoding fontpack fontsize t =
 let rec shorten_text_inner l t =
   match rev t with
   | Cpdftype.Text text::Cpdftype.Font (f, fs)::more ->
-      if Cpdftype.width_of_string (Cpdftype.font_widths f fs) text > l then
+      let width_table =
+        match Hashtbl.find width_table_cache (f, fs) with
+        | w -> w
+        | exception Not_found -> let ws = Cpdftype.font_widths f fs in Hashtbl.add width_table_cache (f, fs) ws; ws
+      in
+      if Cpdftype.width_of_string width_table text > l then
         shorten_text_inner l (rev (Cpdftype.Text (all_but_last text)::Cpdftype.Font (f, fs)::more))
       else
         t
