@@ -6,7 +6,7 @@ let dbg =
   (* Pdfe.logger := (fun s -> print_string s; flush stdout) *)
   ref false
 
-let test_subsetting = true
+let test_subsetting = false
 
 type t =
   {flags : int;
@@ -201,49 +201,6 @@ let read_hmtx_table numOfLongHorMetrics b =
     numOfLongHorMetrics
     (fun _ -> let r = read_ushort b in ignore (read_short b); r)
 
-let write_loca_table subset cmap indexToLocFormat bs loca =
-  let locnums = null_hash () in
-    Hashtbl.add locnums 0 (); (* .notdef *)
-    iter
-      (fun u ->
-         try
-           let locnum = Hashtbl.find cmap u in
-           if !dbg then Printf.printf "write_loca_table: Unicode U+%04X is at location number %i\n" u locnum;
-           Hashtbl.add locnums locnum ()
-         with
-           Not_found -> ())
-      subset;
-  let len = ref 0 in
-  let write_entry loc position =
-    match indexToLocFormat with
-    | 0 -> len += 2; putval bs 16 (i32div position 2l)
-    | 1 -> len += 4; putval bs 32 position
-    | _ -> raise (Pdf.PDFError "Unknown indexToLocFormat in write_loca_table")
-  in
-  let pos = ref 0l in
-  let pairs =
-    map
-      (fun loc ->
-         let len = i32sub loca.(loc + 1) loca.(loc) in
-         let r = (loc, !pos) in
-           pos := i32add !pos len;
-           r)
-      (sort compare (map fst (list_of_hashtbl locnums)))
-  in
-    let pairs = Array.of_list (pairs @ [(Array.length loca - 1, !pos)]) in
-      Array.iteri
-        (fun i (loc, off) ->
-           if i <> Array.length pairs - 1 then
-             begin
-               write_entry loc off;
-               let loc', off' = pairs.(i + 1) in
-               for x = 0 to loc' - loc - 2 do write_entry (loc + x) off' done
-             end
-           else
-             write_entry loc off)
-        pairs;
-      for x = 1 to padding !len do putval bs 8 0l done
-
 (* Expand the subset of locations to include composites *)
 let expand_composites_one mk_b loca glyfoffset locations =
   let rec read_components b =
@@ -275,6 +232,50 @@ let rec expand_composites mk_b loca glyfoffset locations =
   let expanded = expand_composites_one mk_b loca glyfoffset locations in
     if expanded = locations then expanded else expand_composites mk_b loca glyfoffset expanded
 
+let write_loca_table subset cmap indexToLocFormat bs mk_b glyfoffset loca =
+  let locnums = null_hash () in
+    Hashtbl.add locnums 0 (); (* .notdef *)
+    iter
+      (fun u ->
+         try
+           let locnum = Hashtbl.find cmap u in
+           if !dbg then Printf.printf "write_loca_table: Unicode U+%04X is at location number %i\n" u locnum;
+           Hashtbl.add locnums locnum ()
+         with
+           Not_found -> ())
+      subset;
+  let locnums = expand_composites mk_b loca glyfoffset (sort compare (map fst (list_of_hashtbl locnums))) in
+  let len = ref 0 in
+  let write_entry loc position =
+    match indexToLocFormat with
+    | 0 -> len += 2; putval bs 16 (i32div position 2l)
+    | 1 -> len += 4; putval bs 32 position
+    | _ -> raise (Pdf.PDFError "Unknown indexToLocFormat in write_loca_table")
+  in
+  let pos = ref 0l in
+  let pairs =
+    map
+      (fun loc ->
+         let len = i32sub loca.(loc + 1) loca.(loc) in
+         let r = (loc, !pos) in
+           pos := i32add !pos len;
+           r)
+      (sort compare locnums)
+  in
+    let pairs = Array.of_list (pairs @ [(Array.length loca - 1, !pos)]) in
+      Array.iteri
+        (fun i (loc, off) ->
+           if i <> Array.length pairs - 1 then
+             begin
+               write_entry loc off;
+               let loc', off' = pairs.(i + 1) in
+               for x = 0 to loc' - loc - 2 do write_entry (loc + x) off' done
+             end
+           else
+             write_entry loc off)
+        pairs;
+      for x = 1 to padding !len do putval bs 8 0l done
+
 (* Write the notdef glyf, and any others in the subset *)
 let write_glyf_table subset cmap bs mk_b glyfoffset loca =
   if !dbg then Printf.printf "***write_glyf_table\n";
@@ -289,7 +290,7 @@ let write_glyf_table subset cmap bs mk_b glyfoffset loca =
          with
            Not_found -> ())
       subset;
-  let locnums = (*expand_composites mk_b loca glyfoffset*) (sort compare (map fst (list_of_hashtbl locnums))) in
+  let locnums = expand_composites mk_b loca glyfoffset (sort compare (map fst (list_of_hashtbl locnums))) in
   if !dbg then
     (Printf.printf "We want glyfs for locations: ";
      iter (Printf.printf "%i ") locnums; Printf.printf "\n");
@@ -473,7 +474,7 @@ let subset_font major minor tables indexToLocFormat subset encoding cmap loca mk
     (fun (tag, _, _, _) ->
       if !dbg then Printf.printf "Writing %s table\n" (string_of_tag tag);
       if string_of_tag tag = "loca" then
-        write_loca_table subset cmap indexToLocFormat bs loca
+        write_loca_table subset cmap indexToLocFormat bs mk_b glyfoffset loca
       else if string_of_tag tag = "glyf" then
         ignore (write_glyf_table subset cmap bs mk_b glyfoffset loca)
       else if string_of_tag tag = "cmap" && encoding = Pdftext.ImplicitInFontFile then
@@ -677,10 +678,10 @@ let parse ~subset data encoding =
                     widths; subset_fontfile; subset; tounicode})
                  firstchars_2 lastchars_2 widths_2 seconds_subsets subsets_2 seconds_tounicodes
               in
-                (*Printf.printf "\nMain subset:\n"; debug_t one;*)
-                write_font "one.ttf" one.subset_fontfile;
-                (*Printf.printf "\nHigher subset:\n"; debug_t (hd twos);*)
-                if twos <> [] then write_font "two.ttf" (hd twos).subset_fontfile;
+                if !dbg then (Printf.printf "\nMain subset:\n"; debug_t one);
+                if !dbg then write_font "one.ttf" one.subset_fontfile;
+                if !dbg && twos <> [] then (Printf.printf "\nHigher subset:\n"; debug_t (hd twos));
+                if !dbg && twos <> [] then write_font "two.ttf" (hd twos).subset_fontfile;
                 one::twos
 
 let parse ~subset data encoding =
