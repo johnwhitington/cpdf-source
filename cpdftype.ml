@@ -172,14 +172,13 @@ let make_resources fontobjnums =
   Pdf.Dictionary
     [("/Font", Pdf.Dictionary (map (fun fo -> ("/F" ^ string_of_int fo, Pdf.Indirect fo)) (setify fontobjnums)))]
 
-let make_annotations annots =
+let make_annotations pdf annots =
   if annots = [] then Pdf.Dictionary [] else
-    Pdf.Dictionary ["/Annots", Pdf.Array annots]
+    Pdf.Dictionary ["/Annots", Pdf.Array (map (function a -> Pdf.Indirect (Pdf.addobj pdf a)) annots)]
 
 (* At this stage, just Font and Text and HGlue 0. and VGlue 0. and Newline and
    NewPage elements. Split on NewPages, typeset each page, add font
-   dictionaries. New page only
-   creates a page when that page has content. *)
+   dictionaries. New page only creates a page when that page has content. *)
 let typeset lmargin rmargin tmargin bmargin papersize pdf i =
   let debug = false in
   if debug then (print_endline "***input:\n\n"; print_endline (to_string i));
@@ -204,7 +203,7 @@ let typeset lmargin rmargin tmargin bmargin papersize pdf i =
          Pdfpage.mediabox = Pdfpage.rectangle_of_paper papersize;
          Pdfpage.resources = make_resources !thispagefontnums;
          Pdfpage.rotate = Pdfpage.Rotate0;
-         Pdfpage.rest = make_annotations !thispageannotations}
+         Pdfpage.rest = make_annotations pdf !thispageannotations}
       in
         pages := page :: !pages
   in
