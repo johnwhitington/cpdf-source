@@ -78,7 +78,7 @@ and string_of_drawops l =
 type res = 
   {images : (string, (string * int)) Hashtbl.t; (* (name, (pdf name, objnum)) *)
    extgstates : ((string * float), string) Hashtbl.t; (* (kind, value), name *)
-   fonts : (Pdftext.font, (string * int)) Hashtbl.t; (* (font, (objnum, pdf name)) *)
+   fonts : (string * int, (string * int)) Hashtbl.t; (* (font, (objnum, pdf name)) *)
    form_xobjects : (string, (string * int)) Hashtbl.t; (* (name, (pdf name, objnum)) *)
    mutable page_names : string list;
    mutable time : Cpdfstrftime.t;
@@ -153,8 +153,9 @@ let runs_of_utf8 s =
      (map
        (fun l ->
          if l = [] then [] else
-           let f = match l with (_, _, f)::_ -> f | _ -> assert false in
-           let fontname = fst (Hashtbl.find (res ()).fonts f) in
+           let f, n = match l with (_, n, f)::_ -> f, n | _ -> assert false in
+           (*Printf.printf "runs_of_utf8 - looking for (%s, %i) font\n" identifier n;*)
+           let fontname = fst (Hashtbl.find (res ()).fonts (identifier, n)) in
            let charcodes = map (fun (c, _, _) -> char_of_int c) l in
              [Pdfops.Op_Tf (fontname, (res ()).font_size);
               Pdfops.Op_Tj (implode charcodes)])
@@ -273,16 +274,17 @@ let rec ops_of_drawop dryrun pdf endpage filename bates batespad num page = func
               fontpack
       in
         let ns =
-          map
-            (fun font ->
-              try fst (Hashtbl.find (res ()).fonts font) with
+          map2
+            (fun font n ->
+              try fst (Hashtbl.find (res ()).fonts (identifier, n)) with
                 Not_found ->
                   let o = if dryrun then 0 else Pdftext.write_font pdf font in
-                  let n = fresh_name "/F" in
-                    (*Printf.printf "Adding font %s as %s\n" identifier n;*)
-                    Hashtbl.replace (res ()).fonts font (n, o);
-                    n)
+                  let name = fresh_name "/F" in
+                    (*Printf.printf "Adding font %s as %s\n" identifier name;*)
+                    Hashtbl.replace (res ()).fonts (identifier, n) (name, o);
+                    name)
             (fst fontpack)
+            (indx0 (fst fontpack))
         in
           (res ()).page_names <- ns @ (res ()).page_names;
           []
