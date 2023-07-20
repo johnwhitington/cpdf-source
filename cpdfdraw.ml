@@ -146,13 +146,9 @@ let process_specials pdf endpage filename bates batespad num page s =
 
 let runs_of_utf8 s =
   let identifier, fontpack = (res ()).current_fontpack in
-  (*Printf.printf "runs_of_utf8: %s\n" identifier;*)
   let codepoints = Pdftext.codepoints_of_utf8 s in
-  (*Printf.printf "%i codepoints\n" (length codepoints);*)
   let triples = option_map (Cpdfembed.get_char fontpack) codepoints in
-  (*Printf.printf "%i triples\n" (length triples);*)
   let collated = Cpdfembed.collate_runs triples in
-    (*Printf.printf "Collated of length %i\n" (length collated);*)
     flatten
      (map
        (fun l ->
