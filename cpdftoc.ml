@@ -18,11 +18,12 @@ let width_table_cache = null_hash ()
 
 let rec width_of_runs runs =
   match runs with
-  | Cpdftype.Font (f, fontsize)::Cpdftype.Text t::more ->
+  | Cpdftype.Font (id, f, fontsize)::Cpdftype.Text t::more ->
       let width_table =
-        match Hashtbl.find width_table_cache (f, fontsize) with
+        match Hashtbl.find width_table_cache (id, fontsize) with
         | w -> w
-        | exception Not_found -> let ws = Cpdftype.font_widths f fontsize in Hashtbl.add width_table_cache (f, fontsize) ws; ws
+        | exception Not_found ->
+            let ws = Cpdftype.font_widths id f fontsize in Hashtbl.add width_table_cache (id, fontsize) ws; ws
       in
         Cpdftype.width_of_string width_table t +. width_of_runs more
   | [] -> 0.
@@ -39,7 +40,8 @@ let of_utf8 fontpack fontsize t =
          | [] -> []
          | (_, _, font) as h::t ->
              let charcodes = map (fun (c, _, _) -> char_of_int c) (h::t) in
-               [Cpdftype.Font (font, fontsize); Cpdftype.Text charcodes])
+               (*FIXME id *)
+               [Cpdftype.Font ("", font, fontsize); Cpdftype.Text charcodes])
         collated)
 
 (* Cpdftype codepoints from a font and PDFDocEndoding string *)
@@ -50,14 +52,15 @@ let of_pdfdocencoding fontpack fontsize t =
    add dots for an ellipsis *)
 let rec shorten_text_inner l t =
   match rev t with
-  | Cpdftype.Text text::Cpdftype.Font (f, fs)::more ->
+  | Cpdftype.Text text::Cpdftype.Font (id, f, fs)::more ->
       let width_table =
-        match Hashtbl.find width_table_cache (f, fs) with
+        match Hashtbl.find width_table_cache (id, fs) with
         | w -> w
-        | exception Not_found -> let ws = Cpdftype.font_widths f fs in Hashtbl.add width_table_cache (f, fs) ws; ws
+        | exception Not_found ->
+            let ws = Cpdftype.font_widths id f fs in Hashtbl.add width_table_cache (id, fs) ws; ws
       in
       if Cpdftype.width_of_string width_table text > l then
-        shorten_text_inner l (rev (Cpdftype.Text (all_but_last text)::Cpdftype.Font (f, fs)::more))
+        shorten_text_inner l (rev (Cpdftype.Text (all_but_last text)::Cpdftype.Font (id, f, fs)::more))
       else
         t
   | _ -> t
@@ -69,7 +72,8 @@ let shorten_text fontpack fontsize l t =
         unopt (Cpdfembed.get_char fontpack (int_of_char '.'))
       in
       let charcode = char_of_int charcode in
-        short @ [Cpdftype.Font (dotfont, fontsize); Cpdftype.Text [charcode; charcode; charcode]]
+        (* FIXME ID *)
+        short @ [Cpdftype.Font ("", dotfont, fontsize); Cpdftype.Text [charcode; charcode; charcode]]
 
 (* Calculate the used codepoints *)
 let used pdf fastrefnums labels title marks =

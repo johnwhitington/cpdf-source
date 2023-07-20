@@ -5,7 +5,7 @@ type element =
 | VGlue of float
 | NewLine
 | NewPage
-| Font of (Pdftext.font * float)
+| Font of string * Pdftext.font * float
 | BeginDest of Pdfdest.t
 | EndDest
 | BeginDocument
@@ -14,7 +14,7 @@ type t = element list
 
 val to_string : t -> string
 
-val font_widths : Pdftext.font -> float -> float array
+val font_widths : string -> Pdftext.font -> float -> float array
 
 val width_of_string : float array -> char list -> float
 

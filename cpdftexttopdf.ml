@@ -16,7 +16,8 @@ let rec of_utf8_with_newlines fontpack fontsize t =
                  if !currtext <> [] then items := Cpdftype.Text (rev !currtext)::!items;
                  currtext := [];
                  currfont := n;
-                 items := Cpdftype.Font (f, fontsize)::!items;
+                 (* FIXME font id *)
+                 items := Cpdftype.Font ("", f, fontsize)::!items;
                  currtext := char_of_int c::!currtext;
                end
              else

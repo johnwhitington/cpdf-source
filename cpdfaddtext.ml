@@ -272,7 +272,9 @@ let addtext
         let calc_textwidth text =
           match fontpack with
           | Some fontpack ->
-              let widthss = map (fun font -> Cpdftype.font_widths font fontsize) (fst fontpack) in
+              let widthss =
+                map2 (fun n font -> Cpdftype.font_widths (fontname ^ string_of_int n) font fontsize) (indx (fst fontpack)) (fst fontpack)
+              in
               let triples = option_map (Cpdfembed.get_char fontpack) (Pdftext.codepoints_of_utf8 text) in
               let widths = map (fun (charcode, fontnum, _) -> (List.nth widthss fontnum).(charcode)) triples in
                 fsum widths

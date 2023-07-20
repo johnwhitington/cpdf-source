@@ -14,7 +14,7 @@ type element =
 | VGlue of float
 | NewLine
 | NewPage
-| Font of (Pdftext.font * float)
+| Font of string * Pdftext.font * float
 | BeginDest of Pdfdest.t
 | EndDest
 | BeginDocument
@@ -36,33 +36,44 @@ type t = element list
 
 type state =
   {mutable font : Pdftext.font option;
+   mutable fontid : string option;
    mutable fontsize : float;
    mutable width_table : float array; (* Widths for charcodes 0..255 *)
    mutable xpos : float;
    mutable ypos : float;
    mutable dest : Pdfdest.t option}
 
+let width_table_cache = null_hash ()
+
 let initial_state () =
   {font = None;
+   fontid = None;
    fontsize = 0.;
    width_table = [||];
    xpos = 0.;
    ypos = 0.;
    dest = None}
 
-let font_widths f fontsize =
-  match f with
-  | Pdftext.StandardFont (sf, encoding) ->
-      Array.init
-        256
-        (fun x ->
-             fontsize
-          *. float_of_int
-               (Pdfstandard14.textwidth false encoding sf (string_of_char (char_of_int x)))
-          /. 1000.)
-  | Pdftext.SimpleFont {fontmetrics = Some m} ->
-      Array.map (fun x -> fontsize *. x /. 1000. ) m
-  | _ -> raise (Pdf.PDFError "Cpdftype: Unsupported font")
+let font_widths id f fontsize =
+  match Hashtbl.find width_table_cache (id, fontsize) with
+  | x -> x
+  | exception Not_found ->
+      let newtable =
+        match f with
+        | Pdftext.StandardFont (sf, encoding) ->
+            Array.init
+              256
+              (fun x ->
+                   fontsize
+                *. float_of_int
+                     (Pdfstandard14.textwidth false encoding sf (string_of_char (char_of_int x)))
+                /. 1000.)
+        | Pdftext.SimpleFont {fontmetrics = Some m} ->
+            Array.map (fun x -> fontsize *. x /. 1000. ) m
+        | _ -> raise (Pdf.PDFError "Cpdftype: Unsupported font")
+      in
+        Hashtbl.add width_table_cache (id, fontsize) newtable;
+        newtable
 
 let width_of_string ws s =
   let w = ref 0. in
@@ -108,9 +119,9 @@ let layout lmargin rmargin papersize i =
   let xpos_max = width -. lmargin in
     s.xpos <- lmargin;
     let rec layout_element = function
-    | Font (f, fontsize) ->
-        s.width_table <- font_widths f fontsize;
-        o := Font (f, fontsize) :: !o
+    | Font (id, f, fontsize) ->
+        s.width_table <- font_widths id f fontsize;
+        o := Font (id, f, fontsize) :: !o
     | Text text ->
         if text = [] then () else
           begin
@@ -151,10 +162,11 @@ let paginate tmargin bmargin papersize i =
        s.ypos <- s.ypos +. s.fontsize *. 1.3;
        o := NewLine::!o;
        if s.ypos > max_ypos then process NewPage
-   | Font (f, fs) ->
+   | Font (id, f, fs) ->
        s.font <- Some f;
+       s.fontid <- Some id;
        s.fontsize <- fs;
-       o := Font (f, fs)::!o
+       o := Font (id, f, fs)::!o
    | NewPage ->
        s.ypos <- tmargin +. s.fontsize;
        o := NewPage::!o
@@ -178,6 +190,7 @@ let make_annotations pdf annots =
    NewPage elements. Split on NewPages, typeset each page, add font
    dictionaries. New page only creates a page when that page has content. *)
 let typeset lmargin rmargin tmargin bmargin papersize pdf i =
+  Hashtbl.clear width_table_cache;
   let debug = false in
   if debug then (print_endline "***input:\n\n"; print_endline (to_string i));
   let i = layout lmargin rmargin papersize i in
@@ -222,18 +235,19 @@ let typeset lmargin rmargin tmargin bmargin papersize pdf i =
               thisdestrectangles := (minx, miny, minx +. width_of_string s.width_table cps, miny +. s.fontsize)::!thisdestrectangles
           end;
         s.xpos <- s.xpos +. width_of_string s.width_table cps
-    | Font (f, fontsize) ->
+    | Font (id, f, fontsize) ->
         let name, objnum =
-          match List.assoc_opt f !fonts with
+          match List.assoc_opt id !fonts with
           | Some objnum -> ("/F" ^ string_of_int objnum, objnum)
           | None ->
               let num = Pdftext.write_font pdf f in
               let n = "/F" ^ string_of_int num in
-                fonts := (f, num) :: !fonts;
+                fonts := (id, num) :: !fonts;
                 (n, num)
         in
-          s.width_table <- font_widths f fontsize;
+          s.width_table <- font_widths id f fontsize;
           s.font <- Some f;
+          s.fontid <- Some id;
           s.fontsize <- fontsize;
           thispagefontnums := objnum :: !thispagefontnums;
           ops := Pdfops.Op_Tf (name, fontsize)::!ops
@@ -249,7 +263,7 @@ let typeset lmargin rmargin tmargin bmargin papersize pdf i =
         thispagefontnums := [];
         thispageannotations := [];
         ops := [];
-        if s.font <> None then typeset_element (Font (unopt s.font, s.fontsize));
+        if s.font <> None && s.fontid <> None then typeset_element (Font (unopt s.fontid, unopt s.font, s.fontsize));
         s.xpos <- lmargin;
         s.ypos <- tmargin +. s.fontsize
     | BeginDocument ->
