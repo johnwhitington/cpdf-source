@@ -357,6 +357,7 @@ let addtext
             let newresources =
               match fontpack with
               | Some fontpack ->
+                  Printf.printf "New resources: a fontpack!\n";
                   let newfontdict =
                     let fd = ref fontdict in
                       iter2
@@ -368,6 +369,7 @@ let addtext
                   in
                     Pdf.add_dict_entry resources' "/Font" newfontdict
               | None ->
+                  Printf.printf "New resources: no fontpack!\n";
                   match font with
                   | Some (Pdftext.StandardFont _ as font) ->
                       let newfontdict =
@@ -472,7 +474,7 @@ let
   let font, fontpack =
     match cpdffont with
     | Cpdfembed.PreMadeFontPack f ->
-        Some (hd (fst f)), Some f
+        Some (hd (fst f)), None
     | Cpdfembed.EmbedInfo {fontfile; fontname; encoding} ->
         let embedded = Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints:(map fst (list_of_hashtbl used)) ~encoding in
           Some (hd (fst embedded)), Some embedded 
