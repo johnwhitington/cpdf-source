@@ -38,10 +38,9 @@ let of_utf8 fontpack fontsize t =
       (map
         (function
          | [] -> []
-         | (_, _, font) as h::t ->
+         | (_, n, font) as h::t ->
              let charcodes = map (fun (c, _, _) -> char_of_int c) (h::t) in
-               (*FIXME id *)
-               [Cpdftype.Font ("", font, fontsize); Cpdftype.Text charcodes])
+               [Cpdftype.Font (string_of_int n, font, fontsize); Cpdftype.Text charcodes])
         collated)
 
 (* Cpdftype codepoints from a font and PDFDocEndoding string *)
@@ -68,12 +67,11 @@ let rec shorten_text_inner l t =
 let shorten_text fontpack fontsize l t =
   let short = shorten_text_inner l t in
     if short = t then t else
-      let charcode, _, dotfont =
+      let charcode, dotfontnum, dotfont =
         unopt (Cpdfembed.get_char fontpack (int_of_char '.'))
       in
       let charcode = char_of_int charcode in
-        (* FIXME ID *)
-        short @ [Cpdftype.Font ("", dotfont, fontsize); Cpdftype.Text [charcode; charcode; charcode]]
+        short @ [Cpdftype.Font (string_of_int dotfontnum, dotfont, fontsize); Cpdftype.Text [charcode; charcode; charcode]]
 
 (* Calculate the used codepoints *)
 let used pdf fastrefnums labels title marks =
