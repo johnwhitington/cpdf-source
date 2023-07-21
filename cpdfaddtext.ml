@@ -357,7 +357,6 @@ let addtext
             let newresources =
               match fontpack with
               | Some fontpack ->
-                  Printf.printf "New resources: a fontpack!\n";
                   let newfontdict =
                     let fd = ref fontdict in
                       iter2
@@ -369,7 +368,6 @@ let addtext
                   in
                     Pdf.add_dict_entry resources' "/Font" newfontdict
               | None ->
-                  Printf.printf "New resources: no fontpack!\n";
                   match font with
                   | Some (Pdftext.StandardFont _ as font) ->
                       let newfontdict =
