@@ -99,6 +99,7 @@ let used pdf fastrefnums labels title marks =
    CropBox. Font size of title twice body font size. Null page labels added for
    TOC, others bumped up and so preserved. *)
 let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
+  Hashtbl.clear width_table_cache;
   let marks = Pdfmarks.read_bookmarks pdf in
   if marks = [] then (Pdfe.log "No bookmarks, not making table of contents\n"; pdf) else
   let labels = Pdfpagelabels.read pdf in
