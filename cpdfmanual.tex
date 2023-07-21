@@ -2245,7 +2245,6 @@ the file using a different page range each time.
   \noindent\small\begin{verbatim}cpdf ([-add-text <text-format> | -add-rectangle <size>])
       [-font <fontname>]          [-font-size <size-in-points>]
       [-load-ttf <name>=<file>]   [-embed-std14]
-      [-font-enconding
       [-color <color>]            [-line-spacing <number>]
       [-outline]                  [-linewidth <number>]
       [-underneath]               [-relative-to-cropbox]
@@ -2466,7 +2465,7 @@ specifies the size in points:
     \noindent\small\verb!cpdf -add-text "-%Page-" -font-size 36 in.pdf -o out.pdf!
   \end{framed}
 
-  \noindent Adding \texttt{-embed-std14 <directory>}, given a directory holding the GhostScript/URW free fonts, will embed subsetted font files in the PDF for any of the Standard fonts used. These free fonts can be downloaded from \url{https://github.com/ArtifexSoftware/urw-base35-fonts}. This is important, for example, for PDF/A documents, which must have their fonts embedded.
+  \noindent Adding \texttt{-embed-std14 <directory>}, given a directory holding the GhostScript/URW free fonts, will embed subsetted font files in the PDF for any of the Standard fonts used. These free fonts may be downloaded from \url{https://github.com/ArtifexSoftware/urw-base35-fonts}. This is important, for example, for PDF/A documents, which must have their fonts embedded.
 
 The standard fonts cover only the Latin characters, and are limiting. Other TrueType fonts may be introduced with the \texttt{-load-ttf} option, giving a name for, and the file name of the font. For example:
 
