@@ -91,7 +91,7 @@ let default_fontpack =
   Cpdfembed.fontpack_of_standardfont
     (Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding))
 
-let fontpacks = null_hash ()
+let fontpacks = ref (null_hash ())
 
 let empty_res () =
   {images = null_hash ();
@@ -135,8 +135,8 @@ let fresh_name s =
 (* At end of page, we keep things for which we have indirects - but ExtGStates
    aren't indirect, so they go. *)
 let reset_state () =
-  Hashtbl.clear (res ()).extgstates;
-  (res ()).page_names <- []
+  Hashtbl.clear (res ()).extgstates(*;
+  (res ()).page_names <- []*)
 
 let process_specials pdf endpage filename bates batespad num page s =
   let pairs =
@@ -154,7 +154,6 @@ let runs_of_utf8 s =
        (fun l ->
          if l = [] then [] else
            let f, n = match l with (_, n, f)::_ -> f, n | _ -> assert false in
-           (*Printf.printf "runs_of_utf8 - looking for (%s, %i) font\n" identifier n;*)
            let fontname = fst (Hashtbl.find (res ()).fonts (identifier, n)) in
            let charcodes = map (fun (c, _, _) -> char_of_int c) l in
              [Pdfops.Op_Tf (fontname, (res ()).font_size);
@@ -251,7 +250,7 @@ let rec ops_of_drawop dryrun pdf endpage filename bates batespad num page = func
   | FontPack (identifier, cpdffont, codepoints) ->
       (*Printf.printf "FontPack op: %s\n" identifier;*)
       let fontpack =
-        match Hashtbl.find fontpacks identifier with
+        match Hashtbl.find !fontpacks identifier with
         | (fontpack, _) ->
             (*Printf.printf "Cpdfdraw FontPack op: using existing fontpack %s\n" identifier;*)
             fontpack
@@ -270,7 +269,7 @@ let rec ops_of_drawop dryrun pdf endpage filename bates batespad num page = func
               | ExistingNamedFont ->
                   error "-draw does not support using an existing named font"
             in
-              Hashtbl.replace fontpacks identifier (fontpack, codepoints);
+              Hashtbl.replace !fontpacks identifier (fontpack, codepoints);
               fontpack
       in
         let ns =
@@ -290,7 +289,7 @@ let rec ops_of_drawop dryrun pdf endpage filename bates batespad num page = func
           []
   | Font (identifier, size) ->
       (*Printf.printf "Cpdfdraw Font op: Changing to stored font %s\n" identifier;*)
-      let fontpack, codepoints = Hashtbl.find fontpacks identifier in
+      let fontpack, codepoints = Hashtbl.find !fontpacks identifier in
         (res ()).current_fontpack <- (identifier, fontpack);
         if dryrun then (res ()).current_fontpack_codepoints <- codepoints;
         (res ()).font_size <- size;
@@ -383,9 +382,10 @@ let draw_single ~fast ~underneath ~filename ~bates ~batespad fast range pdf draw
       else
         begin
           let r = save_whole_stack () in
+          let saved_fontpacks = Hashtbl.copy !fontpacks in
             ignore (ops_of_drawops true pdf endpage filename bates batespad 0 (hd pages) drawops);
             restore_whole_stack r;
-            Hashtbl.clear fontpacks;
+            fontpacks := saved_fontpacks;
             (*Printf.printf "--------------------------\n";*)
             Some (ops_of_drawops false pdf endpage filename bates batespad 0 (hd pages) drawops)
         end
@@ -399,9 +399,10 @@ let draw_single ~fast ~underneath ~filename ~bates ~batespad fast range pdf draw
               | Some x -> x
               | None ->
                   let r = save_whole_stack () in
+                  let saved_fontpacks = Hashtbl.copy !fontpacks in
                     ignore (ops_of_drawops true pdf endpage filename bates batespad n p drawops);
                     restore_whole_stack r;
-                    Hashtbl.clear fontpacks;
+                    fontpacks := saved_fontpacks;
                     ops_of_drawops false pdf endpage filename bates batespad n p drawops)
            else [])
       (ilist 1 endpage)
@@ -422,7 +423,7 @@ let draw_single ~fast ~underneath ~filename ~bates ~batespad fast range pdf draw
 let draw ?(fast=false) ?(underneath=false) ~filename ~bates ~batespad fast range pdf drawops =
   (*Printf.printf "%s\n" (string_of_drawops drawops); *)
   resstack := [empty_res ()];
-  Hashtbl.clear fontpacks;
+  Hashtbl.clear !fontpacks;
   (res ()).time <- Cpdfstrftime.current_time ();
   let pdf = ref pdf in
   let range = ref range in
