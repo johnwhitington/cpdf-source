@@ -61,7 +61,7 @@ Command Line Tools}
 \vspace{12mm}
 
 {\Huge User Manual}\\
-Version 2.6 (August 2023)
+Version 2.6 (July 2023)
 
 \vspace{25mm}
 
@@ -621,7 +621,7 @@ verbosity. Under Microsoft Windows, type \texttt{cpdf.exe} instead of \texttt{cp
 \label{basicusage}
   \begin{framed}
   \small
-  \noindent\begin{verbatim}
+\noindent\begin{verbatim}
 -help                   --help                   -version 
 -o                      -i                       -idir <directory>
 -recrypt                -decrypt-force           -stdout
@@ -646,15 +646,14 @@ The operation \texttt{-help / --help} prints each operation and option together 
   \section{Input and Output Files}
   The typical pattern for usage is
   \begin{framed}
-  \noindent\small\verb!cpdf [<operation>] <input file(s)>  -o <output file>!
+  \noindent\small\verb!cpdf [<operation>] <input file(s)> -o <output file>!
   \end{framed}
   \noindent and the simplest concrete example, assuming the existence of a file
 \texttt{in.pdf} is:
   \begin{framed}
   \noindent\small\verb!cpdf in.pdf -o out.pdf!
   \end{framed}
-  \noindent This copies \texttt{in.pdf} to \texttt{out.pdf}. The input and
-output may be the same file. Of course, we should like to do more interesting
+  \noindent This copies \texttt{in.pdf} to \texttt{out.pdf}. Of course, we should like to do more interesting
 things to the PDF file than that!
 
   Files on the command line are distinguished from other input by their
@@ -773,7 +772,7 @@ being performed. Separate facilities are provided to decrypt and encrypt files
 
 When appropriate passwords are not available, the option \texttt{-decrypt-force} may be added to the command line to process the file regardless.
 
-For decryption with AES256, passwords may be Unicode. However, the password, should it contain non-ASCII characters, must be normalized by applying the SASLPrep profile (RFC 4013) of the stringprep algorithm (RFC 3454) using the Normalize and BiDi options. It must then be converted to UTF8 and truncated to 127 bytes. Cpdf does not perform this pre-processing - it takes its passwords from the command line without processing.
+For decryption with AES256, passwords may be Unicode. However the password, should it contain non-ASCII characters, must be normalized by applying the SASLPrep profile (RFC 4013) of the stringprep algorithm (RFC 3454) using the Normalize and BiDi options. It must then be converted to UTF8 and truncated to 127 bytes. Cpdf does not perform this pre-processing -- it takes its passwords from the command line without processing.
 
   \section{Standard Input and Standard Output}
 \index{standard input} \index{standard output}
@@ -2470,7 +2469,7 @@ specifies the size in points:
 The standard fonts cover only the Latin characters, and are limiting. Other TrueType fonts may be introduced with the \texttt{-load-ttf} option, giving a name for, and the file name of the font. For example:
 
   \begin{framed}
-    \noindent\small\verb!cpdf -load-ttf A=NotoSans-Black.ttf -font A "-%Page-" -o out.pdf!
+    \noindent\small\verb!cpdf -load-ttf A=NotoSans-Black.ttf -font A -add-text "-%Page-" -o out.pdf!
   \end{framed}
 
 \noindent Here we have used the Noto Sans font from Google. This and other Google fonts contain characters for a huge number of scripts, and are available free from \url{https://fonts.google.com/noto/}. But you may use any TrueType font.
@@ -3263,10 +3262,10 @@ i, ii, iii, iv, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, A-0, A-1, A-2, A-3, A-4, A-5
   \noindent\verb!cpdf -add-page-labels in.pdf 1-4 -label-style LowercaseRoman!\\
   \noindent\verb!     -o out.pdf!\\
   
-  \noindent\verb!cpdf -add-page-labels out.pdf 5-14 -o out.pdf!\\
+  \noindent\verb!cpdf -add-page-labels out.pdf 5-14 -o out2.pdf!\\
 
-  \noindent\verb!cpdf -add-page-labels out.pdf 15-20 -label-prefix "A-"!\\
-  \noindent\verb!     -label-startval 0 -o out.pdf!
+  \noindent\verb!cpdf -add-page-labels out2.pdf 15-20 -label-prefix "A-"!\\
+  \noindent\verb!     -label-startval 0 -o out3.pdf!
 \end{framed}}
 
 \noindent By default the labels begin at page number 1 for each range. To override this, we can use \texttt{-label-startval} (we used $0$ in the final command), where we want the numbers to begin at zero rather than one. The option \texttt{-labels-progress} can be added to make sure the  start value progresses between sub-ranges when the page range specified is disjoint, e.g \texttt{1-9, 30-40} or \texttt{odd}.
@@ -4040,7 +4039,7 @@ A basic text to PDF convertor is included in \texttt{cpdf}. It takes a UTF8 text
  \noindent\small\verb?     -font Courier -font-size 10 -o out.pdf?
 \end{framed}
 
-\noindent The standard paper sizes are listed in Section \ref{papersizes}, or you may specify the width and height directly, as described in the same chapter. The standard fonts are listed in chapter~\ref{chap:8}. The default font is TimesRoman and the default size is 12.
+\noindent The standard paper sizes are listed in Section \ref{papersizes}, or you may specify the width and height directly, as described in the same chapter. The standard fonts are listed in chapter~\ref{chap:8}. The default font is Times-Roman and the default size is 12.
 
 \section{Make a PDF from a PNG or JPEG image}
 \index{image!convert to PDF}
