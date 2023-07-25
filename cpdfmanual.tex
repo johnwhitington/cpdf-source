@@ -4193,6 +4193,13 @@ For PNG files, the file must be 24bit RGB with no transparency and no interlacin
 
   \end{framed}}
 
+\vfill
+\ifdefined\HCode
+  %htlatex code here
+  Please see the PDF version of the manual for the documentation to this chapter.
+\else
+
+
 \section{Basics}
 
 We can draw on an existing PDF (or a new one created with \texttt{-create-pdf} from the previous chapter) using the \texttt{-draw} operation. This provides commands for drawing vector graphics, simple text and adding images. For example:
@@ -4622,6 +4629,7 @@ The drawing operation \texttt{-newpage} creates a fresh page of the same dimensi
 
 \noindent This will create a two page PDF with "Page 1" written on page one and "Page 2" written on page two.
 
+\fi%End htlatex hack
 
 \clearpage\pagestyle{empty}
 %We wanted to call this "Chapter M", but the following commands messed up the PDF bookmarks, so this chapter will simply have to float for now, until we can return to this problem.
@@ -4974,6 +4982,11 @@ YYYY-MM-DDThh:mm:ssTZD
 \end{tabular}
 \pagestyle{fancy}
 
+\vfill
+\ifdefined\HCode
+  %htlatex code here
+\else
+   %pdflatex code here
 \chapter{Change logs}\pagestyle{empty}
 
 \section{CPDF Change Log}
@@ -4987,7 +5000,7 @@ YYYY-MM-DDThh:mm:ssTZD
 {\footnotesize\begin{alltt}
 \input{../camlpdf/Changes}
 \end{alltt}}
-
+\fi
 
 %\backmatter
 %\pagestyle{fancy}
