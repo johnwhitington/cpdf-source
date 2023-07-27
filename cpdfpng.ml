@@ -1,4 +1,4 @@
-(* Read and write non-interlaced, non-transparent 24 bit PNGs. Such a PNG may
+(* Read non-interlaced, non-transparent 24 bit PNGs. Such a PNG may
    be loaded into a PDF simply by extracting its width and height from the
    IHDR, and concatenating all its IDAT data sections together. *)
 open Pdfutil

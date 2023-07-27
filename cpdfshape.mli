@@ -19,6 +19,7 @@ type subpath = hole * closure * segment list
 
 (* A path is made from a number of subpaths. *)
 type path = winding_rule * subpath list
+
 (** The factor by which the radius of a circle is multiplied to find the length
 of the bezier control lines when approximating quarter arcs to make circles. *)
 val kappa : float

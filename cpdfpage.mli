@@ -1,7 +1,5 @@
 (** Working with pages *)
 
-val change_pattern_matrices_page : Pdf.t -> Pdftransform.transform_matrix -> Pdfpage.t -> Pdfpage.t
-
 (** Print page info (Mediabox etc) to standard output. *)
 val output_page_info : Pdf.t -> int list -> unit
 
@@ -117,3 +115,6 @@ val copy_box : string -> string -> bool -> Pdf.t -> int list -> Pdf.t
 
 (** True if all pages are "upright" i.e no rotation and (0,0)-based. *)
 val allupright : int list -> Pdf.t -> bool
+
+(** When a page is transformed, its patterns must be too. *)
+val change_pattern_matrices_page : Pdf.t -> Pdftransform.transform_matrix -> Pdfpage.t -> Pdfpage.t
