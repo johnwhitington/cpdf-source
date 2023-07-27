@@ -12,10 +12,14 @@ type element =
 
 type t = element list
 
+(** Debug printing *)
 val to_string : t -> string
 
+(** Return the font width table for a given (id, font, fontsize) combination. *)
 val font_widths : string -> Pdftext.font -> float -> float array
 
+(** Calculate the widths of a string given a font width table, and list of char codes *)
 val width_of_string : float array -> char list -> float
 
+(** [typeset lmargin rmargin tmargin bmargin papersize pdf contents] builds a list of pages of typset content. *)
 val typeset : float -> float -> float -> float -> Pdfpaper.t -> Pdf.t -> t -> Pdfpage.t list

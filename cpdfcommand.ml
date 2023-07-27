@@ -4483,7 +4483,7 @@ let go () =
       let ops = match !drawops with [("_MAIN", ops)] -> rev ops | _ -> error "not enough -end-xobj or -et" in
         write_pdf
           false
-          (Cpdfdraw.draw ~fast:args.fast ~filename:args.original_filename ~bates:args.bates ~batespad:args.batespad args.fast range pdf ops)
+          (Cpdfdraw.draw ~fast:args.fast ~underneath:args.underneath ~filename:args.original_filename ~bates:args.bates ~batespad:args.batespad range pdf ops)
   | Some (Composition json) ->
       let pdf = get_single_pdf args.op false in
       let filesize =

@@ -420,7 +420,7 @@ let draw_single ~fast ~underneath ~filename ~bates ~batespad fast range pdf draw
   in
     Pdfpage.change_pages true pdf pages
 
-let draw ?(fast=false) ?(underneath=false) ~filename ~bates ~batespad fast range pdf drawops =
+let draw ?(fast=false) ?(underneath=false) ~filename ~bates ~batespad range pdf drawops =
   (*Printf.printf "%s\n" (string_of_drawops drawops); *)
   resstack := [empty_res ()];
   Hashtbl.clear !fontpacks;

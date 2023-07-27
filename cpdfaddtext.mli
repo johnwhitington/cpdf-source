@@ -45,6 +45,19 @@ val addtexts :
     Pdf.t ->(*pdf*)
     Pdf.t
 
+
+(** Add a rectangle to the given pages. [addrectangle fast (w, h) colour outline linewidth opacity position relative_to_cropbox underneath range pdf]. *) 
+val addrectangle :
+    bool ->
+    float * float ->
+    color ->
+    bool ->
+    float ->
+    float ->
+    Cpdfposition.position ->
+    bool -> bool -> int list -> Pdf.t -> Pdf.t
+
+(**/**)
 val replace_pairs :
   Pdf.t ->
   int ->
@@ -56,13 +69,3 @@ val replace_pairs :
 val process_text :
   Cpdfstrftime.t -> string -> (string * (unit -> string)) list -> string
 
-(* Add a rectangle to the page *) 
-val addrectangle :
-    bool ->
-    float * float ->
-    color ->
-    bool ->
-    float ->
-    float ->
-    Cpdfposition.position ->
-    bool -> bool -> int list -> Pdf.t -> Pdf.t

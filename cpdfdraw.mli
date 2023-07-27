@@ -1,3 +1,5 @@
+(** Draw on PDFs *)
+
 type colspec =
    NoCol
  | RGB of float * float * float
@@ -48,9 +50,11 @@ type drawops =
   | RenderMode of int
   | Rise of float
 
+(** Calling [draw fast underneath filename bates batespad range pdf drawops] draws on
+    top of all the pages in the range. *)
 val draw : ?fast:bool ->
            ?underneath:bool ->
            filename:string ->
            bates:int ->
            batespad:int option ->
-           bool -> int list -> Pdf.t -> drawops list -> Pdf.t
+           int list -> Pdf.t -> drawops list -> Pdf.t
