@@ -2311,10 +2311,10 @@ and specs =
        " Flip pages vertically");
    ("-crop",
        Arg.String setcrop,
-       " Crop specified pages");
+       " Crop specified pages (synonym for -cropbox)");
    ("-cropbox",
        Arg.String setcrop,
-       " Crop specified pages (synonym for -crop)");
+       " Crop specified pages");
    ("-artbox",
        Arg.String setart,
        " Set art box for specified pages");
