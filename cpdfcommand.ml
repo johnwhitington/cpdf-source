@@ -1946,19 +1946,6 @@ let setmsheary s =
 let usexobj s =
   addop (Cpdfdraw.Use s)
 
-let obj_of_jpeg_data data =
-  let w, h = Cpdfjpeg.jpeg_dimensions data in
-  let d = 
-    ["/Length", Pdf.Integer (Pdfio.bytes_size data);
-     "/Filter", Pdf.Name "/DCTDecode";
-     "/BitsPerComponent", Pdf.Integer 8;
-     "/ColorSpace", Pdf.Name "/DeviceRGB";
-     "/Subtype", Pdf.Name "/Image";
-     "/Width", Pdf.Integer w;
-     "/Height", Pdf.Integer h]
-  in
-    Pdf.Stream {contents = (Pdf.Dictionary d, Pdf.Got data)}
-
 let addjpeg n =
   let name, filename =
     match String.split_on_char '=' n with
@@ -1967,49 +1954,9 @@ let addjpeg n =
   in
     try
       let data = Pdfio.bytes_of_string (contents_of_file filename) in
-        addop (Cpdfdraw.ImageXObject (name, obj_of_jpeg_data data))
+        addop (Cpdfdraw.ImageXObject (name, Cpdfimage.obj_of_jpeg_data data))
     with
       _ -> error "addjpeg: could not load JPEG"
-
-let image_of_input fobj i =
-  let pdf = Pdf.empty () in
-  let data = Pdfio.bytes_of_input i 0 i.Pdfio.in_channel_length in
-  let obj = fobj data in
-  let w = match Pdf.lookup_direct pdf "/Width" obj with Some x -> Pdf.getnum pdf x | _ -> assert false in
-  let h = match Pdf.lookup_direct pdf "/Height" obj with Some x -> Pdf.getnum pdf x | _ -> assert false in
-  let page =
-    {Pdfpage.content =
-      [Pdfops.stream_of_ops
-      [Pdfops.Op_cm (Pdftransform.matrix_of_transform [Pdftransform.Translate (0., 0.);
-                                                       Pdftransform.Scale ((0., 0.), w, h)]);
-       Pdfops.Op_Do "/I0"]];
-     Pdfpage.mediabox = Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real w; Pdf.Real h];
-     Pdfpage.resources =
-       Pdf.Dictionary
-         ["/XObject", Pdf.Dictionary ["/I0", Pdf.Indirect (Pdf.addobj pdf obj)]];
-     Pdfpage.rotate = Pdfpage.Rotate0;
-     Pdfpage.rest = Pdf.Dictionary []}
-  in
-  let pdf, pageroot = Pdfpage.add_pagetree [page] pdf in
-    Pdfpage.add_root pageroot [] pdf
-
-let obj_of_png_data data =
-  let png = Cpdfpng.read_png (Pdfio.input_of_bytes data) in
-  let d =
-    ["/Length", Pdf.Integer (Pdfio.bytes_size png.idat);
-     "/Filter", Pdf.Name "/FlateDecode";
-     "/Subtype", Pdf.Name "/Image";
-     "/BitsPerComponent", Pdf.Integer 8;
-     "/ColorSpace", Pdf.Name "/DeviceRGB";
-     "/DecodeParms", Pdf.Dictionary
-                      ["/BitsPerComponent", Pdf.Integer 8;
-                       "/Colors", Pdf.Integer 3;
-                       "/Columns", Pdf.Integer png.width;
-                       "/Predictor", Pdf.Integer 15];
-     "/Width", Pdf.Integer png.width;
-     "/Height", Pdf.Integer png.height]
-  in
-    Pdf.Stream {contents = (Pdf.Dictionary d , Pdf.Got png.idat)}
 
 let addpng n =
   let name, filename =
@@ -2018,12 +1965,12 @@ let addpng n =
     | _ -> error "addpng: bad file specification"
   in
     let data = bytes_of_string (contents_of_file filename) in
-      addop (Cpdfdraw.ImageXObject (name, obj_of_png_data data))
+      addop (Cpdfdraw.ImageXObject (name, Cpdfimage.obj_of_png_data data))
 
 let set_input_image f s =
   try
     let fh = open_in_bin s in
-    let pdf = image_of_input f (Pdfio.input_of_channel fh) in
+    let pdf = Cpdfimage.image_of_input f (Pdfio.input_of_channel fh) in
       begin try close_in fh with _ -> () end;
       args.original_filename <- s;
       args.create_objstm <- true;
@@ -2031,8 +1978,8 @@ let set_input_image f s =
   with
     Sys_error _ -> error "Image file not found"
 
-let set_input_png = set_input_image obj_of_png_data
-let set_input_jpeg = set_input_image obj_of_jpeg_data
+let set_input_png = set_input_image Cpdfimage.obj_of_png_data
+let set_input_jpeg = set_input_image Cpdfimage.obj_of_jpeg_data
 
 let addimage s =
   addop (Cpdfdraw.Image s)
@@ -2121,7 +2068,7 @@ let loadttf n =
         begin match args.op with
           Some Draw -> addop (Cpdfdraw.FontPack (fontname, embed_font_inner (EmbeddedFont name), null_hash ())) | _ -> () end
     with
-      _ -> error "addjpeg: could not load JPEG"
+      _ -> error "addtff: could not load TTF"
 
 let add_default_fontpack () =
   if not !fontpack_initialised then

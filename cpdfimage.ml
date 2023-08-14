@@ -271,3 +271,55 @@ let image_resolution pdf range dpi =
   image_resolution pdf range dpi;
   rev !image_results
 
+let obj_of_jpeg_data data =
+  let w, h = Cpdfjpeg.jpeg_dimensions data in
+  let d = 
+    ["/Length", Pdf.Integer (Pdfio.bytes_size data);
+     "/Filter", Pdf.Name "/DCTDecode";
+     "/BitsPerComponent", Pdf.Integer 8;
+     "/ColorSpace", Pdf.Name "/DeviceRGB";
+     "/Subtype", Pdf.Name "/Image";
+     "/Width", Pdf.Integer w;
+     "/Height", Pdf.Integer h]
+  in
+    Pdf.Stream {contents = (Pdf.Dictionary d, Pdf.Got data)}
+
+let obj_of_png_data data =
+  let png = Cpdfpng.read_png (Pdfio.input_of_bytes data) in
+  let d =
+    ["/Length", Pdf.Integer (Pdfio.bytes_size png.idat);
+     "/Filter", Pdf.Name "/FlateDecode";
+     "/Subtype", Pdf.Name "/Image";
+     "/BitsPerComponent", Pdf.Integer 8;
+     "/ColorSpace", Pdf.Name "/DeviceRGB";
+     "/DecodeParms", Pdf.Dictionary
+                      ["/BitsPerComponent", Pdf.Integer 8;
+                       "/Colors", Pdf.Integer 3;
+                       "/Columns", Pdf.Integer png.width;
+                       "/Predictor", Pdf.Integer 15];
+     "/Width", Pdf.Integer png.width;
+     "/Height", Pdf.Integer png.height]
+  in
+    Pdf.Stream {contents = (Pdf.Dictionary d , Pdf.Got png.idat)}
+
+let image_of_input fobj i =
+  let pdf = Pdf.empty () in
+  let data = Pdfio.bytes_of_input i 0 i.Pdfio.in_channel_length in
+  let obj = fobj data in
+  let w = match Pdf.lookup_direct pdf "/Width" obj with Some x -> Pdf.getnum pdf x | _ -> assert false in
+  let h = match Pdf.lookup_direct pdf "/Height" obj with Some x -> Pdf.getnum pdf x | _ -> assert false in
+  let page =
+    {Pdfpage.content =
+      [Pdfops.stream_of_ops
+      [Pdfops.Op_cm (Pdftransform.matrix_of_transform [Pdftransform.Translate (0., 0.);
+                                                       Pdftransform.Scale ((0., 0.), w, h)]);
+       Pdfops.Op_Do "/I0"]];
+     Pdfpage.mediabox = Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real w; Pdf.Real h];
+     Pdfpage.resources =
+       Pdf.Dictionary
+         ["/XObject", Pdf.Dictionary ["/I0", Pdf.Indirect (Pdf.addobj pdf obj)]];
+     Pdfpage.rotate = Pdfpage.Rotate0;
+     Pdfpage.rest = Pdf.Dictionary []}
+  in
+  let pdf, pageroot = Pdfpage.add_pagetree [page] pdf in
+    Pdfpage.add_root pageroot [] pdf
