@@ -24,7 +24,7 @@ OCAMLNCFLAGS = -g -safe-string
 OCAMLBCFLAGS = -g -safe-string
 OCAMLLDFLAGS = -g
 
-TARGETS := byte-code-library htdoc
+TARGETS := byte-code byte-code-library htdoc
 
 LIBINSTALL_FILES = cpdf.cma \
 $(foreach x,$(MODS),$x.mli) $(foreach x,$(MODS),$x.cmi) \
