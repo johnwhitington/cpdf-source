@@ -1,0 +1,16 @@
+opam-version: "2.0"
+maintainer: "contact@coherentgraphics.co.uk"
+license: "Coherent Graphics Ltd Non-Commercial Use License Agreement"
+build: [[make]]
+depends: [
+  "ocaml" {>= "4.10.0"}
+  "ocamlfind" {build}
+  "camlpdf" {= version}
+]
+homepage: "http://github.com/johnwhitington/cpdf-source"
+authors: ["John Whitington"]
+bug-reports: "http://github.com/johnwhitington/cpdf-source/issues"
+dev-repo: "git+https://github.com/johnwhitington/cpdf-source"
+install: [[make "install"]]
+synopsis: "High-level PDF tools based on CamlPDF"
+extra-files: ["cpdf.install" "sha=c7d851ad3b719e440d3c33806755cce4640a94ea74aa4236596e42ca9a5957ad"]
