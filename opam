@@ -13,4 +13,4 @@ bug-reports: "http://github.com/johnwhitington/cpdf-source/issues"
 dev-repo: "git+https://github.com/johnwhitington/cpdf-source"
 install: [[make "install"]]
 synopsis: "High-level PDF tools based on CamlPDF"
-extra-files: ["cpdf.install" "sha=c7d851ad3b719e440d3c33806755cce4640a94ea74aa4236596e42ca9a5957ad"]
+extra-files: ["cpdf.install" "md5=aca30b2d4fec0e5a38374cfefee70a33"]
