@@ -2,7 +2,7 @@ opam-version: "2.0"
 name: "cpdf"
 version: "2.6"
 maintainer: "contact@coherentgraphics.co.uk"
-license: "Coherent Graphics Ltd Non-Commercial Use License Agreement"
+license: "LicenseRef-Coherent-Graphics-Ltd-Non-Commercial-Use-License-Agreement"
 build: [[make]]
 depends: [
   "ocaml" {>= "4.10.0"}
