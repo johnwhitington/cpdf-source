@@ -137,6 +137,9 @@ let show_composition_json filesize pdf =
            `Tuple [`String "XRef Table"; `Int xref_table; `Float (perc xref_table)];
            `Tuple [`String "Unclassified"; `Int (filesize - r); `Float (perc (filesize - r))]]
 
+let show_composition_json_blob filesize pdf =
+  Pdfio.bytes_of_string (Cpdfyojson.Safe.pretty_to_string (show_composition_json filesize pdf))
+
 let show_composition filesize json pdf =
   let module J = Cpdfyojson.Safe in
   let j = show_composition_json filesize pdf in

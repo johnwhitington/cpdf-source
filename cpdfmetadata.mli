@@ -79,3 +79,8 @@ val set_metadata_date : Pdf.t -> string -> Pdf.t
 
 (** Expands the date ["now"] to the date now. Leaves any other string alone. *) 
 val expand_date : string -> string
+
+(** / **)
+val get_catalog_item : string -> Pdf.t -> string
+
+val get_viewer_pref_item : string -> Pdf.t -> string
