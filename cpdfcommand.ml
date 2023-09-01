@@ -505,8 +505,7 @@ type args =
    mutable toc_title : string;
    mutable toc_bookmark : bool;
    mutable idir_only_pdfs : bool;
-   mutable no_warn_rotate : bool;
-   mutable xobj_bbox : float * float * float * float}
+   mutable no_warn_rotate : bool}
 
 let args =
   {op = None;
@@ -627,8 +626,7 @@ let args =
    toc_title = "Table of Contents";
    toc_bookmark = true;
    idir_only_pdfs = false;
-   no_warn_rotate = false;
-   xobj_bbox = (0., 0., 1000., 1000.)}
+   no_warn_rotate = false}
 
 let reset_arguments () =
   args.op <- None;
@@ -733,7 +731,6 @@ let reset_arguments () =
   args.toc_title <- "Table of Contents";
   args.toc_bookmark <- true;
   args.idir_only_pdfs <- false;
-  args.xobj_bbox <- (0., 0., 1000., 1000.);
   (* Do not reset original_filename or cpdflin or was_encrypted or
    was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
    gs_malformed or gs_quiet or no-warn-rotate, since we want these to work
@@ -1126,27 +1123,8 @@ let setfontsize f =
 let setaddtext s =
   setop (AddText s) ()
 
-let parse_color s =
-  match lookup (String.lowercase_ascii s) Cpdfcolours.colours with
-  | Some c ->
-      let r = float_of_int ((c land 0xFF0000) lsr 16) /. 255. in
-      let g = float_of_int ((c land 0x00FF00) lsr 8) /. 255. in
-      let b = float_of_int (c land 0x0000FF) /. 255. in
-        Cpdfaddtext.RGB (r, g, b)
-  | None ->
-      let getnum = function
-        | Pdfgenlex.LexInt i -> float i
-        | Pdfgenlex.LexReal f -> f
-        | _ -> error "Bad color"
-      in
-        match Pdfgenlex.lex_string s with
-        | [g] -> Cpdfaddtext.Grey (getnum g)
-        | [r; g; b] -> Cpdfaddtext.RGB (getnum r, getnum g, getnum b)
-        | [c; y; m; k] -> Cpdfaddtext.CYMK (getnum c, getnum y, getnum m, getnum k)
-        | _ -> error "Bad color"
-
 let setcolor s =
-  args.color <- parse_color s
+  args.color <- Cpdfdrawcontrol.parse_color s
 
 let setopacity o =
   args.opacity <- o
@@ -1744,228 +1722,10 @@ let whingemalformed () =
   Pdfe.log "Command line must be of exactly the form\ncpdf <infile> -gs <path> -gs-malformed-force -o <outfile>\n";
   exit 1
 
-(* Drawing operations. *)
-let drawops = ref [("_MAIN", [])]
-
-let startxobj n =
-  drawops := (n, [])::!drawops
-
-let xobjbbox s =
-  args.xobj_bbox <- Cpdfcoord.parse_rectangle (Pdf.empty ()) s 
-
 let addop o =
   begin match o with Cpdfdraw.FontPack _ -> set fontpack_initialised | _ -> () end;
-  begin match args.op with Some Draw -> () | _ -> error "Need to be in drawing mode for this." end; 
-  match !drawops with
-  | (n, ops)::t -> drawops := (n, (o::ops))::t
-  | [] -> error "no drawops"
-
-let endxobj () =
-  match !drawops with
-  | (n, ops)::t ->
-      drawops := t;
-      let a, b, c, d = args.xobj_bbox in
-        addop (Cpdfdraw.FormXObject (a, b, c, d, n, rev ops))
-  | [] ->
-      error "too many -end-xobj or -et"
-
-let addbt () =
-  drawops := ("_TEXT", [])::!drawops
-
-let addet () =
-  match !drawops with
-  | ("_TEXT", ops)::t ->
-      drawops := t;
-      addop (Cpdfdraw.TextSection (rev ops))
-  | _ -> error "not in a text section at -et"
-
-let push () =
-  drawops := ("_PUSH", [])::!drawops
-
-let pop () =
-  match !drawops with
-  | ("_PUSH", ops)::t ->
-      drawops := t;
-      addop (Cpdfdraw.Qq (rev ops))
-  | _ -> error "not in a pushed section at -pop"
-
-let readfloats s = map float_of_string (String.split_on_char ' ' s)
-
-let col_of_string s =  
-  match parse_color s with
-  | Cpdfaddtext.RGB (r, g, b) -> Cpdfdraw.RGB (r, g, b)
-  | Cpdfaddtext.Grey g -> Cpdfdraw.Grey g
-  | Cpdfaddtext.CYMK (c, y, m, k) -> Cpdfdraw.CYMK (c, y, m, k)
-  | exception _ -> Cpdfdraw.NoCol
-
-let setstroke s =
-  addop (Cpdfdraw.SetStroke (col_of_string s))
-
-let setfill s =
-  addop (Cpdfdraw.SetFill (col_of_string s))
-
-let addrect s =
-  let x, y, w, h = Cpdfcoord.parse_rectangle (Pdf.empty ()) s in
-    addop (Cpdfdraw.Rect (x, y, w, h))
-
-let addto s =
-  let x, y = Cpdfcoord.parse_coordinate (Pdf.empty ()) s in
-    addop (Cpdfdraw.To (x, y))
-
-let addline s =
-  let x, y = Cpdfcoord.parse_coordinate (Pdf.empty ()) s in
-    addop (Cpdfdraw.Line (x, y))
-
-let addbezier s =
-  match readfloats s with
-  | [a; b; c; d; e; f] -> addop (Cpdfdraw.Bezier (a, b, c, d, e, f))
-  | _ -> error "-bez requires six numbers"
-  | exception _ -> error "malformed -bez"
-
-let addbezier23 s =
-  match readfloats s with
-  | [a; b; c; d] -> addop (Cpdfdraw.Bezier23 (a, b, c, d))
-  | _ -> error "-bez23 requires four numbers"
-  | exception _ -> error "malformed -bez23"
-
-let addbezier13 s =
-  match readfloats s with
-  | [a; b; c; d] -> addop (Cpdfdraw.Bezier13 (a, b, c, d))
-  | _ -> error "-bez13 requires four numbers"
-  | exception _ -> error "malformed -bez13"
-
-let addcircle s =
-  match readfloats s with
-  | [x; y; r] ->
-      let _, _, segs = hd (snd (Cpdfshape.circle x y r)) in
-        (match segs with
-         | Cpdfshape.Bezier ((a, b), _, _, _)::_ -> addop (Cpdfdraw.To (a, b))
-         | _ -> assert false);
-        iter
-          (function
-           | Cpdfshape.Bezier (_, (c, d), (e, f), (g, h)) -> addop (Cpdfdraw.Bezier (c, d, e, f, g, h))
-           | Cpdfshape.Straight _ -> assert false)
-          segs
-  | _ -> error "-circle requires three numbers"
-  | exception _ -> error "malformed -circle"
-
-let stroke () =
-  addop Cpdfdraw.Stroke
-
-let fill () =
-  addop Cpdfdraw.Fill
-
-let fillevenodd () =
-  addop Cpdfdraw.FillEvenOdd
-
-let strokefill () =
-  addop Cpdfdraw.FillStroke
-
-let strokefillevenodd () =
-  addop Cpdfdraw.FillStrokeEvenOdd
-
-let clip () =
-  addop Cpdfdraw.Clip
-
-let clipevenodd () =
-  addop Cpdfdraw.ClipEvenOdd
-
-let closepath () =
-  addop Cpdfdraw.ClosePath
-
-let setthickness s =
-  try addop (Cpdfdraw.SetLineThickness (float_of_string s)) with
-    _ -> error "Thickness must be a number"
-
-let setcap s =
-  let num =
-    match s with
-    | "butt" -> 0
-    | "round" -> 1
-    | "square" -> 2
-    | _ -> error "Unknown cap type"
-  in
-    addop (Cpdfdraw.SetLineCap num)
-
-let setjoin s =
-  let num =
-    match s with
-    | "miter" -> 0
-    | "round" -> 1
-    | "bevel" -> 2
-    | _ -> error "Unknown join type"
-  in
-    addop (Cpdfdraw.SetLineJoin num)
-
-let setmiter s = 
-  try addop (Cpdfdraw.SetMiterLimit (float_of_string s)) with
-    _ -> error "Miter limit must be a number"
-
-let setdash s =
-  try
-    let x, y =
-      let nums = readfloats s in all_but_last nums, last nums
-    in
-      addop (Cpdfdraw.SetDashPattern (x, y))
-  with
-   _ -> error "Dash pattern elements must one or more numbers"
-
-let setmatrix s =
-  match readfloats s with
-  | [a; b; c; d; e; f] ->
-      addop (Cpdfdraw.Matrix {Pdftransform.a = a; Pdftransform.b = b; Pdftransform.c = c;
-                              Pdftransform.d = d; Pdftransform.e = e; Pdftransform.f = f})
-  | _ -> error "Matrix must have six numbers"
-  | exception _ -> error "Matrix elements must be numbers"
-
-let setmtranslate s =
-  match readfloats s with
-  | [a; b] -> addop (Cpdfdraw.Matrix (Pdftransform.matrix_of_transform [Pdftransform.Translate (a, b)]))
-  | _ | exception _ -> error "-mtrans takes two numbers"
-
-let setmrotate s =
-  match readfloats s with
-  | [a; b; c] -> addop (Cpdfdraw.Matrix (Pdftransform.matrix_of_transform [Pdftransform.Rotate ((a, b), c)]))
-  | _ | exception _ -> error "-mrot takes three numbers"
-
-let setmscale s =
-  match readfloats s with
-  | [a; b; c; d] -> addop (Cpdfdraw.Matrix (Pdftransform.matrix_of_transform [Pdftransform.Scale ((a, b), c, d)]))
-  | _ | exception _ -> error "-mscale takes four numbers"
-
-let setmshearx s =
-  match readfloats s with
-  | [a; b; c] -> addop (Cpdfdraw.Matrix (Pdftransform.matrix_of_transform [Pdftransform.ShearX ((a, b), c)]))
-  | _ | exception _ -> error "-mshearx takes three numbers"
-
-let setmsheary s = 
-  match readfloats s with
-  | [a; b; c] -> addop (Cpdfdraw.Matrix (Pdftransform.matrix_of_transform [Pdftransform.ShearY ((a, b), c)]))
-  | _ | exception _ -> error "-msheary takes three numbers"
-
-let usexobj s =
-  addop (Cpdfdraw.Use s)
-
-let addjpeg n =
-  let name, filename =
-    match String.split_on_char '=' n with
-    | [name; filename] -> name, filename
-    | _ -> error "addjpeg: bad file specification"
-  in
-    try
-      let data = Pdfio.bytes_of_string (contents_of_file filename) in
-        addop (Cpdfdraw.ImageXObject (name, Cpdfimage.obj_of_jpeg_data data))
-    with
-      _ -> error "addjpeg: could not load JPEG"
-
-let addpng n =
-  let name, filename =
-    match String.split_on_char '=' n with
-    | [name; filename] -> name, filename
-    | _ -> error "addpng: bad file specification"
-  in
-    let data = bytes_of_string (contents_of_file filename) in
-      addop (Cpdfdraw.ImageXObject (name, Cpdfimage.obj_of_png_data data))
+  begin match args.op with Some Draw -> () | _ -> error "Need to be in drawing mode for this." end;
+  Cpdfdrawcontrol.addop o
 
 let set_input_image f s =
   try
@@ -1980,18 +1740,6 @@ let set_input_image f s =
 
 let set_input_png = set_input_image Cpdfimage.obj_of_png_data
 let set_input_jpeg = set_input_image Cpdfimage.obj_of_jpeg_data
-
-let addimage s =
-  addop (Cpdfdraw.Image s)
-
-let addnewpage s =
-  addop Cpdfdraw.NewPage
-
-let addopacity f =
-  addop (Cpdfdraw.Opacity f)
-
-let addsopacity f =
-  addop (Cpdfdraw.SOpacity f)
 
 let embed_font_inner font =
   match font with
@@ -2078,13 +1826,13 @@ let add_default_fontpack () =
     end
    
 let addtext s =
-  begin match !drawops with _::_::_ -> () | _ -> error "-text must be in a -bt / -et section" end;
+  begin match !Cpdfdrawcontrol.drawops with _::_::_ -> () | _ -> error "-text must be in a -bt / -et section" end;
     add_default_fontpack ();
     addop (Cpdfdraw.Font (args.fontname, args.fontsize));
     addop (Cpdfdraw.Text s)
 
 let addspecialtext s =
-  begin match !drawops with _::_::_ -> () | _ -> error "-stext must be in a -bt / -et section" end;
+  begin match !Cpdfdrawcontrol.drawops with _::_::_ -> () | _ -> error "-stext must be in a -bt / -et section" end;
     add_default_fontpack ();
     addop (Cpdfdraw.Font (args.fontname, args.fontsize));
     addop (Cpdfdraw.SpecialText s)
@@ -2894,57 +2642,57 @@ and specs =
      Arg.String settextwidth,
      " Find width of a line of text");
    ("-draw", Arg.Unit setdraw, " Begin drawing");
-   ("-rect", Arg.String addrect, " Draw rectangle");
-   ("-to", Arg.String addto, " Move to");
-   ("-line", Arg.String addline, " Add line to");
-   ("-bez", Arg.String addbezier, " Add Bezier curve to path");
-   ("-bez23", Arg.String addbezier23, " Add Bezier v-op to path");
-   ("-bez13", Arg.String addbezier13, " Add Bezier y-op to path");
-   ("-circle", Arg.String addcircle, " Add circle to path");
-   ("-strokecol", Arg.String setstroke, " Set stroke colour");
-   ("-fillcol", Arg.String setfill, " Set fill colour");
-   ("-stroke", Arg.Unit stroke, " Stroke path");
-   ("-fill", Arg.Unit fill, " Fill path");
-   ("-filleo", Arg.Unit fillevenodd, " Fill path, even odd");
-   ("-strokefill", Arg.Unit strokefill, " Stroke and fill path");
-   ("-strokefilleo", Arg.Unit strokefillevenodd, " Stroke and fill path, even odd");
-   ("-clip", Arg.Unit clip, " Clip");
-   ("-clipeo", Arg.Unit clipevenodd, " Clip, even odd");
-   ("-close", Arg.Unit closepath, " Close path");
-   ("-thick", Arg.String setthickness, " Set stroke thickness");
-   ("-cap", Arg.String setcap, " Set cap");
-   ("-join", Arg.String setjoin, " Set join");
-   ("-miter", Arg.String setmiter, " Set miter limit");
-   ("-dash", Arg.String setdash, " Set dash pattern");
-   ("-push", Arg.Unit push, " Push graphics stack");
-   ("-pop", Arg.Unit pop, " Pop graphics stack");
-   ("-matrix", Arg.String setmatrix, " Append to graphics matrix");
-   ("-mtrans", Arg.String setmtranslate, " Translate the graphics matrix");
-   ("-mrot", Arg.String setmrotate, " Rotate the graphics matrix");
-   ("-mscale", Arg.String setmscale, " Scale the graphics matrix");
-   ("-mshearx", Arg.String setmshearx, " Shear the graphics matrix in X");
-   ("-msheary", Arg.String setmshearx, " Shear the graphics matrix in Y");
-   ("-xobj-bbox", Arg.String xobjbbox, " Specify the bounding box for xobjects");
-   ("-xobj", Arg.String startxobj, " Begin saving a sequence of graphics operators");
-   ("-end-xobj", Arg.Unit endxobj, " End saving a sequence of graphics operators");
-   ("-use", Arg.String usexobj, " Use a saved sequence of graphics operators");
-   ("-draw-jpeg", Arg.String addjpeg, " Load a JPEG from file and name it");
-   ("-draw-png", Arg.String addpng, " Load a PNG from file and name it");
-   ("-image", Arg.String addimage, " Draw an image which has already been loaded");
-   ("-fill-opacity", Arg.Float addopacity, " Set opacity");
-   ("-stroke-opacity", Arg.Float addsopacity, " Set stroke opacity");
-   ("-bt", Arg.Unit addbt, " Begin text");
-   ("-et", Arg.Unit addet, " End text");
+   ("-rect", Arg.String Cpdfdrawcontrol.addrect, " Draw rectangle");
+   ("-to", Arg.String Cpdfdrawcontrol.addto, " Move to");
+   ("-line", Arg.String Cpdfdrawcontrol.addline, " Add line to");
+   ("-bez", Arg.String Cpdfdrawcontrol.addbezier, " Add Bezier curve to path");
+   ("-bez23", Arg.String Cpdfdrawcontrol.addbezier23, " Add Bezier v-op to path");
+   ("-bez13", Arg.String Cpdfdrawcontrol.addbezier13, " Add Bezier y-op to path");
+   ("-circle", Arg.String Cpdfdrawcontrol.addcircle, " Add circle to path");
+   ("-strokecol", Arg.String Cpdfdrawcontrol.setstroke, " Set stroke colour");
+   ("-fillcol", Arg.String Cpdfdrawcontrol.setfill, " Set fill colour");
+   ("-stroke", Arg.Unit Cpdfdrawcontrol.stroke, " Stroke path");
+   ("-fill", Arg.Unit Cpdfdrawcontrol.fill, " Fill path");
+   ("-filleo", Arg.Unit Cpdfdrawcontrol.fillevenodd, " Fill path, even odd");
+   ("-strokefill", Arg.Unit Cpdfdrawcontrol.strokefill, " Stroke and fill path");
+   ("-strokefilleo", Arg.Unit Cpdfdrawcontrol.strokefillevenodd, " Stroke and fill path, even odd");
+   ("-clip", Arg.Unit Cpdfdrawcontrol.clip, " Clip");
+   ("-clipeo", Arg.Unit Cpdfdrawcontrol.clipevenodd, " Clip, even odd");
+   ("-close", Arg.Unit Cpdfdrawcontrol.closepath, " Close path");
+   ("-thick", Arg.String Cpdfdrawcontrol.setthickness, " Set stroke thickness");
+   ("-cap", Arg.String Cpdfdrawcontrol.setcap, " Set cap");
+   ("-join", Arg.String Cpdfdrawcontrol.setjoin, " Set join");
+   ("-miter", Arg.String Cpdfdrawcontrol.setmiter, " Set miter limit");
+   ("-dash", Arg.String Cpdfdrawcontrol.setdash, " Set dash pattern");
+   ("-push", Arg.Unit Cpdfdrawcontrol.push, " Push graphics stack");
+   ("-pop", Arg.Unit Cpdfdrawcontrol.pop, " Pop graphics stack");
+   ("-matrix", Arg.String Cpdfdrawcontrol.setmatrix, " Append to graphics matrix");
+   ("-mtrans", Arg.String Cpdfdrawcontrol.setmtranslate, " Translate the graphics matrix");
+   ("-mrot", Arg.String Cpdfdrawcontrol.setmrotate, " Rotate the graphics matrix");
+   ("-mscale", Arg.String Cpdfdrawcontrol.setmscale, " Scale the graphics matrix");
+   ("-mshearx", Arg.String Cpdfdrawcontrol.setmshearx, " Shear the graphics matrix in X");
+   ("-msheary", Arg.String Cpdfdrawcontrol.setmsheary, " Shear the graphics matrix in Y");
+   ("-xobj-bbox", Arg.String Cpdfdrawcontrol.xobjbbox, " Specify the bounding box for xobjects");
+   ("-xobj", Arg.String Cpdfdrawcontrol.startxobj, " Begin saving a sequence of graphics operators");
+   ("-end-xobj", Arg.Unit Cpdfdrawcontrol.endxobj, " End saving a sequence of graphics operators");
+   ("-use", Arg.String Cpdfdrawcontrol.usexobj, " Use a saved sequence of graphics operators");
+   ("-draw-jpeg", Arg.String Cpdfdrawcontrol.addjpeg, " Load a JPEG from file and name it");
+   ("-draw-png", Arg.String Cpdfdrawcontrol.addpng, " Load a PNG from file and name it");
+   ("-image", Arg.String Cpdfdrawcontrol.addimage, " Draw an image which has already been loaded");
+   ("-fill-opacity", Arg.Float Cpdfdrawcontrol.addopacity, " Set opacity");
+   ("-stroke-opacity", Arg.Float Cpdfdrawcontrol.addsopacity, " Set stroke opacity");
+   ("-bt", Arg.Unit Cpdfdrawcontrol.addbt, " Begin text");
+   ("-et", Arg.Unit Cpdfdrawcontrol.addet, " End text");
    ("-text", Arg.String addtext, " Draw text");
    ("-stext", Arg.String addspecialtext, " Draw text with %specials");
-   ("-leading", Arg.Float (fun f -> addop (Cpdfdraw.Leading f)), " Set leading");
-   ("-charspace", Arg.Float (fun f -> addop (Cpdfdraw.CharSpace f)), " Set character spacing");
-   ("-wordspace", Arg.Float (fun f -> addop (Cpdfdraw.WordSpace f)), " Set word space");
-   ("-textscale", Arg.Float (fun f -> addop (Cpdfdraw.TextScale f)), " Set text scale");
-   ("-rendermode", Arg.Int (fun i -> addop (Cpdfdraw.RenderMode i)), " Set text rendering mode");
-   ("-rise", Arg.Float (fun f -> addop (Cpdfdraw.Rise f)), " Set text rise");
-   ("-nl", Arg.Unit (fun () -> addop Cpdfdraw.Newline), " New line");
-   ("-newpage", Arg.Unit addnewpage, " Move to a fresh page");
+   ("-leading", Arg.Float (fun f -> Cpdfdrawcontrol.addop (Cpdfdraw.Leading f)), " Set leading");
+   ("-charspace", Arg.Float (fun f -> Cpdfdrawcontrol.addop (Cpdfdraw.CharSpace f)), " Set character spacing");
+   ("-wordspace", Arg.Float (fun f -> Cpdfdrawcontrol.addop (Cpdfdraw.WordSpace f)), " Set word space");
+   ("-textscale", Arg.Float (fun f -> Cpdfdrawcontrol.addop (Cpdfdraw.TextScale f)), " Set text scale");
+   ("-rendermode", Arg.Int (fun i -> Cpdfdrawcontrol.addop (Cpdfdraw.RenderMode i)), " Set text rendering mode");
+   ("-rise", Arg.Float (fun f -> Cpdfdrawcontrol.addop (Cpdfdraw.Rise f)), " Set text rise");
+   ("-nl", Arg.Unit (fun () -> Cpdfdrawcontrol.addop Cpdfdraw.Newline), " New line");
+   ("-newpage", Arg.Unit Cpdfdrawcontrol.addnewpage, " Move to a fresh page");
    (* These items are undocumented *)
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit setdebugcrypt, "");
@@ -4427,7 +4175,7 @@ let go () =
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
 
-      let ops = match !drawops with [("_MAIN", ops)] -> rev ops | _ -> error "not enough -end-xobj or -et" in
+      let ops = match !Cpdfdrawcontrol.drawops with [("_MAIN", ops)] -> rev ops | _ -> error "not enough -end-xobj or -et" in
         write_pdf
           false
           (Cpdfdraw.draw ~fast:args.fast ~underneath:args.underneath ~filename:args.original_filename ~bates:args.bates ~batespad:args.batespad range pdf ops)
@@ -4529,7 +4277,7 @@ let go_withargv argv =
            (*Printf.printf "AND:%b, %s\n" islast (Array.fold_left (fun x y -> x  ^ " " ^ y) "" s);
            flprint "\n";*)
            reset_arguments ();
-           drawops := [("_MAIN", [])];
+           Cpdfdrawcontrol.drawops := [("_MAIN", [])];
            process_env_vars ();
            parse_argv () s (align_specs specs) anon_fun usage_msg;
            parse_argv () (Array.of_list ("cpdf"::!control_args)) (align_specs specs) anon_fun usage_msg;
