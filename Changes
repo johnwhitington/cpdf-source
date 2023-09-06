@@ -1,6 +1,12 @@
-2.7 (To come)
+2.7 (to come)
 
 o Added opam file in-source
+
+
+2.6.1 (September 2023)
+
+o Fixed regression in UTF8 text with -add-text
+
 
 2.6 (July 2023)
 
