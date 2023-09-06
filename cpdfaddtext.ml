@@ -50,7 +50,7 @@ let colour_op_stroke = function
   | Grey g -> Pdfops.Op_G g
   | CYMK (c, y, m, k) -> Pdfops.Op_K (c, y, m, k)
 
-let ops fontpack fontpackpdfobjs fontname longest_w x y rotate hoffset voffset outline linewidth unique_fontname unique_fontnames unique_extgstatename colour fontsize text =
+let ops font fontpack fontpackpdfobjs fontname longest_w x y rotate hoffset voffset outline linewidth unique_fontname unique_fontnames unique_extgstatename colour fontsize text =
   let textops =
     match fontpack with
     | Some fontpack ->
@@ -65,7 +65,9 @@ let ops fontpack fontpackpdfobjs fontname longest_w x y rotate hoffset voffset o
                    Pdfops.Op_Tj (implode (map (fun (charcode, _, _) -> char_of_int charcode) l))])
               collated)
     | None ->
-        [Pdfops.Op_Tf (unique_fontname, fontsize); Pdfops.Op_Tj text]
+        match font with
+        | Some font -> [Pdfops.Op_Tf (unique_fontname, fontsize); Pdfops.Op_Tj (charcodes_of_utf8 font text)]
+        | None -> [Pdfops.Op_Tf (unique_fontname, fontsize); Pdfops.Op_Tj text]
   in
     [Pdfops.Op_q;
      Pdfops.Op_BMC "/CPDFSTAMP";
@@ -346,11 +348,11 @@ let addtext
                   in
                     match font with
                     | Some f ->
-                        ops fontpack fontpackpdfobjs fontname longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
+                        ops font fontpack fontpackpdfobjs fontname longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
                         unique_fontname unique_fontnames unique_extgstatename colour fontsize text,
                         urls, x, y, hoffset, voffset, text, joffset
                     | None ->
-                        ops fontpack fontpackpdfobjs fontname longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
+                        ops font fontpack fontpackpdfobjs fontname longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
                         fontname unique_fontnames None colour fontsize text,
                         urls, x, y, hoffset, voffset, text, joffset
           in
