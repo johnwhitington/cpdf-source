@@ -1,4 +1,4 @@
-(** A loose JSON equivalent of XFDF. *)
+(** A loose JSON equivalent of XFDF for annotations. *)
 open Pdfutil
 open Cpdferror
 
@@ -29,8 +29,10 @@ let list_annotations range encoding pdf =
 (* New, JSON style *)
 let rewrite_destination f d =
   match d with
-  | Pdf.Array (Pdf.Indirect i::r) ->
+  | Pdf.Array (Pdf.Indirect i::r) -> (* out *)
       Pdf.Array (Pdf.Integer (f i)::r)
+  | Pdf.Array (Pdf.Integer i::r) -> (* in *)
+      Pdf.Array (Pdf.Indirect (f i)::r)
   | x -> x
 
 let rewrite_destinations f pdf annot =
@@ -127,7 +129,7 @@ let get_annotations_json pdf range =
   in
   let header =
     `List
-     [`Int 0;
+     [`Int ~-1;
       Cpdfjson.json_of_object ~utf8:true ~clean_strings:true pdf (fun _ -> ())
         ~no_stream_data:false ~parse_content:false
         (Pdf.Dictionary ["/CPDFJSONannotformatversion", Pdf.Integer 1])]
@@ -187,9 +189,8 @@ let set_annotations_json pdf i =
               (fun pagenum page ->
                  let forthispage = flatten (keep (function (p, _, _)::t when p = pagenum -> true | _ -> false) annotsforeachpage) in
                    iter
-                     (fun (pnum, i, o) ->
-                        let pageobjnum = match lookup pnum pageobjnummap with Some x -> x | None -> 0 in
-                        let f = fun pnum -> if pageobjnum = 0 then pnum else pageobjnum in
+                     (fun (_, i, o) ->
+                        let f = fun pnum -> match lookup pnum pageobjnummap with Some x -> x | None -> pnum in
                           Pdf.addobj_given_num pdf (i, rewrite_destinations f pdf (Cpdfjson.object_of_json o)))
                      forthispage;
                    if forthispage = [] then page else
