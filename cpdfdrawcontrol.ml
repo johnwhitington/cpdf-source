@@ -254,3 +254,24 @@ let addopacity f =
 
 let addsopacity f =
   addop (Cpdfdraw.SOpacity f)
+
+let addleading f =
+  addop (Cpdfdraw.Leading f)
+
+let addcharspace f =
+  addop (Cpdfdraw.CharSpace f)
+
+let addwordspace f =
+  addop (Cpdfdraw.WordSpace f)
+
+let addtextscale f = 
+  addop (Cpdfdraw.TextScale f)
+
+let addrendermode i =
+  addop (Cpdfdraw.RenderMode i)
+
+let addrise f =
+  addop (Cpdfdraw.Rise f)
+
+let addnewline () = 
+  addop Cpdfdraw.Newline

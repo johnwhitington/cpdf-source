@@ -43,3 +43,10 @@ val addsopacity : float -> unit
 val addbt : unit -> unit
 val addet : unit -> unit
 val addnewpage : unit -> unit
+val addleading : float -> unit
+val addcharspace : float -> unit
+val addwordspace : float -> unit
+val addtextscale : float -> unit
+val addrendermode : int -> unit
+val addrise : float -> unit
+val addnewline : unit -> unit
