@@ -382,10 +382,6 @@ type font =
   | EmbeddedFont of string
   | OtherFont of string
 
-let ttfs = null_hash ()
-
-let fontpack_initialised = ref false
-
 type args =
   {mutable op : op option;
    mutable preserve_objstm : bool;
@@ -736,7 +732,7 @@ let reset_arguments () =
    gs_malformed or gs_quiet or no-warn-rotate, since we want these to work
    across ANDs. Or squeeze options: a little odd, but we want it to happen on
    eventual output. Or -debug-force (from v2.6). *)
-  clear fontpack_initialised
+  clear Cpdfdrawcontrol.fontpack_initialised
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -1723,7 +1719,7 @@ let whingemalformed () =
   exit 1
 
 let addop o =
-  begin match o with Cpdfdraw.FontPack _ -> set fontpack_initialised | _ -> () end;
+  begin match o with Cpdfdraw.FontPack _ -> set Cpdfdrawcontrol.fontpack_initialised | _ -> () end;
   begin match args.op with Some Draw -> () | _ -> error "Need to be in drawing mode for this." end;
   Cpdfdrawcontrol.addop o
 
@@ -1765,7 +1761,7 @@ let embed_font_inner font =
   | EmbeddedFont name ->
       (*Printf.printf "embed_font: TTF\n";*)
       try
-        let fontname, font = Hashtbl.find ttfs name in
+        let fontname, font = Hashtbl.find Cpdfdrawcontrol.ttfs name in
           args.fontname <- fontname;
           font
       with
@@ -1773,9 +1769,11 @@ let embed_font_inner font =
 
 let embed_font () = embed_font_inner args.font
 
+let _ = Cpdfdrawcontrol.embed_font := embed_font
+
 let setfont f =
   try
-    let fontname, _ = Hashtbl.find ttfs f in
+    let fontname, _ = Hashtbl.find Cpdfdrawcontrol.ttfs f in
       args.font <- EmbeddedFont f;
       args.fontname <- fontname
   with
@@ -1809,7 +1807,7 @@ let loadttf n =
       let fontfile = Pdfio.bytes_of_string (contents_of_file filename) in
       let fontname = Filename.remove_extension (Filename.basename filename) in 
         Hashtbl.replace
-          ttfs
+          Cpdfdrawcontrol.ttfs
           name
           (fontname, Cpdfembed.EmbedInfo {fontfile; fontname; encoding = args.fontencoding});
         (* If drawing, add the font pack as an op. *)
@@ -1817,25 +1815,6 @@ let loadttf n =
           Some Draw -> addop (Cpdfdraw.FontPack (fontname, embed_font_inner (EmbeddedFont name), null_hash ())) | _ -> () end
     with
       _ -> error "addtff: could not load TTF"
-
-let add_default_fontpack () =
-  if not !fontpack_initialised then
-    begin
-      addop (Cpdfdraw.FontPack (args.fontname, embed_font (), null_hash ()));
-      set fontpack_initialised
-    end
-   
-let addtext s =
-  begin match !Cpdfdrawcontrol.drawops with _::_::_ -> () | _ -> error "-text must be in a -bt / -et section" end;
-    add_default_fontpack ();
-    addop (Cpdfdraw.Font (args.fontname, args.fontsize));
-    addop (Cpdfdraw.Text s)
-
-let addspecialtext s =
-  begin match !Cpdfdrawcontrol.drawops with _::_::_ -> () | _ -> error "-stext must be in a -bt / -et section" end;
-    add_default_fontpack ();
-    addop (Cpdfdraw.Font (args.fontname, args.fontsize));
-    addop (Cpdfdraw.SpecialText s)
 
 let setstderrtostdout () =
   Pdfe.logger := (fun s -> print_string s; flush stdout)
@@ -1845,6 +1824,9 @@ let settextwidth s =
 
 let setdraw () =
   args.op <- Some Draw
+
+let () = Cpdfdrawcontrol.getfontname := fun () -> args.fontname
+let () = Cpdfdrawcontrol.getfontsize := fun () -> args.fontsize
 
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
@@ -2683,8 +2665,8 @@ and specs =
    ("-stroke-opacity", Arg.Float Cpdfdrawcontrol.addsopacity, " Set stroke opacity");
    ("-bt", Arg.Unit Cpdfdrawcontrol.addbt, " Begin text");
    ("-et", Arg.Unit Cpdfdrawcontrol.addet, " End text");
-   ("-text", Arg.String addtext, " Draw text");
-   ("-stext", Arg.String addspecialtext, " Draw text with %specials");
+   ("-text", Arg.String Cpdfdrawcontrol.addtext, " Draw text");
+   ("-stext", Arg.String Cpdfdrawcontrol.addspecialtext, " Draw text with %specials");
    ("-leading", Arg.Float (fun f -> Cpdfdrawcontrol.addop (Cpdfdraw.Leading f)), " Set leading");
    ("-charspace", Arg.Float (fun f -> Cpdfdrawcontrol.addop (Cpdfdraw.CharSpace f)), " Set character spacing");
    ("-wordspace", Arg.Float (fun f -> Cpdfdrawcontrol.addop (Cpdfdraw.WordSpace f)), " Set word space");

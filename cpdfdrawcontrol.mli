@@ -1,3 +1,8 @@
+val embed_font : (unit -> Cpdfembed.cpdffont) ref
+val getfontname : (unit -> string) ref
+val getfontsize : (unit -> float) ref
+val ttfs : (string, (string * Cpdfembed.cpdffont)) Hashtbl.t
+val fontpack_initialised : bool ref
 val drawops : (string * Cpdfdraw.drawops list) list ref
 val addop : Cpdfdraw.drawops -> unit
 val parse_color : string -> Cpdfaddtext.color
@@ -50,3 +55,6 @@ val addtextscale : float -> unit
 val addrendermode : int -> unit
 val addrise : float -> unit
 val addnewline : unit -> unit
+val add_default_fontpack : string -> unit
+val addtext : string -> unit
+val addspecialtext : string -> unit

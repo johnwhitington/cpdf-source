@@ -2,6 +2,14 @@
 open Pdfutil
 open Cpdferror
 
+let embed_font = ref (fun () -> Cpdfembed.ExistingNamedFont)
+let getfontname = ref (fun () -> "")
+let getfontsize = ref (fun () -> 0.)
+
+let ttfs = null_hash ()
+
+let fontpack_initialised = ref false
+
 let drawops = ref [("_MAIN", [])]
 
 let startxobj n =
@@ -275,3 +283,22 @@ let addrise f =
 
 let addnewline () = 
   addop Cpdfdraw.Newline
+
+let add_default_fontpack fontname =
+  if not !fontpack_initialised then
+    begin
+      addop (Cpdfdraw.FontPack (fontname, !embed_font (), null_hash ()));
+      set fontpack_initialised
+    end
+   
+let addtext s =
+  begin match !drawops with _::_::_ -> () | _ -> error "-text must be in a -bt / -et section" end;
+    add_default_fontpack (!getfontname ());
+    addop (Cpdfdraw.Font (!getfontname (), !getfontsize ()));
+    addop (Cpdfdraw.Text s)
+
+let addspecialtext s =
+  begin match !drawops with _::_::_ -> () | _ -> error "-stext must be in a -bt / -et section" end;
+    add_default_fontpack (!getfontname ());
+    addop (Cpdfdraw.Font (!getfontname (), !getfontsize ()));
+    addop (Cpdfdraw.SpecialText s)
