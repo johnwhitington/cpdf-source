@@ -1827,6 +1827,8 @@ let setdraw () =
 
 let () = Cpdfdrawcontrol.getfontname := fun () -> args.fontname
 let () = Cpdfdrawcontrol.getfontsize := fun () -> args.fontsize
+let () = Cpdfdrawcontrol.setfontname := setfont
+let () = Cpdfdrawcontrol.setfontsize := fun s -> args.fontsize <- s
 
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =

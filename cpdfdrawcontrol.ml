@@ -5,6 +5,8 @@ open Cpdferror
 let embed_font = ref (fun () -> Cpdfembed.ExistingNamedFont)
 let getfontname = ref (fun () -> "")
 let getfontsize = ref (fun () -> 0.)
+let setfontname = ref (fun _ -> ())
+let setfontsize = ref (fun _ -> ())
 
 let ttfs = null_hash ()
 
