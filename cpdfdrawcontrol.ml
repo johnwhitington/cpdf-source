@@ -11,6 +11,8 @@ let setfontsize = ref (fun _ -> Printf.printf "BAD ******\n%!"; ())
 
 let ttfs = null_hash ()
 
+let loadttf name filename = ()
+
 let fontpack_initialised = ref false
 
 let drawops = ref [("_MAIN", [])]

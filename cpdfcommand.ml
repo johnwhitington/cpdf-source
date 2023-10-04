@@ -1790,7 +1790,7 @@ let setfont f =
         begin match Pdftext.standard_font_of_name ("/" ^ f) with
         | Some x -> StandardFont x
         | None ->
-            if f <> "" && hd (explode f) <> '/' then error "Custom font names must begin with /";
+            if f <> "" && hd (explode f) <> '/' then error "Font not found";
             OtherFont (convert f)
         end;
       args.fontname <-
