@@ -8,10 +8,11 @@ let getfontname = ref (fun () -> Printf.printf "BAD ***\n%!"; "")
 let getfontsize = ref (fun () -> Printf.printf "BAD ****\n%!"; 0.)
 let setfontname = ref (fun _ -> Printf.printf "BAD *****\n%!"; ())
 let setfontsize = ref (fun _ -> Printf.printf "BAD ******\n%!"; ())
+let loadttf = ref (fun _ -> Printf.printf "BAD *******\n%!"; ())
 
 let ttfs = null_hash ()
 
-let loadttf name filename = ()
+let loadttfseparate name filename = !loadttf (name ^ "=" ^ filename)
 
 let fontpack_initialised = ref false
 

@@ -1821,6 +1821,8 @@ let loadttf n =
     with
       _ -> error "addtff: could not load TTF"
 
+let () = Cpdfdrawcontrol.loadttf := loadttf
+
 let setstderrtostdout () =
   Pdfe.logger := (fun s -> print_string s; flush stdout)
 
