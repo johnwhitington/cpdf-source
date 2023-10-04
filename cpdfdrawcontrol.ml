@@ -2,11 +2,12 @@
 open Pdfutil
 open Cpdferror
 
-let embed_font = ref (fun () -> Cpdfembed.ExistingNamedFont)
-let getfontname = ref (fun () -> "")
-let getfontsize = ref (fun () -> 0.)
-let setfontname = ref (fun _ -> ())
-let setfontsize = ref (fun _ -> ())
+let embed_font = ref (fun () -> Printf.printf "BAD *\n%!"; Cpdfembed.ExistingNamedFont)
+let setdrawing = ref (fun () -> Printf.printf "BAD **\n%!"; ())
+let getfontname = ref (fun () -> Printf.printf "BAD ***\n%!"; "")
+let getfontsize = ref (fun () -> Printf.printf "BAD ****\n%!"; 0.)
+let setfontname = ref (fun _ -> Printf.printf "BAD *****\n%!"; ())
+let setfontsize = ref (fun _ -> Printf.printf "BAD ******\n%!"; ())
 
 let ttfs = null_hash ()
 

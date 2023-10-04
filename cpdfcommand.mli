@@ -8,3 +8,5 @@ val go_withargv : string array -> unit
 
 (**/**)
 exception StayOnError
+
+val null : unit -> unit

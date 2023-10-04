@@ -14,6 +14,8 @@ let exit n =
   begin try iter Sys.remove !tempfiles with _ -> exit n end;
   exit n
 
+let null () = ()
+
 let initial_file_size = ref 0
 
 let empty = Pdf.empty ()
@@ -1771,7 +1773,10 @@ let embed_font () = embed_font_inner args.font
 
 let _ = Cpdfdrawcontrol.embed_font := embed_font
 
+let _ = Cpdfdrawcontrol.setdrawing := (fun () -> args.op <- Some Draw)
+
 let setfont f =
+  (*Printf.printf "Cpdfcommand.setfont: |%s|\n%!" f;*)
   try
     let fontname, _ = Hashtbl.find Cpdfdrawcontrol.ttfs f in
       args.font <- EmbeddedFont f;
