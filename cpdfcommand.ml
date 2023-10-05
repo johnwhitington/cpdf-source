@@ -1566,6 +1566,9 @@ let setstayonerror () =
 let setembedstd14 s =
   args.embedstd14 <- Some s
 
+let _ =
+  Cpdfdrawcontrol.setembedstd14 := (fun b dir -> if b then args.embedstd14 <- Some dir else args.embedstd14 <- None)
+
 let sethardbox box =
   detect_duplicate_op (HardBox box);
   args.op <- Some (HardBox box)

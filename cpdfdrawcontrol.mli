@@ -4,6 +4,7 @@ val getfontsize : (unit -> float) ref
 val setfontname : (string -> unit) ref
 val setfontsize : (float -> unit) ref
 val setdrawing : (unit -> unit) ref
+val setembedstd14 : (bool -> string -> unit) ref
 val ttfs : (string, (string * Cpdfembed.cpdffont)) Hashtbl.t
 val loadttf : (string -> unit) ref
 val loadttfseparate : string -> string -> unit
