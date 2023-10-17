@@ -86,6 +86,8 @@ let patterns_used pdf content resources =
           ops;
         used
 
+let pats_done = null_hash ()
+
 let rec change_pattern_matrices_resources pdf tr resources names_used_with_scn =
   begin match Pdf.lookup_direct pdf "/XObject" resources with
   | Some (Pdf.Dictionary elts) ->
@@ -93,7 +95,7 @@ let rec change_pattern_matrices_resources pdf tr resources names_used_with_scn =
         (fun (k, v) -> 
            match v with
            | Pdf.Indirect i ->
-               (*Printf.printf "Processing form xobject %s for patterns\n" k;*)
+               (*Printf.printf "Processing form xobject %s for patterns\n%!" k;*)
                change_pattern_matrices_xobject pdf tr v i
            | _ -> raise (Pdf.PDFError "change_pattern_matrices_page"))
         elts
@@ -107,7 +109,7 @@ let rec change_pattern_matrices_resources pdf tr resources names_used_with_scn =
             match Hashtbl.find names_used_with_scn name with
             | exception Not_found -> (name, p)
             | _ ->
-                (*Printf.printf "Changing matrices of pattern %s\n" name;*)
+                (*Printf.printf "Changing matrices of pattern %s\n%!" name;*)
                 let old_pattern = Pdf.direct pdf p in
                   let new_pattern =
                     let existing_tr = Pdf.parse_matrix pdf "/Matrix" old_pattern in
@@ -122,28 +124,33 @@ let rec change_pattern_matrices_resources pdf tr resources names_used_with_scn =
   end
 
 and change_pattern_matrices_xobject pdf tr xobj xobjnum =
-  let xobj = Pdf.direct pdf xobj in
-  match Pdf.lookup_direct pdf "/Subtype" xobj with
-  | Some (Pdf.Name "/Form") ->
-      Pdfcodec.decode_pdfstream pdf xobj;
-      let resources = match Pdf.lookup_direct pdf "/Resources" xobj with Some d -> d | None -> Pdf.Dictionary [] in
-      let used = patterns_used pdf [xobj] resources in
-      begin match Pdf.lookup_direct pdf "/Resources" xobj with
-      | Some resources ->
-          let xobj' =
-            Pdf.add_dict_entry xobj "/Resources" (change_pattern_matrices_resources pdf tr resources used)  
-          in
-            Pdf.addobj_given_num pdf (xobjnum, xobj')
+  match xobj with
+  | Pdf.Indirect i when (try ignore (Hashtbl.find pats_done i); true with Not_found -> false) -> ()
+  | _ ->
+      begin match xobj with Pdf.Indirect i -> Hashtbl.add pats_done i () | _ -> () end;
+      let xobj = Pdf.direct pdf xobj in
+      match Pdf.lookup_direct pdf "/Subtype" xobj with
+      | Some (Pdf.Name "/Form") ->
+          Pdfcodec.decode_pdfstream pdf xobj;
+          let resources = match Pdf.lookup_direct pdf "/Resources" xobj with Some d -> d | None -> Pdf.Dictionary [] in
+          let used = patterns_used pdf [xobj] resources in
+          begin match Pdf.lookup_direct pdf "/Resources" xobj with
+          | Some resources ->
+              let xobj' =
+                Pdf.add_dict_entry xobj "/Resources" (change_pattern_matrices_resources pdf tr resources used)  
+              in
+                Pdf.addobj_given_num pdf (xobjnum, xobj')
+          | _ -> ()
+          end
       | _ -> ()
-      end
-  | _ -> ()
 
 let change_pattern_matrices_page pdf tr page =
+  Hashtbl.clear pats_done;
   (*change_softmask_matrices_page pdf tr page;*)
   let used = patterns_used pdf page.Pdfpage.content page.Pdfpage.resources in
     (*Printf.printf "Patterns for translation, due to being used as cs / CS";
     Hashtbl.iter (fun x _ -> Printf.printf "%s " x) used;
-    Printf.printf "\n";*)
+    Printf.printf "\n%!";*)
     {page with Pdfpage.resources = change_pattern_matrices_resources pdf tr page.Pdfpage.resources used}
 
 (* Output information for each page *)
@@ -466,7 +473,7 @@ let scale_pdf ?(fast=false) sxsylist pdf range =
         and matrix = Pdftransform.matrix_of_op (Pdftransform.Scale ((0., 0.), sx, sy)) in
           let transform_op =
             Pdfops.Op_cm matrix
-          and page =
+          in let page =
             change_pattern_matrices_page pdf matrix page
           in
            Pdfannot.transform_annotations pdf matrix page.Pdfpage.rest;
