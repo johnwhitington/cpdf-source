@@ -2704,7 +2704,7 @@ and usage_msg =
 "Syntax: cpdf [<operation>] <input files> [-o <output file>]\n\n\
 This is a copyrighted, commercial program, and may NOT be freely copied.\n\n\
 Version " ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ " " ^ version_date ^ "\n\n\
-To buy, visit http://www.coherentpdf.com/\n\n\
+To buy, visit https://www.coherentpdf.com/\n\n\
 Input names are distinguished by containing a '.' and may be\n\
 followed by a page range specification, for instance \"1,2,3\"\n\
 or \"1-6,9-end\" or \"even\" or \"odd\" or \"reverse\".\n\nOperations (See \
