@@ -435,9 +435,14 @@ let draw ?(fast=false) ?(underneath=false) ~filename ~bates ~batespad range pdf 
       if hd !chunks <> [] then pdf := draw_single ~fast ~underneath ~filename ~bates ~batespad fast !range !pdf (hd !chunks);
       chunks := tl !chunks;
       if !chunks <> [] then begin
+        (* If the range is just a single page, and there is a next page, move to it. Otherwise,
+           add a blank page at the end of the document. *)
         let endpage = Pdfpage.endpage !pdf in
-          pdf := Cpdfpad.padafter [endpage] !pdf;
-          range := [endpage + 1]
+          match !range with
+          | [x] when endpage > x -> range := [x + 1]
+          | _ ->
+              pdf := Cpdfpad.padafter [endpage] !pdf;
+              range := [endpage + 1]
       end
     done;
     !pdf

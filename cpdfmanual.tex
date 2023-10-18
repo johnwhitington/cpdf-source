@@ -4619,7 +4619,7 @@ NB: To use \texttt{-embed-std14}, put it before \texttt{-draw}.
    \noindent\verb!-newpage! Move to a fresh page
   \end{framed}}
 
-The drawing operation \texttt{-newpage} creates a fresh page of the same dimensions as the last page of the document, and sets the drawing range to just that page. For example:
+If the drawing range is a single page, and the next page already exists, the drawing operation \texttt{-newpage} operation moves to the next page. Otherwise, it creates a fresh page of the same dimensions as the last page of the document, and sets the drawing range to just that page. For example:
 
 \begin{framed}
  \noindent\small\verb?cpdf -create-pdf AND -draw -bt -text "Page 1" -et?\\
