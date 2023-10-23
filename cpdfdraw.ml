@@ -372,23 +372,14 @@ let save_whole_stack () =
 let restore_whole_stack r =
   resstack := r
 
-let draw_single ~fast ~underneath ~filename ~bates ~batespad fast range pdf drawops =
+let draw_single ~fast ~underneath ~filename ~bates ~batespad range pdf drawops =
   (res ()).num <- max (res ()).num (minimum_resource_number pdf range);
   let endpage = Pdfpage.endpage pdf in
   let pages = Pdfpage.pages_of_pagetree pdf in
   let ops =
     if contains_specials drawops
       then None
-      else
-        begin
-          let r = save_whole_stack () in
-          let saved_fontpacks = Hashtbl.copy !fontpacks in
-            ignore (ops_of_drawops true pdf endpage filename bates batespad 0 (hd pages) drawops);
-            restore_whole_stack r;
-            fontpacks := saved_fontpacks;
-            (*Printf.printf "--------------------------\n";*)
-            Some (ops_of_drawops false pdf endpage filename bates batespad 0 (hd pages) drawops)
-        end
+      else Some (ops_of_drawops false pdf endpage filename bates batespad 0 (hd pages) drawops)
   in
   let ss =
     map2
@@ -397,13 +388,7 @@ let draw_single ~fast ~underneath ~filename ~bates ~batespad fast range pdf draw
            then
              (match ops with
               | Some x -> x
-              | None ->
-                  let r = save_whole_stack () in
-                  let saved_fontpacks = Hashtbl.copy !fontpacks in
-                    ignore (ops_of_drawops true pdf endpage filename bates batespad n p drawops);
-                    restore_whole_stack r;
-                    fontpacks := saved_fontpacks;
-                    ops_of_drawops false pdf endpage filename bates batespad n p drawops)
+              | None -> ops_of_drawops false pdf endpage filename bates batespad n p drawops)
            else [])
       (ilist 1 endpage)
       pages
@@ -420,8 +405,25 @@ let draw_single ~fast ~underneath ~filename ~bates ~batespad fast range pdf draw
   in
     Pdfpage.change_pages true pdf pages
 
+(* Do a dry run of all the drawing to collect subset information. *)
+let dryrun ~filename ~bates ~batespad range pdf chunks =
+  let endpage = Pdfpage.endpage pdf in
+  let pages = Pdfpage.pages_of_pagetree pdf in
+  let r = save_whole_stack () in
+  let saved_fontpacks = Hashtbl.copy !fontpacks in
+  let pagenum = ref (hd range) in
+    iter
+      (fun chunk ->
+         ignore (ops_of_drawops true pdf endpage filename bates batespad !pagenum (hd pages) chunk);
+         match range with
+         | [x] when endpage > x -> pagenum := x + 1
+         | _ -> pagenum := endpage + 1)
+      chunks;
+    restore_whole_stack r;
+    fontpacks := saved_fontpacks
+
 let draw ?(fast=false) ?(underneath=false) ~filename ~bates ~batespad range pdf drawops =
-  (*Printf.printf "%s\n" (string_of_drawops drawops); *)
+  (*Printf.printf "%s\n" (string_of_drawops drawops);*)
   resstack := [empty_res ()];
   Hashtbl.clear !fontpacks;
   (res ()).time <- Cpdfstrftime.current_time ();
@@ -430,9 +432,10 @@ let draw ?(fast=false) ?(underneath=false) ~filename ~bates ~batespad range pdf 
   (* Double up a trailing NewPage so it actually does something... *)
   let drawops = match rev drawops with NewPage::t -> rev (NewPage::NewPage::t) | _ -> drawops in
   let chunks = ref (split_around (eq NewPage) drawops) in
+  dryrun ~filename ~bates ~batespad !range !pdf !chunks;
     while !chunks <> [] do
       reset_state ();
-      if hd !chunks <> [] then pdf := draw_single ~fast ~underneath ~filename ~bates ~batespad fast !range !pdf (hd !chunks);
+      if hd !chunks <> [] then pdf := draw_single ~fast ~underneath ~filename ~bates ~batespad !range !pdf (hd !chunks);
       chunks := tl !chunks;
       if !chunks <> [] then begin
         (* If the range is just a single page, and there is a next page, move to it. Otherwise,
