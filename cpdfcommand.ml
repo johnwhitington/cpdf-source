@@ -1074,7 +1074,16 @@ let displaydoctitle b =
   try setop (DisplayDocTitle (bool_of_string b)) () with
     _ -> failwith "DisplayDocTitle: must use true or false"
 
+let read_file_size s =
+  let read_int s = int_of_string (implode (rev s)) in
+    match explode (String.uppercase_ascii s) with
+    | 'B'::'G'::s -> 1024 * 1024 * 1024 * read_int s
+    | 'B'::'M'::s -> 1024 * 1024 * read_int s
+    | 'B'::'K'::s -> 1024 * read_int s
+    | s -> read_int s
+
 let setsplitbookmarks i = setop (SplitOnBookmarks i) ()
+let setsplitmax i = setop (SplitMax (read_file_size i)) ()
 let setstdout () = args.out <- Stdout
 let setstdin () = args.inputs <- [StdIn, "all", "", "", ref false, None]
 let settrans s = args.transition <- Some s
@@ -1961,6 +1970,9 @@ and specs =
    ("-split-bookmarks",
        Arg.Int setsplitbookmarks,
        " Split a file at bookmarks at a given level");
+   ("-split-max",
+       Arg.String setsplitmax,
+       " Split a file to files of a given size");
    ("-scale-page",
       Arg.String setscale,
       " -scale-page \"sx sy\" scales by (sx, sy)");
