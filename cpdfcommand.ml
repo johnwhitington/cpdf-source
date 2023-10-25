@@ -128,6 +128,7 @@ type op =
   | Merge
   | Split
   | SplitOnBookmarks of int
+  | SplitMax of int
   | Clean
   | Info
   | PageInfo
@@ -263,6 +264,7 @@ let string_of_op = function
   | Merge -> "Merge"
   | Split -> "Split"
   | SplitOnBookmarks _ -> "SplitOnBookmarks"
+  | SplitMax _ -> "SplitMax"
   | Clean -> "Clean"
   | Info -> "Info"
   | PageInfo -> "PageInfo"
@@ -839,7 +841,7 @@ let banned banlist = function
   -recrypt from -- the first or second file? *)
   | Decrypt | Encrypt | CombinePages _ -> true (* Never allowed *)
   | AddBookmarks _ | PadBefore | PadAfter | PadEvery _ | PadMultiple _ | PadMultipleBefore _
-  | Merge | Split | SplitOnBookmarks _ | RotateContents _ | Rotate _
+  | Merge | Split | SplitOnBookmarks _ | SplitMax _ | RotateContents _ | Rotate _
   | Rotateby _ | Upright | VFlip | HFlip | Impose _ ->
       mem Pdfcrypt.NoAssemble banlist
   | TwoUp|TwoUpStack|RemoveBookmarks|AddRectangle|RemoveText|
@@ -3139,6 +3141,9 @@ let split_pdf
       enc 0 original_filename squeeze spec pdf
       (splitinto chunksize (indx pdf_pages)) pdf_pages
 
+let split_max enc original_filename ~squeeze output_spec s pdf =
+  ()
+
 let getencryption pdf =
   match Pdfread.what_encryption pdf with
   | None | Some Pdfwrite.AlreadyEncrypted -> "Not encrypted"
@@ -3694,6 +3699,32 @@ let go () =
                 args.create_objstm <- args.preserve_objstm;
                 split_at_bookmarks
                   enc args.original_filename ~squeeze:args.squeeze level output_spec pdf
+        | Stdout -> error "Can't split to standard output"
+        | NoOutputSpecified -> error "Split: No output format specified"
+      end
+  | Some (SplitMax s) ->
+      begin match args.out with
+        | File output_spec ->
+            let pdf = get_single_pdf args.op false in
+              let enc =
+                match args.crypt_method with
+                | "" -> None
+                | _ ->
+                  Some
+                    {Pdfwrite.encryption_method =
+                       (match args.crypt_method with
+                       | "40bit" -> Pdfwrite.PDF40bit
+                       | "128bit" -> Pdfwrite.PDF128bit
+                       | "AES" -> Pdfwrite.AES128bit args.encrypt_metadata
+                       | "AES256" -> Pdfwrite.AES256bit args.encrypt_metadata
+                       | "AES256ISO" -> Pdfwrite.AES256bitISO args.encrypt_metadata
+                       | _ -> assert false (* Pre-checked *));
+                     Pdfwrite.owner_password = args.owner;
+                     Pdfwrite.user_password = args.user;
+                     Pdfwrite.permissions = banlist_of_args ()}
+              in
+                args.create_objstm <- args.preserve_objstm;
+                split_max enc args.original_filename ~squeeze:args.squeeze output_spec s pdf
         | Stdout -> error "Can't split to standard output"
         | NoOutputSpecified -> error "Split: No output format specified"
       end
