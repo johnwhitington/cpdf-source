@@ -3176,10 +3176,10 @@ let rec split_max_search pdf s b p q =
   if p = q then
     if split_max_fits pdf s b q then q else -1
   else
-    let half = ((q + p) / 2) in
-    if split_max_fits pdf s b (half + 1)
-      then split_max_search pdf s b (half + 1) q
-      else split_max_search pdf s b p half
+    let half = (q + p) / 2 in
+      if split_max_fits pdf s b (half + 1)
+        then split_max_search pdf s b (half + 1) q
+        else split_max_search pdf s b p half
 
 let rec split_max enc original_filename ~squeeze output_spec s pdf =
   let outs = ref [] in
@@ -3191,7 +3191,7 @@ let rec split_max enc original_filename ~squeeze output_spec s pdf =
       let newq = split_max_search pdf s !p !p !q in
         if newq = -1 then (Printf.eprintf "Failed to make small enough split at page %i\n" !p; exit 2) else
           begin
-            (*Printf.printf "Found a suitable interval (%i, %i)\n%!" !p newq;*)
+            Printf.printf "Pages %i-%i will fit...\n%!" !p newq;
             outs := ilist !p newq::!outs;
             p := newq + 1;
             q := endpage
