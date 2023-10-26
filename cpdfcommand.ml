@@ -3155,7 +3155,7 @@ let split_pdf
 
 (* Given a PDF, write the split as if we had selected pages, and return its filesize. Delete it. *)
 let split_max_fits pdf s p q =
-  Printf.printf "split_max_fits: %i, %i\n%!" p q;
+  (*Printf.printf "split_max_fits: %i, %i\n%!" p q;*)
   assert (q >= p);
   let filename = Filename.temp_file "cpdf" "sm" in
   let range = ilist p q in
@@ -3171,13 +3171,15 @@ let split_max_fits pdf s p q =
         size <= s
 
 (* Binary search on q from current value down to p to find max which fits. Returns q. Upon failure, returns -1 *)
-let rec split_max_search_down pdf s p q =
-  Printf.printf "split_max_search_down p q %i %i\n%!" p q;
-  (* If down to one page, we can split no more *)
+let rec split_max_search pdf s b p q =
+  (*Printf.printf "split_max_search b p q %i %i %i\n%!" b p q;*)
   if p = q then
-    if split_max_fits pdf s p q then q else -1
+    if split_max_fits pdf s b q then q else -1
   else
-    if split_max_fits pdf s p q then q else split_max_search_down pdf s p (q - 1) 
+    let half = ((q + p) / 2) in
+    if split_max_fits pdf s b (half + 1)
+      then split_max_search pdf s b (half + 1) q
+      else split_max_search pdf s b p half
 
 let rec split_max enc original_filename ~squeeze output_spec s pdf =
   let outs = ref [] in
@@ -3185,10 +3187,11 @@ let rec split_max enc original_filename ~squeeze output_spec s pdf =
   let endpage = Pdfpage.endpage pdf in
   let q = ref endpage in
     while !p < !q do
-      let newq = split_max_search_down pdf s !p !q in
+      (*Printf.printf "Calling split_max_search %i %i %i\n%!" !p !p !q;*)
+      let newq = split_max_search pdf s !p !p !q in
         if newq = -1 then (Printf.eprintf "Failed to make small enough split at page %i\n" !p; exit 2) else
           begin
-            Printf.printf "Found a suitable interval (%i, %i)\n%!" !p newq;
+            (*Printf.printf "Found a suitable interval (%i, %i)\n%!" !p newq;*)
             outs := ilist !p newq::!outs;
             p := newq + 1;
             q := endpage
