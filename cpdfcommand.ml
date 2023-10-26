@@ -3185,11 +3185,12 @@ let rec split_max_search pdf s b p q =
         else split_max_search pdf s b p half
 
 let rec split_max enc original_filename ~squeeze output_spec s pdf =
+  Printf.printf "***split_max\n";
   let outs = ref [] in
   let p = ref 1 in
   let endpage = Pdfpage.endpage pdf in
   let q = ref endpage in
-    while !p < !q do
+    while !p < !q || !p = endpage do
       (*Printf.printf "Calling split_max_search %i %i %i\n%!" !p !p !q;*)
       let newq = split_max_search pdf s !p !p !q in
         if newq = -1 then (Printf.eprintf "Failed to make small enough split at page %i\n" !p; exit 2) else
