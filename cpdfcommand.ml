@@ -1077,9 +1077,12 @@ let displaydoctitle b =
 let read_file_size s =
   let read_int s = int_of_string (implode (rev s)) in
     match rev (explode (String.uppercase_ascii s)) with
-    | 'B'::'G'::s -> 1024 * 1024 * 1024 * read_int s
-    | 'B'::'M'::s -> 1024 * 1024 * read_int s
-    | 'B'::'K'::s -> 1024 * read_int s
+    | 'B'::'I'::'G'::s -> 1024 * 1024 * 1024 * read_int s
+    | 'B'::'G'::s -> 1000 * 1000 * 1000 * read_int s
+    | 'B'::'I'::'M'::s -> 1024 * 1024 * read_int s
+    | 'B'::'M'::s -> 1000 * 1000 * read_int s
+    | 'B'::'I'::'K'::s -> 1024 * read_int s
+    | 'B'::'K'::s -> 1000 * read_int s
     | s -> read_int s
 
 let setsplitbookmarks i = setop (SplitOnBookmarks i) ()
