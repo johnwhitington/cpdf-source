@@ -1,5 +1,14 @@
 2.7 (to come)
 
+New features:
+
+o Split files to max size with -split-max
+
+Extended features:
+
+
+Fixes:
+
 o Added opam file in-source
 o Fixed -set-annotations with page links
 

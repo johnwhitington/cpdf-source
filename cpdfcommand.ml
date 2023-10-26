@@ -1076,7 +1076,7 @@ let displaydoctitle b =
 
 let read_file_size s =
   let read_int s = int_of_string (implode (rev s)) in
-    match explode (String.uppercase_ascii s) with
+    match rev (explode (String.uppercase_ascii s)) with
     | 'B'::'G'::s -> 1024 * 1024 * 1024 * read_int s
     | 'B'::'M'::s -> 1024 * 1024 * read_int s
     | 'B'::'K'::s -> 1024 * read_int s
@@ -3153,8 +3153,44 @@ let split_pdf
       enc 0 original_filename squeeze spec pdf
       (splitinto chunksize (indx pdf_pages)) pdf_pages
 
-let split_max enc original_filename ~squeeze output_spec s pdf =
-  ()
+(* Given a PDF, write the split as if we had selected pages, and return its filesize. Delete it. *)
+let split_max_fits pdf p q =
+  assert (q >= p);
+  let filename = Filename.temp_file "cpdf" "sm" in
+  let range = ilist p q in
+  let newpdf = Pdfpage.pdf_of_pages ~retain_numbering:args.retain_numbering pdf range in
+    let r = args.out in
+      args.out <- File filename;
+      write_pdf false newpdf;
+      args.out <- r;
+      let fh = open_in_bin filename in
+      let size = in_channel_length fh in
+        close_in fh;
+        Sys.remove filename;
+        size
+
+(* FIXME: Show that it terminates and fails if (p, q) do not change *)
+let rec split_max enc original_filename ~squeeze output_spec s pdf =
+  let outs = ref [] in
+  let p = ref 1 in
+  let endpage = Pdfpage.endpage pdf in
+  let q = ref endpage in
+    Printf.printf "Target %i: %i->%i has filesize %i\n" s !p !q (split_max_fits pdf !p !q);
+    if split_max_fits pdf !p !q <= s then
+      begin
+        Printf.printf "Fits\n";
+        outs := ilist !p !q::!outs;
+        if !q = endpage
+          then
+            begin
+              Printf.printf "All splits found, and all fit, so writing results\n";
+              assert (!outs <> []);
+              fast_write_split_pdfs enc 0 original_filename squeeze output_spec pdf (rev !outs) (Pdfpage.pages_of_pagetree pdf)
+            end
+          else Printf.printf "more to do\n"
+      end
+    else
+      Printf.printf "did not fit, chopping in half.\n"
 
 let getencryption pdf =
   match Pdfread.what_encryption pdf with
