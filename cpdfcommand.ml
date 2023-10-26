@@ -3154,7 +3154,8 @@ let split_pdf
       (splitinto chunksize (indx pdf_pages)) pdf_pages
 
 (* Given a PDF, write the split as if we had selected pages, and return its filesize. Delete it. *)
-let split_max_fits pdf p q =
+let split_max_fits pdf s p q =
+  Printf.printf "split_max_fits: %i, %i\n%!" p q;
   assert (q >= p);
   let filename = Filename.temp_file "cpdf" "sm" in
   let range = ilist p q in
@@ -3167,30 +3168,33 @@ let split_max_fits pdf p q =
       let size = in_channel_length fh in
         close_in fh;
         Sys.remove filename;
-        size
+        size <= s
 
-(* FIXME: Show that it terminates and fails if (p, q) do not change *)
+(* Binary search on q from current value down to p to find max which fits. Returns q. Upon failure, returns -1 *)
+let rec split_max_search_down pdf s p q =
+  Printf.printf "split_max_search_down p q %i %i\n%!" p q;
+  (* If down to one page, we can split no more *)
+  if p = q then
+    if split_max_fits pdf s p q then q else -1
+  else
+    if split_max_fits pdf s p q then q else split_max_search_down pdf s p (q - 1) 
+
 let rec split_max enc original_filename ~squeeze output_spec s pdf =
   let outs = ref [] in
   let p = ref 1 in
   let endpage = Pdfpage.endpage pdf in
   let q = ref endpage in
-    Printf.printf "Target %i: %i->%i has filesize %i\n" s !p !q (split_max_fits pdf !p !q);
-    if split_max_fits pdf !p !q <= s then
-      begin
-        Printf.printf "Fits\n";
-        outs := ilist !p !q::!outs;
-        if !q = endpage
-          then
-            begin
-              Printf.printf "All splits found, and all fit, so writing results\n";
-              assert (!outs <> []);
-              fast_write_split_pdfs enc 0 original_filename squeeze output_spec pdf (rev !outs) (Pdfpage.pages_of_pagetree pdf)
-            end
-          else Printf.printf "more to do\n"
-      end
-    else
-      Printf.printf "did not fit, chopping in half.\n"
+    while !p < !q do
+      let newq = split_max_search_down pdf s !p !q in
+        if newq = -1 then (Printf.eprintf "Failed to make small enough split at page %i\n" !p; exit 2) else
+          begin
+            Printf.printf "Found a suitable interval (%i, %i)\n%!" !p newq;
+            outs := ilist !p newq::!outs;
+            p := newq + 1;
+            q := endpage
+          end
+    done;
+    fast_write_split_pdfs enc 0 original_filename squeeze output_spec pdf (rev !outs) (Pdfpage.pages_of_pagetree pdf)
 
 let getencryption pdf =
   match Pdfread.what_encryption pdf with
