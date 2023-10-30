@@ -3,14 +3,15 @@
 New features:
 
 o Split files to max size with -split-max
+o Spray splits a file to multiple outputs by alternating pages
 
 Extended features:
-
 
 Fixes:
 
 o Added opam file in-source
 o Fixed -set-annotations with page links
+
 
 2.6.1 (September 2023)
 
