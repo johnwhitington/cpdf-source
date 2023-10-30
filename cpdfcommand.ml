@@ -1982,6 +1982,9 @@ and specs =
    ("-split-max",
        Arg.String setsplitmax,
        " Split a file to files of a given size");
+   ("-spray",
+       Arg.Unit (setop Spray),
+       " Split a file by alternating pages");
    ("-scale-page",
       Arg.String setscale,
       " -scale-page \"sx sy\" scales by (sx, sy)");
@@ -3110,7 +3113,7 @@ let stem s =
         (neq '.') (rev (explode (Filename.basename s))))))
 
 let fast_write_split_pdfs
-  enc splitlevel original_filename sq spec main_pdf pagenums pdf_pages
+  ?(names=[]) enc splitlevel original_filename sq spec main_pdf pagenums pdf_pages
 =
   let marks = Pdfmarks.read_bookmarks main_pdf in
     iter2
@@ -3118,9 +3121,10 @@ let fast_write_split_pdfs
          let pdf = Pdfpage.pdf_of_pages main_pdf pagenums in
            let startpage, endpage = extremes pagenums in
              let name =
-               Cpdfbookmarks.name_of_spec
-                 args.encoding marks main_pdf splitlevel spec number
-                 (stem original_filename) startpage endpage
+               if names <> [] then List.nth names (number - 1) else
+                 Cpdfbookmarks.name_of_spec
+                   args.encoding marks main_pdf splitlevel spec number
+                   (stem original_filename) startpage endpage
              in
                Pdf.remove_unreferenced pdf;
                if sq then Cpdfsqueeze.squeeze ~pagedata:args.squeeze_pagedata ?logto:!logto pdf;
@@ -3763,9 +3767,11 @@ let go () =
         | File output_spec ->
             let pdf = get_single_pdf args.op false in
             let enc = build_enc () in
+            let names, pagenums = rev !spray_outputs, (many [1] (length !spray_outputs)) in
               args.create_objstm <- args.preserve_objstm;
-              ignore pdf;
-              ignore enc
+              fast_write_split_pdfs ~names enc 0 args.original_filename args.squeeze output_spec pdf pagenums (Pdfpage.pages_of_pagetree pdf)
+              (* Build (output filename, page range) pairs *)
+              (* Write them *)
         | Stdout -> error "Can't spray to standard output"
         | NoOutputSpecified -> error "Spray: No output format specified"
       end
