@@ -3763,17 +3763,25 @@ let go () =
         | NoOutputSpecified -> error "Split: No output format specified"
       end
   | Some Spray ->
-      begin match args.out with
-        | File output_spec ->
+      begin match args.inputs, args.out with
+        | (_, pagespec, _, _, _, _)::_, File output_spec ->
             let pdf = get_single_pdf args.op false in
+            let range = ref (parse_pagespec pdf pagespec) in
             let enc = build_enc () in
-            let names, pagenums = rev !spray_outputs, (many [1] (length !spray_outputs)) in
+            let pagenums = map ref (many [] (length !spray_outputs)) in
+            let n = ref 0 in
+            while !range <> [] do
+              List.nth pagenums (!n mod (length !spray_outputs)) =| hd !range;
+              range := tl !range;
+              n += 1;
+            done;
+            let names = rev !spray_outputs in
+              iter (fun x -> if !x = [] then error "Spray: must have at least one page for each output") pagenums;
               args.create_objstm <- args.preserve_objstm;
-              fast_write_split_pdfs ~names enc 0 args.original_filename args.squeeze output_spec pdf pagenums (Pdfpage.pages_of_pagetree pdf)
-              (* Build (output filename, page range) pairs *)
-              (* Write them *)
-        | Stdout -> error "Can't spray to standard output"
-        | NoOutputSpecified -> error "Spray: No output format specified"
+              fast_write_split_pdfs ~names enc 0 args.original_filename args.squeeze output_spec pdf (map rev (map (!) pagenums)) (Pdfpage.pages_of_pagetree pdf)
+        | _, Stdout -> error "Can't spray to standard output"
+        | _, NoOutputSpecified -> error "Spray: No output format specified"
+        | _, _ -> error "Spray: no input"
       end
   | Some Presentation ->
       let pdf = get_single_pdf args.op false in
