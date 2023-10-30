@@ -129,6 +129,7 @@ type op =
   | Split
   | SplitOnBookmarks of int
   | SplitMax of int
+  | Spray
   | Clean
   | Info
   | PageInfo
@@ -265,6 +266,7 @@ let string_of_op = function
   | Split -> "Split"
   | SplitOnBookmarks _ -> "SplitOnBookmarks"
   | SplitMax _ -> "SplitMax"
+  | Spray -> "Spray"
   | Clean -> "Clean"
   | Info -> "Info"
   | PageInfo -> "PageInfo"
@@ -377,6 +379,9 @@ type output_method =
   | NoOutputSpecified
   | Stdout
   | File of string
+
+(* Outputs are also added here, in case -spray is in use. *)
+let spray_outputs = ref []
 
 (* A list of PDFs to be output, if no output method was specified. *)
 let output_pdfs : Pdf.t list ref = ref []
@@ -841,7 +846,7 @@ let banned banlist = function
   -recrypt from -- the first or second file? *)
   | Decrypt | Encrypt | CombinePages _ -> true (* Never allowed *)
   | AddBookmarks _ | PadBefore | PadAfter | PadEvery _ | PadMultiple _ | PadMultipleBefore _
-  | Merge | Split | SplitOnBookmarks _ | SplitMax _ | RotateContents _ | Rotate _
+  | Merge | Split | SplitOnBookmarks _ | SplitMax _ | Spray | RotateContents _ | Rotate _
   | Rotateby _ | Upright | VFlip | HFlip | Impose _ ->
       mem Pdfcrypt.NoAssemble banlist
   | TwoUp|TwoUpStack|RemoveBookmarks|AddRectangle|RemoveText|
@@ -918,7 +923,8 @@ let setop op () =
   args.op <- Some op
 
 let setout name =
-  args.out <- File name
+  args.out <- File name;
+  spray_outputs := name::!spray_outputs
 
 let setchunk c =
   if c > 0
@@ -3783,6 +3789,9 @@ let go () =
         | Stdout -> error "Can't split to standard output"
         | NoOutputSpecified -> error "Split: No output format specified"
       end
+  | Some Spray ->
+      ()
+      (* FIXME First deduplicate the enc stuff in this and previous entries *)
   | Some Presentation ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
