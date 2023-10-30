@@ -3290,6 +3290,23 @@ let check_clashing_output_name () =
         Pdfe.log "Warning: output file name clashes with input file name. Malformed file may result.\n"
   | _ -> ()
 
+let build_enc () =
+  match args.crypt_method with
+  | "" -> None
+  | _ ->
+    Some
+      {Pdfwrite.encryption_method =
+         (match args.crypt_method with
+         | "40bit" -> Pdfwrite.PDF40bit
+         | "128bit" -> Pdfwrite.PDF128bit
+         | "AES" -> Pdfwrite.AES128bit args.encrypt_metadata
+         | "AES256" -> Pdfwrite.AES256bit args.encrypt_metadata
+         | "AES256ISO" -> Pdfwrite.AES256bitISO args.encrypt_metadata
+         | _ -> assert false (* Pre-checked *));
+       Pdfwrite.owner_password = args.owner;
+       Pdfwrite.user_password = args.user;
+       Pdfwrite.permissions = banlist_of_args ()}
+
 (* Main function *)
 let go () =
   check_bookmarks_mistake ();
@@ -3710,28 +3727,12 @@ let go () =
       begin match args.inputs, args.out with
         | [(f, ranges, _, _, _, _)], File output_spec ->
             let pdf = get_single_pdf args.op true in
-              let enc =
-                match args.crypt_method with
-                | "" -> None
-                | _ ->
-                  Some
-                    {Pdfwrite.encryption_method =
-                       (match args.crypt_method with
-                       | "40bit" -> Pdfwrite.PDF40bit
-                       | "128bit" -> Pdfwrite.PDF128bit
-                       | "AES" -> Pdfwrite.AES128bit args.encrypt_metadata
-                       | "AES256" -> Pdfwrite.AES256bit args.encrypt_metadata
-                       | "AES256ISO" -> Pdfwrite.AES256bitISO args.encrypt_metadata
-                       | _ -> assert false (* Pre-checked *));
-                     Pdfwrite.owner_password = args.owner;
-                     Pdfwrite.user_password = args.user;
-                     Pdfwrite.permissions = banlist_of_args ()}
-              in
-                args.create_objstm <- args.preserve_objstm;
-                split_pdf
-                  enc args.original_filename args.chunksize args.linearize ~cpdflin:args.cpdflin
-                  ~preserve_objstm:args.preserve_objstm ~create_objstm:args.preserve_objstm (*yes--always create if preserving *)
-                  ~squeeze:args.squeeze output_spec pdf
+            let enc = build_enc () in
+              args.create_objstm <- args.preserve_objstm;
+              split_pdf
+                enc args.original_filename args.chunksize args.linearize ~cpdflin:args.cpdflin
+                ~preserve_objstm:args.preserve_objstm ~create_objstm:args.preserve_objstm (*yes--always create if preserving *)
+                ~squeeze:args.squeeze output_spec pdf
         | _, Stdout -> error "Can't split to standard output"
         | _, NoOutputSpecified -> error "Split: No output format specified"
         | _ -> error "Split: bad parameters"
@@ -3740,26 +3741,10 @@ let go () =
       begin match args.out with
         | File output_spec ->
             let pdf = get_single_pdf args.op false in
-              let enc =
-                match args.crypt_method with
-                | "" -> None
-                | _ ->
-                  Some
-                    {Pdfwrite.encryption_method =
-                       (match args.crypt_method with
-                       | "40bit" -> Pdfwrite.PDF40bit
-                       | "128bit" -> Pdfwrite.PDF128bit
-                       | "AES" -> Pdfwrite.AES128bit args.encrypt_metadata
-                       | "AES256" -> Pdfwrite.AES256bit args.encrypt_metadata
-                       | "AES256ISO" -> Pdfwrite.AES256bitISO args.encrypt_metadata
-                       | _ -> assert false (* Pre-checked *));
-                     Pdfwrite.owner_password = args.owner;
-                     Pdfwrite.user_password = args.user;
-                     Pdfwrite.permissions = banlist_of_args ()}
-              in
-                args.create_objstm <- args.preserve_objstm;
-                split_at_bookmarks
-                  enc args.original_filename ~squeeze:args.squeeze level output_spec pdf
+            let enc = build_enc () in
+              args.create_objstm <- args.preserve_objstm;
+              split_at_bookmarks
+                enc args.original_filename ~squeeze:args.squeeze level output_spec pdf
         | Stdout -> error "Can't split to standard output"
         | NoOutputSpecified -> error "Split: No output format specified"
       end
@@ -3767,31 +3752,23 @@ let go () =
       begin match args.out with
         | File output_spec ->
             let pdf = get_single_pdf args.op false in
-              let enc =
-                match args.crypt_method with
-                | "" -> None
-                | _ ->
-                  Some
-                    {Pdfwrite.encryption_method =
-                       (match args.crypt_method with
-                       | "40bit" -> Pdfwrite.PDF40bit
-                       | "128bit" -> Pdfwrite.PDF128bit
-                       | "AES" -> Pdfwrite.AES128bit args.encrypt_metadata
-                       | "AES256" -> Pdfwrite.AES256bit args.encrypt_metadata
-                       | "AES256ISO" -> Pdfwrite.AES256bitISO args.encrypt_metadata
-                       | _ -> assert false (* Pre-checked *));
-                     Pdfwrite.owner_password = args.owner;
-                     Pdfwrite.user_password = args.user;
-                     Pdfwrite.permissions = banlist_of_args ()}
-              in
-                args.create_objstm <- args.preserve_objstm;
-                split_max enc args.original_filename ~squeeze:args.squeeze output_spec s pdf
+            let enc = build_enc () in
+              args.create_objstm <- args.preserve_objstm;
+              split_max enc args.original_filename ~squeeze:args.squeeze output_spec s pdf
         | Stdout -> error "Can't split to standard output"
         | NoOutputSpecified -> error "Split: No output format specified"
       end
   | Some Spray ->
-      ()
-      (* FIXME First deduplicate the enc stuff in this and previous entries *)
+      begin match args.out with
+        | File output_spec ->
+            let pdf = get_single_pdf args.op false in
+            let enc = build_enc () in
+              args.create_objstm <- args.preserve_objstm;
+              ignore pdf;
+              ignore enc
+        | Stdout -> error "Can't spray to standard output"
+        | NoOutputSpecified -> error "Spray: No output format specified"
+      end
   | Some Presentation ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
@@ -4065,19 +4042,7 @@ let go () =
   | Some Encrypt ->
       let pdf = get_single_pdf args.op false in
         let pdf = Cpdfsqueeze.recompress_pdf pdf
-        and encryption =
-          {Pdfwrite.encryption_method =
-             (match args.crypt_method with
-             | "40bit" -> Pdfwrite.PDF40bit
-             | "128bit" -> Pdfwrite.PDF128bit
-             | "AES" -> Pdfwrite.AES128bit args.encrypt_metadata
-             | "AES256" -> Pdfwrite.AES256bit args.encrypt_metadata
-             | "AES256ISO" -> Pdfwrite.AES256bitISO args.encrypt_metadata
-             | _ -> assert false (* Pre-checked *));
-           Pdfwrite.owner_password = args.owner;
-           Pdfwrite.user_password = args.user;
-           Pdfwrite.permissions = banlist_of_args ()}
-        in
+        and encryption = build_enc () in
           Pdf.remove_unreferenced pdf;
           if not args.keepversion then
             begin
@@ -4088,7 +4053,7 @@ let go () =
                 let newversion = if args.create_objstm then 5 else newversion in
                   if pdf.Pdf.major = 1 then pdf.Pdf.minor <- max pdf.Pdf.minor newversion
             end;
-            write_pdf ~encryption:(Some encryption) false pdf
+            write_pdf ~encryption false pdf
   | Some Decrypt ->
       args.recrypt <- false;
       write_pdf false (get_single_pdf args.op false)
