@@ -3158,8 +3158,7 @@ let split_pdf
 
 (* Given a PDF, write the split as if we had selected pages, and return its filesize. Delete it. *)
 let split_max_fits pdf s p q =
-  (*Printf.printf "split_max_fits: %i, %i\n%!" p q;*)
-  assert (q >= p);
+  if q < p then error "split_max_fits" else
   let filename = Filename.temp_file "cpdf" "sm" in
   let range = ilist p q in
   let newpdf = Pdfpage.pdf_of_pages ~retain_numbering:args.retain_numbering pdf range in
@@ -3175,7 +3174,6 @@ let split_max_fits pdf s p q =
 
 (* Binary search on q from current value down to p to find max which fits. Returns q. Upon failure, returns -1 *)
 let rec split_max_search pdf s b p q =
-  (*Printf.printf "split_max_search b p q %i %i %i\n%!" b p q;*)
   if p = q then
     if split_max_fits pdf s b q then q else -1
   else
@@ -3185,15 +3183,13 @@ let rec split_max_search pdf s b p q =
         else split_max_search pdf s b p half
 
 let rec split_max enc original_filename ~squeeze output_spec s pdf =
-  Printf.printf "***split_max\n";
   let outs = ref [] in
   let p = ref 1 in
   let endpage = Pdfpage.endpage pdf in
   let q = ref endpage in
     while !p < !q || !p = endpage do
-      (*Printf.printf "Calling split_max_search %i %i %i\n%!" !p !p !q;*)
       let newq = split_max_search pdf s !p !p !q in
-        if newq = -1 then (Printf.eprintf "Failed to make small enough split at page %i\n" !p; exit 2) else
+        if newq = -1 then (Printf.eprintf "Failed to make small enough split at page %i. No files written.\n" !p; exit 2) else
           begin
             Printf.printf "Pages %i-%i will fit...\n%!" !p newq;
             outs := ilist !p newq::!outs;
