@@ -297,7 +297,15 @@ let list_fonts pdf range =
 let string_of_font (p, n, s, b, e) =
   Printf.sprintf "%i %s %s %s %s\n" p n s b e
 
-let print_fonts pdf range =
-  flprint
-    (fold_left ( ^ ) "" (map string_of_font (list_fonts pdf range)))
+let json_of_font (pagenum, name, subtype, basefont, encoding) =
+  `Assoc
+    [("page", `Int pagenum);
+     ("name", `String name);
+     ("subtype", `String subtype);
+     ("basefont", `String basefont);
+     ("encoding", `String encoding)]
 
+let print_fonts ?(json=false) pdf range =
+  if json
+    then flprint (Cpdfyojson.Safe.pretty_to_string (`List (map json_of_font (list_fonts pdf range))))
+    else flprint (fold_left ( ^ ) "" (map string_of_font (list_fonts pdf range)))

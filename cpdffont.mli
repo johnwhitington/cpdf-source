@@ -3,7 +3,7 @@
 (** {2 Listing fonts} *)
 
 (** Print font list to stdout *)
-val print_fonts : Pdf.t -> int list -> unit
+val print_fonts : ?json:bool -> Pdf.t -> int list -> unit
 
 (** Return font list. Page number, name, subtype, basefont, encoding.  *)
 val list_fonts : Pdf.t -> int list -> (int * string * string * string * string) list

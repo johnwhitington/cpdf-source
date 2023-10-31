@@ -3499,7 +3499,7 @@ let go () =
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some Fonts) true in
           let range = parse_pagespec_allow_empty pdf pagespec in
-            Cpdffont.print_fonts pdf range
+            Cpdffont.print_fonts ~json:args.format_json pdf range
       | _ -> error "-list-fonts: bad command line"
       end
   | Some ListBookmarks ->
