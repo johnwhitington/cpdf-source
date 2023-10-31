@@ -4,6 +4,9 @@ New features:
 
 o Split files to max size with -split-max
 o Spray splits a file to multiple outputs by alternating pages
+o List document and page info in JSON format
+o List page labels in JSON format
+o List fonts in JSON format
 
 Extended features:
 

@@ -1154,6 +1154,22 @@ let setaddbookmarksjson s =
   setop (AddBookmarks s) ();
   args.format_json <- true
 
+let setlistfontsjson () =
+  setop Fonts ();
+  args.format_json <- true
+
+let setinfojson () =
+  setop Info ();
+  args.format_json <- true
+
+let setpageinfojson () =
+  setop PageInfo ();
+  args.format_json <- true
+
+let setprintpagelabelsjson () =
+  setop PrintPageLabels ();
+  args.format_json <- true
+
 let setlistbookmarksjson () =
   setop ListBookmarks ();
   args.format_json <- true
@@ -2328,12 +2344,21 @@ and specs =
    ("-list-fonts",
        Arg.Unit (setop Fonts),
        " Output font list");
+   ("-list-fonts-json",
+       Arg.Unit setlistfontsjson,
+       " Output font list in JSON format");
    ("-info",
        Arg.Unit (setop Info),
        " Output file information");
+   ("-info-json",
+       Arg.Unit setinfojson,
+       " Output file information in JSON format");
    ("-page-info",
        Arg.Unit (setop PageInfo),
        " Output page information");
+   ("-page-info-json",
+       Arg.Unit setpageinfojson,
+       " Output page information in JSON format");
    ("-set-author",
        Arg.String setauthor,
        " Set Author");
@@ -2499,6 +2524,9 @@ and specs =
    ("-print-page-labels",
       Arg.Unit (setop PrintPageLabels),
       " Print page labels");
+   ("-print-page-labels-json",
+      Arg.Unit setprintpagelabelsjson,
+      " Print page labels in JSON format");
    ("-remove-page-labels",
       Arg.Unit (setop RemovePageLabels),
       " Remove page labels");
