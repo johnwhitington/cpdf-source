@@ -1,7 +1,7 @@
 (** Working with pages *)
 
 (** Print page info (Mediabox etc) to standard output. *)
-val output_page_info : Pdf.t -> int list -> unit
+val output_page_info : ?json:bool -> Pdf.t -> int list -> unit
 
 (** Given a function from page number and page to page, a document, and a list
 of page numbers to apply it to, apply the function to all those pages. *)

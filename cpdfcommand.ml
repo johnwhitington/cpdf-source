@@ -3489,7 +3489,7 @@ let go () =
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf args.op true in
             let range = parse_pagespec_allow_empty pdf pagespec in
-              Cpdfpage.output_page_info pdf range
+              Cpdfpage.output_page_info ~json:args.format_json pdf range
       | _ -> error "list-bookmarks: bad command line"
       end
   | Some Metadata ->

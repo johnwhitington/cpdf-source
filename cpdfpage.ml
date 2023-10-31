@@ -154,7 +154,7 @@ let change_pattern_matrices_page pdf tr page =
     {page with Pdfpage.resources = change_pattern_matrices_resources pdf tr page.Pdfpage.resources used}
 
 (* Output information for each page *)
-let output_page_info pdf range =
+let output_page_info ?(json=false) pdf range =
   let pages = Pdfpage.pages_of_pagetree pdf
   and labels = Pdfpagelabels.read pdf in
     let getbox page box =
@@ -173,19 +173,41 @@ let output_page_info pdf range =
     and rotation page =
       Pdfpage.int_of_rotation page.Pdfpage.rotate
     in
-      iter
-        (fun pnum ->
-           let page = select pnum pages in
-             Printf.printf "Page %i:\n" pnum;
-             Printf.printf "Label: %s\n"
-               (try Pdfpagelabels.pagelabeltext_of_pagenumber pnum labels with Not_found -> "");
-             Printf.printf "MediaBox: %s\n" (getbox page "/MediaBox");
-             Printf.printf "CropBox: %s\n" (getbox page "/CropBox");
-             Printf.printf "BleedBox: %s\n" (getbox page "/BleedBox");
-             Printf.printf "TrimBox: %s\n" (getbox page "/TrimBox");
-             Printf.printf "ArtBox: %s\n" (getbox page "/ArtBox");
-             Printf.printf "Rotation: %i\n" (rotation page))
-        range
+      let json_entry_of_pnum pnum =
+        let getbox_json page box =
+          match getbox page box with
+          | "" -> `Null
+          | s ->
+            let a, b, c, d = Cpdfcoord.parse_rectangle (Pdf.empty ()) s in
+              `List [`Float a; `Float b; `Float c; `Float d]
+        in
+        let page = select pnum pages in
+          `Assoc
+            [("Page", `Int pnum);
+             ("Label", (`String (try Pdfpagelabels.pagelabeltext_of_pagenumber pnum labels with Not_found -> "")));
+             ("MediaBox", getbox_json page "/MediaBox");
+             ("CropBox", getbox_json page "/CropBox");
+             ("BleedBox", getbox_json page "/BleedBox");
+             ("TrimBox", getbox_json page "/TrimBox");
+             ("ArtBox", getbox_json page "/ArtBox");
+             ("Rotation", `Int (rotation page))]
+      in
+        if json then
+          flprint (Cpdfyojson.Safe.pretty_to_string (`List (map json_entry_of_pnum range)))
+        else
+          iter
+            (fun pnum ->
+               let page = select pnum pages in
+                 Printf.printf "Page %i:\n" pnum;
+                 Printf.printf "Label: %s\n"
+                   (try Pdfpagelabels.pagelabeltext_of_pagenumber pnum labels with Not_found -> "");
+                 Printf.printf "MediaBox: %s\n" (getbox page "/MediaBox");
+                 Printf.printf "CropBox: %s\n" (getbox page "/CropBox");
+                 Printf.printf "BleedBox: %s\n" (getbox page "/BleedBox");
+                 Printf.printf "TrimBox: %s\n" (getbox page "/TrimBox");
+                 Printf.printf "ArtBox: %s\n" (getbox page "/ArtBox");
+                 Printf.printf "Rotation: %i\n" (rotation page))
+            range
 
 let process_pages f pdf range =
   let pages = Pdfpage.pages_of_pagetree pdf in
