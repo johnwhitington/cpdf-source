@@ -4149,9 +4149,19 @@ let go () =
         write_pdf false pdf
   | Some PrintPageLabels ->
       let pdf = get_single_pdf args.op true in
-        iter
-          print_string
-          (map Pdfpagelabels.string_of_pagelabel (Pdfpagelabels.read pdf))
+        if args.format_json then
+          let json_of_pagelabel l =
+            `Assoc
+              [("labelstyle", `String (Pdfpagelabels.string_of_labelstyle l.Pdfpagelabels.labelstyle));
+               ("labelprefix", begin match l.Pdfpagelabels.labelprefix with None -> `Null | Some s -> `String s end);
+               ("startpage", `Int l.Pdfpagelabels.startpage);
+               ("startvalue", `Int l.Pdfpagelabels.startvalue)]
+          in
+            flprint (Cpdfyojson.Safe.pretty_to_string (`List (map json_of_pagelabel (Pdfpagelabels.read pdf))))
+        else
+          iter
+            print_string
+            (map Pdfpagelabels.string_of_pagelabel (Pdfpagelabels.read pdf))
   | Some (RemoveDictEntry key) ->
       let pdf = get_single_pdf args.op true in
         Cpdftweak.remove_dict_entry pdf key args.dict_entry_search;
