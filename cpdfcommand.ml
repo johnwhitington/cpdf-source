@@ -3178,8 +3178,7 @@ let split_max_fits pdf s p q =
       args.out <- r;
       let fh = open_in_bin filename in
       let size = in_channel_length fh in
-        close_in fh;
-        Sys.remove filename;
+        begin try close_in fh; Sys.remove filename with _ -> () end;
         size <= s
 
 (* Binary search on q from current value down to p to find max which fits. Returns q. Upon failure, returns -1 *)
@@ -3201,7 +3200,7 @@ let rec split_max enc original_filename ~squeeze output_spec s pdf =
       let newq = split_max_search pdf s !p !p !q in
         if newq = -1 then (Printf.eprintf "Failed to make small enough split at page %i. No files written.\n" !p; exit 2) else
           begin
-            Printf.printf "Pages %i-%i will fit...\n%!" !p newq;
+            (*Printf.printf "Pages %i-%i will fit...\n%!" !p newq;*)
             outs := ilist !p newq::!outs;
             p := newq + 1;
             q := endpage
