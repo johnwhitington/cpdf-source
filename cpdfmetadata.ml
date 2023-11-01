@@ -334,7 +334,7 @@ let determine_subformat pdf =
         let _, tree = xmltree_of_bytes metadata in
         flprint (string_of_xmltree tree);
           (* PDF/E *)
-          match get_data_for pdfaid "ISO_PDFEVersion" tree with
+          match get_data_for pdfe "ISO_PDFEVersion" tree with
           | Some s ->
               (* If also a pdfxid, print that in parentheses *)
               s
