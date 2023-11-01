@@ -196,21 +196,21 @@ let output_info ?(json=ref [("none", `Null)]) encoding pdf =
     if notjson then Printf.printf "Pages: %i\n" (Pdfpage.endpage pdf);
     json =| ("Pages", `Int (Pdfpage.endpage pdf));
     if notjson then Printf.printf "Title: %s\n" (getstring "/Title");
-    json =| ("Title", `String (getstring "/Title"));
+    json =| ("Title", if getstring "/Title" = "" then `Null else `String (getstring "/Title"));
     if notjson then Printf.printf "Author: %s\n" (getstring "/Author");
-    json =| ("Author", `String (getstring "/Author"));
+    json =| ("Author", if getstring "/Author" = "" then `Null else `String (getstring "/Author"));
     if notjson then Printf.printf "Subject: %s\n" (getstring "/Subject");
-    json =| ("Subject", `String (getstring "/Subject"));
+    json =| ("Subject", if getstring "/Subject" = "" then `Null else `String (getstring "/Subject"));
     if notjson then Printf.printf "Keywords: %s\n" (getstring "/Keywords");
-    json =| ("Keywords", `String (getstring "/Keywords"));
+    json =| ("Keywords", if getstring "/Keywords" = "" then `Null else `String (getstring "/Keywords"));
     if notjson then  Printf.printf "Creator: %s\n" (getstring "/Creator");
-    json =| ("Creator", `String (getstring "/Creator"));
+    json =| ("Creator", if getstring "/Creator" = "" then `Null else `String (getstring "/Creator"));
     if notjson then Printf.printf "Producer: %s\n" (getstring "/Producer");
-    json =| ("Producer", `String (getstring "/Producer"));
+    json =| ("Producer", if getstring "/Producer" = "" then `Null else `String (getstring "/Producer"));
     if notjson then Printf.printf "Created: %s\n" (getstring "/CreationDate");
-    json =| ("Created", `String (getstring "/CreationDate"));
+    json =| ("Created", if getstring "/CreationDate" = "" then `Null else `String (getstring "/CreationDate"));
     if notjson then Printf.printf "Modified: %s\n" (getstring "/ModDate");
-    json =| ("Modified", `String (getstring "/ModDate"));
+    json =| ("Modified", if getstring "/ModDate" = "" then `Null else `String (getstring "/ModDate"));
     if notjson then Printf.printf "Trapped: %s\n" (getstring "/Trapped");
     json =| ("Trapped", `Bool (bool_of_string (String.lowercase_ascii (getstring "/Trapped"))));
     if notjson then Printf.printf "PageMode: %s\n" (get_catalog_item "/PageMode" pdf);
@@ -326,7 +326,7 @@ let rec get_data_for namespace name = function
    PDF/VT: <pdfvtid:GTS_PDFVTVersion>PDF/VT-1</pdfvtid:GTS_PDFVTVersion>
    PDF/UA: <pdfuaid:part>1</pdfuaid:part>
    PDF/X: <pdfxid:GTS_PDFXVersion>PDF/X-4</pdfxid:GTS_PDFXVersion> (Fallback DID /GTS_PDFXVersion) *)
-let determine_subformat pdf =
+let determine_subformats pdf =
   let formats = ref [] in
   let fallback_pdfx () =
     match Pdf.lookup_direct pdf "/Info" pdf.Pdf.trailerdict with
@@ -340,7 +340,7 @@ let determine_subformat pdf =
     match get_metadata pdf with
     | None ->
         fallback_pdfx ();
-        combine_with_commas !formats
+        !formats
     | Some metadata ->
         let _, tree = xmltree_of_bytes metadata in
           (* PDF/E *)
@@ -374,7 +374,7 @@ let determine_subformat pdf =
           | Some s -> formats =| s
           | None -> ()
           end;
-          combine_with_commas !formats
+          !formats
 
 let output_xmp_info ?(json=ref [("none", `Null)]) encoding pdf =
   let notjson = !json = [("none", `Null)] in
@@ -390,7 +390,9 @@ let output_xmp_info ?(json=ref [("none", `Null)]) encoding pdf =
         else
           json =| (title, `String data)
   in
-    Printf.printf "Subformats: %s\n" (determine_subformat pdf);
+    if notjson
+      then Printf.printf "Subformats: %s\n" (combine_with_commas (determine_subformats pdf))
+      else json =| ("Subformats", `List (map (fun x -> `String x) (determine_subformats pdf)));
     match get_metadata pdf with
       None -> ()
     | Some metadata ->
