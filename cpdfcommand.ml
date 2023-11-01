@@ -3498,9 +3498,11 @@ let go () =
           else (if ida ^ idb = "" then Printf.printf "ID: None" else Printf.printf "ID: %s %s\n" ida idb);
         let pdf = decrypt_if_necessary input (Some Info) pdf in
           if args.format_json then
-            Cpdfmetadata.output_info ~json Cpdfmetadata.UTF8 pdf;
-            Cpdfmetadata.output_xmp_info ~json Cpdfmetadata.UTF8 pdf;
-            flprint (Cpdfyojson.Safe.pretty_to_string (`Assoc (rev !json)))
+            begin
+              Cpdfmetadata.output_info ~json Cpdfmetadata.UTF8 pdf;
+              Cpdfmetadata.output_xmp_info ~json Cpdfmetadata.UTF8 pdf;
+              flprint (Cpdfyojson.Safe.pretty_to_string (`Assoc (rev !json)))
+            end
           else
             begin
               Cpdfmetadata.output_info args.encoding pdf;

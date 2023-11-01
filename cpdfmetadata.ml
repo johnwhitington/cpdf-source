@@ -129,7 +129,6 @@ let print_metadata pdf =
         Printf.printf "%c" (char_of_int (bget data x))
       done
 
-
 let get_info raw pdf =
   let infodict =
     match Pdf.lookup_direct pdf "/Info" pdf.Pdf.trailerdict with
