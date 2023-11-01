@@ -326,6 +326,8 @@ let rec get_data_for namespace name = function
    PDF/VT: <pdfxid:GTS_PDFXVersion>PDF/X-4</pdfxid:GTS_PDFXVersion> <pdfvtid:GTS_PDFVTVersion>PDF/VT-1</pdfvtid:GTS_PDFVTVersion>
    -PDF/UA: <pdfuaid:part>1</pdfuaid:part>
    PDF/X: <pdfxid:GTS_PDFXVersion>PDF/X-4</pdfxid:GTS_PDFXVersion> (Fallback DID /GTS_PDFXVersion(PDF/X-1:2001)) *)
+
+(* FIXME Can it have multiple subformats? *)
 let determine_subformat pdf =
   match get_metadata pdf with
   | None -> "PDF"
@@ -335,9 +337,7 @@ let determine_subformat pdf =
         flprint (string_of_xmltree tree);
           (* PDF/E *)
           match get_data_for pdfe "ISO_PDFEVersion" tree with
-          | Some s ->
-              (* If also a pdfxid, print that in parentheses *)
-              s
+          | Some s -> s
           | None ->
               (* PDF/UA *)
               match get_data_for pdfuaid "part" tree with
