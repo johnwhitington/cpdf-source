@@ -277,12 +277,14 @@ and string_of_xmltrees trees =
     (fun a b -> a ^ " " ^ b) "" (map string_of_xmltree trees)
 
 let adobe = "http://ns.adobe.com/pdf/1.3/"
-
 let xmp = "http://ns.adobe.com/xap/1.0/"
-
 let dc = "http://purl.org/dc/elements/1.1/"
-
 let rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+let pdfaid = "http://www.aiim.org/pdfa/ns/id/"
+let pdfxid = "http://www.npes.org/pdfx/ns/id/"
+let pdfe = "http://www.aiim.org/pdfe/ns/id/"
+let pdfuaid = "http://www.aiim.org/pdfua/ns/id/"
+let pdfvtid = "http://www.npes.org/pdfvt/ns/id/"
 
 let combine_with_spaces strs =
   String.trim
@@ -319,6 +321,44 @@ let rec get_data_for namespace name = function
        x :: _ -> Some x
      | _ -> None
 
+(* -PDF/A: <pdfaid:part>2</pdfaid:part> <pdfaid:conformance>B</pdfaid:conformance>
+   PDF/E: <pdfe:ISO_PDFEVersion>PDF/E-1</pdfe:ISO_PDFEVersion> <pdfxid:GTS_PDFXVersion>PDF/X-4</pdfxid:GTS_PDFXVersion>
+   PDF/VT: <pdfxid:GTS_PDFXVersion>PDF/X-4</pdfxid:GTS_PDFXVersion> <pdfvtid:GTS_PDFVTVersion>PDF/VT-1</pdfvtid:GTS_PDFVTVersion>
+   -PDF/UA: <pdfuaid:part>1</pdfuaid:part>
+   PDF/X: <pdfxid:GTS_PDFXVersion>PDF/X-4</pdfxid:GTS_PDFXVersion> (Fallback DID /GTS_PDFXVersion(PDF/X-1:2001)) *)
+let determine_subformat pdf =
+  match get_metadata pdf with
+  | None -> "PDF"
+  | Some metadata ->
+      try
+        let _, tree = xmltree_of_bytes metadata in
+        flprint (string_of_xmltree tree);
+          (* PDF/E *)
+          match get_data_for pdfaid "ISO_PDFEVersion" tree with
+          | Some s ->
+              (* If also a pdfxid, print that in parentheses *)
+              s
+          | None ->
+              (* PDF/UA *)
+              match get_data_for pdfuaid "part" tree with
+              | Some s -> "PDF/UA-" ^ s
+              | None ->
+                  (* PDF/A *)
+                  match get_data_for pdfaid "part" tree with
+                  | Some part ->
+                      let conformance =
+                        match get_data_for pdfaid "conformance" tree with
+                        | Some s -> String.lowercase_ascii s
+                        | None -> ""
+                      in
+                        "PDF/A-" ^ part ^ conformance
+                  | None ->
+                      "PDFn"
+      with
+        _ ->
+          (* Fallback DID /GTS... *)
+          "qPDF"
+
 let output_xmp_info ?(json=ref [("none", `Null)]) encoding pdf =
   let notjson = !json = [("none", `Null)] in
   let print_out tree title namespace name =
@@ -333,6 +373,7 @@ let output_xmp_info ?(json=ref [("none", `Null)]) encoding pdf =
         else
           json =| (title, `String data)
   in
+    Printf.printf "Subformat: %s\n" (determine_subformat pdf);
     match get_metadata pdf with
       None -> ()
     | Some metadata ->
