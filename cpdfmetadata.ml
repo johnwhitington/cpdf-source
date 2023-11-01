@@ -286,7 +286,7 @@ let pdfe = "http://www.aiim.org/pdfe/ns/id/"
 let pdfuaid = "http://www.aiim.org/pdfua/ns/id/"
 let pdfvtid = "http://www.npes.org/pdfvt/ns/id/"
 
-let combine_with_spaces strs =
+let combine_with_commas strs =
   String.trim
     (fold_left (fun x y -> x ^ (if x <> "" then ", " else "") ^ y) "" strs)
 
@@ -296,7 +296,7 @@ let collect_list_items = function
    E (((n, n'), _), elts) when
      n = rdf && (n' = "Alt" || n' = "Seq" || n' = "Bag")
    ->
-     combine_with_spaces
+     combine_with_commas
        (option_map
          (function
              E (((n, n'), _), [D d]) when n = rdf && n' = "li" ->
@@ -321,43 +321,60 @@ let rec get_data_for namespace name = function
        x :: _ -> Some x
      | _ -> None
 
-(* -PDF/A: <pdfaid:part>2</pdfaid:part> <pdfaid:conformance>B</pdfaid:conformance>
-   PDF/E: <pdfe:ISO_PDFEVersion>PDF/E-1</pdfe:ISO_PDFEVersion> <pdfxid:GTS_PDFXVersion>PDF/X-4</pdfxid:GTS_PDFXVersion>
-   PDF/VT: <pdfxid:GTS_PDFXVersion>PDF/X-4</pdfxid:GTS_PDFXVersion> <pdfvtid:GTS_PDFVTVersion>PDF/VT-1</pdfvtid:GTS_PDFVTVersion>
-   -PDF/UA: <pdfuaid:part>1</pdfuaid:part>
-   PDF/X: <pdfxid:GTS_PDFXVersion>PDF/X-4</pdfxid:GTS_PDFXVersion> (Fallback DID /GTS_PDFXVersion(PDF/X-1:2001)) *)
-
-(* FIXME Can it have multiple subformats? *)
+(* PDF/A: <pdfaid:part>2</pdfaid:part> <pdfaid:conformance>B</pdfaid:conformance>
+   PDF/E: <pdfe:ISO_PDFEVersion>PDF/E-1</pdfe:ISO_PDFEVersion>
+   PDF/VT: <pdfvtid:GTS_PDFVTVersion>PDF/VT-1</pdfvtid:GTS_PDFVTVersion>
+   PDF/UA: <pdfuaid:part>1</pdfuaid:part>
+   PDF/X: <pdfxid:GTS_PDFXVersion>PDF/X-4</pdfxid:GTS_PDFXVersion> (Fallback DID /GTS_PDFXVersion) *)
 let determine_subformat pdf =
-  match get_metadata pdf with
-  | None -> "PDF"
-  | Some metadata ->
-      try
+  let formats = ref [] in
+  let fallback_pdfx () =
+    match Pdf.lookup_direct pdf "/Info" pdf.Pdf.trailerdict with
+    | Some d ->
+        begin match Pdf.lookup_direct pdf "/GTS_PDFXVersion" d with
+        | Some (Pdf.String s) -> formats =| s
+        | _ -> ()
+        end
+    | None -> ()
+  in
+    match get_metadata pdf with
+    | None ->
+        fallback_pdfx ();
+        combine_with_commas !formats
+    | Some metadata ->
         let _, tree = xmltree_of_bytes metadata in
-        flprint (string_of_xmltree tree);
           (* PDF/E *)
-          match get_data_for pdfe "ISO_PDFEVersion" tree with
-          | Some s -> s
-          | None ->
-              (* PDF/UA *)
-              match get_data_for pdfuaid "part" tree with
-              | Some s -> "PDF/UA-" ^ s
-              | None ->
-                  (* PDF/A *)
-                  match get_data_for pdfaid "part" tree with
-                  | Some part ->
-                      let conformance =
-                        match get_data_for pdfaid "conformance" tree with
-                        | Some s -> String.lowercase_ascii s
-                        | None -> ""
-                      in
-                        "PDF/A-" ^ part ^ conformance
-                  | None ->
-                      "PDFn"
-      with
-        _ ->
-          (* Fallback DID /GTS... *)
-          "qPDF"
+          begin match get_data_for pdfe "ISO_PDFEVersion" tree with
+          | Some s -> formats =| s
+          | None -> ()
+          end;
+          (* PDF/UA *)
+          begin match get_data_for pdfuaid "part" tree with
+          | Some s -> formats =| "PDF/UA-" ^ s
+          | None -> ()
+          end;
+          (* PDF/A *)
+          begin match get_data_for pdfaid "part" tree with
+          | Some part ->
+              let conformance =
+                match get_data_for pdfaid "conformance" tree with
+                | Some s -> String.lowercase_ascii s
+                | None -> ""
+              in
+                formats =| "PDF/A-" ^ part ^ conformance
+          | None -> ()
+          end;
+          (* PDF/X *)
+          begin match get_data_for pdfxid "GTS_PDFXVersion" tree with
+          | Some s -> formats =| s
+          | None -> fallback_pdfx ()
+          end;
+          (* PDF/VT *)
+          begin match get_data_for pdfvtid "GTS_PDFVTVersion" tree with
+          | Some s -> formats =| s
+          | None -> ()
+          end;
+          combine_with_commas !formats
 
 let output_xmp_info ?(json=ref [("none", `Null)]) encoding pdf =
   let notjson = !json = [("none", `Null)] in
@@ -373,7 +390,7 @@ let output_xmp_info ?(json=ref [("none", `Null)]) encoding pdf =
         else
           json =| (title, `String data)
   in
-    Printf.printf "Subformat: %s\n" (determine_subformat pdf);
+    Printf.printf "Subformats: %s\n" (determine_subformat pdf);
     match get_metadata pdf with
       None -> ()
     | Some metadata ->
