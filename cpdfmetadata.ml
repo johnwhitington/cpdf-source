@@ -188,28 +188,49 @@ let get_viewer_pref_item name pdf =
       end
   | _ -> ""
 
-let output_info encoding pdf =
+let output_info ?(json=ref [("none", `Null)]) encoding pdf =
+  let notjson = !json = [("none", `Null)] in
   let getstring = getstring encoding pdf in
-    Printf.printf "Version: %i.%i\n" pdf.Pdf.major pdf.Pdf.minor;
-    Printf.printf "Pages: %i\n" (Pdfpage.endpage pdf);
-    Printf.printf "Title: %s\n" (getstring "/Title");
-    Printf.printf "Author: %s\n" (getstring "/Author");
-    Printf.printf "Subject: %s\n" (getstring "/Subject");
-    Printf.printf "Keywords: %s\n" (getstring "/Keywords");
-    Printf.printf "Creator: %s\n" (getstring "/Creator");
-    Printf.printf "Producer: %s\n" (getstring "/Producer");
-    Printf.printf "Created: %s\n" (getstring "/CreationDate");
-    Printf.printf "Modified: %s\n" (getstring "/ModDate");
-    Printf.printf "Trapped: %s\n" (getstring "/Trapped");
-    Printf.printf "PageMode: %s\n" (get_catalog_item "/PageMode" pdf);
-    Printf.printf "PageLayout: %s\n" (get_catalog_item "/PageLayout" pdf);
-    Printf.printf "HideToolbar: %s\n" (get_viewer_pref_item "/HideToolbar" pdf);
-    Printf.printf "HideMenubar: %s\n" (get_viewer_pref_item "/HideMenubar" pdf);
-    Printf.printf "HideWindowUI: %s\n" (get_viewer_pref_item "/HideWindowUI" pdf);
-    Printf.printf "FitWindow: %s\n" (get_viewer_pref_item "/FitWindow" pdf);
-    Printf.printf "CenterWindow: %s\n" (get_viewer_pref_item "/CenterWindow" pdf);
-    Printf.printf "DisplayDocTitle: %s\n" (get_viewer_pref_item "/DisplayDocTitle" pdf);
-    Printf.printf "NonFullScreenPageMode: %s\n" (get_viewer_pref_item "/NonFullScreenPageMode" pdf);
+    if notjson then Printf.printf "Version: %i.%i\n" pdf.Pdf.major pdf.Pdf.minor;
+    json =| ("Version", `List [`Int pdf.Pdf.major; `Int pdf.Pdf.minor]);
+    if notjson then Printf.printf "Pages: %i\n" (Pdfpage.endpage pdf);
+    json =| ("Pages", `Int (Pdfpage.endpage pdf));
+    if notjson then Printf.printf "Title: %s\n" (getstring "/Title");
+    json =| ("Title", `String (getstring "/Title"));
+    if notjson then Printf.printf "Author: %s\n" (getstring "/Author");
+    json =| ("Author", `String (getstring "/Author"));
+    if notjson then Printf.printf "Subject: %s\n" (getstring "/Subject");
+    json =| ("Subject", `String (getstring "/Subject"));
+    if notjson then Printf.printf "Keywords: %s\n" (getstring "/Keywords");
+    json =| ("Keywords", `String (getstring "/Keywords"));
+    if notjson then  Printf.printf "Creator: %s\n" (getstring "/Creator");
+    json =| ("Creator", `String (getstring "/Creator"));
+    if notjson then Printf.printf "Producer: %s\n" (getstring "/Producer");
+    json =| ("Producer", `String (getstring "/Producer"));
+    if notjson then Printf.printf "Created: %s\n" (getstring "/CreationDate");
+    json =| ("Created", `String (getstring "/CreationDate"));
+    if notjson then Printf.printf "Modified: %s\n" (getstring "/ModDate");
+    json =| ("Modified", `String (getstring "/ModDate"));
+    if notjson then Printf.printf "Trapped: %s\n" (getstring "/Trapped");
+    json =| ("Trapped", `Bool (bool_of_string (String.lowercase_ascii (getstring "/Trapped"))));
+    if notjson then Printf.printf "PageMode: %s\n" (get_catalog_item "/PageMode" pdf);
+    json =| ("PageMode", match (get_catalog_item "/PageMode" pdf) with "" -> `Null | x -> `String x);
+    if notjson then Printf.printf "PageLayout: %s\n" (get_catalog_item "/PageLayout" pdf);
+    json =| ("PageLayout", match (get_catalog_item "/PageLayout" pdf) with "" -> `Null | x -> `String x);
+    if notjson then Printf.printf "HideToolbar: %s\n" (get_viewer_pref_item "/HideToolbar" pdf);
+    json =| ("HideToolbar", match get_viewer_pref_item "/HideToolbar" pdf with "" -> `Null | s -> `Bool (bool_of_string s));
+    if notjson then Printf.printf "HideMenubar: %s\n" (get_viewer_pref_item "/HideMenubar" pdf);
+    json =| ("HideMenubar", match get_viewer_pref_item "/HideMenubar" pdf with "" -> `Null | s -> `Bool (bool_of_string s));
+    if notjson then Printf.printf "HideWindowUI: %s\n" (get_viewer_pref_item "/HideWindowUI" pdf);
+    json =| ("HideWindowUI", match get_viewer_pref_item "/HideWindowUI" pdf with "" -> `Null | s -> `Bool (bool_of_string s));
+    if notjson then Printf.printf "FitWindow: %s\n" (get_viewer_pref_item "/FitWindow" pdf);
+    json =| ("FitWindow", match get_viewer_pref_item "/FitWindow" pdf with "" -> `Null | s -> `Bool (bool_of_string s));
+    if notjson then Printf.printf "CenterWindow: %s\n" (get_viewer_pref_item "/CenterWindow" pdf);
+    json =| ("CenterWindow", match get_viewer_pref_item "/CenterWindow" pdf with "" -> `Null | s -> `Bool (bool_of_string s));
+    if notjson then Printf.printf "DisplayDocTitle: %s\n" (get_viewer_pref_item "/DisplayDocTitle" pdf);
+    json =| ("DisplayDocTitle", match get_viewer_pref_item "/DisplayDocTitle" pdf with "" -> `Null | s -> `Bool (bool_of_string s));
+    if notjson then Printf.printf "NonFullScreenPageMode: %s\n" (get_viewer_pref_item "/NonFullScreenPageMode" pdf);
+    json =| ("NonFullPageScreenMode", match (get_viewer_pref_item "/NonFullPageScreenMode" pdf) with "" -> `Null | x -> `String x);
 
 type xmltree =
     E of Cpdfxmlm.tag * xmltree list
@@ -298,13 +319,19 @@ let rec get_data_for namespace name = function
        x :: _ -> Some x
      | _ -> None
 
-let output_xmp_info encoding pdf =
+let output_xmp_info ?(json=ref [("none", `Null)]) encoding pdf =
+  let notjson = !json = [("none", `Null)] in
   let print_out tree title namespace name =
     match get_data_for namespace name tree with
       None -> ()
     | Some data ->
-        Printf.printf "%s: " title;
-        print_endline data
+        if notjson then
+          begin
+            Printf.printf "%s: " title;
+            print_endline data
+          end
+        else
+          json =| (title, `String data)
   in
     match get_metadata pdf with
       None -> ()

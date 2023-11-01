@@ -3471,19 +3471,41 @@ let go () =
         | (AlreadyInMemory pdf, _, _, _, _, _) as input::_ -> pdf, "", input
         | _ -> raise (Arg.Bad "cpdf: No input specified.\n")
       in
-        Printf.printf "Encryption: %s\n" (getencryption pdf);
-        Printf.printf "Permissions: %s\n" (getpermissions pdf);
+        let json = ref [] in
+        if args.format_json
+          then json =| ("Encryption", `String (getencryption pdf))
+          else Printf.printf "Encryption: %s\n" (getencryption pdf);
+        if args.format_json
+          then json =| ("Permissions", `List (map (fun p -> `String (string_of_permission p)) (Pdfread.permissions pdf)))
+          else Printf.printf "Permissions: %s\n" (getpermissions pdf);
         if inname <> "" then
-          Printf.printf "Linearized: %b\n" (Pdfread.is_linearized (Pdfio.input_of_channel (open_in_bin inname)));
-        Printf.printf "Object streams: %b\n" (length (list_of_hashtbl pdf.Pdf.objects.Pdf.object_stream_ids) > 0);
-        Printf.printf "ID: %s\n"
-          (match
-             Pdf.lookup_direct pdf "/ID" pdf.Pdf.trailerdict with
-             | Some (Pdf.Array [Pdf.String s; Pdf.String s']) -> Printf.sprintf "%s %s" (Pdfwrite.make_hex_pdf_string s) (Pdfwrite.make_hex_pdf_string s');
-             | _ -> "None");
+          let lin = Pdfread.is_linearized (Pdfio.input_of_channel (open_in_bin inname)) in
+            if args.format_json then
+              json =| ("Linearized", `Bool lin) else Printf.printf "Linearized: %b\n" lin;
+        let objstm = length (list_of_hashtbl pdf.Pdf.objects.Pdf.object_stream_ids) > 0 in
+        if args.format_json
+          then json =| ("Object streams", `Bool objstm)
+          else Printf.printf "Object streams: %b\n" objstm;
+        let ida, idb =
+          match Pdf.lookup_direct pdf "/ID" pdf.Pdf.trailerdict with
+          | Some (Pdf.Array [Pdf.String s; Pdf.String s']) ->
+              (Pdfwrite.make_hex_pdf_string s, Pdfwrite.make_hex_pdf_string s')
+          | _ -> "", ""
+        in
+        let fixid s = implode (rev (tl (rev (tl (explode s))))) in
+        if args.format_json
+          then json =| ("ID", if ida ^ idb = "" then `Null else `List [`String (fixid ida); `String (fixid idb)])
+          else (if ida ^ idb = "" then Printf.printf "ID: None" else Printf.printf "ID: %s %s\n" ida idb);
         let pdf = decrypt_if_necessary input (Some Info) pdf in
-          Cpdfmetadata.output_info args.encoding pdf;
-          Cpdfmetadata.output_xmp_info args.encoding pdf
+          if args.format_json then
+            Cpdfmetadata.output_info ~json Cpdfmetadata.UTF8 pdf;
+            Cpdfmetadata.output_xmp_info ~json Cpdfmetadata.UTF8 pdf;
+            flprint (Cpdfyojson.Safe.pretty_to_string (`Assoc (rev !json)))
+          else
+            begin
+              Cpdfmetadata.output_info args.encoding pdf;
+              Cpdfmetadata.output_xmp_info args.encoding pdf
+            end
   | Some PageInfo ->
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
