@@ -23,7 +23,7 @@ val missing_fonts : Pdf.t -> int list -> unit
 val print_font_table : Pdf.t -> string -> int -> unit
 
 (** Extract a font file to disk. *)
-val extract_fontfile : int -> string -> Pdf.t -> unit
+val extract_fontfile : int -> string -> string -> Pdf.t -> unit
 
 (** Remove fonts from a document. *)
 val remove_fonts : Pdf.t -> Pdf.t

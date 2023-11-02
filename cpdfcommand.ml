@@ -189,7 +189,7 @@ type op =
   | ExtractImages
   | ImageResolution of float
   | MissingFonts
-  | ExtractFontFile
+  | ExtractFontFile of string
   | ExtractText
   | OpenAtPage of string
   | OpenAtPageFit of string
@@ -320,7 +320,7 @@ let string_of_op = function
   | ExtractImages -> "ExtractImages"
   | ImageResolution _ -> "ImageResolution"
   | MissingFonts -> "MissingFonts"
-  | ExtractFontFile -> "ExtractFontFile"
+  | ExtractFontFile _ -> "ExtractFontFile"
   | ExtractText -> "ExtractText"
   | OpenAtPage _ -> "OpenAtPage"
   | OpenAtPageFit _ -> "OpenAtPageFit"
@@ -837,7 +837,7 @@ let banned banlist = function
   | ShowBoxes | TrimMarks | CreateMetadata | SetMetadataDate _ | SetVersion _
   | SetAuthor _|SetTitle _|SetSubject _|SetKeywords _|SetCreate _
   | SetModify _|SetCreator _|SetProducer _|RemoveDictEntry _ | ReplaceDictEntry _ | PrintDictEntry _ | SetMetadata _
-  | ExtractText | ExtractImages | ExtractFontFile
+  | ExtractText | ExtractImages | ExtractFontFile _
   | AddPageLabels | RemovePageLabels | OutputJSON | OCGCoalesce
   | OCGRename | OCGList | OCGOrderAll | PrintFontEncoding _ | TableOfContents | Typeset _ | Composition _
   | TextWidth _ | SetAnnotations _ | CopyAnnotations _
@@ -1871,6 +1871,9 @@ let settextwidth s =
 let setdraw () =
   args.op <- Some Draw
 
+let setextractfontfile s =
+  args.op <- Some (ExtractFontFile s)
+
 let () = Cpdfdrawcontrol.getfontname := fun () -> args.fontname
 let () = Cpdfdrawcontrol.getfontsize := fun () -> args.fontsize
 let () = Cpdfdrawcontrol.setfontname := setfont
@@ -2668,6 +2671,9 @@ and specs =
    ("-print-font-table-page",
      Arg.Int setfontpage,
      " Set page for -print-font-table");
+   ("-extract-font",
+     Arg.String setextractfontfile,
+     " Extract a font");
    ("-table-of-contents",
      Arg.Unit (setop TableOfContents),
      " Typeset a table of contents from bookmarks");
@@ -2749,7 +2755,7 @@ and specs =
    ("-debug-stderr-to-stdout", Arg.Unit setstderrtostdout, "");
    ("-stay-on-error", Arg.Unit setstayonerror, "");
    (* These items are unfinished *)
-   ("-extract-fontfile", Arg.Unit (setop ExtractFontFile), "");
+
    ("-extract-text", Arg.Unit (setop ExtractText), "");
    ("-extract-text-font-size", Arg.Float setextracttextfontsize, "");
   ]
@@ -3439,17 +3445,17 @@ let go () =
             write_pdf true (Cpdffont.remove_fonts pdf)
       | _ -> error "remove fonts: bad command line"
       end
-  | Some ExtractFontFile ->
+  | Some (ExtractFontFile spec) ->
       begin match args.inputs, args.out with
-      | (_, pagespec, u, o, _, _)::_, _ ->
-          let pdf = get_single_pdf (Some ExtractFontFile) false in
-            let page = args.copyfontpage
-            and name =
-              match args.copyfontname with
-              | Some x -> x
-              | None -> failwith "extract fontfile: no font name given"
-            in
-              Cpdffont.extract_fontfile page name pdf
+      | (_, pagespec, u, o, _, _)::_, File filename ->
+          let pdf = get_single_pdf (Some (ExtractFontFile spec)) false in
+            begin match String.split_on_char ',' spec with
+            | [pnum; name] ->
+                begin try Cpdffont.extract_fontfile (int_of_string pnum) name filename pdf with
+                  Failure _ (*"int_of_string"*) -> error "extract font: bad page number"
+                end
+            | _ -> error "extract font: bad specification"
+            end
       | _ -> error "extract fontfile: bad command line"
       end 
   | Some CountPages ->
