@@ -290,9 +290,9 @@ let json_of_font (pagenum, name, subtype, basefont, encoding) =
   `Assoc
     [("page", `Int pagenum);
      ("name", `String name);
-     ("subtype", `String subtype);
-     ("basefont", `String basefont);
-     ("encoding", `String encoding)]
+     ("subtype", if subtype = "" then `Null else `String subtype);
+     ("basefont", if basefont = "" then `Null else `String basefont);
+     ("encoding", if encoding = "" then `Null else `String encoding)]
 
 let print_fonts ?(json=false) pdf range =
   if json
