@@ -187,6 +187,7 @@ type op =
   | BlackLines
   | BlackFills
   | ExtractImages
+  | ListImages
   | ImageResolution of float
   | MissingFonts
   | ExtractFontFile of string
@@ -318,6 +319,7 @@ let string_of_op = function
   | BlackLines -> "BlackLines"
   | BlackFills -> "BlackFills"
   | ExtractImages -> "ExtractImages"
+  | ListImages -> "ListImages"
   | ImageResolution _ -> "ImageResolution"
   | MissingFonts -> "MissingFonts"
   | ExtractFontFile _ -> "ExtractFontFile"
@@ -827,7 +829,7 @@ cannot proceed at all without owner password. *)
 let banned banlist = function
   | Fonts | Info | Metadata | PageInfo | CountPages
   | ListAttachedFiles | ListAnnotations
-  | ListBookmarks | ImageResolution _ | MissingFonts
+  | ListBookmarks | ImageResolution _ | ListImages | MissingFonts
   | PrintPageLabels | Clean | Compress | Decompress
   | ChangeId | CopyId _ | ListSpotColours | Version
   | DumpAttachedFiles | RemoveMetadata | EmbedMissingFonts | BookmarksOpenToLevel _ | CreatePDF
@@ -1879,6 +1881,10 @@ let () = Cpdfdrawcontrol.getfontsize := fun () -> args.fontsize
 let () = Cpdfdrawcontrol.setfontname := setfont
 let () = Cpdfdrawcontrol.setfontsize := fun s -> args.fontsize <- s
 
+let setlistimagesjson () =
+  setop ListImages ();
+  args.format_json <- true
+
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
   control_args := !control_args @ parse_control_file filename
@@ -2467,9 +2473,24 @@ and specs =
    ("-remove-files",
       Arg.Unit (setop RemoveAttachedFiles),
       " Remove embedded attached document-level files");
+   ("-list-images",
+      Arg.Unit (setop ListImages),
+      " List images");
+   ("-list-images-json",
+      Arg.Unit setlistimagesjson,
+      " List images in JSON format");
+   ("-list-image-use",
+      Arg.Unit (fun () -> setop (ImageResolution max_float) ()),
+      " List images at point of use");
+   ("-list-image-use-json",
+      Arg.Unit (fun () -> args.format_json <- true; setop (ImageResolution max_float) ()),
+      " List images at point of use in JSON format");
    ("-image-resolution",
       Arg.Float setimageresolution,
-      " List images under a given dpi");
+      " List images at point of use under a given dpi");
+   ("-image-resolution-json",
+      Arg.Float (fun f -> setimageresolution f; args.format_json <- true),
+      " List images at point of use under a given dpi");
    ("-copy-font",
       Arg.String setcopyfont,
       " Copy a named font");
@@ -4141,6 +4162,7 @@ let go () =
           let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
             Cpdfimage.extract_images args.path_to_p2p args.path_to_im args.encoding args.dedup args.dedup_per_page pdf range output_spec
   | Some (ImageResolution f) ->
+      (* FIXME add JSON format option *)
       let pdf = get_single_pdf args.op true in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
         let images = Cpdfimage.image_resolution pdf range f in
@@ -4148,8 +4170,10 @@ let go () =
             (function (pagenum, xobject, w, h, wdpi, hdpi) ->
                 if wdpi < f || hdpi < f then
                   Printf.printf "%i, %s, %i, %i, %f, %f\n" pagenum xobject w h wdpi hdpi)
-
             images
+  | Some ListImages ->
+      (* FIXME Implement ListImages *)
+      ()
   | Some MissingFonts ->
       let pdf = get_single_pdf args.op true in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
