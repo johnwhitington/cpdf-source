@@ -2479,10 +2479,10 @@ and specs =
    ("-list-images-json",
       Arg.Unit setlistimagesjson,
       " List images in JSON format");
-   ("-list-image-use",
+   ("-list-images-used",
       Arg.Unit (fun () -> setop (ImageResolution max_float) ()),
       " List images at point of use");
-   ("-list-image-use-json",
+   ("-list-images-used-json",
       Arg.Unit (fun () -> args.format_json <- true; setop (ImageResolution max_float) ()),
       " List images at point of use in JSON format");
    ("-image-resolution",
@@ -4162,15 +4162,20 @@ let go () =
           let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
             Cpdfimage.extract_images args.path_to_p2p args.path_to_im args.encoding args.dedup args.dedup_per_page pdf range output_spec
   | Some (ImageResolution f) ->
-      (* FIXME add JSON format option *)
       let pdf = get_single_pdf args.op true in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
         let images = Cpdfimage.image_resolution pdf range f in
-          iter
-            (function (pagenum, xobject, w, h, wdpi, hdpi) ->
-                if wdpi < f || hdpi < f then
-                  Printf.printf "%i, %s, %i, %i, %f, %f\n" pagenum xobject w h wdpi hdpi)
-            images
+          if args.format_json then
+            flprint
+              (Cpdfyojson.Safe.pretty_to_string
+                 (`List (map (fun (pagenum, xobject, w, h, wdpi, hdpi) ->
+                    `Assoc [("Page", `Int pagenum); ("XObject", `String xobject); ("W", `Int w); ("H", `Int h); ("Xdpi", `Float wdpi); ("Ydpi", `Float hdpi)]) images)))
+          else
+            iter
+              (function (pagenum, xobject, w, h, wdpi, hdpi) ->
+                  if wdpi < f || hdpi < f then
+                    Printf.printf "%i, %s, %i, %i, %f, %f\n" pagenum xobject w h wdpi hdpi)
+               images
   | Some ListImages ->
       (* FIXME Implement ListImages *)
       ()
