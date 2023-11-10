@@ -1,8 +1,8 @@
 (** Images *)
 
 (** Extract images. *)
-val extract_images : string ->
-           string ->
+val extract_images : ?raw:bool -> ?path_to_p2p:string ->
+           ?path_to_im:string ->
            Cpdfmetadata.encoding -> bool -> bool -> Pdf.t -> int list -> string -> unit
 
 (** Report image resolutions. *)        

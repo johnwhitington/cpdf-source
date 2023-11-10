@@ -27,7 +27,7 @@ let write_stream name stream =
     Pdfio.bytes_to_output_channel fh stream;
     close_out fh
 
-let write_image path_to_p2p path_to_im pdf resources name image =
+let write_image ~raw ?path_to_p2p ?path_to_im pdf resources name image =
   match Pdfimage.get_image_24bpp pdf resources image with
   | Pdfimage.JPEG (stream, _) -> write_stream (name ^ ".jpg") stream
   | Pdfimage.JPEG2000 (stream, _) -> write_stream (name ^ ".jpx") stream
@@ -39,10 +39,11 @@ let write_image path_to_p2p path_to_im pdf resources name image =
         pnm_to_channel_24 fh w h stream;
         close_out fh;
         begin match path_to_p2p with
-        | "" ->
+        | None ->
           begin match path_to_im with
-            "" -> Pdfe.log "Neither pnm2png nor imagemagick found. Specify with -p2p or -im\n"
-          | _ ->
+            None ->
+              if not raw then Pdfe.log "Neither pnm2png nor imagemagick found. Specify with -p2p or -im\n"
+          | Some path_to_im ->
             begin match
               Sys.command (Filename.quote_command path_to_im [pnm; png])
             with
@@ -52,7 +53,7 @@ let write_image path_to_p2p path_to_im pdf resources name image =
               Sys.remove pnm
             end
           end
-        | _ ->
+        | Some path_to_p2p ->
           begin match
             Sys.command (Filename.quote_command path_to_p2p ~stdout:png ["-gamma"; "0.45"; "-quiet"; pnm])
           with
@@ -67,16 +68,16 @@ let write_image path_to_p2p path_to_im pdf resources name image =
 
 let written = ref []
 
-let extract_images_inner path_to_p2p path_to_im encoding serial pdf resources stem pnum images =
+let extract_images_inner ~raw ?path_to_p2p ?path_to_im encoding serial pdf resources stem pnum images =
   let names = map
     (fun _ ->
        Cpdfbookmarks.name_of_spec
          encoding [] pdf 0 (stem ^ "-p" ^ string_of_int pnum)
          (let r = !serial in serial := !serial + 1; r) "" 0 0) (indx images)
   in
-    iter2 (write_image path_to_p2p path_to_im pdf resources) names images
+    iter2 (write_image ~raw ?path_to_p2p ?path_to_im pdf resources) names images
 
-let rec extract_images_form_xobject path_to_p2p path_to_im encoding dedup dedup_per_page pdf serial stem pnum form =
+let rec extract_images_form_xobject ~raw ?path_to_p2p ?path_to_im encoding dedup dedup_per_page pdf serial stem pnum form =
   let resources =
     match Pdf.lookup_direct pdf "/Resources" form with
       Some (Pdf.Dictionary d) -> Pdf.Dictionary d
@@ -95,9 +96,9 @@ let rec extract_images_form_xobject path_to_p2p path_to_im encoding dedup dedup_
             written := (option_map (function Pdf.Indirect n -> Some n | _ -> None) images) @ !written;
           images
     in
-      extract_images_inner path_to_p2p path_to_im encoding serial pdf resources stem pnum images
+      extract_images_inner ~raw ?path_to_p2p ?path_to_im encoding serial pdf resources stem pnum images
 
-let extract_images path_to_p2p path_to_im encoding dedup dedup_per_page pdf range stem =
+let extract_images ?(raw=false) ?path_to_p2p ?path_to_im encoding dedup dedup_per_page pdf range stem =
   if dedup || dedup_per_page then written := [];
   let pdf_pages = Pdfpage.pages_of_pagetree pdf in
     let pages =
@@ -119,8 +120,8 @@ let extract_images path_to_p2p path_to_im encoding dedup dedup_per_page pdf rang
                if dedup || dedup_per_page then
                  written := (option_map (function Pdf.Indirect n -> Some n | _ -> None) images) @ !written;
                let forms = keep (fun o -> Pdf.lookup_direct pdf "/Subtype" o = Some (Pdf.Name "/Form")) xobjects in
-                 extract_images_inner path_to_p2p path_to_im encoding serial pdf page.Pdfpage.resources stem pnum images;
-                 iter (extract_images_form_xobject path_to_p2p path_to_im encoding dedup dedup_per_page pdf serial stem pnum) forms)
+                 extract_images_inner ~raw ?path_to_p2p ?path_to_im encoding serial pdf page.Pdfpage.resources stem pnum images;
+                 iter (extract_images_form_xobject ~raw ?path_to_p2p ?path_to_im encoding dedup dedup_per_page pdf serial stem pnum) forms)
           pages
           (indx pages)
 
