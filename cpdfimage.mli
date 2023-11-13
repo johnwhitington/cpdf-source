@@ -8,6 +8,9 @@ val extract_images : ?raw:bool -> ?path_to_p2p:string ->
 (** Report image resolutions. *)        
 val image_resolution : Pdf.t -> int list -> float -> (int * string * int * int * float * float) list
 
+(** List images in JSON format *)
+val images : Pdf.t -> int list -> Cpdfyojson.Safe.t
+
 (**/**)
 val image_of_input : (Pdfio.bytes -> Pdf.pdfobject) -> Pdfio.input -> Pdf.t
 val obj_of_jpeg_data : Pdfio.bytes -> Pdf.pdfobject

@@ -272,6 +272,8 @@ let image_resolution pdf range dpi =
   image_resolution pdf range dpi;
   rev !image_results
 
+let images pdf range = `Null
+
 let obj_of_jpeg_data data =
   let w, h = Cpdfjpeg.jpeg_dimensions data in
   let d = 

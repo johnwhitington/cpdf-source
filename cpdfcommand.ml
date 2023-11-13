@@ -4177,8 +4177,13 @@ let go () =
                     Printf.printf "%i, %s, %i, %i, %f, %f\n" pagenum xobject w h wdpi hdpi)
                images
   | Some ListImages ->
-      (* FIXME Implement ListImages *)
-      ()
+      let pdf = get_single_pdf args.op true in
+      let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
+      let json = Cpdfimage.images pdf range in
+        if args.format_json then
+          flprint (Cpdfyojson.Safe.pretty_to_string json)
+        else
+          flprint "old fashioned output\n"
   | Some MissingFonts ->
       let pdf = get_single_pdf args.op true in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
