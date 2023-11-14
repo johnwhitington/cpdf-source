@@ -8,6 +8,10 @@ let version_date = "(patch 2, 25th October 2023)"
 open Pdfutil
 open Pdfio
 
+let combine_with_spaces strs =
+  String.trim
+    (fold_left (fun x y -> x ^ (if x <> "" then " " else "") ^ y) "" strs)
+
 let tempfiles = ref []
 
 let exit n =
@@ -4183,7 +4187,16 @@ let go () =
         if args.format_json then
           flprint (Cpdfyojson.Safe.pretty_to_string json)
         else
-          flprint "old fashioned output\n"
+          begin match json with
+          | `List l ->
+              iter
+                (function (`Assoc [(_, `Int i); (_, `List pages); (_, `String name); (_, `Int w); (_, `Int h); (_, `String cs)]) ->
+                   let pages = combine_with_spaces (map (function `Int i -> string_of_int i | _ -> "") pages) in
+                     flprint (Printf.sprintf "%i, %s, %s, %i, %i, %s\n" i pages name w h cs)
+                 | _ -> ())
+                l
+          | _ -> ()
+          end
   | Some MissingFonts ->
       let pdf = get_single_pdf args.op true in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
