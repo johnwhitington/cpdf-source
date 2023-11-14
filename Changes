@@ -20,7 +20,7 @@ Fixes:
 
 o Added opam file in-source
 o Fixed -set-annotations with page links
-
+o Allow Exif JPEGs as well as JFIF ones in -jpeg and -draw-jpeg
 
 2.6.1 (September 2023)
 
