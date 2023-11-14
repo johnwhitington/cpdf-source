@@ -272,7 +272,39 @@ let image_resolution pdf range dpi =
   image_resolution pdf range dpi;
   rev !image_results
 
-let images pdf range = `Null
+let images pdf range =
+  let images = null_hash () in
+    Cpdfpage.iter_pages
+      (fun pagenum page ->
+         match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
+          | Some (Pdf.Dictionary xobjects) ->
+              iter
+                (function (name, xobject) ->
+                   match Pdf.lookup_direct pdf "/Subtype" xobject with
+                   | Some (Pdf.Name "/Image") ->
+                       begin match xobject with
+                       | Pdf.Indirect i ->
+                           (* FIXME: Only if we have not seen i before *)
+                           let width =
+                             match Pdf.lookup_direct pdf "/Width" xobject with
+                             | Some x -> Pdf.getnum pdf x
+                             | None -> 1.
+                           and height =
+                             match Pdf.lookup_direct pdf "/Height" xobject with
+                             | Some x -> Pdf.getnum pdf x
+                             | None -> 1.
+                           in
+                             (* FIXME: Store which pages it is referenced from. *)
+                             Hashtbl.replace images i (pagenum, name, int_of_float width, int_of_float height)
+                       | _ -> ()
+                       end
+                   (* FIXME Look into form xobjects recursively *)
+                   | _ -> ())
+                xobjects
+          | _ -> ())
+      pdf
+      range;
+      `Null
 
 let obj_of_jpeg_data data =
   let w, h = Cpdfjpeg.jpeg_dimensions data in
