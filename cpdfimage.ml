@@ -272,6 +272,8 @@ let image_resolution pdf range dpi =
   image_resolution pdf range dpi;
   rev !image_results
 
+(* FIXME Add colourspaces and anything else relevant *)
+(* All the images in file referenced at least once from the given range of pages. *)
 let images pdf range =
   let images = null_hash () in
     Cpdfpage.iter_pages
@@ -284,18 +286,21 @@ let images pdf range =
                    | Some (Pdf.Name "/Image") ->
                        begin match xobject with
                        | Pdf.Indirect i ->
-                           (* FIXME: Only if we have not seen i before *)
-                           let width =
-                             match Pdf.lookup_direct pdf "/Width" xobject with
-                             | Some x -> Pdf.getnum pdf x
-                             | None -> 1.
-                           and height =
-                             match Pdf.lookup_direct pdf "/Height" xobject with
-                             | Some x -> Pdf.getnum pdf x
-                             | None -> 1.
-                           in
-                             (* FIXME: Store which pages it is referenced from. *)
-                             Hashtbl.replace images i (pagenum, name, int_of_float width, int_of_float height)
+                           begin match Hashtbl.find images i with
+                           | (pagenums, n, w, h) ->
+                               Hashtbl.replace images i (pagenum::pagenums, n, w, h)
+                           | exception Not_found ->
+                               let width =
+                                 match Pdf.lookup_direct pdf "/Width" xobject with
+                                 | Some x -> Pdf.getnum pdf x
+                                 | None -> 1.
+                               and height =
+                                 match Pdf.lookup_direct pdf "/Height" xobject with
+                                 | Some x -> Pdf.getnum pdf x
+                                 | None -> 1.
+                               in
+                                 Hashtbl.replace images i ([pagenum], name, int_of_float width, int_of_float height)
+                           end
                        | _ -> ()
                        end
                    (* FIXME Look into form xobjects recursively *)
@@ -304,7 +309,19 @@ let images pdf range =
           | _ -> ())
       pdf
       range;
-      `Null
+      (* Sort page numbers, then sort by first page number appearing, and build JSON structure *)
+      let images = list_of_hashtbl images in
+      let images = map (fun (i, (pnums, n, w, h)) -> (i, (setify (sort compare pnums), n, w, h))) images in
+      let images = sort (fun (_, (pnums, _, _, _)) (_, (pnums', _, _, _)) -> compare (hd pnums) (hd pnums')) images in
+       `List
+         (map
+           (fun (i, (pnums, n, w, h)) ->
+             `Assoc [("Object", `Int i);
+                     ("Pages", `List (map (fun x -> `Int x) pnums));
+                     ("Path", `String n);
+                     ("Width", `Int w);
+                     ("Height", `Int h)])
+           images)
 
 let obj_of_jpeg_data data =
   let w, h = Cpdfjpeg.jpeg_dimensions data in
