@@ -1716,6 +1716,10 @@ let setimposespacing f =
 let setimposelinewidth f =
   args.impose_linewidth <- f
 
+let setchop s =
+  let x, y = Cpdfcoord.parse_coordinate empty s in
+  setop (Chop (int_of_float x, int_of_float y)) ()
+
 let setreplacedictentry s =
   setop (ReplaceDictEntry s) ()
 
@@ -2323,6 +2327,9 @@ and specs =
    ("-impose-linewidth",
       Arg.Float setimposelinewidth,
       " Imposition divider line width (0=none)");
+   ("-chop",
+      Arg.String setchop,
+      " Chop x by y");
    ("-pad-before",
       Arg.Unit (setop PadBefore),
       " Add a blank page before the given pages");
