@@ -8,6 +8,7 @@ o List document and page info in JSON format
 o List page labels in JSON format
 o List fonts in JSON format
 o Identify PDF/A, PDF/X, PDF/E, PDF/VT, PDF/UA in -info
+o Identify AcroForm in -info
 o Extract font files from a document
 o List images on a page with -list-images[-json]
 
