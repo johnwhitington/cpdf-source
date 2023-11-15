@@ -2,8 +2,8 @@
 let demo = false
 let noncomp = false
 let major_version = 2
-let minor_version = 6
-let version_date = "(patch 2, 25th October 2023)"
+let minor_version = 7
+let version_date = "(devel, 15th November 2023)"
 
 open Pdfutil
 open Pdfio
@@ -229,6 +229,7 @@ type op =
   | TextWidth of string
   | Draw
   | Composition of bool
+  | Chop of int * int
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -365,6 +366,7 @@ let string_of_op = function
   | TextWidth _ -> "TextWidth"
   | Draw -> "Draw"
   | Composition _ -> "Composition"
+  | Chop _ -> "Chop"
 
 (* Inputs: filename, pagespec. *)
 type input_kind =
@@ -853,7 +855,7 @@ let banned banlist = function
   | Decrypt | Encrypt | CombinePages _ -> true (* Never allowed *)
   | AddBookmarks _ | PadBefore | PadAfter | PadEvery _ | PadMultiple _ | PadMultipleBefore _
   | Merge | Split | SplitOnBookmarks _ | SplitMax _ | Spray | RotateContents _ | Rotate _
-  | Rotateby _ | Upright | VFlip | HFlip | Impose _ ->
+  | Rotateby _ | Upright | VFlip | HFlip | Impose _ | Chop _ ->
       mem Pdfcrypt.NoAssemble banlist
   | TwoUp|TwoUpStack|RemoveBookmarks|AddRectangle|RemoveText|
     Draft|Shift|Scale|ScaleToFit|RemoveAttachedFiles|
@@ -4369,6 +4371,8 @@ let go () =
         | _ -> 0
       in
         Cpdfcomposition.show_composition filesize json pdf
+  | Some (Chop (x, y)) ->
+      ()
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)
