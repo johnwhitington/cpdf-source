@@ -169,6 +169,7 @@ let get_catalog_item name pdf =
   | Some catalog ->
       begin match Pdf.lookup_direct pdf name catalog with
       | Some (Pdf.Name x) when x <> "" -> implode (tl (explode x))
+      | Some (Pdf.Dictionary _) -> "True"
       | _ -> ""
       end
   | _ -> ""
@@ -230,6 +231,8 @@ let output_info ?(json=ref [("none", `Null)]) encoding pdf =
     json =| ("DisplayDocTitle", match get_viewer_pref_item "/DisplayDocTitle" pdf with "" -> `Null | s -> `Bool (bool_of_string s));
     if notjson then Printf.printf "NonFullScreenPageMode: %s\n" (get_viewer_pref_item "/NonFullScreenPageMode" pdf);
     json =| ("NonFullPageScreenMode", match (get_viewer_pref_item "/NonFullPageScreenMode" pdf) with "" -> `Null | x -> `String x);
+    if notjson then Printf.printf "AcroForm: %s\n" (match get_catalog_item "/AcroForm" pdf with "" -> "False" | x -> x);
+    json =| ("AcroForm", match (get_catalog_item "/AcroForm" pdf) with "" -> `Bool false | x -> `Bool true);
 
 type xmltree =
     E of Cpdfxmlm.tag * xmltree list
