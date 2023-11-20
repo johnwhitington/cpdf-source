@@ -11,6 +11,7 @@ o Identify PDF/A, PDF/X, PDF/E, PDF/VT, PDF/UA in -info
 o Identify AcroForm in -info
 o Extract font files from a document
 o List images on a page with -list-images[-json]
+o Chop pages up into sections with -chop
 
 Extended features:
 
