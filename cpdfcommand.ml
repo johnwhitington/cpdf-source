@@ -4379,7 +4379,9 @@ let go () =
       in
         Cpdfcomposition.show_composition filesize json pdf
   | Some (Chop (x, y)) ->
-      ()
+      let pdf = get_single_pdf args.op false in
+      let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
+        write_pdf false (Cpdfchop.chop ~x ~y pdf range)
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)
