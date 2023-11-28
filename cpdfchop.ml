@@ -1,14 +1,14 @@
 open Pdfutil
 open Cpdferror
 
-(* FIXME Resources - what to do with each. Bookmarks? Annotations - must be duplicated... *)
-(* FIXME How to link annotations within the document work? *)
-(* FIXME Are 'changes' for change_pages important? *)
-(* FIXME Test how the sharing affects other cpdf operations - especially with -fast! *)
+(* 1. FIXME btt / rtl / columns *)
+(* 2. FIXME Test/document how the sharing affects other cpdf operations - especially with -fast! What do we do with fast/slow, and what does it affect, and does -fast need documentation about what happens in general with shared content streams. *)
+(* 3. Annotations must be duplicated *)
+(* 4. What is the effect on bookmarks and links annotations? *)
+(* 5. Any other page meta items? *)
 
 (* Chop a single page into pieces. We prefer the cropbox when available. We set
    mediabox only, and delete any other boxes. *)
-(* FIXME btt / rtl / columns *)
 let get_box pdf page =
   match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
   | Some r -> Pdf.parse_rectangle pdf r
@@ -42,12 +42,23 @@ let chop_boxes pdf x y columns btt rtl p =
 (* Chop pages in the range into pieces *)
 let chop ~x ~y ~columns ~btt ~rtl pdf range =
   let pages = Pdfpage.pages_of_pagetree pdf in
-  let pages =
+  let pages_out =
     flatten
       (map2
         (fun n p -> if mem n range then chop_boxes pdf x y columns btt rtl p else [p])
         (ilist 1 (Pdfpage.endpage pdf))
         pages)
   in
-  let changes = [] in
-    Pdfpage.change_pages ~changes true pdf pages
+  let changes =
+    let q = ref 0 in
+      flatten
+        (map2
+           (fun n p ->
+              if mem n range
+                then (q += 1; let r = combine (many n (x * y)) (ilist !q (!q + x * y - 1)) in q += (x * y - 1); r)
+                else (q += 1; [(n, !q)]))
+           (ilist 1 (Pdfpage.endpage pdf))
+           pages)
+  in
+    (*iter (fun (a, b) -> Printf.printf "%i -> %i\n" a b) changes;*)
+    Pdfpage.change_pages ~changes true pdf pages_out
