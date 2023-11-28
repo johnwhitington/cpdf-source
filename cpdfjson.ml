@@ -194,7 +194,7 @@ let rec op_of_json = function
   | `List [`String s; `String "Unknown"] -> O.Op_Unknown s
   | `List [`String s; obj; `String "DP"] -> O.Op_DP (s, object_of_json obj)
   | `List [a; `String b; `String "InlineImage"] ->
-      O.InlineImage (object_of_json a, Pdfio.bytes_of_string b)
+      O.InlineImage (object_of_json a, None, Pdfio.bytes_of_string b)
   | `List torev ->
       begin match rev torev with
       | `String "SCN"::ns -> O.Op_SCN (map opf (rev ns))
@@ -452,7 +452,7 @@ let json_of_op utf8 pdf no_stream_data = function
       `List (map (fun x -> mkfloat x) fs @ [`String s; `String "SCNName"])
   | O.Op_scnName (s, fs) ->
       `List (map (fun x -> mkfloat x) fs @ [`String s; `String "scnName"])
-  | O.InlineImage (dict, data) ->
+  | O.InlineImage (dict, dp, data) ->
       `List [json_of_object ~utf8 pdf (fun _ -> ()) ~no_stream_data ~parse_content:false dict; `String (Pdfio.string_of_bytes data); `String "InlineImage"]
   | O.Op_DP (s, obj) ->
       `List [`String s; json_of_object ~utf8 pdf (fun _ -> ()) ~no_stream_data ~parse_content:false obj; `String "DP"]
