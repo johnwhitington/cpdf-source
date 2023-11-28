@@ -2,13 +2,10 @@ open Pdfutil
 open Cpdferror
 
 (* 1. FIXME btt / rtl / columns *)
-(* 2. FIXME Test/document how the sharing affects other cpdf operations - especially with -fast! What do we do with fast/slow, and what does it affect, and does -fast need documentation about what happens in general with shared content streams. *)
-(* 3. Annotations must be duplicated *)
-(* 4. What is the effect on bookmarks and links annotations? *)
-(* 5. Any other page meta items? *)
 
 (* Chop a single page into pieces. We prefer the cropbox when available. We set
-   mediabox only, and delete any other boxes. *)
+   mediabox only, and delete any other boxes. We delete /Annots, since
+   duplicate annotations are not allowed. *)
 let get_box pdf page =
   match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
   | Some r -> Pdf.parse_rectangle pdf r
@@ -16,7 +13,12 @@ let get_box pdf page =
 
 let erase_boxes d =
   let f = Pdf.remove_dict_entry in
-    f (f (f (f d "/CropBox") "/BleedBox") "/TrimBox") "/ArtBox"
+    f (f (f (f (f d "/CropBox") "/BleedBox") "/TrimBox") "/ArtBox") "/Annots"
+
+let make_pages x y columns btt rtl w h ps move_page =
+  for ty = y - 1 downto 0 do for tx = 0 to x - 1 do
+    ps =| move_page (w *. float_of_int tx) (h *. float_of_int ty)
+  done done
 
 let chop_boxes pdf x y columns btt rtl p =
   if x < 1 || y < 1 then Cpdferror.error "chop_boxes bad specification" else
@@ -32,11 +34,7 @@ let chop_boxes pdf x y columns btt rtl p =
     (*Printf.printf "minx, miny, maxx, maxy = %f, %f, %f, %f\n" minx miny maxx maxy;*)
     let w, h = (maxx -. minx) /. float_of_int x, (maxy -. miny) /. float_of_int y in
     let ps = ref [] in
-    let move_page = move_page minx miny p w h in
-      (* columns, btt, rtl *)
-      for ty = y - 1 downto 0 do for tx = 0 to x - 1 do
-        ps =| move_page (w *. float_of_int tx) (h *. float_of_int ty)
-      done done;
+      make_pages x y columns btt rtl w h ps (move_page minx miny p w h);
       rev !ps
 
 (* Chop pages in the range into pieces *)
