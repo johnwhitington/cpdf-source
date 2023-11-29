@@ -1,8 +1,6 @@
 open Pdfutil
 open Cpdferror
 
-(* 1. FIXME btt / rtl / columns *)
-
 (* Chop a single page into pieces. We prefer the cropbox when available. We set
    mediabox only, and delete any other boxes. We delete /Annots, since
    duplicate annotations are not allowed. *)

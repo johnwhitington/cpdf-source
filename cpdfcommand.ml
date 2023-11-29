@@ -2314,10 +2314,10 @@ and specs =
       " Impose in columns rather than rows");
    ("-impose-rtl",
       Arg.Unit setimposertl,
-      " Impose right-to-left on rows");
+      " Impose right-to-left");
    ("-impose-btt",
       Arg.Unit setimposebtt,
-      " Impose bottom-to-top on columns");
+      " Impose bottom-to-top");
    ("-impose-margin",
       Arg.Float setimposemargin,
       " Add margin around whole imposed page");
@@ -2330,6 +2330,15 @@ and specs =
    ("-chop",
       Arg.String setchop,
       " Chop x by y");
+   ("-chop-columns",
+      Arg.Unit setimposecolumns,
+      " Chop in columns rather than rows");
+   ("-chop-rtl",
+      Arg.Unit setimposertl,
+      " Chop right-to-left");
+   ("-chop-btt",
+      Arg.Unit setimposebtt,
+      " Chop bottom-to-top");
    ("-pad-before",
       Arg.Unit (setop PadBefore),
       " Add a blank page before the given pages");
