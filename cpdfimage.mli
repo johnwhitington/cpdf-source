@@ -15,3 +15,4 @@ val images : Pdf.t -> int list -> Cpdfyojson.Safe.t
 val image_of_input : (Pdfio.bytes -> Pdf.pdfobject) -> Pdfio.input -> Pdf.t
 val obj_of_jpeg_data : Pdfio.bytes -> Pdf.pdfobject
 val obj_of_png_data : Pdfio.bytes -> Pdf.pdfobject
+val obj_of_jbig2_data : ?global:int -> Pdfio.bytes -> Pdf.pdfobject

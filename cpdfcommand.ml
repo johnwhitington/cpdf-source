@@ -1789,6 +1789,7 @@ let set_input_image f s =
 
 let set_input_png = set_input_image Cpdfimage.obj_of_png_data
 let set_input_jpeg = set_input_image Cpdfimage.obj_of_jpeg_data
+let set_input_jbig2 = set_input_image (Cpdfimage.obj_of_jbig2_data ~global:1)
 
 let embed_font_inner font =
   match font with
@@ -1915,6 +1916,9 @@ and specs =
    ("-jpeg",
        Arg.String set_input_jpeg,
        " Load from a JPEG file, converting to PDF");
+   ("-jbig2",
+       Arg.String set_input_jbig2,
+       " Load from a JBIG2 fragment, converting to PDF");
    ("-idir",
        Arg.String set_input_dir,
        " Add a directory of files");

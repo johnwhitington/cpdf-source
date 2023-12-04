@@ -405,7 +405,22 @@ let obj_of_png_data data =
      "/Width", Pdf.Integer png.width;
      "/Height", Pdf.Integer png.height]
   in
-    Pdf.Stream {contents = (Pdf.Dictionary d , Pdf.Got png.idat)}
+    Pdf.Stream {contents = (Pdf.Dictionary d, Pdf.Got png.idat)}
+
+let obj_of_jbig2_data ?global:int data =
+  let d =
+    let w = 800 in
+    let h = 1200 in
+      [("/Length", Pdf.Integer (Pdfio.bytes_size data));
+       ("/Filter", Pdf.Name "/JBIG2Decode");
+       ("/Subtype", Pdf.Name "/Image");
+       ("/BitsPerComponent", Pdf.Integer 1);
+       ("/ColorSpace", Pdf.Name "/DeviceGray");
+       (* FIXME decodeparms for global *)
+       ("/Width", Pdf.Integer w);
+       ("/Height", Pdf.Integer h)]
+  in
+    Pdf.Stream {contents = (Pdf.Dictionary d, Pdf.Got data)}
 
 let image_of_input fobj i =
   let pdf = Pdf.empty () in
