@@ -1787,9 +1787,11 @@ let set_input_image f s =
   with
     Sys_error _ -> error "Image file not found"
 
+let jbig2_global = ref None
+
 let set_input_png = set_input_image Cpdfimage.obj_of_png_data
 let set_input_jpeg = set_input_image Cpdfimage.obj_of_jpeg_data
-let set_input_jbig2 = set_input_image (Cpdfimage.obj_of_jbig2_data ~global:1)
+let set_input_jbig2 = set_input_image (Cpdfimage.obj_of_jbig2_data ?global:!jbig2_global)
 
 let embed_font_inner font =
   match font with
@@ -1896,6 +1898,12 @@ let setlistimagesjson () =
   setop ListImages ();
   args.format_json <- true
 
+let set_jbig2_global f =
+  jbig2_global := Some (Pdfio.bytes_of_string (contents_of_file f))
+
+let clear_jbig2_global () =
+  jbig2_global := None
+
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
   control_args := !control_args @ parse_control_file filename
@@ -1919,6 +1927,12 @@ and specs =
    ("-jbig2",
        Arg.String set_input_jbig2,
        " Load from a JBIG2 fragment, converting to PDF");
+   ("-jbig2-global",
+       Arg.String set_jbig2_global,
+       " Load a JBIG2 global stream");
+   ("-jbig2-global-clear",
+       Arg.Unit clear_jbig2_global,
+       " Forget any JBIG2 global stream");
    ("-idir",
        Arg.String set_input_dir,
        " Add a directory of files");

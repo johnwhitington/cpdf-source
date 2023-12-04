@@ -388,7 +388,7 @@ let obj_of_jpeg_data data =
      "/Width", Pdf.Integer w;
      "/Height", Pdf.Integer h]
   in
-    Pdf.Stream {contents = (Pdf.Dictionary d, Pdf.Got data)}
+    Pdf.Stream {contents = (Pdf.Dictionary d, Pdf.Got data)}, []
 
 let obj_of_png_data data =
   let png = Cpdfpng.read_png (Pdfio.input_of_bytes data) in
@@ -406,7 +406,7 @@ let obj_of_png_data data =
      "/Width", Pdf.Integer png.width;
      "/Height", Pdf.Integer png.height]
   in
-    Pdf.Stream {contents = (Pdf.Dictionary d, Pdf.Got png.idat)}
+    Pdf.Stream {contents = (Pdf.Dictionary d, Pdf.Got png.idat)}, []
 
 let jbig2_dimensions data =
   (bget data 11 * 256 * 256 * 256 + bget data 12 * 256 * 256 + bget data 13 * 256 + bget data 14,
@@ -424,12 +424,12 @@ let obj_of_jbig2_data ?global:int data =
        ("/Width", Pdf.Integer w);
        ("/Height", Pdf.Integer h)]
   in
-    Pdf.Stream {contents = (Pdf.Dictionary d, Pdf.Got data)}
+    Pdf.Stream {contents = (Pdf.Dictionary d, Pdf.Got data)}, []
 
 let image_of_input fobj i =
   let pdf = Pdf.empty () in
   let data = Pdfio.bytes_of_input i 0 i.Pdfio.in_channel_length in
-  let obj = fobj data in
+  let obj, extras = fobj data in
   let w = match Pdf.lookup_direct pdf "/Width" obj with Some x -> Pdf.getnum pdf x | _ -> assert false in
   let h = match Pdf.lookup_direct pdf "/Height" obj with Some x -> Pdf.getnum pdf x | _ -> assert false in
   let page =

@@ -245,7 +245,7 @@ let addjpeg n =
   in
     try
       let data = Pdfio.bytes_of_string (contents_of_file filename) in
-        addop (Cpdfdraw.ImageXObject (name, Cpdfimage.obj_of_jpeg_data data))
+        addop (Cpdfdraw.ImageXObject (name, fst (Cpdfimage.obj_of_jpeg_data data)))
     with
       _ -> error "addjpeg: could not load JPEG"
 
@@ -256,7 +256,7 @@ let addpng n =
     | _ -> error "addpng: bad file specification"
   in
     let data = Pdfio.bytes_of_string (contents_of_file filename) in
-      addop (Cpdfdraw.ImageXObject (name, Cpdfimage.obj_of_png_data data))
+      addop (Cpdfdraw.ImageXObject (name, fst (Cpdfimage.obj_of_png_data data)))
 
 let addimage s =
   addop (Cpdfdraw.Image s)
