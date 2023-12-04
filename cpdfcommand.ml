@@ -1789,9 +1789,13 @@ let set_input_image f s =
 
 let jbig2_global = ref None
 
-let set_input_png = set_input_image Cpdfimage.obj_of_png_data
-let set_input_jpeg = set_input_image Cpdfimage.obj_of_jpeg_data
-let set_input_jbig2 = set_input_image (Cpdfimage.obj_of_jbig2_data ?global:!jbig2_global)
+let set_input_png = set_input_image (fun () -> Cpdfimage.obj_of_png_data)
+let set_input_jpeg = set_input_image (fun () -> Cpdfimage.obj_of_jpeg_data)
+let set_input_jbig2 =
+  set_input_image
+    (fun () ->
+       Printf.printf "set_input_jbig2, global = %s\n" (match !jbig2_global with None -> "none" | _ -> "some");
+       Cpdfimage.obj_of_jbig2_data ?global:!jbig2_global)
 
 let embed_font_inner font =
   match font with
@@ -1899,6 +1903,7 @@ let setlistimagesjson () =
   args.format_json <- true
 
 let set_jbig2_global f =
+  Printf.printf "inside set_jbig2_global\n";
   jbig2_global := Some (Pdfio.bytes_of_string (contents_of_file f))
 
 let clear_jbig2_global () =

@@ -418,7 +418,7 @@ let obj_of_jbig2_data ?global data =
       match global with
       | Some data ->
           [("/DecodeParms", Pdf.Dictionary [("/JBIG2Globals", Pdf.Indirect 10000)])],
-          [(10000, Pdf.Stream {contents = (Pdf.Dictionary [("/Length", Pdf.Integer (bytes_size data))], Pdf.Got data)})] (* FIXME flate *)
+          [(10000, Pdf.Stream {contents = (Pdf.Dictionary [("/Length", Pdf.Integer (bytes_size data))], Pdf.Got data)})]
       | None ->
           [], []
     in
@@ -437,7 +437,7 @@ let obj_of_jbig2_data ?global data =
 let image_of_input fobj i =
   let pdf = Pdf.empty () in
   let data = Pdfio.bytes_of_input i 0 i.Pdfio.in_channel_length in
-  let obj, extras = fobj data in
+  let obj, extras = fobj () data in
   iter (Pdf.addobj_given_num pdf) extras;
   let w = match Pdf.lookup_direct pdf "/Width" obj with Some x -> Pdf.getnum pdf x | _ -> assert false in
   let h = match Pdf.lookup_direct pdf "/Height" obj with Some x -> Pdf.getnum pdf x | _ -> assert false in

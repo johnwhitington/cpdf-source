@@ -12,7 +12,7 @@ val image_resolution : Pdf.t -> int list -> float -> (int * string * int * int *
 val images : Pdf.t -> int list -> Cpdfyojson.Safe.t
 
 (**/**)
-val image_of_input : (Pdfio.bytes -> Pdf.pdfobject * (int * Pdf.pdfobject) list) -> Pdfio.input -> Pdf.t
+val image_of_input : (unit -> Pdfio.bytes -> Pdf.pdfobject * (int * Pdf.pdfobject) list) -> Pdfio.input -> Pdf.t
 val obj_of_jpeg_data : Pdfio.bytes -> Pdf.pdfobject * (int * Pdf.pdfobject) list
 val obj_of_png_data : Pdfio.bytes -> Pdf.pdfobject * (int * Pdf.pdfobject) list
 val obj_of_jbig2_data : ?global:Pdfio.bytes -> Pdfio.bytes -> Pdf.pdfobject * (int * Pdf.pdfobject) list
