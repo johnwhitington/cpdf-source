@@ -22,14 +22,15 @@ let pnm_to_channel_24 channel w h s =
         done
       done
 
-let write_stream name stream =
-  let fh = open_out_bin name in
-    Pdfio.bytes_to_output_channel fh stream;
-    close_out fh
 
 let jbig2_serial = ref 0
 
 let jbig2_globals = null_hash ()
+
+let write_stream name stream =
+  let fh = open_out_bin name in
+    Pdfio.bytes_to_output_channel fh stream;
+    close_out fh
 
 let write_image ~raw ?path_to_p2p ?path_to_im pdf resources name image =
   match Pdfimage.get_image_24bpp pdf resources image with
@@ -407,10 +408,13 @@ let obj_of_png_data data =
   in
     Pdf.Stream {contents = (Pdf.Dictionary d, Pdf.Got png.idat)}
 
+let jbig2_dimensions data =
+  (bget data 11 * 256 * 256 * 256 + bget data 12 * 256 * 256 + bget data 13 * 256 + bget data 14,
+   bget data 15 * 256 * 256 * 256 + bget data 16 * 256 * 256 + bget data 17 * 256 + bget data 18)
+
 let obj_of_jbig2_data ?global:int data =
   let d =
-    let w = 800 in
-    let h = 1200 in
+    let w, h = jbig2_dimensions data in
       [("/Length", Pdf.Integer (Pdfio.bytes_size data));
        ("/Filter", Pdf.Name "/JBIG2Decode");
        ("/Subtype", Pdf.Name "/Image");
