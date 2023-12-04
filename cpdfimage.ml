@@ -412,24 +412,33 @@ let jbig2_dimensions data =
   (bget data 11 * 256 * 256 * 256 + bget data 12 * 256 * 256 + bget data 13 * 256 + bget data 14,
    bget data 15 * 256 * 256 * 256 + bget data 16 * 256 * 256 + bget data 17 * 256 + bget data 18)
 
-let obj_of_jbig2_data ?global:int data =
-  let d =
+let obj_of_jbig2_data ?global data =
+  let d, extra =
+    let decodeparms, extra =
+      match global with
+      | Some data ->
+          [("/DecodeParms", Pdf.Dictionary [("/JBIG2Globals", Pdf.Indirect 10000)])],
+          [(10000, Pdf.Stream {contents = (Pdf.Dictionary [("/Length", Pdf.Integer (bytes_size data))], Pdf.Got data)})] (* FIXME flate *)
+      | None ->
+          [], []
+    in
     let w, h = jbig2_dimensions data in
       [("/Length", Pdf.Integer (Pdfio.bytes_size data));
        ("/Filter", Pdf.Name "/JBIG2Decode");
        ("/Subtype", Pdf.Name "/Image");
        ("/BitsPerComponent", Pdf.Integer 1);
        ("/ColorSpace", Pdf.Name "/DeviceGray");
-       (* FIXME decodeparms for global *)
        ("/Width", Pdf.Integer w);
        ("/Height", Pdf.Integer h)]
+      @ decodeparms, extra
   in
-    Pdf.Stream {contents = (Pdf.Dictionary d, Pdf.Got data)}, []
+    Pdf.Stream {contents = (Pdf.Dictionary d, Pdf.Got data)}, extra
 
 let image_of_input fobj i =
   let pdf = Pdf.empty () in
   let data = Pdfio.bytes_of_input i 0 i.Pdfio.in_channel_length in
   let obj, extras = fobj data in
+  iter (Pdf.addobj_given_num pdf) extras;
   let w = match Pdf.lookup_direct pdf "/Width" obj with Some x -> Pdf.getnum pdf x | _ -> assert false in
   let h = match Pdf.lookup_direct pdf "/Height" obj with Some x -> Pdf.getnum pdf x | _ -> assert false in
   let page =
