@@ -27,11 +27,41 @@ let write_stream name stream =
     Pdfio.bytes_to_output_channel fh stream;
     close_out fh
 
+let jbig2_serial = ref 0
+
+let jbig2_globals = null_hash ()
+
 let write_image ~raw ?path_to_p2p ?path_to_im pdf resources name image =
   match Pdfimage.get_image_24bpp pdf resources image with
   | Pdfimage.JPEG (stream, _) -> write_stream (name ^ ".jpg") stream
   | Pdfimage.JPEG2000 (stream, _) -> write_stream (name ^ ".jpx") stream
-  | Pdfimage.JBIG2 (stream, _) -> write_stream (name ^ ".jbig2") stream
+  | Pdfimage.JBIG2 (stream, _, global) ->
+      begin match global with
+      | None ->
+          Printf.printf "JBIG2: No global, writing plain\n";
+          write_stream (name ^ ".jbig2") stream
+      | Some g ->
+          Printf.printf "JBIG2: there is a global\n";
+          let go () =
+            let serial, _ = Hashtbl.find jbig2_globals g in
+              write_stream (name ^ ".jbig2__" ^ string_of_int serial) stream
+          in
+            try go () with Not_found ->
+              jbig2_serial += 1;
+              let globaldata =
+                let obj = Pdf.lookup_obj pdf g in
+                  Pdfcodec.decode_pdfstream_until_unknown pdf obj;
+                  match obj with | Pdf.Stream {contents = (_, Got b)} -> Some b | _ -> None
+              in
+                match globaldata with
+                | Some d ->
+                    Hashtbl.add jbig2_globals g (!jbig2_serial, d);
+                    let filename = Filename.concat (Filename.dirname name) (string_of_int !jbig2_serial ^ ".jbig2global") in
+                      write_stream filename d;
+                      go ()
+                | None ->
+                    Pdfe.log "Could not extract JBIG2Globals. Skipping this image."
+      end
   | Pdfimage.Raw (w, h, Pdfimage.BPP24, stream) ->
       let pnm = name ^ ".pnm" in
       let png = name ^ ".png" in
@@ -99,6 +129,8 @@ let rec extract_images_form_xobject ~raw ?path_to_p2p ?path_to_im encoding dedup
       extract_images_inner ~raw ?path_to_p2p ?path_to_im encoding serial pdf resources stem pnum images
 
 let extract_images ?(raw=false) ?path_to_p2p ?path_to_im encoding dedup dedup_per_page pdf range stem =
+  Hashtbl.clear jbig2_globals;
+  jbig2_serial := 0;
   if dedup || dedup_per_page then written := [];
   let pdf_pages = Pdfpage.pages_of_pagetree pdf in
     let pages =

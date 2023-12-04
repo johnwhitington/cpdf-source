@@ -17,6 +17,7 @@ Extended features:
 
 o -list-images-used[-json] extends -image-resolution
 o Use -raw with -extract-images to get PNMs
+o -extract-images can extract JBIG2 images and their globals
 
 Fixes:
 
