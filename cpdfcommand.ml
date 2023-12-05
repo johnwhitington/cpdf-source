@@ -369,13 +369,13 @@ let string_of_op = function
   | Chop _ -> "Chop"
 
 (* Inputs: filename, pagespec. *)
-type input_kind =
-  | AlreadyInMemory of Pdf.t
+type input_kind = 
+  | AlreadyInMemory of Pdf.t * string
   | InFile of string
   | StdIn
 
 let string_of_input_kind = function
-  | AlreadyInMemory _ -> "AlreadyInMemory"
+  | AlreadyInMemory (_, s) -> s
   | InFile s -> s
   | StdIn -> "Stdin"
 
@@ -1338,14 +1338,13 @@ let set_input s =
   args.original_filename <- s;
   args.inputs <- (InFile s, "all", "", "", ref false, None)::args.inputs
 
-
 let set_json_input s =
   args.original_filename <- s;
   args.create_objstm <- true;
   let fh = open_in_bin s in
   let pdf = Cpdfjson.of_input (Pdfio.input_of_channel fh) in
     close_in fh;
-    args.inputs <- (AlreadyInMemory pdf, "all", "", "", ref false, None)::args.inputs
+    args.inputs <- (AlreadyInMemory (pdf, s), "all", "", "", ref false, None)::args.inputs
 
 let set_input_dir s =
   let names = sort compare (leafnames_of_dir s) in
@@ -1783,19 +1782,19 @@ let set_input_image f s =
       begin try close_in fh with _ -> () end;
       args.original_filename <- s;
       args.create_objstm <- true;
-      args.inputs <- (AlreadyInMemory pdf, "all", "", "", ref false, None)::args.inputs
+      args.inputs <- (AlreadyInMemory (pdf, s), "all", "", "", ref false, None)::args.inputs
   with
     Sys_error _ -> error "Image file not found"
 
 let jbig2_global = ref None
 
-let set_input_png = set_input_image (fun () -> Cpdfimage.obj_of_png_data)
-let set_input_jpeg = set_input_image (fun () -> Cpdfimage.obj_of_jpeg_data)
-let set_input_jbig2 =
+let set_input_png s = set_input_image (fun () -> Cpdfimage.obj_of_png_data) s
+
+let set_input_jpeg s = set_input_image (fun () -> Cpdfimage.obj_of_jpeg_data) s
+
+let set_input_jbig2 s =
   set_input_image
-    (fun () ->
-       Printf.printf "set_input_jbig2, global = %s\n" (match !jbig2_global with None -> "none" | _ -> "some");
-       Cpdfimage.obj_of_jbig2_data ?global:!jbig2_global)
+    (fun () -> Cpdfimage.obj_of_jbig2_data ?global:!jbig2_global) s
 
 let embed_font_inner font =
   match font with
@@ -1903,7 +1902,6 @@ let setlistimagesjson () =
   args.format_json <- true
 
 let set_jbig2_global f =
-  Printf.printf "inside set_jbig2_global\n";
   jbig2_global := Some (Pdfio.bytes_of_string (contents_of_file f))
 
 let clear_jbig2_global () =
@@ -2952,7 +2950,7 @@ let rec get_single_pdf ?(decrypt=true) ?(fail=false) op read_lazy =
       in
         args.was_encrypted <- Pdfcrypt.is_encrypted pdf;
         if decrypt then decrypt_if_necessary input op pdf else pdf
-  | (AlreadyInMemory pdf, _, _, _, _, _)::_ -> pdf
+  | (AlreadyInMemory (pdf, s), _, _, _, _, _)::_ -> pdf
   | _ ->
       raise (Arg.Bad "cpdf: No input specified.\n")
 
@@ -2990,7 +2988,7 @@ let rec get_pdf_from_input_kind ?(read_lazy=false) ?(decrypt=true) ?(fail=false)
     exit 2
   in
   match ik with
-  | AlreadyInMemory pdf -> pdf
+  | AlreadyInMemory (pdf, _) -> pdf
   | InFile s ->
       if args.squeeze then
         begin
@@ -3540,7 +3538,7 @@ let go () =
         | (InFile inname, _, u, o, _, _) as input::_ ->
              pdfread_pdf_of_channel_lazy (optstring u) (optstring o) (open_in_bin inname), inname, input
         | (StdIn, _, u, o, _, _) as input::_ -> pdf_of_stdin u o, "", input
-        | (AlreadyInMemory pdf, _, _, _, _, _) as input::_ -> pdf, "", input
+        | (AlreadyInMemory (pdf, _), _, _, _, _, _) as input::_ -> pdf, "", input
         | _ -> raise (Arg.Bad "cpdf: No input specified.\n")
       in
         let json = ref [] in
@@ -4508,7 +4506,7 @@ let go_withargv argv =
            process_env_vars ();
            parse_argv () s (align_specs specs) anon_fun usage_msg;
            parse_argv () (Array.of_list ("cpdf"::!control_args)) (align_specs specs) anon_fun usage_msg;
-           let addrange pdf = AlreadyInMemory pdf, args.dashrange, "", "", ref false, None in
+           let addrange pdf = AlreadyInMemory (pdf, "fromAND"), args.dashrange, "", "", ref false, None in
              args.inputs <- rev (map addrange !output_pdfs) @ rev args.inputs;
              output_pdfs := [];
              go ())

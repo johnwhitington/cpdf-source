@@ -12,6 +12,7 @@ o Identify AcroForm in -info
 o Extract font files from a document
 o List images on a page with -list-images[-json]
 o Chop pages up into sections with -chop
+o Build PDF files from JBIG2 streams, including globals
 
 Extended features:
 
