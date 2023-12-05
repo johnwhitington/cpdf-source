@@ -1794,7 +1794,8 @@ let set_input_jpeg s = set_input_image (fun () -> Cpdfimage.obj_of_jpeg_data) s
 
 let set_input_jbig2 s =
   set_input_image
-    (fun () -> Cpdfimage.obj_of_jbig2_data ?global:!jbig2_global) s
+    (fun () -> Cpdfimage.obj_of_jbig2_data ?global:!jbig2_global) s;
+  args.remove_duplicate_streams <- true
 
 let embed_font_inner font =
   match font with
@@ -3477,6 +3478,7 @@ let go () =
                           Pdfmerge.merge_pdfs
                             args.retain_numbering args.remove_duplicate_fonts names pdfs rangenums
                         in
+                          if args.remove_duplicate_streams then Pdfmerge.remove_duplicate_fonts outpdf; (* JBIG2 Globals *)
                           write_pdf false outpdf
                   end
       | _ ->
