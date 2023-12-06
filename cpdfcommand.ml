@@ -230,6 +230,7 @@ type op =
   | Draw
   | Composition of bool
   | Chop of int * int
+  | ProcessImages
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -367,6 +368,7 @@ let string_of_op = function
   | Draw -> "Draw"
   | Composition _ -> "Composition"
   | Chop _ -> "Chop"
+  | ProcessImages -> "ProcessImages"
 
 (* Inputs: filename, pagespec. *)
 type input_kind = 
@@ -466,6 +468,7 @@ type args =
    mutable path_to_ghostscript : string;
    mutable path_to_im : string;
    mutable path_to_p2p : string;
+   mutable path_to_convert : string;
    mutable frombox : string option;
    mutable tobox : string option;
    mutable mediabox_if_missing : bool;
@@ -518,7 +521,9 @@ type args =
    mutable toc_title : string;
    mutable toc_bookmark : bool;
    mutable idir_only_pdfs : bool;
-   mutable no_warn_rotate : bool}
+   mutable no_warn_rotate : bool;
+   mutable jpegquality : int;
+   mutable jpegqualitylossless : int}
 
 let args =
   {op = None;
@@ -586,6 +591,7 @@ let args =
    path_to_ghostscript = "";
    path_to_im = "";
    path_to_p2p = "";
+   path_to_convert = "";
    frombox = None;
    tobox = None;
    mediabox_if_missing = false;
@@ -639,7 +645,9 @@ let args =
    toc_title = "Table of Contents";
    toc_bookmark = true;
    idir_only_pdfs = false;
-   no_warn_rotate = false}
+   no_warn_rotate = false;
+   jpegquality = 100;
+   jpegqualitylossless = 100}
 
 let reset_arguments () =
   args.op <- None;
@@ -744,6 +752,8 @@ let reset_arguments () =
   args.toc_title <- "Table of Contents";
   args.toc_bookmark <- true;
   args.idir_only_pdfs <- false;
+  args.jpegquality <- 100;
+  args.jpegqualitylossless <- 100;
   (* Do not reset original_filename or cpdflin or was_encrypted or
    was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
    gs_malformed or gs_quiet or no-warn-rotate, since we want these to work
@@ -863,7 +873,7 @@ let banned banlist = function
     CopyBox|MediaBox|HardBox _|SetTrapped|SetUntrapped|Presentation|
     BlackText|BlackLines|BlackFills|CopyFont _|StampOn _|StampUnder _|StampAsXObject _|
     AddText _|ScaleContents _|AttachFile _| ThinLines _ | RemoveClipping | RemoveAllText
-    | Prepend _ | Postpend _ | Draw ->
+  | Prepend _ | Postpend _ | Draw | ProcessImages ->
       mem Pdfcrypt.NoEdit banlist
 
 let operation_allowed pdf banlist op =
@@ -1512,6 +1522,9 @@ let setgspath p =
 let setimpath p =
   args.path_to_im <- p
 
+let setconvertpath p =
+  args.path_to_convert <- p
+
 let setp2ppath p =
   args.path_to_p2p <- p
 
@@ -1907,6 +1920,12 @@ let set_jbig2_global f =
 
 let clear_jbig2_global () =
   jbig2_global := None
+
+let setjpegquality q =
+  args.jpegquality <- q
+ 
+let setjpegqualitylossless q =
+  args.jpegqualitylossless <- q
 
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
@@ -2679,6 +2698,18 @@ and specs =
    ("-dedup-perpage",
      Arg.Unit set_dedup_per_page,
      " Deduplicate extracted images per page only");
+   ("-process-images",
+     Arg.Unit (setop ProcessImages),
+     " Process images within PDF");
+   ("-convert",
+     Arg.String setconvertpath,
+     " Path to convert executable");
+   ("-jpeg-to-jpeg",
+     Arg.Int setjpegquality,
+     " Set JPEG quality for existing JPEGs");
+   ("-lossless-to-jpeg",
+     Arg.Int setjpegqualitylossless,
+     " Set JPEG quality for existing lossless images");
    ("-squeeze",
      Arg.Unit setsqueeze,
      " Squeeze");
@@ -4414,6 +4445,10 @@ let go () =
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
         write_pdf false (Cpdfchop.chop ~x ~y ~columns:args.impose_columns ~btt:args.impose_btt ~rtl:args.impose_rtl pdf range)
+  | Some ProcessImages ->
+      let pdf = get_single_pdf args.op false in
+        Cpdfimage.process pdf;
+        write_pdf false pdf
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)

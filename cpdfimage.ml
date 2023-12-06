@@ -456,3 +456,5 @@ let image_of_input fobj i =
   in
   let pdf, pageroot = Pdfpage.add_pagetree [page] pdf in
     Pdfpage.add_root pageroot [] pdf
+
+let process pdf = ()

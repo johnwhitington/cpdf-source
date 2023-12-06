@@ -11,6 +11,8 @@ val image_resolution : Pdf.t -> int list -> float -> (int * string * int * int *
 (** List images in JSON format *)
 val images : Pdf.t -> int list -> Cpdfyojson.Safe.t
 
+val process : Pdf.t -> unit
+
 (**/**)
 val image_of_input : (unit -> Pdfio.bytes -> Pdf.pdfobject * (int * Pdf.pdfobject) list) -> Pdfio.input -> Pdf.t
 val obj_of_jpeg_data : Pdfio.bytes -> Pdf.pdfobject * (int * Pdf.pdfobject) list
