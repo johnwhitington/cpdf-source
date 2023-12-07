@@ -457,4 +457,45 @@ let image_of_input fobj i =
   let pdf, pageroot = Pdfpage.add_pagetree [page] pdf in
     Pdfpage.add_root pageroot [] pdf
 
-let process pdf = ()
+(* For each image xobject, process it through convert to reduce JPEG quality if we can. *)
+let process pdf ~q ~qlossless ~path_to_convert =
+  let process_obj _ s =
+  match s with
+  | Pdf.Stream ({contents = dict, _} as reference) ->
+      begin match Pdf.lookup_direct pdf "/Subtype" dict, Pdf.lookup_direct pdf "/Filter" dict with
+      | Some (Pdf.Name "/Image"), Some (Pdf.Name "/DCTDecode" | Pdf.Array [Pdf.Name "/DCTDecode"]) ->
+          Pdf.getstream s;
+          let out = Filename.temp_file "cpdf" "convertin" ^ ".jpg" in
+          let out2 = Filename.temp_file "cpdf" "convertout" ^ ".jpg" in
+          let fh = open_out_bin out in
+            (* 1. Write data to temp file *)
+            let size =
+              begin match s with Pdf.Stream {contents = _, Pdf.Got d} -> Pdfio.bytes_to_output_channel fh d; bytes_size d | _ -> 0 end
+            in
+            close_out fh;
+            (* 2. Process with convert. *)
+            let retcode =
+              let command = 
+                (Filename.quote_command path_to_convert
+                  [out; "-quality"; string_of_int q ^ "%"; out2])
+              in
+                Printf.printf "%S\n" command;
+                Sys.command command
+            in
+            if retcode = 0 then
+              begin
+                (* 3. If return code 0, and output file produced, read it in *)
+                let result = open_in_bin out2 in
+                let newsize = in_channel_length result in
+                if newsize < size then
+                  (* 4. Replace the data, but only if it was smaller *)
+                  reference := Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize), Pdf.Got (Pdfio.bytes_of_input_channel result)
+              end;
+            (* 5. Clean up *)
+            Sys.remove out;
+            Sys.remove out2
+      | _ -> ()
+      end
+  | _ -> ()
+  in
+    Pdf.objiter process_obj pdf

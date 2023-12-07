@@ -4447,7 +4447,7 @@ let go () =
         write_pdf false (Cpdfchop.chop ~x ~y ~columns:args.impose_columns ~btt:args.impose_btt ~rtl:args.impose_rtl pdf range)
   | Some ProcessImages ->
       let pdf = get_single_pdf args.op false in
-        Cpdfimage.process pdf;
+        Cpdfimage.process pdf ~q:args.jpegquality ~qlossless:args.jpegqualitylossless ~path_to_convert:args.path_to_convert;
         write_pdf false pdf
 
 (* Advise the user if a combination of command line flags makes little sense,
