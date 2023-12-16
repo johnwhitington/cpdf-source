@@ -138,7 +138,7 @@ and remove_images_page onlyremove boxes pdf page =
         {page with
           Pdfpage.content =
             (let stream = Pdfops.stream_of_ops content' in
-              Pdfcodec.encode_pdfstream pdf Pdfcodec.Flate stream;
+              Pdfcodec.encode_pdfstream ~only_if_smaller:true pdf Pdfcodec.Flate stream;
               [stream]);
           Pdfpage.resources = resources'}, pdf
 

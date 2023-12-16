@@ -21,7 +21,7 @@ let recompress_stream pdf = function
       with
       | _, Some (Pdf.Name "/Metadata") -> ()
       | (None | Some (Pdf.Array [])), _ ->
-          Pdfcodec.encode_pdfstream pdf Pdfcodec.Flate stream
+           Pdfcodec.encode_pdfstream ~only_if_smaller:true pdf Pdfcodec.Flate stream
       | _ -> ()
       end
   | _ -> assert false
