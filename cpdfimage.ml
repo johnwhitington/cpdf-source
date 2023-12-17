@@ -457,41 +457,54 @@ let image_of_input fobj i =
   let pdf, pageroot = Pdfpage.add_pagetree [page] pdf in
     Pdfpage.add_root pageroot [] pdf
 
-(* For each image xobject, process it through convert to reduce JPEG quality if we can. *)
+(* FIXME Make sure this process is ok for masks too - do we get them, is it allowed etc. *)
+(* FIXME Only do if quality < 100 *)
+(* For each image xobject, process it through convert to reduce size. *)
 let process pdf ~q ~qlossless ~path_to_convert =
   let process_obj _ s =
-  match s with
-  | Pdf.Stream ({contents = dict, _} as reference) ->
-      begin match Pdf.lookup_direct pdf "/Subtype" dict, Pdf.lookup_direct pdf "/Filter" dict with
-      | Some (Pdf.Name "/Image"), Some (Pdf.Name "/DCTDecode" | Pdf.Array [Pdf.Name "/DCTDecode"]) ->
-          Pdf.getstream s;
-          let out = Filename.temp_file "cpdf" "convertin" ^ ".jpg" in
-          let out2 = Filename.temp_file "cpdf" "convertout" ^ ".jpg" in
-          let fh = open_out_bin out in
-            let size =
-              begin match s with Pdf.Stream {contents = _, Pdf.Got d} -> Pdfio.bytes_to_output_channel fh d; bytes_size d | _ -> 0 end
-            in
-            close_out fh;
-            let retcode =
-              let command = 
-                (Filename.quote_command path_to_convert
-                  [out; "-quality"; string_of_int q ^ "%"; out2])
+    match s with
+    | Pdf.Stream ({contents = dict, _} as reference) ->
+        begin match Pdf.lookup_direct pdf "/Subtype" dict, Pdf.lookup_direct pdf "/Filter" dict with
+        | Some (Pdf.Name "/Image"), Some (Pdf.Name "/DCTDecode" | Pdf.Array [Pdf.Name "/DCTDecode"]) ->
+            Pdf.getstream s;
+            let out = Filename.temp_file "cpdf" "convertin" ^ ".jpg" in
+            let out2 = Filename.temp_file "cpdf" "convertout" ^ ".jpg" in
+            let fh = open_out_bin out in
+              let size =
+                begin match s with Pdf.Stream {contents = _, Pdf.Got d} -> Pdfio.bytes_to_output_channel fh d; bytes_size d | _ -> 0 end
               in
-                (*Printf.printf "%S\n" command;*)
-                Sys.command command
-            in
-            if retcode = 0 then
-              begin
-                let result = open_in_bin out2 in
-                let newsize = in_channel_length result in
-                if newsize < size then
-                  (*Printf.printf "%i -> %i\n" size newsize;*)
-                  reference := Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize), Pdf.Got (Pdfio.bytes_of_input_channel result)
-              end;
-            Sys.remove out;
-            Sys.remove out2
-      | _ -> ()
-      end
-  | _ -> ()
+              close_out fh;
+              let retcode =
+                let command = 
+                  (Filename.quote_command path_to_convert
+                    [out; "-quality"; string_of_int q ^ "%"; out2])
+                in
+                  (*Printf.printf "%S\n" command;*)
+                  Sys.command command
+              in
+              if retcode = 0 then
+                begin
+                  let result = open_in_bin out2 in
+                  let newsize = in_channel_length result in
+                  if newsize < size then
+                    (*Printf.printf "%i -> %i\n" size newsize;*)
+                    reference := Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize), Pdf.Got (Pdfio.bytes_of_input_channel result)
+                end;
+              Sys.remove out;
+              Sys.remove out2
+        | Some (Pdf.Name "/Image"), _ ->
+            (* 0. Test if this is one we can do - for now just Colourspace=RGB, BPC=8 *)
+            begin match Pdf.lookup_direct pdf "/ColorSpace" dict, Pdf.lookup_direct pdf "/BitsPerComponent" dict with
+            | Some (Pdf.Name "/DeviceRGB"), Some (Pdf.Integer 8) ->
+                Printf.printf "Found a lossless(rgb, 8) image to JPEGify\n"
+            (* 1. Decompress it - check we succeeded, bail if not *)
+            (* 1. Output to pnm *)
+            (* 2. Convert to JPEG with convert *)
+            (* 3. Check smaller, Read file, and build new dictionary - removing ColorSpace, BitsPerComponent replacing Filter *)
+            | _ -> Printf.printf "I"
+            end
+        | _ -> () (* not an image *)
+        end
+    | _ -> () (* not a stream *)
   in
     Pdf.objiter process_obj pdf
