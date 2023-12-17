@@ -459,6 +459,8 @@ let image_of_input fobj i =
 
 (* FIXME Make sure this process is ok for masks too - do we get them, is it allowed etc. *)
 (* FIXME Only do if quality < 100 *)
+(* FIXME Error when path_to_convert not defined *)
+(* FIXME Need the "is it smaller" check from Pdfcodec.encode here too? *)
 (* For each image xobject, process it through convert to reduce size. *)
 let process pdf ~q ~qlossless ~path_to_convert =
   let process_obj _ s =
@@ -487,7 +489,7 @@ let process pdf ~q ~qlossless ~path_to_convert =
                   let result = open_in_bin out2 in
                   let newsize = in_channel_length result in
                   if newsize < size then
-                    (*Printf.printf "%i -> %i\n" size newsize;*)
+                    Printf.printf "JPEG to JPEG %i -> %i\n" size newsize;
                     reference := Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize), Pdf.Got (Pdfio.bytes_of_input_channel result)
                 end;
               Sys.remove out;
@@ -501,7 +503,14 @@ let process pdf ~q ~qlossless ~path_to_convert =
             (* 1. Output to pnm *)
             (* 2. Convert to JPEG with convert *)
             (* 3. Check smaller, Read file, and build new dictionary - removing ColorSpace, BitsPerComponent replacing Filter *)
-            | _ -> Printf.printf "I"
+            | colspace, bpc ->
+              let colspace, bpc, filter = 
+                (match colspace with None -> "none" | Some x -> Pdfwrite.string_of_pdf x),
+                (match bpc with None -> "none" | Some x -> Pdfwrite.string_of_pdf x),
+                (match Pdf.lookup_direct pdf "/Filter" dict with None -> "none" | Some x -> Pdfwrite.string_of_pdf x)
+              in
+                print_string (Printf.sprintf "%s (%s) [%s]\n" colspace bpc filter);
+                () (* an image we cannot or do not handle *)
             end
         | _ -> () (* not an image *)
         end
