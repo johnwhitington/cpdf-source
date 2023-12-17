@@ -457,10 +457,12 @@ let image_of_input fobj i =
   let pdf, pageroot = Pdfpage.add_pagetree [page] pdf in
     Pdfpage.add_root pageroot [] pdf
 
+(* NOTE: ./cpdf -convert convert -recrypt -process-images -lossless-to-jpeg 65 ~/repos/pdfs/PDFTests/main128fail.pdf -o out.pdf *)
 (* FIXME Make sure this process is ok for masks too - do we get them, is it allowed etc. *)
 (* FIXME Only do if quality < 100 *)
 (* FIXME Error when path_to_convert not defined *)
 (* FIXME Need the "is it smaller" check from Pdfcodec.encode here too? *)
+(* FIXME (this appears to make the file larger than ./cpdf ~/repos/pdfs/PDFTests/main128fail.pdf -recrypt -o out.pdf. Why? Seems to not create new object streams. Make it do so, since this a compression mechanism? An empty Pdf.objiter should not blow up a file like this!) *)
 (* For each image xobject, process it through convert to reduce size. *)
 let process pdf ~q ~qlossless ~path_to_convert =
   let process_obj _ s =
