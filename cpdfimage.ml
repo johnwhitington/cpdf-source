@@ -2,26 +2,42 @@ open Pdfutil
 open Pdfio
 open Cpdferror
 
-(* Extract Images. *)
-let pnm_to_channel_24 channel w h s =
-  let white () = output_char channel ' ' 
-  and newline () = output_char channel '\n'
-  and output_string = Stdlib.output_string channel in
-    output_string "P6";
-    white ();
-    output_string (string_of_int w);
-    white ();
-    output_string (string_of_int h);
-    white ();
-    output_string "255";
-    newline ();
-    let pos = ref 0 in
-      for y = 1 to h do
-        for x = 1 to w * 3 do
-          output_byte channel (bget s !pos);
-          incr pos
-        done
+let pnm_white ch = output_char ch ' '
+let pnm_newline ch = output_char ch '\n'
+let pnm_output_string = Stdlib.output_string
+ 
+let pnm_header ch w h =
+  pnm_white ch;
+  pnm_output_string ch (string_of_int w);
+  pnm_white ch;
+  pnm_output_string ch (string_of_int h);
+  pnm_white ch
+
+let pnm_to_channel_24 ch w h s =
+  pnm_output_string ch "P6";
+  pnm_header ch w h;
+  pnm_output_string ch "255";
+  pnm_newline ch;
+  let pos = ref 0 in
+    for y = 1 to h do
+      for x = 1 to w * 3 do
+        output_byte ch (bget s !pos);
+        incr pos
       done
+    done
+
+let pnm_to_channel_8 ch w h s =
+  pnm_output_string ch "P5";
+  pnm_header ch w h;
+  pnm_output_string ch "15";
+  pnm_newline ch;
+  let pos = ref 0 in
+    for y = 1 to h do
+      for x = 1 to w do
+        output_byte ch (bget s !pos);
+        incr pos
+      done
+    done
 
 let jbig2_serial = ref 0
 
@@ -466,6 +482,7 @@ let image_of_input fobj i =
 (* For each image xobject, process it through convert to reduce size. *)
 (* FIXME What about predictors? Audit to see if files get smaller. *)
 (* FIXME if lossy only 5% smaller, ignore? Set this parameter... *)
+(* FIXME error handling for Sys.remove, others *)
 let process pdf ~q ~qlossless ~path_to_convert =
   let process_obj _ s =
     match s with
@@ -501,18 +518,20 @@ let process pdf ~q ~qlossless ~path_to_convert =
         | Some (Pdf.Name "/Image"), _ ->
             (* 0. Test if this is one we can do - for now just Colourspace=RGB, BPC=8 *)
             let bpc = Pdf.lookup_direct pdf "/BitsPerComponent" dict in
-            let is_rgb =
+            let suitable_num =
               match Pdf.lookup_direct pdf "/ColorSpace" dict with
-              | Some (Pdf.Name "/DeviceRGB") -> true
+              | Some (Pdf.Name "/DeviceRGB") -> 3
+              | Some (Pdf.Name "/DeviceGray") -> 1
               | Some (Pdf.Array [Pdf.Name "/ICCBased"; stream]) ->
                   begin match Pdf.lookup_direct pdf "/N" stream with
-                  | Some (Pdf.Integer 3) -> true
-                  | _ -> false
+                  | Some (Pdf.Integer 3) -> 3
+                  | Some (Pdf.Integer 1) -> 1
+                  | _ -> 0
                   end
-              | _ -> false
+              | _ -> 0
             in
-            begin match is_rgb, bpc with
-            | true, Some (Pdf.Integer 8) ->
+            begin match suitable_num, bpc with
+            | (1 | 3), Some (Pdf.Integer 8) ->
                 let size = match Pdf.lookup_direct pdf "/Length" dict with Some (Pdf.Integer i) -> i | _ -> 0 in
                 Pdfcodec.decode_pdfstream_until_unknown pdf s;
                 begin match Pdf.lookup_direct pdf "/Filter" (fst !reference) with Some _ -> () | None ->
@@ -522,12 +541,14 @@ let process pdf ~q ~qlossless ~path_to_convert =
                   let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
                   let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
                   let data = match s with Pdf.Stream {contents = _, Pdf.Got d} -> d | _ -> assert false in
-                  pnm_to_channel_24 fh w h data;
+                  (if suitable_num = 3 then pnm_to_channel_24 else pnm_to_channel_8) fh w h data;
                   close_out fh;
                   let retcode =
                     let command = 
                       (Filename.quote_command path_to_convert
-                        [out; "-quality"; string_of_int qlossless ^ "%"; out2])
+                        ([out; "-quality"; string_of_int qlossless ^ "%"] @
+                        (if suitable_num = 1 then ["-colorspace"; "Gray"] else []) @
+                        [out2]))
                     in
                       (*Printf.printf "%S\n" command;*)
                       Sys.command command
@@ -537,13 +558,16 @@ let process pdf ~q ~qlossless ~path_to_convert =
                       let result = open_in_bin out2 in
                       let newsize = in_channel_length result in
                       if newsize < size then
-                        Printf.printf "Lossless to JPEG %i -> %i\n" size newsize;
-                        reference :=
-                          (Pdf.add_dict_entry
-                            (Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize))
-                             "/Filter"
-                             (Pdf.Name "/DCTDecode")),
-                          Pdf.Got (Pdfio.bytes_of_input_channel result)
+                        begin
+                          Printf.printf "Lossless to JPEG %i -> %i (components %i) \n" size newsize suitable_num;
+                          reference :=
+                            (Pdf.add_dict_entry
+                              (Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize))
+                               "/Filter"
+                               (Pdf.Name "/DCTDecode")),
+                            Pdf.Got (Pdfio.bytes_of_input_channel result)
+                        end;
+                        close_in result
                     end;
                   Sys.remove out;
                   Sys.remove out2
