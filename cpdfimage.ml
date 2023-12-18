@@ -1,5 +1,6 @@
 open Pdfutil
 open Pdfio
+open Cpdferror
 
 (* Extract Images. *)
 let pnm_to_channel_24 channel w h s =
@@ -21,7 +22,6 @@ let pnm_to_channel_24 channel w h s =
           incr pos
         done
       done
-
 
 let jbig2_serial = ref 0
 
@@ -464,6 +464,8 @@ let image_of_input fobj i =
 (* FIXME Need the "is it smaller" check from Pdfcodec.encode here too? *)
 (* FIXME (this appears to make the file larger than ./cpdf ~/repos/pdfs/PDFTests/main128fail.pdf -recrypt -o out.pdf. Why? Seems to not create new object streams. Make it do so, since this a compression mechanism? An empty Pdf.objiter should not blow up a file like this!) *)
 (* For each image xobject, process it through convert to reduce size. *)
+(* FIXME What about predictors? Audit to see if files get smaller. *)
+(* FIXME if lossy only 5% smaller, ignore? Set this parameter... *)
 let process pdf ~q ~qlossless ~path_to_convert =
   let process_obj _ s =
     match s with
@@ -500,18 +502,57 @@ let process pdf ~q ~qlossless ~path_to_convert =
             (* 0. Test if this is one we can do - for now just Colourspace=RGB, BPC=8 *)
             begin match Pdf.lookup_direct pdf "/ColorSpace" dict, Pdf.lookup_direct pdf "/BitsPerComponent" dict with
             | Some (Pdf.Name "/DeviceRGB"), Some (Pdf.Integer 8) ->
-                Printf.printf "Found a lossless(rgb, 8) image to JPEGify\n"
-            (* 1. Decompress it - check we succeeded, bail if not *)
-            (* 1. Output to pnm *)
-            (* 2. Convert to JPEG with convert *)
-            (* 3. Check smaller, Read file, and build new dictionary - removing ColorSpace, BitsPerComponent replacing Filter *)
+                let size = match Pdf.lookup_direct pdf "/Length" dict with Some (Pdf.Integer i) -> i | _ -> 0 in
+                (* 1. Decompress it - check we succeeded, bail if not *)
+                Pdfcodec.decode_pdfstream_until_unknown pdf s;
+                begin match Pdf.lookup_direct pdf "/Filter" (fst !reference) with Some _ -> () | None ->
+                  (* 1. Output to pnm *)
+                  let out = Filename.temp_file "cpdf" "convertin" ^ ".pnm" in
+                  let out2 = Filename.temp_file "cpdf" "convertout" ^ ".jpg" in
+                  let fh = open_out_bin out in
+                  let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
+                  let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
+                  let data = match s with Pdf.Stream {contents = _, Pdf.Got d} -> d | _ -> assert false in
+                  pnm_to_channel_24 fh w h data;
+                  close_out fh;
+                  (* 2. Convert to JPEG with convert *)
+                  let retcode =
+                    let command = 
+                      (Filename.quote_command path_to_convert
+                        [out; "-quality"; string_of_int qlossless ^ "%"; out2])
+                    in
+                      (*Printf.printf "%S\n" command;*)
+                      Sys.command command
+                  in
+                  (* 3. Check smaller, Read file, and build new dictionary - removing ColorSpace, BitsPerComponent replacing Filter *)
+                  if retcode = 0 then
+                    begin
+                      let result = open_in_bin out2 in
+                      let newsize = in_channel_length result in
+                        Printf.printf "Lossless to JPEG %i -> %i\n" size newsize;
+                      if newsize < size then
+                        reference :=
+                          (Pdf.remove_dict_entry
+                            (Pdf.remove_dict_entry
+                              (Pdf.add_dict_entry
+                                (Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize))
+                                "/Filter"
+                                (Pdf.Name "/DCTDecode"))
+                             "/ColorSpace")
+                           "/BitsPerComponent"),
+                          Pdf.Got (Pdfio.bytes_of_input_channel result)
+                    end;
+                  (* 4. Clean up. *)
+                  Sys.remove out;
+                  Sys.remove out2
+                end
             | colspace, bpc ->
-              let colspace, bpc, filter = 
+              (*let colspace, bpc, filter = 
                 (match colspace with None -> "none" | Some x -> Pdfwrite.string_of_pdf x),
                 (match bpc with None -> "none" | Some x -> Pdfwrite.string_of_pdf x),
                 (match Pdf.lookup_direct pdf "/Filter" dict with None -> "none" | Some x -> Pdfwrite.string_of_pdf x)
               in
-                print_string (Printf.sprintf "%s (%s) [%s]\n" colspace bpc filter);
+                print_string (Printf.sprintf "%s (%s) [%s]\n" colspace bpc filter);*)
                 () (* an image we cannot or do not handle *)
             end
         | _ -> () (* not an image *)
