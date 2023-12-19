@@ -29,7 +29,7 @@ let pnm_to_channel_24 ch w h s =
 let pnm_to_channel_8 ch w h s =
   pnm_output_string ch "P5";
   pnm_header ch w h;
-  pnm_output_string ch "15";
+  pnm_output_string ch "255";
   pnm_newline ch;
   let pos = ref 0 in
     for y = 1 to h do
