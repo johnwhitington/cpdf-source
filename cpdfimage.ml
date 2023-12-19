@@ -39,6 +39,15 @@ let pnm_to_channel_8 ch w h s =
       done
     done
 
+let cmyk_to_channel_32 ch w h s =
+  let pos = ref 0 in
+    for y = 1 to h do
+      for x = 1 to w * 4 do
+        output_byte ch (255 - bget s !pos);
+        incr pos
+      done
+    done
+
 let jbig2_serial = ref 0
 
 let jbig2_globals = null_hash ()
@@ -483,6 +492,8 @@ let image_of_input fobj i =
 (* FIXME What about predictors? Audit to see if files get smaller. *)
 (* FIXME if lossy only 5% smaller, ignore? Set this parameter... *)
 (* FIXME error handling for Sys.remove, others *)
+(* FIXME DeviceCYMK - use the convert CYMK samples format *)
+(* FIXME Test JPEG to JPEG on CYMK - is colourspace retained, or do we need to add -colorspace CMYK? *)
 let process pdf ~q ~qlossless ~path_to_convert =
   let process_obj _ s =
     match s with
@@ -522,32 +533,36 @@ let process pdf ~q ~qlossless ~path_to_convert =
               match Pdf.lookup_direct pdf "/ColorSpace" dict with
               | Some (Pdf.Name "/DeviceRGB") -> 3
               | Some (Pdf.Name "/DeviceGray") -> 1
+              | Some (Pdf.Name "/DeviceCMYK") -> 4
               | Some (Pdf.Array [Pdf.Name "/ICCBased"; stream]) ->
                   begin match Pdf.lookup_direct pdf "/N" stream with
                   | Some (Pdf.Integer 3) -> 3
                   | Some (Pdf.Integer 1) -> 1
+                  | Some (Pdf.Integer 4) -> 4
                   | _ -> 0
                   end
               | _ -> 0
             in
             begin match suitable_num, bpc with
-            | (1 | 3), Some (Pdf.Integer 8) ->
+            | (1 | 3 | 4), Some (Pdf.Integer 8) ->
                 let size = match Pdf.lookup_direct pdf "/Length" dict with Some (Pdf.Integer i) -> i | _ -> 0 in
                 Pdfcodec.decode_pdfstream_until_unknown pdf s;
                 begin match Pdf.lookup_direct pdf "/Filter" (fst !reference) with Some _ -> () | None ->
-                  let out = Filename.temp_file "cpdf" "convertin" ^ ".pnm" in
-                  let out2 = Filename.temp_file "cpdf" "convertout" ^ ".jpg" in
-                  let fh = open_out_bin out in
                   let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
                   let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
+                  let out = Filename.temp_file "cpdf" "convertin" ^ (if suitable_num < 4 then ".pnm" else ".cmyk") in
+                  let out2 = Filename.temp_file "cpdf" "convertout" ^ ".jpg" in
+                  let fh = open_out_bin out in
                   let data = match s with Pdf.Stream {contents = _, Pdf.Got d} -> d | _ -> assert false in
-                  (if suitable_num = 3 then pnm_to_channel_24 else pnm_to_channel_8) fh w h data;
+                  (if suitable_num = 3 then pnm_to_channel_24 else
+                   if suitable_num = 4 then cmyk_to_channel_32 else pnm_to_channel_8) fh w h data;
                   close_out fh;
                   let retcode =
                     let command = 
                       (Filename.quote_command path_to_convert
-                        ([out; "-quality"; string_of_int qlossless ^ "%"] @
-                        (if suitable_num = 1 then ["-colorspace"; "Gray"] else []) @
+                        ((if suitable_num = 4 then ["-depth"; "8"; "-size"; string_of_int w ^ "x" ^ string_of_int h] else []) @
+                        [out; "-quality"; string_of_int qlossless ^ "%"] @
+                        (if suitable_num = 1 then ["-colorspace"; "Gray"] else if suitable_num = 4 then ["-colorspace"; "CMYK"] else []) @
                         [out2]))
                     in
                       (*Printf.printf "%S\n" command;*)
