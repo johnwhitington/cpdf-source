@@ -504,18 +504,16 @@ let jpeg_to_jpeg pdf ~q ~path_to_convert s dict reference =
     close_out fh;
     let retcode =
       let command = 
-        (Filename.quote_command path_to_convert
-          [out; "-quality"; string_of_int q ^ "%"; out2])
+        (Filename.quote_command path_to_convert [out; "-quality"; string_of_int q ^ "%"; out2])
       in
-        (*Printf.printf "%S\n" command;*)
-        Sys.command command
+        (*Printf.printf "%S\n" command;*) Sys.command command
     in
     if retcode = 0 then
       begin
         let result = open_in_bin out2 in
         let newsize = in_channel_length result in
         if newsize < size then
-          Printf.printf "JPEG to JPEG %i -> %i\n" size newsize;
+          (*Printf.printf "JPEG to JPEG %i -> %i\n" size newsize;*)
           reference := Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize), Pdf.Got (Pdfio.bytes_of_input_channel result)
       end;
     Sys.remove out;
@@ -536,7 +534,6 @@ let suitable_num pdf dict =
   | _ -> 0
 
 let lossless_to_jpeg pdf ~qlossless ~path_to_convert s dict reference =
-  (* 0. Test if this is one we can do - for now just Colourspace=RGB, BPC=8 *)
   let bpc = Pdf.lookup_direct pdf "/BitsPerComponent" dict in
   let components = suitable_num pdf dict in
   match components, bpc with
@@ -561,8 +558,7 @@ let lossless_to_jpeg pdf ~qlossless ~path_to_convert s dict reference =
               (if components = 1 then ["-colorspace"; "Gray"] else if components = 4 then ["-colorspace"; "CMYK"] else []) @
               [out2]))
           in
-            (*Printf.printf "%S\n" command;*)
-            Sys.command command
+            (*Printf.printf "%S\n" command;*) Sys.command command
         in
         if retcode = 0 then
           begin
@@ -570,7 +566,7 @@ let lossless_to_jpeg pdf ~qlossless ~path_to_convert s dict reference =
             let newsize = in_channel_length result in
             if newsize < size then
               begin
-                Printf.printf "Lossless to JPEG %i -> %i (components %i) \n" size newsize components;
+                (*Printf.printf "Lossless to JPEG %i -> %i (components %i) \n" size newsize components;*)
                 reference :=
                   (Pdf.add_dict_entry
                     (Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize))
