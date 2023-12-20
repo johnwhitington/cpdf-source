@@ -492,111 +492,116 @@ let image_of_input fobj i =
 (* FIXME What about predictors? Audit to see if files get smaller. *)
 (* FIXME if lossy only 5% smaller, ignore? Set this parameter... *)
 (* FIXME error handling for Sys.remove, others *)
-(* FIXME DeviceCYMK - use the convert CYMK samples format *)
-(* FIXME Test JPEG to JPEG on CYMK - is colourspace retained, or do we need to add -colorspace CMYK? *)
+(* FIXME Use raw format for all, and make it fast *)
+let jpeg_to_jpeg pdf ~q ~path_to_convert s dict reference =
+  Pdf.getstream s;
+  let out = Filename.temp_file "cpdf" "convertin" ^ ".jpg" in
+  let out2 = Filename.temp_file "cpdf" "convertout" ^ ".jpg" in
+  let fh = open_out_bin out in
+    let size =
+      begin match s with Pdf.Stream {contents = _, Pdf.Got d} -> Pdfio.bytes_to_output_channel fh d; bytes_size d | _ -> 0 end
+    in
+    close_out fh;
+    let retcode =
+      let command = 
+        (Filename.quote_command path_to_convert
+          [out; "-quality"; string_of_int q ^ "%"; out2])
+      in
+        (*Printf.printf "%S\n" command;*)
+        Sys.command command
+    in
+    if retcode = 0 then
+      begin
+        let result = open_in_bin out2 in
+        let newsize = in_channel_length result in
+        if newsize < size then
+          Printf.printf "JPEG to JPEG %i -> %i\n" size newsize;
+          reference := Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize), Pdf.Got (Pdfio.bytes_of_input_channel result)
+      end;
+    Sys.remove out;
+    Sys.remove out2
+
+let suitable_num pdf dict =
+  match Pdf.lookup_direct pdf "/ColorSpace" dict with
+  | Some (Pdf.Name "/DeviceRGB") -> 3
+  | Some (Pdf.Name "/DeviceGray") -> 1
+  | Some (Pdf.Name "/DeviceCMYK") -> 4
+  | Some (Pdf.Array [Pdf.Name "/ICCBased"; stream]) ->
+      begin match Pdf.lookup_direct pdf "/N" stream with
+      | Some (Pdf.Integer 3) -> 3
+      | Some (Pdf.Integer 1) -> 1
+      | Some (Pdf.Integer 4) -> 4
+      | _ -> 0
+      end
+  | _ -> 0
+
+let lossless_to_jpeg pdf ~qlossless ~path_to_convert s dict reference =
+  (* 0. Test if this is one we can do - for now just Colourspace=RGB, BPC=8 *)
+  let bpc = Pdf.lookup_direct pdf "/BitsPerComponent" dict in
+  let components = suitable_num pdf dict in
+  match components, bpc with
+  | (1 | 3 | 4), Some (Pdf.Integer 8) ->
+      let size = match Pdf.lookup_direct pdf "/Length" dict with Some (Pdf.Integer i) -> i | _ -> 0 in
+      Pdfcodec.decode_pdfstream_until_unknown pdf s;
+      begin match Pdf.lookup_direct pdf "/Filter" (fst !reference) with Some _ -> () | None ->
+        let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
+        let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
+        let out = Filename.temp_file "cpdf" "convertin" ^ (if suitable_num pdf dict < 4 then ".pnm" else ".cmyk") in
+        let out2 = Filename.temp_file "cpdf" "convertout" ^ ".jpg" in
+        let fh = open_out_bin out in
+        let data = match s with Pdf.Stream {contents = _, Pdf.Got d} -> d | _ -> assert false in
+        (if components = 3 then pnm_to_channel_24 else
+         if components = 4 then cmyk_to_channel_32 else pnm_to_channel_8) fh w h data;
+        close_out fh;
+        let retcode =
+          let command = 
+            (Filename.quote_command path_to_convert
+              ((if components = 4 then ["-depth"; "8"; "-size"; string_of_int w ^ "x" ^ string_of_int h] else []) @
+              [out; "-quality"; string_of_int qlossless ^ "%"] @
+              (if components = 1 then ["-colorspace"; "Gray"] else if components = 4 then ["-colorspace"; "CMYK"] else []) @
+              [out2]))
+          in
+            (*Printf.printf "%S\n" command;*)
+            Sys.command command
+        in
+        if retcode = 0 then
+          begin
+            let result = open_in_bin out2 in
+            let newsize = in_channel_length result in
+            if newsize < size then
+              begin
+                Printf.printf "Lossless to JPEG %i -> %i (components %i) \n" size newsize components;
+                reference :=
+                  (Pdf.add_dict_entry
+                    (Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize))
+                     "/Filter"
+                     (Pdf.Name "/DCTDecode")),
+                  Pdf.Got (Pdfio.bytes_of_input_channel result)
+              end;
+              close_in result
+          end;
+        Sys.remove out;
+        Sys.remove out2
+      end
+  | colspace, bpc ->
+    let colspace = Pdf.lookup_direct pdf "/ColorSpace" dict in
+    let colspace, bpc, filter = 
+      (match colspace with None -> "none" | Some x -> Pdfwrite.string_of_pdf x),
+      (match bpc with None -> "none" | Some x -> Pdfwrite.string_of_pdf x),
+      (match Pdf.lookup_direct pdf "/Filter" dict with None -> "none" | Some x -> Pdfwrite.string_of_pdf x)
+    in
+      print_string (Printf.sprintf "%s (%s) [%s]\n" colspace bpc filter);
+      () (* an image we cannot or do not handle *)
+
 let process pdf ~q ~qlossless ~path_to_convert =
   let process_obj _ s =
     match s with
     | Pdf.Stream ({contents = dict, _} as reference) ->
         begin match Pdf.lookup_direct pdf "/Subtype" dict, Pdf.lookup_direct pdf "/Filter" dict with
         | Some (Pdf.Name "/Image"), Some (Pdf.Name "/DCTDecode" | Pdf.Array [Pdf.Name "/DCTDecode"]) ->
-            Pdf.getstream s;
-            let out = Filename.temp_file "cpdf" "convertin" ^ ".jpg" in
-            let out2 = Filename.temp_file "cpdf" "convertout" ^ ".jpg" in
-            let fh = open_out_bin out in
-              let size =
-                begin match s with Pdf.Stream {contents = _, Pdf.Got d} -> Pdfio.bytes_to_output_channel fh d; bytes_size d | _ -> 0 end
-              in
-              close_out fh;
-              let retcode =
-                let command = 
-                  (Filename.quote_command path_to_convert
-                    [out; "-quality"; string_of_int q ^ "%"; out2])
-                in
-                  (*Printf.printf "%S\n" command;*)
-                  Sys.command command
-              in
-              if retcode = 0 then
-                begin
-                  let result = open_in_bin out2 in
-                  let newsize = in_channel_length result in
-                  if newsize < size then
-                    Printf.printf "JPEG to JPEG %i -> %i\n" size newsize;
-                    reference := Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize), Pdf.Got (Pdfio.bytes_of_input_channel result)
-                end;
-              Sys.remove out;
-              Sys.remove out2
+            jpeg_to_jpeg pdf ~q ~path_to_convert s dict reference
         | Some (Pdf.Name "/Image"), _ ->
-            (* 0. Test if this is one we can do - for now just Colourspace=RGB, BPC=8 *)
-            let bpc = Pdf.lookup_direct pdf "/BitsPerComponent" dict in
-            let suitable_num =
-              match Pdf.lookup_direct pdf "/ColorSpace" dict with
-              | Some (Pdf.Name "/DeviceRGB") -> 3
-              | Some (Pdf.Name "/DeviceGray") -> 1
-              | Some (Pdf.Name "/DeviceCMYK") -> 4
-              | Some (Pdf.Array [Pdf.Name "/ICCBased"; stream]) ->
-                  begin match Pdf.lookup_direct pdf "/N" stream with
-                  | Some (Pdf.Integer 3) -> 3
-                  | Some (Pdf.Integer 1) -> 1
-                  | Some (Pdf.Integer 4) -> 4
-                  | _ -> 0
-                  end
-              | _ -> 0
-            in
-            begin match suitable_num, bpc with
-            | (1 | 3 | 4), Some (Pdf.Integer 8) ->
-                let size = match Pdf.lookup_direct pdf "/Length" dict with Some (Pdf.Integer i) -> i | _ -> 0 in
-                Pdfcodec.decode_pdfstream_until_unknown pdf s;
-                begin match Pdf.lookup_direct pdf "/Filter" (fst !reference) with Some _ -> () | None ->
-                  let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
-                  let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
-                  let out = Filename.temp_file "cpdf" "convertin" ^ (if suitable_num < 4 then ".pnm" else ".cmyk") in
-                  let out2 = Filename.temp_file "cpdf" "convertout" ^ ".jpg" in
-                  let fh = open_out_bin out in
-                  let data = match s with Pdf.Stream {contents = _, Pdf.Got d} -> d | _ -> assert false in
-                  (if suitable_num = 3 then pnm_to_channel_24 else
-                   if suitable_num = 4 then cmyk_to_channel_32 else pnm_to_channel_8) fh w h data;
-                  close_out fh;
-                  let retcode =
-                    let command = 
-                      (Filename.quote_command path_to_convert
-                        ((if suitable_num = 4 then ["-depth"; "8"; "-size"; string_of_int w ^ "x" ^ string_of_int h] else []) @
-                        [out; "-quality"; string_of_int qlossless ^ "%"] @
-                        (if suitable_num = 1 then ["-colorspace"; "Gray"] else if suitable_num = 4 then ["-colorspace"; "CMYK"] else []) @
-                        [out2]))
-                    in
-                      (*Printf.printf "%S\n" command;*)
-                      Sys.command command
-                  in
-                  if retcode = 0 then
-                    begin
-                      let result = open_in_bin out2 in
-                      let newsize = in_channel_length result in
-                      if newsize < size then
-                        begin
-                          Printf.printf "Lossless to JPEG %i -> %i (components %i) \n" size newsize suitable_num;
-                          reference :=
-                            (Pdf.add_dict_entry
-                              (Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize))
-                               "/Filter"
-                               (Pdf.Name "/DCTDecode")),
-                            Pdf.Got (Pdfio.bytes_of_input_channel result)
-                        end;
-                        close_in result
-                    end;
-                  Sys.remove out;
-                  Sys.remove out2
-                end
-            | colspace, bpc ->
-              let colspace = Pdf.lookup_direct pdf "/ColorSpace" dict in
-              let colspace, bpc, filter = 
-                (match colspace with None -> "none" | Some x -> Pdfwrite.string_of_pdf x),
-                (match bpc with None -> "none" | Some x -> Pdfwrite.string_of_pdf x),
-                (match Pdf.lookup_direct pdf "/Filter" dict with None -> "none" | Some x -> Pdfwrite.string_of_pdf x)
-              in
-                print_string (Printf.sprintf "%s (%s) [%s]\n" colspace bpc filter);
-                () (* an image we cannot or do not handle *)
-            end
+            lossless_to_jpeg pdf ~qlossless ~path_to_convert s dict reference
         | _ -> () (* not an image *)
         end
     | _ -> () (* not a stream *)
