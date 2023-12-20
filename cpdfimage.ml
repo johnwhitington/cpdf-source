@@ -531,13 +531,14 @@ let suitable_num pdf dict =
       | Some (Pdf.Integer 4) -> 4
       | _ -> 0
       end
+  | Some (Pdf.Array (Pdf.Name "/Separation"::_)) -> ~-1
   | _ -> 0
 
 let lossless_to_jpeg pdf ~qlossless ~path_to_convert s dict reference =
   let bpc = Pdf.lookup_direct pdf "/BitsPerComponent" dict in
   let components = suitable_num pdf dict in
   match components, bpc with
-  | (1 | 3 | 4), Some (Pdf.Integer 8) ->
+  | (1 | 3 | 4 | -1), Some (Pdf.Integer 8) ->
       let size = match Pdf.lookup_direct pdf "/Length" dict with Some (Pdf.Integer i) -> i | _ -> 0 in
       Pdfcodec.decode_pdfstream_until_unknown pdf s;
       begin match Pdf.lookup_direct pdf "/Filter" (fst !reference) with Some _ -> () | None ->
@@ -580,13 +581,13 @@ let lossless_to_jpeg pdf ~qlossless ~path_to_convert s dict reference =
         Sys.remove out2
       end
   | colspace, bpc ->
-    let colspace = Pdf.lookup_direct pdf "/ColorSpace" dict in
+    (*let colspace = Pdf.lookup_direct pdf "/ColorSpace" dict in
     let colspace, bpc, filter = 
       (match colspace with None -> "none" | Some x -> Pdfwrite.string_of_pdf x),
       (match bpc with None -> "none" | Some x -> Pdfwrite.string_of_pdf x),
       (match Pdf.lookup_direct pdf "/Filter" dict with None -> "none" | Some x -> Pdfwrite.string_of_pdf x)
     in
-      print_string (Printf.sprintf "%s (%s) [%s]\n" colspace bpc filter);
+      print_string (Printf.sprintf "%s (%s) [%s]\n" colspace bpc filter);*)
       () (* an image we cannot or do not handle *)
 
 let process pdf ~q ~qlossless ~path_to_convert =
