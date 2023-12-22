@@ -39,6 +39,12 @@ let pnm_to_channel_8 ch w h s =
       done
     done
 
+let pnm_to_channel_1 ch w h s =
+  pnm_output_string ch "P4";
+  pnm_header ch w h;
+  pnm_newline ch;
+  pnm_output_string ch (Pdfio.string_of_bytes s)
+
 let cmyk_to_channel_32 ch w h s =
   let pos = ref 0 in
     for y = 1 to h do
@@ -591,13 +597,31 @@ let lossless_to_jpeg pdf ~qlossless ~path_to_convert s dict reference =
       print_string (Printf.sprintf "%s (%s) [%s]\n" colspace bpc filter);
       () (* an image we cannot or do not handle *)
 
+(* FIXME redirection on all platforms *)
 let recompress_1bpp_jbig2_lossless ~path_to_jbig2enc pdf s dict reference =
-  (* 1. Decode it *)
-  (* 2. Check we are ok *)
+  Printf.printf "recompress_1bpp_jbig2_lossless\n";
+  let size = match Pdf.lookup_direct pdf "/Length" dict with Some (Pdf.Integer i) -> i | _ -> 0 in
+  Pdfcodec.decode_pdfstream_until_unknown pdf s;
+  begin match Pdf.lookup_direct pdf "/Filter" (fst !reference) with Some _ -> () | None ->
+    let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
+    let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
+    let out = Filename.temp_file "cpdf" "convertin" ^ ".pnm" in
+    let out2 = Filename.temp_file "cpdf" "convertout" ^ ".jbig2" in
+    let fh = open_out_bin out in
+    let data = match s with Pdf.Stream {contents = _, Pdf.Got d} -> d | _ -> assert false in
+      pnm_to_channel_1 fh w h data;
+      close_out fh;
+      let retcode =
+        let command =
+          Filename.quote_command ~stdout:out2 path_to_jbig2enc ["-s"; "-p"; "-v"; out]
+        in
+          Printf.printf "%S\n" command; Sys.command command
+      in
+        Printf.printf "retcode = %i\n" retcode
+  end    
   (* 3. Call jbig2enc *)
   (* 4. Read in result *)
   (* 5. Set data and dictionary *)
-  ()
 
 (* JPEG to JPEG: RGB and CMYK JPEGS *)
 (* Lossless to JPEG: 8bpp Grey, 8bpp RGB, 8bpp CMYK including separation add ICCBased colourspaces *)
