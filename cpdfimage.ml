@@ -492,6 +492,7 @@ let image_of_input fobj i =
 (* FIXME if lossy only 5% smaller, ignore? Set this parameter... *)
 (* FIXME error handling for Sys.remove, others *)
 (* FIXME Use raw format for all, and make it fast *)
+(* FIXME combine path_to_im / path_to_convert *)
 let jpeg_to_jpeg pdf ~q ~path_to_convert s dict reference =
   Pdf.getstream s;
   let out = Filename.temp_file "cpdf" "convertin" ^ ".jpg" in
@@ -590,13 +591,18 @@ let lossless_to_jpeg pdf ~qlossless ~path_to_convert s dict reference =
       print_string (Printf.sprintf "%s (%s) [%s]\n" colspace bpc filter);
       () (* an image we cannot or do not handle *)
 
-let recompress_1bpp_jbig2_lossless pdf s dict reference =
+let recompress_1bpp_jbig2_lossless ~path_to_jbig2enc pdf s dict reference =
+  (* 1. Decode it *)
+  (* 2. Check we are ok *)
+  (* 3. Call jbig2enc *)
+  (* 4. Read in result *)
+  (* 5. Set data and dictionary *)
   ()
 
 (* JPEG to JPEG: RGB and CMYK JPEGS *)
 (* Lossless to JPEG: 8bpp Grey, 8bpp RGB, 8bpp CMYK including separation add ICCBased colourspaces *)
 (* 1 bit: anything to JBIG2 lossless (no globals) *)
-let process ?q ?qlossless ?onebppmethod pdf ~path_to_convert =
+let process ?q ?qlossless ?onebppmethod pdf ~path_to_jbig2enc ~path_to_convert =
   let process_obj _ s =
     match s with
     | Pdf.Stream ({contents = dict, _} as reference) ->
@@ -614,7 +620,7 @@ let process ?q ?qlossless ?onebppmethod pdf ~path_to_convert =
         | Some (Pdf.Name "/Image"), _, Some (Pdf.Integer 1), _
         | Some (Pdf.Name "/Image"), _, _, Some (Pdf.Boolean true) ->
            begin match onebppmethod with
-           | Some "JBIG2" -> recompress_1bpp_jbig2_lossless pdf s dict reference
+           | Some "JBIG2" -> recompress_1bpp_jbig2_lossless ~path_to_jbig2enc pdf s dict reference
            | _ -> ()
            end
         | Some (Pdf.Name "/Image"), _, _, _ ->

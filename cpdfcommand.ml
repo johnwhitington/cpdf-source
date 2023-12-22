@@ -469,6 +469,7 @@ type args =
    mutable path_to_im : string;
    mutable path_to_p2p : string;
    mutable path_to_convert : string;
+   mutable path_to_jbig2enc : string;
    mutable frombox : string option;
    mutable tobox : string option;
    mutable mediabox_if_missing : bool;
@@ -589,10 +590,11 @@ let args =
    dashrange = "all";
    outline = false;
    linewidth = 1.0;
-   path_to_ghostscript = "";
-   path_to_im = "";
-   path_to_p2p = "";
-   path_to_convert = "";
+   path_to_ghostscript = "gs";
+   path_to_im = "magick";
+   path_to_p2p = "pnm2png";
+   path_to_convert = "convert";
+   path_to_jbig2enc = "jbig2enc";
    frombox = None;
    tobox = None;
    mediabox_if_missing = false;
@@ -1527,6 +1529,9 @@ let setimpath p =
 
 let setconvertpath p =
   args.path_to_convert <- p
+
+let setjbig2encpath p =
+  args.path_to_jbig2enc <- p
 
 let setp2ppath p =
   args.path_to_p2p <- p
@@ -2710,6 +2715,9 @@ and specs =
    ("-convert",
      Arg.String setconvertpath,
      " Path to convert executable");
+   ("-jbig2enc",
+     Arg.String setjbig2encpath,
+     " Path to jbig2enc executable");
    ("-jpeg-to-jpeg",
      Arg.Int setjpegquality,
      " Set JPEG quality for existing JPEGs");
@@ -4456,7 +4464,7 @@ let go () =
         write_pdf false (Cpdfchop.chop ~x ~y ~columns:args.impose_columns ~btt:args.impose_btt ~rtl:args.impose_rtl pdf range)
   | Some ProcessImages ->
       let pdf = get_single_pdf args.op false in
-        Cpdfimage.process pdf ~q:args.jpegquality ~qlossless:args.jpegqualitylossless ~onebppmethod:args.onebppmethod ~path_to_convert:args.path_to_convert;
+        Cpdfimage.process pdf ~q:args.jpegquality ~qlossless:args.jpegqualitylossless ~onebppmethod:args.onebppmethod ~path_to_jbig2enc:args.path_to_jbig2enc ~path_to_convert:args.path_to_convert;
         write_pdf false pdf
 
 (* Advise the user if a combination of command line flags makes little sense,
