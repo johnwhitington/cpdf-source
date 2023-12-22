@@ -483,7 +483,6 @@ let image_of_input fobj i =
     Pdfpage.add_root pageroot [] pdf
 
 (* NOTE: ./cpdf -convert convert -recrypt -process-images -lossless-to-jpeg 65 ~/repos/pdfs/PDFTests/main128fail.pdf -o out.pdf *)
-(* FIXME Make sure this process is ok for masks too - do we get them, is it allowed etc. *)
 (* FIXME Only do if quality < 100 *)
 (* FIXME Error when path_to_convert not defined *)
 (* FIXME Need the "is it smaller" check from Pdfcodec.encode here too? *)
@@ -581,24 +580,42 @@ let lossless_to_jpeg pdf ~qlossless ~path_to_convert s dict reference =
         Sys.remove out2
       end
   | colspace, bpc ->
-    (*let colspace = Pdf.lookup_direct pdf "/ColorSpace" dict in
+    let colspace = Pdf.lookup_direct pdf "/ColorSpace" dict in
     let colspace, bpc, filter = 
       (match colspace with None -> "none" | Some x -> Pdfwrite.string_of_pdf x),
       (match bpc with None -> "none" | Some x -> Pdfwrite.string_of_pdf x),
       (match Pdf.lookup_direct pdf "/Filter" dict with None -> "none" | Some x -> Pdfwrite.string_of_pdf x)
     in
-      print_string (Printf.sprintf "%s (%s) [%s]\n" colspace bpc filter);*)
+      print_string (Pdfwrite.string_of_pdf dict);
+      print_string (Printf.sprintf "%s (%s) [%s]\n" colspace bpc filter);
       () (* an image we cannot or do not handle *)
 
-let process pdf ~q ~qlossless ~path_to_convert =
+(* JPEG to JPEG: RGB and CMYK JPEGS *)
+(* Lossless to JPEG: 8bpp Grey, 8bpp RGB, 8bpp CMYK including separation add ICCBased colourspaces *)
+(* 1 bit: anything to CCITT; anything to JBIG2 lossless (no globals yet) *)
+let process ?q ?qlossless ?jbig2 pdf ~path_to_convert =
   let process_obj _ s =
     match s with
     | Pdf.Stream ({contents = dict, _} as reference) ->
-        begin match Pdf.lookup_direct pdf "/Subtype" dict, Pdf.lookup_direct pdf "/Filter" dict with
-        | Some (Pdf.Name "/Image"), Some (Pdf.Name "/DCTDecode" | Pdf.Array [Pdf.Name "/DCTDecode"]) ->
-            jpeg_to_jpeg pdf ~q ~path_to_convert s dict reference
-        | Some (Pdf.Name "/Image"), _ ->
-            lossless_to_jpeg pdf ~qlossless ~path_to_convert s dict reference
+        begin match
+          Pdf.lookup_direct pdf "/Subtype" dict,
+          Pdf.lookup_direct pdf "/Filter" dict,
+          Pdf.lookup_direct pdf "/BitsPerComponent" dict,
+          Pdf.lookup_direct pdf "/ImageMask" dict
+        with
+        | Some (Pdf.Name "/Image"), Some (Pdf.Name "/DCTDecode" | Pdf.Array [Pdf.Name "/DCTDecode"]), _, _ ->
+            begin match q with
+            | Some q -> jpeg_to_jpeg pdf ~q ~path_to_convert s dict reference
+            | None -> ()
+            end
+        | Some (Pdf.Name "/Image"), _, Some (Pdf.Integer 1), _
+        | Some (Pdf.Name "/Image"), _, _, Some (Pdf.Boolean true) ->
+            Printf.printf "1bpp\n"
+        | Some (Pdf.Name "/Image"), _, _, _ ->
+            begin match qlossless with
+            | Some qlossless -> lossless_to_jpeg pdf ~qlossless ~path_to_convert s dict reference
+            | None -> ()
+            end
         | _ -> () (* not an image *)
         end
     | _ -> () (* not a stream *)
