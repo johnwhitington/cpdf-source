@@ -590,15 +590,12 @@ let lossless_to_jpeg pdf ~qlossless ~path_to_convert s dict reference =
       print_string (Printf.sprintf "%s (%s) [%s]\n" colspace bpc filter);
       () (* an image we cannot or do not handle *)
 
-let recompress_1bpp_ccitt pdf s dict reference =
-  ()
-
 let recompress_1bpp_jbig2_lossless pdf s dict reference =
   ()
 
 (* JPEG to JPEG: RGB and CMYK JPEGS *)
 (* Lossless to JPEG: 8bpp Grey, 8bpp RGB, 8bpp CMYK including separation add ICCBased colourspaces *)
-(* 1 bit: anything to CCITT; anything to JBIG2 lossless (no globals yet) *)
+(* 1 bit: anything to JBIG2 lossless (no globals) *)
 let process ?q ?qlossless ?onebppmethod pdf ~path_to_convert =
   let process_obj _ s =
     match s with
@@ -617,8 +614,7 @@ let process ?q ?qlossless ?onebppmethod pdf ~path_to_convert =
         | Some (Pdf.Name "/Image"), _, Some (Pdf.Integer 1), _
         | Some (Pdf.Name "/Image"), _, _, Some (Pdf.Boolean true) ->
            begin match onebppmethod with
-           | Some "CCITT" -> recompress_1bpp_ccitt pdf s dict reference
-           | Some "JBIG2Lossless" -> recompress_1bpp_jbig2_lossless pdf s dict reference
+           | Some "JBIG2" -> recompress_1bpp_jbig2_lossless pdf s dict reference
            | _ -> ()
            end
         | Some (Pdf.Name "/Image"), _, _, _ ->
