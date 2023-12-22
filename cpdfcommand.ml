@@ -523,7 +523,8 @@ type args =
    mutable idir_only_pdfs : bool;
    mutable no_warn_rotate : bool;
    mutable jpegquality : int;
-   mutable jpegqualitylossless : int}
+   mutable jpegqualitylossless : int;
+   mutable onebppmethod : string}
 
 let args =
   {op = None;
@@ -647,7 +648,8 @@ let args =
    idir_only_pdfs = false;
    no_warn_rotate = false;
    jpegquality = 100;
-   jpegqualitylossless = 100}
+   jpegqualitylossless = 100;
+   onebppmethod = ""}
 
 let reset_arguments () =
   args.op <- None;
@@ -754,6 +756,7 @@ let reset_arguments () =
   args.idir_only_pdfs <- false;
   args.jpegquality <- 100;
   args.jpegqualitylossless <- 100;
+  args.onebppmethod <- "";
   (* Do not reset original_filename or cpdflin or was_encrypted or
    was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
    gs_malformed or gs_quiet or no-warn-rotate, since we want these to work
@@ -1927,6 +1930,9 @@ let setjpegquality q =
 let setjpegqualitylossless q =
   args.jpegqualitylossless <- q
 
+let set1bppmethod m =
+  args.onebppmethod <- m
+
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
   control_args := !control_args @ parse_control_file filename
@@ -2710,6 +2716,9 @@ and specs =
    ("-lossless-to-jpeg",
      Arg.Int setjpegqualitylossless,
      " Set JPEG quality for existing lossless images");
+   ("-1bpp-method",
+     Arg.String set1bppmethod,
+     " Set 1bpp compression method for existing images");
    ("-squeeze",
      Arg.Unit setsqueeze,
      " Squeeze");
@@ -4447,7 +4456,7 @@ let go () =
         write_pdf false (Cpdfchop.chop ~x ~y ~columns:args.impose_columns ~btt:args.impose_btt ~rtl:args.impose_rtl pdf range)
   | Some ProcessImages ->
       let pdf = get_single_pdf args.op false in
-        Cpdfimage.process pdf ~q:args.jpegquality ~qlossless:args.jpegqualitylossless ~path_to_convert:args.path_to_convert;
+        Cpdfimage.process pdf ~q:args.jpegquality ~qlossless:args.jpegqualitylossless ~onebppmethod:args.onebppmethod ~path_to_convert:args.path_to_convert;
         write_pdf false pdf
 
 (* Advise the user if a combination of command line flags makes little sense,
