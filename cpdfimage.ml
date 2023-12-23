@@ -39,11 +39,13 @@ let pnm_to_channel_8 ch w h s =
       done
     done
 
-let pnm_to_channel_1 ch w h s =
+let pnm_to_channel_1_inverted ch w h s =
   pnm_output_string ch "P4";
   pnm_header ch w h;
   pnm_newline ch;
-  pnm_output_string ch (Pdfio.string_of_bytes s)
+  let inverted = Pdfio.copybytes s in
+    Pdfio.bytes_selfmap lnot inverted;
+    pnm_output_string ch (Pdfio.string_of_bytes inverted)
 
 let cmyk_to_channel_32 ch w h s =
   let pos = ref 0 in
@@ -488,17 +490,15 @@ let image_of_input fobj i =
   let pdf, pageroot = Pdfpage.add_pagetree [page] pdf in
     Pdfpage.add_root pageroot [] pdf
 
-(* NOTE: ./cpdf -convert convert -recrypt -process-images -lossless-to-jpeg 65 ~/repos/pdfs/PDFTests/main128fail.pdf -o out.pdf *)
 (* FIXME Only do if quality < 100 *)
 (* FIXME Error when path_to_convert not defined *)
 (* FIXME Need the "is it smaller" check from Pdfcodec.encode here too? *)
 (* FIXME (this appears to make the file larger than ./cpdf ~/repos/pdfs/PDFTests/main128fail.pdf -recrypt -o out.pdf. Why? Seems to not create new object streams. Make it do so, since this a compression mechanism? An empty Pdf.objiter should not blow up a file like this!) *)
-(* For each image xobject, process it through convert to reduce size. *)
 (* FIXME What about predictors? Audit to see if files get smaller. *)
 (* FIXME if lossy only 5% smaller, ignore? Set this parameter... *)
 (* FIXME error handling for Sys.remove, others *)
 (* FIXME Use raw format for all, and make it fast *)
-(* FIXME combine path_to_im / path_to_convert *)
+(* FIXME what are the best jbig2enc parameters *) 
 let jpeg_to_jpeg pdf ~q ~path_to_convert s dict reference =
   Pdf.getstream s;
   let out = Filename.temp_file "cpdf" "convertin" ^ ".jpg" in
@@ -597,9 +597,7 @@ let lossless_to_jpeg pdf ~qlossless ~path_to_convert s dict reference =
       print_string (Printf.sprintf "%s (%s) [%s]\n" colspace bpc filter);
       () (* an image we cannot or do not handle *)
 
-(* FIXME redirection on all platforms *)
 let recompress_1bpp_jbig2_lossless ~path_to_jbig2enc pdf s dict reference =
-  Printf.printf "recompress_1bpp_jbig2_lossless\n";
   let size = match Pdf.lookup_direct pdf "/Length" dict with Some (Pdf.Integer i) -> i | _ -> 0 in
   Pdfcodec.decode_pdfstream_until_unknown pdf s;
   begin match Pdf.lookup_direct pdf "/Filter" (fst !reference) with Some _ -> () | None ->
@@ -609,17 +607,33 @@ let recompress_1bpp_jbig2_lossless ~path_to_jbig2enc pdf s dict reference =
     let out2 = Filename.temp_file "cpdf" "convertout" ^ ".jbig2" in
     let fh = open_out_bin out in
     let data = match s with Pdf.Stream {contents = _, Pdf.Got d} -> d | _ -> assert false in
-      pnm_to_channel_1 fh w h data;
+      pnm_to_channel_1_inverted fh w h data;
       close_out fh;
       let retcode =
-        let command =
-          Filename.quote_command ~stdout:out2 path_to_jbig2enc ["-s"; "-p"; "-v"; out]
-        in
-          Printf.printf "%S\n" command; Sys.command command
+        let command = Filename.quote_command ~stdout:out2 path_to_jbig2enc ["-p"; out] in
+          (*Printf.printf "%S\n" command;*) Sys.command command
       in
-        Printf.printf "retcode = %i\n" retcode
+        if retcode = 0 then
+          begin
+            let result = open_in_bin out2 in
+            let newsize = in_channel_length result in
+            if newsize < size then
+              begin
+                Printf.printf "1bpp to JBIG2 %i -> %i \n" size newsize;
+                reference :=
+                  (Pdf.remove_dict_entry
+                  (Pdf.add_dict_entry
+                    (Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize))
+                     "/Filter"
+                     (Pdf.Name "/JBIG2Decode")) "/DecodeParms"),
+                  Pdf.Got (Pdfio.bytes_of_input_channel result)
+              end;
+              close_in result
+          end;
+        (*Sys.remove out;
+        Sys.remove out2*)
   end    
-  (* 3. Call jbig2enc *)
+
   (* 4. Read in result *)
   (* 5. Set data and dictionary *)
 
