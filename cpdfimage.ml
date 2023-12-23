@@ -595,6 +595,7 @@ let recompress_1bpp_jbig2_lossless ~path_to_jbig2enc pdf s dict reference =
   match Pdf.lookup_direct pdf "/Filter" (fst !reference) with Some _ -> () | None ->
     let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
     let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
+    if w < 5 || h < 5 then () else (* jbig2enc fails on tiny images *)
     let out = Filename.temp_file "cpdf" "convertin" ^ ".pnm" in
     let out2 = Filename.temp_file "cpdf" "convertout" ^ ".jbig2" in
     let fh = open_out_bin out in
