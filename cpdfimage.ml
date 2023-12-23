@@ -72,10 +72,10 @@ let write_image ~raw ?path_to_p2p ?path_to_im pdf resources name image =
   | Pdfimage.JBIG2 (stream, _, global) ->
       begin match global with
       | None ->
-          Printf.printf "JBIG2: No global, writing plain\n";
+          (*Printf.printf "JBIG2: No global, writing plain\n";*)
           write_stream (name ^ ".jbig2") stream
       | Some g ->
-          Printf.printf "JBIG2: there is a global\n";
+          (*Printf.printf "JBIG2: there is a global\n";*)
           let go () =
             let serial, _ = Hashtbl.find jbig2_globals g in
               write_stream (name ^ ".jbig2__" ^ string_of_int serial) stream
@@ -490,7 +490,6 @@ let image_of_input fobj i =
   let pdf, pageroot = Pdfpage.add_pagetree [page] pdf in
     Pdfpage.add_root pageroot [] pdf
 
-
 let jpeg_to_jpeg pdf ~q ~path_to_convert s dict reference =
   Pdf.getstream s;
   let out = Filename.temp_file "cpdf" "convertin" ^ ".jpg" in
@@ -629,16 +628,6 @@ let recompress_1bpp_jbig2_lossless ~path_to_jbig2enc pdf s dict reference =
 (* JPEG to JPEG: RGB and CMYK JPEGS *)
 (* Lossless to JPEG: 8bpp Grey, 8bpp RGB, 8bpp CMYK including separation and ICCBased colourspaces *)
 (* 1 bit: anything to JBIG2 lossless (no globals) *)
-(* FIXME Only do if quality < 100 *)
-(* FIXME Error when path_to_convert not defined *)
-(* FIXME Need the "is it smaller" check from Pdfcodec.encode here too? *)
-(* FIXME (this appears to make the file larger than ./cpdf ~/repos/pdfs/PDFTests/main128fail.pdf -recrypt -o out.pdf. Why? Seems to not create new object streams. Make it do so, since this a compression mechanism? An empty Pdf.objiter should not blow up a file like this!) *)
-(* FIXME What about predictors? Audit to see if files get smaller. *)
-(* FIXME if lossy only 5% smaller, ignore? Set this parameter... *)
-(* FIXME error handling for Sys.remove, others *)
-(* FIXME Use raw format for all, and make it fast *)
-(* FIXME what are the best jbig2enc parameters *) 
-(* FIXME JBIG2 If we fail, need to have saved old one, otherwise it will no longer be CCITT encoded! Others too! *)
 let process ?q ?qlossless ?onebppmethod pdf ~path_to_jbig2enc ~path_to_convert =
   let process_obj _ s =
     match s with
