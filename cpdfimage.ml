@@ -490,15 +490,7 @@ let image_of_input fobj i =
   let pdf, pageroot = Pdfpage.add_pagetree [page] pdf in
     Pdfpage.add_root pageroot [] pdf
 
-(* FIXME Only do if quality < 100 *)
-(* FIXME Error when path_to_convert not defined *)
-(* FIXME Need the "is it smaller" check from Pdfcodec.encode here too? *)
-(* FIXME (this appears to make the file larger than ./cpdf ~/repos/pdfs/PDFTests/main128fail.pdf -recrypt -o out.pdf. Why? Seems to not create new object streams. Make it do so, since this a compression mechanism? An empty Pdf.objiter should not blow up a file like this!) *)
-(* FIXME What about predictors? Audit to see if files get smaller. *)
-(* FIXME if lossy only 5% smaller, ignore? Set this parameter... *)
-(* FIXME error handling for Sys.remove, others *)
-(* FIXME Use raw format for all, and make it fast *)
-(* FIXME what are the best jbig2enc parameters *) 
+
 let jpeg_to_jpeg pdf ~q ~path_to_convert s dict reference =
   Pdf.getstream s;
   let out = Filename.temp_file "cpdf" "convertin" ^ ".jpg" in
@@ -600,7 +592,7 @@ let lossless_to_jpeg pdf ~qlossless ~path_to_convert s dict reference =
 let recompress_1bpp_jbig2_lossless ~path_to_jbig2enc pdf s dict reference =
   let size = match Pdf.lookup_direct pdf "/Length" dict with Some (Pdf.Integer i) -> i | _ -> 0 in
   Pdfcodec.decode_pdfstream_until_unknown pdf s;
-  begin match Pdf.lookup_direct pdf "/Filter" (fst !reference) with Some _ -> () | None ->
+  match Pdf.lookup_direct pdf "/Filter" (fst !reference) with Some _ -> () | None ->
     let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
     let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
     let out = Filename.temp_file "cpdf" "convertin" ^ ".pnm" in
@@ -619,7 +611,7 @@ let recompress_1bpp_jbig2_lossless ~path_to_jbig2enc pdf s dict reference =
             let newsize = in_channel_length result in
             if newsize < size then
               begin
-                Printf.printf "1bpp to JBIG2 %i -> %i \n" size newsize;
+                (*Printf.printf "1bpp to JBIG2 %i -> %i \n" size newsize;*)
                 reference :=
                   (Pdf.remove_dict_entry
                   (Pdf.add_dict_entry
@@ -630,16 +622,22 @@ let recompress_1bpp_jbig2_lossless ~path_to_jbig2enc pdf s dict reference =
               end;
               close_in result
           end;
-        (*Sys.remove out;
-        Sys.remove out2*)
-  end    
-
-  (* 4. Read in result *)
-  (* 5. Set data and dictionary *)
+        Sys.remove out;
+        Sys.remove out2
 
 (* JPEG to JPEG: RGB and CMYK JPEGS *)
-(* Lossless to JPEG: 8bpp Grey, 8bpp RGB, 8bpp CMYK including separation add ICCBased colourspaces *)
+(* Lossless to JPEG: 8bpp Grey, 8bpp RGB, 8bpp CMYK including separation and ICCBased colourspaces *)
 (* 1 bit: anything to JBIG2 lossless (no globals) *)
+(* FIXME Only do if quality < 100 *)
+(* FIXME Error when path_to_convert not defined *)
+(* FIXME Need the "is it smaller" check from Pdfcodec.encode here too? *)
+(* FIXME (this appears to make the file larger than ./cpdf ~/repos/pdfs/PDFTests/main128fail.pdf -recrypt -o out.pdf. Why? Seems to not create new object streams. Make it do so, since this a compression mechanism? An empty Pdf.objiter should not blow up a file like this!) *)
+(* FIXME What about predictors? Audit to see if files get smaller. *)
+(* FIXME if lossy only 5% smaller, ignore? Set this parameter... *)
+(* FIXME error handling for Sys.remove, others *)
+(* FIXME Use raw format for all, and make it fast *)
+(* FIXME what are the best jbig2enc parameters *) 
+(* FIXME JBIG2 If we fail, need to have saved old one, otherwise it will no longer be CCITT encoded! Others too! *)
 let process ?q ?qlossless ?onebppmethod pdf ~path_to_jbig2enc ~path_to_convert =
   let process_obj _ s =
     match s with
