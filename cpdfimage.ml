@@ -647,18 +647,21 @@ let process
         with
         | Some (Pdf.Name "/Image"), Some (Pdf.Name "/DCTDecode" | Pdf.Array [Pdf.Name "/DCTDecode"]), _, _ ->
             begin match q with
-            | Some q -> jpeg_to_jpeg pdf ~pixel_threshold ~q ~path_to_convert s dict reference
+            | Some q ->
+                if q < 100 then jpeg_to_jpeg pdf ~pixel_threshold ~q ~path_to_convert s dict reference
             | None -> ()
             end
         | Some (Pdf.Name "/Image"), _, Some (Pdf.Integer 1), _
         | Some (Pdf.Name "/Image"), _, _, Some (Pdf.Boolean true) ->
            begin match onebppmethod with
-           | Some "JBIG2" -> recompress_1bpp_jbig2_lossless ~pixel_threshold ~path_to_jbig2enc pdf s dict reference
+           | Some "JBIG2" ->
+               recompress_1bpp_jbig2_lossless ~pixel_threshold ~path_to_jbig2enc pdf s dict reference
            | _ -> ()
            end
         | Some (Pdf.Name "/Image"), _, _, _ ->
             begin match qlossless with
-            | Some qlossless -> lossless_to_jpeg pdf ~pixel_threshold ~qlossless ~path_to_convert s dict reference
+            | Some qlossless ->
+                if qlossless < 100 then lossless_to_jpeg pdf ~pixel_threshold ~qlossless ~path_to_convert s dict reference
             | None -> ()
             end
         | _ -> () (* not an image *)
