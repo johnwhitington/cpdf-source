@@ -526,7 +526,9 @@ type args =
    mutable jpegquality : int;
    mutable jpegqualitylossless : int;
    mutable onebppmethod : string;
-   mutable pixel_threshold : int}
+   mutable pixel_threshold : int;
+   mutable length_threshold : int;
+   mutable percentage_threshold : int}
 
 let args =
   {op = None;
@@ -653,7 +655,9 @@ let args =
    jpegquality = 100;
    jpegqualitylossless = 100;
    onebppmethod = "";
-   pixel_threshold = 25}
+   pixel_threshold = 25;
+   length_threshold = 100;
+   percentage_threshold = 99}
 
 let reset_arguments () =
   args.op <- None;
@@ -761,7 +765,9 @@ let reset_arguments () =
   args.jpegquality <- 100;
   args.jpegqualitylossless <- 100;
   args.onebppmethod <- "";
-  args.pixel_threshold <- 0;
+  args.pixel_threshold <- 25;
+  args.length_threshold <- 100;
+  args.percentage_threshold <- 99;
   (* Do not reset original_filename or cpdflin or was_encrypted or
    was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
    gs_malformed or gs_quiet or no-warn-rotate, since we want these to work
@@ -1944,6 +1950,12 @@ let set1bppmethod m =
 let setpixelthreshold i =
   args.pixel_threshold <- i
 
+let setlengththreshold i =
+  args.length_threshold <- i
+
+let setpercentagethreshold i =
+  args.percentage_threshold <- i
+
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
   control_args := !control_args @ parse_control_file filename
@@ -2736,6 +2748,12 @@ and specs =
    ("-pixel-threshold",
      Arg.Int setpixelthreshold,
      " Only process images with more pixels than this");
+   ("-length-threshold",
+     Arg.Int setlengththreshold,
+     " Only process images with data longer than this");
+   ("-percentage-threshold",
+     Arg.Int setpercentagethreshold,
+     " Only substitute lossy image when smaller than this");
    ("-squeeze",
      Arg.Unit setsqueeze,
      " Squeeze");
@@ -4473,7 +4491,10 @@ let go () =
         write_pdf false (Cpdfchop.chop ~x ~y ~columns:args.impose_columns ~btt:args.impose_btt ~rtl:args.impose_rtl pdf range)
   | Some ProcessImages ->
       let pdf = get_single_pdf args.op false in
-        Cpdfimage.process pdf ~q:args.jpegquality ~qlossless:args.jpegqualitylossless ~onebppmethod:args.onebppmethod ~pixel_threshold:args.pixel_threshold ~path_to_jbig2enc:args.path_to_jbig2enc ~path_to_convert:args.path_to_convert;
+        Cpdfimage.process
+          ~q:args.jpegquality ~qlossless:args.jpegqualitylossless ~onebppmethod:args.onebppmethod
+          ~length_threshold:args.length_threshold ~pixel_threshold:args.pixel_threshold ~percentage_threshold:args.percentage_threshold
+          ~path_to_jbig2enc:args.path_to_jbig2enc ~path_to_convert:args.path_to_convert pdf;
         write_pdf false pdf
 
 (* Advise the user if a combination of command line flags makes little sense,

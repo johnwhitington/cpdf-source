@@ -11,7 +11,10 @@ val image_resolution : Pdf.t -> int list -> float -> (int * string * int * int *
 (** List images in JSON format *)
 val images : Pdf.t -> int list -> Cpdfyojson.Safe.t
 
-val process : ?q:int -> ?qlossless:int -> ?onebppmethod:string -> pixel_threshold:int -> Pdf.t -> path_to_jbig2enc:string -> path_to_convert:string -> unit
+val process :
+  ?q:int -> ?qlossless:int -> ?onebppmethod:string ->
+  length_threshold:int -> percentage_threshold:int -> pixel_threshold:int ->
+  path_to_jbig2enc:string -> path_to_convert:string -> Pdf.t -> unit
 
 (**/**)
 val image_of_input : (unit -> Pdfio.bytes -> Pdf.pdfobject * (int * Pdf.pdfobject) list) -> Pdfio.input -> Pdf.t

@@ -632,7 +632,10 @@ let recompress_1bpp_jbig2_lossless ~pixel_threshold ~path_to_jbig2enc pdf s dict
 (* JPEG to JPEG: RGB and CMYK JPEGS *)
 (* Lossless to JPEG: 8bpp Grey, 8bpp RGB, 8bpp CMYK including separation and ICCBased colourspaces *)
 (* 1 bit: anything to JBIG2 lossless (no globals) *)
-let process ?q ?qlossless ?onebppmethod ~pixel_threshold pdf ~path_to_jbig2enc ~path_to_convert =
+let process
+  ?q ?qlossless ?onebppmethod ~length_threshold ~percentage_threshold ~pixel_threshold
+  ~path_to_jbig2enc ~path_to_convert pdf
+=
   let process_obj _ s =
     match s with
     | Pdf.Stream ({contents = dict, _} as reference) ->
