@@ -1956,6 +1956,9 @@ let setlengththreshold i =
 let setpercentagethreshold i =
   args.percentage_threshold <- i
 
+let setprocessimagesinfo () =
+  set Cpdfimage.debug_image_processing
+
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
   control_args := !control_args @ parse_control_file filename
@@ -2730,6 +2733,9 @@ and specs =
    ("-process-images",
      Arg.Unit (setop ProcessImages),
      " Process images within PDF");
+   ("-process-images-info",
+     Arg.Unit setprocessimagesinfo,
+     " Show info when processing images");
    ("-convert",
      Arg.String setconvertpath,
      " Path to convert executable");

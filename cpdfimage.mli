@@ -1,5 +1,8 @@
 (** Images *)
 
+(** Print info when processing image *)
+val debug_image_processing : bool ref
+
 (** Extract images. *)
 val extract_images :
   ?raw:bool -> ?path_to_p2p:string -> ?path_to_im:string ->
