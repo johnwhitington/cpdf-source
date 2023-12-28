@@ -653,7 +653,7 @@ let args =
    idir_only_pdfs = false;
    no_warn_rotate = false;
    jpegquality = 100;
-   jpegqualitylossless = 100;
+   jpegqualitylossless = 101;
    onebppmethod = "";
    pixel_threshold = 25;
    length_threshold = 100;
@@ -763,7 +763,7 @@ let reset_arguments () =
   args.toc_bookmark <- true;
   args.idir_only_pdfs <- false;
   args.jpegquality <- 100;
-  args.jpegqualitylossless <- 100;
+  args.jpegqualitylossless <- 101;
   args.onebppmethod <- "";
   args.pixel_threshold <- 25;
   args.length_threshold <- 100;
