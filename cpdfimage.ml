@@ -348,8 +348,8 @@ let images pdf range =
         begin match xobject with
         | Pdf.Indirect i ->
             begin match Hashtbl.find images i with
-            | (pagenums, n, w, h, cs) ->
-                Hashtbl.replace images i (pagenum::pagenums, n, w, h, cs)
+            | (pagenums, n, w, h, s, bpc, cs, f) ->
+                Hashtbl.replace images i (pagenum::pagenums, n, w, h, s, bpc, cs, f)
             | exception Not_found ->
                 let width =
                   match Pdf.lookup_direct pdf "/Width" xobject with
@@ -359,12 +359,24 @@ let images pdf range =
                   match Pdf.lookup_direct pdf "/Height" xobject with
                   | Some x -> Pdf.getnum pdf x
                   | None -> 1.
+                and size =
+                  match Pdf.lookup_direct pdf "/Length" xobject with
+                  | Some (Pdf.Integer x) -> x
+                  | _ -> 0
+                and bpc =
+                  match Pdf.lookup_direct pdf "/BitsPerComponent" xobject with
+                  | Some (Pdf.Integer x) -> x
+                  | _ -> 0
                 and colourspace =
                   match Pdf.lookup_direct pdf "/ColorSpace" xobject with
                   | Some x -> Some (Pdfspace.string_of_colourspace (Pdfspace.read_colourspace pdf resources x))
                   | None -> None
+                and filter =
+                  match Pdf.lookup_direct pdf "/Filter" xobject with
+                  | Some (Pdf.Array [x]) | Some x -> Some (Pdfwrite.string_of_pdf x)
+                  | None -> None
                 in
-                  Hashtbl.replace images i ([pagenum], name, int_of_float width, int_of_float height, colourspace)
+                  Hashtbl.replace images i ([pagenum], name, int_of_float width, int_of_float height, size, bpc, colourspace, filter)
             end
         | _ -> ()
         end
@@ -397,17 +409,20 @@ let images pdf range =
         pdf
         range;
         let images = list_of_hashtbl images in
-        let images = map (fun (i, (pnums, n, w, h, c)) -> (i, (setify (sort compare pnums), n, w, h, c))) images in
-        let images = sort (fun (_, (pnums, _, _, _, _)) (_, (pnums', _, _, _, _)) -> compare (hd pnums) (hd pnums')) images in
+        let images = map (fun (i, (pnums, n, w, h, s, bpc, c, filter)) -> (i, (setify (sort compare pnums), n, w, h, s, bpc, c, filter))) images in
+        let images = sort (fun (_, (pnums, _, _, _, _, _, _, _)) (_, (pnums', _, _, _, _, _, _, _)) -> compare (hd pnums) (hd pnums')) images in
          `List
            (map
-             (fun (i, (pnums, n, w, h, cs)) ->
+             (fun (i, (pnums, n, w, h, size, bpc, cs, filter)) ->
                `Assoc [("Object", `Int i);
                        ("Pages", `List (map (fun x -> `Int x) pnums));
                        ("Name", `String n);
                        ("Width", `Int w);
                        ("Height", `Int h);
-                       ("Colourspace", match cs with None -> `Null | Some s -> `String s)])
+                       ("Bytes", `Int size);
+                       ("BitsPerComponent", `Int bpc);
+                       ("Colourspace", match cs with None -> `Null | Some s -> `String s);
+                       ("Filter", match filter with None -> `Null | Some s -> `String s)])
              images)
 
 let obj_of_jpeg_data data =
