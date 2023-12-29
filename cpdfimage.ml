@@ -566,6 +566,7 @@ let lossless_out pdf ~pixel_threshold ~length_threshold extension s dict referen
     in
       print_string (Pdfwrite.string_of_pdf dict);
       print_string (Printf.sprintf "%s (%s) [%s]\n" colspace bpc filter);*)
+      if !debug_image_processing then Printf.printf "not suitable\n%!";
       None (* an image we cannot or do not handle *)
 
 let lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~qlossless ~path_to_convert s dict reference =
