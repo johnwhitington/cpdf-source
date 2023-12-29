@@ -585,7 +585,7 @@ let args =
    retain_numbering = false;
    remove_duplicate_fonts = false;
    remove_duplicate_streams = false;
-   encoding = Cpdfmetadata.UTF;
+   encoding = Cpdfmetadata.UTF8;
    scale = 1.;
    copyfontpage = 1;
    copyfontname = None;
@@ -713,7 +713,7 @@ let reset_arguments () =
   args.retain_numbering <- false;
   args.remove_duplicate_fonts <- false;
   args.remove_duplicate_streams <- false;
-  args.encoding <- Cpdfmetadata.UTF;
+  args.encoding <- Cpdfmetadata.UTF8;
   args.scale <- 1.;
   args.copyfontpage <- 1;
   args.copyfontname <- None;

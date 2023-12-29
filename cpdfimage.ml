@@ -551,53 +551,29 @@ let suitable_num pdf dict =
   | Some (Pdf.Array (Pdf.Name "/Separation"::_)) -> ~-1
   | _ -> 0
 
-let lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~qlossless ~path_to_convert s dict reference =
+
+
+let lossless_out pdf ~pixel_threshold ~length_threshold extension s dict reference =
   let bpc = Pdf.lookup_direct pdf "/BitsPerComponent" dict in
   let components = suitable_num pdf dict in
   match components, bpc with
   | (1 | 3 | 4 | -1), Some (Pdf.Integer 8) ->
       let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
       let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
-      if w * h < pixel_threshold then () else
+      if w * h < pixel_threshold then None else
       let size = match Pdf.lookup_direct pdf "/Length" dict with Some (Pdf.Integer i) -> i | _ -> 0 in
-      if size < length_threshold then () else
-      Pdfcodec.decode_pdfstream_until_unknown pdf s;
-      begin match Pdf.lookup_direct pdf "/Filter" (fst !reference) with Some _ -> () | None ->
+      if size < length_threshold then None else
+      begin
+        Pdfcodec.decode_pdfstream_until_unknown pdf s;
+        match Pdf.lookup_direct pdf "/Filter" (fst !reference) with Some _ -> None | None ->
         let out = Filename.temp_file "cpdf" "convertin" ^ (if suitable_num pdf dict < 4 then ".pnm" else ".cmyk") in
-        let out2 = Filename.temp_file "cpdf" "convertout" ^ ".jpg" in
+        let out2 = Filename.temp_file "cpdf" "convertout" ^ extension in
         let fh = open_out_bin out in
         let data = match s with Pdf.Stream {contents = _, Pdf.Got d} -> d | _ -> assert false in
         (if components = 3 then pnm_to_channel_24 else
          if components = 4 then cmyk_to_channel_32 else pnm_to_channel_8) fh w h data;
         close_out fh;
-        let retcode =
-          let command = 
-            (Filename.quote_command path_to_convert
-              ((if components = 4 then ["-depth"; "8"; "-size"; string_of_int w ^ "x" ^ string_of_int h] else []) @
-              [out; "-quality"; string_of_int qlossless ^ "%"] @
-              (if components = 1 then ["-colorspace"; "Gray"] else if components = 4 then ["-colorspace"; "CMYK"] else []) @
-              [out2]))
-          in
-            (*Printf.printf "%S\n" command;*) Sys.command command
-        in
-        if retcode = 0 then
-          begin
-            let result = open_in_bin out2 in
-            let newsize = in_channel_length result in
-            if newsize < size then
-              begin
-                if !debug_image_processing then Printf.printf "Lossless to JPEG %i -> %i\n%!" size newsize;
-                reference :=
-                  (Pdf.add_dict_entry
-                    (Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize))
-                     "/Filter"
-                     (Pdf.Name "/DCTDecode")),
-                  Pdf.Got (Pdfio.bytes_of_input_channel result)
-              end;
-              close_in result
-          end;
-        Sys.remove out;
-        Sys.remove out2
+        Some (out, out2, size, components, w, h)
       end
   | colspace, bpc ->
     (*let colspace = Pdf.lookup_direct pdf "/ColorSpace" dict in
@@ -608,7 +584,69 @@ let lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshol
     in
       print_string (Pdfwrite.string_of_pdf dict);
       print_string (Printf.sprintf "%s (%s) [%s]\n" colspace bpc filter);*)
-      () (* an image we cannot or do not handle *)
+      None (* an image we cannot or do not handle *)
+
+let lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~qlossless ~path_to_convert s dict reference =
+  match lossless_out pdf ~pixel_threshold ~length_threshold ".jpg" s dict reference with None -> () | Some (out, out2, size, components, w, h) ->
+  let retcode =
+    let command = 
+      (Filename.quote_command path_to_convert
+        ((if components = 4 then ["-depth"; "8"; "-size"; string_of_int w ^ "x" ^ string_of_int h] else []) @
+        [out; "-quality"; string_of_int qlossless ^ "%"] @
+        (if components = 1 then ["-colorspace"; "Gray"] else if components = 4 then ["-colorspace"; "CMYK"] else []) @
+        [out2]))
+    in
+      (*Printf.printf "%S\n" command;*) Sys.command command
+  in
+  if retcode = 0 then
+    begin
+      let result = open_in_bin out2 in
+      let newsize = in_channel_length result in
+      if newsize < size then
+        begin
+          if !debug_image_processing then Printf.printf "Lossless to JPEG %i -> %i\n%!" size newsize;
+          reference :=
+            (Pdf.add_dict_entry
+              (Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize))
+               "/Filter"
+               (Pdf.Name "/DCTDecode")),
+            Pdf.Got (Pdfio.bytes_of_input_channel result)
+        end;
+        close_in result
+    end;
+  Sys.remove out;
+  Sys.remove out2
+
+let lossless_resample pdf ~pixel_threshold ~length_threshold ~percentage_threshold~interpolate ~path_to_convert s dict reference =
+  match lossless_out pdf ~pixel_threshold ~length_threshold ".png" s dict reference with None -> () | Some (out, out2, size, components, w, h) ->
+  let retcode =
+    let command = 
+      (Filename.quote_command path_to_convert
+        ((if components = 4 then ["-depth"; "8"; "-size"; string_of_int w ^ "x" ^ string_of_int h] else []) @
+        [out] @
+        (if components = 1 then ["-colorspace"; "Gray"] else if components = 4 then ["-colorspace"; "CMYK"] else []) @
+        [out2]))
+    in
+      (*Printf.printf "%S\n" command;*) Sys.command command
+  in
+  if retcode = 0 then
+    begin
+      let result = open_in_bin out2 in
+      let newsize = in_channel_length result in
+      if newsize < size then
+        begin
+          if !debug_image_processing then Printf.printf "Lossless to JPEG %i -> %i\n%!" size newsize;
+          reference :=
+            (Pdf.add_dict_entry
+              (Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize))
+               "/Filter"
+               (Pdf.Name "/DCTDecode")),
+            Pdf.Got (Pdfio.bytes_of_input_channel result)
+        end;
+        close_in result
+    end;
+  Sys.remove out;
+  Sys.remove out2
 
 let recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_jbig2enc pdf s dict reference =
   let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
