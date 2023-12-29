@@ -494,10 +494,10 @@ let image_of_input fobj i =
 let jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~q ~path_to_convert s dict reference =
   let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
   let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
-  if w * h < pixel_threshold then () else
+  if w * h < pixel_threshold then (if !debug_image_processing then Printf.printf "pixel threshold not met\n%!") else
   Pdf.getstream s;
   let size = match Pdf.lookup_direct pdf "/Length" dict with Some (Pdf.Integer i) -> i | _ -> 0 in
-  if size < length_threshold then () else
+  if size < length_threshold then (if !debug_image_processing then Printf.printf "length threshold not met\n%!") else
   let out = Filename.temp_file "cpdf" "convertin" ^ ".jpg" in
   let out2 = Filename.temp_file "cpdf" "convertout" ^ ".jpg" in
   let fh = open_out_bin out in
@@ -542,9 +542,9 @@ let lossless_out pdf ~pixel_threshold ~length_threshold extension s dict referen
   | (1 | 3 | 4 | -1), Some (Pdf.Integer 8) ->
       let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
       let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
-      if w * h < pixel_threshold then None else
+      if w * h < pixel_threshold then (if !debug_image_processing then Printf.printf "pixel threshold not met\n%!"; None) else
       let size = match Pdf.lookup_direct pdf "/Length" dict with Some (Pdf.Integer i) -> i | _ -> 0 in
-      if size < length_threshold then None else
+      if size < length_threshold then (if !debug_image_processing then Printf.printf "length threshold not met\n%!"; None) else
       begin
         Pdfcodec.decode_pdfstream_until_unknown pdf s;
         match Pdf.lookup_direct pdf "/Filter" (fst !reference) with Some _ -> None | None ->
@@ -586,13 +586,17 @@ let lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshol
       let newsize = in_channel_length result in
       if newsize < size then
         begin
-          if !debug_image_processing then Printf.printf "Lossless to JPEG %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
+          if !debug_image_processing then Printf.printf "lossless to JPEG %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
           reference :=
             (Pdf.add_dict_entry
               (Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize))
                "/Filter"
                (Pdf.Name "/DCTDecode")),
             Pdf.Got (Pdfio.bytes_of_input_channel result)
+        end
+      else
+        begin
+          if !debug_image_processing then Printf.printf "no size reduction\n%!"
         end;
         close_in result
     end;
@@ -617,13 +621,17 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~percentage_thresho
       let newsize = in_channel_length result in
       if newsize < size then
         begin
-          if !debug_image_processing then Printf.printf "Lossless to JPEG %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
+          if !debug_image_processing then Printf.printf "lossless resample %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
           reference :=
             (Pdf.add_dict_entry
               (Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize))
                "/Filter"
                (Pdf.Name "/DCTDecode")),
             Pdf.Got (Pdfio.bytes_of_input_channel result)
+        end
+      else
+        begin
+          if !debug_image_processing then Printf.printf "no size reduction\n%!"
         end;
         close_in result
     end;
@@ -633,11 +641,11 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~percentage_thresho
 let recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_jbig2enc pdf s dict reference =
   let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
   let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
-  if w * h < pixel_threshold then () else (* pixel_threshold (but also, jbig2enc fails on tiny images) *)
+  if w * h < pixel_threshold then (if !debug_image_processing then Printf.printf "pixel threshold not met\n%!") else (* (but also, jbig2enc fails on tiny images) *)
   let size = match Pdf.lookup_direct pdf "/Length" dict with Some (Pdf.Integer i) -> i | _ -> 0 in
-  if size < length_threshold then () else
+  if size < length_threshold then if !debug_image_processing then Printf.printf "length threshold not met\n%!" else
   Pdfcodec.decode_pdfstream_until_unknown pdf s;
-  match Pdf.lookup_direct pdf "/Filter" (fst !reference) with Some _ -> () | None ->
+  match Pdf.lookup_direct pdf "/Filter" (fst !reference) with Some _ -> if !debug_image_processing then Printf.printf "could not decode - skipping\n%!" | None ->
     let out = Filename.temp_file "cpdf" "convertin" ^ ".pnm" in
     let out2 = Filename.temp_file "cpdf" "convertout" ^ ".jbig2" in
     let fh = open_out_bin out in
@@ -662,6 +670,10 @@ let recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_j
                      "/Filter"
                      (Pdf.Name "/JBIG2Decode")) "/DecodeParms"),
                   Pdf.Got (Pdfio.bytes_of_input_channel result)
+              end
+             else
+              begin
+                if !debug_image_processing then Printf.printf "no size reduction\n%!"
               end;
               close_in result
           end;
@@ -688,25 +700,33 @@ let process
           Pdf.lookup_direct pdf "/ImageMask" dict
         with
         | Some (Pdf.Name "/Image"), Some (Pdf.Name "/DCTDecode" | Pdf.Array [Pdf.Name "/DCTDecode"]), _, _ ->
-            if !debug_image_processing then Printf.printf "(%i/%i) Object %i (JPEG)...\n%!" !ndone nobjects objnum;
             begin match q with
             | Some q ->
-                if q < 100 then jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~q ~path_to_convert s dict reference
+                if q < 100 then
+                  begin
+                    if !debug_image_processing then Printf.printf "(%i/%i) Object %i (JPEG)... %!" !ndone nobjects objnum;
+                    jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~q ~path_to_convert s dict reference
+                  end
             | None -> ()
             end
         | Some (Pdf.Name "/Image"), _, Some (Pdf.Integer 1), _
         | Some (Pdf.Name "/Image"), _, _, Some (Pdf.Boolean true) ->
-            if !debug_image_processing then Printf.printf "(%i/%i) object %i (1bpp)...\n%!" !ndone nobjects objnum;
             begin match onebppmethod with
             | Some "JBIG2" ->
-                recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_jbig2enc pdf s dict reference
+                begin
+                  if !debug_image_processing then Printf.printf "(%i/%i) object %i (1bpp)... %!" !ndone nobjects objnum;
+                  recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_jbig2enc pdf s dict reference
+                end
             | _ -> ()
             end
         | Some (Pdf.Name "/Image"), _, _, _ ->
-            if !debug_image_processing then Printf.printf "(%i/%i) object %i (lossless)...\n%!" !ndone nobjects objnum;
             begin match qlossless with
             | Some qlossless ->
-                if qlossless < 101 then lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~qlossless ~path_to_convert s dict reference
+                if qlossless < 101 then
+                  begin
+                    if !debug_image_processing then Printf.printf "(%i/%i) object %i (lossless)... %!" !ndone nobjects objnum;
+                    lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~qlossless ~path_to_convert s dict reference
+                  end
             | None -> ()
             end
         | _ -> () (* not an image *)
