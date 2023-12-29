@@ -20,26 +20,14 @@ let pnm_to_channel_24 ch w h s =
   pnm_header ch w h;
   pnm_output_string ch "255";
   pnm_newline ch;
-  let pos = ref 0 in
-    for y = 1 to h do
-      for x = 1 to w * 3 do
-        output_byte ch (bget s !pos);
-        incr pos
-      done
-    done
+  bytes_to_output_channel ch s
 
 let pnm_to_channel_8 ch w h s =
   pnm_output_string ch "P5";
   pnm_header ch w h;
   pnm_output_string ch "255";
   pnm_newline ch;
-  let pos = ref 0 in
-    for y = 1 to h do
-      for x = 1 to w do
-        output_byte ch (bget s !pos);
-        incr pos
-      done
-    done
+  bytes_to_output_channel ch s
 
 let pnm_to_channel_1_inverted ch w h s =
   pnm_output_string ch "P4";
@@ -47,16 +35,12 @@ let pnm_to_channel_1_inverted ch w h s =
   pnm_newline ch;
   let inverted = Pdfio.copybytes s in
     Pdfio.bytes_selfmap lnot inverted;
-    pnm_output_string ch (Pdfio.string_of_bytes inverted)
+    bytes_to_output_channel ch inverted
 
 let cmyk_to_channel_32 ch w h s =
-  let pos = ref 0 in
-    for y = 1 to h do
-      for x = 1 to w * 4 do
-        output_byte ch (255 - bget s !pos);
-        incr pos
-      done
-    done
+  let inverted = Pdfio.copybytes s in
+    Pdfio.bytes_selfmap (fun x -> 255 - x) inverted;
+    bytes_to_output_channel ch inverted
 
 let jbig2_serial = ref 0
 
