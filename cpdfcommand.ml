@@ -528,7 +528,9 @@ type args =
    mutable onebppmethod : string;
    mutable pixel_threshold : int;
    mutable length_threshold : int;
-   mutable percentage_threshold : int}
+   mutable percentage_threshold : int;
+   mutable resample_factor : int;
+   mutable resample_interpolate : bool}
 
 let args =
   {op = None;
@@ -657,8 +659,15 @@ let args =
    onebppmethod = "";
    pixel_threshold = 25;
    length_threshold = 100;
-   percentage_threshold = 99}
+   percentage_threshold = 99;
+   resample_factor = 100;
+   resample_interpolate = false}
 
+(* Do not reset original_filename or cpdflin or was_encrypted or
+was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
+gs_malformed or gs_quiet or no-warn-rotate, since we want these to work
+across ANDs. Or squeeze options: a little odd, but we want it to happen on
+eventual output. Or -debug-force (from v2.6). *)
 let reset_arguments () =
   args.op <- None;
   args.preserve_objstm <- true;
@@ -768,11 +777,8 @@ let reset_arguments () =
   args.pixel_threshold <- 25;
   args.length_threshold <- 100;
   args.percentage_threshold <- 99;
-  (* Do not reset original_filename or cpdflin or was_encrypted or
-   was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
-   gs_malformed or gs_quiet or no-warn-rotate, since we want these to work
-   across ANDs. Or squeeze options: a little odd, but we want it to happen on
-   eventual output. Or -debug-force (from v2.6). *)
+  args.resample_factor <- 100;
+  args.resample_interpolate <- false;
   clear Cpdfdrawcontrol.fontpack_initialised
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
@@ -1956,6 +1962,12 @@ let setlengththreshold i =
 let setpercentagethreshold i =
   args.percentage_threshold <- i
 
+let setlosslessresample i =
+  args.resample_factor <- i
+
+let setresampleinterpolate b =
+  args.resample_interpolate <- b
+
 let setprocessimagesinfo () =
   set Cpdfimage.debug_image_processing
 
@@ -2760,6 +2772,12 @@ and specs =
    ("-percentage-threshold",
      Arg.Int setpercentagethreshold,
      " Only substitute lossy image when smaller than this");
+   ("-lossless-resample",
+     Arg.Int setlosslessresample,
+     " Resample lossless images to given part of original");
+   ("-resample-interpolate",
+     Arg.Bool setresampleinterpolate,
+     " Interpolate when resampling");
    ("-squeeze",
      Arg.Unit setsqueeze,
      " Squeeze");
@@ -4499,7 +4517,8 @@ let go () =
       let pdf = get_single_pdf args.op false in
         Cpdfimage.process
           ~q:args.jpegquality ~qlossless:args.jpegqualitylossless ~onebppmethod:args.onebppmethod
-          ~length_threshold:args.length_threshold ~pixel_threshold:args.pixel_threshold ~percentage_threshold:args.percentage_threshold
+          ~length_threshold:args.length_threshold ~percentage_threshold:args.percentage_threshold ~pixel_threshold:args.pixel_threshold 
+          ~factor:args.resample_factor ~interpolate:args.resample_interpolate
           ~path_to_jbig2enc:args.path_to_jbig2enc ~path_to_convert:args.path_to_convert pdf;
         write_pdf false pdf
 

@@ -617,7 +617,7 @@ let lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshol
   remove out;
   remove out2
 
-let lossless_resample pdf ~pixel_threshold ~length_threshold ~percentage_threshold~interpolate ~path_to_convert s dict reference =
+let lossless_resample pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~factor ~interpolate ~path_to_convert s dict reference =
   match lossless_out pdf ~pixel_threshold ~length_threshold ".png" s dict reference with None -> () | Some (out, out2, size, components, w, h) ->
   let retcode =
     let command = 
@@ -702,7 +702,7 @@ let recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_j
 (* Lossless to JPEG: 8bpp Grey, 8bpp RGB, 8bpp CMYK including separation and ICCBased colourspaces *)
 (* 1 bit: anything to JBIG2 lossless (no globals) *)
 let process
-  ?q ?qlossless ?onebppmethod ~length_threshold ~percentage_threshold ~pixel_threshold
+  ?q ?qlossless ?onebppmethod ~length_threshold ~percentage_threshold ~pixel_threshold ~factor ~interpolate
   ~path_to_jbig2enc ~path_to_convert pdf
 =
   let nobjects = Pdf.objcard pdf in
@@ -744,6 +744,14 @@ let process
                   begin
                     if !debug_image_processing then Printf.printf "(%i/%i) object %i (lossless)... %!" !ndone nobjects objnum;
                     lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~qlossless ~path_to_convert s dict reference
+                  end
+                else
+                  begin
+                    if factor < 100 then
+                      begin
+                        if !debug_image_processing then Printf.printf "(%i/%i) object %i (lossless)... %!" !ndone nobjects objnum;
+                        lossless_resample pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~factor ~interpolate ~path_to_convert s dict reference
+                      end
                   end
             | None -> ()
             end
