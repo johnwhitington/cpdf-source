@@ -4,6 +4,9 @@ open Cpdferror
 
 let debug_image_processing = ref false
 
+let remove x =
+  try Sys.remove x with _ -> ()
+
 let pnm_white ch = output_char ch ' '
 let pnm_newline ch = output_char ch '\n'
 let pnm_output_string = Stdlib.output_string
@@ -97,20 +100,20 @@ let write_image ~raw ?path_to_p2p ?path_to_im pdf resources name image =
             begin match
               Sys.command (Filename.quote_command path_to_im [pnm; png])
             with
-              0 -> Sys.remove pnm
+              0 -> remove pnm
             | _ -> 
               Pdfe.log "Call to imagemagick failed: did you specify -p2p or -im correctly?\n";
-              Sys.remove pnm
+              remove pnm
             end
           end
         | Some path_to_p2p ->
           begin match
             Sys.command (Filename.quote_command path_to_p2p ~stdout:png ["-gamma"; "0.45"; "-quiet"; pnm])
           with
-          | 0 -> Sys.remove pnm
+          | 0 -> remove pnm
           | _ ->
               Pdfe.log "Call to pnmtopng failed: did you specify -p2p correctly?\n";
-              Sys.remove pnm
+              remove pnm
           end
         end
   | _ ->
@@ -507,18 +510,28 @@ let jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~q
       let command = 
         (Filename.quote_command path_to_convert [out; "-quality"; string_of_int q ^ "%"; out2])
       in
-        (*Printf.printf "%S\n" command;*) Sys.command command
+        (*0Printf.printf "%S\n" command;*) Sys.command command
     in
     if retcode = 0 then
       begin
         let result = open_in_bin out2 in
         let newsize = in_channel_length result in
         if newsize < size then
-          if !debug_image_processing then Printf.printf "JPEG to JPEG %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
-          reference := Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize), Pdf.Got (Pdfio.bytes_of_input_channel result)
+          begin
+            if !debug_image_processing then Printf.printf "JPEG to JPEG %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
+            reference := Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize), Pdf.Got (Pdfio.bytes_of_input_channel result)
+          end
+        else
+         begin
+           if !debug_image_processing then Printf.printf "no size reduction\n%!"
+         end
+      end
+    else
+      begin
+        Printf.printf "external process failed\n%!"
       end;
-    Sys.remove out;
-    Sys.remove out2
+    remove out;
+    remove out2
 
 let suitable_num pdf dict =
   match Pdf.lookup_direct pdf "/ColorSpace" dict with
@@ -566,7 +579,7 @@ let lossless_out pdf ~pixel_threshold ~length_threshold extension s dict referen
     in
       print_string (Pdfwrite.string_of_pdf dict);
       print_string (Printf.sprintf "%s (%s) [%s]\n" colspace bpc filter);*)
-      if !debug_image_processing then Printf.printf "not suitable\n%!";
+      if !debug_image_processing then Printf.printf "colourspace not suitable\n%!";
       None (* an image we cannot or do not handle *)
 
 let lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~qlossless ~path_to_convert s dict reference =
@@ -601,8 +614,8 @@ let lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshol
         end;
         close_in result
     end;
-  Sys.remove out;
-  Sys.remove out2
+  remove out;
+  remove out2
 
 let lossless_resample pdf ~pixel_threshold ~length_threshold ~percentage_threshold~interpolate ~path_to_convert s dict reference =
   match lossless_out pdf ~pixel_threshold ~length_threshold ".png" s dict reference with None -> () | Some (out, out2, size, components, w, h) ->
@@ -636,50 +649,54 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~percentage_thresho
         end;
         close_in result
     end;
-  Sys.remove out;
-  Sys.remove out2
+  remove out;
+  remove out2
 
 let recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_jbig2enc pdf s dict reference =
   let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
   let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
   if w * h < pixel_threshold then (if !debug_image_processing then Printf.printf "pixel threshold not met\n%!") else (* (but also, jbig2enc fails on tiny images) *)
   let size = match Pdf.lookup_direct pdf "/Length" dict with Some (Pdf.Integer i) -> i | _ -> 0 in
-  if size < length_threshold then if !debug_image_processing then Printf.printf "length threshold not met\n%!" else
-  Pdfcodec.decode_pdfstream_until_unknown pdf s;
-  match Pdf.lookup_direct pdf "/Filter" (fst !reference) with Some _ -> if !debug_image_processing then Printf.printf "could not decode - skipping\n%!" | None ->
-    let out = Filename.temp_file "cpdf" "convertin" ^ ".pnm" in
-    let out2 = Filename.temp_file "cpdf" "convertout" ^ ".jbig2" in
-    let fh = open_out_bin out in
-    let data = match s with Pdf.Stream {contents = _, Pdf.Got d} -> d | _ -> assert false in
-      pnm_to_channel_1_inverted fh w h data;
-      close_out fh;
-      let retcode =
-        let command = Filename.quote_command ~stdout:out2 path_to_jbig2enc ["-p"; out] in
-          (*Printf.printf "%S\n" command;*) Sys.command command
-      in
-        if retcode = 0 then
-          begin
-            let result = open_in_bin out2 in
-            let newsize = in_channel_length result in
-            if newsize < size then
-              begin
-                if !debug_image_processing then Printf.printf "1bpp to JBIG2 %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
-                reference :=
-                  (Pdf.remove_dict_entry
-                  (Pdf.add_dict_entry
-                    (Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize))
-                     "/Filter"
-                     (Pdf.Name "/JBIG2Decode")) "/DecodeParms"),
-                  Pdf.Got (Pdfio.bytes_of_input_channel result)
-              end
-             else
-              begin
-                if !debug_image_processing then Printf.printf "no size reduction\n%!"
-              end;
-              close_in result
-          end;
-        Sys.remove out;
-        Sys.remove out2
+  if size < length_threshold then (if !debug_image_processing then Printf.printf "length threshold not met\n%!") else
+  begin
+    Pdfcodec.decode_pdfstream_until_unknown pdf s;
+    match Pdf.lookup_direct pdf "/Filter" (fst !reference) with
+    | Some x -> if !debug_image_processing then Printf.printf "could not decode - skipping %s length %i\n%!" (Pdfwrite.string_of_pdf x) size
+    | None ->
+      let out = Filename.temp_file "cpdf" "convertin" ^ ".pnm" in
+      let out2 = Filename.temp_file "cpdf" "convertout" ^ ".jbig2" in
+      let fh = open_out_bin out in
+      let data = match s with Pdf.Stream {contents = _, Pdf.Got d} -> d | _ -> assert false in
+        pnm_to_channel_1_inverted fh w h data;
+        close_out fh;
+        let retcode =
+          let command = Filename.quote_command ~stdout:out2 path_to_jbig2enc ["-p"; out] in
+            (*Printf.printf "%S\n" command;*) Sys.command command
+        in
+          if retcode = 0 then
+            begin
+              let result = open_in_bin out2 in
+              let newsize = in_channel_length result in
+              if newsize < size then
+                begin
+                  if !debug_image_processing then Printf.printf "1bpp to JBIG2 %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
+                  reference :=
+                    (Pdf.remove_dict_entry
+                    (Pdf.add_dict_entry
+                      (Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize))
+                       "/Filter"
+                       (Pdf.Name "/JBIG2Decode")) "/DecodeParms"),
+                    Pdf.Got (Pdfio.bytes_of_input_channel result)
+                end
+               else
+                begin
+                  if !debug_image_processing then Printf.printf "no size reduction\n%!"
+                end;
+                close_in result
+            end;
+          remove out;
+          remove out2
+  end
 
 (* JPEG to JPEG: RGB and CMYK JPEGS *)
 (* Lossless to JPEG: 8bpp Grey, 8bpp RGB, 8bpp CMYK including separation and ICCBased colourspaces *)
