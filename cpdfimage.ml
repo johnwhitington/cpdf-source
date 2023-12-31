@@ -5,7 +5,7 @@ open Cpdferror
 let debug_image_processing = ref false
 
 let remove x =
-  try Sys.remove x with _ -> ()
+  (*try Sys.remove x with _ ->*) ()
 
 let pnm_white ch = output_char ch ' '
 let pnm_newline ch = output_char ch '\n'
@@ -623,9 +623,9 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~percentage_thresho
     let command = 
       (Filename.quote_command path_to_convert
         ((if components = 4 then ["-depth"; "8"; "-size"; string_of_int w ^ "x" ^ string_of_int h] else []) @
+        (if components = 1 then ["-colorspace"; "Gray"] else if components = 3 then ["-colorspace"; "RGB"] else if components = 4 then ["-colorspace"; "CMYK"] else []) @
         [out] @
-        (if components = 1 then ["-colorspace"; "Gray"] else if components = 4 then ["-colorspace"; "CMYK"] else []) @
-        [out2]))
+        ["PNG24:" ^ out2]))
     in
       (*Printf.printf "%S\n" command;*) Sys.command command
   in
@@ -636,6 +636,7 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~percentage_thresho
       if newsize < size then
         begin
           if !debug_image_processing then Printf.printf "lossless resample %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
+          (* FIXME Load PNG data in, per existing code: add filter, predictor, length *)
           reference :=
             (Pdf.add_dict_entry
               (Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize))
@@ -648,9 +649,9 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~percentage_thresho
           if !debug_image_processing then Printf.printf "no size reduction\n%!"
         end;
         close_in result
-    end;
+    end(*;
   remove out;
-  remove out2
+  remove out2*)
 
 let recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_jbig2enc pdf s dict reference =
   let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
