@@ -5,7 +5,7 @@ open Cpdferror
 let debug_image_processing = ref false
 
 let remove x =
-  (*try Sys.remove x with _ ->*) ()
+  try Sys.remove x with _ -> ()
 
 let pnm_white ch = output_char ch ' '
 let pnm_newline ch = output_char ch '\n'
@@ -627,7 +627,7 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~percentage_thresho
         [out] @
         ["PNG24:" ^ out2]))
     in
-      (*Printf.printf "%S\n" command;*) Sys.command command
+      Printf.printf "%S\n" command; Sys.command command
   in
   if retcode = 0 then
     begin
