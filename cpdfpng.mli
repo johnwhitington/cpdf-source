@@ -4,7 +4,9 @@
 type t =
   {width : int;
    height : int;
+   bitdepth : int;
+   colortype : int;
    idat : Pdfio.bytes}
 
-(** Read a non-interlaced, non-transparent 24 bit PNG for inclusion in a PDF file. *)
+(** Read a non-interlaced, non-alpha, non-palette PNG for inclusion in a PDF file. *)
 val read_png : Pdfio.input -> t

@@ -1,12 +1,15 @@
-(* Read non-interlaced, non-transparent 24 bit PNGs. Such a PNG may
+(* Read non-interlaced, non-transparent PNGs. Such a PNG may
    be loaded into a PDF simply by extracting its width and height from the
-   IHDR, and concatenating all its IDAT data sections together. *)
+   IHDR, and concatenating all its IDAT data sections together, and specifying
+   the appropriate Filter and Predictor.*)
 open Pdfutil
 open Pdfio
 
 type t =
   {width : int;
    height : int;
+   bitdepth : int;
+   colortype : int;
    idat : bytes}
 
 (* Writing *)
@@ -121,9 +124,8 @@ let read_png i =
     let width = read_unsigned_4byte hdr in
     let height = read_unsigned_4byte hdr in
     let bitdepth = hdr.input_byte () in
-    if bitdepth <> 8 then raise (Pdf.PDFError "read_png: bit depth not 8") else
     let colortype = hdr.input_byte () in
-    if colortype <> 2 then raise (Pdf.PDFError "read_png: only 24 bit non-alpha PNGs") else
+    if colortype <> 2 && colortype <> 0 then raise (Pdf.PDFError "read_png: only non-alpha non-palette PNGs") else
     let _ (*compressionmethod*) = hdr.input_byte () in
     let _ (*filtermethod*) = hdr.input_byte () in
     let interlacemethod = hdr.input_byte () in
@@ -137,6 +139,10 @@ let read_png i =
       with
         _ -> ()
       end;
-      {width = i32toi width; height = i32toi height; idat = concat_bytes (rev !idat)}
+      {width = i32toi width;
+       height = i32toi height;
+       colortype;
+       bitdepth;
+       idat = concat_bytes (rev !idat)}
   with
     e -> raise (Pdf.PDFError (Printf.sprintf "read_png: failed on %s" (Printexc.to_string e)))

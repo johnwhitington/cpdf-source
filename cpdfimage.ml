@@ -429,21 +429,21 @@ let obj_of_jpeg_data data =
 
 let obj_of_png_data data =
   let png = Cpdfpng.read_png (Pdfio.input_of_bytes data) in
-  let d =
-    ["/Length", Pdf.Integer (Pdfio.bytes_size png.idat);
-     "/Filter", Pdf.Name "/FlateDecode";
-     "/Subtype", Pdf.Name "/Image";
-     "/BitsPerComponent", Pdf.Integer 8;
-     "/ColorSpace", Pdf.Name "/DeviceRGB";
-     "/DecodeParms", Pdf.Dictionary
-                      ["/BitsPerComponent", Pdf.Integer 8;
-                       "/Colors", Pdf.Integer 3;
-                       "/Columns", Pdf.Integer png.width;
-                       "/Predictor", Pdf.Integer 15];
-     "/Width", Pdf.Integer png.width;
-     "/Height", Pdf.Integer png.height]
-  in
-    Pdf.Stream {contents = (Pdf.Dictionary d, Pdf.Got png.idat)}, []
+    let d =
+      ["/Length", Pdf.Integer (Pdfio.bytes_size png.idat);
+       "/Filter", Pdf.Name "/FlateDecode";
+       "/Subtype", Pdf.Name "/Image";
+       "/BitsPerComponent", Pdf.Integer png.bitdepth;
+       "/ColorSpace", Pdf.Name (match png.colortype with 0 -> "/DeviceGray" | 2 -> "/DeviceRGB" | _ -> error "obj_of_png_data 1");
+       "/DecodeParms", Pdf.Dictionary
+                        ["/BitsPerComponent", Pdf.Integer png.bitdepth;
+                         "/Colors", Pdf.Integer (match png.colortype with 0 -> 1 | 2 -> 3 | _ -> error "obj_of_png_data 2");
+                         "/Columns", Pdf.Integer png.width;
+                         "/Predictor", Pdf.Integer 15];
+       "/Width", Pdf.Integer png.width;
+       "/Height", Pdf.Integer png.height]
+    in
+      Pdf.Stream {contents = (Pdf.Dictionary d, Pdf.Got png.idat)}, []
 
 let jbig2_dimensions data =
   (bget data 11 * 256 * 256 * 256 + bget data 12 * 256 * 256 + bget data 13 * 256 + bget data 14,
