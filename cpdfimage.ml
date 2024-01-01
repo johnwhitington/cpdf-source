@@ -617,6 +617,13 @@ let lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshol
   remove out;
   remove out2
 
+let combine_dicts o n =
+  let x = 
+  fold_right (fun (k, v) d -> add k v d) o n
+  in
+    Printf.printf "%s\n" (Pdfwrite.string_of_pdf (Pdf.Dictionary x));
+    x
+
 (* FIXME Need to specify exactly where this works, how to process with convert for each etc. *)
 let lossless_resample pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~factor ~interpolate ~path_to_convert s dict reference =
   match lossless_out pdf ~pixel_threshold ~length_threshold ".png" s dict reference with None -> () | Some (out, out2, size, components, w, h) ->
@@ -626,7 +633,7 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~percentage_thresho
       (Filename.quote_command path_to_convert
         ((if components = 4 then ["-depth"; "8"; "-size"; string_of_int w ^ "x" ^ string_of_int h] else []) @
         (if components = 1 then ["-colorspace"; "Gray"] else if components = 3 then ["-colorspace"; "RGB"] else if components = 4 then ["-colorspace"; "CMYK"] else []) @
-        ["-sample"; string_of_int factor ^ "%"] @
+        [if interpolate then "-resize" else "-sample"; string_of_int factor ^ "%"] @
         [out] @
         ["PNG24:" ^ out2])) (*FIXME do we need this anymore? *)
     in
@@ -639,12 +646,13 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~percentage_thresho
       if newsize < size then
         begin
           if !debug_image_processing then Printf.printf "lossless resample %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
-          (* FIXME Merge any extra dictionary entries from original on top of the one read back. *)
           (* FIXME Check that we got back in what we expected? *)
           reference :=
-            match fst (obj_of_png_data (Pdfio.bytes_of_input_channel result)) with
-            | Pdf.Stream s -> !s
-            | _ -> assert false
+            (match fst (obj_of_png_data (Pdfio.bytes_of_input_channel result)) with
+            | Pdf.Stream {contents = Pdf.Dictionary d, data} ->
+                let d' = fold_right (fun (k, v) d -> add k v d) d (match dict with Pdf.Dictionary x -> x | _ -> []) in
+                  (Pdf.Dictionary d', data)
+            | _ -> assert false)
         end
       else
         begin

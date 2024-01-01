@@ -1965,8 +1965,8 @@ let setpercentagethreshold i =
 let setlosslessresample i =
   args.resample_factor <- i
 
-let setresampleinterpolate b =
-  args.resample_interpolate <- b
+let setresampleinterpolate () =
+  args.resample_interpolate <- true
 
 let setprocessimagesinfo () =
   set Cpdfimage.debug_image_processing
@@ -2776,7 +2776,7 @@ and specs =
      Arg.Int setlosslessresample,
      " Resample lossless images to given part of original");
    ("-resample-interpolate",
-     Arg.Bool setresampleinterpolate,
+     Arg.Unit setresampleinterpolate,
      " Interpolate when resampling");
    ("-squeeze",
      Arg.Unit setsqueeze,
