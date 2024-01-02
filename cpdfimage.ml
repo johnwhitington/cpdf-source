@@ -517,7 +517,6 @@ let jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~q
         let result = open_in_bin out2 in
         let newsize = in_channel_length result in
         let perc_ok = float newsize /. float size < float_of_int percentage_threshold /. 100. in
-        Printf.printf "%i %i %b %f %f\n" size newsize perc_ok (float newsize /. float size) (float_of_int percentage_threshold /. 100.); 
         if newsize < size && perc_ok then
           begin
             if !debug_image_processing then Printf.printf "JPEG to JPEG %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
@@ -602,7 +601,6 @@ let lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshol
       let result = open_in_bin out2 in
       let newsize = in_channel_length result in
       let perc_ok = float newsize /. float size < float_of_int percentage_threshold /. 100. in
-      Printf.printf "%i %i %b %f %f\n" size newsize perc_ok (float newsize /. float size) (float_of_int percentage_threshold /. 100.); 
       if newsize < size && perc_ok then
         begin
           if !debug_image_processing then Printf.printf "lossless to JPEG %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
