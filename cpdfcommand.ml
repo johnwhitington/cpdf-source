@@ -660,7 +660,7 @@ let args =
    pixel_threshold = 25;
    length_threshold = 100;
    percentage_threshold = 99;
-   resample_factor = 100;
+   resample_factor = 101;
    resample_interpolate = false}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
@@ -777,7 +777,7 @@ let reset_arguments () =
   args.pixel_threshold <- 25;
   args.length_threshold <- 100;
   args.percentage_threshold <- 99;
-  args.resample_factor <- 100;
+  args.resample_factor <- 101;
   args.resample_interpolate <- false;
   clear Cpdfdrawcontrol.fontpack_initialised
 

@@ -624,19 +624,8 @@ let combine_dicts o n =
     Printf.printf "%s\n" (Pdfwrite.string_of_pdf (Pdf.Dictionary x));
     x
 
-let lossless_resample pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~factor ~interpolate ~path_to_convert s dict reference =
-  match lossless_out pdf ~pixel_threshold ~length_threshold ".png" s dict reference with None -> () | Some (out, out2, size, components, w, h) ->
-  let out3 = Filename.temp_file "cpdf" "convertout" ^ ".png" in
-  let retcode =
-    let command = 
-      (Filename.quote_command path_to_convert
-        ((if components = 4 then ["-depth"; "8"; "-size"; string_of_int w ^ "x" ^ string_of_int h] else []) @
-        (if components = 1 then ["-colorspace"; "Gray"] else if components = 3 then ["-colorspace"; "RGB"] else if components = 4 then ["-colorspace"; "CMYK"] else []) @
-        [if interpolate then "-resize" else "-sample"; string_of_int factor ^ "%"] @
-        [out] @
-        [(*"PNG24:" ^*) out2])) (* without this, might produce a palettised PNG. FIXME:How can we allow 1/2/4/8/24 but without palette? Might anyway? *)
-    in
-    let factor' = int_of_float (100. /. float_of_int factor *. 100.) in
+  (*let out3 = Filename.temp_file "cpdf" "convertout" ^ ".png" in*)
+    (*let factor' = int_of_float (100. /. float_of_int factor *. 100.) in
     let command2 = 
       (Filename.quote_command path_to_convert
         ((if components = 4 then ["-depth"; "8"; "-size"; string_of_int w ^ "x" ^ string_of_int h] else []) @
@@ -644,16 +633,27 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~percentage_thresho
         [if interpolate then "-resize" else "-sample"; string_of_int factor' ^ "%"] @
         [out2] @
         [(*"PNG24:" ^*) out3]))
+    in*)
+
+let lossless_resample pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~factor ~interpolate ~path_to_convert s dict reference =
+  match lossless_out pdf ~pixel_threshold ~length_threshold ".png" s dict reference with
+  | None -> ()
+  | Some (_, _, _, 4, _, _) -> Printf.printf "lossless resampling for CMYK not supported yet\n%!"
+  | Some (out, out2, size, components, w, h) ->
+  let retcode =
+    let command = 
+      Filename.quote_command path_to_convert
+        ((if components = 4 then ["-depth"; "8"; "-size"; string_of_int w ^ "x" ^ string_of_int h] else []) @
+        (if components = 1 then ["-define"; "png:color-type=0"; "-colorspace"; "Gray"] else if components = 3 then ["-define"; "-png:color-type=2"; "-colorspace"; "RGB"] else if components = 4 then ["-colorspace"; "CMYK"] else []) @
+        [if interpolate then "-resize" else "-sample"; string_of_int factor ^ "%"; out; out2])
     in
-      Printf.printf "1: %S\n" command;
-      Printf.printf "2: %S\n" command2;
-      let r = Sys.command command in
-      let r' = Sys.command command2 in
-        r + r'
+      (*Printf.printf "%S\n" command; *)
+      Sys.command command
   in
+  try
   if retcode = 0 then
     begin
-      let result = open_in_bin out3 in
+      let result = open_in_bin out2 in
       let newsize = in_channel_length result in
       if newsize < size then
         begin
@@ -674,6 +674,7 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~percentage_thresho
   remove out;
   remove out2
   remove out3*)
+  with _ -> () (* FIXME Remove *)
 
 let recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_jbig2enc pdf s dict reference =
   let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
@@ -770,7 +771,7 @@ let process
                   end
                 else
                   begin
-                    if factor < 100 then
+                    if factor < 101 then
                       begin
                         if !debug_image_processing then Printf.printf "(%i/%i) object %i (lossless)... %!" !ndone nobjects objnum;
                         lossless_resample pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~factor ~interpolate ~path_to_convert s dict reference
