@@ -516,7 +516,9 @@ let jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~q
       begin
         let result = open_in_bin out2 in
         let newsize = in_channel_length result in
-        if newsize < size then
+        let perc_ok = float newsize /. float size < float_of_int percentage_threshold /. 100. in
+        Printf.printf "%i %i %b %f %f\n" size newsize perc_ok (float newsize /. float size) (float_of_int percentage_threshold /. 100.); 
+        if newsize < size && perc_ok then
           begin
             if !debug_image_processing then Printf.printf "JPEG to JPEG %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
             reference := Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize), Pdf.Got (Pdfio.bytes_of_input_channel result)
@@ -599,7 +601,9 @@ let lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshol
     begin
       let result = open_in_bin out2 in
       let newsize = in_channel_length result in
-      if newsize < size then
+      let perc_ok = float newsize /. float size < float_of_int percentage_threshold /. 100. in
+      Printf.printf "%i %i %b %f %f\n" size newsize perc_ok (float newsize /. float size) (float_of_int percentage_threshold /. 100.); 
+      if newsize < size && perc_ok then
         begin
           if !debug_image_processing then Printf.printf "lossless to JPEG %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
           reference :=
@@ -625,7 +629,7 @@ let combine_dicts o n =
     Printf.printf "%s\n" (Pdfwrite.string_of_pdf (Pdf.Dictionary x));
     x
 
-let lossless_resample pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~factor ~interpolate ~path_to_convert s dict reference =
+let lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolate ~path_to_convert s dict reference =
   match lossless_out pdf ~pixel_threshold ~length_threshold ".png" s dict reference with
   | None -> ()
   | Some (_, _, _, 4, _, _) -> Printf.printf "lossless resampling for CMYK not supported yet\n%!"
@@ -764,7 +768,7 @@ let process
                     if factor < 101 then
                       begin
                         if !debug_image_processing then Printf.printf "(%i/%i) object %i (lossless)... %!" !ndone nobjects objnum;
-                        lossless_resample pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~factor ~interpolate ~path_to_convert s dict reference
+                        lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolate ~path_to_convert s dict reference
                       end
                   end
             | None -> ()
