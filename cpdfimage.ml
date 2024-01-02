@@ -624,29 +624,40 @@ let combine_dicts o n =
     Printf.printf "%s\n" (Pdfwrite.string_of_pdf (Pdf.Dictionary x));
     x
 
-(* FIXME Need to specify exactly where this works, how to process with convert for each etc. *)
 let lossless_resample pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~factor ~interpolate ~path_to_convert s dict reference =
   match lossless_out pdf ~pixel_threshold ~length_threshold ".png" s dict reference with None -> () | Some (out, out2, size, components, w, h) ->
+  let out3 = Filename.temp_file "cpdf" "convertout" ^ ".png" in
   let retcode =
-    (* FIXME upscale required at all? *)
     let command = 
       (Filename.quote_command path_to_convert
         ((if components = 4 then ["-depth"; "8"; "-size"; string_of_int w ^ "x" ^ string_of_int h] else []) @
         (if components = 1 then ["-colorspace"; "Gray"] else if components = 3 then ["-colorspace"; "RGB"] else if components = 4 then ["-colorspace"; "CMYK"] else []) @
         [if interpolate then "-resize" else "-sample"; string_of_int factor ^ "%"] @
         [out] @
-        ["PNG24:" ^ out2])) (*FIXME do we need this anymore? *)
+        [(*"PNG24:" ^*) out2])) (* without this, might produce a palettised PNG. FIXME:How can we allow 1/2/4/8/24 but without palette? Might anyway? *)
     in
-      (*Printf.printf "%S\n" command;*) Sys.command command
+    let factor' = int_of_float (100. /. float_of_int factor *. 100.) in
+    let command2 = 
+      (Filename.quote_command path_to_convert
+        ((if components = 4 then ["-depth"; "8"; "-size"; string_of_int w ^ "x" ^ string_of_int h] else []) @
+        (if components = 1 then ["-colorspace"; "Gray"] else if components = 3 then ["-colorspace"; "RGB"] else if components = 4 then ["-colorspace"; "CMYK"] else []) @
+        [if interpolate then "-resize" else "-sample"; string_of_int factor' ^ "%"] @
+        [out2] @
+        [(*"PNG24:" ^*) out3]))
+    in
+      Printf.printf "1: %S\n" command;
+      Printf.printf "2: %S\n" command2;
+      let r = Sys.command command in
+      let r' = Sys.command command2 in
+        r + r'
   in
   if retcode = 0 then
     begin
-      let result = open_in_bin out2 in
+      let result = open_in_bin out3 in
       let newsize = in_channel_length result in
       if newsize < size then
         begin
           if !debug_image_processing then Printf.printf "lossless resample %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
-          (* FIXME Check that we got back in what we expected? *)
           reference :=
             (match fst (obj_of_png_data (Pdfio.bytes_of_input_channel result)) with
             | Pdf.Stream {contents = Pdf.Dictionary d, data} ->
@@ -661,7 +672,8 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~percentage_thresho
         close_in result
     end(*;
   remove out;
-  remove out2*)
+  remove out2
+  remove out3*)
 
 let recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_jbig2enc pdf s dict reference =
   let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
