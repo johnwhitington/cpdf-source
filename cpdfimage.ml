@@ -545,14 +545,15 @@ let suitable_num pdf dict =
       | Some (Pdf.Integer 4) -> 4
       | _ -> 0
       end
-  | Some (Pdf.Array (Pdf.Name "/Separation"::_)) -> ~-1
+  | Some (Pdf.Array (Pdf.Name ("/Separation")::_)) -> ~-1
+  | Some (Pdf.Array (Pdf.Name ("/Indexed")::_)) -> ~-2
   | _ -> 0
 
 let lossless_out pdf ~pixel_threshold ~length_threshold extension s dict reference =
   let bpc = Pdf.lookup_direct pdf "/BitsPerComponent" dict in
   let components = suitable_num pdf dict in
   match components, bpc with
-  | (1 | 3 | 4 | -1), Some (Pdf.Integer 8) ->
+  | (1 | 3 | 4 | -1 | -2), Some (Pdf.Integer 8) ->
       let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
       let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
       if w * h < pixel_threshold then (if !debug_image_processing then Printf.printf "pixel threshold not met\n%!"; None) else
@@ -571,14 +572,14 @@ let lossless_out pdf ~pixel_threshold ~length_threshold extension s dict referen
         Some (out, out2, size, components, w, h)
       end
   | colspace, bpc ->
-    (*let colspace = Pdf.lookup_direct pdf "/ColorSpace" dict in
+    let colspace = Pdf.lookup_direct pdf "/ColorSpace" dict in
     let colspace, bpc, filter = 
       (match colspace with None -> "none" | Some x -> Pdfwrite.string_of_pdf x),
       (match bpc with None -> "none" | Some x -> Pdfwrite.string_of_pdf x),
       (match Pdf.lookup_direct pdf "/Filter" dict with None -> "none" | Some x -> Pdfwrite.string_of_pdf x)
     in
       print_string (Pdfwrite.string_of_pdf dict);
-      print_string (Printf.sprintf "%s (%s) [%s]\n" colspace bpc filter);*)
+      print_string (Printf.sprintf "%s (%s) [%s]\n" colspace bpc filter);
       if !debug_image_processing then Printf.printf "colourspace not suitable\n%!";
       None (* an image we cannot or do not handle *)
 
@@ -624,17 +625,6 @@ let combine_dicts o n =
     Printf.printf "%s\n" (Pdfwrite.string_of_pdf (Pdf.Dictionary x));
     x
 
-  (*let out3 = Filename.temp_file "cpdf" "convertout" ^ ".png" in*)
-    (*let factor' = int_of_float (100. /. float_of_int factor *. 100.) in
-    let command2 = 
-      (Filename.quote_command path_to_convert
-        ((if components = 4 then ["-depth"; "8"; "-size"; string_of_int w ^ "x" ^ string_of_int h] else []) @
-        (if components = 1 then ["-colorspace"; "Gray"] else if components = 3 then ["-colorspace"; "RGB"] else if components = 4 then ["-colorspace"; "CMYK"] else []) @
-        [if interpolate then "-resize" else "-sample"; string_of_int factor' ^ "%"] @
-        [out2] @
-        [(*"PNG24:" ^*) out3]))
-    in*)
-
 let lossless_resample pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~factor ~interpolate ~path_to_convert s dict reference =
   match lossless_out pdf ~pixel_threshold ~length_threshold ".png" s dict reference with
   | None -> ()
@@ -645,9 +635,9 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~percentage_thresho
       Filename.quote_command path_to_convert
         ((if components = 4 then ["-depth"; "8"; "-size"; string_of_int w ^ "x" ^ string_of_int h] else []) @
         (if components = 1 then ["-define"; "png:color-type=0"; "-colorspace"; "Gray"] else if components = 3 then ["-define"; "-png:color-type=2"; "-colorspace"; "RGB"] else if components = 4 then ["-colorspace"; "CMYK"] else []) @
-        [if interpolate then "-resize" else "-sample"; string_of_int factor ^ "%"; out; out2])
+        [if interpolate && components > -2 then "-resize" else "-sample"; string_of_int factor ^ "%"; out; out2])
     in
-      (*Printf.printf "%S\n" command; *)
+      (*Printf.printf "%S\n" command;*)
       Sys.command command
   in
   try
