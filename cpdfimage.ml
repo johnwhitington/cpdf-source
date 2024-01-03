@@ -510,7 +510,7 @@ let jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~q
       let command = 
         (Filename.quote_command path_to_convert [out; "-quality"; string_of_int q ^ "%"; out2])
       in
-        (*0Printf.printf "%S\n" command;*) Sys.command command
+        (*Printf.printf "%S\n" command;*) Sys.command command
     in
     if retcode = 0 then
       begin
@@ -528,9 +528,7 @@ let jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~q
          end
       end
     else
-      begin
-        Printf.printf "external process failed\n%!"
-      end;
+      begin Printf.printf "external process failed\n%!" end;
     remove out;
     remove out2
 
@@ -551,6 +549,8 @@ let suitable_num pdf dict =
   | _ -> 0
 
 let lossless_out pdf ~pixel_threshold ~length_threshold extension s dict reference =
+  let old = !reference in
+  let restore () = reference := old in
   let bpc = Pdf.lookup_direct pdf "/BitsPerComponent" dict in
   let components = suitable_num pdf dict in
   match components, bpc with
@@ -562,7 +562,7 @@ let lossless_out pdf ~pixel_threshold ~length_threshold extension s dict referen
       if size < length_threshold then (if !debug_image_processing then Printf.printf "length threshold not met\n%!"; None) else
       begin
         Pdfcodec.decode_pdfstream_until_unknown pdf s;
-        match Pdf.lookup_direct pdf "/Filter" (fst !reference) with Some _ -> None | None ->
+        match Pdf.lookup_direct pdf "/Filter" (fst !reference) with Some _ -> restore (); None | None ->
         let out = Filename.temp_file "cpdf" "convertin" ^ (if suitable_num pdf dict < 4 then ".pnm" else ".cmyk") in
         let out2 = Filename.temp_file "cpdf" "convertout" ^ extension in
         let fh = open_out_bin out in
@@ -582,6 +582,7 @@ let lossless_out pdf ~pixel_threshold ~length_threshold extension s dict referen
       print_string (Pdfwrite.string_of_pdf dict);
       print_string (Printf.sprintf "%s (%s) [%s]\n" colspace bpc filter);
       if !debug_image_processing then Printf.printf "colourspace not suitable\n%!";
+      restore ();
       None (* an image we cannot or do not handle *)
 
 let lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~qlossless ~path_to_convert s dict reference =
@@ -619,13 +620,6 @@ let lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshol
     end;
   remove out;
   remove out2
-
-let combine_dicts o n =
-  let x = 
-  fold_right (fun (k, v) d -> add k v d) o n
-  in
-    Printf.printf "%s\n" (Pdfwrite.string_of_pdf (Pdf.Dictionary x));
-    x
 
 let lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolate ~path_to_convert s dict reference =
   match lossless_out pdf ~pixel_threshold ~length_threshold ".png" s dict reference with
@@ -669,6 +663,8 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolat
   with _ -> () (* FIXME Remove *)
 
 let recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_jbig2enc pdf s dict reference =
+  let old = !reference in
+  let restore () = reference := old in
   let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
   let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
   if w * h < pixel_threshold then (if !debug_image_processing then Printf.printf "pixel threshold not met\n%!") else (* (but also, jbig2enc fails on tiny images) *)
@@ -677,7 +673,9 @@ let recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_j
   begin
     Pdfcodec.decode_pdfstream_until_unknown pdf s;
     match Pdf.lookup_direct pdf "/Filter" (fst !reference) with
-    | Some x -> if !debug_image_processing then Printf.printf "could not decode - skipping %s length %i\n%!" (Pdfwrite.string_of_pdf x) size
+    | Some x ->
+        if !debug_image_processing then Printf.printf "could not decode - skipping %s length %i\n%!" (Pdfwrite.string_of_pdf x) size;
+        restore ()
     | None ->
       let out = Filename.temp_file "cpdf" "convertin" ^ ".pnm" in
       let out2 = Filename.temp_file "cpdf" "convertout" ^ ".jbig2" in
