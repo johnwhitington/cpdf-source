@@ -525,7 +525,8 @@ let jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~q
         else
          begin
            if !debug_image_processing then Printf.printf "no size reduction\n%!"
-         end
+         end;
+        close_in result
       end
     else
       begin Printf.printf "external process failed\n%!" end;
