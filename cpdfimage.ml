@@ -718,8 +718,8 @@ let recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_j
    - Downsample colours as well as pixels
    - JBIG2 with refinement coding for multipage lossless? *)
 let process
-  ?q ?qlossless ?onebppmethod ~length_threshold ~percentage_threshold ~pixel_threshold ~factor ~interpolate
-  ~path_to_jbig2enc ~path_to_convert range pdf
+  ?q ?qlossless ?onebppmethod ~length_threshold ~percentage_threshold ~pixel_threshold ~dpi_threshold
+  ~factor ~interpolate ~path_to_jbig2enc ~path_to_convert range pdf
 =
   let inrange =
     match images pdf range with
