@@ -33,6 +33,7 @@ o Fixed -set-annotations with page links
 o Allow Exif JPEGs as well as JFIF ones in -jpeg and -draw-jpeg
 o Only compress a stream if it actually makes it smaller
 
+
 2.6.1 (September 2023)
 
 o Fixed regression in UTF8 text with -add-text
