@@ -4496,7 +4496,6 @@ let go () =
   | Some Draw ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-
       let ops = match !Cpdfdrawcontrol.drawops with [("_MAIN", ops)] -> rev ops | _ -> error "not enough -end-xobj or -et" in
         write_pdf
           false
@@ -4515,11 +4514,12 @@ let go () =
         write_pdf false (Cpdfchop.chop ~x ~y ~columns:args.impose_columns ~btt:args.impose_btt ~rtl:args.impose_rtl pdf range)
   | Some ProcessImages ->
       let pdf = get_single_pdf args.op false in
+      let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
         Cpdfimage.process
           ~q:args.jpegquality ~qlossless:args.jpegqualitylossless ~onebppmethod:args.onebppmethod
           ~length_threshold:args.length_threshold ~percentage_threshold:args.percentage_threshold ~pixel_threshold:args.pixel_threshold 
           ~factor:args.resample_factor ~interpolate:args.resample_interpolate
-          ~path_to_jbig2enc:args.path_to_jbig2enc ~path_to_convert:args.path_to_convert pdf;
+          ~path_to_jbig2enc:args.path_to_jbig2enc ~path_to_convert:args.path_to_convert range pdf;
         write_pdf false pdf
 
 (* Advise the user if a combination of command line flags makes little sense,

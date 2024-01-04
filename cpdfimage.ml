@@ -713,20 +713,26 @@ let recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_j
           remove out2
   end
 
-(* JPEG to JPEG: RGB and CMYK JPEGS *)
-(* Lossless to JPEG: 8bpp Grey, 8bpp RGB, 8bpp CMYK including separation and ICCBased colourspaces *)
-(* 1 bit: anything to JBIG2 lossless (no globals) *)
+(* TODO:
+   - 2bpp, 4bpp, 16bpp images.
+   - Downsample colours as well as pixels
+   - JBIG2 with refinement coding for multipage lossless? *)
 let process
   ?q ?qlossless ?onebppmethod ~length_threshold ~percentage_threshold ~pixel_threshold ~factor ~interpolate
-  ~path_to_jbig2enc ~path_to_convert pdf
+  ~path_to_jbig2enc ~path_to_convert range pdf
 =
+  let inrange =
+    match images pdf range with
+    | `List l -> hashset_of_list (map (function `Assoc (("Object", `Int i)::_) -> i | _ -> assert false) l)
+    | _ -> assert false
+  in
   let nobjects = Pdf.objcard pdf in
   let ndone = ref 0 in
   let process_obj objnum s =
     match s with
     | Pdf.Stream ({contents = dict, _} as reference) ->
         ndone += 1;
-        begin match
+        if Hashtbl.mem inrange objnum then begin match
           Pdf.lookup_direct pdf "/Subtype" dict,
           Pdf.lookup_direct pdf "/Filter" dict,
           Pdf.lookup_direct pdf "/BitsPerComponent" dict,
