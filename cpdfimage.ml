@@ -187,11 +187,7 @@ type xobj =
 
 let image_results = ref []
 
-let add_image_result i =
-  image_results := i::!image_results
-
-(* Given a page and a list of (pagenum, name, thing) *)
-let rec image_resolution_page pdf page pagenum dpi (images : (int * string * xobj) list) =
+let rec image_resolution_page pdf page pagenum dpi images =
   try
     let pageops = Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content
     and transform = ref [ref Pdftransform.i_matrix] in
@@ -215,11 +211,11 @@ let rec image_resolution_page pdf page pagenum dpi (images : (int * string * xob
                  (*i Printf.printf "o = %f, %f, x = %f, %f, y = %f, %f\n" (fst o) (snd o) (fst x) (snd x) (fst y) (snd y); i*)
                  let rec lookup_image k = function
                    | [] -> assert false
-                   | (_, a, _) as h::_ when a = k -> h
+                   | (_, a, _, _) as h::_ when a = k -> h
                    | _::t -> lookup_image k t 
                  in
                    begin match lookup_image xobject images with
-                   | (pagenum, name, Form (xobj_matrix, content, resources)) ->
+                   | (pagenum, name, Form (xobj_matrix, content, resources), objnum) ->
                         let content =
                           (* Add in matrix etc. *)
                           let total_matrix = Pdftransform.matrix_compose xobj_matrix !(hd !transform) in
@@ -238,12 +234,12 @@ let rec image_resolution_page pdf page pagenum dpi (images : (int * string * xob
                           in
                             let newpdf = Pdfpage.change_pages false pdf [page] in
                               image_resolution newpdf [pagenum] dpi
-                   | (pagenum, name, Image (w, h)) ->
+                   | (pagenum, name, Image (w, h), objnum) ->
                        let lx = Pdfunits.points (distance_between o x) Pdfunits.Inch in
                        let ly = Pdfunits.points (distance_between o y) Pdfunits.Inch in
                          let wdpi = float w /. lx
                          and hdpi = float h /. ly in
-                           add_image_result (pagenum, xobject, w, h, wdpi, hdpi)
+                           image_results := (pagenum, xobject, w, h, wdpi, hdpi, objnum)::!image_results
                            (*Printf.printf "%i, %s, %i, %i, %f, %f\n" pagenum xobject w h wdpi hdpi*)
                          (*i else
                            Printf.printf "S %i, %s, %i, %i, %f, %f\n" pagenum xobject (int_of_float w) (int_of_float h) wdpi hdpi i*)
@@ -275,6 +271,7 @@ and image_resolution pdf range dpi =
           | Some (Pdf.Dictionary xobjects) ->
               iter
                 (function (name, xobject) ->
+                   let objnum = match xobject with Pdf.Indirect i -> i | _ -> 0 in
                    match Pdf.lookup_direct pdf "/Subtype" xobject with
                    | Some (Pdf.Name "/Image") ->
                        let width =
@@ -286,7 +283,7 @@ and image_resolution pdf range dpi =
                          | Some x -> Pdf.getnum pdf x
                          | None -> 1.
                        in
-                         images := (pagenum, name, Image (int_of_float width, int_of_float height))::!images
+                         images := (pagenum, name, Image (int_of_float width, int_of_float height), objnum)::!images
                    | Some (Pdf.Name "/Form") ->
                        let resources =
                          match Pdf.lookup_direct pdf "/Resources" xobject with
@@ -301,7 +298,7 @@ and image_resolution pdf range dpi =
                               Pdftransform.d = Pdf.getnum pdf d; Pdftransform.e = Pdf.getnum pdf e; Pdftransform.f = Pdf.getnum pdf f}
                          | _ -> Pdftransform.i_matrix
                        in
-                         images := (pagenum, name, Form (matrix, contents, resources))::!images
+                         images := (pagenum, name, Form (matrix, contents, resources), objnum)::!images
                    | _ -> ()
                 )
                 xobjects
@@ -311,8 +308,8 @@ and image_resolution pdf range dpi =
       (* Now, split into differing pages, and call [image_resolution_page] on each one *)
       let pagesplits =
         map
-          (function (a, _, _)::_ as ls -> (a, ls) | _ -> assert false)
-          (collate (fun (a, _, _) (b, _, _) -> compare a b) (rev !images))
+          (function (a, _, _, _)::_ as ls -> (a, ls) | _ -> assert false)
+          (collate (fun (a, _, _, _) (b, _, _, _) -> compare a b) (rev !images))
       and pages =
         Pdfpage.pages_of_pagetree pdf
       in

@@ -4321,13 +4321,13 @@ let go () =
           if args.format_json then
             flprint
               (Cpdfyojson.Safe.pretty_to_string
-                 (`List (map (fun (pagenum, xobject, w, h, wdpi, hdpi) ->
-                    `Assoc [("Page", `Int pagenum); ("XObject", `String xobject); ("W", `Int w); ("H", `Int h); ("Xdpi", `Float wdpi); ("Ydpi", `Float hdpi)]) images)))
+                 (`List (map (fun (pagenum, xobject, w, h, wdpi, hdpi, objnum) ->
+                    `Assoc [("Object", `Int objnum); ("Page", `Int pagenum); ("XObject", `String xobject); ("W", `Int w); ("H", `Int h); ("Xdpi", `Float wdpi); ("Ydpi", `Float hdpi)]) images)))
           else
             iter
-              (function (pagenum, xobject, w, h, wdpi, hdpi) ->
+              (function (pagenum, xobject, w, h, wdpi, hdpi, objnum) ->
                   if wdpi < f || hdpi < f then
-                    Printf.printf "%i, %s, %i, %i, %f, %f\n" pagenum xobject w h wdpi hdpi)
+                    Printf.printf "%i, %s, %i, %i, %f, %f, %i\n" pagenum xobject w h wdpi hdpi objnum)
                images
   | Some ListImages ->
       let pdf = get_single_pdf args.op true in
