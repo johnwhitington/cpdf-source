@@ -235,8 +235,8 @@ let rec image_resolution_page pdf page pagenum dpi images =
                             let newpdf = Pdfpage.change_pages false pdf [page] in
                               image_resolution newpdf [pagenum] dpi
                    | (pagenum, name, Image (w, h), objnum) ->
-                       let lx = Pdfunits.points (distance_between o x) Pdfunits.Inch in
-                       let ly = Pdfunits.points (distance_between o y) Pdfunits.Inch in
+                       let lx = Pdfunits.inches (distance_between o x) Pdfunits.PdfPoint in
+                       let ly = Pdfunits.inches (distance_between o y) Pdfunits.PdfPoint in
                          let wdpi = float w /. lx
                          and hdpi = float h /. ly in
                            image_results := (pagenum, xobject, w, h, wdpi, hdpi, objnum)::!image_results
