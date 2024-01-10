@@ -727,13 +727,13 @@ let process
     let objnums =
       if dpi_threshold = 0 then [] else
         let results = image_resolution pdf range max_float in
+          (*iter (fun (_, _, _, _, wdpi, hdpi, objnum) -> Printf.printf "From image_resolution %f %f %i\n" wdpi hdpi objnum) results;*)
           let cmp (_, _, _, _, _, _, a) (_, _, _, _, _, _, b) = compare a b in
-          (* Get each obj number associated with its *lowest* resolution *)
           let sets = collate cmp (sort cmp results) in
           let heads = map hd (map (sort (fun (_, _, _, _, a, b, _) (_, _, _, _, c, d, _) -> compare (fmin a b) (fmin c d))) sets) in
-          (* Choose only those where this figure is more than the dpi_threshold *)
-          (*iter (fun (_, _, _, _, wdpi, hdpi, objnum) -> Printf.printf "%f %f %i\n" wdpi hdpi objnum) heads;*)
+          (*iter (fun (_, _, _, _, wdpi, hdpi, objnum) -> Printf.printf "Lowest resolution exemplar %f %f %i\n" wdpi hdpi objnum) heads;*)
           let needed = keep (fun (_, _, _, _, wdpi, hdpi, objnum) -> fmin wdpi hdpi > float_of_int dpi_threshold) heads in
+          (*iter (fun (_, _, _, _, wdpi, hdpi, objnum) -> Printf.printf "keep %f %f %i\n" wdpi hdpi objnum) needed;*)
             map (fun (_, _, _, _, _, _, objnum) -> objnum) needed
     in
       hashset_of_list objnums
