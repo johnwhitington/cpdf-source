@@ -710,13 +710,12 @@ let recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_j
           remove out2
   end
 
-let preprocess_jbig2_lossy ~path_to_jbig2enc range pdf = ()
+let preprocess_jbig2_lossy ~path_to_jbig2enc inrange highdpi pdf = ()
 
 let process
   ?q ?qlossless ?onebppmethod ~length_threshold ~percentage_threshold ~pixel_threshold ~dpi_threshold
   ~dpi_target ~factor ~interpolate ~path_to_jbig2enc ~path_to_convert range pdf
 =
-  begin match onebppmethod with Some "JBIG2Lossy" -> preprocess_jbig2_lossy ~path_to_jbig2enc range pdf | _ -> () end;
   let inrange =
     match images pdf range with
     | `List l -> hashset_of_list (map (function `Assoc (("Object", `Int i)::_) -> i | _ -> assert false) l)
@@ -737,6 +736,7 @@ let process
     in
       hashset_of_list objnums
   in
+  begin match onebppmethod with Some "JBIG2Lossy" -> preprocess_jbig2_lossy ~path_to_jbig2enc inrange highdpi pdf | _ -> () end;
   let nobjects = Pdf.objcard pdf in
   let ndone = ref 0 in
   let process_obj objnum s =
