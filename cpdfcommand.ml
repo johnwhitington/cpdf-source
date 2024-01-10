@@ -530,6 +530,7 @@ type args =
    mutable length_threshold : int;
    mutable percentage_threshold : int;
    mutable dpi_threshold : int;
+   mutable dpi_target : int;
    mutable resample_factor : int;
    mutable resample_interpolate : bool}
 
@@ -662,6 +663,7 @@ let args =
    length_threshold = 100;
    percentage_threshold = 99;
    dpi_threshold = 0;
+   dpi_target = 0;
    resample_factor = 101;
    resample_interpolate = false}
 
@@ -780,6 +782,7 @@ let reset_arguments () =
   args.length_threshold <- 100;
   args.percentage_threshold <- 99;
   args.dpi_threshold <- 0;
+  args.dpi_target <- 0;
   args.resample_factor <- 101;
   args.resample_interpolate <- false;
   clear Cpdfdrawcontrol.fontpack_initialised
@@ -1968,6 +1971,9 @@ let setpercentagethreshold i =
 let setdpithreshold i =
   args.dpi_threshold <- i
 
+let setdpitarget i =
+  args.dpi_target <- i
+
 let setlosslessresample i =
   args.resample_factor <- i
 
@@ -2787,6 +2793,9 @@ and specs =
    ("-resample-interpolate",
      Arg.Unit setresampleinterpolate,
      " Interpolate when resampling");
+   ("-dpi-target",
+     Arg.Int setdpitarget,
+     " Resample to this dpi when using -lossless-resample");
    ("-squeeze",
      Arg.Unit setsqueeze,
      " Squeeze");
@@ -4527,7 +4536,7 @@ let go () =
         Cpdfimage.process
           ~q:args.jpegquality ~qlossless:args.jpegqualitylossless ~onebppmethod:args.onebppmethod
           ~length_threshold:args.length_threshold ~percentage_threshold:args.percentage_threshold ~pixel_threshold:args.pixel_threshold 
-          ~dpi_threshold:args.dpi_threshold ~factor:args.resample_factor ~interpolate:args.resample_interpolate
+          ~dpi_threshold:args.dpi_threshold ~dpi_target:args.dpi_target ~factor:args.resample_factor ~interpolate:args.resample_interpolate
           ~path_to_jbig2enc:args.path_to_jbig2enc ~path_to_convert:args.path_to_convert range pdf;
         write_pdf false pdf
 
