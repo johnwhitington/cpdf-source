@@ -711,6 +711,10 @@ let recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_j
   end
 
 let preprocess_jbig2_lossy ~path_to_jbig2enc inrange highdpi pdf = ()
+ (* Write out each stream as a *.pnm, if we choose to process it, restoring if not. *)
+ (* Call jbig2 to generate one *.jbig2 for each, and a *.jbig2globals *)
+ (* Build the JBIG2Globals stream for the file *)
+ (* For each file, read in the new JBIG2 data, and build each new image stream to replace the old one *)
 
 let process
   ?q ?qlossless ?onebppmethod ~length_threshold ~percentage_threshold ~pixel_threshold ~dpi_threshold
