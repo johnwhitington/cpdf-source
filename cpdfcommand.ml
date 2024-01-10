@@ -2741,7 +2741,7 @@ and specs =
      " See manual for usage.");
    ("-im",
     Arg.String setimpath,
-    " Path to imagemagick executable");
+    " Path to magick executable");
    ("-p2p",
      Arg.String setp2ppath,
      " Path to pnmtopng executable");
@@ -2937,7 +2937,6 @@ and specs =
    ("-debug-stderr-to-stdout", Arg.Unit setstderrtostdout, "");
    ("-stay-on-error", Arg.Unit setstayonerror, "");
    (* These items are unfinished *)
-
    ("-extract-text", Arg.Unit (setop ExtractText), "");
    ("-extract-text-font-size", Arg.Float setextracttextfontsize, "");
   ]
