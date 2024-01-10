@@ -619,7 +619,7 @@ let lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshol
   remove out;
   remove out2
 
-let lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolate ~path_to_convert s dict reference =
+let lossless_resample pdf ~pixel_threshold ~length_threshold ~dpi_target ~factor ~interpolate ~path_to_convert s dict reference =
   match lossless_out pdf ~pixel_threshold ~length_threshold ".png" s dict reference with
   | None -> ()
   | Some (_, _, _, 4, _, _) -> Printf.printf "lossless resampling for CMYK not supported yet\n%!"
@@ -710,14 +710,13 @@ let recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_j
           remove out2
   end
 
-(* TODO:
-   - 2bpp, 4bpp, 16bpp images.
-   - Downsample colours as well as pixels
-   - JBIG2 with refinement coding for multipage lossless? *)
+let preprocess_jbig2_lossy ~path_to_jbig2enc range pdf = ()
+
 let process
   ?q ?qlossless ?onebppmethod ~length_threshold ~percentage_threshold ~pixel_threshold ~dpi_threshold
   ~dpi_target ~factor ~interpolate ~path_to_jbig2enc ~path_to_convert range pdf
 =
+  begin match onebppmethod with Some "JBIG2Lossy" -> preprocess_jbig2_lossy ~path_to_jbig2enc range pdf | _ -> () end;
   let inrange =
     match images pdf range with
     | `List l -> hashset_of_list (map (function `Assoc (("Object", `Int i)::_) -> i | _ -> assert false) l)
@@ -783,7 +782,7 @@ let process
                     if factor < 101 then
                       begin
                         if !debug_image_processing then Printf.printf "(%i/%i) object %i (lossless)... %!" !ndone nobjects objnum;
-                        lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolate ~path_to_convert s dict reference
+                        lossless_resample pdf ~pixel_threshold ~length_threshold ~dpi_target ~factor ~interpolate ~path_to_convert s dict reference
                       end
                   end
             | None -> ()
