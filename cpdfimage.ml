@@ -755,6 +755,7 @@ let preprocess_jbig2_lossy ~path_to_jbig2enc ~length_threshold ~pixel_threshold 
  in
    Pdf.objiter process_obj pdf;
    if length !objnum_name_pairs > 10000 then Pdfe.log "Too many jbig2 streams" else
+   if length !objnum_name_pairs = 0 then () else
    (* Call jbig2 to generate one *.jbig2 for each, and a *.jbig2globals *)
    let jbig2out = Filename.temp_file "cpdf" "jbig2" in
    Printf.printf "jbig2out: %s" jbig2out;
