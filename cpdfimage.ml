@@ -780,7 +780,7 @@ let preprocess_jbig2_lossy ~path_to_jbig2enc ~length_threshold ~pixel_threshold 
                   {contents =
                      Pdf.Dictionary [("/Length", Pdf.Integer (bytes_size data));
                                      ("/Filter", Pdf.Name "/JBIG2Decode");
-                                     ("/JBIG2Globals", Pdf.Indirect globalobj)],
+                                     ("/DecodeParms", Pdf.Dictionary [("/JBIG2Globals", Pdf.Indirect globalobj)])],
                      Pdf.Got data}
               in
               let dict = match Pdf.lookup_obj pdf objnum with Pdf.Stream {contents = d, _} -> d | _ -> Pdf.Dictionary [] in
