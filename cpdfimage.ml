@@ -710,11 +710,53 @@ let recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_j
           remove out2
   end
 
-let preprocess_jbig2_lossy ~path_to_jbig2enc inrange highdpi pdf = ()
+(* Recompress 1bpp images, compressed any way (none, flate, ccitt, jbig2 lossless) to lossy jbig2 *)
+(* For now, just example 6406.pdf, which is CCITT, so simple decompression will do. For lossless
+to lossy JBIG2, we will need to write out and convert to PNM with jbig2dec *)
+(* FIXME: Need interface for jbig2 lossy parameters *)
+let preprocess_jbig2_lossy ~path_to_jbig2enc ~length_threshold ~pixel_threshold ~dpi_threshold inrange highdpi pdf =
+ let objnum_name_pairs = ref [] in
+ let process_obj objnum s =
  (* Write out each stream as a *.pnm, if we choose to process it, restoring if not. *)
- (* Call jbig2 to generate one *.jbig2 for each, and a *.jbig2globals *)
- (* Build the JBIG2Globals stream for the file *)
- (* For each file, read in the new JBIG2 data, and build each new image stream to replace the old one *)
+    match s with
+    | Pdf.Stream ({contents = dict, _} as reference) ->
+        let old = !reference in
+        let restore () = reference := old in
+        if Hashtbl.mem inrange objnum && (dpi_threshold = 0 || Hashtbl.mem highdpi objnum) then begin match
+          Pdf.lookup_direct pdf "/Subtype" dict,
+          Pdf.lookup_direct pdf "/BitsPerComponent" dict,
+          Pdf.lookup_direct pdf "/ImageMask" dict
+        with
+        | Some (Pdf.Name "/Image"), Some (Pdf.Integer 1), _
+        | Some (Pdf.Name "/Image"), _, Some (Pdf.Boolean true) ->
+            let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
+            let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
+            if w * h < pixel_threshold then (if !debug_image_processing then Printf.printf "pixel threshold not met\n%!") else (* (but also, jbig2enc fails on tiny images) *)
+            let size = match Pdf.lookup_direct pdf "/Length" dict with Some (Pdf.Integer i) -> i | _ -> 0 in
+            if size < length_threshold then (if !debug_image_processing then Printf.printf "length threshold not met\n%!") else
+              begin
+                Pdfcodec.decode_pdfstream_until_unknown pdf s;
+                match Pdf.lookup_direct pdf "/Filter" (fst !reference) with
+                | Some x ->
+                    if !debug_image_processing then Printf.printf "could not decode - skipping %s length %i\n%!" (Pdfwrite.string_of_pdf x) size;
+                    restore ()
+                | None ->
+                    let out = Filename.temp_file "cpdf" "convertin" ^ ".pnm" in
+                    let fh = open_out_bin out in
+                    let data = match s with Pdf.Stream {contents = _, Pdf.Got d} -> d | _ -> assert false in
+                      pnm_to_channel_1_inverted fh w h data;
+                      close_out fh;
+                      Printf.printf "obj %i = %s\n%!" objnum out;
+                      objnum_name_pairs := (objnum, out)::!objnum_name_pairs
+              end
+        | _ -> () (* not a 1bpp image *)
+        end
+    | _ -> () (* not a stream *)
+ in
+   Pdf.objiter process_obj pdf
+   (* Call jbig2 to generate one *.jbig2 for each, and a *.jbig2globals *)
+   (* Build the JBIG2Globals stream for the file *)
+   (* For each file, read in the new JBIG2 data, and build each new image stream to replace the old one *)
 
 let process
   ?q ?qlossless ?onebppmethod ~length_threshold ~percentage_threshold ~pixel_threshold ~dpi_threshold
@@ -740,7 +782,7 @@ let process
     in
       hashset_of_list objnums
   in
-  begin match onebppmethod with Some "JBIG2Lossy" -> preprocess_jbig2_lossy ~path_to_jbig2enc inrange highdpi pdf | _ -> () end;
+  begin match onebppmethod with Some "JBIG2Lossy" -> preprocess_jbig2_lossy ~path_to_jbig2enc ~dpi_threshold ~length_threshold ~pixel_threshold inrange highdpi pdf | _ -> () end;
   let nobjects = Pdf.objcard pdf in
   let ndone = ref 0 in
   let process_obj objnum s =
