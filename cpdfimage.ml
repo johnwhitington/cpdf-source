@@ -770,8 +770,29 @@ let preprocess_jbig2_lossy ~path_to_jbig2enc ~length_threshold ~pixel_threshold 
        let globalobj =
          Pdf.addobj pdf (Pdf.Stream {contents = Pdf.Dictionary [("/Length", Pdf.Integer (bytes_size globals))], Pdf.Got globals})
        in
-         ()
-         (* For each file, read in the new JBIG2 data, and build each new image stream to replace the old one *)
+         (* For each file, read in the new JBIG2 data, and build each new image stream to replace the old one, using the same
+         overwriting technique as elsewhere. *)
+         iter2
+           (fun (objnum, _) i ->
+              let data = bytes_of_string (contents_of_file (jbig2out ^ Printf.sprintf ".%04i" i)) in
+              let basic_obj =
+                Pdf.Stream
+                  {contents =
+                     Pdf.Dictionary [("/Length", Pdf.Integer (bytes_size data));
+                                     ("/Filter", Pdf.Name "/JBIG2Decode");
+                                     ("/JBIG2Globals", Pdf.Indirect globalobj)],
+                     Pdf.Got data}
+              in
+              let dict = match Pdf.lookup_obj pdf objnum with Pdf.Stream {contents = d, _} -> d | _ -> Pdf.Dictionary [] in
+                Pdf.addobj_given_num pdf
+                 (objnum,
+                  (match basic_obj with
+                   | Pdf.Stream {contents = Pdf.Dictionary d, data} ->
+                       let d' = fold_right (fun (k, v) d -> add k v d) d (match dict with Pdf.Dictionary x -> x | _ -> []) in
+                         Pdf.Stream {contents = Pdf.Dictionary d', data}
+                   | _ -> assert false)))
+           !objnum_name_pairs
+           (indx0 !objnum_name_pairs)
      end
 
 let process
