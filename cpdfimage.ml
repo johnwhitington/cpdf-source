@@ -753,10 +753,26 @@ let preprocess_jbig2_lossy ~path_to_jbig2enc ~length_threshold ~pixel_threshold 
         end
     | _ -> () (* not a stream *)
  in
-   Pdf.objiter process_obj pdf
+   Pdf.objiter process_obj pdf;
+   if length !objnum_name_pairs > 10000 then Pdfe.log "Too many jbig2 streams" else
    (* Call jbig2 to generate one *.jbig2 for each, and a *.jbig2globals *)
-   (* Build the JBIG2Globals stream for the file *)
-   (* For each file, read in the new JBIG2 data, and build each new image stream to replace the old one *)
+   let jbig2out = Filename.temp_file "cpdf" "jbig2" in
+   Printf.printf "jbig2out: %s" jbig2out;
+   (* FIXME: redirect stdout or sterr from jbig2 to remove summary report. *)
+   let retcode =
+     let command = Filename.quote_command path_to_jbig2enc (["-p"; "-s"; "-b"; jbig2out] @ map snd !objnum_name_pairs) in
+       (*Printf.printf "%S\n" command;*) Sys.command command
+   in
+   if retcode = 0 then
+     begin
+       (* Build the JBIG2Globals stream for the file *)
+       let globals = bytes_of_string (contents_of_file (jbig2out ^ ".sym")) in
+       let globalobj =
+         Pdf.addobj pdf (Pdf.Stream {contents = Pdf.Dictionary [("/Length", Pdf.Integer (bytes_size globals))], Pdf.Got globals})
+       in
+         ()
+         (* For each file, read in the new JBIG2 data, and build each new image stream to replace the old one *)
+     end
 
 let process
   ?q ?qlossless ?onebppmethod ~length_threshold ~percentage_threshold ~pixel_threshold ~dpi_threshold
