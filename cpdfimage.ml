@@ -754,7 +754,7 @@ let preprocess_jbig2_lossy ~path_to_jbig2enc ~length_threshold ~pixel_threshold 
    if length !objnum_name_pairs = 0 then () else
    let jbig2out = Filename.temp_file "cpdf" "jbig2" in
    let retcode =
-     let command = Filename.quote_command path_to_jbig2enc (["-p"; "-s"; "-b"; jbig2out] @ map snd !objnum_name_pairs) in
+     let command = Filename.quote_command path_to_jbig2enc ~stderr:Filename.null (["-p"; "-s"; "-b"; jbig2out] @ map snd !objnum_name_pairs) in
        (*Printf.printf "%S\n" command;*) Sys.command command
    in
    if retcode = 0 then
