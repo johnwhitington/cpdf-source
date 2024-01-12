@@ -532,7 +532,8 @@ type args =
    mutable dpi_threshold : int;
    mutable dpi_target : int;
    mutable resample_factor : int;
-   mutable resample_interpolate : bool}
+   mutable resample_interpolate : bool;
+   mutable jbig2_lossy_threshold : float}
 
 let args =
   {op = None;
@@ -665,7 +666,8 @@ let args =
    dpi_threshold = 0;
    dpi_target = 0;
    resample_factor = 101;
-   resample_interpolate = false}
+   resample_interpolate = false;
+   jbig2_lossy_threshold = 0.85}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -785,6 +787,7 @@ let reset_arguments () =
   args.dpi_target <- 0;
   args.resample_factor <- 101;
   args.resample_interpolate <- false;
+  args.jbig2_lossy_threshold <- 0.85;
   clear Cpdfdrawcontrol.fontpack_initialised
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
@@ -1980,6 +1983,9 @@ let setlosslessresample i =
 let setresampleinterpolate () =
   args.resample_interpolate <- true
 
+let setjbig2_lossy_threshold f =
+  args.jbig2_lossy_threshold <- f
+
 let setprocessimagesinfo () =
   set Cpdfimage.debug_image_processing
 
@@ -2775,6 +2781,9 @@ and specs =
    ("-1bpp-method",
      Arg.String set1bppmethod,
      " Set 1bpp compression method for existing images");
+   ("-jbig2-lossy-threshold",
+     Arg.Float setjbig2_lossy_threshold,
+     " Set jbig2enc lossy threshold");
    ("-pixel-threshold",
      Arg.Int setpixelthreshold,
      " Only process images with more pixels than this");
@@ -4533,7 +4542,7 @@ let go () =
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
         Cpdfimage.process
-          ~q:args.jpegquality ~qlossless:args.jpegqualitylossless ~onebppmethod:args.onebppmethod
+          ~q:args.jpegquality ~qlossless:args.jpegqualitylossless ~onebppmethod:args.onebppmethod ~jbig2_lossy_threshold:args.jbig2_lossy_threshold
           ~length_threshold:args.length_threshold ~percentage_threshold:args.percentage_threshold ~pixel_threshold:args.pixel_threshold 
           ~dpi_threshold:args.dpi_threshold ~dpi_target:args.dpi_target ~factor:args.resample_factor ~interpolate:args.resample_interpolate
           ~path_to_jbig2enc:args.path_to_jbig2enc ~path_to_convert:args.path_to_convert range pdf;

@@ -682,7 +682,7 @@ let recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_j
         pnm_to_channel_1_inverted fh w h data;
         close_out fh;
         let retcode =
-          let command = Filename.quote_command ~stdout:out2 path_to_jbig2enc ["-p"; out] in
+          let command = Filename.quote_command ~stdout:out2 path_to_jbig2enc ["-d"; "-p"; out] in
             (*Printf.printf "%S\n" command;*) Sys.command command
         in
           if retcode = 0 then
@@ -711,7 +711,7 @@ let recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_j
   end
 
 (* Recompress 1bpp images (except existing JBIG2 compressed ones) to lossy jbig2 *)
-let preprocess_jbig2_lossy ~path_to_jbig2enc ~length_threshold ~pixel_threshold ~dpi_threshold inrange highdpi pdf =
+let preprocess_jbig2_lossy ~path_to_jbig2enc ~jbig2_lossy_threshold ~length_threshold ~pixel_threshold ~dpi_threshold inrange highdpi pdf =
  let objnum_name_pairs = ref [] in
  let process_obj objnum s =
    match s with
@@ -758,7 +758,7 @@ let preprocess_jbig2_lossy ~path_to_jbig2enc ~length_threshold ~pixel_threshold 
        Filename.quote_command
          path_to_jbig2enc
          ?stderr:(if !debug_image_processing then None else Some Filename.null)
-         (["-p"; "-s"; "-b"; jbig2out] @ map snd !objnum_name_pairs)
+         (["-p"; "-s"; "-d"; "-t"; string_of_float jbig2_lossy_threshold; "-b"; jbig2out] @ map snd !objnum_name_pairs)
      in
        (*Printf.printf "%S\n" command;*) Sys.command command
    in
@@ -799,7 +799,7 @@ let preprocess_jbig2_lossy ~path_to_jbig2enc ~length_threshold ~pixel_threshold 
    remove (jbig2out ^ ".sym")
 
 let process
-  ?q ?qlossless ?onebppmethod ~length_threshold ~percentage_threshold ~pixel_threshold ~dpi_threshold
+  ?q ?qlossless ?onebppmethod ~jbig2_lossy_threshold ~length_threshold ~percentage_threshold ~pixel_threshold ~dpi_threshold
   ~dpi_target ~factor ~interpolate ~path_to_jbig2enc ~path_to_convert range pdf
 =
   let inrange =
@@ -822,7 +822,7 @@ let process
     in
       hashset_of_list objnums
   in
-  begin match onebppmethod with Some "JBIG2Lossy" -> preprocess_jbig2_lossy ~path_to_jbig2enc ~dpi_threshold ~length_threshold ~pixel_threshold inrange highdpi pdf | _ -> () end;
+  begin match onebppmethod with Some "JBIG2Lossy" -> preprocess_jbig2_lossy ~path_to_jbig2enc ~jbig2_lossy_threshold ~dpi_threshold ~length_threshold ~pixel_threshold inrange highdpi pdf | _ -> () end;
   let nobjects = Pdf.objcard pdf in
   let ndone = ref 0 in
   let process_obj objnum s =
