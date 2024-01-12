@@ -5,7 +5,7 @@ open Cpdferror
 let debug_image_processing = ref false
 
 let remove x =
-  try Sys.remove x with _ -> ()
+  try (*Printf.printf "%s\n" x;*) Sys.remove x with _ -> ()
 
 let pnm_white ch = output_char ch ' '
 let pnm_newline ch = output_char ch '\n'
@@ -762,6 +762,7 @@ let preprocess_jbig2_lossy ~path_to_jbig2enc ~length_threshold ~pixel_threshold 
      in
        (*Printf.printf "%S\n" command;*) Sys.command command
    in
+   iter remove (map snd !objnum_name_pairs);
    if retcode = 0 then
      begin
        let globals = bytes_of_string (contents_of_file (jbig2out ^ ".sym")) in
@@ -790,6 +791,12 @@ let preprocess_jbig2_lossy ~path_to_jbig2enc ~length_threshold ~pixel_threshold 
            !objnum_name_pairs
            (indx0 !objnum_name_pairs)
      end
+   else
+     begin
+       Pdfe.log "Call to jbig2enc failed"
+     end;
+   iter (fun i -> remove (jbig2out ^ Printf.sprintf ".%04i" i)) (indx0 !objnum_name_pairs);
+   remove (jbig2out ^ ".sym")
 
 let process
   ?q ?qlossless ?onebppmethod ~length_threshold ~percentage_threshold ~pixel_threshold ~dpi_threshold
