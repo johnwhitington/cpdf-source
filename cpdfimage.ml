@@ -742,7 +742,7 @@ let preprocess_jbig2_lossy ~path_to_jbig2enc ~length_threshold ~pixel_threshold 
                    let data = match s with Pdf.Stream {contents = _, Pdf.Got d} -> d | _ -> assert false in
                      pnm_to_channel_1_inverted fh w h data;
                      close_out fh;
-                     (*Printf.printf "obj %i = %s\n%!" objnum out;*)
+                     if !debug_image_processing then Printf.printf "obj %i is suitable\n%!" objnum;
                      objnum_name_pairs := (objnum, out)::!objnum_name_pairs
              end
        | _ -> () (* not a 1bpp image *)
@@ -754,7 +754,12 @@ let preprocess_jbig2_lossy ~path_to_jbig2enc ~length_threshold ~pixel_threshold 
    if length !objnum_name_pairs = 0 then () else
    let jbig2out = Filename.temp_file "cpdf" "jbig2" in
    let retcode =
-     let command = Filename.quote_command path_to_jbig2enc ~stderr:Filename.null (["-p"; "-s"; "-b"; jbig2out] @ map snd !objnum_name_pairs) in
+     let command =
+       Filename.quote_command
+         path_to_jbig2enc
+         ?stderr:(if !debug_image_processing then None else Some Filename.null)
+         (["-p"; "-s"; "-b"; jbig2out] @ map snd !objnum_name_pairs)
+     in
        (*Printf.printf "%S\n" command;*) Sys.command command
    in
    if retcode = 0 then
