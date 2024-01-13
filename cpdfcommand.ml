@@ -955,7 +955,7 @@ let rec decrypt_if_necessary (_, _, user_pw, owner_pw, was_dec_with_owner, _) op
 
 (* Output Page Count *)
 let output_page_count pdf =
-  Printf.printf "%i\n" (Pdfpage.endpage pdf)
+  Printf.printf "%i\n" ((if args.fast then Pdfpage.endpage_fast else Pdfpage.endpage) pdf)
 
 let detect_duplicate_op op =
   match args.op with
