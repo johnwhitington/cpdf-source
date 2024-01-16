@@ -1010,6 +1010,28 @@ let setowner s =
 let setuser s =
   args.user <- s
 
+let set_input_image f s =
+  try
+    let fh = open_in_bin s in
+    let pdf = Cpdfimage.image_of_input f (Pdfio.input_of_channel fh) in
+      begin try close_in fh with _ -> () end;
+      args.original_filename <- s;
+      args.create_objstm <- true;
+      args.inputs <- (AlreadyInMemory (pdf, s), "all", "", "", ref false, None)::args.inputs
+  with
+    Sys_error _ -> error "Image file not found"
+
+let jbig2_global = ref None
+
+let set_input_png s = set_input_image (fun () -> Cpdfimage.obj_of_png_data) s
+
+let set_input_jpeg s = set_input_image (fun () -> Cpdfimage.obj_of_jpeg_data) s
+
+let set_input_jbig2 s =
+  set_input_image
+    (fun () -> Cpdfimage.obj_of_jbig2_data ?global:!jbig2_global) s;
+  args.remove_duplicate_streams <- true
+
 let anon_fun s =
   try
     match !encrypt_to_collect with
@@ -1038,7 +1060,13 @@ let anon_fun s =
     Not_found ->
       try
         ignore (String.index s '.');
-        args.inputs <- (InFile s, "all", "", "", ref false, None)::args.inputs;
+        begin match rev (explode s) with
+        | a::b::c::d::e::'.'::r when implode (map Char.uppercase_ascii [e; d; c; b; a]) = "JBIG2" -> set_input_jbig2 s
+        | a::b::c::d::'.'::r when implode (map Char.uppercase_ascii [d; c; b; a]) = "JPEG" -> set_input_jpeg s
+        | a::b::c::'.'::r when implode (map Char.uppercase_ascii [c; b; a]) = "JPG" -> set_input_jpeg s
+        | a::b::c::'.'::r when implode (map Char.uppercase_ascii [c; b; a]) = "PNG" -> set_input_png s
+        | _ -> args.inputs <- (InFile s, "all", "", "", ref false, None)::args.inputs
+        end;
         args.original_filename <- s
       with
         Not_found ->
@@ -1820,27 +1848,6 @@ let addop o =
   begin match args.op with Some Draw -> () | _ -> error "Need to be in drawing mode for this." end;
   Cpdfdrawcontrol.addop o
 
-let set_input_image f s =
-  try
-    let fh = open_in_bin s in
-    let pdf = Cpdfimage.image_of_input f (Pdfio.input_of_channel fh) in
-      begin try close_in fh with _ -> () end;
-      args.original_filename <- s;
-      args.create_objstm <- true;
-      args.inputs <- (AlreadyInMemory (pdf, s), "all", "", "", ref false, None)::args.inputs
-  with
-    Sys_error _ -> error "Image file not found"
-
-let jbig2_global = ref None
-
-let set_input_png s = set_input_image (fun () -> Cpdfimage.obj_of_png_data) s
-
-let set_input_jpeg s = set_input_image (fun () -> Cpdfimage.obj_of_jpeg_data) s
-
-let set_input_jbig2 s =
-  set_input_image
-    (fun () -> Cpdfimage.obj_of_jbig2_data ?global:!jbig2_global) s;
-  args.remove_duplicate_streams <- true
 
 let embed_font_inner font =
   match font with

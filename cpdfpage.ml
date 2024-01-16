@@ -155,8 +155,8 @@ let change_pattern_matrices_page pdf tr page =
 
 (* Output information for each page *)
 let output_page_info ?(json=false) pdf range =
-  let pages = Pdfpage.pages_of_pagetree pdf
-  and labels = Pdfpagelabels.read pdf in
+  let pages = Pdfpage.pages_of_pagetree pdf in
+  let labels = Pdfpagelabels.read pdf in
     let getbox page box =
       if box = "/MediaBox" then
         match page.Pdfpage.mediabox with
@@ -170,8 +170,14 @@ let output_page_info ?(json=false) pdf range =
            Printf.sprintf "%f %f %f %f"
              (Pdf.getnum pdf a) (Pdf.getnum pdf b) (Pdf.getnum pdf c) (Pdf.getnum pdf d)
         | _ -> ""
-    and rotation page =
+    in
+    let rotation page =
       Pdfpage.int_of_rotation page.Pdfpage.rotate
+    in
+    let num_annots page =
+      match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
+      | Some (Pdf.Array a) -> length a
+      | _ -> 0
     in
       let json_entry_of_pnum pnum =
         let getbox_json page box =
@@ -190,7 +196,8 @@ let output_page_info ?(json=false) pdf range =
              ("BleedBox", getbox_json page "/BleedBox");
              ("TrimBox", getbox_json page "/TrimBox");
              ("ArtBox", getbox_json page "/ArtBox");
-             ("Rotation", `Int (rotation page))]
+             ("Rotation", `Int (rotation page));
+             ("Annotations", `Int (num_annots page))]
       in
         if json then
           flprint (Cpdfyojson.Safe.pretty_to_string (`List (map json_entry_of_pnum range)))
@@ -206,7 +213,8 @@ let output_page_info ?(json=false) pdf range =
                  Printf.printf "BleedBox: %s\n" (getbox page "/BleedBox");
                  Printf.printf "TrimBox: %s\n" (getbox page "/TrimBox");
                  Printf.printf "ArtBox: %s\n" (getbox page "/ArtBox");
-                 Printf.printf "Rotation: %i\n" (rotation page))
+                 Printf.printf "Rotation: %i\n" (rotation page);
+                 Printf.printf "Annotations: %i\n" (num_annots page))
             range
 
 let process_pages f pdf range =
