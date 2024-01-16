@@ -28,6 +28,7 @@ o More PNGs - greyscale 1, 2, 4, 8, 16bpp and RGB 16bpp
 o -pages -fast to print number of pages from /Count 
 o Report number of annotations in -page-info
 o Specify image based only on file extension
+o -squeeze updates old compression methods
 
 Fixes:
 
@@ -35,7 +36,6 @@ o Added opam file in-source
 o Fixed -set-annotations with page links
 o Allow Exif JPEGs as well as JFIF ones in -jpeg and -draw-jpeg
 o Only compress a stream if it actually makes it smaller
-
 
 2.6.1 (September 2023)
 

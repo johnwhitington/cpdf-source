@@ -13,14 +13,19 @@ let report_pdf_size pdf =
 
 (* Recompress anything which isn't compressed, unless it's metadata. *)
 let recompress_stream pdf = function
-  (* If there is no compression, compress with /FlateDecode *)
+  (* If there is no compression, or bad compression with /FlateDecode *)
   | Pdf.Stream {contents = (dict, _)} as stream ->
       begin match
         Pdf.lookup_direct pdf "/Filter" dict, 
         Pdf.lookup_direct pdf "/Type" dict
       with
       | _, Some (Pdf.Name "/Metadata") -> ()
-      | (None | Some (Pdf.Array [])), _ ->
+      | (  None
+         | Some (Pdf.Name ("/ASCIIHexDecode" | "/ASCII85Decode" | "/LZWDecode" | "/RunLengthDecode"))
+         | Some (Pdf.Array []
+         | Pdf.Array (Pdf.Name ("/ASCIIHexDecode" | "/ASCII85Decode" | "/LZWDecode" | "/RunLengthDecode")::_)
+        )), _ ->
+           Pdfcodec.decode_pdfstream_until_unknown pdf stream;
            Pdfcodec.encode_pdfstream ~only_if_smaller:true pdf Pdfcodec.Flate stream
       | _ -> ()
       end
