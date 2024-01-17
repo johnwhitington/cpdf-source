@@ -3564,7 +3564,13 @@ let extract_stream pdf objnum decomp =
   ()
 
 let print_obj pdf objnum =
-  ()
+  let obj =
+    if objnum = 0 then
+      pdf.Pdf.trailerdict
+    else
+      Pdf.lookup_obj pdf objnum
+  in
+    Printf.printf "%S\n" (Pdfwrite.string_of_pdf obj)
 
 (* Main function *)
 let go () =
