@@ -231,6 +231,8 @@ type op =
   | Composition of bool
   | Chop of int * int
   | ProcessImages
+  | ExtractStream of int
+  | PrintObj of int
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -369,6 +371,8 @@ let string_of_op = function
   | Composition _ -> "Composition"
   | Chop _ -> "Chop"
   | ProcessImages -> "ProcessImages"
+  | ExtractStream _ -> "ExtractStream"
+  | PrintObj _ -> "PrintObj"
 
 (* Inputs: filename, pagespec. *)
 type input_kind = 
@@ -533,7 +537,8 @@ type args =
    mutable dpi_target : int;
    mutable resample_factor : int;
    mutable resample_interpolate : bool;
-   mutable jbig2_lossy_threshold : float}
+   mutable jbig2_lossy_threshold : float;
+   mutable extract_stream_decompress : bool}
 
 let args =
   {op = None;
@@ -667,7 +672,8 @@ let args =
    dpi_target = 0;
    resample_factor = 101;
    resample_interpolate = false;
-   jbig2_lossy_threshold = 0.85}
+   jbig2_lossy_threshold = 0.85;
+   extract_stream_decompress = false}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -788,6 +794,7 @@ let reset_arguments () =
   args.resample_factor <- 101;
   args.resample_interpolate <- false;
   args.jbig2_lossy_threshold <- 0.85;
+  args.extract_stream_decompress <- false;
   clear Cpdfdrawcontrol.fontpack_initialised
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
@@ -887,7 +894,7 @@ let banned banlist = function
   | ExtractText | ExtractImages | ExtractFontFile _
   | AddPageLabels | RemovePageLabels | OutputJSON | OCGCoalesce
   | OCGRename | OCGList | OCGOrderAll | PrintFontEncoding _ | TableOfContents | Typeset _ | Composition _
-  | TextWidth _ | SetAnnotations _ | CopyAnnotations _
+  | TextWidth _ | SetAnnotations _ | CopyAnnotations _ | ExtractStream _ | PrintObj _
      -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
@@ -1996,6 +2003,16 @@ let setjbig2_lossy_threshold f =
 let setprocessimagesinfo () =
   set Cpdfimage.debug_image_processing
 
+let setextractstream i =
+  args.op <- Some (ExtractStream i)
+
+let setextractstreamdecomp i =
+  args.op <- Some (ExtractStream i);
+  args.extract_stream_decompress <- true
+
+let setprintobj i =
+  args.op <- Some (PrintObj i)
+
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
   control_args := !control_args @ parse_control_file filename
@@ -2945,6 +2962,9 @@ and specs =
    ("-rise", Arg.Float (fun f -> Cpdfdrawcontrol.addop (Cpdfdraw.Rise f)), " Set text rise");
    ("-nl", Arg.Unit (fun () -> Cpdfdrawcontrol.addop Cpdfdraw.Newline), " New line");
    ("-newpage", Arg.Unit Cpdfdrawcontrol.addnewpage, " Move to a fresh page");
+   ("-extract-stream", Arg.Int setextractstream, " Extract a stream");
+   ("-extract-stream-decompress", Arg.Int setextractstreamdecomp, "Extract a stream, decompressing");
+   ("-obj", Arg.Int setprintobj, "Print object");
    (* These items are undocumented *)
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit setdebugcrypt, "");
@@ -3539,6 +3559,12 @@ let build_enc () =
        Pdfwrite.owner_password = args.owner;
        Pdfwrite.user_password = args.user;
        Pdfwrite.permissions = banlist_of_args ()}
+
+let extract_stream pdf objnum decomp =
+  ()
+
+let print_obj pdf objnum =
+  ()
 
 (* Main function *)
 let go () =
@@ -4550,6 +4576,12 @@ let go () =
           ~dpi_threshold:args.dpi_threshold ~dpi_target:args.dpi_target ~factor:args.resample_factor ~interpolate:args.resample_interpolate
           ~path_to_jbig2enc:args.path_to_jbig2enc ~path_to_convert:args.path_to_convert range pdf;
         write_pdf false pdf
+  | Some (ExtractStream i) ->
+      let pdf = get_single_pdf args.op false in
+        extract_stream pdf args.extract_stream_decompress i
+  | Some (PrintObj i) ->
+      let pdf = get_single_pdf args.op false in
+        print_obj pdf i
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)
