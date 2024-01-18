@@ -3560,12 +3560,24 @@ let build_enc () =
        Pdfwrite.user_password = args.user;
        Pdfwrite.permissions = banlist_of_args ()}
 
-let extract_stream pdf objnum decomp =
-  (* Find obj *)
-  (* Decompress if appropriate *)
-  (* Find output filename or stdout *)
-  (* Output it *)
-  ()
+let extract_stream pdf decomp objnum =
+  let obj = Pdf.lookup_obj pdf objnum in
+  Pdf.getstream obj;
+  if decomp then Pdfcodec.decode_pdfstream_until_unknown pdf obj;
+  let data =
+    match obj with
+    | Pdf.Stream {contents = (_, Pdf.Got x)} -> x
+    | _ -> mkbytes 0
+  in
+    match args.out with
+    | NoOutputSpecified ->
+        ()
+    | File outname ->
+        let fh = open_out_bin outname in
+          output_string fh (Pdfio.string_of_bytes data);
+          close_out fh
+    | Stdout ->
+        output_string stdout (Pdfio.string_of_bytes data)
 
 let print_obj pdf objnum =
   let obj =
