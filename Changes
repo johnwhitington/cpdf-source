@@ -18,6 +18,8 @@ o List images on a page with -list-images[-json]
 o Chop pages up into sections with -chop
 o Build PDF files from JBIG2 streams, including globals
 o Reprocess images within PDFs to further compress them
+o Extract streams to disk
+o Explore PDFs by printing objects
 
 Extended features:
 
@@ -29,6 +31,7 @@ o -pages -fast to print number of pages from /Count
 o Report number of annotations in -page-info
 o Specify image based only on file extension
 o -squeeze updates old compression methods
+o Show page size summary in -info
 
 Fixes:
 

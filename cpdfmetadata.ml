@@ -191,6 +191,12 @@ let get_viewer_pref_item name pdf =
 let output_info ?(json=ref [("none", `Null)]) encoding pdf =
   let notjson = !json = [("none", `Null)] in
   let getstring = getstring encoding pdf in
+  let pages = Pdfpage.pages_of_pagetree pdf in
+  let mediaboxes = map (fun page -> page.Pdfpage.mediabox) pages in
+  let trimboxes = map (fun page -> Pdf.lookup_direct pdf "/TrimBox" page.Pdfpage.rest) pages in
+  let artboxes = map (fun page -> Pdf.lookup_direct pdf "/ArtBox" page.Pdfpage.rest) pages in
+  let cropboxes = map (fun page -> Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest) pages in
+  let bleedboxes = map (fun page -> Pdf.lookup_direct pdf "/BleedBox" page.Pdfpage.rest) pages in
     if notjson then Printf.printf "Version: %i.%i\n" pdf.Pdf.major pdf.Pdf.minor;
     json =| ("Version", `List [`Int pdf.Pdf.major; `Int pdf.Pdf.minor]);
     if notjson then Printf.printf "Pages: %i\n" (Pdfpage.endpage pdf);
@@ -233,6 +239,59 @@ let output_info ?(json=ref [("none", `Null)]) encoding pdf =
     json =| ("NonFullPageScreenMode", match (get_viewer_pref_item "/NonFullPageScreenMode" pdf) with "" -> `Null | x -> `String x);
     if notjson then Printf.printf "AcroForm: %s\n" (match get_catalog_item "/AcroForm" pdf with "" -> "False" | x -> x);
     json =| ("AcroForm", match (get_catalog_item "/AcroForm" pdf) with "" -> `Bool false | x -> `Bool true);
+    if notjson then
+      begin
+        Printf.printf "MediaBox: ";
+        begin if length (setify mediaboxes) = 1 then
+          match hd mediaboxes with
+          | Pdf.Array [a; b; c; d] -> Printf.printf "%f %f %f %f\n" (Pdf.getnum pdf a) (Pdf.getnum pdf b) (Pdf.getnum pdf c) (Pdf.getnum pdf d)
+          | _ -> Printf.printf "\n"
+        else
+          Printf.printf "various\n"
+        end;
+        let printbox boxes s =
+          Printf.printf s;
+          Printf.printf ": ";
+          if length (setify boxes) = 1 then
+            begin
+              match hd boxes with
+              | Some (Pdf.Array [a; b; c; d]) -> Printf.printf "%f %f %f %f\n" (Pdf.getnum pdf a) (Pdf.getnum pdf b) (Pdf.getnum pdf c) (Pdf.getnum pdf d)
+              | _ -> Printf.printf "\n"
+            end
+          else
+            Printf.printf "various\n"
+        in
+          printbox cropboxes "CropBox";
+          printbox bleedboxes "BleedBox";
+          printbox trimboxes "TrimBox";
+          printbox artboxes "ArtBox"
+      end
+   else
+     begin
+       let mediabox =
+         if length (setify mediaboxes) = 1 then
+           match hd mediaboxes with
+           | Pdf.Array [a; b; c; d] -> 
+               `List [`Float (Pdf.getnum pdf a); `Float (Pdf.getnum pdf b); `Float (Pdf.getnum pdf c); `Float (Pdf.getnum pdf d)]
+           | _ -> `Null
+         else
+           `String "various"
+       in
+       let jsonbox boxes =
+         if length (setify boxes) = 1 then
+           match hd boxes with
+           | Some (Pdf.Array [a; b; c; d]) ->
+               `List [`Float (Pdf.getnum pdf a); `Float (Pdf.getnum pdf b); `Float (Pdf.getnum pdf c); `Float (Pdf.getnum pdf d)]
+           | _ -> `Null
+         else
+           `String "various"
+       in
+         json =| ("MediaBox", mediabox);
+         json =| ("CropBox", jsonbox cropboxes);
+         json =| ("BleedBox", jsonbox bleedboxes);
+         json =| ("TrimBox", jsonbox trimboxes);
+         json =| ("ArtBox", jsonbox artboxes);
+     end
 
 type xmltree =
     E of Cpdfxmlm.tag * xmltree list

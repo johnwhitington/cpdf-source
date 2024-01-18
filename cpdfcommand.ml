@@ -3561,6 +3561,10 @@ let build_enc () =
        Pdfwrite.permissions = banlist_of_args ()}
 
 let extract_stream pdf objnum decomp =
+  (* Find obj *)
+  (* Decompress if appropriate *)
+  (* Find output filename or stdout *)
+  (* Output it *)
   ()
 
 let print_obj pdf objnum =
