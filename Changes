@@ -20,6 +20,7 @@ o Build PDF files from JBIG2 streams, including globals
 o Reprocess images within PDFs to further compress them
 o Extract streams to disk
 o Explore PDFs by printing objects
+o Shift page boxes with -shift-boxes
 
 Extended features:
 

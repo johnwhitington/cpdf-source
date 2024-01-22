@@ -118,6 +118,7 @@ type op =
   | PadMultiple of int
   | PadMultipleBefore of int
   | Shift
+  | ShiftBoxes
   | Scale
   | ScaleToFit
   | ScaleContents of float
@@ -260,6 +261,7 @@ let string_of_op = function
   | PadMultiple _ -> "PadMultiple"
   | PadMultipleBefore _ -> "PadMultipleBefore"
   | Shift -> "Shift"
+  | ShiftBoxes -> "ShiftBoxes"
   | Scale -> "Scale"
   | ScaleToFit -> "ScaleToFit"
   | ScaleContents _ -> "ScaleContents"
@@ -907,7 +909,7 @@ let banned banlist = function
   | Rotateby _ | Upright | VFlip | HFlip | Impose _ | Chop _ ->
       mem Pdfcrypt.NoAssemble banlist
   | TwoUp|TwoUpStack|RemoveBookmarks|AddRectangle|RemoveText|
-    Draft|Shift|Scale|ScaleToFit|RemoveAttachedFiles|
+    Draft|Shift|ShiftBoxes | Scale|ScaleToFit|RemoveAttachedFiles|
     RemoveAnnotations|RemoveFonts|Crop|RemoveCrop|Trim|RemoveTrim|Bleed|RemoveBleed|Art|RemoveArt|
     CopyBox|MediaBox|HardBox _|SetTrapped|SetUntrapped|Presentation|
     BlackText|BlackLines|BlackFills|CopyFont _|StampOn _|StampUnder _|StampAsXObject _|
@@ -1199,6 +1201,10 @@ let setsetannotations s = setop (SetAnnotations s) ()
 
 let setshift s =
   setop Shift ();
+  args.coord <- s
+
+let setshiftboxes s =
+  setop ShiftBoxes ();
   args.coord <- s
 
 let setscale s =
@@ -2170,6 +2176,9 @@ and specs =
       " -scale-to-fit-scale (1.0 = 100%)");
    ("-shift",
       Arg.String setshift,
+      " -shift \"dx dy\" shifts the chosen pages");
+   ("-shift-boxes",
+      Arg.String setshiftboxes,
       " -shift \"dx dy\" shifts the chosen pages");
    ("-rotate",
        Arg.Int setrotate,
@@ -4183,6 +4192,15 @@ let go () =
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           let dxdylist = Cpdfcoord.parse_coordinates pdf args.coord in
             write_pdf false (Cpdfpage.shift_pdf ~fast:args.fast dxdylist pdf range)
+  | Some ShiftBoxes ->
+      let pdf = get_single_pdf args.op false in
+      let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
+      let dxdylist = Cpdfcoord.parse_coordinates pdf args.coord in
+      let dx, dy = match dxdylist with (a, b)::_ -> a, b | _ -> 0.0, 0.0 in
+      Printf.printf "dx = %f, dy = %f\n" dx dy;
+      let f (xmin, xmax, ymin, ymax) = (xmin +. dx, xmax +. dx, ymin +. dy, ymax +. dy) in
+      let fpage _ p = Cpdfpage.change_boxes f pdf p in
+        write_pdf false (Cpdfpage.process_pages (Pdfpage.ppstub fpage) pdf range)
   | Some Scale ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
