@@ -459,6 +459,7 @@ type args =
    mutable boxes : bool;
    mutable encrypt_metadata : bool;
    mutable retain_numbering : bool;
+   mutable merge_struct_trees : bool;
    mutable remove_duplicate_fonts : bool;
    mutable remove_duplicate_streams : bool;
    mutable encoding : Cpdfmetadata.encoding;
@@ -593,6 +594,7 @@ let args =
    boxes = false;
    encrypt_metadata = true;
    retain_numbering = false;
+   merge_struct_trees = true;
    remove_duplicate_fonts = false;
    remove_duplicate_streams = false;
    encoding = Cpdfmetadata.UTF8;
@@ -732,6 +734,7 @@ let reset_arguments () =
   args.boxes <- false;
   args.encrypt_metadata <- true;
   args.retain_numbering <- false;
+  args.merge_struct_trees <- true;
   args.remove_duplicate_fonts <- false;
   args.remove_duplicate_streams <- false;
   args.encoding <- Cpdfmetadata.UTF8;
@@ -2013,6 +2016,9 @@ let setextractstreamdecomp i =
 let setprintobj i =
   args.op <- Some (PrintObj i)
 
+let setnomergestructtrees () =
+  args.merge_struct_trees <- false
+
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
   control_args := !control_args @ parse_control_file filename
@@ -2129,6 +2135,9 @@ and specs =
    ("-merge-add-bookmarks-use-titles",
        Arg.Unit setmergeaddbookmarksusetitles,
        " Use title of document rather than filename");
+   ("-no-merge-struct-trees",
+       Arg.Unit setnomergestructtrees,
+       " Do not merge structure trees");
    ("-remove-duplicate-fonts",
        Arg.Unit set_remove_duplicate_fonts,
        " Remove duplicate fonts when merging");
@@ -3652,7 +3661,7 @@ let go () =
                         in
                         let outpdf =
                           Pdfmerge.merge_pdfs
-                            args.retain_numbering args.remove_duplicate_fonts names pdfs rangenums
+                            args.retain_numbering args.remove_duplicate_fonts ~struct_hierarchy:args.merge_struct_trees names pdfs rangenums
                         in
                           if args.remove_duplicate_streams then Pdfmerge.remove_duplicate_fonts outpdf; (* JBIG2 Globals *)
                           write_pdf false outpdf

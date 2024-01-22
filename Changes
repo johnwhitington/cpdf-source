@@ -32,6 +32,7 @@ o Report number of annotations in -page-info
 o Specify image based only on file extension
 o -squeeze updates old compression methods
 o Show page size summary in -info
+o Add -no-merge-struct-trees to prevent merging of structure trees
 
 Fixes:
 
@@ -39,6 +40,7 @@ o Added opam file in-source
 o Fixed -set-annotations with page links
 o Allow Exif JPEGs as well as JFIF ones in -jpeg and -draw-jpeg
 o Only compress a stream if it actually makes it smaller
+
 
 2.6.1 (September 2023)
 
