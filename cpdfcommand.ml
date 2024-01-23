@@ -1001,21 +1001,6 @@ let fixdashes s =
     let chars = explode s in
       implode (bufferdashes chars)
 
-let encrypt_to_collect = ref 0
-
-let setmethod s =
-  detect_duplicate_op Encrypt;
-  if args.op = None then args.op <- Some Encrypt; (* Could be additional to -split *)
-  match s with
-  | "40bit" | "128bit" | "AES" | "AES256" | "AES256ISO" -> args.crypt_method <- s
-  | _ -> error ("Unsupported encryption method " ^ s)
-
-let setowner s =
-  args.owner <- s
-
-let setuser s =
-  args.user <- s
-
 let set_input_image f s =
   try
     let fh = open_in_bin s in
@@ -1037,13 +1022,21 @@ let set_input_jbig2 s =
   set_input_image
     (fun () -> Cpdfimage.obj_of_jbig2_data ?global:!jbig2_global) s;
   args.remove_duplicate_streams <- true
+let encrypt_to_collect = ref 0
+
+let setmethod s =
+  detect_duplicate_op Encrypt;
+  if args.op = None then args.op <- Some Encrypt; (* Could be additional to -split *)
+  match s with
+  | "40bit" | "128bit" | "AES" | "AES256" | "AES256ISO" -> args.crypt_method <- s
+  | _ -> error ("Unsupported encryption method " ^ s)
 
 let anon_fun s =
   try
     match !encrypt_to_collect with
     | 3 -> setmethod s; decr encrypt_to_collect
-    | 2 -> setowner s; decr encrypt_to_collect
-    | 1 -> setuser s; decr encrypt_to_collect
+    | 2 -> args.owner <- s; decr encrypt_to_collect
+    | 1 -> args.user <- s; decr encrypt_to_collect
     | 0 ->
       let before, after = cleavewhile (neq '=') (explode s) in
         begin match implode before with
@@ -1344,12 +1337,6 @@ let setcenter n =
   args.position <- Cpdfposition.Centre;
   args.justification <- Cpdfaddtext.CentreJustify
 
-let setbatespad n =
-  args.batespad <- Some n
-
-let setbates n =
-  args.bates <- n
-
 (* Calculate -bates automatically so that n is applied to the first page in the range *)  
 let setbatesrange n =
   let first_page =
@@ -1358,40 +1345,10 @@ let setbatesrange n =
   in
     args.bates <- n + 1 - first_page
 
-let setkeepversion () =
-  args.keepversion <- true
-
-let setbycolumns () =
-  args.bycolumns <- true
-
 let setpagerotation r =
   match r with
   | 90 | 270 -> args.pagerotation <- r
   | _ -> error "Bad Page rotation. Try 90 or 270."
-
-let set_no_edit () =
-  args.no_edit <- true
-
-let set_no_print () =
-  args.no_print <- true
-
-let set_no_copy () =
-  args.no_copy <- true
-
-let set_no_annot () =
-  args.no_annot <- true
-
-let set_no_forms () =
-  args.no_forms <- true
-
-let set_no_extract () =
-  args.no_extract <- true
-
-let set_no_assemble () =
-  args.no_assemble <- true
-
-let set_no_hq_print () =
-  args.no_hq_print <- true
 
 let set_input s =
   args.original_filename <- s;
@@ -1988,7 +1945,7 @@ and specs =
       Arg.Unit (fun () -> args.create_objstm <- true),
       " Create object streams anew");
    ("-keep-version",
-      Arg.Unit setkeepversion,
+      Arg.Unit (fun () -> args.keepversion <- true),
       " Don't change the version number");
    ("-l",
        Arg.Unit (fun () -> args.linearize <- true),
@@ -2151,14 +2108,14 @@ and specs =
    ("-decrypt-force",
       Arg.Unit setdebugforce,
       " Decrypt a file even without password");
-   ("-no-edit", Arg.Unit set_no_edit, " No edits");
-   ("-no-print", Arg.Unit set_no_print, " No printing");
-   ("-no-copy", Arg.Unit set_no_copy, " No copying");
-   ("-no-annot", Arg.Unit set_no_annot, " No annotations");
-   ("-no-forms", Arg.Unit set_no_forms, " No forms");
-   ("-no-extract", Arg.Unit set_no_extract, " No extracting");
-   ("-no-assemble", Arg.Unit set_no_assemble, " No assembling");
-   ("-no-hq-print", Arg.Unit set_no_hq_print, " No high quality printing");
+   ("-no-edit", Arg.Unit (fun () -> args.no_edit <- true) , " No edits");
+   ("-no-print", Arg.Unit (fun () -> args.no_print <- true), " No printing");
+   ("-no-copy", Arg.Unit (fun () -> args.no_copy <- true), " No copying");
+   ("-no-annot", Arg.Unit (fun () -> args.no_annot <- true), " No annotations");
+   ("-no-forms", Arg.Unit (fun () -> args.no_forms <- true), " No forms");
+   ("-no-extract", Arg.Unit (fun () -> args.no_extract <- true), " No extracting");
+   ("-no-assemble", Arg.Unit (fun () -> args.no_assemble <- true), " No assembling");
+   ("-no-hq-print", Arg.Unit (fun () -> args.no_hq_print <- true), " No high quality printing");
    ("-no-encrypt-metadata",
        Arg.Unit set_no_encrypt_metadata,
        " Don't encrypt metadata (AES only)");
@@ -2232,13 +2189,13 @@ and specs =
       Arg.String setrectangle,
       " Add a rectangle to the page");
    ("-bates",
-      Arg.Int setbates,
+      Arg.Int (fun n -> args.bates <- n),
       " Set the base bates number");
    ("-bates-at-range",
       Arg.Int setbatesrange,
       " Set the base bates number at first page in range");
    ("-bates-pad-to",
-      Arg.Int setbatespad,
+      Arg.Int (fun n -> args.batespad <- Some n),
       " Pad the bates number with leading zeroes to width");
    ("-font",
       Arg.String setfont,
