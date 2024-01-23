@@ -1712,36 +1712,6 @@ let setcreatepdfpapersize s =
     let w, h = Cpdfcoord.parse_coordinate (Pdf.empty ()) s in
     Pdfpaper.make Pdfunits.PdfPoint w h
 
-let setdraftremoveonly s =
-  args.removeonly <- Some s
-
-let setgsquiet () =
-  args.gs_quiet <- true
-
-let setjsonparsecontentstreams () =
-  args.jsonparsecontentstreams <- true
-
-let setjsonnostreamdata () =
-  args.jsonnostreamdata <- true
-
-let setjsondecompressstreams () =
-  args.jsondecompressstreams <- true
-
-let setjsoncleanstrings () =
-  args.jsoncleanstrings <- true
-
-let setocgrenamefrom s =
-  args.ocgrenamefrom <- s
-
-let setocgrenameto s =
-  args.ocgrenameto <- s
-
-let setsqueezepagedata () =
-  args.squeeze_pagedata <- false
-
-let setsqueezerecompress () =
-  args.squeeze_recompress <- false
-
 let set_dedup () =
   args.dedup <- true
 
@@ -2656,7 +2626,7 @@ and specs =
       Arg.Unit (setop Draft),
       " Remove images from the file");
    ("-draft-remove-only",
-      Arg.String setdraftremoveonly,
+      Arg.String (fun s -> args.removeonly <- Some s),
       " Only remove named image");
    ("-boxes",
       Arg.Unit setboxes,
@@ -2758,7 +2728,7 @@ and specs =
     Arg.Unit setgsmalformed,
     " Also try to reconstruct malformed files with gs");
    ("-gs-quiet",
-    Arg.Unit setgsquiet,
+    Arg.Unit (fun () -> args.gs_quiet <- true),
     " Make gs go into quiet mode");
    ("-gs-malformed-force",
      Arg.Unit whingemalformed,
@@ -2830,25 +2800,25 @@ and specs =
      Arg.String setsqueezelogto,
      " Squeeze log location");
    ("-squeeze-no-pagedata",
-     Arg.Unit setsqueezepagedata,
+     Arg.Unit (fun () -> args.squeeze_pagedata <- false),
      " Don't recompress pages");
    ("-squeeze-no-recompress",
-     Arg.Unit setsqueezerecompress,
+     Arg.Unit (fun () -> args.squeeze_recompress <- false),
      " Don't recompress streams");
    ("-output-json",
      Arg.Unit (setop OutputJSON),
      " Export PDF file as JSON data");
    ("-output-json-parse-content-streams",
-     Arg.Unit setjsonparsecontentstreams,
+     Arg.Unit (fun () -> args.jsonparsecontentstreams <- true),
      " Parse content streams");
    ("-output-json-no-stream-data",
-     Arg.Unit setjsonnostreamdata,
+     Arg.Unit (fun () -> args.jsonnostreamdata <- true),
      " Skip stream data for brevity");
    ("-output-json-decompress-streams",
-     Arg.Unit setjsondecompressstreams,
+     Arg.Unit (fun () -> args.jsondecompressstreams <- true),
      " Skip stream data for brevity");
    ("-output-json-clean-strings",
-     Arg.Unit setjsoncleanstrings,
+     Arg.Unit (fun () -> args.jsoncleanstrings <- true),
      " Convert UTF16BE strings to PDFDocEncoding when possible");
    ("-j",
      Arg.String set_json_input,
@@ -2860,10 +2830,10 @@ and specs =
      Arg.Unit (setop OCGRename),
      " Rename optional content group");
    ("-ocg-rename-from",
-     Arg.String setocgrenamefrom,
+     Arg.String (fun s -> args.ocgrenamefrom <- s),
      " Rename from (with -ocg-rename)");
    ("-ocg-rename-to",
-     Arg.String setocgrenameto,
+     Arg.String (fun s -> args.ocgrenameto <- s),
      " Rename to (with -ocg-rename)");
    ("-ocg-order-all",
      Arg.Unit (setop OCGOrderAll),
