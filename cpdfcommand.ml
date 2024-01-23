@@ -1387,12 +1387,6 @@ let setdebug () =
   set Pdfops.debug;
   args.debug <- true
 
-let setdebugcrypt () =
-  args.debugcrypt <- true
-
-let setdebugforce () =
-  args.debugforce <- true
-
 let setboxes () =
   args.boxes <- true
 
@@ -1870,9 +1864,6 @@ let setextractstreamdecomp i =
 let setprintobj i =
   args.op <- Some (PrintObj i)
 
-let setnoprocessstructtrees () =
-  args.process_struct_trees <- false
-
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
   control_args := !control_args @ parse_control_file filename
@@ -1990,7 +1981,7 @@ and specs =
        Arg.Unit setmergeaddbookmarksusetitles,
        " Use title of document rather than filename");
    ("-no-process-struct-trees",
-       Arg.Unit setnoprocessstructtrees,
+       Arg.Unit (fun () -> args.process_struct_trees <- false),
        " Do not process structure trees");
    ("-remove-duplicate-fonts",
        Arg.Unit set_remove_duplicate_fonts,
@@ -2106,7 +2097,7 @@ and specs =
       Arg.Unit (setop Decrypt),
       " Decrypt a file");
    ("-decrypt-force",
-      Arg.Unit setdebugforce,
+      Arg.Unit (fun () -> args.debugforce <- true),
       " Decrypt a file even without password");
    ("-no-edit", Arg.Unit (fun () -> args.no_edit <- true) , " No edits");
    ("-no-print", Arg.Unit (fun () -> args.no_print <- true), " No printing");
@@ -2833,8 +2824,8 @@ and specs =
    ("-obj", Arg.Int setprintobj, "Print object");
    (* These items are undocumented *)
    ("-debug", Arg.Unit setdebug, "");
-   ("-debug-crypt", Arg.Unit setdebugcrypt, "");
-   ("-debug-force", Arg.Unit setdebugforce, "");
+   ("-debug-crypt", Arg.Unit (fun () -> args.debugcrypt <- true), "");
+   ("-debug-force", Arg.Unit (fun () -> args.debugforce <- true), "");
    ("-debug-malformed", Arg.Set Pdfread.debug_always_treat_malformed, "");
    ("-debug-stderr-to-stdout", Arg.Unit setstderrtostdout, "");
    ("-stay-on-error", Arg.Unit setstayonerror, "");
