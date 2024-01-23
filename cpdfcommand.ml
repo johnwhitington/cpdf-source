@@ -1555,18 +1555,9 @@ let setrevision n =
   | [] ->
       Pdfe.log "Warning. -revision ignored. Put it after the filename.\n"
 
-let setoutline () =
-  args.outline <- true
-
-let setlinewidth l =
-  args.linewidth <- l
-
 let setimageresolution f =
   detect_duplicate_op (ImageResolution f);
   args.op <- Some (ImageResolution f)
-
-let setgspath p =
-  args.path_to_ghostscript <- p
 
 let setimpath p =
   args.path_to_im <- p
@@ -1591,23 +1582,8 @@ let settobox s =
 let setmediaboxifmissing () =
   args.mediabox_if_missing <- true
 
-let setprerotate () =
-  args.prerotate <- true
-
 let settopage s =
   args.topage <- Some s
-
-let setscalestamptofit () =
-  args.scale_stamp_to_fit <- true
-
-let setremoveduplicatestreams () =
-  args.remove_duplicate_streams <- true
-
-let setnopreserveobjstm () =
-  args.preserve_objstm <- false
-
-let setcreateobjstm () =
-  args.create_objstm <- true
 
 let setstdinuser u =
   match args.inputs with
@@ -1779,7 +1755,6 @@ let addop o =
   begin match o with Cpdfdraw.FontPack _ -> set Cpdfdrawcontrol.fontpack_initialised | _ -> () end;
   begin match args.op with Some Draw -> () | _ -> error "Need to be in drawing mode for this." end;
   Cpdfdrawcontrol.addop o
-
 
 let embed_font_inner font =
   match font with
@@ -2007,10 +1982,10 @@ and specs =
       Arg.Unit (setop ChangeId),
       " Change the file's /ID tag");
    ("-no-preserve-objstm",
-      Arg.Unit setnopreserveobjstm,
+      Arg.Unit (fun () -> args.preserve_objstm <- false),
       " Don't preserve object streams");
    ("-create-objstm",
-      Arg.Unit setcreateobjstm,
+      Arg.Unit (fun () -> args.create_objstm <- true),
       " Create object streams anew");
    ("-keep-version",
       Arg.Unit setkeepversion,
@@ -2109,7 +2084,7 @@ and specs =
        Arg.Unit (setop Upright),
        " Make pages upright");
    ("-prerotate",
-      Arg.Unit setprerotate,
+      Arg.Unit (fun () -> args.prerotate <- true),
       " Calls -upright on pages before modifying them, if required");
    ("-no-warn-rotate",
       Arg.Unit setnowarnrotate,
@@ -2194,7 +2169,7 @@ and specs =
        Arg.Unit (setop Compress),
        " Compress streams, leaving metadata alone");
    ("-remove-duplicate-streams",
-       Arg.Unit setremoveduplicatestreams,
+       Arg.Unit (fun () -> args.remove_duplicate_streams <- true),
        "");
    ("-list-bookmarks",
       Arg.Unit (setop ListBookmarks),
@@ -2242,7 +2217,7 @@ and specs =
       Arg.String setstampunder,
       " Stamp a file under some pages of another");
    ("-scale-stamp-to-fit",
-      Arg.Unit setscalestamptofit,
+      Arg.Unit (fun () -> args.scale_stamp_to_fit <- true),
       " Scale the stamp to fit the page");
    ("-combine-pages",
       Arg.String setcombinepages,
@@ -2284,10 +2259,10 @@ and specs =
       Arg.Float setopacity,
       " Set the text opacity");
    ("-outline",
-      Arg.Unit setoutline,
+      Arg.Unit (fun () -> args.outline <- true),
       " Use outline mode for text");
    ("-linewidth",
-      Arg.Float setlinewidth,
+      Arg.Float (fun f -> args.linewidth <- f),
       " Set line width for outline text");
    ("-pos-center",
       Arg.String setposcenter,
@@ -2692,7 +2667,7 @@ and specs =
     Arg.String setpostpend,
     " Postpend content to page");
    ("-gs",
-    Arg.String setgspath,
+    Arg.String (fun s ->  args.path_to_ghostscript <- s),
     " Path to gs executable");
    ("-gs-malformed",
     Arg.Unit setgsmalformed,
