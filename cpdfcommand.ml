@@ -1712,27 +1712,6 @@ let setcreatepdfpapersize s =
     let w, h = Cpdfcoord.parse_coordinate (Pdf.empty ()) s in
     Pdfpaper.make Pdfunits.PdfPoint w h
 
-let set_dedup () =
-  args.dedup <- true
-
-let set_dedup_per_page () =
-  args.dedup_per_page <- true
-
-let setcollate () =
-  args.collate <- true
-
-let setimposecolumns () =
-  args.impose_columns <- true
-
-let setimposertl () =
-  args.impose_rtl <- true
-
-let setimposebtt () =
-  args.impose_btt <- true
-
-let setimposecenter () =
-  args.impose_center <- true
-
 let setimpose s =
   setop (Impose true) ();
   args.coord <- s
@@ -1740,15 +1719,6 @@ let setimpose s =
 let setimposexy s =
   setop (Impose false) ();
   args.coord <- s
-
-let setimposemargin f =
-  args.impose_margin <- f
-
-let setimposespacing f =
-  args.impose_spacing <- f
-
-let setimposelinewidth f =
-  args.impose_linewidth <- f
 
 let setchop s =
   let x, y = Cpdfcoord.parse_coordinate empty s in
@@ -2028,7 +1998,7 @@ and specs =
       Arg.String setrange,
       " Explicitly add a range");
    ("-collate",
-      Arg.Unit setcollate,
+      Arg.Unit (fun () -> args.collate <- true),
       " Collate ranges when merging");
    ("-revision",
       Arg.Int setrevision,
@@ -2401,34 +2371,34 @@ and specs =
       Arg.String setimposexy,
       " Impose x by y (zero means unlimited)");
    ("-impose-columns",
-      Arg.Unit setimposecolumns,
+      Arg.Unit (fun () -> args.impose_columns <- true),
       " Impose in columns rather than rows");
    ("-impose-rtl",
-      Arg.Unit setimposertl,
+      Arg.Unit (fun () -> args.impose_rtl <- true),
       " Impose right-to-left");
    ("-impose-btt",
-      Arg.Unit setimposebtt,
+      Arg.Unit (fun () -> args.impose_btt <- true),
       " Impose bottom-to-top");
    ("-impose-margin",
-      Arg.Float setimposemargin,
+      Arg.Float (fun f -> args.impose_margin <- f),
       " Add margin around whole imposed page");
    ("-impose-spacing",
-      Arg.Float setimposespacing,
+      Arg.Float (fun f -> args.impose_spacing <- f),
       " Add spacing around each imposed page");
    ("-impose-linewidth",
-      Arg.Float setimposelinewidth,
+      Arg.Float (fun f -> args.impose_linewidth <- f),
       " Imposition divider line width (0=none)");
    ("-chop",
       Arg.String setchop,
       " Chop x by y");
    ("-chop-columns",
-      Arg.Unit setimposecolumns,
+      Arg.Unit (fun () -> args.impose_columns <- true),
       " Chop in columns rather than rows");
    ("-chop-rtl",
-      Arg.Unit setimposertl,
+      Arg.Unit (fun () -> args.impose_rtl <- true),
       " Chop right-to-left");
    ("-chop-btt",
-      Arg.Unit setimposebtt,
+      Arg.Unit (fun () -> args.impose_btt <- true),
       " Chop bottom-to-top");
    ("-pad-before",
       Arg.Unit (setop PadBefore),
@@ -2743,10 +2713,10 @@ and specs =
      Arg.Unit (setop ExtractImages),
      " Extract images to file");
    ("-dedup",
-     Arg.Unit set_dedup,
+     Arg.Unit (fun () -> args.dedup <- true),
      " Deduplicate extracted images fully");
    ("-dedup-perpage",
-     Arg.Unit set_dedup_per_page,
+     Arg.Unit (fun () -> args.dedup_per_page <- true),
      " Deduplicate extracted images per page only");
    ("-process-images",
      Arg.Unit (setop ProcessImages),
