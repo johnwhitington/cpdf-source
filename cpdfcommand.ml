@@ -990,12 +990,6 @@ let setchunk c =
     then args.chunksize <- c
     else error "invalid chunk size"
 
-let setlinearize () =
-  args.linearize <- true
-
-let setkeeplinearize () =
-  args.keeplinearize <- true
-
 let fixdashes s =
   let bufferdashes chars =
     let buf = ref [] in
@@ -1126,23 +1120,6 @@ let setrotateby i =
     then setop (Rotateby i) ()
     else error "bad rotation"
 
-let setrotatecontents f =
-  setop (RotateContents f) ()
-
-let setauthor s = setop (SetAuthor s) ()
-let settitle s = setop (SetTitle s) ()
-let setsubject s = setop (SetSubject s) ()
-let setkeywords s = setop (SetKeywords s) ()
-let setcreate s = setop (SetCreate s) ()
-let setmodify s = setop (SetModify s) ()
-let setcreator s = setop (SetCreator s) ()
-let setproducer s = setop (SetProducer s) ()
-let setmetadata s = setop (SetMetadata s) ()
-let setversion i = setop (SetVersion i) ()
-let setpagelayout s = setop (SetPageLayout s) ()
-let setpagemode s = setop (SetPageMode s) ()
-let setnonfullscreenpagemode s = setop (SetNonFullScreenPageMode s) ()
-
 let hidetoolbar b =
   try setop (HideToolbar (bool_of_string b)) () with
     _ -> failwith "HideToolBar: must use true or false"
@@ -1178,7 +1155,6 @@ let read_file_size s =
     | 'B'::'K'::s -> 1000 * read_int s
     | s -> read_int s
 
-let setsplitbookmarks i = setop (SplitOnBookmarks i) ()
 let setsplitmax i = setop (SplitMax (read_file_size i)) ()
 let setstdout () = args.out <- Stdout
 let setstdin () = args.inputs <- [StdIn, "all", "", "", ref false, None]
@@ -2100,10 +2076,10 @@ and specs =
       Arg.Unit setkeepversion,
       " Don't change the version number");
    ("-l",
-       Arg.Unit setlinearize,
+       Arg.Unit (fun () -> args.linearize <- true),
        " Linearize output file");
    ("-keep-l",
-       Arg.Unit setkeeplinearize,
+       Arg.Unit (fun () -> args.keeplinearize <- true),
        " Linearize if the input file was linearized");
    ("-cpdflin",
        Arg.String setcpdflin,
@@ -2154,7 +2130,7 @@ and specs =
        Arg.Int setchunk,
        " Set chunk size for -split (default 1)");
    ("-split-bookmarks",
-       Arg.Int setsplitbookmarks,
+       Arg.Int (fun i -> setop (SplitOnBookmarks i) ()),
        " Split a file at bookmarks at a given level");
    ("-split-max",
        Arg.String setsplitmax,
@@ -2187,7 +2163,7 @@ and specs =
        Arg.Int setrotateby,
        " Rotate pages by 90, 180 or 270 degrees");
    ("-rotate-contents",
-       Arg.Float setrotatecontents,
+       Arg.Float (fun f -> setop (RotateContents f) ()),
        " Rotate contents of pages");
    ("-upright",
        Arg.Unit (setop Upright),
@@ -2536,28 +2512,28 @@ and specs =
        Arg.Unit setpageinfojson,
        " Output page information in JSON format");
    ("-set-author",
-       Arg.String setauthor,
+       Arg.String (fun s -> setop (SetAuthor s) ()),
        " Set Author");
    ("-set-title",
-      Arg.String settitle,
+      Arg.String (fun s ->  setop (SetTitle s) ()),
       " Set Title");
    ("-set-subject",
-      Arg.String setsubject,
+      Arg.String (fun s -> setop (SetSubject s) ()),
       " Set Subject");
    ("-set-keywords",
-      Arg.String setkeywords,
+      Arg.String (fun s -> setop (SetKeywords s) ()),
       " Set Keywords");
    ("-set-create",
-      Arg.String setcreate,
+      Arg.String (fun s -> setop (SetCreate s) ()),
       " Set Creation date");
    ("-set-modify",
-      Arg.String setmodify,
+      Arg.String (fun s -> setop (SetModify s) ()),
       " Set Modification date");
    ("-set-creator",
-      Arg.String setcreator,
+      Arg.String (fun s -> setop (SetCreator s) ()),
       " Set Creator");
    ("-set-producer",
-      Arg.String setproducer,
+      Arg.String (fun s -> setop (SetProducer s) ()),
       " Set Producer");
    ("-set-trapped",
       Arg.Unit (setop SetTrapped),
@@ -2575,13 +2551,13 @@ and specs =
       Arg.Unit (setop CreateMetadata),
       " Create XMP metadata from scratch.");
    ("-set-page-layout",
-      Arg.String setpagelayout,
+      Arg.String (fun s -> setop (SetPageLayout s) ()),
       " Set page layout upon document opening");
    ("-set-page-mode",
-      Arg.String setpagemode,
+      Arg.String (fun s -> setop (SetPageMode s) ()),
       " Set page mode upon document opening");
    ("-set-non-full-screen-page-mode",
-      Arg.String setnonfullscreenpagemode,
+      Arg.String (fun s -> setop (SetNonFullScreenPageMode s) ()),
       " Set non full screen page mode if page mode is FullScreen");
    ("-open-at-page",
       Arg.String setopenatpage,
@@ -2593,7 +2569,7 @@ and specs =
       Arg.String setopenatpagecustom,
       " Set initial page, with custom scaling");
    ("-set-metadata",
-      Arg.String setmetadata,
+      Arg.String (fun s -> setop (SetMetadata s) ()),
       " Set metadata to the contents of a file");
    ("-print-metadata",
        Arg.Unit (setop Metadata),
@@ -2707,7 +2683,7 @@ and specs =
        Arg.Unit (setop Clean),
        " Garbage-collect a file");
    ("-set-version",
-      Arg.Int setversion,
+      Arg.Int (fun i -> setop (SetVersion i) ()),
       " Set PDF version number");
    ("-copy-id-from",
       Arg.String setcopyid,
