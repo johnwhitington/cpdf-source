@@ -1,5 +1,5 @@
-cpdf-source
-===========
+Coherent PDF Command Line Tools
+===============================
 
 Free for non-commercial use. See LICENSE for details. Copyright Coherent
 Graphics Ltd 2023.
@@ -43,8 +43,8 @@ To build
 --------
 
 If downloading from Github, obtain the correct source. This means choosing the
-tag for a particular version, such as "v2.5". The head of the master branch is
-unstable.
+tag for a particular version, such as "v2.6.1". The head of the master branch
+is unstable.
 
 1. Type `make` to make the cpdf executable and the library
 
