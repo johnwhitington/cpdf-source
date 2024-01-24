@@ -517,7 +517,6 @@ let scale_to_fit_pdf ?(fast=false) position input_scale xylist op pdf range =
     let x, y = List.nth xylist (pnum - 1) in
     let matrix =
       let (minx, miny, maxx, maxy) =
-        (* Use cropbox if available *)
         Pdf.parse_rectangle
           pdf
           (match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
@@ -525,7 +524,7 @@ let scale_to_fit_pdf ?(fast=false) position input_scale xylist op pdf range =
           | None -> page.Pdfpage.mediabox)
       in
         if maxx <= 0. || maxy <= 0. then failwith "Zero-sized pages are invalid" else
-          let fx = x /. maxx in let fy = y /. maxy in
+          let fx = x /. (maxx -. minx) in let fy = y /. (maxy -. miny) in
             let scale = fmin fx fy *. input_scale in
               let trans_x =
                 match position with
@@ -538,8 +537,11 @@ let scale_to_fit_pdf ?(fast=false) position input_scale xylist op pdf range =
                 | Cpdfposition.Bottom _ -> 0.
                 | _ -> (y -. (maxy *. scale)) /. 2.
               in
+              let fixup_trans_x = -. (minx *. scale) /. 2. in
+              let fixup_trans_y = -. (miny *. scale) /. 2. in 
                 (Pdftransform.matrix_of_transform
-                   [Pdftransform.Translate (trans_x, trans_y);
+                   [Pdftransform.Translate (fixup_trans_x, fixup_trans_y);
+                    Pdftransform.Translate (trans_x, trans_y);
                     Pdftransform.Scale ((0., 0.), scale, scale)])
     in
       let page =
