@@ -532,21 +532,27 @@ let scale_to_fit_pdf ?(fast=false) position input_scale xylist op pdf range =
         if maxx <= 0. || maxy <= 0. then failwith "Zero-sized pages are invalid" else
           let fx = x /. (maxx -. minx) in let fy = y /. (maxy -. miny) in
             let scale = fmin fx fy *. input_scale in
-              let trans_x =
-                match position with
-                  Cpdfposition.Left _ -> 0.
-                | Cpdfposition.Right _ -> (x -. (maxx *. scale))
-                | _ -> (x -. (maxx *. scale)) /. 2.
-              and trans_y =
-                match position with
-                | Cpdfposition.Top _ -> (y -. (maxy *. scale))
-                | Cpdfposition.Bottom _ -> 0.
-                | _ -> (y -. (maxy *. scale)) /. 2.
-              in
+              let trans_x = (x -. (maxx *. scale)) /. 2. in
+              let trans_y = (y -. (maxy *. scale)) /. 2. in
               let fixup_trans_x = -. (minx *. scale) /. 2. in
               let fixup_trans_y = -. (miny *. scale) /. 2. in 
+              let position_trans_x =
+                let dx = (x -. ((maxx -. minx) *. scale)) /. 2. in
+                  match position with
+                  | Cpdfposition.Left _ -> ~-. dx
+                  | Cpdfposition.Right _ -> dx
+                  | _ -> 0.
+              in
+              let position_trans_y =
+                let dy = (y -. ((maxy -. miny) *. scale)) /. 2. in
+                  match position with
+                  | Cpdfposition.Top _ -> dy
+                  | Cpdfposition.Bottom _ -> ~-. dy
+                  | _ -> 0.
+              in
                 (Pdftransform.matrix_of_transform
                    [Pdftransform.Translate (fixup_trans_x, fixup_trans_y);
+                    Pdftransform.Translate (position_trans_x, position_trans_y);
                     Pdftransform.Translate (trans_x, trans_y);
                     Pdftransform.Scale ((0., 0.), scale, scale)])
     in
