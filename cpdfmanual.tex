@@ -17,6 +17,7 @@
 %Document -obj - check enc
 %Document -merge-no-struct-trees in merge and collate
 %Document -shift-boxes
+%Document that -scale-to-fit may have -top bottom left right
 \documentclass{book}
 % Edit here to produce cpdfmanual.pdf, cpdflibmanual.pdf, pycpdfmanual.pdf,
 % dotnetcpdflibmanual.pdf, jcpdflibmanual.pdf jscpdflibmanual.pdf etc.
@@ -1465,9 +1466,7 @@ Y factors given. This scales both the page contents, and the page size itself. I
   \noindent Scale a file's pages to fit A4 portrait, scaling the page 90\% of its possible size.
   \end{framed}
 
-\noindent NB: \texttt{-scale-to-fit} presently requires that the origin of the media box be (0, 0). This can be assured by preprocessing with \texttt{-upright} (described elsewhere in this chapter) or by adding the \texttt{-prerotate} option to the command.
-
-The \texttt{-scale-contents} operation scales the contents about the center
+\noindent The \texttt{-scale-contents} operation scales the contents about the center
   of the crop box (or, if absent, the media box), leaving the page dimensions
   (boxes) unchanged.
 
