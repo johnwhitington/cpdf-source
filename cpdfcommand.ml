@@ -3381,8 +3381,8 @@ let collate (names, pdfs, ranges) =
     split3 (rev !nis)
 
 let warn_prerotate range pdf =
-  if not args.prerotate && not (Cpdfpage.allupright range pdf) then
-    Pdfe.log "Some pages in the range have non-zero rotation or non (0,0)-based mediabox. \
+  if not args.prerotate && not (Cpdfpage.alluprightonly range pdf) then
+    Pdfe.log "Some pages in the range have non-zero rotation. \
               Consider adding -prerotate or pre-processing with -upright. \
               To silence this warning use -no-warn-rotate\n"
 

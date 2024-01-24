@@ -409,6 +409,12 @@ let allupright range pdf =
   in
     not (mem false (map page_is_upright (select_pages range pdf)))
 
+(* Same, but don't care about mediabox origin. This is for -scale-to-fit, now that
+it is ok with nonzero origins. *)
+let alluprightonly range pdf =
+  let page_is_upright page = page.Pdfpage.rotate = Pdfpage.Rotate0 in
+    not (mem false (map page_is_upright (select_pages range pdf)))
+
 let upright_transform pdf page =
   let rotate =
     Pdfpage.int_of_rotation page.Pdfpage.rotate
