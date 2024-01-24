@@ -599,7 +599,7 @@ let args =
    process_struct_trees = true;
    remove_duplicate_fonts = false;
    remove_duplicate_streams = false;
-   encoding = Cpdfmetadata.UTF8;
+   encoding = Cpdfmetadata.Stripped;
    scale = 1.;
    copyfontpage = 1;
    copyfontname = None;
@@ -739,7 +739,7 @@ let reset_arguments () =
   args.process_struct_trees <- true;
   args.remove_duplicate_fonts <- false;
   args.remove_duplicate_streams <- false;
-  args.encoding <- Cpdfmetadata.UTF8;
+  args.encoding <- Cpdfmetadata.Stripped;
   args.scale <- 1.;
   args.copyfontpage <- 1;
   args.copyfontname <- None;

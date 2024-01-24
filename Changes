@@ -1,9 +1,5 @@
 2.7 (to come)
 
-Breaking changes:
-
-o -utf8 is now the default. Set -stripped to get old behaviour.
-
 New features:
 
 o Split files to max size with -split-max
