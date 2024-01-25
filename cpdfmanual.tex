@@ -1426,7 +1426,7 @@ Y factors given. This scales both the page contents, and the page size itself. I
   \end{framed}
 
   \noindent The \texttt{-scale-to-fit} operation scales each page in the range to fit a
-  given page size, preserving aspect ratio and centering the result.
+  given page size, preserving aspect ratio and centring the result. If a crop box is present, it is preferred to the media box.
 
   \begin{framed}
   \small\noindent\verb!cpdf -scale-to-fit "297mm 210mm" in.pdf -o out.pdf!
@@ -1435,9 +1435,8 @@ Y factors given. This scales both the page contents, and the page size itself. I
   \vspace{2.5mm}
   \noindent Scale a file's pages to fit A4 portrait.
   \end{framed}
-  %The \texttt{-scale-to-fit-best} and \texttt{-scale-to-fit-minus} are similar, but will rotate a page by $90^\circ$ or $-90^\circ$ respectively on any page where doing so would maximise the scale.
-
-  \noindent The scale can optionally be set to a percentage of the available area, instead of filling it.
+  
+\noindent To avoid centring, supply \texttt{-top\! 0}, \texttt{-bottom\! 0}, \texttt{-left\! 0} or \texttt{-right\! 0} as appropriate. The scale can optionally be set to a percentage of the available area, instead of filling it.
   \begin{framed}
   \small\noindent\verb!cpdf -scale-to-fit a4portrait -scale-to-fit-scale 0.9 in.pdf -o out.pdf!
 
