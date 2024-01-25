@@ -4688,6 +4688,12 @@ If the drawing range is a single page, and the next page already exists, the dra
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -remove-clipping [<range>] in.pdf -o out.pdf!
+
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -obj <obj num> in.pdf!
+
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -extract-stream[-decompress] <obj num> in.pdf [-o out.dat | -stdout]!
   \end{framed}}
   \section{Draft Documents}
 \index{draft}
@@ -4881,6 +4887,47 @@ The \texttt{-remove-clipping} operation removes any clipping paths on given page
   \vspace{2.5mm}
   \noindent Remove clipping paths in \texttt{in.pdf}, writing to \texttt{out.pdf}. 
   \end{framed}
+
+\section{Exploring PDFs}
+
+\noindent The \texttt{-obj} operation prints an object to standard output, given the object number. Number 0 is the trailer dictionary, so we begin there:
+
+{\small\begin{verbatim}
+$ cpdf -obj 0 in.pdf
+"<</Root 1256 0 R/Length 588/ID[('\029\\t>\249\157\182F_\153V\175z[\234\196)
+('\029\\t>\249\157\182F_\153V\175z[\234\196)]/Info 1351 0 R/Size 1406>>"
+
+$ cpdf -obj 1256 in.pdf
+"<</OpenAction 1238 0 R/PageLabels<</Nums[0<</S/r>>16<</S/D>>]>>/PageMode
+/UseOutlines/Names 924 0 R/Outlines 838 0 R/Pages 851 0 R/Type/Catalog>>"
+
+$ cpdf -obj 1238 out.pdf
+"<</D[1225 0 R/Fit]/S/GoTo>>"
+\end{verbatim}}
+
+\noindent A stream may be extracted with \texttt{-extract-stream} or \texttt{-extract-stream-decompress}, which decompresses it first where possible:
+
+{\small\begin{verbatim}
+$ cpdf -obj 0 hello.pdf
+"<</Size 4/Root 4 0 R/ID[(\232\20625\030\179/\176q:O\202\135\176u\137)
+(\232\20625\030\179/\176q:O\202\135\176u\137)]>>"
+
+$ cpdf -obj 4 hello.pdf
+"<</Type/Catalog/Pages 1 0 R>>"
+
+$ cpdf -obj 1 hello.pdf
+"<</Type/Pages/Kids[3 0 R]/Count 1>>"
+
+$ cpdf -obj 3 hello.pdf
+"<</Type/Page/Parent 1 0 R/Resources<</Font<</F0<</Type/Font/Subtype/Type1/BaseFont
+/Times-Italic>>>>>>/MediaBox[0 0 595.275590551 841.88976378]/Rotate 0/Contents
+[2 0 R]>>"
+
+$ cpdf -extract-stream-decompress 2 hello.pdf -stdout
+1 0 0 1 50 770 cm BT/F0 36 Tf(Hello, World!)Tj ET
+\end{verbatim}}
+
+\noindent By these mechanisms, ad-hoc exploration of PDF files is possible.
 
 \begin{cpdflib}
 \clearpage
