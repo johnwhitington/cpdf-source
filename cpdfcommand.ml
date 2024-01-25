@@ -2018,7 +2018,7 @@ and specs =
       " -shift \"dx dy\" shifts the chosen pages");
    ("-shift-boxes",
       Arg.String setshiftboxes,
-      " -shift \"dx dy\" shifts the chosen pages");
+      " -shift-boxes \"dx dy\" shifts boxes on the chosen pages");
    ("-rotate",
        Arg.Int setrotate,
        " Set rotation of pages to 0, 90, 180, 270");
@@ -4031,7 +4031,6 @@ let go () =
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
       let dxdylist = Cpdfcoord.parse_coordinates pdf args.coord in
       let dx, dy = match dxdylist with (a, b)::_ -> a, b | _ -> 0.0, 0.0 in
-      Printf.printf "dx = %f, dy = %f\n" dx dy;
       let f (xmin, xmax, ymin, ymax) = (xmin +. dx, xmax +. dx, ymin +. dy, ymax +. dy) in
       let fpage _ p = Cpdfpage.change_boxes f pdf p in
         write_pdf false (Cpdfpage.process_pages (Pdfpage.ppstub fpage) pdf range)

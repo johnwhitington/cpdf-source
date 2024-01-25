@@ -1340,6 +1340,9 @@ The encryption parameters described in Chapter \ref{encryption} may be added to 
   \small\noindent\verb!cpdf -shift "<shift x> <shift y>" [-fast] in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
+  \small\noindent\verb!cpdf -shift-boxes "<shift x> <shift y>" in.pdf [<range>] -o out.pdf!
+
+  \vspace{1.5mm}
   \small\noindent\verb!cpdf -rotate <angle> in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
@@ -1479,9 +1482,18 @@ by X points horizontally and Y points vertically.
   \vspace{2.5mm}
 
   \noindent Shift pages to the right by 50 points (for instance, to increase
-the binding margin).
+the binding margin).\end{framed}
 
-  \end{framed}
+\noindent The \texttt{-shift-boxes} operation has the same effect, but operates by moving the page boxes only, avoiding processing the page contents. It is therefore faster. Of course, the numbers must be inverted, since it is the boxes being moved not the page:
+
+  \begin{framed}
+  \small\noindent\verb!cpdf -shift-boxes "-50 0" in.pdf even -o out.pdf!
+
+  \vspace{2.5mm}
+
+  \noindent Shift pages to the right by 50 points (for instance, to increase
+the binding margin).\end{framed}
+
   \section{Rotating Pages}
 \index{rotate!pages}
 
