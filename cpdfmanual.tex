@@ -1,25 +1,3 @@
-%Document -split-max
-%Document -spray
-%Document -info-json, -page-info-json, -page-labels-json, -list-fonts-json
-%Document subformat information
-%Document -list-images[-json], -list-image-uses[-json], -image-resolution-json
-%Document -raw for -extract-images
-%Add note to -fast about content sharing (with reference to -chop, but in general too)
-%Document -chop
-%Replace -impose-rtl etc with -rtl etc.
-%Document -extract-images JBIG2 for how to use jbig2dec
-%Document -jbig2 / -jbig2globals
-%Document -process-images
-%Document -pages -fast
-%Document -page-info changes
-%Document -png -jpeg -jbig2 by extension
-%Document -extract-stream - check enc
-%Document -obj - check enc
-%Document -merge-no-struct-trees in merge and collate
-%Document -shift-boxes
-%Document that -scale-to-fit prefers the cropbox
-%Document in -scale-to-fit that hardbox exists
-%Document that -scale-to-fit may have -top bottom left right
 \documentclass{book}
 % Edit here to produce cpdfmanual.pdf, cpdflibmanual.pdf, pycpdfmanual.pdf,
 % dotnetcpdflibmanual.pdf, jcpdflibmanual.pdf jscpdflibmanual.pdf etc.
@@ -3032,8 +3010,10 @@ dictionary, and from any XMP metadata to standard output.
 {\small\begin{verbatim}
 $cpdf -info pdf_reference.pdf
 Encryption: 40bit
-Linearized: true
 Permissions: No edit
+Linearized: true
+Object streams: true
+ID: <0537e963d2234e7e996c49fb9ac87adb> <0537e963d2234e7e996c49fb9ac87adb>
 Version: 1.6
 Pages: 1310
 Title: PDF Reference, version 1.7
@@ -3053,7 +3033,14 @@ HideWindowUI:
 FitWindow: 
 CenterWindow: 
 DisplayDocTitle: 
-NonFullScreenPageMode: 
+NonFullScreenPageMode:
+AcroForm: False
+MediaBox: 0.000000 0.000000 540.000000 666.000000
+CropBox: 
+BleedBox: 
+TrimBox: 
+ArtBox: 
+Subformats: PDF/A-1
 XMP pdf:Producer: Adobe PDF library 7.77
 XMP xmp:CreateDate: 2006-12-21T18:19:09+01:00
 XMP xmp:CreatorTool: Adobe Illustrator CS2
@@ -3061,13 +3048,12 @@ XMP xmp:MetadataDate: 2006-12-21T18:19:09Z
 XMP xmp:ModifyDate: 2006-12-21T18:19:09Z
 XMP dc:title: AI6\end{verbatim}}\end{framed}
 \noindent The details of the format for creation and modification dates can be found in
-Appendix~\ref{dates}.
+Appendix~\ref{dates}. If page boxes vary among pages, the entry will read \texttt{various}.
 
 By default, cpdf strips to ASCII, discarding character codes in excess of 127. In order to preserve the original unicode, add the \texttt{-utf8} option. To disable all postprocessing of the string, add \texttt{-raw}. See Section \ref{textencodings} for more information.
 
 \vspace{4mm}
-The \texttt{-page-info} operation prints the page label, media box and other boxes
-page-by-page to standard output, for all pages in the current range.
+The \texttt{-page-info} operation prints the page label, media box and other boxes, and number of annotations page-by-page to standard output, for all pages in the current range.
 
 \begin{framed}
 {\small\begin{verbatim}
@@ -3080,6 +3066,7 @@ BleedBox:
 TrimBox: 
 ArtBox:
 Rotation: 0
+Annotations: 0
 \end{verbatim}}
 \end{framed}
 
