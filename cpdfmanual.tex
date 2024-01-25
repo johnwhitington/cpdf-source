@@ -1155,6 +1155,7 @@ In modern usage, \texttt{-utf8} is almost always the sensible option.
 cpdf -merge in1.pdf [<range>] in2.pdf [<range>] [<more names/ranges>]
      [-collate] [-retain-numbering] [-remove-duplicate-fonts]
      [-merge-add-bookmarks [-merge-add-bookmarks-use-titles]]
+     [-no-process-struct-trees]
      -o out.pdf\end{verbatim}
 
   \vspace{1.5mm}
@@ -1200,6 +1201,8 @@ The \texttt{-remove-duplicate-fonts} option ensures that fonts used in more than
 of the inputs only appear once in the output.
 
 The \texttt{-merge-add-bookmarks} option adds a top-level bookmark for each file, using the filename. Any existing bookmarks are retained. The \texttt{-merge\--add\--bookmarks\--use\--titles}, when used in conjunction with \texttt{-merge-add-bookmarks}, will use the title from each PDF's metadata instead of the filename.
+
+The \texttt{-no-process-struct-tree} option prevents processing of structure trees. Instead of merging them, they are simply copied across wholesale. This can be useful with \texttt{-collate} which can presently cause an increased size. Or, to simply save time when a merged structure tree is not required.
 
   \section{Splitting}
 \index{splitting}
@@ -1276,7 +1279,9 @@ one of the output files.
 
 \noindent To prevent this process, and convert bookmark names to UTF8 instead, add \texttt{-utf8} to the command.
 
-\section{Encrypting with Split and Split Bookmarks}
+\section{Splitting to Maximum Size}
+
+\section{Encrypting with Split operations}
 \index{encryption}
 The encryption parameters described in Chapter \ref{encryption} may be added to the command line to encrypt each split PDF. Similarly, the \texttt{-recrypt} switch described in Chapter \ref{basicusage} may by given to re-encrypt each file with the existing encryption of the source PDF. 
 \pagestyle{empty}\thispagestyle{fancy}
