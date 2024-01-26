@@ -1942,7 +1942,7 @@ The option \texttt{-squeeze-no-pagedata} avoids the reprocessing of page data, w
 
 \chapter{Bookmarks}\label{chap:6}
   \begin{framed}
-  \small\noindent\verb!cpdf -list-bookmarks [-utf8 | -raw] in.pdf!
+  \small\noindent\verb!cpdf -list-bookmarks [-utf8] in.pdf!
 
   \vspace{1.5mm}
   \small\noindent\verb!cpdf -list-bookmarks-json in.pdf!
@@ -3011,17 +3011,17 @@ given page range.
 \index{metadata}
   \begin{framed}
 
-    \small\noindent\verb!cpdf -info [-raw | -utf8] in.pdf!
+    \small\noindent\verb!cpdf -info[-json] [-utf8] in.pdf!
 
     \vspace{1.5mm}
-    \small\noindent\verb!cpdf -page-info in.pdf [<range>]!
+    \small\noindent\verb!cpdf -page-info[-json] in.pdf [<range>]!
 
     \vspace{1.5mm}
     \small\noindent\verb!cpdf -pages in.pdf!
 
     \vspace{1.5mm}
     \small\noindent\verb!cpdf -set-title <title of document>!\\
-    \small\noindent\verb!     [-also-set-xmp] [-just-set-xmp] [-raw] in.pdf -o out.pdf!\\
+    \small\noindent\verb!     [-also-set-xmp] [-just-set-xmp] in.pdf -o out.pdf!\\
     (Also \texttt{-set-author} etc. See Section \ref{setdocinfo}.)
 
     \vspace{1.5mm}
@@ -3114,10 +3114,51 @@ XMP dc:title: AI6\end{verbatim}}\end{framed}
 \noindent The details of the format for creation and modification dates can be found in
 Appendix~\ref{dates}. If page boxes vary among pages, the entry will read \texttt{various}.
 
-By default, cpdf strips to ASCII, discarding character codes in excess of 127. In order to preserve the original unicode, add the \texttt{-utf8} option. To disable all postprocessing of the string, add \texttt{-raw}. See Section \ref{textencodings} for more information.
+By default, cpdf strips to ASCII, discarding character codes in excess of 127. In order to preserve the original unicode, add the \texttt{-utf8} option. To disable all post-processing of the string, add \texttt{-raw}. See Section \ref{textencodings} for more information.
 
-\vspace{4mm}
-The \texttt{-page-info} operation prints the page label, media box and other boxes, and number of annotations page-by-page to standard output, for all pages in the current range.
+The \texttt{-info-json} operation prints the information in JSON format instead. For example:
+
+\begin{framed}
+{\small\begin{verbatim}
+{
+  "Encryption": "Not encrypted",
+  "Permissions": [],
+  "Linearized": false,
+  "Object streams": true,
+  "ID": [
+    "cf745ad901ffba30957a31858132263e", "cf745ad901ffba30957a31858132263e"
+  ],
+  "Version": [ 1, 5 ],
+  "Pages": 123,
+  "Title": null,
+  "Author": null,
+  "Subject": null,
+  "Keywords": null,
+  "Creator": "LaTeX with hyperref",
+  "Producer": "pdfTeX-1.40.24",
+  "Created": "D:20240126171732Z",
+  "Modified": "D:20240126171732Z",
+  "Trapped": false,
+  "PageMode": "UseOutlines",
+  "PageLayout": null,
+  "HideToolbar": null,
+  "HideMenubar": null,
+  "HideWindowUI": null,
+  "FitWindow": null,
+  "CenterWindow": null,
+  "DisplayDocTitle": null,
+  "NonFullPageScreenMode": null,
+  "AcroForm": false,
+  "MediaBox": [ 0.0, 0.0, 540.0, 666.0 ],
+  "CropBox": null,
+  "BleedBox": null,
+  "TrimBox": null,
+  "ArtBox": null,
+  "Subformats": []
+}
+\end{verbatim}}\end{framed}
+
+\noindent The \texttt{-page-info} operation prints the page label, media box and other boxes, and number of annotations page-by-page to standard output, for all pages in the current range.
 
 \begin{framed}
 {\small\begin{verbatim}
@@ -3134,7 +3175,25 @@ Annotations: 0
 \end{verbatim}}
 \end{framed}
 
-\noindent Note that the format for boxes is minimum x, minimum y, maximum x, maximum y.
+\noindent Note that the format for boxes is minimum x, minimum y, maximum x, maximum y. Using \texttt{-page-info-json} we can get the information in JSON format. For example:
+
+\begin{framed}
+{\small\begin{verbatim}
+[
+  {
+    "Page": 1,
+    "Label": "i",
+    "MediaBox": [ 0.0, 0.0, 600.0, 450.0 ],
+    "CropBox": [ 66.17453, 184.6437, 178.6582, 210.0717 ],
+    "BleedBox": [ 0.0, 0.0, 600.0, 450.0 ],
+    "TrimBox": [ 0.0, 0.0, 600.0, 450.0 ],
+    "ArtBox": [ 0.0, 0.0, 600.0, 450.0 ],
+    "Rotation": 0,
+    "Annotations": 0
+  }
+]
+\end{verbatim}}
+\end{framed}
 
 \smallgap 
 \noindent The \texttt{-pages} operation prints the number of pages in the file.
