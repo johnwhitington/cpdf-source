@@ -1096,7 +1096,7 @@ the command line or configuration files. These are:
 bit ASCII by dropping any high characters, or \verb!-raw! to perform no
 processing. The default unless specified in the documentation for an individual operation is \verb!-stripped!.
 
-In modern usage, \texttt{-utf8} is almost always the sensible option.
+In modern usage, \texttt{-utf8} is almost always the sensible option. But for historical reasons it would be the default.
 
 \begin{cpdflib}
 \clearpage
@@ -1163,6 +1163,9 @@ cpdf -merge in1.pdf [<range>] in2.pdf [<range>] [<more names/ranges>]
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -split-bookmarks <level> in.pdf [-utf8] -o <format>!
+
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -split-max <file size> in.pdf -o <format>!
   \end{framed}
 
   \vspace{12mm}
@@ -1280,6 +1283,17 @@ one of the output files.
 \noindent To prevent this process, and convert bookmark names to UTF8 instead, add \texttt{-utf8} to the command.
 
 \section{Splitting to Maximum Size}
+
+The \texttt{-split-max} operation splits a file into chunks of no more than the given size, starting at the beginning. The suffixes kB, KiB, MB, MiB, GB, and GiB may be used to give the size. For example:
+
+  \begin{framed}\small
+    \noindent\verb!cpdf -split-max 100kB in.pdf -o out%%%.pdf!
+
+    \vspace{2.5mm}
+    \noindent Split \texttt{in.pdf} into parts of no more than 100kB, if possible.
+
+  \end{framed}
+\noindent Should the operation not be possible for the given size, an error message is printed and no output (not even partial output) is produced.
 
 \section{Encrypting with Split operations}
 \index{encryption}
