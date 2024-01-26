@@ -4031,7 +4031,7 @@ let go () =
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
       let dxdylist = Cpdfcoord.parse_coordinates pdf args.coord in
       let dx, dy = match dxdylist with (a, b)::_ -> a, b | _ -> 0.0, 0.0 in
-      let f (xmin, xmax, ymin, ymax) = (xmin +. dx, xmax +. dx, ymin +. dy, ymax +. dy) in
+      let f (xmin, ymin, xmax, ymax) = (xmin +. dx, ymin +. dy, xmax +. dx, ymax +. dy) in
       let fpage _ p = Cpdfpage.change_boxes f pdf p in
         write_pdf false (Cpdfpage.process_pages (Pdfpage.ppstub fpage) pdf range)
   | Some Scale ->
