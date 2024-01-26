@@ -3612,7 +3612,7 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 \noindent\small\verb!     [-dedup | -dedup-perpage] [-raw] -o <path>!
 
 \vspace{1.5mm}
-\noindent\small\verb!cpdf -image-resolution <minimum resolution> in.pdf [<range>]!
+\noindent\small\verb!cpdf -image-resolution[-json] <minimum resolution> in.pdf [<range>]!
 \end{framed}
 
 \section{Extracting images}
@@ -3649,7 +3649,34 @@ The output specifier, e.g \verb!-o output/%%%! gives the number format for numbe
 2, /Im15, 184, 139, 149.960011, 150.672060
 4, /Im29, 53, 48, 149.970749, 151.616446\end{verbatim}}
   \end{framed}
-  \noindent The format is \textit{page number, image name, x pixels, y pixels, x resolution, y resolution}. The resolutions refer to the image's effective resolution at point of use (taking account of scaling, rotation etc).
+  \noindent The format is \textit{page number, image name, x pixels, y pixels, x resolution, y resolution}. The resolutions refer to the image's effective resolution at point of use (taking account 
+of scaling, rotation etc).
+
+The information is also available in JSON format:
+\begin{framed}
+{\small\begin{verbatim}
+[
+  {
+    "Object": 240,
+    "Page": 79,
+    "XObject": "/Z_Im0",
+    "W": 3326,
+    "H": 2584,
+    "Xdpi": 300.0,
+    "Ydpi": 300.0
+  },
+  {
+    "Object": 243,
+    "Page": 80,
+    "XObject": "/Z_Im0",
+    "W": 3300,
+    "H": 2550,
+    "Xdpi": 300.0,
+    "Ydpi": 300.0
+  }
+]
+\end{verbatim}}
+  \end{framed}
 
 \section{Removing an Image}
 
