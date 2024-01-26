@@ -1166,6 +1166,9 @@ cpdf -merge in1.pdf [<range>] in2.pdf [<range>] [<more names/ranges>]
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -split-max <file size> in.pdf -o <format>!
+
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -spray in.pdf -o a.pdf [-o b.pdf [-o ...]]!
   \end{framed}
 
   \vspace{12mm}
@@ -1294,6 +1297,20 @@ The \texttt{-split-max} operation splits a file into chunks of no more than the 
 
   \end{framed}
 \noindent Should the operation not be possible for the given size, an error message is printed and no output (not even partial output) is produced.
+
+\section{Spraying}
+
+Spraying is a sort of de-collation. It takes one input file, and writes pages in turn to one or more outputs:
+
+  \begin{framed}\small
+    \noindent\verb!cpdf -spray in.pdf -o a.pdf -o b.pdf!
+
+    \vspace{2.5mm}
+    \noindent Place odd pages of the input file in one file, and the even in another.
+
+  \end{framed}
+
+\noindent This is the only time more than one \texttt{-o} is allowed.
 
 \section{Encrypting with Split operations}
 \index{encryption}
