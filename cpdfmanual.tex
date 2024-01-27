@@ -4269,6 +4269,10 @@ In a PDF file, optional content groups are used to group graphical elements toge
   \vspace{1.5mm}
   \noindent\verb!cpdf -png <filename> -o out.pdf!
 
+  \vspace{1.5mm}
+  \noindent\verb!cpdf [-jbig2-global <filename>] -jbig2 <filename>!\\
+  \noindent\verb!     [-jbig2-global | -jbig2-global-clear]!\\
+  \noindent\verb!     [-jbig2 <filename>] ... -o out.pdf!
   \end{framed}}
 
 \section{A new blank PDF}
@@ -4313,6 +4317,8 @@ For PNG files, the file must be 24bit RGB with no transparency and no interlacin
 \end{framed}
 
 \noindent The output file will have one point of width or height for each pixel in the input.
+
+\section{Make a PDF from one or more JBIG2 images}
 
 
 \begin{cpdflib}
