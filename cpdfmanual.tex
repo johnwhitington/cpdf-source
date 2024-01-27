@@ -3625,7 +3625,11 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 
 \section{Extracting images}
 
-Cpdf can extract the raster images to a given location. JPEG and JPEG2000 images are extracted directly. Other images are written as PNGs, processed with either ImageMagick's ``magick'' command, or NetPBM's ``pnmtopng'' program, whichever is installed. JBIG2 image extraction is not yet supported.
+Cpdf can extract the raster images to a given location. JPEG and JPEG2000 and lossless JBIG2 images are extracted directly.
+
+Lossy JBIG2 images are extracted likewise, but an extra \texttt{\_\_<n>} is added, giving the number of the JBIG2Global stream for this image, which is extracted as \texttt{<n>.jbig2global}. You may reconstruct the individual images with, for example, \texttt{jbig2dec}.
+
+Other images are written as PNGs, processed with either ImageMagick's ``magick'' command, or NetPBM's ``pnmtopng'' program, whichever is installed.
 
   \begin{framed}
   \noindent\small\verb@cpdf -extract-images in.pdf [<range>] [-im <path>] [-p2p <path]@
