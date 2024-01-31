@@ -1864,7 +1864,7 @@ When appropriate passwords are not available, the option \texttt{-decrypt-force}
      \noindent\verb!cpdf -squeeze in.pdf [-squeeze-log-to <filename>]!\\
      \noindent\verb!     [-squeeze-no-recompress] [-squeeze-no-pagedata] -o out.pdf!   
    \end{framed}
-  \cpdf\ provides basic facilities for decompressing and compressing PDF streams, and for reprocessing the whole file to `squeeze' it.
+  \cpdf\ provides facilities for decompressing and compressing PDF streams, and for losslessly reprocessing the whole file to `squeeze' it. For lossy recompression of images within a PDF, see Chapter 13.
   \section{Decompressing a Document}
 \index{decompressing}
   To decompress the streams in a PDF file, for instance to manually inspect the
@@ -3620,6 +3620,18 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 \vspace{1.5mm}
 \noindent\small\verb!cpdf -list-images-used[-json] in.pdf [<range>]!
 
+\vspace{1.5mm}
+\noindent\small\verb!cpdf -process-images [-process-images-info] in.pdf [<range>]!\\
+\noindent\small\verb!     [-convert <filename>] [-jbig2enc <filename>]!\\
+\noindent\small\verb!     [-lossless-resample <n> | -lossless-to-jpeg <n>]!\\
+\noindent\small\verb!     [-jpeg-to-jpeg <n>] [-1bpp-method <method>]!\\
+\noindent\small\verb!     [-jbig2-lossy-method <method>]!\\
+\noindent\small\verb!     [-pixel-threshold <n>] [-length-threshold <n>]!\\
+\noindent\small\verb!     [-percentage-threshold <n>] [-dpi-threshold <n>]!\\
+\noindent\small\verb!     [-resample-interpolate]!\\
+\noindent\small\verb!     [-dpi-target <n>]!\\
+\noindent\small\verb!     -o out.pdf!
+
 
 \end{framed}
 
@@ -3732,7 +3744,77 @@ The information is also available in JSON format:
 
 \section{Removing an Image}
 
-To remove a particular image, find its name using \texttt{-image-resolution} with a sufficiently high resolution (so as to list all images), and then apply the \texttt{-draft} and \texttt{-draft-remove-only} operations from Section \ref{draft}. 
+To remove a particular image, find its name using \texttt{-list-images} then apply the \texttt{-draft} and \texttt{-draft-remove-only} operations from Section \ref{draft}. 
+
+\section{Processing Images}
+
+Cpdf can process images within a PDF, replacing the original with the processed version. It does this by saving out the image data, putting it through an external process, and then reading it back in and re-inserting it. This is typically used to reduce the size of image data, and thus the size of the PDF.
+
+There are a number of option to deal with lossy (e.g JPEG) and lossless images, one or more of which is specified. For example, the \texttt{-jpeg-to-jpeg} option processes existing JPEG images to a given JPEG quality level:
+
+  \begin{framed}
+  \noindent\small\verb!cpdf -process-images -jpeg-to-jpeg 65 in.pdf -o out.pdf!
+  \end{framed}
+
+\noindent The \texttt{convert} executable (part of ImageMagick) is required. If not installed under a standard name, use \texttt{-convert} to supply it. If we specify \texttt{-process-images-info} too, we can see the work being done:
+
+  \begin{framed}
+  \noindent\small\verb!cpdf -process-images -process-images-info -jpeg-to-jpeg 65!\\
+  \noindent\small\verb!     -convert /opt/homebrew/bin/convert in.pdf -o out.pdf!
+  \end{framed}
+
+\noindent Here is sample output:
+
+\begin{framed}
+{\small\begin{verbatim}
+(20/344) Object 265 (JPEG)... JPEG to JPEG 40798 -> 33463 (82%)
+(38/344) Object 278 (JPEG)... JPEG to JPEG 4382 -> 3482 (79%)
+(87/344) Object 266 (JPEG)... JPEG to JPEG 37227 -> 30199 (81%)
+(243/344) Object 209 (JPEG)... JPEG to JPEG 14651 -> 13822 (94%)
+(246/344) Object 270 (JPEG)... JPEG to JPEG 202568 -> 191175 (94%)
+(281/344) Object 280 (JPEG)... JPEG to JPEG 12255 -> 9825 (80%)
+(312/344) Object 279 (JPEG)... JPEG to JPEG 4117 -> 3157 (76%)
+\end{verbatim}}
+  \end{framed}
+
+\noindent Similar output appears for the other methods, when they are specified. You can see the counter of work being done, and the result for each image chosen for processing.
+
+The \texttt{-lossless-to-jpeg} option converts lossless images within PDFs to JPEG too, at the given quality level. It may be specified in addition to \texttt{-jpeg-to-jpeg}:
+
+  \begin{framed}
+  \noindent\small\verb!cpdf -process-images -jpeg-to-jpeg 65 -lossless-to-jpeg 80!\\
+  \noindent\small\verb!     in.pdf -o out.pdf!
+  \end{framed}
+
+\noindent Images are only processed if they meet certain thresholds. Changes to the default thresholds may be specified:
+
+\bigskip
+\begin{tabular}{lp{6cm}l}
+Option & Effect & Default value\\\hline
+{\small\texttt{-pixel-threshold}} & Images below this number of pixels not processed & 25 \\
+{\small\texttt{-length-threshold}} & Images with less than this number of bytes of data not processed & 100 \\
+{\small\texttt{-percentage-threshold}} & Results not below this percentage of original size discarded & 99 \\
+{\small\texttt{-dpi-threshold}} & Only images above this threshold at all use points processed & (no dpi check)\\\hline
+\end{tabular}
+\bigskip
+
+\noindent Instead of compressing lossless images with lossy JPEG compression, we can resample losslessly:
+
+  \begin{framed}
+  \noindent\small\verb!cpdf -process-images -lossless-resample 80 in.pdf -o out.pdf!
+  \end{framed}
+
+%FIXME check what 80 means here
+\noindent This will resample losslessly-compressed images to contain 80 percent of the original pixels. By default, there will be no interpolation. To use interpolation, which may result in slightly larger data, add \texttt{-resample-interpolate}. To use a DPI target instead, use \texttt{-lossless-resample-dpi} instead:
+
+  \begin{framed}
+  \noindent\small\verb!cpdf -process-images -lossless-resample-dpi 300 in.pdf -o out.pdf!
+  \end{framed}
+
+\noindent The methods so far introduced do not operate on 1 bit per pixel data. Different compression mechanisms are typically in use, and we need a different approach.
+
+%\noindent\small\verb!     [-jbig2enc <filename>]!\\
+%\noindent\small\verb!     [-1bpp-method <method>] [-jbig2-lossy-method <method>]!\\
 
 \begin{cpdflib}
 \clearpage
@@ -4320,6 +4402,20 @@ For PNG files, the file must be 24bit RGB with no transparency and no interlacin
 
 \section{Make a PDF from one or more JBIG2 images}
 
+Cpdf can build multi-pages files from one or more PDF-appropriate JBIG2 fragments, prepared by the \texttt{jbig2enc} program. In lossless mode, there is one JBIG2 fragment for each page:
+
+\begin{framed}
+ \noindent\small\verb?cpdf -jbig2 1.jbig2 -jbig2 2.jbig2 -jbig2 3.jbig2 -o out.pdf?
+\end{framed}
+
+\noindent This produces a PDF of three pages. In lossy mode, a JBIG2Globals stream can be added, which contains shared data for several pages:
+
+\begin{framed}
+ \noindent\small\verb?cpdf -jbig2-global 0.jbig2globals?\\
+ \noindent\small\verb!     -jbig2 1.jbig2 -jbig2 2.jbig2 -jbig2 3.jbig2 -o out.pdf!
+\end{framed}
+
+\noindent The \texttt{-jbig2-global} option may be used to change the JBIG2Globals stream in use. The \texttt{-jbig2-global-clear} option may be used to cease use of a globals stream and return to lossless mode.
 
 \begin{cpdflib}
 \clearpage
