@@ -3623,13 +3623,12 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 \vspace{1.5mm}
 \noindent\small\verb!cpdf -process-images [-process-images-info] in.pdf [<range>]!\\
 \noindent\small\verb!     [-convert <filename>] [-jbig2enc <filename>]!\\
-\noindent\small\verb!     [-lossless-resample <n> | -lossless-to-jpeg <n>]!\\
+\noindent\small\verb!     [-lossless-resample[-dpi] <n> | -lossless-to-jpeg <n>]!\\
 \noindent\small\verb!     [-jpeg-to-jpeg <n>] [-1bpp-method <method>]!\\
-\noindent\small\verb!     [-jbig2-lossy-method <method>]!\\
+\noindent\small\verb!     [-jbig2-lossy-threshold <n>]!\\
 \noindent\small\verb!     [-pixel-threshold <n>] [-length-threshold <n>]!\\
 \noindent\small\verb!     [-percentage-threshold <n>] [-dpi-threshold <n>]!\\
 \noindent\small\verb!     [-resample-interpolate]!\\
-\noindent\small\verb!     [-dpi-target <n>]!\\
 \noindent\small\verb!     -o out.pdf!
 
 
@@ -3794,7 +3793,7 @@ Option & Effect & Default value\\\hline
 {\small\texttt{-pixel-threshold}} & Images below this number of pixels not processed & 25 \\
 {\small\texttt{-length-threshold}} & Images with less than this number of bytes of data not processed & 100 \\
 {\small\texttt{-percentage-threshold}} & Results not below this percentage of original size discarded & 99 \\
-{\small\texttt{-dpi-threshold}} & Only images above this threshold at all use points processed & (no dpi check)\\\hline
+{\small\texttt{-dpi-threshold}} & Only images above this threshold at all use points processed & (no dpi check)
 \end{tabular}
 \bigskip
 
@@ -3811,10 +3810,24 @@ Option & Effect & Default value\\\hline
   \noindent\small\verb!cpdf -process-images -lossless-resample-dpi 300 in.pdf -o out.pdf!
   \end{framed}
 
-\noindent The methods so far introduced do not operate on 1 bit per pixel data. Different compression mechanisms are typically in use, and we need a different approach.
+\noindent The methods so far introduced do not operate on 1 bit per pixel data. Different compression mechanisms are typically in use, and we need a different approach. The \texttt{-1bpp-method} option specifies what to do with losslessly compressed 1 bit-per-pixel images.
 
-%\noindent\small\verb!     [-jbig2enc <filename>]!\\
-%\noindent\small\verb!     [-1bpp-method <method>] [-jbig2-lossy-method <method>]!\\
+\bigskip
+\begin{tabular}{lp{10cm}l}
+Method & Effect\\\hline
+{\small\texttt{JBIG2}} & Lossless JBIG2 \\
+{\small\texttt{JBIG2Lossy}} & Lossy JBIG2, sharing JBIG2Globals data amongst all images.
+\end{tabular}
+\bigskip
+
+\noindent These options require the \texttt{jbig2enc} program, whose location may be specified with \texttt{-jbig2enc}. For lossy JBIG2, the threshold for similarity of data may be set with \texttt{-jbig2-lossy-threshold}. For example:
+
+  \begin{framed}
+  \noindent\small\verb!cpdf -process-images -jbig2enc /usr/bin/jbig2enc -1bpp-method JBIG2Lossy!\\
+  \noindent\small\verb!     -jbig2-lossy-threshold 75 in.pdf -o out.pdf!
+  \end{framed}
+
+\noindent It is not currently possible to reprocess lossless JBIG2 into lossy JBIG2, nor is it possible to recompress into CCITT.
 
 \begin{cpdflib}
 \clearpage
