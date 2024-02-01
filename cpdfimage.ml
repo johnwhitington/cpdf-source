@@ -660,6 +660,12 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolat
   remove out3*)
   with _ -> () (* FIXME Remove *)
 
+let lossless_resample_target_dpi objnum pdf ~pixel_threshold ~length_threshold ~target_dpi_info ~interpolate ~path_to_convert s dict reference =
+  let factor =
+    1
+  in
+    lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolate ~path_to_convert s dict reference
+
 let recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_jbig2enc pdf s dict reference =
   let old = !reference in
   let restore () = reference := old in
@@ -825,6 +831,7 @@ let process
   begin match onebppmethod with Some "JBIG2Lossy" -> preprocess_jbig2_lossy ~path_to_jbig2enc ~jbig2_lossy_threshold ~dpi_threshold ~length_threshold ~pixel_threshold inrange highdpi pdf | _ -> () end;
   let nobjects = Pdf.objcard pdf in
   let ndone = ref 0 in
+  let target_dpi_info = if factor < 0 then [] else [] in
   let process_obj objnum s =
     match s with
     | Pdf.Stream ({contents = dict, _} as reference) ->
@@ -868,7 +875,10 @@ let process
                     if factor < 101 then
                       begin
                         if !debug_image_processing then Printf.printf "(%i/%i) object %i (lossless)... %!" !ndone nobjects objnum;
-                        lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolate ~path_to_convert s dict reference
+                        if factor < 0 then
+                          lossless_resample_target_dpi objnum pdf ~pixel_threshold ~length_threshold ~target_dpi_info ~interpolate ~path_to_convert s dict reference
+                        else
+                          lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolate ~path_to_convert s dict reference
                       end
                   end
             | None -> ()
