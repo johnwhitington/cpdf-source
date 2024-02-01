@@ -530,14 +530,14 @@ type args =
    mutable toc_bookmark : bool;
    mutable idir_only_pdfs : bool;
    mutable no_warn_rotate : bool;
-   mutable jpegquality : int;
-   mutable jpegqualitylossless : int;
+   mutable jpegquality : float;
+   mutable jpegqualitylossless : float;
    mutable onebppmethod : string;
    mutable pixel_threshold : int;
    mutable length_threshold : int;
-   mutable percentage_threshold : int;
-   mutable dpi_threshold : int;
-   mutable resample_factor : int;
+   mutable percentage_threshold : float;
+   mutable dpi_threshold : float;
+   mutable resample_factor : float;
    mutable resample_interpolate : bool;
    mutable jbig2_lossy_threshold : float;
    mutable extract_stream_decompress : bool}
@@ -665,14 +665,14 @@ let args =
    toc_bookmark = true;
    idir_only_pdfs = false;
    no_warn_rotate = false;
-   jpegquality = 100;
-   jpegqualitylossless = 101;
+   jpegquality = 100.;
+   jpegqualitylossless = 101.;
    onebppmethod = "";
    pixel_threshold = 25;
    length_threshold = 100;
-   percentage_threshold = 99;
-   dpi_threshold = 0;
-   resample_factor = 101;
+   percentage_threshold = 99.;
+   dpi_threshold = 0.;
+   resample_factor = 101.;
    resample_interpolate = false;
    jbig2_lossy_threshold = 0.85;
    extract_stream_decompress = false}
@@ -786,14 +786,14 @@ let reset_arguments () =
   args.toc_title <- "Table of Contents";
   args.toc_bookmark <- true;
   args.idir_only_pdfs <- false;
-  args.jpegquality <- 100;
-  args.jpegqualitylossless <- 101;
+  args.jpegquality <- 100.;
+  args.jpegqualitylossless <- 101.;
   args.onebppmethod <- "";
   args.pixel_threshold <- 25;
   args.length_threshold <- 100;
-  args.percentage_threshold <- 99;
-  args.dpi_threshold <- 0;
-  args.resample_factor <- 101;
+  args.percentage_threshold <- 99.;
+  args.dpi_threshold <- 0.;
+  args.resample_factor <- 101.;
   args.resample_interpolate <- false;
   args.jbig2_lossy_threshold <- 0.85;
   args.extract_stream_decompress <- false;
@@ -1840,7 +1840,7 @@ let setlosslessresample i =
   args.resample_factor <- i
 
 let setlosslessresampledpi i =
-  args.resample_factor <- -i
+  args.resample_factor <- -.i
 
 let setresampleinterpolate () =
   args.resample_interpolate <- true
@@ -2651,10 +2651,10 @@ and specs =
      Arg.String setjbig2encpath,
      " Path to jbig2enc executable");
    ("-jpeg-to-jpeg",
-     Arg.Int setjpegquality,
+     Arg.Float setjpegquality,
      " Set JPEG quality for existing JPEGs");
    ("-lossless-to-jpeg",
-     Arg.Int setjpegqualitylossless,
+     Arg.Float setjpegqualitylossless,
      " Set JPEG quality for existing lossless images");
    ("-1bpp-method",
      Arg.String set1bppmethod,
@@ -2669,16 +2669,16 @@ and specs =
      Arg.Int setlengththreshold,
      " Only process images with data longer than this");
    ("-percentage-threshold",
-     Arg.Int setpercentagethreshold,
+     Arg.Float setpercentagethreshold,
      " Only substitute lossy image when smaller than this");
    ("-dpi-threshold",
-     Arg.Int setdpithreshold,
+     Arg.Float setdpithreshold,
      " Only process image when always higher than this dpi");
    ("-lossless-resample",
-     Arg.Int setlosslessresample,
+     Arg.Float setlosslessresample,
      " Resample lossless images to given part of original");
    ("-lossless-resample-dpi",
-     Arg.Int setlosslessresampledpi,
+     Arg.Float setlosslessresampledpi,
      " Resample lossless images to given DPI");
    ("-resample-interpolate",
      Arg.Unit setresampleinterpolate,

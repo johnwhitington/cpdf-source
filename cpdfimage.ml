@@ -505,7 +505,7 @@ let jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~q
     close_out fh;
     let retcode =
       let command = 
-        (Filename.quote_command path_to_convert [out; "-quality"; string_of_int q ^ "%"; out2])
+        (Filename.quote_command path_to_convert [out; "-quality"; string_of_float q ^ "%"; out2]) (*FIXME check percentage as float here *)
       in
         (*Printf.printf "%S\n" command;*) Sys.command command
     in
@@ -513,7 +513,7 @@ let jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~q
       begin
         let result = open_in_bin out2 in
         let newsize = in_channel_length result in
-        let perc_ok = float newsize /. float size < float_of_int percentage_threshold /. 100. in
+        let perc_ok = float newsize /. float size < percentage_threshold /. 100. in
         if newsize < size && perc_ok then
           begin
             if !debug_image_processing then Printf.printf "JPEG to JPEG %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
@@ -589,7 +589,7 @@ let lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshol
     let command = 
       (Filename.quote_command path_to_convert
         ((if components = 4 then ["-depth"; "8"; "-size"; string_of_int w ^ "x" ^ string_of_int h] else []) @
-        [out; "-quality"; string_of_int qlossless ^ "%"] @
+        [out; "-quality"; string_of_float qlossless ^ "%"] @
         (if components = 1 then ["-colorspace"; "Gray"] else if components = 4 then ["-colorspace"; "CMYK"] else []) @
         [out2]))
     in
@@ -599,7 +599,7 @@ let lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshol
     begin
       let result = open_in_bin out2 in
       let newsize = in_channel_length result in
-      let perc_ok = float newsize /. float size < float_of_int percentage_threshold /. 100. in
+      let perc_ok = float newsize /. float size < percentage_threshold /. 100. in
       if newsize < size && perc_ok then
         begin
           if !debug_image_processing then Printf.printf "lossless to JPEG %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
@@ -629,7 +629,7 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolat
       Filename.quote_command path_to_convert
         ((if components = 4 then ["-depth"; "8"; "-size"; string_of_int w ^ "x" ^ string_of_int h] else []) @
         (if components = 1 then ["-define"; "png:color-type=0"; "-colorspace"; "Gray"] else if components = 3 then ["-define"; "-png:color-type=2"; "-colorspace"; "RGB"] else if components = 4 then ["-colorspace"; "CMYK"] else []) @
-        [if interpolate && components > -2 then "-resize" else "-sample"; string_of_int factor ^ "%"; out; out2])
+        [if interpolate && components > -2 then "-resize" else "-sample"; string_of_float factor ^ "%"; out; out2])
     in
       (*Printf.printf "%S\n" command;*)
       Sys.command command
@@ -662,11 +662,9 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolat
 
 let lossless_resample_target_dpi objnum pdf ~pixel_threshold ~length_threshold ~factor ~target_dpi_info ~interpolate ~path_to_convert s dict reference =
   Printf.printf "lossless_resample_target_dpi\n";
-  let real_factor =
-    int_of_float (float_of_int factor /. Hashtbl.find target_dpi_info objnum *. 100.)
-  in
-    Printf.printf "real_factor = %i\n" real_factor;
-    if real_factor < 100 then
+  let real_factor = factor /. Hashtbl.find target_dpi_info objnum *. 100.  in
+    Printf.printf "real_factor = %f\n" real_factor;
+    if real_factor < 100. then
       lossless_resample pdf ~pixel_threshold ~length_threshold ~factor:real_factor ~interpolate ~path_to_convert s dict reference
 
 let recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_jbig2enc pdf s dict reference =
@@ -727,7 +725,7 @@ let preprocess_jbig2_lossy ~path_to_jbig2enc ~jbig2_lossy_threshold ~length_thre
    | Pdf.Stream ({contents = dict, _} as reference) ->
        let old = !reference in
        let restore () = reference := old in
-       if Hashtbl.mem inrange objnum && (dpi_threshold = 0 || Hashtbl.mem highdpi objnum) then begin match
+       if Hashtbl.mem inrange objnum && (dpi_threshold = 0. || Hashtbl.mem highdpi objnum) then begin match
          Pdf.lookup_direct pdf "/Subtype" dict,
          Pdf.lookup_direct pdf "/BitsPerComponent" dict,
          Pdf.lookup_direct pdf "/ImageMask" dict
@@ -808,7 +806,7 @@ let preprocess_jbig2_lossy ~path_to_jbig2enc ~jbig2_lossy_threshold ~length_thre
    remove (jbig2out ^ ".sym")
 
 let process
-  ?q ?qlossless ?onebppmethod ~jbig2_lossy_threshold ~length_threshold ~percentage_threshold ~pixel_threshold ~dpi_threshold
+  ~q ~qlossless ~onebppmethod ~jbig2_lossy_threshold ~length_threshold ~percentage_threshold ~pixel_threshold ~dpi_threshold
  ~factor ~interpolate ~path_to_jbig2enc ~path_to_convert range pdf
 =
   let inrange =
@@ -818,14 +816,14 @@ let process
   in
   let highdpi, target_dpi_info =
     let objnums, dpi =
-      if dpi_threshold = 0 && factor > 0 then ([], []) else
+      if dpi_threshold = 0. && factor > 0. then ([], []) else
         let results = image_resolution pdf range max_float in
           (*iter (fun (_, _, _, _, wdpi, hdpi, objnum) -> Printf.printf "From image_resolution %f %f %i\n" wdpi hdpi objnum) results;*)
           let cmp (_, _, _, _, _, _, a) (_, _, _, _, _, _, b) = compare a b in
           let sets = collate cmp (sort cmp results) in
           let heads = map hd (map (sort (fun (_, _, _, _, a, b, _) (_, _, _, _, c, d, _) -> compare (fmin a b) (fmin c d))) sets) in
           (*iter (fun (_, _, _, _, wdpi, hdpi, objnum) -> Printf.printf "Lowest resolution exemplar %f %f %i\n" wdpi hdpi objnum) heads;*)
-          let needed = keep (fun (_, _, _, _, wdpi, hdpi, objnum) -> fmin wdpi hdpi > float_of_int dpi_threshold) heads in
+          let needed = keep (fun (_, _, _, _, wdpi, hdpi, objnum) -> fmin wdpi hdpi > dpi_threshold) heads in
           (*iter (fun (_, _, _, _, wdpi, hdpi, objnum) -> Printf.printf "keep %f %f %i\n" wdpi hdpi objnum) needed;*)
             map (fun (_, _, _, _, _, _, objnum) -> objnum) needed,
             let r =
@@ -835,33 +833,29 @@ let process
     in
       hashset_of_list objnums, hashtable_of_dictionary dpi
   in
-  begin match onebppmethod with Some "JBIG2Lossy" -> preprocess_jbig2_lossy ~path_to_jbig2enc ~jbig2_lossy_threshold ~dpi_threshold ~length_threshold ~pixel_threshold inrange highdpi pdf | _ -> () end;
+  begin match onebppmethod with "JBIG2Lossy" -> preprocess_jbig2_lossy ~path_to_jbig2enc ~jbig2_lossy_threshold ~dpi_threshold ~length_threshold ~pixel_threshold inrange highdpi pdf | _ -> () end;
   let nobjects = Pdf.objcard pdf in
   let ndone = ref 0 in
   let process_obj objnum s =
     match s with
     | Pdf.Stream ({contents = dict, _} as reference) ->
         ndone += 1;
-        if Hashtbl.mem inrange objnum && (dpi_threshold = 0 || Hashtbl.mem highdpi objnum) then begin match
+        if Hashtbl.mem inrange objnum && (dpi_threshold = 0. || Hashtbl.mem highdpi objnum) then begin match
           Pdf.lookup_direct pdf "/Subtype" dict,
           Pdf.lookup_direct pdf "/Filter" dict,
           Pdf.lookup_direct pdf "/BitsPerComponent" dict,
           Pdf.lookup_direct pdf "/ImageMask" dict
         with
         | Some (Pdf.Name "/Image"), Some (Pdf.Name "/DCTDecode" | Pdf.Array [Pdf.Name "/DCTDecode"]), _, _ ->
-            begin match q with
-            | Some q ->
-                if q < 100 then
-                  begin
-                    if !debug_image_processing then Printf.printf "(%i/%i) Object %i (JPEG)... %!" !ndone nobjects objnum;
-                    jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~q ~path_to_convert s dict reference
-                  end
-            | None -> ()
-            end
+            if q < 100. then
+              begin
+                if !debug_image_processing then Printf.printf "(%i/%i) Object %i (JPEG)... %!" !ndone nobjects objnum;
+                jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~q ~path_to_convert s dict reference
+              end
         | Some (Pdf.Name "/Image"), _, Some (Pdf.Integer 1), _
         | Some (Pdf.Name "/Image"), _, _, Some (Pdf.Boolean true) ->
             begin match onebppmethod with
-            | Some "JBIG2" ->
+            | "JBIG2" ->
                 begin
                   if !debug_image_processing then Printf.printf "(%i/%i) object %i (1bpp)... %!" !ndone nobjects objnum;
                   recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_jbig2enc pdf s dict reference
@@ -869,27 +863,23 @@ let process
             | _ -> ()
             end
         | Some (Pdf.Name "/Image"), _, _, _ ->
-            Printf.printf "Lossless resample: factor = %i\n" factor;
-            begin match qlossless with
-            | Some qlossless ->
-                if qlossless < 101 then
+            Printf.printf "Lossless resample: factor = %f\n" factor;
+            if qlossless < 101. then
+              begin
+                if !debug_image_processing then Printf.printf "(%i/%i) object %i (lossless)... %!" !ndone nobjects objnum;
+                lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~qlossless ~path_to_convert s dict reference
+              end
+            else
+              begin
+                if factor < 101. then
                   begin
                     if !debug_image_processing then Printf.printf "(%i/%i) object %i (lossless)... %!" !ndone nobjects objnum;
-                    lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~qlossless ~path_to_convert s dict reference
+                    if factor < 0. then
+                      lossless_resample_target_dpi objnum pdf ~pixel_threshold ~length_threshold ~factor:~-.factor ~target_dpi_info ~interpolate ~path_to_convert s dict reference
+                    else
+                      lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolate ~path_to_convert s dict reference
                   end
-                else
-                  begin
-                    if factor < 101 then
-                      begin
-                        if !debug_image_processing then Printf.printf "(%i/%i) object %i (lossless)... %!" !ndone nobjects objnum;
-                        if factor < 0 then
-                          lossless_resample_target_dpi objnum pdf ~pixel_threshold ~length_threshold ~factor:~-factor ~target_dpi_info ~interpolate ~path_to_convert s dict reference
-                        else
-                          lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolate ~path_to_convert s dict reference
-                      end
-                  end
-            | None -> ()
-            end
+              end
         | _ -> () (* not an image *)
         end
     | _ -> ndone += 1 (* not a stream *)
