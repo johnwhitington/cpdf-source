@@ -654,16 +654,15 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolat
           if !debug_image_processing then Printf.printf "no size reduction\n%!"
         end;
         close_in result
-    end(*;
-  remove out;
-  remove out2
-  remove out3*)
+    end;
+    remove out;
+    remove out2
   with _ -> () (* FIXME Remove *)
 
 let lossless_resample_target_dpi objnum pdf ~pixel_threshold ~length_threshold ~factor ~target_dpi_info ~interpolate ~path_to_convert s dict reference =
-  Printf.printf "lossless_resample_target_dpi\n";
+  (*Printf.printf "lossless_resample_target_dpi\n";*)
   let real_factor = factor /. Hashtbl.find target_dpi_info objnum *. 100.  in
-    Printf.printf "real_factor = %f\n" real_factor;
+    (*Printf.printf "real_factor = %f\n" real_factor;*)
     if real_factor < 100. then
       lossless_resample pdf ~pixel_threshold ~length_threshold ~factor:real_factor ~interpolate ~path_to_convert s dict reference
 
@@ -826,10 +825,8 @@ let process
           let needed = keep (fun (_, _, _, _, wdpi, hdpi, objnum) -> fmin wdpi hdpi > dpi_threshold) heads in
           (*iter (fun (_, _, _, _, wdpi, hdpi, objnum) -> Printf.printf "keep %f %f %i\n" wdpi hdpi objnum) needed;*)
             map (fun (_, _, _, _, _, _, objnum) -> objnum) needed,
-            let r =
             map (fun (_, _, _, _, wdpi, hdpi, objnum) -> (objnum, fmin wdpi hdpi)) heads
-            in
-              iter (fun (x, d) -> Printf.printf "obj %i at %f dpi\n" x d) r; r
+            (*iter (fun (x, d) -> Printf.printf "obj %i at %f dpi\n" x d) r; r*)
     in
       hashset_of_list objnums, hashtable_of_dictionary dpi
   in
@@ -863,7 +860,6 @@ let process
             | _ -> ()
             end
         | Some (Pdf.Name "/Image"), _, _, _ ->
-            Printf.printf "Lossless resample: factor = %f\n" factor;
             if qlossless < 101. then
               begin
                 if !debug_image_processing then Printf.printf "(%i/%i) object %i (lossless)... %!" !ndone nobjects objnum;
