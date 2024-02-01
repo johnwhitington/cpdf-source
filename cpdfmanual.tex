@@ -61,7 +61,7 @@ Command Line Tools}
 \vspace{12mm}
 
 {\Huge User Manual}\\
-Version 2.6 (July 2023)
+Version 2.7 (February 2024)
 
 \vspace{25mm}
 
@@ -110,7 +110,7 @@ These examples demonstrate just a few of the facilities provided by the Coherent
                   
 \noindent Select the even pages (2, 4, 6...) from \texttt{in.pdf} and write those pages to \texttt{out.pdf}.
 
-\begin{framed}\noindent\texttt{cpdf -merge in.pdf in2.pdf AND -add-text "Copyright 2023"\\\phantom{\ \ \ \ } -o out.pdf}\end{framed}
+\begin{framed}\noindent\texttt{cpdf -merge in.pdf in2.pdf AND -add-text "Copyright 2024"\\\phantom{\ \ \ \ } -o out.pdf}\end{framed}
 
 \noindent Using \texttt{AND} to perform several operations in order, here merging two files together and adding a copyright stamp to every page.
 
@@ -131,6 +131,14 @@ These examples demonstrate just a few of the facilities provided by the Coherent
 \begin{framed}\noindent\texttt{cpdf -split-bookmarks 0 in.pdf -utf8 -o @B.pdf}\end{framed}
 
 \noindent Split \texttt{in.pdf} on bookmark boundaries, writing each to a file whose name is the bookmark label.
+
+\begin{framed}\noindent\texttt{cpdf -split-max 1Mb in.pdf -o \%\%\%.pdf}\end{framed}
+
+\noindent Split \texttt{in.pdf} into files of 1Mb or less
+
+\begin{framed}\noindent\texttt{cpdf -spray in.pdf -o a.pdf -o b.pdf -o c.pdf}\end{framed}
+
+\noindent Split \texttt{in.pdf}, writing pages 1,4,7... to \texttt{a.pdf}, 2,5,8... to \texttt{b.pdf} and 3,6,9... to \texttt{c.pdf}.
 
 \section*{\hyperref[chap:3]{Chapter 3: Pages}}
 
@@ -191,6 +199,10 @@ These examples demonstrate just a few of the facilities provided by the Coherent
 
 \noindent Add bookmarks in the same form from a prepared file \texttt{bookmarks.txt} to \texttt{in.pdf}, writing to \texttt{out.pdf}. JSON alternatives are also available.
 
+\begin{framed}\noindent\texttt{cpdf -table-of-contents in.pdf -o out.pdf}\end{framed}
+
+\noindent Typeset a table of contents from existing bookmarks and prepend to the document.
+
 \section*{\hyperref[chap:7]{Chapter 7: Presentations}}
 
 \begin{framed}\noindent\texttt{cpdf -presentation in.pdf 2-end -trans Split -duration 10\\\phantom{\ \ \ \ } -o out.pdf}\end{framed}
@@ -217,6 +229,10 @@ These examples demonstrate just a few of the facilities provided by the Coherent
 
 \noindent Add extra blank pages after pages one, three and four of a document.
 
+\begin{framed}\noindent\texttt{cpdf -chop "2 2" in.pdf -o out.pdf}\end{framed}
+
+\noindent Chop each page into four quarters, including each in the output.
+
 \section*{\hyperref[chap:10]{Chapter 10: Annotations}}
 
 \begin{framed}\noindent\texttt{cpdf -list-annotations-json in.pdf > out.json}\end{framed}
@@ -226,6 +242,10 @@ These examples demonstrate just a few of the facilities provided by the Coherent
 \begin{framed}\noindent\texttt{cpdf -set-annotations-json out.json in.pdf -o out.pdf}\end{framed}
 
 \noindent Add the annotations from a JSON annotations file to \texttt{in.pdf}, writing to \texttt{out.pdf}.
+
+\begin{framed}\noindent\texttt{cpdf -remove-annotations in.pdf -o out.pdf}\end{framed}
+
+\noindent Remove the annotations from \texttt{in.pdf}, writing to \texttt{out.pdf}.
 
 \section*{\hyperref[chap:11]{Chapter 11: Document Information and Metadata}}
 
@@ -253,6 +273,14 @@ These examples demonstrate just a few of the facilities provided by the Coherent
 
 \noindent Set the document \texttt{in.pdf} to open in PDF Viewer in full screen mode, putting the result in \texttt{out.pdf}.
 
+\begin{framed}\noindent\texttt{cpdf -print-page-labels-json in.pdf}\end{framed}
+
+\noindent Show, in JSON format, the page labels in \texttt{in.pdf}.
+
+\begin{framed}\noindent\texttt{cpdf -composition in.pdf}\end{framed}
+
+\noindent Show how much data in \texttt{in.pdf} is used for images, fonts etc.
+
 \section*{\hyperref[chap:12]{Chapter 12: File Attachments}}
 
 \begin{framed}\noindent\texttt{cpdf -attach-file sheet.xls in.pdf -o out.pdf}\end{framed}
@@ -277,6 +305,9 @@ These examples demonstrate just a few of the facilities provided by the Coherent
 
 \noindent Extract images from \texttt{in.pdf} to directory \texttt{output} (with the help of imagemagick).
 
+\begin{framed}\noindent\texttt{cpdf -process-images -jpeg-to-jpeg 65 in.pdf -o out.pdf}\end{framed}
+
+\noindent Process JPEG images in \texttt{in.pdf} to 65\% quality, writing the output to \texttt{out.pdf}.
 
 \section*{\hyperref[chap:14]{Chapter 14: Fonts}}
 
@@ -284,13 +315,13 @@ These examples demonstrate just a few of the facilities provided by the Coherent
 
 \noindent List the fonts in use, and what pages they are used on.
 
-\begin{framed}\noindent\texttt{cpdf -list-missing-fonts in.pdf}\end{framed}
+\begin{framed}\noindent\texttt{cpdf -missing-fonts in.pdf}\end{framed}
 
 \noindent List missing fonts.
 
 \section*{\hyperref[chap:15]{Chapter 15: PDF and JSON}}
 
-\begin{framed}\noindent\texttt{cpdf in.pdf -output-json -output-json-parse-content-streams\\\phantom{\ \ \ \ } -o out.json}\end{framed}
+\begin{framed}\noindent\texttt{cpdf in.pdf -output-json -utf8 -output-json-parse-content-streams\\\phantom{\ \ \ \ } -o out.json}\end{framed}
 
 \noindent Write the PDF in JSON format to the given file, parsing its content streams into individual JSON objects too.
 
