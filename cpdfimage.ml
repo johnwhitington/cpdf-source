@@ -813,9 +813,9 @@ let process
     | `List l -> hashset_of_list (map (function `Assoc (("Object", `Int i)::_) -> i | _ -> assert false) l)
     | _ -> assert false
   in
-  let highdpi =
-    let objnums =
-      if dpi_threshold = 0 then [] else
+  let highdpi, target_dpi_info =
+    let objnums, dpi =
+      if dpi_threshold = 0 && factor > 0 then ([], []) else
         let results = image_resolution pdf range max_float in
           (*iter (fun (_, _, _, _, wdpi, hdpi, objnum) -> Printf.printf "From image_resolution %f %f %i\n" wdpi hdpi objnum) results;*)
           let cmp (_, _, _, _, _, _, a) (_, _, _, _, _, _, b) = compare a b in
@@ -824,14 +824,17 @@ let process
           (*iter (fun (_, _, _, _, wdpi, hdpi, objnum) -> Printf.printf "Lowest resolution exemplar %f %f %i\n" wdpi hdpi objnum) heads;*)
           let needed = keep (fun (_, _, _, _, wdpi, hdpi, objnum) -> fmin wdpi hdpi > float_of_int dpi_threshold) heads in
           (*iter (fun (_, _, _, _, wdpi, hdpi, objnum) -> Printf.printf "keep %f %f %i\n" wdpi hdpi objnum) needed;*)
-            map (fun (_, _, _, _, _, _, objnum) -> objnum) needed
+            map (fun (_, _, _, _, _, _, objnum) -> objnum) needed,
+let r =
+            map (fun (_, _, _, _, wdpi, hdpi, objnum) -> (objnum, fmin wdpi hdpi)) heads
+       in
+         iter (fun (x, d) -> Printf.printf "obj %i at %f dpi\n" x d) r; r
     in
-      hashset_of_list objnums
+      hashset_of_list objnums, hashset_of_list dpi
   in
   begin match onebppmethod with Some "JBIG2Lossy" -> preprocess_jbig2_lossy ~path_to_jbig2enc ~jbig2_lossy_threshold ~dpi_threshold ~length_threshold ~pixel_threshold inrange highdpi pdf | _ -> () end;
   let nobjects = Pdf.objcard pdf in
   let ndone = ref 0 in
-  let target_dpi_info = if factor < 0 then [] else [] in
   let process_obj objnum s =
     match s with
     | Pdf.Stream ({contents = dict, _} as reference) ->

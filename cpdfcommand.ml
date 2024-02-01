@@ -2677,7 +2677,7 @@ and specs =
    ("-lossless-resample",
      Arg.Int setlosslessresample,
      " Resample lossless images to given part of original");
-   ("-lossless-resample",
+   ("-lossless-resample-dpi",
      Arg.Int setlosslessresampledpi,
      " Resample lossless images to given DPI");
    ("-resample-interpolate",
