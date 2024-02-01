@@ -660,11 +660,14 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolat
   remove out3*)
   with _ -> () (* FIXME Remove *)
 
-let lossless_resample_target_dpi objnum pdf ~pixel_threshold ~length_threshold ~target_dpi_info ~interpolate ~path_to_convert s dict reference =
-  let factor =
-    1
+let lossless_resample_target_dpi objnum pdf ~pixel_threshold ~length_threshold ~factor ~target_dpi_info ~interpolate ~path_to_convert s dict reference =
+  Printf.printf "lossless_resample_target_dpi\n";
+  let real_factor =
+    int_of_float (float_of_int factor /. Hashtbl.find target_dpi_info objnum *. 100.)
   in
-    lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolate ~path_to_convert s dict reference
+    Printf.printf "real_factor = %i\n" real_factor;
+    if real_factor < 100 then
+      lossless_resample pdf ~pixel_threshold ~length_threshold ~factor:real_factor ~interpolate ~path_to_convert s dict reference
 
 let recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_jbig2enc pdf s dict reference =
   let old = !reference in
@@ -825,12 +828,12 @@ let process
           let needed = keep (fun (_, _, _, _, wdpi, hdpi, objnum) -> fmin wdpi hdpi > float_of_int dpi_threshold) heads in
           (*iter (fun (_, _, _, _, wdpi, hdpi, objnum) -> Printf.printf "keep %f %f %i\n" wdpi hdpi objnum) needed;*)
             map (fun (_, _, _, _, _, _, objnum) -> objnum) needed,
-let r =
+            let r =
             map (fun (_, _, _, _, wdpi, hdpi, objnum) -> (objnum, fmin wdpi hdpi)) heads
-       in
-         iter (fun (x, d) -> Printf.printf "obj %i at %f dpi\n" x d) r; r
+            in
+              iter (fun (x, d) -> Printf.printf "obj %i at %f dpi\n" x d) r; r
     in
-      hashset_of_list objnums, hashset_of_list dpi
+      hashset_of_list objnums, hashtable_of_dictionary dpi
   in
   begin match onebppmethod with Some "JBIG2Lossy" -> preprocess_jbig2_lossy ~path_to_jbig2enc ~jbig2_lossy_threshold ~dpi_threshold ~length_threshold ~pixel_threshold inrange highdpi pdf | _ -> () end;
   let nobjects = Pdf.objcard pdf in
@@ -866,6 +869,7 @@ let r =
             | _ -> ()
             end
         | Some (Pdf.Name "/Image"), _, _, _ ->
+            Printf.printf "Lossless resample: factor = %i\n" factor;
             begin match qlossless with
             | Some qlossless ->
                 if qlossless < 101 then
@@ -879,7 +883,7 @@ let r =
                       begin
                         if !debug_image_processing then Printf.printf "(%i/%i) object %i (lossless)... %!" !ndone nobjects objnum;
                         if factor < 0 then
-                          lossless_resample_target_dpi objnum pdf ~pixel_threshold ~length_threshold ~target_dpi_info ~interpolate ~path_to_convert s dict reference
+                          lossless_resample_target_dpi objnum pdf ~pixel_threshold ~length_threshold ~factor:~-factor ~target_dpi_info ~interpolate ~path_to_convert s dict reference
                         else
                           lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolate ~path_to_convert s dict reference
                       end
