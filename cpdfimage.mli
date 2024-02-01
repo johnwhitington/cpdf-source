@@ -18,7 +18,7 @@ val images : Pdf.t -> int list -> Cpdfyojson.Safe.t
 val process :
   ?q:int -> ?qlossless:int -> ?onebppmethod:string -> jbig2_lossy_threshold:float ->
   length_threshold:int -> percentage_threshold:int -> pixel_threshold:int ->
-  dpi_threshold:int -> dpi_target:int -> factor:int -> interpolate:bool ->
+  dpi_threshold:int -> factor:int -> interpolate:bool ->
   path_to_jbig2enc:string -> path_to_convert:string -> int list -> Pdf.t -> unit
 
 (**/**)

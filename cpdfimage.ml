@@ -619,7 +619,7 @@ let lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshol
   remove out;
   remove out2
 
-let lossless_resample pdf ~pixel_threshold ~length_threshold ~dpi_target ~factor ~interpolate ~path_to_convert s dict reference =
+let lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolate ~path_to_convert s dict reference =
   match lossless_out pdf ~pixel_threshold ~length_threshold ".png" s dict reference with
   | None -> ()
   | Some (_, _, _, 4, _, _) -> Printf.printf "lossless resampling for CMYK not supported yet\n%!"
@@ -800,7 +800,7 @@ let preprocess_jbig2_lossy ~path_to_jbig2enc ~jbig2_lossy_threshold ~length_thre
 
 let process
   ?q ?qlossless ?onebppmethod ~jbig2_lossy_threshold ~length_threshold ~percentage_threshold ~pixel_threshold ~dpi_threshold
-  ~dpi_target ~factor ~interpolate ~path_to_jbig2enc ~path_to_convert range pdf
+ ~factor ~interpolate ~path_to_jbig2enc ~path_to_convert range pdf
 =
   let inrange =
     match images pdf range with
@@ -868,7 +868,7 @@ let process
                     if factor < 101 then
                       begin
                         if !debug_image_processing then Printf.printf "(%i/%i) object %i (lossless)... %!" !ndone nobjects objnum;
-                        lossless_resample pdf ~pixel_threshold ~length_threshold ~dpi_target ~factor ~interpolate ~path_to_convert s dict reference
+                        lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolate ~path_to_convert s dict reference
                       end
                   end
             | None -> ()
