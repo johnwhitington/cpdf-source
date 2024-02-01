@@ -355,6 +355,10 @@ These examples demonstrate just a few of the facilities provided by the Coherent
 
 \noindent Typeset a text file as PDF on A3 paper with Courier 10 point font.
 
+\begin{framed}\noindent\texttt{cpdf -jpeg pic.jpeg -png pic.png -o out.pdf}\end{framed}
+
+\noindent Make a two-page PDF, the first from a JPEG and the second from a PNG.
+
 \section*{\hyperref[chap:18]{Chapter 18: Drawing on PDFs}}
 
 \begin{framed}
@@ -373,6 +377,13 @@ These examples demonstrate just a few of the facilities provided by the Coherent
 
 \noindent Create a new PDF and draw three lines of text on it.
 
+\begin{framed}
+ \noindent\small\verb!cpdf -create-pdf AND -draw -bt -text "Page 1" -et -newpage!\\
+ \noindent\small\verb!     -bt -text "Page 2" -et -o out.pdf!
+\end{framed}
+
+\noindent Create a new PDF and draw text on one page and then the next.
+
 \section*{\hyperref[chap:misc]{Chapter 19: Miscellaneous}}
 
 \begin{framed}\noindent\texttt{cpdf -blacktext in.pdf -o out.pdf}\end{framed}
@@ -382,6 +393,12 @@ These examples demonstrate just a few of the facilities provided by the Coherent
 \begin{framed}\noindent\texttt{cpdf -thinlines 2pt in.pdf -o out.pdf}\end{framed}
 
 \noindent Make sure all lines in \texttt{in.pdf} are at least 2pts wide, writing to \texttt{out.pdf}.
+
+
+\begin{framed}\noindent\texttt{cpdf -print-dict-entry /URI in.pdf}\end{framed}
+
+\noindent List all URLs in annotation hyperlinks in \texttt{in.pdf}.
+
 % Letter
 \pagestyle{empty}
 \cleardoublepage
@@ -5228,7 +5245,7 @@ This is for editing data within the PDF's internal representation. Use with caut
 \index{dictionary!replace entry}To print a dictionary entry:
 
   \begin{framed}
-  \small\noindent\verb!cpdf -print-dict-entry /URI in.pdf -o out.pdf!
+  \small\noindent\verb!cpdf -print-dict-entry /URI in.pdf!
 
   \vspace{2.5mm}
   \noindent Print all URLs in annotation hyperlinks \texttt{in.pdf}. 
