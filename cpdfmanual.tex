@@ -2752,6 +2752,10 @@ These two operations add content directly to the beginning or end of the page da
     \vspace{1.5mm}
     \small\noindent\verb!cpdf -chop "<x> <y>" [-chop-columns] [-chop-rtl] [-chop-btt]!\\
     \small\noindent\verb!     in.pdf [<range>] -o out.pdf!
+
+    \vspace{1.5mm}
+    \small\noindent\verb!cpdf [-chop-h <y> | -chop-v <x>] [-chop-columns]!\\
+    \small\noindent\verb!     in.pdf [<range>] -o out.pdf!
   \end{framed}
 
   \section{Inserting Blank Pages}
@@ -2870,6 +2874,17 @@ The \texttt{-chop} operation cuts up a page into multiple pages, according to th
   \end{framed}
 
 \noindent By default, the pieces are arranged in the output file row by row, and from left to right on each row. To alter this, add one or more of \texttt{-chop-columns}, \texttt{-chop-rtl} (right to left), and \texttt{-chop-btt} (bottom to top).
+
+As an alternative, pages can be chopped into two at a given position, horizontally with \texttt{-chop-h} or vertically with \texttt{-chop-v}:
+
+  \begin{framed}
+    \noindent\small\verb!cpdf -chop-h 400 in.pdf -o out.pdf!
+ 
+    \vspace{2.5mm}
+    \noindent Chop each page into two, top and bottom, at 400pt mark.
+  \end{framed}
+
+\noindent To reverse the order of pages in the output, specify -chop-columns in addition.
 
 \begin{cpdflib}
 \clearpage
