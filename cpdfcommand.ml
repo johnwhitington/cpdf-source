@@ -4460,10 +4460,10 @@ let go () =
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
         write_pdf false (Cpdfchop.chop ~x ~y ~columns:args.impose_columns ~btt:args.impose_btt ~rtl:args.impose_rtl pdf range)
-  | Some (ChopHV (is_h, p)) ->
+  | Some (ChopHV (is_h, line)) ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-        write_pdf false (Cpdfchop.chop_hv ~is_h ~p ~columns:args.impose_columns pdf range)
+        write_pdf false (Cpdfchop.chop_hv ~is_h ~line ~columns:args.impose_columns pdf range)
   | Some ProcessImages ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in

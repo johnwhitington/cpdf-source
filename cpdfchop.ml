@@ -32,26 +32,33 @@ let make_pages x y columns btt rtl w h ps move_page =
     in
       if btt then for ty = 0 to y - 1 do row ty done else for ty = y - 1 downto 0 do row ty done
 
-let chop_boxes pdf x y columns btt rtl p =
-  if x < 1 || y < 1 then error "chop_boxes bad specification" else
-    let move_page mx my p w h dx dy =
-      let nminx, nminy, nmaxx, nmaxy = (mx +. dx, my +. dy, mx +. w +. dx, my +. h +. dy) in
-        {p with
-          Pdfpage.mediabox = Pdf.Array [Pdf.Real nminx; Pdf.Real nminy; Pdf.Real nmaxx; Pdf.Real nmaxy];
-          Pdfpage.rest = erase_boxes p.Pdfpage.rest}
-    in
-    let minx, miny, maxx, maxy = get_box pdf p in
-    let w, h = (maxx -. minx) /. float_of_int x, (maxy -. miny) /. float_of_int y in
-    let ps = ref [] in
-      make_pages x y columns btt rtl w h ps (move_page minx miny p w h);
-      rev !ps
+let chop_boxes line pdf x y columns btt rtl p =
+  let move_page mx my p w h dx dy =
+    let nminx, nminy, nmaxx, nmaxy = (mx +. dx, my +. dy, mx +. w +. dx, my +. h +. dy) in
+      {p with
+        Pdfpage.mediabox = Pdf.Array [Pdf.Real nminx; Pdf.Real nminy; Pdf.Real nmaxx; Pdf.Real nmaxy];
+        Pdfpage.rest = erase_boxes p.Pdfpage.rest}
+  in
+    if x = 0 then
+      (* horizontal split at line *)
+      []
+    else
+    if y = 0 then
+      (* vertical split at line *)
+      []
+    else
+      let minx, miny, maxx, maxy = get_box pdf p in
+      let w, h = (maxx -. minx) /. float_of_int x, (maxy -. miny) /. float_of_int y in
+      let ps = ref [] in
+        make_pages x y columns btt rtl w h ps (move_page minx miny p w h);
+        rev !ps
 
-let chop ~x ~y ~columns ~btt ~rtl pdf range =
+let chop_inner ~line ~x ~y ~columns ~btt ~rtl pdf range =
   let pages = Pdfpage.pages_of_pagetree pdf in
   let pages_out =
     flatten
       (map2
-        (fun n p -> if mem n range then chop_boxes pdf x y columns btt rtl p else [p])
+        (fun n p -> if mem n range then chop_boxes line pdf x y columns btt rtl p else [p])
         (ilist 1 (Pdfpage.endpage pdf))
         pages)
   in
@@ -68,6 +75,8 @@ let chop ~x ~y ~columns ~btt ~rtl pdf range =
   in
     Pdfpage.change_pages ~changes true pdf pages_out
 
+let chop ~x ~y ~columns ~btt ~rtl pdf range =
+  chop_inner ~line:0. ~x ~y ~columns ~btt ~rtl pdf range
 
-let chop_hv ~is_h ~p ~columns pdf range =
-  pdf
+let chop_hv ~is_h ~line ~columns pdf range =
+  chop_inner ~line ~x:(if is_h then 0 else 1) ~y:(if is_h then 1 else 0) ~columns ~btt:false ~rtl:false pdf range
