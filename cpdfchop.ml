@@ -67,3 +67,7 @@ let chop ~x ~y ~columns ~btt ~rtl pdf range =
            pages)
   in
     Pdfpage.change_pages ~changes true pdf pages_out
+
+
+let chop_hv ~is_h ~p ~columns pdf range =
+  pdf

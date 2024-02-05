@@ -231,6 +231,7 @@ type op =
   | Draw
   | Composition of bool
   | Chop of int * int
+  | ChopHV of bool * float
   | ProcessImages
   | ExtractStream of int
   | PrintObj of int
@@ -372,6 +373,7 @@ let string_of_op = function
   | Draw -> "Draw"
   | Composition _ -> "Composition"
   | Chop _ -> "Chop"
+  | ChopHV _ -> "ChopHV"
   | ProcessImages -> "ProcessImages"
   | ExtractStream _ -> "ExtractStream"
   | PrintObj _ -> "PrintObj"
@@ -903,7 +905,7 @@ let banned banlist = function
   | Decrypt | Encrypt | CombinePages _ -> true (* Never allowed *)
   | AddBookmarks _ | PadBefore | PadAfter | PadEvery _ | PadMultiple _ | PadMultipleBefore _
   | Merge | Split | SplitOnBookmarks _ | SplitMax _ | Spray | RotateContents _ | Rotate _
-  | Rotateby _ | Upright | VFlip | HFlip | Impose _ | Chop _ ->
+  | Rotateby _ | Upright | VFlip | HFlip | Impose _ | Chop _ | ChopHV _ ->
       mem Pdfcrypt.NoAssemble banlist
   | TwoUp|TwoUpStack|RemoveBookmarks|AddRectangle|RemoveText|
     Draft|Shift|ShiftBoxes | Scale|ScaleToFit|RemoveAttachedFiles|
@@ -1648,6 +1650,12 @@ let setchop s =
   let x, y = Cpdfcoord.parse_coordinate empty s in
   setop (Chop (int_of_float x, int_of_float y)) ()
 
+let setchopv x =
+  setop (ChopHV (false, x)) ()
+
+let setchoph y =
+  setop (ChopHV (true, y)) ()
+
 let setreplacedictentry s =
   setop (ReplaceDictEntry s) ()
 
@@ -2311,6 +2319,12 @@ and specs =
    ("-chop",
       Arg.String setchop,
       " Chop x by y");
+   ("-chop-h",
+      Arg.Float setchoph,
+      " Chop horizontally");
+   ("-chop-v",
+      Arg.Float setchopv,
+      " Chop horizontally");
    ("-chop-columns",
       Arg.Unit (fun () -> args.impose_columns <- true),
       " Chop in columns rather than rows");
@@ -4446,6 +4460,10 @@ let go () =
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
         write_pdf false (Cpdfchop.chop ~x ~y ~columns:args.impose_columns ~btt:args.impose_btt ~rtl:args.impose_rtl pdf range)
+  | Some (ChopHV (is_h, p)) ->
+      let pdf = get_single_pdf args.op false in
+      let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
+        write_pdf false (Cpdfchop.chop_hv ~is_h ~p ~columns:args.impose_columns pdf range)
   | Some ProcessImages ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
