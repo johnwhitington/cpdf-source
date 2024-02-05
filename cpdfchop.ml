@@ -72,6 +72,7 @@ let chop_inner ~line ~x ~y ~columns ~btt ~rtl pdf range =
         (ilist 1 (Pdfpage.endpage pdf))
         pages)
   in
+  let x, y = if x = 0 || y = 0 then 1, 2 else x, y in (* Fix up for -chop-v, -chop-h *)
   let changes =
     let q = ref 0 in
       flatten
