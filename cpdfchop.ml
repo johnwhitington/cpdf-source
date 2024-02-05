@@ -33,25 +33,35 @@ let make_pages x y columns btt rtl w h ps move_page =
       if btt then for ty = 0 to y - 1 do row ty done else for ty = y - 1 downto 0 do row ty done
 
 let chop_boxes line pdf x y columns btt rtl p =
-  let move_page mx my p w h dx dy =
-    let nminx, nminy, nmaxx, nmaxy = (mx +. dx, my +. dy, mx +. w +. dx, my +. h +. dy) in
-      {p with
-        Pdfpage.mediabox = Pdf.Array [Pdf.Real nminx; Pdf.Real nminy; Pdf.Real nmaxx; Pdf.Real nmaxy];
-        Pdfpage.rest = erase_boxes p.Pdfpage.rest}
+  let minx, miny, maxx, maxy = get_box pdf p in
+  let mkpair p minx0 miny0 maxx0 maxy0 minx1 miny1 maxx1 maxy1 =
+    [{p with Pdfpage.mediabox = Pdf.Array [Pdf.Real minx0; Pdf.Real miny0; Pdf.Real maxx0; Pdf.Real maxy0];
+             Pdfpage.rest = erase_boxes p.Pdfpage.rest};
+     {p with Pdfpage.mediabox = Pdf.Array [Pdf.Real minx1; Pdf.Real miny1; Pdf.Real maxx1; Pdf.Real maxy1];
+             Pdfpage.rest = erase_boxes p.Pdfpage.rest}]
   in
-    if x = 0 then
-      (* horizontal split at line *)
-      []
-    else
-    if y = 0 then
-      (* vertical split at line *)
-      []
-    else
-      let minx, miny, maxx, maxy = get_box pdf p in
-      let w, h = (maxx -. minx) /. float_of_int x, (maxy -. miny) /. float_of_int y in
-      let ps = ref [] in
-        make_pages x y columns btt rtl w h ps (move_page minx miny p w h);
-        rev !ps
+  if x = 0 then (* horizontal split at line *)
+    let minx0, miny0, maxx0, maxy0 = minx, line, maxx, maxy in
+    let minx1, miny1, maxx1, maxy1 = minx, miny, maxx, line in
+    let pair = mkpair p minx0 miny0 maxx0 maxy0 minx1 miny1 maxx1 maxy1 in
+      if columns then rev pair else pair
+  else
+  if y = 0 then (* vertical split at line *)
+    let minx0, miny0, maxx0, maxy0 = minx, miny, line, maxy in
+    let minx1, miny1, maxx1, maxy1 = line, miny, maxx, maxy in
+    let pair = mkpair p minx0 miny0 maxx0 maxy0 minx1 miny1 maxx1 maxy1 in
+      if columns then rev pair else pair
+  else
+    let move_page mx my p w h dx dy =
+      let nminx, nminy, nmaxx, nmaxy = (mx +. dx, my +. dy, mx +. w +. dx, my +. h +. dy) in
+        {p with
+          Pdfpage.mediabox = Pdf.Array [Pdf.Real nminx; Pdf.Real nminy; Pdf.Real nmaxx; Pdf.Real nmaxy];
+          Pdfpage.rest = erase_boxes p.Pdfpage.rest}
+    in
+    let w, h = (maxx -. minx) /. float_of_int x, (maxy -. miny) /. float_of_int y in
+    let ps = ref [] in
+      make_pages x y columns btt rtl w h ps (move_page minx miny p w h);
+      rev !ps
 
 let chop_inner ~line ~x ~y ~columns ~btt ~rtl pdf range =
   let pages = Pdfpage.pages_of_pagetree pdf in
