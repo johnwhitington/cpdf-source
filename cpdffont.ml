@@ -294,6 +294,9 @@ let json_of_font (pagenum, name, subtype, basefont, encoding) =
      ("basefont", if basefont = "" then `Null else `String basefont);
      ("encoding", if encoding = "" then `Null else `String encoding)]
 
+let json_fonts pdf range =
+  `List (map json_of_font (list_fonts pdf range))
+
 let print_fonts ?(json=false) pdf range =
   if json
     then flprint (Cpdfyojson.Safe.pretty_to_string (`List (map json_of_font (list_fonts pdf range))))
