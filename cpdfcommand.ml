@@ -4034,22 +4034,19 @@ let go () =
           Cpdfannot.list_annotations range args.encoding pdf
   | Some Shift ->
       let pdf = get_single_pdf args.op false in
-        let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-          let dxdylist = Cpdfcoord.parse_coordinates pdf args.coord in
-            write_pdf false (Cpdfpage.shift_pdf ~fast:args.fast dxdylist pdf range)
+      let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
+      let dxdylist = Cpdfcoord.parse_coordinates pdf args.coord in
+        write_pdf false (Cpdfpage.shift_pdf ~fast:args.fast dxdylist pdf range)
   | Some ShiftBoxes ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
       let dxdylist = Cpdfcoord.parse_coordinates pdf args.coord in
-      let dx, dy = match dxdylist with (a, b)::_ -> a, b | _ -> 0.0, 0.0 in
-      let f (xmin, ymin, xmax, ymax) = (xmin +. dx, ymin +. dy, xmax +. dx, ymax +. dy) in
-      let fpage _ p = Cpdfpage.change_boxes f pdf p in
-        write_pdf false (Cpdfpage.process_pages (Pdfpage.ppstub fpage) pdf range)
+        write_pdf false (Cpdfpage.shift_boxes dxdylist pdf range)
   | Some Scale ->
       let pdf = get_single_pdf args.op false in
-        let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-          let sxsylist = Cpdfcoord.parse_coordinates pdf args.coord in
-            write_pdf false (Cpdfpage.scale_pdf ~fast:args.fast sxsylist pdf range)
+      let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
+      let sxsylist = Cpdfcoord.parse_coordinates pdf args.coord in
+        write_pdf false (Cpdfpage.scale_pdf ~fast:args.fast sxsylist pdf range)
   | Some ScaleToFit ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in

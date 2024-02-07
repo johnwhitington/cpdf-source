@@ -23,6 +23,8 @@ val hard_box : Pdf.t -> int list -> string -> bool -> bool -> Pdf.t
 for all pages in pdf. *)
 val shift_pdf : ?fast:bool -> (float * float) list -> Pdf.t -> int list -> Pdf.t
 
+val shift_boxes : (float * float) list -> Pdf.t -> int list -> Pdf.t
+
 (** Change a page's media box so its minimum x and y are 0, making other
 operations simpler to think about. Any shift that is done is reflected in
 other boxes (clip etc.) *)
