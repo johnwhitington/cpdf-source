@@ -4255,14 +4255,11 @@ let go () =
             Cpdfimage.extract_images ~raw:(args.encoding = Cpdfmetadata.Raw) ?path_to_p2p:(match args.path_to_p2p with "" -> None | x -> Some x) ?path_to_im:(match args.path_to_im with "" -> None | x -> Some x) args.encoding args.dedup args.dedup_per_page pdf range output_spec
   | Some (ImageResolution f) ->
       let pdf = get_single_pdf args.op true in
-        let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-        let images = Cpdfimage.image_resolution pdf range f in
-          if args.format_json then
-            flprint
-              (Cpdfyojson.Safe.pretty_to_string
-                 (`List (map (fun (pagenum, xobject, w, h, wdpi, hdpi, objnum) ->
-                    `Assoc [("Object", `Int objnum); ("Page", `Int pagenum); ("XObject", `String xobject); ("W", `Int w); ("H", `Int h); ("Xdpi", `Float wdpi); ("Ydpi", `Float hdpi)]) images)))
-          else
+      let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
+        if args.format_json then
+          flprint (Pdfio.string_of_bytes (Cpdfimage.image_resolution_json pdf range f))
+        else
+          let images = Cpdfimage.image_resolution pdf range f in
             iter
               (function (pagenum, xobject, w, h, wdpi, hdpi, objnum) ->
                   if wdpi < f || hdpi < f then

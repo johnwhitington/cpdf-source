@@ -324,6 +324,14 @@ let image_resolution pdf range dpi =
   image_resolution pdf range dpi;
   rev !image_results
 
+let image_resolution_json pdf range dpi =
+  let images = image_resolution pdf range dpi in
+    Pdfio.bytes_of_string
+      (Cpdfyojson.Safe.pretty_to_string
+        (`List (map (fun (pagenum, xobject, w, h, wdpi, hdpi, objnum) ->
+           `Assoc [("Object", `Int objnum); ("Page", `Int pagenum); ("XObject", `String xobject);
+                   ("W", `Int w); ("H", `Int h); ("Xdpi", `Float wdpi); ("Ydpi", `Float hdpi)]) images)))
+
 (* All the images in file referenced at least once from the given range of pages. *)
 let images pdf range =
   let images = null_hash () in
