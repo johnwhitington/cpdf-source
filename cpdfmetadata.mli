@@ -84,3 +84,5 @@ val expand_date : string -> string
 val get_catalog_item : string -> Pdf.t -> string
 
 val get_viewer_pref_item : string -> Pdf.t -> string
+
+val determine_subformats : Pdf.t -> string list
