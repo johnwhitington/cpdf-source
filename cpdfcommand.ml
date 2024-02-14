@@ -1137,7 +1137,10 @@ let displaydoctitle b =
     _ -> failwith "DisplayDocTitle: must use true or false"
 
 let read_file_size s =
-  let read_int s = int_of_string (implode (rev s)) in
+  let read_int s' =
+    try int_of_string (implode (rev s')) with
+      _ -> error (Printf.sprintf "Could not read file size specification %s" s)
+  in
     match rev (explode (String.uppercase_ascii s)) with
     | 'B'::'I'::'G'::s -> 1024 * 1024 * 1024 * read_int s
     | 'B'::'G'::s -> 1000 * 1000 * 1000 * read_int s
