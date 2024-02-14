@@ -3955,8 +3955,12 @@ Method & Effect\\\hline
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -embed-missing-fonts -gs <path to gs> in.pdf -o out.pdf!
-  \end{framed}}
 
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -extract-font <page number>,<pdf font name> in.pdf -o out.font!
+
+  \end{framed}}
+ 
 \section{Listing Fonts}
 
 \index{font!listing}
@@ -4092,7 +4096,7 @@ recommended when file size is the sole consideration.
   \vspace{2.5mm}
   \end{framed}
 
-\section{Missing Fonts}
+\section{Missing Fonts}\label{listmisingfonts}
   The \verb!-missing-fonts! operation lists any unembedded fonts in the document, one per line.
   \begin{framed}
   \small\noindent\verb!cpdf -missing-fonts in.pdf!
@@ -4111,7 +4115,13 @@ recommended when file size is the sole consideration.
 
 \noindent\textit{Note: putting a PDF file through \texttt{gs} in this manner may not be lossless: some metadata may not be preserved.}
 
-\label{listmisingfonts}\clearpage\pagestyle{empty}
+\section{Extracting Fonts}
+
+We may extract a font file by giving the page number and the PDF font resource name, as printed by \texttt{-list-fonts} or \texttt{-list-fonts-json}. For example, for the TrueType font \texttt{/F50} on page 5:
+
+  \begin{framed}
+  \small\noindent\verb!cpdf -extract-font 5,/F50 in.pdf -o out.ttf!
+  \end{framed}
 
 \begin{cpdflib}
 \clearpage
