@@ -2,7 +2,7 @@ Coherent PDF Command Line Tools
 ===============================
 
 Free for non-commercial use. See LICENSE for details. Copyright Coherent
-Graphics Ltd 2023.
+Graphics Ltd 2024.
 
 This code builds two things:
 
@@ -43,7 +43,7 @@ To build
 --------
 
 If downloading from Github, obtain the correct source. This means choosing the
-tag for a particular version, such as "v2.6.1". The head of the master branch
+tag for a particular version, such as "v2.7". The head of the master branch
 is unstable.
 
 1. Type `make` to make the cpdf executable and the library

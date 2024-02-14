@@ -3,7 +3,7 @@ let demo = false
 let noncomp = false
 let major_version = 2
 let minor_version = 7
-let version_date = "(25th January 2024)"
+let version_date = "(13th February 2024, RC1)"
 
 open Pdfutil
 open Pdfio
@@ -609,8 +609,8 @@ let args =
    outline = false;
    linewidth = 1.0;
    path_to_ghostscript = "gs";
-   path_to_im = "magick";
-   path_to_p2p = "pnm2png";
+   path_to_im = "";
+   path_to_p2p = "";
    path_to_convert = "convert";
    path_to_jbig2enc = "jbig2";
    frombox = None;
