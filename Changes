@@ -24,7 +24,6 @@ o -list-images-used[-json] extends -image-resolution
 o Use -raw with -extract-images to get PNMs
 o -extract-images can extract JBIG2 images and their globals
 o More PNGs - greyscale 1, 2, 4, 8, 16bpp and RGB 16bpp
-o -pages -fast to print number of pages from /Count 
 o Report number of annotations in -page-info
 o Specify image based only on file extension
 o -squeeze updates old compression methods
