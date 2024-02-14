@@ -3606,7 +3606,7 @@ let go () =
         let fixid s = implode (rev (tl (rev (tl (explode s))))) in
         if args.format_json
           then json =| ("ID", if ida ^ idb = "" then `Null else `List [`String (fixid ida); `String (fixid idb)])
-          else (if ida ^ idb = "" then Printf.printf "ID: None" else Printf.printf "ID: %s %s\n" ida idb);
+          else (if ida ^ idb = "" then Printf.printf "ID: None\n" else Printf.printf "ID: %s %s\n" ida idb);
         let pdf = decrypt_if_necessary input (Some Info) pdf in
           if args.format_json then
             begin
