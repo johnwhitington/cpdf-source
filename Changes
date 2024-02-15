@@ -28,7 +28,7 @@ o Report number of annotations in -page-info
 o Specify image based only on file extension
 o -squeeze updates old compression methods
 o Show page size summary in -info
-o Add -no-merge-struct-trees to prevent merging of structure trees
+o Add -no-process-struct-trees to prevent merging of structure trees
 
 Fixes:
 

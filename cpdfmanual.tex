@@ -4474,14 +4474,14 @@ A basic text to PDF convertor is included in \texttt{cpdf}. It takes a UTF8 text
 
 Simple facilities for making PDFs from PNG and JPEG images are included in \texttt{cpdf}. The resulting file can be written out, or used for further operations.
 
-For PNG files, the file must be 24bit RGB with no transparency and no interlacing:
+For PNG files, the file must have no transparency and no interlacing, and must not be palletised:
 
 \begin{framed}
  \noindent\small\verb?cpdf -png image.png -o out.pdf?\\
- \noindent\small\verb?cpdf -image.png AND -add-text "My Image" -o out.pdf?
+ \noindent\small\verb?cpdf image.png AND -add-text "My Image" -o out.pdf?
 \end{framed}
 
-\noindent Notice that the \texttt{-png} can be omitted if your file has a standard file extension. Almost any JPEG file may be used:
+\noindent Notice that the \texttt{-png} can be omitted if your file has a standard file extension. Almost any JPEG file may be used with \texttt{-jpeg} or again, with a standard extension:
 
 \begin{framed}
  \noindent\small\verb?cpdf -jpeg image.jpg -o out.pdf?
