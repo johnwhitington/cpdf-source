@@ -3137,21 +3137,21 @@ dictionary, and from any XMP metadata to standard output.
 \begin{framed}
 {\small\begin{verbatim}
 $cpdf -info pdf_reference.pdf
-Encryption: 40bit
-Permissions: No edit
+Encryption: Not encrypted
+Permissions: 
 Linearized: true
 Object streams: true
-ID: <0537e963d2234e7e996c49fb9ac87adb> <0537e963d2234e7e996c49fb9ac87adb>
-Version: 1.6
-Pages: 1310
-Title: PDF Reference, version 1.7
+ID: <0b1f990718e2a92c0c112fbf08b233fb> <b2f1dbee369e11d9b951000393c97fd8>
+Version: 1.5
+Pages: 1236
+Title: PDF Reference, version 1.6
 Author: Adobe Systems Incorporated
 Subject: Adobe Portable Document Format (PDF)
 Keywords: 
-Creator: FrameMaker 7.2
-Producer: Acrobat Distiller 7.0.5 (Windows)
-Created: D:20061017081020Z
-Modified: D:20061118211043-02'30'
+Creator: FrameMaker 7.0
+Producer: Acrobat Distiller 6.0.1 for Macintosh
+Created: D:20041114084116Z
+Modified: D:20041114163850-08'00'
 Trapped: False
 PageMode: UseOutlines
 PageLayout: 
@@ -3160,21 +3160,19 @@ HideMenubar:
 HideWindowUI: 
 FitWindow: 
 CenterWindow: 
-DisplayDocTitle: 
-NonFullScreenPageMode:
+DisplayDocTitle: true
+NonFullScreenPageMode: 
 AcroForm: False
-MediaBox: 0.000000 0.000000 540.000000 666.000000
-CropBox: 
+MediaBox: 0.000000 0.000000 612.000000 792.000000
+CropBox: 41.000000 63.000000 572.000000 729.000000
 BleedBox: 
-TrimBox: 
-ArtBox: 
-Subformats: PDF/A-1
-XMP pdf:Producer: Adobe PDF library 7.77
-XMP xmp:CreateDate: 2006-12-21T18:19:09+01:00
-XMP xmp:CreatorTool: Adobe Illustrator CS2
-XMP xmp:MetadataDate: 2006-12-21T18:19:09Z
-XMP xmp:ModifyDate: 2006-12-21T18:19:09Z
-XMP dc:title: AI6\end{verbatim}}\end{framed}
+TrimBox: various
+ArtBox: various
+Subformats: 
+XMP dc:title: PDF Reference, version 1.6
+XMP dc:creator: Adobe Systems Incorporated
+XMP dc:description: Adobe Portable Document Format (PDF)
+\end{verbatim}}\end{framed}
 \noindent The details of the format for creation and modification dates can be found in
 Appendix~\ref{dates}. If page boxes vary among pages, the entry will read \texttt{various}.
 
@@ -3187,21 +3185,21 @@ The \texttt{-info-json} operation prints the information in JSON format instead.
 {
   "Encryption": "Not encrypted",
   "Permissions": [],
-  "Linearized": false,
+  "Linearized": true,
   "Object streams": true,
   "ID": [
-    "cf745ad901ffba30957a31858132263e", "cf745ad901ffba30957a31858132263e"
+    "0b1f990718e2a92c0c112fbf08b233fb", "b2f1dbee369e11d9b951000393c97fd8"
   ],
   "Version": [ 1, 5 ],
-  "Pages": 123,
-  "Title": null,
-  "Author": null,
-  "Subject": null,
+  "Pages": 1236,
+  "Title": "PDF Reference, version 1.6",
+  "Author": "Adobe Systems Incorporated",
+  "Subject": "Adobe Portable Document Format (PDF)",
   "Keywords": null,
-  "Creator": "LaTeX with hyperref",
-  "Producer": "pdfTeX-1.40.24",
-  "Created": "D:20240126171732Z",
-  "Modified": "D:20240126171732Z",
+  "Creator": "FrameMaker 7.0",
+  "Producer": "Acrobat Distiller 6.0.1 for Macintosh",
+  "Created": "D:20041114084116Z",
+  "Modified": "D:20041114163850-08'00'",
   "Trapped": false,
   "PageMode": "UseOutlines",
   "PageLayout": null,
@@ -3210,15 +3208,18 @@ The \texttt{-info-json} operation prints the information in JSON format instead.
   "HideWindowUI": null,
   "FitWindow": null,
   "CenterWindow": null,
-  "DisplayDocTitle": null,
+  "DisplayDocTitle": true,
   "NonFullPageScreenMode": null,
   "AcroForm": false,
-  "MediaBox": [ 0.0, 0.0, 540.0, 666.0 ],
-  "CropBox": null,
+  "MediaBox": [ 0.0, 0.0, 612.0, 792.0 ],
+  "CropBox": [ 41.0, 63.0, 572.0, 729.0 ],
   "BleedBox": null,
-  "TrimBox": null,
-  "ArtBox": null,
-  "Subformats": []
+  "TrimBox": "various",
+  "ArtBox": "various",
+  "Subformats": [],
+  "XMP dc:title": "PDF Reference, version 1.6",
+  "XMP dc:creator": "Adobe Systems Incorporated",
+  "XMP dc:description": "Adobe Portable Document Format (PDF)"
 }
 \end{verbatim}}\end{framed}
 
@@ -3248,10 +3249,10 @@ Annotations: 0
     "Page": 1,
     "Label": "i",
     "MediaBox": [ 0.0, 0.0, 600.0, 450.0 ],
-    "CropBox": [ 66.17453, 184.6437, 178.6582, 210.0717 ],
-    "BleedBox": [ 0.0, 0.0, 600.0, 450.0 ],
-    "TrimBox": [ 0.0, 0.0, 600.0, 450.0 ],
-    "ArtBox": [ 0.0, 0.0, 600.0, 450.0 ],
+    "CropBox": [ 200.0, 200.0, 500.0, 500.0 ],
+    "BleedBox": null,
+    "TrimBox": null,
+    "ArtBox": null,
     "Rotation": 0,
     "Annotations": 0
   }
@@ -3465,13 +3466,13 @@ i, ii, iii, iv, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, A-0, A-1, A-2, A-3, A-4, A-5
 \noindent By default the labels begin at page number 1 for each range. To override this, we can use \texttt{-label-startval} (we used $0$ in the final command), where we want the numbers to begin at zero rather than one. The option \texttt{-labels-progress} can be added to make sure the  start value progresses between sub-ranges when the page range specified is disjoint, e.g \texttt{1-9, 30-40} or \texttt{odd}.
 
 Page labels may be removed altogether by using \texttt{-remove-page-labels} command. To print the page labels from an existing file, use \texttt{-print-page-labels}. For example:
-\begin{framed}\small\begin{verbatim}$ cpdf -print-page-labels cpdfmanual.pdf
+\begin{framed}\small\begin{verbatim}$ cpdf -print-page-labels in.pdf
 labelstyle: LowercaseRoman
 labelprefix: None
 startpage: 1
 startvalue: 1
 labelstyle: DecimalArabic
-labelprefix: None
+labelprefix: A
 startpage: 9
 startvalue: 1
 \end{verbatim}
@@ -3488,8 +3489,8 @@ startvalue: 1
   },
   {
     "labelstyle": "DecimalArabic",
-    "labelprefix": null,
-    "startpage": 17,
+    "labelprefix": "A",
+    "startpage": 9,
     "startvalue": 1
   }
 ]
@@ -4006,9 +4007,9 @@ The information is also available in JSON format with \texttt{-list-fonts-json}:
   {
     "page": 1,
     "name": "/F50",
-    "subtype": "/Type1",
+    "subtype": "/Type0",
     "basefont": "/MCBERL+URWPalladioL-Roma",
-    "encoding": null
+    "encoding": "/Identity-H"
   }
 ]
 \end{verbatim}
