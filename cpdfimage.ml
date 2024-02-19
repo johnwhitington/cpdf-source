@@ -540,9 +540,10 @@ let jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~q
 
 let suitable_num pdf dict =
   match Pdf.lookup_direct pdf "/ColorSpace" dict with
-  | Some (Pdf.Name "/DeviceRGB") -> 3
-  | Some (Pdf.Name "/DeviceGray") -> 1
+  | Some (Pdf.Name ("/DeviceRGB" | "/CalRGB")) -> 3
+  | Some (Pdf.Name ("/DeviceGray" | "/CalGray")) -> 1
   | Some (Pdf.Name "/DeviceCMYK") -> 4
+  | Some (Pdf.Array [Pdf.Name "/Lab"; _]) -> 3
   | Some (Pdf.Array [Pdf.Name "/ICCBased"; stream]) ->
       begin match Pdf.lookup_direct pdf "/N" stream with
       | Some (Pdf.Integer 3) -> 3
@@ -628,6 +629,7 @@ let lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshol
   remove out2
 
 let lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolate ~path_to_convert s dict reference =
+  Printf.printf "***lossless_resample IN dictionary: %S\n" (Pdfwrite.string_of_pdf dict);
   match lossless_out pdf ~pixel_threshold ~length_threshold ".png" s dict reference with
   | None -> ()
   | Some (_, _, _, 4, _, _) -> Printf.printf "lossless resampling for CMYK not supported yet\n%!"
@@ -653,7 +655,11 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolat
           reference :=
             (match fst (obj_of_png_data (Pdfio.bytes_of_input_channel result)) with
             | Pdf.Stream {contents = Pdf.Dictionary d, data} ->
-                let d' = fold_right (fun (k, v) d -> add k v d) d (match dict with Pdf.Dictionary x -> x | _ -> []) in
+                (* Find components of resultant colourspace, and bits per component. If differing from input, abandon *)
+                (* We will then test all the files we have available, and make sure all results correct *)
+                (* Then we will see about how to poke convert to do the correct thing - e.g not use PNG, force different output etc. *)
+                let d' = fold_right (fun (k, v) d -> if k <> "/ColorSpace" then add k v d else d) d (match dict with Pdf.Dictionary x -> x | _ -> []) in
+                  Printf.printf "***lossless_resample OUT dictionary: %S\n" (Pdfwrite.string_of_pdf (Pdf.Dictionary d'));
                   (Pdf.Dictionary d', data)
             | _ -> assert false)
         end
