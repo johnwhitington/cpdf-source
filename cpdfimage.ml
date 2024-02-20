@@ -628,8 +628,19 @@ let lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshol
   remove out;
   remove out2
 
+let test_components pdf dict =
+  match suitable_num pdf dict with -1 | -2 -> 1 | x -> x 
+
+let test_bpc pdf dict =
+  match Pdf.lookup_direct pdf "/BitsPerComponent" dict with
+  | Some (Pdf.Integer i) -> i
+  | _ -> 0
+
 let lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolate ~path_to_convert s dict reference =
-  Printf.printf "***lossless_resample IN dictionary: %S\n" (Pdfwrite.string_of_pdf dict);
+  (* Printf.printf "***lossless_resample IN dictionary: %S\n" (Pdfwrite.string_of_pdf dict); *)
+  let in_components = test_components pdf dict in
+  let in_bpc = test_bpc pdf dict in
+  Printf.printf "\n***IN components = %i, bpc = %i\n" in_components in_bpc;
   match lossless_out pdf ~pixel_threshold ~length_threshold ".png" s dict reference with
   | None -> ()
   | Some (_, _, _, 4, _, _) -> Printf.printf "lossless resampling for CMYK not supported yet\n%!"
@@ -651,16 +662,27 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolat
       let newsize = in_channel_length result in
       if newsize < size then
         begin
-          if !debug_image_processing then Printf.printf "lossless resample %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
+
           reference :=
             (match fst (obj_of_png_data (Pdfio.bytes_of_input_channel result)) with
-            | Pdf.Stream {contents = Pdf.Dictionary d, data} ->
-                (* Find components of resultant colourspace, and bits per component. If differing from input, abandon *)
-                (* We will then test all the files we have available, and make sure all results correct *)
-                (* Then we will see about how to poke convert to do the correct thing - e.g not use PNG, force different output etc. *)
-                let d' = fold_right (fun (k, v) d -> if k <> "/ColorSpace" then add k v d else d) d (match dict with Pdf.Dictionary x -> x | _ -> []) in
-                  Printf.printf "***lossless_resample OUT dictionary: %S\n" (Pdfwrite.string_of_pdf (Pdf.Dictionary d'));
-                  (Pdf.Dictionary d', data)
+            | Pdf.Stream {contents = Pdf.Dictionary d, data} as s ->
+                let out_components = test_components pdf s in
+                let out_bpc = test_bpc pdf s in
+                Printf.printf "***OUT components = %i, bpc = %i\n" out_components out_bpc;
+                if out_components <> in_components || in_bpc <> out_bpc then
+                  begin
+                    if !debug_image_processing then Printf.printf "wrong bpc / components returned. Skipping.\n%!";
+                    !reference
+                  end
+                else
+                begin
+                  if !debug_image_processing then Printf.printf "lossless resample %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
+                  (* We will then test all the files we have available, and make sure all results correct *)
+                  (* Then we will see about how to poke convert to do the correct thing - e.g not use PNG, force different output etc. *)
+                  let d' = fold_right (fun (k, v) d -> if k <> "/ColorSpace" then add k v d else d) d (match dict with Pdf.Dictionary x -> x | _ -> []) in
+                    (*Printf.printf "***lossless_resample OUT dictionary: %S\n" (Pdfwrite.string_of_pdf (Pdf.Dictionary d')); *)
+                    (Pdf.Dictionary d', data)
+                end
             | _ -> assert false)
         end
       else
