@@ -5,7 +5,7 @@ open Cpdferror
 let debug_image_processing = ref false
 
 let remove x =
-  try (*Printf.printf "%s\n" x;*) Sys.remove x with _ -> ()
+  try Printf.printf "%s\n" x; Sys.remove x with _ -> ()
 
 let pnm_white ch = output_char ch ' '
 let pnm_newline ch = output_char ch '\n'
@@ -709,7 +709,11 @@ let lossless_resample_target_dpi objnum pdf ~pixel_threshold ~length_threshold ~
     if real_factor < 100. then
       lossless_resample pdf ~pixel_threshold ~length_threshold ~factor:real_factor ~interpolate ~path_to_convert s dict reference
 
+let complain_jbig2enc path =
+  if path = "" then error "Specify jbig2enc location with -jbig2enc"
+
 let recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_jbig2enc pdf s dict reference =
+  complain_jbig2enc path_to_jbig2enc;
   let old = !reference in
   let restore () = reference := old in
   let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
@@ -734,7 +738,9 @@ let recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_j
           let command = Filename.quote_command ~stdout:out2 path_to_jbig2enc ["-d"; "-p"; out] in
             (*Printf.printf "%S\n" command;*) Sys.command command
         in
-          if retcode = 0 then
+          if retcode <> 0 then
+            restore ()
+          else
             begin
               let result = open_in_bin out2 in
               let newsize = in_channel_length result in
@@ -761,6 +767,7 @@ let recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_j
 
 (* Recompress 1bpp images (except existing JBIG2 compressed ones) to lossy jbig2 *)
 let preprocess_jbig2_lossy ~path_to_jbig2enc ~jbig2_lossy_threshold ~length_threshold ~pixel_threshold ~dpi_threshold inrange highdpi pdf =
+ complain_jbig2enc path_to_jbig2enc;
  let objnum_name_pairs = ref [] in
  let process_obj objnum s =
    match s with
@@ -791,7 +798,7 @@ let preprocess_jbig2_lossy ~path_to_jbig2enc ~jbig2_lossy_threshold ~length_thre
                    let data = match s with Pdf.Stream {contents = _, Pdf.Got d} -> d | _ -> assert false in
                      pnm_to_channel_1_inverted fh w h data;
                      close_out fh;
-                     if !debug_image_processing then Printf.printf "obj %i is suitable\n%!" objnum;
+                     if !debug_image_processing then Printf.printf "JBIG2Lossy: obj %i is suitable\n%!" objnum;
                      objnum_name_pairs := (objnum, out)::!objnum_name_pairs
              end
        | _ -> () (* not a 1bpp image *)
