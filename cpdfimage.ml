@@ -4,8 +4,14 @@ open Cpdferror
 
 let debug_image_processing = ref false
 
+let complain_jbig2enc path =
+  if path = "" then error "Specify jbig2enc location with -jbig2enc"
+
+let complain_convert path =
+  if path = "" then error "Specify convert location with -convert"
+
 let remove x =
-  try Printf.printf "%s\n" x; Sys.remove x with _ -> ()
+  try (*Printf.printf "%s\n" x;*) Sys.remove x with _ -> ()
 
 let pnm_white ch = output_char ch ' '
 let pnm_newline ch = output_char ch '\n'
@@ -500,6 +506,8 @@ let image_of_input fobj i =
     Pdfpage.add_root pageroot [] pdf
 
 let jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~q ~path_to_convert s dict reference =
+  if q < 0. || q > 100. then error "Out of range quality";
+  complain_convert path_to_convert;
   let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
   let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
   if w * h < pixel_threshold then (if !debug_image_processing then Printf.printf "pixel threshold not met\n%!") else
@@ -513,25 +521,29 @@ let jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~q
     close_out fh;
     let retcode =
       let command = 
-        (Filename.quote_command path_to_convert [out; "-quality"; string_of_float q ^ "%"; out2]) (*FIXME check percentage as float here *)
+        (Filename.quote_command path_to_convert [out; "-quality"; string_of_float q ^ "%"; out2])
       in
         (*Printf.printf "%S\n" command;*) Sys.command command
     in
     if retcode = 0 then
       begin
-        let result = open_in_bin out2 in
-        let newsize = in_channel_length result in
-        let perc_ok = float newsize /. float size < percentage_threshold /. 100. in
-        if newsize < size && perc_ok then
-          begin
-            if !debug_image_processing then Printf.printf "JPEG to JPEG %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
-            reference := Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize), Pdf.Got (Pdfio.bytes_of_input_channel result)
-          end
-        else
-         begin
-           if !debug_image_processing then Printf.printf "no size reduction\n%!"
-         end;
-        close_in result
+        try
+          let result = open_in_bin out2 in
+          let newsize = in_channel_length result in
+          let perc_ok = float newsize /. float size < percentage_threshold /. 100. in
+          if newsize < size && perc_ok then
+            begin
+              if !debug_image_processing then Printf.printf "JPEG to JPEG %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
+              reference := Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize), Pdf.Got (Pdfio.bytes_of_input_channel result)
+            end
+          else
+           begin
+             if !debug_image_processing then Printf.printf "no size reduction\n%!"
+           end;
+          close_in result
+       with _ ->
+         remove out;
+         remove out2
       end
     else
       begin Printf.printf "external process failed\n%!" end;
@@ -580,19 +592,20 @@ let lossless_out pdf ~pixel_threshold ~length_threshold extension s dict referen
         Some (out, out2, size, components, w, h)
       end
   | colspace, bpc ->
-    let colspace = Pdf.lookup_direct pdf "/ColorSpace" dict in
+    (*let colspace = Pdf.lookup_direct pdf "/ColorSpace" dict in
     let colspace, bpc, filter = 
       (match colspace with None -> "none" | Some x -> Pdfwrite.string_of_pdf x),
       (match bpc with None -> "none" | Some x -> Pdfwrite.string_of_pdf x),
       (match Pdf.lookup_direct pdf "/Filter" dict with None -> "none" | Some x -> Pdfwrite.string_of_pdf x)
     in
       print_string (Pdfwrite.string_of_pdf dict);
-      print_string (Printf.sprintf "%s (%s) [%s]\n" colspace bpc filter);
+      print_string (Printf.sprintf "%s (%s) [%s]\n" colspace bpc filter);*)
       if !debug_image_processing then Printf.printf "colourspace not suitable\n%!";
       restore ();
       None (* an image we cannot or do not handle *)
 
 let lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~qlossless ~path_to_convert s dict reference =
+  complain_convert path_to_convert;
   match lossless_out pdf ~pixel_threshold ~length_threshold ".jpg" s dict reference with None -> () | Some (out, out2, size, components, w, h) ->
   let retcode =
     let command = 
@@ -606,24 +619,29 @@ let lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshol
   in
   if retcode = 0 then
     begin
-      let result = open_in_bin out2 in
-      let newsize = in_channel_length result in
-      let perc_ok = float newsize /. float size < percentage_threshold /. 100. in
-      if newsize < size && perc_ok then
-        begin
-          if !debug_image_processing then Printf.printf "lossless to JPEG %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
-          reference :=
-            (Pdf.add_dict_entry
-              (Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize))
-               "/Filter"
-               (Pdf.Name "/DCTDecode")),
-            Pdf.Got (Pdfio.bytes_of_input_channel result)
-        end
-      else
-        begin
-          if !debug_image_processing then Printf.printf "no size reduction\n%!"
-        end;
-        close_in result
+      try
+        let result = open_in_bin out2 in
+        let newsize = in_channel_length result in
+        let perc_ok = float newsize /. float size < percentage_threshold /. 100. in
+        if newsize < size && perc_ok then
+          begin
+            if !debug_image_processing then Printf.printf "lossless to JPEG %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
+            reference :=
+              (Pdf.add_dict_entry
+                (Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize))
+                 "/Filter"
+                 (Pdf.Name "/DCTDecode")),
+              Pdf.Got (Pdfio.bytes_of_input_channel result)
+          end
+        else
+          begin
+            if !debug_image_processing then Printf.printf "no size reduction\n%!"
+          end;
+          close_in result
+      with
+        _ ->
+          remove out;
+          remove out2
     end;
   remove out;
   remove out2
@@ -637,9 +655,10 @@ let test_bpc pdf dict =
   | _ -> 0
 
 let lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolate ~path_to_convert s dict reference =
-  (*Printf.printf "***lossless_resample IN dictionary: %S\n" (Pdfwrite.string_of_pdf dict); *)
+  complain_convert path_to_convert;
   let in_components = test_components pdf dict in
   let in_bpc = test_bpc pdf dict in
+  (*Printf.printf "***lossless_resample IN dictionary: %S\n" (Pdfwrite.string_of_pdf dict); *)
   (*Printf.printf "\n***IN components = %i, bpc = %i\n" in_components in_bpc;*)
   match lossless_out pdf ~pixel_threshold ~length_threshold ".png" s dict reference with
   | None -> ()
@@ -662,7 +681,6 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolat
       let newsize = in_channel_length result in
       if newsize < size then
         begin
-
           reference :=
             (match fst (obj_of_png_data (Pdfio.bytes_of_input_channel result)) with
             | Pdf.Stream {contents = Pdf.Dictionary d, data} as s ->
@@ -700,7 +718,9 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolat
     end;
     remove out;
     remove out2
-  with _ -> () (* FIXME Remove *)
+  with _ ->
+    remove out;
+    remove out2
 
 let lossless_resample_target_dpi objnum pdf ~pixel_threshold ~length_threshold ~factor ~target_dpi_info ~interpolate ~path_to_convert s dict reference =
   (*Printf.printf "lossless_resample_target_dpi\n";*)
@@ -708,9 +728,6 @@ let lossless_resample_target_dpi objnum pdf ~pixel_threshold ~length_threshold ~
     (*Printf.printf "real_factor = %f\n" real_factor;*)
     if real_factor < 100. then
       lossless_resample pdf ~pixel_threshold ~length_threshold ~factor:real_factor ~interpolate ~path_to_convert s dict reference
-
-let complain_jbig2enc path =
-  if path = "" then error "Specify jbig2enc location with -jbig2enc"
 
 let recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_jbig2enc pdf s dict reference =
   complain_jbig2enc path_to_jbig2enc;
