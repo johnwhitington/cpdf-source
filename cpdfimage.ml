@@ -514,8 +514,8 @@ let jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~q
   Pdf.getstream s;
   let size = match Pdf.lookup_direct pdf "/Length" dict with Some (Pdf.Integer i) -> i | _ -> 0 in
   if size < length_threshold then (if !debug_image_processing then Printf.printf "length threshold not met\n%!") else
-  let out = Filename.temp_file "cpdf" "convertin" ^ ".jpg" in
-  let out2 = Filename.temp_file "cpdf" "convertout" ^ ".jpg" in
+  let out = Filename.temp_file "cpdf" "convertin.jpg" in
+  let out2 = Filename.temp_file "cpdf" "convertout.jpg" in
   let fh = open_out_bin out in
     begin match s with Pdf.Stream {contents = _, Pdf.Got d} -> Pdfio.bytes_to_output_channel fh d | _ -> () end;
     close_out fh;
@@ -582,8 +582,8 @@ let lossless_out pdf ~pixel_threshold ~length_threshold extension s dict referen
       begin
         Pdfcodec.decode_pdfstream_until_unknown pdf s;
         match Pdf.lookup_direct pdf "/Filter" (fst !reference) with Some _ -> restore (); None | None ->
-        let out = Filename.temp_file "cpdf" "convertin" ^ (if suitable_num pdf dict < 4 then ".pnm" else ".cmyk") in
-        let out2 = Filename.temp_file "cpdf" "convertout" ^ extension in
+        let out = Filename.temp_file "cpdf" ("convertin" ^ (if suitable_num pdf dict < 4 then ".pnm" else ".cmyk")) in
+        let out2 = Filename.temp_file "cpdf" ("convertout" ^ extension) in
         let fh = open_out_bin out in
         let data = match s with Pdf.Stream {contents = _, Pdf.Got d} -> d | _ -> assert false in
         (if components = 3 then pnm_to_channel_24 else
@@ -749,8 +749,8 @@ let recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_j
         if !debug_image_processing then Printf.printf "could not decode - skipping %s length %i\n%!" (Pdfwrite.string_of_pdf x) size;
         restore ()
     | None ->
-      let out = Filename.temp_file "cpdf" "convertin" ^ ".pnm" in
-      let out2 = Filename.temp_file "cpdf" "convertout" ^ ".jbig2" in
+      let out = Filename.temp_file "cpdf" "convertin.pnm" in
+      let out2 = Filename.temp_file "cpdf" "convertout.jbig2" in
       let fh = open_out_bin out in
       let data = match s with Pdf.Stream {contents = _, Pdf.Got d} -> d | _ -> assert false in
         pnm_to_channel_1_inverted fh w h data;
@@ -814,7 +814,7 @@ let preprocess_jbig2_lossy ~path_to_jbig2enc ~jbig2_lossy_threshold ~length_thre
                    if !debug_image_processing then Printf.printf "could not decode - skipping %s length %i\n%!" (Pdfwrite.string_of_pdf x) size;
                    restore ()
                | None ->
-                   let out = Filename.temp_file "cpdf" "convertin" ^ ".pnm" in
+                   let out = Filename.temp_file "cpdf" "convertin.pnm" in
                    let fh = open_out_bin out in
                    let data = match s with Pdf.Stream {contents = _, Pdf.Got d} -> d | _ -> assert false in
                      pnm_to_channel_1_inverted fh w h data;
