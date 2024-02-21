@@ -606,7 +606,11 @@ let lossless_out pdf ~pixel_threshold ~length_threshold extension s dict referen
 
 let lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~qlossless ~path_to_convert s dict reference =
   complain_convert path_to_convert;
-  match lossless_out pdf ~pixel_threshold ~length_threshold ".jpg" s dict reference with None -> () | Some (out, out2, size, components, w, h) ->
+  match lossless_out pdf ~pixel_threshold ~length_threshold ".jpg" s dict reference with
+  | None -> ()
+  | Some (_, _, _, -2, _, _) ->
+      if !debug_image_processing then Printf.printf "skipping indexed colorspace\n%!"
+  | Some (out, out2, size, components, w, h) ->
   let retcode =
     let command = 
       (Filename.quote_command path_to_convert
