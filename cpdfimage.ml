@@ -727,11 +727,11 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolat
     remove out2
 
 let lossless_resample_target_dpi objnum pdf ~pixel_threshold ~length_threshold ~factor ~target_dpi_info ~interpolate ~path_to_convert s dict reference =
-  (*Printf.printf "lossless_resample_target_dpi\n";*)
   let real_factor = factor /. Hashtbl.find target_dpi_info objnum *. 100.  in
-    (*Printf.printf "real_factor = %f\n" real_factor;*)
     if real_factor < 100. then
       lossless_resample pdf ~pixel_threshold ~length_threshold ~factor:real_factor ~interpolate ~path_to_convert s dict reference
+    else
+      if !debug_image_processing then Printf.printf "failed to meet dpi target\n%!"
 
 let recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_jbig2enc pdf s dict reference =
   complain_jbig2enc path_to_jbig2enc;
