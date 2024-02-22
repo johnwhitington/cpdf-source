@@ -477,7 +477,6 @@ type args =
    mutable path_to_ghostscript : string;
    mutable path_to_im : string;
    mutable path_to_p2p : string;
-   mutable path_to_convert : string;
    mutable path_to_jbig2enc : string;
    mutable frombox : string option;
    mutable tobox : string option;
@@ -611,7 +610,6 @@ let args =
    path_to_ghostscript = "";
    path_to_im = "";
    path_to_p2p = "";
-   path_to_convert = "";
    path_to_jbig2enc = "";
    frombox = None;
    tobox = None;
@@ -1514,9 +1512,6 @@ let setimageresolution f =
 
 let setimpath p =
   args.path_to_im <- p
-
-let setconvertpath p =
-  args.path_to_convert <- p
 
 let setjbig2encpath p =
   args.path_to_jbig2enc <- p
@@ -2661,9 +2656,6 @@ and specs =
    ("-process-images-info",
      Arg.Unit setprocessimagesinfo,
      " Show info when processing images");
-   ("-convert",
-     Arg.String setconvertpath,
-     " Path to convert executable");
    ("-jbig2enc",
      Arg.String setjbig2encpath,
      " Path to jbig2enc executable");
@@ -4468,7 +4460,7 @@ let go () =
           ~q:args.jpegquality ~qlossless:args.jpegqualitylossless ~onebppmethod:args.onebppmethod ~jbig2_lossy_threshold:args.jbig2_lossy_threshold
           ~length_threshold:args.length_threshold ~percentage_threshold:args.percentage_threshold ~pixel_threshold:args.pixel_threshold 
           ~dpi_threshold:args.dpi_threshold ~factor:args.resample_factor ~interpolate:args.resample_interpolate
-          ~path_to_jbig2enc:args.path_to_jbig2enc ~path_to_convert:args.path_to_convert range pdf;
+          ~path_to_jbig2enc:args.path_to_jbig2enc ~path_to_convert:args.path_to_im range pdf;
         write_pdf false pdf
   | Some (ExtractStream i) ->
       let pdf = get_single_pdf args.op false in

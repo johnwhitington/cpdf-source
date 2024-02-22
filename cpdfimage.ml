@@ -8,7 +8,7 @@ let complain_jbig2enc path =
   if path = "" then error "Specify jbig2enc location with -jbig2enc"
 
 let complain_convert path =
-  if path = "" then error "Specify convert location with -convert"
+  if path = "" then error "Specify magick location with -im"
 
 let remove x =
   try (*Printf.printf "%s\n" x;*) Sys.remove x with _ -> ()
@@ -671,9 +671,9 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolat
   let retcode =
     let command = 
       Filename.quote_command path_to_convert
-        ((if components = 4 then ["-depth"; "8"; "-size"; string_of_int w ^ "x" ^ string_of_int h] else []) @
+        ([out] @ (if components = 4 then ["-depth"; "8"; "-size"; string_of_int w ^ "x" ^ string_of_int h] else []) @
         (if components = 1 then ["-define"; "png:color-type=0"; "-colorspace"; "Gray"] else if components = 3 then ["-define"; "-png:color-type=2"; "-colorspace"; "RGB"] else if components = 4 then ["-colorspace"; "CMYK"] else []) @
-        [if interpolate && components > -2 then "-resize" else "-sample"; string_of_float factor ^ "%"; out; out2])
+        [if interpolate && components > -2 then "-resize" else "-sample"; string_of_float factor ^ "%"; out2])
     in
       (*Printf.printf "%S\n" command;*)
       Sys.command command
