@@ -3688,7 +3688,7 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 
 \vspace{1.5mm}
 \noindent\small\verb!cpdf -process-images [-process-images-info] in.pdf [<range>]!\\
-\noindent\small\verb!     [-convert <filename>] [-jbig2enc <filename>]!\\
+\noindent\small\verb!     [-im <filename>] [-jbig2enc <filename>]!\\
 \noindent\small\verb!     [-lossless-resample[-dpi] <n> | -lossless-to-jpeg <n>]!\\
 \noindent\small\verb!     [-jpeg-to-jpeg <n>] [-1bpp-method <method>]!\\
 \noindent\small\verb!     [-jbig2-lossy-threshold <n>]!\\
@@ -3818,14 +3818,14 @@ Cpdf can process images within a PDF, replacing the original with the processed 
 There are a number of option to deal with lossy (e.g JPEG) and lossless images, one or more of which is specified. For example, the \texttt{-jpeg-to-jpeg} option processes existing JPEG images to a given JPEG quality level:
 
   \begin{framed}
-  \noindent\small\verb!cpdf -process-images -jpeg-to-jpeg 65 in.pdf -o out.pdf!
+  \noindent\small\verb!cpdf -process-images -im magick -jpeg-to-jpeg 65 in.pdf -o out.pdf!
   \end{framed}
 
-\noindent The \texttt{convert} executable (part of ImageMagick) is required. If not installed under a standard name, use \texttt{-convert} to supply it. If we specify \texttt{-process-images-info} too, we can see the work being done:
+\noindent ImageMagick is required. Use \texttt{-im} to supply it. If we specify \texttt{-process-images-info} too, we can see the work being done:
 
   \begin{framed}
   \noindent\small\verb!cpdf -process-images -process-images-info -jpeg-to-jpeg 65!\\
-  \noindent\small\verb!     -convert /opt/homebrew/bin/convert in.pdf -o out.pdf!
+  \noindent\small\verb!     -im magick in.pdf -o out.pdf!
   \end{framed}
 
 \noindent Here is sample output:
@@ -3848,7 +3848,7 @@ The \texttt{-lossless-to-jpeg} option converts lossless images within PDFs to JP
 
   \begin{framed}
   \noindent\small\verb!cpdf -process-images -jpeg-to-jpeg 65 -lossless-to-jpeg 80!\\
-  \noindent\small\verb!     in.pdf -o out.pdf!
+  \noindent\small\verb!     -im magick in.pdf -o out.pdf!
   \end{framed}
 
 \noindent Images are only processed if they meet certain thresholds. Changes to the default thresholds may be specified:
@@ -3866,14 +3866,15 @@ Option & Effect & Default value\\\hline
 \noindent Instead of compressing lossless images with lossy JPEG compression, we can resample losslessly:
 
   \begin{framed}
-  \noindent\small\verb!cpdf -process-images -lossless-resample 80 in.pdf -o out.pdf!
+  \noindent\small\verb!cpdf -process-images -im magick -lossless-resample 80 in.pdf -o out.pdf!
   \end{framed}
 
 %FIXME check what 80 means here
 \noindent This will resample losslessly-compressed images to contain 80 percent of the original pixels. By default, there will be no interpolation. To use interpolation, which may result in slightly larger data, add \texttt{-resample-interpolate}. To use a DPI target instead, use \texttt{-lossless-resample-dpi} instead:
 
   \begin{framed}
-  \noindent\small\verb!cpdf -process-images -lossless-resample-dpi 300 in.pdf -o out.pdf!
+  \noindent\small\verb!cpdf -process-images -im magick -lossless-resample-dpi 300!\\
+  \noindent\small\verb!     in.pdf -o out.pdf!
   \end{framed}
 
 \noindent The methods so far introduced do not operate on 1 bit per pixel data. Different compression mechanisms are typically in use, and we need a different approach. The \texttt{-1bpp-method} option specifies what to do with losslessly compressed 1 bit-per-pixel images.
@@ -3889,7 +3890,7 @@ Method & Effect\\\hline
 \noindent These options require the \texttt{jbig2enc} program, whose location may be specified with \texttt{-jbig2enc}. For lossy JBIG2, the threshold for similarity of data may be set with \texttt{-jbig2-lossy-threshold}. For example:
 
   \begin{framed}
-  \noindent\small\verb!cpdf -process-images -jbig2enc /usr/bin/jbig2enc -1bpp-method JBIG2Lossy!\\
+  \noindent\small\verb!cpdf -process-images -jbig2enc jbig2enc -1bpp-method JBIG2Lossy!\\
   \noindent\small\verb!     -jbig2-lossy-threshold 75 in.pdf -o out.pdf!
   \end{framed}
 
