@@ -3340,6 +3340,12 @@ at which the command is executed.
 
 \section{Upon Opening a Document}
 
+\noindent When considering the following commands, also NB: If the file has a valid \texttt{/OpenAction} setting, which tells the PDF reader to open at a certain page or position on a page, this can override the page layout or display options. To prevent this, preprocess the file with the \texttt{-remove-dict-entry} functionality from Section \ref{removedictentry}:
+
+  \begin{framed}
+    \noindent\small\verb!cpdf -remove-dict-entry /OpenAction in.pdf -o out.pdf!
+  \end{framed}
+
   \subsection{Page Layout}
 \index{page!layout}
   The \texttt{-set-page-layout} operation specifies the page layout to be used
@@ -3361,11 +3367,7 @@ when a document is opened in, for instance, Acrobat. The possible
     \noindent\small\verb!cpdf -set-page-layout TwoColumnRight in.pdf -o out.pdf!
   \end{framed}
   
-\noindent NB: If the file has a valid \texttt{/OpenAction} setting, which tells the PDF reader to open at a certain page or position on a page, this will override the page layout option. To prevent this, use the \texttt{-remove-dict-entry} functionality from Section \ref{removedictentry}:
 
-  \begin{framed}
-    \noindent\small\verb!cpdf -remove-dict-entry /OpenAction in.pdf -o out.pdf!
-  \end{framed}
 
   \subsection{Page Mode}
 \index{page!mode}
@@ -3395,6 +3397,9 @@ document when first opened. The possible (case-sensitive) values are:
   \noindent As would be expected, \texttt{FullScreen} is not allowed here.
   
   \subsection{Display Options}
+
+The appearance of the PDF viewer upon opening a document may be set with these options. Each is boolean - supply \texttt{true} or \texttt{false}:
+
 \vspace{2mm}
   {\small\begin{tabular}{ll}
     \texttt{-hide-toolbar} & \vspace{2mm} \parbox{8cm}{Hide the viewer's toolbar} \\
