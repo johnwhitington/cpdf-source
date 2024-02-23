@@ -13,7 +13,7 @@ type t =
    idat : bytes}
 
 (* Writing *)
-let tbl =
+(*let tbl =
   ref ([||] : int32 array)
 
 let mktbl () =
@@ -80,7 +80,7 @@ let write_png png o =
   Bytes.set ihdr 12 (char_of_int 0); (* interlace method *)
   write_chunk o "IHDR" ihdr;
   write_chunk o "IDAT" (Bytes.unsafe_of_string (string_of_bytes png.idat));
-  write_chunk o "IEND" (Bytes.create 0)
+  write_chunk o "IEND" (Bytes.create 0)*)
 
 (* Reading *)
 let string_of_tag t =

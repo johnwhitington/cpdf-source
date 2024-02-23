@@ -66,9 +66,9 @@ let read_byte b = getval_31 b 8
 
 let read_short b = sign_extend 16 (getval_31 b 16)
 
-let read_f2dot14 b =
+(*let read_f2dot14 b =
   let v = read_ushort b in
-    float_of_int (sign_extend 2 (v lsr 14)) +. (float_of_int (v land 0x3FFF) /. 16384.)
+    float_of_int (sign_extend 2 (v lsr 14)) +. (float_of_int (v land 0x3FFF) /. 16384.)*)
 
 let discard_bytes b n =
   for x = 1 to n do ignore (getval_31 b 8) done
@@ -129,7 +129,7 @@ let read_format_4_encoding_table b =
     done;
     t
 
-let print_encoding_table fmt table =
+(*let print_encoding_table fmt table =
   let unicodedata = Cpdfunicodedata.unicodedata () in
   let unicodetable = Hashtbl.create 16000 in
    iter
@@ -144,7 +144,7 @@ let print_encoding_table fmt table =
         if !dbg then
           Printf.printf "Char %s (%s) is at glyph index %i\n"
           str (try Hashtbl.find unicodetable str with Not_found -> "Not_found") gi)
-    l
+    l*)
 
 let read_encoding_table fmt length version b =
   if !dbg then Printf.printf "********** format %i table has length, version %i, %i\n" fmt length version;
@@ -374,10 +374,6 @@ let calculate_width_higher unitsPerEm firstchar lastchar subset cmapdata hmtxdat
 
 let calculate_maxwidth unitsPerEm hmtxdata =
   pdf_unit unitsPerEm (hd (sort (fun a b -> compare b a) (Array.to_list hmtxdata)))
-
-let fonumr = ref (-1)
-
-let fonum () = fonumr += 1; !fonumr
 
 let subset_font major minor tables indexToLocFormat subset encoding cmap loca mk_b glyfoffset data =
   let tables = Array.of_list (sort (fun (_, _, o, _) (_, _, o', _) -> compare o o') tables) in

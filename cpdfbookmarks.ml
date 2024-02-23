@@ -1,17 +1,6 @@
 open Pdfutil
 open Cpdferror
 
-(* Add bookmarks *)
-let read_lines input =
-  let lines = ref [] in
-   try
-     while true do
-       let c = read_line input in
-         lines =| c
-    done; []
-   with
-     _ -> rev !lines
-
 (* Verify a list of bookmarks. Positive jumps of > 1 not allowed, no numbers
 smaller than 0. *)
 let rec verify_bookmarks pdf lastlevel fastrefnums endpage = function
@@ -41,9 +30,6 @@ let rec fixup_characters prev = function
   | '\\'::'n'::t -> fixup_characters ('\n'::prev) t
   | h::t -> fixup_characters (h::prev) t
 
-let debug_bookmark_string s =
-  Printf.printf "STR: %s\n" s
-
 (* If optionaldest = [Pdfgenlex.LexString s], we parse the string, convert the
  * integer to an indirect of the real page target, and then put it in. *)
 let target_of_markfile_obj pdf i' pdfobj =
@@ -67,6 +53,9 @@ let target_of_markfile_target pdf i' = function
       let pdfobj = Pdfread.parse_single_object s in
         target_of_markfile_obj pdf i' pdfobj
   | _ -> Pdfpage.target_of_pagenumber pdf i'
+
+(*let debug_bookmark_string s =
+  Printf.printf "STR: %s\n" s*)
 
 let bookmark_of_data pdf i s i' isopen optionaldest =
     (*debug_bookmark_string s;
@@ -266,31 +255,6 @@ let get_bookmarks_json pdf =
   let o, br = Pdfio.input_output_of_bytes (20 * 1024) in
     list_bookmarks ~json:true Cpdfmetadata.UTF8 (ilist 1 (Pdfpage.endpage pdf)) pdf o;
     Pdfio.extract_bytes_from_input_output o br
-
-(* Split at bookmarks *)
-
-let get_bookmark_name pdf marks splitlevel n _ =
-  let refnums = Pdf.page_reference_numbers pdf in
-  let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
-  match keep (function m -> n = Pdfpage.pagenumber_of_target ~fastrefnums pdf m.Pdfmarks.target && m.Pdfmarks.level <= splitlevel) marks with
-  | {Pdfmarks.text = title}::_ -> Cpdfattach.remove_unsafe_characters Cpdfmetadata.UTF8 title
-  | _ -> ""
-
-(* Return list, in order, a *set* of page numbers of bookmarks at a given level *)
-let bookmark_pages level pdf =
-  let refnums = Pdf.page_reference_numbers pdf in
-  let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
-  setify_preserving_order
-    (option_map
-      (function l when l.Pdfmarks.level = level -> Some (Pdfpage.pagenumber_of_target ~fastrefnums pdf l.Pdfmarks.target) | _ -> None)
-      (Pdfmarks.read_bookmarks pdf))
-
-(* Called from cpdflib.ml - different from above *)
-let split_on_bookmarks pdf level =
-  let points = lose (eq 0) (map pred (bookmark_pages level pdf))
-  in let pdf_pages = Pdfpage.pages_of_pagetree pdf in
-    let ranges = splitat points (indx pdf_pages) in
-      map (fun rs -> Pdfpage.pdf_of_pages pdf rs) ranges
 
 let get_bookmark_name encoding pdf marks splitlevel n _ =
   let refnums = Pdf.page_reference_numbers pdf in

@@ -313,7 +313,7 @@ let bytes_of_xmltree t =
     Cpdfxmlm.output_doc_tree frag o t;
     bytes_of_string (Buffer.contents buf)
 
-let rec string_of_xmltree = function
+(*let rec string_of_xmltree = function
    D d ->
      Printf.sprintf "DATA {%s}" d
  | E (tag, trees) ->
@@ -335,7 +335,7 @@ and string_of_attributes attrs =
 
 and string_of_xmltrees trees =
   fold_left
-    (fun a b -> a ^ " " ^ b) "" (map string_of_xmltree trees)
+    (fun a b -> a ^ " " ^ b) "" (map string_of_xmltree trees)*)
 
 let adobe = "http://ns.adobe.com/pdf/1.3/"
 let xmp = "http://ns.adobe.com/xap/1.0/"

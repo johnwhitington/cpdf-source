@@ -23,9 +23,6 @@ let rec insert_after_many_changes isbefore padsize offset range = function
       else
         item::insert_after_many_changes isbefore padsize offset range t
 
-let print_changes =
-  iter (fun (f, t) -> Printf.printf "%i --> %i\n" f t)
-
 let pad_with_pdf (range : int list) (pdf : Pdf.t) (isbefore : bool) (padfile : Pdf.t) =
   let range = sort compare (setify range) in
   let merged =

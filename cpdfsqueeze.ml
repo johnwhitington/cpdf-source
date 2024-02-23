@@ -2,14 +2,14 @@ open Pdfutil
 open Pdfio
 
 (* For debugging *)
-let report_pdf_size pdf =
+(*let report_pdf_size pdf =
   Pdf.remove_unreferenced pdf;
   Pdfwrite.pdf_to_file_options ~preserve_objstm:false ~generate_objstm:false
   ~compress_objstm:false None false pdf "temp.pdf";
   let fh = open_in_bin "temp.pdf" in
     Printf.printf "Size %i bytes\n" (in_channel_length fh);
     flush stdout;
-    close_in fh
+    close_in fh*)
 
 (* Recompress anything which isn't compressed, unless it's metadata. *)
 let recompress_stream pdf = function

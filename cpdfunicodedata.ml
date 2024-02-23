@@ -110,25 +110,6 @@ let rec parse_unicodedata a i =
     then rev a
     else parse_unicodedata (parse_entry i::a) i
 
-let print_entry e =
-  Printf.printf
-    "{{%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s}}\n"
-    e.code_value
-    e.character_name
-    e.general_category
-    e.canonical_combining_classes
-    e.bidirectional_category
-    e.character_decomposition_mapping
-    e.decimal_digit_value
-    e.digit_value
-    e.numeric_value
-    e.mirrored
-    e.unicode_10_name
-    e.iso_10646_comment_field
-    e.uppercase_mapping
-    e.lowercase_mapping
-    e.titlecase_mapping
-
 let unicodedata =
   memoize
     (fun () ->

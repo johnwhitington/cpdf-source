@@ -23,12 +23,6 @@ let charcodes_of_utf8 font s =
     in
     implode (map char_of_int charcodes)
 
-let unicode_codepoint_of_pdfcode encoding_table glyphlist_table p =
-  try
-    hd (Hashtbl.find glyphlist_table (Hashtbl.find encoding_table p))
-  with
-    Not_found -> 0
-
 (* Get the width of some text in the given font *)
 let width_of_text font text =
   match font with
@@ -120,33 +114,6 @@ let extract_num header s =
     [Pdfgenlex.LexInt i] -> Pdf.Integer i
   | [Pdfgenlex.LexReal f] -> Pdf.Real f
   | _ -> raise (Failure ("extract_num: " ^ s))
-
-let extract_fontbbox header s =
-  let num = function
-      Pdfgenlex.LexInt i -> Pdf.Integer i
-    | Pdfgenlex.LexReal f -> Pdf.Real f
-    | _ -> raise (Failure "extract_fontbbox")
-  in
-    match Pdfgenlex.lex_string (Hashtbl.find header s) with
-      [a; b; c; d] -> [num a; num b; num c; num d] 
-    | _ -> raise (Failure "extract_fontbbox")
-
-let remove_slash s =
-  match explode s with
-   '/'::x -> implode x
-  | _ -> raise (Failure "remove_slash")
-
-let extract_widths chars_and_widths =
-  let win_to_name = map (fun (x, y) -> (y, x)) Pdfglyphlist.name_to_win in
-    map
-      (fun x ->
-          try
-            let name = List.assoc x win_to_name in
-              let width = List.assoc (remove_slash name) chars_and_widths in
-                width
-          with
-            _ -> 0)
-      (ilist 0 255)
 
 (* For finding the height for URL links, we try to find the Cap Height for the
    font. We fall back to using the font size alone if we cannot get the cap

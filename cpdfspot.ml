@@ -1,8 +1,5 @@
 open Pdfutil
 
-let print_spot_colour n s =
-  Printf.printf "%i %s\n" n s
-
 let list_spot_colours pdf =
   Pdf.objiter
     (fun _ obj ->
@@ -14,4 +11,3 @@ let list_spot_colours pdf =
            end
        | _ -> ())
     pdf
-

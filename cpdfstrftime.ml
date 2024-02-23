@@ -111,11 +111,6 @@ let contents_of_file filename =
     s
 
 (* Platform-independent current time and date with no Unix module *)
-let debug_str s =
-  for x = 0 to String.length s - 1 do
-    Printf.printf "%i\t%C\n" x s.[x]
-  done
-
 let utf8_of_utf16le s =
   implode (drop_evens (tl (tl (explode s))))
 

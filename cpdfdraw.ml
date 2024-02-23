@@ -51,7 +51,7 @@ type drawops =
   | RenderMode of int
   | Rise of float
 
-let rec string_of_drawop = function
+(*let rec string_of_drawop = function
   | Qq o -> "Qq (" ^ string_of_drawops o ^ ")"
   | FormXObject (_, _, _, _, _, o) -> "FormXObject (" ^ string_of_drawops o ^ ")"
   | TextSection o -> "TextSection (" ^ string_of_drawops o ^ ")"
@@ -72,7 +72,7 @@ let rec string_of_drawop = function
   | RenderMode _ -> "RenderMode" | Rise _ -> "Rise"
 
 and string_of_drawops l =
-  fold_left (fun x y -> x ^ " " ^ y) "" (map string_of_drawop l)
+  fold_left (fun x y -> x ^ " " ^ y) "" (map string_of_drawop l)*)
 
 (* Per page / xobject resources *)
 type res = 

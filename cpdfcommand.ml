@@ -23,7 +23,6 @@ let null () = ()
 let initial_file_size = ref 0
 
 let empty = Pdf.empty ()
-let emptypage = Pdfpage.blankpage Pdfpaper.a4
 
 let fontnames =
   [(Pdftext.TimesRoman, ["NimbusRoman-Regular.ttf"]);
@@ -1345,11 +1344,6 @@ let setbatesrange n =
   in
     args.bates <- n + 1 - first_page
 
-let setpagerotation r =
-  match r with
-  | 90 | 270 -> args.pagerotation <- r
-  | _ -> error "Bad Page rotation. Try 90 or 270."
-
 let set_input s =
   args.original_filename <- s;
   args.inputs <- (InFile s, "all", "", "", ref false, None)::args.inputs
@@ -1691,15 +1685,6 @@ let setidironlypdfs () =
 
 let setnowarnrotate () =
   args.no_warn_rotate <- true
-
-(* Unused for now *)
-let setfontttfencoding s =
-  args.fontencoding <-
-    match s with
-    | "MacRomanEncoding" -> Pdftext.MacRomanEncoding
-    | "WinAnsiEncoding" -> Pdftext.WinAnsiEncoding
-    | "StandardEncoding" -> Pdftext.StandardEncoding
-    | _ -> error "Unknown encoding"
 
 let whingemalformed () =
   Pdfe.log "Command line must be of exactly the form\ncpdf <infile> -gs <path> -gs-malformed-force -o <outfile>\n";
@@ -2970,9 +2955,6 @@ let rec get_single_pdf ?(decrypt=true) ?(fail=false) op read_lazy =
   | _ ->
       raise (Arg.Bad "cpdf: No input specified.\n")
 
-let get_single_pdf_nodecrypt read_lazy =
-  get_single_pdf ~decrypt:false None read_lazy 
-
 let filenames = null_hash ()
 
 let squeeze_logto filename x =
@@ -3332,19 +3314,6 @@ let getencryption pdf =
   | Some (Pdfwrite.AES256bit false) -> "256bit AES, Metadata not encrypted"
   | Some (Pdfwrite.AES256bitISO true) -> "256bit AES ISO, Metadata encrypted"
   | Some (Pdfwrite.AES256bitISO false) -> "256bit AES ISO, Metadata not encrypted"
-
-(* If pages in stamp < pages in main, extend stamp by repeating its last page. If pages in stamp more, chop stamp *)
-let equalize_pages_extend main stamp =
-  let length_stamp = Pdfpage.endpage stamp
-  in let length_main = Pdfpage.endpage main
-  in let extend_lastpage lastpage page len =
-    Pdfpage.change_pages true page (Pdfpage.pages_of_pagetree page @ (many lastpage len))
-  in let chop pdf n =
-    Pdfpage.change_pages true pdf (take (Pdfpage.pages_of_pagetree pdf) n)
-  in
-    if length_stamp > length_main
-      then chop stamp length_main
-      else extend_lastpage (last (Pdfpage.pages_of_pagetree stamp)) stamp (length_main - length_stamp)
 
 let write_json output pdf =
   match output with

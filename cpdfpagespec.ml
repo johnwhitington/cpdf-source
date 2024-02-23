@@ -260,5 +260,5 @@ let string_of_pagespec pdf = function
                   in
                     fold_left ( ^ ) "" (interleave "," rangestrings)
 
-let string_of_range r =
-  fold_left (fun a b -> a ^ " " ^ b) "" (map string_of_int r)
+(*let string_of_range r =
+  fold_left (fun a b -> a ^ " " ^ b) "" (map string_of_int r)*)
