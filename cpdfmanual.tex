@@ -399,8 +399,7 @@ These examples demonstrate just a few of the facilities provided by the Coherent
 
 \noindent List all URLs in annotation hyperlinks in \texttt{in.pdf}.
 
-% Letter
-\pagestyle{empty}
+\pagestyle{empty}\thispagestyle{plain}
 \cleardoublepage
 
 \begin{cpdflib}
@@ -1725,6 +1724,7 @@ Bleed box & Pink
 \medskip
 
 \noindent  The \texttt{-trim-marks} operation adds trim marks to a PDF file. The trim box must be present.
+\thispagestyle{fancy}
 
 \begin{cpdflib}
 \clearpage
@@ -2663,10 +2663,10 @@ A rectangle may be placed on one or more pages by using the \texttt{-add-rectang
                     in.pdf -o out.pdf\end{verbatim}
 \end{framed}
 
-\noindent This can be used to blank out or highlight part of the document. The following positioning options work as you would expect: \texttt{-topleft}, \texttt{-top}, \texttt{-topright}, \texttt{-right}, \texttt{-bottomright}, \texttt{-bottom}, \texttt{-bottomleft}, \texttt{-left}, \texttt{-center}. When using the option \texttt{-pos-left "x y"}, the point (x, y) refers to the bottom-left of the rectangle. When using the option \texttt{-pos-right "x y"}, the point (x, y) refers to the bottom-right of the rectangle. When using the option \texttt{-pos-center "x y"}, the point (x, y) refers to the center of the rectangle. The options \texttt{-diagonal} and \texttt{-reverse-diagonal} have no meaning.\pagestyle{empty}\thispagestyle{fancy}
+\noindent This can be used to blank out or highlight part of the document. The following positioning options work as you would expect: \texttt{-topleft}, \texttt{-top}, \texttt{-topright}, \texttt{-right}, \texttt{-bottomright}, \texttt{-bottom}, \texttt{-bottomleft}, \texttt{-left}, \texttt{-center}. When using the option \texttt{-pos-left "x y"}, the point (x, y) refers to the bottom-left of the rectangle. When using the option \texttt{-pos-right "x y"}, the point (x, y) refers to the bottom-right of the rectangle. When using the option \texttt{-pos-center "x y"}, the point (x, y) refers to the center of the rectangle. The options \texttt{-diagonal} and \texttt{-reverse-diagonal} have no meaning.
 
 \section{Low-level facilities}
-
+\pagestyle{empty}\thispagestyle{fancy}
 These two operations add content directly to the beginning or end of the page data for a page. You must understand the PDF page description language to use these.
 
 \begin{framed}
@@ -3031,6 +3031,8 @@ given page range.
     \noindent Remove annotations from the first page of a file only.
   \end{framed}
 
+\pagestyle{empty}\thispagestyle{fancy}
+
 \begin{cpdflib}
 \clearpage
 \section*{C Interface}
@@ -3072,6 +3074,7 @@ given page range.
 \end{jscpdflib}
 
 \chapter{Document Information and Metadata}\label{chap:11}
+\pagestyle{fancy}
 \index{document information}
 \index{metadata}
   \begin{framed}
