@@ -13,7 +13,6 @@ b) cpdf as an OCaml library, for which documentation is here:
 
 [https://coherentpdf.com/cpdf/](https://coherentpdf.com/cpdf/)
 
-
 Prerequisites to build
 ----------------------
 
@@ -65,7 +64,6 @@ The file `cpdfmanual.pdf` in this folder is the documentation for the command
 line tools. The documentation for the cpdf OCaml library is in `doc/html/cpdf/`
 in this folder once the library has been built.
 
-
 C API
 -----
 
@@ -80,7 +78,30 @@ Python API
 
 A Python interface to cpdf is available:
 
-[https://pypi.org/project/pycpdflib/](https://pypi.org/project/pycpdflib/)
+[https://pypi.org/project/pycpdflib](https://pypi.org/project/pycpdflib)
+
+Java API
+--------
+
+A Java interface to cpdf is available:
+
+[https://github.com/coherentgraphics/jcpdf](https://github.com/coherentgraphics/jcpdf)
+
+.NET API
+--------
+
+A .NET interface to cpdf is available:
+
+[https://github.com/coherentgraphics/dotnet-libcpdf](https://github.com/coherentgraphics/dotnet-libcpdf)
+
+JavaScript API
+--------------
+
+A JavaScript version of cpdf, for server and client side is available:
+
+Distribution: [https://www.npmjs.com/package/coherentpdf](https://www.npmjs.com/package/coherentpdf)
+
+Source: [https://github.com/coherentgraphics/coherentpdf.js](https://github.com/coherentgraphics/coherentpdf.js)
 
 Acknowledgments
 ---------------
