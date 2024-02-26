@@ -1257,7 +1257,7 @@ of the inputs only appear once in the output.
 
 The \texttt{-merge-add-bookmarks} option adds a top-level bookmark for each file, using the filename. Any existing bookmarks are retained. The \texttt{-merge\--add\--bookmarks\--use\--titles}, when used in conjunction with \texttt{-merge-add-bookmarks}, will use the title from each PDF's metadata instead of the filename.
 
-The \texttt{-no-process-struct-tree} option prevents processing of structure trees. Instead of merging them, they are simply copied across wholesale. This can be useful with \texttt{-collate} which can presently cause an increased size. Or, to simply save time when a merged structure tree is not required.
+The \texttt{-no-process-struct-tree} option prevents processing of structure trees. Instead of merging them, they are simply copied across wholesale. This can be useful with \texttt{-collate} which can presently cause an increased size. Or, to simply save time when a merged structure tree is not required. 
 
   \section{Splitting}
 \index{splitting}
@@ -1363,7 +1363,12 @@ Spraying is a sort of de-collation. It takes one input file, and writes pages in
 
 \section{Encrypting with Split operations}
 \index{encryption}
-The encryption parameters described in Chapter \ref{encryption} may be added to the command line to encrypt each split PDF. Similarly, the \texttt{-recrypt} switch described in Chapter \ref{basicusage} may by given to re-encrypt each file with the existing encryption of the source PDF. 
+The encryption parameters described in Chapter \ref{encryption} may be added to the command line to encrypt each split PDF. Similarly, the \texttt{-recrypt} switch described in Chapter \ref{basicusage} may by given to re-encrypt each file with the existing encryption of the source PDF.
+
+\section{Splitting and structure trees}
+
+Presently, cpdf will include the input structure tree in each output PDF. To remove a structure tree entirely, preprocess the file with \texttt{-remove-dict-entry /StructTreeRoot}. If you do not require structure trees, this will lead to faster splitting, and smaller outputs.
+
 \pagestyle{empty}\thispagestyle{fancy}
 
 \begin{cpdflib}
