@@ -1,6 +1,6 @@
 open Pdfutil
 
-let rec of_utf8_with_newlines fontpack fontsize t =
+let of_utf8_with_newlines fontpack fontsize t =
   let items = ref [] in
   let currfont = ref ~-1 in
   let codepoints = Pdftext.codepoints_of_utf8 t in

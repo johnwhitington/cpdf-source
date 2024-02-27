@@ -28,7 +28,7 @@ let removetext range pdf =
       in
         Cpdfpage.process_pages (Pdfpage.ppstub removetext_page) pdf range
 
-let rec remove_all_text_ops pdf resources content =
+let remove_all_text_ops pdf resources content =
   let is_textop = function
     Pdfops.Op_Tj _ | Pdfops.Op_' _ | Pdfops.Op_'' _ | Pdfops.Op_TJ _ -> true
   | _ -> false

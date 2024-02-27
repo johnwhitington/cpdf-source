@@ -924,7 +924,7 @@ let operation_allowed pdf banlist op =
       if args.debugcrypt then Printf.printf "Permissions: %s\n" (getpermissions pdf);
       not (banned banlist op)
 
-let rec decrypt_if_necessary (_, _, user_pw, owner_pw, was_dec_with_owner, _) op pdf =
+let decrypt_if_necessary (_, _, user_pw, owner_pw, was_dec_with_owner, _) op pdf =
   if args.debugcrypt then
     begin match op with
       None -> flprint "decrypt_if_necessary: op = None\n"
@@ -3286,7 +3286,7 @@ let rec split_max_search pdf s b p q =
         then split_max_search pdf s b (half + 1) q
         else split_max_search pdf s b p half
 
-let rec split_max enc original_filename ~squeeze output_spec s pdf =
+let split_max enc original_filename ~squeeze output_spec s pdf =
   let outs = ref [] in
   let p = ref 1 in
   let endpage = Pdfpage.endpage pdf in

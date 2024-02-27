@@ -136,7 +136,7 @@ let extract_images_inner ~raw ?path_to_p2p ?path_to_im encoding serial pdf resou
   in
     iter2 (write_image ~raw ?path_to_p2p ?path_to_im pdf resources) names images
 
-let rec extract_images_form_xobject ~raw ?path_to_p2p ?path_to_im encoding dedup dedup_per_page pdf serial stem pnum form =
+let extract_images_form_xobject ~raw ?path_to_p2p ?path_to_im encoding dedup dedup_per_page pdf serial stem pnum form =
   let resources =
     match Pdf.lookup_direct pdf "/Resources" form with
       Some (Pdf.Dictionary d) -> Pdf.Dictionary d
