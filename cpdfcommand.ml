@@ -4504,10 +4504,10 @@ let go_withargv argv =
   | _ -> 
   Hashtbl.clear filenames;
   if demo then
-    flprint "This demo is for evaluation only. http://www.coherentpdf.com/\n";    
+    flprint "This demo functions normally, but is for evaluation only. http://www.coherentpdf.com/\n";
   if noncomp then
     begin
-      Pdfe.log "For non-commercial use only\n";
+      Pdfe.log "Functions normally, but is for non-commercial use only\n";
       Pdfe.log "To purchase a license visit http://www.coherentpdf.com/\n\n";
     end;
   try
