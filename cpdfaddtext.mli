@@ -1,13 +1,16 @@
 (** Adding text *)
 
-type color =
+(** Colours *)
+type colour =
   Grey of float
 | RGB of float * float * float
 | CYMK of float * float * float * float
 
-val colour_op : color -> Pdfops.t
+(** Build a colour operation for filling with the given colour. *)
+val colour_op : colour -> Pdfops.t
 
-val colour_op_stroke : color -> Pdfops.t
+(** Build a colour operation for filing with the given colour *)
+val colour_op_stroke : colour -> Pdfops.t
 
 (** Justification of multiline text *)
 type justification =
@@ -26,7 +29,7 @@ val addtexts :
     Cpdfembed.cpdffont -> (*font*)
     int -> (* bates number *)
     int option -> (* bates padding width *)
-    color -> (*colour*)
+    colour -> (*colour*)
     Cpdfposition.position -> (*position*)
     float -> (*linespacing*)
     float -> (*fontsize*)
@@ -45,12 +48,11 @@ val addtexts :
     Pdf.t ->(*pdf*)
     Pdf.t
 
-
 (** Add a rectangle to the given pages. [addrectangle fast (w, h) colour outline linewidth opacity position relative_to_cropbox underneath range pdf]. *) 
 val addrectangle :
     bool ->
     float * float ->
-    color ->
+    colour ->
     bool ->
     float ->
     float ->

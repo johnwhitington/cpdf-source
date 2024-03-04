@@ -430,7 +430,7 @@ type args =
    mutable fontencoding : Pdftext.encoding;
    mutable fontsize : float;
    mutable embedstd14 : string option;
-   mutable color : Cpdfaddtext.color;
+   mutable color : Cpdfaddtext.colour;
    mutable opacity : float;
    mutable position : Cpdfposition.position;
    mutable underneath : bool;
@@ -1201,7 +1201,7 @@ let setaddtext s =
   setop (AddText s) ()
 
 let setcolor s =
-  args.color <- Cpdfdrawcontrol.parse_color s
+  args.color <- Cpdfdrawcontrol.parse_colour s
 
 let setopacity o =
   args.opacity <- o

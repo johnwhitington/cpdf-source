@@ -63,7 +63,7 @@ let pop () =
 
 let readfloats s = map float_of_string (String.split_on_char ' ' s)
 
-let parse_color s =
+let parse_colour s =
   match lookup (String.lowercase_ascii s) Cpdfcolours.colours with
   | Some c ->
       let r = float_of_int ((c land 0xFF0000) lsr 16) /. 255. in
@@ -83,7 +83,7 @@ let parse_color s =
         | _ -> error "Bad color"
 
 let col_of_string s =  
-  match parse_color s with
+  match parse_colour s with
   | Cpdfaddtext.RGB (r, g, b) -> Cpdfdraw.RGB (r, g, b)
   | Cpdfaddtext.Grey g -> Cpdfdraw.Grey g
   | Cpdfaddtext.CYMK (c, y, m, k) -> Cpdfdraw.CYMK (c, y, m, k)

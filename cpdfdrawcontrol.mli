@@ -1,3 +1,5 @@
+(** Cpdfcommand draw control *)
+
 val embed_font : (unit -> Cpdfembed.cpdffont) ref
 val getfontname : (unit -> string) ref
 val getfontsize : (unit -> float) ref
@@ -11,7 +13,7 @@ val loadttfseparate : string -> string -> unit
 val fontpack_initialised : bool ref
 val drawops : (string * Cpdfdraw.drawops list) list ref
 val addop : Cpdfdraw.drawops -> unit
-val parse_color : string -> Cpdfaddtext.color
+val parse_colour : string -> Cpdfaddtext.colour
 val addrect : string -> unit
 val addto : string -> unit
 val addline : string -> unit
@@ -64,3 +66,6 @@ val addnewline : unit -> unit
 val add_default_fontpack : string -> unit
 val addtext : string -> unit
 val addspecialtext : string -> unit
+
+(** This the beginnings of separation between cpdfcommand and cpdfdraw when
+    drawing, for use in cpdflib. It is presently undocumented. *)

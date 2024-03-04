@@ -11,6 +11,7 @@ val extract_images :
 (** Report image resolutions. *)        
 val image_resolution : Pdf.t -> int list -> float -> (int * string * int * int * float * float * int) list
 
+(** Report image resolution data in JSON format *)
 val image_resolution_json : Pdf.t -> int list -> float -> Pdfio.bytes
 
 (** List images in JSON format *)

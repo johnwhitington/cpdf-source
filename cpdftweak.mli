@@ -4,13 +4,13 @@
 val thinlines : int list -> float -> Pdf.t -> Pdf.t
 
 (** Make all text on certain pages black. *)
-val blacktext : Cpdfaddtext.color -> int list -> Pdf.t -> Pdf.t
+val blacktext : Cpdfaddtext.colour -> int list -> Pdf.t -> Pdf.t
 
 (** Make all lines on certain pages black. *)
-val blacklines : Cpdfaddtext.color -> int list -> Pdf.t -> Pdf.t
+val blacklines : Cpdfaddtext.colour -> int list -> Pdf.t -> Pdf.t
 
 (** Make all fills on certain pages black. *)
-val blackfills : Cpdfaddtext.color -> int list -> Pdf.t -> Pdf.t
+val blackfills : Cpdfaddtext.colour -> int list -> Pdf.t -> Pdf.t
 
 (** Append page content. *)
 val append_page_content : string -> bool -> bool -> int list -> Pdf.t -> Pdf.t

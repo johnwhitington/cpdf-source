@@ -2,7 +2,7 @@
 open Pdfutil
 open Cpdferror
 
-type color =
+type colour =
   Grey of float
 | RGB of float * float * float
 | CYMK of float * float * float * float
