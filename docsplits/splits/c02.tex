@@ -296,3 +296,8 @@ int cpdf_hasPermission(int, enum cpdf_permission);
  */
 enum cpdf_encryptionMethod cpdf_encryptionKind(int);
 
+/* cpdf_loadFont(name, filename) loads a TrueType font from the given file
+ * name, and names it. It may then be used when adding text or drawing, using
+ * the name in place of a standard font name. */
+void cpdf_loadFont(char *, char *);
+

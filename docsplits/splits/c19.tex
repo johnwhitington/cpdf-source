@@ -1,70 +1,222 @@
-/* CHAPTER 18. Miscellaneous */
+/* CHAPTER 18. Drawing on PDFs */
 
-/*
- * cpdf_draft(pdf, range, boxes) removes images on the given pages, replacing
- * them with crossed boxes if 'boxes' is true.
- */
-void cpdf_draft(int, int, int);
+/* cpdf_drawBegin sets up the drawing process. It must be called before any
+ * other cpdf_draw* function. */
+void cpdf_drawBegin(void);
 
-/*
- * cpdf_removeAllText(pdf, range) removes all text from the given pages in a
- * given document.
- */
-void cpdf_removeAllText(int, int);
+/* cpdf_drawEnd(pdf, range) commits the drawing to the given PDF on pages in
+ * the given range. */
+void cpdf_drawEnd(int, int);
 
-/* cpdf_blackText(pdf, range) blackens all text on the given pages. */
-void cpdf_blackText(int, int);
+/* cpdf_drawExtended(pdf, range, underneath, bates, filename) is the same as
+ * cpdf_drawEnd, but provides the special parameters which may be required when
+ * using cpdf_drawSText. */
+void cpdf_drawEndExtended(int, int, int, int, char *);
 
-/* cpdf_blackLines(pdf, range) blackens all lines on the given pages. */
-void cpdf_blackLines(int, int);
+/* cpdf_drawRect(x, y, w, h) adds a rectangle to the current path. */
+void cpdf_drawRect(double, double, double, double);
 
-/* cpdf_blackFills(pdf, range) blackens all fills on the given pages. */
-void cpdf_blackFills(int, int);
+/* cpdf_drawTo(x, y) moves the current point to (x, y). */
+void cpdf_drawTo(double, double);
 
-/*
- * cpdf_thinLines(pdf, range, min_thickness) thickens every line less than
- * min_thickness to min_thickness. Thickness given in points.
- */
-void cpdf_thinLines(int, int, double);
+/* cpdf_drawLine(x, y) adds a line from the current point to (x, y) to the
+ * current path. */
+void cpdf_drawLine(double, double);
 
-/* cpdf_copyId(from, to) copies the /ID from one document to another. */
-void cpdf_copyId(int, int);
+/* cpdf_drawBez(x1, y1, x2, y2, x3, y3) adds a bezier curve to the current
+ * path. */
+void cpdf_drawBez(double, double, double, double, double, double);
 
-/* cpdf_removeId(pdf) removes a document's /ID. */
-void cpdf_removeId(int);
+/* cpdf_drawBez23(x2, y2, x3, y3) add a bezier curve with (x1, y1) = current
+ * point. */
+void cpdf_drawBez23(double, double, double, double);
 
-/* cpdf_setVersion(pdf, version) sets the minor version number of a document. */
-void cpdf_setVersion(int, int);
+/* cpdf_drawBez13(x1, y1, x3, y3) add a bezier curve with (x3, y3) = new
+ * current point. */
+void cpdf_drawBez13(double, double, double, double);
 
-/* cpdf_setFullVersion(pdf, major_version, minor_version) sets the full version
- * number of a document. */
-void cpdf_setFullVersion(int, int, int);
+/* cpdf_drawCircle(x, y, r) adds a circle to the current path. */
+void cpdf_drawCircle(double, double, double);
 
-/*
- * cpdf_removeDictEntry(pdf, key) removes any dictionary entry with the given
- * key anywhere in the document.
- */
-void cpdf_removeDictEntry(int, const char[]);
+/* cpdf_drawStroke() strokes the curent path, and clears it. */
+void cpdf_drawStroke(void);
 
-/* cpdf_removeDictEntrySearch(pdf, key, seachterm) removes any dictionary entry
- * with the given key whose value matches the given search term. */
-void cpdf_removeDictEntrySearch(int, const char[], const char[]);
+/* cpdf_drawFill() fills the current path with a non-zero winding rule, and
+ * clears it. */
+void cpdf_drawFill(void);
 
-/* cpdf_replaceDictEntry(pdf, key, newvalue) replaces the value associated with
- * the given key. */
-void cpdf_replaceDictEntry(int, const char[], const char[]);
+/* cpdf_drawFillEo() fills the current path with an even-odd winding rule, and
+ * clears it. */
+void cpdf_drawFillEo(void);
 
-/* cpdf_replaceDictEntry(pdf, key, newvalue, searchterm) replaces the value
- * associated with the given key if the existing value matches the search term.
- */
-void cpdf_replaceDictEntrySearch(int, const char[], const char[], const char[]);
+/* cpdf_drawStrokeFill() fills and then strokes the current path with a
+ * non-zero winding rule, and clears it. */
+void cpdf_drawStrokeFill(void);
 
-/* cpdf_getDictEntries(pdf, key, length) returns a JSON array containing any
- * and all values associated with the given key, and fills in its length. */
-void *cpdf_getDictEntries(int, const char[], int *retlen);
+/* cpdf_drawStrokeFillEo() fills and then strokes the current path with an even
+ * odd winding rule, and clears it. */
+void cpdf_drawStrokeFillEo(void);
 
-/*
- * cpdf_removeClipping(pdf, range) removes all clipping from pages in the
- * given range.
- */
-void cpdf_removeClipping(int, int);
+/* cpdf_drawClose closes the current path by appending a straight line segment
+ * from the current point to the starting point of the subpath. */
+void cpdf_drawClose(void);
+
+/* cpdf_drawClip uses the current path as a clipping region, using the non-zero
+ * winding rule. */
+void cpdf_drawClip(void);
+
+/* cpdf_drawClipEo uses the current path as a clipping region, using the
+ * even-odd winding rule. */
+void cpdf_drawClipEo(void);
+
+/* cpdf_drawStrokColGrey(g) changes to a greyscale stroke colourspace and sets
+ * the stroke colour. */
+void cpdf_drawStrokeColGrey(double);
+
+/* cpdf_drawStrokeColRGB(r, g, b) changes to an RGB stroke colourspace and sets
+ * the stroke colour. */
+void cpdf_drawStrokeColRGB(double, double, double);
+
+/* cpdf_drawStrokeColCYMK(c, y, m, k) changes to a CYMK stroke colourspace and
+ * sets the stroke colour. */
+void cpdf_drawStrokeColCYMK(double, double, double, double);
+
+/* cpdf_drawFillColGrey(g) changes to a greyscale fill colourspace and sets the
+ * fill colour. */
+void cpdf_drawFillColGrey(double);
+
+/* cpdf_drawFillColRGB(r, g, b) changes to an RGB fill colourspace and sets the
+ * fill colour. */
+void cpdf_drawFillColRGB(double, double, double);
+
+/* cpdf_drawFillColCYMK(c, y, m, k) changes to a CYMK fill colourspace and sets
+ * the fill colour. */
+void cpdf_drawFillColCYMK(double, double, double, double);
+
+/* cpdf_drawThick(thickness) sets the line thickness. */
+void cpdf_drawThick(double);
+
+/* Line caps. */
+enum cpdf_cap { cpdf_capButt, cpdf_capRound, cpdf_capSquare };
+
+/* cpdf_drawCap(captype) sets the line cap. */
+void cpdf_drawCap(enum cpdf_cap);
+
+/* Line joins. */
+enum cpdf_join { cpdf_joinMiter, cpdf_joinRound, cpdf_joinBevel };
+
+/* cpdf_drawJoin(jointype) sets the line join type. */
+void cpdf_drawJoin(enum cpdf_join);
+
+/* cpdf_drawMiter(m) sets the miter limit. */
+void cpdf_drawMiter(double);
+
+/* cpdf_drawDash(dash description) sets the line dash style. */
+void cpdf_drawDash(char *);
+
+/* cpdf_drawPush() saves the current graphics state on the stack. */
+void cpdf_drawPush(void);
+
+/* cpdf_drawPop() restores the graphics state from the stack. */
+void cpdf_drawPop(void);
+
+/* cpdf_drawMatrix(a, b, c, d, e, f) appends the given matrix to the Current
+ * Transformation Matrix. */
+void cpdf_drawMatrix(double, double, double, double, double, double);
+
+/* cpdf_drawMTrans(tx, ty) appends a translation by (tx, ty) to the Current
+ * Transformation Matrix. */
+void cpdf_drawMTrans(double, double);
+
+/* cpdf_drawMRot(x, y, a) appends a rotation by a around (a, y) to the Current
+ * Transformation Matrix. */
+void cpdf_drawMRot(double, double, double);
+
+/* cpdf_drawMScale(x, y, sx, sy) appends a scaling by (sx, sy) around (x, y) to
+ * the Current Transformation Matrix. */
+void cpdf_drawMScale(double, double, double, double);
+
+/* cpdf_drawMShearX(x, y, a) appends an X shearing of angle a around (x, y) to
+ * the Current Transformation Matrix. */
+void cpdf_drawMShearX(double, double, double);
+
+/* cpdf_drawMShearY(x, y, a) appends an Y shearing of angle a around (x, y) to
+ * the Current Transformation Matrix. */
+void cpdf_drawMShearY(double, double, double);
+
+/* cpdf_drawXObjBBox(x, y, w, h) sets the XObject bounding box. */
+void cpdf_drawXObjBBox(double, double, double, double);
+
+/* cpdf_drawXObj(name) begins the storing of an XObject. */
+void cpdf_drawXObj(char *);
+
+/* cpdf_drawEndXObj() ends the storing of an XObject. */
+void cpdf_drawEndXObj(void);
+
+/* cpdf_drawUse(name) uses the named XObject. */
+void cpdf_drawUse(char *);
+
+/* cpdf_drawJPEG(name, filename) loads a JPEG from the given file, storing it
+ * under the given name. */
+void cpdf_drawJPEG(char *, char *);
+
+/* cpdf_drawPNG(name, filename) loads a 24 bit non-interlaced non-transparent
+ * PNG from the given file, storing it under the given name. */
+void cpdf_drawPNG(char *, char *);
+
+/* cpdf_drawImage(name) draws a stored image. To draw at the expected size, it
+ * is required to scale the Current Transformation Matrix by the width and
+ * height of the image. */
+void cpdf_drawImage(char *);
+
+/* cpdf_drawFillOpacity(n) sets the fill opacity. */
+void cpdf_drawFillOpacity(double);
+
+/* cpdf_drawStrokeOpacity(n) sets the stroke opacity. */
+void cpdf_drawStrokeOpacity(double);
+
+/* cpdf_drawBT() begins a text section. */
+void cpdf_drawBT(void);
+
+/* cpdf_drawET() ends a text section. */
+void cpdf_drawET(void);
+
+/* cpdf_drawFont(fontname) sets the font. */
+void cpdf_drawFont(char *);
+
+/* cpdf_drawFontSize(n) sets the font size. */
+void cpdf_drawFontSize(double);
+
+/* cpdf_drawText(text) draws text. */
+void cpdf_drawText(char *);
+
+/* cpdf_drawSText(text) draws text with %Specials. You may need to use
+ * cpdf_drawEndExtended instead of cpdf_drawEnd later, to provide the extra
+ * information required. */
+void cpdf_drawSText(char *);
+
+/* cpdf_drawLeading(n) sets the leading. */
+void cpdf_drawLeading(double);
+
+/* cpdf_drawCharSpace(n) sets the character spacing. */
+void cpdf_drawCharSpace(double);
+
+/* cpdf_drawWordSpace(n) sets the word spacing. */
+void cpdf_drawWordSpace(double);
+
+/* cpdf_drawTextScale(n) sets the text scaling. */
+void cpdf_drawTextScale(double);
+
+/* cpdf_drawRenderMode(n) sets the text rendering mode. */
+void cpdf_drawRenderMode(int);
+
+/* cpdf_drawRise(n) sets the text rise. */
+void cpdf_drawRise(double);
+
+/* cpdf_drawNL() moves to the next line. */
+void cpdf_drawNL(void);
+
+/* cpdf_drawNewPage() moves to the next page, creating it if necessary, and
+ * setting the range to just that new page. */
+void cpdf_drawNewPage(void);
+

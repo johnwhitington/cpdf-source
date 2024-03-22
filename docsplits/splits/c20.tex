@@ -1,0 +1,70 @@
+/* CHAPTER 19. Miscellaneous */
+
+/*
+ * cpdf_draft(pdf, range, boxes) removes images on the given pages, replacing
+ * them with crossed boxes if 'boxes' is true.
+ */
+void cpdf_draft(int, int, int);
+
+/*
+ * cpdf_removeAllText(pdf, range) removes all text from the given pages in a
+ * given document.
+ */
+void cpdf_removeAllText(int, int);
+
+/* cpdf_blackText(pdf, range) blackens all text on the given pages. */
+void cpdf_blackText(int, int);
+
+/* cpdf_blackLines(pdf, range) blackens all lines on the given pages. */
+void cpdf_blackLines(int, int);
+
+/* cpdf_blackFills(pdf, range) blackens all fills on the given pages. */
+void cpdf_blackFills(int, int);
+
+/*
+ * cpdf_thinLines(pdf, range, min_thickness) thickens every line less than
+ * min_thickness to min_thickness. Thickness given in points.
+ */
+void cpdf_thinLines(int, int, double);
+
+/* cpdf_copyId(from, to) copies the /ID from one document to another. */
+void cpdf_copyId(int, int);
+
+/* cpdf_removeId(pdf) removes a document's /ID. */
+void cpdf_removeId(int);
+
+/* cpdf_setVersion(pdf, version) sets the minor version number of a document. */
+void cpdf_setVersion(int, int);
+
+/* cpdf_setFullVersion(pdf, major_version, minor_version) sets the full version
+ * number of a document. */
+void cpdf_setFullVersion(int, int, int);
+
+/*
+ * cpdf_removeDictEntry(pdf, key) removes any dictionary entry with the given
+ * key anywhere in the document.
+ */
+void cpdf_removeDictEntry(int, const char[]);
+
+/* cpdf_removeDictEntrySearch(pdf, key, seachterm) removes any dictionary entry
+ * with the given key whose value matches the given search term. */
+void cpdf_removeDictEntrySearch(int, const char[], const char[]);
+
+/* cpdf_replaceDictEntry(pdf, key, newvalue) replaces the value associated with
+ * the given key. */
+void cpdf_replaceDictEntry(int, const char[], const char[]);
+
+/* cpdf_replaceDictEntry(pdf, key, newvalue, searchterm) replaces the value
+ * associated with the given key if the existing value matches the search term.
+ */
+void cpdf_replaceDictEntrySearch(int, const char[], const char[], const char[]);
+
+/* cpdf_getDictEntries(pdf, key, length) returns a JSON array containing any
+ * and all values associated with the given key, and fills in its length. */
+void *cpdf_getDictEntries(int, const char[], int *);
+
+/*
+ * cpdf_removeClipping(pdf, range) removes all clipping from pages in the
+ * given range.
+ */
+void cpdf_removeClipping(int, int);

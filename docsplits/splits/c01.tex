@@ -14,6 +14,14 @@ char *cpdf_version();
 void cpdf_setFast();
 void cpdf_setSlow();
 
+/* Calling this function with a true argument sets embedding for the Standard
+ * 14 fonts.  You must also set the directory to load them from with the next
+ * function. Default value: false. */
+void cpdf_embedStd14(int);
+
+/* Set the directory to load Standard 14 fonts for embedding. */
+void cpdf_embedStd14Dir(char *);
+
 /*
  * Errors. cpdf_lastError and cpdf_lastErrorString hold information about the
  * last error to have occurred. They should be consulted after each call. If
@@ -23,6 +31,11 @@ void cpdf_setSlow();
  */
 extern int cpdf_lastError;
 extern char *cpdf_lastErrorString;
+
+/* In some contexts, for example, .NET or JNI, constants in DLLs can be
+ * difficult or impossible to access. we provide functions in addition. */
+int cpdf_fLastError(void);
+char *cpdf_fLastErrorString(void);
 
 /* cpdf_clearError clears the current error state. */
 void cpdf_clearError(void);

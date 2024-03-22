@@ -1,5 +1,20 @@
 /* CHAPTER 13. Images. */
 
+/* Get list of images. Call cpdf_startGetImages, which returns the total number
+ * of images. Then serial numbers 0..<total number> - 1 are used to retreive
+ * data. Finally, call cpdf_endGetImages to clean up. */
+int cpdf_startGetImages(int);
+int cpdf_getImageObjNum(int);
+char *cpdf_getImagePages(int);
+char *cpdf_getImageName(int);
+int cpdf_getImageWidth(int);
+int cpdf_getImageHeight(int);
+int cpdf_getImageSize(int);
+int cpdf_getImageBPC(int);
+char *cpdf_getImageColSpace(int);
+char *cpdf_getImageFilter(int);
+void cpdf_endGetImages(void);
+
 /*
  * Get image data, including resolution at all points of use. Call
  * cpdf_startGetImageResolution(pdf, min_required_resolution) will begin the
@@ -9,12 +24,19 @@
  * serial number 0..<total number> - 1, to retrieve the data. Finally, call
  * cpdf_endGetImageResolution to clean up.
  */
-int cpdf_startGetImageResolution(int, float);
+int cpdf_startGetImageResolution(int, double);
 int cpdf_getImageResolutionPageNumber(int);
 char *cpdf_getImageResolutionImageName(int);
 int cpdf_getImageResolutionXPixels(int);
 int cpdf_getImageResolutionYPixels(int);
 double cpdf_getImageResolutionXRes(int);
 double cpdf_getImageResolutionYRes(int);
+int cpdf_getImageResolutionObjNum(int);
 void cpdf_endGetImageResolution(void);
+
+/* Get image resolution data in JSON format */
+void *cpdf_imageResolutionJSON(int, int *, float);
+
+/* Get image data in JSON format */
+void *cpdf_imagesJSON(int, int *);
 

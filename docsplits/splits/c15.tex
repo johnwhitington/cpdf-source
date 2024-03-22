@@ -15,6 +15,10 @@ char *cpdf_getFontType(int);
 char *cpdf_getFontEncoding(int);
 void cpdf_endGetFontInfo(void);
 
+/* cpdf_fontsJSON(pdf, retlen) returns JSON data for the font list, and fills
+ * in the return length. */
+void *cpdf_fontsJSON(int, int *);
+
 /* cpdf_removeFonts(pdf) removes all font data from a file. */
 void cpdf_removeFonts(int);
 

@@ -21,3 +21,10 @@ int cpdf_textToPDF(double, double, int, double, const char[]);
  * ragged right on a page of the given size in the given font and font size. */
 int cpdf_textToPDFPaper(int, int, double, const char[]);
 
+/* cpdf_fromPNG(filename) builds a PDF from a 24-bit non-interlaced
+ * non-transparent PNG. */
+int cpdf_fromPNG(const char[]);
+
+/* cpdf_fromJPEG(filename) builds a PDF from a JPEG/ */
+int cpdf_fromJPEG(const char[]);
+
