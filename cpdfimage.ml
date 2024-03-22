@@ -365,8 +365,8 @@ let images pdf range =
                   | _ -> 0
                 and bpc =
                   match Pdf.lookup_direct pdf "/BitsPerComponent" xobject with
-                  | Some (Pdf.Integer x) -> x
-                  | _ -> 0
+                  | Some (Pdf.Integer x) -> Some x
+                  | _ -> None
                 and colourspace =
                   match Pdf.lookup_direct pdf "/ColorSpace" xobject with
                   | Some x -> Some (Pdfspace.string_of_colourspace (Pdfspace.read_colourspace pdf resources x))
@@ -420,7 +420,7 @@ let images pdf range =
                        ("Width", `Int w);
                        ("Height", `Int h);
                        ("Bytes", `Int size);
-                       ("BitsPerComponent", `Int bpc);
+                       ("BitsPerComponent", match bpc with None -> `Null | Some bpc -> `Int bpc);
                        ("Colourspace", match cs with None -> `Null | Some s -> `String s);
                        ("Filter", match filter with None -> `Null | Some s -> `String s)])
              images)
