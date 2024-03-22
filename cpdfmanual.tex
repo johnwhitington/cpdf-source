@@ -3,7 +3,7 @@
 % Edit here to produce cpdfmanual.pdf, cpdflibmanual.pdf, pycpdfmanual.pdf,
 % dotnetcpdflibmanual.pdf, jcpdflibmanual.pdf jscpdflibmanual.pdf etc.
 \usepackage{comment}
-\includecomment{cpdflib}
+\excludecomment{cpdflib}
 \excludecomment{pycpdflib}
 \excludecomment{dotnetcpdflib}
 \excludecomment{jcpdflib}
@@ -5092,6 +5092,47 @@ If the drawing range is a single page, and the next page already exists, the dra
 
 \fi%End htlatex hack
 
+\begin{cpdflib}
+\clearpage
+\section*{C Interface}
+\begin{small}\tt
+\lstinputlisting{docsplits/splits/c19}
+\end{small}
+\end{cpdflib}
+
+\begin{pycpdflib}
+\clearpage
+\section*{Python Interface}
+\begin{small}\tt
+\lstinputlisting{pysplits/c19}
+\end{small}
+\end{pycpdflib}
+
+\begin{dotnetcpdflib}
+\clearpage
+\section*{.NET Interface}
+\begin{small}\tt
+\lstinputlisting{dotnetsplits/c19}
+\end{small}
+\end{dotnetcpdflib}
+
+\begin{jcpdflib}
+\clearpage
+\section*{Java Interface}
+\begin{small}\tt
+\lstinputlisting{javasplits/c19}
+\end{small}
+\end{jcpdflib}
+
+\begin{jscpdflib}
+\clearpage
+\section*{JavaScript Interface}
+\begin{small}\tt
+\lstinputlisting{javascriptsplits/c19}
+\end{small}
+\end{jscpdflib}
+
+
 \clearpage\pagestyle{empty}
 %We wanted to call this "Chapter M", but the following commands messed up the PDF bookmarks, so this chapter will simply have to float for now, until we can return to this problem.
 %\setcounter{chapter}{12}
@@ -5388,7 +5429,7 @@ $ cpdf -extract-stream-decompress 2 hello.pdf -stdout
 \clearpage
 \section*{C Interface}
 \begin{small}\tt
-\lstinputlisting{docsplits/splits/c19}
+\lstinputlisting{docsplits/splits/c20}
 \end{small}
 \end{cpdflib}
 
