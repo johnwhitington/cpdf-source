@@ -1063,6 +1063,7 @@ let anon_fun s =
         | a::b::c::'.'::r when implode (map Char.uppercase_ascii [c; b; a]) = "JPG" -> set_input_jpeg s
         | a::b::c::'.'::r when implode (map Char.uppercase_ascii [c; b; a]) = "JP2" -> set_input_jpeg2000 s
         | a::b::c::'.'::r when implode (map Char.uppercase_ascii [c; b; a]) = "JPX" -> set_input_jpeg2000 s
+        | a::b::c::'.'::r when implode (map Char.uppercase_ascii [c; b; a]) = "JPF" -> set_input_jpeg2000 s
         | a::b::c::'.'::r when implode (map Char.uppercase_ascii [c; b; a]) = "PNG" -> set_input_png s
         | _ -> args.inputs <- (InFile s, "all", "", "", ref false, None)::args.inputs
         end;
