@@ -456,6 +456,17 @@ let obj_of_png_data data =
     in
       Pdf.Stream {contents = (Pdf.Dictionary d, Pdf.Got png.idat)}, []
 
+let obj_of_jpeg2000_data data =
+  let w, h = Cpdfjpeg2000.jpeg2000_dimensions data in
+  let d =
+    ["/Length", Pdf.Integer (Pdfio.bytes_size data);
+     "/Filter", Pdf.Name "/JPXDecode";
+     "/Subtype", Pdf.Name "/Image";
+     "/Width", Pdf.Integer w;
+     "/Height", Pdf.Integer h]
+  in
+    Pdf.Stream {contents = (Pdf.Dictionary d, Pdf.Got data)}, [] 
+
 let jbig2_dimensions data =
   (bget data 11 * 256 * 256 * 256 + bget data 12 * 256 * 256 + bget data 13 * 256 + bget data 14,
    bget data 15 * 256 * 256 * 256 + bget data 16 * 256 * 256 + bget data 17 * 256 + bget data 18)

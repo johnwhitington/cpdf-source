@@ -29,3 +29,4 @@ val image_of_input : (unit -> Pdfio.bytes -> Pdf.pdfobject * (int * Pdf.pdfobjec
 val obj_of_jpeg_data : Pdfio.bytes -> Pdf.pdfobject * (int * Pdf.pdfobject) list
 val obj_of_png_data : Pdfio.bytes -> Pdf.pdfobject * (int * Pdf.pdfobject) list
 val obj_of_jbig2_data : ?global:Pdfio.bytes -> Pdfio.bytes -> Pdf.pdfobject * (int * Pdf.pdfobject) list
+val obj_of_jpeg2000_data : Pdfio.bytes -> Pdf.pdfobject * (int * Pdf.pdfobject) list

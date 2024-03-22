@@ -1014,6 +1014,8 @@ let set_input_png s = set_input_image (fun () -> Cpdfimage.obj_of_png_data) s
 
 let set_input_jpeg s = set_input_image (fun () -> Cpdfimage.obj_of_jpeg_data) s
 
+let set_input_jpeg2000 s = set_input_image (fun () -> Cpdfimage.obj_of_jpeg2000_data) s
+
 let set_input_jbig2 s =
   set_input_image
     (fun () -> Cpdfimage.obj_of_jbig2_data ?global:!jbig2_global) s;
@@ -1059,6 +1061,8 @@ let anon_fun s =
         | a::b::c::d::e::'.'::r when implode (map Char.uppercase_ascii [e; d; c; b; a]) = "JBIG2" -> set_input_jbig2 s
         | a::b::c::d::'.'::r when implode (map Char.uppercase_ascii [d; c; b; a]) = "JPEG" -> set_input_jpeg s
         | a::b::c::'.'::r when implode (map Char.uppercase_ascii [c; b; a]) = "JPG" -> set_input_jpeg s
+        | a::b::c::'.'::r when implode (map Char.uppercase_ascii [c; b; a]) = "JP2" -> set_input_jpeg2000 s
+        | a::b::c::'.'::r when implode (map Char.uppercase_ascii [c; b; a]) = "JPX" -> set_input_jpeg2000 s
         | a::b::c::'.'::r when implode (map Char.uppercase_ascii [c; b; a]) = "PNG" -> set_input_png s
         | _ -> args.inputs <- (InFile s, "all", "", "", ref false, None)::args.inputs
         end;
@@ -1872,6 +1876,9 @@ and specs =
    ("-jpeg",
        Arg.String set_input_jpeg,
        " Load from a JPEG file, converting to PDF");
+   ("-jpeg2000",
+       Arg.String set_input_jpeg2000,
+       " Load from a JPEG2000 file, converting to PDF");
    ("-jbig2",
        Arg.String set_input_jbig2,
        " Load from a JBIG2 fragment, converting to PDF");
