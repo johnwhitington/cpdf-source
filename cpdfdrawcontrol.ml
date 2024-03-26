@@ -237,26 +237,38 @@ let setmsheary s =
 let usexobj s =
   addop (Cpdfdraw.Use s)
 
-let addjpeg n =
-  let name, filename =
-    match String.split_on_char '=' n with
-    | [name; filename] -> name, filename
-    | _ -> error "addjpeg: bad file specification"
-  in
-    try
-      let data = Pdfio.bytes_of_string (contents_of_file filename) in
-        addop (Cpdfdraw.ImageXObject (name, fst (Cpdfimage.obj_of_jpeg_data data)))
-    with
-      _ -> error "addjpeg: could not load JPEG"
+let addjpeg ?data n =
+  match data with
+  | Some d ->
+      addop
+        (Cpdfdraw.ImageXObject
+           (n, fst (Cpdfimage.obj_of_jpeg_data (Pdfio.bytes_of_raw d))))
+  | None ->
+      let name, filename =
+        match String.split_on_char '=' n with
+        | [name; filename] -> name, filename
+        | _ -> error "addjpeg: bad file specification"
+      in
+        try
+          let data = Pdfio.bytes_of_string (contents_of_file filename) in
+            addop (Cpdfdraw.ImageXObject (name, fst (Cpdfimage.obj_of_jpeg_data data)))
+        with
+          _ -> error "addjpeg: could not load JPEG"
 
-let addpng n =
-  let name, filename =
-    match String.split_on_char '=' n with
-    | [name; filename] -> name, filename
-    | _ -> error "addpng: bad file specification"
-  in
-    let data = Pdfio.bytes_of_string (contents_of_file filename) in
-      addop (Cpdfdraw.ImageXObject (name, fst (Cpdfimage.obj_of_png_data data)))
+let addpng ?data n =
+  match data with
+  | Some d ->
+      addop
+        (Cpdfdraw.ImageXObject
+           (n, fst (Cpdfimage.obj_of_png_data (Pdfio.bytes_of_raw d))))
+  | None ->
+      let name, filename =
+        match String.split_on_char '=' n with
+        | [name; filename] -> name, filename
+        | _ -> error "addpng: bad file specification"
+      in
+        let data = Pdfio.bytes_of_string (contents_of_file filename) in
+          addop (Cpdfdraw.ImageXObject (name, fst (Cpdfimage.obj_of_png_data data)))
 
 let addimage s =
   addop (Cpdfdraw.Image s)

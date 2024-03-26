@@ -48,8 +48,8 @@ val xobjbbox : string -> unit
 val startxobj : string -> unit
 val endxobj : unit -> unit
 val usexobj : string -> unit
-val addjpeg : string -> unit
-val addpng : string -> unit
+val addjpeg : ?data:Pdfio.rawbytes -> string -> unit
+val addpng : ?data:Pdfio.rawbytes -> string -> unit
 val addimage : string -> unit
 val addopacity : float -> unit
 val addsopacity : float -> unit
