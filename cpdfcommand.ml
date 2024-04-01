@@ -24,21 +24,6 @@ let initial_file_size = ref 0
 
 let empty = Pdf.empty ()
 
-let fontnames =
-  [(Pdftext.TimesRoman, ["NimbusRoman-Regular.ttf"]);
-   (Pdftext.TimesBold, ["NimbusRoman-Bold.ttf"]);
-   (Pdftext.TimesItalic, ["NimbusRoman-Italic.ttf"]);
-   (Pdftext.TimesBoldItalic, ["NimbusRoman-BoldItalic.ttf"]);
-   (Pdftext.Helvetica, ["NimbusSans-Regular.ttf"]);
-   (Pdftext.HelveticaBold, ["NimbusSans-Bold.ttf"]);
-   (Pdftext.HelveticaOblique, ["NimbusSans-Italic.ttf"]);
-   (Pdftext.HelveticaBoldOblique, ["NimbusSans-BoldItalic.ttf"]);
-   (Pdftext.Courier, ["NimbusMonoPS-Regular.ttf"]);
-   (Pdftext.CourierBold, ["NimbusMonoPS-Bold.ttf"]);
-   (Pdftext.CourierOblique, ["NimbusMonoPS-Italic.ttf"]);
-   (Pdftext.CourierBoldOblique, ["NimbusMonoPS-BoldItalic.ttf"]);
-   (Pdftext.Symbol, ["StandardSymbolsPS.ttf"]);
-   (Pdftext.ZapfDingbats, ["D050000L.ttf"])]
 
 (* Wrap up the file reading functions to exit with code 1 when an encryption
 problem occurs. This happens when object streams are in an encrypted document
@@ -1706,16 +1691,12 @@ let embed_font_inner font =
     (*  Printf.printf "embed_font: StandardFont\n";*)
       begin match args.embedstd14 with
       | Some dirname -> 
-        begin try
-          let fontfile, fontname =
-          let filename = hd (List.assoc f fontnames) in
-            Pdfio.bytes_of_string (contents_of_file (Filename.concat dirname filename)),
-            Filename.remove_extension filename
-          in
-          Cpdfembed.EmbedInfo {fontfile; fontname; encoding = args.fontencoding}
-        with
-          e -> error (Printf.sprintf "Can't load font for embedding: %s\n" (Printexc.to_string e))
-        end
+          begin try
+            let fontfile, fontname = Cpdfembed.load_substitute dirname f in
+              Cpdfembed.EmbedInfo {fontfile; fontname; encoding = args.fontencoding}
+          with
+            e -> error (Printf.sprintf "Can't load font for embedding: %s\n" (Printexc.to_string e))
+          end
       | None -> 
           PreMadeFontPack (Cpdfembed.fontpack_of_standardfont (Pdftext.StandardFont (f, args.fontencoding)))
       end

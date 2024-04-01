@@ -106,3 +106,24 @@ let rec collate_runs cfn a = function
 let collate_runs = function
   | [] -> []
   | (_, fontnum, _)::_ as l -> collate_runs fontnum [] l
+
+let fontnames =
+  [(Pdftext.TimesRoman, ["NimbusRoman-Regular.ttf"]);
+   (Pdftext.TimesBold, ["NimbusRoman-Bold.ttf"]);
+   (Pdftext.TimesItalic, ["NimbusRoman-Italic.ttf"]);
+   (Pdftext.TimesBoldItalic, ["NimbusRoman-BoldItalic.ttf"]);
+   (Pdftext.Helvetica, ["NimbusSans-Regular.ttf"]);
+   (Pdftext.HelveticaBold, ["NimbusSans-Bold.ttf"]);
+   (Pdftext.HelveticaOblique, ["NimbusSans-Italic.ttf"]);
+   (Pdftext.HelveticaBoldOblique, ["NimbusSans-BoldItalic.ttf"]);
+   (Pdftext.Courier, ["NimbusMonoPS-Regular.ttf"]);
+   (Pdftext.CourierBold, ["NimbusMonoPS-Bold.ttf"]);
+   (Pdftext.CourierOblique, ["NimbusMonoPS-Italic.ttf"]);
+   (Pdftext.CourierBoldOblique, ["NimbusMonoPS-BoldItalic.ttf"]);
+   (Pdftext.Symbol, ["StandardSymbolsPS.ttf"]);
+   (Pdftext.ZapfDingbats, ["D050000L.ttf"])]
+
+let load_substitute dirname f =
+  let filename = hd (List.assoc f fontnames) in
+    (Pdfio.bytes_of_string (contents_of_file (Filename.concat dirname filename)),
+     Filename.remove_extension filename)

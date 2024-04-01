@@ -24,3 +24,6 @@ val embed_truetype :
 
 (** Collate outputs of [get_char] with like font *)
 val collate_runs : ('a * 'b * 'c) list -> ('a * 'b * 'c) list list
+
+(** Load substitute Standard 14 font *)
+val load_substitute : string -> Pdftext.standard_font -> Pdfio.bytes * string
