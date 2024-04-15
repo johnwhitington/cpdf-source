@@ -35,6 +35,6 @@ let jpeg2000_dimensions_inner bs =
     done
 
 let jpeg2000_dimensions bs =
-  try jpeg2000_dimensions_inner bs; (0, 0) with
+  try ignore (jpeg2000_dimensions_inner bs); (0, 0) with
   | Answer (w, h) -> (w, h)
   | Exit -> error "could not determine JPEG2000 dimensions"
