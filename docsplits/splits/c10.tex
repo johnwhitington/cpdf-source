@@ -36,13 +36,20 @@ void cpdf_padMultipleBefore(int, int);
 void cpdf_impose(int, double, double, int, int, int, int, int, double, double,
                  double);
 
-/* cpdf_chop(pdf, range, x, y, columns, rtl, btt) */
+/* cpdf_chop(pdf, range, x, y, columns, rtl, btt) chops each page in the range
+ * into x * y pieces. If columns is set, the pieces go by columns instead of
+ * rows. If rtl is set, the pieces are taken right-to-left. If btt is set, the
+ * pieces are taken from bottom to top. */
 void cpdf_chop(int, int, int, int, int, int, int);
 
-/* cpdf_choph(pdf, range, columns, y) */
+/* cpdf_chopH(pdf, range, columns, y) chops each page in the range horizontally
+ * at position y. If columns is set, the pieces are arranged in reverse order.
+ * */
 void cpdf_chopH(int, int, int, double);
 
-/* cpdf_chopv(pdf, range, columns, x) */
+/* cpdf_chopV(pdf, range, columns, x) chops each page in the range vertically
+ * at position x. If columns is set, the pieces are arranged in reverse order.
+ * */
 void cpdf_chopV(int, int, int, double);
 
 /*

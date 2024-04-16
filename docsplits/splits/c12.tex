@@ -6,18 +6,27 @@
  */
 int cpdf_isLinearized(const char[]);
 
+/* cpdf_hasObjectStreams(pdf) finds out if a document was written using object
+ * streams. */
 int cpdf_hasObjectStreams(int);
 
+/* cpdf_id1(pdfs) returns the first ID string of the PDF, if any, in
+ * hexadecimal string format. */
 char *cpdf_id1(int);
 
+/* cpdf_id2(pdfs) returns the second ID string of the PDF, if any, in
+ * hexadecimal string format. */
 char *cpdf_id2(int);
 
+/* cpdf_hasAcroForm returns true if the document has an AcroForm */
 int cpdf_hasAcroForm(int);
 
+/* To return the subformats of a PDF (if any), call
+ * cpdf_startGetSubformats(pdf) to return their number. Then pass the numbers
+ * 0..n - 1 to cpdf_getSubformat to return the strings. Call
+ * cpdf_endGetSubformats() to clean up. */
 int cpdf_startGetSubformats(int);
-
 char *cpdf_getSubformat(int);
-
 void cpdf_endGetSubformats(void);
 
 /* cpdf_getVersion(pdf) returns the minor version number of a document. */
@@ -187,7 +196,7 @@ void cpdf_setTrimBox(int, int, double, double, double, double);
 void cpdf_setArtBox(int, int, double, double, double, double);
 void cpdf_setBleedBox(int, int, double, double, double, double);
 
-/* cpdf_pageInfoJSON(pdf, retlen) returns JSON data for the page
+/* cpdf_pageInfoJSON(pdf, size) returns JSON data for the page
 information, and fills in the return length. */
 void *cpdf_pageInfoJSON(int, int *);
 
@@ -269,7 +278,7 @@ void cpdf_displayDocTitle(int, int);
 /* cpdf_getDisplayDocTitle(pdf) gets the display document title flag. */
 int cpdf_getDisplayDocTitle(int);
 
-/* cpdf_nonFullScreenPageMode(pdf, page mode) sets the non full screen page
+/* cpdf_nonFullScreenPageMode(pdf, pagemode) sets the non full screen page
  * mode. */
 void cpdf_nonFullScreenPageMode(int, enum cpdf_pageMode);
 
@@ -297,7 +306,7 @@ void cpdf_setMetadataFromFile(int, const char[]);
 void cpdf_setMetadataFromByteArray(int, void *, int);
 
 /*
- * cpdf_getMetadata(pdf, &length) returns the XMP metadata and fills in
+ * cpdf_getMetadata(pdf, length) returns the XMP metadata and fills in
  * length.
  */
 void *cpdf_getMetadata(int, int *);
@@ -373,7 +382,7 @@ int cpdf_getPageLabelOffset(int);
 int cpdf_getPageLabelRange(int);
 void cpdf_endGetPageLabels();
 
-/* cpdf_compositionJSON(filesize, pdf, size returns the composition data in
- * JSON format. */
+/* cpdf_compositionJSON(filesize, pdf, size) returns the composition data in
+ * JSON format, filling in the return length. */
 void *cpdf_compositionJSON(int, int, int *);
 

@@ -1,5 +1,7 @@
 /* CHAPTER 15. PDF and JSON */
 
+/* Set the JSON output format. If true, the newer UTF8 format is used. Default:
+ * false. */
 void cpdf_JSONUTF8(int);
 
 /* cpdf_outputJSON(filename, parse_content, no_stream_data, pdf) outputs a PDF
@@ -8,7 +10,7 @@ void cpdf_JSONUTF8(int);
  * */
 void cpdf_outputJSON(const char[], int, int, int, int);
 
-/* cpdf_outputJSONMemory(parse_content, no_stream_data, pdf, &length) is like
+/* cpdf_outputJSONMemory(parse_content, no_stream_data, pdf, size) is like
  * outputJSON, but it writes to a buffer in memory. The length is filled in. */
 void *cpdf_outputJSONMemory(int, int, int, int, int *);
 

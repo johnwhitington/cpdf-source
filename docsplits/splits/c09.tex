@@ -47,6 +47,8 @@ int cpdf_combinePages(int, int);
  *
  * %EndLabel The page label of the last page
  *
+ * %Filename The file name
+ *
  * %a        Abbreviated weekday name (Sun, Mon etc.)
  *
  * %A        Full weekday name (Sunday, Monday etc.)
@@ -85,20 +87,18 @@ int cpdf_combinePages(int, int);
  */
 
 /* The standard fonts */
-enum cpdf_font {
-  cpdf_timesRoman,           /* Times Roman */
-  cpdf_timesBold,            /* Times Bold */
-  cpdf_timesItalic,          /* Times Italic */
-  cpdf_timesBoldItalic,      /* Times Bold Italic */
-  cpdf_helvetica,            /* Helvetica */
-  cpdf_helveticaBold,        /* Helvetica Bold */
-  cpdf_helveticaOblique,     /* Helvetica Oblique */
-  cpdf_helveticaBoldOblique, /* Helvetica Bold Oblique */
-  cpdf_courier,              /* Courier */
-  cpdf_courierBold,          /* Courier Bold */
-  cpdf_courierOblique,       /* Courier Oblique */
-  cpdf_courierBoldOblique    /* Courier Bold Oblique */
-};
+char *cpdf_timesRoman = "Times-Roman";
+char *cpdf_timesBold = "Times-Bold";
+char *cpdf_timesItalic = "Times-Italic";
+char *cpdf_timesBoldItalic = "Times-BoldItalic";
+char *cpdf_helvetica = "Helvetica";
+char *cpdf_helveticaBold = "Helvetica-Bold";
+char *cpdf_helveticaOblique = "Helvetica-Oblique";
+char *cpdf_helveticaBoldOblique = "Helvetica-BoldOblique";
+char *cpdf_courier = "Courier";
+char *cpdf_courierBold = "Courier-Bold";
+char *cpdf_courierOblique = "Courier-Oblique";
+char *cpdf_courierBoldOblique = "Courier-BoldOblique";
 
 /* Justifications for multi line text */
 enum cpdf_justification {
@@ -116,7 +116,7 @@ void cpdf_addText(int,                  /* If true, don't actually add text but
                   struct cpdf_position, /* Position to add text at */
                   double,               /* Linespacing, 1.0 = normal */
                   int,                  /* Starting Bates number */
-                  enum cpdf_font,       /* Font */
+                  const char[],         /* Font */
                   double,               /* Font size in points */
                   double,               /* Red component of colour, 0.0 - 1.0 */
                   double, /* Green component of colour, 0.0 - 1.0 */
@@ -140,13 +140,13 @@ void cpdf_addText(int,                  /* If true, don't actually add text but
                   int           /* embed fonts */
 );
 
-/* Add text, with most parameters default. */
+/* Add text, with most parameters default. NB %filename cannot be used here. */
 void cpdf_addTextSimple(int,                  /* Document */
                         int,                  /* Page range */
                         const char[],         /* The text to add */
                         struct cpdf_position, /* Position to add text
                                                * at */
-                        enum cpdf_font,       /* font */
+                        const char[],         /* font */
                         double);              /* font size */
 
 /*
@@ -156,10 +156,10 @@ void cpdf_addTextSimple(int,                  /* Document */
 void cpdf_removeText(int, int);
 
 /*
- * Return the width of a given string in the given font in thousandths of a
- * point.
+ * Return the width of a given string in the given standard font in thousandths
+ * of a point.
  */
-int cpdf_textWidth(enum cpdf_font, const char[]);
+int cpdf_textWidth(const char[], const char[]);
 
 /* cpdf_addContent(content, before, pdf, range) adds page content before (if
  * true) or after (if false) the existing content to pages in the given range

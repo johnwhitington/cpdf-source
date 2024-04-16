@@ -160,9 +160,17 @@ void cpdf_drawUse(char *);
  * under the given name. */
 void cpdf_drawJPEG(char *, char *);
 
-/* cpdf_drawPNG(name, filename) loads a 24 bit non-interlaced non-transparent
+/* cpdf_drawJPEGMemory(name, data, length) loads a JPEG from the given file,
+ * storing it under the given name. */
+void cpdf_drawJPEGMemory(char *, void *, int);
+
+/* cpdf_drawPNG(name, filename) loads a non-interlaced non-transparent
  * PNG from the given file, storing it under the given name. */
 void cpdf_drawPNG(char *, char *);
+
+/* cpdf_drawPNG(name, data, length) loads a non-interlaced non-transparent
+ * PNG from the given file, storing it under the given name. */
+void cpdf_drawPNGMemory(char *, void *, int);
 
 /* cpdf_drawImage(name) draws a stored image. To draw at the expected size, it
  * is required to scale the Current Transformation Matrix by the width and
