@@ -1,20 +1,32 @@
 # CHAPTER 9. Multipage facilities
 
 def twoUp(pdf):
-    """Impose a document two up by retaining the existing page
-    size, scaling pages down."""
+    """Impose a document two up by retaining the existing page size, scaling
+    pages down."""
 
 def twoUpStack(pdf):
-    """Impose a document two up by doubling the page size,
-    to fit two pages on one."""
+    """Impose a document two up by doubling the page size, to fit two pages on
+    one."""
 
 def impose(pdf, x, y, fit, columns, rtl, btt, center, margin, spacing, linewidth):
-    """impose(pdf, x, y, fit, columns, rtl, btt, center, margin, spacing,
-    linewidth) imposes a PDF. There are two modes: imposing x * y, or imposing
-    to fit a page of size x * y. This is controlled by fit. Columns imposes by
-    columns rather than rows. rtl is right-to-left, btt bottom-to-top. Center
-    is unused for now. Margin is the margin around the output, spacing the
-    spacing between imposed inputs."""
+    """Impose a PDF. There are two modes: imposing x * y, or imposing to fit a
+    page of size x * y. This is controlled by fit. Columns imposes by columns
+    rather than rows. rtl is right-to-left, btt bottom-to-top. Center is unused
+    for now. Margin is the margin around the output, spacing the spacing
+    between imposed inputs."""
+
+def chop(pdf, r, x, y, columns, rtl, btt):
+    """Chop each page in the range into x * y pieces. If columns is set, the
+    pieces go by columns instead of rows. If rtl is set, the pieces are taken
+    right-to-left. If btt is set, the pieces are taken from bottom to top. """
+
+def chopH(pdf, r, columns, y):
+    """Chop each page in the range horizontally at position y. If columns is
+    set, the pieces are arranged in reverse order. """
+
+def chopV(pdf, r, columns, x):
+    """Chop each page in the range vertically at position x. If columns is
+    set, the pieces are arranged in reverse order. """
 
 def padBefore(pdf, r):
     """Adds a blank page before each page in the given range."""
@@ -30,5 +42,5 @@ def padMultiple(pdf, n):
     length."""
 
 def padMultipleBefore(pdf, n):
-    """Adds pages at the beginning to pad the file to a
-    multiple of n pages in length."""
+    """Adds pages at the beginning to pad the file to a multiple of n pages in
+    length."""

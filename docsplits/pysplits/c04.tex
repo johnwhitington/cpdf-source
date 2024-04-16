@@ -12,7 +12,7 @@ def scaleToFit(pdf, r, w, h, scale_to_fit_scale):
 
 def scaleToFitPaper(pdf, r, papersize, scale_to_fit_scale):
     """Scales the given pages to fit the given page size, possibly multiplied
-    by scale_to_fit_scale (typically 1.0)"""
+    by scale_to_fit_scale (typically 1.0)."""
 
 def scaleContents(pdf, r, pos, scale):
     """Scales the contents of the pages in the range about the point given by
@@ -20,18 +20,22 @@ def scaleContents(pdf, r, pos, scale):
 
 def shiftContents(pdf, r, dx, dy):
     """Shift the content of the pages in the range by (dx, dy)."""
+    r = range_of_list(r)
+
+def shiftBoxes(pdf, r, dx, dy):
+    """Shift the pages boxes in the range by (dx, dy)."""
 
 def rotate(pdf, r, rotation):
-    """Change the viewing rotation of the pages in the range to an
-    absolute value. Appropriate rotations are 0, 90, 180, 270."""
+    """Change the viewing rotation of the pages in the range to an absolute
+    value. Appropriate rotations are 0, 90, 180, 270."""
 
 def rotateBy(pdf, r, rotation):
-    """Change the viewing rotation of the pages in the range by a
-    given number of degrees. Appropriate values are 90, 180, 270."""
+    """Change the viewing rotation of the pages in the range by a given number
+    of degrees. Appropriate values are 90, 180, 270."""
 
 def rotateContents(pdf, r, rotation):
-    """Rotate the content about the centre
-    of the page by the given number of degrees, in a clockwise direction."""
+    """Rotate the content about the centre of the page by the given number of
+    degrees, in a clockwise direction."""
 
 def upright(pdf, r):
     """Change the viewing rotation of the pages in the range, counter-rotating

@@ -15,7 +15,8 @@ def stampExtended(pdf, pdf2, r, isover, scale_stamp_to_fit, pos,
      - isover True, pdf goes over pdf2, isover False, pdf goes under pdf2
      - scale_stamp_to_fit scales the stamp to fit the page
      - pos gives the position to put the stamp
-     - relative_to_cropbox: if True, pos is relative to crop box not media box"""
+     - relative_to_cropbox: if True, pos is relative to crop box not media box
+    """
 
 def combinePages(pdf, pdf2):
     """Combines the PDFs page-by-page, putting each page of pdf2 over each page
@@ -82,14 +83,15 @@ def addText(metrics, pdf, r, text, p, line_spacing, bates, font, size, red,
       * %%        The % character"""
 
 def addTextSimple(pdf, r, text, p, font, size):
-    """like addText, but with most parameters default
+    """Like addText, but with most parameters default
 
          * pdf = the document
          * r = the range
          * text = the text
          * p = the position
          * font = the font
-         * size = the font size"""
+         * size = the font size
+    NB: %filename cannot be used here. """
 
 def removeText(pdf, r):
     """Remove any text added by libcpdf from the given pages."""

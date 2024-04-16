@@ -1,3 +1,4 @@
+"""
 Loading the libpypcdf and libcpdf DLLs
 --------------------------------------
 
@@ -13,8 +14,8 @@ to tell ``libpycpdf.so`` where to find ``libcpdf.so``.
 Conventions
 -----------
 
-Any function may raise the exception ``CPDFError``, carrying a string describing
-the error.
+Any function may raise the exception ``CPDFError``, carrying a string
+describing the error.
 
 A 'range' is a list of integers specifying page numbers. Page numbers start at
 1. Range arguments are called `r`.
@@ -79,7 +80,17 @@ useNone useOutlines useThumbs useOC useAttachments
 Page label styles:
 
 decimalArabic uppercaseRoman lowercaseRoman uppercaseLetters lowercaseLetters
+
+Line cap types:
+
+capButt capRound capSquare
+
+Line join types:
+
+joinMiter joinRound joinBevel
 """
+
+# CHAPTER 0. Preliminaries
 
 class Pdf:
     """The type of PDF documents."""
@@ -109,19 +120,28 @@ def version():
     """Return the version number of the pycpdflib library."""
 
 def setFast():
-    """ Set fast mode. Some operations have a fast mode. The default is 'slow'
+    """Set fast mode. Some operations have a fast mode. The default is 'slow'
     mode, which works even on old-fashioned files. For more details, see
-    section 1.13 of the CPDF manual. This function sets the mode globally. """
+    section 1.13 of the CPDF manual. This function sets the mode globally."""
 
 def setSlow():
-    """ Set slow mode. Some operations have a fast mode. The default is 'slow'
+    """Set slow mode. Some operations have a fast mode. The default is 'slow'
     mode, which works even on old-fashioned files. For more details, see
-    section 1.13 of the CPDF manual. This function sets the mode globally. """
+    section 1.13 of the CPDF manual. This function sets the mode globally."""
+
+def embedStd14(embed):
+    """Calling this function with a true argument sets embedding for the
+    Standard 14 fonts.  You must also set the directory to load them from with
+    the embedStd14Dir function. Default value: False."""
+
+def embedStd14Dir(d):
+    """Set the directory to load Standard 14 fonts for embedding."""
+    libc.pycpdf_embedStd14Dir(str.encode(d))
 
 def clearError():
-    """ Clear the current error state. """
+    """Clear the current error state."""
 
 def onExit():
-    """ A debug function which prints some information about
+    """A debug function which prints some information about
     resource usage. This can be used to detect if PDFs or ranges are being
     deallocated properly."""
