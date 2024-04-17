@@ -4,7 +4,7 @@
 % dotnetcpdflibmanual.pdf, jcpdflibmanual.pdf jscpdflibmanual.pdf etc.
 \usepackage{comment}
 \excludecomment{cpdflib}
-\excludecomment{pycpdflib}
+\includecomment{pycpdflib}
 \excludecomment{dotnetcpdflib}
 \excludecomment{jcpdflib}
 \excludecomment{jscpdflib}
@@ -1161,8 +1161,8 @@ In modern usage, \texttt{-utf8} is almost always the sensible option. But for hi
 \clearpage
 \section*{Python Interface}
 \begin{small}\tt
-\lstinputlisting{pysplits/c01}
-\lstinputlisting{pysplits/c02}
+\lstinputlisting{docsplits/pysplits/c01}
+\lstinputlisting{docsplits/pysplits/c02}
 \end{small}
 \end{pycpdflib}
 
@@ -1384,7 +1384,7 @@ Presently, cpdf will include the input structure tree in each output PDF. To rem
 \clearpage
 \section*{Python Interface}
 \begin{small}\tt
-\lstinputlisting{pysplits/c03}
+\lstinputlisting{docsplits/pysplits/c03}
 \end{small}
 \end{pycpdflib}
 
@@ -1744,7 +1744,7 @@ Bleed box & Pink
 \clearpage
 \section*{Python Interface}
 \begin{small}\tt
-\lstinputlisting{pysplits/c04}
+\lstinputlisting{docsplits/pysplits/c04}
 \end{small}
 \end{pycpdflib}
 
@@ -1881,7 +1881,7 @@ When appropriate passwords are not available, the option \texttt{-decrypt-force}
 \clearpage
 \section*{Python Interface}
 \begin{small}\tt
-\lstinputlisting{pysplits/c05}
+\lstinputlisting{docsplits/pysplits/c05}
 \end{small}
 \end{pycpdflib}
 
@@ -1976,7 +1976,7 @@ The option \texttt{-squeeze-no-pagedata} avoids the reprocessing of page data, w
 \clearpage
 \section*{Python Interface}
 \begin{small}\tt
-\lstinputlisting{pysplits/c06}
+\lstinputlisting{docsplits/pysplits/c06}
 \end{small}
 \end{pycpdflib}
 
@@ -2183,7 +2183,7 @@ Cpdf can automatically generate a table of contents from existing bookmarks, add
 \clearpage
 \section*{Python Interface}
 \begin{small}\tt
-\lstinputlisting{pysplits/c07}
+\lstinputlisting{docsplits/pysplits/c07}
 \end{small}
 \end{pycpdflib}
 
@@ -2296,7 +2296,7 @@ the file using a different page range each time.
 \clearpage
 \section*{Python Interface}
 \begin{small}\tt
-\lstinputlisting{pysplits/c08}
+\lstinputlisting{docsplits/pysplits/c08}
 \end{small}
 \end{pycpdflib}
 
@@ -2700,7 +2700,7 @@ These two operations add content directly to the beginning or end of the page da
 \clearpage
 \section*{Python Interface}
 \begin{small}\tt
-\lstinputlisting{pysplits/c09}
+\lstinputlisting{docsplits/pysplits/c09}
 \end{small}
 \end{pycpdflib}
 
@@ -2906,7 +2906,7 @@ As an alternative, pages can be chopped into two at a given position, horizontal
 \clearpage
 \section*{Python Interface}
 \begin{small}\tt
-\lstinputlisting{pysplits/c10}
+\lstinputlisting{docsplits/pysplits/c10}
 \end{small}
 \end{pycpdflib}
 
@@ -3051,7 +3051,7 @@ given page range.
 \clearpage
 \section*{Python Interface}
 \begin{small}\tt
-\lstinputlisting{pysplits/c11}
+\lstinputlisting{docsplits/pysplits/c11}
 \end{small}
 \end{pycpdflib}
 
@@ -3555,7 +3555,7 @@ Unclassified: 11229 bytes (3.62%)
 \clearpage
 \section*{Python Interface}
 \begin{small}\tt
-\lstinputlisting{pysplits/c12}
+\lstinputlisting{docsplits/pysplits/c12}
 \end{small}
 \end{pycpdflib}
 
@@ -3658,7 +3658,7 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 \clearpage
 \section*{Python Interface}
 \begin{small}\tt
-\lstinputlisting{pysplits/c13}
+\lstinputlisting{docsplits/pysplits/c13}
 \end{small}
 \end{pycpdflib}
 
@@ -3924,7 +3924,7 @@ NB: CYMK images will be converted to RGB or untouched by some of these processes
 \clearpage
 \section*{Python Interface}
 \begin{small}\tt
-\lstinputlisting{pysplits/c14}
+\lstinputlisting{docsplits/pysplits/c14}
 \end{small}
 \end{pycpdflib}
 \pagestyle{fancy}
@@ -4153,7 +4153,7 @@ We may extract a font file by giving the page number and the PDF font resource n
 \clearpage
 \section*{Python Interface}
 \begin{small}\tt
-\lstinputlisting{pysplits/c15}
+\lstinputlisting{docsplits/pysplits/c15}
 \end{small}
 \end{pycpdflib}
 
@@ -4325,7 +4325,7 @@ We can load a JSON PDF file with the \texttt{-j} option in place of a PDF file a
 \clearpage
 \section*{Python Interface}
 \begin{small}\tt
-\lstinputlisting{pysplits/c16}
+\lstinputlisting{docsplits/pysplits/c16}
 \end{small}
 \end{pycpdflib}
 
@@ -4412,7 +4412,7 @@ In a PDF file, optional content groups are used to group graphical elements toge
 \clearpage
 \section*{Python Interface}
 \begin{small}\tt
-\lstinputlisting{pysplits/c17}
+\lstinputlisting{docsplits/pysplits/c17}
 \end{small}
 \end{pycpdflib}
 
@@ -4535,7 +4535,7 @@ Cpdf can build multi-pages files from one or more PDF-appropriate JBIG2 fragment
 \clearpage
 \section*{Python Interface}
 \begin{small}\tt
-\lstinputlisting{pysplits/c18}
+\lstinputlisting{docsplits/pysplits/c18}
 \end{small}
 \end{pycpdflib}
 
@@ -5104,7 +5104,7 @@ If the drawing range is a single page, and the next page already exists, the dra
 \clearpage
 \section*{Python Interface}
 \begin{small}\tt
-\lstinputlisting{pysplits/c19}
+\lstinputlisting{docsplits/pysplits/c19}
 \end{small}
 \end{pycpdflib}
 
@@ -5437,7 +5437,7 @@ $ cpdf -extract-stream-decompress 2 hello.pdf -stdout
 \clearpage
 \section*{Python Interface}
 \begin{small}\tt
-\lstinputlisting{pysplits/c20}
+\lstinputlisting{docsplits/pysplits/c20}
 \end{small}
 \end{pycpdflib}
 
