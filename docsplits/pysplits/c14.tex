@@ -1,6 +1,19 @@
 # CHAPTER 13. Images
 
-def getImageResolution(pdf, min_required_resolution):
+def getImageResolution(pdf, resolution):
     """Return a list of all uses of images in the PDF which do not meet the
     minimum required resolution in dpi as tuples of:
-    (pagenumber, name, x pixels, y pixels, x resolution, y resolution)"""
+    (pagenumber, name, x pixels, y pixels, x resolution, y resolution, objnum).
+    """
+
+def imageResolutionJSON(pdf, resolution):
+    """Return the image resolution data in JSON format."""
+
+def getImages(pdf):
+    """Return a list of images in the PDF as tuples of:
+    (object number, pages occurring, image name, width, height, size,
+     bitspercomponent, color space, filter)
+    """
+
+def imagesJSON(pdf):
+    """Return the list of images in the PDF in JSON format."""

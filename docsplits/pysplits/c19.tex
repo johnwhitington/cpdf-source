@@ -1,57 +1,208 @@
-# CHAPTER 18. Miscellaneous
+# CHAPTER 18. Drawing on PDFs
 
-def draft(pdf, r, boxes):
-    """Remove images on the given pages, replacing
-    them with crossed boxes if 'boxes' is True."""
+def drawBegin():
+    """Sets up the drawing process. It must be called before any other draw*
+    function."""
 
-def removeAllText(pdf, r):
-    """Remove all text from the given pages in a document."""
+def drawEnd(pdf, r):
+    """Commits the drawing to the given PDF on pages in the given range."""
 
-def blackText(pdf, r):
-    """Blacken all text on the given pages."""
+def drawEndExtended(pdf, r, underneath, bates, filename):
+    """The same as drawEnd, but provides the special parameters which may be
+    required when using drawSText."""
 
-def blackLines(pdf, r):
-    """Blacken all lines on the given pages."""
+def drawRect(x, y, w, h):
+    """Add a rectangle to the current path."""
 
-def blackFills(pdf, r):
-    """Blacken all fills on the given pages."""
+def drawTo(x, y):
+    """Move the current point to (x, y)."""
 
-def thinLines(pdf, r, linewidth):
-    """Thicken every line less than
-    linewidth to linewidth. Thickness given in points."""
+def drawLine(x, y):
+    """Adds a line from the current point to (x, y) to the current path."""
 
-def copyId(pdf, pdf2):
-    """Copy the /ID from one pdf to pdf2."""
+def drawBez(x1, y1, x2, y2, x3, y3):
+    """Adds a Bezier curve to the current path."""
 
-def removeId(pdf):
-    """Remove a document's /ID"""
+def drawBez23(x2, y2, x3, y3):
+    """Adds a Bezier curve twith (x1, y1) = current point."""
 
-def setVersion(pdf, version):
-    """Set the minor version number of a document."""
+def drawBez13(x1, y1, x3, y3):
+    """Adds a Bezier curve with (x3, y3) = new current point."""
 
-def setFullVersion(pdf, major, minor):
-    """Set the major and minor version number of
-    a document."""
+def drawCircle(x, y, r):
+    """Adds a circle to the current path."""
 
-def removeDictEntry(pdf, key):
-    """Remove any dictionary entry with the given
-    key anywhere in the document."""
+def drawStroke():
+    """Stroke the current path and clear it."""
 
-def removeDictEntrySearch(pdf, key, searchterm):
-    """Remove any dictionary entry with the given
-    key anywhere in the document, if its value matches the given search term."""
+def drawFill():
+    """Fills the current path with a non-zero winding rule, and clears it. """
 
-def replaceDictEntry(pdf, key, newvalue):
-    """Replace any dictionary entry with the given
-    key anywhere in the document using the new value given."""
+def drawFillEo():
+    """Fills the current path with an even-odd winding rule, and clears it. """
 
-def replaceDictEntrySearch(pdf, key, newvalue, searchterm):
-    """Replace any dictionary entry with the given key anywhere in the
-    document, if its value matches the given search term, with the new value
-    given."""
+def drawStrokeFill():
+    """Fills and then strokes the current path with a non-zero winding rule,
+    and clears it. """
 
-def getDictEntries(pdf, key):
-    """Return JSON of any dict entries with the given key."""
+def drawStrokeFillEo():
+    """Fills and then strokes the current path with an even-odd winding rule,
+    and clears it. """
 
-def removeClipping(pdf, r):
-    """Remove all clipping from pages in the given range"""
+def drawClose():
+    """Closes the current path by appending a straight line segment from the
+    current point to the starting point of the subpath. """
+
+def drawClip():
+    """Uses the current path as a clipping region, using the non-zero winding
+    rule. """
+
+def drawClipEo():
+    """Uses the current path as a clipping region, using the even-odd winding
+    rule. """
+
+def drawStrokeColGrey(g):
+    """Changes to a greyscale stroke colourspace and sets the stroke colour.
+    """
+
+def drawStrokeColRGB(r, g, b):
+    """Changes to an RGB stroke colourspace and sets the stroke colour. """
+
+def drawStrokeColCYMK(c, y, m, k):
+    """Changes to a CYMK stroke colourspace and sets the stroke colour. """
+
+def drawFillColGrey(g):
+    """Changes to a greyscale fill colourspace and sets the fill colour. """
+
+def drawFillColRGB(r, g, b):
+    """Changes to an RGB fill colourspace and sets the fill colour. """
+
+def drawFillColCYMK(c, y, m, k):
+    """Changes to a CYMK fill colourspace and sets the fill colour. """
+
+def drawThick(thickness):
+    """Sets the line thickness."""
+
+def drawCap(captype):
+    """Sets the line cap."""
+
+def drawJoin(jointype):
+    """Sets the line join type"""
+
+def drawMiter(miter):
+    """Sets the miter limit."""
+
+def drawDash(description):
+    """Sets the line dash style"""
+
+def drawPush():
+    """Saves the current graphics state on the stack. """
+
+def drawPop():
+    """Restores the graphics state from the stack. """
+
+def drawMatrix(a, b, c, d, e, f):
+    """Appends the given matrix to the Current Transformation Matrix. """
+
+def drawMTrans(tx, ty):
+    """Appends a translation by (tx, ty) to the Current Transformation Matrix.
+    """
+
+def drawMRot(x, y, a):
+    """Appends a rotation by a around (a, y) to the Current Transformation
+    Matrix. """
+
+def drawMScale(x, y, sx, sy):
+    """Appends a scaling by (sx, sy) around (x, y) to the Current
+    Transformation Matrix. """
+
+def drawMShearX(x, y, a):
+    """Appends an X shearing of angle a around (x, y) to the Current
+    Transformation Matrix. """
+
+def drawMShearY(x, y, a):
+    """Appends an X shearing of angle a around (x, y) to the Current
+    Transformation Matrix. """
+
+def drawXObjBBox(x, y, w, h):
+    """Sets the XObject bounding box. """
+
+def drawXObj(name):
+    """Begins the storing of an XObject. """
+
+def drawEndXObj():
+    """Ends the storing of an XObject."""
+
+def drawUse(name):
+    """Uses the named XObject. """
+
+def drawJPEG(name, filename):
+    """Loads a JPEG from the given file, storing it under the given name. """
+
+def drawJPEGMemory(name, data):
+    """Loads a JPEG from the given bytearray, storing it under the given name.
+    """
+
+def drawPNG(name, filename):
+    """Loads a non-interlaced non-transparent PNG from the given file, storing
+    it under the given name. """
+
+def drawPNGMemory(name, data):
+    """Loads a non-interlaced non-transparent PNG from the given bytearray,
+    storing it under the given name. """
+
+def drawImage(name):
+    """Draws a stored image. To draw at the expected size, it is required to
+    scale the Current Transformation Matrix by the width and height of the
+    image. """
+
+def drawFillOpacity(n):
+    """Sets the fill opacity."""
+
+def drawStrokeOpacity(n):
+    """Sets the stroke opacity."""
+
+def drawBT():
+    """Begins a text section."""
+
+def drawET():
+    """Ends a text section."""
+
+def drawFont(name):
+    """Sets the font."""
+
+def drawFontSize(n):
+    """Sets the font size."""
+
+def drawText(text):
+    """Draws text."""
+
+def drawSText(text):
+    """draws text with %Specials. You may need to use cpdf_drawEndExtended
+    instead of cpdf_drawEnd later, to provide the extra information required.
+    """
+
+def drawLeading(n):
+    """Sets the leading."""
+
+def drawCharSpace(n):
+    """Sets the character spacing."""
+
+def drawWordSpace(n):
+    """Sets the word spacing."""
+
+def drawTextScale(n):
+    """Sets the text scaling."""
+
+def drawRenderMode(n):
+    """Sets the text rendering mode."""
+
+def drawRise(n):
+    """Sets the text rise."""
+
+def drawNL():
+    """Moves to the next line. """
+
+def drawNewPage():
+    """Moves to the next page, creating it if necessary, and setting the range
+    to just that new page. """

@@ -1,8 +1,25 @@
 # CHAPTER 11. Document Information and Metadata
 
 def isLinearized(filename):
-    """Finds out if a document is linearized as quickly
-    as possible without loading it."""
+    """Finds out if a document is linearized as quickly as possible without
+    loading it."""
+
+def hasAcroForm(pdf):
+    """Returns True if the document has an AcroForm."""
+
+def getSubformats(pdf):
+    """Returns a list of the subformats of the PDF, if any."""
+
+def hasObjectStreams(pdf):
+    """Returns True if a document was written using object streams."""
+
+def id1(pdf):
+    """Return the first ID string of the PDF, if any, in hexadecimal string
+    format."""
+
+def id2(pdf):
+    """Return the second ID string of the PDF, if any, in hexadecimal string
+    format."""
 
 def getVersion(pdf):
     """Return the minor version number of a document."""
@@ -110,64 +127,66 @@ def getDateComponents(string):
     """Return the components (year, month, day, hour, minute, second,
     hour_offset, minute_offset) from a PDF date string.
 
-    Month 1-31, day 1-31, hours (0-23), minutes (0-59), seconds
-    (0-59), hour_offset is the offset from UT in hours (-23 to 23);
-    minute_offset is the offset from UT in minutes (-59 to 59)."""
+    Month 1-31, day 1-31, hours (0-23), minutes (0-59), seconds (0-59),
+    hour_offset is the offset from UT in hours (-23 to 23); minute_offset is
+    the offset from UT in minutes (-59 to 59)."""
 
 def dateStringOfComponents(cs):
     """Build a PDF date string a (year, month, day, hour, minute, second,
     hour_offset, minute_offset) tuple.
 
-    Dates: Month 1-31, day 1-31, hours (0-23), minutes (0-59), seconds
-    (0-59), hour_offset is the offset from UT in hours (-23 to 23);
-    minute_offset is the offset from UT in minutes (-59 to 59)."""
+    Dates: Month 1-31, day 1-31, hours (0-23), minutes (0-59), seconds (0-59),
+    hour_offset is the offset from UT in hours (-23 to 23); minute_offset is
+    the offset from UT in minutes (-59 to 59)."""
 
 def getPageRotation(pdf, pagenumber):
     """Get the viewing rotation for a given page."""
 
 def hasBox(pdf, pagenumber, boxname):
-    """Returns True, if the page has the given box. E.g "/CropBox" """
+    """Returns True, if the page has the given box. E.g "/CropBox"."""
+
+def numAnnots(pdf, pagenumber):
+    """Return the number of annotations on the given page in the given PDF."""
 
 def getMediaBox(pdf, pagenumber):
-    """Get a mediabox box given the document, page range, min x, max x,
-    min y, max y in points. Only suceeds if such a box exists, as checked by
-    hasBox"""
+    """Get a mediabox box given the document, page range, min x, max x, min y,
+    max y in points. Only suceeds if such a box exists, as checked by
+    hasBox."""
 
 def getCropBox(pdf, pagenumber):
-    """Get a crop box given the document, page range, min x, max x,
-    min y, max y in points. Only suceeds if such a box exists, as checked by
-    hasBox"""
+    """Get a crop box given the document, page range, min x, max x, min y, max
+    y in points. Only suceeds if such a box exists, as checked by hasBox."""
 
 def getTrimBox(pdf, pagenumber):
-    """Get a trim box given the document, page range, min x, max x,
-    min y, max y in points. Only suceeds if such a box exists, as checked by
-    hasBox"""
+    """Get a trim box given the document, page range, min x, max x, min y, max
+    y in points. Only suceeds if such a box exists, as checked by hasBox."""
 
 def getArtBox(pdf, pagenumber):
-    """Get an art box given the document, page range, min x, max x,
-    min y, max y in points. Only suceeds if such a box exists, as checked by
-    hasBox"""
+    """Get an art box given the document, page range, min x, max x, min y, max
+    y in points. Only suceeds if such a box exists, as checked by hasBox."""
 
 def getBleedBox(pdf, pagenumber):
-    """Get a bleed box given the document, page range, min x, max x,
-    min y, max y in points. Only suceeds if such a box exists, as checked by
-    hasBox"""
+    """Get a bleed box given the document, page range, min x, max x, min y, max
+    y in points. Only suceeds if such a box exists, as checked by hasBox."""
 
 def setMediaBox(pdf, r, minx, maxx, miny, maxy):
-    """Set the media box given the document, page range, min x, max x,
-    min y, max y in points."""
+    """Set the media box given the document, page range, min x, max x, min y,
+    max y in points."""
 
 def setCropBox(pdf, r, minx, maxx, miny, maxy):
-    """Set the crop box given the document, page range, min x, max x,
-    min y, max y in points."""
+    """Set the crop box given the document, page range, min x, max x, min y,
+    max y in points."""
 
 def setTrimBox(pdf, r, minx, maxx, miny, maxy):
-    """Set the trim box given the document, page range, min x, max x,
-    min y, max y in points."""
+    """Set the trim box given the document, page range, min x, max x, min y,
+    max y in points."""
 
 def setArtBox(pdf, r, minx, maxx, miny, maxy):
-    """Set the art box given the document, page range, min x, max x,
-    min y, max y in points."""
+    """Set the art box given the document, page range, min x, max x, min y, max
+    y in points."""
+
+def pageInfoJSON(pdf):
+    """Returns JSON data for the page information."""
 
 def setBleedBox(pdf, r, minx, maxx, miny, maxy):
     """Set the bleed box given the document, page range, min x, max x,
@@ -188,30 +207,63 @@ def markUntrappedXMP(pdf):
 def setPageLayout(pdf, layout):
     """Set the page layout for a document."""
 
+def getPageLayout(pdf):
+    """Get the page layout for a document."""
+
 def setPageMode(pdf, mode):
     """Set the page mode for a document."""
+
+def getPageMode(pdf):
+    """Get the page mode for a document"""
 
 def hideToolbar(pdf, flag):
     """Sets the hide toolbar flag."""
 
+def getHideToolbar(pdf):
+    """Get the hide toolbar flag."""
+
 def hideMenubar(pdf, flag):
     """Set the hide menu bar flag."""
+
+def getHideMenubar(pdf):
+    """Get the hide menubar flag."""
 
 def hideWindowUi(pdf, flag):
     """Set the hide window UI flag."""
 
+def getHideWindowUi(pdf):
+    """Get the hide window UI flag."""
+
 def fitWindow(pdf, flag):
     """Set the fit window flag."""
+
+def getFitWindow(pdf):
+    """Get the fit window flag."""
 
 def centerWindow(pdf, flag):
     """Set the center window flag."""
 
+def getCenterWindow(pdf):
+    """Get the center window flag."""
+
 def displayDocTitle(pdf, flag):
     """Set the display document title flag."""
+
+def getDisplayDocTitle(pdf):
+    """Get the display document title flag."""
+
+def nonFullScreenPageMode(pdf, flag):
+    """set the non full screen page mode flag."""
+
+def getNonFullScreenPageMode(pdf):
+    """get the non full screen page mode flag."""
 
 def openAtPage(pdf, fitflag, pagenumber):
     """Set the PDF to open, possibly with zoom-to-fit, at the given page number.
     """
+
+def openAtPageCustom(pdf, custom):
+    """Set a custom openAtPage description."""
 
 def setMetadataFromFile(pdf, filename):
     """Set the XMP metadata of a document, given a file name."""
@@ -223,7 +275,7 @@ def getMetadata(pdf):
     """Return the XMP metadata as a byte array of type bytes"""
 
 def removeMetadata(pdf):
-    """Remove the XMP metadata from a document"""
+    """Remove the XMP metadata from a document."""
 
 def createMetadata(pdf):
     """Builds fresh XMP metadata as good as possible from existing
@@ -250,7 +302,7 @@ def getPageLabels(pdf):
     * labelstyle = DecimalArabic
     * labelprefix = ""
     * startpage = 6
-    * startvalue = 1 """
+    * startvalue = 1"""
 
 def addPageLabels(pdf, label, progress):
     """Add one group of page labels from a tuple (style, prefix, offset, range).
@@ -263,3 +315,6 @@ def removePageLabels(pdf):
 
 def getPageLabelStringForPage(pdf, pagenumber):
     """Calculate the full label string for a given page, and return it."""
+
+def compositionJSON(filesize, pdf):
+    """Get the composition in JSON format."""
