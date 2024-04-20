@@ -2154,7 +2154,7 @@ Cpdf can automatically generate a table of contents from existing bookmarks, add
    \noindent\small\verb!cpdf -table-of-contents -toc-title "Contents" in.pdf -o out.pdf!
   \end{framed}
 
-\noindent An empty title removes the title. The sequence \texttt{\textbackslash n} may be used to split the title into lines. The default font is 12pt Times Roman (and 24pt for the title). The base font and size may be changed with \texttt{-font} and \texttt{-font-size} (see chapter 8 for full details):
+\noindent An empty title removes the title. The sequence \texttt{\textbackslash n} may be used to split the title into lines. The default font is 12pt Times Roman (and 24pt for the title). The base font and size may be changed with \texttt{-font} and \texttt{-font-size} (see Section \ref{fonts} for full details):
 
   \begin{framed}
    \noindent\small\verb!cpdf -table-of-contents -font "Courier-Bold" -font-size 8!\\
@@ -2534,6 +2534,7 @@ commands above are to be considered relative to the midline of the text, rather
 than its baseline. Similarly, the \texttt{-topline} option may be used to specify that the position is taken relative to the top of the text.
 
   \subsection{Font and Size}
+\label{fonts}
 \index{font}
   The standard PDF fonts may be set with the \texttt{-font} option. They are:
 
@@ -4484,7 +4485,7 @@ A basic text to PDF convertor is included in \texttt{cpdf}. It takes a UTF8 text
  \noindent\small\verb?     -font Courier -font-size 10 -o out.pdf?
 \end{framed}
 
-\noindent The standard paper sizes are listed in Section \ref{papersizes}, or you may specify the width and height directly, as described in the same chapter. The standard fonts are listed in chapter~\ref{chap:8}. The default font is Times-Roman and the default size is 12.
+\noindent The standard paper sizes are listed in Section \ref{papersizes}, or you may specify the width and height directly, as described in the same chapter. The font may be specified as described in Section \ref{fonts}. The default font is Times-Roman and the default size is 12.
 
 \section{Make a PDF from a PNG or JPEG image}
 \index{image!convert to PDF}
