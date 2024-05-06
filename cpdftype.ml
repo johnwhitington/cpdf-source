@@ -208,15 +208,14 @@ let typeset lmargin rmargin tmargin bmargin papersize pdf i =
   let thisdestrectangles = ref [] in
   let pages = ref [] in
   let write_page () =
-    if !ops <> [] then
-      let page =
-        {Pdfpage.content = [Pdfops.stream_of_ops (rev !ops)];
-         Pdfpage.mediabox = Pdfpage.rectangle_of_paper papersize;
-         Pdfpage.resources = make_resources !thispagefontnums;
-         Pdfpage.rotate = Pdfpage.Rotate0;
-         Pdfpage.rest = make_annotations pdf !thispageannotations}
-      in
-        pages := page :: !pages
+    let page =
+      {Pdfpage.content = if !ops = [] then [] else [Pdfops.stream_of_ops (rev !ops)];
+       Pdfpage.mediabox = Pdfpage.rectangle_of_paper papersize;
+       Pdfpage.resources = make_resources !thispagefontnums;
+       Pdfpage.rotate = Pdfpage.Rotate0;
+       Pdfpage.rest = make_annotations pdf !thispageannotations}
+    in
+      pages := page :: !pages
   in
   let rec typeset_element = function
     | Text cps ->

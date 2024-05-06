@@ -56,8 +56,11 @@ let typeset ~papersize ~font ~fontsize text =
   in
   let instrs = of_utf8_with_newlines fontpack fontsize (Pdfio.string_of_bytes text) in
   let margin = Pdfunits.points (Pdfpaper.width papersize) (Pdfpaper.unit papersize) /. 15.  in
-  let firstfont = hd (keep (function Cpdftype.Font _ -> true | _ -> false) instrs) in 
-  let instrs = [firstfont; Cpdftype.BeginDocument] @ instrs in
+  let instrs =
+    if instrs = [] then [] else
+      let firstfont = hd (keep (function Cpdftype.Font _ -> true | _ -> false) instrs) in 
+        [firstfont; Cpdftype.BeginDocument] @ instrs
+  in
   let pages = Cpdftype.typeset margin margin margin margin papersize pdf instrs in
     let pdf, pageroot = Pdfpage.add_pagetree pages pdf in
       Pdfpage.add_root pageroot [] pdf
