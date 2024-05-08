@@ -605,6 +605,7 @@ let parse ~subset data encoding =
               let subset_1, subsets_2 = find_main encoding subset in
               let flags_1 = calculate_flags false italicangle in
               let flags_2 = calculate_flags true italicangle in
+              if subset_1 = [] then raise (Pdf.PDFError "Cpdftruetype: Refusing to create font with no characters") else
               let firstchar_1, lastchar_1 = extremes (sort compare subset_1) in
               let firstchars_2, lastchars_2 = split (map (fun subset -> (33, length subset + 33 - 1)) subsets_2) in
               let numOfLongHorMetrics =

@@ -437,6 +437,7 @@ let
          iter (iter (fun x -> Hashtbl.replace used x ())) codepoints)
     pages
     (map (fun x -> List.nth ps (x - 1)) pages);
+  if Hashtbl.length used = 0 then pdf else (* Avoid trying to build truetype font with no used set. *)
   let realfontname = ref fontname in
   let font, fontpack =
     match cpdffont with
