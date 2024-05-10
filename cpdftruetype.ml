@@ -80,7 +80,7 @@ let padding32 n =
   i32ofi (padding (i32toi n))
 
 let pdf_unit unitsPerEm x =
-  int_of_float (float_of_int x *. 1000. /. float_of_int unitsPerEm +. 0.5)
+  int_of_float (Float.round (float_of_int x *. 1000. /. float_of_int unitsPerEm))
 
 let string_of_tag t =
   Printf.sprintf "%c%c%c%c"
