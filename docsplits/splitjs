@@ -1,5 +1,5 @@
 #!/bin/bash
-csplit -k -f javascriptsplits/c ../../coherentpdf.js/cpdfdocs.js '/CHAPTER/' {18}
+csplit -k -f javascriptsplits/c ../../coherentpdf.js/cpdfdocs.js '/CHAPTER/' {19}
 mv javascriptsplits/c00 javascriptsplits/c00.tex
 mv javascriptsplits/c01 javascriptsplits/c01.tex
 mv javascriptsplits/c02 javascriptsplits/c02.tex
@@ -20,3 +20,4 @@ mv javascriptsplits/c16 javascriptsplits/c16.tex
 mv javascriptsplits/c17 javascriptsplits/c17.tex
 mv javascriptsplits/c18 javascriptsplits/c18.tex
 mv javascriptsplits/c19 javascriptsplits/c19.tex
+mv javascriptsplits/c20 javascriptsplits/c20.tex

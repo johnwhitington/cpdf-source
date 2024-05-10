@@ -1,0 +1,93 @@
+//CHAPTER 19. Miscellaneous
+
+/** Removes images on the given pages, replacing them with crossed boxes if
+'boxes' is true.
+@arg {pdf} pdf PDF document
+@arg {range} range page range
+@arg {boolean} boxes replace with crossed boxes */
+function draft(pdf, range, boxes) {}
+
+/** Removes all text from the given pages in a given document.
+@arg {pdf} pdf PDF document
+@arg {range} range page range */
+function removeAllText(pdf, range) {}
+
+/* Blackens all text on the given pages.
+@arg {pdf} pdf PDF document
+@arg {range} range page range */
+function blackText(pdf, range) {}
+
+/** Blackens all lines on the given pages.
+@arg {pdf} pdf PDF document
+@arg {range} range page range */
+function blackLines(pdf, range) {}
+
+/** Blackens all fills on the given pages.
+@arg {pdf} pdf PDF document
+@arg {range} range page range */
+function blackFills(pdf, range) {}
+
+/** Thickens every line less than min_thickness to min_thickness. Thickness
+given in points.
+@arg {pdf} pdf PDF document
+@arg {range} range page range
+@arg {number} min_thickness minimum required thickness */
+function thinLines(pdf, range, min_thickness) {}
+
+/** Copies the /ID from one document to another.
+@arg {pdf} pdf_from source document
+@arg {pdf} pdf_to destination document */
+function copyId(pdf_from, pdf_to) {}
+
+/** Removes a document's /ID.
+@arg {pdf} pdf PDF document */
+function removeId(pdf) {}
+
+/** Sets the minor version number of a document.
+@arg {pdf} pdf PDF document
+@arg {number} version */
+function setVersion(pdf, version) {}
+
+/** Sets the full version number of a document.
+@arg {pdf} pdf PDF document
+@arg {number} major version
+@arg {number} minor version */
+function setFullVersion(pdf, major, minor) {}
+
+/** Removes any dictionary entry with the given key anywhere in the document.
+@arg {pdf} pdf PDF document
+@arg {string} key key to remove */
+function removeDictEntry(pdf, key) {}
+
+/** Removes any dictionary entry with the given key whose value matches the
+given search term.
+@arg {pdf} pdf PDF document
+@arg {string} key key to remove
+@arg {string} searchterm search term */
+function removeDictEntrySearch(pdf, key, searchterm) {}
+
+/** Replaces the value associated with the given key.
+@arg {pdf} pdf PDF document
+@arg {string} key key to remove
+@arg {string} newval new value */
+function replaceDictEntry(pdf, key, newval) {}
+
+/** Replaces the value associated with the given key if the existing value
+matches the search term.
+@arg {pdf} pdf PDF document
+@arg {string} key key to remove
+@arg {string} newval new value
+@arg {string} searchterm search term */
+function replaceDictEntrySearch(pdf, key, newval, searchterm) {}
+
+/** Removes all clipping from pages in the given range.
+@arg {pdf} pdf PDF document
+@arg {range} range page range */
+function removeClipping(pdf, range) {}
+
+/* Returns a JSON array containing any and all values associated with the
+given key.
+@arg {pdf} pdf PDF docment
+@arg {string} key key
+@return {Uint8Array} results as an array of bytes */
+function getDictEntries(pdf, key) {}
