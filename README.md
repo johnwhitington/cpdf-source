@@ -110,6 +110,10 @@ The file [cpdfxmlm.ml](cpdfxmlm.ml) was written by Daniel Bünzli.
 
 The file [cpdfyojson.ml](cpdfyojson.ml) was written by Martin Jambon and others.
 
+The error descriptions for -verify-pdfua "matterhorn1.1" come from the PDF
+Association, and are licensed under the Creative Commons Attribution 4.0
+International license.
+
 Contact
 -------
 
