@@ -42,6 +42,7 @@ let matterhorn_21_001 pdf = ()
 let matterhorn_25_001 pdf = ()
 let matterhorn_26_001 pdf = ()
 let matterhorn_26_002 pdf = ()
+let matterhorn_28_002 pdf = ()
 let matterhorn_28_004 pdf = ()
 let matterhorn_28_005 pdf = ()
 let matterhorn_28_006 pdf = ()
@@ -130,6 +131,15 @@ let matterhorn =
    ("25-001", "File contains the dynamicRender element with value “required”.", "UA1:7.15-1", matterhorn_25_001);
    ("26-001", "The file is encrypted but does not contain a P entry in its encryption dictionary.", "UA1:7.16-1", matterhorn_26_001);
    ("26-002", "The file is encrypted and does contain a P entry but the 10th bit position of the P entry is false.", "UA1:7.16-1", matterhorn_26_002);
+   ("28-002", "An annotation, other than of subtype Widget, Link and PrinterMark, is not a direct child of an <Annot> structure element.", "UA1:7.18.1-2", matterhorn_28_002);
+   ("28-004", "An annotation, other than of subtype Widget, does not have a Contents entry and does not have an alternative description (in the form of an Alt entry in the enclosing structure element).", "UA1:7.18.1-4", matterhorn_28_004);
+   ("28-005", "A form field does not have a TU entry and does not have an alternative description (in the form of an Alt entry in the enclosing structure element).", "UA1:7.18.1-4", matterhorn_28_005);
+   ("28-006", "An annotation with subtype undefined in ISO 32000 does not meet 7.18.1.", "UA1:7.18.2-1", matterhorn_28_006);
+   ("28-007", "An annotation of subtype TrapNet exists.", "UA1:7.18.2-2", matterhorn_28_007);
+   ("28-008", "A page containing an annotation does not contain a Tabs entry", "UA1:7.18.3-1", matterhorn_28_008);
+   ("28-009", "A page containing an annotation has a Tabs entry with a value other than S.", "UA1:7.18.3-1", matterhorn_28_009);
+   ("28-010", "A widget annotation is not nested within a <Form> tag.", "UA1:7.18.4-1", matterhorn_28_010);
+   ("28-011", "A link annotation is not nested within a <Link> tag.", "UA1:7.18.5-1", matterhorn_28_011);
   ]
 
 let test_matterhorn pdf =
