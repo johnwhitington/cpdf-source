@@ -219,6 +219,7 @@ type op =
   | ProcessImages
   | ExtractStream of int
   | PrintObj of int
+  | Verify of string
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -361,6 +362,7 @@ let string_of_op = function
   | ProcessImages -> "ProcessImages"
   | ExtractStream _ -> "ExtractStream"
   | PrintObj _ -> "PrintObj"
+  | Verify _ -> "Verify"
 
 (* Inputs: filename, pagespec. *)
 type input_kind = 
@@ -881,6 +883,7 @@ let banned banlist = function
   | AddPageLabels | RemovePageLabels | OutputJSON | OCGCoalesce
   | OCGRename | OCGList | OCGOrderAll | PrintFontEncoding _ | TableOfContents | Typeset _ | Composition _
   | TextWidth _ | SetAnnotations _ | CopyAnnotations _ | ExtractStream _ | PrintObj _
+  | Verify _
      -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
@@ -2802,6 +2805,8 @@ and specs =
    ("-extract-stream", Arg.Int setextractstream, " Extract a stream");
    ("-extract-stream-decompress", Arg.Int setextractstreamdecomp, "Extract a stream, decompressing");
    ("-obj", Arg.Int setprintobj, "Print object");
+   ("-json", Arg.Unit (fun () -> args.format_json <- true), "Format output as JSON");
+   ("-verify", Arg.String (fun s -> setop (Verify s) ()), "Verify conformance to a standard");
    (* These items are undocumented *)
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit (fun () -> args.debugcrypt <- true), "");
@@ -4423,11 +4428,20 @@ let go () =
           ~path_to_jbig2enc:args.path_to_jbig2enc ~path_to_convert:args.path_to_im range pdf;
         write_pdf false pdf
   | Some (ExtractStream i) ->
-      let pdf = get_single_pdf args.op false in
+      let pdf = get_single_pdf args.op true in
         extract_stream pdf args.extract_stream_decompress i
   | Some (PrintObj i) ->
-      let pdf = get_single_pdf args.op false in
+      let pdf = get_single_pdf args.op true in
         print_obj pdf i
+  | Some (Verify standard) ->
+      begin match standard with
+      | "PDF/UA-1(matterhorn)" ->
+          let pdf = get_single_pdf args.op false in
+            if args.format_json
+              then flprint (Cpdfyojson.Safe.pretty_to_string (Cpdfua.test_matterhorn_json pdf))
+              else Cpdfua.test_matterhorn_print pdf
+      | _ -> error "Unknown verification type."
+      end
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)
