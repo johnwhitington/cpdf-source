@@ -1,6 +1,8 @@
 open Pdfutil
 
-exception MatterhornError
+exception MatterhornError of Cpdfyojson.Safe.t
+
+let merror () = raise (MatterhornError `Null)
 
 let matterhorn_01_003 pdf = ()
 let matterhorn_01_004 pdf = ()
@@ -11,8 +13,35 @@ let matterhorn_02_003 pdf = ()
 let matterhorn_06_001 pdf = ()
 let matterhorn_06_002 pdf = ()
 let matterhorn_06_003 pdf = ()
-let matterhorn_07_001 pdf = ()
-let matterhorn_07_002 pdf = ()
+
+(* ViewerPreferences dictionary of the Catalog dictionary does not contain a
+   DisplayDocTitle entry. *)
+let matterhorn_07_001 pdf =
+  match Pdf.lookup_direct pdf "/Root" pdf.Pdf.trailerdict with
+  | Some catalog ->
+      begin match Pdf.lookup_direct pdf "/ViewerPreferences" catalog with
+      | Some d ->
+          begin match Pdf.lookup_direct pdf "/DisplayDocTitle" d with
+          | Some _ -> ()
+          | None -> merror ()
+          end
+      | None -> merror ()
+      end
+  | _ -> merror ()
+
+let matterhorn_07_002 pdf = 
+  match Pdf.lookup_direct pdf "/Root" pdf.Pdf.trailerdict with
+  | Some catalog ->
+      begin match Pdf.lookup_direct pdf "/ViewerPreferences" catalog with
+      | Some d ->
+          begin match Pdf.lookup_direct pdf "/DisplayDocTitle" d with
+          | Some (Pdf.Boolean false) -> merror ()
+          | _ -> ()
+          end
+      | None -> ()
+      end
+  | _ -> ()
+
 let matterhorn_09_004 pdf = ()
 let matterhorn_09_005 pdf = ()
 let matterhorn_09_006 pdf = ()
@@ -183,13 +212,21 @@ let test_matterhorn pdf =
   option_map
     (fun (name, error, section, test) ->
       try test pdf; None with
-       | MatterhornError -> Some (name, error, section)
-       | e -> Some (name, "Incomplete", section)
+       | MatterhornError extra -> Some (name, error, section, extra)
+       | e -> Some (name, "Incomplete", section, `Null)
     )
     matterhorn
 
 let test_matterhorn_print pdf =
-  iter (fun (name, error, section) -> Printf.eprintf "%s %s %s\n" name section error) (test_matterhorn pdf)
+  iter
+    (fun (name, error, section, extra) ->
+       Printf.eprintf "%s %s %s %s\n" name section error
+       (if extra = `Null then "" else "(" ^ Cpdfyojson.Safe.to_string extra ^ ")"))
+    (test_matterhorn pdf)
 
 let test_matterhorn_json pdf =
-  `List (map (fun (name, error, section) -> `Assoc [("name", `String name); ("section", `String section); ("error", `String error)]) (test_matterhorn pdf))
+  `List
+    (map
+      (fun (name, error, section, extra) ->
+        `Assoc [("name", `String name); ("section", `String section); ("error", `String error); ("extra", extra)])
+      (test_matterhorn pdf))
