@@ -231,4 +231,9 @@ let test_matterhorn_json pdf =
         `Assoc [("name", `String name); ("section", `String section); ("error", `String error); ("extra", extra)])
       (test_matterhorn pdf))
 
-let mark pdf = ()
+let mark pdf =
+  let pdf2 = if Cpdfmetadata.get_metadata pdf = None then Cpdfmetadata.create_metadata pdf else pdf in
+   pdf.Pdf.objects <- pdf2.Pdf.objects;
+   pdf.Pdf.trailerdict <- pdf2.Pdf.trailerdict;
+   pdf.Pdf.root <- pdf.Pdf.root;
+   ()

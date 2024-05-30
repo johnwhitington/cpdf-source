@@ -2809,7 +2809,7 @@ and specs =
    ("-obj", Arg.Int setprintobj, "Print object");
    ("-json", Arg.Unit (fun () -> args.format_json <- true), "Format output as JSON");
    ("-verify", Arg.String (fun s -> setop (Verify s) ()), "Verify conformance to a standard");
-   ("-marks-as", Arg.String (fun s -> setop (MarkAs s) ()), "Mark as conforming to a standard");
+   ("-mark-as", Arg.String (fun s -> setop (MarkAs s) ()), "Mark as conforming to a standard");
    (* These items are undocumented *)
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit (fun () -> args.debugcrypt <- true), "");
