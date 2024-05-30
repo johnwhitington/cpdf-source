@@ -140,6 +140,43 @@ let matterhorn =
    ("28-009", "A page containing an annotation has a Tabs entry with a value other than S.", "UA1:7.18.3-1", matterhorn_28_009);
    ("28-010", "A widget annotation is not nested within a <Form> tag.", "UA1:7.18.4-1", matterhorn_28_010);
    ("28-011", "A link annotation is not nested within a <Link> tag.", "UA1:7.18.5-1", matterhorn_28_011);
+   ("28-012", "A link annotation does not include an alternate description in its Contents entry.", "UA1:7.18.5-2", matterhorn_28_012);
+   ("28-014", "CT entry is missing from the media clip data dictionary.", "", matterhorn_28_014);
+   ("28-015", "Alt entry is missing from the media clip data dictionary.", "UA1:7.18.6.2-1", matterhorn_28_015);
+   ("28-016", "File attachment annotations do not conform to 7.11.", "UA1:7.18.7-1", matterhorn_28_016);
+   ("28-017", "A PrinterMark annotation is included in the logical structure.", "UA1:7.18.8-1", matterhorn_28_017);
+   ("28-018", "The appearance stream of a PrinterMark annotation is not marked as Artifact.", "UA1:7.18.8-2", matterhorn_28_018);
+   ("30-001", "A reference XObject is present.", "UA1:7.2", matterhorn_30_001);
+   ("30-002", "Form XObject contains MCIDs and is referenced more than once.", "UA1:7.21.3.1-1",  matterhorn_30_002);
+   ("31-001", "A Type 0 font dictionary with encoding other than Identity-H and Identity-V has values for Registry in both CIDSystemInfo dictionaries that are not identical.", "UA1:7.21.3-1", matterhorn_31_001);
+   ("31-002", "A Type 0 font dictionary with encoding other than Identity-H and Identity-V has values for Ordering in both CIDSystemInfo dictionaries that are not identical.", "UA1:7.21.3.1-1", matterhorn_31_002);
+   ("31-003", "A Type 0 font dictionary with encoding other than Identity-H and Identity-V has a value for Supplement in the CIDSystemInfo dictionary of the CID font that is less than the value for Supplement in the CIDSystemInfo dictionary of the CMap.", "UA1:7.21.3.1-1", matterhorn_31_003);
+   ("31-004", "A Type 2 CID font contains neither a stream nor the name Identity as the value of the CIDToGIDMap entry.", "UA1:7.21.3.2-1", matterhorn_31_004);
+   ("31-005", "A Type 2 CID font does not contain a CIDToGIDMap entry.", "UA1:7.21.3.2-1", matterhorn_31_005);
+   ("31-006", "A CMap is neither listed as described in ISO 32000- 1:2008, 9.7.5.2, Table 118 nor is it embedded.", "UA1:7.21.3.3-1", matterhorn_31_006);
+   ("31-007", "The WMode entry in a CMap dictionary is not identical to the WMode value in the CMap stream.", "UA1:7.21.3.3-1", matterhorn_31_007);
+   ("31-008", "A CMap references another CMap which is not listed in ISO 32000-1:2008, 9.7.5.2, Table 118.", "UA1:7.21.3.3-2", matterhorn_31_008);
+   ("31-009", "For a font used by text intended to be rendered the font program is not embedded.", "UA1:7.21.4.1-1", matterhorn_31_009);
+   ("31-011", "For a font used by text the font program is embedded but it does not contain glyphs for all of the glyphs referenced by the text used for rendering.", "UA1:7.21.4.1-3", matterhorn_31_011);
+   ("31-012", "The FontDescriptor dictionary of an embedded Type 1 font contains a CharSet string, but at least one of the glyphs present in the font program is not listed in the CharSet string.", "UA1:7.21.4.2-1", matterhorn_31_012);
+   ("31-013", "The FontDescriptor dictionary of an embedded Type 1 font contains a CharSet string, but at least one of the glyphs listed in the CharSet string is not present in the font program.", "UA1:7.21.4.2-2", matterhorn_31_013);
+   ("31-014", "The FontDescriptor dictionary of an embedded CID font contains a CIDSet string, but at least one of the glyphs present in the font program is not listed in the CIDSet string.", "UA1:7.21.4.2-3", matterhorn_31_014);
+   ("31-015", "The FontDescriptor dictionary of an embedded CID font contains a CIDSet string, but at least one of the glyphs listed in the CIDSet string is not present in the font program.", "UA1:7.21.4.2-4", matterhorn_31_015);
+   ("31-016", "For one or more glyphs, the glyph width information in the font dictionary and in the embedded font program differ by more than 1/1000 unit.", "UA1:7.21.5-1", matterhorn_31_016);
+   ("31-017", "A non-symbolic TrueType font is used for rendering, but none of the cmap entries in the embedded font program is a non-symbolic cmap.", "UA1:7.21.6-1", matterhorn_31_017);
+   ("31-018", "A non-symbolic TrueType font is used for rendering, but for at least one glyph to be rendered the glyph cannot be looked up by any of the non-symbolic cmap entries in the embedded font program.", "UA1:7.21.6-2", matterhorn_31_018);
+   ("31-019", "The font dictionary for a non-symbolic TrueType font does not contain an Encoding entry.", "UA1:7.21.6-3", matterhorn_31_019);
+   ("31-020", "The font dictionary for a non-symbolic TrueType font contains an Encoding dictionary which does not contain a BaseEncoding entry.", "UA1:7.21.6-4", matterhorn_31_020);
+   ("31-021", "The value for either the Encoding entry or the BaseEncoding entry in the Encoding dictionary in a non-symbolic TrueType font dictionary is neither MacRomanEncoding nor WinAnsiEncoding.", "UA1:7.21.6-5", matterhorn_31_021);
+   ("31-022", "The Differences array in the Encoding entry in a non-symbolic TrueType font dictionary contains one or more glyph names which are not listed in the Adobe Glyph List.", "UA1:7.21.6-6", matterhorn_31_022);
+   ("31-023", "The Differences array is present in the Encoding entry in a non-symbolic TrueType font dictionary but the embedded font program does not contain a (3,1) Microsoft Unicode cmap.", "UA1:7.21.6-7", matterhorn_31_023);
+   ("31-024", "The Encoding entry is present in the font dictionary for a symbolic TrueType font.", "UA1:7.21.6-8", matterhorn_31_024);
+   ("31-025", "The embedded font program for a symbolic TrueType font contains no cmap.", "UA1:7.21.6-9", matterhorn_31_025);
+   ("31-026", "The embedded font program for a symbolic TrueType font contains more than one cmap, but none of the cmap entries is a (3,0) Microsoft Symbol cmap.", "UA1:7.21.6-10", matterhorn_31_026);
+   ("31-027", "A font dictionary does not contain the ToUnicode entry and none of the following is true: the font uses MacRomanEncoding, MacExpertEncoding or WinAnsiEncoding; the font is a Type 1 or Type 3 font and the glyph names of the glyphs referenced are all contained in the Adobe Glyph List or the set of named characters in the Symbol font, as defined in ISO 32000-1:2008, Annex D; the font is a Type 0 font, and its descendant CIDFont uses Adobe-GB1, Adobe-CNS1, Adobe-Japan1 or Adobe-Korea1 character collections; the font is a non-symbolic TrueType font.", "UA1:7.21.7-1", matterhorn_31_027);
+   ("31-028", "One or more Unicode values specified in the ToUnicode CMap are zero (0).", "UA1:7.21.7-2", matterhorn_31_028);
+   ("31-029", "One or more Unicode values specified in the ToUnicode CMap are equal to either U+FEFF or U+FFFE.", "UA1:7.21.7-3", matterhorn_31_029);
+   ("31-030", "One or more characters used in text showing operators reference the .notdef glyph.", "UA1:7.21.8-1", matterhorn_31_030);
   ]
 
 let test_matterhorn pdf =
