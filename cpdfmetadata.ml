@@ -475,7 +475,9 @@ let output_xmp_info ?(json=ref [("none", `Null)]) encoding pdf =
             print_out tree "XMP dc:title" dc "title";
             print_out tree "XMP dc:creator" dc "creator";
             print_out tree "XMP dc:subject" dc "subject";
-            print_out tree "XMP dc:description" dc "description"
+            print_out tree "XMP dc:description" dc "description";
+            print_out tree "PDF/UA pdfuaid:amd" pdfuaid "amd";
+            print_out tree "PDF/UA pdfuaid:corr" pdfuaid "corr"
         with
           _ -> ()
 
