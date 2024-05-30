@@ -230,3 +230,5 @@ let test_matterhorn_json pdf =
       (fun (name, error, section, extra) ->
         `Assoc [("name", `String name); ("section", `String section); ("error", `String error); ("extra", extra)])
       (test_matterhorn pdf))
+
+let mark pdf = ()

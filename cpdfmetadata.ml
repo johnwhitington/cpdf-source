@@ -56,6 +56,11 @@ let xmp_template =
 
 <?xpacket end='r'?>|}
 
+let pdfua_marker =
+{|<rdf:Description rdf:about="" xmlns:pdfuaid="http://www.aiim.org/pdfua/ns/id/">
+    <pdfuaid:part>1</pdfuaid:part>
+  </rdf:Description>"|}
+
 (* Set or replace metadata *)
 let set_metadata_from_bytes keepversion data pdf =
   let metadata_stream =

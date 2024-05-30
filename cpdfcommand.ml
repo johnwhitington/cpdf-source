@@ -220,6 +220,7 @@ type op =
   | ExtractStream of int
   | PrintObj of int
   | Verify of string
+  | MarkAs of string
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -363,6 +364,7 @@ let string_of_op = function
   | ExtractStream _ -> "ExtractStream"
   | PrintObj _ -> "PrintObj"
   | Verify _ -> "Verify"
+  | MarkAs _ -> "MarkAs"
 
 (* Inputs: filename, pagespec. *)
 type input_kind = 
@@ -883,7 +885,7 @@ let banned banlist = function
   | AddPageLabels | RemovePageLabels | OutputJSON | OCGCoalesce
   | OCGRename | OCGList | OCGOrderAll | PrintFontEncoding _ | TableOfContents | Typeset _ | Composition _
   | TextWidth _ | SetAnnotations _ | CopyAnnotations _ | ExtractStream _ | PrintObj _
-  | Verify _
+  | Verify _ | MarkAs _ 
      -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
@@ -2807,6 +2809,7 @@ and specs =
    ("-obj", Arg.Int setprintobj, "Print object");
    ("-json", Arg.Unit (fun () -> args.format_json <- true), "Format output as JSON");
    ("-verify", Arg.String (fun s -> setop (Verify s) ()), "Verify conformance to a standard");
+   ("-marks-as", Arg.String (fun s -> setop (MarkAs s) ()), "Mark as conforming to a standard");
    (* These items are undocumented *)
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit (fun () -> args.debugcrypt <- true), "");
@@ -4441,6 +4444,14 @@ let go () =
               then flprint (Cpdfyojson.Safe.pretty_to_string (Cpdfua.test_matterhorn_json pdf))
               else Cpdfua.test_matterhorn_print pdf
       | _ -> error "Unknown verification type."
+      end
+  | Some (MarkAs standard) ->
+      begin match standard with
+      | "PDF/UA-1" ->
+          let pdf = get_single_pdf args.op false in
+            Cpdfua.mark pdf;
+            write_pdf false pdf
+      | _ -> error "Unknown standard"
       end
 
 (* Advise the user if a combination of command line flags makes little sense,
