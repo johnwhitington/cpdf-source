@@ -287,9 +287,34 @@ let test_matterhorn_json pdf =
         `Assoc [("name", `String name); ("section", `String section); ("error", `String error); ("extra", extra)])
       (test_matterhorn pdf))
 
+let pdfua_marker =
+  Cpdfmetadata.(E (((rdf, "Description"), [((rdf, "about"), ""); (("xmlns", "pdfuaid"), pdfuaid)]), [E (((pdfuaid, "part"), []), [D "1"])]))
+
+(*{|<rdf:Description rdf:about="" xmlns:pdfuaid="http://www.aiim.org/pdfua/ns/id/">
+    <pdfuaid:part>1</pdfuaid:part>
+  </rdf:Description>"|}*)
+
 let mark pdf =
   let pdf2 = if Cpdfmetadata.get_metadata pdf = None then Cpdfmetadata.create_metadata pdf else pdf in
    pdf.Pdf.objects <- pdf2.Pdf.objects;
    pdf.Pdf.trailerdict <- pdf2.Pdf.trailerdict;
-   pdf.Pdf.root <- pdf.Pdf.root;
-   ()
+   pdf.Pdf.root <- pdf2.Pdf.root;
+   match Cpdfmetadata.get_metadata pdf with
+   | Some metadata ->
+       let dtd, tree = Cpdfmetadata.xmltree_of_bytes metadata in
+         (*Printf.printf "string_of_metadata: %s\n" (Cpdfmetadata.string_of_xmltree tree);*)
+         begin match Cpdfmetadata.get_data_for Cpdfmetadata.pdfuaid "part" tree with
+         | Some _ -> () (* Already so marked. *)
+         | None ->
+             (* If not, add our pdfua_marker to the list *)
+             let newtree = tree in
+             (*Cpdfmetadata.(match tree with
+               | E (("rdf"*)
+             let newbytes = Cpdfmetadata.bytes_of_xmltree (dtd, newtree) in
+             (* Write the metadata stream back. *)
+             let pdf3 = Cpdfmetadata.set_metadata_from_bytes true newbytes pdf in
+               pdf.Pdf.objects <- pdf3.Pdf.objects;
+               pdf.Pdf.trailerdict <- pdf3.Pdf.trailerdict;
+               pdf.Pdf.root <- pdf3.Pdf.root
+         end
+   | None -> assert false

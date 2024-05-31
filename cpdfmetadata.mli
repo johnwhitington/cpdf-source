@@ -104,3 +104,7 @@ type xmltree =
 val xmltree_of_bytes : Pdfio.bytes -> Cpdfxmlm.dtd * xmltree
 
 val get_data_for : string -> string -> xmltree -> string option
+
+val string_of_xmltree : xmltree -> string
+
+val bytes_of_xmltree : Cpdfxmlm.dtd * xmltree -> Pdfio.bytes

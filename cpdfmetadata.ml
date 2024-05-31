@@ -56,11 +56,6 @@ let xmp_template =
 
 <?xpacket end='r'?>|}
 
-let pdfua_marker =
-{|<rdf:Description rdf:about="" xmlns:pdfuaid="http://www.aiim.org/pdfua/ns/id/">
-    <pdfuaid:part>1</pdfuaid:part>
-  </rdf:Description>"|}
-
 (* Set or replace metadata *)
 let set_metadata_from_bytes keepversion data pdf =
   let metadata_stream =
@@ -318,11 +313,11 @@ let bytes_of_xmltree t =
     Cpdfxmlm.output_doc_tree frag o t;
     bytes_of_string (Buffer.contents buf)
 
-(*let rec string_of_xmltree = function
+let rec string_of_xmltree = function
    D d ->
-     Printf.sprintf "DATA {%s}" d
+     Printf.sprintf "D {%s}" d
  | E (tag, trees) ->
-     Printf.sprintf "ELT (%s, %s)"
+     Printf.sprintf "E (%s, %s)"
        (string_of_tag tag)
        (string_of_xmltrees trees)
 
@@ -340,7 +335,7 @@ and string_of_attributes attrs =
 
 and string_of_xmltrees trees =
   fold_left
-    (fun a b -> a ^ " " ^ b) "" (map string_of_xmltree trees)*)
+    (fun a b -> a ^ " " ^ b) "" (map string_of_xmltree trees)
 
 let adobe = "http://ns.adobe.com/pdf/1.3/"
 let xmp = "http://ns.adobe.com/xap/1.0/"
