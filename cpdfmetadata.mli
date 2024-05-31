@@ -86,3 +86,21 @@ val get_catalog_item : string -> Pdf.t -> string
 val get_viewer_pref_item : string -> Pdf.t -> string
 
 val determine_subformats : Pdf.t -> string list
+
+val adobe : string
+val xmp : string
+val dc : string
+val rdf : string
+val pdfaid : string
+val pdfxid : string
+val pdfe : string
+val pdfuaid : string
+val pdfvtid : string
+
+type xmltree =
+    E of Cpdfxmlm.tag * xmltree list
+  | D of string
+
+val xmltree_of_bytes : Pdfio.bytes -> Cpdfxmlm.dtd * xmltree
+
+val get_data_for : string -> string -> xmltree -> string option

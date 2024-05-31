@@ -11,16 +11,34 @@ let matterhorn_01_007 pdf = ()
 let matterhorn_02_001 pdf = ()
 let matterhorn_02_003 pdf = ()
 
-
 (* Document does not contain an XMP metadata stream *)
-let matterhorn_06_001 pdf = ()
+let matterhorn_06_001 pdf =
+  match Cpdfmetadata.get_metadata pdf with
+  | Some _ -> ()
+  | None -> merror ()
 
 (* The XMP metadata stream in the Catalog dictionary does not include the
    PDF/UA identifier. *)
-let matterhorn_06_002 pdf = ()
+let matterhorn_06_002 pdf =
+  match Cpdfmetadata.get_metadata pdf with
+  | Some metadata ->
+      let _, tree = Cpdfmetadata.xmltree_of_bytes metadata in
+        begin match Cpdfmetadata.get_data_for Cpdfmetadata.pdfuaid "part" tree with
+        | Some _ -> ()
+        | None -> merror ()
+        end
+  | None -> () (* case covered by test 06_001 above, no need for two failures *)
 
 (* XMP metadata stream does not contain dc:title *)
-let matterhorn_06_003 pdf = ()
+let matterhorn_06_003 pdf =
+  match Cpdfmetadata.get_metadata pdf with
+  | Some metadata ->
+      let _, tree = Cpdfmetadata.xmltree_of_bytes metadata in
+        begin match Cpdfmetadata.get_data_for Cpdfmetadata.dc "title" tree with
+        | Some _ -> ()
+        | None -> merror ()
+        end
+  | None -> () (* case covered by test 06_001 above, no need for two failures *)
 
 (* ViewerPreferences dictionary of the Catalog dictionary does not contain a
    DisplayDocTitle entry. *)
@@ -98,10 +116,16 @@ let matterhorn_25_001 pdf = ()
 (* The file is encrypted but does not contain a P entry in its encryption
    dictionary. *)
 let matterhorn_26_001 pdf = ()
+  (* Would already have failed at this point, because CamlPDF does not allow
+  the decryption of a file with no /P *)
 
 (* The file is encrypted and does contain a P entry but the 10th bit position
    of the P entry is false. *)
-let matterhorn_26_002 pdf = ()
+let matterhorn_26_002 pdf =
+  match pdf.Pdf.saved_encryption with
+  | None -> ()
+  | Some {Pdf.from_get_encryption_values = (_, _, _, p, _, _, _)} ->
+      if mem Pdfcrypt.NoExtract (Pdfcrypt.banlist_of_p p) then merror ()
 
 let matterhorn_28_002 pdf = ()
 let matterhorn_28_004 pdf = ()
