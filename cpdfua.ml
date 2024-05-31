@@ -10,8 +10,16 @@ let matterhorn_01_005 pdf = ()
 let matterhorn_01_007 pdf = ()
 let matterhorn_02_001 pdf = ()
 let matterhorn_02_003 pdf = ()
+
+
+(* Document does not contain an XMP metadata stream *)
 let matterhorn_06_001 pdf = ()
+
+(* The XMP metadata stream in the Catalog dictionary does not include the
+   PDF/UA identifier. *)
 let matterhorn_06_002 pdf = ()
+
+(* XMP metadata stream does not contain dc:title *)
 let matterhorn_06_003 pdf = ()
 
 (* ViewerPreferences dictionary of the Catalog dictionary does not contain a
@@ -29,6 +37,8 @@ let matterhorn_07_001 pdf =
       end
   | _ -> merror ()
 
+(* ViewerPreferences dictionary of the Catalog dictionary contains a
+   DisplayDocTitle entry with a value of false. *)
 let matterhorn_07_002 pdf = 
   match Pdf.lookup_direct pdf "/Root" pdf.Pdf.trailerdict with
   | Some catalog ->
@@ -64,13 +74,35 @@ let matterhorn_17_002 pdf = ()
 let matterhorn_17_003 pdf = ()
 let matterhorn_19_003 pdf = ()
 let matterhorn_19_004 pdf = ()
+
+(* Name entry is missing or has an empty string as its value in an Optional
+   Content Configuration Dictionary in the Configs entry in the OCProperties
+   entry in the Catalog dictionary. *)
 let matterhorn_20_001 pdf = ()
+
+(* Name entry is missing or has an empty string as its value in an Optional
+   Content Configuration Dictionary that is the value of the D entry in the
+   OCProperties entry in the Catalog dictionary. *)
 let matterhorn_20_002 pdf = ()
+
+(* An AS entry appears in an Optional Content Configuration Dictionary. *)
 let matterhorn_20_003 pdf = ()
+
+(* The file specification dictionary for an embedded file does not contain F
+   and UF entries. *)
 let matterhorn_21_001 pdf = ()
+
+(* File contains the dynamicRender element with value “required”. *)
 let matterhorn_25_001 pdf = ()
+
+(* The file is encrypted but does not contain a P entry in its encryption
+   dictionary. *)
 let matterhorn_26_001 pdf = ()
+
+(* The file is encrypted and does contain a P entry but the 10th bit position
+   of the P entry is false. *)
 let matterhorn_26_002 pdf = ()
+
 let matterhorn_28_002 pdf = ()
 let matterhorn_28_004 pdf = ()
 let matterhorn_28_005 pdf = ()
