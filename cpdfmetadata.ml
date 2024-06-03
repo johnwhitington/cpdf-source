@@ -301,14 +301,14 @@ type xmltree =
   | D of string
 
 let xmltree_of_bytes b =
-  let i = Cpdfxmlm.make_input (`String (0, string_of_bytes b)) in
+  let i = Cpdfxmlm.make_input ~strip:true (`String (0, string_of_bytes b)) in
     let el tag childs = E (tag, childs)
     and data d = D d in
       Cpdfxmlm.input_doc_tree ~el ~data i
 
 let bytes_of_xmltree t =
   let buf = Buffer.create 1024 in
-  let o = Cpdfxmlm.make_output (`Buffer buf) in
+  let o = Cpdfxmlm.make_output ~indent:(Some 2) (`Buffer buf) in
   let frag = function
       E (tag, childs) -> `El (tag, childs)
     | D d -> `Data d

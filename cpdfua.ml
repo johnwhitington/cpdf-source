@@ -289,23 +289,26 @@ let test_matterhorn_json pdf =
       (test_matterhorn pdf))
 
 let pdfua_marker =
-  Cpdfmetadata.(E (((rdf, "Description"), [((rdf, "about"), ""); ((Cpdfxmlm.ns_xmlns, "pdfuaid"), pdfuaid)]), [E (((pdfuaid, "part"), []), [D "1"])]))
+  Cpdfmetadata.(E (((rdf, "Description"), [((rdf, "about"), ""); ((Cpdfxmlm.ns_xmlns, "pdfuaid"), pdfuaid)]), [E (((pdfuaid, "part"), []), [D "1"])])) 
 
-let rec strip_ds = function
-  | Cpdfmetadata.D _::r -> strip_ds r
-  | x -> x
-
-let insert_as_rdf_description fragment = function
+let rec insert_as_rdf_description fragment = function
+  | Cpdfmetadata.E (((_, "RDF"), _) as rdftag, rdfs) ->
+      Cpdfmetadata.E (rdftag, fragment::rdfs)
   | Cpdfmetadata.E (((_, "xmpmeta"), _) as xmptag, cs) ->
-      begin match strip_ds cs with
-      | Cpdfmetadata.E (((_, "RDF"), _) as rdftag, rdfs)::more ->
-          Cpdfmetadata.E (xmptag, Cpdfmetadata.E (rdftag, fragment::rdfs)::more)
-      | _ -> error "could not locate RDF"
-      end
+      Cpdfmetadata.E (xmptag, map (insert_as_rdf_description fragment) cs)
   | _ -> error "insert_as_rdf_description: could not find insertion point."
 
-(* FIXME *)
-let delete_pdfua_marker tree = tree
+let rec delete_pdfua_marker tree =
+  let is_pdfuaid = function
+  | Cpdfmetadata.E (((pdfuaid, "part"), _), _) when pdfuaid = Cpdfmetadata.pdfuaid -> true
+  | _ -> false
+  in
+    match tree with
+    | Cpdfmetadata.E (((rdf, "Description"), _), c) when rdf = Cpdfmetadata.rdf && List.exists is_pdfuaid c ->
+        Cpdfmetadata.D ""
+    | Cpdfmetadata.E (x, children) ->
+        Cpdfmetadata.E (x, map delete_pdfua_marker children)
+    | x -> x
 
 let mark pdf =
   let pdf2 = if Cpdfmetadata.get_metadata pdf = None then Cpdfmetadata.create_metadata pdf else pdf in
@@ -315,22 +318,15 @@ let mark pdf =
    match Cpdfmetadata.get_metadata pdf with
    | Some metadata ->
        let dtd, tree = Cpdfmetadata.xmltree_of_bytes metadata in
+       let newtree =
          begin match Cpdfmetadata.get_data_for Cpdfmetadata.pdfuaid "part" tree with
-         | Some _ ->
-             let newtree = delete_pdfua_marker tree in
-             let newtree = insert_as_rdf_description pdfua_marker newtree in
-             let newbytes = Cpdfmetadata.bytes_of_xmltree (dtd, newtree) in
-             let pdf3 = Cpdfmetadata.set_metadata_from_bytes true newbytes pdf in
-               pdf.Pdf.objects <- pdf3.Pdf.objects;
-               pdf.Pdf.trailerdict <- pdf3.Pdf.trailerdict;
-               pdf.Pdf.root <- pdf3.Pdf.root
-         | None ->
-             let newtree = insert_as_rdf_description pdfua_marker tree in
-             let newbytes = Cpdfmetadata.bytes_of_xmltree (dtd, newtree) in
-         (*Printf.printf "string_of_metadata: %s\n" (Cpdfmetadata.string_of_xmltree newtree);*)
-             let pdf3 = Cpdfmetadata.set_metadata_from_bytes true newbytes pdf in
-               pdf.Pdf.objects <- pdf3.Pdf.objects;
-               pdf.Pdf.trailerdict <- pdf3.Pdf.trailerdict;
-               pdf.Pdf.root <- pdf3.Pdf.root
+         | Some _ -> insert_as_rdf_description pdfua_marker (delete_pdfua_marker tree)
+         | None -> insert_as_rdf_description pdfua_marker tree
          end
+       in
+         let newbytes = Cpdfmetadata.bytes_of_xmltree (dtd, newtree) in
+         let pdf3 = Cpdfmetadata.set_metadata_from_bytes true newbytes pdf in
+           pdf.Pdf.objects <- pdf3.Pdf.objects;
+           pdf.Pdf.trailerdict <- pdf3.Pdf.trailerdict;
+           pdf.Pdf.root <- pdf3.Pdf.root
    | None -> assert false
