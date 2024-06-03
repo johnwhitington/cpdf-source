@@ -331,4 +331,20 @@ let mark pdf =
            pdf.Pdf.root <- pdf3.Pdf.root
    | None -> assert false
 
-let extract_struct_tree pdf = `String ""
+let extract_struct_tree pdf =
+  match Pdf.lookup_obj pdf pdf.Pdf.root with
+  | Pdf.Dictionary d ->
+      begin match lookup "/StructTreeRoot" d with
+      | None -> `List []
+      | Some x ->
+          let objs = Pdf.objects_referenced ["/Pg"] [] pdf x in
+            `List
+               (map
+                  (fun objnum ->
+                     let jsonobj =
+                       Cpdfjson.json_of_object ~utf8:true ~no_stream_data:false ~parse_content:false pdf (function _ -> ()) (Pdf.lookup_obj pdf objnum)
+                     in
+                       `Tuple [`Int objnum; jsonobj])
+                  objs)
+      end
+  | _ -> error "extract_struct_tree: no root"
