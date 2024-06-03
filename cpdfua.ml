@@ -330,3 +330,5 @@ let mark pdf =
            pdf.Pdf.trailerdict <- pdf3.Pdf.trailerdict;
            pdf.Pdf.root <- pdf3.Pdf.root
    | None -> assert false
+
+let extract_struct_tree pdf = `String ""

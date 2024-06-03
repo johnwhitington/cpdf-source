@@ -221,6 +221,8 @@ type op =
   | PrintObj of int
   | Verify of string
   | MarkAs of string
+  | ExtractStructTree
+  | ReplaceStructTree of string
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -365,6 +367,8 @@ let string_of_op = function
   | PrintObj _ -> "PrintObj"
   | Verify _ -> "Verify"
   | MarkAs _ -> "MarkAs"
+  | ExtractStructTree -> "ExtractStructTree"
+  | ReplaceStructTree _ -> "ReplaceStructTree"
 
 (* Inputs: filename, pagespec. *)
 type input_kind = 
@@ -885,7 +889,7 @@ let banned banlist = function
   | AddPageLabels | RemovePageLabels | OutputJSON | OCGCoalesce
   | OCGRename | OCGList | OCGOrderAll | PrintFontEncoding _ | TableOfContents | Typeset _ | Composition _
   | TextWidth _ | SetAnnotations _ | CopyAnnotations _ | ExtractStream _ | PrintObj _
-  | Verify _ | MarkAs _ 
+  | Verify _ | MarkAs _ | ExtractStructTree | ReplaceStructTree _ 
      -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
@@ -2810,6 +2814,8 @@ and specs =
    ("-json", Arg.Unit (fun () -> args.format_json <- true), "Format output as JSON");
    ("-verify", Arg.String (fun s -> setop (Verify s) ()), "Verify conformance to a standard");
    ("-mark-as", Arg.String (fun s -> setop (MarkAs s) ()), "Mark as conforming to a standard");
+   ("-extract-struct-tree", Arg.Unit (fun () -> setop ExtractStructTree ()), "Extract structure tree in JSON format");
+   ("-replace-struct-tree", Arg.String (fun s -> setop (ReplaceStructTree s) ()), "Replace structure tree from JSON");
    (* These items are undocumented *)
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit (fun () -> args.debugcrypt <- true), "");
@@ -3335,6 +3341,16 @@ let write_json output pdf =
           ~decompress_streams:args.jsondecompressstreams
           ~clean_strings:args.jsoncleanstrings
           pdf;
+        close_out f
+
+let json_to_output json = function
+  | NoOutputSpecified ->
+      error "no output name specified"
+  | Stdout ->
+      output_string stdout (Cpdfyojson.Safe.pretty_to_string json);
+  | File filename ->
+      let f = open_out filename in
+        output_string f (Cpdfyojson.Safe.pretty_to_string json);
         close_out f
 
 let collate (names, pdfs, ranges) =
@@ -4453,6 +4469,12 @@ let go () =
             write_pdf false pdf
       | _ -> error "Unknown standard"
       end
+  | Some ExtractStructTree ->
+      let pdf = get_single_pdf args.op true in
+      let json = Cpdfua.extract_struct_tree pdf in
+        json_to_output json args.out
+  | Some (ReplaceStructTree f) ->
+      ()
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)
