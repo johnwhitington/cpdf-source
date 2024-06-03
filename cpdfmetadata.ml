@@ -314,7 +314,9 @@ let bytes_of_xmltree t =
     | D d -> `Data d
   in
     Cpdfxmlm.output_doc_tree frag o t;
-    bytes_of_string (Buffer.contents buf)
+    (* Delete the ?xml declaration, per XMP spec. *)
+    let s = Buffer.contents buf in
+    bytes_of_string (String.sub s 39 (String.length s - 39))
 
 let rec string_of_xmltree = function
    D d ->
