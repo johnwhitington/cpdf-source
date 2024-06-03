@@ -19,6 +19,7 @@ let encode_output enc s =
 
 let xmp_template =
 {|<?xpacket begin='' id='W5M0MpCehiHzreSzNTczkc9d'?>
+<x:xmpmeta xmlns:x="adobe:ns:meta/">
 
 <rdf:RDF xmlns:rdf='http://www.w3.org/1999/02/22-rdf-syntax-ns#'
  xmlns:iX='http://ns.adobe.com/iX/1.0/'>
@@ -53,6 +54,8 @@ let xmp_template =
  </rdf:Description>
 
 </rdf:RDF>
+
+</x:xmpmeta>
 
 <?xpacket end='r'?>|}
 
