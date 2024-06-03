@@ -337,7 +337,7 @@ let extract_struct_tree pdf =
       begin match lookup "/StructTreeRoot" d with
       | None -> `List []
       | Some x ->
-          let objs = Pdf.objects_referenced ["/Pg"] [] pdf x in
+          let objs = Pdf.objects_referenced ["/Pg"; "/Obj"; "/Stm"; "/StmOwn"] [] pdf x in
             `List
                (map
                   (fun objnum ->
