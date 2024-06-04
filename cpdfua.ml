@@ -334,24 +334,24 @@ let mark pdf =
 let extract_struct_tree pdf =
   match Pdf.lookup_obj pdf pdf.Pdf.root with
   | Pdf.Dictionary d ->
-      begin match lookup "/StructTreeRoot" d with
-      | None -> `List []
-      | Some x ->
-          let objs = Pdf.objects_referenced ["/Pg"; "/Obj"; "/Stm"; "/StmOwn"] [] pdf x in
-          let zero =
-            `List [`Int 0;
-                    `Assoc [("/CPDFJSONformatversion", `Int 1);
-                            ("/CPDFJSONpageobjnumbers", `List (map (fun x -> `Int (unopt (Pdfpage.page_object_number pdf x))) (ilist 1 (Pdfpage.endpage pdf))))]]
-          in
-            `List
-               (zero::map
-                  (fun objnum ->
-                     let jsonobj =
-                       Cpdfjson.json_of_object ~utf8:true ~no_stream_data:false ~parse_content:false pdf (function _ -> ()) (Pdf.lookup_obj pdf objnum)
-                     in
-                       `List [`Int objnum; jsonobj])
-                  objs)
-      end
+      let zero =
+        `List [`Int 0;
+                `Assoc [("/CPDFJSONformatversion", `Int 1);
+                        ("/CPDFJSONpageobjnumbers", `List (map (fun x -> `Int (unopt (Pdfpage.page_object_number pdf x))) (ilist 1 (Pdfpage.endpage pdf))))]]
+      in
+        begin match lookup "/StructTreeRoot" d with
+        | None -> `List [zero]
+        | Some x ->
+            let objs = Pdf.objects_referenced ["/Pg"; "/Obj"; "/Stm"; "/StmOwn"] [] pdf x in
+              `List
+                 (zero::map
+                    (fun objnum ->
+                       let jsonobj =
+                         Cpdfjson.json_of_object ~utf8:true ~no_stream_data:false ~parse_content:false pdf (function _ -> ()) (Pdf.lookup_obj pdf objnum)
+                       in
+                         `List [`Int objnum; jsonobj])
+                    objs)
+        end
   | _ -> error "extract_struct_tree: no root"
 
 (* Use JSON data to replace objects in a file. Negative objects are new ones,
