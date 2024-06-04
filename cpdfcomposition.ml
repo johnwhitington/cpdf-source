@@ -129,13 +129,13 @@ let show_composition_json filesize pdf =
       compressed_xref_table_size pdf
   in
   let r = images + fonts + content_streams + structure_info + attached_files + xref_table in
-    `List [`Tuple [`String "Images"; `Int images; `Float (perc images)];
-           `Tuple [`String "Fonts"; `Int fonts; `Float (perc fonts)];
-           `Tuple [`String "Content streams"; `Int content_streams; `Float (perc content_streams)];
-           `Tuple [`String "Structure Info"; `Int structure_info; `Float (perc structure_info)];
-           `Tuple [`String "Attached Files"; `Int attached_files; `Float (perc attached_files)];
-           `Tuple [`String "XRef Table"; `Int xref_table; `Float (perc xref_table)];
-           `Tuple [`String "Unclassified"; `Int (filesize - r); `Float (perc (filesize - r))]]
+    `List [`List [`String "Images"; `Int images; `Float (perc images)];
+           `List [`String "Fonts"; `Int fonts; `Float (perc fonts)];
+           `List [`String "Content streams"; `Int content_streams; `Float (perc content_streams)];
+           `List [`String "Structure Info"; `Int structure_info; `Float (perc structure_info)];
+           `List [`String "Attached Files"; `Int attached_files; `Float (perc attached_files)];
+           `List [`String "XRef Table"; `Int xref_table; `Float (perc xref_table)];
+           `List [`String "Unclassified"; `Int (filesize - r); `Float (perc (filesize - r))]]
 
 let show_composition_json_blob filesize pdf =
   Pdfio.bytes_of_string (Cpdfyojson.Safe.pretty_to_string (show_composition_json filesize pdf))
@@ -148,7 +148,7 @@ let show_composition filesize json pdf =
     | `List js ->
         iter
           (function
-           | `Tuple [`String a; `Int b; `Float c] -> Printf.printf "%s: %i bytes (%.2f%%)\n" a b c
+           | `List [`String a; `Int b; `Float c] -> Printf.printf "%s: %i bytes (%.2f%%)\n" a b c
            | _ -> ())
         js
     | _ -> ()

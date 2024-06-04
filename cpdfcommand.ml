@@ -4473,8 +4473,11 @@ let go () =
       let pdf = get_single_pdf args.op true in
       let json = Cpdfua.extract_struct_tree pdf in
         json_to_output json args.out
-  | Some (ReplaceStructTree f) ->
-      ()
+  | Some (ReplaceStructTree s) ->
+      let pdf = get_single_pdf args.op false in
+      let json = Cpdfyojson.Safe.from_file s in
+        Cpdfua.replace_struct_tree pdf json;
+        write_pdf false pdf
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)

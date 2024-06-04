@@ -339,7 +339,7 @@ let extract_struct_tree pdf =
       | Some x ->
           let objs = Pdf.objects_referenced ["/Pg"; "/Obj"; "/Stm"; "/StmOwn"] [] pdf x in
           let zero =
-            `Tuple [`Int 0;
+            `List [`Int 0;
                     `Assoc [("/CPDFJSONformatversion", `Int 1);
                             ("/CPDFJSONpageobjnumbers", `List (map (fun x -> `Int (unopt (Pdfpage.page_object_number pdf x))) (ilist 1 (Pdfpage.endpage pdf))))]]
           in
@@ -349,7 +349,13 @@ let extract_struct_tree pdf =
                      let jsonobj =
                        Cpdfjson.json_of_object ~utf8:true ~no_stream_data:false ~parse_content:false pdf (function _ -> ()) (Pdf.lookup_obj pdf objnum)
                      in
-                       `Tuple [`Int objnum; jsonobj])
+                       `List [`Int objnum; jsonobj])
                   objs)
       end
   | _ -> error "extract_struct_tree: no root"
+
+(* Use JSON data to replace objects in a file. Negative objects are new ones,
+   we make them positive and renumber them not to clash. Everything else must
+   remain unrenumbered. *)
+let replace_struct_tree pdf json =
+  ()
