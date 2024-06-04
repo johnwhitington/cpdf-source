@@ -3,6 +3,11 @@
 New features:
 
 o Build PDF files from JPEG2000 (.jp2, .jpf/.jpx) files
+o Mark a file as PDF/UA compliant
+o Verify compliance to PDF/UA via the Matterhorn protocol
+o Extract, edit and reapply document structure tree
+o Split structure tree when splitting PDF to save size
+o Combine structure trees when stamping PDFs
 
 2.7 (February 2024)
 
