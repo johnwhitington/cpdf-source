@@ -338,8 +338,13 @@ let extract_struct_tree pdf =
       | None -> `List []
       | Some x ->
           let objs = Pdf.objects_referenced ["/Pg"; "/Obj"; "/Stm"; "/StmOwn"] [] pdf x in
+          let zero =
+            `Tuple [`Int 0;
+                    `Assoc [("/CPDFJSONformatversion", `Int 1);
+                            ("/CPDFJSONpageobjnumbers", `List (map (fun x -> `Int (unopt (Pdfpage.page_object_number pdf x))) (ilist 1 (Pdfpage.endpage pdf))))]]
+          in
             `List
-               (map
+               (zero::map
                   (fun objnum ->
                      let jsonobj =
                        Cpdfjson.json_of_object ~utf8:true ~no_stream_data:false ~parse_content:false pdf (function _ -> ()) (Pdf.lookup_obj pdf objnum)
