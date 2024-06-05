@@ -357,7 +357,7 @@ let extract_struct_tree pdf =
 (* Use JSON data to replace objects in a file. Negative objects are new ones,
    we make them positive and renumber them not to clash. Everything else must
    remain unrenumbered. *)
-let replace_struct_tree pdf (json : Cpdfyojson.Safe.t) =
+let replace_struct_tree pdf json =
   try
     let rec rewrite_indirects negobjnummap = function
       | Pdf.Indirect i ->
@@ -370,15 +370,15 @@ let replace_struct_tree pdf (json : Cpdfyojson.Safe.t) =
       | x -> x
     in
       match json with
-      | `List (_::xs) ->
-          let neg, pos = List.partition (function (`List [`Int x; _]) -> x > 0 | _ -> error "structure 1") xs in
+      | `List (`List [`Int 0; _]::xs) ->
+          let pos, neg = List.partition (function (`List [`Int x; _]) -> x > 0 | _ -> error "structure 1") xs in
           let pos = map (function `List [`Int x; j] -> (x, Cpdfjson.object_of_json j) | _ -> error "structure 2") pos in
           let neg = map (function `List [`Int x; j] -> (x, Cpdfjson.object_of_json j) | _ -> error "structure 3") neg in
           let nextnum = Pdf.objcard pdf + 1 in
-          let negobjnummap = map2 (fun n n' -> (n, n')) (map fst neg) (ilist nextnum (nextnum + length neg - 1)) in
+          let negobjnummap = if length neg = 0 then [] else map2 (fun n n' -> (n, n')) (map fst neg) (ilist nextnum (nextnum + length neg - 1)) in
           let pos = map (fun (objnum, obj) -> (objnum, rewrite_indirects negobjnummap obj)) pos in
           let neg = map (fun (objnum, obj) -> (objnum, rewrite_indirects negobjnummap obj)) neg in
             iter (Pdf.addobj_given_num pdf) (pos @ neg)
-      | _ -> error "top level JSON wrong"
+      | _ -> error "Top level JSON wrong. Must be list with 0 first."
   with
     e -> error (Printf.sprintf "replace_struct_tree: %s" (Printexc.to_string e))
