@@ -363,7 +363,7 @@ let replace_struct_tree pdf (json : Cpdfyojson.Safe.t) =
       | Pdf.Indirect i ->
           begin match lookup i negobjnummap with
           | Some x -> Pdf.Indirect x
-          | None -> error "rewrite_indirects"
+          | None -> Pdf.Indirect i
           end
       | Pdf.Dictionary d -> Pdf.recurse_dict (rewrite_indirects negobjnummap) d
       | Pdf.Array a -> Pdf.recurse_array (rewrite_indirects negobjnummap) a
