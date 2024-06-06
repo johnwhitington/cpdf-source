@@ -112,7 +112,38 @@ let matterhorn_20_003 pdf = ()
 let matterhorn_21_001 pdf = ()
 
 (* File contains the dynamicRender element with value “required”. *)
-let matterhorn_25_001 pdf = ()
+let matterhorn_25_001 pdf =
+  let rec contains_required_dynamicRender = function
+    | Cpdfmetadata.E (((_, "dynamicRender"), _), [Cpdfmetadata.D "required"]) -> true
+    | Cpdfmetadata.E (_, children) -> List.exists contains_required_dynamicRender children
+    | Cpdfmetadata.D _ -> false
+  in
+    match Pdf.lookup_direct pdf "/Root" pdf.Pdf.trailerdict with
+    | Some catalog ->
+        begin match Pdf.lookup_direct pdf "/AcroForm" catalog with
+        | Some d ->
+            begin match Pdf.lookup_direct pdf "/XFA" d with
+            | Some (Pdf.Array xfa) ->
+                begin match option_map (function (Pdf.String "config", x) -> Some x | _ -> None) (pairs xfa) with
+                | [config] ->
+                    begin match Pdf.direct pdf config with
+                    | Pdf.Stream _ as s ->
+                      Pdfcodec.decode_pdfstream pdf s;
+                      begin match s with
+                      | Pdf.Stream {contents = _, Pdf.Got xmlstream} ->
+                          let _, tree = Cpdfmetadata.xmltree_of_bytes xmlstream in
+                            if contains_required_dynamicRender tree then merror ()
+                      | _ -> assert false
+                      end
+                    | _ -> ()
+                    end
+                | _ -> ()
+                end
+            | _ -> ()
+            end
+        | _ -> ()
+        end
+    | None -> ()
 
 (* The file is encrypted but does not contain a P entry in its encryption
    dictionary. *)
@@ -132,7 +163,16 @@ let matterhorn_28_002 pdf = ()
 let matterhorn_28_004 pdf = ()
 let matterhorn_28_005 pdf = ()
 let matterhorn_28_006 pdf = ()
-let matterhorn_28_007 pdf = ()
+
+(* An annotation of subtype TrapNet exists. *)
+let matterhorn_28_007 pdf =
+  if
+    List.exists
+      (fun x -> x.Pdfannot.subtype = Pdfannot.TrapNet)
+      (flatten (map (Pdfannot.annotations_of_page pdf) (Pdfpage.pages_of_pagetree pdf)))
+  then
+    merror ()
+
 let matterhorn_28_008 pdf = ()
 let matterhorn_28_009 pdf = ()
 let matterhorn_28_010 pdf = ()
@@ -143,7 +183,6 @@ let matterhorn_28_015 pdf = ()
 let matterhorn_28_016 pdf = ()
 let matterhorn_28_017 pdf = ()
 let matterhorn_28_018 pdf = ()
-let matterhorn_28_012 pdf = ()
 let matterhorn_30_001 pdf = ()
 let matterhorn_30_002 pdf = ()
 let matterhorn_31_001 pdf = ()
