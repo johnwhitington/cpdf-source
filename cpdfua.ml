@@ -109,7 +109,38 @@ let matterhorn_20_003 pdf = ()
 
 (* The file specification dictionary for an embedded file does not contain F
    and UF entries. *)
-let matterhorn_21_001 pdf = ()
+let matterhorn_21_001 pdf =
+  let from_nametree =
+    match Pdf.lookup_direct pdf "/Root" pdf.Pdf.trailerdict with
+    | Some catalog ->
+        begin match Pdf.lookup_direct pdf "/Names" catalog with
+        | Some names ->
+            begin match Pdf.lookup_direct pdf "/EmbeddedFiles" names with
+            | Some embeddedfiles -> 
+                map snd (Pdf.contents_of_nametree pdf embeddedfiles)
+            | None -> []
+            end
+        | None -> []
+        end
+    | None -> []
+  in
+  let from_annots =
+    option_map
+      (fun x ->
+         if x.Pdfannot.subtype = Pdfannot.FileAttachment
+           then Pdf.lookup_direct pdf "/FS" x.Pdfannot.annotrest
+           else None)
+      (flatten (map (Pdfannot.annotations_of_page pdf) (Pdfpage.pages_of_pagetree pdf)))
+  in
+  if
+    List.exists
+      (fun x ->
+         match Pdf.lookup_direct pdf "/F" x, Pdf.lookup_direct pdf "/UF" x with
+         | Some _, Some _ -> false
+         | _ -> true)
+      (from_nametree @ from_annots)
+  then
+    merror ()
 
 (* File contains the dynamicRender element with value “required”. *)
 let matterhorn_25_001 pdf =
