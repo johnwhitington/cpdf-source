@@ -214,8 +214,23 @@ let matterhorn_28_015 pdf = ()
 let matterhorn_28_016 pdf = ()
 let matterhorn_28_017 pdf = ()
 let matterhorn_28_018 pdf = ()
-let matterhorn_30_001 pdf = ()
-let matterhorn_30_002 pdf = ()
+
+(* A reference XObject is present. *)
+let matterhorn_30_001 pdf =
+  Pdf.objiter
+    (fun _ o ->
+       match Pdf.lookup_direct pdf "/Subtype" o, Pdf.lookup_direct pdf "/Ref" o with
+       | Some (Pdf.Name "/Form"), Some _ -> merror ()
+       | _ -> ())
+    pdf
+
+(* Form XObject contains MCIDs and is referenced more than once. *)
+let matterhorn_30_002 pdf =
+  (* We need to consider inheritence here. What solutions do we already have for that, and do we
+     need anything new? *)
+  ()
+
+
 let matterhorn_31_001 pdf = ()
 let matterhorn_31_002 pdf = ()
 let matterhorn_31_003 pdf = ()
