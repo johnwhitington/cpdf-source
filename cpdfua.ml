@@ -5,11 +5,23 @@ exception MatterhornError of Cpdfyojson.Safe.t
 
 let merror () = raise (MatterhornError `Null)
 
+(* Content marked as Artifact is present inside tagged content. *)
 let matterhorn_01_003 pdf = ()
+
+(* Tagged content is present inside content marked as Artifact. *)
 let matterhorn_01_004 pdf = ()
+
+(* Content is neither marked as Artifact nor tagged as real content. *)
 let matterhorn_01_005 pdf = ()
+
+(* Suspects entry has a value of true. *)
 let matterhorn_01_007 pdf = ()
+
+(* One or more non-standard tag’s mapping does not terminate with a standard
+type. *)
 let matterhorn_02_001 pdf = ()
+
+(* A circular mapping exists. *)
 let matterhorn_02_003 pdf = ()
 
 (* Document does not contain an XMP metadata stream *)
@@ -71,27 +83,79 @@ let matterhorn_07_002 pdf =
       end
   | _ -> ()
 
+(* A table-related structure element is used in a way that does not conform to
+   the syntax defined in ISO 32000-1, Table 337. *)
 let matterhorn_09_004 pdf = ()
+
+(* A list-related structure element is used in a way that does not conform to
+   Table 336 in ISO 32000-1. *)
 let matterhorn_09_005 pdf = ()
+
+(* A TOC-related structure element is used in a way that does not conform to
+   Table 333 in ISO 32000-1. *)
 let matterhorn_09_006 pdf = ()
+
+(* A Ruby-related structure element is used in a way that does not conform to
+   Table 338 in ISO 32000-1. *)
 let matterhorn_09_007 pdf = ()
+
+(* A Warichu-related structure element is used in a way that does not conform
+   to Table 338 in ISO 32000-1. *)
 let matterhorn_09_008 pdf = ()
+
+(* Character code cannot be mapped to Unicode. *)
 let matterhorn_10_001 pdf = ()
+
+(* Natural language for text in page content cannot be determined. *)
 let matterhorn_11_001 pdf = ()
+
+(* Natural language for text in Alt, ActualText and E attributes cannot be
+   determined. *)
 let matterhorn_11_002 pdf = ()
+
+(* Natural language in the Outline entries cannot be determined. *)
 let matterhorn_11_003 pdf = ()
+
+(* Natural language in the Contents entry for annotations cannot be determined.
+ *)
 let matterhorn_11_004 pdf = ()
+
+(* Natural language in the TU entry for form fields cannot be determined. *)
 let matterhorn_11_005 pdf = ()
+
+(* Natural language for document metadata cannot be determined. *)
 let matterhorn_11_006 pdf = ()
+
+(* <Figure> tag alternative or replacement text missing. *)
 let matterhorn_13_004 pdf = ()
+
+(* Does use numbered headings, but the first heading tag is not <H1>. *)
 let matterhorn_14_002 pdf = ()
+
+(* Numbered heading levels in descending sequence are skipped (Example: <H3>
+   follows directly after <H1>). *)
 let matterhorn_14_003 pdf = ()
+
+(* A node contains more than one <H> tag. *)
 let matterhorn_14_006 pdf = ()
+
+(* Document uses both <H> and <H#> tags. *)
 let matterhorn_14_007 pdf = ()
+
+(* In a table not organized with Headers attributes and IDs, a <TH> cell does
+   not contain a Scope attribute. *)
 let matterhorn_15_003 pdf = ()
+
+(* <Formula> tag is missing an Alt attribute. *)
 let matterhorn_17_002 pdf = ()
+
+(* Unicode mapping requirements are not met. *)
 let matterhorn_17_003 pdf = ()
+
+(* ID entry of the <Note> tag is not present. *)
 let matterhorn_19_003 pdf = ()
+
+(* ID entry of the <Note> tag is non-unique. *)
 let matterhorn_19_004 pdf = ()
 
 (* Name entry is missing or has an empty string as its value in an Optional
@@ -190,9 +254,21 @@ let matterhorn_26_002 pdf =
   | Some {Pdf.from_get_encryption_values = (_, _, _, p, _, _, _)} ->
       if mem Pdfcrypt.NoExtract (Pdfcrypt.banlist_of_p p) then merror ()
 
+(* An annotation, other than of subtype Widget, Link and PrinterMark, is not a
+   direct child of an <Annot> structure element. *)
 let matterhorn_28_002 pdf = ()
+
+(* An annotation, other than of subtype Widget, does not have a Contents entry
+   and does not have an alternative description (in the form of an Alt entry in
+   the enclosing structure element). *)
 let matterhorn_28_004 pdf = ()
+
+(* A form field does not have a TU entry and does not have an alternative
+   description (in the form of an Alt entry in the enclosing structure
+   element). *)
 let matterhorn_28_005 pdf = ()
+
+(* An annotation with subtype undefined in ISO 32000 does not meet 7.18.1. *)
 let matterhorn_28_006 pdf = ()
 
 (* An annotation of subtype TrapNet exists. *)
@@ -204,15 +280,37 @@ let matterhorn_28_007 pdf =
   then
     merror ()
 
+(* A page containing an annotation does not contain a Tabs entry *)
 let matterhorn_28_008 pdf = ()
+
+(* A page containing an annotation has a Tabs entry with a value other than S.
+ *)
 let matterhorn_28_009 pdf = ()
+
+(* A widget annotation is not nested within a <Form> tag. *)
 let matterhorn_28_010 pdf = ()
+
+(* A link annotation is not nested within a <Link> tag. *)
 let matterhorn_28_011 pdf = ()
+
+(* A link annotation does not include an alternate description in its Contents
+   entry. *)
 let matterhorn_28_012 pdf = ()
+
+(* CT entry is missing from the media clip data dictionary. *)
 let matterhorn_28_014 pdf = ()
+
+(* Alt entry is missing from the media clip data dictionary. *)
 let matterhorn_28_015 pdf = ()
+
+(* File attachment annotations do not conform to 7.11. *)
 let matterhorn_28_016 pdf = ()
+
+(* A PrinterMark annotation is included in the logical structure. *)
 let matterhorn_28_017 pdf = ()
+
+(* The appearance stream of a PrinterMark annotation is not marked as Artifact.
+ *)
 let matterhorn_28_018 pdf = ()
 
 (* A reference XObject is present. *)
@@ -226,39 +324,139 @@ let matterhorn_30_001 pdf =
 
 (* Form XObject contains MCIDs and is referenced more than once. *)
 let matterhorn_30_002 pdf =
-  (* We need to consider inheritence here. What solutions do we already have for that, and do we
-     need anything new? *)
+  (* We need to consider inheritence here. What solutions do we already have
+     for that, and do we need anything new? *)
   ()
 
-
+(* A Type 0 font dictionary with encoding other than Identity-H and Identity-V
+   has values for Registry in both CIDSystemInfo dictionaries that are not
+   identical. *)
 let matterhorn_31_001 pdf = ()
+
+(* A Type 0 font dictionary with encoding other than Identity-H and Identity-V
+   has values for Ordering in both CIDSystemInfo dictionaries that are not
+   identical. *)
 let matterhorn_31_002 pdf = ()
+
+(* A Type 0 font dictionary with encoding other than Identity-H and Identity-V
+   has a value for Supplement in the CIDSystemInfo dictionary of the CID font
+   that is less than the value for Supplement in the CIDSystemInfo dictionary
+   of the CMap. *)
 let matterhorn_31_003 pdf = ()
+
+(* A Type 2 CID font contains neither a stream nor the name Identity as the
+   value of the CIDToGIDMap entry. *)
 let matterhorn_31_004 pdf = ()
+
+(* A Type 2 CID font does not contain a CIDToGIDMap entry. *)
 let matterhorn_31_005 pdf = ()
+
+(* A CMap is neither listed as described in ISO 32000- 1:2008, 9.7.5.2, Table
+   118 nor is it embedded. *)
 let matterhorn_31_006 pdf = ()
+
+(* The WMode entry in a CMap dictionary is not identical to the WMode value in
+the CMap stream. *)
 let matterhorn_31_007 pdf = ()
+
+(* A CMap references another CMap which is not listed in ISO 32000-1:2008,
+   9.7.5.2, Table 118. *)
 let matterhorn_31_008 pdf = ()
+
+(* For a font used by text intended to be rendered the font program is not
+   embedded. *)
 let matterhorn_31_009 pdf = ()
+
+(* For a font used by text the font program is embedded but it does not contain
+   glyphs for all of the glyphs referenced by the text used for rendering. *)
 let matterhorn_31_011 pdf = ()
+
+(* The FontDescriptor dictionary of an embedded Type 1 font contains a CharSet
+   string, but at least one of the glyphs present in the font program is not
+   listed in the CharSet string. *)
 let matterhorn_31_012 pdf = ()
+
+(* The FontDescriptor dictionary of an embedded Type 1 font contains a CharSet
+   string, but at least one of the glyphs listed in the CharSet string is not
+   present in the font program. *)
 let matterhorn_31_013 pdf = ()
+
+(* The FontDescriptor dictionary of an embedded CID font contains a CIDSet
+   string, but at least one of the glyphs present in the font program is not
+   listed in the CIDSet string. *)
 let matterhorn_31_014 pdf = ()
+
+(* The FontDescriptor dictionary of an embedded CID font contains a CIDSet
+   string, but at least one of the glyphs listed in the CIDSet string is not
+   present in the font program. *)
 let matterhorn_31_015 pdf = ()
+
+(* For one or more glyphs, the glyph width information in the font dictionary
+   and in the embedded font program differ by more than 1/1000 unit. *)
 let matterhorn_31_016 pdf = ()
+
+(* A non-symbolic TrueType font is used for rendering, but none of the cmap
+   entries in the embedded font program is a non-symbolic cmap. *)
 let matterhorn_31_017 pdf = ()
+
+(* A non-symbolic TrueType font is used for rendering, but for at least one
+   glyph to be rendered the glyph cannot be looked up by any of the
+   non-symbolic cmap entries in the embedded font program. *)
 let matterhorn_31_018 pdf = ()
+
+(* The font dictionary for a non-symbolic TrueType font does not contain an
+   Encoding entry. *)
 let matterhorn_31_019 pdf = ()
+
+(* The font dictionary for a non-symbolic TrueType font contains an Encoding
+   dictionary which does not contain a BaseEncoding entry. *)
 let matterhorn_31_020 pdf = ()
+
+(* The value for either the Encoding entry or the BaseEncoding entry in the
+   Encoding dictionary in a non-symbolic TrueType font dictionary is neither
+   MacRomanEncoding nor WinAnsiEncoding. *)
 let matterhorn_31_021 pdf = ()
+
+(* The Differences array in the Encoding entry in a non-symbolic TrueType font
+   dictionary contains one or more glyph names which are not listed in the
+   Adobe Glyph List. *)
 let matterhorn_31_022 pdf = ()
+
+(* The Differences array is present in the Encoding entry in a non-symbolic
+   TrueType font dictionary but the embedded font program does not contain a
+   (3,1) Microsoft Unicode cmap. *)
 let matterhorn_31_023 pdf = ()
+
+(* The Encoding entry is present in the font dictionary for a symbolic TrueType
+   font. *)
 let matterhorn_31_024 pdf = ()
+
+(* The embedded font program for a symbolic TrueType font contains no cmap. *)
 let matterhorn_31_025 pdf = ()
+
+(* The embedded font program for a symbolic TrueType font contains more than
+   one cmap, but none of the cmap entries is a (3,0) Microsoft Symbol cmap. *)
 let matterhorn_31_026 pdf = ()
+
+(* A font dictionary does not contain the ToUnicode entry and none of the
+   following is true: the font uses MacRomanEncoding, MacExpertEncoding or
+   WinAnsiEncoding; the font is a Type 1 or Type 3 font and the glyph names of
+   the glyphs referenced are all contained in the Adobe Glyph List or the set
+   of named characters in the Symbol font, as defined in ISO 32000-1:2008,
+   Annex D; the font is a Type 0 font, and its descendant CIDFont uses
+   Adobe-GB1, Adobe-CNS1, Adobe-Japan1 or Adobe-Korea1 character collections;
+   the font is a non-symbolic TrueType font. *)
 let matterhorn_31_027 pdf = ()
+
+(* One or more Unicode values specified in the ToUnicode CMap are zero (0). *)
 let matterhorn_31_028 pdf = ()
+
+(* One or more Unicode values specified in the ToUnicode CMap are equal to
+   either U+FEFF or U+FFFE. *)
 let matterhorn_31_029 pdf = ()
+
+(* One or more characters used in text showing operators reference the .notdef
+   glyph. *)
 let matterhorn_31_030 pdf = ()
 
 let matterhorn =
@@ -355,8 +553,7 @@ let test_matterhorn pdf =
     (fun (name, error, section, test) ->
       try test pdf; None with
        | MatterhornError extra -> Some (name, error, section, extra)
-       | e -> Some (name, "Incomplete", section, `String ("ERROR: " ^ Printexc.to_string e))
-    )
+       | e -> Some (name, "Incomplete", section, `String ("ERROR: " ^ Printexc.to_string e)))
     matterhorn
 
 let test_matterhorn_print pdf =
