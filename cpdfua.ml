@@ -3,7 +3,11 @@ open Cpdferror
 
 exception MatterhornError of Cpdfyojson.Safe.t
 
+exception MatterhornUnimplemented
+
 let merror () = raise (MatterhornError `Null)
+let merror_str s = raise (MatterhornError (`String s))
+let unimpl () = raise MatterhornUnimplemented
 
 (* Content marked as Artifact is present inside tagged content. *)
 let matterhorn_01_003 pdf = ()
@@ -331,18 +335,30 @@ let matterhorn_30_002 pdf =
 (* A Type 0 font dictionary with encoding other than Identity-H and Identity-V
    has values for Registry in both CIDSystemInfo dictionaries that are not
    identical. *)
-let matterhorn_31_001 pdf = ()
+let matterhorn_31_001 pdf =
+  Pdf.objiter
+    (fun _ o ->
+       match Pdf.lookup_direct pdf "/Subtype" o, Pdf.lookup_direct pdf "/Encoding" o with
+       | Some (Pdf.Name "/Type0"), Some (Pdf.Name ("/Identity-H" | "/Identity-V")) -> ()
+       | Some (Pdf.Name "/Type0"), _ ->
+           merror_str
+             "Advisory: contains composite font with non-identity encoding. Cpdf\
+              cannot check the CIDSystemInfo entries are identical automatically."
+       | _ -> ())
+    pdf
 
 (* A Type 0 font dictionary with encoding other than Identity-H and Identity-V
    has values for Ordering in both CIDSystemInfo dictionaries that are not
    identical. *)
-let matterhorn_31_002 pdf = ()
+let matterhorn_31_002 pdf =
+  matterhorn_31_001 pdf
 
 (* A Type 0 font dictionary with encoding other than Identity-H and Identity-V
    has a value for Supplement in the CIDSystemInfo dictionary of the CID font
    that is less than the value for Supplement in the CIDSystemInfo dictionary
    of the CMap. *)
-let matterhorn_31_003 pdf = ()
+let matterhorn_31_003 pdf =
+  matterhorn_31_001 pdf
 
 (* A Type 2 CID font contains neither a stream nor the name Identity as the
    value of the CIDToGIDMap entry. *)
@@ -351,17 +367,19 @@ let matterhorn_31_004 pdf = ()
 (* A Type 2 CID font does not contain a CIDToGIDMap entry. *)
 let matterhorn_31_005 pdf = ()
 
-(* A CMap is neither listed as described in ISO 32000- 1:2008, 9.7.5.2, Table
+(* A CMap is neither listed as described in ISO 32000-1:2008, 9.7.5.2, Table
    118 nor is it embedded. *)
 let matterhorn_31_006 pdf = ()
 
 (* The WMode entry in a CMap dictionary is not identical to the WMode value in
 the CMap stream. *)
-let matterhorn_31_007 pdf = ()
+let matterhorn_31_007 pdf =
+  unimpl ()
 
 (* A CMap references another CMap which is not listed in ISO 32000-1:2008,
    9.7.5.2, Table 118. *)
-let matterhorn_31_008 pdf = ()
+let matterhorn_31_008 pdf =
+  unimpl ()
 
 (* For a font used by text intended to be rendered the font program is not
    embedded. *)
@@ -369,40 +387,48 @@ let matterhorn_31_009 pdf = ()
 
 (* For a font used by text the font program is embedded but it does not contain
    glyphs for all of the glyphs referenced by the text used for rendering. *)
-let matterhorn_31_011 pdf = ()
+let matterhorn_31_011 pdf =
+  unimpl ()
 
 (* The FontDescriptor dictionary of an embedded Type 1 font contains a CharSet
    string, but at least one of the glyphs present in the font program is not
    listed in the CharSet string. *)
-let matterhorn_31_012 pdf = ()
+let matterhorn_31_012 pdf =
+  unimpl ()
 
 (* The FontDescriptor dictionary of an embedded Type 1 font contains a CharSet
    string, but at least one of the glyphs listed in the CharSet string is not
    present in the font program. *)
-let matterhorn_31_013 pdf = ()
+let matterhorn_31_013 pdf =
+  unimpl ()
 
 (* The FontDescriptor dictionary of an embedded CID font contains a CIDSet
    string, but at least one of the glyphs present in the font program is not
    listed in the CIDSet string. *)
-let matterhorn_31_014 pdf = ()
+let matterhorn_31_014 pdf =
+  unimpl ()
 
 (* The FontDescriptor dictionary of an embedded CID font contains a CIDSet
    string, but at least one of the glyphs listed in the CIDSet string is not
    present in the font program. *)
-let matterhorn_31_015 pdf = ()
+let matterhorn_31_015 pdf =
+  unimpl ()
 
 (* For one or more glyphs, the glyph width information in the font dictionary
    and in the embedded font program differ by more than 1/1000 unit. *)
-let matterhorn_31_016 pdf = ()
+let matterhorn_31_016 pdf =
+  unimpl ()
 
 (* A non-symbolic TrueType font is used for rendering, but none of the cmap
    entries in the embedded font program is a non-symbolic cmap. *)
-let matterhorn_31_017 pdf = ()
+let matterhorn_31_017 pdf =
+  unimpl ()
 
 (* A non-symbolic TrueType font is used for rendering, but for at least one
    glyph to be rendered the glyph cannot be looked up by any of the
    non-symbolic cmap entries in the embedded font program. *)
-let matterhorn_31_018 pdf = ()
+let matterhorn_31_018 pdf =
+  unimpl ()
 
 (* The font dictionary for a non-symbolic TrueType font does not contain an
    Encoding entry. *)
@@ -425,18 +451,21 @@ let matterhorn_31_022 pdf = ()
 (* The Differences array is present in the Encoding entry in a non-symbolic
    TrueType font dictionary but the embedded font program does not contain a
    (3,1) Microsoft Unicode cmap. *)
-let matterhorn_31_023 pdf = ()
+let matterhorn_31_023 pdf =
+  unimpl ()
 
 (* The Encoding entry is present in the font dictionary for a symbolic TrueType
    font. *)
 let matterhorn_31_024 pdf = ()
 
 (* The embedded font program for a symbolic TrueType font contains no cmap. *)
-let matterhorn_31_025 pdf = ()
+let matterhorn_31_025 pdf =
+  unimpl ()
 
 (* The embedded font program for a symbolic TrueType font contains more than
    one cmap, but none of the cmap entries is a (3,0) Microsoft Symbol cmap. *)
-let matterhorn_31_026 pdf = ()
+let matterhorn_31_026 pdf =
+  unimpl ()
 
 (* A font dictionary does not contain the ToUnicode entry and none of the
    following is true: the font uses MacRomanEncoding, MacExpertEncoding or
@@ -457,7 +486,8 @@ let matterhorn_31_029 pdf = ()
 
 (* One or more characters used in text showing operators reference the .notdef
    glyph. *)
-let matterhorn_31_030 pdf = ()
+let matterhorn_31_030 pdf =
+  unimpl ()
 
 let matterhorn =
   [("01-003", "Content marked as Artifact is present inside tagged content.", "UA1:7.1-1", matterhorn_01_003);
@@ -553,6 +583,7 @@ let test_matterhorn pdf =
     (fun (name, error, section, test) ->
       try test pdf; None with
        | MatterhornError extra -> Some (name, error, section, extra)
+       | MatterhornUnimplemented -> None
        | e -> Some (name, "Incomplete", section, `String ("ERROR: " ^ Printexc.to_string e)))
     matterhorn
 
