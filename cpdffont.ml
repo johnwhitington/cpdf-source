@@ -97,7 +97,7 @@ let is_missing pdf dict =
               | Some _ -> false
               | None -> true
 
-let missing_font pdf page (name, dict) =
+let missing_font ?l pdf page (name, dict) =
   if is_missing pdf dict then
     let subtype =
       match Pdf.lookup_direct pdf "/Subtype" dict with
@@ -110,12 +110,13 @@ let missing_font pdf page (name, dict) =
     and encoding =
      match Pdf.lookup_direct pdf "/Encoding" dict with
       | Some (Pdf.Name n) -> n
-      | _ -> ""
+      | _ -> "Built-in"
     in 
-      if Pdftext.standard_font_of_name basefont <> None then () else
-      Printf.printf "%i, %s, %s, %s, %s\n" page name subtype basefont encoding
+      match l with
+      | None -> Printf.printf "%i, %s, %s, %s, %s\n" page name subtype basefont encoding
+      | Some r -> r := Printf.sprintf "%i %s %s %s %s" page name subtype basefont encoding::!r
 
-let missing_fonts pdf range =
+let missing_fonts ?l pdf range =
   Cpdfpage.iter_pages
     (fun num page ->
        match Pdf.lookup_direct pdf "/Font" page.Pdfpage.resources with
@@ -130,10 +131,15 @@ let missing_fonts pdf range =
                      | _ -> [(name, dict)])
                   fontdict)
            in
-             iter (missing_font pdf num) name_dict_pairs
+             iter (missing_font ?l pdf num) name_dict_pairs
        | _ -> ())
     pdf
     range
+
+let missing_fonts_return pdf range =
+  let l = ref [] in
+    missing_fonts ~l pdf range;
+    !l
 
 let print_font_table pdf fontname pagenumber =
   let page = try List.nth (Pdfpage.pages_of_pagetree pdf) (pagenumber - 1) with e -> error "page not found" in

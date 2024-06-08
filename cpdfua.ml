@@ -383,7 +383,11 @@ let matterhorn_31_008 pdf =
 
 (* For a font used by text intended to be rendered the font program is not
    embedded. *)
-let matterhorn_31_009 pdf = ()
+(* NB This, for now, reports all unembedded fonts. *)
+let matterhorn_31_009 pdf =
+  let l = Cpdffont.missing_fonts_return pdf (ilist 1 (Pdfpage.endpage pdf)) in
+    if l <> [] then
+      raise (MatterhornError (`List (map (fun x -> `String x) l)))
 
 (* For a font used by text the font program is embedded but it does not contain
    glyphs for all of the glyphs referenced by the text used for rendering. *)
