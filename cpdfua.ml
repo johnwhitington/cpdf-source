@@ -527,16 +527,66 @@ let matterhorn_31_018 pdf =
 
 (* The font dictionary for a non-symbolic TrueType font does not contain an
    Encoding entry. *)
-let matterhorn_31_019 pdf = ()
+let is_non_symbolic pdf o =
+  match Pdf.lookup_direct pdf "/FontDescriptor" o with
+  | Some fd ->
+      begin match Pdf.lookup_direct pdf "/Flags" fd with
+      | Some (Pdf.Integer i) -> not (i land 0b100 > 0)
+      | _ -> true
+      end
+  | None -> true 
+
+let matterhorn_31_019 pdf =
+  Pdf.objiter
+    (fun _ o ->
+       match Pdf.lookup_direct pdf "/Subtype" o with
+       | Some (Pdf.Name "/TrueType") ->
+           begin match is_non_symbolic pdf o, Pdf.lookup_direct pdf "/Encoding" o with
+           | true, None -> merror ()
+           | _ -> ()
+           end
+       | _ -> ())
+    pdf
 
 (* The font dictionary for a non-symbolic TrueType font contains an Encoding
    dictionary which does not contain a BaseEncoding entry. *)
-let matterhorn_31_020 pdf = ()
+let matterhorn_31_020 pdf =
+  Pdf.objiter
+    (fun _ o ->
+       match Pdf.lookup_direct pdf "/Subtype" o with
+       | Some (Pdf.Name "/TrueType") ->
+           begin match is_non_symbolic pdf o, Pdf.lookup_direct pdf "/Encoding" o with
+           | true, Some ((Pdf.Dictionary _) as d) ->
+               begin match Pdf.lookup_direct pdf "/BaseEncoding" d with
+               | None -> merror ()
+               | Some _ -> ()
+               end
+           | _ -> ()
+           end
+       | _ -> ())
+    pdf
 
 (* The value for either the Encoding entry or the BaseEncoding entry in the
    Encoding dictionary in a non-symbolic TrueType font dictionary is neither
    MacRomanEncoding nor WinAnsiEncoding. *)
-let matterhorn_31_021 pdf = ()
+let matterhorn_31_021 pdf =
+  Pdf.objiter
+    (fun _ o ->
+       match Pdf.lookup_direct pdf "/Subtype" o with
+       | Some (Pdf.Name "/TrueType") ->
+           begin match is_non_symbolic pdf o, Pdf.lookup_direct pdf "/Encoding" o with
+           | true, Some (Pdf.Name ("/MacRomanEncoding" | "/WinAnsiEncoding")) -> ()
+           | true, Some (Pdf.Name _) -> merror ()
+           | true, Some ((Pdf.Dictionary _) as d) ->
+               begin match Pdf.lookup_direct pdf "/BaseEncoding" d with
+               | Some (Pdf.Name ("/MacRomanEncoding" | "/WinAnsiEncoding")) -> ()
+               | Some _ -> merror ()
+               | _ -> ()
+               end
+           | _ -> ()
+           end
+       | _ -> ())
+    pdf
 
 (* The Differences array in the Encoding entry in a non-symbolic TrueType font
    dictionary contains one or more glyph names which are not listed in the
@@ -551,7 +601,17 @@ let matterhorn_31_023 pdf =
 
 (* The Encoding entry is present in the font dictionary for a symbolic TrueType
    font. *)
-let matterhorn_31_024 pdf = ()
+let matterhorn_31_024 pdf =
+  Pdf.objiter
+    (fun _ o ->
+       match Pdf.lookup_direct pdf "/Subtype" o with
+       | Some (Pdf.Name "/TrueType") ->
+           begin match is_non_symbolic pdf o, Pdf.lookup_direct pdf "/Encoding" o with
+           | false, Some _ -> merror ()
+           | _ -> ()
+           end
+       | _ -> ())
+    pdf
 
 (* The embedded font program for a symbolic TrueType font contains no cmap. *)
 let matterhorn_31_025 pdf =
