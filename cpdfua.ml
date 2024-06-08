@@ -591,7 +591,24 @@ let matterhorn_31_021 pdf =
 (* The Differences array in the Encoding entry in a non-symbolic TrueType font
    dictionary contains one or more glyph names which are not listed in the
    Adobe Glyph List. *)
-let matterhorn_31_022 pdf = ()
+let matterhorn_31_022 pdf =
+  Pdf.objiter
+    (fun _ o ->
+       match Pdf.lookup_direct pdf "/Subtype" o with
+       | Some (Pdf.Name "/TrueType") ->
+           begin match is_non_symbolic pdf o, Pdf.lookup_direct pdf "/Encoding" o with
+           | true, Some d ->
+               begin match Pdf.lookup_direct pdf "/Differences" d with
+               | Some (Pdf.Array a) ->
+                   let glyphs = Pdfglyphlist.glyph_hashes () in
+                   let names = option_map (function Pdf.Name n -> Some n | _ -> None) a in
+                     if not (List.for_all (Hashtbl.mem glyphs) names) then merror ()
+               | _ -> ()
+               end
+           | _ -> ()
+           end
+       | _ -> ())
+    pdf
 
 (* The Differences array is present in the Encoding entry in a non-symbolic
    TrueType font dictionary but the embedded font program does not contain a
