@@ -8,25 +8,26 @@ exception MatterhornUnimplemented
 let merror () = raise (MatterhornError `Null)
 let merror_str s = raise (MatterhornError (`String s))
 let unimpl () = raise MatterhornUnimplemented
+let todo () = ()
 
 (* Content marked as Artifact is present inside tagged content. *)
-let matterhorn_01_003 pdf = ()
+let matterhorn_01_003 pdf = todo ()
 
 (* Tagged content is present inside content marked as Artifact. *)
-let matterhorn_01_004 pdf = ()
+let matterhorn_01_004 pdf = todo ()
 
 (* Content is neither marked as Artifact nor tagged as real content. *)
-let matterhorn_01_005 pdf = ()
+let matterhorn_01_005 pdf = todo ()
 
 (* Suspects entry has a value of true. *)
-let matterhorn_01_007 pdf = ()
+let matterhorn_01_007 pdf = todo ()
 
 (* One or more non-standard tag’s mapping does not terminate with a standard
 type. *)
-let matterhorn_02_001 pdf = ()
+let matterhorn_02_001 pdf = todo ()
 
 (* A circular mapping exists. *)
-let matterhorn_02_003 pdf = ()
+let matterhorn_02_003 pdf = todo ()
 
 (* Document does not contain an XMP metadata stream *)
 let matterhorn_06_001 pdf =
@@ -89,91 +90,91 @@ let matterhorn_07_002 pdf =
 
 (* A table-related structure element is used in a way that does not conform to
    the syntax defined in ISO 32000-1, Table 337. *)
-let matterhorn_09_004 pdf = ()
+let matterhorn_09_004 pdf = todo ()
 
 (* A list-related structure element is used in a way that does not conform to
    Table 336 in ISO 32000-1. *)
-let matterhorn_09_005 pdf = ()
+let matterhorn_09_005 pdf = todo ()
 
 (* A TOC-related structure element is used in a way that does not conform to
    Table 333 in ISO 32000-1. *)
-let matterhorn_09_006 pdf = ()
+let matterhorn_09_006 pdf = todo ()
 
 (* A Ruby-related structure element is used in a way that does not conform to
    Table 338 in ISO 32000-1. *)
-let matterhorn_09_007 pdf = ()
+let matterhorn_09_007 pdf = todo ()
 
 (* A Warichu-related structure element is used in a way that does not conform
    to Table 338 in ISO 32000-1. *)
-let matterhorn_09_008 pdf = ()
+let matterhorn_09_008 pdf = todo ()
 
 (* Character code cannot be mapped to Unicode. *)
-let matterhorn_10_001 pdf = ()
+let matterhorn_10_001 pdf = todo ()
 
 (* Natural language for text in page content cannot be determined. *)
-let matterhorn_11_001 pdf = ()
+let matterhorn_11_001 pdf = todo ()
 
 (* Natural language for text in Alt, ActualText and E attributes cannot be
    determined. *)
-let matterhorn_11_002 pdf = ()
+let matterhorn_11_002 pdf = todo ()
 
 (* Natural language in the Outline entries cannot be determined. *)
-let matterhorn_11_003 pdf = ()
+let matterhorn_11_003 pdf = todo ()
 
 (* Natural language in the Contents entry for annotations cannot be determined.
  *)
-let matterhorn_11_004 pdf = ()
+let matterhorn_11_004 pdf = todo ()
 
 (* Natural language in the TU entry for form fields cannot be determined. *)
-let matterhorn_11_005 pdf = ()
+let matterhorn_11_005 pdf = todo ()
 
 (* Natural language for document metadata cannot be determined. *)
-let matterhorn_11_006 pdf = ()
+let matterhorn_11_006 pdf = todo ()
 
 (* <Figure> tag alternative or replacement text missing. *)
-let matterhorn_13_004 pdf = ()
+let matterhorn_13_004 pdf = todo ()
 
 (* Does use numbered headings, but the first heading tag is not <H1>. *)
-let matterhorn_14_002 pdf = ()
+let matterhorn_14_002 pdf = todo ()
 
 (* Numbered heading levels in descending sequence are skipped (Example: <H3>
    follows directly after <H1>). *)
-let matterhorn_14_003 pdf = ()
+let matterhorn_14_003 pdf = todo ()
 
 (* A node contains more than one <H> tag. *)
-let matterhorn_14_006 pdf = ()
+let matterhorn_14_006 pdf = todo ()
 
 (* Document uses both <H> and <H#> tags. *)
-let matterhorn_14_007 pdf = ()
+let matterhorn_14_007 pdf = todo ()
 
 (* In a table not organized with Headers attributes and IDs, a <TH> cell does
    not contain a Scope attribute. *)
-let matterhorn_15_003 pdf = ()
+let matterhorn_15_003 pdf = todo ()
 
 (* <Formula> tag is missing an Alt attribute. *)
-let matterhorn_17_002 pdf = ()
+let matterhorn_17_002 pdf = todo ()
 
 (* Unicode mapping requirements are not met. *)
-let matterhorn_17_003 pdf = ()
+let matterhorn_17_003 pdf = todo ()
 
 (* ID entry of the <Note> tag is not present. *)
-let matterhorn_19_003 pdf = ()
+let matterhorn_19_003 pdf = todo ()
 
 (* ID entry of the <Note> tag is non-unique. *)
-let matterhorn_19_004 pdf = ()
+let matterhorn_19_004 pdf = todo ()
 
 (* Name entry is missing or has an empty string as its value in an Optional
    Content Configuration Dictionary in the Configs entry in the OCProperties
    entry in the Catalog dictionary. *)
-let matterhorn_20_001 pdf = ()
+let matterhorn_20_001 pdf = todo ()
 
 (* Name entry is missing or has an empty string as its value in an Optional
    Content Configuration Dictionary that is the value of the D entry in the
    OCProperties entry in the Catalog dictionary. *)
-let matterhorn_20_002 pdf = ()
+let matterhorn_20_002 pdf = todo ()
 
 (* An AS entry appears in an Optional Content Configuration Dictionary. *)
-let matterhorn_20_003 pdf = ()
+let matterhorn_20_003 pdf = todo ()
 
 (* The file specification dictionary for an embedded file does not contain F
    and UF entries. *)
@@ -260,20 +261,20 @@ let matterhorn_26_002 pdf =
 
 (* An annotation, other than of subtype Widget, Link and PrinterMark, is not a
    direct child of an <Annot> structure element. *)
-let matterhorn_28_002 pdf = ()
+let matterhorn_28_002 pdf = todo ()
 
 (* An annotation, other than of subtype Widget, does not have a Contents entry
    and does not have an alternative description (in the form of an Alt entry in
    the enclosing structure element). *)
-let matterhorn_28_004 pdf = ()
+let matterhorn_28_004 pdf = todo ()
 
 (* A form field does not have a TU entry and does not have an alternative
    description (in the form of an Alt entry in the enclosing structure
    element). *)
-let matterhorn_28_005 pdf = ()
+let matterhorn_28_005 pdf = todo ()
 
 (* An annotation with subtype undefined in ISO 32000 does not meet 7.18.1. *)
-let matterhorn_28_006 pdf = ()
+let matterhorn_28_006 pdf = todo ()
 
 (* An annotation of subtype TrapNet exists. *)
 let matterhorn_28_007 pdf =
@@ -285,37 +286,37 @@ let matterhorn_28_007 pdf =
     merror ()
 
 (* A page containing an annotation does not contain a Tabs entry *)
-let matterhorn_28_008 pdf = ()
+let matterhorn_28_008 pdf = todo ()
 
 (* A page containing an annotation has a Tabs entry with a value other than S.
  *)
-let matterhorn_28_009 pdf = ()
+let matterhorn_28_009 pdf = todo ()
 
 (* A widget annotation is not nested within a <Form> tag. *)
-let matterhorn_28_010 pdf = ()
+let matterhorn_28_010 pdf = todo ()
 
 (* A link annotation is not nested within a <Link> tag. *)
-let matterhorn_28_011 pdf = ()
+let matterhorn_28_011 pdf = todo ()
 
 (* A link annotation does not include an alternate description in its Contents
    entry. *)
-let matterhorn_28_012 pdf = ()
+let matterhorn_28_012 pdf = todo ()
 
 (* CT entry is missing from the media clip data dictionary. *)
-let matterhorn_28_014 pdf = ()
+let matterhorn_28_014 pdf = todo ()
 
 (* Alt entry is missing from the media clip data dictionary. *)
-let matterhorn_28_015 pdf = ()
+let matterhorn_28_015 pdf = todo ()
 
 (* File attachment annotations do not conform to 7.11. *)
-let matterhorn_28_016 pdf = ()
+let matterhorn_28_016 pdf = todo ()
 
 (* A PrinterMark annotation is included in the logical structure. *)
-let matterhorn_28_017 pdf = ()
+let matterhorn_28_017 pdf = todo ()
 
 (* The appearance stream of a PrinterMark annotation is not marked as Artifact.
  *)
-let matterhorn_28_018 pdf = ()
+let matterhorn_28_018 pdf = todo ()
 
 (* A reference XObject is present. *)
 let matterhorn_30_001 pdf =
@@ -330,7 +331,7 @@ let matterhorn_30_001 pdf =
 let matterhorn_30_002 pdf =
   (* We need to consider inheritence here. What solutions do we already have
      for that, and do we need anything new? *)
-  ()
+  todo ()
 
 (* A Type 0 font dictionary with encoding other than Identity-H and Identity-V
    has values for Registry in both CIDSystemInfo dictionaries that are not
@@ -647,14 +648,14 @@ let matterhorn_31_026 pdf =
    Annex D; the font is a Type 0 font, and its descendant CIDFont uses
    Adobe-GB1, Adobe-CNS1, Adobe-Japan1 or Adobe-Korea1 character collections;
    the font is a non-symbolic TrueType font. *)
-let matterhorn_31_027 pdf = ()
+let matterhorn_31_027 pdf = todo ()
 
 (* One or more Unicode values specified in the ToUnicode CMap are zero (0). *)
-let matterhorn_31_028 pdf = ()
+let matterhorn_31_028 pdf = todo ()
 
 (* One or more Unicode values specified in the ToUnicode CMap are equal to
    either U+FEFF or U+FFFE. *)
-let matterhorn_31_029 pdf = ()
+let matterhorn_31_029 pdf = todo ()
 
 (* One or more characters used in text showing operators reference the .notdef
    glyph. *)
