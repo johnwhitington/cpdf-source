@@ -362,10 +362,30 @@ let matterhorn_31_003 pdf =
 
 (* A Type 2 CID font contains neither a stream nor the name Identity as the
    value of the CIDToGIDMap entry. *)
-let matterhorn_31_004 pdf = ()
+let matterhorn_31_004 pdf =
+  Pdf.objiter
+    (fun _ n ->
+       match Pdf.lookup_direct pdf "/Subtype" n with
+       | Some (Pdf.Name "/CIDFontType2") ->
+           begin match Pdf.lookup_direct pdf "/CIDtoGIDMap" n with
+           | Some (Pdf.Name "/Identity" | Pdf.Stream _) -> ()
+           | _ -> merror ()
+           end
+       | _ -> ())
+    pdf
 
 (* A Type 2 CID font does not contain a CIDToGIDMap entry. *)
-let matterhorn_31_005 pdf = ()
+let matterhorn_31_005 pdf =
+  Pdf.objiter
+    (fun _ n ->
+       match Pdf.lookup_direct pdf "/Subtype" n with
+       | Some (Pdf.Name "/CIDFontType2") ->
+           begin match Pdf.lookup_direct pdf "/CIDtoGIDMap" n with
+           | Some _ -> ()
+           | _ -> merror ()
+           end
+       | _ -> ())
+    pdf
 
 (* A CMap is neither listed as described in ISO 32000-1:2008, 9.7.5.2, Table
    118 nor is it embedded. *)
