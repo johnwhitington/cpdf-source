@@ -9,6 +9,7 @@ let merror () = raise (MatterhornError `Null)
 let merror_str s = raise (MatterhornError (`String s))
 let unimpl () = raise MatterhornUnimplemented
 let todo () = ()
+let not_fully_implemented () = ()
 
 (* Content marked as Artifact is present inside tagged content. *)
 let matterhorn_01_003 pdf = todo ()
@@ -109,7 +110,8 @@ let matterhorn_09_007 pdf = todo ()
 let matterhorn_09_008 pdf = todo ()
 
 (* Character code cannot be mapped to Unicode. *)
-let matterhorn_10_001 pdf = todo ()
+let matterhorn_10_001 pdf =
+  unimpl ()
 
 (* Natural language for text in page content cannot be determined. *)
 let matterhorn_11_001 pdf = todo ()
@@ -648,7 +650,51 @@ let matterhorn_31_026 pdf =
    Annex D; the font is a Type 0 font, and its descendant CIDFont uses
    Adobe-GB1, Adobe-CNS1, Adobe-Japan1 or Adobe-Korea1 character collections;
    the font is a non-symbolic TrueType font. *)
-let matterhorn_31_027 pdf = todo ()
+let matterhorn_31_027 pdf =
+  not_fully_implemented ();
+  (* Here, we implement most of this one, but can't check the set of referenced
+     glyphs for Type1 / Type3. *)
+  let c1 o =
+    match Pdf.lookup_direct pdf "/Encoding" o with
+    | Some (Pdf.Name ("/MacRomanEncoding" | "/MacExpertEncoding" | "/WinAnsiEncoding")) -> true
+    | _ -> false
+  in
+  let c3 o =
+    match Pdf.lookup_direct pdf "/Subtype" o with
+    | Some (Pdf.Name "/Type0") ->
+        begin match Pdf.lookup_direct pdf "/DescendantFonts" o with
+        | Some (Pdf.Array [df]) ->
+            begin match Pdf.lookup_direct pdf "/CIDSystemInfo" df with
+            | Some cidinfo ->
+                begin match Pdf.lookup_direct pdf "/Registry" cidinfo, Pdf.lookup_direct pdf "/Ordering" cidinfo with
+                | Some (Pdf.Name "/Adobe"), Some (Pdf.Name ("/GB1" | "/CNS1" | "/Japan1" | "/Korea1")) -> true
+                | _ -> false
+                end
+            | _ -> false
+            end
+        | _ -> false
+        end
+    | _ -> false
+  in
+  let c4 o = is_non_symbolic pdf o in
+    Pdf.objiter
+      (fun _ o ->
+         match Pdf.lookup_direct pdf "/ToUnicode" o with
+         | Some _ -> ()
+         | None ->
+             begin match Pdf.lookup_direct pdf "/Type" o with
+             | Some (Pdf.Name "/Font") ->
+                 begin match c1 o, c3 o, c4 o with
+                 | false, false, false ->
+                     begin match Pdf.lookup_direct pdf "/Subtype" o with
+                     | Some (Pdf.Name ("/Type1" | "/Type3")) -> unimpl ()
+                     | _ -> merror ()
+                     end
+                 | _ -> ()
+                 end
+             | _ -> ()
+             end)
+      pdf
 
 let all_tounicodes pdf = 
   let tus = ref [] in
