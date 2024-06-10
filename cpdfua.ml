@@ -331,7 +331,7 @@ let matterhorn_30_001 pdf =
 let matterhorn_30_002 pdf =
   (* We need to consider inheritence here. What solutions do we already have
      for that, and do we need anything new? *)
-  todo ()
+  unimpl ()
 
 (* A Type 0 font dictionary with encoding other than Identity-H and Identity-V
    has values for Registry in both CIDSystemInfo dictionaries that are not
@@ -650,12 +650,35 @@ let matterhorn_31_026 pdf =
    the font is a non-symbolic TrueType font. *)
 let matterhorn_31_027 pdf = todo ()
 
+let all_tounicodes pdf = 
+  let tus = ref [] in
+    Pdf.objiter
+      (fun _ o ->
+        match Pdf.indirect_number pdf "/ToUnicode" o with
+        | Some i -> tus := i::!tus
+        | None -> ())
+      pdf;
+      (setify !tus)
+
+let check_unicode tu n =
+  mem n (flatten (map (fun x -> Pdftext.codepoints_of_utf16be (snd x)) tu))
+
 (* One or more Unicode values specified in the ToUnicode CMap are zero (0). *)
-let matterhorn_31_028 pdf = todo ()
+let matterhorn_31_028 pdf =
+  iter
+    (fun i ->
+      let tu = Pdftext.parse_tounicode pdf (Pdf.lookup_obj pdf i) in
+        if check_unicode tu 0 then merror ())
+    (all_tounicodes pdf)
 
 (* One or more Unicode values specified in the ToUnicode CMap are equal to
    either U+FEFF or U+FFFE. *)
-let matterhorn_31_029 pdf = todo ()
+let matterhorn_31_029 pdf =
+  iter
+    (fun i ->
+      let tu = Pdftext.parse_tounicode pdf (Pdf.lookup_obj pdf i) in
+        if check_unicode tu 0xFEFF || check_unicode tu 0xFFFE then merror ())
+    (all_tounicodes pdf)
 
 (* One or more characters used in text showing operators reference the .notdef
    glyph. *)
