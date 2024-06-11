@@ -24,34 +24,60 @@ let matterhorn_01_005 pdf = todo ()
 (* Suspects entry has a value of true. *)
 let matterhorn_01_007 pdf = todo ()
 
+(* Here, for now, we allow the ISO 32000 and ISO 32000-2 *)
+(* FIXME which verison of PDF/UA are we doing? Can we do both? or pick? *)
 let standard_structure_types =
   ["/Document"; "/DocumentFragment"; "/Part"; "/Sect"; "/Div"; "/Aside";
   "/NonStruct"; "/P"; "/H1"; "/H2"; "/H3"; "/H4"; "/H5"; "/H6"; "/H"; "/Title";
   "/FENote"; "/Sub"; "/Lbl"; "/Span"; "/Em"; "/Strong"; "/Link"; "/Annot";
   "/Form"; "/Ruby"; "/RB"; "/RT"; "/RP"; "/Warichu"; "/WT"; "/WP"; "/L"; "/LI";
   "/LBody"; "/Table"; "/TR"; "/TH"; "/TD"; "/THead"; "/TBody"; "/TFoot";
-  "/Caption"; "/Figure"; "/Formula"; "/Artifact"]
+  "/Caption"; "/Figure"; "/Formula"; "/Artifact";
+  (* 2008 ISO 3200 only *)
+  "/Art"; "/BlockQuote"; "/TOC"; "/TOCI"; "/Index"; "/Private"; "/Quote";
+  "/Note"; "/Reference"; "/Code"]
 
 let read_rolemap pdf = function
   | Pdf.Dictionary d ->
       option_map (function (k, Pdf.Name v) -> Some (k, v) | _ -> None) d
   | _ -> error "read_rolemap: not a rolemap"
 
+let rec follow_standard rm n =
+  match List.assoc_opt n rm with
+  | None -> raise Exit
+  | Some x when mem x standard_structure_types -> ()
+  | Some x -> follow_standard rm x
+
+let circular rm =
+  let rec circular n k rm =
+    n < 0 || match List.assoc_opt k rm with None -> false | Some k' -> circular (n - 1) k' rm
+  in
+    List.exists (fun k -> circular (length rm) k rm) (map fst rm)
+
 (* One or more non-standard tag’s mapping does not terminate with a standard
 type. *)
 let matterhorn_02_001 pdf =
-  todo ()
+  match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/StructTreeRoot"; "/RoleMap"] with
+  | Some rm ->
+      let rolemap = read_rolemap pdf rm in
+        if circular rolemap then () else (* Will be reported below *)
+          iter (fun x -> try follow_standard rolemap x with Exit -> merror ()) (map fst rolemap)
+  | None -> ()
 
 (* A circular mapping exists. *)
 let matterhorn_02_003 pdf =
-  todo ()
+  match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/StructTreeRoot"; "/RoleMap"] with
+  | Some rm ->
+      let rolemap = read_rolemap pdf rm in
+        if circular rolemap then merror ()
+  | None -> ()
 
 (* One or more standard types are remapped. *)
 let matterhorn_02_004 pdf =
   match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/StructTreeRoot"; "/RoleMap"] with
   | Some rm ->
       let rolemap = read_rolemap pdf rm in
-        if List.exists (function k -> mem k standard_structure_types) (map fst rolemap) then merror ()
+      if List.exists (function k -> mem k standard_structure_types) (map fst rolemap) then merror ()
   | None -> ()
 
 (* Document does not contain an XMP metadata stream *)
