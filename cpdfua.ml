@@ -24,12 +24,35 @@ let matterhorn_01_005 pdf = todo ()
 (* Suspects entry has a value of true. *)
 let matterhorn_01_007 pdf = todo ()
 
+let standard_structure_types =
+  ["/Document"; "/DocumentFragment"; "/Part"; "/Sect"; "/Div"; "/Aside";
+  "/NonStruct"; "/P"; "/H1"; "/H2"; "/H3"; "/H4"; "/H5"; "/H6"; "/H"; "/Title";
+  "/FENote"; "/Sub"; "/Lbl"; "/Span"; "/Em"; "/Strong"; "/Link"; "/Annot";
+  "/Form"; "/Ruby"; "/RB"; "/RT"; "/RP"; "/Warichu"; "/WT"; "/WP"; "/L"; "/LI";
+  "/LBody"; "/Table"; "/TR"; "/TH"; "/TD"; "/THead"; "/TBody"; "/TFoot";
+  "/Caption"; "/Figure"; "/Formula"; "/Artifact"]
+
+let read_rolemap pdf = function
+  | Pdf.Dictionary d ->
+      option_map (function (k, Pdf.Name v) -> Some (k, v) | _ -> None) d
+  | _ -> error "read_rolemap: not a rolemap"
+
 (* One or more non-standard tag’s mapping does not terminate with a standard
 type. *)
-let matterhorn_02_001 pdf = todo ()
+let matterhorn_02_001 pdf =
+  todo ()
 
 (* A circular mapping exists. *)
-let matterhorn_02_003 pdf = todo ()
+let matterhorn_02_003 pdf =
+  todo ()
+
+(* One or more standard types are remapped. *)
+let matterhorn_02_004 pdf =
+  match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/StructTreeRoot"; "/RoleMap"] with
+  | Some rm ->
+      let rolemap = read_rolemap pdf rm in
+        if List.exists (function k -> mem k standard_structure_types) (map fst rolemap) then merror ()
+  | None -> ()
 
 (* Document does not contain an XMP metadata stream *)
 let matterhorn_06_001 pdf =
@@ -779,7 +802,8 @@ let matterhorn =
    ("01-005", "Content is neither marked as Artifact nor tagged as real content.", "UA1:7-1-2", matterhorn_01_005);
    ("01-007", "Suspects entry has a value of true.", "UA1:7-1-11", matterhorn_01_007);
    ("02-001", "One or more non-standard tag’s mapping does not terminate with a standard type.", "UA1:7.1-3", matterhorn_02_001);
-   ("02-002", "A circular mapping exists.", "UA1:7.1-4", matterhorn_02_003);
+   ("02-002", "A circular mapping exists.", "UA1:7.1-3", matterhorn_02_003);
+   ("02-003", "One or more standard types are remapped.", "UA1:7.1-4", matterhorn_02_004);
    ("06-001", "Document does not contain an XMP metadata stream", "UA1:7.1-8", matterhorn_06_001);
    ("06-002", "The XMP metadata stream in the Catalog dictionary does not include the PDF/UA identifier.", "UA1:5", matterhorn_06_002);
    ("06-003", "XMP metadata stream does not contain dc:title", "UA1:7.1-8", matterhorn_06_003);
