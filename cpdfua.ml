@@ -10,6 +10,7 @@ let merror_str s = raise (MatterhornError (`String s))
 let unimpl () = raise MatterhornUnimplemented
 let todo () = ()
 let not_fully_implemented () = ()
+let covered_elsewhere () = ()
 
 (* Content marked as Artifact is present inside tagged content. *)
 let matterhorn_01_003 pdf = todo ()
@@ -276,7 +277,13 @@ let matterhorn_28_004 pdf = todo ()
 let matterhorn_28_005 pdf = todo ()
 
 (* An annotation with subtype undefined in ISO 32000 does not meet 7.18.1. *)
-let matterhorn_28_006 pdf = todo ()
+let matterhorn_28_006 pdf =
+  if
+    List.exists
+      (fun x -> match x.Pdfannot.subtype with Pdfannot.Unknown _ -> true | _ -> false)
+      (flatten (map (Pdfannot.annotations_of_page pdf) (Pdfpage.pages_of_pagetree pdf)))
+  then
+    merror ()
 
 (* An annotation of subtype TrapNet exists. *)
 let matterhorn_28_007 pdf =
@@ -288,11 +295,27 @@ let matterhorn_28_007 pdf =
     merror ()
 
 (* A page containing an annotation does not contain a Tabs entry *)
-let matterhorn_28_008 pdf = todo ()
+let matterhorn_28_008 pdf =
+  if
+    List.exists
+      (fun p ->
+         Pdfannot.annotations_of_page pdf p <> [] && Pdf.lookup_direct pdf "/Tabs" p.Pdfpage.rest = None)
+      (Pdfpage.pages_of_pagetree pdf)
+  then
+    merror ()
 
 (* A page containing an annotation has a Tabs entry with a value other than S.
  *)
-let matterhorn_28_009 pdf = todo ()
+let matterhorn_28_009 pdf =
+  if
+    List.exists
+      (fun p ->
+         Pdfannot.annotations_of_page pdf p <> [] &&
+         Pdf.lookup_direct pdf "/Tabs" p.Pdfpage.rest <> None && (* already covered by 28_008 above. *)
+         Pdf.lookup_direct pdf "/Tabs" p.Pdfpage.rest <> Some (Pdf.Name "/S"))
+      (Pdfpage.pages_of_pagetree pdf)
+  then
+    merror ()
 
 (* A widget annotation is not nested within a <Form> tag. *)
 let matterhorn_28_010 pdf = todo ()
@@ -302,16 +325,35 @@ let matterhorn_28_011 pdf = todo ()
 
 (* A link annotation does not include an alternate description in its Contents
    entry. *)
-let matterhorn_28_012 pdf = todo ()
+let matterhorn_28_012 pdf =
+  if
+    List.exists
+      (fun x -> x.Pdfannot.subtype = Pdfannot.Link && x.Pdfannot.annot_contents = None )
+      (flatten (map (Pdfannot.annotations_of_page pdf) (Pdfpage.pages_of_pagetree pdf)))
+  then
+    merror ()
 
 (* CT entry is missing from the media clip data dictionary. *)
-let matterhorn_28_014 pdf = todo ()
+let matterhorn_28_014 pdf =
+  Pdf.objiter
+    (fun _ o ->
+       match Pdf.lookup_direct pdf "/Type" o, Pdf.lookup_direct pdf "/S" o, Pdf.lookup_direct pdf "/CT" o with
+       | Some (Pdf.Name "/MediaClip"), Some (Pdf.Name "/MCD"), None -> merror ()
+       | _ -> ())
+    pdf
 
 (* Alt entry is missing from the media clip data dictionary. *)
-let matterhorn_28_015 pdf = todo ()
+let matterhorn_28_015 pdf =
+  Pdf.objiter
+    (fun _ o ->
+       match Pdf.lookup_direct pdf "/Type" o, Pdf.lookup_direct pdf "/S" o, Pdf.lookup_direct pdf "/CT" o with
+       | Some (Pdf.Name "/MediaClip"), Some (Pdf.Name "/MCD"), None -> merror ()
+       | _ -> ())
+    pdf
 
 (* File attachment annotations do not conform to 7.11. *)
-let matterhorn_28_016 pdf = todo ()
+let matterhorn_28_016 pdf =
+  covered_elsewhere ()
 
 (* A PrinterMark annotation is included in the logical structure. *)
 let matterhorn_28_017 pdf = todo ()
