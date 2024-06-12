@@ -8,6 +8,7 @@ o Verify compliance to PDF/UA via the Matterhorn protocol
 o Extract, edit and reapply document structure tree
 o Split structure tree when splitting PDF to save size
 o Combine structure trees when stamping PDFs
+o Report natural language on -info
 
 2.7 (February 2024)
 

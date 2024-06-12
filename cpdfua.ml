@@ -164,7 +164,8 @@ let matterhorn_10_001 pdf =
   unimpl ()
 
 (* Natural language for text in page content cannot be determined. *)
-let matterhorn_11_001 pdf = todo ()
+let matterhorn_11_001 pdf =
+  unimpl ()
 
 (* Natural language for text in Alt, ActualText and E attributes cannot be
    determined. *)

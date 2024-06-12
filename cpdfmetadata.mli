@@ -87,6 +87,8 @@ val get_viewer_pref_item : string -> Pdf.t -> string
 
 val determine_subformats : Pdf.t -> string list
 
+val language : Pdf.t -> string option
+
 val adobe : string
 val xmp : string
 val dc : string

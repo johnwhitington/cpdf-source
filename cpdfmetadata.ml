@@ -442,6 +442,11 @@ let determine_subformats pdf =
           end;
           !formats
 
+let language pdf =
+  match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/Lang"] with
+  | Some (Pdf.String x) -> Some x
+  | _ -> None
+
 let output_xmp_info ?(json=ref [("none", `Null)]) encoding pdf =
   let notjson = !json = [("none", `Null)] in
   let print_out tree title namespace name =
@@ -459,6 +464,9 @@ let output_xmp_info ?(json=ref [("none", `Null)]) encoding pdf =
     if notjson
       then Printf.printf "Subformats: %s\n" (combine_with_commas (determine_subformats pdf))
       else json =| ("Subformats", `List (map (fun x -> `String x) (determine_subformats pdf)));
+    if notjson
+      then Printf.printf "Language: %s\n" (match language pdf with None -> "" | Some x -> "\"" ^ x ^ "\"")
+      else json =| ("Language", match language pdf with None -> `Null | Some x -> `String x);
     match get_metadata pdf with
       None -> ()
     | Some metadata ->
