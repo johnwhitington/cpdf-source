@@ -447,6 +447,9 @@ let language pdf =
   | Some (Pdf.String x) -> Some x
   | _ -> None
 
+let set_language pdf s =
+  Pdf.replace_chain pdf [] "/Lang" (Pdf.String s)
+
 let output_xmp_info ?(json=ref [("none", `Null)]) encoding pdf =
   let notjson = !json = [("none", `Null)] in
   let print_out tree title namespace name =

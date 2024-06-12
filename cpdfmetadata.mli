@@ -89,6 +89,8 @@ val determine_subformats : Pdf.t -> string list
 
 val language : Pdf.t -> string option
 
+val set_language : Pdf.t -> string -> unit
+
 val adobe : string
 val xmp : string
 val dc : string

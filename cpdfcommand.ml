@@ -223,6 +223,7 @@ type op =
   | MarkAs of string
   | ExtractStructTree
   | ReplaceStructTree of string
+  | SetLanguage of string
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -369,6 +370,7 @@ let string_of_op = function
   | MarkAs _ -> "MarkAs"
   | ExtractStructTree -> "ExtractStructTree"
   | ReplaceStructTree _ -> "ReplaceStructTree"
+  | SetLanguage _ -> "SetLanguage"
 
 (* Inputs: filename, pagespec. *)
 type input_kind = 
@@ -889,7 +891,7 @@ let banned banlist = function
   | AddPageLabels | RemovePageLabels | OutputJSON | OCGCoalesce
   | OCGRename | OCGList | OCGOrderAll | PrintFontEncoding _ | TableOfContents | Typeset _ | Composition _
   | TextWidth _ | SetAnnotations _ | CopyAnnotations _ | ExtractStream _ | PrintObj _
-  | Verify _ | MarkAs _ | ExtractStructTree | ReplaceStructTree _ 
+  | Verify _ | MarkAs _ | ExtractStructTree | ReplaceStructTree _ | SetLanguage _ 
      -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
@@ -2453,6 +2455,9 @@ and specs =
    ("-display-doc-title",
       Arg.String displaydoctitle,
       " Display document's title in the title bar");
+   ("-set-language",
+      Arg.String (fun s -> setop (SetLanguage s) ()),
+      " Set the document's language");
    ("-pages",
       Arg.Unit (setop CountPages),
       " Count pages");
@@ -4477,6 +4482,10 @@ let go () =
       let pdf = get_single_pdf args.op false in
       let json = Cpdfyojson.Safe.from_file s in
         Cpdfua.replace_struct_tree pdf json;
+        write_pdf false pdf
+  | Some (SetLanguage s) ->
+      let pdf = get_single_pdf args.op false in
+        Cpdfmetadata.set_language pdf s;
         write_pdf false pdf
 
 (* Advise the user if a combination of command line flags makes little sense,
