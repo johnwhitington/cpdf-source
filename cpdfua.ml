@@ -12,6 +12,39 @@ let todo () = ()
 let not_fully_implemented () = ()
 let covered_elsewhere () = ()
 
+(* A simple type for structure trees, for doing structure checks. For now just
+   the element name, and its children. *)
+type st = E of string * st list
+
+let rec read_st_inner pdf stnode =
+  let s =
+    match Pdf.lookup_direct pdf "/S" stnode with
+    | Some (Pdf.Name s) -> s
+    | _ -> ""
+  in
+    match Pdf.lookup_direct pdf "/K" stnode with
+    | None -> E (s, [])
+    | Some (Pdf.Dictionary d) -> E (s, [read_st_inner pdf (Pdf.Dictionary d)])
+    | Some (Pdf.Integer mcd) -> E (s, []) (* marked content identifier, we drop. *)
+    | Some (Pdf.Array a) -> E (s, read_st_inner_array pdf a)
+    | _ -> error "malformed st node"
+
+and read_st_inner_array pdf nodes =
+  map (read_st_inner pdf) nodes
+
+let read_st pdf =
+  match Pdf.lookup_obj pdf pdf.Pdf.root with
+  | Pdf.Dictionary d ->
+      begin match lookup "/StructTreeRoot" d with
+      | None -> E ("/StructTreeRoot", [])
+      | Some st -> E ("/StructTreeRoot", [read_st_inner pdf st])
+      end
+  | _ -> error "read_st no root"
+
+let string_of_st st =
+  let rec convert (E (s, ks)) = `Tuple [`String s; `List (map convert ks)] in
+    Cpdfyojson.Safe.pretty_to_string (convert st)
+
 (* Content marked as Artifact is present inside tagged content. *)
 let matterhorn_01_003 pdf = todo ()
 
@@ -145,7 +178,10 @@ let matterhorn_09_004 pdf = todo ()
 
 (* A list-related structure element is used in a way that does not conform to
    Table 336 in ISO 32000-1. *)
-let matterhorn_09_005 pdf = todo ()
+let matterhorn_09_005 pdf =
+  let st = read_st pdf in
+    flprint (string_of_st st);
+    ()
 
 (* A TOC-related structure element is used in a way that does not conform to
    Table 333 in ISO 32000-1. *)
@@ -1001,6 +1037,7 @@ let extract_struct_tree pdf =
                     objs)
         end
   | _ -> error "extract_struct_tree: no root"
+
 
 (* Use JSON data to replace objects in a file. Negative objects are new ones,
    we make them positive and renumber them not to clash. Everything else must
