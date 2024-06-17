@@ -173,13 +173,52 @@ let matterhorn_07_002 pdf =
   | _ -> ()
 
 (* A table-related structure element is used in a way that does not conform to
-   the syntax defined in ISO 32000-1, Table 337. *)
-let matterhorn_09_004 pdf = todo ()
+   the syntax defined in ISO 32000-1, Table 337. We assume no nesting of whole
+   tables, since it is not excplicitly mentioned in the spec. *)
+let matterhorn_09_004 pdf =
+  let rec check_table = function
+  | E ("/Table", cs) ->
+      let cs =
+        begin match cs with
+        | E ("/Caption", _)::cs -> cs
+        | l ->
+            begin match rev cs with
+            | E ("/Caption", _)::cs -> cs
+            | cs -> cs
+            end
+        end
+      in
+        (* A) 1 or more /TRs is ok *)
+        if List.for_all (function E ("/TR", cs) -> iter check_tr cs; true | _ -> false) cs then () else
+        (* B) 0 or 1 /THead followed by 1 or n /TBody followed by 0 or 1 /TFoot *)
+        begin
+          check_thead_tbody_tfoot cs;
+          let without_thead =
+            match cs with
+            | E ("/THead", _)::cs -> cs
+            | cs -> cs
+          in
+          let without_tfoot =
+            match rev without_thead with
+            | E ("/TFoot", _)::cs -> cs
+            | cs -> cs
+          in
+            if List.exists (function E ("/TBody", _) -> false | _ -> true) without_tfoot then
+              merror_str "Top-level /Table not of required form"
+        end
+  | E (_, cs) -> iter check_table cs
+  and check_tr = function
+    | E (("/TH" | "/TD"), _) -> ()
+    | _ -> merror_str "Every /TR element must be a /TH or /TD"
+  and check_thead_tbody_tfoot node =
+    if List.exists (function E ("/TR", _) -> false | _ -> true) node then
+      merror_str "Element in /THead | /TBody | /TFoot not a /TR"
+  in
+    check_table (read_st pdf)
 
 (* A list-related structure element is used in a way that does not conform to
    Table 336 in ISO 32000-1. *)
 let matterhorn_09_005 pdf =
-  flprint "CHECKING LISTS...\n";
   let rec check_l = function
     | E ("/L", cs) ->
         (* 0 or 1 captions *)
