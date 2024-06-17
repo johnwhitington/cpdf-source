@@ -179,9 +179,29 @@ let matterhorn_09_004 pdf = todo ()
 (* A list-related structure element is used in a way that does not conform to
    Table 336 in ISO 32000-1. *)
 let matterhorn_09_005 pdf =
-  let st = read_st pdf in
-    flprint (string_of_st st);
-    ()
+  flprint "CHECKING LISTS...\n";
+  let rec check_l = function
+    | E ("/L", cs) ->
+        (* 0 or 1 captions *)
+        let cs = match cs with E ("/Caption", _)::cs | cs -> cs in
+          (* 1 or n /LI *)
+          begin match cs with
+          | [] -> merror_str "No /LI in /L"
+          | cs -> iter check_li cs
+          end
+    | E (_, cs) ->
+        iter check_l cs
+  and check_li = function
+    (* for each /LI, 1 or n /Lbl or /LBody or both *)
+    | E ("/LI", []) -> merror_str "Empty /LI"
+    | E ("/LI", cs) -> iter check_li_child cs
+    | E (_, _) -> merror_str "Unknown child of /LI"
+    (* need to check all children of /LBody too, to see if any is /L *)
+  and check_li_child = function
+    | E (("/LBody"| "/Lbl"), cs) -> iter check_l cs
+    | E (_, _) -> merror_str "Child of /LI must be /Lbl or /LBody"
+  in
+    check_l (read_st pdf)
 
 (* A TOC-related structure element is used in a way that does not conform to
    Table 333 in ISO 32000-1. *)
