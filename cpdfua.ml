@@ -244,15 +244,64 @@ let matterhorn_09_005 pdf =
 
 (* A TOC-related structure element is used in a way that does not conform to
    Table 333 in ISO 32000-1. *)
-let matterhorn_09_006 pdf = todo ()
+
+(* We test two things: a) everything under a TOC is correct; and b) There is no
+TOCI except under a TOC. *)
+let matterhorn_09_006 pdf =
+  let st = read_st pdf in
+  let seen_toc = ref false in
+    let rec check_toplevel_TOCI n =
+      begin match n with
+      | E ("/TOC", cs) -> set seen_toc
+      | E ("/TOCI", cs) -> if not !seen_toc then merror_str "TOCI without TOC above"
+      | E (_, cs) -> ()
+      end;
+      begin match n with
+      | E (_, cs) -> iter check_toplevel_TOCI cs
+      end
+   in
+   let rec check_toc_toci = function
+     | E ("/TOC", cs) ->
+         if
+           List.exists (function E (("/TOC " | "/TOCI"), _) -> false | _ -> true) cs
+         then
+           merror_str "/TOC children must be /TOC or /TOCI";
+         iter check_toc_toci cs
+     | E ("/TOCI", cs) ->
+         if
+           List.exists (function E (("/TOC " | "/Lbl" | "/Reference" | "/P" | "/NonStruct"), _) -> false | _ -> true) cs
+         then
+           merror_str "Bad child of /TOCI";
+         iter check_toc_toci cs
+     | E (_, cs) ->
+         iter check_toc_toci cs
+   in
+     check_toplevel_TOCI st;
+     check_toc_toci st
 
 (* A Ruby-related structure element is used in a way that does not conform to
    Table 338 in ISO 32000-1. *)
-let matterhorn_09_007 pdf = todo ()
+let matterhorn_09_007 pdf =
+  let st = read_st pdf in
+  let rec check_ruby = function
+    | E ("/Ruby", cs) ->
+        if List.exists (function (E (("/RB" | "/RT" | "RP"), _)) -> false | _ -> true) cs then merror () 
+    | E (_, cs) ->
+        iter check_ruby cs
+  in
+    check_ruby st
 
 (* A Warichu-related structure element is used in a way that does not conform
    to Table 338 in ISO 32000-1. *)
-let matterhorn_09_008 pdf = todo ()
+let matterhorn_09_008 pdf =
+  let st = read_st pdf in
+  let rec check_warichu = function
+    | E ("/Ruby", cs) ->
+        if List.exists (function (E (("/WT" | "/WP"), _)) -> false | _ -> true) cs then merror () 
+    | E (_, cs) ->
+        iter check_warichu cs
+  in
+    check_warichu st
 
 (* Character code cannot be mapped to Unicode. *)
 let matterhorn_10_001 pdf =
