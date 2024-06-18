@@ -1,6 +1,11 @@
 open Pdfutil
 open Cpdferror
 
+(* Implements all Matterhorn checks except for:
+
+  a) Those which require looking deep inside font files; and
+  b) Those which require reading inside the graphics stream. *)
+
 exception MatterhornError of Cpdfyojson.Safe.t
 
 exception MatterhornUnimplemented
@@ -32,7 +37,7 @@ let rec read_st_inner pdf stnode =
 and read_st_inner_array pdf nodes =
   map (read_st_inner pdf) nodes
 
-let read_st pdf =
+let read_st_basic pdf =
   match Pdf.lookup_obj pdf pdf.Pdf.root with
   | Pdf.Dictionary d ->
       begin match lookup "/StructTreeRoot" d with
@@ -40,6 +45,29 @@ let read_st pdf =
       | Some st -> E ("/StructTreeRoot", [read_st_inner pdf st])
       end
   | _ -> error "read_st no root"
+
+(* Rewrite a tree according to a rolemap. FIXME Better do the non-circularity
+   check when reading a rolemap, or this won't terminate... *)
+let rec rewrite_st rolemap (E (n, cs)) =
+  let rec rewrite_st_name rolemap n =
+    match List.assoc_opt n rolemap with
+    | Some n' -> rewrite_st_name rolemap n'
+    | None -> n
+  in
+    E (rewrite_st_name rolemap n, map (rewrite_st rolemap) cs)
+
+let read_rolemap pdf = function
+  | Pdf.Dictionary d ->
+      option_map (function (k, Pdf.Name v) -> Some (k, v) | _ -> None) d
+  | _ -> error "read_rolemap: not a rolemap"
+
+let read_st pdf =
+  let rolemap =
+    match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/StructTreeRoot"; "/RoleMap"] with
+    | Some rm -> read_rolemap pdf rm
+    | None -> []
+  in
+    rewrite_st rolemap (read_st_basic pdf)
 
 let rec st_mem p = function
   | E (s, _) when p s -> true
@@ -76,11 +104,6 @@ let standard_structure_types =
   (* 2008 ISO 3200 only *)
   "/Art"; "/BlockQuote"; "/TOC"; "/TOCI"; "/Index"; "/Private"; "/Quote";
   "/Note"; "/Reference"; "/Code"]
-
-let read_rolemap pdf = function
-  | Pdf.Dictionary d ->
-      option_map (function (k, Pdf.Name v) -> Some (k, v) | _ -> None) d
-  | _ -> error "read_rolemap: not a rolemap"
 
 let rec follow_standard rm n =
   match List.assoc_opt n rm with
