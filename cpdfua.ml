@@ -41,6 +41,10 @@ let read_st pdf =
       end
   | _ -> error "read_st no root"
 
+let rec st_mem p = function
+  | E (s, _) when p s -> true
+  | E (_, cs) -> List.exists (st_mem p) cs
+
 let string_of_st st =
   let rec convert (E (s, ks)) = `Tuple [`String s; `List (map convert ks)] in
     Cpdfyojson.Safe.pretty_to_string (convert st)
@@ -334,18 +338,50 @@ let matterhorn_11_006 pdf = todo ()
 (* <Figure> tag alternative or replacement text missing. *)
 let matterhorn_13_004 pdf = todo ()
 
+let is_hnum s =
+  match explode s with
+  | ['/'; 'H'] -> false
+  | '/'::'H'::cs ->
+      begin try ignore (int_of_string (implode cs)); true with Failure _ -> false end
+  | _ -> false
+
 (* Does use numbered headings, but the first heading tag is not <H1>. *)
-let matterhorn_14_002 pdf = todo ()
+let matterhorn_14_002 pdf =
+  let rec check_hn = function
+  | E ("/H1", cs) -> ()
+  | E (s, cs) when is_hnum s -> merror ()
+  | E (_, cs) -> iter check_hn cs
+  in
+    let st = read_st pdf in
+      check_hn st
 
 (* Numbered heading levels in descending sequence are skipped (Example: <H3>
    follows directly after <H1>). *)
-let matterhorn_14_003 pdf = todo ()
+let matterhorn_14_003 pdf =
+  let rec check_nseq n = function
+  | E (s, cs) when is_hnum s ->
+      let num = int_of_string (implode (tl (tl (explode s)))) in
+        if num > n + 1 then merror ();
+        iter (check_nseq num) cs
+  | E (_, cs) -> iter (check_nseq n) cs
+  in
+    check_nseq 0 (read_st pdf)
 
 (* A node contains more than one <H> tag. *)
-let matterhorn_14_006 pdf = todo ()
+let matterhorn_14_006 pdf =
+  let st = read_st pdf in
+  let found = ref false in
+  let rec check_hs (E (_, cs)) =
+    if length (option_map (function E ("/H", _) -> Some () | _ -> None) cs) > 1 then set found;
+    iter check_hs cs
+  in
+    check_hs st;
+    if !found then merror ()
 
 (* Document uses both <H> and <H#> tags. *)
-let matterhorn_14_007 pdf = todo ()
+let matterhorn_14_007 pdf =
+  let st = read_st pdf in
+    if st_mem (eq "/H") st && st_mem is_hnum st then merror ()
 
 (* In a table not organized with Headers attributes and IDs, a <TH> cell does
    not contain a Scope attribute. *)
