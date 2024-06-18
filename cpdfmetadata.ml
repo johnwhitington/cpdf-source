@@ -191,6 +191,19 @@ let get_viewer_pref_item name pdf =
       end
   | _ -> ""
 
+let get_markinfo_item name pdf =
+  match Pdf.lookup_direct pdf "/Root" pdf.Pdf.trailerdict with
+  | Some catalog ->
+      begin match Pdf.lookup_direct pdf "/MarkInfo" catalog with
+      | Some d ->
+          begin match Pdf.lookup_direct pdf name d with
+          | Some (Pdf.Boolean b) -> b
+          | _ -> false
+          end
+      | None -> false
+      end
+  | _ -> false
+
 let output_info ?(json=ref [("none", `Null)]) encoding pdf =
   let notjson = !json = [("none", `Null)] in
   let getstring = getstring encoding pdf in
@@ -242,6 +255,12 @@ let output_info ?(json=ref [("none", `Null)]) encoding pdf =
     json =| ("NonFullPageScreenMode", match (get_viewer_pref_item "/NonFullPageScreenMode" pdf) with "" -> `Null | x -> `String x);
     if notjson then Printf.printf "AcroForm: %s\n" (match get_catalog_item "/AcroForm" pdf with "" -> "False" | x -> x);
     json =| ("AcroForm", match (get_catalog_item "/AcroForm" pdf) with "" -> `Bool false | x -> `Bool true);
+    if notjson then Printf.printf "Marked: %s\n" (match get_markinfo_item "/Marked" pdf with true -> "True" | _ -> "False");
+    json =| ("Marked", `Bool (get_markinfo_item "/Marked" pdf));
+    if notjson then Printf.printf "UserProperties: %s\n" (match get_markinfo_item "/UserProperties" pdf with true -> "True" | _ -> "False");
+    json =| ("UserProperties", `Bool (get_markinfo_item "/UserProperties" pdf));
+    if notjson then Printf.printf "Suspects: %s\n" (match get_markinfo_item "/Suspects" pdf with true -> "True" | _ -> "False");
+    json =| ("Suspects", `Bool (get_markinfo_item "/Suspects" pdf));
     if notjson then
       begin
         Printf.printf "MediaBox: ";

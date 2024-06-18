@@ -55,7 +55,10 @@ let matterhorn_01_004 pdf = todo ()
 let matterhorn_01_005 pdf = todo ()
 
 (* Suspects entry has a value of true. *)
-let matterhorn_01_007 pdf = todo ()
+let matterhorn_01_007 pdf =
+  match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/MarkInfo"; "/Suspects"] with
+  | Some (Pdf.Boolean true) -> merror ()
+  | _ -> ()
 
 (* Here, for now, we allow the ISO 32000 and ISO 32000-2 *)
 (* FIXME which verison of PDF/UA are we doing? Can we do both? or pick? *)
