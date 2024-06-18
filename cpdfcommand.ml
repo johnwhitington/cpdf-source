@@ -221,6 +221,7 @@ type op =
   | PrintObj of int
   | Verify of string
   | MarkAs of string
+  | RemoveMark of string
   | ExtractStructTree
   | ReplaceStructTree of string
   | SetLanguage of string
@@ -368,6 +369,7 @@ let string_of_op = function
   | PrintObj _ -> "PrintObj"
   | Verify _ -> "Verify"
   | MarkAs _ -> "MarkAs"
+  | RemoveMark _ -> "RemoveMark"
   | ExtractStructTree -> "ExtractStructTree"
   | ReplaceStructTree _ -> "ReplaceStructTree"
   | SetLanguage _ -> "SetLanguage"
@@ -891,7 +893,7 @@ let banned banlist = function
   | AddPageLabels | RemovePageLabels | OutputJSON | OCGCoalesce
   | OCGRename | OCGList | OCGOrderAll | PrintFontEncoding _ | TableOfContents | Typeset _ | Composition _
   | TextWidth _ | SetAnnotations _ | CopyAnnotations _ | ExtractStream _ | PrintObj _
-  | Verify _ | MarkAs _ | ExtractStructTree | ReplaceStructTree _ | SetLanguage _ 
+  | Verify _ | MarkAs _ | RemoveMark _ | ExtractStructTree | ReplaceStructTree _ | SetLanguage _ 
      -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
@@ -2819,6 +2821,7 @@ and specs =
    ("-json", Arg.Unit (fun () -> args.format_json <- true), "Format output as JSON");
    ("-verify", Arg.String (fun s -> setop (Verify s) ()), "Verify conformance to a standard");
    ("-mark-as", Arg.String (fun s -> setop (MarkAs s) ()), "Mark as conforming to a standard");
+   ("-remove-mark", Arg.String (fun s -> setop (RemoveMark s) ()), "Remove conformance mark");
    ("-extract-struct-tree", Arg.Unit (fun () -> setop ExtractStructTree ()), "Extract structure tree in JSON format");
    ("-replace-struct-tree", Arg.String (fun s -> setop (ReplaceStructTree s) ()), "Replace structure tree from JSON");
    (* These items are undocumented *)
@@ -4471,6 +4474,14 @@ let go () =
       | "PDF/UA-1" ->
           let pdf = get_single_pdf args.op false in
             Cpdfua.mark pdf;
+            write_pdf false pdf
+      | _ -> error "Unknown standard"
+      end
+  | Some (RemoveMark standard) ->
+      begin match standard with
+      | "PDF/UA-1" ->
+          let pdf = get_single_pdf args.op false in
+            Cpdfua.remove_mark pdf;
             write_pdf false pdf
       | _ -> error "Unknown standard"
       end

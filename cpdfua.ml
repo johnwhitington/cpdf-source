@@ -1135,32 +1135,47 @@ let rec delete_pdfua_marker tree =
   | _ -> false
   in
     match tree with
-    | Cpdfmetadata.E (((rdf, "Description"), _), c) when rdf = Cpdfmetadata.rdf && List.exists is_pdfuaid c ->
-        Cpdfmetadata.D ""
+    | Cpdfmetadata.E (((rdf, "Description"), x), c) when rdf = Cpdfmetadata.rdf && List.exists is_pdfuaid c ->
+        Cpdfmetadata.E (((rdf, "Description"), x), keep (notpred is_pdfuaid) c)
     | Cpdfmetadata.E (x, children) ->
         Cpdfmetadata.E (x, map delete_pdfua_marker children)
     | x -> x
 
 let mark pdf =
   let pdf2 = if Cpdfmetadata.get_metadata pdf = None then Cpdfmetadata.create_metadata pdf else pdf in
-   pdf.Pdf.objects <- pdf2.Pdf.objects;
-   pdf.Pdf.trailerdict <- pdf2.Pdf.trailerdict;
-   pdf.Pdf.root <- pdf2.Pdf.root;
-   match Cpdfmetadata.get_metadata pdf with
-   | Some metadata ->
-       let dtd, tree = Cpdfmetadata.xmltree_of_bytes metadata in
-       let newtree =
-         begin match Cpdfmetadata.get_data_for Cpdfmetadata.pdfuaid "part" tree with
-         | Some _ -> insert_as_rdf_description pdfua_marker (delete_pdfua_marker tree)
-         | None -> insert_as_rdf_description pdfua_marker tree
-         end
-       in
-         let newbytes = Cpdfmetadata.bytes_of_xmltree (dtd, newtree) in
-         let pdf3 = Cpdfmetadata.set_metadata_from_bytes true newbytes pdf in
-           pdf.Pdf.objects <- pdf3.Pdf.objects;
-           pdf.Pdf.trailerdict <- pdf3.Pdf.trailerdict;
-           pdf.Pdf.root <- pdf3.Pdf.root
-   | None -> assert false
+    pdf.Pdf.objects <- pdf2.Pdf.objects;
+    pdf.Pdf.trailerdict <- pdf2.Pdf.trailerdict;
+    pdf.Pdf.root <- pdf2.Pdf.root;
+    match Cpdfmetadata.get_metadata pdf with
+    | Some metadata ->
+        let dtd, tree = Cpdfmetadata.xmltree_of_bytes metadata in
+        let newtree =
+          match Cpdfmetadata.get_data_for Cpdfmetadata.pdfuaid "part" tree with
+          | Some _ -> insert_as_rdf_description pdfua_marker (delete_pdfua_marker tree)
+          | None -> insert_as_rdf_description pdfua_marker tree
+        in
+          let newbytes = Cpdfmetadata.bytes_of_xmltree (dtd, newtree) in
+          let pdf3 = Cpdfmetadata.set_metadata_from_bytes true newbytes pdf in
+            pdf.Pdf.objects <- pdf3.Pdf.objects;
+            pdf.Pdf.trailerdict <- pdf3.Pdf.trailerdict;
+            pdf.Pdf.root <- pdf3.Pdf.root
+    | None -> assert false
+
+let remove_mark pdf =
+  match Cpdfmetadata.get_metadata pdf with
+  | Some metadata ->
+      let dtd, tree = Cpdfmetadata.xmltree_of_bytes metadata in
+      let newtree =
+        match Cpdfmetadata.get_data_for Cpdfmetadata.pdfuaid "part" tree with
+        | Some _ -> delete_pdfua_marker tree
+        | None -> tree
+      in
+        let newbytes = Cpdfmetadata.bytes_of_xmltree (dtd, newtree) in
+        let pdf3 = Cpdfmetadata.set_metadata_from_bytes true newbytes pdf in
+          pdf.Pdf.objects <- pdf3.Pdf.objects;
+          pdf.Pdf.trailerdict <- pdf3.Pdf.trailerdict;
+          pdf.Pdf.root <- pdf3.Pdf.root
+  | None -> ()
 
 let extract_struct_tree pdf =
   match Pdf.lookup_obj pdf pdf.Pdf.root with
