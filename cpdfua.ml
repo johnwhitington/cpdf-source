@@ -7,6 +7,7 @@ open Cpdferror
   b) Those which require reading inside the graphics stream. *)
 
 (* FIXME pass st / st2 around *)
+(* FIXME maximise chain usage *)
 
 exception MatterhornError of Cpdfyojson.Safe.t
 
@@ -499,15 +500,31 @@ let matterhorn_19_004 pdf =
 (* Name entry is missing or has an empty string as its value in an Optional
    Content Configuration Dictionary in the Configs entry in the OCProperties
    entry in the Catalog dictionary. *)
-let matterhorn_20_001 pdf = todo ()
+let matterhorn_20_001 pdf =
+  match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/OCProperties"; "/Configs"] with
+  | Some (Pdf.Array occds) ->
+      iter (function x -> match Pdf.lookup_direct pdf "/Name" x with None | Some (Pdf.Name "") -> merror () | _ -> ()) occds
+  | _ -> ()
 
 (* Name entry is missing or has an empty string as its value in an Optional
    Content Configuration Dictionary that is the value of the D entry in the
    OCProperties entry in the Catalog dictionary. *)
-let matterhorn_20_002 pdf = todo ()
+let matterhorn_20_002 pdf =
+  match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/OCProperties"; "/D"; "/Name"] with
+  | Some (Pdf.String "") | None -> merror ()
+  | _ -> ()
 
 (* An AS entry appears in an Optional Content Configuration Dictionary. *)
-let matterhorn_20_003 pdf = todo ()
+let matterhorn_20_003 pdf =
+  begin match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/OCProperties"; "/D"; "/AS"] with
+  | Some _ -> merror ()
+  | _ -> ()
+  end;
+  begin match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/OCProperties"; "/Configs"] with
+  | Some (Pdf.Array occds) ->
+      iter (function x -> match Pdf.lookup_direct pdf "/AS" x with Some _ -> merror () | _ -> ()) occds
+  | _ -> ()
+  end
 
 (* The file specification dictionary for an embedded file does not contain F
    and UF entries. *)
