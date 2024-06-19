@@ -6,6 +6,8 @@ open Cpdferror
   a) Those which require looking deep inside font files; and
   b) Those which require reading inside the graphics stream. *)
 
+(* FIXME pass st / st2 around *)
+
 exception MatterhornError of Cpdfyojson.Safe.t
 
 exception MatterhornUnimplemented
@@ -34,16 +36,26 @@ let read_a pdf stnode =
     | Pdf.Stream s -> read_single (fst !s)
     | _ -> error "read_single"
   in
-    match Pdf.lookup_direct pdf "/A" stnode with
-    | Some (Pdf.Array attrs) ->
-        let attrs = keep (function Pdf.Integer _ -> false | _ -> true) attrs in
-          flatten (map read_single attrs)
-    | Some (Pdf.Dictionary d) ->
-        read_single (Pdf.Dictionary d)
-    | Some (Pdf.Stream s) ->
-        read_single (Pdf.Stream s)
-    | Some _ -> []
-    | None -> []
+    let from_a =
+      match Pdf.lookup_direct pdf "/A" stnode with
+      | Some (Pdf.Array attrs) ->
+          let attrs = keep (function Pdf.Integer _ -> false | _ -> true) attrs in
+            flatten (map read_single attrs)
+      | Some (Pdf.Dictionary d) ->
+          read_single (Pdf.Dictionary d)
+      | Some (Pdf.Stream s) ->
+          read_single (Pdf.Stream s)
+      | Some _ -> []
+      | None -> []
+    in
+    (* For now, stick /ID, /Alt in here too. *)
+    let alt =
+      match Pdf.lookup_direct pdf "/Alt" stnode with | Some _ -> ["/Alt"] | None -> []
+    in
+    let id =
+      match Pdf.lookup_direct pdf "/ID" stnode with | Some _ -> ["/ID"] | None -> []
+    in
+      from_a @ id @ alt
 
 let rec read_st_inner pdf stnode =
   let s =
@@ -442,22 +454,47 @@ let matterhorn_15_003 pdf =
      spec, 2014 PDF/UA spec and Matterhorn protocol combined do not quite give
      enough information to know what is required. To be returned to. *)
   let rec check_th = function
-  | E2 ("/TH", attr, _) -> if not (List.mem "/Scope" attr) then merror ()
+  | E2 ("/TH", attr, _) ->
+      if not (List.mem "/Scope" attr) then merror_str "No scope, table organization not checked." (*else Printf.printf "Found /Scope in /TH\n"*)
   | E2 (_, _, cs) -> iter check_th cs
   in
     check_th (read_st2 pdf)
 
 (* <Formula> tag is missing an Alt attribute. *)
-let matterhorn_17_002 pdf = todo ()
+let matterhorn_17_002 pdf =
+  let rec check_fm = function
+  | E2 ("/Formula", attr, _) ->
+      if not (List.mem "/Alt" attr) then merror ()
+  | E2 (_, _, cs) -> iter check_fm cs
+  in
+    check_fm (read_st2 pdf)
 
 (* Unicode mapping requirements are not met. *)
-let matterhorn_17_003 pdf = todo ()
+let matterhorn_17_003 pdf =
+  unimpl ()
 
 (* ID entry of the <Note> tag is not present. *)
-let matterhorn_19_003 pdf = todo ()
+let matterhorn_19_003 pdf =
+  let rec check_note = function
+  | E2 ("/Note", attr, _) ->
+      if not (List.mem "/ID" attr) then merror ()
+  | E2 (_, _, cs) -> iter check_note cs
+  in
+    check_note (read_st2 pdf)
 
 (* ID entry of the <Note> tag is non-unique. *)
-let matterhorn_19_004 pdf = todo ()
+let matterhorn_19_004 pdf =
+  (* Looking for /Type /StructElem /N /Note /ID to exist. *)
+  (* FIXME ClassMaps here? *)
+  let ids = ref [] in
+    Pdf.objiter
+      (fun _ x ->
+         match Pdf.lookup_direct pdf "/Type" x, Pdf.lookup_direct pdf "/S" x, Pdf.lookup_direct pdf "/ID" x with
+         | Some (Pdf.Name "/StructElem"), Some (Pdf.Name "/Note"), Some (Pdf.String s) -> ids := s::!ids
+         | _ -> ())
+      pdf;
+    (* FIXME should write the big setify here, fix up in CamlPDF - this is a good example. *)
+    if length (setify !ids) < length !ids then merror ()
 
 (* Name entry is missing or has an empty string as its value in an Optional
    Content Configuration Dictionary in the Configs entry in the OCProperties
