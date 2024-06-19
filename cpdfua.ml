@@ -21,6 +21,30 @@ let covered_elsewhere () = ()
    the element name, and its children. *)
 type st = E of string * st list
 
+(* Now one which contains the attributes too. *)
+type st2 = E2 of string * string list * st2 list
+
+(* FIXME What about /C? *)
+(* FIXME What about class map? *)
+(* Read attributes. *)
+let read_a pdf stnode =
+  let rec read_single d =
+    match d with
+    | Pdf.Dictionary d -> map fst d
+    | Pdf.Stream s -> read_single (fst !s)
+    | _ -> error "read_single"
+  in
+    match Pdf.lookup_direct pdf "/A" stnode with
+    | Some (Pdf.Array attrs) ->
+        let attrs = keep (function Pdf.Integer _ -> false | _ -> true) attrs in
+          flatten (map read_single attrs)
+    | Some (Pdf.Dictionary d) ->
+        read_single (Pdf.Dictionary d)
+    | Some (Pdf.Stream s) ->
+        read_single (Pdf.Stream s)
+    | Some _ -> []
+    | None -> []
+
 let rec read_st_inner pdf stnode =
   let s =
     match Pdf.lookup_direct pdf "/S" stnode with
@@ -28,10 +52,10 @@ let rec read_st_inner pdf stnode =
     | _ -> ""
   in
     match Pdf.lookup_direct pdf "/K" stnode with
-    | None -> E (s, [])
-    | Some (Pdf.Dictionary d) -> E (s, [read_st_inner pdf (Pdf.Dictionary d)])
-    | Some (Pdf.Integer mcd) -> E (s, []) (* marked content identifier, we drop. *)
-    | Some (Pdf.Array a) -> E (s, read_st_inner_array pdf a)
+    | None -> E2 (s, read_a pdf stnode, [])
+    | Some (Pdf.Dictionary d) -> E2 (s, read_a pdf stnode, [read_st_inner pdf (Pdf.Dictionary d)])
+    | Some (Pdf.Integer mcd) -> E2 (s, read_a pdf stnode, []) (* marked content identifier, we drop. *)
+    | Some (Pdf.Array a) -> E2 (s, read_a pdf stnode, read_st_inner_array pdf a)
     | _ -> error "malformed st node"
 
 and read_st_inner_array pdf nodes =
@@ -41,33 +65,38 @@ let read_st_basic pdf =
   match Pdf.lookup_obj pdf pdf.Pdf.root with
   | Pdf.Dictionary d ->
       begin match lookup "/StructTreeRoot" d with
-      | None -> E ("/StructTreeRoot", [])
-      | Some st -> E ("/StructTreeRoot", [read_st_inner pdf st])
+      | None -> E2 ("/StructTreeRoot", [], [])
+      | Some st -> E2 ("/StructTreeRoot", [], [read_st_inner pdf st])
       end
   | _ -> error "read_st no root"
 
 (* Rewrite a tree according to a rolemap. FIXME Better do the non-circularity
    check when reading a rolemap, or this won't terminate... *)
-let rec rewrite_st rolemap (E (n, cs)) =
+let rec rewrite_st rolemap (E2 (n, attr, cs)) =
   let rec rewrite_st_name rolemap n =
     match List.assoc_opt n rolemap with
     | Some n' -> rewrite_st_name rolemap n'
     | None -> n
   in
-    E (rewrite_st_name rolemap n, map (rewrite_st rolemap) cs)
+    E2 (rewrite_st_name rolemap n, attr, map (rewrite_st rolemap) cs)
 
 let read_rolemap pdf = function
   | Pdf.Dictionary d ->
       option_map (function (k, Pdf.Name v) -> Some (k, v) | _ -> None) d
   | _ -> error "read_rolemap: not a rolemap"
 
-let read_st pdf =
+let read_st2 pdf =
   let rolemap =
     match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/StructTreeRoot"; "/RoleMap"] with
     | Some rm -> read_rolemap pdf rm
     | None -> []
   in
     rewrite_st rolemap (read_st_basic pdf)
+
+let rec st_of_st2 = function E2 (a, _, cs) -> E (a, map st_of_st2 cs)
+
+let read_st pdf =
+  st_of_st2 (read_st2 pdf)
 
 let rec st_mem p = function
   | E (s, _) when p s -> true
@@ -408,7 +437,15 @@ let matterhorn_14_007 pdf =
 
 (* In a table not organized with Headers attributes and IDs, a <TH> cell does
    not contain a Scope attribute. *)
-let matterhorn_15_003 pdf = todo ()
+let matterhorn_15_003 pdf =
+  (* For now, we complain any time a <TH> does not have a scope. The 2008 PDF
+     spec, 2014 PDF/UA spec and Matterhorn protocol combined do not quite give
+     enough information to know what is required. To be returned to. *)
+  let rec check_th = function
+  | E2 ("/TH", attr, _) -> if not (List.mem "/Scope" attr) then merror ()
+  | E2 (_, _, cs) -> iter check_th cs
+  in
+    check_th (read_st2 pdf)
 
 (* <Formula> tag is missing an Alt attribute. *)
 let matterhorn_17_002 pdf = todo ()
