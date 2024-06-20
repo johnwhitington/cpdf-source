@@ -6,7 +6,6 @@ open Cpdferror
   a) Those which require looking deep inside font files; and
   b) Those which require reading inside the graphics stream. *)
 
-(* FIXME pass st / st2 around *)
 (* FIXME maximise chain usage *)
 
 exception MatterhornError of Cpdfyojson.Safe.t
@@ -108,9 +107,6 @@ let read_st2 pdf =
 
 let rec st_of_st2 = function E2 (a, _, cs) -> E (a, map st_of_st2 cs)
 
-let read_st pdf =
-  st_of_st2 (read_st2 pdf)
-
 let rec st_mem p = function
   | E (s, _) when p s -> true
   | E (_, cs) -> List.exists (st_mem p) cs
@@ -120,16 +116,16 @@ let string_of_st st =
     Cpdfyojson.Safe.pretty_to_string (convert st)
 
 (* Content marked as Artifact is present inside tagged content. *)
-let matterhorn_01_003 pdf = todo ()
+let matterhorn_01_003 _ _ pdf = todo ()
 
 (* Tagged content is present inside content marked as Artifact. *)
-let matterhorn_01_004 pdf = todo ()
+let matterhorn_01_004 _ _ pdf = todo ()
 
 (* Content is neither marked as Artifact nor tagged as real content. *)
-let matterhorn_01_005 pdf = todo ()
+let matterhorn_01_005 _ _ pdf = todo ()
 
 (* Suspects entry has a value of true. *)
-let matterhorn_01_007 pdf =
+let matterhorn_01_007 _ _ pdf =
   match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/MarkInfo"; "/Suspects"] with
   | Some (Pdf.Boolean true) -> merror ()
   | _ -> ()
@@ -161,7 +157,7 @@ let circular rm =
 
 (* One or more non-standard tag’s mapping does not terminate with a standard
 type. *)
-let matterhorn_02_001 pdf =
+let matterhorn_02_001 _ _ pdf =
   match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/StructTreeRoot"; "/RoleMap"] with
   | Some rm ->
       let rolemap = read_rolemap pdf rm in
@@ -170,7 +166,7 @@ let matterhorn_02_001 pdf =
   | None -> ()
 
 (* A circular mapping exists. *)
-let matterhorn_02_003 pdf =
+let matterhorn_02_003 _ _ pdf =
   match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/StructTreeRoot"; "/RoleMap"] with
   | Some rm ->
       let rolemap = read_rolemap pdf rm in
@@ -178,7 +174,7 @@ let matterhorn_02_003 pdf =
   | None -> ()
 
 (* One or more standard types are remapped. *)
-let matterhorn_02_004 pdf =
+let matterhorn_02_004 _ _ pdf =
   match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/StructTreeRoot"; "/RoleMap"] with
   | Some rm ->
       let rolemap = read_rolemap pdf rm in
@@ -186,14 +182,14 @@ let matterhorn_02_004 pdf =
   | None -> ()
 
 (* Document does not contain an XMP metadata stream *)
-let matterhorn_06_001 pdf =
+let matterhorn_06_001 _ _ pdf =
   match Cpdfmetadata.get_metadata pdf with
   | Some _ -> ()
   | None -> merror ()
 
 (* The XMP metadata stream in the Catalog dictionary does not include the
    PDF/UA identifier. *)
-let matterhorn_06_002 pdf =
+let matterhorn_06_002 _ _ pdf =
   match Cpdfmetadata.get_metadata pdf with
   | Some metadata ->
       let _, tree = Cpdfmetadata.xmltree_of_bytes metadata in
@@ -204,7 +200,7 @@ let matterhorn_06_002 pdf =
   | None -> () (* case covered by test 06_001 above, no need for two failures *)
 
 (* XMP metadata stream does not contain dc:title *)
-let matterhorn_06_003 pdf =
+let matterhorn_06_003 _ _ pdf =
   match Cpdfmetadata.get_metadata pdf with
   | Some metadata ->
       let _, tree = Cpdfmetadata.xmltree_of_bytes metadata in
@@ -216,7 +212,7 @@ let matterhorn_06_003 pdf =
 
 (* ViewerPreferences dictionary of the Catalog dictionary does not contain a
    DisplayDocTitle entry. *)
-let matterhorn_07_001 pdf =
+let matterhorn_07_001 _ _ pdf =
   match Pdf.lookup_direct pdf "/Root" pdf.Pdf.trailerdict with
   | Some catalog ->
       begin match Pdf.lookup_direct pdf "/ViewerPreferences" catalog with
@@ -231,7 +227,7 @@ let matterhorn_07_001 pdf =
 
 (* ViewerPreferences dictionary of the Catalog dictionary contains a
    DisplayDocTitle entry with a value of false. *)
-let matterhorn_07_002 pdf = 
+let matterhorn_07_002 _ _ pdf = 
   match Pdf.lookup_direct pdf "/Root" pdf.Pdf.trailerdict with
   | Some catalog ->
       begin match Pdf.lookup_direct pdf "/ViewerPreferences" catalog with
@@ -247,7 +243,7 @@ let matterhorn_07_002 pdf =
 (* A table-related structure element is used in a way that does not conform to
    the syntax defined in ISO 32000-1, Table 337. We assume no nesting of whole
    tables, since it is not excplicitly mentioned in the spec. *)
-let matterhorn_09_004 pdf =
+let matterhorn_09_004 st st2 pdf =
   let rec check_table = function
   | E ("/Table", cs) ->
       let cs =
@@ -286,11 +282,11 @@ let matterhorn_09_004 pdf =
     if List.exists (function E ("/TR", _) -> false | _ -> true) node then
       merror_str "Element in /THead | /TBody | /TFoot not a /TR"
   in
-    check_table (read_st pdf)
+    check_table st
 
 (* A list-related structure element is used in a way that does not conform to
    Table 336 in ISO 32000-1. *)
-let matterhorn_09_005 pdf =
+let matterhorn_09_005 st st2 pdf =
   let rec check_l = function
     | E ("/L", cs) ->
         (* 0 or 1 captions *)
@@ -312,15 +308,14 @@ let matterhorn_09_005 pdf =
     | E (("/LBody"| "/Lbl"), cs) -> iter check_l cs
     | E (_, _) -> merror_str "Child of /LI must be /Lbl or /LBody"
   in
-    check_l (read_st pdf)
+    check_l st
 
 (* A TOC-related structure element is used in a way that does not conform to
    Table 333 in ISO 32000-1. *)
 
 (* We test two things: a) everything under a TOC is correct; and b) There is no
 TOCI except under a TOC. *)
-let matterhorn_09_006 pdf =
-  let st = read_st pdf in
+let matterhorn_09_006 st st2 pdf =
   let seen_toc = ref false in
     let rec check_toplevel_TOCI n =
       begin match n with
@@ -353,8 +348,7 @@ let matterhorn_09_006 pdf =
 
 (* A Ruby-related structure element is used in a way that does not conform to
    Table 338 in ISO 32000-1. *)
-let matterhorn_09_007 pdf =
-  let st = read_st pdf in
+let matterhorn_09_007 st st2 pdf =
   let rec check_ruby = function
     | E ("/Ruby", cs) ->
         if List.exists (function (E (("/RB" | "/RT" | "RP"), _)) -> false | _ -> true) cs then merror () 
@@ -365,8 +359,7 @@ let matterhorn_09_007 pdf =
 
 (* A Warichu-related structure element is used in a way that does not conform
    to Table 338 in ISO 32000-1. *)
-let matterhorn_09_008 pdf =
-  let st = read_st pdf in
+let matterhorn_09_008 st st2 pdf =
   let rec check_warichu = function
     | E ("/Ruby", cs) ->
         if List.exists (function (E (("/WT" | "/WP"), _)) -> false | _ -> true) cs then merror () 
@@ -376,32 +369,32 @@ let matterhorn_09_008 pdf =
     check_warichu st
 
 (* Character code cannot be mapped to Unicode. *)
-let matterhorn_10_001 pdf =
+let matterhorn_10_001 _ _ pdf =
   unimpl ()
 
 (* Natural language for text in page content cannot be determined. *)
-let matterhorn_11_001 pdf =
+let matterhorn_11_001 _ _ pdf =
   unimpl ()
 
 (* Natural language for text in Alt, ActualText and E attributes cannot be
    determined. *)
-let matterhorn_11_002 pdf = todo ()
+let matterhorn_11_002 _ _ pdf = todo ()
 
 (* Natural language in the Outline entries cannot be determined. *)
-let matterhorn_11_003 pdf = todo ()
+let matterhorn_11_003 _ _ pdf = todo ()
 
 (* Natural language in the Contents entry for annotations cannot be determined.
  *)
-let matterhorn_11_004 pdf = todo ()
+let matterhorn_11_004 _ _ pdf = todo ()
 
 (* Natural language in the TU entry for form fields cannot be determined. *)
-let matterhorn_11_005 pdf = todo ()
+let matterhorn_11_005 _ _ pdf = todo ()
 
 (* Natural language for document metadata cannot be determined. *)
-let matterhorn_11_006 pdf = todo ()
+let matterhorn_11_006 _ _ pdf = todo ()
 
 (* <Figure> tag alternative or replacement text missing. *)
-let matterhorn_13_004 pdf = todo ()
+let matterhorn_13_004 _ _ pdf = todo ()
 
 let is_hnum s =
   match explode s with
@@ -411,18 +404,17 @@ let is_hnum s =
   | _ -> false
 
 (* Does use numbered headings, but the first heading tag is not <H1>. *)
-let matterhorn_14_002 pdf =
+let matterhorn_14_002 st st2 pdf =
   let rec check_hn = function
   | E ("/H1", cs) -> ()
   | E (s, cs) when is_hnum s -> merror ()
   | E (_, cs) -> iter check_hn cs
   in
-    let st = read_st pdf in
-      check_hn st
+    check_hn st
 
 (* Numbered heading levels in descending sequence are skipped (Example: <H3>
    follows directly after <H1>). *)
-let matterhorn_14_003 pdf =
+let matterhorn_14_003 st st2 pdf =
   let rec check_nseq n = function
   | E (s, cs) when is_hnum s ->
       let num = int_of_string (implode (tl (tl (explode s)))) in
@@ -430,11 +422,10 @@ let matterhorn_14_003 pdf =
         iter (check_nseq num) cs
   | E (_, cs) -> iter (check_nseq n) cs
   in
-    check_nseq 0 (read_st pdf)
+    check_nseq 0 st
 
 (* A node contains more than one <H> tag. *)
-let matterhorn_14_006 pdf =
-  let st = read_st pdf in
+let matterhorn_14_006 st st2 pdf =
   let found = ref false in
   let rec check_hs (E (_, cs)) =
     if length (option_map (function E ("/H", _) -> Some () | _ -> None) cs) > 1 then set found;
@@ -444,13 +435,12 @@ let matterhorn_14_006 pdf =
     if !found then merror ()
 
 (* Document uses both <H> and <H#> tags. *)
-let matterhorn_14_007 pdf =
-  let st = read_st pdf in
-    if st_mem (eq "/H") st && st_mem is_hnum st then merror ()
+let matterhorn_14_007 st st2 pdf =
+  if st_mem (eq "/H") st && st_mem is_hnum st then merror ()
 
 (* In a table not organized with Headers attributes and IDs, a <TH> cell does
    not contain a Scope attribute. *)
-let matterhorn_15_003 pdf =
+let matterhorn_15_003 st st2 pdf =
   (* For now, we complain any time a <TH> does not have a scope. The 2008 PDF
      spec, 2014 PDF/UA spec and Matterhorn protocol combined do not quite give
      enough information to know what is required. To be returned to. *)
@@ -459,32 +449,32 @@ let matterhorn_15_003 pdf =
       if not (List.mem "/Scope" attr) then merror_str "No scope, table organization not checked." (*else Printf.printf "Found /Scope in /TH\n"*)
   | E2 (_, _, cs) -> iter check_th cs
   in
-    check_th (read_st2 pdf)
+    check_th st2
 
 (* <Formula> tag is missing an Alt attribute. *)
-let matterhorn_17_002 pdf =
+let matterhorn_17_002 _ st2 pdf =
   let rec check_fm = function
   | E2 ("/Formula", attr, _) ->
       if not (List.mem "/Alt" attr) then merror ()
   | E2 (_, _, cs) -> iter check_fm cs
   in
-    check_fm (read_st2 pdf)
+    check_fm st2
 
 (* Unicode mapping requirements are not met. *)
-let matterhorn_17_003 pdf =
+let matterhorn_17_003 _ _ pdf =
   unimpl ()
 
 (* ID entry of the <Note> tag is not present. *)
-let matterhorn_19_003 pdf =
+let matterhorn_19_003 st st2 pdf =
   let rec check_note = function
   | E2 ("/Note", attr, _) ->
       if not (List.mem "/ID" attr) then merror ()
   | E2 (_, _, cs) -> iter check_note cs
   in
-    check_note (read_st2 pdf)
+    check_note st2
 
 (* ID entry of the <Note> tag is non-unique. *)
-let matterhorn_19_004 pdf =
+let matterhorn_19_004 _ _ pdf =
   (* Looking for /Type /StructElem /N /Note /ID to exist. *)
   (* FIXME ClassMaps here? *)
   let ids = ref [] in
@@ -494,13 +484,12 @@ let matterhorn_19_004 pdf =
          | Some (Pdf.Name "/StructElem"), Some (Pdf.Name "/Note"), Some (Pdf.String s) -> ids := s::!ids
          | _ -> ())
       pdf;
-    (* FIXME should write the big setify here, fix up in CamlPDF - this is a good example. *)
-    if length (setify !ids) < length !ids then merror ()
+    if length (setify_large !ids) < length !ids then merror ()
 
 (* Name entry is missing or has an empty string as its value in an Optional
    Content Configuration Dictionary in the Configs entry in the OCProperties
    entry in the Catalog dictionary. *)
-let matterhorn_20_001 pdf =
+let matterhorn_20_001 _ _ pdf =
   match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/OCProperties"; "/Configs"] with
   | Some (Pdf.Array occds) ->
       iter (function x -> match Pdf.lookup_direct pdf "/Name" x with None | Some (Pdf.Name "") -> merror () | _ -> ()) occds
@@ -509,13 +498,13 @@ let matterhorn_20_001 pdf =
 (* Name entry is missing or has an empty string as its value in an Optional
    Content Configuration Dictionary that is the value of the D entry in the
    OCProperties entry in the Catalog dictionary. *)
-let matterhorn_20_002 pdf =
+let matterhorn_20_002 _ _ pdf =
   match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/OCProperties"; "/D"; "/Name"] with
   | Some (Pdf.String "") | None -> merror ()
   | _ -> ()
 
 (* An AS entry appears in an Optional Content Configuration Dictionary. *)
-let matterhorn_20_003 pdf =
+let matterhorn_20_003 _ _ pdf =
   begin match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/OCProperties"; "/D"; "/AS"] with
   | Some _ -> merror ()
   | _ -> ()
@@ -528,7 +517,7 @@ let matterhorn_20_003 pdf =
 
 (* The file specification dictionary for an embedded file does not contain F
    and UF entries. *)
-let matterhorn_21_001 pdf =
+let matterhorn_21_001 _ _ pdf =
   let from_nametree =
     match Pdf.lookup_direct pdf "/Root" pdf.Pdf.trailerdict with
     | Some catalog ->
@@ -562,7 +551,7 @@ let matterhorn_21_001 pdf =
     merror ()
 
 (* File contains the dynamicRender element with value “required”. *)
-let matterhorn_25_001 pdf =
+let matterhorn_25_001 _ _ pdf =
   let rec contains_required_dynamicRender = function
     | Cpdfmetadata.E (((_, "dynamicRender"), _), [Cpdfmetadata.D "required"]) -> true
     | Cpdfmetadata.E (_, children) -> List.exists contains_required_dynamicRender children
@@ -597,13 +586,13 @@ let matterhorn_25_001 pdf =
 
 (* The file is encrypted but does not contain a P entry in its encryption
    dictionary. *)
-let matterhorn_26_001 pdf = ()
+let matterhorn_26_001 _ _ pdf = ()
   (* Would already have failed at this point, because CamlPDF does not allow
-  the decryption of a file with no /P *)
+  the decryption of a file with no /P. FIXME Can we make it fail with the right message? *)
 
 (* The file is encrypted and does contain a P entry but the 10th bit position
    of the P entry is false. *)
-let matterhorn_26_002 pdf =
+let matterhorn_26_002 _ _ pdf =
   match pdf.Pdf.saved_encryption with
   | None -> ()
   | Some {Pdf.from_get_encryption_values = (_, _, _, p, _, _, _)} ->
@@ -611,20 +600,20 @@ let matterhorn_26_002 pdf =
 
 (* An annotation, other than of subtype Widget, Link and PrinterMark, is not a
    direct child of an <Annot> structure element. *)
-let matterhorn_28_002 pdf = todo ()
+let matterhorn_28_002 _ _ pdf = todo ()
 
 (* An annotation, other than of subtype Widget, does not have a Contents entry
    and does not have an alternative description (in the form of an Alt entry in
    the enclosing structure element). *)
-let matterhorn_28_004 pdf = todo ()
+let matterhorn_28_004 _ _ pdf = todo ()
 
 (* A form field does not have a TU entry and does not have an alternative
    description (in the form of an Alt entry in the enclosing structure
    element). *)
-let matterhorn_28_005 pdf = todo ()
+let matterhorn_28_005 _ _ pdf = todo ()
 
 (* An annotation with subtype undefined in ISO 32000 does not meet 7.18.1. *)
-let matterhorn_28_006 pdf =
+let matterhorn_28_006 _ _ pdf =
   if
     List.exists
       (fun x -> match x.Pdfannot.subtype with Pdfannot.Unknown _ -> true | _ -> false)
@@ -633,7 +622,7 @@ let matterhorn_28_006 pdf =
     merror ()
 
 (* An annotation of subtype TrapNet exists. *)
-let matterhorn_28_007 pdf =
+let matterhorn_28_007 _ _ pdf =
   if
     List.exists
       (fun x -> x.Pdfannot.subtype = Pdfannot.TrapNet)
@@ -642,7 +631,7 @@ let matterhorn_28_007 pdf =
     merror ()
 
 (* A page containing an annotation does not contain a Tabs entry *)
-let matterhorn_28_008 pdf =
+let matterhorn_28_008 _ _ pdf =
   if
     List.exists
       (fun p ->
@@ -653,7 +642,7 @@ let matterhorn_28_008 pdf =
 
 (* A page containing an annotation has a Tabs entry with a value other than S.
  *)
-let matterhorn_28_009 pdf =
+let matterhorn_28_009 _ _ pdf =
   if
     List.exists
       (fun p ->
@@ -665,14 +654,14 @@ let matterhorn_28_009 pdf =
     merror ()
 
 (* A widget annotation is not nested within a <Form> tag. *)
-let matterhorn_28_010 pdf = todo ()
+let matterhorn_28_010 _ _ pdf = todo ()
 
 (* A link annotation is not nested within a <Link> tag. *)
-let matterhorn_28_011 pdf = todo ()
+let matterhorn_28_011 _ _ pdf = todo ()
 
 (* A link annotation does not include an alternate description in its Contents
    entry. *)
-let matterhorn_28_012 pdf =
+let matterhorn_28_012 _ _ pdf =
   if
     List.exists
       (fun x -> x.Pdfannot.subtype = Pdfannot.Link && x.Pdfannot.annot_contents = None )
@@ -681,7 +670,7 @@ let matterhorn_28_012 pdf =
     merror ()
 
 (* CT entry is missing from the media clip data dictionary. *)
-let matterhorn_28_014 pdf =
+let matterhorn_28_014 _ _ pdf =
   Pdf.objiter
     (fun _ o ->
        match Pdf.lookup_direct pdf "/Type" o, Pdf.lookup_direct pdf "/S" o, Pdf.lookup_direct pdf "/CT" o with
@@ -690,7 +679,7 @@ let matterhorn_28_014 pdf =
     pdf
 
 (* Alt entry is missing from the media clip data dictionary. *)
-let matterhorn_28_015 pdf =
+let matterhorn_28_015 _ _ pdf =
   Pdf.objiter
     (fun _ o ->
        match Pdf.lookup_direct pdf "/Type" o, Pdf.lookup_direct pdf "/S" o, Pdf.lookup_direct pdf "/CT" o with
@@ -699,18 +688,19 @@ let matterhorn_28_015 pdf =
     pdf
 
 (* File attachment annotations do not conform to 7.11. *)
-let matterhorn_28_016 pdf =
+let matterhorn_28_016 _ _ pdf =
+  (* FIXME ?? *)
   covered_elsewhere ()
 
 (* A PrinterMark annotation is included in the logical structure. *)
-let matterhorn_28_017 pdf = todo ()
+let matterhorn_28_017 _ _ pdf = todo ()
 
 (* The appearance stream of a PrinterMark annotation is not marked as Artifact.
  *)
-let matterhorn_28_018 pdf = todo ()
+let matterhorn_28_018 _ _ pdf = todo ()
 
 (* A reference XObject is present. *)
-let matterhorn_30_001 pdf =
+let matterhorn_30_001 _ _ pdf =
   Pdf.objiter
     (fun _ o ->
        match Pdf.lookup_direct pdf "/Subtype" o, Pdf.lookup_direct pdf "/Ref" o with
@@ -719,7 +709,7 @@ let matterhorn_30_001 pdf =
     pdf
 
 (* Form XObject contains MCIDs and is referenced more than once. *)
-let matterhorn_30_002 pdf =
+let matterhorn_30_002 _ _ pdf =
   (* We need to consider inheritence here. What solutions do we already have
      for that, and do we need anything new? *)
   unimpl ()
@@ -727,7 +717,7 @@ let matterhorn_30_002 pdf =
 (* A Type 0 font dictionary with encoding other than Identity-H and Identity-V
    has values for Registry in both CIDSystemInfo dictionaries that are not
    identical. *)
-let matterhorn_31_001 pdf =
+let matterhorn_31_001 _ _ pdf =
   Pdf.objiter
     (fun _ o ->
        match Pdf.lookup_direct pdf "/Subtype" o, Pdf.lookup_direct pdf "/Encoding" o with
@@ -742,19 +732,19 @@ let matterhorn_31_001 pdf =
 (* A Type 0 font dictionary with encoding other than Identity-H and Identity-V
    has values for Ordering in both CIDSystemInfo dictionaries that are not
    identical. *)
-let matterhorn_31_002 pdf =
-  matterhorn_31_001 pdf
+let matterhorn_31_002 st st2 pdf =
+  matterhorn_31_001 st st2 pdf
 
 (* A Type 0 font dictionary with encoding other than Identity-H and Identity-V
    has a value for Supplement in the CIDSystemInfo dictionary of the CID font
    that is less than the value for Supplement in the CIDSystemInfo dictionary
    of the CMap. *)
-let matterhorn_31_003 pdf =
-  matterhorn_31_001 pdf
+let matterhorn_31_003 st st2 pdf =
+  matterhorn_31_001 st st2 pdf
 
 (* A Type 2 CID font contains neither a stream nor the name Identity as the
    value of the CIDToGIDMap entry. *)
-let matterhorn_31_004 pdf =
+let matterhorn_31_004 _ _ pdf =
   Pdf.objiter
     (fun _ n ->
        match Pdf.lookup_direct pdf "/Subtype" n with
@@ -767,7 +757,7 @@ let matterhorn_31_004 pdf =
     pdf
 
 (* A Type 2 CID font does not contain a CIDToGIDMap entry. *)
-let matterhorn_31_005 pdf =
+let matterhorn_31_005 _ _ pdf =
   Pdf.objiter
     (fun _ n ->
        match Pdf.lookup_direct pdf "/Subtype" n with
@@ -842,7 +832,7 @@ let cmap_names =
    "/Identity-H";
    "/Identity-V"]
 
-let matterhorn_31_006 pdf =
+let matterhorn_31_006 _ _ pdf =
   Pdf.objiter
     (fun _ o ->
      match Pdf.lookup_direct pdf "/Subtype" o with
@@ -856,65 +846,65 @@ let matterhorn_31_006 pdf =
 
 (* The WMode entry in a CMap dictionary is not identical to the WMode value in
 the CMap stream. *)
-let matterhorn_31_007 pdf =
+let matterhorn_31_007 _ _ pdf =
   unimpl ()
 
 (* A CMap references another CMap which is not listed in ISO 32000-1:2008,
    9.7.5.2, Table 118. *)
-let matterhorn_31_008 pdf =
+let matterhorn_31_008 _ _ pdf =
   unimpl ()
 
 (* For a font used by text intended to be rendered the font program is not
    embedded. *)
 (* NB This, for now, reports all unembedded fonts. *)
-let matterhorn_31_009 pdf =
+let matterhorn_31_009 _ _ pdf =
   let l = Cpdffont.missing_fonts_return pdf (ilist 1 (Pdfpage.endpage pdf)) in
     if l <> [] then
       raise (MatterhornError (`List (map (fun x -> `String x) l)))
 
 (* For a font used by text the font program is embedded but it does not contain
    glyphs for all of the glyphs referenced by the text used for rendering. *)
-let matterhorn_31_011 pdf =
+let matterhorn_31_011 _ _ pdf =
   unimpl ()
 
 (* The FontDescriptor dictionary of an embedded Type 1 font contains a CharSet
    string, but at least one of the glyphs present in the font program is not
    listed in the CharSet string. *)
-let matterhorn_31_012 pdf =
+let matterhorn_31_012 _ _ pdf =
   unimpl ()
 
 (* The FontDescriptor dictionary of an embedded Type 1 font contains a CharSet
    string, but at least one of the glyphs listed in the CharSet string is not
    present in the font program. *)
-let matterhorn_31_013 pdf =
+let matterhorn_31_013 _ _ pdf =
   unimpl ()
 
 (* The FontDescriptor dictionary of an embedded CID font contains a CIDSet
    string, but at least one of the glyphs present in the font program is not
    listed in the CIDSet string. *)
-let matterhorn_31_014 pdf =
+let matterhorn_31_014 _ _ pdf =
   unimpl ()
 
 (* The FontDescriptor dictionary of an embedded CID font contains a CIDSet
    string, but at least one of the glyphs listed in the CIDSet string is not
    present in the font program. *)
-let matterhorn_31_015 pdf =
+let matterhorn_31_015 _ _ pdf =
   unimpl ()
 
 (* For one or more glyphs, the glyph width information in the font dictionary
    and in the embedded font program differ by more than 1/1000 unit. *)
-let matterhorn_31_016 pdf =
+let matterhorn_31_016 _ _ pdf =
   unimpl ()
 
 (* A non-symbolic TrueType font is used for rendering, but none of the cmap
    entries in the embedded font program is a non-symbolic cmap. *)
-let matterhorn_31_017 pdf =
+let matterhorn_31_017 _ _ pdf =
   unimpl ()
 
 (* A non-symbolic TrueType font is used for rendering, but for at least one
    glyph to be rendered the glyph cannot be looked up by any of the
    non-symbolic cmap entries in the embedded font program. *)
-let matterhorn_31_018 pdf =
+let matterhorn_31_018 _ _ pdf =
   unimpl ()
 
 (* The font dictionary for a non-symbolic TrueType font does not contain an
@@ -928,7 +918,7 @@ let is_non_symbolic pdf o =
       end
   | None -> true 
 
-let matterhorn_31_019 pdf =
+let matterhorn_31_019 _ _ pdf =
   Pdf.objiter
     (fun _ o ->
        match Pdf.lookup_direct pdf "/Subtype" o with
@@ -942,7 +932,7 @@ let matterhorn_31_019 pdf =
 
 (* The font dictionary for a non-symbolic TrueType font contains an Encoding
    dictionary which does not contain a BaseEncoding entry. *)
-let matterhorn_31_020 pdf =
+let matterhorn_31_020 _ _ pdf =
   Pdf.objiter
     (fun _ o ->
        match Pdf.lookup_direct pdf "/Subtype" o with
@@ -961,7 +951,7 @@ let matterhorn_31_020 pdf =
 (* The value for either the Encoding entry or the BaseEncoding entry in the
    Encoding dictionary in a non-symbolic TrueType font dictionary is neither
    MacRomanEncoding nor WinAnsiEncoding. *)
-let matterhorn_31_021 pdf =
+let matterhorn_31_021 _ _ pdf =
   Pdf.objiter
     (fun _ o ->
        match Pdf.lookup_direct pdf "/Subtype" o with
@@ -983,7 +973,7 @@ let matterhorn_31_021 pdf =
 (* The Differences array in the Encoding entry in a non-symbolic TrueType font
    dictionary contains one or more glyph names which are not listed in the
    Adobe Glyph List. *)
-let matterhorn_31_022 pdf =
+let matterhorn_31_022 _ _ pdf =
   Pdf.objiter
     (fun _ o ->
        match Pdf.lookup_direct pdf "/Subtype" o with
@@ -1005,12 +995,12 @@ let matterhorn_31_022 pdf =
 (* The Differences array is present in the Encoding entry in a non-symbolic
    TrueType font dictionary but the embedded font program does not contain a
    (3,1) Microsoft Unicode cmap. *)
-let matterhorn_31_023 pdf =
+let matterhorn_31_023 _ _ pdf =
   unimpl ()
 
 (* The Encoding entry is present in the font dictionary for a symbolic TrueType
    font. *)
-let matterhorn_31_024 pdf =
+let matterhorn_31_024 _ _ pdf =
   Pdf.objiter
     (fun _ o ->
        match Pdf.lookup_direct pdf "/Subtype" o with
@@ -1023,12 +1013,12 @@ let matterhorn_31_024 pdf =
     pdf
 
 (* The embedded font program for a symbolic TrueType font contains no cmap. *)
-let matterhorn_31_025 pdf =
+let matterhorn_31_025 _ _ pdf =
   unimpl ()
 
 (* The embedded font program for a symbolic TrueType font contains more than
    one cmap, but none of the cmap entries is a (3,0) Microsoft Symbol cmap. *)
-let matterhorn_31_026 pdf =
+let matterhorn_31_026 _ _ pdf =
   unimpl ()
 
 (* A font dictionary does not contain the ToUnicode entry and none of the
@@ -1039,7 +1029,7 @@ let matterhorn_31_026 pdf =
    Annex D; the font is a Type 0 font, and its descendant CIDFont uses
    Adobe-GB1, Adobe-CNS1, Adobe-Japan1 or Adobe-Korea1 character collections;
    the font is a non-symbolic TrueType font. *)
-let matterhorn_31_027 pdf =
+let matterhorn_31_027 _ _ pdf =
   not_fully_implemented ();
   (* Here, we implement most of this one, but can't check the set of referenced
      glyphs for Type1 / Type3. *)
@@ -1099,7 +1089,7 @@ let check_unicode tu n =
   mem n (flatten (map (fun x -> Pdftext.codepoints_of_utf16be (snd x)) tu))
 
 (* One or more Unicode values specified in the ToUnicode CMap are zero (0). *)
-let matterhorn_31_028 pdf =
+let matterhorn_31_028 _ _ pdf =
   iter
     (fun i ->
       let tu = Pdftext.parse_tounicode pdf (Pdf.lookup_obj pdf i) in
@@ -1108,7 +1098,7 @@ let matterhorn_31_028 pdf =
 
 (* One or more Unicode values specified in the ToUnicode CMap are equal to
    either U+FEFF or U+FFFE. *)
-let matterhorn_31_029 pdf =
+let matterhorn_31_029 _ _ pdf =
   iter
     (fun i ->
       let tu = Pdftext.parse_tounicode pdf (Pdf.lookup_obj pdf i) in
@@ -1117,7 +1107,7 @@ let matterhorn_31_029 pdf =
 
 (* One or more characters used in text showing operators reference the .notdef
    glyph. *)
-let matterhorn_31_030 pdf =
+let matterhorn_31_030 _ _ pdf =
   unimpl ()
 
 let matterhorn =
@@ -1211,13 +1201,15 @@ let matterhorn =
   ]
 
 let test_matterhorn pdf =
-  option_map
-    (fun (name, error, section, test) ->
-      try test pdf; None with
-       | MatterhornError extra -> Some (name, error, section, extra)
-       | MatterhornUnimplemented -> None
-       | e -> Some (name, "Incomplete", section, `String ("ERROR: " ^ Printexc.to_string e)))
-    matterhorn
+  let st2 = read_st2 pdf in
+  let st = st_of_st2 st2 in
+    option_map
+      (fun (name, error, section, test) ->
+        try test st st2 pdf; None with
+         | MatterhornError extra -> Some (name, error, section, extra)
+         | MatterhornUnimplemented -> None
+         | e -> Some (name, "Incomplete", section, `String ("ERROR: " ^ Printexc.to_string e)))
+      matterhorn
 
 let test_matterhorn_print pdf =
   iter
