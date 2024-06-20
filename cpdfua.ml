@@ -80,8 +80,7 @@ let read_st_basic pdf =
       end
   | _ -> error "read_st no root"
 
-(* Rewrite a tree according to a rolemap. FIXME Better do the non-circularity
-   check when reading a rolemap, or this won't terminate... *)
+(* Rewrite a tree according to a rolemap. *)
 let rec rewrite_st rolemap (E2 (n, attr, cs)) =
   let rec rewrite_st_name rolemap n =
     match List.assoc_opt n rolemap with
@@ -163,7 +162,8 @@ let matterhorn_02_003 _ _ pdf =
   match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/StructTreeRoot"; "/RoleMap"] with
   | Some rm ->
       let rolemap = read_rolemap pdf rm in
-        if circular rolemap then merror ()
+        if circular rolemap then
+          merror_str "STOP. If rolemap circular, cannot proceed with other checks."
   | None -> ()
 
 (* One or more standard types are remapped. *)
@@ -548,7 +548,8 @@ let matterhorn_25_001 _ _ pdf =
    dictionary. *)
 let matterhorn_26_001 _ _ pdf = ()
   (* Would already have failed at this point, because CamlPDF does not allow
-  the decryption of a file with no /P. FIXME Can we make it fail with the right message? *)
+  the decryption of a file with no /P. So this is never reported. A file without
+  a /P is simply reported as malformed upon reading. *)
 
 (* The file is encrypted and does contain a P entry but the 10th bit position
    of the P entry is false. *)
@@ -1076,8 +1077,8 @@ let matterhorn =
    ("01-005", "Content is neither marked as Artifact nor tagged as real content.", "UA1:7-1-2", matterhorn_01_005);
    ("01-007", "Suspects entry has a value of true.", "UA1:7-1-11", matterhorn_01_007);
    ("02-001", "One or more non-standard tag’s mapping does not terminate with a standard type.", "UA1:7.1-3", matterhorn_02_001);
-   ("02-002", "A circular mapping exists.", "UA1:7.1-3", matterhorn_02_003);
-   ("02-003", "One or more standard types are remapped.", "UA1:7.1-4", matterhorn_02_004);
+   ("02-003", "A circular mapping exists.", "UA1:7.1-3", matterhorn_02_003);
+   ("02-004", "One or more standard types are remapped.", "UA1:7.1-4", matterhorn_02_004);
    ("06-001", "Document does not contain an XMP metadata stream", "UA1:7.1-8", matterhorn_06_001);
    ("06-002", "The XMP metadata stream in the Catalog dictionary does not include the PDF/UA identifier.", "UA1:5", matterhorn_06_002);
    ("06-003", "XMP metadata stream does not contain dc:title", "UA1:7.1-8", matterhorn_06_003);
@@ -1161,15 +1162,22 @@ let matterhorn =
   ]
 
 let test_matterhorn pdf =
-  let st2 = read_st2 pdf in
-  let st = st_of_st2 st2 in
-    option_map
-      (fun (name, error, section, test) ->
-        try test st st2 pdf; None with
-         | MatterhornError extra -> Some (name, error, section, extra)
-         | MatterhornUnimplemented -> None
-         | e -> Some (name, "Incomplete", section, `String ("ERROR: " ^ Printexc.to_string e)))
-      matterhorn
+  (* A circularity in the role map prevents all structure checks, so we do it first at stop if it fails. *)
+  let circularity_error =
+    try matterhorn_02_003 0 0 pdf; [] with
+      MatterhornError (`String s) ->
+        [("02-003", "A circular mapping exists.", "UA1:7.1-3", `String s)]
+  in
+  if circularity_error <> [] then circularity_error else
+    let st2 = read_st2 pdf in
+    let st = st_of_st2 st2 in
+      option_map
+        (fun (name, error, section, test) ->
+          try test st st2 pdf; None with
+           | MatterhornError extra -> Some (name, error, section, extra)
+           | MatterhornUnimplemented -> None
+           | e -> Some (name, "Incomplete", section, `String ("ERROR: " ^ Printexc.to_string e)))
+        matterhorn
 
 let test_matterhorn_print pdf =
   iter
