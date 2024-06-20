@@ -46,14 +46,17 @@ let read_a pdf stnode =
       | Some _ -> []
       | None -> []
     in
-    (* For now, stick /ID, /Alt in here too. *)
+    (* For now, stick /ID, /Alt, /ActualText in here too. Eventually, move to prevent crashes. *)
     let alt =
       match Pdf.lookup_direct pdf "/Alt" stnode with | Some _ -> ["/Alt"] | None -> []
     in
     let id =
       match Pdf.lookup_direct pdf "/ID" stnode with | Some _ -> ["/ID"] | None -> []
     in
-      from_a @ id @ alt
+    let at =
+      match Pdf.lookup_direct pdf "/ActualText" stnode with | Some _ -> ["/ActualText"] | None -> []
+    in
+      from_a @ id @ at @ alt
 
 let rec read_st_inner pdf stnode =
   let s =
@@ -371,7 +374,15 @@ let matterhorn_11_005 _ _ pdf = todo ()
 let matterhorn_11_006 _ _ pdf = todo ()
 
 (* <Figure> tag alternative or replacement text missing. *)
-let matterhorn_13_004 _ _ pdf = todo ()
+let matterhorn_13_004 _ st2 pdf =
+  let rec check_fig = function
+  | E2 ("/Figure", attrs, cs) ->
+      if not (mem "/Alt" attrs || mem "/ActualText" attrs) then merror ();
+      iter check_fig cs
+  | E2 (_, _, cs) ->
+      iter check_fig cs
+  in
+    check_fig st2
 
 let is_hnum s =
   match explode s with
