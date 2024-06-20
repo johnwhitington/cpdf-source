@@ -6,8 +6,6 @@ open Cpdferror
   a) Those which require looking deep inside font files; and
   b) Those which require reading inside the graphics stream. *)
 
-(* FIXME maximise chain usage *)
-
 exception MatterhornError of Cpdfyojson.Safe.t
 
 exception MatterhornUnimplemented
@@ -213,31 +211,15 @@ let matterhorn_06_003 _ _ pdf =
 (* ViewerPreferences dictionary of the Catalog dictionary does not contain a
    DisplayDocTitle entry. *)
 let matterhorn_07_001 _ _ pdf =
-  match Pdf.lookup_direct pdf "/Root" pdf.Pdf.trailerdict with
-  | Some catalog ->
-      begin match Pdf.lookup_direct pdf "/ViewerPreferences" catalog with
-      | Some d ->
-          begin match Pdf.lookup_direct pdf "/DisplayDocTitle" d with
-          | Some _ -> ()
-          | None -> merror ()
-          end
-      | None -> merror ()
-      end
-  | _ -> merror ()
+  match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/ViewerPreferences"; "/DisplayDocTitle"] with
+  | None -> merror ()
+  | _ -> ()
 
 (* ViewerPreferences dictionary of the Catalog dictionary contains a
    DisplayDocTitle entry with a value of false. *)
 let matterhorn_07_002 _ _ pdf = 
-  match Pdf.lookup_direct pdf "/Root" pdf.Pdf.trailerdict with
-  | Some catalog ->
-      begin match Pdf.lookup_direct pdf "/ViewerPreferences" catalog with
-      | Some d ->
-          begin match Pdf.lookup_direct pdf "/DisplayDocTitle" d with
-          | Some (Pdf.Boolean false) -> merror ()
-          | _ -> ()
-          end
-      | None -> ()
-      end
+  match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/ViewerPreferences"; "/DisplayDocTitle"] with
+  | Some (Pdf.Boolean false) -> merror ()
   | _ -> ()
 
 (* A table-related structure element is used in a way that does not conform to
@@ -519,18 +501,9 @@ let matterhorn_20_003 _ _ pdf =
    and UF entries. *)
 let matterhorn_21_001 _ _ pdf =
   let from_nametree =
-    match Pdf.lookup_direct pdf "/Root" pdf.Pdf.trailerdict with
-    | Some catalog ->
-        begin match Pdf.lookup_direct pdf "/Names" catalog with
-        | Some names ->
-            begin match Pdf.lookup_direct pdf "/EmbeddedFiles" names with
-            | Some embeddedfiles -> 
-                map snd (Pdf.contents_of_nametree pdf embeddedfiles)
-            | None -> []
-            end
-        | None -> []
-        end
-    | None -> []
+    match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/Names"; "/EmbeddedFiles"] with
+    | Some embeddedfiles -> map snd (Pdf.contents_of_nametree pdf embeddedfiles)
+    | _ -> []
   in
   let from_annots =
     option_map
@@ -557,32 +530,24 @@ let matterhorn_25_001 _ _ pdf =
     | Cpdfmetadata.E (_, children) -> List.exists contains_required_dynamicRender children
     | Cpdfmetadata.D _ -> false
   in
-    match Pdf.lookup_direct pdf "/Root" pdf.Pdf.trailerdict with
-    | Some catalog ->
-        begin match Pdf.lookup_direct pdf "/AcroForm" catalog with
-        | Some d ->
-            begin match Pdf.lookup_direct pdf "/XFA" d with
-            | Some (Pdf.Array xfa) ->
-                begin match option_map (function (Pdf.String "config", x) -> Some x | _ -> None) (pairs xfa) with
-                | [config] ->
-                    begin match Pdf.direct pdf config with
-                    | Pdf.Stream _ as s ->
-                      Pdfcodec.decode_pdfstream pdf s;
-                      begin match s with
-                      | Pdf.Stream {contents = _, Pdf.Got xmlstream} ->
-                          let _, tree = Cpdfmetadata.xmltree_of_bytes xmlstream in
-                            if contains_required_dynamicRender tree then merror ()
-                      | _ -> assert false
-                      end
-                    | _ -> ()
-                    end
-                | _ -> ()
-                end
+    match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/AcroForm"; "/XFA"] with
+    | Some (Pdf.Array xfa) ->
+        begin match option_map (function (Pdf.String "config", x) -> Some x | _ -> None) (pairs xfa) with
+        | [config] ->
+            begin match Pdf.direct pdf config with
+            | Pdf.Stream _ as s ->
+              Pdfcodec.decode_pdfstream pdf s;
+              begin match s with
+              | Pdf.Stream {contents = _, Pdf.Got xmlstream} ->
+                  let _, tree = Cpdfmetadata.xmltree_of_bytes xmlstream in
+                    if contains_required_dynamicRender tree then merror ()
+              | _ -> assert false
+              end
             | _ -> ()
             end
         | _ -> ()
         end
-    | None -> ()
+    | _ -> ()
 
 (* The file is encrypted but does not contain a P entry in its encryption
    dictionary. *)
