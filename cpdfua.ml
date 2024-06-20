@@ -128,23 +128,18 @@ let matterhorn_01_007 _ _ pdf =
   | Some (Pdf.Boolean true) -> merror ()
   | _ -> ()
 
-(* Here, for now, we allow the ISO 32000 and ISO 32000-2 *)
-(* FIXME which verison of PDF/UA are we doing? Can we do both? or pick? *)
-let standard_structure_types =
-  ["/Document"; "/DocumentFragment"; "/Part"; "/Sect"; "/Div"; "/Aside";
-  "/NonStruct"; "/P"; "/H1"; "/H2"; "/H3"; "/H4"; "/H5"; "/H6"; "/H"; "/Title";
-  "/FENote"; "/Sub"; "/Lbl"; "/Span"; "/Em"; "/Strong"; "/Link"; "/Annot";
+let standard_structure_types_2008 =
+  ["/Document"; "/Part"; "/Sect"; "/Div"; "/NonStruct"; "/P"; "/H1"; "/H2";
+  "/H3"; "/H4"; "/H5"; "/H6"; "/H"; "/Lbl"; "/Span"; "/Link"; "/Annot";
   "/Form"; "/Ruby"; "/RB"; "/RT"; "/RP"; "/Warichu"; "/WT"; "/WP"; "/L"; "/LI";
   "/LBody"; "/Table"; "/TR"; "/TH"; "/TD"; "/THead"; "/TBody"; "/TFoot";
-  "/Caption"; "/Figure"; "/Formula"; "/Artifact";
-  (* 2008 ISO 3200 only *)
-  "/Art"; "/BlockQuote"; "/TOC"; "/TOCI"; "/Index"; "/Private"; "/Quote";
-  "/Note"; "/Reference"; "/Code"]
+  "/Caption"; "/Figure"; "/Formula"; "/Art"; "/BlockQuote"; "/TOC"; "/TOCI";
+  "/Index"; "/Private"; "/Quote"; "/Note"; "/Reference"; "/Code"; "/BibEntry"]
 
 let rec follow_standard rm n =
   match List.assoc_opt n rm with
   | None -> raise Exit
-  | Some x when mem x standard_structure_types -> ()
+  | Some x when mem x standard_structure_types_2008 -> ()
   | Some x -> follow_standard rm x
 
 let circular rm =
@@ -176,7 +171,7 @@ let matterhorn_02_004 _ _ pdf =
   match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/StructTreeRoot"; "/RoleMap"] with
   | Some rm ->
       let rolemap = read_rolemap pdf rm in
-      if List.exists (function k -> mem k standard_structure_types) (map fst rolemap) then merror ()
+      if List.exists (function k -> mem k standard_structure_types_2008) (map fst rolemap) then merror ()
   | None -> ()
 
 (* Document does not contain an XMP metadata stream *)
