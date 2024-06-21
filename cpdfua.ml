@@ -2,7 +2,6 @@ open Pdfutil
 open Cpdferror
 
 (* Implements all Matterhorn checks except for:
-
   a) Those which require looking deep inside font files; and
   b) Those which require reading inside the graphics stream. *)
 
@@ -13,9 +12,6 @@ exception MatterhornUnimplemented
 let merror () = raise (MatterhornError `Null)
 let merror_str s = raise (MatterhornError (`String s))
 let unimpl () = raise MatterhornUnimplemented
-let todo () = ()
-let not_fully_implemented () = ()
-let covered_elsewhere () = ()
 
 (* A simple type for structure trees, for doing structure checks. For now just
    the element name, and its children. *)
@@ -116,13 +112,13 @@ let string_of_st st =
     Cpdfyojson.Safe.pretty_to_string (convert st)
 
 (* Content marked as Artifact is present inside tagged content. *)
-let matterhorn_01_003 _ _ pdf = todo ()
+let matterhorn_01_003 _ _ pdf = unimpl ()
 
 (* Tagged content is present inside content marked as Artifact. *)
-let matterhorn_01_004 _ _ pdf = todo ()
+let matterhorn_01_004 _ _ pdf = unimpl ()
 
 (* Content is neither marked as Artifact nor tagged as real content. *)
-let matterhorn_01_005 _ _ pdf = todo ()
+let matterhorn_01_005 _ _ pdf = unimpl ()
 
 (* Suspects entry has a value of true. *)
 let matterhorn_01_007 _ _ pdf =
@@ -358,20 +354,20 @@ let matterhorn_11_001 _ _ pdf =
 
 (* Natural language for text in Alt, ActualText and E attributes cannot be
    determined. *)
-let matterhorn_11_002 _ _ pdf = todo ()
+let matterhorn_11_002 _ _ pdf = unimpl ()
 
 (* Natural language in the Outline entries cannot be determined. *)
-let matterhorn_11_003 _ _ pdf = todo ()
+let matterhorn_11_003 _ _ pdf = unimpl ()
 
 (* Natural language in the Contents entry for annotations cannot be determined.
  *)
-let matterhorn_11_004 _ _ pdf = todo ()
+let matterhorn_11_004 _ _ pdf = unimpl ()
 
 (* Natural language in the TU entry for form fields cannot be determined. *)
-let matterhorn_11_005 _ _ pdf = todo ()
+let matterhorn_11_005 _ _ pdf = unimpl ()
 
 (* Natural language for document metadata cannot be determined. *)
-let matterhorn_11_006 _ _ pdf = todo ()
+let matterhorn_11_006 _ _ pdf = unimpl ()
 
 (* <Figure> tag alternative or replacement text missing. *)
 let matterhorn_13_004 _ st2 pdf =
@@ -616,7 +612,8 @@ let matterhorn_28_004 _ _ pdf =
 (* A form field does not have a TU entry and does not have an alternative
    description (in the form of an Alt entry in the enclosing structure
    element). *)
-let matterhorn_28_005 _ _ pdf = todo ()
+let matterhorn_28_005 _ _ pdf =
+  unimpl ()
 
 (* An annotation with subtype undefined in ISO 32000 does not meet 7.18.1. *)
 let matterhorn_28_006 _ _ pdf =
@@ -715,8 +712,8 @@ let matterhorn_28_015 _ _ pdf =
 
 (* File attachment annotations do not conform to 7.11. *)
 let matterhorn_28_016 _ _ pdf =
-  (* FIXME ?? *)
-  covered_elsewhere ()
+  (* Covered by 21_001 above *)
+  ()
 
 (* A PrinterMark annotation is included in the logical structure. *)
 let matterhorn_28_017 _ _ pdf =
@@ -728,7 +725,8 @@ let matterhorn_28_017 _ _ pdf =
 
 (* The appearance stream of a PrinterMark annotation is not marked as Artifact.
  *)
-let matterhorn_28_018 _ _ pdf = todo ()
+let matterhorn_28_018 _ _ pdf =
+  unimpl ()
 
 (* A reference XObject is present. *)
 let matterhorn_30_001 _ _ pdf =
@@ -1061,7 +1059,6 @@ let matterhorn_31_026 _ _ pdf =
    Adobe-GB1, Adobe-CNS1, Adobe-Japan1 or Adobe-Korea1 character collections;
    the font is a non-symbolic TrueType font. *)
 let matterhorn_31_027 _ _ pdf =
-  not_fully_implemented ();
   (* Here, we implement most of this one, but can't check the set of referenced
      glyphs for Type1 / Type3. *)
   let c1 o =
@@ -1343,7 +1340,6 @@ let extract_struct_tree pdf =
                     objs)
         end
   | _ -> error "extract_struct_tree: no root"
-
 
 (* Use JSON data to replace objects in a file. Negative objects are new ones,
    we make them positive and renumber them not to clash. Everything else must
