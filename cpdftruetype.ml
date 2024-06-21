@@ -504,6 +504,9 @@ let find_main encoding subset =
     in
       (first, splitinto 224 rest)
 
+let collecting_cmaps = ref false
+let collected_cmaps = ref []
+
 let parse ~subset data encoding =
   let mk_b byte_offset = bitbytes_of_input (let i = input_of_bytes data in i.seek_in byte_offset; i) in
   let b = mk_b 0 in
@@ -547,7 +550,9 @@ let parse ~subset data encoding =
             in
             let ascent, descent, capheight, xheight, avgwidth =
               match os2 with
-              | None -> raise (Pdf.PDFError "No os/2 table found in truetype font")
+              | None ->
+                  if !collecting_cmaps then (0, 0, 0, 0, 0) else
+                    raise (Pdf.PDFError "No os/2 table found in truetype font")
               | Some (o, l) -> let b = mk_b (i32toi o) in read_os2_table unitsPerEm b (i32toi l)
             in
             let italicangle =
@@ -579,6 +584,7 @@ let parse ~subset data encoding =
                         let subtable_offset = read_ulong b in
                           if !dbg then Printf.printf "subtable %i. platform_id = %i, encoding_id = %i, subtable_offset = %li\n"
                             x platform_id encoding_id subtable_offset;
+                        collected_cmaps := (platform_id, encoding_id)::!collected_cmaps;
                         let b = mk_b (i32toi cmapoffset + i32toi subtable_offset) in
                         let fmt = read_ushort b in
                         let lngth = read_ushort b in
@@ -684,3 +690,11 @@ let parse ~subset data encoding =
 let parse ~subset data encoding =
   try parse ~subset data encoding with
     e -> raise (Cpdferror.error ("Failed to parse TrueType font: " ^ Printexc.to_string e))
+
+(** Return the list of cmaps from a font file (used for PDF/UA verification). *)
+let cmaps data =
+  set collecting_cmaps;
+  collected_cmaps := [];
+  let _ = try ignore (parse ~subset:[] data Pdftext.WinAnsiEncoding) with e -> () in
+  clear collecting_cmaps;
+  !collected_cmaps

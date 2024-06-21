@@ -925,19 +925,6 @@ let matterhorn_31_015 _ _ pdf =
 let matterhorn_31_016 _ _ pdf =
   unimpl ()
 
-(* A non-symbolic TrueType font is used for rendering, but none of the cmap
-   entries in the embedded font program is a non-symbolic cmap. *)
-let matterhorn_31_017 _ _ pdf =
-  unimpl ()
-
-(* A non-symbolic TrueType font is used for rendering, but for at least one
-   glyph to be rendered the glyph cannot be looked up by any of the
-   non-symbolic cmap entries in the embedded font program. *)
-let matterhorn_31_018 _ _ pdf =
-  unimpl ()
-
-(* The font dictionary for a non-symbolic TrueType font does not contain an
-   Encoding entry. *)
 let is_non_symbolic pdf o =
   match Pdf.lookup_direct pdf "/FontDescriptor" o with
   | Some fd ->
@@ -947,6 +934,43 @@ let is_non_symbolic pdf o =
       end
   | None -> true 
 
+let truetype_fontfile pdf o =
+  match Pdf.lookup_chain pdf o ["/FontDescriptor"; "/FontFile2"] with
+  | Some (Pdf.Stream s) ->
+      Pdfcodec.decode_pdfstream_until_unknown pdf (Pdf.Stream s);
+      begin match s with
+      | {contents = (_, Pdf.Got bs)} -> Some bs
+      | _ -> None
+      end
+  | _ -> None
+
+(* A non-symbolic TrueType font is used for rendering, but none of the cmap
+   entries in the embedded font program is a non-symbolic cmap. *)
+let matterhorn_31_017 _ _ pdf =
+  Pdf.objiter
+    (fun _ o ->
+       match Pdf.lookup_direct pdf "/Subtype" o with
+       | Some (Pdf.Name "/TrueType") ->
+           if not (is_non_symbolic pdf o) then
+             let fontfile = truetype_fontfile pdf o in
+               if fontfile = None then () else
+                 let cmaps = Cpdftruetype.cmaps (unopt fontfile) in
+                   (*iter (fun (x, y) -> Printf.printf "%i, %i\n" x y) cmaps;*)
+                   (* Must all be symbolic *)
+                   if (List.for_all (function (1, 8) | (3, 0) -> true | _ -> false) cmaps) then merror ()
+           else
+             ()
+       | _ -> ())
+    pdf
+
+(* A non-symbolic TrueType font is used for rendering, but for at least one
+   glyph to be rendered the glyph cannot be looked up by any of the
+   non-symbolic cmap entries in the embedded font program. *)
+let matterhorn_31_018 _ _ pdf =
+  unimpl ()
+
+(* The font dictionary for a non-symbolic TrueType font does not contain an
+   Encoding entry. *)
 let matterhorn_31_019 _ _ pdf =
   Pdf.objiter
     (fun _ o ->
@@ -1025,7 +1049,19 @@ let matterhorn_31_022 _ _ pdf =
    TrueType font dictionary but the embedded font program does not contain a
    (3,1) Microsoft Unicode cmap. *)
 let matterhorn_31_023 _ _ pdf =
-  unimpl ()
+  Pdf.objiter
+    (fun _ o ->
+       match Pdf.lookup_direct pdf "/Subtype" o, Pdf.lookup_chain pdf o ["/Encoding"; "/Differences"] with
+       | Some (Pdf.Name "/TrueType"), Some _ ->
+           if is_non_symbolic pdf o then
+             let fontfile = truetype_fontfile pdf o in
+               if fontfile = None then () else
+                 let cmaps = Cpdftruetype.cmaps (unopt fontfile) in
+                   if mem (3, 1) cmaps then () else merror ()
+           else
+             ()
+       | _ -> ())
+    pdf
 
 (* The Encoding entry is present in the font dictionary for a symbolic TrueType
    font. *)
@@ -1043,12 +1079,38 @@ let matterhorn_31_024 _ _ pdf =
 
 (* The embedded font program for a symbolic TrueType font contains no cmap. *)
 let matterhorn_31_025 _ _ pdf =
-  unimpl ()
+  Pdf.objiter
+    (fun _ o ->
+       match Pdf.lookup_direct pdf "/Subtype" o with
+       | Some (Pdf.Name "/TrueType") ->
+           if not (is_non_symbolic pdf o) then
+             let fontfile = truetype_fontfile pdf o in
+               if fontfile = None then () else
+                 let cmaps = Cpdftruetype.cmaps (unopt fontfile) in
+                   (*iter (fun (x, y) -> Printf.printf "%i, %i\n" x y) cmaps;*)
+                   if cmaps = [] then merror ()
+           else
+             ()
+       | _ -> ())
+    pdf
 
 (* The embedded font program for a symbolic TrueType font contains more than
    one cmap, but none of the cmap entries is a (3,0) Microsoft Symbol cmap. *)
 let matterhorn_31_026 _ _ pdf =
-  unimpl ()
+  Pdf.objiter
+    (fun _ o ->
+       match Pdf.lookup_direct pdf "/Subtype" o with
+       | Some (Pdf.Name "/TrueType") ->
+           if true (*not (is_non_symbolic pdf o)*) (*FIXME reinstate test*) then
+             let fontfile = truetype_fontfile pdf o in
+               if fontfile = None then () else
+                 let cmaps = Cpdftruetype.cmaps (unopt fontfile) in
+                   (*iter (fun (x, y) -> Printf.printf "%i, %i\n" x y) cmaps;*)
+                   if length cmaps > 1 && not (mem (3, 0) cmaps) then merror ()
+           else
+             ()
+       | _ -> ())
+    pdf
 
 (* A font dictionary does not contain the ToUnicode entry and none of the
    following is true: the font uses MacRomanEncoding, MacExpertEncoding or
@@ -1227,6 +1289,8 @@ let matterhorn =
    ("31-029", "One or more Unicode values specified in the ToUnicode CMap are equal to either U+FEFF or U+FFFE.", "UA1:7.21.7-3", matterhorn_31_029);
    ("31-030", "One or more characters used in text showing operators reference the .notdef glyph.", "UA1:7.21.8-1", matterhorn_31_030);
   ]
+
+(* FIXME Allow the use of just a single test, and expose it in cpdf command line *)
 
 let test_matterhorn pdf =
   (* A circularity in the role map prevents all structure checks, so we do it first at stop if it fails. *)

@@ -27,3 +27,6 @@ type t =
    additional characters in the font. You should supply a subset (a list of
    unicode codepoints whose corresponding glyphs are required). *)
 val parse : subset:int list -> Pdfio.bytes -> Pdftext.encoding -> t list
+
+(** Return the list of cmaps from a font file (used for PDF/UA verification). *)
+val cmaps : Pdfio.bytes -> (int * int) list
