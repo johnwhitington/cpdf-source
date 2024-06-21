@@ -719,7 +719,12 @@ let matterhorn_28_016 _ _ pdf =
   covered_elsewhere ()
 
 (* A PrinterMark annotation is included in the logical structure. *)
-let matterhorn_28_017 _ _ pdf = todo ()
+let matterhorn_28_017 _ _ pdf =
+  Pdf.objiter
+    (fun _ o -> match Pdf.lookup_direct pdf "/Subtype" o, Pdf.lookup_direct pdf "/StructParent" o with
+     | Some (Pdf.Name "/PrinterMark"), Some _ -> merror ()
+     | _ -> ())
+    pdf
 
 (* The appearance stream of a PrinterMark annotation is not marked as Artifact.
  *)
