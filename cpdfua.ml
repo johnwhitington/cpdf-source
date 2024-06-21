@@ -572,12 +572,46 @@ let matterhorn_26_002 _ _ pdf =
 
 (* An annotation, other than of subtype Widget, Link and PrinterMark, is not a
    direct child of an <Annot> structure element. *)
-let matterhorn_28_002 _ _ pdf = todo ()
+let matterhorn_28_002 _ _ pdf =
+  (* Find object numbers of all annotations which are not Widget, Link, or Printermark. *)
+  Pdf.objiter
+    (fun n obj -> match Pdf.lookup_direct pdf "/Subtype" obj with
+    | Some (Pdf.Name
+              ("/Stamp" | "/Line" | "Square" | "/Circle" | "/Polygon" | "/PolyLine" |
+               "/Highlight" | "/Underline" | "/Squiggly" | "/StrikeOut" | "/Caret" |
+               "/Ink" | "/FileAttachment" | "/Sound" | "/Movie" | "/Screen" | "/TrapNet" |
+               "/Watermark" | "/3D")) ->
+      (* Check that every /StructParent entry for each of these points to something
+      with /S /Annot. No need to worry about rolemapping, because PDF/UA docs
+      aren't allowed to remap standard types. *)
+      begin match Pdf.lookup_chain pdf obj ["/StructParent"; "/S"] with
+      | Some (Pdf.Name "/Annot") -> ()
+      | _ -> merror ()
+      end
+    | _ -> ())
+    pdf
 
 (* An annotation, other than of subtype Widget, does not have a Contents entry
    and does not have an alternative description (in the form of an Alt entry in
    the enclosing structure element). *)
-let matterhorn_28_004 _ _ pdf = todo ()
+let matterhorn_28_004 _ _ pdf =
+  Pdf.objiter
+    (fun n obj -> match Pdf.lookup_direct pdf "/Subtype" obj with
+    | Some (Pdf.Name
+              ("/Stamp" | "/Line" | "Square" | "/Circle" | "/Polygon" | "/PolyLine" |
+               "/Highlight" | "/Underline" | "/Squiggly" | "/StrikeOut" | "/Caret" |
+               "/Ink" | "/FileAttachment" | "/Sound" | "/Movie" | "/Screen" | "/TrapNet" |
+               "/Watermark" | "/3D" | "/Link" | "/PrinterMark")) ->
+      begin match Pdf.lookup_direct pdf "/Contents" obj with
+      | Some _ -> ()
+      | None -> 
+          begin match Pdf.lookup_chain pdf obj ["/StructParent"; "/Alt"] with
+          | Some _ -> ()
+          | _ -> merror ()
+          end
+      end
+    | _ -> ())
+    pdf
 
 (* A form field does not have a TU entry and does not have an alternative
    description (in the form of an Alt entry in the enclosing structure
