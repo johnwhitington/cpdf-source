@@ -660,10 +660,30 @@ let matterhorn_28_009 _ _ pdf =
     merror ()
 
 (* A widget annotation is not nested within a <Form> tag. *)
-let matterhorn_28_010 _ _ pdf = todo ()
+let matterhorn_28_010 _ _ pdf =
+  Pdf.objiter
+    (fun _ o ->
+       match Pdf.lookup_direct pdf "/Subtype" o with
+       | Some (Pdf.Name "/Widget") ->
+           begin match Pdf.lookup_chain pdf o ["/StructParent"; "/S"] with
+           | Some (Pdf.Name "/Form") -> ()
+           | _ -> merror ()
+           end
+       | _ -> ())
+    pdf
 
 (* A link annotation is not nested within a <Link> tag. *)
-let matterhorn_28_011 _ _ pdf = todo ()
+let matterhorn_28_011 _ _ pdf =
+  Pdf.objiter
+    (fun _ o ->
+       match Pdf.lookup_direct pdf "/Subtype" o with
+       | Some (Pdf.Name "/Link") ->
+           begin match Pdf.lookup_chain pdf o ["/StructParent"; "/S"] with
+           | Some (Pdf.Name "/Link") -> ()
+           | _ -> merror ()
+           end
+       | _ -> ())
+    pdf
 
 (* A link annotation does not include an alternate description in its Contents
    entry. *)
