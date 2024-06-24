@@ -12,7 +12,7 @@ o Set the natural language of a file
 
 Extended features:
 
-o Allow -obj/-extract-stream to lookup nested PDF information
+o Allow -obj to look up nested PDF information
 o Merge structure trees better when merging files
 o Report top-level natural language on -info
 o Report mark information dictionary contents on -info

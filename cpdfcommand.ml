@@ -3412,10 +3412,8 @@ let build_enc () =
        Pdfwrite.user_password = args.user;
        Pdfwrite.permissions = banlist_of_args ()}
 
-let objnum_of_objspec s =
-  int_of_string s
-
 let extract_stream pdf decomp objnum =
+  let objnum = int_of_string objnum in (* maybe objspec in the future... *)
   let obj = Pdf.lookup_obj pdf objnum in
   Pdf.getstream obj;
   if decomp then Pdfcodec.decode_pdfstream_until_unknown pdf obj;
@@ -3434,9 +3432,31 @@ let extract_stream pdf decomp objnum =
     | Stdout ->
         output_string stdout (Pdfio.string_of_bytes data)
 
-let print_obj pdf objnum =
-  let obj = if objnum = 0 then pdf.Pdf.trailerdict else Pdf.lookup_obj pdf objnum in
+(* Empty string is trailerdict. Begins with / and it's a chain separated by
+   commas. Begins with P and it's a page number then a (possibly empty) chain.
+   Otherwise it's an object number (0 = trailerdict). *)
+let print_obj pdf objspec =
+  let simple_obj obj =
+    let obj = if obj = 0 then pdf.Pdf.trailerdict else Pdf.lookup_obj pdf obj in
     Printf.printf "%S\n" (Pdfwrite.string_of_pdf obj)
+  in
+  let chain_obj objnum chain =
+    let obj = if objnum = 0 then pdf.Pdf.trailerdict else Pdf.lookup_obj pdf objnum in
+    match Pdf.lookup_chain pdf obj chain with
+    | Some x -> Printf.printf "%S\n" (Pdfwrite.string_of_pdf x)
+    | None -> ()
+  in
+    match explode objspec with
+    | 'P'::more ->
+        let number, chain =
+          let digits, rest = cleavewhile isdigit more in
+            List.nth (Pdf.page_reference_numbers pdf) (int_of_string (implode digits) - 1),
+            begin match String.split_on_char ',' (implode rest) with [""] -> [] | x -> x end
+        in
+          chain_obj number chain
+    | '/'::more -> chain_obj 0 (String.split_on_char ',' (implode ('/'::more)))
+    | [] -> simple_obj 0
+    | _ -> simple_obj (int_of_string objspec)
 
 (* Main function *)
 let go () =
@@ -4458,10 +4478,10 @@ let go () =
         write_pdf false pdf
   | Some (ExtractStream s) ->
       let pdf = get_single_pdf args.op true in
-        extract_stream pdf args.extract_stream_decompress (objnum_of_objspec s)
+        extract_stream pdf args.extract_stream_decompress s
   | Some (PrintObj s) ->
       let pdf = get_single_pdf args.op true in
-        print_obj pdf (objnum_of_objspec s)
+        print_obj pdf s
   | Some (Verify standard) ->
       begin match standard with
       | "PDF/UA-1(matterhorn)" ->
