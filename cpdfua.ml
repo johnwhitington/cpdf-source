@@ -1302,9 +1302,16 @@ let matterhorn =
    ("31-030", "One or more characters used in text showing operators reference the .notdef glyph.", "UA1:7.21.8-1", matterhorn_31_030);
   ]
 
-(* FIXME Allow the use of just a single test, and expose it in cpdf command line *)
-
-let test_matterhorn pdf =
+let test_matterhorn pdf testname =
+  let tests =
+    match testname with
+    | "" -> matterhorn
+    | n -> 
+        match keep (fun (n', _, _, _) -> n' = n) matterhorn with
+        | [] -> error "test not found"
+        | [t] -> [t]
+        | _ -> error "duplicate test"
+  in
   (* A circularity in the role map prevents all structure checks, so we do it first at stop if it fails. *)
   let circularity_error =
     try matterhorn_02_003 0 0 pdf; [] with
@@ -1320,21 +1327,21 @@ let test_matterhorn pdf =
            | MatterhornError extra -> Some (name, error, section, extra)
            | MatterhornUnimplemented -> None
            | e -> Some (name, "Incomplete", section, `String ("ERROR: " ^ Printexc.to_string e)))
-        matterhorn
+        tests
 
-let test_matterhorn_print pdf =
+let test_matterhorn_print pdf testname =
   iter
     (fun (name, error, section, extra) ->
        Printf.eprintf "%s %s %s %s\n" name section error
        (if extra = `Null then "" else "(" ^ Cpdfyojson.Safe.to_string extra ^ ")"))
-    (test_matterhorn pdf)
+    (test_matterhorn pdf testname)
 
-let test_matterhorn_json pdf =
+let test_matterhorn_json pdf testname =
   `List
     (map
       (fun (name, error, section, extra) ->
         `Assoc [("name", `String name); ("section", `String section); ("error", `String error); ("extra", extra)])
-      (test_matterhorn pdf))
+      (test_matterhorn pdf testname))
 
 let pdfua_marker =
   Cpdfmetadata.(E (((rdf, "Description"), [((rdf, "about"), ""); ((Cpdfxmlm.ns_xmlns, "pdfuaid"), pdfuaid)]), [E (((pdfuaid, "part"), []), [D "1"])])) 

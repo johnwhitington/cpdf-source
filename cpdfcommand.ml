@@ -536,7 +536,8 @@ type args =
    mutable resample_factor : float;
    mutable resample_interpolate : bool;
    mutable jbig2_lossy_threshold : float;
-   mutable extract_stream_decompress : bool}
+   mutable extract_stream_decompress : bool;
+   mutable verify_single : string option}
 
 let args =
   {op = None;
@@ -670,7 +671,8 @@ let args =
    resample_factor = 101.;
    resample_interpolate = false;
    jbig2_lossy_threshold = 0.85;
-   extract_stream_decompress = false}
+   extract_stream_decompress = false;
+   verify_single = None}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -792,7 +794,8 @@ let reset_arguments () =
   args.resample_interpolate <- false;
   args.jbig2_lossy_threshold <- 0.85;
   args.extract_stream_decompress <- false;
-  clear Cpdfdrawcontrol.fontpack_initialised
+  clear Cpdfdrawcontrol.fontpack_initialised;
+  args.verify_single <- None
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -2819,6 +2822,7 @@ and specs =
    ("-obj", Arg.String setprintobj, "Print object");
    ("-json", Arg.Unit (fun () -> args.format_json <- true), "Format output as JSON");
    ("-verify", Arg.String (fun s -> setop (Verify s) ()), "Verify conformance to a standard");
+   ("-verify-single", Arg.String (fun s -> args.verify_single <- Some s), "Verify a single test");
    ("-mark-as", Arg.String (fun s -> setop (MarkAs s) ()), "Mark as conforming to a standard");
    ("-remove-mark", Arg.String (fun s -> setop (RemoveMark s) ()), "Remove conformance mark");
    ("-extract-struct-tree", Arg.Unit (fun () -> setop ExtractStructTree ()), "Extract structure tree in JSON format");
@@ -4486,9 +4490,10 @@ let go () =
       begin match standard with
       | "PDF/UA-1(matterhorn)" ->
           let pdf = get_single_pdf args.op false in
+          let testname = match args.verify_single with None -> "" | Some x -> x in
             if args.format_json
-              then flprint (Cpdfyojson.Safe.pretty_to_string (Cpdfua.test_matterhorn_json pdf))
-              else Cpdfua.test_matterhorn_print pdf
+              then flprint (Cpdfyojson.Safe.pretty_to_string (Cpdfua.test_matterhorn_json pdf testname))
+              else Cpdfua.test_matterhorn_print pdf testname
       | _ -> error "Unknown verification type."
       end
   | Some (MarkAs standard) ->
