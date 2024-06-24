@@ -24,7 +24,6 @@ let initial_file_size = ref 0
 
 let empty = Pdf.empty ()
 
-
 (* Wrap up the file reading functions to exit with code 1 when an encryption
 problem occurs. This happens when object streams are in an encrypted document
 and so it can't be read without the right password... The existing error
@@ -217,8 +216,8 @@ type op =
   | Chop of int * int
   | ChopHV of bool * float
   | ProcessImages
-  | ExtractStream of int
-  | PrintObj of int
+  | ExtractStream of string
+  | PrintObj of string
   | Verify of string
   | MarkAs of string
   | RemoveMark of string
@@ -1841,15 +1840,15 @@ let setjbig2_lossy_threshold f =
 let setprocessimagesinfo () =
   set Cpdfimage.debug_image_processing
 
-let setextractstream i =
-  args.op <- Some (ExtractStream i)
+let setextractstream s =
+  args.op <- Some (ExtractStream s)
 
-let setextractstreamdecomp i =
-  args.op <- Some (ExtractStream i);
+let setextractstreamdecomp s =
+  args.op <- Some (ExtractStream s);
   args.extract_stream_decompress <- true
 
-let setprintobj i =
-  args.op <- Some (PrintObj i)
+let setprintobj s =
+  args.op <- Some (PrintObj s)
 
 (* Parse a control file, make an argv, and then make Arg parse it. *)
 let rec make_control_argv_and_parse filename =
@@ -2815,9 +2814,9 @@ and specs =
    ("-rise", Arg.Float (fun f -> Cpdfdrawcontrol.addop (Cpdfdraw.Rise f)), " Set text rise");
    ("-nl", Arg.Unit (fun () -> Cpdfdrawcontrol.addop Cpdfdraw.Newline), " New line");
    ("-newpage", Arg.Unit Cpdfdrawcontrol.addnewpage, " Move to a fresh page");
-   ("-extract-stream", Arg.Int setextractstream, " Extract a stream");
-   ("-extract-stream-decompress", Arg.Int setextractstreamdecomp, "Extract a stream, decompressing");
-   ("-obj", Arg.Int setprintobj, "Print object");
+   ("-extract-stream", Arg.String setextractstream, " Extract a stream");
+   ("-extract-stream-decompress", Arg.String setextractstreamdecomp, "Extract a stream, decompressing");
+   ("-obj", Arg.String setprintobj, "Print object");
    ("-json", Arg.Unit (fun () -> args.format_json <- true), "Format output as JSON");
    ("-verify", Arg.String (fun s -> setop (Verify s) ()), "Verify conformance to a standard");
    ("-mark-as", Arg.String (fun s -> setop (MarkAs s) ()), "Mark as conforming to a standard");
@@ -3412,6 +3411,9 @@ let build_enc () =
        Pdfwrite.owner_password = args.owner;
        Pdfwrite.user_password = args.user;
        Pdfwrite.permissions = banlist_of_args ()}
+
+let objnum_of_objspec s =
+  int_of_string s
 
 let extract_stream pdf decomp objnum =
   let obj = Pdf.lookup_obj pdf objnum in
@@ -4454,12 +4456,12 @@ let go () =
           ~dpi_threshold:args.dpi_threshold ~factor:args.resample_factor ~interpolate:args.resample_interpolate
           ~path_to_jbig2enc:args.path_to_jbig2enc ~path_to_convert:args.path_to_im range pdf;
         write_pdf false pdf
-  | Some (ExtractStream i) ->
+  | Some (ExtractStream s) ->
       let pdf = get_single_pdf args.op true in
-        extract_stream pdf args.extract_stream_decompress i
-  | Some (PrintObj i) ->
+        extract_stream pdf args.extract_stream_decompress (objnum_of_objspec s)
+  | Some (PrintObj s) ->
       let pdf = get_single_pdf args.op true in
-        print_obj pdf i
+        print_obj pdf (objnum_of_objspec s)
   | Some (Verify standard) ->
       begin match standard with
       | "PDF/UA-1(matterhorn)" ->

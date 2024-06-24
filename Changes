@@ -8,7 +8,13 @@ o Verify compliance to PDF/UA via the Matterhorn protocol
 o Extract, edit and reapply document structure tree
 o Split structure tree when splitting PDF to save size
 o Combine structure trees when stamping PDFs
-o Report natural language on -info
+o Set the natural language of a file
+
+Extended features:
+
+o Allow -obj/-extract-stream to lookup nested PDF information
+o Merge structure trees better when merging files
+o Report top-level natural language on -info
 o Report mark information dictionary contents on -info
 
 2.7 (February 2024)
