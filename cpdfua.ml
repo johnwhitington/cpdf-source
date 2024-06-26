@@ -498,8 +498,10 @@ let matterhorn_20_001 _ _ pdf =
    Content Configuration Dictionary that is the value of the D entry in the
    OCProperties entry in the Catalog dictionary. *)
 let matterhorn_20_002 _ _ pdf =
-  match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/OCProperties"; "/D"; "/Name"] with
-  | Some (Pdf.String "") | None -> merror ()
+  match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/OCProperties"; "/D"],
+        Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/OCProperties"; "/D"; "/Name"]
+  with
+  | Some _, (Some (Pdf.String "") | None) -> merror ()
   | _ -> ()
 
 (* An AS entry appears in an Optional Content Configuration Dictionary. *)
@@ -793,9 +795,9 @@ let matterhorn_31_004 _ _ pdf =
     (fun _ n ->
        match Pdf.lookup_direct pdf "/Subtype" n with
        | Some (Pdf.Name "/CIDFontType2") ->
-           begin match Pdf.lookup_direct pdf "/CIDtoGIDMap" n with
+           begin match Pdf.lookup_direct pdf "/CIDToGIDMap" n with
            | Some (Pdf.Name "/Identity" | Pdf.Stream _) -> ()
-           | _ -> merror ()
+           | _ -> merror_str (Pdfwrite.string_of_pdf n)
            end
        | _ -> ())
     pdf
@@ -806,7 +808,7 @@ let matterhorn_31_005 _ _ pdf =
     (fun _ n ->
        match Pdf.lookup_direct pdf "/Subtype" n with
        | Some (Pdf.Name "/CIDFontType2") ->
-           begin match Pdf.lookup_direct pdf "/CIDtoGIDMap" n with
+           begin match Pdf.lookup_direct pdf "/CIDToGIDMap" n with
            | Some _ -> ()
            | _ -> merror ()
            end
