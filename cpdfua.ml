@@ -1351,6 +1351,10 @@ let test_matterhorn_json pdf testname =
 let pdfua_marker =
   Cpdfmetadata.(E (((rdf, "Description"), [((rdf, "about"), ""); ((Cpdfxmlm.ns_xmlns, "pdfuaid"), pdfuaid)]), [E (((pdfuaid, "part"), []), [D "1"])])) 
 
+let pdfua2_marker year =
+  Cpdfmetadata.(E (((rdf, "Description"), [((rdf, "about"), ""); ((Cpdfxmlm.ns_xmlns, "pdfuaid"), pdfuaid)]), [E (((pdfuaid, "part"), []), [D "2"]);
+                                                                                                               E (((pdfuaid, "rev"), []), [D (string_of_int year)])])) 
+
 let rec insert_as_rdf_description fragment = function
   | Cpdfmetadata.E (((_, "RDF"), _) as rdftag, rdfs) ->
       Cpdfmetadata.E (rdftag, fragment::rdfs)
@@ -1360,7 +1364,7 @@ let rec insert_as_rdf_description fragment = function
 
 let rec delete_pdfua_marker tree =
   let is_pdfuaid = function
-  | Cpdfmetadata.E (((pdfuaid, "part"), _), _) when pdfuaid = Cpdfmetadata.pdfuaid -> true
+  | Cpdfmetadata.E (((pdfuaid, ("part" | "rev" | "amd" | "corr")), _), _) when pdfuaid = Cpdfmetadata.pdfuaid -> true
   | _ -> false
   in
     match tree with
@@ -1370,7 +1374,7 @@ let rec delete_pdfua_marker tree =
         Cpdfmetadata.E (x, map delete_pdfua_marker children)
     | x -> x
 
-let mark pdf =
+let mark_inner pdfua_marker pdf =
   let pdf2 = if Cpdfmetadata.get_metadata pdf = None then Cpdfmetadata.create_metadata pdf else pdf in
     pdf.Pdf.objects <- pdf2.Pdf.objects;
     pdf.Pdf.trailerdict <- pdf2.Pdf.trailerdict;
@@ -1389,6 +1393,10 @@ let mark pdf =
             pdf.Pdf.trailerdict <- pdf3.Pdf.trailerdict;
             pdf.Pdf.root <- pdf3.Pdf.root
     | None -> assert false
+
+let mark = mark_inner pdfua_marker
+
+let mark2 year = mark_inner (pdfua2_marker year)
 
 let remove_mark pdf =
   match Cpdfmetadata.get_metadata pdf with

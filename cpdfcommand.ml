@@ -4502,11 +4502,15 @@ let go () =
           let pdf = get_single_pdf args.op false in
             Cpdfua.mark pdf;
             write_pdf false pdf
+      | "PDF/UA-2" ->
+          let pdf = get_single_pdf args.op false in
+            Cpdfua.mark2 2024 pdf;
+            write_pdf false pdf
       | _ -> error "Unknown standard"
       end
   | Some (RemoveMark standard) ->
       begin match standard with
-      | "PDF/UA-1" ->
+      | "PDF/UA-1" | "PDF/UA-2" ->
           let pdf = get_single_pdf args.op false in
             Cpdfua.remove_mark pdf;
             write_pdf false pdf
