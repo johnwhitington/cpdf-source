@@ -1,9 +1,11 @@
 open Pdfutil
 open Cpdferror
 
-(* Implements all Matterhorn checks except for:
+(* Implements most Matterhorn checks except for:
   a) Those which require looking deep inside font files; and
-  b) Those which require reading inside the graphics stream. *)
+  b) Those which require reading inside the graphics stream.
+
+Experimental. Both false positive and false negativce results possible. *)
 
 exception MatterhornError of Cpdfyojson.Safe.t
 
@@ -153,7 +155,7 @@ let matterhorn_02_001 _ _ pdf =
   | Some rm ->
       let rolemap = read_rolemap pdf rm in
         if circular rolemap then () else (* Will be reported below *)
-          iter (fun x -> try follow_standard rolemap x with Exit -> merror ()) (map fst rolemap)
+          iter (fun x -> try follow_standard rolemap x with Exit -> merror_str x) (map fst rolemap)
   | None -> ()
 
 (* A circular mapping exists. *)
@@ -163,6 +165,7 @@ let matterhorn_02_003 _ _ pdf =
       let rolemap = read_rolemap pdf rm in
         if circular rolemap then
           merror_str "STOP. If rolemap circular, cannot proceed with other checks."
+          (* We never reach here in normal use. This is pre-checked. *)
   | None -> ()
 
 (* One or more standard types are remapped. *)
@@ -170,7 +173,7 @@ let matterhorn_02_004 _ _ pdf =
   match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/StructTreeRoot"; "/RoleMap"] with
   | Some rm ->
       let rolemap = read_rolemap pdf rm in
-      if List.exists (function k -> mem k standard_structure_types_2008) (map fst rolemap) then merror ()
+        iter (function k -> if mem k standard_structure_types_2008 then merror_str k) (map fst rolemap)
   | None -> ()
 
 (* Document does not contain an XMP metadata stream *)
@@ -414,7 +417,7 @@ let matterhorn_14_003 st st2 pdf =
   let rec check_nseq n = function
   | E (s, cs) when is_hnum s ->
       let num = int_of_string (implode (tl (tl (explode s)))) in
-        if num > n + 1 then merror ();
+        if num > n + 1 then merror_str (Printf.sprintf "%i -> %i" n num);
         iter (check_nseq num) cs
   | E (_, cs) -> iter (check_nseq n) cs
   in
@@ -442,7 +445,7 @@ let matterhorn_15_003 st st2 pdf =
      enough information to know what is required. To be returned to. *)
   let rec check_th = function
   | E2 ("/TH", attr, _) ->
-      if not (List.mem "/Scope" attr) then merror_str "No scope, table organization not checked." (*else Printf.printf "Found /Scope in /TH\n"*)
+      if not (List.mem "/Scope" attr) then merror_str "No scope, table organization not checked."
   | E2 (_, _, cs) -> iter check_th cs
   in
     check_th st2
@@ -969,7 +972,7 @@ let matterhorn_31_017 _ _ pdf =
                  let cmaps = Cpdftruetype.cmaps (unopt fontfile) in
                    (*iter (fun (x, y) -> Printf.printf "%i, %i\n" x y) cmaps;*)
                    (* Must all be symbolic *)
-                   if (List.for_all (function (1, 8) | (3, 0) -> true | _ -> false) cmaps) then merror ()
+                   iter (function (1, 8) | (3, 0) -> () | (a, b) -> merror_str (Printf.sprintf "(%i, %i) cmap" a b)) cmaps
            else
              ()
        | _ -> ())
@@ -1027,7 +1030,7 @@ let matterhorn_31_021 _ _ pdf =
            | true, Some ((Pdf.Dictionary _) as d) ->
                begin match Pdf.lookup_direct pdf "/BaseEncoding" d with
                | Some (Pdf.Name ("/MacRomanEncoding" | "/WinAnsiEncoding")) -> ()
-               | Some _ -> merror ()
+               | Some x -> merror_str (Pdfwrite.string_of_pdf x)
                | _ -> ()
                end
            | _ -> ()
@@ -1049,7 +1052,7 @@ let matterhorn_31_022 _ _ pdf =
                | Some (Pdf.Array a) ->
                    let glyphs = Pdfglyphlist.glyph_hashes () in
                    let names = option_map (function Pdf.Name n -> Some n | _ -> None) a in
-                     if not (List.for_all (Hashtbl.mem glyphs) names) then merror ()
+                     iter (fun n -> if not (Hashtbl.mem glyphs n) then merror_str n) names
                | _ -> ()
                end
            | _ -> ()
@@ -1113,7 +1116,7 @@ let matterhorn_31_026 _ _ pdf =
     (fun _ o ->
        match Pdf.lookup_direct pdf "/Subtype" o with
        | Some (Pdf.Name "/TrueType") ->
-           if true (*not (is_non_symbolic pdf o)*) (*FIXME reinstate test*) then
+           if not (is_non_symbolic pdf o) then
              let fontfile = truetype_fontfile pdf o in
                if fontfile = None then () else
                  let cmaps = Cpdftruetype.cmaps (unopt fontfile) in
