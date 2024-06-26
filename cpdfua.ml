@@ -583,48 +583,73 @@ let matterhorn_26_002 _ _ pdf =
   | Some {Pdf.from_get_encryption_values = (_, _, _, p, _, _, _)} ->
       if mem Pdfcrypt.NoExtract (Pdfcrypt.banlist_of_p p) then merror ()
 
+let read_parent_tree pdf =
+  match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/StructTreeRoot"; "/ParentTree"] with
+  | Some t -> Pdftree.read_number_tree pdf t
+  | None -> [] 
+
 (* An annotation, other than of subtype Widget, Link and PrinterMark, is not a
    direct child of an <Annot> structure element. *)
 let matterhorn_28_002 _ _ pdf =
-  (* Find object numbers of all annotations which are not Widget, Link, or Printermark. *)
-  Pdf.objiter
-    (fun n obj -> match Pdf.lookup_direct pdf "/Subtype" obj with
-    | Some (Pdf.Name
-              ("/Stamp" | "/Line" | "Square" | "/Circle" | "/Polygon" | "/PolyLine" |
-               "/Highlight" | "/Underline" | "/Squiggly" | "/StrikeOut" | "/Caret" |
-               "/Ink" | "/FileAttachment" | "/Sound" | "/Movie" | "/Screen" | "/TrapNet" |
-               "/Watermark" | "/3D")) ->
-      (* Check that every /StructParent entry for each of these points to something
-      with /S /Annot. No need to worry about rolemapping, because PDF/UA docs
-      aren't allowed to remap standard types. *)
-      begin match Pdf.lookup_chain pdf obj ["/StructParent"; "/S"] with
-      | Some (Pdf.Name "/Annot") -> ()
-      | _ -> merror ()
-      end
-    | _ -> ())
-    pdf
+  let parent_tree = read_parent_tree pdf in
+    (* Find object numbers of all annotations which are not Widget, Link, or Printermark. *)
+    Pdf.objiter
+      (fun n obj -> match Pdf.lookup_direct pdf "/Subtype" obj with
+      | Some (Pdf.Name
+                ("/Stamp" | "/Line" | "Square" | "/Circle" | "/Polygon" | "/PolyLine" |
+                 "/Highlight" | "/Underline" | "/Squiggly" | "/StrikeOut" | "/Caret" |
+                 "/Ink" | "/FileAttachment" | "/Sound" | "/Movie" | "/Screen" | "/TrapNet" |
+                 "/Watermark" | "/3D")) ->
+        (* Check that every /StructParent entry for each of these points to something
+        with /S /Annot. No need to worry about rolemapping, because PDF/UA docs
+        aren't allowed to remap standard types. *)
+        begin match Pdf.lookup_direct pdf "/StructParent" obj with
+        | Some (Pdf.Integer i) ->
+            begin match List.assoc_opt (string_of_int i) parent_tree with
+            | Some d ->
+                begin match Pdf.lookup_direct pdf "/S" d with
+                | Some (Pdf.Name "/Annot") -> ()
+                | _ -> merror ()
+                end
+            | None -> merror ()
+            end
+        | _ -> merror ()
+        end
+      | _ -> ())
+      pdf
 
 (* An annotation, other than of subtype Widget, does not have a Contents entry
    and does not have an alternative description (in the form of an Alt entry in
    the enclosing structure element). *)
 let matterhorn_28_004 _ _ pdf =
-  Pdf.objiter
-    (fun n obj -> match Pdf.lookup_direct pdf "/Subtype" obj with
-    | Some (Pdf.Name
-              ("/Stamp" | "/Line" | "Square" | "/Circle" | "/Polygon" | "/PolyLine" |
-               "/Highlight" | "/Underline" | "/Squiggly" | "/StrikeOut" | "/Caret" |
-               "/Ink" | "/FileAttachment" | "/Sound" | "/Movie" | "/Screen" | "/TrapNet" |
-               "/Watermark" | "/3D" | "/Link" | "/PrinterMark")) ->
-      begin match Pdf.lookup_direct pdf "/Contents" obj with
-      | Some _ -> ()
-      | None -> 
-          begin match Pdf.lookup_chain pdf obj ["/StructParent"; "/Alt"] with
-          | Some _ -> ()
+  let parent_tree = read_parent_tree pdf in
+    Pdf.objiter
+      (fun n obj -> match Pdf.lookup_direct pdf "/Subtype" obj with
+      | Some (Pdf.Name
+                ("/Stamp" | "/Line" | "Square" | "/Circle" | "/Polygon" | "/PolyLine" |
+                 "/Highlight" | "/Underline" | "/Squiggly" | "/StrikeOut" | "/Caret" |
+                 "/Ink" | "/FileAttachment" | "/Sound" | "/Movie" | "/Screen" | "/TrapNet" |
+                 "/Watermark" | "/3D" | "/Link" | "/PrinterMark")) ->
+                   Printf.printf "%S\n" (Pdfwrite.string_of_pdf obj);
+        begin match Pdf.lookup_direct pdf "/Contents" obj with
+        | Some _ -> ()
+        | None ->
+          begin match Pdf.lookup_direct pdf "/StructParent" obj with
+          | Some (Pdf.Integer i) ->
+              begin match List.assoc_opt (string_of_int i) parent_tree with
+              | Some d ->
+                  begin match Pdf.lookup_direct pdf "/Alt" d with
+                  | Some _ -> ()
+                  | _ -> merror ()
+                  end
+              | None -> merror ()
+              end
           | _ -> merror ()
           end
-      end
-    | _ -> ())
-    pdf
+
+        end
+      | _ -> ())
+      pdf
 
 (* A form field does not have a TU entry and does not have an alternative
    description (in the form of an Alt entry in the enclosing structure
@@ -675,29 +700,47 @@ let matterhorn_28_009 _ _ pdf =
 
 (* A widget annotation is not nested within a <Form> tag. *)
 let matterhorn_28_010 _ _ pdf =
-  Pdf.objiter
-    (fun _ o ->
-       match Pdf.lookup_direct pdf "/Subtype" o with
-       | Some (Pdf.Name "/Widget") ->
-           begin match Pdf.lookup_chain pdf o ["/StructParent"; "/S"] with
-           | Some (Pdf.Name "/Form") -> ()
-           | _ -> merror ()
-           end
-       | _ -> ())
-    pdf
+  let parent_tree = read_parent_tree pdf in
+    Pdf.objiter
+      (fun _ o ->
+         match Pdf.lookup_direct pdf "/Subtype" o with
+         | Some (Pdf.Name "/Widget") ->
+             begin match Pdf.lookup_direct pdf "/StructParent" o with
+             | Some (Pdf.Integer i) ->
+                 begin match List.assoc_opt (string_of_int i) parent_tree with
+                 | Some d ->
+                     begin match Pdf.lookup_direct pdf "/S" d with
+                     | Some (Pdf.Name "/Form") -> ()
+                     | _ -> merror ()
+                     end
+                 | _ -> merror ()
+                 end
+             | _ -> merror ()
+             end
+         | _ -> ())
+      pdf
 
 (* A link annotation is not nested within a <Link> tag. *)
 let matterhorn_28_011 _ _ pdf =
-  Pdf.objiter
-    (fun _ o ->
-       match Pdf.lookup_direct pdf "/Subtype" o with
-       | Some (Pdf.Name "/Link") ->
-           begin match Pdf.lookup_chain pdf o ["/StructParent"; "/S"] with
-           | Some (Pdf.Name "/Link") -> ()
-           | _ -> merror ()
-           end
-       | _ -> ())
-    pdf
+  let parent_tree = read_parent_tree pdf in
+    Pdf.objiter
+      (fun _ o ->
+         match Pdf.lookup_direct pdf "/Subtype" o with
+         | Some (Pdf.Name "/Link") ->
+             begin match Pdf.lookup_direct pdf "/StructParent" o with
+             | Some (Pdf.Integer i) ->
+                 begin match List.assoc_opt (string_of_int i) parent_tree with
+                 | Some d ->
+                     begin match Pdf.lookup_direct pdf "/S" d with
+                     | Some (Pdf.Name "/Link") -> ()
+                     | _ -> merror ()
+                     end
+                 | _ -> merror ()
+                 end
+             | _ -> merror ()
+             end
+         | _ -> ())
+      pdf
 
 (* A link annotation does not include an alternate description in its Contents
    entry. *)
