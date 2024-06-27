@@ -62,7 +62,7 @@ Command Line Tools}
 \vspace{12mm}
 
 {\Huge User Manual}\\
-Version 2.7 (February 2024)
+Version 2.8 (November 2024)
 
 \vspace{25mm}
 
@@ -3106,6 +3106,8 @@ given page range.
     \small\noindent\verb!cpdf -set-page-mode <mode> in.pdf -o out.pdf!\\
     \small\noindent\verb!cpdf -set-non-full-screen-page-mode <mode> in.pdf -o out.pdf!
 
+
+
     \vspace{1.5mm} 
     \small\noindent\verb!cpdf -hide-toolbar <true | false> in.pdf -o out.pdf!\\
     \noindent\verb!     -hide-menubar!\\
@@ -3118,6 +3120,9 @@ given page range.
     \small\noindent\verb!cpdf -open-at-page <page number> in.pdf -o out.pdf!\\
     \noindent\verb!cpdf -open-at-page-fit <page number> in.pdf -o out.pdf!\\
     \noindent\verb!cpdf -open-at-page-custom <destination> in.pdf -o out.pdf!
+
+    \vspace{1.5mm}
+    \small\noindent\verb!cpdf -set-language <language> in.pdf -o out.pdf!
 
     \vspace{1.5mm}
     \small\noindent\verb!cpdf -set-metadata <metadata-file> in.pdf -o out.pdf!
@@ -3170,15 +3175,19 @@ HideMenubar:
 HideWindowUI: 
 FitWindow: 
 CenterWindow: 
-DisplayDocTitle: true
+DisplayDocTitle: True
 NonFullScreenPageMode: 
 AcroForm: False
+Marked: False
+UserProperties: False
+Suspects: False
 MediaBox: 0.000000 0.000000 612.000000 792.000000
 CropBox: 41.000000 63.000000 572.000000 729.000000
 BleedBox: 
 TrimBox: various
 ArtBox: various
 Subformats: 
+Language: en-us
 XMP dc:title: PDF Reference, version 1.6
 XMP dc:creator: Adobe Systems Incorporated
 XMP dc:description: Adobe Portable Document Format (PDF)
@@ -3221,12 +3230,16 @@ The \texttt{-info-json} operation prints the information in JSON format instead.
   "DisplayDocTitle": true,
   "NonFullPageScreenMode": null,
   "AcroForm": false,
+  "Marked": false,
+  "UserProperties": false,
+  "Suspects": false,
   "MediaBox": [ 0.0, 0.0, 612.0, 792.0 ],
   "CropBox": [ 41.0, 63.0, 572.0, 729.0 ],
   "BleedBox": null,
   "TrimBox": "various",
   "ArtBox": "various",
   "Subformats": [],
+  "Language": "en-us"
   "XMP dc:title": "PDF Reference, version 1.6",
   "XMP dc:creator": "Adobe Systems Incorporated",
   "XMP dc:description": "Adobe Portable Document Format (PDF)"
@@ -3442,6 +3455,14 @@ Alternatively, we may specify a full destination, of the kind described on page 
     \noindent\small\verb!cpdf -open-at-page-custom "[3 /FitR 100 100 300 300]" in.pdf -o out.pdf!
   \end{framed}
 
+\section{Document Language}
+
+The document language may be set by giving an IETF BCP 47 language tag:
+  \begin{framed}
+    \noindent\small\verb!cpdf -set-language "en-GB" in.pdf -o out.pdf!
+  \end{framed}
+
+\noindent This is the top-level language tag. Existing tags on individual parts of the document are preserved.
 
 \section{Page Labels}
 \index{page!labels}
