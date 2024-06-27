@@ -417,7 +417,7 @@ let matterhorn_14_003 st st2 pdf =
   let rec check_nseq n = function
   | E (s, cs) when is_hnum s ->
       let num = int_of_string (implode (tl (tl (explode s)))) in
-        if num > n + 1 then merror_str (Printf.sprintf "%i -> %i" n num);
+        if num > n + 1 && n > 0 then merror_str (Printf.sprintf "%i -> %i" n num);
         iter (check_nseq num) cs
   | E (_, cs) -> iter (check_nseq n) cs
   in
