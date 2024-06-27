@@ -4508,7 +4508,7 @@ A basic text to PDF convertor is included in \texttt{cpdf}. It takes a UTF8 text
 
 \noindent The standard paper sizes are listed in Section \ref{papersizes}, or you may specify the width and height directly, as described in the same chapter. The font may be specified as described in Section \ref{fonts}. The default font is Times-Roman and the default size is 12.
 
-\section{Make a PDF from a PNG or JPEG image}
+\section{Make a PDF from a PNG, JPEG or JPEG2000 image}
 \index{image!convert to PDF}
 
 Simple facilities for making PDFs from PNG and JPEG images are included in \texttt{cpdf}. The resulting file can be written out, or used for further operations.
@@ -4520,10 +4520,16 @@ For PNG files, the file must have no transparency and no interlacing, and must n
  \noindent\small\verb?cpdf image.png AND -add-text "My Image" -o out.pdf?
 \end{framed}
 
-\noindent Notice that the \texttt{-png} can be omitted if your file has a standard file extension. Almost any JPEG file may be used with \texttt{-jpeg} or again, with a standard extension:
+\noindent Notice that the \texttt{-png} can be omitted if your file has a standard file extension. Almost any JPEG file may be used with \texttt{-jpeg} or again, with a \texttt{-jpg} or \texttt{-jpeg} extension:
 
 \begin{framed}
  \noindent\small\verb?cpdf -jpeg image.jpg -o out.pdf?
+\end{framed}
+
+\noindent JPEG2000 images may be used similarly, with \texttt{-jpeg2000} or alone with a \texttt{jp2}, \texttt{jpx} or \texttt{jpf} extension:
+
+\begin{framed}
+ \noindent\small\verb?cpdf -jpeg2000 image.jp2 -o out.pdf?
 \end{framed}
 
 \noindent The output file will have one point of width or height for each pixel in the input.
@@ -5421,6 +5427,20 @@ $ cpdf -obj 1256 in.pdf
 
 $ cpdf -obj 1238 out.pdf
 "<</D[1225 0 R/Fit]/S/GoTo>>"
+\end{verbatim}}
+
+\noindent Alternatively, we may follow a chain of dictionary entries from the trailer dictionary:
+
+{\small\begin{verbatim}
+$ ./cpdf -obj /Root,/Pages,/Count cpdfmanual.pdf
+"133"
+\end{verbatim}}
+
+\noindent We may also begin at a numbered page instead of at the trailer dictionary:
+
+{\small\begin{verbatim}
+./cpdf -obj P20/Resources,/Font,/F58,/BaseFont cpdfmanual.pdf
+"/MCBERL+URWPalladioL-Roma"
 \end{verbatim}}
 
 \noindent A stream may be extracted with \texttt{-extract-stream} or \texttt{-extract-stream-decompress}, which decompresses it first where possible:
