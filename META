@@ -1,6 +1,6 @@
 name="cpdf"
 description="PDF commmand line tools"
-version="2.6"
+version="2.7"
 requires="camlpdf"
 archive(byte)="cpdf.cma"
 archive(native)="cpdf.cmxa"
