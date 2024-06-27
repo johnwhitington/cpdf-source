@@ -9,6 +9,8 @@ val mark2 : int -> Pdf.t -> unit
 
 val remove_mark : Pdf.t -> unit
 
+val print_struct_tree : Pdf.t -> unit
+
 val extract_struct_tree : Pdf.t -> Cpdfyojson.Safe.t
 
 val replace_struct_tree : Pdf.t -> Cpdfyojson.Safe.t -> unit

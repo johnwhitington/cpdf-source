@@ -221,6 +221,7 @@ type op =
   | Verify of string
   | MarkAs of string
   | RemoveMark of string
+  | PrintStructTree
   | ExtractStructTree
   | ReplaceStructTree of string
   | SetLanguage of string
@@ -369,6 +370,7 @@ let string_of_op = function
   | Verify _ -> "Verify"
   | MarkAs _ -> "MarkAs"
   | RemoveMark _ -> "RemoveMark"
+  | PrintStructTree -> "PrintStructTree"
   | ExtractStructTree -> "ExtractStructTree"
   | ReplaceStructTree _ -> "ReplaceStructTree"
   | SetLanguage _ -> "SetLanguage"
@@ -895,7 +897,8 @@ let banned banlist = function
   | AddPageLabels | RemovePageLabels | OutputJSON | OCGCoalesce
   | OCGRename | OCGList | OCGOrderAll | PrintFontEncoding _ | TableOfContents | Typeset _ | Composition _
   | TextWidth _ | SetAnnotations _ | CopyAnnotations _ | ExtractStream _ | PrintObj _
-  | Verify _ | MarkAs _ | RemoveMark _ | ExtractStructTree | ReplaceStructTree _ | SetLanguage _ 
+  | Verify _ | MarkAs _ | RemoveMark _ | ExtractStructTree | ReplaceStructTree _ | SetLanguage _
+  | PrintStructTree
      -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
@@ -2825,6 +2828,7 @@ and specs =
    ("-verify-single", Arg.String (fun s -> args.verify_single <- Some s), "Verify a single test");
    ("-mark-as", Arg.String (fun s -> setop (MarkAs s) ()), "Mark as conforming to a standard");
    ("-remove-mark", Arg.String (fun s -> setop (RemoveMark s) ()), "Remove conformance mark");
+   ("-print-struct-tree", Arg.Unit (fun () -> setop PrintStructTree ()), "Print structure tree");
    ("-extract-struct-tree", Arg.Unit (fun () -> setop ExtractStructTree ()), "Extract structure tree in JSON format");
    ("-replace-struct-tree", Arg.String (fun s -> setop (ReplaceStructTree s) ()), "Replace structure tree from JSON");
    (* These items are undocumented *)
@@ -4516,6 +4520,9 @@ let go () =
             write_pdf false pdf
       | _ -> error "Unknown standard"
       end
+  | Some PrintStructTree ->
+      let pdf = get_single_pdf args.op true in
+        Cpdfua.print_struct_tree pdf
   | Some ExtractStructTree ->
       let pdf = get_single_pdf args.op true in
       let json = Cpdfua.extract_struct_tree pdf in

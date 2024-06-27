@@ -54,7 +54,17 @@ let read_a pdf stnode =
     let at =
       match Pdf.lookup_direct pdf "/ActualText" stnode with | Some _ -> ["/ActualText"] | None -> []
     in
-      from_a @ id @ at @ alt
+    let pageref =
+      match Pdf.direct pdf stnode with
+      | Pdf.Dictionary d ->
+          begin match lookup "/Pg" d with
+          | Some (Pdf.Indirect i) ->
+              ["_" ^ string_of_int i]
+          | _ -> []
+          end
+      | _ -> []
+    in
+      from_a @ id @ at @ alt @ pageref
 
 let rec read_st_inner pdf stnode =
   let s =
@@ -1508,3 +1518,20 @@ let replace_struct_tree pdf json =
       | _ -> error "Top level JSON wrong. Must be list with 0 first."
   with
     e -> error (Printf.sprintf "replace_struct_tree: %s" (Printexc.to_string e))
+
+let print_struct_tree pdf =
+  let page_lookup =
+    hashtable_of_dictionary (combine (Pdf.page_reference_numbers pdf) (ilist 1 (Pdfpage.endpage pdf)))
+  in
+  let get_page attrs =
+    match option_map (fun x -> match explode x with '_'::more -> Some (implode more) | _ -> None) attrs with
+    | [i] -> string_of_int (try Hashtbl.find page_lookup (int_of_string i) with _ -> 0)
+    | _ -> "0"
+  in
+    let st = read_st2 pdf in
+      match st with E2 ("/StructTreeRoot", _, []) -> () | _ ->
+        flprint
+          (Cpdfprinttree.to_string
+            ~get_name:(fun (E2 (x, a, _)) -> if int_of_string (get_page a) > 0 then x ^ " (" ^ get_page a ^ ")" else x)
+            ~get_children:(fun (E2 (_, _, cs)) -> cs)
+            st)
