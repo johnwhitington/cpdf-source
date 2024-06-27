@@ -630,7 +630,6 @@ let matterhorn_28_004 _ _ pdf =
                  "/Highlight" | "/Underline" | "/Squiggly" | "/StrikeOut" | "/Caret" |
                  "/Ink" | "/FileAttachment" | "/Sound" | "/Movie" | "/Screen" | "/TrapNet" |
                  "/Watermark" | "/3D" | "/Link" | "/PrinterMark")) ->
-                   Printf.printf "%S\n" (Pdfwrite.string_of_pdf obj);
         begin match Pdf.lookup_direct pdf "/Contents" obj with
         | Some _ -> ()
         | None ->
@@ -1216,8 +1215,9 @@ let matterhorn_31_027 _ _ pdf =
                  begin match c1 o, c3 o, c4 o with
                  | false, false, false ->
                      begin match Pdf.lookup_direct pdf "/Subtype" o with
-                     | Some (Pdf.Name ("/Type1" | "/Type3")) -> unimpl ()
-                     | _ -> merror ()
+                     | Some (Pdf.Name ("/Type0" | "/CIDFontType0" | "/CIDFontType2")) -> ()
+                     | Some (Pdf.Name ("/Type1" | "/MMType1" | "/Type3")) -> unimpl ()
+                     | _ -> merror_str (Pdfwrite.string_of_pdf o)
                      end
                  | _ -> ()
                  end
