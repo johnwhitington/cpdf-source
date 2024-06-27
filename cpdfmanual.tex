@@ -30,6 +30,7 @@
 \fancyfoot{}
 \renewcommand{\headrulewidth}{0pt}
 \renewcommand{\footrulewidth}{0pt}
+\usepackage{pmboxdraw}
 \begin{document}
 
 \frontmatter
@@ -5160,6 +5161,88 @@ If the drawing range is a single page, and the next page already exists, the dra
 \end{small}
 \end{jscpdflib}
 
+\clearpage\pagestyle{empty}
+\chapter{Accessible PDFs with PDF/UA}\label{chap:19}\pagestyle{fancy}\index{PDF/UA}\index{accessibility}
+
+  {\small\begin{framed}
+  \noindent\verb!cpdf -print-struct-tree in.pdf!
+
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -extract-struct-tree in.pdf -o out.json]!
+
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -replace-struct-tree in.json in.pdf -o out.pdf]!
+
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -verify "PDF/UA-1(matterhorn)" [-json] in.pdf!
+
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -verify "PDF/UA-1(matterhorn)" -verify-single <test> [-json] in.pdf!
+
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -mark-as ["PDF/UA-1" | "PDF/UA-2"] in.pdf -o out.pdf!
+
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -remove-mark ["PDF/UA-1" | "PDF/UA-2"] in.pdf -o out.pdf!
+
+  \end{framed}}
+(intro)
+
+\section{Structure trees}
+
+In a PDF document, the optional Structure Tree is...
+
+We can print an abbreviated form of the structure tree to standard output with \texttt{cpdf -print-struct-tree in.pdf}:
+
+\begin{verbatim}
+/StructTreeRoot
+└── 
+    └── /Document
+        ├── /Sect
+        │   ├── /P (1)
+        │   │   ├── /Span (1)
+        │   │   └── 
+        │   └── /Figure (1)
+        ├── /Sect
+        │   ├── /H1 (2)
+        │   └── /TOC
+        │       ├── /TOCI
+        │       │   └── /P
+        │       │       └── /Link (2)
+        .       .
+        .       .
+        .
+\end{verbatim}
+
+\noindent The numbers in parentheses are the page numbers for structure elements, where present. To extract the full structure tree to JSON, we can use \texttt{-extract-struct-tree}:
+
+(example of extract)
+
+\noindent This can be edited like .... and reapplied with \texttt{-replace-struct-tree}:
+
+(example of replace)
+
+\noindent To remove a structure tree from a PDF, we can use \texttt{-remove-dict-entry} from Chapter \ref{chap:misc}:
+
+(example of remove)
+
+\section{Verifying conformance to PDF/UA}
+
+(intro)
+
+(example of -verify "PDF/UA-1(matterhorn)")
+
+(example of -verify-single)
+
+\section{PDF/UA compliance markers}
+
+Once we are sure a file complies to PDF/UA, in terms of both machine and human checks, we can mark it as such:
+
+(mark with -mark-as for PDF/UA1 and 2)
+
+To remove such a marker, we can use \texttt{-remove-mark}:
+
+(removing a mark)
 
 \clearpage\pagestyle{empty}
 %We wanted to call this "Chapter M", but the following commands messed up the PDF bookmarks, so this chapter will simply have to float for now, until we can return to this problem.
