@@ -5186,14 +5186,19 @@ If the drawing range is a single page, and the next page already exists, the dra
   \noindent\verb!cpdf -remove-mark ["PDF/UA-1" | "PDF/UA-2"] in.pdf -o out.pdf!
 
   \end{framed}}
-(intro)
+
+PDF/UA (Universal Accessibility) is a PDF subformat whose rules consist of a set of machine-checkable and human-checkable-only requirements to make PDF documents accessible for all users - for example, those using screen readers. Cpdf has some basic facilities for manipulating the extra PDF constructs which are used in (amongst others) PDF/UA, and a basic verifier for most of the machine-checkable requirements.
 
 \section{Structure trees}
 
-In a PDF document, the optional Structure Tree is...
+In a PDF document, the optional Structure Tree is a parallel construct which describes the logical structure of a document (as opposed to the information for rendering the document on the screen or printing it out, which every PDF of course contains).
 
 We can print an abbreviated form of the structure tree to standard output with \texttt{cpdf -print-struct-tree in.pdf}:
 
+\smallgap
+
+\begin{minipage}{\linewidth}
+\begin{framed}
 \begin{verbatim}
 /StructTreeRoot
 └── 
@@ -5213,36 +5218,134 @@ We can print an abbreviated form of the structure tree to standard output with \
         .       .
         .
 \end{verbatim}
+\end{framed}
+\end{minipage}
 
-\noindent The numbers in parentheses are the page numbers for structure elements, where present. To extract the full structure tree to JSON, we can use \texttt{-extract-struct-tree}:
+\smallgap 
+\noindent The numbers in parentheses are the page numbers for structure elements, where present. To extract the full structure tree to JSON, we can use \texttt{cpdf -extract-struct-tree in.pdf -o out.json}:
 
-(example of extract)
+{\small\begin{verbatim}
+[
+  [ 0, { "/CPDFJSONformatversion": 1, "/CPDFJSONpageobjnumbers": [ 52 ] } ],
+  [
+    102,
+    {
+      "/Type": { "N": "/StructElem" },
+      "/S": { "N": "/TD" },
+      "/P": 98,
+      "/Pg": 52,
+      "/K": { "I": 38 },
+      "/T": { "U": "row #7, col #3" },
+      "/A": {
+        "/O": { "N": "/Layout" },
+        "/Height": { "F": 18.28 },
+        "/Width": { "F": 73.07689999999999 }
+      }
+    }
+  ],
+  [
+    15,
+    {
+      "/Type": { "N": "/StructElem" },
+      "/S": { "N": "/TD" },
+      "/P": 59,
+      "/Pg": 52,
+      "/K": { "I": 20 },
+      "/T": { "U": "row #3, col #5" },
+      "/A": {
+        "/O": { "N": "/Layout" },
+        "/Height": { "F": 18.28 },
+        "/Width": { "F": 73.07689999999999 }
+      }
+    }
+  ],
+...
+\end{verbatim}}
 
-\noindent This can be edited like .... and reapplied with \texttt{-replace-struct-tree}:
+\noindent This JSON file contains the structure tree objects from the file, using the format described in chapter \ref{chap:15}. There is a special entry in object \texttt{0} which gives the key to the page object numbers. In this example, there is one page with object number \texttt{52}.
 
-(example of replace)
+This JSON file can be edited, for example to change text strings, and reapplied with \texttt{cpdf -replace-struct-tree out.json in.pdf -o out.pdf}. If extra objects are required, they should be introduced with negative object numbers: cpdf will renumber them on import so as not to clash with any existing numbers.
 
-\noindent To remove a structure tree from a PDF, we can use \texttt{-remove-dict-entry} from Chapter \ref{chap:misc}:
-
-(example of remove)
+To remove a structure tree from a PDF, we can use \texttt{-remove-dict-entry} from Chapter \ref{chap:misc} i.e \texttt{cpdf -remove-struct-entry /StructTreeRoot in.pdf -o out.pdf}.
 
 \section{Verifying conformance to PDF/UA}
 
-(intro)
+Cpdf contains a new, experimental verifier for PDF/UA via the machine-checkable subset of the Matterhorn Protocol, a list of checks based on the PDF/UA-1 specification. For example, we can run \texttt{cpdf -verify "PDF/UA-1(matterhorn)" in.pdf} and see:
 
-(example of -verify "PDF/UA-1(matterhorn)")
+{\small\begin{verbatim}
+06-001 UA1:7.1-8 Document does not contain an XMP metadata stream 
+07-001 UA1:7.1-9 ViewerPreferences dictionary of the Catalog dictionary does
+not contain a DisplayDocTitle entry 
+11-006 UA1:7.2-3 Natural language for document metadata cannot be determined.
+("No top-level /Lang")
+28-004 UA1:7.18.1-4 An annotation, other than of subtype Widget, does not
+have a Contents entry and does not have an alternative description (in the
+form of an Alt entry in the enclosing structure element). 
+28-008 UA1:7.18.3-1 A page containing an annotation does not contain a Tabs
+entry 
+28-011 UA1:7.18.5-1 A link annotation is not nested within a <Link> tag. 
+28-012 UA1:7.18.5-2 A link annotation does not include an alternate
+description in its Contents entry. 
+\end{verbatim}}
 
-(example of -verify-single)
+\noindent The first column here is the Matterhorn Protocol checkpoint, the second the reference in the PDF/UA-1 standard docunment, the third the textual description from the Matterhorn Protocol, and an optional fourth (in parentheses) any extra information available.
+
+The same information is available in JSON format by adding \texttt{-json} to the command line:
+
+{\small\begin{verbatim}
+[
+  {
+    "name": "06-001",
+    "section": "UA1:7.1-8",
+    "error": "Document does not contain an XMP metadata stream",
+    "extra": null
+  },
+  {
+    "name": "07-001",
+    "section": "UA1:7.1-9",
+    "error": "ViewerPreferences dictionary of the Catalog dictionary does not
+contain a DisplayDocTitle entry",
+    "extra": null
+  },
+  {
+    "name": "11-006",
+    "section": "UA1:7.2-3",
+    "error": "Natural language for document metadata cannot be determined.",
+    "extra": "No top-level /Lang"
+  },
+  {
+    "name": "28-004",
+    "section": "UA1:7.18.1-4",
+    "error": "An annotation, other than of subtype Widget, does not have a
+Contents entry and does not have an alternative description (in the form of
+an Alt entry in the enclosing structure element).",
+    "extra": null
+  },
+  {
+    "name": "28-008",
+    "section": "UA1:7.18.3-1",
+    "error": "A page containing an annotation does not contain a Tabs entry",
+    "extra": null
+  },
+  {
+    "name": "28-011",
+    "section": "UA1:7.18.5-1",
+    "error": "A link annotation is not nested within a <Link> tag.",
+    "extra": null
+  },
+  {
+    "name": "28-012",
+    "section": "UA1:7.18.5-2",
+    "error": "A link annotation does not include an alternate description in
+its Contents entry.",
+    "extra": null
+  }\end{verbatim}}
+
+\noindent If verifying many files for a single fault, we may choose which test to run by adding \texttt{-verify-single <testname>} to the command line. For example, \texttt{-verify-single "28-012"}.
 
 \section{PDF/UA compliance markers}
 
-Once we are sure a file complies to PDF/UA, in terms of both machine and human checks, we can mark it as such:
-
-(mark with -mark-as for PDF/UA1 and 2)
-
-To remove such a marker, we can use \texttt{-remove-mark}:
-
-(removing a mark)
+Once we are sure a file complies to PDF/UA, in terms of both machine and human checks, we can mark it as such by using \texttt{cpdf -mark-as "PDF/UA-1" in.pdf -o out.pdf} or \texttt{cpdf -mark-as "PDF/UA-2" in.pdf -o out.pdf} for the recent PDF/UA-2 standard. To remove such a marker we can use, for example, \texttt{cpdf -remove-mark "PDF/UA-1" in.pdf -o out.pdf}.
 
 \clearpage\pagestyle{empty}
 %We wanted to call this "Chapter M", but the following commands messed up the PDF bookmarks, so this chapter will simply have to float for now, until we can return to this problem.
