@@ -5266,7 +5266,7 @@ We can print an abbreviated form of the structure tree to standard output with \
 
 This JSON file can be edited, for example to change text strings, and reapplied with \texttt{cpdf -replace-struct-tree out.json in.pdf -o out.pdf}. If extra objects are required, they should be introduced with negative object numbers: cpdf will renumber them on import so as not to clash with any existing numbers.
 
-To remove a structure tree from a PDF, we can use \texttt{-remove-dict-entry} from Chapter \ref{chap:misc} i.e \texttt{cpdf -remove-struct-entry /StructTreeRoot in.pdf -o out.pdf}.
+To remove a structure tree from a PDF, we can use \texttt{-remove-dict-entry} from Chapter \ref{chap:misc} i.e \texttt{cpdf -remove-dict-entry /StructTreeRoot in.pdf -o out.pdf}.
 
 \section{Verifying conformance to PDF/UA}
 
@@ -5400,7 +5400,7 @@ Once we are sure a file complies to PDF/UA, in terms of both machine and human c
   \noindent\verb!cpdf -remove-clipping [<range>] in.pdf -o out.pdf!
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf -obj <obj num> in.pdf!
+  \noindent\verb!cpdf -obj <object specification> in.pdf!
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -extract-stream[-decompress] <obj num> in.pdf [-o out.dat | -stdout]!
@@ -5618,14 +5618,14 @@ $ cpdf -obj 1238 out.pdf
 \noindent Alternatively, we may follow a chain of dictionary entries from the trailer dictionary:
 
 {\small\begin{verbatim}
-$ ./cpdf -obj /Root,/Pages,/Count cpdfmanual.pdf
+$ ./cpdf -obj /Root/Pages/Count cpdfmanual.pdf
 "133"
 \end{verbatim}}
 
 \noindent We may also begin at a numbered page instead of at the trailer dictionary:
 
 {\small\begin{verbatim}
-./cpdf -obj P20/Resources,/Font,/F58,/BaseFont cpdfmanual.pdf
+./cpdf -obj P20/Resources/Font/F58/BaseFont cpdfmanual.pdf
 "/MCBERL+URWPalladioL-Roma"
 \end{verbatim}}
 

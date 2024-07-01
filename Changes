@@ -6,6 +6,7 @@ o Build PDF files from JPEG2000 (.jp2, .jpf/.jpx) files
 o Mark a file as PDF/UA compliant, or remove such marking
 o Verify compliance to PDF/UA via the Matterhorn protocol
 o Extract, edit and reapply document structure tree
+o Print structure tree summary
 o Split structure tree when splitting PDF to save size
 o Combine structure trees when stamping PDFs
 o Set the natural language of a file

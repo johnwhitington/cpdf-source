@@ -3444,6 +3444,7 @@ let extract_stream pdf decomp objnum =
    commas. Begins with P and it's a page number then a (possibly empty) chain.
    Otherwise it's an object number (0 = trailerdict). *)
 let print_obj pdf objspec =
+  let split str = map (fun x -> "/" ^ x) (tl (String.split_on_char '/' str)) in
   let simple_obj obj =
     let obj = if obj = 0 then pdf.Pdf.trailerdict else Pdf.lookup_obj pdf obj in
     Printf.printf "%S\n" (Pdfwrite.string_of_pdf obj)
@@ -3459,10 +3460,10 @@ let print_obj pdf objspec =
         let number, chain =
           let digits, rest = cleavewhile isdigit more in
             List.nth (Pdf.page_reference_numbers pdf) (int_of_string (implode digits) - 1),
-            begin match String.split_on_char ',' (implode rest) with [""] -> [] | x -> x end
+            begin match split (implode rest) with [""] -> [] | x -> x end
         in
           chain_obj number chain
-    | '/'::more -> chain_obj 0 (String.split_on_char ',' (implode ('/'::more)))
+    | '/'::more -> chain_obj 0 (split (implode ('/'::more)))
     | [] -> simple_obj 0
     | _ -> simple_obj (int_of_string objspec)
 
