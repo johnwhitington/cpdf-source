@@ -302,6 +302,11 @@ let matterhorn_09_005 st st2 pdf =
 (* A TOC-related structure element is used in a way that does not conform to
    Table 333 in ISO 32000-1. *)
 
+let print_children (E (n, cs)) =
+  Printf.printf "%S: " n;
+  iter (fun (E (n, _)) -> Printf.printf "%S " n) cs;
+  flprint "\n"
+
 (* We test two things: a) everything under a TOC is correct; and b) There is no
 TOCI except under a TOC. *)
 let matterhorn_09_006 st st2 pdf =
@@ -319,13 +324,13 @@ let matterhorn_09_006 st st2 pdf =
    let rec check_toc_toci = function
      | E ("/TOC", cs) ->
          if
-           List.exists (function E (("/TOC " | "/TOCI"), _) -> false | _ -> true) cs
+           List.exists (function E (("/TOC" | "/TOCI"), _) -> false | _ -> true) cs
          then
            merror_str "/TOC children must be /TOC or /TOCI";
          iter check_toc_toci cs
      | E ("/TOCI", cs) ->
          if
-           List.exists (function E (("/TOC " | "/Lbl" | "/Reference" | "/P" | "/NonStruct"), _) -> false | _ -> true) cs
+           List.exists (function E (("/TOC" | "/Lbl" | "/Reference" | "/P" | "/NonStruct"), _) -> false | _ -> true) cs
          then
            merror_str "Bad child of /TOCI";
          iter check_toc_toci cs
