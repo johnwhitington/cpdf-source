@@ -27,49 +27,51 @@ let print_children (E (n, cs)) =
   iter (fun (E (n, _)) -> Printf.printf "%S " n) cs;
   flprint "\n"
 
-(* FIXME What about /C? *)
-(* FIXME What about class map? *)
 (* Read attributes. *)
-let read_a pdf stnode =
-  let rec read_single d =
-    match d with
-    | Pdf.Dictionary d -> map fst d
-    | Pdf.Stream s -> read_single (fst !s)
-    | _ -> error "read_single"
+let rec read_single d =
+  match d with
+  | Pdf.Dictionary d -> map fst d
+  | Pdf.Stream s -> read_single (fst !s)
+  | _ -> error "read_single"
+
+let read_a pdf n stnode =
+  match Pdf.lookup_direct pdf n stnode with
+  | Some (Pdf.Array attrs) ->
+      let attrs = keep (function Pdf.Integer _ -> false | _ -> true) attrs in
+        flatten (map read_single attrs)
+  | Some (Pdf.Dictionary d) ->
+      read_single (Pdf.Dictionary d)
+  | Some (Pdf.Stream s) ->
+      read_single (Pdf.Stream s)
+  | Some _ -> []
+  | None -> []
+
+let read_attributes pdf stnode =
+  let from_a = read_a pdf "/A" stnode in
+  let from_c = read_a pdf "/C" stnode in
+  (* Prefer entries from a, but we are just testing for presence, so merely setify *)
+  let attrs = setify (from_a @ from_c) in
+  (* For now, stick /ID, /Alt, /ActualText in here too. Eventually, move to prevent crashes. *)
+  let alt =
+    match Pdf.lookup_direct pdf "/Alt" stnode with | Some _ -> ["/Alt"] | None -> []
   in
-    let from_a =
-      match Pdf.lookup_direct pdf "/A" stnode with
-      | Some (Pdf.Array attrs) ->
-          let attrs = keep (function Pdf.Integer _ -> false | _ -> true) attrs in
-            flatten (map read_single attrs)
-      | Some (Pdf.Dictionary d) ->
-          read_single (Pdf.Dictionary d)
-      | Some (Pdf.Stream s) ->
-          read_single (Pdf.Stream s)
-      | Some _ -> []
-      | None -> []
-    in
-    (* For now, stick /ID, /Alt, /ActualText in here too. Eventually, move to prevent crashes. *)
-    let alt =
-      match Pdf.lookup_direct pdf "/Alt" stnode with | Some _ -> ["/Alt"] | None -> []
-    in
-    let id =
-      match Pdf.lookup_direct pdf "/ID" stnode with | Some _ -> ["/ID"] | None -> []
-    in
-    let at =
-      match Pdf.lookup_direct pdf "/ActualText" stnode with | Some _ -> ["/ActualText"] | None -> []
-    in
-    let pageref =
-      match Pdf.direct pdf stnode with
-      | Pdf.Dictionary d ->
-          begin match lookup "/Pg" d with
-          | Some (Pdf.Indirect i) ->
-              ["_" ^ string_of_int i]
-          | _ -> []
-          end
-      | _ -> []
-    in
-      from_a @ id @ at @ alt @ pageref
+  let id =
+    match Pdf.lookup_direct pdf "/ID" stnode with | Some _ -> ["/ID"] | None -> []
+  in
+  let at =
+    match Pdf.lookup_direct pdf "/ActualText" stnode with | Some _ -> ["/ActualText"] | None -> []
+  in
+  let pageref =
+    match Pdf.direct pdf stnode with
+    | Pdf.Dictionary d ->
+        begin match lookup "/Pg" d with
+        | Some (Pdf.Indirect i) ->
+            ["_" ^ string_of_int i]
+        | _ -> []
+        end
+    | _ -> []
+  in
+    attrs @ id @ at @ alt @ pageref
 
 let rec read_st_inner pdf stnode =
   let s =
@@ -78,10 +80,10 @@ let rec read_st_inner pdf stnode =
     | _ -> ""
   in
     match Pdf.lookup_direct pdf "/K" stnode with
-    | None -> E2 (s, read_a pdf stnode, [])
-    | Some (Pdf.Dictionary d) -> E2 (s, read_a pdf stnode, [read_st_inner pdf (Pdf.Dictionary d)])
-    | Some (Pdf.Integer mcd) -> E2 (s, read_a pdf stnode, []) (* marked content identifier, we drop. *)
-    | Some (Pdf.Array a) -> E2 (s, read_a pdf stnode, read_st_inner_array pdf a)
+    | None -> E2 (s, read_attributes pdf stnode, [])
+    | Some (Pdf.Dictionary d) -> E2 (s, read_attributes pdf stnode, [read_st_inner pdf (Pdf.Dictionary d)])
+    | Some (Pdf.Integer mcd) -> E2 (s, read_attributes pdf stnode, []) (* marked content identifier, we drop. *)
+    | Some (Pdf.Array a) -> E2 (s, read_attributes pdf stnode, read_st_inner_array pdf a)
     | _ -> error "malformed st node"
 
 and read_st_inner_array pdf nodes =
