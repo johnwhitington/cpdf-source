@@ -299,7 +299,8 @@ let matterhorn_09_005 st st2 pdf =
     (* for each /LI, 1 or n /Lbl or /LBody or both *)
     | E ("/LI", []) -> merror_str "Empty /LI"
     | E ("/LI", cs) -> iter check_li_child cs
-    | E (_, _) -> merror_str "Unknown child of /LI"
+    | E ("/L", cs) -> check_l (E ("/L", cs))
+    | E (n, _) -> merror_str ("Unknown child of /LI: " ^ n)
     (* need to check all children of /LBody too, to see if any is /L *)
   and check_li_child = function
     | E (("/LBody"| "/Lbl"), cs) -> iter check_l cs
@@ -640,10 +641,15 @@ let matterhorn_28_002 _ _ pdf =
 (* An annotation, other than of subtype Widget, does not have a Contents entry
    and does not have an alternative description (in the form of an Alt entry in
    the enclosing structure element). *)
+(* NB for future: "The requirements of this clause shall not apply to
+   annotations whose hidden flag is set or whose rectangle is outside the
+   CropBox or whose Subtype is Popup." *)
 let matterhorn_28_004 _ _ pdf =
   let parent_tree = read_parent_tree pdf in
     Pdf.objiter
-      (fun n obj -> match Pdf.lookup_direct pdf "/Subtype" obj with
+      (fun n obj ->
+        (*flprint (Pdfwrite.string_of_pdf obj ^ "\n");*)
+      match Pdf.lookup_direct pdf "/Subtype" obj with
       | Some (Pdf.Name
                 ("/Stamp" | "/Line" | "Square" | "/Circle" | "/Polygon" | "/PolyLine" |
                  "/Highlight" | "/Underline" | "/Squiggly" | "/StrikeOut" | "/Caret" |
