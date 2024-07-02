@@ -5,7 +5,7 @@ open Cpdferror
   a) Those which require looking deep inside font files; and
   b) Those which require reading inside the graphics stream.
 
-Experimental. Both false positive and false negativce results possible. *)
+Experimental. Both false positive and false negative results possible. *)
 
 exception MatterhornError of Cpdfyojson.Safe.t
 
@@ -422,27 +422,28 @@ let is_hnum s =
       begin try ignore (int_of_string (implode cs)); true with Failure _ -> false end
   | _ -> false
 
+let num s = int_of_string (implode (tl (tl (explode s))))
+
+let rec headings_list_of_tree (E (n, cs)) =
+  (if is_hnum n then [n] else []) @ flatten (map headings_list_of_tree cs)
+
 (* Does use numbered headings, but the first heading tag is not <H1>. *)
-let matterhorn_14_002 st st2 pdf =
-  let rec check_hn = function
-  | E ("/H1", cs) -> ()
-  | E (s, cs) when is_hnum s -> merror ()
-  | E (_, cs) -> iter check_hn cs
-  in
-    check_hn st
+let matterhorn_14_002 st _ _ =
+  match headings_list_of_tree st with
+  | [] | "/H1"::_ -> ()
+  | _ -> merror ()
 
 (* Numbered heading levels in descending sequence are skipped (Example: <H3>
    follows directly after <H1>). *)
-let matterhorn_14_003 st st2 pdf =
-  let rec check_nseq n = function
-  | E (s, cs) when is_hnum s ->
-      let num = int_of_string (implode (tl (tl (explode s)))) in
-        if num > n + 1 && n > 0 then merror_str (Printf.sprintf "%i -> %i" n num);
-        iter (check_nseq num) cs
-  | E (_, cs) -> iter (check_nseq n) cs
+let matterhorn_14_003 st _ _ =
+  let rec check l = function
+  | [] -> ()
+  | n::ns ->
+      let nm = num n in
+        if nm > l + 1 then merror_str (Printf.sprintf "%i -> %i" l nm) else check nm ns
   in
-    check_nseq 0 st
-
+    check 1 (headings_list_of_tree st)
+  
 (* A node contains more than one <H> tag. *)
 let matterhorn_14_006 st st2 pdf =
   let found = ref false in
