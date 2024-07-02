@@ -20,9 +20,9 @@ val embed_missing_fonts : string -> bool -> string -> string -> unit
 val copy_font : Pdf.t -> string -> int -> int list -> Pdf.t -> Pdf.t
 
 (** Report missing fonts *)
-val missing_fonts : ?l:string list ref -> Pdf.t -> int list -> unit
+val missing_fonts : ?l:(int * string * string * string * string) list ref -> Pdf.t -> int list -> unit
 
-val missing_fonts_return : Pdf.t -> int list -> string list
+val missing_fonts_return : Pdf.t -> int list -> (int * string * string * string * string) list
 
 (** Print a font table to Standard Output. *)
 val print_font_table : Pdf.t -> string -> int -> unit

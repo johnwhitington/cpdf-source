@@ -114,7 +114,7 @@ let missing_font ?l pdf page (name, dict) =
     in 
       match l with
       | None -> Printf.printf "%i, %s, %s, %s, %s\n" page name subtype basefont encoding
-      | Some r -> r := Printf.sprintf "%i %s %s %s %s" page name subtype basefont encoding::!r
+      | Some r -> r := (page, name, subtype, basefont, encoding)::!r
 
 let missing_fonts ?l pdf range =
   Cpdfpage.iter_pages

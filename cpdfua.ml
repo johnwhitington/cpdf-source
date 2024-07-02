@@ -28,23 +28,23 @@ let print_children (E (n, cs)) =
   flprint "\n"
 
 (* Read attributes. *)
-let rec read_single d =
-  match d with
+let rec read_single pdf d =
+  match Pdf.direct pdf d with
   | Pdf.Dictionary d -> map fst d
-  | Pdf.Stream s -> read_single (fst !s)
+  | Pdf.Stream s -> read_single pdf (fst !s)
   | Pdf.Name n -> [n]
-  | x -> error "read_single"
+  | x -> error ("read_single: " ^ Pdfwrite.string_of_pdf x)
 
 let read_a pdf n stnode =
   match Pdf.lookup_direct pdf n stnode with
   | Some (Pdf.Array attrs) ->
       let attrs = keep (function Pdf.Integer _ -> false | _ -> true) attrs in
-        flatten (map read_single attrs)
+        flatten (map (read_single pdf) attrs)
   | Some (Pdf.Name n) -> [n]
   | Some (Pdf.Dictionary d) ->
-      read_single (Pdf.Dictionary d)
+      read_single pdf (Pdf.Dictionary d)
   | Some (Pdf.Stream s) ->
-      read_single (Pdf.Stream s)
+      read_single pdf (Pdf.Stream s)
   | Some _ -> []
   | None -> []
 
@@ -974,11 +974,12 @@ let matterhorn_31_008 _ _ pdf =
 
 (* For a font used by text intended to be rendered the font program is not
    embedded. *)
-(* NB This, for now, reports all unembedded fonts. *)
+(* NB This, for now, reports all unembedded fonts, save for Type 3 ones... *)
 let matterhorn_31_009 _ _ pdf =
   let l = Cpdffont.missing_fonts_return pdf (ilist 1 (Pdfpage.endpage pdf)) in
+  let l = lose (function (_, _, "/Type3", _, _) -> true | _ -> false) l in
     if l <> [] then
-      raise (MatterhornError (`List (map (fun x -> `String x) l)))
+      raise (MatterhornError (`List (map (fun (a, b, c, d, e) -> `String (Printf.sprintf "%i %s %s %s %s" a b c d e)) l)))
 
 (* For a font used by text the font program is embedded but it does not contain
    glyphs for all of the glyphs referenced by the text used for rendering. *)
