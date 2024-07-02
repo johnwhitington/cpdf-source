@@ -977,7 +977,6 @@ let matterhorn_31_008 _ _ pdf =
 (* NB This, for now, reports all unembedded fonts, save for Type 3 ones... *)
 let matterhorn_31_009 _ _ pdf =
   let l = Cpdffont.missing_fonts_return pdf (ilist 1 (Pdfpage.endpage pdf)) in
-  let l = lose (function (_, _, "/Type3", _, _) -> true | _ -> false) l in
     if l <> [] then
       raise (MatterhornError (`List (map (fun (a, b, c, d, e) -> `String (Printf.sprintf "%i %s %s %s %s" a b c d e)) l)))
 

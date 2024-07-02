@@ -84,18 +84,21 @@ let copy_font frompdf fontname fontpage range pdf =
 
 (* Missing Fonts *)
 let is_missing pdf dict =
-  match Pdf.lookup_direct pdf "/FontDescriptor" dict with
-  | None -> true
-  | Some d ->
-      match Pdf.lookup_direct pdf "/FontFile" d with
-      | Some _ -> false
-      | None ->
-          match Pdf.lookup_direct pdf "/FontFile2" d with
+  match Pdf.lookup_direct pdf "/Subtype" dict with
+  | Some (Pdf.Name "/Type3") -> false
+  | _ -> 
+      match Pdf.lookup_direct pdf "/FontDescriptor" dict with
+      | None -> true
+      | Some d ->
+          match Pdf.lookup_direct pdf "/FontFile" d with
           | Some _ -> false
           | None ->
-              match Pdf.lookup_direct pdf "/FontFile3" d with
+              match Pdf.lookup_direct pdf "/FontFile2" d with
               | Some _ -> false
-              | None -> true
+              | None ->
+                  match Pdf.lookup_direct pdf "/FontFile3" d with
+                  | Some _ -> false
+                  | None -> true
 
 let missing_font ?l pdf page (name, dict) =
   if is_missing pdf dict then
