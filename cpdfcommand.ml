@@ -2821,16 +2821,16 @@ and specs =
    ("-nl", Arg.Unit (fun () -> Cpdfdrawcontrol.addop Cpdfdraw.Newline), " New line");
    ("-newpage", Arg.Unit Cpdfdrawcontrol.addnewpage, " Move to a fresh page");
    ("-extract-stream", Arg.String setextractstream, " Extract a stream");
-   ("-extract-stream-decompress", Arg.String setextractstreamdecomp, "Extract a stream, decompressing");
-   ("-obj", Arg.String setprintobj, "Print object");
-   ("-json", Arg.Unit (fun () -> args.format_json <- true), "Format output as JSON");
-   ("-verify", Arg.String (fun s -> setop (Verify s) ()), "Verify conformance to a standard");
-   ("-verify-single", Arg.String (fun s -> args.verify_single <- Some s), "Verify a single test");
-   ("-mark-as", Arg.String (fun s -> setop (MarkAs s) ()), "Mark as conforming to a standard");
-   ("-remove-mark", Arg.String (fun s -> setop (RemoveMark s) ()), "Remove conformance mark");
-   ("-print-struct-tree", Arg.Unit (fun () -> setop PrintStructTree ()), "Print structure tree");
-   ("-extract-struct-tree", Arg.Unit (fun () -> setop ExtractStructTree ()), "Extract structure tree in JSON format");
-   ("-replace-struct-tree", Arg.String (fun s -> setop (ReplaceStructTree s) ()), "Replace structure tree from JSON");
+   ("-extract-stream-decompress", Arg.String setextractstreamdecomp, " Extract a stream, decompressing");
+   ("-obj", Arg.String setprintobj, " Print object");
+   ("-json", Arg.Unit (fun () -> args.format_json <- true), " Format output as JSON");
+   ("-verify", Arg.String (fun s -> setop (Verify s) ()), " Verify conformance to a standard");
+   ("-verify-single", Arg.String (fun s -> args.verify_single <- Some s), " Verify a single test");
+   ("-mark-as", Arg.String (fun s -> setop (MarkAs s) ()), " Mark as conforming to a standard");
+   ("-remove-mark", Arg.String (fun s -> setop (RemoveMark s) ()), " Remove conformance mark");
+   ("-print-struct-tree", Arg.Unit (fun () -> setop PrintStructTree ()), " Print structure tree");
+   ("-extract-struct-tree", Arg.Unit (fun () -> setop ExtractStructTree ()), " Extract structure tree in JSON format");
+   ("-replace-struct-tree", Arg.String (fun s -> setop (ReplaceStructTree s) ()), " Replace structure tree from JSON");
    (* These items are undocumented *)
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit (fun () -> args.debugcrypt <- true), "");
