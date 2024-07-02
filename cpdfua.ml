@@ -22,6 +22,11 @@ type st = E of string * st list
 (* Now one which contains the attributes too. *)
 type st2 = E2 of string * string list * st2 list
 
+let print_children (E (n, cs)) =
+  Printf.printf "%S: " n;
+  iter (fun (E (n, _)) -> Printf.printf "%S " n) cs;
+  flprint "\n"
+
 (* FIXME What about /C? *)
 (* FIXME What about class map? *)
 (* Read attributes. *)
@@ -240,8 +245,8 @@ let matterhorn_09_004 st st2 pdf =
         | E ("/Caption", _)::cs -> cs
         | l ->
             begin match rev cs with
-            | E ("/Caption", _)::cs -> cs
-            | cs -> cs
+            | E ("/Caption", _)::cs -> rev cs
+            | cs -> rev cs
             end
         end
       in
@@ -267,9 +272,12 @@ let matterhorn_09_004 st st2 pdf =
   and check_tr = function
     | E (("/TH" | "/TD"), _) -> ()
     | _ -> merror_str "Every /TR element must be a /TH or /TD"
-  and check_thead_tbody_tfoot node =
-    if List.exists (function E ("/TR", _) -> false | _ -> true) node then
-      merror_str "Element in /THead | /TBody | /TFoot not a /TR"
+  and check_thead_tbody_tfoot cs =
+    iter
+      (fun node ->
+         if List.exists (function E ("/TR", _) -> false | _ -> true) node then
+           merror_str "Element in /THead | /TBody | /TFoot not a /TR")
+      (map (function (E (_, cs')) -> cs') cs)
   in
     check_table st
 
@@ -302,10 +310,6 @@ let matterhorn_09_005 st st2 pdf =
 (* A TOC-related structure element is used in a way that does not conform to
    Table 333 in ISO 32000-1. *)
 
-let print_children (E (n, cs)) =
-  Printf.printf "%S: " n;
-  iter (fun (E (n, _)) -> Printf.printf "%S " n) cs;
-  flprint "\n"
 
 (* We test two things: a) everything under a TOC is correct; and b) There is no
 TOCI except under a TOC. *)
