@@ -32,13 +32,15 @@ let rec read_single d =
   match d with
   | Pdf.Dictionary d -> map fst d
   | Pdf.Stream s -> read_single (fst !s)
-  | _ -> error "read_single"
+  | Pdf.Name n -> [n]
+  | x -> error "read_single"
 
 let read_a pdf n stnode =
   match Pdf.lookup_direct pdf n stnode with
   | Some (Pdf.Array attrs) ->
       let attrs = keep (function Pdf.Integer _ -> false | _ -> true) attrs in
         flatten (map read_single attrs)
+  | Some (Pdf.Name n) -> [n]
   | Some (Pdf.Dictionary d) ->
       read_single (Pdf.Dictionary d)
   | Some (Pdf.Stream s) ->
