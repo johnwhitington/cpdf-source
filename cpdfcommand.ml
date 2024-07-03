@@ -594,7 +594,7 @@ let args =
    boxes = false;
    encrypt_metadata = true;
    retain_numbering = false;
-   process_struct_trees = true;
+   process_struct_trees = false;
    remove_duplicate_fonts = false;
    remove_duplicate_streams = false;
    encoding = Cpdfmetadata.Stripped;
@@ -733,7 +733,7 @@ let reset_arguments () =
   args.boxes <- false;
   args.encrypt_metadata <- true;
   args.retain_numbering <- false;
-  args.process_struct_trees <- true;
+  args.process_struct_trees <- false;
   args.remove_duplicate_fonts <- false;
   args.remove_duplicate_streams <- false;
   args.encoding <- Cpdfmetadata.Stripped;
@@ -1975,9 +1975,9 @@ and specs =
    ("-merge-add-bookmarks-use-titles",
        Arg.Unit setmergeaddbookmarksusetitles,
        " Use title of document rather than filename");
-   ("-no-process-struct-trees",
-       Arg.Unit (fun () -> args.process_struct_trees <- false),
-       " Do not process structure trees");
+   ("-process-struct-trees",
+       Arg.Unit (fun () -> args.process_struct_trees <- true),
+       " Process structure trees");
    ("-remove-duplicate-fonts",
        Arg.Unit set_remove_duplicate_fonts,
        " Remove duplicate fonts when merging");
