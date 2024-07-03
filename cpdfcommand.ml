@@ -3492,6 +3492,7 @@ let go () =
                 | [pdf] ->
                     if hd ranges <> "all" then
                       let range = parse_pagespec pdf (hd ranges) in
+                        (* FIXME STRUCTURE TREE TRIM *)
                         let newpdf = Pdfpage.pdf_of_pages ~retain_numbering:args.retain_numbering pdf range in
                           write_pdf false newpdf
                     else
@@ -3920,6 +3921,7 @@ let go () =
         | _ -> error "Split: bad parameters"
       end
   | Some (SplitOnBookmarks level) ->
+      (* FIXME STRUCTURE TREE TRIM *)
       begin match args.out with
         | File output_spec ->
             let pdf = get_single_pdf args.op false in
@@ -3931,6 +3933,7 @@ let go () =
         | NoOutputSpecified -> error "Split: No output format specified"
       end
   | Some (SplitMax s) ->
+      (* FIXME STRUCTURE TREE TRIM *)
       begin match args.out with
         | File output_spec ->
             let pdf = get_single_pdf args.op false in
@@ -3941,6 +3944,7 @@ let go () =
         | NoOutputSpecified -> error "Split: No output format specified"
       end
   | Some Spray ->
+      (* FIXME STRUCTURE TREE TRIM *)
       begin match args.inputs, args.out with
         | (_, pagespec, _, _, _, _)::_, File output_spec ->
             let pdf = get_single_pdf args.op false in
