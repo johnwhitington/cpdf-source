@@ -18,6 +18,11 @@ o Merge structure trees better when merging files
 o Report top-level natural language on -info
 o Report mark information dictionary contents on -info
 
+Backward-incompatible change:
+
+o -process-struct-tree replaces -no-process-struct-tree
+newly introduced in previous version
+
 2.7 (February 2024)
 
 New features:
