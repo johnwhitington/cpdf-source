@@ -1261,7 +1261,7 @@ of the inputs only appear once in the output.
 
 The \texttt{-merge-add-bookmarks} option adds a top-level bookmark for each file, using the filename. Any existing bookmarks are retained. The \texttt{-merge\--add\--bookmarks\--use\--titles}, when used in conjunction with \texttt{-merge-add-bookmarks}, will use the title from each PDF's metadata instead of the filename.
 
-The \texttt{-process-struct-trees} option will merge structure trees. Without this option, instead of merging them, they are simply copied across wholesale.
+The \texttt{-process-struct-trees} option will merge structure trees (the data which forms the logical structure of the PDF). In its absence, the structure tree from the first PDF only is preserved.
 
   \section{Splitting}
 \index{splitting}
@@ -1371,7 +1371,7 @@ The encryption parameters described in Chapter \ref{encryption} may be added to 
 
 \section{Splitting and structure trees}
 
-Presently, cpdf will include the input structure tree in each output PDF. To remove a structure tree entirely, preprocess the file with \texttt{-remove-dict-entry /StructTreeRoot}. If you do not require structure trees, this will lead to faster splitting, and smaller outputs.
+The \texttt{-process-struct-trees} option will trim the structure tree (the data which forms the logical structure of the PDF). In its absence, the structure tree is preserved wholesale in each output file.
 
 \pagestyle{empty}\thispagestyle{fancy}
 
