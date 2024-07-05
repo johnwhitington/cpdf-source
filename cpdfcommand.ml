@@ -3231,7 +3231,7 @@ let fast_write_split_pdfs
   let marks = Pdfmarks.read_bookmarks main_pdf in
     iter2
       (fun number pagenums ->
-         let pdf = Pdfpage.pdf_of_pages main_pdf pagenums in
+         let pdf = Pdfpage.pdf_of_pages ~retain_numbering:args.retain_numbering ~process_struct_tree:args.process_struct_trees main_pdf pagenums in
            let startpage, endpage = extremes pagenums in
              let name =
                if names <> [] then List.nth names (number - 1) else
@@ -3284,7 +3284,7 @@ let split_max_fits pdf s p q =
   if q < p then error "split_max_fits" else
   let filename = Filename.temp_file "cpdf" "sm" in
   let range = ilist p q in
-  let newpdf = Pdfpage.pdf_of_pages ~retain_numbering:args.retain_numbering pdf range in
+  let newpdf = Pdfpage.pdf_of_pages ~process_struct_tree:args.process_struct_trees ~retain_numbering:args.retain_numbering pdf range in
     let r = args.out in
       args.out <- File filename;
       write_pdf false newpdf;
@@ -3492,8 +3492,7 @@ let go () =
                 | [pdf] ->
                     if hd ranges <> "all" then
                       let range = parse_pagespec pdf (hd ranges) in
-                        (* FIXME STRUCTURE TREE TRIM *)
-                        let newpdf = Pdfpage.pdf_of_pages ~retain_numbering:args.retain_numbering pdf range in
+                        let newpdf = Pdfpage.pdf_of_pages ~process_struct_tree:args.process_struct_trees ~retain_numbering:args.retain_numbering pdf range in
                           write_pdf false newpdf
                     else
                         write_pdf false pdf
@@ -3921,7 +3920,6 @@ let go () =
         | _ -> error "Split: bad parameters"
       end
   | Some (SplitOnBookmarks level) ->
-      (* FIXME STRUCTURE TREE TRIM *)
       begin match args.out with
         | File output_spec ->
             let pdf = get_single_pdf args.op false in
@@ -3933,7 +3931,6 @@ let go () =
         | NoOutputSpecified -> error "Split: No output format specified"
       end
   | Some (SplitMax s) ->
-      (* FIXME STRUCTURE TREE TRIM *)
       begin match args.out with
         | File output_spec ->
             let pdf = get_single_pdf args.op false in
@@ -3944,7 +3941,6 @@ let go () =
         | NoOutputSpecified -> error "Split: No output format specified"
       end
   | Some Spray ->
-      (* FIXME STRUCTURE TREE TRIM *)
       begin match args.inputs, args.out with
         | (_, pagespec, _, _, _, _)::_, File output_spec ->
             let pdf = get_single_pdf args.op false in
