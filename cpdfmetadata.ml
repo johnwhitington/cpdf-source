@@ -467,7 +467,7 @@ let language pdf =
   | _ -> None
 
 let set_language pdf s =
-  Pdf.replace_chain pdf ["/Root"; "/Lang"] (Pdf.String s)
+  Pdf.replace_chain pdf ["/Root"] ("/Lang", (Pdf.String s))
 
 let output_xmp_info ?(json=ref [("none", `Null)]) encoding pdf =
   let notjson = !json = [("none", `Null)] in
