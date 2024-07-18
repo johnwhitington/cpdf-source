@@ -653,7 +653,7 @@ let matterhorn_28_004 _ _ pdf =
   let parent_tree = read_parent_tree pdf in
     Pdf.objiter
       (fun n obj ->
-        (*flprint (Pdfwrite.string_of_pdf obj ^ "\n");*)
+       (*flprint (Pdfwrite.string_of_pdf obj ^ "\n");*)
       match Pdf.lookup_direct pdf "/Subtype" obj with
       | Some (Pdf.Name
                 ("/Stamp" | "/Line" | "Square" | "/Circle" | "/Polygon" | "/PolyLine" |
@@ -673,9 +673,8 @@ let matterhorn_28_004 _ _ pdf =
                   end
               | None -> merror ()
               end
-          | _ -> merror ()
+          | _ -> () (* Ok, since not part of structure tree. *)
           end
-
         end
       | _ -> ())
       pdf
@@ -766,7 +765,7 @@ let matterhorn_28_011 _ _ pdf =
                      end
                  | _ -> merror ()
                  end
-             | _ -> merror ()
+             | _ -> () (* Not part of structure tree. That's ok. *)
              end
          | _ -> ())
       pdf
