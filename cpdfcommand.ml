@@ -2,7 +2,8 @@
 let demo = false
 let noncomp = false
 let major_version = 2
-let minor_version = 8
+let minor_version = 7
+let minor_minor_version = 1
 let version_date = "(1st August 2024)"
 
 open Pdfutil
@@ -2846,7 +2847,7 @@ and specs =
 and usage_msg =
 "Syntax: cpdf [<operation>] <input files> [-o <output file>]\n\n\
 This is a copyrighted, commercial program, and may NOT be freely copied.\n\n\
-Version " ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ " " ^ version_date ^ "\n\n\
+Version " ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ "." ^ string_of_int minor_minor_version ^ " " ^ version_date ^ "\n\n\
 To buy, visit https://www.coherentpdf.com/\n\n\
 Input names are distinguished by containing a '.' and may be\n\
 followed by a page range specification, for instance \"1,2,3\"\n\
@@ -3474,7 +3475,7 @@ let go () =
   match args.op with
   | Some Version ->
       flprint
-        ("cpdf Version " ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ " " ^ version_date ^ "\n")
+        ("cpdf Version " ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ "." ^ string_of_int minor_minor_version ^ " " ^ version_date ^ "\n")
   | None | Some Merge ->
       begin match args.out, args.inputs with
       | _, (_::_ as inputs) ->
