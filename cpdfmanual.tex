@@ -386,7 +386,13 @@ These examples demonstrate just a few of the facilities provided by the Coherent
 
 \noindent Create a new PDF and draw text on one page and then the next.
 
-\section*{\hyperref[chap:misc]{Chapter 19: Miscellaneous}}
+\section*{\hyperref[chap:misc]{Chapter 19: Accessible PDFs with PDF/UA}}
+
+\begin{framed}\noindent\texttt{cpdf -verify 'PDF/UA-1(matterhorn)' -json in.pdf}\end{framed}
+
+\noindent Verify \texttt{in.pdf} for conformance to PDF/UA-1 using the Matterhorn protocol, returning results in JSON format.
+
+\section*{\hyperref[chap:misc]{Chapter 20: Miscellaneous}}
 
 \begin{framed}\noindent\texttt{cpdf -blacktext in.pdf -o out.pdf}\end{framed}
 
