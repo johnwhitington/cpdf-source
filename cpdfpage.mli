@@ -3,6 +3,7 @@
 (** Print page info (Mediabox etc) to standard output. *)
 val output_page_info : ?json:bool -> ?raisejson:bool -> Pdf.t -> int list -> unit
 
+(** Return page info for selected pages in JSON format. *)
 val json_page_info : Pdf.t -> int list -> Cpdfyojson.Safe.t
 
 (** Given a function from page number and page to page, a document, and a list
