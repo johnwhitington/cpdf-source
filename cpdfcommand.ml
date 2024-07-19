@@ -3531,7 +3531,7 @@ let go () =
                         in
                         let outpdf =
                           Pdfmerge.merge_pdfs
-                            args.retain_numbering args.remove_duplicate_fonts ~struct_hierarchy:args.process_struct_trees names pdfs rangenums
+                            args.retain_numbering args.remove_duplicate_fonts ~process_struct_trees:args.process_struct_trees names pdfs rangenums
                         in
                           if args.remove_duplicate_streams then Pdfmerge.remove_duplicate_fonts outpdf; (* JBIG2 Globals *)
                           write_pdf false outpdf
