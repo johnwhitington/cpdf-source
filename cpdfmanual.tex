@@ -5353,7 +5353,23 @@ its Contents entry.",
 
 \section{PDF/UA compliance markers}
 
-Once we are sure a file complies to PDF/UA, in terms of both machine and human checks, we can mark it as such by using \texttt{cpdf -mark-as "PDF/UA-1" in.pdf -o out.pdf} or \texttt{cpdf -mark-as "PDF/UA-2" in.pdf -o out.pdf} for the recent PDF/UA-2 standard. To remove such a marker we can use, for example, \texttt{cpdf -remove-mark "PDF/UA-1" in.pdf -o out.pdf}.
+Once we are sure a file complies to PDF/UA, in terms of both machine and human checks, we can mark it as such:
+
+  \begin{framed}
+    \noindent\small\verb!cpdf -mark-as "PDF/UA-1" in.pdf -o out.pdf!
+  \end{framed}
+
+\noindent Or, for the more recent PDF/UA-2 standard:
+
+  \begin{framed}
+    \noindent\small\verb!cpdf -mark-as "PDF/UA-2" in.pdf -o out.pdf!
+  \end{framed}
+
+\noindent To remove such a marker we can use, for example:
+
+  \begin{framed}
+    \noindent\small\verb!cpdf -remove-mark "PDF/UA-1" in.pdf -o out.pdf!
+  \end{framed}
 
 \clearpage\pagestyle{empty}
 %We wanted to call this "Chapter M", but the following commands messed up the PDF bookmarks, so this chapter will simply have to float for now, until we can return to this problem.
