@@ -5278,7 +5278,13 @@ To remove a structure tree from a PDF, we can use \texttt{-remove-dict-entry} fr
 
 \section{Verifying conformance to PDF/UA}
 
-Cpdf contains a new, experimental verifier for PDF/UA via the machine-checkable subset of the Matterhorn Protocol, a list of checks based on the PDF/UA-1 specification. For example, we can run \texttt{cpdf -verify "PDF/UA-1(matterhorn)" in.pdf} and see:
+Cpdf contains a new, experimental verifier for PDF/UA via the machine-checkable subset of the Matterhorn Protocol, a list of checks based on the PDF/UA-1 specification. For example, we can run:
+
+  \begin{framed}
+    \noindent\small\verb!cpdf -verify "PDF/UA-1(matterhorn)" in.pdf!
+  \end{framed}
+
+\noindent We see:
 
 {\small\begin{verbatim}
 06-001 UA1:7.1-8 Document does not contain an XMP metadata stream 
@@ -5349,7 +5355,13 @@ its Contents entry.",
     "extra": null
   }\end{verbatim}}
 
-\noindent If verifying many files for a single fault, we may choose which test to run by adding \texttt{-verify-single <testname>} to the command line. For example, \texttt{-verify-single "28-012"}.
+\noindent If verifying many files for a single fault, we may choose which test to run by adding \texttt{-verify-single <testname>} to the command line. For example:
+
+
+  \begin{framed}
+    \noindent\small\verb!cpdf -verify "PDF/UA-1(matterhorn)" -verify-single "28-012" in.pdf!
+  \end{framed}
+
 
 \section{PDF/UA compliance markers}
 
