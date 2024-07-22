@@ -1377,7 +1377,7 @@ The encryption parameters described in Chapter \ref{encryption} may be added to 
 
 \section{Splitting and structure trees}
 
-The \texttt{-process-struct-trees} option will trim the structure tree (the data which forms the logical structure of the PDF). In its absence, the structure tree is preserved wholesale in each output file.
+The \texttt{-process-struct-trees} option used in conjunction with any splitting command will trim the structure tree (the data which forms the logical structure of the PDF) for each output file. In its absence, the structure tree is preserved wholesale in each output file.
 
 \pagestyle{empty}\thispagestyle{fancy}
 
@@ -5402,6 +5402,10 @@ Once we are sure a file complies to PDF/UA, in terms of both machine and human c
   \begin{framed}
     \noindent\small\verb!cpdf -remove-mark "PDF/UA-1" in.pdf -o out.pdf!
   \end{framed}
+
+\section{Merging and splitting PDF/UA files}.
+
+\noindent The \texttt{-process-struct-trees} option should always be used in conjunction with any splitting or merging command to preserve PDF/UA compliance. Details are given in chapter \ref{chap:2}.
 
 \clearpage\pagestyle{empty}
 %We wanted to call this "Chapter M", but the following commands messed up the PDF bookmarks, so this chapter will simply have to float for now, until we can return to this problem.
