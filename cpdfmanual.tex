@@ -5176,10 +5176,10 @@ If the drawing range is a single page, and the next page already exists, the dra
   \noindent\verb!cpdf -print-struct-tree in.pdf!
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf -extract-struct-tree in.pdf -o out.json]!
+  \noindent\verb!cpdf -extract-struct-tree in.pdf -o out.json!
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf -replace-struct-tree in.json in.pdf -o out.pdf]!
+  \noindent\verb!cpdf -replace-struct-tree in.json in.pdf -o out.pdf!
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -verify "PDF/UA-1(matterhorn)" [-json] in.pdf!
@@ -5195,15 +5195,19 @@ If the drawing range is a single page, and the next page already exists, the dra
 
   \end{framed}}
 
-PDF/UA (Universal Accessibility) is a PDF subformat whose rules consist of a set of machine-checkable and human-checkable-only requirements to make PDF documents accessible for all users - for example, those using screen readers. Cpdf has some basic facilities for manipulating the extra PDF constructs which are used in (amongst others) PDF/UA, and a basic verifier for most of the machine-checkable requirements.
+PDF/UA (Universal Accessibility) is a PDF subformat whose rules consist of a set of machine-checkable and human-checkable-only requirements to make PDF documents accessible for all users - for example, those using screen readers. Cpdf has some basic facilities for manipulating the extra PDF constructs which are used in (amongst others) PDF/UA, and a basic verifier for many of the machine-checkable requirements.
 
 \section{Structure trees}
 
-In a PDF document, the optional Structure Tree is a parallel construct which describes the logical structure of a document (as opposed to the information for rendering the document on the screen or printing it out, which every PDF of course contains).
+In a PDF document, the optional Structure Tree is a parallel construct which describes the logical structure of a document (as opposed to the information for rendering the document on the screen or printing it out, which every PDF of course contains.)
 
-We can print an abbreviated form of the structure tree to standard output with \texttt{cpdf -print-struct-tree in.pdf}:
+We can print an abbreviated form of the structure tree to standard output:
 
-\smallgap
+  \begin{framed}
+    \noindent\small\verb!cpdf -print-struct-tree in.pdf!
+  \end{framed}
+
+\noindent This might yield:
 
 \begin{minipage}{\linewidth}
 \begin{framed}
@@ -5230,7 +5234,13 @@ We can print an abbreviated form of the structure tree to standard output with \
 \end{minipage}
 
 \smallgap 
-\noindent The numbers in parentheses are the page numbers for structure elements, where present. To extract the full structure tree to JSON, we can use \texttt{cpdf -extract-struct-tree in.pdf -o out.json}:
+\noindent The numbers in parentheses are the page numbers for structure elements, where present. We can extract the full structure tree to JSON for inspection or manupulation:
+
+  \begin{framed}
+    \noindent\small\verb!cpdf -extract-struct-tree in.pdf -o out.json!
+  \end{framed}
+
+\noindent Here is a typical fragment:
 
 {\small\begin{verbatim}
 [
@@ -5272,9 +5282,19 @@ We can print an abbreviated form of the structure tree to standard output with \
 
 \noindent This JSON file contains the structure tree objects from the file, using the format described in chapter \ref{chap:15}. There is a special entry in object \texttt{0} which gives the key to the page object numbers. In this example, there is one page with object number \texttt{52}.
 
-This JSON file can be edited, for example to change text strings, and reapplied with \texttt{cpdf -replace-struct-tree out.json in.pdf -o out.pdf}. If extra objects are required, they should be introduced with negative object numbers: cpdf will renumber them on import so as not to clash with any existing numbers.
+This JSON file can be edited, for example to change text strings, and reapplied to the same file from which it was extracted:
 
-To remove a structure tree from a PDF, we can use \texttt{-remove-dict-entry} from Chapter \ref{chap:misc} i.e \texttt{cpdf -remove-dict-entry /StructTreeRoot in.pdf -o out.pdf}.
+  \begin{framed}
+    \noindent\small\verb!cpdf -replace-struct-tree out.json in.pdf -o out.pdf!
+  \end{framed}
+
+\noindent If extra objects are required, they should be introduced with negative object numbers: cpdf will renumber them on import so as not to clash with any existing numbers.
+
+To remove a structure tree from a PDF, we can use \texttt{-remove-dict-entry} from Chapter \ref{chap:misc}, in other words:
+
+  \begin{framed}
+    \noindent\small\verb!cpdf -remove-dict-entry /StructTreeRoot in.pdf -o out.pdf!
+  \end{framed}
 
 \section{Verifying conformance to PDF/UA}
 
