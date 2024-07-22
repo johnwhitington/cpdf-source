@@ -1,11 +1,41 @@
 open Pdfutil
 open Cpdferror
 
-(* Implements most Matterhorn checks except for:
-  a) Those which require looking deep inside font files; and
-  b) Those which require reading inside the graphics stream.
+(* Implements most Matterhorn checks except for those which require looking
+   deep inside font files; and those which require reading inside the graphics
+   stream.
 
-Experimental. Both false positive and false negative results possible. *)
+   Fully implemented:
+     01-007
+     02-001 02-003 02-004
+     06-001 06-002 06-003
+     07-001 07-002
+     09-004 09-005 09-006 09-007 09-008
+     11-006
+     13-004
+     14-002 14-003 14-006 14-007
+     15-003
+     17-002
+     19-003 19-004
+     20-001 20-002 20-003
+     21-001
+     25-001
+     26-001 26-002
+     28-002 28-004 28-006 28-007 28-008 28-009 28-010 28-011 28-012 28-014
+            28-015 28-016 28-017
+     30-001
+     31-001 31-002 31-003 31-004 31-005 31-006 31-017 31-019 31-020 31-021
+            31-022 31-023 31-024 31-025 31-026 31-028 31-029 
+   Partially implemented:
+     31-009 31-027
+   Unimplemented:
+     01-003 01-004 01-005
+     10-001
+     11-001 11-002 11-003 11-004 11-005
+     17-003
+     28-005 28-018
+     30-002
+     31-007 31-008 31-011 31-012 31-013 31-014 31-015 31-016 31-018 31-030 *)
 
 exception MatterhornError of Cpdfyojson.Safe.t
 
@@ -201,7 +231,7 @@ let matterhorn_06_001 _ _ pdf =
   | Some _ -> ()
   | None -> merror ()
 
-(* The XMP metadata stream in the Catalog dictionary does not include the
+(* The XMP metadata stream in the Catalog dictionary does notinclude the
    PDF/UA identifier. *)
 let matterhorn_06_002 _ _ pdf =
   match Cpdfmetadata.get_metadata pdf with
@@ -1132,7 +1162,7 @@ let matterhorn_31_022 _ _ pdf =
            end
        | _ -> ())
     pdf
-
+ 
 (* The Differences array is present in the Encoding entry in a non-symbolic
    TrueType font dictionary but the embedded font program does not contain a
    (3,1) Microsoft Unicode cmap. *)
