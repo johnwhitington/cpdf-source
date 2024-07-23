@@ -1,13 +1,18 @@
 Coherent PDF Command Line Tools
 ===============================
 
-Free for non-commercial use. See LICENSE for details. Copyright Coherent
-Graphics Ltd 2024.
+CPDF is distributed under the AGPL - see LICENSE.md. If you are unable to abide
+by the terms of the AGPL, you will need a commercial license.
+
+For commercial licenses, email
+[contact@coherentgraphics.co.uk](mailto:contact@coherentgraphics.co.uk) or
+visit [https://www.coherentpdf.com/](https://www.coherentpdf.com/)
+
+Copyright Coherent Graphics Ltd 2024.
 
 This code builds two things:
 
-a) The CPDF PDF Command Line Tools, which are a popular commercial command line
-tool for editing PDF files.
+a) The CPDF PDF command line tool for editing PDF files.
 
 b) cpdf as an OCaml library, for which documentation is here:
 
@@ -113,6 +118,8 @@ The file [cpdfyojson.ml](cpdfyojson.ml) was written by Martin Jambon and others.
 The error descriptions for -verify "PDF/UA-1(matterhorn)" come from the PDF
 Association, and are licensed under the Creative Commons Attribution 4.0
 International license.
+
+PDF/UA support in Cpdf was implemented under NLnet grant 2023-12-031.
 
 Contact
 -------

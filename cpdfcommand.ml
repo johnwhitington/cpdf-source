@@ -1,6 +1,6 @@
 (* cpdf command line tools *)
 let demo = false
-let noncomp = false
+let agpl = false
 let major_version = 2
 let minor_version = 7
 let minor_minor_version = 1
@@ -2846,9 +2846,9 @@ and specs =
 
 and usage_msg =
 "Syntax: cpdf [<operation>] <input files> [-o <output file>]\n\n\
-This is a copyrighted, commercial program, and may NOT be freely copied.\n\n\
-Version " ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ "." ^ string_of_int minor_minor_version ^ " " ^ version_date ^ "\n\n\
-To buy, visit https://www.coherentpdf.com/\n\n\
+Copyright Coherent Graphics Ltd.\n\n\
+Version " ^ (if agpl then "AGPLv3-licensed " else "") ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ "." ^ string_of_int minor_minor_version ^ " " ^ version_date ^ "\n\n\
+https://www.coherentpdf.com/\n\n\
 Input names are distinguished by containing a '.' and may be\n\
 followed by a page range specification, for instance \"1,2,3\"\n\
 or \"1-6,9-end\" or \"even\" or \"odd\" or \"reverse\".\n\nOperations (See \
@@ -3087,10 +3087,10 @@ let set_creator s pdf =
 
 let really_write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf outname =
   if args.producer <> None then set_producer (unopt args.producer) pdf;
-  if noncomp &&
+  if agpl &&
      (match args.op with Some (SetProducer _) -> false | _ -> match args.producer with None -> true | _ -> false)
   then
-    set_producer "cpdf non-commercial use only. To buy: https://coherentpdf.com/" pdf;
+    set_producer "cpdf AGPL" pdf;
   if args.creator <> None then set_creator (unopt args.creator) pdf;
   if args.debugcrypt then Printf.printf "really_write_pdf\n";
   let will_linearize =
@@ -3475,7 +3475,7 @@ let go () =
   match args.op with
   | Some Version ->
       flprint
-        ("cpdf Version " ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ "." ^ string_of_int minor_minor_version ^ " " ^ version_date ^ "\n")
+        ("cpdf " ^ (if agpl then "AGPL " else "") ^ "Version " ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ "." ^ string_of_int minor_minor_version ^ " " ^ version_date ^ "\n")
   | None | Some Merge ->
       begin match args.out, args.inputs with
       | _, (_::_ as inputs) ->
@@ -4605,12 +4605,7 @@ let go_withargv argv =
   | _ -> 
   Hashtbl.clear filenames;
   if demo then
-    flprint "This demo functions normally, but is for evaluation only. http://www.coherentpdf.com/\n";
-  if noncomp then
-    begin
-      Pdfe.log "Functions normally, but is for non-commercial use only\n";
-      Pdfe.log "To purchase a license visit http://www.coherentpdf.com/\n\n";
-    end;
+    flprint "This demo functions normally, but is for evaluation only. https://www.coherentpdf.com/\n";
   try
     (* Pre-expand -args *)
     let argv = expand_args argv in
