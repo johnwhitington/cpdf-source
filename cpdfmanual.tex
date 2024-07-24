@@ -5298,7 +5298,7 @@ To remove a structure tree from a PDF, we can use \texttt{-remove-dict-entry} fr
 
 \section{Verifying conformance to PDF/UA}
 
-Cpdf contains a new, experimental verifier for PDF/UA via the machine-checkable subset of the Matterhorn Protocol, a list of checks based on the PDF/UA-1 specification. For example, we can run:
+Cpdf contains a new, experimental verifier for PDF/UA via most of the machine-checkable subset of the Matterhorn Protocol, a list of checks based on the PDF/UA-1 specification. For example, we can run:
 
   \begin{framed}
     \noindent\small\verb!cpdf -verify "PDF/UA-1(matterhorn)" in.pdf!
@@ -5382,6 +5382,7 @@ its Contents entry.",
     \noindent\small\verb!cpdf -verify "PDF/UA-1(matterhorn)" -verify-single "28-012" in.pdf!
   \end{framed}
 
+\noindent A list of Matterhorn tests and their implementation status forms Appendix C.
 
 \section{PDF/UA compliance markers}
 
@@ -5838,6 +5839,46 @@ YYYY-MM-DDThh:mm:ssTZD
 \input{../camlpdf/Changes}
 \end{alltt}}
 \fi
+
+\chapter{Matterhorn Protocol}\pagestyle{empty}
+
+Implementation status:
+
+{\footnotesize\begin{alltt}
+   Fully implemented:
+     01-007
+     02-001 02-003 02-004
+     06-001 06-002 06-003
+     07-001 07-002
+     09-004 09-005 09-006 09-007 09-008
+     11-006
+     13-004
+     14-002 14-003 14-006 14-007
+     15-003
+     17-002
+     19-003 19-004
+     20-001 20-002 20-003
+     21-001
+     25-001
+     26-001 26-002
+     28-002 28-004 28-006 28-007 28-008 28-009 28-010 28-011 28-012 28-014
+            28-015 28-016 28-017
+     30-001
+     31-001 31-002 31-003 31-004 31-005 31-006 31-017 31-019 31-020 31-021
+            31-022 31-023 31-024 31-025 31-026 31-028 31-029
+
+   Partially implemented:
+     31-009 31-027
+
+   Unimplemented:
+     01-003 01-004 01-005
+     10-001
+     11-001 11-002 11-003 11-004 11-005
+     17-003
+     28-005 28-018
+     30-002
+     31-007 31-008 31-011 31-012 31-013 31-014 31-015 31-016 31-018 31-030
+\end{alltt}}
 
 %\backmatter
 %\pagestyle{fancy}
