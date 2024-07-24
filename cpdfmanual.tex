@@ -2589,7 +2589,7 @@ See Section \ref{copyfont} for how to use an existing font from the source docum
 
   \subsection{Colors}
 \index{color}
-  The \texttt{-color} option takes an RGB (3 values), CYMK (4 values), or Grey (1 value) color. Components range between 0 and 1. All the standard web colours \url{https://www.w3.org/wiki/CSS/Properties/color/keywords} are provided as RGB components, and may be selected by name.
+  The \texttt{-color} option takes an RGB (3 values), CMYK (4 values), or Grey (1 value) color. Components range between 0 and 1. All the standard web colours \url{https://www.w3.org/wiki/CSS/Properties/color/keywords} are provided as RGB components, and may be selected by name.
 
   \begin{framed}
     \noindent\small\verb!cpdf -add-text "Hullo" -color darkgrey in.pdf -o out.pdf!
@@ -3941,7 +3941,7 @@ Method & Effect\\\hline
 
 \noindent It is not currently possible to reprocess lossless JBIG2 into lossy JBIG2, nor is it possible to recompress into CCITT.
 
-NB: CYMK images will be converted to RGB or untouched by some of these processes. A future version of cpdf will remove this limitation.
+NB: CMYK images will be converted to RGB or untouched by some of these processes. A future version of cpdf will remove this limitation.
 
 \begin{cpdflib}
 \clearpage
@@ -4824,7 +4824,7 @@ To avoid calculating the Bezier curves for a circle manually, \texttt{cpdf} can 
    \noindent\verb!-dash <pattern>! Set dash pattern
   \end{framed}}
 
-We can set stroke and fill colours for our paths, either as greyscale (one component), RGB (three components) or CYMK (four components), or by naming a colour as described in Chapter 8:
+We can set stroke and fill colours for our paths, either as greyscale (one component), RGB (three components) or CMYK (four components), or by naming a colour as described in Chapter 8:
 
 \begin{framed}
  \noindent\small\verb?cpdf -create-pdf AND -draw -circle "200 200 100" -thick 20?\\
