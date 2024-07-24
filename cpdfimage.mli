@@ -17,7 +17,7 @@ val image_resolution_json : Pdf.t -> int list -> float -> Pdfio.bytes
 (** List images in JSON format *)
 val images : Pdf.t -> int list -> Cpdfyojson.Safe.t
 
-(** Reprocess images *)
+(** Reprocess images. See manual for details. *)
 val process :
   q:float -> qlossless:float -> onebppmethod:string -> jbig2_lossy_threshold:float ->
   length_threshold:int -> percentage_threshold:float -> pixel_threshold:int ->
