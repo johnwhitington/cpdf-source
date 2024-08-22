@@ -1,3 +1,9 @@
+2.7.2 (future)
+
+Fixes:
+
+o Removed setting of Producer field in AGPL version
+
 2.7.1 (July 2024)
 
 New features:

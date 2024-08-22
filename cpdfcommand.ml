@@ -3087,10 +3087,6 @@ let set_creator s pdf =
 
 let really_write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf outname =
   if args.producer <> None then set_producer (unopt args.producer) pdf;
-  if agpl &&
-     (match args.op with Some (SetProducer _) -> false | _ -> match args.producer with None -> true | _ -> false)
-  then
-    set_producer "cpdf AGPL" pdf;
   if args.creator <> None then set_creator (unopt args.creator) pdf;
   if args.debugcrypt then Printf.printf "really_write_pdf\n";
   let will_linearize =
