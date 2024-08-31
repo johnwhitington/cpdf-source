@@ -1652,10 +1652,10 @@ let setchop s =
   setop (Chop (int_of_float x, int_of_float y)) ()
 
 let setchopv x =
-  setop (ChopHV (false, x)) ()
+  setop (ChopHV (false, Cpdfcoord.parse_single_number (Pdf.empty ()) x)) ()
 
 let setchoph y =
-  setop (ChopHV (true, y)) ()
+  setop (ChopHV (true, Cpdfcoord.parse_single_number (Pdf.empty ()) y)) ()
 
 let setreplacedictentry s =
   setop (ReplaceDictEntry s) ()
@@ -2311,10 +2311,10 @@ and specs =
       Arg.String setchop,
       " Chop x by y");
    ("-chop-h",
-      Arg.Float setchoph,
+      Arg.String setchoph,
       " Chop horizontally");
    ("-chop-v",
-      Arg.Float setchopv,
+      Arg.String setchopv,
       " Chop horizontally");
    ("-chop-columns",
       Arg.Unit (fun () -> args.impose_columns <- true),
