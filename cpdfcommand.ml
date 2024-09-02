@@ -1454,8 +1454,6 @@ let rec parse_chars args = function
       let this, rest = getarg [] (h::t) in
         parse_chars (this::args) rest
 
-let control_args = ref []
-
 let parse_control_file name =
   (parse_chars []
      (charlist_of_bytes (Pdfio.bytes_of_input_channel (open_in_bin name))))
@@ -1857,11 +1855,7 @@ let setextractstreamdecomp s =
 let setprintobj s =
   args.op <- Some (PrintObj s)
 
-(* Parse a control file, make an argv, and then make Arg parse it. *)
-let rec make_control_argv_and_parse filename =
-  control_args := !control_args @ parse_control_file filename
-
-and specs =
+let specs =
    [("-version",
       Arg.Unit (setop Version),
       " Print the cpdf version number");
@@ -1958,9 +1952,6 @@ and specs =
    ("-fast",
       Arg.Unit setfast,
       " Speed over correctness with malformed documents");
-   ("-control",
-      Arg.String make_control_argv_and_parse,
-      " Use a control file. Deprecated. Use -args.");
    ("-args",
       Arg.Unit (fun () -> ()),
       " Get arguments from a file.");
@@ -4622,7 +4613,6 @@ let go_withargv argv =
            Cpdfdrawcontrol.drawops := [("_MAIN", [])];
            process_env_vars ();
            parse_argv () s (align_specs specs) anon_fun usage_msg;
-           parse_argv () (Array.of_list ("cpdf"::!control_args)) (align_specs specs) anon_fun usage_msg;
            let addrange pdf = AlreadyInMemory (pdf, "fromAND"), args.dashrange, "", "", ref false, None in
              args.inputs <- rev (map addrange !output_pdfs) @ rev args.inputs;
              output_pdfs := [];

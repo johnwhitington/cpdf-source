@@ -3,31 +3,35 @@
 Fixes:
 
 o Removed setting of Producer field in AGPL version
+* Removed long-deprecated -control
+* New -args-json for better control files
+
+* = Supported by a grant from NLnet
 
 2.7.1 (July 2024)
 
 New features:
 
 o Build PDF files from JPEG2000 (.jp2, .jpf/.jpx) files
-o Mark a file as PDF/UA compliant, or remove such marking *
-o Verify compliance to PDF/UA via the Matterhorn protocol *
-o Extract, edit and reapply document structure tree *
-o Print structure tree summary *
-o Split structure tree when splitting PDF to save size *
-o Combine structure trees when stamping PDFs *
-o Set the natural language of a file *
+* Mark a file as PDF/UA compliant, or remove such marking
+* Verify compliance to PDF/UA via the Matterhorn protocol
+* Extract, edit and reapply document structure tree
+* Print structure tree summary
+* Split structure tree when splitting PDF to save size
+* Combine structure trees when stamping PDFs
+* Set the natural language of a file
 
 Extended features:
 
 o Allow -obj to look up nested PDF information
-o Merge structure trees better when merging files *
-o Report top-level natural language on -info *
-o Report mark information dictionary contents on -info *
+* Merge structure trees better when merging files
+* Report top-level natural language on -info
+* Report mark information dictionary contents on -info
 
 Backward-incompatible change:
 
-o -process-struct-tree replaces -no-process-struct-tree
-newly introduced in previous version *
+* -process-struct-tree replaces -no-process-struct-tree
+newly introduced in previous version
 
 * = Supported by a grant from NLnet
 
