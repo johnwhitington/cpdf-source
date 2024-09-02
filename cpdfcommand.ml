@@ -3474,8 +3474,27 @@ let print_obj pdf objspec =
     | [] -> simple_obj 0
     | _ -> simple_obj (int_of_string objspec)
 
+(* Empty string is trailerdict. Begins with / and it's a chain separated by
+   commas. Begins with P and it's a page number then a (possibly empty) chain.
+   Otherwise it's an object number (0 = trailerdict). *)
 let replace_obj pdf objspec obj =
-  ()
+  let key, rest =
+    let r, rest = cleavewhile (neq '/') (rev (explode objspec)) in
+      (implode ('/'::rev r), implode (rev (tl rest)))
+  in
+    ()
+  (*match .... rest .... with
+  | ...not objnum... ->
+  (* 1. It's not an object number *)
+  let chain =
+    (* 1. Chain with /s *)
+    (* 2. P plus possibly empty chain *)
+    []
+  in
+    Pdf.replace_chain pdf chain (k, obj) 
+  (* 2. It is an object number *)
+  | _ ->
+    (* Replace chain within object. How? *)*)
 
 (* Main function *)
 let go () =
