@@ -219,6 +219,7 @@ type op =
   | ProcessImages
   | ExtractStream of string
   | PrintObj of string
+  | ReplaceObj of string * string
   | Verify of string
   | MarkAs of string
   | RemoveMark of string
@@ -368,6 +369,7 @@ let string_of_op = function
   | ProcessImages -> "ProcessImages"
   | ExtractStream _ -> "ExtractStream"
   | PrintObj _ -> "PrintObj"
+  | ReplaceObj _ -> "ReplaceObj"
   | Verify _ -> "Verify"
   | MarkAs _ -> "MarkAs"
   | RemoveMark _ -> "RemoveMark"
@@ -897,7 +899,7 @@ let banned banlist = function
   | ExtractText | ExtractImages | ExtractFontFile _
   | AddPageLabels | RemovePageLabels | OutputJSON | OCGCoalesce
   | OCGRename | OCGList | OCGOrderAll | PrintFontEncoding _ | TableOfContents | Typeset _ | Composition _
-  | TextWidth _ | SetAnnotations _ | CopyAnnotations _ | ExtractStream _ | PrintObj _
+  | TextWidth _ | SetAnnotations _ | CopyAnnotations _ | ExtractStream _ | PrintObj _ | ReplaceObj _
   | Verify _ | MarkAs _ | RemoveMark _ | ExtractStructTree | ReplaceStructTree _ | SetLanguage _
   | PrintStructTree
      -> false (* Always allowed *)
@@ -1863,6 +1865,11 @@ let setextractstreamdecomp s =
 let setprintobj s =
   args.op <- Some (PrintObj s)
 
+let setreplaceobj s =
+  match String.split_on_char '=' s with
+  | [a; b] -> args.op <- Some (ReplaceObj (a, b))
+  | _ -> error "replace_obj: bad specification"
+
 let specs =
    [("-version",
       Arg.Unit (setop Version),
@@ -2826,6 +2833,7 @@ let specs =
    ("-extract-stream", Arg.String setextractstream, " Extract a stream");
    ("-extract-stream-decompress", Arg.String setextractstreamdecomp, " Extract a stream, decompressing");
    ("-obj", Arg.String setprintobj, " Print object");
+   ("-replace-obj", Arg.String setreplaceobj, "Replace object");
    ("-json", Arg.Unit (fun () -> args.format_json <- true), " Format output as JSON");
    ("-verify", Arg.String (fun s -> setop (Verify s) ()), " Verify conformance to a standard");
    ("-verify-single", Arg.String (fun s -> args.verify_single <- Some s), " Verify a single test");
@@ -3465,6 +3473,9 @@ let print_obj pdf objspec =
     | '/'::more -> chain_obj 0 (split (implode ('/'::more)))
     | [] -> simple_obj 0
     | _ -> simple_obj (int_of_string objspec)
+
+let replace_obj pdf objspec obj =
+  ()
 
 (* Main function *)
 let go () =
@@ -4490,6 +4501,9 @@ let go () =
   | Some (PrintObj s) ->
       let pdf = get_single_pdf args.op true in
         print_obj pdf s
+  | Some (ReplaceObj (a, b)) ->
+      let pdf = get_single_pdf args.op false in
+        replace_obj pdf a b
   | Some (Verify standard) ->
       begin match standard with
       | "PDF/UA-1(matterhorn)" ->
