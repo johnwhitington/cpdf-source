@@ -1458,6 +1458,14 @@ let parse_control_file name =
   (parse_chars []
      (charlist_of_bytes (Pdfio.bytes_of_input_channel (open_in_bin name))))
 
+let parse_control_file_json name =
+  try
+    match Cpdfyojson.Safe.from_file name with
+    | `List ls -> map (function `String s -> s | _ -> raise Exit) ls
+    | _ -> raise Exit
+  with
+    Exit -> error "Syntax error in JSON control file."
+
 let setencryptcollect () =
   encrypt_to_collect := 3
 
@@ -1955,6 +1963,9 @@ let specs =
    ("-args",
       Arg.Unit (fun () -> ()),
       " Get arguments from a file.");
+   ("-args-json",
+      Arg.Unit (fun () -> ()),
+      " Get arguments from a JSON file.");
    ("-merge",
        Arg.Unit (setop Merge),
        " Merge a number of files into one");
@@ -4548,6 +4559,8 @@ let rec expand_args_inner prev = function
     [] -> rev prev
   | "-args"::filename::r ->
       expand_args_inner (rev (parse_control_file filename) @ prev) r
+  | "-args-json"::filename::r ->
+      expand_args_inner (rev (parse_control_file_json filename) @ prev) r
   | h::t -> expand_args_inner (h::prev) t
 
 let expand_args argv =
