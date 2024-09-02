@@ -63,7 +63,7 @@ Command Line Tools}
 \vspace{12mm}
 
 {\Huge User Manual}\\
-Version 2.7.1 (August 2024)
+Version 2.7.2 (October 2024)
 
 \vspace{25mm}
 
@@ -685,8 +685,8 @@ Under Microsoft Windows, type \texttt{cpdf.exe} instead of \texttt{cpdf}.
 -stdin                  -stdin-user <password>   -stdin-owner <password>  
 -producer <text>        -creator <text>          -change-id
 -l                      -cpdflin <filename>      -keep-l
--no-preserve-objstm     -create-objstm           -control <filename>
--args <filename>        -utf8                    -stripped
+-no-preserve-objstm     -create-objstm           -args <filename>
+-args-json <filename>   -utf8                    -stripped
 -raw                    -gs                      -gs-malformed
 -gs-malformed-force     -gs-quiet                -error-on-malformed\end{verbatim}\end{framed}
 
@@ -1087,24 +1087,28 @@ displayed on the screen. When a bad or inappropriate password is given, the exit
 \section{Control Files}
 \index{control file}
 \begin{framed}
-  \noindent\small\verb!cpdf -control <filename>! \textit{deprecated}\\
-  \noindent\small\verb!cpdf -args <filename>!
+  \noindent\small\verb!cpdf -args <filename>!\\
+  \noindent\small\verb!cpdf -args-json <filename>!
 \end{framed}
 
 Some operating systems have a limit on the length of a command line. To
 circumvent this, or simply for reasons of flexibility, a control file may be
-specified from which arguments are drawn. This file does not support the full
-syntax of the command line. Commands are separated by whitespace, quotation
-marks may be used if an argument contains a space, and the sequence \verb!\"!
-may be used to introduce a genuine quotation mark in such an argument.
+specified from which arguments are drawn.
 
-Several \verb!-control! arguments may be specified, and may be mixed in with
-conventional command-line arguments. The commands in each control file are
-considered in the order in which they are given, after all conventional
-arguments have been processed.
+Using \texttt{-args} or will perform direct textual substitution of the file into the command line, prior to any other processing.
 
-It is recommended to use \texttt{-args} in all new applications. However, \texttt{-control} will be supported for legacy applications. Using \texttt{-args} in place of \texttt{-control} will perform direct textual substitution of the file into the command line, prior to any other processing.
+Using \texttt{-args-json} will read arguments from a JSON file consisting of a single array of strings. For example:
 
+\begin{framed}
+{\small\begin{verbatim}
+["-merge",
+ "hello.pdf",
+ "cpdfmanual.pdf",
+ //Cpdf's JSON parser allows C-style comments
+ "-o",
+ /* The output file name: */
+ "out.pdf"]
+\end{verbatim}}\end{framed}
 
 \section{String Arguments}
 Command lines are handled differently on each operating system. Some
