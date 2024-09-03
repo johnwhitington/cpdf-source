@@ -3450,8 +3450,9 @@ let extract_stream pdf decomp objnum =
 (* Empty string is trailerdict. Begins with / and it's a chain separated by
    commas. Begins with P and it's a page number then a (possibly empty) chain.
    Otherwise it's an object number (0 = trailerdict). *)
+let split_chain str = map (fun x -> "/" ^ x) (tl (String.split_on_char '/' str))
+
 let print_obj pdf objspec =
-  let split str = map (fun x -> "/" ^ x) (tl (String.split_on_char '/' str)) in
   let simple_obj obj =
     let obj = if obj = 0 then pdf.Pdf.trailerdict else Pdf.lookup_obj pdf obj in
     Printf.printf "%S\n" (Pdfwrite.string_of_pdf obj)
@@ -3467,34 +3468,36 @@ let print_obj pdf objspec =
         let number, chain =
           let digits, rest = cleavewhile isdigit more in
             List.nth (Pdf.page_reference_numbers pdf) (int_of_string (implode digits) - 1),
-            begin match split (implode rest) with [""] -> [] | x -> x end
+            begin match split_chain (implode rest) with [""] -> [] | x -> x end
         in
           chain_obj number chain
-    | '/'::more -> chain_obj 0 (split (implode ('/'::more)))
+    | '/'::more -> chain_obj 0 (split_chain (implode ('/'::more)))
     | [] -> simple_obj 0
     | _ -> simple_obj (int_of_string objspec)
 
-(* Empty string is trailerdict. Begins with / and it's a chain separated by
-   commas. Begins with P and it's a page number then a (possibly empty) chain.
-   Otherwise it's an object number (0 = trailerdict). *)
+(* Empty string is trailerdict. Begins with / and it's a chain separated by commas. *)
 let replace_obj pdf objspec obj =
-  let key, rest =
+  let key, chain =
     let r, rest = cleavewhile (neq '/') (rev (explode objspec)) in
-      (implode ('/'::rev r), implode (rev (tl rest)))
+      (implode ('/'::rev r), split_chain (implode (rev (tl rest))))
   in
-    ()
-  (*match .... rest .... with
-  | ...not objnum... ->
-  (* 1. It's not an object number *)
-  let chain =
-    (* 1. Chain with /s *)
-    (* 2. P plus possibly empty chain *)
-    []
-  in
-    Pdf.replace_chain pdf chain (k, obj) 
-  (* 2. It is an object number *)
-  | _ ->
-    (* Replace chain within object. How? *)*)
+    let rec find_max_existing to_fake chain =
+      if chain = [] then (chain, to_fake) else
+        match Pdf.lookup_chain pdf pdf.Pdf.trailerdict chain with
+        | None -> find_max_existing (hd chain::to_fake) (tl chain)
+        | _ -> (chain, to_fake)
+    in
+    let rec wrap_obj obj = function
+    | [] -> obj
+    | h::t -> Pdf.Dictionary [(h, wrap_obj obj t)]
+    in
+      let chain, to_fake = find_max_existing [] chain in
+      let obj = wrap_obj obj to_fake in
+        Printf.printf "obj is %s\n" (Pdfwrite.string_of_pdf obj);
+        Printf.printf "chain is:\n";
+        iter (Printf.printf "%s ") chain;
+        Printf.printf "\n";
+        Pdf.replace_chain pdf chain (key, obj) 
 
 (* Main function *)
 let go () =
@@ -4522,7 +4525,8 @@ let go () =
         print_obj pdf s
   | Some (ReplaceObj (a, b)) ->
       let pdf = get_single_pdf args.op false in
-        replace_obj pdf a b
+      let pdfobj = Cpdfjson.object_of_json (Cpdfyojson.Safe.from_string b) in
+        replace_obj pdf a pdfobj
   | Some (Verify standard) ->
       begin match standard with
       | "PDF/UA-1(matterhorn)" ->
