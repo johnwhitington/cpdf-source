@@ -3477,6 +3477,7 @@ let print_obj pdf objspec =
 
 (* Empty string is trailerdict. Begins with / and it's a chain separated by commas. *)
 let replace_obj pdf objspec obj =
+  Printf.printf "objspec = %s\n" objspec;
   let key, chain =
     let r, rest = cleavewhile (neq '/') (rev (explode objspec)) in
       (implode ('/'::rev r), split_chain (implode (rev (tl rest))))
@@ -3492,6 +3493,9 @@ let replace_obj pdf objspec obj =
     | h::t -> Pdf.Dictionary [(h, wrap_obj obj t)]
     in
       let chain, to_fake = find_max_existing [] chain in
+        Printf.printf "to_fake is:\n";
+        iter (Printf.printf "%s ") to_fake;
+        Printf.printf "\n";
       let obj = wrap_obj obj to_fake in
         Printf.printf "obj is %s\n" (Pdfwrite.string_of_pdf obj);
         Printf.printf "chain is:\n";
