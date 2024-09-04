@@ -5,6 +5,9 @@ Fixes:
 o Removed setting of Producer field in AGPL version
 * Removed long-deprecated -control
 * New -args-json for better control files
+* New -replace-obj to edit dictionary entries via chain
+* Create structure information for files with -draw
+* Create PDF/UA files from scratch
 
 * = Supported by a grant from NLnet
 
@@ -14,11 +17,11 @@ New features:
 
 o Build PDF files from JPEG2000 (.jp2, .jpf/.jpx) files
 * Mark a file as PDF/UA compliant, or remove such marking
-* Verify compliance to PDF/UA via the Matterhorn protocol
+* Partial verification to PDF/UA via the Matterhorn protocol
 * Extract, edit and reapply document structure tree
 * Print structure tree summary
 * Split structure tree when splitting PDF to save size
-* Combine structure trees when stamping PDFs
+* Combine structure trees when merging or stamping PDFs
 * Set the natural language of a file
 
 Extended features:
