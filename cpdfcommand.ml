@@ -3477,31 +3477,39 @@ let print_obj pdf objspec =
 
 (* Empty string is trailerdict. Begins with / and it's a chain separated by commas. *)
 let replace_obj pdf objspec obj =
-  Printf.printf "objspec = %s\n" objspec;
-  let key, chain =
-    let r, rest = cleavewhile (neq '/') (rev (explode objspec)) in
-      (implode ('/'::rev r), split_chain (implode (rev (tl rest))))
+  (*Printf.printf "objspec = %s\n" objspec;*)
+  let rec find_max_existing to_fake chain =
+    (*Printf.printf "find_max_existing: %s\n" (String.concat "" chain);*)
+    if chain = [] then (chain, to_fake) else
+      match Pdf.lookup_chain pdf pdf.Pdf.trailerdict chain with
+      | None -> find_max_existing (hd (rev chain)::to_fake) (rev (tl (rev chain)))
+      | _ -> (chain, to_fake)
   in
-    let rec find_max_existing to_fake chain =
-      if chain = [] then (chain, to_fake) else
-        match Pdf.lookup_chain pdf pdf.Pdf.trailerdict chain with
-        | None -> find_max_existing (hd chain::to_fake) (tl chain)
-        | _ -> (chain, to_fake)
-    in
-    let rec wrap_obj obj = function
-    | [] -> obj
-    | h::t -> Pdf.Dictionary [(h, wrap_obj obj t)]
-    in
-      let chain, to_fake = find_max_existing [] chain in
-        Printf.printf "to_fake is:\n";
-        iter (Printf.printf "%s ") to_fake;
-        Printf.printf "\n";
-      let obj = wrap_obj obj to_fake in
-        Printf.printf "obj is %s\n" (Pdfwrite.string_of_pdf obj);
-        Printf.printf "chain is:\n";
+  let rec wrap_obj obj = function
+  | [] -> obj
+  | h::t -> Pdf.Dictionary [(h, wrap_obj obj t)]
+  in
+    let chain, to_fake = find_max_existing [] (split_chain objspec) in
+      (*Printf.printf "chain:\n";
+      iter (Printf.printf "%s ") chain;
+      Printf.printf "\n";
+      Printf.printf "to_fake is:\n";
+      iter (Printf.printf "%s ") to_fake;
+      Printf.printf "\n";*)
+      let chain, key, obj =
+        match to_fake with
+        | [] ->
+          (* If chain is complete (i.e to_fake empty), split the key off, and the obj is unaltered *)
+          (rev (tl (rev chain)), hd (rev chain), obj)
+        | h::t ->
+          (* Otherwise to_fake has head. That's the key, and the object is the rest wrapped. *)
+          (chain, h, wrap_obj obj t)
+      in
+        (*Printf.printf "final chain:\n";
         iter (Printf.printf "%s ") chain;
-        Printf.printf "\n";
-        Pdf.replace_chain pdf chain (key, obj) 
+        Printf.printf "key is %s\n" key;
+        Printf.printf "obj is %s\n" (Pdfwrite.string_of_pdf obj);*)
+        Pdf.replace_chain pdf chain (key, obj)
 
 (* Main function *)
 let go () =
@@ -4530,7 +4538,8 @@ let go () =
   | Some (ReplaceObj (a, b)) ->
       let pdf = get_single_pdf args.op false in
       let pdfobj = Cpdfjson.object_of_json (Cpdfyojson.Safe.from_string b) in
-        replace_obj pdf a pdfobj
+        replace_obj pdf a pdfobj;
+        write_pdf false pdf
   | Some (Verify standard) ->
       begin match standard with
       | "PDF/UA-1(matterhorn)" ->
