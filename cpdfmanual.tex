@@ -5468,6 +5468,9 @@ Once we are sure a file complies to PDF/UA, in terms of both machine and human c
   \noindent\verb!cpdf -obj <object specification> in.pdf!
 
   \vspace{1.5mm}
+  \noindent\verb!cpdf -replace-obj <object specification>=<object> in.pdf!
+
+  \vspace{1.5mm}
   \noindent\verb!cpdf -extract-stream[-decompress] <obj num> in.pdf [-o out.dat | -stdout]!
   \end{framed}}
   \section{Draft Documents}
@@ -5717,6 +5720,17 @@ $ cpdf -extract-stream-decompress 2 hello.pdf -stdout
 \end{verbatim}}
 
 \noindent By these mechanisms, ad-hoc exploration of PDF files is possible.
+
+We may also edit dictionary entries with \texttt{-replace-obj} by giving an object specification, and the new value in JSON format:
+
+  \begin{framed}
+  \small\noindent\verb!cpdf -replace-obj /Root/MarkInfo/Marked=true in.pdf -o out.pdf!
+
+  \vspace{2.5mm}
+  \noindent Replace or add dictionary entry in \texttt{in.pdf}, writing to \texttt{out.pdf}. 
+  \end{framed}
+
+\noindent Any part of the object specification not already present will be fabricated using direct nested dictionaries. For example, if \texttt{/MarkInfo} does not exist in the root dictionary, this command adds \texttt{/MarkInfo <</Marked true>>} to the root dictionary.
 
 \begin{cpdflib}
 \clearpage
