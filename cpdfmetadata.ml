@@ -50,7 +50,11 @@ let xmp_template =
  <rdf:Description about=''
   xmlns='http://purl.org/dc/elements/1.1/'
   xmlns:dc='http://purl.org/dc/elements/1.1/'>
-   <dc:title>TITLE</dc:title>
+   <dc:title>
+   <rdf:Alt>
+     <rdf:li xml:lang='x-default'>TITLE</rdf:li>
+   </rdf:Alt>
+   </dc:title>
  </rdf:Description>
 
 </rdf:RDF>
@@ -327,7 +331,7 @@ let xmltree_of_bytes b =
 
 let bytes_of_xmltree t =
   let buf = Buffer.create 1024 in
-  let o = Cpdfxmlm.make_output ~indent:(Some 2) (`Buffer buf) in
+  let o = Cpdfxmlm.make_output ~indent:None (`Buffer buf) in
   let frag = function
       E (tag, childs) -> `El (tag, childs)
     | D d -> `Data d
