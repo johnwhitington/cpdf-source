@@ -3477,9 +3477,7 @@ let print_obj pdf objspec =
 
 (* Empty string is trailerdict. Begins with / and it's a chain separated by commas. *)
 let replace_obj pdf objspec obj =
-  (*Printf.printf "objspec = %s\n" objspec;*)
   let rec find_max_existing to_fake chain =
-    (*Printf.printf "find_max_existing: %s\n" (String.concat "" chain);*)
     if chain = [] then (chain, to_fake) else
       match Pdf.lookup_chain pdf pdf.Pdf.trailerdict chain with
       | None -> find_max_existing (hd (rev chain)::to_fake) (rev (tl (rev chain)))
@@ -3490,26 +3488,15 @@ let replace_obj pdf objspec obj =
   | h::t -> Pdf.Dictionary [(h, wrap_obj obj t)]
   in
     let chain, to_fake = find_max_existing [] (split_chain objspec) in
-      (*Printf.printf "chain:\n";
-      iter (Printf.printf "%s ") chain;
-      Printf.printf "\n";
-      Printf.printf "to_fake is:\n";
-      iter (Printf.printf "%s ") to_fake;
-      Printf.printf "\n";*)
       let chain, key, obj =
         match to_fake with
-        | [] ->
-          (* If chain is complete (i.e to_fake empty), split the key off, and the obj is unaltered *)
-          (rev (tl (rev chain)), hd (rev chain), obj)
-        | h::t ->
-          (* Otherwise to_fake has head. That's the key, and the object is the rest wrapped. *)
-          (chain, h, wrap_obj obj t)
+        | [] -> (rev (tl (rev chain)), hd (rev chain), obj)
+        | h::t -> (chain, h, wrap_obj obj t)
       in
-        (*Printf.printf "final chain:\n";
-        iter (Printf.printf "%s ") chain;
-        Printf.printf "key is %s\n" key;
-        Printf.printf "obj is %s\n" (Pdfwrite.string_of_pdf obj);*)
-        Pdf.replace_chain pdf chain (key, obj)
+        if chain = [] then
+          pdf.Pdf.trailerdict <- Pdf.add_dict_entry pdf.Pdf.trailerdict key obj
+        else
+          Pdf.replace_chain pdf chain (key, obj)
 
 (* Main function *)
 let go () =
