@@ -1584,3 +1584,13 @@ let print_struct_tree pdf =
             ~get_name:(fun (E2 (x, a, _)) -> if int_of_string (get_page a) > 0 then x ^ " (" ^ get_page a ^ ")" else x)
             ~get_children:(fun (E2 (_, _, cs)) -> cs)
             st)
+
+let cpdfua_args title =
+  [       "-create-pdf";
+   "AND"; "-set-title"; title;
+   "AND"; "-create-metadata";
+   "AND"; "-set-language"; "en-US";
+   "AND"; "-display-doc-title"; "true";
+   "AND"; "-replace-obj"; "/Root/MarkInfo/Marked=true";
+   "AND"; "-replace-obj"; "/Root/StructTreeRoot/Type={\"N\":\"/StructTreeRoot\"}";
+   "AND"; "-mark-as"; "PDF/UA-1"]

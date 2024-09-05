@@ -23,3 +23,6 @@ val extract_struct_tree : Pdf.t -> Cpdfyojson.Safe.t
 
 (** Reapply an edited JSON structure tree to its PDF. *)
 val replace_struct_tree : Pdf.t -> Cpdfyojson.Safe.t -> unit
+
+(** / **)
+val cpdfua_args : string -> string list

@@ -4482,6 +4482,7 @@ In a PDF file, optional content groups are used to group graphical elements toge
   \noindent\verb!cpdf -create-pdf [-create-pdf-pages <n>]!\\
   \noindent\verb!     [-create-pdf-papersize <paper size>] -o out.pdf!
 
+
   \vspace{1.5mm}
   \noindent\verb!cpdf -typeset <text file> [-create-pdf-papersize <size>]!\\
   \noindent\verb!     [-font <font>] [-font-size <size>] -o out.pdf!
@@ -5197,6 +5198,10 @@ If the drawing range is a single page, and the next page already exists, the dra
   \vspace{1.5mm}
   \noindent\verb!cpdf -remove-mark ["PDF/UA-1" | "PDF/UA-2"] in.pdf -o out.pdf!
 
+  \vspace{1.5mm}
+  \noindent\verb!cpdf [-create-pdf-pages <n>] [-create-pdf-papersize <paper size>]!\\
+  \noindent\verb!      -create-pdf-ua-1 <title> -o out.pdf!
+
   \end{framed}}
 
 PDF/UA (Universal Accessibility) is a PDF subformat whose rules consist of a set of machine-checkable and human-checkable-only requirements to make PDF documents accessible for all users - for example, those using screen readers. Cpdf has some basic facilities for manipulating the extra PDF constructs which are used in (amongst others) PDF/UA, and a basic verifier for many of the machine-checkable requirements.
@@ -5408,9 +5413,19 @@ Once we are sure a file complies to PDF/UA, in terms of both machine and human c
     \noindent\small\verb!cpdf -remove-mark "PDF/UA-1" in.pdf -o out.pdf!
   \end{framed}
 
-\section{Merging and splitting PDF/UA files}.
+\section{Merging and splitting PDF/UA files}
 
 \noindent The \texttt{-process-struct-trees} option should always be used in conjunction with any splitting or merging command to preserve PDF/UA compliance. Details are given in chapter \ref{chap:2}.
+
+\section{Creating new PDF/UA files}
+
+To create a new PDF/UA-1 file, with A4 portrait paper, one page, and the title \texttt{"My Book"}, we may write:
+
+  \begin{framed}
+    \noindent\small\verb!cpdf -create-pdf-ua-1 "My Book" -o out.pdf!
+  \end{framed}
+
+\noindent A title is needed for every PDF/UA-1 document (even a blank one) for it to meet the standard. Note that any modifying \texttt{-create-pdf-pages} or \texttt{-create-pdf-papersize} must appear before \texttt{-create-pdf-ua-1} on the command line.
 
 \clearpage\pagestyle{empty}
 %We wanted to call this "Chapter M", but the following commands messed up the PDF bookmarks, so this chapter will simply have to float for now, until we can return to this problem.
