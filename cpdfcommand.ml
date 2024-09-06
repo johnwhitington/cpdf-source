@@ -542,7 +542,8 @@ type args =
    mutable resample_interpolate : bool;
    mutable jbig2_lossy_threshold : float;
    mutable extract_stream_decompress : bool;
-   mutable verify_single : string option}
+   mutable verify_single : string option;
+   mutable draw_struct_tree : bool}
 
 let args =
   {op = None;
@@ -677,7 +678,8 @@ let args =
    resample_interpolate = false;
    jbig2_lossy_threshold = 0.85;
    extract_stream_decompress = false;
-   verify_single = None}
+   verify_single = None;
+   draw_struct_tree = false}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -800,7 +802,8 @@ let reset_arguments () =
   args.jbig2_lossy_threshold <- 0.85;
   args.extract_stream_decompress <- false;
   clear Cpdfdrawcontrol.fontpack_initialised;
-  args.verify_single <- None
+  args.verify_single <- None;
+  args.draw_struct_tree <- false
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -1801,6 +1804,9 @@ let settextwidth s =
 let setdraw () =
   args.op <- Some Draw
 
+let setdrawstructtree () =
+  args.draw_struct_tree <- true
+
 let setextractfontfile s =
   args.op <- Some (ExtractFontFile s)
 
@@ -2782,6 +2788,7 @@ let specs =
      Arg.String settextwidth,
      " Find width of a line of text");
    ("-draw", Arg.Unit setdraw, " Begin drawing");
+   ("-draw-struct-tree", Arg.Unit setdrawstructtree, " Build structure trees when drawing.");
    ("-rect", Arg.String Cpdfdrawcontrol.addrect, " Draw rectangle");
    ("-to", Arg.String Cpdfdrawcontrol.addto, " Move to");
    ("-line", Arg.String Cpdfdrawcontrol.addline, " Add line to");
@@ -4493,7 +4500,7 @@ let go () =
       let ops = match !Cpdfdrawcontrol.drawops with [("_MAIN", ops)] -> rev ops | _ -> error "not enough -end-xobj or -et" in
         write_pdf
           false
-          (Cpdfdraw.draw ~fast:args.fast ~underneath:args.underneath ~filename:args.original_filename ~bates:args.bates ~batespad:args.batespad range pdf ops)
+          (Cpdfdraw.draw ~struct_tree:args.draw_struct_tree ~fast:args.fast ~underneath:args.underneath ~filename:args.original_filename ~bates:args.bates ~batespad:args.batespad range pdf ops)
   | Some (Composition json) ->
       let pdf = get_single_pdf args.op false in
       let filesize =

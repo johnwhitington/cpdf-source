@@ -52,8 +52,9 @@ type drawops =
 
 (** Calling [draw fast underneath filename bates batespad range pdf drawops] draws on
     top of all the pages in the range. *)
-val draw : ?fast:bool ->
-           ?underneath:bool ->
+val draw : struct_tree:bool ->
+           fast:bool ->
+           underneath:bool ->
            filename:string ->
            bates:int ->
            batespad:int option ->

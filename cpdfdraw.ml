@@ -422,7 +422,7 @@ let dryrun ~filename ~bates ~batespad range pdf chunks =
     restore_whole_stack r;
     fontpacks := saved_fontpacks
 
-let draw ?(fast=false) ?(underneath=false) ~filename ~bates ~batespad range pdf drawops =
+let draw ~struct_tree ~fast ~underneath ~filename ~bates ~batespad range pdf drawops =
   (*Printf.printf "%s\n" (string_of_drawops drawops);*)
   resstack := [empty_res ()];
   Hashtbl.clear !fontpacks;
