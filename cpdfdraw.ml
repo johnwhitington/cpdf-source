@@ -193,6 +193,14 @@ let update_resources pdf old_resources =
     "/Font"
     (Pdf.Dictionary new_fonts)
 
+let mcidr = ref ~-1
+let mcid () = (incr mcidr; !mcidr)
+
+type structdata =
+  | MCID of int
+
+let structdata = ref []
+
 let rec ops_of_drawop dryrun pdf endpage filename bates batespad num page = function
   | Qq ops ->
       [Pdfops.Op_q] @ ops_of_drawops dryrun pdf endpage filename bates batespad num page ops @ [Pdfops.Op_Q]
@@ -294,7 +302,14 @@ let rec ops_of_drawop dryrun pdf endpage filename bates batespad num page = func
         if dryrun then (res ()).current_fontpack_codepoints <- codepoints;
         (res ()).font_size <- size;
         []
-  | TextSection ops -> [Pdfops.Op_BT] @ ops_of_drawops dryrun pdf endpage filename bates batespad num page ops @ [Pdfops.Op_ET]
+  | TextSection ops ->
+      let m = mcid () in
+        if not dryrun then structdata := MCID m::!structdata;
+        [Pdfops.Op_BDC ("/P", Pdf.Dictionary ["/MCID", Pdf.Integer m]);
+         Pdfops.Op_BT]
+        @ ops_of_drawops dryrun pdf endpage filename bates batespad num page ops @
+        [Pdfops.Op_ET;
+         Pdfops.Op_EMC]
   | Text s ->
       if dryrun then iter (fun c -> Hashtbl.replace (res ()).current_fontpack_codepoints c ()) (Pdftext.codepoints_of_utf8 s);
       runs_of_utf8 s
@@ -422,8 +437,14 @@ let dryrun ~filename ~bates ~batespad range pdf chunks =
     restore_whole_stack r;
     fontpacks := saved_fontpacks
 
+(* Build a tree from the MCIDs and sturcture tree instructions gathered, and
+   add it to the PDF. *)
+let make_structure_tree pdf items =
+  ()
+
 let draw ~struct_tree ~fast ~underneath ~filename ~bates ~batespad range pdf drawops =
   (*Printf.printf "%s\n" (string_of_drawops drawops);*)
+  mcidr := -1;
   resstack := [empty_res ()];
   Hashtbl.clear !fontpacks;
   (res ()).time <- Cpdfstrftime.current_time ();
@@ -448,4 +469,5 @@ let draw ~struct_tree ~fast ~underneath ~filename ~bates ~batespad range pdf dra
               range := [endpage + 1]
       end
     done;
+    make_structure_tree pdf !structdata;
     !pdf
