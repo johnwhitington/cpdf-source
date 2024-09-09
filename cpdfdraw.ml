@@ -195,9 +195,15 @@ let update_resources pdf old_resources =
 
 let mcidr = ref ~-1
 let mcid () = (incr mcidr; !mcidr)
+let mcpage = ref ~-1
 
+(* The structure data, as it is created, in flat form. Later on, this will be
+   reconstructed into a structure tree. *)
 type structdata =
-  | MCID of int
+  | StDataBeginTree of string
+  | StDataEndTree
+  | StDataMCID of string * int
+  | StDataPage of int
 
 let structdata = ref []
 
@@ -304,7 +310,7 @@ let rec ops_of_drawop dryrun pdf endpage filename bates batespad num page = func
         []
   | TextSection ops ->
       let m = mcid () in
-        if not dryrun then structdata := MCID m::!structdata;
+        if not dryrun then structdata := StDataMCID ("/P", m)::!structdata;
         [Pdfops.Op_BDC ("/P", Pdf.Dictionary ["/MCID", Pdf.Integer m]);
          Pdfops.Op_BT]
         @ ops_of_drawops dryrun pdf endpage filename bates batespad num page ops @
@@ -437,14 +443,61 @@ let dryrun ~filename ~bates ~batespad range pdf chunks =
     restore_whole_stack r;
     fontpacks := saved_fontpacks
 
-(* Build a tree from the MCIDs and sturcture tree instructions gathered, and
-   add it to the PDF. *)
+type st =
+   StMCID of int
+ | StItem of {kind : string; pageobjnum : int; children : st list}
+
+(* Build a tree from the MCIDs and structure tree instructions gathered *)
 let make_structure_tree pdf items =
+  (* Make map of page numbers to pageobjnums, and create a reference to keep track. *)
+  let pagenum = ref 0 in
+  let items_out = ref [] in
+  let pageobjnums =
+    let objnums = Pdf.page_reference_numbers pdf in
+      combine (indx objnums) objnums
+  in
+  (* Process the items, making the st list tree data structure *)
+  let process = function
+    | StDataMCID (n, mcid) ->
+        Printf.printf "Looking for page %i\n" !pagenum;
+        items_out =| StItem {kind = n; pageobjnum = unopt (lookup !pagenum pageobjnums); children = [StMCID mcid]}
+    | StDataPage n ->
+        Printf.printf "Setting page number to %i\n" n;
+        pagenum := n
+    | _ -> ()
+  in
+    iter process items;
+    !items_out
+
+(* Write such a structure tree to a PDF. We have to make the objects and build
+   the root and its /K. For now, we just have a root which contains everything
+   else on one level. Later we will use StDataBeginTree / StDataEndTree to make
+   more tree stuff. *)
+
+(* Add the parent tree and parent pointers to the structure tree. *)
+let add_parent_tree pdf =
   ()
+
+let write_structure_tree pdf st =
+  let items =
+    map
+      (function StItem {kind; pageobjnum; children} ->
+         Pdf.Dictionary [("/S", Pdf.Name kind);
+                         ("/P", Pdf.Indirect pageobjnum);
+                         ("/K", Pdf.Array (map (function StMCID x -> Pdf.Integer x | _ -> assert false) children))]
+       | _ -> assert false
+      )
+      st
+  in
+  let st =
+    Pdf.Dictionary [("/Type", Pdf.Name "/StructTreeRoot");
+                    ("/K", Pdf.Array items)]
+  in
+    Pdf.replace_chain pdf ["/Root"] ("/StructTreeRoot", st);
+    add_parent_tree pdf
 
 let draw ~struct_tree ~fast ~underneath ~filename ~bates ~batespad range pdf drawops =
   (*Printf.printf "%s\n" (string_of_drawops drawops);*)
-  mcidr := -1;
   resstack := [empty_res ()];
   Hashtbl.clear !fontpacks;
   (res ()).time <- Cpdfstrftime.current_time ();
@@ -454,7 +507,11 @@ let draw ~struct_tree ~fast ~underneath ~filename ~bates ~batespad range pdf dra
   let drawops = match rev drawops with NewPage::t -> rev (NewPage::NewPage::t) | _ -> drawops in
   let chunks = ref (split_around (eq NewPage) drawops) in
   dryrun ~filename ~bates ~batespad !range !pdf !chunks;
+  mcidr := -1;
+  mcpage := 0;
     while !chunks <> [] do
+      mcpage += 1;
+      structdata =| StDataPage !mcpage;
       reset_state ();
       if hd !chunks <> [] then pdf := draw_single ~fast ~underneath ~filename ~bates ~batespad !range !pdf (hd !chunks);
       chunks := tl !chunks;
@@ -469,5 +526,5 @@ let draw ~struct_tree ~fast ~underneath ~filename ~bates ~batespad range pdf dra
               range := [endpage + 1]
       end
     done;
-    make_structure_tree pdf !structdata;
+    write_structure_tree !pdf (make_structure_tree !pdf (rev !structdata));
     !pdf
