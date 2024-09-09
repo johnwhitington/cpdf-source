@@ -459,10 +459,8 @@ let make_structure_tree pdf items =
   (* Process the items, making the st list tree data structure *)
   let process = function
     | StDataMCID (n, mcid) ->
-        Printf.printf "Looking for page %i\n" !pagenum;
         items_out =| StItem {kind = n; pageobjnum = unopt (lookup !pagenum pageobjnums); children = [StMCID mcid]}
     | StDataPage n ->
-        Printf.printf "Setting page number to %i\n" n;
         pagenum := n
     | _ -> ()
   in
@@ -473,28 +471,28 @@ let make_structure_tree pdf items =
    the root and its /K. For now, we just have a root which contains everything
    else on one level. Later we will use StDataBeginTree / StDataEndTree to make
    more tree stuff. *)
-
-(* Add the parent tree and parent pointers to the structure tree. *)
-let add_parent_tree pdf =
-  ()
-
 let write_structure_tree pdf st =
+  let parentmap = ref [] in
   let items =
     map
       (function StItem {kind; pageobjnum; children} ->
          Pdf.Dictionary [("/S", Pdf.Name kind);
                          ("/P", Pdf.Indirect pageobjnum);
-                         ("/K", Pdf.Array (map (function StMCID x -> Pdf.Integer x | _ -> assert false) children))]
+                         ("/K", Pdf.Array (map (function StMCID x ->
+                                                  let n = Pdf.addobj pdf (Pdf.Integer x) in
+                                                     parentmap =| (string_of_int x, Pdf.Indirect n);
+                                                     Pdf.Indirect (Pdf.addobj pdf (Pdf.Integer x))
+                                                | _ -> assert false) children))]
        | _ -> assert false
       )
       st
   in
   let st =
     Pdf.Dictionary [("/Type", Pdf.Name "/StructTreeRoot");
+                    ("/ParentTree", Pdf.Indirect (Pdf.addobj pdf (Pdftree.build_name_tree true pdf !parentmap))); 
                     ("/K", Pdf.Array items)]
   in
-    Pdf.replace_chain pdf ["/Root"] ("/StructTreeRoot", st);
-    add_parent_tree pdf
+    Pdf.replace_chain pdf ["/Root"] ("/StructTreeRoot", st)
 
 let draw ~struct_tree ~fast ~underneath ~filename ~bates ~batespad range pdf drawops =
   (*Printf.printf "%s\n" (string_of_drawops drawops);*)
