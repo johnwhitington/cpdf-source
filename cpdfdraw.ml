@@ -473,11 +473,13 @@ let make_structure_tree pdf items =
    more tree stuff. *)
 let write_structure_tree pdf st =
   let parentmap = ref [] in
+  let struct_tree_root = Pdf.addobj pdf Pdf.Null in
   let items =
     map
       (function StItem {kind; pageobjnum; children} ->
          Pdf.Dictionary [("/S", Pdf.Name kind);
-                         ("/P", Pdf.Indirect pageobjnum);
+                         ("/Pg", Pdf.Indirect pageobjnum);
+                         ("/P", Pdf.Indirect struct_tree_root);
                          ("/K", Pdf.Array (map (function StMCID x ->
                                                   let n = Pdf.addobj pdf (Pdf.Integer x) in
                                                      parentmap =| (string_of_int x, Pdf.Indirect n);
@@ -492,7 +494,8 @@ let write_structure_tree pdf st =
                     ("/ParentTree", Pdf.Indirect (Pdf.addobj pdf (Pdftree.build_name_tree true pdf !parentmap))); 
                     ("/K", Pdf.Array items)]
   in
-    Pdf.replace_chain pdf ["/Root"] ("/StructTreeRoot", st)
+    Pdf.addobj_given_num pdf (struct_tree_root, st);
+    Pdf.replace_chain pdf ["/Root"] ("/StructTreeRoot", (Pdf.Indirect struct_tree_root))
 
 let draw ~struct_tree ~fast ~underneath ~filename ~bates ~batespad range pdf drawops =
   (*Printf.printf "%s\n" (string_of_drawops drawops);*)
@@ -524,5 +527,5 @@ let draw ~struct_tree ~fast ~underneath ~filename ~bates ~batespad range pdf dra
               range := [endpage + 1]
       end
     done;
-    write_structure_tree !pdf (make_structure_tree !pdf (rev !structdata));
+    if struct_tree then write_structure_tree !pdf (make_structure_tree !pdf (rev !structdata));
     !pdf
