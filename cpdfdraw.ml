@@ -477,14 +477,18 @@ let write_structure_tree pdf st =
   let items =
     map
       (function StItem {kind; pageobjnum; children} ->
-         Pdf.Dictionary [("/S", Pdf.Name kind);
-                         ("/Pg", Pdf.Indirect pageobjnum);
-                         ("/P", Pdf.Indirect struct_tree_root);
-                         ("/K", Pdf.Array (map (function StMCID x ->
-                                                  let n = Pdf.addobj pdf (Pdf.Integer x) in
-                                                     parentmap =| (string_of_int x, Pdf.Indirect n);
-                                                     Pdf.Indirect (Pdf.addobj pdf (Pdf.Integer x))
-                                                | _ -> assert false) children))]
+         let this_objnum = Pdf.addobj pdf Pdf.Null in
+         let this_obj = 
+             Pdf.Dictionary [("/S", Pdf.Name kind);
+                             ("/Pg", Pdf.Indirect pageobjnum);
+                             ("/P", Pdf.Indirect struct_tree_root);
+                             ("/K", Pdf.Array (map (function StMCID x ->
+                                                         parentmap =| (string_of_int x, Pdf.Array [Pdf.Indirect this_objnum]);
+                                                         Pdf.Integer x
+                                                    | _ -> assert false) children))]
+         in
+           Pdf.addobj_given_num pdf (this_objnum, this_obj);
+           Pdf.Indirect this_objnum
        | _ -> assert false
       )
       st
