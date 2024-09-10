@@ -498,7 +498,7 @@ let write_structure_tree pdf st =
   in
   iter
     (fun (pon, _) ->
-       Pdf.addobj_given_num pdf (pon, Pdf.add_dict_entry (Pdf.lookup_obj pdf pon) "/StructParent" (Pdf.Integer pon)))
+       Pdf.addobj_given_num pdf (pon, Pdf.add_dict_entry (Pdf.lookup_obj pdf pon) "/StructParents" (Pdf.Integer pon)))
     !parentmap;
   let parentmap =
     map (fun (pon, items) -> (string_of_int pon, Pdf.Array (map (fun x -> Pdf.Indirect x) (rev items)))) !parentmap
