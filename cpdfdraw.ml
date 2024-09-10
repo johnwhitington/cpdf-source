@@ -473,6 +473,11 @@ let make_structure_tree pdf items =
    more tree stuff. *)
 let write_structure_tree pdf st =
   let parentmap = ref [] in
+  let add_parentmap pon this_objnum =
+    match lookup pon !parentmap with
+    | None -> parentmap =| (pon, [this_objnum])
+    | Some objnums -> parentmap := add pon (this_objnum::objnums) !parentmap
+  in
   let struct_tree_root = Pdf.addobj pdf Pdf.Null in
   let items =
     map
@@ -482,9 +487,7 @@ let write_structure_tree pdf st =
              Pdf.Dictionary [("/S", Pdf.Name kind);
                              ("/Pg", Pdf.Indirect pageobjnum);
                              ("/P", Pdf.Indirect struct_tree_root);
-                             ("/K", Pdf.Array (map (function StMCID x ->
-                                                         parentmap =| (string_of_int x, Pdf.Array [Pdf.Indirect this_objnum]);
-                                                         Pdf.Integer x
+                             ("/K", Pdf.Array (map (function StMCID x -> add_parentmap pageobjnum this_objnum; Pdf.Integer x
                                                     | _ -> assert false) children))]
          in
            Pdf.addobj_given_num pdf (this_objnum, this_obj);
@@ -493,9 +496,16 @@ let write_structure_tree pdf st =
       )
       st
   in
+  iter
+    (fun (pon, _) ->
+       Pdf.addobj_given_num pdf (pon, Pdf.add_dict_entry (Pdf.lookup_obj pdf pon) "/StructParent" (Pdf.Integer pon)))
+    !parentmap;
+  let parentmap =
+    map (fun (pon, items) -> (string_of_int pon, Pdf.Array (map (fun x -> Pdf.Indirect x) (rev items)))) !parentmap
+  in
   let st =
     Pdf.Dictionary [("/Type", Pdf.Name "/StructTreeRoot");
-                    ("/ParentTree", Pdf.Indirect (Pdf.addobj pdf (Pdftree.build_name_tree true pdf !parentmap))); 
+                    ("/ParentTree", Pdf.Indirect (Pdf.addobj pdf (Pdftree.build_name_tree true pdf parentmap))); 
                     ("/K", Pdf.Array items)]
   in
     Pdf.addobj_given_num pdf (struct_tree_root, st);
