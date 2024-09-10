@@ -522,9 +522,9 @@ let draw ~struct_tree ~fast ~underneath ~filename ~bates ~batespad range pdf dra
   let drawops = match rev drawops with NewPage::t -> rev (NewPage::NewPage::t) | _ -> drawops in
   let chunks = ref (split_around (eq NewPage) drawops) in
   dryrun ~filename ~bates ~batespad !range !pdf !chunks;
-  mcidr := -1;
   mcpage := 0;
     while !chunks <> [] do
+      mcidr := -1;
       mcpage += 1;
       structdata =| StDataPage !mcpage;
       reset_state ();
