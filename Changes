@@ -9,7 +9,7 @@ New features:
 
 * New -args-json for better control files
 * New -replace-obj to edit dictionary entries via chain
-* Create PDF/UA files from scratch with -create-pdf-ua-1
+* Create PDF/UA files from scratch with -create-pdf-ua-[1|2]
 * Create structure information for files with -draw
 
 * = Supported by a grant from NLnet
