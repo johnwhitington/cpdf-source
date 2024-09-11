@@ -207,9 +207,9 @@ type structdata =
 
 let structdata = ref []
 
-let rec ops_of_drawop dryrun pdf endpage filename bates batespad num page = function
+let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num page = function
   | Qq ops ->
-      [Pdfops.Op_q] @ ops_of_drawops dryrun pdf endpage filename bates batespad num page ops @ [Pdfops.Op_Q]
+      [Pdfops.Op_q] @ ops_of_drawops struct_tree dryrun pdf endpage filename bates batespad num page ops @ [Pdfops.Op_Q]
   | Matrix m -> [Pdfops.Op_cm m] 
   | Rect (x, y, w, h) -> [Pdfops.Op_re (x, y, w, h)]
   | Bezier (a, b, c, d, e, f) -> [Pdfops.Op_c (a, b, c, d, e, f)]
@@ -245,7 +245,7 @@ let rec ops_of_drawop dryrun pdf endpage filename bates batespad num page = func
   | SetMiterLimit m -> [Pdfops.Op_M m]
   | SetDashPattern (x, y) -> [Pdfops.Op_d (x, y)]
   | FormXObject (a, b, c, d, n, ops) ->
-      create_form_xobject dryrun a b c d pdf endpage filename bates batespad num page n ops;
+      create_form_xobject struct_tree dryrun a b c d pdf endpage filename bates batespad num page n ops;
       []
   | Use n ->
       let pdfname = try fst (Hashtbl.find (res ()).form_xobjects n) with _ -> error ("Form XObject not found: " ^ n) in
@@ -256,7 +256,9 @@ let rec ops_of_drawop dryrun pdf endpage filename bates batespad num page = func
         if not dryrun then structdata := StDataMCID ("/Figure", m, t)::!structdata;
       let pdfname = try fst (Hashtbl.find (res ()).images s) with _ -> error ("Image not found: " ^ s) in
         (res ()).page_names <- pdfname::(res ()).page_names;
-        [Pdfops.Op_BDC ("/Figure", Pdf.Dictionary ["/MCID", Pdf.Integer m]); Pdfops.Op_Do pdfname; Pdfops.Op_EMC]
+            (if struct_tree then [Pdfops.Op_BDC ("/Figure", Pdf.Dictionary ["/MCID", Pdf.Integer m])] else [])
+          @ [Pdfops.Op_Do pdfname]
+          @ (if struct_tree then [Pdfops.Op_EMC] else [])
   | ImageXObject (s, obj) ->
       Hashtbl.replace (res ()).images s (fresh_name "/I", Pdf.addobj pdf obj); 
       []
@@ -313,11 +315,11 @@ let rec ops_of_drawop dryrun pdf endpage filename bates batespad num page = func
   | TextSection ops ->
       let m = mcid () in
         if not dryrun then structdata := StDataMCID ("/P", m, None)::!structdata;
-        [Pdfops.Op_BDC ("/P", Pdf.Dictionary ["/MCID", Pdf.Integer m]);
-         Pdfops.Op_BT]
-        @ ops_of_drawops dryrun pdf endpage filename bates batespad num page ops @
-        [Pdfops.Op_ET;
-         Pdfops.Op_EMC]
+          (if struct_tree then [Pdfops.Op_BDC ("/P", Pdf.Dictionary ["/MCID", Pdf.Integer m])] else [])
+        @ [Pdfops.Op_BT]
+        @ ops_of_drawops struct_tree dryrun pdf endpage filename bates batespad num page ops
+        @ [Pdfops.Op_ET] 
+        @ (if struct_tree then [Pdfops.Op_EMC] else [])
   | Text s ->
       if dryrun then iter (fun c -> Hashtbl.replace (res ()).current_fontpack_codepoints c ()) (Pdftext.codepoints_of_utf8 s);
       runs_of_utf8 s
@@ -333,14 +335,14 @@ let rec ops_of_drawop dryrun pdf endpage filename bates batespad num page = func
   | Rise f -> [Pdfops.Op_Ts f]
   | Newline -> [Pdfops.Op_T']
 
-and ops_of_drawops dryrun pdf endpage filename bates batespad num page drawops =
-  flatten (map (ops_of_drawop dryrun pdf endpage filename bates batespad num page) drawops)
+and ops_of_drawops draw_struct dryrun pdf endpage filename bates batespad num page drawops =
+  flatten (map (ops_of_drawop draw_struct dryrun pdf endpage filename bates batespad num page) drawops)
 
-and create_form_xobject dryrun a b c d pdf endpage filename bates batespad num page n ops =
+and create_form_xobject struct_tree dryrun a b c d pdf endpage filename bates batespad num page n ops =
   respush ();
   reset_state ();
   let data =
-    Pdfio.bytes_of_string (Pdfops.string_of_ops (ops_of_drawops dryrun pdf endpage filename bates batespad num page ops))
+    Pdfio.bytes_of_string (Pdfops.string_of_ops (ops_of_drawops struct_tree dryrun pdf endpage filename bates batespad num page ops))
   in
   let obj =
     Pdf.Stream
@@ -420,14 +422,14 @@ let add_artifacts ops =
   in
     loop [] ops
 
-let draw_single ~fast ~underneath ~filename ~bates ~batespad range pdf drawops =
+let draw_single ~struct_tree ~fast ~underneath ~filename ~bates ~batespad range pdf drawops =
   (res ()).num <- max (res ()).num (minimum_resource_number pdf range);
   let endpage = Pdfpage.endpage pdf in
   let pages = Pdfpage.pages_of_pagetree pdf in
   let ops =
     if contains_specials drawops
       then None
-      else Some (ops_of_drawops false pdf endpage filename bates batespad 0 (hd pages) drawops)
+      else Some (ops_of_drawops struct_tree false pdf endpage filename bates batespad 0 (hd pages) drawops)
   in
   let ss =
     map2
@@ -436,7 +438,7 @@ let draw_single ~fast ~underneath ~filename ~bates ~batespad range pdf drawops =
            then
              (match ops with
               | Some x -> x
-              | None -> ops_of_drawops false pdf endpage filename bates batespad n p drawops)
+              | None -> ops_of_drawops struct_tree false pdf endpage filename bates batespad n p drawops)
            else [])
       (ilist 1 endpage)
       pages
@@ -445,7 +447,7 @@ let draw_single ~fast ~underneath ~filename ~bates ~batespad range pdf drawops =
     map3
       (fun n p ops ->
         if not (mem n range) then p else
-          let ops = add_artifacts ops in
+          let ops = if struct_tree then add_artifacts ops else ops in
           let page = {p with Pdfpage.resources = update_resources pdf p.Pdfpage.resources} in
             (if underneath then Pdfpage.prepend_operators else Pdfpage.postpend_operators) pdf ops ~fast page)
       (ilist 1 endpage)
@@ -455,7 +457,7 @@ let draw_single ~fast ~underneath ~filename ~bates ~batespad range pdf drawops =
     Pdfpage.change_pages true pdf pages
 
 (* Do a dry run of all the drawing to collect subset information. *)
-let dryrun ~filename ~bates ~batespad range pdf chunks =
+let dryrun ~struct_tree ~filename ~bates ~batespad range pdf chunks =
   let endpage = Pdfpage.endpage pdf in
   let pages = Pdfpage.pages_of_pagetree pdf in
   let r = save_whole_stack () in
@@ -463,7 +465,7 @@ let dryrun ~filename ~bates ~batespad range pdf chunks =
   let pagenum = ref (hd range) in
     iter
       (fun chunk ->
-         ignore (ops_of_drawops true pdf endpage filename bates batespad !pagenum (hd pages) chunk);
+         ignore (ops_of_drawops struct_tree true pdf endpage filename bates batespad !pagenum (hd pages) chunk);
          match range with
          | [x] when endpage > x -> pagenum := x + 1
          | _ -> pagenum := endpage + 1)
@@ -554,14 +556,14 @@ let draw ~struct_tree ~fast ~underneath ~filename ~bates ~batespad range pdf dra
   (* Double up a trailing NewPage so it actually does something... *)
   let drawops = match rev drawops with NewPage::t -> rev (NewPage::NewPage::t) | _ -> drawops in
   let chunks = ref (split_around (eq NewPage) drawops) in
-  dryrun ~filename ~bates ~batespad !range !pdf !chunks;
+  dryrun ~struct_tree ~filename ~bates ~batespad !range !pdf !chunks;
   mcpage := 0;
     while !chunks <> [] do
       mcidr := -1;
       mcpage += 1;
       structdata =| StDataPage !mcpage;
       reset_state ();
-      if hd !chunks <> [] then pdf := draw_single ~fast ~underneath ~filename ~bates ~batespad !range !pdf (hd !chunks);
+      if hd !chunks <> [] then pdf := draw_single ~struct_tree ~fast ~underneath ~filename ~bates ~batespad !range !pdf (hd !chunks);
       chunks := tl !chunks;
       if !chunks <> [] then begin
         (* If the range is just a single page, and there is a next page, move to it. Otherwise,
