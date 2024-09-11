@@ -2828,8 +2828,8 @@ let specs =
    ("-use", Arg.String Cpdfdrawcontrol.usexobj, " Use a saved sequence of graphics operators");
    ("-draw-jpeg", Arg.String Cpdfdrawcontrol.addjpeg, " Load a JPEG from file and name it");
    ("-draw-png", Arg.String Cpdfdrawcontrol.addpng, " Load a PNG from file and name it");
-   ("-image", Arg.String (fun s -> Cpdfdrawcontrol.addimage ?title:args.image_title s), " Draw an image which has already been loaded");
-   ("-image-title", Arg.String (fun s -> args.image_title <- Some s), " Give title for future images");
+   ("-image", Arg.String (fun s -> Cpdfdrawcontrol.addimage ?title:args.image_title s; args.image_title <- None), " Draw an image which has already been loaded");
+   ("-image-title", Arg.String (fun s -> args.image_title <- Some s), " Give title for the next -image");
    ("-fill-opacity", Arg.Float Cpdfdrawcontrol.addopacity, " Set opacity");
    ("-stroke-opacity", Arg.Float Cpdfdrawcontrol.addsopacity, " Set stroke opacity");
    ("-bt", Arg.Unit Cpdfdrawcontrol.addbt, " Begin text");

@@ -395,6 +395,31 @@ let save_whole_stack () =
 let restore_whole_stack r =
   resstack := r
 
+(* Mark as an artifact anything not already marked. *)
+let add_artifacts ops =
+  let content = ref false in
+  let artifact = ref false in
+  let rec loop a = function
+  | [] ->
+      (* The end. Must end artifact if in artifact. *)
+      if !artifact then rev (Pdfops.Op_EMC::a) else rev a
+  | Pdfops.Op_BDC _ as h::t -> 
+      (* Entering content. If in artifact, must end artifact. *)
+      let a' = if !artifact then h::Pdfops.Op_EMC::a else h::a in
+        set content; clear artifact; loop a' t
+  | Pdfops.Op_EMC as h::t ->
+      (* Exiting content. *)
+      clear content;
+      loop (h::a) t
+  | h::t -> 
+      (* A normal operation. If not in content or artifact must start artifact. *)
+      let a' =
+        if not (!content || !artifact) then (set artifact; h::Pdfops.Op_BMC "/Artifact"::a) else h::a
+      in
+        loop a' t
+  in
+    loop [] ops
+
 let draw_single ~fast ~underneath ~filename ~bates ~batespad range pdf drawops =
   (res ()).num <- max (res ()).num (minimum_resource_number pdf range);
   let endpage = Pdfpage.endpage pdf in
@@ -420,6 +445,7 @@ let draw_single ~fast ~underneath ~filename ~bates ~batespad range pdf drawops =
     map3
       (fun n p ops ->
         if not (mem n range) then p else
+          let ops = add_artifacts ops in
           let page = {p with Pdfpage.resources = update_resources pdf p.Pdfpage.resources} in
             (if underneath then Pdfpage.prepend_operators else Pdfpage.postpend_operators) pdf ops ~fast page)
       (ilist 1 endpage)
