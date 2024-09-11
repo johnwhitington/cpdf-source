@@ -4,10 +4,13 @@ Fixes:
 
 o Removed setting of Producer field in AGPL version
 * Removed long-deprecated -control
+
+New features:
+
 * New -args-json for better control files
 * New -replace-obj to edit dictionary entries via chain
-* Create structure information for files with -draw
 * Create PDF/UA files from scratch with -create-pdf-ua-1
+* Create structure information for files with -draw
 
 * = Supported by a grant from NLnet
 
