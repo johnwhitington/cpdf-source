@@ -26,3 +26,4 @@ val replace_struct_tree : Pdf.t -> Cpdfyojson.Safe.t -> unit
 
 (** / **)
 val cpdfua_args : string -> string list
+val cpdfua2_args : string -> string list

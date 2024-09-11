@@ -2627,7 +2627,10 @@ let specs =
     " Create a new PDF");
    ("-create-pdf-ua-1",
     Arg.String (fun _ -> ()), (* Processed elsewhere *)
-    " Create a new PDF/UA-1 with the new title");
+    " Create a new PDF/UA-1 with the given title");
+   ("-create-pdf-ua-2",
+    Arg.String (fun _ -> ()), (* Processed elsewhere *)
+    " Create a new PDF/UA-2 with the given title");
    ("-create-pdf-pages",
     Arg.Int setcreatepdfpages,
     " Number of pages for new PDF");
@@ -4621,6 +4624,7 @@ let expand_args argv =
 let rec expand_recipes = function
   | [] -> []
   | "-create-pdf-ua-1"::title::t -> Cpdfua.cpdfua_args title @ expand_recipes t
+  | "-create-pdf-ua-2"::title::t -> Cpdfua.cpdfua2_args title @ expand_recipes t
   | h::t -> h::expand_recipes t
 
 let expand_recipes argv =
