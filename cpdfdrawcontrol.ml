@@ -270,8 +270,8 @@ let addpng ?data n =
         let data = Pdfio.bytes_of_string (contents_of_file filename) in
           addop (Cpdfdraw.ImageXObject (name, fst (Cpdfimage.obj_of_png_data data)))
 
-let addimage s =
-  addop (Cpdfdraw.Image s)
+let addimage ?title s =
+  addop (Cpdfdraw.Image (s, title))
 
 let addnewpage s =
   addop Cpdfdraw.NewPage

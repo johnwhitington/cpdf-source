@@ -543,7 +543,8 @@ type args =
    mutable jbig2_lossy_threshold : float;
    mutable extract_stream_decompress : bool;
    mutable verify_single : string option;
-   mutable draw_struct_tree : bool}
+   mutable draw_struct_tree : bool;
+   mutable image_title : string option}
 
 let args =
   {op = None;
@@ -679,7 +680,8 @@ let args =
    jbig2_lossy_threshold = 0.85;
    extract_stream_decompress = false;
    verify_single = None;
-   draw_struct_tree = false}
+   draw_struct_tree = false;
+   image_title = None}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -803,7 +805,8 @@ let reset_arguments () =
   args.extract_stream_decompress <- false;
   clear Cpdfdrawcontrol.fontpack_initialised;
   args.verify_single <- None;
-  args.draw_struct_tree <- false
+  args.draw_struct_tree <- false;
+  args.image_title <- None
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -2825,7 +2828,8 @@ let specs =
    ("-use", Arg.String Cpdfdrawcontrol.usexobj, " Use a saved sequence of graphics operators");
    ("-draw-jpeg", Arg.String Cpdfdrawcontrol.addjpeg, " Load a JPEG from file and name it");
    ("-draw-png", Arg.String Cpdfdrawcontrol.addpng, " Load a PNG from file and name it");
-   ("-image", Arg.String Cpdfdrawcontrol.addimage, " Draw an image which has already been loaded");
+   ("-image", Arg.String (fun s -> Cpdfdrawcontrol.addimage ?title:args.image_title s), " Draw an image which has already been loaded");
+   ("-image-title", Arg.String (fun s -> args.image_title <- Some s), " Give title for future images");
    ("-fill-opacity", Arg.Float Cpdfdrawcontrol.addopacity, " Set opacity");
    ("-stroke-opacity", Arg.Float Cpdfdrawcontrol.addsopacity, " Set stroke opacity");
    ("-bt", Arg.Unit Cpdfdrawcontrol.addbt, " Begin text");

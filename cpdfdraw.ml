@@ -34,7 +34,7 @@ type drawops =
   | FormXObject of float * float * float * float * string * drawops list
   | Use of string
   | ImageXObject of string * Pdf.pdfobject
-  | Image of string
+  | Image of string * string option
   | NewPage
   | Opacity of float
   | SOpacity of float
@@ -202,7 +202,7 @@ let mcpage = ref ~-1
 type structdata =
   | StDataBeginTree of string
   | StDataEndTree
-  | StDataMCID of string * int
+  | StDataMCID of string * int * string option
   | StDataPage of int
 
 let structdata = ref []
@@ -251,10 +251,12 @@ let rec ops_of_drawop dryrun pdf endpage filename bates batespad num page = func
       let pdfname = try fst (Hashtbl.find (res ()).form_xobjects n) with _ -> error ("Form XObject not found: " ^ n) in
         (res ()).page_names <- pdfname::(res ()).page_names;
         [Pdfops.Op_Do pdfname]
-  | Image s ->
+  | Image (s, t) ->
+      let m = mcid () in
+        if not dryrun then structdata := StDataMCID ("/Figure", m, t)::!structdata;
       let pdfname = try fst (Hashtbl.find (res ()).images s) with _ -> error ("Image not found: " ^ s) in
         (res ()).page_names <- pdfname::(res ()).page_names;
-        [Pdfops.Op_Do pdfname]
+        [Pdfops.Op_BDC ("/Figure", Pdf.Dictionary ["/MCID", Pdf.Integer m]); Pdfops.Op_Do pdfname; Pdfops.Op_EMC]
   | ImageXObject (s, obj) ->
       Hashtbl.replace (res ()).images s (fresh_name "/I", Pdf.addobj pdf obj); 
       []
@@ -310,7 +312,7 @@ let rec ops_of_drawop dryrun pdf endpage filename bates batespad num page = func
         []
   | TextSection ops ->
       let m = mcid () in
-        if not dryrun then structdata := StDataMCID ("/P", m)::!structdata;
+        if not dryrun then structdata := StDataMCID ("/P", m, None)::!structdata;
         [Pdfops.Op_BDC ("/P", Pdf.Dictionary ["/MCID", Pdf.Integer m]);
          Pdfops.Op_BT]
         @ ops_of_drawops dryrun pdf endpage filename bates batespad num page ops @
@@ -445,7 +447,7 @@ let dryrun ~filename ~bates ~batespad range pdf chunks =
 
 type st =
    StMCID of int
- | StItem of {kind : string; pageobjnum : int; children : st list}
+ | StItem of {kind : string; pageobjnum : int; alt : string option; children : st list}
 
 (* Build a tree from the MCIDs and structure tree instructions gathered *)
 let make_structure_tree pdf items =
@@ -458,8 +460,8 @@ let make_structure_tree pdf items =
   in
   (* Process the items, making the st list tree data structure *)
   let process = function
-    | StDataMCID (n, mcid) ->
-        items_out =| StItem {kind = n; pageobjnum = unopt (lookup !pagenum pageobjnums); children = [StMCID mcid]}
+    | StDataMCID (n, mcid, alt) ->
+        items_out =| StItem {kind = n; alt; pageobjnum = unopt (lookup !pagenum pageobjnums); children = [StMCID mcid]}
     | StDataPage n ->
         pagenum := n
     | _ -> ()
@@ -481,14 +483,19 @@ let write_structure_tree pdf st =
   let struct_tree_root = Pdf.addobj pdf Pdf.Null in
   let items =
     map
-      (function StItem {kind; pageobjnum; children} ->
+      (function StItem {kind; pageobjnum; alt; children} ->
          let this_objnum = Pdf.addobj pdf Pdf.Null in
-         let this_obj = 
-             Pdf.Dictionary [("/S", Pdf.Name kind);
+         let alt =
+           match alt with
+           | Some s -> [("/Alt", Pdf.String s)]
+           | None -> []
+         in
+         let this_obj =
+             Pdf.Dictionary (alt @ [("/S", Pdf.Name kind);
                              ("/Pg", Pdf.Indirect pageobjnum);
                              ("/P", Pdf.Indirect struct_tree_root);
                              ("/K", Pdf.Array (map (function StMCID x -> add_parentmap pageobjnum this_objnum; Pdf.Integer x
-                                                    | _ -> assert false) children))]
+                                                    | _ -> assert false) children))])
          in
            Pdf.addobj_given_num pdf (this_objnum, this_obj);
            Pdf.Indirect this_objnum
