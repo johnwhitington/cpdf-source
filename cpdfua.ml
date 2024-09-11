@@ -1593,4 +1593,5 @@ let cpdfua_args title =
    "AND"; "-display-doc-title"; "true";
    "AND"; "-replace-obj"; "/Root/MarkInfo/Marked=true";
    "AND"; "-replace-obj"; "/Root/StructTreeRoot/Type={\"N\":\"/StructTreeRoot\"}";
+   "AND"; "-set-version"; "7";
    "AND"; "-mark-as"; "PDF/UA-1"]
