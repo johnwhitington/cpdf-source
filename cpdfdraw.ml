@@ -176,6 +176,38 @@ let read_resource pdf n res =
   | Some (Pdf.Dictionary d) -> d
   | _ -> []
 
+(* TODO Stolen from Cpdftype. Can these be reunited some day? *)
+let width_of_string ws s =
+  let w = ref 0. in
+    iter (fun s -> w := !w +. ws.(int_of_char s)) s;
+    !w
+
+let split_text space_left widths t =
+  let chars = ref t in
+  let words = ref [] in
+  let space_left = ref space_left in
+  let return needs_newline =
+    (flatten (rev !words), needs_newline, !chars)
+  in
+    try
+      while !chars <> [] do
+        let word, rest = cleavewhile (neq ' ') !chars in
+          let w = width_of_string widths word in 
+          if !words = [] || w < !space_left
+            then
+              let is_last_word = rest = [] in
+              let new_word = if is_last_word then word else word @ [' '] in
+                begin
+                  words := new_word::!words;
+                  space_left := !space_left -. w -. (if is_last_word then 0. else width_of_string widths [' '])
+                end
+            else raise Exit;
+          chars := if rest = [] then [] else tl rest;
+      done;
+      return false
+    with
+      Exit -> return true
+
 let update_resources pdf old_resources =
   let gss_resources = map (fun ((kind, v), n) -> (n, Pdf.Dictionary [(kind, Pdf.Real v)])) (list_of_hashtbl (res ()).extgstates) in
   let select_resources t =
@@ -341,6 +373,7 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
   | Rise f -> [Pdfops.Op_Ts f]
   | Newline -> [Pdfops.Op_T']
 
+(* TODO: Use Uuseg for proper unicode segmentation. *)
 and format_paragraph j w s =
   [Text s]
 
