@@ -332,8 +332,7 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
       if dryrun then iter (fun c -> Hashtbl.replace (res ()).current_fontpack_codepoints c ()) (Pdftext.codepoints_of_utf8 s);
         runs_of_utf8 s
   | Para (j, w, s) ->
-      if dryrun then iter (fun c -> Hashtbl.replace (res ()).current_fontpack_codepoints c ()) (Pdftext.codepoints_of_utf8 s);
-      []
+      ops_of_drawops struct_tree dryrun pdf endpage filename bates batespad num page (format_paragraph j w s)
   | Leading f -> [Pdfops.Op_TL f]
   | CharSpace f -> [Pdfops.Op_Tc f]
   | WordSpace f -> [Pdfops.Op_Tw f]
@@ -342,8 +341,11 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
   | Rise f -> [Pdfops.Op_Ts f]
   | Newline -> [Pdfops.Op_T']
 
-and ops_of_drawops draw_struct dryrun pdf endpage filename bates batespad num page drawops =
-  flatten (map (ops_of_drawop draw_struct dryrun pdf endpage filename bates batespad num page) drawops)
+and format_paragraph j w s =
+  [Text s]
+
+and ops_of_drawops struct_tree dryrun pdf endpage filename bates batespad num page drawops =
+  flatten (map (ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num page) drawops)
 
 and create_form_xobject struct_tree dryrun a b c d pdf endpage filename bates batespad num page n ops =
   respush ();
