@@ -321,3 +321,22 @@ let addspecialtext s =
     add_default_fontpack (!getfontname ());
     addop (Cpdfdraw.Font (!getfontname (), !getfontsize ()));
     addop (Cpdfdraw.SpecialText s)
+
+(* "L200pt=....." *)
+let addpara s =
+  begin match !drawops with _::_::_ -> () | _ -> error "-stext must be in a -bt / -et section" end;
+    add_default_fontpack (!getfontname ());
+    addop (Cpdfdraw.Font (!getfontname (), !getfontsize ()));
+    let j, rest =
+      match explode s with
+      | 'L'::t -> (Cpdfdraw.Left, t)
+      | 'R'::t -> (Cpdfdraw.Right, t)
+      | 'C'::t -> (Cpdfdraw.Centre, t)
+      | _ -> error "Unknown justification specification"
+    in
+    let w, s =
+        match String.split_on_char '=' (implode rest) with
+        | [w; s] -> (Cpdfcoord.parse_single_number (Pdf.empty ()) w, s)
+        | _ -> error "addjpeg: bad file specification"
+    in
+      addop (Cpdfdraw.Para (j, w, s))

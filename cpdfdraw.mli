@@ -6,6 +6,9 @@ type colspec =
  | Grey of float
  | CYMK of float * float * float * float
 
+type justification =
+  Left | Right | Centre
+
 type drawops =
   | Rect of float * float * float * float
   | Bezier of float * float * float * float * float * float
@@ -42,6 +45,7 @@ type drawops =
   | TextSection of drawops list
   | Text of string
   | SpecialText of string
+  | Para of justification * float * string
   | Newline
   | Leading of float
   | CharSpace of float

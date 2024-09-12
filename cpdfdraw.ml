@@ -7,6 +7,9 @@ type colspec =
  | Grey of float
  | CYMK of float * float * float * float
 
+type justification =
+  Left | Right | Centre
+
 type drawops =
   | Rect of float * float * float * float
   | Bezier of float * float * float * float * float * float
@@ -43,6 +46,7 @@ type drawops =
   | TextSection of drawops list
   | Text of string
   | SpecialText of string
+  | Para of justification * float * string
   | Newline
   | Leading of float
   | CharSpace of float
@@ -327,6 +331,9 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
       let s = process_specials pdf endpage filename bates batespad num page s in
       if dryrun then iter (fun c -> Hashtbl.replace (res ()).current_fontpack_codepoints c ()) (Pdftext.codepoints_of_utf8 s);
         runs_of_utf8 s
+  | Para (j, w, s) ->
+      if dryrun then iter (fun c -> Hashtbl.replace (res ()).current_fontpack_codepoints c ()) (Pdftext.codepoints_of_utf8 s);
+      []
   | Leading f -> [Pdfops.Op_TL f]
   | CharSpace f -> [Pdfops.Op_Tc f]
   | WordSpace f -> [Pdfops.Op_Tw f]
