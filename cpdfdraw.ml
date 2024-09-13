@@ -240,21 +240,38 @@ let structdata = ref []
 
 (* TODO: Use Uuseg for proper unicode segmentation. *)
 let format_paragraph j w s =
-  (* 1. Split on word boundaries *)
   let ss = String.split_on_char ' ' s in
-  (* 2. Calculate the runs for each word *)
   let rs_and_widths = ref (map runs_of_utf8 ss) in
-  (* 3. Calculate runs for a space *)
   let space_runs, space_width = runs_of_utf8 " " in
-  (* 4. Now we may find the sections imperatively. *)
   let remaining = ref w in
-  let lines = ref [] in
+  let ops = ref [] in
     while !rs_and_widths <> [] do
-      (* 5. Calculate lines *)
-      ()
+      let word, word_width = hd !rs_and_widths in
+        if !remaining = w then
+          (* If current line empty, output word. *)
+          begin
+            ops := rev word @ !ops;
+            remaining := !remaining -. word_width;
+            rs_and_widths := tl !rs_and_widths
+          end
+        else if word_width +. space_width <= !remaining then
+          (* If current line not empty, and space for space char and word, emit them. *)
+          begin
+            ops := rev space_runs @ !ops;
+            ops := rev word @ !ops;
+            remaining := !remaining -. word_width -. space_width;
+            rs_and_widths := tl !rs_and_widths
+          end
+        else
+          (* If current line not empty, and not enough space, emit newline. *)
+          begin
+            ops := Pdfops.Op_T'::!ops;
+            remaining := w
+          end
     done;
-  (* 6. Now apply justification, and convert lines to final output. *)
-    []
+  rev !ops
+  (* TODO Justification - requires a way to offset, which means keeping the ops
+     separate, and retaining the full line width *)
 
 let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num page = function
   | Qq ops ->
