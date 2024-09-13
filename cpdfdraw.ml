@@ -148,13 +148,38 @@ let process_specials pdf endpage filename bates batespad num page s =
   in
     Cpdfaddtext.process_text (res ()).time s pairs
 
+(* FIXME cache (just for paragraph) *)
+let font_widths f fontsize =
+  match f with
+  | Pdftext.StandardFont (sf, encoding) ->
+      Array.init
+        256
+        (fun x ->
+             fontsize
+          *. float_of_int
+               (Pdfstandard14.textwidth false encoding sf (string_of_char (char_of_int x)))
+          /. 1000.)
+  | Pdftext.SimpleFont {fontmetrics = Some m} ->
+      Array.map (fun x -> fontsize *. x /. 1000. ) m
+  | _ -> raise (Pdf.PDFError "Cpdfdraw: Unsupported font")
+
 let runs_of_utf8 s =
   let identifier, fontpack = (res ()).current_fontpack in
   let codepoints = Pdftext.codepoints_of_utf8 s in
   let triples = option_map (Cpdfembed.get_char fontpack) codepoints in
   let collated = Cpdfembed.collate_runs triples in
+  (* FIXME Efficiency: runs, cacheing *)
+  let w =
+    fold_left ( +. ) 0.
+      (map
+        (fun (charcode, _, font) ->
+           let widths = font_widths font (res ()).font_size in
+             widths.(charcode))
+        triples)
+  in
+  let output =
     flatten
-     (map
+      (map
        (fun l ->
          if l = [] then [] else
            let f, n = match l with (_, n, f)::_ -> f, n | _ -> assert false in
@@ -162,7 +187,9 @@ let runs_of_utf8 s =
            let charcodes = map (fun (c, _, _) -> char_of_int c) l in
              [Pdfops.Op_Tf (fontname, (res ()).font_size);
               Pdfops.Op_Tj (implode charcodes)])
-      collated)
+       collated)
+  in
+    (output, w)
 
 let extgstate kind v =
   try Hashtbl.find (res ()).extgstates (kind, v) with
@@ -175,38 +202,6 @@ let read_resource pdf n res =
   match Pdf.lookup_direct pdf n res with
   | Some (Pdf.Dictionary d) -> d
   | _ -> []
-
-(* TODO Stolen from Cpdftype. Can these be reunited some day? *)
-let width_of_string ws s =
-  let w = ref 0. in
-    iter (fun s -> w := !w +. ws.(int_of_char s)) s;
-    !w
-
-let split_text space_left widths t =
-  let chars = ref t in
-  let words = ref [] in
-  let space_left = ref space_left in
-  let return needs_newline =
-    (flatten (rev !words), needs_newline, !chars)
-  in
-    try
-      while !chars <> [] do
-        let word, rest = cleavewhile (neq ' ') !chars in
-          let w = width_of_string widths word in 
-          if !words = [] || w < !space_left
-            then
-              let is_last_word = rest = [] in
-              let new_word = if is_last_word then word else word @ [' '] in
-                begin
-                  words := new_word::!words;
-                  space_left := !space_left -. w -. (if is_last_word then 0. else width_of_string widths [' '])
-                end
-            else raise Exit;
-          chars := if rest = [] then [] else tl rest;
-      done;
-      return false
-    with
-      Exit -> return true
 
 let update_resources pdf old_resources =
   let gss_resources = map (fun ((kind, v), n) -> (n, Pdf.Dictionary [(kind, Pdf.Real v)])) (list_of_hashtbl (res ()).extgstates) in
@@ -242,6 +237,24 @@ type structdata =
   | StDataPage of int
 
 let structdata = ref []
+
+(* TODO: Use Uuseg for proper unicode segmentation. *)
+let format_paragraph j w s =
+  (* 1. Split on word boundaries *)
+  let ss = String.split_on_char ' ' s in
+  (* 2. Calculate the runs for each word *)
+  let rs_and_widths = ref (map runs_of_utf8 ss) in
+  (* 3. Calculate runs for a space *)
+  let space_runs, space_width = runs_of_utf8 " " in
+  (* 4. Now we may find the sections imperatively. *)
+  let remaining = ref w in
+  let lines = ref [] in
+    while !rs_and_widths <> [] do
+      (* 5. Calculate lines *)
+      ()
+    done;
+  (* 6. Now apply justification, and convert lines to final output. *)
+    []
 
 let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num page = function
   | Qq ops ->
@@ -358,13 +371,14 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
         @ (if struct_tree then [Pdfops.Op_EMC] else [])
   | Text s ->
       if dryrun then iter (fun c -> Hashtbl.replace (res ()).current_fontpack_codepoints c ()) (Pdftext.codepoints_of_utf8 s);
-      runs_of_utf8 s
+      fst (runs_of_utf8 s)
   | SpecialText s ->
       let s = process_specials pdf endpage filename bates batespad num page s in
       if dryrun then iter (fun c -> Hashtbl.replace (res ()).current_fontpack_codepoints c ()) (Pdftext.codepoints_of_utf8 s);
-        runs_of_utf8 s
+        fst (runs_of_utf8 s)
   | Para (j, w, s) ->
-      ops_of_drawops struct_tree dryrun pdf endpage filename bates batespad num page (format_paragraph j w s)
+      if dryrun then iter (fun c -> Hashtbl.replace (res ()).current_fontpack_codepoints c ()) (Pdftext.codepoints_of_utf8 s);
+      format_paragraph j w s
   | Leading f -> [Pdfops.Op_TL f]
   | CharSpace f -> [Pdfops.Op_Tc f]
   | WordSpace f -> [Pdfops.Op_Tw f]
@@ -373,9 +387,6 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
   | Rise f -> [Pdfops.Op_Ts f]
   | Newline -> [Pdfops.Op_T']
 
-(* TODO: Use Uuseg for proper unicode segmentation. *)
-and format_paragraph j w s =
-  [Text s]
 
 and ops_of_drawops struct_tree dryrun pdf endpage filename bates batespad num page drawops =
   flatten (map (ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num page) drawops)
