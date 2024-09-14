@@ -77,6 +77,15 @@ let parse_pagespec_allow_empty pdf spec =
   try Cpdfpagespec.parse_pagespec pdf spec with
     Pdf.PDFError ("Page range specifies no pages") -> []
 
+type subformat =
+  | PDFUA1
+  | PDFUA2
+
+let subformat_of_string = function
+  | "PDF/UA-1" -> PDFUA1
+  | "PDF/UA-2" -> PDFUA2
+  | _ -> error "Unknown subformat"
+
 (* Operations. *)
 type op =
   | CopyFont of string
@@ -544,7 +553,8 @@ type args =
    mutable extract_stream_decompress : bool;
    mutable verify_single : string option;
    mutable draw_struct_tree : bool;
-   mutable image_title : string option}
+   mutable image_title : string option;
+   mutable subformat : subformat option}
 
 let args =
   {op = None;
@@ -681,7 +691,8 @@ let args =
    extract_stream_decompress = false;
    verify_single = None;
    draw_struct_tree = false;
-   image_title = None}
+   image_title = None;
+   subformat = None}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -806,7 +817,8 @@ let reset_arguments () =
   clear Cpdfdrawcontrol.fontpack_initialised;
   args.verify_single <- None;
   args.draw_struct_tree <- false;
-  args.image_title <- None
+  args.image_title <- None;
+  args.subformat <- None
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -1696,6 +1708,9 @@ let setprintfontencoding s =
 
 let settypeset s =
   setop (Typeset s) ()
+
+let settypesetsubformat s =
+  args.subformat <- Some (subformat_of_string s)
 
 let settableofcontentstitle s =
   args.toc_title <- s
@@ -2784,6 +2799,9 @@ let specs =
    ("-typeset",
      Arg.String settypeset,
      " Typeset a text file as a PDF");
+   ("-typeset-subformat",
+     Arg.String settypesetsubformat,
+     " Set subformat for typesetting");
    ("-composition",
      Arg.Unit (setop (Composition false)),
      " Show composition of PDF");
