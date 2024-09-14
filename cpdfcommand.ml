@@ -221,8 +221,8 @@ type op =
   | PrintObj of string
   | ReplaceObj of string * string
   | Verify of string
-  | MarkAs of string
-  | RemoveMark of string
+  | MarkAs of Cpdfua.subformat
+  | RemoveMark of Cpdfua.subformat
   | PrintStructTree
   | ExtractStructTree
   | ReplaceStructTree of string
@@ -2864,8 +2864,8 @@ let specs =
    ("-json", Arg.Unit (fun () -> args.format_json <- true), " Format output as JSON");
    ("-verify", Arg.String (fun s -> setop (Verify s) ()), " Verify conformance to a standard");
    ("-verify-single", Arg.String (fun s -> args.verify_single <- Some s), " Verify a single test");
-   ("-mark-as", Arg.String (fun s -> setop (MarkAs s) ()), " Mark as conforming to a standard");
-   ("-remove-mark", Arg.String (fun s -> setop (RemoveMark s) ()), " Remove conformance mark");
+   ("-mark-as", Arg.String (fun s -> setop (MarkAs (Cpdfua.subformat_of_string s)) ()), " Mark as conforming to a standard");
+   ("-remove-mark", Arg.String (fun s -> setop (RemoveMark (Cpdfua.subformat_of_string s)) ()), " Remove conformance mark");
    ("-print-struct-tree", Arg.Unit (fun () -> setop PrintStructTree ()), " Print structure tree");
    ("-extract-struct-tree", Arg.Unit (fun () -> setop ExtractStructTree ()), " Extract structure tree in JSON format");
    ("-replace-struct-tree", Arg.String (fun s -> setop (ReplaceStructTree s) ()), " Replace structure tree from JSON");
@@ -4566,23 +4566,21 @@ let go () =
       end
   | Some (MarkAs standard) ->
       begin match standard with
-      | "PDF/UA-1" ->
+      | Cpdfua.PDFUA1 ->
           let pdf = get_single_pdf args.op false in
             Cpdfua.mark pdf;
             write_pdf false pdf
-      | "PDF/UA-2" ->
+      | Cpdfua.PDFUA2 ->
           let pdf = get_single_pdf args.op false in
             Cpdfua.mark2 2024 pdf;
             write_pdf false pdf
-      | _ -> error "Unknown standard"
       end
   | Some (RemoveMark standard) ->
       begin match standard with
-      | "PDF/UA-1" | "PDF/UA-2" ->
+      | Cpdfua.PDFUA1 | Cpdfua.PDFUA2 ->
           let pdf = get_single_pdf args.op false in
             Cpdfua.remove_mark pdf;
             write_pdf false pdf
-      | _ -> error "Unknown standard"
       end
   | Some PrintStructTree ->
       let pdf = get_single_pdf args.op true in
