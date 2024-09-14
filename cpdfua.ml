@@ -37,6 +37,15 @@ open Cpdferror
      30-002
      31-007 31-008 31-011 31-012 31-013 31-014 31-015 31-016 31-018 31-030 *)
 
+type subformat =
+  | PDFUA1
+  | PDFUA2
+
+let subformat_of_string = function
+  | "PDF/UA-1" -> PDFUA1
+  | "PDF/UA-2" -> PDFUA2
+  | _ -> error "Unknown subformat"
+
 exception MatterhornError of Cpdfyojson.Safe.t
 
 exception MatterhornUnimplemented

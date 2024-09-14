@@ -77,15 +77,6 @@ let parse_pagespec_allow_empty pdf spec =
   try Cpdfpagespec.parse_pagespec pdf spec with
     Pdf.PDFError ("Page range specifies no pages") -> []
 
-type subformat =
-  | PDFUA1
-  | PDFUA2
-
-let subformat_of_string = function
-  | "PDF/UA-1" -> PDFUA1
-  | "PDF/UA-2" -> PDFUA2
-  | _ -> error "Unknown subformat"
-
 (* Operations. *)
 type op =
   | CopyFont of string
@@ -554,7 +545,7 @@ type args =
    mutable verify_single : string option;
    mutable draw_struct_tree : bool;
    mutable image_title : string option;
-   mutable subformat : subformat option}
+   mutable subformat : Cpdfua.subformat option}
 
 let args =
   {op = None;
@@ -1710,7 +1701,7 @@ let settypeset s =
   setop (Typeset s) ()
 
 let settypesetsubformat s =
-  args.subformat <- Some (subformat_of_string s)
+  args.subformat <- Some (Cpdfua.subformat_of_string s)
 
 let settableofcontentstitle s =
   args.toc_title <- s

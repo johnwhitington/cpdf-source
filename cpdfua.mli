@@ -1,5 +1,11 @@
 (** PDF/UA *)
 
+type subformat =
+  | PDFUA1
+  | PDFUA2
+
+val subformat_of_string : string -> subformat
+
 (** Print matterhorn test results ("" = all tests) *)
 val test_matterhorn_print : Pdf.t -> string -> unit
 
