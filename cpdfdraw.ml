@@ -244,7 +244,14 @@ let format_paragraph j w s =
   let rs_and_widths = ref (map runs_of_utf8 ss) in
   let space_runs, space_width = runs_of_utf8 " " in
   let remaining = ref w in
+  let allops = ref [] in
   let ops = ref [] in
+  let justify ops =
+    match j with
+    | Left -> ops
+    | Right -> [Pdfops.Op_Td (~-.(!remaining), 0.)] @ ops @ [Pdfops.Op_Td (!remaining, 0.)]
+    | Centre -> [Pdfops.Op_Td (~-.(!remaining) /. 2., 0.)] @ ops @ [Pdfops.Op_Td (!remaining /. 2., 0.)]
+  in
     while !rs_and_widths <> [] do
       let word, word_width = hd !rs_and_widths in
         if !remaining = w then
@@ -265,13 +272,13 @@ let format_paragraph j w s =
         else
           (* If current line not empty, and not enough space, emit newline. *)
           begin
-            ops := Pdfops.Op_T'::!ops;
+            allops =| rev (Pdfops.Op_T'::justify !ops);
+            ops := [];
             remaining := w
           end
     done;
-  rev !ops
-  (* TODO Justification - requires a way to offset, which means keeping the ops
-     separate, and retaining the full line width *)
+  allops =| rev (Pdfops.Op_T'::justify !ops);
+  flatten (rev !allops)
 
 let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num page = function
   | Qq ops ->

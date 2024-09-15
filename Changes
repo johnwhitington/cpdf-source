@@ -11,7 +11,7 @@ New features:
 * New -replace-obj to edit dictionary entries via chain
 * Create PDF/UA files from scratch with -create-pdf-ua-[1|2]
 * Create structure information for files with -draw
-* Draw can now make paragraphs
+* Draw can now make paragraphs with -para, -paras
 * Add structure information to -typeset, add -typeset-subformat
 
 * = Supported by a grant from NLnet
