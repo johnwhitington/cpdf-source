@@ -14,6 +14,11 @@ val fontpack_initialised : bool ref
 val drawops : (string * Cpdfdraw.drawops list) list ref
 val addop : Cpdfdraw.drawops -> unit
 val parse_colour : string -> Cpdfaddtext.colour
+val addtag : string -> unit
+val addstag : string -> unit
+val endtag : unit -> unit
+val endstag : unit -> unit
+val autotags : bool -> unit
 val addrect : string -> unit
 val addto : string -> unit
 val addline : string -> unit

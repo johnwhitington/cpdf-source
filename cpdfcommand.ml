@@ -2804,6 +2804,12 @@ let specs =
      " Find width of a line of text");
    ("-draw", Arg.Unit setdraw, " Begin drawing");
    ("-draw-struct-tree", Arg.Unit setdrawstructtree, " Build structure trees when drawing.");
+   ("-tag", Arg.String Cpdfdrawcontrol.addtag, " Begin structure item");
+   ("-stag", Arg.String Cpdfdrawcontrol.addstag, " Begin struture branch");
+   ("-end-tag", Arg.Unit Cpdfdrawcontrol.endtag, " End structure item");
+   ("-end-stag", Arg.Unit Cpdfdrawcontrol.endstag, " End structure branch");
+   ("-auto-tags", Arg.Unit (fun _ -> Cpdfdrawcontrol.autotags true), " Auto-tag paragraphs and figures");
+   ("-no-auto-tags", Arg.Unit (fun _ -> Cpdfdrawcontrol.autotags false), " Don't auto-tag paragraphs and figures");
    ("-rect", Arg.String Cpdfdrawcontrol.addrect, " Draw rectangle");
    ("-to", Arg.String Cpdfdrawcontrol.addto, " Move to");
    ("-line", Arg.String Cpdfdrawcontrol.addline, " Add line to");
