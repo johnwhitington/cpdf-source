@@ -539,7 +539,7 @@ let draw_single ~struct_tree ~fast ~underneath ~filename ~bates ~batespad range 
     map3
       (fun n p ops ->
         if not (mem n range) then p else
-          let ops = if struct_tree then add_artifacts ops else ops in
+          let ops = if struct_tree && !do_add_artifacts then add_artifacts ops else ops in
           let page = {p with Pdfpage.resources = update_resources pdf p.Pdfpage.resources} in
             (if underneath then Pdfpage.prepend_operators else Pdfpage.postpend_operators) pdf ops ~fast page)
       (ilist 1 endpage)
