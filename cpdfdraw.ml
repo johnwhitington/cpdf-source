@@ -3,6 +3,8 @@ open Cpdferror
 
 let do_add_artifacts = ref false
 
+let do_auto_tag = ref true
+
 type colspec =
    NoCol
  | RGB of float * float * float
@@ -56,6 +58,8 @@ type drawops =
   | TextScale of float
   | RenderMode of int
   | Rise of float
+  | Tag of string
+  | EndTag
   | STag of string
   | EndSTag
   | BeginArtifact
@@ -335,9 +339,9 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
         if not dryrun then structdata := StDataMCID ("/Figure", m, t)::!structdata;
       let pdfname = try fst (Hashtbl.find (res ()).images s) with _ -> error ("Image not found: " ^ s) in
         (res ()).page_names <- pdfname::(res ()).page_names;
-            (if struct_tree then [Pdfops.Op_BDC ("/Figure", Pdf.Dictionary ["/MCID", Pdf.Integer m])] else [])
+            (if struct_tree && !do_auto_tag then [Pdfops.Op_BDC ("/Figure", Pdf.Dictionary ["/MCID", Pdf.Integer m])] else [])
           @ [Pdfops.Op_Do pdfname]
-          @ (if struct_tree then [Pdfops.Op_EMC] else [])
+          @ (if struct_tree && !do_auto_tag then [Pdfops.Op_EMC] else [])
   | ImageXObject (s, obj) ->
       Hashtbl.replace (res ()).images s (fresh_name "/I", Pdf.addobj pdf obj); 
       []
@@ -394,11 +398,11 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
   | TextSection ops ->
       let m = mcid () in
         if not dryrun then structdata := StDataMCID ("/P", m, None)::!structdata;
-          (if struct_tree then [Pdfops.Op_BDC ("/P", Pdf.Dictionary ["/MCID", Pdf.Integer m])] else [])
+          (if struct_tree && !do_auto_tag then [Pdfops.Op_BDC ("/P", Pdf.Dictionary ["/MCID", Pdf.Integer m])] else [])
         @ [Pdfops.Op_BT]
         @ ops_of_drawops struct_tree dryrun pdf endpage filename bates batespad num page ops
         @ [Pdfops.Op_ET] 
-        @ (if struct_tree then [Pdfops.Op_EMC] else [])
+        @ (if struct_tree && !do_auto_tag then [Pdfops.Op_EMC] else [])
   | Text s ->
       if dryrun then iter (fun c -> Hashtbl.replace (res ()).current_fontpack_codepoints c ()) (Pdftext.codepoints_of_utf8 s);
       fst (runs_of_utf8 s)
@@ -416,16 +420,15 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
   | RenderMode i -> [Pdfops.Op_Tr i]
   | Rise f -> [Pdfops.Op_Ts f]
   | Newline -> [Pdfops.Op_T']
-  | STag s ->
-      structdata =| StDataBeginTree s;
-      []
-  | EndSTag ->
-      structdata =| StDataEndTree;
-      []
-  | BeginArtifact ->
-      [Pdfops.Op_BMC "/Artifact"]
-  | EndArtifact ->
-      [Pdfops.Op_EMC]
+  | Tag s ->
+      let m = mcid () in
+        if not dryrun then structdata := StDataMCID (s, m, None)::!structdata;
+        [Pdfops.Op_BDC (s, Pdf.Dictionary ["/MCID", Pdf.Integer m])]
+  | EndTag -> [Pdfops.Op_EMC]
+  | STag s -> structdata =| StDataBeginTree s; []
+  | EndSTag -> structdata =| StDataEndTree; []
+  | BeginArtifact -> [Pdfops.Op_BMC "/Artifact"]
+  | EndArtifact -> [Pdfops.Op_EMC]
 
 and ops_of_drawops struct_tree dryrun pdf endpage filename bates batespad num page drawops =
   flatten (map (ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num page) drawops)

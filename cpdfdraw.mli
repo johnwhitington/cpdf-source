@@ -53,12 +53,16 @@ type drawops =
   | TextScale of float
   | RenderMode of int
   | Rise of float
+  | Tag of string
+  | EndTag
   | STag of string
   | EndSTag
   | BeginArtifact
   | EndArtifact
 
 val do_add_artifacts : bool ref
+
+val do_auto_tag : bool ref
 
 (** Calling [draw fast underneath filename bates batespad range pdf drawops] draws on
     top of all the pages in the range. *)

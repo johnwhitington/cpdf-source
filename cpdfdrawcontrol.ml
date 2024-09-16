@@ -95,17 +95,29 @@ let setstroke s =
 let setfill s =
   addop (Cpdfdraw.SetFill (col_of_string s))
 
-let addtag t = ()
+let addtag t =
+  addop (Cpdfdraw.Tag t)
+
 let addstag t =
   addop (Cpdfdraw.STag t)
-let endtag () = ()
+
+let endtag () =
+  addop Cpdfdraw.EndTag
+
 let endstag () =
   addop Cpdfdraw.EndSTag
-let autotags b = ()
+
+let autotags b =
+  Cpdfdraw.do_auto_tag := b
+
 let autoartifacts b =
   Cpdfdraw.do_add_artifacts := b
-let artifact () = ()
-let endartifact () = ()
+
+let artifact () =
+  addop Cpdfdraw.BeginArtifact
+
+let endartifact () =
+  addop Cpdfdraw.EndArtifact
 
 let addrect s =
   let x, y, w, h = Cpdfcoord.parse_rectangle (Pdf.empty ()) s in
