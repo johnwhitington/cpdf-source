@@ -53,6 +53,8 @@ type drawops =
   | TextScale of float
   | RenderMode of int
   | Rise of float
+  | STag of string
+  | EndSTag
 
 (** Calling [draw fast underneath filename bates batespad range pdf drawops] draws on
     top of all the pages in the range. *)

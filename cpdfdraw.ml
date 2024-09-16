@@ -54,6 +54,8 @@ type drawops =
   | TextScale of float
   | RenderMode of int
   | Rise of float
+  | STag of string
+  | EndSTag
 
 (*let rec string_of_drawop = function
   | Qq o -> "Qq (" ^ string_of_drawops o ^ ")"
@@ -410,7 +412,12 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
   | RenderMode i -> [Pdfops.Op_Tr i]
   | Rise f -> [Pdfops.Op_Ts f]
   | Newline -> [Pdfops.Op_T']
-
+  | STag s ->
+      structdata =| StDataBeginTree s;
+      []
+  | EndSTag ->
+      structdata =| StDataEndTree;
+      []
 
 and ops_of_drawops struct_tree dryrun pdf endpage filename bates batespad num page drawops =
   flatten (map (ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num page) drawops)
@@ -552,7 +559,7 @@ let dryrun ~struct_tree ~filename ~bates ~batespad range pdf chunks =
 
 type st =
    StMCID of int
- | StItem of {kind : string; pageobjnum : int; alt : string option; children : st list}
+ | StItem of {kind : string; pageobjnum : int option; alt : string option; children : st list}
 
 (* Build a tree from the MCIDs and structure tree instructions gathered *)
 let make_structure_tree pdf items =
@@ -566,7 +573,7 @@ let make_structure_tree pdf items =
   (* Process the items, making the st list tree data structure *)
   let process = function
     | StDataMCID (n, mcid, alt) ->
-        items_out =| StItem {kind = n; alt; pageobjnum = unopt (lookup !pagenum pageobjnums); children = [StMCID mcid]}
+        items_out =| StItem {kind = n; alt; pageobjnum = lookup !pagenum pageobjnums; children = [StMCID mcid]}
     | StDataPage n ->
         pagenum := n
     | _ -> ()
@@ -595,11 +602,16 @@ let write_structure_tree pdf st =
            | Some s -> [("/Alt", Pdf.String s)]
            | None -> []
          in
+         let page =
+           match pageobjnum with
+           | Some i -> [("/Pg", Pdf.Indirect i)]
+           | None -> []
+         in
          let this_obj =
-             Pdf.Dictionary (alt @ [("/S", Pdf.Name kind);
-                             ("/Pg", Pdf.Indirect pageobjnum);
+             Pdf.Dictionary (alt @ page @
+                            [("/S", Pdf.Name kind);
                              ("/P", Pdf.Indirect struct_tree_root);
-                             ("/K", Pdf.Array (map (function StMCID x -> add_parentmap pageobjnum this_objnum; Pdf.Integer x
+                             ("/K", Pdf.Array (map (function StMCID x -> begin match pageobjnum with Some p -> add_parentmap p this_objnum | _ -> () end; Pdf.Integer x
                                                     | _ -> assert false) children))])
          in
            Pdf.addobj_given_num pdf (this_objnum, this_obj);

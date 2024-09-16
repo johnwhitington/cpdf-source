@@ -96,9 +96,11 @@ let setfill s =
   addop (Cpdfdraw.SetFill (col_of_string s))
 
 let addtag t = ()
-let addstag t = ()
+let addstag t =
+  addop (Cpdfdraw.STag t)
 let endtag () = ()
-let endstag () = ()
+let endstag () =
+  addop Cpdfdraw.EndSTag
 let autotags b = ()
 
 let addrect s =
