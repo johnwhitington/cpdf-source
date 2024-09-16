@@ -19,6 +19,9 @@ val addstag : string -> unit
 val endtag : unit -> unit
 val endstag : unit -> unit
 val autotags : bool -> unit
+val artifact : unit -> unit
+val endartifact : unit -> unit
+val autoartifacts : bool -> unit
 val addrect : string -> unit
 val addto : string -> unit
 val addline : string -> unit

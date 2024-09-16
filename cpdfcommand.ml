@@ -2810,6 +2810,9 @@ let specs =
    ("-end-stag", Arg.Unit Cpdfdrawcontrol.endstag, " End structure branch");
    ("-auto-tags", Arg.Unit (fun _ -> Cpdfdrawcontrol.autotags true), " Auto-tag paragraphs and figures");
    ("-no-auto-tags", Arg.Unit (fun _ -> Cpdfdrawcontrol.autotags false), " Don't auto-tag paragraphs and figures");
+   ("-artifact", Arg.Unit (fun _ -> Cpdfdrawcontrol.artifact ()), " Begin an artifact");
+   ("-end-artifact", Arg.Unit (fun _ -> Cpdfdrawcontrol.endartifact ()), "End an artifact");
+   ("-no-auto-artifacts", Arg.Unit (fun _ -> Cpdfdrawcontrol.autoartifacts false), " Don't mark untagged content as artifacts");
    ("-rect", Arg.String Cpdfdrawcontrol.addrect, " Draw rectangle");
    ("-to", Arg.String Cpdfdrawcontrol.addto, " Move to");
    ("-line", Arg.String Cpdfdrawcontrol.addline, " Add line to");

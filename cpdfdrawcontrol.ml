@@ -102,6 +102,10 @@ let endtag () = ()
 let endstag () =
   addop Cpdfdraw.EndSTag
 let autotags b = ()
+let autoartifacts b =
+  Cpdfdraw.do_add_artifacts := b
+let artifact () = ()
+let endartifact () = ()
 
 let addrect s =
   let x, y, w, h = Cpdfcoord.parse_rectangle (Pdf.empty ()) s in

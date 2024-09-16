@@ -1,6 +1,8 @@
 open Pdfutil
 open Cpdferror
 
+let do_add_artifacts = ref false
+
 type colspec =
    NoCol
  | RGB of float * float * float
@@ -56,6 +58,8 @@ type drawops =
   | Rise of float
   | STag of string
   | EndSTag
+  | BeginArtifact
+  | EndArtifact
 
 (*let rec string_of_drawop = function
   | Qq o -> "Qq (" ^ string_of_drawops o ^ ")"
@@ -418,6 +422,10 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
   | EndSTag ->
       structdata =| StDataEndTree;
       []
+  | BeginArtifact ->
+      [Pdfops.Op_BMC "/Artifact"]
+  | EndArtifact ->
+      [Pdfops.Op_EMC]
 
 and ops_of_drawops struct_tree dryrun pdf endpage filename bates batespad num page drawops =
   flatten (map (ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num page) drawops)
@@ -562,28 +570,6 @@ type st =
  | StItem of {kind : string; pageobjnum : int option; alt : string option; children : st list}
 
 (* Build a tree from the MCIDs and structure tree instructions gathered *)
-(*let make_structure_tree pdf items =
-  (* Make map of page numbers to pageobjnums, and create a reference to keep track. *)
-  let pagenum = ref 0 in
-  let items_out = ref [] in
-  let pageobjnums =
-    let objnums = Pdf.page_reference_numbers pdf in
-      combine (indx objnums) objnums
-  in
-  (* Process the items, making the st list tree data structure *)
-  let process = function
-    | StDataMCID (n, mcid, alt) ->
-        items_out =| StItem {kind = n; alt; pageobjnum = lookup !pagenum pageobjnums; children = [StMCID mcid]}
-    | StDataPage n ->
-        pagenum := n
-    | StDataBeginTree s ->
-        ()
-    | StDataEndTree ->
-        ()
-  in
-    iter process items;
-    !items_out*)
-
 let rec make_structure_tree pageobjnums pdf pagenum = function
   | [] -> []
   | StDataMCID (n, mcid, alt)::t ->
@@ -659,6 +645,7 @@ let write_structure_tree pdf st =
 
 let draw ~struct_tree ~fast ~underneath ~filename ~bates ~batespad range pdf drawops =
   (*Printf.printf "%s\n" (string_of_drawops drawops);*)
+  do_add_artifacts := struct_tree;
   resstack := [empty_res ()];
   Hashtbl.clear !fontpacks;
   (res ()).time <- Cpdfstrftime.current_time ();
