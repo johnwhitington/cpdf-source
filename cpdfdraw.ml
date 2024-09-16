@@ -562,7 +562,7 @@ type st =
  | StItem of {kind : string; pageobjnum : int option; alt : string option; children : st list}
 
 (* Build a tree from the MCIDs and structure tree instructions gathered *)
-let make_structure_tree pdf items =
+(*let make_structure_tree pdf items =
   (* Make map of page numbers to pageobjnums, and create a reference to keep track. *)
   let pagenum = ref 0 in
   let items_out = ref [] in
@@ -576,10 +576,32 @@ let make_structure_tree pdf items =
         items_out =| StItem {kind = n; alt; pageobjnum = lookup !pagenum pageobjnums; children = [StMCID mcid]}
     | StDataPage n ->
         pagenum := n
-    | _ -> ()
+    | StDataBeginTree s ->
+        ()
+    | StDataEndTree ->
+        ()
   in
     iter process items;
-    !items_out
+    !items_out*)
+
+let rec make_structure_tree pageobjnums pdf pagenum = function
+  | [] -> []
+  | StDataMCID (n, mcid, alt)::t ->
+      StItem {kind = n; alt; pageobjnum = lookup !pagenum pageobjnums; children = [StMCID mcid]}::make_structure_tree pageobjnums pdf pagenum t
+  | StDataPage n::t ->
+      pagenum := n;
+      make_structure_tree pageobjnums pdf pagenum t
+  | StDataBeginTree s::t ->
+      make_structure_tree pageobjnums pdf pagenum t
+  | StDataEndTree::t ->
+      make_structure_tree pageobjnums pdf pagenum t
+
+let make_structure_tree pdf items =
+  let pageobjnums =
+    let objnums = Pdf.page_reference_numbers pdf in
+      combine (indx objnums) objnums
+  in
+    make_structure_tree pageobjnums pdf (ref 0) items
 
 (* Write such a structure tree to a PDF. We have to make the objects and build
    the root and its /K. For now, we just have a root which contains everything
