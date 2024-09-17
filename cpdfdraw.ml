@@ -427,8 +427,8 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
   | EndTag -> [Pdfops.Op_EMC]
   | STag s -> structdata =| StDataBeginTree s; []
   | EndSTag -> structdata =| StDataEndTree; []
-  | BeginArtifact -> [Pdfops.Op_BMC "/Artifact"]
-  | EndArtifact -> [Pdfops.Op_EMC]
+  | BeginArtifact -> [Pdfops.Op_BMC "/BeginArtifact"]
+  | EndArtifact -> [Pdfops.Op_BMC "/EndArtifact"]
 
 and ops_of_drawops struct_tree dryrun pdf endpage filename bates batespad num page drawops =
   flatten (map (ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num page) drawops)
@@ -500,6 +500,14 @@ let add_artifacts ops =
   | [] ->
       (* The end. Must end artifact if in artifact. *)
       if !artifact then rev (Pdfops.Op_EMC::a) else rev a
+  | Pdfops.Op_BMC "/BeginArtifact"::t ->
+      (* Convert back-channel artifact beginning. *)
+      set artifact;
+      loop (Pdfops.Op_BMC "/Artifact"::a) t
+  | Pdfops.Op_BMC "/EndArtifact"::t ->
+      (* Convert back-channel artifact ending. *)
+      clear artifact;
+      loop (Pdfops.Op_EMC::a) t
   | Pdfops.Op_BDC _ as h::t -> 
       (* Entering content. If in artifact, must end artifact. *)
       let a' = if !artifact then h::Pdfops.Op_EMC::a else h::a in
