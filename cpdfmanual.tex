@@ -1,4 +1,5 @@
-%Document -control removal, -args-json addition
+%Document new drawing stuff for PDF/UA
+%Document typesetting for PDF/UA
 \documentclass{book}
 % Edit here to produce cpdfmanual.pdf, cpdflibmanual.pdf, pycpdfmanual.pdf,
 % dotnetcpdflibmanual.pdf, jcpdflibmanual.pdf jscpdflibmanual.pdf etc.
@@ -5132,6 +5133,8 @@ If the drawing range is a single page, and the next page already exists, the dra
 
 \noindent This will create a two page PDF with "Page 1" written on page one and "Page 2" written on page two.
 
+\section{Structure information}
+
 \fi%End htlatex hack
 
 \begin{cpdflib}
@@ -5200,7 +5203,7 @@ If the drawing range is a single page, and the next page already exists, the dra
 
   \vspace{1.5mm}
   \noindent\verb!cpdf [-create-pdf-pages <n>] [-create-pdf-papersize <paper size>]!\\
-  \noindent\verb!      -create-pdf-ua-1 <title> -o out.pdf!
+  \noindent\verb!      -create-pdf-ua-<1|2> <title> -o out.pdf!
 
   \end{framed}}
 
@@ -5426,6 +5429,8 @@ To create a new PDF/UA-1 file, with A4 portrait paper, one page, and the title \
   \end{framed}
 
 \noindent A title is needed for every PDF/UA-1 document (even a blank one) for it to meet the standard. Note that any modifying \texttt{-create-pdf-pages} or \texttt{-create-pdf-papersize} must appear before \texttt{-create-pdf-ua-1} on the command line.
+
+For \texttt{PDF/UA-2}, use \texttt{-create-pdf-ua-2} instead.
 
 \clearpage\pagestyle{empty}
 %We wanted to call this "Chapter M", but the following commands messed up the PDF bookmarks, so this chapter will simply have to float for now, until we can return to this problem.
