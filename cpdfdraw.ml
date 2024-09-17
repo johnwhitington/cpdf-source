@@ -1,7 +1,7 @@
 open Pdfutil
 open Cpdferror
 
-let do_add_artifacts = ref false
+let do_add_artifacts = ref true
 
 let do_auto_tag = ref true
 
@@ -648,7 +648,7 @@ let write_structure_tree pdf st =
 
 let draw ~struct_tree ~fast ~underneath ~filename ~bates ~batespad range pdf drawops =
   (*Printf.printf "%s\n" (string_of_drawops drawops);*)
-  do_add_artifacts := struct_tree;
+  if not struct_tree then clear do_add_artifacts;
   resstack := [empty_res ()];
   Hashtbl.clear !fontpacks;
   (res ()).time <- Cpdfstrftime.current_time ();
