@@ -581,6 +581,14 @@ type st =
  | StItem of {kind : string; pageobjnum : int option; alt : string option; children : st list}
 
 (* Build a tree from the MCIDs and structure tree instructions gathered *)
+let rec find_tree_contents a level = function
+  | [] -> error "not enough -end-stag"
+  | StDataBeginTree _ as h::t ->
+      find_tree_contents (h::a) (level + 1) t
+  | StDataEndTree::t ->
+      if level = 1 then (rev a, t) else find_tree_contents a (level - 1) t
+  | h::t -> find_tree_contents (h::a) level t
+
 let rec make_structure_tree pageobjnums pdf pagenum = function
   | [] -> []
   | StDataMCID (n, mcid, alt)::t ->
@@ -589,9 +597,10 @@ let rec make_structure_tree pageobjnums pdf pagenum = function
       pagenum := n;
       make_structure_tree pageobjnums pdf pagenum t
   | StDataBeginTree s::t ->
-      make_structure_tree pageobjnums pdf pagenum t
+      let tree_contents, rest = find_tree_contents [] 1 t in
+        [StItem {kind = s; alt = None; pageobjnum = None; children = make_structure_tree pageobjnums pdf pagenum rest}]
   | StDataEndTree::t ->
-      make_structure_tree pageobjnums pdf pagenum t
+      error "Too many -end-tags"
 
 let make_structure_tree pdf items =
   let pageobjnums =
@@ -601,9 +610,7 @@ let make_structure_tree pdf items =
     make_structure_tree pageobjnums pdf (ref 0) items
 
 (* Write such a structure tree to a PDF. We have to make the objects and build
-   the root and its /K. For now, we just have a root which contains everything
-   else on one level. Later we will use StDataBeginTree / StDataEndTree to make
-   more tree stuff. *)
+   the root and its /K. *)
 let write_structure_tree pdf st =
   let parentmap = ref [] in
   let add_parentmap pon this_objnum =
