@@ -242,7 +242,17 @@ let mcpage = ref ~-1
 let standard_namespace = "http://iso.org/pdf/ssn"
 let pdf2_namespace = "http://iso.org/pdf2/ssn"
 
-let namespace = ref standard_namespace 
+(* namespace, object number pair. *)
+let namespaces = null_hash ()
+
+(* Add the object, add its number and this namespace to the hash. *)
+let add_namespace pdf s =
+  if s = standard_namespace then () else
+    match Hashtbl.find_opt namespaces s with
+    | Some _ -> ()
+    | None ->
+        let objnum = Pdf.addobj pdf (Pdf.Dictionary [("/NS", Pdf.String s)]) in
+          Hashtbl.add namespaces s objnum
 
 (* The structure data, as it is created, in flat form. Later on, this will be
    reconstructed into a structure tree. *)
@@ -251,6 +261,7 @@ type structdata =
   | StDataEndTree
   | StDataMCID of string * int * string option
   | StDataPage of int
+  | StDataNamespace of string
 
 let structdata = ref []
 
@@ -435,7 +446,13 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
   | EndSTag -> if not dryrun then structdata =| StDataEndTree; []
   | BeginArtifact -> [Pdfops.Op_BMC "/BeginArtifact"]
   | EndArtifact -> [Pdfops.Op_BMC "/EndArtifact"]
-  | Namespace s -> if not dryrun then namespace := s; []
+  | Namespace s ->
+      if not dryrun then
+        begin
+          add_namespace pdf s;
+          structdata =| StDataNamespace s
+        end;
+        []
 
 and ops_of_drawops struct_tree dryrun pdf endpage filename bates batespad num page drawops =
   flatten (map (ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num page) drawops)
@@ -585,7 +602,7 @@ let dryrun ~struct_tree ~filename ~bates ~batespad range pdf chunks =
 
 type st =
    StMCID of int
- | StItem of {kind : string; pageobjnum : int option; alt : string option; children : st list}
+ | StItem of {kind : string; namespace : string; pageobjnum : int option; alt : string option; children : st list}
 
 (* Build a tree from the MCIDs and structure tree instructions gathered *)
 let rec find_tree_contents a level = function
@@ -596,16 +613,19 @@ let rec find_tree_contents a level = function
       if level = 1 then (rev a, t) else find_tree_contents a (level - 1) t
   | h::t -> find_tree_contents (h::a) level t
 
-let rec make_structure_tree pageobjnums pdf pagenum = function
+let rec make_structure_tree pageobjnums pdf pagenum namespace = function
   | [] -> []
   | StDataMCID (n, mcid, alt)::t ->
-      StItem {kind = n; alt; pageobjnum = lookup !pagenum pageobjnums; children = [StMCID mcid]}::make_structure_tree pageobjnums pdf pagenum t
+      StItem {kind = n; namespace = !namespace; alt; pageobjnum = lookup !pagenum pageobjnums; children = [StMCID mcid]}::make_structure_tree pageobjnums pdf pagenum namespace t
   | StDataPage n::t ->
       pagenum := n;
-      make_structure_tree pageobjnums pdf pagenum t
+      make_structure_tree pageobjnums pdf pagenum namespace t
+  | StDataNamespace s::t ->
+      namespace := s;
+      make_structure_tree pageobjnums pdf pagenum namespace t
   | StDataBeginTree s::t ->
       let tree_contents, rest = find_tree_contents [] 1 t in
-        [StItem {kind = s; alt = None; pageobjnum = None; children = make_structure_tree pageobjnums pdf pagenum rest}]
+        [StItem {kind = s; namespace = !namespace; alt = None; pageobjnum = None; children = make_structure_tree pageobjnums pdf pagenum namespace rest}]
   | StDataEndTree::t ->
       error "Too many -end-tags"
 
@@ -614,7 +634,7 @@ let make_structure_tree pdf items =
     let objnums = Pdf.page_reference_numbers pdf in
       combine (indx objnums) objnums
   in
-    make_structure_tree pageobjnums pdf (ref 0) items
+    make_structure_tree pageobjnums pdf (ref 0) (ref standard_namespace) items
 
 (* Write such a structure tree to a PDF. *)
 let write_structure_tree pdf st =
@@ -626,7 +646,7 @@ let write_structure_tree pdf st =
   in
   let struct_tree_root = Pdf.addobj pdf Pdf.Null in
   let rec mktree struct_tree_parent  = function
-    | StItem {kind; pageobjnum; alt; children} ->
+    | StItem {kind; namespace; pageobjnum; alt; children} ->
         let this_objnum = Pdf.addobj pdf Pdf.Null in
           begin match pageobjnum with
           | Some p -> add_parentmap p this_objnum
@@ -642,10 +662,15 @@ let write_structure_tree pdf st =
             | Some i -> [("/Pg", Pdf.Indirect i)]
             | None -> []
           in
+          let namespace =
+            if namespace = standard_namespace then [] else
+              [("/NS", Pdf.Indirect (Hashtbl.find namespaces namespace))]
+          in
           let this_obj =
             Pdf.Dictionary
               (alt
                @ page
+               @ namespace
                @ [("/S", Pdf.Name kind);
                   ("/P", Pdf.Indirect struct_tree_parent);
                   ("/K", Pdf.Array (map (mktree this_objnum) children))])
@@ -664,9 +689,16 @@ let write_structure_tree pdf st =
     map (fun (pon, items) -> (string_of_int pon, Pdf.Array (map (fun x -> Pdf.Indirect x) (rev items)))) !parentmap
   in
   let st =
-    Pdf.Dictionary [("/Type", Pdf.Name "/StructTreeRoot");
-                    ("/ParentTree", Pdf.Indirect (Pdf.addobj pdf (Pdftree.build_name_tree true pdf parentmap))); 
-                    ("/K", Pdf.Array items)]
+    let namespaces =
+      match list_of_hashtbl namespaces with
+      | [] -> []
+      | ns -> [("/Namespaces", Pdf.Array (map (function (_, objnum) -> Pdf.Indirect objnum) ns))]
+    in
+    Pdf.Dictionary
+      (namespaces @
+        [("/Type", Pdf.Name "/StructTreeRoot");
+         ("/ParentTree", Pdf.Indirect (Pdf.addobj pdf (Pdftree.build_name_tree true pdf parentmap))); 
+         ("/K", Pdf.Array items)])
   in
     Pdf.addobj_given_num pdf (struct_tree_root, st);
     Pdf.replace_chain pdf ["/Root"] ("/StructTreeRoot", (Pdf.Indirect struct_tree_root))
