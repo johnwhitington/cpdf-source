@@ -404,6 +404,9 @@ let spray_outputs = ref []
 (* A list of PDFs to be output, if no output method was specified. *)
 let output_pdfs : Pdf.t list ref = ref []
 
+let standard_namespace = "http://iso.org/pdf/ssn"
+let pdf2_namespace = "http://iso.org/pdf2/ssn"
+
 type font =
   | StandardFont of Pdftext.standard_font
   | EmbeddedFont of string
@@ -1885,6 +1888,11 @@ let setreplaceobj s =
   | [a; b] -> args.op <- Some (ReplaceObj (a, b))
   | _ -> error "replace_obj: bad specification"
 
+let expand_namespace = function
+  | "PDF" -> standard_namespace
+  | "PDF2" -> pdf2_namespace
+  | x -> x
+
 let specs =
    [("-version",
       Arg.Unit (setop Version),
@@ -2813,6 +2821,7 @@ let specs =
    ("-artifact", Arg.Unit (fun _ -> Cpdfdrawcontrol.artifact ()), " Begin an artifact");
    ("-end-artifact", Arg.Unit (fun _ -> Cpdfdrawcontrol.endartifact ()), "End an artifact");
    ("-no-auto-artifacts", Arg.Unit (fun _ -> Cpdfdrawcontrol.autoartifacts false), " Don't mark untagged content as artifacts");
+   ("-namespace", Arg.String (fun s -> Cpdfdrawcontrol.addnamespace (expand_namespace s)), " Set the structure tree namespace");
    ("-rect", Arg.String Cpdfdrawcontrol.addrect, " Draw rectangle");
    ("-to", Arg.String Cpdfdrawcontrol.addto, " Move to");
    ("-line", Arg.String Cpdfdrawcontrol.addline, " Add line to");

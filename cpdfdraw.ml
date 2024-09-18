@@ -64,6 +64,7 @@ type drawops =
   | EndSTag
   | BeginArtifact
   | EndArtifact
+  | Namespace of string
 
 (*let rec string_of_drawop = function
   | Qq o -> "Qq (" ^ string_of_drawops o ^ ")"
@@ -237,6 +238,11 @@ let update_resources pdf old_resources =
 let mcidr = ref ~-1
 let mcid () = (incr mcidr; !mcidr)
 let mcpage = ref ~-1
+
+let standard_namespace = "http://iso.org/pdf/ssn"
+let pdf2_namespace = "http://iso.org/pdf2/ssn"
+
+let namespace = ref standard_namespace 
 
 (* The structure data, as it is created, in flat form. Later on, this will be
    reconstructed into a structure tree. *)
@@ -429,6 +435,7 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
   | EndSTag -> if not dryrun then structdata =| StDataEndTree; []
   | BeginArtifact -> [Pdfops.Op_BMC "/BeginArtifact"]
   | EndArtifact -> [Pdfops.Op_BMC "/EndArtifact"]
+  | Namespace s -> if not dryrun then namespace := s; []
 
 and ops_of_drawops struct_tree dryrun pdf endpage filename bates batespad num page drawops =
   flatten (map (ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num page) drawops)

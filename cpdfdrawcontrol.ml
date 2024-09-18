@@ -119,6 +119,9 @@ let artifact () =
 let endartifact () =
   addop Cpdfdraw.EndArtifact
 
+let addnamespace s =
+  addop (Cpdfdraw.Namespace s)
+
 let addrect s =
   let x, y, w, h = Cpdfcoord.parse_rectangle (Pdf.empty ()) s in
     addop (Cpdfdraw.Rect (x, y, w, h))

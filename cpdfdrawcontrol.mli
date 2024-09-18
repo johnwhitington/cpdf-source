@@ -19,6 +19,7 @@ val addstag : string -> unit
 val endtag : unit -> unit
 val endstag : unit -> unit
 val autotags : bool -> unit
+val addnamespace : string -> unit
 val artifact : unit -> unit
 val endartifact : unit -> unit
 val autoartifacts : bool -> unit

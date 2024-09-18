@@ -59,6 +59,7 @@ type drawops =
   | EndSTag
   | BeginArtifact
   | EndArtifact
+  | Namespace of string
 
 val do_add_artifacts : bool ref
 
