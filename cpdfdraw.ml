@@ -609,8 +609,7 @@ let make_structure_tree pdf items =
   in
     make_structure_tree pageobjnums pdf (ref 0) items
 
-(* Write such a structure tree to a PDF. We have to make the objects and build
-   the root and its /K. *)
+(* Write such a structure tree to a PDF. *)
 let write_structure_tree pdf st =
   let parentmap = ref [] in
   let add_parentmap pon this_objnum =
@@ -619,33 +618,37 @@ let write_structure_tree pdf st =
     | Some objnums -> parentmap := add pon (this_objnum::objnums) !parentmap
   in
   let struct_tree_root = Pdf.addobj pdf Pdf.Null in
-  let items =
-    map
-      (function StItem {kind; pageobjnum; alt; children} ->
-         let this_objnum = Pdf.addobj pdf Pdf.Null in
-         let alt =
-           match alt with
-           | Some s -> [("/Alt", Pdf.String s)]
-           | None -> []
-         in
-         let page =
-           match pageobjnum with
-           | Some i -> [("/Pg", Pdf.Indirect i)]
-           | None -> []
-         in
-         let this_obj =
-             Pdf.Dictionary (alt @ page @
-                            [("/S", Pdf.Name kind);
-                             ("/P", Pdf.Indirect struct_tree_root);
-                             ("/K", Pdf.Array (map (function StMCID x -> begin match pageobjnum with Some p -> add_parentmap p this_objnum | _ -> () end; Pdf.Integer x
-                                                    | _ -> assert false) children))])
-         in
-           Pdf.addobj_given_num pdf (this_objnum, this_obj);
-           Pdf.Indirect this_objnum
-       | _ -> assert false
-      )
-      st
+  let rec mktree struct_tree_parent  = function
+    | StItem {kind; pageobjnum; alt; children} ->
+        let this_objnum = Pdf.addobj pdf Pdf.Null in
+          begin match pageobjnum with
+          | Some p -> add_parentmap p this_objnum
+          | _ -> ()
+          end;
+          let alt =
+            match alt with
+            | Some s -> [("/Alt", Pdf.String s)]
+            | None -> []
+          in
+          let page =
+            match pageobjnum with
+            | Some i -> [("/Pg", Pdf.Indirect i)]
+            | None -> []
+          in
+          let this_obj =
+            Pdf.Dictionary
+              (alt
+               @ page
+               @ [("/S", Pdf.Name kind);
+                  ("/P", Pdf.Indirect struct_tree_parent);
+                  ("/K", Pdf.Array (map (mktree this_objnum) children))])
+          in
+            Pdf.addobj_given_num pdf (this_objnum, this_obj);
+            Pdf.Indirect this_objnum
+    | StMCID x ->
+        Pdf.Integer x
   in
+  let items = map (mktree struct_tree_root) st in
   iter
     (fun (pon, _) ->
        Pdf.addobj_given_num pdf (pon, Pdf.add_dict_entry (Pdf.lookup_obj pdf pon) "/StructParents" (Pdf.Integer pon)))
