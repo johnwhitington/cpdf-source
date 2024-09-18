@@ -425,8 +425,8 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
         if not dryrun then structdata := StDataMCID (s, m, None)::!structdata;
         [Pdfops.Op_BDC (s, Pdf.Dictionary ["/MCID", Pdf.Integer m])]
   | EndTag -> [Pdfops.Op_EMC]
-  | STag s -> structdata =| StDataBeginTree s; []
-  | EndSTag -> structdata =| StDataEndTree; []
+  | STag s -> if not dryrun then structdata =| StDataBeginTree s; []
+  | EndSTag -> if not dryrun then structdata =| StDataEndTree; []
   | BeginArtifact -> [Pdfops.Op_BMC "/BeginArtifact"]
   | EndArtifact -> [Pdfops.Op_BMC "/EndArtifact"]
 
