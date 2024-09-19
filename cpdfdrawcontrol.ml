@@ -372,12 +372,18 @@ let addpara s =
   let j, w, s = jws s in
     addop (Cpdfdraw.Para (j, w, [s]))
 
-let split_on_newline s = [s]
+let rec split_on_newlines a = function
+  | 0x005c::0x004e::t -> rev a::split_on_newlines [] t
+  | h::t -> split_on_newlines (h::a) t
+  | [] -> if a = [] then [] else [rev a]
+
+let split_on_newlines s =
+  map Pdftext.utf8_of_codepoints (split_on_newlines [] (Pdftext.codepoints_of_utf8 s))
 
 let addparas s =
   begin match !drawops with _::_::_ -> () | _ -> error "-paras must be in a -bt / -et section" end;
   add_default_fontpack (!getfontname ());
   addop (Cpdfdraw.Font (!getfontname (), !getfontsize ()));
   let j, w, s = jws s in
-  let splits = split_on_newline s in
+  let splits = split_on_newlines s in
     addop (Cpdfdraw.Para (j, w, splits))

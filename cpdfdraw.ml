@@ -428,9 +428,13 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
       if dryrun then iter (fun c -> Hashtbl.replace (res ()).current_fontpack_codepoints c ()) (Pdftext.codepoints_of_utf8 s);
         fst (runs_of_utf8 s)
   | Para (j, w, s) ->
-      let s = hd s in (* FIXME *)
-      if dryrun then iter (fun c -> Hashtbl.replace (res ()).current_fontpack_codepoints c ()) (Pdftext.codepoints_of_utf8 s);
-      format_paragraph j w s
+      if dryrun then iter (iter (fun c -> Hashtbl.replace (res ()).current_fontpack_codepoints c ())) (map Pdftext.codepoints_of_utf8 s);
+      let first = ref true in
+        flatten
+          (map
+            (function para ->
+               if not !first then ([Pdfops.Op_T']) else (clear first; []) @ format_paragraph j w para)
+            s)
   | Leading f -> [Pdfops.Op_TL f]
   | CharSpace f -> [Pdfops.Op_Tc f]
   | WordSpace f -> [Pdfops.Op_Tw f]
