@@ -76,6 +76,7 @@ val add_default_fontpack : string -> unit
 val addtext : string -> unit
 val addspecialtext : string -> unit
 val addpara : string -> unit
+val addparas : string -> unit
 
 (** This the beginnings of separation between cpdfcommand and cpdfdraw when
     drawing, for use in cpdflib. It is presently undocumented. *)

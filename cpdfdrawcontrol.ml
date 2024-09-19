@@ -350,20 +350,34 @@ let addspecialtext s =
     addop (Cpdfdraw.SpecialText s)
 
 (* "L200pt=....." *)
+let jws s =
+  let j, rest =
+    match explode s with
+    | 'L'::t -> (Cpdfdraw.Left, t)
+    | 'R'::t -> (Cpdfdraw.Right, t)
+    | 'C'::t -> (Cpdfdraw.Centre, t)
+    | _ -> error "Unknown justification specification"
+  in
+  let w, s =
+      match String.split_on_char '=' (implode rest) with
+      | [w; s] -> (Cpdfcoord.parse_single_number (Pdf.empty ()) w, s)
+      | _ -> error "addjpeg: bad file specification"
+  in
+    j, w, s
+
 let addpara s =
-  begin match !drawops with _::_::_ -> () | _ -> error "-stext must be in a -bt / -et section" end;
-    add_default_fontpack (!getfontname ());
-    addop (Cpdfdraw.Font (!getfontname (), !getfontsize ()));
-    let j, rest =
-      match explode s with
-      | 'L'::t -> (Cpdfdraw.Left, t)
-      | 'R'::t -> (Cpdfdraw.Right, t)
-      | 'C'::t -> (Cpdfdraw.Centre, t)
-      | _ -> error "Unknown justification specification"
-    in
-    let w, s =
-        match String.split_on_char '=' (implode rest) with
-        | [w; s] -> (Cpdfcoord.parse_single_number (Pdf.empty ()) w, s)
-        | _ -> error "addjpeg: bad file specification"
-    in
-      addop (Cpdfdraw.Para (j, w, s))
+  begin match !drawops with _::_::_ -> () | _ -> error "-para must be in a -bt / -et section" end;
+  add_default_fontpack (!getfontname ());
+  addop (Cpdfdraw.Font (!getfontname (), !getfontsize ()));
+  let j, w, s = jws s in
+    addop (Cpdfdraw.Para (j, w, [s]))
+
+let split_on_newline s = [s]
+
+let addparas s =
+  begin match !drawops with _::_::_ -> () | _ -> error "-paras must be in a -bt / -et section" end;
+  add_default_fontpack (!getfontname ());
+  addop (Cpdfdraw.Font (!getfontname (), !getfontsize ()));
+  let j, w, s = jws s in
+  let splits = split_on_newline s in
+    addop (Cpdfdraw.Para (j, w, splits))

@@ -50,7 +50,7 @@ type drawops =
   | TextSection of drawops list
   | Text of string
   | SpecialText of string
-  | Para of justification * float * string
+  | Para of justification * float * string list
   | Newline
   | Leading of float
   | CharSpace of float
@@ -428,6 +428,7 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
       if dryrun then iter (fun c -> Hashtbl.replace (res ()).current_fontpack_codepoints c ()) (Pdftext.codepoints_of_utf8 s);
         fst (runs_of_utf8 s)
   | Para (j, w, s) ->
+      let s = hd s in (* FIXME *)
       if dryrun then iter (fun c -> Hashtbl.replace (res ()).current_fontpack_codepoints c ()) (Pdftext.codepoints_of_utf8 s);
       format_paragraph j w s
   | Leading f -> [Pdfops.Op_TL f]

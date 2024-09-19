@@ -45,7 +45,7 @@ type drawops =
   | TextSection of drawops list
   | Text of string
   | SpecialText of string
-  | Para of justification * float * string
+  | Para of justification * float * string list
   | Newline
   | Leading of float
   | CharSpace of float

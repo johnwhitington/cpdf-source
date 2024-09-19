@@ -2867,6 +2867,7 @@ let specs =
    ("-text", Arg.String Cpdfdrawcontrol.addtext, " Draw text");
    ("-stext", Arg.String Cpdfdrawcontrol.addspecialtext, " Draw text with %specials");
    ("-para", Arg.String Cpdfdrawcontrol.addpara, " Add a paragraph of text");
+   ("-paras", Arg.String Cpdfdrawcontrol.addparas, " Add paragraphs of text, splitting on newlines");
    ("-leading", Arg.Float (fun f -> Cpdfdrawcontrol.addop (Cpdfdraw.Leading f)), " Set leading");
    ("-charspace", Arg.Float (fun f -> Cpdfdrawcontrol.addop (Cpdfdraw.CharSpace f)), " Set character spacing");
    ("-wordspace", Arg.Float (fun f -> Cpdfdrawcontrol.addop (Cpdfdraw.WordSpace f)), " Set word space");
