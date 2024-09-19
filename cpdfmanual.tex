@@ -4681,6 +4681,7 @@ Cpdf can build multi-pages files from one or more PDF-appropriate JBIG2 fragment
    \noindent\verb!-et! End text\\
    \noindent\verb!-text! Draw text\\
    \noindent\verb!-stext! Draw text with \%specials\\
+   \noindent\verb!-para! Typeset paragraph\\
    \noindent\verb!-leading! Set leading\\
    \noindent\verb!-charspace! Set character spacing\\
    \noindent\verb!-wordspace! Set word space\\
@@ -4693,11 +4694,22 @@ Cpdf can build multi-pages files from one or more PDF-appropriate JBIG2 fragment
    \noindent \textsc{The next page}\\
    \noindent\verb!-newpage! Move to a fresh page
 
-
+   \vspace{1.5mm}
+   \noindent \textsc{Structure Information}\\
+   \noindent\verb!-draw-struct-tree! Add structure information\\
+   \noindent\verb!-tag! Begin marked content\\
+   \noindent\verb!-end-tag! End marked content\\
+   \noindent\verb!-stag! Begin structure tree branch\\
+   \noindent\verb!-end-stag! End structure tree branch\\
+   \noindent\verb!-auto-tags! Automatically tag paragraphs and images\\
+   \noindent\verb!-no-auto-tags! Refrain from automatically tag paragraphs and images\\
+   \noindent\verb!-artifact! Begin manual artifact\\
+   \noindent\verb!-end-artifact! End manual artifact\\
+   \noindent\verb!-no-auto-artifacts! Prevent automatic addition of artifacts during postprocessing\\
+   \noindent\verb!-namespace! Set the namespace for future branches of the tree\\
 
   \end{framed}}
 
-\vfill
 \ifdefined\HCode
   %htlatex code here
   Please see the PDF version of the manual for the documentation to this chapter.
@@ -5116,6 +5128,8 @@ NB: To use a TrueType font with \texttt{-draw}, the \texttt{-load-ttf} must appe
 
 NB: To use \texttt{-embed-std14}, put it before \texttt{-draw}.
 
+\section{Paragraphs}
+
 \section{The next page}
 
   {\small\begin{framed}
@@ -5428,9 +5442,13 @@ To create a new PDF/UA-1 file, with A4 portrait paper, one page, and the title \
     \noindent\small\verb!cpdf -create-pdf-ua-1 "My Book" -o out.pdf!
   \end{framed}
 
-\noindent A title is needed for every PDF/UA-1 document (even a blank one) for it to meet the standard. Note that any modifying \texttt{-create-pdf-pages} or \texttt{-create-pdf-papersize} must appear before \texttt{-create-pdf-ua-1} on the command line.
+\noindent A title is needed for every PDF/UA document (even a blank one) for it to meet the standard. Note that any modifying \texttt{-create-pdf-pages} or \texttt{-create-pdf-papersize} must appear before \texttt{-create-pdf-ua-1} on the command line.
 
 For \texttt{PDF/UA-2}, use \texttt{-create-pdf-ua-2} instead.
+
+\section{Drawing on PDF/UA files}
+
+Cpdf can add PDF/UA structure data when drawing on new PDF/UA files. See chapter \ref{chap:15} for details.
 
 \clearpage\pagestyle{empty}
 %We wanted to call this "Chapter M", but the following commands messed up the PDF bookmarks, so this chapter will simply have to float for now, until we can return to this problem.
