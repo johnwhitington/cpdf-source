@@ -373,7 +373,7 @@ let addpara s =
     addop (Cpdfdraw.Para (j, w, [s]))
 
 let rec split_on_newlines a = function
-  | 0x005c::0x004e::t -> rev a::split_on_newlines [] t
+  | 0x005c::0x006e::t -> rev a::split_on_newlines [] t
   | h::t -> split_on_newlines (h::a) t
   | [] -> if a = [] then [] else [rev a]
 

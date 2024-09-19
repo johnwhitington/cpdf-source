@@ -433,7 +433,7 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
         flatten
           (map
             (function para ->
-               if not !first then ([Pdfops.Op_T']) else (clear first; []) @ format_paragraph j w para)
+               (if not !first then ([Pdfops.Op_T']) else (clear first; [])) @ format_paragraph j w para)
             s)
   | Leading f -> [Pdfops.Op_TL f]
   | CharSpace f -> [Pdfops.Op_Tc f]
