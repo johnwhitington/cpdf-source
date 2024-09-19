@@ -5130,6 +5130,22 @@ NB: To use \texttt{-embed-std14}, put it before \texttt{-draw}.
 
 \section{Paragraphs}
 
+\begin{framed}
+ \noindent\small\verb?cpdf -create-pdf AND -draw -mtrans "200 400" -font-size 20 -leading 25?\\
+ \noindent\small\verb?     -bt -para "L200pt=This is a paragraph of width 100pt, left-justif?\\
+ \noindent\small\verb?     ied, containing more than one line..." -et?\\
+ \noindent\small\verb?     -o out.pdf?
+\end{framed}
+
+\bigskip
+\fbox{\includegraphics[width=0.3\textwidth]{manualimages/para.pdf}}
+\bigskip
+
+2. Using -paras with newlines. Mention it's still all on one page.
+
+\texttt{cpdf -}
+ 
+
 \section{The next page}
 
   {\small\begin{framed}
