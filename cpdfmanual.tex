@@ -5130,6 +5130,8 @@ NB: To use \texttt{-embed-std14}, put it before \texttt{-draw}.
 
 \section{Paragraphs}
 
+We can add a paragraph of text of a given width and justification (Left, Right, or Centre) using the \texttt{-para} operation:
+
 \begin{framed}
  \noindent\small\verb?cpdf -create-pdf AND -draw -mtrans "200 400" -font-size 20 -leading 25?\\
  \noindent\small\verb?     -bt -para "L200pt=This is a paragraph of width 100pt, left-justif?\\
@@ -5137,13 +5139,13 @@ NB: To use \texttt{-embed-std14}, put it before \texttt{-draw}.
  \noindent\small\verb?     -o out.pdf?
 \end{framed}
 
+\noindent Notice the paragraph specification \texttt{L200pt=} for left justified, 200pt-wide at the beginning of the string. Notice also we must give a value for \texttt{-leading}. Here is the result:
+
 \bigskip
 \fbox{\includegraphics[width=0.3\textwidth]{manualimages/para.pdf}}
 \bigskip
 
-2. Using -paras with newlines. Mention it's still all on one page.
-
-%./cpdf - 
+\noindent Multiple paragraphs with optional indenting may be laid out with \texttt{-paras}:
 
 \begin{framed}
  \noindent\small\verb?cpdf -create-pdf AND -draw -mtrans "200 500" -bt -font-size 20 -leading 25?\\
@@ -5153,10 +5155,15 @@ NB: To use \texttt{-embed-std14}, put it before \texttt{-draw}.
  \noindent\small\verb?     -o out.pdf?
 \end{framed}
 
+\noindent We specify the newlines with \texttt{\textbackslash n}, and the indentation with \texttt{-indent}. Here is the result.
+
+\noindent
+
 \bigskip
 \fbox{\includegraphics[width=0.3\textwidth]{manualimages/paras.pdf}}
 \bigskip
 
+\noindent Note that there is no automatic typesetting over multiple pages with \texttt{-paras}.
 
 \section{The next page}
 
