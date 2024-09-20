@@ -5143,8 +5143,20 @@ NB: To use \texttt{-embed-std14}, put it before \texttt{-draw}.
 
 2. Using -paras with newlines. Mention it's still all on one page.
 
-%\texttt{cpdf -create-pdf AND -draw -mtrans "200 400" -font-size 20 -leading 25 -bt -paras "R200pt=This is a multi-paragraph piece of text.\nHere is the second paragraph, and then...\n...the third." -et -o out.pdf}
- 
+%./cpdf - 
+
+\begin{framed}
+ \noindent\small\verb?cpdf -create-pdf AND -draw -mtrans "200 500" -bt -font-size 20 -leading 25?\\
+ \noindent\small\verb?     -indent 20 -paras "L300=This is the first paragraph, which is spread ?\\
+ \noindent\small\verb?     over multiple lines at this width...\nAnd here is the second, also ta?\\
+ \noindent\small\verb?     king more than one line.\nHere is a little one." -et AND -decompress?\\
+ \noindent\small\verb?     -o out.pdf?
+\end{framed}
+
+\bigskip
+\fbox{\includegraphics[width=0.3\textwidth]{manualimages/paras.pdf}}
+\bigskip
+
 
 \section{The next page}
 
