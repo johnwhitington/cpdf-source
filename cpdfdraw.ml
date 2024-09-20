@@ -267,7 +267,6 @@ let structdata = ref []
 
 (* TODO: Use Uuseg for proper unicode segmentation. *)
 let format_paragraph indent j w s =
-  Printf.printf "indent = %f\n" indent;
   let ss = String.split_on_char ' ' s in
   let rs_and_widths = ref (map runs_of_utf8 ss) in
   let space_runs, space_width = runs_of_utf8 " " in
