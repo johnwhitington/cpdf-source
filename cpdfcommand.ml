@@ -1897,6 +1897,10 @@ let expand_namespace = function
   | "PDF2" -> pdf2_namespace
   | x -> x
 
+let setreadableops () =
+  Pdfops.whitespace := "\n";
+  Pdfops.always_add_whitespace := true
+
 let specs =
    [("-version",
       Arg.Unit (setop Version),
@@ -2899,6 +2903,7 @@ let specs =
    ("-debug-force", Arg.Unit (fun () -> args.debugforce <- true), "");
    ("-debug-malformed", Arg.Set Pdfread.debug_always_treat_malformed, "");
    ("-debug-stderr-to-stdout", Arg.Unit setstderrtostdout, "");
+   ("-debug-readable-ops", Arg.Unit setreadableops, "");
    ("-stay-on-error", Arg.Unit setstayonerror, "");
    (* These items are unfinished *)
    ("-extract-text", Arg.Unit (setop ExtractText), "");
