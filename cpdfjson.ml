@@ -448,6 +448,7 @@ let json_of_op utf8 pdf no_stream_data = function
   | O.Op_MP s -> `List [`String s; `String "MP"]
   | O.Op_BMC s -> `List [`String s; `String "BMC"]
   | O.Op_Unknown s -> `List [`String s; `String "Unknown"]
+  | O.Op_Comment s  -> `List [`String s; `String "Comment"]
   | O.Op_SCNName (s, fs) ->
       `List (map (fun x -> mkfloat x) fs @ [`String s; `String "SCNName"])
   | O.Op_scnName (s, fs) ->

@@ -1899,7 +1899,8 @@ let expand_namespace = function
 
 let setreadableops () =
   Pdfops.whitespace := "\n";
-  Pdfops.always_add_whitespace := true
+  Pdfops.always_add_whitespace := true;
+  Pdfops.write_comments := true
 
 let specs =
    [("-version",
