@@ -548,7 +548,8 @@ type args =
    mutable verify_single : string option;
    mutable draw_struct_tree : bool;
    mutable image_title : string option;
-   mutable subformat : Cpdfua.subformat option}
+   mutable subformat : Cpdfua.subformat option;
+   mutable indent : float option}
 
 let args =
   {op = None;
@@ -686,7 +687,8 @@ let args =
    verify_single = None;
    draw_struct_tree = false;
    image_title = None;
-   subformat = None}
+   subformat = None;
+   indent = None}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -812,7 +814,8 @@ let reset_arguments () =
   args.verify_single <- None;
   args.draw_struct_tree <- false;
   args.image_title <- None;
-  args.subformat <- None
+  args.subformat <- None;
+  args.indent <- None
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -1826,6 +1829,7 @@ let () = Cpdfdrawcontrol.getfontname := fun () -> args.fontname
 let () = Cpdfdrawcontrol.getfontsize := fun () -> args.fontsize
 let () = Cpdfdrawcontrol.setfontname := setfont
 let () = Cpdfdrawcontrol.setfontsize := fun s -> args.fontsize <- s
+let () = Cpdfdrawcontrol.getindent := fun () -> args.indent
 
 let setlistimagesjson () =
   setop ListImages ();
@@ -2868,6 +2872,7 @@ let specs =
    ("-stext", Arg.String Cpdfdrawcontrol.addspecialtext, " Draw text with %specials");
    ("-para", Arg.String Cpdfdrawcontrol.addpara, " Add a paragraph of text");
    ("-paras", Arg.String Cpdfdrawcontrol.addparas, " Add paragraphs of text, splitting on newlines");
+   ("-indent", Arg.Float (fun f -> args.indent <- Some f), " Set indent for paragraphs");
    ("-leading", Arg.Float (fun f -> Cpdfdrawcontrol.addop (Cpdfdraw.Leading f)), " Set leading");
    ("-charspace", Arg.Float (fun f -> Cpdfdrawcontrol.addop (Cpdfdraw.CharSpace f)), " Set character spacing");
    ("-wordspace", Arg.Float (fun f -> Cpdfdrawcontrol.addop (Cpdfdraw.WordSpace f)), " Set word space");

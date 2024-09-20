@@ -3,6 +3,7 @@
 val embed_font : (unit -> Cpdfembed.cpdffont) ref
 val getfontname : (unit -> string) ref
 val getfontsize : (unit -> float) ref
+val getindent : (unit -> float option) ref
 val setfontname : (string -> unit) ref
 val setfontsize : (float -> unit) ref
 val setdrawing : (unit -> unit) ref

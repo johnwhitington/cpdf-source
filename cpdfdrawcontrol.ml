@@ -10,6 +10,7 @@ let setfontname = ref (fun _ -> Printf.printf "BAD *****\n%!")
 let setfontsize = ref (fun _ -> Printf.printf "BAD ******\n%!")
 let loadttf = ref (fun _ -> Printf.printf "BAD *******\n%!")
 let setembedstd14 = ref (fun _ _ -> Printf.printf "BAD ********\n%!")
+let getindent = ref (fun () -> Printf.printf "BAD *********\n%!"; None)
 
 let ttfs = null_hash ()
 
@@ -370,7 +371,7 @@ let addpara s =
   add_default_fontpack (!getfontname ());
   addop (Cpdfdraw.Font (!getfontname (), !getfontsize ()));
   let j, w, s = jws s in
-    addop (Cpdfdraw.Para (j, w, [s]))
+    addop (Cpdfdraw.Para (None, j, w, [s]))
 
 let rec split_on_newlines a = function
   | 0x005c::0x006e::t -> rev a::split_on_newlines [] t
@@ -386,4 +387,5 @@ let addparas s =
   addop (Cpdfdraw.Font (!getfontname (), !getfontsize ()));
   let j, w, s = jws s in
   let splits = split_on_newlines s in
-    addop (Cpdfdraw.Para (j, w, splits))
+  let indent = !getindent () in
+    addop (Cpdfdraw.Para (indent, j, w, splits))

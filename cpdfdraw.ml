@@ -50,7 +50,7 @@ type drawops =
   | TextSection of drawops list
   | Text of string
   | SpecialText of string
-  | Para of justification * float * string list
+  | Para of float option * justification * float * string list
   | Newline
   | Leading of float
   | CharSpace of float
@@ -266,20 +266,24 @@ type structdata =
 let structdata = ref []
 
 (* TODO: Use Uuseg for proper unicode segmentation. *)
-let format_paragraph j w s =
+let format_paragraph indent j w s =
+  Printf.printf "indent = %f\n" indent;
   let ss = String.split_on_char ' ' s in
   let rs_and_widths = ref (map runs_of_utf8 ss) in
   let space_runs, space_width = runs_of_utf8 " " in
   let remaining = ref w in
   let allops = ref [] in
   let ops = ref [] in
+  let first = ref true in
+  let firstloop = ref true in
   let justify ops =
     match j with
-    | Left -> ops
+    | Left -> (if !first then [Pdfops.Op_Td (~-.indent, 0.)] else []) @ ops @ (if !first then [Pdfops.Op_Td (indent, 0.)] else [])
     | Right -> [Pdfops.Op_Td (~-.(!remaining), 0.)] @ ops @ [Pdfops.Op_Td (!remaining, 0.)]
     | Centre -> [Pdfops.Op_Td (~-.(!remaining) /. 2., 0.)] @ ops @ [Pdfops.Op_Td (!remaining /. 2., 0.)]
   in
     while !rs_and_widths <> [] do
+      if !firstloop then (remaining -.= indent; clear firstloop);
       let word, word_width = hd !rs_and_widths in
         if !remaining = w then
           (* If current line empty, output word. *)
@@ -300,9 +304,10 @@ let format_paragraph j w s =
           (* If current line not empty, and not enough space, emit newline. *)
           begin
             allops =| rev (Pdfops.Op_T'::justify !ops);
+            clear first;
             ops := [];
-            remaining := w
-          end
+            remaining := w;
+          end;
     done;
   allops =| rev (Pdfops.Op_T'::justify !ops);
   flatten (rev !allops)
@@ -427,13 +432,13 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
       let s = process_specials pdf endpage filename bates batespad num page s in
       if dryrun then iter (fun c -> Hashtbl.replace (res ()).current_fontpack_codepoints c ()) (Pdftext.codepoints_of_utf8 s);
         fst (runs_of_utf8 s)
-  | Para (j, w, s) ->
+  | Para (indent, j, w, s) ->
       if dryrun then iter (iter (fun c -> Hashtbl.replace (res ()).current_fontpack_codepoints c ())) (map Pdftext.codepoints_of_utf8 s);
       let first = ref true in
         flatten
           (map
             (function para ->
-               (if not !first then ([Pdfops.Op_T']) else (clear first; [])) @ format_paragraph j w para)
+               (if not !first && indent = None then ([Pdfops.Op_T']) else (clear first; [])) @ format_paragraph (if indent <> None && not !first then unopt indent else 0.) j w para)
             s)
   | Leading f -> [Pdfops.Op_TL f]
   | CharSpace f -> [Pdfops.Op_Tc f]

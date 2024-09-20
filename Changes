@@ -13,6 +13,8 @@ New features:
 * Create structure information for files with -draw
 * Draw can now make paragraphs with -para, -paras
 * Add structure information to -typeset, add -typeset-subformat
+* -typeset can make PDF/UA documents
+* -jpeg, -png and friends can make PDF/UA documents
 
 * = Supported by a grant from NLnet
 
