@@ -79,6 +79,8 @@ page size given by (x, y) and by the [input_scale] (e.g 1.0 = scale to fit, 0.9
 = scale to fit leaving a border etc.). [op] is unused. *) 
 val scale_to_fit_pdf : ?fast:bool -> Cpdfposition.position -> float -> (float * float) list -> 'a -> Pdf.t -> int list -> Pdf.t
 
+val stretch : ?fast:bool -> (float * float) list -> Pdf.t -> int list -> Pdf.t
+
 (** {2 Stamping} *)
 
 (** [combine_pages fast under over scaletofit swap equalize] combines the page

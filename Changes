@@ -15,6 +15,7 @@ New features:
 * Add structure information to -typeset, add -typeset-subformat
 * -typeset can make PDF/UA documents
 * -jpeg, -png and friends can make PDF/UA documents
+o -stretch scales without preserving aspect ratio
 
 * = Supported by a grant from NLnet
 

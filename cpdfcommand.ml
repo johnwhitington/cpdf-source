@@ -105,6 +105,7 @@ type op =
   | ShiftBoxes
   | Scale
   | ScaleToFit
+  | Stretch
   | ScaleContents of float
   | AttachFile of string list
   | RemoveAttachedFiles
@@ -257,6 +258,7 @@ let string_of_op = function
   | ShiftBoxes -> "ShiftBoxes"
   | Scale -> "Scale"
   | ScaleToFit -> "ScaleToFit"
+  | Stretch -> "Stretch"
   | ScaleContents _ -> "ScaleContents"
   | AttachFile _ -> "AttachFile"
   | RemoveAttachedFiles -> "RemoveAttachedFiles"
@@ -925,8 +927,8 @@ let banned banlist = function
   | Merge | Split | SplitOnBookmarks _ | SplitMax _ | Spray | RotateContents _ | Rotate _
   | Rotateby _ | Upright | VFlip | HFlip | Impose _ | Chop _ | ChopHV _ ->
       mem Pdfcrypt.NoAssemble banlist
-  | TwoUp|TwoUpStack|RemoveBookmarks|AddRectangle|RemoveText|
-    Draft|Shift|ShiftBoxes | Scale|ScaleToFit|RemoveAttachedFiles|
+  | TwoUp | TwoUpStack | RemoveBookmarks | AddRectangle | RemoveText|
+    Draft | Shift | ShiftBoxes | Scale | ScaleToFit|Stretch|RemoveAttachedFiles|
     RemoveAnnotations|RemoveFonts|Crop|RemoveCrop|Trim|RemoveTrim|Bleed|RemoveBleed|Art|RemoveArt|
     CopyBox|MediaBox|HardBox _|SetTrapped|SetUntrapped|Presentation|
     BlackText|BlackLines|BlackFills|CopyFont _|StampOn _|StampUnder _|StampAsXObject _|
@@ -1207,6 +1209,10 @@ let setscale s =
 
 let setscaletofit s =
   setop ScaleToFit ();
+  args.coord <- s
+
+let setstretch s =
+  setop Stretch ();
   args.coord <- s
 
 let setattachfile s =
@@ -2044,6 +2050,9 @@ let specs =
    ("-scale-to-fit",
       Arg.String setscaletofit,
       " -scale-to-fit \"x y\" scales to page size (x, y)");
+   ("-stretch",
+      Arg.String setstretch,
+      " -stretch \"x y\" scales without preserving aspect ratio");
    ("-scale-contents",
       Arg.Float setscalecontents,
       "  Scale contents by the given factor");
@@ -4159,6 +4168,13 @@ let go () =
           let xylist = Cpdfcoord.parse_coordinates pdf args.coord
           and scale = args.scale in
             write_pdf false (Cpdfpage.scale_to_fit_pdf ~fast:args.fast args.position scale xylist args.op pdf range)
+  | Some Stretch ->
+      let pdf = get_single_pdf args.op false in
+        let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
+          warn_prerotate range pdf;
+          let pdf = if args.prerotate then prerotate range pdf else pdf in
+          let xylist = Cpdfcoord.parse_coordinates pdf args.coord in
+            write_pdf false (Cpdfpage.stretch ~fast:args.fast xylist pdf range)
   | Some (ScaleContents scale) ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in

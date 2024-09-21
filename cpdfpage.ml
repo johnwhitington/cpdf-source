@@ -363,6 +363,8 @@ let scale_page_contents ?(fast=false) scale position pdf pnum page =
 let scale_contents ?(fast=false) position scale pdf range =
   process_pages (scale_page_contents ~fast scale position pdf) pdf range
 
+
+
 (* Set media box *)
 let set_mediabox xywhlist pdf range =
   let crop_page pnum page =
@@ -531,6 +533,9 @@ let scale_pdf ?(fast=false) sxsylist pdf range =
            (Pdfpage.prepend_operators pdf ~fast [transform_op] page, pnum, matrix)
       in
         process_pages scale_page pdf range
+
+let stretch ?(fast=false) xylist pdf range =
+  pdf
 
 (* Scale to fit page of size x * y *)
 let scale_to_fit_pdf ?(fast=false) position input_scale xylist op pdf range =
