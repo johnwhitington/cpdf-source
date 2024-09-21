@@ -228,6 +228,7 @@ type op =
   | ExtractStructTree
   | ReplaceStructTree of string
   | SetLanguage of string
+  | Redact
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -379,6 +380,7 @@ let string_of_op = function
   | ExtractStructTree -> "ExtractStructTree"
   | ReplaceStructTree _ -> "ReplaceStructTree"
   | SetLanguage _ -> "SetLanguage"
+  | Redact -> "Redact"
 
 (* Inputs: filename, pagespec. *)
 type input_kind = 
@@ -925,7 +927,7 @@ let banned banlist = function
   | Decrypt | Encrypt | CombinePages _ -> true (* Never allowed *)
   | AddBookmarks _ | PadBefore | PadAfter | PadEvery _ | PadMultiple _ | PadMultipleBefore _
   | Merge | Split | SplitOnBookmarks _ | SplitMax _ | Spray | RotateContents _ | Rotate _
-  | Rotateby _ | Upright | VFlip | HFlip | Impose _ | Chop _ | ChopHV _ ->
+  | Rotateby _ | Upright | VFlip | HFlip | Impose _ | Chop _ | ChopHV _ | Redact ->
       mem Pdfcrypt.NoAssemble banlist
   | TwoUp | TwoUpStack | RemoveBookmarks | AddRectangle | RemoveText|
     Draft | Shift | ShiftBoxes | Scale | ScaleToFit|Stretch|RemoveAttachedFiles|
@@ -2907,6 +2909,7 @@ let specs =
    ("-print-struct-tree", Arg.Unit (fun () -> setop PrintStructTree ()), " Print structure tree");
    ("-extract-struct-tree", Arg.Unit (fun () -> setop ExtractStructTree ()), " Extract structure tree in JSON format");
    ("-replace-struct-tree", Arg.String (fun s -> setop (ReplaceStructTree s) ()), " Replace structure tree from JSON");
+   ("-redact", Arg.Unit (fun () -> setop Redact ()), " Redact entire pages");
    (* These items are undocumented *)
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit (fun () -> args.debugcrypt <- true), "");
@@ -4644,6 +4647,10 @@ let go () =
       let pdf = get_single_pdf args.op false in
         Cpdfmetadata.set_language pdf s;
         write_pdf false pdf
+  | Some Redact ->
+      let pdf = get_single_pdf args.op false in
+      let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
+        write_pdf false (Cpdfpage.redact pdf range)
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)

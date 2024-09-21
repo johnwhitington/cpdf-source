@@ -995,3 +995,18 @@ let copy_box f t mediabox_if_missing pdf range =
                else page))
     pdf
     range
+
+(* TODO: Trim structure tree *)
+let redact pdf range =
+  process_pages
+    (Pdfpage.ppstub
+       (fun pnum page ->
+          if mem pnum range then
+            {page with
+               Pdfpage.content = [];
+               Pdfpage.resources = Pdf.Dictionary [];
+               Pdfpage.rest = Pdf.remove_dict_entry page.Pdfpage.rest "/Annots"}
+          else
+            page))
+    pdf
+    range

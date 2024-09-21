@@ -16,6 +16,7 @@ New features:
 * -typeset can make PDF/UA documents
 * -jpeg, -png and friends can make PDF/UA documents
 o -stretch scales without preserving aspect ratio
+o -redact removes whole pages
 
 * = Supported by a grant from NLnet
 
