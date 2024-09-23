@@ -5210,7 +5210,38 @@ $cpdf -print-struct-tree out.pdf
 
 There are two types of tag we can add manually. One kind is used to tag individual pieces of content. We do this with a \texttt{-tag}/\texttt{-end-tag} pair. Note that nesting is not permitted here. For example, let us tag a heading:
 
-(H1 / Para example)
+\begin{framed}
+   \noindent\small\verb!cpdf -create-pdf AND -draw-struct-tree -draw -mtrans "50 700" !\\
+   \noindent\small\verb!     -font-size 40 -no-auto-tags -tag H1 -bt -text "This is the heading"!\\
+   \noindent\small\verb!     -et -end-tag -auto-tags -mtrans "0 -100" -font-size 20 -leading 25!\\
+   \noindent\small\verb!     -bt -paras "L200pt=This is the first paragraph, which spreads over!\\
+   \noindent\small\verb!more than one line\nHere is the second, which also has multiple lines..."!\\
+   \noindent\small\verb!     -et AND -o out.pdf!
+   \noindent\small\verb!!
+   \noindent\small\verb!!
+   \noindent\small\verb!!
+
+\end{framed}
+
+\noindent Here is the result, visually:
+
+\bigskip
+\fbox{\includegraphics[width=0.3\textwidth]{manualimages/h1.pdf}}
+\bigskip
+
+\noindent And here is the structure tree:
+
+\begin{verbatim}
+/StructTreeRoot
+└── 
+    ├── /H1 (1)
+    │   └── 
+    ├── /P (1)
+    │   └── 
+    └── /P (1)
+        └── 
+\end{verbatim}
+
 
    \noindent\verb!-stag! Begin structure tree branch\\
    \noindent\verb!-end-stag! End structure tree branch\\

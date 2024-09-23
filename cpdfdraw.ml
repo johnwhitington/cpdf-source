@@ -429,7 +429,7 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
         []
   | TextSection ops ->
       let m = mcid () in
-        if not dryrun then structdata := StDataMCID ("/P", m, None)::!structdata;
+        if not dryrun then structdata := StDataMCID ("P", m, None)::!structdata;
           (if struct_tree && !do_auto_tag then [Pdfops.Op_BDC ("/P", Pdf.Dictionary ["/MCID", Pdf.Integer m])] else [])
         @ [Pdfops.Op_BT]
         @ ops_of_drawops struct_tree dryrun pdf endpage filename bates batespad num page ops
@@ -460,7 +460,7 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
   | Tag s ->
       let m = mcid () in
         if not dryrun then structdata := StDataMCID (s, m, None)::!structdata;
-        [Pdfops.Op_BDC (s, Pdf.Dictionary ["/MCID", Pdf.Integer m])]
+        [Pdfops.Op_BDC ("/" ^ s, Pdf.Dictionary ["/MCID", Pdf.Integer m])]
   | EndTag -> [Pdfops.Op_EMC]
   | STag s -> if not dryrun then structdata =| StDataBeginTree s; []
   | EndSTag -> if not dryrun then structdata =| StDataEndTree; []
@@ -691,7 +691,7 @@ let write_structure_tree pdf st =
               (alt
                @ page
                @ namespace
-               @ [("/S", Pdf.Name kind);
+               @ [("/S", Pdf.Name ("/" ^ kind));
                   ("/P", Pdf.Indirect struct_tree_parent);
                   ("/K", Pdf.Array (map (mktree this_objnum) children))])
           in
