@@ -4650,7 +4650,7 @@ let go () =
   | Some Redact ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-        write_pdf false (Cpdfpage.redact pdf range)
+        write_pdf false (Cpdfpage.redact ~process_struct_tree:args.process_struct_trees pdf range)
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)

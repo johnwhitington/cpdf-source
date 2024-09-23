@@ -32,3 +32,5 @@ val validate_pagespec : string -> bool
 (** Return a string for the given range. Knows how to identify all, odd, even,
 x-y ranges etc. *)
 val string_of_pagespec : Pdf.t -> int list -> string
+
+val invert_range : int -> int list -> int list

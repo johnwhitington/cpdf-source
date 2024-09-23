@@ -131,4 +131,4 @@ val alluprightonly : int list -> Pdf.t -> bool
 (** When a page is transformed, its patterns must be too. *)
 val change_pattern_matrices_page : Pdf.t -> Pdftransform.transform_matrix -> Pdfpage.t -> Pdfpage.t
 
-val redact : Pdf.t -> int list -> Pdf.t
+val redact : process_struct_tree:bool -> Pdf.t -> int list -> Pdf.t
