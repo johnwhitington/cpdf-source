@@ -5217,13 +5217,9 @@ There are two types of tag we can add manually. One kind is used to tag individu
    \noindent\small\verb!     -bt -paras "L200pt=This is the first paragraph, which spreads over!\\
    \noindent\small\verb!more than one line\nHere is the second, which also has multiple lines..."!\\
    \noindent\small\verb!     -et AND -o out.pdf!
-   \noindent\small\verb!!
-   \noindent\small\verb!!
-   \noindent\small\verb!!
-
 \end{framed}
 
-\noindent Here is the result, visually:
+\noindent We turned off auto-tagging with \texttt{-no-auto-tag}, then used \texttt{-tag H1} and \texttt{-end-tag} to tag the heading. Then we turned auto-tagging back on with \texttt{-auto-tag}. Here is the result, visually:
 
 \bigskip
 \fbox{\includegraphics[width=0.3\textwidth]{manualimages/h1.pdf}}
@@ -5246,7 +5242,7 @@ There are two types of tag we can add manually. One kind is used to tag individu
    \noindent\verb!-stag! Begin structure tree branch\\
    \noindent\verb!-end-stag! End structure tree branch\\
 
-(describe how structure tags are different). Sections example.
+(describe how structure tags are different). Sections example. Top-level /Document example.
 
    \noindent\verb!-artifact! Begin manual artifact\\
    \noindent\verb!-end-artifact! End manual artifact\\
