@@ -5202,9 +5202,7 @@ To enable the generation of structure information, we may add \texttt{-draw-stru
 \begin{verbatim}
 $cpdf -print-struct-tree out.pdf
 /StructTreeRoot
-└── 
-    └── /P (1)
-        └──\end{verbatim}
+└── /P (1)\end{verbatim}
 
 \noindent To prevent such automatic tagging, relying only on manual tags, use \texttt{-no-auto-tags}. The effect may be reversed at any point with \texttt{-auto-tags}. Unless told otherwise, Cpdf auto-tags text as paragraphs /P, and images as /Figure.
 
@@ -5229,13 +5227,9 @@ There are two types of tag we can add manually. One kind is used to tag individu
 
 \begin{verbatim}
 /StructTreeRoot
-└── 
-    ├── /H1 (1)
-    │   └── 
-    ├── /P (1)
-    │   └── 
-    └── /P (1)
-        └── 
+├── /H1 (1)
+├── /P (1)
+└── /P (1)
 \end{verbatim}
 
 
@@ -5344,22 +5338,20 @@ We can print an abbreviated form of the structure tree to standard output:
 \begin{framed}
 \begin{verbatim}
 /StructTreeRoot
-└── 
-    └── /Document
-        ├── /Sect
-        │   ├── /P (1)
-        │   │   ├── /Span (1)
-        │   │   └── 
-        │   └── /Figure (1)
-        ├── /Sect
-        │   ├── /H1 (2)
-        │   └── /TOC
-        │       ├── /TOCI
-        │       │   └── /P
-        │       │       └── /Link (2)
-        .       .
-        .       .
-        .
+└── /Document
+    ├── /Sect
+    │   ├── /P (1)
+    │   │   ├── /Span (1)
+    │   └── /Figure (1)
+    ├── /Sect
+    │   ├── /H1 (2)
+    │   └── /TOC
+    │       ├── /TOCI
+    │       │   └── /P
+    │       │       └── /Link (2)
+    .       .
+    .       .
+    .       .
 \end{verbatim}
 \end{framed}
 \end{minipage}

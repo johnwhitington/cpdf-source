@@ -135,7 +135,9 @@ let read_st_basic pdf =
   | Pdf.Dictionary d ->
       begin match lookup "/StructTreeRoot" d with
       | None -> E2 ("/StructTreeRoot", [], [])
-      | Some st -> E2 ("/StructTreeRoot", [], [read_st_inner pdf st])
+      | Some st ->
+          match read_st_inner pdf st with
+          | E2 (_, a, b) -> E2 ("/StructTreeRoot", a, b)
       end
   | _ -> error "read_st no root"
 
@@ -1577,6 +1579,11 @@ let replace_struct_tree pdf json =
   with
     e -> error (Printf.sprintf "replace_struct_tree: %s" (Printexc.to_string e))
 
+let rec remove_empty = function
+  E2 (n, attrs, cs) ->
+    let cs' = map remove_empty cs in
+      E2 (n, attrs, lose (function E2 ("", _, []) -> true | _ -> false) cs')
+
 let print_struct_tree pdf =
   let page_lookup =
     hashtable_of_dictionary (combine (Pdf.page_reference_numbers pdf) (ilist 1 (Pdfpage.endpage pdf)))
@@ -1592,7 +1599,7 @@ let print_struct_tree pdf =
           (Cpdfprinttree.to_string
             ~get_name:(fun (E2 (x, a, _)) -> if int_of_string (get_page a) > 0 then x ^ " (" ^ get_page a ^ ")" else x)
             ~get_children:(fun (E2 (_, _, cs)) -> cs)
-            st)
+            (remove_empty st))
 
 let cpdfua_args title =
   [       "-create-pdf";
