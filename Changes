@@ -4,6 +4,7 @@ Fixes:
 
 o Removed setting of Producer field in AGPL version
 * Removed long-deprecated -control
+* More compact -print-struct-tree
 
 New features:
 
