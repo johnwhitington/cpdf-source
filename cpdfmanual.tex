@@ -5197,30 +5197,25 @@ To enable the generation of structure information, we may add \texttt{-draw-stru
    \noindent\small\verb!     -draw-struct-tree -draw -bt -text "Hello, World" -et -o out.pdf!
 \end{framed}
 
-\noindent Structure information in a PDF is in the form of a tree. We can now show the structure tree, and see that our paragraph has been automatically tagged by Cpdf:
+\noindent Structure information in a PDF is in the form of a tree. We can now show the structure tree, and see that our paragraph on page one has been automatically tagged by Cpdf:
 
 \begin{verbatim}
 $cpdf -print-struct-tree out.pdf
 /StructTreeRoot
 └── 
     └── /P (1)
-        └── 
-\end{verbatim}
+        └──\end{verbatim}
 
-   \noindent\verb!-auto-tags! Automatically tag paragraphs and images\\
-   \noindent\verb!-no-auto-tags! Refrain from automatically tag paragraphs and images\\
+\noindent To prevent such automatic tagging, relying only on manual tags, use \texttt{-no-auto-tags}. The effect may be reversed at any point with \texttt{-auto-tags}. Unless told otherwise, Cpdf auto-tags text as paragraphs /P, and images as /Figure.
 
-(describe autotagging)
+There are two types of tag we can add manually. One kind is used to tag individual pieces of content. We do this with a \texttt{-tag}/\texttt{-end-tag} pair. Note that nesting is not permitted here. For example, let us tag a heading:
 
-   \noindent\verb!-tag! Begin marked content\\
-   \noindent\verb!-end-tag! End marked content\\
-
-(describe manual tagging. H1 example say)
+(H1 / Para example)
 
    \noindent\verb!-stag! Begin structure tree branch\\
    \noindent\verb!-end-stag! End structure tree branch\\
 
-(describe how structure tags are different).
+(describe how structure tags are different). Sections example.
 
    \noindent\verb!-artifact! Begin manual artifact\\
    \noindent\verb!-end-artifact! End manual artifact\\
@@ -5535,12 +5530,11 @@ Cpdf can add PDF/UA structure data when drawing on new PDF/UA files. For example
 
 \begin{framed}
    \noindent\small\verb!cpdf -create-pdf-ua-1 "Hello" AND!\\
-   \noindent\small\verb!     -embed-std14 /path/to/fonts -draw-struct-tree -draw!\\
-   \noindent\small\verb!     -bt -font Times-Roman -font-size 12 -text "Hello, World" -et!\\
-   \noindent\small\verb!     -o out.pdf!
+   \noindent\small\verb!     -embed-std14 /path/to/fonts -draw-struct-tree!\\
+   \noindent\small\verb!     -draw -bt -text "Hello, World" -et -o out.pdf!
 \end{framed}
 
-\noindent See chapter \ref{chap:18} for details.
+\noindent Note we had to specify embedded fonts to make this a valid PDF/UA-1 file. See chapter \ref{chap:18} for more details about adding structure information when drawing.
 
 \clearpage\pagestyle{empty}
 %We wanted to call this "Chapter M", but the following commands messed up the PDF bookmarks, so this chapter will simply have to float for now, until we can return to this problem.
