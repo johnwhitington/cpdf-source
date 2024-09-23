@@ -5184,6 +5184,54 @@ If the drawing range is a single page, and the next page already exists, the dra
 
 \section{Structure information}
 
+A PDF may contain, in addition to its graphical content, a tree of information concerning the logical organization of the document into chapters, sections, paragraphs, figures and so on. When used with a standard set of pre-defined data types, this is known as Tagged PDF. Some PDF subformats, such as PDF/UA mandate, amongst other things, the full tagging of the file.
+
+When drawing, Cpdf can add such structure information. Partly this can happen automatically, partly it is for the user to add the tags.
+
+NB: These facilities are presently limited to drawing new PDFs. To draw on an existing PDF, it may be possible to draw a new one, and then stamp it on top and have the structure information merged, but this is not guaranteed.
+
+To enable the generation of structure information, we may add \texttt{-draw-struct-tree} to our command:
+
+\begin{framed}
+   \noindent\small\verb!cpdf -create-pdf AND!\\
+   \noindent\small\verb!     -draw-struct-tree -draw -bt -text "Hello, World" -et -o out.pdf!
+\end{framed}
+
+\noindent Structure information in a PDF is in the form of a tree. We can now show the structure tree, and see that our paragraph has been automatically tagged by Cpdf:
+
+\begin{verbatim}
+$cpdf -print-struct-tree out.pdf
+/StructTreeRoot
+└── 
+    └── /P (1)
+        └── 
+\end{verbatim}
+
+   \noindent\verb!-auto-tags! Automatically tag paragraphs and images\\
+   \noindent\verb!-no-auto-tags! Refrain from automatically tag paragraphs and images\\
+
+(describe autotagging)
+
+   \noindent\verb!-tag! Begin marked content\\
+   \noindent\verb!-end-tag! End marked content\\
+
+(describe manual tagging. H1 example say)
+
+   \noindent\verb!-stag! Begin structure tree branch\\
+   \noindent\verb!-end-stag! End structure tree branch\\
+
+(describe how structure tags are different).
+
+   \noindent\verb!-artifact! Begin manual artifact\\
+   \noindent\verb!-end-artifact! End manual artifact\\
+   \noindent\verb!-no-auto-artifacts! Prevent automatic addition of artifacts during postprocessing\\
+
+(talk about artifacting)
+
+   \noindent\verb!-namespace! Set the namespace for future branches of the tree\\
+
+(namespaces, with particular reference to PDF/UA2)
+
 \fi%End htlatex hack
 
 \begin{cpdflib}
@@ -5481,9 +5529,18 @@ To create a new PDF/UA-1 file, with A4 portrait paper, one page, and the title \
 
 For \texttt{PDF/UA-2}, use \texttt{-create-pdf-ua-2} instead.
 
-\section{Drawing on PDF/UA files}
+\section{Drawing PDF/UA files}
 
-Cpdf can add PDF/UA structure data when drawing on new PDF/UA files. See chapter \ref{chap:15} for details.
+Cpdf can add PDF/UA structure data when drawing on new PDF/UA files. For example the following produces a valid PDF/UA-1 file with structure information:
+
+\begin{framed}
+   \noindent\small\verb!cpdf -create-pdf-ua-1 "Hello" AND!\\
+   \noindent\small\verb!     -embed-std14 /path/to/fonts -draw-struct-tree -draw!\\
+   \noindent\small\verb!     -bt -font Times-Roman -font-size 12 -text "Hello, World" -et!\\
+   \noindent\small\verb!     -o out.pdf!
+\end{framed}
+
+\noindent See chapter \ref{chap:18} for details.
 
 \clearpage\pagestyle{empty}
 %We wanted to call this "Chapter M", but the following commands messed up the PDF bookmarks, so this chapter will simply have to float for now, until we can return to this problem.
