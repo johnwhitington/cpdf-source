@@ -175,16 +175,27 @@ let font_widths f fontsize =
   | _ -> raise (Pdf.PDFError "Cpdfdraw: Unsupported font")
 
 let runs_of_utf8 s =
+  let widthcache = null_hash () in
   let identifier, fontpack = (res ()).current_fontpack in
   let codepoints = Pdftext.codepoints_of_utf8 s in
   let triples = option_map (Cpdfembed.get_char fontpack) codepoints in
   let collated = Cpdfembed.collate_runs triples in
-  (* FIXME Efficiency: runs, cacheing *)
+  let font_widths fontnum font font_size =
+    (* Need to cache font widths here. TODO need to cache futher up too for
+       more speed. Check -typeset speed now we need widths. Or, make width
+       calculation optional? *)
+    match Hashtbl.find_opt widthcache (fontnum, font_size) with
+    | Some table -> table
+    | None ->
+        let widths = font_widths font font_size in
+          Hashtbl.add widthcache (fontnum, font_size) widths;
+          widths
+  in
   let w =
     fold_left ( +. ) 0.
       (map
-        (fun (charcode, _, font) ->
-           let widths = font_widths font (res ()).font_size in
+        (fun (charcode, fontnum, font) ->
+           let widths = font_widths fontnum font (res ()).font_size in
              widths.(charcode))
         triples)
   in
