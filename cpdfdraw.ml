@@ -645,7 +645,8 @@ let rec make_structure_tree pageobjnums pdf pagenum namespace = function
       make_structure_tree pageobjnums pdf pagenum namespace t
   | StDataBeginTree s::t ->
       let tree_contents, rest = find_tree_contents [] 1 t in
-        [StItem {kind = s; namespace = !namespace; alt = None; pageobjnum = None; children = make_structure_tree pageobjnums pdf pagenum namespace rest}]
+          StItem {kind = s; namespace = !namespace; alt = None; pageobjnum = None; children = make_structure_tree pageobjnums pdf pagenum namespace tree_contents}
+        ::make_structure_tree pageobjnums pdf pagenum namespace rest
   | StDataEndTree::t ->
       error "Too many -end-tags"
 
