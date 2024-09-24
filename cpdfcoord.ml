@@ -207,20 +207,33 @@ let parse_units_string pdf page s =
     fs
 
 let parse_rectangle pdf s =
-  try
-    match parse_units_string pdf emptypage s with
-    | [x; y; w; h] -> x, y, w, h
-    | _ -> error ("Bad rectangle specification " ^ s)
-  with
-    e -> error ("Bad rectangle specification " ^ s ^ " : " ^ Printexc.to_string e)
+  (* If it begins with ? it's absolute *)
+  let s, absolute =
+    match explode s with
+    | '?'::r -> implode r, true
+    | _ -> s, false
+  in
+    try
+      match parse_units_string pdf emptypage s with
+      | [x; y; w; h] ->
+          if absolute then x, y, w -. x, h -. y else x, y, w, h
+      | _ -> error ("Bad rectangle specification " ^ s)
+    with
+      e -> error ("Bad rectangle specification " ^ s ^ " : " ^ Printexc.to_string e)
 
 let parse_rectangles pdf s =
+  (* If it begins with ? it's absolute *)
+  let s, absolute =
+    match explode s with
+    | '?'::r -> implode r, true
+    | _ -> s, false
+  in
   try
     let pages = Pdfpage.pages_of_pagetree pdf in
     let groups = List.map (fun page -> parse_units_string pdf page s) pages in
       List.map
         (function
-         | [x; y; w; h] -> (x, y, w, h)
+         | [x; y; w; h] -> if absolute then x, y, w -. x, h -. y else x, y, w, h
          | _ -> error ("Bad rectangle specification " ^ s))
         groups
   with

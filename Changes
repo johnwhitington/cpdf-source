@@ -19,6 +19,10 @@ New features:
 o -stretch scales without preserving aspect ratio
 o -redact removes whole pages
 
+Extended features:
+
+o Rectangle may be specified as x y x2 y2 rather than x y w h
+
 * = Supported by a grant from NLnet
 
 2.7.1 (July 2024)
