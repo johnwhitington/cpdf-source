@@ -5214,7 +5214,7 @@ There are two types of tag we can add manually. One kind is used to tag individu
    \noindent\small\verb!     -et -end-tag -auto-tags -mtrans "0 -100" -font-size 20 -leading 25!\\
    \noindent\small\verb!     -bt -paras "L200pt=This is the first paragraph, which spreads over!\\
    \noindent\small\verb!more than one line\nHere is the second, which also has multiple lines..."!\\
-   \noindent\small\verb!     -et AND -o out.pdf!
+   \noindent\small\verb!     -et -o out.pdf!
 \end{framed}
 
 \noindent We turned off auto-tagging with \texttt{-no-auto-tag}, then used \texttt{-tag H1} and \texttt{-end-tag} to tag the heading. Then we turned auto-tagging back on with \texttt{-auto-tag}. Here is the result, visually:
@@ -5232,21 +5232,40 @@ There are two types of tag we can add manually. One kind is used to tag individu
 └── /P (1)
 \end{verbatim}
 
+\noindent Content tagging is flat - every part of the content of a page is part of only one \texttt{-tag}. The logical structure of a document, however, is a tree structure -- sections contain paragraphs, and so on. To build the logical structure tree, we add structure tags using \texttt{-stag} / \texttt{-end-stag} pairs which, of course, may be nested. For example, let's put our H1, and P sections in a Section structure tag:
 
-   \noindent\verb!-stag! Begin structure tree branch\\
-   \noindent\verb!-end-stag! End structure tree branch\\
+\begin{framed}
+   \noindent\small\verb!cpdf -create-pdf AND -draw-struct-tree -draw -mtrans "50 700" !\\
+   \noindent\small\verb!     -font-size 40 -no-auto-tags -stag Section -tag H1 -bt!\\
+   \noindent\small\verb!     -text "This is the heading" -et -end-tag -auto-tags -mtrans "0 -100" !\\
+   \noindent\small\verb!     -font-size 20 -leading 25 -bt -paras "L200pt=This is the first parag!\\
+   \noindent\small\verb!raph, which spreads over more than one line\nHere is the second, which al!\\
+   \noindent\small\verb!so has multiple lines..." -et -end-stag -o out.pdf!
+\end{framed}
 
-(describe how structure tags are different). Sections example. Top-level /Document example.
+\noindent Here is the structure tree:
 
-   \noindent\verb!-artifact! Begin manual artifact\\
-   \noindent\verb!-end-artifact! End manual artifact\\
-   \noindent\verb!-no-auto-artifacts! Prevent automatic addition of artifacts during postprocessing\\
+\begin{verbatim}
+/StructTreeRoot
+└──/Section (1)
+    ├── /H1 (1)
+    ├── /P (1)
+    └── /P (1)
+\end{verbatim}
 
-(talk about artifacting)
+\noindent Some PDF standards require that everything not marked as content (e.g paragraph, figure) etc. is marked as a an artifact. For example, a background image which is the same on every page, or a page border. This tells PDF processors that it is not logical content.
 
-   \noindent\verb!-namespace! Set the namespace for future branches of the tree\\
+By default, Cpdf with \texttt{-draw-struct-tree} will mark anything not automatically or manually tagged as content as an artifact. Should you wish to disable this, you may use \texttt{-no-auto-artifacts}. Whether or not you use \texttt{-no-auto-artifacts}, you may use \texttt{-artifact} / \texttt{end-artifact} pairs to mark artifacts manually. For example:
 
-(namespaces, with particular reference to PDF/UA2)
+\begin{framed}
+   \noindent\small\verb!cpdf -create-pdf AND -draw-struct-tree -draw -no-auto-artifacts!\\
+   \noindent\small\verb!     -artifact -mtrans "50 700" -end-artifact -bt -text "Hello" -et!\\
+   \noindent\small\verb!     -o out.pdf!
+\end{framed}
+
+\noindent Here we manually tagged the \texttt{-mtrans} as being an artifact. The text section was automatically tagged as a paragraph, and so all content has been tagged or marked as an artifact.
+
+Some tags require a namespace other than the default. You can set the namespace with \texttt{-namespace}, which affects all future tags until reset. Two namespace abbreviations are available: \texttt{PDF} for the default \texttt{http://iso.org/pdf/ssn} namespace and \texttt{PDF2} for the PDF 2.0 namespace \texttt{http://iso.org/pdf2/ssn}.
 
 \fi%End htlatex hack
 
