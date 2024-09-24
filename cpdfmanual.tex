@@ -5553,7 +5553,16 @@ Cpdf can add PDF/UA structure data when drawing on new PDF/UA files. For example
    \noindent\small\verb!     -draw -bt -text "Hello, World" -et -o out.pdf!
 \end{framed}
 
-\noindent Note we had to specify embedded fonts to make this a valid PDF/UA-1 file. See chapter \ref{chap:18} for more details about adding structure information when drawing.
+\noindent Note we had to specify embedded fonts to make this a valid PDF/UA-1 file. To make a valid PDF/UA-2 file we must also add a top-level Document structure tag with the appropriate namespace. Here is the PDF/UA-2 version of our file:
+
+\begin{framed}
+   \noindent\small\verb!cpdf -create-pdf-ua-2 "Hello" AND !\\
+   \noindent\small\verb!     -embed-std14 /path/to/fonts -draw-struct-tree!\\
+   \noindent\small\verb!     -draw -namespace PDF2 -stag Document -namespace PDF!\\
+   \noindent\small\verb!     -bt -text "Hello, World" -et -end-stag -o out.pdf!
+\end{framed}
+
+\noindent See chapter \ref{chap:18} for more details about adding structure information when drawing.
 
 \clearpage\pagestyle{empty}
 %We wanted to call this "Chapter M", but the following commands messed up the PDF bookmarks, so this chapter will simply have to float for now, until we can return to this problem.
