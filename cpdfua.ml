@@ -1584,6 +1584,9 @@ let rec remove_empty = function
     let cs' = map remove_empty cs in
       E2 (n, attrs, lose (function E2 ("", _, []) -> true | _ -> false) cs')
 
+let rec remove_slashes = function
+  E2 (n, attrs, cs) -> E2 ((match n with "" -> "" | n -> implode (tl (explode n))), attrs, map remove_slashes cs)
+
 let print_struct_tree pdf =
   let page_lookup =
     hashtable_of_dictionary (combine (Pdf.page_reference_numbers pdf) (ilist 1 (Pdfpage.endpage pdf)))
@@ -1599,7 +1602,7 @@ let print_struct_tree pdf =
           (Cpdfprinttree.to_string
             ~get_name:(fun (E2 (x, a, _)) -> if int_of_string (get_page a) > 0 then x ^ " (" ^ get_page a ^ ")" else x)
             ~get_children:(fun (E2 (_, _, cs)) -> cs)
-            (remove_empty st))
+            (remove_empty (remove_slashes st)))
 
 let cpdfua_args title =
   [       "-create-pdf";

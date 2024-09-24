@@ -5201,8 +5201,8 @@ To enable the generation of structure information, we may add \texttt{-draw-stru
 
 \begin{verbatim}
 $cpdf -print-struct-tree out.pdf
-/StructTreeRoot
-└── /P (1)\end{verbatim}
+StructTreeRoot
+└── P (1)\end{verbatim}
 
 \noindent To prevent such automatic tagging, relying only on manual tags, use \texttt{-no-auto-tags}. The effect may be reversed at any point with \texttt{-auto-tags}. Unless told otherwise, Cpdf auto-tags text as paragraphs /P, and images as /Figure.
 
@@ -5226,10 +5226,10 @@ There are two types of tag we can add manually. One kind is used to tag individu
 \noindent And here is the structure tree:
 
 \begin{verbatim}
-/StructTreeRoot
-├── /H1 (1)
-├── /P (1)
-└── /P (1)
+StructTreeRoot
+├── H1 (1)
+├── P (1)
+└── P (1)
 \end{verbatim}
 
 \noindent Content tagging is flat - every part of the content of a page is part of only one \texttt{-tag}. The logical structure of a document, however, is a tree structure -- sections contain paragraphs, and so on. To build the logical structure tree, we add structure tags using \texttt{-stag} / \texttt{-end-stag} pairs which, of course, may be nested. For example, let's put our H1, and P sections in a Section structure tag:
@@ -5246,11 +5246,11 @@ There are two types of tag we can add manually. One kind is used to tag individu
 \noindent Here is the structure tree:
 
 \begin{verbatim}
-/StructTreeRoot
-└──/Section (1)
-    ├── /H1 (1)
-    ├── /P (1)
-    └── /P (1)
+StructTreeRoot
+└──Section (1)
+    ├── H1 (1)
+    ├── P (1)
+    └── P (1)
 \end{verbatim}
 
 \noindent Some PDF standards require that everything not marked as content (e.g paragraph, figure) etc. is marked as a an artifact. For example, a background image which is the same on every page, or a page border. This tells PDF processors that it is not logical content.
@@ -5356,18 +5356,18 @@ We can print an abbreviated form of the structure tree to standard output:
 \begin{minipage}{\linewidth}
 \begin{framed}
 \begin{verbatim}
-/StructTreeRoot
-└── /Document
-    ├── /Sect
-    │   ├── /P (1)
-    │   │   ├── /Span (1)
-    │   └── /Figure (1)
-    ├── /Sect
-    │   ├── /H1 (2)
-    │   └── /TOC
-    │       ├── /TOCI
-    │       │   └── /P
-    │       │       └── /Link (2)
+StructTreeRoot
+└── Document
+    ├── Sect
+    │   ├── P (1)
+    │   │   ├── Span (1)
+    │   └── Figure (1)
+    ├── Sect
+    │   ├── H1 (2)
+    │   └── TOC
+    │       ├── TOCI
+    │       │   └── P
+    │       │       └── Link (2)
     .       .
     .       .
     .       .
