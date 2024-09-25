@@ -123,6 +123,20 @@ let endartifact () =
 let addnamespace s =
   addop (Cpdfdraw.Namespace s)
 
+let eltinfo s =
+  let k, v =
+    match String.split_on_char '=' s with
+    | [h; t] -> (h, t)
+    | _ -> error "Bad -eltinfo format"
+  in
+    addop (Cpdfdraw.EltInfo (k, v))
+
+let endeltinfo s =
+  addop (Cpdfdraw.EndEltInfo s)
+
+let setrolemap s =
+  Cpdfdraw.rolemap := s
+
 let addrect s =
   let x, y, w, h = Cpdfcoord.parse_rectangle (Pdf.empty ()) s in
     addop (Cpdfdraw.Rect (x, y, w, h))

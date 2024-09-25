@@ -60,10 +60,14 @@ type drawops =
   | BeginArtifact
   | EndArtifact
   | Namespace of string
+  | EltInfo of string * string
+  | EndEltInfo of string
 
 val do_add_artifacts : bool ref
 
 val do_auto_tag : bool ref
+
+val rolemap : string ref
 
 (** Calling [draw fast underneath filename bates batespad range pdf drawops] draws on
     top of all the pages in the range. *)

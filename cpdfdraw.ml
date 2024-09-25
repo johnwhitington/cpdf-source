@@ -5,6 +5,8 @@ let do_add_artifacts = ref true
 
 let do_auto_tag = ref true
 
+let rolemap = ref ""
+
 type colspec =
    NoCol
  | RGB of float * float * float
@@ -65,6 +67,8 @@ type drawops =
   | BeginArtifact
   | EndArtifact
   | Namespace of string
+  | EltInfo of string * string
+  | EndEltInfo of string
 
 (*let rec string_of_drawop = function
   | Qq o -> "Qq (" ^ string_of_drawops o ^ ")"
@@ -721,11 +725,16 @@ let write_structure_tree pdf st =
       | [] -> []
       | ns -> [("/Namespaces", Pdf.Array (map (function (_, objnum) -> Pdf.Indirect objnum) ns))]
     in
-    Pdf.Dictionary
-      (namespaces @
-        [("/Type", Pdf.Name "/StructTreeRoot");
-         ("/ParentTree", Pdf.Indirect (Pdf.addobj pdf (Pdftree.build_name_tree true pdf parentmap))); 
-         ("/K", Pdf.Array items)])
+    let rolemap =
+      match !rolemap with
+      | "" -> []
+      | s -> [("/RoleMap", Pdfread.parse_single_object ("<<" ^ s ^ ">>"))]
+    in
+      Pdf.Dictionary
+        (rolemap @ namespaces @
+          [("/Type", Pdf.Name "/StructTreeRoot");
+           ("/ParentTree", Pdf.Indirect (Pdf.addobj pdf (Pdftree.build_name_tree true pdf parentmap))); 
+           ("/K", Pdf.Array items)])
   in
     Pdf.addobj_given_num pdf (struct_tree_root, st);
     Pdf.replace_chain pdf ["/Root"] ("/StructTreeRoot", (Pdf.Indirect struct_tree_root))

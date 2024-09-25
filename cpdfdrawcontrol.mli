@@ -20,7 +20,10 @@ val addstag : string -> unit
 val endtag : unit -> unit
 val endstag : unit -> unit
 val autotags : bool -> unit
+val eltinfo : string -> unit
+val endeltinfo : string -> unit
 val addnamespace : string -> unit
+val setrolemap : string -> unit
 val artifact : unit -> unit
 val endartifact : unit -> unit
 val autoartifacts : bool -> unit

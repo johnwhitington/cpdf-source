@@ -2841,7 +2841,10 @@ let specs =
    ("-artifact", Arg.Unit (fun _ -> Cpdfdrawcontrol.artifact ()), " Begin an artifact");
    ("-end-artifact", Arg.Unit (fun _ -> Cpdfdrawcontrol.endartifact ()), "End an artifact");
    ("-no-auto-artifacts", Arg.Unit (fun _ -> Cpdfdrawcontrol.autoartifacts false), " Don't mark untagged content as artifacts");
+   ("-eltinfo", Arg.String (fun s -> Cpdfdrawcontrol.eltinfo s), " Add element information");
+   ("-end-eltinfo", Arg.String (fun s -> Cpdfdrawcontrol.endeltinfo s), " Erase element information");
    ("-namespace", Arg.String (fun s -> Cpdfdrawcontrol.addnamespace (expand_namespace s)), " Set the structure tree namespace");
+   ("-rolemap", Arg.String (fun s -> Cpdfdrawcontrol.setrolemap s), " Set a role map");
    ("-rect", Arg.String Cpdfdrawcontrol.addrect, " Draw rectangle");
    ("-to", Arg.String Cpdfdrawcontrol.addto, " Move to");
    ("-line", Arg.String Cpdfdrawcontrol.addline, " Add line to");
