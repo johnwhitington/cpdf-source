@@ -2,7 +2,6 @@
 %Document -eltinfo X=, -end-eltinfo X
 %Document -stretch
 %Document -redact
-%Document ?x0 y0 x1 y1 rectangle specifications
 \documentclass{book}
 % Edit here to produce cpdfmanual.pdf, cpdflibmanual.pdf, pycpdfmanual.pdf,
 % dotnetcpdflibmanual.pdf, jcpdflibmanual.pdf jscpdflibmanual.pdf etc.
@@ -1687,8 +1686,9 @@ contents in any way), use the \texttt{-mediabox} operation.
   \noindent Set the media box to 500 points square.
   \end{framed}
   \noindent The four numbers are minimum x, minimum y, width, height. x
-coordinates increase to the right, y coordinates increase upwards.
-  PDF file can also optionally contain a \textit{crop box} for each page,
+coordinates increase to the right, y coordinates increase upwards. To use absolute numbers rather than width and height we may add an initial question mark and write, for example, \texttt{?100pt 200pt 300pt 400pt} which represents the rectangle with lower-left corner (100pt, 200pt) and upper-right corner (300pt, 400pt).
+
+  PDF files can also optionally contain a \textit{crop box} for each page,
 defining to what extent the page is cropped before being displayed or printed.
 A crop box can be set, changed and removed, without affecting the underlying
 media box. To set or change the crop box use \texttt{-cropbox}. To remove any
@@ -4695,7 +4695,7 @@ Cpdf can build multi-pages files from one or more PDF-appropriate JBIG2 fragment
 
    \vspace{1.5mm}
    \noindent \textsc{The next page}\\
-   \noindent\verb!-newpage! Move to a fresh page
+   \noindent\verb!-newpage! Move to a fresh page\\
 
    \vspace{1.5mm}
    \noindent \textsc{Structure Information}\\
@@ -4710,7 +4710,9 @@ Cpdf can build multi-pages files from one or more PDF-appropriate JBIG2 fragment
    \noindent\verb!-end-artifact! End manual artifact\\
    \noindent\verb!-no-auto-artifacts! Prevent automatic addition of artifacts during postprocessing\\
    \noindent\verb!-namespace! Set the namespace for future branches of the tree\\
-
+   \noindent\verb!-eltinfo! Set element information\\
+   \noindent\verb!-end-eltinfo! Erase element information\\
+   \noindent\verb!-rolemap! Set role map
   \end{framed}}
 
 \ifdefined\HCode
@@ -5191,9 +5193,9 @@ A PDF may contain, in addition to its graphical content, a tree of information c
 
 When drawing, Cpdf can add such structure information. Partly this can happen automatically, partly it is for the user to add the tags.
 
-NB: These facilities are presently limited to drawing new PDFs. To draw on an existing PDF, it may be possible to draw a new one, and then stamp it on top and have the structure information merged, but this is not guaranteed.
+NB: These facilities are presently limited to drawing new PDFs. To draw on an existing PDF draw a new one, and then stamp it on top and the structure information will be merged.
 
-To enable the generation of structure information, we may add \texttt{-draw-struct-tree} to our command:
+To enable the generation of structure information, we add \texttt{-draw-struct-tree} to our command:
 
 \begin{framed}
    \noindent\small\verb!cpdf -create-pdf AND!\\
@@ -5269,6 +5271,8 @@ By default, Cpdf with \texttt{-draw-struct-tree} will mark anything not automati
 \noindent Here we manually tagged the \texttt{-mtrans} as being an artifact. The text section was automatically tagged as a paragraph, and so all content has been tagged or marked as an artifact.
 
 Some tags require a namespace other than the default. You can set the namespace with \texttt{-namespace}, which affects all future tags until reset. Two namespace abbreviations are available: \texttt{PDF} for the default \texttt{http://iso.org/pdf/ssn} namespace and \texttt{PDF2} for the PDF 2.0 namespace \texttt{http://iso.org/pdf2/ssn}.
+
+
 
 \fi%End htlatex hack
 
