@@ -429,7 +429,7 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
         []
   | TextSection ops ->
       let m = mcid () in
-        if not dryrun then structdata := StDataMCID ("P", m, None)::!structdata;
+        if not dryrun then structdata := StDataMCID ("/P", m, None)::!structdata;
           (if struct_tree && !do_auto_tag then [Pdfops.Op_BDC ("/P", Pdf.Dictionary ["/MCID", Pdf.Integer m])] else [])
         @ [Pdfops.Op_BT]
         @ ops_of_drawops struct_tree dryrun pdf endpage filename bates batespad num page ops
@@ -459,10 +459,10 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
   | Newline -> [Pdfops.Op_T']
   | Tag s ->
       let m = mcid () in
-        if not dryrun then structdata := StDataMCID (s, m, None)::!structdata;
+        if not dryrun then structdata := StDataMCID ("/" ^ s, m, None)::!structdata;
         [Pdfops.Op_BDC ("/" ^ s, Pdf.Dictionary ["/MCID", Pdf.Integer m])]
   | EndTag -> [Pdfops.Op_EMC]
-  | STag s -> if not dryrun then structdata =| StDataBeginTree s; []
+  | STag s -> if not dryrun then structdata =| StDataBeginTree ("/" ^ s); []
   | EndSTag -> if not dryrun then structdata =| StDataEndTree; []
   | BeginArtifact -> [Pdfops.Op_BMC "/BeginArtifact"]
   | EndArtifact -> [Pdfops.Op_BMC "/EndArtifact"]
@@ -569,6 +569,12 @@ let add_artifacts ops =
   in
     loop [] ops
 
+(* When no automatic artifacting, we still need to fix our backchannel manual artifacts. *)
+let fixup_manual_artifacts =
+  map (function Pdfops.Op_BMC "/BeginArtifact" -> Pdfops.Op_BMC "/Artifact"
+              | Pdfops.Op_BMC "/EndArtifact" -> Pdfops.Op_EMC
+              | x -> x)
+
 let draw_single ~struct_tree ~fast ~underneath ~filename ~bates ~batespad range pdf drawops =
   (res ()).num <- max (res ()).num (minimum_resource_number pdf range);
   let endpage = Pdfpage.endpage pdf in
@@ -594,7 +600,7 @@ let draw_single ~struct_tree ~fast ~underneath ~filename ~bates ~batespad range 
     map3
       (fun n p ops ->
         if not (mem n range) then p else
-          let ops = if struct_tree && !do_add_artifacts then add_artifacts ops else ops in
+          let ops = if struct_tree && !do_add_artifacts then add_artifacts ops else fixup_manual_artifacts ops in
           let page = {p with Pdfpage.resources = update_resources pdf p.Pdfpage.resources} in
             (if underneath then Pdfpage.prepend_operators else Pdfpage.postpend_operators) pdf ops ~fast page)
       (ilist 1 endpage)
@@ -692,7 +698,7 @@ let write_structure_tree pdf st =
               (alt
                @ page
                @ namespace
-               @ [("/S", Pdf.Name ("/" ^ kind));
+               @ [("/S", Pdf.Name kind);
                   ("/P", Pdf.Indirect struct_tree_parent);
                   ("/K", Pdf.Array (map (mktree this_objnum) children))])
           in
