@@ -551,7 +551,6 @@ type args =
    mutable extract_stream_decompress : bool;
    mutable verify_single : string option;
    mutable draw_struct_tree : bool;
-   mutable image_title : string option;
    mutable subformat : Cpdfua.subformat option;
    mutable indent : float option}
 
@@ -690,7 +689,6 @@ let args =
    extract_stream_decompress = false;
    verify_single = None;
    draw_struct_tree = false;
-   image_title = None;
    subformat = None;
    indent = None}
 
@@ -817,7 +815,6 @@ let reset_arguments () =
   clear Cpdfdrawcontrol.fontpack_initialised;
   args.verify_single <- None;
   args.draw_struct_tree <- false;
-  args.image_title <- None;
   args.subformat <- None;
   args.indent <- None
 
@@ -2881,8 +2878,7 @@ let specs =
    ("-use", Arg.String Cpdfdrawcontrol.usexobj, " Use a saved sequence of graphics operators");
    ("-draw-jpeg", Arg.String Cpdfdrawcontrol.addjpeg, " Load a JPEG from file and name it");
    ("-draw-png", Arg.String Cpdfdrawcontrol.addpng, " Load a PNG from file and name it");
-   ("-image", Arg.String (fun s -> Cpdfdrawcontrol.addimage ?title:args.image_title s; args.image_title <- None), " Draw an image which has already been loaded");
-   ("-image-title", Arg.String (fun s -> args.image_title <- Some s), " Give title for the next -image");
+   ("-image", Arg.String (fun s -> Cpdfdrawcontrol.addimage s), " Draw an image which has already been loaded");
    ("-fill-opacity", Arg.Float Cpdfdrawcontrol.addopacity, " Set opacity");
    ("-stroke-opacity", Arg.Float Cpdfdrawcontrol.addsopacity, " Set stroke opacity");
    ("-bt", Arg.Unit Cpdfdrawcontrol.addbt, " Begin text");

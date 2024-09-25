@@ -63,7 +63,7 @@ val endxobj : unit -> unit
 val usexobj : string -> unit
 val addjpeg : ?data:Pdfio.rawbytes -> string -> unit
 val addpng : ?data:Pdfio.rawbytes -> string -> unit
-val addimage : ?title:string -> string -> unit
+val addimage : string -> unit
 val addopacity : float -> unit
 val addsopacity : float -> unit
 val addbt : unit -> unit

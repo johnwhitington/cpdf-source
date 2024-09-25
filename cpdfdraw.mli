@@ -36,7 +36,7 @@ type drawops =
   | FormXObject of float * float * float * float * string * drawops list
   | Use of string
   | ImageXObject of string * Pdf.pdfobject
-  | Image of string * string option
+  | Image of string
   | NewPage
   | Opacity of float
   | SOpacity of float

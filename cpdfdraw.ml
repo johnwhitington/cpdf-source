@@ -43,7 +43,7 @@ type drawops =
   | FormXObject of float * float * float * float * string * drawops list
   | Use of string
   | ImageXObject of string * Pdf.pdfobject
-  | Image of string * string option
+  | Image of string
   | NewPage
   | Opacity of float
   | SOpacity of float
@@ -274,9 +274,11 @@ let add_namespace pdf s =
 type structdata =
   | StDataBeginTree of string
   | StDataEndTree
-  | StDataMCID of string * int * string option
+  | StDataMCID of string * int
   | StDataPage of int
   | StDataNamespace of string
+  | StEltInfo of string * string
+  | StEndEltInfo of string
 
 let structdata = ref []
 
@@ -326,6 +328,8 @@ let format_paragraph indent j w s =
   allops =| rev (Pdfops.Op_T'::justify !ops);
   flatten (rev !allops)
 
+let current_eltinfo = null_hash ()
+
 let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num page = function
   | Qq ops ->
       [Pdfops.Op_q] @ ops_of_drawops struct_tree dryrun pdf endpage filename bates batespad num page ops @ [Pdfops.Op_Q]
@@ -370,9 +374,9 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
       let pdfname = try fst (Hashtbl.find (res ()).form_xobjects n) with _ -> error ("Form XObject not found: " ^ n) in
         (res ()).page_names <- pdfname::(res ()).page_names;
         [Pdfops.Op_Do pdfname]
-  | Image (s, t) ->
+  | Image s ->
       let m = mcid () in
-        if not dryrun then structdata := StDataMCID ("/Figure", m, t)::!structdata;
+        if not dryrun then structdata := StDataMCID ("/Figure", m)::!structdata;
       let pdfname = try fst (Hashtbl.find (res ()).images s) with _ -> error ("Image not found: " ^ s) in
         (res ()).page_names <- pdfname::(res ()).page_names;
             (if struct_tree && !do_auto_tag then [Pdfops.Op_BDC ("/Figure", Pdf.Dictionary ["/MCID", Pdf.Integer m])] else [])
@@ -433,7 +437,7 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
         []
   | TextSection ops ->
       let m = mcid () in
-        if not dryrun then structdata := StDataMCID ("/P", m, None)::!structdata;
+        if not dryrun then structdata := StDataMCID ("/P", m)::!structdata;
           (if struct_tree && !do_auto_tag then [Pdfops.Op_BDC ("/P", Pdf.Dictionary ["/MCID", Pdf.Integer m])] else [])
         @ [Pdfops.Op_BT]
         @ ops_of_drawops struct_tree dryrun pdf endpage filename bates batespad num page ops
@@ -463,7 +467,7 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
   | Newline -> [Pdfops.Op_T']
   | Tag s ->
       let m = mcid () in
-        if not dryrun then structdata := StDataMCID ("/" ^ s, m, None)::!structdata;
+        if not dryrun then structdata := StDataMCID ("/" ^ s, m)::!structdata;
         [Pdfops.Op_BDC ("/" ^ s, Pdf.Dictionary ["/MCID", Pdf.Integer m])]
   | EndTag -> [Pdfops.Op_EMC]
   | STag s -> if not dryrun then structdata =| StDataBeginTree ("/" ^ s); []
@@ -477,6 +481,12 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
           structdata =| StDataNamespace s
         end;
         []
+  | EltInfo (k, v) ->
+      if not dryrun then structdata =| StEltInfo (k, v);
+      []
+  | EndEltInfo s ->
+      if not dryrun then structdata =| StEndEltInfo s;
+      []
 
 and ops_of_drawops struct_tree dryrun pdf endpage filename bates batespad num page drawops =
   flatten (map (ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num page) drawops)
@@ -645,13 +655,17 @@ let rec find_tree_contents a level = function
 
 let rec make_structure_tree pageobjnums pdf pagenum namespace = function
   | [] -> []
-  | StDataMCID (n, mcid, alt)::t ->
-      StItem {kind = n; namespace = !namespace; alt; pageobjnum = lookup !pagenum pageobjnums; children = [StMCID mcid]}::make_structure_tree pageobjnums pdf pagenum namespace t
+  | StDataMCID (n, mcid)::t ->
+      StItem {kind = n; namespace = !namespace; alt = None; pageobjnum = lookup !pagenum pageobjnums; children = [StMCID mcid]}::make_structure_tree pageobjnums pdf pagenum namespace t
   | StDataPage n::t ->
       pagenum := n;
       make_structure_tree pageobjnums pdf pagenum namespace t
   | StDataNamespace s::t ->
       namespace := s;
+      make_structure_tree pageobjnums pdf pagenum namespace t
+  | StEltInfo (k, v)::t ->
+      make_structure_tree pageobjnums pdf pagenum namespace t
+  | StEndEltInfo s::t ->
       make_structure_tree pageobjnums pdf pagenum namespace t
   | StDataBeginTree s::t ->
       let tree_contents, rest = find_tree_contents [] 1 t in
