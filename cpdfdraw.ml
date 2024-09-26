@@ -656,29 +656,29 @@ let rec find_tree_contents a level = function
 let rec make_structure_tree pageobjnums (pn, ns, ei) pdf = function
   | [] -> []
   | StDataMCID (n, mcid)::t ->
-      Printf.printf "StDataMCID, pagenum = %i, pageobjnum = %i\n" !pn (unopt (lookup !pn pageobjnums));
+      (*Printf.printf "StDataMCID, pagenum = %i, pageobjnum = %i\n" !pn (unopt (lookup !pn pageobjnums));*)
       let item =
         StItem {kind = n; namespace = !ns; alt = list_of_hashtbl ei; pageobjnum = lookup !pn pageobjnums; children = [StMCID mcid]}
       in
         item::make_structure_tree pageobjnums (pn, ns, ei) pdf t
   | StDataPage n::t ->
-      Printf.printf "StDataPage %i\n" n;
+      (*Printf.printf "StDataPage %i\n" n;*)
       pn := n;
       make_structure_tree pageobjnums (pn, ns, ei) pdf t
   | StDataNamespace s::t ->
-      Printf.printf "StDataNamespace %s\n" s;
+      (*Printf.printf "StDataNamespace %s\n" s;*)
       ns := s;
       make_structure_tree pageobjnums (pn, ns, ei) pdf t
   | StEltInfo (k, v)::t ->
-      Printf.printf "StEltInfo %s, %s\n" k (Pdfwrite.string_of_pdf v);
+      (*Printf.printf "StEltInfo %s, %s\n" k (Pdfwrite.string_of_pdf v);*)
       Hashtbl.replace ei k v;
       make_structure_tree pageobjnums (pn, ns, ei) pdf t
   | StEndEltInfo s::t ->
-      Printf.printf "StEndEltInfo %s\n" s;
+      (*Printf.printf "StEndEltInfo %s\n" s;*)
       Hashtbl.remove ei s;
       make_structure_tree pageobjnums (pn, ns, ei) pdf t
   | StDataBeginTree s::t ->
-      Printf.printf "StBeginTree %s\n" s;
+      (*Printf.printf "StBeginTree %s\n" s;*)
       let tree_contents, rest = find_tree_contents [] 1 t in
         let item =
           StItem {kind = s; namespace = !ns; alt = list_of_hashtbl ei; pageobjnum = None;
@@ -693,7 +693,7 @@ let make_structure_tree pdf items =
     let objnums = Pdf.page_reference_numbers pdf in
       combine (indx objnums) objnums
   in
-    make_structure_tree pageobjnums (ref 0, ref "", null_hash ()) pdf items
+    make_structure_tree pageobjnums (ref 0, ref standard_namespace, null_hash ()) pdf items
 
 (* Write such a structure tree to a PDF. *)
 let write_structure_tree pdf st =
@@ -706,7 +706,6 @@ let write_structure_tree pdf st =
   let struct_tree_root = Pdf.addobj pdf Pdf.Null in
   let rec mktree struct_tree_parent  = function
     | StItem {kind; namespace; pageobjnum; alt; children} ->
-        Printf.printf "Found StItem with pageobjnum %s\n" (match pageobjnum with Some x -> string_of_int x | None -> "");
         let this_objnum = Pdf.addobj pdf Pdf.Null in
           begin match pageobjnum with
           | Some p -> add_parentmap p this_objnum
