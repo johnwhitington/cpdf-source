@@ -60,7 +60,7 @@ type drawops =
   | BeginArtifact
   | EndArtifact
   | Namespace of string
-  | EltInfo of string * string
+  | EltInfo of string * Pdf.pdfobject
   | EndEltInfo of string
 
 val do_add_artifacts : bool ref

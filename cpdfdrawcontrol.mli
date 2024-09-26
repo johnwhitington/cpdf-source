@@ -20,7 +20,7 @@ val addstag : string -> unit
 val endtag : unit -> unit
 val endstag : unit -> unit
 val autotags : bool -> unit
-val eltinfo : string -> unit
+val eltinfo : string -> Pdf.pdfobject -> unit
 val endeltinfo : string -> unit
 val addnamespace : string -> unit
 val setrolemap : string -> unit

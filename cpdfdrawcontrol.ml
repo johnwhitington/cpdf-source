@@ -123,13 +123,8 @@ let endartifact () =
 let addnamespace s =
   addop (Cpdfdraw.Namespace s)
 
-let eltinfo s =
-  let k, v =
-    match String.split_on_char '=' s with
-    | [h; t] -> (h, t)
-    | _ -> error "Bad -eltinfo format"
-  in
-    addop (Cpdfdraw.EltInfo (k, v))
+let eltinfo k v =
+  addop (Cpdfdraw.EltInfo (k, v))
 
 let endeltinfo s =
   addop (Cpdfdraw.EndEltInfo s)

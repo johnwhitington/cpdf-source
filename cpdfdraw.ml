@@ -67,7 +67,7 @@ type drawops =
   | BeginArtifact
   | EndArtifact
   | Namespace of string
-  | EltInfo of string * string
+  | EltInfo of string * Pdf.pdfobject
   | EndEltInfo of string
 
 (*let rec string_of_drawop = function
@@ -277,7 +277,7 @@ type structdata =
   | StDataMCID of string * int
   | StDataPage of int
   | StDataNamespace of string
-  | StEltInfo of string * string
+  | StEltInfo of string * Pdf.pdfobject
   | StEndEltInfo of string
 
 let structdata = ref []
@@ -642,7 +642,7 @@ let dryrun ~struct_tree ~filename ~bates ~batespad range pdf chunks =
 
 type st =
    StMCID of int
- | StItem of {kind : string; namespace : string; pageobjnum : int option; alt : string option; children : st list}
+ | StItem of {kind : string; namespace : string; pageobjnum : int option; alt : (string * Pdf.pdfobject) list; children : st list}
 
 (* Build a tree from the MCIDs and structure tree instructions gathered *)
 let rec find_tree_contents a level = function
@@ -653,24 +653,38 @@ let rec find_tree_contents a level = function
       if level = 1 then (rev a, t) else find_tree_contents a (level - 1) t
   | h::t -> find_tree_contents (h::a) level t
 
-let rec make_structure_tree pageobjnums pdf pagenum namespace = function
+let rec make_structure_tree pageobjnums (pn, ns, ei) pdf = function
   | [] -> []
   | StDataMCID (n, mcid)::t ->
-      StItem {kind = n; namespace = !namespace; alt = None; pageobjnum = lookup !pagenum pageobjnums; children = [StMCID mcid]}::make_structure_tree pageobjnums pdf pagenum namespace t
+      Printf.printf "StDataMCID, pagenum = %i, pageobjnum = %i\n" !pn (unopt (lookup !pn pageobjnums));
+      let item =
+        StItem {kind = n; namespace = !ns; alt = list_of_hashtbl ei; pageobjnum = lookup !pn pageobjnums; children = [StMCID mcid]}
+      in
+        item::make_structure_tree pageobjnums (pn, ns, ei) pdf t
   | StDataPage n::t ->
-      pagenum := n;
-      make_structure_tree pageobjnums pdf pagenum namespace t
+      Printf.printf "StDataPage %i\n" n;
+      pn := n;
+      make_structure_tree pageobjnums (pn, ns, ei) pdf t
   | StDataNamespace s::t ->
-      namespace := s;
-      make_structure_tree pageobjnums pdf pagenum namespace t
+      Printf.printf "StDataNamespace %s\n" s;
+      ns := s;
+      make_structure_tree pageobjnums (pn, ns, ei) pdf t
   | StEltInfo (k, v)::t ->
-      make_structure_tree pageobjnums pdf pagenum namespace t
+      Printf.printf "StEltInfo %s, %s\n" k (Pdfwrite.string_of_pdf v);
+      Hashtbl.replace ei k v;
+      make_structure_tree pageobjnums (pn, ns, ei) pdf t
   | StEndEltInfo s::t ->
-      make_structure_tree pageobjnums pdf pagenum namespace t
+      Printf.printf "StEndEltInfo %s\n" s;
+      Hashtbl.remove ei s;
+      make_structure_tree pageobjnums (pn, ns, ei) pdf t
   | StDataBeginTree s::t ->
+      Printf.printf "StBeginTree %s\n" s;
       let tree_contents, rest = find_tree_contents [] 1 t in
-          StItem {kind = s; namespace = !namespace; alt = None; pageobjnum = None; children = make_structure_tree pageobjnums pdf pagenum namespace tree_contents}
-        ::make_structure_tree pageobjnums pdf pagenum namespace rest
+        let item =
+          StItem {kind = s; namespace = !ns; alt = list_of_hashtbl ei; pageobjnum = None;
+                  children = make_structure_tree pageobjnums (pn, ns, ei) pdf tree_contents}
+        in
+          item::make_structure_tree pageobjnums (pn, ns, ei) pdf rest
   | StDataEndTree::t ->
       error "Too many -end-tags"
 
@@ -679,7 +693,7 @@ let make_structure_tree pdf items =
     let objnums = Pdf.page_reference_numbers pdf in
       combine (indx objnums) objnums
   in
-    make_structure_tree pageobjnums pdf (ref 0) (ref standard_namespace) items
+    make_structure_tree pageobjnums (ref 0, ref "", null_hash ()) pdf items
 
 (* Write such a structure tree to a PDF. *)
 let write_structure_tree pdf st =
@@ -692,16 +706,13 @@ let write_structure_tree pdf st =
   let struct_tree_root = Pdf.addobj pdf Pdf.Null in
   let rec mktree struct_tree_parent  = function
     | StItem {kind; namespace; pageobjnum; alt; children} ->
+        Printf.printf "Found StItem with pageobjnum %s\n" (match pageobjnum with Some x -> string_of_int x | None -> "");
         let this_objnum = Pdf.addobj pdf Pdf.Null in
           begin match pageobjnum with
           | Some p -> add_parentmap p this_objnum
           | _ -> ()
           end;
-          let alt =
-            match alt with
-            | Some s -> [("/Alt", Pdf.String s)]
-            | None -> []
-          in
+          let alt = map (fun (k, v) -> ("/" ^ k, v)) alt in
           let page =
             match pageobjnum with
             | Some i -> [("/Pg", Pdf.Indirect i)]
