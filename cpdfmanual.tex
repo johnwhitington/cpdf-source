@@ -1,5 +1,3 @@
-%Document -stretch
-%Document -redact
 \documentclass{book}
 % Edit here to produce cpdfmanual.pdf, cpdflibmanual.pdf, pycpdfmanual.pdf,
 % dotnetcpdflibmanual.pdf, jcpdflibmanual.pdf jscpdflibmanual.pdf etc.
@@ -1433,9 +1431,11 @@ The \texttt{-process-struct-trees} option used in conjunction with any splitting
   \small\noindent\verb!cpdf -scale-page "<scale x> <scale y>" [-fast] in.pdf [<range>] -o out.pdf!
    
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -scale-to-fit "<x size> <y size>" [-fast]!\\
-        \noindent\verb!     [-scale-to-fit-scale <scale>] [-prerotate]!\\    
-        \noindent\verb!     in.pdf [<range>] -o out.pdf!
+  \small\noindent\verb!cpdf -scale-to-fit "<x size> <y size>" [-fast] [-prerotate]!\\
+        \noindent\verb!     [-scale-to-fit-scale <scale>] in.pdf [<range>] -o out.pdf!
+
+  \vspace{1.5mm}
+  \small\noindent\verb!cpdf -stretch "<x size> <y size>" [-fast] in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
   \small\noindent\verb!cpdf -scale-contents [<scale>] [<position>] [-fast]!\\
@@ -1551,6 +1551,15 @@ Y factors given. This scales both the page contents, and the page size itself. I
 
   \vspace{2.5mm}
   \noindent Scale a file's pages to fit A4 portrait, scaling the page 90\% of its possible size.
+  \end{framed}
+
+\noindent The \texttt{-stretch} operation scales the contents to the given size without regard to aspect ratio.
+
+  \begin{framed}
+  \small\noindent\verb!cpdf -stretch a4landscape in.pdf -o out.pdf!
+
+  \vspace{2.5mm}
+  \noindent Scale a file's pages and their content to fit A4 landscape
   \end{framed}
 
 \noindent The \texttt{-scale-contents} operation scales the contents about the center
@@ -2761,6 +2770,9 @@ These two operations add content directly to the beginning or end of the page da
     \small\noindent\verb!cpdf -pad-multiple-before [<integer>] in.pdf -o out.pdf!
 
     \vspace{1.5mm}
+    \small\noindent\verb!cpdf -redact [-process-struct-trees] in.pdf [<range>] -o out.pdf!
+
+    \vspace{1.5mm}
     \small\noindent\verb!cpdf [-impose <pagesize> | impose-xy "<x> <y>"]!\\
     \small\noindent\verb!     [-impose-columns] [-impose-rtl] [-impose-btt]!\\
     \small\noindent\verb!     [-impose-margin <margin>] [-impose-spacing <spacing>]!\\
@@ -2824,6 +2836,19 @@ instance, to add a clean page between chapters of a document.)
  
 
 \noindent The \texttt{-pad-multiple-before n} operation adds the padding pages at the beginning of the file  instead.
+
+\section{Redaction}
+
+Cpdf has very primitive redaction facilities to remove whole pages. We simply give the page range, and such pages will be emptied of content, and any annotations and page resources removed. The page size remains the same.
+
+  \begin{framed}
+    \noindent\small\verb!cpdf -redact in.pdf 1,2,19-end -o out.pdf!
+ 
+    \vspace{2.5mm}
+    \noindent Redact pages 1,2 and 19-end of \texttt{in.pdf}, writing to \texttt{out.pdf}
+  \end{framed}
+
+\noindent If \texttt{-process-struct-trees} is added to the command, the document's structure tree will be shorn of any parts which are marked as relating to the now-redacted pages.
 
 \section{Imposition}
 
