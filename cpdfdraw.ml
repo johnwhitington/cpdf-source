@@ -653,36 +653,40 @@ let rec find_tree_contents a level = function
       if level = 1 then (rev a, t) else find_tree_contents a (level - 1) t
   | h::t -> find_tree_contents (h::a) level t
 
+let mstdebug = ref false
+
 let rec make_structure_tree pageobjnums (pn, ns, ei) pdf = function
   | [] -> []
   | StDataMCID (n, mcid)::t ->
-      (*Printf.printf "StDataMCID, pagenum = %i, pageobjnum = %i\n" !pn (unopt (lookup !pn pageobjnums));*)
+      if !mstdebug then Printf.printf "StDataMCID, pagenum = %i, pageobjnum = %i\n" !pn (unopt (lookup !pn pageobjnums));
       let item =
         StItem {kind = n; namespace = !ns; alt = list_of_hashtbl ei; pageobjnum = lookup !pn pageobjnums; children = [StMCID mcid]}
       in
         item::make_structure_tree pageobjnums (pn, ns, ei) pdf t
   | StDataPage n::t ->
-      (*Printf.printf "StDataPage %i\n" n;*)
+      if !mstdebug then Printf.printf "StDataPage %i\n" n;
       pn := n;
       make_structure_tree pageobjnums (pn, ns, ei) pdf t
   | StDataNamespace s::t ->
-      (*Printf.printf "StDataNamespace %s\n" s;*)
+      if !mstdebug then Printf.printf "StDataNamespace %s\n" s;
       ns := s;
       make_structure_tree pageobjnums (pn, ns, ei) pdf t
   | StEltInfo (k, v)::t ->
-      (*Printf.printf "StEltInfo %s, %s\n" k (Pdfwrite.string_of_pdf v);*)
+      if !mstdebug then Printf.printf "StEltInfo %s, %s\n" k (Pdfwrite.string_of_pdf v);
       Hashtbl.replace ei k v;
       make_structure_tree pageobjnums (pn, ns, ei) pdf t
   | StEndEltInfo s::t ->
-      (*Printf.printf "StEndEltInfo %s\n" s;*)
+      if !mstdebug then Printf.printf "StEndEltInfo %s\n" s;
       Hashtbl.remove ei s;
       make_structure_tree pageobjnums (pn, ns, ei) pdf t
   | StDataBeginTree s::t ->
-      (*Printf.printf "StBeginTree %s\n" s;*)
+      if !mstdebug then Printf.printf "StBeginTree %s, namespace = %s\n" s !ns;
       let tree_contents, rest = find_tree_contents [] 1 t in
         let item =
-          StItem {kind = s; namespace = !ns; alt = list_of_hashtbl ei; pageobjnum = None;
-                  children = make_structure_tree pageobjnums (pn, ns, ei) pdf tree_contents}
+          let namespace = !ns in
+          let alt = list_of_hashtbl ei in
+          let children = make_structure_tree pageobjnums (pn, ns, ei) pdf tree_contents in
+            StItem {kind = s; namespace; alt; pageobjnum = None; children;}
         in
           item::make_structure_tree pageobjnums (pn, ns, ei) pdf rest
   | StDataEndTree::t ->
