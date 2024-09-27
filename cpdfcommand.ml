@@ -552,7 +552,8 @@ type args =
    mutable verify_single : string option;
    mutable draw_struct_tree : bool;
    mutable subformat : Cpdfua.subformat option;
-   mutable indent : float option}
+   mutable indent : float option;
+   mutable title : string option}
 
 let args =
   {op = None;
@@ -690,7 +691,8 @@ let args =
    verify_single = None;
    draw_struct_tree = false;
    subformat = None;
-   indent = None}
+   indent = None;
+   title = None}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -816,7 +818,8 @@ let reset_arguments () =
   args.verify_single <- None;
   args.draw_struct_tree <- false;
   args.subformat <- None;
-  args.indent <- None
+  args.indent <- None;
+  args.title <- None
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -2825,6 +2828,9 @@ let specs =
    ("-subformat",
      Arg.String setsubformat,
      " Set subformat");
+   ("-title",
+     Arg.String (fun s -> args.title <- Some s),
+     " Set PDF/UA title");
    ("-composition",
      Arg.Unit (setop (Composition false)),
      " Show composition of PDF");
