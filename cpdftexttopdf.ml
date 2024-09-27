@@ -43,7 +43,7 @@ let of_utf8_with_newlines fontpack fontsize t =
       if c <> [] then process_codepoints c;
       rev !items
 
-let typeset ~papersize ~font ~fontsize text =
+let typeset ?subformat ?title ~papersize ~font ~fontsize text =
   let pdf = Pdf.empty () in
   let codepoints = setify (Pdftext.codepoints_of_utf8 (Pdfio.string_of_bytes text)) in
   let fontpack =

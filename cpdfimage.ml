@@ -493,7 +493,7 @@ let obj_of_jbig2_data ?global data =
   in
     Pdf.Stream {contents = (Pdf.Dictionary d, Pdf.Got data)}, extra
 
-let image_of_input fobj i =
+let image_of_input ?subformat ?title fobj i =
   let pdf = Pdf.empty () in
   let data = Pdfio.bytes_of_input i 0 i.Pdfio.in_channel_length in
   let obj, extras = fobj () data in

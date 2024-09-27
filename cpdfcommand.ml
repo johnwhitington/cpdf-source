@@ -1025,7 +1025,7 @@ let fixdashes s =
 let set_input_image f s =
   try
     let fh = open_in_bin s in
-    let pdf = Cpdfimage.image_of_input f (Pdfio.input_of_channel fh) in
+    let pdf = Cpdfimage.image_of_input ~subformat:args.subformat ~title:args.title f (Pdfio.input_of_channel fh) in
       begin try close_in fh with _ -> () end;
       args.original_filename <- s;
       args.create_objstm <- true;
@@ -4560,7 +4560,7 @@ let go () =
   | Some (Typeset filename) ->
       let text = Pdfio.bytes_of_input_channel (open_in_bin filename) in
       let cpdffont = embed_font () in
-      let pdf = Cpdftexttopdf.typeset ~font:cpdffont ~papersize:args.createpdf_pagesize ~fontsize:args.fontsize text in
+      let pdf = Cpdftexttopdf.typeset ~subformat:args.subformat ~title:args.title ~font:cpdffont ~papersize:args.createpdf_pagesize ~fontsize:args.fontsize text in
         write_pdf false pdf
   | Some (TextWidth s) ->
       let rawwidth =
