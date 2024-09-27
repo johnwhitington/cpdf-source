@@ -109,7 +109,7 @@ let endstag () =
   addop Cpdfdraw.EndSTag
 
 let autotags b =
-  Cpdfdraw.do_auto_tag := b
+  addop (Cpdfdraw.AutoTag b)
 
 let autoartifacts b =
   Cpdfdraw.do_add_artifacts := b

@@ -62,10 +62,9 @@ type drawops =
   | Namespace of string
   | EltInfo of string * Pdf.pdfobject
   | EndEltInfo of string
+  | AutoTag of bool
 
 val do_add_artifacts : bool ref
-
-val do_auto_tag : bool ref
 
 val rolemap : string ref
 

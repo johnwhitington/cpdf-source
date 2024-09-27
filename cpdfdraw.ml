@@ -69,8 +69,9 @@ type drawops =
   | Namespace of string
   | EltInfo of string * Pdf.pdfobject
   | EndEltInfo of string
+  | AutoTag of bool
 
-(*let rec string_of_drawop = function
+let rec string_of_drawop = function
   | Qq o -> "Qq (" ^ string_of_drawops o ^ ")"
   | FormXObject (_, _, _, _, _, o) -> "FormXObject (" ^ string_of_drawops o ^ ")"
   | TextSection o -> "TextSection (" ^ string_of_drawops o ^ ")"
@@ -89,9 +90,14 @@ type drawops =
   | Newline -> "Newline" | Leading _ -> "Leading" | CharSpace _ -> "CharSpace"
   | WordSpace _ -> "WordSpace" | TextScale _ -> "TextScale"
   | RenderMode _ -> "RenderMode" | Rise _ -> "Rise"
+  | EndTag -> "EndTag" | Tag s -> "Tag " ^ s | EndSTag  -> "EndSTag" | STag s -> "Tag " ^ s
+  | BeginArtifact -> "BeginArtifact" | EndArtifact -> "EndArtifact"
+  | Para (_, _, _, _) -> "Para" | Namespace s -> "Namespace " ^ s 
+  | EltInfo (_, _) -> "EltInfo" | EndEltInfo _ -> "EndEltInfo"
+  | AutoTag _ -> "AutoTag"
 
 and string_of_drawops l =
-  fold_left (fun x y -> x ^ " " ^ y) "" (map string_of_drawop l)*)
+  fold_left (fun x y -> x ^ " " ^ y) "" (map string_of_drawop l)
 
 (* Per page / xobject resources *)
 type res = 
@@ -437,7 +443,7 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
         []
   | TextSection ops ->
       let m = mcid () in
-        if not dryrun then structdata := StDataMCID ("/P", m)::!structdata;
+        if not dryrun && !do_auto_tag then structdata := StDataMCID ("/P", m)::!structdata;
           (if struct_tree && !do_auto_tag then [Pdfops.Op_BDC ("/P", Pdf.Dictionary ["/MCID", Pdf.Integer m])] else [])
         @ [Pdfops.Op_BT]
         @ ops_of_drawops struct_tree dryrun pdf endpage filename bates batespad num page ops
@@ -486,6 +492,9 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
       []
   | EndEltInfo s ->
       if not dryrun then structdata =| StEndEltInfo s;
+      []
+  | AutoTag b ->
+      do_auto_tag := b;
       []
 
 and ops_of_drawops struct_tree dryrun pdf endpage filename bates batespad num page drawops =
@@ -653,12 +662,12 @@ let rec find_tree_contents a level = function
       if level = 1 then (rev a, t) else find_tree_contents a (level - 1) t
   | h::t -> find_tree_contents (h::a) level t
 
-let mstdebug = ref false
+let mstdebug = ref true
 
 let rec make_structure_tree pageobjnums (pn, ns, ei) pdf = function
   | [] -> []
   | StDataMCID (n, mcid)::t ->
-      if !mstdebug then Printf.printf "StDataMCID, pagenum = %i, pageobjnum = %i\n" !pn (unopt (lookup !pn pageobjnums));
+      if !mstdebug then Printf.printf "StDataMCID, type = %s pagenum = %i, pageobjnum = %i\n" n !pn (unopt (lookup !pn pageobjnums));
       let item =
         StItem {kind = n; namespace = !ns; alt = list_of_hashtbl ei; pageobjnum = lookup !pn pageobjnums; children = [StMCID mcid]}
       in
