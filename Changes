@@ -13,7 +13,7 @@ New features:
 * Create PDF/UA files from scratch with -create-pdf-ua-[1|2]
 * Create structure information for files with -draw
 * Draw can now make paragraphs with -para, -paras
-* Add structure information to -typeset, add -typeset-subformat
+* Add structure information to -typeset, add -subformat
 * -typeset can make PDF/UA documents
 * -jpeg, -png and friends can make PDF/UA documents
 o -stretch scales without preserving aspect ratio
@@ -21,7 +21,7 @@ o -redact removes whole pages
 
 Extended features:
 
-o Rectangle may be specified as x y x2 y2 rather than x y w h
+o Rectangle may be specified as x y x' y' rather than x y w h
 
 * = Supported by a grant from NLnet
 
