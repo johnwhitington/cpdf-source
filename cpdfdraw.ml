@@ -662,7 +662,7 @@ let rec find_tree_contents a level = function
       if level = 1 then (rev a, t) else find_tree_contents a (level - 1) t
   | h::t -> find_tree_contents (h::a) level t
 
-let mstdebug = ref true
+let mstdebug = ref false
 
 let rec make_structure_tree pageobjnums (pn, ns, ei) pdf = function
   | [] -> []

@@ -1711,7 +1711,7 @@ let setprintfontencoding s =
 let settypeset s =
   setop (Typeset s) ()
 
-let settypesetsubformat s =
+let setsubformat s =
   args.subformat <- Some (Cpdfua.subformat_of_string s)
 
 let settableofcontentstitle s =
@@ -2822,9 +2822,9 @@ let specs =
    ("-typeset",
      Arg.String settypeset,
      " Typeset a text file as a PDF");
-   ("-typeset-subformat",
-     Arg.String settypesetsubformat,
-     " Set subformat for typesetting");
+   ("-subformat",
+     Arg.String setsubformat,
+     " Set subformat");
    ("-composition",
      Arg.Unit (setop (Composition false)),
      " Show composition of PDF");
