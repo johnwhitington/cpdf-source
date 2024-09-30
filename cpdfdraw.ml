@@ -774,7 +774,7 @@ let write_structure_tree pdf st =
            ("/K", Pdf.Array items)])
   in
     Pdf.addobj_given_num pdf (struct_tree_root, st);
-    Pdf.replace_chain pdf ["/Root"] ("/StructTreeRoot", (Pdf.Indirect struct_tree_root))
+    Pdf.replace_chain pdf ["/Root"] ("/StructTreeRoot", Pdf.Indirect struct_tree_root)
 
 let draw ~struct_tree ~fast ~underneath ~filename ~bates ~batespad range pdf drawops =
   (*Printf.printf "%s\n" (string_of_drawops drawops);*)

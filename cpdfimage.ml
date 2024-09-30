@@ -494,18 +494,18 @@ let obj_of_jbig2_data ?global data =
     Pdf.Stream {contents = (Pdf.Dictionary d, Pdf.Got data)}, extra
 
 let image_of_input ?subformat ?title fobj i =
-  let pdf =
+  let pdf, title =
     match subformat with
-    | None -> Pdf.empty ()
+    | None -> Pdf.empty (), begin match title with Some x -> x | None -> "" end
     | Some Cpdfua.PDFUA1 ->
         begin match title with
         | None -> error "no -title given" 
-        | Some title -> Cpdfua.create_pdfua1 title Pdfpaper.a4 1
+        | Some title -> Cpdfua.create_pdfua1 title Pdfpaper.a4 1, title
         end
     | Some Cpdfua.PDFUA2 ->
         begin match title with
         | None -> error "no -title given"
-        | Some title -> Cpdfua.create_pdfua2 title Pdfpaper.a4 1
+        | Some title -> Cpdfua.create_pdfua2 title Pdfpaper.a4 1, title
         end
   in
   let data = Pdfio.bytes_of_input i 0 i.Pdfio.in_channel_length in
@@ -513,6 +513,13 @@ let image_of_input ?subformat ?title fobj i =
   iter (Pdf.addobj_given_num pdf) extras;
   let w = match Pdf.lookup_direct pdf "/Width" obj with Some x -> Pdf.getnum pdf x | _ -> assert false in
   let h = match Pdf.lookup_direct pdf "/Height" obj with Some x -> Pdf.getnum pdf x | _ -> assert false in
+  let str = Pdf.addobj pdf Pdf.Null in
+  let figure = Pdf.addobj pdf Pdf.Null in
+  let parent_tree = Pdf.addobj pdf Pdf.Null in
+  Pdf.addobj_given_num pdf (parent_tree, Pdf.Dictionary [("/Nums", Pdf.Array [Pdf.Integer 1; Pdf.Array [Pdf.Indirect figure]])]);
+  Pdf.addobj_given_num pdf (figure, Pdf.Dictionary [("/K", Pdf.Array [Pdf.Integer 0]); ("/P", Pdf.Indirect str); ("/S", Pdf.Name "/Figure"); ("/Alt", Pdf.String title)]);
+  Pdf.addobj_given_num pdf (str, Pdf.Dictionary [("/Type", Pdf.Name "/StructTreeRoot"); ("/K", Pdf.Array [Pdf.Indirect figure]); ("/ParentTree", Pdf.Indirect parent_tree)]);
+  Pdf.replace_chain pdf ["/Root"] ("/StructTreeRoot", Pdf.Indirect str);
   let page =
     {Pdfpage.content =
       [Pdfops.stream_of_ops
@@ -526,7 +533,7 @@ let image_of_input ?subformat ?title fobj i =
        Pdf.Dictionary
          ["/XObject", Pdf.Dictionary ["/I0", Pdf.Indirect (Pdf.addobj pdf obj)]];
      Pdfpage.rotate = Pdfpage.Rotate0;
-     Pdfpage.rest = Pdf.Dictionary []}
+     Pdfpage.rest = Pdf.Dictionary [("/StructTreeParents", Pdf.Integer 1)]}
   in
   let pdf, pageroot = Pdfpage.add_pagetree [page] pdf in
     Pdfpage.add_root pageroot [] pdf
