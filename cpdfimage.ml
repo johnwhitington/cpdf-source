@@ -516,9 +516,11 @@ let image_of_input ?subformat ?title fobj i =
   let page =
     {Pdfpage.content =
       [Pdfops.stream_of_ops
-      [Pdfops.Op_cm (Pdftransform.matrix_of_transform [Pdftransform.Translate (0., 0.);
+      [Pdfops.Op_BDC ("/Figure", Pdf.Dictionary [("/MCID", Pdf.Integer 0)]);
+       Pdfops.Op_cm (Pdftransform.matrix_of_transform [Pdftransform.Translate (0., 0.);
                                                        Pdftransform.Scale ((0., 0.), w, h)]);
-       Pdfops.Op_Do "/I0"]];
+       Pdfops.Op_Do "/I0";
+       Pdfops.Op_EMC]];
      Pdfpage.mediabox = Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real w; Pdf.Real h];
      Pdfpage.resources =
        Pdf.Dictionary
