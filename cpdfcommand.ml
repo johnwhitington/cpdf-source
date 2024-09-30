@@ -2667,10 +2667,10 @@ let specs =
     Arg.Unit (setop CreatePDF),
     " Create a new PDF");
    ("-create-pdf-ua-1",
-    Arg.String (fun _ -> ()), (* Processed elsewhere *)
+    Arg.String (fun s -> args.subformat <- Some Cpdfua.PDFUA1; args.title <- Some s; setop CreatePDF ()),
     " Create a new PDF/UA-1 with the given title");
    ("-create-pdf-ua-2",
-    Arg.String (fun _ -> ()), (* Processed elsewhere *)
+    Arg.String (fun s -> args.subformat <- Some Cpdfua.PDFUA1; args.title <- Some s; setop CreatePDF ()),
     " Create a new PDF/UA-2 with the given title");
    ("-create-pdf-pages",
     Arg.Int setcreatepdfpages,
@@ -4694,15 +4694,6 @@ let expand_args argv =
   let l = Array.to_list argv in
     Array.of_list (expand_args_inner [] l)
 
-let rec expand_recipes = function
-  | [] -> []
-  | "-create-pdf-ua-1"::title::t -> Cpdfua.cpdfua_args title @ expand_recipes t
-  | "-create-pdf-ua-2"::title::t -> Cpdfua.cpdfua2_args title @ expand_recipes t
-  | h::t -> h::expand_recipes t
-
-let expand_recipes argv =
-  Array.of_list (expand_recipes (Array.to_list argv))
-
 let gs_malformed_force fi fo =
   if args.path_to_ghostscript = "" then begin
     Pdfe.log "Please supply path to gs with -gs\n";
@@ -4743,8 +4734,6 @@ let go_withargv argv =
   if demo then
     flprint "This demo functions normally, but is for evaluation only. https://www.coherentpdf.com/\n";
   try
-    (* Pre-expands recipes like -create-pdf-ua-1 *)
-    let argv = expand_recipes argv in
     (* Pre-expand -args *)
     let argv = expand_args argv in
     (* Split the arguments into sets either side of ANDs *)

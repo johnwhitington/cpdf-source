@@ -1615,6 +1615,10 @@ let cpdfua_args title =
    "AND"; "-set-version"; "7";
    "AND"; "-mark-as"; "PDF/UA-1"]
 
+let create_cpdfua1 title pagesize pages =
+  let pdf = Cpdfcreate.blank_document_paper pagesize pages in
+    pdf
+
 let cpdfua2_args title =
   [       "-create-pdf";
    "AND"; "-set-title"; title;
@@ -1625,3 +1629,7 @@ let cpdfua2_args title =
    "AND"; "-replace-obj"; "/Root/StructTreeRoot/Type={\"N\":\"/StructTreeRoot\"}";
    "AND"; "-set-version"; "10";
    "AND"; "-mark-as"; "PDF/UA-2"]
+
+let create_cpdfua2 title pagesize pages =
+  let pdf = Cpdfcreate.blank_document_paper pagesize pages in
+    pdf
