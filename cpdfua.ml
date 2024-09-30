@@ -1604,7 +1604,7 @@ let print_struct_tree pdf =
             ~get_children:(fun (E2 (_, _, cs)) -> cs)
             (remove_empty (remove_slashes st)))
 
-let create_cpdfua1 title pagesize pages =
+let create_pdfua1 title pagesize pages =
   let pdf = Cpdfcreate.blank_document_paper pagesize pages in
   let pdf = Cpdfmetadata.set_pdf_info ~xmp_also:false ~xmp_just_set:false ("/Title", Pdf.String title, 0) pdf in
   let pdf = Cpdfmetadata.create_metadata pdf in
@@ -1616,7 +1616,7 @@ let create_cpdfua1 title pagesize pages =
         mark pdf;
         pdf
 
-let create_cpdfua2 title pagesize pages =
+let create_pdfua2 title pagesize pages =
   let pdf = Cpdfcreate.blank_document_paper pagesize pages in
   let pdf = Cpdfmetadata.set_pdf_info ~xmp_also:false ~xmp_just_set:false ("/Title", Pdf.String title, 0) pdf in
   let pdf = Cpdfmetadata.create_metadata pdf in

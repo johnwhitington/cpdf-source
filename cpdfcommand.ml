@@ -1025,7 +1025,7 @@ let fixdashes s =
 let set_input_image f s =
   try
     let fh = open_in_bin s in
-    let pdf = Cpdfimage.image_of_input ~subformat:args.subformat ~title:args.title f (Pdfio.input_of_channel fh) in
+    let pdf = Cpdfimage.image_of_input ?subformat:args.subformat ?title:args.title f (Pdfio.input_of_channel fh) in
       begin try close_in fh with _ -> () end;
       args.original_filename <- s;
       args.create_objstm <- true;
@@ -4476,11 +4476,11 @@ let go () =
       begin match args.subformat with
       | Some Cpdfua.PDFUA1 ->
           begin match args.title with None -> error "Provide -title" | _ -> () end;
-          let pdf = Cpdfua.create_cpdfua1 (unopt args.title) args.createpdf_pagesize args.createpdf_pages in
+          let pdf = Cpdfua.create_pdfua1 (unopt args.title) args.createpdf_pagesize args.createpdf_pages in
             write_pdf false pdf
       | Some Cpdfua.PDFUA2 ->
           begin match args.title with None -> error "Provide -title" | _ -> () end;
-          let pdf = Cpdfua.create_cpdfua2 (unopt args.title) args.createpdf_pagesize args.createpdf_pages in
+          let pdf = Cpdfua.create_pdfua2 (unopt args.title) args.createpdf_pagesize args.createpdf_pages in
             write_pdf false pdf
       | None ->
           let pdf = Cpdfcreate.blank_document_paper args.createpdf_pagesize args.createpdf_pages in

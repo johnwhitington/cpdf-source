@@ -494,7 +494,20 @@ let obj_of_jbig2_data ?global data =
     Pdf.Stream {contents = (Pdf.Dictionary d, Pdf.Got data)}, extra
 
 let image_of_input ?subformat ?title fobj i =
-  let pdf = Pdf.empty () in
+  let pdf =
+    match subformat with
+    | None -> Pdf.empty ()
+    | Some Cpdfua.PDFUA1 ->
+        begin match title with
+        | None -> error "no -title given" 
+        | Some title -> Cpdfua.create_pdfua1 title Pdfpaper.a4 1
+        end
+    | Some Cpdfua.PDFUA2 ->
+        begin match title with
+        | None -> error "no -title given"
+        | Some title -> Cpdfua.create_pdfua2 title Pdfpaper.a4 1
+        end
+  in
   let data = Pdfio.bytes_of_input i 0 i.Pdfio.in_channel_length in
   let obj, extras = fobj () data in
   iter (Pdf.addobj_given_num pdf) extras;
