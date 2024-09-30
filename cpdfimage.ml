@@ -493,7 +493,7 @@ let obj_of_jbig2_data ?global data =
   in
     Pdf.Stream {contents = (Pdf.Dictionary d, Pdf.Got data)}, extra
 
-let image_of_input ?subformat ?title fobj i =
+let image_of_input ?subformat ?title ~process_struct_tree fobj i =
   let pdf, title =
     match subformat with
     | None -> Pdf.empty (), begin match title with Some x -> x | None -> "" end
