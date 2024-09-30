@@ -4495,8 +4495,19 @@ let go () =
       let pdf = get_single_pdf args.op false in
         write_pdf false (Cpdfbookmarks.bookmarks_open_to_level n pdf)
   | Some CreatePDF ->
-      let pdf = Cpdfcreate.blank_document_paper args.createpdf_pagesize args.createpdf_pages in
-        write_pdf false pdf
+      begin match args.subformat with
+      | Some Cpdfua.PDFUA1 ->
+          begin match args.title with None -> error "Provide -title" | _ -> () end;
+          let pdf = Cpdfua.create_cpdfua1 (unopt args.title) args.createpdf_pagesize args.createpdf_pages in
+            write_pdf false pdf
+      | Some Cpdfua.PDFUA2 ->
+          begin match args.title with None -> error "Provide -title" | _ -> () end;
+          let pdf = Cpdfua.create_cpdfua2 (unopt args.title) args.createpdf_pagesize args.createpdf_pages in
+            write_pdf false pdf
+      | None ->
+          let pdf = Cpdfcreate.blank_document_paper args.createpdf_pagesize args.createpdf_pages in
+            write_pdf false pdf
+      end
   | Some RemoveAllText ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
