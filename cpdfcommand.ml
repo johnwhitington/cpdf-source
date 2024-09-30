@@ -2670,7 +2670,7 @@ let specs =
     Arg.String (fun s -> args.subformat <- Some Cpdfua.PDFUA1; args.title <- Some s; setop CreatePDF ()),
     " Create a new PDF/UA-1 with the given title");
    ("-create-pdf-ua-2",
-    Arg.String (fun s -> args.subformat <- Some Cpdfua.PDFUA1; args.title <- Some s; setop CreatePDF ()),
+    Arg.String (fun s -> args.subformat <- Some Cpdfua.PDFUA2; args.title <- Some s; setop CreatePDF ()),
     " Create a new PDF/UA-2 with the given title");
    ("-create-pdf-pages",
     Arg.Int setcreatepdfpages,
@@ -3556,28 +3556,6 @@ let print_obj pdf objspec =
     | [] -> simple_obj 0
     | _ -> simple_obj (int_of_string objspec)
 
-(* Empty string is trailerdict. Begins with / and it's a chain separated by commas. *)
-let replace_obj pdf objspec obj =
-  let rec find_max_existing to_fake chain =
-    if chain = [] then (chain, to_fake) else
-      match Pdf.lookup_chain pdf pdf.Pdf.trailerdict chain with
-      | None -> find_max_existing (hd (rev chain)::to_fake) (rev (tl (rev chain)))
-      | _ -> (chain, to_fake)
-  in
-  let rec wrap_obj obj = function
-  | [] -> obj
-  | h::t -> Pdf.Dictionary [(h, wrap_obj obj t)]
-  in
-    let chain, to_fake = find_max_existing [] (split_chain objspec) in
-      let chain, key, obj =
-        match to_fake with
-        | [] -> (rev (tl (rev chain)), hd (rev chain), obj)
-        | h::t -> (chain, h, wrap_obj obj t)
-      in
-        if chain = [] then
-          pdf.Pdf.trailerdict <- Pdf.add_dict_entry pdf.Pdf.trailerdict key obj
-        else
-          Pdf.replace_chain pdf chain (key, obj)
 
 (* Main function *)
 let go () =
@@ -4624,7 +4602,7 @@ let go () =
   | Some (ReplaceObj (a, b)) ->
       let pdf = get_single_pdf args.op false in
       let pdfobj = Cpdfjson.object_of_json (Cpdfyojson.Safe.from_string b) in
-        replace_obj pdf a pdfobj;
+        Pdf.replace_obj pdf a pdfobj;
         write_pdf false pdf
   | Some (Verify standard) ->
       begin match standard with

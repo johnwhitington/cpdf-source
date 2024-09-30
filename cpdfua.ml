@@ -1604,32 +1604,26 @@ let print_struct_tree pdf =
             ~get_children:(fun (E2 (_, _, cs)) -> cs)
             (remove_empty (remove_slashes st)))
 
-let cpdfua_args title =
-  [       "-create-pdf";
-   "AND"; "-set-title"; title;
-   "AND"; "-create-metadata";
-   "AND"; "-set-language"; "en-US";
-   "AND"; "-display-doc-title"; "true";
-   "AND"; "-replace-obj"; "/Root/MarkInfo/Marked=true";
-   "AND"; "-replace-obj"; "/Root/StructTreeRoot/Type={\"N\":\"/StructTreeRoot\"}";
-   "AND"; "-set-version"; "7";
-   "AND"; "-mark-as"; "PDF/UA-1"]
-
 let create_cpdfua1 title pagesize pages =
   let pdf = Cpdfcreate.blank_document_paper pagesize pages in
-    pdf
-
-let cpdfua2_args title =
-  [       "-create-pdf";
-   "AND"; "-set-title"; title;
-   "AND"; "-create-metadata";
-   "AND"; "-set-language"; "en-US";
-   "AND"; "-display-doc-title"; "true";
-   "AND"; "-replace-obj"; "/Root/MarkInfo/Marked=true";
-   "AND"; "-replace-obj"; "/Root/StructTreeRoot/Type={\"N\":\"/StructTreeRoot\"}";
-   "AND"; "-set-version"; "10";
-   "AND"; "-mark-as"; "PDF/UA-2"]
+  let pdf = Cpdfmetadata.set_pdf_info ~xmp_also:false ~xmp_just_set:false ("/Title", Pdf.String title, 0) pdf in
+  let pdf = Cpdfmetadata.create_metadata pdf in
+    Cpdfmetadata.set_language pdf "en-US";
+    let pdf = Cpdfmetadata.set_viewer_preference ("/DisplayDocTitle", Pdf.Boolean true, 0) pdf in
+      Pdf.replace_obj pdf "/Root/MarkInfo/Marked" (Pdf.Boolean true);
+      Pdf.replace_obj pdf "/Root/StructTreeRoot/Type" (Pdf.Name "/StructTreeRoot");
+      let pdf = {pdf with Pdf.major = 1; Pdf.minor =  7} in
+        mark pdf;
+        pdf
 
 let create_cpdfua2 title pagesize pages =
   let pdf = Cpdfcreate.blank_document_paper pagesize pages in
-    pdf
+  let pdf = Cpdfmetadata.set_pdf_info ~xmp_also:false ~xmp_just_set:false ("/Title", Pdf.String title, 0) pdf in
+  let pdf = Cpdfmetadata.create_metadata pdf in
+    Cpdfmetadata.set_language pdf "en-US";
+    let pdf = Cpdfmetadata.set_viewer_preference ("/DisplayDocTitle", Pdf.Boolean true, 0) pdf in
+      Pdf.replace_obj pdf "/Root/MarkInfo/Marked" (Pdf.Boolean true);
+      Pdf.replace_obj pdf "/Root/StructTreeRoot/Type" (Pdf.Name "/StructTreeRoot");
+      let pdf = {pdf with Pdf.major = 2; Pdf.minor =  0} in
+        mark2 2024 pdf;
+        pdf
