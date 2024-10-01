@@ -513,27 +513,34 @@ let image_of_input ?subformat ?title ~process_struct_tree fobj i =
   iter (Pdf.addobj_given_num pdf) extras;
   let w = match Pdf.lookup_direct pdf "/Width" obj with Some x -> Pdf.getnum pdf x | _ -> assert false in
   let h = match Pdf.lookup_direct pdf "/Height" obj with Some x -> Pdf.getnum pdf x | _ -> assert false in
-  let str = Pdf.addobj pdf Pdf.Null in
-  let figure = Pdf.addobj pdf Pdf.Null in
-  let parent_tree = Pdf.addobj pdf Pdf.Null in
-  Pdf.addobj_given_num pdf (parent_tree, Pdf.Dictionary [("/Nums", Pdf.Array [Pdf.Integer 1; Pdf.Array [Pdf.Indirect figure]])]);
-  Pdf.addobj_given_num pdf (figure, Pdf.Dictionary [("/K", Pdf.Array [Pdf.Integer 0]); ("/P", Pdf.Indirect str); ("/S", Pdf.Name "/Figure"); ("/Alt", Pdf.String title)]);
-  Pdf.addobj_given_num pdf (str, Pdf.Dictionary [("/Type", Pdf.Name "/StructTreeRoot"); ("/K", Pdf.Array [Pdf.Indirect figure]); ("/ParentTree", Pdf.Indirect parent_tree)]);
-  Pdf.replace_chain pdf ["/Root"] ("/StructTreeRoot", Pdf.Indirect str);
+  let structinfo =
+    match process_struct_tree, subformat with
+    | _, (Some Cpdfua.PDFUA1 | Some Cpdfua.PDFUA2) | true, _ -> true
+    | _ -> false
+  in
+    if structinfo then
+      begin
+        let str = Pdf.addobj pdf Pdf.Null in
+        let figure = Pdf.addobj pdf Pdf.Null in
+        let parent_tree = Pdf.addobj pdf Pdf.Null in
+        Pdf.addobj_given_num pdf (parent_tree, Pdf.Dictionary [("/Nums", Pdf.Array [Pdf.Integer 1; Pdf.Array [Pdf.Indirect figure]])]);
+        Pdf.addobj_given_num pdf (figure, Pdf.Dictionary [("/K", Pdf.Array [Pdf.Integer 0]); ("/P", Pdf.Indirect str); ("/S", Pdf.Name "/Figure"); ("/Alt", Pdf.String title)]);
+        Pdf.addobj_given_num pdf (str, Pdf.Dictionary [("/Type", Pdf.Name "/StructTreeRoot"); ("/K", Pdf.Array [Pdf.Indirect figure]); ("/ParentTree", Pdf.Indirect parent_tree)]);
+        Pdf.replace_obj pdf "/Root,/StructTreeRoot" (Pdf.Indirect str)
+      end;
+  let ops =
+      (if structinfo then [Pdfops.Op_BDC ("/Figure", Pdf.Dictionary [("/MCID", Pdf.Integer 0)])] else [])
+    @ [Pdfops.Op_cm (Pdftransform.matrix_of_transform [Pdftransform.Translate (0., 0.);
+                                                         Pdftransform.Scale ((0., 0.), w, h)]);
+       Pdfops.Op_Do "/I0"]
+    @ (if structinfo then [Pdfops.Op_EMC] else [])
+  in
   let page =
-    {Pdfpage.content =
-      [Pdfops.stream_of_ops
-      [Pdfops.Op_BDC ("/Figure", Pdf.Dictionary [("/MCID", Pdf.Integer 0)]);
-       Pdfops.Op_cm (Pdftransform.matrix_of_transform [Pdftransform.Translate (0., 0.);
-                                                       Pdftransform.Scale ((0., 0.), w, h)]);
-       Pdfops.Op_Do "/I0";
-       Pdfops.Op_EMC]];
+    {Pdfpage.content = [Pdfops.stream_of_ops ops];
      Pdfpage.mediabox = Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real w; Pdf.Real h];
-     Pdfpage.resources =
-       Pdf.Dictionary
-         ["/XObject", Pdf.Dictionary ["/I0", Pdf.Indirect (Pdf.addobj pdf obj)]];
+     Pdfpage.resources = Pdf.Dictionary ["/XObject", Pdf.Dictionary ["/I0", Pdf.Indirect (Pdf.addobj pdf obj)]];
      Pdfpage.rotate = Pdfpage.Rotate0;
-     Pdfpage.rest = Pdf.Dictionary [("/StructParents", Pdf.Integer 1)]}
+     Pdfpage.rest = if structinfo then Pdf.Dictionary [("/StructParents", Pdf.Integer 1)] else Pdf.Dictionary []}
   in
   let pdf, pageroot = Pdfpage.add_pagetree [page] pdf in
     Pdfpage.add_root pageroot [] pdf
