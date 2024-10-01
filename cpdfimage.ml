@@ -518,7 +518,21 @@ let image_of_input ?subformat ?title ~process_struct_tree fobj i =
     | _, (Some Cpdfua.PDFUA1 | Some Cpdfua.PDFUA2) | true, _ -> true
     | _ -> false
   in
-    if structinfo then
+    if process_struct_tree || subformat = Some Cpdfua.PDFUA2 then
+      begin
+        let str = Pdf.addobj pdf Pdf.Null in
+        let figure = Pdf.addobj pdf Pdf.Null in
+        let parent_tree = Pdf.addobj pdf Pdf.Null in
+        let namespace = Pdf.addobj pdf (Pdf.Dictionary [("/NS", Pdf.String "http://iso.org/pdf2/ssn")]) in
+        let document = Pdf.addobj pdf Pdf.Null in
+        Pdf.addobj_given_num pdf (document, Pdf.Dictionary [("/K", Pdf.Array [Pdf.Indirect figure]); ("/P", Pdf.Indirect str); ("/S", Pdf.Name "/Document"); ("/NS", Pdf.Indirect namespace)]);
+        Pdf.addobj_given_num pdf (parent_tree, Pdf.Dictionary [("/Nums", Pdf.Array [Pdf.Integer 1; Pdf.Array [Pdf.Indirect figure]])]);
+        Pdf.addobj_given_num pdf (figure, Pdf.Dictionary [("/K", Pdf.Array [Pdf.Integer 0]); ("/P", Pdf.Indirect document); ("/S", Pdf.Name "/Figure"); ("/Alt", Pdf.String title)]);
+        Pdf.addobj_given_num pdf (str, Pdf.Dictionary [("/Namespaces", Pdf.Array [Pdf.Indirect namespace]); ("/Type", Pdf.Name "/StructTreeRoot");
+                                                       ("/K", Pdf.Array [Pdf.Indirect document]); ("/ParentTree", Pdf.Indirect parent_tree)]);
+        Pdf.replace_chain pdf ["/Root"] ("/StructTreeRoot", (Pdf.Indirect str))
+      end
+    else if subformat = Some Cpdfua.PDFUA1 then
       begin
         let str = Pdf.addobj pdf Pdf.Null in
         let figure = Pdf.addobj pdf Pdf.Null in
@@ -526,7 +540,7 @@ let image_of_input ?subformat ?title ~process_struct_tree fobj i =
         Pdf.addobj_given_num pdf (parent_tree, Pdf.Dictionary [("/Nums", Pdf.Array [Pdf.Integer 1; Pdf.Array [Pdf.Indirect figure]])]);
         Pdf.addobj_given_num pdf (figure, Pdf.Dictionary [("/K", Pdf.Array [Pdf.Integer 0]); ("/P", Pdf.Indirect str); ("/S", Pdf.Name "/Figure"); ("/Alt", Pdf.String title)]);
         Pdf.addobj_given_num pdf (str, Pdf.Dictionary [("/Type", Pdf.Name "/StructTreeRoot"); ("/K", Pdf.Array [Pdf.Indirect figure]); ("/ParentTree", Pdf.Indirect parent_tree)]);
-        Pdf.replace_obj pdf "/Root,/StructTreeRoot" (Pdf.Indirect str)
+        Pdf.replace_chain pdf ["/Root"] ("/StructTreeRoot", (Pdf.Indirect str))
       end;
   let ops =
       (if structinfo then [Pdfops.Op_BDC ("/Figure", Pdf.Dictionary [("/MCID", Pdf.Integer 0)])] else [])
