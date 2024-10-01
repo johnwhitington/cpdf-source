@@ -533,7 +533,7 @@ let image_of_input ?subformat ?title ~process_struct_tree fobj i =
        Pdf.Dictionary
          ["/XObject", Pdf.Dictionary ["/I0", Pdf.Indirect (Pdf.addobj pdf obj)]];
      Pdfpage.rotate = Pdfpage.Rotate0;
-     Pdfpage.rest = Pdf.Dictionary [("/StructTreeParents", Pdf.Integer 1)]}
+     Pdfpage.rest = Pdf.Dictionary [("/StructParents", Pdf.Integer 1)]}
   in
   let pdf, pageroot = Pdfpage.add_pagetree [page] pdf in
     Pdfpage.add_root pageroot [] pdf
