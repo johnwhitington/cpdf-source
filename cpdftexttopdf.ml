@@ -44,6 +44,16 @@ let of_utf8_with_newlines fontpack fontsize t =
       if c <> [] then process_codepoints c;
       rev !items
 
+(* Post process, adding Tag / EndTag around paragraphs *)
+let rec tag_paragraphs = function
+  | Cpdftype.NewLine::Cpdftype.NewLine::t ->
+      Cpdftype.EndTag::Cpdftype.NewLine::Cpdftype.NewLine::Cpdftype.Tag "P"::tag_paragraphs t
+  | x::t -> x::tag_paragraphs t
+  | [] -> [Cpdftype.EndTag]
+
+let tag_paragraphs l =
+  Cpdftype.Tag "P"::tag_paragraphs l
+
 let typeset ~process_struct_tree ?subformat ?title ~papersize ~font ~fontsize text =
   let process_struct_tree =
     process_struct_tree || subformat = Some Cpdfua.PDFUA1 || subformat = Some Cpdfua.PDFUA2
@@ -72,10 +82,14 @@ let typeset ~process_struct_tree ?subformat ?title ~papersize ~font ~fontsize te
         raise (Pdf.PDFError "Can't use existing named font for text-to-PDF")
   in
   let instrs = of_utf8_with_newlines fontpack fontsize (Pdfio.string_of_bytes text) in
+  flprint (Cpdftype.to_string instrs);
+  flprint "------------------------------";
+  let tagged = tag_paragraphs instrs in
+  flprint (Cpdftype.to_string tagged);
   let margin = Pdfunits.points (Pdfpaper.width papersize) (Pdfpaper.unit papersize) /. 15.  in
   let instrs =
-    if instrs = [] then [] else
-      let firstfont = hd (keep (function Cpdftype.Font _ -> true | _ -> false) instrs) in 
+    if tagged = [] then [] else
+      let firstfont = hd (keep (function Cpdftype.Font _ -> true | _ -> false) tagged) in 
         [firstfont; Cpdftype.BeginDocument] @ instrs
   in
   let pages = Cpdftype.typeset ~process_struct_tree margin margin margin margin papersize pdf instrs in

@@ -320,6 +320,8 @@ let typeset ~process_struct_tree lmargin rmargin tmargin bmargin papersize pdf i
             thispageannotations := map annot !thisdestrectangles @ !thispageannotations;
         s.dest <- None;
         thisdestrectangles := []
+   | Tag s -> ()
+   | EndTag -> ()
   in
     iter typeset_element i;
     write_page ();
