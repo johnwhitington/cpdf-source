@@ -1,4 +1,5 @@
 open Pdfutil
+open Cpdferror
 
 let of_utf8_with_newlines fontpack fontsize t =
   let items = ref [] in
@@ -47,7 +48,20 @@ let typeset ~process_struct_tree ?subformat ?title ~papersize ~font ~fontsize te
   let process_struct_tree =
     process_struct_tree || subformat = Some Cpdfua.PDFUA1 || subformat = Some Cpdfua.PDFUA2
   in
-  let pdf = Pdf.empty () in
+  let pdf, title =
+    match subformat with
+    | None -> Pdf.empty (), begin match title with Some x -> x | None -> "" end
+    | Some Cpdfua.PDFUA1 ->
+        begin match title with
+        | None -> error "no -title given" 
+        | Some title -> Cpdfua.create_pdfua1 title papersize 1, title
+        end
+    | Some Cpdfua.PDFUA2 ->
+        begin match title with
+        | None -> error "no -title given"
+        | Some title -> Cpdfua.create_pdfua2 title papersize 1, title
+        end
+  in
   let codepoints = setify (Pdftext.codepoints_of_utf8 (Pdfio.string_of_bytes text)) in
   let fontpack =
     match font with
