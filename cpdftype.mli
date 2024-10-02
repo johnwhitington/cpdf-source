@@ -9,7 +9,7 @@ type element =
 | BeginDest of Pdfdest.t
 | EndDest
 | BeginDocument
-| Tag of string
+| Tag of string * int
 | EndTag
 
 type t = element list

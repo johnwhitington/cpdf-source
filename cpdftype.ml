@@ -18,7 +18,7 @@ type element =
 | BeginDest of Pdfdest.t
 | EndDest
 | BeginDocument
-| Tag of string
+| Tag of string * int
 | EndTag
 
 let to_string_elt = function
@@ -31,7 +31,7 @@ let to_string_elt = function
   | BeginDest _ -> "BeginDest"
   | EndDest -> "EndDest"
   | BeginDocument -> "BeginDocument"
-  | Tag s -> "Tag " ^ s
+  | Tag (s, i) -> "Tag " ^ s ^ " " ^ string_of_int i
   | EndTag -> "EndTag"
 
 let to_string es = fold_left (fun a b -> a ^ "\n" ^ b) "" (map to_string_elt es)
@@ -183,13 +183,16 @@ let layout lmargin rmargin papersize i =
     iter layout_element i;
     rev !o
 
-(* Paginate, simply line-based. When ypos + lineheight exceeds max_ypos, we insert a page break. *)
+(* Paginate, simply line-based. When ypos + lineheight exceeds max_ypos, we
+   insert a page break. In addition, we re-write any paragraph tag/endtag to
+   make sure they appear on both pages. *)
 let paginate tmargin bmargin papersize i =
   let height = Pdfunits.points (Pdfpaper.height papersize) (Pdfpaper.unit papersize) in
   let o = ref [] in
   let s = initial_state () in
   s.ypos <- tmargin;
   let max_ypos = height -. bmargin in
+  let tag = ref None in
   let rec process = function
    | VGlue len as glue ->
        s.ypos <- s.ypos +. len;
@@ -206,10 +209,18 @@ let paginate tmargin bmargin papersize i =
        o := Font (id, f, fs)::!o
    | NewPage ->
        s.ypos <- tmargin +. s.fontsize;
-       o := NewPage::!o
+       begin match !tag with Some (s, i) -> o := EndTag::!o | None -> () end;
+       o := NewPage::!o;
+       begin match !tag with Some (s, i) -> o := Tag (s, i)::!o | None -> () end
    | BeginDocument ->
        s.ypos <- tmargin +. s.fontsize;
        o := BeginDocument::!o
+   | Tag (s, i) ->
+       tag := Some (s, i);
+       o := Tag (s, i)::!o
+   | EndTag ->
+       tag := None;
+       o := EndTag::!o
    | x -> o := x::!o
   in
     iter process i;
@@ -323,7 +334,7 @@ let typeset ~process_struct_tree lmargin rmargin tmargin bmargin papersize pdf i
             thispageannotations := map annot !thisdestrectangles @ !thispageannotations;
         s.dest <- None;
         thisdestrectangles := []
-   | Tag s -> ops := Pdfops.Op_BDC ("/" ^ s, Pdf.Dictionary [("/MCID", Pdf.Integer (mcid ()))])::!ops
+   | Tag (s, _) -> ops := Pdfops.Op_BDC ("/" ^ s, Pdf.Dictionary [("/MCID", Pdf.Integer (mcid ()))])::!ops
    | EndTag -> ops := Pdfops.Op_EMC::!ops
   in
     iter typeset_element i;

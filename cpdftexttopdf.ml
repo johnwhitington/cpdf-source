@@ -47,12 +47,12 @@ let of_utf8_with_newlines fontpack fontsize t =
 (* Post process, adding Tag / EndTag around paragraphs *)
 let rec tag_paragraphs = function
   | Cpdftype.NewLine::Cpdftype.NewLine::t ->
-      Cpdftype.EndTag::Cpdftype.NewLine::Cpdftype.NewLine::Cpdftype.Tag "P"::tag_paragraphs t
+      Cpdftype.EndTag::Cpdftype.NewLine::Cpdftype.NewLine::Cpdftype.Tag ("P", 0)::tag_paragraphs t
   | x::t -> x::tag_paragraphs t
   | [] -> [Cpdftype.EndTag]
 
 let tag_paragraphs l =
-  Cpdftype.Tag "P"::tag_paragraphs l
+  Cpdftype.Tag ("P", 0)::tag_paragraphs l
 
 let typeset ~process_struct_tree ?subformat ?title ~papersize ~font ~fontsize text =
   let process_struct_tree =
