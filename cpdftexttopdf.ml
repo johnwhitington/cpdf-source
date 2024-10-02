@@ -82,15 +82,15 @@ let typeset ~process_struct_tree ?subformat ?title ~papersize ~font ~fontsize te
         raise (Pdf.PDFError "Can't use existing named font for text-to-PDF")
   in
   let instrs = of_utf8_with_newlines fontpack fontsize (Pdfio.string_of_bytes text) in
-  flprint (Cpdftype.to_string instrs);
-  flprint "------------------------------";
+  (*flprint (Cpdftype.to_string instrs);
+  flprint "------------------------------";*)
   let tagged = tag_paragraphs instrs in
-  flprint (Cpdftype.to_string tagged);
+  (*flprint (Cpdftype.to_string tagged);*)
   let margin = Pdfunits.points (Pdfpaper.width papersize) (Pdfpaper.unit papersize) /. 15.  in
   let instrs =
     if tagged = [] then [] else
       let firstfont = hd (keep (function Cpdftype.Font _ -> true | _ -> false) tagged) in 
-        [firstfont; Cpdftype.BeginDocument] @ instrs
+        [firstfont; Cpdftype.BeginDocument] @ tagged
   in
   let pages = Cpdftype.typeset ~process_struct_tree margin margin margin margin papersize pdf instrs in
     let pdf, pageroot = Pdfpage.add_pagetree pages pdf in

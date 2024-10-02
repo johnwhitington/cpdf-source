@@ -238,6 +238,8 @@ let typeset ~process_struct_tree lmargin rmargin tmargin bmargin papersize pdf i
   let s = initial_state () in
   s.xpos <- lmargin;
   s.ypos <- tmargin;
+  let mcidr = ref ~-1 in
+  let mcid () = incr mcidr; !mcidr in
   let ops = ref [] in
   let fonts = ref [] in
   let thispagefontnums = ref [] in
@@ -300,6 +302,7 @@ let typeset ~process_struct_tree lmargin rmargin tmargin bmargin papersize pdf i
         thispagefontnums := [];
         thispageannotations := [];
         ops := [];
+        mcidr := -1;
         if s.font <> None && s.fontid <> None then typeset_element (Font (unopt s.fontid, unopt s.font, s.fontsize));
         s.xpos <- lmargin;
         s.ypos <- tmargin +. s.fontsize
@@ -320,8 +323,8 @@ let typeset ~process_struct_tree lmargin rmargin tmargin bmargin papersize pdf i
             thispageannotations := map annot !thisdestrectangles @ !thispageannotations;
         s.dest <- None;
         thisdestrectangles := []
-   | Tag s -> ()
-   | EndTag -> ()
+   | Tag s -> ops := Pdfops.Op_BDC ("/" ^ s, Pdf.Dictionary [("/MCID", Pdf.Integer (mcid ()))])::!ops
+   | EndTag -> ops := Pdfops.Op_EMC::!ops
   in
     iter typeset_element i;
     write_page ();
