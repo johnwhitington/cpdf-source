@@ -9,6 +9,8 @@ type element =
 | BeginDest of Pdfdest.t
 | EndDest
 | BeginDocument
+| Tag of string
+| EndTag
 
 type t = element list
 
@@ -22,4 +24,6 @@ val font_widths : string -> Pdftext.font -> float -> float array
 val width_of_string : float array -> char list -> float
 
 (** [typeset lmargin rmargin tmargin bmargin papersize pdf contents] builds a list of pages of typset content. *)
-val typeset : float -> float -> float -> float -> Pdfpaper.t -> Pdf.t -> t -> Pdfpage.t list
+val typeset : process_struct_tree:bool -> float -> float -> float -> float -> Pdfpaper.t -> Pdf.t -> t -> Pdfpage.t list
+
+val add_artifacts : Pdfops.t list -> Pdfops.t list

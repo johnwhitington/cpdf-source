@@ -559,39 +559,6 @@ let save_whole_stack () =
 let restore_whole_stack r =
   resstack := r
 
-(* Mark as an artifact anything not already marked. *)
-let add_artifacts ops =
-  let content = ref false in
-  let artifact = ref false in
-  let rec loop a = function
-  | [] ->
-      (* The end. Must end artifact if in artifact. *)
-      if !artifact then rev (Pdfops.Op_EMC::a) else rev a
-  | Pdfops.Op_BMC "/BeginArtifact"::t ->
-      (* Convert back-channel artifact beginning. *)
-      set artifact;
-      loop (Pdfops.Op_BMC "/Artifact"::a) t
-  | Pdfops.Op_BMC "/EndArtifact"::t ->
-      (* Convert back-channel artifact ending. *)
-      clear artifact;
-      loop (Pdfops.Op_EMC::a) t
-  | Pdfops.Op_BDC _ as h::t -> 
-      (* Entering content. If in artifact, must end artifact. *)
-      let a' = if !artifact then h::Pdfops.Op_EMC::a else h::a in
-        set content; clear artifact; loop a' t
-  | Pdfops.Op_EMC as h::t ->
-      (* Exiting content. *)
-      clear content;
-      loop (h::a) t
-  | h::t -> 
-      (* A normal operation. If not in content or artifact must start artifact. *)
-      let a' =
-        if not (!content || !artifact) then (set artifact; h::Pdfops.Op_BMC "/Artifact"::a) else h::a
-      in
-        loop a' t
-  in
-    loop [] ops
-
 (* When no automatic artifacting, we still need to fix our backchannel manual artifacts. *)
 let fixup_manual_artifacts =
   map (function Pdfops.Op_BMC "/BeginArtifact" -> Pdfops.Op_BMC "/Artifact"
@@ -623,7 +590,7 @@ let draw_single ~struct_tree ~fast ~underneath ~filename ~bates ~batespad range 
     map3
       (fun n p ops ->
         if not (mem n range) then p else
-          let ops = if struct_tree && !do_add_artifacts then add_artifacts ops else fixup_manual_artifacts ops in
+          let ops = if struct_tree && !do_add_artifacts then Cpdftype.add_artifacts ops else fixup_manual_artifacts ops in
           let page = {p with Pdfpage.resources = update_resources pdf p.Pdfpage.resources} in
             (if underneath then Pdfpage.prepend_operators else Pdfpage.postpend_operators) pdf ops ~fast page)
       (ilist 1 endpage)

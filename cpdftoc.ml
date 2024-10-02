@@ -175,7 +175,7 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
       let firstfont =
         hd (keep (function Cpdftype.Font _ -> true | _ -> false) (title @ flatten lines))
       in
-        Cpdftype.typeset lm rm tm bm firstpage_papersize pdf
+        Cpdftype.typeset ~process_struct_tree:false lm rm tm bm firstpage_papersize pdf
           ([firstfont; Cpdftype.BeginDocument] @ title @ flatten lines)
   in
   let toc_pages =

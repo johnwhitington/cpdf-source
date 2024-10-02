@@ -43,7 +43,10 @@ let of_utf8_with_newlines fontpack fontsize t =
       if c <> [] then process_codepoints c;
       rev !items
 
-let typeset ?subformat ?title ~papersize ~font ~fontsize text =
+let typeset ~process_struct_tree ?subformat ?title ~papersize ~font ~fontsize text =
+  let process_struct_tree =
+    process_struct_tree || subformat = Some Cpdfua.PDFUA1 || subformat = Some Cpdfua.PDFUA2
+  in
   let pdf = Pdf.empty () in
   let codepoints = setify (Pdftext.codepoints_of_utf8 (Pdfio.string_of_bytes text)) in
   let fontpack =
@@ -61,6 +64,6 @@ let typeset ?subformat ?title ~papersize ~font ~fontsize text =
       let firstfont = hd (keep (function Cpdftype.Font _ -> true | _ -> false) instrs) in 
         [firstfont; Cpdftype.BeginDocument] @ instrs
   in
-  let pages = Cpdftype.typeset margin margin margin margin papersize pdf instrs in
+  let pages = Cpdftype.typeset ~process_struct_tree margin margin margin margin papersize pdf instrs in
     let pdf, pageroot = Pdfpage.add_pagetree pages pdf in
       Pdfpage.add_root pageroot [] pdf

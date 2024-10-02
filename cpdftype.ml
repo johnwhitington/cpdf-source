@@ -18,6 +18,8 @@ type element =
 | BeginDest of Pdfdest.t
 | EndDest
 | BeginDocument
+| Tag of string
+| EndTag
 
 let to_string_elt = function
   | Text t -> implode t
@@ -29,6 +31,8 @@ let to_string_elt = function
   | BeginDest _ -> "BeginDest"
   | EndDest -> "EndDest"
   | BeginDocument -> "BeginDocument"
+  | Tag s -> "Tag " ^ s
+  | EndTag -> "EndTag"
 
 let to_string es = fold_left (fun a b -> a ^ "\n" ^ b) "" (map to_string_elt es)
 
@@ -53,6 +57,39 @@ let initial_state () =
    xpos = 0.;
    ypos = 0.;
    dest = None}
+
+(* Mark as an artifact anything not already marked. *)
+let add_artifacts ops =
+  let content = ref false in
+  let artifact = ref false in
+  let rec loop a = function
+  | [] ->
+      (* The end. Must end artifact if in artifact. *)
+      if !artifact then rev (Pdfops.Op_EMC::a) else rev a
+  | Pdfops.Op_BMC "/BeginArtifact"::t ->
+      (* Convert back-channel artifact beginning. *)
+      set artifact;
+      loop (Pdfops.Op_BMC "/Artifact"::a) t
+  | Pdfops.Op_BMC "/EndArtifact"::t ->
+      (* Convert back-channel artifact ending. *)
+      clear artifact;
+      loop (Pdfops.Op_EMC::a) t
+  | Pdfops.Op_BDC _ as h::t -> 
+      (* Entering content. If in artifact, must end artifact. *)
+      let a' = if !artifact then h::Pdfops.Op_EMC::a else h::a in
+        set content; clear artifact; loop a' t
+  | Pdfops.Op_EMC as h::t ->
+      (* Exiting content. *)
+      clear content;
+      loop (h::a) t
+  | h::t -> 
+      (* A normal operation. If not in content or artifact must start artifact. *)
+      let a' =
+        if not (!content || !artifact) then (set artifact; h::Pdfops.Op_BMC "/Artifact"::a) else h::a
+      in
+        loop a' t
+  in
+    loop [] ops
 
 let font_widths id f fontsize =
   match Hashtbl.find width_table_cache (id, fontsize) with
@@ -189,7 +226,7 @@ let make_annotations pdf annots =
 (* At this stage, just Font and Text and HGlue 0. and VGlue 0. and Newline and
    NewPage elements. Split on NewPages, typeset each page, add font
    dictionaries. New page only creates a page when that page has content. *)
-let typeset lmargin rmargin tmargin bmargin papersize pdf i =
+let typeset ~process_struct_tree lmargin rmargin tmargin bmargin papersize pdf i =
   Hashtbl.clear width_table_cache;
   let debug = false in
   if debug then (print_endline "***input:\n\n"; print_endline (to_string i));
@@ -286,3 +323,5 @@ let typeset lmargin rmargin tmargin bmargin papersize pdf i =
     iter typeset_element i;
     write_page ();
     rev !pages
+
+
