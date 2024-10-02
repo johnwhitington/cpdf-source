@@ -245,8 +245,9 @@ let typeset ~process_struct_tree lmargin rmargin tmargin bmargin papersize pdf i
   let thisdestrectangles = ref [] in
   let pages = ref [] in
   let write_page () =
+    let ops = if process_struct_tree then add_artifacts (rev !ops) else rev !ops in
     let page =
-      {Pdfpage.content = if !ops = [] then [] else [Pdfops.stream_of_ops (rev !ops)];
+      {Pdfpage.content = if ops = [] then [] else [Pdfops.stream_of_ops ops];
        Pdfpage.mediabox = Pdfpage.rectangle_of_paper papersize;
        Pdfpage.resources = make_resources !thispagefontnums;
        Pdfpage.rotate = Pdfpage.Rotate0;
@@ -323,5 +324,3 @@ let typeset ~process_struct_tree lmargin rmargin tmargin bmargin papersize pdf i
     iter typeset_element i;
     write_page ();
     rev !pages
-
-
