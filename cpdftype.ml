@@ -234,6 +234,11 @@ let make_annotations pdf annots =
   if annots = [] then Pdf.Dictionary [] else
     Pdf.Dictionary ["/Annots", Pdf.Array (map (function a -> Pdf.Indirect (Pdf.addobj pdf a)) annots)]
 
+let rec number_tags n = function
+  | Tag (s, _)::t -> Tag (s, n)::number_tags (n + 1) t
+  | h::t -> h::number_tags n t
+  | [] -> []
+
 (* At this stage, just Font and Text and HGlue 0. and VGlue 0. and Newline and
    NewPage elements. Split on NewPages, typeset each page, add font
    dictionaries. New page only creates a page when that page has content. *)
@@ -241,6 +246,7 @@ let typeset ~process_struct_tree lmargin rmargin tmargin bmargin papersize pdf i
   Hashtbl.clear width_table_cache;
   let debug = false in
   if debug then (print_endline "***input:\n\n"; print_endline (to_string i));
+  let i = number_tags 1 i in
   let i = layout lmargin rmargin papersize i in
   if debug then (print_endline "***after layout:\n\n"; print_endline (to_string i));
   let i = paginate tmargin bmargin papersize i in
