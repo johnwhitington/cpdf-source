@@ -1228,8 +1228,41 @@ let setattachfile s =
 let setextracttextfontsize f =
   args.extract_text_font_size <- Some f
 
-let setfontsize f =
-  if f > 0.  then args.fontsize <- f else error "Negative font size specified" 
+let setfontsize s =
+  let f = Cpdfcoord.parse_single_number (Pdf.empty ()) s in
+    if f > 0. then args.fontsize <- f else error "Negative font size specified"
+
+let setlinewidth s =
+  let f = Cpdfcoord.parse_single_number (Pdf.empty ()) s in
+    if f > 0. then args.linewidth <- f else error "Negative line width specified"
+
+let setimposemargin s =
+  let f = Cpdfcoord.parse_single_number (Pdf.empty ()) s in
+    args.impose_margin <- f
+
+let setimposelinewidth s =
+  let f = Cpdfcoord.parse_single_number (Pdf.empty ()) s in
+    if f > 0. then args.impose_linewidth <- f else error "Negative impose line width specified" 
+
+let setimposespacing s =
+  let f = Cpdfcoord.parse_single_number (Pdf.empty ()) s in
+    args.impose_spacing <- f
+
+let setleading s =
+  let f = Cpdfcoord.parse_single_number (Pdf.empty ()) s in
+    Cpdfdrawcontrol.addop (Cpdfdraw.Leading f)
+
+let setcharspace s =
+  let f = Cpdfcoord.parse_single_number (Pdf.empty ()) s in
+    Cpdfdrawcontrol.addop (Cpdfdraw.CharSpace f)
+
+let setwordspace s =
+  let f = Cpdfcoord.parse_single_number (Pdf.empty ()) s in
+    Cpdfdrawcontrol.addop (Cpdfdraw.WordSpace f)
+
+let setrise s =
+  let f = Cpdfcoord.parse_single_number (Pdf.empty ()) s in
+    Cpdfdrawcontrol.addop (Cpdfdraw.Rise f)
 
 let setaddtext s =
   setop (AddText s) ()
@@ -2247,7 +2280,7 @@ let specs =
       Arg.String setfont,
       " Set the font");
    ("-font-size",
-      Arg.Float setfontsize,
+      Arg.String setfontsize,
       " Set the font size");
    ("-load-ttf",
       Arg.String loadttf,
@@ -2265,7 +2298,7 @@ let specs =
       Arg.Unit (fun () -> args.outline <- true),
       " Use outline mode for text");
    ("-linewidth",
-      Arg.Float (fun f -> args.linewidth <- f),
+      Arg.String setlinewidth,
       " Set line width for outline text");
    ("-pos-center",
       Arg.String setposcenter,
@@ -2358,13 +2391,13 @@ let specs =
       Arg.Unit (fun () -> args.impose_btt <- true),
       " Impose bottom-to-top");
    ("-impose-margin",
-      Arg.Float (fun f -> args.impose_margin <- f),
+      Arg.String setimposemargin,
       " Add margin around whole imposed page");
    ("-impose-spacing",
-      Arg.Float (fun f -> args.impose_spacing <- f),
+      Arg.String setimposespacing,
       " Add spacing around each imposed page");
    ("-impose-linewidth",
-      Arg.Float (fun f -> args.impose_linewidth <- f),
+      Arg.String setimposelinewidth,
       " Imposition divider line width (0=none)");
    ("-chop",
       Arg.String setchop,
@@ -2901,12 +2934,12 @@ let specs =
    ("-para", Arg.String Cpdfdrawcontrol.addpara, " Add a paragraph of text");
    ("-paras", Arg.String Cpdfdrawcontrol.addparas, " Add paragraphs of text, splitting on newlines");
    ("-indent", Arg.Float (fun f -> args.indent <- Some f), " Set indent for paragraphs");
-   ("-leading", Arg.Float (fun f -> Cpdfdrawcontrol.addop (Cpdfdraw.Leading f)), " Set leading");
-   ("-charspace", Arg.Float (fun f -> Cpdfdrawcontrol.addop (Cpdfdraw.CharSpace f)), " Set character spacing");
-   ("-wordspace", Arg.Float (fun f -> Cpdfdrawcontrol.addop (Cpdfdraw.WordSpace f)), " Set word space");
+   ("-leading", Arg.String setleading, " Set leading");
+   ("-charspace", Arg.String setcharspace, " Set character spacing");
+   ("-wordspace", Arg.String setwordspace, " Set word space");
    ("-textscale", Arg.Float (fun f -> Cpdfdrawcontrol.addop (Cpdfdraw.TextScale f)), " Set text scale");
    ("-rendermode", Arg.Int (fun i -> Cpdfdrawcontrol.addop (Cpdfdraw.RenderMode i)), " Set text rendering mode");
-   ("-rise", Arg.Float (fun f -> Cpdfdrawcontrol.addop (Cpdfdraw.Rise f)), " Set text rise");
+   ("-rise", Arg.String setrise, " Set text rise");
    ("-nl", Arg.Unit (fun () -> Cpdfdrawcontrol.addop Cpdfdraw.Newline), " New line");
    ("-newpage", Arg.Unit Cpdfdrawcontrol.addnewpage, " Move to a fresh page");
    ("-extract-stream", Arg.String setextractstream, " Extract a stream");
