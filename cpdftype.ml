@@ -263,6 +263,8 @@ let typeset ~process_struct_tree lmargin rmargin tmargin bmargin papersize pdf i
   let thispageannotations = ref [] in
   let thisdestrectangles = ref [] in
   let pages = ref [] in
+  let tags = ref [] in
+  let tagsout = ref [] in
   let write_page () =
     let ops = if process_struct_tree then add_artifacts (rev !ops) else rev !ops in
     let page =
@@ -272,7 +274,8 @@ let typeset ~process_struct_tree lmargin rmargin tmargin bmargin papersize pdf i
        Pdfpage.rotate = Pdfpage.Rotate0;
        Pdfpage.rest = make_annotations pdf !thispageannotations}
     in
-      pages := page :: !pages
+      pages := page::!pages;
+      tagsout := rev !tags::!tagsout
   in
   let rec typeset_element = function
     | Text cps ->
@@ -340,9 +343,11 @@ let typeset ~process_struct_tree lmargin rmargin tmargin bmargin papersize pdf i
             thispageannotations := map annot !thisdestrectangles @ !thispageannotations;
         s.dest <- None;
         thisdestrectangles := []
-   | Tag (s, _) -> ops := Pdfops.Op_BDC ("/" ^ s, Pdf.Dictionary [("/MCID", Pdf.Integer (mcid ()))])::!ops
+   | Tag (s, i) ->
+       tags := (s, i)::!tags;
+       ops := Pdfops.Op_BDC ("/" ^ s, Pdf.Dictionary [("/MCID", Pdf.Integer (mcid ()))])::!ops
    | EndTag -> ops := Pdfops.Op_EMC::!ops
   in
     iter typeset_element i;
     write_page ();
-    rev !pages
+    (rev !pages, rev !tagsout)

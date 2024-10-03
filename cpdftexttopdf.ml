@@ -92,6 +92,6 @@ let typeset ~process_struct_tree ?subformat ?title ~papersize ~font ~fontsize te
       let firstfont = hd (keep (function Cpdftype.Font _ -> true | _ -> false) tagged) in 
         [firstfont; Cpdftype.BeginDocument] @ tagged
   in
-  let pages = Cpdftype.typeset ~process_struct_tree margin margin margin margin papersize pdf instrs in
+  let pages, tags = Cpdftype.typeset ~process_struct_tree margin margin margin margin papersize pdf instrs in
     let pdf, pageroot = Pdfpage.add_pagetree pages pdf in
       Pdfpage.add_root pageroot [] pdf

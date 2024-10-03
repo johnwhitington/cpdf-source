@@ -156,7 +156,7 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
             Cpdftype.NewLine])
       (Pdfmarks.read_bookmarks pdf)
   in
-  let toc_pages =
+  let toc_pages, _ =
     let title =
       let glue = Cpdftype.VGlue (fontsize *. 2.) in
         if title = "" then [] else
