@@ -518,7 +518,7 @@ let image_of_input ?subformat ?title ~process_struct_tree fobj i =
     | _, (Some Cpdfua.PDFUA1 | Some Cpdfua.PDFUA2) | true, _ -> true
     | _ -> false
   in
-    if process_struct_tree || subformat = Some Cpdfua.PDFUA2 then
+    if subformat = Some Cpdfua.PDFUA2 then
       begin
         let str = Pdf.addobj pdf Pdf.Null in
         let figure = Pdf.addobj pdf Pdf.Null in
@@ -532,7 +532,7 @@ let image_of_input ?subformat ?title ~process_struct_tree fobj i =
                                                        ("/K", Pdf.Array [Pdf.Indirect document]); ("/ParentTree", Pdf.Indirect parent_tree)]);
         Pdf.replace_chain pdf ["/Root"] ("/StructTreeRoot", (Pdf.Indirect str))
       end
-    else if subformat = Some Cpdfua.PDFUA1 then
+    else if process_struct_tree || subformat = Some Cpdfua.PDFUA1 then
       begin
         let str = Pdf.addobj pdf Pdf.Null in
         let figure = Pdf.addobj pdf Pdf.Null in
