@@ -246,7 +246,7 @@ let typeset ~process_struct_tree lmargin rmargin tmargin bmargin papersize pdf i
   Hashtbl.clear width_table_cache;
   let debug = false in
   if debug then (print_endline "***input:\n\n"; print_endline (to_string i));
-  let i = number_tags 1 i in
+  let i = number_tags 0 i in
   let i = layout lmargin rmargin papersize i in
   if debug then (print_endline "***after layout:\n\n"; print_endline (to_string i));
   let i = paginate tmargin bmargin papersize i in
@@ -275,7 +275,8 @@ let typeset ~process_struct_tree lmargin rmargin tmargin bmargin papersize pdf i
        Pdfpage.rest = make_annotations pdf !thispageannotations}
     in
       pages := page::!pages;
-      tagsout := rev !tags::!tagsout
+      tagsout := rev !tags::!tagsout;
+      tags := []
   in
   let rec typeset_element = function
     | Text cps ->

@@ -94,6 +94,30 @@ let typeset ~process_struct_tree ?subformat ?title ~papersize ~font ~fontsize te
       let firstfont = hd (keep (function Cpdftype.Font _ -> true | _ -> false) tagged) in 
         [firstfont; Cpdftype.BeginDocument] @ tagged
   in
+  let pages, tags = Cpdftype.typeset ~process_struct_tree margin margin margin margin papersize pdf instrs in
+  iter (fun x -> Printf.printf "PAGE\n"; iter (fun (_, i) -> Printf.printf "Tag number %i\n" i) x) tags;
+  (* We make (tag number, page number, mcid) triples *)
+  let tagtriples =
+    flatten
+      (map2
+       (fun pn tags ->
+          map2 (fun (_, tagnum) mcid -> (tagnum, pn, mcid)) tags (indx0 tags))
+       (indx0 tags)
+       tags)
+  in
+    Printf.printf "(tag number, page number, mcid) triples:\n";
+    iter (fun (tagnum, pn, mcid) -> Printf.printf "%i, %i, %i\n" tagnum pn mcid) tagtriples;
+  (* Now work out the nodes and what each /K and /Pg in them is *)
+  let pages_and_mcids =
+    []
+  in
+    Printf.printf "Pages and their MCIDs\n";
+    iter
+      (fun (page, mcids) ->
+         Printf.printf "Page %i\n";
+         iter (Printf.printf "%i ") mcids;
+         Printf.printf "\n")
+      pages_and_mcids;
     if subformat = Some Cpdfua.PDFUA2 then
       begin
         let str = Pdf.addobj pdf Pdf.Null in
@@ -118,11 +142,11 @@ let typeset ~process_struct_tree ?subformat ?title ~papersize ~font ~fontsize te
         Pdf.addobj_given_num pdf (str, Pdf.Dictionary [("/Type", Pdf.Name "/StructTreeRoot"); ("/K", Pdf.Array [Pdf.Indirect p]); ("/ParentTree", Pdf.Indirect parent_tree)]);
         Pdf.replace_chain pdf ["/Root"] ("/StructTreeRoot", (Pdf.Indirect str))
       end;
-  let pages, tags = Cpdftype.typeset ~process_struct_tree margin margin margin margin papersize pdf instrs in
-  let pages =
-    map
-      (fun p -> if process_struct_tree then {p with Pdfpage.rest = Pdf.add_dict_entry p.Pdfpage.rest "/StructParents" (Pdf.Integer 1)} else p)
-      pages
-  in
-    let pdf, pageroot = Pdfpage.add_pagetree pages pdf in
-      Pdfpage.add_root pageroot [] pdf
+    let pages =
+      map2
+        (fun pn p -> if process_struct_tree then {p with Pdfpage.rest = Pdf.add_dict_entry p.Pdfpage.rest "/StructParents" (Pdf.Integer pn)} else p)
+        (indx0 pages)
+        pages
+    in
+      let pdf, pageroot = Pdfpage.add_pagetree pages pdf in
+        Pdfpage.add_root pageroot [] pdf
