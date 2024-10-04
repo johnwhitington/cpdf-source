@@ -137,22 +137,11 @@ let typeset ~process_struct_tree ?subformat ?title ~papersize ~font ~fontsize te
       let pdf, pageroot = Pdfpage.add_pagetree pages pdf in
       let pdf = Pdfpage.add_root pageroot [] pdf in
       let refnums = let ns = Pdf.page_reference_numbers pdf in combine (indx0 ns) ns in
-      if subformat = Some Cpdfua.PDFUA2 then
+      if process_struct_tree || subformat = Some Cpdfua.PDFUA1 || subformat = Some Cpdfua.PDFUA2 then
         begin
-          let str = Pdf.addobj pdf Pdf.Null in
-          let p = Pdf.addobj pdf Pdf.Null in
-          let parent_tree = Pdf.addobj pdf Pdf.Null in
-          let namespace = Pdf.addobj pdf (Pdf.Dictionary [("/NS", Pdf.String "http://iso.org/pdf2/ssn")]) in
-          let document = Pdf.addobj pdf Pdf.Null in
-          Pdf.addobj_given_num pdf (document, Pdf.Dictionary [("/K", Pdf.Array [Pdf.Indirect p]); ("/P", Pdf.Indirect str); ("/S", Pdf.Name "/Document"); ("/NS", Pdf.Indirect namespace)]);
-          Pdf.addobj_given_num pdf (parent_tree, Pdf.Dictionary [("/Nums", Pdf.Array [Pdf.Integer 1; Pdf.Array [Pdf.Indirect p]])]);
-          Pdf.addobj_given_num pdf (p, Pdf.Dictionary [("/K", Pdf.Array [Pdf.Integer 0]); ("/P", Pdf.Indirect document); ("/S", Pdf.Name "/P")]);
-          Pdf.addobj_given_num pdf (str, Pdf.Dictionary [("/Namespaces", Pdf.Array [Pdf.Indirect namespace]); ("/Type", Pdf.Name "/StructTreeRoot");
-                                                         ("/K", Pdf.Array [Pdf.Indirect document]); ("/ParentTree", Pdf.Indirect parent_tree)]);
-          Pdf.replace_chain pdf ["/Root"] ("/StructTreeRoot", (Pdf.Indirect str))
-        end
-      else if process_struct_tree || subformat = Some Cpdfua.PDFUA1 then
-        begin
+          let namespace = if subformat = Some Cpdfua.PDFUA2 then Pdf.addobj pdf (Pdf.Dictionary [("/NS", Pdf.String "http://iso.org/pdf2/ssn")]) else 0 in
+          let document = if subformat = Some Cpdfua.PDFUA2 then Pdf.addobj pdf Pdf.Null else 0 in
+
           let str = Pdf.addobj pdf Pdf.Null in
           let topks =
             map
@@ -160,28 +149,29 @@ let typeset ~process_struct_tree ?subformat ?title ~papersize ~font ~fontsize te
                  let ks =
                    map (fun (_, pagenumber, mcid) -> Pdf.Dictionary [("/Type", Pdf.Name "/MCR"); ("/Pg", Pdf.Indirect (unopt (lookup pagenumber refnums))); ("/MCID", Pdf.Integer mcid)]) parts_of_para
                  in
-                   Pdf.Indirect (Pdf.addobj pdf (Pdf.Dictionary [("/K", Pdf.Array ks); ("/P", Pdf.Indirect str); ("/S", Pdf.Name "/P")])))
+                   Pdf.Indirect (Pdf.addobj pdf (Pdf.Dictionary [("/K", Pdf.Array ks); ("/P", Pdf.Indirect (if subformat = Some Cpdfua.PDFUA2 then document else str)); ("/S", Pdf.Name "/P")])))
               nodes
           in
+          if subformat = Some Cpdfua.PDFUA2 then
+            Pdf.addobj_given_num pdf (document, Pdf.Dictionary [("/K", Pdf.Array topks); ("/P", Pdf.Indirect str); ("/S", Pdf.Name "/Document"); ("/NS", Pdf.Indirect namespace)]);
           let parent_tree =
             (* We are making a map of (page number (/StructParents entry) to list of /P nodes, one for each MCID on that page in order. *)
             let pairs =
               map
                 (fun pn ->
-                  let this_page_triples =
-                    keep (fun (para, page, mcid) -> page = pn) tagtriples
-                  in
-                    Printf.printf "Page %i\n" pn;
-                    iter
-                      (fun (para, page, mcid) -> Printf.printf "Para index %i, MCID %i\n" para mcid)
-                      this_page_triples;
+                  let this_page_triples = keep (fun (para, page, mcid) -> page = pn) tagtriples in
                     (string_of_int pn, Pdf.Array (map (function (para, _, _) -> (List.nth topks para)) this_page_triples)))
                 (indx0 pages)
             in
             Pdf.addobj pdf (Pdftree.build_name_tree true pdf pairs)
-            (*Pdf.addobj pdf (Pdf.Dictionary [("/Nums", Pdf.Array [Pdf.Integer 1; Pdf.Array [Pdf.Indirect p]])])*)
           in
-            Pdf.addobj_given_num pdf (str, Pdf.Dictionary [("/Type", Pdf.Name "/StructTreeRoot"); ("/K", Pdf.Array topks); ("/ParentTree", Pdf.Indirect parent_tree)]);
+          let stns =
+            if subformat = Some Cpdfua.PDFUA2 then [("/Namespaces", Pdf.Array [Pdf.Indirect namespace])] else []
+          in
+          let k =
+            if subformat = Some Cpdfua.PDFUA2 then Pdf.Indirect document else Pdf.Array topks
+          in
+            Pdf.addobj_given_num pdf (str, Pdf.Dictionary (stns @ [("/Type", Pdf.Name "/StructTreeRoot"); ("/K", k); ("/ParentTree", Pdf.Indirect parent_tree)]));
             Pdf.replace_chain pdf ["/Root"] ("/StructTreeRoot", (Pdf.Indirect str))
         end;
         pdf
