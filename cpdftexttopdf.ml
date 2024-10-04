@@ -95,7 +95,7 @@ let typeset ~process_struct_tree ?subformat ?title ~papersize ~font ~fontsize te
         [firstfont; Cpdftype.BeginDocument] @ tagged
   in
   let pages, tags = Cpdftype.typeset ~process_struct_tree margin margin margin margin papersize pdf instrs in
-  iter (fun x -> Printf.printf "PAGE\n"; iter (fun (_, i) -> Printf.printf "Paragraph number %i\n" i) x) tags;
+  (*iter (fun x -> Printf.printf "PAGE\n"; iter (fun (_, i) -> Printf.printf "Paragraph number %i\n" i) x) tags;*)
   (* We make (tag number, page number, mcid) triples *)
   let tagtriples =
     flatten
@@ -105,8 +105,8 @@ let typeset ~process_struct_tree ?subformat ?title ~papersize ~font ~fontsize te
        (indx0 tags)
        tags)
   in
-    Printf.printf "(paragraph number, page number, mcid) triples:\n";
-    iter (fun (tagnum, pn, mcid) -> Printf.printf "%i, %i, %i\n" tagnum pn mcid) tagtriples;
+   (* Printf.printf "(paragraph number, page number, mcid) triples:\n";
+    iter (fun (tagnum, pn, mcid) -> Printf.printf "%i, %i, %i\n" tagnum pn mcid) tagtriples;*)
   (* Now work out the nodes and which MCIDs in which pages they point to. Each paragraph may point to 1 or more nodes. *)
   let rec find_nodes (a : ((int * int * int) list) list) = function
   | (para, page, mcid)::nodes ->
