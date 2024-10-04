@@ -95,7 +95,7 @@ let typeset ~process_struct_tree ?subformat ?title ~papersize ~font ~fontsize te
         [firstfont; Cpdftype.BeginDocument] @ tagged
   in
   let pages, tags = Cpdftype.typeset ~process_struct_tree margin margin margin margin papersize pdf instrs in
-  iter (fun x -> Printf.printf "PAGE\n"; iter (fun (_, i) -> Printf.printf "Tag number %i\n" i) x) tags;
+  iter (fun x -> Printf.printf "PAGE\n"; iter (fun (_, i) -> Printf.printf "Paragraph number %i\n" i) x) tags;
   (* We make (tag number, page number, mcid) triples *)
   let tagtriples =
     flatten
@@ -105,19 +105,29 @@ let typeset ~process_struct_tree ?subformat ?title ~papersize ~font ~fontsize te
        (indx0 tags)
        tags)
   in
-    Printf.printf "(tag number, page number, mcid) triples:\n";
+    Printf.printf "(paragraph number, page number, mcid) triples:\n";
     iter (fun (tagnum, pn, mcid) -> Printf.printf "%i, %i, %i\n" tagnum pn mcid) tagtriples;
-  (* Now work out the nodes and what each /K and /Pg in them is *)
-  let pages_and_mcids =
-    []
+  (* Now work out the nodes and which MCIDs in which pages they point to. Each paragraph may point to 1 or more nodes. *)
+  let rec find_nodes (a : ((int * int * int) list) list) = function
+  | (para, page, mcid)::nodes ->
+      begin match a with
+      | ((para', page', mcid')::t)::rest when para = para' ->
+          find_nodes (((para, page, mcid)::(para', page', mcid')::t)::rest) nodes
+      | (h::t)::rest ->
+          find_nodes (([(para, page, mcid)])::(h::t)::rest) nodes
+      | []::rest ->
+          find_nodes (([(para, page, mcid)])::rest) nodes
+      | [] -> assert false
+      end
+  | [] -> rev (map rev a)
   in
-    Printf.printf "Pages and their MCIDs\n";
+  let nodes = find_nodes [[]] tagtriples in
+    Printf.printf "Paragraphs and their page and MCIDs\n";
     iter
-      (fun (page, mcids) ->
-         Printf.printf "Page %i\n";
-         iter (Printf.printf "%i ") mcids;
-         Printf.printf "\n")
-      pages_and_mcids;
+      (fun parts_of_para ->
+         Printf.printf "Paragraph:\n";
+         iter (fun (para, page, mcid) -> Printf.printf "Para %i, Page %i, MCID %i\n" para page mcid) parts_of_para)
+      nodes;
     if subformat = Some Cpdfua.PDFUA2 then
       begin
         let str = Pdf.addobj pdf Pdf.Null in
