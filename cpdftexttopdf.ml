@@ -155,7 +155,6 @@ let typeset ~process_struct_tree ?subformat ?title ~papersize ~font ~fontsize te
           if subformat = Some Cpdfua.PDFUA2 then
             Pdf.addobj_given_num pdf (document, Pdf.Dictionary [("/K", Pdf.Array topks); ("/P", Pdf.Indirect str); ("/S", Pdf.Name "/Document"); ("/NS", Pdf.Indirect namespace)]);
           let parent_tree =
-            (* We are making a map of (page number (/StructParents entry) to list of /P nodes, one for each MCID on that page in order. *)
             let pairs =
               map
                 (fun pn ->
