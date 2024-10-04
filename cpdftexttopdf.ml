@@ -154,8 +154,6 @@ let typeset ~process_struct_tree ?subformat ?title ~papersize ~font ~fontsize te
       else if process_struct_tree || subformat = Some Cpdfua.PDFUA1 then
         begin
           let str = Pdf.addobj pdf Pdf.Null in
-          let p = Pdf.addobj pdf Pdf.Null in
-          let parent_tree = Pdf.addobj pdf Pdf.Null in
           let topks =
             map
               (fun parts_of_para ->
@@ -165,7 +163,24 @@ let typeset ~process_struct_tree ?subformat ?title ~papersize ~font ~fontsize te
                    Pdf.Indirect (Pdf.addobj pdf (Pdf.Dictionary [("/K", Pdf.Array ks); ("/P", Pdf.Indirect str); ("/S", Pdf.Name "/P")])))
               nodes
           in
-            Pdf.addobj_given_num pdf (parent_tree, Pdf.Dictionary [("/Nums", Pdf.Array [Pdf.Integer 1; Pdf.Array [Pdf.Indirect p]])]);
+          let parent_tree =
+            (* We are making a map of (page number (/StructParents entry) to list of /P nodes, one for each MCID on that page in order. *)
+            let pairs =
+              map
+                (fun pn ->
+                  let this_page_triples =
+                    keep (fun (para, page, mcid) -> page = pn) tagtriples
+                  in
+                    Printf.printf "Page %i\n" pn;
+                    iter
+                      (fun (para, page, mcid) -> Printf.printf "Para index %i, MCID %i\n" para mcid)
+                      this_page_triples;
+                    (string_of_int pn, Pdf.Array (map (function (para, _, _) -> (List.nth topks para)) this_page_triples)))
+                (indx0 pages)
+            in
+            Pdf.addobj pdf (Pdftree.build_name_tree true pdf pairs)
+            (*Pdf.addobj pdf (Pdf.Dictionary [("/Nums", Pdf.Array [Pdf.Integer 1; Pdf.Array [Pdf.Indirect p]])])*)
+          in
             Pdf.addobj_given_num pdf (str, Pdf.Dictionary [("/Type", Pdf.Name "/StructTreeRoot"); ("/K", Pdf.Array topks); ("/ParentTree", Pdf.Indirect parent_tree)]);
             Pdf.replace_chain pdf ["/Root"] ("/StructTreeRoot", (Pdf.Indirect str))
         end;
