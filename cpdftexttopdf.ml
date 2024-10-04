@@ -86,7 +86,7 @@ let typeset ~process_struct_tree ?subformat ?title ~papersize ~font ~fontsize te
   let instrs = of_utf8_with_newlines fontpack fontsize (Pdfio.string_of_bytes text) in
   (*flprint (Cpdftype.to_string instrs);
   flprint "------------------------------";*)
-  let tagged = tag_paragraphs instrs in
+  let tagged = if process_struct_tree then tag_paragraphs instrs else instrs in
   (*flprint (Cpdftype.to_string tagged);*)
   let margin = Pdfunits.points (Pdfpaper.width papersize) (Pdfpaper.unit papersize) /. 15.  in
   let instrs =
@@ -122,12 +122,12 @@ let typeset ~process_struct_tree ?subformat ?title ~papersize ~font ~fontsize te
   | [] -> rev (map rev a)
   in
   let nodes = find_nodes [[]] tagtriples in
-    Printf.printf "Paragraphs and their page and MCIDs\n";
+    (*Printf.printf "Paragraphs and their page and MCIDs\n";
     iter
       (fun parts_of_para ->
          Printf.printf "Paragraph:\n";
          iter (fun (para, page, mcid) -> Printf.printf "Para %i, Page %i, MCID %i\n" para page mcid) parts_of_para)
-      nodes;
+      nodes;*)
     let pages =
       map2
         (fun pn p -> if process_struct_tree then {p with Pdfpage.rest = Pdf.add_dict_entry p.Pdfpage.rest "/StructParents" (Pdf.Integer pn)} else p)
