@@ -193,7 +193,7 @@ type xobj =
 
 let image_results = ref []
 
-let rec image_resolution_page pdf page pagenum dpi images =
+let rec image_resolution_page pdf page pagenum images =
   try
     let pageops = Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content
     and transform = ref [ref Pdftransform.i_matrix] in
@@ -239,7 +239,7 @@ let rec image_resolution_page pdf page pagenum dpi images =
                              Pdfpage.rest = Pdf.Dictionary []}
                           in
                             let newpdf = Pdfpage.change_pages false pdf [page] in
-                              image_resolution newpdf [pagenum] dpi
+                              image_resolution newpdf [pagenum]
                    | (pagenum, name, Image (w, h), objnum) ->
                        let lx = Pdfunits.inches (distance_between o x) Pdfunits.PdfPoint in
                        let ly = Pdfunits.inches (distance_between o y) Pdfunits.PdfPoint in
@@ -268,7 +268,7 @@ let rec image_resolution_page pdf page pagenum dpi images =
     with
       e -> Printf.printf "Error %s\n" (Printexc.to_string e); flprint "\n"
 
-and image_resolution pdf range dpi =
+and image_resolution pdf range =
   let images = ref [] in
     Cpdfpage.iter_pages
       (fun pagenum page ->
@@ -322,13 +322,16 @@ and image_resolution pdf range dpi =
         iter
           (function (pagenum, images) ->
              let page = select pagenum pages in
-               image_resolution_page pdf page pagenum dpi images)
+               image_resolution_page pdf page pagenum images)
           pagesplits
+
+let is_below_dpi dpi (_, _, _, _, wdpi, hdpi, _) =
+  wdpi < dpi || hdpi < dpi
 
 let image_resolution pdf range dpi =
   image_results := [];
-  image_resolution pdf range dpi;
-  rev !image_results
+  image_resolution pdf range;
+  rev (keep (is_below_dpi dpi) !image_results)
 
 let image_resolution_json pdf range dpi =
   let images = image_resolution pdf range dpi in

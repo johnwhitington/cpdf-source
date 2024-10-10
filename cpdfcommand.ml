@@ -4405,8 +4405,7 @@ let go () =
           let images = Cpdfimage.image_resolution pdf range f in
             iter
               (function (pagenum, xobject, w, h, wdpi, hdpi, objnum) ->
-                  if wdpi < f || hdpi < f then
-                    Printf.printf "%i, %s, %i, %i, %f, %f, %i\n" pagenum xobject w h wdpi hdpi objnum)
+                 Printf.printf "%i, %s, %i, %i, %f, %f, %i\n" pagenum xobject w h wdpi hdpi objnum)
                images
   | Some ListImages ->
       let pdf = get_single_pdf args.op true in

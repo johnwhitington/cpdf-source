@@ -23,6 +23,10 @@ Extended features:
 
 o Rectangle may be specified as x y x' y' rather than x y w h
 
+Fixes:
+
+o -image-resolution-json was listing all images
+
 * = Supported by a grant from NLnet
 
 2.7.1 (July 2024)
