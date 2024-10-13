@@ -3589,15 +3589,16 @@ let print_obj pdf objspec =
     | [] -> simple_obj 0
     | _ -> simple_obj (int_of_string objspec)
 
+let print_version () =
+  flprint
+    ("cpdf " ^ (if agpl then "AGPL " else "") ^ "Version " ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ "." ^ string_of_int minor_minor_version ^ " " ^ version_date ^ "\n")
 
 (* Main function *)
 let go () =
   check_bookmarks_mistake ();
   check_clashing_output_name ();
   match args.op with
-  | Some Version ->
-      flprint
-        ("cpdf " ^ (if agpl then "AGPL " else "") ^ "Version " ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ "." ^ string_of_int minor_minor_version ^ " " ^ version_date ^ "\n")
+  | Some Version -> print_version ()
   | None | Some Merge ->
       begin match args.out, args.inputs with
       | _, (_::_ as inputs) ->
@@ -4742,7 +4743,8 @@ let go_withargv argv =
    * has exactly one file input and exactly one output and just -gs <gs>
    * -gs-malformed-force between.  *)
   match argv with
-    [|_; inputfilename; "-gs"; gslocation; "-gs-malformed-force"; "-o"; outputfilename|] ->
+  | [|_|] -> print_version ()
+  | [|_; inputfilename; "-gs"; gslocation; "-gs-malformed-force"; "-o"; outputfilename|] ->
     args.path_to_ghostscript <- gslocation;
     ignore (gs_malformed_force inputfilename outputfilename);
     exit 0
