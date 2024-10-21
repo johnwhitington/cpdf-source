@@ -381,7 +381,7 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
         (res ()).page_names <- pdfname::(res ()).page_names;
         [Pdfops.Op_Do pdfname]
   | Image s ->
-      let m = mcid () in
+      let m = if !do_auto_tag then mcid () else 0 in
         if not dryrun then structdata := StDataMCID ("/Figure", m)::!structdata;
       let pdfname = try fst (Hashtbl.find (res ()).images s) with _ -> error ("Image not found: " ^ s) in
         (res ()).page_names <- pdfname::(res ()).page_names;
@@ -445,7 +445,7 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
       [Pdfops.Op_BT] @ ops_of_drawops struct_tree dryrun pdf endpage filename bates batespad num page ops @ [Pdfops.Op_ET] 
   | Text s ->
       if dryrun then iter (fun c -> Hashtbl.replace (res ()).current_fontpack_codepoints c ()) (Pdftext.codepoints_of_utf8 s);
-      let m = mcid () in
+      let m = if !do_auto_tag then mcid () else 0 in
         if not dryrun && !do_auto_tag then structdata := StDataMCID ("/P", m)::!structdata;
           (if struct_tree && !do_auto_tag then [Pdfops.Op_BDC ("/P", Pdf.Dictionary ["/MCID", Pdf.Integer m])] else [])
         @ fst (runs_of_utf8 s)
@@ -461,7 +461,7 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
           (map
             (function para ->
                let begintag =
-                 let m = mcid () in
+                 let m = if !do_auto_tag then mcid () else 0 in
                    if not dryrun && !do_auto_tag then structdata := StDataMCID ("/P", m)::!structdata;
                    if struct_tree && !do_auto_tag then [Pdfops.Op_BDC ("/P", Pdf.Dictionary ["/MCID", Pdf.Integer m])] else []
                in
