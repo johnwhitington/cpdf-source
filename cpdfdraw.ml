@@ -442,16 +442,14 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
         (res ()).font_size <- size;
         []
   | TextSection ops ->
+      [Pdfops.Op_BT] @ ops_of_drawops struct_tree dryrun pdf endpage filename bates batespad num page ops @ [Pdfops.Op_ET] 
+  | Text s ->
+      if dryrun then iter (fun c -> Hashtbl.replace (res ()).current_fontpack_codepoints c ()) (Pdftext.codepoints_of_utf8 s);
       let m = mcid () in
         if not dryrun && !do_auto_tag then structdata := StDataMCID ("/P", m)::!structdata;
           (if struct_tree && !do_auto_tag then [Pdfops.Op_BDC ("/P", Pdf.Dictionary ["/MCID", Pdf.Integer m])] else [])
-        @ [Pdfops.Op_BT]
-        @ ops_of_drawops struct_tree dryrun pdf endpage filename bates batespad num page ops
-        @ [Pdfops.Op_ET] 
+        @ fst (runs_of_utf8 s)
         @ (if struct_tree && !do_auto_tag then [Pdfops.Op_EMC] else [])
-  | Text s ->
-      if dryrun then iter (fun c -> Hashtbl.replace (res ()).current_fontpack_codepoints c ()) (Pdftext.codepoints_of_utf8 s);
-      fst (runs_of_utf8 s)
   | SpecialText s ->
       let s = process_specials pdf endpage filename bates batespad num page s in
       if dryrun then iter (fun c -> Hashtbl.replace (res ()).current_fontpack_codepoints c ()) (Pdftext.codepoints_of_utf8 s);
