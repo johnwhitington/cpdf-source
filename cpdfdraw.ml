@@ -460,7 +460,18 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
         flatten
           (map
             (function para ->
-               (if not !first && indent = None then ([Pdfops.Op_T']) else (clear first; [])) @ format_paragraph (if indent <> None && not !first then unopt indent else 0.) j w para)
+               let begintag =
+                 let m = mcid () in
+                   if not dryrun && !do_auto_tag then structdata := StDataMCID ("/P", m)::!structdata;
+                   if struct_tree && !do_auto_tag then [Pdfops.Op_BDC ("/P", Pdf.Dictionary ["/MCID", Pdf.Integer m])] else []
+               in
+               let endtag =
+                 if struct_tree && !do_auto_tag then [Pdfops.Op_EMC] else []
+               in
+                  begintag
+                @ (if not !first && indent = None then [Pdfops.Op_T'] else (clear first; []))
+                @ format_paragraph (if indent <> None && not !first then unopt indent else 0.) j w para
+                @ endtag)
             s)
   | Leading f -> [Pdfops.Op_TL f]
   | CharSpace f -> [Pdfops.Op_Tc f]
