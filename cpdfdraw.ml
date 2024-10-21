@@ -288,6 +288,8 @@ type structdata =
 
 let structdata = ref []
 
+(* TODO: Tagging in XObjects, move tag state into res () etc. *)
+
 (* TODO: Use Uuseg for proper unicode segmentation. *)
 let format_paragraph indent j w s =
   let ss = String.split_on_char ' ' s in
