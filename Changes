@@ -16,6 +16,7 @@ New features:
 * Add structure information to -typeset, add -subformat
 * -typeset can make PDF/UA documents
 * -jpeg, -png and friends can make PDF/UA documents
+* Merge PDF/UA-1 and PDF/UA-2 files, preserving standards compliance
 o -stretch scales without preserving aspect ratio
 o -redact removes whole pages
 
