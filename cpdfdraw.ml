@@ -169,7 +169,6 @@ let process_specials pdf endpage filename bates batespad num page s =
   in
     Cpdfaddtext.process_text (res ()).time s pairs
 
-(* FIXME cache (just for paragraph) *)
 let font_widths f fontsize =
   match f with
   | Pdftext.StandardFont (sf, encoding) ->
@@ -191,9 +190,6 @@ let runs_of_utf8 s =
   let triples = option_map (Cpdfembed.get_char fontpack) codepoints in
   let collated = Cpdfembed.collate_runs triples in
   let font_widths fontnum font font_size =
-    (* Need to cache font widths here. TODO need to cache futher up too for
-       more speed. Check -typeset speed now we need widths. Or, make width
-       calculation optional? *)
     match Hashtbl.find_opt widthcache (fontnum, font_size) with
     | Some table -> table
     | None ->
@@ -290,6 +286,24 @@ let structdata = ref []
 
 (* TODO: Tagging in XObjects, move tag state into res () etc. *)
 
+let rec remove_tfs prev = function
+  | [] -> []
+  | Pdfops.Op_Tf (f, _)::t when f = prev -> remove_tfs prev t
+  | Pdfops.Op_Tf (f, s) as h::t -> h::remove_tfs f t
+  | h::t -> h::remove_tfs prev t 
+
+let rec merge_adjacent_tjs ops =
+  let merge_tjs l =
+    Pdfops.Op_Tj (String.concat "" (map (function Pdfops.Op_Tj s -> s | _ -> assert false) l))
+  in
+    match cleavewhile (function Pdfops.Op_Tj _ -> true | _ -> false) ops with
+    | [], h::t -> h::merge_adjacent_tjs t
+    | [], [] -> []
+    | l, t -> merge_tjs l::merge_adjacent_tjs t
+
+let clean_up ops =
+  merge_adjacent_tjs (remove_tfs "" ops)
+
 (* TODO: Use Uuseg for proper unicode segmentation. *)
 let format_paragraph indent j w s =
   let ss = String.split_on_char ' ' s in
@@ -334,7 +348,7 @@ let format_paragraph indent j w s =
           end;
     done;
   allops =| rev (Pdfops.Op_T'::justify !ops);
-  flatten (rev !allops)
+  clean_up (flatten (rev !allops))
 
 let current_eltinfo = null_hash ()
 
