@@ -1,6 +1,3 @@
-%Document -subformat and -title for -jpg, -png etc.
-%Document -subformat and -title for -typeset
-%Document -subformat PDF/UA-2 when merging
 \documentclass{book}
 % Edit here to produce cpdfmanual.pdf, cpdflibmanual.pdf, pycpdfmanual.pdf,
 % dotnetcpdflibmanual.pdf, jcpdflibmanual.pdf jscpdflibmanual.pdf etc.
@@ -4515,18 +4512,22 @@ In a PDF file, optional content groups are used to group graphical elements toge
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -typeset <text file> [-create-pdf-papersize <size>]!\\
-  \noindent\verb!     [-font <font>] [-font-size <size>] -o out.pdf!
+  \noindent\verb!     [-font <font>] [-font-size <size>]!\\
+  \noindent\verb!     [-subformat <subformat>] [-title <string>] -o out.pdf!
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf -jpeg <filename> -o out.pdf]!
+  \noindent\verb!cpdf -jpeg <filename> [-subformat <subformat>] [-title <string>]!\\
+  \noindent\verb!     -o out.pdf!
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf -png <filename> -o out.pdf!
+  \noindent\verb!cpdf -png <filename> [-subformat <subformat>] [-title <string>]!\\
+  \noindent\verb!     -o out.pdf!
 
   \vspace{1.5mm}
   \noindent\verb!cpdf [-jbig2-global <filename>] -jbig2 <filename>!\\
   \noindent\verb!     [-jbig2-global | -jbig2-global-clear]!\\
-  \noindent\verb!     [-jbig2 <filename>] ... -o out.pdf!
+  \noindent\verb!     [-jbig2 <filename>] ...!\\
+  \noindent\verb!     [-subformat <subformat>] [-title <string>] -o out.pdf!
   \end{framed}}
 
 \section{A new blank PDF}
@@ -4551,6 +4552,8 @@ A basic text to PDF convertor is included in \texttt{cpdf}. It takes a UTF8 text
 \end{framed}
 
 \noindent The standard paper sizes are listed in Section \ref{papersizes}, or you may specify the width and height directly, as described in the same chapter. The font may be specified as described in Section \ref{fonts}. The default font is Times-Roman and the default size is 12.
+
+To produce a PDF in PDF/UA-1 or PDF/UA-2 format add, say, \texttt{-subformat PDF/UA-2 -title "Thesis"} to the command line.
 
 \section{Make a PDF from a PNG, JPEG or JPEG2000 image}
 \index{image!convert to PDF}
@@ -4578,6 +4581,8 @@ For PNG files, the file must have no transparency and no interlacing, and must n
 
 \noindent The output file will have one point of width or height for each pixel in the input.
 
+To produce a PDF in PDF/UA-1 or PDF/UA-2 format add, say, \texttt{-subformat PDF/UA-2 -title "Opus"} to the command line.
+
 \section{Make a PDF from one or more JBIG2 images}
 
 Cpdf can build multi-pages files from one or more PDF-appropriate JBIG2 fragments, prepared by the \texttt{jbig2enc} program. In lossless mode, there is one JBIG2 fragment for each page:
@@ -4594,6 +4599,8 @@ Cpdf can build multi-pages files from one or more PDF-appropriate JBIG2 fragment
 \end{framed}
 
 \noindent The \texttt{-jbig2-global} option may be used to change the JBIG2Globals stream in use. The \texttt{-jbig2-global-clear} option may be used to cease use of a globals stream and return to lossless mode.
+
+To produce a PDF in PDF/UA-1 or PDF/UA-2 format add, say, \texttt{-subformat PDF/UA-2 -title "Opus"} to the command line.
 
 \begin{cpdflib}
 \clearpage
