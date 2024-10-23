@@ -171,6 +171,6 @@ let typeset ~process_struct_tree ?subformat ?title ~papersize ~font ~fontsize te
             if subformat = Some Cpdfua.PDFUA2 then Pdf.Indirect document else Pdf.Array topks
           in
             Pdf.addobj_given_num pdf (str, Pdf.Dictionary (stns @ [("/Type", Pdf.Name "/StructTreeRoot"); ("/K", k); ("/ParentTree", Pdf.Indirect parent_tree)]));
-            Pdf.replace_chain pdf ["/Root"] ("/StructTreeRoot", (Pdf.Indirect str))
+            Pdf.replace_chain pdf ["/Root"; "/StructTreeRoot"] (Pdf.Indirect str)
         end;
         pdf

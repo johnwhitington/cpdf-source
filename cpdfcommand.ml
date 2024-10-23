@@ -3593,6 +3593,11 @@ let print_version () =
   flprint
     ("cpdf " ^ (if agpl then "AGPL " else "") ^ "Version " ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ "." ^ string_of_int minor_minor_version ^ " " ^ version_date ^ "\n")
 
+let replace_obj pdf objspec obj =
+  let split_chain str = map (fun x -> "/" ^ x) (tl (String.split_on_char '/' str)) in
+  let chain = split_chain objspec in
+    Pdf.replace_chain pdf chain obj
+    
 (* Main function *)
 let go () =
   check_bookmarks_mistake ();
@@ -4637,7 +4642,7 @@ let go () =
   | Some (ReplaceObj (a, b)) ->
       let pdf = get_single_pdf args.op false in
       let pdfobj = Cpdfjson.object_of_json (Cpdfyojson.Safe.from_string b) in
-        Pdf.replace_obj pdf a pdfobj;
+        replace_obj pdf a pdfobj;
         write_pdf false pdf
   | Some (Verify standard) ->
       begin match standard with

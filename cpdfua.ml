@@ -1610,8 +1610,8 @@ let create_pdfua1 title pagesize pages =
   let pdf = Cpdfmetadata.create_metadata pdf in
     Cpdfmetadata.set_language pdf "en-US";
     let pdf = Cpdfmetadata.set_viewer_preference ("/DisplayDocTitle", Pdf.Boolean true, 0) pdf in
-      Pdf.replace_obj pdf "/Root/MarkInfo/Marked" (Pdf.Boolean true);
-      Pdf.replace_obj pdf "/Root/StructTreeRoot/Type" (Pdf.Name "/StructTreeRoot");
+      Pdf.replace_chain pdf ["/Root"; "/MarkInfo"; "/Marked"] (Pdf.Boolean true);
+      Pdf.replace_chain pdf ["/Root"; "/StructTreeRoot"; "/Type"] (Pdf.Name "/StructTreeRoot");
       let pdf = {pdf with Pdf.major = 1; Pdf.minor =  7} in
         mark pdf;
         pdf
@@ -1622,8 +1622,8 @@ let create_pdfua2 title pagesize pages =
   let pdf = Cpdfmetadata.create_metadata pdf in
     Cpdfmetadata.set_language pdf "en-US";
     let pdf = Cpdfmetadata.set_viewer_preference ("/DisplayDocTitle", Pdf.Boolean true, 0) pdf in
-      Pdf.replace_obj pdf "/Root/MarkInfo/Marked" (Pdf.Boolean true);
-      Pdf.replace_obj pdf "/Root/StructTreeRoot/Type" (Pdf.Name "/StructTreeRoot");
+      Pdf.replace_chain pdf ["/Root"; "/MarkInfo"; "/Marked"] (Pdf.Boolean true);
+      Pdf.replace_chain pdf ["/Root"; "/StructTreeRoot"; "/Type"] (Pdf.Name "/StructTreeRoot");
       let pdf = {pdf with Pdf.major = 2; Pdf.minor =  0} in
         mark2 2024 pdf;
         pdf
