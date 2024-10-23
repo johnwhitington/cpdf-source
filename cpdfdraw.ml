@@ -183,8 +183,7 @@ let font_widths f fontsize =
       Array.map (fun x -> fontsize *. x /. 1000. ) m
   | _ -> raise (Pdf.PDFError "Cpdfdraw: Unsupported font")
 
-let runs_of_utf8 s =
-  let widthcache = null_hash () in
+let runs_of_utf8 ?(widthcache = null_hash ()) s =
   let identifier, fontpack = (res ()).current_fontpack in
   let codepoints = Pdftext.codepoints_of_utf8 s in
   let triples = option_map (Cpdfembed.get_char fontpack) codepoints in
@@ -307,8 +306,9 @@ let clean_up ops =
 (* TODO: Use Uuseg for proper unicode segmentation. *)
 let format_paragraph indent j w s =
   let ss = String.split_on_char ' ' s in
-  let rs_and_widths = ref (map runs_of_utf8 ss) in
-  let space_runs, space_width = runs_of_utf8 " " in
+  let widthcache = null_hash () in
+  let rs_and_widths = ref (map (runs_of_utf8 ~widthcache) ss) in
+  let space_runs, space_width = runs_of_utf8 ~widthcache " " in
   let remaining = ref w in
   let allops = ref [] in
   let ops = ref [] (*[Pdfops.Op_Comment "Format paragraph"]*) in
