@@ -1,10 +1,4 @@
-2.7.2 (to come)
-
-Fixes:
-
-o Removed setting of Producer field in AGPL version
-* Removed long-deprecated -control
-* More compact -print-struct-tree
+2.7.2 (October 2024)
 
 New features:
 
@@ -13,7 +7,7 @@ New features:
 * Create PDF/UA files from scratch with -create-pdf-ua-[1|2]
 * Create structure information for files with -draw
 * Draw can now make paragraphs with -para, -paras
-* Add structure information to -typeset, add -subformat
+* Add structure information to -typeset
 * -typeset can make PDF/UA documents
 * -jpeg, -png and friends can make PDF/UA documents
 * Merge PDF/UA-1 and PDF/UA-2 files, preserving standards compliance
@@ -22,10 +16,13 @@ o -redact removes whole pages
 
 Extended features:
 
-o Rectangle may be specified as x y x' y' rather than x y w h
+o Rectangles may be specified as x y x' y' rather than x y w h
 
 Fixes:
 
+o Removed setting of Producer field in AGPL version
+* Removed long-deprecated -control
+* More compact -print-struct-tree
 o -image-resolution-json was listing all images
 
 * = Supported by a grant from NLnet

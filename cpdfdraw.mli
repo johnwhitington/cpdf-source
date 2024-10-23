@@ -64,11 +64,13 @@ type drawops =
   | EndEltInfo of string
   | AutoTag of bool
 
+(** When this is set, any untagged material is tagged as an artifact. *)
 val do_add_artifacts : bool ref
 
+(** Set the role map. *)
 val rolemap : string ref
 
-(** Calling [draw fast underneath filename bates batespad range pdf drawops] draws on
+(** Calling [draw struct_tree fast underneath filename bates batespad range pdf drawops] draws on
     top of all the pages in the range. *)
 val draw : struct_tree:bool ->
            fast:bool ->

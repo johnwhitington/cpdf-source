@@ -33,4 +33,5 @@ val validate_pagespec : string -> bool
 x-y ranges etc. *)
 val string_of_pagespec : Pdf.t -> int list -> string
 
+(** Invert a range, given the maximum page number and the range. *)
 val invert_range : int -> int list -> int list
