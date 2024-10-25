@@ -1215,7 +1215,7 @@ In modern usage, \texttt{-utf8} is almost always the sensible option. But for hi
 cpdf -merge in1.pdf [<range>] in2.pdf [<range>] [<more names/ranges>]
      [-collate] [-retain-numbering] [-remove-duplicate-fonts]
      [-merge-add-bookmarks [-merge-add-bookmarks-use-titles]]
-     [-process-struct-trees]
+     [-process-struct-trees] [-subformat <subformat>]
      -o out.pdf\end{verbatim}
 
   \vspace{1.5mm}
@@ -1270,7 +1270,7 @@ of the inputs only appear once in the output.
 
 The \texttt{-merge-add-bookmarks} option adds a top-level bookmark for each file, using the filename. Any existing bookmarks are retained. The \texttt{-merge\--add\--bookmarks\--use\--titles}, when used in conjunction with \texttt{-merge-add-bookmarks}, will use the title from each PDF's metadata instead of the filename.
 
-The \texttt{-process-struct-trees} option will merge structure trees (the data which forms the logical structure of the PDF). In its absence, the structure tree from the first PDF only is preserved.
+The \texttt{-process-struct-trees} option will merge structure trees (the data which forms the logical structure of the PDF). In its absence, the structure tree from the first PDF only is preserved. When merging two or more PDF/UA files, we can add \texttt{-subformat PDF/UA-2} to tell Cpdf to add a top-level Document structure tree element, to conform to the PDF/UA-2 standard.
 
   \section{Splitting}
 \index{splitting}
@@ -1380,7 +1380,7 @@ The encryption parameters described in Chapter \ref{encryption} may be added to 
 
 \section{Splitting and structure trees}
 
-The \texttt{-process-struct-trees} option used in conjunction with any splitting command will trim the structure tree (the data which forms the logical structure of the PDF) for each output file. In its absence, the structure tree is preserved wholesale in each output file.
+The \texttt{-process-struct-trees} option used in conjunction with any splitting command will trim the structure tree (the data which forms the logical structure of the PDF) for each output file. In its absence, the structure tree is preserved wholesale in each output file. 
 
 \pagestyle{empty}\thispagestyle{fancy}
 
@@ -1467,17 +1467,17 @@ The \texttt{-process-struct-trees} option used in conjunction with any splitting
   \small\noindent\verb!cpdf -vflip [-fast] in.pdf [<range>] -o out.pdf!
   
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -mediabox "<x> <y> <w> <h>" in.pdf [<range>] -o out.pdf!
+  \small\noindent\verb!cpdf -mediabox <boxspec> in.pdf [<range>] -o out.pdf!
 
 
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -cropbox "<x> <y> <w> <h>" in.pdf [<range>] -o out.pdf!
+  \small\noindent\verb!cpdf -cropbox <boxspec> in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
   \small\noindent\verb!cpdf -remove-cropbox in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
-  (Also \texttt{bleed}, \texttt{art}, and \texttt{trim} versions of these two commands, for example  \texttt{-artbox}, \texttt{-remove-trimbox})
+  (Also \texttt{-bleedbox}, \texttt{-artbox}, \texttt{-trimbox} and \texttt{-remove-bleedbox}, \texttt{-remove-artbox}, \texttt{-remove-trimbox}.)
 
   \vspace{1.5mm}
   \small\noindent\verb!cpdf -frombox <boxname> -tobox <boxname> [-mediabox-if-missing]! \\
@@ -1559,7 +1559,7 @@ Y factors given. This scales both the page contents, and the page size itself. I
   \small\noindent\verb!cpdf -stretch a4landscape in.pdf -o out.pdf!
 
   \vspace{2.5mm}
-  \noindent Scale a file's pages and their content to fit A4 landscape
+  \noindent Scale a file's pages and their content to fit A4 landscape.
   \end{framed}
 
 \noindent The \texttt{-scale-contents} operation scales the contents about the center
