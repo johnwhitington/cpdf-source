@@ -2839,7 +2839,7 @@ instance, to add a clean page between chapters of a document.)
 
 \section{Redaction}
 
-Cpdf has very primitive redaction facilities to remove whole pages. We simply give the page range, and such pages will be emptied of content, and any annotations and page resources removed. The page size remains the same.
+Cpdf has basic redaction facilities to remove whole pages. We simply give the page range, and such pages will be emptied of content, and any annotations and page resources removed. The page dimensions remain the same.
 
   \begin{framed}
     \noindent\small\verb!cpdf -redact in.pdf 1,2,19-end -o out.pdf!
@@ -4524,6 +4524,10 @@ In a PDF file, optional content groups are used to group graphical elements toge
   \noindent\verb!     -o out.pdf!
 
   \vspace{1.5mm}
+  \noindent\verb!cpdf -jpeg2000 <filename> [-subformat <subformat>] [-title <string>]!\\
+  \noindent\verb!     -o out.pdf!
+
+  \vspace{1.5mm}
   \noindent\verb!cpdf [-jbig2-global <filename>] -jbig2 <filename>!\\
   \noindent\verb!     [-jbig2-global | -jbig2-global-clear]!\\
   \noindent\verb!     [-jbig2 <filename>] ...!\\
@@ -5376,8 +5380,8 @@ A role map, which maps non-standard structure types to standard ones, may be set
   \noindent\verb!cpdf -remove-mark ["PDF/UA-1" | "PDF/UA-2"] in.pdf -o out.pdf!
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf [-create-pdf-pages <n>] [-create-pdf-papersize <paper size>]!\\
-  \noindent\verb!      -create-pdf-ua-<1|2> <title> -o out.pdf!
+  \noindent\verb!cpdf -create-pdf-ua-<1|2> <title> [-create-pdf-pages <n>]!\\
+  \noindent\verb!      [-create-pdf-papersize <paper size>] -o out.pdf!
 
   \end{framed}}
 
@@ -5600,9 +5604,7 @@ To create a new PDF/UA-1 file, with A4 portrait paper, one page, and the title \
     \noindent\small\verb!cpdf -create-pdf-ua-1 "My Book" -o out.pdf!
   \end{framed}
 
-\noindent A title is needed for every PDF/UA document (even a blank one) for it to meet the standard. Note that any modifying \texttt{-create-pdf-pages} or \texttt{-create-pdf-papersize} must appear before \texttt{-create-pdf-ua-1} on the command line.
-
-For \texttt{PDF/UA-2}, use \texttt{-create-pdf-ua-2} instead. To make is valid, you must also draw a top-level Document tag as described below.
+\noindent A title is needed for every PDF/UA document (even a blank one) for it to meet the standard. For \texttt{PDF/UA-2}, use \texttt{-create-pdf-ua-2} instead. To make it valid, you must also draw a top-level PDF/UA-2 Document tag as described below.
 
 \section{Drawing PDF/UA files}
 
