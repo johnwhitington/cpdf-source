@@ -4743,7 +4743,7 @@ To produce a PDF in PDF/UA-1 or PDF/UA-2 format add, say, \texttt{-subformat PDF
    \noindent\verb!-stag! Begin structure tree branch\\
    \noindent\verb!-end-stag! End structure tree branch\\
    \noindent\verb!-auto-tags! Automatically tag paragraphs and images\\
-   \noindent\verb!-no-auto-tags! Refrain from automatically tag paragraphs and images\\
+   \noindent\verb!-no-auto-tags! Refrain from automatically tagging paragraphs and images\\
    \noindent\verb!-artifact! Begin manual artifact\\
    \noindent\verb!-end-artifact! End manual artifact\\
    \noindent\verb!-no-auto-artifacts! Prevent automatic addition of artifacts during postprocessing\\
@@ -5227,11 +5227,9 @@ If the drawing range is a single page, and the next page already exists, the dra
 
 \section{Structure information}
 
-A PDF may contain, in addition to its graphical content, a tree of information concerning the logical organization of the document into chapters, sections, paragraphs, figures and so on. When used with a standard set of pre-defined data types, this is known as Tagged PDF. Some PDF subformats, such as PDF/UA mandate, amongst other things, the full tagging of the file.
+A PDF may contain, in addition to its graphical content, a tree of information concerning the logical organization of the document into chapters, sections, paragraphs, figures and so on. When used with a standard set of pre-defined data types, this is known as Tagged PDF. Some PDF subformats, such as PDF/UA, mandate -- amongst other things -- the full tagging of the file.
 
-When drawing, Cpdf can add such structure information. Partly this can happen automatically, partly it is for the user to add the tags.
-
-NB: These facilities are presently limited to drawing new PDFs.
+When drawing, Cpdf can add such structure information. Partly this can happen automatically, partly it is for the user to add the tags. NB: These facilities are presently limited to drawing new PDFs.
 
 To enable the generation of structure information, we add \texttt{-draw-struct-tree} to our command:
 
@@ -5247,7 +5245,7 @@ $cpdf -print-struct-tree out.pdf
 StructTreeRoot
 └── P (1)\end{verbatim}
 
-\noindent To prevent such automatic tagging, relying only on manual tags, use \texttt{-no-auto-tags}. The effect may be reversed at any point with \texttt{-auto-tags}. Unless told otherwise, Cpdf auto-tags text added using \texttt{-text}, \texttt{-stext} and \texttt{-paras} as P, and images as Figure.
+\noindent To prevent such automatic tagging, relying only on manual tags, use \texttt{-no-auto-tags}. The effect may be reversed at any point with \texttt{-auto-tags}. Unless told otherwise, Cpdf auto-tags text added using \texttt{-text}, \texttt{-stext} and \texttt{-paras} with tag P, and images with tag Figure.
 
 There are two types of tag we can add manually. One kind is used to tag individual pieces of content. We do this with a \texttt{-tag}/\texttt{-end-tag} pair. Note that nesting is not permitted here. For example, let us tag a heading:
 
