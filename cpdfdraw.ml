@@ -655,7 +655,7 @@ let rec find_tree_contents a level = function
   | StDataBeginTree _ as h::t ->
       find_tree_contents (h::a) (level + 1) t
   | StDataEndTree::t ->
-      if level = 1 then (rev a, t) else find_tree_contents a (level - 1) t
+      if level = 1 then (rev a, t) else find_tree_contents (StDataEndTree::a) (level - 1) t
   | h::t -> find_tree_contents (h::a) level t
 
 let mstdebug = ref false
