@@ -556,13 +556,44 @@ let stretch ?(fast=false) sxsylist pdf range =
   in
     process_pages stretch_page pdf range
 
+(* Cropping *)
+let crop_pdf ?(box="/CropBox") xywhlist pdf range =
+  let crop_page pagenum page =
+    {page with
+       Pdfpage.rest =
+         (Pdf.add_dict_entry
+            page.Pdfpage.rest
+            box
+            (let x, y, w, h = List.nth xywhlist (pagenum - 1) in
+              (Pdf.Array
+                 [Pdf.Real x; Pdf.Real y;
+                  Pdf.Real (x +.  w); Pdf.Real (y +. h)])))}
+  in
+    process_pages (Pdfpage.ppstub crop_page) pdf range
+
 (* Centre page content (crop box) on given page size, with no scaling. *)
 let center_to_fit sxsylist pdf range =
-  (* Make dxdylist, suitable for shift_boxes *)
-  (* Set the new page size, as media and crop *)
-  (* Call shift_boxes to move each page. *)
-  let dxdylist = sxsylist in
-  shift_boxes dxdylist pdf range
+  let list4 = map (fun (x, y) -> (0., 0., x, y)) sxsylist in
+  let pdf = set_mediabox list4 pdf range in
+  let pdf = crop_pdf list4 pdf range in
+  let pdf = remove_bleed_pdf pdf range in
+  let pdf = remove_art_pdf pdf range in
+  let pdf = remove_bleed_pdf pdf range in
+  let dxdylist =
+    let tx, ty = hd sxsylist in
+      map
+        (fun page ->
+           let (minx, miny, maxx, maxy) =
+             Pdf.parse_rectangle
+               pdf
+               (match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
+               | Some r -> r
+               | None -> page.Pdfpage.mediabox)
+           in
+             (tx -. (maxx -. minx)) /. 2., (ty -. (maxy -. miny)) /. 2.)
+        (Pdfpage.pages_of_pagetree pdf)
+  in
+    shift_boxes dxdylist pdf range
   
 (* Scale to fit page of size x * y *)
 let scale_to_fit_pdf ?(fast=false) position input_scale xylist op pdf range =
@@ -887,20 +918,6 @@ let setBox box minx maxx miny maxy pdf range =
   in
     process_pages (Pdfpage.ppstub set_box_page) pdf range
 
-(* Cropping *)
-let crop_pdf ?(box="/CropBox") xywhlist pdf range =
-  let crop_page pagenum page =
-    {page with
-       Pdfpage.rest =
-         (Pdf.add_dict_entry
-            page.Pdfpage.rest
-            box
-            (let x, y, w, h = List.nth xywhlist (pagenum - 1) in
-              (Pdf.Array
-                 [Pdf.Real x; Pdf.Real y;
-                  Pdf.Real (x +.  w); Pdf.Real (y +. h)])))}
-  in
-    process_pages (Pdfpage.ppstub crop_page) pdf range
 
 (* Add rectangles on top of pages to show Media, Crop, Art, Trim, Bleed boxes.
  *
