@@ -557,27 +557,13 @@ let stretch ?(fast=false) sxsylist pdf range =
     process_pages stretch_page pdf range
 
 (* Centre page content (crop box) on given page size, with no scaling. *)
-let center_to_fit ?(fast=false) sxsylist pdf range =
-  let stretch_page pnum page =
-    let sx, sy = List.nth sxsylist (pnum - 1) in
-    let (minx, miny, maxx, maxy) =
-      Pdf.parse_rectangle
-        pdf
-        (match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
-        | Some r -> r
-        | None -> page.Pdfpage.mediabox)
-    in
-    let scale_x, scale_y = sx /. (maxx -. minx), sy /. (maxy -. miny) in
-    let f (xmin, ymin, xmax, ymax) = xmin *. scale_x, ymin *. scale_y, xmax *. scale_x, ymax *. scale_y in
-    let page = change_boxes f pdf page in
-    let matrix = Pdftransform.matrix_of_op (Pdftransform.Scale ((0., 0.), scale_x, scale_y)) in
-    let transform_op = Pdfops.Op_cm matrix in
-    let page = change_pattern_matrices_page pdf matrix page in
-      Pdfannot.transform_annotations pdf matrix page.Pdfpage.rest;
-      (Pdfpage.prepend_operators pdf ~fast [transform_op] page, pnum, matrix)
-  in
-    process_pages stretch_page pdf range
-
+let center_to_fit sxsylist pdf range =
+  (* Make dxdylist, suitable for shift_boxes *)
+  (* Set the new page size, as media and crop *)
+  (* Call shift_boxes to move each page. *)
+  let dxdylist = sxsylist in
+  shift_boxes dxdylist pdf range
+  
 (* Scale to fit page of size x * y *)
 let scale_to_fit_pdf ?(fast=false) position input_scale xylist op pdf range =
   let scale_page_to_fit pnum page =

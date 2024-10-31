@@ -4223,7 +4223,7 @@ let go () =
           warn_prerotate range pdf;
           let pdf = if args.prerotate then prerotate range pdf else pdf in
           let xylist = Cpdfcoord.parse_coordinates pdf args.coord in
-            write_pdf false (Cpdfpage.center_to_fit ~fast:args.fast xylist pdf range)
+            write_pdf false (Cpdfpage.center_to_fit xylist pdf range)
   | Some (ScaleContents scale) ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
