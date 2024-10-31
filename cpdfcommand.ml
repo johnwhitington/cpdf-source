@@ -1219,7 +1219,7 @@ let setstretch s =
   setop Stretch ();
   args.coord <- s
 
-let setcenter s =
+let setcentertofit s =
   setop CenterToFit ();
   args.coord <- s
 
@@ -2102,7 +2102,7 @@ let specs =
       Arg.String setstretch,
       " -stretch \"x y\" scales without preserving aspect ratio");
    ("-center-to-fit",
-      Arg.String setcenter,
+      Arg.String setcentertofit,
       " -center-to-fit \"x y\" centers pages on page size (x, y)");
    ("-scale-contents",
       Arg.Float setscalecontents,

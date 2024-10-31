@@ -573,12 +573,6 @@ let crop_pdf ?(box="/CropBox") xywhlist pdf range =
 
 (* Centre page content (crop box) on given page size, with no scaling. *)
 let center_to_fit sxsylist pdf range =
-  let list4 = map (fun (x, y) -> (0., 0., x, y)) sxsylist in
-  let pdf = set_mediabox list4 pdf range in
-  let pdf = crop_pdf list4 pdf range in
-  let pdf = remove_bleed_pdf pdf range in
-  let pdf = remove_art_pdf pdf range in
-  let pdf = remove_bleed_pdf pdf range in
   let dxdylist =
     let tx, ty = hd sxsylist in
       map
@@ -590,10 +584,17 @@ let center_to_fit sxsylist pdf range =
                | Some r -> r
                | None -> page.Pdfpage.mediabox)
            in
-             (tx -. (maxx -. minx)) /. 2., (ty -. (maxy -. miny)) /. 2.)
+             (~-.((tx -. (maxx -. minx)) /. 2.),
+              ~-.((ty -. (maxy -. miny)) /. 2.)))
         (Pdfpage.pages_of_pagetree pdf)
   in
-    shift_boxes dxdylist pdf range
+    let list4 = map (fun (x, y) -> (0., 0., x, y)) sxsylist in
+    let pdf = set_mediabox list4 pdf range in
+    let pdf = crop_pdf list4 pdf range in
+    let pdf = remove_bleed_pdf pdf range in
+    let pdf = remove_art_pdf pdf range in
+    let pdf = remove_bleed_pdf pdf range in
+      shift_boxes dxdylist pdf range
   
 (* Scale to fit page of size x * y *)
 let scale_to_fit_pdf ?(fast=false) position input_scale xylist op pdf range =
