@@ -265,6 +265,7 @@ let get_bookmark_name encoding pdf marks splitlevel n _ =
 (* @b52| means bookmark name at start page truncated to 52 characters using crude UTF8 truncation. *)
 let process_others encoding marks pdf splitlevel filename sequence startpage endpage s =
   let trim_utf8 len l =
+    Printf.printf "trim_uff input $%S$\n" (implode l);
     (* This truncator is far from perfect, but it does yield a valid UTF8 string, when given one. *)
     match rev l with
     | b2::b1::b0::t ->
@@ -311,7 +312,8 @@ let process_others encoding marks pdf splitlevel filename sequence startpage end
       | '@'::'E'::t ->
           let width, rest = find_ats 0 t in
             procss (rev (explode (string_of_int_width width endpage)) @ prev) rest
-      | '@'::'B'::t -> procss (rev (explode (get_bookmark_name encoding pdf marks splitlevel startpage pdf)) @ prev) t
+      | '@'::'B'::t ->
+          procss (rev (explode (get_bookmark_name encoding pdf marks splitlevel startpage pdf)) @ prev) t
       | '@'::'b'::t ->
           let number, rest = cleavewhile (function '0'..'9' -> true | _ -> false) t in
           let text = trim_utf8 (int_of_string (implode number)) (explode (get_bookmark_name encoding pdf marks splitlevel startpage pdf)) in
