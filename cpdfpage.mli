@@ -81,6 +81,8 @@ val scale_to_fit_pdf : ?fast:bool -> Cpdfposition.position -> float -> (float * 
 
 val stretch : ?fast:bool -> (float * float) list -> Pdf.t -> int list -> Pdf.t
 
+val center_to_fit : ?fast:bool -> (float * float) list -> Pdf.t -> int list -> Pdf.t
+
 (** {2 Stamping} *)
 
 (** [combine_pages fast under over scaletofit swap equalize] combines the page
