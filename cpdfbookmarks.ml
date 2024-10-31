@@ -54,17 +54,11 @@ let target_of_markfile_target pdf i' = function
         target_of_markfile_obj pdf i' pdfobj
   | _ -> Pdfpage.target_of_pagenumber pdf i'
 
-(*let debug_bookmark_string s =
-  Printf.printf "STR: %s\n" s*)
-
 let bookmark_of_data pdf i s i' isopen optionaldest =
-    (*debug_bookmark_string s;
-    debug_bookmark_string (implode (fixup_characters [] (explode s)));
-    debug_bookmark_string (Pdftext.pdfdocstring_of_utf8 (implode (fixup_characters [] (explode s))));*)
-    {Pdfmarks.level = i;
-     Pdfmarks.text = Pdftext.pdfdocstring_of_utf8 (implode (fixup_characters [] (explode s)));
-     Pdfmarks.target = target_of_markfile_target pdf i' optionaldest;
-     Pdfmarks.isopen = isopen}
+  {Pdfmarks.level = i;
+   Pdfmarks.text = Pdftext.pdfdocstring_of_utf8 (implode (fixup_characters [] (explode s)));
+   Pdfmarks.target = target_of_markfile_target pdf i' optionaldest;
+   Pdfmarks.isopen = isopen}
 
 let target_of_json_target pdf pagenumber target = 
   target_of_markfile_obj pdf pagenumber (Cpdfjson.object_of_json target)
@@ -268,7 +262,23 @@ let get_bookmark_name encoding pdf marks splitlevel n _ =
 (* @S means start page of this section *)
 (* @E means end page of this section *)
 (* @B means bookmark name at start page *)
+(* @b52| means bookmark name at start page truncated to 52 characters using crude UTF8 truncation. *)
 let process_others encoding marks pdf splitlevel filename sequence startpage endpage s =
+  let trim_utf8 len l =
+    (* This truncator is far from perfect, but it does yield a valid UTF8 string, when given one. *)
+    match rev l with
+    | b2::b1::b0::t ->
+        if int_of_char b2 land 0x80 > 0 then
+          begin
+            if int_of_char b2 land 0x40 > 0 then rev (b1::b0::t)
+            else if int_of_char b1 land 0xe0 = 0xe0 then rev (b0::t)
+            else if int_of_char b0 land 0xf0 = 0xf0 then rev t
+            else l
+          end
+        else
+          l
+    | _ -> l
+  in
   let rec find_ats p = function
     '@'::r -> find_ats (p + 1) r
   | r -> (p, r)
@@ -302,6 +312,10 @@ let process_others encoding marks pdf splitlevel filename sequence startpage end
           let width, rest = find_ats 0 t in
             procss (rev (explode (string_of_int_width width endpage)) @ prev) rest
       | '@'::'B'::t -> procss (rev (explode (get_bookmark_name encoding pdf marks splitlevel startpage pdf)) @ prev) t
+      | '@'::'b'::t ->
+          let number, rest = cleavewhile (function '0'..'9' -> true | _ -> false) t in
+          let text = trim_utf8 (int_of_string (implode number)) (explode (get_bookmark_name encoding pdf marks splitlevel startpage pdf)) in
+            procss ((rev text) @ prev) (tl rest)
       | h::t -> procss (h::prev) t
     in
        implode (procss [] (explode s))
