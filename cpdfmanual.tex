@@ -1,4 +1,3 @@
-% Document -center-to-fit
 \documentclass{book}
 % Edit here to produce cpdfmanual.pdf, cpdflibmanual.pdf, pycpdfmanual.pdf,
 % dotnetcpdflibmanual.pdf, jcpdflibmanual.pdf jscpdflibmanual.pdf etc.
@@ -1439,6 +1438,9 @@ The \texttt{-process-struct-trees} option used in conjunction with any splitting
   \small\noindent\verb!cpdf -stretch "<x size> <y size>" [-fast] in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
+  \small\noindent\verb!cpdf -center-to-fit "<x size> <y size>" in.pdf [<range>] -o out.pdf!
+
+  \vspace{1.5mm}
   \small\noindent\verb!cpdf -scale-contents [<scale>] [<position>] [-fast]!\\
         \noindent\verb!     in.pdf [<range>] -o out.pdf!
   
@@ -1466,19 +1468,12 @@ The \texttt{-process-struct-trees} option used in conjunction with any splitting
 
   \vspace{1.5mm}
   \small\noindent\verb!cpdf -vflip [-fast] in.pdf [<range>] -o out.pdf!
-  
-  \vspace{1.5mm}
-  \small\noindent\verb!cpdf -mediabox <boxspec> in.pdf [<range>] -o out.pdf!
-
 
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -cropbox <boxspec> in.pdf [<range>] -o out.pdf!
+  \small\noindent\verb!cpdf -[media|crop|art|trim|bleed]box <boxspec> in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -remove-cropbox in.pdf [<range>] -o out.pdf!
-
-  \vspace{1.5mm}
-  (Also \texttt{-bleedbox}, \texttt{-artbox}, \texttt{-trimbox} and \texttt{-remove-bleedbox}, \texttt{-remove-artbox}, \texttt{-remove-trimbox}.)
+  \small\noindent\verb!cpdf -remove-[crop|art|trim|bleed]box in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
   \small\noindent\verb!cpdf -frombox <boxname> -tobox <boxname> [-mediabox-if-missing]! \\
@@ -1562,6 +1557,16 @@ Y factors given. This scales both the page contents, and the page size itself. I
   \vspace{2.5mm}
   \noindent Scale a file's pages and their content to fit A4 landscape.
   \end{framed}
+
+\noindent The \texttt{-center-to-fit} operation changes the page size without scaling the contents. It centers the old page on the new page.
+
+  \begin{framed}
+  \small\noindent\verb!cpdf -center-to-fit a3portrait in.pdf -o out.pdf!
+
+  \vspace{2.5mm}
+  \noindent Set a file's pages to the given size and center the content.
+  \end{framed}
+
 
 \noindent The \texttt{-scale-contents} operation scales the contents about the center
   of the crop box (or, if absent, the media box), leaving the page dimensions
