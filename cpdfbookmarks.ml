@@ -58,7 +58,9 @@ let bookmark_of_data pdf i s i' isopen optionaldest =
   {Pdfmarks.level = i;
    Pdfmarks.text = Pdftext.pdfdocstring_of_utf8 (implode (fixup_characters [] (explode s)));
    Pdfmarks.target = target_of_markfile_target pdf i' optionaldest;
-   Pdfmarks.isopen = isopen}
+   Pdfmarks.isopen = isopen;
+   Pdfmarks.colour = (0., 0., 0.);
+   Pdfmarks.flags = 0} (* Old bookmark file format does not support colour or flags *)
 
 let target_of_json_target pdf pagenumber target = 
   target_of_markfile_obj pdf pagenumber (Cpdfjson.object_of_json target)
@@ -68,11 +70,16 @@ let mark_of_json pdf = function
             ("text", `String text);
             ("page", `Int pagenumber);
             ("open", `Bool openstatus);
-            ("target", target)] ->
+            ("target", target);
+            ("colour", `List [`Float r; `Float g; `Float b]);
+            ("italic", `Bool italic);
+            ("bold", `Bool bold)] ->
        {Pdfmarks.level = level;
         Pdfmarks.text = Pdftext.pdfdocstring_of_utf8 text;
         Pdfmarks.target = target_of_json_target pdf pagenumber target;
-        Pdfmarks.isopen = openstatus}
+        Pdfmarks.isopen = openstatus;
+        Pdfmarks.colour = (r, g, b);
+        Pdfmarks.flags = (if italic then 1 else 0) lor ((if bold then 1 else 0) lsl 1)}
   | _ -> error "malformed mark in mark_of_json"
 
 let marks_of_json pdf = function
@@ -165,12 +172,16 @@ let json_of_target pdf fastrefnums x =
 let output_json_marks output calculate_page_number pdf fastrefnums marks =
   let module J = Cpdfyojson.Safe in
   let json_of_mark m =
-    `Assoc
-       [("level", `Int m.Pdfmarks.level);
-        ("text", `String (Pdftext.utf8_of_pdfdocstring (Pdftext.simplify_utf16be m.Pdfmarks.text)));
-        ("page", `Int (calculate_page_number m));
-        ("open", `Bool m.Pdfmarks.isopen);
-        ("target", json_of_target pdf fastrefnums m.Pdfmarks.target)]
+    let r, g, b = m.Pdfmarks.colour in
+      `Assoc
+         [("level", `Int m.Pdfmarks.level);
+          ("text", `String (Pdftext.utf8_of_pdfdocstring (Pdftext.simplify_utf16be m.Pdfmarks.text)));
+          ("page", `Int (calculate_page_number m));
+          ("open", `Bool m.Pdfmarks.isopen);
+          ("target", json_of_target pdf fastrefnums m.Pdfmarks.target);
+          ("colour", `List [`Float r; `Float g; `Float b]);
+          ("italic", `Bool (m.Pdfmarks.flags land 1 > 0));
+          ("bold", `Bool (m.Pdfmarks.flags land 2 > 0))]
   in
   let json = `List (map json_of_mark marks) in
     output.Pdfio.output_string (J.pretty_to_string json)
@@ -358,7 +369,9 @@ let add_bookmark_title filename use_title pdf =
       {Pdfmarks.level = 0;
        Pdfmarks.text = Pdftext.pdfdocstring_of_utf8 title;
        Pdfmarks.target = Pdfdest.XYZ (Pdfdest.PageObject page1objnum, None, None, None);
-       Pdfmarks.isopen = false}
+       Pdfmarks.isopen = false;
+       Pdfmarks.colour = (0., 0., 0.);
+       Pdfmarks.flags = 0}
     ::map (function m -> {m with Pdfmarks.level = m.Pdfmarks.level + 1}) marks
   in
     Pdfmarks.add_bookmarks newmarks pdf

@@ -208,7 +208,9 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
         {Pdfmarks.level = 0;
          Pdfmarks.text = Pdftext.pdfdocstring_of_utf8 (implode (real_newline (explode title)));
          Pdfmarks.target = Pdfdest.XYZ (Pdfdest.PageObject (hd refnums), None, None, None);
-         Pdfmarks.isopen = false}
+         Pdfmarks.isopen = false;
+         Pdfmarks.colour = (0., 0., 0.);
+         Pdfmarks.flags = 0}
       in
         Pdfmarks.add_bookmarks (newmark::marks) pdf
     else
