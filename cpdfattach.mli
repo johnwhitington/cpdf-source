@@ -5,9 +5,8 @@ type attachment =
    pagenumber : int;
    data : unit -> Pdfio.bytes}
 
-(** Remove characters which might not make good filenames. If the encoding is
-    [Cpdfmetadata.Stripped] we in addition lose any character > 126. *)
-val remove_unsafe_characters : Cpdfmetadata.encoding -> string -> string
+(** Remove characters which might not make good filenames from a UTF8 string. *)
+val remove_unsafe_characters : string -> string
 
 (** [attach_file keepversion topage pdf filename] attaches the file in
     [filename] to the pdf, optionally to a page (rather than document-level).

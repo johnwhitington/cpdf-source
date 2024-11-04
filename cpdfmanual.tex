@@ -1303,7 +1303,7 @@ the result is unspecified. The following format operators may be used:
   \texttt{@N} & Sequence number without padding zeroes \\
   \texttt{@S} & Start page of this chunk \\
   \texttt{@E} & End page of this chunk \\
-  \texttt{@B} & Bookmark name at this page \\
+  \texttt{@B} & Bookmark name at this page, if any. \\
 \end{tabular}
 \end{center}
 
@@ -1340,13 +1340,11 @@ one of the output files.
     \noindent Split \texttt{a.pdf} on bookmark boundaries, using the bookmark text as the filename.
 
   \end{framed}
-\noindent The bookmark text used for a name is converted from unicode to 7 bit ASCII, and the following characters are removed, in addition to any character with ASCII code less than 32:
+\noindent The bookmark text used for a name has the following characters are removed, in addition to any character with ASCII code less than 32 or equal to 126. In addition, names beginning with \texttt{.} are not produced.
   \begin{framed}
   \centering
   \verb! / ? < > \ : * | " ^ + =!
   \end{framed}
-
-\noindent To prevent this process, and convert bookmark names to UTF8 instead, add \texttt{-utf8} to the command.
 
 \section{Splitting to Maximum Size}
 

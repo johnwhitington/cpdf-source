@@ -265,7 +265,7 @@ let get_bookmark_name encoding pdf marks splitlevel n _ =
   let refnums = Pdf.page_reference_numbers pdf in
   let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
   match keep (function m -> n = Pdfpage.pagenumber_of_target ~fastrefnums pdf m.Pdfmarks.target && m.Pdfmarks.level <= splitlevel) marks with
-  | {Pdfmarks.text = title}::_ -> Cpdfattach.remove_unsafe_characters encoding title
+  | {Pdfmarks.text = title}::_ -> Cpdfattach.remove_unsafe_characters (Pdftext.utf8_of_pdfdocstring title)
   | _ -> ""
 
 (* @F means filename without extension *)

@@ -2,22 +2,31 @@ open Pdfutil
 open Pdfio
 open Cpdferror
 
-(* Remove characters which might not make good filenames. *)
-let remove_unsafe_characters encoding s =
-  if encoding = Cpdfmetadata.UTF8 then Pdftext.utf8_of_pdfdocstring s else (* For @B bookmarks splitting. *)
-  if encoding = Cpdfmetadata.Raw then s else
-    let chars =
-      lose
-        (function x ->
-           match x with
-           '/' | '?' | '<' | '>' | '\\' | ':' | '*' | '|' | '\"' | '^' | '+' | '=' -> true
-           | x when int_of_char x < 32 || (int_of_char x > 126 && encoding <> Cpdfmetadata.Stripped) -> true
-           | _ -> false)
-        (explode s)
-    in
-      match chars with
-      | '.'::more -> implode more
-      | chars -> implode chars
+(* Remove characters which might not make good filenames. In, UTF8, out UTF8. *)
+let remove_unsafe_characters s =
+  let codepoints = Pdftext.codepoints_of_utf8 s in
+  let codepoints =
+    lose
+      (function x ->
+            x = int_of_char '/'
+         || x = int_of_char '?'
+         || x = int_of_char '<'
+         || x = int_of_char '>'
+         || x = int_of_char '\\'
+         || x = int_of_char ':'
+         || x = int_of_char '*'
+         || x = int_of_char '|'
+         || x = int_of_char '\"'
+         || x = int_of_char '^'
+         || x = int_of_char '+'
+         || x = int_of_char '='
+         || x < 32
+         || x = 127)
+      codepoints
+  in
+    match codepoints with
+    | 46::more -> Pdftext.utf8_of_codepoints codepoints (* Don't produce a dotfile *)
+    | chars -> Pdftext.utf8_of_codepoints codepoints
 
 (* Attaching files *)
 let attach_file ?memory keepversion topage pdf file =
@@ -257,7 +266,7 @@ let dump_attachment out pdf (_, embeddedfile) =
         | _ -> error "Bad embedded file stream"
         end
       in
-        let s = remove_unsafe_characters Cpdfmetadata.UTF8 s in
+        let s = remove_unsafe_characters (Pdftext.utf8_of_pdfdocstring s) in
         let filename = if out = "" then s else out ^ Filename.dir_sep ^ s in
         begin try
           let fh = open_out_bin filename in
