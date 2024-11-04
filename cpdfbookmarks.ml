@@ -143,7 +143,6 @@ let parse_bookmark_file verify pdf input =
            !currline
            (Printexc.to_string e))
 
-
 let add_bookmarks ~json verify input pdf =
   let parsed =
     (if json then parse_bookmark_file_json else parse_bookmark_file) verify pdf input in
@@ -273,10 +272,10 @@ let get_bookmark_name encoding pdf marks splitlevel n _ =
 (* @S means start page of this section *)
 (* @E means end page of this section *)
 (* @B means bookmark name at start page *)
-(* @b52| means bookmark name at start page truncated to 52 characters using crude UTF8 truncation. *)
+(* @b52@ means bookmark name at start page truncated to 52 characters using crude UTF8 truncation. *)
 let process_others encoding marks pdf splitlevel filename sequence startpage endpage s =
   let trim_utf8 len l =
-    Printf.printf "trim_uff input $%S$\n" (implode l);
+    let l = try take l len with _ -> l in
     (* This truncator is far from perfect, but it does yield a valid UTF8 string, when given one. *)
     match rev l with
     | b2::b1::b0::t ->
@@ -327,8 +326,9 @@ let process_others encoding marks pdf splitlevel filename sequence startpage end
           procss (rev (explode (get_bookmark_name encoding pdf marks splitlevel startpage pdf)) @ prev) t
       | '@'::'b'::t ->
           let number, rest = cleavewhile (function '0'..'9' -> true | _ -> false) t in
+          begin try ignore (int_of_string (implode number)) with _ -> error "Bad @b spec" end;
           let text = trim_utf8 (int_of_string (implode number)) (explode (get_bookmark_name encoding pdf marks splitlevel startpage pdf)) in
-            procss ((rev text) @ prev) (tl rest)
+            procss (rev text @ prev) (if rest = [] then [] else tl rest)
       | h::t -> procss (h::prev) t
     in
        implode (procss [] (explode s))
