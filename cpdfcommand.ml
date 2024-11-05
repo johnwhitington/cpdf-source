@@ -3655,7 +3655,7 @@ let go () =
                         if args.merge_add_bookmarks then
                           map2
                             (fun filename pdf -> Cpdfbookmarks.add_bookmark_title filename args.merge_add_bookmarks_use_titles pdf)
-                            (map (function InFile s -> s | StdIn -> "" | AlreadyInMemory _ -> "") names)
+                            (map (function InFile s -> s | StdIn -> "" | AlreadyInMemory (_, s) -> s) names)
                             pdfs
                         else
                           pdfs
