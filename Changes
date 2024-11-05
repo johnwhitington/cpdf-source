@@ -7,6 +7,7 @@ o Add @b<n>@ for trimming bookmark text to given length
 o Add Piece Info to -composition[-json]
 o -merge-add-bookmarks now has proper titles for images
 o New -jpeg-to-jpeg-scale and -jpeg-to-jpeg-dpi
+o Expand page characteristics to cover Art, Trim, Bleed
 
 2.7.2 (October 2024)
 

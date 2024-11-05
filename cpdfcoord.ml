@@ -18,8 +18,8 @@ let points_of_papersize p =
   let h = Pdfunits.points (Pdfpaper.height p) u in
     w, h
 
-let cropbox pdf page =
-  match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
+let box name pdf page =
+  match Pdf.lookup_direct pdf name page.Pdfpage.rest with
   | Some pdfobject -> Pdf.direct pdf pdfobject
   | None -> page.Pdfpage.mediabox
 
@@ -30,33 +30,47 @@ let miny pdf box = let minx, miny, maxx, maxy = Pdf.parse_rectangle pdf box in m
 let maxx pdf box = let minx, miny, maxx, maxy = Pdf.parse_rectangle pdf box in maxx
 let maxy pdf box = let minx, miny, maxx, maxy = Pdf.parse_rectangle pdf box in maxy
 
-let find_page_width pdf page = width pdf page.Pdfpage.mediabox
-let find_page_height pdf page = height pdf page.Pdfpage.mediabox
-let find_page_crop_width pdf page = width pdf (cropbox pdf page)
-let find_page_crop_height pdf page = height pdf (cropbox pdf page)
-let find_page_minx pdf page = minx pdf page.Pdfpage.mediabox
-let find_page_miny pdf page = miny pdf page.Pdfpage.mediabox
-let find_page_maxx pdf page = maxx pdf page.Pdfpage.mediabox
-let find_page_maxy pdf page = maxy pdf page.Pdfpage.mediabox
-let find_page_crop_minx pdf page = minx pdf (cropbox pdf page)
-let find_page_crop_miny pdf page = miny pdf (cropbox pdf page)
-let find_page_crop_maxx pdf page = maxx pdf (cropbox pdf page)
-let find_page_crop_maxy pdf page = maxy pdf (cropbox pdf page)
-
 let find_page_characteristic pdf page = function
-  | "PW" -> find_page_width pdf page
-  | "PH" -> find_page_height pdf page
-  | "CW" -> find_page_crop_width pdf page
-  | "CH" -> find_page_crop_height pdf page
-  | "PMINX" -> find_page_minx pdf page
-  | "PMINY" -> find_page_miny pdf page
-  | "PMAXX" -> find_page_maxx pdf page
-  | "PMAXY" -> find_page_maxy pdf page
-  | "CMINX" -> find_page_crop_minx pdf page
-  | "CMINY" -> find_page_crop_miny pdf page
-  | "CMAXX" -> find_page_crop_maxx pdf page
-  | "CMAXY" -> find_page_crop_maxy pdf page
+  | "PW" -> width pdf page.Pdfpage.mediabox
+  | "PH" -> height pdf page.Pdfpage.mediabox
+  | "CW" -> width pdf (box "/CropBox" pdf page)
+  | "CH" -> height pdf (box "/CropBox" pdf page)
+  | "AW" -> width pdf (box "/ArtBox" pdf page)
+  | "AH" -> height pdf (box "/ArtBox" pdf page)
+  | "TW" -> width pdf (box "/TrimBox" pdf page)
+  | "TH" -> height pdf (box "/TrimBox" pdf page)
+  | "BW" -> width pdf (box "/BleedBox" pdf page)
+  | "BH" -> height pdf (box "/BleedBox" pdf page)
+  | "PMINX" -> minx pdf page.Pdfpage.mediabox
+  | "PMINY" -> miny pdf page.Pdfpage.mediabox
+  | "PMAXX" -> maxx pdf page.Pdfpage.mediabox
+  | "PMAXY" -> maxy pdf page.Pdfpage.mediabox
+  | "CMINX" -> minx pdf (box "/CropBox" pdf page)
+  | "CMINY" -> miny pdf (box "/CropBox" pdf page)
+  | "CMAXX" -> maxx pdf (box "/CropBox" pdf page)
+  | "CMAXY" -> maxy pdf (box "/CropBox" pdf page)
+  | "AMINX" -> minx pdf (box "/ArtBox" pdf page)
+  | "AMINY" -> miny pdf (box "/ArtBox" pdf page)
+  | "AMAXX" -> maxx pdf (box "/ArtBox" pdf page)
+  | "AMAXY" -> maxy pdf (box "/ArtBox" pdf page)
+  | "TMINX" -> minx pdf (box "/TrimBox" pdf page)
+  | "TMINY" -> miny pdf (box "/TrimBox" pdf page)
+  | "TMAXX" -> maxx pdf (box "/TrimBox" pdf page)
+  | "TMAXY" -> maxy pdf (box "/TrimBox" pdf page)
+  | "BMINX" -> minx pdf (box "/BleedBox" pdf page)
+  | "BMINY" -> miny pdf (box "/BleedBox" pdf page)
+  | "BMAXX" -> maxx pdf (box "/BleedBox" pdf page)
+  | "BMAXY" -> maxy pdf (box "/BleedBox" pdf page)
   | _ -> failwith "find_page_characteristic"
+
+let is_page_characteristic = function
+  | "PW" | "PH" | "CW" | "CH" | "AW" | "AH" | "TW" | "TH" | "BW" | "BH"
+  | "PMINX" | "PMINY" | "PMAXX" | "PMAXY"
+  | "CMINX" | "CMINY" | "CMAXX" | "CMAXY"
+  | "AMINX" | "AMINY" | "AMAXX" | "AMAXY"
+  | "TMINX" | "TMINY" | "TMAXX" | "TMAXY"
+  | "BMINX" | "BMINY" | "BMAXX" | "BMAXY" -> true
+  | _ -> false
 
 let make_num pdf page unt num =
   let f =
@@ -66,11 +80,7 @@ let make_num pdf page unt num =
     | Pdfgenlex.LexName
       (( "PW" | "PH" | "CW" | "CH" | "PMINX" | "PMINY" | "PMAXX" | "PMAXY"
       | "CMINX" | "CMINY" | "CMAXX" | "CMAXY") as page_characteristic) ->
-        (*let r =*)
         find_page_characteristic pdf page page_characteristic
-        (*in
-          Printf.printf "characteristic %s is %f\n" page_characteristic r;
-          r*)
     | _ -> failwith "make_num"
   in
     match unt with
@@ -172,10 +182,7 @@ and parse_units pdf page numbers = function
   | Pdfgenlex.LexName
       (( "PW" | "PH" | "CW" | "CH" | "PMINX" | "PMINY" | "PMAXX" | "PMAXY"
        | "CMINX" | "CMINY" | "CMAXX" | "CMAXY") as page_characteristic)::more ->
-         let r =
-           find_page_characteristic pdf page page_characteristic
-         in
-         (*  Printf.printf "characteristic %s is %f\n" page_characteristic r;*)
+         let r = find_page_characteristic pdf page page_characteristic in
            parse_units pdf page (r::numbers) more
   | Pdfgenlex.LexName ("add" | "sub" | "mul" | "div") as op::
     ((Pdfgenlex.LexInt _ | Pdfgenlex.LexReal _ |  Pdfgenlex.LexName
