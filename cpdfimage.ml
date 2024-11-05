@@ -562,7 +562,7 @@ let image_of_input ?subformat ?title ~process_struct_tree fobj i =
   let pdf, pageroot = Pdfpage.add_pagetree [page] pdf in
     Pdfpage.add_root pageroot [] pdf
 
-let jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~q ~path_to_convert s dict reference =
+let jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale ~jpeg_to_jpeg_dpi ~q ~path_to_convert s dict reference =
   if q < 0. || q > 100. then error "Out of range quality";
   complain_convert path_to_convert;
   let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
@@ -934,7 +934,7 @@ let preprocess_jbig2_lossy ~path_to_jbig2enc ~jbig2_lossy_threshold ~length_thre
 
 let process
   ~q ~qlossless ~onebppmethod ~jbig2_lossy_threshold ~length_threshold ~percentage_threshold ~pixel_threshold ~dpi_threshold
- ~factor ~interpolate ~path_to_jbig2enc ~path_to_convert range pdf
+  ~factor ~interpolate ~jpeg_to_jpeg_scale ~jpeg_to_jpeg_dpi ~path_to_jbig2enc ~path_to_convert range pdf
 =
   let inrange =
     match images pdf range with
@@ -975,7 +975,7 @@ let process
             if q < 100. then
               begin
                 if !debug_image_processing then Printf.printf "(%i/%i) Object %i (JPEG)... %!" !ndone nobjects objnum;
-                jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~q ~path_to_convert s dict reference
+                jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale ~jpeg_to_jpeg_dpi ~q ~path_to_convert s dict reference
               end
         | Some (Pdf.Name "/Image"), _, Some (Pdf.Integer 1), _
         | Some (Pdf.Name "/Image"), _, _, Some (Pdf.Boolean true) ->

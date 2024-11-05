@@ -542,6 +542,8 @@ type args =
    mutable no_warn_rotate : bool;
    mutable jpegquality : float;
    mutable jpegqualitylossless : float;
+   mutable jpegtojpegscale : float;
+   mutable jpegtojpegdpi : float;
    mutable onebppmethod : string;
    mutable pixel_threshold : int;
    mutable length_threshold : int;
@@ -681,6 +683,8 @@ let args =
    no_warn_rotate = false;
    jpegquality = 100.;
    jpegqualitylossless = 101.;
+   jpegtojpegscale = 1.;
+   jpegtojpegdpi = 0.;
    onebppmethod = "";
    pixel_threshold = 25;
    length_threshold = 100;
@@ -1894,6 +1898,12 @@ let setjpegquality q =
 let setjpegqualitylossless q =
   args.jpegqualitylossless <- q
 
+let setjpegtojpegscale q =
+  args.jpegtojpegscale <- q
+
+let setjpegtojpegdpi q =
+  args.jpegtojpegdpi <- q
+
 let set1bppmethod m =
   args.onebppmethod <- m
 
@@ -2765,6 +2775,12 @@ let specs =
    ("-jpeg-to-jpeg",
      Arg.Float setjpegquality,
      " Set JPEG quality for existing JPEGs");
+   ("-jpeg-to-jpeg-scale",
+     Arg.Float setjpegtojpegscale,
+     " Set the percentage scale for -jpeg-to-jpeg");
+   ("-jpeg-to-jpeg-dpi",
+     Arg.Float setjpegtojpegdpi,
+     " Set the DPI target for -jpeg-to-jpeg");
    ("-lossless-to-jpeg",
      Arg.Float setjpegqualitylossless,
      " Set JPEG quality for existing lossless images");
@@ -4647,6 +4663,7 @@ let go () =
           ~q:args.jpegquality ~qlossless:args.jpegqualitylossless ~onebppmethod:args.onebppmethod ~jbig2_lossy_threshold:args.jbig2_lossy_threshold
           ~length_threshold:args.length_threshold ~percentage_threshold:args.percentage_threshold ~pixel_threshold:args.pixel_threshold 
           ~dpi_threshold:args.dpi_threshold ~factor:args.resample_factor ~interpolate:args.resample_interpolate
+          ~jpeg_to_jpeg_scale:args.jpegtojpegscale ~jpeg_to_jpeg_dpi:args.jpegtojpegdpi
           ~path_to_jbig2enc:args.path_to_jbig2enc ~path_to_convert:args.path_to_im range pdf;
         write_pdf false pdf
   | Some (ExtractStream s) ->

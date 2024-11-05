@@ -22,6 +22,7 @@ val process :
   q:float -> qlossless:float -> onebppmethod:string -> jbig2_lossy_threshold:float ->
   length_threshold:int -> percentage_threshold:float -> pixel_threshold:int ->
   dpi_threshold:float -> factor:float -> interpolate:bool ->
+  jpeg_to_jpeg_scale:float -> jpeg_to_jpeg_dpi:float ->
   path_to_jbig2enc:string -> path_to_convert:string -> int list -> Pdf.t -> unit
 
 (**/**)
