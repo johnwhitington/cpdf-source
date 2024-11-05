@@ -5,6 +5,7 @@ o Allow bold, italic, colours for JSON bookmarks
 o Clean up @B implementation for -split-on-bookmarks
 o Add @b<n>@ for trimming bookmark text to given length
 o Add Piece Info to -composition[-json]
+o -merge-add-bookmarks now has proper titles for images
 
 2.7.2 (October 2024)
 
