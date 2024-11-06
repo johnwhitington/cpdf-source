@@ -562,7 +562,7 @@ let image_of_input ?subformat ?title ~process_struct_tree fobj i =
   let pdf, pageroot = Pdfpage.add_pagetree [page] pdf in
     Pdfpage.add_root pageroot [] pdf
 
-let jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale ~jpeg_to_jpeg_dpi ~interpolate ~q ~path_to_convert s dict reference =
+let jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale ~interpolate ~q ~path_to_convert s dict reference =
   if q < 0. || q > 100. then error "Out of range quality";
   complain_convert path_to_convert;
   let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
@@ -800,6 +800,17 @@ let lossless_resample_target_dpi objnum pdf ~pixel_threshold ~length_threshold ~
     else
       if !debug_image_processing then Printf.printf "failed to meet dpi target\n%!"
 
+let jpeg_to_jpeg_wrapper objnum pdf ~target_dpi_info ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale ~jpeg_to_jpeg_dpi ~interpolate ~q ~path_to_convert s dict reference =
+  if jpeg_to_jpeg_dpi = 0. then
+    jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale ~interpolate ~q ~path_to_convert s dict reference
+  else
+    let factor = jpeg_to_jpeg_dpi in
+    let real_factor = factor /. Hashtbl.find target_dpi_info objnum *. 100. in
+      if real_factor < 100. then
+        jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale:real_factor ~interpolate ~q ~path_to_convert s dict reference
+      else
+        if !debug_image_processing then Printf.printf "failed to meet dpi target\n%!"
+
 let recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_jbig2enc pdf s dict reference =
   complain_jbig2enc path_to_jbig2enc;
   let old = !reference in
@@ -985,7 +996,7 @@ let process
             if q < 100. || jpeg_to_jpeg_scale <> 100. || jpeg_to_jpeg_dpi <> 0.  then
               begin
                 if !debug_image_processing then Printf.printf "(%i/%i) Object %i (JPEG)... %!" !ndone nobjects objnum;
-                jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale ~jpeg_to_jpeg_dpi ~interpolate ~q ~path_to_convert s dict reference
+                jpeg_to_jpeg_wrapper objnum pdf ~target_dpi_info ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale ~jpeg_to_jpeg_dpi ~interpolate ~q ~path_to_convert s dict reference
               end
         | Some (Pdf.Name "/Image"), _, Some (Pdf.Integer 1), _
         | Some (Pdf.Name "/Image"), _, _, Some (Pdf.Boolean true) ->
