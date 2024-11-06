@@ -577,8 +577,14 @@ let jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~j
     begin match s with Pdf.Stream {contents = _, Pdf.Got d} -> Pdfio.bytes_to_output_channel fh d | _ -> () end;
     close_out fh;
     let retcode =
+    let scaling =
+      if jpeg_to_jpeg_scale <> 100. then
+        [(if interpolate then "-sample" else "-resize"); string_of_float jpeg_to_jpeg_scale ^ "%"]
+      else
+        []
+    in
       let command = 
-        (Filename.quote_command path_to_convert [out; "-quality"; string_of_float q ^ "%"; out2])
+        Filename.quote_command path_to_convert ([out] @ scaling @ ["-quality"; string_of_float q ^ "%"; out2])
       in
         Printf.printf "%S\n" command; Sys.command command
     in
@@ -595,7 +601,7 @@ let jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~j
               if !debug_image_processing then Printf.printf "JPEG to JPEG %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
               reference :=
                 Pdf.add_dict_entry (Pdf.add_dict_entry (Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize)) "/Width" (Pdf.Integer w)) "/Height" (Pdf.Integer h),
-                Pdf.Got (Pdfio.bytes_of_input_channel result)
+                Pdf.Got data
             end
           else
            begin
@@ -976,7 +982,7 @@ let process
           Pdf.lookup_direct pdf "/ImageMask" dict
         with
         | Some (Pdf.Name "/Image"), Some (Pdf.Name "/DCTDecode" | Pdf.Array [Pdf.Name "/DCTDecode"]), _, _ ->
-            if q < 100. then
+            if q < 100. || jpeg_to_jpeg_scale <> 100. || jpeg_to_jpeg_dpi <> 0.  then
               begin
                 if !debug_image_processing then Printf.printf "(%i/%i) Object %i (JPEG)... %!" !ndone nobjects objnum;
                 jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale ~jpeg_to_jpeg_dpi ~interpolate ~q ~path_to_convert s dict reference
