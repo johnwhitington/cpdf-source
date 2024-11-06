@@ -801,7 +801,7 @@ let lossless_resample_target_dpi objnum pdf ~pixel_threshold ~length_threshold ~
       else
         if !debug_image_processing then Printf.printf "failed to meet dpi target\n%!"
   with
-    Not_found -> () (* Could not find DPI data - an orphan image. *)
+    Not_found -> Printf.eprintf "Warning: orphaned image, skipping\n" (* Could not find DPI data - an orphan image. *)
 
 let jpeg_to_jpeg_wrapper objnum pdf ~target_dpi_info ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale ~jpeg_to_jpeg_dpi ~interpolate ~q ~path_to_convert s dict reference =
   if jpeg_to_jpeg_dpi = 0. then
@@ -815,7 +815,7 @@ let jpeg_to_jpeg_wrapper objnum pdf ~target_dpi_info ~pixel_threshold ~length_th
         else
           if !debug_image_processing then Printf.printf "failed to meet dpi target\n%!"
     with
-      Not_found -> () (* Could not find DPI data - an orphan image. *)
+      Not_found -> Printf.eprintf "Warning: orphaned image, skipping\n" (* Could not find DPI data - an orphan image. *)
 
 let recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_jbig2enc pdf s dict reference =
   complain_jbig2enc path_to_jbig2enc;
