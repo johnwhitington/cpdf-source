@@ -794,22 +794,28 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolat
     remove out2
 
 let lossless_resample_target_dpi objnum pdf ~pixel_threshold ~length_threshold ~factor ~target_dpi_info ~interpolate ~path_to_convert s dict reference =
-  let real_factor = factor /. Hashtbl.find target_dpi_info objnum *. 100.  in
-    if real_factor < 100. then
-      lossless_resample pdf ~pixel_threshold ~length_threshold ~factor:real_factor ~interpolate ~path_to_convert s dict reference
-    else
-      if !debug_image_processing then Printf.printf "failed to meet dpi target\n%!"
+  try
+    let real_factor = factor /. Hashtbl.find target_dpi_info objnum *. 100.  in
+      if real_factor < 100. then
+        lossless_resample pdf ~pixel_threshold ~length_threshold ~factor:real_factor ~interpolate ~path_to_convert s dict reference
+      else
+        if !debug_image_processing then Printf.printf "failed to meet dpi target\n%!"
+  with
+    Not_found -> () (* Could not find DPI data - an orphan image. *)
 
 let jpeg_to_jpeg_wrapper objnum pdf ~target_dpi_info ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale ~jpeg_to_jpeg_dpi ~interpolate ~q ~path_to_convert s dict reference =
   if jpeg_to_jpeg_dpi = 0. then
     jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale ~interpolate ~q ~path_to_convert s dict reference
   else
-    let factor = jpeg_to_jpeg_dpi in
-    let real_factor = factor /. Hashtbl.find target_dpi_info objnum *. 100. in
-      if real_factor < 100. then
-        jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale:real_factor ~interpolate ~q ~path_to_convert s dict reference
-      else
-        if !debug_image_processing then Printf.printf "failed to meet dpi target\n%!"
+    try
+      let factor = jpeg_to_jpeg_dpi in
+      let real_factor = factor /. Hashtbl.find target_dpi_info objnum *. 100. in
+        if real_factor < 100. then
+          jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale:real_factor ~interpolate ~q ~path_to_convert s dict reference
+        else
+          if !debug_image_processing then Printf.printf "failed to meet dpi target\n%!"
+    with
+      Not_found -> () (* Could not find DPI data - an orphan image. *)
 
 let recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_jbig2enc pdf s dict reference =
   complain_jbig2enc path_to_jbig2enc;
@@ -964,7 +970,7 @@ let process
   in
   let highdpi, target_dpi_info =
     let objnums, dpi =
-      if dpi_threshold = 0. && factor > 0. then ([], []) else
+      if dpi_threshold = 0. && factor > 0. && jpeg_to_jpeg_dpi = 0. then ([], []) else
         let results = image_resolution pdf range max_float in
           (*iter (fun (_, _, _, _, wdpi, hdpi, objnum) -> Printf.printf "From image_resolution %f %f %i\n" wdpi hdpi objnum) results;*)
           let cmp (_, _, _, _, _, _, a) (_, _, _, _, _, _, b) = compare a b in
