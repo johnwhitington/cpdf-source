@@ -562,7 +562,7 @@ let image_of_input ?subformat ?title ~process_struct_tree fobj i =
   let pdf, pageroot = Pdfpage.add_pagetree [page] pdf in
     Pdfpage.add_root pageroot [] pdf
 
-let jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale ~jpeg_to_jpeg_dpi ~q ~path_to_convert s dict reference =
+let jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale ~jpeg_to_jpeg_dpi ~interpolate ~q ~path_to_convert s dict reference =
   if q < 0. || q > 100. then error "Out of range quality";
   complain_convert path_to_convert;
   let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
@@ -580,7 +580,7 @@ let jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~j
       let command = 
         (Filename.quote_command path_to_convert [out; "-quality"; string_of_float q ^ "%"; out2])
       in
-        (*Printf.printf "%S\n" command;*) Sys.command command
+        Printf.printf "%S\n" command; Sys.command command
     in
     if retcode = 0 then
       begin
@@ -590,8 +590,12 @@ let jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~j
           let perc_ok = float newsize /. float size < percentage_threshold /. 100. in
           if newsize < size && perc_ok then
             begin
+              let data = Pdfio.bytes_of_input_channel result in
+              let w, h = Cpdfjpeg.jpeg_dimensions data in
               if !debug_image_processing then Printf.printf "JPEG to JPEG %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
-              reference := Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize), Pdf.Got (Pdfio.bytes_of_input_channel result)
+              reference :=
+                Pdf.add_dict_entry (Pdf.add_dict_entry (Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize)) "/Width" (Pdf.Integer w)) "/Height" (Pdf.Integer h),
+                Pdf.Got (Pdfio.bytes_of_input_channel result)
             end
           else
            begin
@@ -975,7 +979,7 @@ let process
             if q < 100. then
               begin
                 if !debug_image_processing then Printf.printf "(%i/%i) Object %i (JPEG)... %!" !ndone nobjects objnum;
-                jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale ~jpeg_to_jpeg_dpi ~q ~path_to_convert s dict reference
+                jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale ~jpeg_to_jpeg_dpi ~interpolate ~q ~path_to_convert s dict reference
               end
         | Some (Pdf.Name "/Image"), _, Some (Pdf.Integer 1), _
         | Some (Pdf.Name "/Image"), _, _, Some (Pdf.Boolean true) ->
