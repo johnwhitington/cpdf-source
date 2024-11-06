@@ -1,4 +1,3 @@
-%Document colours, bold, italic for bookmarks-json
 \documentclass{book}
 % Edit here to produce cpdfmanual.pdf, cpdflibmanual.pdf, pycpdfmanual.pdf,
 % dotnetcpdflibmanual.pdf, jcpdflibmanual.pdf jscpdflibmanual.pdf etc.
@@ -2082,7 +2081,7 @@ The option \texttt{-squeeze-no-pagedata} avoids the reprocessing of page data, w
 \index{document outline}
   PDF bookmarks (properly called the \textit{document outline}) represent a tree
 of references to parts of the file, typically displayed at the side of the
-screen. The user can click on one to move to the specified place. \cpdf\ provides
+screen. The user can click on one to move to the specified place. Cpdf provides
 facilities to list, add, and remove bookmarks. The format used by the list and
 add operations is the same, so you can feed the output of one into the other,
 for instance to copy bookmarks.
@@ -2108,7 +2107,7 @@ the file is loaded. Then the destination (see below). For example, upon executin
 1 "Part 2a" 5\end{verbatim}}\end{framed}
 \noindent If the page number is 0, it indicates that clicking on that entry doesn't move to a page.
 
-By default, \cpdf\ converts unicode to ASCII text, dropping characters outside
+By default, Cpdf converts unicode to ASCII text, dropping characters outside
 the ASCII range. To prevent this, and return unicode UTF8 output, add the
 \texttt{-utf8} option to the command. To prevent any processing, use the
 \texttt{-raw} option. See Section \ref{textencodings} for more information. A newline in a bookmark is represented as \texttt{"\textbackslash n"}.
@@ -2126,10 +2125,15 @@ By using \texttt{-list-bookmarks-json} instead, the bookmarks are formatted as a
       { "F": 85.039 },
       { "F": 609.307 },
       null ]
+  "colour": [ 0.0, 0.0, 0.0 ],
+  "italic": false,
+  "bold": false
 }
 \end{verbatim}
 
-\noindent See Chapter 15 for more details of cpdf's JSON formatting. There are two differences here: bookmark text is always UTF8, and the numbers for \texttt{level} and \texttt{page} are plain, rather than begin surrounded with \texttt{ \{ "I": \}}.
+\noindent Note that the colour (RGB each from 0.0 to 1.0) and shape of the text (bold, italic, or both) can be read and set with the JSON format.
+
+See Chapter 15 for more details of Cpdf's JSON formatting. There are two differences here: bookmark text is always UTF8, and the numbers for \texttt{level} and \texttt{page} are plain, rather than begin surrounded with \texttt{ \{ "I": \}}.
 
 \subsection{Destinations}
 
