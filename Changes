@@ -1,13 +1,21 @@
 2.7.3 (to come)
 
+New features:
+
 o New -center-to-fit centres pages on a given paper size
-o Allow bold, italic, colours for JSON bookmarks
-o Clean up @B implementation for -split-on-bookmarks
-o Add @b<n>@ for trimming bookmark text to given length
-o Add Piece Info to -composition[-json]
-o -merge-add-bookmarks now has proper titles for images
 o New -jpeg-to-jpeg-scale and -jpeg-to-jpeg-dpi
+
+Extended features:
+
 o Expand page characteristics to cover Art, Trim, Bleed
+o Add Piece Info to -composition[-json]
+o Add @b<n>@ for trimming bookmark text to given length
+o Allow bold, italic, colours for JSON bookmarks
+
+Fixes:
+
+o Clean up @B implementation for -split-on-bookmarks
+o -merge-add-bookmarks now has proper titles for images
 
 2.7.2 (October 2024)
 
