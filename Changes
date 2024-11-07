@@ -11,6 +11,8 @@ o Expand page characteristics to cover Art, Trim, Bleed
 o Add Piece Info to -composition[-json]
 o Add @b<n>@ for trimming bookmark text to given length
 o Allow bold, italic, colours for JSON bookmarks
+o Show OpenAction in -info
+o Show more form information in -info
 
 Fixes:
 
