@@ -3806,13 +3806,12 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 \noindent\small\verb!cpdf -process-images [-process-images-info] in.pdf [<range>]!\\
 \noindent\small\verb!     [-im <filename>] [-jbig2enc <filename>]!\\
 \noindent\small\verb!     [-lossless-resample[-dpi] <n> | -lossless-to-jpeg <n>]!\\
-\noindent\small\verb!     [-jpeg-to-jpeg <n>] [-1bpp-method <method>]!\\
-\noindent\small\verb!     [-jbig2-lossy-threshold <n>]!\\
-\noindent\small\verb!     [-pixel-threshold <n>] [-length-threshold <n>]!\\
-\noindent\small\verb!     [-percentage-threshold <n>] [-dpi-threshold <n>]!\\
-\noindent\small\verb!     [-resample-interpolate]!\\
+\noindent\small\verb!     [-jpeg-to-jpeg <n>] [-jpeg-to-jpeg-scale <n>]!\\
+\noindent\small\verb!     [-jpeg-to-jpeg-dpi <n>] [-1bpp-method <method>]!\\
+\noindent\small\verb!     [-jbig2-lossy-threshold <n>] [-pixel-threshold <n>]!\\
+\noindent\small\verb!     [-length-threshold <n>] [-percentage-threshold <n>]!\\
+\noindent\small\verb!     [-dpi-threshold <n>] [-resample-interpolate]!\\
 \noindent\small\verb!     -o out.pdf!
-
 
 \end{framed}
 
@@ -3985,11 +3984,24 @@ Option & Effect & Default value\\\hline
   \noindent\small\verb!cpdf -process-images -im magick -lossless-resample 80 in.pdf -o out.pdf!
   \end{framed}
 
-%FIXME check what 80 means here
-\noindent This will resample losslessly-compressed images to contain 80 percent of the original pixels. By default, there will be no interpolation. To use interpolation, which may result in slightly larger data, add \texttt{-resample-interpolate}. To use a DPI target instead, use \texttt{-lossless-resample-dpi} instead:
+\noindent This will resample losslessly-compressed images to be 80 percent of the original width and height. By default, there will be no interpolation. To use interpolation, which may result in slightly larger data, add \texttt{-resample-interpolate}. To use a DPI target instead, use \texttt{-lossless-resample-dpi} instead:
 
   \begin{framed}
   \noindent\small\verb!cpdf -process-images -im magick -lossless-resample-dpi 300!\\
+  \noindent\small\verb!     in.pdf -o out.pdf!
+  \end{framed}
+
+\noindent We can also use resampling with \texttt{-jpeg-to-jpeg}, buy specifying \texttt{-jpeg-to-jpeg-scale}:
+
+  \begin{framed}
+  \noindent\small\verb!cpdf -process-images -im magick -jpeg-to-jpeg 70 -jpeg-to-jpeg-scale 50!\\
+  \noindent\small\verb!     in.pdf -o out.pdf!
+  \end{framed}
+
+\noindent We can alternatively use a DPI target:
+
+  \begin{framed}
+  \noindent\small\verb!cpdf -process-images -im magick -jpeg-to-jpeg 70 -jpeg-to-jpeg-dpi 150!\\
   \noindent\small\verb!     in.pdf -o out.pdf!
   \end{framed}
 
