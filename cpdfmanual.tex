@@ -3441,11 +3441,17 @@ at which the command is executed.
 
 \section{Upon Opening a Document}
 
-\noindent When considering the following commands, also NB: If the file has a valid \texttt{/OpenAction} setting, which tells the PDF reader to open at a certain page or position on a page, this can override the page layout or display options. To prevent this, preprocess the file with the \texttt{-remove-dict-entry} functionality from Section \ref{removedictentry}:
+A mark can be put in a PDF to set the page viewing characteristics upon opening.
+
+NB: If the file has a valid \texttt{/OpenAction} setting, which tells the PDF reader to open at a certain page or position on a page, this can override the page layout or display options described below. To prevent this, preprocess the file with the \texttt{-remove-dict-entry} functionality from Section \ref{removedictentry}:
 
   \begin{framed}
     \noindent\small\verb!cpdf -remove-dict-entry /OpenAction in.pdf -o out.pdf!
   \end{framed}
+
+\noindent You can see if the file has such an open action by referring to the output of \texttt{-info}.
+
+NB: The initial view displayed by the dialog box File $\rightarrow$ Properties $\rightarrow$ Initial View in Adobe Reader / Acrobat may not reflect exactly the options here. The options here set the flags within the PDF - Adobe products may show different wording.
 
   \subsection{Page Layout}
 \index{page!layout}
