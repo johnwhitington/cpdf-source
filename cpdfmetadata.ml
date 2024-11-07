@@ -208,6 +208,17 @@ let get_markinfo_item name pdf =
       end
   | _ -> false
 
+(* We fetch the open action, which is either:
+  1. A destination in array form. Change to a page number.
+  2. A /GoTo action with a /D destination - return the destination with number changed.
+  3. Something else - return the whole thing with no changes. *)
+let get_open_action pdf = `Null
+
+let get_open_action_string pdf =
+  match get_open_action pdf with
+  | `Null -> ""
+  | j -> Pdfwrite.string_of_pdf (Cpdfjson.object_of_json j)
+
 let output_info ?(json=ref [("none", `Null)]) encoding pdf =
   let notjson = !json = [("none", `Null)] in
   let getstring = getstring encoding pdf in
@@ -243,6 +254,8 @@ let output_info ?(json=ref [("none", `Null)]) encoding pdf =
     json =| ("PageMode", match (get_catalog_item "/PageMode" pdf) with "" -> `Null | x -> `String x);
     if notjson then Printf.printf "PageLayout: %s\n" (get_catalog_item "/PageLayout" pdf);
     json =| ("PageLayout", match (get_catalog_item "/PageLayout" pdf) with "" -> `Null | x -> `String x);
+    if notjson then Printf.printf "OpenAction: %s\n" (get_open_action_string pdf);
+    json =| ("OpenAction", get_open_action pdf);
     if notjson then Printf.printf "HideToolbar: %s\n" (get_viewer_pref_item "/HideToolbar" pdf);
     json =| ("HideToolbar", match get_viewer_pref_item "/HideToolbar" pdf with "" -> `Null | s -> `Bool (bool_of_string s));
     if notjson then Printf.printf "HideMenubar: %s\n" (get_viewer_pref_item "/HideMenubar" pdf);
