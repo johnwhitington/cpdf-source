@@ -209,9 +209,10 @@ let get_markinfo_item name pdf =
   | _ -> false
 
 (* We fetch the open action, which is either:
-  1. A destination in array form. Change to a page number.
-  2. A /GoTo action with a /D destination - return the destination with number changed.
-  3. Something else - return the whole thing with no changes. *)
+  1. A destination in array form. Change to a page number;
+  2. A /GoTo action with a /D destination - return the destination with number changed;
+  3. Something else - return the whole thing with no changes;
+  4. Not there - return `Null. *)
 let get_open_action pdf = `Null
 
 let get_open_action_string pdf =
