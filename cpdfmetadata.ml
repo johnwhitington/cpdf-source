@@ -213,7 +213,26 @@ let get_markinfo_item name pdf =
   2. A /GoTo action with a /D destination - return the destination with number changed;
   3. Something else - return the whole thing with no changes;
   4. Not there - return `Null. *)
-let get_open_action pdf = `Null
+let get_open_action pdf =
+  let rewrite_page a =
+    match a with
+    | Pdf.Array (Pdf.Indirect i::more) as x->
+        begin match position_1 i (Pdf.page_reference_numbers pdf) with
+        | Some i' -> Pdf.Array (Pdf.Integer i'::more)
+        | None -> x
+        end
+    | x -> x
+  in
+  let convert = Cpdfjson.json_of_object ~utf8:true pdf (fun _ -> ()) ~no_stream_data:true ~parse_content:false in
+    match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/OpenAction"] with
+    | Some (Pdf.Array a) -> convert (rewrite_page (Pdf.Array a))
+    | Some (Pdf.Dictionary d) ->
+        begin match Pdf.lookup_direct pdf "/D" (Pdf.Dictionary d) with
+        | Some (Pdf.Array a) -> convert (rewrite_page (Pdf.Array a))
+        | _ -> convert (Pdf.Dictionary d)
+        end
+    | Some x -> convert x
+    | None -> `Null
 
 let get_open_action_string pdf =
   match get_open_action pdf with
