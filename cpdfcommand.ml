@@ -1737,16 +1737,21 @@ let setreplacedictentry s =
 let setprintdictentry s =
   setop (PrintDictEntry s) ()
 
+let pdf_or_json s =
+  match explode s with
+  | 'P'::'D'::'F'::r -> Pdfread.parse_single_object (implode r)
+  | _ -> Cpdfjson.object_of_json (Cpdfyojson.Safe.from_string s)
+
 let setreplacedictentryvalue s =
   try
-    let pdfobj = Cpdfjson.object_of_json (Cpdfyojson.Safe.from_string s) in
+    let pdfobj = pdf_or_json s in
       args.replace_dict_entry_value <- pdfobj
   with
     e -> error (Printf.sprintf "Failed to parse replacement value: %s\n" (Printexc.to_string e))
 
 let setdictentrysearch s =
   try
-    let pdfobj = Cpdfjson.object_of_json (Cpdfyojson.Safe.from_string s) in
+    let pdfobj = pdf_or_json s in
       args.dict_entry_search <- Some pdfobj
   with
     e -> error (Printf.sprintf "Failed to parse search term: %s\n" (Printexc.to_string e))
@@ -1966,7 +1971,7 @@ let setreadableops () =
 let addeltinfo s =
   match String.split_on_char '=' s with
   | h::t ->
-      let pdfobj = Pdfread.parse_single_object (String.concat "" t) in
+      let pdfobj = pdf_or_json (String.concat "" t) in
         Cpdfdrawcontrol.eltinfo h pdfobj
   | [] -> error "addeltinfo: bad format"
 
@@ -4684,7 +4689,7 @@ let go () =
         print_obj args.format_json pdf s
   | Some (ReplaceObj (a, b)) ->
       let pdf = get_single_pdf args.op false in
-      let pdfobj = Cpdfjson.object_of_json (Cpdfyojson.Safe.from_string b) in
+      let pdfobj = pdf_or_json b in
         replace_obj pdf a pdfobj;
         write_pdf false pdf
   | Some (Verify standard) ->

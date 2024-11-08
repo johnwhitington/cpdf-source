@@ -5373,7 +5373,7 @@ By default, Cpdf with \texttt{-draw-struct-tree} will mark anything not automati
 
 Some tags require a namespace other than the default. You can set the namespace with \texttt{-namespace}, which affects all future tags until reset. Two namespace abbreviations are available: \texttt{PDF} for the default \texttt{http://iso.org/pdf/ssn} namespace and \texttt{PDF2} for the PDF 2.0 namespace \texttt{http://iso.org/pdf2/ssn}.
 
-Extra information may be added to structure tree nodes with \texttt{-eltinfo} / \texttt{-end-eltinfo}. For example, to set the alternative description for an image, we might write \texttt{-eltinfo "Alt=A large horse" -image A -end-eltinfo}. Multiple items may be set at once, for example Alt, ActualText, Lang etc. 
+Extra information may be added to structure tree nodes with \texttt{-eltinfo} / \texttt{-end-eltinfo}. For example, to set the alternative description for an image, we might write (in JSON format, or prefixing with \texttt{PDF} in PDF format) \texttt{-eltinfo "Alt=PDF(A large horse)" -image A -end-eltinfo}. Multiple items may be set at once, for example Alt, ActualText, Lang etc. 
 
 A role map, which maps non-standard structure types to standard ones, may be set with \texttt{-rolemap}. For example \texttt{-rolemap "/S1/H1/S2/H2"} would map the S1 structure type to the standard type H1 and so on.
 
