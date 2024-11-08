@@ -239,6 +239,9 @@ let get_open_action_string pdf =
   | `Null -> ""
   | j -> Pdfwrite.string_of_pdf (Cpdfjson.object_of_json j)
 
+let is_xfa pdf =
+  Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/AcroForm"; "/XFA"] <> None
+
 let output_info ?(json=ref [("none", `Null)]) encoding pdf =
   let notjson = !json = [("none", `Null)] in
   let getstring = getstring encoding pdf in
@@ -292,6 +295,8 @@ let output_info ?(json=ref [("none", `Null)]) encoding pdf =
     json =| ("NonFullPageScreenMode", match (get_viewer_pref_item "/NonFullPageScreenMode" pdf) with "" -> `Null | x -> `String x);
     if notjson then Printf.printf "AcroForm: %s\n" (match get_catalog_item "/AcroForm" pdf with "" -> "False" | x -> x);
     json =| ("AcroForm", match (get_catalog_item "/AcroForm" pdf) with "" -> `Bool false | x -> `Bool true);
+    if notjson then Printf.printf "XFA: %s\n" (if is_xfa pdf then "True" else "False");
+    json =| ("XFA", `Bool (is_xfa pdf));
     if notjson then Printf.printf "Marked: %s\n" (match get_markinfo_item "/Marked" pdf with true -> "True" | _ -> "False");
     json =| ("Marked", `Bool (get_markinfo_item "/Marked" pdf));
     if notjson then Printf.printf "UserProperties: %s\n" (match get_markinfo_item "/UserProperties" pdf with true -> "True" | _ -> "False");
