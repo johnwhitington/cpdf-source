@@ -1944,6 +1944,10 @@ let setextractstreamdecomp s =
 let setprintobj s =
   args.op <- Some (PrintObj s)
 
+let setprintobjjson s =
+  args.format_json <- true;
+  args.op <- Some (PrintObj s)
+
 let setreplaceobj s =
   match String.split_on_char '=' s with
   | [a; b] -> args.op <- Some (ReplaceObj (a, b))
@@ -2970,6 +2974,7 @@ let specs =
    ("-extract-stream", Arg.String setextractstream, " Extract a stream");
    ("-extract-stream-decompress", Arg.String setextractstreamdecomp, " Extract a stream, decompressing");
    ("-obj", Arg.String setprintobj, " Print object");
+   ("-obj-json", Arg.String setprintobjjson, " Print object");
    ("-replace-obj", Arg.String setreplaceobj, "Replace object");
    ("-json", Arg.Unit (fun () -> args.format_json <- true), " Format output as JSON");
    ("-verify", Arg.String (fun s -> setop (Verify s) ()), " Verify conformance to a standard");
@@ -3591,15 +3596,20 @@ let extract_stream pdf decomp objnum =
    Otherwise it's an object number (0 = trailerdict). *)
 let split_chain str = map (fun x -> "/" ^ x) (tl (String.split_on_char '/' str))
 
-let print_obj pdf objspec =
+let print_obj json pdf objspec =
+  let write obj =
+    if json then
+      print_string (Cpdfyojson.Safe.pretty_to_string (Cpdfjson.json_of_object ~utf8:true pdf (fun _ -> ()) ~no_stream_data:false ~parse_content:false obj))
+    else
+      Printf.printf "%S\n" (Pdfwrite.string_of_pdf obj)
+  in
   let simple_obj obj =
-    let obj = if obj = 0 then pdf.Pdf.trailerdict else Pdf.lookup_obj pdf obj in
-    Printf.printf "%S\n" (Pdfwrite.string_of_pdf obj)
+    write (if obj = 0 then pdf.Pdf.trailerdict else Pdf.lookup_obj pdf obj)
   in
   let chain_obj objnum chain =
     let obj = if objnum = 0 then pdf.Pdf.trailerdict else Pdf.lookup_obj pdf objnum in
     match Pdf.lookup_chain pdf obj chain with
-    | Some x -> Printf.printf "%S\n" (Pdfwrite.string_of_pdf x)
+    | Some x -> write x
     | None -> ()
   in
     match explode objspec with
@@ -4671,7 +4681,7 @@ let go () =
         extract_stream pdf args.extract_stream_decompress s
   | Some (PrintObj s) ->
       let pdf = get_single_pdf args.op true in
-        print_obj pdf s
+        print_obj args.format_json pdf s
   | Some (ReplaceObj (a, b)) ->
       let pdf = get_single_pdf args.op false in
       let pdfobj = Cpdfjson.object_of_json (Cpdfyojson.Safe.from_string b) in
