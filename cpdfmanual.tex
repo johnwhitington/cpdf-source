@@ -5895,7 +5895,7 @@ This is for editing data within the PDF's internal representation. Use with caut
   \small\noindent\verb!cpdf -print-dict-entry /URI in.pdf!
 
   \vspace{2.5mm}
-  \noindent Print all URLs in annotation hyperlinks \texttt{in.pdf}. 
+  \noindent Print all URLs in annotation hyperlinks in \texttt{in.pdf}. 
   \end{framed}
 
 \noindent To remove a dictionary entry:
@@ -5912,13 +5912,13 @@ This is for editing data within the PDF's internal representation. Use with caut
   \small\noindent\verb!     in.pdf -o out.pdf!
 
   \vspace{2.5mm}
-  \noindent Replace the entry for \texttt{/One} in every dictionary \texttt{in.pdf} if the key's value is the given CPDFJSON value, writing to \texttt{out.pdf}. 
+  \noindent Replace the entry for \texttt{/One} in every dictionary \texttt{in.pdf} if the key's value is the given CPDFJSON value, writing to \texttt{out.pdf}. Alternatively, prefix \texttt{PDF} to give the value in PDF format.
   \end{framed}
 
-\noindent To replace a dictionary entry, give the replacement value in CPDFJSON format:
+\noindent To replace a dictionary entry, give the replacement value in JSON or format:
 
   \begin{framed}
-  \small\noindent\verb!cpdf -replace-dict-entry /One -replace-dict-entry-value "\{I : 2\}"!\\
+  \small\noindent\verb!cpdf -replace-dict-entry /One -replace-dict-entry-value "PDF2"!\\
   \small\noindent\verb!     in.pdf -o out.pdf!
 
   \vspace{2.5mm}
