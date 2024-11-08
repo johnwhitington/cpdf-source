@@ -14,6 +14,7 @@ o Allow bold, italic, colours for JSON bookmarks
 o Show OpenAction in -info
 o Show more form information in -info
 o Show XFA in -info
+o Allow JSON / PDF syntax in dict processing and object exploration
 
 Fixes:
 
