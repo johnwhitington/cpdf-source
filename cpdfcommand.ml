@@ -2974,7 +2974,7 @@ let specs =
    ("-extract-stream", Arg.String setextractstream, " Extract a stream");
    ("-extract-stream-decompress", Arg.String setextractstreamdecomp, " Extract a stream, decompressing");
    ("-obj", Arg.String setprintobj, " Print object");
-   ("-obj-json", Arg.String setprintobjjson, " Print object");
+   ("-obj-json", Arg.String setprintobjjson, " Print object in JSON format");
    ("-replace-obj", Arg.String setreplaceobj, "Replace object");
    ("-json", Arg.Unit (fun () -> args.format_json <- true), " Format output as JSON");
    ("-verify", Arg.String (fun s -> setop (Verify s) ()), " Verify conformance to a standard");

@@ -5744,7 +5744,7 @@ Cpdf can add PDF/UA structure data when drawing on new PDF/UA files. For example
   \noindent\verb!cpdf -remove-clipping [<range>] in.pdf -o out.pdf!
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf -obj <object specification> in.pdf!
+  \noindent\verb!cpdf -obj[-json] <object specification> in.pdf!
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -replace-obj <object specification>=<object> in.pdf!
@@ -5976,7 +5976,9 @@ $ ./cpdf -obj /Root/Pages/Count cpdfmanual.pdf
 "/MCBERL+URWPalladioL-Roma"
 \end{verbatim}}
 
-\noindent A stream may be extracted with \texttt{-extract-stream} or \texttt{-extract-stream-decompress}, which decompresses it first where possible:
+\noindent To output data in JSON format instead of PDF format, use \texttt{-obj-json} in place of \texttt{-obj}.
+
+A stream may be extracted with \texttt{-extract-stream} or \texttt{-extract-stream-decompress}, which decompresses it first where possible:
 
 {\small\begin{verbatim}
 $ cpdf -obj 0 hello.pdf
@@ -6000,13 +6002,21 @@ $ cpdf -extract-stream-decompress 2 hello.pdf -stdout
 
 \noindent By these mechanisms, ad-hoc exploration of PDF files is possible.
 
-We may also edit dictionary entries with \texttt{-replace-obj} by giving an object specification, and the new value in JSON format:
+We may also edit dictionary entries with \texttt{-replace-obj} by giving an object specification, and the new value in JSON or PDF format (prefix with "PDF" to denote PDF format):
 
   \begin{framed}
   \small\noindent\verb!cpdf -replace-obj /Root/MarkInfo/Marked=true in.pdf -o out.pdf!
 
   \vspace{2.5mm}
   \noindent Replace or add dictionary entry in \texttt{in.pdf}, writing to \texttt{out.pdf}. 
+
+  \vspace{2.5mm}
+
+  \small\noindent\verb!cpdf -replace-obj '/Root/Info/Title=PDF(New title)' in.pdf -o out.pdf!
+
+  \vspace{2.5mm}
+  \noindent Replace or add dictionary entry in \texttt{in.pdf}, writing to \texttt{out.pdf}. 
+
   \end{framed}
 
 \noindent Any part of the object specification not already present will be fabricated using direct nested dictionaries. For example, if \texttt{/MarkInfo} does not exist in the root dictionary, this command adds \texttt{/MarkInfo <</Marked true>>} to the root dictionary.
