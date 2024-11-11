@@ -13,9 +13,8 @@ o Add @b<n>@ for trimming bookmark text to given length
 o Allow bold, italic, colours for JSON bookmarks
 o Show OpenAction in -info
 o Show more form information in -info
-o Show XFA in -info
 o Allow JSON / PDF syntax in dict processing and object exploration
-o %Bookmark and friends when stamping text
+o Show %Bookmark text when stamping text
 
 Fixes:
 
