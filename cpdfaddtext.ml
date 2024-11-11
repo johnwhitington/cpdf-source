@@ -177,22 +177,29 @@ let pagelabel pdf num =
     num
     (Pdfpagelabels.complete (Pdfpagelabels.read pdf))
 
+(*let debug pdf fastrefnums =
+  iter
+    (fun m -> Printf.printf "%i %s (%i)\n" m.Pdfmarks.level (Pdftext.utf8_of_pdfdocstring m.Pdfmarks.text) (Pdfpage.pagenumber_of_target ~fastrefnums pdf m.Pdfmarks.target))*)
+    
 (* Return UTF8 of current bookmark at given level at start of page. No bookmark
-   available = empty string. *)
+   available = empty string. 
+
+   Method: Remove from the list anything from end up to the last mark which is
+   at higher level. This prevents sections in an earlier chapter showing up as
+   bookmarks in a later chapter if no section has yet been introduced in that
+   chapter.  Do this by reversing, then keeping everything up to any higher
+   level. Then re-reverse and filter to only the level required.  Then, We want
+   the first which is on the target page or, if none, the last available. *)
 let bookmark marks fastrefnums level pdf num =
-  let before, _ =
-    (* 1. Pick all marks up to and including those on the needed page. *)
-    cleavewhile (fun mark -> Pdfpage.pagenumber_of_target ~fastrefnums pdf mark.Pdfmarks.target <= num) marks
-  in
-  match
-    (* 2. Remove from the list anything up to the last mark which is at higher
-       level. This prevents sections in an earlier chapter showing up as
-       bookmarks in a later chapter if no section has yet been introduced in
-       that chapter.  Do this by reversing, then keeping everything up to any higher level. Then re-reverse. *)
-    rev (fst (cleavewhile (fun mark -> mark.Pdfmarks.level = level) (rev before)))
-  with
-  | h::_ -> Pdftext.utf8_of_pdfdocstring h.Pdfmarks.text
-  | [] -> ""
+  let before = takewhile (fun mark -> Pdfpage.pagenumber_of_target ~fastrefnums pdf mark.Pdfmarks.target <= num) marks in
+  let pickfrom = keep (fun mark -> mark.Pdfmarks.level = level) (rev (fst (cleavewhile (fun mark -> mark.Pdfmarks.level >= level) (rev before)))) in
+  let on_target_page, before_target_page = List.partition (fun mark -> Pdfpage.pagenumber_of_target ~fastrefnums pdf mark.Pdfmarks.target = num) pickfrom in
+    match on_target_page with
+    | h::_ -> Pdftext.utf8_of_pdfdocstring h.Pdfmarks.text
+    | [] ->
+        match before_target_page with
+        | _::_ -> Pdftext.utf8_of_pdfdocstring (last before_target_page).Pdfmarks.text
+        | [] -> ""
 
 let replace_pairs marks fastrefnums pdf endpage extract_text_font_size filename bates batespad num page =
     [
