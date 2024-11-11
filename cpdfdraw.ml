@@ -164,8 +164,11 @@ let reset_state () =
   (res ()).page_names <- []*)
 
 let process_specials pdf endpage filename bates batespad num page s =
+  let refnums = Pdf.page_reference_numbers pdf in
+  let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
+  let marks = Pdfmarks.read_bookmarks pdf in 
   let pairs =
-    Cpdfaddtext.replace_pairs pdf endpage None filename bates batespad num page
+    Cpdfaddtext.replace_pairs marks fastrefnums pdf endpage None filename bates batespad num page
   in
     Cpdfaddtext.process_text (res ()).time s pairs
 

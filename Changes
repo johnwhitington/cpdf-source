@@ -15,6 +15,7 @@ o Show OpenAction in -info
 o Show more form information in -info
 o Show XFA in -info
 o Allow JSON / PDF syntax in dict processing and object exploration
+o %Bookmark and friends when stamping text
 
 Fixes:
 

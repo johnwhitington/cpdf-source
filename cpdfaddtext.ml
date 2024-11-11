@@ -177,7 +177,24 @@ let pagelabel pdf num =
     num
     (Pdfpagelabels.complete (Pdfpagelabels.read pdf))
 
-let replace_pairs pdf endpage extract_text_font_size filename bates batespad num page =
+(* Return UTF8 of current bookmark at given level at start of page. No bookmark
+   available = empty string. *)
+let bookmark marks fastrefnums level pdf num =
+  let before, _ =
+    (* 1. Pick all marks up to and including those on the needed page. *)
+    cleavewhile (fun mark -> Pdfpage.pagenumber_of_target ~fastrefnums pdf mark.Pdfmarks.target <= num) marks
+  in
+  match
+    (* 2. Remove from the list anything up to the last mark which is at higher
+       level. This prevents sections in an earlier chapter showing up as
+       bookmarks in a later chapter if no section has yet been introduced in
+       that chapter.  Do this by reversing, then keeping everything up to any higher level. Then re-reverse. *)
+    rev (fst (cleavewhile (fun mark -> mark.Pdfmarks.level = level) (rev before)))
+  with
+  | h::_ -> Pdftext.utf8_of_pdfdocstring h.Pdfmarks.text
+  | [] -> ""
+
+let replace_pairs marks fastrefnums pdf endpage extract_text_font_size filename bates batespad num page =
     [
      "%PageDiv2", (fun () -> string_of_int ((num + 1) / 2));
      "%Page", (fun () -> string_of_int num);
@@ -187,6 +204,11 @@ let replace_pairs pdf endpage extract_text_font_size filename bates batespad num
      "%Label", (fun () -> pagelabel pdf num);
      "%EndPage", (fun () -> string_of_int endpage);
      "%EndLabel", (fun () -> pagelabel pdf endpage);
+     "%Bookmark0", (fun () -> bookmark marks fastrefnums 0 pdf num);
+     "%Bookmark1", (fun () -> bookmark marks fastrefnums 1 pdf num);
+     "%Bookmark2", (fun () -> bookmark marks fastrefnums 2 pdf num);
+     "%Bookmark3", (fun () -> bookmark marks fastrefnums 3 pdf num);
+     "%Bookmark4", (fun () -> bookmark marks fastrefnums 4 pdf num);
      "%ExtractedText", (fun () -> Cpdfextracttext.extract_page_text extract_text_font_size pdf num page);
      "%Bates",
         (fun () ->
@@ -199,10 +221,13 @@ let replace_pairs pdf endpage extract_text_font_size filename bates batespad num
                  else implode (many '0' (w - String.length numstring)) ^ numstring))]
 
 let expand_lines text time pdf endpage extract_text_font_size filename bates batespad num page lines =
+  let refnums = Pdf.page_reference_numbers pdf in
+  let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
+  let marks = Pdfmarks.read_bookmarks pdf in
   let expanded_lines =
     map
       (function text ->
-         process_text time text (replace_pairs pdf endpage extract_text_font_size filename bates batespad num page))
+         process_text time text (replace_pairs marks fastrefnums pdf endpage extract_text_font_size filename bates batespad num page))
       lines
   in
     (* process URLs for justification too *)
@@ -291,7 +316,10 @@ let addtext
               (indx0 (fst fontpack))
         in
           let ops, urls, x, y, hoffset, voffset, text, joffset =
-            let text = process_text time text (replace_pairs pdf endpage extract_text_font_size filename bates batespad num page) in
+          let refnums = Pdf.page_reference_numbers pdf in
+          let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
+          let marks = Pdfmarks.read_bookmarks pdf in
+            let text = process_text time text (replace_pairs marks fastrefnums pdf endpage extract_text_font_size filename bates batespad num page) in
             let text, urls = get_urls_line text in
             let lines = map (fun text -> if raw || fontpack <> None then text else charcodes_of_utf8 (Pdftext.read_font pdf fontpdfobj) text) lines in
             let expanded_lines = expand_lines text time pdf endpage extract_text_font_size filename bates batespad num page lines in

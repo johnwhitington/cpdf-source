@@ -61,6 +61,8 @@ val addrectangle :
 
 (**/**)
 val replace_pairs :
+  Pdfmarks.t list ->
+  (int, int) Hashtbl.t ->
   Pdf.t ->
   int ->
   float option ->
