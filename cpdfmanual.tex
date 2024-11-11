@@ -2500,13 +2500,16 @@ font size and color.
     \texttt{\%Label} & The page label of the page \\
     \texttt{\%EndLabel} & The page label of the last page \\
     \texttt{\%filename} & The full file name of the input document \\
-    \texttt{\%URL[text|URL]} & Add \texttt{text}, which links to \texttt{URL} (does not work for diagonal text)
+    \texttt{\%URL[text|URL]} & Add \texttt{text}, which links to \texttt{URL} (does not work for diagonal text)\\
+    \texttt{\%Bookmark<n>} & Bookmark text at level n (0, 1, 2, 3, 4)\\
   \end{tabular}
 
   \vspace{2mm}
   \noindent For example, the format \texttt{"Page~\%Page~of~\%EndPage"} might become "Page~5~of~17".
 
   NB: In some circumstances (e.g in batch files) on Microsoft Windows, \verb!%! is a special character, and must be escaped (written as \verb$%%$). Consult your local documentation for details.
+
+Bookmark text refers to the first bookmark of the given level on the stamped page or, if none, the last bookmark text of that level before that page, so long as uninterrupted by a bookmark of lower level. In other words, these specials are suitable for adding running heads to a document.
 
   \subsection{Date and Time Formats}
   \begin{tabular}{ll}
