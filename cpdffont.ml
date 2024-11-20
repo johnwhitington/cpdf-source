@@ -277,17 +277,53 @@ let list_font pdf page (name, dict) =
   in 
     (page, name, subtype, basefont, encoding)
 
+(* List the fonts used in an xobject, and in any of the xobjects it has. Do not
+   process an xobject twice. *)
+let xobjs_processed = null_hash ()
+
+let rec list_fonts_xobject pdf pagenum xobjname xobjnum =
+  match Hashtbl.find_opt xobjs_processed xobjnum with
+  | None ->
+      let from_xobjs =
+        match Pdf.lookup_direct pdf "/Resources" (Pdf.lookup_obj pdf xobjnum) with
+        | Some r ->
+            begin match Pdf.lookup_direct pdf "/XObject" r with
+            | Some (Pdf.Dictionary xobjs) ->
+                flatten (option_map (function (n, Pdf.Indirect i) -> Some (list_fonts_xobject pdf pagenum (xobjname ^ n) i) | _ -> None) xobjs)
+            | _ -> []
+            end
+        | _ -> []
+      in
+        begin match Pdf.lookup_direct pdf "/Resources" (Pdf.lookup_obj pdf xobjnum) with
+        | Some r ->
+            begin match Pdf.lookup_direct pdf "/Font" r with
+            | Some (Pdf.Dictionary fonts) -> map (list_font pdf pagenum) (map (function (n, f) -> (xobjname ^ n, f)) fonts) @ from_xobjs
+            | _ -> from_xobjs
+            end
+        | None -> from_xobjs
+        end
+  | Some _ ->
+      Hashtbl.add xobjs_processed xobjnum ();
+      []
+  
 let list_fonts pdf range =
+  Hashtbl.clear xobjs_processed;
   let pages = Pdfpage.pages_of_pagetree pdf in
     flatten
       (map
         (fun (num, page) ->
            if mem num range then
-             begin match Pdf.lookup_direct pdf "/Font" page.Pdfpage.resources with
-             | Some (Pdf.Dictionary fontdict) ->
-                 map (list_font pdf num) fontdict
-             | _ -> []
-             end
+             let from_xobjs =
+               match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
+               | Some (Pdf.Dictionary xobjs) ->
+                   flatten (option_map (function (n, Pdf.Indirect i) -> Some (list_fonts_xobject pdf num n i) | _ -> None) xobjs)
+               | _ -> []
+             in
+               begin match Pdf.lookup_direct pdf "/Font" page.Pdfpage.resources with
+               | Some (Pdf.Dictionary fontdict) ->
+                   map (list_font pdf num) fontdict @ from_xobjs
+               | _ -> from_xobjs
+               end
            else
              [])
         (combine (ilist 1 (length pages)) pages))
