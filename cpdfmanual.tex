@@ -4123,7 +4123,7 @@ one-per-line to standard output. For example:
 2 /F13 /Type0 /Cleargothic-Bold /Identity-H
 2 /F16 /Type0 /Arial-ItalicMT /Identity-H
 2 /F21 /Type0 /ArialMT /Identity-H
-2 /F58 /Type1 /Times-Roman /WinAnsiEncoding
+2 /X02/F58 /Type1 /Times-Roman /WinAnsiEncoding
 2 /F59 /Type0 /ClearGothicSerialLight /Identity-H
 2 /F61 /Type0 /Cleargothic-BoldItalic /Identity-H
 2 /F68 /Type0 /Cleargothic-RegularItalic /Identity-H
@@ -4140,7 +4140,7 @@ one-per-line to standard output. For example:
 \end{framed}}
 
 \noindent The first column gives the page number, the second the internal unique font
-name, the third the type of font (Type1, TrueType etc), the fourth the PDF font
+name (or, if the font is used in a Form XObject, the path e.g \texttt{/X1/F0}), the third the type of font (Type1, TrueType etc), the fourth the PDF font
 name, the fifth the PDF font encoding.
 
 The information is also available in JSON format with \texttt{-list-fonts-json}:
