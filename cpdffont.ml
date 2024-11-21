@@ -208,33 +208,46 @@ let print_font_table pdf fontname pagenumber =
             done
     | _ -> failwith "addtext: font not found for width"
 
+let font_from_name pdf fontname pagenumber =
+  try
+    let resources = ref (select pagenumber (Pdfpage.pages_of_pagetree pdf)).Pdfpage.resources in
+    let chain = ref (tl (String.split_on_char '/' fontname)) in
+    let font = ref Pdf.Null in
+      while !chain <> [] do
+        match !chain with
+        | [f] ->
+            font := unopt (Pdf.lookup_chain pdf !resources ["/Font"; ("/" ^ f)]);
+            chain := []
+        | x::xs ->
+            resources := unopt (Pdf.lookup_chain pdf !resources ["/XObject"; "/" ^ x; "/Resources"]);
+            chain := xs
+        | [] -> ()
+      done;
+      !font
+  with
+    _ -> Pdfe.log (Printf.sprintf "Not found: font %s on page %i\n" fontname pagenumber); Pdf.Null
+
 let extract_fontfile pagenumber fontname filename pdf =
-  let resources = (select pagenumber (Pdfpage.pages_of_pagetree pdf)).Pdfpage.resources in
-    match Pdf.lookup_direct pdf "/Font" resources with
-    | None -> failwith "extract_fontfile: font not found"
-    | Some fonts ->
-        let fontobj = Pdf.lookup_fail ("no font " ^ fontname) pdf fontname fonts in
-          let font = Pdftext.read_font pdf fontobj in
-            match font with
-            | Pdftext.CIDKeyedFont (_, {Pdftext.cid_fontdescriptor = {Pdftext.fontfile = Some fontfile}}, _)
-            | Pdftext.SimpleFont {Pdftext.fontdescriptor = Some {Pdftext.fontfile = Some fontfile}} ->
-                begin let objnum =
-                  match fontfile with
-                  | Pdftext.FontFile i | Pdftext.FontFile2 i | Pdftext.FontFile3 i -> i
-                in
-                  match Pdf.lookup_obj pdf objnum with
-                  | Pdf.Stream s as obj ->
-                      Pdfcodec.decode_pdfstream pdf obj;
-                      begin match s with
-                      | {contents = (_, Pdf.Got bytes)} ->
-                           let fh = open_out_bin filename in
-                             for x = 0 to bytes_size bytes - 1 do output_byte fh (bget bytes x) done;
-                             close_out fh
-                      | _ -> failwith "extract_fontfile"
-                      end
-                  | _ -> failwith "extract_fontfile"
-                end
-            | _ -> failwith "unsupported or unfound font"
+  match Pdftext.read_font pdf (font_from_name pdf fontname pagenumber) with
+  | Pdftext.CIDKeyedFont (_, {Pdftext.cid_fontdescriptor = {Pdftext.fontfile = Some fontfile}}, _)
+  | Pdftext.SimpleFont {Pdftext.fontdescriptor = Some {Pdftext.fontfile = Some fontfile}} ->
+      begin let objnum =
+        match fontfile with
+        | Pdftext.FontFile i | Pdftext.FontFile2 i | Pdftext.FontFile3 i -> i
+      in
+        match Pdf.lookup_obj pdf objnum with
+        | Pdf.Stream s as obj ->
+            Pdfcodec.decode_pdfstream pdf obj;
+            begin match s with
+            | {contents = (_, Pdf.Got bytes)} ->
+                 let fh = open_out_bin filename in
+                   for x = 0 to bytes_size bytes - 1 do output_byte fh (bget bytes x) done;
+                   close_out fh
+            | _ -> failwith "extract_fontfile"
+            end
+        | _ -> failwith "extract_fontfile"
+      end
+  | _ -> failwith "unsupported or unfound font"
 
 (* Remove Embedded fonts. This is done by removing the Font Descriptor. *)
 let remove_fontdescriptor pdf = function
