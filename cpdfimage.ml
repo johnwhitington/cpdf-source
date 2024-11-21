@@ -136,25 +136,28 @@ let extract_images_inner ~raw ?path_to_p2p ?path_to_im encoding serial pdf resou
   in
     iter2 (write_image ~raw ?path_to_p2p ?path_to_im pdf resources) names images
 
-let extract_images_form_xobject ~raw ?path_to_p2p ?path_to_im encoding dedup dedup_per_page pdf serial stem pnum form =
+let rec extract_images_form_xobject ~raw ?path_to_p2p ?path_to_im encoding dedup dedup_per_page pdf serial stem pnum form =
+  Printf.printf "form = %s\n" (Pdfwrite.string_of_pdf form);
   let resources =
     match Pdf.lookup_direct pdf "/Resources" form with
       Some (Pdf.Dictionary d) -> Pdf.Dictionary d
     | _ -> Pdf.Dictionary []
   in
-    let images =
+    let images, forms =
       let xobjects =
         match Pdf.lookup_direct pdf "/XObject" resources with
         | Some (Pdf.Dictionary elts) -> map snd elts
         | _ -> []
       in
         (* Remove any already in !written. Add any remaining to !written, if !args.dedup or !args.dedup_page *)
-        let images = keep (fun o -> Pdf.lookup_direct pdf "/Subtype" o = Some (Pdf.Name "/Image")) xobjects in
+        let images, forms = List.partition (fun o -> Pdf.lookup_direct pdf "/Subtype" o = Some (Pdf.Name "/Image")) xobjects in
         let already_written, images = List.partition (function Pdf.Indirect n -> mem n !written | _ -> false) images in
           if dedup || dedup_per_page then
             written := (option_map (function Pdf.Indirect n -> Some n | _ -> None) images) @ !written;
-          images
+          images, forms
     in
+      Printf.printf "extract_images_form_xobject: found %i images and %i subforms\n" (length images) (length forms);
+      iter (extract_images_form_xobject ~raw ?path_to_p2p ?path_to_im encoding dedup dedup_per_page pdf serial stem pnum) forms;
       extract_images_inner ~raw ?path_to_p2p ?path_to_im encoding serial pdf resources stem pnum images
 
 let extract_images ?(raw=false) ?path_to_p2p ?path_to_im encoding dedup dedup_per_page pdf range stem =
