@@ -144,70 +144,6 @@ let missing_fonts_return pdf range =
     missing_fonts ~l pdf range;
     !l
 
-let print_font_table pdf fontname pagenumber =
-  let page = try List.nth (Pdfpage.pages_of_pagetree pdf) (pagenumber - 1) with e -> error "page not found" in
-    match Pdf.lookup_direct pdf "/Font" page.Pdfpage.resources with
-    | Some fontdict ->
-        let font =
-          begin match Pdf.lookup_direct pdf fontname fontdict with
-          | Some font -> font
-          | None ->
-             (* For each item in the fontdict, follow its value and find the basename. If it matches, return that font *)
-             let font = ref None in
-             iter
-               (fun (k, v) ->
-                  match Pdf.lookup_direct pdf "/BaseFont" v with
-                  | Some (Pdf.Name n) when n = fontname -> font := Some v
-                  | _ -> ())
-               (match fontdict with Pdf.Dictionary d -> d | _ -> []);
-             match !font with Some f -> f | None -> failwith (Printf.sprintf "print_font_encoding: font %s not found" fontname)
-          end
-        in
-          let pdftextfont = Pdftext.read_font pdf font in
-          let charset =
-            match pdftextfont with
-            | Pdftext.SimpleFont {Pdftext.fontdescriptor = Some {Pdftext.charset = Some cs}} -> Some cs
-            | _ -> None
-          in
-          let extractor = Pdftext.text_extractor_of_font_real pdftextfont in
-          let unicodedata = Cpdfunicodedata.unicodedata () in
-          let unicodetable = Hashtbl.create 16000 in
-           iter
-            (fun x ->
-               Hashtbl.add
-                 unicodetable
-                 (int_of_string ("0x" ^ x.Cpdfunicodedata.code_value))
-                 (x.Cpdfunicodedata.code_value,
-                  x.Cpdfunicodedata.general_category,
-                  x.Cpdfunicodedata.character_name,
-                  x.Cpdfunicodedata.iso_10646_comment_field))
-            unicodedata;
-            for x = 0 to 255 do
-              let str =
-                  (if Pdftext.is_identity_h pdftextfont then "\000" else "")
-                ^ string_of_char (char_of_int x)
-              in
-              let codepoints = Pdftext.codepoints_of_text extractor str in
-              let unicodenumber, unicodename, is_control =
-                match codepoints with
-                | [c] ->
-                    begin try
-                      let codeval, category, character_name, comment = Hashtbl.find unicodetable c in
-                        codeval, character_name, category = "Cc"
-                    with
-                      Not_found -> "", "", false
-                    end
-                | _ -> "***multiple", "***multiple", false
-              in
-              let utf8 = if is_control then "<nonprintable>" else Pdftext.utf8_of_codepoints codepoints in
-              let glyphnames = fold_left ( ^ ) "" (Pdftext.glyphnames_of_text extractor str) in
-              let is_in_charset s = match charset with None -> true | Some cs -> mem s cs in
-                if glyphnames <> ".notdef" && is_in_charset glyphnames then
-                  Printf.printf
-                    "%i = U+%s (%s - %s) = %s\n" x unicodenumber utf8 unicodename glyphnames
-            done
-    | _ -> failwith "addtext: font not found for width"
-
 let font_from_name pdf fontname pagenumber =
   try
     let resources = ref (select pagenumber (Pdfpage.pages_of_pagetree pdf)).Pdfpage.resources in
@@ -226,6 +162,61 @@ let font_from_name pdf fontname pagenumber =
       !font
   with
     _ -> Pdfe.log (Printf.sprintf "Not found: font %s on page %i\n" fontname pagenumber); Pdf.Null
+
+let print_font_table pdf fontname pagenumber =
+  let fontdict = font_from_name pdf fontname pagenumber in
+  (* For each item in the fontdict, follow its value and find the basename. If it matches, return that font *)
+  let font = ref (Some fontdict) in
+    iter
+      (fun (k, v) ->
+         match Pdf.lookup_direct pdf "/BaseFont" v with
+         | Some (Pdf.Name n) when n = fontname -> font := Some v
+         | _ -> ())
+      (match fontdict with Pdf.Dictionary d -> d | _ -> []);
+  let font = match !font with Some f -> f | None -> failwith (Printf.sprintf "print_font_encoding: font %s not found" fontname) in
+    let pdftextfont = Pdftext.read_font pdf font in
+    let charset =
+      match pdftextfont with
+      | Pdftext.SimpleFont {Pdftext.fontdescriptor = Some {Pdftext.charset = Some cs}} -> Some cs
+      | _ -> None
+    in
+    let extractor = Pdftext.text_extractor_of_font_real pdftextfont in
+    let unicodedata = Cpdfunicodedata.unicodedata () in
+    let unicodetable = Hashtbl.create 16000 in
+     iter
+      (fun x ->
+         Hashtbl.add
+           unicodetable
+           (int_of_string ("0x" ^ x.Cpdfunicodedata.code_value))
+           (x.Cpdfunicodedata.code_value,
+            x.Cpdfunicodedata.general_category,
+            x.Cpdfunicodedata.character_name,
+            x.Cpdfunicodedata.iso_10646_comment_field))
+      unicodedata;
+      for x = 0 to 255 do
+        let str =
+            (if Pdftext.is_identity_h pdftextfont then "\000" else "")
+          ^ string_of_char (char_of_int x)
+        in
+        let codepoints = Pdftext.codepoints_of_text extractor str in
+        let unicodenumber, unicodename, is_control =
+          match codepoints with
+          | [c] ->
+              begin try
+                let codeval, category, character_name, comment = Hashtbl.find unicodetable c in
+                  codeval, character_name, category = "Cc"
+              with
+                Not_found -> "", "", false
+              end
+          | _ -> "***multiple", "***multiple", false
+        in
+        let utf8 = if is_control then "<nonprintable>" else Pdftext.utf8_of_codepoints codepoints in
+        let glyphnames = fold_left ( ^ ) "" (Pdftext.glyphnames_of_text extractor str) in
+        let is_in_charset s = match charset with None -> true | Some cs -> mem s cs in
+          if glyphnames <> ".notdef" && is_in_charset glyphnames then
+            Printf.printf
+              "%i = U+%s (%s - %s) = %s\n" x unicodenumber utf8 unicodename glyphnames
+      done
 
 let extract_fontfile pagenumber fontname filename pdf =
   match Pdftext.read_font pdf (font_from_name pdf fontname pagenumber) with
