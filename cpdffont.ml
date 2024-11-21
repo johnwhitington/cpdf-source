@@ -21,40 +21,45 @@ let embed_missing_fonts path_to_ghostscript gs_quiet fi fo =
       | 0 -> exit 0
       | _ -> Pdfe.log "Font embedding failed.\n"; exit 2
 
+(* Return any font dictionary from a page or xobject given a chain and the page number. *)
+let font_from_name pdf fontname pagenumber =
+  try
+    let resources = ref (select pagenumber (Pdfpage.pages_of_pagetree pdf)).Pdfpage.resources in
+    let chain = ref (tl (String.split_on_char '/' fontname)) in
+    let font = ref Pdf.Null in
+      while !chain <> [] do
+        match !chain with
+        | [f] ->
+            font := unopt (Pdf.lookup_chain pdf !resources ["/Font"; ("/" ^ f)]);
+            chain := []
+        | x::xs ->
+            resources := unopt (Pdf.lookup_chain pdf !resources ["/XObject"; "/" ^ x; "/Resources"]);
+            chain := xs
+        | [] -> ()
+      done;
+      !font
+  with
+    _ -> Pdfe.log (Printf.sprintf "Not found: font %s on page %i\n" fontname pagenumber); Pdf.Null
+
 (* Copy a font from [frompdf] with name [fontname] on page [fontpage] to [pdf] on all pages in [range] *)
 let copy_font frompdf fontname fontpage range pdf =
   match Pdf.renumber_pdfs [frompdf; pdf] with
   | [] | [_] | _::_::_::_ -> assert false
   | [frompdf; pdf] ->
-      (* 1. Get fontpage *)
-      let frompdf_pages = Pdfpage.pages_of_pagetree frompdf in
-        let frompdf_page =
-           try select fontpage frompdf_pages with
-             Not_found -> failwith "copy_font: Page not found in input pdf"
-        in
-      (* 2. Extract font *)
-      let fonts =
-        match Pdf.lookup_direct frompdf "/Font" frompdf_page.Pdfpage.resources with
-        | Some f -> f
-        | None -> failwith "copy_font: font not found"
+      (* Get font and name *)
+      let fromfont = font_from_name frompdf fontname fontpage in
+      let basefontname =
+        match Pdf.lookup_direct frompdf "/BaseFont" fromfont with
+        | Some (Pdf.Name n) -> n
+        | _ -> "/CopyFontAddedNoName"
       in
-        let fromfont =
-          match Pdf.lookup_direct frompdf fontname fonts with
-          | Some f -> f
-          | None -> failwith "copy_font: font not found"
-        in
-          let basefontname =
-            match Pdf.lookup_direct frompdf "/BaseFont" fromfont with
-            | Some (Pdf.Name n) -> n
-            | _ -> "/CopyFontAddedNoName"
-          in
-      (* 3. Get all objects forming font (except main /Font one) *)
+      (* Get all objects forming font (except main /Font one) *)
       let objnumbers = Pdf.objects_referenced [] [] frompdf fromfont in
-      (* 4. Copy them to from frompdf to pdf. *)
+      (* Copy them to from frompdf to pdf. *)
       iter (function objnum -> Pdf.addobj_given_num pdf (objnum, Pdf.lookup_obj frompdf objnum)) objnumbers;
-      (* 5. Get pages from pdf *)
+      (* Get pages from pdf *)
       let pdf_pages = Pdfpage.pages_of_pagetree pdf in
-      (* 6. Add the font to pages in range *)
+      (* Add the font to pages in range *)
       let pages' =
         map
         (function (page, pagenum) ->
@@ -78,7 +83,7 @@ let copy_font frompdf fontname fontpage range pdf =
              else page)
         (combine pdf_pages (indx pdf_pages));
       in
-      (* 7. Put the pages back into the pdf, and return *)
+      (* Put the pages back into the pdf, and return *)
       let pdf, root = Pdfpage.add_pagetree pages' pdf in
         Pdfpage.add_root root [] pdf
 
@@ -119,6 +124,9 @@ let missing_font ?l pdf page (name, dict) =
       | None -> Printf.printf "%i, %s, %s, %s, %s\n" page name subtype basefont encoding
       | Some r -> r := (page, name, subtype, basefont, encoding)::!r
 
+(* FIXME We must look at fonts in Form xobjects too. And process them only
+   once. Plus, process fonts from pages only once too. So, introduce object
+   numbers as the key (fonts can be direct too though! *)
 let missing_fonts ?l pdf range =
   Cpdfpage.iter_pages
     (fun num page ->
@@ -143,25 +151,6 @@ let missing_fonts_return pdf range =
   let l = ref [] in
     missing_fonts ~l pdf range;
     !l
-
-let font_from_name pdf fontname pagenumber =
-  try
-    let resources = ref (select pagenumber (Pdfpage.pages_of_pagetree pdf)).Pdfpage.resources in
-    let chain = ref (tl (String.split_on_char '/' fontname)) in
-    let font = ref Pdf.Null in
-      while !chain <> [] do
-        match !chain with
-        | [f] ->
-            font := unopt (Pdf.lookup_chain pdf !resources ["/Font"; ("/" ^ f)]);
-            chain := []
-        | x::xs ->
-            resources := unopt (Pdf.lookup_chain pdf !resources ["/XObject"; "/" ^ x; "/Resources"]);
-            chain := xs
-        | [] -> ()
-      done;
-      !font
-  with
-    _ -> Pdfe.log (Printf.sprintf "Not found: font %s on page %i\n" fontname pagenumber); Pdf.Null
 
 let print_font_table pdf fontname pagenumber =
   let fontdict = font_from_name pdf fontname pagenumber in
