@@ -195,6 +195,7 @@ type xobj =
 let image_results = ref []
 
 let rec image_resolution_page pdf page pagenum images =
+  (*Printf.printf "image_resolution_page: page %i, %i images\n" pagenum (length images);*)
   try
     let pageops = Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content
     and transform = ref [ref Pdftransform.i_matrix] in
@@ -240,16 +241,14 @@ let rec image_resolution_page pdf page pagenum images =
                              Pdfpage.rest = Pdf.Dictionary []}
                           in
                             let newpdf = Pdfpage.change_pages false pdf [page] in
-                              image_resolution newpdf [pagenum]
+                              image_resolution newpdf [1]
                    | (pagenum, name, Image (w, h), objnum) ->
                        let lx = Pdfunits.inches (distance_between o x) Pdfunits.PdfPoint in
                        let ly = Pdfunits.inches (distance_between o y) Pdfunits.PdfPoint in
                          let wdpi = float w /. lx
                          and hdpi = float h /. ly in
-                           image_results := (pagenum, xobject, w, h, wdpi, hdpi, objnum)::!image_results
-                           (*Printf.printf "%i, %s, %i, %i, %f, %f\n" pagenum xobject w h wdpi hdpi*)
-                         (*i else
-                           Printf.printf "S %i, %s, %i, %i, %f, %f\n" pagenum xobject (int_of_float w) (int_of_float h) wdpi hdpi i*)
+                         image_results := (pagenum, xobject, w, h, wdpi, hdpi, objnum)::!image_results;
+                           (*Printf.printf "%i, %s, %i, %i, %f, %f\n" pagenum xobject w h wdpi hdpi;*)
                    end
          | Pdfops.Op_q ->
              begin match !transform with
@@ -270,12 +269,15 @@ let rec image_resolution_page pdf page pagenum images =
       e -> Printf.printf "Error %s\n" (Printexc.to_string e); flprint "\n"
 
 and image_resolution pdf range =
+  (*Printf.printf "image_resolution top\n";*)
   let images = ref [] in
     Cpdfpage.iter_pages
       (fun pagenum page ->
+         (*Printf.printf "Image resolution, page %i\n" pagenum;*)
          (* 1. Get all image names and their native resolutions from resources as string * int * int *)
          match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
           | Some (Pdf.Dictionary xobjects) ->
+              (*Printf.printf "Found %i Xobjects in page resources\n" (length xobjects);*)
               iter
                 (function (name, xobject) ->
                    let objnum = match xobject with Pdf.Indirect i -> i | _ -> 0 in
