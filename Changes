@@ -15,12 +15,13 @@ o Show OpenAction in -info
 o Show more form information in -info
 o Allow JSON / PDF syntax in dict processing and object exploration
 o Show %Bookmark text when stamping text
-o Font operations now include fonts within xobjects
 
 Fixes:
 
 o Clean up @B implementation for -split-on-bookmarks
 o -merge-add-bookmarks now has proper titles for images
+o Font operations now include fonts within xobjects
+o Image extraction now includes images within xobjects within xobjects
 
 2.7.2 (October 2024)
 
