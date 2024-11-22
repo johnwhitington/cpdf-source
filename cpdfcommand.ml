@@ -4471,8 +4471,9 @@ let go () =
           begin match json with
           | `List l ->
               iter
-                (function (`Assoc [(_, `Int i); (_, `List pages); (_, `String name); (_, `Int w); (_, `Int h); (_, `Int size); (_, bpc); (_, cs); (_, `String filter)]) ->
+                (function (`Assoc [(_, `Int i); (_, `List pages); (_, `String name); (_, `Int w); (_, `Int h); (_, `Int size); (_, bpc); (_, cs); (_, filter)]) ->
                    let pages = combine_with_spaces (map (function `Int i -> string_of_int i | _ -> "") pages) in
+                   let filter = match filter with `String s -> s | _ -> "none" in
                    let bpc = match bpc with `Int bpc -> string_of_int bpc | _ -> "none" in
                    let cs = match cs with `String cs -> cs | _ -> "none" in
                      flprint (Printf.sprintf "%i, %s, %s, %i, %i, %i, %s, %s, %s\n" i pages name w h size bpc cs filter)
