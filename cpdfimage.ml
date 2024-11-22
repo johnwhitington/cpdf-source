@@ -195,7 +195,6 @@ type xobj =
 let image_results = ref []
 
 let rec image_resolution_page pdf page pagenum images =
-  (*Printf.printf "image_resolution_page: page %i, %i images\n" pagenum (length images);*)
   try
     let pageops = Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content
     and transform = ref [ref Pdftransform.i_matrix] in
@@ -241,7 +240,7 @@ let rec image_resolution_page pdf page pagenum images =
                              Pdfpage.rest = Pdf.Dictionary []}
                           in
                             let newpdf = Pdfpage.change_pages false pdf [page] in
-                              image_resolution newpdf [1]
+                              image_resolution newpdf [1] pagenum
                    | (pagenum, name, Image (w, h), objnum) ->
                        let lx = Pdfunits.inches (distance_between o x) Pdfunits.PdfPoint in
                        let ly = Pdfunits.inches (distance_between o y) Pdfunits.PdfPoint in
@@ -268,16 +267,14 @@ let rec image_resolution_page pdf page pagenum images =
     with
       e -> Printf.printf "Error %s\n" (Printexc.to_string e); flprint "\n"
 
-and image_resolution pdf range =
-  (*Printf.printf "image_resolution top\n";*)
+and image_resolution pdf range real_pagenum =
   let images = ref [] in
     Cpdfpage.iter_pages
       (fun pagenum page ->
-         (*Printf.printf "Image resolution, page %i\n" pagenum;*)
+         let pagenum = if real_pagenum > 0 then real_pagenum else pagenum in
          (* 1. Get all image names and their native resolutions from resources as string * int * int *)
          match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
           | Some (Pdf.Dictionary xobjects) ->
-              (*Printf.printf "Found %i Xobjects in page resources\n" (length xobjects);*)
               iter
                 (function (name, xobject) ->
                    let objnum = match xobject with Pdf.Indirect i -> i | _ -> 0 in
@@ -313,7 +310,7 @@ and image_resolution pdf range =
                 xobjects
           | _ -> ())
       pdf
-      range;
+      (if real_pagenum = 0 then range else [1]);
       (* Now, split into differing pages, and call [image_resolution_page] on each one *)
       let pagesplits =
         map
@@ -324,6 +321,7 @@ and image_resolution pdf range =
       in
         iter
           (function (pagenum, images) ->
+             let pagenum = if real_pagenum > 0 then 1 else pagenum in
              let page = select pagenum pages in
                image_resolution_page pdf page pagenum images)
           pagesplits
@@ -333,8 +331,8 @@ let is_below_dpi dpi (_, _, _, _, wdpi, hdpi, _) =
 
 let image_resolution pdf range dpi =
   image_results := [];
-  image_resolution pdf range;
-  rev (keep (is_below_dpi dpi) !image_results)
+  image_resolution pdf range 0;
+  sort compare (rev (keep (is_below_dpi dpi) !image_results))
 
 let image_resolution_json pdf range dpi =
   let images = image_resolution pdf range dpi in
