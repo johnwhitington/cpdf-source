@@ -16,7 +16,7 @@ let combine_with_spaces strs =
 let tempfiles = ref []
 
 let exit n =
-  begin try iter Sys.remove !tempfiles with _ -> exit n end;
+  (*begin try iter Sys.remove !tempfiles with _ -> exit n end;*) (* FIXME *)
   exit n
 
 let null () = ()
@@ -230,6 +230,7 @@ type op =
   | ReplaceStructTree of string
   | SetLanguage of string
   | Redact
+  | Rasterize
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -383,6 +384,7 @@ let string_of_op = function
   | ReplaceStructTree _ -> "ReplaceStructTree"
   | SetLanguage _ -> "SetLanguage"
   | Redact -> "Redact"
+  | Rasterize -> "Rasterize"
 
 (* Inputs: filename, pagespec. *)
 type input_kind = 
@@ -926,7 +928,7 @@ let banned banlist = function
   | OCGRename | OCGList | OCGOrderAll | PrintFontEncoding _ | TableOfContents | Typeset _ | Composition _
   | TextWidth _ | SetAnnotations _ | CopyAnnotations _ | ExtractStream _ | PrintObj _ | ReplaceObj _
   | Verify _ | MarkAs _ | RemoveMark _ | ExtractStructTree | ReplaceStructTree _ | SetLanguage _
-  | PrintStructTree
+  | PrintStructTree | Rasterize
      -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
@@ -2990,6 +2992,7 @@ let specs =
    ("-extract-struct-tree", Arg.Unit (fun () -> setop ExtractStructTree ()), " Extract structure tree in JSON format");
    ("-replace-struct-tree", Arg.String (fun s -> setop (ReplaceStructTree s) ()), " Replace structure tree from JSON");
    ("-redact", Arg.Unit (fun () -> setop Redact ()), " Redact entire pages");
+   ("-rasterize", Arg.Unit (fun () -> setop Rasterize ()), "Rasterize pages");
    (* These items are undocumented *)
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit (fun () -> args.debugcrypt <- true), "");
@@ -3637,7 +3640,46 @@ let replace_obj pdf objspec obj =
   let split_chain str = map (fun x -> "/" ^ x) (tl (String.split_on_char '/' str)) in
   let chain = split_chain objspec in
     Pdf.replace_chain pdf chain obj
-    
+  
+(* Call out to GhostScript to rasterize. Read back in and replace the page contents with the resultant PNG. *)
+let rasterize pdf range =
+  let res = 72. in
+  let tmppdf = Filename.temp_file "cpdf" ".pdf" in
+  tempfiles := tmppdf::!tempfiles;
+  (*Pdfwrite.pdf_to_file pdf tmppdf;*)
+  ignore (Sys.command ("cp " ^ "cpdfmanual.pdf " ^ tmppdf));
+  Printf.printf "in = %s\n" tmppdf;
+  let pdf = Pdfpage.change_pages false pdf
+    (map2
+      (fun page pnum ->
+        let tmpout = Filename.temp_file "cpdf" ".png" in
+        Printf.printf "out = %s\n" tmpout;
+        tempfiles := tmpout::!tempfiles;
+        let gscall =
+          Filename.quote_command args.path_to_ghostscript
+            ((if args.gs_quiet then ["-dQUIET"] else []) @
+            ["-dBATCH"; "-dNOPAUSE"; "-dTextAlphaBits=4"; "-dGraphicsAlphaBits=4";
+             "-sDEVICE=png16m"; "-dUseCropBox"; "-sOUTPUTFILE=" ^ tmpout; "-sPageList=" ^ string_of_int pnum; "-r" ^ string_of_float res; tmppdf])
+        in
+          Printf.printf "call = %s\n" gscall;
+          begin match Sys.command gscall with
+          | 0 -> ()
+          | _ -> Pdfe.log "Rasterization failed\n"; exit 2
+          end;
+        let data = Pdfio.bytes_of_string (Pdfutil.contents_of_file tmpout) in
+        (*Sys.remove tmpout;*)
+        let image, _ = Cpdfimage.obj_of_png_data data in
+        let imageobj = Pdf.addobj pdf image in
+        let w, h = let png = Cpdfpng.read_png (Pdfio.input_of_bytes data) in (png.Cpdfpng.width, png.Cpdfpng.height) in
+        let ops = [Pdfops.Op_cm (Pdftransform.matrix_of_transform [Pdftransform.Scale ((0., 0.), float_of_int w *. 72. /. res, float_of_int h *. 72. /. res)]); Pdfops.Op_Do "/I0"] in
+        {page with Pdfpage.content = [Pdfops.stream_of_ops ops];
+                   Pdfpage.resources = Pdf.Dictionary [("/XObject", Pdf.Dictionary [("/I0", Pdf.Indirect imageobj)])]})
+      (Pdfpage.pages_of_pagetree pdf)
+      (ilist 1 (Pdfpage.endpage pdf)))
+  in
+    (*Sys.remove tmppdf;*)
+    pdf
+
 (* Main function *)
 let go () =
   check_bookmarks_mistake ();
@@ -4741,6 +4783,10 @@ let go () =
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
         write_pdf false (Cpdfpage.redact ~process_struct_tree:args.process_struct_trees pdf range)
+  | Some Rasterize ->
+      let pdf = get_single_pdf args.op false in
+      let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
+        write_pdf false (rasterize pdf range)
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)
