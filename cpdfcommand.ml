@@ -16,7 +16,7 @@ let combine_with_spaces strs =
 let tempfiles = ref []
 
 let exit n =
-  (*begin try iter Sys.remove !tempfiles with _ -> exit n end;*) (* FIXME *)
+  begin try iter Sys.remove !tempfiles with _ -> exit n end;
   exit n
 
 let null () = ()
@@ -559,7 +559,11 @@ type args =
    mutable draw_struct_tree : bool;
    mutable subformat : Cpdfua.subformat option;
    mutable indent : float option;
-   mutable title : string option}
+   mutable title : string option;
+   mutable rast_device : string;
+   mutable rast_res : float;
+   mutable rast_annots : bool;
+   mutable rast_antialias : bool}
 
 let args =
   {op = None;
@@ -700,7 +704,11 @@ let args =
    draw_struct_tree = false;
    subformat = None;
    indent = None;
-   title = None}
+   title = None;
+   rast_device = "png16m";
+   rast_res = 144.;
+   rast_annots = false;
+   rast_antialias = true}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -827,7 +835,11 @@ let reset_arguments () =
   args.draw_struct_tree <- false;
   args.subformat <- None;
   args.indent <- None;
-  args.title <- None
+  args.title <- None;
+  args.rast_device <- "png16m";
+  args.rast_res <- 144.;
+  args.rast_annots <- false;
+  args.rast_antialias <- true
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -2992,7 +3004,12 @@ let specs =
    ("-extract-struct-tree", Arg.Unit (fun () -> setop ExtractStructTree ()), " Extract structure tree in JSON format");
    ("-replace-struct-tree", Arg.String (fun s -> setop (ReplaceStructTree s) ()), " Replace structure tree from JSON");
    ("-redact", Arg.Unit (fun () -> setop Redact ()), " Redact entire pages");
-   ("-rasterize", Arg.Unit (fun () -> setop Rasterize ()), "Rasterize pages");
+   ("-rasterize", Arg.Unit (fun () -> setop Rasterize ()), " Rasterize pages");
+   ("-rasterize-gray", Arg.Unit (fun () -> args.rast_device <- "pnggray"), " Rasterize in greyscale");
+   ("-rasterize-1bpp", Arg.Unit (fun () -> args.rast_device <- "pngmono"), " Rasterize in monochrome");
+   ("-rasterize-res", Arg.Float (fun f -> args.rast_res <- f), " Rastierization resolution");
+   ("-rasterize-annots", Arg.Unit (fun () -> args.rast_annots <- true), " Rasterize annotations");
+   ("-rasterize-no-antialias", Arg.Unit (fun () -> args.rast_antialias <- false), " Don't antialias when rasterizing");
    (* These items are undocumented *)
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit (fun () -> args.debugcrypt <- true), "");
@@ -3642,31 +3659,30 @@ let replace_obj pdf objspec obj =
     Pdf.replace_chain pdf chain obj
   
 (* Call out to GhostScript to rasterize. Read back in and replace the page contents with the resultant PNG. *)
-let rasterize pdf range =
+let rasterize antialias device res annots pdf range =
+  Printf.printf "rasterize antialias=%b device=%s res=%f annots=%b\n" antialias device res annots;
   if args.path_to_ghostscript = "" then begin
     Pdfe.log "Please supply path to gs with -gs\n";
     exit 2
   end;
-  let res = 72. in
   let tmppdf = Filename.temp_file "cpdf" ".pdf" in
   tempfiles := tmppdf::!tempfiles;
-  Pdfwrite.pdf_to_file pdf tmppdf;
-  let pdf = Pdfread.pdf_of_file None None tmppdf in
-  Printf.printf "in = %s\n" tmppdf;
-  let pdf = Pdfpage.change_pages false pdf
+  Pdfwrite.pdf_to_file (Pdf.deep_copy pdf) tmppdf;
+  let pdf = Pdfpage.change_pages true pdf
     (map2
       (fun page pnum ->
         if not (mem pnum range) then page else
         let tmpout = Filename.temp_file "cpdf" ".png" in
-        Printf.printf "out = %s\n" tmpout;
         tempfiles := tmpout::!tempfiles;
+        let antialias = if antialias then "4" else "1" in
         let gscall =
           Filename.quote_command args.path_to_ghostscript
             ((if args.gs_quiet then ["-dQUIET"] else []) @
-            ["-dBATCH"; "-dNOPAUSE"; "-dTextAlphaBits=4"; "-dGraphicsAlphaBits=4";
-             "-sDEVICE=png16m"; "-dUseCropBox"; "-dShowAnnots=false"; "-sOUTPUTFILE=" ^ tmpout; "-sPageList=" ^ string_of_int pnum; "-r" ^ string_of_float res; tmppdf])
+            ["-dBATCH"; "-dNOPAUSE"; "-dSAFER"; "-dTextAlphaBits=" ^ antialias; "-dGraphicsAlphaBits=" ^ antialias;
+             "-sDEVICE=" ^ device; "-dUseCropBox"; "-dShowAnnots=" ^ string_of_bool annots;
+             "-sOUTPUTFILE=" ^ tmpout; "-sPageList=" ^ string_of_int pnum; "-r" ^ string_of_float res; tmppdf])
         in
-          Printf.printf "call = %s\n" gscall;
+          Printf.printf "CALL: %S\n" gscall;
           begin match Sys.command gscall with
           | 0 -> ()
           | _ -> Pdfe.log "Rasterization failed\n"; exit 2
@@ -3688,9 +3704,7 @@ let rasterize pdf range =
              | Some r -> r
              | None -> page.Pdfpage.mediabox)
         in
-        let rotation =
-          rad_of_deg (float_of_int (Pdfpage.int_of_rotation page.Pdfpage.rotate))
-        in
+        let rotation = rad_of_deg (float_of_int (Pdfpage.int_of_rotation page.Pdfpage.rotate)) in
         let tx, ty =
           match page.Pdfpage.rotate with
           | Pdfpage.Rotate0 -> (minx, miny)
@@ -4820,7 +4834,7 @@ let go () =
   | Some Rasterize ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-        write_pdf false (rasterize pdf range)
+        write_pdf false (rasterize args.rast_antialias args.rast_device args.rast_res args.rast_annots pdf range)
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)
