@@ -231,6 +231,7 @@ type op =
   | SetLanguage of string
   | Redact
   | Rasterize
+  | OutputImage of string
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -385,6 +386,7 @@ let string_of_op = function
   | SetLanguage _ -> "SetLanguage"
   | Redact -> "Redact"
   | Rasterize -> "Rasterize"
+  | OutputImage _ -> "OutputImage"
 
 (* Inputs: filename, pagespec. *)
 type input_kind = 
@@ -940,7 +942,7 @@ let banned banlist = function
   | OCGRename | OCGList | OCGOrderAll | PrintFontEncoding _ | TableOfContents | Typeset _ | Composition _
   | TextWidth _ | SetAnnotations _ | CopyAnnotations _ | ExtractStream _ | PrintObj _ | ReplaceObj _
   | Verify _ | MarkAs _ | RemoveMark _ | ExtractStructTree | ReplaceStructTree _ | SetLanguage _
-  | PrintStructTree | Rasterize
+  | PrintStructTree | Rasterize | OutputImage _
      -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
@@ -3010,6 +3012,8 @@ let specs =
    ("-rasterize-res", Arg.Float (fun f -> args.rast_res <- f), " Rastierization resolution");
    ("-rasterize-annots", Arg.Unit (fun () -> args.rast_annots <- true), " Rasterize annotations");
    ("-rasterize-no-antialias", Arg.Unit (fun () -> args.rast_antialias <- false), " Don't antialias when rasterizing");
+   ("-output-jpeg", Arg.String (fun s -> args.op <- Some (OutputImage s)), " Output pages as JPEGs");
+   ("-output-png", Arg.String (fun s -> args.op <- Some (OutputImage s)), " Output pages as PNGs");
    (* These items are undocumented *)
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit (fun () -> args.debugcrypt <- true), "");
@@ -3728,6 +3732,9 @@ let rasterize antialias device res annots pdf range =
     let pdf = if annots then Cpdfannot.remove_annotations range pdf else pdf in
     Sys.remove tmppdf;
     pdf
+
+let write_images spec pdf range =
+  ()
 
 (* Main function *)
 let go () =
@@ -4836,6 +4843,10 @@ let go () =
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
         write_pdf false (rasterize args.rast_antialias args.rast_device args.rast_res args.rast_annots pdf range)
+  | Some (OutputImage spec) ->
+      let pdf = get_single_pdf args.op false in
+      let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
+        write_images spec pdf range
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)
