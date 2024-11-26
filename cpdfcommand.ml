@@ -3643,11 +3643,15 @@ let replace_obj pdf objspec obj =
   
 (* Call out to GhostScript to rasterize. Read back in and replace the page contents with the resultant PNG. *)
 let rasterize pdf range =
+  if args.path_to_ghostscript = "" then begin
+    Pdfe.log "Please supply path to gs with -gs\n";
+    exit 2
+  end;
   let res = 72. in
   let tmppdf = Filename.temp_file "cpdf" ".pdf" in
   tempfiles := tmppdf::!tempfiles;
-  (*Pdfwrite.pdf_to_file pdf tmppdf;*)
-  ignore (Sys.command ("cp " ^ "cpdfmanual.pdf " ^ tmppdf));
+  Pdfwrite.pdf_to_file pdf tmppdf;
+  let pdf = Pdfread.pdf_of_file None None tmppdf in
   Printf.printf "in = %s\n" tmppdf;
   let pdf = Pdfpage.change_pages false pdf
     (map2
@@ -3667,17 +3671,24 @@ let rasterize pdf range =
           | _ -> Pdfe.log "Rasterization failed\n"; exit 2
           end;
         let data = Pdfio.bytes_of_string (Pdfutil.contents_of_file tmpout) in
-        (*Sys.remove tmpout;*)
+        Sys.remove tmpout;
         let image, _ = Cpdfimage.obj_of_png_data data in
         let imageobj = Pdf.addobj pdf image in
         let w, h = let png = Cpdfpng.read_png (Pdfio.input_of_bytes data) in (png.Cpdfpng.width, png.Cpdfpng.height) in
-        let ops = [Pdfops.Op_cm (Pdftransform.matrix_of_transform [Pdftransform.Scale ((0., 0.), float_of_int w *. 72. /. res, float_of_int h *. 72. /. res)]); Pdfops.Op_Do "/I0"] in
+        let (minx, miny, _, _) =
+          Pdf.parse_rectangle
+            pdf
+            (match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
+             | Some r -> r
+             | None -> page.Pdfpage.mediabox)
+        in
+        let ops = [Pdfops.Op_cm (Pdftransform.matrix_of_transform [Pdftransform.Translate (minx, miny); Pdftransform.Scale ((0., 0.), float_of_int w *. 72. /. res, float_of_int h *. 72. /. res)]); Pdfops.Op_Do "/I0"] in
         {page with Pdfpage.content = [Pdfops.stream_of_ops ops];
                    Pdfpage.resources = Pdf.Dictionary [("/XObject", Pdf.Dictionary [("/I0", Pdf.Indirect imageobj)])]})
       (Pdfpage.pages_of_pagetree pdf)
       (ilist 1 (Pdfpage.endpage pdf)))
   in
-    (*Sys.remove tmppdf;*)
+    Sys.remove tmppdf;
     pdf
 
 (* Main function *)
