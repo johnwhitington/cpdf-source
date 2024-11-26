@@ -3012,8 +3012,8 @@ let specs =
    ("-rasterize-res", Arg.Float (fun f -> args.rast_res <- f), " Rastierization resolution");
    ("-rasterize-annots", Arg.Unit (fun () -> args.rast_annots <- true), " Rasterize annotations");
    ("-rasterize-no-antialias", Arg.Unit (fun () -> args.rast_antialias <- false), " Don't antialias when rasterizing");
-   ("-output-jpeg", Arg.String (fun s -> args.op <- Some (OutputImage s)), " Output pages as JPEGs");
-   ("-output-png", Arg.String (fun s -> args.op <- Some (OutputImage s)), " Output pages as PNGs");
+   ("-output-jpeg", Arg.String (fun s -> args.op <- Some (OutputImage ("JPG" ^ s))), " Output pages as JPEGs");
+   ("-output-png", Arg.String (fun s -> args.op <- Some (OutputImage ("PNG" ^ s))), " Output pages as PNGs");
    (* These items are undocumented *)
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit (fun () -> args.debugcrypt <- true), "");
