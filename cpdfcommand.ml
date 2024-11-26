@@ -3656,6 +3656,7 @@ let rasterize pdf range =
   let pdf = Pdfpage.change_pages false pdf
     (map2
       (fun page pnum ->
+        if not (mem pnum range) then page else
         let tmpout = Filename.temp_file "cpdf" ".png" in
         Printf.printf "out = %s\n" tmpout;
         tempfiles := tmpout::!tempfiles;
@@ -3663,7 +3664,7 @@ let rasterize pdf range =
           Filename.quote_command args.path_to_ghostscript
             ((if args.gs_quiet then ["-dQUIET"] else []) @
             ["-dBATCH"; "-dNOPAUSE"; "-dTextAlphaBits=4"; "-dGraphicsAlphaBits=4";
-             "-sDEVICE=png16m"; "-dUseCropBox"; "-sOUTPUTFILE=" ^ tmpout; "-sPageList=" ^ string_of_int pnum; "-r" ^ string_of_float res; tmppdf])
+             "-sDEVICE=png16m"; "-dUseCropBox"; "-dShowAnnots=false"; "-sOUTPUTFILE=" ^ tmpout; "-sPageList=" ^ string_of_int pnum; "-r" ^ string_of_float res; tmppdf])
         in
           Printf.printf "call = %s\n" gscall;
           begin match Sys.command gscall with
@@ -3675,14 +3676,36 @@ let rasterize pdf range =
         let image, _ = Cpdfimage.obj_of_png_data data in
         let imageobj = Pdf.addobj pdf image in
         let w, h = let png = Cpdfpng.read_png (Pdfio.input_of_bytes data) in (png.Cpdfpng.width, png.Cpdfpng.height) in
-        let (minx, miny, _, _) =
+        let w, h =
+          match page.Pdfpage.rotate with
+          | Pdfpage.Rotate90 | Pdfpage.Rotate270 -> h, w
+          | _ -> w, h
+        in
+        let (minx, miny, maxx, maxy) =
           Pdf.parse_rectangle
             pdf
             (match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
              | Some r -> r
              | None -> page.Pdfpage.mediabox)
         in
-        let ops = [Pdfops.Op_cm (Pdftransform.matrix_of_transform [Pdftransform.Translate (minx, miny); Pdftransform.Scale ((0., 0.), float_of_int w *. 72. /. res, float_of_int h *. 72. /. res)]); Pdfops.Op_Do "/I0"] in
+        let rotation =
+          rad_of_deg (float_of_int (Pdfpage.int_of_rotation page.Pdfpage.rotate))
+        in
+        let tx, ty =
+          match page.Pdfpage.rotate with
+          | Pdfpage.Rotate0 -> (minx, miny)
+          | Pdfpage.Rotate270 -> (minx, miny +. (maxy -. miny))
+          | Pdfpage.Rotate90 -> (minx +. (maxx -. minx), miny)
+          | Pdfpage.Rotate180 -> (minx +. (maxx -. minx), miny +. (maxy -. miny))
+        in
+        let ops =
+          [Pdfops.Op_cm
+             (Pdftransform.matrix_of_transform
+               [Pdftransform.Translate (tx, ty);
+                Pdftransform.Scale ((0., 0.), float_of_int w *. 72. /. res, float_of_int h *. 72. /. res);
+                Pdftransform.Rotate ((0., 0.), rotation)]);
+           Pdfops.Op_Do "/I0"]
+        in
         {page with Pdfpage.content = [Pdfops.stream_of_ops ops];
                    Pdfpage.resources = Pdf.Dictionary [("/XObject", Pdf.Dictionary [("/I0", Pdf.Indirect imageobj)])]})
       (Pdfpage.pages_of_pagetree pdf)
