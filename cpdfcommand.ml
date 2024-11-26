@@ -3725,6 +3725,7 @@ let rasterize antialias device res annots pdf range =
       (Pdfpage.pages_of_pagetree pdf)
       (ilist 1 (Pdfpage.endpage pdf)))
   in
+    let pdf = if annots then Cpdfannot.remove_annotations range pdf else pdf in
     Sys.remove tmppdf;
     pdf
 
