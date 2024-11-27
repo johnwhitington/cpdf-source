@@ -566,7 +566,8 @@ type args =
    mutable rast_res : float;
    mutable rast_annots : bool;
    mutable rast_antialias : bool;
-   mutable rast_jpeg_quality : int}
+   mutable rast_jpeg_quality : int;
+   mutable rast_downsample : bool}
 
 let args =
   {op = None;
@@ -712,7 +713,8 @@ let args =
    rast_res = 144.;
    rast_annots = false;
    rast_antialias = true;
-   rast_jpeg_quality = 75}
+   rast_jpeg_quality = 75;
+   rast_downsample = false}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -844,7 +846,8 @@ let reset_arguments () =
   args.rast_res <- 144.;
   args.rast_annots <- false;
   args.rast_antialias <- true;
-  args.rast_jpeg_quality <- 75
+  args.rast_jpeg_quality <- 75;
+  args.rast_downsample <- false
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -3017,6 +3020,7 @@ let specs =
    ("-rasterize-res", Arg.Float (fun f -> args.rast_res <- f), " Rastierization resolution");
    ("-rasterize-annots", Arg.Unit (fun () -> args.rast_annots <- true), " Rasterize annotations");
    ("-rasterize-no-antialias", Arg.Unit (fun () -> args.rast_antialias <- false), " Don't antialias when rasterizing");
+   ("-rasterize-downsample", Arg.Unit (fun () -> args.rast_downsample <- true), " Antialias by downsampling");
    ("-rasterize-jpeg-quality", Arg.Int (fun i -> args.rast_jpeg_quality <- i), " Set JPEG quality");
    ("-output-jpeg", Arg.String (fun s -> args.rast_device <- "jpeg"; args.op <- Some (OutputImage s)), " Output pages as JPEGs");
    ("-output-png", Arg.String (fun s -> args.op <- Some (OutputImage s)), " Output pages as PNGs");
@@ -3669,7 +3673,7 @@ let replace_obj pdf objspec obj =
     Pdf.replace_chain pdf chain obj
   
 (* Call out to GhostScript to rasterize. Read back in and replace the page contents with the resultant PNG. *)
-let rasterize antialias device res annots quality pdf range =
+let rasterize antialias downsample device res annots quality pdf range =
   Printf.printf "rasterize antialias=%b device=%s res=%f annots=%b\n" antialias device res annots;
   if args.path_to_ghostscript = "" then begin
     Pdfe.log "Please supply path to gs with -gs\n";
@@ -3743,7 +3747,7 @@ let rasterize antialias device res annots quality pdf range =
     Sys.remove tmppdf;
     pdf
 
-let write_images device res quality boxname annots antialias spec pdf range =
+let write_images device res quality boxname annots antialias downsample spec pdf range =
   if args.path_to_ghostscript = "" then begin
     Pdfe.log "Please supply path to gs with -gs\n";
     exit 2
@@ -4879,11 +4883,11 @@ let go () =
   | Some Rasterize ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-        write_pdf false (rasterize args.rast_antialias args.rast_device args.rast_res args.rast_annots args.rast_jpeg_quality pdf range)
+        write_pdf false (rasterize args.rast_antialias args.rast_downsample args.rast_device args.rast_res args.rast_annots args.rast_jpeg_quality pdf range)
   | Some (OutputImage spec) ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-        write_images args.rast_device args.rast_res args.rast_jpeg_quality args.tobox args.rast_annots args.rast_antialias spec pdf range
+        write_images args.rast_device args.rast_res args.rast_jpeg_quality args.tobox args.rast_annots args.rast_antialias args.rast_downsample spec pdf range
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)
