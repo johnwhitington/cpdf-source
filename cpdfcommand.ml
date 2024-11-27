@@ -3010,14 +3010,16 @@ let specs =
    ("-replace-struct-tree", Arg.String (fun s -> setop (ReplaceStructTree s) ()), " Replace structure tree from JSON");
    ("-redact", Arg.Unit (fun () -> setop Redact ()), " Redact entire pages");
    ("-rasterize", Arg.Unit (fun () -> setop Rasterize ()), " Rasterize pages");
-   ("-rasterize-gray", Arg.Unit (fun () -> args.rast_device <- "pnggray"), " Rasterize in greyscale");
+   ("-rasterize-gray", Arg.Unit (fun () -> args.rast_device <- "pnggray"), " Rasterize in grayscale");
    ("-rasterize-1bpp", Arg.Unit (fun () -> args.rast_device <- "pngmono"), " Rasterize in monochrome");
+   ("-rasterize-jpeg", Arg.Unit (fun () -> args.rast_device <- "jpeg"), " Rasterize as JPEG");
+   ("-rasterize-jpeg-gray", Arg.Unit (fun () -> args.rast_device <- "jpeggray"), "Rasterize as JPEG in grayscale");
    ("-rasterize-res", Arg.Float (fun f -> args.rast_res <- f), " Rastierization resolution");
    ("-rasterize-annots", Arg.Unit (fun () -> args.rast_annots <- true), " Rasterize annotations");
    ("-rasterize-no-antialias", Arg.Unit (fun () -> args.rast_antialias <- false), " Don't antialias when rasterizing");
    ("-rasterize-jpeg-quality", Arg.Int (fun i -> args.rast_jpeg_quality <- i), " Set JPEG quality");
-   ("-output-jpeg", Arg.String (fun s -> args.op <- Some (OutputImage ("JPG" ^ s))), " Output pages as JPEGs");
-   ("-output-png", Arg.String (fun s -> args.op <- Some (OutputImage ("PNG" ^ s))), " Output pages as PNGs");
+   ("-output-jpeg", Arg.String (fun s -> args.rast_device <- "jpeg"; args.op <- Some (OutputImage s)), " Output pages as JPEGs");
+   ("-output-png", Arg.String (fun s -> args.op <- Some (OutputImage s)), " Output pages as PNGs");
    (* These items are undocumented *)
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit (fun () -> args.debugcrypt <- true), "");
@@ -3667,7 +3669,7 @@ let replace_obj pdf objspec obj =
     Pdf.replace_chain pdf chain obj
   
 (* Call out to GhostScript to rasterize. Read back in and replace the page contents with the resultant PNG. *)
-let rasterize antialias device res annots pdf range =
+let rasterize antialias device res annots quality pdf range =
   Printf.printf "rasterize antialias=%b device=%s res=%f annots=%b\n" antialias device res annots;
   if args.path_to_ghostscript = "" then begin
     Pdfe.log "Please supply path to gs with -gs\n";
@@ -3687,7 +3689,7 @@ let rasterize antialias device res annots pdf range =
           Filename.quote_command args.path_to_ghostscript
             ((if args.gs_quiet then ["-dQUIET"] else []) @
             ["-dBATCH"; "-dNOPAUSE"; "-dSAFER"; "-dTextAlphaBits=" ^ antialias; "-dGraphicsAlphaBits=" ^ antialias;
-             "-sDEVICE=" ^ device; "-dUseCropBox"; "-dShowAnnots=" ^ string_of_bool annots;
+             "-sDEVICE=" ^ device; "-dUseCropBox"; "-dShowAnnots=" ^ string_of_bool annots; "-dJPEGQ=" ^ string_of_int quality;
              "-sOutputFile=" ^ tmpout; "-sPageList=" ^ string_of_int pnum; "-r" ^ string_of_float res; tmppdf])
         in
           Printf.printf "CALL: %S\n" gscall;
@@ -3697,9 +3699,13 @@ let rasterize antialias device res annots pdf range =
           end;
         let data = Pdfio.bytes_of_string (Pdfutil.contents_of_file tmpout) in
         Sys.remove tmpout;
-        let image, _ = Cpdfimage.obj_of_png_data data in
+        let image, _ = (if device = "jpeg" || device = "jpeggray" then Cpdfimage.obj_of_jpeg_data else Cpdfimage.obj_of_png_data) data in
         let imageobj = Pdf.addobj pdf image in
-        let w, h = let png = Cpdfpng.read_png (Pdfio.input_of_bytes data) in (png.Cpdfpng.width, png.Cpdfpng.height) in
+        let w, h =
+          match device with
+          | "jpeg" | "jpeggray" -> Cpdfjpeg.jpeg_dimensions data
+          | _ -> let png = Cpdfpng.read_png (Pdfio.input_of_bytes data) in (png.Cpdfpng.width, png.Cpdfpng.height)
+        in
         let w, h =
           match page.Pdfpage.rotate with
           | Pdfpage.Rotate90 | Pdfpage.Rotate270 -> h, w
@@ -3737,8 +3743,7 @@ let rasterize antialias device res annots pdf range =
     Sys.remove tmppdf;
     pdf
 
-let write_images res quality boxname gray mono annots antialias spec pdf range =
-  let box = if boxname = None then "" else "-dUse" ^ (implode (tl (explode (unopt boxname)))) in
+let write_images device res quality boxname annots antialias spec pdf range =
   if args.path_to_ghostscript = "" then begin
     Pdfe.log "Please supply path to gs with -gs\n";
     exit 2
@@ -3749,19 +3754,14 @@ let write_images res quality boxname gray mono annots antialias spec pdf range =
   iter2
     (fun page pnum ->
        if not (mem pnum range) then () else
-       let device, out =
-         match explode spec with
-         | 'P'::'N'::'G'::t -> (if gray then "pnggray" else if mono then "pngmono" else "png16m"), implode t
-         | 'J'::'P'::'G'::t -> (if gray then "jpeggray" else "jpeg"), implode t
-         | _ -> assert false
-       in
-       let out = Cpdfbookmarks.name_of_spec Cpdfmetadata.UTF8 [] pdf 0 out pnum "" 0 0 in
+       let out = Cpdfbookmarks.name_of_spec Cpdfmetadata.UTF8 [] pdf 0 spec pnum "" 0 0 in
        let antialias = if antialias then "4" else "1" in
        let gscall =
          Filename.quote_command args.path_to_ghostscript
            ((if args.gs_quiet then ["-dQUIET"] else []) @
+            (if boxname = None then [] else ["-dUse" ^ (implode (tl (explode (unopt boxname))))]) @ 
            ["-dBATCH"; "-dNOPAUSE"; "-dSAFER"; "-dTextAlphaBits=" ^ antialias; "-dGraphicsAlphaBits=" ^ antialias;
-            "-sDEVICE=" ^ device; box; "-dShowAnnots=" ^ string_of_bool annots; "-dJPEGQ=" ^ string_of_int quality;
+            "-sDEVICE=" ^ device; "-dShowAnnots=" ^ string_of_bool annots; "-dJPEGQ=" ^ string_of_int quality;
             "-sOutputFile=" ^ out; "-sPageList=" ^ string_of_int pnum; "-r" ^ string_of_float res; tmppdf])
        in
          Printf.printf "CALL: %S\n" gscall;
@@ -4879,13 +4879,11 @@ let go () =
   | Some Rasterize ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-        write_pdf false (rasterize args.rast_antialias args.rast_device args.rast_res args.rast_annots pdf range)
+        write_pdf false (rasterize args.rast_antialias args.rast_device args.rast_res args.rast_annots args.rast_jpeg_quality pdf range)
   | Some (OutputImage spec) ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-        write_images
-          args.rast_res args.rast_jpeg_quality args.tobox (args.rast_device = "pnggray") (args.rast_device = "pngmono")
-          args.rast_annots args.rast_antialias spec pdf range
+        write_images args.rast_device args.rast_res args.rast_jpeg_quality args.tobox args.rast_annots args.rast_antialias spec pdf range
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)
