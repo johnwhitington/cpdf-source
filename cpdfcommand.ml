@@ -565,7 +565,8 @@ type args =
    mutable rast_device : string;
    mutable rast_res : float;
    mutable rast_annots : bool;
-   mutable rast_antialias : bool}
+   mutable rast_antialias : bool;
+   mutable rast_jpeg_quality : int}
 
 let args =
   {op = None;
@@ -710,7 +711,8 @@ let args =
    rast_device = "png16m";
    rast_res = 144.;
    rast_annots = false;
-   rast_antialias = true}
+   rast_antialias = true;
+   rast_jpeg_quality = 75}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -841,7 +843,8 @@ let reset_arguments () =
   args.rast_device <- "png16m";
   args.rast_res <- 144.;
   args.rast_annots <- false;
-  args.rast_antialias <- true
+  args.rast_antialias <- true;
+  args.rast_jpeg_quality <- 75
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -3012,6 +3015,7 @@ let specs =
    ("-rasterize-res", Arg.Float (fun f -> args.rast_res <- f), " Rastierization resolution");
    ("-rasterize-annots", Arg.Unit (fun () -> args.rast_annots <- true), " Rasterize annotations");
    ("-rasterize-no-antialias", Arg.Unit (fun () -> args.rast_antialias <- false), " Don't antialias when rasterizing");
+   ("-rasterize-jpeg-quality", Arg.Int (fun i -> args.rast_jpeg_quality <- i), " Set JPEG quality");
    ("-output-jpeg", Arg.String (fun s -> args.op <- Some (OutputImage ("JPG" ^ s))), " Output pages as JPEGs");
    ("-output-png", Arg.String (fun s -> args.op <- Some (OutputImage ("PNG" ^ s))), " Output pages as PNGs");
    (* These items are undocumented *)
@@ -3684,7 +3688,7 @@ let rasterize antialias device res annots pdf range =
             ((if args.gs_quiet then ["-dQUIET"] else []) @
             ["-dBATCH"; "-dNOPAUSE"; "-dSAFER"; "-dTextAlphaBits=" ^ antialias; "-dGraphicsAlphaBits=" ^ antialias;
              "-sDEVICE=" ^ device; "-dUseCropBox"; "-dShowAnnots=" ^ string_of_bool annots;
-             "-sOUTPUTFILE=" ^ tmpout; "-sPageList=" ^ string_of_int pnum; "-r" ^ string_of_float res; tmppdf])
+             "-sOutputFile=" ^ tmpout; "-sPageList=" ^ string_of_int pnum; "-r" ^ string_of_float res; tmppdf])
         in
           Printf.printf "CALL: %S\n" gscall;
           begin match Sys.command gscall with
@@ -3733,8 +3737,41 @@ let rasterize antialias device res annots pdf range =
     Sys.remove tmppdf;
     pdf
 
-let write_images spec pdf range =
-  ()
+let write_images res quality boxname gray mono annots antialias spec pdf range =
+  let box = if boxname = None then "" else "-dUse" ^ (implode (tl (explode (unopt boxname)))) in
+  if args.path_to_ghostscript = "" then begin
+    Pdfe.log "Please supply path to gs with -gs\n";
+    exit 2
+  end;
+  let tmppdf = Filename.temp_file "cpdf" ".pdf" in
+  tempfiles := tmppdf::!tempfiles;
+  Pdfwrite.pdf_to_file pdf tmppdf;
+  iter2
+    (fun page pnum ->
+       if not (mem pnum range) then () else
+       let device, out =
+         match explode spec with
+         | 'P'::'N'::'G'::t -> (if gray then "pnggray" else if mono then "pngmono" else "png16m"), implode t
+         | 'J'::'P'::'G'::t -> (if gray then "jpeggray" else "jpeg"), implode t
+         | _ -> assert false
+       in
+       let out = Cpdfbookmarks.name_of_spec Cpdfmetadata.UTF8 [] pdf 0 out pnum "" 0 0 in
+       let antialias = if antialias then "4" else "1" in
+       let gscall =
+         Filename.quote_command args.path_to_ghostscript
+           ((if args.gs_quiet then ["-dQUIET"] else []) @
+           ["-dBATCH"; "-dNOPAUSE"; "-dSAFER"; "-dTextAlphaBits=" ^ antialias; "-dGraphicsAlphaBits=" ^ antialias;
+            "-sDEVICE=" ^ device; box; "-dShowAnnots=" ^ string_of_bool annots; "-dJPEGQ=" ^ string_of_int quality;
+            "-sOutputFile=" ^ out; "-sPageList=" ^ string_of_int pnum; "-r" ^ string_of_float res; tmppdf])
+       in
+         Printf.printf "CALL: %S\n" gscall;
+         begin match Sys.command gscall with
+         | 0 -> ()
+         | _ -> Pdfe.log "Rasterization failed\n"; exit 2
+         end)
+    (Pdfpage.pages_of_pagetree pdf)
+    (ilist 1 (Pdfpage.endpage pdf));
+  Sys.remove tmppdf
 
 (* Main function *)
 let go () =
@@ -4846,7 +4883,9 @@ let go () =
   | Some (OutputImage spec) ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
-        write_images spec pdf range
+        write_images
+          args.rast_res args.rast_jpeg_quality args.tobox (args.rast_device = "pnggray") (args.rast_device = "pngmono")
+          args.rast_annots args.rast_antialias spec pdf range
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)
