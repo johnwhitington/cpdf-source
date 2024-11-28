@@ -3837,7 +3837,7 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 
 \vspace{1.5mm}
 
-\noindent\small\verb!cpdf -output-image <format> in.pdf <range>!\\
+\noindent\small\verb!cpdf -output-image in.pdf <range> -o <format>!\\
 \noindent\small\verb!     [-rasterize[-gray|-1bpp|-jpeg|-jpeggray]!\\
 \noindent\small\verb!     [-rasterize-res <n>] [-rasterize-jpeg-quality <n>]!\\
 \noindent\small\verb!     [-rasterize-no-antialias | -rasterize-downsample]!
@@ -4085,7 +4085,7 @@ Option & Effect\\\hline
 \noindent In addition to rasterization of pages, we can export them in PNG or JPEG format, again by the use of GhostScript:
 
   \begin{framed}
-  \noindent\small\verb!cpdf -gs gs -output-image image%%%.png in.pdf 10-end!
+  \noindent\small\verb!cpdf -gs gs -output-image in.pdf 10-end -o image%%%.png!
   \end{framed}
 
 \noindent This will extract pages 10 onwards to the files \texttt{image000.png}, \texttt{image001.png} and so on. All the options above apply, and in addition we can choose which box is rasterized:
@@ -4100,8 +4100,8 @@ Option & Effect\\\hline
 \noindent For example:
 
   \begin{framed}
-  \noindent\small\verb!cpdf -gs gs -output-image image%%%.jpeg -tobox /BleedBox!\\
-  \noindent\small\verb!     -rasterization-jpeg in.pdf!
+  \noindent\small\verb!cpdf -gs gs -output-image -tobox /BleedBox!\\
+  \noindent\small\verb!     -rasterization-jpeg in.pdf -o image%%%.jpeg!
   \end{framed}
 
 

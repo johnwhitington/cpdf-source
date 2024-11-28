@@ -231,7 +231,7 @@ type op =
   | SetLanguage of string
   | Redact
   | Rasterize
-  | OutputImage of string
+  | OutputImage
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -386,7 +386,7 @@ let string_of_op = function
   | SetLanguage _ -> "SetLanguage"
   | Redact -> "Redact"
   | Rasterize -> "Rasterize"
-  | OutputImage _ -> "OutputImage"
+  | OutputImage -> "OutputImage"
 
 (* Inputs: filename, pagespec. *)
 type input_kind = 
@@ -948,7 +948,7 @@ let banned banlist = function
   | OCGRename | OCGList | OCGOrderAll | PrintFontEncoding _ | TableOfContents | Typeset _ | Composition _
   | TextWidth _ | SetAnnotations _ | CopyAnnotations _ | ExtractStream _ | PrintObj _ | ReplaceObj _
   | Verify _ | MarkAs _ | RemoveMark _ | ExtractStructTree | ReplaceStructTree _ | SetLanguage _
-  | PrintStructTree | Rasterize | OutputImage _
+  | PrintStructTree | Rasterize | OutputImage
      -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
@@ -3022,7 +3022,7 @@ let specs =
    ("-rasterize-no-antialias", Arg.Unit (fun () -> args.rast_antialias <- false), " Don't antialias when rasterizing");
    ("-rasterize-downsample", Arg.Unit (fun () -> args.rast_downsample <- true), " Antialias by downsampling");
    ("-rasterize-jpeg-quality", Arg.Int (fun i -> args.rast_jpeg_quality <- i), " Set JPEG quality");
-   ("-output-image", Arg.String (fun s -> args.op <- Some (OutputImage s)), " Output pages as PNGs");
+   ("-output-image", Arg.Unit (fun () -> args.op <- Some OutputImage), " Output pages as images");
    (* These items are undocumented *)
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit (fun () -> args.debugcrypt <- true), "");
@@ -4894,7 +4894,8 @@ let go () =
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
         write_pdf false (rasterize args.rast_antialias args.rast_downsample args.rast_device args.rast_res args.rast_annots args.rast_jpeg_quality pdf range)
-  | Some (OutputImage spec) ->
+  | Some OutputImage ->
+      let spec = match args.out with File spec -> spec | _ -> error "Output must be to a file" in
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
         write_images args.rast_device args.rast_res args.rast_jpeg_quality args.tobox args.rast_annots args.rast_antialias args.rast_downsample spec pdf range
