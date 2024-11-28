@@ -3758,7 +3758,8 @@ let write_images device res quality boxname annots antialias downsample spec pdf
   end;
   let tmppdf = Filename.temp_file "cpdf" ".pdf" in
   tempfiles := tmppdf::!tempfiles;
-  Pdfwrite.pdf_to_file pdf tmppdf;
+  Pdfwrite.pdf_to_file (Pdf.deep_copy pdf) tmppdf;
+  let endpage = Pdfpage.endpage pdf in
   iter2
     (fun page pnum ->
        if not (mem pnum range) then () else
@@ -3783,7 +3784,7 @@ let write_images device res quality boxname annots antialias downsample spec pdf
          | _ -> Pdfe.log "Rasterization failed\n"; exit 2
          end)
     (Pdfpage.pages_of_pagetree pdf)
-    (ilist 1 (Pdfpage.endpage pdf));
+    (ilist 1 endpage);
   Sys.remove tmppdf
 
 (* Main function *)
