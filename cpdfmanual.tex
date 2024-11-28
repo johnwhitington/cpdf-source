@@ -1,5 +1,4 @@
 %Document %Bookmark<n>
-%Fix up typesetting of Cpdf program name
 \documentclass{book}
 % Edit here to produce cpdfmanual.pdf, cpdflibmanual.pdf, pycpdfmanual.pdf,
 % dotnetcpdflibmanual.pdf, jcpdflibmanual.pdf jscpdflibmanual.pdf etc.
@@ -19,7 +18,6 @@
 \PassOptionsToPackage{hyphens}{url}\usepackage[plainpages=false,pdfpagelabels,pdfborder=0 0 0,draft=false,hidelinks,bookmarksnumbered]{hyperref}
 \usepackage{framed}
 \newcommand{\smallgap}{\bigskip}
-\newcommand{\cpdf}{\texttt{cpdf}}
 \addtolength{\textwidth}{20mm}
 \usepackage{makeidx}\makeindex
 \usepackage[left=3cm, right=1.5cm, top=2cm, bottom=1.8cm, paperwidth=7.5in, paperheight=9.25in]{geometry}
@@ -119,7 +117,7 @@ These examples demonstrate just a few of the facilities provided by the Coherent
 
 \begin{framed}\noindent\texttt{cpdf -args args.txt}\end{framed}
 
-\noindent Read \texttt{args.txt} and use its contents as the command line arguments for \texttt{cpdf}.
+\noindent Read \texttt{args.txt} and use its contents as the command line arguments for Cpdf.
 
 \section*{\hyperref[chap:2]{Chapter 2: Merging and Splitting}}
 
@@ -693,7 +691,7 @@ Under Microsoft Windows, type \texttt{cpdf.exe} instead of \texttt{cpdf}.
 
   The Coherent PDF tools provide a wide range of facilities for modifying PDF
 files created by other means. There is a single command-line program
-\cpdf\ (\texttt{cpdf.exe} under Microsoft Windows). The rest of this manual describes the options that may be given
+Cpdf (\texttt{cpdf.exe} under Microsoft Windows). The rest of this manual describes the options that may be given
 to this program.
 
 \section{Documentation}
@@ -859,9 +857,9 @@ Using \texttt{-stdout} on the final command in the pipeline to output the PDF
 to screen is not recommended, since PDF files often contain compressed sections
 which are not screen-readable.
 
-Several \cpdf\ operations write to standard output by default (for
+Several Cpdf operations write to standard output by default (for
 example, listing fonts). A useful feature of the command line (not specific to
-\cpdf) is the ability to redirect this output to a file. This is
+Cpdf) is the ability to redirect this output to a file. This is
 achieved with the \texttt{>} operator:
 
 \begin{framed}
@@ -898,7 +896,7 @@ one command, and the input specifier (e.g filename) of the next. For instance:
 
 \section{Units}
 \index{units}
-When measurements are given to \cpdf, they are in points (1 point = 1/72 inch). They may optionally
+When measurements are given to Cpdf, they are in points (1 point = 1/72 inch). They may optionally
 be followed by some letters to change the measurement. The following are
 supported:
 
@@ -954,7 +952,7 @@ Simple arithmetic may be performed using the words \texttt{add}, \texttt{sub}, \
 
 \section{Setting the Producer and Creator}
 \index{producer}\index{creator}
-The \texttt{-producer} and \texttt{-creator} options may be added to any \texttt{cpdf} command line to set the producer and/or creator of the PDF file. If the file was converted from another format, the \textit{creator} is the program producing the original, the \textit{producer} the program converting it to PDF.
+The \texttt{-producer} and \texttt{-creator} options may be added to any Cpdf command line to set the producer and/or creator of the PDF file. If the file was converted from another format, the \textit{creator} is the program producing the original, the \textit{producer} the program converting it to PDF.
 
 \begin{framed}
   \noindent\small\verb!cpdf -merge in.pdf in2.pdf -producer MyMerger -o out.pdf!
@@ -989,7 +987,7 @@ systems to uniquely identify a file. To change the ID, behavior, use the
 Linearized PDF is a version of the PDF format in which the data is held in a
 special manner to allow content to be fetched only when needed. This means
 viewing a multipage PDF over a slow connection is more responsive. By default,
-\cpdf\ does not linearize output files. To make it do so, add the \texttt{-l}
+Cpdf does not linearize output files. To make it do so, add the \texttt{-l}
 option to the command line, in addition to any other command being used. For example:
 
 \begin{framed}
@@ -999,7 +997,7 @@ option to the command line, in addition to any other command being used. For exa
 \noindent Linearize the file \texttt{in.pdf}, writing to \texttt{out.pdf}.
 \end{framed}
 
-\noindent This requires the existence of the external program \texttt{cpdflin} which is provided with commercial versions of \texttt{cpdf}. This must be installed as described in the installation documentation provided with your copy of \texttt{cpdf}. If you are unable to install \texttt{cpdflin}, you must use \texttt{-cpdflin} to let \texttt{cpdf} know where to find it:
+\noindent This requires the existence of the external program \texttt{cpdflin} which is provided with commercial versions of Cpdf. This must be installed as described in the installation documentation provided with your copy of \texttt{cpdf}. If you are unable to install \texttt{cpdflin}, you must use \texttt{-cpdflin} to let Cpdf know where to find it:
 
 \begin{framed}
 \noindent\small\verb!cpdf.exe -cpdflin "C:\\cpdflin.exe" -l in.pdf -o out.pdf!
@@ -1008,13 +1006,13 @@ option to the command line, in addition to any other command being used. For exa
 \noindent Linearize the file \texttt{in.pdf}, writing to \texttt{out.pdf}.
 \end{framed}
 
-\noindent In extremis, you may place \texttt{cpdflin} and its resources in the current working directory, though this is not recommended. For further help, refer to the installation instructions for your copy of \texttt{cpdf}.
+\noindent In extremis, you may place \texttt{cpdflin} and its resources in the current working directory, though this is not recommended. For further help, refer to the installation instructions for your copy of Cpdf.
 
 To keep the existing linearization status of a file (produce linearized output if the input is linearized and the reverse), use \texttt{-keep-l} instead of \texttt{-l}.
 
 \section{Object Streams}
 \index{object stream}
-PDF 1.5 introduced a new mechanism for storing objects to save space: object streams. by default, \texttt{cpdf} will preserve object streams in input files, creating no more. To prevent the retention of existing object streams, use \texttt{-no-preserve-objstm}:
+PDF 1.5 introduced a new mechanism for storing objects to save space: object streams. by default, Cpdf will preserve object streams in input files, creating no more. To prevent the retention of existing object streams, use \texttt{-no-preserve-objstm}:
 
 \begin{framed}
 \noindent\small\verb!cpdf -no-preserve-objstm in.pdf -o out.pdf!
@@ -1047,7 +1045,7 @@ PDF 1.5 introduced a new mechanism for storing objects to save space: object str
 \index{malformed file}
 \label{fast}
 There are many malformed PDF files in existence, including many produced by
-otherwise-reputable applications. \cpdf\ attempts to correct these problems
+otherwise-reputable applications. Cpdf attempts to correct these problems
 silently.
 
 Grossly malformed files will be reconstructed. The reconstruction
@@ -1061,17 +1059,17 @@ progress is shown on \verb!stderr! (Standard Error):
 \small\verb$Malformed PDF reconstruction succeeded!$
 \end{framed}
 
-\noindent In the unlikely event that \texttt{cpdf} cannot reconstruct a malformed file, it is able to use the \texttt{gs} program to try to reconstruct the PDF file, if you have it installed. For example, if \texttt{gs} is installed and in your path, we might try:
+\noindent In the unlikely event that Cpdf cannot reconstruct a malformed file, it is able to use the \texttt{gs} program to try to reconstruct the PDF file, if you have it installed. For example, if \texttt{gs} is installed and in your path, we might try:
 
 \begin{framed}
 \noindent\small\verb!cpdf -gs gs -gs-malformed in.pdf -o out.pdf!\end{framed}
 
-\noindent To suppress the output of \texttt{gs} use the \texttt{-gs-quiet} option. If the malformity lies inside an individual page of the PDF, rather than in its gross structure, \texttt{cpdf} may appear to succeed in reconstruction, only to fail when processing a page (e.g when adding text). To force the use of \texttt{gs} to pre-process such files so cpdf cannot fail on them, use \texttt{-gs\--malformed\--force}:
+\noindent To suppress the output of \texttt{gs} use the \texttt{-gs-quiet} option. If the malformity lies inside an individual page of the PDF, rather than in its gross structure, Cpdf may appear to succeed in reconstruction, only to fail when processing a page (e.g when adding text). To force the use of \texttt{gs} to pre-process such files so cpdf cannot fail on them, use \texttt{-gs\--malformed\--force}:
 
 \begin{framed}
 \noindent\small\verb!cpdf in.pdf -gs gs -gs-malformed-force -o out.pdf [-gs-quiet]!\end{framed}
 
-\noindent The command line for \texttt{-gs-malformed-force} must be of \textit{precisely} this form. Sometimes, on the other hand, we might wish \texttt{cpdf} to fail immediately on any malformed file, rather than try its own reconstruction process. The option \texttt{-error-on-malformed} achieves this.
+\noindent The command line for \texttt{-gs-malformed-force} must be of \textit{precisely} this form. Sometimes, on the other hand, we might wish Cpdf to fail immediately on any malformed file, rather than try its own reconstruction process. The option \texttt{-error-on-malformed} achieves this.
 
 
 \begin{framed}\noindent\textit{Note: Use of these commands with \texttt{-gs} is a last resort; they may strip some metadata from PDF files.}\end{framed}
@@ -1099,7 +1097,7 @@ shortcuts which speed up processing, but would fail on a minority of pre-ISO fil
 
 \section{Error Handling}
 \index{error handling}
-When \cpdf\ encounters an error, it exits with code 2. An error message is
+When Cpdf encounters an error, it exits with code 2. An error message is
 displayed on \texttt{stderr} (Standard Error). In normal usage, this means it is
 displayed on the screen. When a bad or inappropriate password is given, the exit code is 1.
 
@@ -1132,7 +1130,7 @@ Using \texttt{-args-json} will read arguments from a JSON file consisting of a s
 \section{String Arguments}
 Command lines are handled differently on each operating system. Some
 characters are reserved with special meanings, even when they occur inside
-quoted string arguments. To avoid this problem, \cpdf\ performs processing on
+quoted string arguments. To avoid this problem, Cpdf performs processing on
 string arguments as they are read.
 
 A backslash is used to indicate that a character which would otherwise be
@@ -1153,7 +1151,7 @@ escaped (i.e. written \verb!\\!).
 \index{text!encodings}
 \label{textencodings}
 
-Some \texttt{cpdf} commands write text to standard output, or read text from
+Some Cpdf commands write text to standard output, or read text from
 the command line or configuration files. These are:
 
 \begin{framed}
@@ -1260,7 +1258,7 @@ cpdf -merge in1.pdf [<range>] in2.pdf [<range>] [<more names/ranges>]
 Ranges can be used to select only a subset of pages from each
 input file in the output. The output file consists of the concatenation of all
 the input pages in the order specified on the command line. Actually, the
-\texttt{-merge} can be omitted, since this is the default operation of \cpdf.
+\texttt{-merge} can be omitted, since this is the default operation of Cpdf.
 
   \begin{framed}\small
     \noindent\verb!cpdf -merge a.pdf 1 b.pdf 2-end -o out.pdf!
@@ -1979,7 +1977,7 @@ When appropriate passwords are not available, the option \texttt{-decrypt-force}
      \noindent\verb!cpdf -squeeze in.pdf [-squeeze-log-to <filename>]!\\
      \noindent\verb!     [-squeeze-no-recompress] [-squeeze-no-pagedata] -o out.pdf!   
    \end{framed}
-  \cpdf\ provides facilities for decompressing and compressing PDF streams, and for losslessly reprocessing the whole file to `squeeze' it. For lossy recompression of images within a PDF, see Chapter 13.
+  Cpdf provides facilities for decompressing and compressing PDF streams, and for losslessly reprocessing the whole file to `squeeze' it. For lossy recompression of images within a PDF, see Chapter 13.
   \section{Decompressing a Document}
 \index{decompressing}
   To decompress the streams in a PDF file, for instance to manually inspect the
@@ -1987,14 +1985,14 @@ PDF, use:
   \begin{framed}
    \noindent\small\verb!cpdf -decompress in.pdf -o out.pdf!
   \end{framed}
-  \noindent If \cpdf\ finds a compression type it can't cope with, the stream is left compressed. When using \texttt{-decompress}, object streams are not compressed. It may be easier for manual inspection to also remove object streams, by adding the \texttt{-no-preserve-objstm} option to the command.
+  \noindent If Cpdf finds a compression type it can't cope with, the stream is left compressed. When using \texttt{-decompress}, object streams are not compressed. It may be easier for manual inspection to also remove object streams, by adding the \texttt{-no-preserve-objstm} option to the command.
   \section{Compressing a Document}
 \index{compressing}
   To compress the streams in a PDF file, use:
   \begin{framed}
     \noindent\small\verb!cpdf -compress in.pdf -o out.pdf!
   \end{framed}
-  \noindent\cpdf\ compresses any streams which have no compression using the
+  \noindent Cpdf compresses any streams which have no compression using the
   \textbf{Flate\-Decode} method, with the exception of Metadata streams, which
   are left uncompressed.
   
@@ -2345,7 +2343,7 @@ on automatically, and has no transition effect.
 
 \end{framed}
 
-\noindent To use different options on different page ranges, run \cpdf\ multiple times on
+\noindent To use different options on different page ranges, run Cpdf multiple times on
 the file using a different page range each time.
 
 \begin{cpdflib}
@@ -2480,7 +2478,7 @@ font size and color.
   \end{framed}
   \noindent The default is black 12pt Times New Roman text in the top left of each page. The text can be placed underneath rather than over the page by adding the \texttt{-underneath} option.
   
-  Text previously added by \cpdf\ may be removed by the \texttt{-remove-text} operation.
+  Text previously added by Cpdf may be removed by the \texttt{-remove-text} operation.
 \index{removing text}
   \begin{framed}
     \noindent\small\verb!cpdf -remove-text in.pdf -o out.pdf!
@@ -2840,7 +2838,7 @@ These two operations add content directly to the beginning or end of the page da
   \section{Inserting Blank Pages}
 \index{blank pages!inserting}
   Sometimes, for instance to get a printing arrangement right, it's useful to
-be able to insert blank pages into a PDF file. \cpdf\ can add blank pages
+be able to insert blank pages into a PDF file. Cpdf can add blank pages
 before a given page or pages, or after. The pages in question are specified by
 a range in the usual way:
   \begin{framed}
@@ -2897,7 +2895,7 @@ Cpdf has basic redaction facilities to remove whole pages. We simply give the pa
 
 \index{two-up}\index{imposition}
 
-Imposition is the act of putting two or more pages of an input document onto each page of the output document. There are two operations provided by \texttt{cpdf}:
+Imposition is the act of putting two or more pages of an input document onto each page of the output document. There are two operations provided by Cpdf:
 
 \begin{itemize}
 \item the \texttt{-impose} operation which, given a page size fits multiple pages into it; and
@@ -2933,7 +2931,7 @@ The following options may be used to modify the output:
 
 \noindent To impose with rotated pages, for example to put two A4 portrait pages two-up on an A3 landscape page, rotate them prior to imposition.
 
-Two other ways of putting multiple pages on a single page remain from earlier versions of \texttt{cpdf} which lacked a general imposition operation.  The \texttt{-twoup-stack} operation puts two logical pages on each physical
+Two other ways of putting multiple pages on a single page remain from earlier versions of Cpdf which lacked a general imposition operation.  The \texttt{-twoup-stack} operation puts two logical pages on each physical
 page, rotating them 90 degrees to do so. The new mediabox is thus larger. The \texttt{-twoup} operation does the same, but scales the new sides down so
 that the media box is unchanged.
 
@@ -3717,7 +3715,7 @@ Unclassified: 11229 bytes (3.62%)
   \small\noindent\verb!cpdf -dump-attachments in.pdf -o <directory>!
 \end{framed}
   PDF supports adding attachments (files of any kind, including other PDFs) to
-an existing file. The \cpdf\ tool supports adding and removing \textit{document-level
+an existing file. The Cpdf tool supports adding and removing \textit{document-level
 attachments} --- that is, ones which are associated with the document as a
 whole rather than with an individual page, and also \textit{page-level attachments}, associated with a particular page.
   \section{Adding Attachments}
@@ -4231,7 +4229,7 @@ The information is also available in JSON format with \texttt{-list-fonts-json}:
 
 \section{Listing characters in a font}
 \index{font!print table for}
-We can use \texttt{cpdf} to find out which characters are available in a given font, and to print the map between character codes, unicode codepoints, and Adobe glyph names. This is presently a best-effort service, and does not cover all font/encoding types.
+We can use Cpdf to find out which characters are available in a given font, and to print the map between character codes, unicode codepoints, and Adobe glyph names. This is presently a best-effort service, and does not cover all font/encoding types.
 
 We find the name of the font by using \texttt{-list-fonts}:
 
@@ -4392,7 +4390,7 @@ We may extract a font file by giving the page number and the PDF font resource n
   \end{framed}}
 
 \label{cpdfjson}
-In addition to reading and writing PDF files in the original Adobe format, \texttt{cpdf} can read and write them in its own CPDFJSON format, for somewhat easier extraction of information, modification of PDF files, and so on.
+In addition to reading and writing PDF files in the original Adobe format, Cpdf can read and write them in its own CPDFJSON format, for somewhat easier extraction of information, modification of PDF files, and so on.
 
 \section{Converting PDF to JSON}
 
@@ -4501,13 +4499,13 @@ The option \texttt{-output-json-clean-strings} converts any UTF16BE strings with
 
 \section{Converting JSON to PDF}
 
-We can load a JSON PDF file with the \texttt{-j} option in place of a PDF file anywhere in a normal \texttt{cpdf} command. A range may be applied, just like any other file. 
+We can load a JSON PDF file with the \texttt{-j} option in place of a PDF file anywhere in a normal Cpdf command. A range may be applied, just like any other file. 
 
   \begin{framed}
   \small\noindent\verb!cpdf -j in.json -o out.pdf!
   \end{framed}
 
-\noindent It is not required that \texttt{/Length} entries in CPDFJSON stream dictionaries be correctly updated when the JSON file is edited: \texttt{cpdf} will fix them when loading.
+\noindent It is not required that \texttt{/Length} entries in CPDFJSON stream dictionaries be correctly updated when the JSON file is edited: Cpdf will fix them when loading.
 
 \begin{cpdflib}
 \clearpage
@@ -4682,7 +4680,7 @@ We can build a new PDF file, given a number of pages and a paper size. The defau
 
 \section{Convert a text file to PDF}
 \index{text!convert to PDF}
-A basic text to PDF convertor is included in \texttt{cpdf}. It takes a UTF8 text file (ASCII is a subset of UTF8) and typesets it ragged-right, splitting on whitespace. Both Windows and Unix line endings are allowed. 
+A basic text to PDF convertor is included in Cpdf. It takes a UTF8 text file (ASCII is a subset of UTF8) and typesets it ragged-right, splitting on whitespace. Both Windows and Unix line endings are allowed. 
 
 \begin{framed}
  \noindent\small\verb?cpdf -typeset file.txt -create-pdf-papersize a3portrait?\\
@@ -4696,7 +4694,7 @@ To produce a PDF in PDF/UA-1 or PDF/UA-2 format add, say, \texttt{-subformat PDF
 \section{Make a PDF from a PNG, JPEG or JPEG2000 image}
 \index{image!convert to PDF}
 
-Simple facilities for making PDFs from PNG and JPEG images are included in \texttt{cpdf}. The resulting file can be written out, or used for further operations.
+Simple facilities for making PDFs from PNG and JPEG images are included in Cpdf. The resulting file can be written out, or used for further operations.
 
 For PNG files, the file must have no transparency and no interlacing, and must not be palletised:
 
@@ -4982,7 +4980,7 @@ We can save time when drawing rectangles by using the \texttt{-rect} operation, 
 
 \noindent The operation \texttt{-bez23} is a shorthand used when the first control point is equal to the current point. The operation \texttt{-bez13} is a shorthand used when the second control point is equal to the final point.
 
-To avoid calculating the Bezier curves for a circle manually, \texttt{cpdf} can generate them automatically when given the centre and radius:
+To avoid calculating the Bezier curves for a circle manually, Cpdf can generate them automatically when given the centre and radius:
 
 \begin{framed}
  \noindent\small\verb?cpdf -create-pdf AND -draw -circle "200 200 100"?\\
