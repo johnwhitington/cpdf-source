@@ -3022,8 +3022,7 @@ let specs =
    ("-rasterize-no-antialias", Arg.Unit (fun () -> args.rast_antialias <- false), " Don't antialias when rasterizing");
    ("-rasterize-downsample", Arg.Unit (fun () -> args.rast_downsample <- true), " Antialias by downsampling");
    ("-rasterize-jpeg-quality", Arg.Int (fun i -> args.rast_jpeg_quality <- i), " Set JPEG quality");
-   ("-output-jpeg", Arg.String (fun s -> args.rast_device <- "jpeg"; args.op <- Some (OutputImage s)), " Output pages as JPEGs");
-   ("-output-png", Arg.String (fun s -> args.op <- Some (OutputImage s)), " Output pages as PNGs");
+   ("-output-image", Arg.String (fun s -> args.op <- Some (OutputImage s)), " Output pages as PNGs");
    (* These items are undocumented *)
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit (fun () -> args.debugcrypt <- true), "");

@@ -1,7 +1,5 @@
 %Document %Bookmark<n>
 %Fix up typesetting of Cpdf program name
-%Document rasterization
-%Document PNG / JPEG output
 \documentclass{book}
 % Edit here to produce cpdfmanual.pdf, cpdflibmanual.pdf, pycpdfmanual.pdf,
 % dotnetcpdflibmanual.pdf, jcpdflibmanual.pdf jscpdflibmanual.pdf etc.
@@ -3832,6 +3830,22 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 \noindent\small\verb!     [-dpi-threshold <n>] [-resample-interpolate]!\\
 \noindent\small\verb!     -o out.pdf!
 
+\vspace{1.5mm}
+
+\noindent\small\verb!cpdf -rasterize in.pdf <range> -o out.pdf!\\
+\noindent\small\verb!     [-rasterize[-gray|-1bpp|-jpeg|-jpeggray]!\\
+\noindent\small\verb!     [-rasterize-res <n>] [-rasterize-jpeg-quality <n>]!\\
+\noindent\small\verb!     [-rasterize-no-antialias | -rasterize-downsample]!
+\noindent\small\verb!     [-rasterize-annots]!
+
+\vspace{1.5mm}
+
+\noindent\small\verb!cpdf -output-image <format> in.pdf <range>!\\
+\noindent\small\verb!     [-rasterize[-gray|-1bpp|-jpeg|-jpeggray]!\\
+\noindent\small\verb!     [-rasterize-res <n>] [-rasterize-jpeg-quality <n>]!\\
+\noindent\small\verb!     [-rasterize-no-antialias | -rasterize-downsample]!
+\noindent\small\verb!     [-rasterize-annots] [-tobox <BoxName>]!
+
 \end{framed}
 
 \section{Extracting images}
@@ -4044,6 +4058,55 @@ Method & Effect\\\hline
 \noindent It is not currently possible to reprocess lossless JBIG2 into lossy JBIG2, nor is it possible to recompress into CCITT.
 
 NB: CMYK images will be converted to RGB or untouched by some of these processes. A future version of cpdf will remove this limitation.
+
+\section{Rasterization (PDF to image conversion)}
+
+Cpdf can send individual pages of a PDF out to GhostScript to rasterize them - they are then read back in and replace the original page content:
+
+  \begin{framed}
+  \noindent\small\verb!cpdf -gs gs -rasterize in.pdf -o out.pdf!
+  \end{framed}
+
+\noindent Other metadata (for example, bookmarks) is preserved. By default, the resolution is 144dpi, and the raster data is losslessly compressed. It is the Crop Box which is rasterized, or the Media Box if absent. The following options may be added:
+
+\bigskip
+\noindent\begin{tabular}{lp{8cm}l}
+Option & Effect\\\hline
+{\small\texttt{-rasterize-gray}} & Use grayscale instead of colour \\
+{\small\texttt{-rasterize-1bpp}} & Use monochrome instead of colour\\
+{\small\texttt{-rasterize-jpeg}} & Use JPEG instead of lossless compression\\
+{\small\texttt{-rasterize-jpeggray}} & Use grayscale JPEG instead of lossless compression\\
+{\small\texttt{-rasterize-jpeg-quality}} & Set JPEG image quality (0..100)\\
+{\small\texttt{-rasterize-res}} & Set the resolution\\
+{\small\texttt{-rasterize-annots}} & Rasterize annotations instead of retaining\\
+{\small\texttt{-rasterize-no-antialias}} & Turn off antialiasing\\
+{\small\texttt{-rasterize-downsample}} & Use better but slower antialiasing\\
+{\small\texttt{-gs-quiet}} & Don't show GhostScript output\\
+\end{tabular}
+\bigskip
+
+\noindent In addition to rasterization of pages, we can export them in PNG or JPEG format, again by the use of GhostScript:
+
+  \begin{framed}
+  \noindent\small\verb!cpdf -gs gs -output-image image%%%.png in.pdf 10-end!
+  \end{framed}
+
+\noindent This will extract pages 10 onwards to the files \texttt{image000.png}, \texttt{image001.png} and so on. All the options above apply, and in addition we can choose which box is rasterized:
+
+\bigskip
+\noindent\begin{tabular}{lp{8cm}l}
+Option & Effect\\\hline
+{\small\texttt{-tobox}} & Choose rasterization box \\
+\end{tabular}
+\bigskip
+
+\noindent For example:
+
+  \begin{framed}
+  \noindent\small\verb!cpdf -gs gs -output-image image%%%.jpeg -tobox /BleedBox!\\
+  \noindent\small\verb!     -rasterization-jpeg in.pdf!
+  \end{framed}
+
 
 \begin{cpdflib}
 \clearpage
