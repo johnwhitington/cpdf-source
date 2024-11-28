@@ -25,6 +25,7 @@ o -merge-add-bookmarks now has proper titles for images
 o Font operations now include fonts within xobjects
 o Image extraction now includes images within xobjects within xobjects
 
+
 2.7.2 (October 2024)
 
 New features:
@@ -54,6 +55,7 @@ o -image-resolution-json was listing all images
 
 * = Supported by a grant from NLnet
 
+
 2.7.1 (July 2024)
 
 New features:
@@ -80,6 +82,7 @@ Backward-incompatible change:
 newly introduced in previous version
 
 * = Supported by a grant from NLnet
+
 
 2.7 (February 2024)
 
