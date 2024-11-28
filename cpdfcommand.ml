@@ -3674,7 +3674,6 @@ let replace_obj pdf objspec obj =
   
 (* Call out to GhostScript to rasterize. Read back in and replace the page contents with the resultant PNG. *)
 let rasterize antialias downsample device res annots quality pdf range =
-  Printf.printf "rasterize antialias=%b device=%s res=%f annots=%b\n" antialias device res annots;
   if args.path_to_ghostscript = "" then begin
     Pdfe.log "Please supply path to gs with -gs\n";
     exit 2
@@ -3688,15 +3687,20 @@ let rasterize antialias downsample device res annots quality pdf range =
         if not (mem pnum range) then page else
         let tmpout = Filename.temp_file "cpdf" ".png" in
         tempfiles := tmpout::!tempfiles;
-        let antialias = if antialias then "4" else "1" in
+        let antialias, res =
+          if downsample then ["-dDownScaleFactor=4"], res *. 4.  else
+            let bits = if antialias then "4" else "1" in
+              ["-dTextAlphaBits=" ^ bits; "-dGraphicsAlphaBits=" ^ bits], res
+        in
         let gscall =
           Filename.quote_command args.path_to_ghostscript
             ((if args.gs_quiet then ["-dQUIET"] else []) @
-            ["-dBATCH"; "-dNOPAUSE"; "-dSAFER"; "-dTextAlphaBits=" ^ antialias; "-dGraphicsAlphaBits=" ^ antialias;
-             "-sDEVICE=" ^ device; "-dUseCropBox"; "-dShowAnnots=" ^ string_of_bool annots; "-dJPEGQ=" ^ string_of_int quality;
-             "-sOutputFile=" ^ tmpout; "-sPageList=" ^ string_of_int pnum; "-r" ^ string_of_float res; tmppdf])
+            antialias @
+            ["-dBATCH"; "-dNOPAUSE"; "-sDEVICE=" ^ device; "-dUseCropBox"; "-dShowAnnots=" ^ string_of_bool annots;
+             "-dJPEGQ=" ^ string_of_int quality; "-sOutputFile=" ^ tmpout; "-sPageList=" ^ string_of_int pnum;
+             "-r" ^ string_of_float res; tmppdf])
         in
-          Printf.printf "CALL: %S\n" gscall;
+          (*Printf.printf "CALL: %S\n" gscall;*)
           begin match Sys.command gscall with
           | 0 -> ()
           | _ -> Pdfe.log "Rasterization failed\n"; exit 2
@@ -3715,6 +3719,7 @@ let rasterize antialias downsample device res annots quality pdf range =
           | Pdfpage.Rotate90 | Pdfpage.Rotate270 -> h, w
           | _ -> w, h
         in
+        let w, h = if downsample then w * 4, h * 4 else w, h in
         let (minx, miny, maxx, maxy) =
           Pdf.parse_rectangle
             pdf
@@ -3759,16 +3764,21 @@ let write_images device res quality boxname annots antialias downsample spec pdf
     (fun page pnum ->
        if not (mem pnum range) then () else
        let out = Cpdfbookmarks.name_of_spec Cpdfmetadata.UTF8 [] pdf 0 spec pnum "" 0 0 in
-       let antialias = if antialias then "4" else "1" in
+       let antialias, res =
+         if downsample then ["-dDownScaleFactor=4"], res *. 4.  else
+           let bits = if antialias then "4" else "1" in
+             ["-dTextAlphaBits=" ^ bits; "-dGraphicsAlphaBits=" ^ bits], res
+       in
        let gscall =
          Filename.quote_command args.path_to_ghostscript
            ((if args.gs_quiet then ["-dQUIET"] else []) @
             (if boxname = None then [] else ["-dUse" ^ (implode (tl (explode (unopt boxname))))]) @ 
-           ["-dBATCH"; "-dNOPAUSE"; "-dSAFER"; "-dTextAlphaBits=" ^ antialias; "-dGraphicsAlphaBits=" ^ antialias;
-            "-sDEVICE=" ^ device; "-dShowAnnots=" ^ string_of_bool annots; "-dJPEGQ=" ^ string_of_int quality;
-            "-sOutputFile=" ^ out; "-sPageList=" ^ string_of_int pnum; "-r" ^ string_of_float res; tmppdf])
+           antialias @
+           ["-dBATCH"; "-dNOPAUSE"; "-sDEVICE=" ^ device; "-dShowAnnots=" ^ string_of_bool annots;
+            "-dJPEGQ=" ^ string_of_int quality; "-sOutputFile=" ^ out; "-sPageList=" ^ string_of_int pnum;
+            "-r" ^ string_of_float res; tmppdf])
        in
-         Printf.printf "CALL: %S\n" gscall;
+         (*Printf.printf "CALL: %S\n" gscall;*)
          begin match Sys.command gscall with
          | 0 -> ()
          | _ -> Pdfe.log "Rasterization failed\n"; exit 2
