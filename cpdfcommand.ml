@@ -220,6 +220,7 @@ type op =
   | ChopHV of bool * float
   | ProcessImages
   | ExtractStream of string
+  | ReplaceStream of string
   | PrintObj of string
   | ReplaceObj of string * string
   | Verify of string
@@ -375,6 +376,7 @@ let string_of_op = function
   | ChopHV _ -> "ChopHV"
   | ProcessImages -> "ProcessImages"
   | ExtractStream _ -> "ExtractStream"
+  | ReplaceStream _ -> "ReplaceStream"
   | PrintObj _ -> "PrintObj"
   | ReplaceObj _ -> "ReplaceObj"
   | Verify _ -> "Verify"
@@ -946,7 +948,7 @@ let banned banlist = function
   | ExtractText | ExtractImages | ExtractFontFile _
   | AddPageLabels | RemovePageLabels | OutputJSON | OCGCoalesce
   | OCGRename | OCGList | OCGOrderAll | PrintFontEncoding _ | TableOfContents | Typeset _ | Composition _
-  | TextWidth _ | SetAnnotations _ | CopyAnnotations _ | ExtractStream _ | PrintObj _ | ReplaceObj _
+  | TextWidth _ | SetAnnotations _ | CopyAnnotations _ | ExtractStream _ | ReplaceStream _ | PrintObj _ | ReplaceObj _
   | Verify _ | MarkAs _ | RemoveMark _ | ExtractStructTree | ReplaceStructTree _ | SetLanguage _
   | PrintStructTree | Rasterize | OutputImage
      -> false (* Always allowed *)
@@ -3000,6 +3002,7 @@ let specs =
    ("-newpage", Arg.Unit Cpdfdrawcontrol.addnewpage, " Move to a fresh page");
    ("-extract-stream", Arg.String setextractstream, " Extract a stream");
    ("-extract-stream-decompress", Arg.String setextractstreamdecomp, " Extract a stream, decompressing");
+   ("-replace-stream", Arg.String (fun s -> args.op <- Some (ReplaceStream s)), " Replace a stream");
    ("-obj", Arg.String setprintobj, " Print object");
    ("-obj-json", Arg.String setprintobjjson, " Print object in JSON format");
    ("-replace-obj", Arg.String setreplaceobj, "Replace object");
@@ -3628,6 +3631,19 @@ let extract_stream pdf decomp objnum =
           close_out fh
     | Stdout ->
         output_string stdout (Pdfio.string_of_bytes data)
+
+(* Replace a stream from a file e.g 4=data.dat replaces contents of object 4. The stream dictionary is
+altered only to correct the length. *)
+let replace_stream pdf spec =
+  match String.split_on_char '=' spec with
+  | [n; filename] ->
+      let data = Pdfio.bytes_of_string (contents_of_file filename) in
+        begin match Pdf.lookup_obj pdf (int_of_string n) with
+        | Pdf.Stream ({contents = dict, stream} as s) ->
+            s := (Pdf.add_dict_entry dict "/Length" (Pdf.Integer (bytes_size data)), Pdf.Got data)
+        | _ -> error "not a stream"
+        end
+  | _ -> error "replace_stream: bad specifcation"
 
 (* Empty string is trailerdict. Begins with / and it's a chain separated by
    commas. Begins with P and it's a page number then a (possibly empty) chain.
@@ -4834,6 +4850,10 @@ let go () =
   | Some (ExtractStream s) ->
       let pdf = get_single_pdf args.op true in
         extract_stream pdf args.extract_stream_decompress s
+  | Some (ReplaceStream s) ->
+      let pdf = get_single_pdf args.op false in
+        replace_stream pdf s;
+        write_pdf false pdf
   | Some (PrintObj s) ->
       let pdf = get_single_pdf args.op true in
         print_obj args.format_json pdf s

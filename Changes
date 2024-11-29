@@ -6,6 +6,7 @@ o New -center-to-fit centres pages on a given paper size
 o New -jpeg-to-jpeg-scale and -jpeg-to-jpeg-dpi
 o Rasterize PDFs by calling out to GhostScript
 o Extract pages as PNG/JPEG by calling out to GhostScript
+o Replace stream content with -replace-stream
 
 Extended features:
 
