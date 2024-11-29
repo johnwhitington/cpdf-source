@@ -569,7 +569,8 @@ type args =
    mutable rast_annots : bool;
    mutable rast_antialias : bool;
    mutable rast_jpeg_quality : int;
-   mutable rast_downsample : bool}
+   mutable rast_downsample : bool;
+   mutable replace_stream_with : string}
 
 let args =
   {op = None;
@@ -716,7 +717,8 @@ let args =
    rast_annots = false;
    rast_antialias = true;
    rast_jpeg_quality = 75;
-   rast_downsample = false}
+   rast_downsample = false;
+   replace_stream_with = ""}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -849,7 +851,8 @@ let reset_arguments () =
   args.rast_annots <- false;
   args.rast_antialias <- true;
   args.rast_jpeg_quality <- 75;
-  args.rast_downsample <- false
+  args.rast_downsample <- false;
+  args.replace_stream_with <- ""
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -3003,6 +3006,7 @@ let specs =
    ("-extract-stream", Arg.String setextractstream, " Extract a stream");
    ("-extract-stream-decompress", Arg.String setextractstreamdecomp, " Extract a stream, decompressing");
    ("-replace-stream", Arg.String (fun s -> args.op <- Some (ReplaceStream s)), " Replace a stream");
+   ("-replace-stream-with", Arg.String (fun s -> args.replace_stream_with <- s), " File to replace stream with");
    ("-obj", Arg.String setprintobj, " Print object");
    ("-obj-json", Arg.String setprintobjjson, " Print object in JSON format");
    ("-replace-obj", Arg.String setreplaceobj, "Replace object");
@@ -3634,16 +3638,13 @@ let extract_stream pdf decomp objnum =
 
 (* Replace a stream from a file e.g 4=data.dat replaces contents of object 4. The stream dictionary is
 altered only to correct the length. *)
-let replace_stream pdf spec =
-  match String.split_on_char '=' spec with
-  | [n; filename] ->
-      let data = Pdfio.bytes_of_string (contents_of_file filename) in
-        begin match Pdf.lookup_obj pdf (int_of_string n) with
-        | Pdf.Stream ({contents = dict, stream} as s) ->
-            s := (Pdf.add_dict_entry dict "/Length" (Pdf.Integer (bytes_size data)), Pdf.Got data)
-        | _ -> error "not a stream"
-        end
-  | _ -> error "replace_stream: bad specifcation"
+let replace_stream pdf n filename =
+  let data = Pdfio.bytes_of_string (contents_of_file filename) in
+    begin match Pdf.lookup_obj pdf n with
+    | Pdf.Stream ({contents = dict, stream} as s) ->
+        s := (Pdf.add_dict_entry dict "/Length" (Pdf.Integer (bytes_size data)), Pdf.Got data)
+    | _ -> error "not a stream"
+    end
 
 (* Empty string is trailerdict. Begins with / and it's a chain separated by
    commas. Begins with P and it's a page number then a (possibly empty) chain.
@@ -4852,7 +4853,7 @@ let go () =
         extract_stream pdf args.extract_stream_decompress s
   | Some (ReplaceStream s) ->
       let pdf = get_single_pdf args.op false in
-        replace_stream pdf s;
+        replace_stream pdf (int_of_string s) args.replace_stream_with;
         write_pdf false pdf
   | Some (PrintObj s) ->
       let pdf = get_single_pdf args.op true in
