@@ -243,6 +243,14 @@ let is_xfa pdf =
   Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/AcroForm"; "/XFA"] <> None
 
 let output_info ?(json=ref [("none", `Null)]) encoding unit pdf =
+  let ugetnum pdf o =
+    let n = Pdf.getnum pdf o in
+      match unit with
+      | Pdfunits.PdfPoint -> n
+      | Pdfunits.Inch -> Pdfunits.inches n Pdfunits.PdfPoint
+      | Pdfunits.Centimetre -> Pdfunits.centimetres n Pdfunits.PdfPoint
+      | Pdfunits.Millimetre -> Pdfunits.millimetres n Pdfunits.PdfPoint
+  in
   let notjson = !json = [("none", `Null)] in
   let getstring = getstring encoding pdf in
   let pages = Pdfpage.pages_of_pagetree pdf in
@@ -308,7 +316,7 @@ let output_info ?(json=ref [("none", `Null)]) encoding unit pdf =
         Printf.printf "MediaBox: ";
         begin if length (setify mediaboxes) = 1 then
           match hd mediaboxes with
-          | Pdf.Array [a; b; c; d] -> Printf.printf "%f %f %f %f\n" (Pdf.getnum pdf a) (Pdf.getnum pdf b) (Pdf.getnum pdf c) (Pdf.getnum pdf d)
+          | Pdf.Array [a; b; c; d] -> Printf.printf "%f %f %f %f\n" (ugetnum pdf a) (ugetnum pdf b) (ugetnum pdf c) (ugetnum pdf d)
           | _ -> Printf.printf "\n"
         else
           Printf.printf "various\n"
@@ -319,7 +327,7 @@ let output_info ?(json=ref [("none", `Null)]) encoding unit pdf =
           if length (setify boxes) = 1 then
             begin
               match hd boxes with
-              | Some (Pdf.Array [a; b; c; d]) -> Printf.printf "%f %f %f %f\n" (Pdf.getnum pdf a) (Pdf.getnum pdf b) (Pdf.getnum pdf c) (Pdf.getnum pdf d)
+              | Some (Pdf.Array [a; b; c; d]) -> Printf.printf "%f %f %f %f\n" (ugetnum pdf a) (ugetnum pdf b) (ugetnum pdf c) (ugetnum pdf d)
               | _ -> Printf.printf "\n"
             end
           else
@@ -336,7 +344,7 @@ let output_info ?(json=ref [("none", `Null)]) encoding unit pdf =
          if length (setify mediaboxes) = 1 then
            match hd mediaboxes with
            | Pdf.Array [a; b; c; d] -> 
-               `List [`Float (Pdf.getnum pdf a); `Float (Pdf.getnum pdf b); `Float (Pdf.getnum pdf c); `Float (Pdf.getnum pdf d)]
+               `List [`Float (ugetnum pdf a); `Float (ugetnum pdf b); `Float (ugetnum pdf c); `Float (ugetnum pdf d)]
            | _ -> `Null
          else
            `String "various"
@@ -345,7 +353,7 @@ let output_info ?(json=ref [("none", `Null)]) encoding unit pdf =
          if length (setify boxes) = 1 then
            match hd boxes with
            | Some (Pdf.Array [a; b; c; d]) ->
-               `List [`Float (Pdf.getnum pdf a); `Float (Pdf.getnum pdf b); `Float (Pdf.getnum pdf c); `Float (Pdf.getnum pdf d)]
+               `List [`Float (ugetnum pdf a); `Float (ugetnum pdf b); `Float (ugetnum pdf c); `Float (ugetnum pdf d)]
            | _ -> `Null
          else
            `String "various"

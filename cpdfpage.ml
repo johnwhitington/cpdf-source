@@ -157,6 +157,14 @@ let change_pattern_matrices_page pdf tr page =
 exception Exceptjson of Cpdfyojson.Safe.t
 
 let output_page_info ?(json=false) ?(raisejson=false) unit pdf range =
+  let ugetnum pdf o =
+    let n = Pdf.getnum pdf o in
+      match unit with
+      | Pdfunits.PdfPoint -> n
+      | Pdfunits.Inch -> Pdfunits.inches n Pdfunits.PdfPoint
+      | Pdfunits.Centimetre -> Pdfunits.centimetres n Pdfunits.PdfPoint
+      | Pdfunits.Millimetre -> Pdfunits.millimetres n Pdfunits.PdfPoint
+  in
   let pages = Pdfpage.pages_of_pagetree pdf in
   let labels = Pdfpagelabels.read pdf in
     let getbox page box =
@@ -164,13 +172,13 @@ let output_page_info ?(json=false) ?(raisejson=false) unit pdf range =
         match page.Pdfpage.mediabox with
         | Pdf.Array [a; b; c; d] ->
            Printf.sprintf "%f %f %f %f"
-             (Pdf.getnum pdf a) (Pdf.getnum pdf b) (Pdf.getnum pdf c) (Pdf.getnum pdf d)
+             (ugetnum pdf a) (ugetnum pdf b) (ugetnum pdf c) (ugetnum pdf d)
         | _ -> ""
       else
         match Pdf.lookup_direct pdf box page.Pdfpage.rest with
         | Some (Pdf.Array [a; b; c; d]) ->
            Printf.sprintf "%f %f %f %f"
-             (Pdf.getnum pdf a) (Pdf.getnum pdf b) (Pdf.getnum pdf c) (Pdf.getnum pdf d)
+             (ugetnum pdf a) (ugetnum pdf b) (ugetnum pdf c) (ugetnum pdf d)
         | _ -> ""
     in
     let rotation page =
