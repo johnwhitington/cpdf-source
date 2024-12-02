@@ -571,7 +571,8 @@ type args =
    mutable rast_jpeg_quality : int;
    mutable rast_downsample : bool;
    mutable replace_stream_with : string;
-   mutable output_unit : Pdfunits.t}
+   mutable output_unit : Pdfunits.t;
+   mutable dot_leader : bool}
 
 let args =
   {op = None;
@@ -720,7 +721,8 @@ let args =
    rast_jpeg_quality = 75;
    rast_downsample = false;
    replace_stream_with = "";
-   output_unit = Pdfunits.PdfPoint}
+   output_unit = Pdfunits.PdfPoint;
+   dot_leader = false}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -855,7 +857,8 @@ let reset_arguments () =
   args.rast_jpeg_quality <- 75;
   args.rast_downsample <- false;
   args.replace_stream_with <- "";
-  args.output_unit <- Pdfunits.PdfPoint
+  args.output_unit <- Pdfunits.PdfPoint;
+  args.dot_leader <- false
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -2919,6 +2922,9 @@ let specs =
    ("-toc-no-bookmark",
      Arg.Unit settocnobookmark,
      " Don't add the table of contents to the bookmarks");
+   ("-toc-dot-leader",
+     Arg.Unit (fun () -> args.dot_leader <- true),
+     " Add a dot leader to TOC entries");
    ("-typeset",
      Arg.String settypeset,
      " Typeset a text file as a PDF");
@@ -4802,7 +4808,7 @@ let go () =
       let cpdffont = embed_font () in
       let pdf =
         Cpdftoc.typeset_table_of_contents
-          ~font:cpdffont ~fontsize:args.fontsize ~title:args.toc_title ~bookmark:args.toc_bookmark pdf
+          ~font:cpdffont ~fontsize:args.fontsize ~title:args.toc_title ~bookmark:args.toc_bookmark ~dotleader:args.dot_leader pdf
       in
         write_pdf false pdf
   | Some (Typeset filename) ->

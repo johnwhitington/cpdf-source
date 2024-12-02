@@ -94,11 +94,16 @@ let used pdf fastrefnums labels title marks =
       marks;
     codepoints
 
+(* Fill the space with a small space, maybe some dots, then maybe a final tiny space *)
+(* TODO Test to make sure a title shortened with dots does not gain any leader dots through this mechanism *)
+let make_dots space =
+  [Cpdftype.HGlue space]
+
 (* Typeset a table of contents with given font, font size and title. Mediabox
    (and CropBox) copied from first page of existing PDF. Margin of 10% inside
    CropBox. Font size of title twice body font size. Null page labels added for
    TOC, others bumped up and so preserved. *)
-let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
+let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader pdf =
   Hashtbl.clear width_table_cache;
   let marks = Pdfmarks.read_bookmarks pdf in
   if marks = [] then (Pdfe.log "No bookmarks, not making table of contents\n"; pdf) else
@@ -150,7 +155,7 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark pdf =
            [Cpdftype.BeginDest mark.Pdfmarks.target;
             Cpdftype.HGlue indent]
            @ textruns @
-           [Cpdftype.HGlue space]
+           (if dotleader then make_dots space else [Cpdftype.HGlue space])
            @ labelruns @
            [Cpdftype.EndDest;
             Cpdftype.NewLine])
