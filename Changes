@@ -18,6 +18,7 @@ o Show OpenAction in -info
 o Show more form information in -info
 o Allow JSON / PDF syntax in dict processing and object exploration
 o Show %Bookmark text when stamping text
+o Change units for -info[-json] and -page-info[-json]
 
 Fixes:
 
