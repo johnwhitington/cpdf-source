@@ -570,7 +570,8 @@ type args =
    mutable rast_antialias : bool;
    mutable rast_jpeg_quality : int;
    mutable rast_downsample : bool;
-   mutable replace_stream_with : string}
+   mutable replace_stream_with : string;
+   mutable output_unit : Pdfunits.t}
 
 let args =
   {op = None;
@@ -718,7 +719,8 @@ let args =
    rast_antialias = true;
    rast_jpeg_quality = 75;
    rast_downsample = false;
-   replace_stream_with = ""}
+   replace_stream_with = "";
+   output_unit = Pdfunits.PdfPoint}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -852,7 +854,8 @@ let reset_arguments () =
   args.rast_antialias <- true;
   args.rast_jpeg_quality <- 75;
   args.rast_downsample <- false;
-  args.replace_stream_with <- ""
+  args.replace_stream_with <- "";
+  args.output_unit <- Pdfunits.PdfPoint
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -3030,6 +3033,9 @@ let specs =
    ("-rasterize-downsample", Arg.Unit (fun () -> args.rast_downsample <- true), " Antialias by downsampling");
    ("-rasterize-jpeg-quality", Arg.Int (fun i -> args.rast_jpeg_quality <- i), " Set JPEG quality");
    ("-output-image", Arg.Unit (fun () -> args.op <- Some OutputImage), " Output pages as images");
+   ("-in", Arg.Unit (fun () -> args.output_unit <- Pdfunits.Inch), " Output dimensions in inches");
+   ("-cm", Arg.Unit (fun () -> args.output_unit <- Pdfunits.Centimetre), " Output dimensions in centimetres");
+   ("-mm", Arg.Unit (fun () -> args.output_unit <- Pdfunits.Millimetre), " Output dimensions in millimetres");
    (* These items are undocumented *)
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit (fun () -> args.debugcrypt <- true), "");
@@ -3962,21 +3968,21 @@ let go () =
         let pdf = decrypt_if_necessary input (Some Info) pdf in
           if args.format_json then
             begin
-              Cpdfmetadata.output_info ~json Cpdfmetadata.UTF8 pdf;
-              Cpdfmetadata.output_xmp_info ~json Cpdfmetadata.UTF8 pdf;
+              Cpdfmetadata.output_info ~json Cpdfmetadata.UTF8 args.output_unit pdf;
+              Cpdfmetadata.output_xmp_info ~json Cpdfmetadata.UTF8 args.output_unit pdf;
               flprint (Cpdfyojson.Safe.pretty_to_string (`Assoc (rev !json)))
             end
           else
             begin
-              Cpdfmetadata.output_info args.encoding pdf;
-              Cpdfmetadata.output_xmp_info args.encoding pdf
+              Cpdfmetadata.output_info args.encoding args.output_unit pdf;
+              Cpdfmetadata.output_xmp_info args.encoding args.output_unit pdf
             end
   | Some PageInfo ->
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf args.op true in
             let range = parse_pagespec_allow_empty pdf pagespec in
-              Cpdfpage.output_page_info ~json:args.format_json pdf range
+              Cpdfpage.output_page_info ~json:args.format_json args.output_unit pdf range
       | _ -> error "list-bookmarks: bad command line"
       end
   | Some Metadata ->

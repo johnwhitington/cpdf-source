@@ -49,10 +49,10 @@ from the /Info dictionary, returning it as a UTF8 string *)
 val get_info_utf8 : Pdf.t -> string -> string
 
 (** Output to standard output general information about a PDF. *)
-val output_info : ?json:(string * Cpdfyojson.Safe.t) list ref -> encoding -> Pdf.t -> unit
+val output_info : ?json:(string * Cpdfyojson.Safe.t) list ref -> encoding -> Pdfunits.t -> Pdf.t -> unit
 
 (** Output to standard output information from any XMP metadata stream in a PDF. *)
-val output_xmp_info : ?json:(string * Cpdfyojson.Safe.t) list ref -> encoding -> Pdf.t -> unit
+val output_xmp_info : ?json:(string * Cpdfyojson.Safe.t) list ref -> encoding -> Pdfunits.t -> Pdf.t -> unit
 
 (** Create XMP metadata from scratch *)
 val create_metadata : Pdf.t -> Pdf.t

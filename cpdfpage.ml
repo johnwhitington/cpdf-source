@@ -156,7 +156,7 @@ let change_pattern_matrices_page pdf tr page =
 (* Output information for each page *)
 exception Exceptjson of Cpdfyojson.Safe.t
 
-let output_page_info ?(json=false) ?(raisejson=false) pdf range =
+let output_page_info ?(json=false) ?(raisejson=false) unit pdf range =
   let pages = Pdfpage.pages_of_pagetree pdf in
   let labels = Pdfpagelabels.read pdf in
     let getbox page box =
@@ -223,8 +223,8 @@ let output_page_info ?(json=false) ?(raisejson=false) pdf range =
                  Printf.printf "Annotations: %i\n" (num_annots page))
             range
 
-let json_page_info pdf range =
-  try output_page_info ~json:true ~raisejson:true pdf range; `List [] with
+let json_page_info pdf range unit =
+  try output_page_info ~json:true ~raisejson:true unit pdf range; `List [] with
     Exceptjson j -> j
 
 let process_pages f pdf range =

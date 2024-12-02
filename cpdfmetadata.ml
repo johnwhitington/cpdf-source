@@ -242,7 +242,7 @@ let get_open_action_string pdf =
 let is_xfa pdf =
   Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/AcroForm"; "/XFA"] <> None
 
-let output_info ?(json=ref [("none", `Null)]) encoding pdf =
+let output_info ?(json=ref [("none", `Null)]) encoding unit pdf =
   let notjson = !json = [("none", `Null)] in
   let getstring = getstring encoding pdf in
   let pages = Pdfpage.pages_of_pagetree pdf in
@@ -511,7 +511,7 @@ let language pdf =
 let set_language pdf s =
   Pdf.replace_chain pdf ["/Root"; "/Lang"] (Pdf.String s)
 
-let output_xmp_info ?(json=ref [("none", `Null)]) encoding pdf =
+let output_xmp_info ?(json=ref [("none", `Null)]) encoding unit pdf =
   let notjson = !json = [("none", `Null)] in
   let print_out tree title namespace name =
     match get_data_for namespace name tree with

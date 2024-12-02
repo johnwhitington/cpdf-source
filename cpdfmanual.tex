@@ -1,4 +1,5 @@
 %Document -replace-stream
+%Document -cm -in -mm
 \documentclass{book}
 % Edit here to produce cpdfmanual.pdf, cpdflibmanual.pdf, pycpdfmanual.pdf,
 % dotnetcpdflibmanual.pdf, jcpdflibmanual.pdf jscpdflibmanual.pdf etc.
@@ -1175,6 +1176,10 @@ bit ASCII by dropping any high characters, or \verb!-raw! to perform no
 processing. The default unless specified in the documentation for an individual operation is \verb!-stripped!.
 
 In modern usage, \texttt{-utf8} is almost always the sensible option. But for historical reasons it would be the default.
+
+\section{Line Endings}
+
+For historical reasons, Cpdf uses the Unix line ending character (LF) when writing text files on Microsoft Windows. For example, bookmark files.
 
 \begin{cpdflib}
 \clearpage
