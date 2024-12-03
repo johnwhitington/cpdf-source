@@ -20,6 +20,7 @@ o Allow JSON / PDF syntax in dict processing and object exploration
 o Show %Bookmark text when stamping text
 o Change units for -info[-json] and -page-info[-json]
 o Optionally add dot leaders to tables of content
+o Add -collate-n to extend -collate to multiple pages at once
 
 Fixes:
 

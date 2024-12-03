@@ -531,7 +531,7 @@ type args =
    mutable ocgrenameto : string;
    mutable dedup : bool;
    mutable dedup_per_page : bool;
-   mutable collate : bool;
+   mutable collate : int;
    mutable impose_columns : bool;
    mutable impose_rtl : bool;
    mutable impose_btt : bool;
@@ -681,7 +681,7 @@ let args =
    ocgrenameto = "";
    dedup = false;
    dedup_per_page = false;
-   collate = false;
+   collate = 0;
    impose_columns = false;
    impose_rtl = false;
    impose_btt = false;
@@ -819,7 +819,7 @@ let reset_arguments () =
   args.ocgrenameto <- "";
   args.dedup <- false;
   args.dedup_per_page <- false;
-  args.collate <- false;
+  args.collate <- 0;
   args.impose_columns <- false;
   args.impose_rtl <- false;
   args.impose_btt <- false;
@@ -2064,8 +2064,11 @@ let specs =
       Arg.String setrange,
       " Explicitly add a range");
    ("-collate",
-      Arg.Unit (fun () -> args.collate <- true),
+      Arg.Unit (fun () -> args.collate <- 1),
       " Collate ranges when merging");
+   ("-collate-n",
+      Arg.Int (fun n -> args.collate <- n),
+      " Collate ranges in multiples when merging");
    ("-revision",
       Arg.Int setrevision,
       "");
@@ -3576,7 +3579,7 @@ let json_to_output json = function
         output_string f (Cpdfyojson.Safe.pretty_to_string json);
         close_out f
 
-let collate (names, pdfs, ranges) =
+let collate n (names, pdfs, ranges) =
   let ois = map ref (combine3 names pdfs ranges) in
   let nis = ref [] in
     while flatten (map (fun {contents = (_, _, r)} -> r) ois) <> [] do
@@ -3874,7 +3877,7 @@ let go () =
                         (* At this point, we have the information for collation. *)
                         let names = map string_of_input_kind names in
                         let names, pdfs, rangenums =
-                          (if args.collate then collate else Fun.id) (names, pdfs, rangenums)
+                          (if args.collate > 0 then collate args.collate else Fun.id) (names, pdfs, rangenums)
                         in
                         let outpdf =
                           Pdfmerge.merge_pdfs
