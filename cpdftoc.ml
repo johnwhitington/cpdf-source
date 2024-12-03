@@ -94,17 +94,13 @@ let used pdf fastrefnums labels title marks =
       marks;
     codepoints
 
-(* Fill the space with a small space, maybe some dots, then maybe a final tiny space *)
+(* Make a dot leader *)
 let make_dots space fontpack fontsize =
-  let dots_width, dots =
-    let dotruns = of_utf8 fontpack fontsize "." in
-    let dotwidth = width_of_runs dotruns in
-    let runs = flatten (many dotruns (int_of_float (floor (space /. dotwidth)))) in
-      (width_of_runs runs, runs)
-  in
-  let right_space = space -. dots_width in
-  let left_space = space -. dots_width -. right_space in
-    [Cpdftype.HGlue left_space] @ dots @ [Cpdftype.HGlue right_space]
+  let dotruns = of_utf8 fontpack fontsize "." in
+  let dotwidth = width_of_runs dotruns in
+  let runs = flatten (many dotruns (int_of_float (floor (space /. dotwidth)))) in
+  let remainder = space -. width_of_runs runs in
+    [Cpdftype.HGlue remainder] @ runs
 
 (* Typeset a table of contents with given font, font size and title. Mediabox
    (and CropBox) copied from first page of existing PDF. Margin of 10% inside
