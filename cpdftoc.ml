@@ -95,9 +95,16 @@ let used pdf fastrefnums labels title marks =
     codepoints
 
 (* Fill the space with a small space, maybe some dots, then maybe a final tiny space *)
-(* TODO Test to make sure a title shortened with dots does not gain any leader dots through this mechanism *)
-let make_dots space =
-  [Cpdftype.HGlue space]
+let make_dots space fontpack fontsize =
+  let dots_width, dots =
+    let dotruns = of_utf8 fontpack fontsize "." in
+    let dotwidth = width_of_runs dotruns in
+    let runs = flatten (many dotruns (int_of_float (floor (space /. dotwidth)))) in
+      (width_of_runs runs, runs)
+  in
+  let right_space = space -. dots_width in
+  let left_space = space -. dots_width -. right_space in
+    [Cpdftype.HGlue left_space] @ dots @ [Cpdftype.HGlue right_space]
 
 (* Typeset a table of contents with given font, font size and title. Mediabox
    (and CropBox) copied from first page of existing PDF. Margin of 10% inside
@@ -143,10 +150,8 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader pdf =
          let textruns = of_pdfdocencoding fontpack fontsize mark.Pdfmarks.text in
          let labelruns =
            if mark.Pdfmarks.target = NullDestination then of_pdfdocencoding fontpack fontsize "" else 
-           let pde =
-             let pnum = Pdfpage.pagenumber_of_target ~fastrefnums pdf mark.Pdfmarks.target in
-               try Pdfpagelabels.pagelabeltext_of_pagenumber pnum labels with Not_found -> string_of_int pnum
-           in
+           let pnum = Pdfpage.pagenumber_of_target ~fastrefnums pdf mark.Pdfmarks.target in
+           let pde = try Pdfpagelabels.pagelabeltext_of_pagenumber pnum labels with Not_found -> string_of_int pnum in
              of_pdfdocencoding fontpack fontsize pde
          in
          let textgap = width -. margin *. 2. -. indent -. width_of_runs labelruns in
@@ -155,7 +160,7 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader pdf =
            [Cpdftype.BeginDest mark.Pdfmarks.target;
             Cpdftype.HGlue indent]
            @ textruns @
-           (if dotleader then make_dots space else [Cpdftype.HGlue space])
+           (if dotleader then make_dots space fontpack fontsize else [Cpdftype.HGlue space])
            @ labelruns @
            [Cpdftype.EndDest;
             Cpdftype.NewLine])

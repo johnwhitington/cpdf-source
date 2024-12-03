@@ -2922,7 +2922,7 @@ let specs =
    ("-toc-no-bookmark",
      Arg.Unit settocnobookmark,
      " Don't add the table of contents to the bookmarks");
-   ("-toc-dot-leader",
+   ("-toc-dot-leaders",
      Arg.Unit (fun () -> args.dot_leader <- true),
      " Add a dot leader to TOC entries");
    ("-typeset",
