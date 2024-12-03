@@ -157,13 +157,13 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader pdf =
          let textgap = width -. margin *. 2. -. indent -. width_of_runs labelruns in
          let textruns = shorten_text fontpack fontsize (textgap -. fontsize *. 3.) textruns in
          let space = textgap -. width_of_runs textruns in
-           [Cpdftype.BeginDest mark.Pdfmarks.target;
-            Cpdftype.HGlue indent]
-           @ textruns @
-           (if dotleader then make_dots space fontpack fontsize else [Cpdftype.HGlue space])
-           @ labelruns @
-           [Cpdftype.EndDest;
-            Cpdftype.NewLine])
+         let leader =
+           if dotleader && labelruns <> []
+             then make_dots space fontpack fontsize
+             else [Cpdftype.HGlue space]
+         in
+             [Cpdftype.BeginDest mark.Pdfmarks.target; Cpdftype.HGlue indent] @ textruns @ leader @ labelruns
+           @ [Cpdftype.EndDest; Cpdftype.NewLine])
       (Pdfmarks.read_bookmarks pdf)
   in
   let toc_pages, _ =
