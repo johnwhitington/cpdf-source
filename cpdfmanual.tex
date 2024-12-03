@@ -2076,7 +2076,7 @@ The option \texttt{-squeeze-no-pagedata} avoids the reprocessing of page data, w
   \small\noindent\verb!cpdf -bookmarks-open-to-level <n> in.pdf -o out.pdf!
 
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -table-of-contents [-toc-title] [-toc-no-bookmark]!\\
+  \small\noindent\verb!cpdf -table-of-contents [-toc-title] [-toc-no-bookmark] [-toc-dot-leaders]!\\
   \small\noindent\verb!     [-font <font>] [-font-size <size>] in.pdf -o out.pdf!
 
   \end{framed}
@@ -2226,13 +2226,17 @@ Cpdf can automatically generate a table of contents from existing bookmarks, add
    \noindent\small\verb!     in.pdf -o out.pdf!
   \end{framed}
 
+\noindent Dot leaders may be added with \texttt{-toc-dot-leaders}:
+
+  \begin{framed}
+   \noindent\small\verb!cpdf -table-of-contents -toc-dot-leaders in.pdf -o out.pdf!
+  \end{framed}
+
 \noindent By default, an entry for the new table of contents will be added to the document's bookmarks. To suppress this behaviour, add \texttt{-toc-no-bookmark}:
 
   \begin{framed}
    \noindent\small\verb!cpdf -table-of-contents -toc-no-bookmark in.pdf -o out.pdf!
   \end{framed}
-
-
 
 \clearpage\pagestyle{empty}
 
