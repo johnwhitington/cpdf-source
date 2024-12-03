@@ -3,8 +3,8 @@ let demo = false
 let agpl = true
 let major_version = 2
 let minor_version = 7
-let minor_minor_version = 2
-let version_date = "(19th November 2024)"
+let minor_minor_version = 3
+let version_date = "(devel, 3rd December 2024)"
 
 open Pdfutil
 open Pdfio
@@ -3587,9 +3587,17 @@ let collate n (names, pdfs, ranges) =
         (fun ({contents = (name, pdf, range)} as r) ->
            match range with
            | [] -> ()
-           | h::t ->
-               nis := (name, pdf, [h])::!nis;
-               r := (name, pdf, t))
+           | l ->
+              if length l > n then
+                begin
+                  nis := (name, pdf, take l n)::!nis;
+                  r := (name, pdf, drop l n)
+                end
+              else
+                begin
+                  nis := (name, pdf, l)::!nis;
+                  r := (name, pdf, [])
+                end)
         ois
     done;
     split3 (rev !nis)
