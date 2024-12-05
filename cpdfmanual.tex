@@ -5769,7 +5769,8 @@ Cpdf can add PDF/UA structure data when drawing on new PDF/UA files. For example
 \section{Remediation of PDF/UA verification errors}
 
 %FIXME Check copyright is added for Matterhorn descriptions
-\begin{longtable}{llll}
+\noindent\begin{longtable}{lp{5cm}lp{5cm}}
+  \textbf{Number} & \textbf{Description} & \textbf{Reference} & \textbf{Remediation}\\
   01-003 & Content marked as Artifact is present inside tagged content. & UA1:7.1-1 & Description\\
   01-004 & Tagged content is present inside content marked as Artifact. & UA1:7.1-1 & d\\
   01-005 & Content is neither marked as Artifact nor tagged as real content. & UA1:7-1-2 & d\\
@@ -5794,16 +5795,16 @@ Cpdf can add PDF/UA structure data when drawing on new PDF/UA files. For example
   11-004 & Natural language in the Contents entry for annotations cannot be determined. & UA1:7.2-3 & d\\
   11-005 & Natural language in the TU entry for form fields cannot be determined. & UA1:7.2-3 & d\\
   11-006 & Natural language for document metadata cannot be determined. & UA1:7.2-3 & d\\
-  13-004 & <Figure> tag alternative or replacement text missing. & UA1:7.3-3 & d\\
-  14-002 & Does use numbered headings, but the first heading tag is not <H1>. & UA1:7.4.2-1 & d\\
-  14-003 & Numbered heading levels in descending sequence are skipped (Example: <H3> follows directly after <H1>). & UA1:7.4-1 & d\\
-  14-006 & A node contains more than one <H> tag. & UA1:7.4.4-1 & d\\
-  14-007 & Document uses both <H> and <H\#> tags. & UA1:7.4.4-3 & d\\
-  15-003 & In a table not organized with Headers attributes and IDs, a <TH> cell does not contain a Scope attribute. & UA1:7.5-2 & d\\
-  17-002 & <Formula> tag is missing an Alt attribute. & UA1:7.7-1 & d\\
+  13-004 & \textless Figure\textgreater\ tag alternative or replacement text missing. & UA1:7.3-3 & d\\
+  14-002 & Does use numbered headings, but the first heading tag is not \textless H1\textgreater . & UA1:7.4.2-1 & d\\
+  14-003 & Numbered heading levels in descending sequence are skipped (Example: \textless H3\textgreater\  follows directly after \textless H1\textgreater{}). & UA1:7.4-1 & d\\
+  14-006 & A node contains more than one \textless H\textgreater\ tag. & UA1:7.4.4-1 & d\\
+  14-007 & Document uses both \textless H\textgreater\ and \textless H\#\textgreater\ tags. & UA1:7.4.4-3 & d\\
+  15-003 & In a table not organized with Headers attributes and IDs, a \textless TH\textgreater\ cell does not contain a Scope attribute. & UA1:7.5-2 & d\\
+  17-002 & \textless Formula\textgreater\ tag is missing an Alt attribute. & UA1:7.7-1 & d\\
   17-003 & Unicode mapping requirements are not met. & UA1:7.7-2 & d\\
-  19-003 & ID entry of the <Note> tag is not present. & UA1:7.9-2 & d\\
-  19-004 & ID entry of the <Note> tag is non-unique. & UA1:7.9-2 & d\\
+  19-003 & ID entry of the \textless Note\textgreater\ tag is not present. & UA1:7.9-2 & d\\
+  19-004 & ID entry of the \textless Note\textgreater\ tag is non-unique. & UA1:7.9-2 & d\\
   20-001 & Name entry is missing or has an empty string as its value in an Optional Content Configuration Dictionary in the Configs entry in the OCProperties entry in the Catalog dictionary. & UA1:7.10-1 & d\\
   20-002 & Name entry is missing or has an empty string as its value in an Optional Content Configuration Dictionary that is the value of the D entry in the OCProperties entry in the Catalog dictionary. & UA1:7.10-1 & d\\
   20-003 & An AS entry appears in an Optional Content Configuration Dictionary. & UA1:7.10-2 & d\\
@@ -5811,15 +5812,15 @@ Cpdf can add PDF/UA structure data when drawing on new PDF/UA files. For example
   25-001 & File contains the dynamicRender element with value “required”. & UA1:7.15-1 & d\\
   26-001 & The file is encrypted but does not contain a P entry in its encryption dictionary. & UA1:7.16-1 & d\\
   26-002 & The file is encrypted and does contain a P entry but the 10th bit position of the P entry is false. & UA1:7.16-1 & d\\
-  28-002 & An annotation, other than of subtype Widget, Link and PrinterMark, is not a direct child of an <Annot> structure element. & UA1:7.18.1-2 & d\\
+  28-002 & An annotation, other than of subtype Widget, Link and PrinterMark, is not a direct child of an \textless Annot\textgreater\ structure element. & UA1:7.18.1-2 & d\\
   28-004 & An annotation, other than of subtype Widget, does not have a Contents entry and does not have an alternative description (in the form of an Alt entry in the enclosing structure element). & UA1:7.18.1-4 & d\\
   28-005 & A form field does not have a TU entry and does not have an alternative description (in the form of an Alt entry in the enclosing structure element). & UA1:7.18.1-4 & d\\
   28-006 & An annotation with subtype undefined in ISO 32000 does not meet 7.18.1. & UA1:7.18.2-1 & d\\
   28-007 & An annotation of subtype TrapNet exists. & UA1:7.18.2-2 & d\\
   28-008 & A page containing an annotation does not contain a Tabs entry & UA1:7.18.3-1 & d\\
   28-009 & A page containing an annotation has a Tabs entry with a value other than S. & UA1:7.18.3-1 & d\\
-  28-010 & A widget annotation is not nested within a <Form> tag. & UA1:7.18.4-1 & d\\
-  28-011 & A link annotation is not nested within a <Link> tag. & UA1:7.18.5-1 & d\\
+  28-010 & A widget annotation is not nested within a \textless Form\textgreater\ tag. & UA1:7.18.4-1 & d\\
+  28-011 & A link annotation is not nested within a \textless Link\textgreater\ tag. & UA1:7.18.5-1 & d\\
   28-012 & A link annotation does not include an alternate description in its Contents entry. & UA1:7.18.5-2 & d\\
   28-014 & CT entry is missing from the media clip data dictionary. &  & d\\
   28-015 & Alt entry is missing from the media clip data dictionary. & UA1:7.18.6.2-1 & d\\
