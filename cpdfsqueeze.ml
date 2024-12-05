@@ -49,7 +49,10 @@ let pdfobjeq pdf x y =
     begin match y with Pdf.Stream _ -> Pdf.getstream y | _ -> () end;
     compare x y
 
+let memory () = Printf.printf "%i bytes in use\n%!" (Gc.(quick_stat ()).heap_words * 4)
+
 let really_squeeze pdf =
+  (*Printf.printf "Beginning of really_squeeze: %!"; memory ();*)
   let objs = ref [] in
     Pdf.objiter (fun objnum _ -> objs := objnum :: !objs) pdf;
     let toprocess =
@@ -57,6 +60,7 @@ let really_squeeze pdf =
         (fun x -> length x > 1)
         (collate (pdfobjeq pdf) (sort (pdfobjeq pdf) !objs))
     in
+      (*Printf.printf "Stage 1 done%!\n"; memory ();*)
       (* Remove any pools of objects which are page objects, since Adobe Reader
        * gets confused when there are duplicate page objects. *)
       let toprocess =
@@ -69,6 +73,7 @@ let really_squeeze pdf =
                | _ -> Some l)
           toprocess
       in
+        (*Printf.printf "Stage 2 done%!\n"; memory ();*)
         let pdfr = ref pdf in
         let changetable = Hashtbl.create 100 in
           iter
@@ -79,9 +84,15 @@ let really_squeeze pdf =
              Pdf.renumber is run twice. This is bizarre, since Pdf.renumber is
              an old, well-understood function in use for years -- what is
              going on? Furthermore, if we run it 3 times, it gets bigger again! *)
+          (*Printf.printf "Stage 3 done\n%!"; memory ();*)
           pdfr := Pdf.renumber changetable !pdfr;
+          (*Printf.printf "Stage 4 done\n%!"; memory ();*)
           pdfr := Pdf.renumber changetable !pdfr;
+          (*Printf.printf "Stage 5 done\n%!"; memory ();*)
           Pdf.remove_unreferenced !pdfr;
+          (*Printf.printf "Stage 6 done\n%!"; memory ();*)
+          (*Gc.compact ();*)
+          (*Printf.printf "Compacted:\n%!"; memory ();*)
           pdf.Pdf.root <- !pdfr.Pdf.root;
           pdf.Pdf.objects <- !pdfr.Pdf.objects;
           pdf.Pdf.trailerdict <- !pdfr.Pdf.trailerdict
@@ -95,6 +106,7 @@ resources actually need to be available, the parse will fail, the squeeze of
 this object will fail, and we bail out. *)
 (* FIXME: XObjects inside xobjects? *)
 let xobjects_done = ref []
+
 
 let squeeze_form_xobject pdf objnum =
   if mem objnum !xobjects_done then () else
