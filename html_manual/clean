@@ -1,1 +1,5 @@
 rm -f *.html *.4ct *.4tc *.aux *.css *.dvi *.idv *.idx *.lg *.log *.tmp *.xref *.png *.toc *.out *.cut 
+rm -rf manualimages
+rm -f Changes
+rm -rf ../camlpdf
+rm -f logo.pdf

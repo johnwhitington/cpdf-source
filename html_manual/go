@@ -1,1 +1,6 @@
-htlatex ../cpdfmanual "html,2"
+cp -r ../manualimages .
+cp ../logo.pdf .
+cp ../Changes .
+mkdir ../camlpdf
+cp ../../camlpdf/Changes ../camlpdf/Changes
+TEXINTUTS=..:$TEXINPUTS htlatex ../cpdfmanual "html,2"

@@ -67,13 +67,7 @@ Version 2.7.3 (January 2025)
 \vspace{25mm}
 
 \vfill
-\ifdefined\HCode
-  %htlatex code here
-\else
-   %pdflatex code here
 \includegraphics{logo.pdf}
-\fi
-
 
 \vspace{2mm}
 {\sffamily \bfseries \LARGE Coherent Graphics Ltd}
@@ -4893,12 +4887,6 @@ To produce a PDF in PDF/UA-1 or PDF/UA-2 format add, say, \texttt{-subformat PDF
    \noindent\verb!-rolemap! Set role map
   \end{framed}}
 
-\ifdefined\HCode
-  %htlatex code here
-  Please see the PDF version of the manual for the documentation to this chapter.
-\else
-
-
 \section{Basics}
 
 We can draw on an existing PDF (or a new one created with \texttt{-create-pdf} from the previous chapter) using the \texttt{-draw} operation. This provides commands for drawing vector graphics, simple text and adding images. For example:
@@ -5451,8 +5439,6 @@ Some tags require a namespace other than the default. You can set the namespace 
 Extra information may be added to structure tree nodes with \texttt{-eltinfo} / \texttt{-end-eltinfo}. For example, to set the alternative description for an image, we might write (in JSON format, or prefixing with \texttt{PDF} in PDF format) \texttt{-eltinfo "Alt=PDF(A large horse)" -image A -end-eltinfo}. Multiple items may be set at once, for example Alt, ActualText, Lang etc. 
 
 A role map, which maps non-standard structure types to standard ones, may be set with \texttt{-rolemap}. For example \texttt{-rolemap "/S1/H1/S2/H2"} would map the S1 structure type to the standard type H1 and so on.
-
-\fi%End htlatex hack
 
 \begin{cpdflib}
 \clearpage
@@ -6314,10 +6300,6 @@ YYYY-MM-DDThh:mm:ssTZD
 \pagestyle{fancy}
 
 \vfill
-\ifdefined\HCode
-  %htlatex code here
-\else
-   %pdflatex code here
 \chapter{Change logs}\pagestyle{empty}
 
 \section{CPDF Change Log}
@@ -6331,7 +6313,6 @@ YYYY-MM-DDThh:mm:ssTZD
 {\footnotesize\begin{alltt}
 \input{../camlpdf/Changes}
 \end{alltt}}
-\fi
 
 \chapter{Matterhorn Protocol}\pagestyle{empty}
 
