@@ -1244,12 +1244,11 @@ For historical reasons, Cpdf uses the Unix line ending character (LF) when writi
 \chapter{Merging and Splitting}\label{chap:2}
   \begin{framed}
   \small
-  \noindent\begin{verbatim}
-cpdf -merge in1.pdf [<range>] in2.pdf [<range>] [<more names/ranges>]
-     [-collate] [-retain-numbering] [-remove-duplicate-fonts]
-     [-merge-add-bookmarks [-merge-add-bookmarks-use-titles]]
-     [-process-struct-trees] [-subformat <subformat>]
-     -o out.pdf\end{verbatim}
+  \noindent\verb!cpdf -merge in1.pdf [<range>] in2.pdf [<range>] [<more names/ranges>]!\\
+  \noindent\verb!     [-collate] [-retain-numbering] [-remove-duplicate-fonts]!\\
+  \noindent\verb!     [-merge-add-bookmarks [-merge-add-bookmarks-use-titles]]!\\
+  \noindent\verb!     [-process-struct-trees] [-subformat <subformat>]!\\
+  \noindent\verb!     -o out.pdf\end{verbatim}!
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -split in.pdf [-chunk <chunksize>] [-process-struct-trees]!\\
