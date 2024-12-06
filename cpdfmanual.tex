@@ -641,16 +641,20 @@ coherentpdf.deletePdf(merged);
 \chapter*{Typographical Conventions}
 Command lines to be typed are shown in \texttt{typewriter\hspace{-1mm} font} in a box.
 For example:
+
 \begin{framed}
 \noindent\small\verb!cpdf in.pdf -o out.pdf!
 \end{framed}
+
 \noindent When describing the general form of a command, rather than a particular
 example, square brackets \verb|[]| are used to enclose optional parts, and
 angled braces \verb!<>! to enclose general descriptions which may be
 substituted for particular instances. For example,
+
 \begin{framed}
 \noindent\small\verb!cpdf <operation> in.pdf [<range>] -o out.pdf!
 \end{framed}
+
 \noindent describes a command line which requires an operation and, optionally,
 a range. An exception is that we use \texttt{in.pdf} and \texttt{out.pdf}
 instead of \texttt{<input file>} and \texttt{<output file>} to reduce
@@ -690,7 +694,7 @@ to this program.
 
 \section{Documentation}
 
-The operation \texttt{-help / --help} prints each operation and option together with a short description. The operation \texttt{-version} prints the cpdf version string.
+The operation \texttt{-help / --help} prints each operation and option together with a short description. The operation \texttt{-version} prints the Cpdf version string.
 
   \index{input files} \index{output files}
   \section{Input and Output Files}
@@ -949,7 +953,7 @@ supported:
 \end{tabular}
 \end{center}
 
-\noindent For example, we may write \texttt{PMINX} \texttt{PMINY} to stand for the coordinate of the lower left corner of the page.
+\noindent For example, we may write \texttt{PMINX}\ \texttt{PMINY} to stand for the coordinate of the lower left corner of the page.
 
 Simple arithmetic may be performed using the words \texttt{add}, \texttt{sub}, \texttt{mul} and \texttt{div} to stand for addition, subtraction, multiplication and division. For example, one may write \texttt{14in\hspace{-1mm} sub\hspace{-1mm} 30pt} or \texttt{PMINX\hspace{-1mm} mul\hspace{-1mm} 2}
 
@@ -1803,12 +1807,12 @@ A hard box (one which clips its contents by inserting a clipping rectangle) may 
 The \texttt{-show-boxes} operation displays the boxes present on each page as method of debugging. Since boxes may be coincident, they are shown in differing colours and dash patterns so they may be identified even where they overlap. The colours are:
 
 \medskip
-\begin{tabular}{ll}
-Media box & Red \\
-Crop box & Green \\
-Art box & Blue \\
-Trim box & Orange \\
-Bleed box & Pink 
+\begin{tabular}{lll}
+  Media box & Red& \\
+  Crop box & Green& \\
+  Art box & Blue& \\
+  Trim box & Orange& \\
+  Bleed box & Pink& 
 \end{tabular}
 \medskip
 
@@ -1914,7 +1918,7 @@ person:
   \noindent Add these options to the command line to prevent each operation.
 
   \vspace{2mm}
-\noindent\textit{Note: Adobe Acrobat and Adobe Reader may show slightly different permissions in info dialogues -- this is a result of policy changes and not a bug in \textup{cpdf}. You may need to experiment.}
+\noindent\textit{Note: Adobe Acrobat and Adobe Reader may show slightly different permissions in info dialogues -- this is a result of policy changes and not a bug in \textup{Cpdf}. You may need to experiment.}
 
   \vspace{2mm}
 
@@ -2121,14 +2125,15 @@ The option \texttt{-squeeze-no-pagedata} avoids the reprocessing of page data, w
 
   \end{framed}
 
-\index{bookmarks}\index{JSON!add bookmarks from}
-\index{document outline}
+
   PDF bookmarks (properly called the \textit{document outline}) represent a tree
 of references to parts of the file, typically displayed at the side of the
 screen. The user can click on one to move to the specified place. Cpdf provides
 facilities to list, add, and remove bookmarks. The format used by the list and
 add operations is the same, so you can feed the output of one into the other,
 for instance to copy bookmarks.
+\index{bookmarks}\index{JSON!add bookmarks from}
+\index{document outline}
 
   \section{List Bookmarks}
 \index{bookmarks!listing}\index{JSON!list bookmarks as}
@@ -2151,6 +2156,7 @@ the file is loaded. Then the destination (see below). For example, upon executin
 1 "Part 1B" 3
 0 "Part 2" 4
 1 "Part 2a" 5\end{verbatim}}\end{framed}
+
 \noindent If the page number is 0, it indicates that clicking on that entry doesn't move to a page.
 
 By default, Cpdf converts unicode to ASCII text, dropping characters outside
@@ -2336,14 +2342,13 @@ cpdf -presentation in.pdf [<range>] -o out.pdf
                    [-vertical] [-outward] [-direction <int>]
                    [-effect-duration <float>]\end{verbatim}
 \end{framed}
-\index{presentations}
 
-  \vspace{12mm}
 The PDF file format, starting at Version 1.1, provides for simple slide-show
 presentations in the manner of Microsoft Powerpoint. These can be played in
 Acrobat and possibly other PDF viewers, typically started by entering
 full-screen mode. The \texttt{-presentation} operation allows such a
 presentation to be built from any PDF file.
+\index{presentations}
 
 The \texttt{-trans} option chooses the transition style. When a page range is
 used, it is the transition \textit{from} each page named which is altered. The
@@ -2668,19 +2673,19 @@ than its baseline. Similarly, the \texttt{-topline} option may be used to specif
   The standard PDF fonts may be set with the \texttt{-font} option. They are:
 
   \vspace{2mm}
-  \begin{tabular}{l}
-  Times-Roman\\
-  Times-Bold\\
-  Times-Italic\\
-  Times-BoldItalic\\
-  Helvetica\\
-  Helvetica-Bold\\
-  Helvetica-Oblique\\
-  Helvetica-BoldOblique\\
-  Courier\\
-  Courier-Bold\\
-  Courier-Oblique\\
-  Courier-BoldOblique
+  \begin{tabular}{ll}
+    Times-Roman&\\
+    Times-Bold&\\
+    Times-Italic&\\
+    Times-BoldItalic&\\
+    Helvetica&\\
+    Helvetica-Bold&\\
+    Helvetica-Oblique&\\
+    Helvetica-BoldOblique&\\
+    Courier&\\
+    Courier-Bold&\\
+    Courier-Oblique&\\
+Courier-BoldOblique
   \end{tabular}
  \vspace{2mm}
 
@@ -2781,16 +2786,20 @@ for positions relative to the center of the page. For example:
 \subsection{Special Characters}
 
 If your command line allows for the inclusion of unicode characters, the input
-text will be considered as UTF8 by \verb!cpdf!. Special characters which exist
-in the PDF WinAnsiEncoding Latin 1 code (such as many accented characters) will
-be reproduced in the PDF. This does not mean, however, that every special
-character can be reproduced -- it must exist in the font. When using a custom font, cpdf will attempt to convert from UTF8 to the encoding of that font automatically.
+text will be considered as UTF8 by Cpdf. Special characters which exist in the
+PDF WinAnsiEncoding Latin 1 code (such as many accented characters) will be
+reproduced in the PDF. This does not mean, however, that every special
+character can be reproduced -- it must exist in the font. When using a custom
+font, Cpdf will attempt to convert from UTF8 to the encoding of that font
+automatically.
 
 (For compatibility with previous versions of cpdf, special characters may be
 introduced manually with a backslash followed by the three-digit octal code of
 the character in the PDF WinAnsiEncoding Latin 1 Code. The full table is
 included in Appendix D of the Adobe PDF Reference Manual, which is available at
-\url{https://wwwimages2.adobe.com/content/dam/acom/en/devnet/pdf/pdfs/PDF32000_2008.pdf}. For example, a German sharp s (\ss) may be introduced by \verb!\337!. \textit{This functionality was withdrawn as of version 2.6})
+\url{https://wwwimages2.adobe.com/content/dam/acom/en/devnet/pdf/pdfs/PDF32000_2008.pdf}.
+For example, a German sharp s (\ss) may be introduced by \verb!\337!.
+\textit{This functionality was withdrawn as of version 2.6})
 
 \section{Stamping Rectangles}
 
@@ -2975,9 +2984,8 @@ Imposition is the act of putting two or more pages of an input document onto eac
  
     \vspace{2.5mm}
     \noindent Impose as many pages as will fit on to new A0 landscape pages. 
-  \end{framed}
 
-  \begin{framed}
+    \vspace{2.5mm}
     \noindent\small\verb!cpdf -impose-xy "3 4" in.pdf -o out.pdf!
  
     \vspace{2.5mm}
@@ -3142,7 +3150,7 @@ annotations on the selected pages to standard output. Each annotation is precede
   ]
 \end{verbatim}}
 
-\noindent Extra objects required for annotations, but which are not annotations themselves are also extracted. They omit the page number, being just a pair of the object number and object. The CPDFJSON format is described on page \pageref{cpdfjson}. There is an additional object, -1, which gives the CPDF annotation format version, currently 1.
+\noindent Extra objects required for annotations, but which are not annotations themselves are also extracted. They omit the page number, being just a pair of the object number and object. The CPDFJSON format is described on page \pageref{cpdfjson}. There is an additional object, -1, which gives the Cpdf annotation format version, currently 1.
 
 \section{Setting annotations}
 
@@ -3349,7 +3357,7 @@ XMP dc:description: Adobe Portable Document Format (PDF)
 \noindent The details of the format for creation and modification dates can be found in
 Appendix~\ref{dates}. If page boxes vary among pages, the entry will read \texttt{various}. Add \texttt{-in}, \texttt{-cm} or \texttt{mm} to print boxes in inches, centimetres, or millimetres instead of points.
 
-By default, cpdf strips to ASCII, discarding character codes in excess of 127. In order to preserve the original unicode, add the \texttt{-utf8} option. To disable all post-processing of the string, add \texttt{-raw}. See Section \ref{textencodings} for more information.
+By default, Cpdf strips to ASCII, discarding character codes in excess of 127. In order to preserve the original unicode, add the \texttt{-utf8} option. To disable all post-processing of the string, add \texttt{-raw}. See Section \ref{textencodings} for more information.
 
 The \texttt{-info-json} operation prints the information in JSON format instead. For example:
 
@@ -3486,6 +3494,7 @@ at which the command is executed. Note also that \texttt{-producer} and \texttt{
   \begin{framed}
     \noindent\small\verb!cpdf -set-title "A Night in London" in.pdf -o out.pdf!
   \end{framed}
+
 \noindent The text string is considered to be in UTF8 format, unless the \texttt{-raw}
 option is added---in which case, it is unprocessed, save for the replacement of any octal escape sequence such as \texttt{\textbackslash 017}, which is replaced by a character of its value (here, 15).
 
@@ -4158,7 +4167,7 @@ Method & Effect\\\hline
 
 \noindent It is not currently possible to reprocess lossless JBIG2 into lossy JBIG2, nor is it possible to recompress into CCITT.
 
-NB: CMYK images will be converted to RGB or untouched by some of these processes. A future version of cpdf will remove this limitation.
+NB: CMYK images will be converted to RGB or untouched by some of these processes. A future version of Cpdf will remove this limitation.
 
 \section{Rasterization (PDF to image conversion)}
 
@@ -4373,9 +4382,6 @@ $ ./cpdf -print-font-table /XYPLPB+NimbusSanL-Bold
 
 \noindent The first column is the character code, the second the Unicode codepoint, the character itself and its Unicode name, and the third the Adobe glyph name.
 
-
-
-
 \section{Copying Fonts}
 \label{copyfont}
 
@@ -4399,7 +4405,7 @@ the name \verb!/F10! on page 1 (this information can be found with
 
 \noindent Text in this font can then be added by giving \verb!-font /GHLIGA+c128!. Be
 aware that due to the vagaries of PDF font handling concerning which characters
-are present in the source font, not all characters may be available, or cpdf may not be able to work out the conversion from UTF8 to the font's own encoding. You may add \texttt{-raw} to the command line to avoid any conversion, but the encoding (mapping from input codes to glyphs) may be non-obvious and require knowledge of the PDF format to divine.
+are present in the source font, not all characters may be available, or Cpdf may not be able to work out the conversion from UTF8 to the font's own encoding. You may add \texttt{-raw} to the command line to avoid any conversion, but the encoding (mapping from input codes to glyphs) may be non-obvious and require knowledge of the PDF format to divine.
 
 \section{Removing Fonts}
 \label{removefont}
@@ -4511,7 +4517,7 @@ We convert a PDF file to JSON format like this:
 object, one for each object in the file and two special ones:
 
 \begin{itemize}
-\item Object -1: CPDF's own data with the PDF version number, CPDF JSON format
+\item Object -1: Cpdf's own data with the PDF version number, CPDF JSON format
 number, and flags used when writing (which may be required when reading):
 
 \begin{itemize}
@@ -5377,6 +5383,8 @@ We can change the text rendering mode to show outline text or, in this example, 
  \noindent\small\verb?     -nl -text "lines" -et -circle "100 0 100" -fill -o out.pdf?
 \end{framed}
 
+\noindent Here is the result:
+
 \bigskip
 \fbox{\includegraphics[width=0.3\textwidth]{manualimages/textclip.pdf}}
 \bigskip
@@ -5385,15 +5393,15 @@ We can change the text rendering mode to show outline text or, in this example, 
 \noindent Here are the text rendering modes:
 
 \bigskip
-\begin{tabular}{ll}
-0&Fill text (default)\\
-1&Stroke text\\
-2&Fill, then stroke text\\
-3&Neither fill nor stroke (invisible)\\
-4&Fill text and add to path for clipping\\
-5&Stroke text and add to path for clipping\\
-6&Fill, then stroke text and add to path for clipping\\
-7&Add text to path for clipping
+\begin{tabular}{lll}
+  0&Fill text (default)&\\
+  1&Stroke text&\\
+  2&Fill, then stroke text&\\
+  3&Neither fill nor stroke (invisible)&\\
+  4&Fill text and add to path for clipping&\\
+  5&Stroke text and add to path for clipping&\\
+  6&Fill, then stroke text and add to path for clipping&\\
+  7&Add text to path for clipping&
 \end{tabular}
 \bigskip
 
@@ -5705,7 +5713,7 @@ This JSON file can be edited, for example to change text strings, and reapplied 
     \noindent\small\verb!cpdf -replace-struct-tree out.json in.pdf -o out.pdf!
   \end{framed}
 
-\noindent If extra objects are required, they should be introduced with negative object numbers: cpdf will renumber them on import so as not to clash with any existing numbers.
+\noindent If extra objects are required, they should be introduced with negative object numbers: Cpdf will renumber them on import so as not to clash with any existing numbers.
 
 To remove a structure tree from a PDF, we can use \texttt{-remove-dict-entry} from Chapter \ref{chap:misc}, in other words:
 
@@ -6413,13 +6421,13 @@ YYYY-MM-DDThh:mm:ssTZD
 \vfill
 \chapter{Change logs}\pagestyle{empty}
 
-\section{CPDF Change Log}
+\section{Cpdf Change Log}
 {\footnotesize\begin{alltt}
 \input{Changes}
 \end{alltt}}
 
 \section{CamlPDF Change Log}
-(CamlPDF is the library CPDF is based upon)
+(CamlPDF is the library Cpdf is based upon)
 
 {\footnotesize\begin{alltt}
 \input{../camlpdf/Changes}
