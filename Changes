@@ -28,7 +28,7 @@ o Clean up @B implementation for -split-on-bookmarks
 o -merge-add-bookmarks now has proper titles for images
 o Font operations now include fonts within xobjects
 o Image extraction now includes images within xobjects within xobjects
-
+o HTML manual now ranks equally with PDF manual
 
 2.7.2 (October 2024)
 
