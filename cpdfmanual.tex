@@ -105,7 +105,10 @@ These examples demonstrate just a few of the facilities provided by the Coherent
                   
 \noindent Select the even pages (2, 4, 6...) from \texttt{in.pdf} and write those pages to \texttt{out.pdf}.
 
-\begin{framed}\noindent\texttt{cpdf -merge in.pdf in2.pdf AND -add-text "Copyright 2024"\\\phantom{\ \ \ \ } -o out.pdf}\end{framed}
+\begin{framed}
+ \noindent\small\verb?cpdf -merge in.pdf in2.pdf AND -add-text "Copyright 2024"?\\
+ \noindent\small\verb?     -o out.pdf?
+\end{framed}
 
 \noindent Using \texttt{AND} to perform several operations in order, here merging two files together and adding a copyright stamp to every page.
 
@@ -200,7 +203,10 @@ These examples demonstrate just a few of the facilities provided by the Coherent
 
 \section*{\hyperref[chap:7]{Chapter 7: Presentations}}
 
-\begin{framed}\noindent\texttt{cpdf -presentation in.pdf 2-end -trans Split -duration 10\\\phantom{\ \ \ \ } -o out.pdf}\end{framed}
+\begin{framed}
+ \noindent\small\verb?cpdf -presentation in.pdf 2-end -trans Split -duration 10?\\
+ \noindent\small\verb?     -o out.pdf?
+\end{framed}
 
 \noindent Use the Split style to build a presentation from the PDF \texttt{in.pdf}, each slide staying 10 seconds on screen unless manually advanced. The first page, being a title does not move on automatically, and has no transition effect.
 
@@ -210,7 +216,10 @@ These examples demonstrate just a few of the facilities provided by the Coherent
 
 \noindent Stamp the file \texttt{watermark.pdf} on to each page of \texttt{in.pdf}, writing the result to \texttt{out.pdf}.
 
-\begin{framed}\noindent\texttt{cpdf -topleft 10 -font Courier\\ \phantom{\ \ \ \ } -add-text "Page \%Page\textbackslash nDate \%d-\%m-\%Y" in.pdf -o out.pdf}\end{framed}
+\begin{framed}
+ \noindent\small\verb?cpdf -topleft 10 -font Courier?\\
+ \noindent\small\verb?     -add-text "Page \%Page\nDate \%d-\%m-\%Y" in.pdf -o out.pdf?
+\end{framed}
 
 \noindent Add a page number and date to all the pages in \texttt{in.pdf} using the Courier font, writing to \texttt{out.pdf}.
 
@@ -316,7 +325,10 @@ These examples demonstrate just a few of the facilities provided by the Coherent
 
 \section*{\hyperref[chap:15]{Chapter 15: PDF and JSON}}
 
-\begin{framed}\noindent\texttt{cpdf in.pdf -output-json -utf8 -output-json-parse-content-streams\\\phantom{\ \ \ \ } -o out.json}\end{framed}
+\begin{framed}
+ \noindent\small\verb?cpdf in.pdf -output-json -utf8 -output-json-parse-content-streams?\\
+ \noindent\small\verb?     -o out.json?
+\end{framed}
 
 \noindent Write the PDF in JSON format to the given file, parsing its content streams into individual JSON objects too.
 
@@ -337,15 +349,15 @@ These examples demonstrate just a few of the facilities provided by the Coherent
 \section*{\hyperref[chap:17]{Chapter 17: Creating New PDFs}}
 
 \begin{framed}
- \small\verb?cpdf -create-pdf -create-pdf-pages 20?\\
- \noindent\small\verb?        -create-pdf-papersize usletterportrait -o out.pdf?
+ \noindent\small\verb?cpdf -create-pdf -create-pdf-pages 20?\\
+ \noindent\small\verb?     -create-pdf-papersize usletterportrait -o out.pdf?
 \end{framed}
 
 \noindent Create a US Letter PDF of twenty pages.
 
 \begin{framed}
- \small\verb?cpdf -typeset file.txt -create-pdf-papersize a3portrait?\\
- \noindent\small\verb?        -font Courier -font-size 10 -o out.pdf?
+ \noindent\small\verb?cpdf -typeset file.txt -create-pdf-papersize a3portrait?\\
+ \noindent\small\verb?     -font Courier -font-size 10 -o out.pdf?
 \end{framed}
 
 \noindent Typeset a text file as PDF on A3 paper with Courier 10 point font.
