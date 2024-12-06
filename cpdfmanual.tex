@@ -39,6 +39,9 @@
 \begin{flushright}
 
 
+\ifdefined\HCode
+{\sffamily \bfseries \Huge Coherent PDF Command Line Tools}
+\else
 {\sffamily \bfseries \Huge Coherent PDF
 
 \vspace{2mm}
@@ -58,6 +61,7 @@ Java API and
 JavaScript API and
 \end{jscpdflib}
 Command Line Tools}
+\fi
 
 \vspace{12mm}
 
@@ -67,7 +71,11 @@ Version 2.7.3 (January 2025)
 \vspace{25mm}
 
 \vfill
+\ifdefined\HCode
+\includegraphics[natwidth=50,natheight=50]{logo.pdf}
+\else
 \includegraphics{logo.pdf}
+\fi
 
 \vspace{2mm}
 {\sffamily \bfseries \LARGE Coherent Graphics Ltd}
@@ -5047,7 +5055,11 @@ We can draw on an existing PDF (or a new one created with \texttt{-create-pdf} f
 \noindent We use \texttt{-to} to start the path at a given coordinate, \texttt{-line} to extend the path with each line, and then \texttt{-stroke} to stroke the path. Coordinates in a PDF file have the origin $(0, 0)$ at the bottom-left of the page. All units are in points (1/72 inch). This creates the following PDF:
 
 \bigskip
+\ifdefined\HCode
+\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/line.pdf}}
+\else
 \fbox{\includegraphics[width=0.3\textwidth]{manualimages/line.pdf}}
+\fi
 \bigskip
 
 \noindent Alternatively, we may use \texttt{-close} to draw the final line back to the starting point:
