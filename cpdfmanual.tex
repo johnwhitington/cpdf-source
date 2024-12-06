@@ -695,14 +695,18 @@ The operation \texttt{-help / --help} prints each operation and option together 
   \index{input files} \index{output files}
   \section{Input and Output Files}
   The typical pattern for usage is
+
   \begin{framed}
   \noindent\small\verb!cpdf [<operation>] <input file(s)> -o <output file>!
   \end{framed}
+
   \noindent and the simplest concrete example, assuming the existence of a file
 \texttt{in.pdf} is:
+
   \begin{framed}
   \noindent\small\verb!cpdf in.pdf -o out.pdf!
   \end{framed}
+
   \noindent This copies \texttt{in.pdf} to \texttt{out.pdf}. Of course, we should like to do more interesting
 things to the PDF file than that!
 
@@ -713,25 +717,30 @@ preceded by \verb!-i!. For example:
   \begin{framed}
   \noindent\small\verb!cpdf -i in -o out.pdf!
   \end{framed}
+
 \noindent A whole directory of files may be added (where a command supports multiple files) by using the \verb!-idir! option:
+
   \begin{framed}
   \noindent\small\verb!cpdf -merge -idir myfiles -o out.pdf!
   \end{framed}
+
   \noindent The files in the directory \verb!myfiles! are considered in alphabetical order. They must all be PDF files. If the names of the files are numeric, leading zeroes will be required for the order to be correct (e.g \verb!001.pdf!, \verb!002.pdf! etc).
 
 To restrict cpdf to files ending in \texttt{.pdf} (in upper or lower or mixed case) add the option \texttt{-idir-only-pdfs} \textit{before} \texttt{-idir}:
+
   \begin{framed}
   \noindent\small\verb!cpdf -merge -idir-only-pdfs -idir myfiles -o out.pdf!
   \end{framed}
-
 
   \section{Input Ranges}
   An \index{input range} \index{range} \textit{input range} may be specified
 after each input file. This is treated differently by each operation. For
 instance
+
   \begin{framed}
   \noindent\small\verb!cpdf in.pdf 2-5 -o out.pdf!
   \end{framed}
+
   \noindent extracts pages two, three, four and five from \texttt{in.pdf},
 writing the result to \texttt{out.pdf}, assuming that \texttt{in.pdf} contains
 at least five pages.
@@ -1131,13 +1140,17 @@ A backslash is used to indicate that a character which would otherwise be
 treated specially by the command line interpreter is to be treated literally. For
 example, Unix-like systems attribute a special meaning to the exclamation mark, so
 the command line
+
 \begin{framed}
  \noindent\small\verb?cpdf -add-text "Hello!" in.pdf -o out.pdf?
 \end{framed}
+
 \noindent would fail. We must escape the exclamation mark with a backslash:
+
 \begin{framed}
  \noindent\small\verb?cpdf -add-text "Hello\!" in.pdf -o out.pdf?
 \end{framed}
+
 \noindent It follows that backslashes intended to be taken literally must themselves be
 escaped (i.e. written \verb!\\!).
 
@@ -1294,6 +1307,7 @@ The \texttt{-process-struct-trees} option will merge structure trees (the data w
 are written to file, their names being generated from a \emph{format}. The
 optional \texttt{-chunk} option allows the number of pages written to each
 output file to be set. 
+
   \begin{framed}\small
     \noindent\verb!cpdf -split a.pdf -o out%%%.pdf!
 
@@ -1308,7 +1322,8 @@ output file to be set.
 \texttt{out001.pdf}, \texttt{out002.pdf} etc. with at most ten pages in each
 file. The directory (folder) \texttt{dir} must exist.
   \end{framed}
-\noindent If the output format does not provide enough numbers for the files generated,
+
+  \noindent If the output format does not provide enough numbers for the files generated,
 the result is unspecified. The following format operators may be used:
 
 \begin{center}
@@ -1343,6 +1358,7 @@ and so on. So \texttt{-split-bookmarks 1} creates breaks on level 0 and level
 \texttt{out002.pdf} on bookmark boundaries.
 
   \end{framed}
+
 \noindent There may be many bookmarks on a single page (for instance, if
 paragraphs are bookmarked or there are two subsections on one page). The splits
 calculated by \texttt{-split-bookmarks} ensure that each page appears in only
@@ -1356,7 +1372,9 @@ one of the output files.
     \noindent Split \texttt{a.pdf} on bookmark boundaries, using the bookmark text as the filename.
 
   \end{framed}
+
 \noindent The bookmark text used for a name has the following characters are removed, in addition to any character with ASCII code less than 32 or equal to 126. In addition, names beginning with \texttt{.} are not produced.
+
   \begin{framed}
   \centering
   \verb! / ? < > \ : * | " ^ + =!
@@ -1383,6 +1401,7 @@ The \texttt{-split-max} operation splits a file into chunks of no more than the 
     \noindent Split \texttt{in.pdf} into parts of no more than 100kB, if possible.
 
   \end{framed}
+
 \noindent Should the operation not be possible for the given size, an error message is printed and no output (not even partial output) is produced.
 
 \section{Spraying}
@@ -1566,6 +1585,7 @@ Y factors given. This scales both the page contents, and the page size itself. I
   \end{framed}
   
 \noindent To avoid centring, supply \texttt{-top\! 0}, \texttt{-bottom\! 0}, \texttt{-left\! 0} or \texttt{-right\! 0} as appropriate. The scale can optionally be set to a percentage of the available area, instead of filling it.
+
   \begin{framed}
   \small\noindent\verb!cpdf -scale-to-fit a4portrait -scale-to-fit-scale 0.9 in.pdf -o out.pdf!
 
@@ -1592,7 +1612,6 @@ Y factors given. This scales both the page contents, and the page size itself. I
   \noindent Set a file's pages to the given size and center the content.
   \end{framed}
 
-
 \noindent The \texttt{-scale-contents} operation scales the contents about the center
   of the crop box (or, if absent, the media box), leaving the page dimensions
   (boxes) unchanged.
@@ -1612,8 +1631,6 @@ Y factors given. This scales both the page contents, and the page size itself. I
   \vspace{2.5mm}
   \noindent Scale a file's contents on all pages to 50\% of its original dimensions about a point 20pts from its top right corner.
   \end{framed}
-
-  
 
   \section{Shift Page Contents}
   \index{shift page contents}
@@ -1654,23 +1671,28 @@ contents and/or the page dimensions (use \texttt{-upright} (described elsewhere 
   
 The \texttt{-rotate} operation sets the viewing rotation of the selected pages to
 the absolute value given.
+
   \begin{framed}
   \noindent\small\verb!cpdf -rotate 90 in.pdf -o out.pdf!
 
   \vspace{2.5mm}
   \noindent Set the rotation of all the pages in the input file to ninety degrees clockwise.
   \end{framed}
+
   \noindent The \texttt{-rotateby} operation changes the viewing rotation of all the
 given pages by the relative value given.
+
   \begin{framed}
   \noindent\small\verb!cpdf -rotateby 90 in.pdf -o out.pdf!
 
   \vspace{2.5mm}
   \noindent Rotate all the pages in the input file by ninety degrees clockwise.
   \end{framed}
+
   \noindent The \texttt{-rotate-contents} operation rotates the contents and dimensions
 of the page by the given relative value.
   \index{rotate!contents}
+
   \begin{framed}
   \noindent\small\verb!cpdf -rotate-contents 90 in.pdf -o out.pdf!
 
@@ -1698,6 +1720,7 @@ rotation of the document to zero without altering its appearance. In addition, i
   The \texttt{-hflip} and \texttt{-vflip} operations flip the contents of the
 chosen pages horizontally or vertically. No account is taken of the current
 page rotation when considering what "horizontally" and "vertically" mean, so you may like to use \texttt{-upright} (see above) first.
+
   \begin{framed}
     \noindent\small\verb!cpdf -hflip in.pdf even -o out.pdf!
 
@@ -1717,12 +1740,14 @@ page rotation when considering what "horizontally" and "vertically" mean, so you
   All PDF files contain a \textit{media box} for each page, giving the
 dimensions of the paper. To change these dimensions (without altering the page
 contents in any way), use the \texttt{-mediabox} operation.
+
   \begin{framed}
   \noindent\small\verb!cpdf -mediabox "0pt 0pt 500pt 500pt" in.pdf -o out.pdf!
 
   \vspace{2.5mm}
   \noindent Set the media box to 500 points square.
   \end{framed}
+
   \noindent The four numbers are minimum x, minimum y, width, height. x
 coordinates increase to the right, y coordinates increase upwards. To use absolute numbers rather than width and height we may add an initial question mark and write, for example, \texttt{?100pt 200pt 300pt 400pt} which represents the rectangle with lower-left corner (100pt, 200pt) and upper-right corner (300pt, 400pt).
 
@@ -1731,6 +1756,7 @@ defining to what extent the page is cropped before being displayed or printed.
 A crop box can be set, changed and removed, without affecting the underlying
 media box. To set or change the crop box use \texttt{-cropbox}. To remove any
 existing crop box, use \texttt{-remove-cropbox}.
+
   \begin{framed}
   \noindent\small\verb!cpdf -cropbox "0pt 0pt 200mm 200mm" in.pdf -o out.pdf!
 
@@ -1754,11 +1780,13 @@ existing crop box, use \texttt{-remove-cropbox}.
   \noindent Copy the contents of one box to another.
 
   \end{framed}
+
   \noindent This operation copies the contents of one box (Media box, Crop box, Trim box etc.) to another. If \texttt{-mediabox-if-missing} is added, the media box will be substituted when the 'from' box is not set for a given page. For example
 
   \begin{framed}
     \noindent\small\verb!cpdf -frombox /TrimBox -tobox /CropBox in.pdf -o out.pdf!
   \end{framed}
+
   \noindent copies the Trim Box of each page to the Crop Box of each page. The possible boxes are \texttt{/MediaBox}, \texttt{/CropBox}, \texttt{/BleedBox}, \texttt{/TrimBox}, \texttt{/ArtBox}.\pagestyle{empty}\thispagestyle{fancy}
 
 A hard box (one which clips its contents by inserting a clipping rectangle) may be created with the \texttt{-hard-box} operation:
@@ -1832,6 +1860,7 @@ Bleed box & Pink
 \label{encryption}
 \index{encryption}
 \index{decryption}
+
   \begin{framed}
     \small\noindent\verb!cpdf -encrypt <method> [-pw=]<owner> [-pw=]<user>!\\
     \noindent\verb!     [-no-encrypt-metadata] <permissions> in.pdf -o out.pdf!
@@ -1839,6 +1868,7 @@ Bleed box & Pink
     \vspace{1.5mm}
     \noindent\verb!cpdf -decrypt [-decrypt-force] in.pdf owner=<owner password> -o out.pdf!
   \end{framed}
+
   \label{crypt}
   \section{Introduction}
   PDF files can be encrypted using various types of encryption and attaching
@@ -1890,6 +1920,7 @@ person:
 
   \section{Encrypting a Document}
   To encrypt a document, the owner and user passwords must be given (here, \texttt{fred} and \texttt{charles} respectively):
+
   \begin{framed}
     \noindent\small\verb!cpdf -encrypt 40bit fred charles -no-print in.pdf -o out.pdf!
 
@@ -1899,13 +1930,16 @@ person:
     \vspace{1.5mm}
     \noindent\small\verb!cpdf -encrypt AES fred "" -no-edit -no-copy in.pdf -o out.pdf!
   \end{framed}
+
   \noindent A blank user password is
 common. In this event, PDF viewers will typically not prompt for a
 password for when opening the file or for operations allowable with the user password.
+
   \begin{framed}
     \vspace{1.5mm}
     \noindent\small\verb!cpdf -encrypt AES256ISO fred "" -no-forms in.pdf -o out.pdf!
   \end{framed}
+
 \noindent In addition, the usual method can be used to give the existing owner
 password, if the document is already encrypted.
 
@@ -1916,9 +1950,11 @@ metadata. Add \texttt{-no-encrypt-metadata} to the command line.
 
   \section{Decrypting a Document}
   To decrypt a document, the owner password is provided.
+
   \begin{framed}
     \noindent\small\verb!cpdf -decrypt in.pdf owner=fred -o out.pdf!
   \end{framed}
+
   \noindent The user password cannot decrypt a file.
 
 When appropriate passwords are not available, the option \texttt{-decrypt-force} may be added to the command line to process the file regardless.
@@ -1965,6 +2001,7 @@ When appropriate passwords are not available, the option \texttt{-decrypt-force}
 \end{jscpdflib}
 
 \chapter{Compression}\label{chap:5}
+
   \begin{framed}
      \small\noindent\verb!cpdf -decompress in.pdf -o out.pdf!
 
@@ -1975,21 +2012,26 @@ When appropriate passwords are not available, the option \texttt{-decrypt-force}
      \noindent\verb!cpdf -squeeze in.pdf [-squeeze-log-to <filename>]!\\
      \noindent\verb!     [-squeeze-no-recompress] [-squeeze-no-pagedata] -o out.pdf!   
    \end{framed}
+
   Cpdf provides facilities for decompressing and compressing PDF streams, and for losslessly reprocessing the whole file to `squeeze' it. For lossy recompression of images within a PDF, see Chapter 13.
   \section{Decompressing a Document}
 \index{decompressing}
   To decompress the streams in a PDF file, for instance to manually inspect the
 PDF, use:
+
   \begin{framed}
    \noindent\small\verb!cpdf -decompress in.pdf -o out.pdf!
   \end{framed}
+
   \noindent If Cpdf finds a compression type it can't cope with, the stream is left compressed. When using \texttt{-decompress}, object streams are not compressed. It may be easier for manual inspection to also remove object streams, by adding the \texttt{-no-preserve-objstm} option to the command.
   \section{Compressing a Document}
 \index{compressing}
   To compress the streams in a PDF file, use:
+
   \begin{framed}
     \noindent\small\verb!cpdf -compress in.pdf -o out.pdf!
   \end{framed}
+
   \noindent Cpdf compresses any streams which have no compression using the
   \textbf{Flate\-Decode} method, with the exception of Metadata streams, which
   are left uncompressed.
@@ -1997,9 +2039,11 @@ PDF, use:
   \section{Squeezing a Document}
 \index{squeeze}
   To \textit{squeeze} a PDF file, reducing its size by an average of about twenty percent (though sometimes not at all), use:
+
   \begin{framed}
     \noindent\small\verb!cpdf -squeeze in.pdf -o out.pdf!
   \end{framed}
+
   \noindent Adding \texttt{-squeeze} to the command line when using another operation will \textit{squeeze} the file or files upon output.
   
   The \texttt{-squeeze} operation writes some information about the squeezing process to standard output. The squeezing process involves several processes which losslessly attempt to reduce the file size. It is slow, so should not be used without thought.
@@ -2052,6 +2096,7 @@ The option \texttt{-squeeze-no-pagedata} avoids the reprocessing of page data, w
 \end{jscpdflib}
 
 \chapter{Bookmarks}\label{chap:6}
+
   \begin{framed}
   \small\noindent\verb!cpdf -list-bookmarks [-utf8] in.pdf!
 
@@ -2075,6 +2120,7 @@ The option \texttt{-squeeze-no-pagedata} avoids the reprocessing of page data, w
   \small\noindent\verb!     [-font <font>] [-font-size <size>] in.pdf -o out.pdf!
 
   \end{framed}
+
 \index{bookmarks}\index{JSON!add bookmarks from}
 \index{document outline}
   PDF bookmarks (properly called the \textit{document outline}) represent a tree
@@ -2092,11 +2138,13 @@ particular bookmark is. Then the text of the bookmark in quotes. Then the page
 number which the bookmark points to. Then (optionally) the word "open" if the
 bookmark should have its children (at the level immediately below) visible when
 the file is loaded. Then the destination (see below). For example, upon executing
+
 \begin{framed}
   \noindent\small\verb!cpdf -list-bookmarks doc.pdf!
 \end{framed}
 
 \noindent the result might be:
+
 \begin{framed}{\small\begin{verbatim}
 0 "Part 1" 1 open
 1 "Part 1A" 2 "[2 /XYZ 200 400 null]"
@@ -2160,7 +2208,9 @@ Format & Description\\\hline
   \section{Remove Bookmarks}
   \label{removebookmarks}
 \index{bookmarks!removing}
+
   The \texttt{-remove-bookmarks} operations removes all bookmarks from the file.
+
   \begin{framed}
     \noindent\small\verb!cpdf -remove-bookmarks in.pdf -o out.pdf!
   \end{framed}
@@ -2173,9 +2223,11 @@ Format & Description\\\hline
 \texttt{-list-bookmarks} operation. If there are any bookmarks in the input PDF
 already, they are discarded. For example, if the file \texttt{bookmarks.txt}
 contains the output from \texttt{-list-bookmarks} above, then the command
+
   \begin{framed}
    \noindent\small\verb!cpdf -add-bookmarks bookmarks.txt in.pdf -o out.pdf!
   \end{framed}
+
 \noindent adds the bookmarks to the input file, writing to \texttt{out.pdf}. An error
 will be given if the bookmarks file is not in the correct form (in particular,
 the numbers in the first column which specify the level must form a proper
@@ -2276,6 +2328,7 @@ Cpdf can automatically generate a table of contents from existing bookmarks, add
 \end{jscpdflib}
 
 \chapter{Presentations}\label{chap:7}\pagestyle{fancy}
+
   \begin{framed}
   \small\noindent\begin{verbatim}
 cpdf -presentation in.pdf [<range>] -o out.pdf
@@ -2334,6 +2387,7 @@ only) specifies the direction of the effect. The following values are valid:
 \end{itemize}
 
 \noindent For example:
+
 \begin{framed}
   \small
   \noindent\verb!cpdf -presentation in.pdf 2-end -trans Split -duration 10 -o out.pdf!
@@ -2442,11 +2496,14 @@ the file using a different page range each time.
   The \texttt{-stamp-on} and \texttt{-stamp-under} operations stamp the first
 page of a source PDF onto or under each page in the given range of the input
 file. For example,
+
   \begin{framed}
     \noindent\small\verb!cpdf -stamp-on logo.pdf in.pdf odd -o out.pdf!
   \end{framed}
+
 \noindent stamps the file \texttt{logo.pdf} onto the odd pages of \texttt{in.pdf},
 writing to \texttt{out.pdf}. A watermark should go underneath each page:
+
   \begin{framed}
     \noindent\small\verb!cpdf -stamp-under topsecret.pdf in.pdf -o out.pdf!
   \end{framed}
@@ -2458,6 +2515,7 @@ The \texttt{-scale-stamp-to-fit} option can be added to scale the stamp to fit t
   The \texttt{-combine-pages} operation takes two PDF files and stamps each
 page of one over each page of the other. The length of the output is the same
 as the length of the ``under'' file. For instance:
+
   \begin{framed}
     \noindent\small\verb!cpdf -combine-pages over.pdf under.pdf -o out.pdf!
   \end{framed}
@@ -2475,13 +2533,16 @@ The \texttt{-relative-to-cropbox} option takes the positioning command to be rel
   The \texttt{-add-text} operation allows text, dates and times to be stamped
 over one or more pages of the input at a given position and using a given font,
 font size and color.
+
   \begin{framed}
     \noindent\small\verb!cpdf -add-text "Copyright 2014 ACME Corp." in.pdf -o out.pdf!
   \end{framed}
+
   \noindent The default is black 12pt Times New Roman text in the top left of each page. The text can be placed underneath rather than over the page by adding the \texttt{-underneath} option.
   
   Text previously added by Cpdf may be removed by the \texttt{-remove-text} operation.
 \index{removing text}
+
   \begin{framed}
     \noindent\small\verb!cpdf -remove-text in.pdf -o out.pdf!
   \end{framed}
@@ -2537,6 +2598,7 @@ Bookmark text refers to the first bookmark of the given level on the stamped pag
 \index{bates numbers}
   Unique page identifiers can be specified by putting \verb!%Bates! in the format.
 The starting point can be set with the \texttt{-bates} option. For example:
+
   \begin{framed}
     \noindent\small\verb!cpdf -add-text "Page ID: %Bates" -bates 23745 in.pdf -o out.pdf!
   \end{framed}
@@ -2623,12 +2685,14 @@ than its baseline. Similarly, the \texttt{-topline} option may be used to specif
  \vspace{2mm}
 
   \noindent For example, page numbers in Times Italic can be achieved by:
+
   \begin{framed}
     \noindent\small\verb!cpdf -add-text "-%Page-" -font "Times-Italic" in.pdf -o out.pdf!
   \end{framed}
 
 \noindent The font size can be altered with the \texttt{-font-size} option, which
 specifies the size in points:
+
   \begin{framed}
     \noindent\small\verb!cpdf -add-text "-%Page-" -font-size 36 in.pdf -o out.pdf!
   \end{framed}
@@ -2843,6 +2907,7 @@ These two operations add content directly to the beginning or end of the page da
 be able to insert blank pages into a PDF file. Cpdf can add blank pages
 before a given page or pages, or after. The pages in question are specified by
 a range in the usual way:
+
   \begin{framed}
     \noindent\small\verb!cpdf -pad-before in.pdf 1 -o out.pdf!
  
@@ -2856,9 +2921,11 @@ a range in the usual way:
     \noindent Add a blank page after pages 2, 16, 38, 84, 121 and 147 (for
 instance, to add a clean page between chapters of a document.)
   \end{framed}
+
   \noindent The dimensions of the padded page are derived from the boxes (media box, crop box etc.) of the page after or before which the padding is to be applied.
 
   The \verb!-pad-every n! operation places a blank page after every n pages, excluding any last one. For example on a 9 page document this command adds a blank page after pages 3 and 6:
+
   \begin{framed}
     \noindent\small\verb!cpdf -pad-every 3 in.pdf -o out.pdf!
  
@@ -2866,10 +2933,10 @@ instance, to add a clean page between chapters of a document.)
     \noindent Add a blank page after every three pages
   \end{framed}
   
-
 \noindent In all three of these operations, one may specify \texttt{-pad-with} providing a (usually one-page)  PDF file to be used instead of a blank page. For example, a page saying ``This page left intentionally blank''.
 
   The \verb!-pad-multiple n! operation adds blank pages so the document has a multiple of \verb!n! pages. For example:
+
   \begin{framed}
     \noindent\small\verb!cpdf -pad-multiple 8 in.pdf -o out.pdf!
  
@@ -3098,6 +3165,7 @@ We can also set annotations from a JSON file, either modified from the output of
 page range from one file (the file specified immediately after the option) to
 another pre-existing PDF. The range is specified after this pre-existing PDF.
 The result is then written an output file, specified in the usual way.
+
   \begin{framed}
     \noindent\small\verb!cpdf -copy-annotations from.pdf to.pdf 1-10 -o result.pdf !
     
@@ -3277,6 +3345,7 @@ XMP dc:title: PDF Reference, version 1.6
 XMP dc:creator: Adobe Systems Incorporated
 XMP dc:description: Adobe Portable Document Format (PDF)
 \end{verbatim}}\end{framed}
+
 \noindent The details of the format for creation and modification dates can be found in
 Appendix~\ref{dates}. If page boxes vary among pages, the entry will read \texttt{various}. Add \texttt{-in}, \texttt{-cm} or \texttt{mm} to print boxes in inches, centimetres, or millimetres instead of points.
 
@@ -3374,6 +3443,7 @@ Annotations: 0
 
 \smallgap 
 \noindent The \texttt{-pages} operation prints the number of pages in the file.
+
 \begin{framed}
 {\small\begin{verbatim}
 cpdf -pages Archos.pdf
@@ -3412,6 +3482,7 @@ at which the command is executed. Note also that \texttt{-producer} and \texttt{
   
   \vspace{2mm}
   For example, to set the title, the full command line would be
+
   \begin{framed}
     \noindent\small\verb!cpdf -set-title "A Night in London" in.pdf -o out.pdf!
   \end{framed}
@@ -3427,25 +3498,35 @@ To delete existing non-XMP metadata in line with PDF 2.0, use \texttt{-remove-di
   PDF files can contain a piece of arbitrary metadata, often in XMP format.
 This is typically stored in an uncompressed stream, so that other applications
 can read it without having to decode the whole PDF. To set the metadata:
+
   \begin{framed}
     \noindent\small\verb!cpdf -set-metadata data.xml in.pdf -o out.pdf!
   \end{framed}
+
   \noindent To remove any metadata:
+
   \begin{framed}
     \noindent\small\verb!cpdf -remove-metadata in.pdf -o out.pdf!
   \end{framed}
+
   \noindent To print the current metadata to standard output:
+
   \begin{framed}
     \noindent\small\verb!cpdf -print-metadata in.pdf!
   \end{framed}
+
   \noindent To create XMP metadata from scratch, using any information in the Document Information Dictionary (old-style metadata):
+
   \begin{framed}
     \noindent\small\verb!cpdf -create-metadata in.pdf -o out.pdf!
   \end{framed}
+
   \noindent To set the XMP metadata date field, use:
+
   \begin{framed}
     \noindent\small\verb!cpdf -set-metadata-date <date> in.pdf -o out.pdf!
   \end{framed}
+
 \noindent The date format is defined in Appendix \ref{xmpdate}. Using the date \texttt{"now"} uses the time and date
 at which the command is executed.
 
@@ -3481,6 +3562,7 @@ when a document is opened in, for instance, Acrobat. The possible
   \end{tabular}}\\
 
   \noindent For instance:
+
   \begin{framed}
     \noindent\small\verb!cpdf -set-page-layout TwoColumnRight in.pdf -o out.pdf!
   \end{framed}
@@ -3503,11 +3585,13 @@ document when first opened. The possible (case-sensitive) values are:
   \end{tabular}}\\
 
   \noindent For instance:
+
   \begin{framed}
     \noindent\small\verb!cpdf -set-page-mode FullScreen in.pdf -o out.pdf!
   \end{framed}
   
   \noindent If full screen mode is selected for document opening, we can also set a mode to be used when the user exits from full-screen mode:
+
   \begin{framed}
     \noindent\small\verb!cpdf -set-non-full-screen-page-mode UseAttachments in.pdf -o out.pdf!
   \end{framed}
@@ -3529,16 +3613,19 @@ The appearance of the PDF viewer upon opening a document may be set with these o
   \end{tabular}}\\
 
   \noindent For instance:
+
   \begin{framed}
     \noindent\small\verb!cpdf -hide-toolbar true in.pdf -o out.pdf!
   \end{framed}
 
 \noindent The page a PDF file opens at can be set using \texttt{-open-at-page}:
+
   \begin{framed}
     \noindent\small\verb!cpdf -open-at-page 15 in.pdf -o out.pdf!
   \end{framed}
 
 \noindent To have that page scaled to fit the window in the viewer, use \texttt{-open-at-page-fit} instead:
+
   \begin{framed}
     \noindent\small\verb!cpdf -open-at-page-fit end in.pdf -o out.pdf!
   \end{framed}
@@ -3546,6 +3633,7 @@ The appearance of the PDF viewer upon opening a document may be set with these o
 \noindent (Here, we used \texttt{end} to open at the last page. Any page specification describing a single page is ok here.)
 
 Alternatively, we may specify a full destination, of the kind described on page \pageref{destinations}:
+
   \begin{framed}
     \noindent\small\verb!cpdf -open-at-page-custom "[3 /FitR 100 100 300 300]" in.pdf -o out.pdf!
   \end{framed}
@@ -3553,6 +3641,7 @@ Alternatively, we may specify a full destination, of the kind described on page 
 \section{Document Language}
 
 The document language may be set by giving an IETF BCP 47 language tag:
+
   \begin{framed}
     \noindent\small\verb!cpdf -set-language "en-GB" in.pdf -o out.pdf!
   \end{framed}
@@ -3597,6 +3686,7 @@ i, ii, iii, iv, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, A-0, A-1, A-2, A-3, A-4, A-5
 \noindent By default the labels begin at page number 1 for each range. To override this, we can use \texttt{-label-startval} (we used $0$ in the final command), where we want the numbers to begin at zero rather than one. The option \texttt{-labels-progress} can be added to make sure the  start value progresses between sub-ranges when the page range specified is disjoint, e.g \texttt{1-9, 30-40} or \texttt{odd}.
 
 Page labels may be removed altogether by using \texttt{-remove-page-labels} command. To print the page labels from an existing file, use \texttt{-print-page-labels}. For example:
+
 \begin{framed}\small\begin{verbatim}$ cpdf -print-page-labels in.pdf
 labelstyle: LowercaseRoman
 labelprefix: None
@@ -3716,6 +3806,7 @@ Unclassified: 11229 bytes (3.62%)
   \vspace{1.5mm}
   \small\noindent\verb!cpdf -dump-attachments in.pdf -o <directory>!
 \end{framed}
+
   PDF supports adding attachments (files of any kind, including other PDFs) to
 an existing file. The Cpdf tool supports adding and removing \textit{document-level
 attachments} --- that is, ones which are associated with the document as a
@@ -3723,9 +3814,11 @@ whole rather than with an individual page, and also \textit{page-level attachmen
   \section{Adding Attachments}
 \index{attachments!adding}
   To add an attachment, use the \texttt{-attach-file} operation. For instance,
+
   \begin{framed}
   \noindent\small\verb!cpdf -attach-file sheet.xls in.pdf -o out.pdf!
   \end{framed}
+
   \noindent attaches the Excel spreadsheet \texttt{sheet.xls} to the input file. If the file already has attachments, the new file is added to their number. You can specify multiple files to be attached by using \verb!-attach-file! multiple times. They will be attached in the given order.
   
   The \texttt{-to-page} option can be used to specify that the files will be attached to the given page, rather than at the document level. The \texttt{-to-page} option may be specified at most once. 
@@ -3733,6 +3826,7 @@ whole rather than with an individual page, and also \textit{page-level attachmen
 \section{Listing Attachments}
 \index{attachments!listing}
 To list all document- and page-level attachments, use the \texttt{-list-attached-files} operation. The page number and filename of each attachment is given, page 0 representing a document-level attachment.
+
 \begin{framed}
 {\small\begin{verbatim}
 $cpdf -list-attached-files 14psfonts.pdf
@@ -3745,6 +3839,7 @@ $cpdf -list-attached-files 14psfonts.pdf
   \section{Removing Attachments}
 \index{attachments!removing}
    To remove all document-level and page-level attachments from a file, use the \texttt{-remove-files} operation:
+
   \begin{framed}
     \noindent\small\verb!cpdf -remove-files in.pdf -o out.pdf!
   \end{framed}
@@ -3759,6 +3854,7 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
   \end{framed}
 
 \noindent  Unless either the \texttt{-raw} or \texttt{-utf8} option is given, the filenames are stripped of dubious special characters before writing. It is converted from unicode to 7 bit ASCII, and the following characters are removed, in addition to any character with ASCII code less than 32:
+
   \begin{framed}
   \centering
   \verb! / ? < > \ : * | " ^ + =!
@@ -3911,11 +4007,14 @@ The \texttt{-list-images} operation lists all images in the file:
 
   \section{Listing images at point of use}\label{imageres}
   To list all images in the given range of pages which fall below a given resolution (in dots-per-inch), use the \verb!-image-resolution! function:
+
   \begin{framed}
   \noindent\small\verb@cpdf -image-resolution 300 in.pdf [<range>]@
   \end{framed}
 
-  \begin{framed}
+\noindent Here is the result:
+
+\begin{framed}
 {\small\begin{verbatim}2, /Im5, 531, 684, 149.935297, 150.138267, 31
 2, /Im6, 184, 164, 149.999988, 150.458710, 39
 2, /Im7, 171, 156, 149.999996, 150.579145, 40
@@ -3924,10 +4023,12 @@ The \texttt{-list-images} operation lists all images in the file:
 2, /Im15, 184, 139, 149.960011, 150.672060, 91
 4, /Im29, 53, 48, 149.970749, 151.616446, 93\end{verbatim}}
   \end{framed}
+
   \noindent The format is \textit{page number, image name, x pixels, y pixels, x resolution, y resolution, object number}. The resolutions refer to the image's effective resolution at point of use (taking account 
 of scaling, rotation etc).
 
 The information is also available in JSON format:
+
 \begin{framed}
 {\small\begin{verbatim}
 [
@@ -4188,7 +4289,7 @@ one-per-line to standard output. For example:
 2 /F13 /Type0 /Cleargothic-Bold /Identity-H
 2 /F16 /Type0 /Arial-ItalicMT /Identity-H
 2 /F21 /Type0 /ArialMT /Identity-H
-2 /X02/F58 /Type1 /Times-Roman /WinAnsiEncoding
+2 /X02 /F58 /Type1 /Times-Roman /WinAnsiEncoding
 2 /F59 /Type0 /ClearGothicSerialLight /Identity-H
 2 /F61 /Type0 /Cleargothic-BoldItalic /Identity-H
 2 /F68 /Type0 /Cleargothic-RegularItalic /Identity-H
@@ -4209,6 +4310,7 @@ name (or, if the font is used in a Form XObject, the path e.g \texttt{/X1/F0}), 
 name, the fifth the PDF font encoding.
 
 The information is also available in JSON format with \texttt{-list-fonts-json}:
+
 {\small\begin{framed}\small\begin{verbatim}[
   {
     "page": 1,
@@ -4289,6 +4391,7 @@ For example, if the file \verb!fromfile.pdf! has a font \verb!/GHLIGA+c128! with
 the name \verb!/F10! on page 1 (this information can be found with
 \verb!-list-fonts!), the following would copy the font to the file
 \verb!in.pdf! on all pages, writing the output to \verb!out.pdf!:
+
   \begin{framed}
   \small\noindent\verb!cpdf -copy-font fromfile.pdf -copy-font-name /F10!\\
   \small\noindent\verb!     -copy-font-page 1 in.pdf -o out.pdf!
@@ -4312,11 +4415,13 @@ recommended when file size is the sole consideration.
 
 \section{Missing Fonts}\label{listmisingfonts}
   The \verb!-missing-fonts! operation lists any unembedded fonts in the document, one per line.
+
   \begin{framed}
   \small\noindent\verb!cpdf -missing-fonts in.pdf!
   \end{framed}
 
   \noindent The format is
+
   \begin{framed}
   \small\noindent\verb!Page number, Name, Subtype, Basefont, Encoding!
   \end{framed}
@@ -4580,8 +4685,6 @@ In a PDF file, optional content groups are used to group graphical elements toge
   \end{framed}}
 
 \noindent Rename an optional content group.
-
-
 
   {\small\begin{framed}
   \noindent\verb!cpdf -ocg-coalesce-on-name in.pdf -o out.pdf!
@@ -5102,6 +5205,7 @@ PDF maintains a stack of graphics state, which we can manipulate with \texttt{-p
 NB: When writing text (see below) the \texttt{-font} option is not subject to \texttt{-push} and \texttt{-pop}. Text is set the the font most recently chosen on the command line.
 
 \section{Re-use with XObjects}
+
   {\small\begin{framed}
    \vspace{1.5mm}
    \noindent\verb!-xobj-bbox "x y w h"! Specify the bounding box for xobjects\\
@@ -5282,14 +5386,14 @@ We can change the text rendering mode to show outline text or, in this example, 
 
 \bigskip
 \begin{tabular}{ll}
-0 & Fill text (default)\\
-1 & Stroke text\\
-2 & Fill, then stroke text\\
-3 & Neither fill nor stroke (invisible)\\
-4 & Fill text and add to path for clipping\\
-5 & Stroke text and add to path for clipping\\
-6 & Fill, then stroke text and add to path for clipping\\
-7 & Add text to path for clipping
+0&Fill text (default)\\
+1&Stroke text\\
+2&Fill, then stroke text\\
+3&Neither fill nor stroke (invisible)\\
+4&Fill text and add to path for clipping\\
+5&Stroke text and add to path for clipping\\
+6&Fill, then stroke text and add to path for clipping\\
+7&Add text to path for clipping
 \end{tabular}
 \bigskip
 
@@ -5921,6 +6025,7 @@ file, so that it can be printed with less ink. Optionally, the
 crossed box denoting where the image was. This is not guaranteed to be fully
 visible in all cases (the bitmap may be have been partially covered by vector
 objects or clipped in the original). For example:
+
   \begin{framed}
     \noindent\small\verb!cpdf -draft -boxes in.pdf -o out.pdf!
   \end{framed}
@@ -5946,19 +6051,19 @@ when printed.
 
   This will not work on text which has been converted to outlines, nor on text
 which is part of a form.
+\index{blacken!lines}
+
   \begin{framed}
     \noindent\small\verb!cpdf -blacktext in.pdf -o out.pdf!
   \end{framed}
 
-\index{blacken!lines}
 
 \noindent The \texttt{-blacklines} operation blackens all lines on the given pages.
+\index{blacken!fills}
 
   \begin{framed}
     \noindent\small\verb!cpdf -blacklines in.pdf -o out.pdf!
   \end{framed}
-
-\index{blacken!fills}
 
 \noindent The \texttt{-blackfills} operation blackens all fills on the given pages.
 
@@ -5976,6 +6081,7 @@ might be fine for on-screen work, but when printed on a high resolution device,
 such as by a commercial printer, they may be too faint, or disappear
 altogether. The \texttt{-thinlines} operation prevents this by changing all lines
 thinner than \texttt{<minimal~thickness>} to the given thickness. For example:
+
   \begin{framed}
   \small\noindent\verb!cpdf -thinlines 0.2mm in.pdf [<range>] -o out.pdf!
 
@@ -6000,12 +6106,14 @@ function removes that unneeded data.
    \label{setversion}
    To change the pdf version number, use the \texttt{-set-version} operation,
 giving the part of the version number after the decimal point. For example:
+
   \begin{framed}
   \small\noindent\verb!cpdf -set-version 4 in.pdf -o out.pdf!
 
   \vspace{2.5mm}
   \noindent Change file to PDF 1.4.
   \end{framed} 
+
   \noindent This does not alter any of the actual data in the file ---
 just the supposed version number. For PDF versions starting with 2 add ten to the number. For example, for PDF version 2.0, use \texttt{-set-version 10}.
 
@@ -6013,17 +6121,20 @@ just the supposed version number. For PDF versions starting with 2 add ten to th
 \index{file ID!copy}
   The \texttt{-copy-id-from} operation copies the ID from the given file to the
 input, writing to the output.
+
   \begin{framed}
   \small\noindent\verb!cpdf -copy-id-from source.pdf in.pdf -o out.pdf!
 
   \vspace{2.5mm}
   \noindent Copy the id from \texttt{source.pdf} to the contents of \texttt{in.pdf}, writing to \texttt{out.pdf}.
   \end{framed}
+
   \noindent If there is no ID in the source file, the existing ID is retained. You cannot use \texttt{-recrypt} with \texttt{-copy-id-from}.
 
 \section{Remove ID}
 \index{file ID!remove}
   The \texttt{-remove-id} operation removes the ID from a document.
+
   \begin{framed}
   \small\noindent\verb!cpdf -remove-id in.pdf -o out.pdf!
 
@@ -6358,4 +6469,3 @@ Implementation status:
 %\pagestyle{fancy}
 %\printindex
 \end{document}
-
