@@ -5,3 +5,4 @@ mkdir ../camlpdf
 cp ../../camlpdf/Changes ../camlpdf/Changes
 TEXINTUTS=..:$TEXINPUTS htlatex ../cpdfmanual "html,2"
 sed -i '' 's/.framedenv{border: 1px solid black;}/.framedenv{border: 1px solid black; padding: 8px}/g' cpdfmanual.css
+LCTYPE=C LANG=C sed -i '' 's/__/\&#x00A0;\&#x00A0;/g' *.html

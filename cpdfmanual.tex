@@ -5081,7 +5081,11 @@ We can draw on an existing PDF (or a new one created with \texttt{-create-pdf} f
 \noindent Now we have a filled triangle:
 
 \bigskip
+\ifdefined\HCode
+\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/fill.pdf}}
+\else
 \fbox{\includegraphics[width=0.3\textwidth]{manualimages/fill.pdf}}
+\fi
 \bigskip
 
 \noindent The operations \texttt{-filleo}, \texttt{-strokefill} and \texttt{-strokefilleo} provide alternative combinations of stroke, fill, and winding rule.
@@ -5103,7 +5107,11 @@ We can save time when drawing rectangles by using the \texttt{-rect} operation, 
 \noindent Here is the result:
 
 \bigskip
+\ifdefined\HCode
+\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/bez.pdf}}
+\else
 \fbox{\includegraphics[width=0.3\textwidth]{manualimages/bez.pdf}}
+\fi
 \bigskip
 
 \noindent The operation \texttt{-bez23} is a shorthand used when the first control point is equal to the current point. The operation \texttt{-bez13} is a shorthand used when the second control point is equal to the final point.
@@ -5131,7 +5139,11 @@ To avoid calculating the Bezier curves for a circle manually, Cpdf can generate 
 \noindent Here is the result:
 
 \bigskip
+\ifdefined\HCode
+\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/clip.pdf}}
+\else
 \fbox{\includegraphics[width=0.3\textwidth]{manualimages/clip.pdf}}
+\fi
 \bigskip
 
 \section{Path parameters}
@@ -5155,7 +5167,11 @@ We can set stroke and fill colours for our paths, either as greyscale (one compo
 \noindent Here is the result:
 
 \bigskip
+\ifdefined\HCode
+\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/colfill.pdf}}
+\else
 \fbox{\includegraphics[width=0.3\textwidth]{manualimages/colfill.pdf}}
+\fi
 \bigskip
 
 \noindent We can set line caps and joins with \texttt{-cap}, \texttt{-join}:
@@ -5170,7 +5186,11 @@ We can set stroke and fill colours for our paths, either as greyscale (one compo
 \noindent Then we see:
 
 \bigskip
+\ifdefined\HCode
+\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/capjoins.pdf}}
+\else
 \fbox{\includegraphics[width=0.3\textwidth]{manualimages/capjoins.pdf}}
+\fi
 \bigskip
 
 \noindent The miter limit (see PDF reference for details) may be set with \texttt{-miter}.
@@ -5186,7 +5206,11 @@ Lines may have dash patterns. A dash pattern consists of one or more numbers. Al
 \noindent Here is the result:
 
 \bigskip
+\ifdefined\HCode
+\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/dash.pdf}}
+\else
 \fbox{\includegraphics[width=0.3\textwidth]{manualimages/dash.pdf}}
+\fi
 \bigskip
 
 \section{The graphics stack and matrices}
@@ -5212,7 +5236,11 @@ PDF maintains a stack of graphics state, which we can manipulate with \texttt{-p
 \noindent When we use \texttt{-pop} the colour returns to the saved one:
 
 \bigskip
+\ifdefined\HCode
+\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/pop.pdf}}
+\else
 \fbox{\includegraphics[width=0.3\textwidth]{manualimages/pop.pdf}}
+\fi
 \bigskip
 
 \noindent One very common use for a \texttt{-push}/\texttt{-pop} pair is to isolate the effects of an operation which modifies the current transformation matrix. These operations are used to translate, rotate, scale and so on. For example: 
@@ -5226,7 +5254,11 @@ PDF maintains a stack of graphics state, which we can manipulate with \texttt{-p
 \noindent This is the result. See how the graphics transformation is undone when \texttt{-push} is invoked:
 
 \bigskip
+\ifdefined\HCode
+\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/matrix.pdf}}
+\else
 \fbox{\includegraphics[width=0.3\textwidth]{manualimages/matrix.pdf}}
+\fi
 \bigskip
 
 \noindent This is important because, in the absence of \texttt{-push} and \texttt{-pop} there would be no way to reverse the effect of a graphics matrix modification except to manually calculate its inverse and apply it.
@@ -5254,7 +5286,11 @@ In our examples, we have sometimes had to write the same operations multiple tim
 \noindent Note that we must specify a bounding box for the XObject with \texttt{-xobj-bbox}. Here is the result:
 
 \bigskip
+\ifdefined\HCode
+\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/xobj.pdf}}
+\else
 \fbox{\includegraphics[width=0.3\textwidth]{manualimages/xobj.pdf}}
+\fi
 \bigskip
 
 \noindent XObjects may be nested.
@@ -5276,7 +5312,11 @@ We can include a 24bit non-transparent and non-interlaced PNG, or any JPEG by us
 \noindent Here is the result:
 
 \bigskip
+\ifdefined\HCode
+\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/png.pdf}}
+\else
 \fbox{\includegraphics[width=0.3\textwidth]{manualimages/png.pdf}}
+\fi
 \bigskip
 
 \noindent You can see we had to scale by the width and height of the image to draw it at the size we expect.
@@ -5298,7 +5338,11 @@ We can set fill and stroke transparencies, between 0 (fully transparent) and 1 (
 \noindent Here is the result:
 
 \bigskip
+\ifdefined\HCode
+\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/trans.pdf}}
+\else
 \fbox{\includegraphics[width=0.3\textwidth]{manualimages/trans.pdf}}
+\fi
 \bigskip
 
 \noindent Notice that we used \texttt{-fill} twice, to ensure each circle was in a different path. If they had been part of the same path, the effect would be different.
@@ -5331,7 +5375,11 @@ We can draw text in a \textit{text section}, which must start with \texttt{-bt} 
 \noindent Here is the result:
 
 \bigskip
+\ifdefined\HCode
+\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/text.pdf}}
+\else
 \fbox{\includegraphics[width=0.3\textwidth]{manualimages/text.pdf}}
+\fi
 \bigskip
 
 \noindent If we use \texttt{-stext} instead of \texttt{-text} the usual special values from Chapter 8 (with the exception of URL links) may be used:
@@ -5344,7 +5392,11 @@ We can draw text in a \textit{text section}, which must start with \texttt{-bt} 
 \noindent Now we see:
 
 \bigskip
+\ifdefined\HCode
+\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/stext.pdf}}
+\else
 \fbox{\includegraphics[width=0.3\textwidth]{manualimages/stext.pdf}}
+\fi
 \bigskip
 
 \noindent We can use \texttt{-text} multiple times, interspersing operators which change the text state, such as font and font size:
@@ -5358,7 +5410,11 @@ We can draw text in a \textit{text section}, which must start with \texttt{-bt} 
 \noindent Here is the result:
 
 \bigskip
+\ifdefined\HCode
+\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/fonts.pdf}}
+\else
 \fbox{\includegraphics[width=0.3\textwidth]{manualimages/fonts.pdf}}
+\fi
 \bigskip
 
 \noindent We can alter the character space, word space, horizontal scaling (100 = no scaling, less than 100 shrink, more than 100 stretch), and text rise:
@@ -5373,7 +5429,11 @@ We can draw text in a \textit{text section}, which must start with \texttt{-bt} 
 \noindent Now we see:
 
 \bigskip
+\ifdefined\HCode
+\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/fontparams.pdf}}
+\else
 \fbox{\includegraphics[width=0.3\textwidth]{manualimages/fontparams.pdf}}
+\fi
 \bigskip
 
 \noindent Text may appear on multiple lines. We set up the line spacing with \texttt{-leading} then make new lines with \texttt{-nl}:
@@ -5387,7 +5447,11 @@ We can draw text in a \textit{text section}, which must start with \texttt{-bt} 
 \noindent Now we have:
 
 \bigskip
+\ifdefined\HCode
+\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/lines.pdf}}
+\else
 \fbox{\includegraphics[width=0.3\textwidth]{manualimages/lines.pdf}}
+\fi
 \bigskip
 
 \noindent When composing text, we may need to find the width of a piece of text to see where to break it, or for right alignment. We can use \texttt{-text-width} for this:
@@ -5409,7 +5473,11 @@ We can change the text rendering mode to show outline text or, in this example, 
 \noindent Here is the result:
 
 \bigskip
+\ifdefined\HCode
+\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/textclip.pdf}}
+\else
 \fbox{\includegraphics[width=0.3\textwidth]{manualimages/textclip.pdf}}
+\fi
 \bigskip
 
 
@@ -5448,7 +5516,11 @@ We can add a paragraph of text of a given width and justification (Left, Right, 
 \noindent Notice the paragraph specification \texttt{L200pt=} for left justified, 200pt-wide at the beginning of the string. Notice also we must give a value for \texttt{-leading}. Here is the result:
 
 \bigskip
+\ifdefined\HCode
+\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/para.pdf}}
+\else
 \fbox{\includegraphics[width=0.3\textwidth]{manualimages/para.pdf}}
+\fi
 \bigskip
 
 \noindent Multiple paragraphs with optional indenting may be laid out with \texttt{-paras}:
@@ -5466,7 +5538,11 @@ We can add a paragraph of text of a given width and justification (Left, Right, 
 \noindent
 
 \bigskip
+\ifdefined\HCode
+\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/paras.pdf}}
+\else
 \fbox{\includegraphics[width=0.3\textwidth]{manualimages/paras.pdf}}
+\fi
 \bigskip
 
 \noindent Note that there is no automatic typesetting over multiple pages with \texttt{-paras}.
@@ -5524,7 +5600,11 @@ There are two types of tag we can add manually. One kind is used to tag individu
 \noindent We turned off auto-tagging with \texttt{-no-auto-tag}, then used \texttt{-tag H1} and \texttt{-end-tag} to tag the heading. Then we turned auto-tagging back on with \texttt{-auto-tag}. Here is the result, visually:
 
 \bigskip
+\ifdefined\HCode
+\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/h1.pdf}}
+\else
 \fbox{\includegraphics[width=0.3\textwidth]{manualimages/h1.pdf}}
+\fi
 \bigskip
 
 \noindent And here is the structure tree:
