@@ -87,7 +87,7 @@ Version 2.7.3 (January 2025)
 \ifdefined\HCode
 \includegraphics[natwidth=50,natheight=50]{logo.pdf}
 \else
-\includegraphics{logo.pdf}
+\includegraphics[alt="Coherent Graphics Ltd logo"]{logo.pdf}
 \fi
 
 \vspace{2mm}
@@ -1281,7 +1281,7 @@ For historical reasons, Cpdf uses the Unix line ending character (LF) when writi
   \noindent\verb!     [-collate] [-retain-numbering] [-remove-duplicate-fonts]!\\
   \noindent\verb!     [-merge-add-bookmarks [-merge-add-bookmarks-use-titles]]!\\
   \noindent\verb!     [-process-struct-trees] [-subformat <subformat>]!\\
-  \noindent\verb!     -o out.pdf\end{verbatim}!
+  \noindent\verb!     -o out.pdf!
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -split in.pdf [-chunk <chunksize>] [-process-struct-trees]!\\
@@ -1939,11 +1939,11 @@ person:
    \noindent In addition, 128-bit encryption (Acrobat 5 and above) and AES encryption supports these:
 
    \vspace{2mm}
-   \begin{tabular}{ll}
-     \texttt{-no-forms} & Cannot edit form fields\\
-     \texttt{-no-extract} & Cannot extract text or graphics\\
-     \texttt{-no-assemble} & Cannot merge files etc.\\
-     \texttt{-no-hq-print} & Cannot print high-quality\\
+   \begin{tabular}{lll}
+     \texttt{-no-forms} & Cannot edit form fields&\\
+     \texttt{-no-extract} & Cannot extract text or graphics&\\
+     \texttt{-no-assemble} & Cannot merge files etc.&\\
+     \texttt{-no-hq-print} & Cannot print high-quality&\\
    \end{tabular}
 
   \vspace{2mm}
@@ -2806,7 +2806,7 @@ spacing, where a spacing of 1 is the standard.
   \end{framed}
 
 \noindent Justification of multiple lines is handled by the \texttt{-justify-left}, 
-\texttt{-justify-right} and\\ \texttt{-justify-center} options. The defaults are
+\texttt{-justify-right} and\linebreak \texttt{-justify-center} options. The defaults are
 left justification for positions relative to the left hand side of the page,
 right justification for those relative to the right, and center justification
 for positions relative to the center of the page. For example:
@@ -3316,7 +3316,7 @@ given page range.
     \small\noindent\verb!cpdf -set-language <language> in.pdf -o out.pdf!
 
     \vspace{1.5mm}
-    \small\noindent\verb!cpdf -set-metadata <metadata-file> in.pdf -o out.pdf!
+    \small\noindent\verb!cpdf -set-metadata <metadata-file> in.pdf -o out.pdf!\\
     \small\noindent\verb!cpdf -remove-metadata in.pdf -o out.pdf!\\
     \small\noindent\verb!cpdf -print-metadata in.pdf!\\
     \small\noindent\verb!cpdf -create-metadata in.pdf -o out.pdf!\\
@@ -3972,7 +3972,7 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 \noindent\small\verb!cpdf -rasterize in.pdf <range> -o out.pdf!\\
 \noindent\small\verb!     [-rasterize[-gray|-1bpp|-jpeg|-jpeggray]!\\
 \noindent\small\verb!     [-rasterize-res <n>] [-rasterize-jpeg-quality <n>]!\\
-\noindent\small\verb!     [-rasterize-no-antialias | -rasterize-downsample]!
+\noindent\small\verb!     [-rasterize-no-antialias | -rasterize-downsample]!\\
 \noindent\small\verb!     [-rasterize-annots]!
 
 \vspace{1.5mm}
@@ -3980,7 +3980,7 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 \noindent\small\verb!cpdf -output-image in.pdf <range> -o <format>!\\
 \noindent\small\verb!     [-rasterize[-gray|-1bpp|-jpeg|-jpeggray]!\\
 \noindent\small\verb!     [-rasterize-res <n>] [-rasterize-jpeg-quality <n>]!\\
-\noindent\small\verb!     [-rasterize-no-antialias | -rasterize-downsample]!
+\noindent\small\verb!     [-rasterize-no-antialias | -rasterize-downsample]!\\
 \noindent\small\verb!     [-rasterize-annots] [-tobox <BoxName>]!
 
 \end{framed}
