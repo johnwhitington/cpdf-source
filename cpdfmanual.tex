@@ -85,9 +85,9 @@ Version 2.7.3 (January 2025)
 
 \vfill
 \ifdefined\HCode
-\includegraphics[natwidth=50,natheight=50]{logo.pdf}
+  \includegraphics[natwidth=50,natheight=50,alt={Coherent Graphics Ltd logo}]{logo.pdf}
 \else
-\includegraphics[alt="Coherent Graphics Ltd logo"]{logo.pdf}
+  \includegraphics[alt={Coherent Graphics Ltd logo}]{logo.pdf}
 \fi
 
 \vspace{2mm}
@@ -5069,9 +5069,9 @@ We can draw on an existing PDF (or a new one created with \texttt{-create-pdf} f
 
 \bigskip
 \ifdefined\HCode
-\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/line.pdf}}
+\fbox{\includegraphics[natwidth=298,natheight=421,alt={A single line}]{manualimages/line.pdf}}
 \else
-\fbox{\includegraphics[width=0.3\textwidth]{manualimages/line.pdf}}
+\fbox{\includegraphics[width=0.3\textwidth,alt={A single line}]{manualimages/line.pdf}}
 \fi
 \bigskip
 
@@ -5095,9 +5095,9 @@ We can draw on an existing PDF (or a new one created with \texttt{-create-pdf} f
 
 \bigskip
 \ifdefined\HCode
-\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/fill.pdf}}
+\fbox{\includegraphics[natwidth=298,natheight=421,alt={A filled triangle}]{manualimages/fill.pdf}}
 \else
-\fbox{\includegraphics[width=0.3\textwidth]{manualimages/fill.pdf}}
+\fbox{\includegraphics[width=0.3\textwidth,alt={A filled triangle}]{manualimages/fill.pdf}}
 \fi
 \bigskip
 
@@ -5121,9 +5121,9 @@ We can save time when drawing rectangles by using the \texttt{-rect} operation, 
 
 \bigskip
 \ifdefined\HCode
-\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/bez.pdf}}
+\fbox{\includegraphics[natwidth=298,natheight=421,alt={A bezier line}]{manualimages/bez.pdf}}
 \else
-\fbox{\includegraphics[width=0.3\textwidth]{manualimages/bez.pdf}}
+\fbox{\includegraphics[width=0.3\textwidth,alt={A bezier line}]{manualimages/bez.pdf}}
 \fi
 \bigskip
 
@@ -5153,9 +5153,9 @@ To avoid calculating the Bezier curves for a circle manually, Cpdf can generate 
 
 \bigskip
 \ifdefined\HCode
-\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/clip.pdf}}
+\fbox{\includegraphics[natwidth=298,natheight=421,alt={One circle clipped to another}]{manualimages/clip.pdf}}
 \else
-\fbox{\includegraphics[width=0.3\textwidth]{manualimages/clip.pdf}}
+\fbox{\includegraphics[width=0.3\textwidth,alt={One circle clipped to another}]{manualimages/clip.pdf}}
 \fi
 \bigskip
 
@@ -5181,9 +5181,9 @@ We can set stroke and fill colours for our paths, either as greyscale (one compo
 
 \bigskip
 \ifdefined\HCode
-\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/colfill.pdf}}
+\fbox{\includegraphics[natwidth=298,natheight=421,alt={Stroke and fill colours}]{manualimages/colfill.pdf}}
 \else
-\fbox{\includegraphics[width=0.3\textwidth]{manualimages/colfill.pdf}}
+\fbox{\includegraphics[width=0.3\textwidth,alt={Stroke and fill colours}]{manualimages/colfill.pdf}}
 \fi
 \bigskip
 
@@ -5200,9 +5200,9 @@ We can set stroke and fill colours for our paths, either as greyscale (one compo
 
 \bigskip
 \ifdefined\HCode
-\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/capjoins.pdf}}
+\fbox{\includegraphics[natwidth=298,natheight=421,alt={Caps and joins}]{manualimages/capjoins.pdf}}
 \else
-\fbox{\includegraphics[width=0.3\textwidth]{manualimages/capjoins.pdf}}
+\fbox{\includegraphics[width=0.3\textwidth,alt={Caps and joins}]{manualimages/capjoins.pdf}}
 \fi
 \bigskip
 
@@ -5220,9 +5220,9 @@ Lines may have dash patterns. A dash pattern consists of one or more numbers. Al
 
 \bigskip
 \ifdefined\HCode
-\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/dash.pdf}}
+\fbox{\includegraphics[natwidth=298,natheight=421,alt={Dash patterns}]{manualimages/dash.pdf}}
 \else
-\fbox{\includegraphics[width=0.3\textwidth]{manualimages/dash.pdf}}
+\fbox{\includegraphics[width=0.3\textwidth,alt={Dash patterns}]{manualimages/dash.pdf}}
 \fi
 \bigskip
 
@@ -5250,9 +5250,9 @@ PDF maintains a stack of graphics state, which we can manipulate with \texttt{-p
 
 \bigskip
 \ifdefined\HCode
-\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/pop.pdf}}
+\fbox{\includegraphics[natwidth=298,natheight=421,alt={Push and pop}]{manualimages/pop.pdf}}
 \else
-\fbox{\includegraphics[width=0.3\textwidth]{manualimages/pop.pdf}}
+\fbox{\includegraphics[width=0.3\textwidth,alt={Push and pop}]{manualimages/pop.pdf}}
 \fi
 \bigskip
 
@@ -5268,9 +5268,9 @@ PDF maintains a stack of graphics state, which we can manipulate with \texttt{-p
 
 \bigskip
 \ifdefined\HCode
-\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/matrix.pdf}}
+\fbox{\includegraphics[natwidth=298,natheight=421,alt={Altering the graphics matrix}]{manualimages/matrix.pdf}}
 \else
-\fbox{\includegraphics[width=0.3\textwidth]{manualimages/matrix.pdf}}
+\fbox{\includegraphics[width=0.3\textwidth,alt={Altering the graphics matrix}]{manualimages/matrix.pdf}}
 \fi
 \bigskip
 
@@ -5300,9 +5300,9 @@ In our examples, we have sometimes had to write the same operations multiple tim
 
 \bigskip
 \ifdefined\HCode
-\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/xobj.pdf}}
+\fbox{\includegraphics[natwidth=298,natheight=421,alt={An Xobject}]{manualimages/xobj.pdf}}
 \else
-\fbox{\includegraphics[width=0.3\textwidth]{manualimages/xobj.pdf}}
+\fbox{\includegraphics[width=0.3\textwidth,alt={An XObject}]{manualimages/xobj.pdf}}
 \fi
 \bigskip
 
@@ -5326,9 +5326,9 @@ We can include a 24bit non-transparent and non-interlaced PNG, or any JPEG by us
 
 \bigskip
 \ifdefined\HCode
-\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/png.pdf}}
+\fbox{\includegraphics[natwidth=298,natheight=421,alt={Drawing a PNG on a PDF}]{manualimages/png.pdf}}
 \else
-\fbox{\includegraphics[width=0.3\textwidth]{manualimages/png.pdf}}
+\fbox{\includegraphics[width=0.3\textwidth,alt={Drawing a PNG on a PDF}]{manualimages/png.pdf}}
 \fi
 \bigskip
 
@@ -5352,9 +5352,9 @@ We can set fill and stroke transparencies, between 0 (fully transparent) and 1 (
 
 \bigskip
 \ifdefined\HCode
-\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/trans.pdf}}
+\fbox{\includegraphics[natwidth=298,natheight=421,alt={Fill and stroke transparency}]{manualimages/trans.pdf}}
 \else
-\fbox{\includegraphics[width=0.3\textwidth]{manualimages/trans.pdf}}
+\fbox{\includegraphics[width=0.3\textwidth,alt={Fill and stroke transparency}]{manualimages/trans.pdf}}
 \fi
 \bigskip
 
@@ -5389,9 +5389,9 @@ We can draw text in a \textit{text section}, which must start with \texttt{-bt} 
 
 \bigskip
 \ifdefined\HCode
-\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/text.pdf}}
+\fbox{\includegraphics[natwidth=298,natheight=421,alt={Drawing text}]{manualimages/text.pdf}}
 \else
-\fbox{\includegraphics[width=0.3\textwidth]{manualimages/text.pdf}}
+\fbox{\includegraphics[width=0.3\textwidth,alt={Drawing text}]{manualimages/text.pdf}}
 \fi
 \bigskip
 
@@ -5406,9 +5406,9 @@ We can draw text in a \textit{text section}, which must start with \texttt{-bt} 
 
 \bigskip
 \ifdefined\HCode
-\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/stext.pdf}}
+\fbox{\includegraphics[natwidth=298,natheight=421,alt={Using special text}]{manualimages/stext.pdf}}
 \else
-\fbox{\includegraphics[width=0.3\textwidth]{manualimages/stext.pdf}}
+\fbox{\includegraphics[width=0.3\textwidth,alt={Using special text}]{manualimages/stext.pdf}}
 \fi
 \bigskip
 
@@ -5424,9 +5424,9 @@ We can draw text in a \textit{text section}, which must start with \texttt{-bt} 
 
 \bigskip
 \ifdefined\HCode
-\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/fonts.pdf}}
+\fbox{\includegraphics[natwidth=298,natheight=421,alt={Font and font size}]{manualimages/fonts.pdf}}
 \else
-\fbox{\includegraphics[width=0.3\textwidth]{manualimages/fonts.pdf}}
+\fbox{\includegraphics[width=0.3\textwidth,alt={Font and font size}]{manualimages/fonts.pdf}}
 \fi
 \bigskip
 
@@ -5443,9 +5443,9 @@ We can draw text in a \textit{text section}, which must start with \texttt{-bt} 
 
 \bigskip
 \ifdefined\HCode
-\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/fontparams.pdf}}
+\fbox{\includegraphics[natwidth=298,natheight=421,alt={Font parameters}]{manualimages/fontparams.pdf}}
 \else
-\fbox{\includegraphics[width=0.3\textwidth]{manualimages/fontparams.pdf}}
+\fbox{\includegraphics[width=0.3\textwidth,alt={Font parameters}]{manualimages/fontparams.pdf}}
 \fi
 \bigskip
 
@@ -5461,9 +5461,9 @@ We can draw text in a \textit{text section}, which must start with \texttt{-bt} 
 
 \bigskip
 \ifdefined\HCode
-\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/lines.pdf}}
+\fbox{\includegraphics[natwidth=298,natheight=421,alt={Text on multiple lines}]{manualimages/lines.pdf}}
 \else
-\fbox{\includegraphics[width=0.3\textwidth]{manualimages/lines.pdf}}
+\fbox{\includegraphics[width=0.3\textwidth,alt={Text on multiple lines}]{manualimages/lines.pdf}}
 \fi
 \bigskip
 
@@ -5487,9 +5487,9 @@ We can change the text rendering mode to show outline text or, in this example, 
 
 \bigskip
 \ifdefined\HCode
-\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/textclip.pdf}}
+\fbox{\includegraphics[natwidth=298,natheight=421,alt={Clipping to text}]{manualimages/textclip.pdf}}
 \else
-\fbox{\includegraphics[width=0.3\textwidth]{manualimages/textclip.pdf}}
+\fbox{\includegraphics[width=0.3\textwidth,alt={Clipping to text}]{manualimages/textclip.pdf}}
 \fi
 \bigskip
 
@@ -5530,9 +5530,9 @@ We can add a paragraph of text of a given width and justification (Left, Right, 
 
 \bigskip
 \ifdefined\HCode
-\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/para.pdf}}
+\fbox{\includegraphics[natwidth=298,natheight=421,alt={A paragraph}]{manualimages/para.pdf}}
 \else
-\fbox{\includegraphics[width=0.3\textwidth]{manualimages/para.pdf}}
+\fbox{\includegraphics[width=0.3\textwidth,alt={A paragraph}]{manualimages/para.pdf}}
 \fi
 \bigskip
 
@@ -5552,9 +5552,9 @@ We can add a paragraph of text of a given width and justification (Left, Right, 
 
 \bigskip
 \ifdefined\HCode
-\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/paras.pdf}}
+\fbox{\includegraphics[natwidth=298,natheight=421,alt={Multiple paragraphs}]{manualimages/paras.pdf}}
 \else
-\fbox{\includegraphics[width=0.3\textwidth]{manualimages/paras.pdf}}
+\fbox{\includegraphics[width=0.3\textwidth,alt={Multiple paragraphs}]{manualimages/paras.pdf}}
 \fi
 \bigskip
 
@@ -5614,9 +5614,9 @@ There are two types of tag we can add manually. One kind is used to tag individu
 
 \bigskip
 \ifdefined\HCode
-\fbox{\includegraphics[natwidth=298,natheight=421]{manualimages/h1.pdf}}
+\fbox{\includegraphics[natwidth=298,natheight=421,alt={Manual tagging}]{manualimages/h1.pdf}}
 \else
-\fbox{\includegraphics[width=0.3\textwidth]{manualimages/h1.pdf}}
+\fbox{\includegraphics[width=0.3\textwidth,alt={Manual taggin}]{manualimages/h1.pdf}}
 \fi
 \bigskip
 
