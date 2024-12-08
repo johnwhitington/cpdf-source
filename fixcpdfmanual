@@ -1,0 +1,4 @@
+#Set the language and document title
+cpdf cpdfmanual.pdf -set-language "en-US" AND -set-title "Coherent PDF Command Line Tools Manual" -also-set-xmp -o out.pdf
+cp out.pdf cpdfmanual.pdf
+rm out.pdf
