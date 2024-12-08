@@ -3186,7 +3186,7 @@ annotations on the selected pages to standard output. Each annotation is precede
 
 \section{Setting annotations}
 
-We can also set annotations from a JSON file, either modified from the output of \texttt{-list-annotations-json} or produced manually:
+We can also set annotations from a JSON file, either modified from the output of\linebreak \texttt{-list-annotations-json} or produced manually:
 
   \begin{framed}
     \noindent\small\verb!cpdf -set-annotations annots.json in.pdf -o out.pdf !
@@ -5916,7 +5916,7 @@ its Contents entry.",
     "extra": null
   }\end{verbatim}}
 
-\noindent If verifying many files for a single fault, we may choose which test to run by adding \texttt{-verify-single <testname>} to the command line. For example:
+\noindent If verifying many files for a single fault, we may choose which test to run by adding\linebreak \texttt{-verify-single <testname>} to the command line. For example:
 
 
   \begin{framed}
@@ -6387,9 +6387,9 @@ $ cpdf -obj 1 hello.pdf
 "<</Type/Pages/Kids[3 0 R]/Count 1>>"
 
 $ cpdf -obj 3 hello.pdf
-"<</Type/Page/Parent 1 0 R/Resources<</Font<</F0<</Type/Font/Subtype/Type1/BaseFont
-/Times-Italic>>>>>>/MediaBox[0 0 595.275590551 841.88976378]/Rotate 0/Contents
-[2 0 R]>>"
+"<</Type/Page/Parent 1 0 R/Resources<</Font<</F0<</Type/Font/Subtype/Type1
+/BaseFont/Times-Italic>>>>>>/MediaBox[0 0 595.275590551 841.88976378]
+/Rotate 0/Contents[2 0 R]>>"
 
 $ cpdf -extract-stream-decompress 2 hello.pdf -stdout
 1 0 0 1 50 770 cm BT/F0 36 Tf(Hello, World!)Tj ET
