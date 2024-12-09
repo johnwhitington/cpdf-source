@@ -587,7 +587,7 @@ let jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~j
       let command = 
         Filename.quote_command path_to_convert ([out] @ scaling @ ["-quality"; string_of_float q ^ "%"; out2])
       in
-        Printf.printf "%S\n" command; Sys.command command
+        (*Printf.printf "%S\n" command;*) Sys.command command
     in
     if retcode = 0 then
       begin
