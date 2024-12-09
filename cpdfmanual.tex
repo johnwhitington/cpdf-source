@@ -3728,7 +3728,8 @@ i, ii, iii, iv, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, A-0, A-1, A-2, A-3, A-4, A-5
 
 Page labels may be removed altogether by using \texttt{-remove-page-labels} command. To print the page labels from an existing file, use \texttt{-print-page-labels}. For example:
 
-\begin{framed}\small\begin{verbatim}$ cpdf -print-page-labels in.pdf
+\begin{framed}\small\begin{verbatim}
+$ cpdf -print-page-labels in.pdf
 labelstyle: LowercaseRoman
 labelprefix: None
 startpage: 1
@@ -3763,7 +3764,8 @@ startvalue: 1
 
 The \texttt{-composition} and \texttt{-composition-json} operations show how much space in a PDF is used by each kind of data. Here is the output of \texttt{-composition} for this manual:
 
-\begin{framed}\small\begin{verbatim}$ cpdf -composition cpdfmanual.pdf
+\begin{framed}\small\begin{verbatim}
+$ cpdf -composition cpdfmanual.pdf
 Images: 0 bytes (0.00%)
 Fonts: 144731 bytes (46.72%)
 Content streams: 132767 bytes (42.85%)
@@ -3777,7 +3779,8 @@ Unclassified: 11229 bytes (3.62%)
 
 \noindent And here it is in JSON format:
 
-\begin{framed}\small\begin{verbatim}$ cpdf -composition-json cpdfmanual.pdf
+\begin{framed}\small\begin{verbatim}
+$ cpdf -composition-json cpdfmanual.pdf
 [
   ("Images", 0, 0.0),
   ("Fonts", 144731, 46.71620256351494),
@@ -4203,7 +4206,7 @@ NB: CMYK images will be converted to RGB or untouched by some of these processes
 
 \section{Rasterization (PDF to image conversion)}
 
-Cpdf can send individual pages of a PDF out to GhostScript to rasterize them - they are then read back in and replace the original page content:
+Cpdf can send individual pages of a PDF out to \texttt{gs} to rasterize them - they are then read back in and replace the original page content:
 
   \begin{framed}
   \noindent\small\verb!cpdf -gs gs -rasterize in.pdf -o out.pdf!
@@ -4223,11 +4226,11 @@ Option & Effect\\\hline
 {\small\texttt{-rasterize-annots}} & Rasterize annotations instead of retaining\\
 {\small\texttt{-rasterize-no-antialias}} & Turn off antialiasing\\
 {\small\texttt{-rasterize-downsample}} & Use better but slower antialiasing\\
-{\small\texttt{-gs-quiet}} & Don't show GhostScript output\\
+{\small\texttt{-gs-quiet}} & Don't show \texttt{gs} output\\
 \end{tabular}
 \bigskip
 
-\noindent In addition to rasterization of pages, we can export them in PNG or JPEG format, again by the use of GhostScript:
+\noindent In addition to rasterization of pages, we can export them in PNG or JPEG format, again by the use of \texttt{gs}:
 
   \begin{framed}
   \noindent\small\verb!cpdf -gs gs -output-image in.pdf 10-end -o image%%%.png!
