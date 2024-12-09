@@ -1,16 +1,5 @@
 %Add copyright for Matterhorn extracts
-%\DocumentMetadata{
-%  lang        = de,
-%  pdfversion  = 2.0,
-%  pdfstandard = ua-2,
-%  pdfstandard = a-4f, %or a-4
-%  testphase   = 
-%   {phase-III,
-%   title,
-%    table,
-%    math,
-%    firstaid}  
-%}
+%\DocumentMetadata{lang=en, pdfversion=2.0, pdfstandard=ua-2, pdfstandard=a-4f, testphase={phase-III, title, table, math, firstaid}}
 \documentclass{book}
 % Edit here to produce cpdfmanual.pdf, cpdflibmanual.pdf, pycpdfmanual.pdf,
 % dotnetcpdflibmanual.pdf, jcpdflibmanual.pdf jscpdflibmanual.pdf etc.
@@ -79,7 +68,7 @@ Command Line Tools}
 \vspace{12mm}
 
 {\Huge User Manual}\\
-Version 2.7.3 (January 2025)
+Version 2.8 (December 2024)
 
 \vspace{25mm}
 
@@ -5986,7 +5975,7 @@ Cpdf can add PDF/UA structure data when drawing on new PDF/UA files. For example
 \section{Remediation of PDF/UA verification errors}
 
 %FIXME Check copyright is added for Matterhorn descriptions
-\noindent\begin{longtable}{lp{5cm}lp{5cm}}
+\noindent\begin{tabular}{lp{5cm}lp{5cm}}
   \textbf{Number} & \textbf{Description} & \textbf{Reference} & \textbf{Remediation}\\
   01-003 & Content marked as Artifact is present inside tagged content. & UA1:7.1-1 & Description\\
   01-004 & Tagged content is present inside content marked as Artifact. & UA1:7.1-1 & d\\
@@ -6075,7 +6064,7 @@ Cpdf can add PDF/UA structure data when drawing on new PDF/UA files. For example
   31-028 & One or more Unicode values specified in the ToUnicode CMap are zero (0). & UA1:7.21.7-2 & d\\
   31-029 & One or more Unicode values specified in the ToUnicode CMap are equal to either U+FEFF or U+FFFE. & UA1:7.21.7-3 & d\\
   31-030 & One or more characters used in text showing operators reference the .notdef glyph. & UA1:7.21.8-1 & d\\
-\end{longtable}
+\end{tabular}
 
 
 

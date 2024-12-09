@@ -2,9 +2,9 @@
 let demo = false
 let agpl = true
 let major_version = 2
-let minor_version = 7
-let minor_minor_version = 3
-let version_date = "(devel, 3rd December 2024)"
+let minor_version = 8
+let minor_minor_version = 0
+let version_date = "(10th December 2024)"
 
 open Pdfutil
 open Pdfio
@@ -3061,7 +3061,7 @@ let specs =
 and usage_msg =
 "Syntax: cpdf [<operation>] <input files> [-o <output file>]\n\n\
 Copyright Coherent Graphics Ltd.\n\n\
-Version " ^ (if agpl then "AGPLv3-licensed " else "") ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ "." ^ string_of_int minor_minor_version ^ " " ^ version_date ^ "\n\n\
+Version " ^ (if agpl then "AGPLv3-licensed " else "") ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ "." ^ (if minor_minor_version = 0 then "" else string_of_int minor_minor_version) ^ " " ^ version_date ^ "\n\n\
 https://www.coherentpdf.com/\n\n\
 Input names are distinguished by containing a '.' and may be\n\
 followed by a page range specification, for instance \"1,2,3\"\n\
@@ -3704,7 +3704,7 @@ let print_obj json pdf objspec =
 
 let print_version () =
   flprint
-    ("cpdf " ^ (if agpl then "AGPL " else "") ^ "Version " ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ "." ^ string_of_int minor_minor_version ^ " " ^ version_date ^ "\n")
+    ("cpdf " ^ (if agpl then "AGPL " else "") ^ "Version " ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ (if minor_minor_version = 0 then "" else "." ^ string_of_int minor_minor_version) ^ " " ^ version_date ^ "\n")
 
 let replace_obj pdf objspec obj =
   let split_chain str = map (fun x -> "/" ^ x) (tl (String.split_on_char '/' str)) in
