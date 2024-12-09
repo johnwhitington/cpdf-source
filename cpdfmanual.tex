@@ -5972,99 +5972,99 @@ Cpdf can add PDF/UA structure data when drawing on new PDF/UA files. For example
 
 \noindent See chapter \ref{chap:18} for more details about adding structure information when drawing.
 
-\section{Remediation of PDF/UA verification errors}
-
-%FIXME Check copyright is added for Matterhorn descriptions
-\noindent\begin{tabular}{lp{5cm}lp{5cm}}
-  \textbf{Number} & \textbf{Description} & \textbf{Reference} & \textbf{Remediation}\\
-  01-003 & Content marked as Artifact is present inside tagged content. & UA1:7.1-1 & Description\\
-  01-004 & Tagged content is present inside content marked as Artifact. & UA1:7.1-1 & d\\
-  01-005 & Content is neither marked as Artifact nor tagged as real content. & UA1:7-1-2 & d\\
-  01-007 & Suspects entry has a value of true. & UA1:7-1-11 & d\\
-  02-001 & One or more non-standard tag’s mapping does not terminate with a standard type. & UA1:7.1-3 & d\\
-  02-003 & A circular mapping exists. & UA1:7.1-3 & d\\
-  02-004 & One or more standard types are remapped. & UA1:7.1-4 & d\\
-  06-001 & Document does not contain an XMP metadata stream & UA1:7.1-8 & d\\
-  06-002 & The XMP metadata stream in the Catalog dictionary does not include the PDF/UA identifier. & UA1:5 & d\\
-  06-003 & XMP metadata stream does not contain dc:title & UA1:7.1-8 & d\\
-  07-001 & ViewerPreferences dictionary of the Catalog dictionary does not contain a DisplayDocTitle entry & UA1:7.1-9 & d\\
-  07-002 & ViewerPreferences dictionary of the Catalog dictionary contains a DisplayDocTitle entry with a value of false & UA1:7.1-9 & d\\
-  09-004 & A table-related structure element is used in a way that does not conform to the syntax defined in ISO 32000-1, Table 337. & UA1-7.2-1 & d\\
-  09-005 & A list-related structure element is used in a way that does not conform to Table 336 in ISO 32000-1. & UA1-7.2-1 & d\\
-  09-006 & A TOC-related structure element is used in a way that does not conform to Table 333 in ISO 32000-1. & UA1-7.2-1 & d\\
-  09-007 & A Ruby-related structure element is used in a way that does not conform to Table 338 in ISO 32000-1. & UA1-7.2-1 & d\\
-  09-008 & A Warichu-related structure element is used in a way that does not conform to Table 338 in ISO 32000-1. & UA1-7.2-1 & d\\
-  10-001 & Character code cannot be mapped to Unicode. & UA1:7.2-2 & d\\
-  11-001 & Natural language for text in page content cannot be determined. & UA1:7.2-3 & d\\
-  11-002 & Natural language for text in Alt, ActualText and E attributes cannot be determined. & UA1:7.2-3 & d\\
-  11-003 & Natural language in the Outline entries cannot be determined. & UA1:7.2-3 & d\\
-  11-004 & Natural language in the Contents entry for annotations cannot be determined. & UA1:7.2-3 & d\\
-  11-005 & Natural language in the TU entry for form fields cannot be determined. & UA1:7.2-3 & d\\
-  11-006 & Natural language for document metadata cannot be determined. & UA1:7.2-3 & d\\
-  13-004 & \textless Figure\textgreater\ tag alternative or replacement text missing. & UA1:7.3-3 & d\\
-  14-002 & Does use numbered headings, but the first heading tag is not \textless H1\textgreater . & UA1:7.4.2-1 & d\\
-  14-003 & Numbered heading levels in descending sequence are skipped (Example: \textless H3\textgreater\  follows directly after \textless H1\textgreater{}). & UA1:7.4-1 & d\\
-  14-006 & A node contains more than one \textless H\textgreater\ tag. & UA1:7.4.4-1 & d\\
-  14-007 & Document uses both \textless H\textgreater\ and \textless H\#\textgreater\ tags. & UA1:7.4.4-3 & d\\
-  15-003 & In a table not organized with Headers attributes and IDs, a \textless TH\textgreater\ cell does not contain a Scope attribute. & UA1:7.5-2 & d\\
-  17-002 & \textless Formula\textgreater\ tag is missing an Alt attribute. & UA1:7.7-1 & d\\
-  17-003 & Unicode mapping requirements are not met. & UA1:7.7-2 & d\\
-  19-003 & ID entry of the \textless Note\textgreater\ tag is not present. & UA1:7.9-2 & d\\
-  19-004 & ID entry of the \textless Note\textgreater\ tag is non-unique. & UA1:7.9-2 & d\\
-  20-001 & Name entry is missing or has an empty string as its value in an Optional Content Configuration Dictionary in the Configs entry in the OCProperties entry in the Catalog dictionary. & UA1:7.10-1 & d\\
-  20-002 & Name entry is missing or has an empty string as its value in an Optional Content Configuration Dictionary that is the value of the D entry in the OCProperties entry in the Catalog dictionary. & UA1:7.10-1 & d\\
-  20-003 & An AS entry appears in an Optional Content Configuration Dictionary. & UA1:7.10-2 & d\\
-  21-001 & The file specification dictionary for an embedded file does not contain F and UF entries. & UA1:7.11-1 & d\\
-  25-001 & File contains the dynamicRender element with value “required”. & UA1:7.15-1 & d\\
-  26-001 & The file is encrypted but does not contain a P entry in its encryption dictionary. & UA1:7.16-1 & d\\
-  26-002 & The file is encrypted and does contain a P entry but the 10th bit position of the P entry is false. & UA1:7.16-1 & d\\
-  28-002 & An annotation, other than of subtype Widget, Link and PrinterMark, is not a direct child of an \textless Annot\textgreater\ structure element. & UA1:7.18.1-2 & d\\
-  28-004 & An annotation, other than of subtype Widget, does not have a Contents entry and does not have an alternative description (in the form of an Alt entry in the enclosing structure element). & UA1:7.18.1-4 & d\\
-  28-005 & A form field does not have a TU entry and does not have an alternative description (in the form of an Alt entry in the enclosing structure element). & UA1:7.18.1-4 & d\\
-  28-006 & An annotation with subtype undefined in ISO 32000 does not meet 7.18.1. & UA1:7.18.2-1 & d\\
-  28-007 & An annotation of subtype TrapNet exists. & UA1:7.18.2-2 & d\\
-  28-008 & A page containing an annotation does not contain a Tabs entry & UA1:7.18.3-1 & d\\
-  28-009 & A page containing an annotation has a Tabs entry with a value other than S. & UA1:7.18.3-1 & d\\
-  28-010 & A widget annotation is not nested within a \textless Form\textgreater\ tag. & UA1:7.18.4-1 & d\\
-  28-011 & A link annotation is not nested within a \textless Link\textgreater\ tag. & UA1:7.18.5-1 & d\\
-  28-012 & A link annotation does not include an alternate description in its Contents entry. & UA1:7.18.5-2 & d\\
-  28-014 & CT entry is missing from the media clip data dictionary. &  & d\\
-  28-015 & Alt entry is missing from the media clip data dictionary. & UA1:7.18.6.2-1 & d\\
-  28-016 & File attachment annotations do not conform to 7.11. & UA1:7.18.7-1 & d\\
-  28-017 & A PrinterMark annotation is included in the logical structure. & UA1:7.18.8-1 & d\\
-  28-018 & The appearance stream of a PrinterMark annotation is not marked as Artifact. & UA1:7.18.8-2 & d\\
-  30-001 & A reference XObject is present. & UA1:7.2 & d\\
-  30-002 & Form XObject contains MCIDs and is referenced more than once. & UA1:7.21.3.1-1 &  d\\
-  31-001 & A Type 0 font dictionary with encoding other than Identity-H and Identity-V has values for Registry in both CIDSystemInfo dictionaries that are not identical. & UA1:7.21.3-1 & d\\
-  31-002 & A Type 0 font dictionary with encoding other than Identity-H and Identity-V has values for Ordering in both CIDSystemInfo dictionaries that are not identical. & UA1:7.21.3.1-1 & d\\
-  31-003 & A Type 0 font dictionary with encoding other than Identity-H and Identity-V has a value for Supplement in the CIDSystemInfo dictionary of the CID font that is less than the value for Supplement in the CIDSystemInfo dictionary of the CMap. & UA1:7.21.3.1-1 & d\\
-  31-004 & A Type 2 CID font contains neither a stream nor the name Identity as the value of the CIDToGIDMap entry. & UA1:7.21.3.2-1 & d\\
-  31-005 & A Type 2 CID font does not contain a CIDToGIDMap entry. & UA1:7.21.3.2-1 & d\\
-  31-006 & A CMap is neither listed as described in ISO 32000- 1:2008, 9.7.5.2, Table 118 nor is it embedded. & UA1:7.21.3.3-1 & d\\
-  31-007 & The WMode entry in a CMap dictionary is not identical to the WMode value in the CMap stream. & UA1:7.21.3.3-1 & d\\
-  31-008 & A CMap references another CMap which is not listed in ISO 32000-1:2008, 9.7.5.2, Table 118. & UA1:7.21.3.3-2 & d\\
-  31-009 & For a font used by text intended to be rendered the font program is not embedded. & UA1:7.21.4.1-1 & d\\
-  31-011 & For a font used by text the font program is embedded but it does not contain glyphs for all of the glyphs referenced by the text used for rendering. & UA1:7.21.4.1-3 & d\\
-  31-012 & The FontDescriptor dictionary of an embedded Type 1 font contains a CharSet string, but at least one of the glyphs present in the font program is not listed in the CharSet string. & UA1:7.21.4.2-1 & d\\
-  31-013 & The FontDescriptor dictionary of an embedded Type 1 font contains a CharSet string, but at least one of the glyphs listed in the CharSet string is not present in the font program. & UA1:7.21.4.2-2 & d\\
-  31-014 & The FontDescriptor dictionary of an embedded CID font contains a CIDSet string, but at least one of the glyphs present in the font program is not listed in the CIDSet string. & UA1:7.21.4.2-3 & d\\
-  31-015 & The FontDescriptor dictionary of an embedded CID font contains a CIDSet string, but at least one of the glyphs listed in the CIDSet string is not present in the font program. & UA1:7.21.4.2-4 & d\\
-  31-016 & For one or more glyphs, the glyph width information in the font dictionary and in the embedded font program differ by more than 1/1000 unit. & UA1:7.21.5-1 & d\\
-  31-017 & A non-symbolic TrueType font is used for rendering, but none of the cmap entries in the embedded font program is a non-symbolic cmap. & UA1:7.21.6-1 & d\\
-  31-018 & A non-symbolic TrueType font is used for rendering, but for at least one glyph to be rendered the glyph cannot be looked up by any of the non-symbolic cmap entries in the embedded font program. & UA1:7.21.6-2 & d\\
-  31-019 & The font dictionary for a non-symbolic TrueType font does not contain an Encoding entry. & UA1:7.21.6-3 & d\\
-  31-020 & The font dictionary for a non-symbolic TrueType font contains an Encoding dictionary which does not contain a BaseEncoding entry. & UA1:7.21.6-4 & d\\
-  31-021 & The value for either the Encoding entry or the BaseEncoding entry in the Encoding dictionary in a non-symbolic TrueType font dictionary is neither MacRomanEncoding nor WinAnsiEncoding. & UA1:7.21.6-5 & d\\
-  31-022 & The Differences array in the Encoding entry in a non-symbolic TrueType font dictionary contains one or more glyph names which are not listed in the Adobe Glyph List. & UA1:7.21.6-6 & d\\
-  31-023 & The Differences array is present in the Encoding entry in a non-symbolic TrueType font dictionary but the embedded font program does not contain a (3,1) Microsoft Unicode cmap. & UA1:7.21.6-7 & d\\
-  31-024 & The Encoding entry is present in the font dictionary for a symbolic TrueType font. & UA1:7.21.6-8 & d\\
-  31-025 & The embedded font program for a symbolic TrueType font contains no cmap. & UA1:7.21.6-9 & d\\
-  31-026 & The embedded font program for a symbolic TrueType font contains more than one cmap, but none of the cmap entries is a (3,0) Microsoft Symbol cmap. & UA1:7.21.6-10 & d\\
-  31-027 & A font dictionary does not contain the ToUnicode entry and none of the following is true: the font uses MacRomanEncoding, MacExpertEncoding or WinAnsiEncoding; the font is a Type 1 or Type 3 font and the glyph names of the glyphs referenced are all contained in the Adobe Glyph List or the set of named characters in the Symbol font, as defined in ISO 32000-1:2008, Annex D; the font is a Type 0 font, and its descendant CIDFont uses Adobe-GB1, Adobe-CNS1, Adobe-Japan1 or Adobe-Korea1 character collections; the font is a non-symbolic TrueType font. & UA1:7.21.7-1 & d\\
-  31-028 & One or more Unicode values specified in the ToUnicode CMap are zero (0). & UA1:7.21.7-2 & d\\
-  31-029 & One or more Unicode values specified in the ToUnicode CMap are equal to either U+FEFF or U+FFFE. & UA1:7.21.7-3 & d\\
-  31-030 & One or more characters used in text showing operators reference the .notdef glyph. & UA1:7.21.8-1 & d\\
-\end{tabular}
+%\section{Remediation of PDF/UA verification errors}
+%
+%%FIXME Check copyright is added for Matterhorn descriptions
+%\noindent\begin{tabular}{lp{5cm}lp{5cm}}
+%  \textbf{Number} & \textbf{Description} & \textbf{Reference} & \textbf{Remediation}\\
+%  01-003 & Content marked as Artifact is present inside tagged content. & UA1:7.1-1 & Description\\
+%  01-004 & Tagged content is present inside content marked as Artifact. & UA1:7.1-1 & d\\
+%  01-005 & Content is neither marked as Artifact nor tagged as real content. & UA1:7-1-2 & d\\
+%  01-007 & Suspects entry has a value of true. & UA1:7-1-11 & d\\
+%  02-001 & One or more non-standard tag’s mapping does not terminate with a standard type. & UA1:7.1-3 & d\\
+%  02-003 & A circular mapping exists. & UA1:7.1-3 & d\\
+%  02-004 & One or more standard types are remapped. & UA1:7.1-4 & d\\
+%  06-001 & Document does not contain an XMP metadata stream & UA1:7.1-8 & d\\
+%  06-002 & The XMP metadata stream in the Catalog dictionary does not include the PDF/UA identifier. & UA1:5 & d\\
+%  06-003 & XMP metadata stream does not contain dc:title & UA1:7.1-8 & d\\
+%  07-001 & ViewerPreferences dictionary of the Catalog dictionary does not contain a DisplayDocTitle entry & UA1:7.1-9 & d\\
+%  07-002 & ViewerPreferences dictionary of the Catalog dictionary contains a DisplayDocTitle entry with a value of false & UA1:7.1-9 & d\\
+%  09-004 & A table-related structure element is used in a way that does not conform to the syntax defined in ISO 32000-1, Table 337. & UA1-7.2-1 & d\\
+%  09-005 & A list-related structure element is used in a way that does not conform to Table 336 in ISO 32000-1. & UA1-7.2-1 & d\\
+%  09-006 & A TOC-related structure element is used in a way that does not conform to Table 333 in ISO 32000-1. & UA1-7.2-1 & d\\
+%  09-007 & A Ruby-related structure element is used in a way that does not conform to Table 338 in ISO 32000-1. & UA1-7.2-1 & d\\
+%  09-008 & A Warichu-related structure element is used in a way that does not conform to Table 338 in ISO 32000-1. & UA1-7.2-1 & d\\
+%  10-001 & Character code cannot be mapped to Unicode. & UA1:7.2-2 & d\\
+%  11-001 & Natural language for text in page content cannot be determined. & UA1:7.2-3 & d\\
+%  11-002 & Natural language for text in Alt, ActualText and E attributes cannot be determined. & UA1:7.2-3 & d\\
+%  11-003 & Natural language in the Outline entries cannot be determined. & UA1:7.2-3 & d\\
+%  11-004 & Natural language in the Contents entry for annotations cannot be determined. & UA1:7.2-3 & d\\
+%  11-005 & Natural language in the TU entry for form fields cannot be determined. & UA1:7.2-3 & d\\
+%  11-006 & Natural language for document metadata cannot be determined. & UA1:7.2-3 & d\\
+%  13-004 & \textless Figure\textgreater\ tag alternative or replacement text missing. & UA1:7.3-3 & d\\
+%  14-002 & Does use numbered headings, but the first heading tag is not \textless H1\textgreater . & UA1:7.4.2-1 & d\\
+%  14-003 & Numbered heading levels in descending sequence are skipped (Example: \textless H3\textgreater\  follows directly after \textless H1\textgreater{}). & UA1:7.4-1 & d\\
+%  14-006 & A node contains more than one \textless H\textgreater\ tag. & UA1:7.4.4-1 & d\\
+%  14-007 & Document uses both \textless H\textgreater\ and \textless H\#\textgreater\ tags. & UA1:7.4.4-3 & d\\
+%  15-003 & In a table not organized with Headers attributes and IDs, a \textless TH\textgreater\ cell does not contain a Scope attribute. & UA1:7.5-2 & d\\
+%  17-002 & \textless Formula\textgreater\ tag is missing an Alt attribute. & UA1:7.7-1 & d\\
+%  17-003 & Unicode mapping requirements are not met. & UA1:7.7-2 & d\\
+%  19-003 & ID entry of the \textless Note\textgreater\ tag is not present. & UA1:7.9-2 & d\\
+%  19-004 & ID entry of the \textless Note\textgreater\ tag is non-unique. & UA1:7.9-2 & d\\
+%  20-001 & Name entry is missing or has an empty string as its value in an Optional Content Configuration Dictionary in the Configs entry in the OCProperties entry in the Catalog dictionary. & UA1:7.10-1 & d\\
+%  20-002 & Name entry is missing or has an empty string as its value in an Optional Content Configuration Dictionary that is the value of the D entry in the OCProperties entry in the Catalog dictionary. & UA1:7.10-1 & d\\
+%  20-003 & An AS entry appears in an Optional Content Configuration Dictionary. & UA1:7.10-2 & d\\
+%  21-001 & The file specification dictionary for an embedded file does not contain F and UF entries. & UA1:7.11-1 & d\\
+%  25-001 & File contains the dynamicRender element with value “required”. & UA1:7.15-1 & d\\
+%  26-001 & The file is encrypted but does not contain a P entry in its encryption dictionary. & UA1:7.16-1 & d\\
+%  26-002 & The file is encrypted and does contain a P entry but the 10th bit position of the P entry is false. & UA1:7.16-1 & d\\
+%  28-002 & An annotation, other than of subtype Widget, Link and PrinterMark, is not a direct child of an \textless Annot\textgreater\ structure element. & UA1:7.18.1-2 & d\\
+%  28-004 & An annotation, other than of subtype Widget, does not have a Contents entry and does not have an alternative description (in the form of an Alt entry in the enclosing structure element). & UA1:7.18.1-4 & d\\
+%  28-005 & A form field does not have a TU entry and does not have an alternative description (in the form of an Alt entry in the enclosing structure element). & UA1:7.18.1-4 & d\\
+%  28-006 & An annotation with subtype undefined in ISO 32000 does not meet 7.18.1. & UA1:7.18.2-1 & d\\
+%  28-007 & An annotation of subtype TrapNet exists. & UA1:7.18.2-2 & d\\
+%  28-008 & A page containing an annotation does not contain a Tabs entry & UA1:7.18.3-1 & d\\
+%  28-009 & A page containing an annotation has a Tabs entry with a value other than S. & UA1:7.18.3-1 & d\\
+%  28-010 & A widget annotation is not nested within a \textless Form\textgreater\ tag. & UA1:7.18.4-1 & d\\
+%  28-011 & A link annotation is not nested within a \textless Link\textgreater\ tag. & UA1:7.18.5-1 & d\\
+%  28-012 & A link annotation does not include an alternate description in its Contents entry. & UA1:7.18.5-2 & d\\
+%  28-014 & CT entry is missing from the media clip data dictionary. &  & d\\
+%  28-015 & Alt entry is missing from the media clip data dictionary. & UA1:7.18.6.2-1 & d\\
+%  28-016 & File attachment annotations do not conform to 7.11. & UA1:7.18.7-1 & d\\
+%  28-017 & A PrinterMark annotation is included in the logical structure. & UA1:7.18.8-1 & d\\
+%  28-018 & The appearance stream of a PrinterMark annotation is not marked as Artifact. & UA1:7.18.8-2 & d\\
+%  30-001 & A reference XObject is present. & UA1:7.2 & d\\
+%  30-002 & Form XObject contains MCIDs and is referenced more than once. & UA1:7.21.3.1-1 &  d\\
+%  31-001 & A Type 0 font dictionary with encoding other than Identity-H and Identity-V has values for Registry in both CIDSystemInfo dictionaries that are not identical. & UA1:7.21.3-1 & d\\
+%  31-002 & A Type 0 font dictionary with encoding other than Identity-H and Identity-V has values for Ordering in both CIDSystemInfo dictionaries that are not identical. & UA1:7.21.3.1-1 & d\\
+%  31-003 & A Type 0 font dictionary with encoding other than Identity-H and Identity-V has a value for Supplement in the CIDSystemInfo dictionary of the CID font that is less than the value for Supplement in the CIDSystemInfo dictionary of the CMap. & UA1:7.21.3.1-1 & d\\
+%  31-004 & A Type 2 CID font contains neither a stream nor the name Identity as the value of the CIDToGIDMap entry. & UA1:7.21.3.2-1 & d\\
+%  31-005 & A Type 2 CID font does not contain a CIDToGIDMap entry. & UA1:7.21.3.2-1 & d\\
+%  31-006 & A CMap is neither listed as described in ISO 32000- 1:2008, 9.7.5.2, Table 118 nor is it embedded. & UA1:7.21.3.3-1 & d\\
+%  31-007 & The WMode entry in a CMap dictionary is not identical to the WMode value in the CMap stream. & UA1:7.21.3.3-1 & d\\
+%  31-008 & A CMap references another CMap which is not listed in ISO 32000-1:2008, 9.7.5.2, Table 118. & UA1:7.21.3.3-2 & d\\
+%  31-009 & For a font used by text intended to be rendered the font program is not embedded. & UA1:7.21.4.1-1 & d\\
+%  31-011 & For a font used by text the font program is embedded but it does not contain glyphs for all of the glyphs referenced by the text used for rendering. & UA1:7.21.4.1-3 & d\\
+%  31-012 & The FontDescriptor dictionary of an embedded Type 1 font contains a CharSet string, but at least one of the glyphs present in the font program is not listed in the CharSet string. & UA1:7.21.4.2-1 & d\\
+%  31-013 & The FontDescriptor dictionary of an embedded Type 1 font contains a CharSet string, but at least one of the glyphs listed in the CharSet string is not present in the font program. & UA1:7.21.4.2-2 & d\\
+%  31-014 & The FontDescriptor dictionary of an embedded CID font contains a CIDSet string, but at least one of the glyphs present in the font program is not listed in the CIDSet string. & UA1:7.21.4.2-3 & d\\
+%  31-015 & The FontDescriptor dictionary of an embedded CID font contains a CIDSet string, but at least one of the glyphs listed in the CIDSet string is not present in the font program. & UA1:7.21.4.2-4 & d\\
+%  31-016 & For one or more glyphs, the glyph width information in the font dictionary and in the embedded font program differ by more than 1/1000 unit. & UA1:7.21.5-1 & d\\
+%  31-017 & A non-symbolic TrueType font is used for rendering, but none of the cmap entries in the embedded font program is a non-symbolic cmap. & UA1:7.21.6-1 & d\\
+%  31-018 & A non-symbolic TrueType font is used for rendering, but for at least one glyph to be rendered the glyph cannot be looked up by any of the non-symbolic cmap entries in the embedded font program. & UA1:7.21.6-2 & d\\
+%  31-019 & The font dictionary for a non-symbolic TrueType font does not contain an Encoding entry. & UA1:7.21.6-3 & d\\
+%  31-020 & The font dictionary for a non-symbolic TrueType font contains an Encoding dictionary which does not contain a BaseEncoding entry. & UA1:7.21.6-4 & d\\
+%  31-021 & The value for either the Encoding entry or the BaseEncoding entry in the Encoding dictionary in a non-symbolic TrueType font dictionary is neither MacRomanEncoding nor WinAnsiEncoding. & UA1:7.21.6-5 & d\\
+%  31-022 & The Differences array in the Encoding entry in a non-symbolic TrueType font dictionary contains one or more glyph names which are not listed in the Adobe Glyph List. & UA1:7.21.6-6 & d\\
+%  31-023 & The Differences array is present in the Encoding entry in a non-symbolic TrueType font dictionary but the embedded font program does not contain a (3,1) Microsoft Unicode cmap. & UA1:7.21.6-7 & d\\
+%  31-024 & The Encoding entry is present in the font dictionary for a symbolic TrueType font. & UA1:7.21.6-8 & d\\
+%  31-025 & The embedded font program for a symbolic TrueType font contains no cmap. & UA1:7.21.6-9 & d\\
+%  31-026 & The embedded font program for a symbolic TrueType font contains more than one cmap, but none of the cmap entries is a (3,0) Microsoft Symbol cmap. & UA1:7.21.6-10 & d\\
+%  31-027 & A font dictionary does not contain the ToUnicode entry and none of the following is true: the font uses MacRomanEncoding, MacExpertEncoding or WinAnsiEncoding; the font is a Type 1 or Type 3 font and the glyph names of the glyphs referenced are all contained in the Adobe Glyph List or the set of named characters in the Symbol font, as defined in ISO 32000-1:2008, Annex D; the font is a Type 0 font, and its descendant CIDFont uses Adobe-GB1, Adobe-CNS1, Adobe-Japan1 or Adobe-Korea1 character collections; the font is a non-symbolic TrueType font. & UA1:7.21.7-1 & d\\
+%  31-028 & One or more Unicode values specified in the ToUnicode CMap are zero (0). & UA1:7.21.7-2 & d\\
+%  31-029 & One or more Unicode values specified in the ToUnicode CMap are equal to either U+FEFF or U+FFFE. & UA1:7.21.7-3 & d\\
+%  31-030 & One or more characters used in text showing operators reference the .notdef glyph. & UA1:7.21.8-1 & d\\
+%\end{tabular}
 
 
 
