@@ -3,3 +3,4 @@ rm -rf manualimages
 rm -f Changes
 rm -rf ../camlpdf
 rm -f logo.pdf
+rm cpdfmanual.tex

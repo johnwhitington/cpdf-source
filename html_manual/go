@@ -1,14 +1,25 @@
+#Move files around
 cp -r ../manualimages .
 cp ../logo.pdf .
 cp ../Changes .
 mkdir ../camlpdf
 cp ../../camlpdf/Changes ../camlpdf/Changes
-TEXINTUTS=..:$TEXINPUTS htlatex ../cpdfmanual "html,2"
+cp ../cpdfmanual.tex .
+
+#Remove tagging
+sed -i '' 's/\\DocumentMetadata/\%\\DocumentMetadata/' cpdfmanual.tex
+
+#Typeset to HTML
+htlatex cpdfmanual "html,2"
+
 #Pad frames
 sed -i '' 's/.framedenv{border: 1px solid black;}/.framedenv{border: 1px solid black; padding: 8px}/g' cpdfmanual.css
+
 #Remove tex4ht's attempt at box-drawing characters for struct trees
 LCTYPE=C LANG=C sed -i '' 's/__/\&#x00A0;\&#x00A0;/g' *.html
+
 #Make sure HTML files have a lang set
 LCTYPE=C LANG=C sed -i '' 's/<html >/<html lang="en">/g' *.html
+
 #Give the main page a title
 LCTYPE=C LANG=C sed -i '' 's/<title>/<title>Coherent PDF Command Line Tools Manual/' cpdfmanual.html
