@@ -1,5 +1,4 @@
-%Add copyright for Matterhorn extracts
-\DocumentMetadata{lang=en, pdfversion=2.0, pdfstandard=ua-2, pdfstandard=a-4f, testphase={phase-III, title, table, math, firstaid}}
+%\DocumentMetadata{lang=en, pdfversion=2.0, pdfstandard=ua-2, pdfstandard=a-4f, testphase={phase-III, title, table, math, firstaid}}
 \documentclass{book}
 % Edit here to produce cpdfmanual.pdf, cpdflibmanual.pdf, pycpdfmanual.pdf,
 % dotnetcpdflibmanual.pdf, jcpdflibmanual.pdf jscpdflibmanual.pdf etc.
@@ -4266,8 +4265,8 @@ Option & Effect\\\hline
 \noindent For example:
 
   \begin{framed}
-  \noindent\small\verb!cpdf -gs gs -output-image -tobox /BleedBox!\\
-  \noindent\small\verb!     -rasterization-jpeg in.pdf -o image%%%.jpeg!
+  \noindent\small\verb!cpdf -gs gs -output-image -tobox /BleedBox -rasterize-jpeg in.pdf!\\
+  \noindent\small\verb!     -o image%%%.jpeg!
   \end{framed}
 
 \ \ \ 
