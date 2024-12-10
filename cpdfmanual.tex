@@ -1222,6 +1222,7 @@ In modern usage, \texttt{-utf8} is almost always the sensible option. But for hi
 
 For historical reasons, Cpdf uses the Unix line ending character (LF) when writing text files on Microsoft Windows. For example, bookmark files.
 
+
 \begin{cpdflib}
 \clearpage
 \section*{C Interface}
@@ -1272,7 +1273,11 @@ For historical reasons, Cpdf uses the Unix line ending character (LF) when writi
 \end{small}
 \end{jscpdflib}
 
+\pagestyle{empty}
+\thispagestyle{fancy}
+
 \chapter{Merging and Splitting}\label{chap:2}
+  \pagestyle{fancy}
   \begin{framed}
   \small
   \noindent\verb!cpdf -merge in1.pdf [<range>] in2.pdf [<range>] [<more names/ranges>]!\\
@@ -4308,6 +4313,9 @@ Option & Effect\\\hline
 \end{small}
 \end{jscpdflib}
 
+\pagestyle{empty}
+\thispagestyle{fancy}
+
 \chapter{Fonts}\pagestyle{fancy}\label{chap:14}
  {\small \begin{framed}
 
@@ -6557,7 +6565,7 @@ YYYY-MM-DDThh:mm:ssTZD
 \ \ \ 
 
 \vfill
-\chapter{Change logs}\pagestyle{empty}
+\chapter{Change logs}
 
 \section{Cpdf Change Log}
 {\footnotesize\begin{alltt}
@@ -6571,7 +6579,9 @@ YYYY-MM-DDThh:mm:ssTZD
 \input{../camlpdf/Changes}
 \end{alltt}}
 
-\chapter{Matterhorn Protocol}\pagestyle{empty}
+\pagestyle{empty}
+\thispagestyle{fancy}
+\chapter{Matterhorn Protocol}\pagestyle{fancy}
 
 Implementation status:
 
