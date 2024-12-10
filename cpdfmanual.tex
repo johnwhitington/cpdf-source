@@ -323,6 +323,14 @@ These examples demonstrate just a few of the facilities provided by the Coherent
 
 \noindent Process JPEG images in \texttt{in.pdf} to 65\% quality, writing the output to \texttt{out.pdf}.
 
+\begin{framed}\noindent\texttt{cpdf -gs gs -rasterize in.pdf -o out.pdf}\end{framed}
+
+\noindent Rasterize PDF page content, creating new PDF.
+
+\begin{framed}\noindent\texttt{cpdf -gs gs -output-image in.pdf 10-end -o image\%\%\%.png}\end{framed}
+
+\noindent Rasterize PDF pages to PNG files.
+
 \section*{\hyperref[chap:14]{Chapter 14: Fonts}}
 
 \begin{framed}\noindent\texttt{cpdf -list-fonts in.pdf}\end{framed}
