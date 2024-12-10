@@ -1,5 +1,5 @@
 %Add copyright for Matterhorn extracts
-%\DocumentMetadata{lang=en, pdfversion=2.0, pdfstandard=ua-2, pdfstandard=a-4f, testphase={phase-III, title, table, math, firstaid}}
+\DocumentMetadata{lang=en, pdfversion=2.0, pdfstandard=ua-2, pdfstandard=a-4f, testphase={phase-III, title, table, math, firstaid}}
 \documentclass{book}
 % Edit here to produce cpdfmanual.pdf, cpdflibmanual.pdf, pycpdfmanual.pdf,
 % dotnetcpdflibmanual.pdf, jcpdflibmanual.pdf jscpdflibmanual.pdf etc.
@@ -871,7 +871,8 @@ use of intermediate files. Use \texttt{-stdin} to read from standard input, and
 multiple programs, or multiple invocations of the same program. For example, this sequence of commands (all typed on one line)
 
   \begin{framed}
-  \noindent\small\begin{verbatim}cpdf in.pdf reverse -stdout |
+  \noindent\small\begin{verbatim}
+cpdf in.pdf reverse -stdout |
 cpdf -stdin 1-5 -stdout |
 cpdf -stdin reverse -o out.pdf\end{verbatim}
   \end{framed}
@@ -2486,7 +2487,8 @@ the file using a different page range each time.
   \noindent\small\verb!     [-fast] [-prerotate] [-no-warn-rotate] -o out.pdf!
 
   \vspace{1.5mm}
-  \noindent\small\begin{verbatim}cpdf ([-add-text <text-format> | -add-rectangle <size>])
+  \noindent\small\begin{verbatim}
+cpdf ([-add-text <text-format> | -add-rectangle <size>])
       [-font <fontname>]          [-font-size <size-in-points>]
       [-load-ttf <name>=<file>]   [-embed-std14]
       [-color <color>]            [-line-spacing <number>]
@@ -2723,7 +2725,7 @@ specifies the size in points:
     \noindent\small\verb!cpdf -add-text "-%Page-" -font-size 36 in.pdf -o out.pdf!
   \end{framed}
 
-  \noindent Adding \texttt{-embed-std14 <directory>}, given a directory holding the GhostScript/URW free fonts, will embed subsetted font files in the PDF for any of the Standard fonts used. These free fonts may be downloaded from \url{https://github.com/ArtifexSoftware/urw-base35-fonts}. This is important, for example, for PDF/A documents, which must have their fonts embedded.
+  \noindent Adding \texttt{-embed-std14 <directory>}, given a directory holding the URW Base35 free fonts, will embed subsetted font files in the PDF for any of the Standard fonts used. These free fonts may be downloaded from \url{https://github.com/ArtifexSoftware/urw-base35-fonts}. This is important, for example, for PDF/A documents, which must have their fonts embedded.
 
 The standard fonts cover only the Latin characters, and are limiting. Other TrueType fonts may be introduced with the \texttt{-load-ttf} option, giving a name for, and the file name of the font. For example:
 
@@ -2779,7 +2781,8 @@ the page) or the baseline of the last line of text (if the position is at the
 bottom, bottom left or bottom right).
 
   \begin{framed}
-    \noindent\small\begin{verbatim}cpdf -add-text "Specification\n%Page of %EndPage"
+    \noindent\small\begin{verbatim}
+cpdf -add-text "Specification\n%Page of %EndPage"
      -topright 10 in.pdf -o out.pdf\end{verbatim}
   \end{framed}
 
@@ -2790,7 +2793,8 @@ The \texttt{-line-spacing} option can be used to increase or decrease the line
 spacing, where a spacing of 1 is the standard.
 
   \begin{framed}
-    \noindent\small\begin{verbatim}cpdf -add-text "Specification\n%Page of %EndPage"
+    \noindent\small\begin{verbatim}
+cpdf -add-text "Specification\n%Page of %EndPage"
      -topright 10 -line-spacing 1.5 in.pdf -o out.pdf\end{verbatim}
   \end{framed}
 
@@ -2801,7 +2805,8 @@ right justification for those relative to the right, and center justification
 for positions relative to the center of the page. For example:
 
 \begin{framed}
-  \noindent\small\begin{verbatim}cpdf -add-text "Long line\nShort" -justify-right in.pdf -o out.pdf\end{verbatim}
+  \noindent\small\begin{verbatim}
+cpdf -add-text "Long line\nShort" -justify-right in.pdf -o out.pdf\end{verbatim}
 \end{framed}
 
 \subsection{Special Characters}
@@ -2827,7 +2832,8 @@ For example, a German sharp s (\ss) may be introduced by \verb!\337!.
 A rectangle may be placed on one or more pages by using the \texttt{-add-rectangle <size>} command. Most of the options discussed above for text placement apply in the same way. For example:
 
 \begin{framed}
-  \small\begin{verbatim}cpdf -add-rectangle "200 300" -pos-right 30 -color red -outline
+  \small\begin{verbatim}
+cpdf -add-rectangle "200 300" -pos-right 30 -color red -outline
                     in.pdf -o out.pdf\end{verbatim}
 \end{framed}
 
@@ -3470,7 +3476,6 @@ Annotations: 0
 \end{verbatim}}
 \end{framed}
 
-\smallgap 
 \noindent The \texttt{-pages} operation prints the number of pages in the file.
 
 \begin{framed}
@@ -3732,7 +3737,8 @@ startvalue: 1
 
 \noindent Or, in JSON format with \texttt{-print-page-labels-json}:
 
-\begin{framed}\small\begin{verbatim}[
+\begin{framed}\small\begin{verbatim}
+[
   {
     "labelstyle": "LowercaseRoman",
     "labelprefix": null,
@@ -4005,14 +4011,16 @@ The output specifier, e.g \verb!-o output/%%%! gives the number format for numbe
 The \texttt{-list-images} operation lists all images in the file:
 
   \begin{framed}
-{\small\begin{verbatim}6, 1, /Z_Im0, 3300, 2550, 13432, 1, /DeviceGray, /CCITTFaxDecode
+{\small\begin{verbatim}
+6, 1, /Z_Im0, 3300, 2550, 13432, 1, /DeviceGray, /CCITTFaxDecode
 9, 2 13 14 15, /Z_Im0, 3376, 2649, 37972, 1, /DeviceGray, /CCITTFaxDecode\end{verbatim}}
   \end{framed}
 
 \noindent The fields are \textit{object number, page numbers, image name, width, height, size in bytes, bits per pixel, colour space, filter (compression method)}. With \texttt{-list-images-json}, the same information is available in JSON format:
 
   \begin{framed}
-{\small\begin{verbatim}[
+{\small\begin{verbatim}
+[
   {
     "Object": 6,
     "Pages": [ 1 ],
@@ -4048,7 +4056,8 @@ The \texttt{-list-images} operation lists all images in the file:
 \noindent Here is the result:
 
 \begin{framed}
-{\small\begin{verbatim}2, /Im5, 531, 684, 149.935297, 150.138267, 31
+{\small\begin{verbatim}
+2, /Im5, 531, 684, 149.935297, 150.138267, 31
 2, /Im6, 184, 164, 149.999988, 150.458710, 39
 2, /Im7, 171, 156, 149.999996, 150.579145, 40
 2, /Im9, 65, 91, 149.999986, 151.071856, 57
@@ -4315,7 +4324,8 @@ Option & Effect\\\hline
 \label{listingfonts}
   The \texttt{-list-fonts} operation prints the fonts in the document,
 one-per-line to standard output. For example:
-{\small\begin{framed}\small\begin{verbatim}1 /F245 /Type0 /Cleargothic-Bold /Identity-H
+{\small\begin{framed}\small\begin{verbatim}
+1 /F245 /Type0 /Cleargothic-Bold /Identity-H
 1 /F247 /Type0 /ClearGothicSerialLight /Identity-H
 1 /F248 /Type1 /Times-Roman /WinAnsiEncoding
 1 /F250 /Type0 /Cleargothic-RegularItalic /Identity-H
@@ -4344,7 +4354,8 @@ name, the fifth the PDF font encoding.
 
 The information is also available in JSON format with \texttt{-list-fonts-json}:
 
-{\small\begin{framed}\small\begin{verbatim}[
+{\small\begin{framed}\small\begin{verbatim}
+[
   {
     "page": 1,
     "name": "/F47",
@@ -4440,7 +4451,6 @@ recommended when file size is the sole consideration.
 
   \begin{framed}
   \small\noindent\verb!cpdf -remove-fonts in.pdf -o out.pdf!
-  \vspace{2.5mm}
   \end{framed}
 
 \section{Missing Fonts}\label{listmisingfonts}
