@@ -31,8 +31,8 @@ val extract_struct_tree : Pdf.t -> Cpdfyojson.Safe.t
 (** Reapply an edited JSON structure tree to its PDF. *)
 val replace_struct_tree : Pdf.t -> Cpdfyojson.Safe.t -> unit
 
-(* Make a blank PDF/UA-1 PDF given a title, paper size, and number of pages. *)
+(** Make a blank PDF/UA-1 PDF given a title, paper size, and number of pages. *)
 val create_pdfua1 : string -> Pdfpaper.t -> int -> Pdf.t
 
-(* Make a blank PDF/UA-2 PDF given a title, paper size, and number of pages. *)
+(** Make a blank PDF/UA-2 PDF given a title, paper size, and number of pages. *)
 val create_pdfua2 : string -> Pdfpaper.t -> int -> Pdf.t
