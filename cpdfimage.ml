@@ -684,7 +684,7 @@ let lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshol
       (Filename.quote_command path_to_convert
         ((if components = 4 then ["-depth"; "8"; "-size"; string_of_int w ^ "x" ^ string_of_int h] else []) @
         [out; "-quality"; string_of_float qlossless ^ "%"] @
-        (if components = 1 then ["-colorspace"; "Gray"] else if components = 4 then ["-colorspace"; "CMYK"] else []) @
+        (if components = 1 then ["-colorspace"; "Gray"] else if components = 4 then ["-colorspace"; "CMYK"] else ["-type"; "truecolor"]) @
         [out2]))
     in
       (*Printf.printf "%S\n" command;*) Sys.command command
