@@ -598,7 +598,10 @@ let jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~j
           if newsize < size && perc_ok then
             begin
               let data = Pdfio.bytes_of_input_channel result in
+              (*Printf.printf "Got %i bytes of result\n" (Pdfio.bytes_size data);
+              Printf.printf "%02X %02X %02X %02X\n" (Pdfio.bget data 0) (Pdfio.bget data 1) (Pdfio.bget data 2) (Pdfio.bget data 3);*)
               let w, h = Cpdfjpeg.jpeg_dimensions data in
+              (*Printf.printf "Finsihed call to jpeg_dimensions\n";*)
               if !debug_image_processing then Printf.printf "JPEG to JPEG %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
               reference :=
                 Pdf.add_dict_entry (Pdf.add_dict_entry (Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize)) "/Width" (Pdf.Integer w)) "/Height" (Pdf.Integer h),
@@ -609,14 +612,17 @@ let jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~j
              if !debug_image_processing then Printf.printf "no size reduction\n%!"
            end;
           close_in result
-       with _ ->
+       with e ->
+         Printf.printf "Error %S\n%!" (Printexc.to_string e);
          remove out;
          remove out2
       end
     else
-      begin Printf.printf "external process failed\n%!" end;
-    remove out;
-    remove out2
+      begin
+        Printf.printf "external process failed\n%!";
+        remove out;
+        remove out2
+      end
 
 let suitable_num pdf dict =
   match Pdf.lookup_direct pdf "/ColorSpace" dict with
