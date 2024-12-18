@@ -1,3 +1,9 @@
+2.9 (to come)
+
+Fixes:
+
+o Harden auto-compression against malformed streams
+
 2.8 (December 2024)
 
 New features:
