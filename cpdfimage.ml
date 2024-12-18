@@ -615,11 +615,9 @@ let jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~j
          remove out2
       end
     else
-      begin
-        Printf.printf "external process failed\n%!";
-        remove out;
-        remove out2
-      end
+      Printf.printf "external process failed\n%!";
+    remove out;
+    remove out2
 
 let suitable_num pdf dict =
   match Pdf.lookup_direct pdf "/ColorSpace" dict with
@@ -652,7 +650,7 @@ let lossless_out pdf ~pixel_threshold ~length_threshold extension s dict referen
       if size < length_threshold then (if !debug_image_processing then Printf.printf "length threshold not met\n%!"; None) else
       begin
         Pdfcodec.decode_pdfstream_until_unknown pdf s;
-        match Pdf.lookup_direct pdf "/Filter" (fst !reference) with Some _ -> restore (); None | None ->
+        match Pdf.lookup_direct pdf "/Filter" (fst !reference) with Some x -> restore (); Printf.printf "%S Unable to decompress\n%!" (Pdfwrite.string_of_pdf x); None | None ->
         let out = Filename.temp_file "cpdf" ("convertin" ^ (if suitable_num pdf dict < 4 then ".pnm" else ".cmyk")) in
         let out2 = Filename.temp_file "cpdf" ("convertout" ^ extension) in
         let fh = open_out_bin out in
@@ -714,10 +712,13 @@ let lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshol
           end;
           close_in result
       with
-        _ ->
+        e ->
+          Printf.printf "Failed with %S\n%!" (Printexc.to_string e);
           remove out;
           remove out2
-    end;
+    end
+  else
+    Printf.printf "Return code not zero\n%!";
   remove out;
   remove out2
 
@@ -793,7 +794,8 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolat
     end;
     remove out;
     remove out2
-  with _ ->
+  with e ->
+    Printf.printf "Unable: %S\n" (Printexc.to_string e);
     remove out;
     remove out2
 
@@ -1013,7 +1015,7 @@ let process
             begin match onebppmethod with
             | "JBIG2" ->
                 begin
-                  if !debug_image_processing then Printf.printf "(%i/%i) object %i (1bpp)... %!" !ndone nobjects objnum;
+                  if !debug_image_processing then Printf.printf "(%i/%i) Object %i (1bpp)... %!" !ndone nobjects objnum;
                   recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_jbig2enc pdf s dict reference
                 end
             | _ -> ()
@@ -1021,14 +1023,14 @@ let process
         | Some (Pdf.Name "/Image"), _, _, _ ->
             if qlossless < 101. then
               begin
-                if !debug_image_processing then Printf.printf "(%i/%i) object %i (lossless)... %!" !ndone nobjects objnum;
+                if !debug_image_processing then Printf.printf "(%i/%i) Object %i (lossless)... %!" !ndone nobjects objnum;
                 lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~qlossless ~path_to_convert s dict reference
               end
             else
               begin
                 if factor < 101. then
                   begin
-                    if !debug_image_processing then Printf.printf "(%i/%i) object %i (lossless)... %!" !ndone nobjects objnum;
+                    if !debug_image_processing then Printf.printf "(%i/%i) Object %i (lossless)... %!" !ndone nobjects objnum;
                     if factor < 0. then
                       lossless_resample_target_dpi objnum pdf ~pixel_threshold ~length_threshold ~factor:~-.factor ~target_dpi_info ~interpolate ~path_to_convert s dict reference
                     else
