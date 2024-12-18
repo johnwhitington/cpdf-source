@@ -25,7 +25,7 @@ let recompress_stream pdf = function
          | Some (Pdf.Array []
          | Pdf.Array (Pdf.Name ("/ASCIIHexDecode" | "/ASCII85Decode" | "/LZWDecode" | "/RunLengthDecode")::_)
         )), _ ->
-           Pdfcodec.decode_pdfstream_until_unknown pdf stream;
+           begin try Pdfcodec.decode_pdfstream_until_unknown pdf stream with _ -> Pdfe.log "Warning: Skipping re-encoding of a stream\n" end;
            Pdfcodec.encode_pdfstream ~only_if_smaller:true pdf Pdfcodec.Flate stream
       | _ -> ()
       end
