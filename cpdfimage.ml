@@ -610,12 +610,12 @@ let jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~j
            end;
           close_in result
        with e ->
-         Printf.printf "Error %S\n%!" (Printexc.to_string e);
+         if !debug_image_processing then Printf.printf "Error %S\n%!" (Printexc.to_string e);
          remove out;
          remove out2
       end
     else
-      Printf.printf "external process failed\n%!";
+      if !debug_image_processing then Printf.printf "external process failed\n%!";
     remove out;
     remove out2
 
@@ -650,7 +650,7 @@ let lossless_out pdf ~pixel_threshold ~length_threshold extension s dict referen
       if size < length_threshold then (if !debug_image_processing then Printf.printf "length threshold not met\n%!"; None) else
       begin
         Pdfcodec.decode_pdfstream_until_unknown pdf s;
-        match Pdf.lookup_direct pdf "/Filter" (fst !reference) with Some x -> restore (); Printf.printf "%S Unable to decompress\n%!" (Pdfwrite.string_of_pdf x); None | None ->
+        match Pdf.lookup_direct pdf "/Filter" (fst !reference) with Some x -> restore (); if !debug_image_processing then Printf.printf "%S Unable to decompress\n%!" (Pdfwrite.string_of_pdf x); None | None ->
         let out = Filename.temp_file "cpdf" ("convertin" ^ (if suitable_num pdf dict < 4 then ".pnm" else ".cmyk")) in
         let out2 = Filename.temp_file "cpdf" ("convertout" ^ extension) in
         let fh = open_out_bin out in
@@ -713,12 +713,12 @@ let lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshol
           close_in result
       with
         e ->
-          Printf.printf "Failed with %S\n%!" (Printexc.to_string e);
+          if !debug_image_processing then Printf.printf "Failed with %S\n%!" (Printexc.to_string e);
           remove out;
           remove out2
     end
   else
-    Printf.printf "Return code not zero\n%!";
+    if !debug_image_processing then Printf.printf "Return code not zero\n%!";
   remove out;
   remove out2
 
@@ -738,7 +738,7 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolat
   (*Printf.printf "\n***IN components = %i, bpc = %i\n" in_components in_bpc;*)
   match lossless_out pdf ~pixel_threshold ~length_threshold ".png" s dict reference with
   | None -> ()
-  | Some (_, _, _, 4, _, _) -> Printf.printf "lossless resampling for CMYK not supported yet\n%!"
+  | Some (_, _, _, 4, _, _) -> if !debug_image_processing then Printf.printf "lossless resampling for CMYK not supported yet\n%!"
   | Some (out, out2, size, components, w, h) ->
   let retcode =
     let command = 
@@ -795,7 +795,7 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolat
     remove out;
     remove out2
   with e ->
-    Printf.printf "Unable: %S\n" (Printexc.to_string e);
+    if !debug_image_processing then Printf.printf "Unable: %S\n" (Printexc.to_string e);
     remove out;
     remove out2
 
@@ -807,7 +807,7 @@ let lossless_resample_target_dpi objnum pdf ~pixel_threshold ~length_threshold ~
       else
         if !debug_image_processing then Printf.printf "failed to meet dpi target\n%!"
   with
-    Not_found -> Printf.eprintf "Warning: orphaned image, skipping\n" (* Could not find DPI data - an orphan image. *)
+    Not_found -> if !debug_image_processing then Printf.printf "Warning: orphaned image, skipping\n" (* Could not find DPI data - an orphan image. *)
 
 let jpeg_to_jpeg_wrapper objnum pdf ~target_dpi_info ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale ~jpeg_to_jpeg_dpi ~interpolate ~q ~path_to_convert s dict reference =
   if jpeg_to_jpeg_dpi = 0. then
@@ -821,7 +821,7 @@ let jpeg_to_jpeg_wrapper objnum pdf ~target_dpi_info ~pixel_threshold ~length_th
         else
           if !debug_image_processing then Printf.printf "failed to meet dpi target\n%!"
     with
-      Not_found -> Printf.eprintf "Warning: orphaned image, skipping\n" (* Could not find DPI data - an orphan image. *)
+      Not_found -> if !debug_image_processing then Printf.printf "Warning: orphaned image, skipping\n" (* Could not find DPI data - an orphan image. *)
 
 let recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_jbig2enc pdf s dict reference =
   complain_jbig2enc path_to_jbig2enc;
