@@ -598,10 +598,7 @@ let jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~j
           if newsize < size && perc_ok then
             begin
               let data = Pdfio.bytes_of_input_channel result in
-              (*Printf.printf "Got %i bytes of result\n" (Pdfio.bytes_size data);
-              Printf.printf "%02X %02X %02X %02X\n" (Pdfio.bget data 0) (Pdfio.bget data 1) (Pdfio.bget data 2) (Pdfio.bget data 3);*)
-              let w, h = Cpdfjpeg.jpeg_dimensions data in
-              (*Printf.printf "Finsihed call to jpeg_dimensions\n";*)
+              let w, h = try Cpdfjpeg.jpeg_dimensions data with _ -> (w, h) in (* TODO. https://github.com/johnwhitington/cpdf-source/issues/349 *)
               if !debug_image_processing then Printf.printf "JPEG to JPEG %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
               reference :=
                 Pdf.add_dict_entry (Pdf.add_dict_entry (Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize)) "/Width" (Pdf.Integer w)) "/Height" (Pdf.Integer h),
