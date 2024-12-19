@@ -6012,29 +6012,34 @@ Cpdf can add PDF/UA structure data when drawing on new PDF/UA files. For example
 
 \noindent See chapter \ref{chap:18} for more details about adding structure information when drawing.
 
+%FIXME PDF/UA-2 as well?
 \section{Remediation of PDF/UA verification errors}
+
+\newcommand{\norem}{File does not meet Tagged PDF standard - no remediation possible.}
+\newcommand{\noremua}{File does not meet PDF/UA tagging standard - no remediation possible.}
+\newcommand{\gsfonts}{It is possible that reprocessing the file with \texttt{gs} using \texttt{cpdf in.pdf -gs gs -gs-malformed-force -o out.pdf [-gs-quiet]} will correct the fonts.}
 
 \bgroup
 \def\arraystretch{1.5}
 \noindent\begin{longtable}{lp{10cm}l}
   \textbf{\textsc{Number}} & \textbf{\textsc{Description}} & \textbf{\textsc{Reference}}\\\endhead
   \textbf{01-003} & \textbf{Content marked as Artifact is present inside tagged content.} & \textbf{UA1:7.1-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
+\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\norem}\\
   \textbf{01-004} & \textbf{Tagged content is present inside content marked as Artifact.} & \textbf{UA1:7.1-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
+\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\norem}\\
   \textbf{01-005} & \textbf{Content is neither marked as Artifact nor tagged as real content.} & \textbf{UA1:7-1-2}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
+\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\norem}\\
   \textbf{01-007} & \textbf{Suspects entry has a value of true.} & \textbf{UA1:7-1-11}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
+\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{If you are sure the file conforms to tagged PDF conventions, use \texttt{cpdf -replace-obj /Root/MarkInfo/Suspects=false in.pdf -o out.pdf}.}\\
 
 \textbf{02-001} & \textbf{One or more non-standard tag’s mapping does not terminate with a standard type.} & \textbf{UA1:7.1-3}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
+\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\noremua}\\
 
   \textbf{02-003} & \textbf{A circular mapping exists.} & \textbf{UA1:7.1-3}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
+\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\noremua}\\
 
   \textbf{02-004} & \textbf{One or more standard types are remapped.} & \textbf{UA1:7.1-4}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
+\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\noremua}\\
 
   \textbf{06-001} & \textbf{Document does not contain an XMP metadata stream} & \textbf{UA1:7.1-8}\\
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{Create XMP metadata from any existing old-style metadata in the file with \texttt{cpdf -create-metadata in.pdf -o out.pdf}. This may lead to further verification errors due to empty metadata entries.}\\
@@ -6052,22 +6057,22 @@ Cpdf can add PDF/UA structure data when drawing on new PDF/UA files. For example
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{Replace the entry with \texttt{cpdf -display-doc-title true in.pdf -o out.pdf}.}\\
 
   \textbf{09-004} & \textbf{A table-related structure element is used in a way that does not conform to the syntax defined in ISO 32000-1, Table 337.} & \textbf{UA1-7.2-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
+\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\noremua}\\
 
   \textbf{09-005} & \textbf{A list-related structure element is used in a way that does not conform to Table 336 in ISO 32000-1.} & \textbf{UA1-7.2-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
+\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\noremua}\\
 
   \textbf{09-006} & \textbf{A TOC-related structure element is used in a way that does not conform to Table 333 in ISO 32000-1.} & \textbf{UA1-7.2-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
+\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\noremua}\\
 
   \textbf{09-007} & \textbf{A Ruby-related structure element is used in a way that does not conform to Table 338 in ISO 32000-1.} & \textbf{UA1-7.2-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
+\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\noremua}\\
 
   \textbf{09-008} & \textbf{A Warichu-related structure element is used in a way that does not conform to Table 338 in ISO 32000-1.} & \textbf{UA1-7.2-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
+\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\noremua}\\
 
   \textbf{10-001} & \textbf{Character code cannot be mapped to Unicode.} & \textbf{UA1:7.2-2}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
+\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
 
   \textbf{11-001} & \textbf{Natural language for text in page content cannot be determined.} & \textbf{UA1:7.2-3}\\
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
