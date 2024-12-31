@@ -3645,20 +3645,14 @@ let build_enc () =
    chain. *)
 let split_chain str = map (fun x -> "/" ^ x) (tl (String.split_on_char '/' str))
 
-let print_obj json pdf objspec =
-  let write obj =
-    if json then
-      print_string (Cpdfyojson.Safe.pretty_to_string (Cpdfjson.json_of_object ~utf8:true pdf (fun _ -> ()) ~no_stream_data:false ~parse_content:false obj))
-    else
-      Printf.printf "%S\n" (Pdfwrite.string_of_pdf obj)
-  in
+let find_obj pdf objspec =
   let simple_obj obj =
-    write (if obj = 0 then pdf.Pdf.trailerdict else Pdf.lookup_obj pdf obj)
+    if obj = 0 then pdf.Pdf.trailerdict else Pdf.lookup_obj pdf obj
   in
   let chain_obj objnum chain =
     let obj = if objnum = 0 then pdf.Pdf.trailerdict else Pdf.lookup_obj pdf objnum in
     match Pdf.lookup_chain pdf obj chain with
-    | Some x -> write x
+    | Some x -> x
     | None -> raise (Pdf.PDFError "Chain not found")
   in
     match explode objspec with
@@ -3675,6 +3669,13 @@ let print_obj json pdf objspec =
         let digits, rest = cleavewhile isdigit l in
           chain_obj (int_of_string (implode digits)) (split_chain (implode rest))
 
+let print_obj json pdf objspec =
+  let obj = find_obj pdf objspec in
+    if json then
+      print_string (Cpdfyojson.Safe.pretty_to_string (Cpdfjson.json_of_object ~utf8:true pdf (fun _ -> ()) ~no_stream_data:false ~parse_content:false obj))
+    else
+      Printf.printf "%S\n" (Pdfwrite.string_of_pdf obj)
+
 let print_version () =
   flprint
     ("cpdf " ^ (if agpl then "AGPL " else "") ^ "Version " ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ (if minor_minor_version = 0 then "" else "." ^ string_of_int minor_minor_version) ^ " " ^ version_date ^ "\n")
@@ -3686,10 +3687,12 @@ let replace_obj pdf objspec obj =
       Pdf.replace_chain pdf chain obj
     with
       e -> Pdfe.log "Chain not found"; exit 2
-  
-let extract_stream pdf decomp objnum =
-  let objnum = int_of_string objnum in (* maybe objspec in the future... *)
-  let obj = Pdf.lookup_obj pdf objnum in
+
+let extract_stream_find_obj pdf objspec =
+  int_of_string objspec
+
+let extract_stream pdf decomp objspec =
+  let obj = find_obj pdf objspec in
   Pdf.getstream obj;
   if decomp then Pdfcodec.decode_pdfstream_until_unknown pdf obj;
   let data =
