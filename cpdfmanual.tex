@@ -6018,6 +6018,9 @@ Cpdf can add PDF/UA structure data when drawing on new PDF/UA files. For example
 \newcommand{\norem}{File does not meet Tagged PDF standard - no remediation possible.}
 \newcommand{\noremua}{File does not meet PDF/UA tagging standard - no remediation possible.}
 \newcommand{\gsfonts}{It is possible that reprocessing the file with \texttt{gs} using \texttt{cpdf in.pdf -gs gs -gs-malformed-force -o out.pdf [-gs-quiet]} will correct the fonts.}
+\newcommand{\remannot}{If annotations are not required, they may be removed with \texttt{cpdf -remove-annotations in.pdf -o out.pdf}.}
+\newcommand{\delannot}{Alternatively, use \texttt{-output-annotations-json} and \texttt{-set-annotations-json} as described in Chapter \ref{chap:10} to remove one or more specific annotations.}
+\newcommand{\edittree}{Alternatively, edit the tree manually using \texttt{-extract-struct-tree} and \texttt{-replace-struct-tree} from this chapter.}
 
 \bgroup
 \def\arraystretch{1.5}
@@ -6153,22 +6156,22 @@ Cpdf can add PDF/UA structure data when drawing on new PDF/UA files. For example
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
 
   \textbf{28-006} & \textbf{An annotation with subtype undefined in ISO 32000 does not meet 7.18.1.} & \textbf{UA1:7.18.2-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
+\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\remannot\ \delannot}\\
 
   \textbf{28-007} & \textbf{An annotation of subtype TrapNet exists.} & \textbf{UA1:7.18.2-2}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
+\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\remannot\ \delannot}\\
 
   \textbf{28-008} & \textbf{A page containing an annotation does not contain a Tabs entry} & \textbf{UA1:7.18.3-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
+\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\remannot\ \delannot}\\
 
   \textbf{28-009} & \textbf{A page containing an annotation has a Tabs entry with a value other than S.} & \textbf{UA1:7.18.3-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
+\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\remannot\ \delannot}\\
 
   \textbf{28-010} & \textbf{A widget annotation is not nested within a \textless Form\textgreater\ tag.} & \textbf{UA1:7.18.4-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
+\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\remannot\ \delannot\ \edittree}\\
 
   \textbf{28-011} & \textbf{A link annotation is not nested within a \textless Link\textgreater\ tag.} & \textbf{UA1:7.18.5-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
+\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\remannot\ \delannot\ \edittree}\\
 
   \textbf{28-012} & \textbf{A link annotation does not include an alternate description in its Contents entry.} & \textbf{UA1:7.18.5-2}\\
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
@@ -6183,10 +6186,10 @@ Cpdf can add PDF/UA structure data when drawing on new PDF/UA files. For example
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
 
   \textbf{28-017} & \textbf{A PrinterMark annotation is included in the logical structure.} & \textbf{UA1:7.18.8-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
+\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\remannot\ \delannot\ \edittree}\\
 
   \textbf{28-018} & \textbf{The appearance stream of a PrinterMark annotation is not marked as Artifact.} & \textbf{UA1:7.18.8-2}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
+\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\remannot\ \delannot}\\
 
   \textbf{30-001} & \textbf{A reference XObject is present.} & \textbf{UA1:7.2}\\
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\

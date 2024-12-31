@@ -1,5 +1,9 @@
 2.9 (to come)
 
+Extended features:
+
+o Chains can now print or alter any PDF object
+
 Fixes:
 
 o Harden auto-compression against malformed streams
