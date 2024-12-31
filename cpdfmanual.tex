@@ -6582,7 +6582,7 @@ $ ./cpdf -obj /Root/Pages/Count cpdfmanual.pdf
 "/MCBERL+URWPalladioL-Roma"
 \end{verbatim}}
 
-\noindent To output data in JSON format instead of PDF format, use \texttt{-obj-json} in place of \texttt{-obj}.
+\noindent If the object does not exist, Cpdf will exit with code 2. To output data in JSON format instead of PDF format, use \texttt{-obj-json} in place of \texttt{-obj}.
 
 A stream may be extracted with \texttt{-extract-stream} or \texttt{-extract-stream-decompress}, which decompresses it first where possible:
 

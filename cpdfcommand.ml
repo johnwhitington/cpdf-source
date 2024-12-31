@@ -3647,11 +3647,11 @@ let extract_stream pdf decomp objnum =
   let data =
     match obj with
     | Pdf.Stream {contents = (_, Pdf.Got x)} -> x
-    | _ -> mkbytes 0
+    | _ -> raise (Pdf.PDFError "Stream not found")
   in
     match args.out with
     | NoOutputSpecified ->
-        ()
+        raise (Pdf.PDFError "No output specified")
     | File outname ->
         let fh = open_out_bin outname in
           output_string fh (Pdfio.string_of_bytes data);
@@ -3688,7 +3688,8 @@ let print_obj json pdf objspec =
     let obj = if objnum = 0 then pdf.Pdf.trailerdict else Pdf.lookup_obj pdf objnum in
     match Pdf.lookup_chain pdf obj chain with
     | Some x -> write x
-    | None -> ()
+    | None ->
+        Pdfe.log "Chain not found"; exit 2
   in
     match explode objspec with
     | 'P'::more ->
@@ -3709,7 +3710,10 @@ let print_version () =
 let replace_obj pdf objspec obj =
   let split_chain str = map (fun x -> "/" ^ x) (tl (String.split_on_char '/' str)) in
   let chain = split_chain objspec in
-    Pdf.replace_chain pdf chain obj
+    try
+      Pdf.replace_chain pdf chain obj
+    with
+      e -> Pdfe.log "Chain not found"; exit 2
   
 (* Call out to GhostScript to rasterize. Read back in and replace the page contents with the resultant PNG. *)
 let rasterize antialias downsample device res annots quality pdf range =
