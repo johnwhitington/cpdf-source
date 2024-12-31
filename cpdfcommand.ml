@@ -3639,6 +3639,54 @@ let build_enc () =
        Pdfwrite.user_password = args.user;
        Pdfwrite.permissions = banlist_of_args ()}
 
+(* Empty string is trailerdict. Begins with / and it's a chain separated by
+   commas. Begins with P and it's a page number then a (possibly empty) chain.
+   Otherwise it's an object number (0 = trailerdict) then a (possibly empty)
+   chain. *)
+let split_chain str = map (fun x -> "/" ^ x) (tl (String.split_on_char '/' str))
+
+let print_obj json pdf objspec =
+  let write obj =
+    if json then
+      print_string (Cpdfyojson.Safe.pretty_to_string (Cpdfjson.json_of_object ~utf8:true pdf (fun _ -> ()) ~no_stream_data:false ~parse_content:false obj))
+    else
+      Printf.printf "%S\n" (Pdfwrite.string_of_pdf obj)
+  in
+  let simple_obj obj =
+    write (if obj = 0 then pdf.Pdf.trailerdict else Pdf.lookup_obj pdf obj)
+  in
+  let chain_obj objnum chain =
+    let obj = if objnum = 0 then pdf.Pdf.trailerdict else Pdf.lookup_obj pdf objnum in
+    match Pdf.lookup_chain pdf obj chain with
+    | Some x -> write x
+    | None -> raise (Pdf.PDFError "Chain not found")
+  in
+    match explode objspec with
+    | 'P'::more ->
+        let number, chain =
+          let digits, rest = cleavewhile isdigit more in
+            List.nth (Pdf.page_reference_numbers pdf) (int_of_string (implode digits) - 1),
+            begin match split_chain (implode rest) with [""] -> [] | x -> x end
+        in
+          chain_obj number chain
+    | '/'::more -> chain_obj 0 (split_chain (implode ('/'::more)))
+    | [] -> simple_obj 0
+    | l ->
+        let digits, rest = cleavewhile isdigit l in
+          chain_obj (int_of_string (implode digits)) (split_chain (implode rest))
+
+let print_version () =
+  flprint
+    ("cpdf " ^ (if agpl then "AGPL " else "") ^ "Version " ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ (if minor_minor_version = 0 then "" else "." ^ string_of_int minor_minor_version) ^ " " ^ version_date ^ "\n")
+
+let replace_obj pdf objspec obj =
+  let split_chain str = map (fun x -> "/" ^ x) (tl (String.split_on_char '/' str)) in
+  let chain = split_chain objspec in
+    try
+      Pdf.replace_chain pdf chain obj
+    with
+      e -> Pdfe.log "Chain not found"; exit 2
+  
 let extract_stream pdf decomp objnum =
   let objnum = int_of_string objnum in (* maybe objspec in the future... *)
   let obj = Pdf.lookup_obj pdf objnum in
@@ -3669,52 +3717,6 @@ let replace_stream pdf n filename =
     | _ -> error "not a stream"
     end
 
-(* Empty string is trailerdict. Begins with / and it's a chain separated by
-   commas. Begins with P and it's a page number then a (possibly empty) chain.
-   Otherwise it's an object number (0 = trailerdict). *)
-let split_chain str = map (fun x -> "/" ^ x) (tl (String.split_on_char '/' str))
-
-let print_obj json pdf objspec =
-  let write obj =
-    if json then
-      print_string (Cpdfyojson.Safe.pretty_to_string (Cpdfjson.json_of_object ~utf8:true pdf (fun _ -> ()) ~no_stream_data:false ~parse_content:false obj))
-    else
-      Printf.printf "%S\n" (Pdfwrite.string_of_pdf obj)
-  in
-  let simple_obj obj =
-    write (if obj = 0 then pdf.Pdf.trailerdict else Pdf.lookup_obj pdf obj)
-  in
-  let chain_obj objnum chain =
-    let obj = if objnum = 0 then pdf.Pdf.trailerdict else Pdf.lookup_obj pdf objnum in
-    match Pdf.lookup_chain pdf obj chain with
-    | Some x -> write x
-    | None ->
-        Pdfe.log "Chain not found"; exit 2
-  in
-    match explode objspec with
-    | 'P'::more ->
-        let number, chain =
-          let digits, rest = cleavewhile isdigit more in
-            List.nth (Pdf.page_reference_numbers pdf) (int_of_string (implode digits) - 1),
-            begin match split_chain (implode rest) with [""] -> [] | x -> x end
-        in
-          chain_obj number chain
-    | '/'::more -> chain_obj 0 (split_chain (implode ('/'::more)))
-    | [] -> simple_obj 0
-    | _ -> simple_obj (int_of_string objspec)
-
-let print_version () =
-  flprint
-    ("cpdf " ^ (if agpl then "AGPL " else "") ^ "Version " ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ (if minor_minor_version = 0 then "" else "." ^ string_of_int minor_minor_version) ^ " " ^ version_date ^ "\n")
-
-let replace_obj pdf objspec obj =
-  let split_chain str = map (fun x -> "/" ^ x) (tl (String.split_on_char '/' str)) in
-  let chain = split_chain objspec in
-    try
-      Pdf.replace_chain pdf chain obj
-    with
-      e -> Pdfe.log "Chain not found"; exit 2
-  
 (* Call out to GhostScript to rasterize. Read back in and replace the page contents with the resultant PNG. *)
 let rasterize antialias downsample device res annots quality pdf range =
   if args.path_to_ghostscript = "" then begin
