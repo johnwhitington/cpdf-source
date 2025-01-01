@@ -4731,7 +4731,10 @@ let go () =
         write_pdf false pdf
   | Some (PrintDictEntry key) ->
       let pdf = get_single_pdf args.op true in
-        Cpdftweak.print_dict_entry ~utf8:(args.encoding = Cpdfmetadata.UTF8) pdf key
+        if args.format_json then
+          print_string (Pdfio.string_of_bytes (Cpdftweak.get_dict_entries ~utf8:(args.encoding = Cpdfmetadata.UTF8) pdf key))
+        else
+          Cpdftweak.print_dict_entry ~utf8:(args.encoding = Cpdfmetadata.UTF8) pdf key
   | Some ListSpotColours ->
       let pdf = get_single_pdf args.op false in
         Cpdfspot.list_spot_colours pdf

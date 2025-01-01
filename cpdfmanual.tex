@@ -6326,7 +6326,7 @@ Cpdf can add PDF/UA structure data when drawing on new PDF/UA files. For example
   \noindent\verb!cpdf -list-spot-colors in.pdf!
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf -print-dict-entry <key> in.pdf!
+  \noindent\verb!cpdf -print-dict-entry[-json] <key> in.pdf!
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -remove-dict-entry <key> [-dict-entry-search <term>]!\\
@@ -6346,10 +6346,12 @@ Cpdf can add PDF/UA structure data when drawing on new PDF/UA files. For example
   \noindent\verb!cpdf -replace-obj <object specification>=<object> in.pdf!
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf -extract-stream[-decompress] <obj num> in.pdf [-o out.dat | -stdout]!
+  \noindent\verb!cpdf -extract-stream[-decompress] <object specification>!\\
+  \noindent\verb!     in.pdf [-o out.dat | -stdout]!
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf -replace-stream <obj num> -replace-stream-with <filename>!\\
+  \noindent\verb!cpdf -replace-stream <object specification>!\\
+  \noindent\verb!     -replace-stream-with <filename>!\\
   \noindent\verb!     in.pdf -o out.pdf!\end{framed}}
   \section{Draft Documents}
 \index{draft}
@@ -6501,10 +6503,10 @@ This is for editing data within the PDF's internal representation. Use with caut
   \small\noindent\verb!cpdf -print-dict-entry /URI in.pdf!
 
   \vspace{2.5mm}
-  \noindent Print all URLs in annotation hyperlinks in \texttt{in.pdf}. 
+  \noindent Print all URLs in annotation hyperlinks in \texttt{in.pdf}, one per line. 
   \end{framed}
 
-\noindent To remove a dictionary entry:
+\noindent To report data in JSON format, add \texttt{-json}. To remove a dictionary entry:
 
   \begin{framed}
   \small\noindent\verb!cpdf -remove-dict-entry /One in.pdf -o out.pdf!
