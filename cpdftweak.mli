@@ -29,3 +29,9 @@ val get_dict_entries : utf8:bool -> Pdf.t -> string -> Pdfio.bytes
 
 (** Remove clipping. *)
 val remove_clipping : Pdf.t -> int list -> Pdf.t 
+
+val find_obj : Pdf.t -> string -> Pdf.pdfobject
+
+val replace_stream : Pdf.t -> int -> string -> unit
+
+val replace_obj : Pdf.t -> string -> Pdf.pdfobject -> unit

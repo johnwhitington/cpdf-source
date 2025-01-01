@@ -3639,60 +3639,18 @@ let build_enc () =
        Pdfwrite.user_password = args.user;
        Pdfwrite.permissions = banlist_of_args ()}
 
-(* Empty string is trailerdict. Begins with / and it's a chain separated by
-   commas. Begins with P and it's a page number then a (possibly empty) chain.
-   Otherwise it's an object number (0 = trailerdict) then a (possibly empty)
-   chain. *)
-let split_chain str = map (fun x -> "/" ^ x) (tl (String.split_on_char '/' str))
-
-let find_obj pdf objspec =
-  let simple_obj obj =
-    if obj = 0 then pdf.Pdf.trailerdict else Pdf.lookup_obj pdf obj
-  in
-  let chain_obj objnum chain =
-    let obj = if objnum = 0 then pdf.Pdf.trailerdict else Pdf.lookup_obj pdf objnum in
-    match Pdf.lookup_chain pdf obj chain with
-    | Some x -> x
-    | None -> raise (Pdf.PDFError "Chain not found")
-  in
-    match explode objspec with
-    | 'P'::more ->
-        let number, chain =
-          let digits, rest = cleavewhile isdigit more in
-            List.nth (Pdf.page_reference_numbers pdf) (int_of_string (implode digits) - 1),
-            begin match split_chain (implode rest) with [""] -> [] | x -> x end
-        in
-          chain_obj number chain
-    | '/'::more -> chain_obj 0 (split_chain (implode ('/'::more)))
-    | [] -> simple_obj 0
-    | l ->
-        let digits, rest = cleavewhile isdigit l in
-          chain_obj (int_of_string (implode digits)) (split_chain (implode rest))
-
 let print_obj json pdf objspec =
-  let obj = find_obj pdf objspec in
+  let obj = Cpdftweak.find_obj pdf objspec in
     if json then
       print_string (Cpdfyojson.Safe.pretty_to_string (Cpdfjson.json_of_object ~utf8:true pdf (fun _ -> ()) ~no_stream_data:false ~parse_content:false obj))
     else
       Printf.printf "%S\n" (Pdfwrite.string_of_pdf obj)
 
-let print_version () =
-  flprint
-    ("cpdf " ^ (if agpl then "AGPL " else "") ^ "Version " ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ (if minor_minor_version = 0 then "" else "." ^ string_of_int minor_minor_version) ^ " " ^ version_date ^ "\n")
-
-let replace_obj pdf objspec obj =
-  let split_chain str = map (fun x -> "/" ^ x) (tl (String.split_on_char '/' str)) in
-  let chain = split_chain objspec in
-    try
-      Pdf.replace_chain pdf chain obj
-    with
-      e -> Pdfe.log "Chain not found"; exit 2
-
 let extract_stream_find_obj pdf objspec =
   int_of_string objspec
 
 let extract_stream pdf decomp objspec =
-  let obj = find_obj pdf objspec in
+  let obj = Cpdftweak.find_obj pdf objspec in
   Pdf.getstream obj;
   if decomp then Pdfcodec.decode_pdfstream_until_unknown pdf obj;
   let data =
@@ -3710,15 +3668,9 @@ let extract_stream pdf decomp objspec =
     | Stdout ->
         output_string stdout (Pdfio.string_of_bytes data)
 
-(* Replace a stream from a file e.g 4=data.dat replaces contents of object 4. The stream dictionary is
-altered only to correct the length. *)
-let replace_stream pdf n filename =
-  let data = Pdfio.bytes_of_string (contents_of_file filename) in
-    begin match Pdf.lookup_obj pdf n with
-    | Pdf.Stream ({contents = dict, stream} as s) ->
-        s := (Pdf.add_dict_entry dict "/Length" (Pdf.Integer (bytes_size data)), Pdf.Got data)
-    | _ -> error "not a stream"
-    end
+let print_version () =
+  flprint
+    ("cpdf " ^ (if agpl then "AGPL " else "") ^ "Version " ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ (if minor_minor_version = 0 then "" else "." ^ string_of_int minor_minor_version) ^ " " ^ version_date ^ "\n")
 
 (* Call out to GhostScript to rasterize. Read back in and replace the page contents with the resultant PNG. *)
 let rasterize antialias downsample device res annots quality pdf range =
@@ -4888,7 +4840,7 @@ let go () =
         extract_stream pdf args.extract_stream_decompress s
   | Some (ReplaceStream s) ->
       let pdf = get_single_pdf args.op false in
-        replace_stream pdf (int_of_string s) args.replace_stream_with;
+        Cpdftweak.replace_stream pdf (int_of_string s) args.replace_stream_with;
         write_pdf false pdf
   | Some (PrintObj s) ->
       let pdf = get_single_pdf args.op true in
@@ -4896,7 +4848,7 @@ let go () =
   | Some (ReplaceObj (a, b)) ->
       let pdf = get_single_pdf args.op false in
       let pdfobj = pdf_or_json b in
-        replace_obj pdf a pdfobj;
+        Cpdftweak.replace_obj pdf a pdfobj;
         write_pdf false pdf
   | Some (Verify standard) ->
       begin match standard with

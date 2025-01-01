@@ -302,3 +302,51 @@ let remove_clipping pdf range =
       {page with Pdfpage.content = content'}
   in
     Cpdfpage.process_pages (Pdfpage.ppstub remove_clipping_page) pdf range
+
+(* Empty string is trailerdict. Begins with / and it's a chain separated by
+   commas. Begins with P and it's a page number then a (possibly empty) chain.
+   Otherwise it's an object number (0 = trailerdict) then a (possibly empty)
+   chain. *)
+let split_chain str = map (fun x -> "/" ^ x) (tl (String.split_on_char '/' str))
+
+let find_obj pdf objspec =
+  let simple_obj obj =
+    if obj = 0 then pdf.Pdf.trailerdict else Pdf.lookup_obj pdf obj
+  in
+  let chain_obj objnum chain =
+    let obj = if objnum = 0 then pdf.Pdf.trailerdict else Pdf.lookup_obj pdf objnum in
+    match Pdf.lookup_chain pdf obj chain with
+    | Some x -> x
+    | None -> raise (Pdf.PDFError "Chain not found")
+  in
+    match explode objspec with
+    | 'P'::more ->
+        let number, chain =
+          let digits, rest = cleavewhile isdigit more in
+            List.nth (Pdf.page_reference_numbers pdf) (int_of_string (implode digits) - 1),
+            begin match split_chain (implode rest) with [""] -> [] | x -> x end
+        in
+          chain_obj number chain
+    | '/'::more -> chain_obj 0 (split_chain (implode ('/'::more)))
+    | [] -> simple_obj 0
+    | l ->
+        let digits, rest = cleavewhile isdigit l in
+          chain_obj (int_of_string (implode digits)) (split_chain (implode rest))
+
+let replace_obj pdf objspec obj =
+  let split_chain str = map (fun x -> "/" ^ x) (tl (String.split_on_char '/' str)) in
+  let chain = split_chain objspec in
+    try
+      Pdf.replace_chain pdf chain obj
+    with
+      e -> Pdfe.log "Chain not found"; exit 2
+
+(* Replace a stream from a file e.g 4=data.dat replaces contents of object 4. The stream dictionary is
+altered only to correct the length. *)
+let replace_stream pdf n filename =
+  let data = Pdfio.bytes_of_string (contents_of_file filename) in
+    begin match Pdf.lookup_obj pdf n with
+    | Pdf.Stream ({contents = dict, stream} as s) ->
+        s := (Pdf.add_dict_entry dict "/Length" (Pdf.Integer (bytes_size data)), Pdf.Got data)
+    | _ -> error "not a stream"
+    end
