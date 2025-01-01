@@ -307,7 +307,8 @@ let remove_clipping pdf range =
    commas. Begins with P and it's a page number then a (possibly empty) chain.
    Otherwise it's an object number (0 = trailerdict) then a (possibly empty)
    chain. *)
-let split_chain str = map (fun x -> "/" ^ x) (tl (String.split_on_char '/' str))
+let split_chain str =
+  map (fun x -> "/" ^ x) (tl (String.split_on_char '/' str))
 
 let find_obj pdf objspec =
   let simple_obj obj =
@@ -334,18 +335,14 @@ let find_obj pdf objspec =
           chain_obj (int_of_string (implode digits)) (split_chain (implode rest))
 
 let replace_obj pdf objspec obj =
-  let split_chain str = map (fun x -> "/" ^ x) (tl (String.split_on_char '/' str)) in
-  let chain = split_chain objspec in
-    try
-      Pdf.replace_chain pdf chain obj
-    with
-      e -> Pdfe.log "Chain not found"; exit 2
+  try Pdf.replace_chain pdf (split_chain objspec) obj with
+    _ -> raise (Pdf.PDFError "Chain not found")
 
-(* Replace a stream from a file e.g 4=data.dat replaces contents of object 4. The stream dictionary is
-altered only to correct the length. *)
-let replace_stream pdf n filename =
+(* Replace a stream from a file e.g 4=data.dat replaces contents of object 4.
+   The stream dictionary is altered only to correct the length. *)
+let replace_stream pdf objspec filename =
   let data = Pdfio.bytes_of_string (contents_of_file filename) in
-    begin match Pdf.lookup_obj pdf n with
+    begin match find_obj pdf objspec with
     | Pdf.Stream ({contents = dict, stream} as s) ->
         s := (Pdf.add_dict_entry dict "/Length" (Pdf.Integer (bytes_size data)), Pdf.Got data)
     | _ -> error "not a stream"

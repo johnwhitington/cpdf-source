@@ -4840,7 +4840,7 @@ let go () =
         extract_stream pdf args.extract_stream_decompress s
   | Some (ReplaceStream s) ->
       let pdf = get_single_pdf args.op false in
-        Cpdftweak.replace_stream pdf (int_of_string s) args.replace_stream_with;
+        Cpdftweak.replace_stream pdf s args.replace_stream_with;
         write_pdf false pdf
   | Some (PrintObj s) ->
       let pdf = get_single_pdf args.op true in
