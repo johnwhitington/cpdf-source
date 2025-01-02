@@ -6015,12 +6015,16 @@ Cpdf can add PDF/UA structure data when drawing on new PDF/UA files. For example
 %FIXME PDF/UA-2 as well?
 \section{Remediation of PDF/UA verification errors}
 
-\newcommand{\norem}{File does not meet Tagged PDF standard - no remediation possible.}
-\newcommand{\noremua}{File does not meet PDF/UA tagging standard - no remediation possible.}
+(A description of manual remediation here, then it can be referred to.)
+
+\newcommand{\norem}{File does not meet Tagged PDF standard - only manual remediation possible (see description above this table).}
+\newcommand{\noremua}{File does not meet PDF/UA tagging standard - only manual remediation possible (see description above this table).}
+\newcommand{\manonly}{File does not meet PDF/UA standard - only manual remediation possible (see description above this table).}
 \newcommand{\gsfonts}{It is possible that reprocessing the file with \texttt{gs} using \texttt{cpdf in.pdf -gs gs -gs-malformed-force -o out.pdf [-gs-quiet]} will correct the fonts.}
 \newcommand{\remannot}{If annotations are not required, they may be removed with \texttt{cpdf -remove-annotations in.pdf -o out.pdf}.}
 \newcommand{\delannot}{Alternatively, use \texttt{-output-annotations-json} and \texttt{-set-annotations-json} as described in Chapter \ref{chap:10} to remove one or more specific annotations.}
 \newcommand{\edittree}{Alternatively, edit the tree manually using \texttt{-extract-struct-tree} and \texttt{-replace-struct-tree} from this chapter.}
+\newcommand{\setlang}{Assuming the document is all in a single language, set the top-level language with, for example, \texttt{cpdf -set-language "en-US" in.pdf -o out.pdf}. If the document contains multiple languages, only manual remediation is possible.}
 
 \bgroup
 \def\arraystretch{1.5}
@@ -6078,22 +6082,22 @@ Cpdf can add PDF/UA structure data when drawing on new PDF/UA files. For example
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
 
   \textbf{11-001} & \textbf{Natural language for text in page content cannot be determined.} & \textbf{UA1:7.2-3}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
+\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\setlang}\\
 
   \textbf{11-002} & \textbf{Natural language for text in Alt, ActualText and E attributes cannot be determined.} & \textbf{UA1:7.2-3}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
+\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\setlang}\\
 
   \textbf{11-003} & \textbf{Natural language in the Outline entries cannot be determined.} & UA1:7.2-3\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
+\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\setlang}\\
 
   \textbf{11-004} & \textbf{Natural language in the Contents entry for annotations cannot be determined.} & \textbf{UA1:7.2-3}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
+\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\setlang}\\
 
   \textbf{11-005} & \textbf{Natural language in the TU entry for form fields cannot be determined.} & \textbf{UA1:7.2-3}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
+\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\setlang}\\
 
   \textbf{11-006} & \textbf{Natural language for document metadata cannot be determined.} & \textbf{UA1:7.2-3}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
+\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\setlang}\\
 
   \textbf{13-004} & \textbf{\textless Figure\textgreater\ tag alternative or replacement text missing.} & \textbf{UA1:7.3-3}\\
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
