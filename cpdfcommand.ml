@@ -3641,10 +3641,11 @@ let build_enc () =
 
 let print_obj json pdf objspec =
   let obj = Cpdftweak.find_obj pdf objspec in
+  let trim s = implode (rev (tl (rev (tl (explode s))))) in
     if json then
       print_string (Cpdfyojson.Safe.pretty_to_string (Cpdfjson.json_of_object ~utf8:true pdf (fun _ -> ()) ~no_stream_data:false ~parse_content:false obj))
     else
-      Printf.printf "%S\n" (Pdfwrite.string_of_pdf obj)
+      print_endline (trim (Printf.sprintf "%S" (Pdfwrite.string_of_pdf obj)))
 
 let extract_stream_find_obj pdf objspec =
   int_of_string objspec
