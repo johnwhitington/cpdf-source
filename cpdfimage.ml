@@ -845,11 +845,11 @@ let recompress_1bpp_ccitt_lossless ~pixel_threshold ~length_threshold pdf s dict
             begin
               if !debug_image_processing then Printf.printf "1bpp to CCITT %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
               reference :=
-                (Pdf.remove_dict_entry
+                (Pdf.add_dict_entry
                 (Pdf.add_dict_entry
                   (Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize))
                    "/Filter"
-                   (Pdf.Name "/CCITTFaxDecode")) "/DecodeParms"),
+                   (Pdf.Name "/CCITTFaxDecode")) "/DecodeParms" (Pdf.Array [Pdf.Dictionary [("/K", Pdf.Integer 0); ("/Columns", Pdf.Integer w)]])),
                 Pdf.Got (compressed)
             end
            else
