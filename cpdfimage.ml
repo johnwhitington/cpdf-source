@@ -823,6 +823,41 @@ let jpeg_to_jpeg_wrapper objnum pdf ~target_dpi_info ~pixel_threshold ~length_th
     with
       Not_found -> if !debug_image_processing then Printf.printf "Warning: orphaned image, skipping\n" (* Could not find DPI data - an orphan image. *)
 
+let recompress_1bpp_ccitt_lossless ~pixel_threshold ~length_threshold pdf s dict reference =
+  let old = !reference in
+  let restore () = reference := old in
+  let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
+  let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
+  if w * h < pixel_threshold then (if !debug_image_processing then Printf.printf "pixel threshold not met\n%!") else (* (but also, jbig2enc fails on tiny images) *)
+  let size = match Pdf.lookup_direct pdf "/Length" dict with Some (Pdf.Integer i) -> i | _ -> 0 in
+  if size < length_threshold then (if !debug_image_processing then Printf.printf "length threshold not met\n%!") else
+    begin
+      Pdfcodec.decode_pdfstream_until_unknown pdf s;
+      match Pdf.lookup_direct pdf "/Filter" (fst !reference) with
+      | Some x ->
+          if !debug_image_processing then Printf.printf "could not decode - skipping %s length %i\n%!" (Pdfwrite.string_of_pdf x) size;
+          restore ()
+      | None ->
+        let data = match s with Pdf.Stream {contents = _, Pdf.Got d} -> d | _ -> assert false in
+        let compressed = data in
+        let newsize = bytes_size compressed in
+          if newsize < size then
+            begin
+              if !debug_image_processing then Printf.printf "1bpp to CCITT %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
+              reference :=
+                (Pdf.remove_dict_entry
+                (Pdf.add_dict_entry
+                  (Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize))
+                   "/Filter"
+                   (Pdf.Name "/CCITTFaxDecode")) "/DecodeParms"),
+                Pdf.Got (compressed)
+            end
+           else
+             if !debug_image_processing then Printf.printf "no size reduction\n%!"
+    end
+
+let recompress_1bpp_ccittg4_lossless ~pixel_threshold ~length_threshold pdf s dict reference = ()
+
 let recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_jbig2enc pdf s dict reference =
   complain_jbig2enc path_to_jbig2enc;
   let old = !reference in
@@ -1018,7 +1053,18 @@ let process
                   if !debug_image_processing then Printf.printf "(%i/%i) Object %i (1bpp)... %!" !ndone nobjects objnum;
                   recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_jbig2enc pdf s dict reference
                 end
-            | _ -> ()
+            | "CCITT" ->
+                begin
+                  if !debug_image_processing then Printf.printf "(%i/%i) Object %i (1bpp)... %!" !ndone nobjects objnum;
+                  recompress_1bpp_ccitt_lossless ~pixel_threshold ~length_threshold pdf s dict reference
+                end
+            | "CCITTG4" ->
+                begin
+                  if !debug_image_processing then Printf.printf "(%i/%i) Object %i (1bpp)... %!" !ndone nobjects objnum;
+                  recompress_1bpp_ccittg4_lossless ~pixel_threshold ~length_threshold pdf s dict reference
+                end
+            | "JBIG2Lossy" -> ()
+            | _ -> error "unknown 1bpp method"
             end
         | Some (Pdf.Name "/Image"), _, _, _ ->
             if qlossless < 101. then
