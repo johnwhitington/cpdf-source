@@ -1,6 +1,6 @@
 (* cpdf command line tools *)
 let demo = false
-let agpl = true
+let agpl = false
 let major_version = 2
 let minor_version = 8
 let minor_minor_version = 1
