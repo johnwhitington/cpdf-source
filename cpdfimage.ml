@@ -849,7 +849,7 @@ let recompress_1bpp_ccitt_lossless ~pixel_threshold ~length_threshold pdf s dict
                 (Pdf.add_dict_entry
                   (Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize))
                    "/Filter"
-                   (Pdf.Name "/CCITTFaxDecode")) "/DecodeParms" (Pdf.Array [Pdf.Dictionary [("/K", Pdf.Integer 0); ("/Columns", Pdf.Integer w)]])),
+                   (Pdf.Array [Pdf.Name "/CCITTFaxDecode"])) "/DecodeParms" (Pdf.Array [Pdf.Dictionary [("/K", Pdf.Integer 0); ("/Columns", Pdf.Integer w)]])),
                 Pdf.Got (compressed)
             end
            else
@@ -882,7 +882,7 @@ let recompress_1bpp_ccittg4_lossless ~pixel_threshold ~length_threshold pdf s di
                 (Pdf.add_dict_entry
                   (Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize))
                    "/Filter"
-                   (Pdf.Name "/CCITTFaxDecode")) "/DecodeParms" (Pdf.Array [Pdf.Dictionary [("/K", Pdf.Integer ~-1); ("/Columns", Pdf.Integer w)]])),
+                   (Pdf.Array [Pdf.Name "/CCITTFaxDecode"])) "/DecodeParms" (Pdf.Array [Pdf.Dictionary [("/K", Pdf.Integer ~-1); ("/Columns", Pdf.Integer w)]])),
                 Pdf.Got (compressed)
             end
            else
