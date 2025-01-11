@@ -828,9 +828,9 @@ let recompress_1bpp_ccitt_lossless ~pixel_threshold ~length_threshold pdf s dict
   let restore () = reference := old in
   let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
   let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
-  if w * h < pixel_threshold then (if !debug_image_processing then Printf.printf "pixel threshold not met\n%!") else (* (but also, jbig2enc fails on tiny images) *)
+  (*if w * h < pixel_threshold then (if !debug_image_processing then Printf.printf "pixel threshold not met\n%!") else*)
   let size = match Pdf.lookup_direct pdf "/Length" dict with Some (Pdf.Integer i) -> i | _ -> 0 in
-  if size < length_threshold then (if !debug_image_processing then Printf.printf "length threshold not met\n%!") else
+  (*if size < length_threshold then (if !debug_image_processing then Printf.printf "length threshold not met\n%!") else*)
     begin
       Pdfcodec.decode_pdfstream_until_unknown pdf s;
       match Pdf.lookup_direct pdf "/Filter" (fst !reference) with
@@ -841,7 +841,7 @@ let recompress_1bpp_ccitt_lossless ~pixel_threshold ~length_threshold pdf s dict
         let data = match s with Pdf.Stream {contents = _, Pdf.Got d} -> d | _ -> assert false in
         let compressed = Pdfcodec.encode_ccitt w data in
         let newsize = bytes_size compressed in
-          if newsize < size then
+          if true (*newsize < size*) then
             begin
               if !debug_image_processing then Printf.printf "1bpp to CCITT %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
               reference :=
@@ -861,7 +861,7 @@ let recompress_1bpp_ccittg4_lossless ~pixel_threshold ~length_threshold pdf s di
   let restore () = reference := old in
   let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
   let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
-  if w * h < pixel_threshold then (if !debug_image_processing then Printf.printf "pixel threshold not met\n%!") else (* (but also, jbig2enc fails on tiny images) *)
+  if w * h < pixel_threshold then (if !debug_image_processing then Printf.printf "pixel threshold not met\n%!") else
   let size = match Pdf.lookup_direct pdf "/Length" dict with Some (Pdf.Integer i) -> i | _ -> 0 in
   if size < length_threshold then (if !debug_image_processing then Printf.printf "length threshold not met\n%!") else
     begin
