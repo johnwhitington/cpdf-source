@@ -3,29 +3,8 @@ open Cpdferror
 
 (* Implements most Matterhorn checks except for those which require looking
    deep inside font files; and those which require reading inside the graphics
-   stream.
+   stream. All implemented except:
 
-   Fully implemented:
-     01-007
-     02-001 02-003 02-004
-     06-001 06-002 06-003
-     07-001 07-002
-     09-004 09-005 09-006 09-007 09-008
-     11-006
-     13-004
-     14-002 14-003 14-006 14-007
-     15-003
-     17-002
-     19-003 19-004
-     20-001 20-002 20-003
-     21-001
-     25-001
-     26-001 26-002
-     28-002 28-004 28-006 28-007 28-008 28-009 28-010 28-011 28-012 28-014
-            28-015 28-016 28-017
-     30-001
-     31-001 31-002 31-003 31-004 31-005 31-006 31-017 31-019 31-020 31-021
-            31-022 31-023 31-024 31-025 31-026 31-028 31-029 
    Partially implemented:
      31-009 31-027
    Unimplemented:
