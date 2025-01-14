@@ -7,10 +7,12 @@ o -obj/-obj-json can follow a chain from an object number
 o -obj/-obj-json can explore through arrays and name/number trees
 o -print-dict-entry, -remove-dict-entry and -replace-dict-entry
 can follow a chain from each found dictionary entry
+o More of the PDF/UA Matterhorn verification suite implemented
 
 Fixes:
 
 o Harden auto-compression against malformed streams
+o Add backup JPEG dimensions method in Cpdfimage
 
 2.8 (December 2024)
 
