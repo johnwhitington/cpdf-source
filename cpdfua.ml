@@ -702,8 +702,43 @@ let matterhorn_28_004 _ _ pdf =
 (* A form field does not have a TU entry and does not have an alternative
    description (in the form of an Alt entry in the enclosing structure
    element). *)
+let get_field_object_numbers pdf =
+  let rec get_field_object_numbers_inner obj =
+    match obj with
+    | Pdf.Indirect i ->
+        (* Is this referenced item a field (rather than an annotation alone?).
+           If so, count it, and recurse on an /Kids. *)
+        begin match Pdf.lookup_direct pdf "/T" (Pdf.Indirect i) with
+        | Some _ ->
+            begin match Pdf.lookup_direct pdf "/Kids" (Pdf.Indirect i) with
+            | None -> [i]
+            | Some kids -> i::get_field_object_numbers_inner kids
+            end
+        | None -> []
+        end
+    | _ ->
+       Pdfe.log "get_field_object_numbers_inner: non-indirect Kid";
+       []
+  in
+    match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/AcroForm"; "/Fields"] with
+    | Some (Pdf.Array toplevelfields) ->
+        flatten (map get_field_object_numbers_inner toplevelfields) 
+    | _ ->
+        []
+
 let matterhorn_28_005 _ _ pdf =
-  unimpl ()
+  let missing_tu =
+    option_map
+      (function objnum ->
+        match Pdf.lookup_direct pdf "/T" (Pdf.Indirect objnum) with
+        | Some _ -> None
+        | None -> Some objnum)
+      (get_field_object_numbers pdf)
+  in
+   if missing_tu = [] then () else
+     (* Check for alts in enclosing. We look for /StructParent (from merged annoation, not field) *)
+     let parent_tree = read_parent_tree pdf in
+     ()
 
 (* An annotation with subtype undefined in ISO 32000 does not meet 7.18.1. *)
 let matterhorn_28_006 _ _ pdf =
