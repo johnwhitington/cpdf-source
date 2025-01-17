@@ -12,7 +12,7 @@ open Cpdferror
      10-001
      11-001 11-002 11-003 11-004 11-005
      17-003
-     28-005 28-018
+     28-018
      30-002
      31-007 31-008 31-011 31-012 31-013 31-014 31-015 31-016 31-018 31-030 *)
 
@@ -707,17 +707,17 @@ let get_field_object_numbers pdf =
     match obj with
     | Pdf.Indirect i ->
         (* Is this referenced item a field (rather than an annotation alone?).
-           If so, count it, and recurse on an /Kids. *)
+           If so, count it, and recurse on /Kids. *)
         begin match Pdf.lookup_direct pdf "/T" (Pdf.Indirect i) with
         | Some _ ->
             begin match Pdf.lookup_direct pdf "/Kids" (Pdf.Indirect i) with
-            | None -> [i]
-            | Some kids -> i::get_field_object_numbers_inner kids
+            | Some (Pdf.Array kids) -> i::flatten (map get_field_object_numbers_inner kids)
+            | _ -> [i]
             end
         | None -> []
         end
-    | _ ->
-       Pdfe.log "get_field_object_numbers_inner: non-indirect Kid";
+    | x ->
+       Pdfe.log (Printf.sprintf "get_field_object_numbers_inner: non-indirect Kid %S\n" (Pdfwrite.string_of_pdf x));
        []
   in
     match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/AcroForm"; "/Fields"] with
@@ -736,9 +736,23 @@ let matterhorn_28_005 _ _ pdf =
       (get_field_object_numbers pdf)
   in
    if missing_tu = [] then () else
-     (* Check for alts in enclosing. We look for /StructParent (from merged annoation, not field) *)
+     (* Check for alts in enclosing. We look for /StructParent (from merged annotation, not field) *)
      let parent_tree = read_parent_tree pdf in
-     ()
+       iter
+         (fun objnum ->
+           let obj = Pdf.lookup_obj pdf objnum in
+              match Pdf.lookup_direct pdf "/StructParent" obj with
+              | Some (Pdf.Integer i) ->
+                  begin match List.assoc_opt (string_of_int i) parent_tree with
+                  | Some d ->
+                      begin match Pdf.lookup_direct pdf "/Alt" d with
+                      | None -> merror ()
+                      | _ -> ()
+                      end
+                  | _ -> merror ()
+                  end
+              | _ -> merror ())
+         missing_tu
 
 (* An annotation with subtype undefined in ISO 32000 does not meet 7.18.1. *)
 let matterhorn_28_006 _ _ pdf =
