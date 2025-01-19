@@ -1449,7 +1449,7 @@ let matterhorn =
    ("28-017", "A PrinterMark annotation is included in the logical structure.", "UA1:7.18.8-1", matterhorn_28_017);
    ("28-018", "The appearance stream of a PrinterMark annotation is not marked as Artifact.", "UA1:7.18.8-2", matterhorn_28_018);
    ("30-001", "A reference XObject is present.", "UA1:7.2", matterhorn_30_001);
-   ("30-002", "Form XObject contains MCIDs and is referenced more than once.", "UA1:7.20",  matterhorn_30_002);
+   ("30-002", "Form XObject contains MCIDs and is referenced more than once.", "UA1:7.21.3.1-1",  matterhorn_30_002);
    ("31-001", "A Type 0 font dictionary with encoding other than Identity-H and Identity-V has values for Registry in both CIDSystemInfo dictionaries that are not identical.", "UA1:7.21.3-1", matterhorn_31_001);
    ("31-002", "A Type 0 font dictionary with encoding other than Identity-H and Identity-V has values for Ordering in both CIDSystemInfo dictionaries that are not identical.", "UA1:7.21.3.1-1", matterhorn_31_002);
    ("31-003", "A Type 0 font dictionary with encoding other than Identity-H and Identity-V has a value for Supplement in the CIDSystemInfo dictionary of the CID font that is less than the value for Supplement in the CIDSystemInfo dictionary of the CMap.", "UA1:7.21.3.1-1", matterhorn_31_003);
