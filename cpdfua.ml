@@ -882,7 +882,24 @@ let matterhorn_28_017 _ _ pdf =
 (* The appearance stream of a PrinterMark annotation is not marked as Artifact.
  *)
 let matterhorn_28_018 _ _ pdf =
-  unimpl ()
+  let annotations =
+    map
+      (Pdf.lookup_obj pdf)
+      (Pdf.objselect (fun o -> match Pdf.lookup_direct pdf "/Subtype" o with Some (Pdf.Name "/PrinterMark") -> true | _ -> false) pdf)
+  in
+  let form_xobjects =
+    let ns = option_map (fun a -> Pdf.lookup_chain pdf a ["/AP"; "/N"]) annotations in
+      flatten
+        (map
+           (function Pdf.Dictionary d -> (map (Pdf.direct pdf) (map snd d)) | x -> [x])
+           ns)
+  in
+  iter
+    (fun stream ->
+       let resources = match Pdf.lookup_direct pdf "/Resources" stream with Some d -> d | None -> Pdf.Dictionary [] in
+       let ops = Pdfops.parse_operators pdf resources [stream] in
+         if Cpdftype.add_artifacts ops <> ops then merror ())
+    form_xobjects
 
 (* A reference XObject is present. *)
 let matterhorn_30_001 _ _ pdf =
