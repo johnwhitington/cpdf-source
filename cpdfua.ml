@@ -151,14 +151,36 @@ let string_of_st st =
   let rec convert (E (s, ks)) = `Tuple [`String s; `List (map convert ks)] in
     Cpdfyojson.Safe.pretty_to_string (convert st)
 
+(* Return a list of (obj number, ops) pairs for all pages and form xobjects in a document. *)
+let objnums_and_ops pdf =
+  []
+
 (* Content marked as Artifact is present inside tagged content. *)
-let matterhorn_01_003 _ _ pdf = unimpl ()
+let matterhorn_01_003 _ _ pdf =
+  let artifact_in_content ops =
+    false
+  in
+    iter
+      (fun (o, ops) -> if artifact_in_content ops then merror ())
+      (objnums_and_ops pdf)
 
 (* Tagged content is present inside content marked as Artifact. *)
-let matterhorn_01_004 _ _ pdf = unimpl ()
+let matterhorn_01_004 _ _ pdf =
+  let content_in_artifact ops =
+    false
+  in
+    iter
+      (fun (o, ops) -> if content_in_artifact ops then merror ())
+      (objnums_and_ops pdf)
 
 (* Content is neither marked as Artifact nor tagged as real content. *)
-let matterhorn_01_005 _ _ pdf = unimpl ()
+let matterhorn_01_005 _ _ pdf =
+  let untagged_content ops =
+    false
+  in
+    iter
+      (fun (o, ops) -> if untagged_content ops then merror ())
+      (objnums_and_ops pdf)
 
 (* Suspects entry has a value of true. *)
 let matterhorn_01_007 _ _ pdf =
