@@ -13,7 +13,6 @@ open Cpdferror
      11-001 11-002 11-003 11-004 11-005
      17-003
      28-018
-     30-002
      31-007 31-008 31-011 31-012 31-013 31-014 31-015 31-016 31-018 31-030 *)
 
 type subformat =
@@ -896,9 +895,24 @@ let matterhorn_30_001 _ _ pdf =
 
 (* Form XObject contains MCIDs and is referenced more than once. *)
 let matterhorn_30_002 _ _ pdf =
-  (* We need to consider inheritence here. What solutions do we already have
-     for that, and do we need anything new? *)
-  unimpl ()
+  let contains_mcid n =
+    let obj = Pdf.lookup_obj pdf n in
+    let ops = Pdfops.parse_operators pdf (match Pdf.lookup_direct pdf "/Resources" obj with Some r -> r | None -> Pdf.Dictionary []) [obj] in
+     keep (function Pdfops.Op_BDC (n, d) when Pdf.lookup_direct pdf "/MCID" d <> None -> true | _ -> false) ops <> []
+  in
+  (* 0. Regularize inheritance amongst pages. *)
+  Pdfpage.replace_inherit pdf (Pdf.page_reference_numbers pdf);
+  (* 1. Find list of xobject object numbers *)
+  let xobj_objnums =
+    Pdf.objselect (function o -> match Pdf.lookup_direct pdf "/Subtype" o with Some (Pdf.Name "/Form") -> true | _ -> false) pdf
+  in
+  (* 2. Trim to only ones containing MCIDs *)
+  let containing_mcids = keep contains_mcid xobj_objnums in
+  (* 3. Find from which place each of these is referenced. For pages, it's from
+     a page. For Xobjects, it's from an xobject. But, two pages (or xobjects)
+     could reference an xobject which references an xobject with an MCID - so
+     there is transitivity to deal with! *)
+    ()
 
 (* A Type 0 font dictionary with encoding other than Identity-H and Identity-V
    has values for Registry in both CIDSystemInfo dictionaries that are not
@@ -1416,7 +1430,7 @@ let matterhorn =
    ("28-017", "A PrinterMark annotation is included in the logical structure.", "UA1:7.18.8-1", matterhorn_28_017);
    ("28-018", "The appearance stream of a PrinterMark annotation is not marked as Artifact.", "UA1:7.18.8-2", matterhorn_28_018);
    ("30-001", "A reference XObject is present.", "UA1:7.2", matterhorn_30_001);
-   ("30-002", "Form XObject contains MCIDs and is referenced more than once.", "UA1:7.21.3.1-1",  matterhorn_30_002);
+   ("30-002", "Form XObject contains MCIDs and is referenced more than once.", "UA1:7.20",  matterhorn_30_002);
    ("31-001", "A Type 0 font dictionary with encoding other than Identity-H and Identity-V has values for Registry in both CIDSystemInfo dictionaries that are not identical.", "UA1:7.21.3-1", matterhorn_31_001);
    ("31-002", "A Type 0 font dictionary with encoding other than Identity-H and Identity-V has values for Ordering in both CIDSystemInfo dictionaries that are not identical.", "UA1:7.21.3.1-1", matterhorn_31_002);
    ("31-003", "A Type 0 font dictionary with encoding other than Identity-H and Identity-V has a value for Supplement in the CIDSystemInfo dictionary of the CID font that is less than the value for Supplement in the CIDSystemInfo dictionary of the CMap.", "UA1:7.21.3.1-1", matterhorn_31_003);
