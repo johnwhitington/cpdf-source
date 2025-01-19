@@ -505,7 +505,9 @@ let matterhorn_17_002 _ st2 pdf =
 
 (* Unicode mapping requirements are not met. *)
 let matterhorn_17_003 _ _ pdf =
-  unimpl ()
+  (* Covered elsewhere, since all text in the PDF must meet these requirements,
+     mathematical expressions need not be considered separately. *)
+  ()
 
 (* ID entry of the <Note> tag is not present. *)
 let matterhorn_19_003 st st2 pdf =
