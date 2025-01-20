@@ -173,32 +173,42 @@ let all_ops pdf =
   in
     form_xobject_ops @ page_ops
 
+let rec artifact_in_content c a = function
+  | [] -> ()
+  (* Start content. *)
+  | Pdfops.Op_BDC _::t -> artifact_in_content true a t
+  (* Start artifact. If already in content, this is an error. *)
+  | Pdfops.Op_BMC "/Artifact"::t -> if c then merror () else artifact_in_content c true t
+  (* End artifact or content, whichever is true. If both true, an error. *)
+  | Pdfops.Op_EMC::t -> if c && a then merror () else if c then artifact_in_content false a t else artifact_in_content c false t
+  (* Anything else *)
+  | h::t -> artifact_in_content c a t
+
+let rec content_in_artifact c a = function
+  | [] -> ()
+  (* Start content. If already in artifact, this is an error. *)
+  | Pdfops.Op_BDC _::t -> if a then merror () else content_in_artifact true a t
+  (* Start artifact. *)
+  | Pdfops.Op_BMC "/Artifact"::t -> content_in_artifact c true t
+  (* End artifact or content, whichever is true. If both true, an error. *)
+  | Pdfops.Op_EMC::t -> if c && a then merror () else if c then content_in_artifact false a t else content_in_artifact c false t
+  (* Anything else *)
+  | h::t -> content_in_artifact c a t
+
 (* Content marked as Artifact is present inside tagged content. *)
 let matterhorn_01_003 _ _ pdf =
-  let artifact_in_content ops =
-    false
-  in
-    iter
-      (fun ops -> if artifact_in_content ops then merror ())
-      (all_ops pdf)
+  iter (fun ops -> artifact_in_content false false ops) (all_ops pdf)
 
 (* Tagged content is present inside content marked as Artifact. *)
 let matterhorn_01_004 _ _ pdf =
-  let content_in_artifact ops =
-    false
-  in
-    iter
-      (fun ops -> if content_in_artifact ops then merror ())
-      (all_ops pdf)
+  iter (fun ops -> content_in_artifact false false ops) (all_ops pdf)
 
 (* Content is neither marked as Artifact nor tagged as real content. *)
 let matterhorn_01_005 _ _ pdf =
   let untagged_content ops =
-    false
+    if Cpdftype.add_artifacts ops <> ops then merror ()
   in
-    iter
-      (fun ops -> if untagged_content ops then merror ())
-      (all_ops pdf)
+    iter (fun ops -> untagged_content ops) (all_ops pdf)
 
 (* Suspects entry has a value of true. *)
 let matterhorn_01_007 _ _ pdf =
