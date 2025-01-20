@@ -1,19 +1,15 @@
 open Pdfutil
 open Cpdferror
 
-(* Implements most Matterhorn checks except for those which require looking
-   deep inside font files; and those which require reading inside the graphics
-   stream. All implemented except:
+(* Implements all Matterhorn checks except for those which require looking
+   deep inside font files. Implemented except:
 
    Partially implemented:
-     31-009 31-027
+     31-009 31-027 Fonts
    Unimplemented:
-     01-003 01-004 01-005
-     10-001
-     11-001 11-002 11-003 11-004 11-005
-     17-003
-     28-018
-     31-007 31-008 31-011 31-012 31-013 31-014 31-015 31-016 31-018 31-030 *)
+     10-001 Character code to unicode extraction
+     11-001 11-002 11-003 11-004 11-005 Natural Language
+     31-007 31-008 31-011 31-012 31-013 31-014 31-015 31-016 31-018 31-030 Fonts *)
 
 type subformat =
   | PDFUA1
@@ -151,9 +147,31 @@ let string_of_st st =
   let rec convert (E (s, ks)) = `Tuple [`String s; `List (map convert ks)] in
     Cpdfyojson.Safe.pretty_to_string (convert st)
 
-(* Return a list of (obj number, ops) pairs for all pages and form xobjects in a document. *)
-let objnums_and_ops pdf =
-  []
+(* Return a list of ops for all pages and form xobjects in a document. *)
+let all_ops pdf =
+  let form_xobject_ops =
+    let objnums =
+      Pdf.objselect
+        (function Pdf.Stream s when Pdf.lookup_direct pdf "/Subtype" (Pdf.Stream s) = Some (Pdf.Name "/Form") -> true | _ -> false)
+        pdf
+    in
+      map
+       (fun streamnum ->
+          let stream = Pdf.lookup_obj pdf streamnum in
+          let resources = match Pdf.lookup_direct pdf "/Resources" stream with Some d -> d | None -> Pdf.Dictionary [] in
+            Pdfops.parse_operators pdf resources [stream])
+        objnums
+  in
+  let page_ops =
+    map
+      (fun objnum ->
+         let stream = Pdf.lookup_obj pdf objnum in
+         let resources = match Pdf.lookup_direct pdf "/Resources" stream with Some d -> d | None -> Pdf.Dictionary [] in
+         let content = match Pdf.lookup_direct pdf "/Contents" stream with Some (Pdf.Array a) -> a | Some x -> [x] | None -> [] in
+           Pdfops.parse_operators pdf resources content)
+      (Pdf.page_reference_numbers pdf)
+  in
+    form_xobject_ops @ page_ops
 
 (* Content marked as Artifact is present inside tagged content. *)
 let matterhorn_01_003 _ _ pdf =
@@ -161,8 +179,8 @@ let matterhorn_01_003 _ _ pdf =
     false
   in
     iter
-      (fun (o, ops) -> if artifact_in_content ops then merror ())
-      (objnums_and_ops pdf)
+      (fun ops -> if artifact_in_content ops then merror ())
+      (all_ops pdf)
 
 (* Tagged content is present inside content marked as Artifact. *)
 let matterhorn_01_004 _ _ pdf =
@@ -170,8 +188,8 @@ let matterhorn_01_004 _ _ pdf =
     false
   in
     iter
-      (fun (o, ops) -> if content_in_artifact ops then merror ())
-      (objnums_and_ops pdf)
+      (fun ops -> if content_in_artifact ops then merror ())
+      (all_ops pdf)
 
 (* Content is neither marked as Artifact nor tagged as real content. *)
 let matterhorn_01_005 _ _ pdf =
@@ -179,8 +197,8 @@ let matterhorn_01_005 _ _ pdf =
     false
   in
     iter
-      (fun (o, ops) -> if untagged_content ops then merror ())
-      (objnums_and_ops pdf)
+      (fun ops -> if untagged_content ops then merror ())
+      (all_ops pdf)
 
 (* Suspects entry has a value of true. *)
 let matterhorn_01_007 _ _ pdf =
