@@ -5,10 +5,14 @@ open Cpdferror
    deep inside font files. Implemented except:
 
    Partially implemented:
-     31-009 31-027 Fonts
+     31-009 31-027 Can require looking inside font files
+
+     11-001 11-002 11-003 11-004 11-005 Natural Language (We just check for
+     top-level document language - PDF/UA2 requires it, and we have no example
+     files without it.)
+
    Unimplemented:
      10-001 Character code to unicode extraction
-     11-001 11-002 11-003 11-004 11-005 Natural Language
      31-007 31-008 31-011 31-012 31-013 31-014 31-015 31-016 31-018 31-030 Fonts *)
 
 type subformat =
@@ -444,14 +448,13 @@ let matterhorn_09_008 st st2 pdf =
 let matterhorn_10_001 _ _ pdf =
   unimpl ()
 
-(* Not clear what to do for 001...005 here - if the top-level /Lang is present,
-   that rules all and is sufficient. So how could these then fail? Perhaps they
-   mean if an intervening one has "" as the lang - i.e unknown. Or, if it is
-   not on the ISO 3066 registry list? *)
+(* If the top-level /Lang is present, that rules all and is sufficient. *)
 
 (* Natural language for text in page content cannot be determined. *)
 let matterhorn_11_001 _ _ pdf =
-  unimpl ()
+  match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/Lang"] with
+  | Some (Pdf.String "") | None -> merror_str "No top-level /Lang"
+  | Some _ -> ()
 
 (* Natural language for text in Alt, ActualText and E attributes cannot be
    determined. *)
@@ -469,13 +472,7 @@ let matterhorn_11_005 _ _ pdf = unimpl ()
 
 (* Natural language for document metadata cannot be determined. *)
 let matterhorn_11_006 _ _ pdf =
-  (* Per 2008 14.9.2.1-2, document metadata language is simply determined by
-     the top-level /Lang. In theory, one could omit the top-level /Lang and use
-     xml:lang everywhere in the metadata, but we haven't seen an example which
-     omits top-level /Lang so this will do for now. *)
-  match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/Lang"] with
-  | Some (Pdf.String "") | None -> merror_str "No top-level /Lang"
-  | Some _ -> ()
+  unimpl ()
 
 (* <Figure> tag alternative or replacement text missing. *)
 let matterhorn_13_004 _ st2 pdf =
