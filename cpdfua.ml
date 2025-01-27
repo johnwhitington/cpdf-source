@@ -12,7 +12,6 @@ open Cpdferror
      files without it.)
 
    Unimplemented:
-     10-001 Character code to unicode extraction
      31-007 31-008 31-011 31-012 31-013 31-014 31-015 31-016 31-018 31-030 Fonts *)
 
 type subformat =
@@ -274,7 +273,7 @@ let matterhorn_06_001 _ _ pdf =
   | Some _ -> ()
   | None -> merror ()
 
-(* The XMP metadata stream in the Catalog dictionary does notinclude the
+(* The XMP metadata stream in the Catalog dictionary does not include the
    PDF/UA identifier. *)
 let matterhorn_06_002 _ _ pdf =
   match Cpdfmetadata.get_metadata pdf with
@@ -446,7 +445,24 @@ let matterhorn_09_008 st st2 pdf =
 
 (* Character code cannot be mapped to Unicode. *)
 let matterhorn_10_001 _ _ pdf =
-  unimpl ()
+  (* Each font in the PDF must either, per 9.10.2 in the standard
+      a) Have a /ToUnicode entry; or
+      b) Be a simple font with a simple encoding; or
+      c) Be a CIDFont matching certain parameters *)
+  let check_font font =
+    match Pdf.lookup_direct pdf "/ToUnicode" font with
+    | Some _ -> ()
+    | _ ->
+        ()
+  in
+    Pdf.objiter
+      (fun _ o ->
+         match Pdf.lookup_direct pdf "/Type" o, Pdf.lookup_direct pdf "/Subtype" o with
+         | Some (Pdf.Name "/Font"), Some (Pdf.Name ("/CIDFontType0" | "/CIDFontType2")) -> ()
+         | Some (Pdf.Name "/Font"), _ ->
+             check_font o
+         | _ -> ())
+      pdf
 
 (* If the top-level /Lang is present, that rules all and is sufficient. *)
 
@@ -471,8 +487,7 @@ let matterhorn_11_004 _ _ pdf = unimpl ()
 let matterhorn_11_005 _ _ pdf = unimpl ()
 
 (* Natural language for document metadata cannot be determined. *)
-let matterhorn_11_006 _ _ pdf =
-  unimpl ()
+let matterhorn_11_006 _ _ pdf = unimpl ()
 
 (* <Figure> tag alternative or replacement text missing. *)
 let matterhorn_13_004 _ st2 pdf =
@@ -568,7 +583,6 @@ let matterhorn_19_003 st st2 pdf =
 (* ID entry of the <Note> tag is non-unique. *)
 let matterhorn_19_004 _ _ pdf =
   (* Looking for /Type /StructElem /N /Note /ID to exist. *)
-  (* FIXME ClassMaps here? *)
   let ids = ref [] in
     Pdf.objiter
       (fun _ x ->
