@@ -6,9 +6,11 @@ open Cpdferror
 
    Partially implemented:
      31-009 31-027 Can require looking inside font files
+     
+     10-002 Doesn't check CID keyed fonts
 
      11-001 11-002 11-003 11-004 11-005 Natural Language (We just check for
-     top-level document language - PDF/UA2 requires it, and we have no example
+     top-level document language - PDF/UA-2 requires it, and we have no example
      files without it.)
 
    Unimplemented:
@@ -480,7 +482,7 @@ in
             match Pdf.lookup_direct pdf "/Subtype" font with
             | Some (Pdf.Name "/Type0") ->
               (* c) *)
-              ()
+              unimpl ()
             | _ -> merror ()
   in
     Pdf.objiter
