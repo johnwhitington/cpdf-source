@@ -449,18 +449,32 @@ let matterhorn_10_001 _ _ pdf =
       a) Have a /ToUnicode entry; or
       b) Be a simple font with a simple encoding; or
       c) Be a CIDFont matching certain parameters *)
+  let check_diffs diffs =
+    () (*FIXME *)
+  in
   let check_font font =
     match Pdf.lookup_direct pdf "/ToUnicode" font with
-    | Some _ -> ()
+    | Some _ -> (* a) *) ()
     | _ ->
-        ()
+        match Pdf.lookup_direct pdf "/Encoding" font with
+        | Some (Pdf.Name ("/MacRomanEncoding" | "/MacExpertEncoding" | "/WinAnsiEncoding")) -> () (* b) 1 *)
+        | Some d ->
+            begin match Pdf.lookup_direct pdf "/Differences" d with
+            | Some diffs -> check_diffs diffs (* b) 2 *)
+            | None -> merror ()
+            end
+        | None ->
+            match Pdf.lookup_direct pdf "/Subtype" font with
+            | Some (Pdf.Name "/Type0") ->
+              (* c) *)
+              ()
+            | _ -> merror ()
   in
     Pdf.objiter
       (fun _ o ->
          match Pdf.lookup_direct pdf "/Type" o, Pdf.lookup_direct pdf "/Subtype" o with
          | Some (Pdf.Name "/Font"), Some (Pdf.Name ("/CIDFontType0" | "/CIDFontType2")) -> ()
-         | Some (Pdf.Name "/Font"), _ ->
-             check_font o
+         | Some (Pdf.Name "/Font"), _ -> check_font o
          | _ -> ())
       pdf
 
