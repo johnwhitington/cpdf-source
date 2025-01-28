@@ -459,7 +459,7 @@ let matterhorn_10_001 _ _ pdf =
        @ Pdfglyphlist.name_to_standard
        @ Pdfglyphlist.name_to_pdf
        @ Pdfglyphlist.name_to_macroman)
-in
+  in
     let names =
       match diffs with
       | Pdf.Array a -> option_map (function Pdf.Name n -> Some n | _ -> None) a
@@ -486,19 +486,14 @@ in
               unimpl ()
             | _ -> merror ()
   in
-
-    (* FIXME Not all object numbers, because text extraction need not be
-    possible on fonts referenced only from within AcroForms. Also fonts may be
-    direct and not even object numbers at all. So, instead, return the list of
-    fonts from a file just like -list-fonts and use those fonts. *)
-    Pdf.objiter
-      (fun o _ ->
-         let o = Pdf.lookup_obj pdf o in
-           match Pdf.lookup_direct pdf "/Type" o, Pdf.lookup_direct pdf "/Subtype" o with
-           | Some (Pdf.Name "/Font"), Some (Pdf.Name ("/CIDFontType0" | "/CIDFontType2")) -> ()
-           | Some (Pdf.Name "/Font"), _ -> check_font o
-           | _ -> ())
-      pdf
+    let fonts = map (fun (_, _, _, _, _, x) -> x) (Cpdffont.list_fonts pdf (ilist 1 (Pdfpage.endpage pdf))) in
+      iter
+        (fun o ->
+             match Pdf.lookup_direct pdf "/Type" o, Pdf.lookup_direct pdf "/Subtype" o with
+             | Some (Pdf.Name "/Font"), Some (Pdf.Name ("/CIDFontType0" | "/CIDFontType2")) -> ()
+             | Some (Pdf.Name "/Font"), _ -> check_font o
+             | _ -> ())
+        fonts
 
 (* If the top-level /Lang is present, that rules all and is sufficient. *)
 
