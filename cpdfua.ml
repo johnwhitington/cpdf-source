@@ -450,7 +450,20 @@ let matterhorn_10_001 _ _ pdf =
       b) Be a simple font with a simple encoding; or
       c) Be a CIDFont matching certain parameters *)
   let check_diffs diffs =
-    () (*FIXME *)
+    let allowed_names =
+      map fst
+        (Pdfglyphlist.name_to_symbol
+       @ Pdfglyphlist.name_to_win
+       @ Pdfglyphlist.name_to_standard
+       @ Pdfglyphlist.name_to_pdf
+       @ Pdfglyphlist.name_to_macroman)
+in
+    let names =
+      match diffs with
+      | Pdf.Array a -> option_map (function Pdf.Name n -> Some n | _ -> None) a
+      | _ -> []
+    in
+      if not (List.for_all (mem' allowed_names) names) then merror ()
   in
   let check_font font =
     match Pdf.lookup_direct pdf "/ToUnicode" font with
