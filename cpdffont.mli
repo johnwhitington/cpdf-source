@@ -5,7 +5,7 @@
 (** Print font list to stdout *)
 val print_fonts : ?json:bool -> Pdf.t -> int list -> unit
 
-(** Return font list. Page number, name, subtype, basefont, encoding.  *)
+(** Return font list. Page number, name, subtype, basefont, encoding, font (direct).  *)
 val list_fonts : Pdf.t -> int list -> (int * string * string * string * string * Pdf.pdfobject) list
 
 (** Return font list in JSON format *)

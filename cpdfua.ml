@@ -468,7 +468,7 @@ let matterhorn_10_001 _ _ pdf =
       if not (List.for_all (mem' allowed_names) names) then merror ()
   in
   let check_font font =
-    Printf.printf "Check font: %s\n" (Pdfwrite.string_of_pdf font);
+    (*Printf.printf "Check font: %s\n" (Pdfwrite.string_of_pdf font);*)
     match Pdf.lookup_direct pdf "/ToUnicode" font with
     | Some _ -> (* a) *) ()
     | _ ->

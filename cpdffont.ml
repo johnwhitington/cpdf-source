@@ -268,7 +268,7 @@ let list_font pdf page (name, dict) =
     | Some (Pdf.Name n) -> Pdfwrite.string_of_pdf (Pdf.Name n)
     | _ -> ""
   in 
-    (page, name, subtype, basefont, encoding, Pdf.Null)
+    (page, name, subtype, basefont, encoding, Pdf.direct pdf dict)
 
 (* List the fonts used in an xobject, and in any of the xobjects it has. Do not
    process an xobject twice. *)
