@@ -468,6 +468,7 @@ in
       if not (List.for_all (mem' allowed_names) names) then merror ()
   in
   let check_font font =
+    Printf.printf "Check font: %s\n" (Pdfwrite.string_of_pdf font);
     match Pdf.lookup_direct pdf "/ToUnicode" font with
     | Some _ -> (* a) *) ()
     | _ ->
@@ -485,12 +486,18 @@ in
               unimpl ()
             | _ -> merror ()
   in
+
+    (* FIXME Not all object numbers, because text extraction need not be
+    possible on fonts referenced only from within AcroForms. Also fonts may be
+    direct and not even object numbers at all. So, instead, return the list of
+    fonts from a file just like -list-fonts and use those fonts. *)
     Pdf.objiter
-      (fun _ o ->
-         match Pdf.lookup_direct pdf "/Type" o, Pdf.lookup_direct pdf "/Subtype" o with
-         | Some (Pdf.Name "/Font"), Some (Pdf.Name ("/CIDFontType0" | "/CIDFontType2")) -> ()
-         | Some (Pdf.Name "/Font"), _ -> check_font o
-         | _ -> ())
+      (fun o _ ->
+         let o = Pdf.lookup_obj pdf o in
+           match Pdf.lookup_direct pdf "/Type" o, Pdf.lookup_direct pdf "/Subtype" o with
+           | Some (Pdf.Name "/Font"), Some (Pdf.Name ("/CIDFontType0" | "/CIDFontType2")) -> ()
+           | Some (Pdf.Name "/Font"), _ -> check_font o
+           | _ -> ())
       pdf
 
 (* If the top-level /Lang is present, that rules all and is sufficient. *)

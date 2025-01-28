@@ -268,7 +268,7 @@ let list_font pdf page (name, dict) =
     | Some (Pdf.Name n) -> Pdfwrite.string_of_pdf (Pdf.Name n)
     | _ -> ""
   in 
-    (page, name, subtype, basefont, encoding)
+    (page, name, subtype, basefont, encoding, Pdf.Null)
 
 (* List the fonts used in an xobject, and in any of the xobjects it has. Do not
    process an xobject twice. *)
@@ -321,10 +321,10 @@ let list_fonts pdf range =
              [])
         (combine (ilist 1 (length pages)) pages))
 
-let string_of_font (p, n, s, b, e) =
+let string_of_font (p, n, s, b, e, _) =
   Printf.sprintf "%i %s %s %s %s\n" p n s b e
 
-let json_of_font (pagenum, name, subtype, basefont, encoding) =
+let json_of_font (pagenum, name, subtype, basefont, encoding, _) =
   `Assoc
     [("page", `Int pagenum);
      ("name", `String name);

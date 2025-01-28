@@ -3,16 +3,19 @@
 Extended features:
 
 o -obj JSON output
-o -obj/-obj-json can follow a chain from an object number
-o -obj/-obj-json can explore through arrays and name/number trees
-o -print-dict-entry, -remove-dict-entry and -replace-dict-entry
+* -obj/-obj-json can follow a chain from an object number
+* -obj/-obj-json can explore through arrays and name/number trees
+* -print-dict-entry, -remove-dict-entry and -replace-dict-entry
 can follow a chain from each found dictionary entry
-o More of the PDF/UA Matterhorn verification suite implemented
+* More of the PDF/UA Matterhorn verification suite implemented
+* Font lister now returns the font itself
 
 Fixes:
 
 o Harden auto-compression against malformed streams
 o Add backup JPEG dimensions method in Cpdfimage
+
+* = Supported by a grant from NLnet
 
 2.8 (December 2024)
 

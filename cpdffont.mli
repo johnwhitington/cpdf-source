@@ -6,7 +6,7 @@
 val print_fonts : ?json:bool -> Pdf.t -> int list -> unit
 
 (** Return font list. Page number, name, subtype, basefont, encoding.  *)
-val list_fonts : Pdf.t -> int list -> (int * string * string * string * string) list
+val list_fonts : Pdf.t -> int list -> (int * string * string * string * string * Pdf.pdfobject) list
 
 (** Return font list in JSON format *)
 val json_fonts : Pdf.t -> int list -> Cpdfyojson.Safe.t
