@@ -1,8 +1,7 @@
 open Pdfutil
 open Cpdferror
 
-(* Implements all Matterhorn checks except for those which require looking
-   deep inside font files. Implemented except:
+(* Implements most Matterhorn checks except for:
 
    Partially implemented:
      31-009 31-027 Can require looking inside font files
@@ -14,7 +13,8 @@ open Cpdferror
      files without it.)
 
    Unimplemented:
-     31-007 31-008 31-011 31-012 31-013 31-014 31-015 31-016 31-018 31-030 Fonts *)
+     31-007 31-008 31-011 31-012 31-013 31-014 31-015 31-016 31-018 31-030
+     Require looking inside font files *)
 
 type subformat =
   | PDFUA1
@@ -209,11 +209,19 @@ let matterhorn_01_004 _ _ pdf =
   iter (fun ops -> content_in_artifact false false ops) (all_ops pdf)
 
 (* Content is neither marked as Artifact nor tagged as real content. *)
+
+(* Which operations are real? *)
+let op_is_real = function
+  | Pdfops.(  Op_m _ | Op_l _ | Op_c _ | Op_v _ | Op_y _ | Op_h | Op_re _ | Op_S | Op_s | Op_f | Op_F | Op_f'
+            | Op_B | Op_B' | Op_b | Op_b' | Op_n | Op_W | Op_W' | Op_BT | Op_ET | Op_Tj _ | Op_TJ _ | Op_' _ 
+            | Op_'' _ | Op_sh _ | InlineImage _ | Op_Do _) -> true
+  | _ -> false
+
+(* Look at a list of ops and return operators neither marked as neither artifect nor content *)
+let naked_ops ops = []
+
 let matterhorn_01_005 _ _ pdf =
-  let untagged_content ops =
-    if Cpdftype.add_artifacts ops <> ops then merror ()
-  in
-    iter (fun ops -> untagged_content ops) (all_ops pdf)
+  iter (fun ops -> if List.exists op_is_real (naked_ops ops) then merror ()) (all_ops pdf)
 
 (* Suspects entry has a value of true. *)
 let matterhorn_01_007 _ _ pdf =
