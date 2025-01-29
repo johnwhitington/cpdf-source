@@ -153,19 +153,22 @@ let string_of_st st =
     Cpdfyojson.Safe.pretty_to_string (convert st)
 
 (* Return a list of ops for all pages and form xobjects in a document. *)
-let all_ops pdf =
+let all_ops ?(xobjects=true) pdf =
   let form_xobject_ops =
-    let objnums =
-      Pdf.objselect
-        (function Pdf.Stream s when Pdf.lookup_direct pdf "/Subtype" (Pdf.Stream s) = Some (Pdf.Name "/Form") -> true | _ -> false)
-        pdf
-    in
-      map
-       (fun streamnum ->
-          let stream = Pdf.lookup_obj pdf streamnum in
-          let resources = match Pdf.lookup_direct pdf "/Resources" stream with Some d -> d | None -> Pdf.Dictionary [] in
-            Pdfops.parse_operators pdf resources [stream])
-        objnums
+    if xobjects then
+      let objnums =
+        Pdf.objselect
+          (function Pdf.Stream s when Pdf.lookup_direct pdf "/Subtype" (Pdf.Stream s) = Some (Pdf.Name "/Form") -> true | _ -> false)
+          pdf
+      in
+        map
+         (fun streamnum ->
+            let stream = Pdf.lookup_obj pdf streamnum in
+            let resources = match Pdf.lookup_direct pdf "/Resources" stream with Some d -> d | None -> Pdf.Dictionary [] in
+              Pdfops.parse_operators pdf resources [stream])
+          objnums
+     else
+       []
   in
   let page_ops =
     map
@@ -213,15 +216,34 @@ let matterhorn_01_004 _ _ pdf =
 (* Which operations are real? *)
 let op_is_real = function
   | Pdfops.(  Op_m _ | Op_l _ | Op_c _ | Op_v _ | Op_y _ | Op_h | Op_re _ | Op_S | Op_s | Op_f | Op_F | Op_f'
-            | Op_B | Op_B' | Op_b | Op_b' | Op_n | Op_W | Op_W' | Op_BT | Op_ET | Op_Tj _ | Op_TJ _ | Op_' _ 
+            | Op_B | Op_B' | Op_b | Op_b' | Op_n | Op_W | Op_W' | Op_Tj _ | Op_TJ _ | Op_' _ 
             | Op_'' _ | Op_sh _ | InlineImage _ | Op_Do _) -> true
   | _ -> false
 
-(* Look at a list of ops and return operators neither marked as neither artifect nor content *)
-let naked_ops ops = []
+(* Look at a list of ops and return operators neither marked as neither
+   artifect nor content. Assumes artifact/content markers not nested - so each
+   op is either unmarked, marked as artifact or marked as content. But, of
+   course, other marked content may be present. If it is, it must be properly
+   nested. *)
+type mc = Artifact | Content | Other
+
+let rec naked_ops acc stack = function
+  | [] -> rev acc
+  | Pdfops.Op_BDC (_, Pdf.Dictionary d)::t when lookup "/MCID" d <> None -> naked_ops acc (Content::stack) t
+  | Pdfops.Op_BDC _::t -> naked_ops acc (Other::stack) t
+  | Pdfops.Op_BMC "/Artifact"::t -> naked_ops acc (Artifact::stack) t
+  | Pdfops.Op_EMC::t ->
+      if stack = [] then (Printf.printf "Empty stack!\n"; merror ()) else naked_ops acc (tl stack) t
+  | h::t ->
+      if List.exists (function Artifact | Content -> true | _ -> false) stack
+        then naked_ops acc stack t
+        else naked_ops (h::acc) stack t
+
+let print_ops =
+  iter (fun op -> Printf.printf "%s\n" (Pdfops.string_of_op op))
 
 let matterhorn_01_005 _ _ pdf =
-  iter (fun ops -> if List.exists op_is_real (naked_ops ops) then merror ()) (all_ops pdf)
+  iter (fun ops -> if List.exists op_is_real (let n = naked_ops [] [] ops in print_ops n; n) then merror ()) (all_ops ~xobjects:false pdf)
 
 (* Suspects entry has a value of true. *)
 let matterhorn_01_007 _ _ pdf =
