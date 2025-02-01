@@ -6015,7 +6015,13 @@ Cpdf can add PDF/UA structure data when drawing on new PDF/UA files. For example
 %FIXME PDF/UA-2 as well?
 \section{Remediation of PDF/UA verification errors}
 
-(A description of manual remediation here, then it can be referred to.)
+Remediation of a file which claims to match PDF/UA but which does not (either failing human or mechanical tests) is a complex topic. In this section, we list possible remediations for a file which fails mechanical verification with Cpdf or another verification tool. Sometimes these will be clear and simple -- for example where some piece of document metadata is missing -- and sometimes they will be almost impossible. Of course, often the truth lies between those two extremes.  
+
+When all else fails, it may be possible to modify the basic structures of the PDF manually. This may be done by extracting the PDF to JSON using \texttt{-output-json} from chapter \ref{chap:15}, modifying the file manually in a text editor or automatically with a JSON processing tool such as \texttt{jq} and converting back to a PDF with \texttt{-j}. If the remediation requires altering page content streams, the option \texttt{-output-json-parse-content-streams} may be used. 
+
+\subsection{Remediation List}
+
+The following table lists each mechanically-verifiable test from the Matterhorn protocol. For each, we give the number, description from the Matterhorn protocol, and the reference into the PDF/UA standard. Then we describe, if possible, how to use Cpdf to remediate the failure. Sometimes this is a definitive command, sometimes a last-ditch attempt to re-process the file (to embed missing fonts or correct font structures, for example) and sometimes simply a direction to try the manual remediation procedure described above.
 
 \newcommand{\norem}{File does not meet Tagged PDF standard - only manual remediation possible (see description above this table).}
 \newcommand{\noremua}{File does not meet PDF/UA tagging standard - only manual remediation possible (see description above this table).}
