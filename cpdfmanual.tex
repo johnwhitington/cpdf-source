@@ -6127,7 +6127,7 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\manonly\ \edittree}\\
 
   \textbf{17-003} & \textbf{Unicode mapping requirements are not met.} & \textbf{UA1:7.7-2}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
+\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
 
   \textbf{19-003} & \textbf{ID entry of the \textless Note\textgreater\ tag is not present.} & \textbf{UA1:7.9-2}\\
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\manonly\ \edittree}\\
@@ -6142,13 +6142,13 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\manonly\ \edittree}\\
 
   \textbf{20-003} & \textbf{An AS entry appears in an Optional Content Configuration Dictionary.} & \textbf{UA1:7.10-2}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
+\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\manonly}\\
 
   \textbf{21-001} & \textbf{The file specification dictionary for an embedded file does not contain F and UF entries.} & \textbf{UA1:7.11-1}\\
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\manonly\ \edittree}\\
 
   \textbf{25-001} & \textbf{File contains the dynamicRender element with value “required”.} & \textbf{UA1:7.15-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description}\\
+\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{Not remediable, unless actually a wrong marker. This is an interactive PDF form which likely only works with Adobe Acrobat. If the marker is actually wrong, it may be edited manually inside the XML stream using the instructions above.}\\
 
   \textbf{26-001} & \textbf{The file is encrypted but does not contain a P entry in its encryption dictionary.} & \textbf{UA1:7.16-1}\\
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{Re-encrypt the file with Cpdf as described in Chapter 4.}\\
@@ -6202,7 +6202,7 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\remannot\ \delannot}\\
 
   \textbf{30-001} & \textbf{A reference XObject is present.} & \textbf{UA1:7.2}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{This will be the remediation description.}\\
+\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{A reference XObject references a page in another file. May be cut out manually using the manual remediation instructions above.}\\
 
   \textbf{30-002} & \textbf{Form XObject contains MCIDs and is referenced more than once.} & \textbf{UA1:7.21.3.1-1}\\
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{Unlikely to be remediable: the only option is to manually remove them, but this would then result in a tag tree pointing to non-existent MCIDs, which would be another kind of invalidity. Any PDF producer creating Tagged PDF with MCIDs like this is simply broken.}\\
