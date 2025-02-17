@@ -128,11 +128,15 @@ let write_image ~raw ?path_to_p2p ?path_to_im pdf resources name image =
 let written = ref []
 
 let extract_images_inner ~raw ?path_to_p2p ?path_to_im encoding serial pdf resources stem pnum images =
-  let names = map
-    (fun _ ->
-       Cpdfbookmarks.name_of_spec
-         encoding [] pdf 0 (stem ^ "-p" ^ string_of_int pnum)
-         (let r = !serial in serial := !serial + 1; r) "" 0 0) (indx images)
+  let names =
+    map
+      (fun image ->
+         (* Abuse @S *)
+         let stem = string_replace_all "%objnum" "@S" stem in
+           Cpdfbookmarks.name_of_spec
+             encoding [] pdf 0 (stem ^ "-p" ^ string_of_int pnum)
+             (let r = !serial in serial := !serial + 1; r) "" (match image with Pdf.Indirect i -> i | _ -> 0) 0)
+      images
   in
     iter2 (write_image ~raw ?path_to_p2p ?path_to_im pdf resources) names images
 
