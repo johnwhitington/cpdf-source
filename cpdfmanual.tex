@@ -6038,19 +6038,15 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
 \noindent\begin{longtable}{lp{10cm}l}
   \textbf{\textsc{Number}} & \textbf{\textsc{Description}} & \textbf{\textsc{Reference}}\\\endhead
   \textbf{01-003} & \textbf{Content marked as Artifact is present inside tagged content.} & \textbf{UA1:7.1-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\norem}\\
   \textbf{01-004} & \textbf{Tagged content is present inside content marked as Artifact.} & \textbf{UA1:7.1-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\norem}\\
   \textbf{01-005} & \textbf{Content is neither marked as Artifact nor tagged as real content.} & \textbf{UA1:7-1-2}\\
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\norem}\\
   \textbf{01-007} & \textbf{Suspects entry has a value of true.} & \textbf{UA1:7-1-11}\\
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{If you are sure the file conforms to tagged PDF conventions, use \texttt{cpdf -replace-obj /Root/MarkInfo/Suspects=false in.pdf -o out.pdf}.}\\
 
 \textbf{02-001} & \textbf{One or more non-standard tag’s mapping does not terminate with a standard type.} & \textbf{UA1:7.1-3}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\noremua}\\
 
   \textbf{02-003} & \textbf{A circular mapping exists.} & \textbf{UA1:7.1-3}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\noremua}\\
 
   \textbf{02-004} & \textbf{One or more standard types are remapped.} & \textbf{UA1:7.1-4}\\
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\noremua}\\
@@ -6071,16 +6067,12 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{Replace the entry with \texttt{cpdf -display-doc-title true in.pdf -o out.pdf}.}\\
 
   \textbf{09-004} & \textbf{A table-related structure element is used in a way that does not conform to the syntax defined in ISO 32000-1, Table 337.} & \textbf{UA1-7.2-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\noremua}\\
 
   \textbf{09-005} & \textbf{A list-related structure element is used in a way that does not conform to Table 336 in ISO 32000-1.} & \textbf{UA1-7.2-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\noremua}\\
 
   \textbf{09-006} & \textbf{A TOC-related structure element is used in a way that does not conform to Table 333 in ISO 32000-1.} & \textbf{UA1-7.2-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\noremua}\\
 
   \textbf{09-007} & \textbf{A Ruby-related structure element is used in a way that does not conform to Table 338 in ISO 32000-1.} & \textbf{UA1-7.2-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\noremua}\\
 
   \textbf{09-008} & \textbf{A Warichu-related structure element is used in a way that does not conform to Table 338 in ISO 32000-1.} & \textbf{UA1-7.2-1}\\
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\noremua}\\
@@ -6089,40 +6081,29 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
 
   \textbf{11-001} & \textbf{Natural language for text in page content cannot be determined.} & \textbf{UA1:7.2-3}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\setlang}\\
 
   \textbf{11-002} & \textbf{Natural language for text in Alt, ActualText and E attributes cannot be determined.} & \textbf{UA1:7.2-3}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\setlang}\\
 
   \textbf{11-003} & \textbf{Natural language in the Outline entries cannot be determined.} & UA1:7.2-3\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\setlang}\\
 
   \textbf{11-004} & \textbf{Natural language in the Contents entry for annotations cannot be determined.} & \textbf{UA1:7.2-3}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\setlang}\\
 
   \textbf{11-005} & \textbf{Natural language in the TU entry for form fields cannot be determined.} & \textbf{UA1:7.2-3}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\setlang}\\
 
   \textbf{11-006} & \textbf{Natural language for document metadata cannot be determined.} & \textbf{UA1:7.2-3}\\
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\setlang}\\
 
   \textbf{13-004} & \textbf{\textless Figure\textgreater\ tag alternative or replacement text missing.} & \textbf{UA1:7.3-3}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\manonly\ \edittree}\\
 
   \textbf{14-002} & \textbf{Does use numbered headings, but the first heading tag is not \textless H1\textgreater .} & \textbf{UA1:7.4.2-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\manonly\ \edittree}\\
 
   \textbf{14-003} & \textbf{Numbered heading levels in descending sequence are skipped (Example: \textless H3\textgreater\  follows directly after \textless H1\textgreater{}).} & \textbf{UA1:7.4-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\manonly\ \edittree}\\
 
   \textbf{14-006} & \textbf{A node contains more than one \textless H\textgreater\ tag.} & \textbf{UA1:7.4.4-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\manonly\ \edittree}\\
 
   \textbf{14-007} & \textbf{Document uses both \textless H\textgreater\ and \textless H\#\textgreater\ tags.} & \textbf{UA1:7.4.4-3}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\manonly\ \edittree}\\
 
   \textbf{15-003} & \textbf{In a table not organized with Headers attributes and IDs, a \textless TH\textgreater\ cell does not contain a Scope attribute.} & \textbf{UA1:7.5-2}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\manonly\ \edittree}\\
 
   \textbf{17-002} & \textbf{\textless Formula\textgreater\ tag is missing an Alt attribute.} & \textbf{UA1:7.7-1}\\
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\manonly\ \edittree}\\
@@ -6131,13 +6112,10 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
 
   \textbf{19-003} & \textbf{ID entry of the \textless Note\textgreater\ tag is not present.} & \textbf{UA1:7.9-2}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\manonly\ \edittree}\\
 
   \textbf{19-004} & \textbf{ID entry of the \textless Note\textgreater\ tag is non-unique.} & \textbf{UA1:7.9-2}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\manonly\ \edittree}\\
 
   \textbf{20-001} & \textbf{Name entry is missing or has an empty string as its value in an Optional Content Configuration Dictionary in the Configs entry in the OCProperties entry in the Catalog dictionary.} & \textbf{UA1:7.10-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\manonly\ \edittree}\\
 
   \textbf{20-002} & \textbf{Name entry is missing or has an empty string as its value in an Optional Content Configuration Dictionary that is the value of the D entry in the OCProperties entry in the Catalog dictionary.} & \textbf{UA1:7.10-1}\\
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\manonly\ \edittree}\\
@@ -6152,46 +6130,36 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{Not remediable, unless actually a wrong marker. This is an interactive PDF form which likely only works with Adobe Acrobat. If the marker is actually wrong, it may be edited manually inside the XML stream using the instructions above.}\\
 
   \textbf{26-001} & \textbf{The file is encrypted but does not contain a P entry in its encryption dictionary.} & \textbf{UA1:7.16-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{Re-encrypt the file with Cpdf as described in Chapter 4.}\\
 
   \textbf{26-002} & \textbf{The file is encrypted and does contain a P entry but the 10th bit position of the P entry is false.} & \textbf{UA1:7.16-1}\\
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{Re-encrypt the file with Cpdf as described in Chapter 4.}\\
 
   \textbf{28-002} & \textbf{An annotation, other than of subtype Widget, Link and PrinterMark, is not a direct child of an \textless Annot\textgreater\ structure element.} & \textbf{UA1:7.18.1-2}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\manonly\ \edittree}\\
 
   \textbf{28-004} & \textbf{An annotation, other than of subtype Widget, does not have a Contents entry and does not have an alternative description (in the form of an Alt entry in the enclosing structure element).} & \textbf{UA1:7.18.1-4}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\manonly\ \edittree}\\
 
   \textbf{28-005} & \textbf{A form field does not have a TU entry and does not have an alternative description (in the form of an Alt entry in the enclosing structure element).} & \textbf{UA1:7.18.1-4}\\
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\manonly\ \edittree}\\
 
   \textbf{28-006} & \textbf{An annotation with subtype undefined in ISO 32000 does not meet 7.18.1.} & \textbf{UA1:7.18.2-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\remannot\ \delannot}\\
 
   \textbf{28-007} & \textbf{An annotation of subtype TrapNet exists.} & \textbf{UA1:7.18.2-2}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\remannot\ \delannot}\\
 
   \textbf{28-008} & \textbf{A page containing an annotation does not contain a Tabs entry} & \textbf{UA1:7.18.3-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\remannot\ \delannot}\\
 
   \textbf{28-009} & \textbf{A page containing an annotation has a Tabs entry with a value other than S.} & \textbf{UA1:7.18.3-1}\\
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\remannot\ \delannot}\\
 
   \textbf{28-010} & \textbf{A widget annotation is not nested within a \textless Form\textgreater\ tag.} & \textbf{UA1:7.18.4-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\remannot\ \delannot\ \edittree}\\
 
   \textbf{28-011} & \textbf{A link annotation is not nested within a \textless Link\textgreater\ tag.} & \textbf{UA1:7.18.5-1}\\
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\remannot\ \delannot\ \edittree}\\
 
   \textbf{28-012} & \textbf{A link annotation does not include an alternate description in its Contents entry.} & \textbf{UA1:7.18.5-2}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\remannot\ \delannot}\\
 
   \textbf{28-014} & \textbf{CT entry is missing from the media clip data dictionary.} &\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\remannot\ \delannot}\\
 
   \textbf{28-015} & \textbf{Alt entry is missing from the media clip data dictionary.} & \textbf{UA1:7.18.6.2-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\remannot\ \delannot}\\
 
   \textbf{28-016} & \textbf{File attachment annotations do not conform to 7.11.} & \textbf{UA1:7.18.7-1}\\
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\remannot\ \delannot}\\
@@ -6209,88 +6177,60 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{Unlikely to be remediable: the only option is to manually remove them, but this would then result in a tag tree pointing to non-existent MCIDs, which would be another kind of invalidity. Any PDF producer creating Tagged PDF with MCIDs like this is simply broken.}\\
 
   \textbf{31-001} & \textbf{A Type 0 font dictionary with encoding other than Identity-H and Identity-V has values for Registry in both CIDSystemInfo dictionaries that are not identical.} & \textbf{UA1:7.21.3-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
 
   \textbf{31-002} & \textbf{A Type 0 font dictionary with encoding other than Identity-H and Identity-V has values for Ordering in both CIDSystemInfo dictionaries that are not identical.} & \textbf{UA1:7.21.3.1-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
 
   \textbf{31-003} & \textbf{A Type 0 font dictionary with encoding other than Identity-H and Identity-V has a value for Supplement in the CIDSystemInfo dictionary of the CID font that is less than the value for Supplement in the CIDSystemInfo dictionary of the CMap.} & \textbf{UA1:7.21.3.1-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
 
   \textbf{31-004} & \textbf{A Type 2 CID font contains neither a stream nor the name Identity as the value of the CIDToGIDMap entry.} & \textbf{UA1:7.21.3.2-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
 
   \textbf{31-005} & \textbf{A Type 2 CID font does not contain a CIDToGIDMap entry.} & \textbf{UA1:7.21.3.2-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
 
   \textbf{31-006} & \textbf{A CMap is neither listed as described in ISO 32000- 1:2008, 9.7.5.2, Table 118 nor is it embedded.} & \textbf{UA1:7.21.3.3-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
 
   \textbf{31-007} & \textbf{The WMode entry in a CMap dictionary is not identical to the WMode value in the CMap stream.} & \textbf{UA1:7.21.3.3-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
 
   \textbf{31-008} & \textbf{A CMap references another CMap which is not listed in ISO 32000-1:2008, 9.7.5.2, Table 118.} & \textbf{UA1:7.21.3.3-2}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
 
   \textbf{31-009} & \textbf{For a font used by text intended to be rendered the font program is not embedded.} & \textbf{UA1:7.21.4.1-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
 
   \textbf{31-011} & \textbf{For a font used by text the font program is embedded but it does not contain glyphs for all of the glyphs referenced by the text used for rendering.} & \textbf{UA1:7.21.4.1-3}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
 
   \textbf{31-012} & \textbf{The FontDescriptor dictionary of an embedded Type 1 font contains a CharSet string, but at least one of the glyphs present in the font program is not listed in the CharSet string.} & \textbf{UA1:7.21.4.2-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
 
   \textbf{31-013} & \textbf{The FontDescriptor dictionary of an embedded Type 1 font contains a CharSet string, but at least one of the glyphs listed in the CharSet string is not present in the font program.} & \textbf{UA1:7.21.4.2-2}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
 
   \textbf{31-014} & \textbf{The FontDescriptor dictionary of an embedded CID font contains a CIDSet string, but at least one of the glyphs present in the font program is not listed in the CIDSet string.} & \textbf{UA1:7.21.4.2-3}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
 
   \textbf{31-015} & \textbf{The FontDescriptor dictionary of an embedded CID font contains a CIDSet string, but at least one of the glyphs listed in the CIDSet string is not present in the font program.} & \textbf{UA1:7.21.4.2-4}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
 
   \textbf{31-016} & \textbf{For one or more glyphs, the glyph width information in the font dictionary and in the embedded font program differ by more than 1/1000 unit.} & \textbf{UA1:7.21.5-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
 
   \textbf{31-017} & \textbf{A non-symbolic TrueType font is used for rendering, but none of the cmap entries in the embedded font program is a non-symbolic cmap.} & \textbf{UA1:7.21.6-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
 
   \textbf{31-018} & \textbf{A non-symbolic TrueType font is used for rendering, but for at least one glyph to be rendered the glyph cannot be looked up by any of the non-symbolic cmap entries in the embedded font program.} & \textbf{UA1:7.21.6-2}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
 
   \textbf{31-019} & \textbf{The font dictionary for a non-symbolic TrueType font does not contain an Encoding entry.} & \textbf{UA1:7.21.6-3}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
 
   \textbf{31-020} & \textbf{The font dictionary for a non-symbolic TrueType font contains an Encoding dictionary which does not contain a BaseEncoding entry.} & \textbf{UA1:7.21.6-4}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
 
   \textbf{31-021} & \textbf{The value for either the Encoding entry or the BaseEncoding entry in the Encoding dictionary in a non-symbolic TrueType font dictionary is neither MacRomanEncoding nor WinAnsiEncoding.} & \textbf{UA1:7.21.6-5}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
 
   \textbf{31-022} & \textbf{The Differences array in the Encoding entry in a non-symbolic TrueType font dictionary contains one or more glyph names which are not listed in the Adobe Glyph List.} & \textbf{UA1:7.21.6-6}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
 
   \textbf{31-023} & \textbf{The Differences array is present in the Encoding entry in a non-symbolic TrueType font dictionary but the embedded font program does not contain a (3,1) Microsoft Unicode cmap.} & \textbf{UA1:7.21.6-7}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
 
   \textbf{31-024} & \textbf{The Encoding entry is present in the font dictionary for a symbolic TrueType font.} & \textbf{UA1:7.21.6-8}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
 
   \textbf{31-025} & \textbf{The embedded font program for a symbolic TrueType font contains no cmap.} & \textbf{UA1:7.21.6-9}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
 
   \textbf{31-026} & \textbf{The embedded font program for a symbolic TrueType font contains more than one cmap, but none of the cmap entries is a (3,0) Microsoft Symbol cmap.} & \textbf{UA1:7.21.6-10}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
 
   \textbf{31-027} & \textbf{A font dictionary does not contain the ToUnicode entry and none of the following is true: the font uses MacRomanEncoding, MacExpertEncoding or WinAnsiEncoding; the font is a Type 1 or Type 3 font and the glyph names of the glyphs referenced are all contained in the Adobe Glyph List or the set of named characters in the Symbol font, as defined in ISO 32000-1:2008, Annex D; the font is a Type 0 font, and its descendant CIDFont uses Adobe-GB1, Adobe-CNS1, Adobe-Japan1 or Adobe-Korea1 character collections; the font is a non-symbolic TrueType font.} & \textbf{UA1:7.21.7-1}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
 
   \textbf{31-028} & \textbf{One or more Unicode values specified in the ToUnicode CMap are zero (0).} & \textbf{UA1:7.21.7-2}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
 
   \textbf{31-029} & \textbf{One or more Unicode values specified in the ToUnicode CMap are equal to either U+FEFF or U+FFFE.} & \textbf{UA1:7.21.7-3}\\
-\multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
 
   \textbf{31-030} & \textbf{One or more characters used in text showing operators reference the .notdef glyph.} & \textbf{UA1:7.21.8-1}\\
 \multicolumn{3}{p{\dimexpr\linewidth-4\tabcolsep\relax}}{\gsfonts}\\
