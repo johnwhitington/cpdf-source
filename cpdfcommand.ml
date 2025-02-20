@@ -3482,7 +3482,7 @@ let split_at_bookmarks
 
 let split_pdf
   enc original_filename
-  chunksize linearize ~cpdflin ~preserve_objstm ~create_objstm ~squeeze
+  chunksize linearize ~cpdflin ~squeeze
   spec pdf
 =
   let pdf_pages = Pdfpage.pages_of_pagetree pdf in
@@ -4231,10 +4231,9 @@ let go () =
         | [(f, ranges, _, _, _, _)], File output_spec ->
             let pdf = get_single_pdf args.op true in
             let enc = build_enc () in
-              args.create_objstm <- args.preserve_objstm;
+              if args.preserve_objstm then args.create_objstm <- true; (* For split, always create if preserving *)
               split_pdf
                 enc args.original_filename args.chunksize args.linearize ~cpdflin:args.cpdflin
-                ~preserve_objstm:args.preserve_objstm ~create_objstm:args.preserve_objstm (*yes--always create if preserving *)
                 ~squeeze:args.squeeze output_spec pdf
         | _, Stdout -> error "Can't split to standard output"
         | _, NoOutputSpecified -> error "Split: No output format specified"
