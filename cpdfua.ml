@@ -1187,12 +1187,27 @@ let matterhorn_31_006 _ _ pdf =
 (* The WMode entry in a CMap dictionary is not identical to the WMode value in
 the CMap stream. *)
 let matterhorn_31_007 _ _ pdf =
-  unimpl ()
+  Pdf.objiter
+    (fun _ o ->
+       (* 1. Locate all places a CMap dictionary can be *)
+       (* 2. Get at the CMap and read the wmode *)
+       (* 3. Read the wmode from the cmap dictionary *)
+       (* 4. Whinge if different. *)
+       ()
+    )
+    pdf
 
 (* A CMap references another CMap which is not listed in ISO 32000-1:2008,
    9.7.5.2, Table 118. *)
 let matterhorn_31_008 _ _ pdf =
-  unimpl ()
+  Pdf.objiter
+    (fun _ o ->
+      (* 1. Locate all places a CMap dictionary can be. *)
+      (* 2. Get the cmap and read the usecmap *)
+      (* 3. Check against the list *)
+      ()
+    )
+    pdf
 
 (* For a font used by text intended to be rendered the font program is not
    embedded. *)
