@@ -15,6 +15,7 @@ Fixes:
 
 o Harden auto-compression against malformed streams
 o Add backup JPEG dimensions method in Cpdfimage
+o Correct object stream behaviour when splitting
 
 * = Supported by a grant from NLnet
 
