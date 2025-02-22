@@ -1202,11 +1202,9 @@ let matterhorn_31_007 _ _ pdf =
 let matterhorn_31_008 _ _ pdf =
   Pdf.objiter
     (fun _ o ->
-      (* 1. Locate all places a CMap dictionary can be. *)
-      (* 2. Get the cmap and read the usecmap *)
-      (* 3. Check against the list *)
-      ()
-    )
+      match Pdf.lookup_direct pdf "/UseCMap" o with
+      | Some (Pdf.Name n) when not (List.mem n cmap_names) -> merror_str n    
+      | _ -> ())
     pdf
 
 (* For a font used by text intended to be rendered the font program is not
