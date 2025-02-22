@@ -1189,12 +1189,10 @@ the CMap stream. *)
 let matterhorn_31_007 _ _ pdf =
   Pdf.objiter
     (fun _ o ->
-       (* 1. Locate all places a CMap dictionary can be *)
-       (* 2. Get at the CMap and read the wmode *)
-       (* 3. Read the wmode from the cmap dictionary *)
-       (* 4. Whinge if different. *)
-       ()
-    )
+       match Pdf.lookup_direct pdf "/WMode" o with
+       | Some (Pdf.Integer fromdict) ->
+           if (Pdfcmap.parse_cmap pdf o).wmode <> Some fromdict then merror ()
+       | _ -> ())
     pdf
 
 (* A CMap references another CMap which is not listed in ISO 32000-1:2008,
