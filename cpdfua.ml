@@ -1,12 +1,12 @@
 open Pdfutil
 open Cpdferror
 
-(* Implements most Matterhorn checks except for:
+(* Implements the Matterhorn checks except for:
 
    Partially implemented:
-     31-009 31-027 Can require looking inside font files
+     31-027 Can require looking inside font files
      
-     10-002 Doesn't check CID keyed fonts
+     10-001 Doesn't check CID keyed fonts
 
      11-001 11-002 11-003 11-004 11-005 Natural Language (We just check for
      top-level document language.)
