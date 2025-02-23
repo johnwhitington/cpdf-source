@@ -13,7 +13,10 @@ open Cpdferror
 
    Unimplemented:
      31-011 31-012 31-013 31-014 31-015 31-016 31-018 31-030 Require looking
-     inside font files *)
+     inside font file
+
+   To return to:
+     15_003 17_003 31_009 31_027 *)
 
 type subformat =
   | PDFUA1
@@ -70,7 +73,7 @@ let read_attributes pdf stnode =
   let from_c = read_a pdf "/C" stnode in
   (* Prefer entries from a, but we are just testing for presence, so merely setify *)
   let attrs = setify (from_a @ from_c) in
-  (* For now, stick /ID, /Alt, /ActualText in here too. Eventually, move to prevent crashes. *)
+  (* For now, stick /ID, /Alt, /ActualText in here too. *)
   let alt =
     match Pdf.lookup_direct pdf "/Alt" stnode with | Some _ -> ["/Alt"] | None -> []
   in
@@ -1062,10 +1065,13 @@ let matterhorn_31_001 _ _ pdf =
     (fun _ o ->
        match Pdf.lookup_direct pdf "/Subtype" o, Pdf.lookup_direct pdf "/Encoding" o with
        | Some (Pdf.Name "/Type0"), Some (Pdf.Name ("/Identity-H" | "/Identity-V")) -> ()
-       | Some (Pdf.Name "/Type0"), _ ->
-           merror_str
-             "Advisory: contains composite font with non-identity encoding. Cpdf\
-              cannot check the CIDSystemInfo entries are identical automatically."
+       | Some (Pdf.Name "/Type0"), Some (Pdf.Indirect enc) ->
+           if
+             Pdf.lookup_chain pdf (Pdf.Indirect enc) ["/CIDSystemInfo"; "/Registry"]
+           <>
+             Pdf.lookup_chain pdf o ["/DescendantFonts"; "/[0]"; "/CIDSystemInfo"; "/Registry"]
+           then
+             merror ()
        | _ -> ())
     pdf
 
@@ -1073,14 +1079,38 @@ let matterhorn_31_001 _ _ pdf =
    has values for Ordering in both CIDSystemInfo dictionaries that are not
    identical. *)
 let matterhorn_31_002 st st2 pdf =
-  matterhorn_31_001 st st2 pdf
+  Pdf.objiter
+    (fun _ o ->
+       match Pdf.lookup_direct pdf "/Subtype" o, Pdf.lookup_direct pdf "/Encoding" o with
+       | Some (Pdf.Name "/Type0"), Some (Pdf.Name ("/Identity-H" | "/Identity-V")) -> ()
+       | Some (Pdf.Name "/Type0"), Some (Pdf.Indirect enc) ->
+           if
+             Pdf.lookup_chain pdf (Pdf.Indirect enc) ["/CIDSystemInfo"; "/Ordering"]
+           <>
+             Pdf.lookup_chain pdf o ["/DescendantFonts"; "/[0]"; "/CIDSystemInfo"; "/Ordering"]
+           then
+             merror ()
+       | _ -> ())
+    pdf
 
 (* A Type 0 font dictionary with encoding other than Identity-H and Identity-V
    has a value for Supplement in the CIDSystemInfo dictionary of the CID font
    that is less than the value for Supplement in the CIDSystemInfo dictionary
    of the CMap. *)
 let matterhorn_31_003 st st2 pdf =
-  matterhorn_31_001 st st2 pdf
+  Pdf.objiter
+    (fun _ o ->
+       match Pdf.lookup_direct pdf "/Subtype" o, Pdf.lookup_direct pdf "/Encoding" o with
+       | Some (Pdf.Name "/Type0"), Some (Pdf.Name ("/Identity-H" | "/Identity-V")) -> ()
+       | Some (Pdf.Name "/Type0"), Some (Pdf.Indirect enc) ->
+           if
+             Pdf.lookup_chain pdf (Pdf.Indirect enc) ["/CIDSystemInfo"; "/Registry"]
+           <>
+             Pdf.lookup_chain pdf o ["/DescendantFonts"; "/[0]"; "/CIDSystemInfo"; "/Ordering"]
+           then
+             merror ()
+       | _ -> ())
+    pdf
 
 (* A Type 2 CID font contains neither a stream nor the name Identity as the
    value of the CIDToGIDMap entry. *)
