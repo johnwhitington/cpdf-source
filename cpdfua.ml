@@ -16,7 +16,7 @@ open Cpdferror
      inside font file
 
    To return to:
-     15_003 17_003 31_009 31_027 *)
+     15_003 17_003 31_009 *)
 
 type subformat =
   | PDFUA1
