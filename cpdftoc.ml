@@ -158,8 +158,8 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
              then make_dots space fontpack fontsize
              else [Cpdftype.HGlue space]
          in
-             [Cpdftype.BeginDest (mark.Pdfmarks.target, Some mark.Pdfmarks.text); Cpdftype.HGlue indent] @ textruns @ leader @ labelruns
-           @ [Cpdftype.EndDest; Cpdftype.NewLine])
+             [Cpdftype.Tag ("Link", 0); Cpdftype.BeginDest (mark.Pdfmarks.target, Some mark.Pdfmarks.text); Cpdftype.HGlue indent] @ textruns @ leader @ labelruns
+           @ [Cpdftype.EndDest; Cpdftype.EndTag; Cpdftype.NewLine])
       (Pdfmarks.read_bookmarks pdf)
   in
   let toc_pages, _ =
