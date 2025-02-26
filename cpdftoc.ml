@@ -106,7 +106,7 @@ let make_dots space fontpack fontsize =
    (and CropBox) copied from first page of existing PDF. Margin of 10% inside
    CropBox. Font size of title twice body font size. Null page labels added for
    TOC, others bumped up and so preserved. *)
-let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader pdf =
+let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~process_struct_tree pdf =
   Hashtbl.clear width_table_cache;
   let marks = Pdfmarks.read_bookmarks pdf in
   if marks = [] then (Pdfe.log "No bookmarks, not making table of contents\n"; pdf) else
@@ -158,7 +158,7 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader pdf =
              then make_dots space fontpack fontsize
              else [Cpdftype.HGlue space]
          in
-             [Cpdftype.BeginDest mark.Pdfmarks.target; Cpdftype.HGlue indent] @ textruns @ leader @ labelruns
+             [Cpdftype.BeginDest (mark.Pdfmarks.target, Some mark.Pdfmarks.text); Cpdftype.HGlue indent] @ textruns @ leader @ labelruns
            @ [Cpdftype.EndDest; Cpdftype.NewLine])
       (Pdfmarks.read_bookmarks pdf)
   in
@@ -181,7 +181,7 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader pdf =
       let firstfont =
         hd (keep (function Cpdftype.Font _ -> true | _ -> false) (title @ flatten lines))
       in
-        Cpdftype.typeset ~process_struct_tree:false lm rm tm bm firstpage_papersize pdf
+        Cpdftype.typeset ~process_struct_tree lm rm tm bm firstpage_papersize pdf
           ([firstfont; Cpdftype.BeginDocument] @ title @ flatten lines)
   in
   let toc_pages =

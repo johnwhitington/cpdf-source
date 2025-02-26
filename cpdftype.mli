@@ -6,7 +6,7 @@ type element =
 | NewLine
 | NewPage
 | Font of string * Pdftext.font * float
-| BeginDest of Pdfdest.t
+| BeginDest of Pdfdest.t * string option
 | EndDest
 | BeginDocument
 | Tag of string * int

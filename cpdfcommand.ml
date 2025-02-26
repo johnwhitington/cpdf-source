@@ -4783,7 +4783,8 @@ let go () =
       let cpdffont = embed_font () in
       let pdf =
         Cpdftoc.typeset_table_of_contents
-          ~font:cpdffont ~fontsize:args.fontsize ~title:args.toc_title ~bookmark:args.toc_bookmark ~dotleader:args.dot_leader pdf
+          ~font:cpdffont ~fontsize:args.fontsize ~title:args.toc_title
+          ~bookmark:args.toc_bookmark ~dotleader:args.dot_leader ~process_struct_tree:args.process_struct_trees pdf
       in
         write_pdf false pdf
   | Some (Typeset filename) ->

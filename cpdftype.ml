@@ -15,7 +15,7 @@ type element =
 | NewLine
 | NewPage
 | Font of string * Pdftext.font * float
-| BeginDest of Pdfdest.t
+| BeginDest of Pdfdest.t * string option
 | EndDest
 | BeginDocument
 | Tag of string * int
@@ -45,7 +45,7 @@ type state =
    mutable width_table : float array; (* Widths for charcodes 0..255 *)
    mutable xpos : float;
    mutable ypos : float;
-   mutable dest : Pdfdest.t option}
+   mutable dest : (Pdfdest.t * string option) option}
 
 let width_table_cache = null_hash ()
 
@@ -232,7 +232,8 @@ let make_resources fontobjnums =
 
 let make_annotations pdf annots =
   if annots = [] then Pdf.Dictionary [] else
-    Pdf.Dictionary ["/Annots", Pdf.Array (map (function a -> Pdf.Indirect (Pdf.addobj pdf a)) annots)]
+    Pdf.Dictionary ["/Annots", Pdf.Array (map (function a -> Pdf.Indirect (Pdf.addobj pdf a)) annots);
+                    "/Tabs", Pdf.Name "/S"]
 
 let rec number_tags n = function
   | Tag (s, _)::t -> Tag (s, n)::number_tags (n + 1) t
@@ -329,17 +330,20 @@ let typeset ~process_struct_tree lmargin rmargin tmargin bmargin papersize pdf i
         s.ypos <- tmargin +. s.fontsize
     | BeginDocument ->
         s.ypos <- tmargin +. s.fontsize
-    | BeginDest dest ->
-        s.dest <- Some dest
+    | BeginDest (dest, contents) ->
+        s.dest <- Some (dest, contents)
     | EndDest ->
         if !thisdestrectangles <> [] && s.dest <> None then
           let annot (minx, miny, maxx, maxy) =
+            let dest, contents = unopt s.dest in
             Pdf.Dictionary
+              ((match contents with None -> [] | Some s -> [("/Contents", Pdf.String s)])
+               @
               [("/Type", Pdf.Name "/Annot");
                ("/Subtype", Pdf.Name "/Link");
                ("/Border", Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real 0.]);
                ("/Rect", Pdf.Array [Pdf.Real minx; Pdf.Real miny; Pdf.Real maxx; Pdf.Real maxy]);
-               ("/Dest", Pdfdest.pdfobject_of_destination (unopt s.dest))]
+               ("/Dest", Pdfdest.pdfobject_of_destination dest)])
           in
             thispageannotations := map annot !thisdestrectangles @ !thispageannotations;
         s.dest <- None;
