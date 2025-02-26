@@ -10,6 +10,9 @@ can follow a chain from each found dictionary entry
 * More of the PDF/UA Matterhorn verification suite implemented
 * Font lister now returns the font itself
 o Allow %objnum in output name for -extract-images
+* -show-boxes, -trim-marks, -table-of-contents, -add-text
+  -add-rectangle, -impose, -twoup, -twoup-stack now preserve
+  PDF/UA compatibility
 
 Fixes:
 

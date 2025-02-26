@@ -963,11 +963,13 @@ let show_boxes_page fast pdf _ page =
     | None -> []
   in
     let ops =
-        make_ops (255., 0., 0.) 0. 0. "/MediaBox"
+        [Pdfops.begin_artifact]
+      @ make_ops (255., 0., 0.) 0. 0. "/MediaBox"
       @ make_ops (0., 255., 0.) 7. 7. "/CropBox"
       @ make_ops (0., 0., 255.) 5. 5. "/ArtBox"
       @ make_ops (255.,150.,0.) 3. 3. "/TrimBox"
       @ make_ops (255.,9.,147.) 2. 2. "/BleedBox"
+      @ [Pdfops.end_artifact]
     in
       Pdfpage.postpend_operators pdf ops ~fast page
 
@@ -988,6 +990,7 @@ let trim_marks_page fast pdf n page =
         [Pdfops.Op_q;
          Pdfops.Op_K (1., 1., 1., 1.);
          Pdfops.Op_w 1.]
+         @ [Pdfops.begin_artifact]
          @ line (minx, tmaxy, tminy -. allowance, tmaxy) (* top left *)
          @ line (tminx, tmaxy +. allowance, tminx, maxy)
          @ line (tmaxx +. allowance, tmaxy, maxx, tmaxy) (* top right *)
@@ -996,6 +999,7 @@ let trim_marks_page fast pdf n page =
          @ line (tmaxx, tminy -. allowance, tmaxx, miny)
          @ line (tminx -. allowance, tminy, minx, tminy) (* bottom left *)
          @ line (tminx, tminy -. allowance, tminx, miny)
+         @ [Pdfops.end_artifact]
          @ [Pdfops.Op_Q]
       in
         Pdfpage.postpend_operators pdf ops ~fast page

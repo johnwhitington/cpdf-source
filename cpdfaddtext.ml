@@ -63,7 +63,8 @@ let ops font fontpack fontpackpdfobjs fontname longest_w x y rotate hoffset voff
         | Some font -> [Pdfops.Op_Tf (unique_fontname, fontsize); Pdfops.Op_Tj (charcodes_of_utf8 font text)]
         | None -> [Pdfops.Op_Tf (unique_fontname, fontsize); Pdfops.Op_Tj text]
   in
-    [Pdfops.Op_q;
+    [Pdfops.begin_artifact;
+     Pdfops.Op_q;
      Pdfops.Op_BMC "/CPDFSTAMP";
       Pdfops.Op_cm
         (Pdftransform.matrix_of_transform
@@ -74,7 +75,7 @@ let ops font fontpack fontpackpdfobjs fontname longest_w x y rotate hoffset voff
     @ [colour_op colour; colour_op_stroke colour]
     @ (match unique_extgstatename with None -> [] | Some n -> [Pdfops.Op_gs n])
     @ textops
-    @ [Pdfops.Op_ET; Pdfops.Op_EMC; Pdfops.Op_Q]
+    @ [Pdfops.Op_ET; Pdfops.Op_EMC; Pdfops.Op_Q; Pdfops.end_artifact]
 
 type justification = LeftJustify | CentreJustify | RightJustify
 
@@ -616,6 +617,7 @@ let addrectangle
       | _ -> (x, y)
     in
     let ops =
+      Pdfops.begin_artifact::
       [
        Pdfops.Op_q;
        Pdfops.Op_BMC "/CPDFSTAMP";
@@ -633,6 +635,7 @@ let addrectangle
        Pdfops.Op_EMC;
        Pdfops.Op_Q
       ]
+     @ [Pdfops.end_artifact]
     in
       let page = {page with Pdfpage.resources = resources'} in
         if underneath
