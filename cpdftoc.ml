@@ -102,6 +102,15 @@ let make_dots space fontpack fontsize =
   let remainder = space -. width_of_runs runs in
     [Cpdftype.HGlue remainder] @ runs
 
+(* Prepend structure tree items. FIXME: What to do if not present? Currently we do nothing. *)
+let prepend_structitems pdf items =
+  match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/StructTreeRoot"; "/K"] with
+  | Some (Pdf.Array a) ->
+      Pdf.replace_chain pdf ["/Root"; "/StructTreeRoot"; "/K"] (Pdf.Array (items @ a))
+  | Some (Pdf.Dictionary d) ->
+      Pdf.replace_chain pdf ["/Root"; "/StructTreeRoot"; "/K"] (Pdf.Array (items @ [Pdf.Dictionary d]))
+  | _ -> ()
+
 (* Typeset a table of contents with given font, font size and title. Mediabox
    (and CropBox) copied from first page of existing PDF. Margin of 10% inside
    CropBox. Font size of title twice body font size. Null page labels added for
@@ -162,15 +171,16 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
            @ [Cpdftype.EndDest; Cpdftype.EndTag; Cpdftype.NewLine])
       (Pdfmarks.read_bookmarks pdf)
   in
-  let toc_pages, _ =
+  let toc_pages, toc_tags =
     let title =
       let glue = Cpdftype.VGlue (fontsize *. 2.) in
-        if title = "" then [] else
-          flatten
-            (map
-              (fun l -> l @ [Cpdftype.NewLine])
-              (map (of_utf8 fontpack (fontsize *. 2.)) (map implode (split_toc_title (explode title)))))
-          @ [glue]
+        [Cpdftype.Tag ("P", 0)]
+        @ flatten
+           (map
+             (fun l -> l @ [Cpdftype.NewLine])
+             (map (of_utf8 fontpack (fontsize *. 2.)) (map implode (split_toc_title (explode title)))))
+        @
+        [Cpdftype.EndTag; glue]
     in
     let lm, rm, tm, bm =
       match firstpage_cropbox with
@@ -205,6 +215,31 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
      Pdfpagelabels.startpage = 1;
      Pdfpagelabels.startvalue = 1}
   in
+  (* Building the structure tree. We have MCIDS and page numbers in toc_tags,
+     and annotations in the pages /Annots entries.  We build the new structure
+     tree elements.
+       1) One <p> for the title
+       2) One for each link:
+            link = <</Type /StructElem /S /Link /K [<mcid> <objr>]>>
+            objr = <</Type /ObjR /Obj <linkannot>>>
+     Then we have to graft them onto the file's existing structure tree
+     Then we have to do something about /StructParents.
+
+     It's all a simpler version of what Cpdftexttopdf does (simpler because no
+     paras spanning multiple pages). *)
+     iter (fun x -> Printf.printf "PAGE\n"; iter (fun (_, i) -> Printf.printf "Paragraph number %i\n" i) x) toc_tags;
+  let p_struct_elem_first_page =
+    Pdf.addobj pdf (Pdf.Dictionary [("/Type", Pdf.Name "/StructElem"); ("/S", Pdf.Name "/P")])
+  in
+  let link_struct_elems_for_each_page =
+    map
+      (Pdf.addobj pdf)
+      [Pdf.Dictionary [("/Type", Pdf.Name "/StructElem"); ("/S", Pdf.Name "/Link"); ("/K", Pdf.Array [Pdf.Integer 1; Pdf.Indirect 2])]]
+  in
+  let prepending_structitems =
+    map (fun x -> Pdf.Indirect x) (p_struct_elem_first_page::link_struct_elems_for_each_page)
+  in
+  prepend_structitems pdf prepending_structitems;
   let labels' = label::map (fun l -> {l with Pdfpagelabels.startpage = l.Pdfpagelabels.startpage + toc_pages_len}) labels in
     Pdfpagelabels.write pdf labels';
     if bookmark then
