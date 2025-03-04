@@ -231,10 +231,30 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
   let p_struct_elem_first_page =
     Pdf.addobj pdf (Pdf.Dictionary [("/Type", Pdf.Name "/StructElem"); ("/S", Pdf.Name "/P")])
   in
+  let mcid = ref 1 in
   let link_struct_elems_for_each_page =
-    map
-      (Pdf.addobj pdf)
-      [Pdf.Dictionary [("/Type", Pdf.Name "/StructElem"); ("/S", Pdf.Name "/Link"); ("/K", Pdf.Array [Pdf.Integer 1; Pdf.Indirect 2])]]
+    flatten
+      (map
+        (fun page ->
+          let annot_objnums =
+            match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
+            | Some (Pdf.Array a) -> map (function Pdf.Indirect i -> i | _ -> 0) a
+            | _ -> []
+          in
+          let r = map
+              (fun annot_i ->
+                 let r =
+                   let objr = Pdf.addobj pdf (Pdf.Dictionary [("/Type", Pdf.Name "/ObjR"); ("/Obj", Pdf.Indirect annot_i)]) in
+                     Pdf.addobj pdf
+                       (Pdf.Dictionary [("/Type", Pdf.Name "/StructElem"); 
+                                        ("/S", Pdf.Name "/Link");
+                                        ("/K", Pdf.Array [Pdf.Integer !mcid; Pdf.Indirect objr])])
+                in
+                  incr mcid; r)
+              annot_objnums
+          in
+            mcid := 0; r)
+        toc_pages)
   in
   let prepending_structitems =
     map (fun x -> Pdf.Indirect x) (p_struct_elem_first_page::link_struct_elems_for_each_page)
