@@ -645,12 +645,12 @@ let matterhorn_19_003 st st2 pdf =
 
 (* ID entry of the <Note> tag is non-unique. *)
 let matterhorn_19_004 _ _ pdf =
-  (* Looking for /Type /StructElem /N /Note /ID to exist. *)
+  (* Looking for /S /Note /ID to exist. *)
   let ids = ref [] in
     Pdf.objiter
       (fun _ x ->
-         match Pdf.lookup_direct pdf "/Type" x, Pdf.lookup_direct pdf "/S" x, Pdf.lookup_direct pdf "/ID" x with
-         | Some (Pdf.Name "/StructElem"), Some (Pdf.Name "/Note"), Some (Pdf.String s) -> ids := s::!ids
+         match Pdf.lookup_direct pdf "/S" x, Pdf.lookup_direct pdf "/ID" x with
+         | Some (Pdf.Name "/Note"), Some (Pdf.String s) -> ids := s::!ids
          | _ -> ())
       pdf;
     if length (setify_large !ids) < length !ids then merror ()

@@ -167,8 +167,11 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
              then make_dots space fontpack fontsize
              else [Cpdftype.HGlue space]
          in
-             [Cpdftype.Tag ("Link", 0); Cpdftype.BeginDest (mark.Pdfmarks.target, Some mark.Pdfmarks.text); Cpdftype.HGlue indent] @ textruns @ leader @ labelruns
-           @ [Cpdftype.EndDest; Cpdftype.EndTag; Cpdftype.NewLine])
+             [Cpdftype.BeginDest (mark.Pdfmarks.target, Some mark.Pdfmarks.text); Cpdftype.HGlue indent]
+           @ [Cpdftype.Tag ("Link", 0)] @ textruns @ [Cpdftype.EndTag]
+           @ leader
+           @ [Cpdftype.Tag ("Link", 0)] @ labelruns @ [Cpdftype.EndTag]
+           @ [Cpdftype.EndDest; Cpdftype.NewLine])
       (Pdfmarks.read_bookmarks pdf)
   in
   let toc_pages, toc_tags =
@@ -229,7 +232,7 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
      paras spanning multiple pages). *)
      iter (fun x -> Printf.printf "PAGE\n"; iter (fun (_, i) -> Printf.printf "Paragraph number %i\n" i) x) toc_tags;
   let p_struct_elem_first_page =
-    Pdf.addobj pdf (Pdf.Dictionary [("/Type", Pdf.Name "/StructElem"); ("/S", Pdf.Name "/P")])
+    Pdf.addobj pdf (Pdf.Dictionary [("/S", Pdf.Name "/P")])
   in
   let mcid = ref 1 in
   let link_struct_elems_for_each_page =
@@ -244,10 +247,9 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
           let r = map
               (fun annot_i ->
                  let r =
-                   let objr = Pdf.addobj pdf (Pdf.Dictionary [("/Type", Pdf.Name "/ObjR"); ("/Obj", Pdf.Indirect annot_i)]) in
+                   let objr = Pdf.addobj pdf (Pdf.Dictionary [("/Type", Pdf.Name "/OBJR"); ("/Obj", Pdf.Indirect annot_i)]) in
                      Pdf.addobj pdf
-                       (Pdf.Dictionary [("/Type", Pdf.Name "/StructElem"); 
-                                        ("/S", Pdf.Name "/Link");
+                       (Pdf.Dictionary [("/S", Pdf.Name "/Link");
                                         ("/K", Pdf.Array [Pdf.Integer !mcid; Pdf.Indirect objr])])
                 in
                   incr mcid; r)
