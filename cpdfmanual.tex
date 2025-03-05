@@ -1,4 +1,3 @@
-%Document new places one can use -process-struct-trees
 %Document %objnum in -extract-images
 %\DocumentMetadata{lang=en, pdfversion=2.0, pdfstandard=ua-2, pdfstandard=a-4f, testphase={phase-III, title, table, math, firstaid}}
 \documentclass{book}
@@ -840,6 +839,8 @@ at least five pages.
   \noindent Produce the pages 1,1,2,2,....10,10.
 
   \end{framed}
+
+\noindent If the file has a structure tree (a.k.a Tagged PDF), it will be preserved whole. To trim the structure tree to only include the output pages, and so save space, add \texttt{-process-struct-trees} to the command line.
 
 \index{decryption}
   \section{Working with Encrypted Documents}
@@ -2162,7 +2163,8 @@ The option \texttt{-squeeze-no-pagedata} avoids the reprocessing of page data, w
 
   \vspace{1.5mm}
   \small\noindent\verb!cpdf -table-of-contents [-toc-title] [-toc-no-bookmark] [-toc-dot-leaders]!\\
-  \small\noindent\verb!     [-font <font>] [-font-size <size>] in.pdf -o out.pdf!
+  \small\noindent\verb!     [-font <font>] [-font-size <size>] [-process-struct-trees]!\\
+  \small\noindent\verb!     in.pdf -o out.pdf!
 
   \end{framed}
 
@@ -2331,6 +2333,8 @@ Cpdf can automatically generate a table of contents from existing bookmarks, add
   \begin{framed}
    \noindent\small\verb!cpdf -table-of-contents -toc-no-bookmark in.pdf -o out.pdf!
   \end{framed}
+
+\noindent To create a structure tree for the table of contents, and merge it with the existing one (for example, when adding a table of contents to a PDF/UA file), add \texttt{-process-struct-trees} to the command.
 
 \ \ \
 
@@ -4024,7 +4028,7 @@ Other images are written as PNGs, processed with either ImageMagick's ``magick''
 
 \noindent The \texttt{-im} or \texttt{-p2p} option is used to give the path to the external tool, one of which must be installed (unless \texttt{-raw} is added, which outputs instead just JPEG or plain \texttt{.pnm} files).
 
-The output specifier, e.g \verb!-o output/%%%! gives the number format for numbering the images. Output files are named serially from 0, and include the page number too. For example, output files might be called \texttt{output/000-p1.jpg}, \texttt{output/001-p1.png}, \texttt{output/002-p3.jpg} etc. Here is an example invocation:
+The output specifier, e.g \verb!-o output/%%%! gives the number format for numbering the images. Output files are named serially from 0, and include the page number too. For example, output files might be called \texttt{output/000-p1.jpg}, \texttt{output/001-p1.png}, \texttt{output/002-p3.jpg} etc. The specification \texttt{\%objnum} may also be used to insert the object number of the image. Here is an example invocation:
 
   \begin{framed}
   \noindent\small\verb@cpdf -extract-images in.pdf -im magick -o output/%%%@
