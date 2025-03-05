@@ -212,6 +212,7 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
   let toc_pages_len = length toc_pages in
   let changes = map (fun n -> (n, n + toc_pages_len)) (indx original_pages) in
   let pdf = Pdfpage.change_pages ~changes true pdf (toc_pages @ original_pages) in
+  let toc_pageobjnums = take (Pdf.page_reference_numbers pdf) toc_pages_len in
   let label =
     {Pdfpagelabels.labelstyle = NoLabelPrefixOnly;
      Pdfpagelabels.labelprefix = None;
@@ -225,14 +226,19 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
        2) One for each link:
             link = <</Type /StructElem /S /Link /K [<mcid> <objr>]>>
             objr = <</Type /ObjR /Obj <linkannot>>>
-     Then we have to graft them onto the file's existing structure tree
-     Then we have to do something about /StructParents.
-
-     It's all a simpler version of what Cpdftexttopdf does (simpler because no
-     paras spanning multiple pages). *)
-     iter (fun x -> Printf.printf "PAGE\n"; iter (fun (_, i) -> Printf.printf "Paragraph number %i\n" i) x) toc_tags;
+     Then we have to graft them onto the file's existing structure tree *)
+  (*iter (fun x -> Printf.printf "PAGE\n"; iter (fun (_, i) -> Printf.printf "Paragraph number %i\n" i) x) toc_tags;*)
+  let struct_tree_root =
+    match Pdf.lookup_immediate "/StructTreeRoot" (Pdf.lookup_obj pdf pdf.Pdf.root) with
+    | Some (Pdf.Indirect i) -> i
+    | _ -> 0 (* Will never be written, because we only write if there is an existing tree. To revisit. *)
+  in
   let p_struct_elem_first_page =
-    Pdf.addobj pdf (Pdf.Dictionary [("/S", Pdf.Name "/P")])
+    Pdf.addobj pdf
+      (Pdf.Dictionary [("/S", Pdf.Name "/P");
+                       ("/Pg", Pdf.Indirect (hd toc_pageobjnums));
+                       ("/K", Pdf.Array [Pdf.Integer 0]);
+                       ("/P", Pdf.Indirect struct_tree_root)])
   in
   let mcid = ref 1 in
   let link_struct_elems_for_each_page =
@@ -261,7 +267,14 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
   let prepending_structitems =
     map (fun x -> Pdf.Indirect x) (p_struct_elem_first_page::link_struct_elems_for_each_page)
   in
-  prepend_structitems pdf prepending_structitems;
+  begin match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/StructTreeRoot"; "/K"] with
+  | Some (Pdf.Array a) ->
+      Pdf.replace_chain pdf ["/Root"; "/StructTreeRoot"; "/K"] (Pdf.Array (prepending_structitems @ a))
+  | Some (Pdf.Dictionary d) ->
+      Pdf.replace_chain pdf ["/Root"; "/StructTreeRoot"; "/K"] (Pdf.Array (prepending_structitems @ [Pdf.Dictionary d]))
+  | _ ->
+      () (* None found. In future, may fabricate. For now, no. *)
+  end;
   let labels' = label::map (fun l -> {l with Pdfpagelabels.startpage = l.Pdfpagelabels.startpage + toc_pages_len}) labels in
     Pdfpagelabels.write pdf labels';
     if bookmark then

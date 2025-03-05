@@ -955,9 +955,9 @@ let matterhorn_28_011 _ _ pdf =
                  | Some d ->
                      begin match Pdf.lookup_direct pdf "/S" d with
                      | Some (Pdf.Name "/Link") -> ()
-                     | _ -> merror ()
+                     | _ -> merror_str "type is not link"
                      end
-                 | _ -> merror ()
+                 | _ -> merror_str "not found in parent tree"
                  end
              | _ -> () (* Not part of structure tree. That's ok. *)
              end
