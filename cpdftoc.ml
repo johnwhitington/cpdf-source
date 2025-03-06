@@ -288,12 +288,18 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
     map (fun x -> Pdf.Indirect x) (p_struct_elem_first_page::flatten link_struct_elems_for_each_page)
   in
   (* Add the key and value structure item (any p, and that page's links) to the parent tree for each TOC page *)
-  iter
-    (fun o ->
-       let page = Pdf.lookup_obj pdf o in
-       let ptn = add_to_parent_tree pdf (Pdf.Array []) in
-       Pdf.addobj_given_num pdf (o, Pdf.add_dict_entry page "/StructParents" (Pdf.Integer ptn)))
-    toc_pageobjnums;
+  let toc_structure_items_per_page =
+    match link_struct_elems_for_each_page with
+    | h::t -> (p_struct_elem_first_page::h)::t
+    | [] -> []
+  in
+    iter2
+      (fun o ns ->
+         let page = Pdf.lookup_obj pdf o in
+         let ptn = add_to_parent_tree pdf (Pdf.Array (map (fun x -> Pdf.Indirect x) ns)) in
+         Pdf.addobj_given_num pdf (o, Pdf.add_dict_entry page "/StructParents" (Pdf.Integer ptn)))
+      toc_pageobjnums
+      toc_structure_items_per_page;
   begin match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/StructTreeRoot"; "/K"] with
   | Some (Pdf.Array a) ->
       Pdf.replace_chain pdf ["/Root"; "/StructTreeRoot"; "/K"] (Pdf.Array (prepending_structitems @ a))
