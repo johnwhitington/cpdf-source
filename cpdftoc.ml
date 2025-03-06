@@ -111,6 +111,26 @@ let prepend_structitems pdf items =
       Pdf.replace_chain pdf ["/Root"; "/StructTreeRoot"; "/K"] (Pdf.Array (items @ [Pdf.Dictionary d]))
   | _ -> ()
 
+(* FIXME Again relies upon there being an existing structure tree. Fix. *)
+(* FIXME Again, replace_chain would be much better here if it could deal with a final indirect. *)
+let add_to_parent_tree pdf p =
+  match Pdf.lookup_chain pdf (Pdf.lookup_obj pdf pdf.Pdf.root) ["/StructTreeRoot"; "/ParentTree"] with
+  | Some tree ->
+      let t = Pdftree.read_number_tree pdf tree in
+      let n = match t with [] -> 0 | l -> int_of_string (fst (last l)) + 1 in
+      let newtree = Pdftree.build_name_tree true pdf ((string_of_int n, p)::t) in
+        begin match Pdf.lookup_direct pdf "/StructTreeRoot" (Pdf.lookup_obj pdf pdf.Pdf.root) with
+        | Some (Pdf.Dictionary d) ->
+            begin match lookup "/ParentTree" d with
+            | Some (Pdf.Indirect i) ->
+                Pdf.addobj_given_num pdf (i, newtree)
+            | _ -> ()
+            end
+        | _ -> ()
+        end;
+        n
+  | None -> 0
+
 (* Typeset a table of contents with given font, font size and title. Mediabox
    (and CropBox) copied from first page of existing PDF. Margin of 10% inside
    CropBox. Font size of title twice body font size. Null page labels added for
@@ -226,7 +246,7 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
        2) One for each link:
             link = <</Type /StructElem /S /Link /K [<mcid> <objr>]>>
             objr = <</Type /ObjR /Obj <linkannot>>>
-     Then we have to graft them onto the file's existing structure tree *)
+     Then we have to graft them onto the file's existing structure tree. *)
   (*iter (fun x -> Printf.printf "PAGE\n"; iter (fun (_, i) -> Printf.printf "Paragraph number %i\n" i) x) toc_tags;*)
   let struct_tree_root =
     match Pdf.lookup_immediate "/StructTreeRoot" (Pdf.lookup_obj pdf pdf.Pdf.root) with
@@ -240,33 +260,40 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
                        ("/K", Pdf.Array [Pdf.Integer 0]);
                        ("/P", Pdf.Indirect struct_tree_root)])
   in
+
   let mcid = ref 1 in
   let link_struct_elems_for_each_page =
-    flatten
-      (map
-        (fun page ->
-          let annot_objnums =
-            match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
-            | Some (Pdf.Array a) -> map (function Pdf.Indirect i -> i | _ -> 0) a
-            | _ -> []
-          in
-          let r = map
-              (fun annot_i ->
-                 let r =
-                   let objr = Pdf.addobj pdf (Pdf.Dictionary [("/Type", Pdf.Name "/OBJR"); ("/Obj", Pdf.Indirect annot_i)]) in
-                     Pdf.addobj pdf
-                       (Pdf.Dictionary [("/S", Pdf.Name "/Link");
-                                        ("/K", Pdf.Array [Pdf.Integer !mcid; Pdf.Indirect objr])])
-                in
-                  incr mcid; r)
-              annot_objnums
-          in
-            mcid := 0; r)
-        toc_pages)
+    map
+      (fun page ->
+        let annot_objnums =
+          match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
+          | Some (Pdf.Array a) -> map (function Pdf.Indirect i -> i | _ -> 0) a
+          | _ -> []
+        in
+        let r = map
+            (fun annot_i ->
+               let r =
+                 let objr = Pdf.addobj pdf (Pdf.Dictionary [("/Type", Pdf.Name "/OBJR"); ("/Obj", Pdf.Indirect annot_i)]) in
+                   Pdf.addobj pdf
+                     (Pdf.Dictionary [("/S", Pdf.Name "/Link");
+                                      ("/K", Pdf.Array [Pdf.Integer !mcid; Pdf.Indirect objr])])
+              in
+                incr mcid; r)
+            annot_objnums
+        in
+          mcid := 0; r)
+      toc_pages
   in
   let prepending_structitems =
-    map (fun x -> Pdf.Indirect x) (p_struct_elem_first_page::link_struct_elems_for_each_page)
+    map (fun x -> Pdf.Indirect x) (p_struct_elem_first_page::flatten link_struct_elems_for_each_page)
   in
+  (* Add the key and value structure item (any p, and that page's links) to the parent tree for each TOC page *)
+  iter
+    (fun o ->
+       let page = Pdf.lookup_obj pdf o in
+       let ptn = add_to_parent_tree pdf (Pdf.Array []) in
+       Pdf.addobj_given_num pdf (o, Pdf.add_dict_entry page "/StructParents" (Pdf.Integer ptn)))
+    toc_pageobjnums;
   begin match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/StructTreeRoot"; "/K"] with
   | Some (Pdf.Array a) ->
       Pdf.replace_chain pdf ["/Root"; "/StructTreeRoot"; "/K"] (Pdf.Array (prepending_structitems @ a))
