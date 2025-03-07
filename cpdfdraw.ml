@@ -707,6 +707,8 @@ let make_structure_tree pdf items =
   in
     make_structure_tree pageobjnums (ref 0, ref standard_namespace, null_hash ()) pdf items
 
+(* TODO When we allow drawing on PDFs preserving the structure tree, we must remove /ParentTreeNextKey. *)
+
 (* Write such a structure tree to a PDF. *)
 let write_structure_tree pdf st =
   let parentmap = ref [] in

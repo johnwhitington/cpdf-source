@@ -111,6 +111,21 @@ let prepend_structitems pdf items =
       Pdf.replace_chain pdf ["/Root"; "/StructTreeRoot"; "/K"] (Pdf.Array (items @ [Pdf.Dictionary d]))
   | _ -> ()
 
+(* FIXME Would be better with a Pdf.remove_chain *)
+let remove_parent_tree_next_key pdf =
+  match Pdf.lookup_obj pdf pdf.Pdf.root with
+  | Pdf.Dictionary d ->
+      begin match lookup "/StructTreeRoot" d with
+      | Some (Pdf.Indirect i) ->
+          Pdf.addobj_given_num pdf (i, Pdf.remove_dict_entry (Pdf.lookup_obj pdf i) "/ParentTreeNextKey")
+      | Some (Pdf.Dictionary d2) ->
+          let newstroot = Pdf.remove_dict_entry (Pdf.Dictionary d2) "/ParentTreeNextKey" in
+          let newroot = Pdf.add_dict_entry (Pdf.Dictionary d) "/StructTreeRoot" newstroot in
+            Pdf.addobj_given_num pdf (pdf.Pdf.root, newroot)
+      | _ -> ()
+      end
+  | _ -> ()
+
 (* FIXME Again relies upon there being an existing structure tree. Fix. *)
 (* FIXME Again, replace_chain would be much better here if it could deal with a final indirect. *)
 let add_to_parent_tree pdf p =
@@ -309,6 +324,7 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
          Pdf.addobj_given_num pdf (o, Pdf.add_dict_entry page "/StructParents" (Pdf.Integer ptn)))
       toc_pageobjnums
       toc_structure_items_per_page;
+  remove_parent_tree_next_key pdf;
   begin match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/StructTreeRoot"; "/K"] with
   | Some (Pdf.Array a) ->
       Pdf.replace_chain pdf ["/Root"; "/StructTreeRoot"; "/K"] (Pdf.Array (prepending_structitems @ a))
