@@ -272,7 +272,7 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
       let struct_tree_root =
         match Pdf.lookup_immediate "/StructTreeRoot" (Pdf.lookup_obj pdf pdf.Pdf.root) with
         | Some (Pdf.Indirect i) -> i
-        | _ -> 0 (* Will never be written, because we only write if there is an existing tree. To revisit. *)
+        | _ -> 0 (* Will never happen, because we ran ensure_minimal_struct_tree *)
       in
       let p_struct_elem_first_page =
         Pdf.addobj pdf
@@ -346,7 +346,7 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
       | Some (Pdf.Dictionary d) ->
           Pdf.replace_chain pdf ["/Root"; "/StructTreeRoot"; "/K"] (Pdf.Array (prepending_structitems @ [Pdf.Dictionary d]))
       | _ ->
-          () (* None found. In future, may fabricate. For now, no. *)
+          ()
       end
     end;
   let labels' = label::map (fun l -> {l with Pdfpagelabels.startpage = l.Pdfpagelabels.startpage + toc_pages_len}) labels in
