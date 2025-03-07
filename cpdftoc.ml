@@ -151,6 +151,7 @@ let add_to_parent_tree pdf p =
    CropBox. Font size of title twice body font size. Null page labels added for
    TOC, others bumped up and so preserved. *)
 let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~process_struct_tree pdf =
+  let optional l = if process_struct_tree then l else [] in
   Hashtbl.clear width_table_cache;
   let marks = Pdfmarks.read_bookmarks pdf in
   if marks = [] then (Pdfe.log "No bookmarks, not making table of contents\n"; pdf) else
@@ -203,22 +204,22 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
              else [Cpdftype.HGlue space]
          in
              [Cpdftype.BeginDest (mark.Pdfmarks.target, Some mark.Pdfmarks.text); Cpdftype.HGlue indent]
-           @ [Cpdftype.Tag ("Link", 0)] @ textruns @ [Cpdftype.EndTag]
+           @ optional [(Cpdftype.Tag ("Link", 0))] @ textruns @  optional [Cpdftype.EndTag]
            @ leader
-           @ [Cpdftype.Tag ("Link", 0)] @ labelruns @ [Cpdftype.EndTag]
+           @ optional [Cpdftype.Tag ("Link", 0)] @ labelruns @ optional [Cpdftype.EndTag]
            @ [Cpdftype.EndDest; Cpdftype.NewLine])
       (Pdfmarks.read_bookmarks pdf)
   in
   let toc_pages, toc_tags =
     let title =
       let glue = Cpdftype.VGlue (fontsize *. 2.) in
-        [Cpdftype.Tag ("P", 0)]
+        optional [Cpdftype.Tag ("P", 0)]
         @ flatten
            (map
              (fun l -> l @ [Cpdftype.NewLine])
              (map (of_utf8 fontpack (fontsize *. 2.)) (map implode (split_toc_title (explode title)))))
         @
-        [Cpdftype.EndTag; glue]
+        optional [Cpdftype.EndTag] @ [glue]
     in
     let lm, rm, tm, bm =
       match firstpage_cropbox with
@@ -254,85 +255,88 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
      Pdfpagelabels.startpage = 1;
      Pdfpagelabels.startvalue = 1}
   in
-  let struct_tree_root =
-    match Pdf.lookup_immediate "/StructTreeRoot" (Pdf.lookup_obj pdf pdf.Pdf.root) with
-    | Some (Pdf.Indirect i) -> i
-    | _ -> 0 (* Will never be written, because we only write if there is an existing tree. To revisit. *)
-  in
-  let p_struct_elem_first_page =
-    Pdf.addobj pdf
-      (Pdf.Dictionary [("/S", Pdf.Name "/P");
-                       ("/Pg", Pdf.Indirect (hd toc_pageobjnums));
-                       ("/K", Pdf.Array [Pdf.Integer 0]);
-                       ("/P", Pdf.Indirect struct_tree_root)])
-  in
-  let mcid = ref 1 in
-  let link_struct_elems_for_each_page =
-    map2
-      (fun page pageobjnum ->
-        let annot_objnums =
-          match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
-          | Some (Pdf.Array a) -> map (function Pdf.Indirect i -> i | _ -> 0) a
-          | _ -> []
-        in
-        let r = map
-            (fun annot_i ->
-               let r =
-                 let objr = Pdf.addobj pdf (Pdf.Dictionary [("/Type", Pdf.Name "/OBJR"); ("/Obj", Pdf.Indirect annot_i)]) in
-                   Pdf.addobj pdf
-                     (Pdf.Dictionary [("/S", Pdf.Name "/Link");
-                                      ("/K", Pdf.Array [Pdf.Integer !mcid; Pdf.Indirect objr]);
-                                      ("/P", Pdf.Indirect struct_tree_root);
-                                      ("/Pg", Pdf.Indirect pageobjnum)])
-              in
-                incr mcid; r)
-            annot_objnums
-        in
-          mcid := 0; r)
-      toc_pages
-      toc_pageobjnums
-  in
-  let prepending_structitems =
-    map (fun x -> Pdf.Indirect x) (p_struct_elem_first_page::flatten link_struct_elems_for_each_page)
-  in
-  (* Add the key and value structure item (any p, and that page's links) to the parent tree for each TOC page *)
-  let toc_structure_items_per_page =
-    match link_struct_elems_for_each_page with
-    | h::t -> (p_struct_elem_first_page::h)::t
-    | [] -> []
-  in
-    iter2
-      (fun o ns ->
-         let page = Pdf.lookup_obj pdf o in
-         (* For each annotation, add a structparent entry too. *)
-         let annot_objnums =
-           match Pdf.lookup_direct pdf "/Annots" page with
-           | Some (Pdf.Array a) -> map (function Pdf.Indirect i -> i | _ -> 0) a
-           | _ -> []
-         in
-         (* Remove the Title P from first page list *)
-         let ns2 = if length ns > length annot_objnums then tl ns else ns in
-         iter2
-           (fun annot_objnum n ->
-              let annot = Pdf.lookup_obj pdf annot_objnum in
-              let sp_num = add_to_parent_tree pdf (Pdf.Indirect n) in
-              let new_annot = Pdf.add_dict_entry annot "/StructParent" (Pdf.Integer sp_num) in
-              Pdf.addobj_given_num pdf (annot_objnum, new_annot))
-           annot_objnums
-           ns2;
-         let ptn = add_to_parent_tree pdf (Pdf.Array (map (fun x -> Pdf.Indirect x) ns)) in
-         Pdf.addobj_given_num pdf (o, Pdf.add_dict_entry page "/StructParents" (Pdf.Integer ptn)))
-      toc_pageobjnums
-      toc_structure_items_per_page;
-  remove_parent_tree_next_key pdf;
-  begin match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/StructTreeRoot"; "/K"] with
-  | Some (Pdf.Array a) ->
-      Pdf.replace_chain pdf ["/Root"; "/StructTreeRoot"; "/K"] (Pdf.Array (prepending_structitems @ a))
-  | Some (Pdf.Dictionary d) ->
-      Pdf.replace_chain pdf ["/Root"; "/StructTreeRoot"; "/K"] (Pdf.Array (prepending_structitems @ [Pdf.Dictionary d]))
-  | _ ->
-      () (* None found. In future, may fabricate. For now, no. *)
-  end;
+  if process_struct_tree then
+    begin
+      let struct_tree_root =
+        match Pdf.lookup_immediate "/StructTreeRoot" (Pdf.lookup_obj pdf pdf.Pdf.root) with
+        | Some (Pdf.Indirect i) -> i
+        | _ -> 0 (* Will never be written, because we only write if there is an existing tree. To revisit. *)
+      in
+      let p_struct_elem_first_page =
+        Pdf.addobj pdf
+          (Pdf.Dictionary [("/S", Pdf.Name "/P");
+                           ("/Pg", Pdf.Indirect (hd toc_pageobjnums));
+                           ("/K", Pdf.Array [Pdf.Integer 0]);
+                           ("/P", Pdf.Indirect struct_tree_root)])
+      in
+      let mcid = ref 1 in
+      let link_struct_elems_for_each_page =
+        map2
+          (fun page pageobjnum ->
+            let annot_objnums =
+              match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
+              | Some (Pdf.Array a) -> map (function Pdf.Indirect i -> i | _ -> 0) a
+              | _ -> []
+            in
+            let r = map
+                (fun annot_i ->
+                   let r =
+                     let objr = Pdf.addobj pdf (Pdf.Dictionary [("/Type", Pdf.Name "/OBJR"); ("/Obj", Pdf.Indirect annot_i)]) in
+                       Pdf.addobj pdf
+                         (Pdf.Dictionary [("/S", Pdf.Name "/Link");
+                                          ("/K", Pdf.Array [Pdf.Integer !mcid; Pdf.Indirect objr]);
+                                          ("/P", Pdf.Indirect struct_tree_root);
+                                          ("/Pg", Pdf.Indirect pageobjnum)])
+                  in
+                    incr mcid; r)
+                annot_objnums
+            in
+              mcid := 0; r)
+          toc_pages
+          toc_pageobjnums
+      in
+      let prepending_structitems =
+        map (fun x -> Pdf.Indirect x) (p_struct_elem_first_page::flatten link_struct_elems_for_each_page)
+      in
+      (* Add the key and value structure item (any p, and that page's links) to the parent tree for each TOC page *)
+      let toc_structure_items_per_page =
+        match link_struct_elems_for_each_page with
+        | h::t -> (p_struct_elem_first_page::h)::t
+        | [] -> []
+      in
+        iter2
+          (fun o ns ->
+             let page = Pdf.lookup_obj pdf o in
+             (* For each annotation, add a structparent entry too. *)
+             let annot_objnums =
+               match Pdf.lookup_direct pdf "/Annots" page with
+               | Some (Pdf.Array a) -> map (function Pdf.Indirect i -> i | _ -> 0) a
+               | _ -> []
+             in
+             (* Remove the Title P from first page list *)
+             let ns2 = if length ns > length annot_objnums then tl ns else ns in
+             iter2
+               (fun annot_objnum n ->
+                  let annot = Pdf.lookup_obj pdf annot_objnum in
+                  let sp_num = add_to_parent_tree pdf (Pdf.Indirect n) in
+                  let new_annot = Pdf.add_dict_entry annot "/StructParent" (Pdf.Integer sp_num) in
+                  Pdf.addobj_given_num pdf (annot_objnum, new_annot))
+               annot_objnums
+               ns2;
+             let ptn = add_to_parent_tree pdf (Pdf.Array (map (fun x -> Pdf.Indirect x) ns)) in
+             Pdf.addobj_given_num pdf (o, Pdf.add_dict_entry page "/StructParents" (Pdf.Integer ptn)))
+          toc_pageobjnums
+          toc_structure_items_per_page;
+      remove_parent_tree_next_key pdf;
+      begin match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/StructTreeRoot"; "/K"] with
+      | Some (Pdf.Array a) ->
+          Pdf.replace_chain pdf ["/Root"; "/StructTreeRoot"; "/K"] (Pdf.Array (prepending_structitems @ a))
+      | Some (Pdf.Dictionary d) ->
+          Pdf.replace_chain pdf ["/Root"; "/StructTreeRoot"; "/K"] (Pdf.Array (prepending_structitems @ [Pdf.Dictionary d]))
+      | _ ->
+          () (* None found. In future, may fabricate. For now, no. *)
+      end
+    end;
   let labels' = label::map (fun l -> {l with Pdfpagelabels.startpage = l.Pdfpagelabels.startpage + toc_pages_len}) labels in
     Pdfpagelabels.write pdf labels';
     if bookmark then
