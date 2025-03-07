@@ -126,7 +126,6 @@ let remove_parent_tree_next_key pdf =
       end
   | _ -> ()
 
-(* FIXME Again relies upon there being an existing structure tree. Fix. *)
 (* FIXME Again, replace_chain would be much better here if it could deal with a final indirect. *)
 let add_to_parent_tree pdf p =
   match Pdf.lookup_chain pdf (Pdf.lookup_obj pdf pdf.Pdf.root) ["/StructTreeRoot"; "/ParentTree"] with
@@ -146,12 +145,25 @@ let add_to_parent_tree pdf p =
         n
   | None -> 0
 
+(* Make sure that there is an existing structure tree suitable for us to merge
+   into. Check for /StructTreeRoot. If there, nothing to do. Otherwise, build
+   <</Type/StructTreeRoot/ParentTree .../K[]>>. ParentTree and K actually
+   optional, but it's easier if we assume they are there. *)
+let ensure_minimal_struct_tree pdf =
+  match Pdf.lookup_chain pdf (Pdf.lookup_obj pdf pdf.Pdf.root) ["/StructTreeRoot"] with
+  | Some _ -> ()
+  | None ->
+      let pt = Pdf.addobj pdf (Pdf.Dictionary [("/Nums", Pdf.Array [])]) in
+      let str = Pdf.Dictionary [("/Type", Pdf.Name "/StructTreeRoot"); ("/ParentTree", Pdf.Indirect pt); ("/K", Pdf.Array [])] in
+        Pdf.addobj_given_num pdf (pdf.Pdf.root, (Pdf.add_dict_entry (Pdf.lookup_obj pdf pdf.Pdf.root) "/StructTreeRoot" str))
+
 (* Typeset a table of contents with given font, font size and title. Mediabox
    (and CropBox) copied from first page of existing PDF. Margin of 10% inside
    CropBox. Font size of title twice body font size. Null page labels added for
    TOC, others bumped up and so preserved. *)
 let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~process_struct_tree pdf =
   let optional l = if process_struct_tree then l else [] in
+  if process_struct_tree then ensure_minimal_struct_tree pdf;
   Hashtbl.clear width_table_cache;
   let marks = Pdfmarks.read_bookmarks pdf in
   if marks = [] then (Pdfe.log "No bookmarks, not making table of contents\n"; pdf) else
