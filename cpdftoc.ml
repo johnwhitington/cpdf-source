@@ -233,7 +233,7 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
         @
         optional [Cpdftype.EndTag] @ [glue]
     in
-    let lm, rm, tm, bm =
+    let lm, rm, bm, tm =
       match firstpage_cropbox with
       | None -> (margin, margin, margin, margin)
       | Some (cminx, cminy, cmaxx, cmaxy) ->
