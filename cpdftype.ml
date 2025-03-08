@@ -5,11 +5,13 @@
    For now, this is just an experiment for -table-of-contents and -typeset. To
    be continued... *)
 
-(* At the moment, structure tree support is limited. Cpdftoc.ml and
+(* TODO At the moment, structure tree support is limited. Cpdftoc.ml and
    Cpdftexttopdf do it by post-processing. We need to fix this, which might
    involve returning more than just a list of pages, but in fact working on the
    document. *)
 
+(* TODO Should be able to take any box to typeset in. This papersize/margins
+   combination is very limiting, for example in Cpdftoc. *)
 open Pdfutil
 
 (* Main type *)

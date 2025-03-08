@@ -158,9 +158,12 @@ let ensure_minimal_struct_tree pdf =
         Pdf.addobj_given_num pdf (pdf.Pdf.root, (Pdf.add_dict_entry (Pdf.lookup_obj pdf pdf.Pdf.root) "/StructTreeRoot" str))
 
 (* Typeset a table of contents with given font, font size and title. Mediabox
-   (and CropBox) copied from first page of existing PDF. Margin of 10% inside
-   CropBox. Font size of title twice body font size. Null page labels added for
-   TOC, others bumped up and so preserved. *)
+   copied from first page of existing PDF cropbox, or mediabox if no crop box.
+   Margin of 10%. Font size of title twice body font size. Null page labels
+   added for TOC, others bumped up and so preserved. *)
+(* TODO Fix Cpdftype to take a box not a papersize/margins combo. Then we can remove all the CropBox/Mediabox complications here.
+   Then copying the boxes directly from the first page of the document is ok, and we just prefer the cropbox. Failing file
+   __PDFUA/decomp/08.pdf *)
 let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~process_struct_tree pdf =
   let optional l = if process_struct_tree then l else [] in
   if process_struct_tree then ensure_minimal_struct_tree pdf;
