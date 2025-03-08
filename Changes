@@ -13,12 +13,15 @@ o Allow %objnum in output name for -extract-images
 * -show-boxes, -trim-marks, -table-of-contents, -add-text
   -add-rectangle, -impose, -twoup, -twoup-stack now preserve
   PDF/UA compatibility
+* Preserve PDF/UA when drawing on existing PDF
+* Preserve PDF/uA with -stamp-on and -combine-pages
 
 Fixes:
 
 o Harden auto-compression against malformed streams
 o Add backup JPEG dimensions method in Cpdfimage
 o Correct object stream behaviour when splitting
+o Fix margin calculation for -table-of-contents
 
 * = Supported by a grant from NLnet
 
