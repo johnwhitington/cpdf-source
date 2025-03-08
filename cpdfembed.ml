@@ -83,7 +83,7 @@ let make_fontpack_hashtable fs =
           (fun u ->
             match charcode_extractor u with
             | Some x -> Hashtbl.add table u (i, x)
-            | None -> Printf.printf "charcode_extractor could not find char in make_fontpack_hashtable\n")
+            | None -> Printf.printf "charcode_extractor could not find char U+%04x in make_fontpack_hashtable\n" u)
           subset)
     indexes fs;
   table

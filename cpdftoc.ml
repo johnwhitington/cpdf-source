@@ -138,6 +138,9 @@ let add_to_parent_tree pdf p =
             begin match lookup "/ParentTree" d with
             | Some (Pdf.Indirect i) ->
                 Pdf.addobj_given_num pdf (i, newtree)
+            | Some (Pdf.Dictionary d) ->
+                let i = Pdf.addobj pdf newtree in
+                  Pdf.replace_chain pdf ["/Root"; "/StructTreeRoot"; "/ParentTree"] (Pdf.Indirect i)
             | _ -> ()
             end
         | _ -> ()
