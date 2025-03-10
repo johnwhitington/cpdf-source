@@ -1835,7 +1835,7 @@ let create_pdfua1 title pagesize pages =
     let pdf = Cpdfmetadata.set_viewer_preference ("/DisplayDocTitle", Pdf.Boolean true, 0) pdf in
       Pdf.replace_chain pdf ["/Root"; "/MarkInfo"; "/Marked"] (Pdf.Boolean true);
       Pdf.replace_chain pdf ["/Root"; "/StructTreeRoot"; "/Type"] (Pdf.Name "/StructTreeRoot");
-      let pdf = {pdf with Pdf.major = 1; Pdf.minor =  7} in
+      let pdf = {pdf with Pdf.major = 1; Pdf.minor = 7} in
         mark pdf;
         pdf
 
@@ -1847,8 +1847,32 @@ let create_pdfua2 title pagesize pages =
     let pdf = Cpdfmetadata.set_viewer_preference ("/DisplayDocTitle", Pdf.Boolean true, 0) pdf in
       Pdf.replace_chain pdf ["/Root"; "/MarkInfo"; "/Marked"] (Pdf.Boolean true);
       Pdf.replace_chain pdf ["/Root"; "/StructTreeRoot"; "/Type"] (Pdf.Name "/StructTreeRoot");
-      let pdf = {pdf with Pdf.major = 2; Pdf.minor =  0} in
+      let pdf = {pdf with Pdf.major = 2; Pdf.minor = 0} in
         mark2 2024 pdf;
         pdf
 
-let remove_struct_tree pdf = ()
+let remove_struct_tree pdf =
+  Cpdftweak.remove_dict_entry pdf "/StructTreeRoot" None;
+  Cpdftweak.remove_dict_entry pdf "/StructParent" None;
+  Cpdftweak.remove_dict_entry pdf "/StructParents" None;
+  let remove_struct_tree_ops pdf resources content =
+    let operators = Pdfops.parse_operators pdf resources content in
+    (* In fact, we remove all marked content regions. Acceptable in the circumstances. *)
+    let remove_mcids =
+      lose
+        (function
+         | Pdfops.Op_MP _
+         | Pdfops.Op_DP _
+         | Pdfops.Op_BMC _
+         | Pdfops.Op_BDC _
+         | Pdfops.Op_EMC -> true | _ -> false)
+    in
+    let operators' = remove_mcids operators in
+      [Pdfops.stream_of_ops operators']
+  in
+  let remove_struct_tree_page _ page =
+    let content' = remove_struct_tree_ops pdf page.Pdfpage.resources page.Pdfpage.content in
+      Pdfpage.process_xobjects pdf page remove_struct_tree_ops;
+      {page with Pdfpage.content = content'}
+  in
+    Cpdfpage.process_pages (Pdfpage.ppstub remove_struct_tree_page) pdf (ilist 1 (Pdfpage.endpage pdf))

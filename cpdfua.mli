@@ -32,7 +32,7 @@ val extract_struct_tree : Pdf.t -> Cpdfyojson.Safe.t
 val replace_struct_tree : Pdf.t -> Cpdfyojson.Safe.t -> unit
 
 (** Remove a structure tree entirely from a file, including unmarking marked content. *)
-val remove_struct_tree : Pdf.t -> unit
+val remove_struct_tree : Pdf.t -> Pdf.t
 
 (** Make a blank PDF/UA-1 PDF given a title, paper size, and number of pages. *)
 val create_pdfua1 : string -> Pdfpaper.t -> int -> Pdf.t

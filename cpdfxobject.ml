@@ -85,4 +85,3 @@ let stamp_as_xobject pdf range over =
                     let pdf = Pdfmarks.add_bookmarks new_marks changed in
                     let name = "/" ^ Pdfpage.shortest_unused_prefix pdf ^ "CPDFXObj" in
                       (add_page_as_xobject pdf range over_page name, name)
-

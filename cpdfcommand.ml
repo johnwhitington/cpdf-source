@@ -3032,6 +3032,7 @@ let specs =
    ("-print-struct-tree", Arg.Unit (fun () -> setop PrintStructTree ()), " Print structure tree");
    ("-extract-struct-tree", Arg.Unit (fun () -> setop ExtractStructTree ()), " Extract structure tree in JSON format");
    ("-replace-struct-tree", Arg.String (fun s -> setop (ReplaceStructTree s) ()), " Replace structure tree from JSON");
+   ("-remove-struct-tree", Arg.Unit (fun () -> setop RemoveStructTree ()), " Remove entire structure tree");
    ("-redact", Arg.Unit (fun () -> setop Redact ()), " Redact entire pages");
    ("-rasterize", Arg.Unit (fun () -> setop Rasterize ()), " Rasterize pages");
    ("-rasterize-gray", Arg.Unit (fun () -> args.rast_device <- "pnggray"), " Rasterize in grayscale");
@@ -4895,7 +4896,7 @@ let go () =
         write_pdf false pdf
   | Some RemoveStructTree ->
       let pdf = get_single_pdf args.op false in
-        Cpdfua.remove_struct_tree pdf;
+      let pdf = Cpdfua.remove_struct_tree pdf in
         write_pdf false pdf
   | Some (SetLanguage s) ->
       let pdf = get_single_pdf args.op false in

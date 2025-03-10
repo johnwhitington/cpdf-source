@@ -92,7 +92,7 @@ let blacktext c range pdf =
   in
     Cpdfpage.process_pages (Pdfpage.ppstub blacktext_page) pdf range
 
-(* Blacken lines *)
+(* Blacken lines. FIXME Why doesn't this do xobjects like the other two? *)
 let blacklines_ops c pdf resources content =
   let rec blacken_strokeops prev = function
     | [] -> rev prev
