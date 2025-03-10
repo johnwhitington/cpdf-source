@@ -1,5 +1,9 @@
 2.9 (to come)
 
+New features:
+
+* -remove-struct-tree removes whole structure tree
+
 Extended features:
 
 o -obj JSON output

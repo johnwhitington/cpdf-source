@@ -1850,3 +1850,5 @@ let create_pdfua2 title pagesize pages =
       let pdf = {pdf with Pdf.major = 2; Pdf.minor =  0} in
         mark2 2024 pdf;
         pdf
+
+let remove_struct_tree pdf = ()

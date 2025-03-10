@@ -229,6 +229,7 @@ type op =
   | PrintStructTree
   | ExtractStructTree
   | ReplaceStructTree of string
+  | RemoveStructTree
   | SetLanguage of string
   | Redact
   | Rasterize
@@ -385,6 +386,7 @@ let string_of_op = function
   | PrintStructTree -> "PrintStructTree"
   | ExtractStructTree -> "ExtractStructTree"
   | ReplaceStructTree _ -> "ReplaceStructTree"
+  | RemoveStructTree -> "RemoveStructTree"
   | SetLanguage _ -> "SetLanguage"
   | Redact -> "Redact"
   | Rasterize -> "Rasterize"
@@ -959,7 +961,7 @@ let banned banlist = function
   | OCGRename | OCGList | OCGOrderAll | PrintFontEncoding _ | TableOfContents | Typeset _ | Composition _
   | TextWidth _ | SetAnnotations _ | CopyAnnotations _ | ExtractStream _ | ReplaceStream _ | PrintObj _ | ReplaceObj _
   | Verify _ | MarkAs _ | RemoveMark _ | ExtractStructTree | ReplaceStructTree _ | SetLanguage _
-  | PrintStructTree | Rasterize | OutputImage
+  | PrintStructTree | Rasterize | OutputImage | RemoveStructTree
      -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
@@ -4890,6 +4892,10 @@ let go () =
       let pdf = get_single_pdf args.op false in
       let json = Cpdfyojson.Safe.from_file s in
         Cpdfua.replace_struct_tree pdf json;
+        write_pdf false pdf
+  | Some RemoveStructTree ->
+      let pdf = get_single_pdf args.op false in
+        Cpdfua.remove_struct_tree pdf;
         write_pdf false pdf
   | Some (SetLanguage s) ->
       let pdf = get_single_pdf args.op false in
