@@ -803,7 +803,7 @@ let do_stamp relative_to_cropbox fast position topline midline scale_to_fit isov
          Pdfpage.resources =
            Pdfpage.combine_pdf_resources pdf u.Pdfpage.resources o.Pdfpage.resources}
 
-let stamp relative_to_cropbox position topline midline fast scale_to_fit isover range over pdf =
+let stamp ~process_struct_tree relative_to_cropbox position topline midline fast scale_to_fit isover range over pdf =
   let prefix = Pdfpage.shortest_unused_prefix pdf in
   Pdfpage.add_prefix over prefix;
   let marks = Pdfmarks.read_bookmarks pdf in
@@ -875,7 +875,7 @@ let equalize_pages under over =
     else
       under, over
 
-let combine_pages fast under over scaletofit swap equalize =
+let combine_pages ~process_struct_tree fast under over scaletofit swap equalize =
   let debug_combine_pages = false in
   let debug_pdf pdf n =
     if debug_combine_pages then

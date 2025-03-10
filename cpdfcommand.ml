@@ -4544,7 +4544,7 @@ let go () =
           let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
             let pdf =
               Cpdfpage.stamp
-                args.relative_to_cropbox args.position args.topline args.midline args.fast
+                ~process_struct_tree:args.process_struct_trees args.relative_to_cropbox args.position args.topline args.midline args.fast
                 args.scale_stamp_to_fit true range overpdf pdf
             in
               write_pdf false pdf
@@ -4558,7 +4558,7 @@ let go () =
           let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
             let pdf =
               Cpdfpage.stamp
-                args.relative_to_cropbox args.position args.topline args.midline args.fast
+                ~process_struct_tree:args.process_struct_trees args.relative_to_cropbox args.position args.topline args.midline args.fast
                 args.scale_stamp_to_fit false range underpdf pdf
             in
               write_pdf false pdf
@@ -4569,6 +4569,7 @@ let go () =
         warn_prerotate (parse_pagespec overpdf "all") overpdf;
         write_pdf false
           (Cpdfpage.combine_pages
+             ~process_struct_tree:args.process_struct_trees
              args.fast
                (prerotate (parse_pagespec underpdf "all") underpdf)
                (prerotate (parse_pagespec overpdf "all") overpdf)
