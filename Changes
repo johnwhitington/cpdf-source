@@ -3,7 +3,6 @@
 New features:
 
 * -remove-struct-tree removes whole structure tree
-* -mark-as-artifact marks all unmarked content as artifact
 
 Extended features:
 
