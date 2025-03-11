@@ -91,7 +91,7 @@ the same number of pages as the shorter file. If [scaletofit] is true, the
 [over] file will be scaled to fit. If [swap] is true, [over] and [under] are
 swapped.  If [fast] is true, the PDFs are assumed to be well-formed and no
 fixes are done. *)
-val combine_pages : process_struct_tree:bool -> bool -> Pdf.t -> Pdf.t -> bool -> bool -> bool -> Pdf.t
+val combine_pages : process_struct_tree:bool -> bool -> Pdf.t -> Pdf.t -> bool -> bool -> Pdf.t
 
 (** [stamp relative_to_cropbox position topline midline fast scale_to_fit isover range over pdf] stamps the first page of
 [over] over each page of the PDF. The arguments have the same meaning as in

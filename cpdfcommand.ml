@@ -4576,7 +4576,7 @@ let go () =
              args.fast
                (prerotate (parse_pagespec underpdf "all") underpdf)
                (prerotate (parse_pagespec overpdf "all") overpdf)
-               false false true)
+               false false)
   | Some Encrypt ->
       let pdf = get_single_pdf args.op false in
         let pdf = Cpdfsqueeze.recompress_pdf pdf

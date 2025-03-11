@@ -915,7 +915,8 @@ let equalize_pages under over =
     else
       under, over
 
-let combine_pages ~process_struct_tree fast under over scaletofit swap equalize =
+let combine_pages ~process_struct_tree fast under over scaletofit swap =
+  let over, under = if swap then under, over else over, under in
   let over = if process_struct_tree then mark_all_as_artifact (remove_struct_tree over) else over in
   let debug_combine_pages = false in
   let debug_pdf pdf n =
@@ -924,7 +925,7 @@ let combine_pages ~process_struct_tree fast under over scaletofit swap equalize 
   in
   Pdfpage.add_prefix over (Pdfpage.shortest_unused_prefix under);
   let marks_under, marks_over = Pdfmarks.read_bookmarks under, Pdfmarks.read_bookmarks over in
-  let under, over = if equalize then equalize_pages under over else under, over in
+  let under, over = equalize_pages under over in
   let under_length, over_length = Pdfpage.endpage under, Pdfpage.endpage over in
     if under_length <> over_length then
       raise (Pdf.PDFError "combine_pages: not of equal length")
