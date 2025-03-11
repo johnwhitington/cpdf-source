@@ -2510,9 +2510,10 @@ the file using a different page range each time.
 
   \vspace{1.5mm}
   \noindent\small\verb!cpdf -combine-pages over.pdf under.pdf!\\
-  \noindent\small\verb!     [-fast] [-prerotate] [-no-warn-rotate] -o out.pdf!
+  \noindent\small\verb!     [-fast] [-prerotate] [-no-warn-rotate] [-process-struct-tree]!\\
+  \noindent\small\verb!     [-underneath] [-stamp-scale-to-fit] -o out.pdf!
 
-  \vspace{1.5mm}
+  \vspace{0.1mm}
   \noindent\small\begin{verbatim}
 cpdf ([-add-text <text-format> | -add-rectangle <size>])
       [-font <fontname>]          [-font-size <size-in-points>]
@@ -2566,6 +2567,8 @@ writing to \texttt{out.pdf}. A watermark should go underneath each page:
 
 The \texttt{-scale-stamp-to-fit} option can be added to scale the stamp to fit the page before applying it. The use of positioning commands together with \texttt{-scale-stamp-to-fit} is not recommended.
 
+The \texttt{-relative-to-cropbox} option takes the positioning command to be relative to the crop box of each page rather than the media box.
+
   The \texttt{-combine-pages} operation takes two PDF files and stamps each
 page of one over each page of the other. The length of the output is the same
 as the length of the ``under'' file. For instance:
@@ -2578,7 +2581,7 @@ as the length of the ``under'' file. For instance:
 file. For best results, remove any rotation differences in the two files using
 \texttt{-upright} first, or by adding \texttt{-prerotate} to the command.
 
-The \texttt{-relative-to-cropbox} option takes the positioning command to be relative to the crop box of each page rather than the media box.
+To maintain Tagged PDF, for example with PDF/UA, add \texttt{-process-struct-trees}. The ``under'' file will keep its structure; the stamp will be marked as an artifact. To reverse the order of combination (to have ``over'' under ``under'') add \texttt{-underneath}. To scale the ``over'' file to fit, add \texttt{-scale-stamp-to-fit}.
 
   \section{Stamp Text, Dates and Times.}
 \index{date}

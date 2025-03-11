@@ -3041,7 +3041,7 @@ let specs =
    ("-rasterize-gray", Arg.Unit (fun () -> args.rast_device <- "pnggray"), " Rasterize in grayscale");
    ("-rasterize-1bpp", Arg.Unit (fun () -> args.rast_device <- "pngmono"), " Rasterize in monochrome");
    ("-rasterize-jpeg", Arg.Unit (fun () -> args.rast_device <- "jpeg"), " Rasterize as JPEG");
-   ("-rasterize-jpeg-gray", Arg.Unit (fun () -> args.rast_device <- "jpeggray"), "Rasterize as JPEG in grayscale");
+   ("-rasterize-jpeg-gray", Arg.Unit (fun () -> args.rast_device <- "jpeggray"), " Rasterize as JPEG in grayscale");
    ("-rasterize-res", Arg.Float (fun f -> args.rast_res <- f), " Rastierization resolution");
    ("-rasterize-annots", Arg.Unit (fun () -> args.rast_annots <- true), " Rasterize annotations");
    ("-rasterize-no-antialias", Arg.Unit (fun () -> args.rast_antialias <- false), " Don't antialias when rasterizing");
