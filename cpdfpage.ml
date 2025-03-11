@@ -889,7 +889,7 @@ let stamp ~process_struct_tree relative_to_cropbox position topline midline fast
                     let new_marks = map (Cpdfbookmarks.change_bookmark changetable) marks in
                       Pdfmarks.add_bookmarks new_marks changed
 
-(* Combine pages from two PDFs. For now, assume equal length. FIXME: Why? *)
+(* Combine pages from two PDFs. *)
 
 (* If [over] has more pages than [under], chop the excess. If the converse, pad
 [over] to the same length *)
@@ -915,8 +915,7 @@ let equalize_pages under over =
     else
       under, over
 
-let combine_pages ~process_struct_tree fast under over scaletofit swap =
-  let over, under = if swap then under, over else over, under in
+let combine_pages ~process_struct_tree fast under over scaletofit over_is_under =
   let over = if process_struct_tree then mark_all_as_artifact (remove_struct_tree over) else over in
   let debug_combine_pages = false in
   let debug_pdf pdf n =
@@ -944,7 +943,7 @@ let combine_pages ~process_struct_tree fast under over scaletofit swap =
             map2
               (fun o u ->
                  do_stamp
-                   false fast (BottomLeft (0., 0.)) false false scaletofit (not swap) merged o u over)
+                   false fast (BottomLeft (0., 0.)) false false scaletofit (not over_is_under) merged o u over)
               over_pages under_pages
           in
             (* Build the changes. 123456 -> 123123 *)
