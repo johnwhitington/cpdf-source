@@ -1,15 +1,14 @@
 # Build the cpdf command line tools
 NONDOC = cpdfyojson cpdfxmlm
 
-DOC = cpdfunicodedata cpdferror cpdfdebug cpdfjson cpdfstrftime cpdfcoord \
-      cpdfattach cpdfpagespec cpdfposition cpdfpresent cpdfmetadata \
+DOC = cpdfutil cpdfunicodedata cpdferror cpdfdebug cpdfjson cpdfstrftime \
+      cpdfcoord cpdfattach cpdfpagespec cpdfposition cpdfpresent cpdfmetadata \
       cpdfbookmarks cpdfpage cpdftruetype cpdfremovetext cpdfextracttext \
-      cpdfembed cpdffont cpdftype cpdfaddtext cpdfpad cpdfocg \
-      cpdfsqueeze cpdfdraft cpdfspot cpdfpagelabels cpdfcreate cpdfannot \
-      cpdfxobject cpdfimpose cpdfchop cpdftweak cpdfprinttree cpdfua cpdftexttopdf cpdftoc \
-      cpdfjpeg cpdfjpeg2000 cpdfpng cpdfimage cpdfdraw \
-      cpdfcomposition cpdfshape cpdfcolours cpdfdrawcontrol \
-      cpdfcommand
+      cpdfembed cpdffont cpdftype cpdfaddtext cpdfpad cpdfocg cpdfsqueeze \
+      cpdfdraft cpdfspot cpdfpagelabels cpdfcreate cpdfannot cpdfxobject \
+      cpdfimpose cpdfchop cpdftweak cpdfprinttree cpdfua cpdftexttopdf \
+      cpdftoc cpdfjpeg cpdfjpeg2000 cpdfpng cpdfimage cpdfdraw \
+      cpdfcomposition cpdfshape cpdfcolours cpdfdrawcontrol cpdfcommand
 
 MODS = $(NONDOC) $(DOC)
 

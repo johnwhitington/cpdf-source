@@ -15,12 +15,6 @@ val blackfills : Cpdfaddtext.colour -> int list -> Pdf.t -> Pdf.t
 (** Append page content. *)
 val append_page_content : string -> bool -> bool -> int list -> Pdf.t -> Pdf.t
 
-(** Remove a dictionary entry. *)
-val remove_dict_entry : Pdf.t -> string -> Pdf.pdfobject option -> unit
-
-(** Replace a dictionary entry. *)
-val replace_dict_entry : Pdf.t -> string -> Pdf.pdfobject -> Pdf.pdfobject option -> unit
-
 (** Print a dictionary entry. *)
 val print_dict_entry : utf8:bool -> Pdf.t -> string -> unit
 

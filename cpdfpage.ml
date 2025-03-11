@@ -803,7 +803,47 @@ let do_stamp relative_to_cropbox fast position topline midline scale_to_fit isov
          Pdfpage.resources =
            Pdfpage.combine_pdf_resources pdf u.Pdfpage.resources o.Pdfpage.resources}
 
+let remove_struct_tree pdf =
+  Cpdfutil.remove_dict_entry pdf "/StructTreeRoot" None;
+  Cpdfutil.remove_dict_entry pdf "/StructParent" None;
+  Cpdfutil.remove_dict_entry pdf "/StructParents" None;
+  let remove_struct_tree_ops pdf resources content =
+    let operators = Pdfops.parse_operators pdf resources content in
+    (* In fact, we remove all marked content regions. Acceptable in the circumstances. *)
+    let remove_mcids =
+      lose
+        (function
+         | Pdfops.Op_MP _
+         | Pdfops.Op_DP _
+         | Pdfops.Op_BMC _
+         | Pdfops.Op_BDC _
+         | Pdfops.Op_EMC -> true | _ -> false)
+    in
+    let operators' = remove_mcids operators in
+      [Pdfops.stream_of_ops operators']
+  in
+  let remove_struct_tree_page _ page =
+    let content' = remove_struct_tree_ops pdf page.Pdfpage.resources page.Pdfpage.content in
+      Pdfpage.process_xobjects pdf page remove_struct_tree_ops;
+      {page with Pdfpage.content = content'}
+  in
+    process_pages (Pdfpage.ppstub remove_struct_tree_page) pdf (ilist 1 (Pdfpage.endpage pdf))
+
+let mark_all_as_artifact pdf =
+  let mark_all_as_artifact_ops pdf resources content =
+    let operators = Pdfops.parse_operators pdf resources content in
+    let operators' = [Pdfops.Op_BMC "/Artifact"] @ operators @ [Pdfops.Op_EMC] in
+      [Pdfops.stream_of_ops operators']
+  in
+  let remove_struct_tree_page _ page =
+    let content' = mark_all_as_artifact_ops pdf page.Pdfpage.resources page.Pdfpage.content in
+      Pdfpage.process_xobjects pdf page mark_all_as_artifact_ops;
+      {page with Pdfpage.content = content'}
+  in
+    process_pages (Pdfpage.ppstub remove_struct_tree_page) pdf (ilist 1 (Pdfpage.endpage pdf))
+
 let stamp ~process_struct_tree relative_to_cropbox position topline midline fast scale_to_fit isover range over pdf =
+  let over = if process_struct_tree then mark_all_as_artifact (remove_struct_tree over) else over in
   let prefix = Pdfpage.shortest_unused_prefix pdf in
   Pdfpage.add_prefix over prefix;
   let marks = Pdfmarks.read_bookmarks pdf in

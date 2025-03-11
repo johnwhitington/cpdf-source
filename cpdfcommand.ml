@@ -4679,11 +4679,11 @@ let go () =
             (map Pdfpagelabels.string_of_pagelabel (Pdfpagelabels.read pdf))
   | Some (RemoveDictEntry key) ->
       let pdf = get_single_pdf args.op true in
-        Cpdftweak.remove_dict_entry pdf key args.dict_entry_search;
+        Cpdfutil.remove_dict_entry pdf key args.dict_entry_search;
         write_pdf false pdf
   | Some (ReplaceDictEntry key) ->
       let pdf = get_single_pdf args.op true in
-        Cpdftweak.replace_dict_entry pdf key args.replace_dict_entry_value args.dict_entry_search;
+        Cpdfutil.replace_dict_entry pdf key args.replace_dict_entry_value args.dict_entry_search;
         write_pdf false pdf
   | Some (PrintDictEntry key) ->
       let pdf = get_single_pdf args.op true in
@@ -4897,7 +4897,7 @@ let go () =
         write_pdf false pdf
   | Some RemoveStructTree ->
       let pdf = get_single_pdf args.op false in
-      let pdf = Cpdfua.remove_struct_tree pdf in
+      let pdf = Cpdfpage.remove_struct_tree pdf in
         write_pdf false pdf
   | Some (SetLanguage s) ->
       let pdf = get_single_pdf args.op false in

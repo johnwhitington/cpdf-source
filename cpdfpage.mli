@@ -134,3 +134,10 @@ val alluprightonly : int list -> Pdf.t -> bool
 val change_pattern_matrices_page : Pdf.t -> Pdftransform.transform_matrix -> Pdfpage.t -> Pdfpage.t
 
 val redact : process_struct_tree:bool -> Pdf.t -> int list -> Pdf.t
+
+(** Remove a structure tree entirely from a file, including unmarking marked content. *)
+val remove_struct_tree : Pdf.t -> Pdf.t
+
+(** Mark a PDF as begin entirely artifacts (may be used after running [remove_struct_tree]. *)
+val mark_all_as_artifact : Pdf.t -> Pdf.t
+
