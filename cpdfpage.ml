@@ -916,6 +916,7 @@ let equalize_pages under over =
       under, over
 
 let combine_pages ~process_struct_tree fast under over scaletofit swap equalize =
+  let over = if process_struct_tree then mark_all_as_artifact (remove_struct_tree over) else over in
   let debug_combine_pages = false in
   let debug_pdf pdf n =
     if debug_combine_pages then
