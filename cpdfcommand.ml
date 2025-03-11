@@ -230,6 +230,7 @@ type op =
   | ExtractStructTree
   | ReplaceStructTree of string
   | RemoveStructTree
+  | MarkAsArtifact
   | SetLanguage of string
   | Redact
   | Rasterize
@@ -387,6 +388,7 @@ let string_of_op = function
   | ExtractStructTree -> "ExtractStructTree"
   | ReplaceStructTree _ -> "ReplaceStructTree"
   | RemoveStructTree -> "RemoveStructTree"
+  | MarkAsArtifact -> "MarkAsArtifact"
   | SetLanguage _ -> "SetLanguage"
   | Redact -> "Redact"
   | Rasterize -> "Rasterize"
@@ -961,7 +963,7 @@ let banned banlist = function
   | OCGRename | OCGList | OCGOrderAll | PrintFontEncoding _ | TableOfContents | Typeset _ | Composition _
   | TextWidth _ | SetAnnotations _ | CopyAnnotations _ | ExtractStream _ | ReplaceStream _ | PrintObj _ | ReplaceObj _
   | Verify _ | MarkAs _ | RemoveMark _ | ExtractStructTree | ReplaceStructTree _ | SetLanguage _
-  | PrintStructTree | Rasterize | OutputImage | RemoveStructTree
+  | PrintStructTree | Rasterize | OutputImage | RemoveStructTree | MarkAsArtifact
      -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
@@ -3033,6 +3035,7 @@ let specs =
    ("-extract-struct-tree", Arg.Unit (fun () -> setop ExtractStructTree ()), " Extract structure tree in JSON format");
    ("-replace-struct-tree", Arg.String (fun s -> setop (ReplaceStructTree s) ()), " Replace structure tree from JSON");
    ("-remove-struct-tree", Arg.Unit (fun () -> setop RemoveStructTree ()), " Remove entire structure tree");
+   ("-mark-as-artifact", Arg.Unit (fun () -> setop MarkAsArtifact ()), " Mark whole file as artifact");
    ("-redact", Arg.Unit (fun () -> setop Redact ()), " Redact entire pages");
    ("-rasterize", Arg.Unit (fun () -> setop Rasterize ()), " Rasterize pages");
    ("-rasterize-gray", Arg.Unit (fun () -> args.rast_device <- "pnggray"), " Rasterize in grayscale");
@@ -4898,6 +4901,10 @@ let go () =
   | Some RemoveStructTree ->
       let pdf = get_single_pdf args.op false in
       let pdf = Cpdfpage.remove_struct_tree pdf in
+        write_pdf false pdf
+  | Some MarkAsArtifact ->
+      let pdf = get_single_pdf args.op false in
+      let pdf = Cpdfpage.mark_all_as_artifact pdf in
         write_pdf false pdf
   | Some (SetLanguage s) ->
       let pdf = get_single_pdf args.op false in
