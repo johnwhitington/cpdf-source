@@ -1,4 +1,3 @@
-%Document -process-struct-tree with -stamp-on, -stamp-under, -combine-pages, new combine pages stuff (over is principal, scale stamp to fit)
 %Document -mark-as-artifact
 %\DocumentMetadata{lang=en, pdfversion=2.0, pdfstandard=ua-2, pdfstandard=a-4f, testphase={phase-III, title, table, math, firstaid}}
 \documentclass{book}
@@ -2501,12 +2500,12 @@ the file using a different page range each time.
   \begin{framed}
   \noindent\small\verb!cpdf -stamp-on source.pdf!\\
   \noindent\small\verb!     [-scale-stamp-to-fit] [<positioning command>] [-relative-to-cropbox] !\\
-  \noindent\small\verb!     in.pdf [<range>] [-fast] -o out.pdf!
+  \noindent\small\verb!     [-process-struct-tree] in.pdf [<range>] [-fast] -o out.pdf!
   
   \vspace{1.5mm}
   \noindent\small\verb!cpdf -stamp-under source.pdf!\\
   \noindent\small\verb!     [-scale-stamp-to-fit] [<positioning command>] [-relative-to-cropbox]!\\
-  \noindent\small\verb!     in.pdf [<range>] [-fast] -o out.pdf!
+  \noindent\small\verb!     [-process-struct-tree] in.pdf [<range>] [-fast] -o out.pdf!
 
   \vspace{1.5mm}
   \noindent\small\verb!cpdf -combine-pages over.pdf under.pdf!\\
@@ -2569,6 +2568,8 @@ The \texttt{-scale-stamp-to-fit} option can be added to scale the stamp to fit t
 
 The \texttt{-relative-to-cropbox} option takes the positioning command to be relative to the crop box of each page rather than the media box.
 
+To maintain Tagged PDF, for example with PDF/UA, add \texttt{-process-struct-tree}. The main file will keep its structure; the stamp will be marked as an artifact.
+
   The \texttt{-combine-pages} operation takes two PDF files and stamps each
 page of one over each page of the other. The length of the output is the same
 as the length of the ``under'' file. For instance:
@@ -2581,7 +2582,9 @@ as the length of the ``under'' file. For instance:
 file. For best results, remove any rotation differences in the two files using
 \texttt{-upright} first, or by adding \texttt{-prerotate} to the command.
 
-To maintain Tagged PDF, for example with PDF/UA, add \texttt{-process-struct-trees}. The ``under'' file will keep its structure; the stamp will be marked as an artifact. To reverse the order of combination (to have ``over'' under ``under'') add \texttt{-underneath}. To scale the ``over'' file to fit, add \texttt{-scale-stamp-to-fit}.
+To maintain Tagged PDF, for example with PDF/UA, add \texttt{-process-struct-tree}. The ``under'' file will keep its structure; the ``over`` file will be marked as an artifact.
+
+To reverse the order of combination (to have ``over'' under ``under'') add \texttt{-underneath}. To scale the ``over'' file to fit, add \texttt{-scale-stamp-to-fit}.
 
   \section{Stamp Text, Dates and Times.}
 \index{date}
@@ -5766,6 +5769,9 @@ A role map, which maps non-standard structure types to standard ones, may be set
   \noindent\verb!cpdf -remove-struct-tree in.pdf -o out.pdf!
 
   \vspace{1.5mm}
+  \noindent\verb!cpdf -mark-as-artifact in.pdf -o out.pdf!
+
+  \vspace{1.5mm}
   \noindent\verb!cpdf -verify "PDF/UA-1(matterhorn)" [-json] in.pdf!
 
   \vspace{1.5mm}
@@ -5884,7 +5890,13 @@ To remove a structure tree from a PDF, we can use \texttt{-remove-struct-tree}:
     \noindent\small\verb!cpdf -remove-struct-tree in.pdf -o out.pdf!
   \end{framed}
 
-\noindent This removes the structure tree and all references to it.
+\noindent This removes the structure tree and all references to it, including from inside page content. In addition we can, afterward, use \texttt{-mark-as-artifact}:
+
+  \begin{framed}
+    \noindent\small\verb!cpdf -mark-as-artifact in.pdf -o out.pdf!
+  \end{framed}
+
+\noindent This marks all content in the file as being an artifact.
 
 \section{Verifying conformance to PDF/UA}
 
