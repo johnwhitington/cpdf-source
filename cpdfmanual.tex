@@ -5626,7 +5626,7 @@ If the drawing range is a single page, and the next page already exists, the dra
 
 A PDF may contain, in addition to its graphical content, a tree of information concerning the logical organization of the document into chapters, sections, paragraphs, figures and so on. When used with a standard set of pre-defined data types, this is known as Tagged PDF. Some PDF subformats, such as PDF/UA, mandate -- amongst other things -- the full tagging of the file.
 
-When drawing, Cpdf can add such structure information. Partly this can happen automatically, partly it is for the user to add the tags. NB: These facilities are presently limited to drawing new PDFs.
+When drawing on a fresh file, Cpdf can add such structure information. Partly this can happen automatically, partly it is for the user to add the tags. When drawing on an existing file, the new drawing is marked as an artifact.
 
 To enable the generation of structure information, we add \texttt{-draw-struct-tree} to our command:
 
