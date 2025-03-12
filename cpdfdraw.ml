@@ -622,7 +622,7 @@ let draw_single ~struct_tree ~fast ~underneath ~filename ~bates ~batespad range 
     map3
       (fun n p ops ->
         if not (mem n range) then p else
-          let ops = if struct_tree && !do_add_artifacts then Cpdftype.add_artifacts ops else fixup_manual_artifacts ops in
+          let ops = if !do_add_artifacts then Cpdftype.add_artifacts ops else fixup_manual_artifacts ops in
           let page = {p with Pdfpage.resources = update_resources pdf p.Pdfpage.resources} in
             (if underneath then Pdfpage.prepend_operators else Pdfpage.postpend_operators) pdf ops ~fast page)
       (ilist 1 endpage)
@@ -778,8 +778,14 @@ let write_structure_tree pdf st =
     Pdf.replace_chain pdf ["/Root"; "/StructTreeRoot"] (Pdf.Indirect struct_tree_root)
 
 let draw ~struct_tree ~fast ~underneath ~filename ~bates ~batespad range pdf drawops =
-  (*Printf.printf "%s\n" (string_of_drawops drawops);*)
-  if not struct_tree then clear do_add_artifacts;
+  let is_fresh =
+    match Pdf.lookup_chain pdf (Pdf.lookup_obj pdf pdf.Pdf.root) ["/StructTreeRoot"] with
+    | Some (Pdf.Dictionary [("/Type", Pdf.Name "/StructTreeRoot")]) -> true
+    | _ -> false
+  in
+  let auto_auto_artifact = not is_fresh && struct_tree in
+  let struct_tree = is_fresh && struct_tree in
+  if not struct_tree && not auto_auto_artifact then clear do_add_artifacts;
   resstack := [empty_res ()];
   Hashtbl.clear !fontpacks;
   (res ()).time <- Cpdfstrftime.current_time ();
