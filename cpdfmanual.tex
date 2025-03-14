@@ -4836,22 +4836,23 @@ In a PDF file, optional content groups are used to group graphical elements toge
   \noindent\verb!     [-subformat <subformat>] [-title <string>] -o out.pdf!
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf -jpeg <filename> [-subformat <subformat>] [-title <string>]!\\
+  \noindent\verb!cpdf [-subformat <subformat>] [-title <string>] -jpeg <filename>!\\
   \noindent\verb!     -o out.pdf!
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf -png <filename> [-subformat <subformat>] [-title <string>]!\\
+  \noindent\verb!cpdf [-subformat <subformat>] [-title <string>] -png <filename>!\\
   \noindent\verb!     -o out.pdf!
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf -jpeg2000 <filename> [-subformat <subformat>] [-title <string>]!\\
+  \noindent\verb!cpdf [-subformat <subformat>] [-title <string>] -jpeg2000 <filename>!\\
   \noindent\verb!     -o out.pdf!
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf [-jbig2-global <filename>] -jbig2 <filename>!\\
+  \noindent\verb!cpdf [-subformat <subformat>] [-title <string>]!\\
+  \noindent\verb!     [-jbig2-global <filename>] -jbig2 <filename>!\\
   \noindent\verb!     [-jbig2-global | -jbig2-global-clear]!\\
   \noindent\verb!     [-jbig2 <filename>] ...!\\
-  \noindent\verb!     [-subformat <subformat>] [-title <string>] -o out.pdf!
+  \noindent\verb!      -o out.pdf!
   \end{framed}}
 
 \section{A new blank PDF}
@@ -4905,7 +4906,7 @@ For PNG files, the file must have no transparency and no interlacing, and must n
 
 \noindent The output file will have one point of width or height for each pixel in the input.
 
-To produce a PDF in PDF/UA-1 or PDF/UA-2 format add, say, \texttt{-subformat PDF/UA-2 -title "Opus"} to the command line.
+To produce a PDF in PDF/UA-1 or PDF/UA-2 format add, say, \texttt{-subformat "PDF/UA-2" -title "Opus"} to the command line. NB this must appear before the image file on the command line.
 
 \section{Make a PDF from one or more JBIG2 images}
 
