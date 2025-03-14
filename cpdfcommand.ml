@@ -576,7 +576,8 @@ type args =
    mutable rast_downsample : bool;
    mutable replace_stream_with : string;
    mutable output_unit : Pdfunits.t;
-   mutable dot_leader : bool}
+   mutable dot_leader : bool;
+   mutable preserve_actions : bool}
 
 let args =
   {op = None;
@@ -726,7 +727,8 @@ let args =
    rast_downsample = false;
    replace_stream_with = "";
    output_unit = Pdfunits.PdfPoint;
-   dot_leader = false}
+   dot_leader = false;
+   preserve_actions = false}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -862,7 +864,8 @@ let reset_arguments () =
   args.rast_downsample <- false;
   args.replace_stream_with <- "";
   args.output_unit <- Pdfunits.PdfPoint;
-  args.dot_leader <- false
+  args.dot_leader <- false;
+  args.preserve_actions <- false
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -2281,6 +2284,9 @@ let specs =
    ("-list-bookmarks-json",
       Arg.Unit setlistbookmarksjson,
       " List Bookmarks in JSON format");
+   ("-preserve-actions",
+      Arg.Unit (fun () -> args.preserve_actions <- true),
+      " Preserve actions when listing bookmarks");
    ("-remove-bookmarks",
       Arg.Unit (setop RemoveBookmarks),
       " Remove bookmarks from a file");
@@ -3985,7 +3991,7 @@ let go () =
       | (_, pagespec, _, _, _, _)::_, _ ->
         let pdf = get_single_pdf args.op true in
           let range = parse_pagespec_allow_empty pdf pagespec in
-            Cpdfbookmarks.list_bookmarks ~json:args.format_json args.encoding range pdf (Pdfio.output_of_channel stdout);
+            Cpdfbookmarks.list_bookmarks ~json:args.format_json ~json_preserve_actions:args.preserve_actions args.encoding range pdf (Pdfio.output_of_channel stdout);
             flush stdout
       | _ -> error "list-bookmarks: bad command line"
       end

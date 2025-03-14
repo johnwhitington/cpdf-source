@@ -218,8 +218,8 @@ let process_string encoding s =
         | Cpdfmetadata.Raw -> s
 
 (* List the bookmarks in the given range to the given output *)
-let list_bookmarks ~json encoding range pdf output =
-  let bookmarks = Pdfmarks.read_bookmarks ~preserve_actions:false pdf in
+let list_bookmarks ~json ~json_preserve_actions encoding range pdf output =
+  let bookmarks = Pdfmarks.read_bookmarks ~preserve_actions:(json && json_preserve_actions) pdf in
   let refnums = Pdf.page_reference_numbers pdf in
   let rangetable = hashset_of_list range in
   let range_is_all = range = ilist 1 (Pdfpage.endpage pdf) in

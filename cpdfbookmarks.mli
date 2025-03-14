@@ -12,7 +12,7 @@ val add_bookmarks : json:bool -> bool -> Pdfio.input -> Pdf.t -> Pdf.t
 (** [list_bookmarks encoding range pdf output] lists the bookmarks to the given
 output in the format specified in cpdfmanual.pdf. In the new JSON format if
 chosen. *)
-val list_bookmarks : json:bool -> Cpdfmetadata.encoding -> int list -> Pdf.t -> Pdfio.output -> unit
+val list_bookmarks : json:bool -> json_preserve_actions:bool -> Cpdfmetadata.encoding -> int list -> Pdf.t -> Pdfio.output -> unit
 
 (** Get bookmarks in JSON format. *)
 val get_bookmarks_json : Pdf.t -> Pdfio.bytes
