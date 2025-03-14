@@ -6018,7 +6018,12 @@ To create a new PDF/UA-1 file, with A4 portrait paper, one page, and the title \
     \noindent\small\verb!cpdf -create-pdf-ua-1 "My Book" -o out.pdf!
   \end{framed}
 
-\noindent A title is needed for every PDF/UA document (even a blank one) for it to meet the standard. For \texttt{PDF/UA-2}, use \texttt{-create-pdf-ua-2} instead. To make it valid, you must also draw a top-level PDF/UA-2 Document tag as described below.
+\noindent A title is needed for every PDF/UA document (even a blank one) for it to meet the standard. For \texttt{PDF/UA-2}, use \texttt{-create-pdf-ua-2} instead. To make it valid, you must also draw a top-level PDF/UA-2 Document tag as described below i.e:
+
+\begin{framed}
+  \noindent\small\verb!cpdf -create-pdf-ua-2 "My Book" AND -draw -draw-struct-tree!\\
+  \noindent\small\verb!     -namespace PDF2 -stag Document -end-stag -o out.pdf!
+\end{framed}
 
 \section{Drawing PDF/UA files}
 
