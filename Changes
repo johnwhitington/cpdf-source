@@ -11,7 +11,7 @@ o -obj JSON output
 * -obj/-obj-json can follow a chain from an object number
 * -obj/-obj-json can explore through arrays and name/number trees
 * -print-dict-entry, -remove-dict-entry and -replace-dict-entry
-can follow a chain from each found dictionary entry
+  can follow a chain from each found dictionary entry
 * Much more of the PDF/UA Matterhorn verification suite implemented
 * Font lister now returns the font itself
 o Allow %objnum in output name for -extract-images
@@ -22,6 +22,9 @@ o Allow %objnum in output name for -extract-images
 * Preserve PDF/UA with -stamp-on and -combine-pages
 o Allow -scale-stamp-to-fit for -combine-pages
 * Allow -underneath for -combine-pages
+* Preserve roundtripping of names destinations / actions
+* -preserve-actions allows PDF/UA-2 style roundtripping of
+  outlines
 
 Fixes:
 
