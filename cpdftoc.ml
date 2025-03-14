@@ -171,7 +171,7 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
   let optional l = if process_struct_tree then l else [] in
   if process_struct_tree then ensure_minimal_struct_tree pdf;
   Hashtbl.clear width_table_cache;
-  let marks = Pdfmarks.read_bookmarks pdf in
+  let marks = Pdfmarks.read_bookmarks ~preserve_actions:false pdf in
   if marks = [] then (Pdfe.log "No bookmarks, not making table of contents\n"; pdf) else
   let labels = Pdfpagelabels.read pdf in
   let refnums = Pdf.page_reference_numbers pdf in
@@ -226,7 +226,7 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
            @ leader
            @ optional [Cpdftype.Tag ("Link", 0)] @ labelruns @ optional [Cpdftype.EndTag]
            @ [Cpdftype.EndDest; Cpdftype.NewLine])
-      (Pdfmarks.read_bookmarks pdf)
+      (Pdfmarks.read_bookmarks ~preserve_actions:false pdf)
   in
   let toc_pages, toc_tags =
     let title =
@@ -358,7 +358,7 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
   let labels' = label::map (fun l -> {l with Pdfpagelabels.startpage = l.Pdfpagelabels.startpage + toc_pages_len}) labels in
     Pdfpagelabels.write pdf labels';
     if bookmark then
-      let marks = Pdfmarks.read_bookmarks pdf in
+      let marks = Pdfmarks.read_bookmarks ~preserve_actions:false pdf in
       let refnums = Pdf.page_reference_numbers pdf in
       let newmark =
         {Pdfmarks.level = 0;

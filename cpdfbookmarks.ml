@@ -219,7 +219,7 @@ let process_string encoding s =
 
 (* List the bookmarks in the given range to the given output *)
 let list_bookmarks ~json encoding range pdf output =
-  let bookmarks = Pdfmarks.read_bookmarks pdf in
+  let bookmarks = Pdfmarks.read_bookmarks ~preserve_actions:false pdf in
   let refnums = Pdf.page_reference_numbers pdf in
   let rangetable = hashset_of_list range in
   let range_is_all = range = ilist 1 (Pdfpage.endpage pdf) in
@@ -363,7 +363,7 @@ let add_bookmark_title filename use_title pdf =
     else
       Filename.basename filename
   in
-  let marks = Pdfmarks.read_bookmarks pdf in
+  let marks = Pdfmarks.read_bookmarks ~preserve_actions:false pdf in
   let page1objnum =
     match Pdfpage.page_object_number pdf 1 with
       None -> error "add_bookmark_title: page not found"
@@ -381,7 +381,7 @@ let add_bookmark_title filename use_title pdf =
     Pdfmarks.add_bookmarks newmarks pdf
 
 let bookmarks_open_to_level n pdf =
-  let marks = Pdfmarks.read_bookmarks pdf in
+  let marks = Pdfmarks.read_bookmarks ~preserve_actions:false pdf in
   let newmarks =
     map
       (fun m -> {m with Pdfmarks.isopen = m.Pdfmarks.level < n})

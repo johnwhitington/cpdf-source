@@ -231,7 +231,7 @@ let replace_pairs marks fastrefnums pdf endpage extract_text_font_size filename 
 let expand_lines text time pdf endpage extract_text_font_size filename bates batespad num page lines =
   let refnums = Pdf.page_reference_numbers pdf in
   let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
-  let marks = Pdfmarks.read_bookmarks pdf in
+  let marks = Pdfmarks.read_bookmarks ~preserve_actions:false pdf in
   let expanded_lines =
     map
       (function text ->
@@ -326,7 +326,7 @@ let addtext
           let ops, urls, x, y, hoffset, voffset, text, joffset =
           let refnums = Pdf.page_reference_numbers pdf in
           let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
-          let marks = Pdfmarks.read_bookmarks pdf in
+          let marks = Pdfmarks.read_bookmarks ~preserve_actions:false pdf in
             let text = process_text time text (replace_pairs marks fastrefnums pdf endpage extract_text_font_size filename bates batespad num page) in
             let text, urls = get_urls_line text in
             let lines = map (fun text -> if raw || fontpack <> None then text else charcodes_of_utf8 (Pdftext.read_font pdf fontpdfobj) text) lines in

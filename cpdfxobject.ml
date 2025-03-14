@@ -50,7 +50,7 @@ let add_page_as_xobject pdf range page name =
 let stamp_as_xobject pdf range over =
   let prefix = Pdfpage.shortest_unused_prefix pdf in
   Pdfpage.add_prefix over prefix;
-  let marks = Pdfmarks.read_bookmarks pdf in
+  let marks = Pdfmarks.read_bookmarks ~preserve_actions:false pdf in
   let marks_refnumbers = Pdf.page_reference_numbers pdf in
   let pdf = Pdfmarks.remove_bookmarks pdf in
   let over = Pdfmarks.remove_bookmarks over in
