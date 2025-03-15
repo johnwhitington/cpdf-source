@@ -259,9 +259,9 @@ let list_bookmarks ~json ~json_preserve_actions encoding range pdf output =
                    (output_string_of_target pdf fastrefnums mark.Pdfmarks.target)))
             inrange
 
-let get_bookmarks_json pdf =
+let get_bookmarks_json ~json_preserve_actions pdf =
   let o, br = Pdfio.input_output_of_bytes (20 * 1024) in
-    list_bookmarks ~json:true Cpdfmetadata.UTF8 (ilist 1 (Pdfpage.endpage pdf)) pdf o;
+    list_bookmarks ~json:true ~json_preserve_actions Cpdfmetadata.UTF8 (ilist 1 (Pdfpage.endpage pdf)) pdf o;
     Pdfio.extract_bytes_from_input_output o br
 
 let get_bookmark_name encoding pdf marks splitlevel n _ =

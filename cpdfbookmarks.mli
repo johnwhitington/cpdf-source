@@ -15,7 +15,7 @@ chosen. *)
 val list_bookmarks : json:bool -> json_preserve_actions:bool -> Cpdfmetadata.encoding -> int list -> Pdf.t -> Pdfio.output -> unit
 
 (** Get bookmarks in JSON format. *)
-val get_bookmarks_json : Pdf.t -> Pdfio.bytes
+val get_bookmarks_json : json_preserve_actions:bool -> Pdf.t -> Pdfio.bytes
 
 (** [name_of_spec encoding marks pdf splitlevel spec n filename startpage
     endpage] expands a bookmark specifiation filename. *)
