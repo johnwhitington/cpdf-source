@@ -45,7 +45,7 @@ let target_of_markfile_obj pdf i' pdfobj =
         end
   (* Need to deal with "null", "(string)", and "<<other thing like action" *) 
   | Pdf.Null -> Pdfdest.NullDestination
-  | Pdf.String s -> Pdfdest.read_destination pdf (Pdf.String s)
+  | Pdf.String s -> Pdfdest.NamedDestinationElsewhere s (* TODO Remove hack. *)
   | x -> Pdfdest.Action x
 
 let target_of_markfile_target pdf i' = function
