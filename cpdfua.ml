@@ -3,20 +3,13 @@ open Cpdferror
 
 (* Implements the Matterhorn checks except for:
 
+   Unimplemented:
+     31-011--016,018,030 Require looking inside font file
+
    Partially implemented:
      31-027 Can require looking inside font files
-     
      10-001 Doesn't check CID keyed fonts
-
-     11-001 11-002 11-003 11-004 11-005 Natural Language (We just check for
-     top-level document language.)
-
-   Unimplemented:
-     31-011 31-012 31-013 31-014 31-015 31-016 31-018 31-030 Require looking
-     inside font file
-
-   To return to:
-     15_003 17_003 31_009 *)
+     11-001--005 Natural Language (We just check for top-level document language.) *)
 
 type subformat =
   | PDFUA1

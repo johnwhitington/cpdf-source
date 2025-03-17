@@ -1,4 +1,3 @@
-%Document that -draw-struct-tree when drawing on existing file will artifact the drawing
 %\DocumentMetadata{lang=en, pdfversion=2.0, pdfstandard=ua-2, pdfstandard=a-4f, testphase={phase-III, title, table, math, firstaid}}
 \documentclass{book}
 % Edit here to produce cpdfmanual.pdf, cpdflibmanual.pdf, pycpdfmanual.pdf,
@@ -2147,7 +2146,7 @@ The option \texttt{-squeeze-no-pagedata} avoids the reprocessing of page data, w
   \small\noindent\verb!cpdf -list-bookmarks [-utf8] in.pdf!
 
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -list-bookmarks-json in.pdf!
+  \small\noindent\verb!cpdf -list-bookmarks-json [-preserve-actions] in.pdf!
 
   \vspace{1.5mm}
   \small\noindent\verb!cpdf -remove-bookmarks in.pdf -o out.pdf!
@@ -2228,6 +2227,8 @@ By using \texttt{-list-bookmarks-json} instead, the bookmarks are formatted as a
 
 \noindent Note that the colour (RGB each from 0.0 to 1.0) and shape of the text (bold, italic, or both) can be read and set with the JSON format.
 
+The \texttt{-preserve-actions} option will give the target in its original PDF form, rather than resolving it to a destination (see below).
+
 See Chapter 15 for more details of Cpdf's JSON formatting. There are two differences here: bookmark text is always UTF8, and the numbers for \texttt{level} and \texttt{page} are plain, rather than begin surrounded with \texttt{ \{ "I": \}}.
 
 \subsection{Destinations}
@@ -2289,6 +2290,8 @@ Bookmarks in JSON format (see above) may be added with \texttt{-add-bookmarks-js
   \end{framed}
 
 \noindent Remember that strings in JSON bookmark files are in UTF8.
+
+Note that, if \texttt{-preserve-actions} is used with \texttt{-list-bookmarks-json}, it will no be feasible to use \texttt{-add-bookmarks-json} to add these bookmarks to a different or modified file. They may be round-tripped to the same, unmodified file, of course.
 
 \section{Opening bookmarks}
 \index{bookmarks!opening at level}
