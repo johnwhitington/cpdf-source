@@ -45,7 +45,7 @@ let target_of_markfile_obj pdf i' pdfobj =
         end
   (* Need to deal with "null", "(string)", and "<<other thing like action" *) 
   | Pdf.Null -> Pdfdest.NullDestination
-  | Pdf.String s -> Pdfdest.NamedDestinationElsewhere s (* TODO Remove hack. *)
+  | Pdf.String s -> Pdfdest.NamedDestination s
   | x -> Pdfdest.Action x
 
 let target_of_markfile_target pdf i' = function
@@ -232,7 +232,7 @@ let list_bookmarks ~json ~json_preserve_actions encoding range pdf output =
         (function x ->
            range_is_all || 
            x.Pdfmarks.target = Pdfdest.NullDestination ||
-           (match x.Pdfmarks.target with Pdfdest.NamedDestinationElsewhere _ -> true | _ -> false) ||
+           (match x.Pdfmarks.target with Pdfdest.NamedDestination _ -> true | _ -> false) ||
            Hashtbl.mem rangetable (Pdfpage.pagenumber_of_target ~fastrefnums pdf x.Pdfmarks.target)) bookmarks
     in
       let calculate_page_number mark =
