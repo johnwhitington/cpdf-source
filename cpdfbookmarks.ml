@@ -363,7 +363,7 @@ let add_bookmark_title filename use_title pdf =
     else
       Filename.basename filename
   in
-  let marks = Pdfmarks.read_bookmarks ~preserve_actions:false pdf in
+  let marks = Pdfmarks.read_bookmarks ~preserve_actions:true pdf in
   let page1objnum =
     match Pdfpage.page_object_number pdf 1 with
       None -> error "add_bookmark_title: page not found"
@@ -381,7 +381,7 @@ let add_bookmark_title filename use_title pdf =
     Pdfmarks.add_bookmarks newmarks pdf
 
 let bookmarks_open_to_level n pdf =
-  let marks = Pdfmarks.read_bookmarks ~preserve_actions:false pdf in
+  let marks = Pdfmarks.read_bookmarks ~preserve_actions:true pdf in
   let newmarks =
     map
       (fun m -> {m with Pdfmarks.isopen = m.Pdfmarks.level < n})

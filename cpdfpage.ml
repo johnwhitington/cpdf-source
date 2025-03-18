@@ -846,7 +846,7 @@ let stamp ~process_struct_tree relative_to_cropbox position topline midline fast
   let over = if process_struct_tree then mark_all_as_artifact (remove_struct_tree over) else over in
   let prefix = Pdfpage.shortest_unused_prefix pdf in
   Pdfpage.add_prefix over prefix;
-  let marks = Pdfmarks.read_bookmarks ~preserve_actions:false pdf in
+  let marks = Pdfmarks.read_bookmarks ~preserve_actions:true pdf in
   let marks_refnumbers = Pdf.page_reference_numbers pdf in
   let pdf = Pdfmarks.remove_bookmarks pdf in
   let over = Pdfmarks.remove_bookmarks over in
@@ -923,7 +923,7 @@ let combine_pages ~process_struct_tree fast under over scaletofit over_is_under 
       begin Pdf.remove_unreferenced pdf; Pdfwrite.pdf_to_file pdf n end
   in
   Pdfpage.add_prefix over (Pdfpage.shortest_unused_prefix under);
-  let marks_under, marks_over = Pdfmarks.read_bookmarks ~preserve_actions:false under, Pdfmarks.read_bookmarks ~preserve_actions:false over in
+  let marks_under, marks_over = Pdfmarks.read_bookmarks ~preserve_actions:true under, Pdfmarks.read_bookmarks ~preserve_actions:true over in
   let under, over = equalize_pages under over in
   let under_length, over_length = Pdfpage.endpage under, Pdfpage.endpage over in
     if under_length <> over_length then

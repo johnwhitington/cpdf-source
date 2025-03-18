@@ -3451,7 +3451,7 @@ let stem s =
 let fast_write_split_pdfs
   ?(names=[]) enc splitlevel original_filename sq spec main_pdf pagenums pdf_pages
 =
-  let marks = Pdfmarks.read_bookmarks ~preserve_actions:false main_pdf in
+  let marks = Pdfmarks.read_bookmarks ~preserve_actions:true main_pdf in
     iter2
       (fun number pagenums ->
          let pdf = Pdfpage.pdf_of_pages ~retain_numbering:args.retain_numbering ~process_struct_tree:args.process_struct_trees main_pdf pagenums in
