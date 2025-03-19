@@ -346,16 +346,44 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
           toc_pageobjnums
           toc_structure_items_per_page;
       remove_parent_tree_next_key pdf;
-      (* FIXME: When the subformat is PDF/UA-2 we need to locate the top-level
-         document and put our content inside it, not before it. *)
-      begin match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/StructTreeRoot"; "/K"] with
-      | Some (Pdf.Array a) ->
-          Pdf.replace_chain pdf ["/Root"; "/StructTreeRoot"; "/K"] (Pdf.Array (prepending_structitems @ a))
-      | Some (Pdf.Dictionary d) ->
-          Pdf.replace_chain pdf ["/Root"; "/StructTreeRoot"; "/K"] (Pdf.Array (prepending_structitems @ [Pdf.Dictionary d]))
-      | _ ->
-          ()
-      end
+      if subformat = Some Cpdfua.PDFUA2 then
+        (* Assume that it is just a single, indirect, top-level document.
+           Either given as an indirect, or an array of one indirect. This
+           assumption is ok because /P entries must have an indirect to point
+           to. So if the document contains anything, the /Document structelem
+           must be indirect. *)
+        begin match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/StructTreeRoot"] with
+        | Some d ->
+            (* Get indirect of top-level /Document *)
+            let i =
+              match Pdf.lookup_immediate "/K" d with
+              | Some (Pdf.Indirect i) -> Some i
+              | Some (Pdf.Array [Pdf.Indirect i]) -> Some i
+              | _ -> None
+            in
+              if i = None then () else
+                let obj = Pdf.lookup_obj pdf (unopt i) in
+                let obj' =
+                  let k' =
+                    match Pdf.lookup_direct pdf "/K" obj with
+                    | Some (Pdf.Array a) -> Pdf.Array (prepending_structitems @ a)
+                    | Some (Pdf.Dictionary d) -> Pdf.Array (prepending_structitems @ [Pdf.Dictionary d])
+                    | _ -> Pdf.Null
+                  in
+                    Pdf.add_dict_entry obj "/K" k'
+                in
+                  Pdf.addobj_given_num pdf (unopt i, obj')
+        | _ -> ()
+        end
+      else
+        begin match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/StructTreeRoot"; "/K"] with
+        | Some (Pdf.Array a) ->
+            Pdf.replace_chain pdf ["/Root"; "/StructTreeRoot"; "/K"] (Pdf.Array (prepending_structitems @ a))
+        | Some (Pdf.Dictionary d) ->
+            Pdf.replace_chain pdf ["/Root"; "/StructTreeRoot"; "/K"] (Pdf.Array (prepending_structitems @ [Pdf.Dictionary d]))
+        | _ ->
+            ()
+        end
     end;
   let labels' = label::map (fun l -> {l with Pdfpagelabels.startpage = l.Pdfpagelabels.startpage + toc_pages_len}) labels in
     Pdfpagelabels.write pdf labels';
