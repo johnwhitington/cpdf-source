@@ -346,6 +346,8 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
           toc_pageobjnums
           toc_structure_items_per_page;
       remove_parent_tree_next_key pdf;
+      (* FIXME: When the subformat is PDF/UA-2 we need to locate the top-level
+         document and put our content inside it, not before it. *)
       begin match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/StructTreeRoot"; "/K"] with
       | Some (Pdf.Array a) ->
           Pdf.replace_chain pdf ["/Root"; "/StructTreeRoot"; "/K"] (Pdf.Array (prepending_structitems @ a))
