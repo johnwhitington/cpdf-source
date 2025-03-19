@@ -3754,7 +3754,9 @@ let rasterize antialias downsample device res annots quality pdf range =
                [Pdftransform.Translate (tx, ty);
                 Pdftransform.Scale ((0., 0.), float_of_int w *. 72. /. res, float_of_int h *. 72. /. res);
                 Pdftransform.Rotate ((0., 0.), rotation)]);
-           Pdfops.Op_Do "/I0"]
+           Pdfops.Op_BMC "/Artifact";
+           Pdfops.Op_Do "/I0";
+           Pdfops.Op_EMC]
         in
         {page with Pdfpage.content = [Pdfops.stream_of_ops ops];
                    Pdfpage.resources = Pdf.Dictionary [("/XObject", Pdf.Dictionary [("/I0", Pdf.Indirect imageobj)])]})
@@ -4533,15 +4535,15 @@ let go () =
   | Some RemoveBookmarks ->
       write_pdf false (Pdfmarks.remove_bookmarks (get_single_pdf args.op false))
   | Some TwoUp ->
-      write_pdf false (Cpdfimpose.twoup args.fast (get_single_pdf args.op false))
+      write_pdf false (Cpdfimpose.twoup ~process_struct_tree:args.process_struct_trees args.fast (get_single_pdf args.op false))
   | Some TwoUpStack ->
-      write_pdf false (Cpdfimpose.twoup_stack args.fast (get_single_pdf args.op false))
+      write_pdf false (Cpdfimpose.twoup_stack ~process_struct_tree:args.process_struct_trees args.fast (get_single_pdf args.op false))
   | Some Impose fit ->
       let pdf = get_single_pdf args.op false in
       let x, y = Cpdfcoord.parse_coordinate pdf args.coord in
         if not fit && (x < 0.0 || y < 0.0) then error "Negative imposition parameters not allowed." else
         write_pdf false
-          (Cpdfimpose.impose ~x ~y ~fit ~columns:args.impose_columns ~rtl:args.impose_rtl ~btt:args.impose_btt ~center:args.impose_center
+          (Cpdfimpose.impose ~process_struct_tree:args.process_struct_trees ~x ~y ~fit ~columns:args.impose_columns ~rtl:args.impose_rtl ~btt:args.impose_btt ~center:args.impose_center
                       ~margin:args.impose_margin ~spacing:args.impose_spacing ~linewidth:args.impose_linewidth ~fast:args.fast pdf)
   | Some (StampOn over) ->
       let overpdf =

@@ -191,7 +191,8 @@ let add_border linewidth ~fast pdf =
       fast (w -. linewidth, h -. linewidth) (RGB (0., 0., 0.)) true linewidth 1. (Cpdfposition.BottomLeft (linewidth /. 2., linewidth /. 2.))
       false false (ilist 1 (Pdfpage.endpage pdf)) pdf
 
-let impose ~x ~y ~fit ~columns ~rtl ~btt ~center ~margin ~spacing ~linewidth ~fast pdf =
+let impose ~process_struct_tree ~x ~y ~fit ~columns ~rtl ~btt ~center ~margin ~spacing ~linewidth ~fast pdf =
+  let pdf = if process_struct_tree then Cpdfpage.mark_all_as_artifact pdf else pdf in
   let endpage = Pdfpage.endpage pdf in
   let pagenums = ilist 1 endpage in
   let pdf = Cpdfpage.copy_box "/CropBox" "/MediaBox" true pdf pagenums in
@@ -244,17 +245,17 @@ let impose ~x ~y ~fit ~columns ~rtl ~btt ~center ~margin ~spacing ~linewidth ~fa
   if fit then pdf else Cpdfpage.shift_pdf ~fast (many (margin, margin) (length pages)) pdf (ilist 1 (Pdfpage.endpage pdf))
 
 (* Legacy -twoup-stack. Impose 2x1 on a page twice the size then rotate. *)
-let twoup_stack fast pdf =
+let twoup_stack ~process_struct_tree fast pdf =
   let pdf =
     impose
-      ~x:2. ~y:1. ~fit:false ~columns:false ~rtl:false ~btt:false ~center:false
+      ~process_struct_tree ~x:2. ~y:1. ~fit:false ~columns:false ~rtl:false ~btt:false ~center:false
       ~margin:0. ~spacing:0. ~linewidth:0. ~fast pdf
   in
    let all = ilist 1 (Pdfpage.endpage pdf) in
     Cpdfpage.upright ~fast all (Cpdfpage.rotate_pdf ~-90 pdf all)
 
 (* Legacy -two-up. Rotate the pages and shrink them so as to fit 2x1 on a page the same size. *)
-let twoup fast pdf =
+let twoup ~process_struct_tree fast pdf =
   let firstpage = hd (Pdfpage.pages_of_pagetree pdf) in
   let width, height =
     match Pdf.parse_rectangle pdf firstpage.Pdfpage.mediabox with
@@ -271,7 +272,7 @@ let twoup fast pdf =
         let pdf = Cpdfpage.scale_pdf ~fast (many (sc, sc) endpage) pdf all in
         let pdf =
           impose
-            ~x:2. ~y:1. ~fit:false ~columns:false ~rtl:false ~btt:false ~center:true
+            ~process_struct_tree ~x:2. ~y:1. ~fit:false ~columns:false ~rtl:false ~btt:false ~center:true
             ~margin:0. ~spacing:0. ~linewidth:0. ~fast pdf
         in
         let endpage = Pdfpage.endpage pdf in
