@@ -167,7 +167,7 @@ let ensure_minimal_struct_tree pdf =
 (* TODO Fix Cpdftype to take a box not a papersize/margins combo. Then we can remove all the CropBox/Mediabox complications here.
    Then copying the boxes directly from the first page of the document is ok, and we just prefer the cropbox. Failing file
    __PDFUA/decomp/08.pdf *)
-let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~process_struct_tree pdf =
+let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~process_struct_tree ?subformat pdf =
   let optional l = if process_struct_tree then l else [] in
   if process_struct_tree then ensure_minimal_struct_tree pdf;
   Hashtbl.clear width_table_cache;

@@ -1,10 +1,10 @@
 (* cpdf command line tools *)
 let demo = false
-let agpl = false
+let agpl = true
 let major_version = 2
 let minor_version = 8
 let minor_minor_version = 1
-let version_date = "(devel, 19th December 2024)"
+let version_date = "(devel, 19th March 2025)"
 
 open Pdfutil
 open Pdfio
@@ -4799,7 +4799,7 @@ let go () =
       let pdf =
         Cpdftoc.typeset_table_of_contents
           ~font:cpdffont ~fontsize:args.fontsize ~title:args.toc_title
-          ~bookmark:args.toc_bookmark ~dotleader:args.dot_leader ~process_struct_tree:args.process_struct_trees pdf
+          ~bookmark:args.toc_bookmark ~dotleader:args.dot_leader ~process_struct_tree:args.process_struct_trees ?subformat:args.subformat pdf
       in
         write_pdf false pdf
   | Some (Typeset filename) ->
