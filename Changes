@@ -17,9 +17,9 @@ o -obj JSON output
 o Allow %objnum in output name for -extract-images
 * -show-boxes, -trim-marks, -table-of-contents, -add-text
   -add-rectangle, -impose, -twoup, -twoup-stack now preserve
-  PDF/UA compatibility
-* Preserve PDF/UA when drawing on existing PDF
-* Preserve PDF/UA with -stamp-on and -combine-pages
+  PDF/UA and PDF/UA-2 compatibility
+* Preserve PDF/UA and PDF/UA-2 when drawing on existing PDF
+* Preserve PDF/UA and PDF/UA-2 with -stamp-on and -combine-pages
 o Allow -scale-stamp-to-fit for -combine-pages
 * Allow -underneath for -combine-pages
 * Preserve roundtripping of names destinations / actions

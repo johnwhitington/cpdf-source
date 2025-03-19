@@ -352,6 +352,7 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
            assumption is ok because /P entries must have an indirect to point
            to. So if the document contains anything, the /Document structelem
            must be indirect. *)
+        (* FIXME Move this code up, and return i so we can put the proper /P parent entries in our structure elements. They should point to /Document now not the /StructTreeRoot. *)
         begin match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/StructTreeRoot"] with
         | Some d ->
             (* Get indirect of top-level /Document *)
