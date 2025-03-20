@@ -350,14 +350,23 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
              in
              (* Remove the Title P from first page list *)
              let ns2 = if length ns > length annot_objnums then tl ns else ns in
-             iter2
-               (fun annot_objnum n ->
+             iter3
+               (fun annot_objnum n mark ->
                   let annot = Pdf.lookup_obj pdf annot_objnum in
                   let sp_num = add_to_parent_tree pdf (Pdf.Indirect n) in
                   let new_annot = Pdf.add_dict_entry annot "/StructParent" (Pdf.Integer sp_num) in
-                  Pdf.addobj_given_num pdf (annot_objnum, new_annot))
+                  let a =
+                    match mark.Pdfmarks.target with
+                    | Pdfdest.Action a -> a
+                    | _ -> Pdf.Null
+                  in
+                  let new_annot =
+                    if subformat = Some Cpdfua.PDFUA2 then Pdf.add_dict_entry new_annot "/A" a else new_annot
+                  in
+                    Pdf.addobj_given_num pdf (annot_objnum, new_annot))
                annot_objnums
-               ns2;
+               ns2
+               (flatten (many marks 2));
              let ptn = add_to_parent_tree pdf (Pdf.Array (map (fun x -> Pdf.Indirect x) ns)) in
              Pdf.addobj_given_num pdf (o, Pdf.add_dict_entry page "/StructParents" (Pdf.Integer ptn)))
           toc_pageobjnums
