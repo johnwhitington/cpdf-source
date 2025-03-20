@@ -275,10 +275,25 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
   in
   if process_struct_tree then
     begin
+       (* Get indirect of top-level /Document *)
+      let top_level_document =
+        match subformat with Some Cpdfua.PDFUA2 ->
+          begin match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/StructTreeRoot"] with
+          | Some d ->
+              begin match Pdf.lookup_immediate "/K" d with
+              | Some (Pdf.Indirect i) -> i
+              | Some (Pdf.Array [Pdf.Indirect i]) -> i
+              | _ -> 0
+              end
+          | _ -> 0
+          end
+        | _ -> 0
+      in
       let struct_tree_root =
-        match Pdf.lookup_immediate "/StructTreeRoot" (Pdf.lookup_obj pdf pdf.Pdf.root) with
-        | Some (Pdf.Indirect i) -> i
-        | _ -> 0 (* Will never happen, because we ran ensure_minimal_struct_tree *)
+        if top_level_document > 0 then top_level_document else
+          match Pdf.lookup_immediate "/StructTreeRoot" (Pdf.lookup_obj pdf pdf.Pdf.root) with
+          | Some (Pdf.Indirect i) -> i
+          | _ -> 0 (* Will never happen, because we ran ensure_minimal_struct_tree *)
       in
       let p_struct_elem_first_page =
         Pdf.addobj pdf
@@ -355,15 +370,9 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
         (* FIXME Move this code up, and return i so we can put the proper /P parent entries in our structure elements. They should point to /Document now not the /StructTreeRoot. *)
         begin match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/StructTreeRoot"] with
         | Some d ->
-            (* Get indirect of top-level /Document *)
-            let i =
-              match Pdf.lookup_immediate "/K" d with
-              | Some (Pdf.Indirect i) -> Some i
-              | Some (Pdf.Array [Pdf.Indirect i]) -> Some i
-              | _ -> None
-            in
-              if i = None then () else
-                let obj = Pdf.lookup_obj pdf (unopt i) in
+
+              if top_level_document = 0 then () else
+                let obj = Pdf.lookup_obj pdf top_level_document in
                 let obj' =
                   let k' =
                     match Pdf.lookup_direct pdf "/K" obj with
@@ -373,7 +382,7 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
                   in
                     Pdf.add_dict_entry obj "/K" k'
                 in
-                  Pdf.addobj_given_num pdf (unopt i, obj')
+                  Pdf.addobj_given_num pdf (top_level_document, obj')
         | _ -> ()
         end
       else
