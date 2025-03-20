@@ -287,6 +287,7 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
       end
     | _ -> 0
   in
+  let p_struct_elem_first_page_ref = ref 0 in
   if process_struct_tree then
     begin
       let struct_tree_root =
@@ -302,6 +303,7 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
                            ("/K", Pdf.Array [Pdf.Integer 0]);
                            ("/P", Pdf.Indirect struct_tree_root)])
       in
+      p_struct_elem_first_page_ref := p_struct_elem_first_page;
       let mcid = ref 1 in
       let link_struct_elems_for_each_page =
         map2
@@ -403,7 +405,13 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
          Pdfmarks.text = Pdftext.pdfdocstring_of_utf8 (implode (real_newline (explode title)));
          Pdfmarks.target =
            if subformat = Some Cpdfua.PDFUA2 then
-             Pdfdest.XYZ (Pdfdest.PageObject top_level_document, None, None, None)
+             let action =
+               Pdf.Dictionary
+                 [("/SD", Pdf.Array [Pdf.Indirect !p_struct_elem_first_page_ref; Pdf.Name "/XYZ";  Pdf.Null; Pdf.Null; Pdf.Null]);
+                  ("/S", Pdf.Name "/GoTo");
+                  ("/D", Pdf.Array [Pdf.Indirect (hd refnums); Pdf.Name "/XYZ"; Pdf.Null; Pdf.Null; Pdf.Null])]
+             in
+               Pdfdest.Action action
            else
              Pdfdest.XYZ (Pdfdest.PageObject (hd refnums), None, None, None);
          Pdfmarks.isopen = false;
