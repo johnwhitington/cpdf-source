@@ -171,7 +171,7 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
   let optional l = if process_struct_tree then l else [] in
   if process_struct_tree then ensure_minimal_struct_tree pdf;
   Hashtbl.clear width_table_cache;
-  let marks = Pdfmarks.read_bookmarks ~preserve_actions:false pdf in
+  let marks = Pdfmarks.read_bookmarks ~preserve_actions:true pdf in
   if marks = [] then (Pdfe.log "No bookmarks, not making table of contents\n"; pdf) else
   let labels = Pdfpagelabels.read pdf in
   let refnums = Pdf.page_reference_numbers pdf in
@@ -273,22 +273,22 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
      Pdfpagelabels.startpage = 1;
      Pdfpagelabels.startvalue = 1}
   in
-  if process_struct_tree then
-    begin
-       (* Get indirect of top-level /Document *)
-      let top_level_document =
-        match subformat with Some Cpdfua.PDFUA2 ->
-          begin match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/StructTreeRoot"] with
-          | Some d ->
-              begin match Pdf.lookup_immediate "/K" d with
-              | Some (Pdf.Indirect i) -> i
-              | Some (Pdf.Array [Pdf.Indirect i]) -> i
-              | _ -> 0
-              end
+  (* Get indirect of top-level /Document *)
+  let top_level_document =
+    match subformat with Some Cpdfua.PDFUA2 ->
+      begin match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/StructTreeRoot"] with
+      | Some d ->
+          begin match Pdf.lookup_immediate "/K" d with
+          | Some (Pdf.Indirect i) -> i
+          | Some (Pdf.Array [Pdf.Indirect i]) -> i
           | _ -> 0
           end
-        | _ -> 0
-      in
+      | _ -> 0
+      end
+    | _ -> 0
+  in
+  if process_struct_tree then
+    begin
       let struct_tree_root =
         if top_level_document > 0 then top_level_document else
           match Pdf.lookup_immediate "/StructTreeRoot" (Pdf.lookup_obj pdf pdf.Pdf.root) with
@@ -367,22 +367,20 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
            assumption is ok because /P entries must have an indirect to point
            to. So if the document contains anything, the /Document structelem
            must be indirect. *)
-        (* FIXME Move this code up, and return i so we can put the proper /P parent entries in our structure elements. They should point to /Document now not the /StructTreeRoot. *)
         begin match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/StructTreeRoot"] with
         | Some d ->
-
-              if top_level_document = 0 then () else
-                let obj = Pdf.lookup_obj pdf top_level_document in
-                let obj' =
-                  let k' =
-                    match Pdf.lookup_direct pdf "/K" obj with
-                    | Some (Pdf.Array a) -> Pdf.Array (prepending_structitems @ a)
-                    | Some (Pdf.Dictionary d) -> Pdf.Array (prepending_structitems @ [Pdf.Dictionary d])
-                    | _ -> Pdf.Null
-                  in
-                    Pdf.add_dict_entry obj "/K" k'
+            if top_level_document = 0 then () else
+              let obj = Pdf.lookup_obj pdf top_level_document in
+              let obj' =
+                let k' =
+                  match Pdf.lookup_direct pdf "/K" obj with
+                  | Some (Pdf.Array a) -> Pdf.Array (prepending_structitems @ a)
+                  | Some (Pdf.Dictionary d) -> Pdf.Array (prepending_structitems @ [Pdf.Dictionary d])
+                  | _ -> Pdf.Null
                 in
-                  Pdf.addobj_given_num pdf (top_level_document, obj')
+                  Pdf.add_dict_entry obj "/K" k'
+              in
+                Pdf.addobj_given_num pdf (top_level_document, obj')
         | _ -> ()
         end
       else
@@ -398,12 +396,16 @@ let typeset_table_of_contents ~font ~fontsize ~title ~bookmark ~dotleader ~proce
   let labels' = label::map (fun l -> {l with Pdfpagelabels.startpage = l.Pdfpagelabels.startpage + toc_pages_len}) labels in
     Pdfpagelabels.write pdf labels';
     if bookmark then
-      let marks = Pdfmarks.read_bookmarks ~preserve_actions:false pdf in
+      let marks = Pdfmarks.read_bookmarks ~preserve_actions:true pdf in
       let refnums = Pdf.page_reference_numbers pdf in
       let newmark =
         {Pdfmarks.level = 0;
          Pdfmarks.text = Pdftext.pdfdocstring_of_utf8 (implode (real_newline (explode title)));
-         Pdfmarks.target = Pdfdest.XYZ (Pdfdest.PageObject (hd refnums), None, None, None);
+         Pdfmarks.target =
+           if subformat = Some Cpdfua.PDFUA2 then
+             Pdfdest.XYZ (Pdfdest.PageObject top_level_document, None, None, None)
+           else
+             Pdfdest.XYZ (Pdfdest.PageObject (hd refnums), None, None, None);
          Pdfmarks.isopen = false;
          Pdfmarks.colour = (0., 0., 0.);
          Pdfmarks.flags = 0}
