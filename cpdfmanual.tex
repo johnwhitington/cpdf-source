@@ -2162,7 +2162,8 @@ The option \texttt{-squeeze-no-pagedata} avoids the reprocessing of page data, w
 
   \vspace{1.5mm}
   \small\noindent\verb!cpdf -table-of-contents [-toc-title] [-toc-no-bookmark] [-toc-dot-leaders]!\\
-  \small\noindent\verb!     [-font <font>] [-font-size <size>] [-process-struct-trees]!\\
+  \small\noindent\verb!     [-font <font>] [-font-size <size>] [-embed-std14 /path/to/fonts]!\\
+  \small\noindent\verb!     [-process-struct-trees] [-subformat <subformat>]!\\
   \small\noindent\verb!     in.pdf -o out.pdf!
 
   \end{framed}
@@ -2337,7 +2338,7 @@ Cpdf can automatically generate a table of contents from existing bookmarks, add
    \noindent\small\verb!cpdf -table-of-contents -toc-no-bookmark in.pdf -o out.pdf!
   \end{framed}
 
-\noindent To create a structure tree for the table of contents, and merge it with the existing one (for example, when adding a table of contents to a PDF/UA file), add \texttt{-process-struct-trees} to the command.
+\noindent To create a structure tree for the table of contents, and merge it with the existing one (for example, when adding a table of contents to a PDF/UA file), add \texttt{-process-struct-trees} to the command. For PDF/UA-2, add also \texttt{-subformat "PDF/UA-2"}. You may also need \texttt{-embed-std14} as described in chapter \ref{chap:8}, since fully-embedded fonts are a requirement of some PDF subformats.
 
 \ \ \
 
