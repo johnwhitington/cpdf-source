@@ -2958,13 +2958,14 @@ These two operations add content directly to the beginning or end of the page da
     \small\noindent\verb!     [-impose-columns] [-impose-rtl] [-impose-btt]!\\
     \small\noindent\verb!     [-impose-margin <margin>] [-impose-spacing <spacing>]!\\
     \small\noindent\verb!     [-impose-linewidth <width>] [-fast]!\\
+    \small\noindent\verb!     [-process-struct-trees]!\\
     \small\noindent\verb!     in.pdf -o out.pdf!
 
     \vspace{1.5mm}
-    \small\noindent\verb!cpdf -twoup-stack [-fast] in.pdf -o out.pdf! 
+    \small\noindent\verb!cpdf -twoup-stack [-fast] [-process-struct-trees] in.pdf -o out.pdf! 
 
     \vspace{1.5mm}
-    \small\noindent\verb!cpdf -twoup [-fast] in.pdf -o out.pdf!
+    \small\noindent\verb!cpdf -twoup [-fast] [-process-struct-trees] in.pdf -o out.pdf!
 
     \vspace{1.5mm}
     \small\noindent\verb!cpdf -chop "<x> <y>" [-chop-columns] [-chop-rtl] [-chop-btt]!\\
@@ -3090,7 +3091,7 @@ that the media box is unchanged.
     \noindent Impose a document two-up on a larger page by rotation. 
   \end{framed}
  
-\noindent NB: For all imposition options, see also discussion of \texttt{-fast} in Section \ref{fast}.
+\noindent NB: For all imposition options, see also discussion of \texttt{-fast} in Section \ref{fast}. The option \texttt{-process-struct-trees} will mark the file's content as an artifact for the purpose of imposition.
 
 \section{Chopping up pages}
 
