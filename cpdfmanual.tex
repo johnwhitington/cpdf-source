@@ -68,7 +68,7 @@ Command Line Tools}
 \vspace{12mm}
 
 {\Huge User Manual}\\
-Version 2.8 (December 2024)
+Version 2.8.1 (April 2025)
 
 \vspace{25mm}
 
@@ -1469,7 +1469,7 @@ The encryption parameters described in Chapter \ref{encryption} may be added to 
 
 \section{Splitting and structure trees}
 
-The \texttt{-process-struct-trees} option used in conjunction with any splitting command will trim the structure tree (the data which forms the logical structure of the PDF) for each output file. In its absence, the structure tree is preserved wholesale in each output file. 
+The \texttt{-process-struct-trees} option used in conjunction with any splitting command will trim the structure tree (the data which forms the logical structure of the PDF) for each output file. In its absence, the structure tree is preserved wholesale in each output file. Its use can be important when, for example, producing PDF/UA files.
 
 \pagestyle{empty}\thispagestyle{fancy}
 
@@ -2504,16 +2504,16 @@ the file using a different page range each time.
   \begin{framed}
   \noindent\small\verb!cpdf -stamp-on source.pdf!\\
   \noindent\small\verb!     [-scale-stamp-to-fit] [<positioning command>] [-relative-to-cropbox] !\\
-  \noindent\small\verb!     [-process-struct-tree] in.pdf [<range>] [-fast] -o out.pdf!
+  \noindent\small\verb!     [-process-struct-trees] in.pdf [<range>] [-fast] -o out.pdf!
   
   \vspace{1.5mm}
   \noindent\small\verb!cpdf -stamp-under source.pdf!\\
   \noindent\small\verb!     [-scale-stamp-to-fit] [<positioning command>] [-relative-to-cropbox]!\\
-  \noindent\small\verb!     [-process-struct-tree] in.pdf [<range>] [-fast] -o out.pdf!
+  \noindent\small\verb!     [-process-struct-trees] in.pdf [<range>] [-fast] -o out.pdf!
 
   \vspace{1.5mm}
   \noindent\small\verb!cpdf -combine-pages over.pdf under.pdf!\\
-  \noindent\small\verb!     [-fast] [-prerotate] [-no-warn-rotate] [-process-struct-tree]!\\
+  \noindent\small\verb!     [-fast] [-prerotate] [-no-warn-rotate] [-process-struct-trees]!\\
   \noindent\small\verb!     [-underneath] [-stamp-scale-to-fit] -o out.pdf!
 
   \vspace{0.1mm}
@@ -2528,7 +2528,7 @@ cpdf ([-add-text <text-format> | -add-rectangle <size>])
       [-bates <number>]           [-bates-at-range <number>]
       [-bates-pad-to <number>]    [-opacity <number>]
       [-midline]                  [-topline]
-      [-fast]
+      [-fast]                     [-process-struct-trees]
       in.pdf [<range>] -o out.pdf\end{verbatim}
 
   \vspace{1.5mm}
@@ -2572,7 +2572,7 @@ The \texttt{-scale-stamp-to-fit} option can be added to scale the stamp to fit t
 
 The \texttt{-relative-to-cropbox} option takes the positioning command to be relative to the crop box of each page rather than the media box.
 
-To maintain Tagged PDF, for example with PDF/UA, add \texttt{-process-struct-tree}. The main file will keep its structure; the stamp will be marked as an artifact.
+To maintain Tagged PDF, for example with PDF/UA, add \texttt{-process-struct-trees}. The main file will keep its structure; the stamp will be marked as an artifact.
 
   The \texttt{-combine-pages} operation takes two PDF files and stamps each
 page of one over each page of the other. The length of the output is the same
@@ -2586,7 +2586,7 @@ as the length of the ``under'' file. For instance:
 file. For best results, remove any rotation differences in the two files using
 \texttt{-upright} first, or by adding \texttt{-prerotate} to the command.
 
-To maintain Tagged PDF, for example with PDF/UA, add \texttt{-process-struct-tree}. The ``under'' file will keep its structure; the ``over`` file will be marked as an artifact.
+To maintain Tagged PDF, for example with PDF/UA, add \texttt{-process-struct-trees}. The ``under'' file will keep its structure; the ``over`` file will be marked as an artifact.
 
 To reverse the order of combination (to have ``over'' under ``under'') add \texttt{-underneath}. To scale the ``over'' file to fit, add \texttt{-scale-stamp-to-fit}.
 
@@ -2855,13 +2855,9 @@ character can be reproduced -- it must exist in the font. When using a custom
 font, Cpdf will attempt to convert from UTF8 to the encoding of that font
 automatically.
 
-(For compatibility with previous versions of cpdf, special characters may be
-introduced manually with a backslash followed by the three-digit octal code of
-the character in the PDF WinAnsiEncoding Latin 1 Code. The full table is
-included in Appendix D of the Adobe PDF Reference Manual, which is available at
-\url{https://wwwimages2.adobe.com/content/dam/acom/en/devnet/pdf/pdfs/PDF32000_2008.pdf}.
-For example, a German sharp s (\ss) may be introduced by \verb!\337!.
-\textit{This functionality was withdrawn as of version 2.6})
+\subsection{Preserving structure information}
+
+To maintain Tagged PDF, for example with PDF/UA, add \texttt{-process-struct-trees}. The main file will keep its structure; the stamped text will be marked as an artifact.
 
 \section{Stamping Rectangles}
 
@@ -4870,7 +4866,7 @@ We can build a new PDF file, given a number of pages and a paper size. The defau
  \noindent\small\verb?     -create-pdf-papersize usletterportrait -o out.pdf?
 \end{framed}
 
-\noindent The standard paper sizes are listed in Section \ref{papersizes}, or you may specify the width and height directly, as described in the same chapter.
+\noindent The standard paper sizes are listed in Section \ref{papersizes}, or you may specify the width and height directly, as described in the same chapter. To build new PDF/UA files, see \texttt{-create-pdf-ua-1} and \texttt{-create-pdf-ua-2} in chapter \ref{chap:19}.
 
 \section{Convert a text file to PDF}
 \index{text!convert to PDF}
@@ -4978,7 +4974,9 @@ To produce a PDF in PDF/UA-1 or PDF/UA-2 format add, say, \texttt{-subformat PDF
 
   {\small\begin{framed}
 
-   \noindent\verb!cpdf in.pdf [<range>] -draw <draw operations> [-underneath] -o out.pdf!\\
+   \noindent\verb!cpdf in.pdf [<range>] [-draw-struct-tree] [-underneath]!\\
+   \noindent\verb!     -draw <draw operations> -o out.pdf!\\
+
    \noindent\verb!cpdf -text-width <text> [-font <font>] [-fontsize <fontsize>]!\\
 
    \vspace{1.5mm}
@@ -5634,7 +5632,7 @@ A PDF may contain, in addition to its graphical content, a tree of information c
 
 When drawing on a fresh file, Cpdf can add such structure information. Partly this can happen automatically, partly it is for the user to add the tags. When drawing on an existing file, the new drawing is marked as an artifact.
 
-To enable the generation of structure information, we add \texttt{-draw-struct-tree} to our command:
+To enable the generation of structure information, we add \texttt{-draw-struct-tree} to our command. NB It must precede \texttt{-draw} on the command line.
 
 \begin{framed}
    \noindent\small\verb!cpdf -create-pdf AND!\\
@@ -5718,6 +5716,8 @@ Some tags require a namespace other than the default. You can set the namespace 
 Extra information may be added to structure tree nodes with \texttt{-eltinfo} / \texttt{-end-eltinfo}. For example, to set the alternative description for an image, we might write (in JSON format, or prefixing with \texttt{PDF} in PDF format) \texttt{-eltinfo "Alt=PDF(A large horse)" -image A -end-eltinfo}. Multiple items may be set at once, for example Alt, ActualText, Lang etc. 
 
 A role map, which maps non-standard structure types to standard ones, may be set with \texttt{-rolemap}. For example \texttt{-rolemap "/S1/H1/S2/H2"} would map the S1 structure type to the standard type H1 and so on.
+
+To build a fresh PDF/UA or PDF/UA-2 file for use with \texttt{-draw} use \texttt{-create-pdf-ua-1} or \texttt{-create-pdf-ua-2} from chapter \ref{chap:19}.
 
 \begin{cpdflib}
 \clearpage
