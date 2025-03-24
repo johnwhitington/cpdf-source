@@ -13,6 +13,7 @@ o -obj JSON output
 * -print-dict-entry, -remove-dict-entry and -replace-dict-entry
   can follow a chain from each found dictionary entry
 * Much more of the PDF/UA Matterhorn verification suite implemented
+* PDF/UA verifier now returns extra information with most failures
 * Font lister now returns the font itself
 o Allow %objnum in output name for -extract-images
 * -show-boxes, -trim-marks, -table-of-contents, -add-text

@@ -502,14 +502,14 @@ let matterhorn_10_001 _ _ pdf =
         | Some d ->
             begin match Pdf.lookup_direct pdf "/Differences" d with
             | Some diffs -> check_diffs diffs (* b) 2 *)
-            | None -> merror ()
+            | None -> merror_str "No /Differences"
             end
         | None ->
             match Pdf.lookup_direct pdf "/Subtype" font with
             | Some (Pdf.Name "/Type0") ->
               (* c) *)
               unimpl ()
-            | _ -> merror ()
+            | _ -> merror_str "Not a Type 0 font"
   in
     let fonts = map (fun (_, _, _, _, _, x) -> x) (Cpdffont.list_fonts pdf (ilist 1 (Pdfpage.endpage pdf))) in
       iter
@@ -525,7 +525,8 @@ let matterhorn_10_001 _ _ pdf =
 (* Natural language for text in page content cannot be determined. *)
 let matterhorn_11_001 _ _ pdf =
   match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/Lang"] with
-  | Some (Pdf.String "") | None -> merror_str "No top-level /Lang"
+  | Some (Pdf.String "") -> merror_str "Top-level /Lang is empty"
+  | None -> merror_str "No top-level /Lang"
   | Some _ -> ()
 
 (* Natural language for text in Alt, ActualText and E attributes cannot be
@@ -572,7 +573,7 @@ let rec headings_list_of_tree (E (n, cs)) =
 let matterhorn_14_002 st _ _ =
   match headings_list_of_tree st with
   | [] | "/H1"::_ -> ()
-  | _ -> merror ()
+  | x::_ -> merror_str x
 
 (* Numbered heading levels in descending sequence are skipped (Example: <H3>
    follows directly after <H1>). *)
@@ -664,7 +665,8 @@ let matterhorn_20_002 _ _ pdf =
   match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/OCProperties"; "/D"],
         Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/OCProperties"; "/D"; "/Name"]
   with
-  | Some _, (Some (Pdf.String "") | None) -> merror ()
+  | Some _, Some (Pdf.String "") -> merror_str "empty string"
+  | Some _, None -> merror_str "not present"
   | _ -> ()
 
 (* An AS entry appears in an Optional Content Configuration Dictionary. *)
@@ -864,12 +866,12 @@ let matterhorn_28_005 _ _ pdf =
                   begin match List.assoc_opt (string_of_int i) parent_tree with
                   | Some d ->
                       begin match Pdf.lookup_direct pdf "/Alt" d with
-                      | None -> merror ()
+                      | None -> merror_str "no /Alt"
                       | _ -> ()
                       end
-                  | _ -> merror ()
+                  | _ -> merror_str "no parent tree entry"
                   end
-              | _ -> merror ())
+              | _ -> merror_str "no /StructParent")
          missing_tu
 
 (* An annotation with subtype undefined in ISO 32000 does not meet 7.18.1. *)
@@ -926,11 +928,11 @@ let matterhorn_28_010 _ _ pdf =
                  | Some d ->
                      begin match Pdf.lookup_direct pdf "/S" d with
                      | Some (Pdf.Name "/Form") -> ()
-                     | _ -> merror ()
+                     | _ -> merror_str "type is not form"
                      end
-                 | _ -> merror ()
+                 | _ -> merror_str "not found in parent tree"
                  end
-             | _ -> merror ()
+             | _ -> merror_str "not in structure tree"
              end
          | _ -> ())
       pdf
