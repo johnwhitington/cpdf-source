@@ -1,6 +1,6 @@
 opam-version: "2.0"
 name: "cpdf"
-version: "2.8"
+version: "2.8.1"
 maintainer: "contact@coherentgraphics.co.uk"
 license: "AGPL-3.0-or-later"
 build: [[make]]

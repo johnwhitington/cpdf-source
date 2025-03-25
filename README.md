@@ -8,7 +8,7 @@ For commercial licenses, email
 [contact@coherentgraphics.co.uk](mailto:contact@coherentgraphics.co.uk) or
 visit [https://www.coherentpdf.com/](https://www.coherentpdf.com/)
 
-Copyright Coherent Graphics Ltd 2024.
+Copyright Coherent Graphics Ltd 2025.
 
 This code builds two things:
 
@@ -47,7 +47,7 @@ To build
 --------
 
 If downloading from Github, obtain the correct source. This means choosing the
-tag for a particular version, such as "v2.8". The head of the master branch
+tag for a particular version, such as "v2.8.1". The head of the master branch
 is unstable.
 
 1. Type `make` to make the cpdf executable and the library
