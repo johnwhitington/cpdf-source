@@ -24,8 +24,11 @@ val get_dict_entries : utf8:bool -> Pdf.t -> string -> Pdfio.bytes
 (** Remove clipping. *)
 val remove_clipping : Pdf.t -> int list -> Pdf.t 
 
+(** Find an object from an objspec. Raises and error if the chain is not found. *)
 val find_obj : Pdf.t -> string -> Pdf.pdfobject
 
+(** [remove_stream pdf objspec filename] replaces the stream at [objspec] with the contents of [filename]. *)
 val replace_stream : Pdf.t -> string -> string -> unit
 
+(** [replace_obj pdf objspec obj] replace the object at [objspec] (which must exist) with [obj]. *)
 val replace_obj : Pdf.t -> string -> Pdf.pdfobject -> unit

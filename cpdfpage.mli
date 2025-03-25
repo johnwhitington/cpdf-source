@@ -79,8 +79,10 @@ page size given by (x, y) and by the [input_scale] (e.g 1.0 = scale to fit, 0.9
 = scale to fit leaving a border etc.). [op] is unused. *) 
 val scale_to_fit_pdf : ?fast:bool -> Cpdfposition.position -> float -> (float * float) list -> 'a -> Pdf.t -> int list -> Pdf.t
 
+(** [stretch fast pagesizes pdf range] stretches content to fit the given page size without regard to aspect ratio. *) 
 val stretch : ?fast:bool -> (float * float) list -> Pdf.t -> int list -> Pdf.t
 
+(** [center_to_fit : pagesizes pdf range] moves content to the centre of the page without scaling it. *)
 val center_to_fit : (float * float) list -> Pdf.t -> int list -> Pdf.t
 
 (** {2 Stamping} *)
@@ -133,6 +135,8 @@ val alluprightonly : int list -> Pdf.t -> bool
 (** When a page is transformed, its patterns must be too. *)
 val change_pattern_matrices_page : Pdf.t -> Pdftransform.transform_matrix -> Pdfpage.t -> Pdfpage.t
 
+(** Very basic redaction - the removal of whole pages, optionally trimming the
+    structure tree to remove any content there. *)
 val redact : process_struct_tree:bool -> Pdf.t -> int list -> Pdf.t
 
 (** Remove a structure tree entirely from a file, including unmarking marked content. *)
@@ -140,4 +144,3 @@ val remove_struct_tree : Pdf.t -> Pdf.t
 
 (** Mark a PDF as begin entirely artifacts (may be used after running [remove_struct_tree]. *)
 val mark_all_as_artifact : Pdf.t -> Pdf.t
-
