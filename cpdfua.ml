@@ -1,14 +1,13 @@
 open Pdfutil
 open Cpdferror
 
-(* Implements the Matterhorn checks except for:
+(* Implements the Matterhorn checks for PDF/UA-1 except for:
 
    Unimplemented:
-     31-011--016,018,030 Require looking inside font file
+     31-011--016,018,030 Require looking inside font files
 
    Partially implemented:
-     31-027 Can require looking inside font files
-     10-001 Doesn't check CID keyed fonts
+     31-027, 10-001 Require looking inside font files
      11-001--005 Natural Language (We just check for top-level document language.) *)
 
 type subformat =
@@ -211,7 +210,7 @@ let matterhorn_01_004 _ _ pdf =
 (* Which operations are real? *)
 let op_is_real = function
   | Pdfops.(  Op_m _ | Op_l _ | Op_c _ | Op_v _ | Op_y _ | Op_h | Op_re _ | Op_S | Op_s | Op_f | Op_F | Op_f'
-            | Op_B | Op_B' | Op_b | Op_b' | Op_n | Op_W | Op_W' | Op_Tj _ | Op_TJ _ | Op_' _ 
+            | Op_B | Op_B' | Op_b | Op_b' | Op_W | Op_W' | Op_Tj _ | Op_TJ _ | Op_' _ 
             | Op_'' _ | Op_sh _ | InlineImage _ | Op_Do _) -> true
   | _ -> false
 
@@ -225,20 +224,37 @@ type mc = Artifact | Content | Other
 let rec naked_ops acc stack = function
   | [] -> rev acc
   | Pdfops.Op_BDC (_, Pdf.Dictionary d)::t when lookup "/MCID" d <> None -> naked_ops acc (Content::stack) t
+  | Pdfops.Op_BDC ("/Artifact", _)::t -> naked_ops acc (Artifact::stack) t
   | Pdfops.Op_BDC _::t -> naked_ops acc (Other::stack) t
-  | Pdfops.Op_BMC "/Artifact"::t -> naked_ops acc (Artifact::stack) t
+  | Pdfops.Op_BMC ("/Span" | "/Artifact")::t -> naked_ops acc (Artifact::stack) t
+  | Pdfops.Op_BMC _::t -> naked_ops acc (Other::stack) t
   | Pdfops.Op_EMC::t ->
-      if stack = [] then (Printf.printf "Empty stack!\n"; merror ()) else naked_ops acc (tl stack) t
+      if stack = [] then merror_str "empty stack" else naked_ops acc (tl stack) t
   | h::t ->
-      if List.exists (function Artifact | Content -> true | _ -> false) stack
+      if List.exists (function Artifact | Content -> true | _ -> false) stack || not (op_is_real h)
         then naked_ops acc stack t
         else naked_ops (h::acc) stack t
 
 let print_ops =
   iter (fun op -> Printf.printf "%s\n" (Pdfops.string_of_op op))
 
+(* We may still have sequences of path-creation operators followed by W or W*. Strip any such. *)
+let is_path_construction_operator = function
+  | Pdfops.Op_m _ | Pdfops.Op_l _ | Pdfops.Op_c _ | Pdfops.Op_v _ | Pdfops.Op_y _ | Pdfops.Op_h | Pdfops.Op_re _ -> true
+  | _ -> false
+
+let rec filter_clipping_operations a = function
+  | (Pdfops.Op_W | Pdfops.Op_W')::t ->
+      let _, r = cleavewhile is_path_construction_operator t in
+        filter_clipping_operations a r
+  | h::t -> filter_clipping_operations (h::a) t
+  | [] -> a
+
 let matterhorn_01_005 _ _ pdf =
-  iter (fun ops -> if List.exists op_is_real (let n = naked_ops [] [] ops in print_ops n; n) then merror ()) (all_ops ~xobjects:false pdf)
+  iter
+    (fun ops ->
+       if List.exists op_is_real (let n = filter_clipping_operations [] (rev (naked_ops [] [] ops)) in print_ops n; n) then merror ())
+    (all_ops ~xobjects:false pdf)
 
 (* Suspects entry has a value of true. *)
 let matterhorn_01_007 _ _ pdf =
