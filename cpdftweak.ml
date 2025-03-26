@@ -313,6 +313,8 @@ let replace_obj pdf objspec obj =
   try Pdf.replace_chain pdf (split_chain objspec) obj with
     _ -> raise (Pdf.PDFError "Chain not found")
 
+let remove_obj pdf objspec = ()
+
 (* Replace a stream from a file e.g 4=data.dat replaces contents of object 4.
    The stream dictionary is altered only to correct the length. *)
 let replace_stream pdf objspec filename =

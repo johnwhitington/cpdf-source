@@ -32,3 +32,6 @@ val replace_stream : Pdf.t -> string -> string -> unit
 
 (** [replace_obj pdf objspec obj] replace the object at [objspec] (which must exist) with [obj]. *)
 val replace_obj : Pdf.t -> string -> Pdf.pdfobject -> unit
+
+(** [remove_obj pdf objspec] removes the object described by the object specification. *)
+val remove_obj : Pdf.t -> string -> unit

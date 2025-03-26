@@ -223,6 +223,7 @@ type op =
   | ReplaceStream of string
   | PrintObj of string
   | ReplaceObj of string * string
+  | RemoveObj of string
   | Verify of string
   | MarkAs of Cpdfua.subformat
   | RemoveMark of Cpdfua.subformat
@@ -393,6 +394,7 @@ let string_of_op = function
   | Redact -> "Redact"
   | Rasterize -> "Rasterize"
   | OutputImage -> "OutputImage"
+  | RemoveObj _ -> "RemoveObj"
 
 (* Inputs: filename, pagespec. *)
 type input_kind = 
@@ -964,7 +966,7 @@ let banned banlist = function
   | ExtractText | ExtractImages | ExtractFontFile _
   | AddPageLabels | RemovePageLabels | OutputJSON | OCGCoalesce
   | OCGRename | OCGList | OCGOrderAll | PrintFontEncoding _ | TableOfContents | Typeset _ | Composition _
-  | TextWidth _ | SetAnnotations _ | CopyAnnotations _ | ExtractStream _ | ReplaceStream _ | PrintObj _ | ReplaceObj _
+  | TextWidth _ | SetAnnotations _ | CopyAnnotations _ | ExtractStream _ | ReplaceStream _ | PrintObj _ | ReplaceObj _ | RemoveObj _
   | Verify _ | MarkAs _ | RemoveMark _ | ExtractStructTree | ReplaceStructTree _ | SetLanguage _
   | PrintStructTree | Rasterize | OutputImage | RemoveStructTree | MarkAsArtifact
      -> false (* Always allowed *)
@@ -3031,7 +3033,8 @@ let specs =
    ("-replace-stream-with", Arg.String (fun s -> args.replace_stream_with <- s), " File to replace stream with");
    ("-obj", Arg.String setprintobj, " Print object");
    ("-obj-json", Arg.String setprintobjjson, " Print object in JSON format");
-   ("-replace-obj", Arg.String setreplaceobj, "Replace object");
+   ("-replace-obj", Arg.String setreplaceobj, " Replace object");
+   ("-remove-obj", Arg.String (fun s -> setop (RemoveObj s) ()), " Remove object");
    ("-json", Arg.Unit (fun () -> args.format_json <- true), " Format output as JSON");
    ("-verify", Arg.String (fun s -> setop (Verify s) ()), " Verify conformance to a standard");
    ("-verify-single", Arg.String (fun s -> args.verify_single <- Some s), " Verify a single test");
@@ -4866,6 +4869,9 @@ let go () =
       let pdfobj = pdf_or_json b in
         Cpdftweak.replace_obj pdf a pdfobj;
         write_pdf false pdf
+  | Some (RemoveObj s) ->
+      let pdf = get_single_pdf args.op true in
+        Cpdftweak.remove_obj pdf s
   | Some (Verify standard) ->
       begin match standard with
       | "PDF/UA-1(matterhorn)" ->
