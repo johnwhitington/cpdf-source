@@ -253,7 +253,7 @@ let rec filter_clipping_operations a = function
 let matterhorn_01_005 _ _ pdf =
   iter
     (fun ops ->
-       if List.exists op_is_real (let n = filter_clipping_operations [] (rev (naked_ops [] [] ops)) in print_ops n; n) then merror ())
+       if List.exists op_is_real (let n = filter_clipping_operations [] (rev (naked_ops [] [] ops)) in (*print_ops n;*) n) then merror ())
     (all_ops ~xobjects:false pdf)
 
 (* Suspects entry has a value of true. *)
