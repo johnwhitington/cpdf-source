@@ -416,6 +416,8 @@ let xmp = "http://ns.adobe.com/xap/1.0/"
 let dc = "http://purl.org/dc/elements/1.1/"
 let rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 let pdfaid = "http://www.aiim.org/pdfa/ns/id/"
+let pdfaid_wrong_iso19005_1 = "http://www.aiim.org/pdfa/ns/id"
+let pdfaid_wrong_acrobat_707 = "http://www.aiim.org/pdfa/ns/id.html"
 let pdfxid = "http://www.npes.org/pdfx/ns/id/"
 let pdfe = "http://www.aiim.org/pdfe/ns/id/"
 let pdfuaid = "http://www.aiim.org/pdfua/ns/id/"
@@ -447,6 +449,17 @@ let collect_list_items_all all =
 
 let rec get_data_for namespace name = function
    D _ -> None
+ | E (((_, _), attrs), []) ->
+     begin match
+       option_map
+         (function
+            ((n, n'), str) when n = namespace && n' = name -> Some str
+          | _ -> None)
+         attrs
+     with
+     | h::_ -> Some h
+     | [] -> None
+     end
  | E (((n, n'), _), [D d]) when n = namespace && n' = name ->
      Some d
  | E (((n, n'), _), e) when n = namespace && n' = name ->
@@ -456,7 +469,7 @@ let rec get_data_for namespace name = function
        x :: _ -> Some x
      | _ -> None
 
-(* PDF/A: <pdfaid:part>2</pdfaid:part> <pdfaid:conformance>B</pdfaid:conformance>
+(* PDF/A: <pdfaid:part>2</pdfaid:part> <pdfaid:conformance>B</pdfaid:conformance> or pdfaid:part="2" pdfaid:conformance="B"
    PDF/E: <pdfe:ISO_PDFEVersion>PDF/E-1</pdfe:ISO_PDFEVersion>
    PDF/VT: <pdfvtid:GTS_PDFVTVersion>PDF/VT-1</pdfvtid:GTS_PDFVTVersion>
    PDF/UA: <pdfuaid:part>1</pdfuaid:part>
@@ -489,15 +502,23 @@ let determine_subformats pdf =
           | None -> ()
           end;
           (* PDF/A *)
-          begin match get_data_for pdfaid "part" tree with
-          | Some part ->
+          begin match
+            get_data_for pdfaid "part" tree,
+            get_data_for pdfaid_wrong_acrobat_707 "part" tree,
+            get_data_for pdfaid_wrong_iso19005_1 "part" tree
+          with
+          | (Some part, _, _) | (_, Some part, _) | (_, _, Some part) ->
               let conformance =
-                match get_data_for pdfaid "conformance" tree with
-                | Some s -> String.lowercase_ascii s
-                | None -> ""
+                match
+                  get_data_for pdfaid "conformance" tree,
+                  get_data_for pdfaid_wrong_acrobat_707 "conformance" tree,
+                  get_data_for pdfaid_wrong_iso19005_1 "conformance" tree
+                with
+                | (Some s, _, _) | (_, Some s, _) | (_, _, Some s) -> String.lowercase_ascii s
+                | _ -> ""
               in
                 formats =| "PDF/A-" ^ part ^ conformance
-          | None -> ()
+          | _ -> ()
           end;
           (* PDF/X *)
           begin match get_data_for pdfxid "GTS_PDFXVersion" tree with
