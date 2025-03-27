@@ -4871,7 +4871,8 @@ let go () =
         write_pdf false pdf
   | Some (RemoveObj s) ->
       let pdf = get_single_pdf args.op true in
-        Cpdftweak.remove_obj pdf s
+        Cpdftweak.remove_obj pdf s;
+        write_pdf false pdf
   | Some (Verify standard) ->
       begin match standard with
       | "PDF/UA-1(matterhorn)" ->

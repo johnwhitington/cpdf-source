@@ -2611,6 +2611,8 @@ font size and color.
     \noindent\small\verb!cpdf -remove-text in.pdf -o out.pdf!
   \end{framed}
 
+\noindent NB: Cpdf can only use characters available in the font specified. If necessary, supply your own font with \texttt{-load-ttf} (see below). Times Roman as used in the preceding example refers to the Standard PDF font Times Roman, not the Times Roman which is likely to be supplied with your computer system -- which may have more characters available.
+
   \subsection{Page Numbers and other Special Codes}
 \index{page!numbers}
   There are various special codes to include the page number in the text:
@@ -2761,7 +2763,7 @@ specifies the size in points:
     \noindent\small\verb!cpdf -add-text "-%Page-" -font-size 36 in.pdf -o out.pdf!
   \end{framed}
 
-  \noindent Adding \texttt{-embed-std14 <directory>}, given a directory holding the URW Base35 free fonts, will embed subsetted font files in the PDF for any of the Standard fonts used. These free fonts may be downloaded from \url{https://github.com/ArtifexSoftware/urw-base35-fonts}. This is important, for example, for PDF/A documents, which must have their fonts embedded.
+  \noindent Adding \texttt{-embed-std14 <directory>}, given a directory holding the URW Base35 free fonts, will embed subsetted font files in the PDF for any of the Standard fonts used. These free fonts may be downloaded from \url{https://github.com/ArtifexSoftware/urw-base35-fonts}. This is important, for example, for PDF/A or PDF/UA documents, which must have their fonts embedded.
 
 The standard fonts cover only the Latin characters, and are limiting. Other TrueType fonts may be introduced with the \texttt{-load-ttf} option, giving a name for, and the file name of the font. For example:
 
@@ -6289,12 +6291,8 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
   \noindent\verb!cpdf -remove-all-text in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf -blacktext in.pdf [<range>] -o out.pdf!
-
-  \vspace{1.5mm}
-  \noindent\verb!cpdf -blacklines in.pdf [<range>] -o out.pdf!
-
-  \vspace{1.5mm}
+  \noindent\verb!cpdf -blacktext in.pdf [<range>] -o out.pdf!\\
+  \noindent\verb!cpdf -blacklines in.pdf [<range>] -o out.pdf!\\
   \noindent\verb!cpdf -blackfills in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
@@ -6333,7 +6331,8 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
   \noindent\verb!cpdf -obj[-json] <object specification> in.pdf!
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf -replace-obj <object specification>=<object> in.pdf!
+  \noindent\verb!cpdf -replace-obj <object specification>=<object> in.pdf -o out.pdf!\\
+  \noindent\verb!cpdf -remove-obj <object number> in.pdf -o out.pdf!
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -extract-stream[-decompress] <object specification>!\\
@@ -6638,7 +6637,17 @@ We may also edit dictionary entries with \texttt{-replace-obj} by giving an obje
 
 \noindent Any part of the object specification not already present will be fabricated using direct nested dictionaries. For example, if \texttt{/MarkInfo} does not exist in the root dictionary, this command adds \texttt{/MarkInfo <</Marked true>>} to the root dictionary.
 
-Stream contents may be replaced with \texttt{-replace-stream}:
+An object may be remove with \texttt{-remove-obj}:
+
+  \begin{framed}
+  \small\noindent\verb!cpdf -remove-obj 6 in.pdf -o out.pdf!
+
+  \vspace{2.5mm}
+  \noindent Remove object 6 from \texttt{in.pdf}, writing to \texttt{out.pdf}. 
+  \end{framed}
+
+
+\noindent Stream contents may be replaced with \texttt{-replace-stream}:
 
   \begin{framed}
   \small\noindent\verb!cpdf -replace-stream 4 -replace-stream-with in.dat in.pdf -o out.pdf!
