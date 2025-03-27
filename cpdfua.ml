@@ -1054,19 +1054,28 @@ let matterhorn_30_002 _ _ pdf =
     let ops = Pdfops.parse_operators pdf (match Pdf.lookup_direct pdf "/Resources" obj with Some r -> r | None -> Pdf.Dictionary []) [obj] in
      keep (function Pdfops.Op_BDC (n, d) when Pdf.lookup_direct pdf "/MCID" d <> None -> true | _ -> false) ops <> []
   in
-  (* 0. Regularize inheritance amongst pages. *)
+  (* Regularize inheritance amongst pages. *)
   Pdfpage.replace_inherit pdf (Pdf.page_reference_numbers pdf);
-  (* 1. Find list of xobject object numbers *)
+  (* Find list of xobject object numbers *)
   let xobj_objnums =
     Pdf.objselect (function o -> match Pdf.lookup_direct pdf "/Subtype" o with Some (Pdf.Name "/Form") -> true | _ -> false) pdf
   in
-  (* 2. Trim to only ones containing MCIDs *)
+  (* Trim to only ones containing MCIDs *)
   let containing_mcids = keep contains_mcid xobj_objnums in
-  (* 3. Find from which place each of these is referenced. For pages, it's from
-     a page. For Xobjects, it's from an xobject. But, two pages (or xobjects)
-     could reference an xobject which references an xobject with an MCID - so
-     there is transitivity to deal with! *)
-    ()
+  (* We check that an xobject which contains MCIDs is not referenced
+     directly from multiple (page or xobject) i.e is in their /XObject lists.
+     In both cases (page, form xobject) we can look in /Resources/XObject *)
+  let to_check = xobj_objnums @ Pdf.page_reference_numbers pdf in
+  let results =
+    flatten
+      (map
+        (fun objnum ->
+           match Pdf.lookup_chain pdf (Pdf.Indirect objnum) ["/Resources"; "/XObject"] with
+           | Some (Pdf.Dictionary d) -> option_map (function (_, Pdf.Indirect i) when mem i containing_mcids -> Some i | _ -> None) d
+           | _ -> [])
+        to_check)
+  in
+    if setify results <> results then merror ()
 
 (* A Type 0 font dictionary with encoding other than Identity-H and Identity-V
    has values for Registry in both CIDSystemInfo dictionaries that are not
