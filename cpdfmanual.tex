@@ -1025,6 +1025,8 @@ systems to uniquely identify a file. To change the ID, behavior, use the
 \noindent Write \texttt{in.pdf} to \texttt{out.pdf}, changing the ID.
 \end{framed}
 
+\noindent Setting the environment variable \texttt{CAMLPDF\_REPRODUCIBLE\_IDS} to \texttt{true} will use a standard value instead of generating one.
+
 \section{Linearization}
 \index{linearization}
 Linearized PDF is a version of the PDF format in which the data is held in a
@@ -3551,7 +3553,7 @@ information dictionary:
 
   \noindent (The details of the format for creation and modification dates can be found
 in Appendix~\ref{dates}. Using the date \texttt{"now"} uses the time and date
-at which the command is executed. Note also that \texttt{-producer} and \texttt{-creator} may be used to set the producer and/or the creator when writing any file, separate from the operations described in this chapter.)
+at which the command is executed (unless the environment variable \texttt{CPDF\_REPRODUCIBLE\_DATES} is set to \texttt{true}). Note also that \texttt{-producer} and \texttt{-creator} may be used to set the producer and/or the creator when writing any file, separate from the operations described in this chapter.)
   
   \vspace{2mm}
   For example, to set the title, the full command line would be
