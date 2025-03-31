@@ -146,7 +146,8 @@ let blackfills c range pdf =
 
 (* Set a minimum line width to avoid dropout *)
 let thinlines range width pdf =
-  let thinpage _ page =
+ let comparison, width = if width < 0. then ( <= ), ~-.width else ( >= ), width in
+ let thinpage _ page =
     let operators =
       Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content
     in
@@ -165,7 +166,7 @@ let thinlines range width pdf =
               (* Alter width. *)
               let width' = width /. scaleof_ctm () in
                 let w' =
-                  if w >= width' then Pdfops.Op_w w else Pdfops.Op_w width'
+                  if comparison w width' then Pdfops.Op_w w else Pdfops.Op_w width'
                 in
                   replace_operators (w'::prev) more
             | (Pdfops.Op_cm m)::more ->
@@ -212,7 +213,7 @@ let thinlines range width pdf =
             let operators = replace_operators [] operators in
               (* 2. Add an initial 'w' if width more than default width *)
               let operators =
-                if width > 1. then (Pdfops.Op_w width)::operators else operators
+                if width > 1. || width < 1. then (Pdfops.Op_w width)::operators else operators
               in
                 let content' = [Pdfops.stream_of_ops operators] in
                   {page with Pdfpage.content = content'} 
