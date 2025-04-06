@@ -1032,7 +1032,7 @@ let trim_marks_page fast pdf n page =
          Pdfops.Op_K (1., 1., 1., 1.);
          Pdfops.Op_w 1.]
          @ [Pdfops.begin_artifact]
-         @ line (minx, tmaxy, tminy -. allowance, tmaxy) (* top left *)
+         @ line (minx, tmaxy, tminx -. allowance, tmaxy) (* top left *)
          @ line (tminx, tmaxy +. allowance, tminx, maxy)
          @ line (tmaxx +. allowance, tmaxy, maxx, tmaxy) (* top right *)
          @ line (tmaxx, tmaxy +. allowance, tmaxx, maxy)
