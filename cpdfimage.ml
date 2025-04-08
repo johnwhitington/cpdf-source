@@ -894,7 +894,7 @@ let recompress_1bpp_ccittg4_lossless ~pixel_threshold ~length_threshold pdf s di
           restore ()
       | None ->
         let data = match s with Pdf.Stream {contents = _, Pdf.Got d} -> d | _ -> assert false in
-        let compressed = Pdfcodec.encode_ccitt w data in
+        let compressed = Pdfcodec.encode_ccittg4 w data in
         let newsize = bytes_size compressed in
           if newsize < size then
             begin
