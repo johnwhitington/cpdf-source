@@ -883,9 +883,10 @@ let recompress_1bpp_ccittg4_lossless ~pixel_threshold ~length_threshold pdf s di
   let restore () = reference := old in
   let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
   let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
-  if w * h < pixel_threshold then (if !debug_image_processing then Printf.printf "pixel threshold not met\n%!") else
+  if w <> 25 || h <> 6 then (if !debug_image_processing then Printf.printf "Debug skipping...\n%!") else
+  (*if w * h < pixel_threshold then (if !debug_image_processing then Printf.printf "pixel threshold not met\n%!") else*)
   let size = match Pdf.lookup_direct pdf "/Length" dict with Some (Pdf.Integer i) -> i | _ -> 0 in
-  if size < length_threshold then (if !debug_image_processing then Printf.printf "length threshold not met\n%!") else
+  (*if size < length_threshold then (if !debug_image_processing then Printf.printf "length threshold not met\n%!") else*)
     begin
       Pdfcodec.decode_pdfstream_until_unknown pdf s;
       match Pdf.lookup_direct pdf "/Filter" (fst !reference) with
