@@ -897,7 +897,7 @@ let recompress_1bpp_ccittg4_lossless ~pixel_threshold ~length_threshold pdf s di
         let data = match s with Pdf.Stream {contents = _, Pdf.Got d} -> d | _ -> assert false in
         let compressed = Pdfcodec.encode_ccittg4 w data in
         let newsize = bytes_size compressed in
-          if newsize < size then
+          if true (* newsize < size *) then
             begin
               if !debug_image_processing then Printf.printf "1bpp to CCITT G4 %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
               reference :=
