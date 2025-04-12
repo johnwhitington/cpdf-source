@@ -8,7 +8,8 @@ DOC = cpdfutil cpdfunicodedata cpdferror cpdfdebug cpdfjson cpdfstrftime \
       cpdfdraft cpdfspot cpdfpagelabels cpdfcreate cpdfannot cpdfxobject \
       cpdfimpose cpdfchop cpdftweak cpdfprinttree cpdfua cpdftexttopdf \
       cpdftoc cpdfjpeg cpdfjpeg2000 cpdfpng cpdfimage cpdfdraw \
-      cpdfcomposition cpdfshape cpdfcolours cpdfdrawcontrol cpdfcommand
+      cpdfcomposition cpdfshape cpdfcolours cpdfdrawcontrol cpdfform \
+      cpdfcommand
 
 MODS = $(NONDOC) $(DOC)
 

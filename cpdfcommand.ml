@@ -116,6 +116,8 @@ type op =
   | ListAnnotations
   | CopyAnnotations of string
   | SetAnnotations of string
+  | ExtractForm
+  | ReplaceForm of string
   | Merge
   | Split
   | SplitOnBookmarks of int
@@ -395,6 +397,8 @@ let string_of_op = function
   | Rasterize -> "Rasterize"
   | OutputImage -> "OutputImage"
   | RemoveObj _ -> "RemoveObj"
+  | ExtractForm -> "ExtractForm"
+  | ReplaceForm _ -> "ReplaceForm"
 
 (* Inputs: filename, pagespec. *)
 type input_kind = 
@@ -968,7 +972,7 @@ let banned banlist = function
   | OCGRename | OCGList | OCGOrderAll | PrintFontEncoding _ | TableOfContents | Typeset _ | Composition _
   | TextWidth _ | SetAnnotations _ | CopyAnnotations _ | ExtractStream _ | ReplaceStream _ | PrintObj _ | ReplaceObj _ | RemoveObj _
   | Verify _ | MarkAs _ | RemoveMark _ | ExtractStructTree | ReplaceStructTree _ | SetLanguage _
-  | PrintStructTree | Rasterize | OutputImage | RemoveStructTree | MarkAsArtifact
+  | PrintStructTree | Rasterize | OutputImage | RemoveStructTree | MarkAsArtifact | ExtractForm | ReplaceForm _
      -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
@@ -4938,6 +4942,13 @@ let go () =
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
         write_images args.rast_device args.rast_res args.rast_jpeg_quality args.tobox args.rast_annots args.rast_antialias args.rast_downsample spec pdf range
+  | Some ExtractForm ->
+      let pdf = get_single_pdf args.op false in
+        Cpdfform.extract_form pdf
+  | Some (ReplaceForm filename) ->
+      let pdf = get_single_pdf args.op false in
+        Cpdfform.replace_form filename pdf;
+        write_pdf false pdf
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)
