@@ -2281,7 +2281,7 @@ let specs =
    ("-decompress",
        Arg.Unit (setop Decompress),
        " Decompress");
-   ("-decompress-just-content",
+   ("-just-content",
        Arg.Unit (fun () -> args.decompress_just_content <- true),
        " Decompress just content streams");
    ("-compress",
