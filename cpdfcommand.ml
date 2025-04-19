@@ -583,7 +583,8 @@ type args =
    mutable replace_stream_with : string;
    mutable output_unit : Pdfunits.t;
    mutable dot_leader : bool;
-   mutable preserve_actions : bool}
+   mutable preserve_actions : bool;
+   mutable decompress_just_content : bool}
 
 let args =
   {op = None;
@@ -734,7 +735,8 @@ let args =
    replace_stream_with = "";
    output_unit = Pdfunits.PdfPoint;
    dot_leader = false;
-   preserve_actions = false}
+   preserve_actions = false;
+   decompress_just_content = false}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -871,7 +873,8 @@ let reset_arguments () =
   args.replace_stream_with <- "";
   args.output_unit <- Pdfunits.PdfPoint;
   args.dot_leader <- false;
-  args.preserve_actions <- false
+  args.preserve_actions <- false;
+  args.decompress_just_content <- false
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -2278,6 +2281,9 @@ let specs =
    ("-decompress",
        Arg.Unit (setop Decompress),
        " Decompress");
+   ("-decompress-just-content",
+       Arg.Unit (fun () -> args.decompress_just_content <- true),
+       " Decompress just content streams");
    ("-compress",
        Arg.Unit (setop Compress),
        " Compress streams, leaving metadata alone");
@@ -3345,7 +3351,7 @@ let really_write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf outna
                 Pdfwrite.pdf_to_file_options
                   ~preserve_objstm:args.preserve_objstm
                   ~generate_objstm:args.create_objstm
-                  ~compress_objstm:(not is_decompress)
+                  ~compress_objstm:(not is_decompress || args.decompress_just_content)
                   ~recrypt:(Some best_password)
                   None mk_id pdf outname'
         end
@@ -3358,7 +3364,7 @@ let really_write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf outna
               Pdfwrite.pdf_to_file_options
                 ~preserve_objstm:args.preserve_objstm
                 ~generate_objstm:args.create_objstm
-                ~compress_objstm:(not is_decompress)
+                ~compress_objstm:(not is_decompress || args.decompress_just_content)
                 encryption mk_id pdf outname'
             end
           else
@@ -4080,11 +4086,38 @@ let go () =
       end
   | Some Decompress ->
       let pdf = get_single_pdf (Some Decompress) false in
-        Pdf.iter_stream
-          (function stream ->
-             try Pdfcodec.decode_pdfstream_until_unknown pdf stream with
-               e -> Pdfe.log (Printf.sprintf "Decode failure: %s. Carrying on...\n" (Printexc.to_string e)); ())
-          pdf;
+      let content_stream_object_numbers =
+        if args.decompress_just_content then
+          let t = Hashtbl.create 256 in
+          Pdf.objiter
+            (fun i obj ->
+              begin match Pdf.lookup_immediate "/Contents" obj with
+              | Some (Pdf.Indirect i) -> Hashtbl.replace t i ()
+              | Some (Pdf.Array a) -> iter (function Pdf.Indirect i -> Hashtbl.replace t i () | _ -> ()) a
+              | _ -> ()
+              end;
+              begin match Pdf.lookup_direct pdf "/Subtype" obj with
+              | Some (Pdf.Name "/Form") -> Hashtbl.replace t i ()
+              | _ -> ()
+              end)
+            pdf;
+            t
+        else
+          null_hash ()
+      in
+        begin if args.decompress_just_content then
+          iter
+            (fun (i, _) ->
+               try Pdfcodec.decode_pdfstream_until_unknown pdf (Pdf.Indirect i) with
+                 e -> Pdfe.log (Printf.sprintf "Decode failure: %s. Carrying on...\n" (Printexc.to_string e)))
+            (list_of_hashtbl content_stream_object_numbers)
+        else
+          Pdf.iter_stream
+            (function stream ->
+               try Pdfcodec.decode_pdfstream_until_unknown pdf stream with
+                 e -> Pdfe.log (Printf.sprintf "Decode failure: %s. Carrying on...\n" (Printexc.to_string e)); ())
+            pdf
+        end;
         write_pdf ~is_decompress:true false pdf
   | Some Compress ->
       let pdf = get_single_pdf (Some Compress) false in
