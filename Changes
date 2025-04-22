@@ -2,7 +2,12 @@
 
 New features:
 
-* CCITT and CCITTG4 encoders in -process-images
+o CCITT and CCITTG4 encoders in -process-images
+
+Extended features:
+
+o -thinlines can ensure maximum as well as minimum thickness
+o New -decompress-just-content for easier content stream debugging
 
 2.8.1 (April 2025)
 
