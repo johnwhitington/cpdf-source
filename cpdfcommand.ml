@@ -1637,12 +1637,15 @@ let setimageresolution f =
   args.op <- Some (ImageResolution f)
 
 let setimpath p =
+  Cpdfutil.check_injectible p;
   args.path_to_im <- p
 
 let setjbig2encpath p =
+  Cpdfutil.check_injectible p;
   args.path_to_jbig2enc <- p
 
 let setp2ppath p =
+  Cpdfutil.check_injectible p;
   args.path_to_p2p <- p
 
 let setfrombox s =
@@ -2804,7 +2807,7 @@ let specs =
     Arg.String setpostpend,
     " Postpend content to page");
    ("-gs",
-    Arg.String (fun s ->  args.path_to_ghostscript <- s),
+    Arg.String (fun s -> Cpdfutil.check_injectible s; args.path_to_ghostscript <- s),
     " Path to gs executable");
    ("-gs-malformed",
     Arg.Unit setgsmalformed,
