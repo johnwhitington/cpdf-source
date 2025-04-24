@@ -111,7 +111,7 @@ let concat_bytes ss =
       let p = ref 0 in
         iter
           (fun s ->
-             for x = 0 to bytes_size s - 1 do bset_unsafe s' !p (bget s x); incr p done)
+             for x = 0 to bytes_size s - 1 do bset_unsafe s' !p (bget_unsafe s x); incr p done)
           ss;
         s'
 

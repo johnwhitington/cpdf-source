@@ -1,3 +1,5 @@
+open Pdfutil
+
 let rec dict_entry_single_object f pdf = function
   | (Pdf.Dictionary d) -> f (Pdf.recurse_dict (dict_entry_single_object f pdf) d)
   | (Pdf.Stream {contents = (Pdf.Dictionary dict, data)}) ->
@@ -30,3 +32,11 @@ let replace_dict_entry pdf key value search =
     Pdf.objselfmap (dict_entry_single_object f pdf) pdf;
     pdf.Pdf.trailerdict <- dict_entry_single_object f pdf pdf.Pdf.trailerdict
 
+let injectible = function '&' | '|' | '\n' | '`' | '$' -> true | _ -> false
+
+let check_injectible s =
+  if List.exists injectible (explode s) then
+    begin
+      Pdfe.log "Insecure character in path name. Exiting\n";
+      exit 2
+    end

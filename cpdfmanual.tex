@@ -179,9 +179,9 @@ These examples demonstrate just a few of the facilities provided by the Coherent
 
 \section*{\hyperref[chap:4]{Chapter 4: Encryption and Decryption}}
 
-\begin{framed}\noindent\texttt{cpdf -encrypt 128bit fred joe in.pdf -o out.pdf}\end{framed}
+\begin{framed}\noindent\texttt{cpdf -encrypt AES256ISO fred joe in.pdf -o out.pdf}\end{framed}
 
-\noindent Encrypt \texttt{in.pdf} using 128bit PDF encryption using the owner password \texttt{fred} and the user password \texttt{joe} and writing the encrypted file to \texttt{out.pdf}
+\noindent Encrypt \texttt{in.pdf} using AES 256 PDF encryption using the owner password \texttt{fred} and the user password \texttt{joe} and writing the encrypted file to \texttt{out.pdf}
 
 \begin{framed}\noindent\texttt{cpdf -decrypt in.pdf owner=fred -o out.pdf}\end{framed}
 
@@ -1931,11 +1931,11 @@ person:
   \end{description}
   There are five kinds of encryption:
   \begin{itemize}
-  \item 40-bit encryption (method \texttt{40bit}) in Acrobat 3 (PDF 1.1) and above
-  \item 128-bit encryption (method \texttt{128bit}) in Acrobat 5 (PDF 1.4) and above
+  \item 40-bit encryption (method \texttt{40bit}) in Acrobat 3 (PDF 1.1) and above -- \textit{this is insecure -- do not use for new documents} 
+  \item 128-bit encryption (method \texttt{128bit}) in Acrobat 5 (PDF 1.4) and above -- \textit{this is insecure -- do not use for new documents}
   \item 128-bit AES encryption (method \texttt{AES}) in Acrobat 7 (PDF 1.6) and above
   \item 256-bit AES encryption (method \texttt{AES256}) in Acrobat 9 (PDF 1.7) -- \textit{this is deprecated -- do not use for new documents}
-  \item 256-bit AES encryption (method \texttt{AES256ISO}) in PDF 2.0
+  \item 256-bit AES encryption (method \texttt{AES256ISO}) in Acrobat 9 (PDF 1.7) and later. Also suitable for PDF 2.0.
   \end{itemize}
 
    \vspace{2mm}
@@ -1972,13 +1972,13 @@ person:
   To encrypt a document, the owner and user passwords must be given (here, \texttt{fred} and \texttt{charles} respectively):
 
   \begin{framed}
-    \noindent\small\verb!cpdf -encrypt 40bit fred charles -no-print in.pdf -o out.pdf!
+    \noindent\small\verb!cpdf -encrypt AES fred charles -no-print in.pdf -o out.pdf!
 
     \vspace{1.5mm}
-    \noindent\small\verb!cpdf -encrypt 128bit fred charles -no-extract in.pdf -o out.pdf!
+    \noindent\small\verb!cpdf -encrypt AES fred charles -no-extract in.pdf -o out.pdf!
 
     \vspace{1.5mm}
-    \noindent\small\verb!cpdf -encrypt AES fred "" -no-edit -no-copy in.pdf -o out.pdf!
+    \noindent\small\verb!cpdf -encrypt AES256ISO fred "" -no-edit -no-copy in.pdf -o out.pdf!
   \end{framed}
 
   \noindent A blank user password is
