@@ -8,6 +8,8 @@ let embed_missing_fonts path_to_ghostscript gs_quiet fi fo =
     Pdfe.log "Please supply path to gs with -gs\n";
     exit 2
   end;
+  Cpdfutil.check_injectible fo;
+  Cpdfutil.check_injectible fi;
     let gscall =
       Filename.quote_command path_to_ghostscript
        ((if gs_quiet then ["-dQUIET"] else []) @ 

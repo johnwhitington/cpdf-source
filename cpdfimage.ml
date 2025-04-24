@@ -61,6 +61,7 @@ let write_stream name stream =
     close_out fh
 
 let write_image ~raw ?path_to_p2p ?path_to_im pdf resources name image =
+  Cpdfutil.check_injectible name;
   match Pdfimage.get_image_24bpp pdf resources image with
   | Pdfimage.JPEG (stream, _) -> write_stream (name ^ ".jpg") stream
   | Pdfimage.JPEG2000 (stream, _) -> write_stream (name ^ ".jpx") stream
@@ -568,6 +569,7 @@ let image_of_input ?subformat ?title ~process_struct_tree fobj i =
     Pdfpage.add_root pageroot [] pdf
 
 let backup_jpeg_dimensions ~path_to_convert filename =
+  Cpdfutil.check_injectible filename;
   let tmp = Filename.temp_file "cpdf" "info" in
   let command = Filename.quote_command path_to_convert ["-format"; "%[width] %[height]"; filename; "info:"] ^ " >" ^ tmp in
   let out = Sys.command command in

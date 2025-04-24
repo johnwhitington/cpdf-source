@@ -892,6 +892,8 @@ let find_cpdflin provided =
 (* Call cpdflin, given the (temp) input name, the output name, and the location
 of the cpdflin binary. Returns the exit code. *)
 let call_cpdflin cpdflin temp output best_password =
+  Cpdfutil.check_injectible output;
+  Cpdfutil.check_injectible best_password;
   let command =
     Filename.quote_command cpdflin
       ["--linearize"; ("--password=" ^ best_password); temp; output]
@@ -1706,7 +1708,8 @@ let setlabelstartval i =
 let setlabelsprogress () =
   args.labelsprogress <- true
 
-let setcpdflin s = 
+let setcpdflin s =
+  Cpdfutil.check_injectible s;
   args.cpdflin <- Some s
 
 let setrecrypt () =
@@ -3109,6 +3112,7 @@ let filesize name =
 (* Mend PDF file with Ghostscript. We use this if a file is malformed and CPDF
  * cannot mend it. It is copied to a temporary file, fixed, then we return None or Some (pdf). *)
 let mend_pdf_file_with_ghostscript filename =
+  Cpdfutil.check_injectible filename;
   match args.path_to_ghostscript with
   | "" ->
       Pdfe.log "Please supply path to gs with -gs\n";
@@ -3804,7 +3808,7 @@ let write_images device res quality boxname annots antialias downsample spec pdf
        let gscall =
          Filename.quote_command args.path_to_ghostscript
            ((if args.gs_quiet then ["-dQUIET"] else []) @
-            (if boxname = None then [] else ["-dUse" ^ (implode (tl (explode (unopt boxname))))]) @ 
+            (if boxname = None then [] else (Cpdfutil.check_injectible (unopt boxname); ["-dUse" ^ (implode (tl (explode (unopt boxname))))])) @ 
            antialias @
            ["-dBATCH"; "-dNOPAUSE"; "-sDEVICE=" ^ device; "-dShowAnnots=" ^ string_of_bool annots;
             "-dJPEGQ=" ^ string_of_int quality; "-sOutputFile=" ^ out; "-sPageList=" ^ string_of_int pnum;
@@ -5017,6 +5021,8 @@ let expand_args argv =
     Array.of_list (expand_args_inner [] l)
 
 let gs_malformed_force fi fo =
+  Cpdfutil.check_injectible fi;
+  Cpdfutil.check_injectible fo;
   if args.path_to_ghostscript = "" then begin
     Pdfe.log "Please supply path to gs with -gs\n";
     exit 2
@@ -5044,10 +5050,12 @@ let go_withargv argv =
   match argv with
   | [|_|] -> print_version ()
   | [|_; inputfilename; "-gs"; gslocation; "-gs-malformed-force"; "-o"; outputfilename|] ->
+    Cpdfutil.check_injectible gslocation;
     args.path_to_ghostscript <- gslocation;
     ignore (gs_malformed_force inputfilename outputfilename);
     exit 0
   | [|_; inputfilename; "-gs"; gslocation; "-gs-malformed-force"; "-o"; outputfilename; "-gs-quiet"|] ->
+    Cpdfutil.check_injectible gslocation;
     args.path_to_ghostscript <- gslocation;
     args.gs_quiet <- true;
     ignore (gs_malformed_force inputfilename outputfilename);
