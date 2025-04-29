@@ -238,6 +238,8 @@ type op =
   | Redact
   | Rasterize
   | OutputImage
+  | ContainsJavaScript
+  | RemoveJavaScript
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -399,6 +401,8 @@ let string_of_op = function
   | RemoveObj _ -> "RemoveObj"
   | ExtractForm -> "ExtractForm"
   | ReplaceForm _ -> "ReplaceForm"
+  | ContainsJavaScript -> "ContainsJavaScript"
+  | RemoveJavaScript -> "RemoveJavaScript"
 
 (* Inputs: filename, pagespec. *)
 type input_kind = 
@@ -978,7 +982,7 @@ let banned banlist = function
   | TextWidth _ | SetAnnotations _ | CopyAnnotations _ | ExtractStream _ | ReplaceStream _ | PrintObj _ | ReplaceObj _ | RemoveObj _
   | Verify _ | MarkAs _ | RemoveMark _ | ExtractStructTree | ReplaceStructTree _ | SetLanguage _
   | PrintStructTree | Rasterize | OutputImage | RemoveStructTree | MarkAsArtifact | ExtractForm | ReplaceForm _
-     -> false (* Always allowed *)
+  | ContainsJavaScript | RemoveJavaScript -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
   | Decrypt | Encrypt | CombinePages _ -> true (* Never allowed *)
@@ -3076,6 +3080,8 @@ let specs =
    ("-in", Arg.Unit (fun () -> args.output_unit <- Pdfunits.Inch), " Output dimensions in inches");
    ("-cm", Arg.Unit (fun () -> args.output_unit <- Pdfunits.Centimetre), " Output dimensions in centimetres");
    ("-mm", Arg.Unit (fun () -> args.output_unit <- Pdfunits.Millimetre), " Output dimensions in millimetres");
+   ("-remove-javascript", Arg.Unit (fun () -> setop RemoveJavaScript ()), " Remove JavaScript");
+   ("-contains-javascript", Arg.Unit (fun () -> setop ContainsJavaScript ()), " Detect if a PDF contains JavaScript");
    (* These items are undocumented *)
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit (fun () -> args.debugcrypt <- true), "");
@@ -3822,6 +3828,18 @@ let write_images device res quality boxname annots antialias downsample spec pdf
     (Pdfpage.pages_of_pagetree pdf)
     (ilist 1 endpage);
   Sys.remove tmppdf
+
+let remove_javascript pdf = 
+  (* Find /S /JavaScript and empty the /JS string *)
+  (* Process the /Root -> /Names -> /JavaScript *)
+  (* Empty out and /URL (javascript:...*)
+  ()
+
+let contains_javascript pdf =
+  (* Any dictionary with /S /JavaScript; or
+     Any /Root -> /Names -> /JavaScript; or
+     Any /URL (javascript:...) *)
+  ()
 
 (* Main function *)
 let go () =
@@ -4989,6 +5007,13 @@ let go () =
       let pdf = get_single_pdf args.op false in
         Cpdfform.replace_form filename pdf;
         write_pdf false pdf
+  | Some RemoveJavaScript ->
+      let pdf = get_single_pdf args.op false in
+        remove_javascript pdf;
+        write_pdf false pdf
+  | Some ContainsJavaScript ->
+      let pdf = get_single_pdf args.op true in
+        contains_javascript pdf
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)
