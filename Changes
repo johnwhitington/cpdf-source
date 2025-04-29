@@ -3,6 +3,7 @@
 New features:
 
 o CCITT and CCITTG4 encoders in -process-images
+o Detect and remove JavaScript
 
 Extended features:
 

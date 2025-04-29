@@ -3830,16 +3830,16 @@ let write_images device res quality boxname annots antialias downsample spec pdf
   Sys.remove tmppdf
 
 let remove_javascript pdf = 
-  (* Find /S /JavaScript and empty the /JS string *)
+  (* Find /S /JavaScript and empty the /JS string. Also, Empty out any /URI (javascript). *)
+  Pdf.objselfmap (fun o -> o) pdf
   (* Process the /Root -> /Names -> /JavaScript *)
-  (* Empty out and /URL (javascript:...*)
-  ()
+  (*Pdf.remove_chain pdf ["/Root"; "/Names"; "/JavaScript"];*)
 
 let contains_javascript pdf =
-  (* Any dictionary with /S /JavaScript; or
-     Any /Root -> /Names -> /JavaScript; or
-     Any /URL (javascript:...) *)
-  ()
+  let found = ref false in
+  (* Any dictionary with /S /JavaScript or any /URI (javascript:...) *) 
+  (* Any /Root -> /Names -> /JavaScript *)
+  print_string (Printf.sprintf "%b" !found)
 
 (* Main function *)
 let go () =
