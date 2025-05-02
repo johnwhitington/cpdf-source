@@ -19,7 +19,7 @@ RESULT = cpdf
 ANNOTATE = true
 PACKS = camlpdf
 
-CFLAGS = -fPIC
+CFLAGS = -fPIC -g -o2
 OCAMLFLAGS = -bin-annot
 OCAMLNCFLAGS = -g -safe-string
 OCAMLBCFLAGS = -g -safe-string
