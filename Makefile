@@ -19,7 +19,7 @@ RESULT = cpdf
 ANNOTATE = true
 PACKS = camlpdf
 
-CFLAGS = -fPIC -g -o2
+CFLAGS = -fPIC -g
 OCAMLFLAGS = -bin-annot
 OCAMLNCFLAGS = -g -safe-string
 OCAMLBCFLAGS = -g -safe-string
@@ -41,7 +41,7 @@ all : $(TARGETS)
 clean ::
 	rm -rf doc foo foo2 out.pdf out2.pdf out3.pdf foo.pdf decomp.pdf *.cmt \
 	*.cmti *.json test/*.pdf *.ps *.aux *.idx *.log *.out *.toc *.cut \
-	*.ttf *.ttx out.png
+	*.ttf *.ttx out.png cpdf.dSYM
 
 DOC_FILES = $(foreach x,$(DOC),$(x).mli)
 
