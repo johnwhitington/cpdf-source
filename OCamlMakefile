@@ -614,7 +614,7 @@ endif
 
 ifneq ($(strip $(OBJ_LINK)),)
   ifdef CREATE_LIB
-    OBJS_LIBS := -cclib -l$(CLIB_BASE) $(CLIBS_OPTS) $(MAYBE_IDL)
+    OBJS_LIBS := -ccopt "$(CFLAGS)" -cclib -l$(CLIB_BASE) $(CLIBS_OPTS) $(MAYBE_IDL)
   else
     OBJS_LIBS := $(OBJ_LINK) $(CLIBS_OPTS) $(MAYBE_IDL)
   endif
