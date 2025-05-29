@@ -579,7 +579,7 @@ let
                 !pdf
 
 let addrectangle
-  fast (w, h) colour outline linewidth opacity position relative_to_cropbox
+  fast coord colour outline linewidth opacity position relative_to_cropbox
   underneath range pdf
 =
   let addrectangle_page _ page =
@@ -606,6 +606,11 @@ let addrectangle
         | None -> Pdf.parse_rectangle pdf page.Pdfpage.mediabox
       else
         Pdf.parse_rectangle pdf page.Pdfpage.mediabox
+    in
+    let w, h =
+      match Cpdfcoord.parse_units_string pdf page coord with
+      | [w; h] -> w, h
+      | _ -> error "bad coordinate specification"
     in
     let x, y, _ =
       Cpdfposition.calculate_position false w mediabox position

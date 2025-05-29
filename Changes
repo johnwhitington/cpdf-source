@@ -13,6 +13,7 @@ o New -decompress-just-content for easier content stream debugging
 Fixes:
 
 * Sanitizes inputs to prevent command injection attacks
+o Fix PMAXX et al. w.r.t -add-rectangle
 
 * = Supported by a grant from NLnet
 

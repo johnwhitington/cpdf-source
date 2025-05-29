@@ -4590,7 +4590,7 @@ let go () =
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           write_pdf false
             (Cpdfaddtext.addrectangle
-               args.fast (Cpdfcoord.parse_coordinate pdf args.coord)
+               args.fast args.coord
                args.color args.outline args.linewidth args.opacity args.position
                args.relative_to_cropbox args.underneath range pdf)
   | Some (AddBookmarks file) ->
