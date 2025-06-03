@@ -3829,40 +3829,6 @@ let write_images device res quality boxname annots antialias downsample spec pdf
     (ilist 1 endpage);
   Sys.remove tmppdf
 
-let remove_javascript pdf = 
-  (* Find /S /JavaScript and empty the /JS string. Also, Empty out any /URI (javascript). *)
-  Pdf.objselfmap (fun o -> o) pdf;
-  (* Process the /Root -> /Names -> /JavaScript *)
-  ignore (Pdf.remove_chain pdf ["/Root"; "/Names"; "/JavaScript"])
-
-let contains_javascript pdf =
-  let found = ref false in
-  (* Any dictionary with /S /JavaScript or any /URI (javascript:...) *) 
-  let rec contains_javascript_single_object f pdf = function
-    | (Pdf.Dictionary d) -> f (Pdf.recurse_dict (contains_javascript_single_object f pdf) d)
-    | (Pdf.Stream {contents = (Pdf.Dictionary dict, data)}) ->
-        f (Pdf.Stream {contents = (Pdf.recurse_dict (contains_javascript_single_object f pdf) dict, data)})
-    | Pdf.Array a -> Pdf.recurse_array (contains_javascript_single_object f pdf) a
-    | x -> x
-  in
-  let f d =
-    begin match Pdf.lookup_direct pdf "/S" d with
-    | Some (Pdf.String "/JavaScript") -> set found
-    | _ -> ()
-    end;
-    begin match Pdf.lookup_direct pdf "/URI" d with
-    | Some (Pdf.String s) when String.length s >= 11 && String.sub s 0 11 = "javascript:" -> set found; d
-    | _ -> d
-    end
-  in
-    Pdf.objiter (fun _ obj -> ignore (contains_javascript_single_object f pdf obj)) pdf;
-  (* Any /Root -> /Names -> /JavaScript *)
-  begin match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/Names"; "/JavaScript"] with
-  | Some _ -> set found
-  | None -> ()
-  end;
-  print_string (Printf.sprintf "%b" !found)
-
 (* Main function *)
 let go () =
   check_bookmarks_mistake ();
@@ -5031,11 +4997,11 @@ let go () =
         write_pdf false pdf
   | Some RemoveJavaScript ->
       let pdf = get_single_pdf args.op false in
-        remove_javascript pdf;
+        Cpdfjs.remove_javascript pdf;
         write_pdf false pdf
   | Some ContainsJavaScript ->
       let pdf = get_single_pdf args.op true in
-        contains_javascript pdf
+        print_string (Printf.sprintf "%b" (Cpdfjs.contains_javascript pdf))
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)
