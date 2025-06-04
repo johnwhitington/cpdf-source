@@ -65,18 +65,24 @@ let bookmark_of_data pdf i s i' isopen optionaldest =
 let target_of_json_target pdf pagenumber target = 
   target_of_markfile_obj pdf pagenumber (Cpdfjson.object_of_json target)
 
+let rec json_make_all_float = function
+  | `Assoc l -> `Assoc (map (fun (k, v) -> (k, json_make_all_float v)) l)
+  | `List l -> `List (map json_make_all_float l)
+  | `Int i -> `Float (float_of_int i)
+  | x -> x
+
 let mark_of_json pdf = function
   | `Assoc [("bold", `Bool bold);
             ("colour", `List [`Float r; `Float g; `Float b]);
             ("italic", `Bool italic);
-            ("level", `Int level);
+            ("level", `Float level);
             ("open", `Bool openstatus);
-            ("page", `Int pagenumber);
+            ("page", `Float pagenumber);
             ("target", target);
             ("text", `String text)] ->
-       {Pdfmarks.level = level;
+       {Pdfmarks.level = int_of_float level;
         Pdfmarks.text = Pdftext.pdfdocstring_of_utf8 text;
-        Pdfmarks.target = target_of_json_target pdf pagenumber target;
+        Pdfmarks.target = target_of_json_target pdf (int_of_float pagenumber) target;
         Pdfmarks.isopen = openstatus;
         Pdfmarks.colour = (r, g, b);
         Pdfmarks.flags = (if italic then 1 else 0) lor ((if bold then 1 else 0) lsl 1)}
@@ -87,7 +93,7 @@ let mark_of_json_sort pdf = function
   | _ -> error "malformed mark in mark_of_json_sort"
 
 let marks_of_json pdf = function
-  | `List ms -> map (mark_of_json_sort pdf) ms
+  | `List ms -> map (mark_of_json_sort pdf) (map json_make_all_float ms)
   | _ -> error "top level of JSON boomark file not a list"
 
 let parse_bookmark_file_json verify pdf i =

@@ -222,7 +222,9 @@ and object_of_json = function
         _ -> Pdfe.log (Printf.sprintf "Could not read UTF8 string %S\n" u); P.String u
       end
   | `Assoc ["I", `Int i] -> P.Integer i
+  | `Assoc ["I", `Float f] -> P.Integer (int_of_float f)
   | `Assoc ["F", `Float f] -> P.Real f
+  | `Assoc ["F", `Int i] -> P.Real (float_of_int i)
   | `Assoc ["N", `String n] -> P.Name n
   | `Assoc ["S", `List [dict; `String data]] ->
       let d' =
