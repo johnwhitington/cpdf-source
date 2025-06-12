@@ -103,7 +103,7 @@ let rec squeeze_form_xobject pdf objnum =
       let obj = Pdf.lookup_obj pdf objnum in
         begin match Pdf.lookup_chain pdf obj ["/Resources"; "/XObject"] with
         | Some (Pdf.Dictionary d) ->
-            iter (function (k, Pdf.Indirect i) -> flprint "xobject inside xobject..."; squeeze_form_xobject pdf i | _ -> ()) d
+            iter (function (k, Pdf.Indirect i) -> squeeze_form_xobject pdf i | _ -> ()) d
         | _ -> ()
         end;
         match Pdf.lookup_direct pdf "/Subtype" obj with
