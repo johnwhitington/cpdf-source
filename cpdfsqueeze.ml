@@ -55,10 +55,7 @@ let pdfobjeq pdf x y =
     begin match y with Pdf.Stream _ -> Pdf.getstream y | _ -> () end;
     compare x y
 
-let memory () = Printf.printf "%i bytes in use\n%!" (Gc.(quick_stat ()).heap_words * 4)
-
 let really_squeeze pdf =
-  (*Printf.printf "Beginning of really_squeeze: %!"; memory ();*)
   let objs = ref [] in
     Pdf.objiter (fun objnum _ -> objs := objnum :: !objs) pdf;
     let toprocess =
@@ -66,7 +63,6 @@ let really_squeeze pdf =
         (fun x -> length x > 1)
         (collate (pdfobjeq pdf) (sort (pdfobjeq pdf) !objs))
     in
-      (*Printf.printf "Stage 1 done%!\n"; memory ();*)
       (* Remove any pools of objects which are page objects, since Adobe Reader
        * gets confused when there are duplicate page objects. *)
       let toprocess =
@@ -79,46 +75,37 @@ let really_squeeze pdf =
                | _ -> Some l)
           toprocess
       in
-        (*Printf.printf "Stage 2 done%!\n"; memory ();*)
         let pdfr = ref pdf in
         let changetable = Hashtbl.create 100 in
           iter
             (function [] -> assert false | h::t ->
                iter (fun e -> Hashtbl.add changetable e h) t)
             toprocess;
-          (* For a unknown reason, the output file is much smaller if
-             Pdf.renumber is run twice. This is bizarre, since Pdf.renumber is
-             an old, well-understood function in use for years -- what is
-             going on? Furthermore, if we run it 3 times, it gets bigger again! *)
-          (*Printf.printf "Stage 3 done\n%!"; memory ();*)
           pdfr := Pdf.renumber changetable !pdfr;
-          (*Printf.printf "Stage 4 done\n%!"; memory ();*)
-          pdfr := Pdf.renumber changetable !pdfr;
-          (*Printf.printf "Stage 5 done\n%!"; memory ();*)
           Pdf.remove_unreferenced !pdfr;
-          (*Printf.printf "Stage 6 done\n%!"; memory ();*)
-          (*Gc.compact ();*)
-          (*Printf.printf "Compacted:\n%!"; memory ();*)
           pdf.Pdf.root <- !pdfr.Pdf.root;
           pdf.Pdf.objects <- !pdfr.Pdf.objects;
           pdf.Pdf.trailerdict <- !pdfr.Pdf.trailerdict
 
 (* Squeeze the form xobject at objnum.
 
-FIXME: For old PDFs (< v1.2) any resources from the page (or its ancestors in
+For old PDFs (< v1.2) any resources from the page (or its ancestors in
 the page tree!) are also needed - we must merge them with the ones from the
 xobject itself. However, it it safe for now -- in the unlikely event that the
 resources actually need to be available, the parse will fail, the squeeze of
 this object will fail, and we bail out. *)
-(* FIXME: XObjects inside xobjects? *)
 let xobjects_done = ref []
 
-
-let squeeze_form_xobject pdf objnum =
+let rec squeeze_form_xobject pdf objnum =
   if mem objnum !xobjects_done then () else
     begin
       xobjects_done := objnum :: !xobjects_done;
       let obj = Pdf.lookup_obj pdf objnum in
+        begin match Pdf.lookup_chain pdf obj ["/Resources"; "/XObject"] with
+        | Some (Pdf.Dictionary d) ->
+            iter (function (k, Pdf.Indirect i) -> flprint "xobject inside xobject..."; squeeze_form_xobject pdf i | _ -> ()) d
+        | _ -> ()
+        end;
         match Pdf.lookup_direct pdf "/Subtype" obj with
           Some (Pdf.Name "/Form") ->
             let resources =
@@ -146,8 +133,7 @@ let squeeze_form_xobject pdf objnum =
 
 (* For a list of indirects representing content streams, make sure that none of
 them are duplicated in the PDF. This indicates sharing, which parsing and
-rewriting the streams might destroy, thus making the file bigger. FIXME: The
-correct thing to do is to preserve the multiple content streams. *)
+rewriting the streams might destroy, thus making the file bigger. *)
 let no_duplicates content_stream_numbers stream_numbers =
   not
     (mem false
