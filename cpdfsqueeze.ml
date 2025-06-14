@@ -48,41 +48,68 @@ let decompress_pdf pdf =
     pdf
 
 (* Equality on PDF objects *)
-let pdfobjeq pdf x y =
-  let x = Pdf.lookup_obj pdf x 
-  and y = Pdf.lookup_obj pdf y in
-    begin match x with Pdf.Stream _ -> Pdf.getstream x | _ -> () end;
-    begin match y with Pdf.Stream _ -> Pdf.getstream y | _ -> () end;
-    compare x y
+let pdfobjeq pdf (xnum, x) (ynum, y) =
+  begin match x with Pdf.Stream _ -> Pdf.getstream x | _ -> () end;
+  begin match y with Pdf.Stream _ -> Pdf.getstream y | _ -> () end;
+  compare x y
+
+(* Given (objnum, obj) pairs remove from the list any which can be easily
+   detected to be unique. Do this by:
+
+  1. Calculating the hash for all the objects and make pairs.
+  2. Sort & Collate with custom comparison funciton. (it's now cheap, because these are only hashes)
+  3. Remove the length 1 lists
+  3. Build new list of (objnum, obj) pairs by *)
+let remove_unique_objects pairs =
+  let t = Hashtbl.create (length pairs) in
+  flprint "1"; 
+  iter (fun (objnum, obj) -> Hashtbl.add t objnum (Hashtbl.hash obj)) pairs;
+  let cmp (x, _) (y, _) =
+    Int.compare (Hashtbl.find t x) (Hashtbl.find t y)
+  in
+    flprint "2";
+    flatten
+     (keep
+       (function [_] -> false | _ -> true)
+       (collate cmp (sort cmp pairs)))
 
 let really_squeeze pdf =
+  flprint "*";
   let objs = ref [] in
-    Pdf.objiter (fun objnum _ -> objs := objnum :: !objs) pdf;
+    Pdf.objiter (fun objnum _ -> objs := (objnum, Pdf.lookup_obj pdf objnum) :: !objs) pdf;
+    flprint "A";
+    Printf.printf "%i objs " (length !objs);
+    let toprocess = remove_unique_objects !objs in
+    Printf.printf "preprocess now %i objs " (length toprocess);
     let toprocess =
       keep
-        (fun x -> length x > 1)
-        (collate (pdfobjeq pdf) (sort (pdfobjeq pdf) !objs))
+        (function [_] -> false | _ -> true)
+        (collate (pdfobjeq pdf) (sort (pdfobjeq pdf) toprocess))
     in
+      Printf.printf "mainprocess now %i objs " (length toprocess);
+      flprint "B";
       (* Remove any pools of objects which are page objects, since Adobe Reader
        * gets confused when there are duplicate page objects. *)
       let toprocess =
         option_map
           (function
              [] -> assert false
-           | h::_ as l ->
-               match Pdf.lookup_direct pdf "/Type" (Pdf.lookup_obj pdf h) with
+           | (_, h)::_ as l ->
+               match Pdf.lookup_direct pdf "/Type" h with
                  Some (Pdf.Name "/Page") -> None
                | _ -> Some l)
           toprocess
       in
+        flprint "C";
         let pdfr = ref pdf in
         let changetable = Hashtbl.create 100 in
           iter
-            (function [] -> assert false | h::t ->
-               iter (fun e -> Hashtbl.add changetable e h) t)
+            (function [] -> assert false | (h, _)::t ->
+               iter (fun (e, _) -> Hashtbl.add changetable e h; Pdf.removeobj pdf e) t)
             toprocess;
+          flprint "D";
           pdfr := Pdf.renumber changetable !pdfr;
-          Pdf.remove_unreferenced !pdfr;
+          flprint "E*";
           pdf.Pdf.root <- !pdfr.Pdf.root;
           pdf.Pdf.objects <- !pdfr.Pdf.objects;
           pdf.Pdf.trailerdict <- !pdfr.Pdf.trailerdict
