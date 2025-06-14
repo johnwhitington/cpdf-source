@@ -71,7 +71,7 @@ let remove_unique_objects pairs =
     flatten
      (keep
        (function [_] -> false | _ -> true)
-       (collate cmp (sort cmp pairs)))
+       (collate cmp (let r = sort cmp pairs in flprint "SORT-1 done"; r)))
 
 let really_squeeze pdf =
   flprint "*";
@@ -80,13 +80,13 @@ let really_squeeze pdf =
     flprint "A";
     Printf.printf "%i objs " (length !objs);
     let toprocess = remove_unique_objects !objs in
-    Printf.printf "preprocess now %i objs " (length toprocess);
+    Printf.printf "COLLATE-1 done; preprocess now %i objs |" (length toprocess);
     let toprocess =
       keep
         (function [_] -> false | _ -> true)
-        (collate (pdfobjeq pdf) (sort (pdfobjeq pdf) toprocess))
+        (collate (pdfobjeq pdf) (let r = sort (pdfobjeq pdf) toprocess in flprint "|2-SORT DONE"; r))
     in
-      Printf.printf "mainprocess now %i objs " (length toprocess);
+      Printf.printf "2-COLLATE DONE|mainprocess now %i objs " (length toprocess);
       flprint "B";
       (* Remove any pools of objects which are page objects, since Adobe Reader
        * gets confused when there are duplicate page objects. *)
