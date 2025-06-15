@@ -56,38 +56,27 @@ let pdfobjeq pdf (xnum, x) (ynum, y) =
 (* Given (objnum, obj) pairs remove from the list any which can be easily
    detected to be unique. Do this by:
 
-  1. Calculating the hash for all the objects and make pairs.
-  2. Sort & Collate with custom comparison funciton. (it's now cheap, because these are only hashes)
+  1. Calculating the hash for all the objects and make triples.
+  2. Sort & Collate with custom comparison function. (it's now cheap, because these are only hashes)
   3. Remove the length 1 lists
-  3. Build new list of (objnum, obj) pairs by *)
+  3. Build new list of (objnum, obj) pair.
+
+TODO: Can we get this to work without needing both sort and collate? Perhaps imperatively? *)
 let remove_unique_objects pairs =
-  let t = Hashtbl.create (length pairs) in
-  flprint "1"; 
-  iter (fun (objnum, obj) -> Hashtbl.add t objnum (Hashtbl.hash obj)) pairs;
-  let cmp (x, _) (y, _) =
-    Int.compare (Hashtbl.find t x) (Hashtbl.find t y)
-  in
-    flprint "2";
-    flatten
-     (keep
-       (function [_] -> false | _ -> true)
-       (collate cmp (let r = sort cmp pairs in flprint "SORT-1 done"; r)))
+  let triples = map (fun (objnum, obj) -> (objnum, obj, Hashtbl.hash_param 256 256 obj)) pairs in
+  let cmp (_, _, a) (_, _, b) = Int.compare a b in
+  let newtriples = flatten (keep (function [_] -> false | _ -> true) (collate cmp (sort cmp triples))) in
+    map (fun (a, b, _) -> (a, b)) newtriples
 
 let really_squeeze pdf =
-  flprint "*";
   let objs = ref [] in
     Pdf.objiter (fun objnum _ -> objs := (objnum, Pdf.lookup_obj pdf objnum) :: !objs) pdf;
-    flprint "A";
-    Printf.printf "%i objs " (length !objs);
     let toprocess = remove_unique_objects !objs in
-    Printf.printf "COLLATE-1 done; preprocess now %i objs |" (length toprocess);
     let toprocess =
       keep
         (function [_] -> false | _ -> true)
-        (collate (pdfobjeq pdf) (let r = sort (pdfobjeq pdf) toprocess in flprint "|2-SORT DONE"; r))
+        (collate (pdfobjeq pdf) (sort (pdfobjeq pdf) toprocess))
     in
-      Printf.printf "2-COLLATE DONE|mainprocess now %i objs " (length toprocess);
-      flprint "B";
       (* Remove any pools of objects which are page objects, since Adobe Reader
        * gets confused when there are duplicate page objects. *)
       let toprocess =
@@ -100,16 +89,13 @@ let really_squeeze pdf =
                | _ -> Some l)
           toprocess
       in
-        flprint "C";
         let pdfr = ref pdf in
-        let changetable = Hashtbl.create 100 in
+        let changetable = Hashtbl.create 512 in
           iter
             (function [] -> assert false | (h, _)::t ->
                iter (fun (e, _) -> Hashtbl.add changetable e h; Pdf.removeobj pdf e) t)
             toprocess;
-          flprint "D";
           pdfr := Pdf.renumber changetable !pdfr;
-          flprint "E*";
           pdf.Pdf.root <- !pdfr.Pdf.root;
           pdf.Pdf.objects <- !pdfr.Pdf.objects;
           pdf.Pdf.trailerdict <- !pdfr.Pdf.trailerdict
@@ -271,6 +257,7 @@ let squeeze ?logto ?(pagedata=true) pdf =
         end;
         log (Printf.sprintf "Recompressing document\n");
         ignore (recompress_pdf pdf);
+        log (Printf.sprintf "Finished squeeze\n")
     with
       e ->
         raise
