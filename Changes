@@ -10,6 +10,7 @@ Extended features:
 o -thinlines can ensure maximum as well as minimum thickness
 o New -decompress-just-content for easier content stream debugging
 o -squeeze processes xobjects inside xobjects
+o Speed increases for -squeeze
 
 Fixes:
 
