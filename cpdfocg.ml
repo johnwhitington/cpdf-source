@@ -75,7 +75,7 @@ let ocg_coalesce pdf =
         let new_catalog = Pdf.addobj pdf (Pdf.add_dict_entry (Pdf.catalog_of_pdf pdf) "/OCProperties" (Pdf.Indirect ocp_objnum)) in
         pdf.Pdf.trailerdict <- Pdf.add_dict_entry pdf.Pdf.trailerdict "/Root" (Pdf.Indirect new_catalog);
         pdf.Pdf.root <- new_catalog;
-        Pdf.objselfmap (Pdf.renumber_object_parsed pdf (hashtable_of_dictionary changes)) pdf
+        Pdf.objselfmap (Pdf.renumber_object_parsed ~preserve_order:false pdf (hashtable_of_dictionary changes)) pdf
 
 let ocg_get_list pdf =
   let l = ref [] in

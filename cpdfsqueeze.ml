@@ -95,7 +95,7 @@ let really_squeeze pdf =
             (function [] -> assert false | (h, _)::t ->
                iter (fun (e, _) -> Hashtbl.add changetable e h; Pdf.removeobj pdf e) t)
             toprocess;
-          pdfr := Pdf.renumber changetable !pdfr;
+          pdfr := Pdf.renumber ~preserve_order:true changetable !pdfr;
           pdf.Pdf.root <- !pdfr.Pdf.root;
           pdf.Pdf.objects <- !pdfr.Pdf.objects;
           pdf.Pdf.trailerdict <- !pdfr.Pdf.trailerdict
