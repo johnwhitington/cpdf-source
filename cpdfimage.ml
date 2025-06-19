@@ -3,10 +3,12 @@ open Pdfio
 open Cpdferror
 
 let debug_image_processing = ref false
-let show_commands = ref true
 
 let image_command x =
-  if !show_commands then flprint ("\n" ^ x ^ "\n");
+  begin match Sys.getenv_opt "CPDF_SHOW_EXT" with
+  | Some "true" -> flprint ("\n" ^ x ^ "\n")
+  | _ -> ()
+  end;
   Sys.command x
 
 let complain_jbig2enc path =
