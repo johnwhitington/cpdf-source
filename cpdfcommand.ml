@@ -3412,10 +3412,13 @@ let really_write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf outna
       let s = filesize outname in
         begin
           let str =
-            Printf.sprintf
-              "Final file size is %i bytes, %.2f%% of original.\n"
-              s
-              ((float s /. float !initial_file_size) *. 100.)
+            if !initial_file_size = 0 then
+              Printf.sprintf "Final file size is %i bytes.\n" s
+            else
+              Printf.sprintf
+                "Final file size is %i bytes, %.2f%% of original.\n"
+                s
+                ((float s /. float !initial_file_size) *. 100.)
           in
           match !logto with
           | None -> print_string str
