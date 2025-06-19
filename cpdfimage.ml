@@ -3,6 +3,11 @@ open Pdfio
 open Cpdferror
 
 let debug_image_processing = ref false
+let show_commands = ref true
+
+let image_command x =
+  if !show_commands then flprint ("\n" ^ x ^ "\n");
+  Sys.command x
 
 let complain_jbig2enc path =
   if path = "" then error "Specify jbig2enc location with -jbig2enc"
@@ -105,7 +110,7 @@ let write_image ~raw ?path_to_p2p ?path_to_im pdf resources name image =
               if not raw then Pdfe.log "Neither pnm2png nor imagemagick found. Specify with -p2p or -im\n"
           | Some path_to_im ->
             begin match
-              Sys.command (Filename.quote_command path_to_im [pnm; png])
+              image_command (Filename.quote_command path_to_im [pnm; png])
             with
               0 -> remove pnm
             | _ -> 
@@ -115,7 +120,7 @@ let write_image ~raw ?path_to_p2p ?path_to_im pdf resources name image =
           end
         | Some path_to_p2p ->
           begin match
-            Sys.command (Filename.quote_command path_to_p2p ~stdout:png ["-gamma"; "0.45"; "-quiet"; pnm])
+            image_command (Filename.quote_command path_to_p2p ~stdout:png ["-gamma"; "0.45"; "-quiet"; pnm])
           with
           | 0 -> remove pnm
           | _ ->
@@ -606,7 +611,7 @@ let jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~j
       let command = 
         Filename.quote_command path_to_convert ([out] @ scaling @ ["-quality"; string_of_float q ^ "%"; out2])
       in
-        (*Printf.printf "%S\n" command;*) Sys.command command
+        image_command command
     in
     if retcode = 0 then
       begin
@@ -712,7 +717,7 @@ let lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshol
         (if components = 1 then ["-colorspace"; "Gray"] else if components = 4 then ["-colorspace"; "CMYK"] else ["-type"; "truecolor"]) @
         [out2]))
     in
-      (*Printf.printf "%S\n" command;*) Sys.command command
+      image_command command
   in
   if retcode = 0 then
     begin
@@ -771,8 +776,7 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolat
         (if components = 1 then ["-define"; "png:color-type=0"; "-colorspace"; "Gray"] else if components = 3 then ["-define"; "-png:color-type=2"; "-colorspace"; "RGB"] else if components = 4 then ["-colorspace"; "CMYK"] else []) @
         [if interpolate && components > -2 then "-resize" else "-sample"; string_of_float factor ^ "%"; out2])
     in
-      (*Printf.printf "%S\n" command;*)
-      Sys.command command
+      image_command command
   in
   try
   if retcode = 0 then
@@ -938,7 +942,7 @@ let recompress_1bpp_jbig2_lossless ~pixel_threshold ~length_threshold ~path_to_j
         close_out fh;
         let retcode =
           let command = Filename.quote_command ~stdout:out2 path_to_jbig2enc ["-d"; "-p"; out] in
-            (*Printf.printf "%S\n" command;*) Sys.command command
+            image_command command
         in
           if retcode <> 0 then
             restore ()
@@ -1018,7 +1022,7 @@ let preprocess_jbig2_lossy ~path_to_jbig2enc ~jbig2_lossy_threshold ~length_thre
          ?stderr:(if !debug_image_processing then None else Some Filename.null)
          (["-p"; "-s"; "-d"; "-t"; string_of_float jbig2_lossy_threshold; "-b"; jbig2out] @ map snd !objnum_name_pairs)
      in
-       (*Printf.printf "%S\n" command;*) Sys.command command
+       image_command command
    in
    iter remove (map snd !objnum_name_pairs);
    if retcode = 0 then
