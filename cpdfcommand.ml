@@ -2297,9 +2297,6 @@ let specs =
    ("-compress",
        Arg.Unit (setop Compress),
        " Compress streams, leaving metadata alone");
-   ("-remove-duplicate-streams",
-       Arg.Unit (fun () -> args.remove_duplicate_streams <- true),
-       "");
    ("-list-bookmarks",
       Arg.Unit (setop ListBookmarks),
       " List Bookmarks");
