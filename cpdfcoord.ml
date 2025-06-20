@@ -257,16 +257,25 @@ let parse_coordinate pdf s =
     _ -> error ("Bad coordinate specification " ^ s)
 
 let parse_coordinates pdf s =
-  try
-    let pages = Pdfpage.pages_of_pagetree pdf in
-      let groups = List.map (fun page -> parse_units_string pdf page s) pages in
-        List.map
-          (function
-            | [dx; dy] -> (dx, dy)
-           | _ -> error ("Bad coordinate specification " ^ s))
-          groups
-  with
-    _ -> error ("Bad coordinate specification " ^ s)
+  (* Preprocess "* ..... " and "..... *" for scale_to_fit and friends. *)
+  let s =
+    match explode s with
+    | '*'::' '::r -> implode r ^ " div CH mul CW " ^ implode r 
+    | _ ->
+       match rev (explode s) with
+       | '*'::' '::r -> implode (rev r) ^ " " ^ implode (rev r) ^ " div CW mul CH"
+       | s -> implode (rev s)
+  in
+    try
+      let pages = Pdfpage.pages_of_pagetree pdf in
+        let groups = List.map (fun page -> parse_units_string pdf page s) pages in
+          List.map
+            (function
+              | [dx; dy] -> (dx, dy)
+             | _ -> error ("Bad coordinate specification " ^ s))
+            groups
+    with
+      _ -> error ("Bad coordinate specification " ^ s)
 
 let parse_single_number pdf s =
   try
