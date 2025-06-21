@@ -1,6 +1,9 @@
 (** Utilities *)
 
 val progress : bool ref
+val progress_page : int -> unit
+val progress_endpage : unit -> unit
+val progress_done : unit -> unit
 
 (** Remove a dictionary entry. *)
 val remove_dict_entry : Pdf.t -> string -> Pdf.pdfobject option -> unit

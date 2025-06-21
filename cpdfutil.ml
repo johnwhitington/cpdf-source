@@ -2,6 +2,15 @@ open Pdfutil
 
 let progress = ref false
 
+let progress_page n =
+  if !progress then Printf.eprintf "%i" n
+
+let progress_endpage () =
+  if !progress then Printf.eprintf ".%!"
+
+let progress_done () =
+  if !progress then Printf.eprintf "\n%!"
+
 let rec dict_entry_single_object f pdf = function
   | (Pdf.Dictionary d) -> f (Pdf.recurse_dict (dict_entry_single_object f pdf) d)
   | (Pdf.Stream {contents = (Pdf.Dictionary dict, data)}) ->

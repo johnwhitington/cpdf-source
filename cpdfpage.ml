@@ -242,17 +242,18 @@ let process_pages f pdf range =
         (map2
           (fun n p -> if mem n range then
             begin
-              if !Cpdfutil.progress then Printf.eprintf "%i" n;
+              Cpdfutil.progress_page n; 
               let r = f n p in
-              if !Cpdfutil.progress then Printf.eprintf ".%!";
+              Cpdfutil.progress_endpage ();
               r
             end
           else (p, n, Pdftransform.i_matrix))
           (ilist 1 (length pages))
           pages)
     in
-      if !Cpdfutil.progress then Printf.eprintf "\n%!";
-      Pdfpage.change_pages ~matrices:(combine pagenumbers matrices) true pdf pages'
+      let r = Pdfpage.change_pages ~matrices:(combine pagenumbers matrices) true pdf pages' in
+        Cpdfutil.progress_done ();
+        r
 
 let iter_pages f pdf range =
   let pages = Pdfpage.pages_of_pagetree pdf in
