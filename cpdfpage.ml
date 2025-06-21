@@ -240,10 +240,18 @@ let process_pages f pdf range =
     let pages', pagenumbers, matrices = (* new page objects, page number, matrix *)
       split3
         (map2
-          (fun n p -> if mem n range then f n p else (p, n, Pdftransform.i_matrix))
+          (fun n p -> if mem n range then
+            begin
+              if !Cpdfutil.progress then Printf.eprintf "%i" n;
+              let r = f n p in
+              if !Cpdfutil.progress then Printf.eprintf ".%!";
+              r
+            end
+          else (p, n, Pdftransform.i_matrix))
           (ilist 1 (length pages))
           pages)
     in
+      if !Cpdfutil.progress then Printf.eprintf "\n%!";
       Pdfpage.change_pages ~matrices:(combine pagenumbers matrices) true pdf pages'
 
 let iter_pages f pdf range =

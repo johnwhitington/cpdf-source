@@ -1,5 +1,7 @@
 (** Utilities *)
 
+val progress : bool ref
+
 (** Remove a dictionary entry. *)
 val remove_dict_entry : Pdf.t -> string -> Pdf.pdfobject option -> unit
 

@@ -2089,6 +2089,9 @@ let specs =
    ("-range",
       Arg.String setrange,
       " Explicitly add a range");
+   ("-progress",
+      Arg.Unit (fun () -> set Cpdfutil.progress),
+      " Show progress");
    ("-collate",
       Arg.Unit (fun () -> args.collate <- 1),
       " Collate ranges when merging");
@@ -3833,6 +3836,8 @@ let write_images device res quality boxname annots antialias downsample spec pdf
 let go () =
   check_bookmarks_mistake ();
   check_clashing_output_name ();
+  if !Cpdfutil.progress then
+     begin match args.op with None -> () | Some op -> Printf.eprintf "*** Operation %s\n%!" (string_of_op op) end;
   match args.op with
   | Some Version -> print_version ()
   | None | Some Merge ->

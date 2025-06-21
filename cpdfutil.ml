@@ -1,5 +1,7 @@
 open Pdfutil
 
+let progress = ref false
+
 let rec dict_entry_single_object f pdf = function
   | (Pdf.Dictionary d) -> f (Pdf.recurse_dict (dict_entry_single_object f pdf) d)
   | (Pdf.Stream {contents = (Pdf.Dictionary dict, data)}) ->
