@@ -3178,6 +3178,7 @@ let rec get_single_pdf ?(decrypt=true) ?(fail=false) op read_lazy =
   in
   match args.inputs with
   | (InFile inname, x, u, o, y, revision) as input::more ->
+      Cpdfutil.progress_line (Printf.sprintf "<<< Reading %s" inname);
       if args.squeeze then
         Printf.printf "Initial file size is %i bytes\n" (filesize inname);
       let pdf =
@@ -3202,6 +3203,7 @@ let rec get_single_pdf ?(decrypt=true) ?(fail=false) op read_lazy =
         args.was_encrypted <- Pdfcrypt.is_encrypted pdf;
         if decrypt then decrypt_if_necessary input op pdf else pdf
   | (StdIn, x, u, o, y, revision) as input::more ->
+      Cpdfutil.progress_line (Printf.sprintf "<<< Reading file from stdin");
       let pdf =
         try pdf_of_stdin ?revision u o with
           StdInBytes b ->
@@ -3433,6 +3435,7 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
     | NoOutputSpecified ->
         output_pdfs =| pdf
     | File outname ->
+        Cpdfutil.progress_line (Printf.sprintf ">>> Writing %s" outname);
         begin match encryption with
           None ->
             if not is_decompress then
@@ -3446,6 +3449,7 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
             really_write_pdf ~encryption ~is_decompress mk_id pdf outname
         end
     | Stdout ->
+        Cpdfutil.progress_line (Printf.sprintf ">>> Writing to stdout");
         let temp = Filename.temp_file "cpdfstdout" ".pdf" in
           begin match encryption with
             None -> 
@@ -3836,8 +3840,7 @@ let write_images device res quality boxname annots antialias downsample spec pdf
 let go () =
   check_bookmarks_mistake ();
   check_clashing_output_name ();
-  if !Cpdfutil.progress then
-     begin match args.op with None -> () | Some op -> Printf.eprintf "*** Operation %s\n%!" (string_of_op op) end;
+  begin match args.op with None -> () | Some op -> Cpdfutil.progress_line (Printf.sprintf "*** Operation %s" (string_of_op op)) end;
   match args.op with
   | Some Version -> print_version ()
   | None | Some Merge ->
