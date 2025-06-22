@@ -53,13 +53,17 @@ let remove_all_text range pdf =
     let pages' = ref [] in
       iter2 
         (fun p pagenum ->
+          Cpdfutil.progress_page pagenum;
           let p', pdf' =
             if mem pagenum range
               then remove_all_text_page !pdf p
               else p, !pdf
           in
+            Cpdfutil.progress_endpage ();
             pdf := pdf';
             pages' =| p')
         pages
         pagenums;
-      Pdfpage.change_pages true !pdf (rev !pages')
+      let r = Pdfpage.change_pages true !pdf (rev !pages') in
+        Cpdfutil.progress_done ();
+        r

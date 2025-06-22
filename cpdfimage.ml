@@ -183,6 +183,7 @@ let extract_images ?(raw=false) ?path_to_p2p ?path_to_im encoding dedup dedup_pe
       let serial = ref 0 in
         iter2
           (fun page pnum ->
+             Cpdfutil.progress_page pnum;
              if dedup_per_page then written := [];
              let xobjects =
                match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
@@ -195,9 +196,11 @@ let extract_images ?(raw=false) ?path_to_p2p ?path_to_im encoding dedup dedup_pe
                  written := (option_map (function Pdf.Indirect n -> Some n | _ -> None) images) @ !written;
                let forms = keep (fun o -> Pdf.lookup_direct pdf "/Subtype" o = Some (Pdf.Name "/Form")) xobjects in
                  extract_images_inner ~raw ?path_to_p2p ?path_to_im encoding serial pdf page.Pdfpage.resources stem pnum images;
-                 iter (extract_images_form_xobject ~raw ?path_to_p2p ?path_to_im encoding dedup dedup_per_page pdf serial stem pnum) forms)
+                 iter (extract_images_form_xobject ~raw ?path_to_p2p ?path_to_im encoding dedup dedup_per_page pdf serial stem pnum) forms;
+                 Cpdfutil.progress_endpage ())
           pages
-          (indx pages)
+          (indx pages);
+          Cpdfutil.progress_done ()
 
 (* Image resolution *)
 type xobj =
