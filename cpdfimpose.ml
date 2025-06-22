@@ -58,7 +58,7 @@ let make_margin pdf output_mediabox margin tr =
       in
         (Pdftransform.matrix_compose shift (Pdftransform.matrix_compose scale tr))
 
-(* FIXME fixup -center for next release. For now it has been disabled. *)
+(* FIXME fixup -center. For now it has been disabled. *)
 let impose_transforms pdf fit fx fy columns rtl btt center margin mediabox output_mediabox fit_extra_hspace fit_extra_vspace len =
   let width, height =
     match Pdf.parse_rectangle pdf mediabox with
@@ -121,6 +121,7 @@ let impose_transforms pdf fit fx fy columns rtl btt center margin mediabox outpu
 let impose_pages fit x y columns rtl btt center margin output_mediabox fast fit_extra_hspace fit_extra_vspace pdf = function
   | [] -> assert false
   | (h::_) as pages ->
+     Cpdfutil.progress_line_no_end (Printf.sprintf "Imposing %i pages..." (length pages));
      let transforms = 
        impose_transforms
          pdf fit x y columns rtl btt center margin h.Pdfpage.mediabox
@@ -192,6 +193,8 @@ let add_border linewidth ~fast pdf =
       false false (ilist 1 (Pdfpage.endpage pdf)) pdf
 
 let impose ~process_struct_tree ~x ~y ~fit ~columns ~rtl ~btt ~center ~margin ~spacing ~linewidth ~fast pdf =
+  let progress = !Cpdfutil.progress in
+  clear Cpdfutil.progress;
   let pdf = if process_struct_tree then Cpdfpage.mark_all_as_artifact pdf else pdf in
   let endpage = Pdfpage.endpage pdf in
   let pagenums = ilist 1 endpage in
@@ -231,18 +234,22 @@ let impose ~process_struct_tree ~x ~y ~fit ~columns ~rtl ~btt ~center ~margin ~s
       else if y = 0.0 then Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real (w +. m2); Pdf.Real (h *. float_of_int endpage +. m2)]
       else Pdf.Array [Pdf.Real 0.; Pdf.Real 0.; Pdf.Real (w *. x +. m2); Pdf.Real (h *. y +. m2)]
   in
+  Cpdfutil.progress := progress;
   let pages = Pdfpage.pages_of_pagetree pdf in
   let pagesets = splitinto n pages in
   let renumbered = map (Pdfpage.renumber_pages pdf) pagesets in
   let pages =
      map
-       (impose_pages fit (float_of_int ix) (float_of_int iy) columns rtl btt
-        center margin mediabox' fast fit_extra_hspace fit_extra_vspace pdf)
+       (impose_pages fit (float_of_int ix) (float_of_int iy) columns rtl btt center margin mediabox' fast fit_extra_hspace fit_extra_vspace pdf)
        renumbered
   in
+  clear Cpdfutil.progress;
   let changes = map (fun x -> (x, (x + (n - 1)) / n)) pagenums in
   let pdf = Pdfpage.change_pages ~changes true pdf pages in
-  if fit then pdf else Cpdfpage.shift_pdf ~fast (many (margin, margin) (length pages)) pdf (ilist 1 (Pdfpage.endpage pdf))
+  let r = if fit then pdf else Cpdfpage.shift_pdf ~fast (many (margin, margin) (length pages)) pdf (ilist 1 (Pdfpage.endpage pdf)) in
+  Cpdfutil.progress := progress;
+  Cpdfutil.progress_line "";
+  r
 
 (* Legacy -twoup-stack. Impose 2x1 on a page twice the size then rotate. *)
 let twoup_stack ~process_struct_tree fast pdf =
@@ -252,10 +259,15 @@ let twoup_stack ~process_struct_tree fast pdf =
       ~margin:0. ~spacing:0. ~linewidth:0. ~fast pdf
   in
    let all = ilist 1 (Pdfpage.endpage pdf) in
-    Cpdfpage.upright ~fast all (Cpdfpage.rotate_pdf ~-90 pdf all)
+   let progress = !Cpdfutil.progress in
+     clear Cpdfutil.progress;
+     let r = Cpdfpage.upright ~fast all (Cpdfpage.rotate_pdf ~-90 pdf all) in
+       Cpdfutil.progress := progress;
+       r
 
 (* Legacy -two-up. Rotate the pages and shrink them so as to fit 2x1 on a page the same size. *)
 let twoup ~process_struct_tree fast pdf =
+  let progress = !Cpdfutil.progress in
   let firstpage = hd (Pdfpage.pages_of_pagetree pdf) in
   let width, height =
     match Pdf.parse_rectangle pdf firstpage.Pdfpage.mediabox with
@@ -269,13 +281,18 @@ let twoup ~process_struct_tree fast pdf =
       in
         let endpage = Pdfpage.endpage pdf in
         let all = ilist 1 endpage in
+        clear Cpdfutil.progress;
         let pdf = Cpdfpage.scale_pdf ~fast (many (sc, sc) endpage) pdf all in
+        Cpdfutil.progress := progress;
         let pdf =
           impose
             ~process_struct_tree ~x:2. ~y:1. ~fit:false ~columns:false ~rtl:false ~btt:false ~center:true
             ~margin:0. ~spacing:0. ~linewidth:0. ~fast pdf
         in
+        clear Cpdfutil.progress; 
         let endpage = Pdfpage.endpage pdf in
         let all = ilist 1 endpage in
         let pdf = Cpdfpage.upright all (Cpdfpage.rotate_pdf ~-90 pdf all) in
-          Cpdfpage.scale_to_fit_pdf ~fast Cpdfposition.Diagonal 1. (many (width, height) endpage) () pdf all
+        let r =Cpdfpage.scale_to_fit_pdf ~fast Cpdfposition.Diagonal 1. (many (width, height) endpage) () pdf all in
+          Cpdfutil.progress := progress;
+          r

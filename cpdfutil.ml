@@ -5,6 +5,9 @@ let progress = ref false
 let progress_line s =
   if !progress then Printf.eprintf "%s\n%!" s
 
+let progress_line_no_end s =
+  if !progress then Printf.eprintf "%s%!" s
+
 let progress_page n =
   if !progress then Printf.eprintf "%i%!" n
 

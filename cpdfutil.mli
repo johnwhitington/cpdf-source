@@ -2,6 +2,7 @@
 
 val progress : bool ref
 val progress_line : string -> unit
+val progress_line_no_end : string -> unit
 val progress_page : int -> unit
 val progress_endpage : unit -> unit
 val progress_done : unit -> unit
