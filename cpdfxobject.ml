@@ -60,6 +60,7 @@ let stamp_as_xobject pdf range over =
       | [] -> error "empty PDF"
       | h::_ -> Pdfpage.change_pages ~changes:[(1, 1)] true over [h]
     in
+      Cpdfutil.progress_line "Merging PDFs...";
       let merged =
         Pdfmerge.merge_pdfs
           false false ["a"; "b"] [pdf; over_firstpage_pdf] [pageseqs; [1]]

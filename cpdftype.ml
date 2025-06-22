@@ -254,9 +254,11 @@ let typeset ~process_struct_tree lmargin rmargin tmargin bmargin papersize pdf i
   Hashtbl.clear width_table_cache;
   let debug = false in
   if debug then (print_endline "***input:\n\n"; print_endline (to_string i));
+  Cpdfutil.progress_line "Layout...";
   let i = number_tags 0 i in
   let i = layout lmargin rmargin papersize i in
   if debug then (print_endline "***after layout:\n\n"; print_endline (to_string i));
+  Cpdfutil.progress_line "Paginate...";
   let i = paginate tmargin bmargin papersize i in
   if debug then (print_endline "***after pagination:\n\n"; print_endline (to_string i));
   let height = Pdfunits.points (Pdfpaper.height papersize) (Pdfpaper.unit papersize) in
@@ -360,6 +362,7 @@ let typeset ~process_struct_tree lmargin rmargin tmargin bmargin papersize pdf i
        ops := Pdfops.Op_BDC ("/" ^ s, Pdf.Dictionary [("/MCID", Pdf.Integer (mcid ()))])::!ops
    | EndTag -> ops := Pdfops.Op_EMC::!ops
   in
+    Cpdfutil.progress_line "Typeset...";
     iter typeset_element i;
     write_page ();
     (rev !pages, rev !tagsout)
