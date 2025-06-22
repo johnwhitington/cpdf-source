@@ -606,11 +606,14 @@ let center_to_fit sxsylist pdf range =
         (Pdfpage.pages_of_pagetree pdf)
   in
     let list4 = map (fun (x, y) -> (0., 0., x, y)) sxsylist in
+    let progress = !Cpdfutil.progress in
+    clear Cpdfutil.progress;
     let pdf = set_mediabox list4 pdf range in
     let pdf = crop_pdf list4 pdf range in
     let pdf = remove_bleed_pdf pdf range in
     let pdf = remove_art_pdf pdf range in
     let pdf = remove_bleed_pdf pdf range in
+      Cpdfutil.progress := progress;
       shift_boxes dxdylist pdf range
   
 (* Scale to fit page of size x * y *)
@@ -880,10 +883,11 @@ let stamp ~process_struct_tree relative_to_cropbox position topline midline fast
                 let new_pages =
                   map2
                     (fun pageseq under_page ->
-                      do_stamp relative_to_cropbox fast position topline midline scale_to_fit isover merged
-                      (if mem pageseq range then over_page else
-                        Pdfpage.blankpage Pdfpaper.a4)
-                      under_page over)
+                      Cpdfutil.progress_page pageseq;
+                      let r = do_stamp relative_to_cropbox fast position topline midline scale_to_fit isover merged
+                      (if mem pageseq range then over_page else Pdfpage.blankpage Pdfpaper.a4) under_page over
+                      in
+                      Cpdfutil.progress_endpage (); r)
                     pageseqs
                     under_pages 
                 in
@@ -896,6 +900,7 @@ let stamp ~process_struct_tree relative_to_cropbox position topline midline fast
                     let new_refnumbers = Pdf.page_reference_numbers changed in
                     let changetable = hashtable_of_dictionary (combine marks_refnumbers new_refnumbers) in
                     let new_marks = map (Cpdfbookmarks.change_bookmark changetable) marks in
+                      Cpdfutil.progress_done ();
                       Pdfmarks.add_bookmarks new_marks changed
 
 (* Combine pages from two PDFs. *)
@@ -940,6 +945,7 @@ let combine_pages ~process_struct_tree fast under over scaletofit over_is_under 
     else
       let pageseqs_under = ilist 1 (Pdfpage.endpage under) in
       let pageseqs_over = ilist 1 (Pdfpage.endpage over) in
+      Cpdfutil.progress_line "Merging PDFs...";
       let merged =
         Pdfmerge.merge_pdfs
           false false ["a"; "b"] [under; over] [pageseqs_under; pageseqs_over]
@@ -949,11 +955,15 @@ let combine_pages ~process_struct_tree fast under over scaletofit over_is_under 
           cleave (Pdfpage.pages_of_pagetree merged) under_length
         in
           let new_pages =
-            map2
-              (fun o u ->
-                 do_stamp
-                   false fast (BottomLeft (0., 0.)) false false scaletofit (not over_is_under) merged o u over)
-              over_pages under_pages
+            map3
+              (fun o u n ->
+                 Cpdfutil.progress_page n;
+                 let r =
+                   do_stamp false fast (BottomLeft (0., 0.)) false false scaletofit (not over_is_under) merged o u over
+                 in
+                   Cpdfutil.progress_endpage ();
+                   r)
+              over_pages under_pages (indx over_pages)
           in
             (* Build the changes. 123456 -> 123123 *)
             let changes =
@@ -963,6 +973,7 @@ let combine_pages ~process_struct_tree fast under over scaletofit over_is_under 
               let changed = Pdfpage.change_pages ~changes true merged new_pages in
                 let r = Pdfmarks.add_bookmarks (marks_under @ marks_over) changed in
                    debug_pdf r "final.pdf";
+                   Cpdfutil.progress_done ();
                    r
 
 

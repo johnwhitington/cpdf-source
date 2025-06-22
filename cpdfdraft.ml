@@ -151,13 +151,16 @@ let draft onlyremove boxes range pdf =
       iter2 
        (fun p pagenum ->
          let p', pdf' =
+           Cpdfutil.progress_page pagenum;
            if mem pagenum range
              then remove_images_page onlyremove boxes !pdf p
              else p, !pdf
          in
+           Cpdfutil.progress_endpage ();
            pdf := pdf';
            pages' =| p')
        pages
        pagenums;
+      Cpdfutil.progress_done ();
       Pdfpage.change_pages true !pdf (rev !pages')
 

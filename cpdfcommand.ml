@@ -3261,6 +3261,7 @@ let rec get_pdf_from_input_kind ?(read_lazy=false) ?(decrypt=true) ?(fail=false)
   match ik with
   | AlreadyInMemory (pdf, _) -> pdf
   | InFile s ->
+      Cpdfutil.progress_line (Printf.sprintf "<<< Reading %s" s);
       if args.squeeze then
         begin
           let size = filesize s in
@@ -3297,6 +3298,7 @@ let rec get_pdf_from_input_kind ?(read_lazy=false) ?(decrypt=true) ?(fail=false)
               Hashtbl.add filenames s pdf; pdf
       end
   | StdIn ->
+      Cpdfutil.progress_line (Printf.sprintf "<<< Reading file from stdin");
       let pdf =
         try pdf_of_stdin ?revision u o with
           StdInBytes b ->
@@ -3497,6 +3499,7 @@ let fast_write_split_pdfs
              in
                Pdf.remove_unreferenced pdf;
                if sq then Cpdfsqueeze.squeeze ~pagedata:args.squeeze_pagedata ?logto:!logto pdf;
+               Cpdfutil.progress_line (Printf.sprintf ">>> Writing %s" name);
                really_write_pdf ~encryption:enc (not (enc = None)) pdf name)
       (indx pagenums)
       pagenums
