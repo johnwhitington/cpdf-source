@@ -611,7 +611,9 @@ let draw_single ~struct_tree ~fast ~underneath ~filename ~bates ~batespad range 
       (fun n p ->
          if mem n range
            then
-             (match ops with
+             (let () = Cpdfutil.progress_page n in
+              let () = Cpdfutil.progress_endpage () in
+              match ops with
               | Some x -> x
               | None -> ops_of_drawops struct_tree false pdf endpage filename bates batespad n p drawops)
            else [])
@@ -629,6 +631,7 @@ let draw_single ~struct_tree ~fast ~underneath ~filename ~bates ~batespad range 
       (Pdfpage.pages_of_pagetree pdf)
       ss
   in
+    Cpdfutil.progress_done ();
     Pdfpage.change_pages true pdf pages
 
 (* Do a dry run of all the drawing to collect subset information. *)
@@ -794,6 +797,7 @@ let draw ~struct_tree ~fast ~underneath ~filename ~bates ~batespad range pdf dra
   (* Double up a trailing NewPage so it actually does something... *)
   let drawops = match rev drawops with NewPage::t -> rev (NewPage::NewPage::t) | _ -> drawops in
   let chunks = ref (split_around (eq NewPage) drawops) in
+  Cpdfutil.progress_line "Drawing...";
   dryrun ~struct_tree ~filename ~bates ~batespad !range !pdf !chunks;
   mcpage := 0;
     while !chunks <> [] do
@@ -808,11 +812,13 @@ let draw ~struct_tree ~fast ~underneath ~filename ~bates ~batespad range pdf dra
            add a blank page at the end of the document. *)
         let endpage = Pdfpage.endpage !pdf in
           match !range with
-          | [x] when endpage > x -> range := [x + 1]
+          | [x] when endpage > x ->
+              range := [x + 1]
           | _ ->
+              Cpdfutil.progress_line "New page...";
               pdf := Cpdfpad.padafter [endpage] !pdf;
               range := [endpage + 1]
-      end
+      end;
     done;
     if struct_tree then write_structure_tree !pdf (make_structure_tree !pdf (rev !structdata));
     !pdf
