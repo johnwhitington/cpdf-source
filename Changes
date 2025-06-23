@@ -5,6 +5,7 @@ New features:
 o CCITT and CCITTG4 encoders in -process-images
 o Detect and remove JavaScript
 o Show progress on long files
+o Select only such pages as are annotated
 
 Extended features:
 

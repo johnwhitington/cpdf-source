@@ -2,6 +2,44 @@
 open Pdfutil
 open Cpdferror
 
+let rec subtype_of_string = function
+  | "Text" -> Pdfannot.Text
+  | "Link" -> Pdfannot.Link
+  | "FreeText" -> Pdfannot.FreeText
+  | "Line" -> Pdfannot.Line
+  | "Square" -> Pdfannot.Square
+  | "Circle" -> Pdfannot.Circle
+  | "Polygon" -> Pdfannot.Polygon
+  | "PolyLine" -> Pdfannot.PolyLine
+  | "Highlight" -> Pdfannot.Highlight
+  | "Underline" -> Pdfannot.Underline
+  | "Squiggly" -> Pdfannot.Squiggly
+  | "StrikeOut" -> Pdfannot.StrikeOut
+  | "Stamp" -> Pdfannot.Stamp
+  | "Caret" -> Pdfannot.Caret
+  | "Ink" -> Pdfannot.Ink
+  | "FileAttachment" -> Pdfannot.FileAttachment
+  | "Sound" -> Pdfannot.Sound
+  | "Movie" -> Pdfannot.Movie
+  | "Widget" -> Pdfannot.Widget
+  | "Screen" -> Pdfannot.Screen
+  | "PrinterMark" -> Pdfannot.PrinterMark
+  | "TrapNet" -> Pdfannot.TrapNet
+  | "Watermark" -> Pdfannot.Watermark
+  | "3D" -> Pdfannot.ThreeDee
+  | s ->
+      match explode s with
+      | 'P'::'o'::'p'::'u'::'p'::':'::r ->
+          Pdfannot.Popup
+            {subtype = subtype_of_string (implode r);
+             annot_contents = None;
+             subject = None;
+             rectangle = (0., 0., 0., 0.);
+             border = {width = 0.; vradius = 0.; hradius = 0.; style = Pdfannot.NoStyle; dasharray = [||]};
+             colour = None;
+             annotrest = Pdf.Null}
+      | _ -> Pdfannot.Unknown s
+
 (* List annotations, simple old style. *)
 let get_annotation_string encoding pdf annot =
   match Pdf.lookup_direct pdf "/Contents" annot with

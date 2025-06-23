@@ -42,6 +42,15 @@ let select_portrait = select_dimensions ( < )
 
 let select_landscape = select_dimensions ( > )
 
+let select_annotated pdf range =
+ let pages = Pdfpage.pages_of_pagetree pdf in
+ let num_annots page =
+   match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
+   | Some (Pdf.Array a) -> length a
+   | _ -> 0
+ in
+   option_map (fun n -> if num_annots (select n pages) > 0 then Some n else None) range
+
 let rec mk_numbers pdf endpage lexemes =
   match lexemes with
   | [Pdfgenlex.LexInt n] -> [n]
@@ -64,6 +73,8 @@ let rec mk_numbers pdf endpage lexemes =
        select_portrait pdf (ilist 1 endpage)
   | [Pdfgenlex.LexName "landscape"] ->
        select_landscape pdf (ilist 1 endpage)
+  | [Pdfgenlex.LexName "annotated"] ->
+       select_annotated pdf (ilist 1 endpage)
   | [Pdfgenlex.LexName "odd"] ->
        really_drop_evens (ilist 1 endpage)
   | [Pdfgenlex.LexName "all"] ->
