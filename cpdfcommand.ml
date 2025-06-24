@@ -240,7 +240,7 @@ type op =
   | OutputImage
   | ContainsJavaScript
   | RemoveJavaScript
-  | Portfolio of string
+  | Portfolio
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -404,7 +404,7 @@ let string_of_op = function
   | ReplaceForm _ -> "ReplaceForm"
   | ContainsJavaScript -> "ContainsJavaScript"
   | RemoveJavaScript -> "RemoveJavaScript"
-  | Portfolio _ -> "Portfolio"
+  | Portfolio -> "Portfolio"
 
 (* Inputs: filename, pagespec. *)
 type input_kind = 
@@ -993,7 +993,7 @@ let banned banlist = function
   | Decrypt | Encrypt | CombinePages _ -> true (* Never allowed *)
   | AddBookmarks _ | PadBefore | PadAfter | PadEvery _ | PadMultiple _ | PadMultipleBefore _
   | Merge | Split | SplitOnBookmarks _ | SplitMax _ | Spray | RotateContents _ | Rotate _
-  | Rotateby _ | Upright | VFlip | HFlip | Impose _ | Chop _ | ChopHV _ | Redact | Portfolio _ ->
+  | Rotateby _ | Upright | VFlip | HFlip | Impose _ | Chop _ | ChopHV _ | Redact | Portfolio ->
       mem Pdfcrypt.NoAssemble banlist
   | TwoUp | TwoUpStack | RemoveBookmarks | AddRectangle | RemoveText|
     Draft | Shift | ShiftBoxes | Scale | ScaleToFit|Stretch|CenterToFit|RemoveAttachedFiles|
@@ -3087,7 +3087,7 @@ let specs =
    ("-mm", Arg.Unit (fun () -> args.output_unit <- Pdfunits.Millimetre), " Output dimensions in millimetres");
    ("-remove-javascript", Arg.Unit (fun () -> setop RemoveJavaScript ()), " Remove JavaScript");
    ("-contains-javascript", Arg.Unit (fun () -> setop ContainsJavaScript ()), " Detect if a PDF contains JavaScript");
-   ("-portfolio", Arg.String (fun s -> setop (Portfolio s) ()), " Build a PDF portfolio");
+   ("-portfolio", Arg.Unit (fun () -> setop Portfolio ()), " Build a PDF portfolio");
    ("-pf", Arg.String (fun s -> args.portfolio_files <- s::args.portfolio_files), " Add a portfolio file");
    (* These items are undocumented *)
    ("-debug", Arg.Unit setdebug, "");
@@ -3845,6 +3845,8 @@ let write_images device res quality boxname annots antialias downsample spec pdf
     (Pdfpage.pages_of_pagetree pdf)
     (ilist 1 endpage);
   Sys.remove tmppdf
+
+let portfolio pdf filenames = ()
 
 (* Main function *)
 let go () =
@@ -5020,8 +5022,10 @@ let go () =
   | Some ContainsJavaScript ->
       let pdf = get_single_pdf args.op true in
         print_string (Printf.sprintf "%b" (Cpdfjs.contains_javascript pdf))
-  | Some (Portfolio _) ->
-      flprint "Making portfolio...\n"
+  | Some Portfolio ->
+      let pdf = get_single_pdf args.op true in
+        portfolio pdf (rev args.portfolio_files);
+        write_pdf false pdf
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)
