@@ -240,6 +240,7 @@ type op =
   | OutputImage
   | ContainsJavaScript
   | RemoveJavaScript
+  | Portfolio of string
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -403,6 +404,7 @@ let string_of_op = function
   | ReplaceForm _ -> "ReplaceForm"
   | ContainsJavaScript -> "ContainsJavaScript"
   | RemoveJavaScript -> "RemoveJavaScript"
+  | Portfolio _ -> "Portfolio"
 
 (* Inputs: filename, pagespec. *)
 type input_kind = 
@@ -588,7 +590,8 @@ type args =
    mutable output_unit : Pdfunits.t;
    mutable dot_leader : bool;
    mutable preserve_actions : bool;
-   mutable decompress_just_content : bool}
+   mutable decompress_just_content : bool;
+   mutable portfolio_files : string list}
 
 let args =
   {op = None;
@@ -740,7 +743,8 @@ let args =
    output_unit = Pdfunits.PdfPoint;
    dot_leader = false;
    preserve_actions = false;
-   decompress_just_content = false}
+   decompress_just_content = false;
+   portfolio_files = []}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -878,7 +882,8 @@ let reset_arguments () =
   args.output_unit <- Pdfunits.PdfPoint;
   args.dot_leader <- false;
   args.preserve_actions <- false;
-  args.decompress_just_content <- false
+  args.decompress_just_content <- false;
+  args.portfolio_files <- []
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -988,7 +993,7 @@ let banned banlist = function
   | Decrypt | Encrypt | CombinePages _ -> true (* Never allowed *)
   | AddBookmarks _ | PadBefore | PadAfter | PadEvery _ | PadMultiple _ | PadMultipleBefore _
   | Merge | Split | SplitOnBookmarks _ | SplitMax _ | Spray | RotateContents _ | Rotate _
-  | Rotateby _ | Upright | VFlip | HFlip | Impose _ | Chop _ | ChopHV _ | Redact ->
+  | Rotateby _ | Upright | VFlip | HFlip | Impose _ | Chop _ | ChopHV _ | Redact | Portfolio _ ->
       mem Pdfcrypt.NoAssemble banlist
   | TwoUp | TwoUpStack | RemoveBookmarks | AddRectangle | RemoveText|
     Draft | Shift | ShiftBoxes | Scale | ScaleToFit|Stretch|CenterToFit|RemoveAttachedFiles|
@@ -3082,6 +3087,8 @@ let specs =
    ("-mm", Arg.Unit (fun () -> args.output_unit <- Pdfunits.Millimetre), " Output dimensions in millimetres");
    ("-remove-javascript", Arg.Unit (fun () -> setop RemoveJavaScript ()), " Remove JavaScript");
    ("-contains-javascript", Arg.Unit (fun () -> setop ContainsJavaScript ()), " Detect if a PDF contains JavaScript");
+   ("-portfolio", Arg.String (fun s -> setop (Portfolio s) ()), " Build a PDF portfolio");
+   ("-pf", Arg.String (fun s -> args.portfolio_files <- s::args.portfolio_files), " Add a portfolio file");
    (* These items are undocumented *)
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit (fun () -> args.debugcrypt <- true), "");
@@ -5013,6 +5020,8 @@ let go () =
   | Some ContainsJavaScript ->
       let pdf = get_single_pdf args.op true in
         print_string (Printf.sprintf "%b" (Cpdfjs.contains_javascript pdf))
+  | Some (Portfolio _) ->
+      flprint "Making portfolio...\n"
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)
