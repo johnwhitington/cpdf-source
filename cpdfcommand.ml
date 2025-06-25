@@ -3846,7 +3846,29 @@ let write_images device res quality boxname annots antialias downsample spec pdf
     (ilist 1 endpage);
   Sys.remove tmppdf
 
-let portfolio pdf filenames = ()
+(* Assumes no duplicate file names. *)
+let portfolio pdf filenames =
+  let embedded_files =
+    map
+      (fun filename ->
+        let contents =
+          let bytes = bytes_of_string (contents_of_file filename) in
+          Pdf.addobj pdf (Pdf.Stream {contents = Pdf.Dictionary [("/Length", Pdf.Integer (bytes_size bytes))], Pdf.Got bytes})
+        in
+          Pdf.Indirect (Pdf.addobj pdf (Pdf.Dictionary
+            [("/Type", Pdf.Name "/FileSpec");
+             ("/Desc", Pdf.String filename);
+             ("/F", Pdf.String filename);
+             ("/UF", Pdf.String filename);
+             ("/AFRelationship", Pdf.Name "/Unspecified");
+             ("/EF", Pdf.Dictionary [("/F", Pdf.Indirect contents); ("/UF", Pdf.Indirect contents)])])))
+      filenames
+  in
+  let name_tree =
+    Pdf.Indirect (Pdf.addobj pdf (Pdftree.build_name_tree false pdf (combine filenames embedded_files)))
+  in
+    Pdf.replace_chain pdf ["/Root"; "/Names"; "/EmbeddedFiles"] name_tree;
+    Pdf.replace_chain pdf ["/Root"; "/Collection"] (Pdf.Dictionary [("/View", Pdf.Name "/T")])
 
 (* Main function *)
 let go () =
