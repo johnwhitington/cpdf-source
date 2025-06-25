@@ -591,7 +591,7 @@ type args =
    mutable dot_leader : bool;
    mutable preserve_actions : bool;
    mutable decompress_just_content : bool;
-   mutable portfolio_files : string list}
+   mutable portfolio_files : Cpdfportfolio.entry list}
 
 let args =
   {op = None;
@@ -3088,7 +3088,7 @@ let specs =
    ("-remove-javascript", Arg.Unit (fun () -> setop RemoveJavaScript ()), " Remove JavaScript");
    ("-contains-javascript", Arg.Unit (fun () -> setop ContainsJavaScript ()), " Detect if a PDF contains JavaScript");
    ("-portfolio", Arg.Unit (fun () -> setop Portfolio ()), " Build a PDF portfolio");
-   ("-pf", Arg.String (fun s -> args.portfolio_files <- s::args.portfolio_files), " Add a portfolio file");
+   ("-pf", Arg.String (fun s -> args.portfolio_files <- {filename = s; relationship = Pdf.Null; description = ""}::args.portfolio_files), " Add a portfolio file");
    (* These items are undocumented *)
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit (fun () -> args.debugcrypt <- true), "");
@@ -3845,30 +3845,6 @@ let write_images device res quality boxname annots antialias downsample spec pdf
     (Pdfpage.pages_of_pagetree pdf)
     (ilist 1 endpage);
   Sys.remove tmppdf
-
-(* Assumes no duplicate file names. *)
-let portfolio pdf filenames =
-  let embedded_files =
-    map
-      (fun filename ->
-        let contents =
-          let bytes = bytes_of_string (contents_of_file filename) in
-          Pdf.addobj pdf (Pdf.Stream {contents = Pdf.Dictionary [("/Length", Pdf.Integer (bytes_size bytes))], Pdf.Got bytes})
-        in
-          Pdf.Indirect (Pdf.addobj pdf (Pdf.Dictionary
-            [("/Type", Pdf.Name "/FileSpec");
-             ("/Desc", Pdf.String filename);
-             ("/F", Pdf.String filename);
-             ("/UF", Pdf.String filename);
-             ("/AFRelationship", Pdf.Name "/Unspecified");
-             ("/EF", Pdf.Dictionary [("/F", Pdf.Indirect contents); ("/UF", Pdf.Indirect contents)])])))
-      filenames
-  in
-  let name_tree =
-    Pdf.Indirect (Pdf.addobj pdf (Pdftree.build_name_tree false pdf (combine filenames embedded_files)))
-  in
-    Pdf.replace_chain pdf ["/Root"; "/Names"; "/EmbeddedFiles"] name_tree;
-    Pdf.replace_chain pdf ["/Root"; "/Collection"] (Pdf.Dictionary [("/View", Pdf.Name "/T")])
 
 (* Main function *)
 let go () =
@@ -5046,7 +5022,7 @@ let go () =
         print_string (Printf.sprintf "%b" (Cpdfjs.contains_javascript pdf))
   | Some Portfolio ->
       let pdf = get_single_pdf args.op true in
-        portfolio pdf (rev args.portfolio_files);
+        Cpdfportfolio.portfolio pdf (rev args.portfolio_files);
         write_pdf false pdf
 
 (* Advise the user if a combination of command line flags makes little sense,
