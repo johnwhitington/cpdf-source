@@ -4805,13 +4805,16 @@ let go () =
       | Some Cpdfua.PDFUA1 ->
           begin match args.title with None -> error "Provide -title" | _ -> () end;
           let pdf = Cpdfua.create_pdfua1 (unopt args.title) args.createpdf_pagesize args.createpdf_pages in
+            args.create_objstm <- true;
             write_pdf false pdf
       | Some Cpdfua.PDFUA2 ->
           begin match args.title with None -> error "Provide -title" | _ -> () end;
           let pdf = Cpdfua.create_pdfua2 (unopt args.title) args.createpdf_pagesize args.createpdf_pages in
+            args.create_objstm <- true;
             write_pdf false pdf
       | None ->
           let pdf = Cpdfcreate.blank_document_paper args.createpdf_pagesize args.createpdf_pages in
+            args.create_objstm <- true;
             write_pdf false pdf
       end
   | Some RemoveAllText ->
@@ -5024,6 +5027,7 @@ let go () =
         print_string (Printf.sprintf "%b" (Cpdfjs.contains_javascript pdf))
   | Some Portfolio ->
       let pdf = get_single_pdf args.op true in
+        args.create_objstm <- true;
         Cpdfportfolio.portfolio pdf (rev args.portfolio_files);
         write_pdf false pdf
 
