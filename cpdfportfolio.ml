@@ -3,16 +3,20 @@ open Pdfio
 
 type entry =
   {filename : string;
-   relationship : Pdf.pdfobject;
-   description : string}
+   relationship : string option;
+   description : string option}
+
+let process_afrelationship = function
+  | None -> "/Unspecified"
+  | Some x -> "/" ^ x
 
 (* Assumes no duplicate file names. *)
 let portfolio pdf filenames =
   let embedded_files =
     map
-      (fun {filename} ->
-        let basename = Filename.basename filename in
-        let bytes = bytes_of_string (contents_of_file filename) in
+      (fun e ->
+        let basename = Filename.basename e.filename in
+        let bytes = bytes_of_string (contents_of_file e.filename) in
         let contents =
           Pdf.addobj pdf
             (Pdf.Stream {contents = Pdf.Dictionary
@@ -21,10 +25,10 @@ let portfolio pdf filenames =
         in
           Pdf.Indirect (Pdf.addobj pdf (Pdf.Dictionary
             [("/Type", Pdf.Name "/FileSpec");
-             ("/Desc", Pdf.String basename);
+             ("/Desc", Pdf.String (match e.description with Some x -> x | None -> basename));
              ("/F", Pdf.String basename);
              ("/UF", Pdf.String basename);
-                          ("/AFRelationship", Pdf.Name "/Unspecified");
+                          ("/AFRelationship", Pdf.Name (process_afrelationship e.relationship));
              ("/EF", Pdf.Dictionary [("/F", Pdf.Indirect contents); ("/UF", Pdf.Indirect contents)])])))
       filenames
   in

@@ -3088,7 +3088,9 @@ let specs =
    ("-remove-javascript", Arg.Unit (fun () -> setop RemoveJavaScript ()), " Remove JavaScript");
    ("-contains-javascript", Arg.Unit (fun () -> setop ContainsJavaScript ()), " Detect if a PDF contains JavaScript");
    ("-portfolio", Arg.Unit (fun () -> setop Portfolio ()), " Build a PDF portfolio");
-   ("-pf", Arg.String (fun s -> args.portfolio_files <- {filename = s; relationship = Pdf.Null; description = ""}::args.portfolio_files), " Add a portfolio file");
+   ("-pf", Arg.String (fun s -> args.portfolio_files <- {filename = s; relationship = None; description = None}::args.portfolio_files), " Add a portfolio file");
+   ("-pfd", Arg.String (fun s -> match args.portfolio_files with h::t -> args.portfolio_files <- {h with description = Some s}::t | [] -> error "no portfolio file to take description"), " Set portfolio file description");
+   ("-pfr", Arg.String (fun s -> match args.portfolio_files with h::t -> args.portfolio_files <- {h with relationship = Some s}::t | [] -> error "no portfolio file to take relationship"), " Set portfolio file relationship");
    (* These items are undocumented *)
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit (fun () -> args.debugcrypt <- true), "");
