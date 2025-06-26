@@ -3849,7 +3849,7 @@ let write_images device res quality boxname annots antialias downsample spec pdf
   Sys.remove tmppdf
 
 (* Main function *)
-let go () =
+let rec go () =
   check_bookmarks_mistake ();
   check_clashing_output_name ();
   begin match args.op with None -> () | Some op -> Cpdfutil.progress_line (Printf.sprintf "*** Operation %s" (string_of_op op)) end;
@@ -4801,22 +4801,23 @@ let go () =
       let pdf = get_single_pdf args.op false in
         write_pdf false (Cpdfbookmarks.bookmarks_open_to_level n pdf)
   | Some CreatePDF ->
-      begin match args.subformat with
-      | Some Cpdfua.PDFUA1 ->
-          begin match args.title with None -> error "Provide -title" | _ -> () end;
-          let pdf = Cpdfua.create_pdfua1 (unopt args.title) args.createpdf_pagesize args.createpdf_pages in
-            args.create_objstm <- true;
-            write_pdf false pdf
-      | Some Cpdfua.PDFUA2 ->
-          begin match args.title with None -> error "Provide -title" | _ -> () end;
-          let pdf = Cpdfua.create_pdfua2 (unopt args.title) args.createpdf_pagesize args.createpdf_pages in
-            args.create_objstm <- true;
-            write_pdf false pdf
-      | None ->
-          let pdf = Cpdfcreate.blank_document_paper args.createpdf_pagesize args.createpdf_pages in
-            args.create_objstm <- true;
-            write_pdf false pdf
-      end
+      let pdf =
+        begin match args.subformat with
+        | Some Cpdfua.PDFUA1 ->
+            begin match args.title with None -> error "Provide -title" | _ -> () end;
+            Cpdfua.create_pdfua1 (unopt args.title) args.createpdf_pagesize args.createpdf_pages
+        | Some Cpdfua.PDFUA2 ->
+            begin match args.title with None -> error "Provide -title" | _ -> () end;
+            Cpdfua.create_pdfua2 (unopt args.title) args.createpdf_pagesize args.createpdf_pages
+        | None ->
+            Cpdfcreate.blank_document_paper args.createpdf_pagesize args.createpdf_pages
+        end
+      in
+        args.create_objstm <- true;
+        (* To allow cpdf a.pdf AND -create-pdf -o out.pdf i.e put -create-pdf anywhere. *)
+        args.op <- None;
+        args.inputs <- args.inputs @ [(AlreadyInMemory (pdf, "CreatePDF"), "all", "", "", ref false, None)];
+        go ()
   | Some RemoveAllText ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
