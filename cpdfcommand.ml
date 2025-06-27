@@ -3974,7 +3974,7 @@ let rec go () =
       let pdf, inname, input =
         match args.inputs with
         | (InFile inname, _, u, o, _, _) as input::_ ->
-             pdfread_pdf_of_channel_lazy (optstring u) (optstring o) (open_in_bin inname), inname, input
+            pdfread_pdf_of_channel_lazy (optstring u) (optstring o) (open_in_bin inname), inname, input
         | (StdIn, _, u, o, _, _) as input::_ -> pdf_of_stdin u o, "", input
         | (AlreadyInMemory (pdf, _), _, _, _, _, _) as input::_ -> pdf, "", input
         | _ -> raise (Arg.Bad "cpdf: No input specified.\n")
@@ -3990,7 +3990,7 @@ let rec go () =
           let lin = Pdfread.is_linearized (Pdfio.input_of_channel (open_in_bin inname)) in
             if args.format_json then
               json =| ("Linearized", `Bool lin) else Printf.printf "Linearized: %b\n" lin;
-        let objstm = length (list_of_hashtbl pdf.Pdf.objects.Pdf.object_stream_ids) > 0 in
+        let objstm = Hashtbl.length pdf.Pdf.objects.Pdf.object_stream_ids > 0 in
         if args.format_json
           then json =| ("Object streams", `Bool objstm)
           else Printf.printf "Object streams: %b\n" objstm;

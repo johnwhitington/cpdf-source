@@ -21,6 +21,7 @@ Fixes:
 * Sanitizes inputs to prevent command injection attacks
 o Fix PMAXX et al. w.r.t -add-rectangle
 o Allow Float/Int to appear anywhere in CPDFJSON / bookmark JSON
+o Allow -info in the case where objstm reading requires password
 
 * = Supported by a grant from NLnet
 
