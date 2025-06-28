@@ -1,9 +1,5 @@
 open Pdfutil
 
-(* Raised when syntax is ok, but endpage is too low. Caught by validator.
-Caught and reraised as normal failure by parse_pagespec. *)
-exception PageSpecUnknownPage of int
-
 (* Raised when syntax is wrong. Caught and reraised by parse_pagespec and
 validator. *)
 exception PageSpecBadSyntax
@@ -57,11 +53,11 @@ let rec mk_numbers pdf endpage lexemes =
   | [Pdfgenlex.LexName "end"; Pdfgenlex.LexName "-"; Pdfgenlex.LexInt n] ->
       if n <= endpage
         then rev (ilist n endpage)
-        else raise (PageSpecUnknownPage n)
+        else [endpage]
   | [Pdfgenlex.LexInt n; Pdfgenlex.LexName "-"; Pdfgenlex.LexName "end"] ->
       if n <= endpage
         then ilist n endpage
-        else raise (PageSpecUnknownPage n)
+        else [endpage]
   | [Pdfgenlex.LexName "end"; Pdfgenlex.LexName "-"; Pdfgenlex.LexName "end"] ->
        [endpage]
   | [Pdfgenlex.LexName "even"] ->
@@ -189,16 +185,13 @@ let rec parse_pagespec_inner endpage pdf spec =
         with
           e -> raise PageSpecBadSyntax
       in
-         iter
-           (fun n ->
-              if n <= 0 || n > endpage then raise (PageSpecUnknownPage n))
-           numbers;
-         numbers
+        if numbers = [] then Pdfe.log "Warning: empty page range\n";
+        let numbers' = lose (fun n -> n <= 0 || n > endpage) numbers in
+          if length numbers' <> length numbers then Pdfe.log "Warning: page range contains nonexistant pages\n";
+          numbers'
 
 let parse_pagespec pdf spec =
   try parse_pagespec_inner (Pdfpage.endpage pdf) pdf spec with
-  | PageSpecUnknownPage n ->
-     raise (Pdf.PDFError ("Page " ^ string_of_int n ^ " does not exist."))
   | e ->
      raise
        (Pdf.PDFError
@@ -208,29 +201,18 @@ let parse_pagespec pdf spec =
 
 (* To validate a pagespec as being syntactically correct without the PDF in
 question. This is nasty, since the parser above includes checking based on the
-endpage of the PDF (which we don't have). Pass 100 as the endpage, doubling on
-page range exception, bailing out above 500000. *)
+endpage of the PDF (which we don't have). Pass 500000 as the endpage. *)
 let rec validate_pagespec_inner n spec =
   try
     ignore (parse_pagespec_inner n (Pdfpage.minimum_valid_pdf ()) spec); true
   with
-  | PageSpecUnknownPage _ -> if n < 500000 then validate_pagespec_inner (n * 2) spec else false
   | PageSpecBadSyntax | _ -> false
 
 let validate_pagespec spec =
-  validate_pagespec_inner 100 spec
+  validate_pagespec_inner 500000 spec
 
-let rec parse_pagespec_without_pdf_inner n spec =
-  try
-    parse_pagespec_inner n (Pdfpage.minimum_valid_pdf ()) spec
-  with
-    PageSpecUnknownPage _ ->
-      if n < 500000
-        then parse_pagespec_without_pdf_inner (n * 2) spec
-        else raise (Pdf.PDFError "PageSpecUnknownPage")
-
-let parse_pagespec_without_pdf spec =
-  parse_pagespec_without_pdf_inner 100 spec
+let rec parse_pagespec_without_pdf spec =
+  parse_pagespec_inner 500000 (Pdfpage.minimum_valid_pdf ()) spec
 
 (* Convert an integer list representing a set to a page specification, in order. *)
 let string_of_pagespec pdf = function
