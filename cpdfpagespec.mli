@@ -12,6 +12,7 @@
 {- The words portrait and landscape can be used in place of or at the end of a page range to restrict to just those pages which are portrait or landscape. Note that the meaning of portrait and landscape does not take account of any viewing rotation in place. A page with equal width and height is considered neither portrait nor landscape.}
 {- The word reverse is the same as end-1.}
 {- The word all is the same as 1-end.}
+{- The word empty is the empty range, containing no pages.}
 {- A range must contain no spaces.}
 {- A tilde (~) defines a page number counting from the end of the document rather than the beginning. Page ~1 is the last page, ~2 the penultimate page etc.}
 {- The word "annotated" refers to only such pages as contain annotations. Restrain with, e.g. "annotated:Highlight".}

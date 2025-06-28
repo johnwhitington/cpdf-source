@@ -4,9 +4,6 @@ open Pdfutil
 Caught and reraised as normal failure by parse_pagespec. *)
 exception PageSpecUnknownPage of int
 
-(* There would be no pages *)
-exception PageSpecWouldBeNoPages
-
 (* Raised when syntax is wrong. Caught and reraised by parse_pagespec and
 validator. *)
 exception PageSpecBadSyntax
@@ -81,6 +78,8 @@ let rec mk_numbers pdf endpage lexemes =
        ilist 1 endpage
   | [Pdfgenlex.LexName "reverse"] ->
        rev (ilist 1 endpage)
+  | [Pdfgenlex.LexName "empty"] ->
+       []
   | toks ->
       let ranges = splitat_commas toks in
         if ranges = [toks] then raise PageSpecBadSyntax else
@@ -190,7 +189,6 @@ let rec parse_pagespec_inner endpage pdf spec =
         with
           e -> raise PageSpecBadSyntax
       in
-       if numbers = [] then raise PageSpecWouldBeNoPages else
          iter
            (fun n ->
               if n <= 0 || n > endpage then raise (PageSpecUnknownPage n))
@@ -201,8 +199,6 @@ let parse_pagespec pdf spec =
   try parse_pagespec_inner (Pdfpage.endpage pdf) pdf spec with
   | PageSpecUnknownPage n ->
      raise (Pdf.PDFError ("Page " ^ string_of_int n ^ " does not exist."))
-  | PageSpecWouldBeNoPages ->
-     raise (Pdf.PDFError ("Page range specifies no pages"))
   | e ->
      raise
        (Pdf.PDFError
@@ -213,7 +209,7 @@ let parse_pagespec pdf spec =
 (* To validate a pagespec as being syntactically correct without the PDF in
 question. This is nasty, since the parser above includes checking based on the
 endpage of the PDF (which we don't have). Pass 100 as the endpage, doubling on
-page range exception, bailng out above 500000. *)
+page range exception, bailing out above 500000. *)
 let rec validate_pagespec_inner n spec =
   try
     ignore (parse_pagespec_inner n (Pdfpage.minimum_valid_pdf ()) spec); true
