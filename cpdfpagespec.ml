@@ -199,18 +199,6 @@ let parse_pagespec pdf spec =
           ". Raw error was " ^ Printexc.to_string e ^
           ". Last page was " ^ string_of_int (Pdfpage.endpage pdf)))
 
-(* To validate a pagespec as being syntactically correct without the PDF in
-question. This is nasty, since the parser above includes checking based on the
-endpage of the PDF (which we don't have). Pass 500000 as the endpage. *)
-let rec validate_pagespec_inner n spec =
-  try
-    ignore (parse_pagespec_inner n (Pdfpage.minimum_valid_pdf ()) spec); true
-  with
-  | PageSpecBadSyntax | _ -> false
-
-let validate_pagespec spec =
-  validate_pagespec_inner 500000 spec
-
 let rec parse_pagespec_without_pdf spec =
   parse_pagespec_inner 500000 (Pdfpage.minimum_valid_pdf ()) spec
 

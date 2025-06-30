@@ -27,10 +27,6 @@ val parse_pagespec : Pdf.t -> string -> int list
 (** Same, but without a PDF. Thus 'end' etc. don't work *)
 val parse_pagespec_without_pdf : string -> int list
 
-(** Is a page specification, in theory, valid? This is the most we can find out
-without supplying a PDF, and thus knowing how many pages there are in it. *)
-val validate_pagespec : string -> bool
-
 (** Return a string for the given range. Knows how to identify all, odd, even,
 x-y ranges etc. *)
 val string_of_pagespec : Pdf.t -> int list -> string
