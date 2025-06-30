@@ -591,7 +591,8 @@ type args =
    mutable dot_leader : bool;
    mutable preserve_actions : bool;
    mutable decompress_just_content : bool;
-   mutable portfolio_files : Cpdfportfolio.entry list}
+   mutable portfolio_files : Cpdfportfolio.entry list;
+   mutable scale_to_fit_rotate : int}
 
 let args =
   {op = None;
@@ -744,7 +745,8 @@ let args =
    dot_leader = false;
    preserve_actions = false;
    decompress_just_content = false;
-   portfolio_files = []}
+   portfolio_files = [];
+   scale_to_fit_rotate = 0}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -883,7 +885,8 @@ let reset_arguments () =
   args.dot_leader <- false;
   args.preserve_actions <- false;
   args.decompress_just_content <- false;
-  args.portfolio_files <- []
+  args.portfolio_files <- [];
+  args.scale_to_fit_rotate <- 0
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -2199,6 +2202,12 @@ let specs =
    ("-scale-to-fit-scale",
       Arg.Float setscaletofitscale,
       " -scale-to-fit-scale (1.0 = 100%)");
+   ("-scale-to-fit-rotate-clockwise",
+      Arg.Unit (fun () -> args.scale_to_fit_rotate <- ~-1),
+      " Prepare for -scale-to-fit by rotating pages");
+   ("-scale-to-fit-rotate-anticlockwise",
+      Arg.Unit (fun () -> args.scale_to_fit_rotate <- 1),
+      " Prepare for -scale-to-fit by rotating pages");
    ("-shift",
       Arg.String setshift,
       " -shift \"dx dy\" shifts the chosen pages");
@@ -3728,7 +3737,7 @@ let extract_stream pdf decomp objspec =
 
 let print_version () =
   flprint
-    ("cpdf " ^ (if agpl then "AGPL " else "") ^ "Version " ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ (if minor_minor_version = 0 then "" else "." ^ string_of_int minor_minor_version) ^ " " ^ version_date ^ "\n")
+    ("cpdf " ^ (if agpl then "AGPL " else "") ^ "Version " ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ (if minor_minor_version = 0 then "" else "." ^ string_of_int minor_minor_version) ^ " " ^ version_date ^ " https://www.coherentpdf.com/" ^ "\n")
 
 (* Call out to GhostScript to rasterize. Read back in and replace the page contents with the resultant PNG. *)
 let rasterize antialias downsample device res annots quality pdf range =
@@ -4475,6 +4484,7 @@ let rec go () =
         let range = parse_pagespec_allow_empty pdf (get_pagespec ()) in
           warn_prerotate range pdf;
           let pdf = if args.prerotate then prerotate range pdf else pdf in
+          let pdf = if args.scale_to_fit_rotate <> 0 then Cpdfpage.scale_to_fit_rotate ~fast:args.fast args.scale_to_fit_rotate pdf else pdf in
           let xylist = Cpdfcoord.parse_coordinates pdf args.coord
           and scale = args.scale in
             write_pdf false (Cpdfpage.scale_to_fit_pdf ~fast:args.fast args.position scale xylist args.op pdf range)
