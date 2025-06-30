@@ -666,7 +666,7 @@ let scale_to_fit_pdf ?(fast=false) position input_scale xylist op pdf range =
   in
     process_pages scale_page_to_fit pdf range
 
-let scale_to_fit_rotate ?(fast=false) rotation pdf = pdf
+let scale_to_fit_rotate ?(fast=false) xylist rotation pdf = pdf
 
 (* Add stack operators to a content stream to ensure it is composeable. On
 -fast, we don't check for Q deficit, assuming PDF is ISO. *)
