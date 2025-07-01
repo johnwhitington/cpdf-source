@@ -3040,6 +3040,7 @@ let specs =
    ("-end-xobj", Arg.Unit Cpdfdrawcontrol.endxobj, " End saving a sequence of graphics operators");
    ("-use", Arg.String Cpdfdrawcontrol.usexobj, " Use a saved sequence of graphics operators");
    ("-draw-jpeg", Arg.String Cpdfdrawcontrol.addjpeg, " Load a JPEG from file and name it");
+   ("-draw-jpeg2000", Arg.String Cpdfdrawcontrol.addjpeg2000, " Load a JPEG2000 from file and name it");
    ("-draw-png", Arg.String Cpdfdrawcontrol.addpng, " Load a PNG from file and name it");
    ("-image", Arg.String (fun s -> Cpdfdrawcontrol.addimage s), " Draw an image which has already been loaded");
    ("-fill-opacity", Arg.Float Cpdfdrawcontrol.addopacity, " Set opacity");

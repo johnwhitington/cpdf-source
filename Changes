@@ -17,6 +17,7 @@ o Select only such pages as are annotated
 o Allow -create-pdf and friends to appear in middle of AND
 o Allow the empty range
 o Allow a range specifying some pages which do not exist
+o -draw can use JPEG2000s
 
 Fixes:
 
