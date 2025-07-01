@@ -380,8 +380,6 @@ let scale_page_contents ?(fast=false) scale position pdf pnum page =
 let scale_contents ?(fast=false) position scale pdf range =
   process_pages (scale_page_contents ~fast scale position pdf) pdf range
 
-
-
 (* Set media box *)
 let set_mediabox xywhlist pdf range =
   let crop_page pnum page =
@@ -666,7 +664,26 @@ let scale_to_fit_pdf ?(fast=false) position input_scale xylist op pdf range =
   in
     process_pages scale_page_to_fit pdf range
 
-let scale_to_fit_rotate ?(fast=false) xylist rotation pdf = pdf
+(* For each page. If it is the wrong orientation for the xylist entry, rotate
+   it the specified way (90 degrees, -90 degrees) and run upright (again) too. *)
+let scale_to_fit_rotate ?(fast=false) xylist rotation pdf range =
+  let scale_to_fit_rotate_page pnum page =
+    let tw, th = List.nth xylist (pnum - 1) in
+      let (minx, miny, maxx, maxy) =
+        Pdf.parse_rectangle
+          pdf
+          (match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
+          | Some r -> r
+          | None -> page.Pdfpage.mediabox)
+      in
+        let pw, ph = maxx -. miny, maxy -. miny in
+          if pw < ph && tw > th || pw > ph && tw < th then
+            {page with Pdfpage.rotate = Pdfpage.rotation_of_int ((Pdfpage.int_of_rotation page.Pdfpage.rotate + rotation) mod 360)}
+          else
+            page
+  in
+    let pdf = process_pages (Pdfpage.ppstub scale_to_fit_rotate_page) pdf range in
+      upright ~fast range pdf
 
 (* Add stack operators to a content stream to ensure it is composeable. On
 -fast, we don't check for Q deficit, assuming PDF is ISO. *)

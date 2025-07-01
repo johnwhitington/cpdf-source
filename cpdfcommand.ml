@@ -2196,10 +2196,10 @@ let specs =
       Arg.Float setscaletofitscale,
       " -scale-to-fit-scale (1.0 = 100%)");
    ("-scale-to-fit-rotate-clockwise",
-      Arg.Unit (fun () -> args.scale_to_fit_rotate <- ~-1),
+      Arg.Unit (fun () -> args.scale_to_fit_rotate <- 90),
       " Prepare for -scale-to-fit by rotating pages");
    ("-scale-to-fit-rotate-anticlockwise",
-      Arg.Unit (fun () -> args.scale_to_fit_rotate <- 1),
+      Arg.Unit (fun () -> args.scale_to_fit_rotate <- -90),
       " Prepare for -scale-to-fit by rotating pages");
    ("-shift",
       Arg.String setshift,
@@ -4478,7 +4478,7 @@ let rec go () =
           warn_prerotate range pdf;
           let pdf = if args.prerotate then prerotate range pdf else pdf in
           let xylist = Cpdfcoord.parse_coordinates pdf args.coord in
-          let pdf = if args.scale_to_fit_rotate <> 0 then Cpdfpage.scale_to_fit_rotate ~fast:args.fast xylist args.scale_to_fit_rotate pdf else pdf in
+          let pdf = if args.scale_to_fit_rotate <> 0 then Cpdfpage.scale_to_fit_rotate ~fast:args.fast xylist args.scale_to_fit_rotate pdf range else pdf in
             write_pdf false (Cpdfpage.scale_to_fit_pdf ~fast:args.fast args.position args.scale xylist args.op pdf range)
   | Some Stretch ->
       let pdf = get_single_pdf args.op false in
