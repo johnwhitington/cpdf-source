@@ -24,6 +24,7 @@ Fixes:
 o Fix PMAXX et al. w.r.t -add-rectangle
 o Allow Float/Int to appear anywhere in CPDFJSON / bookmark JSON
 o Allow -info in the case where objstm reading requires password
+o Allow -stdin in -info and in -merge (once)
 
 * = Supported by a grant from NLnet
 

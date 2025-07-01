@@ -1241,7 +1241,12 @@ let read_file_size s =
 
 let setsplitmax i = setop (SplitMax (read_file_size i)) ()
 let setstdout () = args.out <- Stdout
-let setstdin () = args.inputs <- [StdIn, "all", "", "", ref false, None]
+let setstdin () =
+  if keep (function (StdIn, _, _, _, _, _) -> true | _ -> false) args.inputs = [] then
+    args.inputs <- (StdIn, "all", "", "", ref false, None)::args.inputs
+  else
+    error (Printf.sprintf "Can't presently use -stdin twice.")
+
 let settrans s = args.transition <- Some s
 let setduration f = args.duration <- Some f
 let setvertical () = args.horizontal <- false
