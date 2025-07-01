@@ -9,6 +9,7 @@
 %Document "annotated" range
 %Document PDF Portfolios
 %Document that -create-pdf* can appear anywhere now
+%Document -scale-to-fit-rotate*
 %\DocumentMetadata{lang=en, pdfversion=2.0, pdfstandard=ua-2, pdfstandard=a-4f, testphase={phase-III, title, table, math, firstaid}}
 \documentclass{book}
 % Edit here to produce cpdfmanual.pdf, cpdflibmanual.pdf, pycpdfmanual.pdf,
@@ -4020,7 +4021,7 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 
 \vspace{1.5mm}
 
-\noindent\small\verb!cpdf -rasterize in.pdf <range> -o out.pdf!\\
+\noindent\small\verb!cpdf -rasterize in.pdf [<range>] -o out.pdf!\\
 \noindent\small\verb!     [-rasterize[-gray|-1bpp|-jpeg|-jpeggray]!\\
 \noindent\small\verb!     [-rasterize-res <n>] [-rasterize-jpeg-quality <n>]!\\
 \noindent\small\verb!     [-rasterize-no-antialias | -rasterize-downsample]!\\
@@ -4028,7 +4029,7 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 
 \vspace{1.5mm}
 
-\noindent\small\verb!cpdf -output-image in.pdf <range> -o <format>!\\
+\noindent\small\verb!cpdf -output-image in.pdf [<range>] -o <format>!\\
 \noindent\small\verb!     [-rasterize[-gray|-1bpp|-jpeg|-jpeggray]!\\
 \noindent\small\verb!     [-rasterize-res <n>] [-rasterize-jpeg-quality <n>]!\\
 \noindent\small\verb!     [-rasterize-no-antialias | -rasterize-downsample]!\\
