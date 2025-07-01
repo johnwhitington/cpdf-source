@@ -3988,10 +3988,20 @@ let rec go () =
         if args.format_json
           then json =| ("Permissions", `List (map (fun p -> `String (string_of_permission p)) (Pdfread.permissions pdf)))
           else Printf.printf "Permissions: %s\n" (getpermissions pdf);
-        if inname <> "" then
-          let lin = Pdfread.is_linearized (Pdfio.input_of_channel (open_in_bin inname)) in
-            if args.format_json then
-              json =| ("Linearized", `Bool lin) else Printf.printf "Linearized: %b\n" lin;
+        begin
+          if inname <> "" then
+            begin
+              let lin = Pdfread.is_linearized (Pdfio.input_of_channel (open_in_bin inname)) in
+              if args.format_json then
+                json =| ("Linearized", `Bool lin) else Printf.printf "Linearized: %b\n" lin
+            end
+          else
+            begin
+              let lin = pdf.Pdf.was_linearized in
+              if args.format_json then
+                json =| ("Linearized", `Bool lin) else Printf.printf "Linearized: %b\n" lin
+            end
+        end;
         let objstm = Hashtbl.length pdf.Pdf.objects.Pdf.object_stream_ids > 0 in
         if args.format_json
           then json =| ("Object streams", `Bool objstm)
