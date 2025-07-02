@@ -4517,10 +4517,27 @@ let rec go () =
   | Some ListAttachedFiles ->
       let pdf = get_single_pdf args.op false in
         let attachments = Cpdfattach.list_attached_files pdf in
-        iter
-          (fun a -> Printf.printf "%i %s\n" a.Cpdfattach.pagenumber a.Cpdfattach.name)
-          attachments;
-        flprint ""
+        if args.format_json then
+          let json_of_attachment a =
+            `Assoc [("Page", `Int a.Cpdfattach.pagenumber);
+                    ("Name", `String a.Cpdfattach.name);
+                    ("Description", match a.Cpdfattach.description with None -> `Null | Some s -> `String s);
+                    ("Relationship", match a.Cpdfattach.description with None -> `Null | Some s -> `String s)]
+          in
+            let json =
+              `List (map json_of_attachment attachments)
+            in
+              flprint (Cpdfyojson.Safe.pretty_to_string json)
+        else
+          begin
+            iter
+              (fun a ->
+                 Printf.printf "%i %s %s %s\n"
+                   a.Cpdfattach.pagenumber a.Cpdfattach.name
+                   (match a.Cpdfattach.description with None -> "(none)" | Some s -> s)
+                   (match a.Cpdfattach.relationship with None -> "(none)" | Some s -> s)
+              attachments;
+          end
   | Some DumpAttachedFiles ->
       let pdf = get_single_pdf args.op false in
         begin match args.out with
