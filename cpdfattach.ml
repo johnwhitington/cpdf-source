@@ -128,7 +128,9 @@ let attach_file ?memory keepversion topage pdf file =
 type attachment =
   {name : string;
    pagenumber : int;
-   data : unit -> Pdfio.bytes}
+   data : unit -> Pdfio.bytes;
+   description : string option;
+   relationship : string option}
 
 let list_attached_files pdf =
   let toplevel =
@@ -148,6 +150,8 @@ let list_attached_files pdf =
                           | Some stream ->
                               {name = Pdftext.utf8_of_pdfdocstring x;
                                pagenumber = 0;
+                               description = None;
+                               relationship = None;
                                data =
                                  (fun () ->
                                    try
@@ -195,13 +199,17 @@ let list_attached_files pdf =
                                                  Pdf.Stream {contents = (_, Pdf.Got data)} -> data
                                                | _ -> raise Not_found
                                              with
-                                               _ -> raise (Pdf.PDFError "could not retreive attachment data"))}
+                                               _ -> raise (Pdf.PDFError "could not retreive attachment data"));
+                                         description = None;
+                                         relationship = None}
                                    | _ -> raise (Pdf.PDFError "no /F found in attachment")
                                    end
                               | _ ->
                                   Some
                                     {name = Pdftext.utf8_of_pdfdocstring s;
                                      pagenumber = pagenumber;
+                                     relationship = None;
+                                     description = None;
                                      data = (fun () -> raise (Pdf.PDFError "no attachment data"))}
                               end
                           | _ -> None

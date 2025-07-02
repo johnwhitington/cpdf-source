@@ -3,7 +3,9 @@
 type attachment =
   {name : string;
    pagenumber : int;
-   data : unit -> Pdfio.bytes}
+   data : unit -> Pdfio.bytes;
+   description : string option;
+   relationship : string option}
 
 (** Remove characters which might not make good filenames from a UTF8 string. *)
 val remove_unsafe_characters : string -> string
