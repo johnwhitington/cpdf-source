@@ -585,7 +585,8 @@ type args =
    mutable preserve_actions : bool;
    mutable decompress_just_content : bool;
    mutable portfolio_files : Cpdfportfolio.entry list;
-   mutable scale_to_fit_rotate : int}
+   mutable scale_to_fit_rotate : int;
+   mutable include_data : bool}
 
 let args =
   {op = None;
@@ -739,7 +740,8 @@ let args =
    preserve_actions = false;
    decompress_just_content = false;
    portfolio_files = [];
-   scale_to_fit_rotate = 0}
+   scale_to_fit_rotate = 0;
+   include_data = false}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -879,7 +881,8 @@ let reset_arguments () =
   args.preserve_actions <- false;
   args.decompress_just_content <- false;
   args.portfolio_files <- [];
-  args.scale_to_fit_rotate <- 0
+  args.scale_to_fit_rotate <- 0;
+  args.include_data <- false
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -2672,6 +2675,9 @@ let specs =
    ("-list-attached-files",
       Arg.Unit (setop ListAttachedFiles),
       " List attached files");
+   ("-include-data",
+      Arg.Unit (fun () -> args.include_data <- true),
+      " Include file data when listing attachments as JSON");
    ("-dump-attachments",
       Arg.Unit (setop DumpAttachedFiles),
       " Dump attachments to disk");
@@ -4519,10 +4525,12 @@ let rec go () =
         let attachments = Cpdfattach.list_attached_files pdf in
         if args.format_json then
           let json_of_attachment a =
-            `Assoc [("Page", `Int a.Cpdfattach.pagenumber);
-                    ("Name", `String a.Cpdfattach.name);
-                    ("Description", match a.Cpdfattach.description with None -> `Null | Some s -> `String s);
-                    ("Relationship", match a.Cpdfattach.description with None -> `Null | Some s -> `String s)]
+            `Assoc ([("Page", `Int a.Cpdfattach.pagenumber);
+                     ("Name", `String a.Cpdfattach.name);
+                     ("Description", match a.Cpdfattach.description with None -> `Null | Some s -> `String s);
+                     ("Relationship", match a.Cpdfattach.description with None -> `Null | Some s -> `String s)]
+                   @
+                    if args.include_data then [("Data", `String (string_of_bytes (a.Cpdfattach.data ())))] else [])
           in
             let json =
               `List (map json_of_attachment attachments)
@@ -4535,7 +4543,7 @@ let rec go () =
                  Printf.printf "%i %s %s %s\n"
                    a.Cpdfattach.pagenumber a.Cpdfattach.name
                    (match a.Cpdfattach.description with None -> "(none)" | Some s -> s)
-                   (match a.Cpdfattach.relationship with None -> "(none)" | Some s -> s)
+                   (match a.Cpdfattach.relationship with None -> "(none)" | Some s -> s))
               attachments;
           end
   | Some DumpAttachedFiles ->

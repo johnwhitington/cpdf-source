@@ -161,7 +161,7 @@ let list_attached_files pdf =
                                        Pdf.Stream {contents = (_, Pdf.Got data)} -> data
                                      | _ -> raise Not_found
                                    with
-                                     _ -> raise (Pdf.PDFError "could not retreive attachment data"))}
+                                     _ -> raise (Pdf.PDFError "could not retrieve attachment data"))}
                           | None -> raise (Pdf.PDFError "/F not found")
                           end
                       | _ -> raise (Pdf.PDFError "/EF not found"))
@@ -199,7 +199,7 @@ let list_attached_files pdf =
                                                  Pdf.Stream {contents = (_, Pdf.Got data)} -> data
                                                | _ -> raise Not_found
                                              with
-                                               _ -> raise (Pdf.PDFError "could not retreive attachment data"));
+                                               _ -> raise (Pdf.PDFError "could not retrieve attachment data"));
                                          description = None;
                                          relationship = None}
                                    | _ -> raise (Pdf.PDFError "no /F found in attachment")
