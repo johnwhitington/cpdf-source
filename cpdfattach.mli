@@ -1,6 +1,5 @@
 (** File Attachments *)
-
-type attachment =
+type t =
   {name : string;
    pagenumber : int;
    data : unit -> Pdfio.bytes;
@@ -19,7 +18,7 @@ val attach_file : ?memory:Pdfio.bytes -> bool -> int option -> Pdf.t -> string -
 val remove_attached_files : Pdf.t -> Pdf.t
 
 (** List attached files. Attachment name and page number. Page 0 is document level. *)
-val list_attached_files : Pdf.t -> attachment list
+val list_attached_files : Pdf.t -> t list
 
 (** Dump attached files to a given directory. *)
 val dump_attached_files : Pdf.t -> string -> unit

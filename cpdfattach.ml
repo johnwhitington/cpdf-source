@@ -2,6 +2,13 @@ open Pdfutil
 open Pdfio
 open Cpdferror
 
+type t =
+  {name : string;
+   pagenumber : int;
+   data : unit -> Pdfio.bytes;
+   description : string option;
+   relationship : string option}
+
 (* Remove characters which might not make good filenames. In, UTF8, out UTF8. *)
 let remove_unsafe_characters s =
   let codepoints = Pdftext.codepoints_of_utf8 s in
@@ -125,13 +132,6 @@ let attach_file ?memory keepversion topage pdf file =
                                   {pdf with
                                      Pdf.minor = if keepversion || pdf.Pdf.major > 1 then pdf.Pdf.minor else max pdf.Pdf.minor 4}
 
-type attachment =
-  {name : string;
-   pagenumber : int;
-   data : unit -> Pdfio.bytes;
-   description : string option;
-   relationship : string option}
-
 let list_attached_files pdf =
   let toplevel =
     match Pdf.lookup_direct pdf "/Root" pdf.Pdf.trailerdict with
@@ -148,20 +148,30 @@ let list_attached_files pdf =
                       | Some ((Pdf.Dictionary _) as d) ->
                           begin match Pdf.lookup_direct pdf "/F" d with
                           | Some stream ->
-                              {name = Pdftext.utf8_of_pdfdocstring x;
-                               pagenumber = 0;
-                               description = None;
-                               relationship = None;
-                               data =
-                                 (fun () ->
-                                   try
-                                     Pdf.getstream stream;
-                                     Pdfcodec.decode_pdfstream pdf stream;
-                                     match stream with
-                                       Pdf.Stream {contents = (_, Pdf.Got data)} -> data
-                                     | _ -> raise Not_found
-                                   with
-                                     _ -> raise (Pdf.PDFError "could not retrieve attachment data"))}
+                              let description =
+                                match Pdf.lookup_direct pdf "/Desc" ef with
+                                | Some (Pdf.String s) -> Some s
+                                | _ -> None
+                              in
+                              let relationship =
+                                match Pdf.lookup_direct pdf "/AFRelationship" ef with
+                                | Some (Pdf.Name n) -> Some n
+                                | _ -> None
+                              in
+                                {name = Pdftext.utf8_of_pdfdocstring x;
+                                 pagenumber = 0;
+                                 description;
+                                 relationship;
+                                 data =
+                                   (fun () ->
+                                     try
+                                       Pdf.getstream stream;
+                                       Pdfcodec.decode_pdfstream pdf stream;
+                                       match stream with
+                                         Pdf.Stream {contents = (_, Pdf.Got data)} -> data
+                                       | _ -> raise Not_found
+                                     with
+                                       _ -> raise (Pdf.PDFError "could not retrieve attachment data"))}
                           | None -> raise (Pdf.PDFError "/F not found")
                           end
                       | _ -> raise (Pdf.PDFError "/EF not found"))
@@ -187,6 +197,16 @@ let list_attached_files pdf =
                               |  Some ((Pdf.Dictionary _) as d) ->
                                    begin match Pdf.lookup_direct pdf "/F" d with
                                    | Some stream ->
+                                      let description =
+                                        match Pdf.lookup_direct pdf "/Desc" d with
+                                        | Some (Pdf.String s) -> Some s
+                                        | _ -> None
+                                      in
+                                      let relationship =
+                                        match Pdf.lookup_direct pdf "/AFRelationship" d with
+                                        | Some (Pdf.Name n) -> Some n
+                                        | _ -> None
+                                      in
                                        Some
                                         {name = Pdftext.utf8_of_pdfdocstring s;
                                          pagenumber = pagenumber;
@@ -200,8 +220,8 @@ let list_attached_files pdf =
                                                | _ -> raise Not_found
                                              with
                                                _ -> raise (Pdf.PDFError "could not retrieve attachment data"));
-                                         description = None;
-                                         relationship = None}
+                                         description;
+                                         relationship}
                                    | _ -> raise (Pdf.PDFError "no /F found in attachment")
                                    end
                               | _ ->

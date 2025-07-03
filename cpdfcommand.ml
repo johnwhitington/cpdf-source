@@ -4528,7 +4528,7 @@ let rec go () =
             `Assoc ([("Page", `Int a.Cpdfattach.pagenumber);
                      ("Name", `String a.Cpdfattach.name);
                      ("Description", match a.Cpdfattach.description with None -> `Null | Some s -> `String s);
-                     ("Relationship", match a.Cpdfattach.description with None -> `Null | Some s -> `String s)]
+                     ("Relationship", match a.Cpdfattach.relationship with None -> `Null | Some s -> `String s)]
                    @
                     if args.include_data then [("Data", `String (string_of_bytes (a.Cpdfattach.data ())))] else [])
           in
@@ -4540,10 +4540,11 @@ let rec go () =
           begin
             iter
               (fun a ->
-                 Printf.printf "%i %s %s %s\n"
-                   a.Cpdfattach.pagenumber a.Cpdfattach.name
-                   (match a.Cpdfattach.description with None -> "(none)" | Some s -> s)
-                   (match a.Cpdfattach.relationship with None -> "(none)" | Some s -> s))
+                 Printf.printf "%i | %s | %s | %s\n"
+                   a.Cpdfattach.pagenumber
+                   a.Cpdfattach.name
+                   (match a.Cpdfattach.description with None -> "[absent]" | Some s -> s)
+                   (match a.Cpdfattach.relationship with None -> "[absent]" | Some s -> s))
               attachments;
           end
   | Some DumpAttachedFiles ->
