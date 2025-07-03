@@ -9,6 +9,11 @@ let version_date = "(to come)"
 open Pdfutil
 open Pdfio
 
+type attachment =
+  {ofilename : string;
+   mutable odescription : string option;
+   mutable orelationship : string option}
+
 let combine_with_spaces strs =
   String.trim
     (fold_left (fun x y -> x ^ (if x <> "" then " " else "") ^ y) "" strs)
@@ -101,7 +106,7 @@ type op =
   | Stretch
   | CenterToFit
   | ScaleContents of float
-  | AttachFile of string list
+  | AttachFile of attachment list
   | RemoveAttachedFiles
   | ListAttachedFiles
   | DumpAttachedFiles
@@ -1292,12 +1297,11 @@ let setcentertofit s =
   args.coord <- s
 
 let setattachfile s =
-  match args.op with
-  | Some (AttachFile t) ->
-      args.op <- Some (AttachFile (s::t))
-  | None ->
-      setop (AttachFile [s]) ()
-  | Some _ -> detect_duplicate_op (AttachFile [s])
+  let a = {ofilename = s; odescription = None; orelationship = None} in
+    match args.op with
+    | Some (AttachFile t) -> args.op <- Some (AttachFile (a::t))
+    | None -> setop (AttachFile [a]) ()
+    | Some _ -> detect_duplicate_op (AttachFile [a])
 
 let setextracttextfontsize f =
   args.extract_text_font_size <- Some f
@@ -4556,7 +4560,7 @@ let rec go () =
         end
   | Some RemoveAttachedFiles ->
       write_pdf false (Cpdfattach.remove_attached_files (get_single_pdf args.op false))
-  | Some (AttachFile files) ->
+  | Some (AttachFile attachments) ->
       begin match args.inputs with
       | [(k, _, _, _, _, _) as input] ->
           let pdf = get_pdf_from_input_kind input args.op k in
@@ -4568,7 +4572,8 @@ let rec go () =
                | Some s -> Some (int_of_string s)
               with _ -> error "Bad -to-page"
             in
-            let pdf = fold_left (Cpdfattach.attach_file args.keepversion topage) pdf (rev files) in
+            let filenames = rev_map (fun x -> x.ofilename) attachments in
+            let pdf = fold_left (Cpdfattach.attach_file args.keepversion topage) pdf filenames in
               write_pdf false pdf
       | _ -> error "attach file: No input file specified"
       end
