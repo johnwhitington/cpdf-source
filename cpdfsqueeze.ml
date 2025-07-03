@@ -1,23 +1,19 @@
 open Pdfutil
 open Pdfio
 
-(* For debugging *)
-(*let report_pdf_size pdf =
+(*
+let report_pdf_size pdf =
   Pdf.remove_unreferenced pdf;
   Pdfwrite.pdf_to_file_options ~preserve_objstm:false ~generate_objstm:false
   ~compress_objstm:false None false pdf "temp.pdf";
   let fh = open_in_bin "temp.pdf" in
     Printf.printf "Size %i bytes\n" (in_channel_length fh);
     flush stdout;
-    close_in fh*)
+    close_in fh
+*)
 
 (* Recompress anything which isn't compressed (or compressed with old-fashioned
    mechanisms), unless it's metadata. *)
-
-(* TODO The use of this function in cpdfcommand.ml actually takes some power
-   away from the user - maybe they don't want old-fashioned stuff
-   re-compressed, but only uncompressed data compressed. Consider adding a flag
-   -recompress-only-uncompressed and an argument to this function. *)
 let recompress_stream pdf = function
   (* If there is no compression, or bad compression with /FlateDecode *)
   | Pdf.Stream {contents = (dict, _)} as stream ->
@@ -86,6 +82,26 @@ let really_squeeze pdf =
            | (_, h)::_ as l ->
                match Pdf.lookup_direct pdf "/Type" h with
                  Some (Pdf.Name "/Page") -> None
+               | _ -> Some l)
+          toprocess
+      in
+      (* Remove any pools of objects which are annotations, because the PDF spec
+      says annotations may not be shared between pages. *)
+      let toprocess =
+        option_map
+          (function
+             [] -> assert false
+           | (_, h)::_ as l ->
+               match Pdf.lookup_direct pdf "/Subtype" h with
+                 Some (Pdf.Name (  "/Text" | "/Link" | "/FreeText"
+                                 | "/Line" | "/Square" | "/Circle"
+                                 | "/Polygon" | "/PolyLine" | "/Highlight"
+                                 | "/Underline" | "/Squiggly" | "/StrikeOut"
+                                 | "/Caret" | "/Stamp" | "/Ink"
+                                 | "/Popup" | "/FileAttachment" | "/Sound"
+                                 | "/Movie" | "/Screen" |  "/Widget"
+                                 | "/PrinterMark" | "/TrapNet" | "/3D"
+                                 | "/Redact" | "/Projection" | "/RichMedia")) -> None
                | _ -> Some l)
           toprocess
       in
