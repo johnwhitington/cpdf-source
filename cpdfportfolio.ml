@@ -11,7 +11,7 @@ let process_afrelationship = function
   | Some x -> "/" ^ x
 
 (* Build a PDF portfolio a.k.a collection *)
-let portfolio pdf filenames =
+let portfolio pdf entries =
   let embedded_files =
     map
       (fun e ->
@@ -28,14 +28,18 @@ let portfolio pdf filenames =
              ("/Desc", Pdf.String (match e.description with Some x -> x | None -> basename));
              ("/F", Pdf.String basename);
              ("/UF", Pdf.String basename);
-                          ("/AFRelationship", Pdf.Name (process_afrelationship e.relationship));
+             ("/AFRelationship", Pdf.Name (process_afrelationship e.relationship));
              ("/EF", Pdf.Dictionary [("/F", Pdf.Indirect contents); ("/UF", Pdf.Indirect contents)])])))
-      filenames
+      entries
   in
-  (* We need unique keys, even if basenames are not unique... *)
-  let keys = map string_of_int (indx0 filenames) in
+  (* We need unique keys, even if basenames are not unique. We use a number
+     followed by a forward slash. Since the forward slash is illegal in a
+     filename, prefixing with a number cannot accidentally produce another of
+     the names. *)
+  let keys = map (fun (n, e) -> string_of_int n ^ "/" ^ e.filename) (combine (indx0 entries) entries) in
+  assert (length (setify keys) = length keys);
   let name_tree =
-    Pdf.Indirect (Pdf.addobj pdf (Pdftree.build_name_tree false pdf (map3 (fun k {filename} e -> (k, e)) keys filenames embedded_files)))
+    Pdf.Indirect (Pdf.addobj pdf (Pdftree.build_name_tree false pdf (map3 (fun k {filename} e -> (k, e)) keys entries embedded_files)))
   in
     Pdf.replace_chain pdf ["/Root"; "/Names"; "/EmbeddedFiles"] name_tree;
     Pdf.replace_chain pdf ["/Root"; "/Collection"] (Pdf.Dictionary [("/View", Pdf.Name "/T")])
