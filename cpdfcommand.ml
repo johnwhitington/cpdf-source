@@ -1303,6 +1303,16 @@ let setattachfile s =
     | None -> setop (AttachFile [a]) ()
     | Some _ -> detect_duplicate_op (AttachFile [a])
 
+let setattachfiledescription s =
+  match args.op with
+  | Some (AttachFile (h::_)) -> h.odescription <- Some s
+  | _ -> error "no attachemnt to add description for"
+
+let setattachfilerelationship s =
+  match args.op with
+  | Some (AttachFile (h::_)) -> h.orelationship <- Some s
+  | _ -> error "no attachemnt to add relationship for"
+
 let setextracttextfontsize f =
   args.extract_text_font_size <- Some f
 
@@ -2688,6 +2698,12 @@ let specs =
    ("-attach-file",
       Arg.String setattachfile,
       " Attach a file");
+   ("-afd",
+      Arg.String setattachfiledescription,
+      " Add description to attached file");
+   ("-afr",
+      Arg.String setattachfilerelationship,
+      " Add relationship to attached file");
    ("-to-page",
       Arg.String settopage,
       " Attach file to given page instead of document");
@@ -4572,8 +4588,7 @@ let rec go () =
                | Some s -> Some (int_of_string s)
               with _ -> error "Bad -to-page"
             in
-            let filenames = rev_map (fun x -> x.ofilename) attachments in
-            let pdf = fold_left (Cpdfattach.attach_file args.keepversion topage) pdf filenames in
+            let pdf = fold_left (fun pdf a -> Cpdfattach.attach_file args.keepversion topage pdf a.orelationship a.odescription a.ofilename) pdf (rev attachments) in
               write_pdf false pdf
       | _ -> error "attach file: No input file specified"
       end

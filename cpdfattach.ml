@@ -36,7 +36,7 @@ let remove_unsafe_characters s =
     | chars -> Pdftext.utf8_of_codepoints codepoints
 
 (* Attaching files *)
-let attach_file ?memory keepversion topage pdf file =
+let attach_file ?memory keepversion topage pdf relationship description file =
   let data =
     match memory with
       Some data -> data
@@ -65,11 +65,14 @@ let attach_file ?memory keepversion topage pdf file =
       let basename = Pdftext.pdfdocstring_of_utf8 (Filename.basename file) in
         let filespec =
           Pdf.Dictionary
-            [("/EF", Pdf.Dictionary ["/F", Pdf.Indirect filestream_num]);
-             ("/F", Pdf.String basename);
-             ("/Type", Pdf.Name "/Filespec");
-             ("/Desc", Pdf.String "");
-             ("/UF", Pdf.String basename)]
+            ([("/EF", Pdf.Dictionary ["/F", Pdf.Indirect filestream_num]);
+              ("/F", Pdf.String basename);
+              ("/Type", Pdf.Name "/Filespec");
+              ("/UF", Pdf.String basename)]
+             @
+              (if description = None then [] else [("/Desc", Pdf.String (unopt description))])
+             @
+              (if relationship = None then [] else [("/AFRelationship", Pdf.Name (unopt relationship))]))
         in
           match topage with
           | None ->
