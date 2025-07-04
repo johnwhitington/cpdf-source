@@ -3898,7 +3898,8 @@ let write_images device res quality boxname annots antialias downsample spec pdf
     (ilist 1 endpage);
   Sys.remove tmppdf
 
-let remove_article_threads pdf = ()
+let remove_article_threads pdf =
+  Cpdfutil.remove_dict_entry pdf "/Threads" None
 
 let remove_page_piece pdf =
   Cpdfutil.remove_dict_entry pdf "/PieceInfo" None
@@ -3906,7 +3907,10 @@ let remove_page_piece pdf =
 let remove_output_intents pdf =
   Cpdfutil.remove_dict_entry pdf "/OutputIntents" None
 
-let remove_web_capture pdf = ()
+let remove_web_capture pdf =
+  Cpdfutil.remove_dict_entry pdf "/SpiderInfo" None;
+  Cpdfutil.remove_dict_entry pdf "/IDS" None;
+  Cpdfutil.remove_dict_entry pdf "/URLS" None
 
 let remove_procsets pdf =
   Cpdfutil.remove_dict_entry pdf "/ProcSet" None
@@ -3927,7 +3931,7 @@ let rec go () =
                 (* If at least one file had object streams and args.preserve_objstm is true, set -objstm-create *)
                 if args.preserve_objstm then
                   iter
-                    (fun pdf ->
+                   (fun pdf ->
                        if Hashtbl.length pdf.Pdf.objects.Pdf.object_stream_ids > 0
                          then args.create_objstm <- true)
                     pdfs;
