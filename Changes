@@ -6,6 +6,8 @@ o CCITT and CCITTG4 encoders in -process-images
 o Detect and remove JavaScript
 o Show progress on long files
 o Create PDF Portfolios
+o Remove procsets, article threads, page pieces
+o Remove web capture, output intents, alternate images
 
 Extended features:
 
@@ -20,6 +22,8 @@ o Allow a range specifying some pages which do not exist
 o -draw can use JPEG2000s
 o New -list-attached-files-json optionally including file data
 o List and add descriptions and relationships for attachments
+o New operation to remove only embedded standard fonts
+o New operation to remove all metadata
 
 Fixes:
 
