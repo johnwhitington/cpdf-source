@@ -3900,13 +3900,16 @@ let write_images device res quality boxname annots antialias downsample spec pdf
 
 let remove_article_threads pdf = ()
 
-let remove_page_piece pdf = ()
+let remove_page_piece pdf =
+  Cpdfutil.remove_dict_entry pdf "/PieceInfo" None
 
-let remove_output_intents pdf = ()
+let remove_output_intents pdf =
+  Cpdfutil.remove_dict_entry pdf "/OutputIntents" None
 
 let remove_web_capture pdf = ()
 
-let remove_procsets pdf = ()
+let remove_procsets pdf =
+  Cpdfutil.remove_dict_entry pdf "/ProcSet" None
 
 (* Main function *)
 let rec go () =
