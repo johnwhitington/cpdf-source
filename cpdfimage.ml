@@ -778,7 +778,7 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolat
     let command = 
       Filename.quote_command path_to_convert
         ([out] @ (if components = 4 then ["-depth"; "8"; "-size"; string_of_int w ^ "x" ^ string_of_int h] else []) @
-        (if components = 1 then ["-define"; "png:color-type=0"; "-colorspace"; "Gray"] else if components = 3 then ["-define"; "-png:color-type=2"; "-colorspace"; "RGB"] else if components = 4 then ["-colorspace"; "CMYK"] else []) @
+        (if components = 1 then ["-define"; "png:color-type=0"; "-colorspace"; "Gray"] else if components = 3 then ["-define"; "png:color-type=2"; "-colorspace"; "RGB"] else if components = 4 then ["-colorspace"; "CMYK"] else []) @
         [if interpolate && components > -2 then "-resize" else "-sample"; string_of_float factor ^ "%"; out2])
     in
       image_command command
