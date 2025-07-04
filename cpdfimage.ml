@@ -1129,6 +1129,7 @@ let process
                   recompress_1bpp_ccittg4_lossless ~pixel_threshold ~length_threshold pdf s dict reference
                 end
             | "JBIG2Lossy" -> ()
+            | "None" -> ()
             | _ -> error "unknown 1bpp method"
             end
         | Some (Pdf.Name "/Image"), _, _, _ ->

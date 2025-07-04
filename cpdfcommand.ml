@@ -719,7 +719,7 @@ let args =
    jpegqualitylossless = 101.;
    jpegtojpegscale = 100.;
    jpegtojpegdpi = 0.;
-   onebppmethod = "";
+   onebppmethod = "None";
    pixel_threshold = 25;
    length_threshold = 100;
    percentage_threshold = 99.;
@@ -859,7 +859,7 @@ let reset_arguments () =
   args.idir_only_pdfs <- false;
   args.jpegquality <- 100.;
   args.jpegqualitylossless <- 101.;
-  args.onebppmethod <- "";
+  args.onebppmethod <- "None";
   args.pixel_threshold <- 25;
   args.length_threshold <- 100;
   args.percentage_threshold <- 99.;
