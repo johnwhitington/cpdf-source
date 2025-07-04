@@ -239,6 +239,11 @@ type op =
   | ContainsJavaScript
   | RemoveJavaScript
   | Portfolio
+  | RemoveArticleThreads
+  | RemovePagePiece
+  | RemoveOutputIntents
+  | RemoveWebCapture
+  | RemoveProcsets
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -403,6 +408,11 @@ let string_of_op = function
   | ContainsJavaScript -> "ContainsJavaScript"
   | RemoveJavaScript -> "RemoveJavaScript"
   | Portfolio -> "Portfolio"
+  | RemoveArticleThreads -> "RemoveArticleThreads"
+  | RemovePagePiece -> "RemovePagePiece"
+  | RemoveOutputIntents -> "RemoveOutputIntents"
+  | RemoveWebCapture -> "RemoveWebCapture"
+  | RemoveProcsets -> "RemoveProcsets"
 
 (* Inputs: filename, pagespec. *)
 type input_kind = 
@@ -991,7 +1001,8 @@ let banned banlist = function
   | TextWidth _ | SetAnnotations _ | CopyAnnotations _ | ExtractStream _ | ReplaceStream _ | PrintObj _ | ReplaceObj _ | RemoveObj _
   | Verify _ | MarkAs _ | RemoveMark _ | ExtractStructTree | ReplaceStructTree _ | SetLanguage _
   | PrintStructTree | Rasterize | OutputImage | RemoveStructTree | MarkAsArtifact | ExtractForm | ReplaceForm _
-  | ContainsJavaScript | RemoveJavaScript -> false (* Always allowed *)
+  | ContainsJavaScript | RemoveJavaScript | RemoveArticleThreads | RemovePagePiece | RemoveOutputIntents
+  | RemoveWebCapture | RemoveProcsets -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
   | Decrypt | Encrypt | CombinePages _ -> true (* Never allowed *)
@@ -3125,6 +3136,11 @@ let specs =
    ("-pf", Arg.String (fun s -> args.portfolio_files <- {filename = s; relationship = None; description = None}::args.portfolio_files), " Add a portfolio file");
    ("-pfd", Arg.String (fun s -> match args.portfolio_files with h::t -> args.portfolio_files <- {h with description = Some s}::t | [] -> error "no portfolio file to take description"), " Set portfolio file description");
    ("-pfr", Arg.String (fun s -> match args.portfolio_files with h::t -> args.portfolio_files <- {h with relationship = Some s}::t | [] -> error "no portfolio file to take relationship"), " Set portfolio file relationship");
+   ("-remove-article-threads", Arg.Unit (fun () -> setop RemoveArticleThreads ()), " Remove article threads");
+   ("-remove-page-piece", Arg.Unit (fun () -> setop RemovePagePiece ()), " Remove page piece dictionaries");
+   ("-remove-output-intents", Arg.Unit (fun () -> setop RemoveOutputIntents ()), " Remove output intents");
+   ("-remove-web-capture", Arg.Unit (fun () -> setop RemoveWebCapture ()), " Remove web capture data");
+   ("-remove-procsets", Arg.Unit (fun () -> setop RemoveProcsets ()), " Remove procsets");
    (* These items are undocumented *)
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit (fun () -> args.debugcrypt <- true), "");
@@ -3881,6 +3897,16 @@ let write_images device res quality boxname annots antialias downsample spec pdf
     (Pdfpage.pages_of_pagetree pdf)
     (ilist 1 endpage);
   Sys.remove tmppdf
+
+let remove_article_threads pdf = ()
+
+let remove_page_piece pdf = ()
+
+let remove_output_intents pdf = ()
+
+let remove_web_capture pdf = ()
+
+let remove_procsets pdf = ()
 
 (* Main function *)
 let rec go () =
@@ -5094,6 +5120,26 @@ let rec go () =
       let pdf = get_single_pdf args.op true in
         args.create_objstm <- true;
         Cpdfportfolio.portfolio pdf (rev args.portfolio_files);
+        write_pdf false pdf
+  | Some RemoveArticleThreads ->
+      let pdf = get_single_pdf args.op false in
+        remove_article_threads pdf;
+        write_pdf false pdf
+  | Some RemovePagePiece ->
+      let pdf = get_single_pdf args.op false in
+        remove_page_piece pdf;
+        write_pdf false pdf
+  | Some RemoveOutputIntents ->
+      let pdf = get_single_pdf args.op false in
+        remove_output_intents pdf;
+        write_pdf false pdf
+  | Some RemoveWebCapture ->
+      let pdf = get_single_pdf args.op false in
+        remove_web_capture pdf;
+        write_pdf false pdf
+  | Some RemoveProcsets ->
+      let pdf = get_single_pdf args.op false in
+        remove_procsets pdf;
         write_pdf false pdf
 
 (* Advise the user if a combination of command line flags makes little sense,
