@@ -27,7 +27,7 @@ val process :
 
 (**/**)
 val image_of_input : ?subformat:Cpdfua.subformat -> ?title:string -> process_struct_tree:bool -> (unit -> Pdfio.bytes -> Pdf.pdfobject * (int * Pdf.pdfobject) list) -> Pdfio.input -> Pdf.t
-val obj_of_jpeg_data : Pdfio.bytes -> Pdf.pdfobject * (int * Pdf.pdfobject) list
+val obj_of_jpeg_data : path_to_im:string -> Pdfio.bytes -> Pdf.pdfobject * (int * Pdf.pdfobject) list
 val obj_of_png_data : Pdfio.bytes -> Pdf.pdfobject * (int * Pdf.pdfobject) list
 val obj_of_jbig2_data : ?global:Pdfio.bytes -> Pdfio.bytes -> Pdf.pdfobject * (int * Pdf.pdfobject) list
 val obj_of_jpeg2000_data : Pdfio.bytes -> Pdf.pdfobject * (int * Pdf.pdfobject) list

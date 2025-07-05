@@ -1118,7 +1118,7 @@ let jbig2_global = ref None
 
 let set_input_png s = set_input_image (fun () -> Cpdfimage.obj_of_png_data) s
 
-let set_input_jpeg s = set_input_image (fun () -> Cpdfimage.obj_of_jpeg_data) s
+let set_input_jpeg s = set_input_image (fun () -> Cpdfimage.obj_of_jpeg_data ~path_to_im:args.path_to_im) s
 
 let set_input_jpeg2000 s = set_input_image (fun () -> Cpdfimage.obj_of_jpeg2000_data) s
 
@@ -3076,7 +3076,7 @@ let specs =
    ("-xobj", Arg.String Cpdfdrawcontrol.startxobj, " Begin saving a sequence of graphics operators");
    ("-end-xobj", Arg.Unit Cpdfdrawcontrol.endxobj, " End saving a sequence of graphics operators");
    ("-use", Arg.String Cpdfdrawcontrol.usexobj, " Use a saved sequence of graphics operators");
-   ("-draw-jpeg", Arg.String Cpdfdrawcontrol.addjpeg, " Load a JPEG from file and name it");
+   ("-draw-jpeg", Arg.String (Cpdfdrawcontrol.addjpeg ~path_to_im:args.path_to_im), " Load a JPEG from file and name it");
    ("-draw-jpeg2000", Arg.String Cpdfdrawcontrol.addjpeg2000, " Load a JPEG2000 from file and name it");
    ("-draw-png", Arg.String Cpdfdrawcontrol.addpng, " Load a PNG from file and name it");
    ("-image", Arg.String (fun s -> Cpdfdrawcontrol.addimage s), " Draw an image which has already been loaded");
@@ -3815,7 +3815,7 @@ let rasterize antialias downsample device res annots quality pdf range =
           end;
         let data = Pdfio.bytes_of_string (Pdfutil.contents_of_file tmpout) in
         Sys.remove tmpout;
-        let image, _ = (if device = "jpeg" || device = "jpeggray" then Cpdfimage.obj_of_jpeg_data else Cpdfimage.obj_of_png_data) data in
+        let image, _ = (if device = "jpeg" || device = "jpeggray" then Cpdfimage.obj_of_jpeg_data ~path_to_im:args.path_to_im else Cpdfimage.obj_of_png_data) data in
         let imageobj = Pdf.addobj pdf image in
         let w, h =
           match device with

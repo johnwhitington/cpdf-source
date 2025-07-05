@@ -274,12 +274,12 @@ let setmsheary s =
 let usexobj s =
   addop (Cpdfdraw.Use s)
 
-let addjpeg ?data n =
+let addjpeg ?data ~path_to_im n =
   match data with
   | Some d ->
       addop
         (Cpdfdraw.ImageXObject
-           (n, fst (Cpdfimage.obj_of_jpeg_data (Pdfio.bytes_of_raw d))))
+           (n, fst (Cpdfimage.obj_of_jpeg_data ~path_to_im (Pdfio.bytes_of_raw d))))
   | None ->
       let name, filename =
         match String.split_on_char '=' n with
@@ -288,7 +288,7 @@ let addjpeg ?data n =
       in
         try
           let data = Pdfio.bytes_of_string (contents_of_file filename) in
-            addop (Cpdfdraw.ImageXObject (name, fst (Cpdfimage.obj_of_jpeg_data data)))
+            addop (Cpdfdraw.ImageXObject (name, fst (Cpdfimage.obj_of_jpeg_data ~path_to_im data)))
         with
           _ -> error "addjpeg: could not load JPEG"
 

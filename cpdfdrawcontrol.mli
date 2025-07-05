@@ -61,7 +61,7 @@ val xobjbbox : string -> unit
 val startxobj : string -> unit
 val endxobj : unit -> unit
 val usexobj : string -> unit
-val addjpeg : ?data:Pdfio.rawbytes -> string -> unit
+val addjpeg : ?data:Pdfio.rawbytes -> path_to_im:string -> string -> unit
 val addjpeg2000 : ?data:Pdfio.rawbytes -> string -> unit
 val addpng : ?data:Pdfio.rawbytes -> string -> unit
 val addimage : string -> unit

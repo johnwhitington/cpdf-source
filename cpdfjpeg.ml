@@ -42,3 +42,17 @@ let jpeg_dimensions bs =
     assert false
  with
    Answer (w, h) -> (w, h)
+
+let backup_jpeg_dimensions ~path_to_im filename =
+  Cpdfutil.check_injectible filename;
+  let tmp = Filename.temp_file "cpdf" "info" in
+  let command = Filename.quote_command path_to_im ["-format"; "%[width] %[height]"; filename; "info:"] ^ " >" ^ tmp in
+  let out = Sys.command command in
+  if out > 0 then (Pdfe.log "unable to find JPEG dimensions"; (0, 0)) else
+  let w, h =
+    let w, rest = cleavewhile (neq ' ') (explode (contents_of_file tmp)) in
+    let h = tl rest in
+      int_of_string (implode w), int_of_string (implode h)
+  in
+    begin try Sys.remove tmp with _ -> () end;
+    (w, h)

@@ -444,8 +444,17 @@ let images pdf range =
                        ("Filter", match filter with None -> `Null | Some s -> `String s)])
              images)
 
-let obj_of_jpeg_data data =
-  let w, h = Cpdfjpeg.jpeg_dimensions data in
+let obj_of_jpeg_data ~path_to_im data =
+  let w, h = 
+    try Cpdfjpeg.jpeg_dimensions data with _ ->
+      let temp = Filename.temp_file "cpdf" ".jpeg" in
+        contents_to_file ~filename:temp (string_of_bytes data);
+        let w, h = 
+          Cpdfjpeg.backup_jpeg_dimensions ~path_to_im temp
+        in
+          begin try Sys.remove temp with _ -> () end;
+          (w, h)
+  in
   let d = 
     ["/Length", Pdf.Integer (Pdfio.bytes_size data);
      "/Filter", Pdf.Name "/DCTDecode";
@@ -578,20 +587,6 @@ let image_of_input ?subformat ?title ~process_struct_tree fobj i =
   let pdf, pageroot = Pdfpage.add_pagetree [page] pdf in
     Pdfpage.add_root pageroot [] pdf
 
-let backup_jpeg_dimensions ~path_to_convert filename =
-  Cpdfutil.check_injectible filename;
-  let tmp = Filename.temp_file "cpdf" "info" in
-  let command = Filename.quote_command path_to_convert ["-format"; "%[width] %[height]"; filename; "info:"] ^ " >" ^ tmp in
-  let out = Sys.command command in
-  if out > 0 then (Pdfe.log "unable to find JPEG dimensions"; (0, 0)) else
-  let w, h =
-    let w, rest = cleavewhile (neq ' ') (explode (contents_of_file tmp)) in
-    let h = tl rest in
-      int_of_string (implode w), int_of_string (implode h)
-  in
-    remove tmp;
-    (w, h)
-
 let jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale ~interpolate ~q ~path_to_convert s dict reference =
   if q < 0. || q > 100. then error "Out of range quality";
   complain_convert path_to_convert;
@@ -627,7 +622,7 @@ let jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~j
           if newsize < size && perc_ok then
             begin
               let data = Pdfio.bytes_of_input_channel result in
-              let w, h = try Cpdfjpeg.jpeg_dimensions data with e -> try close_in result; backup_jpeg_dimensions ~path_to_convert out2 with e -> (-1, -1) in
+              let w, h = try Cpdfjpeg.jpeg_dimensions data with e -> try close_in result; Cpdfjpeg.backup_jpeg_dimensions ~path_to_im:path_to_convert out2 with e -> (-1, -1) in
               if (w, h) = (-1, -1) then
                 Printf.printf "Could not determine JPEG dimensions. Skipping.\n%!"
               else
