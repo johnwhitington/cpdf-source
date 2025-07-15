@@ -572,6 +572,7 @@ type args =
    mutable no_warn_rotate : bool;
    mutable jpegquality : float;
    mutable jpegqualitylossless : float;
+   mutable jpeg2000qualitylossless : float;
    mutable jpegtojpegscale : float;
    mutable jpegtojpegdpi : float;
    mutable onebppmethod : string;
@@ -727,6 +728,7 @@ let args =
    no_warn_rotate = false;
    jpegquality = 100.;
    jpegqualitylossless = 101.;
+   jpeg2000qualitylossless = 101.;
    jpegtojpegscale = 100.;
    jpegtojpegdpi = 0.;
    onebppmethod = "None";
@@ -869,6 +871,7 @@ let reset_arguments () =
   args.idir_only_pdfs <- false;
   args.jpegquality <- 100.;
   args.jpegqualitylossless <- 101.;
+  args.jpeg2000qualitylossless <- 101.;
   args.onebppmethod <- "None";
   args.pixel_threshold <- 25;
   args.length_threshold <- 100;
@@ -1996,6 +1999,9 @@ let setjpegquality q =
 let setjpegqualitylossless q =
   args.jpegqualitylossless <- q
 
+let setjpeg2000qualitylossless q =
+  args.jpeg2000qualitylossless <- q
+
 let setjpegtojpegscale q =
   args.jpegtojpegscale <- q
 
@@ -2910,6 +2916,9 @@ let specs =
    ("-lossless-to-jpeg",
      Arg.Float setjpegqualitylossless,
      " Set JPEG quality for existing lossless images");
+   ("-lossless-to-jpeg2000",
+     Arg.Float setjpeg2000qualitylossless,
+     " Set JPEG2000 quality for existing lossless images");
    ("-1bpp-method",
      Arg.String set1bppmethod,
      " Set 1bpp compression method for existing images");
@@ -5019,7 +5028,7 @@ let rec go () =
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
         Cpdfimage.process
-          ~q:args.jpegquality ~qlossless:args.jpegqualitylossless ~onebppmethod:args.onebppmethod ~jbig2_lossy_threshold:args.jbig2_lossy_threshold
+          ~q:args.jpegquality ~qlossless:args.jpegqualitylossless ~qlossless2000:args.jpeg2000qualitylossless ~onebppmethod:args.onebppmethod ~jbig2_lossy_threshold:args.jbig2_lossy_threshold
           ~length_threshold:args.length_threshold ~percentage_threshold:args.percentage_threshold ~pixel_threshold:args.pixel_threshold 
           ~dpi_threshold:args.dpi_threshold ~factor:args.resample_factor ~interpolate:args.resample_interpolate
           ~jpeg_to_jpeg_scale:args.jpegtojpegscale ~jpeg_to_jpeg_dpi:args.jpegtojpegdpi

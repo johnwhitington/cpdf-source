@@ -55,7 +55,7 @@ let pnm_to_channel_1_inverted ch w h s =
 
 let cmyk_to_channel_32 ch w h s =
   let inverted = Pdfio.copybytes s in
-    Pdfio.bytes_selfmap (fun x -> 255 - x) inverted;
+    (*Pdfio.bytes_selfmap (fun x -> 255 - x) inverted;*) (*FIXME New JPEG2000 stuff seems to need this removed, but why? And why did we add it? *)
     bytes_to_output_channel ch inverted
 
 let jbig2_serial = ref 0
@@ -1060,8 +1060,57 @@ let preprocess_jbig2_lossy ~path_to_jbig2enc ~jbig2_lossy_threshold ~length_thre
    iter (fun i -> remove (jbig2out ^ Printf.sprintf ".%04i" i)) (indx0 !objnum_name_pairs);
    remove (jbig2out ^ ".sym")
 
+let lossless_to_jpeg2000 objnum pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~qlossless2000 ~path_to_convert s dict reference =
+  complain_convert path_to_convert;
+  match lossless_out pdf ~pixel_threshold ~length_threshold ".jp2" s dict reference with
+  | None -> ()
+  | Some (_, _, _, -2, _, _) ->
+      if !debug_image_processing then Printf.printf "skipping indexed colorspace\n%!"
+  | Some (out, out2, size, components, w, h) ->
+  let retcode =
+    let command = 
+      (Filename.quote_command path_to_convert
+        ((if components = 4 then ["-depth"; "8"; "-size"; string_of_int w ^ "x" ^ string_of_int h] else []) @
+        [out; "-quality"; string_of_float qlossless2000 ^ "%"] @
+        [out2]))
+    in
+      image_command command
+  in
+  if retcode = 0 then
+    begin
+      try
+        let result = open_in_bin out2 in
+        let newsize = in_channel_length result in
+        let perc_ok = float newsize /. float size < percentage_threshold /. 100. in
+        if newsize < size && perc_ok then
+          begin
+            if !debug_image_processing then Printf.printf "lossless to JPEG2000 %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
+            reference :=
+              (Pdf.remove_dict_entry
+                (Pdf.add_dict_entry
+                (Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize))
+                 "/Filter"
+                 (Pdf.Name "/JPXDecode")) "/ColorSpace"),
+              Pdf.Got (Pdfio.bytes_of_input_channel result)
+          end
+        else
+          begin
+            if !debug_image_processing then Printf.printf "no size reduction\n%!"
+          end;
+          close_in result
+      with
+        e ->
+          if !debug_image_processing then Printf.printf "Failed with %S\n%!" (Printexc.to_string e);
+          remove out;
+          remove out2
+    end
+  else
+    if !debug_image_processing then Printf.printf "Return code not zero\n%!";
+  remove out;
+  remove out2
+
 let process
-  ~q ~qlossless ~onebppmethod ~jbig2_lossy_threshold ~length_threshold ~percentage_threshold ~pixel_threshold ~dpi_threshold
+  ~q ~qlossless ~qlossless2000 ~onebppmethod ~jbig2_lossy_threshold ~length_threshold ~percentage_threshold ~pixel_threshold ~dpi_threshold
   ~factor ~interpolate ~jpeg_to_jpeg_scale ~jpeg_to_jpeg_dpi ~path_to_jbig2enc ~path_to_convert range pdf
 =
   let inrange =
@@ -1105,6 +1154,8 @@ let process
                 if !debug_image_processing then Printf.printf "(%i/%i) Object %i (JPEG)... %!" !ndone nobjects objnum;
                 jpeg_to_jpeg_wrapper objnum pdf ~target_dpi_info ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale ~jpeg_to_jpeg_dpi ~interpolate ~q ~path_to_convert s dict reference
               end
+        | Some (Pdf.Name "/Image"), Some (Pdf.Name "/JPXDecode" | Pdf.Array [Pdf.Name "/JPXDecode"]), _, _ ->
+            ()
         | Some (Pdf.Name "/Image"), _, Some (Pdf.Integer 1), _
         | Some (Pdf.Name "/Image"), _, _, Some (Pdf.Boolean true) ->
             begin match onebppmethod with
@@ -1128,10 +1179,16 @@ let process
             | _ -> error "unknown 1bpp method"
             end
         | Some (Pdf.Name "/Image"), _, _, _ ->
+            (* FIXME Define a proper data type to replace the mess of numbers for classification of lossless transforms. Also above for JPEG. *)
             if qlossless < 101. then
               begin
                 if !debug_image_processing then Printf.printf "(%i/%i) Object %i (lossless)... %!" !ndone nobjects objnum;
                 lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~qlossless ~path_to_convert s dict reference
+              end
+            else if qlossless2000 < 101. then
+              begin
+                if !debug_image_processing then Printf.printf "(%i/%i) Object %i (lossless)... %!" !ndone nobjects objnum;
+                lossless_to_jpeg2000 objnum pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~qlossless2000 ~path_to_convert s dict reference;
               end
             else
               begin
