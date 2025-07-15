@@ -2919,6 +2919,9 @@ let specs =
    ("-lossless-to-jpeg2000",
      Arg.Float setjpeg2000qualitylossless,
      " Set JPEG2000 quality for existing lossless images");
+   ("-jpeg2000-to-jpeg2000",
+     Arg.Float (fun x -> setjpeg2000qualitylossless ~-.x),
+     " Set JPEG2000 quality for existing lossless images");
    ("-1bpp-method",
      Arg.String set1bppmethod,
      " Set 1bpp compression method for existing images");
