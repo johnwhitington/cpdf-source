@@ -648,6 +648,67 @@ let jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~j
     remove out;
     remove out2
 
+let jpeg2000_to_jpeg2000 pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale ~interpolate ~q ~path_to_convert s dict reference =
+  if q < 0. || q > 100. then error "Out of range quality";
+  complain_convert path_to_convert;
+  let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
+  let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
+  if w * h < pixel_threshold then (if !debug_image_processing then Printf.printf "pixel threshold not met\n%!") else
+  Pdf.getstream s;
+  let size = match Pdf.lookup_direct pdf "/Length" dict with Some (Pdf.Integer i) -> i | _ -> 0 in
+  if size < length_threshold then (if !debug_image_processing then Printf.printf "length threshold not met\n%!") else
+  let out = Filename.temp_file "cpdf" "convertin.jp2" in
+  let out2 = Filename.temp_file "cpdf" "convertout.jp2" in
+  let fh = open_out_bin out in
+    begin match s with Pdf.Stream {contents = _, Pdf.Got d} -> Pdfio.bytes_to_output_channel fh d | _ -> () end;
+    close_out fh;
+    let retcode =
+    let scaling =
+      if jpeg_to_jpeg_scale <> 100. then
+        [(if interpolate then "-sample" else "-resize"); string_of_float jpeg_to_jpeg_scale ^ "%"]
+      else
+        []
+    in
+      let command = 
+        Filename.quote_command path_to_convert ([out] @ scaling @ ["-quality"; string_of_float q ^ "%"; out2])
+      in
+        image_command command
+    in
+    if retcode = 0 then
+      begin
+        try
+          let result = open_in_bin out2 in
+          let newsize = in_channel_length result in
+          let perc_ok = float newsize /. float size < percentage_threshold /. 100. in
+          if newsize < size && perc_ok then
+            begin
+              let data = Pdfio.bytes_of_input_channel result in
+              let w, h = try Cpdfjpeg2000.jpeg2000_dimensions data with e -> (-1, -1) in
+              if (w, h) = (-1, -1) then
+                Printf.printf "Could not determine JPEG2000 dimensions. Skipping.\n%!"
+              else
+                begin
+                  if !debug_image_processing then Printf.printf "JPEG2000 to JPEG2000 %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
+                  reference :=
+                    Pdf.add_dict_entry (Pdf.add_dict_entry (Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize)) "/Width" (Pdf.Integer w)) "/Height" (Pdf.Integer h),
+                    Pdf.Got data
+                end
+            end
+          else
+           begin
+             if !debug_image_processing then Printf.printf "no size reduction\n%!"
+           end;
+          close_in result
+       with e ->
+         if !debug_image_processing then Printf.printf "Error %S\n%!" (Printexc.to_string e);
+         remove out;
+         remove out2
+      end
+    else
+      if !debug_image_processing then Printf.printf "external process failed\n%!";
+    remove out;
+    remove out2
+
 let suitable_num pdf dict =
   match Pdf.lookup_direct pdf "/ColorSpace" dict with
   | Some (Pdf.Name ("/DeviceRGB" | "/CalRGB")) -> 3
@@ -846,6 +907,20 @@ let jpeg_to_jpeg_wrapper objnum pdf ~target_dpi_info ~pixel_threshold ~length_th
       let real_factor = factor /. Hashtbl.find target_dpi_info objnum *. 100. in
         if real_factor < 100. then
           jpeg_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale:real_factor ~interpolate ~q ~path_to_convert s dict reference
+        else
+          if !debug_image_processing then Printf.printf "failed to meet dpi target\n%!"
+    with
+      Not_found -> if !debug_image_processing then Printf.printf "Warning: orphaned image, skipping\n" (* Could not find DPI data - an orphan image. *)
+
+let jpeg2000_to_jpeg2000_wrapper objnum pdf ~target_dpi_info ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale ~jpeg_to_jpeg_dpi ~interpolate ~q ~path_to_convert s dict reference =
+  if jpeg_to_jpeg_dpi = 0. then
+    jpeg2000_to_jpeg2000 pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale ~interpolate ~q ~path_to_convert s dict reference
+  else
+    try
+      let factor = jpeg_to_jpeg_dpi in
+      let real_factor = factor /. Hashtbl.find target_dpi_info objnum *. 100. in
+        if real_factor < 100. then
+          jpeg2000_to_jpeg2000 pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale:real_factor ~interpolate ~q ~path_to_convert s dict reference
         else
           if !debug_image_processing then Printf.printf "failed to meet dpi target\n%!"
     with
@@ -1155,7 +1230,11 @@ let process
                 jpeg_to_jpeg_wrapper objnum pdf ~target_dpi_info ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale ~jpeg_to_jpeg_dpi ~interpolate ~q ~path_to_convert s dict reference
               end
         | Some (Pdf.Name "/Image"), Some (Pdf.Name "/JPXDecode" | Pdf.Array [Pdf.Name "/JPXDecode"]), _, _ ->
-            ()
+            if qlossless2000 < 0. then
+              begin
+                if !debug_image_processing then Printf.printf "(%i/%i) Object %i (JPEG2000)... %!" !ndone nobjects objnum;
+                jpeg2000_to_jpeg2000_wrapper objnum pdf ~target_dpi_info ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale ~jpeg_to_jpeg_dpi ~interpolate ~q:~-.qlossless2000 ~path_to_convert s dict reference
+              end
         | Some (Pdf.Name "/Image"), _, Some (Pdf.Integer 1), _
         | Some (Pdf.Name "/Image"), _, _, Some (Pdf.Boolean true) ->
             begin match onebppmethod with
