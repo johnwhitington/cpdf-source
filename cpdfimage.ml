@@ -18,7 +18,7 @@ let complain_convert path =
   if path = "" then error "Specify magick location with -im"
 
 let remove x =
-  try (*Printf.printf "%s\n" x;*) Sys.remove x with _ -> ()
+  try (*Printf.printf "%s\n" x;*) (*Sys.remove x*)() with _ -> ()
 
 let pnm_white ch = output_char ch ' '
 let pnm_newline ch = output_char ch '\n'
@@ -848,12 +848,11 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolat
   (*Printf.printf "\n***IN components = %i, bpc = %i\n" in_components in_bpc;*)
   match lossless_out pdf ~pixel_threshold ~length_threshold ".png" s dict reference with
   | None -> ()
-  | Some (_, _, _, 4, _, _) -> if !debug_image_processing then Printf.printf "lossless resampling for CMYK not supported yet\n%!"
   | Some (out, out2, size, components, w, h) ->
   let retcode =
     let command = 
       Filename.quote_command path_to_convert
-        ([out] @ (if components = 4 then ["-depth"; "8"; "-size"; string_of_int w ^ "x" ^ string_of_int h] else []) @
+        ((if components = 4 then ["-depth"; "8"; "-size"; string_of_int w ^ "x" ^ string_of_int h] else []) @ [out] @
         (if components = 1 then ["-define"; "png:color-type=0"; "-colorspace"; "Gray"] else if components = 3 then ["-define"; "png:color-type=2"; "-colorspace"; "RGB"] else if components = 4 then ["-colorspace"; "CMYK"] else []) @
         [if interpolate && components > -2 then "-resize" else "-sample"; string_of_float factor ^ "%"; out2])
     in
