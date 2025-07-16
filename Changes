@@ -8,6 +8,8 @@ o Show progress on long files
 o Create PDF Portfolios
 o Remove procsets, article threads, page pieces
 o Remove web capture, output intents, alternate images
+o Reprocess JPEG2000s within files
+o Convert lossless images to JPEG2000
 
 Extended features:
 
@@ -24,6 +26,7 @@ o New -list-attached-files-json optionally including file data
 o List and add descriptions and relationships for attachments
 o New operation to remove only embedded standard fonts
 o New operation to remove all metadata
+o Process lossless CMYK images
 
 Fixes:
 
