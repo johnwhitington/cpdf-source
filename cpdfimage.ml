@@ -38,6 +38,24 @@ let pnm_to_channel_24 ch w h s =
   pnm_newline ch;
   bytes_to_output_channel ch s
 
+(* The image in PDF format will 4 bits for each, but padded to a whole byte at
+   end of image line. We need to convert to 8 bits per sample with no padding at
+   the end of image line. *)
+let pnm_to_channel_4bpp ch w h s =
+  pnm_output_string ch "P5";
+  pnm_header ch w h;
+  pnm_output_string ch "15";
+  pnm_newline ch;
+  let o, odata = input_output_of_bytes (w * h) in
+  let bs = bitbytes_of_input (input_of_bytes s) in
+    for y = 1 to h do
+      for x = 1 to w do
+        o.output_byte (getval_31 bs 4)
+      done;
+      align bs
+    done;
+    bytes_to_output_channel ch (extract_bytes_from_input_output o odata)
+
 let pnm_to_channel_8 ch w h s =
   pnm_output_string ch "P5";
   pnm_header ch w h;
@@ -732,7 +750,8 @@ let lossless_out pdf ~pixel_threshold ~length_threshold extension s dict referen
   let bpc = Pdf.lookup_direct pdf "/BitsPerComponent" dict in
   let components = suitable_num pdf dict in
   match components, bpc with
-  | (1 | 3 | 4 | -1 | -2), Some (Pdf.Integer 8) ->
+  | (1 | 3 | 4 | -1 | -2), Some (Pdf.Integer (8 as bpc))
+  | -2, Some (Pdf.Integer (4 as bpc)) ->
       let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
       let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
       if w * h < pixel_threshold then (if !debug_image_processing then Printf.printf "pixel threshold not met\n%!"; None) else
@@ -745,20 +764,21 @@ let lossless_out pdf ~pixel_threshold ~length_threshold extension s dict referen
         let out2 = Filename.temp_file "cpdf" ("convertout" ^ extension) in
         let fh = open_out_bin out in
         let data = match s with Pdf.Stream {contents = _, Pdf.Got d} -> d | _ -> assert false in
-        (if components = 3 then pnm_to_channel_24 else
+        (if bpc = 4 && components = -2 then pnm_to_channel_4bpp else
+         if components = 3 then pnm_to_channel_24 else
          if components = 4 then cmyk_to_channel_32 else pnm_to_channel_8) fh w h data;
         close_out fh;
         Some (out, out2, size, components, w, h)
       end
   | colspace, bpc ->
-    (*let colspace = Pdf.lookup_direct pdf "/ColorSpace" dict in
+    let colspace = Pdf.lookup_direct pdf "/ColorSpace" dict in
     let colspace, bpc, filter = 
       (match colspace with None -> "none" | Some x -> Pdfwrite.string_of_pdf x),
       (match bpc with None -> "none" | Some x -> Pdfwrite.string_of_pdf x),
       (match Pdf.lookup_direct pdf "/Filter" dict with None -> "none" | Some x -> Pdfwrite.string_of_pdf x)
     in
       print_string (Pdfwrite.string_of_pdf dict);
-      print_string (Printf.sprintf "%s (%s) [%s]\n" colspace bpc filter);*)
+      print_string (Printf.sprintf "%s (%s) [%s]\n" colspace bpc filter);
       if !debug_image_processing then Printf.printf "colourspace not suitable\n%!";
       restore ();
       None (* an image we cannot or do not handle *)
