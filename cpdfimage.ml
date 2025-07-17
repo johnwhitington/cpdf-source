@@ -863,7 +863,7 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolat
         (if components = 1 then ["-define"; "png:color-type=0"; "-colorspace"; "Gray"]
          else if components = 3 then ["-define"; "png:color-type=2"; "-colorspace"; "RGB"]
          else if components = 4 then ["-colorspace"; "CMYK"] else []) @
-        [if interpolate && components > -2 then "-resize" else "-sample"; string_of_float factor ^ "%"; "-write"; out2] @
+        [if interpolate && components > -2 then "-resize" else "-sample"; string_of_float factor ^ "%"] @ (if components = 4 then ["-write"] else []) @ [out2] @
         (if components = 4 then ["-format"; "%w %h"; "info:"] else [])))
       ^
         (if components = 4 then " >" ^ out3 else "") (* Quoting would mangle redirection. *)
@@ -881,7 +881,16 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolat
           | 'k'::'y'::'m'::'c'::_ ->
             (* We have '.cmyk' not '.png' returned. *)
             let new_w, new_h = read_info_dimensions out3 in
-            let dict = Pdf.add_dict_entry (Pdf.add_dict_entry dict "/Height" (Pdf.Integer new_h)) "/Width" (Pdf.Integer new_w) in
+            let dict =
+              Pdf.remove_dict_entry
+                (Pdf.remove_dict_entry
+                  (Pdf.add_dict_entry
+                    (Pdf.add_dict_entry dict "/Height" (Pdf.Integer new_h))
+                    "/Width" (Pdf.Integer new_w))
+                  "/DecodeParms")
+                "/Filter"
+            in
+            if !debug_image_processing then Printf.printf "lossless resample %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
             reference := (dict, Pdf.Got (Pdfio.bytes_of_input_channel result))
           | _ -> 
             reference :=
