@@ -761,7 +761,7 @@ let lossless_out pdf ~pixel_threshold ~length_threshold extension s dict referen
         Pdfcodec.decode_pdfstream_until_unknown pdf s;
         match Pdf.lookup_direct pdf "/Filter" (fst !reference) with Some x -> restore (); if !debug_image_processing then Printf.printf "%S Unable to decompress\n%!" (Pdfwrite.string_of_pdf x); None | None ->
         let out = Filename.temp_file "cpdf" ("convertin" ^ (if suitable_num pdf dict < 4 then ".pnm" else ".cmyk")) in
-        let out2 = Filename.temp_file "cpdf" ("convertout" ^ extension) in
+        let out2 = Filename.temp_file "cpdf" ("convertout" ^ (if extension <> ".png" then extension else if suitable_num pdf dict < 4 then extension else ".cmyk")) in
         let fh = open_out_bin out in
         let data = match s with Pdf.Stream {contents = _, Pdf.Got d} -> d | _ -> assert false in
         (if bpc = 4 && components = -2 then pnm_to_channel_4bpp else
@@ -840,21 +840,33 @@ let test_bpc pdf dict =
   | Some (Pdf.Integer i) -> i
   | _ -> 0
 
+(* Read dimensions output from imagemagick's info: "%w %h"*)
+let read_info_dimensions filename =
+  match Pdfgenlex.lex (Pdfio.input_of_string (contents_of_file filename)) with
+  | [LexInt w; LexInt h] -> (w, h)
+  | _ -> error "read_info_dimensions"
+
 let lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolate ~path_to_convert s dict reference =
   complain_convert path_to_convert;
   let in_components = test_components pdf dict in
   let in_bpc = test_bpc pdf dict in
   (*Printf.printf "***lossless_resample IN dictionary: %S\n" (Pdfwrite.string_of_pdf dict); *)
   (*Printf.printf "\n***IN components = %i, bpc = %i\n" in_components in_bpc;*)
+  let out3 = Filename.temp_file "cpdf" "dimens" in 
   match lossless_out pdf ~pixel_threshold ~length_threshold ".png" s dict reference with
   | None -> ()
   | Some (out, out2, size, components, w, h) ->
   let retcode =
     let command = 
-      Filename.quote_command path_to_convert
+      (Filename.quote_command path_to_convert
         ((if components = 4 then ["-depth"; "8"; "-size"; string_of_int w ^ "x" ^ string_of_int h] else []) @ [out] @
-        (if components = 1 then ["-define"; "png:color-type=0"; "-colorspace"; "Gray"] else if components = 3 then ["-define"; "png:color-type=2"; "-colorspace"; "RGB"] else if components = 4 then ["-colorspace"; "CMYK"] else []) @
-        [if interpolate && components > -2 then "-resize" else "-sample"; string_of_float factor ^ "%"; out2])
+        (if components = 1 then ["-define"; "png:color-type=0"; "-colorspace"; "Gray"]
+         else if components = 3 then ["-define"; "png:color-type=2"; "-colorspace"; "RGB"]
+         else if components = 4 then ["-colorspace"; "CMYK"] else []) @
+        [if interpolate && components > -2 then "-resize" else "-sample"; string_of_float factor ^ "%"; "-write"; out2] @
+        (if components = 4 then ["-format"; "%w %h"; "info:"] else [])))
+      ^
+        (if components = 4 then " >" ^ out3 else "") (* Quoting would mangle redirection. *)
     in
       image_command command
   in
@@ -865,34 +877,41 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolat
       let newsize = in_channel_length result in
       if newsize < size then
         begin
-          reference :=
-            (match fst (obj_of_png_data (Pdfio.bytes_of_input_channel result)) with
-            | Pdf.Stream {contents = Pdf.Dictionary d, data} as s ->
-                let out_components = test_components pdf s in
-                let out_bpc = test_bpc pdf s in
-                (*Printf.printf "***OUT components = %i, bpc = %i\n" out_components out_bpc;*)
-                let rgb_to_grey_special =
-                  let was_rgb =
-                    match Pdf.lookup_direct pdf "/ColorSpace" dict with
-                    | Some (Pdf.Name ("/DeviceRGB" | "/CalRGB")) -> true
-                    | _ -> false
+          match rev (explode out2) with
+          | 'k'::'y'::'m'::'c'::_ ->
+            (* We have '.cmyk' not '.png' returned. *)
+            let new_w, new_h = read_info_dimensions out3 in
+            let dict = Pdf.add_dict_entry (Pdf.add_dict_entry dict "/Height" (Pdf.Integer new_h)) "/Width" (Pdf.Integer new_w) in
+            reference := (dict, Pdf.Got (Pdfio.bytes_of_input_channel result))
+          | _ -> 
+            reference :=
+              (match fst (obj_of_png_data (Pdfio.bytes_of_input_channel result)) with
+              | Pdf.Stream {contents = Pdf.Dictionary d, data} as s ->
+                  let out_components = test_components pdf s in
+                  let out_bpc = test_bpc pdf s in
+                  (*Printf.printf "***OUT components = %i, bpc = %i\n" out_components out_bpc;*)
+                  let rgb_to_grey_special =
+                    let was_rgb =
+                      match Pdf.lookup_direct pdf "/ColorSpace" dict with
+                      | Some (Pdf.Name ("/DeviceRGB" | "/CalRGB")) -> true
+                      | _ -> false
+                    in
+                      in_bpc = out_bpc && in_components = 3 && out_components = 1 && was_rgb
                   in
-                    in_bpc = out_bpc && in_components = 3 && out_components = 1 && was_rgb
-                in
-                (*Printf.printf "***rgb_to_grey_special = %b\n" rgb_to_grey_special;*)
-                if (out_components <> in_components || in_bpc <> out_bpc) && not rgb_to_grey_special then
+                  (*Printf.printf "***rgb_to_grey_special = %b\n" rgb_to_grey_special;*)
+                  if (out_components <> in_components || in_bpc <> out_bpc) && not rgb_to_grey_special then
+                    begin
+                      if !debug_image_processing then Printf.printf "wrong bpc / components returned. Skipping.\n%!";
+                      !reference
+                    end
+                  else
                   begin
-                    if !debug_image_processing then Printf.printf "wrong bpc / components returned. Skipping.\n%!";
-                    !reference
+                    if !debug_image_processing then Printf.printf "lossless resample %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
+                    let d' = fold_right (fun (k, v) d -> if k <> "/ColorSpace" || rgb_to_grey_special then add k v d else d) d (match dict with Pdf.Dictionary x -> x | _ -> []) in
+                      (*Printf.printf "***lossless_resample OUT dictionary: %S\n" (Pdfwrite.string_of_pdf (Pdf.Dictionary d')); *)
+                      (Pdf.Dictionary d', data)
                   end
-                else
-                begin
-                  if !debug_image_processing then Printf.printf "lossless resample %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
-                  let d' = fold_right (fun (k, v) d -> if k <> "/ColorSpace" || rgb_to_grey_special then add k v d else d) d (match dict with Pdf.Dictionary x -> x | _ -> []) in
-                    (*Printf.printf "***lossless_resample OUT dictionary: %S\n" (Pdfwrite.string_of_pdf (Pdf.Dictionary d')); *)
-                    (Pdf.Dictionary d', data)
-                end
-            | _ -> assert false)
+              | _ -> assert false)
         end
       else
         begin
@@ -901,11 +920,13 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolat
         close_in result
     end;
     remove out;
-    remove out2
+    remove out2;
+    remove out3
   with e ->
     if !debug_image_processing then Printf.printf "Unable: %S\n" (Printexc.to_string e);
     remove out;
-    remove out2
+    remove out2;
+    remove out3
 
 let lossless_resample_target_dpi objnum pdf ~pixel_threshold ~length_threshold ~factor ~target_dpi_info ~interpolate ~path_to_convert s dict reference =
   try
