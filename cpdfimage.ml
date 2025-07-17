@@ -18,7 +18,7 @@ let complain_convert path =
   if path = "" then error "Specify magick location with -im"
 
 let remove x =
-  try (*Printf.printf "%s\n" x;*) (*Sys.remove x*)() with _ -> ()
+  try (*Printf.printf "%s\n" x;*) Sys.remove x with _ -> ()
 
 let pnm_white ch = output_char ch ' '
 let pnm_newline ch = output_char ch '\n'
@@ -72,8 +72,11 @@ let pnm_to_channel_1_inverted ch w h s =
     bytes_to_output_channel ch inverted
 
 let cmyk_to_channel_32 ch w h s =
+  bytes_to_output_channel ch s
+
+let cmyk_to_channel_32_invert ch w h s =
   let inverted = Pdfio.copybytes s in
-    (*Pdfio.bytes_selfmap (fun x -> 255 - x) inverted;*) (*FIXME New JPEG2000 stuff seems to need this removed, but why? And why did we add it? *)
+    Pdfio.bytes_selfmap (fun x -> 255 - x) inverted;
     bytes_to_output_channel ch inverted
 
 let jbig2_serial = ref 0
@@ -744,7 +747,7 @@ let suitable_num pdf dict =
   | Some (Pdf.Array (Pdf.Name ("/Indexed")::_)) -> ~-2
   | _ -> 0
 
-let lossless_out pdf ~pixel_threshold ~length_threshold extension s dict reference =
+let lossless_out pdf ~invert_cmyk ~pixel_threshold ~length_threshold extension s dict reference =
   let old = !reference in
   let restore () = reference := old in
   let bpc = Pdf.lookup_direct pdf "/BitsPerComponent" dict in
@@ -766,7 +769,7 @@ let lossless_out pdf ~pixel_threshold ~length_threshold extension s dict referen
         let data = match s with Pdf.Stream {contents = _, Pdf.Got d} -> d | _ -> assert false in
         (if bpc = 4 && components = -2 then pnm_to_channel_4bpp else
          if components = 3 then pnm_to_channel_24 else
-         if components = 4 then cmyk_to_channel_32 else pnm_to_channel_8) fh w h data;
+         if components = 4 then (if invert_cmyk then cmyk_to_channel_32_invert else cmyk_to_channel_32) else pnm_to_channel_8) fh w h data;
         close_out fh;
         Some (out, out2, size, components, w, h)
       end
@@ -785,7 +788,7 @@ let lossless_out pdf ~pixel_threshold ~length_threshold extension s dict referen
 
 let lossless_to_jpeg pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~qlossless ~path_to_convert s dict reference =
   complain_convert path_to_convert;
-  match lossless_out pdf ~pixel_threshold ~length_threshold ".jpg" s dict reference with
+  match lossless_out pdf ~invert_cmyk:true ~pixel_threshold ~length_threshold ".jpg" s dict reference with
   | None -> ()
   | Some (_, _, _, -2, _, _) ->
       if !debug_image_processing then Printf.printf "skipping indexed colorspace\n%!"
@@ -853,7 +856,7 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolat
   (*Printf.printf "***lossless_resample IN dictionary: %S\n" (Pdfwrite.string_of_pdf dict); *)
   (*Printf.printf "\n***IN components = %i, bpc = %i\n" in_components in_bpc;*)
   let out3 = Filename.temp_file "cpdf" "dimens" in 
-  match lossless_out pdf ~pixel_threshold ~length_threshold ".png" s dict reference with
+  match lossless_out pdf ~invert_cmyk:false ~pixel_threshold ~length_threshold ".png" s dict reference with
   | None -> ()
   | Some (out, out2, size, components, w, h) ->
   let retcode =
@@ -1186,7 +1189,7 @@ let preprocess_jbig2_lossy ~path_to_jbig2enc ~jbig2_lossy_threshold ~length_thre
 
 let lossless_to_jpeg2000 objnum pdf ~pixel_threshold ~length_threshold ~percentage_threshold ~qlossless2000 ~path_to_convert s dict reference =
   complain_convert path_to_convert;
-  match lossless_out pdf ~pixel_threshold ~length_threshold ".jp2" s dict reference with
+  match lossless_out pdf ~invert_cmyk:false ~pixel_threshold ~length_threshold ".jp2" s dict reference with
   | None -> ()
   | Some (_, _, _, -2, _, _) ->
       if !debug_image_processing then Printf.printf "skipping indexed colorspace\n%!"
