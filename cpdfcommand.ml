@@ -4856,20 +4856,27 @@ let rec go () =
         Pdfpagelabels.remove pdf;
         write_pdf false pdf
   | Some PrintPageLabels ->
-      let pdf = get_single_pdf args.op true in
-        if args.format_json then
-          let json_of_pagelabel l =
-            `Assoc
-              [("labelstyle", `String (Pdfpagelabels.string_of_labelstyle l.Pdfpagelabels.labelstyle));
-               ("labelprefix", begin match l.Pdfpagelabels.labelprefix with None -> `Null | Some s -> `String s end);
-               ("startpage", `Int l.Pdfpagelabels.startpage);
-               ("startvalue", `Int l.Pdfpagelabels.startvalue)]
-          in
-            flprint (Cpdfyojson.Safe.pretty_to_string (`List (map json_of_pagelabel (Pdfpagelabels.read pdf))))
-        else
-          iter
-            print_string
-            (map Pdfpagelabels.string_of_pagelabel (Pdfpagelabels.read pdf))
+      let string_of_pagelabel l =
+        (Printf.sprintf "labelstyle: %s\n" (Pdfpagelabels.string_of_labelstyle l.Pdfpagelabels.labelstyle)) ^
+        (Printf.sprintf "labelprefix: %s\n"
+           (match l.Pdfpagelabels.labelprefix with None -> "None" | Some s -> (Pdftext.utf8_of_pdfdocstring s))) ^
+        (Printf.sprintf "startpage: %i\n" l.Pdfpagelabels.startpage) ^
+        (Printf.sprintf "startvalue: %s\n" (string_of_int l.Pdfpagelabels.startvalue))
+      in
+        let pdf = get_single_pdf args.op true in
+          if args.format_json then
+            let json_of_pagelabel l =
+              `Assoc
+                [("labelstyle", `String (Pdfpagelabels.string_of_labelstyle l.Pdfpagelabels.labelstyle));
+                 ("labelprefix", begin match l.Pdfpagelabels.labelprefix with None -> `Null | Some s -> `String (Pdftext.utf8_of_pdfdocstring s) end);
+                 ("startpage", `Int l.Pdfpagelabels.startpage);
+                 ("startvalue", `Int l.Pdfpagelabels.startvalue)]
+            in
+              flprint (Cpdfyojson.Safe.pretty_to_string (`List (map json_of_pagelabel (Pdfpagelabels.read pdf))))
+          else
+            iter
+              print_string
+              (map string_of_pagelabel (Pdfpagelabels.read pdf))
   | Some (RemoveDictEntry key) ->
       let pdf = get_single_pdf args.op true in
         Cpdfutil.remove_dict_entry pdf key args.dict_entry_search;
