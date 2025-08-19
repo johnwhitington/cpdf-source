@@ -36,6 +36,7 @@ o Allow Float/Int to appear anywhere in CPDFJSON / bookmark JSON
 o Allow -info in the case where objstm reading requires password
 o Allow -stdin in -info and in -merge (once)
 o Cpdfimages was accidentally creating palettised PNGs
+o Page label prefixes now in UTF8 
 
 * = Supported by a grant from NLnet
 
