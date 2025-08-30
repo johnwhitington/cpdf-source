@@ -824,7 +824,9 @@ at least five pages.
     \item The word \texttt{all} is the same as \texttt{1-end}.
     \item A range must contain no spaces.
     \item Prepending \texttt{NOT} to a whole page range inverts it. 
-    \item Prepending \verb!<n>!\texttt{DUP} to a whole page range duplicates each page of the range \verb!<n>! times.\index{page!duplicate}
+    \item Prepending \verb!<n>!\texttt{DUP} to a whole page range duplicates each page of the range \verb!<n>! times.
+    \item The range \texttt{annotated} includes in the output just such pages as contain one or more annotations.
+\index{page!duplicate}
   \end{itemize}
  
   \noindent For example:
@@ -2077,7 +2079,7 @@ When appropriate passwords are not available, the option \texttt{-decrypt-force}
 \chapter{Compression}\label{chap:5}
 
   \begin{framed}
-     \small\noindent\verb!cpdf -decompress in.pdf -o out.pdf!
+     \small\noindent\verb!cpdf -decompress [-just-content] in.pdf -o out.pdf!
 
      \vspace{1.5mm}
      \noindent\verb!cpdf -compress in.pdf -o out.pdf!
@@ -2097,8 +2099,9 @@ PDF, use:
    \noindent\small\verb!cpdf -decompress in.pdf -o out.pdf!
   \end{framed}
 
-  \noindent If Cpdf finds a compression type it can't cope with, the stream is left compressed. When using \texttt{-decompress}, object streams are not compressed. It may be easier for manual inspection to also remove object streams, by adding the \texttt{-no-preserve-objstm} option to the command.
-  \section{Compressing a Document}
+  \noindent If Cpdf finds a compression type it can't cope with, the stream is left compressed. To decompress only page content streams, add \texttt{-just-content}.
+
+When using \texttt{-decompress}, object streams are not removed. It may be easier for manual inspection to also remove object streams, by adding the \texttt{-no-preserve-objstm} option to the command.   \section{Compressing a Document}
 \index{compressing}
   To compress the streams in a PDF file, use:
 
@@ -6325,7 +6328,7 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
   \noindent\verb!cpdf -blackfills in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf -thinlines <minimum thickness> in.pdf [<range>] -o out.pdf!
+  \noindent\verb!cpdf -thinlines <min thickness> in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -clean in.pdf -o out.pdf!
@@ -6443,6 +6446,8 @@ thinner than \texttt{<minimal~thickness>} to the given thickness. For example:
   \vspace{2.5mm}
   \noindent Thicken all lines less than 0.2mm to that value.
   \end{framed} 
+
+  \noindent A negative value will instead thin lines to the absolute of the value given. By processing twice, with a positive then negative figure, it is therefore possible to clamp thicknesses to a range or single value.
 
   \section{Garbage Collection}
 \index{garbage collection}
