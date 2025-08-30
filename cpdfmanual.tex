@@ -1258,6 +1258,19 @@ In modern usage, \texttt{-utf8} is almost always the sensible option. But for hi
 
 For historical reasons, Cpdf uses the Unix line ending character (LF) when writing text files on Microsoft Windows. For example, bookmark files.
 
+\section{Showing Progress}
+
+Adding \texttt{-progress} to any Cpdf command will show progress on Standard Error:
+
+{\small\begin{verbatim}
+$ cpdf -add-text Private in.pdf -o out.pdf -progress
+*** Operation AddText
+<<< Reading cpdfmanual.pdf
+1.2.3.4.5.6.7.8.9.10.11.12.13.14.15.16.17.18.19.20.21
+>>> Writing out.pdf
+\end{verbatim}}
+
+\noindent For page-by-page operations the page number is printed when the operation begins, the period when it ends. The \texttt{-progress} option, when combined with \texttt{AND}, shows progress for all operations after it is specified.
 
 \begin{cpdflib}
 \clearpage
@@ -4906,6 +4919,12 @@ We can build a new PDF file, given a number of pages and a paper size. The defau
 \end{framed}
 
 \noindent The standard paper sizes are listed in Section \ref{papersizes}, or you may specify the width and height directly, as described in the same chapter. To build new PDF/UA files, see \texttt{-create-pdf-ua-1} and \texttt{-create-pdf-ua-2} in chapter \ref{chap:19}.
+
+The \texttt{-create-pdf} operation may appear after \texttt{AND} too, naturally:
+
+\begin{framed}
+ \noindent\small\verb?cpdf one.pdf AND -create-pdf AND two.pdf -o out.pdf?
+\end{framed}
 
 \section{Convert a text file to PDF}
 \index{text!convert to PDF}
