@@ -1,21 +1,14 @@
-%Document negative widths in -thinlines
 %Document CCITT and CCITTG4 in -process-images
-%Document -decompress-just-content
 %Document -contains-javascript and -remove-javascript
-%Document what UTF8 does w.r.t @B in -split-bookmarks
 %Document CPDF_SHOW_EXT for image processing
 %Document "* 500pt" / "500pt *" in -scale-to-fit / -center-to-fit
-%Document -progress
-%Document "annotated" range
 %Document PDF Portfolios
-%Document that -create-pdf* can appear anywhere now
 %Document -scale-to-fit-rotate*
 %Document JPEG 2000 with -draw
 %Document new -list-attached-files format and -list-attached-files -json
 %Document new -afd -afr for adding attachments
 %Document -include-data with new -list-attached-files -json
 %Document decide how names (boxes, portfolio afrelationships, attachment afrelationships) are to be input. Slash or no slash?
-%Document default external programs
 %Document new -remove-article-threads -remove-page-piece -remove-web-capture -remove-procsets -remove-output-intents
 %Document -remove-embedded-standard-fonts
 %Document -remove-alternate-images
@@ -23,7 +16,6 @@
 %Document Collect together references to the above and -remove-files -remove-annotations -process-images -draft -remove-all-text to Chapter 5
 %Document new JPEG2000 reprocessing options -jpeg2000-to-jpeg2000 and -lossless-to-jpeg2000
 %Document CMYK -process-images
-%Document that -print-page-labels[-json] use UTF8 for the label
 
 %\DocumentMetadata{lang=en, pdfversion=2.0, pdfstandard=ua-2, pdfstandard=a-4f, testphase={phase-III, title, table, math, firstaid}}
 \documentclass{book}
@@ -5090,6 +5082,7 @@ To produce a PDF in PDF/UA-1 or PDF/UA-2 format add, say, \texttt{-subformat PDF
    \noindent \textsc{Images}\\
    \noindent\verb!-draw-jpeg! Load a JPEG from file and name it\\
    \noindent\verb!-draw-png! Load a PNG from file and name it\\
+   \noindent\verb!-draw-jpeg2000! Load a JPEG2000 from file and name it\\
    \noindent\verb!-image! Draw an image which has already been loaded\\
 
    \vspace{1.5mm}
@@ -5419,10 +5412,11 @@ In our examples, we have sometimes had to write the same operations multiple tim
   {\small\begin{framed}
    \noindent\verb!-draw-jpeg <name>=<filename>! Load a JPEG from file and name it\\
    \noindent\verb!-draw-png <name>=<filename>! Load a PNG from file and name it\\
+   \noindent\verb!-draw-jpeg2000 <name>=<filename>! Load a JPEG2000 from file and name it\\
    \noindent\verb!-image <name>! Draw an image which has already been loaded
   \end{framed}}
 
-We can include a 24bit non-transparent and non-interlaced PNG, or any JPEG by using \texttt{-draw-jpeg} or \texttt{-draw-png} to load it and assign it a name. We can then use \texttt{-image} to use it at any point:
+We can include a 24bit non-transparent and non-interlaced PNG, or any JPEG or JPEG2000 by using \texttt{-draw-jpeg[2000]} or \texttt{-draw-png} to load it and assign it a name. We can then use \texttt{-image} to use it at any point:
 
 \begin{framed}
  \noindent\small\verb?cpdf -create-pdf AND -draw -draw-png A=sheet.png?\\
