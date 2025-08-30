@@ -1329,6 +1329,10 @@ $ cpdf -add-text Private in.pdf -o out.pdf -progress
   \noindent\verb!     -o out.pdf!
 
   \vspace{1.5mm}
+  \noindent\verb!cpdf -portfolio in.pdf -pf <filename> [-pfd <string>]!\\
+  \noindent\verb!     [-pfr <relationship>] [-pf ...] -o out.pdf!
+
+  \vspace{1.5mm}
   \noindent\verb!cpdf -split in.pdf [-chunk <chunksize>] [-process-struct-trees]!\\
   \noindent\verb!     -o <format>!
 
@@ -1344,6 +1348,7 @@ $ cpdf -add-text Private in.pdf -o out.pdf -progress
   \end{framed}
 
   \vspace{12mm}
+
   \section{Merging}
 \index{merging}
   The \texttt{-merge} operation allow the merging of several files into one.
@@ -1381,6 +1386,19 @@ of the inputs only appear once in the output.
 The \texttt{-merge-add-bookmarks} option adds a top-level bookmark for each file, using the filename. Any existing bookmarks are retained. The \texttt{-merge\--add\--bookmarks\--use\--titles}, when used in conjunction with \texttt{-merge-add-bookmarks}, will use the title from each PDF's metadata instead of the filename.
 
 The \texttt{-process-struct-trees} option will merge structure trees (the data which forms the logical structure of the PDF). In its absence, the structure tree from the first PDF only is preserved. When merging two or more PDF/UA files, we can add \texttt{-subformat PDF/UA-2} to tell Cpdf to add a top-level Document structure tree element, to conform to the PDF/UA-2 standard.
+
+\section{PDF Portfolios}
+
+A PDF portfolio is a special kind of PDF with contains other documents (PDF and otherwise) within it. Support is mostly limited to Adobe products at time of writing. To create a portfolio from a PDF file and and a JPEG:
+
+  \begin{framed}\small
+    \noindent\verb!cpdf -create-pdf AND -portfolio -pf one.pdf -pf two.jpeg -o out.pdf!
+
+    \vspace{2.5mm}
+    \noindent Build a PDF portfolio with two files: \texttt{out.pdf} and \texttt{two.jpeg}, writing to \texttt{out.pdf}.
+  \end{framed}
+
+\noindent When opened in a supporting PDF viewer, such as Adobe Reader, a navigation pane is shown, allowing each file to be viewed. There are two columns of interest: the Description and the Relationship. By default, Cpdf uses the file name for the description, and "Unspecified" for the Relationship. We can specify the description by adding \texttt{-pfd "The description"} after the relevant \texttt{-pf}, and the relationship by adding \texttt{-pfr RelationshipName}.
 
   \section{Splitting}
 \index{splitting}
