@@ -1553,11 +1553,14 @@ The \texttt{-process-struct-trees} option used in conjunction with any splitting
 \pagestyle{fancy}
   \label{pages}
   \begin{framed}
-  \small\noindent\verb!cpdf -scale-page "<scale x> <scale y>" [-fast] in.pdf [<range>] -o out.pdf!
+  \small\noindent\verb!cpdf -scale-page "<scale x> <scale y>" [-fast] [<position>]!\\
+        \noindent\verb!     in.pdf [<range>] -o out.pdf!
    
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -scale-to-fit "<x size> <y size>" [-fast] [-prerotate]!\\
-        \noindent\verb!     [-scale-to-fit-scale <scale>] in.pdf [<range>] -o out.pdf!
+  \small\noindent\verb!cpdf -scale-to-fit "<x size> <y size>" [-fast] [-prerotate] [<position>]!\\
+        \noindent\verb!     [-scale-to-fit-scale <scale>]!\\
+        \noindent\verb!     [-scale-to-fit-rotate-clockwise] [-scale-to-fit-rotate-anticlockwise]!\\
+        \noindent\verb!     in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
   \small\noindent\verb!cpdf -stretch "<x size> <y size>" [-fast] in.pdf [<range>] -o out.pdf!
@@ -1665,17 +1668,28 @@ Y factors given. This scales both the page contents, and the page size itself. I
   \noindent Scale a file's pages to fit A4 portrait.
   \end{framed}
   
-\noindent To avoid centring, supply \texttt{-top\! 0}, \texttt{-bottom\! 0}, \texttt{-left\! 0} or \texttt{-right\! 0} as appropriate. The scale can optionally be set to a percentage of the available area, instead of filling it.
+\noindent To avoid centring, supply \texttt{-top\! 0}, \texttt{-bottom\! 0}, \texttt{-left\! 0} or \texttt{-right\! 0} as appropriate. The scale can optionally be set to a proportion of the available area, instead of filling it:
 
   \begin{framed}
   \small\noindent\verb!cpdf -scale-to-fit a4portrait -scale-to-fit-scale 0.9 in.pdf -o out.pdf!
-
 
   \vspace{2.5mm}
   \noindent Scale a file's pages to fit A4 portrait, scaling the page 90\% of its possible size.
   \end{framed}
 
-\noindent The \texttt{-stretch} operation scales the contents to the given size without regard to aspect ratio.
+
+\noindent To automatically calculate one or other dimension, use an asterisk:
+
+  \begin{framed}
+  \small\noindent\verb!cpdf -scale-to-fit "297mm *" in.pdf -o out.pdf!
+
+  \vspace{2.5mm}
+  \noindent Scale a file's pages to fit 297mm width, maintaining proportion.
+  \end{framed}
+
+\noindent To automatically rotate pages to maximise use of area on the output size, add the option \texttt{-scale-to-fit-rotate-[anti]clockwise}.
+
+The \texttt{-stretch} operation scales the contents to the given size without regard to aspect ratio:
 
   \begin{framed}
   \small\noindent\verb!cpdf -stretch a4landscape in.pdf -o out.pdf!
@@ -1693,7 +1707,9 @@ Y factors given. This scales both the page contents, and the page size itself. I
   \noindent Set a file's pages to the given size and center the content.
   \end{framed}
 
-\noindent The \texttt{-scale-contents} operation scales the contents about the center
+\noindent Sizes with asterisks like \texttt{"* 500pt"} may also be used here.
+
+The \texttt{-scale-contents} operation scales the contents about the center
   of the crop box (or, if absent, the media box), leaving the page dimensions
   (boxes) unchanged.
 
