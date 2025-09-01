@@ -1,9 +1,6 @@
-%Document -contains-javascript and -remove-javascript
-
-%Document decide how names (boxes, portfolio afrelationships, attachment afrelationships) are to be input. Slash or no slash?
-
 %Document new -remove-article-threads -remove-page-piece -remove-web-capture -remove-procsets -remove-output-intents
 %Document -remove-embedded-standard-fonts -remove-alternate-images -remove-all-metadata
+
 %Document Collect together references to the above and -remove-files -remove-annotations -process-images -draft -remove-all-text to Chapter 5
 
 %Document CCITT and CCITTG4 in -process-images (when done)
@@ -3974,14 +3971,14 @@ The \texttt{-afd} and \texttt{-afr} options may be used to specify the textual d
 
 \section{Listing Attachments}
 \index{attachments!listing}
-To list all document- and page-level attachments, use the \texttt{-list-attached-files} operation. The page number and filename of each attachment is given, page 0 representing a document-level attachment.
+To list all document- and page-level attachments, use the \texttt{-list-attached-files} operation. The page number and filename of each attachment is given, page 0 representing a document-level attachment, then any description then any relationship:
 
 \begin{framed}
 {\small\begin{verbatim}
 $cpdf -list-attached-files 14psfonts.pdf
-0 | utility.ml | [absent] | /Unspecified
-0 | utility.mli | [absent] | [absent]
-4 | notes.xls | "My notes" | /Unspecified
+0 | utility.ml |  | Unspecified
+0 | utility.mli |  |
+4 | notes.xls | "My notes" | Unspecified
 \end{verbatim}}
 \end{framed}
 

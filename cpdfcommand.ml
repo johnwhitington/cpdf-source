@@ -4608,8 +4608,8 @@ let rec go () =
                  Printf.printf "%i | %s | %s | %s\n"
                    a.Cpdfattach.pagenumber
                    a.Cpdfattach.name
-                   (match a.Cpdfattach.description with None -> "[absent]" | Some s -> s)
-                   (match a.Cpdfattach.relationship with None -> "[absent]" | Some s -> s))
+                   (match a.Cpdfattach.description with None -> "" | Some s -> "\"" ^ s ^ "\"")
+                   (match a.Cpdfattach.relationship with None -> "" | Some s -> s))
               attachments;
           end
   | Some DumpAttachedFiles ->
