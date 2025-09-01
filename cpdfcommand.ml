@@ -5141,7 +5141,7 @@ let rec go () =
         write_pdf false pdf
   | Some ContainsJavaScript ->
       let pdf = get_single_pdf args.op true in
-        print_string (Printf.sprintf "%b" (Cpdfjs.contains_javascript pdf))
+        print_string (Printf.sprintf "%b\n" (Cpdfjs.contains_javascript pdf))
   | Some Portfolio ->
       let pdf = get_single_pdf args.op true in
         args.create_objstm <- true;

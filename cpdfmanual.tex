@@ -1,21 +1,12 @@
-%Document CCITT and CCITTG4 in -process-images
 %Document -contains-javascript and -remove-javascript
-%Document CPDF_SHOW_EXT for image processing
-%Document "* 500pt" / "500pt *" in -scale-to-fit / -center-to-fit
-%Document PDF Portfolios
-%Document -scale-to-fit-rotate*
-%Document JPEG 2000 with -draw
-%Document new -list-attached-files format and -list-attached-files -json
-%Document new -afd -afr for adding attachments
-%Document -include-data with new -list-attached-files -json
+
 %Document decide how names (boxes, portfolio afrelationships, attachment afrelationships) are to be input. Slash or no slash?
+
 %Document new -remove-article-threads -remove-page-piece -remove-web-capture -remove-procsets -remove-output-intents
-%Document -remove-embedded-standard-fonts
-%Document -remove-alternate-images
-%Document -remove-all-metadata
+%Document -remove-embedded-standard-fonts -remove-alternate-images -remove-all-metadata
 %Document Collect together references to the above and -remove-files -remove-annotations -process-images -draft -remove-all-text to Chapter 5
-%Document new JPEG2000 reprocessing options -jpeg2000-to-jpeg2000 and -lossless-to-jpeg2000
-%Document CMYK -process-images
+
+%Document CCITT and CCITTG4 in -process-images (when done)
 
 %\DocumentMetadata{lang=en, pdfversion=2.0, pdfstandard=ua-2, pdfstandard=a-4f, testphase={phase-III, title, table, math, firstaid}}
 \documentclass{book}
@@ -3949,11 +3940,13 @@ $ cpdf -composition-json cpdfmanual.pdf
 \chapter{File Attachments}\label{chap:12}\pagestyle{fancy}
 \index{attachments}
 \begin{framed}
-  \small\noindent\verb!cpdf -attach-file <filename> [-to-page <page number>] in.pdf -o out.pdf!
+  \small\noindent\verb!cpdf -attach-file <filename> [-to-page <page number>]!\\
+  \small\noindent\verb!     [-afd <string>] [-afr <relationship>] [-attach-file ...]!\\
+  \small\noindent\verb!     in.pdf -o out.pdf!
 
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -list-attached-files in.pdf!
- 
+  \small\noindent\verb!cpdf -list-attached-files [-json] [-include-data] in.pdf!
+
   \vspace{1.5mm}
   \small\noindent\verb!cpdf -remove-files in.pdf -o out.pdf!
 
@@ -3977,6 +3970,8 @@ whole rather than with an individual page, and also \textit{page-level attachmen
   
   The \texttt{-to-page} option can be used to specify that the files will be attached to the given page, rather than at the document level. The \texttt{-to-page} option may be specified at most once. 
 
+The \texttt{-afd} and \texttt{-afr} options may be used to specify the textual description and/or relationship for the file.
+
 \section{Listing Attachments}
 \index{attachments!listing}
 To list all document- and page-level attachments, use the \texttt{-list-attached-files} operation. The page number and filename of each attachment is given, page 0 representing a document-level attachment.
@@ -3984,11 +3979,30 @@ To list all document- and page-level attachments, use the \texttt{-list-attached
 \begin{framed}
 {\small\begin{verbatim}
 $cpdf -list-attached-files 14psfonts.pdf
-0 utility.ml
-0 utility.mli
-4 notes.xls
+0 | utility.ml | [absent] | /Unspecified
+0 | utility.mli | [absent] | [absent]
+4 | notes.xls | "My notes" | /Unspecified
 \end{verbatim}}
 \end{framed}
+
+\noindent The same data may be listed in JSON format:
+
+\begin{framed}
+{\small\begin{verbatim}
+$cpdf -list-attached-files -json 14psfonts.pdf
+[
+  {
+    "Page": 0,
+    "Name": "utility.ml",
+    "Description": null,
+    "Relationship": null
+  }
+]
+...
+\end{verbatim}}
+\end{framed}
+
+\noindent Adding \texttt{-include-data} to the command line when calling \texttt{-list-attached-files -json} will include an extra JSON field \texttt{data} containing the file data for each attachment. 
 
   \section{Removing Attachments}
 \index{attachments!removing}
@@ -3998,7 +4012,7 @@ $cpdf -list-attached-files 14psfonts.pdf
     \noindent\small\verb!cpdf -remove-files in.pdf -o out.pdf!
   \end{framed}
 
-\section{Dumping Attachments to File}
+\section{Extracting Attachments}
 \index{attachments!dumping to file}
 
 The \texttt{-dump-attachments} operation, when given a PDF file and a directory path as the output, will write each attachment under its filename (as displayed by \texttt{-list-attached-files} to that directory. The directory must exist prior to the call.
@@ -4013,6 +4027,8 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
   \centering
   \verb! / ? < > \ : * | " ^ + =!
   \end{framed}
+
+\noindent As an alternative, and as described, adding \texttt{-include-data} to the command line when calling \texttt{-list-attached-files -json} will include an extra JSON field \texttt{data} containing the file data for each attachment. 
 
 \ \ \ 
 
@@ -4075,6 +4091,7 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 \noindent\small\verb!     [-im <filename>] [-jbig2enc <filename>]!\\
 \noindent\small\verb!     [-lossless-resample[-dpi] <n> | -lossless-to-jpeg <n>]!\\
 \noindent\small\verb!     [-jpeg-to-jpeg <n>] [-jpeg-to-jpeg-scale <n>]!\\
+\noindent\small\verb!     [-lossless-to-jpeg2000 <n>] [-jpeg2000-to-jpeg2000 <n>]!\\
 \noindent\small\verb!     [-jpeg-to-jpeg-dpi <n>] [-1bpp-method <method>]!\\
 \noindent\small\verb!     [-jbig2-lossy-threshold <n>] [-pixel-threshold <n>]!\\
 \noindent\small\verb!     [-length-threshold <n>] [-percentage-threshold <n>]!\\
@@ -4249,7 +4266,7 @@ There are a number of option to deal with lossy (e.g JPEG) and lossless images, 
 \end{verbatim}}
   \end{framed}
 
-\noindent Similar output appears for the other methods, when they are specified. You can see the counter of work being done, and the result for each image chosen for processing.
+\noindent Similar output appears for the other methods, when they are specified. You can see the counter of work being done, and the result for each image chosen for processing. (The actual calls to external processes like imagemagick may be seen by setting the \texttt{CPDF\_SHOW\_EXT} environment variable to \texttt{true}).
 
 The \texttt{-lossless-to-jpeg} option converts lossless images within PDFs to JPEG too, at the given quality level. It may be specified in addition to \texttt{-jpeg-to-jpeg}:
 
@@ -4270,7 +4287,9 @@ Option & Effect & Default value\\\hline
 \end{tabular}
 \bigskip
 
-\noindent Instead of compressing lossless images with lossy JPEG compression, we can resample losslessly:
+\noindent We may pick JPEG2000 compression instead of JPEG compression by choosing the option \texttt{-lossless-to-jpeg2000} instead of \texttt{-lossless-to-jpeg} or \texttt{-jpeg2000-to-jpeg2000} instead of \texttt{-jpeg-to-jpeg} or both.
+
+Instead of compressing lossless images with lossy JPEG or JPEG2000 compression, we can resample losslessly:
 
   \begin{framed}
   \noindent\small\verb!cpdf -process-images -im magick -lossless-resample 80 in.pdf -o out.pdf!
@@ -4315,8 +4334,6 @@ Method & Effect\\\hline
   \end{framed}
 
 \noindent It is not currently possible to reprocess lossless JBIG2 into lossy JBIG2, nor is it possible to recompress into CCITT.
-
-NB: CMYK images will be converted to RGB or untouched by some of these processes. A future version of Cpdf will remove this limitation.
 
 \section{Rasterization (PDF to image conversion)}
 
@@ -6425,7 +6442,12 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
   \vspace{1.5mm}
   \noindent\verb!cpdf -replace-stream <object specification>!\\
   \noindent\verb!     -replace-stream-with <filename>!\\
-  \noindent\verb!     in.pdf -o out.pdf!\end{framed}}
+  \noindent\verb!     in.pdf -o out.pdf!
+
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -contains-javascript in.pdf!\\
+  \noindent\verb!cpdf -remove-javascript in.pdf -o out.pdf!\end{framed}}
+
   \section{Draft Documents}
 \index{draft}
 \label{draft}
@@ -6744,6 +6766,29 @@ An object may be remove with \texttt{-remove-obj}:
   \end{framed}
 
 \noindent The stream dictionary is unaffected, save for any correction to its length entry.
+
+\section{JavaScript and PDF}
+
+We can see if a PDF contains any JavaScript scripts or \texttt{javascript:} URIs:
+
+  \begin{framed}
+  \small\noindent\verb!cpdf -contains-javascript in.pdf -o out.pdf!
+
+  \vspace{2.5mm}
+  \noindent Prints \texttt{true} if the PDF contains JavaScript, \texttt{false} otherwise. 
+
+  \end{framed}
+
+\noindent We can remove any such from the PDF:
+
+  \begin{framed}
+  \small\noindent\verb!cpdf -remove-javascript in.pdf -o out.pdf!
+
+  \vspace{2.5mm}
+  \noindent Remove JavaScript from \texttt{in.pdf}, writing to \texttt{out.pdf}. 
+
+  \end{framed}
+
 
 \begin{cpdflib}
 \clearpage
