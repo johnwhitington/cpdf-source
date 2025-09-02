@@ -1,9 +1,5 @@
-%Document new -remove-article-threads -remove-page-piece -remove-web-capture -remove-procsets -remove-output-intents
-%Document -remove-embedded-standard-fonts -remove-alternate-images -remove-all-metadata
-
-%Document Collect together references to the above and -remove-files -remove-annotations -process-images -draft -remove-all-text to Chapter 5
-
-%Document CCITT and CCITTG4 in -process-images (when done)
+%Implement and Document -remove-embedded-standard-fonts -remove-alternate-images -remove-all-metadata (+ add to chapter 5 list)
+%Implement and Document CCITTG4 and Document CCITT in -process-images
 
 %\DocumentMetadata{lang=en, pdfversion=2.0, pdfstandard=ua-2, pdfstandard=a-4f, testphase={phase-III, title, table, math, firstaid}}
 \documentclass{book}
@@ -2113,7 +2109,14 @@ When appropriate passwords are not available, the option \texttt{-decrypt-force}
      
      \vspace{1.5mm}
      \noindent\verb!cpdf -squeeze in.pdf [-squeeze-log-to <filename>]!\\
-     \noindent\verb!     [-squeeze-no-recompress] [-squeeze-no-pagedata] -o out.pdf!   
+     \noindent\verb!     [-squeeze-no-recompress] [-squeeze-no-pagedata] -o out.pdf!
+
+     \vspace{1.5mm}
+     \noindent\verb!cpdf -remove-article-threads in.pdf -o out.pdf!\\
+     \noindent\verb!cpdf -remove-page-piece in.pdf -o out.pdf!\\
+     \noindent\verb!cpdf -remove-web-capture in.pdf -o out.pdf!\\
+     \noindent\verb!cpdf -remove-procsets in.pdf -o out.pdf!\\
+     \noindent\verb!cpdf -remove-output-intents in.pdf -o out.pdf!
    \end{framed}
 
   Cpdf provides facilities for decompressing and compressing PDF streams, and for losslessly reprocessing the whole file to `squeeze' it. For lossy recompression of images within a PDF, see Chapter 13.
@@ -2166,6 +2169,44 @@ Final file size is 187200 bytes,  78.60% of original.
 \noindent The \texttt{-squeeze-log-to <filename>} option writes the log to the given file instead of to standard output. Log content is appended to the end of the log file, preserving existing contents.
 
 The option \texttt{-squeeze-no-pagedata} avoids the reprocessing of page data, which avoids problems in case of malformed files, and makes the process much faster at the cost of a little less compression. The option \texttt{-squeeze-no-recompress} is deprecated as of version 2.6 and has no effect.
+
+\section{Other Lossless Compression}
+
+Chapter 13 describes \texttt{-process-images}, which supports the lossless re-compression of images within a PDF, depending on the options given.
+
+\section{Lossy Compression}
+
+We have discussed only methods of compression which do not remove content or metadata. Cpdf also provides some functions for stripping out unwanted metadata:
+
+\begin{description}
+\item[\normalfont\texttt{-remove-article-threads}] Removes article threads, which contain information on the logical order of a document's parts.
+\item[\normalfont\texttt{-remove-page-piece}] Removes page-piece information, which is a kind of private PDF information found in PDFs saved from image editors or converted from other formats.
+\item[\normalfont\texttt{-remove-web-capture}] Removes web capture data, a now-deprecated way of saving additional metadata in PDFs originating as web content.
+\item[\normalfont\texttt{-remove-procsets}] Removes ProcSets, a now-irrelevant data structure often in early PDFs
+\item[\normalfont\texttt{-remove-output-intents}] Removes Output Intents, a colour-matching system for documents intended to be printed.
+\end{description}
+
+\noindent For each operation, the command looks like this:
+
+  \begin{framed}
+    \noindent\small\verb!cpdf -remove-* in.pdf -o out.pdf!
+  \end{framed}
+
+\noindent Throughout this manual a number of other functions are described which could be characterised as lossy compression, depending upon the circumstance. We list and briefly describe each here for convenience:
+
+\begin{description}
+\item[\normalfont\texttt{-remove-files}] Chapter 12. Removes attached files from a PDF.
+\item[\normalfont\texttt{-remove-annotations}] Chapter 10. Removes annotations from a PDF.
+\item[\normalfont\texttt{-process-images}] Chapter 13. Lossy (and lossless) reprocessing of images within PDFs.
+\item[\normalfont\texttt{-draft}] Chapter \ref{chap:misc}. Remove images from a PDF.
+\item[\normalfont\texttt{-remove-all-text}] Chapter \ref{chap:misc}. Remove text from a PDF.
+\item[\normalfont\texttt{-remove-fonts}] Chapter \ref {chap:14}. Remove embedded fonts from a PDF.
+%\item[\normalfont\texttt{-remove-embedded-standard-fonts}] Chapter x. Does something
+%\item[\normalfont\texttt{-remove-alternate-images}] Chapter x. Does something
+%\item[\normalfont\texttt{-remove-all-metadata}] Chapter x. Does something
+\end{description}
+
+\noindent To find out what is in a PDF, use \texttt{-composition[-json]} from Chapter 11.
 
 \begin{cpdflib}
 \clearpage
@@ -4439,7 +4480,8 @@ Option & Effect\\\hline
   \noindent\verb!     -copy-font-name <name> in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf -remove-fonts in.pdf -o out.pdf!
+  \noindent\verb!cpdf -remove-fonts in.pdf -o out.pdf!\\
+  \noindent\verb!cpdf -remove-embedded-standard-fonts in.pdf -o out.pdf!
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -missing-fonts in.pdf!
