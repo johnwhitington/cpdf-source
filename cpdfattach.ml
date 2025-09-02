@@ -72,7 +72,7 @@ let attach_file ?memory keepversion topage pdf relationship description file =
              @
               (if description = None then [] else [("/Desc", Pdf.String (unopt description))])
              @
-              (if relationship = None then [] else [("/AFRelationship", Pdf.Name (unopt relationship))]))
+              (if relationship = None then [] else [("/AFRelationship", Pdf.Name ("/" ^ unopt relationship))]))
         in
           match topage with
           | None ->
