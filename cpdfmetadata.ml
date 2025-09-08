@@ -114,17 +114,13 @@ let remove_metadata pdf =
              Pdf.root =
                rootnum}
 
+(* Remove any object with /Type /Metadata *)
 let remove_all_metadata pdf =
-  match Pdf.lookup_direct pdf "/Root" pdf.Pdf.trailerdict with
-  | None -> error "malformed file" 
-  | Some root ->
-      let root' = Pdf.remove_dict_entry root "/Metadata" in
-        let rootnum = Pdf.addobj pdf root' in
-          {pdf with
-             Pdf.trailerdict =
-               Pdf.add_dict_entry pdf.Pdf.trailerdict "/Root" (Pdf.Indirect rootnum);
-             Pdf.root =
-               rootnum}
+  let pdf = remove_metadata pdf in
+    let toremove = ref [] in
+    Pdf.objiter (fun objnum obj -> match Pdf.lookup_direct pdf "/Type" obj with Some (Pdf.Name "/Metadata") -> toremove =| objnum | _ -> ()) pdf;
+    iter (Pdf.removeobj pdf) !toremove;
+    pdf
 
 (* Print metadata *)
 let get_metadata pdf =
