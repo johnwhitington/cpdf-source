@@ -114,6 +114,18 @@ let remove_metadata pdf =
              Pdf.root =
                rootnum}
 
+let remove_all_metadata pdf =
+  match Pdf.lookup_direct pdf "/Root" pdf.Pdf.trailerdict with
+  | None -> error "malformed file" 
+  | Some root ->
+      let root' = Pdf.remove_dict_entry root "/Metadata" in
+        let rootnum = Pdf.addobj pdf root' in
+          {pdf with
+             Pdf.trailerdict =
+               Pdf.add_dict_entry pdf.Pdf.trailerdict "/Root" (Pdf.Indirect rootnum);
+             Pdf.root =
+               rootnum}
+
 (* Print metadata *)
 let get_metadata pdf =
   match Pdf.lookup_direct pdf "/Root" pdf.Pdf.trailerdict with

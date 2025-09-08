@@ -68,6 +68,9 @@ val set_metadata_from_bytes : bool -> Pdfio.bytes -> Pdf.t -> Pdf.t
 (** Remove the metadata from a file *)
 val remove_metadata : Pdf.t -> Pdf.t
 
+(** Remove the metadata from all objects in a file *)
+val remove_all_metadata : Pdf.t -> Pdf.t
+
 (** Extract metadata to a [Pdfio.bytes] *)
 val get_metadata : Pdf.t -> Pdfio.bytes option
 

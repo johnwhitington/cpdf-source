@@ -126,7 +126,7 @@ type op =
   | PageInfo
   | Metadata
   | SetMetadata of string
-  | RemoveMetadata
+  | RemoveMetadata of bool
   | Fonts
   | RemoveFonts
   | Compress
@@ -295,7 +295,7 @@ let string_of_op = function
   | PageInfo -> "PageInfo"
   | Metadata -> "Metadata"
   | SetMetadata _ -> "SetMetadata"
-  | RemoveMetadata -> "RemoveMetadata"
+  | RemoveMetadata _ -> "RemoveMetadata"
   | Fonts -> "Fonts"
   | RemoveFonts -> "RemoveFonts"
   | Compress -> "Compress"
@@ -991,7 +991,7 @@ let banned banlist = function
   | ListBookmarks | ImageResolution _ | ListImages | MissingFonts
   | PrintPageLabels | Clean | Compress | Decompress
   | ChangeId | CopyId _ | ListSpotColours | Version
-  | DumpAttachedFiles | RemoveMetadata | EmbedMissingFonts | BookmarksOpenToLevel _ | CreatePDF
+  | DumpAttachedFiles | RemoveMetadata _ | EmbedMissingFonts | BookmarksOpenToLevel _ | CreatePDF
   | SetPageMode _ | SetNonFullScreenPageMode _ | HideToolbar _ | HideMenubar _ | HideWindowUI _
   | FitWindow _ | CenterWindow _ | DisplayDocTitle _
   | RemoveId | OpenAtPageFit _ | OpenAtPage _ | OpenAtPageCustom _ | SetPageLayout _
@@ -2674,8 +2674,11 @@ let specs =
        Arg.Unit (setop Metadata),
        " Output metadata information");
    ("-remove-metadata",
-       Arg.Unit (setop RemoveMetadata),
+       Arg.Unit (setop (RemoveMetadata false)),
        " Remove document metadata");
+   ("-remove-all-metadata",
+       Arg.Unit (setop (RemoveMetadata true)),
+       " Remove document metadata on all objects");
    ("-set-metadata-date",
        Arg.String setsetmetadatadate,
        " Set the XMP metadata date property");
@@ -4785,8 +4788,8 @@ let rec go () =
   | Some Decrypt ->
       args.recrypt <- false;
       write_pdf false (get_single_pdf args.op false)
-  | Some RemoveMetadata ->
-      write_pdf false (Cpdfmetadata.remove_metadata (get_single_pdf args.op false))
+  | Some (RemoveMetadata all) ->
+      write_pdf false ((if all then Cpdfmetadata.remove_all_metadata else Cpdfmetadata.remove_metadata) (get_single_pdf args.op false))
   | Some ExtractImages ->
       let output_spec =
         begin match args.out with
