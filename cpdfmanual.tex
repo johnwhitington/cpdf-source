@@ -1,5 +1,6 @@
-%Document -remove-all-metadata (+ add to chapter 5 list)
-%Implement -extract-all-metadata
+%Document -remove-all-metadata
+%Document -extract-all-metadata
+
 %Implement and Document CCITTG4 and Document CCITT in -process-images
 
 %\DocumentMetadata{lang=en, pdfversion=2.0, pdfstandard=ua-2, pdfstandard=a-4f, testphase={phase-III, title, table, math, firstaid}}
@@ -2196,15 +2197,14 @@ We have discussed only methods of compression which do not remove content or met
 \noindent Throughout this manual a number of other functions are described which could be characterised as lossy compression, depending upon the circumstance. We list and briefly describe each here for convenience:
 
 \begin{description}
-\item[\normalfont\texttt{-remove-files}] Chapter 12. Removes attached files from a PDF.
-\item[\normalfont\texttt{-remove-annotations}] Chapter 10. Removes annotations from a PDF.
-\item[\normalfont\texttt{-process-images}] Chapter 13. Lossy (and lossless) reprocessing of images within PDFs.
-\item[\normalfont\texttt{-draft}] Chapter \ref{chap:misc}. Remove images from a PDF.
-\item[\normalfont\texttt{-remove-all-text}] Chapter \ref{chap:misc}. Remove text from a PDF.
+\item[\normalfont\texttt{-remove-annotations}] Chapter \ref{chap:10}. Removes annotations from a PDF.
+\item[\normalfont\texttt{-remove-metadata}] Chapter \ref{chap:11}. Remove main XMP metadata.
+\item[\normalfont\texttt{-remove-all-metadata}] Chapter \ref{chap:11}. Remove all XMP metadata.
+\item[\normalfont\texttt{-remove-files}] Chapter \ref{chap:12}. Removes attached files from a PDF.
+\item[\normalfont\texttt{-process-images}] Chapter \ref{chap:13}. Lossy (and lossless) reprocessing of images within PDFs.
 \item[\normalfont\texttt{-remove-fonts}] Chapter \ref {chap:14}. Remove embedded fonts from a PDF.
-%\item[\normalfont\texttt{-remove-embedded-standard-fonts}] Chapter x. Does something
-%\item[\normalfont\texttt{-remove-alternate-images}] Chapter x. Does something
-%\item[\normalfont\texttt{-remove-all-metadata}] Chapter x. Does something
+\item[\normalfont\texttt{-remove-all-text}] Chapter \ref{chap:misc}. Remove text from a PDF.
+\item[\normalfont\texttt{-draft}] Chapter \ref{chap:misc}. Remove images from a PDF.
 \end{description}
 
 \noindent To find out what is in a PDF, use \texttt{-composition[-json]} from Chapter 11.
@@ -3453,7 +3453,9 @@ given page range.
     \vspace{1.5mm}
     \small\noindent\verb!cpdf -set-metadata <metadata-file> in.pdf -o out.pdf!\\
     \small\noindent\verb!cpdf -remove-metadata in.pdf -o out.pdf!\\
+    \small\noindent\verb!cpdf -remove-all-metadata in.pdf -o out.pdf!\\
     \small\noindent\verb!cpdf -print-metadata in.pdf!\\
+    \small\noindent\verb!cpdf -extract-all-metadata in.pdf -o <directory>!\\
     \small\noindent\verb!cpdf -create-metadata in.pdf -o out.pdf!\\
     \small\noindent\verb!cpdf -set-metadata-date <date> in.pdf -o out.pdf!
     
@@ -3670,40 +3672,53 @@ To delete existing non-XMP metadata in line with PDF 2.0, use \texttt{-remove-di
 
   \section{XMP Metadata}
 \index{metadata!XMP}\index{XMP metadata}
-  PDF files can contain a piece of arbitrary metadata, often in XMP format.
+  PDF files can contain one or more pieces of arbitrary metadata, often in XMP format.
 This is typically stored in an uncompressed stream, so that other applications
-can read it without having to decode the whole PDF. To set the metadata:
+can read it without having to decode the whole PDF. To set the main metadata:
 
   \begin{framed}
     \noindent\small\verb!cpdf -set-metadata data.xml in.pdf -o out.pdf!
   \end{framed}
 
-  \noindent To remove any metadata:
+  \noindent To remove the main metadata:
 
   \begin{framed}
     \noindent\small\verb!cpdf -remove-metadata in.pdf -o out.pdf!
   \end{framed}
 
-  \noindent To print the current metadata to standard output:
+  \noindent To remove all metadata:
+
+  \begin{framed}
+    \noindent\small\verb!cpdf -remove-all-metadata in.pdf -o out.pdf!
+  \end{framed}
+
+  \noindent To print the main metadata to standard output:
 
   \begin{framed}
     \noindent\small\verb!cpdf -print-metadata in.pdf!
   \end{framed}
 
-  \noindent To create XMP metadata from scratch, using any information in the Document Information Dictionary (old-style metadata):
+  \noindent To extract all metadata to file:
+
+  \begin{framed}
+    \noindent\small\verb!cpdf -extract-all-metadata in.pdf -o dir!
+  \end{framed}
+
+  \noindent This will create zero or one files \texttt{dir/main.xml} and zero or more files \texttt{dir/<objnum>.xml}.
+
+  To create main XMP metadata from scratch, using any information in the Document Information Dictionary (old-style metadata):
 
   \begin{framed}
     \noindent\small\verb!cpdf -create-metadata in.pdf -o out.pdf!
   \end{framed}
 
-  \noindent To set the XMP metadata date field, use:
+  \noindent To set the main XMP metadata date field, use:
 
   \begin{framed}
     \noindent\small\verb!cpdf -set-metadata-date <date> in.pdf -o out.pdf!
   \end{framed}
 
-\noindent The date format is defined in Appendix \ref{xmpdate}. Using the date \texttt{"now"} uses the time and date
-at which the command is executed.
+\noindent The date format is defined in Appendix \ref{xmpdate}. Using the date \texttt{"now"} uses the time and date at which the command is executed.
 
 
 \section{Upon Opening a Document}

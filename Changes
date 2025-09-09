@@ -5,11 +5,13 @@ New features:
 o CCITT and CCITTG4 encoders in -process-images
 o Detect and remove JavaScript
 o Show progress on long files
-o Create PDF Portfolios
+o Create PDF portfolios
 o Remove procsets, article threads, page pieces
 o Remove web capture, output intents, alternate images
 o Reprocess JPEG2000s within files
 o Convert lossless images to JPEG2000
+o Remove all metadata streams
+o Extract all metadata streams to file
 
 Extended features:
 
