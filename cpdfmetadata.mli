@@ -77,6 +77,9 @@ val get_metadata : Pdf.t -> Pdfio.bytes option
 (** Print metadate to stdout *)
 val print_metadata : Pdf.t -> unit
 
+(** Extract all metadata to file. *)
+val extract_all_metadata : Pdf.t -> string -> unit
+
 (** Set the metadata date *)
 val set_metadata_date : Pdf.t -> string -> Pdf.t
 

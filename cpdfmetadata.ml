@@ -144,6 +144,46 @@ let print_metadata pdf =
         Printf.printf "%c" (char_of_int (bget data x))
       done
 
+(* We output directory/main.xml for the main metadata, and directory
+   obj<objnum>.xml for the rest. So, we need to distinguish the main one by
+   object number first. *)
+let extract_all_metadata pdf directory =
+  let write_metadata_file prefix addobj objnum =
+    let filename = Filename.concat directory (prefix ^ (if addobj then string_of_int objnum else "") ^ ".xml") in
+    let data =
+      match Pdf.lookup_obj pdf objnum with
+      | (Pdf.Stream _) as s ->
+          Pdfcodec.decode_pdfstream pdf s;
+          begin match s with
+          | Pdf.Stream {contents = (_, Pdf.Got data)} -> string_of_bytes data 
+          | _ -> assert false
+          end
+      | _ -> ""
+    in
+      contents_to_file ~filename data
+  in
+  let metadata_objnum =
+    match Pdf.lookup_direct pdf "/Root" pdf.Pdf.trailerdict with
+    | Some (Pdf.Dictionary root) ->
+        begin match lookup "/Metadata" root with
+        | Some (Pdf.Indirect i) -> Some i
+        | _ -> None
+        end
+    | _ -> error "malformed file"
+  in
+  let to_extract = ref [] in
+    Pdf.objiter (fun objnum obj -> match Pdf.lookup_direct pdf "/Type" obj with Some (Pdf.Name "/Metadata") -> to_extract =| objnum | _ -> ()) pdf;
+  let to_extract =
+    match metadata_objnum with
+    | None -> !to_extract
+    | Some i -> lose (eq i) !to_extract
+  in
+    begin match metadata_objnum with
+    | Some i -> write_metadata_file "main" false i
+    | None -> ()
+    end;
+    iter (fun i -> write_metadata_file "obj" true i) to_extract
+
 let get_info raw pdf =
   let infodict =
     match Pdf.lookup_direct pdf "/Info" pdf.Pdf.trailerdict with

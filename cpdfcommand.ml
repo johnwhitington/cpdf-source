@@ -127,6 +127,7 @@ type op =
   | Metadata
   | SetMetadata of string
   | RemoveMetadata of bool
+  | ExtractMetadata
   | Fonts
   | RemoveFonts
   | Compress
@@ -296,6 +297,7 @@ let string_of_op = function
   | Metadata -> "Metadata"
   | SetMetadata _ -> "SetMetadata"
   | RemoveMetadata _ -> "RemoveMetadata"
+  | ExtractMetadata -> "ExtractMetadata"
   | Fonts -> "Fonts"
   | RemoveFonts -> "RemoveFonts"
   | Compress -> "Compress"
@@ -1005,7 +1007,7 @@ let banned banlist = function
   | Verify _ | MarkAs _ | RemoveMark _ | ExtractStructTree | ReplaceStructTree _ | SetLanguage _
   | PrintStructTree | Rasterize | OutputImage | RemoveStructTree | MarkAsArtifact | ExtractForm | ReplaceForm _
   | ContainsJavaScript | RemoveJavaScript | RemoveArticleThreads | RemovePagePiece | RemoveOutputIntents
-  | RemoveWebCapture | RemoveProcsets -> false (* Always allowed *)
+  | RemoveWebCapture | RemoveProcsets | ExtractMetadata -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
   | Decrypt | Encrypt | CombinePages _ -> true (* Never allowed *)
@@ -2679,6 +2681,9 @@ let specs =
    ("-remove-all-metadata",
        Arg.Unit (setop (RemoveMetadata true)),
        " Remove document metadata on all objects");
+   ("-extract-all-metadata",
+       Arg.Unit (setop ExtractMetadata),
+       " Extract all document metadata to file");
    ("-set-metadata-date",
        Arg.String setsetmetadatadate,
        " Set the XMP metadata date property");
@@ -4790,6 +4795,15 @@ let rec go () =
       write_pdf false (get_single_pdf args.op false)
   | Some (RemoveMetadata all) ->
       write_pdf false ((if all then Cpdfmetadata.remove_all_metadata else Cpdfmetadata.remove_metadata) (get_single_pdf args.op false))
+  | Some ExtractMetadata ->
+      let output_spec =
+        begin match args.out with
+        | File output_spec -> output_spec
+        | _ -> ""
+        end
+      in
+        let pdf = get_single_pdf args.op true in
+          Cpdfmetadata.extract_all_metadata pdf output_spec
   | Some ExtractImages ->
       let output_spec =
         begin match args.out with
