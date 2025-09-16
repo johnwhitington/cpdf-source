@@ -26,7 +26,6 @@ o Allow a range specifying some pages which do not exist
 o -draw can use JPEG2000s
 o New -list-attached-files-json optionally including file data
 o List and add descriptions and relationships for attachments
-o New operation to remove only embedded standard fonts
 o New operation to remove all metadata
 o Process lossless CMYK images
 
@@ -39,6 +38,7 @@ o Allow -info in the case where objstm reading requires password
 o Allow -stdin in -info and in -merge (once)
 o Cpdfimages was accidentally creating palettised PNGs
 o Page label prefixes now in UTF8 
+o Regression where bookmarks were being corrupted
 
 * = Supported by a grant from NLnet
 
