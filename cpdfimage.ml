@@ -1237,7 +1237,7 @@ let lossless_to_jpeg2000 objnum pdf ~pixel_threshold ~length_threshold ~percenta
   remove out2
 
 let process
-  ~q ~qlossless ~qlossless2000 ~onebppmethod ~jbig2_lossy_threshold ~length_threshold ~percentage_threshold ~pixel_threshold ~dpi_threshold
+  ~q ~qlossless ~qlossless2000 ~onebppmethod ~onebppmethodforce ~jbig2_lossy_threshold ~length_threshold ~percentage_threshold ~pixel_threshold ~dpi_threshold
   ~factor ~interpolate ~jpeg_to_jpeg_scale ~jpeg_to_jpeg_dpi ~path_to_jbig2enc ~path_to_convert range pdf
 =
   let inrange =
