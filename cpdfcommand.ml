@@ -1,5 +1,4 @@
 (* cpdf command line tools *)
-let demo = false
 let agpl = true
 let major_version = 2
 let minor_version = 9
@@ -5264,8 +5263,6 @@ let go_withargv argv =
     exit 0
   | _ -> 
   Hashtbl.clear filenames;
-  if demo then
-    flprint "This demo functions normally, but is for evaluation only. https://www.coherentpdf.com/\n";
   try
     (* Pre-expand -args *)
     let argv = expand_args argv in
