@@ -1049,16 +1049,16 @@ option to the command line, in addition to any other command being used. For exa
 \noindent Linearize the file \texttt{in.pdf}, writing to \texttt{out.pdf}.
 \end{framed}
 
-\noindent This requires the existence of the external program \texttt{cpdflin} which is provided with commercial versions of Cpdf. This must be installed as described in the installation documentation provided with your copy of \texttt{cpdf}. If you are unable to install \texttt{cpdflin}, you must use \texttt{-cpdflin} to let Cpdf know where to find it:
+\noindent This requires the existence of an external linearize such as \texttt{qpdf}. If you are unable to install the linearizer, you must use \texttt{-cpdflin} to let Cpdf know where to find it:
 
 \begin{framed}
-\noindent\small\verb!cpdf.exe -cpdflin "C:\\cpdflin.exe" -l in.pdf -o out.pdf!
+\noindent\small\verb!cpdf.exe -cpdflin "C:\\qpdf.exe" -l in.pdf -o out.pdf!
 
 \vspace{2.5mm}
 \noindent Linearize the file \texttt{in.pdf}, writing to \texttt{out.pdf}.
 \end{framed}
 
-\noindent In extremis, you may place \texttt{cpdflin} and its resources in the current working directory, though this is not recommended. For further help, refer to the installation instructions for your copy of Cpdf.
+\noindent In extremis, you may place the linearizer and its resources in the current working directory, though this is not recommended.
 
 To keep the existing linearization status of a file (produce linearized output if the input is linearized and the reverse), use \texttt{-keep-l} instead of \texttt{-l}.
 
