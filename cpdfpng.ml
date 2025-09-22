@@ -125,7 +125,7 @@ let read_png i =
     let height = read_unsigned_4byte hdr in
     let bitdepth = hdr.input_byte () in
     let colortype = hdr.input_byte () in
-    if colortype <> 2 && colortype <> 0 then raise (Pdf.PDFError "read_png: only non-alpha non-palette PNGs") else
+    if colortype <> 2 && colortype <> 0 && colortype <> 6 && colortype <> 4 then raise (Pdf.PDFError "read_png: only non-palette PNGs") else
     let _ (*compressionmethod*) = hdr.input_byte () in
     let _ (*filtermethod*) = hdr.input_byte () in
     let interlacemethod = hdr.input_byte () in
