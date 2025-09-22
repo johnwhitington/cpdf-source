@@ -3142,6 +3142,7 @@ let specs =
    ("-mark-as-artifact", Arg.Unit (fun () -> setop MarkAsArtifact ()), " Mark whole file as artifact");
    ("-redact", Arg.Unit (fun () -> setop Redact ()), " Redact entire pages");
    ("-rasterize", Arg.Unit (fun () -> setop Rasterize ()), " Rasterize pages");
+   ("-rasterize-alpha", Arg.Unit (fun () -> args.rast_device <- "png16malpha"), " Rasterize in RGBA");
    ("-rasterize-gray", Arg.Unit (fun () -> args.rast_device <- "pnggray"), " Rasterize in grayscale");
    ("-rasterize-1bpp", Arg.Unit (fun () -> args.rast_device <- "pngmono"), " Rasterize in monochrome");
    ("-rasterize-jpeg", Arg.Unit (fun () -> args.rast_device <- "jpeg"), " Rasterize as JPEG");
@@ -3914,7 +3915,10 @@ let write_images device res quality boxname annots antialias downsample spec pdf
             "-dJPEGQ=" ^ string_of_int quality; "-sOutputFile=" ^ out; "-sPageList=" ^ string_of_int pnum;
             "-r" ^ string_of_float res; tmppdf])
        in
-         (*Printf.printf "CALL: %S\n" gscall;*)
+         begin match Sys.getenv_opt "CPDF_SHOW_EXT" with
+         | Some "true" -> flprint (gscall ^ "\n")
+         | _ -> ()
+         end;
          begin match Sys.command gscall with
          | 0 -> ()
          | _ -> Pdfe.log "Rasterization failed\n"; exit 2
