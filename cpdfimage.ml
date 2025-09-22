@@ -487,23 +487,48 @@ let obj_of_jpeg_data ~path_to_im data =
   in
     Pdf.Stream {contents = (Pdf.Dictionary d, Pdf.Got data)}, []
 
+(* Given all the IDAT data, split the alpha channel off, and recombine all the data into two new data streams *)
+(* FIXME only works for now on 8bpp data, so we must error out if not 8bpp. *)
+let split_mask colortype data =
+  let i = Pdfio.input_of_bytes data in
+  let channels = match colortype with 4 -> 1 | 6 -> 3 | _ -> error "obj_of_png_data/split_mask: bad colortype" in
+  let (colourso, coloursr), (masko, maskr) =
+    Pdfio.input_output_of_bytes (bytes_size data * 3 / 4),
+    Pdfio.input_output_of_bytes (bytes_size data / 4)
+  in
+    try
+      while true do
+        do_many (fun _ -> colourso.output_byte (i.input_byte ())) channels;
+        masko.output_byte (i.input_byte ())
+      done;
+      (Pdfio.mkbytes 0, Some (Pdfio.mkbytes 0))
+    with
+      End_of_file -> 
+        (Pdfio.extract_bytes_from_input_output colourso coloursr, Some (Pdfio.extract_bytes_from_input_output masko maskr))
+
 let obj_of_png_data data =
   let png = Cpdfpng.read_png (Pdfio.input_of_bytes data) in
-    let d =
-      ["/Length", Pdf.Integer (Pdfio.bytes_size png.idat);
-       "/Filter", Pdf.Name "/FlateDecode";
-       "/Subtype", Pdf.Name "/Image";
-       "/BitsPerComponent", Pdf.Integer png.bitdepth;
-       "/ColorSpace", Pdf.Name (match png.colortype with 0 -> "/DeviceGray" | 2 -> "/DeviceRGB" | _ -> error "obj_of_png_data 1");
-       "/DecodeParms", Pdf.Dictionary
-                        ["/BitsPerComponent", Pdf.Integer png.bitdepth;
-                         "/Colors", Pdf.Integer (match png.colortype with 0 -> 1 | 2 -> 3 | _ -> error "obj_of_png_data 2");
-                         "/Columns", Pdf.Integer png.width;
-                         "/Predictor", Pdf.Integer 15];
-       "/Width", Pdf.Integer png.width;
-       "/Height", Pdf.Integer png.height]
-    in
-      Pdf.Stream {contents = (Pdf.Dictionary d, Pdf.Got png.idat)}, []
+  (* Do we need to split out a mask? *)
+  let imagedata, mask =
+    match png.colortype with
+    | 4 | 6 -> split_mask png.colortype png.idat
+    | _ -> png.idat, None
+  in
+  let d =
+    ["/Length", Pdf.Integer (Pdfio.bytes_size png.idat);
+     "/Filter", Pdf.Name "/FlateDecode";
+     "/Subtype", Pdf.Name "/Image";
+     "/BitsPerComponent", Pdf.Integer png.bitdepth;
+     "/ColorSpace", Pdf.Name (match png.colortype with 0 | 4 -> "/DeviceGray" | 2 | 6 -> "/DeviceRGB" | _ -> error "obj_of_png_data unknown colortype");
+     "/DecodeParms", Pdf.Dictionary
+                      ["/BitsPerComponent", Pdf.Integer png.bitdepth;
+                       "/Colors", Pdf.Integer (match png.colortype with 0 | 4 -> 1 | 2 | 6 -> 3 | _ -> error "obj_of_png_data unknown colortype ");
+                       "/Columns", Pdf.Integer png.width;
+                       "/Predictor", Pdf.Integer 15];
+     "/Width", Pdf.Integer png.width;
+     "/Height", Pdf.Integer png.height]
+  in
+    Pdf.Stream {contents = (Pdf.Dictionary d, Pdf.Got imagedata)}, []
 
 let obj_of_jpeg2000_data data =
   let w, h = Cpdfjpeg2000.jpeg2000_dimensions data in
