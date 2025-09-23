@@ -1123,15 +1123,15 @@ let set_input_image f s =
 
 let jbig2_global = ref None
 
-let set_input_png s = set_input_image (fun () -> Cpdfimage.obj_of_png_data) s
+let set_input_png s = set_input_image (fun pdf -> Cpdfimage.obj_of_png_data pdf) s
 
-let set_input_jpeg s = set_input_image (fun () -> Cpdfimage.obj_of_jpeg_data ~path_to_im:args.path_to_im) s
+let set_input_jpeg s = set_input_image (fun _ -> Cpdfimage.obj_of_jpeg_data ~path_to_im:args.path_to_im) s
 
-let set_input_jpeg2000 s = set_input_image (fun () -> Cpdfimage.obj_of_jpeg2000_data) s
+let set_input_jpeg2000 s = set_input_image (fun _ -> Cpdfimage.obj_of_jpeg2000_data) s
 
 let set_input_jbig2 s =
   set_input_image
-    (fun () -> Cpdfimage.obj_of_jbig2_data ?global:!jbig2_global) s;
+    (fun _ -> Cpdfimage.obj_of_jbig2_data ?global:!jbig2_global) s;
   args.remove_duplicate_streams <- true
 let encrypt_to_collect = ref 0
 
@@ -3103,7 +3103,7 @@ let specs =
    ("-use", Arg.String Cpdfdrawcontrol.usexobj, " Use a saved sequence of graphics operators");
    ("-draw-jpeg", Arg.String (Cpdfdrawcontrol.addjpeg ~path_to_im:args.path_to_im), " Load a JPEG from file and name it");
    ("-draw-jpeg2000", Arg.String Cpdfdrawcontrol.addjpeg2000, " Load a JPEG2000 from file and name it");
-   ("-draw-png", Arg.String Cpdfdrawcontrol.addpng, " Load a PNG from file and name it");
+   ("-draw-png", Arg.String (fun s -> Cpdfdrawcontrol.addpng (Pdf.empty ()) s), " Load a PNG from file and name it"); (* FIXME Pdf.empty here, need to rework addpng. *)
    ("-image", Arg.String (fun s -> Cpdfdrawcontrol.addimage s), " Draw an image which has already been loaded");
    ("-fill-opacity", Arg.Float Cpdfdrawcontrol.addopacity, " Set opacity");
    ("-stroke-opacity", Arg.Float Cpdfdrawcontrol.addsopacity, " Set stroke opacity");
@@ -3841,7 +3841,7 @@ let rasterize antialias downsample device res annots quality pdf range =
           end;
         let data = Pdfio.bytes_of_string (Pdfutil.contents_of_file tmpout) in
         Sys.remove tmpout;
-        let image, _ = (if device = "jpeg" || device = "jpeggray" then Cpdfimage.obj_of_jpeg_data ~path_to_im:args.path_to_im else Cpdfimage.obj_of_png_data) data in
+        let image, _ = (if device = "jpeg" || device = "jpeggray" then Cpdfimage.obj_of_jpeg_data ~path_to_im:args.path_to_im else Cpdfimage.obj_of_png_data pdf) data in
         let imageobj = Pdf.addobj pdf image in
         let w, h =
           match device with

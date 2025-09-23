@@ -487,46 +487,81 @@ let obj_of_jpeg_data ~path_to_im data =
   in
     Pdf.Stream {contents = (Pdf.Dictionary d, Pdf.Got data)}, []
 
-(* Given all the IDAT data, split the alpha channel off, and recombine all the data into two new data streams *)
-(* FIXME only works for now on 8bpp data, so we must error out if not 8bpp. *)
-let split_mask colortype data =
+(* Given all the IDAT data, decompress and depredicte, split the alpha channel off, and recombine all the data into two new compressed data streams. *)
+(* TODO Extend/Fix Pdfcodec.encode_predictor to reinstate the prediction. *)
+let split_mask png =
+  let data = Pdfcodec.decode_flate png.Cpdfpng.idat in
+  let channels = match png.colortype with 4 -> 1 | 6 -> 3 | _ -> error "obj_of_png_data/split_mask: bad colortype" in
+  let data = Pdfcodec.decode_predictor 15 (channels + 1) png.bitdepth png.width data in
   let i = Pdfio.input_of_bytes data in
-  let channels = match colortype with 4 -> 1 | 6 -> 3 | _ -> error "obj_of_png_data/split_mask: bad colortype" in
+  let predictor = false in
   let (colourso, coloursr), (masko, maskr) =
-    Pdfio.input_output_of_bytes (bytes_size data * 3 / 4),
-    Pdfio.input_output_of_bytes (bytes_size data / 4)
+    Pdfio.input_output_of_bytes (png.width * png.height * channels),
+    Pdfio.input_output_of_bytes (png.width * png.height)
   in
     try
       while true do
-        do_many (fun _ -> colourso.output_byte (i.input_byte ())) channels;
-        masko.output_byte (i.input_byte ())
+        do_many (fun _ -> colourso.output_byte (int_of_char (unopt (i.input_char ())))) channels;
+        masko.output_byte (int_of_char (unopt (i.input_char ())))
       done;
-      (Pdfio.mkbytes 0, Some (Pdfio.mkbytes 0))
+      (Pdfio.mkbytes 0, Some (Pdfio.mkbytes 0), predictor)
     with
-      End_of_file -> 
-        (Pdfio.extract_bytes_from_input_output colourso coloursr, Some (Pdfio.extract_bytes_from_input_output masko maskr))
+      _ -> 
+        (Pdfcodec.encode_flate (Pdfio.extract_bytes_from_input_output colourso coloursr),
+         Some (Pdfcodec.encode_flate (Pdfio.extract_bytes_from_input_output masko maskr)),
+         predictor)
 
-let obj_of_png_data data =
+let obj_of_png_data pdf data =
   let png = Cpdfpng.read_png (Pdfio.input_of_bytes data) in
-  (* Do we need to split out a mask? *)
-  let imagedata, mask =
+  let imagedata, mask, predictor =
     match png.colortype with
-    | 4 | 6 -> split_mask png.colortype png.idat
-    | _ -> png.idat, None
+    | 4 | 6 -> split_mask png
+    | _ -> png.idat, None, true
+  in
+  let smask =
+    match mask with
+    | None -> []
+    | Some data ->
+        let smask =
+          Pdf.Stream
+           {contents = (Pdf.Dictionary
+             (["/Length", Pdf.Integer (Pdfio.bytes_size data);
+              "/Subtype", Pdf.Name "/Image";
+              "/BitsPerComponent", Pdf.Integer png.bitdepth;
+              "/ColorSpace", Pdf.Name "/DeviceGray";
+              "/Width", Pdf.Integer png.width;
+              "/Height", Pdf.Integer png.height;
+              "/Filter", Pdf.Name "/FlateDecode"]
+              @
+               (if predictor then
+                  ["/DecodeParms", Pdf.Dictionary
+                    ["/BitsPerComponent", Pdf.Integer png.bitdepth;
+                     "/Colors", Pdf.Integer 1;
+                     "/Columns", Pdf.Integer png.width;
+                     "/Predictor", Pdf.Integer 15]]
+                else [])),
+             Pdf.Got data)}
+        in
+          ["/SMask", Pdf.Indirect (Pdf.addobj pdf smask)]
   in
   let d =
     ["/Length", Pdf.Integer (Pdfio.bytes_size png.idat);
-     "/Filter", Pdf.Name "/FlateDecode";
      "/Subtype", Pdf.Name "/Image";
      "/BitsPerComponent", Pdf.Integer png.bitdepth;
      "/ColorSpace", Pdf.Name (match png.colortype with 0 | 4 -> "/DeviceGray" | 2 | 6 -> "/DeviceRGB" | _ -> error "obj_of_png_data unknown colortype");
-     "/DecodeParms", Pdf.Dictionary
-                      ["/BitsPerComponent", Pdf.Integer png.bitdepth;
-                       "/Colors", Pdf.Integer (match png.colortype with 0 | 4 -> 1 | 2 | 6 -> 3 | _ -> error "obj_of_png_data unknown colortype ");
-                       "/Columns", Pdf.Integer png.width;
-                       "/Predictor", Pdf.Integer 15];
      "/Width", Pdf.Integer png.width;
-     "/Height", Pdf.Integer png.height]
+     "/Height", Pdf.Integer png.height;
+     "/Filter", Pdf.Name "/FlateDecode"]
+    @
+     (if predictor then
+       ["/DecodeParms", Pdf.Dictionary
+          ["/BitsPerComponent", Pdf.Integer png.bitdepth;
+           "/Colors", Pdf.Integer (match png.colortype with 0 | 4 -> 1 | 2 | 6 -> 3 | _ -> error "obj_of_png_data unknown colortype ");
+           "/Columns", Pdf.Integer png.width;
+           "/Predictor", Pdf.Integer 15]]
+      else
+        [])
+     @ smask
   in
     Pdf.Stream {contents = (Pdf.Dictionary d, Pdf.Got imagedata)}, []
 
@@ -583,7 +618,7 @@ let image_of_input ?subformat ?title ~process_struct_tree fobj i =
         end
   in
   let data = Pdfio.bytes_of_input i 0 i.Pdfio.in_channel_length in
-  let obj, extras = fobj () data in
+  let obj, extras = fobj pdf data in
   iter (Pdf.addobj_given_num pdf) extras;
   let w = match Pdf.lookup_direct pdf "/Width" obj with Some x -> Pdf.getnum pdf x | _ -> assert false in
   let h = match Pdf.lookup_direct pdf "/Height" obj with Some x -> Pdf.getnum pdf x | _ -> assert false in
@@ -922,7 +957,7 @@ let lossless_resample pdf ~pixel_threshold ~length_threshold ~factor ~interpolat
             reference := (dict, Pdf.Got (Pdfio.bytes_of_input_channel result))
           | _ -> 
             reference :=
-              (match fst (obj_of_png_data (Pdfio.bytes_of_input_channel result)) with
+              (match fst (obj_of_png_data pdf (Pdfio.bytes_of_input_channel result)) with
               | Pdf.Stream {contents = Pdf.Dictionary d, data} as s ->
                   let out_components = test_components pdf s in
                   let out_bpc = test_bpc pdf s in

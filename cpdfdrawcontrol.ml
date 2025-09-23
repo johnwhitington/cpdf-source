@@ -292,12 +292,12 @@ let addjpeg ?data ~path_to_im n =
         with
           _ -> error "addjpeg: could not load JPEG"
 
-let addpng ?data n =
+let addpng pdf ?data n =
   match data with
   | Some d ->
       addop
         (Cpdfdraw.ImageXObject
-           (n, fst (Cpdfimage.obj_of_png_data (Pdfio.bytes_of_raw d))))
+           (n, fst (Cpdfimage.obj_of_png_data pdf (Pdfio.bytes_of_raw d))))
   | None ->
       let name, filename =
         match String.split_on_char '=' n with
@@ -305,7 +305,7 @@ let addpng ?data n =
         | _ -> error "addpng: bad file specification"
       in
         let data = Pdfio.bytes_of_string (contents_of_file filename) in
-          addop (Cpdfdraw.ImageXObject (name, fst (Cpdfimage.obj_of_png_data data)))
+          addop (Cpdfdraw.ImageXObject (name, fst (Cpdfimage.obj_of_png_data pdf data)))
 
 let addjpeg2000 ?data n =
   match data with
