@@ -2078,6 +2078,8 @@ let addeltinfo s =
         Cpdfdrawcontrol.eltinfo h pdfobj
   | [] -> error "addeltinfo: bad format"
 
+let rfindpdf = ref (fun () -> Pdf.empty ())
+
 let specs =
    [("-version",
       Arg.Unit (setop Version),
@@ -3103,7 +3105,7 @@ let specs =
    ("-use", Arg.String Cpdfdrawcontrol.usexobj, " Use a saved sequence of graphics operators");
    ("-draw-jpeg", Arg.String (Cpdfdrawcontrol.addjpeg ~path_to_im:args.path_to_im), " Load a JPEG from file and name it");
    ("-draw-jpeg2000", Arg.String Cpdfdrawcontrol.addjpeg2000, " Load a JPEG2000 from file and name it");
-   ("-draw-png", Arg.String (fun s -> Cpdfdrawcontrol.addpng (Pdf.empty ()) s), " Load a PNG from file and name it"); (* FIXME Pdf.empty here, need to rework addpng. *)
+   ("-draw-png", Arg.String (fun s -> Cpdfdrawcontrol.addpng (!rfindpdf ()) s), " Load a PNG from file and name it");
    ("-image", Arg.String (fun s -> Cpdfdrawcontrol.addimage s), " Draw an image which has already been loaded");
    ("-fill-opacity", Arg.Float Cpdfdrawcontrol.addopacity, " Set opacity");
    ("-stroke-opacity", Arg.Float Cpdfdrawcontrol.addsopacity, " Set stroke opacity");
@@ -3312,6 +3314,18 @@ let rec get_single_pdf ?(decrypt=true) ?(fail=false) op read_lazy =
   | (AlreadyInMemory (pdf, s), _, _, _, _, _)::_ -> pdf
   | _ ->
       raise (Arg.Bad "cpdf: No input specified.\n")
+
+(* Sometimes we need the PDF to have been loaded e.g for -draw-png. *)
+let findpdf () =
+  Printf.printf "findpdf (), there are %i inputs\n" (length args.inputs);
+  match args.inputs with
+  | [(i, a, b, c, d, e)] ->
+      let pdf = get_single_pdf (Some Draw) false in
+        args.inputs <- [(AlreadyInMemory (pdf, ""), a, b, c, d, e)];
+        pdf
+  | _ -> error "findpdf, must be single input."
+
+let _ = rfindpdf := findpdf
 
 let filenames = null_hash ()
 
