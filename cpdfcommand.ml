@@ -3317,7 +3317,6 @@ let rec get_single_pdf ?(decrypt=true) ?(fail=false) op read_lazy =
 
 (* Sometimes we need the PDF to have been loaded e.g for -draw-png. *)
 let findpdf () =
-  Printf.printf "findpdf (), there are %i inputs\n" (length args.inputs);
   match args.inputs with
   | [(i, a, b, c, d, e)] ->
       let pdf = get_single_pdf (Some Draw) false in
@@ -5300,9 +5299,9 @@ let go_withargv argv =
            reset_arguments ();
            Cpdfdrawcontrol.drawops := [("_MAIN", [])];
            process_env_vars ();
-           parse_argv () s (align_specs specs) anon_fun usage_msg;
            let addrange pdf = AlreadyInMemory (pdf, "fromAND"), args.dashrange, "", "", ref false, None in
              args.inputs <- rev (map addrange !output_pdfs) @ rev args.inputs;
+             parse_argv () s (align_specs specs) anon_fun usage_msg;
              output_pdfs := [];
              go ())
          sets;
