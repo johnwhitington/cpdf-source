@@ -2,7 +2,6 @@
 %Implement and Document reprocessing of JBIG2000 lossless into JBIG2000 lossy
 %Implement and Document -1bpp-method-force to allow all directions
 %Implement and Document CCITTG4 and Document CCITT in -process-images
-%Document new -rasterize-alpha for rasterization and for -output-image
 
 %\DocumentMetadata{lang=en, pdfversion=2.0, pdfstandard=ua-2, pdfstandard=a-4f, testphase={phase-III, title, table, math, firstaid}}
 \documentclass{book}
@@ -4159,7 +4158,7 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 \noindent\small\verb!     [-rasterize[-gray|-1bpp|-jpeg|-jpeggray]!\\
 \noindent\small\verb!     [-rasterize-res <n>] [-rasterize-jpeg-quality <n>]!\\
 \noindent\small\verb!     [-rasterize-no-antialias | -rasterize-downsample]!\\
-\noindent\small\verb!     [-rasterize-annots]!
+\noindent\small\verb!     [-rasterize-annots] | [-rasterize-alpha]!
 
 \vspace{1.5mm}
 
@@ -4167,7 +4166,8 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 \noindent\small\verb!     [-rasterize[-gray|-1bpp|-jpeg|-jpeggray]!\\
 \noindent\small\verb!     [-rasterize-res <n>] [-rasterize-jpeg-quality <n>]!\\
 \noindent\small\verb!     [-rasterize-no-antialias | -rasterize-downsample]!\\
-\noindent\small\verb!     [-rasterize-annots] [-tobox <BoxName>]!
+\noindent\small\verb!     [-rasterize-annots] [-rasterize-alpha]!\\
+\noindent\small\verb!     [-tobox <BoxName>]!
 
 \end{framed}
 
@@ -4412,6 +4412,7 @@ Option & Effect\\\hline
 {\small\texttt{-rasterize-annots}} & Rasterize annotations instead of retaining\\
 {\small\texttt{-rasterize-no-antialias}} & Turn off antialiasing\\
 {\small\texttt{-rasterize-downsample}} & Use better but slower antialiasing\\
+{\small\texttt{-rasterize-alpha}} & Produce an alpha channel (lossless only)\\
 {\small\texttt{-gs-quiet}} & Don't show \texttt{gs} output\\
 \end{tabular}
 \bigskip
@@ -5043,7 +5044,7 @@ To produce a PDF in PDF/UA-1 or PDF/UA-2 format add, say, \texttt{-subformat PDF
 
 Simple facilities for making PDFs from PNG and JPEG images are included in Cpdf. The resulting file can be written out, or used for further operations.
 
-For PNG files, the file must have no transparency and no interlacing, and must not be palletised:
+For PNG files, the file must have no interlacing, and must not be palletised:
 
 \begin{framed}
  \noindent\small\verb?cpdf -png image.png -o out.pdf?\\
