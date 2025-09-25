@@ -388,8 +388,8 @@ let images pdf range =
         begin match xobject with
         | Pdf.Indirect i ->
             begin match Hashtbl.find images i with
-            | (pagenums, n, w, h, s, bpc, cs, f) ->
-                Hashtbl.replace images i (pagenum::pagenums, n, w, h, s, bpc, cs, f)
+            | (pagenums, n, w, h, s, bpc, cs, f, mt) ->
+                Hashtbl.replace images i (pagenum::pagenums, n, w, h, s, bpc, cs, f, mt)
             | exception Not_found ->
                 let width =
                   match Pdf.lookup_direct pdf "/Width" xobject with
@@ -415,8 +415,36 @@ let images pdf range =
                   match Pdf.lookup_direct pdf "/Filter" xobject with
                   | Some (Pdf.Array [x]) | Some x -> Some (Pdfwrite.string_of_pdf x)
                   | None -> None
+                and masktype =
+                  match Pdf.lookup_direct pdf "/ImageMask" xobject with
+                  | Some (Pdf.Boolean true) -> ("ImageMask", 0)
+                  | _ ->
+                      match Pdf.lookup_direct pdf "/Mask" xobject with
+                      | Some (Pdf.Stream _) ->
+                          let objnum =
+                            match Pdf.direct pdf xobject with
+                            | Pdf.Stream {contents = (Pdf.Dictionary d, _)} ->
+                                begin match lookup "/Mask" d with Some (Pdf.Indirect i) -> i | _ -> 0 end
+                            | _ -> 0
+                          in
+                            ("ExplicitMask", objnum)
+                      | Some _ -> ("ColourKeyMask", 0)
+                      | None ->
+                          match Pdf.lookup_direct pdf "/SMask" xobject with
+                          | Some _ ->
+                              let objnum =
+                                match Pdf.direct pdf xobject with
+                                | Pdf.Stream {contents = (Pdf.Dictionary d, _)} ->
+                                    begin match lookup "/SMask" d with Some (Pdf.Indirect i) -> i | _ -> 0 end
+                                | _ -> 0
+                              in
+                                ("SMask", objnum)
+                          | _ ->
+                              match Pdf.lookup_direct pdf "/SMaskInData" xobject with
+                              | Some _ -> ("SMaskInData", 0)
+                              | _ -> ("NoMask", 0)
                 in
-                  Hashtbl.replace images i ([pagenum], name, int_of_float width, int_of_float height, size, bpc, colourspace, filter)
+                  Hashtbl.replace images i ([pagenum], name, int_of_float width, int_of_float height, size, bpc, colourspace, filter, masktype)
             end
         | _ -> ()
         end
@@ -449,11 +477,11 @@ let images pdf range =
         pdf
         range;
         let images = list_of_hashtbl images in
-        let images = map (fun (i, (pnums, n, w, h, s, bpc, c, filter)) -> (i, (setify (sort compare pnums), n, w, h, s, bpc, c, filter))) images in
-        let images = sort (fun (_, (pnums, _, _, _, _, _, _, _)) (_, (pnums', _, _, _, _, _, _, _)) -> compare (hd pnums) (hd pnums')) images in
+        let images = map (fun (i, (pnums, n, w, h, s, bpc, c, filter, mt)) -> (i, (setify (sort compare pnums), n, w, h, s, bpc, c, filter, mt))) images in
+        let images = sort (fun (_, (pnums, _, _, _, _, _, _, _, _)) (_, (pnums', _, _, _, _, _, _, _, _)) -> compare (hd pnums) (hd pnums')) images in
          `List
            (map
-             (fun (i, (pnums, n, w, h, size, bpc, cs, filter)) ->
+             (fun (i, (pnums, n, w, h, size, bpc, cs, filter, (masktype, maskobjnum))) ->
                `Assoc [("Object", `Int i);
                        ("Pages", `List (map (fun x -> `Int x) pnums));
                        ("Name", `String n);
@@ -462,7 +490,9 @@ let images pdf range =
                        ("Bytes", `Int size);
                        ("BitsPerComponent", match bpc with None -> `Null | Some bpc -> `Int bpc);
                        ("Colourspace", match cs with None -> `Null | Some s -> `String s);
-                       ("Filter", match filter with None -> `Null | Some s -> `String s)])
+                       ("Filter", match filter with None -> `Null | Some s -> `String s);
+                       ("Mask", `String masktype);
+                       ("MaskObjNum", match maskobjnum with 0 -> `Null | n -> `Int n)])
              images)
 
 let obj_of_jpeg_data ~path_to_im data =
