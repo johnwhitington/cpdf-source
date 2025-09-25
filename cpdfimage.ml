@@ -487,9 +487,10 @@ let obj_of_jpeg_data ~path_to_im data =
   in
     Pdf.Stream {contents = (Pdf.Dictionary d, Pdf.Got data)}, []
 
-(* Given all the IDAT data, decompress and depredicte, split the alpha channel off, and recombine all the data into two new compressed data streams. *)
-(* TODO Extend/Fix Pdfcodec.encode_predictor to reinstate the prediction. *)
+(* Given all the IDAT data, decompress and depredicte, split the alpha channel
+   off, and recombine all the data into two new compressed data streams. *)
 let split_mask png =
+  if png.Cpdfpng.bitdepth > 8 then error "Cannot use alpha PNGs with >8bpp" else
   let data = Pdfcodec.decode_flate png.Cpdfpng.idat in
   let channels = match png.colortype with 4 -> 1 | 6 -> 3 | _ -> error "obj_of_png_data/split_mask: bad colortype" in
   let data = Pdfcodec.decode_predictor 15 (channels + 1) png.bitdepth png.width data in
