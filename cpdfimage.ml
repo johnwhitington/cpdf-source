@@ -382,7 +382,7 @@ let image_resolution_json pdf range dpi =
 let images ~inline pdf range =
   let images = null_hash () in
   let formnums = null_hash () in
-  let collect_inline_images stream =
+  let rec collect_inline_images pagenum stream =
     if inline then
       begin
         let resources =
@@ -398,11 +398,18 @@ let images ~inline pdf range =
         in
           let ops = Pdfops.parse_operators pdf resources contents in
             iter
-              (function Pdfops.InlineImage (a, b, c) -> flprint "inline image found\n" | _ -> ())
+              (function
+               | Pdfops.InlineImage (dict, _, data) ->
+                   let xobject =
+                     let dict = Pdf.add_dict_entry dict "/Subtype" (Pdf.Name "/Image") in
+                     let dict = Pdf.add_dict_entry dict "/Length" (Pdf.Integer (bytes_size data)) in
+                       Pdf.Indirect (Pdf.addobj pdf (Pdf.Stream {contents = dict, Pdf.Got data}))
+                   in
+                     process_xobject (Pdf.Dictionary []) pagenum (Pdfpage.blankpage Pdfpaper.a4) ("/InlineImage", xobject)
+               | _ -> ())
               ops
      end
-  in
-  let rec process_xobject resources pagenum page (name, xobject) =
+  and process_xobject resources pagenum page (name, xobject) =
     match Pdf.lookup_direct pdf "/Subtype" xobject with
     | Some (Pdf.Name "/Image") ->
         begin match xobject with
@@ -412,11 +419,11 @@ let images ~inline pdf range =
                 Hashtbl.replace images i (pagenum::pagenums, n, w, h, s, bpc, cs, f, mt)
             | exception Not_found ->
                 let width =
-                  match Pdf.lookup_direct pdf "/Width" xobject with
+                  match Pdf.lookup_direct_orelse pdf "/Width" "/W" xobject with
                   | Some x -> Pdf.getnum pdf x
                   | None -> 1.
                 and height =
-                  match Pdf.lookup_direct pdf "/Height" xobject with
+                  match Pdf.lookup_direct_orelse pdf "/Height" "/H" xobject with
                   | Some x -> Pdf.getnum pdf x
                   | None -> 1.
                 and size =
@@ -424,19 +431,19 @@ let images ~inline pdf range =
                   | Some (Pdf.Integer x) -> x
                   | _ -> 0
                 and bpc =
-                  match Pdf.lookup_direct pdf "/BitsPerComponent" xobject with
+                  match Pdf.lookup_direct_orelse pdf "/BitsPerComponent" "/BPC" xobject with
                   | Some (Pdf.Integer x) -> Some x
                   | _ -> None
                 and colourspace =
-                  match Pdf.lookup_direct pdf "/ColorSpace" xobject with
+                  match Pdf.lookup_direct_orelse pdf "/ColorSpace" "/CS" xobject with
                   | Some x -> Some (Pdfspace.string_of_colourspace (Pdfspace.read_colourspace pdf resources x))
                   | None -> None
                 and filter =
-                  match Pdf.lookup_direct pdf "/Filter" xobject with
+                  match Pdf.lookup_direct_orelse pdf "/Filter" "/F" xobject with
                   | Some (Pdf.Array [x]) | Some x -> Some (Pdfwrite.string_of_pdf x)
                   | None -> None
                 and masktype =
-                  match Pdf.lookup_direct pdf "/ImageMask" xobject with
+                  match Pdf.lookup_direct_orelse pdf "/ImageMask" "/IM" xobject with
                   | Some (Pdf.Boolean true) -> ("ImageMask", 0)
                   | _ ->
                       match Pdf.lookup_direct pdf "/Mask" xobject with
@@ -489,7 +496,7 @@ let images ~inline pdf range =
                     [("/Resources", match Pdf.lookup_direct pdf "/Resources" xobject with Some d -> d | None -> Pdf.Dictionary []);
                      ("/Contents", Pdf.Indirect i)]
                 in
-                collect_inline_images fakeobj;
+                collect_inline_images pagenum fakeobj;
                 Hashtbl.add formnums i ();
                 begin match Pdf.lookup_direct pdf "/Resources" xobject with
                 | Some r ->
@@ -507,7 +514,7 @@ let images ~inline pdf range =
       Cpdfpage.iter_pages
         (fun pagenum page ->
           let fakeobj = Pdf.Dictionary [("/Resources", page.resources); ("/Contents", Pdf.Array page.content)] in
-           collect_inline_images fakeobj;
+           collect_inline_images pagenum fakeobj;
            match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
             | Some (Pdf.Dictionary xobjects) ->
                 iter (process_xobject page.Pdfpage.resources pagenum page) xobjects
