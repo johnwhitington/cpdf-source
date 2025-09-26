@@ -12,6 +12,8 @@ o Reprocess JPEG2000s within files
 o Convert lossless images to JPEG2000
 o Remove all metadata streams
 o Extract all metadata streams to file
+o Allow the empty range
+o Allow a range specifying some pages which do not exist
 
 Extended features:
 
@@ -21,14 +23,13 @@ o -squeeze processes xobjects inside xobjects
 o Speed increases for -squeeze on huge files
 o Select only such pages as are annotated
 o Allow -create-pdf and friends to appear in middle of AND
-o Allow the empty range
-o Allow a range specifying some pages which do not exist
 o -draw can use JPEG2000s
 o New -list-attached-files-json optionally including file data
 o List and add descriptions and relationships for attachments
-o New operation to remove all metadata
 o Process lossless CMYK images
 o Use alpha with 8bpp PNGs with -rasterize, -output-image, -png and when drawing
+o -list-images and friends show mask status, and list masks
+o -list-images and friends now list inline images
 
 Fixes:
 

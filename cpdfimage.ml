@@ -424,7 +424,12 @@ let images pdf range =
                           let objnum =
                             match Pdf.direct pdf xobject with
                             | Pdf.Stream {contents = (Pdf.Dictionary d, _)} ->
-                                begin match lookup "/Mask" d with Some (Pdf.Indirect i) -> i | _ -> 0 end
+                                begin match lookup "/Mask" d with
+                                | Some (Pdf.Indirect i) ->
+                                    process_xobject resources pagenum page ("/Mask", Pdf.Indirect i);
+                                    i
+                                | _ -> 0
+                                end
                             | _ -> 0
                           in
                             ("ExplicitMask", objnum)
@@ -435,7 +440,12 @@ let images pdf range =
                               let objnum =
                                 match Pdf.direct pdf xobject with
                                 | Pdf.Stream {contents = (Pdf.Dictionary d, _)} ->
-                                    begin match lookup "/SMask" d with Some (Pdf.Indirect i) -> i | _ -> 0 end
+                                    begin match lookup "/SMask" d with
+                                    | Some (Pdf.Indirect i) ->
+                                        process_xobject resources pagenum page ("/SMask", Pdf.Indirect i);
+                                        i
+                                    | _ -> 0
+                                    end
                                 | _ -> 0
                               in
                                 ("SMask", objnum)
