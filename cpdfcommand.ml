@@ -604,7 +604,8 @@ type args =
    mutable decompress_just_content : bool;
    mutable portfolio_files : Cpdfportfolio.entry list;
    mutable scale_to_fit_rotate : int;
-   mutable include_data : bool}
+   mutable include_data : bool;
+   mutable inline : bool}
 
 let args =
   {op = None;
@@ -761,7 +762,8 @@ let args =
    decompress_just_content = false;
    portfolio_files = [];
    scale_to_fit_rotate = 0;
-   include_data = false}
+   include_data = false;
+   inline = false}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -904,7 +906,8 @@ let reset_arguments () =
   args.decompress_just_content <- false;
   args.portfolio_files <- [];
   args.scale_to_fit_rotate <- 0;
-  args.include_data <- false
+  args.include_data <- false;
+  args.inline <- false
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -2757,6 +2760,9 @@ let specs =
    ("-image-resolution-json",
       Arg.Float (fun f -> setimageresolution f; args.format_json <- true),
       " List images at point of use under a given dpi");
+   ("-inline",
+      Arg.Unit (fun () -> args.inline <- true),
+      " Include inline images");
    ("-copy-font",
       Arg.String setcopyfont,
       " Copy a named font");
@@ -4850,7 +4856,7 @@ let rec go () =
   | Some ListImages ->
       let pdf = get_single_pdf args.op true in
       let range = parse_pagespec pdf (get_pagespec ()) in
-      let json = Cpdfimage.images pdf range in
+      let json = Cpdfimage.images ~inline:args.inline pdf range in
         if args.format_json then
           flprint (Cpdfyojson.Safe.pretty_to_string json)
         else
