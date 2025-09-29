@@ -382,6 +382,7 @@ let image_resolution_json pdf range dpi =
 let images ~inline pdf range =
   let images = null_hash () in
   let formnums = null_hash () in
+  let iifakeobjs = null_hash () in
   let rec collect_inline_images pagenum stream =
     if inline then
       begin
@@ -403,7 +404,9 @@ let images ~inline pdf range =
                    let xobject =
                      let dict = Pdf.add_dict_entry dict "/Subtype" (Pdf.Name "/Image") in
                      let dict = Pdf.add_dict_entry dict "/Length" (Pdf.Integer (bytes_size data)) in
-                       Pdf.Indirect (Pdf.addobj pdf (Pdf.Stream {contents = dict, Pdf.Got data}))
+                     let i = Pdf.addobj pdf (Pdf.Stream {contents = dict, Pdf.Got data}) in
+                       Hashtbl.add iifakeobjs i ();
+                       Pdf.Indirect i
                    in
                      process_xobject (Pdf.Dictionary []) pagenum (Pdfpage.blankpage Pdfpaper.a4) ("/InlineImage", xobject)
                | _ -> ())
@@ -521,13 +524,14 @@ let images ~inline pdf range =
             | _ -> ())
         pdf
         range;
+        Hashtbl.iter (fun k _ -> Pdf.removeobj pdf k) iifakeobjs;
         let images = list_of_hashtbl images in
         let images = map (fun (i, (pnums, n, w, h, s, bpc, c, filter, mt)) -> (i, (setify (sort compare pnums), n, w, h, s, bpc, c, filter, mt))) images in
         let images = sort (fun (_, (pnums, _, _, _, _, _, _, _, _)) (_, (pnums', _, _, _, _, _, _, _, _)) -> compare (hd pnums) (hd pnums')) images in
          `List
            (map
              (fun (i, (pnums, n, w, h, size, bpc, cs, filter, (masktype, maskobjnum))) ->
-               `Assoc [("Object", `Int i);
+               `Assoc [("Object", `Int (if Hashtbl.mem iifakeobjs i then 0 else i));
                        ("Pages", `List (map (fun x -> `Int x) pnums));
                        ("Name", `String n);
                        ("Width", `Int w);
