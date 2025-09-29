@@ -4846,9 +4846,9 @@ let rec go () =
       let pdf = get_single_pdf args.op true in
       let range = parse_pagespec pdf (get_pagespec ()) in
         if args.format_json then
-          flprint (Pdfio.string_of_bytes (Cpdfimage.image_resolution_json pdf range f))
+          flprint (Pdfio.string_of_bytes (Cpdfimage.image_resolution_json ~inline:args.inline pdf range f))
         else
-          let images = Cpdfimage.image_resolution pdf range f in
+          let images = Cpdfimage.image_resolution ~inline:args.inline pdf range f in
             iter
               (function (pagenum, xobject, w, h, wdpi, hdpi, objnum) ->
                  Printf.printf "%i, %s, %i, %i, %f, %f, %i\n" pagenum xobject w h wdpi hdpi objnum)

@@ -226,11 +226,11 @@ let extract_images ?(raw=false) ?path_to_p2p ?path_to_im encoding dedup dedup_pe
 (* Image resolution *)
 type xobj =
   | Image of int * int (* width, height *)
-  | Form of Pdftransform.transform_matrix * Pdf.pdfobject * Pdf.pdfobject (* Will add actual data later. *)
+  | Form of Pdftransform.transform_matrix * Pdf.pdfobject * Pdf.pdfobject
 
 let image_results = ref []
 
-let rec image_resolution_page pdf page pagenum images =
+let rec image_resolution_page ~inline pdf page pagenum images =
   try
     let pageops = Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content
     and transform = ref [ref Pdftransform.i_matrix] in
@@ -241,6 +241,13 @@ let rec image_resolution_page pdf page pagenum images =
              | [] -> raise (Failure "no transform")
              | _ -> (hd !transform) := Pdftransform.matrix_compose !(hd !transform) matrix
              end
+         | Pdfops.InlineImage (dict, _, _) ->
+             if inline then
+               begin
+                 match Pdf.lookup_direct_orelse pdf "/Width" "/W" dict, Pdf.lookup_direct_orelse pdf "/Height" "/H" dict with
+                 | Some (Pdf.Integer w), Some (Pdf.Integer h) -> ()
+                 | _ -> ()
+               end
          | Pdfops.Op_Do xobject ->
              let trans (x, y) =
                match !transform with
@@ -276,7 +283,7 @@ let rec image_resolution_page pdf page pagenum images =
                              Pdfpage.rest = Pdf.Dictionary []}
                           in
                             let newpdf = Pdfpage.change_pages false pdf [page] in
-                              image_resolution newpdf [1] pagenum
+                              image_resolution ~inline newpdf [1] pagenum
                    | (pagenum, name, Image (w, h), objnum) ->
                        let lx = Pdfunits.inches (distance_between o x) Pdfunits.PdfPoint in
                        let ly = Pdfunits.inches (distance_between o y) Pdfunits.PdfPoint in
@@ -303,7 +310,7 @@ let rec image_resolution_page pdf page pagenum images =
     with
       e -> Printf.printf "Error %s\n" (Printexc.to_string e); flprint "\n"
 
-and image_resolution pdf range real_pagenum =
+and image_resolution ~inline pdf range real_pagenum =
   let images = ref [] in
     Cpdfpage.iter_pages
       (fun pagenum page ->
@@ -359,19 +366,19 @@ and image_resolution pdf range real_pagenum =
           (function (pagenum, images) ->
              let pagenum = if real_pagenum > 0 then 1 else pagenum in
              let page = select pagenum pages in
-               image_resolution_page pdf page pagenum images)
+               image_resolution_page ~inline pdf page pagenum images)
           pagesplits
 
 let is_below_dpi dpi (_, _, _, _, wdpi, hdpi, _) =
   wdpi < dpi || hdpi < dpi
 
-let image_resolution pdf range dpi =
+let image_resolution ~inline pdf range dpi =
   image_results := [];
-  image_resolution pdf range 0;
+  image_resolution ~inline pdf range 0;
   sort compare (rev (keep (is_below_dpi dpi) !image_results))
 
-let image_resolution_json pdf range dpi =
-  let images = image_resolution pdf range dpi in
+let image_resolution_json ~inline pdf range dpi =
+  let images = image_resolution ~inline pdf range dpi in
     Pdfio.bytes_of_string
       (Cpdfyojson.Safe.pretty_to_string
         (`List (map (fun (pagenum, xobject, w, h, wdpi, hdpi, objnum) ->
@@ -1388,7 +1395,7 @@ let process
   let highdpi, target_dpi_info =
     let objnums, dpi =
       if dpi_threshold = 0. && factor > 0. && jpeg_to_jpeg_dpi = 0. then ([], []) else
-        let results = image_resolution pdf range max_float in
+        let results = image_resolution ~inline:false pdf range max_float in
           (*iter (fun (_, _, _, _, wdpi, hdpi, objnum) -> Printf.printf "From image_resolution %f %f %i\n" wdpi hdpi objnum) results;*)
           let cmp (_, _, _, _, _, _, a) (_, _, _, _, _, _, b) = compare a b in
           let sets = collate cmp (sort cmp results) in

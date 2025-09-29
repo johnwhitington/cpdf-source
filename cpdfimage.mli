@@ -9,10 +9,10 @@ val extract_images :
   Cpdfmetadata.encoding -> bool -> bool -> Pdf.t -> int list -> string -> unit
 
 (** Report image resolutions. *)        
-val image_resolution : Pdf.t -> int list -> float -> (int * string * int * int * float * float * int) list
+val image_resolution : inline:bool -> Pdf.t -> int list -> float -> (int * string * int * int * float * float * int) list
 
 (** Report image resolution data in JSON format *)
-val image_resolution_json : Pdf.t -> int list -> float -> Pdfio.bytes
+val image_resolution_json : inline:bool -> Pdf.t -> int list -> float -> Pdfio.bytes
 
 (** List images in JSON format *)
 val images : inline:bool -> Pdf.t -> int list -> Cpdfyojson.Safe.t
