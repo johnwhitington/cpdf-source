@@ -231,6 +231,7 @@ type xobj =
 let image_results = ref []
 
 let rec image_resolution_page ~inline pdf page pagenum images =
+  Printf.printf "image_resolution_page, inline = %b, pagenum = %i\n" inline pagenum;
   try
     let pageops = Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content
     and transform = ref [ref Pdftransform.i_matrix] in
@@ -242,10 +243,24 @@ let rec image_resolution_page ~inline pdf page pagenum images =
              | _ -> (hd !transform) := Pdftransform.matrix_compose !(hd !transform) matrix
              end
          | Pdfops.InlineImage (dict, _, _) ->
+             flprint "Found an inline image\n";
              if inline then
                begin
                  match Pdf.lookup_direct_orelse pdf "/Width" "/W" dict, Pdf.lookup_direct_orelse pdf "/Height" "/H" dict with
-                 | Some (Pdf.Integer w), Some (Pdf.Integer h) -> ()
+                 | Some (Pdf.Integer w), Some (Pdf.Integer h) ->
+                     let trans (x, y) =
+                       match !transform with
+                       | [] -> raise (Failure "no transform")
+                       | _ -> Pdftransform.transform_matrix !(hd !transform) (x, y)
+                     in
+                       let o = trans (0., 0.)
+                       and x = trans (1., 0.)
+                       and y = trans (0., 1.) in
+                       let lx = Pdfunits.inches (distance_between o x) Pdfunits.PdfPoint in
+                       let ly = Pdfunits.inches (distance_between o y) Pdfunits.PdfPoint in
+                         let wdpi = float w /. lx
+                         and hdpi = float h /. ly in
+                           image_results := (pagenum, "/InlineImage", w, h, wdpi, hdpi, 0)::!image_results
                  | _ -> ()
                end
          | Pdfops.Op_Do xobject ->
@@ -311,6 +326,7 @@ let rec image_resolution_page ~inline pdf page pagenum images =
       e -> Printf.printf "Error %s\n" (Printexc.to_string e); flprint "\n"
 
 and image_resolution ~inline pdf range real_pagenum =
+  Printf.printf "image_resolution, inline = %b\n" inline;
   let images = ref [] in
     Cpdfpage.iter_pages
       (fun pagenum page ->
@@ -361,6 +377,16 @@ and image_resolution ~inline pdf range real_pagenum =
           (collate (fun (a, _, _, _) (b, _, _, _) -> compare a b) (rev !images))
       and pages =
         Pdfpage.pages_of_pagetree pdf
+      in
+      (* If inline is set we in fact need to process all pages in the range
+         even if no image xobjects are linked to that page. So, add
+         fake entries with empty image lists. *)
+      let pagesplits =
+        let fsts = map fst pagesplits in
+          if inline then
+            option_map (fun p -> if mem p fsts then None else Some (p, [])) range @ pagesplits
+          else
+            pagesplits 
       in
         iter
           (function (pagenum, images) ->
