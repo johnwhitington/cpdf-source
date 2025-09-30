@@ -231,7 +231,7 @@ type xobj =
 let image_results = ref []
 
 let rec image_resolution_page ~inline pdf page pagenum images =
-  Printf.printf "image_resolution_page, inline = %b, pagenum = %i\n" inline pagenum;
+  (*Printf.printf "image_resolution_page, inline = %b, pagenum = %i\n" inline pagenum;*)
   try
     let pageops = Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content
     and transform = ref [ref Pdftransform.i_matrix] in
@@ -243,7 +243,7 @@ let rec image_resolution_page ~inline pdf page pagenum images =
              | _ -> (hd !transform) := Pdftransform.matrix_compose !(hd !transform) matrix
              end
          | Pdfops.InlineImage (dict, _, _) ->
-             flprint "Found an inline image\n";
+             (*flprint "Found an inline image\n";*)
              if inline then
                begin
                  match Pdf.lookup_direct_orelse pdf "/Width" "/W" dict, Pdf.lookup_direct_orelse pdf "/Height" "/H" dict with
@@ -326,7 +326,6 @@ let rec image_resolution_page ~inline pdf page pagenum images =
       e -> Printf.printf "Error %s\n" (Printexc.to_string e); flprint "\n"
 
 and image_resolution ~inline pdf range real_pagenum =
-  Printf.printf "image_resolution, inline = %b\n" inline;
   let images = ref [] in
     Cpdfpage.iter_pages
       (fun pagenum page ->
