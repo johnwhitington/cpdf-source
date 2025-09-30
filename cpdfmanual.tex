@@ -4128,17 +4128,18 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 
 \chapter{Images}\label{chap:13}
 \begin{framed}
+
+\noindent\small\verb!cpdf -list-images[-json] [-inline] in.pdf [<range>]!
+
+\vspace{1.5mm}
+\noindent\small\verb!cpdf -image-resolution[-json] <n> [-inline] in.pdf [<range>]!
+
+\vspace{1.5mm}
+\noindent\small\verb!cpdf -list-images-used[-json] [-inline] in.pdf [<range>]!
+
+\vspace{1.5mm}
 \noindent\small\verb!cpdf -extract-images in.pdf [<range>] [-im <path>] [-p2p <path>]!
 \noindent\small\verb!     [-dedup | -dedup-perpage] [-raw] -o <path>!
-
-\vspace{1.5mm}
-\noindent\small\verb!cpdf -list-images[-json] in.pdf [<range>]!
-
-\vspace{1.5mm}
-\noindent\small\verb!cpdf -image-resolution[-json] <minimum resolution> in.pdf [<range>]!
-
-\vspace{1.5mm}
-\noindent\small\verb!cpdf -list-images-used[-json] in.pdf [<range>]!
 
 \vspace{1.5mm}
 \noindent\small\verb!cpdf -process-images [-process-images-info] in.pdf [<range>]!\\
@@ -4171,28 +4172,7 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 
 \end{framed}
 
-\section{Extracting images}
 
-Cpdf can extract the raster images to a given location. JPEG and JPEG2000 and lossless JBIG2 images are extracted directly.
-
-Lossy JBIG2 images are extracted likewise, but an extra \texttt{\_\_<n>} is added, giving the number of the JBIG2Global stream for this image, which is extracted as \texttt{<n>.jbig2global}. You may reconstruct the individual images with, for example, \texttt{jbig2dec}.
-
-Other images are written as PNGs, processed with either ImageMagick's ``magick'' command, or NetPBM's ``pnmtopng'' program, whichever is installed.
-
-  \begin{framed}
-  \noindent\small\verb@cpdf -extract-images in.pdf [<range>] [-im <path>] [-p2p <path]@
-  \noindent\small\verb@     [-dedup | -dedup-perpage] -o <path>@
-  \end{framed}
-
-\noindent The \texttt{-im} or \texttt{-p2p} option is used to give the path to the external tool, one of which must be installed (unless \texttt{-raw} is added, which outputs instead just JPEG or plain \texttt{.pnm} files).
-
-The output specifier, e.g \verb!-o output/%%%! gives the number format for numbering the images. Output files are named serially from 0, and include the page number too. For example, output files might be called \texttt{output/000-p1.jpg}, \texttt{output/001-p1.png}, \texttt{output/002-p3.jpg} etc. The specification \texttt{\%objnum} may also be used to insert the object number of the image. Here is an example invocation:
-
-  \begin{framed}
-  \noindent\small\verb@cpdf -extract-images in.pdf -im magick -o output/%%%@
-  \end{framed}
-
-\noindent The \texttt{output} directory must already exist. The \texttt{-dedup} option deduplicates images entirely; the \texttt{-dedup-perpage} option only per page.
 
 \section{Listing images}
 
@@ -4200,11 +4180,13 @@ The \texttt{-list-images} operation lists all images in the file:
 
   \begin{framed}
 {\small\begin{verbatim}
-6, 1, /Z_Im0, 3300, 2550, 13432, 1, /DeviceGray, /CCITTFaxDecode
-9, 2 13 14 15, /Z_Im0, 3376, 2649, 37972, 1, /DeviceGray, /CCITTFaxDecode\end{verbatim}}
+6, 1, /I0, 3300, 2550, 13432, 1, /DeviceGray, /FlateDecode, NoMask, none
+9, 2 3, /I1, 3376, 2649, 37972, 1, /DeviceGray, /FlateDecode, NoMask, none\end{verbatim}}
   \end{framed}
 
-\noindent The fields are \textit{object number, page numbers, image name, width, height, size in bytes, bits per pixel, colour space, filter (compression method)}. With \texttt{-list-images-json}, the same information is available in JSON format:
+\noindent The fields are \textit{object number, page numbers, image name, width, height, size in bytes, bits per pixel, colour space, filter (compression method), mask type, mask object number}. Image masks are also listed, and the mask object number may be used for cross-referencing. Mask types are \texttt{ExplicitMask}, \texttt{ColourKeyMask}, \texttt{SMask}, \texttt{SMaskInData} and \texttt{NoMask}.
+
+With \texttt{-list-images-json}, the same information is available in JSON format:
 
   \begin{framed}
 {\small\begin{verbatim}
@@ -4212,27 +4194,33 @@ The \texttt{-list-images} operation lists all images in the file:
   {
     "Object": 6,
     "Pages": [ 1 ],
-    "Name": "/Z_Im0",
+    "Name": "/I0",
     "Width": 3300,
     "Height": 2550,
     "Bytes": 13432,
     "BitsPerComponent": 1,
     "Colourspace": "/DeviceGray",
-    "Filter": "/CCITTFaxDecode"
+    "Filter": "FlateDecode",
+    "Mask": "NoMask",
+    "MaskObjNum": null
   },
   {
     "Object": 9,
-    "Pages": [ 2, 13, 14, 15 ],
-    "Name": "/Z_Im0",
+    "Pages": [ 2, 3 ],
+    "Name": "/I0",
     "Width": 3376,
     "Height": 2649,
     "Bytes": 37972,
     "BitsPerComponent": 1,
     "Colourspace": "/DeviceGray",
-    "Filter": "/CCITTFaxDecode"
+    "Filter": "/FlateDecode"
+    "Mask": "NoMask",
+    "MaskObjNum": null
   }
 ]\end{verbatim}}
   \end{framed}
+
+By adding \texttt{-inline} to the command line, inline images will be listed too. For inline images, the object number will be zero and the image name will be \texttt{/InlineImage}.
 
   \section{Listing images at point of use}\label{imageres}
   To list all images in the given range of pages which fall below a given resolution (in dots-per-inch), use the \verb!-image-resolution! function:
@@ -4284,7 +4272,30 @@ The information is also available in JSON format:
 \end{verbatim}}
   \end{framed}
 
-\noindent To list all images regardless of resolution, use \texttt{-list-images-used} or \texttt{-list-images-used-json} instead.
+\noindent To list all images regardless of resolution, use \texttt{-list-images-used} or \texttt{-list-images-used-json} instead. Add \texttt{-inline} to list inline images too.
+
+\section{Extracting images}
+
+Cpdf can extract the raster images to a given location. JPEG and JPEG2000 and lossless JBIG2 images are extracted directly.
+
+Lossy JBIG2 images are extracted likewise, but an extra \texttt{\_\_<n>} is added, giving the number of the JBIG2Global stream for this image, which is extracted as \texttt{<n>.jbig2global}. You may reconstruct the individual images with, for example, \texttt{jbig2dec}.
+
+Other images are written as PNGs, processed with either ImageMagick's ``magick'' command, or NetPBM's ``pnmtopng'' program, whichever is installed.
+
+  \begin{framed}
+  \noindent\small\verb@cpdf -extract-images in.pdf [<range>] [-im <path>] [-p2p <path]@
+  \noindent\small\verb@     [-dedup | -dedup-perpage] -o <path>@
+  \end{framed}
+
+\noindent The \texttt{-im} or \texttt{-p2p} option is used to give the path to the external tool, one of which must be installed (unless \texttt{-raw} is added, which outputs instead just JPEG or plain \texttt{.pnm} files).
+
+The output specifier, e.g \verb!-o output/%%%! gives the number format for numbering the images. Output files are named serially from 0, and include the page number too. For example, output files might be called \texttt{output/000-p1.jpg}, \texttt{output/001-p1.png}, \texttt{output/002-p3.jpg} etc. The specification \texttt{\%objnum} may also be used to insert the object number of the image. Here is an example invocation:
+
+  \begin{framed}
+  \noindent\small\verb@cpdf -extract-images in.pdf -im magick -o output/%%%@
+  \end{framed}
+
+\noindent The \texttt{output} directory must already exist. The \texttt{-dedup} option deduplicates images entirely; the \texttt{-dedup-perpage} option only per page.
 
 \section{Removing an Image}
 
