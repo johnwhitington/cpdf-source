@@ -197,7 +197,7 @@ let extract_inline_images ~raw ?path_to_p2p ?path_to_im encoding pdf page pnum s
      | Pdfops.InlineImage (dict, _, data) ->
          let newdict = Pdf.add_dict_entry dict "/Length" (Pdf.Integer (bytes_size data)) in
          let fakeobj = Pdf.Stream {contents = newdict, Pdf.Got data} in
-         (* Abuse @S *)
+         (* Abuse @S as above. *)
          let stem = string_replace_all "%objnum" "@S" stem in
          let name =
            Cpdfbookmarks.name_of_spec
