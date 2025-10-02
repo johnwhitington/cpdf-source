@@ -27,9 +27,10 @@ o -draw can use JPEG2000s
 o New -list-attached-files-json optionally including file data
 o List and add descriptions and relationships for attachments
 o Process lossless CMYK images
-o Use alpha with 8bpp PNGs with -rasterize, -output-image, -png and when drawing
+o Use 8bpp Alpha PNGs with -rasterize, -output-image, -png and when drawing
 o -list-images and friends show mask status, and list masks
 o -list-images and friends now list inline images
+o Extract inline images
 
 Fixes:
 

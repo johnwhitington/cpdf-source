@@ -191,7 +191,13 @@ let rec extract_images_form_xobject ~raw ?path_to_p2p ?path_to_im encoding dedup
       iter (extract_images_form_xobject ~raw ?path_to_p2p ?path_to_im encoding dedup dedup_per_page pdf serial stem pnum) forms;
       extract_images_inner ~raw ?path_to_p2p ?path_to_im encoding serial pdf resources stem pnum images
 
-let extract_images ?(raw=false) ?path_to_p2p ?path_to_im encoding dedup dedup_per_page pdf range stem =
+let extract_inline_images ~raw ?path_to_p2p ?path_to_im encoding pdf range serial stem =
+  ()
+
+let extract_inline_images_form ~raw ?path_to_p2p ?path_to_im encoding pdf serial stem form =
+  ()
+
+let extract_images ~inline ?(raw=false) ?path_to_p2p ?path_to_im encoding dedup dedup_per_page pdf range stem =
   Hashtbl.clear jbig2_globals;
   jbig2_serial := 0;
   if dedup || dedup_per_page then written := [];
@@ -218,6 +224,11 @@ let extract_images ?(raw=false) ?path_to_p2p ?path_to_im encoding dedup dedup_pe
                let forms = keep (fun o -> Pdf.lookup_direct pdf "/Subtype" o = Some (Pdf.Name "/Form")) xobjects in
                  extract_images_inner ~raw ?path_to_p2p ?path_to_im encoding serial pdf page.Pdfpage.resources stem pnum images;
                  iter (extract_images_form_xobject ~raw ?path_to_p2p ?path_to_im encoding dedup dedup_per_page pdf serial stem pnum) forms;
+                 if inline then
+                   begin
+                     extract_inline_images ~raw ?path_to_p2p ?path_to_im encoding pdf range serial stem;
+                     iter (extract_inline_images_form ~raw ?path_to_p2p ?path_to_im encoding pdf serial stem) forms;
+                   end;
                  Cpdfutil.progress_endpage ())
           pages
           (indx pages);

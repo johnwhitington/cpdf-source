@@ -4299,7 +4299,7 @@ The output specifier, e.g \verb!-o output/%%%! gives the number format for numbe
 
 \section{Removing an Image}
 
-To remove a particular image, find its name using \texttt{-list-images} then apply the \texttt{-draft} and \texttt{-draft-remove-only} operations from Section \ref{draft}. 
+To remove a particular image, find its name using \texttt{-list-images-used} then apply the \texttt{-draft} and \texttt{-draft-remove-only} operations from Section \ref{draft}. 
 
 \section{Processing Images}
 
@@ -6530,13 +6530,13 @@ objects or clipped in the original). For example:
     \noindent\small\verb!cpdf -draft -boxes in.pdf -o out.pdf!
   \end{framed}
 
-\noindent To remove a single image only, specify \texttt{-draft-remove-only}, giving the name of the image obtained by a call to \texttt{-image-resolution} as described in Section \ref{imageres} and giving the appropriate page. For example:
+\noindent To remove a single image only, specify \texttt{-draft-remove-only}, giving the name of the image obtained by a call to \texttt{-list-images-used} as described in Section \ref{imageres} and giving the appropriate page. For example:
 
   \begin{framed}
     \noindent\small\verb!cpdf -draft -boxes -draft-remove-only "/Im1" in.pdf 7 -o out.pdf!
   \end{framed}
 
-\noindent To remove text instead of images, use the \texttt{-remove-all-text} operation:
+\noindent Note that this is only appropriate if the image is not used by other pages. To remove text instead of images, use the \texttt{-remove-all-text} operation:
 
   \begin{framed}
     \noindent\small\verb!cpdf -remove-all-text in.pdf -o out.pdf!
