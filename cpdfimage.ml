@@ -191,20 +191,23 @@ let rec extract_images_form_xobject ~raw ?path_to_p2p ?path_to_im encoding dedup
       iter (extract_images_form_xobject ~raw ?path_to_p2p ?path_to_im encoding dedup dedup_per_page pdf serial stem pnum) forms;
       extract_images_inner ~raw ?path_to_p2p ?path_to_im encoding serial pdf resources stem pnum images
 
-(* FIXME What naming scheme should we use for inline images? Fix up. Use the proper function (encoding etc.) *)
 let extract_inline_images ~raw ?path_to_p2p ?path_to_im encoding pdf page pnum serial stem =
   iter
     (function
      | Pdfops.InlineImage (dict, _, data) ->
          let newdict = Pdf.add_dict_entry dict "/Length" (Pdf.Integer (bytes_size data)) in
          let fakeobj = Pdf.Stream {contents = newdict, Pdf.Got data} in
-         let name = stem ^ "-" ^ string_of_int !serial ^ "-inline" in
-           incr serial;
+         (* Abuse @S *)
+         let stem = string_replace_all "%objnum" "@S" stem in
+         let name =
+           Cpdfbookmarks.name_of_spec
+             encoding [] pdf 0 (stem ^ "-p" ^ string_of_int pnum ^ "-inline")
+             (let r = !serial in serial := !serial + 1; r) "" 0 0
+         in
            write_image ~raw ?path_to_p2p ?path_to_im pdf page.Pdfpage.resources name fakeobj
      | _ -> ())
     (Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content)
 
-(* FIXME Assign naming scheme for these too, including page number. *)
 let extract_inline_images_form ~raw ?path_to_p2p ?path_to_im encoding pdf pnum serial stem form =
   let fakepage =
     {Pdfpage.content = [form];
