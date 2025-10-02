@@ -191,11 +191,29 @@ let rec extract_images_form_xobject ~raw ?path_to_p2p ?path_to_im encoding dedup
       iter (extract_images_form_xobject ~raw ?path_to_p2p ?path_to_im encoding dedup dedup_per_page pdf serial stem pnum) forms;
       extract_images_inner ~raw ?path_to_p2p ?path_to_im encoding serial pdf resources stem pnum images
 
-let extract_inline_images ~raw ?path_to_p2p ?path_to_im encoding pdf range serial stem =
-  ()
+(* FIXME What naming scheme should we use for inline images? Fix up. Use the proper function (encoding etc.) *)
+let extract_inline_images ~raw ?path_to_p2p ?path_to_im encoding pdf page pnum serial stem =
+  iter
+    (function
+     | Pdfops.InlineImage (dict, _, data) ->
+         let newdict = Pdf.add_dict_entry dict "/Length" (Pdf.Integer (bytes_size data)) in
+         let fakeobj = Pdf.Stream {contents = newdict, Pdf.Got data} in
+         let name = stem ^ "-" ^ string_of_int !serial ^ "-inline" in
+           incr serial;
+           write_image ~raw ?path_to_p2p ?path_to_im pdf page.Pdfpage.resources name fakeobj
+     | _ -> ())
+    (Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content)
 
-let extract_inline_images_form ~raw ?path_to_p2p ?path_to_im encoding pdf serial stem form =
-  ()
+(* FIXME Assign naming scheme for these too, including page number. *)
+let extract_inline_images_form ~raw ?path_to_p2p ?path_to_im encoding pdf pnum serial stem form =
+  let fakepage =
+    {Pdfpage.content = [form];
+     Pdfpage.mediabox = Pdf.Array [Pdf.Integer 0; Pdf.Integer 0; Pdf.Integer 0; Pdf.Integer 0];
+     Pdfpage.resources = begin match Pdf.lookup_direct pdf "/Resources" form with Some d -> d | None -> Pdf.Dictionary [] end;
+     Pdfpage.rotate = Pdfpage.Rotate0;
+     Pdfpage.rest = Pdf.Dictionary []}
+  in
+    extract_inline_images ~raw ?path_to_p2p ?path_to_im encoding pdf fakepage pnum serial stem
 
 let extract_images ~inline ?(raw=false) ?path_to_p2p ?path_to_im encoding dedup dedup_per_page pdf range stem =
   Hashtbl.clear jbig2_globals;
@@ -226,8 +244,8 @@ let extract_images ~inline ?(raw=false) ?path_to_p2p ?path_to_im encoding dedup 
                  iter (extract_images_form_xobject ~raw ?path_to_p2p ?path_to_im encoding dedup dedup_per_page pdf serial stem pnum) forms;
                  if inline then
                    begin
-                     extract_inline_images ~raw ?path_to_p2p ?path_to_im encoding pdf range serial stem;
-                     iter (extract_inline_images_form ~raw ?path_to_p2p ?path_to_im encoding pdf serial stem) forms;
+                     extract_inline_images ~raw ?path_to_p2p ?path_to_im encoding pdf page pnum serial stem;
+                     iter (extract_inline_images_form ~raw ?path_to_p2p ?path_to_im encoding pdf pnum serial stem) forms;
                    end;
                  Cpdfutil.progress_endpage ())
           pages
