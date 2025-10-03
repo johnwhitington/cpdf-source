@@ -4142,6 +4142,10 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 \noindent\small\verb!     [-dedup | -dedup-perpage] [-raw] [-inline] -o <path>!
 
 \vspace{1.5mm}
+\noindent\small\verb!cpdf -extract-single-image <object number>!\\
+\noindent\small\verb!     [-im <path>] [-p2p <path>] [-raw] in.pdf -o <filename>!
+
+\vspace{1.5mm}
 \noindent\small\verb!cpdf -process-images [-process-images-info] in.pdf [<range>]!\\
 \noindent\small\verb!     [-im <filename>] [-jbig2enc <filename>]!\\
 \noindent\small\verb!     [-lossless-resample[-dpi] <n> | -lossless-to-jpeg <n>]!\\
@@ -4296,6 +4300,14 @@ The output specifier, e.g \verb!-o output/%%%! gives the number format for numbe
   \end{framed}
 
 \noindent The \texttt{output} directory must already exist. The \texttt{-dedup} option deduplicates images entirely; the \texttt{-dedup-perpage} option only per page. The \texttt{-inline} option also extracts inline images; they will have \texttt{-inline} appended to the stem of the file name.
+
+To extract a single image, we can use the object number printed when we use either \texttt{-list-images[-json]} or \texttt{-list-images-used[-json]}. For example:
+
+  \begin{framed}
+  \noindent\small\verb@cpdf -extract-single-image 14 in.pdf -im magick -o output@
+  \end{framed}
+
+\noindent This will extract the image at object 14 to \texttt{output.\{png, pnm, jpeg, jpeg2000, jbig2\}}. Any soft mask will be extracted with name \texttt{output-smask}. This single image extraction procedure does not work for lossy JBIG2 images with JBIG2Globals streams.
 
 \section{Removing an Image}
 
