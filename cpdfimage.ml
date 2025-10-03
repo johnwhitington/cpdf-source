@@ -156,15 +156,16 @@ let write_image ~raw ?path_to_p2p ?path_to_im pdf resources name image =
 
 let written = ref []
 
-let extract_images_inner ~raw ?path_to_p2p ?path_to_im encoding serial pdf resources stem pnum images =
+let extract_images_inner ?name ~raw ?path_to_p2p ?path_to_im encoding serial pdf resources stem pnum images =
   let names =
     map
       (fun image ->
-         (* Abuse @S *)
-         let stem = string_replace_all "%objnum" "@S" stem in
-           Cpdfbookmarks.name_of_spec
-             encoding [] pdf 0 (stem ^ "-p" ^ string_of_int pnum)
-             (let r = !serial in serial := !serial + 1; r) "" (match image with Pdf.Indirect i -> i | _ -> 0) 0)
+         match name with Some s -> s | None ->
+           (* Abuse @S *)
+           let stem = string_replace_all "%objnum" "@S" stem in
+             Cpdfbookmarks.name_of_spec
+               encoding [] pdf 0 (stem ^ "-p" ^ string_of_int pnum)
+               (let r = !serial in serial := !serial + 1; r) "" (match image with Pdf.Indirect i -> i | _ -> 0) 0)
       images
   in
     iter2 (write_image ~raw ?path_to_p2p ?path_to_im pdf resources) names images
@@ -256,7 +257,15 @@ let extract_images ~inline ?(raw=false) ?path_to_p2p ?path_to_im encoding dedup 
           Cpdfutil.progress_done ()
 
 let extract_single_image ?(raw=false) ?path_to_p2p ?path_to_im encoding pdf objnum stem =
-  ()
+  extract_images_inner ~name:stem ~raw ?path_to_p2p ?path_to_im encoding (ref 0) pdf (Pdf.Dictionary []) stem 0 [Pdf.Indirect objnum];
+  match Pdf.direct pdf (Pdf.Indirect objnum) with
+  | Pdf.Stream {contents = (Pdf.Dictionary dict, _)}->
+      begin match lookup "/SMask" dict with
+      | Some (Pdf.Indirect i) ->
+          extract_images_inner ~name:(stem ^ "-smask") ~raw ?path_to_p2p ?path_to_im encoding (ref 0) pdf (Pdf.Dictionary []) stem 0 [Pdf.Indirect i]
+      | _ -> ()
+      end
+  | _ -> ()
 
 (* Image resolution *)
 type xobj =
