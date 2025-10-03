@@ -255,6 +255,9 @@ let extract_images ~inline ?(raw=false) ?path_to_p2p ?path_to_im encoding dedup 
           (indx pages);
           Cpdfutil.progress_done ()
 
+let extract_single_image ?(raw=false) ?path_to_p2p ?path_to_im encoding pdf objnum stem =
+  ()
+
 (* Image resolution *)
 type xobj =
   | Image of int * int (* width, height *)

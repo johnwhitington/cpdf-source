@@ -4139,7 +4139,7 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 
 \vspace{1.5mm}
 \noindent\small\verb!cpdf -extract-images in.pdf [<range>] [-im <path>] [-p2p <path>]!
-\noindent\small\verb!     [-dedup | -dedup-perpage] [-raw] -o <path>!
+\noindent\small\verb!     [-dedup | -dedup-perpage] [-raw] [-inline] -o <path>!
 
 \vspace{1.5mm}
 \noindent\small\verb!cpdf -process-images [-process-images-info] in.pdf [<range>]!\\
@@ -4295,7 +4295,7 @@ The output specifier, e.g \verb!-o output/%%%! gives the number format for numbe
   \noindent\small\verb@cpdf -extract-images in.pdf -im magick -o output/%%%@
   \end{framed}
 
-\noindent The \texttt{output} directory must already exist. The \texttt{-dedup} option deduplicates images entirely; the \texttt{-dedup-perpage} option only per page.
+\noindent The \texttt{output} directory must already exist. The \texttt{-dedup} option deduplicates images entirely; the \texttt{-dedup-perpage} option only per page. The \texttt{-inline} option also extracts inline images; they will have \texttt{-inline} appended to the stem of the file name.
 
 \section{Removing an Image}
 

@@ -8,6 +8,11 @@ val extract_images :
   inline:bool -> ?raw:bool -> ?path_to_p2p:string -> ?path_to_im:string ->
   Cpdfmetadata.encoding -> bool -> bool -> Pdf.t -> int list -> string -> unit
 
+(** Extract single image. *)
+val extract_single_image :
+  ?raw:bool -> ?path_to_p2p:string -> ?path_to_im:string ->
+  Cpdfmetadata.encoding -> Pdf.t -> int -> string -> unit
+
 (** Report image resolutions. *)        
 val image_resolution : inline:bool -> Pdf.t -> int list -> float -> (int * string * int * int * float * float * int) list
 

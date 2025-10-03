@@ -178,6 +178,7 @@ type op =
   | BlackLines
   | BlackFills
   | ExtractImages
+  | ExtractSingleImage of int
   | ListImages
   | ImageResolution of float
   | MissingFonts
@@ -342,6 +343,7 @@ let string_of_op = function
   | BlackLines -> "BlackLines"
   | BlackFills -> "BlackFills"
   | ExtractImages -> "ExtractImages"
+  | ExtractSingleImage _ -> "ExtractSingleImage"
   | ListImages -> "ListImages"
   | ImageResolution _ -> "ImageResolution"
   | MissingFonts -> "MissingFonts"
@@ -1005,7 +1007,7 @@ let banned banlist = function
   | ShowBoxes | TrimMarks | CreateMetadata | SetMetadataDate _ | SetVersion _
   | SetAuthor _|SetTitle _|SetSubject _|SetKeywords _|SetCreate _
   | SetModify _|SetCreator _|SetProducer _|RemoveDictEntry _ | ReplaceDictEntry _ | PrintDictEntry _ | SetMetadata _
-  | ExtractText | ExtractImages | ExtractFontFile _
+  | ExtractText | ExtractImages | ExtractSingleImage _ | ExtractFontFile _
   | AddPageLabels | RemovePageLabels | OutputJSON | OCGCoalesce
   | OCGRename | OCGList | OCGOrderAll | PrintFontEncoding _ | TableOfContents | Typeset _ | Composition _
   | TextWidth _ | SetAnnotations _ | CopyAnnotations _ | ExtractStream _ | ReplaceStream _ | PrintObj _ | ReplaceObj _ | RemoveObj _
@@ -2906,6 +2908,9 @@ let specs =
      " Path to pnmtopng executable");
    ("-extract-images",
      Arg.Unit (setop ExtractImages),
+     " Extract images to file");
+   ("-extract-single-image",
+     Arg.Int (fun i -> setop (ExtractSingleImage i) ()),
      " Extract images to file");
    ("-dedup",
      Arg.Unit (fun () -> args.dedup <- true),
@@ -4842,6 +4847,15 @@ let rec go () =
         let pdf = get_single_pdf args.op true in
           let range = parse_pagespec pdf (get_pagespec ()) in
             Cpdfimage.extract_images ~inline:args.inline ~raw:(args.encoding = Cpdfmetadata.Raw) ?path_to_p2p:(match args.path_to_p2p with "" -> None | x -> Some x) ?path_to_im:(match args.path_to_im with "" -> None | x -> Some x) args.encoding args.dedup args.dedup_per_page pdf range output_spec
+  | Some (ExtractSingleImage objnum) ->
+      let output_spec =
+        begin match args.out with
+        | File output_spec -> output_spec
+        | _ -> ""
+        end
+      in
+        let pdf = get_single_pdf args.op true in
+          Cpdfimage.extract_single_image ~raw:(args.encoding = Cpdfmetadata.Raw) ?path_to_p2p:(match args.path_to_p2p with "" -> None | x -> Some x) ?path_to_im:(match args.path_to_im with "" -> None | x -> Some x) args.encoding pdf objnum output_spec
   | Some (ImageResolution f) ->
       let pdf = get_single_pdf args.op true in
       let range = parse_pagespec pdf (get_pagespec ()) in
