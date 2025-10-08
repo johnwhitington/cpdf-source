@@ -32,6 +32,8 @@ o Use 8bpp Alpha PNGs with -rasterize, -output-image, -png and when drawing
 o -list-images and friends show mask status, and list masks
 o -list-images and friends now list inline images
 o Extract inline images
+o Extract soft masks
+o Optionally combine soft marks with image when extracting images
 
 Fixes:
 
