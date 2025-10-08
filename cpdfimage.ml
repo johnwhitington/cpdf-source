@@ -219,7 +219,7 @@ let extract_inline_images_form ~raw ?path_to_p2p ?path_to_im encoding pdf pnum s
   in
     extract_inline_images ~raw ?path_to_p2p ?path_to_im encoding pdf fakepage pnum serial stem
 
-let extract_images ~inline ?(raw=false) ?path_to_p2p ?path_to_im encoding dedup dedup_per_page pdf range stem =
+let extract_images ~merge_masks ~inline ?(raw=false) ?path_to_p2p ?path_to_im encoding dedup dedup_per_page pdf range stem =
   Hashtbl.clear jbig2_globals;
   jbig2_serial := 0;
   if dedup || dedup_per_page then written := [];
@@ -267,7 +267,7 @@ let extract_images ~inline ?(raw=false) ?path_to_p2p ?path_to_im encoding dedup 
           (indx pages);
           Cpdfutil.progress_done ()
 
-let extract_single_image ?(raw=false) ?path_to_p2p ?path_to_im encoding pdf objnum stem =
+let extract_single_image ~merge_masks ?(raw=false) ?path_to_p2p ?path_to_im encoding pdf objnum stem =
   extract_images_inner ~name:stem ~raw ?path_to_p2p ?path_to_im encoding (ref 0) pdf (Pdf.Dictionary []) stem 0 [Pdf.Indirect objnum];
   match Pdf.direct pdf (Pdf.Indirect objnum) with
   | Pdf.Stream {contents = (Pdf.Dictionary dict, _)}->

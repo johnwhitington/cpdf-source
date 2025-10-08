@@ -607,7 +607,8 @@ type args =
    mutable portfolio_files : Cpdfportfolio.entry list;
    mutable scale_to_fit_rotate : int;
    mutable include_data : bool;
-   mutable inline : bool}
+   mutable inline : bool;
+   mutable merge_masks : bool}
 
 let args =
   {op = None;
@@ -765,7 +766,8 @@ let args =
    portfolio_files = [];
    scale_to_fit_rotate = 0;
    include_data = false;
-   inline = false}
+   inline = false;
+   merge_masks = false}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -909,7 +911,8 @@ let reset_arguments () =
   args.portfolio_files <- [];
   args.scale_to_fit_rotate <- 0;
   args.include_data <- false;
-  args.inline <- false
+  args.inline <- false;
+  args.merge_masks <- false
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -2918,6 +2921,9 @@ let specs =
    ("-dedup-perpage",
      Arg.Unit (fun () -> args.dedup_per_page <- true),
      " Deduplicate extracted images per page only");
+   ("-merge-masks",
+     Arg.Unit (fun () -> args.merge_masks <- true),
+     " Merge images and their soft masks");
    ("-process-images",
      Arg.Unit (setop ProcessImages),
      " Process images within PDF");
@@ -4846,7 +4852,7 @@ let rec go () =
       in
         let pdf = get_single_pdf args.op true in
           let range = parse_pagespec pdf (get_pagespec ()) in
-            Cpdfimage.extract_images ~inline:args.inline ~raw:(args.encoding = Cpdfmetadata.Raw) ?path_to_p2p:(match args.path_to_p2p with "" -> None | x -> Some x) ?path_to_im:(match args.path_to_im with "" -> None | x -> Some x) args.encoding args.dedup args.dedup_per_page pdf range output_spec
+            Cpdfimage.extract_images ~merge_masks:args.merge_masks ~inline:args.inline ~raw:(args.encoding = Cpdfmetadata.Raw) ?path_to_p2p:(match args.path_to_p2p with "" -> None | x -> Some x) ?path_to_im:(match args.path_to_im with "" -> None | x -> Some x) args.encoding args.dedup args.dedup_per_page pdf range output_spec
   | Some (ExtractSingleImage objnum) ->
       let output_spec =
         begin match args.out with
@@ -4855,7 +4861,7 @@ let rec go () =
         end
       in
         let pdf = get_single_pdf args.op true in
-          Cpdfimage.extract_single_image ~raw:(args.encoding = Cpdfmetadata.Raw) ?path_to_p2p:(match args.path_to_p2p with "" -> None | x -> Some x) ?path_to_im:(match args.path_to_im with "" -> None | x -> Some x) args.encoding pdf objnum output_spec
+          Cpdfimage.extract_single_image ~merge_masks:args.merge_masks ~raw:(args.encoding = Cpdfmetadata.Raw) ?path_to_p2p:(match args.path_to_p2p with "" -> None | x -> Some x) ?path_to_im:(match args.path_to_im with "" -> None | x -> Some x) args.encoding pdf objnum output_spec
   | Some (ImageResolution f) ->
       let pdf = get_single_pdf args.op true in
       let range = parse_pagespec pdf (get_pagespec ()) in
