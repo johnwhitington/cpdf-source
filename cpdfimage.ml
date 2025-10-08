@@ -245,6 +245,17 @@ let extract_images ~inline ?(raw=false) ?path_to_p2p ?path_to_im encoding dedup 
                  written := (option_map (function Pdf.Indirect n -> Some n | _ -> None) images) @ !written;
                let forms = keep (fun o -> Pdf.lookup_direct pdf "/Subtype" o = Some (Pdf.Name "/Form")) xobjects in
                  extract_images_inner ~raw ?path_to_p2p ?path_to_im encoding serial pdf page.Pdfpage.resources stem pnum images;
+                 iter
+                   (fun d ->
+                      match Pdf.direct pdf d with
+                      | Pdf.Stream {contents = (Pdf.Dictionary dict, _)} ->
+                          begin match lookup "/SMask" dict with
+                          | Some (Pdf.Indirect i) ->
+                              extract_images_inner ~raw ?path_to_p2p ?path_to_im encoding serial pdf (Pdf.Dictionary []) (stem ^ "-smask") pnum [Pdf.Indirect i]
+                          | _ -> ()
+                          end
+                      | _ -> ())
+                   images;
                  iter (extract_images_form_xobject ~raw ?path_to_p2p ?path_to_im encoding dedup dedup_per_page pdf serial stem pnum) forms;
                  if inline then
                    begin
