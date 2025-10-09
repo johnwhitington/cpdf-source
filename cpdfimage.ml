@@ -156,6 +156,19 @@ let write_image ~raw ?path_to_p2p ?path_to_im pdf resources name image =
 
 let written = ref []
 
+let combine_image_and_mask ?path_to_im name maskname stem =
+  (* Look for name.png, maskname.png. Make name-maskname-combined.png *)
+  match path_to_im with
+  | None -> error "combine_image_and_mask: imagemagick not found"
+  | Some path_to_im ->
+      let out =
+        image_command
+          (Filename.quote_command path_to_im
+            [name ^ ".png"; maskname ^ ".png"; "-compose"; "CopyOpacity"; "-composite";
+             Filename.dirname stem  ^ Filename.dir_sep ^ Filename.basename name ^ "-" ^ Filename.basename maskname ^ "-combined" ^ ".png"])
+      in
+        if out > 0 then Pdfe.log "could not combine image and mask"
+
 let extract_images_inner ~readname ?name ~raw ?path_to_p2p ?path_to_im encoding serial pdf resources stem pnum images =
   let names =
     map
@@ -168,7 +181,7 @@ let extract_images_inner ~readname ?name ~raw ?path_to_p2p ?path_to_im encoding 
                (let r = !serial in serial := !serial + 1; r) "" (match image with Pdf.Indirect i -> i | _ -> 0) 0)
       images
   in
-    readname := names;
+    readname := names @ !readname;
     iter2 (write_image ~raw ?path_to_p2p ?path_to_im pdf resources) names images
 
 let rec extract_images_form_xobject ~raw ?path_to_p2p ?path_to_im encoding dedup dedup_per_page pdf serial stem pnum form =
@@ -256,10 +269,14 @@ let extract_images ~merge_masks ~inline ?(raw=false) ?path_to_p2p ?path_to_im en
                           begin match lookup "/SMask" dict with
                           | Some (Pdf.Indirect i) ->
                               extract_images_inner ~readname:maskname ~raw ?path_to_p2p ?path_to_im encoding serial pdf (Pdf.Dictionary []) (stem ^ "-smask") pnum [Pdf.Indirect i]
-                          | _ -> ()
+                          | _ ->
+                              maskname := "NONE"::!maskname
                           end
-                      | _ -> ())
-                   images;
+                      | _ -> maskname := "NONE"::!maskname)
+                   (rev images);
+                 iter2
+                   (fun name maskname -> if maskname <> "NONE" then combine_image_and_mask ?path_to_im name maskname stem)
+                   !name !maskname;
                  iter (extract_images_form_xobject ~raw ?path_to_p2p ?path_to_im encoding dedup dedup_per_page pdf serial stem pnum) forms;
                  if inline then
                    begin
@@ -275,7 +292,7 @@ let extract_single_image ~merge_masks ?(raw=false) ?path_to_p2p ?path_to_im enco
   let name = ref [] in
   let maskname = ref [] in
   extract_images_inner ~readname:name ~name:stem ~raw ?path_to_p2p ?path_to_im encoding (ref 0) pdf (Pdf.Dictionary []) stem 0 [Pdf.Indirect objnum];
-  match Pdf.direct pdf (Pdf.Indirect objnum) with
+  begin match Pdf.direct pdf (Pdf.Indirect objnum) with
   | Pdf.Stream {contents = (Pdf.Dictionary dict, _)}->
       begin match lookup "/SMask" dict with
       | Some (Pdf.Indirect i) ->
@@ -283,6 +300,13 @@ let extract_single_image ~merge_masks ?(raw=false) ?path_to_p2p ?path_to_im enco
       | _ -> ()
       end
   | _ -> ()
+  end;
+  if merge_masks then
+    begin match !name, !maskname with
+    | [name], [maskname] ->
+        combine_image_and_mask ?path_to_im name maskname stem
+    | _ -> ()
+    end
 
 (* Image resolution *)
 type xobj =
