@@ -156,7 +156,7 @@ let write_image ~raw ?path_to_p2p ?path_to_im pdf resources name image =
 
 let written = ref []
 
-let extract_images_inner ?name ~raw ?path_to_p2p ?path_to_im encoding serial pdf resources stem pnum images =
+let extract_images_inner ~readname ?name ~raw ?path_to_p2p ?path_to_im encoding serial pdf resources stem pnum images =
   let names =
     map
       (fun image ->
@@ -168,6 +168,7 @@ let extract_images_inner ?name ~raw ?path_to_p2p ?path_to_im encoding serial pdf
                (let r = !serial in serial := !serial + 1; r) "" (match image with Pdf.Indirect i -> i | _ -> 0) 0)
       images
   in
+    readname := names;
     iter2 (write_image ~raw ?path_to_p2p ?path_to_im pdf resources) names images
 
 let rec extract_images_form_xobject ~raw ?path_to_p2p ?path_to_im encoding dedup dedup_per_page pdf serial stem pnum form =
@@ -190,7 +191,8 @@ let rec extract_images_form_xobject ~raw ?path_to_p2p ?path_to_im encoding dedup
           images, forms
     in
       iter (extract_images_form_xobject ~raw ?path_to_p2p ?path_to_im encoding dedup dedup_per_page pdf serial stem pnum) forms;
-      extract_images_inner ~raw ?path_to_p2p ?path_to_im encoding serial pdf resources stem pnum images
+      let readname = ref [] in
+        extract_images_inner ~readname ~raw ?path_to_p2p ?path_to_im encoding serial pdf resources stem pnum images
 
 let extract_inline_images ~raw ?path_to_p2p ?path_to_im encoding pdf page pnum serial stem =
   iter
@@ -244,14 +246,16 @@ let extract_images ~merge_masks ~inline ?(raw=false) ?path_to_p2p ?path_to_im en
                if dedup || dedup_per_page then
                  written := (option_map (function Pdf.Indirect n -> Some n | _ -> None) images) @ !written;
                let forms = keep (fun o -> Pdf.lookup_direct pdf "/Subtype" o = Some (Pdf.Name "/Form")) xobjects in
-                 extract_images_inner ~raw ?path_to_p2p ?path_to_im encoding serial pdf page.Pdfpage.resources stem pnum images;
+               let name = ref [] in
+               let maskname = ref [] in
+                 extract_images_inner ~readname:name ~raw ?path_to_p2p ?path_to_im encoding serial pdf page.Pdfpage.resources stem pnum images;
                  iter
                    (fun d ->
                       match Pdf.direct pdf d with
                       | Pdf.Stream {contents = (Pdf.Dictionary dict, _)} ->
                           begin match lookup "/SMask" dict with
                           | Some (Pdf.Indirect i) ->
-                              extract_images_inner ~raw ?path_to_p2p ?path_to_im encoding serial pdf (Pdf.Dictionary []) (stem ^ "-smask") pnum [Pdf.Indirect i]
+                              extract_images_inner ~readname:maskname ~raw ?path_to_p2p ?path_to_im encoding serial pdf (Pdf.Dictionary []) (stem ^ "-smask") pnum [Pdf.Indirect i]
                           | _ -> ()
                           end
                       | _ -> ())
@@ -268,12 +272,14 @@ let extract_images ~merge_masks ~inline ?(raw=false) ?path_to_p2p ?path_to_im en
           Cpdfutil.progress_done ()
 
 let extract_single_image ~merge_masks ?(raw=false) ?path_to_p2p ?path_to_im encoding pdf objnum stem =
-  extract_images_inner ~name:stem ~raw ?path_to_p2p ?path_to_im encoding (ref 0) pdf (Pdf.Dictionary []) stem 0 [Pdf.Indirect objnum];
+  let name = ref [] in
+  let maskname = ref [] in
+  extract_images_inner ~readname:name ~name:stem ~raw ?path_to_p2p ?path_to_im encoding (ref 0) pdf (Pdf.Dictionary []) stem 0 [Pdf.Indirect objnum];
   match Pdf.direct pdf (Pdf.Indirect objnum) with
   | Pdf.Stream {contents = (Pdf.Dictionary dict, _)}->
       begin match lookup "/SMask" dict with
       | Some (Pdf.Indirect i) ->
-          extract_images_inner ~name:(stem ^ "-smask") ~raw ?path_to_p2p ?path_to_im encoding (ref 0) pdf (Pdf.Dictionary []) stem 0 [Pdf.Indirect i]
+          extract_images_inner ~readname:maskname ~name:(stem ^ "-smask") ~raw ?path_to_p2p ?path_to_im encoding (ref 0) pdf (Pdf.Dictionary []) stem 0 [Pdf.Indirect i]
       | _ -> ()
       end
   | _ -> ()
