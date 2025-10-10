@@ -158,7 +158,11 @@ let written = ref []
 
 let combine_image_and_mask ?path_to_im name maskname stem =
   (* Look for name.png or name.jpg, maskname.png. Make name-maskname-combined.png *)
-  let full_name = if Sys.file_exists (name ^ ".png") then name ^ ".png" else name ^ ".jpg" in
+  let full_name =
+    if Sys.file_exists (name ^ ".png") then name ^ ".png"
+    else if Sys.file_exists (name ^ ".jpg") then name ^ ".jpg"
+    else (name ^ ".pnm")
+  in
   match path_to_im with
   | None -> error "combine_image_and_mask: imagemagick not found"
   | Some path_to_im ->

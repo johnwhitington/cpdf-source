@@ -4139,11 +4139,11 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 
 \vspace{1.5mm}
 \noindent\small\verb!cpdf -extract-images in.pdf [<range>] [-im <path>] [-p2p <path>]!
-\noindent\small\verb!     [-dedup | -dedup-perpage] [-raw] [-inline] -o <path>!
+\noindent\small\verb!     [-dedup | -dedup-perpage] [-raw] [-inline] [-merge-masks] -o <path>!
 
 \vspace{1.5mm}
-\noindent\small\verb!cpdf -extract-single-image <object number>!\\
-\noindent\small\verb!     [-im <path>] [-p2p <path>] [-raw] in.pdf -o <filename>!
+\noindent\small\verb!cpdf -extract-single-image <object number> [-im <path>] [-p2p <path>]!\\
+\noindent\small\verb!     [-raw] [-merge-masks] in.pdf -o <filename>!
 
 \vspace{1.5mm}
 \noindent\small\verb!cpdf -process-images [-process-images-info] in.pdf [<range>]!\\
@@ -4301,13 +4301,15 @@ The output specifier, e.g \verb!-o output/%%%! gives the number format for numbe
 
 \noindent The \texttt{output} directory must already exist. The \texttt{-dedup} option deduplicates images entirely; the \texttt{-dedup-perpage} option only per page. The \texttt{-inline} option also extracts inline images; they will have \texttt{-inline} appended to the stem of the file name.
 
+Some images can have soft masks, which are a mechanism for adding transparency to images in a PDF. Such masks will be extracted with a \texttt{-mask} suffix. Adding \texttt{-merge-masks} to the command line will post-process by merging each soft mask and its image to produce an output PNG with an alpha channel, named by concatenating the two existing file names and adding the suffix \texttt{-combined}.
+
 To extract a single image, we can use the object number printed when we use either \texttt{-list-images[-json]} or \texttt{-list-images-used[-json]}. For example:
 
   \begin{framed}
   \noindent\small\verb@cpdf -extract-single-image 14 in.pdf -im magick -o output@
   \end{framed}
 
-\noindent This will extract the image at object 14 to \texttt{output.\{png, pnm, jpeg, jpeg2000, jbig2\}}. Any soft mask will be extracted with name \texttt{output-smask}. This single image extraction procedure does not work for lossy JBIG2 images with JBIG2Globals streams.
+\noindent This will extract the image at object 14 to \texttt{output.\{png, pnm, jpeg, jpeg2000, jbig2\}}. Any soft mask will be extracted with name \texttt{output-smask}. Add \texttt{-merge-masks} to merge soft masks as already described. This single image extraction procedure does not work for lossy JBIG2 images with JBIG2Globals streams.
 
 \section{Removing an Image}
 
