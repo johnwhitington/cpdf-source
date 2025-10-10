@@ -157,14 +157,15 @@ let write_image ~raw ?path_to_p2p ?path_to_im pdf resources name image =
 let written = ref []
 
 let combine_image_and_mask ?path_to_im name maskname stem =
-  (* Look for name.png, maskname.png. Make name-maskname-combined.png *)
+  (* Look for name.png or name.jpg, maskname.png. Make name-maskname-combined.png *)
+  let full_name = if Sys.file_exists (name ^ ".png") then name ^ ".png" else name ^ ".jpg" in
   match path_to_im with
   | None -> error "combine_image_and_mask: imagemagick not found"
   | Some path_to_im ->
       let out =
         image_command
           (Filename.quote_command path_to_im
-            [name ^ ".png"; maskname ^ ".png"; "-compose"; "CopyOpacity"; "-composite";
+            [full_name; maskname ^ ".png"; "-compose"; "CopyOpacity"; "-composite";
              Filename.dirname stem  ^ Filename.dir_sep ^ Filename.basename name ^ "-" ^ Filename.basename maskname ^ "-combined" ^ ".png"])
       in
         if out > 0 then Pdfe.log "could not combine image and mask"
