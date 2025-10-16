@@ -115,6 +115,8 @@ The file [cpdfxmlm.ml](cpdfxmlm.ml) was written by Daniel Bünzli.
 
 The file [cpdfyojson.ml](cpdfyojson.ml) was written by Martin Jambon and others.
 
+Unicode Data Files are under the Unicode Inc. License agreement.
+
 The error descriptions for -verify "PDF/UA-1(matterhorn)" come from the PDF
 Association, and are licensed under the Creative Commons Attribution 4.0
 International license.
