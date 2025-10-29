@@ -565,7 +565,19 @@ let images ~inline pdf range =
                   | None -> None
                 and filter =
                   match Pdf.lookup_direct_orelse pdf "/Filter" "/F" xobject with
-                  | Some (Pdf.Array [x]) | Some x -> Some (Pdfwrite.string_of_pdf x)
+                  | Some Pdf.Name "/CCITTFaxDecode" ->
+                      begin match Pdf.lookup_chain pdf xobject ["/DecodeParms"; "/K"] with
+                      | Some (Pdf.Integer n) when n < 0 -> Some "/CCITTFaxDecodeG4"
+                      | Some (Pdf.Integer n) when n > 0 -> Some "/CCITTFaxDecodeG32D"
+                      | _ -> Some "/CCITTFaxDecodeG31D"
+                      end
+                  | Some Pdf.Name "/JBIG2Decode" ->
+                      begin match Pdf.lookup_chain pdf xobject ["/DecodeParms"; "/JBIG2Globals"] with
+                      | Some _ -> Some "/JBIG2DecodeLossy"
+                      | _ -> Some "/JBIG2DecodeLossless"
+                      end
+                  | Some (Pdf.Array [x]) | Some x ->
+                      Some (Pdfwrite.string_of_pdf x)
                   | None -> None
                 and masktype =
                   match Pdf.lookup_direct_orelse pdf "/ImageMask" "/IM" xobject with
