@@ -565,15 +565,22 @@ let images ~inline pdf range =
                   | None -> None
                 and filter =
                   match Pdf.lookup_direct_orelse pdf "/Filter" "/F" xobject with
-                  | Some Pdf.Name "/CCITTFaxDecode" ->
+                  | Some (Pdf.Array [Pdf.Name "/CCITTFaxDecode"] | Pdf.Name "/CCITTFaxDecode") ->
                       begin match Pdf.lookup_chain pdf xobject ["/DecodeParms"; "/K"] with
                       | Some (Pdf.Integer n) when n < 0 -> Some "/CCITTFaxDecodeG4"
                       | Some (Pdf.Integer n) when n > 0 -> Some "/CCITTFaxDecodeG32D"
-                      | _ -> Some "/CCITTFaxDecodeG31D"
+                      | Some (Pdf.Integer 0) -> Some "/CCITTFaxDecodeG31D"
+                      | _ ->
+                          begin match Pdf.lookup_chain pdf xobject ["/DecodeParms"; "/[0]"; "/K"] with
+                          | Some (Pdf.Integer n) when n < 0 -> Some "/CCITTFaxDecodeG4"
+                          | Some (Pdf.Integer n) when n > 0 -> Some "/CCITTFaxDecodeG32D"
+                          | Some (Pdf.Integer 0) -> Some "/CCITTFaxDecodeG31D"
+                          | _ -> Some "/CCITTFaxDecode"
+                          end
                       end
-                  | Some Pdf.Name "/JBIG2Decode" ->
-                      begin match Pdf.lookup_chain pdf xobject ["/DecodeParms"; "/JBIG2Globals"] with
-                      | Some _ -> Some "/JBIG2DecodeLossy"
+                  | Some (Pdf.Array [Pdf.Name "/JBIG2Decode"] | Pdf.Name "/JBIG2Decode") ->
+                      begin match Pdf.lookup_chain pdf xobject ["/DecodeParms"; "/JBIG2Globals"], Pdf.lookup_chain pdf xobject ["/DecodeParms"; "/[0]"; "/JBIG2Globals"] with
+                      | Some _, _ | _, Some _ -> Some "/JBIG2DecodeLossy"
                       | _ -> Some "/JBIG2DecodeLossless"
                       end
                   | Some (Pdf.Array [x]) | Some x ->
