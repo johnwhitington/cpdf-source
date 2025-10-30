@@ -4286,13 +4286,13 @@ let rec go () =
         begin if args.decompress_just_content then
           iter
             (fun (i, _) ->
-               try Pdfcodec.decode_pdfstream_until_unknown pdf (Pdf.Indirect i) with
+               try Pdfcodec.decode_pdfstream_until_unknown ~jbig2dec:args.path_to_jbig2dec pdf (Pdf.Indirect i) with
                  e -> Pdfe.log (Printf.sprintf "Decode failure: %s. Carrying on...\n" (Printexc.to_string e)))
             (list_of_hashtbl content_stream_object_numbers)
         else
           Pdf.iter_stream
             (function stream ->
-               try Pdfcodec.decode_pdfstream_until_unknown pdf stream with
+               try Pdfcodec.decode_pdfstream_until_unknown ~jbig2dec:args.path_to_jbig2dec pdf stream with
                  e -> Pdfe.log (Printf.sprintf "Decode failure: %s. Carrying on...\n" (Printexc.to_string e)); ())
             pdf
         end;
