@@ -520,6 +520,7 @@ type args =
    mutable path_to_im : string;
    mutable path_to_p2p : string;
    mutable path_to_jbig2enc : string;
+   mutable path_to_jbig2dec : string;
    mutable frombox : string option;
    mutable tobox : string option;
    mutable mediabox_if_missing : bool;
@@ -678,6 +679,7 @@ let args =
    path_to_im = begin match Sys.os_type with "Unix" -> "magick" | _ -> "magick.exe" end;
    path_to_p2p = "";
    path_to_jbig2enc = "";
+   path_to_jbig2dec = "";
    frombox = None;
    tobox = None;
    mediabox_if_missing = false;
@@ -1698,6 +1700,10 @@ let setimpath p =
 let setjbig2encpath p =
   Cpdfutil.check_injectible p;
   args.path_to_jbig2enc <- p
+
+let setjbig2decpath p =
+  Cpdfutil.check_injectible p;
+  args.path_to_jbig2dec <- p
 
 let setp2ppath p =
   Cpdfutil.check_injectible p;
@@ -2933,6 +2939,9 @@ let specs =
    ("-jbig2enc",
      Arg.String setjbig2encpath,
      " Path to jbig2enc executable");
+   ("-jbig2dec",
+     Arg.String setjbig2decpath,
+     " Path to jbig2dec executable");
    ("-jpeg-to-jpeg",
      Arg.Float setjpegquality,
      " Set JPEG quality for existing JPEGs");
