@@ -36,6 +36,7 @@ o -list-images now distinguishes lossy and lossless JBIG2
 o Extract inline images
 o Extract soft masks
 o Optionally combine soft marks with image when extracting images
+o Decompress can decompress JBIG2 encoded streams with jbig2dec
 
 Fixes:
 
