@@ -95,10 +95,10 @@ let rewrite_destinations f pdf annot =
           end
      | None -> annot
 
-(* We exclude the same annotations as the XFDF spec does. *)
+(* We exclude the same annotations as the XFDF spec does. (NB: not any more) *)
 let excluded pdf annot =
   match Pdf.lookup_direct pdf "/Subtype" annot with
-  | Some (Pdf.Name ("/Movie" | "/Widget" | "/Screen" | "/PrinterMark" | "/TrapNet")) -> true
+  (*| Some (Pdf.Name ("/Movie" | "/Widget" | "/Screen" | "/PrinterMark" | "/TrapNet")) -> true*)
   | _ -> false
 
 let extra = ref []
