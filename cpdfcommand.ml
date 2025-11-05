@@ -245,6 +245,7 @@ type op =
   | RemoveOutputIntents
   | RemoveWebCapture
   | RemoveProcsets
+  | Summary
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -416,6 +417,7 @@ let string_of_op = function
   | RemoveOutputIntents -> "RemoveOutputIntents"
   | RemoveWebCapture -> "RemoveWebCapture"
   | RemoveProcsets -> "RemoveProcsets"
+  | Summary -> "Summary"
 
 (* Inputs: filename, pagespec. *)
 type input_kind = 
@@ -1016,7 +1018,7 @@ let banned banlist = function
   | Verify _ | MarkAs _ | RemoveMark _ | ExtractStructTree | ReplaceStructTree _ | SetLanguage _
   | PrintStructTree | Rasterize | OutputImage | RemoveStructTree | MarkAsArtifact | ExtractForm | ReplaceForm _
   | ContainsJavaScript | RemoveJavaScript | RemoveArticleThreads | RemovePagePiece | RemoveOutputIntents
-  | RemoveWebCapture | RemoveProcsets | ExtractMetadata -> false (* Always allowed *)
+  | RemoveWebCapture | RemoveProcsets | ExtractMetadata | Summary -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
   | Decrypt | Encrypt | CombinePages _ -> true (* Never allowed *)
@@ -2092,9 +2094,12 @@ let addeltinfo s =
 let rfindpdf = ref (fun () -> Pdf.empty ())
 
 let specs =
-   [("-version",
+  [("-version",
       Arg.Unit (setop Version),
       " Print the cpdf version number");
+   ("-summary",
+      Arg.Unit (setop Summary),
+      "");
    ("-o",
        Arg.String setout,
        " Set the output file, if appropriate");
@@ -3202,7 +3207,12 @@ let specs =
    ("-extract-text-font-size", Arg.Float setextracttextfontsize, "");
   ]
 
-and usage_msg =
+let empty_specs =
+  ("-help", Arg.Unit (fun () -> ()), "")::
+  ("--help", Arg.Unit (fun () -> ()), "")::
+  map (fun (a, b, c) -> (a, b, "")) specs
+
+let usage_msg =
 "Syntax: cpdf [<operation>] <input files> [-o <output file>]\n\n\
 Copyright Coherent Graphics Ltd.\n\n\
 Version " ^ (if agpl then "AGPLv3-licensed " else "") ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ "." ^ (if minor_minor_version = 0 then "" else string_of_int minor_minor_version) ^ " " ^ version_date ^ "\n\n\
@@ -3837,7 +3847,7 @@ let extract_stream pdf decomp objspec =
 
 let print_version () =
   flprint
-    ("cpdf " ^ (if agpl then "AGPL " else "") ^ "Version " ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ (if minor_minor_version = 0 then "" else "." ^ string_of_int minor_minor_version) ^ " " ^ version_date ^ " https://www.coherentpdf.com/" ^ "\n")
+    ("cpdf " ^ (if agpl then "AGPL " else "") ^ "Version " ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ (if minor_minor_version = 0 then "" else "." ^ string_of_int minor_minor_version) ^ " " ^ version_date ^ " https://www.coherentpdf.com/\n-help for help." ^ "\n")
 
 (* Call out to GhostScript to rasterize. Read back in and replace the page contents with the resultant PNG. *)
 let rasterize antialias downsample device res annots quality pdf range =
@@ -5243,6 +5253,8 @@ let rec go () =
       let pdf = get_single_pdf args.op false in
         remove_procsets pdf;
         write_pdf false pdf
+  | Some Summary ->
+      flprint "This is the summary\n"
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)
@@ -5349,7 +5361,7 @@ let go_withargv argv =
         (implode (takewhile (neq '\n') (explode s)) ^ " Use -help for help.\n\n");
       if not !stay_on_error then exit 2 else raise StayOnError
   | Arg.Help _ ->
-      Arg.usage (align_specs specs) usage_msg;
+      Arg.usage (align_specs empty_specs) usage_msg;
       flush stderr (*r for Windows *)
   | Sys_error s as e ->
       Pdfe.log (s ^ "\n\n");
