@@ -1,0 +1,4 @@
+pandoc --standalone --to man cpdf.1.md -o cpdf.1
+#pandoc cpdf.md -o cpdf.html
+#pandoc cpdf.md -t html -o cpdf.pdf
+#pandoc cpdf.md -o cpdf/index.html --split-level=1 --embed-resources --standalone
