@@ -260,7 +260,7 @@ These examples demonstrate just a few of the facilities provided by the Coherent
 
 \noindent List the annotations in a file \texttt{in.pdf} to standard output, redirecting to file \texttt{out.json}.
 
-\begin{framed}\noindent\texttt{cpdf -set-annotations-json out.json in.pdf -o out.pdf}\end{framed}
+\begin{framed}\noindent\texttt{cpdf -set-annotations out.json in.pdf -o out.pdf}\end{framed}
 
 \noindent Add the annotations from a JSON annotations file to \texttt{in.pdf}, writing to \texttt{out.pdf}.
 
@@ -3265,7 +3265,7 @@ As an alternative, pages can be chopped into two at a given position, horizontal
   \small\noindent\verb!cpdf -list-annotations-json in.pdf [<range>]!
 
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -set-annotations-json <filename> [-underneath]!\\
+  \small\noindent\verb!cpdf -set-annotations <filename> [-underneath]!\\
   \noindent\verb!     in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
@@ -4523,7 +4523,6 @@ Option & Effect\\\hline
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -remove-fonts in.pdf -o out.pdf!\\
-  \noindent\verb!cpdf -remove-embedded-standard-fonts in.pdf -o out.pdf!
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -missing-fonts in.pdf!
@@ -6252,7 +6251,7 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
 \newcommand{\manonly}{File does not meet PDF/UA standard - only manual remediation possible (see description above this table).}
 \newcommand{\gsfonts}{It is possible that reprocessing the file with \texttt{gs} using \texttt{cpdf in.pdf -gs gs -gs-malformed-force -o out.pdf [-gs-quiet]} will correct the fonts.}
 \newcommand{\remannot}{If annotations are not required, they may be removed with \texttt{cpdf -remove-annotations in.pdf -o out.pdf}.}
-\newcommand{\delannot}{Alternatively, use \texttt{-output-annotations-json} and \texttt{-set-annotations-json} as described in Chapter \ref{chap:10} to remove one or more specific annotations.}
+\newcommand{\delannot}{Alternatively, use \texttt{-output-annotations-json} and \texttt{-set-annotations} as described in Chapter \ref{chap:10} to remove one or more specific annotations.}
 \newcommand{\edittree}{Alternatively, edit the tree manually using \texttt{-extract-struct-tree} and \texttt{-replace-struct-tree} from this chapter.}
 \newcommand{\setlang}{Assuming the document is all in a single language, set the top-level language with, for example, \texttt{cpdf -set-language "en-US" in.pdf -o out.pdf}. If the document contains multiple languages, only manual remediation is possible.}
 
@@ -6496,7 +6495,7 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
   \noindent\verb!cpdf -list-spot-colors in.pdf!
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf -print-dict-entry[-json] <key> in.pdf!
+  \noindent\verb!cpdf -print-dict-entry [-json] <key> in.pdf!
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -remove-dict-entry <key> [-dict-entry-search <term>]!\\

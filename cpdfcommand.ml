@@ -580,7 +580,6 @@ type args =
    mutable jpegtojpegscale : float;
    mutable jpegtojpegdpi : float;
    mutable onebppmethod : string;
-   mutable onebppmethodforce : bool;
    mutable pixel_threshold : int;
    mutable length_threshold : int;
    mutable percentage_threshold : float;
@@ -740,7 +739,6 @@ let args =
    jpegtojpegscale = 100.;
    jpegtojpegdpi = 0.;
    onebppmethod = "None";
-   onebppmethodforce = false;
    pixel_threshold = 25;
    length_threshold = 100;
    percentage_threshold = 99.;
@@ -884,7 +882,6 @@ let reset_arguments () =
   args.jpegqualitylossless <- 101.;
   args.jpeg2000qualitylossless <- 101.;
   args.onebppmethod <- "None";
-  args.onebppmethodforce <- false;
   args.pixel_threshold <- 25;
   args.length_threshold <- 100;
   args.percentage_threshold <- 99.;
@@ -2963,9 +2960,6 @@ let specs =
    ("-1bpp-method",
      Arg.String set1bppmethod,
      " Set 1bpp compression method for existing images");
-   ("-1bpp-method-force",
-     Arg.Unit (fun () -> args.onebppmethodforce <- true),
-     " Use new 1bpp method even if typically worse");
    ("-jbig2-lossy-threshold",
      Arg.Float setjbig2_lossy_threshold,
      " Set jbig2enc lossy threshold");
@@ -3089,7 +3083,7 @@ let specs =
    ("-auto-tags", Arg.Unit (fun _ -> Cpdfdrawcontrol.autotags true), " Auto-tag paragraphs and figures");
    ("-no-auto-tags", Arg.Unit (fun _ -> Cpdfdrawcontrol.autotags false), " Don't auto-tag paragraphs and figures");
    ("-artifact", Arg.Unit (fun _ -> Cpdfdrawcontrol.artifact ()), " Begin an artifact");
-   ("-end-artifact", Arg.Unit (fun _ -> Cpdfdrawcontrol.endartifact ()), "End an artifact");
+   ("-end-artifact", Arg.Unit (fun _ -> Cpdfdrawcontrol.endartifact ()), " End an artifact");
    ("-no-auto-artifacts", Arg.Unit (fun _ -> Cpdfdrawcontrol.autoartifacts false), " Don't mark untagged content as artifacts");
    ("-eltinfo", Arg.String addeltinfo, " Add element information");
    ("-end-eltinfo", Arg.String (fun s -> Cpdfdrawcontrol.endeltinfo s), " Erase element information");
@@ -5120,7 +5114,7 @@ let rec go () =
       let range = parse_pagespec pdf (get_pagespec ()) in
         Cpdfimage.process
           ~q:args.jpegquality ~qlossless:args.jpegqualitylossless ~qlossless2000:args.jpeg2000qualitylossless
-          ~onebppmethod:args.onebppmethod ~onebppmethodforce:args.onebppmethodforce ~jbig2_lossy_threshold:args.jbig2_lossy_threshold
+          ~onebppmethod:args.onebppmethod ~jbig2_lossy_threshold:args.jbig2_lossy_threshold
           ~length_threshold:args.length_threshold ~percentage_threshold:args.percentage_threshold ~pixel_threshold:args.pixel_threshold 
           ~dpi_threshold:args.dpi_threshold ~factor:args.resample_factor ~interpolate:args.resample_interpolate
           ~jpeg_to_jpeg_scale:args.jpegtojpegscale ~jpeg_to_jpeg_dpi:args.jpegtojpegdpi
