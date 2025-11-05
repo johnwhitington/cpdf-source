@@ -42,6 +42,22 @@ The sections in this man page follow the chapters of cpdfmanual.pdf.
 input PDF. If your file does not end with .pdf, you can supply the file with
 **-i** instead.
 
+**-range**
+
+: a
+
+**-progress**
+
+: a
+
+**-keep-version**
+
+: a
+
+**-fast**
+
+: a
+
 **-idir <directory>**
 
 : Add a whole directory of PDFs as inputs.
@@ -256,6 +272,15 @@ cpdf -encrypt \<method> \[-pw=]\<owner> \[-pw=]\<user> \[-no-encrypt-metadata] \
 
 : a
 
+-no-edit
+-no-print
+-no-copy
+-no-annot
+-no-forms
+-no-extract
+-no-assemble
+-no-hq-print
+
 cpdf -decrypt \[-decrypt-force] in.pdf owner=\<owner password> -o out.pdf
 
 : a
@@ -263,6 +288,10 @@ cpdf -decrypt \[-decrypt-force] in.pdf owner=\<owner password> -o out.pdf
 # 5. COMPRESSION
 
 cpdf -decompress \[-just-content] in.pdf -o out.pdf
+
+: a
+
+-jbig2dec
 
 : a
 
@@ -350,6 +379,18 @@ cpdf (\[-add-text \<text-format> | -add-rectangle \<size>]) [-font \<fontname>] 
 
 Positioning commands for -add-text and -add-rectangle:
 
+-pos-left
+
+:a
+
+-pos-center
+
+:a
+
+-pos-right
+
+:a
+
 -top 10
 
 :a
@@ -407,6 +448,18 @@ Positioning commands for -add-text and -add-rectangle:
 :a
 
 -center
+
+:a
+
+-justify-left
+
+:a
+
+-justify-right
+
+:a
+
+-justify-center
 
 :a
 
@@ -977,6 +1030,10 @@ Text
 -paras
 
 : Typeset multiple paragraphs
+
+-indent
+
+: a
 
 -leading
 

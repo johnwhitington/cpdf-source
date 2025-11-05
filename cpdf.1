@@ -34,6 +34,18 @@ input PDF.
 If your file does not end with .pdf, you can supply the file with
 \f[B]\-i\f[R] instead.
 .TP
+\f[B]\-range\f[R]
+a
+.TP
+\f[B]\-progress\f[R]
+a
+.TP
+\f[B]\-keep\-version\f[R]
+a
+.TP
+\f[B]\-fast\f[R]
+a
+.TP
 \f[B]\-idir \f[R]
 Add a whole directory of PDFs as inputs.
 .TP
@@ -192,12 +204,18 @@ a
 .TP
 cpdf \-encrypt <method> [\-pw=]<owner> [\-pw=]<user> [\-no\-encrypt\-metadata] <permissions> in.pdf \-o out.pdf
 a
+.PP
+\-no\-edit \-no\-print \-no\-copy \-no\-annot \-no\-forms \-no\-extract
+\-no\-assemble \-no\-hq\-print
 .TP
 cpdf \-decrypt [\-decrypt\-force] in.pdf owner=<owner password> \-o out.pdf
 a
 .SH 5. COMPRESSION
 .TP
 cpdf \-decompress [\-just\-content] in.pdf \-o out.pdf
+a
+.TP
+\-jbig2dec
 a
 .TP
 cpdf \-compress in.pdf \-o out.pdf
@@ -262,6 +280,18 @@ a
 .PP
 Positioning commands for \-add\-text and \-add\-rectangle:
 .PP
+\-pos\-left
+.PP
+:a
+.PP
+\-pos\-center
+.PP
+:a
+.PP
+\-pos\-right
+.PP
+:a
+.PP
 \-top 10
 .PP
 :a
@@ -319,6 +349,18 @@ Positioning commands for \-add\-text and \-add\-rectangle:
 :a
 .PP
 \-center
+.PP
+:a
+.PP
+\-justify\-left
+.PP
+:a
+.PP
+\-justify\-right
+.PP
+:a
+.PP
+\-justify\-center
 .PP
 :a
 .TP
@@ -753,6 +795,9 @@ Typeset a paragraph
 .TP
 \-paras
 Typeset multiple paragraphs
+.TP
+\-indent
+a
 .TP
 \-leading
 Set leading
