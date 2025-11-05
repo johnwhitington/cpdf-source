@@ -5254,7 +5254,10 @@ let rec go () =
         remove_procsets pdf;
         write_pdf false pdf
   | Some Summary ->
-      flprint "This is the summary\n"
+      let nohelp =
+        [("-help", Arg.Unit (fun () -> ()), ""); ("--help", Arg.Unit (fun () -> ()), "")]
+      in
+        Arg.usage (Arg.align (nohelp @ specs)) ""
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)
@@ -5267,9 +5270,6 @@ let parse_argv () s specs anon_fun usage_msg =
     Array.iter (fun s -> Pdfe.log (Printf.sprintf "arg: %s\n" s)) Sys.argv;
   Arg.parse_argv ~current:(ref 0) s specs anon_fun usage_msg;
   check_command_line ()
-
-let align_specs s =
-  Arg.align s
 
 (* The old -control mechanism clashed with AND, but must be retained for
 backwards compatibility. There is a new mechanism -args file which performs
@@ -5349,7 +5349,7 @@ let go_withargv argv =
            process_env_vars ();
            let addrange pdf = AlreadyInMemory (pdf, "fromAND"), args.dashrange, "", "", ref false, None in
              args.inputs <- rev (map addrange !output_pdfs) @ rev args.inputs;
-             parse_argv () s (align_specs specs) anon_fun usage_msg;
+             parse_argv () s (Arg.align specs) anon_fun usage_msg;
              output_pdfs := [];
              go ())
          sets;
@@ -5361,7 +5361,7 @@ let go_withargv argv =
         (implode (takewhile (neq '\n') (explode s)) ^ " Use -help for help.\n\n");
       if not !stay_on_error then exit 2 else raise StayOnError
   | Arg.Help _ ->
-      Arg.usage (align_specs empty_specs) usage_msg;
+      Arg.usage empty_specs usage_msg;
       flush stderr (*r for Windows *)
   | Sys_error s as e ->
       Pdfe.log (s ^ "\n\n");
