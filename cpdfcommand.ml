@@ -3214,13 +3214,11 @@ let empty_specs =
 
 let usage_msg =
 "Syntax: cpdf [<operation>] <input files> [-o <output file>]\n\n\
-Copyright Coherent Graphics Ltd.\n\n\
-Version " ^ (if agpl then "AGPLv3-licensed " else "") ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ "." ^ (if minor_minor_version = 0 then "" else string_of_int minor_minor_version) ^ " " ^ version_date ^ "\n\n\
+Copyright Coherent Graphics Ltd. Version " ^ (if agpl then "AGPLv3-licensed " else "") ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ "." ^ (if minor_minor_version = 0 then "" else string_of_int minor_minor_version) ^ " " ^ version_date ^ "\n\n\
 https://www.coherentpdf.com/\n\n\
-Input names are distinguished by containing a '.' and may be\n\
-followed by a page range specification, for instance \"1,2,3\"\n\
-or \"1-6,9-end\" or \"even\" or \"odd\" or \"reverse\".\n\nOperations (See \
-manual for full details):\n"
+Full manual: https://www.coherentpdf.com/cpdfmanual.pdf\n\n\
+For man page, where available, type 'man cpdf' at command line.\n\n\
+For summary of command line arguments type 'cpdf -summary'."
 
 (* Reading and writing *)
 let filesize name =
