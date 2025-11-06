@@ -6,23 +6,29 @@ cpdf \- PDF command line tools
 .SH SYNOPSIS
 \f[B]cpdf\f[R] in.pdf [operation] [options] [\-o out.pdf]
 .PP
-FIXME mention AND here.
+\f[B]cpdf\f[R] in.pdf [operation] [options] \f[B]AND\f[R] [operation]
+[options] \f[B]AND\f[R] \&...
+[\-o out.pdf]
 .SH DESCRIPTION
 \f[B]cpdf\f[R] is an AGPL\-licensed command line tool for processing PDF
 files.
 The rest of this man page gives a brief description of each command line
 operation and option.
-The file cpdfmanual.pdf which you should find installed or otherwise at
-https://www.coherentpdf.com/cpdfmanual.pdf gives the full usage details.
+The file cpdfmanual.pdf which you should find installed on your system
+or otherwise at https://www.coherentpdf.com/cpdfmanual.pdf gives the
+full usage details.
 .PP
 The sections in this man page follow the chapters of cpdfmanual.pdf.
 .SH 1. BASIC USAGE
 .TP
-\f[B]\-help, \(enhelp\f[R]
-Lists Cpdf\(cqs operations and options, very briefly.
-.TP
 \f[B]\-version\f[R]
 Print the Cpdf version number
+.TP
+\f[B]\-help, \(enhelp\f[R]
+Gives links to sources of help
+.TP
+\f[B]\-summary\f[R]
+Lists and describes very briefly each command line option
 .TP
 \f[B]\-o\f[R]
 The output filename.
@@ -35,16 +41,26 @@ If your file does not end with .pdf, you can supply the file with
 \f[B]\-i\f[R] instead.
 .TP
 \f[B]\-range\f[R]
-a
+Gives the range of pages to be affected by a the operation.
+By default, all pages are affected.
+The range may be specified without \f[B]\-range\f[R] simply by writing
+it directly after the filename it relates to.
+Example ranges: \(lq2\(rq \(lq1\-5\(rq \(lq1,2,3\-end\(rq \(lqodd\(rq
+\(lqNOT1\-5\(rq.
+See cpdfmanual.pdf for a full description.
 .TP
 \f[B]\-progress\f[R]
-a
+Show which operations and on which pages they are operating, as it
+happens, on standard error.
 .TP
 \f[B]\-keep\-version\f[R]
-a
+Keep the PDF version of the input document even if features are used
+which would otherwise make it increase.
 .TP
 \f[B]\-fast\f[R]
-a
+Presume ISO\-compliant content streams when processing page contents.
+This is faster, because it does not involve re\-parsing whole streams to
+add content.
 .TP
 \f[B]\-idir \f[R]
 Add a whole directory of PDFs as inputs.
@@ -53,16 +69,19 @@ Add a whole directory of PDFs as inputs.
 Restrict \f[B]\-idir\f[R] to only files ending in .pdf (any case).
 .TP
 \f[B]\-recrypt\f[R]
-a
+Re\-encrypt output files using the same encryption parameters (if any)
+as the input file.
 .TP
 \f[B]\-decrypt\-force\f[R]
-a
+Allow the output file to be written decrypted even if permissions would
+otherwise prevent it.
 .TP
 \f[B]\-stdout\f[R]
-a
+Write the output file to standard output instead of to a file with
+\f[B]\-o\f[R].
 .TP
 \f[B]\-stdin\f[R]
-a
+Read the input PDF from standard input instead of from a named file.
 .TP
 \f[B]\-stdin\-user \f[R]
 a

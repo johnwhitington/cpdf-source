@@ -10,27 +10,32 @@ cpdf - PDF command line tools
 
 **cpdf** in.pdf \[operation] \[options] \[-o out.pdf]
 
-FIXME mention AND here.
+**cpdf** in.pdf \[operation] \[options] **AND** \[operation] \[options] **AND**
+... \[-o out.pdf]
 
 # DESCRIPTION
 
 **cpdf** is an AGPL-licensed command line tool for processing PDF files. The
 rest of this man page gives a brief description of each command line operation
-and option. The file cpdfmanual.pdf which you should find installed or
-otherwise at https://www.coherentpdf.com/cpdfmanual.pdf gives the full usage
-details.
+and option. The file cpdfmanual.pdf which you should find installed on your
+system or otherwise at https://www.coherentpdf.com/cpdfmanual.pdf gives the
+full usage details.
 
 The sections in this man page follow the chapters of cpdfmanual.pdf.
 
 # 1. BASIC USAGE
 
-**-help, --help**
-
-: Lists Cpdf's operations and options, very briefly.
-
 **-version**
 
 : Print the Cpdf version number
+
+**-help, --help**
+
+: Gives links to sources of help
+
+**-summary**
+
+: Lists and describes very briefly each command line option
 
 **-o**
 
@@ -44,19 +49,25 @@ input PDF. If your file does not end with .pdf, you can supply the file with
 
 **-range**
 
-: a
+: Gives the range of pages to be affected by a the operation. By default, all
+pages are affected. The range may be specified without **-range** simply by
+writing it directly after the filename it relates to. Example ranges: "2" "1-5"
+"1,2,3-end" "odd" "NOT1-5". See cpdfmanual.pdf for a full description.
 
 **-progress**
 
-: a
+: Show which operations and on which pages they are operating, as it happens,
+on standard error.
 
 **-keep-version**
 
-: a
+: Keep the PDF version of the input document even if features are used which
+would otherwise make it increase.
 
 **-fast**
 
-: a
+: Presume ISO-compliant content streams when processing page contents. This is
+faster, because it does not involve re-parsing whole streams to add content.
 
 **-idir <directory>**
 
@@ -68,59 +79,67 @@ input PDF. If your file does not end with .pdf, you can supply the file with
 
 **-recrypt**
 
-: a
+: Re-encrypt output files using the same encryption parameters (if any) as the
+input file. 
 
 **-decrypt-force**
 
-: a
+: Allow the output file to be written decrypted even if permissions would
+otherwise prevent it.
 
 **-stdout**
 
-: a
+: Write the output file to standard output instead of to a file with **-o**.
 
 **-stdin**
 
-: a
+: Read the input PDF from standard input instead of from a named file.
 
 **-stdin-user <password>**
 
-: a
+: Supply the user password for the PDF which is from standard input. 
 
 **-stdin-owner <password>**
 
-: a
+: Supply the owner password the the PDF which is from standard input.
 
 **-producer <text>**
 
-: a
+: Set the producer of the output file.
 
 **-creator <text>**
 
-: a
+: Set the creator of the output file.
 
 **-change-id**
 
-: a
+: Change the PDF's ID field when writing the output file.
 
 **-l**
 
-: a
+: Linearize the PDF when writing. Requires a linearizer to be supplied with
+**-cpdflin**.
 
 **-cpdflin <filename>**
 
-: a
+: Give the path of an external linearizer. For example, Qpdf.
 
 **-keep-l**
 
-: a
+: Keep the linearization status (either linearized or not) of the input file
+upon output. Requires a linearizer to be supplied with **-cpdflin**.
 
 **-no-preserve-objstm**
 
-: a
+: Do not preseve existing object streams when writing the output file. Note
+that **-create-objstm** and **-no-preserve-objstm** may be used together - the
+effect is then to redo all object streams.
 
 **-create-objstm**
 
-: a
+: Create new object streams when writing the output file. Note that
+**-create-objstm** and **-no-preserve-objstm** may be used together - the
+effect is then to redo all object streams.
 
 **-args <filename>**
 
