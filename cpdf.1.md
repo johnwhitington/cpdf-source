@@ -8,7 +8,15 @@ cpdf - PDF command line tools
 
 # SYNOPSIS
 
+Simple operation:
+
 **cpdf** in.pdf \[operation] \[options] \[-o out.pdf]
+
+Operation on password-protected file:
+
+**cpdf** in.pdf \[user=\<password>] \[owner=\<password>] ....
+
+Multiple operations, one after another:
 
 **cpdf** in.pdf \[operation] \[options] **AND** \[operation] \[options] **AND**
 ... \[-o out.pdf]
@@ -143,43 +151,53 @@ effect is then to redo all object streams.
 
 **-args <filename>**
 
-: a
+: Read command line arguments from the given file by direct textual
+substitution into the command line, prior to any other processing. 
 
 **-args-json <filename>**
 
-: a
+: Read command line arguments from a JSON file consisting of a single array of
+strings.
 
 **-utf8**
 
-: a
+: Read and write string data as UTF8. Almost always the sensible option, and
+will become the default in a future version. See section 1.17 of cpdfmanual.pdf.
 
 **-stripped**
 
-: a
+: Convert string output to 7 bit ASCII by dropping any high characters. To be
+used with caution. See section 1.17 of cpdfmanual.pdf.
 
 **-raw**
 
-: a
+: Perform no processing on string outputs. See section 1.17 of cpdfmanual.pdf.
 
 **-gs**
 
-: a
+: A very few of Cpdf's functions rely upon the **gs** command. Its path may be
+supplied with **-gs**.
 
 **-gs-malformed**
 
-: a
+: This option is used to allow Cpdf to call out the **gs** command to
+pre-process badly malformed files as a last resort. See section 1.13 of
+cpdfmanual.pdf for details.
 
 **-gs-malformed-force**
 
-: a
+: This option is used to allow Cpdf to call out to the **gs** command to
+pre-process badly malformed files as a last resort. See section 1.13 of
+cpdfmanual.pdf for details.
 
 **-gs-quiet**
 
-: a
+: Do not show the output of **gs** when used.
 
 **-error-on-malformed**
 
-: a
+: Do not attemp to reconstruct malformed files by any method, but exit with an
+error.
 
 # 2. MERGING AND SPLITTING
 

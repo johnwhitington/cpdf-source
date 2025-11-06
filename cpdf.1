@@ -4,7 +4,15 @@
 .SH NAME
 cpdf \- PDF command line tools
 .SH SYNOPSIS
+Simple operation:
+.PP
 \f[B]cpdf\f[R] in.pdf [operation] [options] [\-o out.pdf]
+.PP
+Operation on password\-protected file:
+.PP
+\f[B]cpdf\f[R] in.pdf [user=<password>] [owner=<password>] \&....
+.PP
+Multiple operations, one after another:
 .PP
 \f[B]cpdf\f[R] in.pdf [operation] [options] \f[B]AND\f[R] [operation]
 [options] \f[B]AND\f[R] \&...
@@ -84,64 +92,88 @@ Write the output file to standard output instead of to a file with
 Read the input PDF from standard input instead of from a named file.
 .TP
 \f[B]\-stdin\-user \f[R]
-a
+Supply the user password for the PDF which is from standard input.
 .TP
 \f[B]\-stdin\-owner \f[R]
-a
+Supply the owner password the the PDF which is from standard input.
 .TP
 \f[B]\-producer \f[R]
-a
+Set the producer of the output file.
 .TP
 \f[B]\-creator \f[R]
-a
+Set the creator of the output file.
 .TP
 \f[B]\-change\-id\f[R]
-a
+Change the PDF\(cqs ID field when writing the output file.
 .TP
 \f[B]\-l\f[R]
-a
+Linearize the PDF when writing.
+Requires a linearizer to be supplied with \f[B]\-cpdflin\f[R].
 .TP
 \f[B]\-cpdflin \f[R]
-a
+Give the path of an external linearizer.
+For example, Qpdf.
 .TP
 \f[B]\-keep\-l\f[R]
-a
+Keep the linearization status (either linearized or not) of the input
+file upon output.
+Requires a linearizer to be supplied with \f[B]\-cpdflin\f[R].
 .TP
 \f[B]\-no\-preserve\-objstm\f[R]
-a
+Do not preseve existing object streams when writing the output file.
+Note that \f[B]\-create\-objstm\f[R] and
+\f[B]\-no\-preserve\-objstm\f[R] may be used together \- the effect is
+then to redo all object streams.
 .TP
 \f[B]\-create\-objstm\f[R]
-a
+Create new object streams when writing the output file.
+Note that \f[B]\-create\-objstm\f[R] and
+\f[B]\-no\-preserve\-objstm\f[R] may be used together \- the effect is
+then to redo all object streams.
 .TP
 \f[B]\-args \f[R]
-a
+Read command line arguments from the given file by direct textual
+substitution into the command line, prior to any other processing.
 .TP
 \f[B]\-args\-json \f[R]
-a
+Read command line arguments from a JSON file consisting of a single
+array of strings.
 .TP
 \f[B]\-utf8\f[R]
-a
+Read and write string data as UTF8.
+Almost always the sensible option, and will become the default in a
+future version.
+See section 1.17 of cpdfmanual.pdf.
 .TP
 \f[B]\-stripped\f[R]
-a
+Convert string output to 7 bit ASCII by dropping any high characters.
+To be used with caution.
+See section 1.17 of cpdfmanual.pdf.
 .TP
 \f[B]\-raw\f[R]
-a
+Perform no processing on string outputs.
+See section 1.17 of cpdfmanual.pdf.
 .TP
 \f[B]\-gs\f[R]
-a
+A very few of Cpdf\(cqs functions rely upon the \f[B]gs\f[R] command.
+Its path may be supplied with \f[B]\-gs\f[R].
 .TP
 \f[B]\-gs\-malformed\f[R]
-a
+This option is used to allow Cpdf to call out the \f[B]gs\f[R] command
+to pre\-process badly malformed files as a last resort.
+See section 1.13 of cpdfmanual.pdf for details.
 .TP
 \f[B]\-gs\-malformed\-force\f[R]
-a
+This option is used to allow Cpdf to call out to the \f[B]gs\f[R]
+command to pre\-process badly malformed files as a last resort.
+See section 1.13 of cpdfmanual.pdf for details.
 .TP
 \f[B]\-gs\-quiet\f[R]
-a
+Do not show the output of \f[B]gs\f[R] when used.
 .TP
 \f[B]\-error\-on\-malformed\f[R]
-a
+Do not attemp to reconstruct malformed files by any method, but exit
+with an error.
 .SH 2. MERGING AND SPLITTING
 .TP
 \f[B]cpdf \-merge in1.pdf\f[R] [<range>] \f[B]in2.pdf\f[R] [<range>] [<more names/ranges>] [\-collate] [\-collate\-n <n>] [\-retain\-numbering] [\-merge\-add\-bookmarks [\-merge\-add\-bookmarks\-use\-titles]] [\-remove\-duplicate\-fonts] [\-process\-struct\-trees] [\-subformat <subformat>] \f[B]\-o out.pdf\f[R]
