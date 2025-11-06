@@ -175,24 +175,136 @@ Do not show the output of \f[B]gs\f[R] when used.
 Do not attemp to reconstruct malformed files by any method, but exit
 with an error.
 .SH 2. MERGING AND SPLITTING
+.SS Merging
+\f[B]cpdf \-merge in1.pdf\f[R] [<range>] \f[B]in2.pdf\f[R] [<range>]
+[<more names/ranges>] [\-collate] [\-collate\-n <n>]
+[\-retain\-numbering] [\-merge\-add\-bookmarks
+[\-merge\-add\-bookmarks\-use\-titles]] [\-remove\-duplicate\-fonts]
+[\-process\-struct\-trees] [\-subformat <subformat>] \f[B]\-o
+out.pdf\f[R]
+.PP
+The \f[B]\-merge\f[R] operation allows the merging of several files into
+one.
+Ranges can be used to select only a subset of pages from each input file
+in the output.
+The output file consists of the concatenation of all the input pages in
+the order specified on the command line.
+Actually, the \f[B]\-merge\f[R] can be omitted, since this is the
+default operation of Cpdf.
 .TP
-\f[B]cpdf \-merge in1.pdf\f[R] [<range>] \f[B]in2.pdf\f[R] [<range>] [<more names/ranges>] [\-collate] [\-collate\-n <n>] [\-retain\-numbering] [\-merge\-add\-bookmarks [\-merge\-add\-bookmarks\-use\-titles]] [\-remove\-duplicate\-fonts] [\-process\-struct\-trees] [\-subformat <subformat>] \f[B]\-o out.pdf\f[R]
-a
+\f[B]\-collate\f[R]
+Instead of ordinary operation, take the first page from the first
+document, then the first from the second and so on.
+Then the second page from the first document and on until all pages are
+exhausted.
 .TP
-cpdf \-portfolio in.pdf \-pf <filename> [\-pfd ] [\-pfr <relationship>] [\-pf \&...] \-o out.pdf
-a
+\f[B]\-collate\-n\f[R]
+Like collate, but in chunks of more than one page.
 .TP
-cpdf \-split in.pdf [\-chunk <chunksize>] [\-process\-struct\-trees] \-o <format>
-a
+\f[B]\-retain\-numbering\f[R]
+Keep the page numbering of each input file intact, rather than
+renumbering the pages in the output document beginning at 1.
 .TP
-cpdf \-split\-bookmarks <level> in.pdf [\-utf8] [\-process\-struct\-trees] \-o <format>
-a
+\f[B]\-merge\-add\-bookmarks [\-merge\-add\-bookmarks\-use\-titles]\f[R]
+Add a top\-level bookmark for each file, using the filename.
+\f[B]\-merge\-add\-bookmarks\-use\-titles\f[R], when used in conjunction
+with \f[B]\-merge\-add\-bookmarks\f[R] uses the titles from document
+metadata instead.
 .TP
-cpdf \-split\-max <file size> in.pdf [\-process\-struct\-trees] \-o <format>
-a
+\f[B]\-remove\-duplicate\-fonts\f[R]
+Ensures that fonts used in more than one input appear only once in the
+output.
 .TP
-cpdf \-spray in.pdf [\-process\-struct\-trees] \-o a.pdf [\-o b.pdf [\-o \&...]]
-a
+\f[B]\-process\-struct\-trees\f[R]
+Merge input structure trees in the output.
+.TP
+\f[B]\-subformat\f[R]
+If \f[B]\-subformat\f[R] \(lqPDF/UA\-2\(rq is given, together with
+\f[B]\-process\-struct\-trees\f[R] Cpdf will add a top\-level Document
+structure tree element.
+.SS Portfolios
+A PDF portfolio is a special kind of PDF with contains other documents
+(PDF and otherwise) within it.
+Support is mostly limited to Adobe products at time of writing.
+.PP
+cpdf \-portfolio in.pdf \-pf <filename> [\-pfd ] [\-pfr <relationship>]
+[\-pf \&...]
+\-o out.pdf
+.PP
+The input in.pdf here is the main file.
+You can build a blank one with \f[B]\-create\-pdf\f[R].
+.TP
+\f[B]\-pf\f[R]
+The filename for each file to include in the portfolio.
+.TP
+\f[B]\-pfd\f[R]
+The description for the file (must appear after \f[B]\-pf\f[R]).
+.TP
+\f[B]\-pfr\f[R]
+The so\-called relationship for the file (must appear after
+\f[B]\-pf\f[R]).
+.SS Splitting
+We can split an input PDF into its constituent pages, and output one PDF
+for each page.
+.PP
+cpdf \-split in.pdf [\-chunk <chunksize>] [\-process\-struct\-trees]
+[\-utf8] \-o <format>
+.PP
+The output format has many options (see cpdfmanual.pdf for details).
+But the simplest is just to number the outputs in sequence.
+For example cpdf \-split in.pdf \-o out%%%.pdf will produce out001.pdf,
+out002.pdf and so on.
+.TP
+\f[B]\-chunk\f[R]
+Choose a chunk size other than 1.
+.TP
+\f[B]\-process\-struct\-trees\f[R]
+Split the input document\(cqs structure tree into the output documents.
+.TP
+\f[B]\-utf8\f[R]
+This option may be required in the case of some output formats.
+See cpdfmanual.pdf for details.
+.SS Splitting on bookmarks
+We can split on bookmark boundaries, at a given level, instead of
+splitting on each page:
+.PP
+cpdf \-split\-bookmarks <level> in.pdf [\-process\-struct\-trees]
+[\-utf8] \-o <format>
+.TP
+\f[B]\-process\-struct\-trees\f[R]
+Split the input document\(cqs structure tree into the output documents.
+.TP
+\f[B]\-utf8\f[R]
+This option may be required in the case of some output formats.
+See cpdfmanual.pdf for details.
+.SS Splitting to a given size
+We can split the file, if possible, to a maximum filesize for each
+output PDF:
+.PP
+cpdf \-split\-max <file size> in.pdf [\-process\-struct\-trees] [\-utf8]
+\-o <format>
+.TP
+\f[B]\-process\-struct\-trees\f[R]
+Split the input document\(cqs structure tree into the output documents.
+.TP
+\f[B]\-utf8\f[R]
+This option may be required in the case of some output formats.
+See cpdfmanual.pdf for details.
+.SS Interleaved splitting
+We can use \f[B]\-spray\f[R] to write the split pages to more than one
+named output file.
+When Cpdf runs out of output files, it adds the next page to the first
+output file, and so on until all input pages are exhausted.
+.PP
+cpdf \-spray in.pdf [\-process\-struct\-trees] [\-utf8] \-o a.pdf [\-o
+b.pdf [\-o \&...]]
+.TP
+\f[B]\-process\-struct\-trees\f[R]
+Split the input document\(cqs structure tree into the output documents.
+.TP
+\f[B]\-utf8\f[R]
+This option may be required in the case of some output formats.
+See cpdfmanual.pdf for details.
 .SH 3. PAGES
 .TP
 cpdf \-scale\-page \(lq<scale x> <scale y>\(rq [\-fast] [] in.pdf [<range>] \-o out.pdf

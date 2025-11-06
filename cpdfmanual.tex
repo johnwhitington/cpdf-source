@@ -1319,24 +1319,26 @@ $ cpdf -add-text Private in.pdf -o out.pdf -progress
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -split in.pdf [-chunk <chunksize>] [-process-struct-trees]!\\
-  \noindent\verb!     -o <format>!
+  \noindent\verb!     [-utf8] -o <format>!
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -split-bookmarks <level> in.pdf [-utf8] [-process-struct-trees]!\\
   \noindent\verb!     -o <format>!
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf -split-max <file size> in.pdf [-process-struct-trees] -o <format>!
+  \noindent\verb!cpdf -split-max <file size> in.pdf [-utf8] [-process-struct-trees]!\\
+  \noindent\verb!     -o <format>!
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf -spray in.pdf [-process-struct-trees] -o a.pdf [-o b.pdf [-o ...]]!
+  \noindent\verb!cpdf -spray in.pdf [-utf8] [-process-struct-trees]!\\
+  \noindent\verb!     -o a.pdf [-o b.pdf [-o ...]]!
   \end{framed}
 
   \vspace{12mm}
 
   \section{Merging}
 \index{merging}
-  The \texttt{-merge} operation allow the merging of several files into one.
+  The \texttt{-merge} operation allows the merging of several files into one.
 Ranges can be used to select only a subset of pages from each
 input file in the output. The output file consists of the concatenation of all
 the input pages in the order specified on the command line. Actually, the

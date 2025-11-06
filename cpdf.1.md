@@ -201,29 +201,149 @@ error.
 
 # 2. MERGING AND SPLITTING
 
-**cpdf -merge in1.pdf** \[\<range>] **in2.pdf** \[\<range>] \[\<more names/ranges>] \[-collate] \[-collate-n \<n>] \[-retain-numbering] \[-merge-add-bookmarks \[-merge-add-bookmarks-use-titles]] \[-remove-duplicate-fonts] \[-process-struct-trees] \[-subformat \<subformat>] **-o out.pdf**
+## Merging
 
-: a
+**cpdf -merge in1.pdf** \[\<range>] **in2.pdf** \[\<range>] \[\<more
+names/ranges>] \[-collate] \[-collate-n \<n>] \[-retain-numbering]
+\[-merge-add-bookmarks \[-merge-add-bookmarks-use-titles]]
+\[-remove-duplicate-fonts] \[-process-struct-trees] \[-subformat \<subformat>]
+**-o out.pdf**
 
-cpdf -portfolio in.pdf -pf \<filename> \[-pfd <string>] \[-pfr \<relationship>] \[-pf ...] -o out.pdf
+The **-merge** operation allows the merging of several files into one.
+Ranges can be used to select only a subset of pages from each
+input file in the output. The output file consists of the concatenation of all
+the input pages in the order specified on the command line. Actually, the
+**-merge** can be omitted, since this is the default operation of Cpdf.
 
-: a
+**-collate**
 
-cpdf -split in.pdf \[-chunk \<chunksize>] \[-process-struct-trees] -o \<format>
+: Instead of ordinary operation, take the first page from the first document,
+then the first from the second and so on. Then the second page from the first
+document and on until all pages are exhausted.
 
-: a
+**-collate-n**
 
-cpdf -split-bookmarks \<level> in.pdf \[-utf8] \[-process-struct-trees] -o \<format>
+: Like collate, but in chunks of more than one page.
 
-: a
+**-retain-numbering**
 
-cpdf -split-max \<file size> in.pdf \[-process-struct-trees] -o \<format>
+: Keep the page numbering of each input file intact, rather than renumbering
+the pages in the output document beginning at 1.
 
-: a
+**-merge-add-bookmarks \[-merge-add-bookmarks-use-titles]**
 
-cpdf -spray in.pdf \[-process-struct-trees] -o a.pdf \[-o b.pdf \[-o ...]]
+: Add a top-level bookmark for each file, using the filename.
+**-merge-add-bookmarks-use-titles**, when used in conjunction with
+**-merge-add-bookmarks** uses the titles from document metadata instead.
 
-: a
+**-remove-duplicate-fonts**
+
+: Ensures that fonts used in more than one input appear only once in the output.
+
+**-process-struct-trees**
+
+: Merge input structure trees in the output.
+
+**-subformat**
+
+: If **-subformat** "PDF/UA-2" is given, together with
+**-process-struct-trees** Cpdf will add a top-level Document structure tree
+element.
+
+## Portfolios
+
+A PDF portfolio is a special kind of PDF with contains other documents (PDF and
+otherwise) within it. Support is mostly limited to Adobe products at time of
+writing.
+
+cpdf -portfolio in.pdf -pf \<filename> \[-pfd <string>] \[-pfr \<relationship>]
+\[-pf ...] -o out.pdf
+
+The input in.pdf here is the main file. You can build a blank one with **-create-pdf**.
+
+**-pf**
+
+: The filename for each file to include in the portfolio.
+
+**-pfd**
+
+: The description for the file (must appear after **-pf**).
+
+**-pfr**
+
+: The so-called relationship for the file (must appear after **-pf**).
+
+## Splitting
+
+We can split an input PDF into its constituent pages, and output one PDF for
+each page.
+
+cpdf -split in.pdf \[-chunk \<chunksize>] \[-process-struct-trees] \[-utf8] -o
+\<format>
+
+The output format has many options (see cpdfmanual.pdf for details). But the
+simplest is just to number the outputs in sequence. For example cpdf -split
+in.pdf -o out%%%.pdf will produce out001.pdf, out002.pdf and so on.
+
+**-chunk**
+
+: Choose a chunk size other than 1.
+
+**-process-struct-trees**
+
+: Split the input document's structure tree into the output documents.
+
+**-utf8**
+
+: This option may be required in the case of some output formats. See
+cpdfmanual.pdf for details.
+
+## Splitting on bookmarks
+
+We can split on bookmark boundaries, at a given level, instead of splitting on each page:
+
+cpdf -split-bookmarks \<level> in.pdf \[-process-struct-trees] \[-utf8] -o \<format>
+
+**-process-struct-trees**
+
+: Split the input document's structure tree into the output documents.
+
+**-utf8**
+
+: This option may be required in the case of some output formats. See
+cpdfmanual.pdf for details.
+
+## Splitting to a given size
+
+We can split the file, if possible, to a maximum filesize for each output PDF:
+
+cpdf -split-max \<file size> in.pdf \[-process-struct-trees] \[-utf8] -o \<format>
+
+**-process-struct-trees**
+
+: Split the input document's structure tree into the output documents.
+
+**-utf8**
+
+: This option may be required in the case of some output formats. See
+cpdfmanual.pdf for details.
+
+## Interleaved splitting
+
+We can use **-spray** to write the split pages to more than one named output
+file. When Cpdf runs out of output files, it adds the next page to the first
+output file, and so on until all input pages are exhausted.
+
+cpdf -spray in.pdf \[-process-struct-trees] \[-utf8] -o a.pdf \[-o b.pdf \[-o ...]]
+
+**-process-struct-trees**
+
+: Split the input document's structure tree into the output documents.
+
+**-utf8**
+
+: This option may be required in the case of some output formats. See
+cpdfmanual.pdf for details.
 
 # 3. PAGES
 
