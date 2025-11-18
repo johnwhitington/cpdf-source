@@ -17,7 +17,7 @@ SOURCES = $(foreach x,$(MODS),$(x).ml $(x).mli) cpdfcommandrun.ml
 
 RESULT = cpdf
 ANNOTATE = true
-PACKS = camlpdf
+PACKS = unix camlpdf
 
 CFLAGS = -fPIC -g
 OCAMLFLAGS = -bin-annot

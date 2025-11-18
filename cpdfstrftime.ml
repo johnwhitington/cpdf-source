@@ -121,7 +121,17 @@ let year_day d m y =
     n1 - n2 * n3 + d - 30
 
 (* OCAML *)
-let js_date () = dummy
+let js_date () =
+  let d = Unix.localtime (Unix.time ()) in
+    {_tm_sec = d.tm_sec;
+     _tm_min = d.tm_min;
+     _tm_hour = d.tm_hour;
+     _tm_mday = d.tm_mday;
+     _tm_mon = d.tm_mon;
+     _tm_year = d.tm_year;
+     _tm_wday = d.tm_wday;
+     _tm_yday = d.tm_yday;
+     _tm_isdst = d.tm_isdst}
 
 (* JS *)
 (*
@@ -138,8 +148,8 @@ let js_date () =
    _tm_isdst = d.tm_isdst}
 *)
 
-let return_date () =
-  match Sys.backend_type with Sys.Other "js_of_ocaml" -> js_date () | _ ->
+let return_date () = js_date ()
+  (*match Sys.backend_type with Sys.Other "js_of_ocaml" -> js_date () | _ ->
   match Sys.os_type with
     "Unix" ->
       (* Call the POSIX 'date' program, redirected to a temp file, and parse. *)
@@ -189,7 +199,7 @@ let return_date () =
          _tm_wday = get_int r2 13 1;
          _tm_yday = year_day day month year - 1;
          _tm_isdst = false}
-  | _ -> failwith "Unknown Sys.os_type in Cpdfstrftime.return_date"
+  | _ -> failwith "Unknown Sys.os_type in Cpdfstrftime.return_date" *)
 
 let current_time () =
   try return_date () with
