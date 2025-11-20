@@ -347,81 +347,114 @@ cpdfmanual.pdf for details.
 
 # 3. PAGES
 
-cpdf -scale-page "\<scale x> \<scale y>" \[-fast] \[<position>] in.pdf \[\<range>] -o out.pdf
+cpdf -scale-page "\<scale x> \<scale y>" \[-fast] \[<position>] in.pdf
+\[\<range>] -o out.pdf
 
-: a
+: Scale pages in the given range by the given factor e.g "2 2". See the end of
+this chapter for -fast and -position.
 
-cpdf -scale-to-fit "\<x size> \<y size>" \[-fast] \[-prerotate] \[\<position>] \[-scale-to-fit-scale \<scale>] \[-scale-to-fit-rotate-clockwise] \[-scale-to-fit-rotate-anticlockwise] in.pdf \[\<range>] -o out.pdf
+cpdf -scale-to-fit "\<x size> \<y size>" \[-fast] \[-prerotate] \[\<position>]
+\[-scale-to-fit-scale \<scale>] \[-scale-to-fit-rotate-clockwise]
+\[-scale-to-fit-rotate-anticlockwise] in.pdf \[\<range>] -o out.pdf
 
-: a
+: Scale pages in the given range to fit the given size e.g "a4paper" or "10in
+7in", without altering the aspect ratio. By default the content will be
+centered on the new page. See the end of this chapter for -position
+and -prerotate.
+
+**-scale-to-fit-scale**
+
+: Scale to a proportion of the available area, instead of filling it. For
+example 0.9 for 90 percent.
+
+**-scale-to-fit-rotate-clockwise -scale-to-fit-rotate-anticlockwise**
+
+: Automatically rotate page to maximise use of area.
 
 cpdf -stretch "\<x size> \<y size>" \[-fast] in.pdf \[\<range>] -o out.pdf
 
-: a
+: Scale pages without regard to aspect ratio.
 
-cpdf -center-to-fit "\<x size> \<y size>" in.pdf \[\<range>] -o out.pdf
+cpdf -center-to-fit "\<x size> \<y size>" \[-fast] in.pdf \[\<range>] -o
+out.pdf
 
-: a
+: Center each page on a new page size, without scaling it.
 
-cpdf -scale-contents \[\<scale>] \[<position>] \[-fast] in.pdf \[\<range>] -o out.pdf
+cpdf -scale-contents \[\<scale>] \[<position>] \[-fast] in.pdf \[\<range>] -o
+out.pdf
 
-: a
+: Scale the content of pages by a given factor, without changing the size
+of the page. See the end of this chapter for -position.
 
 cpdf -shift "\<shift x> \<shift y>" \[-fast] in.pdf \[\<range>] -o out.pdf
 
-: a
+: Shift the content of pages by a given displacement.
 
 cpdf -shift-boxes "\<shift x> \<shift y>" in.pdf \[\<range>] -o out.pdf
 
-: a
+: Shift the boxes of a page by a given displacement, without moving the content.
 
 cpdf -rotate \<angle> in.pdf \[\<range>] -o out.pdf
 
-: a
+: Change the PDF viewing rotation of pages to 0, 90, 180 or 270 degrees clockwise. 
 
 cpdf -rotateby \<angle> in.pdf \[\<range>] -o out.pdf
 
-: a
+: Change the PDF viewing rotation of pages by 0, 90, 180 or 270 degrees clockwise. 
 
 cpdf -upright \[-fast] in.pdf \[\<range>] -o out.pdf
 
-: a
+: The -upright operation does whatever combination of -rotate and
+-rotate-contents is required to change the rotation of the document to zero
+without altering its appearance. In addition, it makes sure the media box has
+its origin at (0,0), changing other boxes to compensate.
 
 cpdf -rotate-contents \<angle> \[-fast] in.pdf \[\<range>] -o out.pdf
 
-: a
+: Rotates the contents of the page around its center point by the given angle.
 
 cpdf -hflip \[-fast] in.pdf \[\<range>] -o out.pdf
 
-: a
+: Flip page content horizontally.
 
 cpdf -vflip \[-fast] in.pdf \[\<range>] -o out.pdf
 
-: a
+: Flip page content vertically.
 
 cpdf -\[media|crop|art|trim|bleed]box \<boxspec> in.pdf \[\<range>] -o out.pdf
 
-: a
+: Set the media, crop, art, trim or bleed box. For example -cropbox "50 50 300
+200" sets minx 50, miny 50, width 300, height 200. To use absolute numbers
+instead of width and height, prefix with a question mark, writing "?50 50 350
+250" instead.
 
 cpdf -remove-\[crop|art|trim|bleed]box in.pdf \[\<range>] -o out.pdf
 
-: a
+: Remove a crop, art, trim or bleed box from pages.
 
 cpdf -frombox \<boxname> -tobox \<boxname> \[-mediabox-if-missing] in.pdf \[\<range>] -o out.pdf
 
-: a
+: Copy a box to another. For example from /TrimBox to /CropBox.
+
+**-mediabox-if-missing**
+
+: Use media box, rather than failing, if the -frombox is missing.
 
 cpdf -hard-box \<boxname> \[-fast] in.pdf \[\<range>] \[-mediabox-if-missing] -o out.pdf
 
-: a
+: Create a hard box for a given box name - that is to say, one which clips its contents.
 
 cpdf -show-boxes \[-fast] in.pdf \[\<range>] -o out.pdf
 
-: a
+: Show the media, crop, art, trim, and bleed boxes in Red, Green, Blue, Orange
+and Pink respectively.
 
 cpdf -trim-marks \[-fast] in.pdf \[\<range>] -o out.pdf
 
-: a
+: Add trim marks to a PDF. The trim box must be present.
+
+FIXME: POSITIONS
+FIXME: FAST
 
 # 4. ENCRYPTION AND DECRYPTION
 
