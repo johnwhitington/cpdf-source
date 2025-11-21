@@ -504,29 +504,93 @@ to be printed.
 .SH 6. BOOKMARKS
 .TP
 cpdf \-list\-bookmarks [\-utf8] in.pdf
-a
+Print bookmark data to Standard Output.
+The data includes level, title, pagenumber linked to, and full link
+data.
+Use \-utf8 always.
+For example:
+.PP
+0 \(lqPart 1\(rq 1 open 1 \(lqPart 1A\(rq 2 \(lq[2 /XYZ 200 400
+null]\(rq 1 \(lqPart 1B\(rq 3 0 \(lqPart 2\(rq 4 1 \(lqPart 2a\(rq 5
 .TP
 cpdf \-list\-bookmarks\-json [\-preserve\-actions] in.pdf
-a
+Print bookmark data to Standard Output in JSON format instead.
+Here is a single entry in the JSON array of bookmarks:
+.PP
+{ \(lqlevel\(rq: 0, \(lqtext\(rq: \(lq1 Basic Usage\(rq, \(lqpage\(rq:
+17, \(lqopen\(rq: false, \(lqtarget\(rq: [ { \(lqI\(rq: 17 }, {
+\(lqN\(rq: \(lq/XYZ\(rq }, { \(lqF\(rq: 85.039 }, { \(lqF\(rq: 609.307
+}, null ] \(lqcolour\(rq: [ 0.0, 0.0, 0.0 ], \(lqitalic\(rq: false,
+\(lqbold\(rq: false }
 .TP
 cpdf \-remove\-bookmarks in.pdf \-o out.pdf
-a
+Remove all bookmarks from a PDF.
 .TP
 cpdf \-add\-bookmarks <bookmark file> in.pdf \-o out.pdf
-a
+Add bookmarks, given an old\-style bookmark file.
 .TP
 cpdf \-add\-bookmarks\-json <bookmark file> in.pdf \-o out.pdf
-a
+Add bookmarks, given a new\-style JSON bookmark file.
 .TP
 cpdf \-bookmarks\-open\-to\-level <n> in.pdf \-o out.pdf
-a
+Set all bookmarks up to and including a given level to be open.
 .TP
 cpdf \-table\-of\-contents [\-toc\-title] [\-toc\-no\-bookmark] [\-toc\-dot\-leaders] [\-font ] [\-font\-size ] [\-embed\-std14 /path/to/fonts] [\-process\-struct\-trees] [\-subformat ] in.pdf \-o out.pdf
-a
+Generate a typeset table of contents from existing bookmarks, adding it
+to the beginning of the document.
+.TP
+\f[B]\-toc\-title\f[R]
+Title (default is \(lqTable of Contents\(rq)
+.TP
+\f[B]\-toc\-no\-bookmark\f[R]
+Do not add an entry for the new table of contents in the document\(cqs
+bookmarks.
+.TP
+\f[B]\-toc\-dot\-leaders\f[R]
+Add dot leaders.
+.TP
+\f[B]\-font\f[R]
+Give the font (default Times Roman)
+.TP
+\f[B]\-font\-size\f[R]
+Give the font size (default 12pt)
+.TP
+\f[B]\-embed\-std14\f[R]
+Embed Standard 14 fonts given their path (see cpdfmanual.pdf for
+details).
+.TP
+\f[B]\-process\-struct\-trees\f[R]
+Create a structure tree for the new table of contents and merge it with
+the document\(cqs.
+.TP
+\f[B]\-subformat\f[R]
+Add \-subformat \(lqPDF/UA\-2\(rq when adding a table of contents to a
+PDF/UA\-2 file to keep compatibility.
 .SH 7. PRESENTATIONS
 .TP
 cpdf \-presentation in.pdf [<range>] \-o out.pdf [\-trans <transition\-name>] [\-duration <float>] [\-vertical] [\-outward] [\-direction <int>] [\-effect\-duration <float>]
-a
+Make a slide\-show presentation from a PDF.
+.TP
+\f[B]\-trans\f[R]
+The transition style, one of Split, Blinds, Box, Wipe, Dissolve,
+Glitter.
+.TP
+\f[B]\-duration\f[R]
+Time in seconds before presentation advances (default: no automatic
+advancement).
+.TP
+\f[B]\-vertical\f[R]
+Select vertical blinds for transition type Blinds.
+.TP
+\f[B]\-outward\f[R]
+Select outward sweep for transition type Box.
+.TP
+\f[B]\-direction\f[R]
+Direction for Wipe and Glitter styles.
+See cpdfmanual.pdf for full information.
+.TP
+\f[B]\-effect\-duration\f[R]
+Length in seconds of the transition itself.
 .SH 8. WATERMARKS AND STAMPS
 .TP
 cpdf \-stamp\-on source.pdf [\-scale\-stamp\-to\-fit] [] [\-relative\-to\-cropbox] [\-process\-struct\-trees] in.pdf [] [\-fast] \-o out.pdf

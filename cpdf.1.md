@@ -572,37 +572,114 @@ cpdf -remove-output-intents in.pdf -o out.pdf
 
 cpdf -list-bookmarks \[-utf8] in.pdf
 
-: a
+: Print bookmark data to Standard Output. The data includes level, title, pagenumber linked to, and full link data. Use -utf8 always. For example:
+
+0 "Part 1" 1 open
+1 "Part 1A" 2 "[2 /XYZ 200 400 null]"
+1 "Part 1B" 3
+0 "Part 2" 4
+1 "Part 2a" 5
 
 cpdf -list-bookmarks-json \[-preserve-actions] in.pdf
 
-: a
+: Print bookmark data to Standard Output in JSON format instead. Here is a single entry in the JSON array of bookmarks:
+
+{ "level": 0,
+  "text": "1 Basic Usage",
+  "page": 17,
+  "open": false,
+  "target":
+    [ { "I": 17 },
+      { "N": "/XYZ" },
+      { "F": 85.039 },
+      { "F": 609.307 },
+      null ]
+  "colour": [ 0.0, 0.0, 0.0 ],
+  "italic": false,
+  "bold": false
+}
 
 cpdf -remove-bookmarks in.pdf -o out.pdf
 
-: a
+: Remove all bookmarks from a PDF.
 
 cpdf -add-bookmarks \<bookmark file> in.pdf -o out.pdf
 
-: a
+: Add bookmarks, given an old-style bookmark file.
 
 cpdf -add-bookmarks-json \<bookmark file> in.pdf -o out.pdf
 
-: a
+: Add bookmarks, given a new-style JSON bookmark file.
 
 cpdf -bookmarks-open-to-level \<n> in.pdf -o out.pdf
 
-: a
+: Set all bookmarks up to and including a given level to be open.
 
 cpdf -table-of-contents \[-toc-title] \[-toc-no-bookmark] \[-toc-dot-leaders] \[-font <font>] \[-font-size <size>] \[-embed-std14 /path/to/fonts] \[-process-struct-trees] \[-subformat <subformat>] in.pdf -o out.pdf
 
-: a
+: Generate a typeset table of contents from existing bookmarks, adding it to the beginning of the document.
+
+**-toc-title**
+
+: Title (default is "Table of Contents")
+
+**-toc-no-bookmark**
+
+: Do not add an entry for the new table of contents in the document's bookmarks.
+
+**-toc-dot-leaders**
+
+: Add dot leaders.
+
+**-font**
+
+: Give the font (default Times Roman)
+
+**-font-size**
+
+: Give the font size (default 12pt)
+
+**-embed-std14**
+
+: Embed Standard 14 fonts given their path (see cpdfmanual.pdf for details).
+
+**-process-struct-trees**
+
+: Create a structure tree for the new table of contents and merge it with the document's.
+
+**-subformat**
+
+: Add -subformat "PDF/UA-2" when adding a table of contents to a PDF/UA-2 file to keep compatibility.
 
 # 7. PRESENTATIONS
 
 cpdf -presentation in.pdf \[\<range>] -o out.pdf \[-trans \<transition-name>] \[-duration \<float>] \[-vertical] \[-outward] \[-direction \<int>] \[-effect-duration \<float>]
 
-: a
+: Make a slide-show presentation from a PDF.
+
+**-trans**
+
+: The transition style, one of Split, Blinds, Box, Wipe, Dissolve, Glitter.
+
+**-duration**
+
+: Time in seconds before presentation advances (default: no automatic advancement).
+
+**-vertical**
+
+: Select vertical blinds for transition type Blinds.
+
+**-outward**
+
+: Select outward sweep for transition type Box.
+
+**-direction**
+
+: Direction for Wipe and Glitter styles. See cpdfmanual.pdf for full information.
+
+**-effect-duration**
+
+: Length in seconds of the transition itself.
 
 # 8. WATERMARKS AND STAMPS
 
