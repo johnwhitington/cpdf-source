@@ -227,7 +227,7 @@ These examples demonstrate just a few of the facilities provided by the Coherent
 
 \noindent Use the Split style to build a presentation from the PDF \texttt{in.pdf}, each slide staying 10 seconds on screen unless manually advanced. The first page, being a title does not move on automatically, and has no transition effect.
 
-\section*{\hyperref[chap:8]{Chapter 8: Logos, Watermarks and Stamps}}
+\section*{\hyperref[chap:8]{Chapter 8: Text and Stamps}}
 
 \begin{framed}\noindent\texttt{cpdf -stamp-on watermark.pdf in.pdf -o out.pdf}\end{framed}
 
@@ -2599,7 +2599,7 @@ the file using a different page range each time.
 \end{small}
 \end{jscpdflib}
 
-\chapter{Watermarks and Stamps}\label{chap:8}
+\chapter{Text and Stamps}\label{chap:8}
 \label{stamps}
 \index{watermarks}
   \begin{framed}
@@ -2616,6 +2616,8 @@ the file using a different page range each time.
   \noindent\small\verb!cpdf -combine-pages over.pdf under.pdf!\\
   \noindent\small\verb!     [-fast] [-prerotate] [-no-warn-rotate] [-process-struct-trees]!\\
   \noindent\small\verb!     [-underneath] [-stamp-scale-to-fit] -o out.pdf!
+
+%FIXME add -justify-left, right, center here.
 
   \vspace{0.1mm}
   \noindent\small\begin{verbatim}

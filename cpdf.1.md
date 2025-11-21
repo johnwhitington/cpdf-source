@@ -681,125 +681,264 @@ cpdf -presentation in.pdf \[\<range>] -o out.pdf \[-trans \<transition-name>] \[
 
 : Length in seconds of the transition itself.
 
-# 8. WATERMARKS AND STAMPS
+# 8. TEXT AND STAMPS
 
-cpdf -stamp-on source.pdf [-scale-stamp-to-fit] [<positioning command>] [-relative-to-cropbox] [-process-struct-trees] in.pdf [<range>] [-fast] -o out.pdf
-
-: a
-
-cpdf -stamp-under source.pdf [-scale-stamp-to-fit] [<positioning command>] [-relative-to-cropbox] [-process-struct-trees] in.pdf [<range>] [-fast] -o out.pdf
+cpdf [-stamp-on | -stamp-under] source.pdf [-scale-stamp-to-fit] [<positioning command>] [-relative-to-cropbox] [-process-struct-trees] in.pdf [<range>] [-fast] -o out.pdf
 
 : a
+
+**-scale-stamp-to-fit**
+
+: Scale the stamp to fit the page before applying it.
+
+**-relative-to-cropbox**
+
+: Take the positioning command relative to the crop box rather than the media box.
+
+**-process-struct-trees**
+
+: Maintain tagged PDF. The main file will keep its structure; the stamp will be marked as an artifact.
+
+See below for positioning commands.
 
 cpdf -combine-pages over.pdf under.pdf [-fast] [-prerotate] [-no-warn-rotate] [-process-struct-trees] [-underneath] [-stamp-scale-to-fit] -o out.pdf
 
 : a
 
+**-prerotate**
+
+: Remove any rotation differences between the files before combining.
+
+**-no-warn-rotate**
+
+: Do not warn of unresolved rotation differences.
+
+**-underneath**
+
+: Reverse the order of "over" and "under" files.
+
+**-process-struct-trees**
+
+: Maintain tagged PDF. The "under" file will keep its structure; the "over" file will be marked as an artifact.
+
 cpdf (\[-add-text \<text-format> | -add-rectangle \<size>]) [-font \<fontname>] [-font-size \<size-in-points>] [-load-ttf \<name>=\<file>] [-embed-std14] [-color \<color>] [-line-spacing \<number>] [-outline] [-linewidth \<number>] [-underneath] [-relative-to-cropbox] [-prerotate] [-no-warn-rotate] [-bates \<number>] [-bates-at-range \<number>] [-bates-pad-to \<number>] [-opacity \<number>] [-midline] [-topline] [-fast] [-process-struct-trees] in.pdf \[\<range>] -o out.pdf
+ 
+: Add text to a PDF. Various special codes for page numbers or time and date may be used. For example:
 
-: a
+%Page Page number in arabic notation (1, 2, 3. . . )
+%PageDiv2 Page number in arabic notation divided by two
+%roman Page number in lower-case roman notation (i, ii, iii. . . )
+%Roman Page number in upper-case roman notation (I, II, III. . . )
+%EndPage Last page of document in arabic notation
+%Label The page label of the page
+%EndLabel The page label of the last page
+%filename The full file name of the input document
+%URL[text|URL] Add text, which links to URL (does not work for diagonal text)
+%Bookmark<n> Bookmark text at level n (0, 1, 2, 3, 4)
+%Bates bates number
 
-Positioning commands for -add-text and -add-rectangle:
+And date and time formats:
 
--pos-left
+%a Abbreviated weekday name (Sun, Mon etc.)
+%A Full weekday name (Sunday, Monday etc.)
+%b Abbreviated month name (Jan, Feb etc.)
+%B Full month name (January, February etc.)
+%d Day of themonth (01-31)
+%e Day of themonth (1-31)
+%H Hour in 24-hour clock (00-23)
+%I Hour in 12-hour clock (01-12)
+%j Day of the year (001-366)
+%m Month of the year (01-12)
+%M Minute of the hour (00-59)
+%p "a.m" or "p.m"
+%S Second of theminute (00-61)
+%T Same as %H:%M:%S %u Weekday (1-7, 1 = Sunday)
+%w Weekday (0-6, 0 = Sunday)
+%Y Year (0000-9999)
+%% The % character
 
-:a
+\n may be used to demarcate multiple lines.
 
--pos-center
+**-font**
 
-:a
+: Give the font (default Times Roman). Options are:
 
--pos-right
+Times-Roman Times-Bold Times-Italic Times-BoldItalic Helvetica Helvetica-Bold Helvetica-Oblique Helvetica-BoldOblique Courier Courier-Bold Courier-Oblique Courier-BoldOblique
 
-:a
+**-font-size**
 
--top 10
+: Give the font size (default 12pt)
 
-:a
+**-load-ttf**
 
--topleft 10
+: Load a truetype font, and give it name which may be used with -font. For example -load-ttd A=NotoSans-Black.ttf
 
-:a
+**-embed-std14**
 
--topleft "10 20"
+: Embed the standard 14 fonts given the path to the URW Base35 free fonts.
 
-:a
+**-color**
 
--topright 10
+: Choose the text colour using one (Grey), three (RGB), or four (CMYK) numbers from 0-1. E.g "0.5 0.4 0.5".
 
-:a
+**-line-spacing**
 
--topright "10 20"
+: Set the spacing for multi-line text (default 1).
 
-:a
+**-outline**
 
--left 10
+: Use outline text.
 
-:a
+**-linewidth**
 
--bottomleft 10
+: Line width for outline text.
 
-:a
+**-underneath**
 
--bottomleft "10 20"
+: Put the text underneath the page instead of on top of the page.
 
-:a
+**-relative-to-cropbox**
 
--bottom 10
+: Positions are relative to the crop box, rather than the media box.
 
-:a
+**-prerotate**
 
--bottomright 10
+: Remove any viewing rotation before adding text.
 
-:a
+**-no-warn-rotate**
 
--bottomright "10 20"
+: Do not warn of unresolved viewing rotation.
 
-:a
+**-bates**
 
--right 10
+: Set the bates number for use with %Bates
 
-:a
+**-bates-at-range**
 
--diagonal
+: Set the bates number for the first page in the range.
 
-:a
+**-bates-pad-to**
 
--reverse-diagonal
+: Pad bates numbers to a given number of leading zeros.
 
-:a
+**-opacity**
 
--center
+: Set text opacity. Wholly opaque is 1, wholly transparent is 0.
 
-:a
+**-midline**
 
--justify-left
+: Position is relative to the midline of text rather than the baseline.
 
-:a
+**-topline**
 
--justify-right
+: Position is relative to the topline of text rather than the baseline.
 
-:a
+**-process-struct-trees**
 
--justify-center
+: Maintain tagged PDF, for example with PDF/UA. The main file will keep its structure; the stamped text will be marked as an artifact.
 
-:a
+Positioning commands:
+
+**-pos-left**
+
+: Position the left of the baseline of the text at the given coordinates e.g "100 200".
+
+**-pos-center**
+
+: Position the center of the baseline of the text at the given coordinates e.g "100 200".
+
+**-pos-right**
+
+: Position the right of the baseline of the text at the given coordinates e.g "100 200".
+
+**-top 10**
+
+: Position the baseline of the text 10 pts from the top middle of the page.
+
+**-topleft 10**
+
+: Position the left of the baseline of the text 10 pts below and right of the top left of the page.
+
+**-topleft "10 20"**
+
+: Position the left of the baseline of the text 20 pts below and 10 pts right of the top left of the page.
+
+**-topright 10**
+
+: Position the right of the baseline of the text 10 pts below and left of the top right of the page.
+
+**-topright "10 20"**
+
+: Position the right of the baseline of the text 20 pts below and 10 pts left of the top right of the page.
+
+**-left 10**
+
+: Position the left of the baseline of the text 10 pts right of the left middle of the page.
+
+**-bottomleft 10**
+
+: Position the left of the baseline of the text 10pts up and right of the bottom left of the page.
+
+**-bottomleft "10 20"**
+
+: Position the left of the baseline of the text 20pts up and 10pts right of the bottom left of the page.
+
+**-bottom 10**
+
+: Position the center of the baseline of the text 10pts up from the bottom middle of the page.
+
+**-bottomright 10**
+
+: Position the right of the baseline of the text 10pts up and left from the bottom right of the page.
+
+**-bottomright "10 20"**
+
+: Position the right of the baseline of the text 20pts up and 10pts left from the bottom right of the page.
+
+**-right 10**
+
+: Position the right of the baseline of the text 10pts left of the center right of the page.
+
+**-diagonal**
+
+: Position text diagonally, bottom left to top right.
+
+**-reverse-diagonal**
+
+: Position text diagonally, top left to bottom right.
+
+**-center**
+
+: Position text centered on the page.
+
+**-justify-left**
+
+: Set left justifcation for multi-line text. Default depends upon position.
+
+**-justify-right**
+
+: Set right justification for multi-line text. Default depends upon position.
+
+**-justify-center**
+
+: Set center justification for multi-line text. Default depends upon position.
 
 cpdf -remove-text in.pdf \[\<range>] -o out.pdf
 
-: a
+: Remove text previously added by Cpdf.
 
 cpdf -prepend-content \<content> in.pdf \[\<range>] -o out.pdf
 
-: a
+: A low-level operation to prepend raw content to the beginning of page streams.
 
 cpdf -postpend-content \<content> in.pdf \[\<range>] -o out.pdf
 
-: a
+: A low-level operation to postpend raw content to the end of page streams.
 
 cpdf -stamp-as-xobject stamp.pdf in.pdf \[\<range>] -o out.pdf
 
-: a
+: A low-level operation to add stamp.pdf as a Form XObject in the given pages
+of a PDF and write to Standard Output its name. 
 
 # 9. MULTIPAGE FACILITIES
 
