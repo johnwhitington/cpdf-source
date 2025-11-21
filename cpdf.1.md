@@ -942,23 +942,19 @@ of a PDF and write to Standard Output its name.
 
 # 9. MULTIPAGE FACILITIES
 
-cpdf -pad-before in.pdf \[\<range>] \[-pad-with pad.pdf] -o out.pdf
+cpdf [-pad-before | -pad-after] in.pdf \[\<range>] \[-pad-with pad.pdf] -o out.pdf
 
 : a
 
-cpdf -pad-after in.pdf \[\<range>] \[-pad-with pad.pdf] -o out.pdf
-
-: a
+**-pad-with**
 
 cpdf -pad-every \[\<integer>] in.pdf \[-pad-with pad.pdf] -o out.pdf
 
 : a
 
-cpdf -pad-multiple \[\<integer>] in.pdf -o out.pdf
+**-pad-with**
 
-: a
-
-cpdf -pad-multiple-before \[\<integer>] in.pdf -o out.pdf
+cpdf [-pad-multiple | -pad-multiple-before] \[\<integer>] in.pdf -o out.pdf
 
 : a
 
@@ -966,11 +962,35 @@ cpdf -redact \[-process-struct-trees] in.pdf \[\<range>] -o out.pdf
 
 : a
 
+**-process-struct-trees**
+
+: a
+
 cpdf \[-impose \<pagesize> | impose-xy "\<x> \<y>"] \[-impose-columns] \[-impose-rtl] \[-impose-btt] \[-impose-margin <margin>] \[-impose-spacing \<spacing>] \[-impose-linewidth \<width>] \[-fast] \[-process-struct-trees] in.pdf -o out.pdf
 
 : a
 
+**-impose-columns**
+
+: a
+
+**-impose-rtl**
+
+**-impose-btt**
+
+**-impose-margin**
+
+**-impose-spacing**
+
+**-impose-linewidth**
+
+**-process-struct-trees**
+
 cpdf -twoup-stack \[-fast] \[-process-struct-trees] in.pdf -o out.pdf
+
+: a
+
+**-process-struct-trees**
 
 : a
 
@@ -978,11 +998,31 @@ cpdf -twoup \[-fast] \[-process-struct-trees] in.pdf -o out.pdf
 
 : a
 
+**-process-struct-trees**
+
+: a
+
 cpdf -chop "\<x> \<y>" \[-chop-columns] \[-chop-rtl] \[-chop-btt] in.pdf \[\<range>] -o out.pdf
 
 : a
 
+**-chop-columns**
+
+: a
+
+**-chop-rtl**
+
+: a
+
+**-chop-btt**
+
+: a
+
 cpdf \[-chop-h \<y> | -chop-v \<x>] \[-chop-columns] in.pdf \[\<range>] -o out.pdf
+
+**-chop-columns**
+
+: a
 
 # 10. ANNOTATIONS
 
@@ -995,6 +1035,8 @@ cpdf -list-annotations-json in.pdf \[\<range>]
 : a
 
 cpdf -set-annotations \<filename> \[-underneath] in.pdf \[\<range>] -o out.pdf
+
+**-underneath**
 
 : a
 
@@ -1021,41 +1063,20 @@ cpdf -pages in.pdf
 : a
 
 cpdf -set-title \<title of document> \[-also-set-xmp] \[-just-set-xmp] in.pdf -o out.pdf
-
-: a
-
 cpdf -set-author \<author of document> \[-also-set-xmp] \[-just-set-xmp] in.pdf -o out.pdf
-
-: a
-
 cpdf -set-subject \<subject of document> \[-also-set-xmp] \[-just-set-xmp] in.pdf -o out.pdf
-
-: a
-
 cpdf -set-keywords \<keywords of document> \[-also-set-xmp] \[-just-set-xmp] in.pdf -o out.pdf
-
-: a
-
 cpdf -set-creator \<creator of document> \[-also-set-xmp] \[-just-set-xmp] in.pdf -o out.pdf
-
-: a
-
 cpdf -set-producer \<producer of document> \[-also-set-xmp] \[-just-set-xmp] in.pdf -o out.pdf
 
 : a
 
 cpdf -set-create \<date> \[-also-set-xmp] \[-just-set-xmp] in.pdf -o out.pdf
-
-: a
-
 cpdf -set-modify \<date> \[-also-set-xmp] \[-just-set-xmp] in.pdf -o out.pdf
 
 : a
 
 cpdf -set-trapped in.pdf -o out.pdf \[-also-set-xmp] \[-just-set-xmp] 
-
-: a
-
 cpdf -set-untrapped in.pdf -o out.pdf \[-also-set-xmp] \[-just-set-xmp]
 
 : a
@@ -1144,6 +1165,20 @@ cpdf -add-page-labels in.pdf -o out.pdf \[-label-style \<style>] \[-label-prefix
 
 : a
 
+**-label-style**
+
+: a
+
+**-label-prefix**
+
+: a
+
+**-label-startval**
+
+: a
+
+**-labels-progress**
+
 cpdf -remove-page-labels in.pdf -o out.pdf
 
 : a
@@ -1154,13 +1189,35 @@ cpdf -print-page-labels\[-json] in.pdf
 
 cpdf -composition\[-json] in.pdf
 
+: a
+
 # 12. FILE ATTACHMENTS
 
 cpdf -attach-file \<filename> \[-to-page \<page number>] \[-afd \<string>] \[-afr \<relationship>] \[-attach-file ...] in.pdf -o out.pdf
 
 : a
 
+**-to-page**
+
+: a
+
+**-afd**
+
+: a
+
+**-afr**
+
+: a
+
 cpdf -list-attached-files \[-json] \[-include-data] in.pdf
+
+: a
+
+**-json**
+
+: a
+
+**-include-data**
 
 : a
 

@@ -830,38 +830,72 @@ A low\-level operation to add stamp.pdf as a Form XObject in the given
 pages of a PDF and write to Standard Output its name.
 .SH 9. MULTIPAGE FACILITIES
 .TP
-cpdf \-pad\-before in.pdf [<range>] [\-pad\-with pad.pdf] \-o out.pdf
+cpdf [\-pad\-before | \-pad\-after] in.pdf [<range>] [\-pad\-with pad.pdf] \-o out.pdf
 a
-.TP
-cpdf \-pad\-after in.pdf [<range>] [\-pad\-with pad.pdf] \-o out.pdf
-a
+.PP
+\f[B]\-pad\-with\f[R]
 .TP
 cpdf \-pad\-every [<integer>] in.pdf [\-pad\-with pad.pdf] \-o out.pdf
 a
+.PP
+\f[B]\-pad\-with\f[R]
 .TP
-cpdf \-pad\-multiple [<integer>] in.pdf \-o out.pdf
-a
-.TP
-cpdf \-pad\-multiple\-before [<integer>] in.pdf \-o out.pdf
+cpdf [\-pad\-multiple | \-pad\-multiple\-before] [<integer>] in.pdf \-o out.pdf
 a
 .TP
 cpdf \-redact [\-process\-struct\-trees] in.pdf [<range>] \-o out.pdf
 a
 .TP
+\f[B]\-process\-struct\-trees\f[R]
+a
+.TP
 cpdf [\-impose <pagesize> | impose\-xy \(lq<x> <y>\(rq] [\-impose\-columns] [\-impose\-rtl] [\-impose\-btt] [\-impose\-margin ] [\-impose\-spacing <spacing>] [\-impose\-linewidth <width>] [\-fast] [\-process\-struct\-trees] in.pdf \-o out.pdf
 a
 .TP
+\f[B]\-impose\-columns\f[R]
+a
+.PP
+\f[B]\-impose\-rtl\f[R]
+.PP
+\f[B]\-impose\-btt\f[R]
+.PP
+\f[B]\-impose\-margin\f[R]
+.PP
+\f[B]\-impose\-spacing\f[R]
+.PP
+\f[B]\-impose\-linewidth\f[R]
+.PP
+\f[B]\-process\-struct\-trees\f[R]
+.TP
 cpdf \-twoup\-stack [\-fast] [\-process\-struct\-trees] in.pdf \-o out.pdf
+a
+.TP
+\f[B]\-process\-struct\-trees\f[R]
 a
 .TP
 cpdf \-twoup [\-fast] [\-process\-struct\-trees] in.pdf \-o out.pdf
 a
 .TP
+\f[B]\-process\-struct\-trees\f[R]
+a
+.TP
 cpdf \-chop \(lq<x> <y>\(rq [\-chop\-columns] [\-chop\-rtl] [\-chop\-btt] in.pdf [<range>] \-o out.pdf
+a
+.TP
+\f[B]\-chop\-columns\f[R]
+a
+.TP
+\f[B]\-chop\-rtl\f[R]
+a
+.TP
+\f[B]\-chop\-btt\f[R]
 a
 .PP
 cpdf [\-chop\-h <y> | \-chop\-v <x>] [\-chop\-columns] in.pdf [<range>]
 \-o out.pdf
+.TP
+\f[B]\-chop\-columns\f[R]
+a
 .SH 10. ANNOTATIONS
 .TP
 cpdf \-list\-annotations in.pdf [<range>]
@@ -869,8 +903,11 @@ a
 .TP
 cpdf \-list\-annotations\-json in.pdf [<range>]
 a
+.PP
+cpdf \-set\-annotations <filename> [\-underneath] in.pdf [<range>] \-o
+out.pdf
 .TP
-cpdf \-set\-annotations <filename> [\-underneath] in.pdf [<range>] \-o out.pdf
+\f[B]\-underneath\f[R]
 a
 .TP
 cpdf \-copy\-annotations from.pdf to.pdf [<range>] \-o out.pdf
@@ -888,36 +925,30 @@ a
 .TP
 cpdf \-pages in.pdf
 a
-.TP
-cpdf \-set\-title <title of document> [\-also\-set\-xmp] [\-just\-set\-xmp] in.pdf \-o out.pdf
-a
-.TP
-cpdf \-set\-author <author of document> [\-also\-set\-xmp] [\-just\-set\-xmp] in.pdf \-o out.pdf
-a
-.TP
-cpdf \-set\-subject <subject of document> [\-also\-set\-xmp] [\-just\-set\-xmp] in.pdf \-o out.pdf
-a
-.TP
-cpdf \-set\-keywords <keywords of document> [\-also\-set\-xmp] [\-just\-set\-xmp] in.pdf \-o out.pdf
-a
-.TP
-cpdf \-set\-creator <creator of document> [\-also\-set\-xmp] [\-just\-set\-xmp] in.pdf \-o out.pdf
-a
-.TP
-cpdf \-set\-producer <producer of document> [\-also\-set\-xmp] [\-just\-set\-xmp] in.pdf \-o out.pdf
-a
-.TP
-cpdf \-set\-create <date> [\-also\-set\-xmp] [\-just\-set\-xmp] in.pdf \-o out.pdf
-a
-.TP
-cpdf \-set\-modify <date> [\-also\-set\-xmp] [\-just\-set\-xmp] in.pdf \-o out.pdf
-a
-.TP
-cpdf \-set\-trapped in.pdf \-o out.pdf [\-also\-set\-xmp] [\-just\-set\-xmp]
-a
-.TP
-cpdf \-set\-untrapped in.pdf \-o out.pdf [\-also\-set\-xmp] [\-just\-set\-xmp]
-a
+.PP
+cpdf \-set\-title <title of document> [\-also\-set\-xmp]
+[\-just\-set\-xmp] in.pdf \-o out.pdf cpdf \-set\-author <author of
+document> [\-also\-set\-xmp] [\-just\-set\-xmp] in.pdf \-o out.pdf cpdf
+\-set\-subject <subject of document> [\-also\-set\-xmp]
+[\-just\-set\-xmp] in.pdf \-o out.pdf cpdf \-set\-keywords <keywords of
+document> [\-also\-set\-xmp] [\-just\-set\-xmp] in.pdf \-o out.pdf cpdf
+\-set\-creator <creator of document> [\-also\-set\-xmp]
+[\-just\-set\-xmp] in.pdf \-o out.pdf cpdf \-set\-producer <producer of
+document> [\-also\-set\-xmp] [\-just\-set\-xmp] in.pdf \-o out.pdf
+.PP
+: a
+.PP
+cpdf \-set\-create <date> [\-also\-set\-xmp] [\-just\-set\-xmp] in.pdf
+\-o out.pdf cpdf \-set\-modify <date> [\-also\-set\-xmp]
+[\-just\-set\-xmp] in.pdf \-o out.pdf
+.PP
+: a
+.PP
+cpdf \-set\-trapped in.pdf \-o out.pdf [\-also\-set\-xmp]
+[\-just\-set\-xmp] cpdf \-set\-untrapped in.pdf \-o out.pdf
+[\-also\-set\-xmp] [\-just\-set\-xmp]
+.PP
+: a
 .TP
 cpdf \-set\-page\-layout <layout> in.pdf \-o out.pdf
 a
@@ -982,19 +1013,46 @@ a
 cpdf \-add\-page\-labels in.pdf \-o out.pdf [\-label\-style <style>] [\-label\-prefix ] [\-label\-startval ] [\-labels\-progress]
 a
 .TP
+\f[B]\-label\-style\f[R]
+a
+.TP
+\f[B]\-label\-prefix\f[R]
+a
+.TP
+\f[B]\-label\-startval\f[R]
+a
+.PP
+\f[B]\-labels\-progress\f[R]
+.TP
 cpdf \-remove\-page\-labels in.pdf \-o out.pdf
 a
 .TP
 cpdf \-print\-page\-labels[\-json] in.pdf
 a
-.PP
+.TP
 cpdf \-composition[\-json] in.pdf
+a
 .SH 12. FILE ATTACHMENTS
 .TP
 cpdf \-attach\-file <filename> [\-to\-page <page number>] [\-afd <string>] [\-afr <relationship>] [\-attach\-file \&...] in.pdf \-o out.pdf
 a
 .TP
+\f[B]\-to\-page\f[R]
+a
+.TP
+\f[B]\-afd\f[R]
+a
+.TP
+\f[B]\-afr\f[R]
+a
+.TP
 cpdf \-list\-attached\-files [\-json] [\-include\-data] in.pdf
+a
+.TP
+\f[B]\-json\f[R]
+a
+.TP
+\f[B]\-include\-data\f[R]
 a
 .TP
 cpdf \-remove\-files in.pdf \-o out.pdf
