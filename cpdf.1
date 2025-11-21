@@ -407,43 +407,100 @@ The trim box must be present.
 .PP
 FIXME: POSITIONS FIXME: FAST
 .SH 4. ENCRYPTION AND DECRYPTION
-.TP
-cpdf \-encrypt <method> [\-pw=]<owner> [\-pw=]<user> [\-no\-encrypt\-metadata] <permissions> in.pdf \-o out.pdf
-a
+cpdf \-encrypt <method> [\-pw=]<owner> [\-pw=]<user>
+[\-no\-encrypt\-metadata] <permissions> in.pdf \-o out.pdf
 .PP
-\-no\-edit \-no\-print \-no\-copy \-no\-annot \-no\-forms \-no\-extract
-\-no\-assemble \-no\-hq\-print
+: Encrypt a document given the method (e.g AES256ISO for modern usage),
+owner and user passwords, and optionally permissions.
+E.g cpdf \-encrypt AES256ISO secret \(lq\(rq in.pdf \-o out.pdf
 .TP
-cpdf \-decrypt [\-decrypt\-force] in.pdf owner=<owner password> \-o out.pdf
-a
+\f[B]\-no\-encrypt\-metadata\f[R]
+Do not encrypt metadata (AES encryption only)
+.TP
+\f[B]\-pw=\f[R]
+Useful if a password may begin with a dash.
+.PP
+Permissions:
+.TP
+\f[B]\-no\-edit\f[R]
+Cannot change the document
+.TP
+\f[B]\-no\-print\f[R]
+Cannot print the document
+.TP
+\f[B]\-no\-copy\f[R]
+Cannot select or copy text or graphics
+.TP
+\f[B]\-no\-annot\f[R]
+Cannot add or change form fields or annotations
+.TP
+\f[B]\-no\-forms\f[R]
+Cannot edit form fields
+.TP
+\f[B]\-no\-extract\f[R]
+Cannot extract text or graphics
+.TP
+\f[B]\-no\-assemble\f[R]
+Cannot merge files etc.
+.TP
+\f[B]\-no\-hq\-print\f[R]
+Cannot print high\-quality
+.PP
+cpdf \-decrypt [\-decrypt\-force] in.pdf owner=<owner password> \-o
+out.pdf
+.PP
+Note: Adobe Acrobat and Adobe Reader may show slightly different
+permissions in info dialogues \(en this is a result of policy changes
+and not a bug in Cpdf.
+You may need to experiment.
+.PP
+: Decrypt a document, given its owner password.
+.TP
+\f[B]\-decrypt\-force\f[R]
+Decrypt even without the owner password, using just the user password.
+The user password is often blank.
 .SH 5. COMPRESSION
 .TP
 cpdf \-decompress [\-just\-content] in.pdf \-o out.pdf
-a
+Decompress the streams in a PDF file, for instance to manually inspect
+it.
+.TP
+\f[B]\-just\-content\f[R]
+Only decompress page content streams
 .TP
 \-jbig2dec
-a
+Give the path to the jbig2dec program which Cpdf uses, if available, to
+decompress JBIG2 streams.
 .TP
 cpdf \-compress in.pdf \-o out.pdf
-a
+Compress any streams which are uncompressed using the FlateDecode
+method, with the exception of metadata streams.
 .TP
-cpdf \-squeeze in.pdf [\-squeeze\-log\-to <filename>] [\-squeeze\-no\-recompress] [\-squeeze\-no\-pagedata] \-o out.pdf
-a
+cpdf \-squeeze in.pdf [\-squeeze\-log\-to <filename>] [\-squeeze\-no\-pagedata] \-o out.pdf
+Squeeze a file by coalescing like objects, and various other maneuvers.
+.TP
+\f[B]\-squeeze\-log\-to\f[R]
+Write the squeeze log to file rather than standard output.
+.TP
+\f[B]\-squeeze\-no\-pagedata\f[R]
+Avoid processing page data, making the squeeze process much faster at
+the cost of a little compression.
 .TP
 cpdf \-remove\-article\-threads in.pdf \-o out.pdf
-a
+Remove article threads.
 .TP
 cpdf \-remove\-page\-piece in.pdf \-o out.pdf
-a
+Remove page piece information.
 .TP
 cpdf \-remove\-web\-capture in.pdf \-o out.pdf
-a
+Remove web capture data.
 .TP
 cpdf \-remove\-procsets in.pdf \-o out.pdf
-a
+Remove ProcSets, a now\-irrelevant data structure from early PDFs.
 .TP
 cpdf \-remove\-output\-intents in.pdf \-o out.pdf
-a
+Remove output intents, a colour\-matching system for documents intended
+to be printed.
 .SH 6. BOOKMARKS
 .TP
 cpdf \-list\-bookmarks [\-utf8] in.pdf

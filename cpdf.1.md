@@ -458,60 +458,115 @@ FIXME: FAST
 
 # 4. ENCRYPTION AND DECRYPTION
 
-cpdf -encrypt \<method> \[-pw=]\<owner> \[-pw=]\<user> \[-no-encrypt-metadata] \<permissions> in.pdf -o out.pdf
+cpdf -encrypt \<method> \[-pw=]\<owner> \[-pw=]\<user> \[-no-encrypt-metadata]
+\<permissions> in.pdf -o out.pdf
 
-: a
+: Encrypt a document given the method (e.g AES256ISO for modern usage), owner
+and user passwords, and optionally permissions. E.g cpdf -encrypt AES256ISO
+secret "" in.pdf -o out.pdf
 
--no-edit
--no-print
--no-copy
--no-annot
--no-forms
--no-extract
--no-assemble
--no-hq-print
+**-no-encrypt-metadata**
+
+: Do not encrypt metadata (AES encryption only)
+
+**-pw=**
+
+: Useful if a password may begin with a dash.
+
+Permissions:
+
+**-no-edit**
+
+: Cannot change the document
+
+**-no-print**
+
+: Cannot print the document
+
+**-no-copy**
+
+: Cannot select or copy text or graphics
+
+**-no-annot**
+
+: Cannot add or change form fields or annotations
+
+**-no-forms**
+
+: Cannot edit form fields
+
+**-no-extract**
+
+: Cannot extract text or graphics
+
+**-no-assemble**
+
+: Cannot merge files etc.
+
+**-no-hq-print**
+
+: Cannot print high-quality
 
 cpdf -decrypt \[-decrypt-force] in.pdf owner=\<owner password> -o out.pdf
 
-: a
+Note: Adobe Acrobat and Adobe Reader may show slightly different permissions in info dialogues – this
+is a result of policy changes and not a bug in Cpdf. You may need to experiment.
+
+: Decrypt a document, given its owner password.
+
+**-decrypt-force**
+
+: Decrypt even without the owner password, using just the user password. The user password is often blank.
 
 # 5. COMPRESSION
 
 cpdf -decompress \[-just-content] in.pdf -o out.pdf
 
-: a
+: Decompress the streams in a PDF file, for instance to manually inspect it.
+
+**-just-content**
+
+: Only decompress page content streams
 
 -jbig2dec
 
-: a
+: Give the path to the jbig2dec program which Cpdf uses, if available, to decompress JBIG2 streams.
 
 cpdf -compress in.pdf -o out.pdf
 
-: a
+: Compress any streams which are uncompressed using the FlateDecode method, with the exception of metadata streams.
 
-cpdf -squeeze in.pdf \[-squeeze-log-to \<filename>] \[-squeeze-no-recompress] \[-squeeze-no-pagedata] -o out.pdf
+cpdf -squeeze in.pdf \[-squeeze-log-to \<filename>] \[-squeeze-no-pagedata] -o out.pdf
 
-: a
+: Squeeze a file by coalescing like objects, and various other maneuvers.
+
+**-squeeze-log-to**
+
+: Write the squeeze log to file rather than standard output.
+
+**-squeeze-no-pagedata**
+
+: Avoid processing page data, making the squeeze process much faster at the cost of a little compression.
 
 cpdf -remove-article-threads in.pdf -o out.pdf
 
-: a
+: Remove article threads.
 
 cpdf -remove-page-piece in.pdf -o out.pdf
 
-: a
+: Remove page piece information.
 
 cpdf -remove-web-capture in.pdf -o out.pdf
 
-: a
+: Remove web capture data.
 
 cpdf -remove-procsets in.pdf -o out.pdf
 
-: a
+: Remove ProcSets, a now-irrelevant data structure from early PDFs.
 
 cpdf -remove-output-intents in.pdf -o out.pdf
 
-: a
+: Remove output intents, a colour-matching system for documents intended to be printed.
 
 # 6. BOOKMARKS
 
