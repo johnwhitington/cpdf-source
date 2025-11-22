@@ -899,22 +899,27 @@ a
 .SH 10. ANNOTATIONS
 .TP
 cpdf \-list\-annotations in.pdf [<range>]
-a
+List textual content of annotations to Standard Output.
+Each annotation is preceded by the page number and followed by a
+newline.
 .TP
 cpdf \-list\-annotations\-json in.pdf [<range>]
-a
-.PP
-cpdf \-set\-annotations <filename> [\-underneath] in.pdf [<range>] \-o
-out.pdf
+List annotation objects in JSON format.
+This includes all ancillary objects, to support round\-tripping.
+See cpdfmanual.pdf for full format details.
+.TP
+cpdf \-set\-annotations <filename> [\-underneath] in.pdf [<range>] \-o out.pdf
+Set annotations from a JSON file.
+They will be added on top of any annotations already present.
 .TP
 \f[B]\-underneath\f[R]
-a
+Put the annotations underneath instead of on top of existing ones.
 .TP
 cpdf \-copy\-annotations from.pdf to.pdf [<range>] \-o out.pdf
-a
+Copy annotations from from.pdf to to.pdf.
 .TP
 cpdf \-remove\-annotations in.pdf [<range>] \-o out.pdf
-a
+Remove annotations from the document.
 .SH 11. DOCUMENT INFORMATION AND METADATA
 .TP
 cpdf \-info[\-json] [\-utf8] [\-in | \-cm | \-mm] in.pdf
@@ -1033,33 +1038,36 @@ a
 cpdf \-composition[\-json] in.pdf
 a
 .SH 12. FILE ATTACHMENTS
-.TP
-cpdf \-attach\-file <filename> [\-to\-page <page number>] [\-afd <string>] [\-afr <relationship>] [\-attach\-file \&...] in.pdf \-o out.pdf
-a
+cpdf \-attach\-file <filename> [\-to\-page <page number>] [\-afd
+<string>] [\-afr <relationship>] [\-attach\-file \&...]
+in.pdf \-o out.pdf
+.PP
+: Attach a file to a PDF, given its filename.
 .TP
 \f[B]\-to\-page\f[R]
-a
+Instead of attaching globally, add it as an attachment on a single page.
 .TP
 \f[B]\-afd\f[R]
-a
+Supply the textual description for this attachment.
 .TP
 \f[B]\-afr\f[R]
-a
+Supply the so\-called Relationship for this attachment.
 .TP
 cpdf \-list\-attached\-files [\-json] [\-include\-data] in.pdf
-a
+List attached files.
 .TP
 \f[B]\-json\f[R]
-a
+List attached files in JSON format.
+See cpdfmanual.pdf for full details.
 .TP
 \f[B]\-include\-data\f[R]
-a
+Include the attachment file data when listing in JSON format.
 .TP
 cpdf \-remove\-files in.pdf \-o out.pdf
-a
+Remove attached files from a PDF.
 .TP
 cpdf \-dump\-attachments in.pdf \-o <directory>
-a
+Extract the attachments to a given directory.
 .SH 13. IMAGES
 .TP
 cpdf \-list\-images[\-json] [\-inline] in.pdf [<range>]
@@ -1091,44 +1099,93 @@ cpdf \-output\-image in.pdf [<range>] \-o <format>
 .SH 14. FONTS
 .TP
 cpdf \-list\-fonts[\-json] in.pdf
-a
+List the fonts on each page in a file together with their types.
+Either in plain text (\-list\-fonts) or JSON (\-list\-fonts\-json)
+format.
 .TP
 cpdf \-print\-font\-table <font name> \-print\-font\-table\-page <n> in.pdf
-a
+Print a font table for a given font name and page:
+.PP
+e.g:
+.PP
+cpdf \-print\-font\-table /XYPLPB+NimbusSanL\-Bold
+\-print\-font\-table\-page 1 cpdfmanual.pdf 67 = U+0043 (C \- LATIN
+CAPITAL LETTER C) = /C 68 = U+0044 (D \- LATIN CAPITAL LETTER D) = /D 70
+= U+0046 (F \- LATIN CAPITAL LETTER F) = /F 71 = U+0047 (G \- LATIN
+CAPITAL LETTER G) = /G \&...
+.PP
+cpdf \-copy\-font fromfile.pdf \-copy\-font\-page <int>
+\-copy\-font\-name <name> in.pdf [<range>] \-o out.pdf
+.PP
+: A low\-level operation to copy a font from one file to another.
 .TP
-cpdf \-copy\-font fromfile.pdf \-copy\-font\-page <int> \-copy\-font\-name <name> in.pdf [<range>] \-o out.pdf
-a
+\f[B]\-copy\-font\-page\f[R]
+The page from which to copy the font.
+.TP
+\f[B]\-copy\-font\-name\f[R]
+The (PDF) name of the font.
 .TP
 cpdf \-remove\-fonts in.pdf \-o out.pdf
-a
+Remove fonts from a file.
 .TP
 cpdf \-missing\-fonts in.pdf
-a
+Report missing fonts \- i.e those which are unembedded.
 .TP
 cpdf \-embed\-missing\-fonts \-gs <path to gs> in.pdf \-o out.pdf
-a
+Use Ghostscript to embed missing fonts into a PDF.
+Note: putting a PDF file through gs in this manner may not be lossless:
+some metadata may not be preserved
 .TP
 cpdf \-extract\-font <page number>,<pdf font name> in.pdf \-o out.font
-a
+Extract a font file from a PDF given a pagenumber, font name pair.
+E.g:
+.PP
+cpdf \-extract\-font 5,/F50 in.pdf \-o out.ttf
 .SH 15. PDF AND JSON
+cpdf in.pdf \-output\-json \-o out.json
+[\-output\-json\-parse\-content\-streams]
+[\-output\-json\-no\-stream\-data] [\-output\-json\-decompress\-streams]
+[\-output\-json\-clean\-strings] [\-utf8]
+.PP
+: Convert PDF to a JSON format which may be inspected, or edited and
+round\-tripped back into PDF.
 .TP
-cpdf in.pdf \-output\-json \-o out.json [\-output\-json\-parse\-content\-streams] [\-output\-json\-no\-stream\-data] [\-output\-json\-decompress\-streams] [\-output\-json\-clean\-strings] [\-utf8]
-a
+\f[B]\-output\-json\-parse\-content\-streams\f[R]
+Parse the content streams into JSON too.
+.TP
+\f[B]\-output\-json\-no\-stream\-data\f[R]
+Elide stream data.
+This makes a smaller file, but bars round\-tripping.
+.TP
+\f[B]\-output\-json\-decompress\-streams\f[R]
+Keep the streams intact, and decompress them.
+.TP
+\f[B]\-output\-json\-clean\-strings\f[R]
+Deprecated in favour of \f[B]\-utf8\f[R] below.
+.TP
+\f[B]\-utf8\f[R]
+Use UTF8 rather than PDFDocEncoding for strings, to make them more
+easily editable.
 .TP
 cpdf \-j in.json \-o out.pdf
-a
+Convert a JSON file to a PDF file.
 .SH 16. OPTIONAL CONTENT GROUPS
 .TP
 cpdf \-ocg\-list in.pdf
-a
+List the optional content groups in the PDF, one oper line, to Standard
+Output.
 .TP
 cpdf \-ocg\-rename \-ocg\-rename\-from <a> \-ocg\-rename\-to <b> in.pdf \-o out.pdf
-a
+Rename an optional content group given the old and new names.
 .TP
 cpdf \-ocg\-order\-all in.pdf \-o out.pdf
-a
-.PP
+Ensure that every optional content group appears in the order list.
+.TP
 cpdf \-ocg\-coalesce\-on\-name in.pdf \-o out.pdf
+Coalesce optional content groups.
+For example, if we merge or stamp two files both with an OCG called
+\(lqLayer 1\(rq, we will have two differen optional content groups.
+This command will merge them into a single optional content group.
 .SH 17. CREATING NEW PDFS
 .TP
 cpdf \-create\-pdf [\-create\-pdf\-pages <n>] [\-create\-pdf\-papersize <paper size>] \-o out.pdf

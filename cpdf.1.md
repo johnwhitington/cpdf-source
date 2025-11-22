@@ -1028,25 +1028,30 @@ cpdf \[-chop-h \<y> | -chop-v \<x>] \[-chop-columns] in.pdf \[\<range>] -o out.p
 
 cpdf -list-annotations in.pdf \[\<range>]
 
-: a
+: List textual content of annotations to Standard Output. Each annotation is
+preceded by the page number and followed by a newline.
 
 cpdf -list-annotations-json in.pdf \[\<range>]
 
-: a
+: List annotation objects in JSON format. This includes all ancillary objects,
+to support round-tripping. See cpdfmanual.pdf for full format details.
 
 cpdf -set-annotations \<filename> \[-underneath] in.pdf \[\<range>] -o out.pdf
 
+: Set annotations from a JSON file. They will be added on top of any
+annotations already present.
+
 **-underneath**
 
-: a
+: Put the annotations underneath instead of on top of existing ones.
 
 cpdf -copy-annotations from.pdf to.pdf \[\<range>] -o out.pdf
 
-: a
+: Copy annotations from from.pdf to to.pdf.
 
 cpdf -remove-annotations in.pdf \[\<range>] -o out.pdf
 
-: a
+: Remove annotations from the document.
 
 # 11. DOCUMENT INFORMATION AND METADATA
 
@@ -1193,41 +1198,42 @@ cpdf -composition\[-json] in.pdf
 
 # 12. FILE ATTACHMENTS
 
-cpdf -attach-file \<filename> \[-to-page \<page number>] \[-afd \<string>] \[-afr \<relationship>] \[-attach-file ...] in.pdf -o out.pdf
+cpdf -attach-file \<filename> \[-to-page \<page number>] \[-afd \<string>]
+\[-afr \<relationship>] \[-attach-file ...] in.pdf -o out.pdf
 
-: a
+: Attach a file to a PDF, given its filename.
 
 **-to-page**
 
-: a
+: Instead of attaching globally, add it as an attachment on a single page.
 
 **-afd**
 
-: a
+: Supply the textual description for this attachment. 
 
 **-afr**
 
-: a
+: Supply the so-called Relationship for this attachment.
 
 cpdf -list-attached-files \[-json] \[-include-data] in.pdf
 
-: a
+: List attached files.
 
 **-json**
 
-: a
+: List attached files in JSON format. See cpdfmanual.pdf for full details.
 
 **-include-data**
 
-: a
+: Include the attachment file data when listing in JSON format.
 
 cpdf -remove-files in.pdf -o out.pdf
 
-: a
+: Remove attached files from a PDF.
 
 cpdf -dump-attachments in.pdf -o \<directory>
 
-: a
+: Extract the attachments to a given directory.
 
 # 13. IMAGES
 
@@ -1265,57 +1271,106 @@ cpdf -output-image in.pdf \[\<range>] -o \<format> \[-rasterize\[-gray|-1bpp|-jp
 
 cpdf -list-fonts\[-json] in.pdf
 
-: a
+: List the fonts on each page in a file together with their types. Either in plain text (-list-fonts) or JSON (-list-fonts-json) format.
 
 cpdf -print-font-table \<font name> -print-font-table-page \<n> in.pdf
 
-: a
+: Print a font table for a given font name and page:
 
-cpdf -copy-font fromfile.pdf -copy-font-page \<int> -copy-font-name \<name> in.pdf \[\<range>] -o out.pdf
+e.g:
 
-: a
+cpdf -print-font-table /XYPLPB+NimbusSanL-Bold -print-font-table-page 1 cpdfmanual.pdf
+67 = U+0043 (C - LATIN CAPITAL LETTER C) = /C
+68 = U+0044 (D - LATIN CAPITAL LETTER D) = /D
+70 = U+0046 (F - LATIN CAPITAL LETTER F) = /F
+71 = U+0047 (G - LATIN CAPITAL LETTER G) = /G
+...
+
+cpdf -copy-font fromfile.pdf -copy-font-page \<int> -copy-font-name \<name>
+in.pdf \[\<range>] -o out.pdf
+
+: A low-level operation to copy a font from one file to another.
+
+**-copy-font-page**
+
+: The page from which to copy the font.
+
+**-copy-font-name**
+
+: The (PDF) name of the font. 
 
 cpdf -remove-fonts in.pdf -o out.pdf
 
-: a
+: Remove fonts from a file.
 
 cpdf -missing-fonts in.pdf
 
-: a
+: Report missing fonts - i.e those which are unembedded.
 
 cpdf -embed-missing-fonts -gs \<path to gs> in.pdf -o out.pdf
 
-: a
+: Use Ghostscript to embed missing fonts into a PDF. Note: putting a PDF file
+through gs in this manner may not be lossless: some metadata may not be
+preserved
 
 cpdf -extract-font \<page number>,\<pdf font name> in.pdf -o out.font
 
-: a
+: Extract a font file from a PDF given a pagenumber, font name pair. E.g:
+
+cpdf -extract-font 5,/F50 in.pdf -o out.ttf
 
 # 15. PDF AND JSON
 
-cpdf in.pdf -output-json -o out.json \[-output-json-parse-content-streams] \[-output-json-no-stream-data] \[-output-json-decompress-streams] \[-output-json-clean-strings] \[-utf8]
+cpdf in.pdf -output-json -o out.json \[-output-json-parse-content-streams]
+\[-output-json-no-stream-data] \[-output-json-decompress-streams]
+\[-output-json-clean-strings] \[-utf8]
 
-: a
+: Convert PDF to a JSON format which may be inspected, or edited and
+round-tripped back into PDF.
+
+**-output-json-parse-content-streams**
+
+: Parse the content streams into JSON too.
+
+**-output-json-no-stream-data**
+
+: Elide stream data. This makes a smaller file, but bars round-tripping.
+
+**-output-json-decompress-streams**
+
+: Keep the streams intact, and decompress them.
+
+**-output-json-clean-strings**
+
+: Deprecated in favour of **-utf8** below.
+
+**-utf8**
+
+: Use UTF8 rather than PDFDocEncoding for strings, to make them more easily editable.
 
 cpdf -j in.json -o out.pdf
 
-: a
+: Convert a JSON file to a PDF file.
 
 # 16. OPTIONAL CONTENT GROUPS
 
 cpdf -ocg-list in.pdf
 
-: a
+: List the optional content groups in the PDF, one oper line, to Standard Output.
 
 cpdf -ocg-rename -ocg-rename-from \<a> -ocg-rename-to \<b> in.pdf -o out.pdf
 
-: a
+: Rename an optional content group given the old and new names.
 
 cpdf -ocg-order-all in.pdf -o out.pdf
 
-: a
+: Ensure that every optional content group appears in the order list.
 
 cpdf -ocg-coalesce-on-name in.pdf -o out.pdf
+
+: Coalesce optional content groups. For example, if we merge or stamp two files
+both with an OCG called "Layer 1", we will have two differen optional content
+groups. This command will merge them into a single optional content group.
 
 # 17. CREATING NEW PDFS
 
