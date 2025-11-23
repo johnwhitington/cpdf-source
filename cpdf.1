@@ -831,71 +831,113 @@ pages of a PDF and write to Standard Output its name.
 .SH 9. MULTIPAGE FACILITIES
 .TP
 cpdf [\-pad\-before | \-pad\-after] in.pdf [<range>] [\-pad\-with pad.pdf] \-o out.pdf
-a
-.PP
+Add blank pages before or after each page in the given range.
+.TP
 \f[B]\-pad\-with\f[R]
+Use a separate PDF to act as the padding.
 .TP
 cpdf \-pad\-every [<integer>] in.pdf [\-pad\-with pad.pdf] \-o out.pdf
-a
-.PP
+Add a blank pages afyer every n pages.
+.TP
 \f[B]\-pad\-with\f[R]
+Use a separate PDF to act as the padding.
 .TP
 cpdf [\-pad\-multiple | \-pad\-multiple\-before] [<integer>] in.pdf \-o out.pdf
-a
+Add as many blank pages as are required before or after the original
+pages to make the file\(cqs length a multiple of the given number of
+pages
 .TP
 cpdf \-redact [\-process\-struct\-trees] in.pdf [<range>] \-o out.pdf
-a
+Remove the content of the pages in the given range entirely, including
+annotations and any resources.
 .TP
 \f[B]\-process\-struct\-trees\f[R]
-a
-.TP
-cpdf [\-impose <pagesize> | impose\-xy \(lq<x> <y>\(rq] [\-impose\-columns] [\-impose\-rtl] [\-impose\-btt] [\-impose\-margin ] [\-impose\-spacing <spacing>] [\-impose\-linewidth <width>] [\-fast] [\-process\-struct\-trees] in.pdf \-o out.pdf
-a
+Process the document\(cqs structure tree to remove any parts which are
+marked as relating to the now\-redacted pages.
+.PP
+cpdf [\-impose <pagesize> | impose\-xy \(lq<x> <y>\(rq]
+[\-impose\-columns] [\-impose\-rtl] [\-impose\-btt] [\-impose\-margin ]
+[\-impose\-spacing <spacing>] [\-impose\-linewidth <width>] [\-fast]
+[\-process\-struct\-trees] in.pdf \-o out.pdf
+.PP
+: Cpdf has two imposition operations:
+.IP
+.EX
+ \-impose fits multiple pages onto a given page size e.g \-impose a4portrait
+ or \-impose \(dq8in 12in\(dq
+
+ \-impose\-xy build an output page with the x pages horizontally and y pages
+ vertically e.g \-impose\-xy \(dq2 3\(dq
+.EE
 .TP
 \f[B]\-impose\-columns\f[R]
-a
-.PP
+Lay the pages out in columns rather than rows
+.TP
 \f[B]\-impose\-rtl\f[R]
-.PP
+Lay the pages out right to left
+.TP
 \f[B]\-impose\-btt\f[R]
-.PP
+Lay the pages out bottom to top
+.TP
 \f[B]\-impose\-margin\f[R]
-.PP
+Add a margin around the edge of each page.
+When using \-impose\-xy the page size increases; with \-impose the pages
+are scaled.
+.TP
 \f[B]\-impose\-spacing\f[R]
-.PP
+Add spacing between rows and columns.
+When using \-impose\-xy the page size increases; with \-impose the pages
+are scaled.
+.TP
 \f[B]\-impose\-linewidth\f[R]
+Add a border around each input page.
+With \-impose the pages are scaled after the border is added, so you
+must account for this yourself.
+.TP
+\f[B]\-process\-struct\-trees\f[R]
+Mark the file\(cqs content as an artifact for the purposes of
+imposition.
 .PP
+cpdf \-twoup\-stack [\-fast] [\-process\-struct\-trees] in.pdf \-o
+out.pdf cpdf \-twoup [\-fast] [\-process\-struct\-trees] in.pdf \-o
+out.pdf
+.PP
+: Two old imposition functions which can now both be done with \-impose
+/ \-impose\-xy.
+The \-twoup\-stack operation puts two logical pages on each physical
+page, rotating them 90 degrees to do so.
+The new mediabox is thus larger.
+Whereas the \-twoup operation does the same, but scales the new sides
+down so that the media box is unchanged.
+.TP
 \f[B]\-process\-struct\-trees\f[R]
-.TP
-cpdf \-twoup\-stack [\-fast] [\-process\-struct\-trees] in.pdf \-o out.pdf
-a
-.TP
-\f[B]\-process\-struct\-trees\f[R]
-a
-.TP
-cpdf \-twoup [\-fast] [\-process\-struct\-trees] in.pdf \-o out.pdf
-a
-.TP
-\f[B]\-process\-struct\-trees\f[R]
-a
-.TP
-cpdf \-chop \(lq<x> <y>\(rq [\-chop\-columns] [\-chop\-rtl] [\-chop\-btt] in.pdf [<range>] \-o out.pdf
-a
+Mark the file\(cqs content as an artifact for the purposes of
+imposition.
+.PP
+cpdf \-chop \(lq<x> <y>\(rq [\-chop\-columns] [\-chop\-rtl]
+[\-chop\-btt] in.pdf [<range>] \-o out.pdf
+.PP
+: The \-chop operation cuts up a page into multiple pages, according to
+the chosen grid.
 .TP
 \f[B]\-chop\-columns\f[R]
-a
+Arrange by columns instead of rows.
 .TP
 \f[B]\-chop\-rtl\f[R]
-a
+Arrange right to left.
 .TP
 \f[B]\-chop\-btt\f[R]
-a
+Arrange bottom to top.
 .PP
 cpdf [\-chop\-h <y> | \-chop\-v <x>] [\-chop\-columns] in.pdf [<range>]
 \-o out.pdf
+.PP
+: Chop each page into two, vertically or horizontally, at the given
+position.
+E.g \-chop\-h 200pt.
 .TP
 \f[B]\-chop\-columns\f[R]
-a
+Reverse the order of pages in the output.
 .SH 10. ANNOTATIONS
 .TP
 cpdf \-list\-annotations in.pdf [<range>]

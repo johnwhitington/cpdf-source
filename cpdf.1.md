@@ -944,85 +944,119 @@ of a PDF and write to Standard Output its name.
 
 cpdf [-pad-before | -pad-after] in.pdf \[\<range>] \[-pad-with pad.pdf] -o out.pdf
 
-: a
+: Add blank pages before or after each page in the given range.
 
 **-pad-with**
+
+: Use a separate PDF to act as the padding.
 
 cpdf -pad-every \[\<integer>] in.pdf \[-pad-with pad.pdf] -o out.pdf
 
-: a
+: Add a blank pages afyer every n pages.
 
 **-pad-with**
 
+: Use a separate PDF to act as the padding.
+
 cpdf [-pad-multiple | -pad-multiple-before] \[\<integer>] in.pdf -o out.pdf
 
-: a
+: Add as many blank pages as are required before or after the original pages to
+make the file's length a multiple of the given number of pages
 
 cpdf -redact \[-process-struct-trees] in.pdf \[\<range>] -o out.pdf
 
-: a
+: Remove the content of the pages in the given range entirely, including
+annotations and any resources. 
 
 **-process-struct-trees**
 
-: a
+: Process the document's structure tree to remove any parts which are marked as
+relating to the now-redacted pages.
 
-cpdf \[-impose \<pagesize> | impose-xy "\<x> \<y>"] \[-impose-columns] \[-impose-rtl] \[-impose-btt] \[-impose-margin <margin>] \[-impose-spacing \<spacing>] \[-impose-linewidth \<width>] \[-fast] \[-process-struct-trees] in.pdf -o out.pdf
+cpdf \[-impose \<pagesize> | impose-xy "\<x> \<y>"] \[-impose-columns]
+\[-impose-rtl] \[-impose-btt] \[-impose-margin <margin>] \[-impose-spacing
+\<spacing>] \[-impose-linewidth \<width>] \[-fast] \[-process-struct-trees]
+in.pdf -o out.pdf
 
-: a
+: Cpdf has two imposition operations:
+
+     -impose fits multiple pages onto a given page size e.g -impose a4portrait
+     or -impose "8in 12in"
+
+     -impose-xy build an output page with the x pages horizontally and y pages
+     vertically e.g -impose-xy "2 3"
 
 **-impose-columns**
 
-: a
+: Lay the pages out in columns rather than rows
 
 **-impose-rtl**
 
+: Lay the pages out right to left
+
 **-impose-btt**
+
+: Lay the pages out bottom to top
 
 **-impose-margin**
 
+: Add a margin around the edge of each page. When using -impose-xy the page
+size increases; with -impose the pages are scaled.
+
 **-impose-spacing**
+
+: Add spacing between rows and columns. When using -impose-xy the page size
+increases; with -impose the pages are scaled.
 
 **-impose-linewidth**
 
-**-process-struct-trees**
-
-cpdf -twoup-stack \[-fast] \[-process-struct-trees] in.pdf -o out.pdf
-
-: a
+: Add a border around each input page. With -impose the pages are scaled after
+the border is added, so you must account for this yourself.
 
 **-process-struct-trees**
 
-: a
+: Mark the file's content as an artifact for the purposes of imposition.
 
-cpdf -twoup \[-fast] \[-process-struct-trees] in.pdf -o out.pdf
+cpdf -twoup-stack \[-fast] \[-process-struct-trees] in.pdf -o out.pdf cpdf
+-twoup \[-fast] \[-process-struct-trees] in.pdf -o out.pdf
 
-: a
+: Two old imposition functions which can now both be done with -impose /
+-impose-xy. The -twoup-stack operation puts two logical pages on each physical
+page, rotating them 90 degrees to do so. The new mediabox is thus larger.
+Whereas the -twoup operation does the same, but scales the new sides down so
+that the media box is unchanged.
 
 **-process-struct-trees**
 
-: a
+: Mark the file's content as an artifact for the purposes of imposition.
 
-cpdf -chop "\<x> \<y>" \[-chop-columns] \[-chop-rtl] \[-chop-btt] in.pdf \[\<range>] -o out.pdf
+cpdf -chop "\<x> \<y>" \[-chop-columns] \[-chop-rtl] \[-chop-btt] in.pdf
+\[\<range>] -o out.pdf
 
-: a
+: The -chop operation cuts up a page into multiple pages, according to the
+chosen grid.
 
 **-chop-columns**
 
-: a
+: Arrange by columns instead of rows.
 
 **-chop-rtl**
 
-: a
+: Arrange right to left.
 
 **-chop-btt**
 
-: a
+: Arrange bottom to top.
 
-cpdf \[-chop-h \<y> | -chop-v \<x>] \[-chop-columns] in.pdf \[\<range>] -o out.pdf
+cpdf \[-chop-h \<y> | -chop-v \<x>] \[-chop-columns] in.pdf \[\<range>] -o
+out.pdf
+
+: Chop each page into two, vertically or horizontally, at the given position.
+E.g -chop-h 200pt.
 
 **-chop-columns**
 
-: a
+: Reverse the order of pages in the output.
 
 # 10. ANNOTATIONS
 
