@@ -1512,70 +1512,79 @@ cpdf \-create\-pdf\-ua\-<1|2> <title> [\-create\-pdf\-pages <n>]
 .SH 20. MISCELLANEOUS
 .TP
 cpdf \-draft [\-boxes] [\-draft\-remove\-only <n>] in.pdf [<range>] \-o out.pdf
-a
+Remove bitmapped (photographic) images from a PDF.
+.TP
+\f[B]\-boxes\f[R]
+Replace each image with a crossed box to show where it was.
+.TP
+\f[B]\-draft\-remove\-only\f[R]
+Remove only one image, with the given name.
+The name can be obtained from, for example, \-list\-images\-used.
 .TP
 cpdf \-remove\-all\-text in.pdf [<range>] \-o out.pdf
-a
+Remove all text from a PDF.
 .TP
 cpdf \-blacktext in.pdf [<range>] \-o out.pdf
-a
+Make all text black.
 .TP
 cpdf \-blacklines in.pdf [<range>] \-o out.pdf
-a
+Make all lines black.
 .TP
 cpdf \-blackfills in.pdf [<range>] \-o out.pdf
-a
+Make all fills black.
 .TP
 cpdf \-thinlines <min thickness> in.pdf [<range>] \-o out.pdf
-a
+Make each line a minimum thickness.
+A negative value will instead thin lines to the absolute of the value
+given.
+By processing twice, with a positive then negative figure, it is
+therefore possible to clamp thicknesses to a range or single value.
 .TP
 cpdf \-clean in.pdf \-o out.pdf
-a
+Deprecated.
+This work is now done by default upon writing any file.
 .TP
 cpdf \-set\-version <version number> in.pdf \-o out.pdf
-a
+Set the version of a PDF.
+E.g for version 1.4, use \-set\-version 4.
+For PDF versions starting with 2, add ten to the number.
+E.g for PDF 2.0, use \-set\-version 10.
 .TP
 cpdf \-copy\-id\-from source.pdf in.pdf \-o out.pdf
-a
+Copy the ID from one PDF to another.
 .TP
 cpdf \-remove\-id in.pdf \-o out.pdf
-a
+Remove the ID from a PDF.
 .TP
 cpdf \-list\-spot\-colors in.pdf
-a
-.TP
-cpdf \-print\-dict\-entry [\-json] <key> in.pdf
-a
-.TP
-cpdf \-remove\-dict\-entry <key> [\-dict\-entry\-search <term>] in.pdf \-o out.pdf
-a
-.TP
-cpdf \-replace\-dict\-entry <key> \-replace\-dict\-entry\-value <value> [\-dict\-entry\-search <term>] in.pdf \-o out.pdf
-a
+List the names of any separation colour spaces in a PDF.
+.PP
+cpdf \-print\-dict\-entry [\-json] <key> in.pdf cpdf
+\-remove\-dict\-entry <key> [\-dict\-entry\-search <term>] in.pdf \-o
+out.pdf cpdf \-replace\-dict\-entry <key> \-replace\-dict\-entry\-value
+<value> [\-dict\-entry\-search <term>] in.pdf \-o out.pdf
+.PP
+: Low level operations to edit PDF objects directly.
+See cpdfmanual.pdf for details.
 .TP
 cpdf \-remove\-clipping [<range>] in.pdf \-o out.pdf
-a
-.TP
-cpdf \-obj[\-json] <object specification> in.pdf
-a
-.TP
-cpdf \-replace\-obj <object specification>=<object> in.pdf \-o out.pdf
-a
-.TP
-cpdf \-remove\-obj <object number> in.pdf \-o out.pdf
-a
-.TP
-cpdf \-extract\-stream[\-decompress] <object specification> in.pdf [\-o out.dat | \-stdout]
-a
-.TP
-cpdf \-replace\-stream <object specification> \-replace\-stream\-with <filename> in.pdf \-o out.pdf
-a
+Remove any clipping paths from a PDF.
+.PP
+cpdf \-obj[\-json] <object specification> in.pdf cpdf \-replace\-obj
+<object specification>=<object> in.pdf \-o out.pdf cpdf \-remove\-obj
+<object number> in.pdf \-o out.pdf cpdf \-extract\-stream[\-decompress]
+<object specification> in.pdf [\-o out.dat | \-stdout] cpdf
+\-replace\-stream <object specification> \-replace\-stream\-with
+<filename> in.pdf \-o out.pdf
+.PP
+: Low level operations to explore and edit PDF files object\-by\-object.
+See cpdfmanual.pdf for details.
 .TP
 cpdf \-contains\-javascript in.pdf
-a
+Prints true if the PDF contains JavaScript, false otherwise.
 .TP
 cpdf \-remove\-javascript in.pdf \-o out.pdf
-a
+Remove JavaScript from a PDF.
 .SH ENVIRONMENT
 .SH BUGS
 .SH AUTHOR

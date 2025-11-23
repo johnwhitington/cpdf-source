@@ -1778,91 +1778,86 @@ cpdf -create-pdf-ua-\<1|2> \<title> \[-create-pdf-pages \<n>] \[-create-pdf-pape
 
 cpdf -draft \[-boxes] \[-draft-remove-only \<n>] in.pdf \[\<range>] -o out.pdf
 
-: a
+: Remove bitmapped (photographic) images from a PDF.
+
+**-boxes**
+
+: Replace each image with a crossed box to show where it was.
+
+**-draft-remove-only**
+
+: Remove only one image, with the given name. The name can be obtained from, for example, -list-images-used.
 
 cpdf -remove-all-text in.pdf \[\<range>] -o out.pdf
 
-: a
+: Remove all text from a PDF.
 
 cpdf -blacktext in.pdf \[\<range>] -o out.pdf
 
-: a
+: Make all text black.
 
 cpdf -blacklines in.pdf \[\<range>] -o out.pdf
 
-: a
+: Make all lines black.
 
 cpdf -blackfills in.pdf \[\<range>] -o out.pdf
 
-: a
+: Make all fills black.
 
 cpdf -thinlines \<min thickness> in.pdf \[\<range>] -o out.pdf
 
-: a
+: Make each line a minimum thickness. A negative value will instead thin lines
+to the absolute of the value given. By processing twice, with a positive then
+negative figure, it is therefore possible to clamp thicknesses to a range or
+single value.
 
 cpdf -clean in.pdf -o out.pdf
 
-: a
+: Deprecated. This work is now done by default upon writing any file.
 
 cpdf -set-version \<version number> in.pdf -o out.pdf
 
-: a
+: Set the version of a PDF. E.g for version 1.4, use -set-version 4. For PDF
+versions starting with 2, add ten to the number. E.g for PDF 2.0, use
+-set-version 10.
 
 cpdf -copy-id-from source.pdf in.pdf -o out.pdf
 
-: a
+: Copy the ID from one PDF to another.
 
 cpdf -remove-id in.pdf -o out.pdf
 
-: a
+: Remove the ID from a PDF.
 
 cpdf -list-spot-colors in.pdf
 
-: a
+: List the names of any separation colour spaces in a PDF.
 
 cpdf -print-dict-entry [-json] \<key> in.pdf
-
-: a
-
 cpdf -remove-dict-entry \<key> [-dict-entry-search \<term>] in.pdf -o out.pdf
-
-: a
-
 cpdf -replace-dict-entry \<key> -replace-dict-entry-value \<value> \[-dict-entry-search \<term>] in.pdf -o out.pdf
 
-: a
+: Low level operations to edit PDF objects directly. See cpdfmanual.pdf for details.
 
 cpdf -remove-clipping \[\<range>] in.pdf -o out.pdf
 
-: a
+: Remove any clipping paths from a PDF.
 
 cpdf -obj[-json] \<object specification> in.pdf
-
-: a
-
 cpdf -replace-obj \<object specification>=\<object> in.pdf -o out.pdf
-
-: a
-
 cpdf -remove-obj \<object number> in.pdf -o out.pdf
-
-: a
-
 cpdf -extract-stream\[-decompress] \<object specification> in.pdf \[-o out.dat | -stdout]
-
-: a
-
 cpdf -replace-stream \<object specification> -replace-stream-with \<filename> in.pdf -o out.pdf
 
-: a
+: Low level operations to explore and edit PDF files object-by-object. See cpdfmanual.pdf for details.
 
 cpdf -contains-javascript in.pdf
 
-: a
+: Prints true if the PDF contains JavaScript, false otherwise.
 
 cpdf -remove-javascript in.pdf -o out.pdf
 
-: a
+: Remove JavaScript from a PDF.
 
 # ENVIRONMENT
 
