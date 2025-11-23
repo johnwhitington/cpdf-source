@@ -1828,41 +1828,55 @@ Structure Information
 
 cpdf -print-struct-tree in.pdf
 
-: a
+: Print a PDF's structure tree to Standard Output for inspection.
 
 cpdf -extract-struct-tree in.pdf -o out.json
 
-: a
+: Extract the whole structure tree in JSON format. See cpdfmanual.pdf for details.
 
 cpdf -replace-struct-tree in.json in.pdf -o out.pdf
 
-: a
+: Replace a PDF's structure tree with one from a JSON file.
 
 cpdf -remove-struct-tree in.pdf -o out.pdf
 
-: a
+: Remove the structure tree from a file.
 
 cpdf -mark-as-artifact in.pdf -o out.pdf
 
-: a
+: Mark all the content of the file as being an artifact.
 
 cpdf -verify "PDF/UA-1(matterhorn)" \[-json] in.pdf
 
-: a
+: Verify conformance with PDF/UA-1.
+
+**-json**
+
+: Output conformance failures in JSON rather than plain text format.
 
 cpdf -verify "PDF/UA-1(matterhorn)" -verify-single \<test> \[-json] in.pdf
 
-: a
+: Verify conformance with PDF/UA-1 using just one test. See cpdfmanual.pdf for list of tests.
 
 cpdf -mark-as \["PDF/UA-1" | "PDF/UA-2"] in.pdf -o out.pdf
 
-: a
+: Mark a PDF as conforming to PDF/UA-1 or PDF/UA-2
 
 cpdf -remove-mark \["PDF/UA-1" | "PDF/UA-2"] in.pdf -o out.pdf
 
-: a
+: Remove conformance marker from a PDF.
 
 cpdf -create-pdf-ua-\<1|2> \<title> \[-create-pdf-pages \<n>] \[-create-pdf-papersize \<paper size>] -o out.pdf
+
+: Create a new, blank, PDF/UA-1 or PDF/UA-2 file.
+
+**-create-pdf-pages**
+
+: Give the number of pages.
+
+**-create-pdf-papersize**
+
+: Give the paper size, e.g "a3landscape" or "200pt 600pt"
 
 # 20. MISCELLANEOUS
 

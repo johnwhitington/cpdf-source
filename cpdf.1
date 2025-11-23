@@ -1548,34 +1548,45 @@ Set role map
 .SH 19. ACCESSIBLE PDFS WITH PDF/UA
 .TP
 cpdf \-print\-struct\-tree in.pdf
-a
+Print a PDF\(cqs structure tree to Standard Output for inspection.
 .TP
 cpdf \-extract\-struct\-tree in.pdf \-o out.json
-a
+Extract the whole structure tree in JSON format.
+See cpdfmanual.pdf for details.
 .TP
 cpdf \-replace\-struct\-tree in.json in.pdf \-o out.pdf
-a
+Replace a PDF\(cqs structure tree with one from a JSON file.
 .TP
 cpdf \-remove\-struct\-tree in.pdf \-o out.pdf
-a
+Remove the structure tree from a file.
 .TP
 cpdf \-mark\-as\-artifact in.pdf \-o out.pdf
-a
+Mark all the content of the file as being an artifact.
 .TP
 cpdf \-verify \(lqPDF/UA\-1(matterhorn)\(rq [\-json] in.pdf
-a
+Verify conformance with PDF/UA\-1.
+.TP
+\f[B]\-json\f[R]
+Output conformance failures in JSON rather than plain text format.
 .TP
 cpdf \-verify \(lqPDF/UA\-1(matterhorn)\(rq \-verify\-single <test> [\-json] in.pdf
-a
+Verify conformance with PDF/UA\-1 using just one test.
+See cpdfmanual.pdf for list of tests.
 .TP
 cpdf \-mark\-as [\(lqPDF/UA\-1\(rq | \(lqPDF/UA\-2\(rq] in.pdf \-o out.pdf
-a
+Mark a PDF as conforming to PDF/UA\-1 or PDF/UA\-2
 .TP
 cpdf \-remove\-mark [\(lqPDF/UA\-1\(rq | \(lqPDF/UA\-2\(rq] in.pdf \-o out.pdf
-a
-.PP
-cpdf \-create\-pdf\-ua\-<1|2> <title> [\-create\-pdf\-pages <n>]
-[\-create\-pdf\-papersize <paper size>] \-o out.pdf
+Remove conformance marker from a PDF.
+.TP
+cpdf \-create\-pdf\-ua\-<1|2> <title> [\-create\-pdf\-pages <n>] [\-create\-pdf\-papersize <paper size>] \-o out.pdf
+Create a new, blank, PDF/UA\-1 or PDF/UA\-2 file.
+.TP
+\f[B]\-create\-pdf\-pages\f[R]
+Give the number of pages.
+.TP
+\f[B]\-create\-pdf\-papersize\f[R]
+Give the paper size, e.g \(lqa3landscape\(rq or \(lq200pt 600pt\(rq
 .SH 20. MISCELLANEOUS
 .TP
 cpdf \-draft [\-boxes] [\-draft\-remove\-only <n>] in.pdf [<range>] \-o out.pdf
