@@ -592,9 +592,13 @@ See cpdfmanual.pdf for full information.
 \f[B]\-effect\-duration\f[R]
 Length in seconds of the transition itself.
 .SH 8. TEXT AND STAMPS
-.TP
-cpdf [\-stamp\-on | \-stamp\-under] source.pdf [\-scale\-stamp\-to\-fit] [] [\-relative\-to\-cropbox] [\-process\-struct\-trees] in.pdf [] [\-fast] \-o out.pdf
-a
+cpdf [\-stamp\-on | \-stamp\-under] source.pdf [\-scale\-stamp\-to\-fit]
+[] [\-relative\-to\-cropbox] [\-process\-struct\-trees] in.pdf []
+[\-fast] \-o out.pdf
+.PP
+: Stamp a one\-page PDF over or under each page in the given range.
+The positioning commands described later in this chapter may be used to
+choose where to stamp it (default, bottom left of media box).
 .TP
 \f[B]\-scale\-stamp\-to\-fit\f[R]
 Scale the stamp to fit the page before applying it.
@@ -608,10 +612,12 @@ Maintain tagged PDF.
 The main file will keep its structure; the stamp will be marked as an
 artifact.
 .PP
-See below for positioning commands.
-.TP
-cpdf \-combine\-pages over.pdf under.pdf [\-fast] [\-prerotate] [\-no\-warn\-rotate] [\-process\-struct\-trees] [\-underneath] [\-stamp\-scale\-to\-fit] \-o out.pdf
-a
+cpdf \-combine\-pages over.pdf under.pdf [\-fast] [\-prerotate]
+[\-no\-warn\-rotate] [\-process\-struct\-trees] [\-underneath]
+[\-stamp\-scale\-to\-fit] \-o out.pdf
+.PP
+: Combine the pages of two PDFs, page 1 of the first with page 1 of the
+second and so on.
 .TP
 \f[B]\-prerotate\f[R]
 Remove any rotation differences between the files before combining.
@@ -626,9 +632,17 @@ Reverse the order of \(lqover\(rq and \(lqunder\(rq files.
 Maintain tagged PDF.
 The \(lqunder\(rq file will keep its structure; the \(lqover\(rq file
 will be marked as an artifact.
-.TP
-cpdf ([\-add\-text <text\-format> | \-add\-rectangle <size>]) [\-font <fontname>] [\-font\-size <size\-in\-points>] [\-load\-ttf <name>=<file>] [\-embed\-std14] [\-color <color>] [\-line\-spacing <number>] [\-outline] [\-linewidth <number>] [\-underneath] [\-relative\-to\-cropbox] [\-prerotate] [\-no\-warn\-rotate] [\-bates <number>] [\-bates\-at\-range <number>] [\-bates\-pad\-to <number>] [\-opacity <number>] [\-midline] [\-topline] [\-fast] [\-process\-struct\-trees] in.pdf [<range>] \-o out.pdf
-Add text to a PDF.
+.PP
+cpdf ([\-add\-text <text\-format> | \-add\-rectangle <size>]) [\-font
+<fontname>] [\-font\-size <size\-in\-points>] [\-load\-ttf
+<name>=<file>] [\-embed\-std14] [\-color <color>] [\-line\-spacing
+<number>] [\-outline] [\-linewidth <number>] [\-underneath]
+[\-relative\-to\-cropbox] [\-prerotate] [\-no\-warn\-rotate] [\-bates
+<number>] [\-bates\-at\-range <number>] [\-bates\-pad\-to <number>]
+[\-opacity <number>] [\-midline] [\-topline] [\-fast]
+[\-process\-struct\-trees] in.pdf [<range>] \-o out.pdf
+.PP
+: Add text to a PDF.
 Various special codes for page numbers or time and date may be used.
 For example:
 .PP
@@ -1229,24 +1243,77 @@ For example, if we merge or stamp two files both with an OCG called
 \(lqLayer 1\(rq, we will have two differen optional content groups.
 This command will merge them into a single optional content group.
 .SH 17. CREATING NEW PDFS
+cpdf \-create\-pdf [\-create\-pdf\-pages <n>] [\-create\-pdf\-papersize
+<paper size>] \-o out.pdf
+.PP
+: Create a new PDF (default, 1 page A4 portrait).
 .TP
-cpdf \-create\-pdf [\-create\-pdf\-pages <n>] [\-create\-pdf\-papersize <paper size>] \-o out.pdf
-a
+\f[B]\-create\-pdf\-pages\f[R]
+Give the number of pages.
 .TP
-cpdf \-typeset <text file> [\-create\-pdf\-papersize <size>] [\-font <font>] [\-font\-size <size>] [\-subformat <subformat>] [\-title <string>] \-o out.pdf
-a
+\f[B]\-create\-pdf\-papersize\f[R]
+Give the paper size, e.g \(lqa3landscape\(rq or \(lq200pt 600pt\(rq
+.PP
+cpdf \-typeset <text file> [\-create\-pdf\-papersize <size>] [\-font
+<font>] [\-font\-size <size>] [\-subformat <subformat>] [\-title
+<string>] \-o out.pdf
+.PP
+: Typeset a text file into a PDF.
 .TP
-cpdf [\-subformat <subformat>] [\-title <string>] \-jpeg <filename> \-o out.pdf
-a
+\f[B]\-create\-pdf\-papersize\f[R]
+Give the paper size.
 .TP
-cpdf [\-subformat <subformat>] [\-title <string>] \-png <filename> \-o out.pdf
-a
+\f[B]\-font\f[R]
+The font (default Times\-Roman)
 .TP
-cpdf [\-subformat <subformat>] [\-title <string>] \-jpeg2000 <filename> \-o out.pdf
-a
+\f[B]\-font\-size\f[R]
+The font size (default 12pt)
 .TP
-cpdf [\-subformat <subformat>] [\-title <string>] [\-jbig2\-global <filename>] \-jbig2 <filename> [\-jbig2\-global | \-jbig2\-global\-clear] [\-jbig2 <filename>] \&... \-o out.pdf
-a
+\f[B]\-subformat\f[R]
+Specify PDF/UA\-1 or PDF/UA\-2 to make a conforming file.
+.TP
+\f[B]\-title\f[R]
+Specify a title when using \-subformat for a PDF/UA file.
+.PP
+cpdf \-jpeg <filename> [\-subformat <subformat>] [\-title <string>] \-o
+out.pdf cpdf \-png <filename> [\-subformat <subformat>] [\-title
+<string>] \-o out.pdf cpdf\-jpeg2000 <filename>[\-subformat <subformat>]
+[\-title <string>] \-o out.pdf
+.PP
+: Build a PDF from an image file (JPEG, PNG or JPEG2000).
+.TP
+\f[B]\-subformat\f[R]
+Specify PDF/UA\-1 or PDF/UA\-2 to make a conforming file.
+.TP
+\f[B]\-title\f[R]
+Specify a title when using \-subformat for a PDF/UA file.
+.PP
+cpdf [\-jbig2\-global <filename>] \-jbig2 <filename> [\-jbig2\-global |
+\-jbig2\-global\-clear] [\-jbig2 <filename>] \&...
+[\-subformat <subformat>] [\-title <string>] \-o out.pdf
+.PP
+: Make a multi\-page PDF from one or more PDF\-appropriate JBIG2
+fragments prepared by the jbig2enc program.
+For example, in lossless mode:
+.PP
+cpdf \-jbig2 1.jbig2 \-jbig2 2.jbig2 \-jbig2 3.jbig2 \-o out.pdf
+.PP
+In lossy mode, jbig2globals segments may be specified:
+.PP
+cpdf \-jbig2\-global 0.jbig2globals \-jbig2 1.jbig2 \-jbig2 2.jbig2
+\-jbig2 3.jbig2 \-o out.pdf
+.TP
+\f[B]\-jbig2\-global\f[R]
+Change the jbig2global segment in use.
+.TP
+\f[B]\-jbig2\-global\-clear\f[R]
+Cease use of jbig2global segment, and return to lossles mode.
+.TP
+\f[B]\-subformat\f[R]
+Specify PDF/UA\-1 or PDF/UA\-2 to make a conforming file.
+.TP
+\f[B]\-title\f[R]
+Specify a title when using \-subformat for a PDF/UA file.
 .SH 18. DRAWING ON PDFS
 cpdf in.pdf [] [\-draw\-struct\-tree] [\-underneath] \-draw  \-o out.pdf
 .PP

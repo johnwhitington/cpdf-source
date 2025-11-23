@@ -683,9 +683,13 @@ cpdf -presentation in.pdf \[\<range>] -o out.pdf \[-trans \<transition-name>] \[
 
 # 8. TEXT AND STAMPS
 
-cpdf [-stamp-on | -stamp-under] source.pdf [-scale-stamp-to-fit] [<positioning command>] [-relative-to-cropbox] [-process-struct-trees] in.pdf [<range>] [-fast] -o out.pdf
+cpdf [-stamp-on | -stamp-under] source.pdf [-scale-stamp-to-fit] [<positioning
+command>] [-relative-to-cropbox] [-process-struct-trees] in.pdf [<range>]
+[-fast] -o out.pdf
 
-: a
+: Stamp a one-page PDF over or under each page in the given range. The
+positioning commands described later in this chapter may be used to choose
+where to stamp it (default, bottom left of media box).
 
 **-scale-stamp-to-fit**
 
@@ -697,13 +701,14 @@ cpdf [-stamp-on | -stamp-under] source.pdf [-scale-stamp-to-fit] [<positioning c
 
 **-process-struct-trees**
 
-: Maintain tagged PDF. The main file will keep its structure; the stamp will be marked as an artifact.
+: Maintain tagged PDF. The main file will keep its structure; the stamp will be
+marked as an artifact.
 
-See below for positioning commands.
+cpdf -combine-pages over.pdf under.pdf [-fast] [-prerotate] [-no-warn-rotate]
+[-process-struct-trees] [-underneath] [-stamp-scale-to-fit] -o out.pdf
 
-cpdf -combine-pages over.pdf under.pdf [-fast] [-prerotate] [-no-warn-rotate] [-process-struct-trees] [-underneath] [-stamp-scale-to-fit] -o out.pdf
-
-: a
+: Combine the pages of two PDFs, page 1 of the first with page 1 of the second
+and so on.
 
 **-prerotate**
 
@@ -719,11 +724,19 @@ cpdf -combine-pages over.pdf under.pdf [-fast] [-prerotate] [-no-warn-rotate] [-
 
 **-process-struct-trees**
 
-: Maintain tagged PDF. The "under" file will keep its structure; the "over" file will be marked as an artifact.
+: Maintain tagged PDF. The "under" file will keep its structure; the "over"
+file will be marked as an artifact.
 
-cpdf (\[-add-text \<text-format> | -add-rectangle \<size>]) [-font \<fontname>] [-font-size \<size-in-points>] [-load-ttf \<name>=\<file>] [-embed-std14] [-color \<color>] [-line-spacing \<number>] [-outline] [-linewidth \<number>] [-underneath] [-relative-to-cropbox] [-prerotate] [-no-warn-rotate] [-bates \<number>] [-bates-at-range \<number>] [-bates-pad-to \<number>] [-opacity \<number>] [-midline] [-topline] [-fast] [-process-struct-trees] in.pdf \[\<range>] -o out.pdf
+cpdf (\[-add-text \<text-format> | -add-rectangle \<size>]) [-font \<fontname>]
+[-font-size \<size-in-points>] [-load-ttf \<name>=\<file>] [-embed-std14]
+[-color \<color>] [-line-spacing \<number>] [-outline] [-linewidth \<number>]
+[-underneath] [-relative-to-cropbox] [-prerotate] [-no-warn-rotate] [-bates
+\<number>] [-bates-at-range \<number>] [-bates-pad-to \<number>] [-opacity
+\<number>] [-midline] [-topline] [-fast] [-process-struct-trees] in.pdf
+\[\<range>] -o out.pdf
  
-: Add text to a PDF. Various special codes for page numbers or time and date may be used. For example:
+: Add text to a PDF. Various special codes for page numbers or time and date
+may be used. For example:
 
 %Page Page number in arabic notation (1, 2, 3. . . )
 %PageDiv2 Page number in arabic notation divided by two
@@ -763,7 +776,9 @@ And date and time formats:
 
 : Give the font (default Times Roman). Options are:
 
-Times-Roman Times-Bold Times-Italic Times-BoldItalic Helvetica Helvetica-Bold Helvetica-Oblique Helvetica-BoldOblique Courier Courier-Bold Courier-Oblique Courier-BoldOblique
+Times-Roman Times-Bold Times-Italic Times-BoldItalic Helvetica Helvetica-Bold
+Helvetica-Oblique Helvetica-BoldOblique Courier Courier-Bold Courier-Oblique
+Courier-BoldOblique
 
 **-font-size**
 
@@ -771,7 +786,8 @@ Times-Roman Times-Bold Times-Italic Times-BoldItalic Helvetica Helvetica-Bold He
 
 **-load-ttf**
 
-: Load a truetype font, and give it name which may be used with -font. For example -load-ttd A=NotoSans-Black.ttf
+: Load a truetype font, and give it name which may be used with -font. For
+example -load-ttd A=NotoSans-Black.ttf
 
 **-embed-std14**
 
@@ -779,7 +795,8 @@ Times-Roman Times-Bold Times-Italic Times-BoldItalic Helvetica Helvetica-Bold He
 
 **-color**
 
-: Choose the text colour using one (Grey), three (RGB), or four (CMYK) numbers from 0-1. E.g "0.5 0.4 0.5".
+: Choose the text colour using one (Grey), three (RGB), or four (CMYK) numbers
+from 0-1. E.g "0.5 0.4 0.5".
 
 **-line-spacing**
 
@@ -835,21 +852,25 @@ Times-Roman Times-Bold Times-Italic Times-BoldItalic Helvetica Helvetica-Bold He
 
 **-process-struct-trees**
 
-: Maintain tagged PDF, for example with PDF/UA. The main file will keep its structure; the stamped text will be marked as an artifact.
+: Maintain tagged PDF, for example with PDF/UA. The main file will keep its
+structure; the stamped text will be marked as an artifact.
 
 Positioning commands:
 
 **-pos-left**
 
-: Position the left of the baseline of the text at the given coordinates e.g "100 200".
+: Position the left of the baseline of the text at the given coordinates e.g
+"100 200".
 
 **-pos-center**
 
-: Position the center of the baseline of the text at the given coordinates e.g "100 200".
+: Position the center of the baseline of the text at the given coordinates e.g
+"100 200".
 
 **-pos-right**
 
-: Position the right of the baseline of the text at the given coordinates e.g "100 200".
+: Position the right of the baseline of the text at the given coordinates e.g
+"100 200".
 
 **-top 10**
 
@@ -857,47 +878,58 @@ Positioning commands:
 
 **-topleft 10**
 
-: Position the left of the baseline of the text 10 pts below and right of the top left of the page.
+: Position the left of the baseline of the text 10 pts below and right of the
+top left of the page.
 
 **-topleft "10 20"**
 
-: Position the left of the baseline of the text 20 pts below and 10 pts right of the top left of the page.
+: Position the left of the baseline of the text 20 pts below and 10 pts right
+of the top left of the page.
 
 **-topright 10**
 
-: Position the right of the baseline of the text 10 pts below and left of the top right of the page.
+: Position the right of the baseline of the text 10 pts below and left of the
+top right of the page.
 
 **-topright "10 20"**
 
-: Position the right of the baseline of the text 20 pts below and 10 pts left of the top right of the page.
+: Position the right of the baseline of the text 20 pts below and 10 pts left
+of the top right of the page.
 
 **-left 10**
 
-: Position the left of the baseline of the text 10 pts right of the left middle of the page.
+: Position the left of the baseline of the text 10 pts right of the left middle
+of the page.
 
 **-bottomleft 10**
 
-: Position the left of the baseline of the text 10pts up and right of the bottom left of the page.
+: Position the left of the baseline of the text 10pts up and right of the
+bottom left of the page.
 
 **-bottomleft "10 20"**
 
-: Position the left of the baseline of the text 20pts up and 10pts right of the bottom left of the page.
+: Position the left of the baseline of the text 20pts up and 10pts right of the
+bottom left of the page.
 
 **-bottom 10**
 
-: Position the center of the baseline of the text 10pts up from the bottom middle of the page.
+: Position the center of the baseline of the text 10pts up from the bottom
+middle of the page.
 
 **-bottomright 10**
 
-: Position the right of the baseline of the text 10pts up and left from the bottom right of the page.
+: Position the right of the baseline of the text 10pts up and left from the
+bottom right of the page.
 
 **-bottomright "10 20"**
 
-: Position the right of the baseline of the text 20pts up and 10pts left from the bottom right of the page.
+: Position the right of the baseline of the text 20pts up and 10pts left from
+the bottom right of the page.
 
 **-right 10**
 
-: Position the right of the baseline of the text 10pts left of the center right of the page.
+: Position the right of the baseline of the text 10pts left of the center right
+of the page.
 
 **-diagonal**
 
@@ -1408,29 +1440,87 @@ groups. This command will merge them into a single optional content group.
 
 # 17. CREATING NEW PDFS
 
-cpdf -create-pdf \[-create-pdf-pages \<n>] \[-create-pdf-papersize \<paper size>] -o out.pdf
+cpdf -create-pdf \[-create-pdf-pages \<n>] \[-create-pdf-papersize \<paper
+size>] -o out.pdf
 
-: a
+: Create a new PDF (default, 1 page A4 portrait).
 
-cpdf -typeset \<text file> \[-create-pdf-papersize \<size>] \[-font \<font>] \[-font-size \<size>] \[-subformat \<subformat>] \[-title \<string>] -o out.pdf
+**-create-pdf-pages**
 
-: a
+: Give the number of pages.
 
-cpdf \[-subformat \<subformat>] \[-title \<string>] -jpeg \<filename> -o out.pdf
+**-create-pdf-papersize**
 
-: a
+: Give the paper size, e.g "a3landscape" or "200pt 600pt"
 
-cpdf \[-subformat \<subformat>] \[-title \<string>] -png \<filename> -o out.pdf
+cpdf -typeset \<text file> \[-create-pdf-papersize \<size>] \[-font \<font>]
+\[-font-size \<size>] \[-subformat \<subformat>] \[-title \<string>] -o out.pdf
 
-: a
+: Typeset a text file into a PDF.
 
-cpdf \[-subformat \<subformat>] \[-title \<string>] -jpeg2000 \<filename> -o out.pdf
+**-create-pdf-papersize**
 
-: a
+: Give the paper size.
 
-cpdf \[-subformat \<subformat>] \[-title \<string>] \[-jbig2-global \<filename>] -jbig2 \<filename> \[-jbig2-global | -jbig2-global-clear] \[-jbig2 \<filename>] ...  -o out.pdf
+**-font**
 
-: a
+: The font (default Times-Roman)
+
+**-font-size**
+
+: The font size (default 12pt)
+
+**-subformat**
+
+: Specify PDF/UA-1 or PDF/UA-2 to make a conforming file.
+
+**-title**
+
+: Specify a title when using -subformat for a PDF/UA file.
+
+cpdf  -jpeg \<filename> \[-subformat \<subformat>] \[-title \<string>] -o
+out.pdf
+cpdf -png \<filename> \[-subformat \<subformat>] \[-title \<string>] -o out.pdf
+cpdf-jpeg2000 \<filename>\[-subformat \<subformat>] \[-title \<string>] -o
+out.pdf
+
+: Build a PDF from an image file (JPEG, PNG or JPEG2000).
+
+**-subformat**
+
+: Specify PDF/UA-1 or PDF/UA-2 to make a conforming file.
+
+**-title**
+
+: Specify a title when using -subformat for a PDF/UA file.
+
+cpdf \[-jbig2-global \<filename>] -jbig2 \<filename> \[-jbig2-global |
+-jbig2-global-clear] \[-jbig2 \<filename>] ... \[-subformat \<subformat>]
+\[-title \<string>] -o out.pdf
+
+: Make a multi-page PDF from one or more PDF-appropriate JBIG2 fragments prepared by the jbig2enc program. For example, in lossless mode:
+
+cpdf -jbig2 1.jbig2 -jbig2 2.jbig2 -jbig2 3.jbig2 -o out.pdf
+
+In lossy mode, jbig2globals segments may be specified:
+
+cpdf -jbig2-global 0.jbig2globals -jbig2 1.jbig2 -jbig2 2.jbig2 -jbig2 3.jbig2 -o out.pdf
+
+**-jbig2-global**
+
+: Change the jbig2global segment in use.
+
+**-jbig2-global-clear**
+
+: Cease use of jbig2global segment, and return to lossles mode.
+
+**-subformat**
+
+: Specify PDF/UA-1 or PDF/UA-2 to make a conforming file.
+
+**-title**
+
+: Specify a title when using -subformat for a PDF/UA file.
 
 # 18. DRAWING ON PDFS
 
