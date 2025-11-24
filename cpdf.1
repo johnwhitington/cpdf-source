@@ -1534,9 +1534,25 @@ Specify PDF/UA\-1 or PDF/UA\-2 to make a conforming file.
 \f[B]\-title\f[R]
 Specify a title when using \-subformat for a PDF/UA file.
 .SH 18. DRAWING ON PDFS
+.TP
 cpdf in.pdf [] [\-draw\-struct\-tree] [\-underneath] \-draw  \-o out.pdf
-.PP
+Draw on a PDF.
+.TP
+\f[B]\-draw\-struct\-tree\f[R]
+Produce structure information.
+.TP
+\f[B]\-underneath\f[R]
+Draw underneath instead of on top of any existing page content.
+.TP
 cpdf \-text\-width  [\-font ] [\-fontsize ]
+Return the width of a string of text in a one of the Standard 14 fonts.
+Used for calculations of text position (e.g right\-alignment).
+.TP
+\f[B]\-font\f[R]
+Specify the font.
+.TP
+\f[B]\-fontsize\f[R]
+Specify the font size.
 .PP
 Building and showing paths
 .TP
@@ -1883,6 +1899,22 @@ Prints true if the PDF contains JavaScript, false otherwise.
 cpdf \-remove\-javascript in.pdf \-o out.pdf
 Remove JavaScript from a PDF.
 .SH ENVIRONMENT
+.TP
+\f[B]CPDF_SHOW_EXT\f[R]
+Show command line of external commands as they are called if equal to
+\(lqtrue\(rq.
+.TP
+\f[B]CPDF_DEBUG\f[R]
+Same as adding \-debug to command line, if equal to \(lqtrue\(rq.
+.TP
+\f[B]CPDF_REPRODUCIBLE_DATES\f[R]
+Expand data \(lqnow\(rq to the same, false value each time, if equal to
+\(lqtrue\(rq.
+.TP
+\f[B]CAMLPDF_REPRODUCIBLE_IDS\f[R]
+Produce the same file ID each time, if equal to \(lqtrue\(rq.
 .SH BUGS
+See https://github.com/johnwhitington/cpdf\-source/issues or email
+contact\(atcoherentgraphics.co.uk
 .SH AUTHORS
 John Whitington.

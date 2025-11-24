@@ -2255,4 +2255,23 @@ cpdf -remove-javascript in.pdf -o out.pdf
 
 # ENVIRONMENT
 
+**CPDF_SHOW_EXT**
+
+: Show command line of external commands as they are called if equal to "true".
+
+**CPDF_DEBUG**
+
+: Same as adding -debug to command line, if equal to "true".
+
+**CPDF_REPRODUCIBLE_DATES**
+
+: Expand data "now" to the same, false value each time, if equal to "true".
+
+**CAMLPDF_REPRODUCIBLE_IDS**
+
+: Produce the same file ID each time, if equal to "true".
+
 # BUGS
+
+See https://github.com/johnwhitington/cpdf-source/issues or email
+contact@coherentgraphics.co.uk
