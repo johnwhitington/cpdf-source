@@ -1395,33 +1395,213 @@ cpdf -dump-attachments in.pdf -o \<directory>
 
 cpdf -list-images\[-json] \[-inline] in.pdf \[\<range>]
 
-: a
+: List the images in a file, together with their object number, page numbers,
+image name, width, height, size in bytes, bits per pixel, colour space,
+compression method, mask type and mask object number. Either in plain text
+(-list-images) or JSON (-list-images-json).
 
-cpdf -image-resolution\[-json] \<n> \[-inline] in.pdf \[\<range>]
+**-inline**
 
-: a
+: Also list inline images.
 
 cpdf -list-images-used\[-json] \[-inline] in.pdf \[\<range>]
+cpdf -image-resolution\[-json] \<n> \[-inline] in.pdf \[\<range>]
 
-: a
+: The -list-images-used and -list-images-used-json operations list the images
+at point of use, including page number, image name, width in pixels, height in
+pixels, x resolution, y resolution and object number. Using -image-resolution
+or -image-resolution-json instead reports only such images as do not reach a
+minimum resolution.
 
-cpdf -extract-images in.pdf \[\<range>] \[-im <path>] \[-p2p <path>] \[-dedup | -dedup-perpage] \[-raw] \[-inline] \[-merge-masks] -o \<path>
+**-inline**
 
-: a
+: Also list inline images.
 
-cpdf -extract-single-image \<object number> \[-im \<path>] \[-p2p <path>] \[-raw] \[-merge-masks] in.pdf -o \<filename>
+cpdf -extract-images in.pdf \[\<range>] \[-im <path>] \[-p2p <path>] \[-dedup |
+-dedup-perpage] \[-raw] \[-inline] \[-merge-masks] -o \<path>
 
-: a
+: Extract images to a given path e.g "output/%%%". JPEG, JPEG2000 and lossless JBIG2 images are extracted directly. Lossy JBIG2 images are extracted in sections. Other images are written as PNGs, processed with ImageMagick.
 
-cpdf -process-images \[-process-images-info] in.pdf \[\<range>] \[-im \<filename>] [-jbig2enc \<filename>] [-lossless-resample[-dpi] \<n> | -lossless-to-jpeg \<n>] \[-jpeg-to-jpeg \<n>] \[-jpeg-to-jpeg-scale \<n>] \[-lossless-to-jpeg2000 \<n>] \[-jpeg2000-to-jpeg2000 \<n>] \[-jpeg-to-jpeg-dpi \<n>] \[-1bpp-method \<method>] \[-jbig2-lossy-threshold \<n>] \[-pixel-threshold \<n>] \[-length-threshold \<n>] \[-percentage-threshold \<n>] \[-dpi-threshold \<n>] \[-resample-interpolate] -o out.pdf
+**-im**
 
-: a
+: Provide path to ImageMagick
 
-cpdf -rasterize in.pdf \[\<range>] -o out.pdf \[-rasterize\[-gray|-1bpp|-jpeg|-jpeggray] \[-rasterize-res \<n>] \[-rasterize-jpeg-quality \<n>] \[-rasterize-no-antialias | -rasterize-downsample] \[-rasterize-annots] | \[-rasterize-alpha]
+**-p2p**
 
-: a
+: Provide path to pnmtopng if ImageMagick not available.
 
-cpdf -output-image in.pdf \[\<range>] -o \<format> \[-rasterize\[-gray|-1bpp|-jpeg|-jpeggray] \[-rasterize-res <n>] \[-rasterize-jpeg-quality <n>] \[-rasterize-no-antialias | -rasterize-downsample] \[-rasterize-annots] \[-rasterize-alpha] \[-tobox <BoxName>]
+**-dedup**
+
+: Deduplicate images, extracting only once even if multiply-included.
+
+**-dedup-per-page**
+
+: Deduplicate images, but only per-page.
+
+**-raw**
+
+: Output .pnm files instead of .png
+
+**-inline**
+
+: Also extract inline images.
+
+**-merge-masks**
+
+: Merge soft masks with their images when extracting.
+
+cpdf -extract-single-image \<object number> \[-im \<path>] \[-p2p <path>]
+\[-raw] \[-merge-masks] in.pdf -o \<filename>
+
+: Extract a single image, given its object number. Other flags as above.
+
+cpdf -process-images \[-process-images-info] in.pdf \[\<range>] \[-im
+\<filename>] [-jbig2enc \<filename>] [-lossless-resample[-dpi] \<n> |
+-lossless-to-jpeg \<n>] \[-jpeg-to-jpeg \<n>] \[-jpeg-to-jpeg-scale \<n>]
+\[-lossless-to-jpeg2000 \<n>] \[-jpeg2000-to-jpeg2000 \<n>] \[-jpeg-to-jpeg-dpi
+\<n>] \[-1bpp-method \<method>] \[-jbig2-lossy-threshold \<n>]
+\[-pixel-threshold \<n>] \[-length-threshold \<n>] \[-percentage-threshold
+\<n>] \[-dpi-threshold \<n>] \[-resample-interpolate] -o out.pdf
+
+: Re-process existing images within the PDF, typically to reduce size. For a
+full commentary, see cpdfmanual.pdf.
+
+**-process-images-info**
+
+: Show the work being done.
+
+**-im**
+
+: Supply path to ImageMagick.
+
+**-jbig2enc**
+
+: Supply path to jbig2enc.
+
+**-lossless-resample**
+
+: Resample lossless images to the given percentage scale.
+
+**-lossless-resample-dpi**
+
+: Resample lossless images to a given DPI resolution.
+
+**-lossless-to-jpeg**
+
+: Convert lossless images to JPEG at the given quality level.
+
+**-jpeg-to-jpeg**
+
+: Reprocess JPEG images to the given quality level.
+
+**-jpeg-to-jpeg-scale**
+
+: Reprocess JPEG images to the given percentage scale.
+
+**-jpeg-to-jpeg-dpi**
+
+: Reprocess JPEG images to the given DPI resolution.
+
+**-lossless-to-jpeg2000**
+
+: Convert lossless images to JPEG 2000 at the given quality level.
+
+**-jpeg2000-to-jpeg2000**
+
+: Reprocess JPEG 2000 images to the given quality level.
+
+**-1bpp-method**
+
+: Specify method for 1bpp images. One of JBIG2Lossy, JBIG2Lossless.
+
+**-jbig2-lossy-threshold**
+
+: Set the threshold for lossy JBIG2 compression.
+
+**-pixel-threshold**
+
+: Images below this number of pixels not processed (default 25).
+
+**-length-threshold**
+
+: Images with less than this number of bytes not processed (default 100).
+
+**-percentage-threshold**
+
+: Results not below this percentage of original size discarded (default 90).
+
+**-dpi-threshold**
+
+: Only image above this threshold at all use points processed (default no dpi threshold).
+
+**-resample-interpolate**
+
+: Use interpolation when resampling.
+
+cpdf -rasterize in.pdf \[\<range>] -o out.pdf \[-gs <path>]
+\[-rasterize\[-gray|-1bpp|-jpeg|-jpeggray] \[-rasterize-res \<n>]
+\[-rasterize-jpeg-quality \<n>] \[-rasterize-no-antialias |
+-rasterize-downsample] \[-rasterize-annots] | \[-rasterize-alpha]
+
+: Rasterize each page, replacing the page contents with the rasterized version
+in the output PDF.
+
+**-gs**
+
+: Supply path to gs.
+
+**-rasterize-gray**
+
+: Use grayscale instead of colour.
+
+**-rasterize-1bpp**
+
+: Use monochrome instead of colour.
+
+**-rasterize-jpeg**
+
+: Use JPEG instead of lossless compression.
+
+**-rasterize-jpeggray**
+
+: Use grayscale JPEG instead of lossless compression.
+
+**-rasterize-res**
+
+: Set the resolution (default 144dpi).
+
+**-rasterize-jpeg-quality**
+
+: Set JPEG image quality (0..100).
+
+**-rasterize-no-antialias**
+
+: Turn off antialiasing.
+
+**-rasterize-downsample**
+
+: Use better but slower antialiasing.
+
+**-rasterize-annots**
+
+: Rasterize annotations instead of retaining.
+
+**-rasterize-alpha**
+
+: Produce an alpha channel (lossless only)
+
+cpdf -output-image in.pdf \[\<range>] -o \<format> \[-gs <path>]
+\[-rasterize\[-gray|-1bpp|-jpeg|-jpeggray] \[-rasterize-res <n>]
+\[-rasterize-jpeg-quality <n>] \[-rasterize-no-antialias |
+-rasterize-downsample] \[-rasterize-annots] \[-rasterize-alpha] \[-tobox
+<BoxName>]
+
+: Output rasterized images for each page to the given folder and format e.g
+"dir/%%%.png". Options as above and:
+
+**-tobox**
+
+: Specify the box to rasterize (default, /MediaBox).
 
 # 14. FONTS
 
