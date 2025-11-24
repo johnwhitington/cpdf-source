@@ -1123,15 +1123,81 @@ cpdf -remove-annotations in.pdf \[\<range>] -o out.pdf
 
 cpdf -info\[-json] \[-utf8] \[-in | -cm | -mm] in.pdf
 
-: a
+: Print info about a document in plain text (-info) or JSON (-info-json). For example:
+
+cpdf -info pdf_reference.pdf
+Encryption: Not encrypted
+Permissions: 
+Linearized: true
+Object streams: true
+ID: <0b1f990718e2a92c0c112fbf08b233fb> <b2f1dbee369e11d9b951000393c97fd8>
+Version: 1.5
+Pages: 1236
+Title: PDF Reference, version 1.6
+Author: Adobe Systems Incorporated
+Subject: Adobe Portable Document Format (PDF)
+Keywords: 
+Creator: FrameMaker 7.0
+Producer: Acrobat Distiller 6.0.1 for Macintosh
+Created: D:20041114084116Z
+Modified: D:20041114163850-08'00'
+Trapped: False
+PageMode: UseOutlines
+PageLayout: 
+OpenAction: [1/XYZ -32768 -32768 1]
+HideToolbar: 
+HideMenubar: 
+HideWindowUI: 
+FitWindow: 
+CenterWindow: 
+DisplayDocTitle: True
+NonFullScreenPageMode: 
+AcroForm: False
+XFA: False
+Marked: False
+UserProperties: False
+Suspects: False
+MediaBox: 0.000000 0.000000 612.000000 792.000000
+CropBox: 41.000000 63.000000 572.000000 729.000000
+BleedBox: 
+TrimBox: various
+ArtBox: various
+Subformats: 
+Language: en-us
+XMP dc:title: PDF Reference, version 1.6
+XMP dc:creator: Adobe Systems Incorporated
+XMP dc:description: Adobe Portable Document Format (PDF)
+
+**-utf8**
+
+: Output in UTF8 format (plain text only)
+
+**-in** / **-mm** / **-cm**
+
+: Output dimensions in inches, millimetres or centimetres instead of points.
 
 cpdf -page-info\[-json] \[-in | -cm | -mm] in.pdf \[\<range>]
 
-: a
+: List page information in plain (-page-info) or JSON (-page-info-json) format.
+
+cpdf -page-info 14psfonts.pdf
+Page 1:
+Label: i
+MediaBox: 0.000000 0.000000 600.000000 450.000000
+CropBox: 200.000000 200.000000 500.000000 500.000000
+BleedBox:
+TrimBox:
+ArtBox:
+Rotation: 0
+Annotations: 0
+
+**-in** / **-mm** / **-cm**
+
+: Output dimensions in inches, millimetres or centimetres instead of points.
 
 cpdf -pages in.pdf
 
-: a
+: Print the number of pages in the file.
 
 cpdf -set-title \<title of document> \[-also-set-xmp] \[-just-set-xmp] in.pdf -o out.pdf
 cpdf -set-author \<author of document> \[-also-set-xmp] \[-just-set-xmp] in.pdf -o out.pdf
@@ -1140,127 +1206,151 @@ cpdf -set-keywords \<keywords of document> \[-also-set-xmp] \[-just-set-xmp] in.
 cpdf -set-creator \<creator of document> \[-also-set-xmp] \[-just-set-xmp] in.pdf -o out.pdf
 cpdf -set-producer \<producer of document> \[-also-set-xmp] \[-just-set-xmp] in.pdf -o out.pdf
 
-: a
+: Set metadata
 
 cpdf -set-create \<date> \[-also-set-xmp] \[-just-set-xmp] in.pdf -o out.pdf
 cpdf -set-modify \<date> \[-also-set-xmp] \[-just-set-xmp] in.pdf -o out.pdf
 
-: a
+: Set creation or modification dates. See cpdfmanual.pdf for details of the PDF date format.
 
 cpdf -set-trapped in.pdf -o out.pdf \[-also-set-xmp] \[-just-set-xmp] 
 cpdf -set-untrapped in.pdf -o out.pdf \[-also-set-xmp] \[-just-set-xmp]
 
-: a
+: Set the trapped status of a PDF.
+
+**-also-set-xmp**
+
+: Set the XMP metadata, if the field is present, in addition to the old-style PDF metadata.
+
+**-just-set-xmp**
+
+: Just set the XMP metadata, if the field is present, in addition to the old-style PDF metadata.
 
 cpdf -set-page-layout \<layout> in.pdf -o out.pdf
 
-: a
+: Set the page layout: one of SinglePage, OneColumn, TwoColumnLeft, TwoColumnRight, TwoPageLeft, TwoPageRight
 
 cpdf -set-page-mode \<mode> in.pdf -o out.pdf
 
-: a
+: Set the page mode: one of UseNone, UseOutlines, UseThumbs, FullScreen, UseOC, UseAttachments.
 
 cpdf -set-non-full-screen-page-mode \<mode> in.pdf -o out.pdf
 
-: a
+: Set the non full screen mode for a PDF with FullScreen page mode: one of UseNone, UseOutlines, UseThumbs, UseAttachments.
 
 cpdf -hide-toolbar \<true | false> in.pdf -o out.pdf
 
-: a
+: Hide or reveal the viewer's toolbar.
 
 cpdf -hide-menubar \<true | false> in.pdf -o out.pdf
 
-: a
+: Hide or reveal the viewer's menubar.
 
 cpdf -hide-window-ui \<true | false> in.pdf -o out.pdf
 
-: a
+: Hide or reveal the window's scroll bars.
 
 cpdf -fit-window \<true | false> in.pdf -o out.pdf
 
-: a
+: Resize the document's windows to fit the size of the first page.
 
 cpdf -center-window \<true | false> in.pdf -o out.pdf
 
-: a
+: Position the document window in the center of the screen.
 
 cpdf -display-doc-title \<true | false> in.pdf -o out.pdf
 
-: a
+: Display the document title instead of the file name in the title bar.
 
 cpdf -open-at-page \<page number> in.pdf -o out.pdf
 
-: a
+: Set the document to open at the given page number.
 
 cpdf -open-at-page-fit \<page number> in.pdf -o out.pdf
 
-: a
+: Set the document to open at the given page number scaled to fit the window.
 
 cpdf -open-at-page-custom \<destination> in.pdf -o out.pdf
 
-: a
+: Set the document to open at a custom destination. See cpdfmanual.pdf for details.
 
 cpdf -set-language \<language> in.pdf -o out.pdf
 
-: a
+: Set the document's global language, for example "en-US"
 
 cpdf -set-metadata \<metadata-file> in.pdf -o out.pdf
 
-: a
+: Replace or add XMP metadata.
 
 cpdf -remove-metadata in.pdf -o out.pdf
 
-: a
+: Remove the main XMP metadata stream.
 
 cpdf -remove-all-metadata in.pdf -o out.pdf
 
-: a
+: Remove all XMP metadata streams.
 
 cpdf -print-metadata in.pdf
 
-: a
+: Print the XMP metadata stream to standard output.
 
 cpdf -extract-all-metadata in.pdf -o <directory>
 
-: a
+: Extract XMP metadata streams to the given directory.
 
 cpdf -create-metadata in.pdf -o out.pdf
 
-: a
+: Create or replace XMP metadata from old-style metadata.
 
 cpdf -set-metadata-date \<date> in.pdf -o out.pdf
 
-: a
+: Set the XMP metadata date. See cpdfmanual.pdf for date format details.
 
-cpdf -add-page-labels in.pdf -o out.pdf \[-label-style \<style>] \[-label-prefix <string>] \[-label-startval <integer>] \[-labels-progress]
+cpdf -add-page-labels in.pdf [<range>] -o out.pdf \[-label-style \<style>]
+\[-label-prefix <string>] \[-label-startval <integer>] \[-labels-progress]
 
-: a
+: Add page labels to a PDF. Multiple calls may be used to add multiple ranges of page labels.
 
 **-label-style**
 
-: a
+: One of DecimalArabic, LowercaseRoman, UppercaseRoman, LowercaseLetters,
+UppercaseLetters, NoLabelPrefixOnly.
 
 **-label-prefix**
 
-: a
+: The textual prefix for these labels.
 
 **-label-startval**
 
-: a
+: By default the labels begin at page number 1 for each range. To override
+this, we can use -label-startval
 
 **-labels-progress**
 
+: make sure the start value progresses between sub-ranges when the page range
+specified is disjoint, e.g "1-9, 30-40" or "odd".
+
 cpdf -remove-page-labels in.pdf -o out.pdf
 
-: a
+: Remove the page labels.
 
 cpdf -print-page-labels\[-json] in.pdf
 
-: a
+: Print the page labels in plain text (-print-page-labels) or JSON (-print-page-lables-json) format.
 
 cpdf -composition\[-json] in.pdf
 
-: a
+: Print the composition of a PDF, showing how much space is taken by images, fonts etc.
+
+$ cpdf -composition cpdfmanual.pdf
+Images: 0 bytes (0.00%)
+Fonts: 144731 bytes (46.72%)
+Content streams: 132767 bytes (42.85%)
+Structure Info: 0 bytes (0.00%)
+Attached Files: 0 bytes (0.00%)
+XRef Table: 21082 bytes (6.80%)
+Piece Info: 0 bytes (0.00%)
+Unclassified: 11229 bytes (3.62%)
 
 # 12. FILE ATTACHMENTS
 
