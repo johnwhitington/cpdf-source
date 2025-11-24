@@ -1537,6 +1537,7 @@ Specify a title when using \-subformat for a PDF/UA file.
 .TP
 cpdf in.pdf [] [\-draw\-struct\-tree] [\-underneath] \-draw  \-o out.pdf
 Draw on a PDF.
+See cpdfmanual.pdf for a tutorial, and full information.
 .TP
 \f[B]\-draw\-struct\-tree\f[R]
 Produce structure information.
@@ -1554,27 +1555,27 @@ Specify the font.
 \f[B]\-fontsize\f[R]
 Specify the font size.
 .PP
-Building and showing paths
+\f[B]Building and showing paths\f[R]
 .TP
-\-rect
+\-rect \(lqx y w h\(rq
 Draw rectangle
 .TP
-\-to
+\-to \(lqx y\(rq
 Move to
 .TP
-\-line
+\-line \(lqx y\(rq
 Add line to path
 .TP
-\-bez
+\-bez \(lqx1 y1 x2 y2 x3 y3\(rq
 Add Bezier curve to path
 .TP
-\-bez23
+\-bez23 \(lqx2 y2 x3 y3\(rq
 Add Bezier curve to path
 .TP
-\-bez13
+\-bez13 \(lqx1 y1 x3 y3\(rq
 Add Bezier curve to path
 .TP
-\-circle
+\-circle \(lqx y r\(rq
 Add circle to path
 .TP
 \-stroke
@@ -1595,7 +1596,7 @@ Stroke and fill path, even odd
 \-close
 Close path
 .PP
-Clipping with paths
+\f[B]Clipping with paths\f[R]
 .TP
 \-clip
 Clip
@@ -1603,30 +1604,30 @@ Clip
 \-clipeo
 Clip, even odd
 .PP
-Path parameters
+\f[B]Path parameters\f[R]
 .TP
-\-strokecol
+\f[B]\-strokecol\f[R] \(lqg\(rq | \(lqr g b\(rq | \(lqc y m k\(rq | 
 Set stroke colour
 .TP
-\-fillcol
+\f[B]\-fillcol\f[R] \(lqg\(rq | \(lqr g b\(rq | \(lqc y m k\(rq | 
 Set fill colour
 .TP
-\-thick
+\f[B]\-thick\f[R] 
 Set stroke thickness
 .TP
-\-cap
+\f[B]\-cap\f[R] butt | round | square
 Set cap
 .TP
-\-join
+\f[B]\-join\f[R] miter | round | bevel
 Set join
 .TP
-\-miter
+\f[B]\-miter\f[R] 
 Set miter limit
 .TP
-\-dash
+\f[B]\-dash\f[R] 
 Set dash pattern
 .PP
-The graphics stack and matrices
+\f[B]The graphics stack and matrices\f[R]
 .TP
 \-push
 Push graphics stack
@@ -1634,27 +1635,27 @@ Push graphics stack
 \-pop
 Pop graphics stack
 .TP
-\-matrix
+\-matrix \(lqa b c d e f\(rq
 Append to graphics matrix
 .TP
-\-mtrans
+\-mtrans \(lqtx ty\(rq
 Translate the graphics matrix
 .TP
-\-mrot
+\-mrot \(lqx y a\(rq
 Rotate the graphics matrix
 .TP
-\-mscale
+\-mscale \(lqx y sx sy\(rq
 Scale the graphics matrix
 .TP
-\-mshearx
+\-mshearx \(lqx y a\(rq
 Shear the graphics matrix in X
 .TP
-\-msheary
+\-msheary \(lqx y a\(rq
 Shear the graphics matrix in Y
 .PP
-Re\-use with XObjects
+\f[B]Re\-use with XObjects\f[R]
 .TP
-\-xobj\-bbox
+\-xobj\-bbox \(lqx y w h\(rq
 Specify the bounding box for xobjects
 .TP
 \-xobj
@@ -1666,29 +1667,29 @@ End saving a sequence of graphics operators
 \-use
 Use a saved sequence of graphics operators
 .PP
-Images
+\f[B]Images\f[R]
 .TP
-\-draw\-jpeg
+\-draw\-jpeg =
 Load a JPEG from file and name it
 .TP
-\-draw\-png
+\-draw\-png =
 Load a PNG from file and name it
 .TP
-\-draw\-jpeg2000
+\-draw\-jpeg2000 =
 Load a JPEG2000 from file and name it
 .TP
-\-image
+\-image 
 Draw an image which has already been loaded
 .PP
-Transparency
+\f[B]Transparency\f[R]
 .TP
-\-fill\-opacity
+\-fill\-opacity 
 Set opacity
 .TP
-\-stroke\-opacity
+\-stroke\-opacity 
 Set stroke opacity
 .PP
-Text
+\f[B]Text\f[R]
 .TP
 \-bt
 Begin text
@@ -1696,37 +1697,37 @@ Begin text
 \-et
 End text
 .TP
-\-text
+\-text 
 Draw text
 .TP
-\-stext
+\-stext 
 Draw text with %specials
 .TP
-\-para
+\-para 
 Typeset a paragraph
 .TP
-\-paras
+\-paras 
 Typeset multiple paragraphs
 .TP
-\-indent
+\-indent 
 a
 .TP
-\-leading
+\-leading 
 Set leading
 .TP
-\-charspace
+\-charspace 
 Set character spacing
 .TP
-\-wordspace
+\-wordspace 
 Set word space
 .TP
-\-textscale
+\-textscale 
 Set text scale
 .TP
-\-rendermode
+\-rendermode 
 Set text rendering mode
 .TP
-\-rise
+\-rise 
 Set text rise
 .TP
 \-nl
@@ -1737,18 +1738,19 @@ The next page
 \-newpage
 Move to a fresh page
 .PP
-Structure Information
+\f[B]Structure Information\f[R]
 .TP
 \-draw\-struct\-tree
-Add structure information
+Add structure information.
+Must precede \-draw on command line.
 .TP
-\-tag
+\-tag 
 Begin marked content
 .TP
 \-end\-tag
 End marked content
 .TP
-\-stag
+\-stag 
 Begin structure tree branch
 .TP
 \-end\-stag
@@ -1769,16 +1771,16 @@ End manual artifact
 \-no\-auto\-artifacts
 Prevent automatic addition of artifacts during postprocessing
 .TP
-\-namespace
+\-namespace 
 Set the namespace for future branches of the tree
 .TP
-\-eltinfo
+\-eltinfo <elt=text>
 Set element information
 .TP
 \-end\-eltinfo
 Erase element information
 .TP
-\-rolemap
+\-rolemap 
 Set role map
 .SH 19. ACCESSIBLE PDFS WITH PDF/UA
 .TP

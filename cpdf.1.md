@@ -1796,7 +1796,7 @@ cpdf -jbig2-global 0.jbig2globals -jbig2 1.jbig2 -jbig2 2.jbig2 -jbig2 3.jbig2 -
 
 cpdf in.pdf [<range>] [-draw-struct-tree] [-underneath] -draw <draw operations> -o out.pdf
 
-: Draw on a PDF.
+: Draw on a PDF. See cpdfmanual.pdf for a tutorial, and full information.
 
 **-draw-struct-tree**
 
@@ -1808,7 +1808,8 @@ cpdf in.pdf [<range>] [-draw-struct-tree] [-underneath] -draw <draw operations> 
 
 cpdf -text-width <text> [-font <font>] [-fontsize <fontsize>]
 
-: Return the width of a string of text in a one of the Standard 14 fonts. Used for calculations of text position (e.g right-alignment).
+: Return the width of a string of text in a one of the Standard 14 fonts. Used
+for calculations of text position (e.g right-alignment).
 
 **-font**
 
@@ -1818,33 +1819,33 @@ cpdf -text-width <text> [-font <font>] [-fontsize <fontsize>]
 
 : Specify the font size.
 
-Building and showing paths
+**Building and showing paths**
 
--rect
+-rect "x y w h"
 
 : Draw rectangle
 
--to
+-to "x y"
 
 : Move to
 
--line
+-line "x y"
 
 : Add line to path
 
--bez
+-bez "x1 y1 x2 y2 x3 y3"
 
 : Add Bezier curve to path
 
--bez23
+-bez23 "x2 y2 x3 y3"
 
 : Add Bezier curve to path
 
--bez13
+-bez13 "x1 y1 x3 y3"
 
 : Add Bezier curve to path
 
--circle
+-circle "x y r"
 
 : Add circle to path
 
@@ -1872,7 +1873,7 @@ Building and showing paths
 
 : Close path
 
-Clipping with paths
+**Clipping with paths**
 
 -clip
 
@@ -1882,37 +1883,37 @@ Clipping with paths
 
 : Clip, even odd
 
-Path parameters
+**Path parameters**
 
--strokecol
+**-strokecol** "g" | "r g b" | "c y m k" | <namedcolour>
 
 : Set stroke colour
 
--fillcol
+**-fillcol** "g" | "r g b" | "c y m k" | <namedcolour>
 
 : Set fill colour
 
--thick
+**-thick** <n>
 
 : Set stroke thickness
 
--cap
+**-cap** butt | round | square
 
 : Set cap
 
--join
+**-join** miter | round | bevel
 
 : Set join
 
--miter
+**-miter** <n>
 
 : Set miter limit
 
--dash
+**-dash** <pattern>
 
 : Set dash pattern
 
-The graphics stack and matrices
+**The graphics stack and matrices**
 
 -push
 
@@ -1922,33 +1923,33 @@ The graphics stack and matrices
 
 : Pop graphics stack
 
--matrix
+-matrix "a b c d e f"
 
 : Append to graphics matrix
 
--mtrans
+-mtrans "tx ty"
 
 : Translate the graphics matrix
 
--mrot
+-mrot "x y a"
 
 : Rotate the graphics matrix
 
--mscale
+-mscale "x y sx sy"
 
 : Scale the graphics matrix
 
--mshearx
+-mshearx "x y a"
 
 : Shear the graphics matrix in X
 
--msheary
+-msheary "x y a"
 
 : Shear the graphics matrix in Y
 
-Re-use with XObjects
+**Re-use with XObjects**
 
--xobj-bbox
+-xobj-bbox "x y w h"
 
 : Specify the bounding box for xobjects
 
@@ -1964,35 +1965,35 @@ Re-use with XObjects
 
 : Use a saved sequence of graphics operators
 
-Images
+**Images**
 
--draw-jpeg
+-draw-jpeg <name>=<filename>
 
 : Load a JPEG from file and name it
 
--draw-png
+-draw-png <name>=<filename>
 
 : Load a PNG from file and name it
 
--draw-jpeg2000
+-draw-jpeg2000 <name>=<filename>
 
 : Load a JPEG2000 from file and name it
 
--image
+-image <name>
 
 : Draw an image which has already been loaded
 
-Transparency
+**Transparency**
 
--fill-opacity
+-fill-opacity <n>
 
 : Set opacity
 
--stroke-opacity
+-stroke-opacity <n>
 
 : Set stroke opacity
 
-Text
+**Text**
 
 -bt
 
@@ -2002,47 +2003,47 @@ Text
 
 : End text
 
--text
+-text <text>
 
 : Draw text
 
--stext
+-stext <text>
 
 : Draw text with %specials
 
--para
+-para <paragraph>
 
 : Typeset a paragraph
 
--paras
+-paras <paragraph>
 
 : Typeset multiple paragraphs
 
--indent
+-indent <n>
 
 : a
 
--leading
+-leading <n>
 
 : Set leading
 
--charspace
+-charspace <n>
 
 : Set character spacing
 
--wordspace
+-wordspace <n>
 
 : Set word space
 
--textscale
+-textscale <n>
 
 : Set text scale
 
--rendermode
+-rendermode <n>
 
 : Set text rendering mode
 
--rise
+-rise <n>
 
 : Set text rise
 
@@ -2056,13 +2057,13 @@ The next page
 
 : Move to a fresh page
 
-Structure Information
+**Structure Information**
 
 -draw-struct-tree
 
-: Add structure information
+: Add structure information. Must precede -draw on command line.
 
--tag
+-tag <tagname>
 
 : Begin marked content
 
@@ -2070,7 +2071,7 @@ Structure Information
 
 : End marked content
 
--stag
+-stag <tagname>
 
 : Begin structure tree branch
 
@@ -2098,11 +2099,11 @@ Structure Information
 
 : Prevent automatic addition of artifacts during postprocessing
 
--namespace
+-namespace <namespace>
 
 : Set the namespace for future branches of the tree
 
--eltinfo
+-eltinfo <elt=text>
 
 : Set element information
 
@@ -2110,7 +2111,7 @@ Structure Information
 
 : Erase element information
 
--rolemap
+-rolemap <rolemap>
 
 : Set role map
 
