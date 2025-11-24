@@ -1796,7 +1796,27 @@ cpdf -jbig2-global 0.jbig2globals -jbig2 1.jbig2 -jbig2 2.jbig2 -jbig2 3.jbig2 -
 
 cpdf in.pdf [<range>] [-draw-struct-tree] [-underneath] -draw <draw operations> -o out.pdf
 
+: Draw on a PDF.
+
+**-draw-struct-tree**
+
+: Produce structure information.
+
+**-underneath**
+
+: Draw underneath instead of on top of any existing page content.
+
 cpdf -text-width <text> [-font <font>] [-fontsize <fontsize>]
+
+: Return the width of a string of text in a one of the Standard 14 fonts. Used for calculations of text position (e.g right-alignment).
+
+**-font**
+
+: Specify the font.
+
+**-fontsize**
+
+: Specify the font size.
 
 Building and showing paths
 
@@ -2236,7 +2256,3 @@ cpdf -remove-javascript in.pdf -o out.pdf
 # ENVIRONMENT
 
 # BUGS
-
-# AUTHOR
-
-John Whitington <john at coherentgraphics dot co dot uk>
