@@ -321,7 +321,7 @@ See the end of this chapter for \-fast and \-position.
 Scale pages in the given range to fit the given size e.g \(lqa4paper\(rq
 or \(lq10in 7in\(rq, without altering the aspect ratio.
 By default the content will be centered on the new page.
-See the end of this chapter for \-position and \-prerotate.
+See Chapter 8 for information on positions.
 .TP
 \f[B]\-scale\-to\-fit\-scale\f[R]
 Scale to a proportion of the available area, instead of filling it.
@@ -329,6 +329,9 @@ For example 0.9 for 90 percent.
 .TP
 \f[B]\-scale\-to\-fit\-rotate\-clockwise \-scale\-to\-fit\-rotate\-anticlockwise\f[R]
 Automatically rotate page to maximise use of area.
+.TP
+\f[B]\-prerotate\f[R]
+Remove any viewing rotation before beginning.
 .PP
 \f[B]cpdf \-stretch \(lq<x size> <y size>\(rq\f[R] [\-fast]
 \f[B]in.pdf\f[R] [<range>] \f[B]\-o out.pdf\f[R]
@@ -437,8 +440,6 @@ Orange and Pink respectively.
 .PP
 Add trim marks to a PDF.
 The trim box must be present.
-.PP
-FIXME: POSITIONS FIXME: FAST
 .SH 4. ENCRYPTION AND DECRYPTION
 \f[B]cpdf \-encrypt <method> [\-pw=]<owner> [\-pw=]<user>\f[R]
 [\-no\-encrypt\-metadata] <permissions> \f[B]in.pdf \-o out.pdf\f[R]
@@ -545,7 +546,7 @@ to be printed.
 .SH 6. BOOKMARKS
 \f[B]cpdf \-list\-bookmarks\f[R] [\-utf8] \f[B]in.pdf\f[R]
 .PP
-Print bookmark data to Standard Output.
+Print bookmark data to standard output.
 The data includes level, title, pagenumber linked to, and full link
 data.
 Use \-utf8 always.
@@ -562,7 +563,7 @@ For example:
 \f[B]cpdf \-list\-bookmarks\-json\f[R] [\-preserve\-actions]
 \f[B]in.pdf\f[R]
 .PP
-Print bookmark data to Standard Output in JSON format instead.
+Print bookmark data to standard output in JSON format instead.
 Here is a single entry in the JSON array of bookmarks:
 .IP
 .EX
@@ -623,7 +624,7 @@ Give the font (default Times Roman).
 Give the font size (default 12pt).
 .TP
 \f[B]\-embed\-std14\f[R]
-Embed Standard 14 fonts given their path (see cpdfmanual.pdf for
+Embed standard 14 fonts given their path (see cpdfmanual.pdf for
 details).
 .TP
 \f[B]\-process\-struct\-trees\f[R]
@@ -938,7 +939,7 @@ streams.
 out.pdf\f[R]
 .PP
 A low\-level operation to add stamp.pdf as a Form XObject in the given
-pages of a PDF and write to Standard Output its name.
+pages of a PDF and write to standard output its name.
 .SH 9. MULTIPAGE FACILITIES
 \f[B]cpdf [\-pad\-before | \-pad\-after] in.pdf\f[R] [<range>]
 [\-pad\-with pad.pdf] \f[B]\-o out.pdf\f[R]
@@ -1665,8 +1666,8 @@ Convert a JSON file to a PDF file.
 .SH 16. OPTIONAL CONTENT GROUPS
 \f[B]cpdf \-ocg\-list in.pdf\f[R]
 .PP
-List the optional content groups in the PDF, one oper line, to Standard
-Output.
+List the optional content groups in the PDF, one oper line, to standard
+output.
 .PP
 \f[B]cpdf \-ocg\-rename \-ocg\-rename\-from <a> \-ocg\-rename\-to <b>
 in.pdf \-o out.pdf\f[R]
@@ -1774,7 +1775,7 @@ Draw underneath instead of on top of any existing page content.
 .PP
 \f[B]cpdf \-text\-width \f[R] [\-font ] [\-fontsize ]
 .PP
-Return the width of a string of text in a one of the Standard 14 fonts.
+Return the width of a string of text in a one of the standard 14 fonts.
 Used for calculations of text position (e.g right\-alignment).
 .TP
 \f[B]\-font\f[R]
@@ -2013,7 +2014,7 @@ Set role map.
 .SH 19. ACCESSIBLE PDFS WITH PDF/UA
 \f[B]cpdf \-print\-struct\-tree in.pdf\f[R]
 .PP
-Print a PDF\(cqs structure tree to Standard Output for inspection.
+Print a PDF\(cqs structure tree to standard output for inspection.
 .PP
 \f[B]cpdf \-extract\-struct\-tree in.pdf \-o out.json\f[R]
 .PP

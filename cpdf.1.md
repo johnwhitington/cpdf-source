@@ -360,8 +360,7 @@ this chapter for -fast and -position.
 
 Scale pages in the given range to fit the given size e.g "a4paper" or "10in
 7in", without altering the aspect ratio. By default the content will be
-centered on the new page. See the end of this chapter for -position
-and -prerotate.
+centered on the new page. See Chapter 8 for information on positions.
 
 **-scale-to-fit-scale**
 
@@ -371,6 +370,10 @@ example 0.9 for 90 percent.
 **-scale-to-fit-rotate-clockwise -scale-to-fit-rotate-anticlockwise**
 
 : Automatically rotate page to maximise use of area.
+
+**-prerotate**
+
+: Remove any viewing rotation before beginning.
 
 **cpdf -stretch "\<x size> \<y size>"** \[-fast] **in.pdf** \[\<range>] **-o out.pdf**
 
@@ -453,9 +456,6 @@ and Pink respectively.
 **cpdf -trim-marks** \[-fast] **in.pdf** \[\<range>] **-o out.pdf**
 
 Add trim marks to a PDF. The trim box must be present.
-
-FIXME: POSITIONS
-FIXME: FAST
 
 # 4. ENCRYPTION AND DECRYPTION
 
@@ -576,7 +576,7 @@ Remove output intents, a colour-matching system for documents intended to be pri
 
 **cpdf -list-bookmarks** \[-utf8] **in.pdf**
 
-Print bookmark data to Standard Output. The data includes level, title,
+Print bookmark data to standard output. The data includes level, title,
 pagenumber linked to, and full link data. Use -utf8 always. For example:
 
 ```
@@ -589,7 +589,7 @@ pagenumber linked to, and full link data. Use -utf8 always. For example:
 
 **cpdf -list-bookmarks-json** \[-preserve-actions] **in.pdf**
 
-Print bookmark data to Standard Output in JSON format instead. Here is a single
+Print bookmark data to standard output in JSON format instead. Here is a single
 entry in the JSON array of bookmarks:
 
 ```
@@ -654,7 +654,7 @@ the beginning of the document.
 
 **-embed-std14**
 
-: Embed Standard 14 fonts given their path (see cpdfmanual.pdf for details).
+: Embed standard 14 fonts given their path (see cpdfmanual.pdf for details).
 
 **-process-struct-trees**
 
@@ -1005,7 +1005,7 @@ A low-level operation to postpend raw content to the end of page streams.
 **cpdf -stamp-as-xobject stamp.pdf in.pdf** \[\<range>] **-o out.pdf**
 
 A low-level operation to add stamp.pdf as a Form XObject in the given pages
-of a PDF and write to Standard Output its name. 
+of a PDF and write to standard output its name. 
 
 # 9. MULTIPAGE FACILITIES
 
@@ -1748,7 +1748,7 @@ Convert a JSON file to a PDF file.
 
 **cpdf -ocg-list in.pdf**
 
-List the optional content groups in the PDF, one oper line, to Standard Output.
+List the optional content groups in the PDF, one oper line, to standard output.
 
 **cpdf -ocg-rename -ocg-rename-from \<a> -ocg-rename-to \<b> in.pdf -o out.pdf**
 
@@ -1867,7 +1867,7 @@ Draw on a PDF. See cpdfmanual.pdf for a tutorial, and full information.
 
 **cpdf -text-width <text>** [-font <font>] [-fontsize <fontsize>]
 
-Return the width of a string of text in a one of the Standard 14 fonts. Used
+Return the width of a string of text in a one of the standard 14 fonts. Used
 for calculations of text position (e.g right-alignment).
 
 **-font**
@@ -2178,7 +2178,7 @@ The next page.
 
 **cpdf -print-struct-tree in.pdf**
 
-Print a PDF's structure tree to Standard Output for inspection.
+Print a PDF's structure tree to standard output for inspection.
 
 **cpdf -extract-struct-tree in.pdf -o out.json**
 
