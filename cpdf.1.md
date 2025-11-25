@@ -668,19 +668,21 @@ file to keep compatibility.
 
 # 7. PRESENTATIONS
 
-cpdf -presentation in.pdf \[\<range>] -o out.pdf \[-trans \<transition-name>]
+**cpdf -presentation in.pdf** \[\<range>] **-o out.pdf** \[-trans \<transition-name>]
 \[-duration \<float>] \[-vertical] \[-outward] \[-direction \<int>]
 \[-effect-duration \<float>]
 
-: Make a slide-show presentation from a PDF.
+Make a slide-show presentation from a PDF.
 
 **-trans**
 
-: The transition style, one of Split, Blinds, Box, Wipe, Dissolve, Glitter.
+The transition style, one of **Split**, **Blinds**, **Box**, **Wipe**,
+**Dissolve**, **Glitter**.
 
 **-duration**
 
-: Time in seconds before presentation advances (default: no automatic advancement).
+: Time in seconds before presentation advances (default: no automatic
+advancement).
 
 **-vertical**
 
@@ -692,7 +694,8 @@ cpdf -presentation in.pdf \[\<range>] -o out.pdf \[-trans \<transition-name>]
 
 **-direction**
 
-: Direction for Wipe and Glitter styles. See cpdfmanual.pdf for full information.
+: Direction for Wipe and Glitter styles. See cpdfmanual.pdf for full
+information.
 
 **-effect-duration**
 
@@ -700,11 +703,11 @@ cpdf -presentation in.pdf \[\<range>] -o out.pdf \[-trans \<transition-name>]
 
 # 8. TEXT AND STAMPS
 
-cpdf [-stamp-on | -stamp-under] source.pdf [-scale-stamp-to-fit] [<positioning
-command>] [-relative-to-cropbox] [-process-struct-trees] in.pdf [<range>]
-[-fast] -o out.pdf
+**cpdf [-stamp-on | -stamp-under] stamp.pdf** [-scale-stamp-to-fit] [<positioning
+command>] [-relative-to-cropbox] [-process-struct-trees] **in.pdf** [<range>]
+[-fast] **-o out.pdf**
 
-: Stamp a one-page PDF over or under each page in the given range. The
+Stamp a one-page PDF over or under each page in the given range. The
 positioning commands described later in this chapter may be used to choose
 where to stamp it (default, bottom left of media box).
 
@@ -721,10 +724,10 @@ where to stamp it (default, bottom left of media box).
 : Maintain tagged PDF. The main file will keep its structure; the stamp will be
 marked as an artifact.
 
-cpdf -combine-pages over.pdf under.pdf [-fast] [-prerotate] [-no-warn-rotate]
-[-process-struct-trees] [-underneath] [-stamp-scale-to-fit] -o out.pdf
+**cpdf -combine-pages over.pdf under.pdf** [-fast] [-prerotate] [-no-warn-rotate]
+[-process-struct-trees] [-underneath] [-stamp-scale-to-fit] **-o out.pdf**
 
-: Combine the pages of two PDFs, page 1 of the first with page 1 of the second
+Combine the pages of two PDFs, page 1 of the first with page 1 of the second
 and so on.
 
 **-prerotate**
@@ -744,17 +747,18 @@ and so on.
 : Maintain tagged PDF. The "under" file will keep its structure; the "over"
 file will be marked as an artifact.
 
-cpdf (\[-add-text \<text-format> | -add-rectangle \<size>]) [-font \<fontname>]
+**cpdf **\[-add-text \<text-format> | -add-rectangle \<size>]** [-font \<fontname>]
 [-font-size \<size-in-points>] [-load-ttf \<name>=\<file>] [-embed-std14]
 [-color \<color>] [-line-spacing \<number>] [-outline] [-linewidth \<number>]
 [-underneath] [-relative-to-cropbox] [-prerotate] [-no-warn-rotate] [-bates
 \<number>] [-bates-at-range \<number>] [-bates-pad-to \<number>] [-opacity
-\<number>] [-midline] [-topline] [-fast] [-process-struct-trees] in.pdf
-\[\<range>] -o out.pdf
+\<number>] [-midline] [-topline] [-fast] [-process-struct-trees] **in.pdf**
+\[\<range>] **-o out.pdf**
  
-: Add text to a PDF. Various special codes for page numbers or time and date
+Add text to a PDF. Various special codes for page numbers or time and date
 may be used. For example:
 
+```
 %Page Page number in arabic notation (1, 2, 3. . . )
 %PageDiv2 Page number in arabic notation divided by two
 %roman Page number in lower-case roman notation (i, ii, iii. . . )
@@ -766,9 +770,11 @@ may be used. For example:
 %URL[text|URL] Add text, which links to URL (does not work for diagonal text)
 %Bookmark<n> Bookmark text at level n (0, 1, 2, 3, 4)
 %Bates bates number
+```
 
 And date and time formats:
 
+```
 %a Abbreviated weekday name (Sun, Mon etc.)
 %A Full weekday name (Sunday, Monday etc.)
 %b Abbreviated month name (Jan, Feb etc.)
@@ -786,6 +792,7 @@ And date and time formats:
 %w Weekday (0-6, 0 = Sunday)
 %Y Year (0000-9999)
 %% The % character
+```
 
 \n may be used to demarcate multiple lines.
 
@@ -793,18 +800,29 @@ And date and time formats:
 
 : Give the font (default Times Roman). Options are:
 
-Times-Roman Times-Bold Times-Italic Times-BoldItalic Helvetica Helvetica-Bold
-Helvetica-Oblique Helvetica-BoldOblique Courier Courier-Bold Courier-Oblique
+```
+Times-Roman
+Times-Bold
+Times-Italic
+Times-BoldItalic
+Helvetica
+Helvetica-Bold
+Helvetica-Oblique
+Helvetica-BoldOblique
+Courier
+Courier-Bold
+Courier-Oblique
 Courier-BoldOblique
+```
 
 **-font-size**
 
-: Give the font size (default 12pt)
+: Give the font size (default 12pt).
 
 **-load-ttf**
 
 : Load a truetype font, and give it name which may be used with -font. For
-example -load-ttd A=NotoSans-Black.ttf
+example **-load-ttf A=NotoSans-Black.ttf**.
 
 **-embed-std14**
 
@@ -813,7 +831,7 @@ example -load-ttd A=NotoSans-Black.ttf
 **-color**
 
 : Choose the text colour using one (Grey), three (RGB), or four (CMYK) numbers
-from 0-1. E.g "0.5 0.4 0.5".
+from 0-1. E.g **-color "0.5 0.4 0.5"**.
 
 **-line-spacing**
 
@@ -845,7 +863,7 @@ from 0-1. E.g "0.5 0.4 0.5".
 
 **-bates**
 
-: Set the bates number for use with %Bates
+: Set the bates number for use with **%Bates**.
 
 **-bates-at-range**
 
@@ -972,34 +990,34 @@ of the page.
 
 : Set center justification for multi-line text. Default depends upon position.
 
-cpdf -remove-text in.pdf \[\<range>] -o out.pdf
+**cpdf -remove-text in.pdf** \[\<range>] **-o out.pdf**
 
-: Remove text previously added by Cpdf.
+Remove text previously added by Cpdf.
 
-cpdf -prepend-content \<content> in.pdf \[\<range>] -o out.pdf
+**cpdf -prepend-content \<content> in.pdf** \[\<range>] **-o out.pdf**
 
-: A low-level operation to prepend raw content to the beginning of page streams.
+A low-level operation to prepend raw content to the beginning of page streams.
 
-cpdf -postpend-content \<content> in.pdf \[\<range>] -o out.pdf
+**cpdf -postpend-content \<content> in.pdf** \[\<range>] **-o out.pdf**
 
-: A low-level operation to postpend raw content to the end of page streams.
+A low-level operation to postpend raw content to the end of page streams.
 
-cpdf -stamp-as-xobject stamp.pdf in.pdf \[\<range>] -o out.pdf
+**cpdf -stamp-as-xobject stamp.pdf in.pdf** \[\<range>] **-o out.pdf**
 
-: A low-level operation to add stamp.pdf as a Form XObject in the given pages
+A low-level operation to add stamp.pdf as a Form XObject in the given pages
 of a PDF and write to Standard Output its name. 
 
 # 9. MULTIPAGE FACILITIES
 
-cpdf [-pad-before | -pad-after] in.pdf \[\<range>] \[-pad-with pad.pdf] -o out.pdf
+**cpdf [-pad-before | -pad-after] in.pdf** \[\<range>] \[-pad-with pad.pdf] **-o out.pdf**
 
-: Add blank pages before or after each page in the given range.
+Add blank pages before or after each page in the given range.
 
 **-pad-with**
 
 : Use a separate PDF to act as the padding.
 
-cpdf -pad-every \[\<integer>] in.pdf \[-pad-with pad.pdf] -o out.pdf
+**cpdf -pad-every \<n> in.pdf** \[-pad-with pad.pdf] **-o out.pdf**
 
 : Add a blank pages afyer every n pages.
 
@@ -1007,14 +1025,14 @@ cpdf -pad-every \[\<integer>] in.pdf \[-pad-with pad.pdf] -o out.pdf
 
 : Use a separate PDF to act as the padding.
 
-cpdf [-pad-multiple | -pad-multiple-before] \[\<integer>] in.pdf -o out.pdf
+**cpdf [-pad-multiple | -pad-multiple-before]** \[\<integer>] **in.pdf -o out.pdf**
 
-: Add as many blank pages as are required before or after the original pages to
+Add as many blank pages as are required before or after the original pages to
 make the file's length a multiple of the given number of pages
 
-cpdf -redact \[-process-struct-trees] in.pdf \[\<range>] -o out.pdf
+**cpdf -redact** \[-process-struct-trees] **in.pdf** \[\<range>] **-o out.pdf**
 
-: Remove the content of the pages in the given range entirely, including
+Remove the content of the pages in the given range entirely, including
 annotations and any resources. 
 
 **-process-struct-trees**
@@ -1022,18 +1040,18 @@ annotations and any resources.
 : Process the document's structure tree to remove any parts which are marked as
 relating to the now-redacted pages.
 
-cpdf \[-impose \<pagesize> | impose-xy "\<x> \<y>"] \[-impose-columns]
+**cpdf \[-impose \<pagesize> | impose-xy "\<x> \<y>"]** \[-impose-columns]
 \[-impose-rtl] \[-impose-btt] \[-impose-margin <margin>] \[-impose-spacing
 \<spacing>] \[-impose-linewidth \<width>] \[-fast] \[-process-struct-trees]
 in.pdf -o out.pdf
 
-: Cpdf has two imposition operations:
+Cpdf has two imposition operations:
 
-     -impose fits multiple pages onto a given page size e.g -impose a4portrait
-     or -impose "8in 12in"
+**-impose** fits multiple pages onto a given page size e.g **-impose
+a4portrait** or **-impose "8in 12in"**
 
-     -impose-xy build an output page with the x pages horizontally and y pages
-     vertically e.g -impose-xy "2 3"
+**-impose-xy** build an output page with the x pages horizontally and y pages
+vertically e.g **-impose-xy "2 3"**
 
 **-impose-columns**
 
@@ -1066,23 +1084,24 @@ the border is added, so you must account for this yourself.
 
 : Mark the file's content as an artifact for the purposes of imposition.
 
-cpdf -twoup-stack \[-fast] \[-process-struct-trees] in.pdf -o out.pdf cpdf
--twoup \[-fast] \[-process-struct-trees] in.pdf -o out.pdf
+**cpdf -twoup-stack** \[-fast] \[-process-struct-trees] **in.pdf -o out.pdf**
 
-: Two old imposition functions which can now both be done with -impose /
--impose-xy. The -twoup-stack operation puts two logical pages on each physical
-page, rotating them 90 degrees to do so. The new mediabox is thus larger.
-Whereas the -twoup operation does the same, but scales the new sides down so
-that the media box is unchanged.
+**cpdf -twoup** \[-fast] \[-process-struct-trees] **in.pdf -o out.pdf**
+
+Two old imposition functions which can now both be done with **-impose** /
+**-impose-xy**. The **-twoup-stack** operation puts two logical pages on each
+physical page, rotating them 90 degrees to do so. The new mediabox is thus
+larger.  Whereas the **-twoup** operation does the same, but scales the new
+sides down so that the media box is unchanged.
 
 **-process-struct-trees**
 
 : Mark the file's content as an artifact for the purposes of imposition.
 
-cpdf -chop "\<x> \<y>" \[-chop-columns] \[-chop-rtl] \[-chop-btt] in.pdf
-\[\<range>] -o out.pdf
+**cpdf -chop "\<x> \<y>"** \[-chop-columns] \[-chop-rtl] \[-chop-btt] **in.pdf**
+\[\<range>] **-o out.pdf**
 
-: The -chop operation cuts up a page into multiple pages, according to the
+The **-chop** operation cuts up a page into multiple pages, according to the
 chosen grid.
 
 **-chop-columns**
@@ -1097,11 +1116,11 @@ chosen grid.
 
 : Arrange bottom to top.
 
-cpdf \[-chop-h \<y> | -chop-v \<x>] \[-chop-columns] in.pdf \[\<range>] -o
-out.pdf
+**cpdf \[-chop-h \<y> | -chop-v \<x>]** \[-chop-columns] **in.pdf** \[\<range>]
+**-o out.pdf**
 
-: Chop each page into two, vertically or horizontally, at the given position.
-E.g -chop-h 200pt.
+Chop each page into two, vertically or horizontally, at the given position.
+E.g **-chop-h 200pt**.
 
 **-chop-columns**
 
@@ -1109,39 +1128,40 @@ E.g -chop-h 200pt.
 
 # 10. ANNOTATIONS
 
-cpdf -list-annotations in.pdf \[\<range>]
+**cpdf -list-annotations in.pdf** \[\<range>]
 
-: List textual content of annotations to Standard Output. Each annotation is
+List textual content of annotations to standard output. Each annotation is
 preceded by the page number and followed by a newline.
 
-cpdf -list-annotations-json in.pdf \[\<range>]
+**cpdf -list-annotations-json in.pdf** \[\<range>]
 
-: List annotation objects in JSON format. This includes all ancillary objects,
+List annotation objects in JSON format. This includes all ancillary objects,
 to support round-tripping. See cpdfmanual.pdf for full format details.
 
-cpdf -set-annotations \<filename> \[-underneath] in.pdf \[\<range>] -o out.pdf
+**cpdf -set-annotations \<filename>** \[-underneath] **in.pdf** \[\<range>] **-o out.pdf**
 
-: Set annotations from a JSON file. They will be added on top of any
+Set annotations from a JSON file. They will be added on top of any
 annotations already present.
 
 **-underneath**
 
 : Put the annotations underneath instead of on top of existing ones.
 
-cpdf -copy-annotations from.pdf to.pdf \[\<range>] -o out.pdf
+**cpdf -copy-annotations from.pdf to.pdf** \[\<range>] **-o out.pdf**
 
-: Copy annotations from from.pdf to to.pdf.
+Copy annotations from **from.pdf** to **to.pdf**.
 
-cpdf -remove-annotations in.pdf \[\<range>] -o out.pdf
+**cpdf -remove-annotations in.pdf** \[\<range>] **-o out.pdf**
 
 : Remove annotations from the document.
 
 # 11. DOCUMENT INFORMATION AND METADATA
 
-cpdf -info\[-json] \[-utf8] \[-in | -cm | -mm] in.pdf
+**cpdf -info\[-json]** \[-utf8] \[-in | -cm | -mm] **in.pdf**
 
-: Print info about a document in plain text (-info) or JSON (-info-json). For example:
+Print info about a document in plain text (**-info**) or JSON (**-info-json**). For example:
 
+```
 cpdf -info pdf_reference.pdf
 Encryption: Not encrypted
 Permissions: 
@@ -1184,6 +1204,7 @@ Language: en-us
 XMP dc:title: PDF Reference, version 1.6
 XMP dc:creator: Adobe Systems Incorporated
 XMP dc:description: Adobe Portable Document Format (PDF)
+```
 
 **-utf8**
 
@@ -1193,10 +1214,11 @@ XMP dc:description: Adobe Portable Document Format (PDF)
 
 : Output dimensions in inches, millimetres or centimetres instead of points.
 
-cpdf -page-info\[-json] \[-in | -cm | -mm] in.pdf \[\<range>]
+**cpdf -page-info\[-json]** \[-in | -cm | -mm] **in.pdf** \[\<range>]
 
-: List page information in plain (-page-info) or JSON (-page-info-json) format.
+List page information in plain (**-page-info**) or JSON (**-page-info-json**) format.
 
+```
 cpdf -page-info 14psfonts.pdf
 Page 1:
 Label: i
@@ -1207,33 +1229,41 @@ TrimBox:
 ArtBox:
 Rotation: 0
 Annotations: 0
+```
 
 **-in** / **-mm** / **-cm**
 
 : Output dimensions in inches, millimetres or centimetres instead of points.
 
-cpdf -pages in.pdf
+**cpdf -pages in.pdf**
 
-: Print the number of pages in the file.
+Print the number of pages in the file.
 
-cpdf -set-title \<title of document> \[-also-set-xmp] \[-just-set-xmp] in.pdf -o out.pdf
-cpdf -set-author \<author of document> \[-also-set-xmp] \[-just-set-xmp] in.pdf -o out.pdf
-cpdf -set-subject \<subject of document> \[-also-set-xmp] \[-just-set-xmp] in.pdf -o out.pdf
-cpdf -set-keywords \<keywords of document> \[-also-set-xmp] \[-just-set-xmp] in.pdf -o out.pdf
-cpdf -set-creator \<creator of document> \[-also-set-xmp] \[-just-set-xmp] in.pdf -o out.pdf
-cpdf -set-producer \<producer of document> \[-also-set-xmp] \[-just-set-xmp] in.pdf -o out.pdf
+**cpdf -set-title \<title>** \[-also-set-xmp] \[-just-set-xmp] **in.pdf -o out.pdf**
 
-: Set metadata
+**cpdf -set-author \<author>** \[-also-set-xmp] \[-just-set-xmp] **in.pdf -o out.pdf**
 
-cpdf -set-create \<date> \[-also-set-xmp] \[-just-set-xmp] in.pdf -o out.pdf
-cpdf -set-modify \<date> \[-also-set-xmp] \[-just-set-xmp] in.pdf -o out.pdf
+**cpdf -set-subject \<subject>** \[-also-set-xmp] \[-just-set-xmp] **in.pdf -o out.pdf**
 
-: Set creation or modification dates. See cpdfmanual.pdf for details of the PDF date format.
+**cpdf -set-keywords \<keywords>** \[-also-set-xmp] \[-just-set-xmp] **in.pdf -o out.pdf**
 
-cpdf -set-trapped in.pdf -o out.pdf \[-also-set-xmp] \[-just-set-xmp] 
-cpdf -set-untrapped in.pdf -o out.pdf \[-also-set-xmp] \[-just-set-xmp]
+**cpdf -set-creator \<creator>** \[-also-set-xmp] \[-just-set-xmp] **in.pdf -o out.pdf**
 
-: Set the trapped status of a PDF.
+**cpdf -set-produce* \<producer>** \[-also-set-xmp] \[-just-set-xmp] **in.pdf -o out.pdf**
+
+Set metadata.
+
+**cpdf -set-create \<date>** \[-also-set-xmp] \[-just-set-xmp] **in.pdf -o out.pdf**
+
+**cpdf -set-modify \<date>** \[-also-set-xmp] \[-just-set-xmp] **in.pdf -o out.pdf**
+
+Set creation or modification dates. See cpdfmanual.pdf for details of the PDF date format.
+
+**cpdf -set-trapped in.pdf -o out.pdf** \[-also-set-xmp] \[-just-set-xmp] 
+
+**cpdf -set-untrapped in.pdf -o out.pdf** \[-also-set-xmp] \[-just-set-xmp]
+
+Set the trapped status of a PDF.
 
 **-also-set-xmp**
 
@@ -1243,95 +1273,98 @@ cpdf -set-untrapped in.pdf -o out.pdf \[-also-set-xmp] \[-just-set-xmp]
 
 : Just set the XMP metadata, if the field is present, in addition to the old-style PDF metadata.
 
-cpdf -set-page-layout \<layout> in.pdf -o out.pdf
+**cpdf -set-page-layout \<layout> in.pdf -o out.pdf**
 
-: Set the page layout: one of SinglePage, OneColumn, TwoColumnLeft, TwoColumnRight, TwoPageLeft, TwoPageRight
+Set the page layout: one of **SinglePage**, **OneColumn**, **TwoColumnLeft**,
+**TwoColumnRight**, **TwoPageLeft**, **TwoPageRight**
 
-cpdf -set-page-mode \<mode> in.pdf -o out.pdf
+**cpdf -set-page-mode \<mode> in.pdf -o out.pdf**
 
-: Set the page mode: one of UseNone, UseOutlines, UseThumbs, FullScreen, UseOC, UseAttachments.
+Set the page mode: one of **UseNone**, **UseOutlines**, **UseThumbs**,
+**FullScreen**, **UseOC**, **UseAttachments**.
 
-cpdf -set-non-full-screen-page-mode \<mode> in.pdf -o out.pdf
+**cpdf -set-non-full-screen-page-mode \<mode> in.pdf -o out.pdf**
 
-: Set the non full screen mode for a PDF with FullScreen page mode: one of UseNone, UseOutlines, UseThumbs, UseAttachments.
+Set the non full screen mode for a PDF with FullScreen page mode: one of
+**UseNone**, **UseOutlines**, **UseThumbs**, **UseAttachments**.
 
-cpdf -hide-toolbar \<true | false> in.pdf -o out.pdf
+**cpdf -hide-toolbar \<true | false> in.pdf -o out.pdf**
 
-: Hide or reveal the viewer's toolbar.
+Hide or reveal the viewer's toolbar.
 
-cpdf -hide-menubar \<true | false> in.pdf -o out.pdf
+**cpdf -hide-menubar \<true | false> in.pdf -o out.pdf**
 
-: Hide or reveal the viewer's menubar.
+Hide or reveal the viewer's menubar.
 
-cpdf -hide-window-ui \<true | false> in.pdf -o out.pdf
+**cpdf -hide-window-ui \<true | false> in.pdf -o out.pdf**
 
-: Hide or reveal the window's scroll bars.
+Hide or reveal the window's scroll bars.
 
-cpdf -fit-window \<true | false> in.pdf -o out.pdf
+**cpdf -fit-window \<true | false> in.pdf -o out.pdf**
 
-: Resize the document's windows to fit the size of the first page.
+Resize the document's windows to fit the size of the first page.
 
-cpdf -center-window \<true | false> in.pdf -o out.pdf
+**cpdf -center-window \<true | false> in.pdf -o out.pdf**
 
-: Position the document window in the center of the screen.
+Position the document window in the center of the screen.
 
-cpdf -display-doc-title \<true | false> in.pdf -o out.pdf
+**cpdf -display-doc-title \<true | false> in.pdf -o out.pdf**
 
-: Display the document title instead of the file name in the title bar.
+Display the document title instead of the file name in the title bar.
 
-cpdf -open-at-page \<page number> in.pdf -o out.pdf
+**cpdf -open-at-page \<page number> in.pdf -o out.pdf**
 
-: Set the document to open at the given page number.
+Set the document to open at the given page number.
 
-cpdf -open-at-page-fit \<page number> in.pdf -o out.pdf
+**cpdf -open-at-page-fit \<page number> in.pdf -o out.pdf**
 
-: Set the document to open at the given page number scaled to fit the window.
+Set the document to open at the given page number scaled to fit the window.
 
-cpdf -open-at-page-custom \<destination> in.pdf -o out.pdf
+**cpdf -open-at-page-custom \<destination> in.pdf -o out.pdf**
 
-: Set the document to open at a custom destination. See cpdfmanual.pdf for details.
+Set the document to open at a custom destination. See cpdfmanual.pdf for details.
 
-cpdf -set-language \<language> in.pdf -o out.pdf
+**cpdf -set-language \<language> in.pdf -o out.pdf**
 
-: Set the document's global language, for example "en-US"
+Set the document's global language, for example "en-US"
 
-cpdf -set-metadata \<metadata-file> in.pdf -o out.pdf
+**cpdf -set-metadata \<metadata-file> in.pdf -o out.pdf**
 
-: Replace or add XMP metadata.
+Replace or add XMP metadata.
 
-cpdf -remove-metadata in.pdf -o out.pdf
+**cpdf -remove-metadata in.pdf -o out.pdf**
 
-: Remove the main XMP metadata stream.
+Remove the main XMP metadata stream.
 
-cpdf -remove-all-metadata in.pdf -o out.pdf
+**cpdf -remove-all-metadata in.pdf -o out.pdf**
 
-: Remove all XMP metadata streams.
+Remove all XMP metadata streams.
 
-cpdf -print-metadata in.pdf
+**cpdf -print-metadata in.pdf**
 
-: Print the XMP metadata stream to standard output.
+Print the XMP metadata stream to standard output.
 
-cpdf -extract-all-metadata in.pdf -o <directory>
+**cpdf -extract-all-metadata in.pdf -o <directory>**
 
-: Extract XMP metadata streams to the given directory.
+Extract XMP metadata streams to the given directory.
 
-cpdf -create-metadata in.pdf -o out.pdf
+**cpdf -create-metadata in.pdf -o out.pdf**
 
-: Create or replace XMP metadata from old-style metadata.
+Create or replace XMP metadata from old-style metadata.
 
-cpdf -set-metadata-date \<date> in.pdf -o out.pdf
+**cpdf -set-metadata-date \<date> in.pdf -o out.pdf**
 
-: Set the XMP metadata date. See cpdfmanual.pdf for date format details.
+Set the XMP metadata date. See cpdfmanual.pdf for date format details.
 
-cpdf -add-page-labels in.pdf [<range>] -o out.pdf \[-label-style \<style>]
+**cpdf -add-page-labels in.pdf** [<range>] **-o out.pdf** \[-label-style \<style>]
 \[-label-prefix <string>] \[-label-startval <integer>] \[-labels-progress]
 
-: Add page labels to a PDF. Multiple calls may be used to add multiple ranges of page labels.
+Add page labels to a PDF. Multiple calls may be used to add multiple ranges of page labels.
 
 **-label-style**
 
-: One of DecimalArabic, LowercaseRoman, UppercaseRoman, LowercaseLetters,
-UppercaseLetters, NoLabelPrefixOnly.
+: One of **DecimalArabic**, **LowercaseRoman**, **UppercaseRoman**, **LowercaseLetters**,
+**UppercaseLetters**, **NoLabelPrefixOnly**.
 
 **-label-prefix**
 
@@ -1340,26 +1373,28 @@ UppercaseLetters, NoLabelPrefixOnly.
 **-label-startval**
 
 : By default the labels begin at page number 1 for each range. To override
-this, we can use -label-startval
+this, we can use **-label-startval**.
 
 **-labels-progress**
 
 : make sure the start value progresses between sub-ranges when the page range
 specified is disjoint, e.g "1-9, 30-40" or "odd".
 
-cpdf -remove-page-labels in.pdf -o out.pdf
+**cpdf -remove-page-labels in.pdf -o out.pdf**
 
-: Remove the page labels.
+Remove the page labels.
 
-cpdf -print-page-labels\[-json] in.pdf
+**cpdf -print-page-labels\[-json] in.pdf**
 
-: Print the page labels in plain text (-print-page-labels) or JSON (-print-page-lables-json) format.
+Print the page labels in plain text (**-print-page-labels**) or JSON
+(**-print-page-lables-json**) format.
 
-cpdf -composition\[-json] in.pdf
+**cpdf -composition\[-json] in.pdf**
 
-: Print the composition of a PDF, showing how much space is taken by images, fonts etc.
+Print the composition of a PDF, showing how much space is taken by images, fonts etc.
 
-$ cpdf -composition cpdfmanual.pdf
+```
+cpdf -composition cpdfmanual.pdf
 Images: 0 bytes (0.00%)
 Fonts: 144731 bytes (46.72%)
 Content streams: 132767 bytes (42.85%)
@@ -1368,6 +1403,7 @@ Attached Files: 0 bytes (0.00%)
 XRef Table: 21082 bytes (6.80%)
 Piece Info: 0 bytes (0.00%)
 Unclassified: 11229 bytes (3.62%)
+```
 
 # 12. FILE ATTACHMENTS
 
