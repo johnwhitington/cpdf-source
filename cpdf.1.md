@@ -256,10 +256,10 @@ A PDF portfolio is a special kind of PDF with contains other documents (PDF and
 otherwise) within it. Support is mostly limited to Adobe products at time of
 writing.
 
-cpdf -portfolio in.pdf -pf \<filename> \[-pfd <string>] \[-pfr \<relationship>]
-\[-pf ...] -o out.pdf
+**cpdf** **-portfolio** **in.pdf** -pf \<filename> \[-pfd <string>] \[-pfr \<relationship>]
+\[-pf ...] **-o out.pdf**
 
-The input in.pdf here is the main file. You can build a blank one with **-create-pdf**.
+The input **in.pdf** here is the main file. You can build a blank one with **-create-pdf**.
 
 **-pf**
 
@@ -278,12 +278,12 @@ The input in.pdf here is the main file. You can build a blank one with **-create
 We can split an input PDF into its constituent pages, and output one PDF for
 each page.
 
-cpdf -split in.pdf \[-chunk \<chunksize>] \[-process-struct-trees] \[-utf8] -o
-\<format>
+**cpdf -split in.pdf** \[-chunk \<chunksize>] \[-process-struct-trees] \[-utf8] **-o
+\<format>**
 
 The output format has many options (see cpdfmanual.pdf for details). But the
-simplest is just to number the outputs in sequence. For example cpdf -split
-in.pdf -o out%%%.pdf will produce out001.pdf, out002.pdf and so on.
+simplest is just to number the outputs in sequence. For example **cpdf -split
+in.pdf -o out%%%.pdf** will produce out001.pdf, out002.pdf and so on.
 
 **-chunk**
 
@@ -302,7 +302,7 @@ cpdfmanual.pdf for details.
 
 We can split on bookmark boundaries, at a given level, instead of splitting on each page:
 
-cpdf -split-bookmarks \<level> in.pdf \[-process-struct-trees] \[-utf8] -o \<format>
+**cpdf -split-bookmarks \<level> in.pdf** \[-process-struct-trees] \[-utf8] **-o \<format>**
 
 **-process-struct-trees**
 
@@ -317,7 +317,8 @@ cpdfmanual.pdf for details.
 
 We can split the file, if possible, to a maximum filesize for each output PDF:
 
-cpdf -split-max \<file size> in.pdf \[-process-struct-trees] \[-utf8] -o \<format>
+**cpdf -split-max \<file size> in.pdf** \[-process-struct-trees] \[-utf8] **-o \<format>
+**
 
 **-process-struct-trees**
 
@@ -334,7 +335,7 @@ We can use **-spray** to write the split pages to more than one named output
 file. When Cpdf runs out of output files, it adds the next page to the first
 output file, and so on until all input pages are exhausted.
 
-cpdf -spray in.pdf \[-process-struct-trees] \[-utf8] -o a.pdf \[-o b.pdf \[-o ...]]
+**cpdf -spray in.pdf** \[-process-struct-trees] \[-utf8] **-o a.pdf** \[-o b.pdf \[-o ...]]
 
 **-process-struct-trees**
 
@@ -347,17 +348,17 @@ cpdfmanual.pdf for details.
 
 # 3. PAGES
 
-cpdf -scale-page "\<scale x> \<scale y>" \[-fast] \[<position>] in.pdf
-\[\<range>] -o out.pdf
+**cpdf -scale-page "\<scale x> \<scale y>"** \[-fast] \[<position>] **in.pdf**
+\[\<range>] **-o out.pdf**
 
-: Scale pages in the given range by the given factor e.g "2 2". See the end of
+Scale pages in the given range by the given factor e.g "2 2". See the end of
 this chapter for -fast and -position.
 
-cpdf -scale-to-fit "\<x size> \<y size>" \[-fast] \[-prerotate] \[\<position>]
+**cpdf -scale-to-fit "\<x size> \<y size>"** \[-fast] \[-prerotate] \[\<position>]
 \[-scale-to-fit-scale \<scale>] \[-scale-to-fit-rotate-clockwise]
-\[-scale-to-fit-rotate-anticlockwise] in.pdf \[\<range>] -o out.pdf
+\[-scale-to-fit-rotate-anticlockwise] **in.pdf** \[\<range>] **-o out.pdf**
 
-: Scale pages in the given range to fit the given size e.g "a4paper" or "10in
+Scale pages in the given range to fit the given size e.g "a4paper" or "10in
 7in", without altering the aspect ratio. By default the content will be
 centered on the new page. See the end of this chapter for -position
 and -prerotate.
@@ -371,103 +372,103 @@ example 0.9 for 90 percent.
 
 : Automatically rotate page to maximise use of area.
 
-cpdf -stretch "\<x size> \<y size>" \[-fast] in.pdf \[\<range>] -o out.pdf
+**cpdf -stretch "\<x size> \<y size>"** \[-fast] **in.pdf** \[\<range>] **-o out.pdf**
 
-: Scale pages without regard to aspect ratio.
+Scale pages without regard to aspect ratio.
 
-cpdf -center-to-fit "\<x size> \<y size>" \[-fast] in.pdf \[\<range>] -o
-out.pdf
+**cpdf -center-to-fit "\<x size> \<y size>"** \[-fast] **in.pdf** \[\<range>] **-o
+out.pdf**
 
-: Center each page on a new page size, without scaling it.
+Center each page on a new page size, without scaling it.
 
-cpdf -scale-contents \[\<scale>] \[<position>] \[-fast] in.pdf \[\<range>] -o
-out.pdf
+**cpdf -scale-contents <scale>** \[<position>] \[-fast] **in.pdf** \[\<range>] **-o
+out.pdf**
 
-: Scale the content of pages by a given factor, without changing the size
-of the page. See the end of this chapter for -position.
+Scale the content of pages by a given factor, without changing the size
+of the page. See the end of this chapter for position.
 
-cpdf -shift "\<shift x> \<shift y>" \[-fast] in.pdf \[\<range>] -o out.pdf
+**cpdf -shift "\<shift x> \<shift y>"** \[-fast] **in.pdf** \[\<range>] **-o out.pdf**
 
-: Shift the content of pages by a given displacement.
+Shift the content of pages by a given displacement.
 
-cpdf -shift-boxes "\<shift x> \<shift y>" in.pdf \[\<range>] -o out.pdf
+**cpdf -shift-boxes "\<shift x> \<shift y>"** **in.pdf** \[\<range>] **-o out.pdf**
 
-: Shift the boxes of a page by a given displacement, without moving the content.
+Shift the boxes of a page by a given displacement, without moving the content.
 
-cpdf -rotate \<angle> in.pdf \[\<range>] -o out.pdf
+**cpdf -rotate \<angle> in.pdf** \[\<range>] **-o out.pdf**
 
-: Change the PDF viewing rotation of pages to 0, 90, 180 or 270 degrees clockwise. 
+Change the PDF viewing rotation of pages to 0, 90, 180 or 270 degrees clockwise. 
 
-cpdf -rotateby \<angle> in.pdf \[\<range>] -o out.pdf
+**cpdf -rotateby \<angle> in.pdf** \[\<range>] **-o out.pdf**
 
-: Change the PDF viewing rotation of pages by 0, 90, 180 or 270 degrees clockwise. 
+Change the PDF viewing rotation of pages by 0, 90, 180 or 270 degrees clockwise. 
 
-cpdf -upright \[-fast] in.pdf \[\<range>] -o out.pdf
+**cpdf -upright** \[-fast] **in.pdf** \[\<range>] **-o out.pdf**
 
-: The -upright operation does whatever combination of -rotate and
--rotate-contents is required to change the rotation of the document to zero
+The **-upright** operation does whatever combination of **-rotate** and
+**-rotate-contents** is required to change the rotation of the document to zero
 without altering its appearance. In addition, it makes sure the media box has
 its origin at (0,0), changing other boxes to compensate.
 
-cpdf -rotate-contents \<angle> \[-fast] in.pdf \[\<range>] -o out.pdf
+**cpdf -rotate-contents \<angle>** \[-fast] **in.pdf** \[\<range>] **-o out.pdf**
 
-: Rotates the contents of the page around its center point by the given angle.
+Rotates the contents of the page around its center point by the given angle.
 
-cpdf -hflip \[-fast] in.pdf \[\<range>] -o out.pdf
+**cpdf -hflip** \[-fast] **in.pdf** \[\<range>] **-o out.pdf**
 
-: Flip page content horizontally.
+Flip page content horizontally.
 
-cpdf -vflip \[-fast] in.pdf \[\<range>] -o out.pdf
+**cpdf -vflip** \[-fast] **in.pdf** \[\<range>] **-o out.pdf**
 
-: Flip page content vertically.
+Flip page content vertically.
 
-cpdf -\[media|crop|art|trim|bleed]box \<boxspec> in.pdf \[\<range>] -o out.pdf
+**cpdf **-\[media|crop|art|trim|bleed]box** **\<boxspec> in.pdf** \[\<range>] **-o out.pdf**
 
-: Set the media, crop, art, trim or bleed box. For example -cropbox "50 50 300
-200" sets minx 50, miny 50, width 300, height 200. To use absolute numbers
-instead of width and height, prefix with a question mark, writing "?50 50 350
-250" instead.
+Set the media, crop, art, trim or bleed box. For example **-cropbox "50 50 300
+200"** sets minx 50, miny 50, width 300, height 200. To use absolute numbers
+instead of width and height, prefix with a question mark, writing **"?50 50 350
+250"** instead.
 
-cpdf -remove-\[crop|art|trim|bleed]box in.pdf \[\<range>] -o out.pdf
+**cpdf -remove-\[crop|art|trim|bleed]box in.pdf** \[\<range>] **-o out.pdf**
 
-: Remove a crop, art, trim or bleed box from pages.
+Remove a crop, art, trim or bleed box from pages.
 
-cpdf -frombox \<boxname> -tobox \<boxname> \[-mediabox-if-missing] in.pdf \[\<range>] -o out.pdf
+**cpdf -frombox \<boxname> -tobox \<boxname>** \[-mediabox-if-missing] **in.pdf** \[\<range>] **-o out.pdf**
 
-: Copy a box to another. For example from /TrimBox to /CropBox.
+Copy a box to another. For example from **/TrimBox** to **/CropBox**.
 
 **-mediabox-if-missing**
 
-: Use media box, rather than failing, if the -frombox is missing.
+Use media box, rather than failing, if the **-frombox** is missing.
 
-cpdf -hard-box \<boxname> \[-fast] in.pdf \[\<range>] \[-mediabox-if-missing] -o out.pdf
+**cpdf -hard-box \<boxname>** \[-fast] **in.pdf** \[\<range>] \[-mediabox-if-missing] **-o out.pdf**
 
-: Create a hard box for a given box name - that is to say, one which clips its contents.
+Create a hard box for a given box name - that is to say, one which clips its contents.
 
-cpdf -show-boxes \[-fast] in.pdf \[\<range>] -o out.pdf
+**cpdf -show-boxes** \[-fast] **in.pdf** \[\<range>] **-o out.pdf**
 
-: Show the media, crop, art, trim, and bleed boxes in Red, Green, Blue, Orange
+Show the media, crop, art, trim, and bleed boxes in Red, Green, Blue, Orange
 and Pink respectively.
 
-cpdf -trim-marks \[-fast] in.pdf \[\<range>] -o out.pdf
+**cpdf -trim-marks** \[-fast] **in.pdf** \[\<range>] **-o out.pdf**
 
-: Add trim marks to a PDF. The trim box must be present.
+Add trim marks to a PDF. The trim box must be present.
 
 FIXME: POSITIONS
 FIXME: FAST
 
 # 4. ENCRYPTION AND DECRYPTION
 
-cpdf -encrypt \<method> \[-pw=]\<owner> \[-pw=]\<user> \[-no-encrypt-metadata]
-\<permissions> in.pdf -o out.pdf
+**cpdf -encrypt \<method> \[-pw=]\<owner> \[-pw=]\<user>** \[-no-encrypt-metadata]
+\<permissions> **in.pdf -o out.pdf**
 
-: Encrypt a document given the method (e.g AES256ISO for modern usage), owner
-and user passwords, and optionally permissions. E.g cpdf -encrypt AES256ISO
-secret "" in.pdf -o out.pdf
+Encrypt a document given the method (e.g **AES256ISO** for modern usage), owner
+and user passwords, and optionally permissions. E.g **cpdf -encrypt AES256ISO
+secret "" in.pdf -o out.pdf**.
 
 **-no-encrypt-metadata**
 
-: Do not encrypt metadata (AES encryption only)
+: Do not encrypt metadata (AES encryption only).
 
 **-pw=**
 
@@ -477,68 +478,71 @@ Permissions:
 
 **-no-edit**
 
-: Cannot change the document
+: Cannot change the document.
 
 **-no-print**
 
-: Cannot print the document
+: Cannot print the document.
 
 **-no-copy**
 
-: Cannot select or copy text or graphics
+: Cannot select or copy text or graphics.
 
 **-no-annot**
 
-: Cannot add or change form fields or annotations
+: Cannot add or change form fields or annotations.
 
 **-no-forms**
 
-: Cannot edit form fields
+: Cannot edit form fields.
 
 **-no-extract**
 
-: Cannot extract text or graphics
+: Cannot extract text or graphics.
 
 **-no-assemble**
 
-: Cannot merge files etc.
+: Cannot, for example, merge files.
 
 **-no-hq-print**
 
-: Cannot print high-quality
-
-cpdf -decrypt \[-decrypt-force] in.pdf owner=\<owner password> -o out.pdf
+: Cannot print high-quality.
 
 Note: Adobe Acrobat and Adobe Reader may show slightly different permissions in info dialogues – this
 is a result of policy changes and not a bug in Cpdf. You may need to experiment.
+
+**cpdf -decrypt** \[-decrypt-force] **in.pdf owner=\<owner password> -o out.pdf**
 
 : Decrypt a document, given its owner password.
 
 **-decrypt-force**
 
-: Decrypt even without the owner password, using just the user password. The user password is often blank.
+: Decrypt even without the owner password, using just the user password. The
+user password is often blank.
 
 # 5. COMPRESSION
 
-cpdf -decompress \[-just-content] in.pdf -o out.pdf
+**cpdf -decompress** \[-just-content] **in.pdf -o out.pdf**
 
-: Decompress the streams in a PDF file, for instance to manually inspect it.
+Decompress the streams in a PDF file, for instance to manually inspect it.
 
 **-just-content**
 
-: Only decompress page content streams
+: Only decompress page content streams.
 
--jbig2dec
+**-jbig2dec**
 
-: Give the path to the jbig2dec program which Cpdf uses, if available, to decompress JBIG2 streams.
+: Give the path to the jbig2dec program which Cpdf uses, if available, to
+decompress JBIG2 streams.
 
-cpdf -compress in.pdf -o out.pdf
+**cpdf -compress in.pdf -o out.pdf**
 
-: Compress any streams which are uncompressed using the FlateDecode method, with the exception of metadata streams.
+Compress any streams which are uncompressed using the FlateDecode method,
+with the exception of metadata streams.
 
-cpdf -squeeze in.pdf \[-squeeze-log-to \<filename>] \[-squeeze-no-pagedata] -o out.pdf
+**cpdf -squeeze in.pdf** \[-squeeze-log-to \<filename>] \[-squeeze-no-pagedata] **-o out.pdf**
 
-: Squeeze a file by coalescing like objects, and various other maneuvers.
+Squeeze a file by coalescing like objects, and various other methods.
 
 **-squeeze-log-to**
 
@@ -548,42 +552,47 @@ cpdf -squeeze in.pdf \[-squeeze-log-to \<filename>] \[-squeeze-no-pagedata] -o o
 
 : Avoid processing page data, making the squeeze process much faster at the cost of a little compression.
 
-cpdf -remove-article-threads in.pdf -o out.pdf
+**cpdf -remove-article-threads in.pdf -o out.pdf**
 
-: Remove article threads.
+Remove article threads.
 
-cpdf -remove-page-piece in.pdf -o out.pdf
+**cpdf -remove-page-piece in.pdf -o out.pdf**
 
-: Remove page piece information.
+Remove page piece information.
 
-cpdf -remove-web-capture in.pdf -o out.pdf
+**cpdf -remove-web-capture in.pdf -o out.pdf**
 
-: Remove web capture data.
+Remove web capture data.
 
-cpdf -remove-procsets in.pdf -o out.pdf
+**cpdf -remove-procsets in.pdf -o out.pdf**
 
-: Remove ProcSets, a now-irrelevant data structure from early PDFs.
+Remove ProcSets, a now-irrelevant data structure from early PDFs.
 
-cpdf -remove-output-intents in.pdf -o out.pdf
+**cpdf -remove-output-intents in.pdf -o out.pdf**
 
-: Remove output intents, a colour-matching system for documents intended to be printed.
+Remove output intents, a colour-matching system for documents intended to be printed.
 
 # 6. BOOKMARKS
 
-cpdf -list-bookmarks \[-utf8] in.pdf
+**cpdf -list-bookmarks** \[-utf8] **in.pdf**
 
-: Print bookmark data to Standard Output. The data includes level, title, pagenumber linked to, and full link data. Use -utf8 always. For example:
+Print bookmark data to Standard Output. The data includes level, title,
+pagenumber linked to, and full link data. Use -utf8 always. For example:
 
+```
 0 "Part 1" 1 open
 1 "Part 1A" 2 "[2 /XYZ 200 400 null]"
 1 "Part 1B" 3
 0 "Part 2" 4
 1 "Part 2a" 5
+```
 
-cpdf -list-bookmarks-json \[-preserve-actions] in.pdf
+**cpdf -list-bookmarks-json** \[-preserve-actions] **in.pdf**
 
-: Print bookmark data to Standard Output in JSON format instead. Here is a single entry in the JSON array of bookmarks:
+Print bookmark data to Standard Output in JSON format instead. Here is a single
+entry in the JSON array of bookmarks:
 
+```
 { "level": 0,
   "text": "1 Basic Usage",
   "page": 17,
@@ -598,30 +607,34 @@ cpdf -list-bookmarks-json \[-preserve-actions] in.pdf
   "italic": false,
   "bold": false
 }
+```
 
-cpdf -remove-bookmarks in.pdf -o out.pdf
+**cpdf -remove-bookmarks in.pdf -o out.pdf**
 
-: Remove all bookmarks from a PDF.
+Remove all bookmarks from a PDF.
 
-cpdf -add-bookmarks \<bookmark file> in.pdf -o out.pdf
+**cpdf -add-bookmarks \<bookmark file> in.pdf -o out.pdf**
 
-: Add bookmarks, given an old-style bookmark file.
+Add bookmarks, given an old-style bookmark file.
 
-cpdf -add-bookmarks-json \<bookmark file> in.pdf -o out.pdf
+**cpdf -add-bookmarks-json \<bookmark file> in.pdf -o out.pdf**
 
-: Add bookmarks, given a new-style JSON bookmark file.
+Add bookmarks, given a new-style JSON bookmark file.
 
-cpdf -bookmarks-open-to-level \<n> in.pdf -o out.pdf
+**cpdf -bookmarks-open-to-level \<n> in.pdf -o out.pdf**
 
-: Set all bookmarks up to and including a given level to be open.
+Set all bookmarks up to and including a given level to be open.
 
-cpdf -table-of-contents \[-toc-title] \[-toc-no-bookmark] \[-toc-dot-leaders] \[-font <font>] \[-font-size <size>] \[-embed-std14 /path/to/fonts] \[-process-struct-trees] \[-subformat <subformat>] in.pdf -o out.pdf
+**cpdf -table-of-contents** \[-toc-title] \[-toc-no-bookmark] \[-toc-dot-leaders]
+\[-font <font>] \[-font-size <size>] \[-embed-std14 /path/to/fonts]
+\[-process-struct-trees] \[-subformat <subformat>] **in.pdf -o out.pdf**
 
-: Generate a typeset table of contents from existing bookmarks, adding it to the beginning of the document.
+Generate a typeset table of contents from existing bookmarks, adding it to
+the beginning of the document.
 
 **-toc-title**
 
-: Title (default is "Table of Contents")
+: Title (default is "Table of Contents").
 
 **-toc-no-bookmark**
 
@@ -633,11 +646,11 @@ cpdf -table-of-contents \[-toc-title] \[-toc-no-bookmark] \[-toc-dot-leaders] \[
 
 **-font**
 
-: Give the font (default Times Roman)
+: Give the font (default Times Roman).
 
 **-font-size**
 
-: Give the font size (default 12pt)
+: Give the font size (default 12pt).
 
 **-embed-std14**
 
@@ -645,15 +658,19 @@ cpdf -table-of-contents \[-toc-title] \[-toc-no-bookmark] \[-toc-dot-leaders] \[
 
 **-process-struct-trees**
 
-: Create a structure tree for the new table of contents and merge it with the document's.
+: Create a structure tree for the new table of contents and merge it with the
+document's.
 
 **-subformat**
 
-: Add -subformat "PDF/UA-2" when adding a table of contents to a PDF/UA-2 file to keep compatibility.
+: Add **-subformat "PDF/UA-2"** when adding a table of contents to a PDF/UA-2
+file to keep compatibility.
 
 # 7. PRESENTATIONS
 
-cpdf -presentation in.pdf \[\<range>] -o out.pdf \[-trans \<transition-name>] \[-duration \<float>] \[-vertical] \[-outward] \[-direction \<int>] \[-effect-duration \<float>]
+cpdf -presentation in.pdf \[\<range>] -o out.pdf \[-trans \<transition-name>]
+\[-duration \<float>] \[-vertical] \[-outward] \[-direction \<int>]
+\[-effect-duration \<float>]
 
 : Make a slide-show presentation from a PDF.
 
