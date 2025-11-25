@@ -794,7 +794,7 @@ And date and time formats:
 %% The % character
 ```
 
-\n may be used to demarcate multiple lines.
+\\n may be used to demarcate multiple lines.
 
 **-font**
 
@@ -1407,10 +1407,10 @@ Unclassified: 11229 bytes (3.62%)
 
 # 12. FILE ATTACHMENTS
 
-cpdf -attach-file \<filename> \[-to-page \<page number>] \[-afd \<string>]
-\[-afr \<relationship>] \[-attach-file ...] in.pdf -o out.pdf
+**cpdf -attach-file \<filename>** \[-to-page \<page number>] \[-afd \<string>]
+\[-afr \<relationship>] \[-attach-file ...] **in.pdf -o out.pdf**
 
-: Attach a file to a PDF, given its filename.
+Attach a file to a PDF, given its filename.
 
 **-to-page**
 
@@ -1424,9 +1424,9 @@ cpdf -attach-file \<filename> \[-to-page \<page number>] \[-afd \<string>]
 
 : Supply the so-called Relationship for this attachment.
 
-cpdf -list-attached-files \[-json] \[-include-data] in.pdf
+**cpdf -list-attached-files** \[-json] \[-include-data] **in.pdf**
 
-: List attached files.
+List attached files.
 
 **-json**
 
@@ -1436,44 +1436,47 @@ cpdf -list-attached-files \[-json] \[-include-data] in.pdf
 
 : Include the attachment file data when listing in JSON format.
 
-cpdf -remove-files in.pdf -o out.pdf
+**cpdf -remove-files in.pdf -o out.pdf**
 
-: Remove attached files from a PDF.
+Remove attached files from a PDF.
 
-cpdf -dump-attachments in.pdf -o \<directory>
+**cpdf -dump-attachments in.pdf -o \<directory>**
 
-: Extract the attachments to a given directory.
+Extract the attachments to a given directory.
 
 # 13. IMAGES
 
-cpdf -list-images\[-json] \[-inline] in.pdf \[\<range>]
+**cpdf -list-images\[-json]** \[-inline] **in.pdf** \[\<range>]
 
-: List the images in a file, together with their object number, page numbers,
+List the images in a file, together with their object number, page numbers,
 image name, width, height, size in bytes, bits per pixel, colour space,
 compression method, mask type and mask object number. Either in plain text
-(-list-images) or JSON (-list-images-json).
+(**-list-images**) or JSON (**-list-images-json**).
 
 **-inline**
 
 : Also list inline images.
 
-cpdf -list-images-used\[-json] \[-inline] in.pdf \[\<range>]
-cpdf -image-resolution\[-json] \<n> \[-inline] in.pdf \[\<range>]
+**cpdf -list-images-used\[-json]** \[-inline] **in.pdf** \[\<range>]
 
-: The -list-images-used and -list-images-used-json operations list the images
+**cpdf -image-resolution\[-json] \<n>** \[-inline] **in.pdf** \[\<range>]
+
+The **-list-images-used** and **-list-images-used-json** operations list the images
 at point of use, including page number, image name, width in pixels, height in
-pixels, x resolution, y resolution and object number. Using -image-resolution
-or -image-resolution-json instead reports only such images as do not reach a
+pixels, x resolution, y resolution and object number. Using **-image-resolution**
+or **-image-resolution-json** instead reports only such images as do not reach a
 minimum resolution.
 
 **-inline**
 
 : Also list inline images.
 
-cpdf -extract-images in.pdf \[\<range>] \[-im <path>] \[-p2p <path>] \[-dedup |
--dedup-perpage] \[-raw] \[-inline] \[-merge-masks] -o \<path>
+**cpdf -extract-images in.pdf** \[\<range>] \[-im <path>] \[-p2p <path>] \[-dedup |
+-dedup-perpage] \[-raw] \[-inline] \[-merge-masks] **-o \<path>**
 
-: Extract images to a given path e.g "output/%%%". JPEG, JPEG2000 and lossless JBIG2 images are extracted directly. Lossy JBIG2 images are extracted in sections. Other images are written as PNGs, processed with ImageMagick.
+Extract images to a given path e.g "output/%%%". JPEG, JPEG2000 and lossless
+JBIG2 images are extracted directly. Lossy JBIG2 images are extracted in
+sections. Other images are written as PNGs, processed with ImageMagick.
 
 **-im**
 
@@ -1503,20 +1506,20 @@ cpdf -extract-images in.pdf \[\<range>] \[-im <path>] \[-p2p <path>] \[-dedup |
 
 : Merge soft masks with their images when extracting.
 
-cpdf -extract-single-image \<object number> \[-im \<path>] \[-p2p <path>]
-\[-raw] \[-merge-masks] in.pdf -o \<filename>
+**cpdf -extract-single-image \<object number>** \[-im \<path>] \[-p2p <path>]
+\[-raw] \[-merge-masks] **in.pdf -o \<filename>**
 
-: Extract a single image, given its object number. Other flags as above.
+Extract a single image, given its object number. Other flags as above.
 
-cpdf -process-images \[-process-images-info] in.pdf \[\<range>] \[-im
+**cpdf -process-images** \[-process-images-info] **in.pdf** \[\<range>] \[-im
 \<filename>] [-jbig2enc \<filename>] [-lossless-resample[-dpi] \<n> |
 -lossless-to-jpeg \<n>] \[-jpeg-to-jpeg \<n>] \[-jpeg-to-jpeg-scale \<n>]
 \[-lossless-to-jpeg2000 \<n>] \[-jpeg2000-to-jpeg2000 \<n>] \[-jpeg-to-jpeg-dpi
 \<n>] \[-1bpp-method \<method>] \[-jbig2-lossy-threshold \<n>]
 \[-pixel-threshold \<n>] \[-length-threshold \<n>] \[-percentage-threshold
-\<n>] \[-dpi-threshold \<n>] \[-resample-interpolate] -o out.pdf
+\<n>] \[-dpi-threshold \<n>] \[-resample-interpolate] **-o out.pdf**
 
-: Re-process existing images within the PDF, typically to reduce size. For a
+Re-process existing images within the PDF, typically to reduce size. For a
 full commentary, see cpdfmanual.pdf.
 
 **-process-images-info**
@@ -1591,12 +1594,12 @@ full commentary, see cpdfmanual.pdf.
 
 : Use interpolation when resampling.
 
-cpdf -rasterize in.pdf \[\<range>] -o out.pdf \[-gs <path>]
+**cpdf -rasterize in.pdf** \[\<range>] **-o out.pdf** \[-gs <path>]
 \[-rasterize\[-gray|-1bpp|-jpeg|-jpeggray] \[-rasterize-res \<n>]
 \[-rasterize-jpeg-quality \<n>] \[-rasterize-no-antialias |
 -rasterize-downsample] \[-rasterize-annots] | \[-rasterize-alpha]
 
-: Rasterize each page, replacing the page contents with the rasterized version
+Rasterize each page, replacing the page contents with the rasterized version
 in the output PDF.
 
 **-gs**
@@ -1643,42 +1646,43 @@ in the output PDF.
 
 : Produce an alpha channel (lossless only)
 
-cpdf -output-image in.pdf \[\<range>] -o \<format> \[-gs <path>]
+**cpdf -output-image in.pdf** \[\<range>] **-o \<format>** \[-gs <path>]
 \[-rasterize\[-gray|-1bpp|-jpeg|-jpeggray] \[-rasterize-res <n>]
 \[-rasterize-jpeg-quality <n>] \[-rasterize-no-antialias |
 -rasterize-downsample] \[-rasterize-annots] \[-rasterize-alpha] \[-tobox
 <BoxName>]
 
-: Output rasterized images for each page to the given folder and format e.g
+Output rasterized images for each page to the given folder and format e.g
 "dir/%%%.png". Options as above and:
 
 **-tobox**
 
-: Specify the box to rasterize (default, /MediaBox).
+: Specify the box to rasterize (default /MediaBox).
 
 # 14. FONTS
 
-cpdf -list-fonts\[-json] in.pdf
+**cpdf -list-fonts\[-json] in.pdf**
 
-: List the fonts on each page in a file together with their types. Either in plain text (-list-fonts) or JSON (-list-fonts-json) format.
+List the fonts on each page in a file together with their types. Either in
+plain text (-list-fonts) or JSON (-list-fonts-json) format.
 
-cpdf -print-font-table \<font name> -print-font-table-page \<n> in.pdf
+**cpdf -print-font-table \<font name>** -print-font-table-page \<n> **in.pdf**
 
-: Print a font table for a given font name and page:
+Print a font table for a given font name and page, e.g:
 
-e.g:
-
+```
 cpdf -print-font-table /XYPLPB+NimbusSanL-Bold -print-font-table-page 1 cpdfmanual.pdf
 67 = U+0043 (C - LATIN CAPITAL LETTER C) = /C
 68 = U+0044 (D - LATIN CAPITAL LETTER D) = /D
 70 = U+0046 (F - LATIN CAPITAL LETTER F) = /F
 71 = U+0047 (G - LATIN CAPITAL LETTER G) = /G
 ...
+```
 
-cpdf -copy-font fromfile.pdf -copy-font-page \<int> -copy-font-name \<name>
-in.pdf \[\<range>] -o out.pdf
+**cpdf -copy-font fromfile.pdf** -copy-font-page \<int> -copy-font-name \<name>
+**in.pdf** \[\<range>] **-o out.pdf**
 
-: A low-level operation to copy a font from one file to another.
+A low-level operation to copy a font from one file to another.
 
 **-copy-font-page**
 
@@ -1688,33 +1692,32 @@ in.pdf \[\<range>] -o out.pdf
 
 : The (PDF) name of the font. 
 
-cpdf -remove-fonts in.pdf -o out.pdf
+**cpdf -remove-fonts in.pdf -o out.pdf**
 
-: Remove fonts from a file.
+Remove fonts from a file.
 
-cpdf -missing-fonts in.pdf
+**cpdf -missing-fonts in.pdf**
 
-: Report missing fonts - i.e those which are unembedded.
+Report missing fonts - i.e those which are unembedded.
 
-cpdf -embed-missing-fonts -gs \<path to gs> in.pdf -o out.pdf
+**cpdf -embed-missing-fonts -gs \<path to gs> in.pdf -o out.pdf**
 
-: Use Ghostscript to embed missing fonts into a PDF. Note: putting a PDF file
-through gs in this manner may not be lossless: some metadata may not be
-preserved
+Use gs to embed missing fonts into a PDF. Note: putting a PDF file through gs
+in this manner may not be lossless: some metadata may not be preserved
 
-cpdf -extract-font \<page number>,\<pdf font name> in.pdf -o out.font
+**cpdf -extract-font \<page number>,\<pdf font name> in.pdf -o out.font**
 
-: Extract a font file from a PDF given a pagenumber, font name pair. E.g:
+Extract a font file from a PDF given a pagenumber, font name pair. E.g:
 
 cpdf -extract-font 5,/F50 in.pdf -o out.ttf
 
 # 15. PDF AND JSON
 
-cpdf in.pdf -output-json -o out.json \[-output-json-parse-content-streams]
+**cpdf in.pdf -output-json -o out.json** \[-output-json-parse-content-streams]
 \[-output-json-no-stream-data] \[-output-json-decompress-streams]
 \[-output-json-clean-strings] \[-utf8]
 
-: Convert PDF to a JSON format which may be inspected, or edited and
+Convert PDF to a JSON format which may be inspected, or edited and
 round-tripped back into PDF.
 
 **-output-json-parse-content-streams**
@@ -1737,34 +1740,34 @@ round-tripped back into PDF.
 
 : Use UTF8 rather than PDFDocEncoding for strings, to make them more easily editable.
 
-cpdf -j in.json -o out.pdf
+**cpdf -j in.json -o out.pdf**
 
-: Convert a JSON file to a PDF file.
+Convert a JSON file to a PDF file.
 
 # 16. OPTIONAL CONTENT GROUPS
 
-cpdf -ocg-list in.pdf
+**cpdf -ocg-list in.pdf**
 
-: List the optional content groups in the PDF, one oper line, to Standard Output.
+List the optional content groups in the PDF, one oper line, to Standard Output.
 
-cpdf -ocg-rename -ocg-rename-from \<a> -ocg-rename-to \<b> in.pdf -o out.pdf
+**cpdf -ocg-rename -ocg-rename-from \<a> -ocg-rename-to \<b> in.pdf -o out.pdf**
 
-: Rename an optional content group given the old and new names.
+Rename an optional content group given the old and new names.
 
-cpdf -ocg-order-all in.pdf -o out.pdf
+**cpdf -ocg-order-all in.pdf -o out.pdf**
 
-: Ensure that every optional content group appears in the order list.
+Ensure that every optional content group appears in the order list.
 
-cpdf -ocg-coalesce-on-name in.pdf -o out.pdf
+**cpdf -ocg-coalesce-on-name in.pdf -o out.pdf**
 
-: Coalesce optional content groups. For example, if we merge or stamp two files
+Coalesce optional content groups. For example, if we merge or stamp two files
 both with an OCG called "Layer 1", we will have two differen optional content
 groups. This command will merge them into a single optional content group.
 
 # 17. CREATING NEW PDFS
 
-cpdf -create-pdf \[-create-pdf-pages \<n>] \[-create-pdf-papersize \<paper
-size>] -o out.pdf
+**cpdf -create-pdf** \[-create-pdf-pages \<n>] \[-create-pdf-papersize \<paper
+size>] **-o out.pdf**
 
 : Create a new PDF (default, 1 page A4 portrait).
 
@@ -1776,10 +1779,10 @@ size>] -o out.pdf
 
 : Give the paper size, e.g "a3landscape" or "200pt 600pt"
 
-cpdf -typeset \<text file> \[-create-pdf-papersize \<size>] \[-font \<font>]
-\[-font-size \<size>] \[-subformat \<subformat>] \[-title \<string>] -o out.pdf
+**cpdf -typeset \<text file>** \[-create-pdf-papersize \<size>] \[-font \<font>]
+\[-font-size \<size>] \[-subformat \<subformat>] \[-title \<string>] **-o out.pdf**
 
-: Typeset a text file into a PDF.
+Typeset a text file into a PDF.
 
 **-create-pdf-papersize**
 
@@ -1801,13 +1804,15 @@ cpdf -typeset \<text file> \[-create-pdf-papersize \<size>] \[-font \<font>]
 
 : Specify a title when using -subformat for a PDF/UA file.
 
-cpdf  -jpeg \<filename> \[-subformat \<subformat>] \[-title \<string>] -o
-out.pdf
-cpdf -png \<filename> \[-subformat \<subformat>] \[-title \<string>] -o out.pdf
-cpdf-jpeg2000 \<filename>\[-subformat \<subformat>] \[-title \<string>] -o
-out.pdf
+**cpdf  -jpeg \<filename>** \[-subformat \<subformat>] \[-title \<string>] **-o
+out.pdf**
 
-: Build a PDF from an image file (JPEG, PNG or JPEG2000).
+**cpdf -png \<filename>** \[-subformat \<subformat>] \[-title \<string>] **-o out.pdf**
+
+**cpdf -jpeg2000 \<filename>** \[-subformat \<subformat>] \[-title \<string>] **-o
+out.pdf**
+
+Build a PDF from an image file (JPEG, PNG or JPEG2000).
 
 **-subformat**
 
@@ -1817,11 +1822,12 @@ out.pdf
 
 : Specify a title when using -subformat for a PDF/UA file.
 
-cpdf \[-jbig2-global \<filename>] -jbig2 \<filename> \[-jbig2-global |
+**cpdf** \[-jbig2-global \<filename>] **-jbig2 \<filename>** \[-jbig2-global |
 -jbig2-global-clear] \[-jbig2 \<filename>] ... \[-subformat \<subformat>]
-\[-title \<string>] -o out.pdf
+\[-title \<string>] **-o out.pdf**
 
-: Make a multi-page PDF from one or more PDF-appropriate JBIG2 fragments prepared by the jbig2enc program. For example, in lossless mode:
+Make a multi-page PDF from one or more PDF-appropriate JBIG2 fragments
+prepared by the jbig2enc program. For example, in lossless mode:
 
 cpdf -jbig2 1.jbig2 -jbig2 2.jbig2 -jbig2 3.jbig2 -o out.pdf
 
@@ -1847,9 +1853,9 @@ cpdf -jbig2-global 0.jbig2globals -jbig2 1.jbig2 -jbig2 2.jbig2 -jbig2 3.jbig2 -
 
 # 18. DRAWING ON PDFS
 
-cpdf in.pdf [<range>] [-draw-struct-tree] [-underneath] -draw <draw operations> -o out.pdf
+**cpdf in.pdf** [<range>] [-draw-struct-tree] [-underneath] **-draw <draw operations>** **-o out.pdf**
 
-: Draw on a PDF. See cpdfmanual.pdf for a tutorial, and full information.
+Draw on a PDF. See cpdfmanual.pdf for a tutorial, and full information.
 
 **-draw-struct-tree**
 
@@ -1859,9 +1865,9 @@ cpdf in.pdf [<range>] [-draw-struct-tree] [-underneath] -draw <draw operations> 
 
 : Draw underneath instead of on top of any existing page content.
 
-cpdf -text-width <text> [-font <font>] [-fontsize <fontsize>]
+**cpdf -text-width <text>** [-font <font>] [-fontsize <fontsize>]
 
-: Return the width of a string of text in a one of the Standard 14 fonts. Used
+Return the width of a string of text in a one of the Standard 14 fonts. Used
 for calculations of text position (e.g right-alignment).
 
 **-font**
@@ -1874,345 +1880,345 @@ for calculations of text position (e.g right-alignment).
 
 **Building and showing paths**
 
--rect "x y w h"
+**-rect "x y w h"**
 
-: Draw rectangle
+: Draw rectangle.
 
--to "x y"
+**-to "x y"**
 
-: Move to
+: Move to.
 
--line "x y"
+**-line "x y"**
 
-: Add line to path
+: Add line to path.
 
--bez "x1 y1 x2 y2 x3 y3"
+**-bez "x1 y1 x2 y2 x3 y3"**
 
-: Add Bezier curve to path
+: Add Bezier curve to path.
 
--bez23 "x2 y2 x3 y3"
+**-bez23 "x2 y2 x3 y3"**
 
-: Add Bezier curve to path
+: Add Bezier curve to path.
 
--bez13 "x1 y1 x3 y3"
+**-bez13 "x1 y1 x3 y3"**
 
-: Add Bezier curve to path
+: Add Bezier curve to path.
 
--circle "x y r"
+**-circle "x y r"**
 
-: Add circle to path
+: Add circle to path.
 
--stroke
+**-stroke**
 
-: Stroke path
+: Stroke path.
 
--fill
+**-fill**
 
-: Fill path
+: Fill path.
 
--filleo
+**-filleo**
 
-: Fill path, even odd
+: Fill path, even odd.
 
--strokefill
+**-strokefill**
 
-: Stroke and fill path
+: Stroke and fill path.
 
--strokefilleo
+**-strokefilleo**
 
-: Stroke and fill path, even odd
+: Stroke and fill path, even odd.
 
--close
+**-close**
 
-: Close path
+: Close path.
 
 **Clipping with paths**
 
--clip
+**-clip**
 
-: Clip
+: Clip.
 
--clipeo
+**-clipeo**
 
-: Clip, even odd
+: Clip, even odd.
 
 **Path parameters**
 
 **-strokecol** "g" | "r g b" | "c y m k" | <namedcolour>
 
-: Set stroke colour
+: Set stroke colour.
 
 **-fillcol** "g" | "r g b" | "c y m k" | <namedcolour>
 
-: Set fill colour
+: Set fill colour.
 
 **-thick** <n>
 
-: Set stroke thickness
+: Set stroke thickness.
 
 **-cap** butt | round | square
 
-: Set cap
+: Set cap.
 
 **-join** miter | round | bevel
 
-: Set join
+: Set join.
 
 **-miter** <n>
 
-: Set miter limit
+: Set miter limit.
 
 **-dash** <pattern>
 
-: Set dash pattern
+: Set dash pattern.
 
 **The graphics stack and matrices**
 
--push
+**-push**
 
-: Push graphics stack
+: Push graphics stack.
 
--pop
+**-pop**
 
-: Pop graphics stack
+: Pop graphics stack.
 
--matrix "a b c d e f"
+**-matrix "a b c d e f"**
 
-: Append to graphics matrix
+: Append to graphics matrix.
 
--mtrans "tx ty"
+**-mtrans "tx ty"**
 
-: Translate the graphics matrix
+: Translate the graphics matrix.
 
--mrot "x y a"
+**-mrot "x y a"**
 
-: Rotate the graphics matrix
+: Rotate the graphics matrix.
 
--mscale "x y sx sy"
+**-mscale "x y sx sy"**
 
-: Scale the graphics matrix
+: Scale the graphics matrix.
 
--mshearx "x y a"
+**-mshearx "x y a"**
 
-: Shear the graphics matrix in X
+: Shear the graphics matrix in X.
 
--msheary "x y a"
+**-msheary "x y a"**
 
-: Shear the graphics matrix in Y
+: Shear the graphics matrix in Y.
 
 **Re-use with XObjects**
 
--xobj-bbox "x y w h"
+**-xobj-bbox "x y w h"**
 
-: Specify the bounding box for xobjects
+: Specify the bounding box for xobjects.
 
--xobj
+**-xobj**
 
-: Begin saving a sequence of graphics operators
+: Begin saving a sequence of graphics operators.
 
--end-xobj
+**-end-xobj**
 
-: End saving a sequence of graphics operators
+: End saving a sequence of graphics operators.
 
--use
+**-use**
 
-: Use a saved sequence of graphics operators
+: Use a saved sequence of graphics operators.
 
 **Images**
 
--draw-jpeg <name>=<filename>
+**-draw-jpeg** <name>=<filename>
 
-: Load a JPEG from file and name it
+: Load a JPEG from file and name it.
 
--draw-png <name>=<filename>
+**-draw-png** <name>=<filename>
 
-: Load a PNG from file and name it
+: Load a PNG from file and name it.
 
--draw-jpeg2000 <name>=<filename>
+**-draw-jpeg2000** <name>=<filename>
 
-: Load a JPEG2000 from file and name it
+: Load a JPEG2000 from file and name it.
 
--image <name>
+**-image** <name>
 
-: Draw an image which has already been loaded
+: Draw an image which has already been loaded.
 
 **Transparency**
 
--fill-opacity <n>
+**-fill-opacity** <n>
 
-: Set opacity
+: Set opacity.
 
--stroke-opacity <n>
+**-stroke-opacity** <n>
 
-: Set stroke opacity
+: Set stroke opacity.
 
 **Text**
 
--bt
+**-bt**
 
-: Begin text
+: Begin text.
 
--et
+**-et**
 
-: End text
+: End text.
 
--text <text>
+**-text** <text>
 
-: Draw text
+: Draw text.
 
--stext <text>
+**-stext** <text>
 
-: Draw text with %specials
+: Draw text with %specials.
 
--para <paragraph>
+**-para** <paragraph>
 
-: Typeset a paragraph
+: Typeset a paragraph.
 
--paras <paragraph>
+**-paras** <paragraph>
 
-: Typeset multiple paragraphs
+: Typeset multiple paragraphs.
 
--indent <n>
+**-indent** <n>
 
-: a
+: Set paragraph indent.
 
--leading <n>
+**-leading** <n>
 
-: Set leading
+: Set leading.
 
--charspace <n>
+**-charspace** <n>
 
-: Set character spacing
+: Set character spacing.
 
--wordspace <n>
+**-wordspace** <n>
 
-: Set word space
+: Set word space.
 
--textscale <n>
+**-textscale** <n>
 
-: Set text scale
+: Set text scale.
 
--rendermode <n>
+**-rendermode** <n>
 
-: Set text rendering mode
+: Set text rendering mode.
 
--rise <n>
+**-rise** <n>
 
-: Set text rise
+: Set text rise.
 
--nl
+**-nl**
 
-: New line
+: New line.
 
-The next page
+The next page.
 
--newpage
+**-newpage**
 
-: Move to a fresh page
+: Move to a fresh page.
 
 **Structure Information**
 
--draw-struct-tree
+**-draw-struct-tree**
 
 : Add structure information. Must precede -draw on command line.
 
--tag <tagname>
+**-tag** <tagname>
 
-: Begin marked content
+: Begin marked content.
 
--end-tag
+**-end-tag**
 
-: End marked content
+: End marked content.
 
--stag <tagname>
+**-stag** <tagname>
 
-: Begin structure tree branch
+: Begin structure tree branch.
 
--end-stag
+**-end-stag**
 
-: End structure tree branch
+: End structure tree branch.
 
--auto-tags
+**-auto-tags**
 
-: Automatically tag paragraphs and images
+: Automatically tag paragraphs and images.
 
--no-auto-tags
+**-no-auto-tags**
 
-: Refrain from automatically tagging paragraphs and images
+: Refrain from automatically tagging paragraphs and images.
 
--artifact
+**-artifact**
 
-: Begin manual artifact
+: Begin manual artifact.
 
--end-artifact
+**-end-artifact**
 
-: End manual artifact
+: End manual artifact.
 
--no-auto-artifacts
+**-no-auto-artifacts**
 
-: Prevent automatic addition of artifacts during postprocessing
+: Prevent automatic addition of artifacts during postprocessing.
 
--namespace <namespace>
+**-namespace** <namespace>
 
-: Set the namespace for future branches of the tree
+: Set the namespace for future branches of the tree.
 
--eltinfo <elt=text>
+**-eltinfo** <elt=text>
 
-: Set element information
+: Set element information.
 
--end-eltinfo
+**-end-eltinfo**
 
-: Erase element information
+: Erase element information.
 
--rolemap <rolemap>
+**-rolemap** <rolemap>
 
-: Set role map
+: Set role map.
 
 # 19. ACCESSIBLE PDFS WITH PDF/UA
 
-cpdf -print-struct-tree in.pdf
+**cpdf -print-struct-tree in.pdf**
 
-: Print a PDF's structure tree to Standard Output for inspection.
+Print a PDF's structure tree to Standard Output for inspection.
 
-cpdf -extract-struct-tree in.pdf -o out.json
+**cpdf -extract-struct-tree in.pdf -o out.json**
 
-: Extract the whole structure tree in JSON format. See cpdfmanual.pdf for details.
+Extract the whole structure tree in JSON format. See cpdfmanual.pdf for details.
 
-cpdf -replace-struct-tree in.json in.pdf -o out.pdf
+**cpdf -replace-struct-tree in.json in.pdf -o out.pdf**
 
-: Replace a PDF's structure tree with one from a JSON file.
+Replace a PDF's structure tree with one from a JSON file.
 
-cpdf -remove-struct-tree in.pdf -o out.pdf
+**cpdf -remove-struct-tree in.pdf -o out.pdf**
 
-: Remove the structure tree from a file.
+Remove the structure tree from a file.
 
-cpdf -mark-as-artifact in.pdf -o out.pdf
+**cpdf -mark-as-artifact in.pdf -o out.pdf**
 
-: Mark all the content of the file as being an artifact.
+Mark all the content of the file as being an artifact.
 
-cpdf -verify "PDF/UA-1(matterhorn)" \[-json] in.pdf
+**cpdf -verify "PDF/UA-1(matterhorn)"**  -verify-single \<test> \[-json] **in.pdf**
 
-: Verify conformance with PDF/UA-1.
+Verify conformance with PDF/UA-1.
 
 **-json**
 
 : Output conformance failures in JSON rather than plain text format.
 
-cpdf -verify "PDF/UA-1(matterhorn)" -verify-single \<test> \[-json] in.pdf
+**-verify-single \<test>**
 
-: Verify conformance with PDF/UA-1 using just one test. See cpdfmanual.pdf for list of tests.
+: Verify just one test. See cpdfmanual.pdf for list of tests.
 
-cpdf -mark-as \["PDF/UA-1" | "PDF/UA-2"] in.pdf -o out.pdf
+**cpdf -mark-as \["PDF/UA-1" | "PDF/UA-2"] in.pdf -o out.pdf**
 
-: Mark a PDF as conforming to PDF/UA-1 or PDF/UA-2
+Mark a PDF as conforming to PDF/UA-1 or PDF/UA-2
 
-cpdf -remove-mark \["PDF/UA-1" | "PDF/UA-2"] in.pdf -o out.pdf
+**cpdf -remove-mark \["PDF/UA-1" | "PDF/UA-2"] in.pdf -o out.pdf**
 
-: Remove conformance marker from a PDF.
+Remove conformance marker from a PDF.
 
-cpdf -create-pdf-ua-\<1|2> \<title> \[-create-pdf-pages \<n>] \[-create-pdf-papersize \<paper size>] -o out.pdf
+**cpdf -create-pdf-ua-\<1|2> \<title>** \[-create-pdf-pages \<n>] \[-create-pdf-papersize \<paper size>] **-o out.pdf**
 
-: Create a new, blank, PDF/UA-1 or PDF/UA-2 file.
+Create a new, blank, PDF/UA-1 or PDF/UA-2 file.
 
 **-create-pdf-pages**
 
@@ -2224,9 +2230,9 @@ cpdf -create-pdf-ua-\<1|2> \<title> \[-create-pdf-pages \<n>] \[-create-pdf-pape
 
 # 20. MISCELLANEOUS
 
-cpdf -draft \[-boxes] \[-draft-remove-only \<n>] in.pdf \[\<range>] -o out.pdf
+**cpdf -draft** \[-boxes] \[-draft-remove-only \<n>] **in.pdf** \[\<range>] **-o out.pdf**
 
-: Remove bitmapped (photographic) images from a PDF.
+Remove bitmapped (photographic) images from a PDF.
 
 **-boxes**
 
@@ -2234,78 +2240,85 @@ cpdf -draft \[-boxes] \[-draft-remove-only \<n>] in.pdf \[\<range>] -o out.pdf
 
 **-draft-remove-only**
 
-: Remove only one image, with the given name. The name can be obtained from, for example, -list-images-used.
+: Remove only one image, with the given name. The name can be obtained from,
+for example, **-list-images-used**.
 
-cpdf -remove-all-text in.pdf \[\<range>] -o out.pdf
+**cpdf -remove-all-text in.pdf** \[\<range>] **-o out.pdf**
 
-: Remove all text from a PDF.
+Remove all text from a PDF.
 
-cpdf -blacktext in.pdf \[\<range>] -o out.pdf
+**cpdf -blacktext in.pdf** \[\<range>] **-o out.pdf**
 
-: Make all text black.
+Make all text black.
 
-cpdf -blacklines in.pdf \[\<range>] -o out.pdf
+**cpdf -blacklines in.pdf** \[\<range>] **-o out.pdf**
 
-: Make all lines black.
+Make all lines black.
 
-cpdf -blackfills in.pdf \[\<range>] -o out.pdf
+**cpdf -blackfills in.pdf** \[\<range>] **-o out.pdf**
 
-: Make all fills black.
+Make all fills black.
 
-cpdf -thinlines \<min thickness> in.pdf \[\<range>] -o out.pdf
+**cpdf -thinlines \<min thickness> in.pdf** \[\<range>] **-o out.pdf**
 
-: Make each line a minimum thickness. A negative value will instead thin lines
+Make each line a minimum thickness. A negative value will instead thin lines
 to the absolute of the value given. By processing twice, with a positive then
 negative figure, it is therefore possible to clamp thicknesses to a range or
 single value.
 
-cpdf -clean in.pdf -o out.pdf
+**cpdf -clean in.pdf -o out.pdf**
 
-: Deprecated. This work is now done by default upon writing any file.
+Deprecated. This work is now done by default upon writing any file.
 
-cpdf -set-version \<version number> in.pdf -o out.pdf
+**cpdf -set-version \<version number> in.pdf -o out.pdf**
 
-: Set the version of a PDF. E.g for version 1.4, use -set-version 4. For PDF
+Set the version of a PDF. E.g for version 1.4, use **-set-version 4**. For PDF
 versions starting with 2, add ten to the number. E.g for PDF 2.0, use
--set-version 10.
+**-set-version 10**.
 
-cpdf -copy-id-from source.pdf in.pdf -o out.pdf
+**cpdf -copy-id-from source.pdf in.pdf -o out.pdf**
 
-: Copy the ID from one PDF to another.
+Copy the ID from one PDF to another.
 
-cpdf -remove-id in.pdf -o out.pdf
+**cpdf -remove-id in.pdf -o out.pdf**
 
-: Remove the ID from a PDF.
+Remove the ID from a PDF.
 
-cpdf -list-spot-colors in.pdf
+**cpdf -list-spot-colors in.pdf**
 
-: List the names of any separation colour spaces in a PDF.
+List the names of any separation colour spaces in a PDF.
 
-cpdf -print-dict-entry [-json] \<key> in.pdf
-cpdf -remove-dict-entry \<key> [-dict-entry-search \<term>] in.pdf -o out.pdf
-cpdf -replace-dict-entry \<key> -replace-dict-entry-value \<value> \[-dict-entry-search \<term>] in.pdf -o out.pdf
+**cpdf -print-dict-entry** [-json] **\<key> in.pdf**
 
-: Low level operations to edit PDF objects directly. See cpdfmanual.pdf for details.
+**cpdf -remove-dict-entry \<key>** [-dict-entry-search \<term>] **in.pdf -o out.pdf**
 
-cpdf -remove-clipping \[\<range>] in.pdf -o out.pdf
+**cpdf -replace-dict-entry \<key> -replace-dict-entry-value \<value>** \[-dict-entry-search \<term>] **in.pdf -o out.pdf**
 
-: Remove any clipping paths from a PDF.
+Low level operations to edit PDF objects directly. See cpdfmanual.pdf for details.
 
-cpdf -obj[-json] \<object specification> in.pdf
-cpdf -replace-obj \<object specification>=\<object> in.pdf -o out.pdf
-cpdf -remove-obj \<object number> in.pdf -o out.pdf
-cpdf -extract-stream\[-decompress] \<object specification> in.pdf \[-o out.dat | -stdout]
-cpdf -replace-stream \<object specification> -replace-stream-with \<filename> in.pdf -o out.pdf
+**cpdf -remove-clipping in.pdf** \[\<range>] **-o out.pdf**
 
-: Low level operations to explore and edit PDF files object-by-object. See cpdfmanual.pdf for details.
+Remove any clipping paths from a PDF.
 
-cpdf -contains-javascript in.pdf
+**cpdf -obj[-json] \<object specification> in.pdf**
 
-: Prints true if the PDF contains JavaScript, false otherwise.
+**cpdf -replace-obj \<object specification>=\<object> in.pdf -o out.pdf**
 
-cpdf -remove-javascript in.pdf -o out.pdf
+**cpdf -remove-obj \<object number> in.pdf -o out.pdf**
 
-: Remove JavaScript from a PDF.
+**cpdf -extract-stream\[-decompress] \<object specification> in.pdf \[-o out.dat | -stdout]**
+
+**cpdf -replace-stream \<object specification> -replace-stream-with \<filename> in.pdf -o out.pdf**
+
+Low level operations to explore and edit PDF files object-by-object. See cpdfmanual.pdf for details.
+
+**cpdf -contains-javascript in.pdf**
+
+Prints true if the PDF contains JavaScript, false otherwise.
+
+**cpdf -remove-javascript in.pdf -o out.pdf**
+
+Remove JavaScript from a PDF.
 
 # ENVIRONMENT
 

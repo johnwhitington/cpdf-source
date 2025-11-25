@@ -754,7 +754,7 @@ And date and time formats:
 %% The % character
 .EE
 .PP
-may be used to demarcate multiple lines.
+\(rsn may be used to demarcate multiple lines.
 .TP
 \f[B]\-font\f[R]
 Give the font (default Times Roman).
@@ -1355,11 +1355,11 @@ Piece Info: 0 bytes (0.00%)
 Unclassified: 11229 bytes (3.62%)
 .EE
 .SH 12. FILE ATTACHMENTS
-cpdf \-attach\-file <filename> [\-to\-page <page number>] [\-afd
-<string>] [\-afr <relationship>] [\-attach\-file \&...]
-in.pdf \-o out.pdf
+\f[B]cpdf \-attach\-file <filename>\f[R] [\-to\-page <page number>]
+[\-afd <string>] [\-afr <relationship>] [\-attach\-file \&...]
+\f[B]in.pdf \-o out.pdf\f[R]
 .PP
-: Attach a file to a PDF, given its filename.
+Attach a file to a PDF, given its filename.
 .TP
 \f[B]\-to\-page\f[R]
 Instead of attaching globally, add it as an attachment on a single page.
@@ -1369,8 +1369,10 @@ Supply the textual description for this attachment.
 .TP
 \f[B]\-afr\f[R]
 Supply the so\-called Relationship for this attachment.
-.TP
-cpdf \-list\-attached\-files [\-json] [\-include\-data] in.pdf
+.PP
+\f[B]cpdf \-list\-attached\-files\f[R] [\-json] [\-include\-data]
+\f[B]in.pdf\f[R]
+.PP
 List attached files.
 .TP
 \f[B]\-json\f[R]
@@ -1379,40 +1381,49 @@ See cpdfmanual.pdf for full details.
 .TP
 \f[B]\-include\-data\f[R]
 Include the attachment file data when listing in JSON format.
-.TP
-cpdf \-remove\-files in.pdf \-o out.pdf
+.PP
+\f[B]cpdf \-remove\-files in.pdf \-o out.pdf\f[R]
+.PP
 Remove attached files from a PDF.
-.TP
-cpdf \-dump\-attachments in.pdf \-o <directory>
+.PP
+\f[B]cpdf \-dump\-attachments in.pdf \-o <directory>\f[R]
+.PP
 Extract the attachments to a given directory.
 .SH 13. IMAGES
-.TP
-cpdf \-list\-images[\-json] [\-inline] in.pdf [<range>]
+\f[B]cpdf \-list\-images[\-json]\f[R] [\-inline] \f[B]in.pdf\f[R]
+[<range>]
+.PP
 List the images in a file, together with their object number, page
 numbers, image name, width, height, size in bytes, bits per pixel,
 colour space, compression method, mask type and mask object number.
-Either in plain text (\-list\-images) or JSON (\-list\-images\-json).
+Either in plain text (\f[B]\-list\-images\f[R]) or JSON
+(\f[B]\-list\-images\-json\f[R]).
 .TP
 \f[B]\-inline\f[R]
 Also list inline images.
 .PP
-cpdf \-list\-images\-used[\-json] [\-inline] in.pdf [<range>] cpdf
-\-image\-resolution[\-json] <n> [\-inline] in.pdf [<range>]
+\f[B]cpdf \-list\-images\-used[\-json]\f[R] [\-inline] \f[B]in.pdf\f[R]
+[<range>]
 .PP
-: The \-list\-images\-used and \-list\-images\-used\-json operations
-list the images at point of use, including page number, image name,
-width in pixels, height in pixels, x resolution, y resolution and object
-number.
-Using \-image\-resolution or \-image\-resolution\-json instead reports
-only such images as do not reach a minimum resolution.
+\f[B]cpdf \-image\-resolution[\-json] <n>\f[R] [\-inline]
+\f[B]in.pdf\f[R] [<range>]
+.PP
+The \f[B]\-list\-images\-used\f[R] and
+\f[B]\-list\-images\-used\-json\f[R] operations list the images at point
+of use, including page number, image name, width in pixels, height in
+pixels, x resolution, y resolution and object number.
+Using \f[B]\-image\-resolution\f[R] or
+\f[B]\-image\-resolution\-json\f[R] instead reports only such images as
+do not reach a minimum resolution.
 .TP
 \f[B]\-inline\f[R]
 Also list inline images.
 .PP
-cpdf \-extract\-images in.pdf [<range>] [\-im ] [\-p2p ] [\-dedup |
-\-dedup\-perpage] [\-raw] [\-inline] [\-merge\-masks] \-o <path>
+\f[B]cpdf \-extract\-images in.pdf\f[R] [<range>] [\-im ] [\-p2p ]
+[\-dedup | \-dedup\-perpage] [\-raw] [\-inline] [\-merge\-masks]
+\f[B]\-o <path>\f[R]
 .PP
-: Extract images to a given path e.g \(lqoutput/%%%\(rq.
+Extract images to a given path e.g \(lqoutput/%%%\(rq.
 JPEG, JPEG2000 and lossless JBIG2 images are extracted directly.
 Lossy JBIG2 images are extracted in sections.
 Other images are written as PNGs, processed with ImageMagick.
@@ -1438,23 +1449,23 @@ Also extract inline images.
 \f[B]\-merge\-masks\f[R]
 Merge soft masks with their images when extracting.
 .PP
-cpdf \-extract\-single\-image <object number> [\-im <path>] [\-p2p ]
-[\-raw] [\-merge\-masks] in.pdf \-o <filename>
+\f[B]cpdf \-extract\-single\-image <object number>\f[R] [\-im <path>]
+[\-p2p ] [\-raw] [\-merge\-masks] \f[B]in.pdf \-o <filename>\f[R]
 .PP
-: Extract a single image, given its object number.
+Extract a single image, given its object number.
 Other flags as above.
 .PP
-cpdf \-process\-images [\-process\-images\-info] in.pdf [<range>] [\-im
-<filename>] [\-jbig2enc <filename>] [\-lossless\-resample[\-dpi] <n> |
-\-lossless\-to\-jpeg <n>] [\-jpeg\-to\-jpeg <n>]
-[\-jpeg\-to\-jpeg\-scale <n>] [\-lossless\-to\-jpeg2000 <n>]
-[\-jpeg2000\-to\-jpeg2000 <n>] [\-jpeg\-to\-jpeg\-dpi <n>]
-[\-1bpp\-method <method>] [\-jbig2\-lossy\-threshold <n>]
-[\-pixel\-threshold <n>] [\-length\-threshold <n>]
-[\-percentage\-threshold <n>] [\-dpi\-threshold <n>]
-[\-resample\-interpolate] \-o out.pdf
+\f[B]cpdf \-process\-images\f[R] [\-process\-images\-info]
+\f[B]in.pdf\f[R] [<range>] [\-im <filename>] [\-jbig2enc <filename>]
+[\-lossless\-resample[\-dpi] <n> | \-lossless\-to\-jpeg <n>]
+[\-jpeg\-to\-jpeg <n>] [\-jpeg\-to\-jpeg\-scale <n>]
+[\-lossless\-to\-jpeg2000 <n>] [\-jpeg2000\-to\-jpeg2000 <n>]
+[\-jpeg\-to\-jpeg\-dpi <n>] [\-1bpp\-method <method>]
+[\-jbig2\-lossy\-threshold <n>] [\-pixel\-threshold <n>]
+[\-length\-threshold <n>] [\-percentage\-threshold <n>]
+[\-dpi\-threshold <n>] [\-resample\-interpolate] \f[B]\-o out.pdf\f[R]
 .PP
-: Re\-process existing images within the PDF, typically to reduce size.
+Re\-process existing images within the PDF, typically to reduce size.
 For a full commentary, see cpdfmanual.pdf.
 .TP
 \f[B]\-process\-images\-info\f[R]
@@ -1514,12 +1525,12 @@ dpi threshold).
 \f[B]\-resample\-interpolate\f[R]
 Use interpolation when resampling.
 .PP
-cpdf \-rasterize in.pdf [<range>] \-o out.pdf [\-gs ]
-[\-rasterize[\-gray|\-1bpp|\-jpeg|\-jpeggray] [\-rasterize\-res <n>]
+\f[B]cpdf \-rasterize in.pdf\f[R] [<range>] \f[B]\-o out.pdf\f[R] [\-gs
+] [\-rasterize[\-gray|\-1bpp|\-jpeg|\-jpeggray] [\-rasterize\-res <n>]
 [\-rasterize\-jpeg\-quality <n>] [\-rasterize\-no\-antialias |
 \-rasterize\-downsample] [\-rasterize\-annots] | [\-rasterize\-alpha]
 .PP
-: Rasterize each page, replacing the page contents with the rasterized
+Rasterize each page, replacing the page contents with the rasterized
 version in the output PDF.
 .TP
 \f[B]\-gs\f[R]
@@ -1555,70 +1566,80 @@ Rasterize annotations instead of retaining.
 \f[B]\-rasterize\-alpha\f[R]
 Produce an alpha channel (lossless only)
 .PP
-cpdf \-output\-image in.pdf [<range>] \-o <format> [\-gs ]
-[\-rasterize[\-gray|\-1bpp|\-jpeg|\-jpeggray] [\-rasterize\-res ]
-[\-rasterize\-jpeg\-quality ] [\-rasterize\-no\-antialias |
+\f[B]cpdf \-output\-image in.pdf\f[R] [<range>] \f[B]\-o <format>\f[R]
+[\-gs ] [\-rasterize[\-gray|\-1bpp|\-jpeg|\-jpeggray] [\-rasterize\-res
+] [\-rasterize\-jpeg\-quality ] [\-rasterize\-no\-antialias |
 \-rasterize\-downsample] [\-rasterize\-annots] [\-rasterize\-alpha]
 [\-tobox ]
 .PP
-: Output rasterized images for each page to the given folder and format
+Output rasterized images for each page to the given folder and format
 e.g \(lqdir/%%%.png\(rq.
 Options as above and:
 .TP
 \f[B]\-tobox\f[R]
-Specify the box to rasterize (default, /MediaBox).
+Specify the box to rasterize (default /MediaBox).
 .SH 14. FONTS
-.TP
-cpdf \-list\-fonts[\-json] in.pdf
+\f[B]cpdf \-list\-fonts[\-json] in.pdf\f[R]
+.PP
 List the fonts on each page in a file together with their types.
 Either in plain text (\-list\-fonts) or JSON (\-list\-fonts\-json)
 format.
-.TP
-cpdf \-print\-font\-table <font name> \-print\-font\-table\-page <n> in.pdf
-Print a font table for a given font name and page:
 .PP
-e.g:
+\f[B]cpdf \-print\-font\-table <font name>\f[R]
+\-print\-font\-table\-page <n> \f[B]in.pdf\f[R]
 .PP
-cpdf \-print\-font\-table /XYPLPB+NimbusSanL\-Bold
-\-print\-font\-table\-page 1 cpdfmanual.pdf 67 = U+0043 (C \- LATIN
-CAPITAL LETTER C) = /C 68 = U+0044 (D \- LATIN CAPITAL LETTER D) = /D 70
-= U+0046 (F \- LATIN CAPITAL LETTER F) = /F 71 = U+0047 (G \- LATIN
-CAPITAL LETTER G) = /G \&...
+Print a font table for a given font name and page, e.g:
+.IP
+.EX
+cpdf \-print\-font\-table /XYPLPB+NimbusSanL\-Bold \-print\-font\-table\-page 1 cpdfmanual.pdf
+67 = U+0043 (C \- LATIN CAPITAL LETTER C) = /C
+68 = U+0044 (D \- LATIN CAPITAL LETTER D) = /D
+70 = U+0046 (F \- LATIN CAPITAL LETTER F) = /F
+71 = U+0047 (G \- LATIN CAPITAL LETTER G) = /G
+\&...
+.EE
 .PP
-cpdf \-copy\-font fromfile.pdf \-copy\-font\-page <int>
-\-copy\-font\-name <name> in.pdf [<range>] \-o out.pdf
+\f[B]cpdf \-copy\-font fromfile.pdf\f[R] \-copy\-font\-page <int>
+\-copy\-font\-name <name> \f[B]in.pdf\f[R] [<range>] \f[B]\-o
+out.pdf\f[R]
 .PP
-: A low\-level operation to copy a font from one file to another.
+A low\-level operation to copy a font from one file to another.
 .TP
 \f[B]\-copy\-font\-page\f[R]
 The page from which to copy the font.
 .TP
 \f[B]\-copy\-font\-name\f[R]
 The (PDF) name of the font.
-.TP
-cpdf \-remove\-fonts in.pdf \-o out.pdf
+.PP
+\f[B]cpdf \-remove\-fonts in.pdf \-o out.pdf\f[R]
+.PP
 Remove fonts from a file.
-.TP
-cpdf \-missing\-fonts in.pdf
+.PP
+\f[B]cpdf \-missing\-fonts in.pdf\f[R]
+.PP
 Report missing fonts \- i.e those which are unembedded.
-.TP
-cpdf \-embed\-missing\-fonts \-gs <path to gs> in.pdf \-o out.pdf
-Use Ghostscript to embed missing fonts into a PDF.
+.PP
+\f[B]cpdf \-embed\-missing\-fonts \-gs <path to gs> in.pdf \-o
+out.pdf\f[R]
+.PP
+Use gs to embed missing fonts into a PDF.
 Note: putting a PDF file through gs in this manner may not be lossless:
 some metadata may not be preserved
-.TP
-cpdf \-extract\-font <page number>,<pdf font name> in.pdf \-o out.font
+.PP
+\f[B]cpdf \-extract\-font <page number>,<pdf font name> in.pdf \-o
+out.font\f[R]
+.PP
 Extract a font file from a PDF given a pagenumber, font name pair.
 E.g:
 .PP
 cpdf \-extract\-font 5,/F50 in.pdf \-o out.ttf
 .SH 15. PDF AND JSON
-cpdf in.pdf \-output\-json \-o out.json
+\f[B]cpdf in.pdf \-output\-json \-o out.json\f[R]
 [\-output\-json\-parse\-content\-streams]
 [\-output\-json\-no\-stream\-data] [\-output\-json\-decompress\-streams]
 [\-output\-json\-clean\-strings] [\-utf8]
 .PP
-: Convert PDF to a JSON format which may be inspected, or edited and
+Convert PDF to a JSON format which may be inspected, or edited and
 round\-tripped back into PDF.
 .TP
 \f[B]\-output\-json\-parse\-content\-streams\f[R]
@@ -1637,29 +1658,34 @@ Deprecated in favour of \f[B]\-utf8\f[R] below.
 \f[B]\-utf8\f[R]
 Use UTF8 rather than PDFDocEncoding for strings, to make them more
 easily editable.
-.TP
-cpdf \-j in.json \-o out.pdf
+.PP
+\f[B]cpdf \-j in.json \-o out.pdf\f[R]
+.PP
 Convert a JSON file to a PDF file.
 .SH 16. OPTIONAL CONTENT GROUPS
-.TP
-cpdf \-ocg\-list in.pdf
+\f[B]cpdf \-ocg\-list in.pdf\f[R]
+.PP
 List the optional content groups in the PDF, one oper line, to Standard
 Output.
-.TP
-cpdf \-ocg\-rename \-ocg\-rename\-from <a> \-ocg\-rename\-to <b> in.pdf \-o out.pdf
+.PP
+\f[B]cpdf \-ocg\-rename \-ocg\-rename\-from <a> \-ocg\-rename\-to <b>
+in.pdf \-o out.pdf\f[R]
+.PP
 Rename an optional content group given the old and new names.
-.TP
-cpdf \-ocg\-order\-all in.pdf \-o out.pdf
+.PP
+\f[B]cpdf \-ocg\-order\-all in.pdf \-o out.pdf\f[R]
+.PP
 Ensure that every optional content group appears in the order list.
-.TP
-cpdf \-ocg\-coalesce\-on\-name in.pdf \-o out.pdf
+.PP
+\f[B]cpdf \-ocg\-coalesce\-on\-name in.pdf \-o out.pdf\f[R]
+.PP
 Coalesce optional content groups.
 For example, if we merge or stamp two files both with an OCG called
 \(lqLayer 1\(rq, we will have two differen optional content groups.
 This command will merge them into a single optional content group.
 .SH 17. CREATING NEW PDFS
-cpdf \-create\-pdf [\-create\-pdf\-pages <n>] [\-create\-pdf\-papersize
-<paper size>] \-o out.pdf
+\f[B]cpdf \-create\-pdf\f[R] [\-create\-pdf\-pages <n>]
+[\-create\-pdf\-papersize <paper size>] \f[B]\-o out.pdf\f[R]
 .PP
 : Create a new PDF (default, 1 page A4 portrait).
 .TP
@@ -1669,11 +1695,11 @@ Give the number of pages.
 \f[B]\-create\-pdf\-papersize\f[R]
 Give the paper size, e.g \(lqa3landscape\(rq or \(lq200pt 600pt\(rq
 .PP
-cpdf \-typeset <text file> [\-create\-pdf\-papersize <size>] [\-font
-<font>] [\-font\-size <size>] [\-subformat <subformat>] [\-title
-<string>] \-o out.pdf
+\f[B]cpdf \-typeset <text file>\f[R] [\-create\-pdf\-papersize <size>]
+[\-font <font>] [\-font\-size <size>] [\-subformat <subformat>] [\-title
+<string>] \f[B]\-o out.pdf\f[R]
 .PP
-: Typeset a text file into a PDF.
+Typeset a text file into a PDF.
 .TP
 \f[B]\-create\-pdf\-papersize\f[R]
 Give the paper size.
@@ -1690,12 +1716,16 @@ Specify PDF/UA\-1 or PDF/UA\-2 to make a conforming file.
 \f[B]\-title\f[R]
 Specify a title when using \-subformat for a PDF/UA file.
 .PP
-cpdf \-jpeg <filename> [\-subformat <subformat>] [\-title <string>] \-o
-out.pdf cpdf \-png <filename> [\-subformat <subformat>] [\-title
-<string>] \-o out.pdf cpdf\-jpeg2000 <filename>[\-subformat <subformat>]
-[\-title <string>] \-o out.pdf
+\f[B]cpdf \-jpeg <filename>\f[R] [\-subformat <subformat>] [\-title
+<string>] \f[B]\-o out.pdf\f[R]
 .PP
-: Build a PDF from an image file (JPEG, PNG or JPEG2000).
+\f[B]cpdf \-png <filename>\f[R] [\-subformat <subformat>] [\-title
+<string>] \f[B]\-o out.pdf\f[R]
+.PP
+\f[B]cpdf \-jpeg2000 <filename>\f[R] [\-subformat <subformat>] [\-title
+<string>] \f[B]\-o out.pdf\f[R]
+.PP
+Build a PDF from an image file (JPEG, PNG or JPEG2000).
 .TP
 \f[B]\-subformat\f[R]
 Specify PDF/UA\-1 or PDF/UA\-2 to make a conforming file.
@@ -1703,12 +1733,12 @@ Specify PDF/UA\-1 or PDF/UA\-2 to make a conforming file.
 \f[B]\-title\f[R]
 Specify a title when using \-subformat for a PDF/UA file.
 .PP
-cpdf [\-jbig2\-global <filename>] \-jbig2 <filename> [\-jbig2\-global |
-\-jbig2\-global\-clear] [\-jbig2 <filename>] \&...
-[\-subformat <subformat>] [\-title <string>] \-o out.pdf
+\f[B]cpdf\f[R] [\-jbig2\-global <filename>] \f[B]\-jbig2 <filename>\f[R]
+[\-jbig2\-global | \-jbig2\-global\-clear] [\-jbig2 <filename>] \&...
+[\-subformat <subformat>] [\-title <string>] \f[B]\-o out.pdf\f[R]
 .PP
-: Make a multi\-page PDF from one or more PDF\-appropriate JBIG2
-fragments prepared by the jbig2enc program.
+Make a multi\-page PDF from one or more PDF\-appropriate JBIG2 fragments
+prepared by the jbig2enc program.
 For example, in lossless mode:
 .PP
 cpdf \-jbig2 1.jbig2 \-jbig2 2.jbig2 \-jbig2 3.jbig2 \-o out.pdf
@@ -1730,8 +1760,9 @@ Specify PDF/UA\-1 or PDF/UA\-2 to make a conforming file.
 \f[B]\-title\f[R]
 Specify a title when using \-subformat for a PDF/UA file.
 .SH 18. DRAWING ON PDFS
-.TP
-cpdf in.pdf [] [\-draw\-struct\-tree] [\-underneath] \-draw  \-o out.pdf
+\f[B]cpdf in.pdf\f[R] [] [\-draw\-struct\-tree] [\-underneath]
+\f[B]\-draw \f[R] \f[B]\-o out.pdf\f[R]
+.PP
 Draw on a PDF.
 See cpdfmanual.pdf for a tutorial, and full information.
 .TP
@@ -1740,8 +1771,9 @@ Produce structure information.
 .TP
 \f[B]\-underneath\f[R]
 Draw underneath instead of on top of any existing page content.
-.TP
-cpdf \-text\-width  [\-font ] [\-fontsize ]
+.PP
+\f[B]cpdf \-text\-width \f[R] [\-font ] [\-fontsize ]
+.PP
 Return the width of a string of text in a one of the Standard 14 fonts.
 Used for calculations of text position (e.g right\-alignment).
 .TP
@@ -1753,266 +1785,278 @@ Specify the font size.
 .PP
 \f[B]Building and showing paths\f[R]
 .TP
-\-rect \(lqx y w h\(rq
-Draw rectangle
+\f[B]\-rect \(lqx y w h\(rq\f[R]
+Draw rectangle.
 .TP
-\-to \(lqx y\(rq
-Move to
+\f[B]\-to \(lqx y\(rq\f[R]
+Move to.
 .TP
-\-line \(lqx y\(rq
-Add line to path
+\f[B]\-line \(lqx y\(rq\f[R]
+Add line to path.
 .TP
-\-bez \(lqx1 y1 x2 y2 x3 y3\(rq
-Add Bezier curve to path
+\f[B]\-bez \(lqx1 y1 x2 y2 x3 y3\(rq\f[R]
+Add Bezier curve to path.
 .TP
-\-bez23 \(lqx2 y2 x3 y3\(rq
-Add Bezier curve to path
+\f[B]\-bez23 \(lqx2 y2 x3 y3\(rq\f[R]
+Add Bezier curve to path.
 .TP
-\-bez13 \(lqx1 y1 x3 y3\(rq
-Add Bezier curve to path
+\f[B]\-bez13 \(lqx1 y1 x3 y3\(rq\f[R]
+Add Bezier curve to path.
 .TP
-\-circle \(lqx y r\(rq
-Add circle to path
+\f[B]\-circle \(lqx y r\(rq\f[R]
+Add circle to path.
 .TP
-\-stroke
-Stroke path
+\f[B]\-stroke\f[R]
+Stroke path.
 .TP
-\-fill
-Fill path
+\f[B]\-fill\f[R]
+Fill path.
 .TP
-\-filleo
-Fill path, even odd
+\f[B]\-filleo\f[R]
+Fill path, even odd.
 .TP
-\-strokefill
-Stroke and fill path
+\f[B]\-strokefill\f[R]
+Stroke and fill path.
 .TP
-\-strokefilleo
-Stroke and fill path, even odd
+\f[B]\-strokefilleo\f[R]
+Stroke and fill path, even odd.
 .TP
-\-close
-Close path
+\f[B]\-close\f[R]
+Close path.
 .PP
 \f[B]Clipping with paths\f[R]
 .TP
-\-clip
-Clip
+\f[B]\-clip\f[R]
+Clip.
 .TP
-\-clipeo
-Clip, even odd
+\f[B]\-clipeo\f[R]
+Clip, even odd.
 .PP
 \f[B]Path parameters\f[R]
 .TP
 \f[B]\-strokecol\f[R] \(lqg\(rq | \(lqr g b\(rq | \(lqc y m k\(rq | 
-Set stroke colour
+Set stroke colour.
 .TP
 \f[B]\-fillcol\f[R] \(lqg\(rq | \(lqr g b\(rq | \(lqc y m k\(rq | 
-Set fill colour
+Set fill colour.
 .TP
 \f[B]\-thick\f[R] 
-Set stroke thickness
+Set stroke thickness.
 .TP
 \f[B]\-cap\f[R] butt | round | square
-Set cap
+Set cap.
 .TP
 \f[B]\-join\f[R] miter | round | bevel
-Set join
+Set join.
 .TP
 \f[B]\-miter\f[R] 
-Set miter limit
+Set miter limit.
 .TP
 \f[B]\-dash\f[R] 
-Set dash pattern
+Set dash pattern.
 .PP
 \f[B]The graphics stack and matrices\f[R]
 .TP
-\-push
-Push graphics stack
+\f[B]\-push\f[R]
+Push graphics stack.
 .TP
-\-pop
-Pop graphics stack
+\f[B]\-pop\f[R]
+Pop graphics stack.
 .TP
-\-matrix \(lqa b c d e f\(rq
-Append to graphics matrix
+\f[B]\-matrix \(lqa b c d e f\(rq\f[R]
+Append to graphics matrix.
 .TP
-\-mtrans \(lqtx ty\(rq
-Translate the graphics matrix
+\f[B]\-mtrans \(lqtx ty\(rq\f[R]
+Translate the graphics matrix.
 .TP
-\-mrot \(lqx y a\(rq
-Rotate the graphics matrix
+\f[B]\-mrot \(lqx y a\(rq\f[R]
+Rotate the graphics matrix.
 .TP
-\-mscale \(lqx y sx sy\(rq
-Scale the graphics matrix
+\f[B]\-mscale \(lqx y sx sy\(rq\f[R]
+Scale the graphics matrix.
 .TP
-\-mshearx \(lqx y a\(rq
-Shear the graphics matrix in X
+\f[B]\-mshearx \(lqx y a\(rq\f[R]
+Shear the graphics matrix in X.
 .TP
-\-msheary \(lqx y a\(rq
-Shear the graphics matrix in Y
+\f[B]\-msheary \(lqx y a\(rq\f[R]
+Shear the graphics matrix in Y.
 .PP
 \f[B]Re\-use with XObjects\f[R]
 .TP
-\-xobj\-bbox \(lqx y w h\(rq
-Specify the bounding box for xobjects
+\f[B]\-xobj\-bbox \(lqx y w h\(rq\f[R]
+Specify the bounding box for xobjects.
 .TP
-\-xobj
-Begin saving a sequence of graphics operators
+\f[B]\-xobj\f[R]
+Begin saving a sequence of graphics operators.
 .TP
-\-end\-xobj
-End saving a sequence of graphics operators
+\f[B]\-end\-xobj\f[R]
+End saving a sequence of graphics operators.
 .TP
-\-use
-Use a saved sequence of graphics operators
+\f[B]\-use\f[R]
+Use a saved sequence of graphics operators.
 .PP
 \f[B]Images\f[R]
 .TP
-\-draw\-jpeg =
-Load a JPEG from file and name it
+\f[B]\-draw\-jpeg\f[R] =
+Load a JPEG from file and name it.
 .TP
-\-draw\-png =
-Load a PNG from file and name it
+\f[B]\-draw\-png\f[R] =
+Load a PNG from file and name it.
 .TP
-\-draw\-jpeg2000 =
-Load a JPEG2000 from file and name it
+\f[B]\-draw\-jpeg2000\f[R] =
+Load a JPEG2000 from file and name it.
 .TP
-\-image 
-Draw an image which has already been loaded
+\f[B]\-image\f[R] 
+Draw an image which has already been loaded.
 .PP
 \f[B]Transparency\f[R]
 .TP
-\-fill\-opacity 
-Set opacity
+\f[B]\-fill\-opacity\f[R] 
+Set opacity.
 .TP
-\-stroke\-opacity 
-Set stroke opacity
+\f[B]\-stroke\-opacity\f[R] 
+Set stroke opacity.
 .PP
 \f[B]Text\f[R]
 .TP
-\-bt
-Begin text
+\f[B]\-bt\f[R]
+Begin text.
 .TP
-\-et
-End text
+\f[B]\-et\f[R]
+End text.
 .TP
-\-text 
-Draw text
+\f[B]\-text\f[R] 
+Draw text.
 .TP
-\-stext 
-Draw text with %specials
+\f[B]\-stext\f[R] 
+Draw text with %specials.
 .TP
-\-para 
-Typeset a paragraph
+\f[B]\-para\f[R] 
+Typeset a paragraph.
 .TP
-\-paras 
-Typeset multiple paragraphs
+\f[B]\-paras\f[R] 
+Typeset multiple paragraphs.
 .TP
-\-indent 
-a
+\f[B]\-indent\f[R] 
+Set paragraph indent.
 .TP
-\-leading 
-Set leading
+\f[B]\-leading\f[R] 
+Set leading.
 .TP
-\-charspace 
-Set character spacing
+\f[B]\-charspace\f[R] 
+Set character spacing.
 .TP
-\-wordspace 
-Set word space
+\f[B]\-wordspace\f[R] 
+Set word space.
 .TP
-\-textscale 
-Set text scale
+\f[B]\-textscale\f[R] 
+Set text scale.
 .TP
-\-rendermode 
-Set text rendering mode
+\f[B]\-rendermode\f[R] 
+Set text rendering mode.
 .TP
-\-rise 
-Set text rise
+\f[B]\-rise\f[R] 
+Set text rise.
 .TP
-\-nl
-New line
+\f[B]\-nl\f[R]
+New line.
 .PP
-The next page
+The next page.
 .TP
-\-newpage
-Move to a fresh page
+\f[B]\-newpage\f[R]
+Move to a fresh page.
 .PP
 \f[B]Structure Information\f[R]
 .TP
-\-draw\-struct\-tree
+\f[B]\-draw\-struct\-tree\f[R]
 Add structure information.
 Must precede \-draw on command line.
 .TP
-\-tag 
-Begin marked content
+\f[B]\-tag\f[R] 
+Begin marked content.
 .TP
-\-end\-tag
-End marked content
+\f[B]\-end\-tag\f[R]
+End marked content.
 .TP
-\-stag 
-Begin structure tree branch
+\f[B]\-stag\f[R] 
+Begin structure tree branch.
 .TP
-\-end\-stag
-End structure tree branch
+\f[B]\-end\-stag\f[R]
+End structure tree branch.
 .TP
-\-auto\-tags
-Automatically tag paragraphs and images
+\f[B]\-auto\-tags\f[R]
+Automatically tag paragraphs and images.
 .TP
-\-no\-auto\-tags
-Refrain from automatically tagging paragraphs and images
+\f[B]\-no\-auto\-tags\f[R]
+Refrain from automatically tagging paragraphs and images.
 .TP
-\-artifact
-Begin manual artifact
+\f[B]\-artifact\f[R]
+Begin manual artifact.
 .TP
-\-end\-artifact
-End manual artifact
+\f[B]\-end\-artifact\f[R]
+End manual artifact.
 .TP
-\-no\-auto\-artifacts
-Prevent automatic addition of artifacts during postprocessing
+\f[B]\-no\-auto\-artifacts\f[R]
+Prevent automatic addition of artifacts during postprocessing.
 .TP
-\-namespace 
-Set the namespace for future branches of the tree
+\f[B]\-namespace\f[R] 
+Set the namespace for future branches of the tree.
 .TP
-\-eltinfo <elt=text>
-Set element information
+\f[B]\-eltinfo\f[R] <elt=text>
+Set element information.
 .TP
-\-end\-eltinfo
-Erase element information
+\f[B]\-end\-eltinfo\f[R]
+Erase element information.
 .TP
-\-rolemap 
-Set role map
+\f[B]\-rolemap\f[R] 
+Set role map.
 .SH 19. ACCESSIBLE PDFS WITH PDF/UA
-.TP
-cpdf \-print\-struct\-tree in.pdf
+\f[B]cpdf \-print\-struct\-tree in.pdf\f[R]
+.PP
 Print a PDF\(cqs structure tree to Standard Output for inspection.
-.TP
-cpdf \-extract\-struct\-tree in.pdf \-o out.json
+.PP
+\f[B]cpdf \-extract\-struct\-tree in.pdf \-o out.json\f[R]
+.PP
 Extract the whole structure tree in JSON format.
 See cpdfmanual.pdf for details.
-.TP
-cpdf \-replace\-struct\-tree in.json in.pdf \-o out.pdf
+.PP
+\f[B]cpdf \-replace\-struct\-tree in.json in.pdf \-o out.pdf\f[R]
+.PP
 Replace a PDF\(cqs structure tree with one from a JSON file.
-.TP
-cpdf \-remove\-struct\-tree in.pdf \-o out.pdf
+.PP
+\f[B]cpdf \-remove\-struct\-tree in.pdf \-o out.pdf\f[R]
+.PP
 Remove the structure tree from a file.
-.TP
-cpdf \-mark\-as\-artifact in.pdf \-o out.pdf
+.PP
+\f[B]cpdf \-mark\-as\-artifact in.pdf \-o out.pdf\f[R]
+.PP
 Mark all the content of the file as being an artifact.
-.TP
-cpdf \-verify \(lqPDF/UA\-1(matterhorn)\(rq [\-json] in.pdf
+.PP
+\f[B]cpdf \-verify \(lqPDF/UA\-1(matterhorn)\(rq\f[R] \-verify\-single
+<test> [\-json] \f[B]in.pdf\f[R]
+.PP
 Verify conformance with PDF/UA\-1.
 .TP
 \f[B]\-json\f[R]
 Output conformance failures in JSON rather than plain text format.
 .TP
-cpdf \-verify \(lqPDF/UA\-1(matterhorn)\(rq \-verify\-single <test> [\-json] in.pdf
-Verify conformance with PDF/UA\-1 using just one test.
+\f[B]\-verify\-single <test>\f[R]
+Verify just one test.
 See cpdfmanual.pdf for list of tests.
-.TP
-cpdf \-mark\-as [\(lqPDF/UA\-1\(rq | \(lqPDF/UA\-2\(rq] in.pdf \-o out.pdf
+.PP
+\f[B]cpdf \-mark\-as [\(lqPDF/UA\-1\(rq | \(lqPDF/UA\-2\(rq] in.pdf \-o
+out.pdf\f[R]
+.PP
 Mark a PDF as conforming to PDF/UA\-1 or PDF/UA\-2
-.TP
-cpdf \-remove\-mark [\(lqPDF/UA\-1\(rq | \(lqPDF/UA\-2\(rq] in.pdf \-o out.pdf
+.PP
+\f[B]cpdf \-remove\-mark [\(lqPDF/UA\-1\(rq | \(lqPDF/UA\-2\(rq] in.pdf
+\-o out.pdf\f[R]
+.PP
 Remove conformance marker from a PDF.
-.TP
-cpdf \-create\-pdf\-ua\-<1|2> <title> [\-create\-pdf\-pages <n>] [\-create\-pdf\-papersize <paper size>] \-o out.pdf
+.PP
+\f[B]cpdf \-create\-pdf\-ua\-<1|2> <title>\f[R] [\-create\-pdf\-pages
+<n>] [\-create\-pdf\-papersize <paper size>] \f[B]\-o out.pdf\f[R]
+.PP
 Create a new, blank, PDF/UA\-1 or PDF/UA\-2 file.
 .TP
 \f[B]\-create\-pdf\-pages\f[R]
@@ -2021,8 +2065,9 @@ Give the number of pages.
 \f[B]\-create\-pdf\-papersize\f[R]
 Give the paper size, e.g \(lqa3landscape\(rq or \(lq200pt 600pt\(rq
 .SH 20. MISCELLANEOUS
-.TP
-cpdf \-draft [\-boxes] [\-draft\-remove\-only <n>] in.pdf [<range>] \-o out.pdf
+\f[B]cpdf \-draft\f[R] [\-boxes] [\-draft\-remove\-only <n>]
+\f[B]in.pdf\f[R] [<range>] \f[B]\-o out.pdf\f[R]
+.PP
 Remove bitmapped (photographic) images from a PDF.
 .TP
 \f[B]\-boxes\f[R]
@@ -2030,71 +2075,96 @@ Replace each image with a crossed box to show where it was.
 .TP
 \f[B]\-draft\-remove\-only\f[R]
 Remove only one image, with the given name.
-The name can be obtained from, for example, \-list\-images\-used.
-.TP
-cpdf \-remove\-all\-text in.pdf [<range>] \-o out.pdf
+The name can be obtained from, for example,
+\f[B]\-list\-images\-used\f[R].
+.PP
+\f[B]cpdf \-remove\-all\-text in.pdf\f[R] [<range>] \f[B]\-o
+out.pdf\f[R]
+.PP
 Remove all text from a PDF.
-.TP
-cpdf \-blacktext in.pdf [<range>] \-o out.pdf
+.PP
+\f[B]cpdf \-blacktext in.pdf\f[R] [<range>] \f[B]\-o out.pdf\f[R]
+.PP
 Make all text black.
-.TP
-cpdf \-blacklines in.pdf [<range>] \-o out.pdf
+.PP
+\f[B]cpdf \-blacklines in.pdf\f[R] [<range>] \f[B]\-o out.pdf\f[R]
+.PP
 Make all lines black.
-.TP
-cpdf \-blackfills in.pdf [<range>] \-o out.pdf
+.PP
+\f[B]cpdf \-blackfills in.pdf\f[R] [<range>] \f[B]\-o out.pdf\f[R]
+.PP
 Make all fills black.
-.TP
-cpdf \-thinlines <min thickness> in.pdf [<range>] \-o out.pdf
+.PP
+\f[B]cpdf \-thinlines <min thickness> in.pdf\f[R] [<range>] \f[B]\-o
+out.pdf\f[R]
+.PP
 Make each line a minimum thickness.
 A negative value will instead thin lines to the absolute of the value
 given.
 By processing twice, with a positive then negative figure, it is
 therefore possible to clamp thicknesses to a range or single value.
-.TP
-cpdf \-clean in.pdf \-o out.pdf
+.PP
+\f[B]cpdf \-clean in.pdf \-o out.pdf\f[R]
+.PP
 Deprecated.
 This work is now done by default upon writing any file.
-.TP
-cpdf \-set\-version <version number> in.pdf \-o out.pdf
+.PP
+\f[B]cpdf \-set\-version <version number> in.pdf \-o out.pdf\f[R]
+.PP
 Set the version of a PDF.
-E.g for version 1.4, use \-set\-version 4.
+E.g for version 1.4, use \f[B]\-set\-version 4\f[R].
 For PDF versions starting with 2, add ten to the number.
-E.g for PDF 2.0, use \-set\-version 10.
-.TP
-cpdf \-copy\-id\-from source.pdf in.pdf \-o out.pdf
+E.g for PDF 2.0, use \f[B]\-set\-version 10\f[R].
+.PP
+\f[B]cpdf \-copy\-id\-from source.pdf in.pdf \-o out.pdf\f[R]
+.PP
 Copy the ID from one PDF to another.
-.TP
-cpdf \-remove\-id in.pdf \-o out.pdf
+.PP
+\f[B]cpdf \-remove\-id in.pdf \-o out.pdf\f[R]
+.PP
 Remove the ID from a PDF.
-.TP
-cpdf \-list\-spot\-colors in.pdf
+.PP
+\f[B]cpdf \-list\-spot\-colors in.pdf\f[R]
+.PP
 List the names of any separation colour spaces in a PDF.
 .PP
-cpdf \-print\-dict\-entry [\-json] <key> in.pdf cpdf
-\-remove\-dict\-entry <key> [\-dict\-entry\-search <term>] in.pdf \-o
-out.pdf cpdf \-replace\-dict\-entry <key> \-replace\-dict\-entry\-value
-<value> [\-dict\-entry\-search <term>] in.pdf \-o out.pdf
+\f[B]cpdf \-print\-dict\-entry\f[R] [\-json] \f[B]<key> in.pdf\f[R]
 .PP
-: Low level operations to edit PDF objects directly.
+\f[B]cpdf \-remove\-dict\-entry <key>\f[R] [\-dict\-entry\-search
+<term>] \f[B]in.pdf \-o out.pdf\f[R]
+.PP
+\f[B]cpdf \-replace\-dict\-entry <key> \-replace\-dict\-entry\-value
+<value>\f[R] [\-dict\-entry\-search <term>] \f[B]in.pdf \-o out.pdf\f[R]
+.PP
+Low level operations to edit PDF objects directly.
 See cpdfmanual.pdf for details.
-.TP
-cpdf \-remove\-clipping [<range>] in.pdf \-o out.pdf
+.PP
+\f[B]cpdf \-remove\-clipping in.pdf\f[R] [<range>] \f[B]\-o out.pdf\f[R]
+.PP
 Remove any clipping paths from a PDF.
 .PP
-cpdf \-obj[\-json] <object specification> in.pdf cpdf \-replace\-obj
-<object specification>=<object> in.pdf \-o out.pdf cpdf \-remove\-obj
-<object number> in.pdf \-o out.pdf cpdf \-extract\-stream[\-decompress]
-<object specification> in.pdf [\-o out.dat | \-stdout] cpdf
-\-replace\-stream <object specification> \-replace\-stream\-with
-<filename> in.pdf \-o out.pdf
+\f[B]cpdf \-obj[\-json] <object specification> in.pdf\f[R]
 .PP
-: Low level operations to explore and edit PDF files object\-by\-object.
+\f[B]cpdf \-replace\-obj <object specification>=<object> in.pdf \-o
+out.pdf\f[R]
+.PP
+\f[B]cpdf \-remove\-obj <object number> in.pdf \-o out.pdf\f[R]
+.PP
+\f[B]cpdf \-extract\-stream[\-decompress] <object specification> in.pdf
+[\-o out.dat | \-stdout]\f[R]
+.PP
+\f[B]cpdf \-replace\-stream <object specification>
+\-replace\-stream\-with <filename> in.pdf \-o out.pdf\f[R]
+.PP
+Low level operations to explore and edit PDF files object\-by\-object.
 See cpdfmanual.pdf for details.
-.TP
-cpdf \-contains\-javascript in.pdf
+.PP
+\f[B]cpdf \-contains\-javascript in.pdf\f[R]
+.PP
 Prints true if the PDF contains JavaScript, false otherwise.
-.TP
-cpdf \-remove\-javascript in.pdf \-o out.pdf
+.PP
+\f[B]cpdf \-remove\-javascript in.pdf \-o out.pdf\f[R]
+.PP
 Remove JavaScript from a PDF.
 .SH ENVIRONMENT
 .TP
