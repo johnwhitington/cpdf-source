@@ -6,21 +6,20 @@ cpdf \- PDF command line tools
 .SH SYNOPSIS
 Simple operation:
 .PP
-\f[B]cpdf\f[R] \f[B]in.pdf\f[R] [operation] [options] [\-o out.pdf]
+\f[B]cpdf\f[R] [in.pdf] [operation] [options] [\-o out.pdf]
 .PP
 Operation on password\-protected file:
 .PP
-\f[B]cpdf\f[R] \f[B]in.pdf\f[R] [user=<password>] [owner=<password>]
-\&...
+\f[B]cpdf\f[R] in.pdf [user=<password>] [owner=<password>] \&...
 [\-o out.pdf]
 .PP
 Multiple operations, one after another:
 .PP
-\f[B]cpdf\f[R] \f[B]in.pdf\f[R] [operation] [options] \f[B]AND\f[R]
-[operation] [options] \f[B]AND\f[R] \&...
+\f[B]cpdf\f[R] [in.pdf] [operation] [options] \f[B]AND\f[R] [operation]
+[options] \f[B]AND\f[R] \&...
 [\-o out.pdf]
 .SH DESCRIPTION
-\f[B]cpdf\f[R] is an AGPL\-licensed command line tool for processing PDF
+\f[B]Cpdf\f[R] is an AGPL\-licensed command line tool for processing PDF
 files.
 The rest of this man page gives a brief description of each command line
 operation and option.
@@ -28,8 +27,8 @@ The file cpdfmanual.pdf which you should find installed on your system
 or otherwise at https://www.coherentpdf.com/cpdfmanual.pdf gives the
 full usage details.
 .PP
-The sections in this man page follow the chapters of cpdfmanual.pdf, for
-east cross\-referencing.
+The sections in this document follow the chapters of cpdfmanual.pdf, for
+easy cross\-referencing.
 .SH 1. BASIC USAGE
 .TP
 \f[B]\-version\f[R]
@@ -41,17 +40,17 @@ Gives links to sources of help.
 \f[B]\-summary\f[R]
 Lists and describes very briefly each command line option.
 .TP
-\f[B]\-o\f[R]
+\f[B]\-o\f[R] <filename>
 The output filename.
 Beware of writing back to the same file.
 .TP
-\f[B]\-i\f[R]
+\f[B]\-i\f[R] <filename>
 Cpdf automatically treats any filename ending with .pdf (any case) as an
 input PDF.
 If your file does not end with .pdf, you can supply the file with
 \f[B]\-i\f[R] instead.
 .TP
-\f[B]\-range\f[R]
+\f[B]\-range\f[R] <range>
 Gives the range of pages to be affected by an operation.
 By default, all pages are affected.
 The range may be specified without \f[B]\-range\f[R] simply by writing
@@ -73,7 +72,7 @@ Presume ISO\-compliant content streams when processing page content.
 This is faster, because it does not involve re\-parsing whole streams to
 add content.
 .TP
-\f[B]\-idir \f[R]
+\f[B]\-idir\f[R] <directory>
 Add a whole directory of PDFs as inputs.
 .TP
 \f[B]\-idir\-only\-pdfs\f[R]
@@ -94,16 +93,16 @@ Write the output file to standard output instead of to a file with
 \f[B]\-stdin\f[R]
 Read the input PDF from standard input instead of from a named file.
 .TP
-\f[B]\-stdin\-user \f[R]
+\f[B]\-stdin\-user\f[R] <password>
 Supply the user password for the PDF which is from standard input.
 .TP
-\f[B]\-stdin\-owner \f[R]
+\f[B]\-stdin\-owner\f[R] <password>
 Supply the owner password the the PDF which is from standard input.
 .TP
-\f[B]\-producer \f[R]
+\f[B]\-producer\f[R] <text>
 Set the producer of the output file.
 .TP
-\f[B]\-creator \f[R]
+\f[B]\-creator\f[R] <text>
 Set the creator of the output file.
 .TP
 \f[B]\-change\-id\f[R]
@@ -113,7 +112,7 @@ Change the PDF\(cqs ID field when writing the output file.
 Linearize the PDF when writing.
 Requires a linearizer to be supplied with \f[B]\-cpdflin\f[R].
 .TP
-\f[B]\-cpdflin \f[R]
+\f[B]\-cpdflin\f[R] <filename>
 Give the path of an external linearizer.
 For example, Qpdf.
 .TP
@@ -134,11 +133,11 @@ Note that \f[B]\-create\-objstm\f[R] and
 \f[B]\-no\-preserve\-objstm\f[R] may be used together \- the effect is
 then to redo all object streams.
 .TP
-\f[B]\-args \f[R]
+\f[B]\-args\f[R] <filename>
 Read command line arguments from the given file by direct textual
 substitution into the command line, prior to any other processing.
 .TP
-\f[B]\-args\-json \f[R]
+\f[B]\-args\-json\f[R] <filename>
 Read command line arguments from a JSON file consisting of a single
 array of strings.
 .TP
@@ -154,7 +153,7 @@ To be used with caution.
 \f[B]\-raw\f[R]
 Perform no processing on string outputs.
 .TP
-\f[B]\-gs\f[R]
+\f[B]\-gs\f[R] <path>
 A very few of Cpdf\(cqs functions rely upon the \f[B]gs\f[R] command.
 Its path may be supplied with \f[B]\-gs\f[R].
 .TP
@@ -196,7 +195,7 @@ document, then the first from the second and so on.
 Then the second page from the first document and on until all pages are
 exhausted.
 .TP
-\f[B]\-collate\-n\f[R]
+\f[B]\-collate\-n\f[R] <n>
 Like \f[B]\-collate\f[R], but in chunks of more than one page.
 .TP
 \f[B]\-retain\-numbering\f[R]
@@ -216,7 +215,7 @@ output.
 \f[B]\-process\-struct\-trees\f[R]
 Merge input structure trees in the output.
 .TP
-\f[B]\-subformat\f[R]
+\f[B]\-subformat\f[R] <subformat>
 If \f[B]\-subformat\f[R] \(lqPDF/UA\-2\(rq is given, together with
 \f[B]\-process\-struct\-trees\f[R], Cpdf will add a top\-level Document
 structure tree element.
@@ -232,13 +231,13 @@ Support is mostly limited to Adobe products at time of writing.
 The input \f[B]in.pdf\f[R] here is the main file.
 You can build a blank one with \f[B]\-create\-pdf\f[R].
 .TP
-\f[B]\-pf\f[R]
+\f[B]\-pf\f[R] <filename>
 The filename for each file to include in the portfolio.
 .TP
-\f[B]\-pfd\f[R]
+\f[B]\-pfd\f[R] <description>
 The description for the file (must appear after \f[B]\-pf\f[R]).
 .TP
-\f[B]\-pfr\f[R]
+\f[B]\-pfr\f[R] <relationship>
 The so\-called relationship for the file (must appear after
 \f[B]\-pf\f[R]).
 .SS Splitting
@@ -253,7 +252,7 @@ But the simplest is just to number the outputs in sequence.
 For example \f[B]cpdf in.pdf \-o out%%%.pdf\f[R] will produce
 out001.pdf, out002.pdf and so on.
 .TP
-\f[B]\-chunk\f[R]
+\f[B]\-chunk\f[R] <n>
 Choose a chunk size other than 1.
 .TP
 \f[B]\-process\-struct\-trees\f[R]
@@ -269,6 +268,7 @@ See cpdfmanual.pdf for details.
 Split on bookmark boundaries at a given level, instead of splitting on
 each page.
 Level 0 is top level, level 1 next, and so on.
+See above for format details.
 .TP
 \f[B]\-process\-struct\-trees\f[R]
 Split the input document\(cqs structure tree into the output documents.
@@ -277,11 +277,12 @@ Split the input document\(cqs structure tree into the output documents.
 This option may be required in the case of some output formats.
 See cpdfmanual.pdf for details.
 .SS Splitting to a given size
-We can split the file, if possible, to a maximum file size for each
-output PDF:
-.PP
 \f[B]cpdf \-split\-max <file size> in.pdf\f[R]
 [\-process\-struct\-trees] [\-utf8] \f[B]\-o <format> \f[R]
+.PP
+Split the file, if possible, to a maximum file size (in bytes) for each
+output PDF.
+See above for format details.
 .TP
 \f[B]\-process\-struct\-trees\f[R]
 Split the input document\(cqs structure tree into the output documents.

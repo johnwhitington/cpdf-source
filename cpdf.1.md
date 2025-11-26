@@ -10,26 +10,26 @@ cpdf - PDF command line tools
 
 Simple operation:
 
-**cpdf** **in.pdf** \[operation] \[options] \[-o out.pdf]
+**cpdf** [in.pdf] \[operation] \[options] \[-o out.pdf]
 
 Operation on password-protected file:
 
-**cpdf** **in.pdf** \[user=\<password>] \[owner=\<password>] ... \[-o out.pdf]
+**cpdf** in.pdf \[user=\<password>] \[owner=\<password>] ... \[-o out.pdf]
 
 Multiple operations, one after another:
 
-**cpdf** **in.pdf** \[operation] \[options] **AND** \[operation] \[options] **AND**
+**cpdf** [in.pdf] \[operation] \[options] **AND** \[operation] \[options] **AND**
 ... \[-o out.pdf]
 
 # DESCRIPTION
 
-**cpdf** is an AGPL-licensed command line tool for processing PDF files. The
+**Cpdf** is an AGPL-licensed command line tool for processing PDF files. The
 rest of this man page gives a brief description of each command line operation
 and option. The file cpdfmanual.pdf which you should find installed on your
 system or otherwise at https://www.coherentpdf.com/cpdfmanual.pdf gives the
 full usage details.
 
-The sections in this man page follow the chapters of cpdfmanual.pdf, for east
+The sections in this document follow the chapters of cpdfmanual.pdf, for easy
 cross-referencing.
 
 # 1. BASIC USAGE
@@ -46,17 +46,17 @@ cross-referencing.
 
 : Lists and describes very briefly each command line option.
 
-**-o**
+**-o** \<filename>
 
 : The output filename. Beware of writing back to the same file.
 
-**-i**
+**-i** \<filename>
 
 : Cpdf automatically treats any filename ending with .pdf (any case) as an
 input PDF. If your file does not end with .pdf, you can supply the file with
 **-i** instead.
 
-**-range**
+**-range** \<range>
 
 : Gives the range of pages to be affected by an operation. By default, all
 pages are affected. The range may be specified without **-range** simply by
@@ -78,7 +78,7 @@ would otherwise make it increase.
 : Presume ISO-compliant content streams when processing page content. This is
 faster, because it does not involve re-parsing whole streams to add content.
 
-**-idir <directory>**
+**-idir** \<directory>
 
 : Add a whole directory of PDFs as inputs.
 
@@ -104,19 +104,19 @@ otherwise prevent it.
 
 : Read the input PDF from standard input instead of from a named file.
 
-**-stdin-user <password>**
+**-stdin-user** \<password>
 
 : Supply the user password for the PDF which is from standard input. 
 
-**-stdin-owner <password>**
+**-stdin-owner** \<password>
 
 : Supply the owner password the the PDF which is from standard input.
 
-**-producer <text>**
+**-producer** \<text>
 
 : Set the producer of the output file.
 
-**-creator <text>**
+**-creator** \<text>
 
 : Set the creator of the output file.
 
@@ -129,7 +129,7 @@ otherwise prevent it.
 : Linearize the PDF when writing. Requires a linearizer to be supplied with
 **-cpdflin**.
 
-**-cpdflin <filename>**
+**-cpdflin** \<filename>
 
 : Give the path of an external linearizer. For example, Qpdf.
 
@@ -150,12 +150,12 @@ effect is then to redo all object streams.
 **-create-objstm** and **-no-preserve-objstm** may be used together - the
 effect is then to redo all object streams.
 
-**-args <filename>**
+**-args** \<filename>
 
 : Read command line arguments from the given file by direct textual
 substitution into the command line, prior to any other processing. 
 
-**-args-json <filename>**
+**-args-json** \<filename>
 
 : Read command line arguments from a JSON file consisting of a single array of
 strings.
@@ -174,7 +174,7 @@ used with caution.
 
 : Perform no processing on string outputs.
 
-**-gs**
+**-gs** \<path>
 
 : A very few of Cpdf's functions rely upon the **gs** command. Its path may be
 supplied with **-gs**.
@@ -220,7 +220,7 @@ the input pages in the order specified on the command line. Actually, the
 then the first from the second and so on. Then the second page from the first
 document and on until all pages are exhausted.
 
-**-collate-n**
+**-collate-n** \<n>
 
 : Like **-collate**, but in chunks of more than one page.
 
@@ -243,7 +243,7 @@ the pages in the output document beginning at 1.
 
 : Merge input structure trees in the output.
 
-**-subformat**
+**-subformat** \<subformat>
 
 : If **-subformat** "PDF/UA-2" is given, together with
 **-process-struct-trees**, Cpdf will add a top-level Document structure tree
@@ -260,15 +260,15 @@ writing.
 
 The input **in.pdf** here is the main file. You can build a blank one with **-create-pdf**.
 
-**-pf**
+**-pf** \<filename>
 
 : The filename for each file to include in the portfolio.
 
-**-pfd**
+**-pfd** \<description>
 
 : The description for the file (must appear after **-pf**).
 
-**-pfr**
+**-pfr** \<relationship>
 
 : The so-called relationship for the file (must appear after **-pf**).
 
@@ -284,7 +284,7 @@ The output format has many options (see cpdfmanual.pdf for details). But the
 simplest is just to number the outputs in sequence. For example **cpdf in.pdf
 -o out%%%.pdf** will produce out001.pdf, out002.pdf and so on.
 
-**-chunk**
+**-chunk** \<n>
 
 : Choose a chunk size other than 1.
 
@@ -301,7 +301,9 @@ cpdfmanual.pdf for details.
 
 **cpdf -split-bookmarks \<level> in.pdf** \[-process-struct-trees] \[-utf8] **-o \<format>**
 
-Split on bookmark boundaries at a given level, instead of splitting on each page. Level 0 is top level, level 1 next, and so on.
+Split on bookmark boundaries at a given level, instead of splitting on each
+page. Level 0 is top level, level 1 next, and so on. See above for format
+details.
 
 **-process-struct-trees**
 
@@ -314,10 +316,12 @@ cpdfmanual.pdf for details.
 
 ## Splitting to a given size
 
-We can split the file, if possible, to a maximum file size for each output PDF:
 
 **cpdf -split-max \<file size> in.pdf** \[-process-struct-trees] \[-utf8] **-o \<format>
 **
+
+Split the file, if possible, to a maximum file size (in bytes) for each output
+PDF. See above for format details.
 
 **-process-struct-trees**
 
