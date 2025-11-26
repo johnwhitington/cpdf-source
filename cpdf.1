@@ -306,24 +306,23 @@ Split the input document\(cqs structure tree into the output documents.
 This option may be required in the case of some output formats.
 See cpdfmanual.pdf for details.
 .SH 3. PAGES
-\f[B]cpdf \-scale\-page \(lq<scale x> <scale y>\(rq\f[R] [\-fast]
-[<position>] \f[B]in.pdf\f[R] [<range>] \f[B]\-o out.pdf\f[R]
+\f[B]cpdf \-scale\-page \(lq<scale x> <scale y>\(rq\f[R]
+\f[B]in.pdf\f[R] [<range>] [\-fast] [<position>] \f[B]\-o out.pdf\f[R]
 .PP
 Scale pages in the given range by the given factor e.g \(lq2 2\(rq.
 See the end of this chapter for \-fast and \-position.
 .PP
-\f[B]cpdf \-scale\-to\-fit \(lq<x size> <y size>\(rq\f[R] [\-fast]
-[\-prerotate] [<position>] [\-scale\-to\-fit\-scale <scale>]
-[\-scale\-to\-fit\-rotate\-clockwise]
-[\-scale\-to\-fit\-rotate\-anticlockwise] \f[B]in.pdf\f[R] [<range>]
-\f[B]\-o out.pdf\f[R]
+\f[B]cpdf \-scale\-to\-fit \(lq<x size> <y size>\(rq\f[R]
+\f[B]in.pdf\f[R] [<range>] [\-fast] [\-prerotate] [<position>]
+[\-scale\-to\-fit\-scale <scale>] [\-scale\-to\-fit\-rotate\-clockwise]
+[\-scale\-to\-fit\-rotate\-anticlockwise] \f[B]\-o out.pdf\f[R]
 .PP
 Scale pages in the given range to fit the given size e.g \(lqa4paper\(rq
 or \(lq10in 7in\(rq, without altering the aspect ratio.
 By default the content will be centered on the new page.
 See Chapter 8 for information on positions.
 .TP
-\f[B]\-scale\-to\-fit\-scale\f[R]
+\f[B]\-scale\-to\-fit\-scale\f[R] <n>
 Scale to a proportion of the available area, instead of filling it.
 For example 0.9 for 90 percent.
 .TP
@@ -333,25 +332,25 @@ Automatically rotate page to maximise use of area.
 \f[B]\-prerotate\f[R]
 Remove any viewing rotation before beginning.
 .PP
-\f[B]cpdf \-stretch \(lq<x size> <y size>\(rq\f[R] [\-fast]
-\f[B]in.pdf\f[R] [<range>] \f[B]\-o out.pdf\f[R]
+\f[B]cpdf \-stretch \(lq<x size> <y size>\(rq\f[R] \f[B]in.pdf\f[R]
+[<range>] [\-fast] \f[B]\-o out.pdf\f[R]
 .PP
 Scale pages without regard to aspect ratio.
 .PP
-\f[B]cpdf \-center\-to\-fit \(lq<x size> <y size>\(rq\f[R] [\-fast]
-\f[B]in.pdf\f[R] [<range>] \f[B]\-o out.pdf\f[R]
+\f[B]cpdf \-center\-to\-fit \(lq<x size> <y size>\(rq\f[R]
+\f[B]in.pdf\f[R] [<range>] [\-fast] \f[B]\-o out.pdf\f[R]
 .PP
 Center each page on a new page size, without scaling it.
 .PP
-\f[B]cpdf \-scale\-contents <scale>\f[R] [<position>] [\-fast]
-\f[B]in.pdf\f[R] [<range>] \f[B]\-o out.pdf\f[R]
+\f[B]cpdf \-scale\-contents <scale>\f[R] \f[B]in.pdf\f[R] [<range>]
+[<position>] [\-fast] \f[B]\-o out.pdf\f[R]
 .PP
 Scale the content of pages by a given factor, without changing the size
 of the page.
 See the end of this chapter for position.
 .PP
-\f[B]cpdf \-shift \(lq<shift x> <shift y>\(rq\f[R] [\-fast]
-\f[B]in.pdf\f[R] [<range>] \f[B]\-o out.pdf\f[R]
+\f[B]cpdf \-shift \(lq<shift x> <shift y>\(rq\f[R] \f[B]in.pdf\f[R]
+[<range>] [\-fast] \f[B]\-o out.pdf\f[R]
 .PP
 Shift the content of pages by a given displacement.
 .PP
@@ -371,7 +370,7 @@ clockwise.
 Change the PDF viewing rotation of pages by 0, 90, 180 or 270 degrees
 clockwise.
 .PP
-\f[B]cpdf \-upright\f[R] [\-fast] \f[B]in.pdf\f[R] [<range>] \f[B]\-o
+\f[B]cpdf \-upright\f[R] \f[B]in.pdf\f[R] [<range>] [\-fast] \f[B]\-o
 out.pdf\f[R]
 .PP
 The \f[B]\-upright\f[R] operation does whatever combination of
@@ -381,18 +380,18 @@ appearance.
 In addition, it makes sure the media box has its origin at (0,0),
 changing other boxes to compensate.
 .PP
-\f[B]cpdf \-rotate\-contents <angle>\f[R] [\-fast] \f[B]in.pdf\f[R]
-[<range>] \f[B]\-o out.pdf\f[R]
+\f[B]cpdf \-rotate\-contents <angle>\f[R] \f[B]in.pdf\f[R] [<range>]
+[\-fast] \f[B]\-o out.pdf\f[R]
 .PP
 Rotates the content of the page around its center point by the given
 angle.
 .PP
-\f[B]cpdf \-hflip\f[R] [\-fast] \f[B]in.pdf\f[R] [<range>] \f[B]\-o
+\f[B]cpdf \-hflip\f[R] \f[B]in.pdf\f[R] [<range>] [\-fast] \f[B]\-o
 out.pdf\f[R]
 .PP
 Flip page content horizontally.
 .PP
-\f[B]cpdf \-vflip\f[R] [\-fast] \f[B]in.pdf\f[R] [<range>] \f[B]\-o
+\f[B]cpdf \-vflip\f[R] \f[B]in.pdf\f[R] [<range>] [\-fast] \f[B]\-o
 out.pdf\f[R]
 .PP
 Flip page content vertically.
@@ -411,31 +410,29 @@ question mark, writing \f[B]\(lq?50 50 350 250\(rq\f[R] instead.
 .PP
 Remove a crop, art, trim or bleed box from pages.
 .PP
-\f[B]cpdf \-frombox <boxname> \-tobox <boxname>\f[R]
-[\-mediabox\-if\-missing] \f[B]in.pdf\f[R] [<range>] \f[B]\-o
-out.pdf\f[R]
+\f[B]cpdf \-frombox <boxname> \-tobox <boxname>\f[R] \f[B]in.pdf\f[R]
+[<range>] [\-mediabox\-if\-missing] \f[B]\-o out.pdf\f[R]
 .PP
 Copy a box to another.
 For example from \f[B]/TrimBox\f[R] to \f[B]/CropBox\f[R].
-.PP
+.TP
 \f[B]\-mediabox\-if\-missing\f[R]
-.PP
 Use media box, rather than failing, if the \f[B]\-frombox\f[R] is
 missing.
 .PP
-\f[B]cpdf \-hard\-box <boxname>\f[R] [\-fast] \f[B]in.pdf\f[R] [<range>]
+\f[B]cpdf \-hard\-box <boxname>\f[R] \f[B]in.pdf\f[R] [<range>] [\-fast]
 [\-mediabox\-if\-missing] \f[B]\-o out.pdf\f[R]
 .PP
 Create a hard box for a given box name \- that is to say, one which
 clips its content.
 .PP
-\f[B]cpdf \-show\-boxes\f[R] [\-fast] \f[B]in.pdf\f[R] [<range>]
+\f[B]cpdf \-show\-boxes\f[R] \f[B]in.pdf\f[R] [<range>] [\-fast]
 \f[B]\-o out.pdf\f[R]
 .PP
 Show the media, crop, art, trim, and bleed boxes in Red, Green, Blue,
 Orange and Pink respectively.
 .PP
-\f[B]cpdf \-trim\-marks\f[R] [\-fast] \f[B]in.pdf\f[R] [<range>]
+\f[B]cpdf \-trim\-marks\f[R] \f[B]in.pdf\f[R] [<range>] [\-fast]
 \f[B]\-o out.pdf\f[R]
 .PP
 Add trim marks to a PDF.
