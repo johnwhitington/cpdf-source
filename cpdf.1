@@ -1036,8 +1036,8 @@ new sides down so that the media box is unchanged.
 Mark the file\(cqs content as an artifact for the purposes of
 imposition.
 .PP
-\f[B]cpdf \-chop \(lq<x> <y>\(rq\f[R] [\-chop\-columns] [\-chop\-rtl]
-[\-chop\-btt] \f[B]in.pdf\f[R] [<range>] \f[B]\-o out.pdf\f[R]
+\f[B]cpdf \-chop \(lq<x> <y>\(rq\f[R] \f[B]in.pdf\f[R] [<range>]
+[\-chop\-columns] [\-chop\-rtl] [\-chop\-btt] \f[B]\-o out.pdf\f[R]
 .PP
 The \f[B]\-chop\f[R] operation cuts up a page into multiple pages,
 according to the chosen grid.
@@ -1051,8 +1051,8 @@ Arrange right to left.
 \f[B]\-chop\-btt\f[R]
 Arrange bottom to top.
 .PP
-\f[B]cpdf [\-chop\-h <y> | \-chop\-v <x>]\f[R] [\-chop\-columns]
-\f[B]in.pdf\f[R] [<range>] \f[B]\-o out.pdf\f[R]
+\f[B]cpdf [\-chop\-h <y> | \-chop\-v <x>]\f[R] \f[B]in.pdf\f[R]
+[<range>] [\-chop\-columns] \f[B]\-o out.pdf\f[R]
 .PP
 Chop each page into two, vertically or horizontally, at the given
 position.
@@ -1073,14 +1073,13 @@ List annotation objects in JSON format.
 This includes all ancillary objects, to support round\-tripping.
 See cpdfmanual.pdf for full format details.
 .PP
-\f[B]cpdf \-set\-annotations <filename>\f[R] [\-underneath]
-\f[B]in.pdf\f[R] [<range>] \f[B]\-o out.pdf\f[R]
+\f[B]cpdf \-set\-annotations <filename>\f[R] \f[B]in.pdf\f[R] [<range>]
+[\-underneath] \f[B]\-o out.pdf\f[R]
 .PP
 Set annotations from a JSON file.
 They will be added on top of any annotations already present.
-.PP
+.TP
 \f[B]\-underneath\f[R]
-.PP
 Put the annotations underneath instead of on top of existing ones.
 .PP
 \f[B]cpdf \-copy\-annotations from.pdf to.pdf\f[R] [<range>] \f[B]\-o
@@ -1093,8 +1092,8 @@ out.pdf\f[R]
 .PP
 Remove annotations from the document.
 .SH 11. DOCUMENT INFORMATION AND METADATA
-\f[B]cpdf \-info[\-json]\f[R] [\-utf8] [\-in | \-cm | \-mm]
-\f[B]in.pdf\f[R]
+\f[B]cpdf \-info[\-json]\f[R] \f[B]in.pdf\f[R] [\-utf8] [\-in | \-cm |
+\-mm]
 .PP
 Print info about a document in plain text (\f[B]\-info\f[R]) or JSON
 (\f[B]\-info\-json\f[R]).
@@ -1152,8 +1151,8 @@ Output in UTF8 format (plain text only)
 Output dimensions in inches, millimetres or centimetres instead of
 points.
 .PP
-\f[B]cpdf \-page\-info[\-json]\f[R] [\-in | \-cm | \-mm]
-\f[B]in.pdf\f[R] [<range>]
+\f[B]cpdf \-page\-info[\-json]\f[R] \f[B]in.pdf\f[R] [<range>] [\-in |
+\-cm | \-mm]
 .PP
 List page information in plain (\f[B]\-page\-info\f[R]) or JSON
 (\f[B]\-page\-info\-json\f[R]) format.
@@ -1179,40 +1178,40 @@ points.
 .PP
 Print the number of pages in the file.
 .PP
-\f[B]cpdf \-set\-title <title>\f[R] [\-also\-set\-xmp]
-[\-just\-set\-xmp] \f[B]in.pdf \-o out.pdf\f[R]
+\f[B]cpdf \-set\-title <title>\f[R] \f[B]in.pdf\f[R] [\-also\-set\-xmp]
+[\-just\-set\-xmp] \f[B]\-o out.pdf\f[R]
 .PP
-\f[B]cpdf \-set\-author <author>\f[R] [\-also\-set\-xmp]
-[\-just\-set\-xmp] \f[B]in.pdf \-o out.pdf\f[R]
+\f[B]cpdf \-set\-author <author>\f[R] \f[B]in.pdf\f[R]
+[\-also\-set\-xmp] [\-just\-set\-xmp] \f[B]\-o out.pdf\f[R]
 .PP
-\f[B]cpdf \-set\-subject <subject>\f[R] [\-also\-set\-xmp]
-[\-just\-set\-xmp] \f[B]in.pdf \-o out.pdf\f[R]
+\f[B]cpdf \-set\-subject <subject>\f[R] \f[B]in.pdf\f[R]
+[\-also\-set\-xmp] [\-just\-set\-xmp] \f[B]\-o out.pdf\f[R]
 .PP
-\f[B]cpdf \-set\-keywords <keywords>\f[R] [\-also\-set\-xmp]
-[\-just\-set\-xmp] \f[B]in.pdf \-o out.pdf\f[R]
+\f[B]cpdf \-set\-keywords <keywords>\f[R] \f[B]in.pdf\f[R]
+[\-also\-set\-xmp] [\-just\-set\-xmp] \f[B]\-o out.pdf\f[R]
 .PP
-\f[B]cpdf \-set\-creator <creator>\f[R] [\-also\-set\-xmp]
-[\-just\-set\-xmp] \f[B]in.pdf \-o out.pdf\f[R]
+\f[B]cpdf \-set\-creator <creator>\f[R] \f[B]in.pdf\f[R]
+[\-also\-set\-xmp] [\-just\-set\-xmp] \f[B]\-o out.pdf\f[R]
 .PP
-\f[B]cpdf \-set\-produce* <producer>\f[R] [\-also\-set\-xmp]
-[\-just\-set\-xmp] \f[B]in.pdf \-o out.pdf\f[R]
+\f[B]cpdf \-set\-produce* <producer>\f[R] \f[B]in.pdf\f[R]
+[\-also\-set\-xmp] [\-just\-set\-xmp] \f[B]\-o out.pdf\f[R]
 .PP
 Set metadata.
 .PP
-\f[B]cpdf \-set\-create <date>\f[R] [\-also\-set\-xmp]
-[\-just\-set\-xmp] \f[B]in.pdf \-o out.pdf\f[R]
+\f[B]cpdf \-set\-create <date>\f[R] \f[B]in.pdf\f[R] [\-also\-set\-xmp]
+[\-just\-set\-xmp] \f[B]\-o out.pdf\f[R]
 .PP
-\f[B]cpdf \-set\-modify <date>\f[R] [\-also\-set\-xmp]
-[\-just\-set\-xmp] \f[B]in.pdf \-o out.pdf\f[R]
+\f[B]cpdf \-set\-modify <date>\f[R] \f[B]in.pdf\f[R] [\-also\-set\-xmp]
+[\-just\-set\-xmp] \f[B]\-o out.pdf\f[R]
 .PP
 Set creation or modification dates.
 See cpdfmanual.pdf for details of the PDF date format.
 .PP
-\f[B]cpdf \-set\-trapped in.pdf \-o out.pdf\f[R] [\-also\-set\-xmp]
-[\-just\-set\-xmp]
+\f[B]cpdf \-set\-trapped in.pdf\f[R] [\-also\-set\-xmp]
+[\-just\-set\-xmp] \f[B]\-o out.pdf\f[R]
 .PP
-\f[B]cpdf \-set\-untrapped in.pdf \-o out.pdf\f[R] [\-also\-set\-xmp]
-[\-just\-set\-xmp]
+\f[B]cpdf \-set\-untrapped in.pdf\f[R] [\-also\-set\-xmp]
+[\-just\-set\-xmp] \f[B]\-o out.pdf\f[R]
 .PP
 Set the trapped status of a PDF.
 .TP
@@ -1314,9 +1313,9 @@ Create or replace XMP metadata from old\-style metadata.
 Set the XMP metadata date.
 See cpdfmanual.pdf for date format details.
 .PP
-\f[B]cpdf \-add\-page\-labels in.pdf\f[R] [<range>] \f[B]\-o
-out.pdf\f[R] [\-label\-style <style>] [\-label\-prefix <string>]
-[\-label\-startval <integer>] [\-labels\-progress]
+\f[B]cpdf \-add\-page\-labels in.pdf\f[R] [<range>] [\-label\-style
+<style>] [\-label\-prefix <string>] [\-label\-startval <integer>]
+[\-labels\-progress] \f[B]\-o out.pdf\f[R]
 .PP
 Add page labels to a PDF.
 Multiple calls may be used to add multiple ranges of page labels.
@@ -1363,23 +1362,24 @@ Piece Info: 0 bytes (0.00%)
 Unclassified: 11229 bytes (3.62%)
 .EE
 .SH 12. FILE ATTACHMENTS
-\f[B]cpdf \-attach\-file <filename>\f[R] [\-to\-page <page number>]
-[\-afd <string>] [\-afr <relationship>] [\-attach\-file \&...]
-\f[B]in.pdf \-o out.pdf\f[R]
+\f[B]cpdf \-attach\-file <filename>\f[R] \f[B]in.pdf\f[R] [\-to\-page
+<page number>] [\-afd <string>] [\-afr <relationship>] [\-attach\-file
+\&...]
+\f[B]\-o out.pdf\f[R]
 .PP
 Attach a file to a PDF, given its filename.
 .TP
-\f[B]\-to\-page\f[R]
+\f[B]\-to\-page\f[R] <page number>
 Instead of attaching globally, add it as an attachment on a single page.
 .TP
-\f[B]\-afd\f[R]
+\f[B]\-afd\f[R] <string>
 Supply the textual description for this attachment.
 .TP
-\f[B]\-afr\f[R]
+\f[B]\-afr\f[R] <relationship>
 Supply the so\-called Relationship for this attachment.
 .PP
-\f[B]cpdf \-list\-attached\-files\f[R] [\-json] [\-include\-data]
-\f[B]in.pdf\f[R]
+\f[B]cpdf \-list\-attached\-files\f[R] \f[B]in.pdf\f[R] [\-json]
+[\-include\-data]
 .PP
 List attached files.
 .TP
@@ -1398,7 +1398,7 @@ Remove attached files from a PDF.
 .PP
 Extract the attachments to a given directory.
 .SH 13. IMAGES
-\f[B]cpdf \-list\-images[\-json]\f[R] [\-inline] \f[B]in.pdf\f[R]
+\f[B]cpdf \-list\-images[\-json]\f[R] \f[B]in.pdf\f[R] [\-inline]
 [<range>]
 .PP
 List the images in a file together with their object number, page
@@ -1410,11 +1410,11 @@ Either in plain text (\f[B]\-list\-images\f[R]) or JSON
 \f[B]\-inline\f[R]
 Also list inline images.
 .PP
-\f[B]cpdf \-list\-images\-used[\-json]\f[R] [\-inline] \f[B]in.pdf\f[R]
+\f[B]cpdf \-list\-images\-used[\-json]\f[R] \f[B]in.pdf\f[R] [\-inline]
 [<range>]
 .PP
-\f[B]cpdf \-image\-resolution[\-json] <n>\f[R] [\-inline]
-\f[B]in.pdf\f[R] [<range>]
+\f[B]cpdf \-image\-resolution[\-json] <n>\f[R] \f[B]in.pdf\f[R]
+[\-inline] [<range>]
 .PP
 The \f[B]\-list\-images\-used\f[R] and
 \f[B]\-list\-images\-used\-json\f[R] operations list the images at point
@@ -1437,10 +1437,10 @@ JPEG, JPEG2000 and lossless JBIG2 images are extracted directly.
 Lossy JBIG2 images are extracted in sections.
 Other images are written as PNGs, processed with ImageMagick.
 .TP
-\f[B]\-im\f[R]
-Provide path to ImageMagick
+\f[B]\-im\f[R] <path>
+Provide path to ImageMagick.
 .TP
-\f[B]\-p2p\f[R]
+\f[B]\-p2p\f[R] <path>
 Provide path to pnmtopng if ImageMagick not available.
 .TP
 \f[B]\-dedup\f[R]
@@ -1450,7 +1450,7 @@ Deduplicate images, extracting only once even if multiply\-included.
 Deduplicate images, but only per\-page.
 .TP
 \f[B]\-raw\f[R]
-Output .pnm files instead of .png
+Output .pnm files instead of .png.
 .TP
 \f[B]\-inline\f[R]
 Also extract inline images.
@@ -1458,15 +1458,16 @@ Also extract inline images.
 \f[B]\-merge\-masks\f[R]
 Merge soft masks with their images when extracting.
 .PP
-\f[B]cpdf \-extract\-single\-image <object number>\f[R] [\-im <path>]
-[\-p2p <path>] [\-raw] [\-merge\-masks] \f[B]in.pdf \-o <filename>\f[R]
+\f[B]cpdf \-extract\-single\-image <object number>\f[R] \f[B]in.pdf\f[R]
+[\-im <path>] [\-p2p <path>] [\-raw] [\-merge\-masks] \f[B]\-o
+<filename>\f[R]
 .PP
 Extract a single image, given its object number.
 Other flags as above.
 .PP
-\f[B]cpdf \-process\-images\f[R] [\-process\-images\-info]
-\f[B]in.pdf\f[R] [<range>] [\-im <filename>] [\-jbig2enc <filename>]
-[\-lossless\-resample[\-dpi] <n> | \-lossless\-to\-jpeg <n>]
+\f[B]cpdf \-process\-images\f[R] \f[B]in.pdf\f[R]
+[\-process\-images\-info] [<range>] [\-im <filename>] [\-jbig2enc
+<filename>] [\-lossless\-resample[\-dpi] <n> | \-lossless\-to\-jpeg <n>]
 [\-jpeg\-to\-jpeg <n>] [\-jpeg\-to\-jpeg\-scale <n>]
 [\-lossless\-to\-jpeg2000 <n>] [\-jpeg2000\-to\-jpeg2000 <n>]
 [\-jpeg\-to\-jpeg\-dpi <n>] [\-1bpp\-method <method>]
@@ -1480,70 +1481,70 @@ For a full commentary, see cpdfmanual.pdf.
 \f[B]\-process\-images\-info\f[R]
 Show the work being done.
 .TP
-\f[B]\-im\f[R]
+\f[B]\-im\f[R] <path>
 Supply path to ImageMagick.
 .TP
-\f[B]\-jbig2enc\f[R]
+\f[B]\-jbig2enc\f[R] <path>
 Supply path to jbig2enc.
 .TP
-\f[B]\-lossless\-resample\f[R]
+\f[B]\-lossless\-resample\f[R] <n>
 Resample lossless images to the given percentage scale.
 .TP
-\f[B]\-lossless\-resample\-dpi\f[R]
+\f[B]\-lossless\-resample\-dpi\f[R] <n>
 Resample lossless images to a given DPI resolution.
 .TP
-\f[B]\-lossless\-to\-jpeg\f[R]
+\f[B]\-lossless\-to\-jpeg\f[R] <n>
 Convert lossless images to JPEG at the given quality level.
 .TP
-\f[B]\-jpeg\-to\-jpeg\f[R]
+\f[B]\-jpeg\-to\-jpeg\f[R] <n>
 Reprocess JPEG images to the given quality level.
 .TP
-\f[B]\-jpeg\-to\-jpeg\-scale\f[R]
+\f[B]\-jpeg\-to\-jpeg\-scale\f[R] <n>
 Reprocess JPEG images to the given percentage scale.
 .TP
-\f[B]\-jpeg\-to\-jpeg\-dpi\f[R]
+\f[B]\-jpeg\-to\-jpeg\-dpi\f[R] <n>
 Reprocess JPEG images to the given DPI resolution.
 .TP
-\f[B]\-lossless\-to\-jpeg2000\f[R]
+\f[B]\-lossless\-to\-jpeg2000\f[R] <n>
 Convert lossless images to JPEG 2000 at the given quality level.
 .TP
-\f[B]\-jpeg2000\-to\-jpeg2000\f[R]
+\f[B]\-jpeg2000\-to\-jpeg2000\f[R] <n>
 Reprocess JPEG 2000 images to the given quality level.
 .TP
-\f[B]\-1bpp\-method\f[R]
+\f[B]\-1bpp\-method\f[R] <1bppmethod>
 Specify method for 1bpp images.
-One of JBIG2Lossy, JBIG2Lossless.
+One of \f[B]JBIG2Lossy\f[R], \f[B]JBIG2Lossless\f[R].
 .TP
-\f[B]\-jbig2\-lossy\-threshold\f[R]
+\f[B]\-jbig2\-lossy\-threshold\f[R] <n>
 Set the threshold for lossy JBIG2 compression.
 .TP
-\f[B]\-pixel\-threshold\f[R]
+\f[B]\-pixel\-threshold\f[R] <n>
 Images below this number of pixels not processed (default 25).
 .TP
-\f[B]\-length\-threshold\f[R]
+\f[B]\-length\-threshold\f[R] <n>
 Images with less than this number of bytes not processed (default 100).
 .TP
-\f[B]\-percentage\-threshold\f[R]
+\f[B]\-percentage\-threshold\f[R] <n>
 Results not below this percentage of original size discarded (default
 90).
 .TP
-\f[B]\-dpi\-threshold\f[R]
+\f[B]\-dpi\-threshold\f[R] <n>
 Only image above this threshold at all use points processed (default no
 dpi threshold).
 .TP
 \f[B]\-resample\-interpolate\f[R]
 Use interpolation when resampling.
 .PP
-\f[B]cpdf \-rasterize in.pdf\f[R] [<range>] \f[B]\-o out.pdf\f[R] [\-gs
-<path>] [\-rasterize[\-gray | \-1bpp | \-jpeg | \-jpeggray]
-[\-rasterize\-res <n>] [\-rasterize\-jpeg\-quality <n>]
-[\-rasterize\-no\-antialias | \-rasterize\-downsample]
-[\-rasterize\-annots] | [\-rasterize\-alpha]
+\f[B]cpdf \-rasterize in.pdf\f[R] [<range>] [\-gs <path>]
+[\-rasterize[\-gray | \-1bpp | \-jpeg | \-jpeggray] [\-rasterize\-res
+<n>] [\-rasterize\-jpeg\-quality <n>] [\-rasterize\-no\-antialias |
+\-rasterize\-downsample] [\-rasterize\-annots] | [\-rasterize\-alpha]
+\f[B]\-o out.pdf\f[R]
 .PP
 Rasterize each page, replacing the page content with the rasterized
 version in the output PDF.
 .TP
-\f[B]\-gs\f[R]
+\f[B]\-gs\f[R] <path>
 Supply path to gs.
 .TP
 \f[B]\-rasterize\-gray\f[R]
@@ -1558,10 +1559,10 @@ Use JPEG instead of lossless compression.
 \f[B]\-rasterize\-jpeggray\f[R]
 Use grayscale JPEG instead of lossless compression.
 .TP
-\f[B]\-rasterize\-res\f[R]
+\f[B]\-rasterize\-res\f[R] <n>
 Set the resolution (default 144dpi).
 .TP
-\f[B]\-rasterize\-jpeg\-quality\f[R]
+\f[B]\-rasterize\-jpeg\-quality\f[R] <n>
 Set JPEG image quality (0..100).
 .TP
 \f[B]\-rasterize\-no\-antialias\f[R]
@@ -1576,17 +1577,17 @@ Rasterize annotations instead of retaining.
 \f[B]\-rasterize\-alpha\f[R]
 Produce an alpha channel (lossless only)
 .PP
-\f[B]cpdf \-output\-image in.pdf\f[R] [<range>] \f[B]\-o <format>\f[R]
-[\-gs <path>] [\-rasterize[\-gray | \-1bpp | \-jpeg | \-jpeggray]
-[\-rasterize\-res <n>] [\-rasterize\-jpeg\-quality <n>]
-[\-rasterize\-no\-antialias | \-rasterize\-downsample]
-[\-rasterize\-annots] [\-rasterize\-alpha] [\-tobox <BoxName>]
+\f[B]cpdf \-output\-image in.pdf\f[R] [<range>] [\-gs <path>]
+[\-rasterize[\-gray | \-1bpp | \-jpeg | \-jpeggray] [\-rasterize\-res
+<n>] [\-rasterize\-jpeg\-quality <n>] [\-rasterize\-no\-antialias |
+\-rasterize\-downsample] [\-rasterize\-annots] [\-rasterize\-alpha]
+[\-tobox <BoxName>] \f[B]\-o <format>\f[R]
 .PP
 Output rasterized images for each page to the given folder and format
 e.g \(lqdir/%%%.png\(rq would create dir/001.png and so on.
 Options as above and:
 .TP
-\f[B]\-tobox\f[R]
+\f[B]\-tobox\f[R] <box>
 Specify the box to rasterize (default \f[B]/MediaBox\f[R]).
 .SH 14. FONTS
 \f[B]cpdf \-list\-fonts[\-json] in.pdf\f[R]
@@ -1595,13 +1596,13 @@ List the fonts on each page in a file together with their types.
 Either in plain text (\f[B]\-list\-fonts\f[R]) or JSON
 (\f[B]\-list\-fonts\-json\f[R]) format.
 .PP
-\f[B]cpdf \-print\-font\-table <font name>\f[R]
-\-print\-font\-table\-page <n> \f[B]in.pdf\f[R]
+\f[B]cpdf \-print\-font\-table <font name>\f[R] \f[B]in.pdf\f[R]
+[\-print\-font\-table\-page <n>]
 .PP
 Print a font table for a given font name and page, e.g:
 .IP
 .EX
-cpdf \-print\-font\-table /XYPLPB+NimbusSanL\-Bold \-print\-font\-table\-page 1 cpdfmanual.pdf
+cpdf \-print\-font\-table /XYPLPB+NimbusSanL\-Bold \-print\-font\-table\-page 2 cpdfmanual.pdf
 67 = U+0043 (C \- LATIN CAPITAL LETTER C) = /C
 68 = U+0044 (D \- LATIN CAPITAL LETTER D) = /D
 70 = U+0046 (F \- LATIN CAPITAL LETTER F) = /F
@@ -1609,9 +1610,8 @@ cpdf \-print\-font\-table /XYPLPB+NimbusSanL\-Bold \-print\-font\-table\-page 1 
 \&...
 .EE
 .PP
-\f[B]cpdf \-copy\-font fromfile.pdf\f[R] \-copy\-font\-page <int>
-\-copy\-font\-name <name> \f[B]in.pdf\f[R] [<range>] \f[B]\-o
-out.pdf\f[R]
+\f[B]cpdf \-copy\-font fromfile.pdf\f[R] \f[B]in.pdf\f[R] [<range>]
+\-copy\-font\-page <int> \-copy\-font\-name <name> \f[B]\-o out.pdf\f[R]
 .PP
 A low\-level operation to copy a font from one file to another.
 .TP
@@ -1644,10 +1644,10 @@ E.g:
 .PP
 cpdf \-extract\-font 5,/F50 in.pdf \-o out.ttf
 .SH 15. PDF AND JSON
-\f[B]cpdf in.pdf \-output\-json \-o out.json\f[R]
+\f[B]cpdf in.pdf \-output\-json\f[R]
 [\-output\-json\-parse\-content\-streams]
 [\-output\-json\-no\-stream\-data] [\-output\-json\-decompress\-streams]
-[\-output\-json\-clean\-strings] [\-utf8]
+[\-output\-json\-clean\-strings] [\-utf8] \f[B]\-o out.json\f[R]
 .PP
 Convert PDF to a JSON format which may be inspected, or edited and
 round\-tripped back into PDF.
@@ -1678,8 +1678,8 @@ Convert a JSON file to a PDF file.
 List the optional content groups in the PDF, one per line, to standard
 output.
 .PP
-\f[B]cpdf \-ocg\-rename \-ocg\-rename\-from <a> \-ocg\-rename\-to <b>
-in.pdf \-o out.pdf\f[R]
+\f[B]cpdf \-ocg\-rename in.pdf \-ocg\-rename\-from <a> \-ocg\-rename\-to
+<b> \-o out.pdf\f[R]
 .PP
 Rename an optional content group given the old and new names.
 .PP
@@ -1699,10 +1699,10 @@ This command will merge them into a single optional content group.
 .PP
 Create a new PDF (default: one page, A4 portrait).
 .TP
-\f[B]\-create\-pdf\-pages\f[R]
+\f[B]\-create\-pdf\-pages\f[R] <n>
 Give the number of pages.
 .TP
-\f[B]\-create\-pdf\-papersize\f[R]
+\f[B]\-create\-pdf\-papersize\f[R] <papersize>
 Give the paper size, e.g \(lqa3landscape\(rq or \(lq200pt 600pt\(rq
 .PP
 \f[B]cpdf \-typeset <text file>\f[R] [\-create\-pdf\-papersize <size>]
@@ -1711,19 +1711,19 @@ Give the paper size, e.g \(lqa3landscape\(rq or \(lq200pt 600pt\(rq
 .PP
 Typeset a text file into a PDF.
 .TP
-\f[B]\-create\-pdf\-papersize\f[R]
+\f[B]\-create\-pdf\-papersize\f[R] <papersize>
 Give the paper size.
 .TP
-\f[B]\-font\f[R]
+\f[B]\-font\f[R] <font>
 The font (default Times\-Roman)
 .TP
-\f[B]\-font\-size\f[R]
+\f[B]\-font\-size\f[R] <n>
 The font size (default 12pt)
 .TP
-\f[B]\-subformat\f[R]
+\f[B]\-subformat\f[R] <subformat>
 Specify PDF/UA\-1 or PDF/UA\-2 to make a conforming file.
 .TP
-\f[B]\-title\f[R]
+\f[B]\-title\f[R] <title>
 Specify a title when using \-subformat for a PDF/UA file.
 .PP
 \f[B]cpdf \-jpeg <filename>\f[R] [\-subformat <subformat>] [\-title
@@ -1737,10 +1737,10 @@ Specify a title when using \-subformat for a PDF/UA file.
 .PP
 Build a PDF from an image file (JPEG, PNG or JPEG2000).
 .TP
-\f[B]\-subformat\f[R]
+\f[B]\-subformat\f[R] <subformat>
 Specify PDF/UA\-1 or PDF/UA\-2 to make a conforming file.
 .TP
-\f[B]\-title\f[R]
+\f[B]\-title\f[R] <title>
 Specify a title when using \-subformat for a PDF/UA file.
 .PP
 \f[B]cpdf\f[R] [\-jbig2\-global <filename>] \f[B]\-jbig2 <filename>\f[R]
@@ -1759,20 +1759,20 @@ In lossy mode, jbig2globals segments may be specified:
 \f[B]cpdf \-jbig2\-global 0.jbig2globals \-jbig2 1.jbig2 \-jbig2 2.jbig2
 \-jbig2 3.jbig2 \-o out.pdf\f[R]
 .TP
-\f[B]\-jbig2\-global\f[R]
+\f[B]\-jbig2\-global\f[R] <file>
 Change the jbig2global segment in use.
 .TP
 \f[B]\-jbig2\-global\-clear\f[R]
 Cease use of jbig2global segment, and return to lossless mode.
 .TP
-\f[B]\-subformat\f[R]
+\f[B]\-subformat\f[R] <subformat>
 Specify PDF/UA\-1 or PDF/UA\-2 to make a conforming file.
 .TP
-\f[B]\-title\f[R]
+\f[B]\-title\f[R] <title>
 Specify a title when using \-subformat for a PDF/UA file.
 .SH 18. DRAWING ON PDFS
-\f[B]cpdf in.pdf\f[R] [<range>] [\-draw\-struct\-tree] [\-underneath]
-\f[B]\-draw <draw operations>\f[R] \f[B]\-o out.pdf\f[R]
+\f[B]cpdf in.pdf\f[R] [<range>] [\-draw\-struct\-tree] \f[B]\-draw <draw
+operations>\f[R] [\-underneath] \f[B]\-o out.pdf\f[R]
 .PP
 Draw on a PDF.
 See cpdfmanual.pdf for a tutorial, and full information.
@@ -1789,10 +1789,10 @@ Draw underneath instead of on top of any existing page content.
 Return the width of a string of text in a one of the standard 14 fonts.
 Used for calculations of text position (e.g right\-alignment).
 .TP
-\f[B]\-font\f[R]
+\f[B]\-font\f[R] <font>
 Specify the font.
 .TP
-\f[B]\-fontsize\f[R]
+\f[B]\-fontsize\f[R] <n>
 Specify the font size.
 .PP
 \f[B]Building and showing paths\f[R]
@@ -1898,13 +1898,13 @@ Shear the graphics matrix in Y.
 \f[B]\-xobj\-bbox \(lqx y w h\(rq\f[R]
 Specify the bounding box for xobjects.
 .TP
-\f[B]\-xobj\f[R]
+\f[B]\-xobj\f[R] <name>
 Begin saving a sequence of graphics operators.
 .TP
 \f[B]\-end\-xobj\f[R]
 End saving a sequence of graphics operators.
 .TP
-\f[B]\-use\f[R]
+\f[B]\-use\f[R] <name>
 Use a saved sequence of graphics operators.
 .PP
 \f[B]Images\f[R]
@@ -2044,8 +2044,8 @@ Remove the structure tree from a file.
 .PP
 Mark all the content of the file as being an artifact.
 .PP
-\f[B]cpdf \-verify \(lqPDF/UA\-1(matterhorn)\(rq\f[R] \-verify\-single
-<test> [\-json] \f[B]in.pdf\f[R]
+\f[B]cpdf \-verify \(lqPDF/UA\-1(matterhorn)\(rq\f[R] \f[B]in.pdf\f[R]
+[\-verify\-single <test>] [\-json]
 .PP
 Verify conformance with PDF/UA\-1.
 .TP
@@ -2071,14 +2071,14 @@ Remove conformance marker from a PDF.
 .PP
 Create a new, blank, PDF/UA\-1 or PDF/UA\-2 file.
 .TP
-\f[B]\-create\-pdf\-pages\f[R]
+\f[B]\-create\-pdf\-pages\f[R] <n>
 Give the number of pages.
 .TP
-\f[B]\-create\-pdf\-papersize\f[R]
+\f[B]\-create\-pdf\-papersize\f[R] <papersize>
 Give the paper size, e.g \(lqa3landscape\(rq or \(lq200pt 600pt\(rq
 .SH 20. MISCELLANEOUS
-\f[B]cpdf \-draft\f[R] [\-boxes] [\-draft\-remove\-only <n>]
-\f[B]in.pdf\f[R] [<range>] \f[B]\-o out.pdf\f[R]
+\f[B]cpdf \-draft\f[R] \f[B]in.pdf\f[R] [<range>] [\-boxes]
+[\-draft\-remove\-only <n>] \f[B]\-o out.pdf\f[R]
 .PP
 Remove bit\-mapped (photographic) images from a PDF.
 .TP
@@ -2140,13 +2140,14 @@ Remove the ID from a PDF.
 .PP
 List the names of any separation colour spaces in a PDF.
 .PP
-\f[B]cpdf \-print\-dict\-entry\f[R] [\-json] \f[B]<key> in.pdf\f[R]
+\f[B]cpdf \-print\-dict\-entry\f[R] \f[B]<key> in.pdf\f[R] [\-json]
 .PP
-\f[B]cpdf \-remove\-dict\-entry <key>\f[R] [\-dict\-entry\-search
-<term>] \f[B]in.pdf \-o out.pdf\f[R]
+\f[B]cpdf \-remove\-dict\-entry <key>\f[R] \f[B]in.pdf\f[R]
+[\-dict\-entry\-search <term>] \f[B]\-o out.pdf\f[R]
 .PP
 \f[B]cpdf \-replace\-dict\-entry <key> \-replace\-dict\-entry\-value
-<value>\f[R] [\-dict\-entry\-search <term>] \f[B]in.pdf \-o out.pdf\f[R]
+<value>\f[R] \f[B]in.pdf\f[R] [\-dict\-entry\-search <term>] \f[B]\-o
+out.pdf\f[R]
 .PP
 Low level operations to edit PDF objects directly.
 See cpdfmanual.pdf for details.
@@ -2163,7 +2164,7 @@ out.pdf\f[R]
 \f[B]cpdf \-remove\-obj <object number> in.pdf \-o out.pdf\f[R]
 .PP
 \f[B]cpdf \-extract\-stream[\-decompress] <object specification> in.pdf
-[\-o out.dat | \-stdout]\f[R]
+\-o out.dat\f[R]
 .PP
 \f[B]cpdf \-replace\-stream <object specification>
 \-replace\-stream\-with <filename> in.pdf \-o out.pdf\f[R]
