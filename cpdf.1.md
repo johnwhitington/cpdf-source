@@ -10,15 +10,15 @@ cpdf - PDF command line tools
 
 Simple operation:
 
-**cpdf** in.pdf \[operation] \[options] \[-o out.pdf]
+**cpdf** **in.pdf** \[operation] \[options] \[-o out.pdf]
 
 Operation on password-protected file:
 
-**cpdf** in.pdf \[user=\<password>] \[owner=\<password>] ....
+**cpdf** **in.pdf** \[user=\<password>] \[owner=\<password>] ... \[-o out.pdf]
 
 Multiple operations, one after another:
 
-**cpdf** in.pdf \[operation] \[options] **AND** \[operation] \[options] **AND**
+**cpdf** **in.pdf** \[operation] \[options] **AND** \[operation] \[options] **AND**
 ... \[-o out.pdf]
 
 # DESCRIPTION
@@ -29,21 +29,22 @@ and option. The file cpdfmanual.pdf which you should find installed on your
 system or otherwise at https://www.coherentpdf.com/cpdfmanual.pdf gives the
 full usage details.
 
-The sections in this man page follow the chapters of cpdfmanual.pdf.
+The sections in this man page follow the chapters of cpdfmanual.pdf, for east
+cross-referencing.
 
 # 1. BASIC USAGE
 
 **-version**
 
-: Print the Cpdf version number
+: Print the Cpdf version number.
 
 **-help, --help**
 
-: Gives links to sources of help
+: Gives links to sources of help.
 
 **-summary**
 
-: Lists and describes very briefly each command line option
+: Lists and describes very briefly each command line option.
 
 **-o**
 
@@ -57,7 +58,7 @@ input PDF. If your file does not end with .pdf, you can supply the file with
 
 **-range**
 
-: Gives the range of pages to be affected by a the operation. By default, all
+: Gives the range of pages to be affected by an operation. By default, all
 pages are affected. The range may be specified without **-range** simply by
 writing it directly after the filename it relates to. Example ranges: "2" "1-5"
 "1,2,3-end" "odd" "NOT1-5". See cpdfmanual.pdf for a full description.
@@ -74,7 +75,7 @@ would otherwise make it increase.
 
 **-fast**
 
-: Presume ISO-compliant content streams when processing page contents. This is
+: Presume ISO-compliant content streams when processing page content. This is
 faster, because it does not involve re-parsing whole streams to add content.
 
 **-idir <directory>**
@@ -162,16 +163,16 @@ strings.
 **-utf8**
 
 : Read and write string data as UTF8. Almost always the sensible option, and
-will become the default in a future version. See section 1.17 of cpdfmanual.pdf.
+will become the default in a future version.
 
 **-stripped**
 
 : Convert string output to 7 bit ASCII by dropping any high characters. To be
-used with caution. See section 1.17 of cpdfmanual.pdf.
+used with caution.
 
 **-raw**
 
-: Perform no processing on string outputs. See section 1.17 of cpdfmanual.pdf.
+: Perform no processing on string outputs.
 
 **-gs**
 
@@ -181,14 +182,12 @@ supplied with **-gs**.
 **-gs-malformed**
 
 : This option is used to allow Cpdf to call out the **gs** command to
-pre-process badly malformed files as a last resort. See section 1.13 of
-cpdfmanual.pdf for details.
+pre-process badly malformed files as a last resort.
 
 **-gs-malformed-force**
 
 : This option is used to allow Cpdf to call out to the **gs** command to
-pre-process badly malformed files as a last resort. See section 1.13 of
-cpdfmanual.pdf for details.
+pre-process badly malformed files as a last resort.
 
 **-gs-quiet**
 
@@ -196,7 +195,7 @@ cpdfmanual.pdf for details.
 
 **-error-on-malformed**
 
-: Do not attemp to reconstruct malformed files by any method, but exit with an
+: Do not attempt to reconstruct malformed files by any method, but exit with an
 error.
 
 # 2. MERGING AND SPLITTING
@@ -223,7 +222,7 @@ document and on until all pages are exhausted.
 
 **-collate-n**
 
-: Like collate, but in chunks of more than one page.
+: Like **-collate**, but in chunks of more than one page.
 
 **-retain-numbering**
 
@@ -232,9 +231,9 @@ the pages in the output document beginning at 1.
 
 **-merge-add-bookmarks \[-merge-add-bookmarks-use-titles]**
 
-: Add a top-level bookmark for each file, using the filename.
+: Add a top-level bookmark for each file, using the filename. The option
 **-merge-add-bookmarks-use-titles**, when used in conjunction with
-**-merge-add-bookmarks** uses the titles from document metadata instead.
+**-merge-add-bookmarks**, uses the titles from document metadata instead.
 
 **-remove-duplicate-fonts**
 
@@ -247,7 +246,7 @@ the pages in the output document beginning at 1.
 **-subformat**
 
 : If **-subformat** "PDF/UA-2" is given, together with
-**-process-struct-trees** Cpdf will add a top-level Document structure tree
+**-process-struct-trees**, Cpdf will add a top-level Document structure tree
 element.
 
 ## Portfolios
@@ -282,8 +281,8 @@ each page.
 \<format>**
 
 The output format has many options (see cpdfmanual.pdf for details). But the
-simplest is just to number the outputs in sequence. For example **cpdf -split
-in.pdf -o out%%%.pdf** will produce out001.pdf, out002.pdf and so on.
+simplest is just to number the outputs in sequence. For example **cpdf in.pdf
+-o out%%%.pdf** will produce out001.pdf, out002.pdf and so on.
 
 **-chunk**
 
@@ -300,9 +299,9 @@ cpdfmanual.pdf for details.
 
 ## Splitting on bookmarks
 
-We can split on bookmark boundaries, at a given level, instead of splitting on each page:
-
 **cpdf -split-bookmarks \<level> in.pdf** \[-process-struct-trees] \[-utf8] **-o \<format>**
+
+Split on bookmark boundaries at a given level, instead of splitting on each page. Level 0 is top level, level 1 next, and so on.
 
 **-process-struct-trees**
 
@@ -348,7 +347,7 @@ cpdfmanual.pdf for details.
 
 # 3. PAGES
 
-**cpdf -scale-page "\<scale x> \<scale y>"** \[-fast] \[<position>] **in.pdf**
+**cpdf -scale-page "\<scale x> \<scale y>"** \[-fast] \[\<position>] **in.pdf**
 \[\<range>] **-o out.pdf**
 
 Scale pages in the given range by the given factor e.g "2 2". See the end of
@@ -384,7 +383,7 @@ out.pdf**
 
 Center each page on a new page size, without scaling it.
 
-**cpdf -scale-contents <scale>** \[<position>] \[-fast] **in.pdf** \[\<range>] **-o
+**cpdf -scale-contents <scale>** \[\<position>] \[-fast] **in.pdf** \[\<range>] **-o
 out.pdf**
 
 Scale the content of pages by a given factor, without changing the size
@@ -415,7 +414,7 @@ its origin at (0,0), changing other boxes to compensate.
 
 **cpdf -rotate-contents \<angle>** \[-fast] **in.pdf** \[\<range>] **-o out.pdf**
 
-Rotates the contents of the page around its center point by the given angle.
+Rotates the content of the page around its center point by the given angle.
 
 **cpdf -hflip** \[-fast] **in.pdf** \[\<range>] **-o out.pdf**
 
@@ -425,14 +424,14 @@ Flip page content horizontally.
 
 Flip page content vertically.
 
-**cpdf **-\[media|crop|art|trim|bleed]box** **\<boxspec> in.pdf** \[\<range>] **-o out.pdf**
+**cpdf **-\[media | crop | art | trim | bleed]box** **\<boxspec> in.pdf** \[\<range>] **-o out.pdf**
 
 Set the media, crop, art, trim or bleed box. For example **-cropbox "50 50 300
 200"** sets minx 50, miny 50, width 300, height 200. To use absolute numbers
 instead of width and height, prefix with a question mark, writing **"?50 50 350
 250"** instead.
 
-**cpdf -remove-\[crop|art|trim|bleed]box in.pdf** \[\<range>] **-o out.pdf**
+**cpdf -remove-\[crop | art | trim | bleed]box in.pdf** \[\<range>] **-o out.pdf**
 
 Remove a crop, art, trim or bleed box from pages.
 
@@ -446,7 +445,7 @@ Use media box, rather than failing, if the **-frombox** is missing.
 
 **cpdf -hard-box \<boxname>** \[-fast] **in.pdf** \[\<range>] \[-mediabox-if-missing] **-o out.pdf**
 
-Create a hard box for a given box name - that is to say, one which clips its contents.
+Create a hard box for a given box name - that is to say, one which clips its content.
 
 **cpdf -show-boxes** \[-fast] **in.pdf** \[\<range>] **-o out.pdf**
 
@@ -522,7 +521,7 @@ user password is often blank.
 
 # 5. COMPRESSION
 
-**cpdf -decompress** \[-just-content] **in.pdf -o out.pdf**
+**cpdf -decompress** \[-just-content] \[-jbig2dec \<path>] **in.pdf -o out.pdf**
 
 Decompress the streams in a PDF file, for instance to manually inspect it.
 
@@ -577,7 +576,7 @@ Remove output intents, a colour-matching system for documents intended to be pri
 **cpdf -list-bookmarks** \[-utf8] **in.pdf**
 
 Print bookmark data to standard output. The data includes level, title,
-pagenumber linked to, and full link data. Use -utf8 always. For example:
+page number linked to, and full link data. Use **-utf8** always. For example:
 
 ```
 0 "Part 1" 1 open
@@ -609,6 +608,10 @@ entry in the JSON array of bookmarks:
 }
 ```
 
+**-preserve-actions**
+
+: Instead of resolving complex destinations types to simple ones, keep the originals.
+
 **cpdf -remove-bookmarks in.pdf -o out.pdf**
 
 Remove all bookmarks from a PDF.
@@ -626,8 +629,8 @@ Add bookmarks, given a new-style JSON bookmark file.
 Set all bookmarks up to and including a given level to be open.
 
 **cpdf -table-of-contents** \[-toc-title] \[-toc-no-bookmark] \[-toc-dot-leaders]
-\[-font <font>] \[-font-size <size>] \[-embed-std14 /path/to/fonts]
-\[-process-struct-trees] \[-subformat <subformat>] **in.pdf -o out.pdf**
+\[-font \<font>] \[-font-size \<size>] \[-embed-std14 /path/to/fonts]
+\[-process-struct-trees] \[-subformat \<subformat>] **in.pdf -o out.pdf**
 
 Generate a typeset table of contents from existing bookmarks, adding it to
 the beginning of the document.
@@ -703,9 +706,9 @@ information.
 
 # 8. TEXT AND STAMPS
 
-**cpdf [-stamp-on | -stamp-under] stamp.pdf** [-scale-stamp-to-fit] [<positioning
-command>] [-relative-to-cropbox] [-process-struct-trees] **in.pdf** [<range>]
-[-fast] **-o out.pdf**
+**cpdf \[-stamp-on | -stamp-under] stamp.pdf** \[-scale-stamp-to-fit] \[\<positioning
+command>] \[-relative-to-cropbox] \[-process-struct-trees] **in.pdf** \[\<range>]
+\[-fast] **-o out.pdf**
 
 Stamp a one-page PDF over or under each page in the given range. The
 positioning commands described later in this chapter may be used to choose
@@ -747,7 +750,7 @@ and so on.
 : Maintain tagged PDF. The "under" file will keep its structure; the "over"
 file will be marked as an artifact.
 
-**cpdf **\[-add-text \<text-format> | -add-rectangle \<size>]** [-font \<fontname>]
+**cpdf \[-add-text \<text-format> | -add-rectangle \<size>]** [-font \<fontname>]
 [-font-size \<size-in-points>] [-load-ttf \<name>=\<file>] [-embed-std14]
 [-color \<color>] [-line-spacing \<number>] [-outline] [-linewidth \<number>]
 [-underneath] [-relative-to-cropbox] [-prerotate] [-no-warn-rotate] [-bates
@@ -759,17 +762,17 @@ Add text to a PDF. Various special codes for page numbers or time and date
 may be used. For example:
 
 ```
-%Page Page number in arabic notation (1, 2, 3. . . )
-%PageDiv2 Page number in arabic notation divided by two
-%roman Page number in lower-case roman notation (i, ii, iii. . . )
-%Roman Page number in upper-case roman notation (I, II, III. . . )
-%EndPage Last page of document in arabic notation
-%Label The page label of the page
-%EndLabel The page label of the last page
-%filename The full file name of the input document
+%Page          Page number in arabic notation (1, 2, 3. . . )
+%PageDiv2      Page number in arabic notation divided by two
+%roman         Page number in lower-case roman notation (i, ii, iii. . . )
+%Roman         Page number in upper-case roman notation (I, II, III. . . )
+%EndPage       Last page of document in arabic notation
+%Label         The page label of the page
+%EndLabel      The page label of the last page
+%filename      The full file name of the input document
 %URL[text|URL] Add text, which links to URL (does not work for diagonal text)
-%Bookmark<n> Bookmark text at level n (0, 1, 2, 3, 4)
-%Bates bates number
+%Bookmark<n>   Bookmark text at level n (0, 1, 2, 3, 4)
+%Bates         Bates number
 ```
 
 And date and time formats:
@@ -1019,7 +1022,7 @@ Add blank pages before or after each page in the given range.
 
 **cpdf -pad-every \<n> in.pdf** \[-pad-with pad.pdf] **-o out.pdf**
 
-: Add a blank pages afyer every n pages.
+: Add a blank pages after every n pages.
 
 **-pad-with**
 
@@ -1041,9 +1044,9 @@ annotations and any resources.
 relating to the now-redacted pages.
 
 **cpdf \[-impose \<pagesize> | impose-xy "\<x> \<y>"]** \[-impose-columns]
-\[-impose-rtl] \[-impose-btt] \[-impose-margin <margin>] \[-impose-spacing
+\[-impose-rtl] \[-impose-btt] \[-impose-margin \<margin>] \[-impose-spacing
 \<spacing>] \[-impose-linewidth \<width>] \[-fast] \[-process-struct-trees]
-in.pdf -o out.pdf
+**in.pdf -o out.pdf**
 
 Cpdf has two imposition operations:
 
@@ -1145,7 +1148,7 @@ annotations already present.
 
 **-underneath**
 
-: Put the annotations underneath instead of on top of existing ones.
+Put the annotations underneath instead of on top of existing ones.
 
 **cpdf -copy-annotations from.pdf to.pdf** \[\<range>] **-o out.pdf**
 
@@ -1153,7 +1156,7 @@ Copy annotations from **from.pdf** to **to.pdf**.
 
 **cpdf -remove-annotations in.pdf** \[\<range>] **-o out.pdf**
 
-: Remove annotations from the document.
+Remove annotations from the document.
 
 # 11. DOCUMENT INFORMATION AND METADATA
 
@@ -1267,7 +1270,8 @@ Set the trapped status of a PDF.
 
 **-also-set-xmp**
 
-: Set the XMP metadata, if the field is present, in addition to the old-style PDF metadata.
+: Set the XMP metadata if the field is present, in addition to setting the
+old-style PDF metadata.
 
 **-just-set-xmp**
 
@@ -1356,8 +1360,8 @@ Create or replace XMP metadata from old-style metadata.
 
 Set the XMP metadata date. See cpdfmanual.pdf for date format details.
 
-**cpdf -add-page-labels in.pdf** [<range>] **-o out.pdf** \[-label-style \<style>]
-\[-label-prefix <string>] \[-label-startval <integer>] \[-labels-progress]
+**cpdf -add-page-labels in.pdf** \[\<range>] **-o out.pdf** \[-label-style \<style>]
+\[-label-prefix \<string>] \[-label-startval \<integer>] \[-labels-progress]
 
 Add page labels to a PDF. Multiple calls may be used to add multiple ranges of page labels.
 
@@ -1387,7 +1391,7 @@ Remove the page labels.
 **cpdf -print-page-labels\[-json] in.pdf**
 
 Print the page labels in plain text (**-print-page-labels**) or JSON
-(**-print-page-lables-json**) format.
+(**-print-page-labels-json**) format.
 
 **cpdf -composition\[-json] in.pdf**
 
@@ -1448,7 +1452,7 @@ Extract the attachments to a given directory.
 
 **cpdf -list-images\[-json]** \[-inline] **in.pdf** \[\<range>]
 
-List the images in a file, together with their object number, page numbers,
+List the images in a file together with their object number, page numbers,
 image name, width, height, size in bytes, bits per pixel, colour space,
 compression method, mask type and mask object number. Either in plain text
 (**-list-images**) or JSON (**-list-images-json**).
@@ -1462,7 +1466,7 @@ compression method, mask type and mask object number. Either in plain text
 **cpdf -image-resolution\[-json] \<n>** \[-inline] **in.pdf** \[\<range>]
 
 The **-list-images-used** and **-list-images-used-json** operations list the images
-at point of use, including page number, image name, width in pixels, height in
+at point of use with their page number, image name, width in pixels, height in
 pixels, x resolution, y resolution and object number. Using **-image-resolution**
 or **-image-resolution-json** instead reports only such images as do not reach a
 minimum resolution.
@@ -1474,9 +1478,10 @@ minimum resolution.
 **cpdf -extract-images in.pdf** \[\<range>] \[-im <path>] \[-p2p <path>] \[-dedup |
 -dedup-perpage] \[-raw] \[-inline] \[-merge-masks] **-o \<path>**
 
-Extract images to a given path e.g "output/%%%". JPEG, JPEG2000 and lossless
-JBIG2 images are extracted directly. Lossy JBIG2 images are extracted in
-sections. Other images are written as PNGs, processed with ImageMagick.
+Extract images to a given path e.g "output/%%%", which would create
+output/001.jpg, output/002.png and so on. JPEG, JPEG2000 and lossless JBIG2
+images are extracted directly. Lossy JBIG2 images are extracted in sections.
+Other images are written as PNGs, processed with ImageMagick.
 
 **-im**
 
@@ -1594,12 +1599,12 @@ full commentary, see cpdfmanual.pdf.
 
 : Use interpolation when resampling.
 
-**cpdf -rasterize in.pdf** \[\<range>] **-o out.pdf** \[-gs <path>]
-\[-rasterize\[-gray|-1bpp|-jpeg|-jpeggray] \[-rasterize-res \<n>]
+**cpdf -rasterize in.pdf** \[\<range>] **-o out.pdf** \[-gs \<path>]
+\[-rasterize\[-gray | -1bpp | -jpeg | -jpeggray] \[-rasterize-res \<n>]
 \[-rasterize-jpeg-quality \<n>] \[-rasterize-no-antialias |
 -rasterize-downsample] \[-rasterize-annots] | \[-rasterize-alpha]
 
-Rasterize each page, replacing the page contents with the rasterized version
+Rasterize each page, replacing the page content with the rasterized version
 in the output PDF.
 
 **-gs**
@@ -1646,25 +1651,25 @@ in the output PDF.
 
 : Produce an alpha channel (lossless only)
 
-**cpdf -output-image in.pdf** \[\<range>] **-o \<format>** \[-gs <path>]
-\[-rasterize\[-gray|-1bpp|-jpeg|-jpeggray] \[-rasterize-res <n>]
-\[-rasterize-jpeg-quality <n>] \[-rasterize-no-antialias |
+**cpdf -output-image in.pdf** \[\<range>] **-o \<format>** \[-gs \<path>]
+\[-rasterize\[-gray | -1bpp | -jpeg | -jpeggray] \[-rasterize-res \<n>]
+\[-rasterize-jpeg-quality \<n>] \[-rasterize-no-antialias |
 -rasterize-downsample] \[-rasterize-annots] \[-rasterize-alpha] \[-tobox
-<BoxName>]
+\<BoxName>]
 
 Output rasterized images for each page to the given folder and format e.g
-"dir/%%%.png". Options as above and:
+"dir/%%%.png" would create dir/001.png and so on. Options as above and:
 
 **-tobox**
 
-: Specify the box to rasterize (default /MediaBox).
+: Specify the box to rasterize (default **/MediaBox**).
 
 # 14. FONTS
 
 **cpdf -list-fonts\[-json] in.pdf**
 
 List the fonts on each page in a file together with their types. Either in
-plain text (-list-fonts) or JSON (-list-fonts-json) format.
+plain text (**-list-fonts**) or JSON (**-list-fonts-json**) format.
 
 **cpdf -print-font-table \<font name>** -print-font-table-page \<n> **in.pdf**
 
@@ -1769,7 +1774,7 @@ groups. This command will merge them into a single optional content group.
 **cpdf -create-pdf** \[-create-pdf-pages \<n>] \[-create-pdf-papersize \<paper
 size>] **-o out.pdf**
 
-: Create a new PDF (default, 1 page A4 portrait).
+Create a new PDF (default: one page, A4 portrait).
 
 **-create-pdf-pages**
 
@@ -1829,11 +1834,11 @@ Build a PDF from an image file (JPEG, PNG or JPEG2000).
 Make a multi-page PDF from one or more PDF-appropriate JBIG2 fragments
 prepared by the jbig2enc program. For example, in lossless mode:
 
-cpdf -jbig2 1.jbig2 -jbig2 2.jbig2 -jbig2 3.jbig2 -o out.pdf
+**cpdf -jbig2 1.jbig2 -jbig2 2.jbig2 -jbig2 3.jbig2 -o out.pdf**
 
 In lossy mode, jbig2globals segments may be specified:
 
-cpdf -jbig2-global 0.jbig2globals -jbig2 1.jbig2 -jbig2 2.jbig2 -jbig2 3.jbig2 -o out.pdf
+**cpdf -jbig2-global 0.jbig2globals -jbig2 1.jbig2 -jbig2 2.jbig2 -jbig2 3.jbig2 -o out.pdf**
 
 **-jbig2-global**
 
@@ -1853,7 +1858,7 @@ cpdf -jbig2-global 0.jbig2globals -jbig2 1.jbig2 -jbig2 2.jbig2 -jbig2 3.jbig2 -
 
 # 18. DRAWING ON PDFS
 
-**cpdf in.pdf** [<range>] [-draw-struct-tree] [-underneath] **-draw <draw operations>** **-o out.pdf**
+**cpdf in.pdf** \[\<range>] [-draw-struct-tree] [-underneath] **-draw \<draw operations>** **-o out.pdf**
 
 Draw on a PDF. See cpdfmanual.pdf for a tutorial, and full information.
 
@@ -1865,7 +1870,7 @@ Draw on a PDF. See cpdfmanual.pdf for a tutorial, and full information.
 
 : Draw underneath instead of on top of any existing page content.
 
-**cpdf -text-width <text>** [-font <font>] [-fontsize <fontsize>]
+**cpdf -text-width \<text>** \[-font \<font>] \[-fontsize \<fontsize>]
 
 Return the width of a string of text in a one of the standard 14 fonts. Used
 for calculations of text position (e.g right-alignment).
@@ -2110,7 +2115,7 @@ for calculations of text position (e.g right-alignment).
 
 : New line.
 
-The next page.
+**The Next Page**
 
 **-newpage**
 
@@ -2120,7 +2125,7 @@ The next page.
 
 **-draw-struct-tree**
 
-: Add structure information. Must precede -draw on command line.
+: Add structure information. Must precede **-draw** on command line.
 
 **-tag** <tagname>
 
@@ -2328,7 +2333,7 @@ Remove JavaScript from a PDF.
 
 **CPDF_DEBUG**
 
-: Same as adding -debug to command line, if equal to "true".
+: Same as adding **-debug** to command line, if equal to "true".
 
 **CPDF_REPRODUCIBLE_DATES**
 

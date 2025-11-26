@@ -6,16 +6,18 @@ cpdf \- PDF command line tools
 .SH SYNOPSIS
 Simple operation:
 .PP
-\f[B]cpdf\f[R] in.pdf [operation] [options] [\-o out.pdf]
+\f[B]cpdf\f[R] \f[B]in.pdf\f[R] [operation] [options] [\-o out.pdf]
 .PP
 Operation on password\-protected file:
 .PP
-\f[B]cpdf\f[R] in.pdf [user=<password>] [owner=<password>] \&....
+\f[B]cpdf\f[R] \f[B]in.pdf\f[R] [user=<password>] [owner=<password>]
+\&...
+[\-o out.pdf]
 .PP
 Multiple operations, one after another:
 .PP
-\f[B]cpdf\f[R] in.pdf [operation] [options] \f[B]AND\f[R] [operation]
-[options] \f[B]AND\f[R] \&...
+\f[B]cpdf\f[R] \f[B]in.pdf\f[R] [operation] [options] \f[B]AND\f[R]
+[operation] [options] \f[B]AND\f[R] \&...
 [\-o out.pdf]
 .SH DESCRIPTION
 \f[B]cpdf\f[R] is an AGPL\-licensed command line tool for processing PDF
@@ -26,17 +28,18 @@ The file cpdfmanual.pdf which you should find installed on your system
 or otherwise at https://www.coherentpdf.com/cpdfmanual.pdf gives the
 full usage details.
 .PP
-The sections in this man page follow the chapters of cpdfmanual.pdf.
+The sections in this man page follow the chapters of cpdfmanual.pdf, for
+east cross\-referencing.
 .SH 1. BASIC USAGE
 .TP
 \f[B]\-version\f[R]
-Print the Cpdf version number
+Print the Cpdf version number.
 .TP
 \f[B]\-help, \(enhelp\f[R]
-Gives links to sources of help
+Gives links to sources of help.
 .TP
 \f[B]\-summary\f[R]
-Lists and describes very briefly each command line option
+Lists and describes very briefly each command line option.
 .TP
 \f[B]\-o\f[R]
 The output filename.
@@ -49,7 +52,7 @@ If your file does not end with .pdf, you can supply the file with
 \f[B]\-i\f[R] instead.
 .TP
 \f[B]\-range\f[R]
-Gives the range of pages to be affected by a the operation.
+Gives the range of pages to be affected by an operation.
 By default, all pages are affected.
 The range may be specified without \f[B]\-range\f[R] simply by writing
 it directly after the filename it relates to.
@@ -66,7 +69,7 @@ Keep the PDF version of the input document even if features are used
 which would otherwise make it increase.
 .TP
 \f[B]\-fast\f[R]
-Presume ISO\-compliant content streams when processing page contents.
+Presume ISO\-compliant content streams when processing page content.
 This is faster, because it does not involve re\-parsing whole streams to
 add content.
 .TP
@@ -143,16 +146,13 @@ array of strings.
 Read and write string data as UTF8.
 Almost always the sensible option, and will become the default in a
 future version.
-See section 1.17 of cpdfmanual.pdf.
 .TP
 \f[B]\-stripped\f[R]
 Convert string output to 7 bit ASCII by dropping any high characters.
 To be used with caution.
-See section 1.17 of cpdfmanual.pdf.
 .TP
 \f[B]\-raw\f[R]
 Perform no processing on string outputs.
-See section 1.17 of cpdfmanual.pdf.
 .TP
 \f[B]\-gs\f[R]
 A very few of Cpdf\(cqs functions rely upon the \f[B]gs\f[R] command.
@@ -161,18 +161,16 @@ Its path may be supplied with \f[B]\-gs\f[R].
 \f[B]\-gs\-malformed\f[R]
 This option is used to allow Cpdf to call out the \f[B]gs\f[R] command
 to pre\-process badly malformed files as a last resort.
-See section 1.13 of cpdfmanual.pdf for details.
 .TP
 \f[B]\-gs\-malformed\-force\f[R]
 This option is used to allow Cpdf to call out to the \f[B]gs\f[R]
 command to pre\-process badly malformed files as a last resort.
-See section 1.13 of cpdfmanual.pdf for details.
 .TP
 \f[B]\-gs\-quiet\f[R]
 Do not show the output of \f[B]gs\f[R] when used.
 .TP
 \f[B]\-error\-on\-malformed\f[R]
-Do not attemp to reconstruct malformed files by any method, but exit
+Do not attempt to reconstruct malformed files by any method, but exit
 with an error.
 .SH 2. MERGING AND SPLITTING
 .SS Merging
@@ -199,7 +197,7 @@ Then the second page from the first document and on until all pages are
 exhausted.
 .TP
 \f[B]\-collate\-n\f[R]
-Like collate, but in chunks of more than one page.
+Like \f[B]\-collate\f[R], but in chunks of more than one page.
 .TP
 \f[B]\-retain\-numbering\f[R]
 Keep the page numbering of each input file intact, rather than
@@ -207,9 +205,9 @@ renumbering the pages in the output document beginning at 1.
 .TP
 \f[B]\-merge\-add\-bookmarks [\-merge\-add\-bookmarks\-use\-titles]\f[R]
 Add a top\-level bookmark for each file, using the filename.
-\f[B]\-merge\-add\-bookmarks\-use\-titles\f[R], when used in conjunction
-with \f[B]\-merge\-add\-bookmarks\f[R] uses the titles from document
-metadata instead.
+The option \f[B]\-merge\-add\-bookmarks\-use\-titles\f[R], when used in
+conjunction with \f[B]\-merge\-add\-bookmarks\f[R], uses the titles from
+document metadata instead.
 .TP
 \f[B]\-remove\-duplicate\-fonts\f[R]
 Ensures that fonts used in more than one input appear only once in the
@@ -220,7 +218,7 @@ Merge input structure trees in the output.
 .TP
 \f[B]\-subformat\f[R]
 If \f[B]\-subformat\f[R] \(lqPDF/UA\-2\(rq is given, together with
-\f[B]\-process\-struct\-trees\f[R] Cpdf will add a top\-level Document
+\f[B]\-process\-struct\-trees\f[R], Cpdf will add a top\-level Document
 structure tree element.
 .SS Portfolios
 A PDF portfolio is a special kind of PDF with contains other documents
@@ -252,7 +250,7 @@ for each page.
 .PP
 The output format has many options (see cpdfmanual.pdf for details).
 But the simplest is just to number the outputs in sequence.
-For example \f[B]cpdf \-split in.pdf \-o out%%%.pdf\f[R] will produce
+For example \f[B]cpdf in.pdf \-o out%%%.pdf\f[R] will produce
 out001.pdf, out002.pdf and so on.
 .TP
 \f[B]\-chunk\f[R]
@@ -265,11 +263,12 @@ Split the input document\(cqs structure tree into the output documents.
 This option may be required in the case of some output formats.
 See cpdfmanual.pdf for details.
 .SS Splitting on bookmarks
-We can split on bookmark boundaries, at a given level, instead of
-splitting on each page:
-.PP
 \f[B]cpdf \-split\-bookmarks <level> in.pdf\f[R]
 [\-process\-struct\-trees] [\-utf8] \f[B]\-o <format>\f[R]
+.PP
+Split on bookmark boundaries at a given level, instead of splitting on
+each page.
+Level 0 is top level, level 1 next, and so on.
 .TP
 \f[B]\-process\-struct\-trees\f[R]
 Split the input document\(cqs structure tree into the output documents.
@@ -306,8 +305,8 @@ Split the input document\(cqs structure tree into the output documents.
 This option may be required in the case of some output formats.
 See cpdfmanual.pdf for details.
 .SH 3. PAGES
-\f[B]cpdf \-scale\-page \(lq<scale x> <scale y>\(rq\f[R] [\-fast] []
-\f[B]in.pdf\f[R] [<range>] \f[B]\-o out.pdf\f[R]
+\f[B]cpdf \-scale\-page \(lq<scale x> <scale y>\(rq\f[R] [\-fast]
+[<position>] \f[B]in.pdf\f[R] [<range>] \f[B]\-o out.pdf\f[R]
 .PP
 Scale pages in the given range by the given factor e.g \(lq2 2\(rq.
 See the end of this chapter for \-fast and \-position.
@@ -343,8 +342,8 @@ Scale pages without regard to aspect ratio.
 .PP
 Center each page on a new page size, without scaling it.
 .PP
-\f[B]cpdf \-scale\-contents \f[R] [] [\-fast] \f[B]in.pdf\f[R] [<range>]
-\f[B]\-o out.pdf\f[R]
+\f[B]cpdf \-scale\-contents \f[R] [<position>] [\-fast] \f[B]in.pdf\f[R]
+[<range>] \f[B]\-o out.pdf\f[R]
 .PP
 Scale the content of pages by a given factor, without changing the size
 of the page.
@@ -384,7 +383,7 @@ changing other boxes to compensate.
 \f[B]cpdf \-rotate\-contents <angle>\f[R] [\-fast] \f[B]in.pdf\f[R]
 [<range>] \f[B]\-o out.pdf\f[R]
 .PP
-Rotates the contents of the page around its center point by the given
+Rotates the content of the page around its center point by the given
 angle.
 .PP
 \f[B]cpdf \-hflip\f[R] [\-fast] \f[B]in.pdf\f[R] [<range>] \f[B]\-o
@@ -397,7 +396,7 @@ out.pdf\f[R]
 .PP
 Flip page content vertically.
 .PP
-\f[B]cpdf \f[R]\-[media|crop|art|trim|bleed]box** \f[B]<boxspec>
+\f[B]cpdf \f[R]\-[media | crop | art | trim | bleed]box** \f[B]<boxspec>
 in.pdf\f[R] [<range>] \f[B]\-o out.pdf\f[R]
 .PP
 Set the media, crop, art, trim or bleed box.
@@ -406,7 +405,7 @@ For example \f[B]\-cropbox \(lq50 50 300 200\(rq\f[R] sets minx 50, miny
 To use absolute numbers instead of width and height, prefix with a
 question mark, writing \f[B]\(lq?50 50 350 250\(rq\f[R] instead.
 .PP
-\f[B]cpdf \-remove\-[crop|art|trim|bleed]box in.pdf\f[R] [<range>]
+\f[B]cpdf \-remove\-[crop | art | trim | bleed]box in.pdf\f[R] [<range>]
 \f[B]\-o out.pdf\f[R]
 .PP
 Remove a crop, art, trim or bleed box from pages.
@@ -427,7 +426,7 @@ missing.
 [\-mediabox\-if\-missing] \f[B]\-o out.pdf\f[R]
 .PP
 Create a hard box for a given box name \- that is to say, one which
-clips its contents.
+clips its content.
 .PP
 \f[B]cpdf \-show\-boxes\f[R] [\-fast] \f[B]in.pdf\f[R] [<range>]
 \f[B]\-o out.pdf\f[R]
@@ -493,8 +492,8 @@ Decrypt a document, given its owner password.
 Decrypt even without the owner password, using just the user password.
 The user password is often blank.
 .SH 5. COMPRESSION
-\f[B]cpdf \-decompress\f[R] [\-just\-content] \f[B]in.pdf \-o
-out.pdf\f[R]
+\f[B]cpdf \-decompress\f[R] [\-just\-content] [\-jbig2dec <path>]
+\f[B]in.pdf \-o out.pdf\f[R]
 .PP
 Decompress the streams in a PDF file, for instance to manually inspect
 it.
@@ -547,9 +546,9 @@ to be printed.
 \f[B]cpdf \-list\-bookmarks\f[R] [\-utf8] \f[B]in.pdf\f[R]
 .PP
 Print bookmark data to standard output.
-The data includes level, title, pagenumber linked to, and full link
+The data includes level, title, page number linked to, and full link
 data.
-Use \-utf8 always.
+Use \f[B]\-utf8\f[R] always.
 For example:
 .IP
 .EX
@@ -582,6 +581,10 @@ Here is a single entry in the JSON array of bookmarks:
   \(dqbold\(dq: false
 }
 .EE
+.TP
+\f[B]\-preserve\-actions\f[R]
+Instead of resolving complex destinations types to simple ones, keep the
+originals.
 .PP
 \f[B]cpdf \-remove\-bookmarks in.pdf \-o out.pdf\f[R]
 .PP
@@ -600,9 +603,10 @@ Add bookmarks, given a new\-style JSON bookmark file.
 Set all bookmarks up to and including a given level to be open.
 .PP
 \f[B]cpdf \-table\-of\-contents\f[R] [\-toc\-title]
-[\-toc\-no\-bookmark] [\-toc\-dot\-leaders] [\-font ] [\-font\-size ]
-[\-embed\-std14 /path/to/fonts] [\-process\-struct\-trees] [\-subformat
-] \f[B]in.pdf \-o out.pdf\f[R]
+[\-toc\-no\-bookmark] [\-toc\-dot\-leaders] [\-font <font>]
+[\-font\-size <size>] [\-embed\-std14 /path/to/fonts]
+[\-process\-struct\-trees] [\-subformat <subformat>] \f[B]in.pdf \-o
+out.pdf\f[R]
 .PP
 Generate a typeset table of contents from existing bookmarks, adding it
 to the beginning of the document.
@@ -664,9 +668,9 @@ See cpdfmanual.pdf for full information.
 Length in seconds of the transition itself.
 .SH 8. TEXT AND STAMPS
 \f[B]cpdf [\-stamp\-on | \-stamp\-under] stamp.pdf\f[R]
-[\-scale\-stamp\-to\-fit] [] [\-relative\-to\-cropbox]
-[\-process\-struct\-trees] \f[B]in.pdf\f[R] [] [\-fast] \f[B]\-o
-out.pdf\f[R]
+[\-scale\-stamp\-to\-fit] [<positioning command>]
+[\-relative\-to\-cropbox] [\-process\-struct\-trees] \f[B]in.pdf\f[R]
+[<range>] [\-fast] \f[B]\-o out.pdf\f[R]
 .PP
 Stamp a one\-page PDF over or under each page in the given range.
 The positioning commands described later in this chapter may be used to
@@ -705,7 +709,7 @@ Maintain tagged PDF.
 The \(lqunder\(rq file will keep its structure; the \(lqover\(rq file
 will be marked as an artifact.
 .PP
-\f[B]cpdf \f[R][\-add\-text <text\-format> | \-add\-rectangle <size>]**
+\f[B]cpdf [\-add\-text <text\-format> | \-add\-rectangle <size>]\f[R]
 [\-font <fontname>] [\-font\-size <size\-in\-points>] [\-load\-ttf
 <name>=<file>] [\-embed\-std14] [\-color <color>] [\-line\-spacing
 <number>] [\-outline] [\-linewidth <number>] [\-underneath]
@@ -720,17 +724,17 @@ Various special codes for page numbers or time and date may be used.
 For example:
 .IP
 .EX
-%Page Page number in arabic notation (1, 2, 3. . . )
-%PageDiv2 Page number in arabic notation divided by two
-%roman Page number in lower\-case roman notation (i, ii, iii. . . )
-%Roman Page number in upper\-case roman notation (I, II, III. . . )
-%EndPage Last page of document in arabic notation
-%Label The page label of the page
-%EndLabel The page label of the last page
-%filename The full file name of the input document
+%Page          Page number in arabic notation (1, 2, 3. . . )
+%PageDiv2      Page number in arabic notation divided by two
+%roman         Page number in lower\-case roman notation (i, ii, iii. . . )
+%Roman         Page number in upper\-case roman notation (I, II, III. . . )
+%EndPage       Last page of document in arabic notation
+%Label         The page label of the page
+%EndLabel      The page label of the last page
+%filename      The full file name of the input document
 %URL[text|URL] Add text, which links to URL (does not work for diagonal text)
-%Bookmark<n> Bookmark text at level n (0, 1, 2, 3, 4)
-%Bates bates number
+%Bookmark<n>   Bookmark text at level n (0, 1, 2, 3, 4)
+%Bates         Bates number
 .EE
 .PP
 And date and time formats:
@@ -950,7 +954,7 @@ Add blank pages before or after each page in the given range.
 Use a separate PDF to act as the padding.
 .TP
 \f[B]cpdf \-pad\-every <n> in.pdf\f[R] [\-pad\-with pad.pdf] \f[B]\-o out.pdf\f[R]
-Add a blank pages afyer every n pages.
+Add a blank pages after every n pages.
 .TP
 \f[B]\-pad\-with\f[R]
 Use a separate PDF to act as the padding.
@@ -973,9 +977,9 @@ Process the document\(cqs structure tree to remove any parts which are
 marked as relating to the now\-redacted pages.
 .PP
 \f[B]cpdf [\-impose <pagesize> | impose\-xy \(lq<x> <y>\(rq]\f[R]
-[\-impose\-columns] [\-impose\-rtl] [\-impose\-btt] [\-impose\-margin ]
-[\-impose\-spacing <spacing>] [\-impose\-linewidth <width>] [\-fast]
-[\-process\-struct\-trees] in.pdf \-o out.pdf
+[\-impose\-columns] [\-impose\-rtl] [\-impose\-btt] [\-impose\-margin
+<margin>] [\-impose\-spacing <spacing>] [\-impose\-linewidth <width>]
+[\-fast] [\-process\-struct\-trees] \f[B]in.pdf \-o out.pdf\f[R]
 .PP
 Cpdf has two imposition operations:
 .PP
@@ -1074,16 +1078,19 @@ See cpdfmanual.pdf for full format details.
 .PP
 Set annotations from a JSON file.
 They will be added on top of any annotations already present.
-.TP
+.PP
 \f[B]\-underneath\f[R]
+.PP
 Put the annotations underneath instead of on top of existing ones.
 .PP
 \f[B]cpdf \-copy\-annotations from.pdf to.pdf\f[R] [<range>] \f[B]\-o
 out.pdf\f[R]
 .PP
 Copy annotations from \f[B]from.pdf\f[R] to \f[B]to.pdf\f[R].
-.TP
-\f[B]cpdf \-remove\-annotations in.pdf\f[R] [<range>] \f[B]\-o out.pdf\f[R]
+.PP
+\f[B]cpdf \-remove\-annotations in.pdf\f[R] [<range>] \f[B]\-o
+out.pdf\f[R]
+.PP
 Remove annotations from the document.
 .SH 11. DOCUMENT INFORMATION AND METADATA
 \f[B]cpdf \-info[\-json]\f[R] [\-utf8] [\-in | \-cm | \-mm]
@@ -1210,7 +1217,7 @@ See cpdfmanual.pdf for details of the PDF date format.
 Set the trapped status of a PDF.
 .TP
 \f[B]\-also\-set\-xmp\f[R]
-Set the XMP metadata, if the field is present, in addition to the
+Set the XMP metadata if the field is present, in addition to setting the
 old\-style PDF metadata.
 .TP
 \f[B]\-just\-set\-xmp\f[R]
@@ -1307,9 +1314,9 @@ Create or replace XMP metadata from old\-style metadata.
 Set the XMP metadata date.
 See cpdfmanual.pdf for date format details.
 .PP
-\f[B]cpdf \-add\-page\-labels in.pdf\f[R] [] \f[B]\-o out.pdf\f[R]
-[\-label\-style <style>] [\-label\-prefix ] [\-label\-startval ]
-[\-labels\-progress]
+\f[B]cpdf \-add\-page\-labels in.pdf\f[R] [<range>] \f[B]\-o
+out.pdf\f[R] [\-label\-style <style>] [\-label\-prefix <string>]
+[\-label\-startval <integer>] [\-labels\-progress]
 .PP
 Add page labels to a PDF.
 Multiple calls may be used to add multiple ranges of page labels.
@@ -1337,7 +1344,7 @@ Remove the page labels.
 \f[B]cpdf \-print\-page\-labels[\-json] in.pdf\f[R]
 .PP
 Print the page labels in plain text (\f[B]\-print\-page\-labels\f[R]) or
-JSON (\f[B]\-print\-page\-lables\-json\f[R]) format.
+JSON (\f[B]\-print\-page\-labels\-json\f[R]) format.
 .PP
 \f[B]cpdf \-composition[\-json] in.pdf\f[R]
 .PP
@@ -1394,7 +1401,7 @@ Extract the attachments to a given directory.
 \f[B]cpdf \-list\-images[\-json]\f[R] [\-inline] \f[B]in.pdf\f[R]
 [<range>]
 .PP
-List the images in a file, together with their object number, page
+List the images in a file together with their object number, page
 numbers, image name, width, height, size in bytes, bits per pixel,
 colour space, compression method, mask type and mask object number.
 Either in plain text (\f[B]\-list\-images\f[R]) or JSON
@@ -1411,7 +1418,7 @@ Also list inline images.
 .PP
 The \f[B]\-list\-images\-used\f[R] and
 \f[B]\-list\-images\-used\-json\f[R] operations list the images at point
-of use, including page number, image name, width in pixels, height in
+of use with their page number, image name, width in pixels, height in
 pixels, x resolution, y resolution and object number.
 Using \f[B]\-image\-resolution\f[R] or
 \f[B]\-image\-resolution\-json\f[R] instead reports only such images as
@@ -1424,7 +1431,8 @@ Also list inline images.
 [\-dedup | \-dedup\-perpage] [\-raw] [\-inline] [\-merge\-masks]
 \f[B]\-o <path>\f[R]
 .PP
-Extract images to a given path e.g \(lqoutput/%%%\(rq.
+Extract images to a given path e.g \(lqoutput/%%%\(rq, which would
+create output/001.jpg, output/002.png and so on.
 JPEG, JPEG2000 and lossless JBIG2 images are extracted directly.
 Lossy JBIG2 images are extracted in sections.
 Other images are written as PNGs, processed with ImageMagick.
@@ -1527,11 +1535,12 @@ dpi threshold).
 Use interpolation when resampling.
 .PP
 \f[B]cpdf \-rasterize in.pdf\f[R] [<range>] \f[B]\-o out.pdf\f[R] [\-gs
-] [\-rasterize[\-gray|\-1bpp|\-jpeg|\-jpeggray] [\-rasterize\-res <n>]
-[\-rasterize\-jpeg\-quality <n>] [\-rasterize\-no\-antialias |
-\-rasterize\-downsample] [\-rasterize\-annots] | [\-rasterize\-alpha]
+<path>] [\-rasterize[\-gray | \-1bpp | \-jpeg | \-jpeggray]
+[\-rasterize\-res <n>] [\-rasterize\-jpeg\-quality <n>]
+[\-rasterize\-no\-antialias | \-rasterize\-downsample]
+[\-rasterize\-annots] | [\-rasterize\-alpha]
 .PP
-Rasterize each page, replacing the page contents with the rasterized
+Rasterize each page, replacing the page content with the rasterized
 version in the output PDF.
 .TP
 \f[B]\-gs\f[R]
@@ -1568,23 +1577,23 @@ Rasterize annotations instead of retaining.
 Produce an alpha channel (lossless only)
 .PP
 \f[B]cpdf \-output\-image in.pdf\f[R] [<range>] \f[B]\-o <format>\f[R]
-[\-gs ] [\-rasterize[\-gray|\-1bpp|\-jpeg|\-jpeggray] [\-rasterize\-res
-] [\-rasterize\-jpeg\-quality ] [\-rasterize\-no\-antialias |
-\-rasterize\-downsample] [\-rasterize\-annots] [\-rasterize\-alpha]
-[\-tobox ]
+[\-gs <path>] [\-rasterize[\-gray | \-1bpp | \-jpeg | \-jpeggray]
+[\-rasterize\-res <n>] [\-rasterize\-jpeg\-quality <n>]
+[\-rasterize\-no\-antialias | \-rasterize\-downsample]
+[\-rasterize\-annots] [\-rasterize\-alpha] [\-tobox <BoxName>]
 .PP
 Output rasterized images for each page to the given folder and format
-e.g \(lqdir/%%%.png\(rq.
+e.g \(lqdir/%%%.png\(rq would create dir/001.png and so on.
 Options as above and:
 .TP
 \f[B]\-tobox\f[R]
-Specify the box to rasterize (default /MediaBox).
+Specify the box to rasterize (default \f[B]/MediaBox\f[R]).
 .SH 14. FONTS
 \f[B]cpdf \-list\-fonts[\-json] in.pdf\f[R]
 .PP
 List the fonts on each page in a file together with their types.
-Either in plain text (\-list\-fonts) or JSON (\-list\-fonts\-json)
-format.
+Either in plain text (\f[B]\-list\-fonts\f[R]) or JSON
+(\f[B]\-list\-fonts\-json\f[R]) format.
 .PP
 \f[B]cpdf \-print\-font\-table <font name>\f[R]
 \-print\-font\-table\-page <n> \f[B]in.pdf\f[R]
@@ -1688,7 +1697,7 @@ This command will merge them into a single optional content group.
 \f[B]cpdf \-create\-pdf\f[R] [\-create\-pdf\-pages <n>]
 [\-create\-pdf\-papersize <paper size>] \f[B]\-o out.pdf\f[R]
 .PP
-: Create a new PDF (default, 1 page A4 portrait).
+Create a new PDF (default: one page, A4 portrait).
 .TP
 \f[B]\-create\-pdf\-pages\f[R]
 Give the number of pages.
@@ -1742,12 +1751,13 @@ Make a multi\-page PDF from one or more PDF\-appropriate JBIG2 fragments
 prepared by the jbig2enc program.
 For example, in lossless mode:
 .PP
-cpdf \-jbig2 1.jbig2 \-jbig2 2.jbig2 \-jbig2 3.jbig2 \-o out.pdf
+\f[B]cpdf \-jbig2 1.jbig2 \-jbig2 2.jbig2 \-jbig2 3.jbig2 \-o
+out.pdf\f[R]
 .PP
 In lossy mode, jbig2globals segments may be specified:
 .PP
-cpdf \-jbig2\-global 0.jbig2globals \-jbig2 1.jbig2 \-jbig2 2.jbig2
-\-jbig2 3.jbig2 \-o out.pdf
+\f[B]cpdf \-jbig2\-global 0.jbig2globals \-jbig2 1.jbig2 \-jbig2 2.jbig2
+\-jbig2 3.jbig2 \-o out.pdf\f[R]
 .TP
 \f[B]\-jbig2\-global\f[R]
 Change the jbig2global segment in use.
@@ -1761,8 +1771,8 @@ Specify PDF/UA\-1 or PDF/UA\-2 to make a conforming file.
 \f[B]\-title\f[R]
 Specify a title when using \-subformat for a PDF/UA file.
 .SH 18. DRAWING ON PDFS
-\f[B]cpdf in.pdf\f[R] [] [\-draw\-struct\-tree] [\-underneath]
-\f[B]\-draw \f[R] \f[B]\-o out.pdf\f[R]
+\f[B]cpdf in.pdf\f[R] [<range>] [\-draw\-struct\-tree] [\-underneath]
+\f[B]\-draw <draw operations>\f[R] \f[B]\-o out.pdf\f[R]
 .PP
 Draw on a PDF.
 See cpdfmanual.pdf for a tutorial, and full information.
@@ -1773,7 +1783,8 @@ Produce structure information.
 \f[B]\-underneath\f[R]
 Draw underneath instead of on top of any existing page content.
 .PP
-\f[B]cpdf \-text\-width \f[R] [\-font ] [\-fontsize ]
+\f[B]cpdf \-text\-width <text>\f[R] [\-font <font>] [\-fontsize
+<fontsize>]
 .PP
 Return the width of a string of text in a one of the standard 14 fonts.
 Used for calculations of text position (e.g right\-alignment).
@@ -1962,7 +1973,7 @@ Set text rise.
 \f[B]\-nl\f[R]
 New line.
 .PP
-The next page.
+\f[B]The Next Page\f[R]
 .TP
 \f[B]\-newpage\f[R]
 Move to a fresh page.
@@ -1971,7 +1982,7 @@ Move to a fresh page.
 .TP
 \f[B]\-draw\-struct\-tree\f[R]
 Add structure information.
-Must precede \-draw on command line.
+Must precede \f[B]\-draw\f[R] on command line.
 .TP
 \f[B]\-tag\f[R] 
 Begin marked content.
@@ -2174,7 +2185,8 @@ Show command line of external commands as they are called if equal to
 \(lqtrue\(rq.
 .TP
 \f[B]CPDF_DEBUG\f[R]
-Same as adding \-debug to command line, if equal to \(lqtrue\(rq.
+Same as adding \f[B]\-debug\f[R] to command line, if equal to
+\(lqtrue\(rq.
 .TP
 \f[B]CPDF_REPRODUCIBLE_DATES\f[R]
 Expand data \(lqnow\(rq to the same, false value each time, if equal to
