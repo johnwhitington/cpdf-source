@@ -255,7 +255,7 @@ A PDF portfolio is a special kind of PDF with contains other documents (PDF and
 otherwise) within it. Support is mostly limited to Adobe products at time of
 writing.
 
-**cpdf** **-portfolio** **in.pdf** -pf \<filename> \[-pfd <string>] \[-pfr \<relationship>]
+**cpdf** **-portfolio** **in.pdf** -pf \<filename> \[-pfd \<string>] \[-pfr \<relationship>]
 \[-pf ...] **-o out.pdf**
 
 The input **in.pdf** here is the main file. You can build a blank one with **-create-pdf**.
@@ -383,7 +383,7 @@ out.pdf**
 
 Center each page on a new page size, without scaling it.
 
-**cpdf -scale-contents <scale>** \[\<position>] \[-fast] **in.pdf** \[\<range>] **-o
+**cpdf -scale-contents \<scale>** \[\<position>] \[-fast] **in.pdf** \[\<range>] **-o
 out.pdf**
 
 Scale the content of pages by a given factor, without changing the size
@@ -1348,7 +1348,7 @@ Remove all XMP metadata streams.
 
 Print the XMP metadata stream to standard output.
 
-**cpdf -extract-all-metadata in.pdf -o <directory>**
+**cpdf -extract-all-metadata in.pdf -o \<directory>**
 
 Extract XMP metadata streams to the given directory.
 
@@ -1511,7 +1511,7 @@ Other images are written as PNGs, processed with ImageMagick.
 
 : Merge soft masks with their images when extracting.
 
-**cpdf -extract-single-image \<object number>** \[-im \<path>] \[-p2p <path>]
+**cpdf -extract-single-image \<object number>** \[-im \<path>] \[-p2p \<path>]
 \[-raw] \[-merge-masks] **in.pdf -o \<filename>**
 
 Extract a single image, given its object number. Other flags as above.
@@ -1949,15 +1949,15 @@ for calculations of text position (e.g right-alignment).
 
 **Path parameters**
 
-**-strokecol** "g" | "r g b" | "c y m k" | <namedcolour>
+**-strokecol** "g" | "r g b" | "c y m k" | \<namedcolour>
 
 : Set stroke colour.
 
-**-fillcol** "g" | "r g b" | "c y m k" | <namedcolour>
+**-fillcol** "g" | "r g b" | "c y m k" | \<namedcolour>
 
 : Set fill colour.
 
-**-thick** <n>
+**-thick** \<n>
 
 : Set stroke thickness.
 
@@ -1969,11 +1969,11 @@ for calculations of text position (e.g right-alignment).
 
 : Set join.
 
-**-miter** <n>
+**-miter** \<n>
 
 : Set miter limit.
 
-**-dash** <pattern>
+**-dash** \<pattern>
 
 : Set dash pattern.
 
@@ -2031,29 +2031,29 @@ for calculations of text position (e.g right-alignment).
 
 **Images**
 
-**-draw-jpeg** <name>=<filename>
+**-draw-jpeg** \<name>=\<filename>
 
 : Load a JPEG from file and name it.
 
-**-draw-png** <name>=<filename>
+**-draw-png** \<name>=\<filename>
 
 : Load a PNG from file and name it.
 
-**-draw-jpeg2000** <name>=<filename>
+**-draw-jpeg2000** \<name>=\<filename>
 
 : Load a JPEG2000 from file and name it.
 
-**-image** <name>
+**-image** \<name>
 
 : Draw an image which has already been loaded.
 
 **Transparency**
 
-**-fill-opacity** <n>
+**-fill-opacity** \<n>
 
 : Set opacity.
 
-**-stroke-opacity** <n>
+**-stroke-opacity** \<n>
 
 : Set stroke opacity.
 
@@ -2067,47 +2067,47 @@ for calculations of text position (e.g right-alignment).
 
 : End text.
 
-**-text** <text>
+**-text** \<text>
 
 : Draw text.
 
-**-stext** <text>
+**-stext** \<text>
 
 : Draw text with %specials.
 
-**-para** <paragraph>
+**-para** \<paragraph>
 
 : Typeset a paragraph.
 
-**-paras** <paragraph>
+**-paras** \<paragraph>
 
 : Typeset multiple paragraphs.
 
-**-indent** <n>
+**-indent** \<n>
 
 : Set paragraph indent.
 
-**-leading** <n>
+**-leading** \<n>
 
 : Set leading.
 
-**-charspace** <n>
+**-charspace** \<n>
 
 : Set character spacing.
 
-**-wordspace** <n>
+**-wordspace** \<n>
 
 : Set word space.
 
-**-textscale** <n>
+**-textscale** \<n>
 
 : Set text scale.
 
-**-rendermode** <n>
+**-rendermode** \<n>
 
 : Set text rendering mode.
 
-**-rise** <n>
+**-rise** \<n>
 
 : Set text rise.
 
@@ -2127,7 +2127,7 @@ for calculations of text position (e.g right-alignment).
 
 : Add structure information. Must precede **-draw** on command line.
 
-**-tag** <tagname>
+**-tag** \<tagname>
 
 : Begin marked content.
 
@@ -2135,7 +2135,7 @@ for calculations of text position (e.g right-alignment).
 
 : End marked content.
 
-**-stag** <tagname>
+**-stag** \<tagname>
 
 : Begin structure tree branch.
 
@@ -2163,11 +2163,11 @@ for calculations of text position (e.g right-alignment).
 
 : Prevent automatic addition of artifacts during post-processing.
 
-**-namespace** <namespace>
+**-namespace** \<namespace>
 
 : Set the namespace for future branches of the tree.
 
-**-eltinfo** <elt=text>
+**-eltinfo** \<elt=text>
 
 : Set element information.
 
@@ -2175,7 +2175,7 @@ for calculations of text position (e.g right-alignment).
 
 : Erase element information.
 
-**-rolemap** <rolemap>
+**-rolemap** \<rolemap>
 
 : Set role map.
 
@@ -2221,7 +2221,7 @@ Mark a PDF as conforming to PDF/UA-1 or PDF/UA-2
 
 Remove conformance marker from a PDF.
 
-**cpdf -create-pdf-ua-\<1|2> \<title>** \[-create-pdf-pages \<n>] \[-create-pdf-papersize \<paper size>] **-o out.pdf**
+**cpdf -create-pdf-ua-\<1 | 2> \<title>** \[-create-pdf-pages \<n>] \[-create-pdf-papersize \<paper size>] **-o out.pdf**
 
 Create a new, blank, PDF/UA-1 or PDF/UA-2 file.
 

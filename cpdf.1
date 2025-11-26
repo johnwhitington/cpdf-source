@@ -123,7 +123,7 @@ file upon output.
 Requires a linearizer to be supplied with \f[B]\-cpdflin\f[R].
 .TP
 \f[B]\-no\-preserve\-objstm\f[R]
-Do not preseve existing object streams when writing the output file.
+Do not preserve existing object streams when writing the output file.
 Note that \f[B]\-create\-objstm\f[R] and
 \f[B]\-no\-preserve\-objstm\f[R] may be used together \- the effect is
 then to redo all object streams.
@@ -226,7 +226,7 @@ A PDF portfolio is a special kind of PDF with contains other documents
 Support is mostly limited to Adobe products at time of writing.
 .PP
 \f[B]cpdf\f[R] \f[B]\-portfolio\f[R] \f[B]in.pdf\f[R] \-pf <filename>
-[\-pfd ] [\-pfr <relationship>] [\-pf \&...]
+[\-pfd <string>] [\-pfr <relationship>] [\-pf \&...]
 \f[B]\-o out.pdf\f[R]
 .PP
 The input \f[B]in.pdf\f[R] here is the main file.
@@ -277,7 +277,7 @@ Split the input document\(cqs structure tree into the output documents.
 This option may be required in the case of some output formats.
 See cpdfmanual.pdf for details.
 .SS Splitting to a given size
-We can split the file, if possible, to a maximum filesize for each
+We can split the file, if possible, to a maximum file size for each
 output PDF:
 .PP
 \f[B]cpdf \-split\-max <file size> in.pdf\f[R]
@@ -342,8 +342,8 @@ Scale pages without regard to aspect ratio.
 .PP
 Center each page on a new page size, without scaling it.
 .PP
-\f[B]cpdf \-scale\-contents \f[R] [<position>] [\-fast] \f[B]in.pdf\f[R]
-[<range>] \f[B]\-o out.pdf\f[R]
+\f[B]cpdf \-scale\-contents <scale>\f[R] [<position>] [\-fast]
+\f[B]in.pdf\f[R] [<range>] \f[B]\-o out.pdf\f[R]
 .PP
 Scale the content of pages by a given factor, without changing the size
 of the page.
@@ -912,7 +912,7 @@ Position text diagonally, top left to bottom right.
 Position text centered on the page.
 .TP
 \f[B]\-justify\-left\f[R]
-Set left justifcation for multi\-line text.
+Set left justification for multi\-line text.
 Default depends upon position.
 .TP
 \f[B]\-justify\-right\f[R]
@@ -1301,7 +1301,7 @@ Remove all XMP metadata streams.
 .PP
 Print the XMP metadata stream to standard output.
 .PP
-\f[B]cpdf \-extract\-all\-metadata in.pdf \-o \f[R]
+\f[B]cpdf \-extract\-all\-metadata in.pdf \-o <directory>\f[R]
 .PP
 Extract XMP metadata streams to the given directory.
 .PP
@@ -1459,7 +1459,7 @@ Also extract inline images.
 Merge soft masks with their images when extracting.
 .PP
 \f[B]cpdf \-extract\-single\-image <object number>\f[R] [\-im <path>]
-[\-p2p ] [\-raw] [\-merge\-masks] \f[B]in.pdf \-o <filename>\f[R]
+[\-p2p <path>] [\-raw] [\-merge\-masks] \f[B]in.pdf \-o <filename>\f[R]
 .PP
 Extract a single image, given its object number.
 Other flags as above.
@@ -1565,10 +1565,10 @@ Set the resolution (default 144dpi).
 Set JPEG image quality (0..100).
 .TP
 \f[B]\-rasterize\-no\-antialias\f[R]
-Turn off antialiasing.
+Turn off anti\-aliasing.
 .TP
 \f[B]\-rasterize\-downsample\f[R]
-Use better but slower antialiasing.
+Use better but slower anti\-aliasing.
 .TP
 \f[B]\-rasterize\-annots\f[R]
 Rasterize annotations instead of retaining.
@@ -1639,7 +1639,7 @@ some metadata may not be preserved
 \f[B]cpdf \-extract\-font <page number>,<pdf font name> in.pdf \-o
 out.font\f[R]
 .PP
-Extract a font file from a PDF given a pagenumber, font name pair.
+Extract a font file from a PDF given a page number, font name pair.
 E.g:
 .PP
 cpdf \-extract\-font 5,/F50 in.pdf \-o out.ttf
@@ -1675,7 +1675,7 @@ Convert a JSON file to a PDF file.
 .SH 16. OPTIONAL CONTENT GROUPS
 \f[B]cpdf \-ocg\-list in.pdf\f[R]
 .PP
-List the optional content groups in the PDF, one oper line, to standard
+List the optional content groups in the PDF, one per line, to standard
 output.
 .PP
 \f[B]cpdf \-ocg\-rename \-ocg\-rename\-from <a> \-ocg\-rename\-to <b>
@@ -1691,7 +1691,7 @@ Ensure that every optional content group appears in the order list.
 .PP
 Coalesce optional content groups.
 For example, if we merge or stamp two files both with an OCG called
-\(lqLayer 1\(rq, we will have two differen optional content groups.
+\(lqLayer 1\(rq, we will have two different optional content groups.
 This command will merge them into a single optional content group.
 .SH 17. CREATING NEW PDFS
 \f[B]cpdf \-create\-pdf\f[R] [\-create\-pdf\-pages <n>]
@@ -1763,7 +1763,7 @@ In lossy mode, jbig2globals segments may be specified:
 Change the jbig2global segment in use.
 .TP
 \f[B]\-jbig2\-global\-clear\f[R]
-Cease use of jbig2global segment, and return to lossles mode.
+Cease use of jbig2global segment, and return to lossless mode.
 .TP
 \f[B]\-subformat\f[R]
 Specify PDF/UA\-1 or PDF/UA\-2 to make a conforming file.
@@ -1846,13 +1846,13 @@ Clip, even odd.
 .PP
 \f[B]Path parameters\f[R]
 .TP
-\f[B]\-strokecol\f[R] \(lqg\(rq | \(lqr g b\(rq | \(lqc y m k\(rq | 
+\f[B]\-strokecol\f[R] \(lqg\(rq | \(lqr g b\(rq | \(lqc y m k\(rq | <namedcolour>
 Set stroke colour.
 .TP
-\f[B]\-fillcol\f[R] \(lqg\(rq | \(lqr g b\(rq | \(lqc y m k\(rq | 
+\f[B]\-fillcol\f[R] \(lqg\(rq | \(lqr g b\(rq | \(lqc y m k\(rq | <namedcolour>
 Set fill colour.
 .TP
-\f[B]\-thick\f[R] 
+\f[B]\-thick\f[R] <n>
 Set stroke thickness.
 .TP
 \f[B]\-cap\f[R] butt | round | square
@@ -1861,10 +1861,10 @@ Set cap.
 \f[B]\-join\f[R] miter | round | bevel
 Set join.
 .TP
-\f[B]\-miter\f[R] 
+\f[B]\-miter\f[R] <n>
 Set miter limit.
 .TP
-\f[B]\-dash\f[R] 
+\f[B]\-dash\f[R] <pattern>
 Set dash pattern.
 .PP
 \f[B]The graphics stack and matrices\f[R]
@@ -1909,24 +1909,24 @@ Use a saved sequence of graphics operators.
 .PP
 \f[B]Images\f[R]
 .TP
-\f[B]\-draw\-jpeg\f[R] =
+\f[B]\-draw\-jpeg\f[R] <name>=<filename>
 Load a JPEG from file and name it.
 .TP
-\f[B]\-draw\-png\f[R] =
+\f[B]\-draw\-png\f[R] <name>=<filename>
 Load a PNG from file and name it.
 .TP
-\f[B]\-draw\-jpeg2000\f[R] =
+\f[B]\-draw\-jpeg2000\f[R] <name>=<filename>
 Load a JPEG2000 from file and name it.
 .TP
-\f[B]\-image\f[R] 
+\f[B]\-image\f[R] <name>
 Draw an image which has already been loaded.
 .PP
 \f[B]Transparency\f[R]
 .TP
-\f[B]\-fill\-opacity\f[R] 
+\f[B]\-fill\-opacity\f[R] <n>
 Set opacity.
 .TP
-\f[B]\-stroke\-opacity\f[R] 
+\f[B]\-stroke\-opacity\f[R] <n>
 Set stroke opacity.
 .PP
 \f[B]Text\f[R]
@@ -1937,37 +1937,37 @@ Begin text.
 \f[B]\-et\f[R]
 End text.
 .TP
-\f[B]\-text\f[R] 
+\f[B]\-text\f[R] <text>
 Draw text.
 .TP
-\f[B]\-stext\f[R] 
+\f[B]\-stext\f[R] <text>
 Draw text with %specials.
 .TP
-\f[B]\-para\f[R] 
+\f[B]\-para\f[R] <paragraph>
 Typeset a paragraph.
 .TP
-\f[B]\-paras\f[R] 
+\f[B]\-paras\f[R] <paragraph>
 Typeset multiple paragraphs.
 .TP
-\f[B]\-indent\f[R] 
+\f[B]\-indent\f[R] <n>
 Set paragraph indent.
 .TP
-\f[B]\-leading\f[R] 
+\f[B]\-leading\f[R] <n>
 Set leading.
 .TP
-\f[B]\-charspace\f[R] 
+\f[B]\-charspace\f[R] <n>
 Set character spacing.
 .TP
-\f[B]\-wordspace\f[R] 
+\f[B]\-wordspace\f[R] <n>
 Set word space.
 .TP
-\f[B]\-textscale\f[R] 
+\f[B]\-textscale\f[R] <n>
 Set text scale.
 .TP
-\f[B]\-rendermode\f[R] 
+\f[B]\-rendermode\f[R] <n>
 Set text rendering mode.
 .TP
-\f[B]\-rise\f[R] 
+\f[B]\-rise\f[R] <n>
 Set text rise.
 .TP
 \f[B]\-nl\f[R]
@@ -1984,13 +1984,13 @@ Move to a fresh page.
 Add structure information.
 Must precede \f[B]\-draw\f[R] on command line.
 .TP
-\f[B]\-tag\f[R] 
+\f[B]\-tag\f[R] <tagname>
 Begin marked content.
 .TP
 \f[B]\-end\-tag\f[R]
 End marked content.
 .TP
-\f[B]\-stag\f[R] 
+\f[B]\-stag\f[R] <tagname>
 Begin structure tree branch.
 .TP
 \f[B]\-end\-stag\f[R]
@@ -2009,9 +2009,9 @@ Begin manual artifact.
 End manual artifact.
 .TP
 \f[B]\-no\-auto\-artifacts\f[R]
-Prevent automatic addition of artifacts during postprocessing.
+Prevent automatic addition of artifacts during post\-processing.
 .TP
-\f[B]\-namespace\f[R] 
+\f[B]\-namespace\f[R] <namespace>
 Set the namespace for future branches of the tree.
 .TP
 \f[B]\-eltinfo\f[R] <elt=text>
@@ -2020,7 +2020,7 @@ Set element information.
 \f[B]\-end\-eltinfo\f[R]
 Erase element information.
 .TP
-\f[B]\-rolemap\f[R] 
+\f[B]\-rolemap\f[R] <rolemap>
 Set role map.
 .SH 19. ACCESSIBLE PDFS WITH PDF/UA
 \f[B]cpdf \-print\-struct\-tree in.pdf\f[R]
@@ -2066,7 +2066,7 @@ Mark a PDF as conforming to PDF/UA\-1 or PDF/UA\-2
 .PP
 Remove conformance marker from a PDF.
 .PP
-\f[B]cpdf \-create\-pdf\-ua\-<1|2> <title>\f[R] [\-create\-pdf\-pages
+\f[B]cpdf \-create\-pdf\-ua\-<1 | 2> <title>\f[R] [\-create\-pdf\-pages
 <n>] [\-create\-pdf\-papersize <paper size>] \f[B]\-o out.pdf\f[R]
 .PP
 Create a new, blank, PDF/UA\-1 or PDF/UA\-2 file.
@@ -2080,7 +2080,7 @@ Give the paper size, e.g \(lqa3landscape\(rq or \(lq200pt 600pt\(rq
 \f[B]cpdf \-draft\f[R] [\-boxes] [\-draft\-remove\-only <n>]
 \f[B]in.pdf\f[R] [<range>] \f[B]\-o out.pdf\f[R]
 .PP
-Remove bitmapped (photographic) images from a PDF.
+Remove bit\-mapped (photographic) images from a PDF.
 .TP
 \f[B]\-boxes\f[R]
 Replace each image with a crossed box to show where it was.
