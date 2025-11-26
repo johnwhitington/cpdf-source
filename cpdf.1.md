@@ -463,8 +463,8 @@ Add trim marks to a PDF. The trim box must be present.
 
 # 4. ENCRYPTION AND DECRYPTION
 
-**cpdf -encrypt \<method> \[-pw=]\<owner> \[-pw=]\<user>** \[-no-encrypt-metadata]
-\<permissions> **in.pdf -o out.pdf**
+**cpdf -encrypt \<method> \[-pw=]\<owner> \[-pw=]\<user>** **in.pdf** \[-no-encrypt-metadata]
+\<permissions> **-o out.pdf**
 
 Encrypt a document given the method (e.g **AES256ISO** for modern usage), owner
 and user passwords, and optionally permissions. E.g **cpdf -encrypt AES256ISO
@@ -474,7 +474,7 @@ secret "" in.pdf -o out.pdf**.
 
 : Do not encrypt metadata (AES encryption only).
 
-**-pw=**
+**-pw=**\<password>
 
 : Useful if a password may begin with a dash.
 
@@ -515,7 +515,7 @@ Permissions:
 Note: Adobe Acrobat and Adobe Reader may show slightly different permissions in info dialogues – this
 is a result of policy changes and not a bug in Cpdf. You may need to experiment.
 
-**cpdf -decrypt** \[-decrypt-force] **in.pdf owner=\<owner password> -o out.pdf**
+**cpdf -decrypt** **in.pdf owner=\<owner password>** \[-decrypt-force] **-o out.pdf**
 
 : Decrypt a document, given its owner password.
 
@@ -526,7 +526,7 @@ user password is often blank.
 
 # 5. COMPRESSION
 
-**cpdf -decompress** \[-just-content] \[-jbig2dec \<path>] **in.pdf -o out.pdf**
+**cpdf -decompress** **in.pdf** \[-just-content] \[-jbig2dec \<path>] **-o out.pdf**
 
 Decompress the streams in a PDF file, for instance to manually inspect it.
 
@@ -534,7 +534,7 @@ Decompress the streams in a PDF file, for instance to manually inspect it.
 
 : Only decompress page content streams.
 
-**-jbig2dec**
+**-jbig2dec** \<path>
 
 : Give the path to the jbig2dec program which Cpdf uses, if available, to
 decompress JBIG2 streams.
@@ -578,7 +578,7 @@ Remove output intents, a colour-matching system for documents intended to be pri
 
 # 6. BOOKMARKS
 
-**cpdf -list-bookmarks** \[-utf8] **in.pdf**
+**cpdf -list-bookmarks** **in.pdf** \[-utf8]
 
 Print bookmark data to standard output. The data includes level, title,
 page number linked to, and full link data. Use **-utf8** always. For example:
@@ -591,7 +591,7 @@ page number linked to, and full link data. Use **-utf8** always. For example:
 1 "Part 2a" 5
 ```
 
-**cpdf -list-bookmarks-json** \[-preserve-actions] **in.pdf**
+**cpdf -list-bookmarks-json** **in.pdf** \[-preserve-actions]
 
 Print bookmark data to standard output in JSON format instead. Here is a single
 entry in the JSON array of bookmarks:
@@ -633,14 +633,14 @@ Add bookmarks, given a new-style JSON bookmark file.
 
 Set all bookmarks up to and including a given level to be open.
 
-**cpdf -table-of-contents** \[-toc-title] \[-toc-no-bookmark] \[-toc-dot-leaders]
+**cpdf -table-of-contents** **in.pdf** \[-toc-title] \[-toc-no-bookmark] \[-toc-dot-leaders]
 \[-font \<font>] \[-font-size \<size>] \[-embed-std14 /path/to/fonts]
-\[-process-struct-trees] \[-subformat \<subformat>] **in.pdf -o out.pdf**
+\[-process-struct-trees] \[-subformat \<subformat>] **-o out.pdf**
 
 Generate a typeset table of contents from existing bookmarks, adding it to
 the beginning of the document.
 
-**-toc-title**
+**-toc-title** \<title>
 
 : Title (default is "Table of Contents").
 
@@ -652,11 +652,11 @@ the beginning of the document.
 
 : Add dot leaders.
 
-**-font**
+**-font** \<font>
 
 : Give the font (default Times Roman).
 
-**-font-size**
+**-font-size** \<n>
 
 : Give the font size (default 12pt).
 
@@ -669,7 +669,7 @@ the beginning of the document.
 : Create a structure tree for the new table of contents and merge it with the
 document's.
 
-**-subformat**
+**-subformat** \<subformat>
 
 : Add **-subformat "PDF/UA-2"** when adding a table of contents to a PDF/UA-2
 file to keep compatibility.
@@ -682,12 +682,12 @@ file to keep compatibility.
 
 Make a slide-show presentation from a PDF.
 
-**-trans**
+**-trans** \<transition>
 
 The transition style, one of **Split**, **Blinds**, **Box**, **Wipe**,
 **Dissolve**, **Glitter**.
 
-**-duration**
+**-duration** \<n>
 
 : Time in seconds before presentation advances (default: no automatic
 advancement).
@@ -700,20 +700,20 @@ advancement).
 
 : Select outward sweep for transition type Box.
 
-**-direction**
+**-direction** \<n>
 
 : Direction for Wipe and Glitter styles. See cpdfmanual.pdf for full
 information.
 
-**-effect-duration**
+**-effect-duration** \<n>
 
 : Length in seconds of the transition itself.
 
 # 8. TEXT AND STAMPS
 
-**cpdf \[-stamp-on | -stamp-under] stamp.pdf** \[-scale-stamp-to-fit] \[\<positioning
-command>] \[-relative-to-cropbox] \[-process-struct-trees] **in.pdf** \[\<range>]
-\[-fast] **-o out.pdf**
+**cpdf \[-stamp-on | -stamp-under] stamp.pdf** **in.pdf** \[\<range>]
+\[-scale-stamp-to-fit] \[\<positioning command>] \[-relative-to-cropbox]
+\[-process-struct-trees] \[-fast] **-o out.pdf**
 
 Stamp a one-page PDF over or under each page in the given range. The
 positioning commands described later in this chapter may be used to choose
@@ -804,7 +804,7 @@ And date and time formats:
 
 \\n may be used to demarcate multiple lines.
 
-**-font**
+**-font** \<font>
 
 : Give the font (default Times Roman). Options are:
 
@@ -823,25 +823,25 @@ Courier-Oblique
 Courier-BoldOblique
 ```
 
-**-font-size**
+**-font-size** \<n>
 
 : Give the font size (default 12pt).
 
-**-load-ttf**
+**-load-ttf** \<filename>
 
 : Load a truetype font, and give it name which may be used with -font. For
 example **-load-ttf A=NotoSans-Black.ttf**.
 
-**-embed-std14**
+**-embed-std14** \<path>
 
 : Embed the standard 14 fonts given the path to the URW Base35 free fonts.
 
-**-color**
+**-color** \<color>
 
 : Choose the text colour using one (Grey), three (RGB), or four (CMYK) numbers
 from 0-1. E.g **-color "0.5 0.4 0.5"**.
 
-**-line-spacing**
+**-line-spacing** \<n>
 
 : Set the spacing for multi-line text (default 1).
 
@@ -849,7 +849,7 @@ from 0-1. E.g **-color "0.5 0.4 0.5"**.
 
 : Use outline text.
 
-**-linewidth**
+**-linewidth** \<n>
 
 : Line width for outline text.
 
@@ -869,19 +869,19 @@ from 0-1. E.g **-color "0.5 0.4 0.5"**.
 
 : Do not warn of unresolved viewing rotation.
 
-**-bates**
+**-bates** \<n>
 
 : Set the bates number for use with **%Bates**.
 
-**-bates-at-range**
+**-bates-at-range** \<n>
 
 : Set the bates number for the first page in the range.
 
-**-bates-pad-to**
+**-bates-pad-to** \<n>
 
 : Pad bates numbers to a given number of leading zeros.
 
-**-opacity**
+**-opacity** \<n>
 
 : Set text opacity. Wholly opaque is 1, wholly transparent is 0.
 
@@ -900,17 +900,17 @@ structure; the stamped text will be marked as an artifact.
 
 Positioning commands:
 
-**-pos-left**
+**-pos-left** "100 200"
 
 : Position the left of the baseline of the text at the given coordinates e.g
 "100 200".
 
-**-pos-center**
+**-pos-center** "100 200"
 
 : Position the center of the baseline of the text at the given coordinates e.g
 "100 200".
 
-**-pos-right**
+**-pos-right** "100 200"
 
 : Position the right of the baseline of the text at the given coordinates e.g
 "100 200".
@@ -1021,7 +1021,7 @@ of a PDF and write to standard output its name.
 
 Add blank pages before or after each page in the given range.
 
-**-pad-with**
+**-pad-with** \<filename>
 
 : Use a separate PDF to act as the padding.
 
@@ -1029,7 +1029,7 @@ Add blank pages before or after each page in the given range.
 
 : Add a blank pages after every n pages.
 
-**-pad-with**
+**-pad-with** \<filename>
 
 : Use a separate PDF to act as the padding.
 
@@ -1038,7 +1038,7 @@ Add blank pages before or after each page in the given range.
 Add as many blank pages as are required before or after the original pages to
 make the file's length a multiple of the given number of pages
 
-**cpdf -redact** \[-process-struct-trees] **in.pdf** \[\<range>] **-o out.pdf**
+**cpdf -redact** **in.pdf** \[\<range>] \[-process-struct-trees] **-o out.pdf**
 
 Remove the content of the pages in the given range entirely, including
 annotations and any resources. 
@@ -1048,53 +1048,53 @@ annotations and any resources.
 : Process the document's structure tree to remove any parts which are marked as
 relating to the now-redacted pages.
 
-**cpdf \[-impose \<pagesize> | impose-xy "\<x> \<y>"]** \[-impose-columns]
-\[-impose-rtl] \[-impose-btt] \[-impose-margin \<margin>] \[-impose-spacing
-\<spacing>] \[-impose-linewidth \<width>] \[-fast] \[-process-struct-trees]
-**in.pdf -o out.pdf**
+**cpdf \[-impose \<pagesize> | impose-xy "\<x> \<y>"]** **in.pdf**
+\[-impose-columns] \[-impose-rtl] \[-impose-btt] \[-impose-margin \<margin>]
+\[-impose-spacing \<spacing>] \[-impose-linewidth \<width>] \[-fast]
+\[-process-struct-trees] **-o out.pdf**
 
 Cpdf has two imposition operations:
 
 **-impose** fits multiple pages onto a given page size e.g **-impose
 a4portrait** or **-impose "8in 12in"**
 
-**-impose-xy** build an output page with the x pages horizontally and y pages
+**-impose-xy** builds an output page with the x pages horizontally and y pages
 vertically e.g **-impose-xy "2 3"**
 
 **-impose-columns**
 
-: Lay the pages out in columns rather than rows
+: Lay the pages out in columns rather than rows.
 
 **-impose-rtl**
 
-: Lay the pages out right to left
+: Lay the pages out right to left.
 
 **-impose-btt**
 
-: Lay the pages out bottom to top
+: Lay the pages out bottom to top.
 
 **-impose-margin**
 
-: Add a margin around the edge of each page. When using -impose-xy the page
-size increases; with -impose the pages are scaled.
+: Add a margin around the edge of each page. When using **-impose-xy** the page
+size increases; with **-impose** the pages are scaled.
 
 **-impose-spacing**
 
-: Add spacing between rows and columns. When using -impose-xy the page size
-increases; with -impose the pages are scaled.
+: Add spacing between rows and columns. When using **-impose-xy** the page size
+increases; with **-impose** the pages are scaled.
 
 **-impose-linewidth**
 
-: Add a border around each input page. With -impose the pages are scaled after
+: Add a border around each input page. With **-impose** the pages are scaled after
 the border is added, so you must account for this yourself.
 
 **-process-struct-trees**
 
 : Mark the file's content as an artifact for the purposes of imposition.
 
-**cpdf -twoup-stack** \[-fast] \[-process-struct-trees] **in.pdf -o out.pdf**
+**cpdf -twoup-stack** **in.pdf** \[-fast] \[-process-struct-trees] **-o out.pdf**
 
-**cpdf -twoup** \[-fast] \[-process-struct-trees] **in.pdf -o out.pdf**
+**cpdf -twoup** **in.pdf** \[-fast] \[-process-struct-trees] **-o out.pdf**
 
 Two old imposition functions which can now both be done with **-impose** /
 **-impose-xy**. The **-twoup-stack** operation puts two logical pages on each

@@ -439,7 +439,8 @@ Add trim marks to a PDF.
 The trim box must be present.
 .SH 4. ENCRYPTION AND DECRYPTION
 \f[B]cpdf \-encrypt <method> [\-pw=]<owner> [\-pw=]<user>\f[R]
-[\-no\-encrypt\-metadata] <permissions> \f[B]in.pdf \-o out.pdf\f[R]
+\f[B]in.pdf\f[R] [\-no\-encrypt\-metadata] <permissions> \f[B]\-o
+out.pdf\f[R]
 .PP
 Encrypt a document given the method (e.g \f[B]AES256ISO\f[R] for modern
 usage), owner and user passwords, and optionally permissions.
@@ -449,7 +450,7 @@ out.pdf\f[R].
 \f[B]\-no\-encrypt\-metadata\f[R]
 Do not encrypt metadata (AES encryption only).
 .TP
-\f[B]\-pw=\f[R]
+\f[B]\-pw=\f[R]<password>
 Useful if a password may begin with a dash.
 .PP
 Permissions:
@@ -483,15 +484,15 @@ permissions in info dialogues \(en this is a result of policy changes
 and not a bug in Cpdf.
 You may need to experiment.
 .TP
-\f[B]cpdf \-decrypt\f[R] [\-decrypt\-force] \f[B]in.pdf owner=<owner password> \-o out.pdf\f[R]
+\f[B]cpdf \-decrypt\f[R] \f[B]in.pdf owner=<owner password>\f[R] [\-decrypt\-force] \f[B]\-o out.pdf\f[R]
 Decrypt a document, given its owner password.
 .TP
 \f[B]\-decrypt\-force\f[R]
 Decrypt even without the owner password, using just the user password.
 The user password is often blank.
 .SH 5. COMPRESSION
-\f[B]cpdf \-decompress\f[R] [\-just\-content] [\-jbig2dec <path>]
-\f[B]in.pdf \-o out.pdf\f[R]
+\f[B]cpdf \-decompress\f[R] \f[B]in.pdf\f[R] [\-just\-content]
+[\-jbig2dec <path>] \f[B]\-o out.pdf\f[R]
 .PP
 Decompress the streams in a PDF file, for instance to manually inspect
 it.
@@ -499,7 +500,7 @@ it.
 \f[B]\-just\-content\f[R]
 Only decompress page content streams.
 .TP
-\f[B]\-jbig2dec\f[R]
+\f[B]\-jbig2dec\f[R] <path>
 Give the path to the jbig2dec program which Cpdf uses, if available, to
 decompress JBIG2 streams.
 .PP
@@ -541,7 +542,7 @@ Remove ProcSets, a now\-irrelevant data structure from early PDFs.
 Remove output intents, a colour\-matching system for documents intended
 to be printed.
 .SH 6. BOOKMARKS
-\f[B]cpdf \-list\-bookmarks\f[R] [\-utf8] \f[B]in.pdf\f[R]
+\f[B]cpdf \-list\-bookmarks\f[R] \f[B]in.pdf\f[R] [\-utf8]
 .PP
 Print bookmark data to standard output.
 The data includes level, title, page number linked to, and full link
@@ -557,8 +558,8 @@ For example:
 1 \(dqPart 2a\(dq 5
 .EE
 .PP
-\f[B]cpdf \-list\-bookmarks\-json\f[R] [\-preserve\-actions]
-\f[B]in.pdf\f[R]
+\f[B]cpdf \-list\-bookmarks\-json\f[R] \f[B]in.pdf\f[R]
+[\-preserve\-actions]
 .PP
 Print bookmark data to standard output in JSON format instead.
 Here is a single entry in the JSON array of bookmarks:
@@ -600,16 +601,16 @@ Add bookmarks, given a new\-style JSON bookmark file.
 .PP
 Set all bookmarks up to and including a given level to be open.
 .PP
-\f[B]cpdf \-table\-of\-contents\f[R] [\-toc\-title]
+\f[B]cpdf \-table\-of\-contents\f[R] \f[B]in.pdf\f[R] [\-toc\-title]
 [\-toc\-no\-bookmark] [\-toc\-dot\-leaders] [\-font <font>]
 [\-font\-size <size>] [\-embed\-std14 /path/to/fonts]
-[\-process\-struct\-trees] [\-subformat <subformat>] \f[B]in.pdf \-o
+[\-process\-struct\-trees] [\-subformat <subformat>] \f[B]\-o
 out.pdf\f[R]
 .PP
 Generate a typeset table of contents from existing bookmarks, adding it
 to the beginning of the document.
 .TP
-\f[B]\-toc\-title\f[R]
+\f[B]\-toc\-title\f[R] <title>
 Title (default is \(lqTable of Contents\(rq).
 .TP
 \f[B]\-toc\-no\-bookmark\f[R]
@@ -619,10 +620,10 @@ bookmarks.
 \f[B]\-toc\-dot\-leaders\f[R]
 Add dot leaders.
 .TP
-\f[B]\-font\f[R]
+\f[B]\-font\f[R] <font>
 Give the font (default Times Roman).
 .TP
-\f[B]\-font\-size\f[R]
+\f[B]\-font\-size\f[R] <n>
 Give the font size (default 12pt).
 .TP
 \f[B]\-embed\-std14\f[R]
@@ -633,7 +634,7 @@ details).
 Create a structure tree for the new table of contents and merge it with
 the document\(cqs.
 .TP
-\f[B]\-subformat\f[R]
+\f[B]\-subformat\f[R] <subformat>
 Add \f[B]\-subformat \(lqPDF/UA\-2\(rq\f[R] when adding a table of
 contents to a PDF/UA\-2 file to keep compatibility.
 .SH 7. PRESENTATIONS
@@ -643,12 +644,12 @@ contents to a PDF/UA\-2 file to keep compatibility.
 .PP
 Make a slide\-show presentation from a PDF.
 .PP
-\f[B]\-trans\f[R]
+\f[B]\-trans\f[R] <transition>
 .PP
 The transition style, one of \f[B]Split\f[R], \f[B]Blinds\f[R],
 \f[B]Box\f[R], \f[B]Wipe\f[R], \f[B]Dissolve\f[R], \f[B]Glitter\f[R].
 .TP
-\f[B]\-duration\f[R]
+\f[B]\-duration\f[R] <n>
 Time in seconds before presentation advances (default: no automatic
 advancement).
 .TP
@@ -658,17 +659,17 @@ Select vertical blinds for transition type Blinds.
 \f[B]\-outward\f[R]
 Select outward sweep for transition type Box.
 .TP
-\f[B]\-direction\f[R]
+\f[B]\-direction\f[R] <n>
 Direction for Wipe and Glitter styles.
 See cpdfmanual.pdf for full information.
 .TP
-\f[B]\-effect\-duration\f[R]
+\f[B]\-effect\-duration\f[R] <n>
 Length in seconds of the transition itself.
 .SH 8. TEXT AND STAMPS
-\f[B]cpdf [\-stamp\-on | \-stamp\-under] stamp.pdf\f[R]
-[\-scale\-stamp\-to\-fit] [<positioning command>]
-[\-relative\-to\-cropbox] [\-process\-struct\-trees] \f[B]in.pdf\f[R]
-[<range>] [\-fast] \f[B]\-o out.pdf\f[R]
+\f[B]cpdf [\-stamp\-on | \-stamp\-under] stamp.pdf\f[R] \f[B]in.pdf\f[R]
+[<range>] [\-scale\-stamp\-to\-fit] [<positioning command>]
+[\-relative\-to\-cropbox] [\-process\-struct\-trees] [\-fast] \f[B]\-o
+out.pdf\f[R]
 .PP
 Stamp a one\-page PDF over or under each page in the given range.
 The positioning commands described later in this chapter may be used to
@@ -759,7 +760,7 @@ And date and time formats:
 .PP
 \(rsn may be used to demarcate multiple lines.
 .TP
-\f[B]\-font\f[R]
+\f[B]\-font\f[R] <font>
 Give the font (default Times Roman).
 Options are:
 .IP
@@ -778,28 +779,28 @@ Courier\-Oblique
 Courier\-BoldOblique
 .EE
 .TP
-\f[B]\-font\-size\f[R]
+\f[B]\-font\-size\f[R] <n>
 Give the font size (default 12pt).
 .TP
-\f[B]\-load\-ttf\f[R]
+\f[B]\-load\-ttf\f[R] <filename>
 Load a truetype font, and give it name which may be used with \-font.
 For example \f[B]\-load\-ttf A=NotoSans\-Black.ttf\f[R].
 .TP
-\f[B]\-embed\-std14\f[R]
+\f[B]\-embed\-std14\f[R] <path>
 Embed the standard 14 fonts given the path to the URW Base35 free fonts.
 .TP
-\f[B]\-color\f[R]
+\f[B]\-color\f[R] <color>
 Choose the text colour using one (Grey), three (RGB), or four (CMYK)
 numbers from 0\-1.
 E.g \f[B]\-color \(lq0.5 0.4 0.5\(rq\f[R].
 .TP
-\f[B]\-line\-spacing\f[R]
+\f[B]\-line\-spacing\f[R] <n>
 Set the spacing for multi\-line text (default 1).
 .TP
 \f[B]\-outline\f[R]
 Use outline text.
 .TP
-\f[B]\-linewidth\f[R]
+\f[B]\-linewidth\f[R] <n>
 Line width for outline text.
 .TP
 \f[B]\-underneath\f[R]
@@ -814,16 +815,16 @@ Remove any viewing rotation before adding text.
 \f[B]\-no\-warn\-rotate\f[R]
 Do not warn of unresolved viewing rotation.
 .TP
-\f[B]\-bates\f[R]
+\f[B]\-bates\f[R] <n>
 Set the bates number for use with \f[B]%Bates\f[R].
 .TP
-\f[B]\-bates\-at\-range\f[R]
+\f[B]\-bates\-at\-range\f[R] <n>
 Set the bates number for the first page in the range.
 .TP
-\f[B]\-bates\-pad\-to\f[R]
+\f[B]\-bates\-pad\-to\f[R] <n>
 Pad bates numbers to a given number of leading zeros.
 .TP
-\f[B]\-opacity\f[R]
+\f[B]\-opacity\f[R] <n>
 Set text opacity.
 Wholly opaque is 1, wholly transparent is 0.
 .TP
@@ -840,15 +841,15 @@ as an artifact.
 .PP
 Positioning commands:
 .TP
-\f[B]\-pos\-left\f[R]
+\f[B]\-pos\-left\f[R] \(lq100 200\(rq
 Position the left of the baseline of the text at the given coordinates
 e.g \(lq100 200\(rq.
 .TP
-\f[B]\-pos\-center\f[R]
+\f[B]\-pos\-center\f[R] \(lq100 200\(rq
 Position the center of the baseline of the text at the given coordinates
 e.g \(lq100 200\(rq.
 .TP
-\f[B]\-pos\-right\f[R]
+\f[B]\-pos\-right\f[R] \(lq100 200\(rq
 Position the right of the baseline of the text at the given coordinates
 e.g \(lq100 200\(rq.
 .TP
@@ -948,13 +949,13 @@ pages of a PDF and write to standard output its name.
 .PP
 Add blank pages before or after each page in the given range.
 .TP
-\f[B]\-pad\-with\f[R]
+\f[B]\-pad\-with\f[R] <filename>
 Use a separate PDF to act as the padding.
 .TP
 \f[B]cpdf \-pad\-every <n> in.pdf\f[R] [\-pad\-with pad.pdf] \f[B]\-o out.pdf\f[R]
 Add a blank pages after every n pages.
 .TP
-\f[B]\-pad\-with\f[R]
+\f[B]\-pad\-with\f[R] <filename>
 Use a separate PDF to act as the padding.
 .PP
 \f[B]cpdf [\-pad\-multiple | \-pad\-multiple\-before]\f[R] [<integer>]
@@ -964,8 +965,8 @@ Add as many blank pages as are required before or after the original
 pages to make the file\(cqs length a multiple of the given number of
 pages
 .PP
-\f[B]cpdf \-redact\f[R] [\-process\-struct\-trees] \f[B]in.pdf\f[R]
-[<range>] \f[B]\-o out.pdf\f[R]
+\f[B]cpdf \-redact\f[R] \f[B]in.pdf\f[R] [<range>]
+[\-process\-struct\-trees] \f[B]\-o out.pdf\f[R]
 .PP
 Remove the content of the pages in the given range entirely, including
 annotations and any resources.
@@ -975,52 +976,53 @@ Process the document\(cqs structure tree to remove any parts which are
 marked as relating to the now\-redacted pages.
 .PP
 \f[B]cpdf [\-impose <pagesize> | impose\-xy \(lq<x> <y>\(rq]\f[R]
-[\-impose\-columns] [\-impose\-rtl] [\-impose\-btt] [\-impose\-margin
-<margin>] [\-impose\-spacing <spacing>] [\-impose\-linewidth <width>]
-[\-fast] [\-process\-struct\-trees] \f[B]in.pdf \-o out.pdf\f[R]
+\f[B]in.pdf\f[R] [\-impose\-columns] [\-impose\-rtl] [\-impose\-btt]
+[\-impose\-margin <margin>] [\-impose\-spacing <spacing>]
+[\-impose\-linewidth <width>] [\-fast] [\-process\-struct\-trees]
+\f[B]\-o out.pdf\f[R]
 .PP
 Cpdf has two imposition operations:
 .PP
 \f[B]\-impose\f[R] fits multiple pages onto a given page size e.g
 \f[B]\-impose a4portrait\f[R] or \f[B]\-impose \(lq8in 12in\(rq\f[R]
 .PP
-\f[B]\-impose\-xy\f[R] build an output page with the x pages
+\f[B]\-impose\-xy\f[R] builds an output page with the x pages
 horizontally and y pages vertically e.g \f[B]\-impose\-xy \(lq2
 3\(rq\f[R]
 .TP
 \f[B]\-impose\-columns\f[R]
-Lay the pages out in columns rather than rows
+Lay the pages out in columns rather than rows.
 .TP
 \f[B]\-impose\-rtl\f[R]
-Lay the pages out right to left
+Lay the pages out right to left.
 .TP
 \f[B]\-impose\-btt\f[R]
-Lay the pages out bottom to top
+Lay the pages out bottom to top.
 .TP
 \f[B]\-impose\-margin\f[R]
 Add a margin around the edge of each page.
-When using \-impose\-xy the page size increases; with \-impose the pages
-are scaled.
+When using \f[B]\-impose\-xy\f[R] the page size increases; with
+\f[B]\-impose\f[R] the pages are scaled.
 .TP
 \f[B]\-impose\-spacing\f[R]
 Add spacing between rows and columns.
-When using \-impose\-xy the page size increases; with \-impose the pages
-are scaled.
+When using \f[B]\-impose\-xy\f[R] the page size increases; with
+\f[B]\-impose\f[R] the pages are scaled.
 .TP
 \f[B]\-impose\-linewidth\f[R]
 Add a border around each input page.
-With \-impose the pages are scaled after the border is added, so you
-must account for this yourself.
+With \f[B]\-impose\f[R] the pages are scaled after the border is added,
+so you must account for this yourself.
 .TP
 \f[B]\-process\-struct\-trees\f[R]
 Mark the file\(cqs content as an artifact for the purposes of
 imposition.
 .PP
-\f[B]cpdf \-twoup\-stack\f[R] [\-fast] [\-process\-struct\-trees]
-\f[B]in.pdf \-o out.pdf\f[R]
+\f[B]cpdf \-twoup\-stack\f[R] \f[B]in.pdf\f[R] [\-fast]
+[\-process\-struct\-trees] \f[B]\-o out.pdf\f[R]
 .PP
-\f[B]cpdf \-twoup\f[R] [\-fast] [\-process\-struct\-trees] \f[B]in.pdf
-\-o out.pdf\f[R]
+\f[B]cpdf \-twoup\f[R] \f[B]in.pdf\f[R] [\-fast]
+[\-process\-struct\-trees] \f[B]\-o out.pdf\f[R]
 .PP
 Two old imposition functions which can now both be done with
 \f[B]\-impose\f[R] / \f[B]\-impose\-xy\f[R].
