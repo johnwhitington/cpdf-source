@@ -140,7 +140,7 @@ upon output. Requires a linearizer to be supplied with **-cpdflin**.
 
 **-no-preserve-objstm**
 
-: Do not preseve existing object streams when writing the output file. Note
+: Do not preserve existing object streams when writing the output file. Note
 that **-create-objstm** and **-no-preserve-objstm** may be used together - the
 effect is then to redo all object streams.
 
@@ -314,7 +314,7 @@ cpdfmanual.pdf for details.
 
 ## Splitting to a given size
 
-We can split the file, if possible, to a maximum filesize for each output PDF:
+We can split the file, if possible, to a maximum file size for each output PDF:
 
 **cpdf -split-max \<file size> in.pdf** \[-process-struct-trees] \[-utf8] **-o \<format>
 **
@@ -983,7 +983,7 @@ of the page.
 
 **-justify-left**
 
-: Set left justifcation for multi-line text. Default depends upon position.
+: Set left justification for multi-line text. Default depends upon position.
 
 **-justify-right**
 
@@ -1637,11 +1637,11 @@ in the output PDF.
 
 **-rasterize-no-antialias**
 
-: Turn off antialiasing.
+: Turn off anti-aliasing.
 
 **-rasterize-downsample**
 
-: Use better but slower antialiasing.
+: Use better but slower anti-aliasing.
 
 **-rasterize-annots**
 
@@ -1712,7 +1712,7 @@ in this manner may not be lossless: some metadata may not be preserved
 
 **cpdf -extract-font \<page number>,\<pdf font name> in.pdf -o out.font**
 
-Extract a font file from a PDF given a pagenumber, font name pair. E.g:
+Extract a font file from a PDF given a page number, font name pair. E.g:
 
 cpdf -extract-font 5,/F50 in.pdf -o out.ttf
 
@@ -1753,7 +1753,7 @@ Convert a JSON file to a PDF file.
 
 **cpdf -ocg-list in.pdf**
 
-List the optional content groups in the PDF, one oper line, to standard output.
+List the optional content groups in the PDF, one per line, to standard output.
 
 **cpdf -ocg-rename -ocg-rename-from \<a> -ocg-rename-to \<b> in.pdf -o out.pdf**
 
@@ -1766,7 +1766,7 @@ Ensure that every optional content group appears in the order list.
 **cpdf -ocg-coalesce-on-name in.pdf -o out.pdf**
 
 Coalesce optional content groups. For example, if we merge or stamp two files
-both with an OCG called "Layer 1", we will have two differen optional content
+both with an OCG called "Layer 1", we will have two different optional content
 groups. This command will merge them into a single optional content group.
 
 # 17. CREATING NEW PDFS
@@ -1846,7 +1846,7 @@ In lossy mode, jbig2globals segments may be specified:
 
 **-jbig2-global-clear**
 
-: Cease use of jbig2global segment, and return to lossles mode.
+: Cease use of jbig2global segment, and return to lossless mode.
 
 **-subformat**
 
@@ -2161,7 +2161,7 @@ for calculations of text position (e.g right-alignment).
 
 **-no-auto-artifacts**
 
-: Prevent automatic addition of artifacts during postprocessing.
+: Prevent automatic addition of artifacts during post-processing.
 
 **-namespace** <namespace>
 
@@ -2237,7 +2237,7 @@ Create a new, blank, PDF/UA-1 or PDF/UA-2 file.
 
 **cpdf -draft** \[-boxes] \[-draft-remove-only \<n>] **in.pdf** \[\<range>] **-o out.pdf**
 
-Remove bitmapped (photographic) images from a PDF.
+Remove bit-mapped (photographic) images from a PDF.
 
 **-boxes**
 
