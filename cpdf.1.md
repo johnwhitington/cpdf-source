@@ -4,7 +4,7 @@
 
 # NAME
 
-cpdf - PDF command line tools
+cpdf - PDF command line tools.
 
 # SYNOPSIS
 
@@ -24,7 +24,7 @@ Multiple operations, one after another:
 # DESCRIPTION
 
 **Cpdf** is an AGPL-licensed command line tool for processing PDF files. The
-rest of this man page gives a brief description of each command line operation
+rest of this document gives a brief description of each command line operation
 and option. The file cpdfmanual.pdf which you should find installed on your
 system or otherwise at https://www.coherentpdf.com/cpdfmanual.pdf gives the
 full usage details.
@@ -48,7 +48,7 @@ cross-referencing.
 
 **-o** \<filename>
 
-: The output filename. Beware of writing back to the same file.
+: The output filename. Beware of writing back to the input file.
 
 **-i** \<filename>
 
@@ -84,7 +84,8 @@ faster, because it does not involve re-parsing whole streams to add content.
 
 **-idir-only-pdfs**
 
-: Restrict **-idir** to only files ending in .pdf (any case).
+: Restrict **-idir** to only files ending in .pdf (any case). Must appear
+before **-idir**.
 
 **-recrypt**
 
@@ -129,7 +130,7 @@ otherwise prevent it.
 : Linearize the PDF when writing. Requires a linearizer to be supplied with
 **-cpdflin**.
 
-**-cpdflin** \<filename>
+**-cpdflin** \<path>
 
 : Give the path of an external linearizer. For example, Qpdf.
 
@@ -181,13 +182,12 @@ supplied with **-gs**.
 
 **-gs-malformed**
 
-: This option is used to allow Cpdf to call out the **gs** command to
+: This option is used to allow Cpdf to call out to the **gs** command to
 pre-process badly malformed files as a last resort.
 
 **-gs-malformed-force**
 
-: This option is used to allow Cpdf to call out to the **gs** command to
-pre-process badly malformed files as a last resort.
+: See cpdfmanual.pdf for details of this fragile command.
 
 **-gs-quiet**
 
@@ -251,7 +251,7 @@ element.
 
 ## Portfolios
 
-A PDF portfolio is a special kind of PDF with contains other documents (PDF and
+A PDF portfolio is a special kind of PDF which contains other documents (PDF and
 otherwise) within it. Support is mostly limited to Adobe products at time of
 writing.
 
@@ -351,7 +351,7 @@ cpdfmanual.pdf for details.
 
 # 3. PAGES
 
-**cpdf -scale-page "\<scale x> \<scale y>"** **in.pdf** \[\<range>] \[-fast]
+**cpdf -scale-page "\<x scale> \<y scale>"** **in.pdf** \[\<range>] \[-fast]
 \[\<position>] **-o out.pdf**
 
 Scale pages in the given range by the given factor e.g "2 2". See Chapter 8 for
@@ -429,7 +429,7 @@ Flip page content horizontally.
 
 Flip page content vertically.
 
-**cpdf **-\[media | crop | art | trim | bleed]box** **\<boxspec> in.pdf** \[\<range>] **-o out.pdf**
+**cpdf -\[media | crop | art | trim | bleed]box \<boxspec> in.pdf** \[\<range>] **-o out.pdf**
 
 Set the media, crop, art, trim or bleed box. For example **-cropbox "50 50 300
 200"** sets minx 50, miny 50, width 300, height 200. To use absolute numbers
@@ -463,7 +463,7 @@ Add trim marks to a PDF. The trim box must be present.
 
 # 4. ENCRYPTION AND DECRYPTION
 
-**cpdf -encrypt \<method> \[-pw=]\<owner> \[-pw=]\<user>** **in.pdf** \[-no-encrypt-metadata]
+**cpdf -encrypt \<method> \[-pw=]\<owner password> \[-pw=]\<user password>** **in.pdf** \[-no-encrypt-metadata]
 \<permissions> **-o out.pdf**
 
 Encrypt a document given the method (e.g **AES256ISO** for modern usage), owner
@@ -621,11 +621,11 @@ entry in the JSON array of bookmarks:
 
 Remove all bookmarks from a PDF.
 
-**cpdf -add-bookmarks \<bookmark file> in.pdf -o out.pdf**
+**cpdf -add-bookmarks \<filename> in.pdf -o out.pdf**
 
 Add bookmarks, given an old-style bookmark file.
 
-**cpdf -add-bookmarks-json \<bookmark file> in.pdf -o out.pdf**
+**cpdf -add-bookmarks-json \<filename> in.pdf -o out.pdf**
 
 Add bookmarks, given a new-style JSON bookmark file.
 
@@ -757,10 +757,10 @@ file will be marked as an artifact.
 
 **cpdf \[-add-text \<string> | -add-rectangle \<xsize ysize>]** [-font \<fontname>]
 [-font-size \<n>] [-load-ttf \<name>=\<filename>] [-embed-std14]
-[-color \<color>] [-line-spacing \<number>] [-outline] [-linewidth \<n>]
+[-color \<color>] [-line-spacing \<n>] [-outline] [-linewidth \<n>]
 [-underneath] [-relative-to-cropbox] [-prerotate] [-no-warn-rotate] [-bates
-\<number>] [-bates-at-range \<number>] [-bates-pad-to \<number>] [-opacity
-\<number>] [-midline] [-topline] [-fast] [-process-struct-trees] **in.pdf**
+\<n>] [-bates-at-range \<n>] [-bates-pad-to \<n>] [-opacity
+\<n>] [-midline] [-topline] [-fast] [-process-struct-trees] **in.pdf**
 \[\<range>] **-o out.pdf**
  
 Add text to a PDF. Various special codes for page numbers or time and date
@@ -1600,9 +1600,9 @@ full commentary, see cpdfmanual.pdf.
 : Use interpolation when resampling.
 
 **cpdf -rasterize in.pdf** \[\<range>] \[-gs \<path>]
-\[-rasterize\[-gray | -1bpp | -jpeg | -jpeggray] \[-rasterize-res \<n>]
+\[-rasterize\[-gray | -1bpp | -jpeg | -jpeggray]] \[-rasterize-res \<n>]
 \[-rasterize-jpeg-quality \<n>] \[-rasterize-no-antialias |
--rasterize-downsample] \[-rasterize-annots] | \[-rasterize-alpha] **-o out.pdf** 
+-rasterize-downsample] \[-rasterize-annots] \[-rasterize-alpha] **-o out.pdf** 
 
 Rasterize each page, replacing the page content with the rasterized version
 in the output PDF.
@@ -1707,7 +1707,7 @@ Report missing fonts - i.e those which are unembedded.
 **cpdf -embed-missing-fonts -gs \<path to gs> in.pdf -o out.pdf**
 
 Use gs to embed missing fonts into a PDF. Note: putting a PDF file through gs
-in this manner may not be lossless: some metadata may not be preserved
+in this manner may not be lossless: some metadata may not be preserved.
 
 **cpdf -extract-font \<n>,\<pdf font name> in.pdf -o out.font**
 
@@ -1770,8 +1770,7 @@ groups. This command will merge them into a single optional content group.
 
 # 17. CREATING NEW PDFS
 
-**cpdf -create-pdf** \[-create-pdf-pages \<n>] \[-create-pdf-papersize \<paper
-size>] **-o out.pdf**
+**cpdf -create-pdf** \[-create-pdf-pages \<n>] \[-create-pdf-papersize \<papersize>] **-o out.pdf**
 
 Create a new PDF (default: one page, A4 portrait).
 
@@ -1783,8 +1782,8 @@ Create a new PDF (default: one page, A4 portrait).
 
 : Give the paper size, e.g "a3landscape" or "200pt 600pt"
 
-**cpdf -typeset \<filename>** \[-create-pdf-papersize \<size>] \[-font \<font>]
-\[-font-size \<size>] \[-subformat \<subformat>] \[-title \<string>] **-o out.pdf**
+**cpdf -typeset \<filename>** \[-create-pdf-papersize \<papersize>] \[-font \<font>]
+\[-font-size \<n>] \[-subformat \<subformat>] \[-title \<string>] **-o out.pdf**
 
 Typeset a text file into a PDF.
 
@@ -1806,7 +1805,7 @@ Typeset a text file into a PDF.
 
 **-title** \<string>
 
-: Specify a title when using -subformat for a PDF/UA file.
+: Specify a title when using **-subformat** for a PDF/UA file.
 
 **cpdf  -jpeg \<filename>** \[-subformat \<subformat>] \[-title \<string>] **-o
 out.pdf**
@@ -1824,7 +1823,7 @@ Build a PDF from an image file (JPEG, PNG or JPEG2000).
 
 **-title** \<string>
 
-: Specify a title when using -subformat for a PDF/UA file.
+: Specify a title when using **-subformat** for a PDF/UA file.
 
 **cpdf** \[-jbig2-global \<filename>] **-jbig2 \<filename>** \[-jbig2-global |
 -jbig2-global-clear] \[-jbig2 \<filename>] ... \[-subformat \<subformat>]
@@ -1853,7 +1852,7 @@ In lossy mode, jbig2globals segments may be specified:
 
 **-title** \<string>
 
-: Specify a title when using -subformat for a PDF/UA file.
+: Specify a title when using **-subformat** for a PDF/UA file.
 
 # 18. DRAWING ON PDFS
 
@@ -2208,7 +2207,7 @@ Verify conformance with PDF/UA-1.
 
 : Output conformance failures in JSON rather than plain text format.
 
-**-verify-single \<test>**
+**-verify-single** \<test>
 
 : Verify just one test. See cpdfmanual.pdf for list of tests.
 

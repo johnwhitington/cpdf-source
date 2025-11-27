@@ -2,7 +2,7 @@
 .\"
 .TH "CPDF" "1" "November 2025" ""
 .SH NAME
-cpdf \- PDF command line tools
+cpdf \- PDF command line tools.
 .SH SYNOPSIS
 Simple operation:
 .PP
@@ -21,7 +21,7 @@ Multiple operations, one after another:
 .SH DESCRIPTION
 \f[B]Cpdf\f[R] is an AGPL\-licensed command line tool for processing PDF
 files.
-The rest of this man page gives a brief description of each command line
+The rest of this document gives a brief description of each command line
 operation and option.
 The file cpdfmanual.pdf which you should find installed on your system
 or otherwise at https://www.coherentpdf.com/cpdfmanual.pdf gives the
@@ -42,7 +42,7 @@ Lists and describes very briefly each command line option.
 .TP
 \f[B]\-o\f[R] <filename>
 The output filename.
-Beware of writing back to the same file.
+Beware of writing back to the input file.
 .TP
 \f[B]\-i\f[R] <filename>
 Cpdf automatically treats any filename ending with .pdf (any case) as an
@@ -77,6 +77,7 @@ Add a whole directory of PDFs as inputs.
 .TP
 \f[B]\-idir\-only\-pdfs\f[R]
 Restrict \f[B]\-idir\f[R] to only files ending in .pdf (any case).
+Must appear before \f[B]\-idir\f[R].
 .TP
 \f[B]\-recrypt\f[R]
 Re\-encrypt output files using the same encryption parameters (if any)
@@ -112,7 +113,7 @@ Change the PDF\(cqs ID field when writing the output file.
 Linearize the PDF when writing.
 Requires a linearizer to be supplied with \f[B]\-cpdflin\f[R].
 .TP
-\f[B]\-cpdflin\f[R] <filename>
+\f[B]\-cpdflin\f[R] <path>
 Give the path of an external linearizer.
 For example, Qpdf.
 .TP
@@ -158,12 +159,11 @@ A very few of Cpdf\(cqs functions rely upon the \f[B]gs\f[R] command.
 Its path may be supplied with \f[B]\-gs\f[R].
 .TP
 \f[B]\-gs\-malformed\f[R]
-This option is used to allow Cpdf to call out the \f[B]gs\f[R] command
-to pre\-process badly malformed files as a last resort.
-.TP
-\f[B]\-gs\-malformed\-force\f[R]
 This option is used to allow Cpdf to call out to the \f[B]gs\f[R]
 command to pre\-process badly malformed files as a last resort.
+.TP
+\f[B]\-gs\-malformed\-force\f[R]
+See cpdfmanual.pdf for details of this fragile command.
 .TP
 \f[B]\-gs\-quiet\f[R]
 Do not show the output of \f[B]gs\f[R] when used.
@@ -220,7 +220,7 @@ If \f[B]\-subformat\f[R] \(lqPDF/UA\-2\(rq is given, together with
 \f[B]\-process\-struct\-trees\f[R], Cpdf will add a top\-level Document
 structure tree element.
 .SS Portfolios
-A PDF portfolio is a special kind of PDF with contains other documents
+A PDF portfolio is a special kind of PDF which contains other documents
 (PDF and otherwise) within it.
 Support is mostly limited to Adobe products at time of writing.
 .PP
@@ -306,7 +306,7 @@ Split the input document\(cqs structure tree into the output documents.
 This option may be required in the case of some output formats.
 See cpdfmanual.pdf for details.
 .SH 3. PAGES
-\f[B]cpdf \-scale\-page \(lq<scale x> <scale y>\(rq\f[R]
+\f[B]cpdf \-scale\-page \(lq<x scale> <y scale>\(rq\f[R]
 \f[B]in.pdf\f[R] [<range>] [\-fast] [<position>] \f[B]\-o out.pdf\f[R]
 .PP
 Scale pages in the given range by the given factor e.g \(lq2 2\(rq.
@@ -396,8 +396,8 @@ out.pdf\f[R]
 .PP
 Flip page content vertically.
 .PP
-\f[B]cpdf \f[R]\-[media | crop | art | trim | bleed]box** \f[B]<boxspec>
-in.pdf\f[R] [<range>] \f[B]\-o out.pdf\f[R]
+\f[B]cpdf \-[media | crop | art | trim | bleed]box <boxspec> in.pdf\f[R]
+[<range>] \f[B]\-o out.pdf\f[R]
 .PP
 Set the media, crop, art, trim or bleed box.
 For example \f[B]\-cropbox \(lq50 50 300 200\(rq\f[R] sets minx 50, miny
@@ -438,9 +438,9 @@ Orange and Pink respectively.
 Add trim marks to a PDF.
 The trim box must be present.
 .SH 4. ENCRYPTION AND DECRYPTION
-\f[B]cpdf \-encrypt <method> [\-pw=]<owner> [\-pw=]<user>\f[R]
-\f[B]in.pdf\f[R] [\-no\-encrypt\-metadata] <permissions> \f[B]\-o
-out.pdf\f[R]
+\f[B]cpdf \-encrypt <method> [\-pw=]<owner password> [\-pw=]<user
+password>\f[R] \f[B]in.pdf\f[R] [\-no\-encrypt\-metadata] <permissions>
+\f[B]\-o out.pdf\f[R]
 .PP
 Encrypt a document given the method (e.g \f[B]AES256ISO\f[R] for modern
 usage), owner and user passwords, and optionally permissions.
@@ -589,11 +589,11 @@ originals.
 .PP
 Remove all bookmarks from a PDF.
 .PP
-\f[B]cpdf \-add\-bookmarks <bookmark file> in.pdf \-o out.pdf\f[R]
+\f[B]cpdf \-add\-bookmarks <filename> in.pdf \-o out.pdf\f[R]
 .PP
 Add bookmarks, given an old\-style bookmark file.
 .PP
-\f[B]cpdf \-add\-bookmarks\-json <bookmark file> in.pdf \-o out.pdf\f[R]
+\f[B]cpdf \-add\-bookmarks\-json <filename> in.pdf \-o out.pdf\f[R]
 .PP
 Add bookmarks, given a new\-style JSON bookmark file.
 .PP
@@ -710,12 +710,12 @@ will be marked as an artifact.
 .PP
 \f[B]cpdf [\-add\-text <string> | \-add\-rectangle <xsize ysize>]\f[R]
 [\-font <fontname>] [\-font\-size <n>] [\-load\-ttf <name>=<filename>]
-[\-embed\-std14] [\-color <color>] [\-line\-spacing <number>]
-[\-outline] [\-linewidth <n>] [\-underneath] [\-relative\-to\-cropbox]
-[\-prerotate] [\-no\-warn\-rotate] [\-bates <number>]
-[\-bates\-at\-range <number>] [\-bates\-pad\-to <number>] [\-opacity
-<number>] [\-midline] [\-topline] [\-fast] [\-process\-struct\-trees]
-\f[B]in.pdf\f[R] [<range>] \f[B]\-o out.pdf\f[R]
+[\-embed\-std14] [\-color <color>] [\-line\-spacing <n>] [\-outline]
+[\-linewidth <n>] [\-underneath] [\-relative\-to\-cropbox] [\-prerotate]
+[\-no\-warn\-rotate] [\-bates <n>] [\-bates\-at\-range <n>]
+[\-bates\-pad\-to <n>] [\-opacity <n>] [\-midline] [\-topline] [\-fast]
+[\-process\-struct\-trees] \f[B]in.pdf\f[R] [<range>] \f[B]\-o
+out.pdf\f[R]
 .PP
 Add text to a PDF.
 Various special codes for page numbers or time and date may be used.
@@ -1529,9 +1529,9 @@ dpi threshold).
 Use interpolation when resampling.
 .PP
 \f[B]cpdf \-rasterize in.pdf\f[R] [<range>] [\-gs <path>]
-[\-rasterize[\-gray | \-1bpp | \-jpeg | \-jpeggray] [\-rasterize\-res
+[\-rasterize[\-gray | \-1bpp | \-jpeg | \-jpeggray]] [\-rasterize\-res
 <n>] [\-rasterize\-jpeg\-quality <n>] [\-rasterize\-no\-antialias |
-\-rasterize\-downsample] [\-rasterize\-annots] | [\-rasterize\-alpha]
+\-rasterize\-downsample] [\-rasterize\-annots] [\-rasterize\-alpha]
 \f[B]\-o out.pdf\f[R]
 .PP
 Rasterize each page, replacing the page content with the rasterized
@@ -1627,7 +1627,7 @@ out.pdf\f[R]
 .PP
 Use gs to embed missing fonts into a PDF.
 Note: putting a PDF file through gs in this manner may not be lossless:
-some metadata may not be preserved
+some metadata may not be preserved.
 .PP
 \f[B]cpdf \-extract\-font <n>,<pdf font name> in.pdf \-o out.font\f[R]
 .PP
@@ -1687,7 +1687,7 @@ For example, if we merge or stamp two files both with an OCG called
 This command will merge them into a single optional content group.
 .SH 17. CREATING NEW PDFS
 \f[B]cpdf \-create\-pdf\f[R] [\-create\-pdf\-pages <n>]
-[\-create\-pdf\-papersize <paper size>] \f[B]\-o out.pdf\f[R]
+[\-create\-pdf\-papersize <papersize>] \f[B]\-o out.pdf\f[R]
 .PP
 Create a new PDF (default: one page, A4 portrait).
 .TP
@@ -1697,9 +1697,9 @@ Give the number of pages.
 \f[B]\-create\-pdf\-papersize\f[R] <papersize>
 Give the paper size, e.g \(lqa3landscape\(rq or \(lq200pt 600pt\(rq
 .PP
-\f[B]cpdf \-typeset <filename>\f[R] [\-create\-pdf\-papersize <size>]
-[\-font <font>] [\-font\-size <size>] [\-subformat <subformat>] [\-title
-<string>] \f[B]\-o out.pdf\f[R]
+\f[B]cpdf \-typeset <filename>\f[R] [\-create\-pdf\-papersize
+<papersize>] [\-font <font>] [\-font\-size <n>] [\-subformat
+<subformat>] [\-title <string>] \f[B]\-o out.pdf\f[R]
 .PP
 Typeset a text file into a PDF.
 .TP
@@ -1716,7 +1716,7 @@ The font size (default 12pt)
 Specify PDF/UA\-1 or PDF/UA\-2 to make a conforming file.
 .TP
 \f[B]\-title\f[R] <string>
-Specify a title when using \-subformat for a PDF/UA file.
+Specify a title when using \f[B]\-subformat\f[R] for a PDF/UA file.
 .PP
 \f[B]cpdf \-jpeg <filename>\f[R] [\-subformat <subformat>] [\-title
 <string>] \f[B]\-o out.pdf\f[R]
@@ -1733,7 +1733,7 @@ Build a PDF from an image file (JPEG, PNG or JPEG2000).
 Specify PDF/UA\-1 or PDF/UA\-2 to make a conforming file.
 .TP
 \f[B]\-title\f[R] <string>
-Specify a title when using \-subformat for a PDF/UA file.
+Specify a title when using \f[B]\-subformat\f[R] for a PDF/UA file.
 .PP
 \f[B]cpdf\f[R] [\-jbig2\-global <filename>] \f[B]\-jbig2 <filename>\f[R]
 [\-jbig2\-global | \-jbig2\-global\-clear] [\-jbig2 <filename>] \&...
@@ -1761,7 +1761,7 @@ Cease use of jbig2global segment, and return to lossless mode.
 Specify PDF/UA\-1 or PDF/UA\-2 to make a conforming file.
 .TP
 \f[B]\-title\f[R] <string>
-Specify a title when using \-subformat for a PDF/UA file.
+Specify a title when using \f[B]\-subformat\f[R] for a PDF/UA file.
 .SH 18. DRAWING ON PDFS
 \f[B]cpdf in.pdf\f[R] [<range>] [\-draw\-struct\-tree] \f[B]\-draw <draw
 operations>\f[R] [\-underneath] \f[B]\-o out.pdf\f[R]
@@ -2043,7 +2043,7 @@ Verify conformance with PDF/UA\-1.
 \f[B]\-json\f[R]
 Output conformance failures in JSON rather than plain text format.
 .TP
-\f[B]\-verify\-single <test>\f[R]
+\f[B]\-verify\-single\f[R] <test>
 Verify just one test.
 See cpdfmanual.pdf for list of tests.
 .PP
