@@ -548,7 +548,7 @@ with the exception of metadata streams.
 
 Squeeze a file by coalescing like objects, and various other methods.
 
-**-squeeze-log-to**
+**-squeeze-log-to** \<filename>
 
 : Write the squeeze log to file rather than standard output.
 
@@ -634,7 +634,7 @@ Add bookmarks, given a new-style JSON bookmark file.
 Set all bookmarks up to and including a given level to be open.
 
 **cpdf -table-of-contents** **in.pdf** \[-toc-title \<string>] \[-toc-no-bookmark] \[-toc-dot-leaders]
-\[-font \<font>] \[-font-size \<n>] \[-embed-std14 /path/to/fonts]
+\[-font \<font>] \[-font-size \<n>] \[-embed-std14 \<path>]
 \[-process-struct-trees] \[-subformat \<subformat>] **-o out.pdf**
 
 Generate a typeset table of contents from existing bookmarks, adding it to
@@ -755,8 +755,8 @@ and so on.
 : Maintain tagged PDF. The "under" file will keep its structure; the "over"
 file will be marked as an artifact.
 
-**cpdf \[-add-text \<string> | -add-rectangle \<xsize ysize>]** [-font \<fontname>]
-[-font-size \<n>] [-load-ttf \<name>=\<filename>] [-embed-std14]
+**cpdf \[-add-text \<string> | -add-rectangle "\<x size> \<y size>"]** [-font \<fontname>]
+[-font-size \<n>] [-load-ttf \<name>=\<filename>] [-embed-std14 \<path>]
 [-color \<color>] [-line-spacing \<n>] [-outline] [-linewidth \<n>]
 [-underneath] [-relative-to-cropbox] [-prerotate] [-no-warn-rotate] [-bates
 \<n>] [-bates-at-range \<n>] [-bates-pad-to \<n>] [-opacity
@@ -787,16 +787,17 @@ And date and time formats:
 %A Full weekday name (Sunday, Monday etc.)
 %b Abbreviated month name (Jan, Feb etc.)
 %B Full month name (January, February etc.)
-%d Day of themonth (01-31)
-%e Day of themonth (1-31)
+%d Day of the month (01-31)
+%e Day of the month (1-31)
 %H Hour in 24-hour clock (00-23)
 %I Hour in 12-hour clock (01-12)
 %j Day of the year (001-366)
 %m Month of the year (01-12)
 %M Minute of the hour (00-59)
 %p "a.m" or "p.m"
-%S Second of theminute (00-61)
-%T Same as %H:%M:%S %u Weekday (1-7, 1 = Sunday)
+%S Second of the minute (00-61)
+%T Same as %H:%M:%S
+%u Weekday (1-7, 1 = Sunday)
 %w Weekday (0-6, 0 = Sunday)
 %Y Year (0000-9999)
 %% The % character
@@ -827,7 +828,7 @@ Courier-BoldOblique
 
 : Give the font size (default 12pt).
 
-**-load-ttf** \<filename>
+**-load-ttf** \<name>=\<filename>
 
 : Load a truetype font, and give it name which may be used with -font. For
 example **-load-ttf A=NotoSans-Black.ttf**.
@@ -912,61 +913,61 @@ Positioning commands:
 
 : Position the right of the baseline of the text at (x, y).
 
-**-top \<n>**
+**-top** \<n>
 
 : Position the baseline of the text n pts from the top middle of the page.
 
-**-topleft \<n>**
+**-topleft** \<n>
 
 : Position the left of the baseline of the text n pts below and right of the
 top left of the page.
 
-**-topleft "\<x> \<y>"**
+**-topleft** "\<x> \<y>"
 
 : Position the left of the baseline of the text y pts below and x pts right
 of the top left of the page.
 
-**-topright \<n>**
+**-topright** \<n>
 
 : Position the right of the baseline of the text n pts below and left of the
 top right of the page.
 
-**-topright "\<x> \<y>"**
+**-topright** "\<x> \<y>"
 
 : Position the right of the baseline of the text y pts below and x pts left
 of the top right of the page.
 
-**-left \<n>**
+**-left** \<n>
 
 : Position the left of the baseline of the text n pts right of the left middle
 of the page.
 
-**-bottomleft \<n>**
+**-bottomleft** \<n>
 
 : Position the left of the baseline of the text n pts up and right of the
 bottom left of the page.
 
-**-bottomleft "\<x> \<y>"**
+**-bottomleft** "\<x> \<y>"
 
 : Position the left of the baseline of the text y pts up and x pts right of the
 bottom left of the page.
 
-**-bottom \<n>**
+**-bottom** \<n>
 
 : Position the center of the baseline of the text n pts up from the bottom
 middle of the page.
 
-**-bottomright \<n>**
+**-bottomright** \<n>
 
 : Position the right of the baseline of the text n pts up and left from the
 bottom right of the page.
 
-**-bottomright "\<x> \<y>"**
+**-bottomright** "\<x> \<y>"
 
 : Position the right of the baseline of the text y pts up and x pts left from
 the bottom right of the page.
 
-**-right \<n>**
+**-right** \<n>
 
 : Position the right of the baseline of the text n pts left of the center right
 of the page.
@@ -1450,7 +1451,7 @@ Extract the attachments to a given directory.
 
 # 13. IMAGES
 
-**cpdf -list-images\[-json]** **in.pdf** \[-inline] \[\<range>]
+**cpdf -list-images\[-json]** **in.pdf** \[\<range>] \[-inline]
 
 List the images in a file together with their object number, page numbers,
 image name, width, height, size in bytes, bits per pixel, colour space,
@@ -1461,9 +1462,9 @@ compression method, mask type and mask object number. Either in plain text
 
 : Also list inline images.
 
-**cpdf -list-images-used\[-json]** **in.pdf** \[-inline] \[\<range>]
+**cpdf -list-images-used\[-json]** **in.pdf** \[\<range>] \[-inline] 
 
-**cpdf -image-resolution\[-json] \<n>** **in.pdf** \[-inline] \[\<range>]
+**cpdf -image-resolution\[-json] \<n>** **in.pdf** \[\<range>] \[-inline] 
 
 The **-list-images-used** and **-list-images-used-json** operations list the images
 at point of use with their page number, image name, width in pixels, height in
@@ -1475,7 +1476,7 @@ minimum resolution.
 
 : Also list inline images.
 
-**cpdf -extract-images in.pdf** \[\<range>] \[-im <path>] \[-p2p <path>] \[-dedup |
+**cpdf -extract-images in.pdf** \[\<range>] \[-im \<path>] \[-p2p \<path>] \[-dedup |
 -dedup-perpage] \[-raw] \[-inline] \[-merge-masks] **-o \<path>**
 
 Extract images to a given path e.g "output/%%%", which would create
@@ -1655,12 +1656,12 @@ in the output PDF.
 \[-rasterize\[-gray | -1bpp | -jpeg | -jpeggray] \[-rasterize-res \<n>]
 \[-rasterize-jpeg-quality \<n>] \[-rasterize-no-antialias |
 -rasterize-downsample] \[-rasterize-annots] \[-rasterize-alpha] \[-tobox
-\<BoxName>] **-o \<format>** 
+\<boxname>] **-o \<format>** 
 
 Output rasterized images for each page to the given folder and format e.g
 "dir/%%%.png" would create dir/001.png and so on. Options as above and:
 
-**-tobox** \<box>
+**-tobox** \<boxname>
 
 : Specify the box to rasterize (default **/MediaBox**).
 
@@ -1711,7 +1712,7 @@ in this manner may not be lossless: some metadata may not be preserved.
 
 **cpdf -extract-font \<n>,\<pdf font name> in.pdf -o out.font**
 
-Extract a font file from a PDF given a page number, font name pair. E.g:
+Extract a font file from a PDF given a page number, font name pair e.g:
 
 cpdf -extract-font 5,/F50 in.pdf -o out.ttf
 
@@ -1883,31 +1884,31 @@ for calculations of text position (e.g right-alignment).
 
 **Building and showing paths**
 
-**-rect "x y w h"**
+**-rect** "x y w h"
 
 : Draw rectangle.
 
-**-to "x y"**
+**-to** "x y"
 
 : Move to.
 
-**-line "x y"**
+**-line** "x y"
 
 : Add line to path.
 
-**-bez "x1 y1 x2 y2 x3 y3"**
+**-bez** "x1 y1 x2 y2 x3 y3"
 
 : Add Bezier curve to path.
 
-**-bez23 "x2 y2 x3 y3"**
+**-bez23** "x2 y2 x3 y3"
 
 : Add Bezier curve to path.
 
-**-bez13 "x1 y1 x3 y3"**
+**-bez13** "x1 y1 x3 y3"
 
 : Add Bezier curve to path.
 
-**-circle "x y r"**
+**-circle** "x y r"
 
 : Add circle to path.
 
@@ -1985,33 +1986,33 @@ for calculations of text position (e.g right-alignment).
 
 : Pop graphics stack.
 
-**-matrix "a b c d e f"**
+**-matrix** "a b c d e f"
 
 : Append to graphics matrix.
 
-**-mtrans "tx ty"**
+**-mtrans** "tx ty"
 
 : Translate the graphics matrix.
 
-**-mrot "x y a"**
+**-mrot** "x y a"
 
 : Rotate the graphics matrix.
 
-**-mscale "x y sx sy"**
+**-mscale** "x y sx sy"
 
 : Scale the graphics matrix.
 
-**-mshearx "x y a"**
+**-mshearx** "x y a"
 
 : Shear the graphics matrix in X.
 
-**-msheary "x y a"**
+**-msheary** "x y a"
 
 : Shear the graphics matrix in Y.
 
 **Re-use with XObjects**
 
-**-xobj-bbox "x y w h"**
+**-xobj-bbox** "x y w h"
 
 : Specify the bounding box for xobjects.
 
@@ -2221,7 +2222,7 @@ Remove conformance marker from a PDF.
 
 **cpdf -create-pdf-ua-\<1 | 2> \<string>** \[-create-pdf-pages \<n>] \[-create-pdf-papersize \<papersize>] **-o out.pdf**
 
-Create a new, blank, PDF/UA-1 or PDF/UA-2 file.
+Create a new, blank, PDF/UA-1 or PDF/UA-2 file with the given title.
 
 **-create-pdf-pages** \<n>
 
