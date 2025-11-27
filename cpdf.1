@@ -72,7 +72,7 @@ Presume ISO\-compliant content streams when processing page content.
 This is faster, because it does not involve re\-parsing whole streams to
 add content.
 .TP
-\f[B]\-idir\f[R] <directory>
+\f[B]\-idir\f[R] <path>
 Add a whole directory of PDFs as inputs.
 .TP
 \f[B]\-idir\-only\-pdfs\f[R]
@@ -99,10 +99,10 @@ Supply the user password for the PDF which is from standard input.
 \f[B]\-stdin\-owner\f[R] <password>
 Supply the owner password the the PDF which is from standard input.
 .TP
-\f[B]\-producer\f[R] <text>
+\f[B]\-producer\f[R] <string>
 Set the producer of the output file.
 .TP
-\f[B]\-creator\f[R] <text>
+\f[B]\-creator\f[R] <string>
 Set the creator of the output file.
 .TP
 \f[B]\-change\-id\f[R]
@@ -244,8 +244,8 @@ The so\-called relationship for the file (must appear after
 We can split an input PDF into its constituent pages, and output one PDF
 for each page.
 .PP
-\f[B]cpdf \-split in.pdf\f[R] [\-chunk <chunksize>]
-[\-process\-struct\-trees] [\-utf8] \f[B]\-o <format>\f[R]
+\f[B]cpdf \-split in.pdf\f[R] [\-chunk <n>] [\-process\-struct\-trees]
+[\-utf8] \f[B]\-o <format>\f[R]
 .PP
 The output format has many options (see cpdfmanual.pdf for details).
 But the simplest is just to number the outputs in sequence.
@@ -277,8 +277,8 @@ Split the input document\(cqs structure tree into the output documents.
 This option may be required in the case of some output formats.
 See cpdfmanual.pdf for details.
 .SS Splitting to a given size
-\f[B]cpdf \-split\-max <file size> in.pdf\f[R]
-[\-process\-struct\-trees] [\-utf8] \f[B]\-o <format> \f[R]
+\f[B]cpdf \-split\-max <n> in.pdf\f[R] [\-process\-struct\-trees]
+[\-utf8] \f[B]\-o <format> \f[R]
 .PP
 Split the file, if possible, to a maximum file size (in bytes) for each
 output PDF.
@@ -310,7 +310,7 @@ See cpdfmanual.pdf for details.
 \f[B]in.pdf\f[R] [<range>] [\-fast] [<position>] \f[B]\-o out.pdf\f[R]
 .PP
 Scale pages in the given range by the given factor e.g \(lq2 2\(rq.
-See the end of this chapter for \-fast and \-position.
+See Chapter 8 for information on positions.
 .PP
 \f[B]cpdf \-scale\-to\-fit \(lq<x size> <y size>\(rq\f[R]
 \f[B]in.pdf\f[R] [<range>] [\-fast] [\-prerotate] [<position>]
@@ -601,16 +601,16 @@ Add bookmarks, given a new\-style JSON bookmark file.
 .PP
 Set all bookmarks up to and including a given level to be open.
 .PP
-\f[B]cpdf \-table\-of\-contents\f[R] \f[B]in.pdf\f[R] [\-toc\-title]
-[\-toc\-no\-bookmark] [\-toc\-dot\-leaders] [\-font <font>]
-[\-font\-size <size>] [\-embed\-std14 /path/to/fonts]
+\f[B]cpdf \-table\-of\-contents\f[R] \f[B]in.pdf\f[R] [\-toc\-title
+<string>] [\-toc\-no\-bookmark] [\-toc\-dot\-leaders] [\-font <font>]
+[\-font\-size <n>] [\-embed\-std14 /path/to/fonts]
 [\-process\-struct\-trees] [\-subformat <subformat>] \f[B]\-o
 out.pdf\f[R]
 .PP
 Generate a typeset table of contents from existing bookmarks, adding it
 to the beginning of the document.
 .TP
-\f[B]\-toc\-title\f[R] <title>
+\f[B]\-toc\-title\f[R] <string>
 Title (default is \(lqTable of Contents\(rq).
 .TP
 \f[B]\-toc\-no\-bookmark\f[R]
@@ -640,7 +640,7 @@ contents to a PDF/UA\-2 file to keep compatibility.
 .SH 7. PRESENTATIONS
 \f[B]cpdf \-presentation in.pdf\f[R] [<range>] \f[B]\-o out.pdf\f[R]
 [\-trans <transition\-name>] [\-duration <float>] [\-vertical]
-[\-outward] [\-direction <int>] [\-effect\-duration <float>]
+[\-outward] [\-direction <n>] [\-effect\-duration <float>]
 .PP
 Make a slide\-show presentation from a PDF.
 .PP
@@ -708,15 +708,14 @@ Maintain tagged PDF.
 The \(lqunder\(rq file will keep its structure; the \(lqover\(rq file
 will be marked as an artifact.
 .PP
-\f[B]cpdf [\-add\-text <text\-format> | \-add\-rectangle <size>]\f[R]
-[\-font <fontname>] [\-font\-size <size\-in\-points>] [\-load\-ttf
-<name>=<file>] [\-embed\-std14] [\-color <color>] [\-line\-spacing
-<number>] [\-outline] [\-linewidth <number>] [\-underneath]
-[\-relative\-to\-cropbox] [\-prerotate] [\-no\-warn\-rotate] [\-bates
-<number>] [\-bates\-at\-range <number>] [\-bates\-pad\-to <number>]
-[\-opacity <number>] [\-midline] [\-topline] [\-fast]
-[\-process\-struct\-trees] \f[B]in.pdf\f[R] [<range>] \f[B]\-o
-out.pdf\f[R]
+\f[B]cpdf [\-add\-text <string> | \-add\-rectangle <xsize ysize>]\f[R]
+[\-font <fontname>] [\-font\-size <n>] [\-load\-ttf <name>=<filename>]
+[\-embed\-std14] [\-color <color>] [\-line\-spacing <number>]
+[\-outline] [\-linewidth <n>] [\-underneath] [\-relative\-to\-cropbox]
+[\-prerotate] [\-no\-warn\-rotate] [\-bates <number>]
+[\-bates\-at\-range <number>] [\-bates\-pad\-to <number>] [\-opacity
+<number>] [\-midline] [\-topline] [\-fast] [\-process\-struct\-trees]
+\f[B]in.pdf\f[R] [<range>] \f[B]\-o out.pdf\f[R]
 .PP
 Add text to a PDF.
 Various special codes for page numbers or time and date may be used.
@@ -841,64 +840,60 @@ as an artifact.
 .PP
 Positioning commands:
 .TP
-\f[B]\-pos\-left\f[R] \(lq100 200\(rq
-Position the left of the baseline of the text at the given coordinates
-e.g \(lq100 200\(rq.
+\f[B]\-pos\-left\f[R] \(lq<x> <y>\(rq
+Position the left of the baseline of the text at (x, y).
 .TP
-\f[B]\-pos\-center\f[R] \(lq100 200\(rq
-Position the center of the baseline of the text at the given coordinates
-e.g \(lq100 200\(rq.
+\f[B]\-pos\-center\f[R] \(lq<x> <y>\(rq
+Position the center of the baseline of the text at (x, y).
 .TP
-\f[B]\-pos\-right\f[R] \(lq100 200\(rq
-Position the right of the baseline of the text at the given coordinates
-e.g \(lq100 200\(rq.
+\f[B]\-pos\-right\f[R] \(lq<x> <y>\(rq
+Position the right of the baseline of the text at (x, y).
 .TP
-\f[B]\-top 10\f[R]
-Position the baseline of the text 10 pts from the top middle of the
-page.
+\f[B]\-top <n>\f[R]
+Position the baseline of the text n pts from the top middle of the page.
 .TP
-\f[B]\-topleft 10\f[R]
-Position the left of the baseline of the text 10 pts below and right of
+\f[B]\-topleft <n>\f[R]
+Position the left of the baseline of the text n pts below and right of
 the top left of the page.
 .TP
-\f[B]\-topleft \(lq10 20\(rq\f[R]
-Position the left of the baseline of the text 20 pts below and 10 pts
+\f[B]\-topleft \(lq<x> <y>\(rq\f[R]
+Position the left of the baseline of the text y pts below and x pts
 right of the top left of the page.
 .TP
-\f[B]\-topright 10\f[R]
-Position the right of the baseline of the text 10 pts below and left of
+\f[B]\-topright <n>\f[R]
+Position the right of the baseline of the text n pts below and left of
 the top right of the page.
 .TP
-\f[B]\-topright \(lq10 20\(rq\f[R]
-Position the right of the baseline of the text 20 pts below and 10 pts
+\f[B]\-topright \(lq<x> <y>\(rq\f[R]
+Position the right of the baseline of the text y pts below and x pts
 left of the top right of the page.
 .TP
-\f[B]\-left 10\f[R]
-Position the left of the baseline of the text 10 pts right of the left
+\f[B]\-left <n>\f[R]
+Position the left of the baseline of the text n pts right of the left
 middle of the page.
 .TP
-\f[B]\-bottomleft 10\f[R]
-Position the left of the baseline of the text 10pts up and right of the
+\f[B]\-bottomleft <n>\f[R]
+Position the left of the baseline of the text n pts up and right of the
 bottom left of the page.
 .TP
-\f[B]\-bottomleft \(lq10 20\(rq\f[R]
-Position the left of the baseline of the text 20pts up and 10pts right
+\f[B]\-bottomleft \(lq<x> <y>\(rq\f[R]
+Position the left of the baseline of the text y pts up and x pts right
 of the bottom left of the page.
 .TP
-\f[B]\-bottom 10\f[R]
-Position the center of the baseline of the text 10pts up from the bottom
+\f[B]\-bottom <n>\f[R]
+Position the center of the baseline of the text n pts up from the bottom
 middle of the page.
 .TP
-\f[B]\-bottomright 10\f[R]
-Position the right of the baseline of the text 10pts up and left from
+\f[B]\-bottomright <n>\f[R]
+Position the right of the baseline of the text n pts up and left from
 the bottom right of the page.
 .TP
-\f[B]\-bottomright \(lq10 20\(rq\f[R]
-Position the right of the baseline of the text 20pts up and 10pts left
+\f[B]\-bottomright \(lq<x> <y>\(rq\f[R]
+Position the right of the baseline of the text y pts up and x pts left
 from the bottom right of the page.
 .TP
-\f[B]\-right 10\f[R]
-Position the right of the baseline of the text 10pts left of the center
+\f[B]\-right <n>\f[R]
+Position the right of the baseline of the text n pts left of the center
 right of the page.
 .TP
 \f[B]\-diagonal\f[R]
@@ -958,7 +953,7 @@ Add a blank pages after every n pages.
 \f[B]\-pad\-with\f[R] <filename>
 Use a separate PDF to act as the padding.
 .PP
-\f[B]cpdf [\-pad\-multiple | \-pad\-multiple\-before]\f[R] [<integer>]
+\f[B]cpdf [\-pad\-multiple | \-pad\-multiple\-before]\f[R] [<n>]
 \f[B]in.pdf \-o out.pdf\f[R]
 .PP
 Add as many blank pages as are required before or after the original
@@ -977,9 +972,8 @@ marked as relating to the now\-redacted pages.
 .PP
 \f[B]cpdf [\-impose <pagesize> | impose\-xy \(lq<x> <y>\(rq]\f[R]
 \f[B]in.pdf\f[R] [\-impose\-columns] [\-impose\-rtl] [\-impose\-btt]
-[\-impose\-margin <margin>] [\-impose\-spacing <spacing>]
-[\-impose\-linewidth <width>] [\-fast] [\-process\-struct\-trees]
-\f[B]\-o out.pdf\f[R]
+[\-impose\-margin <n>] [\-impose\-spacing <n>] [\-impose\-linewidth <n>]
+[\-fast] [\-process\-struct\-trees] \f[B]\-o out.pdf\f[R]
 .PP
 Cpdf has two imposition operations:
 .PP
@@ -999,17 +993,17 @@ Lay the pages out right to left.
 \f[B]\-impose\-btt\f[R]
 Lay the pages out bottom to top.
 .TP
-\f[B]\-impose\-margin\f[R]
+\f[B]\-impose\-margin\f[R] <n>
 Add a margin around the edge of each page.
 When using \f[B]\-impose\-xy\f[R] the page size increases; with
 \f[B]\-impose\f[R] the pages are scaled.
 .TP
-\f[B]\-impose\-spacing\f[R]
+\f[B]\-impose\-spacing\f[R] <n>
 Add spacing between rows and columns.
 When using \f[B]\-impose\-xy\f[R] the page size increases; with
 \f[B]\-impose\f[R] the pages are scaled.
 .TP
-\f[B]\-impose\-linewidth\f[R]
+\f[B]\-impose\-linewidth\f[R] <n>
 Add a border around each input page.
 With \f[B]\-impose\f[R] the pages are scaled after the border is added,
 so you must account for this yourself.
@@ -1178,22 +1172,22 @@ points.
 .PP
 Print the number of pages in the file.
 .PP
-\f[B]cpdf \-set\-title <title>\f[R] \f[B]in.pdf\f[R] [\-also\-set\-xmp]
+\f[B]cpdf \-set\-title <string>\f[R] \f[B]in.pdf\f[R] [\-also\-set\-xmp]
 [\-just\-set\-xmp] \f[B]\-o out.pdf\f[R]
 .PP
-\f[B]cpdf \-set\-author <author>\f[R] \f[B]in.pdf\f[R]
+\f[B]cpdf \-set\-author <string>\f[R] \f[B]in.pdf\f[R]
 [\-also\-set\-xmp] [\-just\-set\-xmp] \f[B]\-o out.pdf\f[R]
 .PP
-\f[B]cpdf \-set\-subject <subject>\f[R] \f[B]in.pdf\f[R]
+\f[B]cpdf \-set\-subject <string>\f[R] \f[B]in.pdf\f[R]
 [\-also\-set\-xmp] [\-just\-set\-xmp] \f[B]\-o out.pdf\f[R]
 .PP
-\f[B]cpdf \-set\-keywords <keywords>\f[R] \f[B]in.pdf\f[R]
+\f[B]cpdf \-set\-keywords <string>\f[R] \f[B]in.pdf\f[R]
 [\-also\-set\-xmp] [\-just\-set\-xmp] \f[B]\-o out.pdf\f[R]
 .PP
-\f[B]cpdf \-set\-creator <creator>\f[R] \f[B]in.pdf\f[R]
+\f[B]cpdf \-set\-creator <string>\f[R] \f[B]in.pdf\f[R]
 [\-also\-set\-xmp] [\-just\-set\-xmp] \f[B]\-o out.pdf\f[R]
 .PP
-\f[B]cpdf \-set\-produce* <producer>\f[R] \f[B]in.pdf\f[R]
+\f[B]cpdf \-set\-producer <string>\f[R] \f[B]in.pdf\f[R]
 [\-also\-set\-xmp] [\-just\-set\-xmp] \f[B]\-o out.pdf\f[R]
 .PP
 Set metadata.
@@ -1266,11 +1260,11 @@ Position the document window in the center of the screen.
 .PP
 Display the document title instead of the file name in the title bar.
 .PP
-\f[B]cpdf \-open\-at\-page <page number> in.pdf \-o out.pdf\f[R]
+\f[B]cpdf \-open\-at\-page <n> in.pdf \-o out.pdf\f[R]
 .PP
 Set the document to open at the given page number.
 .PP
-\f[B]cpdf \-open\-at\-page\-fit <page number> in.pdf \-o out.pdf\f[R]
+\f[B]cpdf \-open\-at\-page\-fit <n> in.pdf \-o out.pdf\f[R]
 .PP
 Set the document to open at the given page number scaled to fit the
 window.
@@ -1284,7 +1278,7 @@ See cpdfmanual.pdf for details.
 .PP
 Set the document\(cqs global language, for example \(lqen\-US\(rq
 .PP
-\f[B]cpdf \-set\-metadata <metadata\-file> in.pdf \-o out.pdf\f[R]
+\f[B]cpdf \-set\-metadata <filename> in.pdf \-o out.pdf\f[R]
 .PP
 Replace or add XMP metadata.
 .PP
@@ -1300,7 +1294,7 @@ Remove all XMP metadata streams.
 .PP
 Print the XMP metadata stream to standard output.
 .PP
-\f[B]cpdf \-extract\-all\-metadata in.pdf \-o <directory>\f[R]
+\f[B]cpdf \-extract\-all\-metadata in.pdf \-o <path>\f[R]
 .PP
 Extract XMP metadata streams to the given directory.
 .PP
@@ -1314,7 +1308,7 @@ Set the XMP metadata date.
 See cpdfmanual.pdf for date format details.
 .PP
 \f[B]cpdf \-add\-page\-labels in.pdf\f[R] [<range>] [\-label\-style
-<style>] [\-label\-prefix <string>] [\-label\-startval <integer>]
+<style>] [\-label\-prefix <string>] [\-label\-startval <n>]
 [\-labels\-progress] \f[B]\-o out.pdf\f[R]
 .PP
 Add page labels to a PDF.
@@ -1363,13 +1357,12 @@ Unclassified: 11229 bytes (3.62%)
 .EE
 .SH 12. FILE ATTACHMENTS
 \f[B]cpdf \-attach\-file <filename>\f[R] \f[B]in.pdf\f[R] [\-to\-page
-<page number>] [\-afd <string>] [\-afr <relationship>] [\-attach\-file
-\&...]
+<n>] [\-afd <string>] [\-afr <relationship>] [\-attach\-file \&...]
 \f[B]\-o out.pdf\f[R]
 .PP
 Attach a file to a PDF, given its filename.
 .TP
-\f[B]\-to\-page\f[R] <page number>
+\f[B]\-to\-page\f[R] <n>
 Instead of attaching globally, add it as an attachment on a single page.
 .TP
 \f[B]\-afd\f[R] <string>
@@ -1394,7 +1387,7 @@ Include the attachment file data when listing in JSON format.
 .PP
 Remove attached files from a PDF.
 .PP
-\f[B]cpdf \-dump\-attachments in.pdf \-o <directory>\f[R]
+\f[B]cpdf \-dump\-attachments in.pdf \-o <path>\f[R]
 .PP
 Extract the attachments to a given directory.
 .SH 13. IMAGES
@@ -1611,14 +1604,14 @@ cpdf \-print\-font\-table /XYPLPB+NimbusSanL\-Bold \-print\-font\-table\-page 2 
 .EE
 .PP
 \f[B]cpdf \-copy\-font fromfile.pdf\f[R] \f[B]in.pdf\f[R] [<range>]
-\-copy\-font\-page <int> \-copy\-font\-name <name> \f[B]\-o out.pdf\f[R]
+\-copy\-font\-page <n> \-copy\-font\-name <name> \f[B]\-o out.pdf\f[R]
 .PP
 A low\-level operation to copy a font from one file to another.
 .TP
-\f[B]\-copy\-font\-page\f[R]
+\f[B]\-copy\-font\-page\f[R] <n>
 The page from which to copy the font.
 .TP
-\f[B]\-copy\-font\-name\f[R]
+\f[B]\-copy\-font\-name\f[R] <n>
 The (PDF) name of the font.
 .PP
 \f[B]cpdf \-remove\-fonts in.pdf \-o out.pdf\f[R]
@@ -1636,8 +1629,7 @@ Use gs to embed missing fonts into a PDF.
 Note: putting a PDF file through gs in this manner may not be lossless:
 some metadata may not be preserved
 .PP
-\f[B]cpdf \-extract\-font <page number>,<pdf font name> in.pdf \-o
-out.font\f[R]
+\f[B]cpdf \-extract\-font <n>,<pdf font name> in.pdf \-o out.font\f[R]
 .PP
 Extract a font file from a PDF given a page number, font name pair.
 E.g:
@@ -1705,7 +1697,7 @@ Give the number of pages.
 \f[B]\-create\-pdf\-papersize\f[R] <papersize>
 Give the paper size, e.g \(lqa3landscape\(rq or \(lq200pt 600pt\(rq
 .PP
-\f[B]cpdf \-typeset <text file>\f[R] [\-create\-pdf\-papersize <size>]
+\f[B]cpdf \-typeset <filename>\f[R] [\-create\-pdf\-papersize <size>]
 [\-font <font>] [\-font\-size <size>] [\-subformat <subformat>] [\-title
 <string>] \f[B]\-o out.pdf\f[R]
 .PP
@@ -1723,7 +1715,7 @@ The font size (default 12pt)
 \f[B]\-subformat\f[R] <subformat>
 Specify PDF/UA\-1 or PDF/UA\-2 to make a conforming file.
 .TP
-\f[B]\-title\f[R] <title>
+\f[B]\-title\f[R] <string>
 Specify a title when using \-subformat for a PDF/UA file.
 .PP
 \f[B]cpdf \-jpeg <filename>\f[R] [\-subformat <subformat>] [\-title
@@ -1740,7 +1732,7 @@ Build a PDF from an image file (JPEG, PNG or JPEG2000).
 \f[B]\-subformat\f[R] <subformat>
 Specify PDF/UA\-1 or PDF/UA\-2 to make a conforming file.
 .TP
-\f[B]\-title\f[R] <title>
+\f[B]\-title\f[R] <string>
 Specify a title when using \-subformat for a PDF/UA file.
 .PP
 \f[B]cpdf\f[R] [\-jbig2\-global <filename>] \f[B]\-jbig2 <filename>\f[R]
@@ -1759,7 +1751,7 @@ In lossy mode, jbig2globals segments may be specified:
 \f[B]cpdf \-jbig2\-global 0.jbig2globals \-jbig2 1.jbig2 \-jbig2 2.jbig2
 \-jbig2 3.jbig2 \-o out.pdf\f[R]
 .TP
-\f[B]\-jbig2\-global\f[R] <file>
+\f[B]\-jbig2\-global\f[R] <filename>
 Change the jbig2global segment in use.
 .TP
 \f[B]\-jbig2\-global\-clear\f[R]
@@ -1768,7 +1760,7 @@ Cease use of jbig2global segment, and return to lossless mode.
 \f[B]\-subformat\f[R] <subformat>
 Specify PDF/UA\-1 or PDF/UA\-2 to make a conforming file.
 .TP
-\f[B]\-title\f[R] <title>
+\f[B]\-title\f[R] <string>
 Specify a title when using \-subformat for a PDF/UA file.
 .SH 18. DRAWING ON PDFS
 \f[B]cpdf in.pdf\f[R] [<range>] [\-draw\-struct\-tree] \f[B]\-draw <draw
@@ -1783,8 +1775,7 @@ Produce structure information.
 \f[B]\-underneath\f[R]
 Draw underneath instead of on top of any existing page content.
 .PP
-\f[B]cpdf \-text\-width <text>\f[R] [\-font <font>] [\-fontsize
-<fontsize>]
+\f[B]cpdf \-text\-width <string>\f[R] [\-font <font>] [\-fontsize <n>]
 .PP
 Return the width of a string of text in a one of the standard 14 fonts.
 Used for calculations of text position (e.g right\-alignment).
@@ -1855,10 +1846,10 @@ Set fill colour.
 \f[B]\-thick\f[R] <n>
 Set stroke thickness.
 .TP
-\f[B]\-cap\f[R] butt | round | square
+\f[B]\-cap\f[R] <butt | round | square>
 Set cap.
 .TP
-\f[B]\-join\f[R] miter | round | bevel
+\f[B]\-join\f[R] <miter | round | bevel>
 Set join.
 .TP
 \f[B]\-miter\f[R] <n>
@@ -1937,10 +1928,10 @@ Begin text.
 \f[B]\-et\f[R]
 End text.
 .TP
-\f[B]\-text\f[R] <text>
+\f[B]\-text\f[R] <string>
 Draw text.
 .TP
-\f[B]\-stext\f[R] <text>
+\f[B]\-stext\f[R] <string>
 Draw text with %specials.
 .TP
 \f[B]\-para\f[R] <paragraph>
@@ -1984,13 +1975,13 @@ Move to a fresh page.
 Add structure information.
 Must precede \f[B]\-draw\f[R] on command line.
 .TP
-\f[B]\-tag\f[R] <tagname>
+\f[B]\-tag\f[R] <name>
 Begin marked content.
 .TP
 \f[B]\-end\-tag\f[R]
 End marked content.
 .TP
-\f[B]\-stag\f[R] <tagname>
+\f[B]\-stag\f[R] <name>
 Begin structure tree branch.
 .TP
 \f[B]\-end\-stag\f[R]
@@ -2014,7 +2005,7 @@ Prevent automatic addition of artifacts during post\-processing.
 \f[B]\-namespace\f[R] <namespace>
 Set the namespace for future branches of the tree.
 .TP
-\f[B]\-eltinfo\f[R] <elt=text>
+\f[B]\-eltinfo\f[R] <elt=string>
 Set element information.
 .TP
 \f[B]\-end\-eltinfo\f[R]
@@ -2066,8 +2057,8 @@ Mark a PDF as conforming to PDF/UA\-1 or PDF/UA\-2
 .PP
 Remove conformance marker from a PDF.
 .PP
-\f[B]cpdf \-create\-pdf\-ua\-<1 | 2> <title>\f[R] [\-create\-pdf\-pages
-<n>] [\-create\-pdf\-papersize <paper size>] \f[B]\-o out.pdf\f[R]
+\f[B]cpdf \-create\-pdf\-ua\-<1 | 2> <string>\f[R] [\-create\-pdf\-pages
+<n>] [\-create\-pdf\-papersize <papersize>] \f[B]\-o out.pdf\f[R]
 .PP
 Create a new, blank, PDF/UA\-1 or PDF/UA\-2 file.
 .TP

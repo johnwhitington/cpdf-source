@@ -78,7 +78,7 @@ would otherwise make it increase.
 : Presume ISO-compliant content streams when processing page content. This is
 faster, because it does not involve re-parsing whole streams to add content.
 
-**-idir** \<directory>
+**-idir** \<path>
 
 : Add a whole directory of PDFs as inputs.
 
@@ -112,11 +112,11 @@ otherwise prevent it.
 
 : Supply the owner password the the PDF which is from standard input.
 
-**-producer** \<text>
+**-producer** \<string>
 
 : Set the producer of the output file.
 
-**-creator** \<text>
+**-creator** \<string>
 
 : Set the creator of the output file.
 
@@ -277,7 +277,7 @@ The input **in.pdf** here is the main file. You can build a blank one with **-cr
 We can split an input PDF into its constituent pages, and output one PDF for
 each page.
 
-**cpdf -split in.pdf** \[-chunk \<chunksize>] \[-process-struct-trees] \[-utf8] **-o
+**cpdf -split in.pdf** \[-chunk \<n>] \[-process-struct-trees] \[-utf8] **-o
 \<format>**
 
 The output format has many options (see cpdfmanual.pdf for details). But the
@@ -317,7 +317,7 @@ cpdfmanual.pdf for details.
 ## Splitting to a given size
 
 
-**cpdf -split-max \<file size> in.pdf** \[-process-struct-trees] \[-utf8] **-o \<format>
+**cpdf -split-max \<n> in.pdf** \[-process-struct-trees] \[-utf8] **-o \<format>
 **
 
 Split the file, if possible, to a maximum file size (in bytes) for each output
@@ -354,8 +354,8 @@ cpdfmanual.pdf for details.
 **cpdf -scale-page "\<scale x> \<scale y>"** **in.pdf** \[\<range>] \[-fast]
 \[\<position>] **-o out.pdf**
 
-Scale pages in the given range by the given factor e.g "2 2". See the end of
-this chapter for -fast and -position.
+Scale pages in the given range by the given factor e.g "2 2". See Chapter 8 for
+information on positions.
 
 **cpdf -scale-to-fit "\<x size> \<y size>"** **in.pdf** \[\<range>] \[-fast]
 \[-prerotate] \[\<position>] \[-scale-to-fit-scale \<scale>]
@@ -633,14 +633,14 @@ Add bookmarks, given a new-style JSON bookmark file.
 
 Set all bookmarks up to and including a given level to be open.
 
-**cpdf -table-of-contents** **in.pdf** \[-toc-title] \[-toc-no-bookmark] \[-toc-dot-leaders]
-\[-font \<font>] \[-font-size \<size>] \[-embed-std14 /path/to/fonts]
+**cpdf -table-of-contents** **in.pdf** \[-toc-title \<string>] \[-toc-no-bookmark] \[-toc-dot-leaders]
+\[-font \<font>] \[-font-size \<n>] \[-embed-std14 /path/to/fonts]
 \[-process-struct-trees] \[-subformat \<subformat>] **-o out.pdf**
 
 Generate a typeset table of contents from existing bookmarks, adding it to
 the beginning of the document.
 
-**-toc-title** \<title>
+**-toc-title** \<string>
 
 : Title (default is "Table of Contents").
 
@@ -677,7 +677,7 @@ file to keep compatibility.
 # 7. PRESENTATIONS
 
 **cpdf -presentation in.pdf** \[\<range>] **-o out.pdf** \[-trans \<transition-name>]
-\[-duration \<float>] \[-vertical] \[-outward] \[-direction \<int>]
+\[-duration \<float>] \[-vertical] \[-outward] \[-direction \<n>]
 \[-effect-duration \<float>]
 
 Make a slide-show presentation from a PDF.
@@ -755,9 +755,9 @@ and so on.
 : Maintain tagged PDF. The "under" file will keep its structure; the "over"
 file will be marked as an artifact.
 
-**cpdf \[-add-text \<text-format> | -add-rectangle \<size>]** [-font \<fontname>]
-[-font-size \<size-in-points>] [-load-ttf \<name>=\<file>] [-embed-std14]
-[-color \<color>] [-line-spacing \<number>] [-outline] [-linewidth \<number>]
+**cpdf \[-add-text \<string> | -add-rectangle \<xsize ysize>]** [-font \<fontname>]
+[-font-size \<n>] [-load-ttf \<name>=\<filename>] [-embed-std14]
+[-color \<color>] [-line-spacing \<number>] [-outline] [-linewidth \<n>]
 [-underneath] [-relative-to-cropbox] [-prerotate] [-no-warn-rotate] [-bates
 \<number>] [-bates-at-range \<number>] [-bates-pad-to \<number>] [-opacity
 \<number>] [-midline] [-topline] [-fast] [-process-struct-trees] **in.pdf**
@@ -900,78 +900,75 @@ structure; the stamped text will be marked as an artifact.
 
 Positioning commands:
 
-**-pos-left** "100 200"
+**-pos-left** "\<x> \<y>"
 
-: Position the left of the baseline of the text at the given coordinates e.g
-"100 200".
+: Position the left of the baseline of the text at (x, y).
 
-**-pos-center** "100 200"
+**-pos-center** "\<x> \<y>"
 
-: Position the center of the baseline of the text at the given coordinates e.g
-"100 200".
+: Position the center of the baseline of the text at (x, y).
 
-**-pos-right** "100 200"
+**-pos-right** "\<x> \<y>"
 
-: Position the right of the baseline of the text at the given coordinates e.g
-"100 200".
+: Position the right of the baseline of the text at (x, y).
 
-**-top 10**
+**-top \<n>**
 
-: Position the baseline of the text 10 pts from the top middle of the page.
+: Position the baseline of the text n pts from the top middle of the page.
 
-**-topleft 10**
+**-topleft \<n>**
 
-: Position the left of the baseline of the text 10 pts below and right of the
+: Position the left of the baseline of the text n pts below and right of the
 top left of the page.
 
-**-topleft "10 20"**
+**-topleft "\<x> \<y>"**
 
-: Position the left of the baseline of the text 20 pts below and 10 pts right
+: Position the left of the baseline of the text y pts below and x pts right
 of the top left of the page.
 
-**-topright 10**
+**-topright \<n>**
 
-: Position the right of the baseline of the text 10 pts below and left of the
+: Position the right of the baseline of the text n pts below and left of the
 top right of the page.
 
-**-topright "10 20"**
+**-topright "\<x> \<y>"**
 
-: Position the right of the baseline of the text 20 pts below and 10 pts left
+: Position the right of the baseline of the text y pts below and x pts left
 of the top right of the page.
 
-**-left 10**
+**-left \<n>**
 
-: Position the left of the baseline of the text 10 pts right of the left middle
+: Position the left of the baseline of the text n pts right of the left middle
 of the page.
 
-**-bottomleft 10**
+**-bottomleft \<n>**
 
-: Position the left of the baseline of the text 10pts up and right of the
+: Position the left of the baseline of the text n pts up and right of the
 bottom left of the page.
 
-**-bottomleft "10 20"**
+**-bottomleft "\<x> \<y>"**
 
-: Position the left of the baseline of the text 20pts up and 10pts right of the
+: Position the left of the baseline of the text y pts up and x pts right of the
 bottom left of the page.
 
-**-bottom 10**
+**-bottom \<n>**
 
-: Position the center of the baseline of the text 10pts up from the bottom
+: Position the center of the baseline of the text n pts up from the bottom
 middle of the page.
 
-**-bottomright 10**
+**-bottomright \<n>**
 
-: Position the right of the baseline of the text 10pts up and left from the
+: Position the right of the baseline of the text n pts up and left from the
 bottom right of the page.
 
-**-bottomright "10 20"**
+**-bottomright "\<x> \<y>"**
 
-: Position the right of the baseline of the text 20pts up and 10pts left from
+: Position the right of the baseline of the text y pts up and x pts left from
 the bottom right of the page.
 
-**-right 10**
+**-right \<n>**
 
-: Position the right of the baseline of the text 10pts left of the center right
+: Position the right of the baseline of the text n pts left of the center right
 of the page.
 
 **-diagonal**
@@ -1033,7 +1030,7 @@ Add blank pages before or after each page in the given range.
 
 : Use a separate PDF to act as the padding.
 
-**cpdf [-pad-multiple | -pad-multiple-before]** \[\<integer>] **in.pdf -o out.pdf**
+**cpdf [-pad-multiple | -pad-multiple-before]** \[\<n>] **in.pdf -o out.pdf**
 
 Add as many blank pages as are required before or after the original pages to
 make the file's length a multiple of the given number of pages
@@ -1049,8 +1046,8 @@ annotations and any resources.
 relating to the now-redacted pages.
 
 **cpdf \[-impose \<pagesize> | impose-xy "\<x> \<y>"]** **in.pdf**
-\[-impose-columns] \[-impose-rtl] \[-impose-btt] \[-impose-margin \<margin>]
-\[-impose-spacing \<spacing>] \[-impose-linewidth \<width>] \[-fast]
+\[-impose-columns] \[-impose-rtl] \[-impose-btt] \[-impose-margin \<n>]
+\[-impose-spacing \<n>] \[-impose-linewidth \<n>] \[-fast]
 \[-process-struct-trees] **-o out.pdf**
 
 Cpdf has two imposition operations:
@@ -1073,17 +1070,17 @@ vertically e.g **-impose-xy "2 3"**
 
 : Lay the pages out bottom to top.
 
-**-impose-margin**
+**-impose-margin** \<n>
 
 : Add a margin around the edge of each page. When using **-impose-xy** the page
 size increases; with **-impose** the pages are scaled.
 
-**-impose-spacing**
+**-impose-spacing** \<n>
 
 : Add spacing between rows and columns. When using **-impose-xy** the page size
 increases; with **-impose** the pages are scaled.
 
-**-impose-linewidth**
+**-impose-linewidth** \<n>
 
 : Add a border around each input page. With **-impose** the pages are scaled after
 the border is added, so you must account for this yourself.
@@ -1245,17 +1242,17 @@ Annotations: 0
 
 Print the number of pages in the file.
 
-**cpdf -set-title \<title>** **in.pdf** \[-also-set-xmp] \[-just-set-xmp] **-o out.pdf**
+**cpdf -set-title \<string>** **in.pdf** \[-also-set-xmp] \[-just-set-xmp] **-o out.pdf**
 
-**cpdf -set-author \<author>** **in.pdf** \[-also-set-xmp] \[-just-set-xmp] **-o out.pdf**
+**cpdf -set-author \<string>** **in.pdf** \[-also-set-xmp] \[-just-set-xmp] **-o out.pdf**
 
-**cpdf -set-subject \<subject>** **in.pdf** \[-also-set-xmp] \[-just-set-xmp] **-o out.pdf**
+**cpdf -set-subject \<string>** **in.pdf** \[-also-set-xmp] \[-just-set-xmp] **-o out.pdf**
 
-**cpdf -set-keywords \<keywords>** **in.pdf** \[-also-set-xmp] \[-just-set-xmp] **-o out.pdf**
+**cpdf -set-keywords \<string>** **in.pdf** \[-also-set-xmp] \[-just-set-xmp] **-o out.pdf**
 
-**cpdf -set-creator \<creator>** **in.pdf** \[-also-set-xmp] \[-just-set-xmp] **-o out.pdf**
+**cpdf -set-creator \<string>** **in.pdf** \[-also-set-xmp] \[-just-set-xmp] **-o out.pdf**
 
-**cpdf -set-produce* \<producer>** **in.pdf** \[-also-set-xmp] \[-just-set-xmp] **-o out.pdf**
+**cpdf -set-producer \<string>** **in.pdf** \[-also-set-xmp] \[-just-set-xmp] **-o out.pdf**
 
 Set metadata.
 
@@ -1319,11 +1316,11 @@ Position the document window in the center of the screen.
 
 Display the document title instead of the file name in the title bar.
 
-**cpdf -open-at-page \<page number> in.pdf -o out.pdf**
+**cpdf -open-at-page \<n> in.pdf -o out.pdf**
 
 Set the document to open at the given page number.
 
-**cpdf -open-at-page-fit \<page number> in.pdf -o out.pdf**
+**cpdf -open-at-page-fit \<n> in.pdf -o out.pdf**
 
 Set the document to open at the given page number scaled to fit the window.
 
@@ -1335,7 +1332,7 @@ Set the document to open at a custom destination. See cpdfmanual.pdf for details
 
 Set the document's global language, for example "en-US"
 
-**cpdf -set-metadata \<metadata-file> in.pdf -o out.pdf**
+**cpdf -set-metadata \<filename> in.pdf -o out.pdf**
 
 Replace or add XMP metadata.
 
@@ -1351,7 +1348,7 @@ Remove all XMP metadata streams.
 
 Print the XMP metadata stream to standard output.
 
-**cpdf -extract-all-metadata in.pdf -o \<directory>**
+**cpdf -extract-all-metadata in.pdf -o \<path>**
 
 Extract XMP metadata streams to the given directory.
 
@@ -1364,7 +1361,7 @@ Create or replace XMP metadata from old-style metadata.
 Set the XMP metadata date. See cpdfmanual.pdf for date format details.
 
 **cpdf -add-page-labels in.pdf** \[\<range>] \[-label-style \<style>]
-\[-label-prefix \<string>] \[-label-startval \<integer>] \[-labels-progress] **-o out.pdf** 
+\[-label-prefix \<string>] \[-label-startval \<n>] \[-labels-progress] **-o out.pdf** 
 
 Add page labels to a PDF. Multiple calls may be used to add multiple ranges of page labels.
 
@@ -1414,12 +1411,12 @@ Unclassified: 11229 bytes (3.62%)
 
 # 12. FILE ATTACHMENTS
 
-**cpdf -attach-file \<filename>** **in.pdf** \[-to-page \<page number>] \[-afd \<string>]
+**cpdf -attach-file \<filename>** **in.pdf** \[-to-page \<n>] \[-afd \<string>]
 \[-afr \<relationship>] \[-attach-file ...] **-o out.pdf**
 
 Attach a file to a PDF, given its filename.
 
-**-to-page** \<page number>
+**-to-page** \<n>
 
 : Instead of attaching globally, add it as an attachment on a single page.
 
@@ -1447,7 +1444,7 @@ List attached files.
 
 Remove attached files from a PDF.
 
-**cpdf -dump-attachments in.pdf -o \<directory>**
+**cpdf -dump-attachments in.pdf -o \<path>**
 
 Extract the attachments to a given directory.
 
@@ -1687,15 +1684,15 @@ cpdf -print-font-table /XYPLPB+NimbusSanL-Bold -print-font-table-page 2 cpdfmanu
 ...
 ```
 
-**cpdf -copy-font fromfile.pdf** **in.pdf** \[\<range>] -copy-font-page \<int> -copy-font-name \<name> **-o out.pdf**
+**cpdf -copy-font fromfile.pdf** **in.pdf** \[\<range>] -copy-font-page \<n> -copy-font-name \<name> **-o out.pdf**
 
 A low-level operation to copy a font from one file to another.
 
-**-copy-font-page**
+**-copy-font-page** \<n>
 
 : The page from which to copy the font.
 
-**-copy-font-name**
+**-copy-font-name** \<n>
 
 : The (PDF) name of the font. 
 
@@ -1712,7 +1709,7 @@ Report missing fonts - i.e those which are unembedded.
 Use gs to embed missing fonts into a PDF. Note: putting a PDF file through gs
 in this manner may not be lossless: some metadata may not be preserved
 
-**cpdf -extract-font \<page number>,\<pdf font name> in.pdf -o out.font**
+**cpdf -extract-font \<n>,\<pdf font name> in.pdf -o out.font**
 
 Extract a font file from a PDF given a page number, font name pair. E.g:
 
@@ -1786,7 +1783,7 @@ Create a new PDF (default: one page, A4 portrait).
 
 : Give the paper size, e.g "a3landscape" or "200pt 600pt"
 
-**cpdf -typeset \<text file>** \[-create-pdf-papersize \<size>] \[-font \<font>]
+**cpdf -typeset \<filename>** \[-create-pdf-papersize \<size>] \[-font \<font>]
 \[-font-size \<size>] \[-subformat \<subformat>] \[-title \<string>] **-o out.pdf**
 
 Typeset a text file into a PDF.
@@ -1807,7 +1804,7 @@ Typeset a text file into a PDF.
 
 : Specify PDF/UA-1 or PDF/UA-2 to make a conforming file.
 
-**-title** \<title>
+**-title** \<string>
 
 : Specify a title when using -subformat for a PDF/UA file.
 
@@ -1825,7 +1822,7 @@ Build a PDF from an image file (JPEG, PNG or JPEG2000).
 
 : Specify PDF/UA-1 or PDF/UA-2 to make a conforming file.
 
-**-title** \<title>
+**-title** \<string>
 
 : Specify a title when using -subformat for a PDF/UA file.
 
@@ -1842,7 +1839,7 @@ In lossy mode, jbig2globals segments may be specified:
 
 **cpdf -jbig2-global 0.jbig2globals -jbig2 1.jbig2 -jbig2 2.jbig2 -jbig2 3.jbig2 -o out.pdf**
 
-**-jbig2-global** \<file>
+**-jbig2-global** \<filename>
 
 : Change the jbig2global segment in use.
 
@@ -1854,7 +1851,7 @@ In lossy mode, jbig2globals segments may be specified:
 
 : Specify PDF/UA-1 or PDF/UA-2 to make a conforming file.
 
-**-title** \<title>
+**-title** \<string>
 
 : Specify a title when using -subformat for a PDF/UA file.
 
@@ -1872,7 +1869,7 @@ Draw on a PDF. See cpdfmanual.pdf for a tutorial, and full information.
 
 : Draw underneath instead of on top of any existing page content.
 
-**cpdf -text-width \<text>** \[-font \<font>] \[-fontsize \<fontsize>]
+**cpdf -text-width \<string>** \[-font \<font>] \[-fontsize \<n>]
 
 Return the width of a string of text in a one of the standard 14 fonts. Used
 for calculations of text position (e.g right-alignment).
@@ -1963,11 +1960,11 @@ for calculations of text position (e.g right-alignment).
 
 : Set stroke thickness.
 
-**-cap** butt | round | square
+**-cap** \<butt | round | square>
 
 : Set cap.
 
-**-join** miter | round | bevel
+**-join** \<miter | round | bevel>
 
 : Set join.
 
@@ -2069,11 +2066,11 @@ for calculations of text position (e.g right-alignment).
 
 : End text.
 
-**-text** \<text>
+**-text** \<string>
 
 : Draw text.
 
-**-stext** \<text>
+**-stext** \<string>
 
 : Draw text with %specials.
 
@@ -2129,7 +2126,7 @@ for calculations of text position (e.g right-alignment).
 
 : Add structure information. Must precede **-draw** on command line.
 
-**-tag** \<tagname>
+**-tag** \<name>
 
 : Begin marked content.
 
@@ -2137,7 +2134,7 @@ for calculations of text position (e.g right-alignment).
 
 : End marked content.
 
-**-stag** \<tagname>
+**-stag** \<name>
 
 : Begin structure tree branch.
 
@@ -2169,7 +2166,7 @@ for calculations of text position (e.g right-alignment).
 
 : Set the namespace for future branches of the tree.
 
-**-eltinfo** \<elt=text>
+**-eltinfo** \<elt=string>
 
 : Set element information.
 
@@ -2223,7 +2220,7 @@ Mark a PDF as conforming to PDF/UA-1 or PDF/UA-2
 
 Remove conformance marker from a PDF.
 
-**cpdf -create-pdf-ua-\<1 | 2> \<title>** \[-create-pdf-pages \<n>] \[-create-pdf-papersize \<paper size>] **-o out.pdf**
+**cpdf -create-pdf-ua-\<1 | 2> \<string>** \[-create-pdf-pages \<n>] \[-create-pdf-papersize \<papersize>] **-o out.pdf**
 
 Create a new, blank, PDF/UA-1 or PDF/UA-2 file.
 
