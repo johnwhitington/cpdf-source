@@ -44,6 +44,7 @@ let pad_with_pdf (range : int list) (pdf : Pdf.t) (isbefore : bool) (padfile : P
       (* FIXME Provide ~changes here? *)
       Pdfpage.change_pages false merged (flatten newpages)
 
+(* NB. Range must be sorted. *)
 let pad padwith range pdf isbefore =
   match padwith with
     Some padfile -> pad_with_pdf range pdf isbefore padfile
@@ -71,13 +72,13 @@ let padafter ?padwith range pdf =
   let isinpdf n = mem n (ilist 1 (Pdfpage.endpage pdf)) in
     if not (fold_left ( && ) true (map isinpdf range)) then
       raise (Failure "padafter: range contains pages not present in pdf");
-    pad padwith range pdf false
+    pad padwith (sort compare range) pdf false
 
 let padbefore ?padwith range pdf =
   let isinpdf n = mem n (ilist 1 (Pdfpage.endpage pdf)) in
     if not (fold_left ( && ) true (map isinpdf range)) then
       raise (Failure "padbefore: range contains pages not present in pdf");
-    pad padwith (map pred range) pdf true
+    pad padwith (map pred (sort compare range)) pdf true
 
 let padmultiple n pdf =
   let neg, n = n < 0, if n < 0 then -n else n in

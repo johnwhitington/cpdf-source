@@ -49,6 +49,7 @@ o Cpdfimages was accidentally creating palettised PNGs
 o Page label prefixes now in UTF8 
 o Regression where bookmarks were being corrupted
 o Removes the dependency on wmic for reading the date.
+o -pad-after, -pad-before were failing if range not sorted
 
 * = Supported by a grant from NLnet
 
