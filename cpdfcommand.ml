@@ -2571,7 +2571,7 @@ let specs =
       " Chop horizontally");
    ("-chop-v",
       Arg.String setchopv,
-      " Chop horizontally");
+      " Chop vertically");
    ("-chop-columns",
       Arg.Unit (fun () -> args.impose_columns <- true),
       " Chop in columns rather than rows");
@@ -3082,7 +3082,7 @@ let specs =
    ("-draw", Arg.Unit setdraw, " Begin drawing");
    ("-draw-struct-tree", Arg.Unit setdrawstructtree, " Build structure trees when drawing.");
    ("-tag", Arg.String Cpdfdrawcontrol.addtag, " Begin structure item");
-   ("-stag", Arg.String Cpdfdrawcontrol.addstag, " Begin struture branch");
+   ("-stag", Arg.String Cpdfdrawcontrol.addstag, " Begin structure branch");
    ("-end-tag", Arg.Unit Cpdfdrawcontrol.endtag, " End structure item");
    ("-end-stag", Arg.Unit Cpdfdrawcontrol.endstag, " End structure branch");
    ("-auto-tags", Arg.Unit (fun _ -> Cpdfdrawcontrol.autotags true), " Auto-tag paragraphs and figures");

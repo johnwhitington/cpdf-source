@@ -1261,7 +1261,7 @@ Set metadata.
 
 **cpdf -set-modify \<date>** **in.pdf** \[-also-set-xmp] \[-just-set-xmp] **-o out.pdf**
 
-Set creation or modification dates. See cpdfmanual.pdf for details of the PDF date format.
+Set creation or modification dates. See Appendix A of cpdfmanual.pdf for details of the PDF date format.
 
 **cpdf -set-trapped in.pdf** \[-also-set-xmp] \[-just-set-xmp] **-o out.pdf**
 
@@ -1359,7 +1359,7 @@ Create or replace XMP metadata from old-style metadata.
 
 **cpdf -set-metadata-date \<date> in.pdf -o out.pdf**
 
-Set the XMP metadata date. See cpdfmanual.pdf for date format details.
+Set the XMP metadata date. See Appendix A in cpdfmanual.pdf for date format details.
 
 **cpdf -add-page-labels in.pdf** \[\<range>] \[-label-style \<style>]
 \[-label-prefix \<string>] \[-label-startval \<n>] \[-labels-progress] **-o out.pdf** 

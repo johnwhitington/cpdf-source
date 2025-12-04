@@ -3526,7 +3526,7 @@ XMP dc:description: Adobe Portable Document Format (PDF)
 \end{verbatim}}\end{framed}
 
 \noindent The details of the format for creation and modification dates can be found in
-Appendix~\ref{dates}. If page boxes vary among pages, the entry will read \texttt{various}. Add \texttt{-in}, \texttt{-cm} or \texttt{mm} to print boxes in inches, centimetres, or millimetres instead of points.
+Appendix~\ref{dates}. If page boxes vary among pages, the entry will read \texttt{various}. Add \texttt{-in}, \texttt{-cm} or \texttt{-mm} to print boxes in inches, centimetres, or millimetres instead of points.
 
 By default, Cpdf strips to ASCII, discarding character codes in excess of 127. In order to preserve the original unicode, add the \texttt{-utf8} option. To disable all post-processing of the string, add \texttt{-raw}. See Section \ref{textencodings} for more information.
 
@@ -6498,7 +6498,7 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
   \noindent\verb!cpdf -list-spot-colors in.pdf!
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf -print-dict-entry [-json] <key> in.pdf!
+  \noindent\verb!cpdf -print-dict-entry <key> [-json]  in.pdf!
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -remove-dict-entry <key> [-dict-entry-search <term>]!\\
@@ -6771,7 +6771,7 @@ $ ./cpdf -obj 1256/PageLabels/Nums cpdfmanual.pdf
 /MCBERL+URWPalladioL-Roma
 \end{verbatim}}
 
-\noindent To output data in JSON format instead of PDF format, add \texttt{-json}:
+\noindent To output data in JSON format instead of PDF format, use \texttt{-obj-json} instead:
 
 {\small\begin{verbatim}
 ./cpdf -obj-json 140/Prev/Prev/Prev cpdfmanual.pdf
