@@ -1,7 +1,6 @@
 %Document extraction of soft masks and mask changes to -list-images and friends
 %Implement and Document CCITTG4 and Document CCITT in -process-images
-%Document reprocessing of JBIG2000 lossless into JBIG2000 lossy -jbig2enc when decompressing prior
-
+%Document reprocessing of JBIG2000 lossless into JBIG2000 lossy -jbig2enc
 %\DocumentMetadata{lang=en, pdfversion=2.0, pdfstandard=ua-2, pdfstandard=a-4f, testphase={phase-III, title, table, math, firstaid}}
 \documentclass{book}
 % Edit here to produce cpdfmanual.pdf, cpdflibmanual.pdf, pycpdfmanual.pdf,
@@ -4414,8 +4413,6 @@ Method & Effect\\\hline
   \noindent\small\verb!cpdf -process-images -jbig2enc jbig2enc -1bpp-method JBIG2Lossy!\\
   \noindent\small\verb!     -jbig2-lossy-threshold 75 in.pdf -o out.pdf!
   \end{framed}
-
-\noindent It is not currently possible to reprocess lossless JBIG2 into lossy JBIG2, nor is it possible to recompress into CCITT.
 
 \section{Rasterization (PDF to image conversion)}
 
