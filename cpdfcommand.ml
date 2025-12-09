@@ -4285,20 +4285,21 @@ let rec go () =
         else
           null_hash ()
       in
-        begin if args.decompress_just_content then
-          iter
-            (fun (i, _) ->
-               try Pdfcodec.decode_pdfstream_until_unknown ~jbig2dec:args.path_to_jbig2dec pdf (Pdf.Indirect i) with
-                 e -> Pdfe.log (Printf.sprintf "Decode failure: %s. Carrying on...\n" (Printexc.to_string e)))
-            (list_of_hashtbl content_stream_object_numbers)
-        else
-          Pdf.iter_stream
-            (function stream ->
-               try Pdfcodec.decode_pdfstream_until_unknown ~jbig2dec:args.path_to_jbig2dec pdf stream with
-                 e -> Pdfe.log (Printf.sprintf "Decode failure: %s. Carrying on...\n" (Printexc.to_string e)); ())
-            pdf
-        end;
-        write_pdf ~is_decompress:true false pdf
+        let jbig2dec = match args.path_to_jbig2dec with "" -> None | s -> Some s in
+          begin if args.decompress_just_content then
+            iter
+              (fun (i, _) ->
+                 try Pdfcodec.decode_pdfstream_until_unknown ?jbig2dec pdf (Pdf.Indirect i) with
+                   e -> Pdfe.log (Printf.sprintf "Decode failure: %s. Carrying on...\n" (Printexc.to_string e)))
+              (list_of_hashtbl content_stream_object_numbers)
+          else
+            Pdf.iter_stream
+              (function stream ->
+                 try Pdfcodec.decode_pdfstream_until_unknown ?jbig2dec pdf stream with
+                   e -> Pdfe.log (Printf.sprintf "Decode failure: %s. Carrying on...\n" (Printexc.to_string e)); ())
+              pdf
+          end;
+          write_pdf ~is_decompress:true false pdf
   | Some Compress ->
       let pdf = get_single_pdf (Some Compress) false in
         if args.remove_duplicate_streams then
@@ -5126,7 +5127,7 @@ let rec go () =
           ~length_threshold:args.length_threshold ~percentage_threshold:args.percentage_threshold ~pixel_threshold:args.pixel_threshold 
           ~dpi_threshold:args.dpi_threshold ~factor:args.resample_factor ~interpolate:args.resample_interpolate
           ~jpeg_to_jpeg_scale:args.jpegtojpegscale ~jpeg_to_jpeg_dpi:args.jpegtojpegdpi
-          ~path_to_jbig2enc:args.path_to_jbig2enc ~path_to_convert:args.path_to_im range pdf;
+          ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_jbig2enc:args.path_to_jbig2enc ~path_to_convert:args.path_to_im range pdf;
         write_pdf false pdf
   | Some (ExtractStream s) ->
       let pdf = get_single_pdf args.op true in

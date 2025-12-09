@@ -28,7 +28,7 @@ val process :
   length_threshold:int -> percentage_threshold:float -> pixel_threshold:int ->
   dpi_threshold:float -> factor:float -> interpolate:bool ->
   jpeg_to_jpeg_scale:float -> jpeg_to_jpeg_dpi:float ->
-  path_to_jbig2enc:string -> path_to_convert:string -> int list -> Pdf.t -> unit
+  path_to_jbig2dec:string -> path_to_jbig2enc:string -> path_to_convert:string -> int list -> Pdf.t -> unit
 
 (**/**)
 val image_of_input : ?subformat:Cpdfua.subformat -> ?title:string -> process_struct_tree:bool -> (Pdf.t -> Pdfio.bytes -> Pdf.pdfobject * (int * Pdf.pdfobject) list) -> Pdfio.input -> Pdf.t
