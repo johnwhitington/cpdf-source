@@ -120,8 +120,7 @@ let year_day d m y =
   let n3 = 1 + (y - 4 * (y / 4) + 2) / 3 in
     n1 - n2 * n3 + d - 30
 
-(* OCAML *)
-let js_date () =
+let current_time () =
   let d = Unix.localtime (Unix.time ()) in
     {_tm_sec = d.tm_sec;
      _tm_min = d.tm_min;
@@ -132,88 +131,6 @@ let js_date () =
      _tm_wday = d.tm_wday;
      _tm_yday = d.tm_yday;
      _tm_isdst = d.tm_isdst}
-
-(* JS *)
-(*
-let js_date () =
-  let d = Unix.localtime (Unix.time ()) in
-  {_tm_sec = d.tm_sec;
-   _tm_min = d.tm_min;
-   _tm_hour = d.tm_hour;
-   _tm_mday = d.tm_mday;
-   _tm_mon = d.tm_mon;
-   _tm_year = d.tm_year;
-   _tm_wday = d.tm_wday;
-   _tm_yday = d.tm_yday;
-   _tm_isdst = d.tm_isdst}
-*)
-
-let return_date () = js_date ()
-  (*match Sys.backend_type with Sys.Other "js_of_ocaml" -> js_date () | _ ->
-  match Sys.os_type with
-    "Unix" ->
-      (* Call the POSIX 'date' program, redirected to a temp file, and parse. *)
-      let tempfile = Filename.temp_file "cpdf" "strftime" in
-      let command = Filename.quote_command "date" ~stdout:tempfile ["+%S-%M-%H-%d-%m-%Y-%w-%j"] in
-      let outcode = Sys.command command in
-      if outcode > 0 then raise (Failure "Date command returned non-zero exit code") else
-        let r = contents_of_file tempfile in
-        let get_int o l = int_of_string (String.sub r o l) in
-          Sys.remove tempfile;
-          {_tm_sec = get_int 0 2;
-           _tm_min = get_int 3 2;
-           _tm_hour = get_int 6 2;
-           _tm_mday = get_int 9 2;
-           _tm_mon = get_int 12 2 - 1;
-           _tm_year = get_int 15 4 - 1900;
-           _tm_wday = get_int 20 1;
-           _tm_yday = get_int 22 3 - 1;
-           _tm_isdst = false}
-   | "Win32" | "Cygwin" ->
-      (* Run 'wmic os get LocalDateTime' (exists on XP Pro or later, Vista or later). *)
-      let get_int r o l = int_of_string (String.sub r o l) in
-      let tempfile = Filename.temp_file "cpdf" "strftime" in
-      let command = Filename.quote_command "wmic.exe" ~stdout:tempfile ["os"; "get"; "LocalDateTime"] in
-      let outcode = Sys.command command in
-      if outcode > 0 then raise (Failure "wmic.exe os get LocalDateTime command returned non-zero exit code") else
-        let r = contents_of_file tempfile in
-        Sys.remove tempfile;
-        let r = utf8_of_utf16le r in
-      (* Run 'wmic path win32_localtime get dayofweek' (exists on XP Pro or later, Vista or later). *)
-      let tempfile = Filename.temp_file "cpdf" "strftime" in
-      let command = Filename.quote_command "wmic.exe" ~stdout:tempfile ["path"; "win32_localtime"; "get"; "dayofweek"] in
-      let outcode = Sys.command command in
-      if outcode > 0 then raise (Failure "wmic.exe path win32_localtime get dayofweek returned non-zero exit code") else
-        let r2 = contents_of_file tempfile in
-        Sys.remove tempfile;
-        let r2 = utf8_of_utf16le r2 in
-        let day = get_int r 35 2 in
-        let month = get_int r 33 2 in
-        let year = get_int r 29 4 in
-        {_tm_sec = get_int r 41 2;
-         _tm_min = get_int r 39 2;
-         _tm_hour = get_int r 37 2;
-         _tm_mday = day;
-         _tm_mon = month - 1;
-         _tm_year = year - 1900;
-         _tm_wday = get_int r2 13 1;
-         _tm_yday = year_day day month year - 1;
-         _tm_isdst = false}
-  | _ -> failwith "Unknown Sys.os_type in Cpdfstrftime.return_date" *)
-
-let current_time () =
-  try return_date () with
-    e ->
-      Pdfe.log (Printf.sprintf "Failed to retrieve time due to %s\n" (Printexc.to_string e));
-      {_tm_sec = 0;
-       _tm_min = 0;
-       _tm_hour = 0;
-       _tm_mday = 1;
-       _tm_mon = 0;
-       _tm_year = 0;
-       _tm_wday = 0;
-       _tm_yday = 0;
-       _tm_isdst = false}
 
 let strftime ?time text =
   let time =
