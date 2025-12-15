@@ -74,8 +74,7 @@ let rec mk_numbers pdf endpage lexemes =
        ilist 1 endpage
   | [Pdfgenlex.LexName "reverse"] ->
        rev (ilist 1 endpage)
-  | [Pdfgenlex.LexName "empty"] ->
-       []
+  | [] -> [] (* The empty range *)
   | toks ->
       let ranges = splitat_commas toks in
         if ranges = [toks] then raise PageSpecBadSyntax else
@@ -133,7 +132,7 @@ let resolve_pagelabels pdf spec =
     resolve_pagelabels_inner spec
 
 let rec parse_pagespec_inner endpage pdf spec =
-  let spec = if spec = "" then "all" else spec in
+  (*let spec = if spec = "" then "all" else spec in*)
   let spec = implode (resolve_pagelabels pdf (explode spec)) in
   let spec = space_string spec in
     if endpage < 1 then raise (Pdf.PDFError "This PDF file has no pages and is therefore malformed") else

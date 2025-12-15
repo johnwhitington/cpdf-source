@@ -460,7 +460,7 @@ let
   justification midline topline filename extract_text_font_size shift
   ?(raw=false) pdf
 =
-  if pages = [] then error "addtexts: empty page range" else
+  if pages = [] then pdf else
   let time = Cpdfstrftime.current_time () in
   let endpage = Pdfpage.endpage pdf in
   let ps = Pdfpage.pages_of_pagetree pdf in
