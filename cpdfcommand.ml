@@ -5349,6 +5349,7 @@ let go_withargv argv =
            let addrange pdf = AlreadyInMemory (pdf, "fromAND"), args.dashrange, "", "", ref false, None in
              args.inputs <- rev (map addrange !output_pdfs) @ rev args.inputs;
              parse_argv () s (Arg.align specs) anon_fun usage_msg;
+             args.inputs <- rev args.inputs;
              output_pdfs := [];
              go ())
          sets;
