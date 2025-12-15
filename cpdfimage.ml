@@ -279,9 +279,10 @@ let extract_images ~merge_masks ~inline ?(raw=false) ?path_to_p2p ?path_to_im en
                           end
                       | _ -> maskname := "NONE"::!maskname)
                    (rev images);
-                 iter2
-                   (fun name maskname -> if maskname <> "NONE" then combine_image_and_mask ?path_to_im name maskname stem)
-                   !name !maskname;
+                 if merge_masks then
+                   iter2
+                     (fun name maskname -> if maskname <> "NONE" then combine_image_and_mask ?path_to_im name maskname stem)
+                     !name !maskname;
                  iter (extract_images_form_xobject ~raw ?path_to_p2p ?path_to_im encoding dedup dedup_per_page pdf serial stem pnum) forms;
                  if inline then
                    begin
