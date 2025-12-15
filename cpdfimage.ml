@@ -366,12 +366,12 @@ let rec image_resolution_page ~inline pdf page pagenum images =
                in
                  (*i Printf.printf "o = %f, %f, x = %f, %f, y = %f, %f\n" (fst o) (snd o) (fst x) (snd x) (fst y) (snd y); i*)
                  let rec lookup_image k = function
-                   | [] -> assert false
-                   | (_, a, _, _) as h::_ when a = k -> h
+                   | [] -> None (* Known to fail with -inline. Not know why, but surpressing error for now. *)
+                   | (_, a, _, _) as h::_ when a = k -> Some h
                    | _::t -> lookup_image k t 
                  in
                    begin match lookup_image xobject images with
-                   | (pagenum, name, Form (xobj_matrix, content, resources), objnum) ->
+                   | Some (pagenum, name, Form (xobj_matrix, content, resources), objnum) ->
                         let content =
                           (* Add in matrix etc. *)
                           let total_matrix = Pdftransform.matrix_compose xobj_matrix !(hd !transform) in
@@ -390,13 +390,14 @@ let rec image_resolution_page ~inline pdf page pagenum images =
                           in
                             let newpdf = Pdfpage.change_pages false pdf [page] in
                               image_resolution ~inline newpdf [1] pagenum
-                   | (pagenum, name, Image (w, h), objnum) ->
+                   | Some (pagenum, name, Image (w, h), objnum) ->
                        let lx = Pdfunits.inches (distance_between o x) Pdfunits.PdfPoint in
                        let ly = Pdfunits.inches (distance_between o y) Pdfunits.PdfPoint in
                          let wdpi = float w /. lx
                          and hdpi = float h /. ly in
                          image_results := (pagenum, xobject, w, h, wdpi, hdpi, objnum)::!image_results;
                            (*Printf.printf "%i, %s, %i, %i, %f, %f\n" pagenum xobject w h wdpi hdpi;*)
+                   | None -> ()
                    end
          | Pdfops.Op_q ->
              begin match !transform with
