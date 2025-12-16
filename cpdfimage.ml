@@ -1266,9 +1266,9 @@ let recompress_1bpp_ccitt_lossless ?jbig2dec ~pixel_threshold ~length_threshold 
   let restore () = reference := old in
   let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
   let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
-  (*if w * h < pixel_threshold then (if !debug_image_processing then Printf.printf "pixel threshold not met\n%!") else*)
+  if w * h < pixel_threshold then (if !debug_image_processing then Printf.printf "pixel threshold not met\n%!") else
   let size = match Pdf.lookup_direct pdf "/Length" dict with Some (Pdf.Integer i) -> i | _ -> 0 in
-  (*if size < length_threshold then (if !debug_image_processing then Printf.printf "length threshold not met\n%!") else*)
+  if size < length_threshold then (if !debug_image_processing then Printf.printf "length threshold not met\n%!") else
     begin
       Pdfcodec.decode_pdfstream_until_unknown ?jbig2dec pdf s;
       match Pdf.lookup_direct pdf "/Filter" (fst !reference) with
@@ -1279,7 +1279,7 @@ let recompress_1bpp_ccitt_lossless ?jbig2dec ~pixel_threshold ~length_threshold 
         let data = match s with Pdf.Stream {contents = _, Pdf.Got d} -> d | _ -> assert false in
         let compressed = Pdfcodec.encode_ccitt w h data in
         let newsize = bytes_size compressed in
-          if true (*newsize < size*) then
+          if newsize < size then
             begin
               if !debug_image_processing then Printf.printf "1bpp to CCITT %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
               reference :=
@@ -1299,10 +1299,10 @@ let recompress_1bpp_ccittg4_lossless ?jbig2dec ~pixel_threshold ~length_threshol
   let restore () = reference := old in
   let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
   let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
-  (*if w <> 25 || h <> 6 then (if !debug_image_processing then Printf.printf "Debug skipping...\n%!") else*)
-  (*if w * h < pixel_threshold then (if !debug_image_processing then Printf.printf "pixel threshold not met\n%!") else*)
+  if w <> 25 || h <> 6 then (if !debug_image_processing then Printf.printf "Debug skipping...\n%!") else
+  if w * h < pixel_threshold then (if !debug_image_processing then Printf.printf "pixel threshold not met\n%!") else
   let size = match Pdf.lookup_direct pdf "/Length" dict with Some (Pdf.Integer i) -> i | _ -> 0 in
-  (*if size < length_threshold then (if !debug_image_processing then Printf.printf "length threshold not met\n%!") else*)
+  if size < length_threshold then (if !debug_image_processing then Printf.printf "length threshold not met\n%!") else
     begin
       Pdfcodec.decode_pdfstream_until_unknown ?jbig2dec pdf s;
       match Pdf.lookup_direct pdf "/Filter" (fst !reference) with
@@ -1313,7 +1313,7 @@ let recompress_1bpp_ccittg4_lossless ?jbig2dec ~pixel_threshold ~length_threshol
         let data = match s with Pdf.Stream {contents = _, Pdf.Got d} -> d | _ -> assert false in
         let compressed = Pdfcodec.encode_ccittg4 w h data in
         let newsize = bytes_size compressed in
-          if true (* newsize < size *) then
+          if newsize < size then
             begin
               if !debug_image_processing then Printf.printf "1bpp to CCITT G4 %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
               reference :=
