@@ -610,7 +610,8 @@ type args =
    mutable scale_to_fit_rotate : int;
    mutable include_data : bool;
    mutable inline : bool;
-   mutable merge_masks : bool}
+   mutable merge_masks : bool;
+   mutable process_images_force : bool}
 
 let args =
   {op = None;
@@ -769,7 +770,8 @@ let args =
    scale_to_fit_rotate = 0;
    include_data = false;
    inline = false;
-   merge_masks = false}
+   merge_masks = false;
+   process_images_force = false}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -913,7 +915,8 @@ let reset_arguments () =
   args.scale_to_fit_rotate <- 0;
   args.include_data <- false;
   args.inline <- false;
-  args.merge_masks <- false
+  args.merge_masks <- false;
+  args.process_images_force <- false
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -2938,6 +2941,9 @@ let specs =
    ("-process-images-info",
      Arg.Unit setprocessimagesinfo,
      " Show info when processing images");
+   ("-process-images-force",
+     Arg.Unit (fun () -> args.process_images_force <- true),
+     " Force reprocessing even when size increases");
    ("-jbig2enc",
      Arg.String setjbig2encpath,
      " Path to jbig2enc executable");
@@ -5122,6 +5128,7 @@ let rec go () =
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
         Cpdfimage.process
+          ~force:args.process_images_force
           ~q:args.jpegquality ~qlossless:args.jpegqualitylossless ~qlossless2000:args.jpeg2000qualitylossless
           ~onebppmethod:args.onebppmethod ~jbig2_lossy_threshold:args.jbig2_lossy_threshold
           ~length_threshold:args.length_threshold ~percentage_threshold:args.percentage_threshold ~pixel_threshold:args.pixel_threshold 
