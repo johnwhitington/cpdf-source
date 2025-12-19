@@ -1261,6 +1261,7 @@ let jpeg2000_to_jpeg2000_wrapper objnum pdf ~force ~target_dpi_info ~pixel_thres
     with
       Not_found -> if !debug_image_processing then Printf.printf "Warning: orphaned image, skipping\n" (* Could not find DPI data - an orphan image. *)
 
+
 let recompress_1bpp_ccitt_lossless ?jbig2dec ~force ~pixel_threshold ~length_threshold pdf s dict reference =
   let old = !reference in
   let restore () = reference := old in
@@ -1329,6 +1330,7 @@ let recompress_1bpp_ccittg4_lossless ?jbig2dec ~force ~pixel_threshold ~length_t
     end
 
 let recompress_1bpp_jbig2_lossless ?jbig2dec ~force ~pixel_threshold ~length_threshold ~path_to_jbig2enc pdf s dict reference =
+  (* Small bug: if the lossless comes out larger than the lossy, and force is not in use, restore () will not restore the previous encoding: it will end up flated when the PDF is written. *)
   complain_jbig2enc path_to_jbig2enc;
   let old = !reference in
   let restore () = reference := old in
@@ -1580,17 +1582,23 @@ let process
               | "JBIG2" ->
                   begin
                     if !debug_image_processing then Printf.printf "(%i/%i) Object %i (1bpp)... %!" !ndone nobjects objnum;
-                    recompress_1bpp_jbig2_lossless ?jbig2dec ~force ~pixel_threshold ~length_threshold ~path_to_jbig2enc pdf s dict reference
+                    (* For now, for this and all 1bpp, force is always set to true. This is because
+                    restore () can't restore the old compression, and things would end up
+                    flated, which is worse than unchanged. In any event, it fits in well with
+                    the behaviour of the jbig2lossy pre-processor, which always forces. TODO: In
+                    the case of malformed or odd files where the decoding fails restore still isn't
+                    good enough. But we don't have an example yet. *)
+                    recompress_1bpp_jbig2_lossless ?jbig2dec ~force:true ~pixel_threshold ~length_threshold ~path_to_jbig2enc pdf s dict reference
                   end
               | "CCITT" ->
                   begin
                     if !debug_image_processing then Printf.printf "(%i/%i) Object %i (1bpp)... %!" !ndone nobjects objnum;
-                    recompress_1bpp_ccitt_lossless ?jbig2dec ~force ~pixel_threshold ~length_threshold pdf s dict reference
+                    recompress_1bpp_ccitt_lossless ?jbig2dec ~force:true ~pixel_threshold ~length_threshold pdf s dict reference
                   end
               | "CCITTG4" ->
                   begin
                     if !debug_image_processing then Printf.printf "(%i/%i) Object %i (1bpp)... %!" !ndone nobjects objnum;
-                    recompress_1bpp_ccittg4_lossless ?jbig2dec ~force ~pixel_threshold ~length_threshold pdf s dict reference
+                    recompress_1bpp_ccittg4_lossless ?jbig2dec ~force:true ~pixel_threshold ~length_threshold pdf s dict reference
                   end
               | "JBIG2Lossy" -> ()
               | "None" -> ()
