@@ -18,6 +18,7 @@ o Extract a single image with -extract-single-image
 Extended features:
 
 o CCITT and CCITTG4 encoders in -process-images
+o Force image processing even when image larger
 o -thinlines can ensure maximum as well as minimum thickness
 o New -decompress-just-content for easier content stream debugging
 o -squeeze processes xobjects inside xobjects
