@@ -1295,12 +1295,12 @@ let recompress_1bpp_ccitt_lossless ?jbig2dec ~force ~pixel_threshold ~length_thr
              if !debug_image_processing then Printf.printf "no size reduction\n%!"
     end
 
-let recompress_1bpp_ccittg4_lossless ?jbig2dec ~force ~pixel_threshold ~length_threshold pdf s dict reference =
+let recompress_1bpp_ccittg4_lossless ~im ?jbig2dec ~force ~pixel_threshold ~length_threshold pdf s dict reference =
   let old = !reference in
   let restore () = reference := old in
   let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
   let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
-  if w <> 25 || h <> 6 then (if !debug_image_processing then Printf.printf "Debug skipping...\n%!") else
+  (*if w <> 25 || h <> 6 then (if !debug_image_processing then Printf.printf "Debug skipping...\n%!") else*)
   if w * h < pixel_threshold then (if !debug_image_processing then Printf.printf "pixel threshold not met\n%!") else
   let size = match Pdf.lookup_direct pdf "/Length" dict with Some (Pdf.Integer i) -> i | _ -> 0 in
   if size < length_threshold then (if !debug_image_processing then Printf.printf "length threshold not met\n%!") else
@@ -1312,7 +1312,7 @@ let recompress_1bpp_ccittg4_lossless ?jbig2dec ~force ~pixel_threshold ~length_t
           restore ()
       | None ->
         let data = match s with Pdf.Stream {contents = _, Pdf.Got d} -> d | _ -> assert false in
-        let compressed = Pdfcodec.encode_ccittg4 w h data in
+        let compressed = Pdfcodec.encode_ccittg4 ~im w h data in
         let newsize = bytes_size compressed in
           if newsize < size || force then
             begin
@@ -1522,7 +1522,7 @@ let lossless_to_jpeg2000 objnum pdf ~force ~pixel_threshold ~length_threshold ~p
   remove out2
 
 let process
-  ~force ~q ~qlossless ~qlossless2000 ~onebppmethod ~jbig2_lossy_threshold ~length_threshold ~percentage_threshold ~pixel_threshold ~dpi_threshold
+  ~im ~force ~q ~qlossless ~qlossless2000 ~onebppmethod ~jbig2_lossy_threshold ~length_threshold ~percentage_threshold ~pixel_threshold ~dpi_threshold
   ~factor ~interpolate ~jpeg_to_jpeg_scale ~jpeg_to_jpeg_dpi ~path_to_jbig2dec ~path_to_jbig2enc ~path_to_convert range pdf
 =
   let inrange =
@@ -1598,7 +1598,7 @@ let process
               | "CCITTG4" ->
                   begin
                     if !debug_image_processing then Printf.printf "(%i/%i) Object %i (1bpp)... %!" !ndone nobjects objnum;
-                    recompress_1bpp_ccittg4_lossless ?jbig2dec ~force:true ~pixel_threshold ~length_threshold pdf s dict reference
+                    recompress_1bpp_ccittg4_lossless ~im ?jbig2dec ~force:true ~pixel_threshold ~length_threshold pdf s dict reference
                   end
               | "JBIG2Lossy" -> ()
               | "None" -> ()

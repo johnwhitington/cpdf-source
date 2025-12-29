@@ -5128,7 +5128,7 @@ let rec go () =
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
         Cpdfimage.process
-          ~force:args.process_images_force
+          ~im:args.path_to_im ~force:args.process_images_force
           ~q:args.jpegquality ~qlossless:args.jpegqualitylossless ~qlossless2000:args.jpeg2000qualitylossless
           ~onebppmethod:args.onebppmethod ~jbig2_lossy_threshold:args.jbig2_lossy_threshold
           ~length_threshold:args.length_threshold ~percentage_threshold:args.percentage_threshold ~pixel_threshold:args.pixel_threshold 
