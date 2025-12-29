@@ -338,9 +338,11 @@ let change_boxes f pdf page =
                Pdfpage.rest = rest'}
 
 let shift_boxes dxdylist pdf range =
-  let dx, dy = match dxdylist with (a, b)::_ -> a, b | _ -> 0.0, 0.0 in
-  let f (xmin, ymin, xmax, ymax) = (xmin +. dx, ymin +. dy, xmax +. dx, ymax +. dy) in
-  let fpage _ p = change_boxes f pdf p in
+  let fpage pnum p =
+    let dx, dy = List.nth dxdylist (pnum - 1) in
+    let f (xmin, ymin, xmax, ymax) = (xmin +. dx, ymin +. dy, xmax +. dx, ymax +. dy) in
+      change_boxes f pdf p
+  in
     process_pages (Pdfpage.ppstub fpage) pdf range
 
 (* Scale contents *)
