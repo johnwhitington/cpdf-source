@@ -4149,6 +4149,7 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 
 \vspace{1.5mm}
 \noindent\small\verb!cpdf -process-images [-process-images-info] in.pdf [<range>]!\\
+\noindent\small\verb!     [-process-images-force]!\\
 \noindent\small\verb!     [-im <filename>] [-jbig2enc <filename>]!\\
 \noindent\small\verb!     [-lossless-resample[-dpi] <n> | -lossless-to-jpeg <n>]!\\
 \noindent\small\verb!     [-jpeg-to-jpeg <n>] [-jpeg-to-jpeg-scale <n>]!\\
@@ -4369,7 +4370,9 @@ Option & Effect & Default value\\\hline
 \end{tabular}
 \bigskip
 
-\noindent We may pick JPEG2000 compression instead of JPEG compression by choosing the option \texttt{-lossless-to-jpeg2000} instead of \texttt{-lossless-to-jpeg} or \texttt{-jpeg2000-to-jpeg2000} instead of \texttt{-jpeg-to-jpeg} or both.
+\noindent The \texttt{-process-images-force} option will process the image even if the resulting image requires more storage than the original.
+
+We may pick JPEG2000 compression instead of JPEG compression by choosing the option \texttt{-lossless-to-jpeg2000} instead of \texttt{-lossless-to-jpeg} or \texttt{-jpeg2000-to-jpeg2000} instead of \texttt{-jpeg-to-jpeg} or both.
 
 Instead of compressing lossless images with lossy JPEG or JPEG2000 compression, we can resample losslessly:
 
@@ -4410,7 +4413,7 @@ Method & Effect\\\hline
 \end{tabular}
 \bigskip
 
-\noindent The JBIG2 options require the \texttt{jbig2enc} program, whose location may be specified with \texttt{-jbig2enc}. For lossy JBIG2, the threshold for similarity of data may be set with \texttt{-jbig2-lossy-threshold}. For example:
+\noindent The JBIG2 options require the \texttt{jbig2enc} program, whose location may be specified with \texttt{-jbig2enc}. For lossy JBIG2, the threshold for similarity of data may be set with\\ \texttt{-jbig2-lossy-threshold}. For example:
 
   \begin{framed}
   \noindent\small\verb!cpdf -process-images -jbig2enc jbig2enc -1bpp-method JBIG2Lossy!\\
