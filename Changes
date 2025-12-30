@@ -2,6 +2,8 @@
 
 New features:
 
+o Cpdf now has a man page, which abbreviates cpdfmanual.pdf
+o More sensible -help (current -help moved to -summary)
 o Detect and remove JavaScript
 o Show progress on long files
 o Create PDF portfolios
