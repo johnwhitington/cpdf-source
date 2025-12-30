@@ -68,7 +68,7 @@ Command Line Tools}
 \vspace{12mm}
 
 {\Huge User Manual}\\
-Version 2.8.1 (April 2025)
+Version 2.9 (February 2026)
 
 \vspace{25mm}
 
@@ -842,7 +842,10 @@ at least five pages.
 
   \end{framed}
 
-\noindent If the file has a structure tree (a.k.a Tagged PDF), it will be preserved whole. To trim the structure tree to only include the output pages, and so save space, add \texttt{-process-struct-trees} to the command line.
+
+\noindent Page ranges may refer to non-existent pages, except in the case where a PDF file with no pages would be produced - such a file is invalid.
+
+If the file has a structure tree (a.k.a Tagged PDF), it will be preserved whole. To trim the structure tree to only include the output pages, and so save space, add \texttt{-process-struct-trees} to the command line.
 
 \index{decryption}
   \section{Working with Encrypted Documents}
@@ -4401,16 +4404,20 @@ Instead of compressing lossless images with lossy JPEG or JPEG2000 compression, 
 \begin{tabular}{lp{10cm}l}
 Method & Effect\\\hline
 {\small\texttt{JBIG2}} & Lossless JBIG2 \\
-{\small\texttt{JBIG2Lossy}} & Lossy JBIG2, sharing JBIG2Globals data amongst all images.
+{\small\texttt{JBIG2Lossy}} & Lossy JBIG2, sharing JBIG2Globals data amongst all images.\\
+{\small\texttt{CCITTG4}} & CCITT Group 4 fax, the best non-JBIG2 option.\\
+{\small\texttt{CCITTG3}} & CCITT Group 3, obsolete.
 \end{tabular}
 \bigskip
 
-\noindent These options require the \texttt{jbig2enc} program, whose location may be specified with \texttt{-jbig2enc}. For lossy JBIG2, the threshold for similarity of data may be set with \texttt{-jbig2-lossy-threshold}. For example:
+\noindent The JBIG2 options require the \texttt{jbig2enc} program, whose location may be specified with \texttt{-jbig2enc}. For lossy JBIG2, the threshold for similarity of data may be set with \texttt{-jbig2-lossy-threshold}. For example:
 
   \begin{framed}
   \noindent\small\verb!cpdf -process-images -jbig2enc jbig2enc -1bpp-method JBIG2Lossy!\\
   \noindent\small\verb!     -jbig2-lossy-threshold 75 in.pdf -o out.pdf!
   \end{framed}
+
+\noindent The \texttt{-process-images-force} option is always on when processing 1bpp images, though for true forcing the length and pixel thresholds must also be removed.
 
 \section{Rasterization (PDF to image conversion)}
 
