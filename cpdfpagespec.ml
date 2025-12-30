@@ -186,7 +186,12 @@ let rec parse_pagespec_inner endpage pdf spec =
       in
         if numbers = [] then Pdfe.log "Warning: empty page range\n";
         let numbers' = lose (fun n -> n <= 0 || n > endpage) numbers in
-          if length numbers' <> length numbers then Pdfe.log "Warning: page range contains nonexistant pages\n";
+          if length numbers' <> length numbers then
+            begin
+              Pdfe.log "Warning: page range contains nonexistant pages: ";
+              iter (fun x -> Pdfe.log (string_of_int x ^ " ")) (keep (fun n -> n <= 0 || n > endpage) numbers);
+              Pdfe.log "\n"
+            end;
           numbers'
 
 let parse_pagespec pdf spec =
