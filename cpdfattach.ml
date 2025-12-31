@@ -298,13 +298,14 @@ let dump_attachment out pdf (_, embeddedfile) =
         end
       in
         let s = remove_unsafe_characters (Pdftext.utf8_of_pdfdocstring s) in
-        let filename = if out = "" then Filename.quote s else out ^ Filename.dir_sep ^ Filename.quote s in
+        let filename = if out = "" then s else out ^ Filename.dir_sep ^ s in
+        Printf.printf "filename = |%s|\n" filename;
         begin try
           let fh = open_out_bin filename in
             for x = 0 to bytes_size efdata - 1 do output_byte fh (bget efdata x) done;
             close_out fh
         with
-          e -> Pdfe.log (Printf.sprintf "Failed to write attachment to %s\n" filename);
+          e -> Pdfe.log (Printf.sprintf "Failed to write attachment to %s (%s)\n" filename (Printexc.to_string e));
         end
   | _ -> ()
 
