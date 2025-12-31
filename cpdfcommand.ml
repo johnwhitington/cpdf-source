@@ -2,7 +2,7 @@
 let agpl = true
 let major_version = 2
 let minor_version = 9
-let minor_minor_version = 1
+let minor_minor_version = 0
 let version_date = "beta, 30th December 2025"
 
 open Pdfutil
