@@ -1458,9 +1458,10 @@ Merge soft masks with their images when extracting.
 Extract a single image, given its object number.
 Other flags as above.
 .PP
-\f[B]cpdf \-process\-images\f[R] \f[B]in.pdf\f[R]
-[\-process\-images\-info] [<range>] [\-im <filename>] [\-jbig2enc
-<filename>] [\-lossless\-resample[\-dpi] <n> | \-lossless\-to\-jpeg <n>]
+\f[B]cpdf \-process\-images\f[R] \f[B]in.pdf\f[R] [<range>]
+[\-process\-images\-info] [\-process\-images\-force] [\-im <filename>]
+[\-jbig2enc <filename>] [\-jbig2dec <filename>]
+[\-lossless\-resample[\-dpi] <n> | \-lossless\-to\-jpeg <n>]
 [\-jpeg\-to\-jpeg <n>] [\-jpeg\-to\-jpeg\-scale <n>]
 [\-lossless\-to\-jpeg2000 <n>] [\-jpeg2000\-to\-jpeg2000 <n>]
 [\-jpeg\-to\-jpeg\-dpi <n>] [\-1bpp\-method <method>]
@@ -1474,11 +1475,17 @@ For a full commentary, see cpdfmanual.pdf.
 \f[B]\-process\-images\-info\f[R]
 Show the work being done.
 .TP
+\f[B]\-process\-images\-force\f[R]
+Process image even when size would increase.
+.TP
 \f[B]\-im\f[R] <path>
 Supply path to ImageMagick.
 .TP
 \f[B]\-jbig2enc\f[R] <path>
 Supply path to jbig2enc.
+.TP
+\f[B]\-jbig2enc\f[R] <path>
+Supply path to jbig2dec.
 .TP
 \f[B]\-lossless\-resample\f[R] <n>
 Resample lossless images to the given percentage scale.
@@ -1506,7 +1513,8 @@ Reprocess JPEG 2000 images to the given quality level.
 .TP
 \f[B]\-1bpp\-method\f[R] <1bppmethod>
 Specify method for 1bpp images.
-One of \f[B]JBIG2Lossy\f[R], \f[B]JBIG2Lossless\f[R].
+One of \f[B]JBIG2Lossy\f[R], \f[B]JBIG2Lossless\f[R], \f[B]CCITT\f[R],
+\f[B]CCITTG4\f[R].
 .TP
 \f[B]\-jbig2\-lossy\-threshold\f[R] <n>
 Set the threshold for lossy JBIG2 compression.

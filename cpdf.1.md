@@ -1517,13 +1517,14 @@ Other images are written as PNGs, processed with ImageMagick.
 
 Extract a single image, given its object number. Other flags as above.
 
-**cpdf -process-images** **in.pdf** \[-process-images-info] \[\<range>] \[-im
-\<filename>] [-jbig2enc \<filename>] [-lossless-resample[-dpi] \<n> |
--lossless-to-jpeg \<n>] \[-jpeg-to-jpeg \<n>] \[-jpeg-to-jpeg-scale \<n>]
-\[-lossless-to-jpeg2000 \<n>] \[-jpeg2000-to-jpeg2000 \<n>] \[-jpeg-to-jpeg-dpi
-\<n>] \[-1bpp-method \<method>] \[-jbig2-lossy-threshold \<n>]
-\[-pixel-threshold \<n>] \[-length-threshold \<n>] \[-percentage-threshold
-\<n>] \[-dpi-threshold \<n>] \[-resample-interpolate] **-o out.pdf**
+**cpdf -process-images** **in.pdf** \[\<range>] \[-process-images-info]
+\[-process-images-force] \[-im \<filename>] [-jbig2enc \<filename>] \[-jbig2dec
+\<filename>] [-lossless-resample[-dpi] \<n> | -lossless-to-jpeg \<n>]
+\[-jpeg-to-jpeg \<n>] \[-jpeg-to-jpeg-scale \<n>] \[-lossless-to-jpeg2000 \<n>]
+\[-jpeg2000-to-jpeg2000 \<n>] \[-jpeg-to-jpeg-dpi \<n>] \[-1bpp-method
+\<method>] \[-jbig2-lossy-threshold \<n>] \[-pixel-threshold \<n>]
+\[-length-threshold \<n>] \[-percentage-threshold \<n>] \[-dpi-threshold \<n>]
+\[-resample-interpolate] **-o out.pdf**
 
 Re-process existing images within the PDF, typically to reduce size. For a
 full commentary, see cpdfmanual.pdf.
@@ -1532,6 +1533,10 @@ full commentary, see cpdfmanual.pdf.
 
 : Show the work being done.
 
+**-process-images-force**
+
+: Process image even when size would increase.
+
 **-im** \<path>
 
 : Supply path to ImageMagick.
@@ -1539,6 +1544,10 @@ full commentary, see cpdfmanual.pdf.
 **-jbig2enc** \<path>
 
 : Supply path to jbig2enc.
+
+**-jbig2enc** \<path>
+
+: Supply path to jbig2dec.
 
 **-lossless-resample** \<n>
 
@@ -1574,7 +1583,7 @@ full commentary, see cpdfmanual.pdf.
 
 **-1bpp-method** \<1bppmethod>
 
-: Specify method for 1bpp images. One of **JBIG2Lossy**, **JBIG2Lossless**.
+: Specify method for 1bpp images. One of **JBIG2Lossy**, **JBIG2Lossless**, **CCITT**, **CCITTG4**.
 
 **-jbig2-lossy-threshold** \<n>
 
