@@ -2104,7 +2104,7 @@ When appropriate passwords are not available, the option \texttt{-decrypt-force}
 \chapter{Compression}\label{chap:5}
 
   \begin{framed}
-     \small\noindent\verb!cpdf -decompress [-just-content] in.pdf -o out.pdf!
+     \small\noindent\verb!cpdf -decompress [-just-content] [-jbig2dec <path>] in.pdf -o out.pdf!
 
      \vspace{1.5mm}
      \noindent\verb!cpdf -compress in.pdf -o out.pdf!
@@ -2133,7 +2133,11 @@ PDF, use:
 
   \noindent If Cpdf finds a compression type it can't cope with, the stream is left compressed. To decompress only page content streams, add \texttt{-just-content}.
 
-When using \texttt{-decompress}, object streams are not removed. It may be easier for manual inspection to also remove object streams, by adding the \texttt{-no-preserve-objstm} option to the command.   \section{Compressing a Document}
+When using \texttt{-decompress}, object streams are not removed. It may be easier for manual inspection to also remove object streams, by adding the \texttt{-no-preserve-objstm} option to the command.
+
+To decompress JBIG2-compressed streams Cpdf needs the help of the external \texttt{jbig2dec} program. Use \texttt{-jbig2dec} to specify it, or leave it unspecified to leave these streams compressed.
+
+\section{Compressing a Document}
 \index{compressing}
   To compress the streams in a PDF file, use:
 
@@ -4150,7 +4154,7 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 \vspace{1.5mm}
 \noindent\small\verb!cpdf -process-images [-process-images-info] in.pdf [<range>]!\\
 \noindent\small\verb!     [-process-images-force]!\\
-\noindent\small\verb!     [-im <filename>] [-jbig2enc <filename>]!\\
+\noindent\small\verb!     [-im <path>] [-jbig2enc <path>] [-jbig2dec <path>]!\\
 \noindent\small\verb!     [-lossless-resample[-dpi] <n> | -lossless-to-jpeg <n>]!\\
 \noindent\small\verb!     [-jpeg-to-jpeg <n>] [-jpeg-to-jpeg-scale <n>]!\\
 \noindent\small\verb!     [-lossless-to-jpeg2000 <n>] [-jpeg2000-to-jpeg2000 <n>]!\\
@@ -4413,7 +4417,9 @@ Method & Effect\\\hline
 \end{tabular}
 \bigskip
 
-\noindent The JBIG2 options require the \texttt{jbig2enc} program, whose location may be specified with \texttt{-jbig2enc}. For lossy JBIG2, the threshold for similarity of data may be set with\\ \texttt{-jbig2-lossy-threshold}. For example:
+\noindent The JBIG2 options always require the \texttt{jbig2enc} program, whose location may be specified with \texttt{-jbig2enc}. To convert from any JBIG2 compression type to any other JBIG2 or non-JBIG2 compression type in addition requires the \texttt{jbig2dec} program which may be specified with \texttt{-jbig2dec}.
+
+For lossy JBIG2, the threshold for similarity of data may be set with\\ \texttt{-jbig2-lossy-threshold}. For example:
 
   \begin{framed}
   \noindent\small\verb!cpdf -process-images -jbig2enc jbig2enc -1bpp-method JBIG2Lossy!\\

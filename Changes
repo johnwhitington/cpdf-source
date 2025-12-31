@@ -22,13 +22,13 @@ Extended features:
 o CCITT and CCITTG4 encoders in -process-images
 o Force image processing even when image larger
 o -thinlines can ensure maximum as well as minimum thickness
-o New -decompress-just-content for easier content stream debugging
+o New -just-content for easier content stream debugging
 o -squeeze processes xobjects inside xobjects
 o Speed increases for -squeeze on huge files
 o Select only such pages as are annotated
 o Allow -create-pdf and friends to appear in middle of AND
 o -draw can use JPEG2000s
-o New -list-attached-files-json optionally including file data
+o New -list-attached-files -json optionally including file data
 o List and add descriptions and relationships for attachments
 o Process lossless CMYK images
 o Use 8bpp Alpha PNGs with -rasterize, -output-image, -png and when drawing
