@@ -2,7 +2,7 @@
 let agpl = true
 let major_version = 2
 let minor_version = 9
-let minor_minor_version = 0
+let minor_minor_version = 1
 let version_date = "beta, 30th December 2025"
 
 open Pdfutil
@@ -3220,7 +3220,7 @@ let empty_specs =
 
 let usage_msg =
 "Syntax: cpdf [<operation>] <input files> [-o <output file>]\n\n\
-Copyright Coherent Graphics Ltd. Version " ^ (if agpl then "AGPLv3-licensed " else "") ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ "." ^ string_of_int minor_minor_version ^ " " ^ version_date ^ "\n\n\
+Copyright Coherent Graphics Ltd. Version " ^ (if agpl then "AGPLv3-licensed " else "") ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ (if minor_minor_version > 0 then "." ^ string_of_int minor_minor_version else "") ^ " " ^ version_date ^ "\n\n\
 https://www.coherentpdf.com/\n\n\
 Full manual: https://www.coherentpdf.com/cpdfmanual.pdf\n\n\
 For man page, where available, type 'man cpdf' at command line.\n\n\
