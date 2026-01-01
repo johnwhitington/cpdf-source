@@ -1,6 +1,6 @@
 % CPDF(1)
-% John Whitington
-% November 2025
+% Coherent Graphics Ltd
+% February 2026
 
 # NAME
 

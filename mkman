@@ -1,3 +1,3 @@
 #groff -m mandoc -Thtml ./cpdf.1 > ~/Desktop/cpdf.html
-#pandoc --standalone --to html cpdf.1.md -o ~/Desktop/cpdf.html
+pandoc --standalone --to html cpdf.1.md -o cpdf.html
 pandoc --standalone --to man cpdf.1.md -o cpdf.1
