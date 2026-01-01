@@ -79,6 +79,9 @@ page size given by (x, y) and by the [input_scale] (e.g 1.0 = scale to fit, 0.9
 = scale to fit leaving a border etc.). [op] is unused. *) 
 val scale_to_fit_pdf : ?fast:bool -> Cpdfposition.position -> float -> (float * float) list -> 'a -> Pdf.t -> int list -> Pdf.t
 
+(** [scale_to_fit_rotate fast pagesizelist rotatation pdf range] is like
+    scale_to_fit, but will rotate any page by 90 or -90 if doing so would
+    increase its scale. *)
 val scale_to_fit_rotate : ?fast:bool -> (float * float) list -> int -> Pdf.t -> int list -> Pdf.t
 
 (** [stretch fast pagesizes pdf range] stretches content to fit the given page size without regard to aspect ratio. *) 

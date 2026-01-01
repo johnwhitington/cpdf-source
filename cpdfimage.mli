@@ -1,6 +1,6 @@
 (** Images *)
 
-(** Print info when processing image *)
+(** Print info when processing image. *)
 val debug_image_processing : bool ref
 
 (** Extract images. *)
@@ -16,13 +16,13 @@ val extract_single_image :
 (** Report image resolutions. *)        
 val image_resolution : inline:bool -> Pdf.t -> int list -> float -> (int * string * int * int * float * float * int) list
 
-(** Report image resolution data in JSON format *)
+(** Report image resolution data in JSON format. *)
 val image_resolution_json : inline:bool -> Pdf.t -> int list -> float -> Pdfio.bytes
 
-(** List images in JSON format *)
+(** List images in JSON format. *)
 val images : inline:bool -> Pdf.t -> int list -> Cpdfyojson.Safe.t
 
-(** Reprocess images. See manual for details. *)
+(** Reprocess images. See cpdfmanual.pdf for details. *)
 val process :
   im:string -> force:bool -> q:float -> qlossless:float -> qlossless2000:float -> onebppmethod:string -> jbig2_lossy_threshold:float ->
   length_threshold:int -> percentage_threshold:float -> pixel_threshold:int ->

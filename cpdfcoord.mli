@@ -14,6 +14,7 @@ val parse_coordinate : Pdf.t -> string -> float * float
 (** Read a list of coordinates from a string *)
 val parse_coordinates : Pdf.t -> string -> (float * float) list
 
+(** Parse some numbers from a string, converting their units e.g "16mm 12pt". *)
 val parse_units_string : Pdf.t -> Pdfpage.t -> string -> float list
 
 (** Read a single number from a string *)
