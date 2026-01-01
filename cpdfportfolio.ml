@@ -1,7 +1,7 @@
 open Pdfutil
 open Pdfio
 
-type entry =
+type t =
   {filename : string;
    relationship : string option;
    description : string option}

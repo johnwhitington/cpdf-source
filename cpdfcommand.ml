@@ -113,8 +113,6 @@ type op =
   | ListAnnotations
   | CopyAnnotations of string
   | SetAnnotations of string
-  | ExtractForm
-  | ReplaceForm of string
   | Merge
   | Split
   | SplitOnBookmarks of int
@@ -407,8 +405,6 @@ let string_of_op = function
   | Rasterize -> "Rasterize"
   | OutputImage -> "OutputImage"
   | RemoveObj _ -> "RemoveObj"
-  | ExtractForm -> "ExtractForm"
-  | ReplaceForm _ -> "ReplaceForm"
   | ContainsJavaScript -> "ContainsJavaScript"
   | RemoveJavaScript -> "RemoveJavaScript"
   | Portfolio -> "Portfolio"
@@ -606,7 +602,7 @@ type args =
    mutable dot_leader : bool;
    mutable preserve_actions : bool;
    mutable decompress_just_content : bool;
-   mutable portfolio_files : Cpdfportfolio.entry list;
+   mutable portfolio_files : Cpdfportfolio.t list;
    mutable scale_to_fit_rotate : int;
    mutable include_data : bool;
    mutable inline : bool;
@@ -1019,7 +1015,7 @@ let banned banlist = function
   | OCGRename | OCGList | OCGOrderAll | PrintFontEncoding _ | TableOfContents | Typeset _ | Composition _
   | TextWidth _ | SetAnnotations _ | CopyAnnotations _ | ExtractStream _ | ReplaceStream _ | PrintObj _ | ReplaceObj _ | RemoveObj _
   | Verify _ | MarkAs _ | RemoveMark _ | ExtractStructTree | ReplaceStructTree _ | SetLanguage _
-  | PrintStructTree | Rasterize | OutputImage | RemoveStructTree | MarkAsArtifact | ExtractForm | ReplaceForm _
+  | PrintStructTree | Rasterize | OutputImage | RemoveStructTree | MarkAsArtifact
   | ContainsJavaScript | RemoveJavaScript | RemoveArticleThreads | RemovePagePiece | RemoveOutputIntents
   | RemoveWebCapture | RemoveProcsets | ExtractMetadata | Summary -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
@@ -5220,13 +5216,6 @@ let rec go () =
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
         write_images args.rast_device args.rast_res args.rast_jpeg_quality args.tobox args.rast_annots args.rast_antialias args.rast_downsample spec pdf range
-  | Some ExtractForm ->
-      let pdf = get_single_pdf args.op false in
-        Cpdfform.extract_form pdf
-  | Some (ReplaceForm filename) ->
-      let pdf = get_single_pdf args.op false in
-        Cpdfform.replace_form filename pdf;
-        write_pdf false pdf
   | Some RemoveJavaScript ->
       let pdf = get_single_pdf args.op false in
         Cpdfjs.remove_javascript pdf;
