@@ -3215,11 +3215,12 @@ let empty_specs =
   map (fun (a, b, c) -> (a, b, "")) specs
 
 let usage_msg =
-"Syntax: cpdf [<operation>] <input files> [-o <output file>]\n\n\
+"Syntax: cpdf [<operation>] [<input files>] [-o <output file>]\n\n\
 Copyright Coherent Graphics Ltd. Version " ^ (if agpl then "AGPLv3-licensed " else "") ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ (if minor_minor_version > 0 then "." ^ string_of_int minor_minor_version else "") ^ " " ^ version_date ^ "\n\n\
 https://www.coherentpdf.com/\n\n\
 Full manual: https://www.coherentpdf.com/cpdfmanual.pdf\n\n\
-For man page, where available, type 'man cpdf' at command line.\n\n\
+For man page, where available, type 'man cpdf' at command line.\n\
+Or online at https://www.coherentpdf.com/cpdf.1.html\n\n\
 For summary of command line arguments type 'cpdf -summary'."
 
 (* Reading and writing *)
