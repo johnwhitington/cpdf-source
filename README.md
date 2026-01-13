@@ -1,6 +1,8 @@
 Coherent PDF Command Line Tools
 ===============================
 
+(If you are looking for binaries, there are here: https://www.github.com/coherentgraphics/cpdf-binaries )
+
 CPDF is distributed under the AGPL - see LICENSE.md. If you are unable to abide
 by the terms of the AGPL, you will need a commercial license.
 
@@ -9,6 +11,10 @@ For commercial licenses, email
 visit [https://www.coherentpdf.com/](https://www.coherentpdf.com/)
 
 Copyright Coherent Graphics Ltd 2025.
+
+Keep up to date by joining the very low volume cpdf-announce mailin list:
+
+https://groups.google.com/g/cpdf-announce/
 
 This code builds two things:
 
