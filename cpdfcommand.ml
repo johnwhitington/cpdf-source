@@ -3209,6 +3209,8 @@ let specs =
    ("-extract-text-font-size", Arg.Float setextracttextfontsize, "");
   ]
 
+let specs = sort compare specs
+
 let empty_specs =
   ("-help", Arg.Unit (fun () -> ()), "")::
   ("--help", Arg.Unit (fun () -> ()), "")::

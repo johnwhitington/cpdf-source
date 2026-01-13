@@ -1368,7 +1368,7 @@ A PDF portfolio is a special kind of PDF with contains other documents (PDF and 
     \noindent\verb!cpdf -create-pdf AND -portfolio -pf one.pdf -pf two.jpeg -o out.pdf!
 
     \vspace{2.5mm}
-    \noindent Build a PDF portfolio with two files: \texttt{out.pdf} and \texttt{two.jpeg}, writing to \texttt{out.pdf}.
+    \noindent Build a PDF portfolio with two files: \texttt{one.pdf} and \texttt{two.jpeg}, writing to \texttt{out.pdf}.
   \end{framed}
 
 \noindent When opened in a supporting PDF viewer, such as Adobe Reader, a navigation pane is shown, allowing each file to be viewed. There are two columns of interest: the Description and the Relationship. By default, Cpdf uses the file name for the description, and "Unspecified" for the Relationship. We can specify the description by adding \texttt{-pfd "The description"} after the relevant \texttt{-pf}, and the relationship by adding \texttt{-pfr RelationshipName}.
@@ -2383,7 +2383,7 @@ Bookmarks in JSON format (see above) may be added with \texttt{-add-bookmarks-js
 
 \noindent Remember that strings in JSON bookmark files are in UTF8.
 
-Note that, if \texttt{-preserve-actions} is used with \texttt{-list-bookmarks-json}, it will no be feasible to use \texttt{-add-bookmarks-json} to add these bookmarks to a different or modified file. They may be round-tripped to the same, unmodified file, of course.
+Note that, if \texttt{-preserve-actions} is used with \texttt{-list-bookmarks-json}, it will not be feasible to use \texttt{-add-bookmarks-json} to add these bookmarks to a different or modified file. They may be round-tripped to the same, unmodified file, of course.
 
 \section{Opening bookmarks}
 \index{bookmarks!opening at level}
