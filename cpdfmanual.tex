@@ -695,16 +695,18 @@ coherentpdf.deletePdf(merged);
   \begin{framed}
   \small
 \noindent\begin{verbatim}
--help                   --help                   -version 
+-help / --help          -summary                 -version
 -o                      -i                       -idir <directory>
--recrypt                -decrypt-force           -stdout
--stdin                  -stdin-user <password>   -stdin-owner <password>  
--producer <text>        -creator <text>          -change-id
+-idir-only-pdfs         -range                   -recrypt                
+-decrypt-force          -stdout                  -stdin
+-stdin-user <password>  -stdin-owner <password>  -producer <text>        
+-creator <text>         -keep-version            -change-id
 -l                      -cpdflin <filename>      -keep-l
 -no-preserve-objstm     -create-objstm           -args <filename>
 -args-json <filename>   -utf8                    -stripped
 -raw                    -gs                      -gs-malformed
--gs-malformed-force     -gs-quiet                -error-on-malformed\end{verbatim}\end{framed}
+-gs-malformed-force     -gs-quiet                -error-on-malformed
+-progress\end{verbatim}\end{framed}
 
   The Coherent PDF tools provide a wide range of facilities for modifying PDF
 files created by other means. There is a single command-line program
@@ -1119,7 +1121,7 @@ shortcuts which speed up processing, but would fail on a minority of pre-ISO fil
 \begin{framed}
 \small\noindent Chapter \ref{pages}\\
 \noindent\small\verb!-rotate-contents -upright -vflip -hflip!\\
-\small\verb!-shift -scale-page -scale-to-fit -scale-contents!\\
+\small\verb!-shift -scale-page -scale-to-fit -scale-contents -center-to-fit -stretch!\\
 \small\verb!-show-boxes -hard-box -trim-marks!\\
 
 \noindent Chapter \ref{stamps}\\
@@ -1557,7 +1559,7 @@ The \texttt{-process-struct-trees} option used in conjunction with any splitting
   \small\noindent\verb!cpdf -stretch "<x size> <y size>" [-fast] in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -center-to-fit "<x size> <y size>" in.pdf [<range>] -o out.pdf!
+  \small\noindent\verb!cpdf -center-to-fit "<x size> <y size>" [-fast] in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
   \small\noindent\verb!cpdf -scale-contents [<scale>] [<position>] [-fast]!\\
@@ -6983,7 +6985,7 @@ YYYY-MM-DDThh:mm:ssTZD
 
 \section{Cpdf Change Log}
 {\footnotesize\begin{alltt}
-\input{Changes}
+\input{Changes.txt}
 \end{alltt}}
 
 \section{CamlPDF Change Log}
