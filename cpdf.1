@@ -242,7 +242,7 @@ The so\-called relationship for the file (must appear after
 \f[B]\-pf\f[R]).
 .SS Splitting
 We can split an input PDF into its constituent pages, and output one PDF
-for each page.
+for each page or each chunk of pages.
 .PP
 \f[B]cpdf \-split in.pdf\f[R] [\-chunk <n>] [\-process\-struct\-trees]
 [\-utf8] \f[B]\-o <format>\f[R]
@@ -948,7 +948,7 @@ Add blank pages before or after each page in the given range.
 Use a separate PDF to act as the padding.
 .TP
 \f[B]cpdf \-pad\-every <n> in.pdf\f[R] [\-pad\-with pad.pdf] \f[B]\-o out.pdf\f[R]
-Add a blank pages after every n pages.
+Add a blank page after every n pages.
 .TP
 \f[B]\-pad\-with\f[R] <filename>
 Use a separate PDF to act as the padding.
@@ -1484,7 +1484,7 @@ Supply path to ImageMagick.
 \f[B]\-jbig2enc\f[R] <path>
 Supply path to jbig2enc.
 .TP
-\f[B]\-jbig2enc\f[R] <path>
+\f[B]\-jbig2dec\f[R] <path>
 Supply path to jbig2dec.
 .TP
 \f[B]\-lossless\-resample\f[R] <n>

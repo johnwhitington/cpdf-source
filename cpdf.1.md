@@ -275,7 +275,7 @@ The input **in.pdf** here is the main file. You can build a blank one with **-cr
 ## Splitting
 
 We can split an input PDF into its constituent pages, and output one PDF for
-each page.
+each page or each chunk of pages.
 
 **cpdf -split in.pdf** \[-chunk \<n>] \[-process-struct-trees] \[-utf8] **-o
 \<format>**
@@ -1025,7 +1025,7 @@ Add blank pages before or after each page in the given range.
 
 **cpdf -pad-every \<n> in.pdf** \[-pad-with pad.pdf] **-o out.pdf**
 
-: Add a blank pages after every n pages.
+: Add a blank page after every n pages.
 
 **-pad-with** \<filename>
 
@@ -1545,7 +1545,7 @@ full commentary, see cpdfmanual.pdf.
 
 : Supply path to jbig2enc.
 
-**-jbig2enc** \<path>
+**-jbig2dec** \<path>
 
 : Supply path to jbig2dec.
 
