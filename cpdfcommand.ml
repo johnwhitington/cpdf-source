@@ -244,6 +244,7 @@ type op =
   | RemoveWebCapture
   | RemoveProcsets
   | Summary
+  | Revisions
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -414,6 +415,7 @@ let string_of_op = function
   | RemoveWebCapture -> "RemoveWebCapture"
   | RemoveProcsets -> "RemoveProcsets"
   | Summary -> "Summary"
+  | Revisions -> "Revisions"
 
 (* Inputs: filename, pagespec. *)
 type input_kind = 
@@ -1017,7 +1019,7 @@ let banned banlist = function
   | Verify _ | MarkAs _ | RemoveMark _ | ExtractStructTree | ReplaceStructTree _ | SetLanguage _
   | PrintStructTree | Rasterize | OutputImage | RemoveStructTree | MarkAsArtifact
   | ContainsJavaScript | RemoveJavaScript | RemoveArticleThreads | RemovePagePiece | RemoveOutputIntents
-  | RemoveWebCapture | RemoveProcsets | ExtractMetadata | Summary -> false (* Always allowed *)
+  | RemoveWebCapture | RemoveProcsets | ExtractMetadata | Summary | Revisions -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
   | Decrypt | Encrypt | CombinePages _ -> true (* Never allowed *)
@@ -2161,7 +2163,10 @@ let specs =
       " Collate ranges in multiples when merging");
    ("-revision",
       Arg.Int setrevision,
-      "");
+      " Choose revision to read from");
+   ("-revisions",
+      Arg.Unit (setop Revisions),
+      " Print number of revisions");
    ("-change-id",
       Arg.Unit (setop ChangeId),
       " Change the file's /ID tag");
@@ -3276,7 +3281,8 @@ let pdf_of_stdin ?revision user_pw owner_pw =
    with
      _ -> raise (StdInBytes !rbytes)
 
-let rec get_single_pdf ?(decrypt=true) ?(fail=false) op read_lazy =
+let rec get_single_pdf ?(revisions=false) ?(decrypt=true) ?(fail=false) op read_lazy =
+  (*Pdfe.log (Printf.sprintf "****get_single_pdf: revisions = %b\n" revisions);*)
   let failout () =
     if fail then begin
       (* Reconstructed with ghostscript, but then we couldn't read it even then. Do not loop. *)
@@ -3298,6 +3304,7 @@ let rec get_single_pdf ?(decrypt=true) ?(fail=false) op read_lazy =
   in
   match args.inputs with
   | (InFile inname, x, u, o, y, revision) as input::more ->
+      let revision = if revisions then Some ~-1 else revision in
       Cpdfutil.progress_line (Printf.sprintf "<<< Reading %s" inname);
       if args.squeeze then
         Printf.printf "Initial file size is %i bytes\n" (filesize inname);
@@ -3309,6 +3316,7 @@ let rec get_single_pdf ?(decrypt=true) ?(fail=false) op read_lazy =
             pdfread_pdf_of_file ?revision (optstring u) (optstring o) inname
         with
         | Cpdferror.SoftError _ as e -> raise e (* Bad owner or user password *)
+        | Pdfread.Revisions n -> raise (Pdfread.Revisions n)
         | _ ->
             if args.gs_malformed then
               begin
@@ -3324,6 +3332,7 @@ let rec get_single_pdf ?(decrypt=true) ?(fail=false) op read_lazy =
         if decrypt then decrypt_if_necessary input op pdf else pdf
   | (StdIn, x, u, o, y, revision) as input::more ->
       Cpdfutil.progress_line (Printf.sprintf "<<< Reading file from stdin");
+      let revision = if revisions then Some ~-1 else revision in
       let pdf =
         try pdf_of_stdin ?revision u o with
           StdInBytes b ->
@@ -3344,7 +3353,9 @@ let rec get_single_pdf ?(decrypt=true) ?(fail=false) op read_lazy =
       in
         args.was_encrypted <- Pdfcrypt.is_encrypted pdf;
         if decrypt then decrypt_if_necessary input op pdf else pdf
-  | (AlreadyInMemory (pdf, s), _, _, _, _, _)::_ -> pdf
+  | (AlreadyInMemory (pdf, s), _, _, _, _, _)::_ ->
+      (* For now, any file we have read or created will have 1 revision, because we don't preserve them. *)
+      if revisions then raise (Pdfread.Revisions 1) else pdf
   | _ ->
       raise (Arg.Bad "cpdf: No input specified.\n")
 
@@ -5256,6 +5267,10 @@ let rec go () =
         [("-help", Arg.Unit (fun () -> ()), ""); ("--help", Arg.Unit (fun () -> ()), "")]
       in
         Arg.usage (Arg.align (nohelp @ specs)) ""
+  | Some Revisions ->
+      begin try ignore (get_single_pdf ~revisions:true args.op true) with
+        Pdfread.Revisions n -> Printf.printf "%i\n" n
+      end
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)
