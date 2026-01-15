@@ -245,6 +245,7 @@ type op =
   | RemoveProcsets
   | Summary
   | Revisions
+  | SigInfo
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -416,6 +417,7 @@ let string_of_op = function
   | RemoveProcsets -> "RemoveProcsets"
   | Summary -> "Summary"
   | Revisions -> "Revisions"
+  | SigInfo -> "SigInfo"
 
 (* Inputs: filename, pagespec. *)
 type input_kind = 
@@ -1019,7 +1021,7 @@ let banned banlist = function
   | Verify _ | MarkAs _ | RemoveMark _ | ExtractStructTree | ReplaceStructTree _ | SetLanguage _
   | PrintStructTree | Rasterize | OutputImage | RemoveStructTree | MarkAsArtifact
   | ContainsJavaScript | RemoveJavaScript | RemoveArticleThreads | RemovePagePiece | RemoveOutputIntents
-  | RemoveWebCapture | RemoveProcsets | ExtractMetadata | Summary | Revisions -> false (* Always allowed *)
+  | RemoveWebCapture | RemoveProcsets | ExtractMetadata | Summary | Revisions | SigInfo -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
   | Decrypt | Encrypt | CombinePages _ -> true (* Never allowed *)
@@ -3201,6 +3203,7 @@ let specs =
    ("-remove-output-intents", Arg.Unit (fun () -> setop RemoveOutputIntents ()), " Remove output intents");
    ("-remove-web-capture", Arg.Unit (fun () -> setop RemoveWebCapture ()), " Remove web capture data");
    ("-remove-procsets", Arg.Unit (fun () -> setop RemoveProcsets ()), " Remove procsets");
+   ("-sig-info", Arg.Unit (fun () -> setop SigInfo ()), " Show digital signature information");
    (* These items are undocumented *)
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit (fun () -> args.debugcrypt <- true), "");
@@ -3282,7 +3285,6 @@ let pdf_of_stdin ?revision user_pw owner_pw =
      _ -> raise (StdInBytes !rbytes)
 
 let rec get_single_pdf ?(revisions=false) ?(decrypt=true) ?(fail=false) op read_lazy =
-  Pdfe.log (Printf.sprintf "****get_single_pdf: revisions = %b\n" revisions);
   let failout () =
     if fail then begin
       (* Reconstructed with ghostscript, but then we couldn't read it even then. Do not loop. *)
@@ -4000,6 +4002,9 @@ let remove_web_capture pdf =
 
 let remove_procsets pdf =
   Cpdfutil.remove_dict_entry pdf "/ProcSet" None
+
+let show_digital_signature_info pdf json =
+  ()
 
 (* Main function *)
 let rec go () =
@@ -5271,6 +5276,9 @@ let rec go () =
       begin try ignore (get_single_pdf ~revisions:true args.op true) with
         Pdfread.Revisions n -> Printf.printf "%i\n" n
       end
+  | Some SigInfo ->
+      let pdf = get_single_pdf args.op true in
+        show_digital_signature_info pdf args.format_json
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)
