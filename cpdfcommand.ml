@@ -3282,7 +3282,7 @@ let pdf_of_stdin ?revision user_pw owner_pw =
      _ -> raise (StdInBytes !rbytes)
 
 let rec get_single_pdf ?(revisions=false) ?(decrypt=true) ?(fail=false) op read_lazy =
-  (*Pdfe.log (Printf.sprintf "****get_single_pdf: revisions = %b\n" revisions);*)
+  Pdfe.log (Printf.sprintf "****get_single_pdf: revisions = %b\n" revisions);
   let failout () =
     if fail then begin
       (* Reconstructed with ghostscript, but then we couldn't read it even then. Do not loop. *)
@@ -3323,7 +3323,7 @@ let rec get_single_pdf ?(revisions=false) ?(decrypt=true) ?(fail=false) op read_
                 failout ();
                 let newname = mend_pdf_file_with_ghostscript inname in
                   args.inputs <- (InFile newname, x, u, o, y, revision)::more;
-                  get_single_pdf ~fail:true op read_lazy 
+                  get_single_pdf ~revisions ~decrypt ~fail:true op read_lazy
               end
             else
               warn_gs ()
@@ -3346,7 +3346,7 @@ let rec get_single_pdf ?(revisions=false) ?(decrypt=true) ?(fail=false) op read_
                 close_out fh;
                 let newname = mend_pdf_file_with_ghostscript inname in
                 args.inputs <- (InFile newname, x, u, o, y, revision)::more;
-                get_single_pdf ~fail:true op read_lazy
+                get_single_pdf ~revisions ~decrypt ~fail:true op read_lazy
               end
             else
               warn_gs ()
