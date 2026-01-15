@@ -48,7 +48,7 @@
 \begin{document}
 
 \frontmatter
-%\pagestyle{empty}
+\pagestyle{empty}
 
 \begin{flushright}
 
@@ -4156,7 +4156,7 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 \vspace{1.5mm}
 
 \noindent\small\verb!cpdf -rasterize in.pdf [<range>] -o out.pdf!\\
-\noindent\small\verb!     [-rasterize[-gray|-1bpp|-jpeg|-jpeggray]!\\
+\noindent\small\verb!     [-rasterize[-gray|-1bpp|-jpeg|-jpeg-gray]!\\
 \noindent\small\verb!     [-rasterize-res <n>] [-rasterize-jpeg-quality <n>]!\\
 \noindent\small\verb!     [-rasterize-no-antialias | -rasterize-downsample]!\\
 \noindent\small\verb!     [-rasterize-annots] | [-rasterize-alpha]!
@@ -4164,7 +4164,7 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 \vspace{1.5mm}
 
 \noindent\small\verb!cpdf -output-image in.pdf [<range>] -o <format>!\\
-\noindent\small\verb!     [-rasterize[-gray|-1bpp|-jpeg|-jpeggray]!\\
+\noindent\small\verb!     [-rasterize[-gray|-1bpp|-jpeg|-jpeg-gray]!\\
 \noindent\small\verb!     [-rasterize-res <n>] [-rasterize-jpeg-quality <n>]!\\
 \noindent\small\verb!     [-rasterize-no-antialias | -rasterize-downsample]!\\
 \noindent\small\verb!     [-rasterize-annots] [-rasterize-alpha]!\\
@@ -4433,7 +4433,7 @@ Option & Effect\\\hline
 {\small\texttt{-rasterize-gray}} & Use grayscale instead of colour \\
 {\small\texttt{-rasterize-1bpp}} & Use monochrome instead of colour\\
 {\small\texttt{-rasterize-jpeg}} & Use JPEG instead of lossless compression\\
-{\small\texttt{-rasterize-jpeggray}} & Use grayscale JPEG instead of lossless compression\\
+{\small\texttt{-rasterize-jpeg-gray}} & Use grayscale JPEG instead of lossless compression\\
 {\small\texttt{-rasterize-jpeg-quality}} & Set JPEG image quality (0..100)\\
 {\small\texttt{-rasterize-res}} & Set the resolution\\
 {\small\texttt{-rasterize-annots}} & Rasterize annotations instead of retaining\\
