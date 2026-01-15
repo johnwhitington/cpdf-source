@@ -4003,8 +4003,55 @@ let remove_web_capture pdf =
 let remove_procsets pdf =
   Cpdfutil.remove_dict_entry pdf "/ProcSet" None
 
+(* First, simplistic version. Look through all objects, to locate /FT/Sig
+  anywhere. Then assume /V in same dicitonary (smashed widget/field?). Then
+  print /Type, /Filter, /SubFilter, /Name. *)
 let show_digital_signature_info pdf json =
-  ()
+  let sigs = ref [] in
+    Pdf.objiter
+      (fun i obj ->
+         match Pdf.lookup_direct pdf "/FT" obj with
+         | Some (Pdf.Name "/Sig") ->
+             begin match Pdf.lookup_direct pdf "/V" obj with
+             | Some d ->
+                 let sigtype =
+                   match Pdf.lookup_direct pdf "/Type" d with
+                   | Some (Pdf.Name n) -> n
+                   | _ -> "Sig"
+                 in
+                 let sigfilter =
+                   match Pdf.lookup_direct pdf "/Filter" d with
+                   | Some (Pdf.Name n) -> n
+                   | _ -> "" 
+                 in
+                 let sigsubfilter =
+                   match Pdf.lookup_direct pdf "/SubFilter" d with
+                   | Some (Pdf.Name n) -> n
+                   | _ -> "" 
+                 in
+                 let signame =
+                   match Pdf.lookup_direct pdf "/Name" d with
+                   | Some (Pdf.String s) -> Pdftext.utf8_of_pdfdocstring s
+                   | _ -> ""
+                 in
+                   sigs =| (sigtype, sigfilter, sigsubfilter, signame)
+             | _ -> ()
+             end
+         | _ -> ())
+      pdf;
+    if json then
+      let mkjson (t, f, sf, n) =
+        `Assoc [("/Type", `String t);
+                ("/Filter", `String f);
+                ("/SubFilter", `String sf);
+                ("/Name", `String n)]
+      in
+        flprint (Cpdfyojson.Safe.pretty_to_string (`List (map mkjson !sigs))) 
+    else
+      iter
+        (fun (sigtype, sigfilter, sigsubfilter, signame) ->
+           Printf.printf "%s, %s, %s, %s\n" sigtype sigfilter sigsubfilter signame)
+        !sigs
 
 (* Main function *)
 let rec go () =
