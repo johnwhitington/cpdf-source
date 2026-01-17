@@ -611,7 +611,8 @@ type args =
    mutable include_data : bool;
    mutable inline : bool;
    mutable merge_masks : bool;
-   mutable process_images_force : bool}
+   mutable process_images_force : bool;
+   mutable update : bool}
 
 let args =
   {op = None;
@@ -771,7 +772,8 @@ let args =
    include_data = false;
    inline = false;
    merge_masks = false;
-   process_images_force = false}
+   process_images_force = false;
+   update = false}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -916,7 +918,8 @@ let reset_arguments () =
   args.include_data <- false;
   args.inline <- false;
   args.merge_masks <- false;
-  args.process_images_force <- false
+  args.process_images_force <- false;
+  args.update <- false
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -3204,6 +3207,7 @@ let specs =
    ("-remove-web-capture", Arg.Unit (fun () -> setop RemoveWebCapture ()), " Remove web capture data");
    ("-remove-procsets", Arg.Unit (fun () -> setop RemoveProcsets ()), " Remove procsets");
    ("-sig-info", Arg.Unit (fun () -> setop SigInfo ()), " Show digital signature information");
+   ("-update", Arg.Unit (fun () -> args.update <- true), " Update file by appending");
    (* These items are undocumented *)
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit (fun () -> args.debugcrypt <- true), "");

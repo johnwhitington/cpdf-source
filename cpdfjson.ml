@@ -287,7 +287,8 @@ let pdf_of_json json =
       {P.maxobjnum = 0;
        P.parse = None;
        P.pdfobjects = objmap;
-       P.object_stream_ids = Hashtbl.create 0}
+       P.object_stream_ids = Hashtbl.create 0;
+       P.altered = Hashtbl.create 0}
     in
       {P.major;
        P.minor;
