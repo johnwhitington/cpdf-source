@@ -3514,6 +3514,7 @@ let really_write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf outna
                 if owner_pw <> "" then owner_pw else user_pw
               in
                 Pdfwrite.pdf_to_file_options
+                  ~update:args.update
                   ~preserve_objstm:args.preserve_objstm
                   ~generate_objstm:args.create_objstm
                   ~compress_objstm:(not is_decompress || args.decompress_just_content)
@@ -3527,6 +3528,7 @@ let really_write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf outna
               if args.debugcrypt then
                 Printf.printf "Pdf to file in really_write_pdf\n";
               Pdfwrite.pdf_to_file_options
+                ~update:args.update
                 ~preserve_objstm:args.preserve_objstm
                 ~generate_objstm:args.create_objstm
                 ~compress_objstm:(not is_decompress || args.decompress_just_content)
@@ -3814,7 +3816,7 @@ let check_bookmarks_mistake () =
 let check_clashing_output_name () =
   match args.out with
   | File s ->
-      if (List.exists (function (InFile s', _, _, _, _, _) when s = s' -> true | _ -> false) args.inputs) then
+      if (List.exists (function (InFile s', _, _, _, _, _) when s = s' -> true | _ -> false) args.inputs) && not args.update then
         Pdfe.log "Warning: output file name clashes with input file name. Malformed file may result.\n"
   | _ -> ()
 
