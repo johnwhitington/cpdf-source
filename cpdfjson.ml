@@ -297,7 +297,8 @@ let pdf_of_json json =
        P.objects;
        P.trailerdict = !trailerdict;
        P.was_linearized = false;
-       P.saved_encryption = None}
+       P.saved_encryption = None;
+       P.first_xref = 0}
 
 let mkfloat f = `Assoc [("F", `Float f)]
 let mkint i = `Assoc [("I", `Int i)]
