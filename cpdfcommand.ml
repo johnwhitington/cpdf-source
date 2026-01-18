@@ -3595,7 +3595,7 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
                 ignore (Cpdfsqueeze.recompress_pdf pdf);
                 if args.squeeze then Cpdfsqueeze.squeeze ~pagedata:args.squeeze_pagedata ?logto:!logto pdf;
               end;
-            if not args.update then Pdf.remove_unreferenced pdf;
+            Pdf.remove_unreferenced pdf;
             really_write_pdf ~is_decompress mk_id pdf outname
         | Some _ ->
             really_write_pdf ~encryption ~is_decompress mk_id pdf outname
@@ -3609,7 +3609,7 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
                 begin
                   ignore (Cpdfsqueeze.recompress_pdf pdf);
                   if args.squeeze then Cpdfsqueeze.squeeze ~pagedata:args.squeeze_pagedata ?logto:!logto pdf;
-                  if not args.update then Pdf.remove_unreferenced pdf
+                  Pdf.remove_unreferenced pdf
                 end;
                 really_write_pdf ~encryption ~is_decompress mk_id pdf temp;
           | Some _ ->
