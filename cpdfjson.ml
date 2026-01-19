@@ -288,8 +288,7 @@ let pdf_of_json json =
        P.parse = None;
        P.pdfobjects = objmap;
        P.object_stream_ids = null_hash ();
-       P.altered = null_hash ();
-       P.deleted = null_hash ()}
+       P.log = []}
     in
       {P.major;
        P.minor;
