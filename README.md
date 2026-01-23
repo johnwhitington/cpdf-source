@@ -12,7 +12,7 @@ visit [https://www.coherentpdf.com/](https://www.coherentpdf.com/)
 
 Copyright Coherent Graphics Ltd 2025.
 
-Keep up to date by joining the very low volume cpdf-announce mailin list:
+Keep up to date by joining the very low volume cpdf-announce mailing list:
 
 https://groups.google.com/g/cpdf-announce/
 
