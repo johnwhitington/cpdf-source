@@ -244,7 +244,7 @@ let expand_lines text time pdf endpage extract_text_font_size filename bates bat
 let addtext
   time lines linewidth outline fast colour fontname encoding bates batespad
   fontsize fontpack font fontpdfobj fontpackpdfobjs underneath position hoffset voffset text pages 
-  cropbox opacity justification filename extract_text_font_size shift raw pdf
+  relative_to_box opacity justification filename extract_text_font_size shift raw pdf
 =
   let endpage = Pdfpage.endpage pdf in
   let shifts = Cpdfcoord.parse_coordinates pdf shift in
@@ -336,8 +336,8 @@ let addtext
               let longest_w = last (sort compare allwidths) in
               let joffset = find_justification_offsets longest_w textwidth position justification in
               let mediabox =
-                if cropbox then
-                  match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
+                if relative_to_box <> "/MediaBox" then
+                  match Pdf.lookup_direct pdf relative_to_box page.Pdfpage.rest with
                   | Some pdfobject -> Pdf.parse_rectangle pdf (Pdf.direct pdf pdfobject)
                   | None -> Pdf.parse_rectangle pdf page.Pdfpage.mediabox
                 else
@@ -456,7 +456,7 @@ let unescape_string s =
 
 let
   addtexts linewidth outline fast fontname (cpdffont : Cpdfembed.cpdffont) bates batespad
-  colour position linespacing fontsize underneath text pages cropbox opacity
+  colour position linespacing fontsize underneath text pages relative_to_box opacity
   justification midline topline filename extract_text_font_size shift
   ?(raw=false) pdf
 =
@@ -572,14 +572,14 @@ let
                      pdf :=
                        addtext time lines linewidth outline fast colour !realfontname encoding
                        bates batespad fontsize fontpack font fontpdfobj fontpackpdfobjs underneath
-                       position hoff voff line pages cropbox opacity justification filename
+                       position hoff voff line pages relative_to_box opacity justification filename
                        extract_text_font_size shift raw !pdf;
                      voffset := !voffset +. (linespacing *. fontsize))
                 lines;
                 !pdf
 
 let addrectangle
-  fast coord colour outline linewidth opacity position relative_to_cropbox
+  fast coord colour outline linewidth opacity position relative_to_box
   underneath range pdf
 =
   let addrectangle_page _ page =
@@ -600,8 +600,8 @@ let addrectangle
         page.Pdfpage.resources, None
     in
     let mediabox =
-      if relative_to_cropbox then
-        match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
+      if relative_to_box <> "/MediaBox" then
+        match Pdf.lookup_direct pdf relative_to_box page.Pdfpage.rest with
         | Some pdfobject -> Pdf.parse_rectangle pdf (Pdf.direct pdf pdfobject)
         | None -> Pdf.parse_rectangle pdf page.Pdfpage.mediabox
       else

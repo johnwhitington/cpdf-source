@@ -779,16 +779,16 @@ let combine_page_items pdf adict bdict =
         [] -> adict
       | annots -> Pdf.add_dict_entry adict "/Annots" (Pdf.Array annots)
 
-let do_stamp relative_to_cropbox fast position topline midline scale_to_fit isover pdf o u opdf =
+let do_stamp relative_to_box fast position topline midline scale_to_fit isover pdf o u opdf =
   (* Scale page stamp o to fit page u *)
   let sxmin, symin, sxmax, symax =
     Pdf.parse_rectangle
       pdf
-      (match Pdf.lookup_direct pdf "/CropBox" o.Pdfpage.rest with | Some r -> r | None -> o.Pdfpage.mediabox)
+      (match Pdf.lookup_direct pdf relative_to_box o.Pdfpage.rest with | Some r -> r | None -> o.Pdfpage.mediabox)
   in let txmin, tymin, txmax, tymax =
     Pdf.parse_rectangle
       pdf
-      (match Pdf.lookup_direct pdf "/CropBox" u.Pdfpage.rest with | Some r -> r | None -> u.Pdfpage.mediabox)
+      (match Pdf.lookup_direct pdf relative_to_box u.Pdfpage.rest with | Some r -> r | None -> u.Pdfpage.mediabox)
   in
     let o =
       if scale_to_fit then
@@ -807,7 +807,7 @@ let do_stamp relative_to_cropbox fast position topline midline scale_to_fit isov
                   let matrix = 
                     (Pdftransform.matrix_of_transform
                          ([Pdftransform.Translate (dx, dy)] @
-                          (if relative_to_cropbox then [Pdftransform.Translate (txmin, tymin)] else []) @
+                          (if relative_to_box <> "/MediaBox" then [Pdftransform.Translate (txmin, tymin)] else []) @
                           [Pdftransform.Scale ((sxmin, symin), scale, scale)]))
                   in
                     Pdfannot.transform_annotations pdf matrix o.Pdfpage.rest;
@@ -819,7 +819,7 @@ let do_stamp relative_to_cropbox fast position topline midline scale_to_fit isov
           let dx, dy = stamp_shift_of_position topline midline sw sh w h position in
             let matrix =
               (Pdftransform.matrix_of_transform
-                ((if relative_to_cropbox then [Pdftransform.Translate (txmin, tymin)] else []) @
+                ((if relative_to_box <> "/MediaBox" then [Pdftransform.Translate (txmin, tymin)] else []) @
                 [Pdftransform.Translate (dx, dy)]))
             in
               Pdfannot.transform_annotations pdf matrix o.Pdfpage.rest;
@@ -875,7 +875,7 @@ let mark_all_as_artifact pdf =
   in
     process_pages (Pdfpage.ppstub remove_struct_tree_page) pdf (ilist 1 (Pdfpage.endpage pdf))
 
-let stamp ~process_struct_tree relative_to_cropbox position topline midline fast scale_to_fit isover range over pdf =
+let stamp ~process_struct_tree relative_to_box position topline midline fast scale_to_fit isover range over pdf =
   let over = if process_struct_tree then mark_all_as_artifact (remove_struct_tree over) else over in
   let prefix = Pdfpage.shortest_unused_prefix pdf in
   Pdfpage.add_prefix over prefix;
@@ -905,7 +905,7 @@ let stamp ~process_struct_tree relative_to_cropbox position topline midline fast
                   map2
                     (fun pageseq under_page ->
                       Cpdfutil.progress_page pageseq;
-                      let r = do_stamp relative_to_cropbox fast position topline midline scale_to_fit isover merged
+                      let r = do_stamp relative_to_box fast position topline midline scale_to_fit isover merged
                       (if mem pageseq range then over_page else Pdfpage.blankpage Pdfpaper.a4) under_page over
                       in
                       Cpdfutil.progress_endpage (); r)
@@ -980,7 +980,7 @@ let combine_pages ~process_struct_tree fast under over scaletofit over_is_under 
               (fun o u n ->
                  Cpdfutil.progress_page n;
                  let r =
-                   do_stamp false fast (BottomLeft (0., 0.)) false false scaletofit (not over_is_under) merged o u over
+                   do_stamp "/MediaBox" fast (BottomLeft (0., 0.)) false false scaletofit (not over_is_under) merged o u over
                  in
                    Cpdfutil.progress_endpage ();
                    r)

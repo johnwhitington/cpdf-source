@@ -103,7 +103,7 @@ val combine_pages : process_struct_tree:bool -> bool -> Pdf.t -> Pdf.t -> bool -
 (** [stamp relative_to_cropbox position topline midline fast scale_to_fit isover range over pdf] stamps the first page of
 [over] over each page of the PDF. The arguments have the same meaning as in
 [combine_pages]. *)
-val stamp : process_struct_tree:bool -> bool -> Cpdfposition.position -> bool -> bool -> bool -> bool -> bool -> int list -> Pdf.t -> Pdf.t -> Pdf.t
+val stamp : process_struct_tree:bool -> string -> Cpdfposition.position -> bool -> bool -> bool -> bool -> bool -> int list -> Pdf.t -> Pdf.t -> Pdf.t
 
 (**  {2 Page geometry} *)
 

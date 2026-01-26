@@ -486,7 +486,7 @@ type args =
    mutable bates : int;
    mutable batespad : int option;
    mutable prerotate : bool;
-   mutable relative_to_cropbox : bool;
+   mutable relative_to_box : string;
    mutable keepversion : bool;
    mutable bycolumns : bool;
    mutable pagerotation : int;
@@ -646,7 +646,7 @@ let args =
    bates = 0;
    batespad = None;
    prerotate = false;
-   relative_to_cropbox = false;
+   relative_to_box = "/MediaBox";
    keepversion = false;
    bycolumns = false;
    pagerotation = 0;
@@ -812,7 +812,7 @@ let reset_arguments () =
   args.bates <- 0;
   args.batespad <- None;
   args.prerotate <- false;
-  args.relative_to_cropbox <- false;
+  args.relative_to_box <- "/MediaBox";
   args.keepversion <- false;
   args.bycolumns <- false;
   args.pagerotation <- 0;
@@ -2537,8 +2537,17 @@ let specs =
       Arg.Unit (fun () -> args.topline <- true),
       " Adjust text to topline rather than baseline");
    ("-relative-to-cropbox",
-      Arg.Unit (fun () -> args.relative_to_cropbox <- true),
-      " Add text relative to Crop Box not Media Box");
+      Arg.Unit (fun () -> args.relative_to_box <- "/CropBox"),
+      " Add relative to Crop Box not Media Box");
+   ("-relative-to-trimbox",
+      Arg.Unit (fun () -> args.relative_to_box <- "/TrimBox"),
+      " Add relative to Trim Box not Media Box");
+   ("-relative-to-artbox",
+      Arg.Unit (fun () -> args.relative_to_box <- "/ArtBox"),
+      " Add relative to Art Box not Media Box");
+   ("-relative-to-bleedbox",
+      Arg.Unit (fun () -> args.relative_to_box <- "/BleedBox"),
+      " Add relative to Bleed Box not Media Box");
    ("-embed-missing-fonts",
       Arg.Unit (setop EmbedMissingFonts),
       " Embed missing fonts by calling gs");
@@ -4828,7 +4837,7 @@ let rec go () =
                    args.linewidth args.outline args.fast args.fontname
                    cpdffont args.bates args.batespad args.color args.position
                    args.linespacing args.fontsize args.underneath text range
-                   args.relative_to_cropbox args.opacity
+                   args.relative_to_box args.opacity
                    args.justification args.midline args.topline filename
                    args.extract_text_font_size args.coord ~raw:(args.encoding = Raw) pdf)
   | Some RemoveText ->
@@ -4842,7 +4851,7 @@ let rec go () =
             (Cpdfaddtext.addrectangle
                args.fast args.coord
                args.color args.outline args.linewidth args.opacity args.position
-               args.relative_to_cropbox args.underneath range pdf)
+               args.relative_to_box args.underneath range pdf)
   | Some (AddBookmarks file) ->
       write_pdf false
         (Cpdfbookmarks.add_bookmarks ~json:args.format_json true (Pdfio.input_of_channel (open_in_bin file))
@@ -4870,7 +4879,7 @@ let rec go () =
           let range = parse_pagespec pdf (get_pagespec ()) in
             let pdf =
               Cpdfpage.stamp
-                ~process_struct_tree:args.process_struct_trees args.relative_to_cropbox args.position args.topline args.midline args.fast
+                ~process_struct_tree:args.process_struct_trees args.relative_to_box args.position args.topline args.midline args.fast
                 args.scale_stamp_to_fit true range overpdf pdf
             in
               write_pdf false pdf
@@ -4884,7 +4893,7 @@ let rec go () =
           let range = parse_pagespec pdf (get_pagespec ()) in
             let pdf =
               Cpdfpage.stamp
-                ~process_struct_tree:args.process_struct_trees args.relative_to_cropbox args.position args.topline args.midline args.fast
+                ~process_struct_tree:args.process_struct_trees args.relative_to_box args.position args.topline args.midline args.fast
                 args.scale_stamp_to_fit false range underpdf pdf
             in
               write_pdf false pdf

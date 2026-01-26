@@ -190,7 +190,7 @@ let add_border linewidth ~fast pdf =
   let _, _, w, h = Pdf.parse_rectangle pdf firstpage.Pdfpage.mediabox in
     Cpdfaddtext.addrectangle
       fast (string_of_float (w -. linewidth) ^ " " ^ string_of_float (h -. linewidth)) (RGB (0., 0., 0.)) true linewidth 1. (Cpdfposition.BottomLeft (linewidth /. 2., linewidth /. 2.))
-      false false (ilist 1 (Pdfpage.endpage pdf)) pdf
+      "/MediaBox" false (ilist 1 (Pdfpage.endpage pdf)) pdf
 
 let impose ~process_struct_tree ~x ~y ~fit ~columns ~rtl ~btt ~center ~margin ~spacing ~linewidth ~fast pdf =
   let progress = !Cpdfutil.progress in
