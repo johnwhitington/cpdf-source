@@ -6,6 +6,9 @@ Coherent PDF Command Line Tools
 CPDF is distributed under the AGPL - see LICENSE.md. If you are unable to abide
 by the terms of the AGPL, you will need a commercial license.
 
+See also original copyright and/or license statements in cpdfxmlm.ml*,
+cpdfyojson.ml*, cpdfua.ml, and cpdfunicodedata.*
+
 For commercial licenses, email
 [contact@coherentgraphics.co.uk](mailto:contact@coherentgraphics.co.uk) or
 visit [https://www.coherentpdf.com/](https://www.coherentpdf.com/)
