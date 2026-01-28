@@ -4792,8 +4792,9 @@ let rec go () =
          `List l ->
            map
              (function
-               | `Assoc [("Page", `Int 0); ("Name", `String name); ("Description", desc); ("Relationship", rel); ("Data", `String data)] ->
-                 (name,
+               | `Assoc [("Page", `Int n); ("Name", `String name); ("Description", desc); ("Relationship", rel); ("Data", `String data)] ->
+                  (begin match n with 0 -> None | n -> Some n end,
+                   name,
                    begin match desc with `Null -> None | `String s -> Some s | _ -> error "JSON: bad description" end,
                    begin match rel with `Null -> None | `String s -> Some s | _ -> error "JSON: bad relationship" end,
                    bytes_of_string data)
@@ -4801,7 +4802,7 @@ let rec go () =
              l
         | _ -> error "JSON: top-level list expected."
       in
-        let pdf = fold_left (fun pdf (n, d, r, data) -> Cpdfattach.attach_file ?memory:(Some data) args.keepversion None pdf r d n) pdf attachments in
+        let pdf = fold_left (fun pdf (p, n, d, r, data) -> Cpdfattach.attach_file ?memory:(Some data) args.keepversion p pdf r d n) pdf attachments in
           write_pdf false pdf
   | Some PadBefore ->
       let pdf = get_single_pdf args.op false in
