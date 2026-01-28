@@ -50,6 +50,7 @@ let add_page_labels pdf progress style prefix startval range =
 (* The JSON version simply calls Pdfpagelabels.write. *)
 let add_page_labels_json pdf = function
   | `List pls ->
+      let pls = map (function `Assoc l -> `Assoc (sort compare l) | x -> x) pls in
       let labels =
         map
           (function

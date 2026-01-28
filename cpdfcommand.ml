@@ -4795,16 +4795,17 @@ let rec go () =
       let attachments =
         match Cpdfyojson.Safe.from_file f with
          `List l ->
-           map
-             (function
-               | `Assoc [("Page", `Int n); ("Name", `String name); ("Description", desc); ("Relationship", rel); ("Data", `String data)] ->
-                  (begin match n with 0 -> None | n -> Some n end,
-                   name,
-                   begin match desc with `Null -> None | `String s -> Some s | _ -> error "JSON: bad description" end,
-                   begin match rel with `Null -> None | `String s -> Some s | _ -> error "JSON: bad relationship" end,
-                   bytes_of_string data)
-               | _ -> error "JSON: bad attachment")
-             l
+           let l = map (function `Assoc l -> `Assoc (sort compare l) | x -> x) l in
+             map
+               (function
+                 | `Assoc [("Data", `String data); ("Description", desc); ("Name", `String name); ("Page", `Int n); ("Relationship", rel); ] ->
+                    (begin match n with 0 -> None | n -> Some n end,
+                     name,
+                     begin match desc with `Null -> None | `String s -> Some s | _ -> error "JSON: bad description" end,
+                     begin match rel with `Null -> None | `String s -> Some s | _ -> error "JSON: bad relationship" end,
+                     bytes_of_string data)
+                 | _ -> error "JSON: bad attachment")
+               l
         | _ -> error "JSON: top-level list expected."
       in
         let pdf = fold_left (fun pdf (p, n, d, r, data) -> Cpdfattach.attach_file ?memory:(Some data) args.keepversion p pdf r d n) pdf attachments in
