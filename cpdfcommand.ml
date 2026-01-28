@@ -246,6 +246,7 @@ type op =
   | Summary
   | Revisions
   | SigInfo
+  | AddAttachedFilesJSON of string
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -418,6 +419,7 @@ let string_of_op = function
   | Summary -> "Summary"
   | Revisions -> "Revisions"
   | SigInfo -> "SigInfo"
+  | AddAttachedFilesJSON _ -> "AddAttachedFilesJSON"
 
 (* Inputs: filename, pagespec. *)
 type input_kind = 
@@ -1024,7 +1026,8 @@ let banned banlist = function
   | Verify _ | MarkAs _ | RemoveMark _ | ExtractStructTree | ReplaceStructTree _ | SetLanguage _
   | PrintStructTree | Rasterize | OutputImage | RemoveStructTree | MarkAsArtifact
   | ContainsJavaScript | RemoveJavaScript | RemoveArticleThreads | RemovePagePiece | RemoveOutputIntents
-  | RemoveWebCapture | RemoveProcsets | ExtractMetadata | Summary | Revisions | SigInfo -> false (* Always allowed *)
+  | RemoveWebCapture | RemoveProcsets | ExtractMetadata | Summary | Revisions | SigInfo
+  | AddAttachedFilesJSON _ -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
   | Decrypt | Encrypt | CombinePages _ -> true (* Never allowed *)
@@ -2752,6 +2755,9 @@ let specs =
    ("-list-attached-files",
       Arg.Unit (setop ListAttachedFiles),
       " List attached files");
+   ("-add-attached-files-json",
+      Arg.String (fun s -> setop (AddAttachedFilesJSON s) ()),
+      " Add document-level attached files from JSON");
    ("-include-data",
       Arg.Unit (fun () -> args.include_data <- true),
       " Include file data when listing attachments as JSON");
@@ -4779,6 +4785,13 @@ let rec go () =
               write_pdf false pdf
       | _ -> error "attach file: No input file specified"
       end
+  | Some (AddAttachedFilesJSON f) ->
+      let pdf = get_single_pdf args.op false in
+      let attachments =
+        [("logo.pdf", Some "description", Some "relationship", bytes_of_string "foo")]
+      in
+        let pdf = fold_left (fun pdf (n, d, r, data) -> Cpdfattach.attach_file ?memory:(Some data) args.keepversion None pdf r d n) pdf attachments in
+          write_pdf false pdf
   | Some PadBefore ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
