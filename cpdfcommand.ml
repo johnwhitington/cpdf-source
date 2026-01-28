@@ -186,6 +186,7 @@ type op =
   | OpenAtPageFit of string
   | OpenAtPageCustom of string
   | AddPageLabels
+  | AddPageLabelsJSON of string
   | RemovePageLabels
   | PrintPageLabels
   | RemoveDictEntry of string
@@ -355,6 +356,7 @@ let string_of_op = function
   | OpenAtPageFit _ -> "OpenAtPageFit"
   | OpenAtPageCustom _ -> "OpenAtPageCustom"
   | AddPageLabels -> "AddPageLabels"
+  | AddPageLabelsJSON _ -> "AddPageLabelsJSON"
   | RemovePageLabels -> "RemovePageLabels"
   | PrintPageLabels -> "PrintPageLabels"
   | RemoveDictEntry _ -> "RemoveDictEntry"
@@ -1020,7 +1022,7 @@ let banned banlist = function
   | SetAuthor _|SetTitle _|SetSubject _|SetKeywords _|SetCreate _
   | SetModify _|SetCreator _|SetProducer _|RemoveDictEntry _ | ReplaceDictEntry _ | PrintDictEntry _ | SetMetadata _
   | ExtractText | ExtractImages | ExtractSingleImage _ | ExtractFontFile _
-  | AddPageLabels | RemovePageLabels | OutputJSON | OCGCoalesce
+  | AddPageLabels | AddPageLabelsJSON _ | RemovePageLabels | OutputJSON | OCGCoalesce
   | OCGRename | OCGList | OCGOrderAll | PrintFontEncoding _ | TableOfContents | Typeset _ | Composition _
   | TextWidth _ | SetAnnotations _ | CopyAnnotations _ | ExtractStream _ | ReplaceStream _ | PrintObj _ | ReplaceObj _ | RemoveObj _
   | Verify _ | MarkAs _ | RemoveMark _ | ExtractStructTree | ReplaceStructTree _ | SetLanguage _
@@ -2866,6 +2868,9 @@ let specs =
    ("-add-page-labels",
       Arg.Unit (setop AddPageLabels),
       " Add or replace page labels");
+   ("-add-page-labels-json",
+      Arg.String (fun s -> setop (AddPageLabelsJSON s) ()),
+      " Add or replace page labels from JSON");
    ("-label-style",
       Arg.String setlabelstyle,
       " Set label style (default DecimalArabic)");
@@ -5043,6 +5048,9 @@ let rec go () =
           Cpdfpagelabels.add_page_labels
             pdf args.labelsprogress args.labelstyle args.labelprefix args.labelstartval range;
           write_pdf false pdf
+  | Some (AddPageLabelsJSON f) ->
+      let pdf = get_single_pdf args.op false in
+        write_pdf false pdf
   | Some RemovePageLabels ->
       let pdf = get_single_pdf args.op false in
         Pdfpagelabels.remove pdf;
