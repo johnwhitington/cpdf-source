@@ -4788,7 +4788,18 @@ let rec go () =
   | Some (AddAttachedFilesJSON f) ->
       let pdf = get_single_pdf args.op false in
       let attachments =
-        [("logo.pdf", Some "description", Some "relationship", bytes_of_string "foo")]
+        match Cpdfyojson.Safe.from_file f with
+         `List l ->
+           map
+             (function
+               | `Assoc [("Page", `Int 0); ("Name", `String name); ("Description", desc); ("Relationship", rel); ("Data", `String data)] ->
+                 (name,
+                   begin match desc with `Null -> None | `String s -> Some s | _ -> error "JSON: bad description" end,
+                   begin match rel with `Null -> None | `String s -> Some s | _ -> error "JSON: bad relationship" end,
+                   bytes_of_string data)
+               | _ -> error "JSON: bad attachment")
+             l
+        | _ -> error "JSON: top-level list expected."
       in
         let pdf = fold_left (fun pdf (n, d, r, data) -> Cpdfattach.attach_file ?memory:(Some data) args.keepversion None pdf r d n) pdf attachments in
           write_pdf false pdf
