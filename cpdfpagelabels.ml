@@ -1,4 +1,5 @@
 open Pdfutil
+open Cpdferror
 
 (* Split the given range (which is in order) into multiple contiguous ones. *)
 let rec ranges_of_range curr prev = function
@@ -46,5 +47,30 @@ let add_page_labels pdf progress style prefix startval range =
         startval_additions;
         Pdfpagelabels.write pdf !labels
 
-let add_page_labels_json pdf json = ()
-
+(* The JSON version simply calls Pdfpagelabels.write. *)
+let add_page_labels_json pdf = function
+  | `List pls ->
+      let labels =
+        map
+          (function
+            `Assoc [("labelstyle", `String labelstyle);
+                    ("labelprefix", `String labelprefix);
+                    ("startpage", `Int startpage);
+                    ("startvalue", `Int startvalue)] ->
+                       {Pdfpagelabels.labelstyle = Pdfpagelabels.labelstyle_of_string labelstyle;
+                        Pdfpagelabels.labelprefix = Some (Pdftext.pdfdocstring_of_utf8 labelprefix);
+                        Pdfpagelabels.startpage = startpage;
+                        Pdfpagelabels.startvalue = startvalue}
+           | `Assoc [("labelstyle", `String labelstyle);
+                     ("labelprefix", `Null);
+                     ("startpage", `Int startpage);
+                     ("startvalue", `Int startvalue)] ->
+                       {Pdfpagelabels.labelstyle = Pdfpagelabels.labelstyle_of_string labelstyle;
+                        Pdfpagelabels.labelprefix = None;
+                        Pdfpagelabels.startpage = startpage;
+                        Pdfpagelabels.startvalue = startvalue}
+            | _ -> error "add_page_labels_json: malformed JSON")
+          pls
+      in
+        Pdfpagelabels.write pdf labels
+  | _ -> error "add_page_labels_json: JSON not a list"
