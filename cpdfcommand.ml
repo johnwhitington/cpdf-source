@@ -4800,7 +4800,7 @@ let rec go () =
                (function
                  | `Assoc [("Data", `String data); ("Description", desc); ("Name", `String name); ("Page", `Int n); ("Relationship", rel); ] ->
                     (begin match n with 0 -> None | n -> Some n end,
-                     name,
+                     Pdftext.pdfdocstring_of_utf8 name,
                      begin match desc with `Null -> None | `String s -> Some s | _ -> error "JSON: bad description" end,
                      begin match rel with `Null -> None | `String s -> Some s | _ -> error "JSON: bad relationship" end,
                      bytes_of_string data)
