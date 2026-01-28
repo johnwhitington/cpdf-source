@@ -5050,6 +5050,7 @@ let rec go () =
           write_pdf false pdf
   | Some (AddPageLabelsJSON f) ->
       let pdf = get_single_pdf args.op false in
+        Cpdfpagelabels.add_page_labels_json pdf (Cpdfyojson.Safe.from_file f);
         write_pdf false pdf
   | Some RemovePageLabels ->
       let pdf = get_single_pdf args.op false in

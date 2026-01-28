@@ -45,3 +45,6 @@ let add_page_labels pdf progress style prefix startval range =
         ranges
         startval_additions;
         Pdfpagelabels.write pdf !labels
+
+let add_page_labels_json pdf json = ()
+
