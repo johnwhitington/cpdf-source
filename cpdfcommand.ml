@@ -2757,7 +2757,7 @@ let specs =
    ("-list-attached-files",
       Arg.Unit (setop ListAttachedFiles),
       " List attached files");
-   ("-add-attached-files-json",
+   ("-attach-files-json",
       Arg.String (fun s -> setop (AddAttachedFilesJSON s) ()),
       " Add document-level attached files from JSON");
    ("-include-data",

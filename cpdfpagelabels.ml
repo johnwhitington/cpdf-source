@@ -54,16 +54,16 @@ let add_page_labels_json pdf = function
       let labels =
         map
           (function
-            `Assoc [("labelstyle", `String labelstyle);
-                    ("labelprefix", `String labelprefix);
+            `Assoc [("labelprefix", `String labelprefix);
+                    ("labelstyle", `String labelstyle);
                     ("startpage", `Int startpage);
                     ("startvalue", `Int startvalue)] ->
                        {Pdfpagelabels.labelstyle = Pdfpagelabels.labelstyle_of_string labelstyle;
                         Pdfpagelabels.labelprefix = Some (Pdftext.pdfdocstring_of_utf8 labelprefix);
                         Pdfpagelabels.startpage = startpage;
                         Pdfpagelabels.startvalue = startvalue}
-           | `Assoc [("labelstyle", `String labelstyle);
-                     ("labelprefix", `Null);
+           | `Assoc [("labelprefix", `Null);
+                     ("labelstyle", `String labelstyle);
                      ("startpage", `Int startpage);
                      ("startvalue", `Int startvalue)] ->
                        {Pdfpagelabels.labelstyle = Pdfpagelabels.labelstyle_of_string labelstyle;
