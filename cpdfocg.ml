@@ -95,8 +95,18 @@ let ocg_get_list pdf =
   end;
   rev !l
 
-let ocg_list pdf =
-  List.iter (Printf.printf "%s\n") (map Pdftext.utf8_of_pdfdocstring (ocg_get_list pdf))
+(* Output all OCGs in JSON such that simple changes can be made by
+   roundtripping. Of course, we can't change the tags in the page content, so
+   what can be done with this is, by it nature, limited. *)
+let ocg_list_json pdf =
+  ()
+
+let ocg_list json pdf =
+  if json then ocg_list_json pdf else
+    List.iter (Printf.printf "%s\n") (map Pdftext.utf8_of_pdfdocstring (ocg_get_list pdf))
+
+let ocg_replace json pdf =
+  ()
 
 let ocg_rename f t pdf =
   Pdf.objselfmap

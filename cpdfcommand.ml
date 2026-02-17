@@ -207,6 +207,7 @@ type op =
   | OutputJSON
   | OCGCoalesce
   | OCGList
+  | OCGReplace of string
   | OCGRename
   | OCGOrderAll
   | StampAsXObject of string
@@ -382,6 +383,7 @@ let string_of_op = function
   | OutputJSON -> "OutputJSON"
   | OCGCoalesce -> "OCGCoalesce"
   | OCGList -> "OCGList"
+  | OCGReplace _ -> "OCGReplace"
   | OCGRename -> "OCGRename"
   | OCGOrderAll -> "OCGOrderAll"
   | StampAsXObject _ -> "StampAsXObject"
@@ -1023,7 +1025,7 @@ let banned banlist = function
   | SetModify _|SetCreator _|SetProducer _|RemoveDictEntry _ | ReplaceDictEntry _ | PrintDictEntry _ | SetMetadata _
   | ExtractText | ExtractImages | ExtractSingleImage _ | ExtractFontFile _
   | AddPageLabels | AddPageLabelsJSON _ | RemovePageLabels | OutputJSON | OCGCoalesce
-  | OCGRename | OCGList | OCGOrderAll | PrintFontEncoding _ | TableOfContents | Typeset _ | Composition _
+  | OCGRename | OCGList | OCGReplace _ | OCGOrderAll | PrintFontEncoding _ | TableOfContents | Typeset _ | Composition _
   | TextWidth _ | SetAnnotations _ | CopyAnnotations _ | ExtractStream _ | ReplaceStream _ | PrintObj _ | ReplaceObj _ | RemoveObj _
   | Verify _ | MarkAs _ | RemoveMark _ | ExtractStructTree | ReplaceStructTree _ | SetLanguage _
   | PrintStructTree | Rasterize | OutputImage | RemoveStructTree | MarkAsArtifact
@@ -3053,6 +3055,9 @@ let specs =
      " Load a PDF JSON file");
    ("-ocg-list",
      Arg.Unit (setop OCGList),
+     " List optional content groups");
+   ("-ocg-list-json",
+     Arg.Unit (fun () -> args.format_json <- true; setop OCGList ()),
      " List optional content groups");
    ("-ocg-rename",
      Arg.Unit (setop OCGRename),
@@ -5162,7 +5167,11 @@ let rec go () =
         write_pdf false pdf
   | Some OCGList ->
       let pdf = get_single_pdf args.op true in
-        Cpdfocg.ocg_list pdf
+        Cpdfocg.ocg_list args.format_json pdf
+  | Some (OCGReplace json) ->
+      let pdf = get_single_pdf args.op false in
+        Cpdfocg.ocg_replace json pdf;
+        write_pdf false pdf
   | Some OCGRename ->
       let pdf = get_single_pdf args.op false in
         Cpdfocg.ocg_rename args.ocgrenamefrom args.ocgrenameto pdf;
