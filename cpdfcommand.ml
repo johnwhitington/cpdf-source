@@ -3058,7 +3058,10 @@ let specs =
      " List optional content groups");
    ("-ocg-list-json",
      Arg.Unit (fun () -> args.format_json <- true; setop OCGList ()),
-     " List optional content groups");
+     " List optional content groups as JSON");
+   ("-ocg-replace",
+     Arg.String (fun s -> setop (OCGReplace s) ()),
+     " Replace optional content groups from JSON");
    ("-ocg-rename",
      Arg.Unit (setop OCGRename),
      " Rename optional content group");
