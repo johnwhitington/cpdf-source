@@ -3846,7 +3846,7 @@ let check_clashing_output_name () =
   match args.out with
   | File s ->
       if (List.exists (function (InFile s', _, _, _, _, _) when s = s' -> true | _ -> false) args.inputs) && not args.update then
-        Pdfe.log "Warning: output file name clashes with input file name. Malformed file may result.\n"
+        Pdfe.log "Warning: output file name clashes with input file name. Malformed file may result. Did you mean to use -update?\n"
   | _ -> ()
 
 let build_enc () =
