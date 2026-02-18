@@ -99,10 +99,14 @@ let ocg_get_list pdf =
    roundtripping. Of course, we can't change the tags in the page content, so
    what can be done with this is, by it nature, limited. *)
 let ocg_list_json pdf =
-  ()
+  (* 1. Find the top of the OCG set of objects. Is it always indirect? If so, easy. *)
+  (* 2. Locate all reachable objects *)
+  (* 3. Write them out in CPDFJSON format, with a little header /CPDFJSONocgformatversion *)
+  (* 4. Format should match roughly annotations JSON format - or is it a little simpler? Follow also usage of utf8, clean_strings etc. *)
+  `Null
 
 let ocg_list json pdf =
-  if json then ocg_list_json pdf else
+  if json then flprint (Cpdfyojson.Safe.pretty_to_string (ocg_list_json pdf)) else
     List.iter (Printf.printf "%s\n") (map Pdftext.utf8_of_pdfdocstring (ocg_get_list pdf))
 
 let ocg_replace json pdf =
