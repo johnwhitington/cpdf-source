@@ -1695,11 +1695,12 @@ let setrange spec =
   | x -> ()
 
 let setrevision n =
-  match args.inputs with
-    (a, b, c, d, e, _)::more ->
-      args.inputs <- (a, b, c, d, e, Some n) :: more
-  | [] ->
-      Pdfe.log "Warning. -revision ignored. Put it after the filename.\n"
+  if n < 0 then error "Revision number too low." else
+    match args.inputs with
+      (a, b, c, d, e, _)::more ->
+        args.inputs <- (a, b, c, d, e, Some n) :: more
+    | [] ->
+        Pdfe.log "Warning. -revision ignored. Put it after the filename.\n"
 
 let setimageresolution f =
   detect_duplicate_op (ImageResolution f);
