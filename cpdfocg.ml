@@ -102,10 +102,40 @@ let ocg_list_json pdf =
   match Pdfocg.read_ocg pdf with
   | None -> `Null
   | Some ocg ->
-      let json_of_config _ = `Null in
+      let json_of_config _ =
         `Assoc
-           [("OCGs", `List []);
-            ("default config", `String "CONFIG");
+           [("name", `Null);
+            ("creator", `Null);
+            ("base state", `Null);
+            ("on", `Null);
+            ("off", `Null);
+            ("intent", `Null);
+            ("usage application dictionaries", `Null);
+            ("order", `Null);
+            ("list mode", `Null);
+            ("rb groups", `Null);
+            ("locked", `Null)]
+      in
+      let json_of_usage u =
+        `Assoc
+           [("creator info", `Null);
+            ("language", `Null);
+            ("export", `Null);
+            ("zoom", `Null);
+            ("print", `Null);
+            ("view", `Null);
+            ("user", `Null);
+            ("page element", `Null)]
+      in
+      let json_of_ocg o =
+        `Assoc
+           [("name", `Null);
+            ("intent", `List []);
+            ("usage", begin match o.Pdfocg.ocg_usage with None -> `Null | Some usage -> json_of_usage usage end)]
+      in
+        `Assoc
+           [("OCGs", `Assoc (map (fun (i, o) -> (string_of_int i, json_of_ocg o)) ocg.ocgs));
+            ("default config", json_of_config ocg.ocg_default_config);
             ("configs", begin match ocg.ocg_configs with None -> `Null | Some cfgs -> `List (map json_of_config cfgs) end)]
 
 let ocg_list json pdf =
