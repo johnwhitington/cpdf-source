@@ -99,12 +99,10 @@ let ocg_get_list pdf =
    roundtripping. Of course, we can't change the tags in the page content, so
    what can be done with this is, by it nature, limited. *)
 let ocg_list_json pdf =
-  let string s =
-    `String (Pdftext.utf8_of_pdfdocstring s)
-  in
-  let string_opt o =
-    match o with None -> `Null | Some s -> `String (Pdftext.utf8_of_pdfdocstring s)
-  in
+  let string s = `String (Pdftext.utf8_of_pdfdocstring s) in
+  let int i = `Int i in
+  let opt f x = match x with None -> `Null | Some s -> f s in
+  let list f l = `List (map f l) in
   match Pdfocg.read_ocg pdf with
   | None -> `Null
   | Some ocg ->
@@ -113,21 +111,29 @@ let ocg_list_json pdf =
         | Pdfocg.OCG_OFF -> `String "Off"
         | Pdfocg.OCG_Unchanged -> `String "Unchanged"
       in
+      let json_of_listmode = function
+        | Pdfocg.OCG_AllPages -> `String "AllPages"
+        | Pdfocg.OCG_VisiblePages -> `String "VisiblePages"
+      in
+      let json_of_usage_application_dictionary d =
+        `Null
+      in
       let json_of_config c =
         `Assoc
-           [("name", string_opt c.Pdfocg.ocgconfig_name);
-            ("creator", string_opt c.Pdfocg.ocgconfig_creator);
+           [("name", opt string c.Pdfocg.ocgconfig_name);
+            ("creator", opt string c.Pdfocg.ocgconfig_creator);
             ("base state", json_of_state c.Pdfocg.ocgconfig_basestate);
-            ("on", `Null);
-            ("off", `Null);
-            ("intent", `Null);
-            ("usage application dictionaries", `Null);
-            ("order", `Null);
-            ("list mode", `Null);
-            ("rb groups", `Null);
-            ("locked", `Null)]
+            ("on", opt (list int) c.Pdfocg.ocgconfig_on);
+            ("off", opt (list int) c.Pdfocg.ocgconfig_off);
+            ("intent", list string c.Pdfocg.ocgconfig_intent);
+            ("usage application dictionaries", opt (list json_of_usage_application_dictionary) c.Pdfocg.ocgconfig_usage_application_dictionaries);
+            ("order", opt (list int) c.Pdfocg.ocgconfig_order);
+            ("list mode", json_of_listmode c.Pdfocg.ocgconfig_listmode);
+            ("rb groups", opt (list (list int)) c.Pdfocg.ocgconfig_rbgroups);
+            ("locked", list int c.Pdfocg.ocgconfig_locked)]
       in
       let json_of_usage u =
+        (* FIXME We don't have an example for this yet... *)
         `Assoc
            [("creator info", `Null);
             ("language", `Null);
@@ -141,13 +147,13 @@ let ocg_list_json pdf =
       let json_of_ocg o =
         `Assoc
            [("name", string o.Pdfocg.ocg_name);
-            ("intent", `List (map string o.Pdfocg.ocg_intent));
-            ("usage", begin match o.Pdfocg.ocg_usage with None -> `Null | Some usage -> json_of_usage usage end)]
+            ("intent", list string o.Pdfocg.ocg_intent);
+            ("usage", opt json_of_usage o.Pdfocg.ocg_usage)]
       in
         `Assoc
            [("OCGs", `Assoc (map (fun (i, o) -> (string_of_int i, json_of_ocg o)) ocg.ocgs));
             ("default config", json_of_config ocg.ocg_default_config);
-            ("configs", begin match ocg.ocg_configs with None -> `Null | Some cfgs -> `List (map json_of_config cfgs) end)]
+            ("configs", opt (list json_of_config) ocg.ocg_configs)]
 
 let ocg_list json pdf =
   if json then flprint (Cpdfyojson.Safe.pretty_to_string (ocg_list_json pdf)) else
