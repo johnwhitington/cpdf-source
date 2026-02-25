@@ -99,14 +99,25 @@ let ocg_get_list pdf =
    roundtripping. Of course, we can't change the tags in the page content, so
    what can be done with this is, by it nature, limited. *)
 let ocg_list_json pdf =
+  let string s =
+    `String (Pdftext.utf8_of_pdfdocstring s)
+  in
+  let string_opt o =
+    match o with None -> `Null | Some s -> `String (Pdftext.utf8_of_pdfdocstring s)
+  in
   match Pdfocg.read_ocg pdf with
   | None -> `Null
   | Some ocg ->
-      let json_of_config _ =
+      let json_of_state = function
+        | Pdfocg.OCG_ON -> `String "On"
+        | Pdfocg.OCG_OFF -> `String "Off"
+        | Pdfocg.OCG_Unchanged -> `String "Unchanged"
+      in
+      let json_of_config c =
         `Assoc
-           [("name", `Null);
-            ("creator", `Null);
-            ("base state", `Null);
+           [("name", string_opt c.Pdfocg.ocgconfig_name);
+            ("creator", string_opt c.Pdfocg.ocgconfig_creator);
+            ("base state", json_of_state c.Pdfocg.ocgconfig_basestate);
             ("on", `Null);
             ("off", `Null);
             ("intent", `Null);
@@ -129,8 +140,8 @@ let ocg_list_json pdf =
       in
       let json_of_ocg o =
         `Assoc
-           [("name", `Null);
-            ("intent", `List []);
+           [("name", string o.Pdfocg.ocg_name);
+            ("intent", `List (map string o.Pdfocg.ocg_intent));
             ("usage", begin match o.Pdfocg.ocg_usage with None -> `Null | Some usage -> json_of_usage usage end)]
       in
         `Assoc
