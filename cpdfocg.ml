@@ -115,8 +115,16 @@ let ocg_list_json pdf =
         | Pdfocg.OCG_AllPages -> `String "AllPages"
         | Pdfocg.OCG_VisiblePages -> `String "VisiblePages"
       in
+      let json_of_event = function
+        | Pdfocg.OCG_View -> `String "View"
+        | Pdfocg.OCG_Print -> `String "Print"
+        | Pdfocg.OCG_Export -> `String "Export"
+      in
       let json_of_usage_application_dictionary d =
-        `Null
+        `Assoc
+           [("event", json_of_event d.Pdfocg.ocg_event);
+            ("ocgs", list string d.Pdfocg.ocg_ocgs);
+            ("category", list string d.Pdfocg.ocg_category)]
       in
       let json_of_config c =
         `Assoc
