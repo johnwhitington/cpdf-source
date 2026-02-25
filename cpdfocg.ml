@@ -123,7 +123,7 @@ let ocg_list_json pdf =
       let json_of_usage_application_dictionary d =
         `Assoc
            [("event", json_of_event d.Pdfocg.ocg_event);
-            ("ocgs", list string d.Pdfocg.ocg_ocgs);
+            ("ocgs", list int d.Pdfocg.ocg_ocgs);
             ("category", list string d.Pdfocg.ocg_category)]
       in
       let json_of_config c =
