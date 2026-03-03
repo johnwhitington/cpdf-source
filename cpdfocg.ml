@@ -120,6 +120,9 @@ let ocg_list_json pdf =
         | Pdfocg.OCG_Print -> `String "Print"
         | Pdfocg.OCG_Export -> `String "Export"
       in
+      let json_of_order order =
+        `List (map (fun (n, ocgs) -> `Assoc [("name", opt string n); ("ocgs", list int ocgs)]) order)
+      in
       let json_of_usage_application_dictionary d =
         `Assoc
            [("event", json_of_event d.Pdfocg.ocg_event);
@@ -135,7 +138,7 @@ let ocg_list_json pdf =
             ("off", opt (list int) c.Pdfocg.ocgconfig_off);
             ("intent", list string c.Pdfocg.ocgconfig_intent);
             ("usage application dictionaries", opt (list json_of_usage_application_dictionary) c.Pdfocg.ocgconfig_usage_application_dictionaries);
-            ("order", opt (list int) c.Pdfocg.ocgconfig_order);
+            ("order", opt json_of_order c.Pdfocg.ocgconfig_order);
             ("list mode", json_of_listmode c.Pdfocg.ocgconfig_listmode);
             ("rb groups", opt (list (list int)) c.Pdfocg.ocgconfig_rbgroups);
             ("locked", list int c.Pdfocg.ocgconfig_locked)]
