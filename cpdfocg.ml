@@ -101,14 +101,15 @@ let ocg_get_list pdf =
 let ocg_list_json pdf =
   let string s = `String (Pdftext.utf8_of_pdfdocstring s) in
   let int i = `Int i in
+  let float f = `Float f in
   let opt f x = match x with None -> `Null | Some s -> f s in
   let list f l = `List (map f l) in
   match Pdfocg.read_ocg pdf with
   | None -> `Null
   | Some ocg ->
       let json_of_state = function
-        | Pdfocg.OCG_ON -> `String "On"
-        | Pdfocg.OCG_OFF -> `String "Off"
+        | Pdfocg.OCG_ON -> `String "ON"
+        | Pdfocg.OCG_OFF -> `String "OFF"
         | Pdfocg.OCG_Unchanged -> `String "Unchanged"
       in
       let json_of_listmode = function
@@ -121,50 +122,54 @@ let ocg_list_json pdf =
         | Pdfocg.OCG_Export -> `String "Export"
       in
       let json_of_order order =
-        `List (map (fun (n, ocgs) -> `Assoc [("name", opt string n); ("ocgs", list int ocgs)]) order)
+        `List (map (fun (n, ocgs) -> `Assoc [("Name", opt string n); ("OCGs", list int ocgs)]) order)
       in
       let json_of_usage_application_dictionary d =
         `Assoc
-           [("event", json_of_event d.Pdfocg.ocg_event);
-            ("ocgs", list int d.Pdfocg.ocg_ocgs);
-            ("category", list string d.Pdfocg.ocg_category)]
+           [("Event", json_of_event d.Pdfocg.ocg_event);
+            ("OCGs", list int d.Pdfocg.ocg_ocgs);
+            ("Category", list string d.Pdfocg.ocg_category)]
       in
       let json_of_config c =
         `Assoc
-           [("name", opt string c.Pdfocg.ocgconfig_name);
-            ("creator", opt string c.Pdfocg.ocgconfig_creator);
-            ("base state", json_of_state c.Pdfocg.ocgconfig_basestate);
-            ("on", list int c.Pdfocg.ocgconfig_on);
-            ("off", list int c.Pdfocg.ocgconfig_off);
-            ("intent", list string c.Pdfocg.ocgconfig_intent);
-            ("usage application dictionaries", list json_of_usage_application_dictionary c.Pdfocg.ocgconfig_usage_application_dictionaries);
-            ("order", opt json_of_order c.Pdfocg.ocgconfig_order);
-            ("list mode", json_of_listmode c.Pdfocg.ocgconfig_listmode);
-            ("rb groups", opt (list (list int)) c.Pdfocg.ocgconfig_rbgroups);
-            ("locked", list int c.Pdfocg.ocgconfig_locked)]
+           [("Name", opt string c.Pdfocg.ocgconfig_name);
+            ("Creator", opt string c.Pdfocg.ocgconfig_creator);
+            ("BaseState", json_of_state c.Pdfocg.ocgconfig_basestate);
+            ("ON", list int c.Pdfocg.ocgconfig_on);
+            ("OFF", list int c.Pdfocg.ocgconfig_off);
+            ("Intent", list string c.Pdfocg.ocgconfig_intent);
+            ("AS", list json_of_usage_application_dictionary c.Pdfocg.ocgconfig_usage_application_dictionaries);
+            ("Order", opt json_of_order c.Pdfocg.ocgconfig_order);
+            ("ListMode", json_of_listmode c.Pdfocg.ocgconfig_listmode);
+            ("RBGroups", opt (list (list int)) c.Pdfocg.ocgconfig_rbgroups);
+            ("Locked", list int c.Pdfocg.ocgconfig_locked)]
       in
       let json_of_usage u =
-        (* FIXME We don't have an example for this yet... *)
         `Assoc
-           [("creator info", `Null);
-            ("language", `Null);
-            ("export", `Null);
-            ("zoom", `Null);
-            ("print", `Null);
-            ("view", `Null);
-            ("user", `Null);
-            ("page element", `Null)]
+           [("CreatorInfo-Creator", opt string u.Pdfocg.ocg_creatorinfo_creator);
+            ("CreatorInfo-Subtype", opt string u.Pdfocg.ocg_creatorinfo_subtype);
+            ("Language-Language", opt string u.Pdfocg.ocg_language);
+            ("Language-Preferred", opt string u.Pdfocg.ocg_language_preferred);
+            ("Export", opt string u.Pdfocg.ocg_export);
+            ("Zoom-Min", opt float u.Pdfocg.ocg_zoom_min);
+            ("Zoom-Max", opt float u.Pdfocg.ocg_zoom_max);
+            ("Print-Subtype", opt string u.Pdfocg.ocg_print_subtype);
+            ("Print-PrintState", opt string u.Pdfocg.ocg_print_printstate);
+            ("ViewState", opt string u.Pdfocg.ocg_viewstate);
+            ("User-Type", opt string u.Pdfocg.ocg_user_type);
+            ("User-Name", opt (list string) u.Pdfocg.ocg_user_name);
+            ("PageElement-Subtype", opt string u.Pdfocg.ocg_page_element_subtype)]
       in
       let json_of_ocg o =
         `Assoc
-           [("name", string o.Pdfocg.ocg_name);
-            ("intent", list string o.Pdfocg.ocg_intent);
-            ("usage", opt json_of_usage o.Pdfocg.ocg_usage)]
+           [("Name", string o.Pdfocg.ocg_name);
+            ("Intent", list string o.Pdfocg.ocg_intent);
+            ("Usage", opt json_of_usage o.Pdfocg.ocg_usage)]
       in
         `Assoc
            [("OCGs", `Assoc (map (fun (i, o) -> (string_of_int i, json_of_ocg o)) ocg.ocgs));
-            ("default config", json_of_config ocg.ocg_default_config);
-            ("configs", list json_of_config ocg.ocg_configs)]
+            ("Default", json_of_config ocg.ocg_default_config);
+            ("Configs", list json_of_config ocg.ocg_configs)]
 
 let ocg_list json pdf =
   if json then flprint (Cpdfyojson.Safe.pretty_to_string (ocg_list_json pdf)) else
