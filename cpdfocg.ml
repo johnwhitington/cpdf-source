@@ -134,10 +134,10 @@ let ocg_list_json pdf =
            [("name", opt string c.Pdfocg.ocgconfig_name);
             ("creator", opt string c.Pdfocg.ocgconfig_creator);
             ("base state", json_of_state c.Pdfocg.ocgconfig_basestate);
-            ("on", opt (list int) c.Pdfocg.ocgconfig_on);
-            ("off", opt (list int) c.Pdfocg.ocgconfig_off);
+            ("on", list int c.Pdfocg.ocgconfig_on);
+            ("off", list int c.Pdfocg.ocgconfig_off);
             ("intent", list string c.Pdfocg.ocgconfig_intent);
-            ("usage application dictionaries", opt (list json_of_usage_application_dictionary) c.Pdfocg.ocgconfig_usage_application_dictionaries);
+            ("usage application dictionaries", list json_of_usage_application_dictionary c.Pdfocg.ocgconfig_usage_application_dictionaries);
             ("order", opt json_of_order c.Pdfocg.ocgconfig_order);
             ("list mode", json_of_listmode c.Pdfocg.ocgconfig_listmode);
             ("rb groups", opt (list (list int)) c.Pdfocg.ocgconfig_rbgroups);
@@ -164,7 +164,7 @@ let ocg_list_json pdf =
         `Assoc
            [("OCGs", `Assoc (map (fun (i, o) -> (string_of_int i, json_of_ocg o)) ocg.ocgs));
             ("default config", json_of_config ocg.ocg_default_config);
-            ("configs", opt (list json_of_config) ocg.ocg_configs)]
+            ("configs", list json_of_config ocg.ocg_configs)]
 
 let ocg_list json pdf =
   if json then flprint (Cpdfyojson.Safe.pretty_to_string (ocg_list_json pdf)) else
