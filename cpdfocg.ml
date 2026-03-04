@@ -1,4 +1,5 @@
 open Pdfutil
+open Cpdferror
 
 (* 1. Get list of indirects of all OCGs from the /OCProperties, and their textual names
  * 2. Calculate a change list to coalesce them
@@ -108,18 +109,18 @@ let ocg_list_json pdf =
   | None -> `Null
   | Some ocg ->
       let json_of_state = function
-        | Pdfocg.OCG_ON -> `String "ON"
-        | Pdfocg.OCG_OFF -> `String "OFF"
-        | Pdfocg.OCG_Unchanged -> `String "Unchanged"
+        | Pdfocg.OCG_ON -> `String "/ON"
+        | Pdfocg.OCG_OFF -> `String "/OFF"
+        | Pdfocg.OCG_Unchanged -> `String "/Unchanged"
       in
       let json_of_listmode = function
-        | Pdfocg.OCG_AllPages -> `String "AllPages"
-        | Pdfocg.OCG_VisiblePages -> `String "VisiblePages"
+        | Pdfocg.OCG_AllPages -> `String "/AllPages"
+        | Pdfocg.OCG_VisiblePages -> `String "/VisiblePages"
       in
       let json_of_event = function
-        | Pdfocg.OCG_View -> `String "View"
-        | Pdfocg.OCG_Print -> `String "Print"
-        | Pdfocg.OCG_Export -> `String "Export"
+        | Pdfocg.OCG_View -> `String "/View"
+        | Pdfocg.OCG_Print -> `String "/Print"
+        | Pdfocg.OCG_Export -> `String "/Export"
       in
       let json_of_order order =
         `List (map (fun (n, ocgs) -> `Assoc [("Name", opt string n); ("OCGs", list int ocgs)]) order)
@@ -175,8 +176,40 @@ let ocg_list json pdf =
   if json then flprint (Cpdfyojson.Safe.pretty_to_string (ocg_list_json pdf)) else
     List.iter (Printf.printf "%s\n") (map Pdftext.utf8_of_pdfdocstring (ocg_get_list pdf))
 
-let ocg_replace json pdf =
-  ()
+let ocg_read_json json =
+  match json with
+  | `Null -> None
+  | `Assoc a ->
+      begin match sort compare a with
+      | [("Configs", configs);
+         ("Default", default);
+         ("OCGs", ocgs)] ->
+           let ocg_default_config =
+             {Pdfocg.ocgconfig_name = None;
+              Pdfocg.ocgconfig_creator = None;
+              Pdfocg.ocgconfig_basestate = Pdfocg.OCG_ON;
+              Pdfocg.ocgconfig_on = [];
+              Pdfocg.ocgconfig_off = [];
+              Pdfocg.ocgconfig_intent = [];
+              Pdfocg.ocgconfig_usage_application_dictionaries = [];
+              Pdfocg.ocgconfig_order = None;
+              Pdfocg.ocgconfig_listmode = Pdfocg.OCG_AllPages;
+              Pdfocg.ocgconfig_rbgroups = None;
+              Pdfocg.ocgconfig_locked = []}
+           in
+             Some
+               {Pdfocg.ocgs = [];
+                Pdfocg.ocg_default_config;
+                Pdfocg.ocg_configs = []}
+      | _ -> error "ocg_read_json: malformed JSON top-level dictionary"
+      end
+  | _ -> error "ocg_read_json: malformed JSON top-level"
+
+let ocg_replace filename pdf =
+  let json = Cpdfyojson.Safe.from_string (contents_of_file filename) in
+  match ocg_read_json json with
+  | None -> ()
+  | Some ocg -> Pdfocg.write_ocg pdf ocg
 
 let ocg_rename f t pdf =
   Pdf.objselfmap
