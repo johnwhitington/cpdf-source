@@ -176,31 +176,54 @@ let ocg_list json pdf =
   if json then flprint (Cpdfyojson.Safe.pretty_to_string (ocg_list_json pdf)) else
     List.iter (Printf.printf "%s\n") (map Pdftext.utf8_of_pdfdocstring (ocg_get_list pdf))
 
+let ocg_read_usage json =
+  Some
+   {Pdfocg.ocg_creatorinfo = None; (* FIXME *)
+    Pdfocg.ocg_language = None; (* FIXME *)
+    Pdfocg.ocg_export = None; (* FIXME *)
+    Pdfocg.ocg_zoom_min = None; (* FIXME *)
+    Pdfocg.ocg_zoom_max = None; (* FIXME *)
+    Pdfocg.ocg_print_subtype = None; (* FIXME *)
+    Pdfocg.ocg_print_printstate = None; (* FIXME *)
+    Pdfocg.ocg_viewstate = None; (* FIXME *)
+    Pdfocg.ocg_user = None; (* FIXME *)
+    Pdfocg.ocg_page_element_subtype = None} (* FIXME *)
+
+let ocg_read_appdict json =
+  {Pdfocg.ocg_event = Pdfocg.OCG_View; (* FIXME *)
+   Pdfocg.ocg_ocgs = []; (* FIXME *)
+   Pdfocg.ocg_category = []} (* FIXME *)
+
+let ocg_read_config json =
+  {Pdfocg.ocgconfig_name = None; (* FIXME *)
+   Pdfocg.ocgconfig_creator = None; (* FIXME *)
+   Pdfocg.ocgconfig_basestate = Pdfocg.OCG_ON; (* FIXME *)
+   Pdfocg.ocgconfig_on = []; (* FIXME *)
+   Pdfocg.ocgconfig_off = []; (* FIXME *)
+   Pdfocg.ocgconfig_intent = []; (* FIXME *)
+   Pdfocg.ocgconfig_usage_application_dictionaries = map ocg_read_appdict []; (* FIXME *)
+   Pdfocg.ocgconfig_order = None; (* FIXME *)
+   Pdfocg.ocgconfig_listmode = Pdfocg.OCG_AllPages; (* FIXME *)
+   Pdfocg.ocgconfig_rbgroups = None; (* FIXME *)
+   Pdfocg.ocgconfig_locked = []} (* FIXME *)
+
+let ocg_read_ocg json =
+  (1 (* FIXME *), {Pdfocg.ocg_name = ""; (* FIXME *)
+       Pdfocg.ocg_intent = []; (* FIXME *)
+       Pdfocg.ocg_usage = ocg_read_usage `Null}) (* FIXME *)
+   
 let ocg_read_json json =
   match json with
   | `Null -> None
   | `Assoc a ->
       begin match sort compare a with
-      | [("Configs", configs);
+      | [("Configs", `List configs);
          ("Default", default);
-         ("OCGs", ocgs)] ->
-           let ocg_default_config =
-             {Pdfocg.ocgconfig_name = None;
-              Pdfocg.ocgconfig_creator = None;
-              Pdfocg.ocgconfig_basestate = Pdfocg.OCG_ON;
-              Pdfocg.ocgconfig_on = [];
-              Pdfocg.ocgconfig_off = [];
-              Pdfocg.ocgconfig_intent = [];
-              Pdfocg.ocgconfig_usage_application_dictionaries = [];
-              Pdfocg.ocgconfig_order = None;
-              Pdfocg.ocgconfig_listmode = Pdfocg.OCG_AllPages;
-              Pdfocg.ocgconfig_rbgroups = None;
-              Pdfocg.ocgconfig_locked = []}
-           in
+         ("OCGs", `List ocgs)] ->
              Some
-               {Pdfocg.ocgs = [];
-                Pdfocg.ocg_default_config;
-                Pdfocg.ocg_configs = []}
+               {Pdfocg.ocgs = map ocg_read_ocg ocgs;
+                Pdfocg.ocg_default_config = ocg_read_config default;
+                Pdfocg.ocg_configs = map ocg_read_config configs}
       | _ -> error "ocg_read_json: malformed JSON top-level dictionary"
       end
   | _ -> error "ocg_read_json: malformed JSON top-level"
