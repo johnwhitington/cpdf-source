@@ -147,18 +147,18 @@ let ocg_list_json pdf =
       in
       let json_of_usage u =
         `Assoc
-           [("CreatorInfo-Creator", opt string u.Pdfocg.ocg_creatorinfo_creator);
-            ("CreatorInfo-Subtype", opt string u.Pdfocg.ocg_creatorinfo_subtype);
-            ("Language-Language", opt string u.Pdfocg.ocg_language);
-            ("Language-Preferred", opt string u.Pdfocg.ocg_language_preferred);
+           [("CreatorInfo-Creator", opt string (match u.Pdfocg.ocg_creatorinfo with None -> None | Some (a, _) -> Some a));
+            ("CreatorInfo-Subtype", opt string (match u.Pdfocg.ocg_creatorinfo with None -> None | Some (_, b) -> Some b));
+            ("Language-Language", opt string (match u.Pdfocg.ocg_language with None -> None | Some (l, _) -> Some l));
+            ("Language-Preferred", opt string (match u.Pdfocg.ocg_language with None -> None | Some (_, o) -> o));
             ("Export", opt string u.Pdfocg.ocg_export);
             ("Zoom-Min", opt float u.Pdfocg.ocg_zoom_min);
             ("Zoom-Max", opt float u.Pdfocg.ocg_zoom_max);
             ("Print-Subtype", opt string u.Pdfocg.ocg_print_subtype);
             ("Print-PrintState", opt string u.Pdfocg.ocg_print_printstate);
             ("ViewState", opt string u.Pdfocg.ocg_viewstate);
-            ("User-Type", opt string u.Pdfocg.ocg_user_type);
-            ("User-Name", opt (list string) u.Pdfocg.ocg_user_name);
+            ("User-Type", opt string (match u.Pdfocg.ocg_user with None -> None | Some (a, _) -> Some a));
+            ("User-Name", opt (list string) (match u.Pdfocg.ocg_user with None -> None | Some (_, b) -> Some b));
             ("PageElement-Subtype", opt string u.Pdfocg.ocg_page_element_subtype)]
       in
       let json_of_ocg o =
