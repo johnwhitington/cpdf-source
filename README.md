@@ -12,7 +12,7 @@ For commercial licenses, email
 [contact@coherentgraphics.co.uk](mailto:contact@coherentgraphics.co.uk) or
 visit [https://www.coherentpdf.com/](https://www.coherentpdf.com/)
 
-Copyright Coherent Graphics Ltd 2025.
+Copyright Coherent Graphics Ltd 2026.
 
 Keep up to date by joining the very low volume cpdf-announce mailing list:
 
@@ -55,7 +55,7 @@ To build
 --------
 
 If downloading from Github, obtain the correct source. This means choosing the
-tag for a particular version, such as "v2.8.1". The head of the master branch
+tag for a particular version, such as "v2.9". The head of the master branch
 is unstable.
 
 1. Type `make` to make the cpdf executable and the library
@@ -69,6 +69,14 @@ Alternatively, the library and command-line binary can be installed by
 ```
 opam install cpdf
 ```
+Package management
+
+•	OPAM CamlPDF / CPDF
+•	Debian
+•	Fedora
+•	Homebrew
+•	Winget
+•	Choco
 
 Documentation
 -------------
