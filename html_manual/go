@@ -1,9 +1,9 @@
 #Move files around
 cp -r ../manualimages .
 cp ../logo.pdf .
-cp ../Changes .
+cp ../Changes.txt .
 mkdir ../camlpdf
-cp ../../camlpdf/Changes ../camlpdf/Changes
+cp ../../camlpdf/Changes.txt ../camlpdf/Changes.txt
 cp ../cpdfmanual.tex .
 
 #Remove tagging
