@@ -36,7 +36,7 @@ val addtexts :
     bool -> (*underneath*)
     string ->(*text*)
     int list ->(*page range*)
-    bool ->(*relative to cropbox?*)
+    string ->(*relative to box*)
     float ->(*opacity*)
     justification ->(*justification*)
     bool ->(*midline adjust?*)
@@ -57,7 +57,7 @@ val addrectangle :
     float ->
     float ->
     Cpdfposition.position ->
-    bool -> bool -> int list -> Pdf.t -> Pdf.t
+    string -> bool -> int list -> Pdf.t -> Pdf.t
 
 (**/**)
 val replace_pairs :

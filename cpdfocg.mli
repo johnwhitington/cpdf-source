@@ -3,8 +3,11 @@
 (** Return list of OCG names. *)
 val ocg_get_list : Pdf.t -> string list
 
-(** Print OCG list to Standard Output. *)
-val ocg_list : Pdf.t -> unit
+(** Print OCG list to Standard Output, optioanally in JSON format. *)
+val ocg_list : bool -> Pdf.t -> unit
+
+(** Replace OCG from JSON. *)
+val ocg_replace : string -> Pdf.t -> unit
 
 (** Coalesce same-named OCGs resulting from merge. *)
 val ocg_coalesce : Pdf.t -> unit

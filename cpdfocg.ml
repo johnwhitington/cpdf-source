@@ -1,4 +1,5 @@
 open Pdfutil
+open Cpdferror
 
 (* 1. Get list of indirects of all OCGs from the /OCProperties, and their textual names
  * 2. Calculate a change list to coalesce them
@@ -95,8 +96,143 @@ let ocg_get_list pdf =
   end;
   rev !l
 
-let ocg_list pdf =
-  List.iter (Printf.printf "%s\n") (map Pdftext.utf8_of_pdfdocstring (ocg_get_list pdf))
+(* Output all OCGs in JSON such that simple changes can be made by
+   roundtripping. Of course, we can't change the tags in the page content, so
+   what can be done with this is, by it nature, limited. *)
+let ocg_list_json pdf =
+  let string s = `String (Pdftext.utf8_of_pdfdocstring s) in
+  let int i = `Int i in
+  let float f = `Float f in
+  let opt f x = match x with None -> `Null | Some s -> f s in
+  let list f l = `List (map f l) in
+  match Pdfocg.read_ocg pdf with
+  | None -> `Null
+  | Some ocg ->
+      let json_of_state = function
+        | Pdfocg.OCG_ON -> `String "/ON"
+        | Pdfocg.OCG_OFF -> `String "/OFF"
+        | Pdfocg.OCG_Unchanged -> `String "/Unchanged"
+      in
+      let json_of_listmode = function
+        | Pdfocg.OCG_AllPages -> `String "/AllPages"
+        | Pdfocg.OCG_VisiblePages -> `String "/VisiblePages"
+      in
+      let json_of_event = function
+        | Pdfocg.OCG_View -> `String "/View"
+        | Pdfocg.OCG_Print -> `String "/Print"
+        | Pdfocg.OCG_Export -> `String "/Export"
+      in
+      let json_of_order order =
+        `List (map (fun (n, ocgs) -> `Assoc [("Name", opt string n); ("OCGs", list int ocgs)]) order)
+      in
+      let json_of_usage_application_dictionary d =
+        `Assoc
+           [("Event", json_of_event d.Pdfocg.ocg_event);
+            ("OCGs", list int d.Pdfocg.ocg_ocgs);
+            ("Category", list string d.Pdfocg.ocg_category)]
+      in
+      let json_of_config c =
+        `Assoc
+           [("Name", opt string c.Pdfocg.ocgconfig_name);
+            ("Creator", opt string c.Pdfocg.ocgconfig_creator);
+            ("BaseState", json_of_state c.Pdfocg.ocgconfig_basestate);
+            ("ON", list int c.Pdfocg.ocgconfig_on);
+            ("OFF", list int c.Pdfocg.ocgconfig_off);
+            ("Intent", list string c.Pdfocg.ocgconfig_intent);
+            ("AS", list json_of_usage_application_dictionary c.Pdfocg.ocgconfig_usage_application_dictionaries);
+            ("Order", opt json_of_order c.Pdfocg.ocgconfig_order);
+            ("ListMode", json_of_listmode c.Pdfocg.ocgconfig_listmode);
+            ("RBGroups", opt (list (list int)) c.Pdfocg.ocgconfig_rbgroups);
+            ("Locked", list int c.Pdfocg.ocgconfig_locked)]
+      in
+      let json_of_usage u =
+        `Assoc
+           [("CreatorInfo-Creator", opt string (match u.Pdfocg.ocg_creatorinfo with None -> None | Some (a, _) -> Some a));
+            ("CreatorInfo-Subtype", opt string (match u.Pdfocg.ocg_creatorinfo with None -> None | Some (_, b) -> Some b));
+            ("Language-Language", opt string (match u.Pdfocg.ocg_language with None -> None | Some (l, _) -> Some l));
+            ("Language-Preferred", opt string (match u.Pdfocg.ocg_language with None -> None | Some (_, o) -> o));
+            ("Export", opt string u.Pdfocg.ocg_export);
+            ("Zoom-Min", opt float u.Pdfocg.ocg_zoom_min);
+            ("Zoom-Max", opt float u.Pdfocg.ocg_zoom_max);
+            ("Print-Subtype", opt string u.Pdfocg.ocg_print_subtype);
+            ("Print-PrintState", opt string u.Pdfocg.ocg_print_printstate);
+            ("ViewState", opt string u.Pdfocg.ocg_viewstate);
+            ("User-Type", opt string (match u.Pdfocg.ocg_user with None -> None | Some (a, _) -> Some a));
+            ("User-Name", opt (list string) (match u.Pdfocg.ocg_user with None -> None | Some (_, b) -> Some b));
+            ("PageElement-Subtype", opt string u.Pdfocg.ocg_page_element_subtype)]
+      in
+      let json_of_ocg o =
+        `Assoc
+           [("Name", string o.Pdfocg.ocg_name);
+            ("Intent", list string o.Pdfocg.ocg_intent);
+            ("Usage", opt json_of_usage o.Pdfocg.ocg_usage)]
+      in
+        `Assoc
+           [("OCGs", `Assoc (map (fun (i, o) -> (string_of_int i, json_of_ocg o)) ocg.ocgs));
+            ("Default", json_of_config ocg.ocg_default_config);
+            ("Configs", list json_of_config ocg.ocg_configs)]
+
+let ocg_list json pdf =
+  if json then flprint (Cpdfyojson.Safe.pretty_to_string (ocg_list_json pdf)) else
+    List.iter (Printf.printf "%s\n") (map Pdftext.utf8_of_pdfdocstring (ocg_get_list pdf))
+
+let ocg_read_usage json =
+  Some
+   {Pdfocg.ocg_creatorinfo = None; (* FIXME *)
+    Pdfocg.ocg_language = None; (* FIXME *)
+    Pdfocg.ocg_export = None; (* FIXME *)
+    Pdfocg.ocg_zoom_min = None; (* FIXME *)
+    Pdfocg.ocg_zoom_max = None; (* FIXME *)
+    Pdfocg.ocg_print_subtype = None; (* FIXME *)
+    Pdfocg.ocg_print_printstate = None; (* FIXME *)
+    Pdfocg.ocg_viewstate = None; (* FIXME *)
+    Pdfocg.ocg_user = None; (* FIXME *)
+    Pdfocg.ocg_page_element_subtype = None} (* FIXME *)
+
+let ocg_read_appdict json =
+  {Pdfocg.ocg_event = Pdfocg.OCG_View; (* FIXME *)
+   Pdfocg.ocg_ocgs = []; (* FIXME *)
+   Pdfocg.ocg_category = []} (* FIXME *)
+
+let ocg_read_config json =
+  {Pdfocg.ocgconfig_name = None; (* FIXME *)
+   Pdfocg.ocgconfig_creator = None; (* FIXME *)
+   Pdfocg.ocgconfig_basestate = Pdfocg.OCG_ON; (* FIXME *)
+   Pdfocg.ocgconfig_on = []; (* FIXME *)
+   Pdfocg.ocgconfig_off = []; (* FIXME *)
+   Pdfocg.ocgconfig_intent = []; (* FIXME *)
+   Pdfocg.ocgconfig_usage_application_dictionaries = map ocg_read_appdict []; (* FIXME *)
+   Pdfocg.ocgconfig_order = None; (* FIXME *)
+   Pdfocg.ocgconfig_listmode = Pdfocg.OCG_AllPages; (* FIXME *)
+   Pdfocg.ocgconfig_rbgroups = None; (* FIXME *)
+   Pdfocg.ocgconfig_locked = []} (* FIXME *)
+
+let ocg_read_ocg json =
+  (1 (* FIXME *), {Pdfocg.ocg_name = ""; (* FIXME *)
+       Pdfocg.ocg_intent = []; (* FIXME *)
+       Pdfocg.ocg_usage = ocg_read_usage `Null}) (* FIXME *)
+   
+let ocg_read_json json =
+  match json with
+  | `Null -> None
+  | `Assoc a ->
+      begin match sort compare a with
+      | [("Configs", `List configs);
+         ("Default", default);
+         ("OCGs", `List ocgs)] ->
+             Some
+               {Pdfocg.ocgs = map ocg_read_ocg ocgs;
+                Pdfocg.ocg_default_config = ocg_read_config default;
+                Pdfocg.ocg_configs = map ocg_read_config configs}
+      | _ -> error "ocg_read_json: malformed JSON top-level dictionary"
+      end
+  | _ -> error "ocg_read_json: malformed JSON top-level"
+
+let ocg_replace filename pdf =
+  let json = Cpdfyojson.Safe.from_string (contents_of_file filename) in
+  match ocg_read_json json with
+  | None -> ()
+  | Some ocg -> Pdfocg.write_ocg pdf ocg
 
 let ocg_rename f t pdf =
   Pdf.objselfmap

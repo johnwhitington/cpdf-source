@@ -186,6 +186,7 @@ type op =
   | OpenAtPageFit of string
   | OpenAtPageCustom of string
   | AddPageLabels
+  | AddPageLabelsJSON of string
   | RemovePageLabels
   | PrintPageLabels
   | RemoveDictEntry of string
@@ -206,6 +207,7 @@ type op =
   | OutputJSON
   | OCGCoalesce
   | OCGList
+  | OCGReplace of string
   | OCGRename
   | OCGOrderAll
   | StampAsXObject of string
@@ -244,6 +246,9 @@ type op =
   | RemoveWebCapture
   | RemoveProcsets
   | Summary
+  | Revisions
+  | SigInfo
+  | AddAttachedFilesJSON of string
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -352,6 +357,7 @@ let string_of_op = function
   | OpenAtPageFit _ -> "OpenAtPageFit"
   | OpenAtPageCustom _ -> "OpenAtPageCustom"
   | AddPageLabels -> "AddPageLabels"
+  | AddPageLabelsJSON _ -> "AddPageLabelsJSON"
   | RemovePageLabels -> "RemovePageLabels"
   | PrintPageLabels -> "PrintPageLabels"
   | RemoveDictEntry _ -> "RemoveDictEntry"
@@ -377,6 +383,7 @@ let string_of_op = function
   | OutputJSON -> "OutputJSON"
   | OCGCoalesce -> "OCGCoalesce"
   | OCGList -> "OCGList"
+  | OCGReplace _ -> "OCGReplace"
   | OCGRename -> "OCGRename"
   | OCGOrderAll -> "OCGOrderAll"
   | StampAsXObject _ -> "StampAsXObject"
@@ -414,6 +421,9 @@ let string_of_op = function
   | RemoveWebCapture -> "RemoveWebCapture"
   | RemoveProcsets -> "RemoveProcsets"
   | Summary -> "Summary"
+  | Revisions -> "Revisions"
+  | SigInfo -> "SigInfo"
+  | AddAttachedFilesJSON _ -> "AddAttachedFilesJSON"
 
 (* Inputs: filename, pagespec. *)
 type input_kind = 
@@ -482,7 +492,7 @@ type args =
    mutable bates : int;
    mutable batespad : int option;
    mutable prerotate : bool;
-   mutable relative_to_cropbox : bool;
+   mutable relative_to_box : string;
    mutable keepversion : bool;
    mutable bycolumns : bool;
    mutable pagerotation : int;
@@ -607,7 +617,8 @@ type args =
    mutable include_data : bool;
    mutable inline : bool;
    mutable merge_masks : bool;
-   mutable process_images_force : bool}
+   mutable process_images_force : bool;
+   mutable update : bool}
 
 let args =
   {op = None;
@@ -641,7 +652,7 @@ let args =
    bates = 0;
    batespad = None;
    prerotate = false;
-   relative_to_cropbox = false;
+   relative_to_box = "/MediaBox";
    keepversion = false;
    bycolumns = false;
    pagerotation = 0;
@@ -767,7 +778,8 @@ let args =
    include_data = false;
    inline = false;
    merge_masks = false;
-   process_images_force = false}
+   process_images_force = false;
+   update = false}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -806,7 +818,7 @@ let reset_arguments () =
   args.bates <- 0;
   args.batespad <- None;
   args.prerotate <- false;
-  args.relative_to_cropbox <- false;
+  args.relative_to_box <- "/MediaBox";
   args.keepversion <- false;
   args.bycolumns <- false;
   args.pagerotation <- 0;
@@ -912,7 +924,8 @@ let reset_arguments () =
   args.include_data <- false;
   args.inline <- false;
   args.merge_masks <- false;
-  args.process_images_force <- false
+  args.process_images_force <- false;
+  args.update <- false
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -1011,13 +1024,14 @@ let banned banlist = function
   | SetAuthor _|SetTitle _|SetSubject _|SetKeywords _|SetCreate _
   | SetModify _|SetCreator _|SetProducer _|RemoveDictEntry _ | ReplaceDictEntry _ | PrintDictEntry _ | SetMetadata _
   | ExtractText | ExtractImages | ExtractSingleImage _ | ExtractFontFile _
-  | AddPageLabels | RemovePageLabels | OutputJSON | OCGCoalesce
-  | OCGRename | OCGList | OCGOrderAll | PrintFontEncoding _ | TableOfContents | Typeset _ | Composition _
+  | AddPageLabels | AddPageLabelsJSON _ | RemovePageLabels | OutputJSON | OCGCoalesce
+  | OCGRename | OCGList | OCGReplace _ | OCGOrderAll | PrintFontEncoding _ | TableOfContents | Typeset _ | Composition _
   | TextWidth _ | SetAnnotations _ | CopyAnnotations _ | ExtractStream _ | ReplaceStream _ | PrintObj _ | ReplaceObj _ | RemoveObj _
   | Verify _ | MarkAs _ | RemoveMark _ | ExtractStructTree | ReplaceStructTree _ | SetLanguage _
   | PrintStructTree | Rasterize | OutputImage | RemoveStructTree | MarkAsArtifact
   | ContainsJavaScript | RemoveJavaScript | RemoveArticleThreads | RemovePagePiece | RemoveOutputIntents
-  | RemoveWebCapture | RemoveProcsets | ExtractMetadata | Summary -> false (* Always allowed *)
+  | RemoveWebCapture | RemoveProcsets | ExtractMetadata | Summary | Revisions | SigInfo
+  | AddAttachedFilesJSON _ -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
   | Decrypt | Encrypt | CombinePages _ -> true (* Never allowed *)
@@ -1681,11 +1695,12 @@ let setrange spec =
   | x -> ()
 
 let setrevision n =
-  match args.inputs with
-    (a, b, c, d, e, _)::more ->
-      args.inputs <- (a, b, c, d, e, Some n) :: more
-  | [] ->
-      Pdfe.log "Warning. -revision ignored. Put it after the filename.\n"
+  if n < 0 then error "Revision number too low." else
+    match args.inputs with
+      (a, b, c, d, e, _)::more ->
+        args.inputs <- (a, b, c, d, e, Some n) :: more
+    | [] ->
+        Pdfe.log "Warning. -revision ignored. Put it after the filename.\n"
 
 let setimageresolution f =
   detect_duplicate_op (ImageResolution f);
@@ -2161,7 +2176,10 @@ let specs =
       " Collate ranges in multiples when merging");
    ("-revision",
       Arg.Int setrevision,
-      "");
+      " Choose revision to read from");
+   ("-revisions",
+      Arg.Unit (setop Revisions),
+      " Print number of revisions");
    ("-change-id",
       Arg.Unit (setop ChangeId),
       " Change the file's /ID tag");
@@ -2527,8 +2545,17 @@ let specs =
       Arg.Unit (fun () -> args.topline <- true),
       " Adjust text to topline rather than baseline");
    ("-relative-to-cropbox",
-      Arg.Unit (fun () -> args.relative_to_cropbox <- true),
-      " Add text relative to Crop Box not Media Box");
+      Arg.Unit (fun () -> args.relative_to_box <- "/CropBox"),
+      " Add relative to Crop Box not Media Box");
+   ("-relative-to-trimbox",
+      Arg.Unit (fun () -> args.relative_to_box <- "/TrimBox"),
+      " Add relative to Trim Box not Media Box");
+   ("-relative-to-artbox",
+      Arg.Unit (fun () -> args.relative_to_box <- "/ArtBox"),
+      " Add relative to Art Box not Media Box");
+   ("-relative-to-bleedbox",
+      Arg.Unit (fun () -> args.relative_to_box <- "/BleedBox"),
+      " Add relative to Bleed Box not Media Box");
    ("-embed-missing-fonts",
       Arg.Unit (setop EmbedMissingFonts),
       " Embed missing fonts by calling gs");
@@ -2733,6 +2760,9 @@ let specs =
    ("-list-attached-files",
       Arg.Unit (setop ListAttachedFiles),
       " List attached files");
+   ("-attach-files-json",
+      Arg.String (fun s -> setop (AddAttachedFilesJSON s) ()),
+      " Add document-level attached files from JSON");
    ("-include-data",
       Arg.Unit (fun () -> args.include_data <- true),
       " Include file data when listing attachments as JSON");
@@ -2841,6 +2871,9 @@ let specs =
    ("-add-page-labels",
       Arg.Unit (setop AddPageLabels),
       " Add or replace page labels");
+   ("-add-page-labels-json",
+      Arg.String (fun s -> setop (AddPageLabelsJSON s) ()),
+      " Add or replace page labels from JSON");
    ("-label-style",
       Arg.String setlabelstyle,
       " Set label style (default DecimalArabic)");
@@ -3024,6 +3057,12 @@ let specs =
    ("-ocg-list",
      Arg.Unit (setop OCGList),
      " List optional content groups");
+   ("-ocg-list-json",
+     Arg.Unit (fun () -> args.format_json <- true; setop OCGList ()),
+     " List optional content groups as JSON");
+   ("-ocg-replace",
+     Arg.String (fun s -> setop (OCGReplace s) ()),
+     " Replace optional content groups from JSON");
    ("-ocg-rename",
      Arg.Unit (setop OCGRename),
      " Rename optional content group");
@@ -3196,6 +3235,8 @@ let specs =
    ("-remove-output-intents", Arg.Unit (fun () -> setop RemoveOutputIntents ()), " Remove output intents");
    ("-remove-web-capture", Arg.Unit (fun () -> setop RemoveWebCapture ()), " Remove web capture data");
    ("-remove-procsets", Arg.Unit (fun () -> setop RemoveProcsets ()), " Remove procsets");
+   ("-sig-info", Arg.Unit (fun () -> setop SigInfo ()), " Show digital signature information");
+   ("-update", Arg.Unit (fun () -> args.update <- true), " Update file by appending");
    (* These items are undocumented *)
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit (fun () -> args.debugcrypt <- true), "");
@@ -3276,7 +3317,7 @@ let pdf_of_stdin ?revision user_pw owner_pw =
    with
      _ -> raise (StdInBytes !rbytes)
 
-let rec get_single_pdf ?(decrypt=true) ?(fail=false) op read_lazy =
+let rec get_single_pdf ?(revisions=false) ?(decrypt=true) ?(fail=false) op read_lazy =
   let failout () =
     if fail then begin
       (* Reconstructed with ghostscript, but then we couldn't read it even then. Do not loop. *)
@@ -3298,6 +3339,7 @@ let rec get_single_pdf ?(decrypt=true) ?(fail=false) op read_lazy =
   in
   match args.inputs with
   | (InFile inname, x, u, o, y, revision) as input::more ->
+      let revision = if revisions then Some ~-1 else revision in
       Cpdfutil.progress_line (Printf.sprintf "<<< Reading %s" inname);
       if args.squeeze then
         Printf.printf "Initial file size is %i bytes\n" (filesize inname);
@@ -3309,13 +3351,14 @@ let rec get_single_pdf ?(decrypt=true) ?(fail=false) op read_lazy =
             pdfread_pdf_of_file ?revision (optstring u) (optstring o) inname
         with
         | Cpdferror.SoftError _ as e -> raise e (* Bad owner or user password *)
+        | Pdfread.Revisions n -> raise (Pdfread.Revisions n)
         | _ ->
             if args.gs_malformed then
               begin
                 failout ();
                 let newname = mend_pdf_file_with_ghostscript inname in
                   args.inputs <- (InFile newname, x, u, o, y, revision)::more;
-                  get_single_pdf ~fail:true op read_lazy 
+                  get_single_pdf ~revisions ~decrypt ~fail:true op read_lazy
               end
             else
               warn_gs ()
@@ -3324,6 +3367,7 @@ let rec get_single_pdf ?(decrypt=true) ?(fail=false) op read_lazy =
         if decrypt then decrypt_if_necessary input op pdf else pdf
   | (StdIn, x, u, o, y, revision) as input::more ->
       Cpdfutil.progress_line (Printf.sprintf "<<< Reading file from stdin");
+      let revision = if revisions then Some ~-1 else revision in
       let pdf =
         try pdf_of_stdin ?revision u o with
           StdInBytes b ->
@@ -3337,14 +3381,16 @@ let rec get_single_pdf ?(decrypt=true) ?(fail=false) op read_lazy =
                 close_out fh;
                 let newname = mend_pdf_file_with_ghostscript inname in
                 args.inputs <- (InFile newname, x, u, o, y, revision)::more;
-                get_single_pdf ~fail:true op read_lazy
+                get_single_pdf ~revisions ~decrypt ~fail:true op read_lazy
               end
             else
               warn_gs ()
       in
         args.was_encrypted <- Pdfcrypt.is_encrypted pdf;
         if decrypt then decrypt_if_necessary input op pdf else pdf
-  | (AlreadyInMemory (pdf, s), _, _, _, _, _)::_ -> pdf
+  | (AlreadyInMemory (pdf, s), _, _, _, _, _)::_ ->
+      (* For now, any file we have read or created will have 1 revision, because we don't preserve them. *)
+      if revisions then raise (Pdfread.Revisions 1) else pdf
   | _ ->
       raise (Arg.Bad "cpdf: No input specified.\n")
 
@@ -3497,6 +3543,7 @@ let really_write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf outna
                 if owner_pw <> "" then owner_pw else user_pw
               in
                 Pdfwrite.pdf_to_file_options
+                  ~update:args.update
                   ~preserve_objstm:args.preserve_objstm
                   ~generate_objstm:args.create_objstm
                   ~compress_objstm:(not is_decompress || args.decompress_just_content)
@@ -3510,6 +3557,7 @@ let really_write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf outna
               if args.debugcrypt then
                 Printf.printf "Pdf to file in really_write_pdf\n";
               Pdfwrite.pdf_to_file_options
+                ~update:args.update
                 ~preserve_objstm:args.preserve_objstm
                 ~generate_objstm:args.create_objstm
                 ~compress_objstm:(not is_decompress || args.decompress_just_content)
@@ -3797,8 +3845,8 @@ let check_bookmarks_mistake () =
 let check_clashing_output_name () =
   match args.out with
   | File s ->
-      if (List.exists (function (InFile s', _, _, _, _, _) when s = s' -> true | _ -> false) args.inputs) then
-        Pdfe.log "Warning: output file name clashes with input file name. Malformed file may result.\n"
+      if (List.exists (function (InFile s', _, _, _, _, _) when s = s' -> true | _ -> false) args.inputs) && not args.update then
+        Pdfe.log "Warning: output file name clashes with input file name. Malformed file may result. Did you mean to use -update?\n"
   | _ -> ()
 
 let build_enc () =
@@ -3989,6 +4037,56 @@ let remove_web_capture pdf =
 
 let remove_procsets pdf =
   Cpdfutil.remove_dict_entry pdf "/ProcSet" None
+
+(* First, simplistic version. Look through all objects, to locate /FT/Sig
+  anywhere. Then assume /V in same dicitonary (smashed widget/field?). Then
+  print /Type, /Filter, /SubFilter, /Name. *)
+let show_digital_signature_info pdf json =
+  let sigs = ref [] in
+    Pdf.objiter
+      (fun i obj ->
+         match Pdf.lookup_direct pdf "/FT" obj with
+         | Some (Pdf.Name "/Sig") ->
+             begin match Pdf.lookup_direct pdf "/V" obj with
+             | Some d ->
+                 let sigtype =
+                   match Pdf.lookup_direct pdf "/Type" d with
+                   | Some (Pdf.Name n) -> n
+                   | _ -> "Sig"
+                 in
+                 let sigfilter =
+                   match Pdf.lookup_direct pdf "/Filter" d with
+                   | Some (Pdf.Name n) -> n
+                   | _ -> "" 
+                 in
+                 let sigsubfilter =
+                   match Pdf.lookup_direct pdf "/SubFilter" d with
+                   | Some (Pdf.Name n) -> n
+                   | _ -> "" 
+                 in
+                 let signame =
+                   match Pdf.lookup_direct pdf "/Name" d with
+                   | Some (Pdf.String s) -> Pdftext.utf8_of_pdfdocstring s
+                   | _ -> ""
+                 in
+                   sigs =| (sigtype, sigfilter, sigsubfilter, signame)
+             | _ -> ()
+             end
+         | _ -> ())
+      pdf;
+    if json then
+      let mkjson (t, f, sf, n) =
+        `Assoc [("/Type", `String t);
+                ("/Filter", `String f);
+                ("/SubFilter", `String sf);
+                ("/Name", `String n)]
+      in
+        flprint (Cpdfyojson.Safe.pretty_to_string (`List (map mkjson !sigs))) 
+    else
+      iter
+        (fun (sigtype, sigfilter, sigsubfilter, signame) ->
+           Printf.printf "%s, %s, %s, %s\n" sigtype sigfilter sigsubfilter signame)
+        !sigs
 
 (* Main function *)
 let rec go () =
@@ -4701,6 +4799,26 @@ let rec go () =
               write_pdf false pdf
       | _ -> error "attach file: No input file specified"
       end
+  | Some (AddAttachedFilesJSON f) ->
+      let pdf = get_single_pdf args.op false in
+      let attachments =
+        match Cpdfyojson.Safe.from_file f with
+         `List l ->
+           let l = map (function `Assoc l -> `Assoc (sort compare l) | x -> x) l in
+             map
+               (function
+                 | `Assoc [("Data", `String data); ("Description", desc); ("Name", `String name); ("Page", `Int n); ("Relationship", rel); ] ->
+                    (begin match n with 0 -> None | n -> Some n end,
+                     Pdftext.pdfdocstring_of_utf8 name,
+                     begin match desc with `Null -> None | `String s -> Some s | _ -> error "JSON: bad description" end,
+                     begin match rel with `Null -> None | `String s -> Some s | _ -> error "JSON: bad relationship" end,
+                     bytes_of_string data)
+                 | _ -> error "JSON: bad attachment")
+               l
+        | _ -> error "JSON: top-level list expected."
+      in
+        let pdf = fold_left (fun pdf (p, n, d, r, data) -> Cpdfattach.attach_file ?memory:(Some data) args.keepversion p pdf r d n) pdf attachments in
+          write_pdf false pdf
   | Some PadBefore ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
@@ -4759,7 +4877,7 @@ let rec go () =
                    args.linewidth args.outline args.fast args.fontname
                    cpdffont args.bates args.batespad args.color args.position
                    args.linespacing args.fontsize args.underneath text range
-                   args.relative_to_cropbox args.opacity
+                   args.relative_to_box args.opacity
                    args.justification args.midline args.topline filename
                    args.extract_text_font_size args.coord ~raw:(args.encoding = Raw) pdf)
   | Some RemoveText ->
@@ -4773,7 +4891,7 @@ let rec go () =
             (Cpdfaddtext.addrectangle
                args.fast args.coord
                args.color args.outline args.linewidth args.opacity args.position
-               args.relative_to_cropbox args.underneath range pdf)
+               args.relative_to_box args.underneath range pdf)
   | Some (AddBookmarks file) ->
       write_pdf false
         (Cpdfbookmarks.add_bookmarks ~json:args.format_json true (Pdfio.input_of_channel (open_in_bin file))
@@ -4801,7 +4919,7 @@ let rec go () =
           let range = parse_pagespec pdf (get_pagespec ()) in
             let pdf =
               Cpdfpage.stamp
-                ~process_struct_tree:args.process_struct_trees args.relative_to_cropbox args.position args.topline args.midline args.fast
+                ~process_struct_tree:args.process_struct_trees args.relative_to_box args.position args.topline args.midline args.fast
                 args.scale_stamp_to_fit true range overpdf pdf
             in
               write_pdf false pdf
@@ -4815,7 +4933,7 @@ let rec go () =
           let range = parse_pagespec pdf (get_pagespec ()) in
             let pdf =
               Cpdfpage.stamp
-                ~process_struct_tree:args.process_struct_trees args.relative_to_cropbox args.position args.topline args.midline args.fast
+                ~process_struct_tree:args.process_struct_trees args.relative_to_box args.position args.topline args.midline args.fast
                 args.scale_stamp_to_fit false range underpdf pdf
             in
               write_pdf false pdf
@@ -4940,6 +5058,10 @@ let rec go () =
           Cpdfpagelabels.add_page_labels
             pdf args.labelsprogress args.labelstyle args.labelprefix args.labelstartval range;
           write_pdf false pdf
+  | Some (AddPageLabelsJSON f) ->
+      let pdf = get_single_pdf args.op false in
+        Cpdfpagelabels.add_page_labels_json pdf (Cpdfyojson.Safe.from_file f);
+        write_pdf false pdf
   | Some RemovePageLabels ->
       let pdf = get_single_pdf args.op false in
         Pdfpagelabels.remove pdf;
@@ -5049,7 +5171,11 @@ let rec go () =
         write_pdf false pdf
   | Some OCGList ->
       let pdf = get_single_pdf args.op true in
-        Cpdfocg.ocg_list pdf
+        Cpdfocg.ocg_list args.format_json pdf
+  | Some (OCGReplace json) ->
+      let pdf = get_single_pdf args.op false in
+        Cpdfocg.ocg_replace json pdf;
+        write_pdf false pdf
   | Some OCGRename ->
       let pdf = get_single_pdf args.op false in
         Cpdfocg.ocg_rename args.ocgrenamefrom args.ocgrenameto pdf;
@@ -5256,6 +5382,13 @@ let rec go () =
         [("-help", Arg.Unit (fun () -> ()), ""); ("--help", Arg.Unit (fun () -> ()), "")]
       in
         Arg.usage (Arg.align (nohelp @ specs)) ""
+  | Some Revisions ->
+      begin try ignore (get_single_pdf ~revisions:true args.op true) with
+        Pdfread.Revisions n -> Printf.printf "%i\n" n
+      end
+  | Some SigInfo ->
+      let pdf = get_single_pdf args.op true in
+        show_digital_signature_info pdf args.format_json
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)

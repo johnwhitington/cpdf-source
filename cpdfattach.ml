@@ -38,16 +38,7 @@ let remove_unsafe_characters s =
 (* Attaching files *)
 let attach_file ?memory keepversion topage pdf relationship description file =
   let data =
-    match memory with
-      Some data -> data
-    | None ->
-        let ch = open_in_bin file in
-        let len = in_channel_length ch in
-        let stream = mkbytes len in
-        let i = input_of_channel ch in
-          setinit i stream 0 len;
-          close_in ch;
-          stream
+    match memory with Some data -> data | None -> bytes_of_string (contents_of_file file)
   in
     let filestream =
       Pdf.Stream
