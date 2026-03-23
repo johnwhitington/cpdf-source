@@ -177,40 +177,90 @@ let ocg_list json pdf =
     List.iter (Printf.printf "%s\n") (map Pdftext.utf8_of_pdfdocstring (ocg_get_list pdf))
 
 let ocg_read_usage json =
-  Some
-   {Pdfocg.ocg_creatorinfo = None; (* FIXME *)
-    Pdfocg.ocg_language = None; (* FIXME *)
-    Pdfocg.ocg_export = None; (* FIXME *)
-    Pdfocg.ocg_zoom_min = None; (* FIXME *)
-    Pdfocg.ocg_zoom_max = None; (* FIXME *)
-    Pdfocg.ocg_print_subtype = None; (* FIXME *)
-    Pdfocg.ocg_print_printstate = None; (* FIXME *)
-    Pdfocg.ocg_viewstate = None; (* FIXME *)
-    Pdfocg.ocg_user = None; (* FIXME *)
-    Pdfocg.ocg_page_element_subtype = None} (* FIXME *)
+  match json with
+  | `Null -> None
+  | `Assoc l ->
+      begin match sort compare l with 
+      | [("CreatorInfo-Creator", cc);
+         ("CreatorInfo-Subtype", cs);
+         ("Export", e);
+         ("Language-Language", ll);
+         ("Language-Preferred", lp);
+         ("PageElement-Subtype", pes);
+         ("Print-PrintState", pp);
+         ("Print-Subtype", ps);
+         ("User-Name", un);
+         ("User-Type", ut);
+         ("ViewState", vs);
+         ("Zoom-Max", zmax);
+         ("Zoom-Min", zmin)] ->
+           Some
+             {Pdfocg.ocg_creatorinfo = None;
+              Pdfocg.ocg_language = None;
+              Pdfocg.ocg_export = None;
+              Pdfocg.ocg_zoom_min = None;
+              Pdfocg.ocg_zoom_max = None;
+              Pdfocg.ocg_print_subtype = None;
+              Pdfocg.ocg_print_printstate = None;
+              Pdfocg.ocg_viewstate = None;
+              Pdfocg.ocg_user = None;
+              Pdfocg.ocg_page_element_subtype = None}
+      | _ -> error "ocg_read_usage: malformed"
+      end
+  | _ -> error "ocg_read_usage: malformed"
 
-let ocg_read_appdict json =
-  {Pdfocg.ocg_event = Pdfocg.OCG_View; (* FIXME *)
-   Pdfocg.ocg_ocgs = []; (* FIXME *)
-   Pdfocg.ocg_category = []} (* FIXME *)
-
-let ocg_read_config json =
+let rec ocg_read_config json =
   {Pdfocg.ocgconfig_name = None; (* FIXME *)
    Pdfocg.ocgconfig_creator = None; (* FIXME *)
    Pdfocg.ocgconfig_basestate = Pdfocg.OCG_ON; (* FIXME *)
    Pdfocg.ocgconfig_on = []; (* FIXME *)
    Pdfocg.ocgconfig_off = []; (* FIXME *)
    Pdfocg.ocgconfig_intent = []; (* FIXME *)
-   Pdfocg.ocgconfig_usage_application_dictionaries = map ocg_read_appdict []; (* FIXME *)
+   Pdfocg.ocgconfig_usage_application_dictionaries = option_map ocg_read_appdict []; (* FIXME *)
    Pdfocg.ocgconfig_order = None; (* FIXME *)
    Pdfocg.ocgconfig_listmode = Pdfocg.OCG_AllPages; (* FIXME *)
    Pdfocg.ocgconfig_rbgroups = None; (* FIXME *)
    Pdfocg.ocgconfig_locked = []} (* FIXME *)
 
-let ocg_read_ocg json =
-  (1 (* FIXME *), {Pdfocg.ocg_name = ""; (* FIXME *)
-       Pdfocg.ocg_intent = []; (* FIXME *)
-       Pdfocg.ocg_usage = ocg_read_usage `Null}) (* FIXME *)
+and ocg_read_appdict json =
+  match json with
+  | `Null -> None
+  | `Assoc a ->
+      match sort compare a with
+      | [("Category", `List categories);
+         ("Event", `String event);
+         ("OCGs", `List ocgs)] ->
+          Some
+            {Pdfocg.ocg_event =
+              begin match event with
+              | "/View" -> Pdfocg.OCG_View
+              | "/Print" -> Pdfocg.OCG_Print
+              | "/Export" -> Pdfocg.OCG_Export
+              | _ -> error "ocg_read_appdict: bad event"
+              end;
+             Pdfocg.ocg_ocgs = map fst (map ocg_read_ocg_with_num ocgs);
+             Pdfocg.ocg_category = map (function `String s -> s | _ -> error "ocg_read_ocg: bad category") categories}
+      | _ ->
+         error "ocg_read_appdict: malformed"
+
+and ocg_read_ocg = function
+  | `Assoc l ->
+      begin match sort compare l with
+      | [("Intent", `List intents);
+         ("Name", `String name);
+         ("Usage", usage)] ->
+            {Pdfocg.ocg_name = name;
+             Pdfocg.ocg_intent = (map (function `String s -> s | _ -> error "ocg_read_ocg: malformed intent") intents);
+             Pdfocg.ocg_usage = ocg_read_usage usage}
+      | _ -> error "ocg_read_ocg: malformed"
+      end
+  | _ -> error "ocg_read_ocg: malformed" 
+
+and ocg_read_ocg_with_num = function
+  | `Assoc
+       [(ocg_number_as_string, ocg)] ->
+         (int_of_string ocg_number_as_string, ocg_read_ocg ocg)
+  | _ -> error "ocg_read_ocg_with_num: malformed"
    
 let ocg_read_json json =
   match json with
@@ -221,7 +271,7 @@ let ocg_read_json json =
          ("Default", default);
          ("OCGs", `List ocgs)] ->
              Some
-               {Pdfocg.ocgs = map ocg_read_ocg ocgs;
+               {Pdfocg.ocgs = map ocg_read_ocg_with_num ocgs;
                 Pdfocg.ocg_default_config = ocg_read_config default;
                 Pdfocg.ocg_configs = map ocg_read_config configs}
       | _ -> error "ocg_read_json: malformed JSON top-level dictionary"
@@ -230,9 +280,9 @@ let ocg_read_json json =
 
 let ocg_replace filename pdf =
   let json = Cpdfyojson.Safe.from_string (contents_of_file filename) in
-  match ocg_read_json json with
-  | None -> ()
-  | Some ocg -> Pdfocg.write_ocg pdf ocg
+    match ocg_read_json json with
+    | None -> ()
+    | Some ocg -> Pdfocg.write_ocg pdf ocg
 
 let ocg_rename f t pdf =
   Pdf.objselfmap
