@@ -351,7 +351,7 @@ and ocg_read_appdict json =
               | "/Export" -> Pdfocg.OCG_Export
               | _ -> error "ocg_read_appdict: bad event"
               end;
-             Pdfocg.ocg_ocgs = map fst (map ocg_read_ocg_with_num ocgs);
+             Pdfocg.ocg_ocgs = []; (*map fst (map ocg_read_ocg_with_num ocgs);*) (* FIXME FIXME FIXME *)
              Pdfocg.ocg_category = map (function `String s -> s | _ -> error "ocg_read_ocg: bad category") categories}
       | _ ->
          error "ocg_read_appdict: malformed"
@@ -372,8 +372,7 @@ and ocg_read_ocg = function
   | _ -> error "ocg_read_ocg: malformed" 
 
 and ocg_read_ocg_with_num = function
-  | `Assoc
-       [(ocg_number_as_string, ocg)] ->
+  | (ocg_number_as_string, ocg) ->
          (int_of_string ocg_number_as_string, ocg_read_ocg ocg)
   | _ -> error "ocg_read_ocg_with_num: malformed"
    
@@ -384,7 +383,7 @@ let ocg_read_json json =
       begin match sort compare a with
       | [("Configs", `List configs);
          ("Default", default);
-         ("OCGs", `List ocgs)] ->
+         ("OCGs", `Assoc ocgs)] ->
              Some
                {Pdfocg.ocgs = map ocg_read_ocg_with_num ocgs;
                 Pdfocg.ocg_default_config = ocg_read_config default;
