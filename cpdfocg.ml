@@ -269,7 +269,7 @@ let rec ocg_read_config json =
               | _ -> error "ocg_read_config: malformed off"
               end;
             Pdfocg.ocgconfig_intent =
-              begin match off with
+              begin match i with
               | `List l -> map (function `String i -> i | _ -> error "ocg_read_config: malformed intent") l
               | _ -> error "ocg_read_config: malformed intent"
               end;
