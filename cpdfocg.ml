@@ -195,38 +195,151 @@ let ocg_read_usage json =
          ("Zoom-Max", zmax);
          ("Zoom-Min", zmin)] ->
            Some
-             {Pdfocg.ocg_creatorinfo = None;
-              Pdfocg.ocg_language = None;
-              Pdfocg.ocg_export = None;
-              Pdfocg.ocg_zoom_min = None;
-              Pdfocg.ocg_zoom_max = None;
-              Pdfocg.ocg_print_subtype = None;
-              Pdfocg.ocg_print_printstate = None;
-              Pdfocg.ocg_viewstate = None;
-              Pdfocg.ocg_user = None;
-              Pdfocg.ocg_page_element_subtype = None}
+             {Pdfocg.ocg_creatorinfo =
+                begin match cc, cs with
+                | `Null, `Null -> None
+                | `String a, `String b -> Some (a, b)
+                | _ -> error "ocg_read_usage: malformed creator info"
+                end;
+              Pdfocg.ocg_language =
+                begin match ll, lp with
+                | `Null, `Null -> None
+                | `String a, `String b -> Some (a, Some b)
+                | `String a, `Null -> Some (a, None)
+                | _ -> error "ocg_read_usage: malformed language"
+                end;
+              Pdfocg.ocg_export =
+                begin match e with `Null -> None | `String s -> Some s | _ -> error "ocg_read_usage: malformed export" end;
+              Pdfocg.ocg_zoom_min =
+                begin match zmin with `Null -> None | `Float s -> Some s | _ -> error "ocg_read_usage: malformed zoom min" end;
+              Pdfocg.ocg_zoom_max =
+                begin match zmax with `Null -> None | `Float s -> Some s | _ -> error "ocg_read_usage: malformed zoom max" end;
+              Pdfocg.ocg_print_subtype =
+                begin match ps with `Null -> None | `String s -> Some s | _ -> error "ocg_read_usage: malformed print subtype" end;
+              Pdfocg.ocg_print_printstate =
+                begin match pp with `Null -> None | `String s -> Some s | _ -> error "ocg_read_usage: malformed print printstate" end;
+              Pdfocg.ocg_viewstate =
+                begin match vs with `Null -> None | `String s -> Some s | _ -> error "ocg_read_usage: malformed print viewstate" end;
+              Pdfocg.ocg_user =
+                begin match ut, un with
+                | `Null, `Null -> None
+                | `String a, `List b -> Some (a, map (function `String s -> s | _ -> error "ocg_read_usage: malformed user") b)
+                | _ -> error "ocg_read_usage: malformed user"
+                end;
+              Pdfocg.ocg_page_element_subtype =
+                begin match vs with `Null -> None | `String s -> Some s | _ -> error "ocg_read_usage: malformed subtype" end}
       | _ -> error "ocg_read_usage: malformed"
       end
   | _ -> error "ocg_read_usage: malformed"
 
 let rec ocg_read_config json =
-  {Pdfocg.ocgconfig_name = None; (* FIXME *)
-   Pdfocg.ocgconfig_creator = None; (* FIXME *)
-   Pdfocg.ocgconfig_basestate = Pdfocg.OCG_ON; (* FIXME *)
-   Pdfocg.ocgconfig_on = []; (* FIXME *)
-   Pdfocg.ocgconfig_off = []; (* FIXME *)
-   Pdfocg.ocgconfig_intent = []; (* FIXME *)
-   Pdfocg.ocgconfig_usage_application_dictionaries = option_map ocg_read_appdict []; (* FIXME *)
-   Pdfocg.ocgconfig_order = None; (* FIXME *)
-   Pdfocg.ocgconfig_listmode = Pdfocg.OCG_AllPages; (* FIXME *)
-   Pdfocg.ocgconfig_rbgroups = None; (* FIXME *)
-   Pdfocg.ocgconfig_locked = []} (* FIXME *)
+  match json with
+  | `Assoc l ->
+      begin match sort compare l with
+      | [("AS", a);
+         ("BaseState", bs);
+         ("Creator", c);
+         ("Intent", i);
+         ("ListMode", lm);
+         ("Locked", l);
+         ("Name", n);
+         ("OFF", off);
+         ("ON", on);
+         ("Order", o);
+         ("RBGroups", rb)] ->
+           {Pdfocg.ocgconfig_name =
+              begin match n with `Null -> None | `String s -> Some s | _ -> error "ocg_read_config: malformed name" end;
+            Pdfocg.ocgconfig_creator =
+              begin match c with `Null -> None | `String s -> Some s | _ -> error "ocg_read_config: malformed creator" end;
+            Pdfocg.ocgconfig_basestate =
+              begin match bs with
+              | `String "/ON" -> Pdfocg.OCG_ON
+              | `String "/OFF" -> Pdfocg.OCG_OFF
+              | `String "/Unchanged" -> Pdfocg.OCG_Unchanged
+              | _ -> error "ocg_read_config: malformed base state"
+              end;
+            Pdfocg.ocgconfig_on =
+              begin match on with
+              | `List l -> map (function `Int i -> i | _ -> error "ocg_read_config: malformed on") l
+              | _ -> error "ocg_read_config: malformed on"
+              end;
+            Pdfocg.ocgconfig_off =
+              begin match off with
+              | `List l -> map (function `Int i -> i | _ -> error "ocg_read_config: malformed off") l
+              | _ -> error "ocg_read_config: malformed off"
+              end;
+            Pdfocg.ocgconfig_intent =
+              begin match off with
+              | `List l -> map (function `String i -> i | _ -> error "ocg_read_config: malformed intent") l
+              | _ -> error "ocg_read_config: malformed intent"
+              end;
+            Pdfocg.ocgconfig_usage_application_dictionaries =
+              begin match a with
+              | `List l -> option_map ocg_read_appdict l
+              | _ -> error "ocg_read_config: malformed usage application dictionary list"
+              end;
+            Pdfocg.ocgconfig_order =
+              begin match o with
+              | `Null -> None
+              | `List pairs ->
+                  let extracted_pairs =
+                    map
+                      (function
+                       | `Assoc pair ->
+                            begin match sort compare pair with
+                            | [("Name", name); ("OCGs", ocgs)] ->
+                                  let stringopt =
+                                    match name with
+                                    | `Null -> None
+                                    | `String s -> Some s
+                                    | _ -> error "ocg_read_config: malformed order name"
+                                  in
+                                  let intlist =
+                                    match ocgs with
+                                    | `List l -> map (function `Int i -> i | _ -> error "ocg_read_config: malformed order ocg") l
+                                    | _ -> error "ocg_read_config: malformed order ocg"
+                                  in
+                                    (stringopt, intlist)
+                            | _ -> error "ocg_read_config: malformed order pair"
+                            end
+                       | _ -> error "ocg_read_config: malformed order pair")
+                      pairs
+                  in
+                    Some extracted_pairs
+              | _ -> error "ocg_read_config: malformed order"
+              end;
+            Pdfocg.ocgconfig_listmode =
+              begin match lm with
+              | `String "/AllPages" -> Pdfocg.OCG_AllPages
+              | `String "/VisiblePages" -> Pdfocg.OCG_VisiblePages
+              | _ -> error "ocg_read_config: malformed list mode"
+              end;
+            Pdfocg.ocgconfig_rbgroups =
+              begin match rb with
+              | `Null -> None
+              | `List ls ->
+                  Some
+                    (map
+                       (function
+                        | `List l -> map (function `Int i -> i | _ -> error "ocg_read_config: bad rbgroups") l
+                        | _ -> error "ocg_read_config: bad rbgroups")
+                       ls)
+              | _ -> error "ocg_read_config: bad rbgroups"
+              end;
+            Pdfocg.ocgconfig_locked =
+              begin match l with
+              | `List l -> map (function `Int i -> i | _ -> error "ocg_read_config: malformed locked") l
+              | _ -> error "ocg_read_config: malformed locked"
+              end}
+      | _ -> error "ocg_read_config: malformed"
+      end
+  | _ -> error "ocg_read_config: malformed"
 
 and ocg_read_appdict json =
   match json with
   | `Null -> None
   | `Assoc a ->
-      match sort compare a with
+      begin match sort compare a with
       | [("Category", `List categories);
          ("Event", `String event);
          ("OCGs", `List ocgs)] ->
@@ -242,6 +355,8 @@ and ocg_read_appdict json =
              Pdfocg.ocg_category = map (function `String s -> s | _ -> error "ocg_read_ocg: bad category") categories}
       | _ ->
          error "ocg_read_appdict: malformed"
+      end
+  | _ -> error "ocg_read_appdict: malformed"
 
 and ocg_read_ocg = function
   | `Assoc l ->
