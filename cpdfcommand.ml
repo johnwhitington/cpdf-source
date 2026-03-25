@@ -4066,7 +4066,9 @@ let show_digital_signature_info pdf json =
                  in
                  let signame =
                    match Pdf.lookup_direct pdf "/Name" d with
-                   | Some (Pdf.String s) -> Pdftext.utf8_of_pdfdocstring s
+                   | Some (Pdf.String s) ->
+                       (* We saw a file with FFFE instead of FEFF. *)
+                       begin try Pdftext.utf8_of_pdfdocstring s with _ -> "" end
                    | _ -> ""
                  in
                    sigs =| (sigtype, sigfilter, sigsubfilter, signame)
