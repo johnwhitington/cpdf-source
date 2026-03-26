@@ -707,7 +707,8 @@ coherentpdf.deletePdf(merged);
 -args-json <filename>   -utf8                    -stripped
 -raw                    -gs                      -gs-malformed
 -gs-malformed-force     -gs-quiet                -error-on-malformed
--progress\end{verbatim}\end{framed}
+-progress               -revision                -revisions
+-update\end{verbatim}\end{framed}
 
   The Coherent PDF tools provide a wide range of facilities for modifying PDF
 files created by other means. There is a single command-line program
@@ -1237,6 +1238,31 @@ $ cpdf -add-text Private in.pdf -o out.pdf -progress
 \end{verbatim}}
 
 \noindent For page-by-page operations the page number is printed when the operation begins, the period when it ends. The \texttt{-progress} option, when combined with \texttt{AND}, shows progress for all operations after it is specified.
+
+\section{Incremental update}
+
+A PDF can contain multiple revisions. These are created when, for example, an annotation is added in Adobe Reader, or when some other programs edit files. They are also an important part of the PDF mechanisms for digital signatures. We can find out how many revisions are in a PDF:
+
+{\small\begin{verbatim}
+$ cpdf -revisions in.pdf
+3
+\end{verbatim}}
+
+\noindent We can retrieve any revision we like. The most recent is revision 1, the next back revision 2, and so on:
+
+\begin{framed}
+ \noindent\small\verb?cpdf in.pdf -revision 2 -o out.pdf?
+\end{framed}
+
+\noindent Note that this extracts exactly revision 2, not a PDF with revisions 2..n. Note also that \texttt{-revision} must come after the filename.
+
+We can incrementally update a PDF by adding \texttt{-update} to a Cpdf command:
+
+\begin{framed}
+ \noindent\small\verb?cpdf in.pdf -rotate 90 -update -o in.pdf?
+\end{framed}
+
+\noindent Note the filename is specified twice.
 
 \begin{cpdflib}
 \clearpage
