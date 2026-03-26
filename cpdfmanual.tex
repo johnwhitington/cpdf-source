@@ -3416,6 +3416,9 @@ given page range.
     \small\noindent\verb!cpdf -pages in.pdf!
 
     \vspace{1.5mm}
+    \small\noindent\verb!cpdf -sig-info [-json] in.pdf!
+
+    \vspace{1.5mm}
     \small\noindent\verb!cpdf -set-title <title of document>!\\
     \small\noindent\verb!     [-also-set-xmp] [-just-set-xmp] in.pdf -o out.pdf!\\
     (Also \texttt{-set-author} etc. See Section \ref{setdocinfo}.)
@@ -3619,6 +3622,29 @@ Annotations: 0
 {\small\begin{verbatim}
 cpdf -pages Archos.pdf
 8
+\end{verbatim}}
+\end{framed}
+
+\noindent The \texttt{-sig-info} operation prints information for each digital signature in the document:
+
+\begin{framed}
+{\small\begin{verbatim}
+/Sig, /Adobe.PPKLite, /adbe.x509.rsa_sha1, DIN Deutsches Institut
+\end{verbatim}}
+\end{framed}
+
+\noindent Add \texttt{-json} to use JSON instead:
+
+\begin{framed}
+{\small\begin{verbatim}
+[
+  {
+    "/Type": "/Sig",
+    "/Filter": "/Adobe.PPKLite",
+    "/SubFilter": "/adbe.x509.rsa_sha1",
+    "/Name": "DIN Deutsches Institut"
+  }
+]
 \end{verbatim}}
 \end{framed}
 
@@ -3869,6 +3895,8 @@ i, ii, iii, iv, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, A-0, A-1, A-2, A-3, A-4, A-5
 \end{framed}}
 
 \noindent By default the labels begin at page number 1 for each range. To override this, we can use \texttt{-label-startval} (we used $0$ in the final command), where we want the numbers to begin at zero rather than one. The option \texttt{-labels-progress} can be added to make sure the  start value progresses between sub-ranges when the page range specified is disjoint, e.g \texttt{1-9, 30-40} or \texttt{odd}.
+
+Alternatively, we can use \texttt{-add-page-labels-json} where a JSON page label file has been prepared as described below.
 
 Page labels may be removed altogether by using \texttt{-remove-page-labels} command. To print the page labels from an existing file, use \texttt{-print-page-labels}. For example:
 
