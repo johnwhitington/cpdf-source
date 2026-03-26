@@ -198,6 +198,18 @@ pre-process badly malformed files as a last resort.
 : Do not attempt to reconstruct malformed files by any method, but exit with an
 error.
 
+**-revisions**
+
+: Print the number of incremental-update revisions in the file.
+
+**-revision** \<n>
+
+: Extract a revision from the file. Revision 1 is the latest, 2 the next back and so on. Must come after file name.
+
+**-update**
+
+: Update a file incrementally. As in **cpdf** **in.pdf** ... -update **-o in.pdf**.
+
 # 2. MERGING AND SPLITTING
 
 ## Merging
@@ -712,7 +724,7 @@ information.
 # 8. TEXT AND STAMPS
 
 **cpdf \[-stamp-on | -stamp-under] stamp.pdf** **in.pdf** \[\<range>]
-\[-scale-stamp-to-fit] \[\<positioning command>] \[-relative-to-cropbox]
+\[-scale-stamp-to-fit] \[\<positioning command>] \[-relative-to-\[crop|trim|art|bleed]box]
 \[-process-struct-trees] \[-fast] **-o out.pdf**
 
 Stamp a one-page PDF over or under each page in the given range. The
@@ -723,9 +735,9 @@ where to stamp it (default, bottom left of media box).
 
 : Scale the stamp to fit the page before applying it.
 
-**-relative-to-cropbox**
+**-relative-to-\[crop|trim|art|bleed]box**
 
-: Take the positioning command relative to the crop box rather than the media box.
+: Take the positioning command relative to the given box rather than the media box.
 
 **-process-struct-trees**
 
@@ -758,7 +770,7 @@ file will be marked as an artifact.
 **cpdf \[-add-text \<string> | -add-rectangle "\<x size> \<y size>"]** [-font \<fontname>]
 [-font-size \<n>] [-load-ttf \<name>=\<filename>] [-embed-std14 \<path>]
 [-color \<color>] [-line-spacing \<n>] [-outline] [-linewidth \<n>]
-[-underneath] [-relative-to-cropbox] [-prerotate] [-no-warn-rotate] [-bates
+[-underneath] [-relative-to-\[crop|trim|art|bleed]box] [-prerotate] [-no-warn-rotate] [-bates
 \<n>] [-bates-at-range \<n>] [-bates-pad-to \<n>] [-opacity
 \<n>] [-midline] [-topline] [-fast] [-process-struct-trees] **in.pdf**
 \[\<range>] **-o out.pdf**
@@ -858,9 +870,9 @@ from 0-1. E.g **-color "0.5 0.4 0.5"**.
 
 : Put the text underneath the page instead of on top of the page.
 
-**-relative-to-cropbox**
+**-relative-to-\[crop|trim|art|bleed]box**
 
-: Positions are relative to the crop box, rather than the media box.
+: Positions are relative to the given box, rather than the media box.
 
 **-prerotate**
 

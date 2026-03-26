@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
@@ -92,6 +92,7 @@
       color: #606060;
     }
     code {
+      white-space: pre-wrap;
       font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
       font-size: 85%;
       margin: 0;
@@ -155,7 +156,6 @@
     #TOC a:not(:hover) {
       text-decoration: none;
     }
-    code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
     div.columns{display: flex; gap: min(4vw, 1.5em);}
     div.column{flex: auto; overflow-x: auto;}
@@ -374,6 +374,20 @@ last resort.</p>
 <dd>
 <p>Do not attempt to reconstruct malformed files by any method, but exit
 with an error.</p>
+</dd>
+<dt><strong>-revisions</strong></dt>
+<dd>
+<p>Print the number of incremental-update revisions in the file.</p>
+</dd>
+<dt><strong>-revision</strong> &lt;n&gt;</dt>
+<dd>
+<p>Extract a revision from the file. Revision 1 is the latest, 2 the
+next back and so on. Must come after file name.</p>
+</dd>
+<dt><strong>-update</strong></dt>
+<dd>
+<p>Update a file incrementally. As in <strong>cpdf</strong>
+<strong>in.pdf</strong> … -update <strong>-o in.pdf</strong>.</p>
 </dd>
 </dl>
 <h1 id="merging-and-splitting">2. MERGING AND SPLITTING</h1>
@@ -890,7 +904,7 @@ information.</p>
 <h1 id="text-and-stamps">8. TEXT AND STAMPS</h1>
 <p><strong>cpdf [-stamp-on | -stamp-under] stamp.pdf</strong>
 <strong>in.pdf</strong> [&lt;range&gt;] [-scale-stamp-to-fit]
-[&lt;positioning command&gt;] [-relative-to-cropbox]
+[&lt;positioning command&gt;] [-relative-to-[crop|trim|art|bleed]box]
 [-process-struct-trees] [-fast] <strong>-o out.pdf</strong></p>
 <p>Stamp a one-page PDF over or under each page in the given range. The
 positioning commands described later in this chapter may be used to
@@ -900,10 +914,10 @@ choose where to stamp it (default, bottom left of media box).</p>
 <dd>
 <p>Scale the stamp to fit the page before applying it.</p>
 </dd>
-<dt><strong>-relative-to-cropbox</strong></dt>
+<dt><strong>-relative-to-[crop|trim|art|bleed]box</strong></dt>
 <dd>
-<p>Take the positioning command relative to the crop box rather than the
-media box.</p>
+<p>Take the positioning command relative to the given box rather than
+the media box.</p>
 </dd>
 <dt><strong>-process-struct-trees</strong></dt>
 <dd>
@@ -940,11 +954,12 @@ combining.</p>
 size&gt; &lt;y size&gt;”]</strong> [-font &lt;fontname&gt;] [-font-size
 &lt;n&gt;] [-load-ttf &lt;name&gt;=&lt;filename&gt;] [-embed-std14
 &lt;path&gt;] [-color &lt;color&gt;] [-line-spacing &lt;n&gt;]
-[-outline] [-linewidth &lt;n&gt;] [-underneath] [-relative-to-cropbox]
-[-prerotate] [-no-warn-rotate] [-bates &lt;n&gt;] [-bates-at-range
-&lt;n&gt;] [-bates-pad-to &lt;n&gt;] [-opacity &lt;n&gt;] [-midline]
-[-topline] [-fast] [-process-struct-trees] <strong>in.pdf</strong>
-[&lt;range&gt;] <strong>-o out.pdf</strong></p>
+[-outline] [-linewidth &lt;n&gt;] [-underneath]
+[-relative-to-[crop|trim|art|bleed]box] [-prerotate] [-no-warn-rotate]
+[-bates &lt;n&gt;] [-bates-at-range &lt;n&gt;] [-bates-pad-to &lt;n&gt;]
+[-opacity &lt;n&gt;] [-midline] [-topline] [-fast]
+[-process-struct-trees] <strong>in.pdf</strong> [&lt;range&gt;]
+<strong>-o out.pdf</strong></p>
 <p>Add text to a PDF. Various special codes for page numbers or time and
 date may be used. For example:</p>
 <pre><code>%Page          Page number in arabic notation (1, 2, 3. . . )
@@ -1032,9 +1047,9 @@ numbers from 0-1. E.g <strong>-color “0.5 0.4 0.5”</strong>.</p>
 <dd>
 <p>Put the text underneath the page instead of on top of the page.</p>
 </dd>
-<dt><strong>-relative-to-cropbox</strong></dt>
+<dt><strong>-relative-to-[crop|trim|art|bleed]box</strong></dt>
 <dd>
-<p>Positions are relative to the crop box, rather than the media
+<p>Positions are relative to the given box, rather than the media
 box.</p>
 </dd>
 <dt><strong>-prerotate</strong></dt>
