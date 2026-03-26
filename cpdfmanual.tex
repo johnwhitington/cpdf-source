@@ -2597,12 +2597,14 @@ the file using a different page range each time.
 \index{watermarks}
   \begin{framed}
   \noindent\small\verb!cpdf -stamp-on source.pdf!\\
-  \noindent\small\verb!     [-scale-stamp-to-fit] [<positioning command>] [-relative-to-cropbox] !\\
+  \noindent\small\verb!     [-scale-stamp-to-fit] [<positioning command>]!
+  \noindent\small\verb!     [-relative-to-[crop|trim|art|bleed]box] !\\
   \noindent\small\verb!     [-process-struct-trees] in.pdf [<range>] [-fast] -o out.pdf!
   
   \vspace{1.5mm}
   \noindent\small\verb!cpdf -stamp-under source.pdf!\\
-  \noindent\small\verb!     [-scale-stamp-to-fit] [<positioning command>] [-relative-to-cropbox]!\\
+  \noindent\small\verb!     [-scale-stamp-to-fit] [<positioning command>]!\\
+  \noindent\small\verb!     [-relative-to-[crop|trim|art|bleed]box]!\\
   \noindent\small\verb!     [-process-struct-trees] in.pdf [<range>] [-fast] -o out.pdf!
 
   \vspace{1.5mm}
@@ -2619,7 +2621,7 @@ cpdf ([-add-text <text-format> | -add-rectangle <size>])
       [-load-ttf <name>=<file>]   [-embed-std14]
       [-color <color>]            [-line-spacing <number>]
       [-outline]                  [-linewidth <number>]
-      [-underneath]               [-relative-to-cropbox]
+      [-underneath]               [-relative-to-[crop|trim|art|bleed]box]
       [-prerotate]                [-no-warn-rotate]
       [-bates <number>]           [-bates-at-range <number>]
       [-bates-pad-to <number>]    [-opacity <number>]
@@ -2666,7 +2668,7 @@ writing to \texttt{out.pdf}. A watermark should go underneath each page:
 
 The \texttt{-scale-stamp-to-fit} option can be added to scale the stamp to fit the page before applying it. The use of positioning commands together with \texttt{-scale-stamp-to-fit} is not recommended.
 
-The \texttt{-relative-to-cropbox} option takes the positioning command to be relative to the crop box of each page rather than the media box.
+The \texttt{-relative-to-[crop|trim|art|bleed]box} option takes the positioning command to be relative to the given box of each page rather than the media box.
 
 To maintain Tagged PDF, for example with PDF/UA, add \texttt{-process-struct-trees}. The main file will keep its structure; the stamp will be marked as an artifact.
 
@@ -2819,8 +2821,8 @@ position, so \texttt{-prerotate} may be added to the command line if the file
 contains pages with a non-zero viewing rotation (to silence the rotation warning, add \texttt{-no-warn-rotate} instead) This is equivalent to
 pre-processing the document with \texttt{-upright} (see chapter 3).
    
-The \texttt{-relative-to-cropbox} modifier can be added to the command line to
-make these measurements relative to the crop box instead of the media box. The \texttt{-midline} option may be added to specify that the positioning
+The \texttt{-relative-to-[crop|trim|art|bleed]box} modifier can be added to the command line to
+make these measurements relative to the given box instead of the media box. The \texttt{-midline} option may be added to specify that the positioning
 commands above are to be considered relative to the midline of the text, rather
 than its baseline. Similarly, the \texttt{-topline} option may be used to specify that the position is taken relative to the top of the text.
 
@@ -3461,7 +3463,8 @@ given page range.
     \small\noindent\verb!cpdf -add-page-labels in.pdf [<range>] -o out.pdf!\\
     \noindent\verb!     [-label-style <style>] [-label-prefix <string>]!\\
     \noindent\verb!     [-label-startval <integer>] [-labels-progress]!\\
-    
+    \noindent\verb!cpdf -add-page-labels-json in.json in.pdf -o out.pdf!
+
     \vspace{1.5mm}
     \small\noindent\verb!cpdf -remove-page-labels in.pdf -o out.pdf!\\
     \small\noindent\verb!cpdf -print-page-labels[-json] in.pdf!
@@ -4019,7 +4022,8 @@ $ cpdf -composition-json cpdfmanual.pdf
 \begin{framed}
   \small\noindent\verb!cpdf -attach-file <filename> [-to-page <page number>]!\\
   \small\noindent\verb!     [-afd <string>] [-afr <relationship>] [-attach-file ...]!\\
-  \small\noindent\verb!     in.pdf -o out.pdf!
+  \small\noindent\verb!     in.pdf -o out.pdf!\\
+  \small\noindent\verb!cpdf -attach-files-json in.json in.pdf -o out.pdf!
 
   \vspace{1.5mm}
   \small\noindent\verb!cpdf -list-attached-files [-json] [-include-data] in.pdf!
@@ -4048,6 +4052,8 @@ whole rather than with an individual page, and also \textit{page-level attachmen
   The \texttt{-to-page} option can be used to specify that the files will be attached to the given page, rather than at the document level. The \texttt{-to-page} option may be specified at most once. 
 
 The \texttt{-afd} and \texttt{-afr} options may be used to specify the textual description and/or relationship for the file.
+
+Alternatively, attachments may be added with \texttt{-attach-files-json} from a JSON file in the format used by \texttt{-list-attached-files -json -include-data}, described below.
 
 \section{Listing Attachments}
 \index{attachments!listing}
