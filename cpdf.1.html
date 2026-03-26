@@ -1453,6 +1453,8 @@ points.</p>
 </dl>
 <p><strong>cpdf -pages in.pdf</strong></p>
 <p>Print the number of pages in the file.</p>
+<p><strong>cpdf -sig-info [-json] in.pdf</strong></p>
+<p>Print information about digital signatures.</p>
 <p><strong>cpdf -set-title &lt;string&gt;</strong>
 <strong>in.pdf</strong> [-also-set-xmp] [-just-set-xmp] <strong>-o
 out.pdf</strong></p>
@@ -1593,12 +1595,21 @@ override this, we can use <strong>-label-startval</strong>.</p>
 range specified is disjoint, e.g “1-9, 30-40” or “odd”.</p>
 </dd>
 </dl>
+<p><strong>cpdf -add-page-labels-json in.json -o out.pdf</strong></p>
+<p>Add page labels from a file like that produced by
+<strong>-print-page-labels-json -include-data</strong>.</p>
 <p><strong>cpdf -remove-page-labels in.pdf -o out.pdf</strong></p>
 <p>Remove the page labels.</p>
 <p><strong>cpdf -print-page-labels[-json] in.pdf</strong></p>
 <p>Print the page labels in plain text
 (<strong>-print-page-labels</strong>) or JSON
 (<strong>-print-page-labels-json</strong>) format.</p>
+<dl>
+<dt><strong>-include-data</strong></dt>
+<dd>
+<p>In JSON format, include the attachment data as well as metadata.</p>
+</dd>
+</dl>
 <p><strong>cpdf -composition[-json] in.pdf</strong></p>
 <p>Print the composition of a PDF, showing how much space is taken by
 images, fonts etc.</p>
@@ -1631,6 +1642,10 @@ page.</p>
 <p>Supply the so-called Relationship for this attachment.</p>
 </dd>
 </dl>
+<p><strong>cpdf -add-attached-files in.json in.pdf -o
+out.pdf</strong></p>
+<p>Add attached files from JSON produced by
+<strong>-list-attached-files</strong> or otherwise.</p>
 <p><strong>cpdf -list-attached-files</strong> <strong>in.pdf</strong>
 [-json] [-include-data]</p>
 <p>List attached files.</p>
@@ -1972,6 +1987,12 @@ easily editable.</p>
 <p><strong>cpdf -ocg-list in.pdf</strong></p>
 <p>List the optional content groups in the PDF, one per line, to
 standard output.</p>
+<p><strong>cpdf -ocg-list-json in.pdf</strong></p>
+<p>List the optional content groups in JSON format, suitable for
+modificationn and roundtripping.</p>
+<p><strong>cpdf -ocg-replace in.json in.pdf -o out.pdf</strong></p>
+<p>Replace the optional content groups in a PDF with the (possibly
+modified) output of <strong>-ocg-list-json</strong>.</p>
 <p><strong>cpdf -ocg-rename in.pdf -ocg-rename-from &lt;a&gt;
 -ocg-rename-to &lt;b&gt; -o out.pdf</strong></p>
 <p>Rename an optional content group given the old and new names.</p>

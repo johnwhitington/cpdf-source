@@ -1255,6 +1255,10 @@ Annotations: 0
 
 Print the number of pages in the file.
 
+**cpdf -sig-info [-json] in.pdf**
+
+Print information about digital signatures.
+
 **cpdf -set-title \<string>** **in.pdf** \[-also-set-xmp] \[-just-set-xmp] **-o out.pdf**
 
 **cpdf -set-author \<string>** **in.pdf** \[-also-set-xmp] \[-just-set-xmp] **-o out.pdf**
@@ -1397,6 +1401,10 @@ this, we can use **-label-startval**.
 : make sure the start value progresses between sub-ranges when the page range
 specified is disjoint, e.g "1-9, 30-40" or "odd".
 
+**cpdf -add-page-labels-json in.json -o out.pdf**
+
+Add page labels from a file like that produced by **-print-page-labels-json -include-data**.
+
 **cpdf -remove-page-labels in.pdf -o out.pdf**
 
 Remove the page labels.
@@ -1405,6 +1413,10 @@ Remove the page labels.
 
 Print the page labels in plain text (**-print-page-labels**) or JSON
 (**-print-page-labels-json**) format.
+
+**-include-data**
+
+: In JSON format, include the attachment data as well as metadata.
 
 **cpdf -composition\[-json] in.pdf**
 
@@ -1440,6 +1452,10 @@ Attach a file to a PDF, given its filename.
 **-afr** \<relationship>
 
 : Supply the so-called Relationship for this attachment.
+
+**cpdf -add-attached-files in.json in.pdf -o out.pdf**
+
+Add attached files from JSON produced by **-list-attached-files** or otherwise.
 
 **cpdf -list-attached-files** **in.pdf** \[-json] \[-include-data]
 
@@ -1775,6 +1791,14 @@ Convert a JSON file to a PDF file.
 **cpdf -ocg-list in.pdf**
 
 List the optional content groups in the PDF, one per line, to standard output.
+
+**cpdf -ocg-list-json in.pdf**
+
+List the optional content groups in JSON format, suitable for modificationn and roundtripping.
+
+**cpdf -ocg-replace in.json in.pdf -o out.pdf**
+
+Replace the optional content groups in a PDF with the (possibly modified) output of **-ocg-list-json**.
 
 **cpdf -ocg-rename in.pdf -ocg-rename-from \<a> -ocg-rename-to \<b> -o out.pdf**
 

@@ -1186,6 +1186,10 @@ points.
 .PP
 Print the number of pages in the file.
 .PP
+\f[B]cpdf \-sig\-info [\-json] in.pdf\f[R]
+.PP
+Print information about digital signatures.
+.PP
 \f[B]cpdf \-set\-title <string>\f[R] \f[B]in.pdf\f[R] [\-also\-set\-xmp]
 [\-just\-set\-xmp] \f[B]\-o out.pdf\f[R]
 .PP
@@ -1344,6 +1348,11 @@ To override this, we can use \f[B]\-label\-startval\f[R].
 make sure the start value progresses between sub\-ranges when the page
 range specified is disjoint, e.g \(lq1\-9, 30\-40\(rq or \(lqodd\(rq.
 .PP
+\f[B]cpdf \-add\-page\-labels\-json in.json \-o out.pdf\f[R]
+.PP
+Add page labels from a file like that produced by
+\f[B]\-print\-page\-labels\-json \-include\-data\f[R].
+.PP
 \f[B]cpdf \-remove\-page\-labels in.pdf \-o out.pdf\f[R]
 .PP
 Remove the page labels.
@@ -1352,6 +1361,9 @@ Remove the page labels.
 .PP
 Print the page labels in plain text (\f[B]\-print\-page\-labels\f[R]) or
 JSON (\f[B]\-print\-page\-labels\-json\f[R]) format.
+.TP
+\f[B]\-include\-data\f[R]
+In JSON format, include the attachment data as well as metadata.
 .PP
 \f[B]cpdf \-composition[\-json] in.pdf\f[R]
 .PP
@@ -1384,6 +1396,11 @@ Supply the textual description for this attachment.
 .TP
 \f[B]\-afr\f[R] <relationship>
 Supply the so\-called Relationship for this attachment.
+.PP
+\f[B]cpdf \-add\-attached\-files in.json in.pdf \-o out.pdf\f[R]
+.PP
+Add attached files from JSON produced by
+\f[B]\-list\-attached\-files\f[R] or otherwise.
 .PP
 \f[B]cpdf \-list\-attached\-files\f[R] \f[B]in.pdf\f[R] [\-json]
 [\-include\-data]
@@ -1690,6 +1707,16 @@ Convert a JSON file to a PDF file.
 .PP
 List the optional content groups in the PDF, one per line, to standard
 output.
+.PP
+\f[B]cpdf \-ocg\-list\-json in.pdf\f[R]
+.PP
+List the optional content groups in JSON format, suitable for
+modificationn and roundtripping.
+.PP
+\f[B]cpdf \-ocg\-replace in.json in.pdf \-o out.pdf\f[R]
+.PP
+Replace the optional content groups in a PDF with the (possibly
+modified) output of \f[B]\-ocg\-list\-json\f[R].
 .PP
 \f[B]cpdf \-ocg\-rename in.pdf \-ocg\-rename\-from <a> \-ocg\-rename\-to
 <b> \-o out.pdf\f[R]
