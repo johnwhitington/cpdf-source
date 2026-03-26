@@ -4954,7 +4954,11 @@ We can load a JSON PDF file with the \texttt{-j} option in place of a PDF file a
 \chapter{Optional Content Groups}\label{chap:16}\pagestyle{fancy}\index{optional content group}
 
   {\small\begin{framed}
-  \noindent\verb!cpdf -ocg-list in.pdf!
+  \noindent\verb!cpdf -ocg-list in.pdf!\\
+  \noindent\verb!cpdf -ocg-list-json in.pdf!
+
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -ocg-replace in.json in.pdf -o out.pdf!
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -ocg-rename -ocg-rename-from <a> -ocg-rename-to <b> in.pdf -o out.pdf!
@@ -4974,26 +4978,32 @@ In a PDF file, optional content groups are used to group graphical elements toge
   \noindent\verb!cpdf -ocg-list in.pdf!
   \end{framed}}
 
-\noindent List the optional content groups in the PDF, one per line, to standard output. UTF8.
+\noindent List the optional content groups in the PDF, one per line, to standard output. UTF8. To list in JSON format instead, use \texttt{-ocg-list-json}. This JSON data may be edited, and the result round-tripped back into the same file with \texttt{-ocg-replace}:
+
+  {\small\begin{framed}
+  \noindent\verb!cpdf -ocg-replace in.json in.pdf -o out.pdf!
+  \end{framed}}
   
+\noindent To rename an optional content group:
+
   {\small\begin{framed}
   \noindent\verb!cpdf -ocg-rename -ocg-rename-from <a> -ocg-rename-to <b> in.pdf -o out.pdf!
   \end{framed}}
 
-\noindent Rename an optional content group.
+\noindent To coalesce optional content groups: 
 
   {\small\begin{framed}
   \noindent\verb!cpdf -ocg-coalesce-on-name in.pdf -o out.pdf!
   \end{framed}}
 
+\noindent For example, if we merge or stamp two files both with an OCG called "Layer 1", we will have two different optional content groups. Running \texttt{-ocg-coalesce-on-name} will merge the two into a single optional content group.
 
-\noindent Coalesce optional content groups. For example, if we merge or stamp two files both with an OCG called "Layer 1", we will have two different optional content groups. Running \texttt{-ocg-coalesce-on-name} will merge the two into a single optional content group.
+To ensure that every optional content group appears in the order list:
 
   {\small\begin{framed}
   \noindent\verb!cpdf -ocg-order-all in.pdf -o out.pdf!
   \end{framed}}
 
-\noindent Ensure that every optional content group appears in the order list.
 
 \begin{cpdflib}
 \clearpage
