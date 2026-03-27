@@ -46,7 +46,7 @@ The ocamlfind library manager
 
 If you are using the OPAM package manager:
 
-[http://opam.ocamlpro.com](http://opam.ocamlpro.com)
+[https://opam.ocaml.org](https://opam.ocaml.org)
 
 these can be installed by:
 
