@@ -168,7 +168,7 @@ let process_specials pdf endpage filename bates batespad num page s =
   let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
   let marks = Pdfmarks.read_bookmarks ~preserve_actions:false pdf in 
   let pairs =
-    Cpdfaddtext.replace_pairs marks fastrefnums pdf endpage None filename bates batespad num page
+    Cpdfaddtext.replace_pairs marks fastrefnums pdf endpage filename bates batespad num page
   in
     Cpdfaddtext.process_text (res ()).time s pairs
 

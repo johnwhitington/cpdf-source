@@ -181,7 +181,6 @@ type op =
   | ImageResolution of float
   | MissingFonts
   | ExtractFontFile of string
-  | ExtractText
   | OpenAtPage of string
   | OpenAtPageFit of string
   | OpenAtPageCustom of string
@@ -352,7 +351,6 @@ let string_of_op = function
   | ImageResolution _ -> "ImageResolution"
   | MissingFonts -> "MissingFonts"
   | ExtractFontFile _ -> "ExtractFontFile"
-  | ExtractText -> "ExtractText"
   | OpenAtPage _ -> "OpenAtPage"
   | OpenAtPageFit _ -> "OpenAtPageFit"
   | OpenAtPageCustom _ -> "OpenAtPageCustom"
@@ -548,7 +546,6 @@ type args =
    mutable was_decrypted_with_owner : bool;
    mutable creator : string option;
    mutable producer : string option;
-   mutable extract_text_font_size : float option;
    mutable padwith : string option;
    mutable alsosetxml : bool;
    mutable justsetxml : bool;
@@ -709,7 +706,6 @@ let args =
    producer = None;
    creator = None;
    embedstd14 = None;
-   extract_text_font_size = None;
    padwith = None;
    alsosetxml = false;
    justsetxml = false;
@@ -859,7 +855,6 @@ let reset_arguments () =
   args.labelstartval <- 1;
   args.labelsprogress <- false;
   args.embedstd14 <- None;
-  args.extract_text_font_size <- None;
   args.padwith <- None;
   args.alsosetxml <- false;
   args.justsetxml <- false;
@@ -1023,7 +1018,7 @@ let banned banlist = function
   | ShowBoxes | TrimMarks | CreateMetadata | SetMetadataDate _ | SetVersion _
   | SetAuthor _|SetTitle _|SetSubject _|SetKeywords _|SetCreate _
   | SetModify _|SetCreator _|SetProducer _|RemoveDictEntry _ | ReplaceDictEntry _ | PrintDictEntry _ | SetMetadata _
-  | ExtractText | ExtractImages | ExtractSingleImage _ | ExtractFontFile _
+  | ExtractImages | ExtractSingleImage _ | ExtractFontFile _
   | AddPageLabels | AddPageLabelsJSON _ | RemovePageLabels | OutputJSON | OCGCoalesce
   | OCGRename | OCGList | OCGReplace _ | OCGOrderAll | PrintFontEncoding _ | TableOfContents | Typeset _ | Composition _
   | TextWidth _ | SetAnnotations _ | CopyAnnotations _ | ExtractStream _ | ReplaceStream _ | PrintObj _ | ReplaceObj _ | RemoveObj _
@@ -1352,9 +1347,6 @@ let setattachfilerelationship s =
   match args.op with
   | Some (AttachFile (h::_)) -> h.orelationship <- Some s
   | _ -> error "no attachemnt to add relationship for"
-
-let setextracttextfontsize f =
-  args.extract_text_font_size <- Some f
 
 let setfontsize s =
   let f = Cpdfcoord.parse_single_number (Pdf.empty ()) s in
@@ -3240,15 +3232,10 @@ let specs =
    (* These items are undocumented *)
    ("-debug", Arg.Unit setdebug, "");
    ("-debug-crypt", Arg.Unit (fun () -> args.debugcrypt <- true), "");
-   ("-debug-force", Arg.Unit (fun () -> args.debugforce <- true), "");
    ("-debug-malformed", Arg.Set Pdfread.debug_always_treat_malformed, "");
    ("-debug-stderr-to-stdout", Arg.Unit setstderrtostdout, "");
    ("-debug-readable-ops", Arg.Unit setreadableops, "");
-   ("-stay-on-error", Arg.Unit setstayonerror, "");
-   (* These items are unfinished *)
-   ("-extract-text", Arg.Unit (setop ExtractText), "");
-   ("-extract-text-font-size", Arg.Float setextracttextfontsize, "");
-  ]
+   ("-stay-on-error", Arg.Unit setstayonerror, "")]
 
 let specs = sort compare specs
 
@@ -4881,7 +4868,7 @@ let rec go () =
                    args.linespacing args.fontsize args.underneath text range
                    args.relative_to_box args.opacity
                    args.justification args.midline args.topline filename
-                   args.extract_text_font_size args.coord ~raw:(args.encoding = Raw) pdf)
+                   args.coord ~raw:(args.encoding = Raw) pdf)
   | Some RemoveText ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
@@ -5041,19 +5028,6 @@ let rec go () =
       let pdf = get_single_pdf args.op true in
         let range = parse_pagespec pdf (get_pagespec ()) in
           Cpdffont.missing_fonts pdf range
-  | Some ExtractText ->
-      let pdf = get_single_pdf args.op true in
-        let range = parse_pagespec pdf (get_pagespec ()) in
-          let text = Cpdfextracttext.extract_text args.extract_text_font_size pdf range in
-            begin match args.out with
-            | File filename ->
-                let fh = open_out_bin filename in
-                  output_string fh text;
-                  close_out fh
-            | NoOutputSpecified | Stdout ->
-                print_string text;
-                print_newline ()
-            end
   | Some AddPageLabels ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in

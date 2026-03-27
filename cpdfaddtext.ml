@@ -202,7 +202,7 @@ let bookmark marks fastrefnums level pdf num =
         | _::_ -> Pdftext.utf8_of_pdfdocstring (last before_target_page).Pdfmarks.text
         | [] -> ""
 
-let replace_pairs marks fastrefnums pdf endpage extract_text_font_size filename bates batespad num page =
+let replace_pairs marks fastrefnums pdf endpage filename bates batespad num page =
     [
      "%PageDiv2", (fun () -> string_of_int ((num + 1) / 2));
      "%Page", (fun () -> string_of_int num);
@@ -217,7 +217,6 @@ let replace_pairs marks fastrefnums pdf endpage extract_text_font_size filename 
      "%Bookmark2", (fun () -> bookmark marks fastrefnums 2 pdf num);
      "%Bookmark3", (fun () -> bookmark marks fastrefnums 3 pdf num);
      "%Bookmark4", (fun () -> bookmark marks fastrefnums 4 pdf num);
-     "%ExtractedText", (fun () -> Cpdfextracttext.extract_page_text extract_text_font_size pdf num page);
      "%Bates",
         (fun () ->
           (let numstring = string_of_int (bates + num - 1) in
@@ -228,14 +227,14 @@ let replace_pairs marks fastrefnums pdf endpage extract_text_font_size filename 
                  then numstring
                  else implode (many '0' (w - String.length numstring)) ^ numstring))]
 
-let expand_lines text time pdf endpage extract_text_font_size filename bates batespad num page lines =
+let expand_lines text time pdf endpage filename bates batespad num page lines =
   let refnums = Pdf.page_reference_numbers pdf in
   let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
   let marks = Pdfmarks.read_bookmarks ~preserve_actions:false pdf in
   let expanded_lines =
     map
       (function text ->
-         process_text time text (replace_pairs marks fastrefnums pdf endpage extract_text_font_size filename bates batespad num page))
+         process_text time text (replace_pairs marks fastrefnums pdf endpage filename bates batespad num page))
       lines
   in
     (* process URLs for justification too *)
@@ -244,7 +243,7 @@ let expand_lines text time pdf endpage extract_text_font_size filename bates bat
 let addtext
   time lines linewidth outline fast colour fontname encoding bates batespad
   fontsize fontpack font fontpdfobj fontpackpdfobjs underneath position hoffset voffset text pages 
-  relative_to_box opacity justification filename extract_text_font_size shift raw pdf
+  relative_to_box opacity justification filename shift raw pdf
 =
   let endpage = Pdfpage.endpage pdf in
   let shifts = Cpdfcoord.parse_coordinates pdf shift in
@@ -327,10 +326,10 @@ let addtext
           let refnums = Pdf.page_reference_numbers pdf in
           let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
           let marks = Pdfmarks.read_bookmarks ~preserve_actions:false pdf in
-            let text = process_text time text (replace_pairs marks fastrefnums pdf endpage extract_text_font_size filename bates batespad num page) in
+            let text = process_text time text (replace_pairs marks fastrefnums pdf endpage filename bates batespad num page) in
             let text, urls = get_urls_line text in
             let lines = map (fun text -> if raw || fontpack <> None then text else charcodes_of_utf8 (Pdftext.read_font pdf fontpdfobj) text) lines in
-            let expanded_lines = expand_lines text time pdf endpage extract_text_font_size filename bates batespad num page lines in
+            let expanded_lines = expand_lines text time pdf endpage filename bates batespad num page lines in
             let textwidth = calc_textwidth text
             and allwidths = map calc_textwidth expanded_lines in
               let longest_w = last (sort compare allwidths) in
@@ -457,8 +456,7 @@ let unescape_string s =
 let
   addtexts linewidth outline fast fontname (cpdffont : Cpdfembed.cpdffont) bates batespad
   colour position linespacing fontsize underneath text pages relative_to_box opacity
-  justification midline topline filename extract_text_font_size shift
-  ?(raw=false) pdf
+  justification midline topline filename shift ?(raw=false) pdf
 =
   if pages = [] then pdf else
   let time = Cpdfstrftime.current_time () in
@@ -468,7 +466,7 @@ let
   let lines = map unescape_string (split_at_newline text) in
   iter2
     (fun num page ->
-       let expanded_lines = expand_lines text time pdf endpage extract_text_font_size filename bates batespad num page lines in
+       let expanded_lines = expand_lines text time pdf endpage filename bates batespad num page lines in
          let codepoints = map Pdftext.codepoints_of_utf8 expanded_lines in
          iter (iter (fun x -> Hashtbl.replace used x ())) codepoints)
     pages
@@ -573,7 +571,7 @@ let
                        addtext time lines linewidth outline fast colour !realfontname encoding
                        bates batespad fontsize fontpack font fontpdfobj fontpackpdfobjs underneath
                        position hoff voff line pages relative_to_box opacity justification filename
-                       extract_text_font_size shift raw !pdf;
+                       shift raw !pdf;
                      voffset := !voffset +. (linespacing *. fontsize))
                 lines;
                 !pdf

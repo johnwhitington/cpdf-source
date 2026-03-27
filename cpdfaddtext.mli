@@ -42,7 +42,6 @@ val addtexts :
     bool ->(*midline adjust?*)
     bool ->(*topline adjust?*)
     string ->(*filename*)
-    float option -> (*extract_text_font_size*)
     string -> (* shift *)
     ?raw:bool -> (* raw *)
     Pdf.t ->(*pdf*)
@@ -65,7 +64,6 @@ val replace_pairs :
   (int, int) Hashtbl.t ->
   Pdf.t ->
   int ->
-  float option ->
   string ->
   int ->
   int option -> int -> Pdfpage.t -> (string * (unit -> string)) list
