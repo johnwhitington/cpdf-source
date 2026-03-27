@@ -3229,13 +3229,12 @@ let specs =
    ("-remove-procsets", Arg.Unit (fun () -> setop RemoveProcsets ()), " Remove procsets");
    ("-sig-info", Arg.Unit (fun () -> setop SigInfo ()), " Show digital signature information");
    ("-update", Arg.Unit (fun () -> args.update <- true), " Update file by appending");
-   (* These items are undocumented *)
-   ("-debug", Arg.Unit setdebug, "");
-   ("-debug-crypt", Arg.Unit (fun () -> args.debugcrypt <- true), "");
-   ("-debug-malformed", Arg.Set Pdfread.debug_always_treat_malformed, "");
-   ("-debug-stderr-to-stdout", Arg.Unit setstderrtostdout, "");
-   ("-debug-readable-ops", Arg.Unit setreadableops, "");
-   ("-stay-on-error", Arg.Unit setstayonerror, "")]
+   ("-debug", Arg.Unit setdebug, " Show debug information");
+   ("-debug-crypt", Arg.Unit (fun () -> args.debugcrypt <- true), " Show encryption debug information");
+   ("-debug-malformed", Arg.Set Pdfread.debug_always_treat_malformed, " Always treat files as malformed");
+   ("-debug-stderr-to-stdout", Arg.Unit setstderrtostdout, " Log to stdout instead of stderr");
+   ("-debug-readable-ops", Arg.Unit setreadableops, " Use newlines as whitespace in page content streams");
+   ("-stay-on-error", Arg.Unit setstayonerror, " Do not call exit() after an error")]
 
 let specs = sort compare specs
 

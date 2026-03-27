@@ -9,6 +9,7 @@ o Add attached files from JSON data
 o Add page labels from JSON data
 o List OCGs in JSON form with -ocg-list-json
 o Edit & round-trip OCGs with -ocg-replace
+o Document all debug functions in -summary
 
 2.9 (March 2026)
 
