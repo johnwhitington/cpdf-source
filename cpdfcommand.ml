@@ -248,6 +248,7 @@ type op =
   | Revisions
   | SigInfo
   | AddAttachedFilesJSON of string
+  | RemoveStreamContent
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -422,6 +423,7 @@ let string_of_op = function
   | Revisions -> "Revisions"
   | SigInfo -> "SigInfo"
   | AddAttachedFilesJSON _ -> "AddAttachedFilesJSON"
+  | RemoveStreamContent -> "RemoveStreamContent"
 
 (* Inputs: filename, pagespec. *)
 type input_kind = 
@@ -1026,7 +1028,7 @@ let banned banlist = function
   | PrintStructTree | Rasterize | OutputImage | RemoveStructTree | MarkAsArtifact
   | ContainsJavaScript | RemoveJavaScript | RemoveArticleThreads | RemovePagePiece | RemoveOutputIntents
   | RemoveWebCapture | RemoveProcsets | ExtractMetadata | Summary | Revisions | SigInfo
-  | AddAttachedFilesJSON _ -> false (* Always allowed *)
+  | AddAttachedFilesJSON _ | RemoveStreamContent -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
   | Decrypt | Encrypt | CombinePages _ -> true (* Never allowed *)
@@ -4153,7 +4155,10 @@ let rec go () =
               error "Must specify one output and at least one input"
           | _ -> assert false
       end
-  | Some (CopyFont fromfile) ->
+  | op ->
+  match unopt op with
+  | Version | Merge -> ()
+  | CopyFont fromfile ->
       begin match args.inputs, args.out with
       | (_, pagespec, u, o, _, _)::_, _ ->
           let pdf = get_single_pdf (Some (CopyFont fromfile)) false
@@ -4168,14 +4173,14 @@ let rec go () =
                   write_pdf true outpdf
       | _ -> error "copyfont: bad command line"
       end
-  | Some RemoveFonts ->
+  | RemoveFonts ->
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some RemoveFonts) false in
             write_pdf true (Cpdffont.remove_fonts pdf)
       | _ -> error "remove fonts: bad command line"
       end
-  | Some (ExtractFontFile spec) ->
+  | ExtractFontFile spec ->
       begin match args.inputs, args.out with
       | (_, pagespec, u, o, _, _)::_, File filename ->
           let pdf = get_single_pdf (Some (ExtractFontFile spec)) false in
@@ -4188,17 +4193,17 @@ let rec go () =
             end
       | _ -> error "extract fontfile: bad command line"
       end 
-  | Some CountPages ->
+  | CountPages ->
       begin match args.inputs with
        [(ik, _, _, _, _, _) as input] ->
          let pdf = get_pdf_from_input_kind ~read_lazy:true ~decrypt:false input (Some CountPages) ik in
            output_page_count pdf
       | _ -> raise (Arg.Bad "CountPages: must have a single input file only")
       end
-  | Some Clean ->
+  | Clean ->
       let pdf' = get_single_pdf (Some Clean) false in
         write_pdf false pdf'
-  | Some Info ->
+  | Info ->
       let pdf, inname, input =
         match args.inputs with
         | (InFile inname, _, u, o, _, _) as input::_ ->
@@ -4254,7 +4259,7 @@ let rec go () =
               Cpdfmetadata.output_info args.encoding args.output_unit pdf;
               Cpdfmetadata.output_xmp_info args.encoding args.output_unit pdf
             end
-  | Some PageInfo ->
+  | PageInfo ->
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf args.op true in
@@ -4262,9 +4267,9 @@ let rec go () =
               Cpdfpage.output_page_info ~json:args.format_json args.output_unit pdf range
       | _ -> error "list-bookmarks: bad command line"
       end
-  | Some Metadata ->
+  | Metadata ->
       Cpdfmetadata.print_metadata (get_single_pdf (Some Metadata) true)
-  | Some Fonts ->
+  | Fonts ->
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some Fonts) true in
@@ -4272,7 +4277,7 @@ let rec go () =
             Cpdffont.print_fonts ~json:args.format_json pdf range
       | _ -> error "-list-fonts: bad command line"
       end
-  | Some ListBookmarks ->
+  | ListBookmarks ->
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
         let pdf = get_single_pdf args.op true in
@@ -4281,7 +4286,7 @@ let rec go () =
             flush stdout
       | _ -> error "list-bookmarks: bad command line"
       end
-  | Some Crop ->
+  | Crop ->
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some Crop) false in
@@ -4291,7 +4296,7 @@ let rec go () =
                   write_pdf false pdf
       | _ -> error "crop: bad command line"
       end
-  | Some Art ->
+  | Art ->
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some Art) false in
@@ -4301,7 +4306,7 @@ let rec go () =
                   write_pdf false pdf
       | _ -> error "art: bad command line"
       end
-  | Some Bleed ->
+  | Bleed ->
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some Bleed) false in
@@ -4311,7 +4316,7 @@ let rec go () =
                   write_pdf false pdf
       | _ -> error "bleed: bad command line"
       end
-  | Some Trim ->
+  | Trim ->
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some Trim) false in
@@ -4321,7 +4326,7 @@ let rec go () =
                   write_pdf false pdf
       | _ -> error "trim: bad command line"
       end
-  | Some MediaBox ->
+  | MediaBox ->
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some MediaBox) false in
@@ -4331,7 +4336,7 @@ let rec go () =
                   write_pdf false pdf
       | _ -> error "set media box: bad command line"
       end
-  | Some (HardBox box) ->
+  | HardBox box ->
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some (HardBox box)) false in
@@ -4340,7 +4345,7 @@ let rec go () =
               write_pdf false pdf
       | _ -> error "hard box: bad command line"
       end
-  | Some CopyBox ->
+  | CopyBox ->
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some CopyBox) false in
@@ -4355,7 +4360,7 @@ let rec go () =
                   write_pdf false pdf
       | _ -> error "Copy Box: bad command line"
       end
-  | Some Decompress ->
+  | Decompress ->
       let pdf = get_single_pdf (Some Decompress) false in
       let content_stream_object_numbers =
         if args.decompress_just_content then
@@ -4391,12 +4396,12 @@ let rec go () =
               pdf
           end;
           write_pdf ~is_decompress:true false pdf
-  | Some Compress ->
+  | Compress ->
       let pdf = get_single_pdf (Some Compress) false in
         if args.remove_duplicate_streams then
           Pdfmerge.remove_duplicate_fonts pdf;
         write_pdf false (Cpdfsqueeze.recompress_pdf pdf)
-  | Some RemoveCrop ->
+  | RemoveCrop ->
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some RemoveCrop) false in
@@ -4405,7 +4410,7 @@ let rec go () =
                 write_pdf false pdf
       | _ -> error "remove-crop: bad command line"
       end
-  | Some RemoveArt ->
+  | RemoveArt ->
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some RemoveArt) false in
@@ -4414,7 +4419,7 @@ let rec go () =
                 write_pdf false pdf
       | _ -> error "remove-crop: bad command line"
       end
-  | Some RemoveTrim ->
+  | RemoveTrim ->
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some RemoveTrim) false in
@@ -4423,7 +4428,7 @@ let rec go () =
                 write_pdf false pdf
       | _ -> error "remove-crop: bad command line"
       end
-  | Some RemoveBleed ->
+  | RemoveBleed ->
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some RemoveBleed) false in
@@ -4432,7 +4437,7 @@ let rec go () =
                 write_pdf false pdf
       | _ -> error "remove-crop: bad command line"
       end
-  | Some (Rotate _)  | Some (Rotateby _) ->
+  | Rotate _ | Rotateby _ ->
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf args.op false in
@@ -4447,7 +4452,7 @@ let rec go () =
                   write_pdf false pdf
       | _ -> error "rotate: bad command line"
       end
-  | Some (RotateContents a) ->
+  | RotateContents a ->
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf args.op false in
@@ -4456,7 +4461,7 @@ let rec go () =
                 write_pdf false pdf
       | _ -> error "rotate-contents: bad command line"
       end
-  | Some Upright ->
+  | Upright ->
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf args.op false in
@@ -4465,7 +4470,7 @@ let rec go () =
                 write_pdf false pdf
       | _ -> error "rotate-contents: bad command line"
       end
-  | Some ((VFlip | HFlip) as flip) ->
+  | (VFlip | HFlip) as flip ->
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf args.op false in
@@ -4478,9 +4483,9 @@ let rec go () =
                 write_pdf false pdf
       | _ -> error "flip: bad command line"
       end
-  | Some ((SetAuthor _ | SetTitle _ | SetSubject _ | SetKeywords _
-          | SetCreate _ | SetModify _ | SetCreator _ | SetProducer _
-          | SetTrapped | SetUntrapped) as op) ->
+  | (SetAuthor _ | SetTitle _ | SetSubject _ | SetKeywords _
+    | SetCreate _ | SetModify _ | SetCreator _ | SetProducer _
+    | SetTrapped | SetUntrapped) as op ->
       let key, value, version  =
         let f s = if args.encoding <> Cpdfmetadata.Raw then Pdftext.pdfdocstring_of_utf8 s else unescape_octals s in
           match op with
@@ -4503,10 +4508,10 @@ let rec go () =
                  ~xmp_also:args.alsosetxml
                  ~xmp_just_set:args.justsetxml
                  (key, value, version) pdf)
-  | Some (SetMetadataDate date) ->
+  | SetMetadataDate date ->
       write_pdf false (Cpdfmetadata.set_metadata_date (get_single_pdf args.op false) date)
-  | Some ((HideToolbar _ | HideMenubar _ | HideWindowUI _
-          | FitWindow _ | CenterWindow _ | DisplayDocTitle _) as op) ->
+  | (HideToolbar _ | HideMenubar _ | HideWindowUI _
+     | FitWindow _ | CenterWindow _ | DisplayDocTitle _) as op ->
       begin match args.out with
       | _ ->
         let key, value, version =
@@ -4523,22 +4528,22 @@ let rec go () =
      let version = if args.keepversion || pdf.Pdf.major > 1 then pdf.Pdf.minor else version in
           write_pdf false (Cpdfmetadata.set_viewer_preference (key, value, version) pdf)
       end
-  | Some (OpenAtPage str) ->
+  | OpenAtPage str ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf str in
       let n = match range with [x] -> x | _ -> error "open_at_page: range does not specify single page" in
         write_pdf false (Cpdfmetadata.set_open_action pdf false n)
-  | Some (OpenAtPageFit str) ->
+  | OpenAtPageFit str ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf str in
       let n = match range with [x] -> x | _ -> error "open_at_page_fit: range does not specify single page" in
         write_pdf false (Cpdfmetadata.set_open_action pdf true n)
-  | Some (OpenAtPageCustom dest) ->
+  | OpenAtPageCustom dest ->
       let pdf = get_single_pdf args.op false in
         write_pdf false (Cpdfmetadata.set_open_action ~dest pdf true 1)
-  | Some (SetMetadata metadata_file) ->
+  | SetMetadata metadata_file ->
       write_pdf false (Cpdfmetadata.set_metadata args.keepversion metadata_file (get_single_pdf args.op false))
-  | Some (SetVersion v) ->
+  | SetVersion v ->
       let pdf = get_single_pdf args.op false in
       let pdf =
         if v >= 10
@@ -4546,13 +4551,13 @@ let rec go () =
           else {pdf with Pdf.major = 1; Pdf.minor = v}
       in
          write_pdf false pdf
-  | Some (SetPageLayout s) ->
+  | SetPageLayout s ->
       write_pdf false (Cpdfmetadata.set_page_layout (get_single_pdf args.op false) s)
-  | Some (SetPageMode s) ->
+  | SetPageMode s ->
       write_pdf false (Cpdfmetadata.set_page_mode (get_single_pdf args.op false) s)
-  | Some (SetNonFullScreenPageMode s) ->
+  | SetNonFullScreenPageMode s ->
       write_pdf false (Cpdfmetadata.set_non_full_screen_page_mode (get_single_pdf args.op false) s)
-  | Some Split ->
+  | Split ->
       begin match args.inputs, args.out with
         | [(f, ranges, _, _, _, _)], File output_spec ->
             let pdf = get_single_pdf args.op true in
@@ -4565,7 +4570,7 @@ let rec go () =
         | _, NoOutputSpecified -> error "Split: No output format specified"
         | _ -> error "Split: bad parameters"
       end
-  | Some (SplitOnBookmarks level) ->
+  | SplitOnBookmarks level ->
       begin match args.out with
         | File output_spec ->
             let pdf = get_single_pdf args.op false in
@@ -4576,7 +4581,7 @@ let rec go () =
         | Stdout -> error "Can't split to standard output"
         | NoOutputSpecified -> error "Split: No output format specified"
       end
-  | Some (SplitMax s) ->
+  | SplitMax s ->
       begin match args.out with
         | File output_spec ->
             let pdf = get_single_pdf args.op false in
@@ -4586,7 +4591,7 @@ let rec go () =
         | Stdout -> error "Can't split to standard output"
         | NoOutputSpecified -> error "Split: No output format specified"
       end
-  | Some Spray ->
+  | Spray ->
       begin match args.inputs, args.out with
         | (_, pagespec, _, _, _, _)::_, File output_spec ->
             let pdf = get_single_pdf args.op false in
@@ -4607,7 +4612,7 @@ let rec go () =
         | _, NoOutputSpecified -> error "Spray: No output format specified"
         | _, _ -> error "Spray: no input"
       end
-  | Some Presentation ->
+  | Presentation ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
           let pdf' =
@@ -4618,7 +4623,7 @@ let rec go () =
           in
             pdf.Pdf.minor <- if args.keepversion || pdf.Pdf.major > 1 then pdf.Pdf.minor else max pdf.Pdf.minor 1;
             write_pdf false pdf'
-  | Some ChangeId ->
+  | ChangeId ->
       if args.recrypt then
         soft_error "Cannot recrypt with change id: an id is part of encryption information";
       begin match args.inputs, args.out with
@@ -4630,13 +4635,13 @@ let rec go () =
             write_pdf true pdf
       | _ -> error "ChangeId: exactly one input file and output file required."
       end
-  | Some RemoveId ->
+  | RemoveId ->
       if args.recrypt then
         soft_error "Cannot recrypt with remove id: an id is part of encryption information";
       let pdf = get_single_pdf args.op false in
         pdf.Pdf.trailerdict <- Pdf.remove_dict_entry pdf.Pdf.trailerdict "/ID";
         write_pdf false pdf
-  | Some (CopyId getfrom) ->
+  | CopyId getfrom ->
       if args.recrypt then
         soft_error "Cannot recrypt with copy id: an id is part of encryption information";
       begin match args.inputs with
@@ -4650,27 +4655,27 @@ let rec go () =
             write_pdf false pdf
       | _ -> error "copy-id: No input file specified"
       end
-  | Some (ThinLines w) ->
+  | ThinLines w ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
           write_pdf false (Cpdftweak.thinlines range w pdf)
-  | Some BlackText ->
+  | BlackText ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
           write_pdf false (Cpdftweak.blacktext args.color range pdf)
-  | Some BlackLines ->
+  | BlackLines ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
           write_pdf false (Cpdftweak.blacklines args.color range pdf)
-  | Some BlackFills ->
+  | BlackFills ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
           write_pdf false (Cpdftweak.blackfills args.color range pdf)
-  | Some RemoveAnnotations ->
+  | RemoveAnnotations ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
           write_pdf false (Cpdfannot.remove_annotations range pdf)
-  | Some (CopyAnnotations getfrom) ->
+  | CopyAnnotations getfrom ->
       begin match args.inputs with
       | [(k, _, u, o, _, _) as input] ->
           let input_pdf = get_pdf_from_input_kind input args.op k in
@@ -4682,34 +4687,34 @@ let rec go () =
             write_pdf false input_pdf
       | _ -> error "copy-annotations: No input file specified"
       end
-  | Some (SetAnnotations json) ->
+  | SetAnnotations json ->
       let data = Pdfio.input_of_channel (open_in_bin json) in
       let pdf = get_single_pdf args.op false in
         Cpdfannot.set_annotations_json pdf data;
         write_pdf false pdf
-  | Some ListAnnotations ->
+  | ListAnnotations ->
       let pdf = get_single_pdf args.op true in
       let range = parse_pagespec pdf (get_pagespec ()) in
         if args.format_json then
           flprint (Pdfio.string_of_bytes (Cpdfannot.get_annotations_json pdf range))
         else
           Cpdfannot.list_annotations range args.encoding pdf
-  | Some Shift ->
+  | Shift ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
       let dxdylist = Cpdfcoord.parse_coordinates pdf args.coord in
         write_pdf false (Cpdfpage.shift_pdf ~fast:args.fast dxdylist pdf range)
-  | Some ShiftBoxes ->
+  | ShiftBoxes ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
       let dxdylist = Cpdfcoord.parse_coordinates pdf args.coord in
         write_pdf false (Cpdfpage.shift_boxes dxdylist pdf range)
-  | Some Scale ->
+  | Scale ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
       let sxsylist = Cpdfcoord.parse_coordinates pdf args.coord in
         write_pdf false (Cpdfpage.scale_pdf ~fast:args.fast sxsylist pdf range)
-  | Some ScaleToFit ->
+  | ScaleToFit ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
           warn_prerotate range pdf;
@@ -4717,25 +4722,25 @@ let rec go () =
           let xylist = Cpdfcoord.parse_coordinates pdf args.coord in
           let pdf = if args.scale_to_fit_rotate <> 0 then Cpdfpage.scale_to_fit_rotate ~fast:args.fast xylist args.scale_to_fit_rotate pdf range else pdf in
             write_pdf false (Cpdfpage.scale_to_fit_pdf ~fast:args.fast args.position args.scale xylist args.op pdf range)
-  | Some Stretch ->
+  | Stretch ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
           warn_prerotate range pdf;
           let pdf = if args.prerotate then prerotate range pdf else pdf in
           let xylist = Cpdfcoord.parse_coordinates pdf args.coord in
             write_pdf false (Cpdfpage.stretch ~fast:args.fast xylist pdf range)
-  | Some CenterToFit ->
+  | CenterToFit ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
           warn_prerotate range pdf;
           let pdf = if args.prerotate then prerotate range pdf else pdf in
           let xylist = Cpdfcoord.parse_coordinates pdf args.coord in
             write_pdf false (Cpdfpage.center_to_fit xylist pdf range)
-  | Some (ScaleContents scale) ->
+  | ScaleContents scale ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
           write_pdf false (Cpdfpage.scale_contents ~fast:args.fast args.position scale pdf range)
-  | Some ListAttachedFiles ->
+  | ListAttachedFiles ->
       let pdf = get_single_pdf args.op false in
         let attachments = Cpdfattach.list_attached_files pdf in
         if args.format_json then
@@ -4762,16 +4767,16 @@ let rec go () =
                    (match a.Cpdfattach.relationship with None -> "" | Some s -> s))
               attachments;
           end
-  | Some DumpAttachedFiles ->
+  | DumpAttachedFiles ->
       let pdf = get_single_pdf args.op false in
         begin match args.out with
         | NoOutputSpecified -> Cpdfattach.dump_attached_files pdf ""
         | File n -> Cpdfattach.dump_attached_files pdf n
         | Stdout -> error "Can't dump attachments to stdout"
         end
-  | Some RemoveAttachedFiles ->
+  | RemoveAttachedFiles ->
       write_pdf false (Cpdfattach.remove_attached_files (get_single_pdf args.op false))
-  | Some (AttachFile attachments) ->
+  | AttachFile attachments ->
       begin match args.inputs with
       | [(k, _, _, _, _, _) as input] ->
           let pdf = get_pdf_from_input_kind input args.op k in
@@ -4787,7 +4792,7 @@ let rec go () =
               write_pdf false pdf
       | _ -> error "attach file: No input file specified"
       end
-  | Some (AddAttachedFilesJSON f) ->
+  | AddAttachedFilesJSON f ->
       let pdf = get_single_pdf args.op false in
       let attachments =
         match Cpdfyojson.Safe.from_file f with
@@ -4807,7 +4812,7 @@ let rec go () =
       in
         let pdf = fold_left (fun pdf (p, n, d, r, data) -> Cpdfattach.attach_file ?memory:(Some data) args.keepversion p pdf r d n) pdf attachments in
           write_pdf false pdf
-  | Some PadBefore ->
+  | PadBefore ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
           let padwith =
@@ -4816,7 +4821,7 @@ let rec go () =
             | Some filename -> Some (pdfread_pdf_of_file None None filename)
           in
             write_pdf false (Cpdfpad.padbefore ?padwith range pdf)
-  | Some PadAfter ->
+  | PadAfter ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
           let padwith =
@@ -4825,7 +4830,7 @@ let rec go () =
             | Some filename -> Some (pdfread_pdf_of_file None None filename)
           in
             write_pdf false (Cpdfpad.padafter ?padwith range pdf)
-  | Some (PadEvery n) ->
+  | PadEvery n ->
       let pdf = get_single_pdf args.op false in
         let range =
           match keep (function m -> m mod n = 0) (ilist 1 (Pdfpage.endpage pdf)) with
@@ -4838,17 +4843,17 @@ let rec go () =
             | Some filename -> Some (pdfread_pdf_of_file None None filename)
           in
             write_pdf false (Cpdfpad.padafter ?padwith range pdf)
-  | Some (PadMultiple n) ->
+  | PadMultiple n ->
       let pdf = get_single_pdf args.op false in
         write_pdf false (Cpdfpad.padmultiple n pdf)
-  | Some (PadMultipleBefore n) ->
+  | PadMultipleBefore n ->
       let pdf = get_single_pdf args.op false in
         write_pdf false (Cpdfpad.padmultiple (-n) pdf)
-  | Some Draft ->
+  | Draft ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
           write_pdf false (Cpdfdraft.draft args.removeonly args.boxes range pdf)
-  | Some (AddText text) ->
+  | AddText text ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
           let cpdffont = embed_font () in
@@ -4868,11 +4873,11 @@ let rec go () =
                    args.relative_to_box args.opacity
                    args.justification args.midline args.topline filename
                    args.coord ~raw:(args.encoding = Raw) pdf)
-  | Some RemoveText ->
+  | RemoveText ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
           write_pdf false (Cpdfremovetext.removetext range pdf)
-  | Some AddRectangle ->
+  | AddRectangle ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
           write_pdf false
@@ -4880,24 +4885,24 @@ let rec go () =
                args.fast args.coord
                args.color args.outline args.linewidth args.opacity args.position
                args.relative_to_box args.underneath range pdf)
-  | Some (AddBookmarks file) ->
+  | AddBookmarks file ->
       write_pdf false
         (Cpdfbookmarks.add_bookmarks ~json:args.format_json true (Pdfio.input_of_channel (open_in_bin file))
           (get_single_pdf args.op false))
-  | Some RemoveBookmarks ->
+  | RemoveBookmarks ->
       write_pdf false (Pdfmarks.remove_bookmarks (get_single_pdf args.op false))
-  | Some TwoUp ->
+  | TwoUp ->
       write_pdf false (Cpdfimpose.twoup ~process_struct_tree:args.process_struct_trees args.fast (get_single_pdf args.op false))
-  | Some TwoUpStack ->
+  | TwoUpStack ->
       write_pdf false (Cpdfimpose.twoup_stack ~process_struct_tree:args.process_struct_trees args.fast (get_single_pdf args.op false))
-  | Some Impose fit ->
+  | Impose fit ->
       let pdf = get_single_pdf args.op false in
       let x, y = Cpdfcoord.parse_coordinate pdf args.coord in
         if not fit && (x < 0.0 || y < 0.0) then error "Negative imposition parameters not allowed." else
         write_pdf false
           (Cpdfimpose.impose ~process_struct_tree:args.process_struct_trees ~x ~y ~fit ~columns:args.impose_columns ~rtl:args.impose_rtl ~btt:args.impose_btt ~center:args.impose_center
                       ~margin:args.impose_margin ~spacing:args.impose_spacing ~linewidth:args.impose_linewidth ~fast:args.fast pdf)
-  | Some (StampOn over) ->
+  | StampOn over ->
       let overpdf =
         match over with
         | "stamp_use_stdin" -> pdf_of_stdin "" ""
@@ -4911,7 +4916,7 @@ let rec go () =
                 args.scale_stamp_to_fit true range overpdf pdf
             in
               write_pdf false pdf
-  | Some (StampUnder under) ->
+  | StampUnder under ->
       let underpdf =
         match under with
         | "stamp_use_stdin" -> pdf_of_stdin "" ""
@@ -4925,7 +4930,7 @@ let rec go () =
                 args.scale_stamp_to_fit false range underpdf pdf
             in
               write_pdf false pdf
-  | Some (CombinePages over) ->
+  | CombinePages over ->
       let underpdf = get_single_pdf args.op false in
       let overpdf = pdfread_pdf_of_file None None over in
         warn_prerotate (parse_pagespec underpdf "all") underpdf;
@@ -4937,7 +4942,7 @@ let rec go () =
                (prerotate (parse_pagespec underpdf "all") underpdf)
                (prerotate (parse_pagespec overpdf "all") overpdf)
                args.scale_stamp_to_fit args.underneath)
-  | Some Encrypt ->
+  | Encrypt ->
       let pdf = get_single_pdf args.op false in
         let pdf = Cpdfsqueeze.recompress_pdf pdf
         and encryption = build_enc () in
@@ -4952,12 +4957,12 @@ let rec go () =
                   if pdf.Pdf.major = 1 then pdf.Pdf.minor <- max pdf.Pdf.minor newversion
             end;
             write_pdf ~encryption false pdf
-  | Some Decrypt ->
+  | Decrypt ->
       args.recrypt <- false;
       write_pdf false (get_single_pdf args.op false)
-  | Some (RemoveMetadata all) ->
+  | RemoveMetadata all ->
       write_pdf false ((if all then Cpdfmetadata.remove_all_metadata else Cpdfmetadata.remove_metadata) (get_single_pdf args.op false))
-  | Some ExtractMetadata ->
+  | ExtractMetadata ->
       let output_spec =
         begin match args.out with
         | File output_spec -> output_spec
@@ -4966,7 +4971,7 @@ let rec go () =
       in
         let pdf = get_single_pdf args.op true in
           Cpdfmetadata.extract_all_metadata pdf output_spec
-  | Some ExtractImages ->
+  | ExtractImages ->
       let output_spec =
         begin match args.out with
         | File output_spec -> output_spec
@@ -4976,7 +4981,7 @@ let rec go () =
         let pdf = get_single_pdf args.op true in
           let range = parse_pagespec pdf (get_pagespec ()) in
             Cpdfimage.extract_images ~merge_masks:args.merge_masks ~inline:args.inline ~raw:(args.encoding = Cpdfmetadata.Raw) ?path_to_p2p:(match args.path_to_p2p with "" -> None | x -> Some x) ?path_to_im:(match args.path_to_im with "" -> None | x -> Some x) args.encoding args.dedup args.dedup_per_page pdf range output_spec
-  | Some (ExtractSingleImage objnum) ->
+  | ExtractSingleImage objnum ->
       let output_spec =
         begin match args.out with
         | File output_spec -> output_spec
@@ -4985,7 +4990,7 @@ let rec go () =
       in
         let pdf = get_single_pdf args.op true in
           Cpdfimage.extract_single_image ~merge_masks:args.merge_masks ~raw:(args.encoding = Cpdfmetadata.Raw) ?path_to_p2p:(match args.path_to_p2p with "" -> None | x -> Some x) ?path_to_im:(match args.path_to_im with "" -> None | x -> Some x) args.encoding pdf objnum output_spec
-  | Some (ImageResolution f) ->
+  | ImageResolution f ->
       let pdf = get_single_pdf args.op true in
       let range = parse_pagespec pdf (get_pagespec ()) in
         if args.format_json then
@@ -4996,7 +5001,7 @@ let rec go () =
               (function (pagenum, xobject, w, h, wdpi, hdpi, objnum) ->
                  Printf.printf "%i, %s, %i, %i, %f, %f, %i\n" pagenum xobject w h wdpi hdpi objnum)
                images
-  | Some ListImages ->
+  | ListImages ->
       let pdf = get_single_pdf args.op true in
       let range = parse_pagespec pdf (get_pagespec ()) in
       let json = Cpdfimage.images ~inline:args.inline pdf range in
@@ -5023,25 +5028,25 @@ let rec go () =
                 l
           | _ -> ()
           end
-  | Some MissingFonts ->
+  | MissingFonts ->
       let pdf = get_single_pdf args.op true in
         let range = parse_pagespec pdf (get_pagespec ()) in
           Cpdffont.missing_fonts pdf range
-  | Some AddPageLabels ->
+  | AddPageLabels ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
           Cpdfpagelabels.add_page_labels
             pdf args.labelsprogress args.labelstyle args.labelprefix args.labelstartval range;
           write_pdf false pdf
-  | Some (AddPageLabelsJSON f) ->
+  | AddPageLabelsJSON f ->
       let pdf = get_single_pdf args.op false in
         Cpdfpagelabels.add_page_labels_json pdf (Cpdfyojson.Safe.from_file f);
         write_pdf false pdf
-  | Some RemovePageLabels ->
+  | RemovePageLabels ->
       let pdf = get_single_pdf args.op false in
         Pdfpagelabels.remove pdf;
         write_pdf false pdf
-  | Some PrintPageLabels ->
+  | PrintPageLabels ->
       let string_of_pagelabel l =
         (Printf.sprintf "labelstyle: %s\n" (Pdfpagelabels.string_of_labelstyle l.Pdfpagelabels.labelstyle)) ^
         (Printf.sprintf "labelprefix: %s\n"
@@ -5063,31 +5068,31 @@ let rec go () =
             iter
               print_string
               (map string_of_pagelabel (Pdfpagelabels.read pdf))
-  | Some (RemoveDictEntry key) ->
+  | RemoveDictEntry key ->
       let pdf = get_single_pdf args.op true in
         Cpdfutil.remove_dict_entry pdf key args.dict_entry_search;
         write_pdf false pdf
-  | Some (ReplaceDictEntry key) ->
+  | ReplaceDictEntry key ->
       let pdf = get_single_pdf args.op true in
         Cpdfutil.replace_dict_entry pdf key args.replace_dict_entry_value args.dict_entry_search;
         write_pdf false pdf
-  | Some (PrintDictEntry key) ->
+  | PrintDictEntry key ->
       let pdf = get_single_pdf args.op true in
         if args.format_json then
           print_string (Pdfio.string_of_bytes (Cpdftweak.get_dict_entries ~utf8:(args.encoding = Cpdfmetadata.UTF8) pdf key))
         else
           Cpdftweak.print_dict_entry ~utf8:(args.encoding = Cpdfmetadata.UTF8) pdf key
-  | Some ListSpotColours ->
+  | ListSpotColours ->
       let pdf = get_single_pdf args.op false in
         Cpdfspot.list_spot_colours pdf
-  | Some RemoveClipping ->
+  | RemoveClipping ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
           write_pdf false (Cpdftweak.remove_clipping pdf range)
-  | Some CreateMetadata ->
+  | CreateMetadata ->
       let pdf = get_single_pdf args.op false in
         write_pdf false (Cpdfmetadata.create_metadata pdf)
-  | Some EmbedMissingFonts ->
+  | EmbedMissingFonts ->
       let fi =
         match args.inputs with
           [(InFile fi, _, _, _, _, _)] -> fi
@@ -5099,10 +5104,10 @@ let rec go () =
         | _ -> error "Output method not supported for -embed-missing-fonts"
       in
         Cpdffont.embed_missing_fonts args.path_to_ghostscript args.gs_quiet fi fo
-  | Some (BookmarksOpenToLevel n) ->
+  | BookmarksOpenToLevel n ->
       let pdf = get_single_pdf args.op false in
         write_pdf false (Cpdfbookmarks.bookmarks_open_to_level n pdf)
-  | Some CreatePDF ->
+  | CreatePDF ->
       let pdf =
         begin match args.subformat with
         | Some Cpdfua.PDFUA1 ->
@@ -5120,46 +5125,46 @@ let rec go () =
         args.op <- None;
         args.inputs <- args.inputs @ [(AlreadyInMemory (pdf, "CreatePDF"), "all", "", "", ref false, None)];
         go ()
-  | Some RemoveAllText ->
+  | RemoveAllText ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
         write_pdf false (Cpdfremovetext.remove_all_text range pdf)
-  | Some ShowBoxes ->
+  | ShowBoxes ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
         write_pdf false (Cpdfpage.show_boxes pdf range)
-  | Some TrimMarks ->
+  | TrimMarks ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
         write_pdf false (Cpdfpage.trim_marks pdf range)
-  | Some (Postpend s | Prepend s as x) ->
+  | Postpend s | Prepend s as x ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
       let before = match x with Prepend _ -> true | _ -> false in
         write_pdf false (Cpdftweak.append_page_content s before args.fast range pdf)
-  | Some OutputJSON ->
+  | OutputJSON ->
       let pdf = get_single_pdf args.op false in
         write_json args.out pdf
-  | Some OCGCoalesce ->
+  | OCGCoalesce ->
       let pdf = get_single_pdf args.op false in
         Cpdfocg.ocg_coalesce pdf;
         write_pdf false pdf
-  | Some OCGList ->
+  | OCGList ->
       let pdf = get_single_pdf args.op true in
         Cpdfocg.ocg_list args.format_json pdf
-  | Some (OCGReplace json) ->
+  | OCGReplace json ->
       let pdf = get_single_pdf args.op false in
         Cpdfocg.ocg_replace json pdf;
         write_pdf false pdf
-  | Some OCGRename ->
+  | OCGRename ->
       let pdf = get_single_pdf args.op false in
         Cpdfocg.ocg_rename args.ocgrenamefrom args.ocgrenameto pdf;
         write_pdf false pdf
-  | Some OCGOrderAll ->
+  | OCGOrderAll ->
       let pdf = get_single_pdf args.op false in
         Cpdfocg.ocg_order_all pdf;
         write_pdf false pdf
-  | Some (StampAsXObject stamp) ->
+  | StampAsXObject stamp ->
       let stamp_pdf =
         match stamp with
         | "stamp_use_stdin" -> pdf_of_stdin "" ""
@@ -5173,10 +5178,10 @@ let rec go () =
             Printf.printf "%s\n" xobj_name;
             flush stdout;
             write_pdf false pdf
-  | Some (PrintFontEncoding fontname) ->
+  | PrintFontEncoding fontname ->
       let pdf = get_single_pdf args.op true in
         Cpdffont.print_font_table pdf fontname args.copyfontpage
-  | Some TableOfContents ->
+  | TableOfContents ->
       let pdf = get_single_pdf args.op false in
       let cpdffont = embed_font () in
       let pdf =
@@ -5185,13 +5190,13 @@ let rec go () =
           ~bookmark:args.toc_bookmark ~dotleader:args.dot_leader ~process_struct_tree:args.process_struct_trees ?subformat:args.subformat pdf
       in
         write_pdf false pdf
-  | Some (Typeset filename) ->
+  | Typeset filename ->
       let text = Pdfio.bytes_of_input_channel (open_in_bin filename) in
       let cpdffont = embed_font () in
       let pdf = Cpdftexttopdf.typeset ~process_struct_tree:args.process_struct_trees 
       ?subformat:args.subformat ?title:args.title ~font:cpdffont ~papersize:args.createpdf_pagesize ~fontsize:args.fontsize text in
         write_pdf false pdf
-  | Some (TextWidth s) ->
+  | TextWidth s ->
       let rawwidth =
         match args.font with
         | StandardFont f ->
@@ -5201,14 +5206,14 @@ let rec go () =
       in
         let w = (float rawwidth *. args.fontsize) /. 1000. in
           Printf.printf "%f\n" w
-  | Some Draw ->
+  | Draw ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
       let ops = match !Cpdfdrawcontrol.drawops with [("_MAIN", ops)] -> rev ops | _ -> error "not enough -end-xobj or -et" in
         write_pdf
           false
           (Cpdfdraw.draw ~struct_tree:args.draw_struct_tree ~fast:args.fast ~underneath:args.underneath ~filename:args.original_filename ~bates:args.bates ~batespad:args.batespad range pdf ops)
-  | Some (Composition json) ->
+  | Composition json ->
       let pdf = get_single_pdf args.op false in
       let filesize =
         match args.inputs with
@@ -5216,15 +5221,15 @@ let rec go () =
         | _ -> 0
       in
         Cpdfcomposition.show_composition filesize json pdf
-  | Some (Chop (x, y)) ->
+  | Chop (x, y) ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
         write_pdf false (Cpdfchop.chop ~x ~y ~columns:args.impose_columns ~btt:args.impose_btt ~rtl:args.impose_rtl pdf range)
-  | Some (ChopHV (is_h, line)) ->
+  | ChopHV (is_h, line) ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
         write_pdf false (Cpdfchop.chop_hv ~is_h ~line ~columns:args.impose_columns pdf range)
-  | Some ProcessImages ->
+  | ProcessImages ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
         Cpdfimage.process
@@ -5236,26 +5241,26 @@ let rec go () =
           ~jpeg_to_jpeg_scale:args.jpegtojpegscale ~jpeg_to_jpeg_dpi:args.jpegtojpegdpi
           ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_jbig2enc:args.path_to_jbig2enc ~path_to_convert:args.path_to_im range pdf;
         write_pdf false pdf
-  | Some (ExtractStream s) ->
+  | ExtractStream s ->
       let pdf = get_single_pdf args.op true in
         extract_stream pdf args.extract_stream_decompress s
-  | Some (ReplaceStream s) ->
+  | ReplaceStream s ->
       let pdf = get_single_pdf args.op false in
         Cpdftweak.replace_stream pdf s args.replace_stream_with;
         write_pdf false pdf
-  | Some (PrintObj s) ->
+  | PrintObj s ->
       let pdf = get_single_pdf args.op true in
         print_obj args.format_json pdf s
-  | Some (ReplaceObj (a, b)) ->
+  | ReplaceObj (a, b) ->
       let pdf = get_single_pdf args.op false in
       let pdfobj = pdf_or_json b in
         Cpdftweak.replace_obj pdf a pdfobj;
         write_pdf false pdf
-  | Some (RemoveObj s) ->
+  | RemoveObj s ->
       let pdf = get_single_pdf args.op true in
         Cpdftweak.remove_obj pdf s;
         write_pdf false pdf
-  | Some (Verify standard) ->
+  | Verify standard ->
       begin match standard with
       | "PDF/UA-1(matterhorn)" ->
           let pdf = get_single_pdf args.op false in
@@ -5265,7 +5270,7 @@ let rec go () =
               else Cpdfua.test_matterhorn_print pdf testname
       | _ -> error "Unknown verification type."
       end
-  | Some (MarkAs standard) ->
+  | MarkAs standard ->
       begin match standard with
       | Cpdfua.PDFUA1 ->
           let pdf = get_single_pdf args.op false in
@@ -5276,94 +5281,96 @@ let rec go () =
             Cpdfua.mark2 2024 pdf;
             write_pdf false pdf
       end
-  | Some (RemoveMark standard) ->
+  | RemoveMark standard ->
       begin match standard with
       | Cpdfua.PDFUA1 | Cpdfua.PDFUA2 ->
           let pdf = get_single_pdf args.op false in
             Cpdfua.remove_mark pdf;
             write_pdf false pdf
       end
-  | Some PrintStructTree ->
+  | PrintStructTree ->
       let pdf = get_single_pdf args.op true in
         Cpdfua.print_struct_tree pdf
-  | Some ExtractStructTree ->
+  | ExtractStructTree ->
       let pdf = get_single_pdf args.op true in
       let json = Cpdfua.extract_struct_tree pdf in
         json_to_output json args.out
-  | Some (ReplaceStructTree s) ->
+  | ReplaceStructTree s ->
       let pdf = get_single_pdf args.op false in
       let json = Cpdfyojson.Safe.from_file s in
         Cpdfua.replace_struct_tree pdf json;
         write_pdf false pdf
-  | Some RemoveStructTree ->
+  | RemoveStructTree ->
       let pdf = get_single_pdf args.op false in
       let pdf = Cpdfpage.remove_struct_tree pdf in
         write_pdf false pdf
-  | Some MarkAsArtifact ->
+  | MarkAsArtifact ->
       let pdf = get_single_pdf args.op false in
       let pdf = Cpdfpage.mark_all_as_artifact pdf in
         write_pdf false pdf
-  | Some (SetLanguage s) ->
+  | SetLanguage s ->
       let pdf = get_single_pdf args.op false in
         Cpdfmetadata.set_language pdf s;
         write_pdf false pdf
-  | Some Redact ->
+  | Redact ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
         write_pdf false (Cpdfpage.redact ~process_struct_tree:args.process_struct_trees pdf range)
-  | Some Rasterize ->
+  | Rasterize ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
         write_pdf false (rasterize args.rast_antialias args.rast_downsample args.rast_device args.rast_res args.rast_annots args.rast_jpeg_quality pdf range)
-  | Some OutputImage ->
+  | OutputImage ->
       let spec = match args.out with File spec -> spec | _ -> error "Output must be to a file" in
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
         write_images args.rast_device args.rast_res args.rast_jpeg_quality args.tobox args.rast_annots args.rast_antialias args.rast_downsample spec pdf range
-  | Some RemoveJavaScript ->
+  | RemoveJavaScript ->
       let pdf = get_single_pdf args.op false in
         Cpdfjs.remove_javascript pdf;
         write_pdf false pdf
-  | Some ContainsJavaScript ->
+  | ContainsJavaScript ->
       let pdf = get_single_pdf args.op true in
         print_string (Printf.sprintf "%b\n" (Cpdfjs.contains_javascript pdf))
-  | Some Portfolio ->
+  | Portfolio ->
       let pdf = get_single_pdf args.op true in
         args.create_objstm <- true;
         Cpdfportfolio.portfolio pdf (rev args.portfolio_files);
         write_pdf false pdf
-  | Some RemoveArticleThreads ->
+  | RemoveArticleThreads ->
       let pdf = get_single_pdf args.op false in
         remove_article_threads pdf;
         write_pdf false pdf
-  | Some RemovePagePiece ->
+  | RemovePagePiece ->
       let pdf = get_single_pdf args.op false in
         remove_page_piece pdf;
         write_pdf false pdf
-  | Some RemoveOutputIntents ->
+  | RemoveOutputIntents ->
       let pdf = get_single_pdf args.op false in
         remove_output_intents pdf;
         write_pdf false pdf
-  | Some RemoveWebCapture ->
+  | RemoveWebCapture ->
       let pdf = get_single_pdf args.op false in
         remove_web_capture pdf;
         write_pdf false pdf
-  | Some RemoveProcsets ->
+  | RemoveProcsets ->
       let pdf = get_single_pdf args.op false in
         remove_procsets pdf;
         write_pdf false pdf
-  | Some Summary ->
+  | Summary ->
       let nohelp =
         [("-help", Arg.Unit (fun () -> ()), ""); ("--help", Arg.Unit (fun () -> ()), "")]
       in
         Arg.usage (Arg.align (nohelp @ specs)) ""
-  | Some Revisions ->
+  | Revisions ->
       begin try ignore (get_single_pdf ~revisions:true args.op true) with
         Pdfread.Revisions n -> Printf.printf "%i\n" n
       end
-  | Some SigInfo ->
+  | SigInfo ->
       let pdf = get_single_pdf args.op true in
         show_digital_signature_info pdf args.format_json
+  | RemoveStreamContent -> 
+      ()
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)
