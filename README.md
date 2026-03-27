@@ -61,6 +61,12 @@ If downloading from Github, obtain the correct source. This means choosing the
 tag for a particular version, such as "v2.9". The head of the master branch
 is unstable.
 
+For example:
+```
+latest-version-tag="$(curl  "https://api.github.com/repos/johnwhitington/cpdf-source/tags" | jq -r '.[0].commit.url')"
+git clone --branch "$latest-version-tag" https://github.com/johnwhitington/cpdf-source
+```
+
 1. Type `make` to make the cpdf executable and the library
 
 2. Type `make install` to install the OCaml cpdf library.
