@@ -3236,7 +3236,8 @@ let specs =
    ("-debug-malformed", Arg.Set Pdfread.debug_always_treat_malformed, " Always treat files as malformed");
    ("-debug-stderr-to-stdout", Arg.Unit setstderrtostdout, " Log to stdout instead of stderr");
    ("-debug-readable-ops", Arg.Unit setreadableops, " Use newlines as whitespace in page content streams");
-   ("-stay-on-error", Arg.Unit setstayonerror, " Do not call exit() after an error")]
+   ("-stay-on-error", Arg.Unit setstayonerror, " Do not call exit() after an error");
+   ("-remove-stream-content", Arg.Unit (fun () -> setop RemoveStreamContent ()), " Remove stream content for debugging")]
 
 let specs = sort compare specs
 
@@ -5370,7 +5371,14 @@ let rec go () =
       let pdf = get_single_pdf args.op true in
         show_digital_signature_info pdf args.format_json
   | RemoveStreamContent -> 
-      ()
+      let pdf = get_single_pdf args.op true in
+        Pdf.objiter
+          (fun i obj ->
+             match obj with
+             | Pdf.Stream ({contents = dict, stream} as s) -> s := (dict, Got (mkbytes 0))
+             | x -> ())
+          pdf;
+        write_pdf false pdf
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)
