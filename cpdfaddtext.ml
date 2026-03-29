@@ -533,7 +533,7 @@ let
                   in
                     voffset := !voffset +. baseline_adjustment
               | Some (Pdftext.SimpleFont {fontdescriptor = Some {capheight}})  ->
-                  voffset := !voffset +. capheight /. 2. /. 1000.
+                  voffset := !voffset +. fontsize *. capheight /. 2. /. 1000.
               | _ ->
                   Pdfe.log "Unable to find midline adjustment in this font\n"
             end
@@ -546,7 +546,7 @@ let
                   in
                     voffset := !voffset +. baseline_adjustment
               | Some (Pdftext.SimpleFont {fontdescriptor = Some {capheight}})  ->
-                  voffset := !voffset +. capheight /. 1000.
+                  voffset := !voffset +. fontsize *. capheight /. 1000.
               | _ ->
                   Pdfe.log "Unable to find topline adjustment in this font\n"
             end;
