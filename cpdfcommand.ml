@@ -5362,8 +5362,7 @@ let rec go () =
       let nohelp =
         [("-help", Arg.Unit (fun () -> ()), ""); ("--help", Arg.Unit (fun () -> ()), "")]
       in
-        Unix.dup2 Unix.stdout Unix.stderr; (* output on stdout instead. *)
-        Arg.usage (Arg.align (nohelp @ specs)) ""
+        flprint (implode (tl (explode ((Arg.usage_string (Arg.align (nohelp @ specs)) "")))))
   | Revisions ->
       begin try ignore (get_single_pdf ~revisions:true args.op true) with
         Pdfread.Revisions n -> Printf.printf "%i\n" n
