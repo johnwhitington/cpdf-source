@@ -6619,13 +6619,13 @@ objects or clipped in the original). For example:
     \noindent\small\verb!cpdf -draft -boxes in.pdf -o out.pdf!
   \end{framed}
 
-\noindent To remove a single image only, specify \texttt{-draft-remove-only}, giving the name of the image obtained by a call to \texttt{-list-images-used} as described in Section \ref{imageres} and giving the appropriate page. For example:
+\noindent To remove a single image only, specify \texttt{-draft-remove-only}, giving the name of the image obtained by a call to \texttt{-list-images-used} as described in Section \ref{imageres} and giving the appropriate page or page range. For example:
 
   \begin{framed}
     \noindent\small\verb!cpdf -draft -boxes -draft-remove-only "/Im1" in.pdf 7 -o out.pdf!
   \end{framed}
 
-\noindent Note that this is only appropriate if the image is not used by other pages. To remove text instead of images, use the \texttt{-remove-all-text} operation:
+\noindent Note that this is only appropriate if the image is not used by pages outside the range. Check this by cross-referencing object numbers in the output of \texttt{-list-images[-used]}. To remove text instead of images, use the \texttt{-remove-all-text} operation:
 
   \begin{framed}
     \noindent\small\verb!cpdf -remove-all-text in.pdf -o out.pdf!
