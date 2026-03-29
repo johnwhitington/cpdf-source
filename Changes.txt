@@ -20,6 +20,7 @@ o Document all debug functions in -summary
 Fixes:
 
 o -midline and -topline now work properly for custom fonts
+o -summary goes to stdout
 
 2.9 (March 2026)
 
