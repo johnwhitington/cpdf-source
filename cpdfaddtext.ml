@@ -49,8 +49,9 @@ let colour_op_stroke = function
 
 let ops rotation font fontpack fontpackpdfobjs fontname longest_w x y rotate hoffset voffset outline linewidth unique_fontname unique_fontnames unique_extgstatename colour fontsize text textwidth position =
   let rot =
-    match rotation with
-    | Rot0 -> 0. | Rot90 -> rad_of_deg 270. | Rot180 -> rad_of_deg 180. | Rot270 -> rad_of_deg 90.
+    match position with Cpdfposition.Diagonal | Cpdfposition.ReverseDiagonal -> 0. | _ -> 
+      match rotation with
+      | Rot0 -> 0. | Rot90 -> rad_of_deg 270. | Rot180 -> rad_of_deg 180. | Rot270 -> rad_of_deg 90.
   in
   let rot_h_offset, rot_v_offset =
     match position with
@@ -412,7 +413,7 @@ let addtext
             and allwidths = map calc_textwidth expanded_lines in
               let longest_w = last (sort compare allwidths) in
               let joffset = find_justification_offsets longest_w textwidth position justification in
-              let mediabox =
+              let (xmin, ymin, xmax, ymax) as mediabox =
                 if relative_to_box <> "/MediaBox" then
                   match Pdf.lookup_direct pdf relative_to_box page.Pdfpage.rest with
                   | Some pdfobject -> Pdf.parse_rectangle pdf (Pdf.direct pdf pdfobject)
@@ -421,10 +422,29 @@ let addtext
                   Pdf.parse_rectangle pdf page.Pdfpage.mediabox
               in
                 let x, y, rotate = Cpdfposition.calculate_position false textwidth mediabox position in
+                  let rotate = if rotation = Rot180 then rotate +. rad_of_deg 180. else rotate in
                   let hoffset, voffset =
-                    if position = Diagonal || position = ReverseDiagonal
-                      then -. (cos ((pi /. 2.) -. rotate) *. voffset), sin ((pi /. 2.) -. rotate) *. voffset
-                      else hoffset, voffset 
+                    if position = Diagonal
+                      then
+                        begin if rotation = Rot180 then
+                          let angle = atan ((ymax -. ymin) /. (xmax -. xmin)) in
+                          let dx = cos angle *. textwidth in
+                          let dy = sin angle *. textwidth in
+                            (-. (cos ((pi /. 2.) -. rotate) *. voffset)) -. dx, sin ((pi /. 2.) -. rotate) *. voffset -. dy
+                        else
+                          -. (cos ((pi /. 2.) -. rotate) *. voffset), sin ((pi /. 2.) -. rotate) *. voffset
+                        end
+                    else if position = ReverseDiagonal
+                      then
+                        begin if rotation = Rot180 then
+                          let angle = atan ((ymax -. ymin) /. (xmax -. xmin)) in
+                          let dx = cos angle *. textwidth in
+                          let dy = sin angle *. textwidth in
+                            (-. (cos ((pi /. 2.) -. rotate) *. voffset)) -. dx, sin ((pi /. 2.) -. rotate) *. voffset +. dy
+                        else
+                          -. (cos ((pi /. 2.) -. rotate) *. voffset), sin ((pi /. 2.) -. rotate) *. voffset
+                        end
+                    else hoffset, voffset 
                   in
                     match font with
                     | Some f ->
