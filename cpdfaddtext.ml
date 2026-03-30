@@ -47,13 +47,45 @@ let colour_op_stroke = function
   | Grey g -> Pdfops.Op_G g
   | CYMK (c, y, m, k) -> Pdfops.Op_K (c, y, m, k)
 
-let ops rotation font fontpack fontpackpdfobjs fontname longest_w x y rotate hoffset voffset outline linewidth unique_fontname unique_fontnames unique_extgstatename colour fontsize text =
-  let rotation =
+let ops rotation font fontpack fontpackpdfobjs fontname longest_w x y rotate hoffset voffset outline linewidth unique_fontname unique_fontnames unique_extgstatename colour fontsize text textwidth position =
+  let rot =
     match rotation with
-    | Rot0 -> 0.
-    | Rot90 -> rad_of_deg 270.
-    | Rot180 -> rad_of_deg 180.
-    | Rot270 -> rad_of_deg 90.
+    | Rot0 -> 0. | Rot90 -> rad_of_deg 270. | Rot180 -> rad_of_deg 180. | Rot270 -> rad_of_deg 90.
+  in
+  let rot_h_offset, rot_v_offset =
+    match position with
+    | Cpdfposition.TopLeft _ ->
+        begin match rotation with
+        | Rot0 -> 0., 0.
+        | Rot90 -> 0., 0.
+        | Rot180 -> textwidth, 0.
+        | Rot270 -> 0., ~-.textwidth
+        end
+    | Cpdfposition.Top _ ->
+        begin match rotation with
+        | Rot0 -> 0., 0.
+        | Rot90 -> textwidth /. 2., 0.
+        | Rot180 -> textwidth, 0.
+        | Rot270 -> textwidth /. 2., ~-.textwidth
+        end
+    | Cpdfposition.TopRight _ ->
+        begin match rotation with
+        | Rot0 -> 0., 0.
+        | Rot90 -> textwidth, 0.
+        | Rot180 -> textwidth, 0.
+        | Rot270 -> textwidth, ~-.textwidth
+        end
+    | Cpdfposition.Right _ -> 0., 0.
+    | Cpdfposition.BottomRight _ -> 0., 0.
+    | Cpdfposition.Bottom _ -> 0., 0.
+    | Cpdfposition.BottomLeft _ -> 0., 0.
+    | Cpdfposition.Left _ -> 0., 0.
+    | Cpdfposition.Centre -> 0., 0.
+    | Cpdfposition.PosCentre _ -> 0., 0.
+    | Cpdfposition.PosLeft _ -> 0., 0.
+    | Cpdfposition.PosRight _ -> 0., 0.
+    | Cpdfposition.Diagonal -> 0., 0.
+    | Cpdfposition.ReverseDiagonal -> 0., 0.
   in
   let textops =
     match fontpack with
@@ -78,8 +110,8 @@ let ops rotation font fontpack fontpackpdfobjs fontname longest_w x y rotate hof
      Pdfops.Op_BMC "/CPDFSTAMP";
       Pdfops.Op_cm
         (Pdftransform.matrix_of_transform
-          [Pdftransform.Translate (x -. hoffset, y -. voffset);
-           Pdftransform.Rotate ((0., 0.), rotate +. rotation)]);
+          [Pdftransform.Translate (x -. hoffset +. rot_h_offset, y -. voffset +. rot_v_offset);
+           Pdftransform.Rotate ((0., 0.), rotate +. rot)]);
       Pdfops.Op_BT]
     @ (if outline then [Pdfops.Op_w linewidth; Pdfops.Op_Tr 1] else [Pdfops.Op_Tr 0])
     @ [colour_op colour; colour_op_stroke colour]
@@ -361,11 +393,11 @@ let addtext
                     match font with
                     | Some f ->
                         ops rotation font fontpack fontpackpdfobjs fontname longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
-                        unique_fontname unique_fontnames unique_extgstatename colour fontsize text,
+                        unique_fontname unique_fontnames unique_extgstatename colour fontsize text textwidth position,
                         urls, x, y, hoffset, voffset, text, joffset
                     | None ->
                         ops rotation font fontpack fontpackpdfobjs fontname longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
-                        fontname unique_fontnames None colour fontsize text,
+                        fontname unique_fontnames None colour fontsize text textwidth position,
                         urls, x, y, hoffset, voffset, text, joffset
           in
             let newresources =
