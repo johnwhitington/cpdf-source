@@ -16,6 +16,7 @@ Extended features:
 
 o Operations -relative-to-[bleed|art|trim]box as well as crop
 o Document all debug functions in -summary
+o Rotate text for -add-text using -text-[90|180|270].
 
 Fixes:
 
