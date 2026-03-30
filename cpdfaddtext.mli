@@ -18,6 +18,9 @@ type justification =
   | CentreJustify
   | RightJustify
 
+(** Rotation *)
+type rotation = Rot0 | Rot90 | Rot180 | Rot270
+
 (** Call [add_texts linewidth outline fast fontname font bates batespad colour
 position linespacing fontsize underneath text pages orientation
 relative_to_cropbox midline_adjust topline filename pdf]. For details see cpdfmanual.pdf *)
@@ -41,6 +44,7 @@ val addtexts :
     justification ->(*justification*)
     bool ->(*midline adjust?*)
     bool ->(*topline adjust?*)
+    rotation -> (* rotation *)
     string ->(*filename*)
     string -> (* shift *)
     ?raw:bool -> (* raw *)

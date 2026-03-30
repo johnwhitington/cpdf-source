@@ -617,7 +617,8 @@ type args =
    mutable inline : bool;
    mutable merge_masks : bool;
    mutable process_images_force : bool;
-   mutable update : bool}
+   mutable update : bool;
+   mutable text_rotation : Cpdfaddtext.rotation}
 
 let args =
   {op = None;
@@ -777,7 +778,8 @@ let args =
    inline = false;
    merge_masks = false;
    process_images_force = false;
-   update = false}
+   update = false;
+   text_rotation = Cpdfaddtext.Rot0}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -922,7 +924,8 @@ let reset_arguments () =
   args.inline <- false;
   args.merge_masks <- false;
   args.process_images_force <- false;
-  args.update <- false
+  args.update <- false;
+  args.text_rotation <- Cpdfaddtext.Rot0
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -3237,7 +3240,10 @@ let specs =
    ("-debug-stderr-to-stdout", Arg.Unit setstderrtostdout, " Log to stdout instead of stderr");
    ("-debug-readable-ops", Arg.Unit setreadableops, " Use newlines as whitespace in page content streams");
    ("-stay-on-error", Arg.Unit setstayonerror, " Do not call exit() after an error");
-   ("-remove-stream-content", Arg.Unit (fun () -> setop RemoveStreamContent ()), " Remove stream content for debugging")]
+   ("-remove-stream-content", Arg.Unit (fun () -> setop RemoveStreamContent ()), " Remove stream content for debugging");
+   ("-text-90", Arg.Unit (fun () -> args.text_rotation <- Cpdfaddtext.Rot90), " Rotate text to 90 degrees");
+   ("-text-180", Arg.Unit (fun () -> args.text_rotation <- Cpdfaddtext.Rot180), " Rotate text to 180 degrees");
+   ("-text-270", Arg.Unit (fun () -> args.text_rotation <- Cpdfaddtext.Rot270), " Rotate text to 270 degrees")]
 
 let specs = sort compare specs
 
@@ -4872,7 +4878,7 @@ let rec go () =
                    cpdffont args.bates args.batespad args.color args.position
                    args.linespacing args.fontsize args.underneath text range
                    args.relative_to_box args.opacity
-                   args.justification args.midline args.topline filename
+                   args.justification args.midline args.topline args.text_rotation filename
                    args.coord ~raw:(args.encoding = Raw) pdf)
   | RemoveText ->
       let pdf = get_single_pdf args.op false in

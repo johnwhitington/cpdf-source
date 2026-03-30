@@ -7,6 +7,9 @@ type colour =
 | RGB of float * float * float
 | CYMK of float * float * float * float
 
+(** Rotation *)
+type rotation = Rot0 | Rot90 | Rot180 | Rot270
+
 (* Process UTF8 text to charcodes, given a font. *)
 let charcodes_of_utf8 font s =
   let extractor = Pdftext.charcode_extractor_of_font_real ~debug:false font in
@@ -44,7 +47,14 @@ let colour_op_stroke = function
   | Grey g -> Pdfops.Op_G g
   | CYMK (c, y, m, k) -> Pdfops.Op_K (c, y, m, k)
 
-let ops font fontpack fontpackpdfobjs fontname longest_w x y rotate hoffset voffset outline linewidth unique_fontname unique_fontnames unique_extgstatename colour fontsize text =
+let ops rotation font fontpack fontpackpdfobjs fontname longest_w x y rotate hoffset voffset outline linewidth unique_fontname unique_fontnames unique_extgstatename colour fontsize text =
+  let rotation =
+    match rotation with
+    | Rot0 -> 0.
+    | Rot90 -> rad_of_deg 270.
+    | Rot180 -> rad_of_deg 180.
+    | Rot270 -> rad_of_deg 90.
+  in
   let textops =
     match fontpack with
     | Some fontpack ->
@@ -69,7 +79,7 @@ let ops font fontpack fontpackpdfobjs fontname longest_w x y rotate hoffset voff
       Pdfops.Op_cm
         (Pdftransform.matrix_of_transform
           [Pdftransform.Translate (x -. hoffset, y -. voffset);
-           Pdftransform.Rotate ((0., 0.), rotate)]);
+           Pdftransform.Rotate ((0., 0.), rotate +. rotation)]);
       Pdfops.Op_BT]
     @ (if outline then [Pdfops.Op_w linewidth; Pdfops.Op_Tr 1] else [Pdfops.Op_Tr 0])
     @ [colour_op colour; colour_op_stroke colour]
@@ -243,7 +253,7 @@ let expand_lines text time pdf endpage filename bates batespad num page lines =
 let addtext
   time lines linewidth outline fast colour fontname encoding bates batespad
   fontsize fontpack font fontpdfobj fontpackpdfobjs underneath position hoffset voffset text pages 
-  relative_to_box opacity justification filename shift raw pdf
+  relative_to_box opacity justification filename shift raw rotation pdf
 =
   let endpage = Pdfpage.endpage pdf in
   let shifts = Cpdfcoord.parse_coordinates pdf shift in
@@ -350,11 +360,11 @@ let addtext
                   in
                     match font with
                     | Some f ->
-                        ops font fontpack fontpackpdfobjs fontname longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
+                        ops rotation font fontpack fontpackpdfobjs fontname longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
                         unique_fontname unique_fontnames unique_extgstatename colour fontsize text,
                         urls, x, y, hoffset, voffset, text, joffset
                     | None ->
-                        ops font fontpack fontpackpdfobjs fontname longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
+                        ops rotation font fontpack fontpackpdfobjs fontname longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
                         fontname unique_fontnames None colour fontsize text,
                         urls, x, y, hoffset, voffset, text, joffset
           in
@@ -454,9 +464,9 @@ let unescape_string s =
   implode (unescape_chars [] (explode s))
 
 let
-  addtexts linewidth outline fast fontname (cpdffont : Cpdfembed.cpdffont) bates batespad
+  addtexts linewidth outline fast fontname cpdffont bates batespad
   colour position linespacing fontsize underneath text pages relative_to_box opacity
-  justification midline topline filename shift ?(raw=false) pdf
+  justification midline topline rotation filename shift ?(raw=false) pdf
 =
   if pages = [] then pdf else
   let time = Cpdfstrftime.current_time () in
@@ -571,7 +581,7 @@ let
                        addtext time lines linewidth outline fast colour !realfontname encoding
                        bates batespad fontsize fontpack font fontpdfobj fontpackpdfobjs underneath
                        position hoff voff line pages relative_to_box opacity justification filename
-                       shift raw !pdf;
+                       shift raw rotation !pdf;
                      voffset := !voffset +. (linespacing *. fontsize))
                 lines;
                 !pdf
