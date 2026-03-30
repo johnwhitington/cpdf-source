@@ -75,15 +75,51 @@ let ops rotation font fontpack fontpackpdfobjs fontname longest_w x y rotate hof
         | Rot180 -> textwidth, 0.
         | Rot270 -> textwidth, ~-.textwidth
         end
-    | Cpdfposition.Right _ -> 0., 0.
-    | Cpdfposition.BottomRight _ -> 0., 0.
-    | Cpdfposition.Bottom _ -> 0., 0.
-    | Cpdfposition.BottomLeft _ -> 0., 0.
-    | Cpdfposition.Left _ -> 0., 0.
-    | Cpdfposition.Centre -> 0., 0.
-    | Cpdfposition.PosCentre _ -> 0., 0.
-    | Cpdfposition.PosLeft _ -> 0., 0.
-    | Cpdfposition.PosRight _ -> 0., 0.
+    | Cpdfposition.Right _ ->
+        begin match rotation with
+        | Rot0 -> 0., 0.
+        | Rot90 -> textwidth, textwidth /. 2.
+        | Rot180 -> textwidth, 0.
+        | Rot270 -> textwidth, ~-.textwidth /. 2.
+        end
+    | Cpdfposition.BottomRight _ ->
+        begin match rotation with
+        | Rot0 -> 0., 0.
+        | Rot90 -> textwidth, textwidth
+        | Rot180 -> textwidth, 0.
+        | Rot270 -> textwidth, 0.
+        end
+    | Cpdfposition.Bottom _ ->
+        begin match rotation with
+        | Rot0 -> 0., 0.
+        | Rot90 -> textwidth /. 2., textwidth
+        | Rot180 -> textwidth, 0.
+        | Rot270 -> textwidth /. 2., 0.
+        end
+    | Cpdfposition.BottomLeft _ ->
+        begin match rotation with
+        | Rot0 -> 0., 0.
+        | Rot90 -> 0., textwidth
+        | Rot180 -> textwidth, 0.
+        | Rot270 -> 0., 0.
+        end
+    | Cpdfposition.Left _ ->
+        begin match rotation with
+        | Rot0 -> 0., 0.
+        | Rot90 -> 0., textwidth /. 2.
+        | Rot180 -> textwidth, 0.
+        | Rot270 -> 0., ~-.textwidth /. 2.
+        end
+    | Cpdfposition.Centre
+    | Cpdfposition.PosCentre _ 
+    | Cpdfposition.PosLeft _
+    | Cpdfposition.PosRight _ ->
+        begin match rotation with
+        | Rot0 -> 0., 0.
+        | Rot90 -> textwidth /. 2., textwidth /. 2.
+        | Rot180 -> textwidth, 0.
+        | Rot270 -> textwidth /. 2., ~-.textwidth /. 2.
+        end
     | Cpdfposition.Diagonal -> 0., 0.
     | Cpdfposition.ReverseDiagonal -> 0., 0.
   in
