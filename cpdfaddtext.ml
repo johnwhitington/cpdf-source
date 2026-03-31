@@ -371,9 +371,8 @@ let addtext
                     else hoffset, voffset 
                   in
             let rot =
-              match position with Cpdfposition.Diagonal | Cpdfposition.ReverseDiagonal -> 0. | _ -> 
-                match rotation with
-                | Rot0 -> 0. | Rot90 -> rad_of_deg 270. | Rot180 -> rad_of_deg 180. | Rot270 -> rad_of_deg 90.
+              match rotation with
+              | Rot0 -> 0. | Rot90 -> rad_of_deg 270. | Rot180 -> rad_of_deg 180. | Rot270 -> rad_of_deg 90.
             in
             let rot_h_offset, rot_v_offset =
               match position with
