@@ -325,7 +325,7 @@ let addtext
                   key)
               (indx0 (fst fontpack))
         in
-          let ops, urls, x, y, hoffset, voffset, text, joffset =
+          let ops, urls, x, y, hoffset, voffset, text, joffset, rot, rot_h_offset, rot_v_offset =
           let refnums = Pdf.page_reference_numbers pdf in
           let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
           let marks = Pdfmarks.read_bookmarks ~preserve_actions:false pdf in
@@ -450,11 +450,11 @@ let addtext
               | Some f ->
                   ops rotation font fontpack fontpackpdfobjs fontname longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
                   unique_fontname unique_fontnames unique_extgstatename colour fontsize text textwidth position rot rot_h_offset rot_v_offset,
-                  urls, x, y, hoffset, voffset, text, joffset
+                  urls, x, y, hoffset, voffset, text, joffset, rot, rot_h_offset, rot_v_offset
               | None ->
                   ops rotation font fontpack fontpackpdfobjs fontname longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
                   fontname unique_fontnames None colour fontsize text textwidth position rot rot_h_offset rot_v_offset,
-                  urls, x, y, hoffset, voffset, text, joffset
+                  urls, x, y, hoffset, voffset, text, joffset, rot, rot_h_offset, rot_v_offset
           in
             let newresources =
               match fontpack with
@@ -501,13 +501,31 @@ let addtext
                 map (fun (url, s, e) ->
                        let sx = annot_coord text s in
                        let ex = annot_coord text e in
-                       let x, y = x -. hoffset -. joffset, y -. voffset in
+                       let x2, y2 = x -. hoffset -. joffset, y -. voffset in
                        let height =
                          match cap_height font fontname with
                          | Some c -> (c *. fontsize) /. 1000.
                          | None -> fontsize
                        in
-                         Pdf.Indirect (Pdf.addobj pdf (annot (x +. sx, y, x +. ex, y +. height) url))) urls
+                         let minx, miny, maxx, maxy = (x2 +. sx, y2, x +. ex, y2 +. height) in
+                         (* Rotate the x, y and apply rotation offsets. rotation around original (x, y), rot_h_offset, rot_v_offset. (TODO joffset?? test with multiline) *)
+                         let final_rectangle =
+                           let transform =
+                             Pdftransform.matrix_of_transform
+                               [Pdftransform.Translate (rot_h_offset, rot_v_offset);
+                                Pdftransform.Rotate ((x, y), rot)]
+                           in
+                           let (x0, y0) = Pdftransform.transform_matrix transform (minx, miny) in
+                           let (x1, y1) = Pdftransform.transform_matrix transform (maxx, maxy) in
+                           let (x2, y2) = Pdftransform.transform_matrix transform (minx, maxy) in
+                           let (x3, y3) = Pdftransform.transform_matrix transform (maxx, miny) in
+                             let minx = fmin (fmin x0 x1) (fmin x2 x3) in
+                             let miny = fmin (fmin y0 y1) (fmin y2 y3) in
+                             let maxx = fmax (fmax x0 x1) (fmax x2 x3) in
+                             let maxy = fmax (fmax y0 y1) (fmax y2 y3) in
+                               (minx, miny, maxx, maxy)
+                         in
+                           Pdf.Indirect (Pdf.addobj pdf (annot final_rectangle url))) urls
             in
             let newrest =
               if annots = [] then page.Pdfpage.rest else
