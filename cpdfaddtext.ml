@@ -246,7 +246,7 @@ let expand_lines text time pdf endpage filename bates batespad num page lines =
 let addtext
   time lines linewidth outline fast colour fontname encoding bates batespad
   fontsize fontpack font fontpdfobj fontpackpdfobjs underneath position hoffset voffset text pages 
-  relative_to_box opacity justification filename shift raw rotation pdf
+  relative_to_box opacity justification filename shift raw url_border rotation pdf
 =
   let endpage = Pdfpage.endpage pdf in
   let shifts = Cpdfcoord.parse_coordinates pdf shift in
@@ -488,7 +488,7 @@ let addtext
               Pdf.Dictionary
                 [("/Subtype", Pdf.Name "/Link");
                  ("/Rect", Pdf.Array [Pdf.Real minx; Pdf.Real miny; Pdf.Real maxx; Pdf.Real maxy]);
-                 ("/BS", Pdf.Dictionary [("/W", Pdf.Integer 0)]);
+                 ("/BS", Pdf.Dictionary [("/W", Pdf.Integer (if url_border then 1 else 0))]);
                  ("/A", Pdf.Dictionary [("/URI", Pdf.String url);
                                         ("/Type", Pdf.Name "/Action");
                                         ("/S", Pdf.Name "/URI")])]
@@ -554,7 +554,7 @@ let unescape_string s =
 let
   addtexts linewidth outline fast fontname cpdffont bates batespad
   colour position linespacing fontsize underneath text pages relative_to_box opacity
-  justification midline topline rotation filename shift ?(raw=false) pdf
+  justification midline topline rotation filename shift ?(raw=false) url_border pdf
 =
   if pages = [] then pdf else
   let time = Cpdfstrftime.current_time () in
@@ -669,7 +669,7 @@ let
                        addtext time lines linewidth outline fast colour !realfontname encoding
                        bates batespad fontsize fontpack font fontpdfobj fontpackpdfobjs underneath
                        position hoff voff line pages relative_to_box opacity justification filename
-                       shift raw rotation !pdf;
+                       shift raw url_border rotation !pdf;
                      voffset := !voffset +. (linespacing *. fontsize))
                 lines;
                 !pdf

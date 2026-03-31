@@ -618,7 +618,8 @@ type args =
    mutable merge_masks : bool;
    mutable process_images_force : bool;
    mutable update : bool;
-   mutable text_rotation : Cpdfaddtext.rotation}
+   mutable text_rotation : Cpdfaddtext.rotation;
+   mutable url_border : bool}
 
 let args =
   {op = None;
@@ -779,7 +780,8 @@ let args =
    merge_masks = false;
    process_images_force = false;
    update = false;
-   text_rotation = Cpdfaddtext.Rot0}
+   text_rotation = Cpdfaddtext.Rot0;
+   url_border = false}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -925,7 +927,8 @@ let reset_arguments () =
   args.merge_masks <- false;
   args.process_images_force <- false;
   args.update <- false;
-  args.text_rotation <- Cpdfaddtext.Rot0
+  args.text_rotation <- Cpdfaddtext.Rot0;
+  args.url_border <- false
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -1346,12 +1349,12 @@ let setattachfile s =
 let setattachfiledescription s =
   match args.op with
   | Some (AttachFile (h::_)) -> h.odescription <- Some s
-  | _ -> error "no attachemnt to add description for"
+  | _ -> error "no attachment to add description for"
 
 let setattachfilerelationship s =
   match args.op with
   | Some (AttachFile (h::_)) -> h.orelationship <- Some s
-  | _ -> error "no attachemnt to add relationship for"
+  | _ -> error "no attachment to add relationship for"
 
 let setfontsize s =
   let f = Cpdfcoord.parse_single_number (Pdf.empty ()) s in
@@ -3243,7 +3246,8 @@ let specs =
    ("-remove-stream-content", Arg.Unit (fun () -> setop RemoveStreamContent ()), " Remove stream content for debugging");
    ("-text-90", Arg.Unit (fun () -> args.text_rotation <- Cpdfaddtext.Rot90), " Rotate text to 90 degrees");
    ("-text-180", Arg.Unit (fun () -> args.text_rotation <- Cpdfaddtext.Rot180), " Rotate text to 180 degrees");
-   ("-text-270", Arg.Unit (fun () -> args.text_rotation <- Cpdfaddtext.Rot270), " Rotate text to 270 degrees")]
+   ("-text-270", Arg.Unit (fun () -> args.text_rotation <- Cpdfaddtext.Rot270), " Rotate text to 270 degrees");
+   ("-url-border", Arg.Unit (fun () -> args.url_border <- true), " Add a border to URLs")]
 
 let specs = sort compare specs
 
@@ -4879,7 +4883,7 @@ let rec go () =
                    args.linespacing args.fontsize args.underneath text range
                    args.relative_to_box args.opacity
                    args.justification args.midline args.topline args.text_rotation filename
-                   args.coord ~raw:(args.encoding = Raw) pdf)
+                   args.coord ~raw:(args.encoding = Raw) args.url_border pdf)
   | RemoveText ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in

@@ -48,6 +48,7 @@ val addtexts :
     string ->(*filename*)
     string -> (* shift *)
     ?raw:bool -> (* raw *)
+    bool -> (* URL border *)
     Pdf.t ->(*pdf*)
     Pdf.t
 
