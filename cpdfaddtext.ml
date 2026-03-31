@@ -325,7 +325,7 @@ let addtext
                   key)
               (indx0 (fst fontpack))
         in
-          let ops, urls, x, y, hoffset, voffset, text, joffset, rot, rot_h_offset, rot_v_offset =
+          let ops, urls, x, y, hoffset, voffset, text, joffset, rot, rot_h_offset, rot_v_offset, rotate =
           let refnums = Pdf.page_reference_numbers pdf in
           let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
           let marks = Pdfmarks.read_bookmarks ~preserve_actions:false pdf in
@@ -450,11 +450,11 @@ let addtext
               | Some f ->
                   ops rotation font fontpack fontpackpdfobjs fontname longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
                   unique_fontname unique_fontnames unique_extgstatename colour fontsize text textwidth position rot rot_h_offset rot_v_offset,
-                  urls, x, y, hoffset, voffset, text, joffset, rot, rot_h_offset, rot_v_offset
+                  urls, x, y, hoffset, voffset, text, joffset, rot, rot_h_offset, rot_v_offset, rotate
               | None ->
                   ops rotation font fontpack fontpackpdfobjs fontname longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
                   fontname unique_fontnames None colour fontsize text textwidth position rot rot_h_offset rot_v_offset,
-                  urls, x, y, hoffset, voffset, text, joffset, rot, rot_h_offset, rot_v_offset
+                  urls, x, y, hoffset, voffset, text, joffset, rot, rot_h_offset, rot_v_offset, rotate
           in
             let newresources =
               match fontpack with
@@ -508,12 +508,14 @@ let addtext
                          | None -> fontsize
                        in
                          let minx, miny, maxx, maxy = (x2 +. sx, y2, x +. ex, y2 +. height) in
+                         Printf.printf "minx = %f, miny = %f, maxx = %f, maxy = %f\n" minx miny maxx maxy;
+                         Printf.printf "rot = %f, rot_h_offset = %f, rot_v_offset = %f, rotation = %f\n" rot rot_h_offset rot_v_offset rotate;
                          (* Rotate the x, y and apply rotation offsets. rotation around original (x, y), rot_h_offset, rot_v_offset. (TODO joffset?? test with multiline) *)
                          let final_rectangle =
                            let transform =
                              Pdftransform.matrix_of_transform
                                [Pdftransform.Translate (rot_h_offset, rot_v_offset);
-                                Pdftransform.Rotate ((x, y), rot)]
+                                Pdftransform.Rotate ((x, y), rot +. rotate)]
                            in
                            let (x0, y0) = Pdftransform.transform_matrix transform (minx, miny) in
                            let (x1, y1) = Pdftransform.transform_matrix transform (maxx, maxy) in
