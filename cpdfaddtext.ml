@@ -47,7 +47,11 @@ let colour_op_stroke = function
   | Grey g -> Pdfops.Op_G g
   | CYMK (c, y, m, k) -> Pdfops.Op_K (c, y, m, k)
 
-let ops rotation font fontpack fontpackpdfobjs fontname longest_w x y rotate hoffset voffset outline linewidth unique_fontname unique_fontnames unique_extgstatename colour fontsize text textwidth position rot rot_h_offset rot_v_offset =
+let ops
+  rotation font fontpack fontpackpdfobjs fontname longest_w x y rotate hoffset voffset outline linewidth
+  unique_fontname unique_fontnames unique_extgstatename colour fontsize text textwidth position
+  rot rot_h_offset rot_v_offset
+=
   let textops =
     match fontpack with
     | Some fontpack ->
@@ -642,15 +646,28 @@ let
               ref (0. -. ((linespacing *. fontsize *. (float (length lines) -. 1.)) /. 2.))
           | _ -> ref 0.
         in
+        let hoffset =
+          ref 0.
+        in
           if midline then
             begin match font with
               | Some (Pdftext.StandardFont (font, _)) ->
                   let baseline_adjustment =
                     (fontsize *. float (Pdfstandard14.baseline_adjustment font)) /. 1000.
                   in
-                    voffset := !voffset +. baseline_adjustment
+                    begin match rotation with
+                    | Rot0 -> voffset := !voffset +. baseline_adjustment
+                    | Rot90 -> hoffset := !hoffset +. baseline_adjustment
+                    | Rot180 -> voffset := !voffset -. baseline_adjustment
+                    | Rot270 -> hoffset := !hoffset -. baseline_adjustment
+                    end
               | Some (Pdftext.SimpleFont {fontdescriptor = Some {capheight}})  ->
-                  voffset := !voffset +. fontsize *. capheight /. 2. /. 1000.
+                    begin match rotation with
+                    | Rot0 -> voffset := !voffset +. fontsize *. capheight /. 2. /. 1000.
+                    | Rot90 -> hoffset := !hoffset +. fontsize *. capheight /. 2. /. 1000.
+                    | Rot180 -> voffset := !voffset -. fontsize *. capheight /. 2. /. 1000.
+                    | Rot270 -> hoffset := !hoffset -. fontsize *. capheight /. 2. /. 1000.
+                    end
               | _ ->
                   Pdfe.log "Unable to find midline adjustment in this font\n"
             end
@@ -661,9 +678,19 @@ let
                   let baseline_adjustment =
                     (fontsize *. float (Pdfstandard14.baseline_adjustment font) *. 2.0) /. 1000.
                   in
-                    voffset := !voffset +. baseline_adjustment
+                    begin match rotation with
+                    | Rot0 -> voffset := !voffset +. baseline_adjustment
+                    | Rot90 -> hoffset := !hoffset +. baseline_adjustment
+                    | Rot180 -> voffset := !voffset -. baseline_adjustment
+                    | Rot270 -> hoffset := !hoffset -. baseline_adjustment
+                    end
               | Some (Pdftext.SimpleFont {fontdescriptor = Some {capheight}})  ->
-                  voffset := !voffset +. fontsize *. capheight /. 1000.
+                    begin match rotation with
+                    | Rot0 -> voffset := !voffset +. fontsize *. capheight /. 1000.
+                    | Rot90 -> hoffset := !hoffset +. fontsize *. capheight /. 1000.
+                    | Rot180 -> voffset := !voffset -. fontsize *. capheight /. 1000.
+                    | Rot270 -> hoffset := !hoffset -. fontsize *. capheight /. 1000.
+                    end
               | _ ->
                   Pdfe.log "Unable to find topline adjustment in this font\n"
             end;
@@ -683,7 +710,7 @@ let
             in
               iter
                 (fun line ->
-                   let voff, hoff = !voffset, 0. in
+                   let voff, hoff = !voffset, !hoffset in
                      pdf :=
                        addtext time lines linewidth outline fast colour !realfontname encoding
                        bates batespad fontsize fontpack font fontpdfobj fontpackpdfobjs underneath
