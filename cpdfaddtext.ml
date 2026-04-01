@@ -678,18 +678,28 @@ let
                   let baseline_adjustment =
                     (fontsize *. float (Pdfstandard14.baseline_adjustment font) *. 2.0) /. 1000.
                   in
-                    begin match rotation with
-                    | Rot0 -> voffset := !voffset +. baseline_adjustment
-                    | Rot90 -> hoffset := !hoffset +. baseline_adjustment
-                    | Rot180 -> voffset := !voffset -. baseline_adjustment
-                    | Rot270 -> hoffset := !hoffset -. baseline_adjustment
+                    begin match position with
+                    | Diagonal | ReverseDiagonal ->
+                        voffset := !voffset +. baseline_adjustment
+                    | _ ->
+                        begin match rotation with
+                        | Rot0 -> voffset := !voffset +. baseline_adjustment
+                        | Rot90 -> hoffset := !hoffset +. baseline_adjustment
+                        | Rot180 -> voffset := !voffset -. baseline_adjustment
+                        | Rot270 -> hoffset := !hoffset -. baseline_adjustment
+                        end
                     end
               | Some (Pdftext.SimpleFont {fontdescriptor = Some {capheight}})  ->
-                    begin match rotation with
-                    | Rot0 -> voffset := !voffset +. fontsize *. capheight /. 1000.
-                    | Rot90 -> hoffset := !hoffset +. fontsize *. capheight /. 1000.
-                    | Rot180 -> voffset := !voffset -. fontsize *. capheight /. 1000.
-                    | Rot270 -> hoffset := !hoffset -. fontsize *. capheight /. 1000.
+                    begin match position with
+                    | Diagonal | ReverseDiagonal ->
+                        voffset := !voffset +. fontsize *. capheight /. 1000.                        
+                    | _ ->
+                        begin match rotation with
+                        | Rot0 -> voffset := !voffset +. fontsize *. capheight /. 1000.
+                        | Rot90 -> hoffset := !hoffset +. fontsize *. capheight /. 1000.
+                        | Rot180 -> voffset := !voffset -. fontsize *. capheight /. 1000.
+                        | Rot270 -> hoffset := !hoffset -. fontsize *. capheight /. 1000.
+                        end
                     end
               | _ ->
                   Pdfe.log "Unable to find topline adjustment in this font\n"
