@@ -2978,6 +2978,8 @@ for positions relative to the center of the page. For example:
 cpdf -add-text "Long line\nShort" -justify-right in.pdf -o out.pdf\end{verbatim}
 \end{framed}
 
+\noindent NB: The \texttt{-justify-} option must be after the position (e.g \texttt{-top-left}) option since positions will reset default justification.
+
 \subsection{Special Characters}
 
 If your command line allows for the inclusion of unicode characters, the input
