@@ -93,32 +93,38 @@ let find_justification_offsets rotation longest_w w position j =
   (* *** Working on Rot90 *)
   match rotation with
   | Rot90 | Rot270 ->
-    begin match j with
-    | LeftJustify ->
-        begin match position with
-        | TopLeft _ | TopRight _ | Top _ -> 0.
-        | Left _ | PosLeft _ | PosCentre _ | Centre | PosRight _ | Right _ -> (longest_w -. w) /. 2.
-        | BottomLeft _ | Bottom _ | BottomRight _ -> longest_w -. w
-        | Diagonal -> 0.
-        | ReverseDiagonal -> 0.
-        end
-    | RightJustify ->
-        begin match position with
-        | TopLeft _ | Left _ | PosLeft _ | BottomLeft _ -> ~-.(longest_w -. w)
-        | Top _ | PosCentre _ | Bottom _ | Centre -> ~-.((longest_w -. w) /. 2.)
-        | TopRight _ | BottomRight _ | PosRight _ | Right _ -> 0.
-        | Diagonal -> 0.
-        | ReverseDiagonal -> 0.
-        end
-    | CentreJustify ->
-        begin match position with
-        | TopLeft _ | Left _ | PosLeft _ | BottomLeft _ -> ~-.((longest_w -. w) /. 2.)
-        | Top _ | PosCentre _ | Bottom _ | Centre -> 0.
-        | TopRight _ | BottomRight _ | PosRight _ | Right _ -> (longest_w -. w) /. 2.
-        | Diagonal -> 0.
-        | ReverseDiagonal -> 0.
-        end
-    end
+    let j =
+      match j with
+      | CentreJustify -> CentreJustify
+      | LeftJustify -> if rotation = Rot270 then RightJustify else LeftJustify
+      | RightJustify -> if rotation = Rot270 then LeftJustify else RightJustify
+    in
+      begin match j with
+      | LeftJustify ->
+          begin match position with
+          | TopLeft _ | TopRight _ | Top _ -> 0.
+          | Left _ | PosLeft _ | PosCentre _ | Centre | PosRight _ | Right _ -> (longest_w -. w) /. 2.
+          | BottomLeft _ | Bottom _ | BottomRight _ -> longest_w -. w
+          | Diagonal -> 0.
+          | ReverseDiagonal -> 0.
+          end
+      | RightJustify ->
+          begin match position with
+          | TopLeft _ | TopRight _ | Top _ -> ~-.(longest_w -. w)
+          | Left _ | PosLeft _ | PosCentre _ | Centre | PosRight _ | Right _ -> ~-.((longest_w -. w) /. 2.)
+          | BottomLeft _ | Bottom _ | BottomRight _ -> 0.
+          | Diagonal -> 0.
+          | ReverseDiagonal -> 0.
+          end
+      | CentreJustify ->
+          begin match position with
+          | TopLeft _ | TopRight _ | Top _ -> ~-.((longest_w -. w) /. 2.)
+          | Left _ | PosLeft _ | PosCentre _ | Centre | PosRight _ | Right _ -> 0.
+          | BottomLeft _ | Bottom _ | BottomRight _ -> (longest_w -. w) /. 2.
+          | Diagonal -> 0.
+          | ReverseDiagonal -> 0.
+          end
+      end
   | Rot0 | Rot180 ->
     let j =
       match j with
