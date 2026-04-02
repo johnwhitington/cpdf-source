@@ -449,15 +449,20 @@ let addtext
               | Cpdfposition.Diagonal -> 0., 0.
               | Cpdfposition.ReverseDiagonal -> 0., 0.
             in
-              match font with
-              | Some f ->
-                  ops rotation font fontpack fontpackpdfobjs fontname longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
-                  unique_fontname unique_fontnames unique_extgstatename colour fontsize text textwidth position rot rot_h_offset rot_v_offset,
-                  urls, x, y, hoffset, voffset, text, joffset, rot, rot_h_offset, rot_v_offset, rotate
-              | None ->
-                  ops rotation font fontpack fontpackpdfobjs fontname longest_w (x +. shift_x) (y +. shift_y) rotate (hoffset +. joffset) voffset outline linewidth
-                  fontname unique_fontnames None colour fontsize text textwidth position rot rot_h_offset rot_v_offset,
-                  urls, x, y, hoffset, voffset, text, joffset, rot, rot_h_offset, rot_v_offset, rotate
+              let hoffset, voffset =
+                match rotation with
+                | Rot90 | Rot270 -> hoffset, voffset -. joffset
+                | _ -> hoffset +. joffset, voffset
+              in
+                match font with
+                | Some f ->
+                    ops rotation font fontpack fontpackpdfobjs fontname longest_w (x +. shift_x) (y +. shift_y) rotate hoffset voffset outline linewidth
+                    unique_fontname unique_fontnames unique_extgstatename colour fontsize text textwidth position rot rot_h_offset rot_v_offset,
+                    urls, x, y, hoffset, voffset, text, joffset, rot, rot_h_offset, rot_v_offset, rotate
+                | None ->
+                    ops rotation font fontpack fontpackpdfobjs fontname longest_w (x +. shift_x) (y +. shift_y) rotate hoffset voffset outline linewidth
+                    fontname unique_fontnames None colour fontsize text textwidth position rot rot_h_offset rot_v_offset,
+                    urls, x, y, hoffset, voffset, text, joffset, rot, rot_h_offset, rot_v_offset, rotate
           in
             let newresources =
               match fontpack with
@@ -632,6 +637,7 @@ let
         | _ -> failwith "addtext: font dictionary not present"
   in
     let lines = map unescape_string (split_at_newline text) in
+    let lines = match rotation with Rot180 | Rot270 -> rev lines | _ -> lines in
       let pdf = ref pdf in
         let voffset =
           let open Cpdfposition in
@@ -726,7 +732,10 @@ let
                        bates batespad fontsize fontpack font fontpdfobj fontpackpdfobjs underneath
                        position hoff voff line pages relative_to_box opacity justification filename
                        shift raw url_border rotation !pdf;
-                     voffset := !voffset +. (linespacing *. fontsize))
+                     begin match rotation with
+                     | Rot90 | Rot270 -> hoffset := !hoffset +. (linespacing *. fontsize)
+                     | _ -> voffset := !voffset +. (linespacing *. fontsize)
+                     end)
                 lines;
                 !pdf
 
