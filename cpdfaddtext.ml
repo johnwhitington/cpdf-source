@@ -558,11 +558,12 @@ let addtext
                          | Some c -> (c *. fontsize) /. 1000.
                          | None -> fontsize
                        in
-                         let minx, miny, maxx, maxy = (x2 +. sx, y2, x +. ex, y2 +. height) in
+                         let minx, miny, maxx, maxy = (x2 +. sx, y2, x2 +. ex, y2 +. height) in
                          Printf.printf "minx = %f, miny = %f, maxx = %f, maxy = %f\n" minx miny maxx maxy;
                          Printf.printf "rot = %f, rot_h_offset = %f, rot_v_offset = %f, rotation = %f\n" rot rot_h_offset rot_v_offset rotate;
                          (* Rotate the x, y and apply rotation offsets. rotation around original (x, y), rot_h_offset, rot_v_offset. *)
                          let final_rectangle =
+                           (*(minx, miny, maxx, maxy)*)
                            let transform =
                              Pdftransform.matrix_of_transform
                                [Pdftransform.Translate (rot_h_offset, rot_v_offset);
