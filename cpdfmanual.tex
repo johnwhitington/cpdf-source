@@ -2978,7 +2978,7 @@ for positions relative to the center of the page. For example:
 cpdf -add-text "Long line\nShort" -justify-right in.pdf -o out.pdf\end{verbatim}
 \end{framed}
 
-\noindent NB: The \texttt{-justify-} option must be after the position (e.g \texttt{-top-left}) option since positions will reset default justification.
+\noindent NB: The \texttt{-justify-} option must be after the position (e.g \texttt{-top-left}) option since positions will reset default justification. Diagonal text is always center-justified.
 
 \subsection{Special Characters}
 
@@ -5442,7 +5442,7 @@ We can save time when drawing rectangles by using the \texttt{-rect} operation, 
 
 \noindent The operation \texttt{-bez23} is a shorthand used when the first control point is equal to the current point. The operation \texttt{-bez13} is a shorthand used when the second control point is equal to the final point.
 
-To avoid calculating the Bezier curves for a circle manually, Cpdf can generate them automatically when given the centre and radius:
+To avoid calculating the Bezier curves for a circle manually, Cpdf can generate them automatically when given the center and radius:
 
 \begin{framed}
  \noindent\small\verb?cpdf -create-pdf AND -draw -circle "200 200 100"?\\
@@ -5831,7 +5831,7 @@ NB: To use \texttt{-embed-std14}, put it before \texttt{-draw}.
 
 \section{Paragraphs}
 
-We can add a paragraph of text of a given width and justification (Left, Right, or Centre) using the \texttt{-para} operation:
+We can add a paragraph of text of a given width and justification (Left, Right, or Center) using the \texttt{-para} operation:
 
 \begin{framed}
  \noindent\small\verb?cpdf -create-pdf AND -draw -mtrans "200 400" -font-size 20 -leading 25?\\

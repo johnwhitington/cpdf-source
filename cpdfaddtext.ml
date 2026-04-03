@@ -90,7 +90,6 @@ type justification = LeftJustify | CentreJustify | RightJustify
 width, the justification and the position. *)
 let find_justification_offsets rotation longest_w w position j =
   let open Cpdfposition in
-  (* *** Working on Rot90 *)
   match rotation with
   | Rot90 | Rot270 ->
     let j =
