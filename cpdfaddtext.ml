@@ -444,7 +444,7 @@ let addtext
                   | Rot180 -> textwidth, 0.
                   | Rot270 -> textwidth, ~-.textwidth
                   end
-              | Cpdfposition.Right _ ->
+              | Cpdfposition.Right _ | Cpdfposition.PosRight _ ->
                   begin match rotation with
                   | Rot0 -> 0., 0.
                   | Rot90 -> textwidth, textwidth /. 2.
@@ -472,22 +472,19 @@ let addtext
                   | Rot180 -> textwidth, 0.
                   | Rot270 -> 0., 0.
                   end
-              | Cpdfposition.Left _ ->
+              | Cpdfposition.Left _  | Cpdfposition.PosLeft _ ->
                   begin match rotation with
                   | Rot0 -> 0., 0.
                   | Rot90 -> 0., textwidth /. 2.
                   | Rot180 -> textwidth, 0.
                   | Rot270 -> 0., ~-.textwidth /. 2.
                   end
-              | Cpdfposition.Centre
-              | Cpdfposition.PosCentre _ 
-              | Cpdfposition.PosLeft _
-              | Cpdfposition.PosRight _ ->
+              | Cpdfposition.Centre | Cpdfposition.PosCentre _ ->
                   begin match rotation with
                   | Rot0 -> 0., 0.
                   | Rot90 -> textwidth /. 2., textwidth /. 2.
                   | Rot180 -> textwidth, 0.
-                  | Rot270 -> textwidth /. 2., ~-.textwidth /. 2.
+                  | Rot270 -> textwidth /. 2., ~-.(textwidth /. 2.)
                   end
               | Cpdfposition.Diagonal -> 0., 0.
               | Cpdfposition.ReverseDiagonal -> 0., 0.
@@ -497,6 +494,7 @@ let addtext
                 | Rot90 | Rot270 -> hoffset, voffset -. joffset
                 | _ -> hoffset +. joffset, voffset
               in
+                (*Printf.printf "x = %f, shift_x = %f, y = %f, shift_y = %f, hoffset = %f, voffset = %f, rot_h_offset = %f, rot_v_offset = %f\n" x shift_x y shift_y hoffset voffset rot_h_offset rot_v_offset;*)
                 match font with
                 | Some f ->
                     ops rotation font fontpack fontpackpdfobjs fontname longest_w (x +. shift_x) (y +. shift_y) rotate hoffset voffset outline linewidth
@@ -559,8 +557,8 @@ let addtext
                          | None -> fontsize
                        in
                          let minx, miny, maxx, maxy = (x2 +. sx, y2, x +. ex, y2 +. height) in
-                         Printf.printf "minx = %f, miny = %f, maxx = %f, maxy = %f\n" minx miny maxx maxy;
-                         Printf.printf "rot = %f, rot_h_offset = %f, rot_v_offset = %f, rotation = %f\n" rot rot_h_offset rot_v_offset rotate;
+                         (*Printf.printf "minx = %f, miny = %f, maxx = %f, maxy = %f\n" minx miny maxx maxy;
+                         Printf.printf "rot = %f, rot_h_offset = %f, rot_v_offset = %f, rotation = %f\n" rot rot_h_offset rot_v_offset rotate;*)
                          (* Rotate the x, y and apply rotation offsets. rotation around original (x, y), rot_h_offset, rot_v_offset. (TODO joffset?? test with multiline) *)
                          let final_rectangle =
                            let transform =
@@ -770,6 +768,8 @@ let
               iter
                 (fun line ->
                    let voff, hoff = !voffset, !hoffset in
+                     (*Printf.printf "line %s, voff = %f, hoff = %f\n" line voff hoff;
+                     le hoff = 0. in*)
                      pdf :=
                        addtext time lines linewidth outline fast colour !realfontname encoding
                        bates batespad fontsize fontpack font fontpdfobj fontpackpdfobjs underneath
