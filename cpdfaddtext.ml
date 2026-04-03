@@ -766,8 +766,6 @@ let
               iter
                 (fun line ->
                    let voff, hoff = !voffset, !hoffset in
-                     (*Printf.printf "line %s, voff = %f, hoff = %f\n" line voff hoff;
-                     le hoff = 0. in*)
                      pdf :=
                        addtext time lines linewidth outline fast colour !realfontname encoding
                        bates batespad fontsize fontpack font fontpdfobj fontpackpdfobjs underneath
