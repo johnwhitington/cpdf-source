@@ -493,7 +493,7 @@ let addtext
                 | Rot90 | Rot270 -> hoffset, voffset -. joffset
                 | _ -> hoffset +. joffset, voffset
               in
-                (*Printf.printf "x = %f, shift_x = %f, y = %f, shift_y = %f, hoffset = %f, voffset = %f, rot_h_offset = %f, rot_v_offset = %f\n" x shift_x y shift_y hoffset voffset rot_h_offset rot_v_offset;*)
+                Printf.printf "x = %f, shift_x = %f, y = %f, shift_y = %f, hoffset = %f, voffset = %f, rot_h_offset = %f, rot_v_offset = %f\n" x shift_x y shift_y hoffset voffset rot_h_offset rot_v_offset;
                 match font with
                 | Some f ->
                     ops rotation font fontpack fontpackpdfobjs fontname longest_w (x +. shift_x) (y +. shift_y) rotate hoffset voffset outline linewidth
@@ -547,8 +547,11 @@ let addtext
                   calc_textwidth (implode before)
               in
                 map (fun (url, s, e) ->
+                       Printf.printf "We have a URL. Text is '%s', s = %i, e = %i\n" text s e;
                        let sx = annot_coord text s in
                        let ex = annot_coord text e in
+                       Printf.printf "sx = %f, ex = %f\n" sx ex;
+                       Printf.printf "x = %f, hoffset = %f, joffset = %f, y = %f, voffset = %f\n" x hoffset joffset y voffset;
                        let x2, y2 = x -. hoffset -. joffset, y -. voffset in
                        let height =
                          match cap_height font fontname with
@@ -556,14 +559,14 @@ let addtext
                          | None -> fontsize
                        in
                          let minx, miny, maxx, maxy = (x2 +. sx, y2, x +. ex, y2 +. height) in
-                         (*Printf.printf "minx = %f, miny = %f, maxx = %f, maxy = %f\n" minx miny maxx maxy;
-                         Printf.printf "rot = %f, rot_h_offset = %f, rot_v_offset = %f, rotation = %f\n" rot rot_h_offset rot_v_offset rotate;*)
-                         (* Rotate the x, y and apply rotation offsets. rotation around original (x, y), rot_h_offset, rot_v_offset. (TODO joffset?? test with multiline) *)
+                         Printf.printf "minx = %f, miny = %f, maxx = %f, maxy = %f\n" minx miny maxx maxy;
+                         Printf.printf "rot = %f, rot_h_offset = %f, rot_v_offset = %f, rotation = %f\n" rot rot_h_offset rot_v_offset rotate;
+                         (* Rotate the x, y and apply rotation offsets. rotation around original (x, y), rot_h_offset, rot_v_offset. *)
                          let final_rectangle =
                            let transform =
                              Pdftransform.matrix_of_transform
                                [Pdftransform.Translate (rot_h_offset, rot_v_offset);
-                                Pdftransform.Rotate ((x, y), rot +. rotate)]
+                                Pdftransform.Rotate ((x2, y2), rot +. rotate)]
                            in
                            let (x0, y0) = Pdftransform.transform_matrix transform (minx, miny) in
                            let (x1, y1) = Pdftransform.transform_matrix transform (maxx, maxy) in
