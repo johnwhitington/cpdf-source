@@ -1,7 +1,5 @@
 %TODO: Document -debug, -debug-crypt, -debug-malformed, -debug-stderr-to-stdout, -debug-readable-ops, -stay-on-error
 %TODO: Document -remove-stream-content
-%TODO: Document -text-90, -text-180, -text-270
-%TODO: Document -url-border
 
 %Possible improvements:
 %
@@ -2658,6 +2656,7 @@ cpdf ([-add-text <text-format> | -add-rectangle <size>])
       [-bates-pad-to <number>]    [-opacity <number>]
       [-midline]                  [-topline]
       [-fast]                     [-process-struct-trees]
+      [-url-border]
       in.pdf [<range>] -o out.pdf\end{verbatim}
 
   \vspace{1.5mm}
@@ -2756,7 +2755,7 @@ font size and color.
     \texttt{\%Label} & The page label of the page \\
     \texttt{\%EndLabel} & The page label of the last page \\
     \texttt{\%filename} & The full file name of the input document \\
-    \texttt{\%URL[text|URL]} & Add \texttt{text}, which links to \texttt{URL}\\
+    \texttt{\%URL[text|URL]} & Add \texttt{text}, which links to \texttt{URL}. Add \texttt{-url-border} to show link area.\\
     \texttt{\%Bookmark<n>} & Bookmark text at level n (0, 1, 2, 3, 4)\\
   \end{tabular}
 
@@ -2858,6 +2857,8 @@ The \texttt{-relative-to-[crop|trim|art|bleed]box} modifier can be added to the 
 make these measurements relative to the given box instead of the media box. The \texttt{-midline} option may be added to specify that the positioning
 commands above are to be considered relative to the midline of the text, rather
 than its baseline. Similarly, the \texttt{-topline} option may be used to specify that the position is taken relative to the top of the text.
+
+The options \texttt{-text-90}, \texttt{-text-180} and \texttt{-text-270} may be added to rotate the text.
 
   \subsection{Font and Size}
 \label{fonts}

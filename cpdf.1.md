@@ -996,6 +996,18 @@ of the page.
 
 : Position text centered on the page.
 
+**-text-90**
+
+: Rotate text 90 degrees.
+
+**-text-180**
+
+: Rotate text 180 degrees.
+
+**-text-270**
+
+: Rotate text 270 degrees.
+
 **-justify-left**
 
 : Set left justification for multi-line text. Default depends upon position.
@@ -1007,6 +1019,10 @@ of the page.
 **-justify-center**
 
 : Set center justification for multi-line text. Default depends upon position.
+
+**-url-border**
+
+: Show the border for %URL text specials.
 
 **cpdf -remove-text in.pdf** \[\<range>] **-o out.pdf**
 
