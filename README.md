@@ -72,14 +72,10 @@ Alternatively, the library and command-line binary can be installed by
 ```
 opam install cpdf
 ```
-Package management
 
-•	OPAM CamlPDF / CPDF
-•	Debian
-•	Fedora
-•	Homebrew
-•	Winget
-•	Choco
+Binaries: https://www.github.com/coherentgraphics/cpdf-binaries
+
+Cpdf may also be included in your package manager, but do check the version.
 
 Documentation
 -------------
