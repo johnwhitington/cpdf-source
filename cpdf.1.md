@@ -772,7 +772,7 @@ file will be marked as an artifact.
 [-color \<color>] [-line-spacing \<n>] [-outline] [-linewidth \<n>]
 [-underneath] [-relative-to-\[crop|trim|art|bleed]box] [-prerotate] [-no-warn-rotate] [-bates
 \<n>] [-bates-at-range \<n>] [-bates-pad-to \<n>] [-opacity
-\<n>] [-midline] [-topline] [-fast] [-process-struct-trees] **in.pdf**
+\<n>] [-midline] [-topline] [-text-[90|180|270]] [-fast] [-process-struct-trees] **in.pdf**
 \[\<range>] **-o out.pdf**
  
 Add text to a PDF. Various special codes for page numbers or time and date
