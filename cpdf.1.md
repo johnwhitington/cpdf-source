@@ -2385,6 +2385,34 @@ Prints true if the PDF contains JavaScript, false otherwise.
 
 Remove JavaScript from a PDF.
 
+**cpdf -debug in.pdf ...**
+
+Show debug information.
+
+**cpdf -debug-crypt in.pdf ...**
+
+Show extra debug information to do with encryption. 
+
+**cpdf -debug-malformed in.pdf ...**
+
+Treat file as if malformed.
+
+**cpdf -debug-stderr-to-stdout in.pdf ...**
+
+Intermingle **stderr** and **stdout** output on **stdout**.
+
+**cpdf -debug-readable-ops in.pdf ...**
+
+Use newlines instead of spaces in page stream content.
+
+**cpdf -stay-on-error in.pdf ...**
+
+Do not call exit() after an error.
+
+**cpdf -remove-stream-content in.pdf -o out.pdf**
+
+Remove stream content when writing.
+
 # ENVIRONMENT
 
 **CPDF_SHOW_EXT**

@@ -2230,6 +2230,35 @@ Prints true if the PDF contains JavaScript, false otherwise.
 \f[B]cpdf \-remove\-javascript in.pdf \-o out.pdf\f[R]
 .PP
 Remove JavaScript from a PDF.
+.PP
+\f[B]cpdf \-debug in.pdf \&...\f[R]
+.PP
+Show debug information.
+.PP
+\f[B]cpdf \-debug\-crypt in.pdf \&...\f[R]
+.PP
+Show extra debug information to do with encryption.
+.PP
+\f[B]cpdf \-debug\-malformed in.pdf \&...\f[R]
+.PP
+Treat file as if malformed.
+.PP
+\f[B]cpdf \-debug\-stderr\-to\-stdout in.pdf \&...\f[R]
+.PP
+Intermingle \f[B]stderr\f[R] and \f[B]stdout\f[R] output on
+\f[B]stdout\f[R].
+.PP
+\f[B]cpdf \-debug\-readable\-ops in.pdf \&...\f[R]
+.PP
+Use newlines instead of spaces in page stream content.
+.PP
+\f[B]cpdf \-stay\-on\-error in.pdf \&...\f[R]
+.PP
+Do not call exit() after an error.
+.PP
+\f[B]cpdf \-remove\-stream\-content in.pdf \-o out.pdf\f[R]
+.PP
+Remove stream content when writing.
 .SH ENVIRONMENT
 .TP
 \f[B]CPDF_SHOW_EXT\f[R]

@@ -1,6 +1,3 @@
-%TODO: Document -debug, -debug-crypt, -debug-malformed, -debug-stderr-to-stdout, -debug-readable-ops, -stay-on-error
-%TODO: Document -remove-stream-content
-
 %Possible improvements:
 %
 %1) Chapter 1 is too big
@@ -6951,6 +6948,69 @@ We can see if a PDF contains any JavaScript scripts or \texttt{javascript:} URIs
   \noindent Remove JavaScript from \texttt{in.pdf}, writing to \texttt{out.pdf}. 
 
   \end{framed}
+
+\section{Debugging tools}
+
+Some extra options are available to aid debugging of Cpdf and PDF output:
+
+  \begin{framed}
+  \small\noindent\verb!cpdf -debug in.pdf ...!
+
+  \vspace{2.5mm}
+  \noindent Show debug information. 
+
+  \end{framed}
+
+  \begin{framed}
+  \small\noindent\verb!cpdf -debug-crypt in.pdf ...!
+
+  \vspace{2.5mm}
+  \noindent Show extra debug information to do with encryption. 
+
+  \end{framed}
+
+  \begin{framed}
+  \small\noindent\verb!cpdf -debug-malformed in.pdf ...!
+
+  \vspace{2.5mm}
+  \noindent Treat file as if malformed. 
+
+  \end{framed}
+
+  \begin{framed}
+  \small\noindent\verb!cpdf -debug-stderr-to-stdout in.pdf ...!
+
+  \vspace{2.5mm}
+  \noindent Intermingle \texttt{stderr} and \texttt{stdout} output on \texttt{stdout}. 
+
+  \end{framed}
+
+  \begin{framed}
+  \small\noindent\verb!cpdf -debug-readable-ops in.pdf ...!
+
+  \vspace{2.5mm}
+  \noindent Use newlines instead of spaces in page stream content. 
+
+  \end{framed}
+
+  \begin{framed}
+  \small\noindent\verb!cpdf -stay-on-error in.pdf ...!
+
+  \vspace{2.5mm}
+  \noindent Do not call \texttt{exit()} after an error.
+
+  \end{framed}
+
+\noindent{And one operation}:
+
+  \begin{framed}
+  \small\noindent\verb!cpdf -remove-stream-content in.pdf -o out.pdf!
+
+  \vspace{2.5mm}
+  \noindent Remove stream content when writing. This will create a document which is malformed, but easier to navigate in a text editor. 
+
+  \end{framed}
+
 
 
 \begin{cpdflib}
