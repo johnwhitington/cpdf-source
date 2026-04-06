@@ -9,7 +9,7 @@ DOC = cpdfutil cpdfunicodedata cpdferror cpdfdebug cpdfjson cpdfstrftime \
       cpdfimpose cpdfchop cpdftweak cpdfprinttree cpdfua cpdftexttopdf \
       cpdftoc cpdfjpeg cpdfjpeg2000 cpdfpng cpdfimage cpdfdraw \
       cpdfcomposition cpdfshape cpdfcolours cpdfdrawcontrol cpdfjs \
-      cpdfportfolio cpdfcommand
+      cpdfportfolio cpdfcontent cpdfcommand
 
 MODS = $(NONDOC) $(DOC)
 
