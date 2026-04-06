@@ -130,6 +130,8 @@ The file [cpdfxmlm.ml](cpdfxmlm.ml) was written by Daniel Bünzli.
 
 The file [cpdfyojson.ml](cpdfyojson.ml) was written by Martin Jambon and others.
 
+The files [gpc.c](gpc.c) and [gpc.h](gpc.c) were written by Alan Murta.
+
 Unicode Data Files are under the Unicode Inc. License agreement.
 
 The error descriptions for -verify "PDF/UA-1(matterhorn)" come from the PDF

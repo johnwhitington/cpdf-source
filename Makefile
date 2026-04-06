@@ -9,11 +9,11 @@ DOC = cpdfutil cpdfunicodedata cpdferror cpdfdebug cpdfjson cpdfstrftime \
       cpdfimpose cpdfchop cpdftweak cpdfprinttree cpdfua cpdftexttopdf \
       cpdftoc cpdfjpeg cpdfjpeg2000 cpdfpng cpdfimage cpdfdraw \
       cpdfcomposition cpdfshape cpdfcolours cpdfdrawcontrol cpdfjs \
-      cpdfportfolio cpdfcontent cpdfredact cpdfcommand
+      cpdfportfolio cpdfclip cpdfcontent cpdfredact cpdfcommand
 
 MODS = $(NONDOC) $(DOC)
 
-SOURCES = $(foreach x,$(MODS),$(x).ml $(x).mli) cpdfcommandrun.ml
+SOURCES = gpc.c gpcml.c $(foreach x,$(MODS),$(x).ml $(x).mli) cpdfcommandrun.ml
 
 RESULT = cpdf
 ANNOTATE = true
@@ -27,7 +27,7 @@ OCAMLLDFLAGS = -g
 
 TARGETS := byte-code byte-code-library htdoc
 
-LIBINSTALL_FILES = cpdf.cma \
+LIBINSTALL_FILES = cpdf.cma libcpdf_stubs.a dllcpdf_stubs.* \
 $(foreach x,$(MODS),$x.mli) $(foreach x,$(MODS),$x.cmi) \
 $(foreach x,$(MODS),$x.cmti)
 

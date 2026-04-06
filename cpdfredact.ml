@@ -4,3 +4,5 @@ let redact ~path ~page =
   let ops = [] in
   let ops' =Cpdfcontent.filter_ops ~f:(fun () -> ()) ~resources ~ops in
     ()
+
+let x = Cpdfclip.Difference
