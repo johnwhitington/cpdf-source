@@ -234,6 +234,7 @@ type op =
   | MarkAsArtifact
   | SetLanguage of string
   | Redact
+  | RedactShape of string
   | Rasterize
   | OutputImage
   | ContainsJavaScript
@@ -408,6 +409,7 @@ let string_of_op = function
   | MarkAsArtifact -> "MarkAsArtifact"
   | SetLanguage _ -> "SetLanguage"
   | Redact -> "Redact"
+  | RedactShape _ -> "RedactShape"
   | Rasterize -> "Rasterize"
   | OutputImage -> "OutputImage"
   | RemoveObj _ -> "RemoveObj"
@@ -1040,7 +1042,7 @@ let banned banlist = function
   | Decrypt | Encrypt | CombinePages _ -> true (* Never allowed *)
   | AddBookmarks _ | PadBefore | PadAfter | PadEvery _ | PadMultiple _ | PadMultipleBefore _
   | Merge | Split | SplitOnBookmarks _ | SplitMax _ | Spray | RotateContents _ | Rotate _
-  | Rotateby _ | Upright | VFlip | HFlip | Impose _ | Chop _ | ChopHV _ | Redact | Portfolio ->
+  | Rotateby _ | Upright | VFlip | HFlip | Impose _ | Chop _ | ChopHV _ | Redact | RedactShape _ | Portfolio ->
       mem Pdfcrypt.NoAssemble banlist
   | TwoUp | TwoUpStack | RemoveBookmarks | AddRectangle | RemoveText|
     Draft | Shift | ShiftBoxes | Scale | ScaleToFit|Stretch|CenterToFit|RemoveAttachedFiles|
@@ -3209,6 +3211,7 @@ let specs =
    ("-remove-struct-tree", Arg.Unit (fun () -> setop RemoveStructTree ()), " Remove entire structure tree");
    ("-mark-as-artifact", Arg.Unit (fun () -> setop MarkAsArtifact ()), " Mark whole file as artifact");
    ("-redact", Arg.Unit (fun () -> setop Redact ()), " Redact entire pages");
+   ("-redact-rect", Arg.String (fun s -> setop (RedactShape s) ()), " Redact rectangle");
    ("-rasterize", Arg.Unit (fun () -> setop Rasterize ()), " Rasterize pages");
    ("-rasterize-alpha", Arg.Unit (fun () -> args.rast_device <- "png16malpha"), " Rasterize in RGBA");
    ("-rasterize-gray", Arg.Unit (fun () -> args.rast_device <- "pnggray"), " Rasterize in grayscale");
@@ -5327,6 +5330,18 @@ let rec go () =
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
         write_pdf false (Cpdfpage.redact ~process_struct_tree:args.process_struct_trees pdf range)
+  | RedactShape rectspect ->
+      let pdf = get_single_pdf args.op false in
+      let range = parse_pagespec pdf (get_pagespec ()) in
+      let rectcoords = [] in
+      let pdf =
+        Cpdfpage.process_pages
+          (Pdfpage.ppstub
+            (fun pnum page -> if mem pnum range then (Cpdfredact.redact ~path:rectcoords ~page; page) else page))
+            pdf
+            range
+      in
+        write_pdf false pdf
   | Rasterize ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
