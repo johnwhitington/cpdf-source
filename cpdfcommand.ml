@@ -235,6 +235,8 @@ type op =
   | SetLanguage of string
   | Redact
   | RedactShape of string
+  | RedactApply
+  | RedactApplyType of string
   | Rasterize
   | OutputImage
   | ContainsJavaScript
@@ -410,6 +412,8 @@ let string_of_op = function
   | SetLanguage _ -> "SetLanguage"
   | Redact -> "Redact"
   | RedactShape _ -> "RedactShape"
+  | RedactApply -> "RedactApply"
+  | RedactApplyType _ -> "RedactApplyType"
   | Rasterize -> "Rasterize"
   | OutputImage -> "OutputImage"
   | RemoveObj _ -> "RemoveObj"
@@ -1042,7 +1046,8 @@ let banned banlist = function
   | Decrypt | Encrypt | CombinePages _ -> true (* Never allowed *)
   | AddBookmarks _ | PadBefore | PadAfter | PadEvery _ | PadMultiple _ | PadMultipleBefore _
   | Merge | Split | SplitOnBookmarks _ | SplitMax _ | Spray | RotateContents _ | Rotate _
-  | Rotateby _ | Upright | VFlip | HFlip | Impose _ | Chop _ | ChopHV _ | Redact | RedactShape _ | Portfolio ->
+  | Rotateby _ | Upright | VFlip | HFlip | Impose _ | Chop _ | ChopHV _ | Redact | RedactShape _
+  | RedactApply | RedactApplyType _ | Portfolio ->
       mem Pdfcrypt.NoAssemble banlist
   | TwoUp | TwoUpStack | RemoveBookmarks | AddRectangle | RemoveText|
     Draft | Shift | ShiftBoxes | Scale | ScaleToFit|Stretch|CenterToFit|RemoveAttachedFiles|
@@ -3212,6 +3217,9 @@ let specs =
    ("-mark-as-artifact", Arg.Unit (fun () -> setop MarkAsArtifact ()), " Mark whole file as artifact");
    ("-redact", Arg.Unit (fun () -> setop Redact ()), " Redact entire pages");
    ("-redact-rect", Arg.String (fun s -> setop (RedactShape s) ()), " Redact rectangle");
+   ("-redact-shape", Arg.String (fun s -> setop (RedactShape s) ()), " Redact shape");
+   ("-redact-apply", Arg.Unit (fun s -> setop RedactApply ()), " Apply redaction annotations");
+   ("-redact-apply-type", Arg.String (fun s -> setop (RedactApplyType s) ()), "Apply redaction from non-redaction annotation");
    ("-rasterize", Arg.Unit (fun () -> setop Rasterize ()), " Rasterize pages");
    ("-rasterize-alpha", Arg.Unit (fun () -> args.rast_device <- "png16malpha"), " Rasterize in RGBA");
    ("-rasterize-gray", Arg.Unit (fun () -> args.rast_device <- "pnggray"), " Rasterize in grayscale");
@@ -5343,6 +5351,16 @@ let rec go () =
             pdf
             range
       in
+        write_pdf false pdf
+  | RedactApply ->
+      let pdf = get_single_pdf args.op false in
+      let range = parse_pagespec pdf (get_pagespec ()) in
+        Cpdfredact.apply pdf range;
+        write_pdf false pdf
+  | RedactApplyType s ->
+      let pdf = get_single_pdf args.op false in
+      let range = parse_pagespec pdf (get_pagespec ()) in
+        Cpdfredact.apply_type s pdf range;
         write_pdf false pdf
   | Rasterize ->
       let pdf = get_single_pdf args.op false in
