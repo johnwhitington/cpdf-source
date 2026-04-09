@@ -184,7 +184,7 @@ let rec initial_colour pdf resources = function
   ability to split up text lines to remove just some glyphs.) *)
  
 (* Return next object, list of ops consumed, remaining list *)
-let rec next_object ~resources = function
+let rec next_object stack state ~resources = function
   | Pdfops.Op_w f -> []
   | Pdfops.Op_J i -> []
   | Pdfops.Op_j i -> []
@@ -195,7 +195,9 @@ let rec next_object ~resources = function
   | Pdfops.Op_gs s -> []
   | Pdfops.Op_q -> []
   | Pdfops.Op_Q -> []
-  | Pdfops.Op_cm m -> []
+  | Pdfops.Op_cm m ->
+      state.ctm <- Pdftransform.matrix_compose state.ctm m;
+      []
   | Pdfops.Op_m (f1, f2) -> []
   | Pdfops.Op_l (f1, f2) -> []
   | Pdfops.Op_c (f1, f2, f3, f4, f5, f6) -> []
@@ -215,20 +217,33 @@ let rec next_object ~resources = function
   | Pdfops.Op_n -> []
   | Pdfops.Op_W -> []
   | Pdfops.Op_W' -> []
-  | Pdfops.Op_BT -> []
-  | Pdfops.Op_ET -> []
+  | Pdfops.Op_BT ->
+      (* Begin text object. For now, nothing. Eventually remove if whole text object turns out to be in redaction area. *)
+      []
+  | Pdfops.Op_ET ->
+      (* End text object. For now, nothing. Eventually remove if whole text object in redaction area. *)
+      []
   | Pdfops.Op_Tc f -> []
   | Pdfops.Op_Tw f -> []
   | Pdfops.Op_Tz f -> []
   | Pdfops.Op_TL f -> []
-  | Pdfops.Op_Tf (s, f) -> []
+  | Pdfops.Op_Tf (s, f) ->
+      (* Can this appear outside text area? Proably. *)
+      state.text_state.font <- s;
+      state.text_state.font_size <- f;
+      []
   | Pdfops.Op_Tr i -> []
   | Pdfops.Op_Ts f -> []
   | Pdfops.Op_Td (f1, f2) -> []
   | Pdfops.Op_TD (f1, f2) -> []
   | Pdfops.Op_Tm m -> []
   | Pdfops.Op_T' -> []
-  | Pdfops.Op_Tj s -> []
+  | Pdfops.Op_Tj s ->
+      (* We calculate the bounding boxes for each character, and for the whole piece.
+         We send the first to the filter function: if true, remove whole thing.
+         If false, start sending the indiviual characters, and reconstruct the result as
+         a new text section using kerning gaps or other text movement operators between Tj ops. *)
+      []
   | Pdfops.Op_TJ p -> []
   | Pdfops.Op_' s -> []
   | Pdfops.Op_'' (f1, f2, s) -> []
