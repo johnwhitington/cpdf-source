@@ -5405,9 +5405,11 @@ let rec go () =
         write_pdf false pdf
   | Summary ->
       let nohelp =
-        [("-help", Arg.Unit (fun () -> ()), ""); ("--help", Arg.Unit (fun () -> ()), "")]
+        [("-help", Arg.Unit (fun () -> ()), " Show help");
+         ("--help", Arg.Unit (fun () -> ()), "");
+         ("-summary", Arg.Unit (fun () -> ()), " Show this summary")]
       in
-        flprint (implode (tl (explode ((Arg.usage_string (Arg.align (nohelp @ specs)) "")))))
+        flprint (implode (tl (explode ((Arg.usage_string (Arg.align (sort (fun (a, _, _) (b, _, _) -> compare a b) (nohelp @ specs))) "")))))
   | Revisions ->
       begin try ignore (get_single_pdf ~revisions:true args.op true) with
         Pdfread.Revisions n -> Printf.printf "%i\n" n
