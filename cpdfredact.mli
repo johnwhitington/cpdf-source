@@ -1,6 +1,7 @@
+(** Redaction. *)
 
-val redact : Pdf.t -> path:((float * float) list) -> page:Pdfpage.t -> unit
+val redact : Pdf.t -> path:((float * float) list) -> int list -> Pdf.t
 
 val apply : Pdf.t -> int list -> unit
 
-val apply_type : string -> Pdf.t -> int list -> unit
+val apply_type : Pdf.t -> string -> int list -> unit

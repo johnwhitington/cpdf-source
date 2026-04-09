@@ -5343,14 +5343,8 @@ let rec go () =
       let range = parse_pagespec pdf (get_pagespec ()) in
       let minx, miny, w, h = Cpdfcoord.parse_rectangle pdf rectspec in
       let maxx, maxy = minx +. w, miny +. h in
-      let rectcoords = [(minx, miny); (minx, maxy); (maxx, maxy); (maxx, miny)] in
-      let pdf =
-        Cpdfpage.process_pages
-          (Pdfpage.ppstub
-            (fun pnum page -> if mem pnum range then (Cpdfredact.redact pdf ~path:rectcoords ~page; page) else page))
-            pdf
-            range
-      in
+      let path = [(minx, miny); (minx, maxy); (maxx, maxy); (maxx, miny)] in
+      let pdf = Cpdfredact.redact pdf ~path range in
         write_pdf false pdf
   | RedactApply ->
       let pdf = get_single_pdf args.op false in
@@ -5360,7 +5354,7 @@ let rec go () =
   | RedactApplyType s ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
-        Cpdfredact.apply_type s pdf range;
+        Cpdfredact.apply_type pdf s range;
         write_pdf false pdf
   | Rasterize ->
       let pdf = get_single_pdf args.op false in

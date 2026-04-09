@@ -1,3 +1,6 @@
 (** Representing page content as objects without loss. *)
 
-val filter_ops : f:(unit -> unit) -> mediabox:(float * float * float * float) -> resources:Pdf.pdfobject -> ops:Pdfops.t list -> Pdfops.t list
+val filter_ops :
+  f:(float * float * float * float -> bool) ->
+  mediabox:(float * float * float * float) ->
+  resources:Pdf.pdfobject -> ops:Pdfops.t list -> Pdfops.t list

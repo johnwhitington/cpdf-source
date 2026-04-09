@@ -261,6 +261,7 @@ let rec next_object ~resources = function
   | Pdfops.Op_Unknown s -> []
   | Pdfops.Op_Comment s -> []
 
+(* Draft redactor. f is given the bbox and determines whether to delete or not. *)
 let filter_ops ~f ~mediabox ~resources ~ops =
   let stack : state list ref = ref [] in
   let state = ref (initial_state mediabox) in
