@@ -1,5 +1,5 @@
 
-val redact : path:((float * float) list) -> page:Pdfpage.t -> unit
+val redact : Pdf.t -> path:((float * float) list) -> page:Pdfpage.t -> unit
 
 val apply : Pdf.t -> int list -> unit
 

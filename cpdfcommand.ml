@@ -5347,7 +5347,7 @@ let rec go () =
       let pdf =
         Cpdfpage.process_pages
           (Pdfpage.ppstub
-            (fun pnum page -> if mem pnum range then (Cpdfredact.redact ~path:rectcoords ~page; page) else page))
+            (fun pnum page -> if mem pnum range then (Cpdfredact.redact pdf ~path:rectcoords ~page; page) else page))
             pdf
             range
       in

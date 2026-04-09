@@ -1,4 +1,5 @@
 (** Representing page content as objects without loss. *)
+open Pdfutil
 
 (* We run through the ops, doing all the work to process the page w.r.t
    graphics and text state.
@@ -10,6 +11,26 @@
    blow-ups (i.e keep xobjects) and fully round-trippable.
 
 *)
+
+type fpoint = float * float
+
+type winding_rule = EvenOdd | NonZero
+
+type segment =
+  | Straight of fpoint * fpoint
+  | Bezier of fpoint * fpoint * fpoint * fpoint
+
+(* Each segment list may be marked as a hole or not. *)
+type hole = Hole | Not_hole
+
+(* A [subpath] is either closed or open. *)
+type closure = Closed | Open
+
+(* A [subpath] is the pair of a hole and a list of segments. *)
+type subpath = hole * closure * segment list
+
+(* A path is made from a number of subpaths. *)
+type path = winding_rule * subpath list
 
 (* Where are we in state diagram? Inline images already done in Pdfops, Shading
    and External are immediate and their states do not need representing. *)
@@ -102,6 +123,57 @@ let initial_state (minx, miny, maxx, maxy) =
    flatness = 1.;
    smoothness = 0.5}
 
+let copystate state =
+  {state with ctm = state.ctm}
+
+let push_statestack statestack state =
+  statestack =| copystate state
+
+let pop_statestack statestack state =
+  match !statestack with
+  | [] -> raise (Pdf.PDFError "Unbalanced q/Q Ops")
+  | h::t -> statestack := t; state := h
+
+type partial =
+  | NoPartial
+  | PartialPath of fpoint * fpoint * segment list * subpath list 
+
+let rec initial_colour pdf resources = function
+  | Pdf.Name "/DeviceGray"
+  | Pdf.Array (Pdf.Name "/CalGray"::_) ->
+      [0.]
+  | Pdf.Name "/DeviceRGB"
+  | Pdf.Array (Pdf.Name "/CalRGB"::_) ->
+      [0.; 0.; 0.]
+  | Pdf.Name "/DeviceCMYK" ->
+      [0.; 0.; 0.; 1.]
+  | Pdf.Name "/Pattern"
+  | Pdf.Array [Pdf.Name "/Pattern"] ->
+      [0.]
+  | Pdf.Array elts as cs ->
+      begin match elts with
+        | [Pdf.Name "/ICCBased"; iccstream] ->
+             begin match Pdf.lookup_direct pdf "/Alternate" iccstream with
+             | Some space -> initial_colour pdf resources space
+             | None ->
+                 begin match Pdf.lookup_direct pdf "/N" iccstream with
+                 | Some (Pdf.Integer 1) -> [0.]
+                 | Some (Pdf.Integer 3) -> [0.; 0.; 0.]
+                 | Some (Pdf.Integer 4) -> [0.; 0.; 0.; 0.]
+                 | _ -> raise (Pdf.PDFError "Bad ICCBased Alternate")
+                 end
+             end
+        | Pdf.Name "/DeviceN"::_::alternate::_ 
+        | [Pdf.Name "/Separation"; _; alternate; _] ->
+            initial_colour pdf resources alternate
+        | [Pdf.Name "/Pattern"; alternate] ->
+            initial_colour pdf resources alternate
+        | _ -> Pdfe.log (Printf.sprintf "%s\n" (Pdfwrite.string_of_pdf cs)); raise (Pdf.PDFError "Unknown colourspace A")
+      end
+  | Pdf.Indirect _ as indirect ->
+      initial_colour pdf resources (Pdf.direct pdf indirect)
+  | _ -> raise (Pdf.PDFError "Unknown colourspace B")
+
 (* An example, for redaction for now. We go through all the ops, then call f to
    see which objects to remove based on bounding box. This requires:
 
@@ -189,6 +261,7 @@ let rec next_object ~resources = function
   | Pdfops.Op_Unknown s -> []
   | Pdfops.Op_Comment s -> []
 
-let filter_ops ~f ~resources ~ops =
-  let s = initial_state (0., 0., 500., 500.) in
+let filter_ops ~f ~mediabox ~resources ~ops =
+  let stack : state list ref = ref [] in
+  let state = ref (initial_state mediabox) in
   ops

@@ -1,8 +1,8 @@
 
-let redact ~path ~page =
+let redact pdf ~path ~page =
   let resources = Pdf.Null in
   let ops = [] in
-  let ops' = Cpdfcontent.filter_ops ~f:(fun () -> ()) ~resources ~ops in
+  let ops' = Cpdfcontent.filter_ops ~f:(fun () -> ()) ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox) ~resources ~ops in
     ignore ops'
 
 let x = Cpdfclip.Difference
