@@ -184,7 +184,7 @@ let rec initial_colour pdf resources = function
   ability to split up text lines to remove just some glyphs.) *)
  
 (* Return next object, list of ops consumed, remaining list *)
-let rec next_object ~f ~stack ~state ~resources = function
+let rec process_op ~f ~stack ~state ~resources = function
   | Pdfops.Op_w f -> []
   | Pdfops.Op_J i -> []
   | Pdfops.Op_j i -> []
@@ -281,7 +281,8 @@ let rec next_object ~f ~stack ~state ~resources = function
 let filter_ops ~f ~mediabox ~resources ~ops =
   let stack : state list ref = ref [] in
   let state = ref (initial_state mediabox) in
-    next_object ~f ~stack ~state:!state ~resources (Pdfops.Op_Tj "")
+    iter (fun op -> ignore (process_op ~f ~stack ~state:!state ~resources op)) ops;
+    ops
 
 let show_bounding_boxes pdf range =
   let show_bounding_boxes_page page =
