@@ -252,6 +252,7 @@ type op =
   | SigInfo
   | AddAttachedFilesJSON of string
   | RemoveStreamContent
+  | ShowBoundingBoxes
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -430,6 +431,7 @@ let string_of_op = function
   | SigInfo -> "SigInfo"
   | AddAttachedFilesJSON _ -> "AddAttachedFilesJSON"
   | RemoveStreamContent -> "RemoveStreamContent"
+  | ShowBoundingBoxes -> "ShowBoundingBoxes"
 
 (* Inputs: filename, pagespec. *)
 type input_kind = 
@@ -1040,7 +1042,7 @@ let banned banlist = function
   | PrintStructTree | Rasterize | OutputImage | RemoveStructTree | MarkAsArtifact
   | ContainsJavaScript | RemoveJavaScript | RemoveArticleThreads | RemovePagePiece | RemoveOutputIntents
   | RemoveWebCapture | RemoveProcsets | ExtractMetadata | Summary | Revisions | SigInfo
-  | AddAttachedFilesJSON _ | RemoveStreamContent -> false (* Always allowed *)
+  | AddAttachedFilesJSON _ | RemoveStreamContent | ShowBoundingBoxes -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
   | Decrypt | Encrypt | CombinePages _ -> true (* Never allowed *)
@@ -3258,7 +3260,8 @@ let specs =
    ("-text-90", Arg.Unit (fun () -> args.text_rotation <- Cpdfaddtext.Rot90), " Rotate text to 90 degrees");
    ("-text-180", Arg.Unit (fun () -> args.text_rotation <- Cpdfaddtext.Rot180), " Rotate text to 180 degrees");
    ("-text-270", Arg.Unit (fun () -> args.text_rotation <- Cpdfaddtext.Rot270), " Rotate text to 270 degrees");
-   ("-url-border", Arg.Unit (fun () -> args.url_border <- true), " Add a border to URLs")]
+   ("-url-border", Arg.Unit (fun () -> args.url_border <- true), " Add a border to URLs");
+   ("-show-bboxes", Arg.Unit (fun () -> setop ShowBoundingBoxes ()), " Show bounding boxes")]
 
 let specs = sort compare specs
 
@@ -5419,6 +5422,11 @@ let rec go () =
              | Pdf.Stream ({contents = dict, stream} as s) -> s := (dict, Got (mkbytes 0))
              | x -> ())
           pdf;
+        write_pdf false pdf
+  | ShowBoundingBoxes ->
+      let pdf = get_single_pdf args.op true in
+      let range = parse_pagespec pdf (get_pagespec ()) in
+        Cpdfcontent.show_bounding_boxes pdf range;
         write_pdf false pdf
 
 (* Advise the user if a combination of command line flags makes little sense,

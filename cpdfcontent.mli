@@ -4,3 +4,6 @@ val filter_ops :
   f:(float * float * float * float -> bool) ->
   mediabox:(float * float * float * float) ->
   resources:Pdf.pdfobject -> ops:Pdfops.t list -> Pdfops.t list
+
+
+val show_bounding_boxes : Pdf.t -> int list -> unit

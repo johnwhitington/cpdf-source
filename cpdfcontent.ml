@@ -281,3 +281,5 @@ let filter_ops ~f ~mediabox ~resources ~ops =
   let stack : state list ref = ref [] in
   let state = ref (initial_state mediabox) in
   ops
+
+let show_bounding_boxes pdf range = ()
