@@ -6,4 +6,4 @@ val filter_ops :
   resources:Pdf.pdfobject -> ops:Pdfops.t list -> Pdfops.t list
 
 
-val show_bounding_boxes : Pdf.t -> int list -> unit
+val show_bounding_boxes : Pdf.t -> int list -> Pdf.t

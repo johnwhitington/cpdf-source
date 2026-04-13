@@ -184,7 +184,7 @@ let rec initial_colour pdf resources = function
   ability to split up text lines to remove just some glyphs.) *)
  
 (* Return next object, list of ops consumed, remaining list *)
-let rec next_object stack state ~resources = function
+let rec next_object ~f ~stack ~state ~resources = function
   | Pdfops.Op_w f -> []
   | Pdfops.Op_J i -> []
   | Pdfops.Op_j i -> []
@@ -243,6 +243,7 @@ let rec next_object stack state ~resources = function
          We send the first to the filter function: if true, remove whole thing.
          If false, start sending the indiviual characters, and reconstruct the result as
          a new text section using kerning gaps or other text movement operators between Tj ops. *)
+      f (100., 100., 200., 300.);
       []
   | Pdfops.Op_TJ p -> []
   | Pdfops.Op_' s -> []
@@ -280,6 +281,31 @@ let rec next_object stack state ~resources = function
 let filter_ops ~f ~mediabox ~resources ~ops =
   let stack : state list ref = ref [] in
   let state = ref (initial_state mediabox) in
-  ops
+    next_object ~f ~stack ~state:!state ~resources (Pdfops.Op_Tj "")
 
-let show_bounding_boxes pdf range = ()
+let show_bounding_boxes pdf range =
+  let show_bounding_boxes_page page =
+    let ops = Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content in
+    let page_boxes = ref [] in
+      ignore (filter_ops ~f:(fun box -> page_boxes =| box; false) ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox) ~resources:page.Pdfpage.resources ~ops);
+      !page_boxes
+  in
+  let bboxes = ref [] in
+  let pdf =
+    (* Collect bounding boxes for each page. *)
+    Cpdfpage.process_pages
+      (Pdfpage.ppstub
+        (fun pnum page -> if mem pnum range then (bboxes =| (pnum, show_bounding_boxes_page page); page) else page))
+           pdf
+           range
+  in
+    (* Postpend new content. *)
+    let pdf = ref pdf in
+    let content_of_boxes boxes =
+      flatten (map (fun (minx, miny, maxx, maxy) -> [Pdfops.Op_re (minx, miny, maxx -. minx, maxy -. miny); Op_S]) boxes)
+    in
+      iter
+        (fun (pnum, boxes) ->
+           pdf := Cpdftweak.append_page_content (Pdfops.string_of_ops (content_of_boxes boxes)) false false [pnum] !pdf)
+        !bboxes;
+      !pdf

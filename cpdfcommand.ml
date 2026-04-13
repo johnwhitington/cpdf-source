@@ -5426,7 +5426,7 @@ let rec go () =
   | ShowBoundingBoxes ->
       let pdf = get_single_pdf args.op true in
       let range = parse_pagespec pdf (get_pagespec ()) in
-        Cpdfcontent.show_bounding_boxes pdf range;
+      let pdf = Cpdfcontent.show_bounding_boxes pdf range in
         write_pdf false pdf
 
 (* Advise the user if a combination of command line flags makes little sense,
