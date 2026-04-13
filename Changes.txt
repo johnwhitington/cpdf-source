@@ -11,6 +11,7 @@ o Add page labels from JSON data
 o List OCGs in JSON form with -ocg-list-json
 o Edit & round-trip OCGs with -ocg-replace
 o Remove stream content for debug
+o Show bounding boxes of page content with -show-bboxes
 
 Extended features:
 

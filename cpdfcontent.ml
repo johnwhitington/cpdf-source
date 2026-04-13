@@ -292,16 +292,15 @@ let show_bounding_boxes pdf range =
   in
   let bboxes = ref [] in
   let pdf =
-    (* Collect bounding boxes for each page. *)
     Cpdfpage.process_pages
       (Pdfpage.ppstub
         (fun pnum page -> if mem pnum range then (bboxes =| (pnum, show_bounding_boxes_page page); page) else page))
            pdf
            range
   in
-    (* Postpend new content. *)
     let pdf = ref pdf in
     let content_of_boxes boxes =
+      [Pdfops.Op_w 0.5] @
       flatten (map (fun (minx, miny, maxx, maxy) -> [Pdfops.Op_re (minx, miny, maxx -. minx, maxy -. miny); Op_S]) boxes)
     in
       iter
