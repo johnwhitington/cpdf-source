@@ -43,6 +43,7 @@ type text_state =
    mutable horizontal_scaling : float;
    mutable leading : float;
    mutable font : string;
+   mutable fontobj : Pdftext.font;
    mutable font_size : float;
    mutable rendering_mode : int;
    mutable rise : float;
@@ -86,6 +87,7 @@ let initial_text_state () =
    horizontal_scaling = 100.;
    leading = 0.;
    font = "/Times-NewRoman";
+   fontobj = Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding);
    font_size = 12.;
    rendering_mode = 0;
    rise = 0.;
@@ -182,9 +184,60 @@ let rec initial_colour pdf resources = function
   c) Dealing with xobjects
   d) Calculation of bounding boxed for text (1. Simple - whole thing. Later,
   ability to split up text lines to remove just some glyphs.) *)
- 
+
+(* FIXME Move to Pdftext, get out of Cpdfaddtext. *)
+let width_of_codepoint font codepoint =
+  match font with
+  | Pdftext.SimpleFont {Pdftext.fontmetrics = Some fontmetrics} ->
+      fontmetrics.(codepoint)
+  | _ ->
+    Pdfe.log "width_of_codepoint: don't understand this font\n";
+    0.
+
+(* FIXME Move to Pdftext For finding the height for URL links, we try to find the Cap Height for the
+   font. We fall back to using the font size alone if we cannot get the cap
+   height. *)
+
+(* Lex an integer from the table *)
+let extract_num header s =
+  match Pdfgenlex.lex_string (Hashtbl.find header s) with
+    [Pdfgenlex.LexInt i] -> Pdf.Integer i
+  | [Pdfgenlex.LexReal f] -> Pdf.Real f
+  | _ -> raise (Failure ("extract_num: " ^ s))
+
+let cap_height font fontname =
+  match font with
+  | Some (Pdftext.SimpleFont {fontdescriptor = Some {capheight}}) ->
+      capheight
+  | _ ->
+      (* FIXME We should not need the font name here. We should get it from the font. *)
+      try
+        let font = unopt (Pdftext.standard_font_of_name ("/" ^ fontname)) in
+        let header, _, _, _ = Pdfstandard14.afm_data font in
+          let capheight = try extract_num header "CapHeight" with _ -> Pdf.Integer 0 in
+            match capheight with Pdf.Integer i -> float_of_int i | Pdf.Real r -> r | _ -> 0.
+      with
+        _ -> 0.
+
+let process_tj ~f ~stack ~state ~resources s =
+  (* 1. We need to be able to split the string s into PDF character codes. Then
+    we can look them up in the font data structure to find out the widths. Then
+    we can produce the output boxes. *)
+  let text_extractor = Pdftext.text_extractor_of_font_real state.text_state.fontobj in
+  let codepoints = Pdftext.codepoints_of_text text_extractor s in
+  let widths = map (width_of_codepoint state.text_state.fontobj) codepoints in (* FIXME Proper width-getter -> put into Pdftext...? *)
+  let heights = map (fun _ -> cap_height (Some state.text_state.fontobj) state.text_state.font) codepoints in
+  let minx, miny = Pdftransform.transform_matrix state.ctm (0., 0.) in
+  let minx, miny = ref minx, ref miny in
+    iter2
+      (fun w h ->
+        f (!minx, !miny, !minx +. w, !miny +. h);
+        minx +.= w)
+      widths
+      heights
+
 (* Return next object, list of ops consumed, remaining list *)
-let rec process_op ~f ~stack ~state ~resources = function
+let rec process_op ~pdf ~f ~stack ~state ~resources = function
   | Pdfops.Op_w f -> []
   | Pdfops.Op_J i -> []
   | Pdfops.Op_j i -> []
@@ -228,9 +281,16 @@ let rec process_op ~f ~stack ~state ~resources = function
   | Pdfops.Op_Tz f -> []
   | Pdfops.Op_TL f -> []
   | Pdfops.Op_Tf (s, f) ->
-      (* Can this appear outside text area? Proably. *)
       state.text_state.font <- s;
       state.text_state.font_size <- f;
+      begin match Pdf.lookup_direct pdf "/Font" resources with
+      | Some fontdict ->
+          begin match Pdf.lookup_direct pdf s fontdict with
+          | Some font -> state.text_state.fontobj <- Pdftext.read_font pdf font
+          | None -> Pdfe.log "Font not found\n"
+          end
+      | None -> Pdfe.log "Font not found\n"
+      end;
       []
   | Pdfops.Op_Tr i -> []
   | Pdfops.Op_Ts f -> []
@@ -243,7 +303,8 @@ let rec process_op ~f ~stack ~state ~resources = function
          We send the first to the filter function: if true, remove whole thing.
          If false, start sending the indiviual characters, and reconstruct the result as
          a new text section using kerning gaps or other text movement operators between Tj ops. *)
-      f (100., 100., 200., 300.);
+      (* Find (x, y) based on ctm. *)
+      process_tj ~f ~stack ~state ~resources s;
       []
   | Pdfops.Op_TJ p -> []
   | Pdfops.Op_' s -> []
@@ -278,17 +339,17 @@ let rec process_op ~f ~stack ~state ~resources = function
   | Pdfops.Op_Comment s -> []
 
 (* Draft redactor. f is given the bbox and determines whether to delete or not. *)
-let filter_ops ~f ~mediabox ~resources ~ops =
+let filter_ops ~pdf ~f ~mediabox ~resources ~ops =
   let stack : state list ref = ref [] in
   let state = ref (initial_state mediabox) in
-    iter (fun op -> ignore (process_op ~f ~stack ~state:!state ~resources op)) ops;
+    iter (fun op -> ignore (process_op ~pdf ~f ~stack ~state:!state ~resources op)) ops;
     ops
 
 let show_bounding_boxes pdf range =
   let show_bounding_boxes_page page =
     let ops = Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content in
     let page_boxes = ref [] in
-      ignore (filter_ops ~f:(fun box -> page_boxes =| box; false) ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox) ~resources:page.Pdfpage.resources ~ops);
+      ignore (filter_ops ~pdf ~f:(fun box -> page_boxes =| box; false) ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox) ~resources:page.Pdfpage.resources ~ops);
       !page_boxes
   in
   let bboxes = ref [] in
