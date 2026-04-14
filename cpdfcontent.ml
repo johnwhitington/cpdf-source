@@ -231,20 +231,20 @@ let descender = function
 
 let process_tj ~f ~stack ~state ~resources s =
   Printf.printf "process_tf %s\n" s;
-  let text_extractor = Pdftext.text_extractor_of_font_real state.text_state.fontobj in
+  let text_extractor = Pdftext.text_extractor_of_font_real !state.text_state.fontobj in
   let codepoints = Pdftext.codepoints_of_text text_extractor s in
-  let widths = map (fun x -> (width_of_codepoint state.text_state.fontobj x *. state.text_state.font_size) /. 1000.) codepoints in
-  let heights = map (fun x -> (height state.text_state.fontobj *. state.text_state.font_size) /. 1000.) codepoints in
-  let descenders = map (fun x -> (descender state.text_state.fontobj *. state.text_state.font_size) /. 1000.) codepoints in
+  let widths = map (fun x -> (width_of_codepoint !state.text_state.fontobj x *. !state.text_state.font_size) /. 1000.) codepoints in
+  let heights = map (fun x -> (height !state.text_state.fontobj *. !state.text_state.font_size) /. 1000.) codepoints in
+  let descenders = map (fun x -> (descender !state.text_state.fontobj *. !state.text_state.font_size) /. 1000.) codepoints in
   (*iter (Printf.printf "%f ") widths; flprint "\n"; iter (Printf.printf "%f ") heights; flprint "\n"; iter (Printf.printf "%f ") descenders; flprint "\n";*)
     iter3
       (fun w h d ->
-        let t_rm = Pdftransform.matrix_compose state.ctm state.text_state.t_m in
+        let t_rm = Pdftransform.matrix_compose !state.ctm !state.text_state.t_m in
         let (bl_x, bl_y) = Pdftransform.transform_matrix t_rm (0., d) in
         let (tr_x, tr_y) = Pdftransform.transform_matrix t_rm (w, h) in
           Printf.printf "Baseline position on page (%f, %f)\n" bl_x bl_y;
           f (bl_x, bl_y, tr_x, tr_y);
-          state.text_state.t_m <- Pdftransform.matrix_compose (Pdftransform.mktranslate w 0.) state.text_state.t_m) 
+          !state.text_state.t_m <- Pdftransform.matrix_compose (Pdftransform.mktranslate w 0.) !state.text_state.t_m) 
       widths
       heights
       descenders
@@ -255,7 +255,7 @@ let process_capital_tj ~f ~stack ~state ~resources elts =
      | Pdf.String s ->
          process_tj ~f ~stack ~state ~resources s
      | Pdf.Real n ->
-         state.text_state.t_m <- Pdftransform.matrix_compose (Pdftransform.mktranslate n 0.) state.text_state.t_m
+         !state.text_state.t_m <- Pdftransform.matrix_compose (Pdftransform.mktranslate n 0.) !state.text_state.t_m
      | _ -> ())
     elts
 
@@ -269,10 +269,12 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
   | Pdfops.Op_ri s -> ()
   | Pdfops.Op_i i -> ()
   | Pdfops.Op_gs s -> ()
-  | Pdfops.Op_q -> ()
-  | Pdfops.Op_Q -> ()
+  | Pdfops.Op_q ->
+      push_statestack stack !state
+  | Pdfops.Op_Q ->
+      pop_statestack stack state
   | Pdfops.Op_cm m ->
-      state.ctm <- Pdftransform.matrix_compose m state.ctm
+      !state.ctm <- Pdftransform.matrix_compose m !state.ctm
   | Pdfops.Op_m (f1, f2) -> ()
   | Pdfops.Op_l (f1, f2) -> ()
   | Pdfops.Op_c (f1, f2, f3, f4, f5, f6) -> ()
@@ -293,8 +295,8 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
   | Pdfops.Op_W -> ()
   | Pdfops.Op_W' -> ()
   | Pdfops.Op_BT ->
-      state.text_state.t_m <- Pdftransform.i_matrix;
-      state.text_state.t_lm <- Pdftransform.i_matrix
+      !state.text_state.t_m <- Pdftransform.i_matrix;
+      !state.text_state.t_lm <- Pdftransform.i_matrix
   | Pdfops.Op_ET ->
       ()
   | Pdfops.Op_Tc f -> ()
@@ -302,12 +304,12 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
   | Pdfops.Op_Tz f -> ()
   | Pdfops.Op_TL f -> ()
   | Pdfops.Op_Tf (s, f) ->
-      state.text_state.font <- s;
-      state.text_state.font_size <- f;
+      !state.text_state.font <- s;
+      !state.text_state.font_size <- f;
       begin match Pdf.lookup_direct pdf "/Font" resources with
       | Some fontdict ->
           begin match Pdf.lookup_direct pdf s fontdict with
-          | Some font -> state.text_state.fontobj <- Pdftext.read_font pdf font
+          | Some font -> !state.text_state.fontobj <- Pdftext.read_font pdf font
           | None -> Pdfe.log "Font not found\n"
           end
       | None -> Pdfe.log "Font not found\n"
@@ -317,8 +319,8 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
   | Pdfops.Op_Td (f1, f2) -> ()
   | Pdfops.Op_TD (f1, f2) -> ()
   | Pdfops.Op_Tm m ->
-      state.text_state.t_m <- m;
-      state.text_state.t_lm <- m
+      !state.text_state.t_m <- m;
+      !state.text_state.t_lm <- m
   | Pdfops.Op_T' -> ()
   | Pdfops.Op_Tj s ->
       process_tj ~f ~stack ~state ~resources s
@@ -357,9 +359,9 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
 
 (* Draft redactor. f is given the bbox and determines whether to delete or not. *)
 let filter_ops ~pdf ~f ~mediabox ~resources ~ops =
-  let stack : state list ref = ref [] in
+  let stack = ref [] in
   let state = ref (initial_state mediabox) in
-    iter (fun op -> process_op ~pdf ~f ~stack ~state:!state ~resources op) ops;
+    iter (fun op -> process_op ~pdf ~f ~stack ~state ~resources op) ops;
     ops
 
 let show_bounding_boxes pdf range =
