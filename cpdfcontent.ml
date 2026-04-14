@@ -49,8 +49,7 @@ type text_state =
    mutable rise : float;
    mutable knockout : bool;
    mutable t_m : Pdftransform.transform_matrix;
-   mutable t_lm : Pdftransform.transform_matrix;
-   mutable t_rm : Pdftransform.transform_matrix}
+   mutable t_lm : Pdftransform.transform_matrix}
 
 type state =
   {mutable ctm : Pdftransform.transform_matrix;
@@ -93,8 +92,7 @@ let initial_text_state () =
    rise = 0.;
    knockout = true;
    t_m = Pdftransform.i_matrix;
-   t_lm = Pdftransform.i_matrix;
-   t_rm = Pdftransform.i_matrix}
+   t_lm = Pdftransform.i_matrix}
 
 let initial_state (minx, miny, maxx, maxy) =
   {ctm = Pdftransform.i_matrix;
@@ -232,71 +230,77 @@ let descender = function
       0.
 
 let process_tj ~f ~stack ~state ~resources s =
+  Printf.printf "process_tf %s\n" s;
   let text_extractor = Pdftext.text_extractor_of_font_real state.text_state.fontobj in
   let codepoints = Pdftext.codepoints_of_text text_extractor s in
-  let widths = map (fun x -> (width_of_codepoint state.text_state.fontobj x *. state.text_state.font_size) /. 1000.) codepoints in (* FIXME Proper width-getter -> put into Pdftext...? *)
+  let widths = map (fun x -> (width_of_codepoint state.text_state.fontobj x *. state.text_state.font_size) /. 1000.) codepoints in
   let heights = map (fun x -> (height state.text_state.fontobj *. state.text_state.font_size) /. 1000.) codepoints in
   let descenders = map (fun x -> (descender state.text_state.fontobj *. state.text_state.font_size) /. 1000.) codepoints in
-  (*iter (Printf.printf "%f ") widths;
-  flprint "\n";
-  iter (Printf.printf "%f ") heights;
-  flprint "\n";
-  iter (Printf.printf "%f ") descenders;
-  flprint "\n";*)
-  let minx, miny = Pdftransform.transform_matrix state.ctm (0., 0.) in
-  let minx, miny = ref minx, ref miny in
+  (*iter (Printf.printf "%f ") widths; flprint "\n"; iter (Printf.printf "%f ") heights; flprint "\n"; iter (Printf.printf "%f ") descenders; flprint "\n";*)
     iter3
       (fun w h d ->
-        f (!minx, !miny +. d, !minx +. w, !miny +. h);
-        minx +.= w)
+        let t_rm = Pdftransform.matrix_compose state.text_state.t_lm (Pdftransform.matrix_compose state.text_state.t_m state.ctm) in
+        let (bl_x, bl_y) = Pdftransform.transform_matrix t_rm (0., d) in
+        let (tr_x, tr_y) = Pdftransform.transform_matrix t_rm (w, h) in
+          Printf.printf "Baseline position on page (%f, %f)\n" bl_x bl_y;
+          f (bl_x, bl_y, tr_x, tr_y);
+          state.text_state.t_m <- Pdftransform.matrix_compose (Pdftransform.mktranslate w 0.) state.text_state.t_m) 
       widths
       heights
       descenders
 
+let process_capital_tj ~f ~stack ~state ~resources elts =
+  iter
+    (function
+     | Pdf.String s ->
+         process_tj ~f ~stack ~state ~resources s
+     | Pdf.Real n ->
+         state.text_state.t_m <- Pdftransform.matrix_compose (Pdftransform.mktranslate n 0.) state.text_state.t_m
+     | _ -> ())
+    elts
+
 (* Return next object, list of ops consumed, remaining list *)
 let rec process_op ~pdf ~f ~stack ~state ~resources = function
-  | Pdfops.Op_w f -> []
-  | Pdfops.Op_J i -> []
-  | Pdfops.Op_j i -> []
-  | Pdfops.Op_M f -> []
-  | Pdfops.Op_d (fl, f) -> []
-  | Pdfops.Op_ri s -> []
-  | Pdfops.Op_i i -> []
-  | Pdfops.Op_gs s -> []
-  | Pdfops.Op_q -> []
-  | Pdfops.Op_Q -> []
+  | Pdfops.Op_w f -> ()
+  | Pdfops.Op_J i -> ()
+  | Pdfops.Op_j i -> ()
+  | Pdfops.Op_M f -> ()
+  | Pdfops.Op_d (fl, f) -> ()
+  | Pdfops.Op_ri s -> ()
+  | Pdfops.Op_i i -> ()
+  | Pdfops.Op_gs s -> ()
+  | Pdfops.Op_q -> ()
+  | Pdfops.Op_Q -> ()
   | Pdfops.Op_cm m ->
-      state.ctm <- Pdftransform.matrix_compose state.ctm m;
-      []
-  | Pdfops.Op_m (f1, f2) -> []
-  | Pdfops.Op_l (f1, f2) -> []
-  | Pdfops.Op_c (f1, f2, f3, f4, f5, f6) -> []
-  | Pdfops.Op_v (f1, f2, f3, f4) -> []
-  | Pdfops.Op_y (f1, f2, f3, f4) -> []
-  | Pdfops.Op_h -> []
-  | Pdfops.Op_re (f1, f2, f3, f4) -> []
-  | Pdfops.Op_S -> []
-  | Pdfops.Op_s -> []
-  | Pdfops.Op_f -> []
-  | Pdfops.Op_F -> []
-  | Pdfops.Op_f' -> []
-  | Pdfops.Op_B -> []
-  | Pdfops.Op_B' -> []
-  | Pdfops.Op_b -> []
-  | Pdfops.Op_b' -> []
-  | Pdfops.Op_n -> []
-  | Pdfops.Op_W -> []
-  | Pdfops.Op_W' -> []
+      state.ctm <- Pdftransform.matrix_compose state.ctm m
+  | Pdfops.Op_m (f1, f2) -> ()
+  | Pdfops.Op_l (f1, f2) -> ()
+  | Pdfops.Op_c (f1, f2, f3, f4, f5, f6) -> ()
+  | Pdfops.Op_v (f1, f2, f3, f4) -> ()
+  | Pdfops.Op_y (f1, f2, f3, f4) -> ()
+  | Pdfops.Op_h -> ()
+  | Pdfops.Op_re (f1, f2, f3, f4) -> ()
+  | Pdfops.Op_S -> ()
+  | Pdfops.Op_s -> ()
+  | Pdfops.Op_f -> ()
+  | Pdfops.Op_F -> ()
+  | Pdfops.Op_f' -> ()
+  | Pdfops.Op_B -> ()
+  | Pdfops.Op_B' -> ()
+  | Pdfops.Op_b -> ()
+  | Pdfops.Op_b' -> ()
+  | Pdfops.Op_n -> ()
+  | Pdfops.Op_W -> ()
+  | Pdfops.Op_W' -> ()
   | Pdfops.Op_BT ->
-      (* Begin text object. For now, nothing. Eventually remove if whole text object turns out to be in redaction area. *)
-      []
+      state.text_state.t_m <- Pdftransform.i_matrix;
+      state.text_state.t_lm <- Pdftransform.i_matrix
   | Pdfops.Op_ET ->
-      (* End text object. For now, nothing. Eventually remove if whole text object in redaction area. *)
-      []
-  | Pdfops.Op_Tc f -> []
-  | Pdfops.Op_Tw f -> []
-  | Pdfops.Op_Tz f -> []
-  | Pdfops.Op_TL f -> []
+      ()
+  | Pdfops.Op_Tc f -> ()
+  | Pdfops.Op_Tw f -> ()
+  | Pdfops.Op_Tz f -> ()
+  | Pdfops.Op_TL f -> ()
   | Pdfops.Op_Tf (s, f) ->
       state.text_state.font <- s;
       state.text_state.font_size <- f;
@@ -307,59 +311,54 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
           | None -> Pdfe.log "Font not found\n"
           end
       | None -> Pdfe.log "Font not found\n"
-      end;
-      []
-  | Pdfops.Op_Tr i -> []
-  | Pdfops.Op_Ts f -> []
-  | Pdfops.Op_Td (f1, f2) -> []
-  | Pdfops.Op_TD (f1, f2) -> []
-  | Pdfops.Op_Tm m -> []
-  | Pdfops.Op_T' -> []
+      end
+  | Pdfops.Op_Tr i -> ()
+  | Pdfops.Op_Ts f -> ()
+  | Pdfops.Op_Td (f1, f2) -> ()
+  | Pdfops.Op_TD (f1, f2) -> ()
+  | Pdfops.Op_Tm m ->
+      state.text_state.t_m <- m
+  | Pdfops.Op_T' -> ()
   | Pdfops.Op_Tj s ->
-      (* We calculate the bounding boxes for each character, and for the whole piece.
-         We send the first to the filter function: if true, remove whole thing.
-         If false, start sending the indiviual characters, and reconstruct the result as
-         a new text section using kerning gaps or other text movement operators between Tj ops. *)
-      (* Find (x, y) based on ctm. *)
-      process_tj ~f ~stack ~state ~resources s;
-      []
-  | Pdfops.Op_TJ p -> []
-  | Pdfops.Op_' s -> []
-  | Pdfops.Op_'' (f1, f2, s) -> []
-  | Pdfops.Op_d0 (f1, f2) -> []
-  | Pdfops.Op_d1 (f1, f2, f3, f4, f5, f6) -> []
-  | Pdfops.Op_CS s -> []
-  | Pdfops.Op_cs s -> []
-  | Pdfops.Op_SC fl -> []
-  | Pdfops.Op_sc fl -> []
-  | Pdfops.Op_SCN fl -> []
-  | Pdfops.Op_scn fl -> []
-  | Pdfops.Op_SCNName (s, fl) -> []
-  | Pdfops.Op_scnName (s, fl) -> []
-  | Pdfops.Op_G f -> []
-  | Pdfops.Op_g f -> []
-  | Pdfops.Op_RG (f1, f2, f3) -> []
-  | Pdfops.Op_rg (f1, f2, f3) -> []
-  | Pdfops.Op_K (f1, f2, f3, f4) -> []
-  | Pdfops.Op_k (f1, f2, f3, f4) -> []
-  | Pdfops.Op_sh s -> []
-  | Pdfops.InlineImage i -> []
-  | Pdfops.Op_Do s -> []
-  | Pdfops.Op_MP s -> []
-  | Pdfops.Op_DP (s, p) -> []
-  | Pdfops.Op_BMC s -> []
-  | Pdfops.Op_BDC (s, p) -> []
-  | Pdfops.Op_EMC -> []
-  | Pdfops.Op_BX -> []
-  | Pdfops.Op_EX -> []
-  | Pdfops.Op_Unknown s -> []
-  | Pdfops.Op_Comment s -> []
+      process_tj ~f ~stack ~state ~resources s
+  | Pdfops.Op_TJ p ->
+      process_capital_tj ~f ~stack ~state ~resources (match p with Pdf.Array a -> a | _ -> [])
+  | Pdfops.Op_' s -> ()
+  | Pdfops.Op_'' (f1, f2, s) -> ()
+  | Pdfops.Op_d0 (f1, f2) -> ()
+  | Pdfops.Op_d1 (f1, f2, f3, f4, f5, f6) -> ()
+  | Pdfops.Op_CS s -> ()
+  | Pdfops.Op_cs s -> ()
+  | Pdfops.Op_SC fl -> ()
+  | Pdfops.Op_sc fl -> ()
+  | Pdfops.Op_SCN fl -> ()
+  | Pdfops.Op_scn fl -> ()
+  | Pdfops.Op_SCNName (s, fl) -> ()
+  | Pdfops.Op_scnName (s, fl) -> ()
+  | Pdfops.Op_G f -> ()
+  | Pdfops.Op_g f -> ()
+  | Pdfops.Op_RG (f1, f2, f3) -> ()
+  | Pdfops.Op_rg (f1, f2, f3) -> ()
+  | Pdfops.Op_K (f1, f2, f3, f4) -> ()
+  | Pdfops.Op_k (f1, f2, f3, f4) -> ()
+  | Pdfops.Op_sh s -> ()
+  | Pdfops.InlineImage i -> ()
+  | Pdfops.Op_Do s -> ()
+  | Pdfops.Op_MP s -> ()
+  | Pdfops.Op_DP (s, p) -> ()
+  | Pdfops.Op_BMC s -> ()
+  | Pdfops.Op_BDC (s, p) -> ()
+  | Pdfops.Op_EMC -> ()
+  | Pdfops.Op_BX -> ()
+  | Pdfops.Op_EX -> ()
+  | Pdfops.Op_Unknown s -> ()
+  | Pdfops.Op_Comment s -> ()
 
 (* Draft redactor. f is given the bbox and determines whether to delete or not. *)
 let filter_ops ~pdf ~f ~mediabox ~resources ~ops =
   let stack : state list ref = ref [] in
   let state = ref (initial_state mediabox) in
-    iter (fun op -> ignore (process_op ~pdf ~f ~stack ~state:!state ~resources op)) ops;
+    iter (fun op -> process_op ~pdf ~f ~stack ~state:!state ~resources op) ops;
     ops
 
 let show_bounding_boxes pdf range =
