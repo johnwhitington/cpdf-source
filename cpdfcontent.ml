@@ -86,7 +86,7 @@ let initial_text_state () =
    word_spacing = 0.;
    horizontal_scaling = 100.;
    leading = 0.;
-   font = "/Times-NewRoman";
+   font = "";
    fontobj = Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding);
    font_size = 12.;
    rendering_mode = 0;
@@ -190,8 +190,12 @@ let width_of_codepoint font codepoint =
   match font with
   | Pdftext.SimpleFont {Pdftext.fontmetrics = Some fontmetrics} ->
       fontmetrics.(codepoint)
-  | _ ->
-    Pdfe.log "width_of_codepoint: don't understand this font\n";
+  | Pdftext.StandardFont (f, _) ->
+      let w = Pdfstandard14.textwidth false Pdftext.ImplicitInFontFile (* FIXME *) f (string_of_char (char_of_int codepoint)) in
+        float_of_int w
+  | f ->
+    flprint (Pdftext.string_of_font f);
+    Pdfe.log "\nwidth_of_codepoint: don't understand this font\n";
     0.
 
 (* FIXME Move to Pdftext For finding the height for URL links, we try to find the Cap Height for the
@@ -205,36 +209,49 @@ let extract_num header s =
   | [Pdfgenlex.LexReal f] -> Pdf.Real f
   | _ -> raise (Failure ("extract_num: " ^ s))
 
-let cap_height font fontname =
-  match font with
-  | Some (Pdftext.SimpleFont {fontdescriptor = Some {capheight}}) ->
-      capheight
+let height = function
+  | Pdftext.SimpleFont {fontdescriptor = Some {ascent}} ->
+      ascent
+  | Pdftext.StandardFont (font, _) ->
+      let header, _, _, _ = Pdfstandard14.afm_data font in
+        let height = try extract_num header "Ascender" with _ -> Pdf.Integer 0 in
+          begin match height with Pdf.Integer i -> float_of_int i | Pdf.Real r -> r | _ -> 0. end
   | _ ->
-      (* FIXME We should not need the font name here. We should get it from the font. *)
-      try
-        let font = unopt (Pdftext.standard_font_of_name ("/" ^ fontname)) in
-        let header, _, _, _ = Pdfstandard14.afm_data font in
-          let capheight = try extract_num header "CapHeight" with _ -> Pdf.Integer 0 in
-            match capheight with Pdf.Integer i -> float_of_int i | Pdf.Real r -> r | _ -> 0.
-      with
-        _ -> 0.
+      Pdfe.log "Height: unknown font";
+      0.
+
+let descender = function
+  | Pdftext.SimpleFont {fontdescriptor = Some {descent}} ->
+      descent
+  | Pdftext.StandardFont (font, _) ->
+      let header, _, _, _ = Pdfstandard14.afm_data font in
+        let height = try extract_num header "Descender" with _ -> Pdf.Integer 0 in
+          begin match height with Pdf.Integer i -> float_of_int i | Pdf.Real r -> r | _ -> 0. end
+  | _ ->
+      Pdfe.log "Height: unknown font";
+      0.
 
 let process_tj ~f ~stack ~state ~resources s =
-  (* 1. We need to be able to split the string s into PDF character codes. Then
-    we can look them up in the font data structure to find out the widths. Then
-    we can produce the output boxes. *)
   let text_extractor = Pdftext.text_extractor_of_font_real state.text_state.fontobj in
   let codepoints = Pdftext.codepoints_of_text text_extractor s in
-  let widths = map (width_of_codepoint state.text_state.fontobj) codepoints in (* FIXME Proper width-getter -> put into Pdftext...? *)
-  let heights = map (fun _ -> cap_height (Some state.text_state.fontobj) state.text_state.font) codepoints in
+  let widths = map (fun x -> (width_of_codepoint state.text_state.fontobj x *. state.text_state.font_size) /. 1000.) codepoints in (* FIXME Proper width-getter -> put into Pdftext...? *)
+  let heights = map (fun x -> (height state.text_state.fontobj *. state.text_state.font_size) /. 1000.) codepoints in
+  let descenders = map (fun x -> (descender state.text_state.fontobj *. state.text_state.font_size) /. 1000.) codepoints in
+  (*iter (Printf.printf "%f ") widths;
+  flprint "\n";
+  iter (Printf.printf "%f ") heights;
+  flprint "\n";
+  iter (Printf.printf "%f ") descenders;
+  flprint "\n";*)
   let minx, miny = Pdftransform.transform_matrix state.ctm (0., 0.) in
   let minx, miny = ref minx, ref miny in
-    iter2
-      (fun w h ->
-        f (!minx, !miny, !minx +. w, !miny +. h);
+    iter3
+      (fun w h d ->
+        f (!minx, !miny +. d, !minx +. w, !miny +. h);
         minx +.= w)
       widths
       heights
+      descenders
 
 (* Return next object, list of ops consumed, remaining list *)
 let rec process_op ~pdf ~f ~stack ~state ~resources = function

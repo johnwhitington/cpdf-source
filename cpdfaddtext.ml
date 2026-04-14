@@ -332,7 +332,7 @@ let addtext
           match font with
           | Some (Pdftext.StandardFont (f, _)) ->
               let rawwidth =
-                Pdfstandard14.textwidth false encoding f text
+                Pdfstandard14.textwidth false Pdftext.ImplicitInFontFile (* FIXME *) f text
               in
                 (float rawwidth *. fontsize) /. 1000.
           | Some font ->
