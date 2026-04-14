@@ -239,7 +239,7 @@ let process_tj ~f ~stack ~state ~resources s =
   (*iter (Printf.printf "%f ") widths; flprint "\n"; iter (Printf.printf "%f ") heights; flprint "\n"; iter (Printf.printf "%f ") descenders; flprint "\n";*)
     iter3
       (fun w h d ->
-        let t_rm = Pdftransform.matrix_compose state.text_state.t_lm (Pdftransform.matrix_compose state.text_state.t_m state.ctm) in
+        let t_rm = Pdftransform.matrix_compose state.ctm state.text_state.t_m in
         let (bl_x, bl_y) = Pdftransform.transform_matrix t_rm (0., d) in
         let (tr_x, tr_y) = Pdftransform.transform_matrix t_rm (w, h) in
           Printf.printf "Baseline position on page (%f, %f)\n" bl_x bl_y;
@@ -272,7 +272,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
   | Pdfops.Op_q -> ()
   | Pdfops.Op_Q -> ()
   | Pdfops.Op_cm m ->
-      state.ctm <- Pdftransform.matrix_compose state.ctm m
+      state.ctm <- Pdftransform.matrix_compose m state.ctm
   | Pdfops.Op_m (f1, f2) -> ()
   | Pdfops.Op_l (f1, f2) -> ()
   | Pdfops.Op_c (f1, f2, f3, f4, f5, f6) -> ()
@@ -317,7 +317,8 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
   | Pdfops.Op_Td (f1, f2) -> ()
   | Pdfops.Op_TD (f1, f2) -> ()
   | Pdfops.Op_Tm m ->
-      state.text_state.t_m <- m
+      state.text_state.t_m <- m;
+      state.text_state.t_lm <- m
   | Pdfops.Op_T' -> ()
   | Pdfops.Op_Tj s ->
       process_tj ~f ~stack ~state ~resources s
