@@ -240,13 +240,21 @@ let process_tj ~f ~stack ~state ~resources s =
   let chars = map int_of_char (explode s) in
     iter (Printf.printf "%i ") chars;
     flprint "\n";
-  let widths = map (fun x -> (width_of_codepoint !state.text_state.fontobj x *. !state.text_state.font_size) /. 1000.) chars in
-  let heights = map (fun x -> (height !state.text_state.fontobj *. !state.text_state.font_size) /. 1000.) chars in
-  let descenders = map (fun x -> (descender !state.text_state.fontobj *. !state.text_state.font_size) /. 1000.) chars in
+  let widths = map (fun x -> (width_of_codepoint !state.text_state.fontobj x) /. 1000.) chars in
+  let heights = map (fun x -> (height !state.text_state.fontobj) /. 1000.) chars in
+  let descenders = map (fun x -> (descender !state.text_state.fontobj) /. 1000.) chars in
   iter (Printf.printf "%f ") widths; flprint "\n"; (*iter (Printf.printf "%f ") heights; flprint "\n"; iter (Printf.printf "%f ") descenders; flprint "\n";*)
     iter3
       (fun w h d ->
-        let t_rm = Pdftransform.matrix_compose !state.ctm !state.text_state.t_m in
+        let t_params =
+          {Pdftransform.a = !state.text_state.font_size *. !state.text_state.horizontal_scaling;
+           Pdftransform.b = 0.;
+           Pdftransform.c = 0.;
+           Pdftransform.d = !state.text_state.font_size;
+           Pdftransform.e = 0.;
+           Pdftransform.f = !state.text_state.rise}
+        in
+        let t_rm = Pdftransform.matrix_compose !state.ctm (Pdftransform.matrix_compose !state.text_state.t_m t_params) in
         let (bl_x, bl_y) = Pdftransform.transform_matrix t_rm (0., d) in
         let (tr_x, tr_y) = Pdftransform.transform_matrix t_rm (w, h) in
           Printf.printf "Baseline position on page (%f, %f)\n" bl_x bl_y;
@@ -310,7 +318,8 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
   | Pdfops.Op_Tc f -> ()
   | Pdfops.Op_Tw f -> ()
   | Pdfops.Op_Tz f -> ()
-  | Pdfops.Op_TL f -> ()
+  | Pdfops.Op_TL f ->
+      !state.text_state.leading <- f
   | Pdfops.Op_Tf (s, f) ->
       !state.text_state.font <- s;
       !state.text_state.font_size <- f;
@@ -323,19 +332,30 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
       | None -> Pdfe.log "Font not found\n"
       end
   | Pdfops.Op_Tr i -> ()
-  | Pdfops.Op_Ts f -> ()
-  | Pdfops.Op_Td (f1, f2) -> ()
-  | Pdfops.Op_TD (f1, f2) -> ()
+  | Pdfops.Op_Ts f ->
+      !state.text_state.rise <- f
+  | Pdfops.Op_Td (f1, f2) ->
+      !state.text_state.t_lm <- Pdftransform.matrix_compose !state.text_state.t_lm (Pdftransform.mktranslate f1 f2);
+      !state.text_state.t_m <- !state.text_state.t_lm
+  | Pdfops.Op_TD (f1, f2) ->
+      process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_TL ~-.f2);
+      process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_Td (f1, f2))
   | Pdfops.Op_Tm m ->
       !state.text_state.t_m <- m;
       !state.text_state.t_lm <- m
-  | Pdfops.Op_T' -> ()
+  | Pdfops.Op_T' ->
+      process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_TD (0., ~-.(!state.text_state.leading)))
   | Pdfops.Op_Tj s ->
       process_tj ~f ~stack ~state ~resources s
   | Pdfops.Op_TJ p ->
       process_capital_tj ~f ~stack ~state ~resources (match p with Pdf.Array a -> a | _ -> [])
-  | Pdfops.Op_' s -> ()
-  | Pdfops.Op_'' (f1, f2, s) -> ()
+  | Pdfops.Op_' s ->
+      process_op ~pdf ~f ~stack ~state ~resources Pdfops.Op_T';
+      process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_Tj s)
+  | Pdfops.Op_'' (f1, f2, s) ->
+      process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_Tw f1);
+      process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_Tc f2);
+      process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_' s)
   | Pdfops.Op_d0 (f1, f2) -> ()
   | Pdfops.Op_d1 (f1, f2, f3, f4, f5, f6) -> ()
   | Pdfops.Op_CS s -> ()
