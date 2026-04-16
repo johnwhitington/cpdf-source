@@ -187,14 +187,20 @@ let rec initial_colour pdf resources = function
 let width_of_codepoint font codepoint =
   match font with
   | Pdftext.SimpleFont {Pdftext.fontmetrics = Some fontmetrics} ->
-      fontmetrics.(codepoint)
+      begin try
+        fontmetrics.(codepoint)
+      with
+        e -> Pdfe.log (Printf.sprintf "Unable to get width (%s, %s, %i)\n" (Printexc.to_string e) (Pdftext.string_of_font font) codepoint); 0.
+      end
   | Pdftext.StandardFont (f, _) ->
-      let w = Pdfstandard14.textwidth false Pdftext.ImplicitInFontFile (* FIXME *) f (string_of_char (char_of_int codepoint)) in
-        float_of_int w
+      begin try
+        let w = Pdfstandard14.textwidth false Pdftext.ImplicitInFontFile (* FIXME *) f (string_of_char (char_of_int codepoint)) in
+          float_of_int w
+      with
+        e -> Pdfe.log (Printf.sprintf "Unable to get width - StandardFont (%s, %s, %i)\n" (Printexc.to_string e) (Pdftext.string_of_font font) codepoint); 0.
+      end
   | f ->
-    flprint (Pdftext.string_of_font f);
-    Pdfe.log "\nwidth_of_codepoint: don't understand this font\n";
-    0.
+    Pdfe.log (Printf.sprintf "Unable to get width for font (%s, %i)\n" (Pdftext.string_of_font f) codepoint); 0.
 
 (* FIXME Move to Pdftext For finding the height for URL links, we try to find the Cap Height for the
    font. We fall back to using the font size alone if we cannot get the cap
@@ -215,7 +221,7 @@ let height = function
         let height = try extract_num header "Ascender" with _ -> Pdf.Integer 0 in
           begin match height with Pdf.Integer i -> float_of_int i | Pdf.Real r -> r | _ -> 0. end
   | _ ->
-      Pdfe.log "Height: unknown font";
+      Pdfe.log "Height: unknown font\n";
       0.
 
 let descender = function
