@@ -1,16 +1,11 @@
-(** Representing page content as objects without loss. *)
+(** Processing page content. *)
 open Pdfutil
 
-(* We run through the ops, doing all the work to process the page w.r.t
-   graphics and text state.
-
-   Initial aim: get bounding box of objects so we can redact them, outputting
+(* Initial aim: get bounding box of objects so we can redact them, outputting
    the stream with objects redacted.
 
-   Final aim: page contents as objects free of graphics state, but without
-   blow-ups (i.e keep xobjects) and fully round-trippable.
-
-*)
+   Future aim: page contents as objects free of graphics state, but without
+   blow-ups (i.e keep xobjects) and fully round-trippable. *)
 
 type fpoint = float * float
 
@@ -402,29 +397,3 @@ let filter_ops ~pdf ~f ~mediabox ~resources ~ops =
   let state = ref (initial_state mediabox) in
     iter (fun op -> process_op ~pdf ~f ~stack ~state ~resources op) ops;
     ops
-
-let show_bounding_boxes pdf range =
-  let show_bounding_boxes_page page =
-    let ops = Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content in
-    let page_boxes = ref [] in
-      ignore (filter_ops ~pdf ~f:(fun box -> page_boxes =| box; false) ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox) ~resources:page.Pdfpage.resources ~ops);
-      !page_boxes
-  in
-  let bboxes = ref [] in
-  let pdf =
-    Cpdfpage.process_pages
-      (Pdfpage.ppstub
-        (fun pnum page -> if mem pnum range then (bboxes =| (pnum, show_bounding_boxes_page page); page) else page))
-           pdf
-           range
-  in
-    let pdf = ref pdf in
-    let content_of_boxes boxes =
-      [Pdfops.Op_w 0.5] @
-      flatten (map (fun (minx, miny, maxx, maxy) -> [Pdfops.Op_re (minx, miny, maxx -. minx, maxy -. miny); Op_S]) boxes)
-    in
-      iter
-        (fun (pnum, boxes) ->
-           pdf := Cpdftweak.append_page_content (Pdfops.string_of_ops (content_of_boxes boxes)) false false [pnum] !pdf)
-        !bboxes;
-      !pdf
