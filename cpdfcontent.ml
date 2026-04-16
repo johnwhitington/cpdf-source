@@ -169,16 +169,6 @@ let rec initial_colour pdf resources = function
       initial_colour pdf resources (Pdf.direct pdf indirect)
   | _ -> raise (Pdf.PDFError "Unknown colourspace B")
 
-(* An example, for redaction for now. We go through all the ops, then call f to
-   see which objects to remove based on bounding box. This requires:
-
-  a) Updating of matrices
-  b) Calculation of bounding boxes for graphics (detecting graphics objects)
-  c) Dealing with xobjects
-  d) Calculation of bounding boxed for text (1. Simple - whole thing. Later,
-  ability to split up text lines to remove just some glyphs.) *)
-
-(* FIXME Move to Pdftext, get out of Cpdfaddtext. *)
 let width_of_codepoint font codepoint =
   match font with
   | Pdftext.SimpleFont {Pdftext.fontmetrics = Some fontmetrics} ->
@@ -229,8 +219,7 @@ let descender = function
 let process_tj ~f ~stack ~state ~resources s =
   Printf.printf "process_tf %S\n" s;
   let chars = map int_of_char (explode s) in
-    iter (Printf.printf "%i ") chars;
-    flprint "\n";
+  (*  iter (Printf.printf "%i ") chars; flprint "\n";*)
   let widths = map (fun x -> (width_of_codepoint !state.text_state.fontobj x) /. 1000.) chars in
   let heights = map (fun x -> (height !state.text_state.fontobj) /. 1000.) chars in
   let descenders = map (fun x -> (descender !state.text_state.fontobj) /. 1000.) chars in
@@ -253,8 +242,7 @@ let process_tj ~f ~stack ~state ~resources s =
           !state.text_state.t_m <- Pdftransform.matrix_compose !state.text_state.t_m (Pdftransform.mktranslate w 0.)) 
       widths
       heights
-      descenders(*;
-    exit 0*)
+      descenders
 
 let process_capital_tj ~f ~stack ~state ~resources elts =
   iter
@@ -380,7 +368,26 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
   | Pdfops.Op_k (f1, f2, f3, f4) -> ()
   | Pdfops.Op_sh s -> ()
   | Pdfops.InlineImage i -> ()
-  | Pdfops.Op_Do s -> ()
+  | Pdfops.Op_Do s ->
+      begin match Pdf.lookup_direct pdf "/XObject" resources with
+      | Some d ->
+          begin match Pdf.lookup_direct pdf s d with
+          | Some xobj ->
+              begin match Pdf.lookup_direct pdf "/Subtype" xobj with
+              | Some (Pdf.Name "/Image") ->
+                  ()
+              | Some (Pdf.Name "/Form") ->
+                  process_op ~pdf ~f ~stack ~state ~resources Pdfops.Op_q;
+                  (* TODO concatenate Matrix and CTM. *)
+                  (* TODO add clipping to Form's BBOX. *)
+                  process_form_xobject ~pdf ~f ~stack ~state ~resources xobj;
+                  process_op ~pdf ~f ~stack ~state ~resources Pdfops.Op_Q;
+              | _ -> raise (Pdf.PDFError "Unknown kind of xobject")
+              end
+          | _ -> raise (Pdf.PDFError "Unknown xobject")
+          end
+      | None -> raise (Pdf.PDFError "xobject not found")
+      end
   | Pdfops.Op_MP s -> ()
   | Pdfops.Op_DP (s, p) -> ()
   | Pdfops.Op_BMC s -> ()
@@ -390,6 +397,27 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
   | Pdfops.Op_EX -> ()
   | Pdfops.Op_Unknown s -> ()
   | Pdfops.Op_Comment s -> ()
+
+and process_form_xobject ~pdf ~f ~stack ~state ~resources pdfobject =
+  let content = [Pdf.direct pdf pdfobject] in
+    let pagedict =
+      match Pdf.direct pdf resources with
+      | Pdf.Dictionary rs -> rs
+      | _ -> []
+    in
+    let xobjdict =
+      match Pdf.direct pdf pdfobject with
+      | Pdf.Stream {contents = (dict, _)} ->
+          begin match Pdf.lookup_direct pdf "/Resources" dict with
+          | Some (Pdf.Dictionary rs) -> rs
+          | _ -> []
+          end
+      | _ -> raise (Pdf.PDFError "bad stream in process_form_xobject")
+    in
+      let total_resources = Pdf.Dictionary (mergedict pagedict xobjdict) in
+        iter
+          (process_op ~pdf ~f ~stack ~state ~resources:total_resources)
+          (Pdfops.parse_operators pdf total_resources content)
 
 (* Draft redactor. f is given the bbox and determines whether to delete or not. *)
 let filter_ops ~pdf ~f ~mediabox ~resources ~ops =
