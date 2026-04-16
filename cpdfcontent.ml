@@ -236,24 +236,26 @@ let descender = function
       0.
 
 let process_tj ~f ~stack ~state ~resources s =
-  (*Printf.printf "process_tf %s\n" s;*)
-  let text_extractor = Pdftext.text_extractor_of_font_real !state.text_state.fontobj in
-  let codepoints = Pdftext.codepoints_of_text text_extractor s in
-  let widths = map (fun x -> (width_of_codepoint !state.text_state.fontobj x *. !state.text_state.font_size) /. 1000.) codepoints in
-  let heights = map (fun x -> (height !state.text_state.fontobj *. !state.text_state.font_size) /. 1000.) codepoints in
-  let descenders = map (fun x -> (descender !state.text_state.fontobj *. !state.text_state.font_size) /. 1000.) codepoints in
-  (*iter (Printf.printf "%f ") widths; flprint "\n"; iter (Printf.printf "%f ") heights; flprint "\n"; iter (Printf.printf "%f ") descenders; flprint "\n";*)
+  Printf.printf "process_tf %S\n" s;
+  let chars = map int_of_char (explode s) in
+    iter (Printf.printf "%i ") chars;
+    flprint "\n";
+  let widths = map (fun x -> (width_of_codepoint !state.text_state.fontobj x *. !state.text_state.font_size) /. 1000.) chars in
+  let heights = map (fun x -> (height !state.text_state.fontobj *. !state.text_state.font_size) /. 1000.) chars in
+  let descenders = map (fun x -> (descender !state.text_state.fontobj *. !state.text_state.font_size) /. 1000.) chars in
+  iter (Printf.printf "%f ") widths; flprint "\n"; (*iter (Printf.printf "%f ") heights; flprint "\n"; iter (Printf.printf "%f ") descenders; flprint "\n";*)
     iter3
       (fun w h d ->
         let t_rm = Pdftransform.matrix_compose !state.ctm !state.text_state.t_m in
         let (bl_x, bl_y) = Pdftransform.transform_matrix t_rm (0., d) in
         let (tr_x, tr_y) = Pdftransform.transform_matrix t_rm (w, h) in
-          (*Printf.printf "Baseline position on page (%f, %f)\n" bl_x bl_y;*)
+          Printf.printf "Baseline position on page (%f, %f)\n" bl_x bl_y;
           f (bl_x, bl_y, tr_x, tr_y);
           !state.text_state.t_m <- Pdftransform.matrix_compose !state.text_state.t_m (Pdftransform.mktranslate w 0.)) 
       widths
       heights
-      descenders
+      descenders(*;
+    exit 0*)
 
 let process_capital_tj ~f ~stack ~state ~resources elts =
   iter
