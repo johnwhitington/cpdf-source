@@ -64,7 +64,7 @@ type state =
    mutable line_join : int;
    mutable miter_limit : float;
    mutable dash_pattern : float list * float;
-   mutable rendering_intent : Pdf.pdfobject;
+   mutable rendering_intent : string;
    mutable stroke_adjustment : bool;
    mutable blend_mode : Pdf.pdfobject;
    mutable soft_mask : Pdf.pdfobject;
@@ -107,7 +107,7 @@ let initial_state (minx, miny, maxx, maxy) =
    line_join = 0;
    miter_limit = 10.;
    dash_pattern = ([], 0.);
-   rendering_intent = Pdf.Name "/RelativeColorimetric";
+   rendering_intent = "/RelativeColorimetric";
    stroke_adjustment = false;
    blend_mode = Pdf.Name "/Normal";
    soft_mask = Pdf.Null;
@@ -202,10 +202,6 @@ let width_of_codepoint font codepoint =
   | f ->
     Pdfe.log (Printf.sprintf "Unable to get width for font (%s, %i)\n" (Pdftext.string_of_font f) codepoint); 0.
 
-(* FIXME Move to Pdftext For finding the height for URL links, we try to find the Cap Height for the
-   font. We fall back to using the font size alone if we cannot get the cap
-   height. *)
-
 (* Lex an integer from the table *)
 let extract_num header s =
   match Pdfgenlex.lex_string (Hashtbl.find header s) with
@@ -275,16 +271,27 @@ let process_capital_tj ~f ~stack ~state ~resources elts =
      | _ -> ())
     elts
 
+let read_graphics_state_dictionary ~pdf ~state s =
+  ()
+
 (* Return next object, list of ops consumed, remaining list *)
 let rec process_op ~pdf ~f ~stack ~state ~resources = function
-  | Pdfops.Op_w f -> ()
-  | Pdfops.Op_J i -> ()
-  | Pdfops.Op_j i -> ()
-  | Pdfops.Op_M f -> ()
-  | Pdfops.Op_d (fl, f) -> ()
-  | Pdfops.Op_ri s -> ()
-  | Pdfops.Op_i i -> ()
-  | Pdfops.Op_gs s -> ()
+  | Pdfops.Op_w f ->
+      !state.line_width <- f
+  | Pdfops.Op_J i ->
+      !state.line_cap <- i
+  | Pdfops.Op_j i ->
+      !state.line_join <- i
+  | Pdfops.Op_M f ->
+      !state.miter_limit <- f
+  | Pdfops.Op_d (fl, f) ->
+      !state.dash_pattern <- (fl, f)
+  | Pdfops.Op_ri s ->
+      !state.rendering_intent <- s
+  | Pdfops.Op_i f ->
+      !state.flatness <- f
+  | Pdfops.Op_gs s ->
+      read_graphics_state_dictionary ~pdf ~state s
   | Pdfops.Op_q ->
       push_statestack stack !state
   | Pdfops.Op_Q ->
@@ -315,9 +322,12 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
       !state.text_state.t_lm <- Pdftransform.i_matrix
   | Pdfops.Op_ET ->
       ()
-  | Pdfops.Op_Tc f -> ()
-  | Pdfops.Op_Tw f -> ()
-  | Pdfops.Op_Tz f -> ()
+  | Pdfops.Op_Tc f ->
+      !state.text_state.character_spacing <- f
+  | Pdfops.Op_Tw f ->
+      !state.text_state.word_spacing <- f
+  | Pdfops.Op_Tz f ->
+      !state.text_state.horizontal_scaling <- (f /. 100.)
   | Pdfops.Op_TL f ->
       !state.text_state.leading <- f
   | Pdfops.Op_Tf (s, f) ->
@@ -331,7 +341,8 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
           end
       | None -> Pdfe.log "Font not found\n"
       end
-  | Pdfops.Op_Tr i -> ()
+  | Pdfops.Op_Tr i ->
+      !state.text_state.rendering_mode <- i
   | Pdfops.Op_Ts f ->
       !state.text_state.rise <- f
   | Pdfops.Op_Td (f1, f2) ->

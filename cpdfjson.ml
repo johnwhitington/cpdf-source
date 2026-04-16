@@ -159,7 +159,7 @@ let rec op_of_json = function
   | `List [a; `String "J"] -> O.Op_J (opi a)
   | `List [a; `String "M"] -> O.Op_M (opf a)
   | `List [`String s; `String "ri"] -> O.Op_ri s
-  | `List [a; `String "i"] -> O.Op_i (opi a)
+  | `List [a; `String "i"] -> O.Op_i (opf a)
   | `List [a; b; c; d; e; f; `String "c"] -> O.Op_c (opf a, opf b, opf c, opf d, opf e, opf f)
   | `List [a; b; c; d; `String "v"] -> O.Op_v (opf a, opf b, opf c, opf d)
   | `List [a; b; c; d; `String "y"] -> O.Op_y (opf a, opf b, opf c, opf d)
@@ -404,7 +404,7 @@ let json_of_op utf8 pdf no_stream_data = function
   | O.Op_J j -> `List [mkint j; `String "J"]
   | O.Op_M m -> `List [mkfloat m; `String "M"]
   | O.Op_ri s -> `List [`String s; `String "ri"]
-  | O.Op_i i -> `List [mkint i; `String "i"]
+  | O.Op_i i -> `List [mkfloat i; `String "i"]
   | O.Op_c (a, b, c, d, e, f) ->
       `List
         [mkfloat a; mkfloat b; mkfloat c;
