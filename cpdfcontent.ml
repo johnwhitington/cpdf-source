@@ -230,7 +230,7 @@ let descender = function
       0.
 
 let process_tj ~f ~stack ~state ~resources s =
-  Printf.printf "process_tf %s\n" s;
+  (*Printf.printf "process_tf %s\n" s;*)
   let text_extractor = Pdftext.text_extractor_of_font_real !state.text_state.fontobj in
   let codepoints = Pdftext.codepoints_of_text text_extractor s in
   let widths = map (fun x -> (width_of_codepoint !state.text_state.fontobj x *. !state.text_state.font_size) /. 1000.) codepoints in
@@ -242,9 +242,9 @@ let process_tj ~f ~stack ~state ~resources s =
         let t_rm = Pdftransform.matrix_compose !state.ctm !state.text_state.t_m in
         let (bl_x, bl_y) = Pdftransform.transform_matrix t_rm (0., d) in
         let (tr_x, tr_y) = Pdftransform.transform_matrix t_rm (w, h) in
-          Printf.printf "Baseline position on page (%f, %f)\n" bl_x bl_y;
+          (*Printf.printf "Baseline position on page (%f, %f)\n" bl_x bl_y;*)
           f (bl_x, bl_y, tr_x, tr_y);
-          !state.text_state.t_m <- Pdftransform.matrix_compose (Pdftransform.mktranslate w 0.) !state.text_state.t_m) 
+          !state.text_state.t_m <- Pdftransform.matrix_compose !state.text_state.t_m (Pdftransform.mktranslate w 0.)) 
       widths
       heights
       descenders
