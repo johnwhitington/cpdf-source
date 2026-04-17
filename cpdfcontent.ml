@@ -78,7 +78,7 @@ type state =
 let initial_text_state () =
   {character_spacing = 0.;
    word_spacing = 0.;
-   horizontal_scaling = 100.;
+   horizontal_scaling = 1.;
    leading = 0.;
    font = "";
    fontobj = Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding);
@@ -175,17 +175,27 @@ let width_of_charcode font charcode =
       begin try
         fontmetrics.(charcode)
       with
-        e -> Pdfe.log (Printf.sprintf "Unable to get width (%s, %s, %i)\n" (Printexc.to_string e) (Pdftext.string_of_font font) charcode); 0.
+        e -> Pdfe.log (Printf.sprintf "Unable to get width (%s, %s, %i)\n" (Printexc.to_string e) (Pdftext.string_of_font font) charcode); exit 2; 0.
       end
-  | Pdftext.StandardFont (f, _) ->
+  | Pdftext.StandardFont (f, encoding) ->
       begin try
-        let w = Pdfstandard14.textwidth false Pdftext.ImplicitInFontFile (* FIXME *) f (string_of_char (char_of_int charcode)) in
+        let w = Pdfstandard14.textwidth false encoding f (string_of_char (char_of_int charcode)) in
           float_of_int w
       with
-        e -> Pdfe.log (Printf.sprintf "Unable to get width - StandardFont (%s, %s, %i)\n" (Printexc.to_string e) (Pdftext.string_of_font font) charcode); 0.
+        e ->
+          Pdfe.log (Printf.sprintf "Unable to get width - StandardFont (%s, %s, %i)\n" (Printexc.to_string e) (Pdftext.string_of_font font) charcode);
+          exit 2;
+          0.
+      end
+  | Pdftext.CIDKeyedFont (basefont, {cid_widths; cid_default_width}, encoding) as f ->
+      begin match lookup charcode cid_widths with
+      | Some f -> f
+      | None -> Pdfe.log (Printf.sprintf "Unable to get cid width (%s, %i)\n" (Pdftext.string_of_font f) charcode); exit 2; 0.
       end
   | f ->
-    Pdfe.log (Printf.sprintf "Unable to get width for font (%s, %i)\n" (Pdftext.string_of_font f) charcode); 0.
+    Pdfe.log (Printf.sprintf "Unable to get width for font (%s, %i)\n" (Pdftext.string_of_font f) charcode);
+    exit 2;
+    0.
 
 (* Lex an integer from the table *)
 let extract_num header s =
@@ -203,6 +213,7 @@ let height = function
           begin match height with Pdf.Integer i -> float_of_int i | Pdf.Real r -> r | _ -> 0. end
   | _ ->
       Pdfe.log "Height: unknown font\n";
+      exit 2;
       0.
 
 let descender = function
@@ -213,8 +224,13 @@ let descender = function
         let height = try extract_num header "Descender" with _ -> Pdf.Integer 0 in
           begin match height with Pdf.Integer i -> float_of_int i | Pdf.Real r -> r | _ -> 0. end
   | _ ->
-      Pdfe.log "Height: unknown font";
+      Pdfe.log "Height: unknown font\n";
+      exit 2;
       0.
+
+let tx ~state w c tj =
+  ((w -. tj /. 1000.) *. !state.text_state.font_size +. !state.text_state.character_spacing +.
+  (if c = 32 then 1. else 0.) *. !state.text_state.word_spacing) *. !state.text_state.horizontal_scaling
 
 let process_tj ~f ~stack ~state ~resources s =
   (*Printf.printf "process_tj %S\n" s;*)
@@ -223,9 +239,9 @@ let process_tj ~f ~stack ~state ~resources s =
   let widths = map (fun x -> (width_of_charcode !state.text_state.fontobj x) /. 1000.) chars in
   let heights = map (fun x -> (height !state.text_state.fontobj) /. 1000.) chars in
   let descenders = map (fun x -> (descender !state.text_state.fontobj) /. 1000.) chars in
-  (*iter (Printf.printf "%f ") widths;*) flprint "\n"; (*iter (Printf.printf "%f ") heights; flprint "\n"; iter (Printf.printf "%f ") descenders; flprint "\n";*)
-    iter3
-      (fun w h d ->
+  (*iter (Printf.printf "%f ") widths; flprint "\n";*) (*iter (Printf.printf "%f ") heights; flprint "\n"; iter (Printf.printf "%f ") descenders; flprint "\n";*)
+    iter4
+      (fun c w h d ->
         let t_params =
           {Pdftransform.a = !state.text_state.font_size *. !state.text_state.horizontal_scaling;
            Pdftransform.b = 0.;
@@ -237,9 +253,11 @@ let process_tj ~f ~stack ~state ~resources s =
         let t_rm = Pdftransform.matrix_compose !state.ctm (Pdftransform.matrix_compose !state.text_state.t_m t_params) in
         let (bl_x, bl_y) = Pdftransform.transform_matrix t_rm (0., d) in
         let (tr_x, tr_y) = Pdftransform.transform_matrix t_rm (w, h) in
-          Printf.printf "Baseline position on page (%f, %f)\n" bl_x bl_y;
+          (*Printf.printf "Baseline position on page (%f, %f)\n" bl_x bl_y;*)
           f (bl_x, bl_y, tr_x, tr_y);
-          !state.text_state.t_m <- Pdftransform.matrix_compose !state.text_state.t_m (Pdftransform.mktranslate w 0.)) 
+          let advance = tx ~state w c 0. in
+            !state.text_state.t_m <- Pdftransform.matrix_compose !state.text_state.t_m (Pdftransform.mktranslate advance 0.))
+      chars
       widths
       heights
       descenders
@@ -250,7 +268,8 @@ let process_capital_tj ~f ~stack ~state ~resources elts =
      | Pdf.String s ->
          process_tj ~f ~stack ~state ~resources s
      | Pdf.Real n ->
-         !state.text_state.t_m <- Pdftransform.matrix_compose (Pdftransform.mktranslate n 0.) !state.text_state.t_m
+         let advance = tx ~state 0. 0 n in
+         !state.text_state.t_m <- Pdftransform.matrix_compose !state.text_state.t_m (Pdftransform.mktranslate advance 0.)
      | _ -> ())
     elts
 
