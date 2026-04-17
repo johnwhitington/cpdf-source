@@ -169,23 +169,23 @@ let rec initial_colour pdf resources = function
       initial_colour pdf resources (Pdf.direct pdf indirect)
   | _ -> raise (Pdf.PDFError "Unknown colourspace B")
 
-let width_of_codepoint font codepoint =
+let width_of_charcode font charcode =
   match font with
   | Pdftext.SimpleFont {Pdftext.fontmetrics = Some fontmetrics} ->
       begin try
-        fontmetrics.(codepoint)
+        fontmetrics.(charcode)
       with
-        e -> Pdfe.log (Printf.sprintf "Unable to get width (%s, %s, %i)\n" (Printexc.to_string e) (Pdftext.string_of_font font) codepoint); 0.
+        e -> Pdfe.log (Printf.sprintf "Unable to get width (%s, %s, %i)\n" (Printexc.to_string e) (Pdftext.string_of_font font) charcode); 0.
       end
   | Pdftext.StandardFont (f, _) ->
       begin try
-        let w = Pdfstandard14.textwidth false Pdftext.ImplicitInFontFile (* FIXME *) f (string_of_char (char_of_int codepoint)) in
+        let w = Pdfstandard14.textwidth false Pdftext.ImplicitInFontFile (* FIXME *) f (string_of_char (char_of_int charcode)) in
           float_of_int w
       with
-        e -> Pdfe.log (Printf.sprintf "Unable to get width - StandardFont (%s, %s, %i)\n" (Printexc.to_string e) (Pdftext.string_of_font font) codepoint); 0.
+        e -> Pdfe.log (Printf.sprintf "Unable to get width - StandardFont (%s, %s, %i)\n" (Printexc.to_string e) (Pdftext.string_of_font font) charcode); 0.
       end
   | f ->
-    Pdfe.log (Printf.sprintf "Unable to get width for font (%s, %i)\n" (Pdftext.string_of_font f) codepoint); 0.
+    Pdfe.log (Printf.sprintf "Unable to get width for font (%s, %i)\n" (Pdftext.string_of_font f) charcode); 0.
 
 (* Lex an integer from the table *)
 let extract_num header s =
@@ -217,13 +217,13 @@ let descender = function
       0.
 
 let process_tj ~f ~stack ~state ~resources s =
-  Printf.printf "process_tf %S\n" s;
+  (*Printf.printf "process_tj %S\n" s;*)
   let chars = map int_of_char (explode s) in
   (*  iter (Printf.printf "%i ") chars; flprint "\n";*)
-  let widths = map (fun x -> (width_of_codepoint !state.text_state.fontobj x) /. 1000.) chars in
+  let widths = map (fun x -> (width_of_charcode !state.text_state.fontobj x) /. 1000.) chars in
   let heights = map (fun x -> (height !state.text_state.fontobj) /. 1000.) chars in
   let descenders = map (fun x -> (descender !state.text_state.fontobj) /. 1000.) chars in
-  iter (Printf.printf "%f ") widths; flprint "\n"; (*iter (Printf.printf "%f ") heights; flprint "\n"; iter (Printf.printf "%f ") descenders; flprint "\n";*)
+  (*iter (Printf.printf "%f ") widths;*) flprint "\n"; (*iter (Printf.printf "%f ") heights; flprint "\n"; iter (Printf.printf "%f ") descenders; flprint "\n";*)
     iter3
       (fun w h d ->
         let t_params =
@@ -377,11 +377,32 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
               | Some (Pdf.Name "/Image") ->
                   ()
               | Some (Pdf.Name "/Form") ->
-                  process_op ~pdf ~f ~stack ~state ~resources Pdfops.Op_q;
-                  (* TODO concatenate Matrix and CTM. *)
-                  (* TODO add clipping to Form's BBOX. *)
-                  process_form_xobject ~pdf ~f ~stack ~state ~resources xobj;
-                  process_op ~pdf ~f ~stack ~state ~resources Pdfops.Op_Q;
+                  let matrix =
+                    match Pdf.lookup_direct pdf "/Matrix" xobj with
+                    | Some (Pdf.Array [a; b; c; d; e; f]) ->
+                        begin try
+                          Pdftransform.matrix
+                            (Pdf.getnum pdf a) (Pdf.getnum pdf b) (Pdf.getnum pdf c)
+                            (Pdf.getnum pdf d) (Pdf.getnum pdf e) (Pdf.getnum pdf f)
+                        with
+                          _ -> Pdftransform.i_matrix
+                        end
+                    | _ -> Pdftransform.i_matrix
+                  in
+                  let minx, miny, maxx, maxy =
+                    match Pdf.lookup_direct pdf "/BBox" xobj with
+                    | Some x ->
+                        begin try Pdf.parse_rectangle pdf x with _ -> (min_float, min_float, max_float, max_float) end
+                    | None -> 
+                        (min_float, min_float, max_float, max_float)
+                  in
+                    process_op ~pdf ~f ~stack ~state ~resources Pdfops.Op_q;
+                    !state.ctm <- Pdftransform.matrix_compose !state.ctm matrix;
+                    process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_re (minx, miny, maxx, maxy));
+                    process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_W);
+                    process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_n);
+                    process_form_xobject ~pdf ~f ~stack ~state ~resources xobj;
+                    process_op ~pdf ~f ~stack ~state ~resources Pdfops.Op_Q;
               | _ -> raise (Pdf.PDFError "Unknown kind of xobject")
               end
           | _ -> raise (Pdf.PDFError "Unknown xobject")
