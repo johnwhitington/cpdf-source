@@ -197,48 +197,41 @@ let width_of_charcode font charcode =
     exit 2;
     0.
 
-(* Lex an integer from the table *)
 let extract_num header s =
   match Pdfgenlex.lex_string (Hashtbl.find header s) with
-    [Pdfgenlex.LexInt i] -> Pdf.Integer i
+  | [Pdfgenlex.LexInt i] -> Pdf.Integer i
   | [Pdfgenlex.LexReal f] -> Pdf.Real f
   | _ -> raise (Failure ("extract_num: " ^ s))
 
-let height = function
-  | Pdftext.SimpleFont {fontdescriptor = Some {ascent}} ->
-      ascent
+let extra_metrics = function
+  | Pdftext.SimpleFont {fontdescriptor = Some {ascent; descent}}
+  | Pdftext.CIDKeyedFont (_, {cid_fontdescriptor = {ascent; descent}}, _) ->
+      (ascent, descent)
   | Pdftext.StandardFont (font, _) ->
       let header, _, _, _ = Pdfstandard14.afm_data font in
-        let height = try extract_num header "Ascender" with _ -> Pdf.Integer 0 in
-          begin match height with Pdf.Integer i -> float_of_int i | Pdf.Real r -> r | _ -> 0. end
-  | _ ->
-      Pdfe.log "Height: unknown font\n";
-      exit 2;
-      0.
-
-let descender = function
-  | Pdftext.SimpleFont {fontdescriptor = Some {descent}} ->
-      descent
-  | Pdftext.StandardFont (font, _) ->
-      let header, _, _, _ = Pdfstandard14.afm_data font in
-        let height = try extract_num header "Descender" with _ -> Pdf.Integer 0 in
-          begin match height with Pdf.Integer i -> float_of_int i | Pdf.Real r -> r | _ -> 0. end
-  | _ ->
-      Pdfe.log "Height: unknown font\n";
-      exit 2;
-      0.
+        let ascender = try extract_num header "Ascender" with _ -> Pdf.Integer 0 in
+        let descender = try extract_num header "Descender" with _ -> Pdf.Integer 0 in
+          begin match ascender with Pdf.Integer i -> float_of_int i | Pdf.Real r -> r | _ -> 0. end,
+          begin match descender with Pdf.Integer i -> float_of_int i | Pdf.Real r -> r | _ -> 0. end
+  | Pdftext.SimpleFont _ ->
+      Pdfe.log "Missing fontdescriptor in SimpleFont";
+      exit 2
 
 let tx ~state w c tj =
   ((w -. tj /. 1000.) *. !state.text_state.font_size +. !state.text_state.character_spacing +.
   (if c = 32 then 1. else 0.) *. !state.text_state.word_spacing) *. !state.text_state.horizontal_scaling
 
+let charcodes_of_string font s =
+  match font with
+  | Pdftext.StandardFont _ | Pdftext.SimpleFont _ -> map int_of_char (explode s)
+  | Pdftext.CIDKeyedFont _ -> map int_of_char (pair (fun a b -> b) (explode s)) (* Just Identity H for now *)
+
 let process_tj ~f ~stack ~state ~resources s =
   (*Printf.printf "process_tj %S\n" s;*)
-  let chars = map int_of_char (explode s) in
-  (*  iter (Printf.printf "%i ") chars; flprint "\n";*)
+  let chars = charcodes_of_string !state.text_state.fontobj s in
+  (*iter (Printf.printf "%i ") chars; flprint "\n";*)
   let widths = map (fun x -> (width_of_charcode !state.text_state.fontobj x) /. 1000.) chars in
-  let heights = map (fun x -> (height !state.text_state.fontobj) /. 1000.) chars in
-  let descenders = map (fun x -> (descender !state.text_state.fontobj) /. 1000.) chars in
+  let ascenders, descenders = split (map (fun x -> let a, b = extra_metrics !state.text_state.fontobj in (a /. 1000., b /. 1000.)) chars) in
   (*iter (Printf.printf "%f ") widths; flprint "\n";*) (*iter (Printf.printf "%f ") heights; flprint "\n"; iter (Printf.printf "%f ") descenders; flprint "\n";*)
     iter4
       (fun c w h d ->
@@ -259,7 +252,7 @@ let process_tj ~f ~stack ~state ~resources s =
             !state.text_state.t_m <- Pdftransform.matrix_compose !state.text_state.t_m (Pdftransform.mktranslate advance 0.))
       chars
       widths
-      heights
+      ascenders
       descenders
 
 let process_capital_tj ~f ~stack ~state ~resources elts =
