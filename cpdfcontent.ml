@@ -172,8 +172,13 @@ let rec initial_colour pdf resources = function
 let width_of_charcode font charcode =
   match font with
   | Pdftext.SimpleFont {Pdftext.fontmetrics = Some fontmetrics} ->
+      let matrix =
+        match font with
+        | Pdftext.SimpleFont {Pdftext.fonttype = Pdftext.Type3 {fontmatrix}} -> fontmatrix
+        | _ -> Pdftransform.i_matrix
+      in
       begin try
-        fontmetrics.(charcode)
+        fst (Pdftransform.transform_matrix matrix (fontmetrics.(charcode), 0.))
       with
         e -> Pdfe.log (Printf.sprintf "Unable to get width (%s, %s, %i)\n" (Printexc.to_string e) (Pdftext.string_of_font font) charcode); exit 2; 0.
       end
