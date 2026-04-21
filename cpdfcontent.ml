@@ -119,7 +119,8 @@ let initial_state (minx, miny, maxx, maxy) =
    smoothness = 0.5}
 
 let copystate state =
-  {state with ctm = state.ctm}
+  let text_state = {state.text_state with leading = state.text_state.leading} in
+    {state with text_state}
 
 let push_statestack statestack state =
   statestack =| copystate state
@@ -180,7 +181,7 @@ let width_of_charcode font charcode =
       begin try
         fst (Pdftransform.transform_matrix matrix (fontmetrics.(charcode), 0.))
       with
-        e -> Pdfe.log (Printf.sprintf "Unable to get width (%s, %s, %i)\n" (Printexc.to_string e) (Pdftext.string_of_font font) charcode); exit 2; 0.
+        e -> Pdfe.log (Printf.sprintf "Unable to get width (%s, %s, %i)\n" (Printexc.to_string e) (Pdftext.string_of_font font) charcode); 0.
       end
   | Pdftext.StandardFont (f, encoding) ->
       begin try
@@ -189,17 +190,15 @@ let width_of_charcode font charcode =
       with
         e ->
           Pdfe.log (Printf.sprintf "Unable to get width - StandardFont (%s, %s, %i)\n" (Printexc.to_string e) (Pdftext.string_of_font font) charcode);
-          exit 2;
           0.
       end
-  | Pdftext.CIDKeyedFont (basefont, {cid_widths; cid_default_width}, encoding) as f ->
+  | Pdftext.CIDKeyedFont (_, {cid_widths; cid_default_width}, _) ->
       begin match lookup charcode cid_widths with
       | Some f -> f
-      | None -> Pdfe.log (Printf.sprintf "Unable to get cid width (%s, %i)\n" (Pdftext.string_of_font f) charcode); exit 2; 0.
+      | None -> cid_default_width
       end
   | f ->
     Pdfe.log (Printf.sprintf "Unable to get width for font (%s, %i)\n" (Pdftext.string_of_font f) charcode);
-    exit 2;
     0.
 
 let extract_num header s =
@@ -237,7 +236,7 @@ let process_tj ~f ~stack ~state ~resources s =
   (*iter (Printf.printf "%i ") chars; flprint "\n";*)
   let widths = map (fun x -> (width_of_charcode !state.text_state.fontobj x) /. 1000.) chars in
   let ascenders, descenders = split (map (fun x -> let a, b = extra_metrics !state.text_state.fontobj in (a /. 1000., b /. 1000.)) chars) in
-  (*iter (Printf.printf "%f ") widths; flprint "\n";*) (*iter (Printf.printf "%f ") heights; flprint "\n"; iter (Printf.printf "%f ") descenders; flprint "\n";*)
+  (*iter (Printf.printf "%f ") widths; flprint "\n"; iter (Printf.printf "%f ") ascenders; flprint "\n"; iter (Printf.printf "%f ") descenders; flprint "\n";*)
     iter4
       (fun c w h d ->
         let t_params =
@@ -297,7 +296,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
   | Pdfops.Op_Q ->
       pop_statestack stack state
   | Pdfops.Op_cm m ->
-      !state.ctm <- Pdftransform.matrix_compose m !state.ctm
+      !state.ctm <- Pdftransform.matrix_compose !state.ctm m
   | Pdfops.Op_m (f1, f2) -> ()
   | Pdfops.Op_l (f1, f2) -> ()
   | Pdfops.Op_c (f1, f2, f3, f4, f5, f6) -> ()
