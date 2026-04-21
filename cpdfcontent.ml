@@ -225,6 +225,9 @@ let tx ~state w c tj =
   ((w -. tj /. 1000.) *. !state.text_state.font_size +. !state.text_state.character_spacing +.
   (if c = 32 then 1. else 0.) *. !state.text_state.word_spacing) *. !state.text_state.horizontal_scaling
 
+let tx2 ~state tj =
+  (~-.tj /. 1000.) *. !state.text_state.horizontal_scaling
+
 let charcodes_of_string font s =
   match font with
   | Pdftext.StandardFont _ | Pdftext.SimpleFont _ -> map int_of_char (explode s)
@@ -262,7 +265,7 @@ let process_capital_tj ~f ~stack ~state ~resources elts =
      | Pdf.String s ->
          process_tj ~f ~stack ~state ~resources s
      | Pdf.Real n ->
-         !state.text_state.t_m <- Pdftransform.matrix_compose !state.text_state.t_m (Pdftransform.mktranslate (tx ~state 0. 0 n) 0.)
+         !state.text_state.t_m <- Pdftransform.matrix_compose !state.text_state.t_m (Pdftransform.mktranslate (tx2 ~state n) 0.)
      | _ -> ())
     elts
 
@@ -389,18 +392,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
               | Some (Pdf.Name "/Image") ->
                   ()
               | Some (Pdf.Name "/Form") ->
-                  let matrix =
-                    match Pdf.lookup_direct pdf "/Matrix" xobj with
-                    | Some (Pdf.Array [a; b; c; d; e; f]) ->
-                        begin try
-                          Pdftransform.matrix
-                            (Pdf.getnum pdf a) (Pdf.getnum pdf b) (Pdf.getnum pdf c)
-                            (Pdf.getnum pdf d) (Pdf.getnum pdf e) (Pdf.getnum pdf f)
-                        with
-                          _ -> Pdftransform.i_matrix
-                        end
-                    | _ -> Pdftransform.i_matrix
-                  in
+                  let matrix = Pdf.parse_matrix pdf "/Matrix" xobj in
                   let minx, miny, maxx, maxy =
                     match Pdf.lookup_direct pdf "/BBox" xobj with
                     | Some x ->
