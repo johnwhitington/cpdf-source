@@ -208,8 +208,8 @@ let extract_num header s =
   | _ -> raise (Failure ("extract_num: " ^ s))
 
 let extra_metrics = function
-  | Pdftext.SimpleFont {fontdescriptor = Some {ascent; descent}}
-  | Pdftext.CIDKeyedFont (_, {cid_fontdescriptor = {ascent; descent}}, _) ->
+  | Pdftext.SimpleFont {fontdescriptor = Some {ascent; descent; fontbbox}}
+  | Pdftext.CIDKeyedFont (_, {cid_fontdescriptor = {ascent; descent; fontbbox}}, _) ->
       (ascent, descent)
   | Pdftext.StandardFont (font, _) ->
       let header, _, _, _ = Pdfstandard14.afm_data font in
@@ -235,10 +235,10 @@ let process_tj ~f ~stack ~state ~resources s =
   let chars = charcodes_of_string !state.text_state.fontobj s in
   (*iter (Printf.printf "%i ") chars; flprint "\n";*)
   let widths = map (fun x -> (width_of_charcode !state.text_state.fontobj x) /. 1000.) chars in
-  let ascenders, descenders = split (map (fun x -> let a, b = extra_metrics !state.text_state.fontobj in (a /. 1000., b /. 1000.)) chars) in
-  (*iter (Printf.printf "%f ") widths; flprint "\n"; iter (Printf.printf "%f ") ascenders; flprint "\n"; iter (Printf.printf "%f ") descenders; flprint "\n";*)
-    iter4
-      (fun c w h d ->
+  let ascent, descent = let a, b = extra_metrics !state.text_state.fontobj in (a /. 1000., b /. 1000.) in
+  (*iter (Printf.printf "%f ") widths; flprint "\n"; *)
+    iter2
+      (fun c w ->
         let t_params =
           {Pdftransform.a = !state.text_state.font_size *. !state.text_state.horizontal_scaling;
            Pdftransform.b = 0.;
@@ -248,16 +248,13 @@ let process_tj ~f ~stack ~state ~resources s =
            Pdftransform.f = !state.text_state.rise}
         in
         let t_rm = Pdftransform.matrix_compose !state.ctm (Pdftransform.matrix_compose !state.text_state.t_m t_params) in
-        let (bl_x, bl_y) = Pdftransform.transform_matrix t_rm (0., d) in
-        let (tr_x, tr_y) = Pdftransform.transform_matrix t_rm (w, h) in
+        let (bl_x, bl_y) = Pdftransform.transform_matrix t_rm (0., descent) in
+        let (tr_x, tr_y) = Pdftransform.transform_matrix t_rm (w, ascent) in
           (*Printf.printf "Baseline position on page (%f, %f)\n" bl_x bl_y;*)
           f (bl_x, bl_y, tr_x, tr_y);
-          let advance = tx ~state w c 0. in
-            !state.text_state.t_m <- Pdftransform.matrix_compose !state.text_state.t_m (Pdftransform.mktranslate advance 0.))
+          !state.text_state.t_m <- Pdftransform.matrix_compose !state.text_state.t_m (Pdftransform.mktranslate (tx ~state w c 0.) 0.))
       chars
       widths
-      ascenders
-      descenders
 
 let process_capital_tj ~f ~stack ~state ~resources elts =
   iter
@@ -265,8 +262,7 @@ let process_capital_tj ~f ~stack ~state ~resources elts =
      | Pdf.String s ->
          process_tj ~f ~stack ~state ~resources s
      | Pdf.Real n ->
-         let advance = tx ~state 0. 0 n in
-         !state.text_state.t_m <- Pdftransform.matrix_compose !state.text_state.t_m (Pdftransform.mktranslate advance 0.)
+         !state.text_state.t_m <- Pdftransform.matrix_compose !state.text_state.t_m (Pdftransform.mktranslate (tx ~state 0. 0 n) 0.)
      | _ -> ())
     elts
 
