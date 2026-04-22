@@ -240,7 +240,7 @@ let tx ~state w c tj =
   (if c = 32 then 1. else 0.) *. !state.text_state.word_spacing) *. !state.text_state.horizontal_scaling
 
 let tx2 ~state tj =
-  (~-.tj /. 1000.) *. !state.text_state.horizontal_scaling
+  (~-.tj /. 1000.) *. !state.text_state.horizontal_scaling *. !state.text_state.font_size
 
 let charcodes_of_string font s =
   match font with
