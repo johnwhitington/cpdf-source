@@ -627,7 +627,8 @@ type args =
    mutable process_images_force : bool;
    mutable update : bool;
    mutable text_rotation : Cpdfaddtext.rotation;
-   mutable url_border : bool}
+   mutable url_border : bool;
+   mutable show_bboxes_light : bool}
 
 let args =
   {op = None;
@@ -789,7 +790,8 @@ let args =
    process_images_force = false;
    update = false;
    text_rotation = Cpdfaddtext.Rot0;
-   url_border = false}
+   url_border = false;
+   show_bboxes_light = false}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -936,7 +938,8 @@ let reset_arguments () =
   args.process_images_force <- false;
   args.update <- false;
   args.text_rotation <- Cpdfaddtext.Rot0;
-  args.url_border <- false
+  args.url_border <- false;
+  args.show_bboxes_light <- false
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -3261,7 +3264,8 @@ let specs =
    ("-text-180", Arg.Unit (fun () -> args.text_rotation <- Cpdfaddtext.Rot180), " Rotate text to 180 degrees");
    ("-text-270", Arg.Unit (fun () -> args.text_rotation <- Cpdfaddtext.Rot270), " Rotate text to 270 degrees");
    ("-url-border", Arg.Unit (fun () -> args.url_border <- true), " Add a border to URLs");
-   ("-show-bboxes", Arg.Unit (fun () -> setop ShowBoundingBoxes ()), " Show bounding boxes")]
+   ("-show-bboxes", Arg.Unit (fun () -> setop ShowBoundingBoxes ()), " Show bounding boxes");
+   ("-bboxes-light", Arg.Unit (fun () -> args.show_bboxes_light <- true), " Use light colours for bounding boxes")]
 
 let specs = sort compare specs
 
@@ -5426,7 +5430,7 @@ let rec go () =
   | ShowBoundingBoxes ->
       let pdf = get_single_pdf args.op true in
       let range = parse_pagespec pdf (get_pagespec ()) in
-      let pdf = Cpdfredact.show_bounding_boxes pdf range in
+      let pdf = Cpdfredact.show_bounding_boxes ~light:args.show_bboxes_light pdf range in
         write_pdf false pdf
 
 (* Advise the user if a combination of command line flags makes little sense,
