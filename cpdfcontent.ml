@@ -207,14 +207,28 @@ let extract_num header s =
   | [Pdfgenlex.LexReal f] -> Pdf.Real f
   | _ -> raise (Failure ("extract_num: " ^ s))
 
+let extract_rectangle header s =
+  match Pdfgenlex.lex_string (Hashtbl.find header s) with
+  | [Pdfgenlex.LexInt _; LexInt y0; LexInt _; LexInt y1] -> (Pdf.Integer (min y0 y1), Pdf.Integer (max y0 y1))
+  | _ -> raise (Failure ("extract_rectangle: " ^ s))
+
 let extra_metrics = function
   | Pdftext.SimpleFont {fontdescriptor = Some {ascent; descent; fontbbox}}
   | Pdftext.CIDKeyedFont (_, {cid_fontdescriptor = {ascent; descent; fontbbox}}, _) ->
-      (ascent, descent)
+      begin match fontbbox with
+      | (0., 0., 0., 0.) -> (ascent, descent)
+      | (_, miny, _, maxy) -> (miny, maxy)
+      end
   | Pdftext.StandardFont (font, _) ->
       let header, _, _, _ = Pdfstandard14.afm_data font in
-        let ascender = try extract_num header "Ascender" with _ -> Pdf.Integer 0 in
-        let descender = try extract_num header "Descender" with _ -> Pdf.Integer 0 in
+        let ascender, descender = try extract_rectangle header "FontBBox" with _ -> Pdf.Integer 0, Pdf.Integer 0 in
+        let ascender, descender =
+          if ascender = Pdf.Integer 0 && descender = Pdf.Integer 0 then
+            (begin try extract_num header "Ascender" with _ -> Pdf.Integer 0 end,
+            begin try extract_num header "Descender" with _ -> Pdf.Integer 0 end)
+          else
+            (ascender, descender)
+        in
           begin match ascender with Pdf.Integer i -> float_of_int i | Pdf.Real r -> r | _ -> 0. end,
           begin match descender with Pdf.Integer i -> float_of_int i | Pdf.Real r -> r | _ -> 0. end
   | Pdftext.SimpleFont _ ->
