@@ -175,11 +175,15 @@ let width_of_charcode font charcode =
   | Pdftext.SimpleFont {Pdftext.fontmetrics = Some fontmetrics} ->
       let matrix =
         match font with
-        | Pdftext.SimpleFont {Pdftext.fonttype = Pdftext.Type3 {fontmatrix}} -> fontmatrix
+        | Pdftext.SimpleFont {Pdftext.fonttype = Pdftext.Type3 {fontmatrix}} ->
+            (*Printf.printf "charcode = %i\n" charcode;*)
+            fontmatrix
         | _ -> Pdftransform.i_matrix
       in
       begin try
-        fst (Pdftransform.transform_matrix matrix (fontmetrics.(charcode), 0.))
+        (*Printf.printf "width = %f\n" fontmetrics.(charcode);*)
+        let final = fst (Pdftransform.transform_matrix matrix (fontmetrics.(charcode), 0.)) in
+          (*Printf.printf "final width = %f\n" final;*) final
       with
         e -> Pdfe.log (Printf.sprintf "Unable to get width (%s, %s, %i)\n" (Printexc.to_string e) (Pdftext.string_of_font font) charcode); 0.
       end
@@ -213,6 +217,9 @@ let extract_rectangle header s =
   | _ -> raise (Failure ("extract_rectangle: " ^ s))
 
 let extra_metrics = function
+  | Pdftext.SimpleFont {fonttype = Pdftext.Type3 {fontbbox = (minx, miny, maxx, maxy)}} ->
+      (*Printf.printf "Finding ascent, descent for Type 3 char %f %f %f %f\n" minx miny maxx maxy;*)
+      (miny, maxy)
   | Pdftext.SimpleFont {fontdescriptor = Some {ascent; descent; fontbbox}}
   | Pdftext.CIDKeyedFont (_, {cid_fontdescriptor = {ascent; descent; fontbbox}}, _) ->
       begin match fontbbox with
@@ -233,7 +240,7 @@ let extra_metrics = function
           begin match descender with Pdf.Integer i -> float_of_int i | Pdf.Real r -> r | _ -> 0. end
   | Pdftext.SimpleFont _ ->
       Pdfe.log "Missing fontdescriptor in SimpleFont";
-      exit 2
+      (0., 0.)
 
 let tx ~state w c tj =
   ((w -. tj /. 1000.) *. !state.text_state.font_size +. !state.text_state.character_spacing +.
@@ -250,10 +257,11 @@ let charcodes_of_string font s =
 let process_tj ~f ~stack ~state ~resources s =
   (*Printf.printf "process_tj %S\n" s;*)
   let chars = charcodes_of_string !state.text_state.fontobj s in
-  (*iter (Printf.printf "%i ") chars; flprint "\n";*)
+  (*flprint "CHARS: "; iter (Printf.printf "%i ") chars; flprint "\n";*)
   let widths = map (fun x -> (width_of_charcode !state.text_state.fontobj x) /. 1000.) chars in
   let ascent, descent = let a, b = extra_metrics !state.text_state.fontobj in (a /. 1000., b /. 1000.) in
-  (*iter (Printf.printf "%f ") widths; flprint "\n"; *)
+  (*flprint "WIDTHS: "; iter (Printf.printf "%f ") widths; flprint "\n";
+  Printf.printf "ascent = %f, descent = %f\n" ascent descent;*)
     iter2
       (fun c w ->
         let t_params =
@@ -270,6 +278,7 @@ let process_tj ~f ~stack ~state ~resources s =
         let (x2, y2) = Pdftransform.transform_matrix t_rm (w, ascent) in
         let (x3, y3) = Pdftransform.transform_matrix t_rm (w, descent) in
           (*Printf.printf "Baseline position on page (%f, %f)\n" bl_x bl_y;*)
+          (*flprint "BOX: "; Printf.printf "%f %f %f %f %f %f %f %f\n" x0 y0 x1 y1 x2 y2 x3 y3;*)
           f (x0, y0, x1, y1, x2, y2, x3, y3);
           !state.text_state.t_m <- Pdftransform.matrix_compose !state.text_state.t_m (Pdftransform.mktranslate (tx ~state w c 0.) 0.))
       chars
