@@ -251,10 +251,12 @@ let process_tj ~f ~stack ~state ~resources s =
            Pdftransform.f = !state.text_state.rise}
         in
         let t_rm = Pdftransform.matrix_compose !state.ctm (Pdftransform.matrix_compose !state.text_state.t_m t_params) in
-        let (bl_x, bl_y) = Pdftransform.transform_matrix t_rm (0., descent) in
-        let (tr_x, tr_y) = Pdftransform.transform_matrix t_rm (w, ascent) in
+        let (x0, y0) = Pdftransform.transform_matrix t_rm (0., descent) in
+        let (x1, y1) = Pdftransform.transform_matrix t_rm (0., ascent) in
+        let (x2, y2) = Pdftransform.transform_matrix t_rm (w, ascent) in
+        let (x3, y3) = Pdftransform.transform_matrix t_rm (w, descent) in
           (*Printf.printf "Baseline position on page (%f, %f)\n" bl_x bl_y;*)
-          f (bl_x, bl_y, tr_x, tr_y);
+          f (x0, y0, x1, y1, x2, y2, x3, y3);
           !state.text_state.t_m <- Pdftransform.matrix_compose !state.text_state.t_m (Pdftransform.mktranslate (tx ~state w c 0.) 0.))
       chars
       widths
