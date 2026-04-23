@@ -34,19 +34,19 @@ Prerequisites to build
 
 The OCaml compiler
 
-[http://ocaml.org](http://ocaml.org)
+[https://ocaml.org](https://ocaml.org)
 
 The camlpdf library
 
-[http://github.com/johnwhitington/camlpdf](http://www.github.com/johnwhitington/camlpdf)
+[https://github.com/johnwhitington/camlpdf](https://www.github.com/johnwhitington/camlpdf)
 
 The ocamlfind library manager
 
-[http://projects.camlcity.org/projects/findlib.html](http://projects.camlcity.org/projects/findlib.html)
+[https://projects.camlcity.org/projects/findlib.html](https://projects.camlcity.org/projects/findlib.html)
 
 If you are using the OPAM package manager:
 
-[http://opam.ocamlpro.com](http://opam.ocamlpro.com)
+[https://opam.ocaml.org](http://opam.ocaml.org)
 
 these can be installed by:
 
