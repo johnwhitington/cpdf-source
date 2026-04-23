@@ -32,6 +32,10 @@ type path = winding_rule * subpath list
 
 type content = Glyph | InlineImage | Image | Path
 
+type partial =
+  | NoPartial
+  | PartialPath of fpoint * fpoint * segment list * subpath list 
+
 type text_state =
   {mutable character_spacing : float;
    mutable word_spacing : float;
@@ -48,7 +52,9 @@ type text_state =
 
 type state =
   {mutable ctm : Pdftransform.transform_matrix;
-   mutable clipping_path : float * float * float * float;
+   mutable partial_path : partial;
+   mutable path : path;
+   mutable clipping_path : path;
    mutable color_space : Pdf.pdfobject;
    mutable color : float list;
    mutable stroke_color : float list;
@@ -90,7 +96,14 @@ let initial_text_state () =
 
 let initial_state (minx, miny, maxx, maxy) =
   {ctm = Pdftransform.i_matrix;
-   clipping_path = (minx, miny, maxx, maxy);
+   clipping_path =
+     (EvenOdd, [(Not_hole, Closed,
+                 [Straight ((minx, miny), (minx, maxy));
+                  Straight ((minx, maxy), (maxx, maxy));
+                  Straight ((maxx, maxy), (maxx, miny));
+                  Straight ((maxx, miny), (minx, miny))])]);
+   partial_path = NoPartial;
+   path = (EvenOdd, []);
    color_space = Pdf.Name "/DeviceGray";
    color = [1.];
    stroke_color = [1.];
@@ -128,9 +141,6 @@ let pop_statestack statestack state =
   | [] -> raise (Pdf.PDFError "Unbalanced q/Q Ops")
   | h::t -> statestack := t; state := h
 
-type partial =
-  | NoPartial
-  | PartialPath of fpoint * fpoint * segment list * subpath list 
 
 let rec initial_colour pdf resources = function
   | Pdf.Name "/DeviceGray"
@@ -320,201 +330,158 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
   | Pdfops.Op_cm m ->
       !state.ctm <- Pdftransform.matrix_compose !state.ctm m
   | Pdfops.Op_m (x, y) ->
-      (* Begin a new subpath. Get into path mode if not already there. If the last op was an
-      [Op_m], it should have no effect. *)
-      (*(!state).objectclass <- PathObject;
-      begin match partial with
+      begin match !state.partial_path with
       | PartialPath (sp, cp, segs, subpaths) ->
-          if segs = []
-            then PartialPath ((x, y), (x, y), [], subpaths), graphic
-            else PartialPath ((x, y), (x, y), [], (Not_hole, Open, rev segs)::subpaths), graphic
+          !state.partial_path <-
+            if segs = []
+              then PartialPath ((x, y), (x, y), [], subpaths)
+              else PartialPath ((x, y), (x, y), [], (Not_hole, Open, rev segs)::subpaths)
       | _ ->
-          PartialPath ((x, y), (x, y), [], []), graphic
-      end*)()
+          !state.partial_path <- PartialPath ((x, y), (x, y), [], [])
+      end
   | Pdfops.Op_l (x, y) ->
-      (*if (!state).objectclass <> PathObject then
-        raise (Pdf.PDFError "Pdfgraphics: Op_l");
-      begin match partial with 
+      begin match !state.partial_path with 
       | PartialPath (sp, cp, segs, subpaths) ->
-          PartialPath (sp, (x, y), Straight (cp, (x, y))::segs, subpaths), graphic
-      | _ ->
-          raise (Pdf.PDFError "Pdfgraphics: Op_l")
-      end*)()
+          !state.partial_path <- PartialPath (sp, (x, y), Straight (cp, (x, y))::segs, subpaths)
+      | _ -> ()
+      end
   | Pdfops.Op_c (a, b, c, d, e, f) ->
-      (*if (!state).objectclass <> PathObject then
-        raise (Pdf.PDFError "Pdfgraphics: Op_c");
-      begin match partial with 
+      begin match !state.partial_path with 
       | PartialPath (sp, cp, segs, subpaths) ->
           let ep = (e, f) in
-            let curve = Bezier (cp, (a, b), (c, d), ep) in
-              PartialPath (sp, ep, curve::segs, subpaths), graphic
-      | _ ->
-          raise (Pdf.PDFError "Pdfgraphics: Op_c")
-      end*)()
+          let curve = Bezier (cp, (a, b), (c, d), ep) in
+            !state.partial_path <- PartialPath (sp, ep, curve::segs, subpaths)
+      | _ -> ()
+      end
   | Pdfops.Op_v (a, b, c, d) ->
-      (*if (!state).objectclass <> PathObject then
-        raise (Pdf.PDFError "Pdfgraphics: Op_v");
-      begin match partial with 
+      begin match !state.partial_path with 
       | PartialPath (sp, cp, segs, subpaths) ->
           let ep = (c, d) in
-            let curve = Bezier (cp, cp, (a, b), ep) in
-              PartialPath (sp, ep, curve::segs, subpaths), graphic
-      | _ ->
-          raise (Pdf.PDFError "Pdfgraphics: Op_v")
-      end*)()
+          let curve = Bezier (cp, cp, (a, b), ep) in
+            !state.partial_path <- PartialPath (sp, ep, curve::segs, subpaths)
+      | _ -> ()
+      end
   | Pdfops.Op_y (a, b, c, d) ->
-      (*if (!state).objectclass <> PathObject then
-        raise (Pdf.PDFError "Pdfgraphics: Op_y");
-      begin match partial with 
+      begin match !state.partial_path with 
       | PartialPath (sp, cp, segs, subpaths) ->
           let ep = (c, d) in
-            let curve = Bezier (cp, (a, b), ep, ep) in
-              PartialPath (sp, ep, curve::segs, subpaths), graphic
-      | _ ->
-          raise (Pdf.PDFError "Pdfgraphics: Op_y")
-      end*)()
+          let curve = Bezier (cp, (a, b), ep, ep) in
+            !state.partial_path <- PartialPath (sp, ep, curve::segs, subpaths)
+      | _ -> ()
+      end
   | Pdfops.Op_h ->
-      (*if (!state).objectclass <> PathObject then
-        raise (Pdf.PDFError "Pdfgraphics: Op_h - not in PathObject");
-      begin match partial with 
+      begin match !state.partial_path with 
       | PartialPath (sp, cp, segs, subpaths) ->
-          PartialPath (sp, cp, [], (Not_hole, Closed, rev segs)::subpaths), graphic
-      | _ ->
-          raise (Pdf.PDFError "Pdfgraphics: Op_h - not a partial path")
-      end*)()
+          !state.partial_path <- PartialPath (sp, cp, [], (Not_hole, Closed, rev segs)::subpaths)
+      | _ -> ()
+      end
   | Pdfops.Op_s ->
-      (* Close and stroke. Equivalent to h S *)
-      (*process_ops pdf page ret [Pdfops.Op_h; Pdfops.Op_S]*)()
+      iter (process_op ~pdf ~f ~stack ~state ~resources) [Pdfops.Op_h; Pdfops.Op_S]
   | Pdfops.Op_b ->
-      (* Close, fill, stroke, nonzero. Equivalent to h B *)
-      (*process_ops pdf page ret [Pdfops.Op_h; Pdfops.Op_B]*)()
+      iter (process_op ~pdf ~f ~stack ~state ~resources) [Pdfops.Op_h; Pdfops.Op_B]
   | Pdfops.Op_b' ->
-      (* Close, fill, stroke, evenodd. Equivalent to h B* *)
-      (*process_ops pdf page ret [Pdfops.Op_h; Pdfops.Op_B']*)()
+      iter (process_op ~pdf ~f ~stack ~state ~resources) [Pdfops.Op_h; Pdfops.Op_B']
   | Pdfops.Op_f | Pdfops.Op_F ->
-      (*(* Close and Fill non-zero *)
-      if (!state).objectclass <> PathObject then
-        raise (Pdf.PDFError "Pdfgraphics: Op_f");
-      let partial, graphic = process_op pdf page (partial, graphic) Pdfops.Op_h in
-        (!state).objectclass <- PageDescriptionLevel;
-        begin match partial with
+        process_op ~pdf ~f ~stack ~state ~resources Pdfops.Op_h;
+        begin match !state.partial_path with
         | PartialPath (sp, cp, segs, subpaths) ->
             (* segs is empty, due to [Op_h] *)
-            PartialPath (sp, cp, [], []),
-            Path ((NonZero, rev subpaths), path_attributes_fill ())::graphic
-        | _ ->
-           raise (Pdf.PDFError "Pdfgraphics: Op_f")
-        end*)()
+            !state.partial_path <- PartialPath (sp, cp, [], []);
+            !state.path <- (NonZero, rev subpaths)
+        | _ -> ()
+        end
   | Pdfops.Op_S ->
-      (* Stroke *)
-      (*if (!state).objectclass <> PathObject then
-        raise (Pdf.PDFError "Pdfgraphics: Op_S");
-      (!state).objectclass <- PageDescriptionLevel;
-      begin match partial with
+      begin match !state.partial_path with
       | PartialPath (sp, cp, segs, subpaths) ->
           if segs = [] then
-            PartialPath (sp, cp, [], []),
-            Path ((EvenOdd, rev subpaths), path_attributes_stroke ())::graphic
+            begin
+              !state.partial_path <- PartialPath (sp, cp, [], []);
+              !state.path <- (EvenOdd, rev subpaths)
+            end
           else
-            PartialPath (sp, cp, [], []),
-            Path ((EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths)), path_attributes_stroke ())::graphic
-      | _ ->
-         raise (Pdf.PDFError "Pdfgraphics: Op_S")
-      end*)()
+            begin
+              !state.partial_path <- PartialPath (sp, cp, [], []);
+              !state.path <- (EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths))
+            end
+      | _ -> ()
+      end
   | Pdfops.Op_B ->
-      (* Fill and stroke, non-zero. *)
-      (*if (!state).objectclass <> PathObject then
-        raise (Pdf.PDFError "Pdfgraphics: Op_B");
-      (!state).objectclass <- PageDescriptionLevel;
-      begin match partial with
+      begin match !state.partial_path with
       | PartialPath (sp, cp, segs, subpaths) ->
           if segs = [] then
-            PartialPath (sp, cp, [], []),
-            Path ((NonZero, rev subpaths), path_attributes_fill_and_stroke ())::graphic
+            begin
+              !state.partial_path <- PartialPath (sp, cp, [], []);
+              !state.path <- (NonZero, rev subpaths)
+            end
           else
-            PartialPath (sp, cp, [], []),
-            Path ((NonZero, rev ((Not_hole, Open, rev segs)::subpaths)), path_attributes_fill_and_stroke ())
-            ::graphic
-      | _ ->
-        raise (Pdf.PDFError "Pdfgraphics: Op_B")
-      end*)()
+            begin
+              !state.partial_path <- PartialPath (sp, cp, [], []);
+              !state.path <- (NonZero, rev ((Not_hole, Open, rev segs)::subpaths))
+            end
+      | _ -> ()
+      end
   | Pdfops.Op_B' ->
-      (* Fill and stroke, even-odd. *)
-      (*if (!state).objectclass <> PathObject then
-        raise (Pdf.PDFError "Pdfgraphics: Op_B*");
-      let partial, graphic = process_op pdf page (partial, graphic) Pdfops.Op_h in
-        (!state).objectclass <- PageDescriptionLevel;
-        begin match partial with
+        process_op ~pdf ~f ~stack ~state ~resources Pdfops.Op_h;
+        begin match !state.partial_path with
         | PartialPath (sp, cp, segs, subpaths) ->
             if segs = [] then
-              PartialPath (sp, cp, [], []),
-              Path ((EvenOdd, rev subpaths), path_attributes_fill_and_stroke ())::graphic
+              begin
+                !state.partial_path <- PartialPath (sp, cp, [], []);
+                !state.path <- (EvenOdd, rev subpaths)
+              end
             else
-              PartialPath (sp, cp, [], []),
-              Path ((EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths)), path_attributes_fill_and_stroke ())
-              ::graphic
-        | _ ->
-           raise (Pdf.PDFError "Pdfgraphics: Op_B*")
-        end*)
-      ()
+              begin
+                !state.partial_path <- PartialPath (sp, cp, [], []);
+                !state.path <- (EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths))
+              end
+        | _ -> ()
+        end
   | Pdfops.Op_f' ->
-      (* Fill, even-odd *)
-      (*if (!state).objectclass <> PathObject then
-        raise (Pdf.PDFError "Pdfgraphics: Op_f*");
-      (!state).objectclass <- PageDescriptionLevel;
-      begin match partial with
+      begin match !state.partial_path with
       | PartialPath (sp, cp, segs, subpaths) ->
           if segs = [] then
-            PartialPath (sp, cp, [], []),
-            Path ((EvenOdd, rev subpaths), path_attributes_fill ())::graphic
+            begin
+              !state.partial_path <- PartialPath (sp, cp, [], []);
+              !state.path <- (EvenOdd, rev subpaths)
+            end
           else
-            PartialPath (sp, cp, [], []),
-            Path ((EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths)), path_attributes_fill ())
-            ::graphic
-      | _ ->
-         raise (Pdf.PDFError "Pdfgraphics: Op_f*")
-      end*)()
-  | Pdfops.Op_n ->
-      (*(* no-op *)
-      (!state).objectclass <- PageDescriptionLevel;
-      (* for now, until we support clipviews, clean up the polygon *)
-      (NoPartial, graphic)*)()
+            begin
+              !state.partial_path <- PartialPath (sp, cp, [], []);
+              !state.path <- (EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths))
+            end
+      | _ -> ()
+      end
+  | Pdfops.Op_n -> ()
   | Pdfops.Op_re (x, y, w, h) ->
-      (* Rectangle. *)
-      (*let ops =
-        [Pdfops.Op_m (x, y);
-         Pdfops.Op_l (x +. w, y);
-         Pdfops.Op_l (x +. w, y +. h);
-         Pdfops.Op_l (x, y +. h);
-         Pdfops.Op_h]
-      in
-        process_ops pdf page (partial, graphic) ops*)()
+      iter
+        (process_op ~pdf ~f ~stack ~state ~resources)
+        [Pdfops.Op_m (x, y); Pdfops.Op_l (x +. w, y); Pdfops.Op_l (x +. w, y +. h); Pdfops.Op_l (x, y +. h); Pdfops.Op_h]
   | Pdfops.Op_W ->
-      (* Move the current partial path into Clip, and return *)
-      (*begin match partial with
+      (* FIXME Actually should modify clip not replace it. *)
+      begin match !state.partial_path with
       | PartialPath (_, _, segments, subpaths) ->
-          if segments = [] && subpaths = [] then ret else
+          if segments = [] && subpaths = [] then () else
             let path =
               if segments <> []
                 then (Not_hole, Closed, rev segments)::subpaths
                 else subpaths
             in
-              (!state).clip <- Some (NonZero, path); ret
-      | _ -> ret
-      end*)()
-      (* FIXME: In NextClip needs to support possibly several clips, since we can do W n W n W n f, for instance? *)
+              !state.clipping_path <- (NonZero, path)
+      | _ -> ()
+      end
   | Pdfops.Op_W' ->
-      (*begin match partial with
+      (* FIXME Actually should modify clip not replace it. *)
+      begin match !state.partial_path with
       | PartialPath (_, _, segments, subpaths) ->
-          if segments = [] && subpaths = [] then ret else
+          if segments = [] && subpaths = [] then () else
             let path =
               if segments <> []
                 then (Not_hole, Closed, rev segments)::subpaths
                 else subpaths
             in
-              (!state).clip <- Some (EvenOdd, path); ret
-      | _ -> ret
-      end*)()
+              !state.clipping_path <- (EvenOdd, path)
+      | _ -> ()
+      end
   | Pdfops.Op_BT ->
       !state.text_state.t_m <- Pdftransform.i_matrix;
       !state.text_state.t_lm <- Pdftransform.i_matrix
