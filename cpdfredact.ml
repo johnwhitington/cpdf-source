@@ -25,6 +25,7 @@ let colour ~light = function
   | Cpdfcontent.InlineImage -> [if light then Pdfops.Op_RG (1.0, 0.5, 0.5) else Pdfops.Op_RG (1.0, 0., 0.)]
   | Cpdfcontent.Image -> [if light then Pdfops.Op_RG (0.5, 1.0, 0.5) else Pdfops.Op_RG (0., 1.0, 0.)]
   | Cpdfcontent.Path -> [if light then Pdfops.Op_RG (0.5, 0.5, 1.0) else Pdfops.Op_RG (0., 0., 1.0)]
+  | Cpdfcontent.Shading -> [if light then Pdfops.Op_RG (0.5, 1.0, 1.0) else Pdfops.Op_RG (0., 1., 1.)]
 
 let mkbox ~light (boxtype, (x0, y0, x1, y1, x2, y2, x3, y3)) =
   colour ~light boxtype @ [Pdfops.Op_w 0.5] @

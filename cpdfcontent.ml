@@ -27,10 +27,7 @@ type subpath = hole * closure * segment list
 (* A path is made from a number of subpaths. *)
 type path = winding_rule * subpath list
 
-(* Where are we in state diagram? Inline images already done in Pdfops, Shading
-   and External are immediate and their states do not need representing. *)
-
-type content = Glyph | InlineImage | Image | Path
+type content = Glyph | InlineImage | Image | Path | Shading
 
 type partial =
   | NoPartial
@@ -779,7 +776,14 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
   | Pdfops.Op_k (f1, f2, f3, f4) ->
       !state.colorspace_non_stroke <- Pdfspace.DeviceCMYK;
       !state.color <- Floats [f1; f2; f3; f4]
-  | Pdfops.Op_sh s -> ()
+  | Pdfops.Op_sh s ->
+      let shadingdict = Pdf.lookup_fail "no /Shading" pdf "/Shading" resources in
+      let shading = Pdf.lookup_fail "named shading not found" pdf s shadingdict in
+      let shading = read_shading pdf Pdftransform.i_matrix Pdf.Null shading in
+        begin match shading.shading_bbox with
+        | Some x -> ()
+        | None -> ()
+        end
   | Pdfops.InlineImage i ->
       let x0, y0 = Pdftransform.transform_matrix !state.ctm (0., 0.) in
       let x1, y1 = Pdftransform.transform_matrix !state.ctm (0., 1.) in

@@ -1,8 +1,9 @@
 (** Representing page content as objects without loss. *)
 
-type content = Glyph | InlineImage | Image | Path
+(** The kind of content being returned. *)
+type content = Glyph | InlineImage | Image | Path | Shading
 
-(* Filter ops based on a bounding-box predicate. *)
+(** Filter ops based on a bounding-box predicate. *)
 val filter_ops :
   pdf:Pdf.t ->
   f:(content * (float * float * float * float * float * float * float * float) -> bool) ->
