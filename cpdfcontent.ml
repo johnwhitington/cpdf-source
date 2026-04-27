@@ -36,6 +36,53 @@ type partial =
   | NoPartial
   | PartialPath of fpoint * fpoint * segment list * subpath list 
 
+type tiling = Tiling
+
+type function_shading =
+  {funshading_domain : float * float * float * float;
+   funshading_matrix : Pdftransform.transform_matrix;
+   funshading_function : Pdffun.t}
+
+type radial_shading =
+  {radialshading_coords : float * float * float * float * float * float;
+   radialshading_domain : float * float;
+   radialshading_function : Pdffun.t list;
+   radialshading_extend : bool * bool}
+
+type axial_shading =
+  {axialshading_coords : float * float * float * float;
+   axialshading_domain : float * float;
+   axialshading_function : Pdffun.t list;
+   axialshading_extend : bool * bool}
+
+type shading_kind =
+ | FunctionShading of function_shading
+ | AxialShading of axial_shading
+ | RadialShading of radial_shading
+ | FreeFormGouraudShading
+ | LatticeFormGouraudShading
+ | CoonsPatchMesh
+ | TensorProductPatchMesh
+
+type shading =
+ {shading_colourspace : Pdf.pdfobject;
+  shading_background : Pdf.pdfobject option;
+  shading_bbox : Pdf.pdfobject option;
+  shading_antialias : bool;
+  shading_matrix : Pdftransform.transform_matrix;
+  shading_extgstate : Pdf.pdfobject;
+  shading : shading_kind}
+
+type pattern =
+  | ColouredTilingPattern of tiling
+  | UncolouredTilingPattern of tiling
+  | ShadingPattern of shading
+
+type colvals =
+  | Floats of float list
+  | Named of (string * float list)
+  | Pattern of pattern
+
 type text_state =
   {mutable character_spacing : float;
    mutable word_spacing : float;
@@ -55,9 +102,10 @@ type state =
    mutable partial_path : partial;
    mutable path : path;
    mutable clipping_path : path;
-   mutable color_space : Pdf.pdfobject;
-   mutable color : float list;
-   mutable stroke_color : float list;
+   mutable colorspace_stroke : Pdfspace.t;
+   mutable colorspace_non_stroke : Pdfspace.t;
+   mutable color : colvals;
+   mutable stroke_color : colvals;
    mutable text_state : text_state;
    mutable line_width : float;
    mutable line_cap : int;
@@ -104,9 +152,10 @@ let initial_state (minx, miny, maxx, maxy) =
                   Straight ((maxx, miny), (minx, miny))])]);
    partial_path = NoPartial;
    path = (EvenOdd, []);
-   color_space = Pdf.Name "/DeviceGray";
-   color = [1.];
-   stroke_color = [1.];
+   colorspace_stroke = Pdfspace.DeviceGray;
+   colorspace_non_stroke = Pdfspace.DeviceGray;
+   color = Floats [1.];
+   stroke_color = Floats [1.];
    text_state = initial_text_state ();
    line_width = 1.;
    line_cap = 0;
@@ -141,6 +190,22 @@ let pop_statestack statestack state =
   | [] -> raise (Pdf.PDFError "Unbalanced q/Q Ops")
   | h::t -> statestack := t; state := h
 
+(* Calculate the bounding box (xmin, xmax, ymin, ymax) of a graphic. *)
+let bbox_of_segment = function
+  | Straight ((x1, y1), (x2, y2)) ->
+      fmin x1 x2, fmax x1 x2, fmin y1 y2, fmax y1 y2
+  | Bezier ((x1, y1), (x2, y2), (x3, y3), (x4, y4)) ->
+      fmin (fmin x1 x2) (fmin x3 x4), fmax (fmax x1 x2) (fmax x3 x4),
+      fmin (fmin y1 y2) (fmin y3 y4), fmax (fmax y1 y2) (fmax y3 y4)
+
+let bbox_of_path (_, subpaths) =
+  let segments =
+    flatten (map (function (_, _, l) -> l) subpaths)
+  in
+    fold_left
+      box_union_float
+      (max_float, min_float, max_float, min_float)
+      (map bbox_of_segment segments)
 
 let rec initial_colour pdf resources = function
   | Pdf.Name "/DeviceGray"
@@ -305,6 +370,138 @@ let process_capital_tj ~f ~stack ~state ~resources elts =
 let read_graphics_state_dictionary ~pdf ~state s =
   ()
 
+let read_tiling_pattern _ =
+  ColouredTilingPattern Tiling
+
+let read_function_shading pdf shading =
+  let domain =
+    match Pdf.lookup_direct pdf "/Domain" shading with
+    | Some (Pdf.Array [a; b; c; d]) -> Pdf.getnum pdf a, Pdf.getnum pdf b, Pdf.getnum pdf c, Pdf.getnum pdf d
+    | _ -> 0., 1., 0., 1.
+  and matrix =
+    Pdf.parse_matrix pdf "/Matrix" shading
+  and func =
+    Pdf.lookup_fail "No function found" pdf "/Function" shading
+  in
+    FunctionShading
+      {funshading_domain = domain;
+       funshading_matrix = matrix;
+       funshading_function = Pdffun.parse_function pdf func}
+
+let read_radial_shading pdf shading =
+  let coords =
+    match Pdf.lookup_direct pdf "/Coords" shading with
+    | Some (Pdf.Array [a; b; c; d; e; f]) ->
+        Pdf.getnum pdf a, Pdf.getnum pdf b, Pdf.getnum pdf c, Pdf.getnum pdf d, Pdf.getnum pdf e, Pdf.getnum pdf f
+    | _ -> raise (Pdf.PDFError "Pdfgraphics.read_radial_shading: no coords in radial shading")
+  and domain =
+    match Pdf.lookup_direct pdf "/Domain" shading with
+    | Some (Pdf.Array [a; b]) -> Pdf.getnum pdf a, Pdf.getnum pdf b
+    | _ -> 0., 1.
+  and func =
+    match Pdf.lookup_direct pdf "/Function" shading with
+    | Some (Pdf.Array fs) -> map (Pdffun.parse_function pdf) fs
+    | Some f -> [Pdffun.parse_function pdf f]
+    | _ -> raise (Pdf.PDFError "Pdfgraphics.read_radial_shading: no function in radial shading")
+  and extend =
+    match Pdf.lookup_direct pdf "/Extend" shading with
+    | Some (Pdf.Array [Pdf.Boolean a; Pdf.Boolean b]) -> a, b
+    | _ -> false, false
+  in
+    RadialShading
+      {radialshading_coords = coords;
+       radialshading_domain = domain;
+       radialshading_function = func;
+       radialshading_extend = extend}
+
+let read_axial_shading pdf shading =
+  let coords =
+    match Pdf.lookup_direct pdf "/Coords" shading with
+    | Some (Pdf.Array [a; b; c; d]) ->
+        Pdf.getnum pdf a, Pdf.getnum pdf b, Pdf.getnum pdf c, Pdf.getnum pdf d
+    | _ -> raise (Pdf.PDFError "Pdfgraphics.read_axial_shading: no coords in radial shading")
+  and domain =
+    match Pdf.lookup_direct pdf "/Domain" shading with
+    | Some (Pdf.Array [a; b]) -> Pdf.getnum pdf a, Pdf.getnum pdf b
+    | _ -> 0., 1.
+  and func =
+    match Pdf.lookup_direct pdf "/Function" shading with
+    | Some (Pdf.Array fs) -> map (Pdffun.parse_function pdf) fs
+    | Some f -> [Pdffun.parse_function pdf f]
+    | _ -> raise (Pdf.PDFError "Pdfgraphics.read_axial_shading: no function in radial shading")
+  and extend =
+    match Pdf.lookup_direct pdf "/Extend" shading with
+    | Some (Pdf.Array [Pdf.Boolean a; Pdf.Boolean b]) -> a, b
+    | _ -> false, false
+  in
+    AxialShading
+      {axialshading_coords = coords;
+       axialshading_domain = domain;
+       axialshading_function = func;
+       axialshading_extend = extend}
+
+(* Read a shading pattern *)
+let read_shading pdf matrix extgstate shading =
+  let colourspace =
+    Pdf.lookup_fail "No colourspace in shading" pdf "/ColorSpace" shading
+  and background =
+    Pdf.lookup_direct pdf "/Background" shading
+  and bbox =
+    Pdf.lookup_direct pdf "/BBox" shading
+  and antialias =
+    match Pdf.lookup_direct pdf "/BBox" shading with
+    | Some (Pdf.Boolean true) -> true
+    | _ -> false
+  in
+    let shading =
+      match Pdf.lookup_fail "no /ShadingType" pdf "/ShadingType" shading with
+      | Pdf.Integer 1 -> read_function_shading pdf shading
+      | Pdf.Integer 3 -> read_radial_shading pdf shading
+      | Pdf.Integer 2 -> read_axial_shading pdf shading
+      | Pdf.Integer 4 -> FreeFormGouraudShading
+      | Pdf.Integer 5 -> LatticeFormGouraudShading
+      | Pdf.Integer 6 -> CoonsPatchMesh
+      | Pdf.Integer 7 -> TensorProductPatchMesh
+      | _ -> raise (Pdf.PDFError "Pdfgraphics.unknown shadingtype")
+    in
+      {shading_colourspace = colourspace;
+       shading_background = background;
+       shading_bbox = bbox;
+       shading_antialias = antialias;
+       shading_matrix = matrix;
+       shading_extgstate = extgstate;
+       shading = shading}
+
+let read_shading_pattern pdf p =
+  let matrix = Pdf.parse_matrix pdf "/Matrix" p
+  and extgstate =
+    match Pdf.lookup_direct pdf "/ExtGState" p with
+    | Some (Pdf.Dictionary _ as d) -> d
+    | _ -> Pdf.Dictionary []
+  in
+    match Pdf.lookup_direct pdf "/Shading" p with
+    | Some shading ->
+        ShadingPattern (read_shading pdf matrix extgstate shading)
+    | _ ->
+        raise (Pdf.PDFError "No shading dictionary")
+
+let read_pattern pdf page name =
+  match Pdf.lookup_direct pdf "/Pattern" page.Pdfpage.resources with
+  | None -> raise (Pdf.PDFError "No pattern dictionary")
+  | Some patterndict ->
+      match Pdf.lookup_direct pdf name patterndict with
+      | None -> raise (Pdf.PDFError "Pattern not found")
+      | Some pattern ->
+          match Pdf.lookup_direct pdf "/PatternType" pattern with
+          | Some (Pdf.Integer 1) ->
+               read_tiling_pattern pattern
+          | Some (Pdf.Integer 2) ->
+               read_shading_pattern pdf pattern
+          | _ -> raise (Pdf.PDFError "unknown pattern")
+
+let read_pattern pdf resources name =
+  ColouredTilingPattern Tiling 
+  
 (* Return next object, list of ops consumed, remaining list *)
 let rec process_op ~pdf ~f ~stack ~state ~resources = function
   | Pdfops.Op_w f ->
@@ -534,20 +731,54 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
       process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_' s)
   | Pdfops.Op_d0 (f1, f2) -> ()
   | Pdfops.Op_d1 (f1, f2, f3, f4, f5, f6) -> ()
-  | Pdfops.Op_CS s -> ()
-  | Pdfops.Op_cs s -> ()
-  | Pdfops.Op_SC fl -> ()
-  | Pdfops.Op_sc fl -> ()
-  | Pdfops.Op_SCN fl -> ()
-  | Pdfops.Op_scn fl -> ()
-  | Pdfops.Op_SCNName (s, fl) -> ()
-  | Pdfops.Op_scnName (s, fl) -> ()
-  | Pdfops.Op_G f -> ()
-  | Pdfops.Op_g f -> ()
-  | Pdfops.Op_RG (f1, f2, f3) -> ()
-  | Pdfops.Op_rg (f1, f2, f3) -> ()
-  | Pdfops.Op_K (f1, f2, f3, f4) -> ()
-  | Pdfops.Op_k (f1, f2, f3, f4) -> ()
+  | Pdfops.Op_CS s ->
+      !state.colorspace_stroke <- Pdfspace.read_colourspace pdf resources (Pdf.Name s)
+  | Pdfops.Op_cs s ->
+      !state.colorspace_non_stroke <- Pdfspace.read_colourspace pdf resources (Pdf.Name s)
+  | Pdfops.Op_SC fl | Pdfops.Op_SCN fl ->
+      !state.stroke_color <- Floats fl
+  | Pdfops.Op_sc fl | Pdfops.Op_scn fl ->
+      !state.color <- Floats fl
+  | Pdfops.Op_SCNName (s, fl) ->
+      begin match !state.colorspace_non_stroke with
+      | Pdfspace.Pattern | Pdfspace.PatternWithBaseColourspace _ ->
+          begin try
+            !state.color <- Pattern (read_pattern pdf resources s)
+          with
+            _ -> ()
+          end
+      | _ -> 
+          !state.color <- Named (s, fl)
+      end
+  | Pdfops.Op_scnName (s, fl) ->
+      begin match !state.colorspace_stroke with
+      | Pdfspace.Pattern | Pdfspace.PatternWithBaseColourspace _ ->
+          begin try
+            !state.stroke_color <- Pattern (read_pattern pdf resources s)
+          with
+            _ -> ()
+          end
+      | _ -> 
+          !state.stroke_color <- Named (s, fl)
+      end
+  | Pdfops.Op_G f ->
+      !state.colorspace_stroke <- Pdfspace.DeviceGray;
+      !state.stroke_color <- Floats [f];
+  | Pdfops.Op_g f ->
+      !state.colorspace_non_stroke <- Pdfspace.DeviceGray;
+      !state.color <- Floats [f];
+  | Pdfops.Op_RG (f1, f2, f3) ->
+      !state.colorspace_stroke <- Pdfspace.DeviceRGB;
+      !state.stroke_color <- Floats [f1; f2; f3]
+  | Pdfops.Op_rg (f1, f2, f3) ->
+      !state.colorspace_non_stroke <- Pdfspace.DeviceRGB;
+      !state.color <- Floats [f1; f2; f3]
+  | Pdfops.Op_K (f1, f2, f3, f4) ->
+      !state.colorspace_stroke <- Pdfspace.DeviceCMYK;
+      !state.stroke_color <- Floats [f1; f2; f3; f4]
+  | Pdfops.Op_k (f1, f2, f3, f4) ->
+      !state.colorspace_non_stroke <- Pdfspace.DeviceCMYK;
+      !state.color <- Floats [f1; f2; f3; f4]
   | Pdfops.Op_sh s -> ()
   | Pdfops.InlineImage i ->
       let x0, y0 = Pdftransform.transform_matrix !state.ctm (0., 0.) in
