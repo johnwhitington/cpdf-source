@@ -12,6 +12,9 @@ val blacklines : Cpdfaddtext.colour -> int list -> Pdf.t -> Pdf.t
 (** Make all fills on certain pages black. *)
 val blackfills : Cpdfaddtext.colour -> int list -> Pdf.t -> Pdf.t
 
+(** Change all text to rendering mode 0 (filled). *)
+val reveal_hidden_text : int list -> Pdf.t -> Pdf.t
+
 (** Append page content. *)
 val append_page_content : string -> bool -> bool -> int list -> Pdf.t -> Pdf.t
 

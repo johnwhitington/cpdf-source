@@ -253,6 +253,7 @@ type op =
   | AddAttachedFilesJSON of string
   | RemoveStreamContent
   | ShowBoundingBoxes
+  | RevealText
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -432,6 +433,7 @@ let string_of_op = function
   | AddAttachedFilesJSON _ -> "AddAttachedFilesJSON"
   | RemoveStreamContent -> "RemoveStreamContent"
   | ShowBoundingBoxes -> "ShowBoundingBoxes"
+  | RevealText -> "RevealText"
 
 (* Inputs: filename, pagespec. *)
 type input_kind = 
@@ -1045,7 +1047,7 @@ let banned banlist = function
   | PrintStructTree | Rasterize | OutputImage | RemoveStructTree | MarkAsArtifact
   | ContainsJavaScript | RemoveJavaScript | RemoveArticleThreads | RemovePagePiece | RemoveOutputIntents
   | RemoveWebCapture | RemoveProcsets | ExtractMetadata | Summary | Revisions | SigInfo
-  | AddAttachedFilesJSON _ | RemoveStreamContent | ShowBoundingBoxes -> false (* Always allowed *)
+  | AddAttachedFilesJSON _ | RemoveStreamContent | ShowBoundingBoxes | RevealText -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
   | Decrypt | Encrypt | CombinePages _ -> true (* Never allowed *)
@@ -3265,7 +3267,8 @@ let specs =
    ("-text-270", Arg.Unit (fun () -> args.text_rotation <- Cpdfaddtext.Rot270), " Rotate text to 270 degrees");
    ("-url-border", Arg.Unit (fun () -> args.url_border <- true), " Add a border to URLs");
    ("-show-bboxes", Arg.Unit (fun () -> setop ShowBoundingBoxes ()), " Show bounding boxes");
-   ("-bboxes-light", Arg.Unit (fun () -> args.show_bboxes_light <- true), " Use light colours for bounding boxes")]
+   ("-bboxes-light", Arg.Unit (fun () -> args.show_bboxes_light <- true), " Use light colours for bounding boxes");
+   ("-reveal-text", Arg.Unit (fun () -> setop RevealText ()), " Reveal hidden text")]
 
 let specs = sort compare specs
 
@@ -5431,6 +5434,11 @@ let rec go () =
       let pdf = get_single_pdf args.op true in
       let range = parse_pagespec pdf (get_pagespec ()) in
       let pdf = Cpdfredact.show_bounding_boxes ~light:args.show_bboxes_light pdf range in
+        write_pdf false pdf
+  | RevealText ->
+      let pdf = get_single_pdf args.op true in
+      let range = parse_pagespec pdf (get_pagespec ()) in
+      let pdf = Cpdftweak.reveal_hidden_text range pdf in
         write_pdf false pdf
 
 (* Advise the user if a combination of command line flags makes little sense,

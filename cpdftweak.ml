@@ -144,6 +144,21 @@ let blackfills c range pdf =
   in
     Cpdfpage.process_pages (Pdfpage.ppstub blackfills_page) pdf range
 
+let reveal_hidden_text range pdf =
+  let reveal_hidden_text_ops pdf resources content =
+    let operators = Pdfops.parse_operators pdf resources content in
+    let operators' = lose (function Pdfops.Op_Tr _ -> true | _ -> false) operators in
+      [Pdfops.stream_of_ops operators']
+  in
+  let reveal_hidden_text_page _ page =
+    let content' =
+      reveal_hidden_text_ops pdf page.Pdfpage.resources page.Pdfpage.content
+    in
+      Pdfpage.process_xobjects pdf page reveal_hidden_text_ops;
+      {page with Pdfpage.content = content'}
+  in
+    Cpdfpage.process_pages (Pdfpage.ppstub reveal_hidden_text_page) pdf range
+
 (* Set a minimum line width to avoid dropout *)
 let thinlines range width pdf =
  let comparison, width = if width < 0. then ( <= ), ~-.width else ( >= ), width in
