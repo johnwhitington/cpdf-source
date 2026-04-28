@@ -3,27 +3,9 @@
 (* This module provides for the stroking of lines, and production of shape
 primitives (circles, regular polygons etc). *)
 open Pdfutil
+open Cpdfcontent
 
-type fpoint = float * float
-
-type winding_rule = EvenOdd | NonZero
-
-type segment =
-  | Straight of fpoint * fpoint
-  | Bezier of fpoint * fpoint * fpoint * fpoint
-
-(* Each segment list may be marked as a hole or not. *)
-type hole = Hole | Not_hole
-
-(* A [subpath] is either closed or open. *)
-type closure = Closed | Open
-
-(* A [subpath] is the pair of a hole and a list of segments. *)
-type subpath = hole * closure * segment list
-
-(* A path is made from a number of subpaths. *)
-type path = winding_rule * subpath list
-(* \section{Common geometric functions} *)
+(* Common geometric functions *)
 
 (* The factor by which we multiply the radius to find the length of the bezier
 control lines when approximating quarter arcs to make semicircles and circles.

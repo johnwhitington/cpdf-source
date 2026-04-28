@@ -167,12 +167,12 @@ let addcircle s =
   | [x; y; r] ->
       let _, _, segs = hd (snd (Cpdfshape.circle x y r)) in
         (match segs with
-         | Cpdfshape.Bezier ((a, b), _, _, _)::_ -> addop (Cpdfdraw.To (a, b))
+         | Cpdfcontent.Bezier ((a, b), _, _, _)::_ -> addop (Cpdfdraw.To (a, b))
          | _ -> assert false);
         iter
           (function
-           | Cpdfshape.Bezier (_, (c, d), (e, f), (g, h)) -> addop (Cpdfdraw.Bezier (c, d, e, f, g, h))
-           | Cpdfshape.Straight _ -> assert false)
+           | Cpdfcontent.Bezier (_, (c, d), (e, f), (g, h)) -> addop (Cpdfdraw.Bezier (c, d, e, f, g, h))
+           | Cpdfcontent.Straight _ -> assert false)
           segs
   | _ -> error "-circle requires three numbers"
   | exception _ -> error "malformed -circle"
