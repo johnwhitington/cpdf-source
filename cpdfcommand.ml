@@ -74,6 +74,10 @@ let parse_pagespec pdf spec =
   try Cpdfpagespec.parse_pagespec pdf spec with
     Failure x -> error x
 
+type shape =
+  | NoShape
+  | Rect of float * float * float * float
+
 (* Operations. *)
 type op =
   | CopyFont of string
@@ -252,7 +256,7 @@ type op =
   | SigInfo
   | AddAttachedFilesJSON of string
   | RemoveStreamContent
-  | ShowBoundingBoxes
+  | ShowBoundingBoxes of shape
   | RevealText
 
 let string_of_op = function
@@ -432,7 +436,7 @@ let string_of_op = function
   | SigInfo -> "SigInfo"
   | AddAttachedFilesJSON _ -> "AddAttachedFilesJSON"
   | RemoveStreamContent -> "RemoveStreamContent"
-  | ShowBoundingBoxes -> "ShowBoundingBoxes"
+  | ShowBoundingBoxes _ -> "ShowBoundingBoxes"
   | RevealText -> "RevealText"
 
 (* Inputs: filename, pagespec. *)
@@ -1047,7 +1051,7 @@ let banned banlist = function
   | PrintStructTree | Rasterize | OutputImage | RemoveStructTree | MarkAsArtifact
   | ContainsJavaScript | RemoveJavaScript | RemoveArticleThreads | RemovePagePiece | RemoveOutputIntents
   | RemoveWebCapture | RemoveProcsets | ExtractMetadata | Summary | Revisions | SigInfo
-  | AddAttachedFilesJSON _ | RemoveStreamContent | ShowBoundingBoxes | RevealText -> false (* Always allowed *)
+  | AddAttachedFilesJSON _ | RemoveStreamContent | ShowBoundingBoxes _ | RevealText -> false (* Always allowed *)
   (* Combine pages is not allowed because we would not know where to get the
   -recrypt from -- the first or second file? *)
   | Decrypt | Encrypt | CombinePages _ -> true (* Never allowed *)
@@ -2120,6 +2124,10 @@ let addeltinfo s =
   | [] -> error "addeltinfo: bad format"
 
 let rfindpdf = ref (fun () -> Pdf.empty ())
+
+let read_shape s =
+  let a, b, c, d = Cpdfcoord.parse_rectangle (Pdf.empty ()) s in
+    Rect (a, b, c, d)
 
 let specs =
   [("-version",
@@ -3266,7 +3274,8 @@ let specs =
    ("-text-180", Arg.Unit (fun () -> args.text_rotation <- Cpdfaddtext.Rot180), " Rotate text to 180 degrees");
    ("-text-270", Arg.Unit (fun () -> args.text_rotation <- Cpdfaddtext.Rot270), " Rotate text to 270 degrees");
    ("-url-border", Arg.Unit (fun () -> args.url_border <- true), " Add a border to URLs");
-   ("-show-bboxes", Arg.Unit (fun () -> setop ShowBoundingBoxes ()), " Show bounding boxes");
+   ("-show-bboxes", Arg.Unit (fun () -> setop (ShowBoundingBoxes NoShape) ()), " Show bounding boxes");
+   ("-show-bboxes-shape", Arg.String (fun s -> setop (ShowBoundingBoxes (read_shape s)) ()), " Show bounding boxes in a given shape");
    ("-bboxes-light", Arg.Unit (fun () -> args.show_bboxes_light <- true), " Use light colours for bounding boxes");
    ("-reveal-text", Arg.Unit (fun () -> setop RevealText ()), " Reveal hidden text")]
 
@@ -5430,10 +5439,15 @@ let rec go () =
              | x -> ())
           pdf;
         write_pdf false pdf
-  | ShowBoundingBoxes ->
+  | ShowBoundingBoxes shape ->
       let pdf = get_single_pdf args.op true in
       let range = parse_pagespec pdf (get_pagespec ()) in
-      let pdf = Cpdfredact.show_bounding_boxes ~light:args.show_bboxes_light pdf range in
+      (* TODO unify shape treatment with RedactShape. *)
+      let shape = match shape with
+      | NoShape -> None
+      | Rect (minx, miny, w, h) -> Some (minx, miny, minx +. w, miny +. h)
+      in
+      let pdf = Cpdfredact.show_bounding_boxes ~shape ~light:args.show_bboxes_light pdf range in
         write_pdf false pdf
   | RevealText ->
       let pdf = get_single_pdf args.op true in

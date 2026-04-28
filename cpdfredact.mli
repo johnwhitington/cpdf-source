@@ -6,4 +6,4 @@ val apply : Pdf.t -> int list -> unit
 
 val apply_type : Pdf.t -> string -> int list -> unit
 
-val show_bounding_boxes : light:bool -> Pdf.t -> int list -> Pdf.t
+val show_bounding_boxes : shape:(float * float * float * float) option -> light:bool -> Pdf.t -> int list -> Pdf.t

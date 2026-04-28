@@ -60,7 +60,35 @@ let show_annotation_bounding_boxes ~light pdf range =
         (rev !bboxes);
       !pdf
 
-let show_bounding_boxes ~light pdf range =
+(* See if the given box is to be treated. For now:
+
+  a) Glyphs - any intersection
+  b) Image - any intersection
+  c) InlineImage - any intersection
+  d) Path - path must be wholly contained in box
+  e) Shading - must be wholly contained in box *)
+let box_matches (minx, miny, maxx, maxy) (boxtype, (x0, y0, x1, y1, x2, y2, x3, y3)) =
+  let bminx, bmaxx, bminy, bmaxy =
+    fmin (fmin x0 x1) (fmin x2 x3), fmax (fmax x0 x1) (fmax x2 x3),
+    fmin (fmin y0 y1) (fmin y2 y3), fmax (fmax y0 y1) (fmax y2 y3)
+  in
+  let any_intersection (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy) =
+    box_overlap_float minx miny maxx maxy bminx bminy bmaxx bmaxy <> None
+  in
+  let wholly_contained (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy) =
+    bminx > minx && bmaxx < maxx && bminy > miny && bmaxx < maxy
+  in
+    match boxtype with
+    | Cpdfcontent.Glyph | Image | InlineImage -> any_intersection (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy)
+    | Path | Shading -> wholly_contained (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy)
+
+let select_boxes shape boxes =
+  match shape with 
+  | None -> boxes
+  | Some (minx, miny, maxx, maxy) ->
+      keep (box_matches (minx, miny, maxx, maxy)) boxes
+
+let show_bounding_boxes ~shape ~light pdf range =
   let pdf = show_annotation_bounding_boxes ~light pdf range in
   Cpdfutil.progress_line "Finding page content bounding boxes...";
   let show_bounding_boxes_page page =
@@ -79,7 +107,7 @@ let show_bounding_boxes ~light pdf range =
   in
     let pdf = ref pdf in
     Cpdfutil.progress_line "Showing page content bounding boxes...";
-    let content_of_boxes boxes = flatten (map (mkbox ~light) boxes) in
+    let content_of_boxes boxes = flatten (map (mkbox ~light) (select_boxes shape boxes)) in
       iter
         (fun (pnum, boxes) ->
            pdf := Cpdftweak.append_page_content (Pdfops.string_of_ops (content_of_boxes boxes)) false false [pnum] !pdf)
