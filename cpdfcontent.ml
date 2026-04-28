@@ -497,8 +497,42 @@ let read_pattern pdf page name =
           | _ -> raise (Pdf.PDFError "unknown pattern")
 
 let read_pattern pdf resources name =
-  ColouredTilingPattern Tiling 
-  
+  ColouredTilingPattern Tiling
+
+let bbox_of_segment = function
+  | Straight ((x1, y1), (x2, y2)) ->
+      fmin x1 x2, fmax x1 x2, fmin y1 y2, fmax y1 y2
+  | Bezier ((x1, y1), (x2, y2), (x3, y3), (x4, y4)) ->
+      fmin (fmin x1 x2) (fmin x3 x4), fmax (fmax x1 x2) (fmax x3 x4),
+      fmin (fmin y1 y2) (fmin y3 y4), fmax (fmax y1 y2) (fmax y3 y4)
+
+let bbox_of_path (_, subpaths) =
+  let segments = flatten (map (function (_, _, l) -> l) subpaths) in
+    fold_left
+      box_union_float
+      (max_float, min_float, max_float, min_float)
+      (map bbox_of_segment segments)
+
+let transform_path m (w, subpaths) =
+  let transform_point (x, y) = Pdftransform.transform_matrix m (x, y) in
+  let transform_segment = function
+  | Straight (a, b) -> Straight (transform_point a, transform_point b)
+  | Bezier (a, b, c, d) -> Bezier (transform_point a, transform_point b, transform_point c, transform_point d)
+  in
+    (w, map (fun (h, c, segments) -> (h, c, map transform_segment segments)) subpaths)
+
+let emit_path_bounding_box ~stroking ~f ~state =
+  let path = transform_path !state.ctm !state.path in
+  let minx, maxx, miny, maxy = bbox_of_path path in
+  let minx, maxx, miny, maxy =
+    if stroking then
+       let dx, dy = Pdftransform.transform_matrix !state.ctm (!state.line_width, !state.line_width) in
+         (minx -. dx /. 2., maxx +. dx /. 2., miny -. dy /. 2., maxy +. dy /. 2.)
+    else
+      (minx, maxx, miny, maxy)
+  in
+    ignore (f (Path, (minx, miny, minx, maxy, maxx, maxy, maxx, miny)))
+
 (* Return next object, list of ops consumed, remaining list *)
 let rec process_op ~pdf ~f ~stack ~state ~resources = function
   | Pdfops.Op_w f ->
@@ -581,7 +615,8 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
         | PartialPath (sp, cp, segs, subpaths) ->
             (* segs is empty, due to [Op_h] *)
             !state.partial_path <- PartialPath (sp, cp, [], []);
-            !state.path <- (NonZero, rev subpaths)
+            !state.path <- (NonZero, rev subpaths);
+            emit_path_bounding_box ~stroking:false ~f ~state
         | _ -> ()
         end
   | Pdfops.Op_S ->
@@ -596,7 +631,8 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
             begin
               !state.partial_path <- PartialPath (sp, cp, [], []);
               !state.path <- (EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths))
-            end
+            end;
+          emit_path_bounding_box ~stroking:true ~f ~state
       | _ -> ()
       end
   | Pdfops.Op_B ->
@@ -611,7 +647,8 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
             begin
               !state.partial_path <- PartialPath (sp, cp, [], []);
               !state.path <- (NonZero, rev ((Not_hole, Open, rev segs)::subpaths))
-            end
+            end;
+          emit_path_bounding_box ~stroking:true ~f ~state
       | _ -> ()
       end
   | Pdfops.Op_B' ->
@@ -627,7 +664,8 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
               begin
                 !state.partial_path <- PartialPath (sp, cp, [], []);
                 !state.path <- (EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths))
-              end
+              end;
+            emit_path_bounding_box ~stroking:true ~f ~state
         | _ -> ()
         end
   | Pdfops.Op_f' ->
@@ -642,7 +680,8 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
             begin
               !state.partial_path <- PartialPath (sp, cp, [], []);
               !state.path <- (EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths))
-            end
+            end;
+          emit_path_bounding_box ~stroking:false ~f ~state
       | _ -> ()
       end
   | Pdfops.Op_n -> ()
