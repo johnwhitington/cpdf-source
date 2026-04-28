@@ -187,7 +187,7 @@ let pop_statestack statestack state =
   | [] -> raise (Pdf.PDFError "Unbalanced q/Q Ops")
   | h::t -> statestack := t; state := h
 
-(* Calculate the bounding box (xmin, xmax, ymin, ymax) of a graphic. *)
+(* Calculate the bounding box (xmin, xmax, ymin, ymax) of a path. *)
 let bbox_of_segment = function
   | Straight ((x1, y1), (x2, y2)) ->
       fmin x1 x2, fmax x1 x2, fmin y1 y2, fmax y1 y2
@@ -245,26 +245,16 @@ let width_of_charcode font charcode =
   | Pdftext.SimpleFont {Pdftext.fontmetrics = Some fontmetrics} ->
       let matrix =
         match font with
-        | Pdftext.SimpleFont {Pdftext.fonttype = Pdftext.Type3 {fontmatrix}} ->
-            (*Printf.printf "charcode = %i\n" charcode;*)
-            fontmatrix
+        | Pdftext.SimpleFont {Pdftext.fonttype = Pdftext.Type3 {fontmatrix}} -> fontmatrix
         | _ -> Pdftransform.i_matrix
       in
-      begin try
-        (*Printf.printf "width = %f\n" fontmetrics.(charcode);*)
-        let final = fst (Pdftransform.transform_matrix matrix (fontmetrics.(charcode), 0.)) in
-          (*Printf.printf "final width = %f\n" final;*) final
-      with
+      begin try fst (Pdftransform.transform_matrix matrix (fontmetrics.(charcode), 0.)) with
         e -> Pdfe.log (Printf.sprintf "Unable to get width (%s, %s, %i)\n" (Printexc.to_string e) (Pdftext.string_of_font font) charcode); 0.
       end
   | Pdftext.StandardFont (f, encoding) ->
-      begin try
-        let w = Pdfstandard14.textwidth false encoding f (string_of_char (char_of_int charcode)) in
-          float_of_int w
-      with
+      begin try float_of_int (Pdfstandard14.textwidth false encoding f (string_of_char (char_of_int charcode))) with
         e ->
-          Pdfe.log (Printf.sprintf "Unable to get width - StandardFont (%s, %s, %i)\n" (Printexc.to_string e) (Pdftext.string_of_font font) charcode);
-          0.
+          Pdfe.log (Printf.sprintf "Unable to get width - StandardFont (%s, %s, %i)\n" (Printexc.to_string e) (Pdftext.string_of_font font) charcode); 0.
       end
   | Pdftext.CIDKeyedFont (_, {cid_widths; cid_default_width}, _) ->
       begin match lookup charcode cid_widths with
@@ -272,8 +262,7 @@ let width_of_charcode font charcode =
       | None -> cid_default_width
       end
   | f ->
-    Pdfe.log (Printf.sprintf "Unable to get width for font (%s, %i)\n" (Pdftext.string_of_font f) charcode);
-    0.
+    Pdfe.log (Printf.sprintf "Unable to get width for font (%s, %i)\n" (Pdftext.string_of_font f) charcode); 0.
 
 let extract_num header s =
   match Pdfgenlex.lex_string (Hashtbl.find header s) with
@@ -508,10 +497,9 @@ let bbox_of_segment = function
 
 let bbox_of_path (_, subpaths) =
   let segments = flatten (map (function (_, _, l) -> l) subpaths) in
-    fold_left
-      box_union_float
-      (max_float, min_float, max_float, min_float)
-      (map bbox_of_segment segments)
+    if segments = [] then None else
+      let boxes = map bbox_of_segment segments in
+        Some (fold_left box_union_float (hd boxes) (tl boxes))
 
 let transform_path m (w, subpaths) =
   let transform_point (x, y) = Pdftransform.transform_matrix m (x, y) in
@@ -523,15 +511,18 @@ let transform_path m (w, subpaths) =
 
 let emit_path_bounding_box ~stroking ~f ~state =
   let path = transform_path !state.ctm !state.path in
-  let minx, maxx, miny, maxy = bbox_of_path path in
-  let minx, maxx, miny, maxy =
-    if stroking then
-       let dx, dy = Pdftransform.transform_matrix !state.ctm (!state.line_width, !state.line_width) in
-         (minx -. dx /. 2., maxx +. dx /. 2., miny -. dy /. 2., maxy +. dy /. 2.)
-    else
-      (minx, maxx, miny, maxy)
-  in
-    ignore (f (Path, (minx, miny, minx, maxy, maxx, maxy, maxx, miny)))
+  let bbox = bbox_of_path path in
+    match bbox with
+    | None -> ()
+    | Some (minx, maxx, miny, maxy) ->
+        let minx, maxx, miny, maxy =
+          if stroking then
+             let dx, dy = Pdftransform.transform_matrix !state.ctm (!state.line_width, !state.line_width) in
+               (minx -. dx /. 2., maxx +. dx /. 2., miny -. dy /. 2., maxy +. dy /. 2.)
+          else
+            (minx, maxx, miny, maxy)
+        in
+          ignore (f (Path, (minx, miny, minx, maxy, maxx, maxy, maxx, miny)))
 
 (* Return next object, list of ops consumed, remaining list *)
 let rec process_op ~pdf ~f ~stack ~state ~resources = function
