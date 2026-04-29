@@ -27,7 +27,7 @@ type subpath = hole * closure * segment list
 (* A path is made from a number of subpaths. *)
 type path = winding_rule * subpath list
 
-type content = Glyph | InlineImage | Image | Path | Shading
+type content = Glyph | InlineImage | Image | Path | Shading | Clip
 
 type partial =
   | NoPartial
@@ -509,8 +509,8 @@ let transform_path m (w, subpaths) =
   in
     (w, map (fun (h, c, segments) -> (h, c, map transform_segment segments)) subpaths)
 
-let emit_path_bounding_box ~stroking ~f ~state =
-  let path = transform_path !state.ctm !state.path in
+let emit_path_bounding_box ~content ~stroking ~f ~state =
+  let path = transform_path !state.ctm (if content = Clip then !state.clipping_path else !state.path) in
   let bbox = bbox_of_path path in
     match bbox with
     | None -> ()
@@ -522,7 +522,7 @@ let emit_path_bounding_box ~stroking ~f ~state =
           else
             (minx, maxx, miny, maxy)
         in
-          ignore (f (Path, (minx, miny, minx, maxy, maxx, maxy, maxx, miny)))
+          ignore (f (content, (minx, miny, minx, maxy, maxx, maxy, maxx, miny)))
 
 (* Return next object, list of ops consumed, remaining list *)
 let rec process_op ~pdf ~f ~stack ~state ~resources = function
@@ -607,7 +607,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
             (* segs is empty, due to [Op_h] *)
             !state.partial_path <- PartialPath (sp, cp, [], []);
             !state.path <- (NonZero, rev subpaths);
-            emit_path_bounding_box ~stroking:false ~f ~state
+            emit_path_bounding_box ~content:Path ~stroking:false ~f ~state
         | _ -> ()
         end
   | Pdfops.Op_S ->
@@ -623,7 +623,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
               !state.partial_path <- PartialPath (sp, cp, [], []);
               !state.path <- (EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths))
             end;
-          emit_path_bounding_box ~stroking:true ~f ~state
+          emit_path_bounding_box ~content:Path ~stroking:true ~f ~state
       | _ -> ()
       end
   | Pdfops.Op_B ->
@@ -639,7 +639,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
               !state.partial_path <- PartialPath (sp, cp, [], []);
               !state.path <- (NonZero, rev ((Not_hole, Open, rev segs)::subpaths))
             end;
-          emit_path_bounding_box ~stroking:true ~f ~state
+          emit_path_bounding_box ~content:Path ~stroking:true ~f ~state
       | _ -> ()
       end
   | Pdfops.Op_B' ->
@@ -656,7 +656,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
                 !state.partial_path <- PartialPath (sp, cp, [], []);
                 !state.path <- (EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths))
               end;
-            emit_path_bounding_box ~stroking:true ~f ~state
+            emit_path_bounding_box ~content:Path ~stroking:true ~f ~state
         | _ -> ()
         end
   | Pdfops.Op_f' ->
@@ -672,10 +672,12 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
               !state.partial_path <- PartialPath (sp, cp, [], []);
               !state.path <- (EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths))
             end;
-          emit_path_bounding_box ~stroking:false ~f ~state
+          emit_path_bounding_box ~content:Path ~stroking:false ~f ~state
       | _ -> ()
       end
-  | Pdfops.Op_n -> ()
+  | Pdfops.Op_n ->
+      emit_path_bounding_box ~content:Clip ~stroking:false ~f ~state;
+      !state.partial_path <- NoPartial
   | Pdfops.Op_re (x, y, w, h) ->
       iter
         (process_op ~pdf ~f ~stack ~state ~resources)
@@ -843,7 +845,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
                   in
                     process_op ~pdf ~f ~stack ~state ~resources Pdfops.Op_q;
                     !state.ctm <- Pdftransform.matrix_compose !state.ctm matrix;
-                    process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_re (minx, miny, maxx, maxy));
+                    process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_re (minx, miny, maxx -. minx, maxy -. miny));
                     process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_W);
                     process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_n);
                     process_form_xobject ~pdf ~f ~stack ~state ~resources xobj;

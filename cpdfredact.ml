@@ -21,15 +21,18 @@ let apply pdf range = ()
 let apply_type pdf typ range = ()
 
 let colour ~light = function
-  | Cpdfcontent.Glyph -> [Pdfops.Op_G (if light then 1.0 else 0.0)]
-  | Cpdfcontent.InlineImage -> [if light then Pdfops.Op_RG (1.0, 0.5, 0.5) else Pdfops.Op_RG (1.0, 0., 0.)]
-  | Cpdfcontent.Image -> [if light then Pdfops.Op_RG (0.5, 1.0, 0.5) else Pdfops.Op_RG (0., 1.0, 0.)]
-  | Cpdfcontent.Path -> [if light then Pdfops.Op_RG (0.5, 0.5, 1.0) else Pdfops.Op_RG (0., 0., 1.0)]
-  | Cpdfcontent.Shading -> [if light then Pdfops.Op_RG (0.5, 1.0, 1.0) else Pdfops.Op_RG (0., 1., 1.)]
+  | Cpdfcontent.Glyph -> [Pdfops.Op_G (if light then 1. else 0.)] (* Black *)
+  | Cpdfcontent.InlineImage -> [if light then Pdfops.Op_RG (1., 0.5, 0.5) else Pdfops.Op_RG (1., 0., 0.)] (* Red *)
+  | Cpdfcontent.Image -> [if light then Pdfops.Op_RG (0.5, 1., 0.5) else Pdfops.Op_RG (0., 1., 0.)] (* Green *)
+  | Cpdfcontent.Path -> [if light then Pdfops.Op_RG (0.5, 0.5, 1.) else Pdfops.Op_RG (0., 0., 1.)] (* Blue *)
+  | Cpdfcontent.Shading -> [if light then Pdfops.Op_RG (0.5, 1., 1.) else Pdfops.Op_RG (0., 1., 1.)] (* Cyan *)
+  | Cpdfcontent.Clip -> [Pdfops.Op_d ([4.; 4.], 0.); Pdfops.Op_G (if light then 1. else 0.)] (* Black, dashed. *)
 
 let mkbox ~light (boxtype, (x0, y0, x1, y1, x2, y2, x3, y3)) =
+  [Pdfops.Op_q] @
   colour ~light boxtype @ [Pdfops.Op_w 0.5] @
-  [Pdfops.Op_m (x0, y0); Op_l (x1, y1); Op_l (x2, y2); Op_l (x3, y3); Op_h; Op_S]
+  [Pdfops.Op_m (x0, y0); Op_l (x1, y1); Op_l (x2, y2); Op_l (x3, y3); Op_h; Op_S] @
+  [Pdfops.Op_Q]
 
 let mkannotbox ~light (minx, miny, maxx, maxy) =
   [if light then Pdfops.Op_RG (1.0, 1.0, 0.5) else Pdfops.Op_RG (1.0, 1.0, 0.)] @ [Pdfops.Op_w 1.0] @
@@ -80,7 +83,7 @@ let box_matches (minx, miny, maxx, maxy) (boxtype, (x0, y0, x1, y1, x2, y2, x3, 
   in
     match boxtype with
     | Cpdfcontent.Glyph | Image | InlineImage -> any_intersection (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy)
-    | Path | Shading -> wholly_contained (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy)
+    | Path | Shading | Clip -> wholly_contained (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy)
 
 let select_boxes shape boxes =
   match shape with 

@@ -21,7 +21,7 @@ type subpath = hole * closure * segment list
 type path = winding_rule * subpath list
 
 (** The kind of content being returned. *)
-type content = Glyph | InlineImage | Image | Path | Shading
+type content = Glyph | InlineImage | Image | Path | Shading | Clip
 
 (** Filter ops based on a bounding-box predicate. *)
 val filter_ops :
