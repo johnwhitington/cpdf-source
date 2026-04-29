@@ -276,9 +276,10 @@ let extract_rectangle header s =
   | _ -> raise (Failure ("extract_rectangle: " ^ s))
 
 let extra_metrics = function
-  | Pdftext.SimpleFont {fonttype = Pdftext.Type3 {fontbbox = (minx, miny, maxx, maxy)}} ->
+  | Pdftext.SimpleFont {fonttype = Pdftext.Type3 {fontmatrix; fontbbox = (minx, miny, maxx, maxy)}} ->
       (*Printf.printf "Finding ascent, descent for Type 3 char %f %f %f %f\n" minx miny maxx maxy;*)
-      (miny, maxy)
+        (snd (Pdftransform.transform_matrix fontmatrix (0., maxy)),
+         snd (Pdftransform.transform_matrix fontmatrix (0., miny)))
   | Pdftext.SimpleFont {fontdescriptor = Some {ascent; descent; fontbbox}}
   | Pdftext.CIDKeyedFont (_, {cid_fontdescriptor = {ascent; descent; fontbbox}}, _) ->
       begin match fontbbox with
@@ -317,10 +318,15 @@ let process_tj ~f ~stack ~state ~resources s =
   (*Printf.printf "process_tj %S\n" s;*)
   let chars = charcodes_of_string !state.text_state.fontobj s in
   (*flprint "CHARS: "; iter (Printf.printf "%i ") chars; flprint "\n";*)
-  let widths = map (fun x -> (width_of_charcode !state.text_state.fontobj x) /. 1000.) chars in
-  let ascent, descent = let a, b = extra_metrics !state.text_state.fontobj in (a /. 1000., b /. 1000.) in
-  (*flprint "WIDTHS: "; iter (Printf.printf "%f ") widths; flprint "\n";
-  Printf.printf "ascent = %f, descent = %f\n" ascent descent;*)
+  let divisor =
+    match !state.text_state.fontobj with
+    | Pdftext.SimpleFont {fonttype = Pdftext.Type3 _ } -> 1.
+    | _ -> 1000.
+  in
+  let widths = map (fun x -> width_of_charcode !state.text_state.fontobj x /. divisor) chars in
+  let ascent, descent = let a, b = extra_metrics !state.text_state.fontobj in (a /. divisor, b /. divisor) in
+    (*flprint "WIDTHS: "; iter (Printf.printf "%f ") widths; flprint "\n";
+      Printf.printf "ascent = %f, descent = %f\n" ascent descent*)
     iter2
       (fun c w ->
         let t_params =
@@ -336,7 +342,6 @@ let process_tj ~f ~stack ~state ~resources s =
         let (x1, y1) = Pdftransform.transform_matrix t_rm (0., ascent) in
         let (x2, y2) = Pdftransform.transform_matrix t_rm (w, ascent) in
         let (x3, y3) = Pdftransform.transform_matrix t_rm (w, descent) in
-          (*Printf.printf "Baseline position on page (%f, %f)\n" bl_x bl_y;*)
           (*flprint "BOX: "; Printf.printf "%f %f %f %f %f %f %f %f\n" x0 y0 x1 y1 x2 y2 x3 y3;*)
           f (Glyph, (x0, y0, x1, y1, x2, y2, x3, y3));
           !state.text_state.t_m <- Pdftransform.matrix_compose !state.text_state.t_m (Pdftransform.mktranslate (tx ~state w c 0.) 0.))
