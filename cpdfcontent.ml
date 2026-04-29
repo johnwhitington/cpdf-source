@@ -510,7 +510,7 @@ let transform_path m (w, subpaths) =
     (w, map (fun (h, c, segments) -> (h, c, map transform_segment segments)) subpaths)
 
 let emit_path_bounding_box ~content ~stroking ~f ~state =
-  let path = transform_path !state.ctm (if content = Clip then !state.clipping_path else !state.path) in
+  let path = transform_path !state.ctm (if content = Clip || content = Shading then !state.clipping_path else !state.path) in
   let bbox = bbox_of_path path in
     match bbox with
     | None -> ()
@@ -809,13 +809,25 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
       !state.colorspace_non_stroke <- Pdfspace.DeviceCMYK;
       !state.color <- Floats [f1; f2; f3; f4]
   | Pdfops.Op_sh s ->
+      begin try
       let shadingdict = Pdf.lookup_fail "no /Shading" pdf "/Shading" resources in
       let shading = Pdf.lookup_fail "named shading not found" pdf s shadingdict in
       let shading = read_shading pdf Pdftransform.i_matrix Pdf.Null shading in
         begin match shading.shading_bbox with
-        | Some x -> ()
-        | None -> ()
+        | Some r ->
+            begin try
+              let minx, miny, maxx, maxy = Pdf.parse_rectangle pdf r in
+                ignore (f (Shading, (minx, miny, minx, maxy, maxx, maxy, maxx, miny)))
+            with
+              _ -> ()
+            end
+        | None ->
+            (* This is an unbounded shading, not recommended. So we use the current clipping path. *)
+            emit_path_bounding_box ~content:Shading ~stroking:false ~f ~state
         end
+      with
+        _ -> ()
+      end
   | Pdfops.InlineImage i ->
       let x0, y0 = Pdftransform.transform_matrix !state.ctm (0., 0.) in
       let x1, y1 = Pdftransform.transform_matrix !state.ctm (0., 1.) in
