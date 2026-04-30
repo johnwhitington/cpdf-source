@@ -38,7 +38,7 @@ let mkannotbox ~light (minx, miny, maxx, maxy) =
   [if light then Pdfops.Op_RG (1.0, 1.0, 0.5) else Pdfops.Op_RG (1.0, 1.0, 0.)] @ [Pdfops.Op_w 1.0] @
   [Pdfops.Op_m (minx, miny); Op_l (minx, maxy); Op_l (maxx, maxy); Op_l (maxx, miny); Op_l (minx, miny); Op_h; Op_S]
 
-let show_annotation_bounding_boxes ~light pdf range =
+let show_annotation_bounding_boxes ~fast ~light pdf range =
   Cpdfutil.progress_line "Finding annotations...";
   let show_annotation_bounding_boxes_page pdf page =
     map
@@ -59,7 +59,7 @@ let show_annotation_bounding_boxes ~light pdf range =
       iter
         (fun (pnum, boxes) ->
            if boxes <> [] then
-             pdf := Cpdftweak.append_page_content (Pdfops.string_of_ops (content_of_boxes boxes)) false false [pnum] !pdf)
+             pdf := Cpdftweak.append_page_content (Pdfops.string_of_ops (content_of_boxes boxes)) false fast [pnum] !pdf)
         (rev !bboxes);
       !pdf
 
@@ -91,8 +91,8 @@ let select_boxes shape boxes =
   | Some (minx, miny, maxx, maxy) ->
       keep (box_matches (minx, miny, maxx, maxy)) boxes
 
-let show_bounding_boxes ~shape ~light pdf range =
-  let pdf = show_annotation_bounding_boxes ~light pdf range in
+let show_bounding_boxes ~fast ~shape ~light pdf range =
+  let pdf = show_annotation_bounding_boxes ~fast ~light pdf range in
   Cpdfutil.progress_line "Finding page content bounding boxes...";
   let show_bounding_boxes_page page =
     let ops = Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content in
@@ -114,6 +114,6 @@ let show_bounding_boxes ~shape ~light pdf range =
       iter
         (fun (pnum, boxes) ->
            if boxes <> [] then
-             pdf := Cpdftweak.append_page_content (Pdfops.string_of_ops (content_of_boxes boxes)) false false [pnum] !pdf)
+             pdf := Cpdftweak.append_page_content (Pdfops.string_of_ops (content_of_boxes boxes)) false fast [pnum] !pdf)
         (rev !bboxes);
       !pdf

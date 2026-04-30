@@ -5447,7 +5447,7 @@ let rec go () =
       | NoShape -> None
       | Rect (minx, miny, w, h) -> Some (minx, miny, minx +. w, miny +. h)
       in
-      let pdf = Cpdfredact.show_bounding_boxes ~shape ~light:args.show_bboxes_light pdf range in
+      let pdf = Cpdfredact.show_bounding_boxes ~fast:args.fast ~shape ~light:args.show_bboxes_light pdf range in
         write_pdf false pdf
   | RevealText ->
       let pdf = get_single_pdf args.op true in
