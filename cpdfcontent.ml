@@ -87,6 +87,7 @@ type text_state =
    mutable leading : float;
    mutable font : string;
    mutable fontobj : Pdftext.font;
+   mutable extra_metrics : float * float;
    mutable font_size : float;
    mutable rendering_mode : int;
    mutable rise : float;
@@ -132,6 +133,7 @@ let initial_text_state () =
    leading = 0.;
    font = "";
    fontobj = Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding);
+   extra_metrics = (0., 0.);
    font_size = 12.;
    rendering_mode = 0;
    rise = 0.;
@@ -257,7 +259,7 @@ let width_of_charcode font charcode =
           Pdfe.log (Printf.sprintf "Unable to get width - StandardFont (%s, %s, %i)\n" (Printexc.to_string e) (Pdftext.string_of_font font) charcode); 0.
       end
   | Pdftext.CIDKeyedFont (_, {cid_widths; cid_default_width}, _) ->
-      begin match lookup charcode cid_widths with
+      begin match Hashtbl.find_opt cid_widths charcode with
       | Some f -> f
       | None -> cid_default_width
       end
@@ -324,7 +326,7 @@ let process_tj ~f ~stack ~state ~resources s =
     | _ -> 1000.
   in
   let widths = map (fun x -> width_of_charcode !state.text_state.fontobj x /. divisor) chars in
-  let ascent, descent = let a, b = extra_metrics !state.text_state.fontobj in (a /. divisor, b /. divisor) in
+  let ascent, descent = let a, b = !state.text_state.extra_metrics in (a /. divisor, b /. divisor) in
     (*flprint "WIDTHS: "; iter (Printf.printf "%f ") widths; flprint "\n";
       Printf.printf "ascent = %f, descent = %f\n" ascent descent*)
     iter2
@@ -732,7 +734,9 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
       begin match Pdf.lookup_direct pdf "/Font" resources with
       | Some fontdict ->
           begin match Pdf.lookup_direct pdf s fontdict with
-          | Some font -> !state.text_state.fontobj <- Pdftext.read_font pdf font
+          | Some font ->
+              !state.text_state.fontobj <- Pdftext.read_font pdf font;
+              !state.text_state.extra_metrics <- extra_metrics !state.text_state.fontobj
           | None -> Pdfe.log "Font not found\n"
           end
       | None -> Pdfe.log "Font not found\n"

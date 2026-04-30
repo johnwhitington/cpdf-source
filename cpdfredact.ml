@@ -113,6 +113,7 @@ let show_bounding_boxes ~shape ~light pdf range =
     let content_of_boxes boxes = flatten (map (mkbox ~light) (select_boxes shape boxes)) in
       iter
         (fun (pnum, boxes) ->
-           pdf := Cpdftweak.append_page_content (Pdfops.string_of_ops (content_of_boxes boxes)) false false [pnum] !pdf)
+           if boxes <> [] then
+             pdf := Cpdftweak.append_page_content (Pdfops.string_of_ops (content_of_boxes boxes)) false false [pnum] !pdf)
         (rev !bboxes);
       !pdf
