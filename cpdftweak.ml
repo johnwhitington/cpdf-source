@@ -238,9 +238,15 @@ let thinlines range width pdf =
 (* Parse the new content to make sure syntactically ok, append
  * as required. Rewrite the content *)
 let append_page_content_page fast s before pdf n page =
-  let ops =
-    Pdfops.parse_stream pdf page.Pdfpage.resources [bytes_of_string s] 
-  in
+  if s = "" then page else
+    let ops =
+      Pdfops.parse_stream pdf page.Pdfpage.resources [bytes_of_string s] 
+    in
+      (if before then Pdfpage.prepend_operators else Pdfpage.postpend_operators)
+      pdf ops ~fast page
+
+let append_page_content_page_ops fast ops before pdf n page =
+  if ops = [] then page else
     (if before then Pdfpage.prepend_operators else Pdfpage.postpend_operators)
     pdf ops ~fast page
 
@@ -249,6 +255,9 @@ let append_page_content s before fast range pdf =
 
 let append_page_content_multiple ss before fast pdf =
   Cpdfpage.process_pages (Pdfpage.ppstub (fun n page -> append_page_content_page fast (List.nth ss (n - 1)) before pdf n page)) pdf (ilist 1 (Pdfpage.endpage pdf))
+
+let append_page_content_multiple_ops opss before fast pdf =
+  Cpdfpage.process_pages (Pdfpage.ppstub (fun n page -> append_page_content_page_ops fast (List.nth opss (n - 1)) before pdf n page)) pdf (ilist 1 (Pdfpage.endpage pdf))
 
 let rec dict_entry_single_object f pdf = function
   | (Pdf.Dictionary d) -> f (Pdf.recurse_dict (dict_entry_single_object f pdf) d)

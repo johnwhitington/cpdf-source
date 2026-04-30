@@ -20,6 +20,8 @@ val append_page_content : string -> bool -> bool -> int list -> Pdf.t -> Pdf.t
 
 val append_page_content_multiple : string list -> bool -> bool -> Pdf.t -> Pdf.t
 
+val append_page_content_multiple_ops : Pdfops.t list list -> bool -> bool -> Pdf.t -> Pdf.t
+
 (** Print a dictionary entry. *)
 val print_dict_entry : utf8:bool -> Pdf.t -> string -> unit
 
