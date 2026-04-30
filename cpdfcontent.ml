@@ -524,7 +524,9 @@ let emit_path_bounding_box ~content ~stroking ~f ~state =
     | Some (minx, maxx, miny, maxy) ->
         let minx, maxx, miny, maxy =
           if stroking then
-             let dx, dy = Pdftransform.transform_matrix !state.ctm (!state.line_width, !state.line_width) in
+             let dx0, dy0 = Pdftransform.transform_matrix !state.ctm (0., 0.) in
+             let dx1, dy1 = Pdftransform.transform_matrix !state.ctm (!state.line_width, !state.line_width) in
+             let dx, dy = fabs (dx1 -. dx0), fabs (dy1 -. dy0) in
                (minx -. dx /. 2., maxx +. dx /. 2., miny -. dy /. 2., maxy +. dy /. 2.)
           else
             (minx, maxx, miny, maxy)
