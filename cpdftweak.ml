@@ -247,6 +247,9 @@ let append_page_content_page fast s before pdf n page =
 let append_page_content s before fast range pdf =
   Cpdfpage.process_pages (Pdfpage.ppstub (append_page_content_page fast s before pdf)) pdf range
 
+let append_page_content_multiple ss before fast pdf =
+  Cpdfpage.process_pages (Pdfpage.ppstub (fun n page -> append_page_content_page fast (List.nth ss (n - 1)) before pdf n page)) pdf (ilist 1 (Pdfpage.endpage pdf))
+
 let rec dict_entry_single_object f pdf = function
   | (Pdf.Dictionary d) -> f (Pdf.recurse_dict (dict_entry_single_object f pdf) d)
   | (Pdf.Stream {contents = (Pdf.Dictionary dict, data)}) ->

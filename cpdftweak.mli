@@ -18,6 +18,8 @@ val reveal_hidden_text : int list -> Pdf.t -> Pdf.t
 (** Append page content. *)
 val append_page_content : string -> bool -> bool -> int list -> Pdf.t -> Pdf.t
 
+val append_page_content_multiple : string list -> bool -> bool -> Pdf.t -> Pdf.t
+
 (** Print a dictionary entry. *)
 val print_dict_entry : utf8:bool -> Pdf.t -> string -> unit
 

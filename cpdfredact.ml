@@ -56,12 +56,15 @@ let show_annotation_bounding_boxes ~fast ~light pdf range =
     let pdf = ref pdf in
     Cpdfutil.progress_line "Showing annotations...";
     let content_of_boxes boxes = flatten (map (mkannotbox ~light) boxes) in
-      iter
-        (fun (pnum, boxes) ->
-           if boxes <> [] then
-             pdf := Cpdftweak.append_page_content (Pdfops.string_of_ops (content_of_boxes boxes)) false fast [pnum] !pdf)
-        (rev !bboxes);
-      !pdf
+    let strings =
+      map
+        (fun n ->
+           match lookup n !bboxes with
+           | Some boxes -> Pdfops.string_of_ops (content_of_boxes boxes)
+           | None -> "")
+        (ilist 1 (Pdfpage.endpage !pdf))
+    in
+      Cpdftweak.append_page_content_multiple strings false fast !pdf
 
 (* See if the given box is to be treated. For now:
 
@@ -111,9 +114,12 @@ let show_bounding_boxes ~fast ~shape ~light pdf range =
     let pdf = ref pdf in
     Cpdfutil.progress_line "Showing page content bounding boxes...";
     let content_of_boxes boxes = flatten (map (mkbox ~light) (select_boxes shape boxes)) in
-      iter
-        (fun (pnum, boxes) ->
-           if boxes <> [] then
-             pdf := Cpdftweak.append_page_content (Pdfops.string_of_ops (content_of_boxes boxes)) false fast [pnum] !pdf)
-        (rev !bboxes);
-      !pdf
+    let strings =
+      map
+        (fun n ->
+           match lookup n !bboxes with
+           | Some boxes -> Pdfops.string_of_ops (content_of_boxes boxes)
+           | None -> "")
+        (ilist 1 (Pdfpage.endpage !pdf))
+    in
+      Cpdftweak.append_page_content_multiple strings false fast !pdf
