@@ -1,12 +1,6 @@
 (** Processing page content. *)
 open Pdfutil
 
-(* Initial aim: get bounding box of objects so we can redact them, outputting
-   the stream with objects redacted.
-
-   Future aim: page contents as objects free of graphics state, but without
-   blow-ups (i.e keep xobjects) and fully round-trippable. *)
-
 type fpoint = float * float
 
 type winding_rule = EvenOdd | NonZero
@@ -15,16 +9,12 @@ type segment =
   | Straight of fpoint * fpoint
   | Bezier of fpoint * fpoint * fpoint * fpoint
 
-(* Each segment list may be marked as a hole or not. *)
 type hole = Hole | Not_hole
 
-(* A [subpath] is either closed or open. *)
 type closure = Closed | Open
 
-(* A [subpath] is the pair of a hole and a list of segments. *)
 type subpath = hole * closure * segment list
 
-(* A path is made from a number of subpaths. *)
 type path = winding_rule * subpath list
 
 type content = Glyph | InlineImage | Image | Path | Shading | Clip
@@ -242,6 +232,10 @@ let rec initial_colour pdf resources = function
       initial_colour pdf resources (Pdf.direct pdf indirect)
   | _ -> raise (Pdf.PDFError "Unknown colourspace B")
 
+let vertical = function
+  | Pdftext.CIDKeyedFont (_, _, Pdftext.Predefined "/Identity-V") -> true
+  | _ -> false
+
 let width_of_charcode font charcode =
   match font with
   | Pdftext.SimpleFont {Pdftext.fontmetrics = Some fontmetrics} ->
@@ -258,11 +252,17 @@ let width_of_charcode font charcode =
         e ->
           Pdfe.log (Printf.sprintf "Unable to get width - StandardFont (%s, %s, %i)\n" (Printexc.to_string e) (Pdftext.string_of_font font) charcode); 0.
       end
-  | Pdftext.CIDKeyedFont (_, {cid_widths; cid_default_width}, _) ->
-      begin match Hashtbl.find_opt cid_widths charcode with
-      | Some f -> f
-      | None -> cid_default_width
-      end
+  | Pdftext.CIDKeyedFont (_, {cid_widths; cid_widths2; cid_default_width; cid_default_width2}, _) ->
+      if vertical font then
+        begin match Hashtbl.find_opt cid_widths2 charcode with
+        | Some (w, _, _) -> w
+        | None -> snd cid_default_width2
+        end
+      else
+        begin match Hashtbl.find_opt cid_widths charcode with
+        | Some f -> f
+        | None -> cid_default_width
+        end
   | f ->
     Pdfe.log (Printf.sprintf "Unable to get width for font (%s, %i)\n" (Pdftext.string_of_font f) charcode); 0.
 
@@ -279,9 +279,8 @@ let extract_rectangle header s =
 
 let extra_metrics = function
   | Pdftext.SimpleFont {fonttype = Pdftext.Type3 {fontmatrix; fontbbox = (minx, miny, maxx, maxy)}} ->
-      (*Printf.printf "Finding ascent, descent for Type 3 char %f %f %f %f\n" minx miny maxx maxy;*)
-        (snd (Pdftransform.transform_matrix fontmatrix (0., maxy)),
-         snd (Pdftransform.transform_matrix fontmatrix (0., miny)))
+      (snd (Pdftransform.transform_matrix fontmatrix (0., maxy)),
+       snd (Pdftransform.transform_matrix fontmatrix (0., miny)))
   | Pdftext.SimpleFont {fontdescriptor = Some {ascent; descent; fontbbox}}
   | Pdftext.CIDKeyedFont (_, {cid_fontdescriptor = {ascent; descent; fontbbox}}, _) ->
       begin match fontbbox with
@@ -304,31 +303,30 @@ let extra_metrics = function
       Pdfe.log "Missing fontdescriptor in SimpleFont";
       (0., 0.)
 
-let tx ~state w c tj =
-  ((w -. tj /. 1000.) *. !state.text_state.font_size +. !state.text_state.character_spacing +.
-  (if c = 32 then 1. else 0.) *. !state.text_state.word_spacing) *. !state.text_state.horizontal_scaling
-
-let tx2 ~state tj =
-  (~-.tj /. 1000.) *. !state.text_state.horizontal_scaling *. !state.text_state.font_size
-
 let charcodes_of_string font s =
   match font with
   | Pdftext.StandardFont _ | Pdftext.SimpleFont _ -> map int_of_char (explode s)
-  | Pdftext.CIDKeyedFont _ -> map int_of_char (pair (fun a b -> b) (explode s)) (* Just Identity H for now *)
+  | Pdftext.CIDKeyedFont _ -> map int_of_char (pair (fun a b -> b) (explode s)) (* Just Identity-H / Identity-V for now *)
 
 let process_tj ~f ~stack ~state ~resources s =
-  (*Printf.printf "process_tj %S\n" s;*)
+  let vertical = vertical !state.text_state.fontobj in
+  let debug = !state.text_state.font = "/C0_2" && vertical in
+  if debug then Printf.printf "process_tj %S\n" s;
   let chars = charcodes_of_string !state.text_state.fontobj s in
-  (*flprint "CHARS: "; iter (Printf.printf "%i ") chars; flprint "\n";*)
+  if debug then begin flprint "CHARS: "; iter (Printf.printf "%i ") chars; flprint "\n" end;
   let divisor =
     match !state.text_state.fontobj with
     | Pdftext.SimpleFont {fonttype = Pdftext.Type3 _ } -> 1.
     | _ -> 1000.
   in
+  (* TODO fix width-getter for vertical *)
   let widths = map (fun x -> width_of_charcode !state.text_state.fontobj x /. divisor) chars in
   let ascent, descent = let a, b = !state.text_state.extra_metrics in (a /. divisor, b /. divisor) in
-    (*flprint "WIDTHS: "; iter (Printf.printf "%f ") widths; flprint "\n";
-      Printf.printf "ascent = %f, descent = %f\n" ascent descent*)
+    if debug then
+      begin
+        flprint "WIDTHS: "; iter (Printf.printf "%f ") widths; flprint "\n";
+        Printf.printf "ascent = %f, descent = %f\n" ascent descent
+      end;
     iter2
       (fun c w ->
         let t_params =
@@ -344,19 +342,45 @@ let process_tj ~f ~stack ~state ~resources s =
         let (x1, y1) = Pdftransform.transform_matrix t_rm (0., ascent) in
         let (x2, y2) = Pdftransform.transform_matrix t_rm (w, ascent) in
         let (x3, y3) = Pdftransform.transform_matrix t_rm (w, descent) in
-          (*flprint "BOX: "; Printf.printf "%f %f %f %f %f %f %f %f\n" x0 y0 x1 y1 x2 y2 x3 y3;*)
+          if debug then begin flprint "BOX: "; Printf.printf "%f %f %f %f %f %f %f %f\n" x0 y0 x1 y1 x2 y2 x3 y3 end;
           f (Glyph, (x0, y0, x1, y1, x2, y2, x3, y3));
-          !state.text_state.t_m <- Pdftransform.matrix_compose !state.text_state.t_m (Pdftransform.mktranslate (tx ~state w c 0.) 0.))
+          let tx =
+            if vertical then 0. else
+              (w *. !state.text_state.font_size +. !state.text_state.character_spacing +.
+              (if c = 32 then 1. else 0.) *. !state.text_state.word_spacing) *. !state.text_state.horizontal_scaling
+          in
+          let ty =
+            if vertical then
+              w *. !state.text_state.font_size +. !state.text_state.character_spacing +. !state.text_state.word_spacing
+            else
+              0.
+          in
+            !state.text_state.t_m <- Pdftransform.matrix_compose !state.text_state.t_m (Pdftransform.mktranslate tx ty))
       chars
       widths
 
 let process_capital_tj ~f ~stack ~state ~resources elts =
+  let vertical = vertical !state.text_state.fontobj in
+  let debug = !state.text_state.font = "/C0_2" && vertical in
+  if debug then flprint "process_capital_tj...\n";
   iter
     (function
      | Pdf.String s ->
          process_tj ~f ~stack ~state ~resources s
      | Pdf.Real n ->
-         !state.text_state.t_m <- Pdftransform.matrix_compose !state.text_state.t_m (Pdftransform.mktranslate (tx2 ~state n) 0.)
+         let tx =
+           if vertical then
+             0.
+           else
+             (~-.n /. 1000.) *. !state.text_state.horizontal_scaling *. !state.text_state.font_size
+         in
+         let ty =
+           if vertical then
+             (~-.n /. 1000.) *. !state.text_state.font_size
+           else
+             0.
+         in
+           !state.text_state.t_m <- Pdftransform.matrix_compose !state.text_state.t_m (Pdftransform.mktranslate tx ty)
      | _ -> ())
     elts
 
