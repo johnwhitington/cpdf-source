@@ -1241,7 +1241,7 @@ let matterhorn_31_007 _ _ pdf =
     (fun _ o ->
        match Pdf.lookup_direct pdf "/WMode" o with
        | Some (Pdf.Integer fromdict) ->
-           if (Pdfcmap.parse_cmap pdf o).wmode <> Some fromdict then merror ()
+           if (Pdfcmap.parse_cmap pdf o).wmode <> fromdict then merror ()
        | _ -> ())
     pdf
 

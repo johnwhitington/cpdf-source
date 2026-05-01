@@ -235,10 +235,12 @@ let rec initial_colour pdf resources = function
 let vertical = function
   | Pdftext.CIDKeyedFont (_, _, Pdftext.Predefined "/Identity-V") -> true
   | Pdftext.CIDKeyedFont (_, _, Pdftext.Predefined "/Identity-H") -> false
-  | Pdftext.CIDKeyedFont (_, _, _) as f ->
+  | Pdftext.CIDKeyedFont (_, _, Pdftext.CMap {wmode}) -> wmode = 1
+  | Pdftext.CIDKeyedFont _ as f ->
       Pdfe.logf "Cannot determine font direction for font %s\n" (Pdftext.string_of_font f);
       false
-  | _ -> false
+  | _ ->
+      false
 
 let width_of_charcode font charcode =
   match font with
