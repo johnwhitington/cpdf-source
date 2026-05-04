@@ -70,14 +70,18 @@ type colvals =
   | Named of (string * float list)
   | Pattern of pattern
 
+type font_data =
+  {mutable fontobj : Pdftext.font;
+   mutable extra_metrics : float * float}
+
 type text_state =
   {mutable character_spacing : float;
    mutable word_spacing : float;
    mutable horizontal_scaling : float;
    mutable leading : float;
    mutable font : string;
-   mutable fontobj : Pdftext.font;
-   mutable extra_metrics : float * float;
+   mutable font_data : font_data;
+   mutable font_cache : (string, font_data) Hashtbl.t;
    mutable font_size : float;
    mutable rendering_mode : int;
    mutable rise : float;
@@ -122,8 +126,10 @@ let initial_text_state () =
    horizontal_scaling = 1.;
    leading = 0.;
    font = "";
-   fontobj = Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding);
-   extra_metrics = (0., 0.);
+   font_data =
+     {fontobj = Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding);
+      extra_metrics = (0., 0.)};
+   font_cache = null_hash ();
    font_size = 12.;
    rendering_mode = 0;
    rise = 0.;
@@ -324,18 +330,18 @@ let charcodes_of_string s = function
       try map (fun (a, b) -> int_of_char a lsl 8 lor int_of_char b) (pairs_of_list (explode s)) with Invalid_argument _ -> []
 
 let process_tj ~f ~stack ~state ~resources s =
-  let vertical = vertical !state.text_state.fontobj in
+  let vertical = vertical !state.text_state.font_data.fontobj in
   let debug = false in (*!state.text_state.font = "/C0_0" && vertical in*)
   if debug then Printf.printf "process_tj %S\n" s;
-  let chars = charcodes_of_string s !state.text_state.fontobj in
+  let chars = charcodes_of_string s !state.text_state.font_data.fontobj in
   if debug then begin flprint "CHARS: "; iter (Printf.printf "%i ") chars; flprint "\n" end;
   let divisor =
-    match !state.text_state.fontobj with
+    match !state.text_state.font_data.fontobj with
     | Pdftext.SimpleFont {fonttype = Pdftext.Type3 _ } -> 1.
     | _ -> 1000.
   in
-  let widths = map (fun x -> let w, pvx, pvy = width_of_charcode !state.text_state.fontobj x in w /. divisor, pvx /. divisor, pvy /. divisor) chars in
-  let ascent, descent = let a, b = !state.text_state.extra_metrics in (a /. divisor, b /. divisor) in
+  let widths = map (fun x -> let w, pvx, pvy = width_of_charcode !state.text_state.font_data.fontobj x in w /. divisor, pvx /. divisor, pvy /. divisor) chars in
+  let ascent, descent = let a, b = !state.text_state.font_data.extra_metrics in (a /. divisor, b /. divisor) in
     if debug then
       begin
         flprint "WIDTHS: "; iter (fun (a, b, c) -> Printf.printf "%f (%f %f) " a b c) widths; flprint "\n";
@@ -374,7 +380,7 @@ let process_tj ~f ~stack ~state ~resources s =
       widths
 
 let process_capital_tj ~f ~stack ~state ~resources elts =
-  let vertical = vertical !state.text_state.fontobj in
+  let vertical = vertical !state.text_state.font_data.fontobj in
   let debug = false (* !state.text_state.font = "/C0_0" && vertical *) in
   if debug then flprint "process_capital_tj...\n";
   iter
@@ -765,15 +771,22 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
   | Pdfops.Op_Tf (s, f) ->
       !state.text_state.font <- s;
       !state.text_state.font_size <- f;
-      begin match Pdf.lookup_direct pdf "/Font" resources with
-      | Some fontdict ->
-          begin match Pdf.lookup_direct pdf s fontdict with
-          | Some font ->
-              !state.text_state.fontobj <- Pdftext.read_font pdf font;
-              !state.text_state.extra_metrics <- extra_metrics !state.text_state.fontobj
+      begin match Hashtbl.find_opt !state.text_state.font_cache s with
+      | Some font_data ->
+          !state.text_state.font_data <- font_data
+      | None ->
+          begin match Pdf.lookup_direct pdf "/Font" resources with
+          | Some fontdict ->
+              begin match Pdf.lookup_direct pdf s fontdict with
+              | Some font ->
+                  let fontobj = Pdftext.read_font pdf font in
+                  let font_data = {fontobj; extra_metrics = extra_metrics fontobj} in
+                    !state.text_state.font_data <- font_data;
+                    Hashtbl.add !state.text_state.font_cache s font_data
+              | None -> Pdfe.log "Font not found\n"
+              end
           | None -> Pdfe.log "Font not found\n"
-          end
-      | None -> Pdfe.log "Font not found\n"
+      end
       end
   | Pdfops.Op_Tr i ->
       !state.text_state.rendering_mode <- i
@@ -898,13 +911,18 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
                     | None -> 
                         (min_float, min_float, max_float, max_float)
                   in
+                  let saved_font_cache =
+                    Hashtbl.copy !state.text_state.font_cache
+                  in
                     process_op ~pdf ~f ~stack ~state ~resources Pdfops.Op_q;
                     !state.ctm <- Pdftransform.matrix_compose !state.ctm matrix;
                     process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_re (minx, miny, maxx -. minx, maxy -. miny));
                     process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_W);
                     process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_n);
+                    Hashtbl.clear !state.text_state.font_cache;
                     process_form_xobject ~pdf ~f ~stack ~state ~resources xobj;
                     process_op ~pdf ~f ~stack ~state ~resources Pdfops.Op_Q;
+                    !state.text_state.font_cache <- saved_font_cache
               | _ -> raise (Pdf.PDFError "Unknown kind of xobject")
               end
           | _ -> raise (Pdf.PDFError "Unknown xobject")
