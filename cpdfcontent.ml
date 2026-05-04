@@ -309,16 +309,16 @@ let extra_metrics = function
       Pdfe.log "Missing fontdescriptor in SimpleFont";
       (0., 0.)
 
-let charcodes_of_string font s =
-  match font with
-  | Pdftext.StandardFont _ | Pdftext.SimpleFont _ -> map int_of_char (explode s)
-  | Pdftext.CIDKeyedFont _ -> map int_of_char (pair (fun a b -> b) (explode s)) (* Just Identity-H / Identity-V for now *)
+let charcodes_of_string s = function
+    Pdftext.StandardFont _ | Pdftext.SimpleFont _ -> map int_of_char (explode s)
+  | Pdftext.CIDKeyedFont _ ->
+      try map (fun (a, b) -> int_of_char a lsl 8 lor int_of_char b) (pairs_of_list (explode s)) with Invalid_argument _ -> []
 
 let process_tj ~f ~stack ~state ~resources s =
   let vertical = vertical !state.text_state.fontobj in
   let debug = !state.text_state.font = "/C0_2" && vertical in
   if debug then Printf.printf "process_tj %S\n" s;
-  let chars = charcodes_of_string !state.text_state.fontobj s in
+  let chars = charcodes_of_string s !state.text_state.fontobj in
   if debug then begin flprint "CHARS: "; iter (Printf.printf "%i ") chars; flprint "\n" end;
   let divisor =
     match !state.text_state.fontobj with
