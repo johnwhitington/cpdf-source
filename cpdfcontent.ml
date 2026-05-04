@@ -250,27 +250,36 @@ let width_of_charcode font charcode =
         | Pdftext.SimpleFont {Pdftext.fonttype = Pdftext.Type3 {fontmatrix}} -> fontmatrix
         | _ -> Pdftransform.i_matrix
       in
-      begin try fst (Pdftransform.transform_matrix matrix (fontmetrics.(charcode), 0.)) with
-        e -> Pdfe.log (Printf.sprintf "Unable to get width (%s, %s, %i)\n" (Printexc.to_string e) (Pdftext.string_of_font font) charcode); 0.
+      begin try (fst (Pdftransform.transform_matrix matrix (fontmetrics.(charcode), 0.)), 0., 0.) with
+        e ->
+          Pdfe.log (Printf.sprintf "Unable to get width (%s, %s, %i)\n" (Printexc.to_string e) (Pdftext.string_of_font font) charcode);
+          (0., 0., 0.)
       end
   | Pdftext.StandardFont (f, encoding) ->
-      begin try float_of_int (Pdfstandard14.textwidth false encoding f (string_of_char (char_of_int charcode))) with
+      begin try (float_of_int (Pdfstandard14.textwidth false encoding f (string_of_char (char_of_int charcode))), 0., 0.) with
         e ->
-          Pdfe.log (Printf.sprintf "Unable to get width - StandardFont (%s, %s, %i)\n" (Printexc.to_string e) (Pdftext.string_of_font font) charcode); 0.
+          Pdfe.log (Printf.sprintf "Unable to get width - StandardFont (%s, %s, %i)\n" (Printexc.to_string e) (Pdftext.string_of_font font) charcode);
+          (0., 0., 0.)
       end
   | Pdftext.CIDKeyedFont (_, {cid_widths; cid_widths2; cid_default_width; cid_default_width2}, _) ->
       if vertical font then
         begin match Hashtbl.find_opt cid_widths2 charcode with
-        | Some (w, _, _) -> w
-        | None -> snd cid_default_width2
+        | Some (w1, pvx, pvy) -> (w1, pvx, pvy)
+        | None ->
+            match Hashtbl.find_opt cid_widths charcode with
+            | Some w0 -> (w0 /. 2., fst cid_default_width2, snd cid_default_width2)
+            | None ->
+                Pdfe.log (Printf.sprintf "Unable to get width for font (%s, %i)\n" (Pdftext.string_of_font font) charcode);
+                (0., 0., 0.)
         end
       else
         begin match Hashtbl.find_opt cid_widths charcode with
-        | Some f -> f
-        | None -> cid_default_width
+        | Some f -> (f, 0., 0.)
+        | None -> (cid_default_width, 0., 0.)
         end
-  | f ->
-    Pdfe.log (Printf.sprintf "Unable to get width for font (%s, %i)\n" (Pdftext.string_of_font f) charcode); 0.
+  | _ ->
+    Pdfe.log (Printf.sprintf "Unable to get width for font (%s, %i)\n" (Pdftext.string_of_font font) charcode);
+    (0., 0., 0.)
 
 let extract_num header s =
   match Pdfgenlex.lex_string (Hashtbl.find header s) with
@@ -316,7 +325,7 @@ let charcodes_of_string s = function
 
 let process_tj ~f ~stack ~state ~resources s =
   let vertical = vertical !state.text_state.fontobj in
-  let debug = !state.text_state.font = "/C0_2" && vertical in
+  let debug = !state.text_state.font = "/C0_0" && vertical in
   if debug then Printf.printf "process_tj %S\n" s;
   let chars = charcodes_of_string s !state.text_state.fontobj in
   if debug then begin flprint "CHARS: "; iter (Printf.printf "%i ") chars; flprint "\n" end;
@@ -326,7 +335,7 @@ let process_tj ~f ~stack ~state ~resources s =
     | _ -> 1000.
   in
   (* TODO fix width-getter for vertical *)
-  let widths = map (fun x -> width_of_charcode !state.text_state.fontobj x /. divisor) chars in
+  let widths = map (fun x -> (let w, _, _ = width_of_charcode !state.text_state.fontobj x in w) /. divisor) chars in
   let ascent, descent = let a, b = !state.text_state.extra_metrics in (a /. divisor, b /. divisor) in
     if debug then
       begin
@@ -367,7 +376,7 @@ let process_tj ~f ~stack ~state ~resources s =
 
 let process_capital_tj ~f ~stack ~state ~resources elts =
   let vertical = vertical !state.text_state.fontobj in
-  let debug = !state.text_state.font = "/C0_2" && vertical in
+  let debug = !state.text_state.font = "/C0_0" && vertical in
   if debug then flprint "process_capital_tj...\n";
   iter
     (function
