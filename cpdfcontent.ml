@@ -72,7 +72,8 @@ type colvals =
 
 type font_data =
   {mutable fontobj : Pdftext.font;
-   mutable extra_metrics : float * float}
+   mutable extra_metrics : float * float;
+   mutable table : (int, string) Hashtbl.t}
 
 type text_state =
   {mutable character_spacing : float;
@@ -128,7 +129,8 @@ let initial_text_state () =
    font = "";
    font_data =
      {fontobj = Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding);
-      extra_metrics = (0., 0.)};
+      extra_metrics = (0., 0.);
+      table = null_hash ()};
    font_cache = null_hash ();
    font_size = 12.;
    rendering_mode = 0;
@@ -248,7 +250,7 @@ let vertical = function
   | _ ->
       false
 
-let width_of_charcode font charcode =
+let width_of_charcode font charcode table =
   match font with
   | Pdftext.SimpleFont {Pdftext.fontmetrics = Some fontmetrics} ->
       let matrix =
@@ -262,7 +264,7 @@ let width_of_charcode font charcode =
           (0., 0., 0.)
       end
   | Pdftext.StandardFont (f, encoding) ->
-      begin try (float_of_int (Pdfstandard14.textwidth false encoding f (string_of_char (char_of_int charcode))), 0., 0.) with
+      begin try (float_of_int (Pdfstandard14.charwidth encoding table f charcode), 0., 0.) with
         e ->
           Pdfe.log (Printf.sprintf "Unable to get width - StandardFont (%s, %s, %i)\n" (Printexc.to_string e) (Pdftext.string_of_font font) charcode);
           (0., 0., 0.)
@@ -340,7 +342,7 @@ let process_tj ~f ~stack ~state ~resources s =
     | Pdftext.SimpleFont {fonttype = Pdftext.Type3 _ } -> 1.
     | _ -> 1000.
   in
-  let widths = map (fun x -> let w, pvx, pvy = width_of_charcode !state.text_state.font_data.fontobj x in w /. divisor, pvx /. divisor, pvy /. divisor) chars in
+  let widths = map (fun x -> let w, pvx, pvy = width_of_charcode !state.text_state.font_data.fontobj x !state.text_state.font_data.table in w /. divisor, pvx /. divisor, pvy /. divisor) chars in
   let ascent, descent = let a, b = !state.text_state.font_data.extra_metrics in (a /. divisor, b /. divisor) in
     if debug then
       begin
@@ -780,7 +782,14 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
               begin match Pdf.lookup_direct pdf s fontdict with
               | Some font ->
                   let fontobj = Pdftext.read_font pdf font in
-                  let font_data = {fontobj; extra_metrics = extra_metrics fontobj} in
+                  let font_data =
+                    {fontobj;
+                     extra_metrics = extra_metrics fontobj;
+                     table =
+                       match fontobj with
+                       | Pdftext.StandardFont (_, encoding) -> Pdftext.table_of_encoding encoding
+                       | _ -> null_hash ()}
+                  in
                     !state.text_state.font_data <- font_data;
                     Hashtbl.add !state.text_state.font_cache s font_data
               | None -> Pdfe.log "Font not found\n"
