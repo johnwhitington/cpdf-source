@@ -325,7 +325,7 @@ let charcodes_of_string s = function
 
 let process_tj ~f ~stack ~state ~resources s =
   let vertical = vertical !state.text_state.fontobj in
-  let debug = !state.text_state.font = "/C0_0" && vertical in
+  let debug = false in (*!state.text_state.font = "/C0_0" && vertical in*)
   if debug then Printf.printf "process_tj %S\n" s;
   let chars = charcodes_of_string s !state.text_state.fontobj in
   if debug then begin flprint "CHARS: "; iter (Printf.printf "%i ") chars; flprint "\n" end;
@@ -334,16 +334,15 @@ let process_tj ~f ~stack ~state ~resources s =
     | Pdftext.SimpleFont {fonttype = Pdftext.Type3 _ } -> 1.
     | _ -> 1000.
   in
-  (* TODO fix width-getter for vertical *)
-  let widths = map (fun x -> (let w, _, _ = width_of_charcode !state.text_state.fontobj x in w) /. divisor) chars in
+  let widths = map (fun x -> let w, pvx, pvy = width_of_charcode !state.text_state.fontobj x in w /. divisor, pvx /. divisor, pvy /. divisor) chars in
   let ascent, descent = let a, b = !state.text_state.extra_metrics in (a /. divisor, b /. divisor) in
     if debug then
       begin
-        flprint "WIDTHS: "; iter (Printf.printf "%f ") widths; flprint "\n";
+        flprint "WIDTHS: "; iter (fun (a, b, c) -> Printf.printf "%f (%f %f) " a b c) widths; flprint "\n";
         Printf.printf "ascent = %f, descent = %f\n" ascent descent
       end;
     iter2
-      (fun c w ->
+      (fun c (w, pvx, pvy) ->
         let t_params =
           {Pdftransform.a = !state.text_state.font_size *. !state.text_state.horizontal_scaling;
            Pdftransform.b = 0.;
@@ -353,10 +352,10 @@ let process_tj ~f ~stack ~state ~resources s =
            Pdftransform.f = !state.text_state.rise}
         in
         let t_rm = Pdftransform.matrix_compose !state.ctm (Pdftransform.matrix_compose !state.text_state.t_m t_params) in
-        let (x0, y0) = Pdftransform.transform_matrix t_rm (0., descent) in
-        let (x1, y1) = Pdftransform.transform_matrix t_rm (0., ascent) in
-        let (x2, y2) = Pdftransform.transform_matrix t_rm (w, ascent) in
-        let (x3, y3) = Pdftransform.transform_matrix t_rm (w, descent) in
+        let (x0, y0) = Pdftransform.transform_matrix t_rm (0. +. pvx, descent -. pvy) in
+        let (x1, y1) = Pdftransform.transform_matrix t_rm (0. +. pvx, ascent -. pvy) in
+        let (x2, y2) = Pdftransform.transform_matrix t_rm (w +. pvx, ascent -. pvy) in
+        let (x3, y3) = Pdftransform.transform_matrix t_rm (w +. pvx, descent -. pvy) in
           if debug then begin flprint "BOX: "; Printf.printf "%f %f %f %f %f %f %f %f\n" x0 y0 x1 y1 x2 y2 x3 y3 end;
           f (Glyph, (x0, y0, x1, y1, x2, y2, x3, y3));
           let tx =
@@ -376,7 +375,7 @@ let process_tj ~f ~stack ~state ~resources s =
 
 let process_capital_tj ~f ~stack ~state ~resources elts =
   let vertical = vertical !state.text_state.fontobj in
-  let debug = !state.text_state.font = "/C0_0" && vertical in
+  let debug = false (* !state.text_state.font = "/C0_0" && vertical *) in
   if debug then flprint "process_capital_tj...\n";
   iter
     (function
@@ -384,16 +383,10 @@ let process_capital_tj ~f ~stack ~state ~resources elts =
          process_tj ~f ~stack ~state ~resources s
      | Pdf.Real n ->
          let tx =
-           if vertical then
-             0.
-           else
-             (~-.n /. 1000.) *. !state.text_state.horizontal_scaling *. !state.text_state.font_size
+           if vertical then 0.  else (~-.n /. 1000.) *. !state.text_state.horizontal_scaling *. !state.text_state.font_size
          in
          let ty =
-           if vertical then
-             (~-.n /. 1000.) *. !state.text_state.font_size
-           else
-             0.
+           if vertical then (~-.n /. 1000.) *. !state.text_state.font_size else 0.
          in
            !state.text_state.t_m <- Pdftransform.matrix_compose !state.text_state.t_m (Pdftransform.mktranslate tx ty)
      | _ -> ())
