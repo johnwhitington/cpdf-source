@@ -15,11 +15,14 @@ val blackfills : Cpdfaddtext.colour -> int list -> Pdf.t -> Pdf.t
 (** Change all text to rendering mode 0 (filled). *)
 val reveal_hidden_text : int list -> Pdf.t -> Pdf.t
 
-(** Append page content. *)
+(** Append page content. The first boolean is true if prepending rather than
+    appending, the second true for fast mode. *)
 val append_page_content : string -> bool -> bool -> int list -> Pdf.t -> Pdf.t
 
+(** The same, but a different string is supplied for each page (and so, no range is required.) *)
 val append_page_content_multiple : string list -> bool -> bool -> Pdf.t -> Pdf.t
 
+(** The same, but operations are provided instead of strings. *)
 val append_page_content_multiple_ops : Pdfops.t list list -> bool -> bool -> Pdf.t -> Pdf.t
 
 (** Print a dictionary entry. *)
