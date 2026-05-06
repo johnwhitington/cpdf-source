@@ -1031,7 +1031,29 @@ and read_graphics_state_dictionary ~pdf ~f ~stack ~state ~resources s =
     | Some (Pdf.Integer opm) -> !state.overprint_mode <- opm
     | _ -> ()
     end;
-    (*Font FIXME *)
+    (* Font. Sadly this code is essentially copied from Op_Tf (minus the
+    caching). At some point think if this can be combined (and cached). But
+    really we need to find or craft an example first. *)
+    begin match Pdf.lookup_direct pdf "/Font" extgstate_dict with
+    | Some (Pdf.Array [Pdf.Indirect font; size]) ->
+        begin match Pdf.getnum_opt pdf size with
+        | Some f -> !state.text_state.font_size <- f
+        | None -> ()
+        end;
+        !state.text_state.font <- "__EXTGSTATE__" ^ string_of_int font;
+        let font = Pdf.direct pdf (Pdf.Indirect font) in
+        let fontobj = Pdftext.read_font pdf font in
+        let font_data =
+          {fontobj;
+           extra_metrics = extra_metrics fontobj;
+           table =
+             match fontobj with
+             | Pdftext.StandardFont (_, encoding) -> Pdftext.table_of_encoding encoding
+             | _ -> null_hash ()}
+        in
+          !state.text_state.font_data <- font_data;
+    | _ -> ()
+    end;
     (*BG*)
     begin match Pdf.lookup_direct pdf "/BG" extgstate_dict with
     | Some bg -> !state.black_generation <- bg
