@@ -97,8 +97,8 @@ type state =
    mutable clipping_path : path;
    mutable colorspace_stroke : Pdfspace.t;
    mutable colorspace_non_stroke : Pdfspace.t;
-   mutable color : colvals;
-   mutable stroke_color : colvals;
+   mutable color_stroke : colvals;
+   mutable color_non_stroke : colvals;
    mutable text_state : text_state;
    mutable line_width : float;
    mutable line_cap : int;
@@ -112,7 +112,8 @@ type state =
    mutable alpha_constant : float;
    mutable alpha_source : bool;
    mutable black_point_compensation : Pdf.pdfobject;
-   mutable overprint : bool;
+   mutable overprint_stroke : bool;
+   mutable overprint_non_stroke : bool;
    mutable overprint_mode : float;
    mutable black_generation : Pdf.pdfobject;
    mutable undercolor_removal : Pdf.pdfobject;
@@ -151,8 +152,8 @@ let initial_state (minx, miny, maxx, maxy) =
    path = (EvenOdd, []);
    colorspace_stroke = Pdfspace.DeviceGray;
    colorspace_non_stroke = Pdfspace.DeviceGray;
-   color = Floats [1.];
-   stroke_color = Floats [1.];
+   color_non_stroke = Floats [1.];
+   color_stroke = Floats [1.];
    text_state = initial_text_state ();
    line_width = 1.;
    line_cap = 0;
@@ -166,7 +167,8 @@ let initial_state (minx, miny, maxx, maxy) =
    alpha_constant = 1.;
    alpha_source = false;
    black_point_compensation = Pdf.Name "/Default";
-   overprint = false;
+   overprint_stroke = false;
+   overprint_non_stroke = false;
    overprint_mode = 0.;
    black_generation = Pdf.Null;
    undercolor_removal = Pdf.Null;
@@ -400,88 +402,89 @@ let process_capital_tj ~f ~stack ~state ~resources elts =
      | _ -> ())
     elts
 
-let read_graphics_state_dictionary ~pdf ~state s =
-  ()
+
+let combine_clip clipping_path new_path =
+  new_path
 
 let read_tiling_pattern _ =
   ColouredTilingPattern Tiling
 
 let read_function_shading pdf shading =
-  let domain =
+  let funshading_domain =
     match Pdf.lookup_direct pdf "/Domain" shading with
     | Some (Pdf.Array [a; b; c; d]) -> Pdf.getnum pdf a, Pdf.getnum pdf b, Pdf.getnum pdf c, Pdf.getnum pdf d
     | _ -> 0., 1., 0., 1.
-  and matrix =
+  and funshading_matrix =
     Pdf.parse_matrix pdf "/Matrix" shading
-  and func =
-    Pdf.lookup_fail "No function found" pdf "/Function" shading
+  and funshading_function =
+    Pdffun.parse_function pdf (Pdf.lookup_fail "No function found" pdf "/Function" shading)
   in
     FunctionShading
-      {funshading_domain = domain;
-       funshading_matrix = matrix;
-       funshading_function = Pdffun.parse_function pdf func}
+      {funshading_domain;
+       funshading_matrix;
+       funshading_function}
 
 let read_radial_shading pdf shading =
-  let coords =
+  let radialshading_coords =
     match Pdf.lookup_direct pdf "/Coords" shading with
     | Some (Pdf.Array [a; b; c; d; e; f]) ->
         Pdf.getnum pdf a, Pdf.getnum pdf b, Pdf.getnum pdf c, Pdf.getnum pdf d, Pdf.getnum pdf e, Pdf.getnum pdf f
     | _ -> raise (Pdf.PDFError "Pdfgraphics.read_radial_shading: no coords in radial shading")
-  and domain =
+  and radialshading_domain =
     match Pdf.lookup_direct pdf "/Domain" shading with
     | Some (Pdf.Array [a; b]) -> Pdf.getnum pdf a, Pdf.getnum pdf b
     | _ -> 0., 1.
-  and func =
+  and radialshading_function =
     match Pdf.lookup_direct pdf "/Function" shading with
     | Some (Pdf.Array fs) -> map (Pdffun.parse_function pdf) fs
     | Some f -> [Pdffun.parse_function pdf f]
     | _ -> raise (Pdf.PDFError "Pdfgraphics.read_radial_shading: no function in radial shading")
-  and extend =
+  and radialshading_extend =
     match Pdf.lookup_direct pdf "/Extend" shading with
     | Some (Pdf.Array [Pdf.Boolean a; Pdf.Boolean b]) -> a, b
     | _ -> false, false
   in
     RadialShading
-      {radialshading_coords = coords;
-       radialshading_domain = domain;
-       radialshading_function = func;
-       radialshading_extend = extend}
+      {radialshading_coords;
+       radialshading_domain;
+       radialshading_function;
+       radialshading_extend}
 
 let read_axial_shading pdf shading =
-  let coords =
+  let axialshading_coords =
     match Pdf.lookup_direct pdf "/Coords" shading with
     | Some (Pdf.Array [a; b; c; d]) ->
         Pdf.getnum pdf a, Pdf.getnum pdf b, Pdf.getnum pdf c, Pdf.getnum pdf d
     | _ -> raise (Pdf.PDFError "Pdfgraphics.read_axial_shading: no coords in radial shading")
-  and domain =
+  and axialshading_domain =
     match Pdf.lookup_direct pdf "/Domain" shading with
     | Some (Pdf.Array [a; b]) -> Pdf.getnum pdf a, Pdf.getnum pdf b
     | _ -> 0., 1.
-  and func =
+  and axialshading_function =
     match Pdf.lookup_direct pdf "/Function" shading with
     | Some (Pdf.Array fs) -> map (Pdffun.parse_function pdf) fs
     | Some f -> [Pdffun.parse_function pdf f]
     | _ -> raise (Pdf.PDFError "Pdfgraphics.read_axial_shading: no function in radial shading")
-  and extend =
+  and axialshading_extend =
     match Pdf.lookup_direct pdf "/Extend" shading with
     | Some (Pdf.Array [Pdf.Boolean a; Pdf.Boolean b]) -> a, b
     | _ -> false, false
   in
     AxialShading
-      {axialshading_coords = coords;
-       axialshading_domain = domain;
-       axialshading_function = func;
-       axialshading_extend = extend}
+      {axialshading_coords;
+       axialshading_domain;
+       axialshading_function;
+       axialshading_extend}
 
 (* Read a shading pattern *)
-let read_shading pdf matrix extgstate shading =
-  let colourspace =
+let read_shading pdf shading_matrix shading_extgstate shading =
+  let shading_colourspace =
     Pdf.lookup_fail "No colourspace in shading" pdf "/ColorSpace" shading
-  and background =
+  and shading_background =
     Pdf.lookup_direct pdf "/Background" shading
-  and bbox =
+  and shading_bbox =
     Pdf.lookup_direct pdf "/BBox" shading
-  and antialias =
+  and shading_antialias =
     match Pdf.lookup_direct pdf "/BBox" shading with
     | Some (Pdf.Boolean true) -> true
     | _ -> false
@@ -497,13 +500,13 @@ let read_shading pdf matrix extgstate shading =
       | Pdf.Integer 7 -> TensorProductPatchMesh
       | _ -> raise (Pdf.PDFError "Pdfgraphics.unknown shadingtype")
     in
-      {shading_colourspace = colourspace;
-       shading_background = background;
-       shading_bbox = bbox;
-       shading_antialias = antialias;
-       shading_matrix = matrix;
-       shading_extgstate = extgstate;
-       shading = shading}
+      {shading_colourspace;
+       shading_background;
+       shading_bbox;
+       shading_antialias;
+       shading_matrix;
+       shading_extgstate;
+       shading}
 
 let read_shading_pattern pdf p =
   let matrix = Pdf.parse_matrix pdf "/Matrix" p
@@ -590,7 +593,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
   | Pdfops.Op_i f ->
       !state.flatness <- f
   | Pdfops.Op_gs s ->
-      read_graphics_state_dictionary ~pdf ~state s
+      read_graphics_state_dictionary ~pdf ~f ~stack ~state ~resources s
   | Pdfops.Op_q ->
       push_statestack stack !state
   | Pdfops.Op_Q ->
@@ -650,15 +653,15 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
   | Pdfops.Op_b' ->
       iter (process_op ~pdf ~f ~stack ~state ~resources) [Pdfops.Op_h; Pdfops.Op_B']
   | Pdfops.Op_f | Pdfops.Op_F ->
-        process_op ~pdf ~f ~stack ~state ~resources Pdfops.Op_h;
-        begin match !state.partial_path with
-        | PartialPath (sp, cp, segs, subpaths) ->
-            (* segs is empty, due to [Op_h] *)
-            !state.partial_path <- PartialPath (sp, cp, [], []);
-            !state.path <- (NonZero, rev subpaths);
-            emit_path_bounding_box ~content:Path ~stroking:false ~f ~state
-        | _ -> ()
-        end
+      process_op ~pdf ~f ~stack ~state ~resources Pdfops.Op_h;
+      begin match !state.partial_path with
+      | PartialPath (sp, cp, segs, subpaths) ->
+          (* segs is empty, due to [Op_h] *)
+          !state.partial_path <- PartialPath (sp, cp, [], []);
+          !state.path <- (NonZero, rev subpaths);
+          emit_path_bounding_box ~content:Path ~stroking:false ~f ~state
+      | _ -> ()
+      end
   | Pdfops.Op_S ->
       begin match !state.partial_path with
       | PartialPath (sp, cp, segs, subpaths) ->
@@ -732,7 +735,6 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
         (process_op ~pdf ~f ~stack ~state ~resources)
         [Pdfops.Op_m (x, y); Pdfops.Op_l (x +. w, y); Pdfops.Op_l (x +. w, y +. h); Pdfops.Op_l (x, y +. h); Pdfops.Op_h]
   | Pdfops.Op_W ->
-      (* FIXME Actually should modify clip not replace it. *)
       begin match !state.partial_path with
       | PartialPath (_, _, segments, subpaths) ->
           if segments = [] && subpaths = [] then () else
@@ -741,11 +743,10 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
                 then (Not_hole, Closed, rev segments)::subpaths
                 else subpaths
             in
-              !state.clipping_path <- (NonZero, path)
+              !state.clipping_path <- combine_clip !state.clipping_path (NonZero, path)
       | _ -> ()
       end
   | Pdfops.Op_W' ->
-      (* FIXME Actually should modify clip not replace it. *)
       begin match !state.partial_path with
       | PartialPath (_, _, segments, subpaths) ->
           if segments = [] && subpaths = [] then () else
@@ -754,7 +755,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
                 then (Not_hole, Closed, rev segments)::subpaths
                 else subpaths
             in
-              !state.clipping_path <- (EvenOdd, path)
+              !state.clipping_path <- combine_clip !state.clipping_path (EvenOdd, path)
       | _ -> ()
       end
   | Pdfops.Op_BT ->
@@ -830,49 +831,41 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
   | Pdfops.Op_cs s ->
       !state.colorspace_non_stroke <- Pdfspace.read_colourspace pdf resources (Pdf.Name s)
   | Pdfops.Op_SC fl | Pdfops.Op_SCN fl ->
-      !state.stroke_color <- Floats fl
+      !state.color_stroke <- Floats fl
   | Pdfops.Op_sc fl | Pdfops.Op_scn fl ->
-      !state.color <- Floats fl
+      !state.color_non_stroke <- Floats fl
   | Pdfops.Op_SCNName (s, fl) ->
       begin match !state.colorspace_non_stroke with
       | Pdfspace.Pattern | Pdfspace.PatternWithBaseColourspace _ ->
-          begin try
-            !state.color <- Pattern (read_pattern pdf resources s)
-          with
-            _ -> ()
-          end
+          begin try !state.color_non_stroke <- Pattern (read_pattern pdf resources s) with _ -> () end
       | _ -> 
-          !state.color <- Named (s, fl)
+          !state.color_non_stroke <- Named (s, fl)
       end
   | Pdfops.Op_scnName (s, fl) ->
       begin match !state.colorspace_stroke with
       | Pdfspace.Pattern | Pdfspace.PatternWithBaseColourspace _ ->
-          begin try
-            !state.stroke_color <- Pattern (read_pattern pdf resources s)
-          with
-            _ -> ()
-          end
+          begin try !state.color_stroke <- Pattern (read_pattern pdf resources s) with _ -> () end
       | _ -> 
-          !state.stroke_color <- Named (s, fl)
+          !state.color_stroke <- Named (s, fl)
       end
   | Pdfops.Op_G f ->
       !state.colorspace_stroke <- Pdfspace.DeviceGray;
-      !state.stroke_color <- Floats [f];
+      !state.color_stroke <- Floats [f];
   | Pdfops.Op_g f ->
       !state.colorspace_non_stroke <- Pdfspace.DeviceGray;
-      !state.color <- Floats [f];
+      !state.color_non_stroke <- Floats [f];
   | Pdfops.Op_RG (f1, f2, f3) ->
       !state.colorspace_stroke <- Pdfspace.DeviceRGB;
-      !state.stroke_color <- Floats [f1; f2; f3]
+      !state.color_stroke <- Floats [f1; f2; f3]
   | Pdfops.Op_rg (f1, f2, f3) ->
       !state.colorspace_non_stroke <- Pdfspace.DeviceRGB;
-      !state.color <- Floats [f1; f2; f3]
+      !state.color_non_stroke <- Floats [f1; f2; f3]
   | Pdfops.Op_K (f1, f2, f3, f4) ->
       !state.colorspace_stroke <- Pdfspace.DeviceCMYK;
-      !state.stroke_color <- Floats [f1; f2; f3; f4]
+      !state.color_stroke <- Floats [f1; f2; f3; f4]
   | Pdfops.Op_k (f1, f2, f3, f4) ->
       !state.colorspace_non_stroke <- Pdfspace.DeviceCMYK;
-      !state.color <- Floats [f1; f2; f3; f4]
+      !state.color_non_stroke <- Floats [f1; f2; f3; f4]
   | Pdfops.Op_sh s ->
       begin try
       let shadingdict = Pdf.lookup_fail "no /Shading" pdf "/Shading" resources in
@@ -968,6 +961,89 @@ and process_form_xobject ~pdf ~f ~stack ~state ~resources pdfobject =
         iter
           (process_op ~pdf ~f ~stack ~state ~resources:total_resources)
           (Pdfops.parse_operators pdf total_resources content)
+
+and read_graphics_state_dictionary ~pdf ~f ~stack ~state ~resources s =
+  let extgstate_dict =
+    match Pdf.lookup_direct pdf "/ExtGState" resources with
+    | Some (Pdf.Dictionary _ as d) -> d
+    | _ -> Pdf.Dictionary []
+  in
+    (*LW*)
+    begin match Pdf.lookup_direct pdf "/LW" extgstate_dict with
+    | Some (Pdf.Real lw) -> process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_w lw)
+    | Some (Pdf.Integer lw) -> process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_w (float_of_int lw))
+    | _ -> ()
+    end;
+    (*LC*)
+    begin match Pdf.lookup_direct pdf "/LC" extgstate_dict with
+    | Some (Pdf.Integer lc) -> process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_J lc)
+    | _ -> ()
+    end;
+    (*LJ*)
+    begin match Pdf.lookup_direct pdf "/LJ" extgstate_dict with
+    | Some (Pdf.Integer lj) -> process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_j lj)
+    | _ -> ()
+    end;
+    (*ML*)
+    begin match Pdf.lookup_direct pdf "/ML" extgstate_dict with
+    | Some (Pdf.Real ml) -> process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_M ml)
+    | Some (Pdf.Integer ml) -> process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_M (float_of_int ml))
+    | _ -> ()
+    end;
+    (*D*)
+    begin match Pdf.lookup_direct pdf "/D" extgstate_dict with
+    | Some (Pdf.Array [a; phase]) ->
+        let fs =
+          try
+            match Pdf.direct pdf a with | Pdf.Array a -> a | _ -> []
+          with
+            _ -> []
+        in
+          process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_d (map (Pdf.getnum pdf) fs, Pdf.getnum pdf phase))
+    | _ -> ()
+    end;
+    (*RI*)
+    begin match Pdf.lookup_direct pdf "/RI" extgstate_dict with
+    | Some (Pdf.Name ri) -> process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_ri ri)
+    | _ -> ()
+    end;
+    (*OP*)
+    begin match Pdf.lookup_direct pdf "/OP" extgstate_dict with
+    | Some (Pdf.Boolean op) ->
+        begin match Pdf.lookup_direct pdf "/op" extgstate_dict with
+        | Some (Pdf.Boolean _) ->
+            !state.overprint_stroke <- op
+        | _ ->
+            !state.overprint_stroke <- op;
+            !state.overprint_non_stroke <- op
+        end
+    | _ -> ()
+    end;
+    (*op*)
+    begin match Pdf.lookup_direct pdf "/op" extgstate_dict with
+    | Some (Pdf.Boolean op) -> !state.overprint_non_stroke <- op
+    | _ -> ()
+    end
+    (*OPM*)
+    (*Font*)
+    (*BG*)
+    (*BG2*)
+    (*UCR*)
+    (*UCR2*)
+    (*TR*)
+    (*TR2*)
+    (*HT*)
+    (*FL*)
+    (*SM*)
+    (*SA*)
+    (*BM*)
+    (*SMask*)
+    (*CA*)
+    (*ca*)
+    (*AIS*)
+    (*TK*)
+    (*UseBlackPtComp*)
+    (*HTO*)
 
 (* Draft redactor. f is given the bbox and determines whether to delete or not. *)
 let filter_ops ~pdf ~f ~mediabox ~resources ~ops =
