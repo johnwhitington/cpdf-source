@@ -1032,15 +1032,48 @@ and read_graphics_state_dictionary ~pdf ~f ~stack ~state ~resources s =
     | _ -> ()
     end;
     (*Font FIXME *)
-    (*BG FIXME*)
-    (*BG2 FIXME*)
-    (*UCR FIXME*)
-    (*UCR2 FIXME*)
-    (*TR FIXME*)
-    (*TR2 FIXME*)
-    (*HT FIXME*)
-    (*FL FIXME*)
-    (*SM FIXME*)
+    (*BG*)
+    begin match Pdf.lookup_direct pdf "/BG" extgstate_dict with
+    | Some bg -> !state.black_generation <- bg
+    | _ -> ()
+    end;
+    (*BG2*)
+    begin match Pdf.lookup_direct pdf "/BG2" extgstate_dict with
+    | Some bg2 -> !state.black_generation <- bg2
+    | _ -> ()
+    end;
+    (*UCR*)
+    begin match Pdf.lookup_direct pdf "/UCR" extgstate_dict with
+    | Some ucr -> !state.undercolor_removal <- ucr
+    | _ -> ()
+    end;
+    (*UCR2*)
+    begin match Pdf.lookup_direct pdf "/UCR2" extgstate_dict with
+    | Some ucr2 -> !state.undercolor_removal <- ucr2
+    | _ -> ()
+    end;
+    (*TR*)
+    begin match Pdf.lookup_direct pdf "/TR" extgstate_dict with
+    | Some tr -> !state.transfer <- tr
+    | _ -> ()
+    end;
+    (*TR2*)
+    begin match Pdf.lookup_direct pdf "/TR2" extgstate_dict with
+    | Some tr2 -> !state.transfer <- tr2
+    | _ -> ()
+    end;
+    (*HT*)
+    begin match Pdf.lookup_direct pdf "/HT" extgstate_dict with
+    | Some ht -> !state.halftone <- ht
+    | _ -> ()
+    end;
+    (*FL*)
+    begin match Pdf.lookup_direct pdf "/FL" extgstate_dict with
+    | Some (Pdf.Real fl) -> !state.flatness <- fl
+    | Some (Pdf.Integer fl) -> !state.flatness <- float_of_int fl
+    | _ -> ()
+    end;
+    (*SM*)
     begin match Pdf.lookup_direct pdf "/SM" extgstate_dict with
     | Some (Pdf.Real sm) -> !state.smoothness <- sm
     | Some (Pdf.Integer sm) -> !state.smoothness <- float_of_int sm
@@ -1051,8 +1084,16 @@ and read_graphics_state_dictionary ~pdf ~f ~stack ~state ~resources s =
     | Some (Pdf.Boolean sa) -> !state.stroke_adjustment <- sa
     | _ -> ()
     end;
-    (*BM FIXME *)
-    (*SMask FIXME *)
+    (*BM*)
+    begin match Pdf.lookup_direct pdf "/BM" extgstate_dict with
+    | Some bm -> !state.blend_mode <- bm
+    | _ -> ()
+    end;
+    (*SMask*)
+    begin match Pdf.lookup_direct pdf "/SMask" extgstate_dict with
+    | Some smask -> !state.halftone <- smask
+    | _ -> ()
+    end;
     (*CA*)
     begin match Pdf.lookup_direct pdf "/CA" extgstate_dict with
     | Some (Pdf.Real ca) -> !state.alpha_constant_stroke <- ca
@@ -1079,8 +1120,12 @@ and read_graphics_state_dictionary ~pdf ~f ~stack ~state ~resources s =
     begin match Pdf.lookup_direct pdf "/UseBlackPtComp" extgstate_dict with
     | Some (Pdf.Name bpc) -> !state.black_point_compensation <- bpc
     | _ -> ()
+    end;
+    (*HTO*)
+    begin match Pdf.lookup_direct pdf "/HTO" extgstate_dict with
+    | Some hto -> !state.halftone <- hto
+    | _ -> ()
     end
-    (*HTO FIXME*)
 
 (* Draft redactor. f is given the bbox and determines whether to delete or not. *)
 let filter_ops ~pdf ~f ~mediabox ~resources ~ops =
