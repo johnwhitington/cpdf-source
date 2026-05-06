@@ -94,7 +94,7 @@ type state =
   {mutable ctm : Pdftransform.transform_matrix;
    mutable partial_path : partial;
    mutable path : path;
-   mutable clipping_path : path;
+   mutable clipping_path : path list;
    mutable colourspace_stroke : Pdfspace.t;
    mutable colourspace_non_stroke : Pdfspace.t;
    mutable colour_stroke : colvals;
@@ -148,11 +148,11 @@ let initial_text_state () =
 let initial_state (minx, miny, maxx, maxy) =
   {ctm = Pdftransform.i_matrix;
    clipping_path =
-     (EvenOdd, [(Not_hole, Closed,
+     [(EvenOdd, [(Not_hole, Closed,
                  [Straight ((minx, miny), (minx, maxy));
                   Straight ((minx, maxy), (maxx, maxy));
                   Straight ((maxx, maxy), (maxx, miny));
-                  Straight ((maxx, miny), (minx, miny))])]);
+                  Straight ((maxx, miny), (minx, miny))])])];
    partial_path = NoPartial;
    path = (EvenOdd, []);
    colourspace_stroke = Pdfspace.DeviceGray;
@@ -412,10 +412,6 @@ let process_capital_tj ~f ~stack ~state ~resources elts =
      | _ -> ())
     elts
 
-
-let combine_clip clipping_path new_path =
-  new_path
-
 let read_tiling_pattern _ =
   ColouredTilingPattern Tiling
 
@@ -570,7 +566,7 @@ let transform_path m (w, subpaths) =
     (w, map (fun (h, c, segments) -> (h, c, map transform_segment segments)) subpaths)
 
 let emit_path_bounding_box ~content ~stroking ~f ~state =
-  let path = transform_path !state.ctm (if content = Clip || content = Shading then !state.clipping_path else !state.path) in
+  let path = transform_path !state.ctm (if content = Clip || content = Shading then hd !state.clipping_path else !state.path) in
   let bbox = bbox_of_path path in
     match bbox with
     | None -> ()
@@ -753,7 +749,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
                 then (Not_hole, Closed, rev segments)::subpaths
                 else subpaths
             in
-              !state.clipping_path <- combine_clip !state.clipping_path (NonZero, path)
+              !state.clipping_path <- (NonZero, path)::!state.clipping_path
       | _ -> ()
       end
   | Pdfops.Op_W' ->
@@ -765,7 +761,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
                 then (Not_hole, Closed, rev segments)::subpaths
                 else subpaths
             in
-              !state.clipping_path <- combine_clip !state.clipping_path (EvenOdd, path)
+              !state.clipping_path <- (EvenOdd, path)::!state.clipping_path
       | _ -> ()
       end
   | Pdfops.Op_BT ->
