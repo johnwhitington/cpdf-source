@@ -109,12 +109,13 @@ type state =
    mutable stroke_adjustment : bool;
    mutable blend_mode : Pdf.pdfobject;
    mutable soft_mask : Pdf.pdfobject;
-   mutable alpha_constant : float;
+   mutable alpha_constant_stroke : float;
+   mutable alpha_constant_non_stroke : float;
    mutable alpha_source : bool;
-   mutable black_point_compensation : Pdf.pdfobject;
+   mutable black_point_compensation : string;
    mutable overprint_stroke : bool;
    mutable overprint_non_stroke : bool;
-   mutable overprint_mode : float;
+   mutable overprint_mode : int;
    mutable black_generation : Pdf.pdfobject;
    mutable undercolor_removal : Pdf.pdfobject;
    mutable transfer : Pdf.pdfobject;
@@ -164,12 +165,13 @@ let initial_state (minx, miny, maxx, maxy) =
    stroke_adjustment = false;
    blend_mode = Pdf.Name "/Normal";
    soft_mask = Pdf.Null;
-   alpha_constant = 1.;
+   alpha_constant_stroke = 1.;
+   alpha_constant_non_stroke = 1.;
    alpha_source = false;
-   black_point_compensation = Pdf.Name "/Default";
+   black_point_compensation = "/Default";
    overprint_stroke = false;
    overprint_non_stroke = false;
-   overprint_mode = 0.;
+   overprint_mode = 0;
    black_generation = Pdf.Null;
    undercolor_removal = Pdf.Null;
    transfer = Pdf.Null;
@@ -1023,27 +1025,62 @@ and read_graphics_state_dictionary ~pdf ~f ~stack ~state ~resources s =
     begin match Pdf.lookup_direct pdf "/op" extgstate_dict with
     | Some (Pdf.Boolean op) -> !state.overprint_non_stroke <- op
     | _ -> ()
-    end
+    end;
     (*OPM*)
-    (*Font*)
-    (*BG*)
-    (*BG2*)
-    (*UCR*)
-    (*UCR2*)
-    (*TR*)
-    (*TR2*)
-    (*HT*)
-    (*FL*)
-    (*SM*)
+    begin match Pdf.lookup_direct pdf "/op" extgstate_dict with
+    | Some (Pdf.Integer opm) -> !state.overprint_mode <- opm
+    | _ -> ()
+    end;
+    (*Font FIXME *)
+    (*BG FIXME*)
+    (*BG2 FIXME*)
+    (*UCR FIXME*)
+    (*UCR2 FIXME*)
+    (*TR FIXME*)
+    (*TR2 FIXME*)
+    (*HT FIXME*)
+    (*FL FIXME*)
+    (*SM FIXME*)
+    begin match Pdf.lookup_direct pdf "/SM" extgstate_dict with
+    | Some (Pdf.Real sm) -> !state.smoothness <- sm
+    | Some (Pdf.Integer sm) -> !state.smoothness <- float_of_int sm
+    | _ -> ()
+    end;
     (*SA*)
-    (*BM*)
-    (*SMask*)
+    begin match Pdf.lookup_direct pdf "/SA" extgstate_dict with
+    | Some (Pdf.Boolean sa) -> !state.stroke_adjustment <- sa
+    | _ -> ()
+    end;
+    (*BM FIXME *)
+    (*SMask FIXME *)
     (*CA*)
+    begin match Pdf.lookup_direct pdf "/CA" extgstate_dict with
+    | Some (Pdf.Real ca) -> !state.alpha_constant_stroke <- ca
+    | Some (Pdf.Integer ca) -> !state.alpha_constant_stroke <- float_of_int ca
+    | _ -> ()
+    end;
     (*ca*)
+    begin match Pdf.lookup_direct pdf "/ca" extgstate_dict with
+    | Some (Pdf.Real ca) -> !state.alpha_constant_non_stroke <- ca
+    | Some (Pdf.Integer ca) -> !state.alpha_constant_non_stroke <- float_of_int ca
+    | _ -> ()
+    end;
     (*AIS*)
+    begin match Pdf.lookup_direct pdf "/AIS" extgstate_dict with
+    | Some (Pdf.Boolean ais) -> !state.alpha_source <- ais
+    | _ -> ()
+    end;
     (*TK*)
+    begin match Pdf.lookup_direct pdf "/TK" extgstate_dict with
+    | Some (Pdf.Boolean tk) -> !state.text_state.knockout <- tk
+    | _ -> ()
+    end;
     (*UseBlackPtComp*)
-    (*HTO*)
+    begin match Pdf.lookup_direct pdf "/UseBlackPtComp" extgstate_dict with
+    | Some (Pdf.Name bpc) -> !state.black_point_compensation <- bpc
+    | _ -> ()
+    end
+    (*HTO FIXME*)
 
 (* Draft redactor. f is given the bbox and determines whether to delete or not. *)
 let filter_ops ~pdf ~f ~mediabox ~resources ~ops =
