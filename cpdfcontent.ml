@@ -121,7 +121,9 @@ type state =
    mutable transfer : Pdf.pdfobject;
    mutable halftone : Pdf.pdfobject;
    mutable flatness : float;
-   mutable smoothness : float}
+   mutable smoothness : float;
+   mutable d0 : (float * float) option;
+   mutable d1 : (float * float * float * float * float * float) option}
 
 let initial_text_state () =
   {character_spacing = 0.;
@@ -177,7 +179,9 @@ let initial_state (minx, miny, maxx, maxy) =
    transfer = Pdf.Null;
    halftone = Pdf.Null;
    flatness = 1.;
-   smoothness = 0.5}
+   smoothness = 0.5;
+   d0 = None;
+   d1 = None}
 
 let copystate state =
   let text_state = {state.text_state with leading = state.text_state.leading} in
@@ -826,8 +830,10 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
       process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_Tw f1);
       process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_Tc f2);
       process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_' s)
-  | Pdfops.Op_d0 (f1, f2) -> ()
-  | Pdfops.Op_d1 (f1, f2, f3, f4, f5, f6) -> ()
+  | Pdfops.Op_d0 (f1, f2) ->
+      !state.d0 <- Some (f1, f2)
+  | Pdfops.Op_d1 (f1, f2, f3, f4, f5, f6) ->
+      !state.d1 <- Some (f1, f2, f3, f4, f5, f6)
   | Pdfops.Op_CS s ->
       !state.colorspace_stroke <- Pdfspace.read_colourspace pdf resources (Pdf.Name s)
   | Pdfops.Op_cs s ->
