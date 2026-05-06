@@ -95,10 +95,10 @@ type state =
    mutable partial_path : partial;
    mutable path : path;
    mutable clipping_path : path;
-   mutable colorspace_stroke : Pdfspace.t;
-   mutable colorspace_non_stroke : Pdfspace.t;
-   mutable color_stroke : colvals;
-   mutable color_non_stroke : colvals;
+   mutable colourspace_stroke : Pdfspace.t;
+   mutable colourspace_non_stroke : Pdfspace.t;
+   mutable colour_stroke : colvals;
+   mutable colour_non_stroke : colvals;
    mutable text_state : text_state;
    mutable line_width : float;
    mutable line_cap : int;
@@ -117,7 +117,7 @@ type state =
    mutable overprint_non_stroke : bool;
    mutable overprint_mode : int;
    mutable black_generation : Pdf.pdfobject;
-   mutable undercolor_removal : Pdf.pdfobject;
+   mutable undercolour_removal : Pdf.pdfobject;
    mutable transfer : Pdf.pdfobject;
    mutable halftone : Pdf.pdfobject;
    mutable flatness : float;
@@ -155,17 +155,17 @@ let initial_state (minx, miny, maxx, maxy) =
                   Straight ((maxx, miny), (minx, miny))])]);
    partial_path = NoPartial;
    path = (EvenOdd, []);
-   colorspace_stroke = Pdfspace.DeviceGray;
-   colorspace_non_stroke = Pdfspace.DeviceGray;
-   color_non_stroke = Floats [1.];
-   color_stroke = Floats [1.];
+   colourspace_stroke = Pdfspace.DeviceGray;
+   colourspace_non_stroke = Pdfspace.DeviceGray;
+   colour_non_stroke = Floats [1.];
+   colour_stroke = Floats [1.];
    text_state = initial_text_state ();
    line_width = 1.;
    line_cap = 0;
    line_join = 0;
    miter_limit = 10.;
    dash_pattern = ([], 0.);
-   rendering_intent = "/RelativeColorimetric";
+   rendering_intent = "/Relativecolourimetric";
    stroke_adjustment = false;
    blend_mode = Pdf.Name "/Normal";
    soft_mask = Pdf.Null;
@@ -177,7 +177,7 @@ let initial_state (minx, miny, maxx, maxy) =
    overprint_non_stroke = false;
    overprint_mode = 0;
    black_generation = Pdf.Null;
-   undercolor_removal = Pdf.Null;
+   undercolour_removal = Pdf.Null;
    transfer = Pdf.Null;
    halftone = Pdf.Null;
    flatness = 1.;
@@ -219,15 +219,15 @@ let bbox_of_path (_, subpaths) =
 let rec initial_colour pdf resources = function
   | Pdf.Name "/DeviceGray"
   | Pdf.Array (Pdf.Name "/CalGray"::_) ->
-      [0.]
+      Floats [0.]
   | Pdf.Name "/DeviceRGB"
   | Pdf.Array (Pdf.Name "/CalRGB"::_) ->
-      [0.; 0.; 0.]
+      Floats [0.; 0.; 0.]
   | Pdf.Name "/DeviceCMYK" ->
-      [0.; 0.; 0.; 1.]
+      Floats [0.; 0.; 0.; 1.]
   | Pdf.Name "/Pattern"
   | Pdf.Array [Pdf.Name "/Pattern"] ->
-      [0.]
+      Floats [0.]
   | Pdf.Array elts as cs ->
       begin match elts with
         | [Pdf.Name "/ICCBased"; iccstream] ->
@@ -235,9 +235,9 @@ let rec initial_colour pdf resources = function
              | Some space -> initial_colour pdf resources space
              | None ->
                  begin match Pdf.lookup_direct pdf "/N" iccstream with
-                 | Some (Pdf.Integer 1) -> [0.]
-                 | Some (Pdf.Integer 3) -> [0.; 0.; 0.]
-                 | Some (Pdf.Integer 4) -> [0.; 0.; 0.; 0.]
+                 | Some (Pdf.Integer 1) -> Floats [0.]
+                 | Some (Pdf.Integer 3) -> Floats [0.; 0.; 0.]
+                 | Some (Pdf.Integer 4) -> Floats [0.; 0.; 0.; 0.]
                  | _ -> raise (Pdf.PDFError "Bad ICCBased Alternate")
                  end
              end
@@ -489,7 +489,7 @@ let read_axial_shading pdf shading =
 (* Read a shading pattern *)
 let read_shading pdf shading_matrix shading_extgstate shading =
   let shading_colourspace =
-    Pdf.lookup_fail "No colourspace in shading" pdf "/ColorSpace" shading
+    Pdf.lookup_fail "No colourspace in shading" pdf "/colourSpace" shading
   and shading_background =
     Pdf.lookup_direct pdf "/Background" shading
   and shading_bbox =
@@ -839,45 +839,47 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
   | Pdfops.Op_d1 (f1, f2, f3, f4, f5, f6) ->
       !state.d1 <- Some (f1, f2, f3, f4, f5, f6)
   | Pdfops.Op_CS s ->
-      !state.colorspace_stroke <- Pdfspace.read_colourspace pdf resources (Pdf.Name s)
+      !state.colourspace_stroke <- Pdfspace.read_colourspace pdf resources (Pdf.Name s);
+      !state.colour_stroke <- initial_colour pdf resources (Pdf.Name s) 
   | Pdfops.Op_cs s ->
-      !state.colorspace_non_stroke <- Pdfspace.read_colourspace pdf resources (Pdf.Name s)
+      !state.colourspace_non_stroke <- Pdfspace.read_colourspace pdf resources (Pdf.Name s);
+      !state.colour_non_stroke <- initial_colour pdf resources (Pdf.Name s) 
   | Pdfops.Op_SC fl | Pdfops.Op_SCN fl ->
-      !state.color_stroke <- Floats fl
+      !state.colour_stroke <- Floats fl
   | Pdfops.Op_sc fl | Pdfops.Op_scn fl ->
-      !state.color_non_stroke <- Floats fl
+      !state.colour_non_stroke <- Floats fl
   | Pdfops.Op_SCNName (s, fl) ->
-      begin match !state.colorspace_non_stroke with
+      begin match !state.colourspace_non_stroke with
       | Pdfspace.Pattern | Pdfspace.PatternWithBaseColourspace _ ->
-          begin try !state.color_non_stroke <- Pattern (read_pattern pdf resources s) with _ -> () end
+          begin try !state.colour_non_stroke <- Pattern (read_pattern pdf resources s) with _ -> () end
       | _ -> 
-          !state.color_non_stroke <- Named (s, fl)
+          !state.colour_non_stroke <- Named (s, fl)
       end
   | Pdfops.Op_scnName (s, fl) ->
-      begin match !state.colorspace_stroke with
+      begin match !state.colourspace_stroke with
       | Pdfspace.Pattern | Pdfspace.PatternWithBaseColourspace _ ->
-          begin try !state.color_stroke <- Pattern (read_pattern pdf resources s) with _ -> () end
+          begin try !state.colour_stroke <- Pattern (read_pattern pdf resources s) with _ -> () end
       | _ -> 
-          !state.color_stroke <- Named (s, fl)
+          !state.colour_stroke <- Named (s, fl)
       end
   | Pdfops.Op_G f ->
-      !state.colorspace_stroke <- Pdfspace.DeviceGray;
-      !state.color_stroke <- Floats [f];
+      !state.colourspace_stroke <- Pdfspace.DeviceGray;
+      !state.colour_stroke <- Floats [f];
   | Pdfops.Op_g f ->
-      !state.colorspace_non_stroke <- Pdfspace.DeviceGray;
-      !state.color_non_stroke <- Floats [f];
+      !state.colourspace_non_stroke <- Pdfspace.DeviceGray;
+      !state.colour_non_stroke <- Floats [f];
   | Pdfops.Op_RG (f1, f2, f3) ->
-      !state.colorspace_stroke <- Pdfspace.DeviceRGB;
-      !state.color_stroke <- Floats [f1; f2; f3]
+      !state.colourspace_stroke <- Pdfspace.DeviceRGB;
+      !state.colour_stroke <- Floats [f1; f2; f3]
   | Pdfops.Op_rg (f1, f2, f3) ->
-      !state.colorspace_non_stroke <- Pdfspace.DeviceRGB;
-      !state.color_non_stroke <- Floats [f1; f2; f3]
+      !state.colourspace_non_stroke <- Pdfspace.DeviceRGB;
+      !state.colour_non_stroke <- Floats [f1; f2; f3]
   | Pdfops.Op_K (f1, f2, f3, f4) ->
-      !state.colorspace_stroke <- Pdfspace.DeviceCMYK;
-      !state.color_stroke <- Floats [f1; f2; f3; f4]
+      !state.colourspace_stroke <- Pdfspace.DeviceCMYK;
+      !state.colour_stroke <- Floats [f1; f2; f3; f4]
   | Pdfops.Op_k (f1, f2, f3, f4) ->
-      !state.colorspace_non_stroke <- Pdfspace.DeviceCMYK;
-      !state.color_non_stroke <- Floats [f1; f2; f3; f4]
+      !state.colourspace_non_stroke <- Pdfspace.DeviceCMYK;
+      !state.colour_non_stroke <- Floats [f1; f2; f3; f4]
   | Pdfops.Op_sh s ->
       begin try
       let shadingdict = Pdf.lookup_fail "no /Shading" pdf "/Shading" resources in
@@ -1088,12 +1090,12 @@ and read_graphics_state_dictionary ~pdf ~f ~stack ~state ~resources s =
     end;
     (*UCR*)
     begin match Pdf.lookup_direct pdf "/UCR" extgstate_dict with
-    | Some ucr -> !state.undercolor_removal <- ucr
+    | Some ucr -> !state.undercolour_removal <- ucr
     | _ -> ()
     end;
     (*UCR2*)
     begin match Pdf.lookup_direct pdf "/UCR2" extgstate_dict with
-    | Some ucr2 -> !state.undercolor_removal <- ucr2
+    | Some ucr2 -> !state.undercolour_removal <- ucr2
     | _ -> ()
     end;
     (*TR*)
