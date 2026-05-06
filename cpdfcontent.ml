@@ -123,7 +123,9 @@ type state =
    mutable flatness : float;
    mutable smoothness : float;
    mutable d0 : (float * float) option;
-   mutable d1 : (float * float * float * float * float * float) option}
+   mutable d1 : (float * float * float * float * float * float) option;
+   mutable marked_content_point : (string * Pdf.pdfobject option) option;
+   mutable marked_content : (string * Pdf.pdfobject option) list}
 
 let initial_text_state () =
   {character_spacing = 0.;
@@ -181,7 +183,9 @@ let initial_state (minx, miny, maxx, maxy) =
    flatness = 1.;
    smoothness = 0.5;
    d0 = None;
-   d1 = None}
+   d1 = None;
+   marked_content_point = None;
+   marked_content = []}
 
 let copystate state =
   let text_state = {state.text_state with leading = state.text_state.leading} in
@@ -939,15 +943,27 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
           end
       | None -> raise (Pdf.PDFError "xobject not found")
       end
-  | Pdfops.Op_MP s -> ()
-  | Pdfops.Op_DP (s, p) -> ()
-  | Pdfops.Op_BMC s -> ()
-  | Pdfops.Op_BDC (s, p) -> ()
-  | Pdfops.Op_EMC -> ()
-  | Pdfops.Op_BX -> ()
-  | Pdfops.Op_EX -> ()
-  | Pdfops.Op_Unknown s -> ()
-  | Pdfops.Op_Comment s -> ()
+  | Pdfops.Op_MP s ->
+      !state.marked_content_point <- Some (s, None)
+  | Pdfops.Op_DP (s, p) ->
+      !state.marked_content_point <- Some (s, Some p)
+  | Pdfops.Op_BMC s ->
+      !state.marked_content <- (s, None)::!state.marked_content
+  | Pdfops.Op_BDC (s, p) ->
+      !state.marked_content <- (s, Some p)::!state.marked_content
+  | Pdfops.Op_EMC ->
+      begin match !state.marked_content with
+      | _::t -> !state.marked_content <- t
+      | _ -> ()
+      end
+  | Pdfops.Op_BX ->
+      ()
+  | Pdfops.Op_EX ->
+      ()
+  | Pdfops.Op_Unknown _ ->
+      ()
+  | Pdfops.Op_Comment _ ->
+      ()
 
 and process_form_xobject ~pdf ~f ~stack ~state ~resources pdfobject =
   let content = [Pdf.direct pdf pdfobject] in
