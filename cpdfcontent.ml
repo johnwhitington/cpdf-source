@@ -1,6 +1,9 @@
 (** Processing page content. *)
 open Pdfutil
 
+(* TODO Harden against errors in all places - it's not appropriate to complain
+   (rather log) in the middle of processing a content stream. *)
+
 type fpoint = float * float
 
 type winding_rule = EvenOdd | NonZero
