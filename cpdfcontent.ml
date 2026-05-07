@@ -216,6 +216,7 @@ let bbox_of_path (_, subpaths) =
       (max_float, min_float, max_float, min_float)
       (map bbox_of_segment segments)
 
+(* Eventually this will be replaced with one operating on Pdfspace.t, of course. *)
 let rec initial_colour pdf resources = function
   | Pdf.Name "/DeviceGray"
   | Pdf.Array (Pdf.Name "/CalGray"::_) ->
@@ -241,6 +242,7 @@ let rec initial_colour pdf resources = function
                  | _ -> raise (Pdf.PDFError "Bad ICCBased Alternate")
                  end
              end
+        | Pdf.Name "/Lab"::_ -> Floats [0.; 0.; 0.; 0.]
         | Pdf.Name "/DeviceN"::_::alternate::_ 
         | [Pdf.Name "/Separation"; _; alternate; _] ->
             initial_colour pdf resources alternate
@@ -250,7 +252,14 @@ let rec initial_colour pdf resources = function
       end
   | Pdf.Indirect _ as indirect ->
       initial_colour pdf resources (Pdf.direct pdf indirect)
-  | _ -> raise (Pdf.PDFError "Unknown colourspace B")
+  | Pdf.Name n ->
+      begin match Pdf.lookup_chain pdf resources ["/ColorSpace"; n] with
+      | Some cs -> initial_colour pdf resources cs
+      | None -> Pdfe.logf "Can't find colourspace %s\n" n; Floats [0.]
+      end
+  | p ->
+      Pdfe.logf "Unknown colourspace %s" (Pdfwrite.string_of_pdf p);
+      Floats [0.]
 
 let vertical = function
   | Pdftext.CIDKeyedFont (_, _, Pdftext.Predefined "/Identity-V") -> true

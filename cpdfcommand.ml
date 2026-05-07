@@ -8,6 +8,8 @@ let version_date = "(to come)"
 open Pdfutil
 open Pdfio
 
+let _ = set Pdfe.suppress_adjacent_duplicates
+
 type attachment =
   {ofilename : string;
    mutable odescription : string option;
