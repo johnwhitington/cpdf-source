@@ -2597,6 +2597,13 @@ output on <strong>stdout</strong>.</p>
 <p>Do not call exit() after an error.</p>
 <p><strong>cpdf -remove-stream-content in.pdf -o out.pdf</strong></p>
 <p>Remove stream content when writing.</p>
+<p><strong>cpdf -show-bboxes in.pdf</strong> [-light] <strong>-o
+out.pdf</strong></p>
+<p>Show bounding boxes of objects on page.</p>
+<p><strong>cpdf -show-bboxes-shape &lt;boxspec&gt;</strong> [-light]
+<strong>-o out.pdf</strong></p>
+<p>Show bounding boxes of objects on page which lie within a given
+rectangle “minx miny width height”.</p>
 <h1 id="environment">ENVIRONMENT</h1>
 <dl>
 <dt><strong>CPDF_SHOW_EXT</strong></dt>

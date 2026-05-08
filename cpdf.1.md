@@ -2417,6 +2417,14 @@ Do not call exit() after an error.
 
 Remove stream content when writing.
 
+**cpdf -show-bboxes in.pdf** \[-light] **-o out.pdf**
+
+Show bounding boxes of objects on page.
+
+**cpdf -show-bboxes-shape \<boxspec>** \[-light] **-o out.pdf**
+
+Show bounding boxes of objects on page which lie within a given rectangle "minx miny width height".
+
 # ENVIRONMENT
 
 **CPDF_SHOW_EXT**

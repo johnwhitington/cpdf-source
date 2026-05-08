@@ -7048,6 +7048,13 @@ Clip & Black, dashed.
 
 \noindent The option \texttt{-light} may be specified to use lighter versions of these colours if the PDF in question is dark.
 
+To show only such boxes as lie within a given rectangle (for example, those which may be redacted by a redaction annotation covering that region), use \texttt{-show-bboxes-shape} instead:
+
+  \begin{framed}
+  \small\noindent\verb!cpdf -show-bboxes-shape "50 50 200 300" in.pdf -o out.pdf!
+  \end{framed}
+
+
 \begin{cpdflib}
 \clearpage
 \section*{C Interface}

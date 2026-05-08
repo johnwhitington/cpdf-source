@@ -2263,6 +2263,16 @@ Do not call exit() after an error.
 \f[B]cpdf \-remove\-stream\-content in.pdf \-o out.pdf\f[R]
 .PP
 Remove stream content when writing.
+.PP
+\f[B]cpdf \-show\-bboxes in.pdf\f[R] [\-light] \f[B]\-o out.pdf\f[R]
+.PP
+Show bounding boxes of objects on page.
+.PP
+\f[B]cpdf \-show\-bboxes\-shape <boxspec>\f[R] [\-light] \f[B]\-o
+out.pdf\f[R]
+.PP
+Show bounding boxes of objects on page which lie within a given
+rectangle \(lqminx miny width height\(rq.
 .SH ENVIRONMENT
 .TP
 \f[B]CPDF_SHOW_EXT\f[R]
