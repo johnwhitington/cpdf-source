@@ -6607,7 +6607,11 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -contains-javascript in.pdf!\\
-  \noindent\verb!cpdf -remove-javascript in.pdf -o out.pdf!\end{framed}}
+  \noindent\verb!cpdf -remove-javascript in.pdf -o out.pdf!
+
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -show-bboxes [-light] in.pdf [<range>] -o out.pdf!\\
+  \noindent\verb!cpdf -show-bboxes-shape <boxspec> [-light] in.pdf [<range>] -o out.pdf!\end{framed}}
 
   \section{Draft Documents}
 \index{draft}
@@ -7020,7 +7024,29 @@ Some extra options are available to aid debugging of Cpdf and PDF output:
 
   \end{framed}
 
+\section{Showing object bounding boxes}
 
+We can show the content which makes up each page by showing the bounding box of each path, glyph, image, inline image, shading, and clipping region:
+
+  \begin{framed}
+  \small\noindent\verb!cpdf -show-bboxes in.pdf -o out.pdf!
+  \end{framed}
+
+\noindent Here are the colours:
+
+\medskip
+\begin{tabular}{ll}
+\textbf{Object} & \textbf{Colour}\\\hline
+Path & Blue \\
+Glyph & Black\\
+Image & Green\\
+Inline image & Red\\
+Shading & Cyan\\
+Clip & Black, dashed.
+\end{tabular}
+\medskip
+
+\noindent The option \texttt{-light} may be specified to use lighter versions of these colours if the PDF in question is dark.
 
 \begin{cpdflib}
 \clearpage

@@ -3278,7 +3278,7 @@ let specs =
    ("-url-border", Arg.Unit (fun () -> args.url_border <- true), " Add a border to URLs");
    ("-show-bboxes", Arg.Unit (fun () -> setop (ShowBoundingBoxes NoShape) ()), " Show bounding boxes");
    ("-show-bboxes-shape", Arg.String (fun s -> setop (ShowBoundingBoxes (read_shape s)) ()), " Show bounding boxes in a given shape");
-   ("-bboxes-light", Arg.Unit (fun () -> args.show_bboxes_light <- true), " Use light colours for bounding boxes");
+   ("-light", Arg.Unit (fun () -> args.show_bboxes_light <- true), " Use light colours for bounding boxes");
    ("-reveal-text", Arg.Unit (fun () -> setop RevealText ()), " Reveal hidden text")]
 
 let specs = sort compare specs
