@@ -2324,6 +2324,10 @@ Make all lines black.
 
 Make all fills black.
 
+**cpdf -reveal-text in.pdf** \[\<range>] **-o out.pdf**
+
+Make all text filled.
+
 **cpdf -thinlines \<min thickness> in.pdf** \[\<range>] **-o out.pdf**
 
 Make each line a minimum thickness. A negative value will instead thin lines
