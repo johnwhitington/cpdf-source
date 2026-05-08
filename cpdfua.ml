@@ -1241,7 +1241,7 @@ let matterhorn_31_007 _ _ pdf =
     (fun _ o ->
        match Pdf.lookup_direct pdf "/WMode" o with
        | Some (Pdf.Integer fromdict) ->
-           if (Pdfcmap.parse_cmap pdf o).wmode <> fromdict then merror ()
+           if (Pdfcmap.parse_cmap ~to_unicode:false pdf o).wmode <> fromdict then merror ()
        | _ -> ())
     pdf
 
@@ -1555,7 +1555,7 @@ let check_unicode tu n =
 let matterhorn_31_028 _ _ pdf =
   iter
     (fun i ->
-      let tu = (Pdfcmap.parse_cmap pdf (Pdf.lookup_obj pdf i)).map in
+      let tu = (Pdfcmap.parse_cmap ~to_unicode:true pdf (Pdf.lookup_obj pdf i)).map in
         if check_unicode tu 0 then merror ())
     (all_tounicodes pdf)
 
@@ -1564,7 +1564,7 @@ let matterhorn_31_028 _ _ pdf =
 let matterhorn_31_029 _ _ pdf =
   iter
     (fun i ->
-      let tu = (Pdfcmap.parse_cmap pdf (Pdf.lookup_obj pdf i)).map in
+      let tu = (Pdfcmap.parse_cmap ~to_unicode:true pdf (Pdf.lookup_obj pdf i)).map in
         if check_unicode tu 0xFEFF || check_unicode tu 0xFFFE then merror ())
     (all_tounicodes pdf)
 
