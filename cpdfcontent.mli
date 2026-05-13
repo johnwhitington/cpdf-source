@@ -23,9 +23,18 @@ type path = winding_rule * subpath list
 (** The kind of content being returned. *)
 type content = Glyph | InlineImage | Image | Path | Shading | Clip
 
+type bounding_box =
+  Quad of float * float * float * float * float * float * float * float
+
+type page_obj =
+  {bounding_box : bounding_box;
+   content : content}
+
 (** Filter ops based on a bounding-box predicate. *)
-val filter_ops :
+val filter :
   pdf:Pdf.t ->
-  f:(content * (float * float * float * float * float * float * float * float) -> bool) ->
+  f:(page_obj -> bool) ->
   mediabox:(float * float * float * float) ->
-  resources:Pdf.pdfobject -> ops:Pdfops.t list -> Pdfops.t list
+  resources:Pdf.pdfobject ->
+  ops:Pdfops.t list ->
+  Pdfops.t list

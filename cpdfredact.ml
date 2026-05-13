@@ -5,7 +5,7 @@ let redact pdf ~path range =
   let redact_page page =
     let resources = Pdf.Null in
     let ops = [] in
-    let ops' = Cpdfcontent.filter_ops ~f:(fun _ -> false) ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox) ~resources ~ops in
+    let ops' = Cpdfcontent.filter ~f:(fun _ -> false) ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox) ~resources ~ops in
       ignore ops'
   in
     Cpdfpage.process_pages
@@ -28,9 +28,9 @@ let colour ~light = function
   | Cpdfcontent.Shading -> [if light then Pdfops.Op_RG (0.5, 1., 1.) else Pdfops.Op_RG (0., 1., 1.)] (* Cyan *)
   | Cpdfcontent.Clip -> [Pdfops.Op_d ([4.; 4.], 0.); Pdfops.Op_G (if light then 1. else 0.)] (* Black, dashed. *)
 
-let mkbox ~light (boxtype, (x0, y0, x1, y1, x2, y2, x3, y3)) =
+let mkbox ~light {Cpdfcontent.content; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} =
   [Pdfops.Op_q] @
-  colour ~light boxtype @ [Pdfops.Op_w 0.5] @
+  colour ~light content @ [Pdfops.Op_w 0.5] @
   [Pdfops.Op_m (x0, y0); Op_l (x1, y1); Op_l (x2, y2); Op_l (x3, y3); Op_h; Op_S] @
   [Pdfops.Op_Q]
 
@@ -70,7 +70,7 @@ let show_annotation_bounding_boxes ~fast ~light pdf range =
   c) InlineImage - any intersection
   d) Path - path must be wholly contained in box
   e) Shading - must be wholly contained in box *)
-let box_matches (minx, miny, maxx, maxy) (boxtype, (x0, y0, x1, y1, x2, y2, x3, y3)) =
+let box_matches (minx, miny, maxx, maxy) {Cpdfcontent.content; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} =
   let bminx, bmaxx, bminy, bmaxy =
     fmin (fmin x0 x1) (fmin x2 x3), fmax (fmax x0 x1) (fmax x2 x3),
     fmin (fmin y0 y1) (fmin y2 y3), fmax (fmax y0 y1) (fmax y2 y3)
@@ -81,7 +81,7 @@ let box_matches (minx, miny, maxx, maxy) (boxtype, (x0, y0, x1, y1, x2, y2, x3, 
   let wholly_contained (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy) =
     bminx > minx && bmaxx < maxx && bminy > miny && bmaxx < maxy
   in
-    match boxtype with
+    match content with
     | Cpdfcontent.Glyph | Image | InlineImage -> any_intersection (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy)
     | Path | Shading | Clip -> wholly_contained (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy)
 
@@ -97,7 +97,7 @@ let show_bounding_boxes ~fast ~shape ~light pdf range =
   let show_bounding_boxes_page page =
     let ops = Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content in
     let page_boxes = ref [] in
-      ignore (Cpdfcontent.filter_ops ~pdf ~f:(fun box -> page_boxes =| box; false) ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox) ~resources:page.Pdfpage.resources ~ops);
+      ignore (Cpdfcontent.filter ~pdf ~f:(fun page_obj -> page_boxes =| page_obj; false) ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox) ~resources:page.Pdfpage.resources ~ops);
       !page_boxes
   in
   let bboxes = ref [] in

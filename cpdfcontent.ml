@@ -1,9 +1,6 @@
 (** Processing page content. *)
 open Pdfutil
 
-(* TODO Harden against errors in all places - it's not appropriate to complain
-   (rather log) in the middle of processing a content stream. *)
-
 type fpoint = float * float
 
 type winding_rule = EvenOdd | NonZero
@@ -21,6 +18,13 @@ type subpath = hole * closure * segment list
 type path = winding_rule * subpath list
 
 type content = Glyph | InlineImage | Image | Path | Shading | Clip
+
+type bounding_box =
+  Quad of float * float * float * float * float * float * float * float
+
+type page_obj =
+  {bounding_box : bounding_box;
+   content : content}
 
 type partial =
   | NoPartial
@@ -389,7 +393,7 @@ let process_tj ~f ~stack ~state ~resources s =
         let (x2, y2) = Pdftransform.transform_matrix t_rm (w +. pvx, ascent -. pvy) in
         let (x3, y3) = Pdftransform.transform_matrix t_rm (w +. pvx, descent -. pvy) in
           if debug then begin flprint "BOX: "; Printf.printf "%f %f %f %f %f %f %f %f\n" x0 y0 x1 y1 x2 y2 x3 y3 end;
-          f (Glyph, (x0, y0, x1, y1, x2, y2, x3, y3));
+          f {content = Glyph; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)};
           let tx =
             if vertical then 0. else
               (w *. !state.text_state.font_size +. !state.text_state.character_spacing +.
@@ -592,7 +596,7 @@ let emit_path_bounding_box ~content ~stroking ~f ~state =
           else
             (minx, maxx, miny, maxy)
         in
-          ignore (f (content, (minx, miny, minx, maxy, maxx, maxy, maxx, miny)))
+          ignore (f ({content; bounding_box = Quad (minx, miny, minx, maxy, maxx, maxy, maxx, miny)}))
 
 (* Return next object, list of ops consumed, remaining list *)
 let rec process_op ~pdf ~f ~stack ~state ~resources = function
@@ -897,7 +901,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
         | Some r ->
             begin try
               let minx, miny, maxx, maxy = Pdf.parse_rectangle pdf r in
-                ignore (f (Shading, (minx, miny, minx, maxy, maxx, maxy, maxx, miny)))
+                ignore (f {content = Shading; bounding_box = Quad (minx, miny, minx, maxy, maxx, maxy, maxx, miny)})
             with
               _ -> ()
             end
@@ -913,7 +917,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
       let x1, y1 = Pdftransform.transform_matrix !state.ctm (0., 1.) in
       let x2, y2 = Pdftransform.transform_matrix !state.ctm (1., 1.) in
       let x3, y3 = Pdftransform.transform_matrix !state.ctm (1., 0.) in
-        ignore (f (InlineImage, (x0, y0, x1, y1, x2, y2, x3, y3)))
+        ignore (f {content = InlineImage; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)})
   | Pdfops.Op_Do s ->
       begin match Pdf.lookup_direct pdf "/XObject" resources with
       | Some d ->
@@ -925,7 +929,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
                   let x1, y1 = Pdftransform.transform_matrix !state.ctm (0., 1.) in
                   let x2, y2 = Pdftransform.transform_matrix !state.ctm (1., 1.) in
                   let x3, y3 = Pdftransform.transform_matrix !state.ctm (1., 0.) in
-                    ignore (f (Image, (x0, y0, x1, y1, x2, y2, x3, y3)))
+                    ignore (f {content = Image; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)})
               | Some (Pdf.Name "/Form") ->
                   let matrix = Pdf.parse_matrix pdf "/Matrix" xobj in
                   let minx, miny, maxx, maxy =
@@ -1002,29 +1006,24 @@ and read_graphics_state_dictionary ~pdf ~f ~stack ~state ~resources s =
     | Some (Pdf.Dictionary _ as d) -> d
     | _ -> Pdf.Dictionary []
   in
-    (*LW*)
     begin match Pdf.lookup_direct pdf "/LW" extgstate_dict with
     | Some (Pdf.Real lw) -> process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_w lw)
     | Some (Pdf.Integer lw) -> process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_w (float_of_int lw))
     | _ -> ()
     end;
-    (*LC*)
     begin match Pdf.lookup_direct pdf "/LC" extgstate_dict with
     | Some (Pdf.Integer lc) -> process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_J lc)
     | _ -> ()
     end;
-    (*LJ*)
     begin match Pdf.lookup_direct pdf "/LJ" extgstate_dict with
     | Some (Pdf.Integer lj) -> process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_j lj)
     | _ -> ()
     end;
-    (*ML*)
     begin match Pdf.lookup_direct pdf "/ML" extgstate_dict with
     | Some (Pdf.Real ml) -> process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_M ml)
     | Some (Pdf.Integer ml) -> process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_M (float_of_int ml))
     | _ -> ()
     end;
-    (*D*)
     begin match Pdf.lookup_direct pdf "/D" extgstate_dict with
     | Some (Pdf.Array [a; phase]) ->
         let fs =
@@ -1036,12 +1035,10 @@ and read_graphics_state_dictionary ~pdf ~f ~stack ~state ~resources s =
           process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_d (map (Pdf.getnum pdf) fs, Pdf.getnum pdf phase))
     | _ -> ()
     end;
-    (*RI*)
     begin match Pdf.lookup_direct pdf "/RI" extgstate_dict with
     | Some (Pdf.Name ri) -> process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_ri ri)
     | _ -> ()
     end;
-    (*OP*)
     begin match Pdf.lookup_direct pdf "/OP" extgstate_dict with
     | Some (Pdf.Boolean op) ->
         begin match Pdf.lookup_direct pdf "/op" extgstate_dict with
@@ -1053,12 +1050,10 @@ and read_graphics_state_dictionary ~pdf ~f ~stack ~state ~resources s =
         end
     | _ -> ()
     end;
-    (*op*)
     begin match Pdf.lookup_direct pdf "/op" extgstate_dict with
     | Some (Pdf.Boolean op) -> !state.overprint_non_stroke <- op
     | _ -> ()
     end;
-    (*OPM*)
     begin match Pdf.lookup_direct pdf "/op" extgstate_dict with
     | Some (Pdf.Integer opm) -> !state.overprint_mode <- opm
     | _ -> ()
@@ -1086,103 +1081,85 @@ and read_graphics_state_dictionary ~pdf ~f ~stack ~state ~resources s =
           !state.text_state.font_data <- font_data;
     | _ -> ()
     end;
-    (*BG*)
     begin match Pdf.lookup_direct pdf "/BG" extgstate_dict with
     | Some bg -> !state.black_generation <- bg
     | _ -> ()
     end;
-    (*BG2*)
     begin match Pdf.lookup_direct pdf "/BG2" extgstate_dict with
     | Some bg2 -> !state.black_generation <- bg2
     | _ -> ()
     end;
-    (*UCR*)
     begin match Pdf.lookup_direct pdf "/UCR" extgstate_dict with
     | Some ucr -> !state.undercolour_removal <- ucr
     | _ -> ()
     end;
-    (*UCR2*)
     begin match Pdf.lookup_direct pdf "/UCR2" extgstate_dict with
     | Some ucr2 -> !state.undercolour_removal <- ucr2
     | _ -> ()
     end;
-    (*TR*)
     begin match Pdf.lookup_direct pdf "/TR" extgstate_dict with
     | Some tr -> !state.transfer <- tr
     | _ -> ()
     end;
-    (*TR2*)
     begin match Pdf.lookup_direct pdf "/TR2" extgstate_dict with
     | Some tr2 -> !state.transfer <- tr2
     | _ -> ()
     end;
-    (*HT*)
     begin match Pdf.lookup_direct pdf "/HT" extgstate_dict with
     | Some ht -> !state.halftone <- ht
     | _ -> ()
     end;
-    (*FL*)
     begin match Pdf.lookup_direct pdf "/FL" extgstate_dict with
     | Some (Pdf.Real fl) -> !state.flatness <- fl
     | Some (Pdf.Integer fl) -> !state.flatness <- float_of_int fl
     | _ -> ()
     end;
-    (*SM*)
     begin match Pdf.lookup_direct pdf "/SM" extgstate_dict with
     | Some (Pdf.Real sm) -> !state.smoothness <- sm
     | Some (Pdf.Integer sm) -> !state.smoothness <- float_of_int sm
     | _ -> ()
     end;
-    (*SA*)
     begin match Pdf.lookup_direct pdf "/SA" extgstate_dict with
     | Some (Pdf.Boolean sa) -> !state.stroke_adjustment <- sa
     | _ -> ()
     end;
-    (*BM*)
     begin match Pdf.lookup_direct pdf "/BM" extgstate_dict with
     | Some bm -> !state.blend_mode <- bm
     | _ -> ()
     end;
-    (*SMask*)
     begin match Pdf.lookup_direct pdf "/SMask" extgstate_dict with
     | Some smask -> !state.halftone <- smask
     | _ -> ()
     end;
-    (*CA*)
     begin match Pdf.lookup_direct pdf "/CA" extgstate_dict with
     | Some (Pdf.Real ca) -> !state.alpha_constant_stroke <- ca
     | Some (Pdf.Integer ca) -> !state.alpha_constant_stroke <- float_of_int ca
     | _ -> ()
     end;
-    (*ca*)
     begin match Pdf.lookup_direct pdf "/ca" extgstate_dict with
     | Some (Pdf.Real ca) -> !state.alpha_constant_non_stroke <- ca
     | Some (Pdf.Integer ca) -> !state.alpha_constant_non_stroke <- float_of_int ca
     | _ -> ()
     end;
-    (*AIS*)
     begin match Pdf.lookup_direct pdf "/AIS" extgstate_dict with
     | Some (Pdf.Boolean ais) -> !state.alpha_source <- ais
     | _ -> ()
     end;
-    (*TK*)
     begin match Pdf.lookup_direct pdf "/TK" extgstate_dict with
     | Some (Pdf.Boolean tk) -> !state.text_state.knockout <- tk
     | _ -> ()
     end;
-    (*UseBlackPtComp*)
     begin match Pdf.lookup_direct pdf "/UseBlackPtComp" extgstate_dict with
     | Some (Pdf.Name bpc) -> !state.black_point_compensation <- bpc
     | _ -> ()
     end;
-    (*HTO*)
     begin match Pdf.lookup_direct pdf "/HTO" extgstate_dict with
     | Some hto -> !state.halftone <- hto
     | _ -> ()
     end
 
-(* Draft redactor. f is given the bbox and determines whether to delete or not. *)
-let filter_ops ~pdf ~f ~mediabox ~resources ~ops =
+(* Filter page content, given a predicate on page content. *)
+let filter ~pdf ~f ~mediabox ~resources ~ops =
   let stack = ref [] in
   let state = ref (initial_state mediabox) in
     iter (fun op -> process_op ~pdf ~f ~stack ~state ~resources op) ops;
