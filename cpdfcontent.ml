@@ -1176,5 +1176,22 @@ let filter ~pdf ~f ~mediabox ~resources ~ops =
     iter (fun op -> process_op ~pdf ~f ~stack ~state ~resources op) ops;
     ops
 
+(* Export page content to JSON. One day this will be round-trippable. *)
+let json_of_object = function
+  | Glyph -> `String "Glyph"
+  | InlineImage -> `String "InlineImage"
+  | Image -> `String "Image"
+  | Path -> `String "Path"
+  | Shading -> `String "Shading"
+  | Clip -> `String "Clip"
+
 let to_json ~pdf ~mediabox ~resources ~ops =
-  `List []
+  let jsons = ref [] in
+  let f {content; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} =
+    jsons =|
+      `Assoc ([("object", json_of_object content);
+               ("bbox", `List [`Float x0; `Float y0; `Float x1; `Float y1; `Float x2; `Float y2; `Float x3; `Float y3])]);
+    true
+  in
+    ignore (filter ~pdf ~f ~mediabox ~resources ~ops);
+    `List (rev !jsons)

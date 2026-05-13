@@ -5445,11 +5445,13 @@ let rec go () =
           option_map2
             (fun page pnum ->
                if mem pnum range then
-                 Some (Cpdfcontent.to_json
-                         ~pdf
-                         ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox)
-                         ~resources:page.Pdfpage.resources
-                         ~ops:(Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content))
+                 Some (`Assoc
+                         [("page", `Int pnum);
+                          ("contents", Cpdfcontent.to_json
+                                         ~pdf
+                                         ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox)
+                                         ~resources:page.Pdfpage.resources
+                                         ~ops:(Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content))])
                else
                  None)
             (Pdfpage.pages_of_pagetree pdf)
