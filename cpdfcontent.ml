@@ -17,7 +17,13 @@ type subpath = hole * closure * segment list
 
 type path = winding_rule * subpath list
 
-type content = Glyph | InlineImage | Image | Path | Shading | Clip
+type content =
+  | Glyph of int
+  | InlineImage
+  | Image
+  | Path
+  | Shading
+  | Clip
 
 type bounding_box =
   Quad of float * float * float * float * float * float * float * float
@@ -397,7 +403,7 @@ let process_tj ~f ~stack ~state ~resources s =
         let (x2, y2) = Pdftransform.transform_matrix t_rm (w +. pvx, ascent -. pvy) in
         let (x3, y3) = Pdftransform.transform_matrix t_rm (w +. pvx, descent -. pvy) in
           if debug then begin flprint "BOX: "; Printf.printf "%f %f %f %f %f %f %f %f\n" x0 y0 x1 y1 x2 y2 x3 y3 end;
-          f {content = Glyph; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)};
+          f {content = Glyph c; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)};
           let tx =
             if vertical then 0. else
               (w *. !state.text_state.font_size +. !state.text_state.character_spacing +.
@@ -1176,14 +1182,23 @@ let filter ~pdf ~f ~mediabox ~resources ~ops =
     iter (fun op -> process_op ~pdf ~f ~stack ~state ~resources op) ops;
     ops
 
+let bytes n =
+  let rec count v = if v = 0 then 0 else 1 + count (v lsr 8) in
+  let l = max 1 (count n) in
+  let b = Bytes.create l in
+  for i = 0 to l - 1 do
+    Bytes.set b (l - 1 - i) (Char.chr ((n lsr (i * 8)) land 0xFF))
+  done;
+  Bytes.to_string b
+
 (* Export page content to JSON. One day this will be round-trippable. *)
 let json_of_object = function
-  | Glyph -> `String "Glyph"
-  | InlineImage -> `String "InlineImage"
-  | Image -> `String "Image"
-  | Path -> `String "Path"
-  | Shading -> `String "Shading"
-  | Clip -> `String "Clip"
+  | Glyph c -> `Assoc [("obj", `String "glyph"); ("charcode", `Int c); ("bytes", `String (bytes c))]
+  | InlineImage -> `String "inline image"
+  | Image -> `String "image"
+  | Path -> `String "path"
+  | Shading -> `String "shading"
+  | Clip -> `String "clip"
 
 let to_json ~pdf ~mediabox ~resources ~ops =
   let jsons = ref [] in

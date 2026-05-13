@@ -20,8 +20,14 @@ type subpath = hole * closure * segment list
 (* A path is made from a number of subpaths. *)
 type path = winding_rule * subpath list
 
-(** The kind of content being returned. *)
-type content = Glyph | InlineImage | Image | Path | Shading | Clip
+(** Content item  *)
+type content =
+  | Glyph of int
+  | InlineImage
+  | Image
+  | Path
+  | Shading
+  | Clip
 
 type bounding_box =
   Quad of float * float * float * float * float * float * float * float
