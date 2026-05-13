@@ -22,7 +22,7 @@ type content = Glyph | InlineImage | Image | Path | Shading | Clip
 type bounding_box =
   Quad of float * float * float * float * float * float * float * float
 
-type page_obj =
+type t =
   {bounding_box : bounding_box;
    content : content}
 
@@ -203,7 +203,7 @@ let push_statestack statestack state =
 
 let pop_statestack statestack state =
   match !statestack with
-  | [] -> raise (Pdf.PDFError "Unbalanced q/Q Ops")
+  | [] -> Pdfe.log "Warning: Unbalanced q/Q Ops"
   | h::t -> statestack := t; state := h
 
 (* Calculate the bounding box (xmin, xmax, ymin, ymax) of a path. *)
@@ -246,7 +246,7 @@ let rec initial_colour pdf resources = function
                  | Some (Pdf.Integer 1) -> Floats [0.]
                  | Some (Pdf.Integer 3) -> Floats [0.; 0.; 0.]
                  | Some (Pdf.Integer 4) -> Floats [0.; 0.; 0.; 0.]
-                 | _ -> raise (Pdf.PDFError "Bad ICCBased Alternate")
+                 | _ -> Pdfe.log "Bad ICCBased Alternate"; Floats [0.]
                  end
              end
         | Pdf.Name "/Lab"::_ -> Floats [0.; 0.; 0.; 0.]
@@ -255,7 +255,7 @@ let rec initial_colour pdf resources = function
             initial_colour pdf resources alternate
         | [Pdf.Name "/Pattern"; alternate] ->
             initial_colour pdf resources alternate
-        | _ -> Pdfe.log (Printf.sprintf "%s\n" (Pdfwrite.string_of_pdf cs)); raise (Pdf.PDFError "Unknown colourspace A")
+        | _ -> Pdfe.log (Printf.sprintf "%s\n" (Pdfwrite.string_of_pdf cs)); Floats [0.]
       end
   | Pdf.Indirect _ as indirect ->
       initial_colour pdf resources (Pdf.direct pdf indirect)
@@ -321,12 +321,16 @@ let extract_num header s =
   match Pdfgenlex.lex_string (Hashtbl.find header s) with
   | [Pdfgenlex.LexInt i] -> Pdf.Integer i
   | [Pdfgenlex.LexReal f] -> Pdf.Real f
-  | _ -> raise (Failure ("extract_num: " ^ s))
+  | _ ->
+      Pdfe.logf "extract_num: %s\n" s;
+      Pdf.Integer 0
 
 let extract_rectangle header s =
   match Pdfgenlex.lex_string (Hashtbl.find header s) with
   | [Pdfgenlex.LexInt _; LexInt y0; LexInt _; LexInt y1] -> (Pdf.Integer (min y0 y1), Pdf.Integer (max y0 y1))
-  | _ -> raise (Failure ("extract_rectangle: " ^ s))
+  | _ ->
+      Pdfe.logf "extract_rectangle: %s\n" s;
+      (Pdf.Integer 0, Pdf.Integer 0)
 
 let extra_metrics = function
   | Pdftext.SimpleFont {fonttype = Pdftext.Type3 {fontmatrix; fontbbox = (minx, miny, maxx, maxy)}} ->
@@ -361,7 +365,7 @@ let charcodes_of_string s = function
 
 let process_tj ~f ~stack ~state ~resources s =
   let vertical = vertical !state.text_state.font_data.fontobj in
-  let debug = false in (*!state.text_state.font = "/C0_0" && vertical in*)
+  let debug = false in
   if debug then Printf.printf "process_tj %S\n" s;
   let chars = charcodes_of_string s !state.text_state.font_data.fontobj in
   if debug then begin flprint "CHARS: "; iter (Printf.printf "%i ") chars; flprint "\n" end;
@@ -439,7 +443,10 @@ let read_function_shading pdf shading =
   and funshading_matrix =
     Pdf.parse_matrix pdf "/Matrix" shading
   and funshading_function =
-    Pdffun.parse_function pdf (Pdf.lookup_fail "No function found" pdf "/Function" shading)
+    try
+      Pdffun.parse_function pdf (Pdf.lookup_fail "No function found" pdf "/Function" shading)
+    with
+      _ -> {Pdffun.func = Calculator []; domain = []; range = None}
   in
     FunctionShading
       {funshading_domain;
@@ -451,7 +458,8 @@ let read_radial_shading pdf shading =
     match Pdf.lookup_direct pdf "/Coords" shading with
     | Some (Pdf.Array [a; b; c; d; e; f]) ->
         Pdf.getnum pdf a, Pdf.getnum pdf b, Pdf.getnum pdf c, Pdf.getnum pdf d, Pdf.getnum pdf e, Pdf.getnum pdf f
-    | _ -> raise (Pdf.PDFError "Pdfgraphics.read_radial_shading: no coords in radial shading")
+    | _ ->
+        (0., 0., 0., 0., 0., 0.)
   and radialshading_domain =
     match Pdf.lookup_direct pdf "/Domain" shading with
     | Some (Pdf.Array [a; b]) -> Pdf.getnum pdf a, Pdf.getnum pdf b
@@ -460,7 +468,7 @@ let read_radial_shading pdf shading =
     match Pdf.lookup_direct pdf "/Function" shading with
     | Some (Pdf.Array fs) -> map (Pdffun.parse_function pdf) fs
     | Some f -> [Pdffun.parse_function pdf f]
-    | _ -> raise (Pdf.PDFError "Pdfgraphics.read_radial_shading: no function in radial shading")
+    | _ -> [{Pdffun.func = Calculator []; domain = []; range = None}]
   and radialshading_extend =
     match Pdf.lookup_direct pdf "/Extend" shading with
     | Some (Pdf.Array [Pdf.Boolean a; Pdf.Boolean b]) -> a, b
@@ -477,7 +485,7 @@ let read_axial_shading pdf shading =
     match Pdf.lookup_direct pdf "/Coords" shading with
     | Some (Pdf.Array [a; b; c; d]) ->
         Pdf.getnum pdf a, Pdf.getnum pdf b, Pdf.getnum pdf c, Pdf.getnum pdf d
-    | _ -> raise (Pdf.PDFError "Pdfgraphics.read_axial_shading: no coords in radial shading")
+    | _ -> 0., 0., 0., 0.
   and axialshading_domain =
     match Pdf.lookup_direct pdf "/Domain" shading with
     | Some (Pdf.Array [a; b]) -> Pdf.getnum pdf a, Pdf.getnum pdf b
@@ -486,7 +494,7 @@ let read_axial_shading pdf shading =
     match Pdf.lookup_direct pdf "/Function" shading with
     | Some (Pdf.Array fs) -> map (Pdffun.parse_function pdf) fs
     | Some f -> [Pdffun.parse_function pdf f]
-    | _ -> raise (Pdf.PDFError "Pdfgraphics.read_axial_shading: no function in radial shading")
+    | _ -> [{Pdffun.func = Calculator []; domain = []; range = None}]
   and axialshading_extend =
     match Pdf.lookup_direct pdf "/Extend" shading with
     | Some (Pdf.Array [Pdf.Boolean a; Pdf.Boolean b]) -> a, b
@@ -501,7 +509,9 @@ let read_axial_shading pdf shading =
 (* Read a shading pattern *)
 let read_shading pdf shading_matrix shading_extgstate shading =
   let shading_colourspace =
-    Pdf.lookup_fail "No colourspace in shading" pdf "/colourSpace" shading
+    match Pdf.lookup_direct pdf "/colourSpace" shading with 
+    | Some cs -> cs
+    | None -> Pdf.Null
   and shading_background =
     Pdf.lookup_direct pdf "/Background" shading
   and shading_bbox =
@@ -512,15 +522,15 @@ let read_shading pdf shading_matrix shading_extgstate shading =
     | _ -> false
   in
     let shading =
-      match Pdf.lookup_fail "no /ShadingType" pdf "/ShadingType" shading with
-      | Pdf.Integer 1 -> read_function_shading pdf shading
-      | Pdf.Integer 3 -> read_radial_shading pdf shading
-      | Pdf.Integer 2 -> read_axial_shading pdf shading
-      | Pdf.Integer 4 -> FreeFormGouraudShading
-      | Pdf.Integer 5 -> LatticeFormGouraudShading
-      | Pdf.Integer 6 -> CoonsPatchMesh
-      | Pdf.Integer 7 -> TensorProductPatchMesh
-      | _ -> raise (Pdf.PDFError "Pdfgraphics.unknown shadingtype")
+      match Pdf.lookup_direct pdf "/ShadingType" shading with
+      | Some Pdf.Integer 1 -> read_function_shading pdf shading
+      | Some Pdf.Integer 3 -> read_radial_shading pdf shading
+      | Some Pdf.Integer 2 -> read_axial_shading pdf shading
+      | Some Pdf.Integer 4 -> FreeFormGouraudShading
+      | Some Pdf.Integer 5 -> LatticeFormGouraudShading
+      | Some Pdf.Integer 6 -> CoonsPatchMesh
+      | Some Pdf.Integer 7 -> TensorProductPatchMesh
+      | _ -> TensorProductPatchMesh
     in
       {shading_colourspace;
        shading_background;
@@ -543,22 +553,17 @@ let read_shading_pattern pdf p =
     | _ ->
         raise (Pdf.PDFError "No shading dictionary")
 
-let read_pattern pdf page name =
-  match Pdf.lookup_direct pdf "/Pattern" page.Pdfpage.resources with
-  | None -> raise (Pdf.PDFError "No pattern dictionary")
+let read_pattern pdf resources name =
+  match Pdf.lookup_direct pdf "/Pattern" resources with
+  | None -> None
   | Some patterndict ->
       match Pdf.lookup_direct pdf name patterndict with
-      | None -> raise (Pdf.PDFError "Pattern not found")
+      | None -> None
       | Some pattern ->
           match Pdf.lookup_direct pdf "/PatternType" pattern with
-          | Some (Pdf.Integer 1) ->
-               read_tiling_pattern pattern
-          | Some (Pdf.Integer 2) ->
-               read_shading_pattern pdf pattern
-          | _ -> raise (Pdf.PDFError "unknown pattern")
-
-let read_pattern pdf resources name =
-  ColouredTilingPattern Tiling
+          | Some (Pdf.Integer 1) -> Some (read_tiling_pattern pattern)
+          | Some (Pdf.Integer 2) -> Some (read_shading_pattern pdf pattern)
+          | _ -> None
 
 let bbox_of_segment = function
   | Straight ((x1, y1), (x2, y2)) ->
@@ -863,14 +868,20 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
   | Pdfops.Op_SCNName (s, fl) ->
       begin match !state.colourspace_non_stroke with
       | Pdfspace.Pattern | Pdfspace.PatternWithBaseColourspace _ ->
-          begin try !state.colour_non_stroke <- Pattern (read_pattern pdf resources s) with _ -> () end
+          begin match read_pattern pdf resources s with
+          | Some pattern -> !state.colour_non_stroke <- Pattern pattern
+          | None -> ()
+          end
       | _ -> 
           !state.colour_non_stroke <- Named (s, fl)
       end
   | Pdfops.Op_scnName (s, fl) ->
       begin match !state.colourspace_stroke with
       | Pdfspace.Pattern | Pdfspace.PatternWithBaseColourspace _ ->
-          begin try !state.colour_stroke <- Pattern (read_pattern pdf resources s) with _ -> () end
+          begin match read_pattern pdf resources s with
+          | Some pattern -> !state.colour_stroke <- Pattern pattern
+          | None -> ()
+          end
       | _ -> 
           !state.colour_stroke <- Named (s, fl)
       end
@@ -894,21 +905,21 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
       !state.colour_non_stroke <- Floats [f1; f2; f3; f4]
   | Pdfops.Op_sh s ->
       begin try
-      let shadingdict = Pdf.lookup_fail "no /Shading" pdf "/Shading" resources in
-      let shading = Pdf.lookup_fail "named shading not found" pdf s shadingdict in
-      let shading = read_shading pdf Pdftransform.i_matrix Pdf.Null shading in
-        begin match shading.shading_bbox with
-        | Some r ->
-            begin try
-              let minx, miny, maxx, maxy = Pdf.parse_rectangle pdf r in
-                ignore (f {content = Shading; bounding_box = Quad (minx, miny, minx, maxy, maxx, maxy, maxx, miny)})
-            with
-              _ -> ()
-            end
-        | None ->
-            (* This is an unbounded shading, not recommended. So we use the current clipping path. *)
-            emit_path_bounding_box ~content:Shading ~stroking:false ~f ~state
-        end
+        let shadingdict = Pdf.lookup_fail "no /Shading" pdf "/Shading" resources in
+        let shading = Pdf.lookup_fail "named shading not found" pdf s shadingdict in
+        let shading = read_shading pdf Pdftransform.i_matrix Pdf.Null shading in
+          begin match shading.shading_bbox with
+          | Some r ->
+              begin try
+                let minx, miny, maxx, maxy = Pdf.parse_rectangle pdf r in
+                  ignore (f {content = Shading; bounding_box = Quad (minx, miny, minx, maxy, maxx, maxy, maxx, miny)})
+              with
+                _ -> ()
+              end
+          | None ->
+              (* This is an unbounded shading, not recommended. So we use the current clipping path. *)
+              emit_path_bounding_box ~content:Shading ~stroking:false ~f ~state
+          end
       with
         _ -> ()
       end
@@ -993,7 +1004,7 @@ and process_form_xobject ~pdf ~f ~stack ~state ~resources pdfobject =
           | Some (Pdf.Dictionary rs) -> rs
           | _ -> []
           end
-      | _ -> raise (Pdf.PDFError "bad stream in process_form_xobject")
+      | _ -> []
     in
       let total_resources = Pdf.Dictionary (mergedict pagedict xobjdict) in
         iter

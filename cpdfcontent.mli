@@ -26,14 +26,14 @@ type content = Glyph | InlineImage | Image | Path | Shading | Clip
 type bounding_box =
   Quad of float * float * float * float * float * float * float * float
 
-type page_obj =
+type t =
   {bounding_box : bounding_box;
    content : content}
 
-(** Filter ops based on a bounding-box predicate. *)
+(** Filter ops based on a t predicate. *)
 val filter :
   pdf:Pdf.t ->
-  f:(page_obj -> bool) ->
+  f:(t -> bool) ->
   mediabox:(float * float * float * float) ->
   resources:Pdf.pdfobject ->
   ops:Pdfops.t list ->
