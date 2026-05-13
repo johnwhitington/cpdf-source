@@ -260,6 +260,7 @@ type op =
   | RemoveStreamContent
   | ShowBoundingBoxes of shape
   | RevealText
+  | PageContentJSON
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -440,6 +441,7 @@ let string_of_op = function
   | RemoveStreamContent -> "RemoveStreamContent"
   | ShowBoundingBoxes _ -> "ShowBoundingBoxes"
   | RevealText -> "RevealText"
+  | PageContentJSON -> "PageContentJSON"
 
 (* Inputs: filename, pagespec. *)
 type input_kind = 
@@ -1033,30 +1035,8 @@ performed is checked to see if it's allowable under the permissions regime. *)
 bans list in the input file, the operation cannot proceed. Other operations
 cannot proceed at all without owner password. *)
 let banned banlist = function
-  | Fonts | Info | Metadata | PageInfo | CountPages
-  | ListAttachedFiles | ListAnnotations
-  | ListBookmarks | ImageResolution _ | ListImages | MissingFonts
-  | PrintPageLabels | Clean | Compress | Decompress
-  | ChangeId | CopyId _ | ListSpotColours | Version
-  | DumpAttachedFiles | RemoveMetadata _ | EmbedMissingFonts | BookmarksOpenToLevel _ | CreatePDF
-  | SetPageMode _ | SetNonFullScreenPageMode _ | HideToolbar _ | HideMenubar _ | HideWindowUI _
-  | FitWindow _ | CenterWindow _ | DisplayDocTitle _
-  | RemoveId | OpenAtPageFit _ | OpenAtPage _ | OpenAtPageCustom _ | SetPageLayout _
-  | ShowBoxes | TrimMarks | CreateMetadata | SetMetadataDate _ | SetVersion _
-  | SetAuthor _|SetTitle _|SetSubject _|SetKeywords _|SetCreate _
-  | SetModify _|SetCreator _|SetProducer _|RemoveDictEntry _ | ReplaceDictEntry _ | PrintDictEntry _ | SetMetadata _
-  | ExtractImages | ExtractSingleImage _ | ExtractFontFile _
-  | AddPageLabels | AddPageLabelsJSON _ | RemovePageLabels | OutputJSON | OCGCoalesce
-  | OCGRename | OCGList | OCGReplace _ | OCGOrderAll | PrintFontEncoding _ | TableOfContents | Typeset _ | Composition _
-  | TextWidth _ | SetAnnotations _ | CopyAnnotations _ | ExtractStream _ | ReplaceStream _ | PrintObj _ | ReplaceObj _ | RemoveObj _
-  | Verify _ | MarkAs _ | RemoveMark _ | ExtractStructTree | ReplaceStructTree _ | SetLanguage _
-  | PrintStructTree | Rasterize | OutputImage | RemoveStructTree | MarkAsArtifact
-  | ContainsJavaScript | RemoveJavaScript | RemoveArticleThreads | RemovePagePiece | RemoveOutputIntents
-  | RemoveWebCapture | RemoveProcsets | ExtractMetadata | Summary | Revisions | SigInfo
-  | AddAttachedFilesJSON _ | RemoveStreamContent | ShowBoundingBoxes _ | RevealText -> false (* Always allowed *)
-  (* Combine pages is not allowed because we would not know where to get the
-  -recrypt from -- the first or second file? *)
-  | Decrypt | Encrypt | CombinePages _ -> true (* Never allowed *)
+  (* Combine pages is not allowed because we would not know which file to get the -recrypt from *)
+  | Decrypt | Encrypt | CombinePages _ -> true
   | AddBookmarks _ | PadBefore | PadAfter | PadEvery _ | PadMultiple _ | PadMultipleBefore _
   | Merge | Split | SplitOnBookmarks _ | SplitMax _ | Spray | RotateContents _ | Rotate _
   | Rotateby _ | Upright | VFlip | HFlip | Impose _ | Chop _ | ChopHV _ | Redact | RedactShape _
@@ -1070,6 +1050,7 @@ let banned banlist = function
     AddText _|ScaleContents _|AttachFile _| ThinLines _ | RemoveClipping | RemoveAllText
   | Prepend _ | Postpend _ | Draw | ProcessImages ->
       mem Pdfcrypt.NoEdit banlist
+  | _ -> false
 
 let operation_allowed pdf banlist op =
   args.debugforce || 
@@ -3279,7 +3260,8 @@ let specs =
    ("-show-bboxes", Arg.Unit (fun () -> setop (ShowBoundingBoxes NoShape) ()), " Show bounding boxes");
    ("-show-bboxes-shape", Arg.String (fun s -> setop (ShowBoundingBoxes (read_shape s)) ()), " Show bounding boxes in a given shape");
    ("-light", Arg.Unit (fun () -> args.show_bboxes_light <- true), " Use light colours for bounding boxes");
-   ("-reveal-text", Arg.Unit (fun () -> setop RevealText ()), " Reveal hidden text")]
+   ("-reveal-text", Arg.Unit (fun () -> setop RevealText ()), " Reveal hidden text");
+   ("-page-content", Arg.Unit (fun () -> setop PageContentJSON ()), " Export page content as JSON")]
 
 let specs = sort compare specs
 
@@ -5456,6 +5438,33 @@ let rec go () =
       let range = parse_pagespec pdf (get_pagespec ()) in
       let pdf = Cpdftweak.reveal_hidden_text range pdf in
         write_pdf false pdf
+  | PageContentJSON ->
+      let pdf = get_single_pdf args.op true in
+      let range = parse_pagespec pdf (get_pagespec ()) in
+        let jsons =
+          option_map2
+            (fun page pnum ->
+               if mem pnum range then
+                 Some (Cpdfcontent.to_json
+                         ~pdf
+                         ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox)
+                         ~resources:page.Pdfpage.resources
+                         ~ops:(Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content))
+               else
+                 None)
+            (Pdfpage.pages_of_pagetree pdf)
+            (ilist 1 (Pdfpage.endpage pdf))
+        in
+        let json =
+          `List jsons
+        in
+        let channel =
+          match args.out with
+          | File outname -> open_out_bin outname
+          | Stdout -> stdout
+          | _ -> error "Unknown output type"
+        in
+          Cpdfyojson.Safe.pretty_to_channel channel json
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)

@@ -1175,3 +1175,6 @@ let filter ~pdf ~f ~mediabox ~resources ~ops =
   let state = ref (initial_state mediabox) in
     iter (fun op -> process_op ~pdf ~f ~stack ~state ~resources op) ops;
     ops
+
+let to_json ~pdf ~mediabox ~resources ~ops =
+  `List []

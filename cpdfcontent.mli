@@ -30,7 +30,7 @@ type t =
   {bounding_box : bounding_box;
    content : content}
 
-(** Filter ops based on a t predicate. *)
+(** Filter objects based on a predicate on [t]. *)
 val filter :
   pdf:Pdf.t ->
   f:(t -> bool) ->
@@ -38,3 +38,10 @@ val filter :
   resources:Pdf.pdfobject ->
   ops:Pdfops.t list ->
   Pdfops.t list
+
+val to_json :
+  pdf:Pdf.t ->
+  mediabox:(float * float * float * float) ->
+  resources:Pdf.pdfobject ->
+  ops:Pdfops.t list ->
+  Cpdfyojson.Safe.t
