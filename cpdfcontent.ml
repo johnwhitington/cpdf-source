@@ -17,21 +17,6 @@ type subpath = hole * closure * segment list
 
 type path = winding_rule * subpath list
 
-type content =
-  | Glyph of int
-  | InlineImage of Pdf.pdfobject * Pdfio.bytes
-  | Image of string
-  | Path of path
-  | Shading of string
-  | Clip (* This is just for -show-bboxes. Clipping exists in the state otherwise. *)
-
-type bounding_box =
-  Quad of float * float * float * float * float * float * float * float
-
-type t =
-  {bounding_box : bounding_box;
-   content : content}
-
 type partial =
   | NoPartial
   | PartialPath of fpoint * fpoint * segment list * subpath list 
@@ -139,6 +124,22 @@ type state =
    mutable d1 : (float * float * float * float * float * float) option;
    mutable marked_content_point : (string * Pdf.pdfobject option) option;
    mutable marked_content : (string * Pdf.pdfobject option) list}
+
+type content =
+  | Glyph of int
+  | InlineImage of Pdf.pdfobject * Pdfio.bytes
+  | Image of string
+  | Path of path
+  | Shading of string
+  | Clip (* This is just for -show-bboxes. Clipping exists in the state otherwise. *)
+
+type bounding_box =
+  Quad of float * float * float * float * float * float * float * float
+
+type t =
+  {bounding_box : bounding_box;
+   content : content;
+   state : state}
 
 let initial_text_state () =
   {character_spacing = 0.;
@@ -403,7 +404,7 @@ let process_tj ~f ~stack ~state ~resources s =
         let (x2, y2) = Pdftransform.transform_matrix t_rm (w +. pvx, ascent -. pvy) in
         let (x3, y3) = Pdftransform.transform_matrix t_rm (w +. pvx, descent -. pvy) in
           if debug then begin flprint "BOX: "; Printf.printf "%f %f %f %f %f %f %f %f\n" x0 y0 x1 y1 x2 y2 x3 y3 end;
-          f {content = Glyph c; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)};
+          f {state = copystate !state; content = Glyph c; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)};
           let tx =
             if vertical then 0. else
               (w *. !state.text_state.font_size +. !state.text_state.character_spacing +.
@@ -607,7 +608,7 @@ let emit_path_bounding_box ~content ~stroking ~f ~state =
           else
             (minx, maxx, miny, maxy)
         in
-          ignore (f ({content; bounding_box = Quad (minx, miny, minx, maxy, maxx, maxy, maxx, miny)}))
+          ignore (f ({state = copystate !state; content; bounding_box = Quad (minx, miny, minx, maxy, maxx, maxy, maxx, miny)}))
 
 (* Return next object, list of ops consumed, remaining list *)
 let rec process_op ~pdf ~f ~stack ~state ~resources = function
@@ -918,7 +919,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
           | Some r ->
               begin try
                 let minx, miny, maxx, maxy = Pdf.parse_rectangle pdf r in
-                  ignore (f {content = Shading s; bounding_box = Quad (minx, miny, minx, maxy, maxx, maxy, maxx, miny)})
+                  ignore (f {state = copystate !state; content = Shading s; bounding_box = Quad (minx, miny, minx, maxy, maxx, maxy, maxx, miny)})
               with
                 _ -> ()
               end
@@ -934,7 +935,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
       let x1, y1 = Pdftransform.transform_matrix !state.ctm (0., 1.) in
       let x2, y2 = Pdftransform.transform_matrix !state.ctm (1., 1.) in
       let x3, y3 = Pdftransform.transform_matrix !state.ctm (1., 0.) in
-        ignore (f {content = InlineImage (dict, data); bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)})
+        ignore (f {state = copystate !state; content = InlineImage (dict, data); bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)})
   | Pdfops.Op_Do s ->
       begin match Pdf.lookup_direct pdf "/XObject" resources with
       | Some d ->
@@ -946,7 +947,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
                   let x1, y1 = Pdftransform.transform_matrix !state.ctm (0., 1.) in
                   let x2, y2 = Pdftransform.transform_matrix !state.ctm (1., 1.) in
                   let x3, y3 = Pdftransform.transform_matrix !state.ctm (1., 0.) in
-                    ignore (f {content = Image s; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)})
+                    ignore (f {state = copystate !state; content = Image s; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)})
               | Some (Pdf.Name "/Form") ->
                   let matrix = Pdf.parse_matrix pdf "/Matrix" xobj in
                   let minx, miny, maxx, maxy =
