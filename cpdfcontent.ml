@@ -1208,7 +1208,34 @@ let json_of_path (winding, subpaths) =
   `Assoc [("winding", `String ((function EvenOdd -> "even-odd" | NonZero -> "non-zero") winding));
           ("subpaths", `List (map json_of_subpath subpaths))]
 
+(* TODO *)
 let json_of_inline_image (dict, data) = `Null
+
+let json_of_state_glyph state =
+  `Assoc [("rendering mode", `Int state.text_state.rendering_mode);
+          ("knockout", `Bool state.text_state.knockout);
+          ("font", `String state.text_state.font);
+          ("font size", `Float state.text_state.font_size)]
+
+(* TODO *)
+let json_of_state_inline_image state = `Null
+
+(* TODO *)
+let json_of_state_image state = `Null
+
+(* TODO *)
+let json_of_state_path state = `Null
+
+(* TODO *)
+let json_of_state_shading state = `Null
+
+let json_of_state state = function
+  | Glyph _ -> json_of_state_glyph state
+  | InlineImage _ -> json_of_state_inline_image state
+  | Image _ -> json_of_state_image state
+  | Path _ -> json_of_state_path state
+  | Shading _ -> json_of_state_shading state
+  | Clip -> assert false (* Clipping path is part of the state. It exists in the content type only because we use it for -show-bboxes. *)
 
 let json_of_object = function
   | Glyph c -> `Assoc [("obj", `String "glyph"); ("charcode", `Int c); ("bytes", `String (bytes c))]
@@ -1220,10 +1247,11 @@ let json_of_object = function
 
 let to_json ~pdf ~mediabox ~resources ~ops =
   let jsons = ref [] in
-  let f {content; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} =
+  let f {state; content; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} =
     if content <> Clip then
       jsons =|
         `Assoc ([("object", json_of_object content);
+                 ("state", json_of_state state content);
                  ("bbox", `List [`Float x0; `Float y0; `Float x1; `Float y1; `Float x2; `Float y2; `Float x3; `Float y3])]);
     true
   in
