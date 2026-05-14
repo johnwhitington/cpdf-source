@@ -1,4 +1,4 @@
-(** Processing page content. *)
+(* Processing page content. *)
 open Pdfutil
 
 type fpoint = float * float
@@ -179,7 +179,7 @@ let initial_state (minx, miny, maxx, maxy) =
    line_join = 0;
    miter_limit = 10.;
    dash_pattern = ([], 0.);
-   rendering_intent = "/Relativecolourimetric";
+   rendering_intent = "/RelativeColorimetric";
    stroke_adjustment = false;
    blend_mode = Pdf.Name "/Normal";
    soft_mask = Pdf.Null;
@@ -1208,26 +1208,60 @@ let json_of_path (winding, subpaths) =
   `Assoc [("winding", `String ((function EvenOdd -> "even-odd" | NonZero -> "non-zero") winding));
           ("subpaths", `List (map json_of_subpath subpaths))]
 
-(* TODO *)
 let json_of_inline_image (dict, data) = `Null
 
+(* TODO Combine clipping paths using the intersector. *)
 let json_of_state_glyph state =
   `Assoc [("rendering mode", `Int state.text_state.rendering_mode);
           ("knockout", `Bool state.text_state.knockout);
           ("font", `String state.text_state.font);
-          ("font size", `Float state.text_state.font_size)]
+          ("font size", `Float state.text_state.font_size);
+          ("clipping path", json_of_path (hd state.clipping_path))]
 
-(* TODO *)
-let json_of_state_inline_image state = `Null
+let json_of_state_inline_image state =
+  `Assoc [("clipping path", json_of_path (hd state.clipping_path))]
 
-(* TODO *)
-let json_of_state_image state = `Null
+let json_of_state_image state =
+  `Assoc [("clipping path", json_of_path (hd state.clipping_path))]
 
-(* TODO *)
-let json_of_state_path state = `Null
+let json_of_colourspace = function
+  | Pdfspace.DeviceGray -> `String "DeviceGray"
+  | DeviceRGB -> `String "DeviceRGB"
+  | DeviceCMYK -> `String "DeviceCMYK"
+  | CalGray _ -> `String "CalGray"
+  | CalRGB _ -> `String "CalRGB"
+  | Lab _ -> `String "Lab"
+  | ICCBased _ -> `String "ICCBased"
+  | Indexed _ -> `String "Indexed"
+  | Pattern -> `String "Pattern"
+  | PatternWithBaseColourspace _ -> `String "PatternWithBaseColourspace"
+  | Separation _ -> `String "Separation"
+  | DeviceN _ -> `String "DeviceN"
 
-(* TODO *)
-let json_of_state_shading state = `Null
+let json_of_colvals = function
+  | Floats fl -> `List (map (fun x -> `Float x) fl)
+  | Named (s, fl) -> `List (`String s::map (fun x -> `Float x) fl)
+  | Pattern _ -> `String "pattern"
+
+(* TODO Doesn't actually store fill or stroke in path data type! Add this in Cpdfcontent.path data type. *)
+let json_of_state_path state =
+  `Assoc [("clipping path", json_of_path (hd state.clipping_path));
+          ("colourspace stroke", json_of_colourspace state.colourspace_stroke);
+          ("colourspace non stroke", json_of_colourspace state.colourspace_non_stroke);
+          ("colour stroke", json_of_colvals state.colour_stroke);
+          ("colour non stroke", json_of_colvals state.colour_non_stroke);
+          ("line width", `Float state.line_width);
+          ("line cap", `Int state.line_cap);
+          ("line join", `Int state.line_join);
+          ("dash pattern",
+             let arr, phase = state.dash_pattern in
+               `Assoc [("array", `List (map (fun x -> `Float x) arr));
+                       ("phase", `Float phase)]
+          );
+          ("rendering intent", `String state.rendering_intent)]
+
+let json_of_state_shading state =
+  `Assoc [("clipping path", json_of_path (hd state.clipping_path))]
 
 let json_of_state state = function
   | Glyph _ -> json_of_state_glyph state
@@ -1238,7 +1272,7 @@ let json_of_state state = function
   | Clip -> assert false (* Clipping path is part of the state. It exists in the content type only because we use it for -show-bboxes. *)
 
 let json_of_object = function
-  | Glyph c -> `Assoc [("obj", `String "glyph"); ("charcode", `Int c); ("bytes", `String (bytes c))]
+  | Glyph c -> `Assoc [("obj", `String "glyph"); ("charcode", `Int c); ("bytes", `String (bytes c))] (* TODO Extracted text. *)
   | InlineImage (dict, data) -> `Assoc [("obj", `String "inline image"); ("inline image", json_of_inline_image (dict, data))]
   | Image i -> `Assoc [("obj", `String "image"); ("image", `String i)]
   | Path p -> `Assoc [("obj", `String "path"); ("path", json_of_path p)]
