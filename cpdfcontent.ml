@@ -21,7 +21,7 @@ type content =
   | Glyph of int
   | InlineImage
   | Image
-  | Path
+  | Path of path
   | Shading
   | Clip
 
@@ -692,7 +692,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
           (* segs is empty, due to [Op_h] *)
           !state.partial_path <- PartialPath (sp, cp, [], []);
           !state.path <- (NonZero, rev subpaths);
-          emit_path_bounding_box ~content:Path ~stroking:false ~f ~state
+          emit_path_bounding_box ~content:(Path !state.path) ~stroking:false ~f ~state
       | _ -> ()
       end
   | Pdfops.Op_S ->
@@ -708,7 +708,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
               !state.partial_path <- PartialPath (sp, cp, [], []);
               !state.path <- (EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths))
             end;
-          emit_path_bounding_box ~content:Path ~stroking:true ~f ~state
+          emit_path_bounding_box ~content:(Path !state.path) ~stroking:true ~f ~state
       | _ -> ()
       end
   | Pdfops.Op_B ->
@@ -724,7 +724,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
               !state.partial_path <- PartialPath (sp, cp, [], []);
               !state.path <- (NonZero, rev ((Not_hole, Open, rev segs)::subpaths))
             end;
-          emit_path_bounding_box ~content:Path ~stroking:true ~f ~state
+          emit_path_bounding_box ~content:(Path !state.path) ~stroking:true ~f ~state
       | _ -> ()
       end
   | Pdfops.Op_B' ->
@@ -741,7 +741,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
                 !state.partial_path <- PartialPath (sp, cp, [], []);
                 !state.path <- (EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths))
               end;
-            emit_path_bounding_box ~content:Path ~stroking:true ~f ~state
+            emit_path_bounding_box ~content:(Path !state.path) ~stroking:true ~f ~state
         | _ -> ()
         end
   | Pdfops.Op_f' ->
@@ -757,7 +757,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
               !state.partial_path <- PartialPath (sp, cp, [], []);
               !state.path <- (EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths))
             end;
-          emit_path_bounding_box ~content:Path ~stroking:false ~f ~state
+          emit_path_bounding_box ~content:(Path !state.path) ~stroking:false ~f ~state
       | _ -> ()
       end
   | Pdfops.Op_n ->
@@ -1192,20 +1192,36 @@ let bytes n =
   Bytes.to_string b
 
 (* Export page content to JSON. One day this will be round-trippable. *)
+let json_of_fpoint (x, y) =
+  `Assoc [("x", `Float x); ("y", `Float y)]
+
+let json_of_segment = function
+  | Straight (a, b) -> `Assoc [("line", `List [json_of_fpoint a; json_of_fpoint b])]
+  | Bezier (a, b, c, d) -> `Assoc [("bezier", `List [json_of_fpoint a; json_of_fpoint b; json_of_fpoint c; json_of_fpoint d])]
+
+let json_of_subpath (_, closure, segments) =
+  `Assoc [("closed", `Bool (closure = Closed));
+          ("segments", `List (map json_of_segment segments))]
+
+let json_of_path (winding, subpaths) =
+  `Assoc [("winding", `String ((function EvenOdd -> "even-odd" | NonZero -> "non-zero") winding));
+          ("subpaths", `List (map json_of_subpath subpaths))]
+
 let json_of_object = function
   | Glyph c -> `Assoc [("obj", `String "glyph"); ("charcode", `Int c); ("bytes", `String (bytes c))]
   | InlineImage -> `String "inline image"
   | Image -> `String "image"
-  | Path -> `String "path"
+  | Path p -> `Assoc [("obj", `String "path"); ("path", json_of_path p)]
   | Shading -> `String "shading"
-  | Clip -> `String "clip"
+  | Clip -> assert false (* Clipping path is part of the state. It exists in the content type only because we use it for -show-bboxes. *)
 
 let to_json ~pdf ~mediabox ~resources ~ops =
   let jsons = ref [] in
   let f {content; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} =
-    jsons =|
-      `Assoc ([("object", json_of_object content);
-               ("bbox", `List [`Float x0; `Float y0; `Float x1; `Float y1; `Float x2; `Float y2; `Float x3; `Float y3])]);
+    if content <> Clip then
+      jsons =|
+        `Assoc ([("object", json_of_object content);
+                 ("bbox", `List [`Float x0; `Float y0; `Float x1; `Float y1; `Float x2; `Float y2; `Float x3; `Float y3])]);
     true
   in
     ignore (filter ~pdf ~f ~mediabox ~resources ~ops);

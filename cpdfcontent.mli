@@ -25,7 +25,7 @@ type content =
   | Glyph of int
   | InlineImage
   | Image
-  | Path
+  | Path of path
   | Shading
   | Clip
 

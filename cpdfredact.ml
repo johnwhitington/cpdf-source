@@ -24,7 +24,7 @@ let colour ~light = function
   | Cpdfcontent.Glyph _ -> [Pdfops.Op_G (if light then 1. else 0.)] (* Black *)
   | Cpdfcontent.InlineImage -> [if light then Pdfops.Op_RG (1., 0.5, 0.5) else Pdfops.Op_RG (1., 0., 0.)] (* Red *)
   | Cpdfcontent.Image -> [if light then Pdfops.Op_RG (0.5, 1., 0.5) else Pdfops.Op_RG (0., 1., 0.)] (* Green *)
-  | Cpdfcontent.Path -> [if light then Pdfops.Op_RG (0.5, 0.5, 1.) else Pdfops.Op_RG (0., 0., 1.)] (* Blue *)
+  | Cpdfcontent.Path _ -> [if light then Pdfops.Op_RG (0.5, 0.5, 1.) else Pdfops.Op_RG (0., 0., 1.)] (* Blue *)
   | Cpdfcontent.Shading -> [if light then Pdfops.Op_RG (0.5, 1., 1.) else Pdfops.Op_RG (0., 1., 1.)] (* Cyan *)
   | Cpdfcontent.Clip -> [Pdfops.Op_d ([4.; 4.], 0.); Pdfops.Op_G (if light then 1. else 0.)] (* Black, dashed. *)
 
@@ -83,7 +83,7 @@ let box_matches (minx, miny, maxx, maxy) {Cpdfcontent.content; bounding_box = Qu
   in
     match content with
     | Cpdfcontent.Glyph _ | Image | InlineImage -> any_intersection (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy)
-    | Path | Shading | Clip -> wholly_contained (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy)
+    | Path _ | Shading | Clip -> wholly_contained (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy)
 
 let select_boxes shape boxes =
   match shape with 
