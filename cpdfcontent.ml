@@ -19,11 +19,11 @@ type path = winding_rule * subpath list
 
 type content =
   | Glyph of int
-  | InlineImage
-  | Image
+  | InlineImage of Pdf.pdfobject * Pdfio.bytes
+  | Image of string
   | Path of path
-  | Shading
-  | Clip
+  | Shading of string
+  | Clip (* This is just for -show-bboxes. Clipping exists in the state otherwise. *)
 
 type bounding_box =
   Quad of float * float * float * float * float * float * float * float
@@ -593,7 +593,7 @@ let transform_path m (w, subpaths) =
     (w, map (fun (h, c, segments) -> (h, c, map transform_segment segments)) subpaths)
 
 let emit_path_bounding_box ~content ~stroking ~f ~state =
-  let path = transform_path !state.ctm (if content = Clip || content = Shading then hd !state.clipping_path else !state.path) in
+  let path = transform_path !state.ctm (match content with Clip | Shading _ -> hd !state.clipping_path | _ -> !state.path) in
   let bbox = bbox_of_path path in
     match bbox with
     | None -> ()
@@ -918,23 +918,23 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
           | Some r ->
               begin try
                 let minx, miny, maxx, maxy = Pdf.parse_rectangle pdf r in
-                  ignore (f {content = Shading; bounding_box = Quad (minx, miny, minx, maxy, maxx, maxy, maxx, miny)})
+                  ignore (f {content = Shading s; bounding_box = Quad (minx, miny, minx, maxy, maxx, maxy, maxx, miny)})
               with
                 _ -> ()
               end
           | None ->
               (* This is an unbounded shading, not recommended. So we use the current clipping path. *)
-              emit_path_bounding_box ~content:Shading ~stroking:false ~f ~state
+              emit_path_bounding_box ~content:(Shading s) ~stroking:false ~f ~state
           end
       with
         _ -> ()
       end
-  | Pdfops.InlineImage i ->
+  | Pdfops.InlineImage (dict, _, data) ->
       let x0, y0 = Pdftransform.transform_matrix !state.ctm (0., 0.) in
       let x1, y1 = Pdftransform.transform_matrix !state.ctm (0., 1.) in
       let x2, y2 = Pdftransform.transform_matrix !state.ctm (1., 1.) in
       let x3, y3 = Pdftransform.transform_matrix !state.ctm (1., 0.) in
-        ignore (f {content = InlineImage; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)})
+        ignore (f {content = InlineImage (dict, data); bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)})
   | Pdfops.Op_Do s ->
       begin match Pdf.lookup_direct pdf "/XObject" resources with
       | Some d ->
@@ -946,7 +946,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
                   let x1, y1 = Pdftransform.transform_matrix !state.ctm (0., 1.) in
                   let x2, y2 = Pdftransform.transform_matrix !state.ctm (1., 1.) in
                   let x3, y3 = Pdftransform.transform_matrix !state.ctm (1., 0.) in
-                    ignore (f {content = Image; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)})
+                    ignore (f {content = Image s; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)})
               | Some (Pdf.Name "/Form") ->
                   let matrix = Pdf.parse_matrix pdf "/Matrix" xobj in
                   let minx, miny, maxx, maxy =
@@ -1207,12 +1207,14 @@ let json_of_path (winding, subpaths) =
   `Assoc [("winding", `String ((function EvenOdd -> "even-odd" | NonZero -> "non-zero") winding));
           ("subpaths", `List (map json_of_subpath subpaths))]
 
+let json_of_inline_image (dict, data) = `Null
+
 let json_of_object = function
   | Glyph c -> `Assoc [("obj", `String "glyph"); ("charcode", `Int c); ("bytes", `String (bytes c))]
-  | InlineImage -> `String "inline image"
-  | Image -> `String "image"
+  | InlineImage (dict, data) -> `Assoc [("obj", `String "inline image"); ("inline image", json_of_inline_image (dict, data))]
+  | Image i -> `Assoc [("obj", `String "image"); ("image", `String i)]
   | Path p -> `Assoc [("obj", `String "path"); ("path", json_of_path p)]
-  | Shading -> `String "shading"
+  | Shading s -> `Assoc [("obj", `String "shading"); ("shading", `String s)]
   | Clip -> assert false (* Clipping path is part of the state. It exists in the content type only because we use it for -show-bboxes. *)
 
 let to_json ~pdf ~mediabox ~resources ~ops =

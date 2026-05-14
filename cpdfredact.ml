@@ -22,10 +22,10 @@ let apply_type pdf typ range = ()
 
 let colour ~light = function
   | Cpdfcontent.Glyph _ -> [Pdfops.Op_G (if light then 1. else 0.)] (* Black *)
-  | Cpdfcontent.InlineImage -> [if light then Pdfops.Op_RG (1., 0.5, 0.5) else Pdfops.Op_RG (1., 0., 0.)] (* Red *)
-  | Cpdfcontent.Image -> [if light then Pdfops.Op_RG (0.5, 1., 0.5) else Pdfops.Op_RG (0., 1., 0.)] (* Green *)
+  | Cpdfcontent.InlineImage _ -> [if light then Pdfops.Op_RG (1., 0.5, 0.5) else Pdfops.Op_RG (1., 0., 0.)] (* Red *)
+  | Cpdfcontent.Image _ -> [if light then Pdfops.Op_RG (0.5, 1., 0.5) else Pdfops.Op_RG (0., 1., 0.)] (* Green *)
   | Cpdfcontent.Path _ -> [if light then Pdfops.Op_RG (0.5, 0.5, 1.) else Pdfops.Op_RG (0., 0., 1.)] (* Blue *)
-  | Cpdfcontent.Shading -> [if light then Pdfops.Op_RG (0.5, 1., 1.) else Pdfops.Op_RG (0., 1., 1.)] (* Cyan *)
+  | Cpdfcontent.Shading _ -> [if light then Pdfops.Op_RG (0.5, 1., 1.) else Pdfops.Op_RG (0., 1., 1.)] (* Cyan *)
   | Cpdfcontent.Clip -> [Pdfops.Op_d ([4.; 4.], 0.); Pdfops.Op_G (if light then 1. else 0.)] (* Black, dashed. *)
 
 let mkbox ~light {Cpdfcontent.content; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} =
@@ -82,8 +82,8 @@ let box_matches (minx, miny, maxx, maxy) {Cpdfcontent.content; bounding_box = Qu
     bminx > minx && bmaxx < maxx && bminy > miny && bmaxx < maxy
   in
     match content with
-    | Cpdfcontent.Glyph _ | Image | InlineImage -> any_intersection (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy)
-    | Path _ | Shading | Clip -> wholly_contained (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy)
+    | Cpdfcontent.Glyph _ | Image _ | InlineImage _ -> any_intersection (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy)
+    | Path _ | Shading _ | Clip -> wholly_contained (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy)
 
 let select_boxes shape boxes =
   match shape with 

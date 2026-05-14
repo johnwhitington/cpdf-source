@@ -23,10 +23,10 @@ type path = winding_rule * subpath list
 (** Content item  *)
 type content =
   | Glyph of int
-  | InlineImage
-  | Image
+  | InlineImage of Pdf.pdfobject * Pdfio.bytes
+  | Image of string
   | Path of path
-  | Shading
+  | Shading of string
   | Clip
 
 type bounding_box =
