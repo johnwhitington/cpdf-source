@@ -91,7 +91,8 @@ type colvals =
 type font_data =
   {mutable fontobj : Pdftext.font;
    mutable extra_metrics : float * float;
-   mutable table : (int, string) Hashtbl.t}
+   mutable table : (int, string) Hashtbl.t;
+   mutable text_extractor : Pdftext.text_extractor}
 
 type text_state =
   {mutable character_spacing : float;
@@ -165,3 +166,7 @@ val to_json :
   resources:Pdf.pdfobject ->
   ops:Pdfops.t list ->
   Cpdfyojson.Safe.t
+
+(**/**)
+
+val test_extract_text : Pdf.t -> int list -> string -> unit

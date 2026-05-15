@@ -261,6 +261,7 @@ type op =
   | ShowBoundingBoxes of shape
   | RevealText
   | PageContentJSON
+  | TestExtractText of string
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -442,6 +443,7 @@ let string_of_op = function
   | ShowBoundingBoxes _ -> "ShowBoundingBoxes"
   | RevealText -> "RevealText"
   | PageContentJSON -> "PageContentJSON"
+  | _ -> "<unfilled>"
 
 (* Inputs: filename, pagespec. *)
 type input_kind = 
@@ -3261,7 +3263,8 @@ let specs =
    ("-show-bboxes-shape", Arg.String (fun s -> setop (ShowBoundingBoxes (read_shape s)) ()), " Show bounding boxes in a given shape");
    ("-light", Arg.Unit (fun () -> args.show_bboxes_light <- true), " Use light colours for bounding boxes");
    ("-reveal-text", Arg.Unit (fun () -> setop RevealText ()), " Reveal hidden text");
-   ("-page-content", Arg.Unit (fun () -> setop PageContentJSON ()), " Export page content as JSON")]
+   ("-page-content", Arg.Unit (fun () -> setop PageContentJSON ()), " Export page content as JSON");
+   ("-test-extract-text", Arg.String (fun s -> setop (TestExtractText s) ()), "")]
 
 let specs = sort compare specs
 
@@ -5457,16 +5460,17 @@ let rec go () =
             (Pdfpage.pages_of_pagetree pdf)
             (ilist 1 (Pdfpage.endpage pdf))
         in
-        let json =
-          `List jsons
-        in
         let channel =
           match args.out with
           | File outname -> open_out_bin outname
           | Stdout -> stdout
           | _ -> error "Unknown output type"
         in
-          Cpdfyojson.Safe.pretty_to_channel channel json
+          Cpdfyojson.Safe.pretty_to_channel channel (`List jsons)
+  | TestExtractText f ->
+      let pdf = get_single_pdf args.op true in
+      let range = parse_pagespec pdf (get_pagespec ()) in
+        Cpdfcontent.test_extract_text pdf range f
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)

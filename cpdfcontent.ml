@@ -76,7 +76,8 @@ type colvals =
 type font_data =
   {mutable fontobj : Pdftext.font;
    mutable extra_metrics : float * float;
-   mutable table : (int, string) Hashtbl.t}
+   mutable table : (int, string) Hashtbl.t;
+   mutable text_extractor : Pdftext.text_extractor}
 
 type text_state =
   {mutable character_spacing : float;
@@ -155,7 +156,8 @@ let initial_text_state () =
    font_data =
      {fontobj = Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding);
       extra_metrics = (0., 0.);
-      table = null_hash ()};
+      table = null_hash ();
+      text_extractor = Pdftext.text_extractor_of_font_real (Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding))};
    font_cache = null_hash ();
    font_size = 12.;
    rendering_mode = 0;
@@ -826,9 +828,11 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
                     {fontobj;
                      extra_metrics = extra_metrics fontobj;
                      table =
-                       match fontobj with
+                       begin match fontobj with
                        | Pdftext.StandardFont (_, encoding) -> Pdftext.table_of_encoding encoding
-                       | _ -> null_hash ()}
+                       | _ -> null_hash ()
+                       end;
+                     text_extractor = Pdftext.text_extractor_of_font_real fontobj}
                   in
                     !state.text_state.font_data <- font_data;
                     Hashtbl.add !state.text_state.font_cache s font_data
@@ -1097,9 +1101,11 @@ and read_graphics_state_dictionary ~pdf ~f ~stack ~state ~resources s =
           {fontobj;
            extra_metrics = extra_metrics fontobj;
            table =
-             match fontobj with
+             begin match fontobj with
              | Pdftext.StandardFont (_, encoding) -> Pdftext.table_of_encoding encoding
-             | _ -> null_hash ()}
+             | _ -> null_hash ()
+             end;
+           text_extractor = Pdftext.text_extractor_of_font_real fontobj}
         in
           !state.text_state.font_data <- font_data;
     | _ -> ()
@@ -1296,3 +1302,26 @@ let to_json ~pdf ~mediabox ~resources ~ops =
   in
     ignore (filter ~pdf ~f ~mediabox ~resources ~ops);
     `List (rev !jsons)
+
+(* A very simple text extractor just for testing the text extraction we will need for -page-content and proof files. *)
+let test_extract_text pdf range output_file =
+  let fh = open_out_bin output_file in
+  let codepoints = ref [] in
+    iter2
+      (fun page pnum ->
+         let f = function
+           | {content = Glyph charcode; state} ->
+               codepoints := Pdftext.codepoints_of_text state.text_state.font_data.text_extractor (bytes charcode)::!codepoints;
+               false
+           | _ -> false
+         in
+           if mem pnum range then
+             ignore
+               (filter
+                 ~pdf ~f ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox)
+                 ~resources:page.Pdfpage.resources ~ops:(Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content)))
+      (Pdfpage.pages_of_pagetree pdf)
+      (ilist 1 (Pdfpage.endpage pdf));
+      let utf8 = Pdftext.utf8_of_codepoints (flatten (rev !codepoints)) in
+        output_string fh utf8;
+        close_out fh
