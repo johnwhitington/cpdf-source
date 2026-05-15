@@ -169,4 +169,4 @@ val to_json :
 
 (**/**)
 
-val test_extract_text : Pdf.t -> int list -> string -> unit
+val test_extract_text : Pdf.t -> int list -> out_channel -> unit

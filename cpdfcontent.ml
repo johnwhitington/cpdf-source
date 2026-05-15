@@ -1304,11 +1304,11 @@ let to_json ~pdf ~mediabox ~resources ~ops =
     `List (rev !jsons)
 
 (* A very simple text extractor just for testing the text extraction we will need for -page-content and proof files. *)
-let test_extract_text pdf range output_file =
-  let fh = open_out_bin output_file in
+let test_extract_text pdf range ch =
   let codepoints = ref [] in
     iter2
       (fun page pnum ->
+         codepoints := [int_of_char '\n']::!codepoints;
          let f = function
            | {content = Glyph charcode; state} ->
                codepoints := Pdftext.codepoints_of_text state.text_state.font_data.text_extractor (bytes charcode)::!codepoints;
@@ -1323,5 +1323,5 @@ let test_extract_text pdf range output_file =
       (Pdfpage.pages_of_pagetree pdf)
       (ilist 1 (Pdfpage.endpage pdf));
       let utf8 = Pdftext.utf8_of_codepoints (flatten (rev !codepoints)) in
-        output_string fh utf8;
-        close_out fh
+        output_string ch utf8;
+        close_out ch
