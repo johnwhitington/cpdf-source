@@ -1194,15 +1194,6 @@ let filter ~pdf ~f ~mediabox ~resources ~ops =
     iter (fun op -> process_op ~pdf ~f ~stack ~state ~resources op) ops;
     ops
 
-let bytes n =
-  let rec count v = if v = 0 then 0 else 1 + count (v lsr 8) in
-  let l = max 1 (count n) in
-  let b = Bytes.create l in
-  for i = 0 to l - 1 do
-    Bytes.set b (l - 1 - i) (Char.chr ((n lsr (i * 8)) land 0xFF))
-  done;
-  Bytes.to_string b
-
 (* Export page content to JSON. One day this will be round-trippable. *)
 let json_of_fpoint (x, y) =
   `Assoc [("x", `Float x); ("y", `Float y)]
@@ -1282,8 +1273,18 @@ let json_of_state state = function
   | Shading _ -> json_of_state_shading state
   | Clip -> assert false (* Clipping path is part of the state. It exists in the content type only because we use it for -show-bboxes. *)
 
-let json_of_object = function
-  | Glyph c -> `Assoc [("obj", `String "glyph"); ("charcode", `Int c); ("bytes", `String (bytes c))] (* TODO Extracted text. *)
+let json_of_object state = function
+  | Glyph charcode ->
+      let bytes =
+        match state.text_state.font_data.fontobj with
+        | Pdftext.CIDKeyedFont _ -> implode [char_of_int (charcode lsr 8); char_of_int (charcode land 0xFF)]
+        | _ -> string_of_char (char_of_int charcode)
+      in
+        `Assoc
+          [("obj", `String "glyph");
+           ("charcode", `Int charcode);
+           ("bytes", `String bytes);
+           ("extracted text", `String (Pdftext.utf8_of_codepoints (Pdftext.codepoints_of_text state.text_state.font_data.text_extractor bytes)))]
   | InlineImage (dict, data) -> `Assoc [("obj", `String "inline image"); ("inline image", json_of_inline_image (dict, data))]
   | Image i -> `Assoc [("obj", `String "image"); ("image", `String i)]
   | Path p -> `Assoc [("obj", `String "path"); ("path", json_of_path p)]
@@ -1295,13 +1296,18 @@ let to_json ~pdf ~mediabox ~resources ~ops =
   let f {state; content; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} =
     if content <> Clip then
       jsons =|
-        `Assoc ([("object", json_of_object content);
+        `Assoc ([("object", json_of_object state content);
                  ("state", json_of_state state content);
                  ("bbox", `List [`Float x0; `Float y0; `Float x1; `Float y1; `Float x2; `Float y2; `Float x3; `Float y3])]);
     true
   in
     ignore (filter ~pdf ~f ~mediabox ~resources ~ops);
     `List (rev !jsons)
+
+let charcodes_of_string s = function
+    Pdftext.StandardFont _ | Pdftext.SimpleFont _ -> map int_of_char (explode s)
+  | Pdftext.CIDKeyedFont _ ->
+      try map (fun (a, b) -> int_of_char a lsl 8 lor int_of_char b) (pairs_of_list (explode s)) with Invalid_argument _ -> []
 
 (* A very simple text extractor just for testing the text extraction we will need for -page-content and proof files. *)
 let test_extract_text pdf range ch =
@@ -1311,7 +1317,12 @@ let test_extract_text pdf range ch =
          codepoints := [int_of_char '\n']::!codepoints;
          let f = function
            | {content = Glyph charcode; state} ->
-               codepoints := Pdftext.codepoints_of_text state.text_state.font_data.text_extractor (bytes charcode)::!codepoints;
+               let bytes =
+                 match state.text_state.font_data.fontobj with
+                 | Pdftext.CIDKeyedFont _ -> implode [char_of_int (charcode lsr 8); char_of_int (charcode land 0xFF)]
+                 | _ -> string_of_char (char_of_int charcode)
+               in
+               codepoints := Pdftext.codepoints_of_text state.text_state.font_data.text_extractor bytes::!codepoints;
                false
            | _ -> false
          in

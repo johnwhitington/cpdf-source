@@ -186,7 +186,7 @@ let print_font_table pdf fontname pagenumber =
       unicodedata;
       for x = 0 to 255 do
         let str =
-            (if Pdftext.is_identity_h pdftextfont then "\000" else "")
+            (if Pdftext.is_twobyte pdftextfont then "\000" else "")
           ^ string_of_char (char_of_int x)
         in
         let codepoints = Pdftext.codepoints_of_text extractor str in
