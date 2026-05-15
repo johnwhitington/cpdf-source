@@ -3,7 +3,7 @@ NONDOC = cpdfyojson cpdfxmlm
 
 DOC = cpdfutil cpdfunicodedata cpdferror cpdfdebug cpdfjson cpdfstrftime \
       cpdfcoord cpdfattach cpdfpagespec cpdfposition cpdfpresent cpdfmetadata \
-      cpdfbookmarks cpdfpage cpdftruetype cpdfremovetext cpdfextracttext \
+      cpdfbookmarks cpdfpage cpdftruetype cpdfremovetext \
       cpdfembed cpdffont cpdftype cpdfaddtext cpdfpad cpdfocg cpdfsqueeze \
       cpdfdraft cpdfspot cpdfpagelabels cpdfcreate cpdfannot cpdfxobject \
       cpdfimpose cpdfchop cpdftweak cpdfprinttree cpdfua cpdftexttopdf \
