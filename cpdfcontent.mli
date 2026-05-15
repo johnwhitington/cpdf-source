@@ -20,12 +20,17 @@ type subpath = hole * closure * segment list
 (* A path is made from a number of subpaths. *)
 type path = winding_rule * subpath list
 
+type drawn_path =
+  {stroked : bool;
+   filled : bool;
+   path : path}
+
 (** Content item  *)
 type content =
   | Glyph of int
   | InlineImage of Pdf.pdfobject * Pdfio.bytes
   | Image of string
-  | Path of path
+  | Path of drawn_path
   | Shading of string
   | Clip
 
@@ -106,7 +111,7 @@ type text_state =
 type state =
   {mutable ctm : Pdftransform.transform_matrix;
    mutable partial_path : partial;
-   mutable path : path;
+   mutable path : drawn_path;
    mutable clipping_path : path list;
    mutable colourspace_stroke : Pdfspace.t;
    mutable colourspace_non_stroke : Pdfspace.t;

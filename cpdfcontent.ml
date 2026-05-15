@@ -17,6 +17,11 @@ type subpath = hole * closure * segment list
 
 type path = winding_rule * subpath list
 
+type drawn_path =
+  {stroked : bool;
+   filled : bool;
+   path : path}
+
 type partial =
   | NoPartial
   | PartialPath of fpoint * fpoint * segment list * subpath list 
@@ -91,7 +96,7 @@ type text_state =
 type state =
   {mutable ctm : Pdftransform.transform_matrix;
    mutable partial_path : partial;
-   mutable path : path;
+   mutable path : drawn_path;
    mutable clipping_path : path list;
    mutable colourspace_stroke : Pdfspace.t;
    mutable colourspace_non_stroke : Pdfspace.t;
@@ -129,7 +134,7 @@ type content =
   | Glyph of int
   | InlineImage of Pdf.pdfobject * Pdfio.bytes
   | Image of string
-  | Path of path
+  | Path of drawn_path
   | Shading of string
   | Clip (* This is just for -show-bboxes. Clipping exists in the state otherwise. *)
 
@@ -168,7 +173,7 @@ let initial_state (minx, miny, maxx, maxy) =
                   Straight ((maxx, maxy), (maxx, miny));
                   Straight ((maxx, miny), (minx, miny))])])];
    partial_path = NoPartial;
-   path = (EvenOdd, []);
+   path = {filled = false; stroked = false; path = (EvenOdd, [])};
    colourspace_stroke = Pdfspace.DeviceGray;
    colourspace_non_stroke = Pdfspace.DeviceGray;
    colour_non_stroke = Floats [1.];
@@ -594,7 +599,7 @@ let transform_path m (w, subpaths) =
     (w, map (fun (h, c, segments) -> (h, c, map transform_segment segments)) subpaths)
 
 let emit_path_bounding_box ~content ~stroking ~f ~state =
-  let path = transform_path !state.ctm (match content with Clip | Shading _ -> hd !state.clipping_path | _ -> !state.path) in
+  let path = transform_path !state.ctm (match content with Clip | Shading _ -> hd !state.clipping_path | _ -> !state.path.path) in
   let bbox = bbox_of_path path in
     match bbox with
     | None -> ()
@@ -692,7 +697,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
       | PartialPath (sp, cp, segs, subpaths) ->
           (* segs is empty, due to [Op_h] *)
           !state.partial_path <- PartialPath (sp, cp, [], []);
-          !state.path <- (NonZero, rev subpaths);
+          !state.path <- {filled = true; stroked = false; path = (NonZero, rev subpaths)};
           emit_path_bounding_box ~content:(Path !state.path) ~stroking:false ~f ~state
       | _ -> ()
       end
@@ -702,12 +707,12 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
           if segs = [] then
             begin
               !state.partial_path <- PartialPath (sp, cp, [], []);
-              !state.path <- (EvenOdd, rev subpaths)
+              !state.path <- {filled = false; stroked = true; path = (EvenOdd, rev subpaths)}
             end
           else
             begin
               !state.partial_path <- PartialPath (sp, cp, [], []);
-              !state.path <- (EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths))
+              !state.path <- {filled = false; stroked = true; path = (EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths))}
             end;
           emit_path_bounding_box ~content:(Path !state.path) ~stroking:true ~f ~state
       | _ -> ()
@@ -718,12 +723,12 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
           if segs = [] then
             begin
               !state.partial_path <- PartialPath (sp, cp, [], []);
-              !state.path <- (NonZero, rev subpaths)
+              !state.path <- {filled = true; stroked = true; path = (NonZero, rev subpaths)}
             end
           else
             begin
               !state.partial_path <- PartialPath (sp, cp, [], []);
-              !state.path <- (NonZero, rev ((Not_hole, Open, rev segs)::subpaths))
+              !state.path <- {filled = true; stroked = true; path = (NonZero, rev ((Not_hole, Open, rev segs)::subpaths))}
             end;
           emit_path_bounding_box ~content:(Path !state.path) ~stroking:true ~f ~state
       | _ -> ()
@@ -735,12 +740,12 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
             if segs = [] then
               begin
                 !state.partial_path <- PartialPath (sp, cp, [], []);
-                !state.path <- (EvenOdd, rev subpaths)
+                !state.path <- {filled = true; stroked = true; path = (EvenOdd, rev subpaths)}
               end
             else
               begin
                 !state.partial_path <- PartialPath (sp, cp, [], []);
-                !state.path <- (EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths))
+                !state.path <- {filled = true; stroked = true; path = (EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths))}
               end;
             emit_path_bounding_box ~content:(Path !state.path) ~stroking:true ~f ~state
         | _ -> ()
@@ -751,12 +756,12 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
           if segs = [] then
             begin
               !state.partial_path <- PartialPath (sp, cp, [], []);
-              !state.path <- (EvenOdd, rev subpaths)
+              !state.path <- {filled = true; stroked = false; path = (EvenOdd, rev subpaths)}
             end
           else
             begin
               !state.partial_path <- PartialPath (sp, cp, [], []);
-              !state.path <- (EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths))
+              !state.path <- {filled = true; stroked = false; path = (EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths))}
             end;
           emit_path_bounding_box ~content:(Path !state.path) ~stroking:false ~f ~state
       | _ -> ()
@@ -1204,25 +1209,26 @@ let json_of_subpath (_, closure, segments) =
   `Assoc [("closed", `Bool (closure = Closed));
           ("segments", `List (map json_of_segment segments))]
 
-let json_of_path (winding, subpaths) =
+let json_of_path {filled; stroked; path = (winding, subpaths)} =
   `Assoc [("winding", `String ((function EvenOdd -> "even-odd" | NonZero -> "non-zero") winding));
-          ("subpaths", `List (map json_of_subpath subpaths))]
+          ("subpaths", `List (map json_of_subpath subpaths));
+          ("stroked", `Bool stroked);
+          ("filled", `Bool filled)]
 
 let json_of_inline_image (dict, data) = `Null
 
-(* TODO Combine clipping paths using the intersector. *)
 let json_of_state_glyph state =
   `Assoc [("rendering mode", `Int state.text_state.rendering_mode);
           ("knockout", `Bool state.text_state.knockout);
           ("font", `String state.text_state.font);
           ("font size", `Float state.text_state.font_size);
-          ("clipping path", json_of_path (hd state.clipping_path))]
+          ("clipping path", `List (map json_of_path (map (function path -> {filled = false; stroked = false; path}) state.clipping_path)))]
 
 let json_of_state_inline_image state =
-  `Assoc [("clipping path", json_of_path (hd state.clipping_path))]
+  `Assoc [("clipping path", `List (map json_of_path (map (function path -> {filled = false; stroked = false; path}) state.clipping_path)))]
 
 let json_of_state_image state =
-  `Assoc [("clipping path", json_of_path (hd state.clipping_path))]
+  `Assoc [("clipping path", `List (map json_of_path (map (function path -> {filled = false; stroked = false; path}) state.clipping_path)))]
 
 let json_of_colourspace = function
   | Pdfspace.DeviceGray -> `String "DeviceGray"
@@ -1243,9 +1249,8 @@ let json_of_colvals = function
   | Named (s, fl) -> `List (`String s::map (fun x -> `Float x) fl)
   | Pattern _ -> `String "pattern"
 
-(* TODO Doesn't actually store fill or stroke in path data type! Add this in Cpdfcontent.path data type. *)
 let json_of_state_path state =
-  `Assoc [("clipping path", json_of_path (hd state.clipping_path));
+  `Assoc [("clipping path", `List (map json_of_path (map (function path -> {filled = false; stroked = false; path}) state.clipping_path)));
           ("colourspace stroke", json_of_colourspace state.colourspace_stroke);
           ("colourspace non stroke", json_of_colourspace state.colourspace_non_stroke);
           ("colour stroke", json_of_colvals state.colour_stroke);
@@ -1261,7 +1266,7 @@ let json_of_state_path state =
           ("rendering intent", `String state.rendering_intent)]
 
 let json_of_state_shading state =
-  `Assoc [("clipping path", json_of_path (hd state.clipping_path))]
+  `Assoc [("clipping path", `List (map json_of_path (map (function path -> {filled = false; stroked = false; path}) state.clipping_path)))]
 
 let json_of_state state = function
   | Glyph _ -> json_of_state_glyph state
