@@ -268,7 +268,7 @@ let list_font pdf page (name, dict) =
   in let encoding =
    match Pdf.lookup_direct pdf "/Encoding" dict with
     | Some (Pdf.Name n) -> Pdfwrite.string_of_pdf (Pdf.Name n)
-    | _ -> ""
+    | _ -> "Custom"
   in 
     (page, name, subtype, basefont, encoding, Pdf.direct pdf dict)
 
