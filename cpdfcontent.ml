@@ -1291,10 +1291,16 @@ let json_of_object state = function
   | Shading s -> `Assoc [("obj", `String "shading"); ("shading", `String s)]
   | Clip -> assert false (* Clipping path is part of the state. It exists in the content type only because we use it for -show-bboxes. *)
 
-let to_json ~pdf ~mediabox ~resources ~ops =
+let to_json ~pdf ~mediabox ~resources ?(graphics=true) ?(text=true) ?(images=true) ops =
   let jsons = ref [] in
+  let including = function
+    | Clip -> false
+    | Glyph _ -> text
+    | InlineImage (_, _) | Image _ -> images
+    | Path _ | Shading _ -> graphics
+  in
   let f {state; content; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} =
-    if content <> Clip then
+    if including content then
       jsons =|
         `Assoc ([("object", json_of_object state content);
                  ("state", json_of_state state content);

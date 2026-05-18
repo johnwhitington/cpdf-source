@@ -164,7 +164,10 @@ val to_json :
   pdf:Pdf.t ->
   mediabox:(float * float * float * float) ->
   resources:Pdf.pdfobject ->
-  ops:Pdfops.t list ->
+  ?graphics:bool ->
+  ?text:bool ->
+  ?images:bool ->
+  Pdfops.t list ->
   Cpdfyojson.Safe.t
 
 (**/**)

@@ -640,7 +640,10 @@ type args =
    mutable update : bool;
    mutable text_rotation : Cpdfaddtext.rotation;
    mutable url_border : bool;
-   mutable show_bboxes_light : bool}
+   mutable show_bboxes_light : bool;
+   mutable page_content_images : bool;
+   mutable page_content_text : bool;
+   mutable page_content_graphics : bool}
 
 let args =
   {op = None;
@@ -803,7 +806,10 @@ let args =
    update = false;
    text_rotation = Cpdfaddtext.Rot0;
    url_border = false;
-   show_bboxes_light = false}
+   show_bboxes_light = false;
+   page_content_images = true;
+   page_content_text = true;
+   page_content_graphics = true}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -951,7 +957,10 @@ let reset_arguments () =
   args.update <- false;
   args.text_rotation <- Cpdfaddtext.Rot0;
   args.url_border <- false;
-  args.show_bboxes_light <- false
+  args.show_bboxes_light <- false;
+  args.page_content_images <- true;
+  args.page_content_text <- true;
+  args.page_content_graphics <- true
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -3264,6 +3273,9 @@ let specs =
    ("-light", Arg.Unit (fun () -> args.show_bboxes_light <- true), " Use light colours for bounding boxes");
    ("-reveal-text", Arg.Unit (fun () -> setop RevealText ()), " Reveal hidden text");
    ("-page-content", Arg.Unit (fun () -> setop PageContentJSON ()), " Export page content as JSON");
+   ("-pc-no-images", Arg.Unit (fun () -> args.page_content_images <- false), " Don't list images in page content");
+   ("-pc-no-text", Arg.Unit (fun () -> args.page_content_text <- false), " Don't list text in page content");
+   ("-pc-no-graphics", Arg.Unit (fun () -> args.page_content_graphics <- false), " Don't list paths and shadings in page content");
    (* Undocumented. *)
    ("-test-extract-text", Arg.Unit (fun () -> setop TestExtractText ()), "")]
 
@@ -5455,7 +5467,10 @@ let rec go () =
                                          ~pdf
                                          ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox)
                                          ~resources:page.Pdfpage.resources
-                                         ~ops:(Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content))])
+                                         ~graphics:args.page_content_graphics
+                                         ~text:args.page_content_text
+                                         ~images:args.page_content_images
+                                         (Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content))])
                else
                  None)
             (Pdfpage.pages_of_pagetree pdf)
