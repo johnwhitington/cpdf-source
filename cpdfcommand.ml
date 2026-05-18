@@ -5460,19 +5460,24 @@ let rec go () =
         let jsons =
           option_map2
             (fun page pnum ->
-               if mem pnum range then
-                 Some (`Assoc
-                         [("page", `Int pnum);
-                          ("contents", Cpdfcontent.to_json
-                                         ~pdf
-                                         ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox)
-                                         ~resources:page.Pdfpage.resources
-                                         ~graphics:args.page_content_graphics
-                                         ~text:args.page_content_text
-                                         ~images:args.page_content_images
-                                         (Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content))])
-               else
-                 None)
+               Cpdfutil.progress_page pnum;
+               let r =
+                 if mem pnum range then
+                   Some (`Assoc
+                           [("page", `Int pnum);
+                            ("contents", Cpdfcontent.to_json
+                                           ~pdf
+                                           ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox)
+                                           ~resources:page.Pdfpage.resources
+                                           ~graphics:args.page_content_graphics
+                                           ~text:args.page_content_text
+                                           ~images:args.page_content_images
+                                           (Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content))])
+                 else
+                   None
+               in
+                 Cpdfutil.progress_endpage ();
+                 r)
             (Pdfpage.pages_of_pagetree pdf)
             (ilist 1 (Pdfpage.endpage pdf))
         in
@@ -5482,7 +5487,8 @@ let rec go () =
           | Stdout -> stdout
           | _ -> error "Unknown output type"
         in
-          Cpdfyojson.Safe.pretty_to_channel channel (`List jsons)
+          Cpdfyojson.Safe.pretty_to_channel channel (`List jsons);
+          Cpdfutil.progress_done ()
   | TestExtractText ->
       let channel =
         match args.out with

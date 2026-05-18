@@ -1284,7 +1284,7 @@ let json_of_object state = function
           [("obj", `String "glyph");
            ("charcode", `Int charcode);
            ("bytes", `String bytes);
-           ("extracted text", `String (Pdftext.utf8_of_codepoints (Pdftext.codepoints_of_text state.text_state.font_data.text_extractor bytes)))]
+           ("text", `String (Pdftext.utf8_of_codepoints (Pdftext.codepoints_of_text state.text_state.font_data.text_extractor bytes)))]
   | InlineImage (dict, data) -> `Assoc [("obj", `String "inline image"); ("inline image", json_of_inline_image (dict, data))]
   | Image i -> `Assoc [("obj", `String "image"); ("image", `String i)]
   | Path p -> `Assoc [("obj", `String "path"); ("path", json_of_path p)]
