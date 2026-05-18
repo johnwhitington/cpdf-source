@@ -2604,6 +2604,24 @@ out.pdf</strong></p>
 <strong>-o out.pdf</strong></p>
 <p>Show bounding boxes of objects on page which lie within a given
 rectangle “minx miny width height”.</p>
+<p><strong>cpdf -page-content in.pdf</strong> [&lt;range&gt;]
+[-pc-no-graphics] [-pc-no-text] [-pc-no-images] <strong>-o
+out.json</strong></p>
+<p>Output JSON representation of content of pages.</p>
+<dl>
+<dt><strong>-pc-no-graphics</strong></dt>
+<dd>
+<p>Suppress output of paths and shadings.</p>
+</dd>
+<dt><strong>-pc-no-text</strong></dt>
+<dd>
+<p>Suppress output of text objects.</p>
+</dd>
+<dt><strong>-pc-no-images</strong></dt>
+<dd>
+<p>Suppress output of images.</p>
+</dd>
+</dl>
 <h1 id="environment">ENVIRONMENT</h1>
 <dl>
 <dt><strong>CPDF_SHOW_EXT</strong></dt>

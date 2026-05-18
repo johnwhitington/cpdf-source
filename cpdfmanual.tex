@@ -6611,7 +6611,11 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -show-bboxes [-light] in.pdf [<range>] -o out.pdf!\\
-  \noindent\verb!cpdf -show-bboxes-shape <boxspec> [-light] in.pdf [<range>] -o out.pdf!\end{framed}}
+  \noindent\verb!cpdf -show-bboxes-shape <boxspec> [-light] in.pdf [<range>] -o out.pdf!
+
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -page-content [-pc-no-images] [-pc-no-graphics] [-pc-no-text]!\\
+  \noindent\verb!      in.pdf [<range> -o out.pdf!\end{framed}}
 
   \section{Draft Documents}
 \index{draft}
@@ -7054,6 +7058,17 @@ To show only such boxes as lie within a given rectangle (for example, those whic
   \small\noindent\verb!cpdf -show-bboxes-shape "50 50 200 300" in.pdf -o out.pdf!
   \end{framed}
 
+\section{Extracting page content}
+
+The \texttt{-page-content} operation outputs JSON describing the graphic objects, text, and images on the given pages of the given PDF:
+
+  \begin{framed}
+  \small\noindent\verb!cpdf -page-content in.pdf -o out.pdf!
+  \end{framed}
+
+\noindent Since such output can be very large, the options \texttt{-pc-no-text}, \texttt{-pc-no-graphics} and \texttt{-pc-no-images} may be used to suppress unwanted elements.
+
+In the future, this JSON format will contain enough information to modify and round-trip page content.
 
 \begin{cpdflib}
 \clearpage

@@ -2425,6 +2425,22 @@ Show bounding boxes of objects on page.
 
 Show bounding boxes of objects on page which lie within a given rectangle "minx miny width height".
 
+**cpdf -page-content in.pdf** \[\<range>] \[-pc-no-graphics] \[-pc-no-text] \[-pc-no-images] **-o out.json**
+
+Output JSON representation of content of pages.
+
+**-pc-no-graphics**
+
+: Suppress output of paths and shadings.
+
+**-pc-no-text**
+
+: Suppress output of text objects.
+
+**-pc-no-images**
+
+: Suppress output of images.
+
 # ENVIRONMENT
 
 **CPDF_SHOW_EXT**

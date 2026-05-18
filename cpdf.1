@@ -2273,6 +2273,20 @@ out.pdf\f[R]
 .PP
 Show bounding boxes of objects on page which lie within a given
 rectangle \(lqminx miny width height\(rq.
+.PP
+\f[B]cpdf \-page\-content in.pdf\f[R] [<range>] [\-pc\-no\-graphics]
+[\-pc\-no\-text] [\-pc\-no\-images] \f[B]\-o out.json\f[R]
+.PP
+Output JSON representation of content of pages.
+.TP
+\f[B]\-pc\-no\-graphics\f[R]
+Suppress output of paths and shadings.
+.TP
+\f[B]\-pc\-no\-text\f[R]
+Suppress output of text objects.
+.TP
+\f[B]\-pc\-no\-images\f[R]
+Suppress output of images.
 .SH ENVIRONMENT
 .TP
 \f[B]CPDF_SHOW_EXT\f[R]
