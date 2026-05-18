@@ -332,7 +332,7 @@ let json_of_font (pagenum, name, subtype, basefont, encoding, _) =
      ("name", `String name);
      ("subtype", if subtype = "" then `Null else `String subtype);
      ("basefont", if basefont = "" then `Null else `String basefont);
-     ("encoding", if encoding = "" then `Null else `String encoding)]
+     ("encoding", if encoding = "" then `String "Custom" else `String encoding)]
 
 let json_fonts pdf range =
   `List (map json_of_font (list_fonts pdf range))
