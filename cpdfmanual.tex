@@ -6615,7 +6615,7 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -page-content [-pc-no-images] [-pc-no-graphics] [-pc-no-text]!\\
-  \noindent\verb!      in.pdf [<range> -o out.pdf!\end{framed}}
+  \noindent\verb!      in.pdf [<range>] -o out.json!\end{framed}}
 
   \section{Draft Documents}
 \index{draft}
@@ -7063,7 +7063,7 @@ To show only such boxes as lie within a given rectangle (for example, those whic
 The \texttt{-page-content} operation outputs JSON describing the graphic objects, text, and images on the given pages of the given PDF:
 
   \begin{framed}
-  \small\noindent\verb!cpdf -page-content in.pdf -o out.pdf!
+  \small\noindent\verb!cpdf -page-content in.pdf -o out.json!
   \end{framed}
 
 \noindent Since such output can be very large, the options \texttt{-pc-no-text}, \texttt{-pc-no-graphics} and \texttt{-pc-no-images} may be used to suppress unwanted elements.
