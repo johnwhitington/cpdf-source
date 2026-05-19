@@ -28,7 +28,7 @@ Fixes:
 
 o -midline and -topline now work properly for custom fonts
 o -summary goes to stdout
-o Correct parent links in -add-annotations-json
+o Correct parent links for non-dests in -set-annotations
 
 2.9 (March 2026)
 
