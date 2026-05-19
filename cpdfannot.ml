@@ -77,8 +77,13 @@ let rewrite_destinations f pdf annot =
   (* Deal with /P in annotation *)
   let annot =
     match Pdf.indirect_number pdf "/P" annot with
-    | Some i -> Pdf.add_dict_entry annot "/P" (Pdf.Integer (f i))
-    | None -> annot
+    | Some i ->
+        Pdf.add_dict_entry annot "/P" (Pdf.Integer (f i))
+    | None ->
+        match Pdf.lookup_direct pdf "/P" annot with
+        | Some (Pdf.Integer i) ->
+            Pdf.add_dict_entry annot "/P" (Pdf.Indirect (f i))
+        | _ -> annot
   in
   (* Deal with /Dest in annotation *)
   match Pdf.lookup_direct pdf "/Dest" annot with
