@@ -1,2 +1,15 @@
 .DS_Store
 .texpadtmp
+._d/
+._bcdi/
+._ncdi/
+*.cmt
+*.cmti
+*.o
+*.annot
+*.cmo
+*.cmi
+*.cmx
+*.cmxa
+*.cmxs
+cpdf
