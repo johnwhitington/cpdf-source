@@ -9,7 +9,7 @@ CPDF is distributed under the AGPL - see LICENSE.md. If you are unable to abide
 by the terms of the AGPL, you will need a commercial license.
 
 See also original copyright and/or license statements in cpdfxmlm.ml*,
-cpdfyojson.ml*, cpdfua.ml, and cpdfunicodedata.*
+cpdfyojson.ml*, cpdfua.ml, cpdfunicodedata.*, and compressor.
 
 For commercial licenses, email
 [contact@coherentgraphics.co.uk](mailto:contact@coherentgraphics.co.uk) or
@@ -58,7 +58,7 @@ To build
 --------
 
 If downloading from Github, obtain the correct source. This means choosing the
-tag for a particular version, such as "v2.9". The head of the master branch
+tag for a particular version, such as "v2.9.1". The head of the master branch
 is unstable.
 
 1. Type `make` to make the cpdf executable and the library
@@ -139,6 +139,8 @@ Association, and are licensed under the Creative Commons Attribution 4.0
 International license.
 
 PDF/UA support in Cpdf was implemented under NLnet grant 2023-12-031.
+
+Redaction support in Cpdf is being implemented under NLnet grant 2025-10-235.
 
 Contact
 -------
