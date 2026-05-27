@@ -8,16 +8,12 @@ type segment =
   | Straight of fpoint * fpoint
   | Bezier of fpoint * fpoint * fpoint * fpoint
 
-(* Each segment list may be marked as a hole or not. *)
 type hole = Hole | Not_hole
 
-(* A [subpath] is either closed or open. *)
 type closure = Closed | Open
 
-(* A [subpath] is the pair of a hole and a list of segments. *)
 type subpath = hole * closure * segment list
 
-(* A path is made from a number of subpaths. *)
 type path = winding_rule * subpath list
 
 type drawn_path =
@@ -25,7 +21,6 @@ type drawn_path =
    filled : bool;
    path : path}
 
-(** Content item  *)
 type content =
   | Glyph of int
   | InlineImage of Pdf.pdfobject * Pdfio.bytes
@@ -160,6 +155,7 @@ val filter :
   ops:Pdfops.t list ->
   Pdfops.t list
 
+(** Process graphics operations and output result as JSON. *)
 val to_json :
   pdf:Pdf.t ->
   mediabox:(float * float * float * float) ->

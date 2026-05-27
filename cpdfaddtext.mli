@@ -22,8 +22,9 @@ type justification =
 type rotation = Rot0 | Rot90 | Rot180 | Rot270
 
 (** Call [add_texts linewidth outline fast fontname font bates batespad colour
-position linespacing fontsize underneath text pages orientation
-relative_to_cropbox midline_adjust topline filename pdf]. For details see cpdfmanual.pdf *)
+position linespacing fontsize underneath text range box opacity justification
+midline topline rotation filename shift raw url_border pdf]. For details see
+cpdfmanual.pdf *)
 val addtexts :
     float -> (*linewidth*)
     bool -> (*outline*)
