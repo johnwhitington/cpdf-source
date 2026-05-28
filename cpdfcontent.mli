@@ -1,4 +1,4 @@
-(** Representing page content as objects without loss. *)
+(** Page content as objects *)
 
 type fpoint = float * float
 

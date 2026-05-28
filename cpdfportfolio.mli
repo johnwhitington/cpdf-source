@@ -1,4 +1,4 @@
-(** Portfolios. *)
+(** Portfolios *)
 
 (** A single entry in the portfolio. *)
 type t =
