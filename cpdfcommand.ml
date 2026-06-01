@@ -3225,7 +3225,6 @@ let specs =
    ("-remove-struct-tree", Arg.Unit (fun () -> setop RemoveStructTree ()), " Remove entire structure tree");
    ("-mark-as-artifact", Arg.Unit (fun () -> setop MarkAsArtifact ()), " Mark whole file as artifact");
    ("-redact", Arg.Unit (fun () -> setop Redact ()), " Redact entire pages");
-   ("-redact-rect", Arg.String (fun s -> setop (RedactShape s) ()), " Redact rectangle");
    ("-redact-shape", Arg.String (fun s -> setop (RedactShape s) ()), " Redact shape");
    ("-redact-apply", Arg.Unit (fun s -> setop RedactApply ()), " Apply redaction annotations");
    ("-redact-apply-type", Arg.String (fun s -> setop (RedactApplyType s) ()), "Apply redaction from non-redaction annotation");

@@ -3,14 +3,19 @@ open Pdfutil
 (* Redact a path on a page *)
 let redact pdf ~path range =
   let redact_page page =
-    let resources = Pdf.Null in
-    let ops = [] in
-    let ops' = Cpdfcontent.filter ~f:(fun _ -> false) ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox) ~resources ~ops in
-      ignore ops'
+    let ops' =
+      Cpdfcontent.filter
+        ~pdf
+        ~f:(fun _ -> false)
+        ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox)
+        ~resources:page.Pdfpage.resources
+        ~ops:(Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content)
+    in
+      {page with Pdfpage.content = [Pdfops.stream_of_ops ops']}
   in
     Cpdfpage.process_pages
       (Pdfpage.ppstub
-        (fun pnum page -> if mem pnum range then (redact_page page; page) else page))
+        (fun pnum page -> if mem pnum range then redact_page page else page))
            pdf
            range
 

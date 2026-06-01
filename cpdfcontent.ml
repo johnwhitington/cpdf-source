@@ -425,7 +425,8 @@ let process_tj ~f ~stack ~state ~resources s =
           in
             !state.text_state.t_m <- Pdftransform.matrix_compose !state.text_state.t_m (Pdftransform.mktranslate tx ty))
       chars
-      widths
+      widths;
+    s
 
 let process_capital_tj ~f ~stack ~state ~resources elts =
   let vertical = vertical !state.text_state.font_data.fontobj in
@@ -434,7 +435,7 @@ let process_capital_tj ~f ~stack ~state ~resources elts =
   iter
     (function
      | Pdf.String s ->
-         process_tj ~f ~stack ~state ~resources s
+         ignore (process_tj ~f ~stack ~state ~resources s)
      | Pdf.Real n ->
          let tx =
            if vertical then 0.  else (~-.n /. 1000.) *. !state.text_state.horizontal_scaling *. !state.text_state.font_size
@@ -444,7 +445,8 @@ let process_capital_tj ~f ~stack ~state ~resources elts =
          in
            !state.text_state.t_m <- Pdftransform.matrix_compose !state.text_state.t_m (Pdftransform.mktranslate tx ty)
      | _ -> ())
-    elts
+    elts;
+  (Pdf.Array elts)
 
 let read_tiling_pattern _ =
   ColouredTilingPattern Tiling
@@ -617,30 +619,46 @@ let emit_path_bounding_box ~content ~stroking ~f ~state =
         in
           ignore (f ({state = copystate !state; content; bounding_box = Quad (minx, miny, minx, maxy, maxx, maxy, maxx, miny)}))
 
-(* Return next object, list of ops consumed, remaining list *)
-let rec process_op ~pdf ~f ~stack ~state ~resources = function
+(* TODO Allow this to expand operations, optionally e.g for -remove-xobjects.
+   TODO Allow filtering on object, but also on ops (only one of these options at a time though.
+   TODO Allow iter and map to save creating all the sublists?
+   TODO Allow removal of un-needed ops automatically by checking state. How much of our possible compressor is this?
+   TODO Change to take all ops not just one op? Does this help with the compressor? *)
+let rec process_op ~pdf ~f ~stack ~state ~resources op =
+  match op with
   | Pdfops.Op_w f ->
-      !state.line_width <- f
+      !state.line_width <- f;
+      [op]
   | Pdfops.Op_J i ->
-      !state.line_cap <- i
+      !state.line_cap <- i;
+      [op]
   | Pdfops.Op_j i ->
-      !state.line_join <- i
+      !state.line_join <- i;
+      [op]
   | Pdfops.Op_M f ->
-      !state.miter_limit <- f
+      !state.miter_limit <- f;
+      [op]
   | Pdfops.Op_d (fl, f) ->
-      !state.dash_pattern <- (fl, f)
+      !state.dash_pattern <- (fl, f);
+      [op]
   | Pdfops.Op_ri s ->
-      !state.rendering_intent <- s
+      !state.rendering_intent <- s;
+      [op]
   | Pdfops.Op_i f ->
-      !state.flatness <- f
+      !state.flatness <- f;
+      [op]
   | Pdfops.Op_gs s ->
-      read_graphics_state_dictionary ~pdf ~f ~stack ~state ~resources s
+      read_graphics_state_dictionary ~pdf ~f ~stack ~state ~resources s;
+      [op]
   | Pdfops.Op_q ->
-      push_statestack stack !state
+      push_statestack stack !state;
+      [op]
   | Pdfops.Op_Q ->
-      pop_statestack stack state
+      pop_statestack stack state;
+      [op]
   | Pdfops.Op_cm m ->
-      !state.ctm <- Pdftransform.matrix_compose !state.ctm m
+      !state.ctm <- Pdftransform.matrix_compose !state.ctm m;
+      [op]
   | Pdfops.Op_m (x, y) ->
       begin match !state.partial_path with
       | PartialPath (sp, cp, segs, subpaths) ->
@@ -650,13 +668,15 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
               else PartialPath ((x, y), (x, y), [], (Not_hole, Open, rev segs)::subpaths)
       | _ ->
           !state.partial_path <- PartialPath ((x, y), (x, y), [], [])
-      end
+      end;
+      [op]
   | Pdfops.Op_l (x, y) ->
       begin match !state.partial_path with 
       | PartialPath (sp, cp, segs, subpaths) ->
           !state.partial_path <- PartialPath (sp, (x, y), Straight (cp, (x, y))::segs, subpaths)
       | _ -> ()
-      end
+      end;
+      [op]
   | Pdfops.Op_c (a, b, c, d, e, f) ->
       begin match !state.partial_path with 
       | PartialPath (sp, cp, segs, subpaths) ->
@@ -664,7 +684,8 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
           let curve = Bezier (cp, (a, b), (c, d), ep) in
             !state.partial_path <- PartialPath (sp, ep, curve::segs, subpaths)
       | _ -> ()
-      end
+      end;
+      [op]
   | Pdfops.Op_v (a, b, c, d) ->
       begin match !state.partial_path with 
       | PartialPath (sp, cp, segs, subpaths) ->
@@ -672,7 +693,8 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
           let curve = Bezier (cp, cp, (a, b), ep) in
             !state.partial_path <- PartialPath (sp, ep, curve::segs, subpaths)
       | _ -> ()
-      end
+      end;
+      [op]
   | Pdfops.Op_y (a, b, c, d) ->
       begin match !state.partial_path with 
       | PartialPath (sp, cp, segs, subpaths) ->
@@ -680,29 +702,35 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
           let curve = Bezier (cp, (a, b), ep, ep) in
             !state.partial_path <- PartialPath (sp, ep, curve::segs, subpaths)
       | _ -> ()
-      end
+      end;
+      [op]
   | Pdfops.Op_h ->
       begin match !state.partial_path with 
       | PartialPath (sp, cp, segs, subpaths) ->
           !state.partial_path <- PartialPath (sp, cp, [], (Not_hole, Closed, rev segs)::subpaths)
       | _ -> ()
-      end
+      end;
+      [op]
   | Pdfops.Op_s ->
-      iter (process_op ~pdf ~f ~stack ~state ~resources) [Pdfops.Op_h; Pdfops.Op_S]
+      ignore (map (process_op ~pdf ~f ~stack ~state ~resources) [Pdfops.Op_h; Pdfops.Op_S]);
+      [op]
   | Pdfops.Op_b ->
-      iter (process_op ~pdf ~f ~stack ~state ~resources) [Pdfops.Op_h; Pdfops.Op_B]
+      ignore (map (process_op ~pdf ~f ~stack ~state ~resources) [Pdfops.Op_h; Pdfops.Op_B]);
+      [op]
   | Pdfops.Op_b' ->
-      iter (process_op ~pdf ~f ~stack ~state ~resources) [Pdfops.Op_h; Pdfops.Op_B']
+      ignore (map (process_op ~pdf ~f ~stack ~state ~resources) [Pdfops.Op_h; Pdfops.Op_B']);
+      [op]
   | Pdfops.Op_f | Pdfops.Op_F ->
-      process_op ~pdf ~f ~stack ~state ~resources Pdfops.Op_h;
-      begin match !state.partial_path with
-      | PartialPath (sp, cp, segs, subpaths) ->
-          (* segs is empty, due to [Op_h] *)
-          !state.partial_path <- PartialPath (sp, cp, [], []);
-          !state.path <- {filled = true; stroked = false; path = (NonZero, rev subpaths)};
-          emit_path_bounding_box ~content:(Path !state.path) ~stroking:false ~f ~state
-      | _ -> ()
-      end
+        ignore (process_op ~pdf ~f ~stack ~state ~resources Pdfops.Op_h);
+        begin match !state.partial_path with
+        | PartialPath (sp, cp, segs, subpaths) ->
+            (* segs is empty, due to [Op_h] *)
+            !state.partial_path <- PartialPath (sp, cp, [], []);
+            !state.path <- {filled = true; stroked = false; path = (NonZero, rev subpaths)};
+            emit_path_bounding_box ~content:(Path !state.path) ~stroking:false ~f ~state
+        | _ -> ()
+        end;
+        [op]
   | Pdfops.Op_S ->
       begin match !state.partial_path with
       | PartialPath (sp, cp, segs, subpaths) ->
@@ -718,7 +746,8 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
             end;
           emit_path_bounding_box ~content:(Path !state.path) ~stroking:true ~f ~state
       | _ -> ()
-      end
+      end;
+      [op]
   | Pdfops.Op_B ->
       begin match !state.partial_path with
       | PartialPath (sp, cp, segs, subpaths) ->
@@ -734,9 +763,10 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
             end;
           emit_path_bounding_box ~content:(Path !state.path) ~stroking:true ~f ~state
       | _ -> ()
-      end
+      end;
+      [op]
   | Pdfops.Op_B' ->
-        process_op ~pdf ~f ~stack ~state ~resources Pdfops.Op_h;
+        ignore (process_op ~pdf ~f ~stack ~state ~resources Pdfops.Op_h);
         begin match !state.partial_path with
         | PartialPath (sp, cp, segs, subpaths) ->
             if segs = [] then
@@ -751,7 +781,8 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
               end;
             emit_path_bounding_box ~content:(Path !state.path) ~stroking:true ~f ~state
         | _ -> ()
-        end
+        end;
+        [op]
   | Pdfops.Op_f' ->
       begin match !state.partial_path with
       | PartialPath (sp, cp, segs, subpaths) ->
@@ -767,14 +798,18 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
             end;
           emit_path_bounding_box ~content:(Path !state.path) ~stroking:false ~f ~state
       | _ -> ()
-      end
+      end;
+      [op]
   | Pdfops.Op_n ->
       emit_path_bounding_box ~content:Clip ~stroking:false ~f ~state;
-      !state.partial_path <- NoPartial
+      !state.partial_path <- NoPartial;
+      [op]
   | Pdfops.Op_re (x, y, w, h) ->
-      iter
-        (process_op ~pdf ~f ~stack ~state ~resources)
-        [Pdfops.Op_m (x, y); Pdfops.Op_l (x +. w, y); Pdfops.Op_l (x +. w, y +. h); Pdfops.Op_l (x, y +. h); Pdfops.Op_h]
+      ignore
+        (map
+          (process_op ~pdf ~f ~stack ~state ~resources)
+          [Pdfops.Op_m (x, y); Pdfops.Op_l (x +. w, y); Pdfops.Op_l (x +. w, y +. h); Pdfops.Op_l (x, y +. h); Pdfops.Op_h]);
+      [op]
   | Pdfops.Op_W ->
       begin match !state.partial_path with
       | PartialPath (_, _, segments, subpaths) ->
@@ -786,7 +821,8 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
             in
               !state.clipping_path <- (NonZero, path)::!state.clipping_path
       | _ -> ()
-      end
+      end;
+      [op]
   | Pdfops.Op_W' ->
       begin match !state.partial_path with
       | PartialPath (_, _, segments, subpaths) ->
@@ -798,20 +834,26 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
             in
               !state.clipping_path <- (EvenOdd, path)::!state.clipping_path
       | _ -> ()
-      end
+      end;
+      [op]
   | Pdfops.Op_BT ->
       !state.text_state.t_m <- Pdftransform.i_matrix;
-      !state.text_state.t_lm <- Pdftransform.i_matrix
+      !state.text_state.t_lm <- Pdftransform.i_matrix;
+      [op]
   | Pdfops.Op_ET ->
-      ()
+      [op]
   | Pdfops.Op_Tc f ->
-      !state.text_state.character_spacing <- f
+      !state.text_state.character_spacing <- f;
+      [op]
   | Pdfops.Op_Tw f ->
-      !state.text_state.word_spacing <- f
+      !state.text_state.word_spacing <- f;
+      [op]
   | Pdfops.Op_Tz f ->
-      !state.text_state.horizontal_scaling <- (f /. 100.)
+      !state.text_state.horizontal_scaling <- (f /. 100.);
+      [op]
   | Pdfops.Op_TL f ->
-      !state.text_state.leading <- f
+      !state.text_state.leading <- f;
+      [op]
   | Pdfops.Op_Tf (s, f) ->
       !state.text_state.font <- s;
       !state.text_state.font_size <- f;
@@ -840,47 +882,57 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
               end
           | None -> Pdfe.log "Font not found\n"
       end
-      end
+      end;
+      [op]
   | Pdfops.Op_Tr i ->
-      !state.text_state.rendering_mode <- i
+      !state.text_state.rendering_mode <- i;
+      [op]
   | Pdfops.Op_Ts f ->
-      !state.text_state.rise <- f
+      !state.text_state.rise <- f;
+      [op]
   | Pdfops.Op_Td (f1, f2) ->
       !state.text_state.t_lm <- Pdftransform.matrix_compose !state.text_state.t_lm (Pdftransform.mktranslate f1 f2);
-      !state.text_state.t_m <- !state.text_state.t_lm
+      !state.text_state.t_m <- !state.text_state.t_lm;
+      [op]
   | Pdfops.Op_TD (f1, f2) ->
-      process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_TL ~-.f2);
-      process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_Td (f1, f2))
+      flatten (map (process_op ~pdf ~f ~stack ~state ~resources) [(Pdfops.Op_TL ~-.f2); (Pdfops.Op_Td (f1, f2))])
   | Pdfops.Op_Tm m ->
       !state.text_state.t_m <- m;
-      !state.text_state.t_lm <- m
+      !state.text_state.t_lm <- m;
+      [op]
   | Pdfops.Op_T' ->
-      process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_TD (0., ~-.(!state.text_state.leading)))
+      ignore (process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_TD (0., ~-.(!state.text_state.leading))));
+      [op]
   | Pdfops.Op_Tj s ->
-      process_tj ~f ~stack ~state ~resources s
+      [Pdfops.Op_Tj (process_tj ~f ~stack ~state ~resources s)]
   | Pdfops.Op_TJ p ->
-      process_capital_tj ~f ~stack ~state ~resources (match p with Pdf.Array a -> a | _ -> [])
+      [Pdfops.Op_TJ (process_capital_tj ~f ~stack ~state ~resources (match p with Pdf.Array a -> a | _ -> []))]
   | Pdfops.Op_' s ->
-      process_op ~pdf ~f ~stack ~state ~resources Pdfops.Op_T';
-      process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_Tj s)
+      ignore (map (process_op ~pdf ~f ~stack ~state ~resources) [Pdfops.Op_T'; Pdfops.Op_Tj s]);
+      [op]
   | Pdfops.Op_'' (f1, f2, s) ->
-      process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_Tw f1);
-      process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_Tc f2);
-      process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_' s)
+      ignore (map (process_op ~pdf ~f ~stack ~state ~resources) [(Pdfops.Op_Tw f1); (Pdfops.Op_Tc f2); (Pdfops.Op_' s)]);
+      [op]
   | Pdfops.Op_d0 (f1, f2) ->
-      !state.d0 <- Some (f1, f2)
+      !state.d0 <- Some (f1, f2);
+      [op]
   | Pdfops.Op_d1 (f1, f2, f3, f4, f5, f6) ->
-      !state.d1 <- Some (f1, f2, f3, f4, f5, f6)
+      !state.d1 <- Some (f1, f2, f3, f4, f5, f6);
+      [op]
   | Pdfops.Op_CS s ->
       !state.colourspace_stroke <- Pdfspace.read_colourspace pdf resources (Pdf.Name s);
-      !state.colour_stroke <- initial_colour pdf resources (Pdf.Name s) 
+      !state.colour_stroke <- initial_colour pdf resources (Pdf.Name s);
+      [op]
   | Pdfops.Op_cs s ->
       !state.colourspace_non_stroke <- Pdfspace.read_colourspace pdf resources (Pdf.Name s);
-      !state.colour_non_stroke <- initial_colour pdf resources (Pdf.Name s) 
+      !state.colour_non_stroke <- initial_colour pdf resources (Pdf.Name s);
+      [op]
   | Pdfops.Op_SC fl | Pdfops.Op_SCN fl ->
-      !state.colour_stroke <- Floats fl
+      !state.colour_stroke <- Floats fl;
+      [op]
   | Pdfops.Op_sc fl | Pdfops.Op_scn fl ->
-      !state.colour_non_stroke <- Floats fl
+      !state.colour_non_stroke <- Floats fl;
+      [op]
   | Pdfops.Op_SCNName (s, fl) ->
       begin match !state.colourspace_non_stroke with
       | Pdfspace.Pattern | Pdfspace.PatternWithBaseColourspace _ ->
@@ -890,7 +942,8 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
           end
       | _ -> 
           !state.colour_non_stroke <- Named (s, fl)
-      end
+      end;
+      [op]
   | Pdfops.Op_scnName (s, fl) ->
       begin match !state.colourspace_stroke with
       | Pdfspace.Pattern | Pdfspace.PatternWithBaseColourspace _ ->
@@ -900,25 +953,32 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
           end
       | _ -> 
           !state.colour_stroke <- Named (s, fl)
-      end
+      end;
+      [op]
   | Pdfops.Op_G f ->
       !state.colourspace_stroke <- Pdfspace.DeviceGray;
       !state.colour_stroke <- Floats [f];
+      [op]
   | Pdfops.Op_g f ->
       !state.colourspace_non_stroke <- Pdfspace.DeviceGray;
       !state.colour_non_stroke <- Floats [f];
+      [op]
   | Pdfops.Op_RG (f1, f2, f3) ->
       !state.colourspace_stroke <- Pdfspace.DeviceRGB;
-      !state.colour_stroke <- Floats [f1; f2; f3]
+      !state.colour_stroke <- Floats [f1; f2; f3];
+      [op]
   | Pdfops.Op_rg (f1, f2, f3) ->
       !state.colourspace_non_stroke <- Pdfspace.DeviceRGB;
-      !state.colour_non_stroke <- Floats [f1; f2; f3]
+      !state.colour_non_stroke <- Floats [f1; f2; f3];
+      [op]
   | Pdfops.Op_K (f1, f2, f3, f4) ->
       !state.colourspace_stroke <- Pdfspace.DeviceCMYK;
-      !state.colour_stroke <- Floats [f1; f2; f3; f4]
+      !state.colour_stroke <- Floats [f1; f2; f3; f4];
+      [op]
   | Pdfops.Op_k (f1, f2, f3, f4) ->
       !state.colourspace_non_stroke <- Pdfspace.DeviceCMYK;
-      !state.colour_non_stroke <- Floats [f1; f2; f3; f4]
+      !state.colour_non_stroke <- Floats [f1; f2; f3; f4];
+      [op]
   | Pdfops.Op_sh s ->
       begin try
         let shadingdict = Pdf.lookup_fail "no /Shading" pdf "/Shading" resources in
@@ -938,13 +998,15 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
           end
       with
         _ -> ()
-      end
+      end;
+      [op]
   | Pdfops.InlineImage (dict, _, data) ->
       let x0, y0 = Pdftransform.transform_matrix !state.ctm (0., 0.) in
       let x1, y1 = Pdftransform.transform_matrix !state.ctm (0., 1.) in
       let x2, y2 = Pdftransform.transform_matrix !state.ctm (1., 1.) in
       let x3, y3 = Pdftransform.transform_matrix !state.ctm (1., 0.) in
-        ignore (f {state = copystate !state; content = InlineImage (dict, data); bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)})
+        ignore (f {state = copystate !state; content = InlineImage (dict, data); bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)});
+        [op]
   | Pdfops.Op_Do s ->
       begin match Pdf.lookup_direct pdf "/XObject" resources with
       | Some d ->
@@ -969,42 +1031,48 @@ let rec process_op ~pdf ~f ~stack ~state ~resources = function
                   let saved_font_cache =
                     Hashtbl.copy !state.text_state.font_cache
                   in
-                    process_op ~pdf ~f ~stack ~state ~resources Pdfops.Op_q;
+                    ignore (process_op ~pdf ~f ~stack ~state ~resources Pdfops.Op_q);
                     !state.ctm <- Pdftransform.matrix_compose !state.ctm matrix;
-                    process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_re (minx, miny, maxx -. minx, maxy -. miny));
-                    process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_W);
-                    process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_n);
+                    ignore (process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_re (minx, miny, maxx -. minx, maxy -. miny)));
+                    ignore (process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_W));
+                    ignore (process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_n));
                     Hashtbl.clear !state.text_state.font_cache;
                     process_form_xobject ~pdf ~f ~stack ~state ~resources xobj;
-                    process_op ~pdf ~f ~stack ~state ~resources Pdfops.Op_Q;
+                    ignore (process_op ~pdf ~f ~stack ~state ~resources Pdfops.Op_Q);
                     !state.text_state.font_cache <- saved_font_cache
               | _ -> raise (Pdf.PDFError "Unknown kind of xobject")
               end
           | _ -> raise (Pdf.PDFError "Unknown xobject")
           end
       | None -> raise (Pdf.PDFError "xobject not found")
-      end
+      end;
+      [op]
   | Pdfops.Op_MP s ->
-      !state.marked_content_point <- Some (s, None)
+      !state.marked_content_point <- Some (s, None);
+      [op]
   | Pdfops.Op_DP (s, p) ->
-      !state.marked_content_point <- Some (s, Some p)
+      !state.marked_content_point <- Some (s, Some p);
+      [op]
   | Pdfops.Op_BMC s ->
-      !state.marked_content <- (s, None)::!state.marked_content
+      !state.marked_content <- (s, None)::!state.marked_content;
+      [op]
   | Pdfops.Op_BDC (s, p) ->
-      !state.marked_content <- (s, Some p)::!state.marked_content
+      !state.marked_content <- (s, Some p)::!state.marked_content;
+      [op]
   | Pdfops.Op_EMC ->
       begin match !state.marked_content with
       | _::t -> !state.marked_content <- t
       | _ -> ()
-      end
+      end;
+      [op]
   | Pdfops.Op_BX ->
-      ()
+      [op]
   | Pdfops.Op_EX ->
-      ()
+      [op]
   | Pdfops.Op_Unknown _ ->
-      ()
+      [op]
   | Pdfops.Op_Comment _ ->
-      ()
+      [op]
 
 and process_form_xobject ~pdf ~f ~stack ~state ~resources pdfobject =
   let content = [Pdf.direct pdf pdfobject] in
@@ -1023,9 +1091,10 @@ and process_form_xobject ~pdf ~f ~stack ~state ~resources pdfobject =
       | _ -> []
     in
       let total_resources = Pdf.Dictionary (mergedict pagedict xobjdict) in
-        iter
-          (process_op ~pdf ~f ~stack ~state ~resources:total_resources)
-          (Pdfops.parse_operators pdf total_resources content)
+        ignore
+          (map
+            (process_op ~pdf ~f ~stack ~state ~resources:total_resources)
+            (Pdfops.parse_operators pdf total_resources content))
 
 and read_graphics_state_dictionary ~pdf ~f ~stack ~state ~resources s =
   let extgstate_dict =
@@ -1034,21 +1103,21 @@ and read_graphics_state_dictionary ~pdf ~f ~stack ~state ~resources s =
     | _ -> Pdf.Dictionary []
   in
     begin match Pdf.lookup_direct pdf "/LW" extgstate_dict with
-    | Some (Pdf.Real lw) -> process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_w lw)
-    | Some (Pdf.Integer lw) -> process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_w (float_of_int lw))
+    | Some (Pdf.Real lw) -> ignore (process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_w lw))
+    | Some (Pdf.Integer lw) -> ignore (process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_w (float_of_int lw)))
     | _ -> ()
     end;
     begin match Pdf.lookup_direct pdf "/LC" extgstate_dict with
-    | Some (Pdf.Integer lc) -> process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_J lc)
+    | Some (Pdf.Integer lc) -> ignore (process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_J lc))
     | _ -> ()
     end;
     begin match Pdf.lookup_direct pdf "/LJ" extgstate_dict with
-    | Some (Pdf.Integer lj) -> process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_j lj)
+    | Some (Pdf.Integer lj) -> ignore (process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_j lj))
     | _ -> ()
     end;
     begin match Pdf.lookup_direct pdf "/ML" extgstate_dict with
-    | Some (Pdf.Real ml) -> process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_M ml)
-    | Some (Pdf.Integer ml) -> process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_M (float_of_int ml))
+    | Some (Pdf.Real ml) -> ignore (process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_M ml))
+    | Some (Pdf.Integer ml) -> ignore (process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_M (float_of_int ml)))
     | _ -> ()
     end;
     begin match Pdf.lookup_direct pdf "/D" extgstate_dict with
@@ -1059,11 +1128,11 @@ and read_graphics_state_dictionary ~pdf ~f ~stack ~state ~resources s =
           with
             _ -> []
         in
-          process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_d (map (Pdf.getnum pdf) fs, Pdf.getnum pdf phase))
+          ignore (process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_d (map (Pdf.getnum pdf) fs, Pdf.getnum pdf phase)))
     | _ -> ()
     end;
     begin match Pdf.lookup_direct pdf "/RI" extgstate_dict with
-    | Some (Pdf.Name ri) -> process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_ri ri)
+    | Some (Pdf.Name ri) -> ignore (process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_ri ri))
     | _ -> ()
     end;
     begin match Pdf.lookup_direct pdf "/OP" extgstate_dict with
@@ -1191,8 +1260,7 @@ and read_graphics_state_dictionary ~pdf ~f ~stack ~state ~resources s =
 let filter ~pdf ~f ~mediabox ~resources ~ops =
   let stack = ref [] in
   let state = ref (initial_state mediabox) in
-    iter (fun op -> process_op ~pdf ~f ~stack ~state ~resources op) ops;
-    ops
+    flatten (map (process_op ~pdf ~f ~stack ~state ~resources) ops)
 
 (* Export page content to JSON. One day this will be round-trippable. *)
 let json_of_fpoint (x, y) =
