@@ -377,6 +377,10 @@ let charcodes_of_string s = function
   | Pdftext.CIDKeyedFont _ ->
       try map (fun (a, b) -> int_of_char a lsl 8 lor int_of_char b) (pairs_of_list (explode s)) with Invalid_argument _ -> []
 
+let string_of_charcodes cc = function 
+    Pdftext.StandardFont _ | Pdftext.SimpleFont _ -> implode (map char_of_int cc)
+  | Pdftext.CIDKeyedFont _ -> implode (flatten (map (fun x -> [char_of_int (x lsr 8); char_of_int (x land 0xFF)]) cc))
+
 let process_tj ~f ~stack ~state ~resources s =
   let vertical = vertical !state.text_state.font_data.fontobj in
   let debug = false in
@@ -395,38 +399,60 @@ let process_tj ~f ~stack ~state ~resources s =
         flprint "WIDTHS: "; iter (fun (a, b, c) -> Printf.printf "%f (%f %f) " a b c) widths; flprint "\n";
         Printf.printf "ascent = %f, descent = %f\n" ascent descent
       end;
-    iter2
-      (fun c (w, pvx, pvy) ->
-        let t_params =
-          {Pdftransform.a = !state.text_state.font_size *. !state.text_state.horizontal_scaling;
-           Pdftransform.b = 0.;
-           Pdftransform.c = 0.;
-           Pdftransform.d = !state.text_state.font_size;
-           Pdftransform.e = 0.;
-           Pdftransform.f = !state.text_state.rise}
-        in
-        let t_rm = Pdftransform.matrix_compose !state.ctm (Pdftransform.matrix_compose !state.text_state.t_m t_params) in
-        let (x0, y0) = Pdftransform.transform_matrix t_rm (0. +. pvx, descent -. pvy) in
-        let (x1, y1) = Pdftransform.transform_matrix t_rm (0. +. pvx, ascent -. pvy) in
-        let (x2, y2) = Pdftransform.transform_matrix t_rm (w +. pvx, ascent -. pvy) in
-        let (x3, y3) = Pdftransform.transform_matrix t_rm (w +. pvx, descent -. pvy) in
-          if debug then begin flprint "BOX: "; Printf.printf "%f %f %f %f %f %f %f %f\n" x0 y0 x1 y1 x2 y2 x3 y3 end;
-          f {state = copystate !state; content = Glyph c; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)};
-          let tx =
-            if vertical then 0. else
-              (w *. !state.text_state.font_size +. !state.text_state.character_spacing +.
-              (if c = 32 then 1. else 0.) *. !state.text_state.word_spacing) *. !state.text_state.horizontal_scaling
+    let op_of_triples triples =
+      if List.for_all (fun (_, _, f_result) -> f_result) triples then
+        begin
+          flprint "removing all...\n";
+          Pdfops.Op_Tj "" (* FIXME Use an option here to return nothing... *)
+        end
+      else
+      if List.for_all (fun (_, _, f_result) -> not f_result) triples then
+        begin
+          flprint "removing none...\n";
+          Pdfops.Op_Tj s
+        end
+      else
+        (* If at least one true, we output a TJ with the groups (reconstructing the charcodes!) and the widths for the gaps. *)
+        begin
+          flprint "some, rebuilidng Tj into TJ\n";
+          Pdfops.Op_TJ (Pdf.Array [Pdf.String (string_of_charcodes chars !state.text_state.font_data.fontobj)])
+        end
+    in
+    let triples =
+      map2
+        (fun c (w, pvx, pvy) ->
+          let t_params =
+            {Pdftransform.a = !state.text_state.font_size *. !state.text_state.horizontal_scaling;
+             Pdftransform.b = 0.;
+             Pdftransform.c = 0.;
+             Pdftransform.d = !state.text_state.font_size;
+             Pdftransform.e = 0.;
+             Pdftransform.f = !state.text_state.rise}
           in
-          let ty =
-            if vertical then
-              w *. !state.text_state.font_size +. !state.text_state.character_spacing +. !state.text_state.word_spacing
-            else
-              0.
-          in
-            !state.text_state.t_m <- Pdftransform.matrix_compose !state.text_state.t_m (Pdftransform.mktranslate tx ty))
-      chars
-      widths;
-    s
+          let t_rm = Pdftransform.matrix_compose !state.ctm (Pdftransform.matrix_compose !state.text_state.t_m t_params) in
+          let (x0, y0) = Pdftransform.transform_matrix t_rm (0. +. pvx, descent -. pvy) in
+          let (x1, y1) = Pdftransform.transform_matrix t_rm (0. +. pvx, ascent -. pvy) in
+          let (x2, y2) = Pdftransform.transform_matrix t_rm (w +. pvx, ascent -. pvy) in
+          let (x3, y3) = Pdftransform.transform_matrix t_rm (w +. pvx, descent -. pvy) in
+            if debug then begin flprint "BOX: "; Printf.printf "%f %f %f %f %f %f %f %f\n" x0 y0 x1 y1 x2 y2 x3 y3 end;
+            let f_result = f {state = copystate !state; content = Glyph c; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} in
+            let tx =
+              if vertical then 0. else
+                (w *. !state.text_state.font_size +. !state.text_state.character_spacing +.
+                (if c = 32 then 1. else 0.) *. !state.text_state.word_spacing) *. !state.text_state.horizontal_scaling
+            in
+            let ty =
+              if vertical then
+                w *. !state.text_state.font_size +. !state.text_state.character_spacing +. !state.text_state.word_spacing
+              else
+                0.
+            in
+              !state.text_state.t_m <- Pdftransform.matrix_compose !state.text_state.t_m (Pdftransform.mktranslate tx ty);
+              (c, w, f_result))
+        chars
+        widths
+      in
+        op_of_triples triples
 
 let process_capital_tj ~f ~stack ~state ~resources elts =
   let vertical = vertical !state.text_state.font_data.fontobj in
@@ -904,7 +930,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources op =
       ignore (process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_TD (0., ~-.(!state.text_state.leading))));
       [op]
   | Pdfops.Op_Tj s ->
-      [Pdfops.Op_Tj (process_tj ~f ~stack ~state ~resources s)]
+      [process_tj ~f ~stack ~state ~resources s]
   | Pdfops.Op_TJ p ->
       [Pdfops.Op_TJ (process_capital_tj ~f ~stack ~state ~resources (match p with Pdf.Array a -> a | _ -> []))]
   | Pdfops.Op_' s ->

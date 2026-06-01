@@ -1,12 +1,41 @@
 open Pdfutil
 
+(* See if the given box is to be treated. For now:
+
+  a) Glyphs - any intersection
+  b) Image - any intersection
+  c) InlineImage - any intersection
+  d) Path - path must be wholly contained in box
+  e) Shading - must be wholly contained in box *)
+let box_matches (minx, miny, maxx, maxy) {Cpdfcontent.content; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} =
+  let bminx, bmaxx, bminy, bmaxy =
+    fmin (fmin x0 x1) (fmin x2 x3), fmax (fmax x0 x1) (fmax x2 x3),
+    fmin (fmin y0 y1) (fmin y2 y3), fmax (fmax y0 y1) (fmax y2 y3)
+  in
+  let any_intersection (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy) =
+    box_overlap_float minx miny maxx maxy bminx bminy bmaxx bmaxy <> None
+  in
+  let wholly_contained (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy) =
+    bminx > minx && bmaxx < maxx && bminy > miny && bmaxx < maxy
+  in
+    match content with
+    | Cpdfcontent.Glyph _ | Image _ | InlineImage _ -> any_intersection (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy)
+    | Path _ | Shading _ | Clip -> wholly_contained (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy)
+
+let select_boxes shape boxes =
+  match shape with 
+  | None -> boxes
+  | Some (minx, miny, maxx, maxy) ->
+      keep (box_matches (minx, miny, maxx, maxy)) boxes
+
 (* Redact a path on a page *)
+(* TODO use the path. *)
 let redact pdf ~path range =
   let redact_page page =
     let ops' =
       Cpdfcontent.filter
         ~pdf
-        ~f:(fun _ -> false)
+        ~f:(box_matches (100., 100., 200., 300.))
         ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox)
         ~resources:page.Pdfpage.resources
         ~ops:(Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content)
@@ -67,34 +96,6 @@ let show_annotation_bounding_boxes ~fast ~light pdf range =
         (ilist 1 (Pdfpage.endpage !pdf))
     in
       Cpdftweak.append_page_content_multiple_ops opss false fast !pdf
-
-(* See if the given box is to be treated. For now:
-
-  a) Glyphs - any intersection
-  b) Image - any intersection
-  c) InlineImage - any intersection
-  d) Path - path must be wholly contained in box
-  e) Shading - must be wholly contained in box *)
-let box_matches (minx, miny, maxx, maxy) {Cpdfcontent.content; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} =
-  let bminx, bmaxx, bminy, bmaxy =
-    fmin (fmin x0 x1) (fmin x2 x3), fmax (fmax x0 x1) (fmax x2 x3),
-    fmin (fmin y0 y1) (fmin y2 y3), fmax (fmax y0 y1) (fmax y2 y3)
-  in
-  let any_intersection (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy) =
-    box_overlap_float minx miny maxx maxy bminx bminy bmaxx bmaxy <> None
-  in
-  let wholly_contained (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy) =
-    bminx > minx && bmaxx < maxx && bminy > miny && bmaxx < maxy
-  in
-    match content with
-    | Cpdfcontent.Glyph _ | Image _ | InlineImage _ -> any_intersection (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy)
-    | Path _ | Shading _ | Clip -> wholly_contained (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy)
-
-let select_boxes shape boxes =
-  match shape with 
-  | None -> boxes
-  | Some (minx, miny, maxx, maxy) ->
-      keep (box_matches (minx, miny, maxx, maxy)) boxes
 
 let show_bounding_boxes ~fast ~shape ~light pdf range =
   let pdf = show_annotation_bounding_boxes ~fast ~light pdf range in
