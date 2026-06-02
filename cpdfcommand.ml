@@ -5361,7 +5361,7 @@ let rec go () =
       let range = parse_pagespec pdf (get_pagespec ()) in
       let minx, miny, w, h = Cpdfcoord.parse_rectangle pdf rectspec in
       let maxx, maxy = minx +. w, miny +. h in
-      let path = [(minx, miny); (minx, maxy); (maxx, maxy); (maxx, miny)] in
+      let path = (minx, miny, maxx, maxy) in
       let pdf = Cpdfredact.redact pdf ~path range in
         write_pdf false pdf
   | RedactApply ->

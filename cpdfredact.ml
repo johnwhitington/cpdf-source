@@ -29,13 +29,12 @@ let select_boxes shape boxes =
       keep (box_matches (minx, miny, maxx, maxy)) boxes
 
 (* Redact a path on a page *)
-(* TODO use the path. *)
 let redact pdf ~path range =
   let redact_page page =
     let ops' =
       Cpdfcontent.filter
         ~pdf
-        ~f:(box_matches (100., 100., 100., 1000.))
+        ~f:(box_matches path)
         ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox)
         ~resources:page.Pdfpage.resources
         ~ops:(Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content)
