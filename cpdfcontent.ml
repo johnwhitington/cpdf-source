@@ -401,28 +401,18 @@ let process_tj ~f ~stack ~state ~resources s =
       end;
     let op_of_triples triples =
       if List.for_all (fun (_, _, f_result) -> f_result) triples then
-        begin
-          flprint "tj: removing all...\n";
-          let total_width = fold_left ( +. ) 0. (map (fun (_, w, _) -> w) triples) in
-            Pdfops.Op_TJ (Pdf.Array [Pdf.Real total_width])
-        end
+        let total_width = ~-.(fold_left ( +. ) 0. (map (fun (_, w, _) -> w) triples) *. 1000.) in
+          Pdfops.Op_TJ (Pdf.Array [Pdf.Real total_width])
+      else if List.for_all (fun (_, _, f_result) -> not f_result) triples then
+        Pdfops.Op_Tj s
       else
-      if List.for_all (fun (_, _, f_result) -> not f_result) triples then
-        begin
-          flprint "tj: removing none...\n";
-          Pdfops.Op_Tj s
-        end
-      else
-        begin
-          flprint "tj: some, rebuiliding Tj into TJ\n";
-          let compose_tj_group = function
-            | [] -> assert false
-            | (_, _, false)::_ as l -> Pdf.String (string_of_charcodes (map (fun (c, _, _) -> c) l) !state.text_state.font_data.fontobj)
-            | (_, _, true)::_ as l -> Pdf.Real (~-.(fold_left ( +. ) 0. (map (fun (_, w, _) -> w) l)) *. 1000.)
-          in
-          let groups = split_around_two (fun (_, _, f_result) (_, _, f_result') -> f_result <> f_result') triples in
-            Pdfops.Op_TJ (Pdf.Array (map compose_tj_group groups))
-        end
+        let compose_tj_group = function
+          | [] -> assert false
+          | (_, _, false)::_ as l -> Pdf.String (string_of_charcodes (map (fun (c, _, _) -> c) l) !state.text_state.font_data.fontobj)
+          | (_, _, true)::_ as l -> Pdf.Real (~-.(fold_left ( +. ) 0. (map (fun (_, w, _) -> w) l)) *. 1000.)
+        in
+        let groups = split_around_two (fun (_, _, f_result) (_, _, f_result') -> f_result <> f_result') triples in
+          Pdfops.Op_TJ (Pdf.Array (map compose_tj_group groups))
     in
     let triples =
       map2
@@ -463,7 +453,7 @@ let process_tj ~f ~stack ~state ~resources s =
 let process_capital_tj ~f ~stack ~state ~resources elts =
   let vertical = vertical !state.text_state.font_data.fontobj in
   let debug = false (* !state.text_state.font = "/C0_0" && vertical *) in
-  (*if debug then*) flprint "process_capital_tj...\n";
+  if debug then flprint "process_capital_tj...\n";
   let elts' =
     map
       (function
