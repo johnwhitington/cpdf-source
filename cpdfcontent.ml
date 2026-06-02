@@ -402,19 +402,19 @@ let process_tj ~f ~stack ~state ~resources s =
     let op_of_triples triples =
       if List.for_all (fun (_, _, f_result) -> f_result) triples then
         begin
-          flprint "removing all...\n";
+          flprint "tj: removing all...\n";
           let total_width = fold_left ( +. ) 0. (map (fun (_, w, _) -> w) triples) in
-            Pdfops.Op_TJ (Pdf.Array [Pdf.Real total_width]);
+            Pdfops.Op_TJ (Pdf.Array [Pdf.Real total_width])
         end
       else
       if List.for_all (fun (_, _, f_result) -> not f_result) triples then
         begin
-          flprint "removing none...\n";
+          flprint "tj: removing none...\n";
           Pdfops.Op_Tj s
         end
       else
         begin
-          flprint "some, rebuiliding Tj into TJ\n";
+          flprint "tj: some, rebuiliding Tj into TJ\n";
           let compose_tj_group = function
             | [] -> assert false
             | (_, _, false)::_ as l -> Pdf.String (string_of_charcodes (map (fun (c, _, _) -> c) l) !state.text_state.font_data.fontobj)
@@ -463,22 +463,25 @@ let process_tj ~f ~stack ~state ~resources s =
 let process_capital_tj ~f ~stack ~state ~resources elts =
   let vertical = vertical !state.text_state.font_data.fontobj in
   let debug = false (* !state.text_state.font = "/C0_0" && vertical *) in
-  if debug then flprint "process_capital_tj...\n";
-  iter
-    (function
-     | Pdf.String s ->
-         ignore (process_tj ~f ~stack ~state ~resources s)
-     | Pdf.Real n ->
-         let tx =
-           if vertical then 0.  else (~-.n /. 1000.) *. !state.text_state.horizontal_scaling *. !state.text_state.font_size
-         in
-         let ty =
-           if vertical then (~-.n /. 1000.) *. !state.text_state.font_size else 0.
-         in
-           !state.text_state.t_m <- Pdftransform.matrix_compose !state.text_state.t_m (Pdftransform.mktranslate tx ty)
-     | _ -> ())
-    elts;
-  (Pdf.Array elts)
+  (*if debug then*) flprint "process_capital_tj...\n";
+  let elts' =
+    map
+      (function
+       | Pdf.String s ->
+           (match process_tj ~f ~stack ~state ~resources s with Pdfops.Op_Tj s -> [Pdf.String s] | Pdfops.Op_TJ (Pdf.Array l) -> l | _ -> assert false)
+       | Pdf.Real n ->
+           let tx =
+             if vertical then 0.  else (~-.n /. 1000.) *. !state.text_state.horizontal_scaling *. !state.text_state.font_size
+           in
+           let ty =
+             if vertical then (~-.n /. 1000.) *. !state.text_state.font_size else 0.
+           in
+             !state.text_state.t_m <- Pdftransform.matrix_compose !state.text_state.t_m (Pdftransform.mktranslate tx ty);
+           [Pdf.Real n]
+       | _ -> [])
+      elts
+  in
+    (Pdf.Array (flatten elts'))
 
 let read_tiling_pattern _ =
   ColouredTilingPattern Tiling
