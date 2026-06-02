@@ -177,7 +177,7 @@ let rec op_of_json = function
           {Pdftransform.a = opf a; Pdftransform.b = opf b; Pdftransform.c = opf c;
            Pdftransform.d = opf d; Pdftransform.e = opf e; Pdftransform.f = opf f}
   | `List [`String s; `String "Tj"] -> Op_Tj s
-  | `List [obj; `String "TJ"] -> Op_TJ (object_of_json obj)
+  | `List [`List objs; `String "TJ"] -> Op_TJ (map object_of_json objs)
   | `List [`String s; `String "'"] -> Op_' s
   | `List [a; b; `String s; `String "''"] -> Op_'' (opf a, opf b, s)
   | `List [a; b; `String "d0"] -> Op_d0 (opf a, opf b)
@@ -432,7 +432,7 @@ let json_of_op utf8 pdf no_stream_data = function
          mkfloat t.Pdftransform.d; mkfloat t.Pdftransform.e; mkfloat t.Pdftransform.f;
          `String "Tm"]
   | O.Op_Tj s -> `List [`String s; `String "Tj"]
-  | O.Op_TJ pdfobject -> `List [json_of_object ~utf8 pdf (fun _ -> ()) ~no_stream_data ~parse_content:false pdfobject; `String "TJ"]
+  | O.Op_TJ l -> `List [`List (map (json_of_object ~utf8 pdf (fun _ -> ()) ~no_stream_data ~parse_content:false) l); `String "TJ"]
   | O.Op_' s -> `List [`String s; `String "'"]
   | O.Op_'' (k, k', s) -> `List [mkfloat k; mkfloat k'; `String s; `String "''"]
   | O.Op_d0 (k, k') -> `List [mkfloat k; mkfloat k'; `String "d0"]

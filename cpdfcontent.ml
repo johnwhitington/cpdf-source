@@ -381,6 +381,21 @@ let string_of_charcodes cc = function
     Pdftext.StandardFont _ | Pdftext.SimpleFont _ -> implode (map char_of_int cc)
   | Pdftext.CIDKeyedFont _ -> implode (flatten (map (fun x -> [char_of_int (x lsr 8); char_of_int (x land 0xFF)]) cc))
 
+let rec optimise_capital_tj l =
+  match cleavewhile (function Pdf.String _ -> true | _ -> false) l with
+  | [], [] -> []
+  | [], more ->
+      begin match cleavewhile (function Pdf.Real _ -> true | _ -> false) l with
+      | [], more -> optimise_capital_tj more
+      | reals, more -> Pdf.Real (fold_left ( +. ) 0. (map (function Pdf.Real r -> r | _ -> assert false) reals))::optimise_capital_tj more
+      end
+  | strings, more -> Pdf.String (String.concat "" (map (function Pdf.String s -> s | _ -> assert false) strings))::optimise_capital_tj more
+
+let optimise_tj = function
+  | Pdfops.Op_Tj s -> Pdfops.Op_Tj s
+  | Pdfops.Op_TJ l -> Pdfops.Op_TJ (optimise_capital_tj l)
+  | _ -> assert false
+
 let process_tj ~f ~stack ~state ~resources s =
   let vertical = vertical !state.text_state.font_data.fontobj in
   let debug = false in
@@ -402,7 +417,7 @@ let process_tj ~f ~stack ~state ~resources s =
     let op_of_triples triples =
       if List.for_all (fun (_, _, f_result) -> f_result) triples then
         let total_width = ~-.(fold_left ( +. ) 0. (map (fun (_, w, _) -> w) triples) *. 1000.) in
-          Pdfops.Op_TJ (Pdf.Array [Pdf.Real total_width])
+          Pdfops.Op_TJ [Pdf.Real total_width]
       else if List.for_all (fun (_, _, f_result) -> not f_result) triples then
         Pdfops.Op_Tj s
       else
@@ -412,7 +427,7 @@ let process_tj ~f ~stack ~state ~resources s =
           | (_, _, true)::_ as l -> Pdf.Real (~-.(fold_left ( +. ) 0. (map (fun (_, w, _) -> w) l)) *. 1000.)
         in
         let groups = split_around_two (fun (_, _, f_result) (_, _, f_result') -> f_result <> f_result') triples in
-          Pdfops.Op_TJ (Pdf.Array (map compose_tj_group groups))
+          Pdfops.Op_TJ (map compose_tj_group groups)
     in
     let triples =
       map2
@@ -454,24 +469,18 @@ let process_capital_tj ~f ~stack ~state ~resources elts =
   let vertical = vertical !state.text_state.font_data.fontobj in
   let debug = false (* !state.text_state.font = "/C0_0" && vertical *) in
   if debug then flprint "process_capital_tj...\n";
-  let elts' =
-    map
+  flatten
+    (map
       (function
        | Pdf.String s ->
-           (match process_tj ~f ~stack ~state ~resources s with Pdfops.Op_Tj s -> [Pdf.String s] | Pdfops.Op_TJ (Pdf.Array l) -> l | _ -> assert false)
+           (match process_tj ~f ~stack ~state ~resources s with Pdfops.Op_Tj s -> [Pdf.String s] | Pdfops.Op_TJ l -> l | _ -> assert false)
        | Pdf.Real n ->
-           let tx =
-             if vertical then 0.  else (~-.n /. 1000.) *. !state.text_state.horizontal_scaling *. !state.text_state.font_size
-           in
-           let ty =
-             if vertical then (~-.n /. 1000.) *. !state.text_state.font_size else 0.
-           in
+           let tx = if vertical then 0.  else (~-.n /. 1000.) *. !state.text_state.horizontal_scaling *. !state.text_state.font_size in
+           let ty = if vertical then (~-.n /. 1000.) *. !state.text_state.font_size else 0. in
              !state.text_state.t_m <- Pdftransform.matrix_compose !state.text_state.t_m (Pdftransform.mktranslate tx ty);
-           [Pdf.Real n]
+             [Pdf.Real n]
        | _ -> [])
-      elts
-  in
-    (Pdf.Array (flatten elts'))
+      elts)
 
 let read_tiling_pattern _ =
   ColouredTilingPattern Tiling
@@ -929,9 +938,9 @@ let rec process_op ~pdf ~f ~stack ~state ~resources op =
       ignore (process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_TD (0., ~-.(!state.text_state.leading))));
       [op]
   | Pdfops.Op_Tj s ->
-      [process_tj ~f ~stack ~state ~resources s]
-  | Pdfops.Op_TJ p ->
-      [Pdfops.Op_TJ (process_capital_tj ~f ~stack ~state ~resources (match p with Pdf.Array a -> a | _ -> []))]
+      [optimise_tj (process_tj ~f ~stack ~state ~resources s)]
+  | Pdfops.Op_TJ l ->
+      [Pdfops.Op_TJ (optimise_capital_tj (process_capital_tj ~f ~stack ~state ~resources l))]
   | Pdfops.Op_' s ->
       ignore (map (process_op ~pdf ~f ~stack ~state ~resources) [Pdfops.Op_T'; Pdfops.Op_Tj s]);
       [op]
