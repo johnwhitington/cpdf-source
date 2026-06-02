@@ -403,7 +403,8 @@ let process_tj ~f ~stack ~state ~resources s =
       if List.for_all (fun (_, _, f_result) -> f_result) triples then
         begin
           flprint "removing all...\n";
-          Pdfops.Op_Tj "" (* FIXME Use an option here to return nothing... *)
+          let total_width = fold_left ( +. ) 0. (map (fun (_, w, _) -> w) triples) in
+            Pdfops.Op_TJ (Pdf.Array [Pdf.Real total_width]);
         end
       else
       if List.for_all (fun (_, _, f_result) -> not f_result) triples then
@@ -412,10 +413,15 @@ let process_tj ~f ~stack ~state ~resources s =
           Pdfops.Op_Tj s
         end
       else
-        (* If at least one true, we output a TJ with the groups (reconstructing the charcodes!) and the widths for the gaps. *)
         begin
-          flprint "some, rebuilidng Tj into TJ\n";
-          Pdfops.Op_TJ (Pdf.Array [Pdf.String (string_of_charcodes chars !state.text_state.font_data.fontobj)])
+          flprint "some, rebuiliding Tj into TJ\n";
+          let compose_tj_group = function
+            | [] -> assert false
+            | (_, _, false)::_ as l -> Pdf.String (string_of_charcodes (map (fun (c, _, _) -> c) l) !state.text_state.font_data.fontobj)
+            | (_, _, true)::_ as l -> Pdf.Real (~-.(fold_left ( +. ) 0. (map (fun (_, w, _) -> w) l)) *. 1000.)
+          in
+          let groups = split_around_two (fun (_, _, f_result) (_, _, f_result') -> f_result <> f_result') triples in
+            Pdfops.Op_TJ (Pdf.Array (map compose_tj_group groups))
         end
     in
     let triples =

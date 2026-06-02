@@ -35,7 +35,7 @@ let redact pdf ~path range =
     let ops' =
       Cpdfcontent.filter
         ~pdf
-        ~f:(box_matches (100., 100., 200., 300.))
+        ~f:(box_matches (100., 100., 100., 1000.))
         ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox)
         ~resources:page.Pdfpage.resources
         ~ops:(Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content)
