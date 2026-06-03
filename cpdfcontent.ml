@@ -393,7 +393,11 @@ let rec optimise_capital_tj l =
 
 let optimise_tj = function
   | Pdfops.Op_Tj s -> Pdfops.Op_Tj s
-  | Pdfops.Op_TJ l -> Pdfops.Op_TJ (optimise_capital_tj l)
+  | Pdfops.Op_TJ l ->
+      begin match optimise_capital_tj l with
+      | [Pdf.String s] -> Pdfops.Op_Tj s
+      | tj -> Pdfops.Op_TJ tj
+      end
   | _ -> assert false
 
 let process_tj ~f ~stack ~state ~resources s =

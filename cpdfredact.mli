@@ -4,7 +4,7 @@
 val redact : Pdf.t -> path:(float * float * float * float) -> color:Cpdfaddtext.colour -> outline:bool -> opacity:float -> linewidth:float -> underneath:bool -> int list -> Pdf.t
 
 (** Apply redaction annotations in a given range. Not implemented yet. *)
-val apply : Pdf.t -> int list -> unit
+val apply : Pdf.t -> int list -> Pdf.t
 
 (** Apply the given type of annotations as if they were redaction annotations in the given range. Not implemented yet. *)
 val apply_type : Pdf.t -> string -> int list -> unit

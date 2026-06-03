@@ -5367,7 +5367,7 @@ let rec go () =
   | RedactApply ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
-        Cpdfredact.apply pdf range;
+      let pdf = Cpdfredact.apply pdf range in
         write_pdf false pdf
   | RedactApplyType s ->
       let pdf = get_single_pdf args.op false in

@@ -43,20 +43,28 @@ let redact pdf ~path:((minx, miny, maxx, maxy) as path) ~color ~outline ~opacity
   in
     let pdf =
       Cpdfpage.process_pages
-      (Pdfpage.ppstub
-        (fun pnum page -> if mem pnum range then redact_page page else page))
-           pdf
-           range
+        (Pdfpage.ppstub
+          (fun pnum page -> if mem pnum range then redact_page page else page))
+        pdf
+        range
     in
       let pdf =
         Cpdfaddtext.addrectangle
-          false (Printf.sprintf "%s %s" (string_of_float (maxx -. minx)) (string_of_float (maxy -. miny))) color outline linewidth
-          opacity (Cpdfposition.PosLeft(minx, miny)) "/Absolute" underneath range pdf
+          false (Printf.sprintf "%s %s" (string_of_float (maxx -. minx)) (string_of_float (maxy -. miny)))
+          color outline linewidth opacity (Cpdfposition.PosLeft(minx, miny)) "/Absolute" underneath range pdf
       in
         pdf
 
 (* Apply redaction annotations. *)
-let apply pdf range = ()
+let apply pdf range =
+  let apply_page page =
+    page
+  in
+    Cpdfpage.process_pages
+      (Pdfpage.ppstub
+        (fun pnum page -> if mem pnum range then apply_page page else page))
+      pdf
+      range
 
 (* Apply other annotations (Rect, Polyline) etc. as if they were redaction annotations. *)
 let apply_type pdf typ range = ()
