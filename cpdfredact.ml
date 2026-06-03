@@ -29,42 +29,93 @@ let select_boxes shape boxes =
       keep (box_matches (minx, miny, maxx, maxy)) boxes
 
 (* Redact a path on a page *)
+let redact_page pdf ~path page =
+  let ops' =
+    Cpdfcontent.filter
+      ~pdf
+      ~f:(box_matches path)
+      ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox)
+      ~resources:page.Pdfpage.resources
+      ~ops:(Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content)
+  in
+    {page with Pdfpage.content = [Pdfops.stream_of_ops ops']}
+
 let redact pdf ~path:((minx, miny, maxx, maxy) as path) ~color ~outline ~opacity ~linewidth ~underneath range =
-  let redact_page page =
-    let ops' =
-      Cpdfcontent.filter
-        ~pdf
-        ~f:(box_matches path)
-        ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox)
-        ~resources:page.Pdfpage.resources
-        ~ops:(Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content)
+  let pdf =
+    Cpdfpage.process_pages
+      (Pdfpage.ppstub
+        (fun pnum page -> if mem pnum range then redact_page pdf ~path page else page))
+      pdf
+      range
+  in
+    let pdf =
+      Cpdfaddtext.addrectangle
+        false (Printf.sprintf "%s %s" (string_of_float (maxx -. minx)) (string_of_float (maxy -. miny)))
+        color outline linewidth opacity (Cpdfposition.PosLeft(minx, miny)) "/Absolute" underneath range pdf
     in
-      {page with Pdfpage.content = [Pdfops.stream_of_ops ops']}
+      pdf
+
+let redact_add_rectangle_pnum pdf ~path:(minx, miny, maxx, maxy) ~color ~outline ~opacity ~linewidth ~underneath pnum =
+  Cpdfaddtext.addrectangle
+    false (Printf.sprintf "%s %s" (string_of_float (maxx -. minx)) (string_of_float (maxy -. miny)))
+    color outline linewidth opacity (Cpdfposition.PosLeft(minx, miny)) "/Absolute" underneath [pnum] pdf
+
+(* Apply redaction annotations. *)
+let apply pdf ~color ~outline ~opacity ~linewidth ~underneath range =
+  let rectangles = ref [] in
+  let apply_page pnum page =
+    match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
+    | Some (Pdf.Array annots) ->
+        let redact_annotation_objnums =
+          option_map
+            (function Pdf.Indirect i when Pdf.lookup_direct pdf "/Subtype" (Pdf.Indirect i) = Some (Pdf.Name "/Redact") -> Some i | _ -> None)
+            annots
+        in
+        let popups_of_redactions =
+          option_map
+            (function Pdf.Indirect i when Pdf.lookup_direct pdf "/Subtype" (Pdf.Indirect i) = Some (Pdf.Name "/Popup") ->
+               let parent =
+                 match Pdf.indirect_number pdf "/Parent" (Pdf.Indirect i) with
+                 | Some i -> i
+                 | _ -> 0
+               in
+                 if mem parent redact_annotation_objnums then Some i else None
+             | _ -> None)
+            annots
+        in
+        let page =
+          fold_left
+            (fun page i ->
+              match Pdf.lookup_direct pdf "/Rect" (Pdf.Indirect i) with
+              | Some rect ->
+                  let path = Pdf.parse_rectangle pdf rect in
+                    rectangles =| (pnum, path);
+                    redact_page pdf ~path page
+              | None ->
+                  page)
+            page
+            redact_annotation_objnums
+        in
+        {page with
+          Pdfpage.rest =
+            Pdf.add_dict_entry
+              page.Pdfpage.rest
+              "/Annots"
+              (Pdf.Array (lose (function Pdf.Indirect i -> mem i redact_annotation_objnums || mem i popups_of_redactions | _ -> false) annots))}
+    | _ -> page
   in
     let pdf =
       Cpdfpage.process_pages
         (Pdfpage.ppstub
-          (fun pnum page -> if mem pnum range then redact_page page else page))
+          (fun pnum page -> if mem pnum range then apply_page pnum page else page))
         pdf
         range
     in
-      let pdf =
-        Cpdfaddtext.addrectangle
-          false (Printf.sprintf "%s %s" (string_of_float (maxx -. minx)) (string_of_float (maxy -. miny)))
-          color outline linewidth opacity (Cpdfposition.PosLeft(minx, miny)) "/Absolute" underneath range pdf
-      in
+      fold_left
+        (fun pdf (pnum, path) ->
+           redact_add_rectangle_pnum pdf ~path ~color ~outline ~opacity ~linewidth ~underneath pnum)
         pdf
-
-(* Apply redaction annotations. *)
-let apply pdf range =
-  let apply_page page =
-    page
-  in
-    Cpdfpage.process_pages
-      (Pdfpage.ppstub
-        (fun pnum page -> if mem pnum range then apply_page page else page))
-      pdf
-      range
+        !rectangles
 
 (* Apply other annotations (Rect, Polyline) etc. as if they were redaction annotations. *)
 let apply_type pdf typ range = ()
