@@ -384,7 +384,9 @@ let addtext
               let longest_w = last (sort compare allwidths) in
               let joffset = find_justification_offsets rotation longest_w textwidth position justification in
               let (xmin, ymin, xmax, ymax) as mediabox =
-                if relative_to_box <> "/MediaBox" then
+                if relative_to_box = "/Absolute" then
+                  (0., 0., 100., 100.)
+                else if relative_to_box <> "/MediaBox" then
                   match Pdf.lookup_direct pdf relative_to_box page.Pdfpage.rest with
                   | Some pdfobject -> Pdf.parse_rectangle pdf (Pdf.direct pdf pdfobject)
                   | None -> Pdf.parse_rectangle pdf page.Pdfpage.mediabox
@@ -800,6 +802,7 @@ let addrectangle
         page.Pdfpage.resources, None
     in
     let mediabox =
+      if relative_to_box = "/Absolute" then (0., 0., 100., 100.) else
       if relative_to_box <> "/MediaBox" then
         match Pdf.lookup_direct pdf relative_to_box page.Pdfpage.rest with
         | Some pdfobject -> Pdf.parse_rectangle pdf (Pdf.direct pdf pdfobject)

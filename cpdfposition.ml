@@ -32,7 +32,7 @@ let string_of_position = function
   | ReverseDiagonal -> "Reverse Diagonal"
   | Centre -> "Centre"
 
-(* Given the mediabox, calculate an absolute position for the text. *)
+(* Given the mediabox (or any other box), calculate an absolute position. *)
 let calculate_position ignore_d w (xmin, ymin, xmax, ymax) pos =
   let rot = 0. in
     match pos with

@@ -29,7 +29,7 @@ let select_boxes shape boxes =
       keep (box_matches (minx, miny, maxx, maxy)) boxes
 
 (* Redact a path on a page *)
-let redact pdf ~path range =
+let redact pdf ~path:((minx, miny, maxx, maxy) as path) ~color ~outline ~opacity ~linewidth ~underneath range =
   let redact_page page =
     let ops' =
       Cpdfcontent.filter
@@ -41,11 +41,19 @@ let redact pdf ~path range =
     in
       {page with Pdfpage.content = [Pdfops.stream_of_ops ops']}
   in
-    Cpdfpage.process_pages
+    let pdf =
+      Cpdfpage.process_pages
       (Pdfpage.ppstub
         (fun pnum page -> if mem pnum range then redact_page page else page))
            pdf
            range
+    in
+      let pdf =
+        Cpdfaddtext.addrectangle
+          false (Printf.sprintf "%s %s" (string_of_float (maxx -. minx)) (string_of_float (maxy -. miny))) color outline linewidth
+          opacity (Cpdfposition.PosLeft(minx, miny)) "/Absolute" underneath range pdf
+      in
+        pdf
 
 (* Apply redaction annotations. *)
 let apply pdf range = ()

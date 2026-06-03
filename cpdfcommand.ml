@@ -5362,7 +5362,7 @@ let rec go () =
       let minx, miny, w, h = Cpdfcoord.parse_rectangle pdf rectspec in
       let maxx, maxy = minx +. w, miny +. h in
       let path = (minx, miny, maxx, maxy) in
-      let pdf = Cpdfredact.redact pdf ~path range in
+      let pdf = Cpdfredact.redact pdf ~path ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth ~underneath:args.underneath range in
         write_pdf false pdf
   | RedactApply ->
       let pdf = get_single_pdf args.op false in
