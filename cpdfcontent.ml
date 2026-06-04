@@ -1043,8 +1043,12 @@ let rec process_op ~pdf ~f ~stack ~state ~resources op =
       let x1, y1 = Pdftransform.transform_matrix !state.ctm (0., 1.) in
       let x2, y2 = Pdftransform.transform_matrix !state.ctm (1., 1.) in
       let x3, y3 = Pdftransform.transform_matrix !state.ctm (1., 0.) in
-        ignore (f {state = copystate !state; content = InlineImage (dict, data); bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)});
-        [op]
+        if f {state = copystate !state; content = InlineImage (dict, data); bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} then
+          (* 1. TODO: We want to know properly what kind of intersection it is, so we know whether to chop or remove *)
+          (* 2. TODO: Call out to chop it. *)
+          []
+        else
+          [op]
   | Pdfops.Op_Do s ->
       begin match Pdf.lookup_direct pdf "/XObject" resources with
       | Some d ->
@@ -1056,7 +1060,13 @@ let rec process_op ~pdf ~f ~stack ~state ~resources op =
                   let x1, y1 = Pdftransform.transform_matrix !state.ctm (0., 1.) in
                   let x2, y2 = Pdftransform.transform_matrix !state.ctm (1., 1.) in
                   let x3, y3 = Pdftransform.transform_matrix !state.ctm (1., 0.) in
-                    ignore (f {state = copystate !state; content = Image s; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)})
+                  if f {state = copystate !state; content = Image s; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} then
+                    (* 1. TODO: Remove also from the /Resources for this page or xobject. How do we know where we are? *)
+                    (* 2. TODO: We want to know properly what kind of intersection it is, so we know whether to chop or remove *)
+                    (* 3. TODO: Call out to chop it. *)
+                    []
+                  else
+                    [op]
               | Some (Pdf.Name "/Form") ->
                   let matrix = Pdf.parse_matrix pdf "/Matrix" xobj in
                   let minx, miny, maxx, maxy =
@@ -1066,9 +1076,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources op =
                     | None -> 
                         (min_float, min_float, max_float, max_float)
                   in
-                  let saved_font_cache =
-                    Hashtbl.copy !state.text_state.font_cache
-                  in
+                  let saved_font_cache = Hashtbl.copy !state.text_state.font_cache in
                     ignore (process_op ~pdf ~f ~stack ~state ~resources Pdfops.Op_q);
                     !state.ctm <- Pdftransform.matrix_compose !state.ctm matrix;
                     ignore (process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_re (minx, miny, maxx -. minx, maxy -. miny)));
@@ -1077,14 +1085,14 @@ let rec process_op ~pdf ~f ~stack ~state ~resources op =
                     Hashtbl.clear !state.text_state.font_cache;
                     process_form_xobject ~pdf ~f ~stack ~state ~resources xobj;
                     ignore (process_op ~pdf ~f ~stack ~state ~resources Pdfops.Op_Q);
-                    !state.text_state.font_cache <- saved_font_cache
-              | _ -> raise (Pdf.PDFError "Unknown kind of xobject")
+                    !state.text_state.font_cache <- saved_font_cache;
+                    [op]
+              | _ -> Pdfe.log "Unknown kind of xobject"; [op]
               end
-          | _ -> raise (Pdf.PDFError "Unknown xobject")
+          | _ -> Pdfe.log "Unknown xobject"; [op]
           end
-      | None -> raise (Pdf.PDFError "xobject not found")
-      end;
-      [op]
+      | None -> Pdfe.log "xobject not found"; [op]
+      end
   | Pdfops.Op_MP s ->
       !state.marked_content_point <- Some (s, None);
       [op]
