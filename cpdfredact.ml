@@ -18,15 +18,15 @@ let box_matches (minx, miny, maxx, maxy) {Cpdfcontent.content; bounding_box = Qu
   let wholly_contained (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy) =
     bminx > minx && bmaxx < maxx && bminy > miny && bmaxx < maxy
   in
-    match content with
-    | Cpdfcontent.Glyph _ | Image _ | InlineImage _ -> any_intersection (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy)
-    | Path _ | Shading _ | Clip -> wholly_contained (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy)
+    if wholly_contained (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy) then Cpdfcontent.Encloses else
+    if any_intersection (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy) then Intersects else
+      Nonintersecting
 
 let select_boxes shape boxes =
   match shape with 
   | None -> boxes
   | Some (minx, miny, maxx, maxy) ->
-      keep (box_matches (minx, miny, maxx, maxy)) boxes
+      keep (fun box -> box_matches (minx, miny, maxx, maxy) box <> Cpdfcontent.Nonintersecting) boxes
 
 (* Redact a path on a page *)
 let redact_page pdf ~path page =
@@ -169,7 +169,7 @@ let show_bounding_boxes ~fast ~shape ~light pdf range =
   let show_bounding_boxes_page page =
     let ops = Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content in
     let page_boxes = ref [] in
-      ignore (Cpdfcontent.filter ~pdf ~f:(fun page_obj -> page_boxes =| page_obj; false) ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox) ~resources:page.Pdfpage.resources ~ops);
+      ignore (Cpdfcontent.filter ~pdf ~f:(fun page_obj -> page_boxes =| page_obj; Nonintersecting) ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox) ~resources:page.Pdfpage.resources ~ops);
       !page_boxes
   in
   let bboxes = ref [] in

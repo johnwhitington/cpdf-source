@@ -32,6 +32,11 @@ type content =
 type bounding_box =
   Quad of float * float * float * float * float * float * float * float
 
+type overlap =
+  | Encloses
+  | Intersects
+  | Nonintersecting
+
 type partial =
   | NoPartial
   | PartialPath of fpoint * fpoint * segment list * subpath list 
@@ -149,7 +154,7 @@ type t =
 (** Filter objects based on a predicate on [t]. *)
 val filter :
   pdf:Pdf.t ->
-  f:(t -> bool) ->
+  f:(t -> overlap) ->
   mediabox:(float * float * float * float) ->
   resources:Pdf.pdfobject ->
   ops:Pdfops.t list ->

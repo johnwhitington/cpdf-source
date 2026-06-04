@@ -142,6 +142,11 @@ type content =
 type bounding_box =
   Quad of float * float * float * float * float * float * float * float
 
+type overlap =
+  | Encloses
+  | Intersects
+  | Nonintersecting
+
 type t =
   {bounding_box : bounding_box;
    content : content;
@@ -401,6 +406,7 @@ let optimise_tj = function
   | _ -> assert false
 
 let process_tj ~f ~stack ~state ~resources s =
+  let f : t -> overlap = f in
   let vertical = vertical !state.text_state.font_data.fontobj in
   let debug = false in
   if debug then Printf.printf "process_tj %S\n" s;
@@ -419,16 +425,16 @@ let process_tj ~f ~stack ~state ~resources s =
         Printf.printf "ascent = %f, descent = %f\n" ascent descent
       end;
     let op_of_triples triples =
-      if List.for_all (fun (_, _, f_result) -> f_result) triples then
+      if List.for_all (function (_, _, (Intersects | Encloses)) -> true | _ -> false) triples then
         let total_width = ~-.(fold_left ( +. ) 0. (map (fun (_, w, _) -> w) triples) *. 1000.) in
           Pdfops.Op_TJ [Pdf.Real total_width]
-      else if List.for_all (fun (_, _, f_result) -> not f_result) triples then
+      else if List.for_all (function (_, _, Nonintersecting) -> true | _ -> false) triples then
         Pdfops.Op_Tj s
       else
         let compose_tj_group = function
           | [] -> assert false
-          | (_, _, false)::_ as l -> Pdf.String (string_of_charcodes (map (fun (c, _, _) -> c) l) !state.text_state.font_data.fontobj)
-          | (_, _, true)::_ as l -> Pdf.Real (~-.(fold_left ( +. ) 0. (map (fun (_, w, _) -> w) l)) *. 1000.)
+          | (_, _, Nonintersecting)::_ as l -> Pdf.String (string_of_charcodes (map (fun (c, _, _) -> c) l) !state.text_state.font_data.fontobj)
+          | (_, _, (Encloses | Intersects))::_ as l -> Pdf.Real (~-.(fold_left ( +. ) 0. (map (fun (_, w, _) -> w) l)) *. 1000.)
         in
         let groups = split_around_two (fun (_, _, f_result) (_, _, f_result') -> f_result <> f_result') triples in
           Pdfops.Op_TJ (map compose_tj_group groups)
@@ -663,6 +669,7 @@ let emit_path_bounding_box ~content ~stroking ~f ~state =
    TODO Allow removal of un-needed ops automatically by checking state. How much of our possible compressor is this?
    TODO Change to take all ops not just one op? Does this help with the compressor? *)
 let rec process_op ~pdf ~f ~stack ~state ~resources op =
+  let f : t -> overlap = f in
   match op with
   | Pdfops.Op_w f ->
       !state.line_width <- f;
@@ -1043,7 +1050,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources op =
       let x1, y1 = Pdftransform.transform_matrix !state.ctm (0., 1.) in
       let x2, y2 = Pdftransform.transform_matrix !state.ctm (1., 1.) in
       let x3, y3 = Pdftransform.transform_matrix !state.ctm (1., 0.) in
-        if f {state = copystate !state; content = InlineImage (dict, data); bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} then
+        if f {state = copystate !state; content = InlineImage (dict, data); bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} <> Nonintersecting then
           (* 1. TODO: We want to know properly what kind of intersection it is, so we know whether to chop or remove *)
           (* 2. TODO: Call out to chop it. *)
           []
@@ -1060,7 +1067,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources op =
                   let x1, y1 = Pdftransform.transform_matrix !state.ctm (0., 1.) in
                   let x2, y2 = Pdftransform.transform_matrix !state.ctm (1., 1.) in
                   let x3, y3 = Pdftransform.transform_matrix !state.ctm (1., 0.) in
-                  if f {state = copystate !state; content = Image s; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} then
+                  if f {state = copystate !state; content = Image s; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} <> Nonintersecting then
                     (* 1. TODO: Remove also from the /Resources for this page or xobject. How do we know where we are? *)
                     (* 2. TODO: We want to know properly what kind of intersection it is, so we know whether to chop or remove *)
                     (* 3. TODO: Call out to chop it. *)
@@ -1419,7 +1426,7 @@ let to_json ~pdf ~mediabox ~resources ?(graphics=true) ?(text=true) ?(images=tru
         `Assoc ([("object", json_of_object state content);
                  ("state", json_of_state state content);
                  ("bbox", `List [`Float x0; `Float y0; `Float x1; `Float y1; `Float x2; `Float y2; `Float x3; `Float y3])]);
-    true
+    Encloses
   in
     ignore (filter ~pdf ~f ~mediabox ~resources ~ops);
     `List (rev !jsons)
@@ -1443,8 +1450,8 @@ let test_extract_text pdf range ch =
                  | _ -> string_of_char (char_of_int charcode)
                in
                codepoints := Pdftext.codepoints_of_text state.text_state.font_data.text_extractor bytes::!codepoints;
-               false
-           | _ -> false
+               Encloses
+           | _ -> Encloses
          in
            if mem pnum range then
              ignore
