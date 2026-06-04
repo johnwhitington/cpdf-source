@@ -12,15 +12,16 @@ let box_matches (minx, miny, maxx, maxy) {Cpdfcontent.content; bounding_box = Qu
     fmin (fmin x0 x1) (fmin x2 x3), fmax (fmax x0 x1) (fmax x2 x3),
     fmin (fmin y0 y1) (fmin y2 y3), fmax (fmax y0 y1) (fmax y2 y3)
   in
+  (*begin match content with Image _ -> Printf.printf "Box: %f %f %f %f, test %f %f %f %f\n" minx miny maxx maxy bminx bminy bmaxx bmaxy | _ -> () end;*)
   let any_intersection (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy) =
     box_overlap_float minx miny maxx maxy bminx bminy bmaxx bmaxy <> None
   in
   let wholly_contained (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy) =
     bminx > minx && bmaxx < maxx && bminy > miny && bmaxx < maxy
   in
-    if wholly_contained (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy) then Cpdfcontent.Encloses else
-    if any_intersection (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy) then Intersects else
-      Nonintersecting
+    if wholly_contained (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy) then ((*flprint "Encloses!\n";*) Cpdfcontent.Encloses) else
+    if any_intersection (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy) then ((*flprint "Intersects!\n";*) Intersects) else
+      ((*flprint "Nonintersecting!\n";*) Nonintersecting)
 
 let select_boxes shape boxes =
   match shape with 

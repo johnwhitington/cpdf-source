@@ -1057,6 +1057,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources op =
         else
           [op]
   | Pdfops.Op_Do s ->
+      Printf.printf "Op_Do: %s\n" s;
       begin match Pdf.lookup_direct pdf "/XObject" resources with
       | Some d ->
           begin match Pdf.lookup_direct pdf s d with
@@ -1067,6 +1068,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources op =
                   let x1, y1 = Pdftransform.transform_matrix !state.ctm (0., 1.) in
                   let x2, y2 = Pdftransform.transform_matrix !state.ctm (1., 1.) in
                   let x3, y3 = Pdftransform.transform_matrix !state.ctm (1., 0.) in
+                  (*Printf.printf "(minx, miny, maxx, maxy) = %f, %f, %f, %f\n" x0 y0 x2 y2;*)
                   if f {state = copystate !state; content = Image s; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} <> Nonintersecting then
                     (* 1. TODO: Remove also from the /Resources for this page or xobject. How do we know where we are? *)
                     (* 2. TODO: We want to know properly what kind of intersection it is, so we know whether to chop or remove *)
