@@ -14,6 +14,9 @@ val remove_annotations : int list -> Pdf.t -> Pdf.t
 (** Copy the annotations on a given set of pages *)
 val copy_annotations : int list -> Pdf.t -> Pdf.t -> unit
 
+(** Annotation type from a string. *)
+val subtype_of_string : string -> Pdfannot.subtype
+
 (* {2 Old-style functions *)
 
 (** Return the annotations as a simple old-style (pagenumber, content) list. *)

@@ -3281,6 +3281,7 @@ let specs =
    ("-pc-no-text", Arg.Unit (fun () -> args.page_content_text <- false), " Don't list text in page content");
    ("-pc-no-graphics", Arg.Unit (fun () -> args.page_content_graphics <- false), " Don't list paths and shadings in page content");
    ("-annotate", Arg.String (fun s -> setop AddAnnotation (); args.rectangle <- s), " Annotate pages");
+   ("-annot-type", Arg.String (fun s -> args.annotation_subtype <- Cpdfannot.subtype_of_string s), " Select annotation type");
    (* Undocumented. *)
    ("-test-extract-text", Arg.Unit (fun () -> setop TestExtractText ()), "")]
 
@@ -5511,7 +5512,9 @@ let rec go () =
         {Pdfannot.subtype = Pdfannot.Redact;
          annot_contents = None;
          subject = None;
-         rectangle = (100., 100., 300., 300.);
+         rectangle =
+           (let x, y, w, h = Cpdfcoord.parse_rectangle pdf args.rectangle in
+             (x, y, x +. w, y +. h));
          border = None;
          colour = None;
          annotrest = Pdf.Dictionary []}
