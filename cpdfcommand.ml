@@ -262,6 +262,7 @@ type op =
   | RevealText
   | PageContentJSON
   | TestExtractText
+  | AddAnnotation
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -443,6 +444,7 @@ let string_of_op = function
   | ShowBoundingBoxes _ -> "ShowBoundingBoxes"
   | RevealText -> "RevealText"
   | PageContentJSON -> "PageContentJSON"
+  | AddAnnotation -> "AddAnnotation"
   | _ -> "<unfilled>"
 
 (* Inputs: filename, pagespec. *)
@@ -643,7 +645,8 @@ type args =
    mutable show_bboxes_light : bool;
    mutable page_content_images : bool;
    mutable page_content_text : bool;
-   mutable page_content_graphics : bool}
+   mutable page_content_graphics : bool;
+   mutable annotation_subtype : Pdfannot.subtype}
 
 let args =
   {op = None;
@@ -809,7 +812,8 @@ let args =
    show_bboxes_light = false;
    page_content_images = true;
    page_content_text = true;
-   page_content_graphics = true}
+   page_content_graphics = true;
+   annotation_subtype = Pdfannot.Redact}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -960,7 +964,8 @@ let reset_arguments () =
   args.show_bboxes_light <- false;
   args.page_content_images <- true;
   args.page_content_text <- true;
-  args.page_content_graphics <- true
+  args.page_content_graphics <- true;
+  args.annotation_subtype <- Redact
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -3275,6 +3280,7 @@ let specs =
    ("-pc-no-images", Arg.Unit (fun () -> args.page_content_images <- false), " Don't list images in page content");
    ("-pc-no-text", Arg.Unit (fun () -> args.page_content_text <- false), " Don't list text in page content");
    ("-pc-no-graphics", Arg.Unit (fun () -> args.page_content_graphics <- false), " Don't list paths and shadings in page content");
+   ("-annotate", Arg.String (fun s -> setop AddAnnotation (); args.rectangle <- s), " Annotate pages");
    (* Undocumented. *)
    ("-test-extract-text", Arg.Unit (fun () -> setop TestExtractText ()), "")]
 
@@ -5498,6 +5504,23 @@ let rec go () =
       let pdf = get_single_pdf args.op true in
       let range = parse_pagespec pdf (get_pagespec ()) in
         Cpdfcontent.test_extract_text pdf range channel
+  | AddAnnotation ->
+      let pdf = get_single_pdf args.op true in
+      let range = parse_pagespec pdf (get_pagespec ()) in
+      let annot =
+        {Pdfannot.subtype = Pdfannot.Redact;
+         annot_contents = None;
+         subject = None;
+         rectangle = (100., 100., 300., 300.);
+         border = None;
+         colour = None;
+         annotrest = Pdf.Dictionary []}
+      in
+      let pdf =
+        Cpdfpage.process_pages
+          (Pdfpage.ppstub (fun pnum page -> if mem pnum range then Pdfannot.add_annotation pdf page annot else page)) pdf range
+      in
+        write_pdf false pdf
 
 (* Advise the user if a combination of command line flags makes little sense,
 or error out if it make no sense at all. *)

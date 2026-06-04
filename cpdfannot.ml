@@ -27,6 +27,8 @@ let rec subtype_of_string = function
   | "TrapNet" -> Pdfannot.TrapNet
   | "Watermark" -> Pdfannot.Watermark
   | "3D" -> Pdfannot.ThreeDee
+  | "Redact" -> Pdfannot.Redact
+  | "Projection" -> Pdfannot.Projection
   | s ->
       match explode s with
       | 'P'::'o'::'p'::'u'::'p'::':'::r ->
@@ -35,9 +37,9 @@ let rec subtype_of_string = function
              annot_contents = None;
              subject = None;
              rectangle = (0., 0., 0., 0.);
-             border = {width = 0.; vradius = 0.; hradius = 0.; style = Pdfannot.NoStyle; dasharray = [||]};
+             border = None;
              colour = None;
-             annotrest = Pdf.Null}
+             annotrest = Pdf.Dictionary []}
       | _ -> Pdfannot.Unknown s
 
 (* List annotations, simple old style. *)
