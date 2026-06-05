@@ -5516,7 +5516,7 @@ let rec go () =
            (let x, y, w, h = Cpdfcoord.parse_rectangle pdf args.rectangle in
              (x, y, x +. w, y +. h));
          border = None;
-         colour = None;
+         colour = Some [0.858826; 0.203918; 0.145096];
          annotrest = Pdf.Dictionary []}
       in
       let pdf =
