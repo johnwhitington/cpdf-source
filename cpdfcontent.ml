@@ -1060,8 +1060,8 @@ let rec process_op ~pdf ~f ~stack ~state ~resources op =
       Printf.printf "Op_Do: %s\n" s;
       begin match Pdf.lookup_direct pdf "/XObject" resources with
       | Some d ->
-          begin match Pdf.lookup_direct pdf s d with
-          | Some xobj ->
+          begin match Pdf.indirect_number pdf s d, Pdf.lookup_direct pdf s d with
+          | Some xobjnum, Some xobj ->
               begin match Pdf.lookup_direct pdf "/Subtype" xobj with
               | Some (Pdf.Name "/Image") ->
                   let x0, y0 = Pdftransform.transform_matrix !state.ctm (0., 0.) in
@@ -1092,7 +1092,24 @@ let rec process_op ~pdf ~f ~stack ~state ~resources op =
                     ignore (process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_W));
                     ignore (process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_n));
                     Hashtbl.clear !state.text_state.font_cache;
-                    process_form_xobject ~pdf ~f ~stack ~state ~resources xobj;
+                    let ops = process_form_xobject ~pdf ~f ~stack ~state ~resources xobj in
+                    (* TODO Not clear what to do here in general. Content of
+                       xobject will be processed each time. For redaction, we
+                       might need to redact each time, so that is correct: any
+                       use intersecting the ares needs removal even when
+                       shared. We need to return to the question of shared
+                       content. Perhaps any redacted one needs automaticaly
+                       copying to a new name? But what about xobjects of
+                       xobjects and so on? *)
+                    begin match xobj with
+                    | Pdf.Stream ({contents = (dict, _)} as r) ->
+                       begin match Pdfops.stream_of_ops ops with
+                       | Pdf.Stream {contents = (_, Pdf.Got bytes)} ->
+                           r := (dict, Pdf.Got bytes)
+                       | _ -> assert false
+                       end
+                    | _ -> Pdfe.log "malformed stream"
+                    end;
                     ignore (process_op ~pdf ~f ~stack ~state ~resources Pdfops.Op_Q);
                     !state.text_state.font_cache <- saved_font_cache;
                     [op]
@@ -1129,15 +1146,15 @@ let rec process_op ~pdf ~f ~stack ~state ~resources op =
   | Pdfops.Op_Comment _ ->
       [op]
 
-and process_form_xobject ~pdf ~f ~stack ~state ~resources pdfobject =
-  let content = [Pdf.direct pdf pdfobject] in
+and process_form_xobject ~pdf ~f ~stack ~state ~resources obj =
+  let content = [Pdf.direct pdf obj] in
     let pagedict =
       match Pdf.direct pdf resources with
       | Pdf.Dictionary rs -> rs
       | _ -> []
     in
     let xobjdict =
-      match Pdf.direct pdf pdfobject with
+      match Pdf.direct pdf obj with
       | Pdf.Stream {contents = (dict, _)} ->
           begin match Pdf.lookup_direct pdf "/Resources" dict with
           | Some (Pdf.Dictionary rs) -> rs
@@ -1146,7 +1163,7 @@ and process_form_xobject ~pdf ~f ~stack ~state ~resources pdfobject =
       | _ -> []
     in
       let total_resources = Pdf.Dictionary (mergedict pagedict xobjdict) in
-        ignore
+        flatten
           (map
             (process_op ~pdf ~f ~stack ~state ~resources:total_resources)
             (Pdfops.parse_operators pdf total_resources content))
