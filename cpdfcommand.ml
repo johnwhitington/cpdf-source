@@ -5379,7 +5379,7 @@ let rec go () =
   | RedactApplyType s ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
-        Cpdfredact.apply_type pdf s range;
+      let pdf = Cpdfredact.apply pdf ~typ:("/" ^ s) ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth ~underneath:args.underneath range in
         write_pdf false pdf
   | Rasterize ->
       let pdf = get_single_pdf args.op false in

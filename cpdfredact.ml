@@ -62,14 +62,14 @@ let redact_add_rectangle_pnum pdf ~path:(minx, miny, maxx, maxy) ~color ~outline
     color outline linewidth opacity (Cpdfposition.PosLeft(minx, miny)) "/Absolute" underneath [pnum] pdf
 
 (* Apply redaction annotations. *)
-let apply pdf ~color ~outline ~opacity ~linewidth ~underneath range =
+let apply pdf ?(typ="/Redact") ~color ~outline ~opacity ~linewidth ~underneath range =
   let rectangles = ref [] in
   let apply_page pnum page =
     match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
     | Some (Pdf.Array annots) ->
         let redact_annotation_objnums =
           option_map
-            (function Pdf.Indirect i when Pdf.lookup_direct pdf "/Subtype" (Pdf.Indirect i) = Some (Pdf.Name "/Redact") -> Some i | _ -> None)
+            (function Pdf.Indirect i when Pdf.lookup_direct pdf "/Subtype" (Pdf.Indirect i) = Some (Pdf.Name typ) -> Some i | _ -> None)
             annots
         in
         let popups_of_redactions =
@@ -117,9 +117,6 @@ let apply pdf ~color ~outline ~opacity ~linewidth ~underneath range =
            redact_add_rectangle_pnum pdf ~path ~color ~outline ~opacity ~linewidth ~underneath pnum)
         pdf
         !rectangles
-
-(* Apply other annotations (Rect, Polyline) etc. as if they were redaction annotations. *)
-let apply_type pdf typ range = ()
 
 let colour ~light = function
   | Cpdfcontent.Glyph _ -> [Pdfops.Op_G (if light then 1. else 0.)] (* Black *)
