@@ -563,6 +563,7 @@ type args =
    mutable squeeze : bool;
    mutable squeeze_recompress : bool;
    mutable squeeze_pagedata: bool;
+   mutable squeeze_reprocess: bool;
    mutable original_filename : string;
    mutable was_encrypted : bool;
    mutable cpdflin : string option;
@@ -729,6 +730,7 @@ let args =
    squeeze = false;
    squeeze_recompress = true;
    squeeze_pagedata = true;
+   squeeze_reprocess = false;
    original_filename = "";
    was_encrypted = false;
    cpdflin = None;
@@ -3057,6 +3059,9 @@ let specs =
    ("-squeeze-no-recompress",
      Arg.Unit (fun () -> args.squeeze_recompress <- false),
      " Don't recompress streams");
+   ("-squeeze-reprocess",
+     Arg.Unit (fun () -> args.squeeze_reprocess <- true),
+     "");
    ("-output-json",
      Arg.Unit (setop OutputJSON),
      " Export PDF file as JSON data");
@@ -3657,7 +3662,7 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
             if not is_decompress then
               begin
                 ignore (Cpdfsqueeze.recompress_pdf pdf);
-                if args.squeeze then Cpdfsqueeze.squeeze ~pagedata:args.squeeze_pagedata ?logto:!logto pdf;
+                if args.squeeze then Cpdfsqueeze.squeeze ~pagedata:args.squeeze_pagedata ~reprocess:args.squeeze_reprocess ?logto:!logto pdf;
               end;
             Pdf.remove_unreferenced pdf;
             really_write_pdf ~is_decompress mk_id pdf outname
@@ -3672,7 +3677,7 @@ let write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf =
               if not is_decompress then
                 begin
                   ignore (Cpdfsqueeze.recompress_pdf pdf);
-                  if args.squeeze then Cpdfsqueeze.squeeze ~pagedata:args.squeeze_pagedata ?logto:!logto pdf;
+                  if args.squeeze then Cpdfsqueeze.squeeze ~pagedata:args.squeeze_pagedata ~reprocess:args.squeeze_reprocess ?logto:!logto pdf;
                   Pdf.remove_unreferenced pdf
                 end;
                 really_write_pdf ~encryption ~is_decompress mk_id pdf temp;
@@ -3712,7 +3717,7 @@ let fast_write_split_pdfs
                    (stem original_filename) startpage endpage
              in
                Pdf.remove_unreferenced pdf;
-               if sq then Cpdfsqueeze.squeeze ~pagedata:args.squeeze_pagedata ?logto:!logto pdf;
+               if sq then Cpdfsqueeze.squeeze ~pagedata:args.squeeze_pagedata ~reprocess:args.squeeze_reprocess ?logto:!logto pdf;
                Cpdfutil.progress_line (Printf.sprintf ">>> Writing %s" name);
                really_write_pdf ~encryption:enc (not (enc = None)) pdf name)
       (indx pagenums)

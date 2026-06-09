@@ -125,14 +125,14 @@ resources actually need to be available, the parse will fail, the squeeze of
 this object will fail, and we bail out. *)
 let xobjects_done = ref []
 
-let rec squeeze_form_xobject pdf objnum =
+let rec process_form_xobject f pdf objnum =
   if mem objnum !xobjects_done then () else
     begin
       xobjects_done := objnum :: !xobjects_done;
       let obj = Pdf.lookup_obj pdf objnum in
         begin match Pdf.lookup_chain pdf obj ["/Resources"; "/XObject"] with
         | Some (Pdf.Dictionary d) ->
-            iter (function (k, Pdf.Indirect i) -> squeeze_form_xobject pdf i | _ -> ()) d
+            iter (function (k, Pdf.Indirect i) -> process_form_xobject f pdf i | _ -> ()) d
         | _ -> ()
         end;
         match Pdf.lookup_direct pdf "/Subtype" obj with
@@ -142,9 +142,14 @@ let rec squeeze_form_xobject pdf objnum =
                 Some d -> d
               | None -> Pdf.Dictionary []
             in
+            let mediabox =
+              match Pdf.lookup_direct pdf "/BBox" obj with
+              | Some x -> x
+              | None -> Pdf.Array [Pdf.Integer 0; Pdf.Integer 0; Pdf.Integer 612; Pdf.Integer 792]
+            in
               begin match
                 Pdfops.stream_of_ops
-                  (Pdfops.parse_operators pdf resources [Pdf.Indirect objnum])
+                  (f pdf mediabox resources (Pdfops.parse_operators pdf resources [Pdf.Indirect objnum]))
               with
                 Pdf.Stream {contents = (_, Pdf.Got data)} ->
                   (* Put replacement data in original stream, and overwrite /Length *)
@@ -153,9 +158,9 @@ let rec squeeze_form_xobject pdf objnum =
                       str :=
                         (Pdf.add_dict_entry d "/Length" (Pdf.Integer (bytes_size data)),
                          Pdf.Got data)
-                  | _ -> failwith "squeeze_form_xobject"
+                  | _ -> failwith "process_form_xobject"
                   end
-              | _ -> failwith "squeeze_form_xobject"
+              | _ -> failwith "process_form_xobject"
               end
         | _ -> ()
     end
@@ -184,7 +189,7 @@ let content_streams_of_page pdf refnum =
 
 (* For each object in the PDF marked with /Type /Page, for each /Contents
 indirect reference or array of such, decode and recode that content stream. *)
-let squeeze_all_content_streams pdf =
+let process_all_content_streams f pdf =
   let page_reference_numbers = Pdf.page_reference_numbers pdf in
     let all_content_streams_in_doc =
       flatten (map (content_streams_of_page pdf) page_reference_numbers)
@@ -201,6 +206,11 @@ let squeeze_all_content_streams pdf =
                   match Pdf.lookup_direct pdf "/Resources" d with
                     Some d -> d
                   | None -> Pdf.Dictionary []
+                in
+                let mediabox =
+                  match Pdf.lookup_direct pdf "/MediaBox" d with
+                  | Some x -> x
+                  | None -> Pdf.Array [Pdf.Integer 0; Pdf.Integer 0; Pdf.Integer 612; Pdf.Integer 792]
                 in
                   begin try
                     let content_streams =
@@ -220,7 +230,7 @@ let squeeze_all_content_streams pdf =
                       then
                         let newstream =
                           Pdfops.stream_of_ops
-                            (Pdfops.parse_operators pdf resources content_streams)
+                            (f pdf mediabox resources (Pdfops.parse_operators pdf resources content_streams))
                         in
                           let newdict =
                             Pdf.add_dict_entry
@@ -232,23 +242,27 @@ let squeeze_all_content_streams pdf =
                               Some (Pdf.Dictionary xobjs) ->
                                 iter
                                   (function
-                                     (_, Pdf.Indirect i) -> squeeze_form_xobject pdf i
-                                    | _ -> failwith "squeeze_xobject")
+                                     (_, Pdf.Indirect i) -> process_form_xobject f pdf i
+                                    | _ -> failwith "process_xobject")
                                   xobjs
                             | _ -> ()
                             end
                   with
                     (* No /Contents, which is ok. Or a parsing failure due to
                      uninherited resources. FIXME: Add support for inherited
-                     resources. NB 24th March 2023 we tried this, and sizes went up
-                     on many files and down on none! So reverted. *)
+                     resources. NB 24th March 2023 we tried this, and sizes
+                     went up on many files and down on none! So reverted. NB
+                     9th Jun 2026 we now might have an inherited Mediabox,
+                     which is a potential problem.  (Or, is the worst that
+                     could happen that the reprocessed stream is a little less
+                     efficient? *)
                     Not_found -> ()
                   end
             | _ -> ())
         pdf
 
 (* We run squeeze enough times for the number of objects to not change *)
-let squeeze ?logto ?(pagedata=true) pdf =
+let squeeze ?logto ~reprocess ~pagedata pdf =
   let log x =
     match logto with
       None -> print_string x; flush stdout
@@ -266,10 +280,17 @@ let squeeze ?logto ?(pagedata=true) pdf =
         n := Pdf.objcard pdf;
         log (Printf.sprintf "Squeezing... Down to %i objects\n" (Pdf.objcard pdf));
       done;
+      if reprocess then
+        begin
+          log (Printf.sprintf "Reprocessing page data and xobjects\n");
+          process_all_content_streams
+            (fun pdf mediabox resources ops -> Cpdfcontent.compress ~pdf ~mediabox:(Pdf.parse_rectangle pdf mediabox) ~resources ~ops)
+            pdf
+        end;
       if pagedata then
         begin
           log (Printf.sprintf "Squeezing page data and xobjects\n");
-          squeeze_all_content_streams pdf;
+          process_all_content_streams (fun _ _ _ ops -> ops) pdf
         end;
         log (Printf.sprintf "Recompressing document\n");
         ignore (recompress_pdf pdf);

@@ -160,6 +160,13 @@ val filter :
   ops:Pdfops.t list ->
   Pdfops.t list
 
+val compress :
+  pdf:Pdf.t ->
+  mediabox:(float * float * float * float) ->
+  resources:Pdf.pdfobject ->
+  ops:Pdfops.t list ->
+  Pdfops.t list
+
 (** Process graphics operations and output result as JSON. *)
 val to_json :
   pdf:Pdf.t ->

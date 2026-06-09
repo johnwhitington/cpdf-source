@@ -1334,6 +1334,26 @@ let filter ~pdf ~f ~mediabox ~resources ~ops =
   let state = ref (initial_state mediabox) in
     flatten (map (process_op ~pdf ~f ~stack ~state ~resources) ops)
 
+(* We run process_op over each op, losing any operation which doesn't alter the state.
+   This is used, for example, to clean up redacted paths. And, of course, for efficiency. *)
+(* FIXME: The problem here (and elsewhere) is that Form Xobjects are treated differently, rather than recursively using 'filter'. We should have filter take a copy of itself to call itself? For example, in 'compress' Form Xobjects would not be compressed....*)
+(* FIXME: Check the fake 'f' here with Nonintersecting really is a no-op *)
+(* FIXME: Other kinds of compression are available - for example this does not compress 'm l l l l S' into 're S'. See also the PDF 1.0 spec for additional ideas. *)
+(* FIXME: Cleaning up paths - when an OP_n is removed, we have to scroll back and remove any path-creation ops. So this is not quite so simple.... *)
+(* FIXME: This wants thorough testing - we can do it through an private optional extension to -squeeze... *)
+let compress ~pdf ~mediabox ~resources ~ops =
+  let stack = ref [] in
+  let state = ref (initial_state mediabox) in
+  let opsout = ref [] in
+    iter
+      (fun op ->
+         let old_state = copystate !state in
+         let stack_length = length !stack in
+           ignore (process_op ~pdf ~f:(fun _ -> Nonintersecting) ~stack ~state ~resources op);
+           if !state <> old_state || stack_length <> length !stack then opsout := op::!opsout)
+      ops;
+    (rev !opsout)
+
 (* Export page content to JSON. One day this will be round-trippable. *)
 let json_of_fpoint (x, y) =
   `Assoc [("x", `Float x); ("y", `Float y)]
