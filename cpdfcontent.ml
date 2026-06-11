@@ -668,8 +668,8 @@ let emit_path_bounding_box ~content ~stroking ~f ~state =
    TODO Allow iter and map to save creating all the sublists?
    TODO Allow removal of un-needed ops automatically by checking state. How much of our possible compressor is this?
    TODO Change to take all ops not just one op? Does this help with the compressor? *)
-let rec process_op ~pdf ~f ~stack ~state ~resources op =
-  let f : t -> overlap = f in
+let rec process_op ~pdf ~f ~remove ~stack ~state ~resources op =
+  let remove : string -> unit = remove in
   match op with
   | Pdfops.Op_w f ->
       !state.line_width <- f;
@@ -693,7 +693,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources op =
       !state.flatness <- f;
       [op]
   | Pdfops.Op_gs s ->
-      read_graphics_state_dictionary ~pdf ~f ~stack ~state ~resources s;
+      read_graphics_state_dictionary ~pdf ~f ~remove ~stack ~state ~resources s;
       [op]
   | Pdfops.Op_q ->
       push_statestack stack !state;
@@ -757,16 +757,16 @@ let rec process_op ~pdf ~f ~stack ~state ~resources op =
       end;
       [op]
   | Pdfops.Op_s ->
-      ignore (map (process_op ~pdf ~f ~stack ~state ~resources) [Pdfops.Op_h; Pdfops.Op_S]);
+      ignore (map (process_op ~pdf ~f ~remove ~stack ~state ~resources) [Pdfops.Op_h; Pdfops.Op_S]);
       [op]
   | Pdfops.Op_b ->
-      ignore (map (process_op ~pdf ~f ~stack ~state ~resources) [Pdfops.Op_h; Pdfops.Op_B]);
+      ignore (map (process_op ~pdf ~f ~remove ~stack ~state ~resources) [Pdfops.Op_h; Pdfops.Op_B]);
       [op]
   | Pdfops.Op_b' ->
-      ignore (map (process_op ~pdf ~f ~stack ~state ~resources) [Pdfops.Op_h; Pdfops.Op_B']);
+      ignore (map (process_op ~pdf ~f ~remove ~stack ~state ~resources) [Pdfops.Op_h; Pdfops.Op_B']);
       [op]
   | Pdfops.Op_f | Pdfops.Op_F ->
-        ignore (process_op ~pdf ~f ~stack ~state ~resources Pdfops.Op_h);
+        ignore (process_op ~pdf ~f ~remove ~stack ~state ~resources Pdfops.Op_h);
         begin match !state.partial_path with
         | PartialPath (sp, cp, segs, subpaths) ->
             (* segs is empty, due to [Op_h] *)
@@ -811,7 +811,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources op =
       end;
       [op]
   | Pdfops.Op_B' ->
-        ignore (process_op ~pdf ~f ~stack ~state ~resources Pdfops.Op_h);
+        ignore (process_op ~pdf ~f ~remove ~stack ~state ~resources Pdfops.Op_h);
         begin match !state.partial_path with
         | PartialPath (sp, cp, segs, subpaths) ->
             if segs = [] then
@@ -852,7 +852,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources op =
   | Pdfops.Op_re (x, y, w, h) ->
       ignore
         (map
-          (process_op ~pdf ~f ~stack ~state ~resources)
+          (process_op ~pdf ~f ~remove ~stack ~state ~resources)
           [Pdfops.Op_m (x, y); Pdfops.Op_l (x +. w, y); Pdfops.Op_l (x +. w, y +. h); Pdfops.Op_l (x, y +. h); Pdfops.Op_h]);
       [op]
   | Pdfops.Op_W ->
@@ -940,23 +940,23 @@ let rec process_op ~pdf ~f ~stack ~state ~resources op =
       !state.text_state.t_m <- !state.text_state.t_lm;
       [op]
   | Pdfops.Op_TD (f1, f2) ->
-      flatten (map (process_op ~pdf ~f ~stack ~state ~resources) [(Pdfops.Op_TL ~-.f2); (Pdfops.Op_Td (f1, f2))])
+      flatten (map (process_op ~pdf ~f ~remove ~stack ~state ~resources) [(Pdfops.Op_TL ~-.f2); (Pdfops.Op_Td (f1, f2))])
   | Pdfops.Op_Tm m ->
       !state.text_state.t_m <- m;
       !state.text_state.t_lm <- m;
       [op]
   | Pdfops.Op_T' ->
-      ignore (process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_TD (0., ~-.(!state.text_state.leading))));
+      ignore (process_op ~pdf ~f ~remove ~stack ~state ~resources (Pdfops.Op_TD (0., ~-.(!state.text_state.leading))));
       [op]
   | Pdfops.Op_Tj s ->
       [optimise_tj (process_tj ~f ~stack ~state ~resources s)]
   | Pdfops.Op_TJ l ->
       [Pdfops.Op_TJ (optimise_capital_tj (process_capital_tj ~f ~stack ~state ~resources l))]
   | Pdfops.Op_' s ->
-      ignore (map (process_op ~pdf ~f ~stack ~state ~resources) [Pdfops.Op_T'; Pdfops.Op_Tj s]);
+      ignore (map (process_op ~pdf ~f ~remove ~stack ~state ~resources) [Pdfops.Op_T'; Pdfops.Op_Tj s]);
       [op]
   | Pdfops.Op_'' (f1, f2, s) ->
-      ignore (map (process_op ~pdf ~f ~stack ~state ~resources) [(Pdfops.Op_Tw f1); (Pdfops.Op_Tc f2); (Pdfops.Op_' s)]);
+      ignore (map (process_op ~pdf ~f ~remove ~stack ~state ~resources) [(Pdfops.Op_Tw f1); (Pdfops.Op_Tc f2); (Pdfops.Op_' s)]);
       [op]
   | Pdfops.Op_d0 (f1, f2) ->
       !state.d0 <- Some (f1, f2);
@@ -1086,31 +1086,66 @@ let rec process_op ~pdf ~f ~stack ~state ~resources op =
                         (min_float, min_float, max_float, max_float)
                   in
                   let saved_font_cache = Hashtbl.copy !state.text_state.font_cache in
-                    ignore (process_op ~pdf ~f ~stack ~state ~resources Pdfops.Op_q);
+                    ignore (process_op ~pdf ~f ~remove ~stack ~state ~resources Pdfops.Op_q);
                     !state.ctm <- Pdftransform.matrix_compose !state.ctm matrix;
-                    ignore (process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_re (minx, miny, maxx -. minx, maxy -. miny)));
-                    ignore (process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_W));
-                    ignore (process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_n));
+                    ignore (process_op ~pdf ~f ~remove ~stack ~state ~resources (Pdfops.Op_re (minx, miny, maxx -. minx, maxy -. miny)));
+                    ignore (process_op ~pdf ~f ~remove ~stack ~state ~resources (Pdfops.Op_W));
+                    ignore (process_op ~pdf ~f ~remove ~stack ~state ~resources (Pdfops.Op_n));
                     Hashtbl.clear !state.text_state.font_cache;
-                    let ops = process_form_xobject ~pdf ~f ~stack ~state ~resources xobj in
+                    let to_remove = ref [] in
+                    let ops = process_form_xobject ~pdf ~f ~remove:(fun s -> to_remove := s::!to_remove) ~stack ~state ~resources xobj in
                     (* TODO Not clear what to do here in general. Content of
                        xobject will be processed each time. For redaction, we
                        might need to redact each time, so that is correct: any
-                       use intersecting the ares needs removal even when
+                       use intersecting the area needs removal even when
                        shared. We need to return to the question of shared
-                       content. Perhaps any redacted one needs automaticaly
+                       content. Perhaps any redacted one needs automatically
                        copying to a new name? But what about xobjects of
                        xobjects and so on? *)
+                    if !to_remove <> [] then
+                      begin
+                        Printf.printf "To remove at xobject level... ";
+                        iter (Printf.printf "%s ") !to_remove;
+                        flprint "\n";
+                      end;
+                    let resources' =
+                      let xobjects =
+                        match Pdf.lookup_chain pdf xobj ["/Resources"; "/XObject"] with
+                        | Some (Pdf.Dictionary d) -> d
+                        | _ -> []
+                      in
+                        let xobjects' = ref xobjects in
+                          iter
+                            (fun x ->
+                              (* If it's in the resources, remove it. If it's not
+                               there, it's an old-fashioned xobject with a resource
+                               in the page. We must call the main page removal procedure
+                               then! *)
+                               if List.exists (function (k, _) -> k = x) !xobjects' then
+                                 xobjects' := lose (function (k, _) -> k = x) !xobjects'
+                               else
+                                 remove x)
+                            !to_remove;
+                        let resources =
+                          match Pdf.lookup_direct pdf "/Resources" xobj with
+                          | Some d -> d
+                          | _ -> Pdf.Dictionary []
+                        in
+                          Pdf.add_dict_entry resources "/XObject" (Pdf.Dictionary !xobjects')
+                    in
+                    let ops =
+                      lose (function Pdfops.Op_Do n when mem n !to_remove -> true | _ -> false) ops
+                    in
                     begin match xobj with
                     | Pdf.Stream ({contents = (dict, _)} as r) ->
                        begin match Pdfops.stream_of_ops ops with
                        | Pdf.Stream {contents = (_, Pdf.Got bytes)} ->
-                           r := (dict, Pdf.Got bytes)
+                           r := (Pdf.add_dict_entry dict "/Resources" resources', Pdf.Got bytes)
                        | _ -> assert false
                        end
                     | _ -> Pdfe.log "malformed stream"
                     end;
-                    ignore (process_op ~pdf ~f ~stack ~state ~resources Pdfops.Op_Q);
+                    ignore (process_op ~pdf ~f ~remove ~stack ~state ~resources Pdfops.Op_Q);
                     !state.text_state.font_cache <- saved_font_cache;
                     [op]
               | _ -> Pdfe.log "Unknown kind of xobject"; [op]
@@ -1146,7 +1181,7 @@ let rec process_op ~pdf ~f ~stack ~state ~resources op =
   | Pdfops.Op_Comment _ ->
       [op]
 
-and process_form_xobject ~pdf ~f ~stack ~state ~resources obj =
+and process_form_xobject ~pdf ~f ~remove ~stack ~state ~resources obj =
   let content = [Pdf.direct pdf obj] in
     let pagedict =
       match Pdf.direct pdf resources with
@@ -1165,31 +1200,31 @@ and process_form_xobject ~pdf ~f ~stack ~state ~resources obj =
       let total_resources = Pdf.Dictionary (mergedict pagedict xobjdict) in
         flatten
           (map
-            (process_op ~pdf ~f ~stack ~state ~resources:total_resources)
+            (process_op ~pdf ~f ~remove ~stack ~state ~resources:total_resources)
             (Pdfops.parse_operators pdf total_resources content))
 
-and read_graphics_state_dictionary ~pdf ~f ~stack ~state ~resources s =
+and read_graphics_state_dictionary ~pdf ~f ~remove ~stack ~state ~resources s =
   let extgstate_dict =
     match Pdf.lookup_direct pdf "/ExtGState" resources with
     | Some (Pdf.Dictionary _ as d) -> d
     | _ -> Pdf.Dictionary []
   in
     begin match Pdf.lookup_direct pdf "/LW" extgstate_dict with
-    | Some (Pdf.Real lw) -> ignore (process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_w lw))
-    | Some (Pdf.Integer lw) -> ignore (process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_w (float_of_int lw)))
+    | Some (Pdf.Real lw) -> ignore (process_op ~pdf ~f ~remove ~stack ~state ~resources (Pdfops.Op_w lw))
+    | Some (Pdf.Integer lw) -> ignore (process_op ~pdf ~f ~remove ~stack ~state ~resources (Pdfops.Op_w (float_of_int lw)))
     | _ -> ()
     end;
     begin match Pdf.lookup_direct pdf "/LC" extgstate_dict with
-    | Some (Pdf.Integer lc) -> ignore (process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_J lc))
+    | Some (Pdf.Integer lc) -> ignore (process_op ~pdf ~f ~remove ~stack ~state ~resources (Pdfops.Op_J lc))
     | _ -> ()
     end;
     begin match Pdf.lookup_direct pdf "/LJ" extgstate_dict with
-    | Some (Pdf.Integer lj) -> ignore (process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_j lj))
+    | Some (Pdf.Integer lj) -> ignore (process_op ~pdf ~f ~remove ~stack ~state ~resources (Pdfops.Op_j lj))
     | _ -> ()
     end;
     begin match Pdf.lookup_direct pdf "/ML" extgstate_dict with
-    | Some (Pdf.Real ml) -> ignore (process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_M ml))
-    | Some (Pdf.Integer ml) -> ignore (process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_M (float_of_int ml)))
+    | Some (Pdf.Real ml) -> ignore (process_op ~pdf ~f ~remove ~stack ~state ~resources (Pdfops.Op_M ml))
+    | Some (Pdf.Integer ml) -> ignore (process_op ~pdf ~f ~remove ~stack ~state ~resources (Pdfops.Op_M (float_of_int ml)))
     | _ -> ()
     end;
     begin match Pdf.lookup_direct pdf "/D" extgstate_dict with
@@ -1200,11 +1235,11 @@ and read_graphics_state_dictionary ~pdf ~f ~stack ~state ~resources s =
           with
             _ -> []
         in
-          ignore (process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_d (map (Pdf.getnum pdf) fs, Pdf.getnum pdf phase)))
+          ignore (process_op ~pdf ~f ~remove ~stack ~state ~resources (Pdfops.Op_d (map (Pdf.getnum pdf) fs, Pdf.getnum pdf phase)))
     | _ -> ()
     end;
     begin match Pdf.lookup_direct pdf "/RI" extgstate_dict with
-    | Some (Pdf.Name ri) -> ignore (process_op ~pdf ~f ~stack ~state ~resources (Pdfops.Op_ri ri))
+    | Some (Pdf.Name ri) -> ignore (process_op ~pdf ~f ~remove ~stack ~state ~resources (Pdfops.Op_ri ri))
     | _ -> ()
     end;
     begin match Pdf.lookup_direct pdf "/OP" extgstate_dict with
@@ -1329,10 +1364,10 @@ and read_graphics_state_dictionary ~pdf ~f ~stack ~state ~resources s =
     end
 
 (* Filter page content, given a predicate on page content. *)
-let filter ~pdf ~f ~mediabox ~resources ~ops =
+let filter ~pdf ~f ~remove ~mediabox ~resources ~ops =
   let stack = ref [] in
   let state = ref (initial_state mediabox) in
-    flatten (map (process_op ~pdf ~f ~stack ~state ~resources) ops)
+    flatten (map (process_op ~pdf ~f ~remove ~stack ~state ~resources) ops)
 
 (* We run process_op over each op, losing any operation which doesn't alter the state.
    This is used, for example, to clean up redacted paths. And, of course, for efficiency. *)
@@ -1349,7 +1384,7 @@ let compress ~pdf ~mediabox ~resources ~ops =
       (fun op ->
          let old_state = copystate !state in
          let stack_length = length !stack in
-           ignore (process_op ~pdf ~f:(fun _ -> Nonintersecting) ~stack ~state ~resources op);
+           ignore (process_op ~pdf ~f:(fun _ -> Nonintersecting) ~remove:(fun _ -> ()) ~stack ~state ~resources op);
            if !state <> old_state || stack_length <> length !stack then opsout := op::!opsout)
       ops;
     (rev !opsout)
@@ -1467,7 +1502,7 @@ let to_json ~pdf ~mediabox ~resources ?(graphics=true) ?(text=true) ?(images=tru
                  ("bbox", `List [`Float x0; `Float y0; `Float x1; `Float y1; `Float x2; `Float y2; `Float x3; `Float y3])]);
     Encloses
   in
-    ignore (filter ~pdf ~f ~mediabox ~resources ~ops);
+    ignore (filter ~pdf ~f ~remove:(fun _ -> ()) ~mediabox ~resources ~ops);
     `List (rev !jsons)
 
 let charcodes_of_string s = function
@@ -1495,7 +1530,7 @@ let test_extract_text pdf range ch =
            if mem pnum range then
              ignore
                (filter
-                 ~pdf ~f ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox)
+                 ~pdf ~f ~remove:(fun _ -> ()) ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox)
                  ~resources:page.Pdfpage.resources ~ops:(Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content)))
       (Pdfpage.pages_of_pagetree pdf)
       (ilist 1 (Pdfpage.endpage pdf));

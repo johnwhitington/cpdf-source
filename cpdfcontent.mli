@@ -155,6 +155,7 @@ type t =
 val filter :
   pdf:Pdf.t ->
   f:(t -> overlap) ->
+  remove:(string -> unit) ->
   mediabox:(float * float * float * float) ->
   resources:Pdf.pdfobject ->
   ops:Pdfops.t list ->

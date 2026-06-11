@@ -31,15 +31,36 @@ let select_boxes shape boxes =
 
 (* Redact a path on a page *)
 let redact_page pdf ~path page =
-  let ops' =
+  let to_remove = ref [] in
+  let ops =
     Cpdfcontent.filter
       ~pdf
       ~f:(box_matches path)
+      ~remove:(fun s -> to_remove := s::!to_remove)
       ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox)
       ~resources:page.Pdfpage.resources
       ~ops:(Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content)
   in
-    {page with Pdfpage.content = [Pdfops.stream_of_ops ops']}
+    if !to_remove <> [] then
+      begin
+        Printf.printf "To remove at page level... ";
+        iter (Printf.printf "%s ") !to_remove;
+        flprint "\n";
+      end;
+    let ops =
+      lose (function Pdfops.Op_Do n when mem n !to_remove -> true | _ -> false) ops
+    in
+    let resources' =
+      let xobjects =
+        match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
+        | Some (Pdf.Dictionary d) -> d
+        | _ -> []
+      in
+        Pdf.add_dict_entry page.Pdfpage.resources "/XObject" (Pdf.Dictionary (lose (fun (k, _) -> mem k !to_remove) xobjects))
+    in
+      {page with
+         Pdfpage.content = [Pdfops.stream_of_ops ops];
+         Pdfpage.resources = resources'}
 
 let redact pdf ~path:((minx, miny, maxx, maxy) as path) ~color ~outline ~opacity ~linewidth ~underneath range =
   let pdf =
@@ -167,7 +188,7 @@ let show_bounding_boxes ~fast ~shape ~light pdf range =
   let show_bounding_boxes_page page =
     let ops = Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content in
     let page_boxes = ref [] in
-      ignore (Cpdfcontent.filter ~pdf ~f:(fun page_obj -> page_boxes =| page_obj; Nonintersecting) ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox) ~resources:page.Pdfpage.resources ~ops);
+      ignore (Cpdfcontent.filter ~pdf ~f:(fun page_obj -> page_boxes =| page_obj; Nonintersecting) ~remove:(fun _ -> ()) ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox) ~resources:page.Pdfpage.resources ~ops);
       !page_boxes
   in
   let bboxes = ref [] in
