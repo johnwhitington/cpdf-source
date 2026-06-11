@@ -1395,17 +1395,20 @@ let filter ~pdf ~f ~remove ~mediabox ~resources ~ops =
 (* FIXME: Check the fake 'f' here with Nonintersecting really is a no-op *)
 (* FIXME: Other kinds of compression are available - for example this does not compress 'm l l l l S' into 're S'. See also the PDF 1.0 spec for additional ideas. *)
 (* FIXME: Cleaning up paths - when an OP_n is removed, we have to scroll back and remove any path-creation ops. So this is not quite so simple.... *)
-(* FIXME: This wants thorough testing - we can do it through an private optional extension to -squeeze... *)
 let compress ~pdf ~mediabox ~resources ~ops =
   let stack = ref [] in
   let state = ref (initial_state mediabox) in
   let opsout = ref [] in
     iter
       (fun op ->
+         let effective_op = function
+         | Pdfops.Op_Do _ | Op_sh _ | InlineImage _ | Op_MP _ | Op_DP _ | Op_BMC _ | Op_BDC _ | Op_EMC | Op_BX | Op_EX | Op_Unknown _ -> true
+         | _ -> false
+         in
          let old_state = copystate !state in
          let stack_length = length !stack in
            ignore (process_op ~pdf ~f:(fun _ -> Nonintersecting) ~remove:(fun _ -> ()) ~stack ~state ~resources op);
-           if compare_state !state old_state <> 0 || stack_length <> length !stack then opsout := op::!opsout)
+           if compare_state !state old_state <> 0 || stack_length <> length !stack || effective_op op then opsout := op::!opsout)
       ops;
     (rev !opsout)
 
