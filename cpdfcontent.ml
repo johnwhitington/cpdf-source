@@ -77,7 +77,7 @@ type font_data =
   {mutable fontobj : Pdftext.font;
    mutable extra_metrics : float * float;
    mutable table : (int, string) Hashtbl.t;
-   mutable text_extractor : Pdftext.text_extractor}
+   mutable text_extractor : Pdftext.text_extractor option}
 
 type text_state =
   {mutable character_spacing : float;
@@ -94,8 +94,13 @@ type text_state =
    mutable t_m : Pdftransform.transform_matrix;
    mutable t_lm : Pdftransform.transform_matrix}
 
+type mode =
+  | Graphics
+  | Text
+
 type state =
-  {mutable ctm : Pdftransform.transform_matrix;
+  {mutable mode : mode;
+   mutable ctm : Pdftransform.transform_matrix;
    mutable partial_path : partial;
    mutable path : drawn_path;
    mutable clipping_path : path list;
@@ -162,7 +167,7 @@ let initial_text_state () =
      {fontobj = Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding);
       extra_metrics = (0., 0.);
       table = null_hash ();
-      text_extractor = Pdftext.text_extractor_of_font_real (Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding))};
+      text_extractor = Some (Pdftext.text_extractor_of_font_real (Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding)))};
    font_cache = null_hash ();
    font_size = 12.;
    rendering_mode = 0;
@@ -172,7 +177,8 @@ let initial_text_state () =
    t_lm = Pdftransform.i_matrix}
 
 let initial_state (minx, miny, maxx, maxy) =
-  {ctm = Pdftransform.i_matrix;
+  {mode = Graphics;
+   ctm = Pdftransform.i_matrix;
    clipping_path =
      [(EvenOdd, [(Not_hole, Closed,
                  [Straight ((minx, miny), (minx, maxy));
@@ -212,6 +218,16 @@ let initial_state (minx, miny, maxx, maxy) =
    d1 = None;
    marked_content_point = None;
    marked_content = []}
+
+let compare_state a b =
+  let te_a = a.text_state.font_data.text_extractor in
+  let te_b = b.text_state.font_data.text_extractor in
+    a.text_state.font_data.text_extractor <- None;
+    b.text_state.font_data.text_extractor <- None;
+    let r = compare a b in
+      a.text_state.font_data.text_extractor <- te_a;
+      b.text_state.font_data.text_extractor <- te_b;
+      r
 
 let copystate state =
   let text_state = {state.text_state with leading = state.text_state.leading} in
@@ -884,8 +900,10 @@ let rec process_op ~pdf ~f ~remove ~stack ~state ~resources op =
   | Pdfops.Op_BT ->
       !state.text_state.t_m <- Pdftransform.i_matrix;
       !state.text_state.t_lm <- Pdftransform.i_matrix;
+      !state.mode <- Text;
       [op]
   | Pdfops.Op_ET ->
+      !state.mode <- Graphics;
       [op]
   | Pdfops.Op_Tc f ->
       !state.text_state.character_spacing <- f;
@@ -919,7 +937,7 @@ let rec process_op ~pdf ~f ~remove ~stack ~state ~resources op =
                        | Pdftext.StandardFont (_, encoding) -> Pdftext.table_of_encoding encoding
                        | _ -> null_hash ()
                        end;
-                     text_extractor = Pdftext.text_extractor_of_font_real fontobj}
+                     text_extractor = Some (Pdftext.text_extractor_of_font_real fontobj)}
                   in
                     !state.text_state.font_data <- font_data;
                     Hashtbl.add !state.text_state.font_cache s font_data
@@ -1057,7 +1075,6 @@ let rec process_op ~pdf ~f ~remove ~stack ~state ~resources op =
         else
           [op]
   | Pdfops.Op_Do s ->
-      Printf.printf "Op_Do: %s\n" s;
       begin match Pdf.lookup_direct pdf "/XObject" resources with
       | Some d ->
           begin match Pdf.indirect_number pdf s d, Pdf.lookup_direct pdf s d with
@@ -1070,10 +1087,13 @@ let rec process_op ~pdf ~f ~remove ~stack ~state ~resources op =
                   let x3, y3 = Pdftransform.transform_matrix !state.ctm (1., 0.) in
                   (*Printf.printf "(minx, miny, maxx, maxy) = %f, %f, %f, %f\n" x0 y0 x2 y2;*)
                   if f {state = copystate !state; content = Image s; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} <> Nonintersecting then
-                    (* 1. TODO: Remove also from the /Resources for this page or xobject. How do we know where we are? *)
-                    (* 2. TODO: We want to know properly what kind of intersection it is, so we know whether to chop or remove *)
-                    (* 3. TODO: Call out to chop it. *)
-                    []
+                    begin
+                      (* 1. TODO: Remove also from the /Resources for this page or xobject. How do we know where we are? *)
+                      (* 2. TODO: We want to know properly what kind of intersection it is, so we know whether to chop or remove *)
+                      (* 3. TODO: Call out to chop it. *)
+                      remove s;
+                      []
+                    end
                   else
                     [op]
               | Some (Pdf.Name "/Form") ->
@@ -1281,7 +1301,7 @@ and read_graphics_state_dictionary ~pdf ~f ~remove ~stack ~state ~resources s =
              | Pdftext.StandardFont (_, encoding) -> Pdftext.table_of_encoding encoding
              | _ -> null_hash ()
              end;
-           text_extractor = Pdftext.text_extractor_of_font_real fontobj}
+           text_extractor = Some (Pdftext.text_extractor_of_font_real fontobj)}
         in
           !state.text_state.font_data <- font_data;
     | _ -> ()
@@ -1385,7 +1405,7 @@ let compress ~pdf ~mediabox ~resources ~ops =
          let old_state = copystate !state in
          let stack_length = length !stack in
            ignore (process_op ~pdf ~f:(fun _ -> Nonintersecting) ~remove:(fun _ -> ()) ~stack ~state ~resources op);
-           if !state <> old_state || stack_length <> length !stack then opsout := op::!opsout)
+           if compare_state !state old_state <> 0 || stack_length <> length !stack then opsout := op::!opsout)
       ops;
     (rev !opsout)
 
@@ -1479,7 +1499,7 @@ let json_of_object state = function
           [("obj", `String "glyph");
            ("charcode", `Int charcode);
            ("bytes", `String bytes);
-           ("text", `String (Pdftext.utf8_of_codepoints (Pdftext.codepoints_of_text state.text_state.font_data.text_extractor bytes)))]
+           ("text", `String (Pdftext.utf8_of_codepoints (Pdftext.codepoints_of_text (unopt state.text_state.font_data.text_extractor) bytes)))]
   | InlineImage (dict, data) -> `Assoc [("obj", `String "inline image"); ("inline image", json_of_inline_image (dict, data))]
   | Image i -> `Assoc [("obj", `String "image"); ("image", `String i)]
   | Path p -> `Assoc [("obj", `String "path"); ("path", json_of_path p)]
@@ -1523,7 +1543,7 @@ let test_extract_text pdf range ch =
                  | Pdftext.CIDKeyedFont _ -> implode [char_of_int (charcode lsr 8); char_of_int (charcode land 0xFF)]
                  | _ -> string_of_char (char_of_int charcode)
                in
-               codepoints := Pdftext.codepoints_of_text state.text_state.font_data.text_extractor bytes::!codepoints;
+               codepoints := Pdftext.codepoints_of_text (unopt state.text_state.font_data.text_extractor) bytes::!codepoints;
                Encloses
            | _ -> Encloses
          in

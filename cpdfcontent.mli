@@ -92,7 +92,7 @@ type font_data =
   {mutable fontobj : Pdftext.font;
    mutable extra_metrics : float * float;
    mutable table : (int, string) Hashtbl.t;
-   mutable text_extractor : Pdftext.text_extractor}
+   mutable text_extractor : Pdftext.text_extractor option}
 
 type text_state =
   {mutable character_spacing : float;
@@ -109,8 +109,13 @@ type text_state =
    mutable t_m : Pdftransform.transform_matrix;
    mutable t_lm : Pdftransform.transform_matrix}
 
+type mode =
+  | Graphics
+  | Text
+
 type state =
-  {mutable ctm : Pdftransform.transform_matrix;
+  {mutable mode : mode;
+   mutable ctm : Pdftransform.transform_matrix;
    mutable partial_path : partial;
    mutable path : drawn_path;
    mutable clipping_path : path list;
