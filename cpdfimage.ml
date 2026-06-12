@@ -1632,3 +1632,5 @@ let process
     | _ -> ndone += 1 (* not a stream *)
   in
     Pdf.objiter process_obj pdf
+
+let redact pdf imageobjnum (minx, miny, maxx, maxy) = ()

@@ -34,7 +34,7 @@ type bounding_box =
 
 type overlap =
   | Encloses
-  | Intersects
+  | Intersects of bounding_box
   | Nonintersecting
 
 type partial =

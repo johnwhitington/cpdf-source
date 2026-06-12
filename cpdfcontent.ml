@@ -149,7 +149,7 @@ type bounding_box =
 
 type overlap =
   | Encloses
-  | Intersects
+  | Intersects of bounding_box
   | Nonintersecting
 
 type t =
@@ -441,7 +441,7 @@ let process_tj ~f ~stack ~state ~resources s =
         Printf.printf "ascent = %f, descent = %f\n" ascent descent
       end;
     let op_of_triples triples =
-      if List.for_all (function (_, _, (Intersects | Encloses)) -> true | _ -> false) triples then
+      if List.for_all (function (_, _, (Intersects _ | Encloses)) -> true | _ -> false) triples then
         let total_width = ~-.(fold_left ( +. ) 0. (map (fun (_, w, _) -> w) triples) *. 1000.) in
           Pdfops.Op_TJ [Pdf.Real total_width]
       else if List.for_all (function (_, _, Nonintersecting) -> true | _ -> false) triples then
@@ -450,7 +450,7 @@ let process_tj ~f ~stack ~state ~resources s =
         let compose_tj_group = function
           | [] -> assert false
           | (_, _, Nonintersecting)::_ as l -> Pdf.String (string_of_charcodes (map (fun (c, _, _) -> c) l) !state.text_state.font_data.fontobj)
-          | (_, _, (Encloses | Intersects))::_ as l -> Pdf.Real (~-.(fold_left ( +. ) 0. (map (fun (_, w, _) -> w) l)) *. 1000.)
+          | (_, _, (Encloses | Intersects _))::_ as l -> Pdf.Real (~-.(fold_left ( +. ) 0. (map (fun (_, w, _) -> w) l)) *. 1000.)
         in
         let groups = split_around_two (fun (_, _, f_result) (_, _, f_result') -> f_result <> f_result') triples in
           Pdfops.Op_TJ (map compose_tj_group groups)
@@ -679,10 +679,36 @@ let emit_path_bounding_box ~content ~stroking ~f ~state =
         in
           ignore (f ({state = copystate !state; content; bounding_box = Quad (minx, miny, minx, maxy, maxx, maxy, maxx, miny)}))
 
+(* Given an image object number and coordinates within that image, call out to imagemagick to redact the given rectangle. *)
+let chop_image pdf imageobjnum ctm (x0, y0, x1, y1, x2, y2, x3, y3) =
+  let image = Pdf.lookup_obj pdf imageobjnum in
+  Printf.printf "chop_image: %f, %f %f, %f %f, %f %f, %f\n" x0 y0 x1 y1 x2 y2 x3 y3;
+  (* 1. Calculate minx, miny, maxx, maxy in image space by inverting the ctm and asking what the unit square maps back to. *)
+  let w =
+    match Pdf.lookup_direct pdf "/Width" image with
+    | Some (Pdf.Integer i) -> i
+    | _ -> raise Exit
+  in
+  let h =
+    match Pdf.lookup_direct pdf "/Height" image with
+    | Some (Pdf.Integer i) -> i
+    | _ -> raise Exit
+  in
+  let minx, miny, maxx, maxy =
+    let inverse = Pdftransform.matrix_invert ctm in
+      let minx, miny = Pdftransform.transform_matrix inverse (x0 *. float w, y0 *. float h) in
+      let maxx, maxy = Pdftransform.transform_matrix inverse (x2 *. float w, y2 *. float h) in
+         minx, miny, maxx, maxy
+  in
+  Printf.printf "In image space, minx, miny = %f, %f maxx, maxy = %f, %f\n" minx miny maxx maxy;
+  (* 2. Send the image to file. Can we re-use Cpdfimage code here? In fact, we really must to capture all the complexity. *)
+  (* 3. Construct an imagemagick command line and run it. magick ~/Desktop/png.png -stroke none -draw "rectangle 100,100 200,300" out.png *)
+  (* 4. Read the image back in. Again re-using Cpdfimage code. *)
+  Cpdfimage.redact pdf imageobjnum (minx, miny, maxx, maxy)
+
 (* TODO Allow this to expand operations, optionally e.g for -remove-xobjects.
-   TODO Allow filtering on object, but also on ops (only one of these options at a time though.
+   TODO Allow filtering on object, but also on ops (only one of these options at a time though).
    TODO Allow iter and map to save creating all the sublists?
-   TODO Allow removal of un-needed ops automatically by checking state. How much of our possible compressor is this?
    TODO Change to take all ops not just one op? Does this help with the compressor? *)
 let rec process_op ~pdf ~f ~remove ~stack ~state ~resources op =
   let remove : string -> unit = remove in
@@ -1068,12 +1094,11 @@ let rec process_op ~pdf ~f ~remove ~stack ~state ~resources op =
       let x1, y1 = Pdftransform.transform_matrix !state.ctm (0., 1.) in
       let x2, y2 = Pdftransform.transform_matrix !state.ctm (1., 1.) in
       let x3, y3 = Pdftransform.transform_matrix !state.ctm (1., 0.) in
-        if f {state = copystate !state; content = InlineImage (dict, data); bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} <> Nonintersecting then
-          (* 1. TODO: We want to know properly what kind of intersection it is, so we know whether to chop or remove *)
-          (* 2. TODO: Call out to chop it. *)
-          []
-        else
-          [op]
+        begin match f {state = copystate !state; content = InlineImage (dict, data); bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} with
+        | Encloses -> []
+        | Intersects _ -> [] (* TODO: Chop *)
+        | Nonintersecting -> [op]
+        end
   | Pdfops.Op_Do s ->
       begin match Pdf.lookup_direct pdf "/XObject" resources with
       | Some d ->
@@ -1085,17 +1110,11 @@ let rec process_op ~pdf ~f ~remove ~stack ~state ~resources op =
                   let x1, y1 = Pdftransform.transform_matrix !state.ctm (0., 1.) in
                   let x2, y2 = Pdftransform.transform_matrix !state.ctm (1., 1.) in
                   let x3, y3 = Pdftransform.transform_matrix !state.ctm (1., 0.) in
-                  (*Printf.printf "(minx, miny, maxx, maxy) = %f, %f, %f, %f\n" x0 y0 x2 y2;*)
-                  if f {state = copystate !state; content = Image s; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} <> Nonintersecting then
-                    begin
-                      (* 1. TODO: Remove also from the /Resources for this page or xobject. How do we know where we are? *)
-                      (* 2. TODO: We want to know properly what kind of intersection it is, so we know whether to chop or remove *)
-                      (* 3. TODO: Call out to chop it. *)
-                      remove s;
-                      []
+                    begin match f {state = copystate !state; content = Image s; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} with
+                    | Encloses -> remove s; []
+                    | Intersects (Quad (x0, y0, x1, y1, x2, y2, x3, y3)) -> chop_image pdf xobjnum !state.ctm (x0, y0, x1, y1, x2, y2, x3, y3); [op]
+                    | Nonintersecting -> [op]
                     end
-                  else
-                    [op]
               | Some (Pdf.Name "/Form") ->
                   let matrix = Pdf.parse_matrix pdf "/Matrix" xobj in
                   let minx, miny, maxx, maxy =
