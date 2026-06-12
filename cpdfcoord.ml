@@ -179,6 +179,7 @@ and parse_units pdf page numbers = function
       parse_units pdf page (x::numbers) more
   | Pdfgenlex.LexName "pt"::more ->
       parse_units pdf page numbers more
+  (* TODO These should be extended for bleed, trim, art as above, surely? *)
   | Pdfgenlex.LexName
       (( "PW" | "PH" | "CW" | "CH" | "PMINX" | "PMINY" | "PMAXX" | "PMAXY"
        | "CMINX" | "CMINY" | "CMAXX" | "CMAXY") as page_characteristic)::more ->

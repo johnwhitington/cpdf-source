@@ -5369,6 +5369,7 @@ let rec go () =
       let range = parse_pagespec pdf (get_pagespec ()) in
         write_pdf false (Cpdfpage.redact ~process_struct_tree:args.process_struct_trees pdf range)
   | RedactShape rectspec ->
+      (* TODO When we allow rectangles only, we can then fix this to pass all the rectangles, so that "CMINX CMINY CW CH" and hence ./cpdftest -redact-whole-page work. *)
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
       let minx, miny, w, h = Cpdfcoord.parse_rectangle pdf rectspec in
