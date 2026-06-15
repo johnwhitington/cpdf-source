@@ -422,7 +422,6 @@ let optimise_tj = function
   | _ -> assert false
 
 let process_tj ~f ~stack ~state ~resources s =
-  let f : t -> overlap = f in
   let vertical = vertical !state.text_state.font_data.fontobj in
   let debug = false in
   if debug then Printf.printf "process_tj %S\n" s;
@@ -666,7 +665,7 @@ let emit_path_bounding_box ~content ~stroking ~f ~state =
   let path = transform_path !state.ctm (match content with Clip | Shading _ -> hd !state.clipping_path | _ -> !state.path.path) in
   let bbox = bbox_of_path path in
     match bbox with
-    | None -> ()
+    | None -> Nonintersecting
     | Some (minx, maxx, miny, maxy) ->
         let minx, maxx, miny, maxy =
           if stroking then
@@ -677,7 +676,7 @@ let emit_path_bounding_box ~content ~stroking ~f ~state =
           else
             (minx, maxx, miny, maxy)
         in
-          ignore (f ({state = copystate !state; content; bounding_box = Quad (minx, miny, minx, maxy, maxx, maxy, maxx, miny)}))
+          f ({state = copystate !state; content; bounding_box = Quad (minx, miny, minx, maxy, maxx, maxy, maxx, miny)})
 
 (* Given an image object number and coordinates within that image, call out to imagemagick to redact the given rectangle. *)
 let chop_image pdf imageobjnum ctm (x0, y0, x1, y1, x2, y2, x3, y3) =
@@ -808,16 +807,18 @@ let rec process_op ~pdf ~f ~remove ~stack ~state ~resources op =
       ignore (map (process_op ~pdf ~f ~remove ~stack ~state ~resources) [Pdfops.Op_h; Pdfops.Op_B']);
       [op]
   | Pdfops.Op_f | Pdfops.Op_F ->
-        ignore (process_op ~pdf ~f ~remove ~stack ~state ~resources Pdfops.Op_h);
-        begin match !state.partial_path with
-        | PartialPath (sp, cp, segs, subpaths) ->
-            (* segs is empty, due to [Op_h] *)
-            !state.partial_path <- PartialPath (sp, cp, [], []);
-            !state.path <- {filled = true; stroked = false; path = (NonZero, rev subpaths)};
-            emit_path_bounding_box ~content:(Path !state.path) ~stroking:false ~f ~state
-        | _ -> ()
-        end;
-        [op]
+      ignore (process_op ~pdf ~f ~remove ~stack ~state ~resources Pdfops.Op_h);
+      begin match !state.partial_path with
+      | PartialPath (sp, cp, segs, subpaths) ->
+          (* segs is empty, due to [Op_h] *)
+          !state.partial_path <- PartialPath (sp, cp, [], []);
+          !state.path <- {filled = true; stroked = false; path = (NonZero, rev subpaths)};
+          begin match emit_path_bounding_box ~content:(Path !state.path) ~stroking:false ~f ~state with
+          | Nonintersecting -> [op]
+          | Encloses | Intersects _ -> [Pdfops.Op_n]
+          end
+      | _ -> [op]
+      end
   | Pdfops.Op_S ->
       begin match !state.partial_path with
       | PartialPath (sp, cp, segs, subpaths) ->
@@ -831,10 +832,12 @@ let rec process_op ~pdf ~f ~remove ~stack ~state ~resources op =
               !state.partial_path <- PartialPath (sp, cp, [], []);
               !state.path <- {filled = false; stroked = true; path = (EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths))}
             end;
-          emit_path_bounding_box ~content:(Path !state.path) ~stroking:true ~f ~state
-      | _ -> ()
-      end;
-      [op]
+          begin match emit_path_bounding_box ~content:(Path !state.path) ~stroking:true ~f ~state with
+          | Nonintersecting -> [op]
+          | Encloses | Intersects _ -> [Pdfops.Op_n]
+          end
+      | _ -> [op]
+      end
   | Pdfops.Op_B ->
       begin match !state.partial_path with
       | PartialPath (sp, cp, segs, subpaths) ->
@@ -848,28 +851,32 @@ let rec process_op ~pdf ~f ~remove ~stack ~state ~resources op =
               !state.partial_path <- PartialPath (sp, cp, [], []);
               !state.path <- {filled = true; stroked = true; path = (NonZero, rev ((Not_hole, Open, rev segs)::subpaths))}
             end;
-          emit_path_bounding_box ~content:(Path !state.path) ~stroking:true ~f ~state
-      | _ -> ()
-      end;
-      [op]
+          begin match emit_path_bounding_box ~content:(Path !state.path) ~stroking:true ~f ~state with
+          | Nonintersecting -> [op]
+          | Encloses | Intersects _ -> [Pdfops.Op_n]
+          end
+      | _ -> [op]
+      end
   | Pdfops.Op_B' ->
-        ignore (process_op ~pdf ~f ~remove ~stack ~state ~resources Pdfops.Op_h);
-        begin match !state.partial_path with
-        | PartialPath (sp, cp, segs, subpaths) ->
-            if segs = [] then
-              begin
-                !state.partial_path <- PartialPath (sp, cp, [], []);
-                !state.path <- {filled = true; stroked = true; path = (EvenOdd, rev subpaths)}
-              end
-            else
-              begin
-                !state.partial_path <- PartialPath (sp, cp, [], []);
-                !state.path <- {filled = true; stroked = true; path = (EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths))}
-              end;
-            emit_path_bounding_box ~content:(Path !state.path) ~stroking:true ~f ~state
-        | _ -> ()
-        end;
-        [op]
+      ignore (process_op ~pdf ~f ~remove ~stack ~state ~resources Pdfops.Op_h);
+      begin match !state.partial_path with
+      | PartialPath (sp, cp, segs, subpaths) ->
+          if segs = [] then
+            begin
+              !state.partial_path <- PartialPath (sp, cp, [], []);
+              !state.path <- {filled = true; stroked = true; path = (EvenOdd, rev subpaths)}
+            end
+          else
+            begin
+              !state.partial_path <- PartialPath (sp, cp, [], []);
+              !state.path <- {filled = true; stroked = true; path = (EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths))}
+            end;
+          begin match emit_path_bounding_box ~content:(Path !state.path) ~stroking:true ~f ~state with
+          | Nonintersecting -> [op]
+          | Encloses | Intersects _ -> [Pdfops.Op_n]
+          end
+      | _ -> [op]
+      end
   | Pdfops.Op_f' ->
       begin match !state.partial_path with
       | PartialPath (sp, cp, segs, subpaths) ->
@@ -883,12 +890,14 @@ let rec process_op ~pdf ~f ~remove ~stack ~state ~resources op =
               !state.partial_path <- PartialPath (sp, cp, [], []);
               !state.path <- {filled = true; stroked = false; path = (EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths))}
             end;
-          emit_path_bounding_box ~content:(Path !state.path) ~stroking:false ~f ~state
-      | _ -> ()
-      end;
-      [op]
+          begin match emit_path_bounding_box ~content:(Path !state.path) ~stroking:false ~f ~state with
+          | Nonintersecting -> [op]
+          | Encloses | Intersects _ -> [Pdfops.Op_n]
+          end
+      | _ -> [op]
+      end
   | Pdfops.Op_n ->
-      emit_path_bounding_box ~content:Clip ~stroking:false ~f ~state;
+      ignore (emit_path_bounding_box ~content:Clip ~stroking:false ~f ~state);
       !state.partial_path <- NoPartial;
       [op]
   | Pdfops.Op_re (x, y, w, h) ->
@@ -1077,18 +1086,21 @@ let rec process_op ~pdf ~f ~remove ~stack ~state ~resources op =
           | Some r ->
               begin try
                 let minx, miny, maxx, maxy = Pdf.parse_rectangle pdf r in
-                  ignore (f {state = copystate !state; content = Shading s; bounding_box = Quad (minx, miny, minx, maxy, maxx, maxy, maxx, miny)})
+                  match f {state = copystate !state; content = Shading s; bounding_box = Quad (minx, miny, minx, maxy, maxx, maxy, maxx, miny)} with
+                  | Nonintersecting -> [op]
+                  | Intersects _ | Encloses -> []
               with
-                _ -> ()
+                _ -> [op]
               end
           | None ->
               (* This is an unbounded shading, not recommended. So we use the current clipping path. *)
-              emit_path_bounding_box ~content:(Shading s) ~stroking:false ~f ~state
+              match emit_path_bounding_box ~content:(Shading s) ~stroking:false ~f ~state with
+              | Nonintersecting -> [op]
+              | Intersects _ | Encloses -> []
           end
       with
-        _ -> ()
-      end;
-      [op]
+        _ -> [op]
+      end
   | Pdfops.InlineImage (dict, _, data) ->
       let x0, y0 = Pdftransform.transform_matrix !state.ctm (0., 0.) in
       let x1, y1 = Pdftransform.transform_matrix !state.ctm (0., 1.) in
@@ -1141,12 +1153,12 @@ let rec process_op ~pdf ~f ~remove ~stack ~state ~resources op =
                        content. Perhaps any redacted one needs automatically
                        copying to a new name? But what about xobjects of
                        xobjects and so on? *)
-                    if !to_remove <> [] then
+                    (*if !to_remove <> [] then
                       begin
                         Printf.printf "To remove at xobject level... ";
                         iter (Printf.printf "%s ") !to_remove;
                         flprint "\n";
-                      end;
+                      end;*)
                     let resources' =
                       let xobjects =
                         match Pdf.lookup_chain pdf xobj ["/Resources"; "/XObject"] with

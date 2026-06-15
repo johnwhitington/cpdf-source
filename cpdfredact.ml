@@ -41,12 +41,12 @@ let redact_page pdf ~path page =
       ~resources:page.Pdfpage.resources
       ~ops:(Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content)
   in
-    if !to_remove <> [] then
+    (*if !to_remove <> [] then
       begin
         Printf.printf "To remove at page level... ";
         iter (Printf.printf "%s ") !to_remove;
         flprint "\n";
-      end;
+      end;*)
     let ops =
       lose (function Pdfops.Op_Do n when mem n !to_remove -> true | _ -> false) ops
     in
