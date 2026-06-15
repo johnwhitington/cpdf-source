@@ -156,7 +156,7 @@ let read_encoding_table fmt length version b =
   | 4 -> read_format_4_encoding_table b;
   | 6 -> read_format_6_encoding_table b;
   | n ->
-      Pdfe.log (Printf.sprintf "read_encoding_table: format %i not known\n" n);
+      (*Pdfe.log (Printf.sprintf "read_encoding_table: format %i not known\n" n);*)
       null_hash ()
 
 let read_loca_table indexToLocFormat numGlyphs b =
