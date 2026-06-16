@@ -32,7 +32,7 @@ val process :
 
 (** Redact an image. Returns success or failure. *)
 val redact :
-  Pdf.t -> int -> (float * float * float * float) -> bool
+  Pdf.t -> int -> path_to_convert:string -> (float * float * float * float) -> bool
 
 (**/**)
 val image_of_input : ?subformat:Cpdfua.subformat -> ?title:string -> process_struct_tree:bool -> (Pdf.t -> Pdfio.bytes -> Pdf.pdfobject * (int * Pdf.pdfobject) list) -> Pdfio.input -> Pdf.t

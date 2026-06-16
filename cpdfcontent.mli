@@ -159,6 +159,7 @@ type t =
 (** Filter objects based on a predicate on [t]. *)
 val filter :
   pdf:Pdf.t ->
+  path_to_convert:string ->
   f:(t -> overlap) ->
   remove:(string -> unit) ->
   mediabox:(float * float * float * float) ->
