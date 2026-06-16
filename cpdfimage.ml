@@ -1633,4 +1633,40 @@ let process
   in
     Pdf.objiter process_obj pdf
 
-let redact pdf imageobjnum (minx, miny, maxx, maxy) = ()
+let redact pdf objnum (minx, miny, maxx, maxy) =
+  let s = Pdf.lookup_obj pdf objnum in
+    match s with
+    | Pdf.Stream ({contents = dict, _} as reference) ->
+        begin match
+          Pdf.lookup_direct pdf "/Subtype" dict,
+          Pdf.lookup_direct pdf "/Filter" dict,
+          Pdf.lookup_direct pdf "/BitsPerComponent" dict,
+          Pdf.lookup_direct pdf "/ImageMask" dict
+        with
+        | Some (Pdf.Name "/Image"), Some (Pdf.Name "/DCTDecode" | Pdf.Array [Pdf.Name "/DCTDecode"]), _, _ ->
+            begin
+              if !debug_image_processing then Printf.printf "Redacting image %i (JPEG)... %!" objnum;
+              (*jpeg_to_jpeg_wrapper objnum pdf ~force ~target_dpi_info ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale ~jpeg_to_jpeg_dpi ~interpolate ~q ~path_to_convert s dict reference*)
+              false
+            end
+        | Some (Pdf.Name "/Image"), Some (Pdf.Name "/JPXDecode" | Pdf.Array [Pdf.Name "/JPXDecode"]), _, _ ->
+            begin
+              if !debug_image_processing then Printf.printf "Redacting image %i (JPEG2000)... %!" objnum;
+              (*jpeg2000_to_jpeg2000_wrapper objnum pdf ~force ~target_dpi_info ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale ~jpeg_to_jpeg_dpi ~interpolate ~q:~-.qlossless2000 ~path_to_convert s dict reference*)
+              false
+            end
+        | Some (Pdf.Name "/Image"), _, Some (Pdf.Integer 1), _
+        | Some (Pdf.Name "/Image"), _, _, Some (Pdf.Boolean true) ->
+            (* 1bpp. Here we need to process losslessly JBIG2/JBIG2Lossy and CCITT and any others. *)
+            if !debug_image_processing then Printf.printf "Redacting image %i (1bpp)... %!" objnum;
+            false
+            (*recompress_1bpp_jbig2_lossless ?jbig2dec ~force:true ~pixel_threshold ~length_threshold ~path_to_jbig2enc pdf s dict reference*)
+            (*recompress_1bpp_ccitt_lossless ?jbig2dec ~force:true ~pixel_threshold ~length_threshold pdf s dict reference*)
+            (*recompress_1bpp_ccittg4_lossless ~im ?jbig2dec ~force:true ~pixel_threshold ~length_threshold pdf s dict reference*)
+        | Some (Pdf.Name "/Image"), _, _, _ ->
+            if !debug_image_processing then Printf.printf "Redacting image %i (lossless)... %!" objnum;
+            false
+            (*lossless_resample pdf ~force ~pixel_threshold ~length_threshold ~factor ~interpolate ~path_to_convert s dict reference*)
+        | _ -> Pdfe.log "Cpdfimage.redact: not an image"; false
+        end
+    | _ -> Pdfe.log "Cpdfimage.redact: not a stream"; false

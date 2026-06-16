@@ -30,8 +30,9 @@ val process :
   jpeg_to_jpeg_scale:float -> jpeg_to_jpeg_dpi:float ->
   path_to_jbig2dec:string -> path_to_jbig2enc:string -> path_to_convert:string -> int list -> Pdf.t -> unit
 
+(** Redact an image. Returns success or failure. *)
 val redact :
-  Pdf.t -> int -> (float * float * float * float) -> unit
+  Pdf.t -> int -> (float * float * float * float) -> bool
 
 (**/**)
 val image_of_input : ?subformat:Cpdfua.subformat -> ?title:string -> process_struct_tree:bool -> (Pdf.t -> Pdfio.bytes -> Pdf.pdfobject * (int * Pdf.pdfobject) list) -> Pdfio.input -> Pdf.t

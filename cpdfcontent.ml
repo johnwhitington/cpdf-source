@@ -1124,7 +1124,12 @@ let rec process_op ~pdf ~f ~remove ~stack ~state ~resources op =
                   let x3, y3 = Pdftransform.transform_matrix !state.ctm (1., 0.) in
                     begin match f {state = copystate !state; content = Image s; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} with
                     | Encloses -> remove s; []
-                    | Intersects (Quad (x0, y0, x1, y1, x2, y2, x3, y3)) -> chop_image pdf xobjnum !state.ctm (x0, y0, x1, y1, x2, y2, x3, y3); [op]
+                    | Intersects (Quad (x0, y0, x1, y1, x2, y2, x3, y3)) ->
+                        if chop_image pdf xobjnum !state.ctm (x0, y0, x1, y1, x2, y2, x3, y3) then [op] else
+                          begin
+                            Pdfe.log "Failed to chop image, removing whole image instead\n";
+                            []
+                          end
                     | Nonintersecting -> [op]
                     end
               | Some (Pdf.Name "/Form") ->
