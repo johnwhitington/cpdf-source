@@ -1633,9 +1633,10 @@ let process
   in
     Pdf.objiter process_obj pdf
 
-let redact_jpeg_to_jpeg pdf ~path_to_convert s dict reference =
+let redact_jpeg_to_jpeg pdf ~path_to_convert (minx, miny, maxx, maxy) s dict reference =
   complain_convert path_to_convert;
   Pdf.getstream s;
+  let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
   let out = Filename.temp_file "cpdf" "convertin.jpg" in
   let out2 = Filename.temp_file "cpdf" "convertout.jpg" in
   let fh = open_out_bin out in
@@ -1643,7 +1644,7 @@ let redact_jpeg_to_jpeg pdf ~path_to_convert s dict reference =
     close_out fh;
     let retcode =
       let command = 
-        Filename.quote_command path_to_convert ([out; out2])
+        Filename.quote_command path_to_convert ([out; "-stroke"; "none"; "-draw"; (Printf.sprintf "rectangle %f,%f %f,%f" minx (float_of_int h -. miny) maxx (float_of_int h -. maxy)); out2])
       in
         image_command command
     in
@@ -1655,8 +1656,8 @@ let redact_jpeg_to_jpeg pdf ~path_to_convert s dict reference =
           let newsize = bytes_size data in
             reference := (Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize), Pdf.Got data);
             close_in result;
-            remove out;
-            remove out2;
+            (*remove out;
+            remove out2;*)
             true
        with e ->
          if !debug_image_processing then Printf.printf "Error %S\n%!" (Printexc.to_string e);
@@ -1684,7 +1685,7 @@ let redact pdf objnum ~path_to_convert (minx, miny, maxx, maxy) =
         with
         | Some (Pdf.Name "/Image"), Some (Pdf.Name "/DCTDecode" | Pdf.Array [Pdf.Name "/DCTDecode"]), _, _ ->
             if !debug_image_processing then Printf.printf "Redacting image %i (JPEG)... %!" objnum;
-            let r = redact_jpeg_to_jpeg pdf ~path_to_convert s dict reference in
+            let r = redact_jpeg_to_jpeg pdf ~path_to_convert (minx, miny, maxx, maxy) s dict reference in
               if !debug_image_processing then Printf.printf "%b\n%!" r;
               r
         | Some (Pdf.Name "/Image"), Some (Pdf.Name "/JPXDecode" | Pdf.Array [Pdf.Name "/JPXDecode"]), _, _ ->
