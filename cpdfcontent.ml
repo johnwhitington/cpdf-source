@@ -695,9 +695,9 @@ let chop_image pdf ~path_to_convert imageobjnum ctm (x0, y0, x1, y1, x2, y2, x3,
   in
   let minx, miny, maxx, maxy =
     let inverse = Pdftransform.matrix_invert ctm in
-      let minx, miny = Pdftransform.transform_matrix inverse (x0 *. float w, y0 *. float h) in
-      let maxx, maxy = Pdftransform.transform_matrix inverse (x2 *. float w, y2 *. float h) in
-         minx, miny, maxx, maxy
+      let minx, miny = Pdftransform.transform_matrix inverse (x0, y0) in
+      let maxx, maxy = Pdftransform.transform_matrix inverse (x2, y2) in
+         minx *. float w, miny *. float h, maxx *. float w, maxy *. float h
   in
   Printf.printf "In image space, minx, miny = %f, %f maxx, maxy = %f, %f\n" minx miny maxx maxy;
   (* 2. Send the image to file. Can we re-use Cpdfimage code here? In fact, we really must to capture all the complexity. *)
