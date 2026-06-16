@@ -1633,6 +1633,101 @@ let process
   in
     Pdf.objiter process_obj pdf
 
+let redact_lossless pdf ~path_to_convert (minx, miny, maxx, maxy) s dict reference =
+  complain_convert path_to_convert;
+  let in_components = test_components pdf dict in
+  let in_bpc = test_bpc pdf dict in
+  (*Printf.printf "***lossless_resample IN dictionary: %S\n" (Pdfwrite.string_of_pdf dict); *)
+  (*Printf.printf "\n***IN components = %i, bpc = %i\n" in_components in_bpc;*)
+  let out3 = Filename.temp_file "cpdf" "dimens" in 
+  match lossless_out pdf ~invert_cmyk:false ~pixel_threshold:0 ~length_threshold:0 ".png" s dict reference with
+  | None -> false
+  | Some (out, out2, size, components, w, h) ->
+  let retcode =
+    let command = 
+      (Filename.quote_command path_to_convert
+        ((if components = 4 then ["-depth"; "8"; "-size"; string_of_int w ^ "x" ^ string_of_int h] else []) @ [out] @
+        (if components = 1 then ["-define"; "png:color-type=0"; "-colorspace"; "Gray"]
+         else if components = 3 then ["-define"; "png:color-type=2"; "-colorspace"; "RGB"]
+         else if components = 4 then ["-colorspace"; "CMYK"] else []) @
+        (if components = 4 then ["-write"] else []) @ [out2] @
+        (if components = 4 then ["-format"; "%w %h"; "info:"] else [])))
+      ^
+        (if components = 4 then " >" ^ out3 else "") (* Quoting would mangle redirection. *)
+    in
+      image_command command
+  in
+  try
+  if retcode = 0 then
+    begin
+      let result = open_in_bin out2 in
+      let newsize = in_channel_length result in
+        begin
+          match rev (explode out2) with
+          | 'k'::'y'::'m'::'c'::_ ->
+            (* We have '.cmyk' not '.png' returned. *)
+            let new_w, new_h = read_info_dimensions out3 in
+            let dict =
+              Pdf.remove_dict_entry
+                (Pdf.remove_dict_entry
+                  (Pdf.add_dict_entry
+                    (Pdf.add_dict_entry dict "/Height" (Pdf.Integer new_h))
+                    "/Width" (Pdf.Integer new_w))
+                  "/DecodeParms")
+                "/Filter"
+            in
+            if !debug_image_processing then Printf.printf "lossless resample %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
+            reference := (dict, Pdf.Got (Pdfio.bytes_of_input_channel result))
+          | _ -> 
+            reference :=
+              (match fst (obj_of_png_data pdf (Pdfio.bytes_of_input_channel result)) with
+              | Pdf.Stream {contents = Pdf.Dictionary d, data} as s ->
+                  let out_components = test_components pdf s in
+                  let out_bpc = test_bpc pdf s in
+                  (*Printf.printf "***OUT components = %i, bpc = %i\n" out_components out_bpc;*)
+                  let rgb_to_grey_special =
+                    let was_rgb =
+                      match Pdf.lookup_direct pdf "/ColorSpace" dict with
+                      | Some (Pdf.Name ("/DeviceRGB" | "/CalRGB")) -> true
+                      | _ -> false
+                    in
+                      in_bpc = out_bpc && in_components = 3 && out_components = 1 && was_rgb
+                  in
+                  (*Printf.printf "***rgb_to_grey_special = %b\n" rgb_to_grey_special;*)
+                  if (out_components <> in_components || in_bpc <> out_bpc) && not rgb_to_grey_special then
+                    begin
+                      if !debug_image_processing then Printf.printf "wrong bpc / components returned. Skipping.\n%!";
+                      !reference
+                    end
+                  else
+                  begin
+                    if !debug_image_processing then Printf.printf "lossless resample %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
+                    let d' = fold_right (fun (k, v) d -> if k <> "/ColorSpace" || rgb_to_grey_special then add k v d else d) d (match dict with Pdf.Dictionary x -> x | _ -> []) in
+                      (*Printf.printf "***lossless_resample OUT dictionary: %S\n" (Pdfwrite.string_of_pdf (Pdf.Dictionary d')); *)
+                      (Pdf.Dictionary d', data)
+                  end
+              | _ -> assert false)
+        end;
+        close_in result;
+        remove out;
+        remove out2;
+        remove out3;
+        true
+    end
+    else
+      begin
+        remove out;
+        remove out2;
+        remove out3;
+        false
+      end
+  with e ->
+    if !debug_image_processing then Printf.printf "Unable: %S\n" (Printexc.to_string e);
+    remove out;
+    remove out2;
+    remove out3;
+    false
+
 let redact_jpeg_to_jpeg pdf ~path_to_convert (minx, miny, maxx, maxy) s dict reference =
   complain_convert path_to_convert;
   Pdf.getstream s;
@@ -1704,8 +1799,9 @@ let redact pdf objnum ~path_to_convert (minx, miny, maxx, maxy) =
             (*recompress_1bpp_ccittg4_lossless ~im ?jbig2dec ~force:true ~pixel_threshold ~length_threshold pdf s dict reference*)
         | Some (Pdf.Name "/Image"), _, _, _ ->
             if !debug_image_processing then Printf.printf "Redacting image %i (lossless)... %!" objnum;
-            false
-            (*lossless_resample pdf ~force ~pixel_threshold ~length_threshold ~factor ~interpolate ~path_to_convert s dict reference*)
+            let r = redact_lossless pdf ~path_to_convert (minx, miny, maxx, maxy) s dict reference in
+              if !debug_image_processing then Printf.printf "%b\n%!" r;
+              r
         | _ -> Pdfe.log "Cpdfimage.redact: not an image"; false
         end
     | _ -> Pdfe.log "Cpdfimage.redact: not a stream"; false
