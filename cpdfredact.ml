@@ -16,7 +16,7 @@ let box_matches (minx, miny, maxx, maxy) {Cpdfcontent.content; bounding_box = Qu
     box_overlap_float minx miny maxx maxy bminx bminy bmaxx bmaxy
   in
   let wholly_contained (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy) =
-    bminx > minx && bmaxx < maxx && bminy > miny && bmaxx < maxy
+    bminx > minx && bmaxx < maxx && bminy > miny && bmaxy < maxy
   in
     if wholly_contained (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy) then Cpdfcontent.Encloses else
      match any_intersection (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy) with
