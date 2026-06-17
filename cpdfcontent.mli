@@ -162,7 +162,6 @@ val filter :
   path_to_jbig2dec:string ->
   path_to_convert:string ->
   path_to_jbig2enc:string ->
-  onebppmethod:string ->
   f:(t -> overlap) ->
   remove:(string -> unit) ->
   mediabox:(float * float * float * float) ->

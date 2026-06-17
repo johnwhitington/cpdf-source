@@ -1811,7 +1811,7 @@ let redact_jpeg2000 pdf ~path_to_convert (minx, miny, maxx, maxy) s dict referen
 let redact_1bpp ?jbig2dec ~path_to_jbig2enc pdf s dict reference =
   false
 
-let redact pdf objnum ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~onebppmethod (minx, miny, maxx, maxy) =
+let redact pdf objnum ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc (minx, miny, maxx, maxy) =
   let s = Pdf.lookup_obj pdf objnum in
     match s with
     | Pdf.Stream ({contents = dict, _} as reference) ->

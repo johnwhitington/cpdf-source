@@ -6,7 +6,6 @@ val redact :
   path_to_jbig2dec:string ->
   path_to_convert:string ->
   path_to_jbig2enc:string ->
-  onebppmethod:string ->
   path:(float * float * float * float) ->
   color:Cpdfaddtext.colour ->
   outline:bool ->
@@ -22,7 +21,6 @@ val apply :
   path_to_jbig2dec:string ->
   path_to_convert:string ->
   path_to_jbig2enc:string ->
-  onebppmethod:string ->
   ?typ:string ->
   color:Cpdfaddtext.colour ->
   outline:bool ->

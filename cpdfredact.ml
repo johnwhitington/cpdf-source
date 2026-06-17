@@ -30,7 +30,7 @@ let select_boxes shape boxes =
       keep (fun box -> box_matches (minx, miny, maxx, maxy) box <> Cpdfcontent.Nonintersecting) boxes
 
 (* Redact a path on a page *)
-let redact_page pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~onebppmethod ~path page =
+let redact_page pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~path page =
   let to_remove = ref [] in
   let ops =
     Cpdfcontent.filter
@@ -38,7 +38,6 @@ let redact_page pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~onebpp
       ~path_to_jbig2dec
       ~path_to_convert
       ~path_to_jbig2enc
-      ~onebppmethod
       ~f:(box_matches path)
       ~remove:(fun s -> to_remove := s::!to_remove)
       ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox)
@@ -66,11 +65,11 @@ let redact_page pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~onebpp
          Pdfpage.content = [Pdfops.stream_of_ops ops];
          Pdfpage.resources = resources'}
 
-let redact pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~onebppmethod ~path:((minx, miny, maxx, maxy) as path) ~color ~outline ~opacity ~linewidth ~underneath range =
+let redact pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~path:((minx, miny, maxx, maxy) as path) ~color ~outline ~opacity ~linewidth ~underneath range =
   let pdf =
     Cpdfpage.process_pages
       (Pdfpage.ppstub
-        (fun pnum page -> if mem pnum range then redact_page pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~onebppmethod ~path page else page))
+        (fun pnum page -> if mem pnum range then redact_page pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~path page else page))
       pdf
       range
   in
@@ -87,7 +86,7 @@ let redact_add_rectangle_pnum pdf ~path:(minx, miny, maxx, maxy) ~color ~outline
     color outline linewidth opacity (Cpdfposition.PosLeft(minx, miny)) "/Absolute" underneath [pnum] pdf
 
 (* Apply redaction annotations. *)
-let apply pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~onebppmethod ?(typ="/Redact") ~color ~outline ~opacity ~linewidth ~underneath range =
+let apply pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ?(typ="/Redact") ~color ~outline ~opacity ~linewidth ~underneath range =
   let rectangles = ref [] in
   let apply_page pnum page =
     match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
@@ -116,7 +115,7 @@ let apply pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~onebppmethod
               | Some rect ->
                   let path = Pdf.parse_rectangle pdf rect in
                     rectangles =| (pnum, path);
-                    redact_page pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~onebppmethod ~path page
+                    redact_page pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~path page
               | None ->
                   page)
             page
@@ -192,7 +191,7 @@ let show_bounding_boxes ~fast ~shape ~light pdf range =
   let show_bounding_boxes_page page =
     let ops = Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content in
     let page_boxes = ref [] in
-      ignore (Cpdfcontent.filter ~pdf ~path_to_jbig2dec:"" ~path_to_convert:"" ~path_to_jbig2enc:"" ~onebppmethod:"" ~f:(fun page_obj -> page_boxes =| page_obj; Nonintersecting) ~remove:(fun _ -> ()) ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox) ~resources:page.Pdfpage.resources ~ops);
+      ignore (Cpdfcontent.filter ~pdf ~path_to_jbig2dec:"" ~path_to_convert:"" ~path_to_jbig2enc:"" ~f:(fun page_obj -> page_boxes =| page_obj; Nonintersecting) ~remove:(fun _ -> ()) ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox) ~resources:page.Pdfpage.resources ~ops);
       !page_boxes
   in
   let bboxes = ref [] in
