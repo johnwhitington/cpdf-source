@@ -5375,17 +5375,28 @@ let rec go () =
       let minx, miny, w, h = Cpdfcoord.parse_rectangle pdf rectspec in
       let maxx, maxy = minx +. w, miny +. h in
       let path = (minx, miny, maxx, maxy) in
-      let pdf = Cpdfredact.redact pdf ~path_to_convert:args.path_to_im ~path ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth ~underneath:args.underneath range in
+      let pdf =
+        Cpdfredact.redact
+          pdf ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc ~onebppmethod:args.onebppmethod
+          ~path ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth ~underneath:args.underneath range
+      in
         write_pdf false pdf
   | RedactApply ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
-      let pdf = Cpdfredact.apply pdf ~path_to_convert:args.path_to_im ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth ~underneath:args.underneath range in
+      let pdf =
+        Cpdfredact.apply pdf ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc ~onebppmethod:args.onebppmethod
+        ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth ~underneath:args.underneath range
+      in
         write_pdf false pdf
   | RedactApplyType s ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
-      let pdf = Cpdfredact.apply pdf ~path_to_convert:args.path_to_im ~typ:("/" ^ s) ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth ~underneath:args.underneath range in
+      let pdf =
+        Cpdfredact.apply
+          pdf ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc ~onebppmethod:args.onebppmethod
+          ~typ:("/" ^ s) ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth ~underneath:args.underneath range
+      in
         write_pdf false pdf
   | Rasterize ->
       let pdf = get_single_pdf args.op false in

@@ -1768,7 +1768,7 @@ let redact_jpeg_to_jpeg pdf ~path_to_convert (minx, miny, maxx, maxy) s dict ref
         false
       end
 
-let redact pdf objnum ~path_to_convert (minx, miny, maxx, maxy) =
+let redact pdf objnum ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~onebppmethod (minx, miny, maxx, maxy) =
   let s = Pdf.lookup_obj pdf objnum in
     match s with
     | Pdf.Stream ({contents = dict, _} as reference) ->
@@ -1791,12 +1791,35 @@ let redact pdf objnum ~path_to_convert (minx, miny, maxx, maxy) =
             end
         | Some (Pdf.Name "/Image"), _, Some (Pdf.Integer 1), _
         | Some (Pdf.Name "/Image"), _, _, Some (Pdf.Boolean true) ->
-            (* 1bpp. Here we need to process losslessly JBIG2/JBIG2Lossy and CCITT and any others. *)
             if !debug_image_processing then Printf.printf "Redacting image %i (1bpp)... %!" objnum;
-            false
-            (*recompress_1bpp_jbig2_lossless ?jbig2dec ~force:true ~pixel_threshold ~length_threshold ~path_to_jbig2enc pdf s dict reference*)
-            (*recompress_1bpp_ccitt_lossless ?jbig2dec ~force:true ~pixel_threshold ~length_threshold pdf s dict reference*)
-            (*recompress_1bpp_ccittg4_lossless ~im ?jbig2dec ~force:true ~pixel_threshold ~length_threshold pdf s dict reference*)
+            let jbig2dec = match path_to_jbig2dec with "" -> None | s -> Some s in
+              begin match onebppmethod with
+              | "JBIG2" ->
+                  begin
+                    if !debug_image_processing then Printf.printf "Redacting image %i (1bpp to JBIG2)... %!" objnum;
+                    (*redact_1bpp_jbig2_lossless ?jbig2dec ~path_to_jbig2enc pdf s dict reference*)
+                    false
+                  end
+              | "CCITT" ->
+                  begin
+                    if !debug_image_processing then Printf.printf "Redacting image %i (1bpp to CCITT)... %!" objnum;
+                    (*recompress_1bpp_ccitt_lossless ?jbig2dec pdf s dict reference*)
+                    false
+                  end
+              | "CCITTG4" ->
+                  begin
+                    if !debug_image_processing then Printf.printf "Redacting image %i (1bpp to CCITTG4)... %!" objnum;
+                    (*recompress_1bpp_ccittg4_lossless ~path_to_convert ?jbig2dec pdf s dict reference*)
+                    false
+                  end
+              | "JBIG2Lossy" ->
+                  false
+              | "None" ->
+                  false
+              | _ ->
+                  Pdfe.log "unknown onebppmethod";
+                  false
+              end
         | Some (Pdf.Name "/Image"), _, _, _ ->
             if !debug_image_processing then Printf.printf "Redacting image %i (lossless)... %!" objnum;
             let r = redact_lossless pdf ~path_to_convert (minx, miny, maxx, maxy) s dict reference in
