@@ -1728,7 +1728,7 @@ let redact_lossless pdf ~path_to_convert (minx, miny, maxx, maxy) s dict referen
     remove out3;
     false
 
-let redact_jpeg_to_jpeg pdf ~path_to_convert (minx, miny, maxx, maxy) s dict reference =
+let redact_jpeg pdf ~path_to_convert (minx, miny, maxx, maxy) s dict reference =
   complain_convert path_to_convert;
   Pdf.getstream s;
   let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
@@ -1768,6 +1768,46 @@ let redact_jpeg_to_jpeg pdf ~path_to_convert (minx, miny, maxx, maxy) s dict ref
         false
       end
 
+let redact_jpeg2000 pdf ~path_to_convert (minx, miny, maxx, maxy) s dict reference =
+  complain_convert path_to_convert;
+  let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
+  Pdf.getstream s;
+  let out = Filename.temp_file "cpdf" "convertin.jp2" in
+  let out2 = Filename.temp_file "cpdf" "convertout.jp2" in
+  let fh = open_out_bin out in
+    begin match s with Pdf.Stream {contents = _, Pdf.Got d} -> Pdfio.bytes_to_output_channel fh d | _ -> () end;
+    close_out fh;
+    let retcode =
+      let command = 
+        Filename.quote_command path_to_convert ([out; "-stroke"; "none"; "-draw"; (Printf.sprintf "rectangle %f,%f %f,%f" minx (float_of_int h -. miny) maxx (float_of_int h -. maxy)); out2])
+      in
+        image_command command
+    in
+    if retcode = 0 then
+      begin
+        try
+          let result = open_in_bin out2 in
+          let newsize = in_channel_length result in
+          let data = Pdfio.bytes_of_input_channel result in
+            reference := Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize), Pdf.Got data;
+            close_in result;
+            remove out;
+            remove out2;
+            true
+       with e ->
+         if !debug_image_processing then Printf.printf "Error %S\n%!" (Printexc.to_string e);
+         remove out;
+         remove out2;
+         false
+      end
+    else
+      begin
+        if !debug_image_processing then Printf.printf "external process failed\n%!";
+        remove out;
+        remove out2;
+        false
+      end
+
 let redact pdf objnum ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~onebppmethod (minx, miny, maxx, maxy) =
   let s = Pdf.lookup_obj pdf objnum in
     match s with
@@ -1780,15 +1820,14 @@ let redact pdf objnum ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~oneb
         with
         | Some (Pdf.Name "/Image"), Some (Pdf.Name "/DCTDecode" | Pdf.Array [Pdf.Name "/DCTDecode"]), _, _ ->
             if !debug_image_processing then Printf.printf "Redacting image %i (JPEG)... %!" objnum;
-            let r = redact_jpeg_to_jpeg pdf ~path_to_convert (minx, miny, maxx, maxy) s dict reference in
+            let r = redact_jpeg pdf ~path_to_convert (minx, miny, maxx, maxy) s dict reference in
               if !debug_image_processing then Printf.printf "%b\n%!" r;
               r
         | Some (Pdf.Name "/Image"), Some (Pdf.Name "/JPXDecode" | Pdf.Array [Pdf.Name "/JPXDecode"]), _, _ ->
-            begin
               if !debug_image_processing then Printf.printf "Redacting image %i (JPEG2000)... %!" objnum;
-              (*jpeg2000_to_jpeg2000_wrapper objnum pdf ~force ~target_dpi_info ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale ~jpeg_to_jpeg_dpi ~interpolate ~q:~-.qlossless2000 ~path_to_convert s dict reference*)
-              false
-            end
+              let r = redact_jpeg2000 pdf ~path_to_convert (minx, miny, maxx, maxy) s dict reference in
+                if !debug_image_processing then Printf.printf "%b\n%!" r;
+                r
         | Some (Pdf.Name "/Image"), _, Some (Pdf.Integer 1), _
         | Some (Pdf.Name "/Image"), _, _, Some (Pdf.Boolean true) ->
             if !debug_image_processing then Printf.printf "Redacting image %i (1bpp)... %!" objnum;
