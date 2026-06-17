@@ -1808,6 +1808,9 @@ let redact_jpeg2000 pdf ~path_to_convert (minx, miny, maxx, maxy) s dict referen
         false
       end
 
+let redact_1bpp ?jbig2dec ~path_to_jbig2enc pdf s dict reference =
+  false
+
 let redact pdf objnum ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~onebppmethod (minx, miny, maxx, maxy) =
   let s = Pdf.lookup_obj pdf objnum in
     match s with
@@ -1832,33 +1835,7 @@ let redact pdf objnum ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~oneb
         | Some (Pdf.Name "/Image"), _, _, Some (Pdf.Boolean true) ->
             if !debug_image_processing then Printf.printf "Redacting image %i (1bpp)... %!" objnum;
             let jbig2dec = match path_to_jbig2dec with "" -> None | s -> Some s in
-              begin match onebppmethod with
-              | "JBIG2" ->
-                  begin
-                    if !debug_image_processing then Printf.printf "Redacting image %i (1bpp to JBIG2)... %!" objnum;
-                    (*redact_1bpp_jbig2_lossless ?jbig2dec ~path_to_jbig2enc pdf s dict reference*)
-                    false
-                  end
-              | "CCITT" ->
-                  begin
-                    if !debug_image_processing then Printf.printf "Redacting image %i (1bpp to CCITT)... %!" objnum;
-                    (*recompress_1bpp_ccitt_lossless ?jbig2dec pdf s dict reference*)
-                    false
-                  end
-              | "CCITTG4" ->
-                  begin
-                    if !debug_image_processing then Printf.printf "Redacting image %i (1bpp to CCITTG4)... %!" objnum;
-                    (*recompress_1bpp_ccittg4_lossless ~path_to_convert ?jbig2dec pdf s dict reference*)
-                    false
-                  end
-              | "JBIG2Lossy" ->
-                  false
-              | "None" ->
-                  false
-              | _ ->
-                  Pdfe.log "unknown onebppmethod";
-                  false
-              end
+              redact_1bpp ?jbig2dec ~path_to_jbig2enc pdf s dict reference
         | Some (Pdf.Name "/Image"), _, _, _ ->
             if !debug_image_processing then Printf.printf "Redacting image %i (lossless)... %!" objnum;
             let r = redact_lossless pdf ~path_to_convert (minx, miny, maxx, maxy) s dict reference in
