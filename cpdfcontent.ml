@@ -1422,6 +1422,9 @@ let filter ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~f ~remove 
   let state = ref (initial_state mediabox) in
     flatten (map (process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~f ~remove ~stack ~state ~resources) ops)
 
+let postprocess_remove_empty_path_ops ops =
+  ops
+
 (* We run process_op over each op, losing any operation which doesn't alter the state.
    This is used, for example, to clean up redacted paths. And, of course, for efficiency. *)
 (* Experimental, do not use. *)

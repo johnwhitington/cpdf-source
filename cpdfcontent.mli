@@ -169,6 +169,8 @@ val filter :
   ops:Pdfops.t list ->
   Pdfops.t list
 
+val postprocess_remove_empty_path_ops : Pdfops.t list -> Pdfops.t list
+
 (** Process graphics operations and output result as JSON. *)
 val to_json :
   pdf:Pdf.t ->

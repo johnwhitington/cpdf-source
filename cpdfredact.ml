@@ -53,6 +53,9 @@ let redact_page pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~path p
     let ops =
       lose (function Pdfops.Op_Do n when mem n !to_remove -> true | _ -> false) ops
     in
+    let ops =
+      Cpdfcontent.postprocess_remove_empty_path_ops ops
+    in
     let resources' =
       let xobjects =
         match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
