@@ -679,10 +679,8 @@ let emit_path_bounding_box ~content ~stroking ~f ~state =
           f ({state = copystate !state; content; bounding_box = Quad (minx, miny, minx, maxy, maxx, maxy, maxx, miny)})
 
 (* Given an image object number and coordinates within that image, call out to imagemagick to redact the given rectangle. *)
-let chop_image pdf ~path_to_convert imageobjnum ctm (x0, y0, x1, y1, x2, y2, x3, y3) =
+let rec chop_image pdf ~path_to_convert imageobjnum ctm (x0, y0, x1, y1, x2, y2, x3, y3) =
   let image = Pdf.lookup_obj pdf imageobjnum in
-  Printf.printf "chop_image: %f, %f %f, %f %f, %f %f, %f\n" x0 y0 x1 y1 x2 y2 x3 y3;
-  (* 1. Calculate minx, miny, maxx, maxy in image space by inverting the ctm and asking what the unit square maps back to. *)
   let w =
     match Pdf.lookup_direct pdf "/Width" image with
     | Some (Pdf.Integer i) -> i
@@ -699,11 +697,11 @@ let chop_image pdf ~path_to_convert imageobjnum ctm (x0, y0, x1, y1, x2, y2, x3,
       let maxx, maxy = Pdftransform.transform_matrix inverse (x2, y2) in
          minx *. float w, miny *. float h, maxx *. float w, maxy *. float h
   in
-  Printf.printf "In image space, minx, miny = %f, %f maxx, maxy = %f, %f\n" minx miny maxx maxy;
-  (* 2. Send the image to file. Can we re-use Cpdfimage code here? In fact, we really must to capture all the complexity. *)
-  (* 3. Construct an imagemagick command line and run it. magick ~/Desktop/png.png -stroke none -draw "rectangle 100,100 200,300" out.png *)
-  (* 4. Read the image back in. Again re-using Cpdfimage code. *)
-  Cpdfimage.redact pdf imageobjnum ~path_to_convert (minx, miny, maxx, maxy)
+    Cpdfimage.redact pdf imageobjnum ~path_to_convert (minx, miny, maxx, maxy)
+  &&
+    match Pdf.lookup_immediate "/Mask" image with
+    | Some (Pdf.Indirect i) -> chop_image pdf ~path_to_convert i ctm (x0, y0, x1, y1, x2, y2, x3, y3) 
+    | _ -> true
 
 (* TODO Allow this to expand operations, optionally e.g for -remove-xobjects.
    TODO Allow filtering on object, but also on ops (only one of these options at a time though).
@@ -1107,9 +1105,8 @@ let rec process_op ~pdf ~path_to_convert ~f ~remove ~stack ~state ~resources op 
       let x2, y2 = Pdftransform.transform_matrix !state.ctm (1., 1.) in
       let x3, y3 = Pdftransform.transform_matrix !state.ctm (1., 0.) in
         begin match f {state = copystate !state; content = InlineImage (dict, data); bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} with
-        | Encloses -> []
-        | Intersects _ -> [] (* TODO: Chop *)
         | Nonintersecting -> [op]
+        | _ -> []
         end
   | Pdfops.Op_Do s ->
       begin match Pdf.lookup_direct pdf "/XObject" resources with
