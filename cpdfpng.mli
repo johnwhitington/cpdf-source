@@ -10,3 +10,6 @@ type t =
 
 (** Read a non-interlaced, non-alpha, non-palette PNG for inclusion in a PDF file. *)
 val read_png : Pdfio.input -> t
+
+(** Write a PNG. *)
+val write_png : t -> Pdfio.output -> unit

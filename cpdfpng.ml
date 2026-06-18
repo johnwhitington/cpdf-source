@@ -13,7 +13,7 @@ type t =
    idat : bytes}
 
 (* Writing *)
-(*let tbl =
+let tbl =
   ref ([||] : int32 array)
 
 let mktbl () =
@@ -73,14 +73,14 @@ let write_png png o =
   let ihdr = Bytes.make 13 '\000' in
   write_word ihdr 0 (i32ofi png.width);
   write_word ihdr 4 (i32ofi png.height);
-  Bytes.set ihdr 8 (char_of_int 8); (* bit depth *)
-  Bytes.set ihdr 9 (char_of_int 2); (* colour type *)
+  Bytes.set ihdr 8 (char_of_int png.bitdepth); (* bit depth *)
+  Bytes.set ihdr 9 (char_of_int png.colortype); (* colour type *)
   Bytes.set ihdr 10 (char_of_int 0); (* compression method *)
   Bytes.set ihdr 11 (char_of_int 0); (* filter method *)
   Bytes.set ihdr 12 (char_of_int 0); (* interlace method *)
   write_chunk o "IHDR" ihdr;
   write_chunk o "IDAT" (Bytes.unsafe_of_string (string_of_bytes png.idat));
-  write_chunk o "IEND" (Bytes.create 0)*)
+  write_chunk o "IEND" (Bytes.create 0)
 
 (* Reading *)
 let string_of_tag t =
