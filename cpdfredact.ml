@@ -68,7 +68,16 @@ let redact_page pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~path p
          Pdfpage.content = [Pdfops.stream_of_ops ops];
          Pdfpage.resources = resources'}
 
+(* Redaction cannot copy with lossy JBIG2, because the round-tripping would
+   could introduce new losses, and we don't know the settings that were used
+   upon the first compression.  So it's too dangerous. Therefore, we convert
+   all JBIG2Lossy to lossless JBIG2 (if possible) or CCITTG4 (if not) before
+   embarking upon redaction. *)
+
+let preprocess_jbig2lossy pdf = ()
+
 let redact pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~path:((minx, miny, maxx, maxy) as path) ~color ~outline ~opacity ~linewidth ~underneath range =
+  preprocess_jbig2lossy pdf;
   let pdf =
     Cpdfpage.process_pages
       (Pdfpage.ppstub
@@ -90,6 +99,7 @@ let redact_add_rectangle_pnum pdf ~path:(minx, miny, maxx, maxy) ~color ~outline
 
 (* Apply redaction annotations. *)
 let apply pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ?(typ="/Redact") ~color ~outline ~opacity ~linewidth ~underneath range =
+  preprocess_jbig2_lossy pdf;
   let rectangles = ref [] in
   let apply_page pnum page =
     match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
