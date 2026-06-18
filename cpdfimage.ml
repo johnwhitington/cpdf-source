@@ -1818,7 +1818,7 @@ let redact_jpeg2000 pdf ~path_to_convert (minx, miny, maxx, maxy) s dict referen
     JBIG2Lossy is dealt with by previous to this function being called by pre-processing/warning.
 
     On any failure (decompressing, processing, recompressing) we return false. *)
-let redact_1bpp ?jbig2dec ~path_to_jbig2enc ~path_to_convert (minx, miny, maxx, maxy) pdf s dict reference =
+let redact_1bpp ?jbig2dec ~path_to_jbig2enc ~path_to_convert (minx, miny, maxx, maxy) pdf s dict reference was_jbig2 =
   complain_convert path_to_convert;
   Pdfcodec.decode_pdfstream_until_unknown ?jbig2dec pdf s;
   match Pdf.lookup_direct pdf "/Filter" (fst !reference) with
@@ -1878,9 +1878,57 @@ let redact_1bpp ?jbig2dec ~path_to_jbig2enc ~path_to_convert (minx, miny, maxx, 
               reference := Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize), Pdf.Got data;
             | _ -> ()
             end;
-            remove out;
-            remove out2;
-            true
+            if was_jbig2 then
+              begin
+                (* Compress JBIG2 with JBIG2enc *)
+                let out' = Filename.temp_file "cpdf" "convertin.pnm" in
+                let out2' = Filename.temp_file "cpdf" "convertout.jbig2" in
+                let fh = open_out_bin out in
+                let data = match s with Pdf.Stream {contents = _, Pdf.Got d} -> d | _ -> assert false in
+                  pnm_to_channel_1_inverted fh width height data;
+                  close_out fh;
+                  let retcode =
+                    let command = Filename.quote_command ~stdout:out2 path_to_jbig2enc ["-d"; "-p"; out] in
+                      image_command command
+                  in
+                    if retcode <> 0 then
+                      begin
+                        remove out;
+                        remove out2;
+                        false
+                      end
+                    else
+                      let result = open_in_bin out2 in
+                      let newsize = in_channel_length result in
+                        reference :=
+                          (Pdf.remove_dict_entry
+                          (Pdf.add_dict_entry
+                            (Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize))
+                             "/Filter"
+                             (Pdf.Name "/JBIG2Decode")) "/DecodeParms"),
+                          Pdf.Got (Pdfio.bytes_of_input_channel result);
+                        remove out;
+                        remove out2;
+                        remove out';
+                        remove out2';
+                        true
+              end
+            else
+              begin
+                (* Compress CCITTG4 with magick *)
+                let compressed = Pdfcodec.encode_ccittg4 ~im:path_to_convert width height data in
+                let newsize = bytes_size compressed in
+                  reference :=
+                    (Pdf.add_dict_entry
+                    (Pdf.add_dict_entry
+                      (Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize))
+                       "/Filter"
+                       (Pdf.Array [Pdf.Name "/CCITTFaxDecode"])) "/DecodeParms" (Pdf.Array [Pdf.Dictionary [("/K", Pdf.Integer ~-1); ("/Columns", Pdf.Integer width)]])),
+                    Pdf.Got (compressed);
+                  remove out;
+                  remove out2;
+                  true
+              end
 
 let redact pdf objnum ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc (minx, miny, maxx, maxy) =
   let s = Pdf.lookup_obj pdf objnum in
@@ -1906,7 +1954,12 @@ let redact pdf objnum ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc (minx
         | Some (Pdf.Name "/Image"), _, _, Some (Pdf.Boolean true) ->
             if !debug_image_processing then Printf.printf "Redacting image %i (1bpp)... %!" objnum;
             let jbig2dec = match path_to_jbig2dec with "" -> None | s -> Some s in
-              redact_1bpp ?jbig2dec ~path_to_jbig2enc ~path_to_convert (minx, miny, maxx, maxy) pdf s dict reference
+            let was_jbig2 =
+              match Pdf.lookup_direct pdf "/Filter" dict with
+              | Some (Pdf.Name "/JBIG2Decode") | Some (Pdf.Array [Pdf.Name "/JBIG2Decode"]) -> true
+              | _ -> false
+            in
+              redact_1bpp ?jbig2dec ~path_to_jbig2enc ~path_to_convert (minx, miny, maxx, maxy) pdf s dict reference was_jbig2
         | Some (Pdf.Name "/Image"), _, _, _ ->
             if !debug_image_processing then Printf.printf "Redacting image %i (lossless)... %!" objnum;
             let r = redact_lossless pdf ~path_to_convert (minx, miny, maxx, maxy) s dict reference in
