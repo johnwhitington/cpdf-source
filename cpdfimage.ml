@@ -1826,7 +1826,6 @@ let redact_1bpp ?jbig2dec ~path_to_jbig2enc ~path_to_convert (minx, miny, maxx, 
       if !debug_image_processing then Printf.printf "%S Unable to decompress\n%!" (Pdfwrite.string_of_pdf x);
       false
   | None ->
-      Printf.printf "redact_1bpp: ready to process\n";
       let width = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
       let height = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
       let idat =
@@ -1844,9 +1843,7 @@ let redact_1bpp ?jbig2dec ~path_to_jbig2enc ~path_to_convert (minx, miny, maxx, 
       in
       let png = {Cpdfpng.width; height; bitdepth = 1; colortype = 0; idat} in 
       let out = Filename.temp_file "cpdf" "convertin.png" in
-      Printf.printf "%s\n" out;
       let out2 = Filename.temp_file "cpdf" "convertout.png" in
-      Printf.printf "%s\n" out2;
       let fh = open_out_bin out in
       let o = Pdfio.output_of_channel fh in 
         Cpdfpng.write_png png o;
@@ -1854,15 +1851,36 @@ let redact_1bpp ?jbig2dec ~path_to_jbig2enc ~path_to_convert (minx, miny, maxx, 
       let retcode =
         let command = 
           Filename.quote_command path_to_convert
-             ([out; "-stroke"; "none"; "-draw"; (Printf.sprintf "rectangle %f,%f %f,%f" minx (float_of_int height -. miny) maxx (float_of_int height -. maxy)); "-depth"; "1"; out2])
+             ([out; "-stroke"; "none"; "-draw";
+               (Printf.sprintf "rectangle %f,%f %f,%f" minx (float_of_int height -. miny) maxx (float_of_int height -. maxy));
+               "-depth"; "1"; out2])
         in
-          flprint command;
           image_command command
       in
-        Printf.printf "retcode %i\n" retcode;
-        (*remove out;
-        remove out2;*)
-        false
+        if retcode > 0 then
+          begin
+            remove out;
+            remove out2;
+            false
+          end
+        else
+          let inpng = Pdfcodec.decode_flate ((Cpdfpng.read_png (Pdfio.input_of_channel (open_in_bin out2))).idat) in
+          let i = Pdfio.input_of_bytes inpng in
+          let io, br = Pdfio.input_output_of_bytes (bytes_size inpng - height) in
+          for _ = 1 to height do
+            ignore (i.input_byte ()); (* Skip PNG filter byte *)
+            for _ = 1 to (width + 7) / 8 do io.output_byte (i.input_byte ()) done
+          done;
+          let data = Pdfio.extract_bytes_from_input_output io br in
+          let newsize = bytes_size data in
+            begin match s with
+            | Pdf.Stream {contents = (dict, _)} ->
+              reference := Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize), Pdf.Got data;
+            | _ -> ()
+            end;
+            remove out;
+            remove out2;
+            true
 
 let redact pdf objnum ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc (minx, miny, maxx, maxy) =
   let s = Pdf.lookup_obj pdf objnum in
