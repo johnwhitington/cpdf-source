@@ -74,10 +74,21 @@ let redact_page pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~path p
    all JBIG2Lossy to lossless JBIG2 (if possible) or CCITTG4 (if not) before
    embarking upon redaction. *)
 
-let preprocess_jbig2lossy pdf = ()
+let preprocess_jbig2lossy_to_jbig2lossless ?jbig2dec ~path_to_jbig2enc pdf =
+  Pdf.objiter
+    (fun objnum s ->
+       match s with
+       | Pdf.Stream ({contents = dict, _} as reference) ->
+         begin match Pdf.lookup_chain pdf dict ["/DecodeParms"; "/JBIG2Globals"] with
+         | Some _ ->
+             Cpdfimage.recompress_1bpp_jbig2_lossless ?jbig2dec ~force:true ~pixel_threshold:0 ~length_threshold:0 ~path_to_jbig2enc pdf s dict reference
+         | _ -> ()
+         end
+       | _ -> ())
+     pdf
 
 let redact pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~path:((minx, miny, maxx, maxy) as path) ~color ~outline ~opacity ~linewidth ~underneath range =
-  preprocess_jbig2lossy pdf;
+  preprocess_jbig2lossy_to_jbig2lossless ~jbig2dec:path_to_jbig2dec ~path_to_jbig2enc pdf;
   let pdf =
     Cpdfpage.process_pages
       (Pdfpage.ppstub
@@ -99,7 +110,7 @@ let redact_add_rectangle_pnum pdf ~path:(minx, miny, maxx, maxy) ~color ~outline
 
 (* Apply redaction annotations. *)
 let apply pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ?(typ="/Redact") ~color ~outline ~opacity ~linewidth ~underneath range =
-  preprocess_jbig2_lossy pdf;
+  preprocess_jbig2lossy_to_jbig2lossless ~jbig2dec:path_to_jbig2dec ~path_to_jbig2enc pdf;
   let rectangles = ref [] in
   let apply_page pnum page =
     match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with

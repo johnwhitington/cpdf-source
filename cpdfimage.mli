@@ -40,3 +40,14 @@ val obj_of_jpeg_data : path_to_im:string -> Pdfio.bytes -> Pdf.pdfobject * (int 
 val obj_of_png_data : Pdf.t -> Pdfio.bytes -> Pdf.pdfobject * (int * Pdf.pdfobject) list
 val obj_of_jbig2_data : ?global:Pdfio.bytes -> Pdfio.bytes -> Pdf.pdfobject * (int * Pdf.pdfobject) list
 val obj_of_jpeg2000_data : Pdfio.bytes -> Pdf.pdfobject * (int * Pdf.pdfobject) list
+val recompress_1bpp_jbig2_lossless :
+  ?jbig2dec:string ->
+  force:bool ->
+  pixel_threshold:int ->
+  length_threshold:int ->
+  path_to_jbig2enc:string ->
+  Pdf.t ->
+  Pdf.pdfobject ->
+  Pdf.pdfobject ->
+  (Pdf.pdfobject * Pdf.stream) ref ->
+  unit
