@@ -1637,8 +1637,6 @@ let redact_lossless pdf ~path_to_convert (minx, miny, maxx, maxy) s dict referen
   complain_convert path_to_convert;
   let in_components = test_components pdf dict in
   let in_bpc = test_bpc pdf dict in
-  (*Printf.printf "***lossless_resample IN dictionary: %S\n" (Pdfwrite.string_of_pdf dict); *)
-  (*Printf.printf "\n***IN components = %i, bpc = %i\n" in_components in_bpc;*)
   let out3 = Filename.temp_file "cpdf" "dimens" in 
   match lossless_out pdf ~invert_cmyk:false ~pixel_threshold:0 ~length_threshold:0 ".png" s dict reference with
   | None -> false
@@ -1684,7 +1682,6 @@ let redact_lossless pdf ~path_to_convert (minx, miny, maxx, maxy) s dict referen
               | Pdf.Stream {contents = Pdf.Dictionary d, data} as s ->
                   let out_components = test_components pdf s in
                   let out_bpc = test_bpc pdf s in
-                  (*Printf.printf "***OUT components = %i, bpc = %i\n" out_components out_bpc;*)
                   let rgb_to_grey_special =
                     let was_rgb =
                       match Pdf.lookup_direct pdf "/ColorSpace" dict with
@@ -1693,7 +1690,6 @@ let redact_lossless pdf ~path_to_convert (minx, miny, maxx, maxy) s dict referen
                     in
                       in_bpc = out_bpc && in_components = 3 && out_components = 1 && was_rgb
                   in
-                  (*Printf.printf "***rgb_to_grey_special = %b\n" rgb_to_grey_special;*)
                   if (out_components <> in_components || in_bpc <> out_bpc) && not rgb_to_grey_special then
                     begin
                       if !debug_image_processing then Printf.printf "wrong bpc / components returned. Skipping.\n%!";
@@ -1703,7 +1699,6 @@ let redact_lossless pdf ~path_to_convert (minx, miny, maxx, maxy) s dict referen
                   begin
                     if !debug_image_processing then Printf.printf "lossless resample %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
                     let d' = fold_right (fun (k, v) d -> if k <> "/ColorSpace" || rgb_to_grey_special then add k v d else d) d (match dict with Pdf.Dictionary x -> x | _ -> []) in
-                      (*Printf.printf "***lossless_resample OUT dictionary: %S\n" (Pdfwrite.string_of_pdf (Pdf.Dictionary d')); *)
                       (Pdf.Dictionary d', data)
                   end
               | _ -> assert false)
@@ -1751,8 +1746,8 @@ let redact_jpeg pdf ~path_to_convert (minx, miny, maxx, maxy) s dict reference =
           let newsize = bytes_size data in
             reference := (Pdf.add_dict_entry dict "/Length" (Pdf.Integer newsize), Pdf.Got data);
             close_in result;
-            (*remove out;
-            remove out2;*)
+            remove out;
+            remove out2;
             true
        with e ->
          if !debug_image_processing then Printf.printf "Error %S\n%!" (Printexc.to_string e);
@@ -1895,6 +1890,8 @@ let redact_1bpp ?jbig2dec ~path_to_jbig2enc ~path_to_convert (minx, miny, maxx, 
                       begin
                         remove out;
                         remove out2;
+                        remove out';
+                        remove out2';
                         false
                       end
                     else
