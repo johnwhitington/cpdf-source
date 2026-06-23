@@ -89,6 +89,7 @@ let preprocess_jbig2lossy_to_jbig2lossless ?jbig2dec ~path_to_jbig2enc pdf =
 
 let redact pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~path:((minx, miny, maxx, maxy) as path) ~color ~outline ~opacity ~linewidth ~underneath range =
   preprocess_jbig2lossy_to_jbig2lossless ~jbig2dec:path_to_jbig2dec ~path_to_jbig2enc pdf;
+  Cpdfutil.progress_line "Redacting content...";
   let pdf =
     Cpdfpage.process_pages
       (Pdfpage.ppstub
@@ -96,6 +97,7 @@ let redact pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~path:((minx
       pdf
       range
   in
+    Cpdfutil.progress_line "Adding redaction appearance...";
     let pdf =
       Cpdfaddtext.addrectangle
         false (Printf.sprintf "%s %s" (string_of_float (maxx -. minx)) (string_of_float (maxy -. miny)))

@@ -1659,7 +1659,6 @@ let redact_lossless pdf ~path_to_convert (minx, miny, maxx, maxy) s dict referen
   if retcode = 0 then
     begin
       let result = open_in_bin out2 in
-      let newsize = in_channel_length result in
         begin
           match rev (explode out2) with
           | 'k'::'y'::'m'::'c'::_ ->
@@ -1674,7 +1673,6 @@ let redact_lossless pdf ~path_to_convert (minx, miny, maxx, maxy) s dict referen
                   "/DecodeParms")
                 "/Filter"
             in
-            if !debug_image_processing then Printf.printf "lossless resample %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
             reference := (dict, Pdf.Got (Pdfio.bytes_of_input_channel result))
           | _ -> 
             reference :=
@@ -1697,7 +1695,7 @@ let redact_lossless pdf ~path_to_convert (minx, miny, maxx, maxy) s dict referen
                     end
                   else
                   begin
-                    if !debug_image_processing then Printf.printf "lossless resample %i -> %i (%i%%)\n%!" size newsize (int_of_float (float newsize /. float size *. 100.));
+
                     let d' = fold_right (fun (k, v) d -> if k <> "/ColorSpace" || rgb_to_grey_special then add k v d else d) d (match dict with Pdf.Dictionary x -> x | _ -> []) in
                       (Pdf.Dictionary d', data)
                   end
@@ -1929,6 +1927,9 @@ let redact_1bpp ?jbig2dec ~path_to_jbig2enc ~path_to_convert (minx, miny, maxx, 
 
 let redact pdf objnum ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc (minx, miny, maxx, maxy) =
   let s = Pdf.lookup_obj pdf objnum in
+  let result b =
+    if !debug_image_processing then Printf.printf "%s\n%!" (if b then "done." else "failed, whole image will be removed.")
+  in
     match s with
     | Pdf.Stream ({contents = dict, _} as reference) ->
         begin match
@@ -1938,30 +1939,28 @@ let redact pdf objnum ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc (minx
           Pdf.lookup_direct pdf "/ImageMask" dict
         with
         | Some (Pdf.Name "/Image"), Some (Pdf.Name "/DCTDecode" | Pdf.Array [Pdf.Name "/DCTDecode"]), _, _ ->
-            if !debug_image_processing then Printf.printf "Redacting image %i (JPEG)... %!" objnum;
+            if !debug_image_processing then Printf.printf "Processing image %i for redaction (JPEG)... %!" objnum;
             let r = redact_jpeg pdf ~path_to_convert (minx, miny, maxx, maxy) s dict reference in
-              if !debug_image_processing then Printf.printf "%b\n%!" r;
-              r
+              result r; r
         | Some (Pdf.Name "/Image"), Some (Pdf.Name "/JPXDecode" | Pdf.Array [Pdf.Name "/JPXDecode"]), _, _ ->
-              if !debug_image_processing then Printf.printf "Redacting image %i (JPEG2000)... %!" objnum;
+              if !debug_image_processing then Printf.printf "Processing image %i for redaction (JPEG2000)... %!" objnum;
               let r = redact_jpeg2000 pdf ~path_to_convert (minx, miny, maxx, maxy) s dict reference in
-                if !debug_image_processing then Printf.printf "%b\n%!" r;
-                r
+                result r; r
         | Some (Pdf.Name "/Image"), _, Some (Pdf.Integer 1), _
         | Some (Pdf.Name "/Image"), _, _, Some (Pdf.Boolean true) ->
-            if !debug_image_processing then Printf.printf "Redacting image %i (1bpp)... %!" objnum;
+            if !debug_image_processing then Printf.printf "Processing image %i for redaction (1bpp)... %!" objnum;
             let jbig2dec = match path_to_jbig2dec with "" -> None | s -> Some s in
             let was_jbig2 =
               match Pdf.lookup_direct pdf "/Filter" dict with
               | Some (Pdf.Name "/JBIG2Decode") | Some (Pdf.Array [Pdf.Name "/JBIG2Decode"]) -> true
               | _ -> false
             in
-              redact_1bpp ?jbig2dec ~path_to_jbig2enc ~path_to_convert (minx, miny, maxx, maxy) pdf s dict reference was_jbig2
+              let r = redact_1bpp ?jbig2dec ~path_to_jbig2enc ~path_to_convert (minx, miny, maxx, maxy) pdf s dict reference was_jbig2 in
+                result r; r
         | Some (Pdf.Name "/Image"), _, _, _ ->
-            if !debug_image_processing then Printf.printf "Redacting image %i (lossless)... %!" objnum;
+            if !debug_image_processing then Printf.printf "Processing image %i for redaction (lossless)... %!" objnum;
             let r = redact_lossless pdf ~path_to_convert (minx, miny, maxx, maxy) s dict reference in
-              if !debug_image_processing then Printf.printf "%b\n%!" r;
-              r
+              result r; r
         | _ -> Pdfe.log "Cpdfimage.redact: not an image"; false
         end
     | _ -> Pdfe.log "Cpdfimage.redact: not a stream"; false
