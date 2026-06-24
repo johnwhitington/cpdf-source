@@ -442,7 +442,7 @@ let process_tj ~f ~stack ~state ~resources s =
     let op_of_triples triples =
       if List.for_all (function (_, _, (Intersects _ | Encloses)) -> true | _ -> false) triples then
         let total_width =
-          ~-.(fold_left ( +. ) 0. (map (fun (c, w, _) -> w +. !state.text_state.character_spacing (**. !state.text_state.font_size*) +. (if c = 32 then 1. else 0.) *. !state.text_state.word_spacing (**. !state.text_state.font_size*)) triples) *. 1000.)
+          ~-.(fold_left ( +. ) 0. (map (fun (c, w, _) -> w +. !state.text_state.character_spacing /. !state.text_state.font_size +. (if c = 32 then 1. else 0.) *. !state.text_state.word_spacing /. !state.text_state.font_size) triples) *. 1000.)
         in
           Pdfops.Op_TJ [Pdf.Real total_width]
       else if List.for_all (function (_, _, Nonintersecting) -> true | _ -> false) triples then
@@ -452,8 +452,7 @@ let process_tj ~f ~stack ~state ~resources s =
           | [] -> assert false
           | (_, _, Nonintersecting)::_ as l -> Pdf.String (string_of_charcodes (map (fun (c, _, _) -> c) l) !state.text_state.font_data.fontobj)
           | (_, _, (Encloses | Intersects _))::_ as l ->
-              (* Seems the word and char spacing adjustment is needed for the last file we fixed, but breaks beef-car.pdf? *)
-              Pdf.Real (~-.(fold_left ( +. ) 0. (map (fun (c, w, _) -> w +. !state.text_state.character_spacing (**. !state.text_state.font_size*) +. (if c = 32 then 1. else 0.) *. !state.text_state.word_spacing (**. !state.text_state.font_size*)) l)) *. 1000.)
+              Pdf.Real (~-.(fold_left ( +. ) 0. (map (fun (c, w, _) -> w +. !state.text_state.character_spacing /. !state.text_state.font_size +. (if c = 32 then 1. else 0.) *. !state.text_state.word_spacing /. !state.text_state.font_size) l)) *. 1000.)
         in
         let is_different a b =
           neq (eq a Nonintersecting) (eq b Nonintersecting)
