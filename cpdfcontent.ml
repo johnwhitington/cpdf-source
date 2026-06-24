@@ -442,7 +442,7 @@ let process_tj ~f ~stack ~state ~resources s =
     let op_of_triples triples =
       if List.for_all (function (_, _, (Intersects _ | Encloses)) -> true | _ -> false) triples then
         let total_width =
-          ~-.(fold_left ( +. ) 0. (map (fun (c, w, _) -> w +. !state.text_state.character_spacing +. (if c = 32 then 1. else 0.) *. !state.text_state.word_spacing) triples) *. 1000.)
+          ~-.(fold_left ( +. ) 0. (map (fun (c, w, _) -> w +. !state.text_state.character_spacing (**. !state.text_state.font_size*) +. (if c = 32 then 1. else 0.) *. !state.text_state.word_spacing (**. !state.text_state.font_size*)) triples) *. 1000.)
         in
           Pdfops.Op_TJ [Pdf.Real total_width]
       else if List.for_all (function (_, _, Nonintersecting) -> true | _ -> false) triples then
@@ -452,10 +452,14 @@ let process_tj ~f ~stack ~state ~resources s =
           | [] -> assert false
           | (_, _, Nonintersecting)::_ as l -> Pdf.String (string_of_charcodes (map (fun (c, _, _) -> c) l) !state.text_state.font_data.fontobj)
           | (_, _, (Encloses | Intersects _))::_ as l ->
-              Pdf.Real (~-.(fold_left ( +. ) 0. (map (fun (c, w, _) -> w +. !state.text_state.character_spacing +. (if c = 32 then 1. else 0.) *. !state.text_state.word_spacing) l)) *. 1000.)
+              (* Seems the word and char spacing adjustment is needed for the last file we fixed, but breaks beef-car.pdf? *)
+              Pdf.Real (~-.(fold_left ( +. ) 0. (map (fun (c, w, _) -> w +. !state.text_state.character_spacing (**. !state.text_state.font_size*) +. (if c = 32 then 1. else 0.) *. !state.text_state.word_spacing (**. !state.text_state.font_size*)) l)) *. 1000.)
         in
-        let groups = split_around_two (fun (_, _, f_result) (_, _, f_result') -> f_result <> f_result') triples in
-          Pdfops.Op_TJ (map compose_tj_group groups)
+        let is_different a b =
+          neq (eq a Nonintersecting) (eq b Nonintersecting)
+        in
+          let groups = split_around_two (fun (_, _, f_result) (_, _, f_result') -> is_different f_result f_result') triples in
+            Pdfops.Op_TJ (map compose_tj_group groups)
     in
     let triples =
       map2
@@ -994,7 +998,8 @@ let rec process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~f 
       !state.text_state.t_m <- !state.text_state.t_lm;
       [op]
   | Pdfops.Op_TD (f1, f2) ->
-      flatten (map (process_op ~pdf ~f ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~remove ~stack ~state ~resources) [(Pdfops.Op_TL ~-.f2); (Pdfops.Op_Td (f1, f2))])
+      ignore (map (process_op ~pdf ~f ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~remove ~stack ~state ~resources) [(Pdfops.Op_TL ~-.f2); (Pdfops.Op_Td (f1, f2))]);
+      [op]
   | Pdfops.Op_Tm m ->
       !state.text_state.t_m <- m;
       !state.text_state.t_lm <- m;
