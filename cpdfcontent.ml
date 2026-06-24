@@ -441,7 +441,9 @@ let process_tj ~f ~stack ~state ~resources s =
       end;
     let op_of_triples triples =
       if List.for_all (function (_, _, (Intersects _ | Encloses)) -> true | _ -> false) triples then
-        let total_width = ~-.(fold_left ( +. ) 0. (map (fun (_, w, _) -> w) triples) *. 1000.) in
+        let total_width =
+          ~-.(fold_left ( +. ) 0. (map (fun (c, w, _) -> w +. !state.text_state.character_spacing +. (if c = 32 then 1. else 0.) *. !state.text_state.word_spacing) triples) *. 1000.)
+        in
           Pdfops.Op_TJ [Pdf.Real total_width]
       else if List.for_all (function (_, _, Nonintersecting) -> true | _ -> false) triples then
         Pdfops.Op_Tj s
@@ -449,7 +451,8 @@ let process_tj ~f ~stack ~state ~resources s =
         let compose_tj_group = function
           | [] -> assert false
           | (_, _, Nonintersecting)::_ as l -> Pdf.String (string_of_charcodes (map (fun (c, _, _) -> c) l) !state.text_state.font_data.fontobj)
-          | (_, _, (Encloses | Intersects _))::_ as l -> Pdf.Real (~-.(fold_left ( +. ) 0. (map (fun (_, w, _) -> w) l)) *. 1000.)
+          | (_, _, (Encloses | Intersects _))::_ as l ->
+              Pdf.Real (~-.(fold_left ( +. ) 0. (map (fun (c, w, _) -> w +. !state.text_state.character_spacing +. (if c = 32 then 1. else 0.) *. !state.text_state.word_spacing) l)) *. 1000.)
         in
         let groups = split_around_two (fun (_, _, f_result) (_, _, f_result') -> f_result <> f_result') triples in
           Pdfops.Op_TJ (map compose_tj_group groups)
@@ -1000,9 +1003,9 @@ let rec process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~f 
       ignore (process_op ~pdf ~f ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~remove ~stack ~state ~resources (Pdfops.Op_TD (0., ~-.(!state.text_state.leading))));
       [op]
   | Pdfops.Op_Tj s ->
-      [optimise_tj (process_tj ~f ~stack ~state ~resources s)]
+      [(*optimise_tj*) (process_tj ~f ~stack ~state ~resources s)]
   | Pdfops.Op_TJ l ->
-      [Pdfops.Op_TJ (optimise_capital_tj (process_capital_tj ~f ~stack ~state ~resources l))]
+      [Pdfops.Op_TJ ((*optimise_capital_tj*) (process_capital_tj ~f ~stack ~state ~resources l))]
   | Pdfops.Op_' s ->
       ignore (map (process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~f ~remove ~stack ~state ~resources) [Pdfops.Op_T'; Pdfops.Op_Tj s]);
       [op]
