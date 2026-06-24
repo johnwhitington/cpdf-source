@@ -1648,6 +1648,7 @@ let redact_lossless pdf ~path_to_convert (minx, miny, maxx, maxy) s dict referen
         (if components = 1 then ["-define"; "png:color-type=0"; "-colorspace"; "Gray"]
          else if components = 3 then ["-define"; "png:color-type=2"; "-colorspace"; "RGB"]
          else if components = 4 then ["-colorspace"; "CMYK"] else []) @
+        ["-stroke"; "none"; "-fill"; "black"; "-draw"; (Printf.sprintf "rectangle %f,%f %f,%f" minx (float_of_int h -. miny) maxx (float_of_int h -. maxy))] @ 
         (if components = 4 then ["-write"] else []) @ [out2] @
         (if components = 4 then ["-format"; "%w %h"; "info:"] else [])))
       ^
@@ -1801,16 +1802,6 @@ let redact_jpeg2000 pdf ~path_to_convert (minx, miny, maxx, maxy) s dict referen
         false
       end
 
-(* Here, we need to
-    a) Dump the data for CCITT, CCITTG4, Flate-or-any-other, JBIG2 (if possible), 1bpp files to 1bpp PNG(?)
-    b) Run magick to add the rectangle, creating another 1bpp PNG.
-    c) Read back the 1bpp PNG, and convert to, preferentially:
-          1. JBIG2 Lossless (but only if it was originally....)
-          2. CCITTG4 (also uses imagemagick, but we know we have it)
-
-    JBIG2Lossy is dealt with by previous to this function being called by pre-processing/warning.
-
-    On any failure (decompressing, processing, recompressing) we return false. *)
 let redact_1bpp ?jbig2dec ~path_to_jbig2enc ~path_to_convert (minx, miny, maxx, maxy) pdf s dict reference was_jbig2 =
   complain_convert path_to_convert;
   Pdfcodec.decode_pdfstream_until_unknown ?jbig2dec pdf s;
