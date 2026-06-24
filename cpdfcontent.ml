@@ -422,17 +422,21 @@ let optimise_tj = function
   | _ -> assert false
 
 let process_tj ~f ~stack ~state ~resources s =
-  let vertical = vertical !state.text_state.font_data.fontobj in
+  let fontobj = !state.text_state.font_data.fontobj in
+  let character_spacing = !state.text_state.character_spacing in
+  let word_spacing = !state.text_state.word_spacing in
+  let font_size = !state.text_state.font_size in
+  let vertical = vertical fontobj in
   let debug = false in
   if debug then Printf.printf "process_tj %S\n" s;
-  let chars = charcodes_of_string s !state.text_state.font_data.fontobj in
+  let chars = charcodes_of_string s fontobj in
   if debug then begin flprint "CHARS: "; iter (Printf.printf "%i ") chars; flprint "\n" end;
   let divisor =
-    match !state.text_state.font_data.fontobj with
+    match fontobj with
     | Pdftext.SimpleFont {fonttype = Pdftext.Type3 _ } -> 1.
     | _ -> 1000.
   in
-  let widths = map (fun x -> let w, pvx, pvy = width_of_charcode !state.text_state.font_data.fontobj x !state.text_state.font_data.table in w /. divisor, pvx /. divisor, pvy /. divisor) chars in
+  let widths = map (fun x -> let w, pvx, pvy = width_of_charcode fontobj x !state.text_state.font_data.table in w /. divisor, pvx /. divisor, pvy /. divisor) chars in
   let ascent, descent = let a, b = !state.text_state.font_data.extra_metrics in (a /. divisor, b /. divisor) in
     if debug then
       begin
@@ -442,7 +446,7 @@ let process_tj ~f ~stack ~state ~resources s =
     let op_of_triples triples =
       if List.for_all (function (_, _, (Intersects _ | Encloses)) -> true | _ -> false) triples then
         let total_width =
-          ~-.(fold_left ( +. ) 0. (map (fun (c, w, _) -> w +. !state.text_state.character_spacing /. !state.text_state.font_size +. (if c = 32 then 1. else 0.) *. !state.text_state.word_spacing /. !state.text_state.font_size) triples) *. 1000.)
+          ~-.(fold_left ( +. ) 0. (map (fun (c, w, _) -> w +. character_spacing /. !state.text_state.font_size +. (if c = 32 then 1. else 0.) *. word_spacing /. !state.text_state.font_size) triples) *. 1000.)
         in
           Pdfops.Op_TJ [Pdf.Real total_width]
       else if List.for_all (function (_, _, Nonintersecting) -> true | _ -> false) triples then
@@ -450,9 +454,9 @@ let process_tj ~f ~stack ~state ~resources s =
       else
         let compose_tj_group = function
           | [] -> assert false
-          | (_, _, Nonintersecting)::_ as l -> Pdf.String (string_of_charcodes (map (fun (c, _, _) -> c) l) !state.text_state.font_data.fontobj)
+          | (_, _, Nonintersecting)::_ as l -> Pdf.String (string_of_charcodes (map (fun (c, _, _) -> c) l) fontobj)
           | (_, _, (Encloses | Intersects _))::_ as l ->
-              Pdf.Real (~-.(fold_left ( +. ) 0. (map (fun (c, w, _) -> w +. !state.text_state.character_spacing /. !state.text_state.font_size +. (if c = 32 then 1. else 0.) *. !state.text_state.word_spacing /. !state.text_state.font_size) l)) *. 1000.)
+              Pdf.Real (~-.(fold_left ( +. ) 0. (map (fun (c, w, _) -> w +. character_spacing /. !state.text_state.font_size +. (if c = 32 then 1. else 0.) *. word_spacing /. !state.text_state.font_size) l)) *. 1000.)
         in
         let is_different a b =
           neq (eq a Nonintersecting) (eq b Nonintersecting)
@@ -464,10 +468,10 @@ let process_tj ~f ~stack ~state ~resources s =
       map2
         (fun c (w, pvx, pvy) ->
           let t_params =
-            {Pdftransform.a = !state.text_state.font_size *. !state.text_state.horizontal_scaling;
+            {Pdftransform.a = font_size *. !state.text_state.horizontal_scaling;
              Pdftransform.b = 0.;
              Pdftransform.c = 0.;
-             Pdftransform.d = !state.text_state.font_size;
+             Pdftransform.d = font_size;
              Pdftransform.e = 0.;
              Pdftransform.f = !state.text_state.rise}
           in
@@ -480,12 +484,12 @@ let process_tj ~f ~stack ~state ~resources s =
             let f_result = f {state = copystate !state; content = Glyph c; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} in
             let tx =
               if vertical then 0. else
-                (w *. !state.text_state.font_size +. !state.text_state.character_spacing +.
-                (if c = 32 then 1. else 0.) *. !state.text_state.word_spacing) *. !state.text_state.horizontal_scaling
+                (w *. font_size +. character_spacing +.
+                (if c = 32 then 1. else 0.) *. word_spacing) *. !state.text_state.horizontal_scaling
             in
             let ty =
               if vertical then
-                w *. !state.text_state.font_size +. !state.text_state.character_spacing +. !state.text_state.word_spacing
+                w *. font_size +. character_spacing +. word_spacing
               else
                 0.
             in
@@ -1007,9 +1011,9 @@ let rec process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~f 
       ignore (process_op ~pdf ~f ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~remove ~stack ~state ~resources (Pdfops.Op_TD (0., ~-.(!state.text_state.leading))));
       [op]
   | Pdfops.Op_Tj s ->
-      [(*optimise_tj*) (process_tj ~f ~stack ~state ~resources s)]
+      [optimise_tj (process_tj ~f ~stack ~state ~resources s)]
   | Pdfops.Op_TJ l ->
-      [Pdfops.Op_TJ ((*optimise_capital_tj*) (process_capital_tj ~f ~stack ~state ~resources l))]
+      [Pdfops.Op_TJ (optimise_capital_tj (process_capital_tj ~f ~stack ~state ~resources l))]
   | Pdfops.Op_' s ->
       ignore (map (process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~f ~remove ~stack ~state ~resources) [Pdfops.Op_T'; Pdfops.Op_Tj s]);
       [op]
