@@ -177,7 +177,6 @@ let initial_text_state () =
    t_lm = Pdftransform.i_matrix}
 
 let initial_state (minx, miny, maxx, maxy) =
-  Printf.printf "initial_state %f %f %f %f\n" minx miny maxx maxy;
   {mode = Graphics;
    ctm = Pdftransform.i_matrix;
    clipping_path =
@@ -698,10 +697,10 @@ let emit_path_bounding_box ~content ~stroking ~f ~state =
   in
     match bbox with
     | None -> 
-        flprint "No bbox found in emit_path_bounding_box\n";
+        (*flprint "No bbox found in emit_path_bounding_box\n";*)
         Nonintersecting
     | Some (minx, maxx, miny, maxy) ->
-        Printf.printf "found bbox in emit_path_bounding_box: %f %f %f %f\n" minx maxx miny maxy;
+        (*Printf.printf "found bbox in emit_path_bounding_box: %f %f %f %f\n" minx maxx miny maxy;*)
         let minx, maxx, miny, maxy =
           if stroking then
              let dx0, dy0 = Pdftransform.transform_matrix !state.ctm (0., 0.) in
@@ -941,7 +940,6 @@ let rec process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~f 
           [Pdfops.Op_m (x, y); Pdfops.Op_l (x +. w, y); Pdfops.Op_l (x +. w, y +. h); Pdfops.Op_l (x, y +. h); Pdfops.Op_h]);
       [op]
   | Pdfops.Op_W ->
-      flprint "Op_w";
       begin match !state.partial_path with
       | PartialPath (_, _, segments, subpaths) ->
           if segments = [] && subpaths = [] then () else
@@ -955,7 +953,6 @@ let rec process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~f 
       end;
       [op]
   | Pdfops.Op_W' ->
-      flprint "Op_W'";
       begin match !state.partial_path with
       | PartialPath (_, _, segments, subpaths) ->
           if segments = [] && subpaths = [] then () else
@@ -991,7 +988,11 @@ let rec process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~f 
   | Pdfops.Op_Tf (s, f) ->
       !state.text_state.font <- s;
       !state.text_state.font_size <- f;
-      begin match Hashtbl.find_opt !state.text_state.font_cache s with
+      (* File redact/text.pdf fails with -show-bboxes and /F1 in main and
+         XObject, so we remove caching for now. To be investigated... Code for
+         Op_Do below looks correct, copying and clearing the cache, and copying
+         back, so why? *)
+      begin match None (*Hashtbl.find_opt !state.text_state.font_cache s*) with
       | Some font_data ->
           !state.text_state.font_data <- font_data
       | None ->
@@ -1121,7 +1122,6 @@ let rec process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~f 
         let shading = read_shading pdf Pdftransform.i_matrix Pdf.Null shading in
           begin match shading.shading_bbox with
           | Some r ->
-              flprint "good shading\n";
               begin try
                 let minx, miny, maxx, maxy = Pdf.parse_rectangle pdf r in
                   match f {state = copystate !state; content = Shading s; bounding_box = Quad (minx, miny, minx, maxy, maxx, maxy, maxx, miny)} with
@@ -1132,7 +1132,6 @@ let rec process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~f 
               end
           | None ->
               (* This is an unbounded shading, not recommended. So we use the current clipping path. *)
-              flprint "bad shading\n";
               match emit_path_bounding_box ~content:(Shading s) ~stroking:false ~f ~state with
               | Nonintersecting -> [op]
               | Intersects _ | Encloses -> []
