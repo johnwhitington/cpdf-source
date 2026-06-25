@@ -177,6 +177,7 @@ let initial_text_state () =
    t_lm = Pdftransform.i_matrix}
 
 let initial_state (minx, miny, maxx, maxy) =
+  Printf.printf "initial_state %f %f %f %f\n" minx miny maxx maxy;
   {mode = Graphics;
    ctm = Pdftransform.i_matrix;
    clipping_path =
@@ -671,12 +672,36 @@ let transform_path m (w, subpaths) =
   in
     (w, map (fun (h, c, segments) -> (h, c, map transform_segment segments)) subpaths)
 
+(* Find the intersection of all the bboxes of all the clipping paths, to find the BBOX for bad shadings.*)
+let smallest_clip_bbox paths =
+  let bboxes = map bbox_of_path paths in
+  let overlap = ref (hd bboxes) in
+    iter
+      (function
+       | None -> overlap := None 
+       | Some (minx, maxx, miny, maxy) ->
+           overlap :=
+             match !overlap with
+             | None -> Some (minx, maxx, miny, maxy)
+             | Some (ominx, omaxx, ominy, omaxy) ->
+                 match box_overlap_float minx miny maxx maxy ominx ominy omaxx omaxy with
+                 | None -> None
+                 | Some (nminx, nminy, nmaxx, nmaxy) -> Some (nminy, nmaxx, nminy, nmaxy))
+      (tl bboxes);
+    !overlap
+
 let emit_path_bounding_box ~content ~stroking ~f ~state =
-  let path = transform_path !state.ctm (match content with Clip | Shading _ -> hd !state.clipping_path | _ -> !state.path.path) in
-  let bbox = bbox_of_path path in
+  let bbox =
+    match content with
+    | Clip | Shading _ -> smallest_clip_bbox (map (transform_path !state.ctm) !state.clipping_path)
+    | _ -> bbox_of_path (transform_path !state.ctm !state.path.path)
+  in
     match bbox with
-    | None -> Nonintersecting
+    | None -> 
+        flprint "No bbox found in emit_path_bounding_box\n";
+        Nonintersecting
     | Some (minx, maxx, miny, maxy) ->
+        Printf.printf "found bbox in emit_path_bounding_box: %f %f %f %f\n" minx maxx miny maxy;
         let minx, maxx, miny, maxy =
           if stroking then
              let dx0, dy0 = Pdftransform.transform_matrix !state.ctm (0., 0.) in
@@ -916,6 +941,7 @@ let rec process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~f 
           [Pdfops.Op_m (x, y); Pdfops.Op_l (x +. w, y); Pdfops.Op_l (x +. w, y +. h); Pdfops.Op_l (x, y +. h); Pdfops.Op_h]);
       [op]
   | Pdfops.Op_W ->
+      flprint "Op_w";
       begin match !state.partial_path with
       | PartialPath (_, _, segments, subpaths) ->
           if segments = [] && subpaths = [] then () else
@@ -929,6 +955,7 @@ let rec process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~f 
       end;
       [op]
   | Pdfops.Op_W' ->
+      flprint "Op_W'";
       begin match !state.partial_path with
       | PartialPath (_, _, segments, subpaths) ->
           if segments = [] && subpaths = [] then () else
