@@ -709,8 +709,9 @@ let rec chop_image pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc imag
   in
     Cpdfimage.redact pdf imageobjnum ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc (minx, miny, maxx, maxy)
   &&
-    match Pdf.lookup_immediate "/Mask" image with
-    | Some (Pdf.Indirect i) -> chop_image pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc i ctm (x0, y0, x1, y1, x2, y2, x3, y3) 
+    match Pdf.lookup_immediate "/Mask" image, Pdf.lookup_immediate "/SMask" image with
+    | Some (Pdf.Indirect i), _ | _, Some (Pdf.Indirect i) ->
+        chop_image pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc i ctm (x0, y0, x1, y1, x2, y2, x3, y3) 
     | _ -> true
 
 (* TODO Allow this to expand operations, optionally e.g for -remove-xobjects.
@@ -806,14 +807,14 @@ let rec process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~f 
       end;
       [op]
   | Pdfops.Op_s ->
-      ignore (map (process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~f ~remove ~stack ~state ~resources) [Pdfops.Op_h; Pdfops.Op_S]);
-      [op]
+      ignore (map (process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~f ~remove ~stack ~state ~resources) [Pdfops.Op_h]);
+      process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~f ~remove ~stack ~state ~resources Pdfops.Op_S
   | Pdfops.Op_b ->
-      ignore (map (process_op ~pdf ~f ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~remove ~stack ~state ~resources) [Pdfops.Op_h; Pdfops.Op_B]);
-      [op]
+      ignore (map (process_op ~pdf ~f ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~remove ~stack ~state ~resources) [Pdfops.Op_h]);
+      process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~f ~remove ~stack ~state ~resources Pdfops.Op_B
   | Pdfops.Op_b' ->
-      ignore (map (process_op ~pdf ~f ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~remove ~stack ~state ~resources) [Pdfops.Op_h; Pdfops.Op_B']);
-      [op]
+      ignore (map (process_op ~pdf ~f ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~remove ~stack ~state ~resources) [Pdfops.Op_h]);
+      process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~f ~remove ~stack ~state ~resources Pdfops.Op_B'
   | Pdfops.Op_f | Pdfops.Op_F ->
       ignore (process_op ~pdf ~f ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~remove ~stack ~state ~resources Pdfops.Op_h);
       begin match !state.partial_path with
@@ -1015,11 +1016,11 @@ let rec process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~f 
   | Pdfops.Op_TJ l ->
       [Pdfops.Op_TJ (optimise_capital_tj (process_capital_tj ~f ~stack ~state ~resources l))]
   | Pdfops.Op_' s ->
-      ignore (map (process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~f ~remove ~stack ~state ~resources) [Pdfops.Op_T'; Pdfops.Op_Tj s]);
-      [op]
+      ignore (map (process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~f ~remove ~stack ~state ~resources) [Pdfops.Op_T']);
+      process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~f ~remove ~stack ~state ~resources (Pdfops.Op_Tj s)
   | Pdfops.Op_'' (f1, f2, s) ->
-      ignore (map (process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~f ~remove ~stack ~state ~resources) [(Pdfops.Op_Tw f1); (Pdfops.Op_Tc f2); (Pdfops.Op_' s)]);
-      [op]
+      ignore (map (process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~f ~remove ~stack ~state ~resources) [(Pdfops.Op_Tw f1); (Pdfops.Op_Tc f2)]);
+      process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~f ~remove ~stack ~state ~resources (Pdfops.Op_' s)
   | Pdfops.Op_d0 (f1, f2) ->
       !state.d0 <- Some (f1, f2);
       [op]
@@ -1093,6 +1094,7 @@ let rec process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~f 
         let shading = read_shading pdf Pdftransform.i_matrix Pdf.Null shading in
           begin match shading.shading_bbox with
           | Some r ->
+              flprint "good shading\n";
               begin try
                 let minx, miny, maxx, maxy = Pdf.parse_rectangle pdf r in
                   match f {state = copystate !state; content = Shading s; bounding_box = Quad (minx, miny, minx, maxy, maxx, maxy, maxx, miny)} with
@@ -1103,6 +1105,7 @@ let rec process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~f 
               end
           | None ->
               (* This is an unbounded shading, not recommended. So we use the current clipping path. *)
+              flprint "bad shading\n";
               match emit_path_bounding_box ~content:(Shading s) ~stroking:false ~f ~state with
               | Nonintersecting -> [op]
               | Intersects _ | Encloses -> []
