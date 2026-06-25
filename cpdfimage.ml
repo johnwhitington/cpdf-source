@@ -1660,53 +1660,54 @@ let redact_lossless pdf ~path_to_convert (minx, miny, maxx, maxy) s dict referen
   if retcode = 0 then
     begin
       let result = open_in_bin out2 in
-        begin
-          match rev (explode out2) with
-          | 'k'::'y'::'m'::'c'::_ ->
-            (* We have '.cmyk' not '.png' returned. *)
-            let new_w, new_h = read_info_dimensions out3 in
-            let dict =
-              Pdf.remove_dict_entry
-                (Pdf.remove_dict_entry
-                  (Pdf.add_dict_entry
-                    (Pdf.add_dict_entry dict "/Height" (Pdf.Integer new_h))
-                    "/Width" (Pdf.Integer new_w))
-                  "/DecodeParms")
-                "/Filter"
-            in
-            reference := (dict, Pdf.Got (Pdfio.bytes_of_input_channel result))
-          | _ -> 
-            reference :=
-              (match fst (obj_of_png_data pdf (Pdfio.bytes_of_input_channel result)) with
-              | Pdf.Stream {contents = Pdf.Dictionary d, data} as s ->
-                  let out_components = test_components pdf s in
-                  let out_bpc = test_bpc pdf s in
-                  let rgb_to_grey_special =
-                    let was_rgb =
-                      match Pdf.lookup_direct pdf "/ColorSpace" dict with
-                      | Some (Pdf.Name ("/DeviceRGB" | "/CalRGB")) -> true
-                      | _ -> false
-                    in
-                      in_bpc = out_bpc && in_components = 3 && out_components = 1 && was_rgb
-                  in
-                  if (out_components <> in_components || in_bpc <> out_bpc) && not rgb_to_grey_special then
-                    begin
-                      if !debug_image_processing then Printf.printf "wrong bpc / components returned. Skipping.\n%!";
-                      !reference
-                    end
-                  else
-                  begin
-
-                    let d' = fold_right (fun (k, v) d -> if k <> "/ColorSpace" || rgb_to_grey_special then add k v d else d) d (match dict with Pdf.Dictionary x -> x | _ -> []) in
-                      (Pdf.Dictionary d', data)
-                  end
-              | _ -> assert false)
-        end;
-        close_in result;
-        remove out;
-        remove out2;
-        remove out3;
-        true
+        match rev (explode out2) with
+        | 'k'::'y'::'m'::'c'::_ ->
+          (* We have '.cmyk' not '.png' returned. *)
+          let new_w, new_h = read_info_dimensions out3 in
+          let dict =
+            Pdf.remove_dict_entry
+              (Pdf.remove_dict_entry
+                (Pdf.add_dict_entry
+                  (Pdf.add_dict_entry dict "/Height" (Pdf.Integer new_h))
+                  "/Width" (Pdf.Integer new_w))
+                "/DecodeParms")
+              "/Filter"
+          in
+            reference := (dict, Pdf.Got (Pdfio.bytes_of_input_channel result));
+            true
+        | _ -> 
+          (match fst (obj_of_png_data pdf (Pdfio.bytes_of_input_channel result)) with
+          | Pdf.Stream {contents = Pdf.Dictionary d, data} as s ->
+              let out_components = test_components pdf s in
+              let out_bpc = test_bpc pdf s in
+              let rgb_to_grey_special =
+                let was_rgb =
+                  match Pdf.lookup_direct pdf "/ColorSpace" dict with
+                  | Some (Pdf.Name ("/DeviceRGB" | "/CalRGB")) -> true
+                  | _ -> false
+                in
+                  in_bpc = out_bpc && in_components = 3 && out_components = 1 && was_rgb
+              in
+              if (out_components <> in_components || in_bpc <> out_bpc) && not rgb_to_grey_special then
+                begin
+                  if !debug_image_processing then Printf.printf "wrong bpc / components returned. Skipping.\n%!";
+                  close_in result;
+                  remove out;
+                  remove out2;
+                  remove out3;
+                  false
+                end
+              else
+                begin
+                  let d' = fold_right (fun (k, v) d -> if k <> "/ColorSpace" || rgb_to_grey_special then add k v d else d) d (match dict with Pdf.Dictionary x -> x | _ -> []) in
+                    reference := (Pdf.Dictionary d', data);
+                    close_in result;
+                    remove out;
+                    remove out2;
+                    remove out3;
+                    true
+                end
+          | _ -> assert false)
     end
     else
       begin
