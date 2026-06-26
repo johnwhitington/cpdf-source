@@ -940,6 +940,7 @@ let rec process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~f 
           [Pdfops.Op_m (x, y); Pdfops.Op_l (x +. w, y); Pdfops.Op_l (x +. w, y +. h); Pdfops.Op_l (x, y +. h); Pdfops.Op_h]);
       [op]
   | Pdfops.Op_W ->
+      (* TODO Should we be removing clipping paths? For example, in 6408.pdf the path betrays the bicycle shape... Remove if wholly within rectangle? *)
       begin match !state.partial_path with
       | PartialPath (_, _, segments, subpaths) ->
           if segments = [] && subpaths = [] then () else
