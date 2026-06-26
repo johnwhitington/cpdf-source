@@ -8,6 +8,7 @@ val redact :
   path_to_convert:string ->
   path_to_jbig2enc:string ->
   path:(float * float * float * float) ->
+  invert:bool ->
   color:Cpdfaddtext.colour ->
   outline:bool ->
   opacity:float ->
@@ -24,6 +25,7 @@ val apply :
   path_to_convert:string ->
   path_to_jbig2enc:string ->
   ?typ:string ->
+  invert:bool ->
   color:Cpdfaddtext.colour ->
   outline:bool ->
   opacity:float ->
