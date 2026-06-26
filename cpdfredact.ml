@@ -87,7 +87,42 @@ let preprocess_jbig2lossy_to_jbig2lossless ?jbig2dec ~path_to_jbig2enc pdf =
        | _ -> ())
      pdf
 
-let redact pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~path:((minx, miny, maxx, maxy) as path) ~color ~outline ~opacity ~linewidth ~underneath range =
+(* Remove any annotation whose rect intersects with the redaction rect. *)
+let redact_annotations pdf range ~path:(minx, miny, maxx, maxy) =
+  let to_delete = ref [] in
+  let redact_annotations_page pnum page =
+    match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
+    | Some (Pdf.Array annots) ->
+        let annotation_objnums = option_map (function Pdf.Indirect i -> Some i | _ -> None) annots in
+        let page =
+          fold_left
+            (fun page i ->
+              match Pdf.lookup_direct pdf "/Rect" (Pdf.Indirect i) with
+              | Some rect ->
+                  let annot_rect = Pdf.parse_rectangle pdf rect in
+                    (* TODO If this rectangle and the main one intersect/enclose, then add to to_delete *)
+                    page
+              | None ->
+                  page)
+            page
+            annotation_objnums
+        in
+        (* TODO Delete popup if we delete an annotation. *)
+        {page with
+          Pdfpage.rest =
+            Pdf.add_dict_entry
+              page.Pdfpage.rest
+              "/Annots"
+              (Pdf.Array (lose (function Pdf.Indirect i -> mem i !to_delete | _ -> false) annots))}
+    | _ -> page
+  in
+    Cpdfpage.process_pages
+      (Pdfpage.ppstub
+        (fun pnum page -> if mem pnum range then redact_annotations_page pnum page else page))
+      pdf
+      range
+
+let redact pdf ~annots ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~path:((minx, miny, maxx, maxy) as path) ~color ~outline ~opacity ~linewidth ~underneath range =
   preprocess_jbig2lossy_to_jbig2lossless ~jbig2dec:path_to_jbig2dec ~path_to_jbig2enc pdf;
   Cpdfutil.progress_line "Redacting content...";
   let pdf =
@@ -97,6 +132,7 @@ let redact pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~path:((minx
       pdf
       range
   in
+    let pdf = if annots then redact_annotations pdf range ~path else pdf in
     Cpdfutil.progress_line "Adding redaction appearance...";
     let pdf =
       Cpdfaddtext.addrectangle
@@ -111,7 +147,7 @@ let redact_add_rectangle_pnum pdf ~path:(minx, miny, maxx, maxy) ~color ~outline
     color outline linewidth opacity (Cpdfposition.PosLeft(minx, miny)) "/Absolute" underneath [pnum] pdf
 
 (* Apply redaction annotations. *)
-let apply pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ?(typ="/Redact") ~color ~outline ~opacity ~linewidth ~underneath range =
+let apply pdf ~annots ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ?(typ="/Redact") ~color ~outline ~opacity ~linewidth ~underneath range =
   preprocess_jbig2lossy_to_jbig2lossless ~jbig2dec:path_to_jbig2dec ~path_to_jbig2enc pdf;
   let rectangles = ref [] in
   let apply_page pnum page =
@@ -164,7 +200,8 @@ let apply pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ?(typ="/Redac
     in
       fold_left
         (fun pdf (pnum, path) ->
-           redact_add_rectangle_pnum pdf ~path ~color ~outline ~opacity ~linewidth ~underneath pnum)
+           let pdf = if annots then redact_annotations pdf [pnum] ~path else pdf in
+             redact_add_rectangle_pnum pdf ~path ~color ~outline ~opacity ~linewidth ~underneath pnum)
         pdf
         !rectangles
 

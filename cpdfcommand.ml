@@ -647,7 +647,8 @@ type args =
    mutable page_content_images : bool;
    mutable page_content_text : bool;
    mutable page_content_graphics : bool;
-   mutable annotation_subtype : Pdfannot.subtype}
+   mutable annotation_subtype : Pdfannot.subtype;
+   mutable redact_annotations : bool}
 
 let args =
   {op = None;
@@ -815,7 +816,8 @@ let args =
    page_content_images = true;
    page_content_text = true;
    page_content_graphics = true;
-   annotation_subtype = Pdfannot.Redact}
+   annotation_subtype = Pdfannot.Redact;
+   redact_annotations = false}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -967,7 +969,8 @@ let reset_arguments () =
   args.page_content_images <- true;
   args.page_content_text <- true;
   args.page_content_graphics <- true;
-  args.annotation_subtype <- Redact
+  args.annotation_subtype <- Redact;
+  args.redact_annotations <- false
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -3287,6 +3290,7 @@ let specs =
    ("-pc-no-graphics", Arg.Unit (fun () -> args.page_content_graphics <- false), " Don't list paths and shadings in page content");
    ("-annotate", Arg.String (fun s -> setop AddAnnotation (); args.rectangle <- s), " Annotate pages");
    ("-annot-type", Arg.String (fun s -> args.annotation_subtype <- Cpdfannot.subtype_of_string s), " Select annotation type");
+   ("-redact-annotations", Arg.Unit (fun () -> args.redact_annotations <- true), " Also redact annotations");
    (* Undocumented. *)
    ("-test-extract-text", Arg.Unit (fun () -> setop TestExtractText ()), "")]
 
@@ -5377,7 +5381,7 @@ let rec go () =
       let path = (minx, miny, maxx, maxy) in
       let pdf =
         Cpdfredact.redact
-          pdf ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc
+          pdf ~annots:args.redact_annotations ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc
           ~path ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth ~underneath:args.underneath range
       in
         write_pdf false pdf
@@ -5385,7 +5389,7 @@ let rec go () =
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
       let pdf =
-        Cpdfredact.apply pdf ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc
+        Cpdfredact.apply pdf ~annots:args.redact_annotations ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc
         ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth ~underneath:args.underneath range
       in
         write_pdf false pdf
@@ -5394,7 +5398,7 @@ let rec go () =
       let range = parse_pagespec pdf (get_pagespec ()) in
       let pdf =
         Cpdfredact.apply
-          pdf ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc
+          pdf ~annots:args.redact_annotations ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc
           ~typ:("/" ^ s) ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth ~underneath:args.underneath range
       in
         write_pdf false pdf

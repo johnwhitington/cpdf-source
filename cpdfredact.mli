@@ -1,8 +1,9 @@
 (** Redaction. *)
 
-(** Redact a PDF in the given shape in the given range. Not implemented yet. *)
+(** Redact a PDF in the given shape in the given range. *)
 val redact : 
   Pdf.t ->
+  annots:bool ->
   path_to_jbig2dec:string ->
   path_to_convert:string ->
   path_to_jbig2enc:string ->
@@ -18,6 +19,7 @@ val redact :
 (** Apply redaction annotations in a given range. *)
 val apply :
   Pdf.t ->
+  annots:bool ->
   path_to_jbig2dec:string ->
   path_to_convert:string ->
   path_to_jbig2enc:string ->
