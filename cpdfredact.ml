@@ -44,18 +44,8 @@ let redact_page pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~path p
       ~resources:page.Pdfpage.resources
       ~ops:(Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content)
   in
-    (*if !to_remove <> [] then
-      begin
-        Printf.printf "To remove at page level... ";
-        iter (Printf.printf "%s ") !to_remove;
-        flprint "\n";
-      end;*)
-    let ops =
-      lose (function Pdfops.Op_Do n when mem n !to_remove -> true | _ -> false) ops
-    in
-    let ops =
-      Cpdfcontent.postprocess_remove_empty_path_ops ops
-    in
+    let ops = lose (function Pdfops.Op_Do n when mem n !to_remove -> true | _ -> false) ops in
+    let ops = Cpdfcontent.postprocess_remove_empty_path_ops ops in
     let resources' =
       let xobjects =
         match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
@@ -73,7 +63,6 @@ let redact_page pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~path p
    upon the first compression.  So it's too dangerous. Therefore, we convert
    all JBIG2Lossy to lossless JBIG2 (if possible) or CCITTG4 (if not) before
    embarking upon redaction. *)
-
 let preprocess_jbig2lossy_to_jbig2lossless ?jbig2dec ~path_to_jbig2enc pdf =
   Pdf.objiter
     (fun objnum s ->
@@ -99,21 +88,30 @@ let redact_annotations pdf range ~path:(minx, miny, maxx, maxy) =
             (fun page i ->
               match Pdf.lookup_direct pdf "/Rect" (Pdf.Indirect i) with
               | Some rect ->
-                  let annot_rect = Pdf.parse_rectangle pdf rect in
-                    (* TODO If this rectangle and the main one intersect/enclose, then add to to_delete *)
+                  let aminx, aminy, amaxx, amaxy = Pdf.parse_rectangle pdf rect in
+                    begin match box_overlap_float aminx aminy amaxx amaxy minx miny maxx maxy with
+                    | Some _-> to_delete =| i
+                    | None -> ()
+                    end;
                     page
               | None ->
                   page)
             page
             annotation_objnums
         in
-        (* TODO Delete popup if we delete an annotation. *)
+        let popups_to_delete = ref [] in
+        iter
+          (fun i ->
+            match Pdf.indirect_number pdf "/Parent" (Pdf.Indirect i) with
+            | Some i' when mem i' !to_delete -> popups_to_delete =| i
+            | _ -> ())
+          annotation_objnums;
         {page with
           Pdfpage.rest =
             Pdf.add_dict_entry
               page.Pdfpage.rest
               "/Annots"
-              (Pdf.Array (lose (function Pdf.Indirect i -> mem i !to_delete | _ -> false) annots))}
+              (Pdf.Array (lose (function Pdf.Indirect i -> mem i !to_delete || mem i !popups_to_delete | _ -> false) annots))}
     | _ -> page
   in
     Cpdfpage.process_pages
