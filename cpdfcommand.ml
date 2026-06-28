@@ -5463,13 +5463,14 @@ let rec go () =
   | ShowBoundingBoxes shape ->
       let pdf = get_single_pdf args.op true in
       let range = parse_pagespec pdf (get_pagespec ()) in
-      let path = match shape with
-      | "" -> None
-      | rect ->
-          let minx, miny, w, h = Cpdfcoord.parse_rectangle pdf rect in
-            Some (minx, miny, minx +. w, miny +. h)
+      let paths =
+        match shape with
+        | "" -> map (fun _ -> None) (ilist 1 (Pdfpage.endpage pdf))
+        | rect ->
+            let rects = Cpdfcoord.parse_rectangles pdf rect in
+              map (fun (minx, miny, w, h) -> Some (minx, miny, minx +. w, miny +. h)) rects
       in
-      let pdf = Cpdfredact.show_bounding_boxes ~fast:args.fast ~path ~light:args.show_bboxes_light pdf range in
+      let pdf = Cpdfredact.show_bounding_boxes ~fast:args.fast ~paths ~light:args.show_bboxes_light pdf range in
         write_pdf false pdf
   | RevealText ->
       let pdf = get_single_pdf args.op true in

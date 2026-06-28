@@ -36,4 +36,4 @@ val apply :
 
 (** Show bounding boxes in the given shape or, if None, the whole page in the
     given rage. [light] will use lighter colours. *)
-val show_bounding_boxes : fast:bool -> path:(float * float * float * float) option -> light:bool -> Pdf.t -> int list -> Pdf.t
+val show_bounding_boxes : fast:bool -> paths:(float * float * float * float) option list -> light:bool -> Pdf.t -> int list -> Pdf.t

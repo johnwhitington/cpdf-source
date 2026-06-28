@@ -251,7 +251,7 @@ let show_annotation_bounding_boxes ~fast ~light pdf range =
     in
       Cpdftweak.append_page_content_multiple_ops opss false fast !pdf
 
-let show_bounding_boxes ~fast ~path ~light pdf range =
+let show_bounding_boxes ~fast ~paths ~light pdf range =
   let pdf = show_annotation_bounding_boxes ~fast ~light pdf range in
   Cpdfutil.progress_line "Finding page content bounding boxes...";
   let show_bounding_boxes_page page =
@@ -270,10 +270,13 @@ let show_bounding_boxes ~fast ~path ~light pdf range =
   in
     let pdf = ref pdf in
     Cpdfutil.progress_line "Showing page content bounding boxes...";
-    let content_of_boxes boxes = flatten (map (mkbox ~light) (select_boxes path boxes)) in
+    let content_of_boxes pnum boxes =
+      let path = List.nth paths (pnum - 1) in
+        flatten (map (mkbox ~light) (select_boxes path boxes))
+    in
     let opss =
       map
-        (fun n -> match lookup n !bboxes with | Some boxes -> content_of_boxes boxes | None -> [])
+        (fun pnum -> match lookup pnum !bboxes with Some boxes -> content_of_boxes pnum boxes | None -> [])
         (ilist 1 (Pdfpage.endpage !pdf))
     in
       Cpdftweak.append_page_content_multiple_ops opss false fast !pdf
