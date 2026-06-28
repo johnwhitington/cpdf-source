@@ -76,10 +76,6 @@ let parse_pagespec pdf spec =
   try Cpdfpagespec.parse_pagespec pdf spec with
     Failure x -> error x
 
-type shape =
-  | NoShape
-  | Rect of float * float * float * float
-
 (* Operations. *)
 type op =
   | CopyFont of string
@@ -258,7 +254,7 @@ type op =
   | SigInfo
   | AddAttachedFilesJSON of string
   | RemoveStreamContent
-  | ShowBoundingBoxes of shape
+  | ShowBoundingBoxes of string
   | RevealText
   | PageContentJSON
   | TestExtractText
@@ -2132,10 +2128,6 @@ let addeltinfo s =
 
 let rfindpdf = ref (fun () -> Pdf.empty ())
 
-let read_shape s =
-  let a, b, c, d = Cpdfcoord.parse_rectangle (Pdf.empty ()) s in
-    Rect (a, b, c, d)
-
 let specs =
   [("-version",
       Arg.Unit (setop Version),
@@ -3283,8 +3275,8 @@ let specs =
    ("-text-180", Arg.Unit (fun () -> args.text_rotation <- Cpdfaddtext.Rot180), " Rotate text to 180 degrees");
    ("-text-270", Arg.Unit (fun () -> args.text_rotation <- Cpdfaddtext.Rot270), " Rotate text to 270 degrees");
    ("-url-border", Arg.Unit (fun () -> args.url_border <- true), " Add a border to URLs");
-   ("-show-bboxes", Arg.Unit (fun () -> setop (ShowBoundingBoxes NoShape) ()), " Show bounding boxes");
-   ("-show-bboxes-shape", Arg.String (fun s -> setop (ShowBoundingBoxes (read_shape s)) ()), " Show bounding boxes in a given shape");
+   ("-show-bboxes", Arg.Unit (fun () -> setop (ShowBoundingBoxes "") ()), " Show bounding boxes");
+   ("-show-bboxes-shape", Arg.String (fun s -> setop (ShowBoundingBoxes s) ()), " Show bounding boxes in a given shape");
    ("-light", Arg.Unit (fun () -> args.show_bboxes_light <- true), " Use light colours for bounding boxes");
    ("-reveal-text", Arg.Unit (fun () -> setop RevealText ()), " Reveal hidden text");
    ("-page-content", Arg.Unit (fun () -> setop PageContentJSON ()), " Export page content as JSON");
@@ -5377,12 +5369,10 @@ let rec go () =
       let range = parse_pagespec pdf (get_pagespec ()) in
         write_pdf false (Cpdfpage.redact ~process_struct_tree:args.process_struct_trees pdf range)
   | RedactShape rectspec ->
-      (* TODO When we allow rectangles only, we can then fix this to pass all the rectangles, so that "CMINX CMINY CW CH" and hence ./cpdftest -redact-whole-page work. *)
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
       let minx, miny, w, h = Cpdfcoord.parse_rectangle pdf rectspec in
-      let maxx, maxy = minx +. w, miny +. h in
-      let path = (minx, miny, maxx, maxy) in
+      let path = (minx, miny, minx +. w, miny +. h) in
       let pdf =
         Cpdfredact.redact
           pdf ~annots:args.redact_annotations ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc
@@ -5473,12 +5463,13 @@ let rec go () =
   | ShowBoundingBoxes shape ->
       let pdf = get_single_pdf args.op true in
       let range = parse_pagespec pdf (get_pagespec ()) in
-      (* TODO unify shape treatment with RedactShape. *)
-      let shape = match shape with
-      | NoShape -> None
-      | Rect (minx, miny, w, h) -> Some (minx, miny, minx +. w, miny +. h)
+      let path = match shape with
+      | "" -> None
+      | rect ->
+          let minx, miny, w, h = Cpdfcoord.parse_rectangle pdf rect in
+            Some (minx, miny, minx +. w, miny +. h)
       in
-      let pdf = Cpdfredact.show_bounding_boxes ~fast:args.fast ~shape ~light:args.show_bboxes_light pdf range in
+      let pdf = Cpdfredact.show_bounding_boxes ~fast:args.fast ~path ~light:args.show_bboxes_light pdf range in
         write_pdf false pdf
   | RevealText ->
       let pdf = get_single_pdf args.op true in
