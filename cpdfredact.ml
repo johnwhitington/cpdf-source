@@ -82,6 +82,7 @@ let preprocess_jbig2lossy_to_jbig2lossless ?jbig2dec ~path_to_jbig2enc pdf =
 
 (* Remove any annotation whose rect intersects with the redaction rect. *)
 let redact_annotations pdf range ~path:(minx, miny, maxx, maxy) =
+  Cpdfutil.progress_line "Redacting annotations...";
   let to_delete = ref [] in
   let redact_annotations_page pnum page =
     match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
