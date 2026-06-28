@@ -5,7 +5,7 @@ New features:
 * Redact documents with -redact-shape
 * Apply redaction annotations with -redact-apply
 * Apply other annotations as redactions with -redact-apply-type
-* Create redaction annotations
+* Create redaction annotations with -add-annotation
 
 * = Supported by a grant from NLnet
 

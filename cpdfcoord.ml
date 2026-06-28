@@ -78,8 +78,11 @@ let make_num pdf page unt num =
     | Pdfgenlex.LexInt i -> float_of_int i
     | Pdfgenlex.LexReal r -> r
     | Pdfgenlex.LexName
-      (( "PW" | "PH" | "CW" | "CH" | "PMINX" | "PMINY" | "PMAXX" | "PMAXY"
-      | "CMINX" | "CMINY" | "CMAXX" | "CMAXY") as page_characteristic) ->
+      ((  "PW" | "PH" | "PMINX" | "PMINY" | "PMAXX" | "PMAXY"
+        | "CW" | "CH" | "CMINX" | "CMINY" | "CMAXX" | "CMAXY"
+        | "AW" | "AH" | "AMINX" | "AMINY" | "AMAXX" | "AMAXY"
+        | "TW" | "TH" | "TMINX" | "TMINY" | "TMAXX" | "TMAXY"
+        | "BW" | "BH" | "BMINX" | "BMINY" | "BMAXX" | "BMAXY") as page_characteristic) ->
         find_page_characteristic pdf page page_characteristic
     | _ -> failwith "make_num"
   in
@@ -179,22 +182,30 @@ and parse_units pdf page numbers = function
       parse_units pdf page (x::numbers) more
   | Pdfgenlex.LexName "pt"::more ->
       parse_units pdf page numbers more
-  (* TODO These should be extended for bleed, trim, art as above, surely? *)
   | Pdfgenlex.LexName
-      (( "PW" | "PH" | "CW" | "CH" | "PMINX" | "PMINY" | "PMAXX" | "PMAXY"
-       | "CMINX" | "CMINY" | "CMAXX" | "CMAXY") as page_characteristic)::more ->
+      (( "PW" | "PH" | "PMINX" | "PMINY" | "PMAXX" | "PMAXY"
+       | "CW" | "CH" | "CMINX" | "CMINY" | "CMAXX" | "CMAXY"
+       | "AW" | "AH" | "AMINX" | "AMINY" | "AMAXX" | "AMAXY"
+       | "TW" | "TH" | "TMINX" | "TMINY" | "TMAXX" | "TMAXY"
+       | "BW" | "BH" | "BMINX" | "BMINY" | "BMAXX" | "BMAXY") as page_characteristic)::more ->
          let r = find_page_characteristic pdf page page_characteristic in
            parse_units pdf page (r::numbers) more
   | Pdfgenlex.LexName ("add" | "sub" | "mul" | "div") as op::
     ((Pdfgenlex.LexInt _ | Pdfgenlex.LexReal _ |  Pdfgenlex.LexName
-      ( "PW" | "PH" | "CW" | "CH" | "PMINX" | "PMINY" | "PMAXX" | "PMAXY"
-       | "CMINX" | "CMINY" | "CMAXX" | "CMAXY")) as num)::
+      (  "PW" | "PH"| "PMINX" | "PMINY" | "PMAXX" | "PMAXY"
+       | "CW" | "CH" | "CMINX" | "CMINY" | "CMAXX" | "CMAXY"
+       | "AW" | "AH" | "AMINX" | "AMINY" | "AMAXX" | "AMAXY"
+       | "TW" | "TH" | "TMINX" | "TMINY" | "TMAXX" | "TMAXY"
+       | "BW" | "BH" | "BMINX" | "BMINY" | "BMAXX" | "BMAXY")) as num)::
     (Pdfgenlex.LexName ("pt" | "mm" | "cm" | "in") as unt)::more ->
       parse_units pdf page (update_last_number pdf page unt op num numbers) more
   | Pdfgenlex.LexName ("add" | "sub" | "mul" | "div") as op::
     ((Pdfgenlex.LexInt _ | Pdfgenlex.LexReal _ |  Pdfgenlex.LexName
-      ( "PW" | "PH" | "CW" | "CH" | "PMINX" | "PMINY" | "PMAXX" | "PMAXY"
-       | "CMINX" | "CMINY" | "CMAXX" | "CMAXY")) as num)::more ->
+      (  "PW" | "PH" | "PMINX" | "PMINY" | "PMAXX" | "PMAXY"
+       | "CW" | "CH" | "CMINX" | "CMINY" | "CMAXX" | "CMAXY"
+       | "AW" | "AH" | "AMINX" | "AMINY" | "AMAXX" | "AMAXY"
+       | "TW" | "TH" | "TMINX" | "TMINY" | "TMAXX" | "TMAXY"
+       | "BW" | "BH" | "BMINX" | "BMINY" | "BMAXX" | "BMAXY")) as num)::more ->
       parse_units pdf page (update_last_number pdf page (Pdfgenlex.LexName "pt") op num numbers) more
   | _ -> rev numbers
 
@@ -210,9 +221,7 @@ let space_units s =
   implode (space_units_inner (explode s))
 
 let parse_units_string pdf page s =
-  let fs = parse_units pdf page [] (Pdfgenlex.lex_string <| space_units s) in
-    (*(List.fold_left (fun x y -> x ^ " " ^ y) "" (List.map string_of_float * fs));*)
-    fs
+  parse_units pdf page [] (Pdfgenlex.lex_string <| space_units s)
 
 let parse_rectangle pdf s =
   (* If it begins with ? it's absolute *)
@@ -250,9 +259,7 @@ let parse_rectangles pdf s =
 let parse_coordinate pdf s =
   try
     match parse_units_string pdf emptypage s with
-    | [dx; dy] ->
-        (*Printf.printf "result = %f, %f\n" dx dy;*)
-        dx, dy
+    | [dx; dy] -> dx, dy
     | _ -> error ("Bad coordinate specification " ^ s)
   with
     _ -> error ("Bad coordinate specification " ^ s)

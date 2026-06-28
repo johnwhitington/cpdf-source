@@ -645,7 +645,8 @@ type args =
    mutable page_content_graphics : bool;
    mutable annotation_subtype : Pdfannot.subtype;
    mutable redact_annotations : bool;
-   mutable redact_invert : bool}
+   mutable redact_invert : bool;
+   mutable redact_show : bool}
 
 let args =
   {op = None;
@@ -815,7 +816,8 @@ let args =
    page_content_graphics = true;
    annotation_subtype = Pdfannot.Redact;
    redact_annotations = false;
-   redact_invert = false}
+   redact_invert = false;
+   redact_show = true}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -969,7 +971,8 @@ let reset_arguments () =
   args.page_content_graphics <- true;
   args.annotation_subtype <- Redact;
   args.redact_annotations <- false;
-  args.redact_invert <- false
+  args.redact_invert <- false;
+  args.redact_show <- true
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -3287,6 +3290,7 @@ let specs =
    ("-annot-type", Arg.String (fun s -> args.annotation_subtype <- Cpdfannot.subtype_of_string s), " Select annotation type");
    ("-redact-annotations", Arg.Unit (fun () -> args.redact_annotations <- true), " Also redact annotations");
    ("-redact-invert", Arg.Unit (fun () -> args.redact_invert <- true), " Invert redaction area");
+   ("-redact-no-show", Arg.Unit (fun () -> args.redact_show <- false), " Do not show redaction area");
    (* Undocumented. *)
    ("-test-extract-text", Arg.Unit (fun () -> setop TestExtractText ()), "")]
 
@@ -5376,7 +5380,7 @@ let rec go () =
       let pdf =
         Cpdfredact.redact
           pdf ~annots:args.redact_annotations ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc
-          ~paths ~invert:args.redact_invert ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth ~underneath:args.underneath range
+          ~paths ~invert:args.redact_invert ~show:args.redact_show ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth ~underneath:args.underneath range
       in
         write_pdf false pdf
   | RedactApply ->
@@ -5384,7 +5388,7 @@ let rec go () =
       let range = parse_pagespec pdf (get_pagespec ()) in
       let pdf =
         Cpdfredact.apply pdf ~annots:args.redact_annotations ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc
-        ~invert:args.redact_invert ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth ~underneath:args.underneath range
+        ~invert:args.redact_invert ~show:args.redact_show ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth ~underneath:args.underneath range
       in
         write_pdf false pdf
   | RedactApplyType s ->
@@ -5393,7 +5397,7 @@ let rec go () =
       let pdf =
         Cpdfredact.apply
           pdf ~annots:args.redact_annotations ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc
-          ~typ:("/" ^ s) ~invert:args.redact_invert ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth ~underneath:args.underneath range
+          ~typ:("/" ^ s) ~invert:args.redact_invert ~show:args.redact_show ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth ~underneath:args.underneath range
       in
         write_pdf false pdf
   | Rasterize ->
