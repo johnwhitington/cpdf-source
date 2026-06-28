@@ -5371,12 +5371,12 @@ let rec go () =
   | RedactShape rectspec ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
-      let minx, miny, w, h = Cpdfcoord.parse_rectangle pdf rectspec in
-      let path = (minx, miny, minx +. w, miny +. h) in
+      let rects = Cpdfcoord.parse_rectangles pdf rectspec in
+      let paths = map (fun (minx, miny, w, h) -> (minx, miny, minx +. w, miny +. h)) rects in
       let pdf =
         Cpdfredact.redact
           pdf ~annots:args.redact_annotations ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc
-          ~path ~invert:args.redact_invert ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth ~underneath:args.underneath range
+          ~paths ~invert:args.redact_invert ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth ~underneath:args.underneath range
       in
         write_pdf false pdf
   | RedactApply ->

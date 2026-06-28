@@ -7,7 +7,7 @@ val redact :
   path_to_jbig2dec:string ->
   path_to_convert:string ->
   path_to_jbig2enc:string ->
-  path:(float * float * float * float) ->
+  paths:(float * float * float * float) list ->
   invert:bool ->
   color:Cpdfaddtext.colour ->
   outline:bool ->
