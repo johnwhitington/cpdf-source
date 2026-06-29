@@ -34,7 +34,7 @@ let invert_overlap = function
   | _ -> Nonintersecting
 
 (* Redact a path on a page *)
-let redact_page pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~path ~invert page =
+let redact_page pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~path ~invert page =
   let to_remove = ref [] in
   let ops =
     Cpdfcontent.filter
@@ -42,6 +42,7 @@ let redact_page pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~path ~
       ~path_to_jbig2dec
       ~path_to_convert
       ~path_to_jbig2enc
+      ~color
       ~f:(function content -> if invert then invert_overlap (box_matches path content) else box_matches path content)
       ~remove:(fun s -> to_remove := s::!to_remove)
       ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox)
@@ -132,7 +133,7 @@ let redact pdf ~annots ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~pat
   let pdf =
     Cpdfpage.process_pages
       (Pdfpage.ppstub
-        (fun pnum page -> if mem pnum range then let path = List.nth paths (pnum - 1) in redact_page pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~path ~invert page else page))
+        (fun pnum page -> if mem pnum range then let path = List.nth paths (pnum - 1) in redact_page pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~path ~invert page else page))
       pdf
       range
   in
@@ -193,7 +194,7 @@ let apply pdf ~annots ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ?(typ
               | Some rect ->
                   let path = Pdf.parse_rectangle pdf rect in
                     rectangles =| (pnum, path);
-                    redact_page pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~path ~invert page
+                    redact_page pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~path ~invert page
               | None ->
                   page)
             page
@@ -270,7 +271,7 @@ let show_bounding_boxes ~fast ~paths ~light pdf range =
   let show_bounding_boxes_page page =
     let ops = Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content in
     let page_boxes = ref [] in
-      ignore (Cpdfcontent.filter ~pdf ~path_to_jbig2dec:"" ~path_to_convert:"" ~path_to_jbig2enc:"" ~f:(fun page_obj -> page_boxes =| page_obj; Nonintersecting) ~remove:(fun _ -> ()) ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox) ~resources:page.Pdfpage.resources ~ops);
+      ignore (Cpdfcontent.filter ~pdf ~path_to_jbig2dec:"" ~path_to_convert:"" ~path_to_jbig2enc:"" ~color:(Cpdfaddtext.Grey 0.) ~f:(fun page_obj -> page_boxes =| page_obj; Nonintersecting) ~remove:(fun _ -> ()) ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox) ~resources:page.Pdfpage.resources ~ops);
       !page_boxes
   in
   let bboxes = ref [] in
