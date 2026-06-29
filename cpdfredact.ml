@@ -144,14 +144,11 @@ let redact pdf ~annots ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~pat
         let pdf = ref pdf in
           iter
             (fun pnum ->
-              let minx, miny, maxx, maxy =
-                let minx, miny, w, h = List.nth paths (pnum - 1) in
-                  minx, miny, minx +. w, miny +. h
-                in
-                  pdf :=
-                    Cpdfaddtext.addrectangle
-                      false (Printf.sprintf "%s %s" (string_of_float (maxx -. minx)) (string_of_float (maxy -. miny)))
-                      color outline linewidth opacity (Cpdfposition.PosLeft(minx, miny)) "/Absolute" underneath [pnum] !pdf)
+              let minx, miny, maxx, maxy = List.nth paths (pnum - 1) in
+                pdf :=
+                  Cpdfaddtext.addrectangle
+                    false (Printf.sprintf "%s %s" (string_of_float (maxx -. minx)) (string_of_float (maxy -. miny)))
+                    color outline linewidth opacity (Cpdfposition.PosLeft(minx, miny)) "/Absolute" underneath [pnum] !pdf)
             range;
           !pdf
       end
