@@ -646,7 +646,8 @@ type args =
    mutable annotation_subtype : Pdfannot.subtype;
    mutable redact_annotations : bool;
    mutable redact_invert : bool;
-   mutable redact_show : bool}
+   mutable redact_show : bool;
+   mutable redact_proof : bool}
 
 let args =
   {op = None;
@@ -817,7 +818,8 @@ let args =
    annotation_subtype = Pdfannot.Redact;
    redact_annotations = false;
    redact_invert = false;
-   redact_show = true}
+   redact_show = true;
+   redact_proof = false}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -972,7 +974,8 @@ let reset_arguments () =
   args.annotation_subtype <- Redact;
   args.redact_annotations <- false;
   args.redact_invert <- false;
-  args.redact_show <- true
+  args.redact_show <- true;
+  args.redact_proof <- false
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -3291,6 +3294,7 @@ let specs =
    ("-redact-annotations", Arg.Unit (fun () -> args.redact_annotations <- true), " Also redact annotations");
    ("-redact-invert", Arg.Unit (fun () -> args.redact_invert <- true), " Invert redaction area");
    ("-redact-no-show", Arg.Unit (fun () -> args.redact_show <- false), " Do not show redaction area");
+   ("-redact-proof", Arg.Unit (fun () -> args.redact_proof <- true), " Write redaction proofs in addition to redacted file");
    (* Undocumented. *)
    ("-test-extract-text", Arg.Unit (fun () -> setop TestExtractText ()), "")]
 
