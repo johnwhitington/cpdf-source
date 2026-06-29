@@ -1734,7 +1734,7 @@ let redact_jpeg pdf ~path_to_convert (minx, miny, maxx, maxy) s dict reference =
     close_out fh;
     let retcode =
       let command = 
-        Filename.quote_command path_to_convert ([out; "-stroke"; "none"; "-draw"; (Printf.sprintf "rectangle %f,%f %f,%f" minx (float_of_int h -. miny) maxx (float_of_int h -. maxy)); out2])
+        Filename.quote_command path_to_convert ([out; "-stroke"; "none"; "-fill"; "black"; "-draw"; (Printf.sprintf "rectangle %f,%f %f,%f" minx (float_of_int h -. miny) maxx (float_of_int h -. maxy)); out2])
       in
         image_command command
     in
@@ -1774,7 +1774,7 @@ let redact_jpeg2000 pdf ~path_to_convert (minx, miny, maxx, maxy) s dict referen
     close_out fh;
     let retcode =
       let command = 
-        Filename.quote_command path_to_convert ([out; "-stroke"; "none"; "-draw"; (Printf.sprintf "rectangle %f,%f %f,%f" minx (float_of_int h -. miny) maxx (float_of_int h -. maxy)); out2])
+        Filename.quote_command path_to_convert ([out; "-stroke"; "none"; "-fill"; "black"; "-draw"; (Printf.sprintf "rectangle %f,%f %f,%f" minx (float_of_int h -. miny) maxx (float_of_int h -. maxy)); out2])
       in
         image_command command
     in
@@ -1836,7 +1836,7 @@ let redact_1bpp ?jbig2dec ~path_to_jbig2enc ~path_to_convert (minx, miny, maxx, 
       let retcode =
         let command = 
           Filename.quote_command path_to_convert
-             ([out; "-stroke"; "none"; "-draw";
+             ([out; "-stroke"; "none"; "-fill"; "black"; "-draw";
                (Printf.sprintf "rectangle %f,%f %f,%f" minx (float_of_int height -. miny) maxx (float_of_int height -. maxy));
                "-depth"; "1"; out2])
         in
