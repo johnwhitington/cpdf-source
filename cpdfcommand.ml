@@ -477,8 +477,27 @@ type font =
   | EmbeddedFont of string
   | OtherFont of string
 
+(* One item, or two separated by a comma. No whitespace. First is "remove" or
+   "leave" or "chop", second is "encloses" or "touches" *)
 let parse_redaction_spec s =
-  (Cpdfredact.Remove, None)
+  let parse_redaction_operation l =
+    match implode l with
+    | "remove" -> Cpdfredact.Remove
+    | "chop" -> Cpdfredact.Chop
+    | "leave" -> Cpdfredact.Leave
+    | _ -> error "bad redaction specification"
+  in
+  let parse_redaction_detection l =
+    match implode l with
+    | "touches" -> Cpdfredact.Touching
+    | "encloses" -> Cpdfredact.Enclosing
+    | _ -> error "bad redaction specification"
+  in
+  let before, after = cleavewhile (neq ',') (explode s) in
+    if after = [] then
+      (parse_redaction_operation before, Some (parse_redaction_detection (tl after)))
+    else
+      (parse_redaction_operation before, None)
 
 type args =
   {mutable op : op option;
