@@ -11,7 +11,7 @@ type colspec =
    NoCol
  | RGB of float * float * float
  | Grey of float
- | CYMK of float * float * float * float
+ | CMYK of float * float * float * float
 
 type justification =
   Left | Right | Centre
@@ -369,14 +369,14 @@ let rec ops_of_drawop struct_tree dryrun pdf endpage filename bates batespad num
       begin match x with
       | RGB (r, g, b) -> [Op_rg (r, g, b)]
       | Grey g -> [Op_g g]
-      | CYMK (c, y, m, k) -> [Op_k (c, y, m, k)]
+      | CMYK (c, m, y, k) -> [Op_k (c, m, y, k)]
       | NoCol -> []
       end
   | SetStroke x ->
       begin match x with
       | RGB (r, g, b) -> [Op_RG (r, g, b)]
       | Grey g -> [Op_G g]
-      | CYMK (c, y, m, k) -> [Op_K (c, y, m, k)]
+      | CMYK (c, m, y, k) -> [Op_K (c, m, y, k)]
       | NoCol -> []
       end
   | ClosePath -> [Pdfops.Op_h]

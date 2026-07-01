@@ -4,7 +4,7 @@
 type colour =
   Grey of float
 | RGB of float * float * float
-| CYMK of float * float * float * float
+| CMYK of float * float * float * float
 
 (** Build a colour operation for filling with the given colour. *)
 val colour_op : colour -> Pdfops.t

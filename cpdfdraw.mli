@@ -4,7 +4,7 @@ type colspec =
    NoCol
  | RGB of float * float * float
  | Grey of float
- | CYMK of float * float * float * float
+ | CMYK of float * float * float * float
 
 type justification =
   Left | Right | Centre

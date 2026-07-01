@@ -5,7 +5,7 @@ open Cpdferror
 type colour =
   Grey of float
 | RGB of float * float * float
-| CYMK of float * float * float * float
+| CMYK of float * float * float * float
 
 (** Rotation *)
 type rotation = Rot0 | Rot90 | Rot180 | Rot270
@@ -40,12 +40,12 @@ let width_of_text font text =
 let colour_op = function
   | RGB (r, g, b) -> Pdfops.Op_rg (r, g, b)
   | Grey g -> Pdfops.Op_g g
-  | CYMK (c, y, m, k) -> Pdfops.Op_k (c, y, m, k)
+  | CMYK (c, y, m, k) -> Pdfops.Op_k (c, y, m, k)
 
 let colour_op_stroke = function
   | RGB (r, g, b) -> Pdfops.Op_RG (r, g, b)
   | Grey g -> Pdfops.Op_G g
-  | CYMK (c, y, m, k) -> Pdfops.Op_K (c, y, m, k)
+  | CMYK (c, y, m, k) -> Pdfops.Op_K (c, y, m, k)
 
 let ops
   rotation font fontpack fontpackpdfobjs fontname longest_w x y rotate hoffset voffset outline linewidth

@@ -80,14 +80,14 @@ let parse_colour s =
         match Pdfgenlex.lex_string s with
         | [g] -> Cpdfaddtext.Grey (getnum g)
         | [r; g; b] -> Cpdfaddtext.RGB (getnum r, getnum g, getnum b)
-        | [c; y; m; k] -> Cpdfaddtext.CYMK (getnum c, getnum y, getnum m, getnum k)
+        | [c; m; y; k] -> Cpdfaddtext.CMYK (getnum c, getnum m, getnum y, getnum k)
         | _ -> error "Bad color"
 
 let col_of_string s =  
   match parse_colour s with
   | Cpdfaddtext.RGB (r, g, b) -> Cpdfdraw.RGB (r, g, b)
   | Cpdfaddtext.Grey g -> Cpdfdraw.Grey g
-  | Cpdfaddtext.CYMK (c, y, m, k) -> Cpdfdraw.CYMK (c, y, m, k)
+  | Cpdfaddtext.CMYK (c, m, y, k) -> Cpdfdraw.CMYK (c, m, y, k)
   | exception _ -> Cpdfdraw.NoCol
 
 let setstroke s =

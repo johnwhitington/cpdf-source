@@ -17,8 +17,15 @@ let complain_jbig2enc path =
 let complain_convert path =
   if path = "" then error "Specify magick location with -im"
 
+let magick_color c =
+  let expand n = Printf.sprintf "%i%%" (int_of_float (n *. 100.)) in
+    match c with
+    | Cpdfaddtext.Grey g -> Printf.sprintf "gray(%s)" (expand g)
+    | Cpdfaddtext.RGB (r, g, b) -> Printf.sprintf "rgb(%s, %s, %s)" (expand r) (expand g) (expand b)
+    | Cpdfaddtext.CMYK (c, y, m, k) -> Printf.sprintf "cmyk(%s, %s, %s, %s)" (expand c) (expand y) (expand m) (expand k)
+
 let remove x =
-  try (*Printf.printf "%s\n" x;*) Sys.remove x with _ -> ()
+  try (*Printf.printf "%s\n" x;*) (*Sys.remove x*) () with _ -> ()
 
 let pnm_white ch = output_char ch ' '
 let pnm_newline ch = output_char ch '\n'
@@ -1633,7 +1640,7 @@ let process
   in
     Pdf.objiter process_obj pdf
 
-let redact_lossless pdf ~path_to_convert (minx, miny, maxx, maxy) s dict reference =
+let redact_lossless pdf ~path_to_convert (minx, miny, maxx, maxy) ~color s dict reference =
   complain_convert path_to_convert;
   let in_components = test_components pdf dict in
   let in_bpc = test_bpc pdf dict in
@@ -1648,7 +1655,7 @@ let redact_lossless pdf ~path_to_convert (minx, miny, maxx, maxy) s dict referen
         (if components = 1 then ["-define"; "png:color-type=0"; "-colorspace"; "Gray"]
          else if components = 3 then ["-define"; "png:color-type=2"; "-colorspace"; "RGB"]
          else if components = 4 then ["-colorspace"; "CMYK"] else []) @
-        ["-stroke"; "none"; "-fill"; "black"; "-draw"; (Printf.sprintf "rectangle %f,%f %f,%f" minx (float_of_int h -. miny) maxx (float_of_int h -. maxy))] @ 
+        ["-stroke"; "none"; "-fill"; magick_color color; "-draw"; (Printf.sprintf "rectangle %f,%f %f,%f" minx (float_of_int h -. miny) maxx (float_of_int h -. maxy))] @ 
         (if components = 4 then ["-write"] else []) @ [out2] @
         (if components = 4 then ["-format"; "%w %h"; "info:"] else [])))
       ^
@@ -1723,7 +1730,7 @@ let redact_lossless pdf ~path_to_convert (minx, miny, maxx, maxy) s dict referen
     remove out3;
     false
 
-let redact_jpeg pdf ~path_to_convert (minx, miny, maxx, maxy) s dict reference =
+let redact_jpeg pdf ~path_to_convert (minx, miny, maxx, maxy) ~color s dict reference =
   complain_convert path_to_convert;
   Pdf.getstream s;
   let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
@@ -1734,7 +1741,7 @@ let redact_jpeg pdf ~path_to_convert (minx, miny, maxx, maxy) s dict reference =
     close_out fh;
     let retcode =
       let command = 
-        Filename.quote_command path_to_convert ([out; "-stroke"; "none"; "-fill"; "black"; "-draw"; (Printf.sprintf "rectangle %f,%f %f,%f" minx (float_of_int h -. miny) maxx (float_of_int h -. maxy)); out2])
+        Filename.quote_command path_to_convert ([out; "-stroke"; "none"; "-fill"; magick_color color; "-draw"; (Printf.sprintf "rectangle %f,%f %f,%f" minx (float_of_int h -. miny) maxx (float_of_int h -. maxy)); out2])
       in
         image_command command
     in
@@ -1763,7 +1770,7 @@ let redact_jpeg pdf ~path_to_convert (minx, miny, maxx, maxy) s dict reference =
         false
       end
 
-let redact_jpeg2000 pdf ~path_to_convert (minx, miny, maxx, maxy) s dict reference =
+let redact_jpeg2000 pdf ~path_to_convert (minx, miny, maxx, maxy) ~color s dict reference =
   complain_convert path_to_convert;
   let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
   Pdf.getstream s;
@@ -1774,7 +1781,7 @@ let redact_jpeg2000 pdf ~path_to_convert (minx, miny, maxx, maxy) s dict referen
     close_out fh;
     let retcode =
       let command = 
-        Filename.quote_command path_to_convert ([out; "-stroke"; "none"; "-fill"; "black"; "-draw"; (Printf.sprintf "rectangle %f,%f %f,%f" minx (float_of_int h -. miny) maxx (float_of_int h -. maxy)); out2])
+        Filename.quote_command path_to_convert ([out; "-stroke"; "none"; "-fill"; magick_color color; "-draw"; (Printf.sprintf "rectangle %f,%f %f,%f" minx (float_of_int h -. miny) maxx (float_of_int h -. maxy)); out2])
       in
         image_command command
     in
@@ -1803,7 +1810,7 @@ let redact_jpeg2000 pdf ~path_to_convert (minx, miny, maxx, maxy) s dict referen
         false
       end
 
-let redact_1bpp ?jbig2dec ~path_to_jbig2enc ~path_to_convert (minx, miny, maxx, maxy) pdf s dict reference was_jbig2 =
+let redact_1bpp ?jbig2dec ~path_to_jbig2enc ~path_to_convert (minx, miny, maxx, maxy) ~color pdf s dict reference was_jbig2 =
   complain_convert path_to_convert;
   Pdfcodec.decode_pdfstream_until_unknown ?jbig2dec pdf s;
   match Pdf.lookup_direct pdf "/Filter" (fst !reference) with
@@ -1836,7 +1843,7 @@ let redact_1bpp ?jbig2dec ~path_to_jbig2enc ~path_to_convert (minx, miny, maxx, 
       let retcode =
         let command = 
           Filename.quote_command path_to_convert
-             ([out; "-stroke"; "none"; "-fill"; "black"; "-draw";
+             ([out; "-stroke"; "none"; "-fill"; magick_color color; "-draw";
                (Printf.sprintf "rectangle %f,%f %f,%f" minx (float_of_int height -. miny) maxx (float_of_int height -. maxy));
                "-depth"; "1"; out2])
         in
@@ -1932,11 +1939,11 @@ let redact pdf ~objnum ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~col
         with
         | Some (Pdf.Name "/Image"), Some (Pdf.Name "/DCTDecode" | Pdf.Array [Pdf.Name "/DCTDecode"]), _, _ ->
             if !debug_image_processing then Printf.printf "Processing image %i for redaction (JPEG)... %!" objnum;
-            let r = redact_jpeg pdf ~path_to_convert path s dict reference in
+            let r = redact_jpeg pdf ~path_to_convert path ~color s dict reference in
               result r; r
         | Some (Pdf.Name "/Image"), Some (Pdf.Name "/JPXDecode" | Pdf.Array [Pdf.Name "/JPXDecode"]), _, _ ->
               if !debug_image_processing then Printf.printf "Processing image %i for redaction (JPEG2000)... %!" objnum;
-              let r = redact_jpeg2000 pdf ~path_to_convert path s dict reference in
+              let r = redact_jpeg2000 pdf ~path_to_convert path ~color s dict reference in
                 result r; r
         | Some (Pdf.Name "/Image"), _, Some (Pdf.Integer 1), _
         | Some (Pdf.Name "/Image"), _, _, Some (Pdf.Boolean true) ->
@@ -1947,11 +1954,11 @@ let redact pdf ~objnum ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~col
               | Some (Pdf.Name "/JBIG2Decode") | Some (Pdf.Array [Pdf.Name "/JBIG2Decode"]) -> true
               | _ -> false
             in
-              let r = redact_1bpp ?jbig2dec ~path_to_jbig2enc ~path_to_convert path pdf s dict reference was_jbig2 in
+              let r = redact_1bpp ?jbig2dec ~path_to_jbig2enc ~path_to_convert path ~color pdf s dict reference was_jbig2 in
                 result r; r
         | Some (Pdf.Name "/Image"), _, _, _ ->
             if !debug_image_processing then Printf.printf "Processing image %i for redaction (lossless)... %!" objnum;
-            let r = redact_lossless pdf ~path_to_convert path s dict reference in
+            let r = redact_lossless pdf ~path_to_convert path ~color s dict reference in
               result r; r
         | _ -> Pdfe.log "Cpdfimage.redact: not an image"; false
         end
