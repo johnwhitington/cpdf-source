@@ -24,8 +24,13 @@ let magick_color c =
     | Cpdfaddtext.RGB (r, g, b) -> Printf.sprintf "rgb(%s, %s, %s)" (expand r) (expand g) (expand b)
     | Cpdfaddtext.CMYK (c, y, m, k) -> Printf.sprintf "cmyk(%s, %s, %s, %s)" (expand c) (expand y) (expand m) (expand k)
 
+let rec magick_color_1bpp = function
+  | Cpdfaddtext.Grey g -> if g > 0.5 then "black" else "white"
+  | Cpdfaddtext.RGB (r, g, b) -> magick_color_1bpp (Cpdfaddtext.Grey ((r +. g +. b) /. 3.))
+  | Cpdfaddtext.CMYK (c, m, y, k) -> magick_color_1bpp (Cpdfaddtext.RGB ((1. -. c) *. (1. -. k), (1. -. m) *. (1. -. k), (1. -. y) *. (1. -. k)))
+
 let remove x =
-  try (*Printf.printf "%s\n" x;*) (*Sys.remove x*) () with _ -> ()
+  try (*Printf.printf "%s\n" x;*) Sys.remove x with _ -> ()
 
 let pnm_white ch = output_char ch ' '
 let pnm_newline ch = output_char ch '\n'
@@ -1655,7 +1660,7 @@ let redact_lossless pdf ~path_to_convert (minx, miny, maxx, maxy) ~color s dict 
         (if components = 1 then ["-define"; "png:color-type=0"; "-colorspace"; "Gray"]
          else if components = 3 then ["-define"; "png:color-type=2"; "-colorspace"; "RGB"]
          else if components = 4 then ["-colorspace"; "CMYK"] else []) @
-        ["-stroke"; "none"; "-fill"; magick_color color; "-draw"; (Printf.sprintf "rectangle %f,%f %f,%f" minx (float_of_int h -. miny) maxx (float_of_int h -. maxy))] @ 
+        ["-stroke"; "none"; "-fill"; magick_color_1bpp color; "-draw"; (Printf.sprintf "rectangle %f,%f %f,%f" minx (float_of_int h -. miny) maxx (float_of_int h -. maxy))] @ 
         (if components = 4 then ["-write"] else []) @ [out2] @
         (if components = 4 then ["-format"; "%w %h"; "info:"] else [])))
       ^
@@ -1856,7 +1861,16 @@ let redact_1bpp ?jbig2dec ~path_to_jbig2enc ~path_to_convert (minx, miny, maxx, 
             false
           end
         else
-          let inpng = Pdfcodec.decode_flate ((Cpdfpng.read_png (Pdfio.input_of_channel (open_in_bin out2))).idat) in
+          let inpng, err =
+            try
+              Pdfcodec.decode_flate ((Cpdfpng.read_png (Pdfio.input_of_channel (open_in_bin out2))).idat), false
+            with
+              _ ->
+                remove out;
+                remove out2;
+                mkbytes 0, true
+          in
+          if err then false else
           let i = Pdfio.input_of_bytes inpng in
           let io, br = Pdfio.input_output_of_bytes (bytes_size inpng - height) in
           for _ = 1 to height do
