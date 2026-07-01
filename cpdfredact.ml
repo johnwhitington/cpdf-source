@@ -1,5 +1,11 @@
 open Pdfutil
 
+type operation = Remove | Leave | Chop
+
+type detection = Touching | Enclosing
+
+type spec = operation * detection option
+
 (* See if the given box is to be treated. For now:
 
   a) Glyphs - any intersection
@@ -127,7 +133,7 @@ let redact_annotations pdf range ~paths =
       pdf
       range
 
-let redact pdf ~annots ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~paths ~invert ~show ~color ~outline ~opacity ~linewidth ~underneath range =
+let redact pdf ~text ~images ~inline_images ~vectors ~annotations ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~paths ~invert ~show ~color ~outline ~opacity ~linewidth ~underneath range =
   preprocess_jbig2lossy_to_jbig2lossless ~jbig2dec:path_to_jbig2dec ~path_to_jbig2enc pdf;
   Cpdfutil.progress_line "Redacting content...";
   let pdf =
@@ -137,7 +143,11 @@ let redact pdf ~annots ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~pat
       pdf
       range
   in
-    let pdf = if annots then redact_annotations pdf range ~paths else pdf in
+    let pdf =
+      match annotations with
+      | Remove, _ -> redact_annotations pdf range ~paths
+      | _ -> pdf
+    in
     if show then
       begin
         Cpdfutil.progress_line "Adding redaction appearance...";
@@ -161,7 +171,7 @@ let redact_add_rectangle_pnum pdf ~path:(minx, miny, maxx, maxy) ~color ~outline
     color outline linewidth opacity (Cpdfposition.PosLeft(minx, miny)) "/Absolute" underneath [pnum] pdf
 
 (* Apply redaction annotations. *)
-let apply pdf ~annots ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ?(typ="/Redact") ~invert ~show ~color ~outline ~opacity ~linewidth ~underneath range =
+let apply pdf ~text ~images ~inline_images ~vectors ~annotations ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ?(typ="/Redact") ~invert ~show ~color ~outline ~opacity ~linewidth ~underneath range =
   preprocess_jbig2lossy_to_jbig2lossless ~jbig2dec:path_to_jbig2dec ~path_to_jbig2enc pdf;
   let rectangles = ref [] in
   let apply_page pnum page =
@@ -214,7 +224,11 @@ let apply pdf ~annots ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ?(typ
     in
       fold_left
         (fun pdf (pnum, path) ->
-           let pdf = if annots then redact_annotations pdf [pnum] ~paths:(many path (Pdfpage.endpage pdf)) else pdf in
+           let pdf = 
+             match annotations with
+             | (Remove, _) -> redact_annotations pdf [pnum] ~paths:(many path (Pdfpage.endpage pdf))
+             | _ -> pdf
+           in
              if show then redact_add_rectangle_pnum pdf ~path ~color ~outline ~opacity ~linewidth ~underneath pnum else pdf)
         pdf
         !rectangles

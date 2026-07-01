@@ -3082,8 +3082,7 @@ These two operations add content directly to the beginning or end of the page da
     \vspace{1.5mm}
     \small\noindent\verb!cpdf -pad-multiple-before [<integer>] in.pdf -o out.pdf!
 
-    \vspace{1.5mm}
-    \small\noindent\verb!cpdf -redact [-process-struct-trees] in.pdf [<range>] -o out.pdf!
+
 
     \vspace{1.5mm}
     \small\noindent\verb!cpdf [-impose <pagesize> | impose-xy "<x> <y>"]!\\
@@ -3154,18 +3153,6 @@ instance, to add a clean page between chapters of a document.)
 
 \noindent The \texttt{-pad-multiple-before n} operation adds the padding pages at the beginning of the file  instead.
 
-\section{Redaction}
-
-Cpdf has basic redaction facilities to remove whole pages. We simply give the page range, and such pages will be emptied of content, and any annotations and page resources removed. The page dimensions remain the same.
-
-  \begin{framed}
-    \noindent\small\verb!cpdf -redact in.pdf 1,2,19-end -o out.pdf!
- 
-    \vspace{2.5mm}
-    \noindent Redact pages 1,2 and 19-end of \texttt{in.pdf}, writing to \texttt{out.pdf}
-  \end{framed}
-
-\noindent If \texttt{-process-struct-trees} is added to the command, the document's structure tree will be shorn of any parts which are marked as relating to the now-redacted pages.
 
 \section{Imposition}
 
@@ -6542,6 +6529,56 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
 
 \end{longtable}
 \egroup
+
+\clearpage\pagestyle{empty}
+\chapter{Redaction}\label{chap:20}\pagestyle{fancy}\index{redaction}\index{redact}
+
+  {\small\begin{framed}
+  \noindent\verb!cpdf -redact [-process-struct-trees] in.pdf [<range>] -o out.pdf!\\
+  \noindent\verb!cpdf -redact-shape <rectangle> [options] in.pdf [<range>] -o out.pdf!
+
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -redact-apply [options] in.pdf -o out.pdf!\\
+  \noindent\verb!cpdf -redact-apply-type <type> [options] in.pdf -o out.pdf!
+
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -annotate <rectangle> [-annot-type <type>] in.pdf -o out.pdf!
+
+  \vspace{3.5mm}
+  \noindent Redaction options:
+
+  \vspace{1.5mm}
+  \noindent\verb!-color <color>!\\
+  \noindent\verb!-outline!\\
+  \noindent\verb!-redact-no-show!\\
+  \noindent\verb!-redact-invert!\\
+  \noindent\verb!-redact-proof!\\
+  \noindent\verb!-redact-text [remove | no],[touching | enclosing]!\\
+  \noindent\verb!-redact-images [remove | chop | no],[touching | enclosing]!\\
+  \noindent\verb!-redact-inline-images [remove | chop | no],[touching | enclosing]!\\
+  \noindent\verb!-redact-vectors [remove | no],[touching | enclosing]!\\
+  \noindent\verb!-redact-annotations [remove | no],[touching | enclosing]!
+ 
+  \end{framed}}
+
+(Introductory paragraphs, including present limitations).
+
+\section{Redacting whole pages}
+
+To redact a whole page we give the page range, and such pages will be emptied of content, and any annotations and page resources removed. The page dimensions remain the same.
+
+  \begin{framed}
+    \noindent\small\verb!cpdf -redact in.pdf 1,2,19-end -o out.pdf!
+ 
+    \vspace{2.5mm}
+    \noindent Redact pages 1,2 and 19-end of \texttt{in.pdf}, writing to \texttt{out.pdf}
+  \end{framed}
+
+\noindent If \texttt{-process-struct-trees} is added to the command, the document's structure tree will be shorn of any parts which are marked as relating to the now-redacted pages.
+
+\section{Redacting content selectively}
+
+\section{Redaction annotations}
 
 \clearpage\pagestyle{empty}
 %We wanted to call this "Chapter M", but the following commands messed up the PDF bookmarks, so this chapter will simply have to float for now, until we can return to this problem.
