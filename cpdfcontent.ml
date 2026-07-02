@@ -157,6 +157,13 @@ type t =
    content : content;
    state : state}
 
+type helpers =
+  {path_to_jbig2dec : string;
+   path_to_convert : string;
+   path_to_jbig2enc : string;
+   color : Cpdfaddtext.colour;
+   remove : string -> unit}
+
 let initial_text_state () =
   {character_spacing = 0.;
    word_spacing = 0.;
@@ -713,7 +720,7 @@ let emit_path_bounding_box ~content ~stroking ~f ~state =
           f ({state = copystate !state; content; bounding_box = Quad (minx, miny, minx, maxy, maxx, maxy, maxx, miny)})
 
 (* Given an image object number and coordinates within that image, call out to imagemagick to redact the given rectangle. *)
-let rec chop_image pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color objnum ctm (x0, y0, x1, y1, x2, y2, x3, y3) =
+let rec chop_image pdf ~helpers objnum ctm (x0, y0, x1, y1, x2, y2, x3, y3) =
   let image = Pdf.lookup_obj pdf objnum in
   let w =
     match Pdf.lookup_direct pdf "/Width" image with
@@ -731,19 +738,25 @@ let rec chop_image pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~col
       let maxx, maxy = Pdftransform.transform_matrix inverse (x2, y2) in
          minx *. float w, miny *. float h, maxx *. float w, maxy *. float h
   in
-    Cpdfimage.redact pdf ~objnum ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~path:(minx, miny, maxx, maxy)
+    Cpdfimage.redact
+      pdf
+      ~objnum
+      ~path_to_jbig2dec:helpers.path_to_jbig2dec
+      ~path_to_convert:helpers.path_to_convert
+      ~path_to_jbig2enc:helpers.path_to_jbig2enc
+      ~color:helpers.color
+      ~path:(minx, miny, maxx, maxy)
   &&
     match Pdf.lookup_immediate "/Mask" image, Pdf.lookup_immediate "/SMask" image with
     | Some (Pdf.Indirect i), _ | _, Some (Pdf.Indirect i) ->
-        chop_image pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color i ctm (x0, y0, x1, y1, x2, y2, x3, y3) 
+        chop_image pdf ~helpers i ctm (x0, y0, x1, y1, x2, y2, x3, y3) 
     | _ -> true
 
 (* TODO Allow this to expand operations, optionally e.g for -remove-xobjects.
    TODO Allow filtering on object, but also on ops (only one of these options at a time though).
    TODO Allow iter and map to save creating all the sublists?
    TODO Change to take all ops not just one op? Does this help with the compressor? *)
-let rec process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~f ~remove ~stack ~state ~resources op =
-  let remove : string -> unit = remove in
+let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
   match op with
   | Pdfops.Op_w f ->
       !state.line_width <- f;
@@ -767,7 +780,7 @@ let rec process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~co
       !state.flatness <- f;
       [op]
   | Pdfops.Op_gs s ->
-      read_graphics_state_dictionary ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~f ~remove ~stack ~state ~resources s;
+      read_graphics_state_dictionary ~pdf ~helpers ~f ~stack ~state ~resources s;
       [op]
   | Pdfops.Op_q ->
       push_statestack stack !state;
@@ -831,16 +844,16 @@ let rec process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~co
       end;
       [op]
   | Pdfops.Op_s ->
-      ignore (map (process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~f ~remove ~stack ~state ~resources) [Pdfops.Op_h]);
-      process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~f ~remove ~stack ~state ~resources Pdfops.Op_S
+      ignore (map (process_op ~pdf ~helpers ~f ~stack ~state ~resources) [Pdfops.Op_h]);
+      process_op ~pdf ~helpers ~f ~stack ~state ~resources Pdfops.Op_S
   | Pdfops.Op_b ->
-      ignore (map (process_op ~pdf ~f ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~remove ~stack ~state ~resources) [Pdfops.Op_h]);
-      process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~f ~remove ~stack ~state ~resources Pdfops.Op_B
+      ignore (map (process_op ~pdf ~helpers ~f ~stack ~state ~resources) [Pdfops.Op_h]);
+      process_op ~pdf ~helpers ~f ~stack ~state ~resources Pdfops.Op_B
   | Pdfops.Op_b' ->
-      ignore (map (process_op ~pdf ~f ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~remove ~stack ~state ~resources) [Pdfops.Op_h]);
-      process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~f ~remove ~stack ~state ~resources Pdfops.Op_B'
+      ignore (map (process_op ~pdf ~helpers ~f ~stack ~state ~resources) [Pdfops.Op_h]);
+      process_op ~pdf ~helpers ~f ~stack ~state ~resources Pdfops.Op_B'
   | Pdfops.Op_f | Pdfops.Op_F ->
-      ignore (process_op ~pdf ~f ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~remove ~stack ~state ~resources Pdfops.Op_h);
+      ignore (process_op ~pdf ~helpers ~f ~stack ~state ~resources Pdfops.Op_h);
       begin match !state.partial_path with
       | PartialPath (sp, cp, segs, subpaths) ->
           (* segs is empty, due to [Op_h] *)
@@ -891,7 +904,7 @@ let rec process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~co
       | _ -> [op]
       end
   | Pdfops.Op_B' ->
-      ignore (process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~f ~remove ~stack ~state ~resources Pdfops.Op_h);
+      ignore (process_op ~pdf ~helpers ~f ~stack ~state ~resources Pdfops.Op_h);
       begin match !state.partial_path with
       | PartialPath (sp, cp, segs, subpaths) ->
           if segs = [] then
@@ -936,7 +949,7 @@ let rec process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~co
   | Pdfops.Op_re (x, y, w, h) ->
       ignore
         (map
-          (process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~f ~remove ~stack ~state ~resources)
+          (process_op ~pdf ~helpers ~f ~stack ~state ~resources)
           [Pdfops.Op_m (x, y); Pdfops.Op_l (x +. w, y); Pdfops.Op_l (x +. w, y +. h); Pdfops.Op_l (x, y +. h); Pdfops.Op_h]);
       [op]
   | Pdfops.Op_W ->
@@ -1031,25 +1044,25 @@ let rec process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~co
       !state.text_state.t_m <- !state.text_state.t_lm;
       [op]
   | Pdfops.Op_TD (f1, f2) ->
-      ignore (map (process_op ~pdf ~f ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~remove ~stack ~state ~resources) [(Pdfops.Op_TL ~-.f2); (Pdfops.Op_Td (f1, f2))]);
+      ignore (map (process_op ~pdf ~helpers ~f ~stack ~state ~resources) [(Pdfops.Op_TL ~-.f2); (Pdfops.Op_Td (f1, f2))]);
       [op]
   | Pdfops.Op_Tm m ->
       !state.text_state.t_m <- m;
       !state.text_state.t_lm <- m;
       [op]
   | Pdfops.Op_T' ->
-      ignore (process_op ~pdf ~f ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~remove ~stack ~state ~resources (Pdfops.Op_TD (0., ~-.(!state.text_state.leading))));
+      ignore (process_op ~pdf ~helpers ~f ~stack ~state ~resources (Pdfops.Op_TD (0., ~-.(!state.text_state.leading))));
       [op]
   | Pdfops.Op_Tj s ->
       [optimise_tj (process_tj ~f ~stack ~state ~resources s)]
   | Pdfops.Op_TJ l ->
       [Pdfops.Op_TJ (optimise_capital_tj (process_capital_tj ~f ~stack ~state ~resources l))]
   | Pdfops.Op_' s ->
-      ignore (map (process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~f ~remove ~stack ~state ~resources) [Pdfops.Op_T']);
-      process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~f ~remove ~stack ~state ~resources (Pdfops.Op_Tj s)
+      ignore (map (process_op ~pdf ~helpers ~f ~stack ~state ~resources) [Pdfops.Op_T']);
+      process_op ~pdf ~helpers ~f ~stack ~state ~resources (Pdfops.Op_Tj s)
   | Pdfops.Op_'' (f1, f2, s) ->
-      ignore (map (process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~f ~remove ~stack ~state ~resources) [(Pdfops.Op_Tw f1); (Pdfops.Op_Tc f2)]);
-      process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~f ~remove ~stack ~state ~resources (Pdfops.Op_' s)
+      ignore (map (process_op ~pdf ~helpers ~f ~stack ~state ~resources) [(Pdfops.Op_Tw f1); (Pdfops.Op_Tc f2)]);
+      process_op ~pdf ~helpers ~f ~stack ~state ~resources (Pdfops.Op_' s)
   | Pdfops.Op_d0 (f1, f2) ->
       !state.d0 <- Some (f1, f2);
       [op]
@@ -1161,9 +1174,9 @@ let rec process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~co
                   let x2, y2 = Pdftransform.transform_matrix !state.ctm (1., 1.) in
                   let x3, y3 = Pdftransform.transform_matrix !state.ctm (1., 0.) in
                     begin match f {state = copystate !state; content = Image s; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} with
-                    | Encloses -> remove s; []
+                    | Encloses -> helpers.remove s; []
                     | Intersects (Quad (x0, y0, x1, y1, x2, y2, x3, y3)) ->
-                        if chop_image pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color xobjnum !state.ctm (x0, y0, x1, y1, x2, y2, x3, y3) then [op] else
+                        if chop_image pdf ~helpers xobjnum !state.ctm (x0, y0, x1, y1, x2, y2, x3, y3) then [op] else
                           begin
                             Pdfe.log "Failed to chop image, removing whole image instead\n";
                             []
@@ -1180,14 +1193,14 @@ let rec process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~co
                         (min_float, min_float, max_float, max_float)
                   in
                   let saved_font_cache = Hashtbl.copy !state.text_state.font_cache in
-                    ignore (process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~f ~remove ~stack ~state ~resources Pdfops.Op_q);
+                    ignore (process_op ~pdf ~helpers ~f ~stack ~state ~resources Pdfops.Op_q);
                     !state.ctm <- Pdftransform.matrix_compose !state.ctm matrix;
-                    ignore (process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~f ~remove ~stack ~state ~resources (Pdfops.Op_re (minx, miny, maxx -. minx, maxy -. miny)));
-                    ignore (process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~f ~remove ~stack ~state ~resources (Pdfops.Op_W));
-                    ignore (process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~f ~remove ~stack ~state ~resources (Pdfops.Op_n));
+                    ignore (process_op ~pdf ~helpers ~f ~stack ~state ~resources (Pdfops.Op_re (minx, miny, maxx -. minx, maxy -. miny)));
+                    ignore (process_op ~pdf ~helpers ~f ~stack ~state ~resources (Pdfops.Op_W));
+                    ignore (process_op ~pdf ~helpers ~f ~stack ~state ~resources (Pdfops.Op_n));
                     Hashtbl.clear !state.text_state.font_cache;
                     let to_remove = ref [] in
-                    let ops = process_form_xobject ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~f ~color ~remove:(fun s -> to_remove := s::!to_remove) ~stack ~state ~resources xobj in
+                    let ops = process_form_xobject ~pdf ~f ~helpers:{helpers with remove = (fun s -> to_remove := s::!to_remove)} ~stack ~state ~resources xobj in
                     (* TODO Not clear what to do here in general. Content of
                        xobject will be processed each time. For redaction, we
                        might need to redact each time, so that is correct: any
@@ -1218,7 +1231,7 @@ let rec process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~co
                                if List.exists (function (k, _) -> k = x) !xobjects' then
                                  xobjects' := lose (function (k, _) -> k = x) !xobjects'
                                else
-                                 remove x)
+                                 helpers.remove x)
                             !to_remove;
                         let resources =
                           match Pdf.lookup_direct pdf "/Resources" xobj with
@@ -1239,7 +1252,7 @@ let rec process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~co
                        end
                     | _ -> Pdfe.log "malformed stream"
                     end;
-                    ignore (process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~f ~color ~remove ~stack ~state ~resources Pdfops.Op_Q);
+                    ignore (process_op ~pdf ~helpers ~f ~stack ~state ~resources Pdfops.Op_Q);
                     !state.text_state.font_cache <- saved_font_cache;
                     [op]
               | _ -> Pdfe.log "Unknown kind of xobject"; [op]
@@ -1275,7 +1288,7 @@ let rec process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~co
   | Pdfops.Op_Comment _ ->
       [op]
 
-and process_form_xobject ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~f ~remove ~stack ~state ~resources obj =
+and process_form_xobject ~pdf ~helpers ~f ~stack ~state ~resources obj =
   let content = [Pdf.direct pdf obj] in
     let pagedict =
       match Pdf.direct pdf resources with
@@ -1294,31 +1307,31 @@ and process_form_xobject ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2e
       let total_resources = Pdf.Dictionary (mergedict pagedict xobjdict) in
         flatten
           (map
-            (process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~f ~remove ~stack ~state ~resources:total_resources)
+            (process_op ~pdf ~helpers ~f ~stack ~state ~resources:total_resources)
             (Pdfops.parse_operators pdf total_resources content))
 
-and read_graphics_state_dictionary ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~f ~remove ~stack ~state ~resources s =
+and read_graphics_state_dictionary ~pdf ~helpers ~f ~stack ~state ~resources s =
   let extgstate_dict =
     match Pdf.lookup_direct pdf "/ExtGState" resources with
     | Some (Pdf.Dictionary _ as d) -> d
     | _ -> Pdf.Dictionary []
   in
     begin match Pdf.lookup_direct pdf "/LW" extgstate_dict with
-    | Some (Pdf.Real lw) -> ignore (process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~f ~remove ~stack ~state ~resources (Pdfops.Op_w lw))
-    | Some (Pdf.Integer lw) -> ignore (process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~f ~remove ~stack ~state ~resources (Pdfops.Op_w (float_of_int lw)))
+    | Some (Pdf.Real lw) -> ignore (process_op ~pdf ~helpers ~f ~stack ~state ~resources (Pdfops.Op_w lw))
+    | Some (Pdf.Integer lw) -> ignore (process_op ~pdf ~helpers ~f ~stack ~state ~resources (Pdfops.Op_w (float_of_int lw)))
     | _ -> ()
     end;
     begin match Pdf.lookup_direct pdf "/LC" extgstate_dict with
-    | Some (Pdf.Integer lc) -> ignore (process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~f ~remove ~stack ~state ~resources (Pdfops.Op_J lc))
+    | Some (Pdf.Integer lc) -> ignore (process_op ~pdf ~helpers ~f ~stack ~state ~resources (Pdfops.Op_J lc))
     | _ -> ()
     end;
     begin match Pdf.lookup_direct pdf "/LJ" extgstate_dict with
-    | Some (Pdf.Integer lj) -> ignore (process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~f ~remove ~stack ~state ~resources (Pdfops.Op_j lj))
+    | Some (Pdf.Integer lj) -> ignore (process_op ~pdf ~helpers ~f ~stack ~state ~resources (Pdfops.Op_j lj))
     | _ -> ()
     end;
     begin match Pdf.lookup_direct pdf "/ML" extgstate_dict with
-    | Some (Pdf.Real ml) -> ignore (process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~f ~remove ~stack ~state ~resources (Pdfops.Op_M ml))
-    | Some (Pdf.Integer ml) -> ignore (process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~f ~remove ~stack ~state ~resources (Pdfops.Op_M (float_of_int ml)))
+    | Some (Pdf.Real ml) -> ignore (process_op ~pdf ~helpers ~f ~stack ~state ~resources (Pdfops.Op_M ml))
+    | Some (Pdf.Integer ml) -> ignore (process_op ~pdf ~helpers ~f ~stack ~state ~resources (Pdfops.Op_M (float_of_int ml)))
     | _ -> ()
     end;
     begin match Pdf.lookup_direct pdf "/D" extgstate_dict with
@@ -1329,11 +1342,11 @@ and read_graphics_state_dictionary ~pdf ~path_to_jbig2dec ~path_to_convert ~path
           with
             _ -> []
         in
-          ignore (process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~f ~remove ~stack ~state ~resources (Pdfops.Op_d (map (Pdf.getnum pdf) fs, Pdf.getnum pdf phase)))
+          ignore (process_op ~pdf ~helpers ~f ~stack ~state ~resources (Pdfops.Op_d (map (Pdf.getnum pdf) fs, Pdf.getnum pdf phase)))
     | _ -> ()
     end;
     begin match Pdf.lookup_direct pdf "/RI" extgstate_dict with
-    | Some (Pdf.Name ri) -> ignore (process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~f ~remove ~stack ~state ~resources (Pdfops.Op_ri ri))
+    | Some (Pdf.Name ri) -> ignore (process_op ~pdf ~helpers ~f ~stack ~state ~resources (Pdfops.Op_ri ri))
     | _ -> ()
     end;
     begin match Pdf.lookup_direct pdf "/OP" extgstate_dict with
@@ -1458,10 +1471,10 @@ and read_graphics_state_dictionary ~pdf ~path_to_jbig2dec ~path_to_convert ~path
     end
 
 (* Filter page content, given a predicate on page content. *)
-let filter ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~f ~remove ~mediabox ~resources ~ops =
+let filter ~pdf ~helpers ~f ~mediabox ~resources ~ops =
   let stack = ref [] in
   let state = ref (initial_state mediabox) in
-    flatten (map (process_op ~pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~f ~remove ~stack ~state ~resources) ops)
+    flatten (map (process_op ~pdf ~helpers ~f ~stack ~state ~resources) ops)
 
 let rec postprocess_remove_empty_path_ops_inner a ops =
   match
@@ -1496,7 +1509,15 @@ let compress ~pdf ~mediabox ~resources ~ops =
          in
          let old_state = copystate !state in
          let stack_length = length !stack in
-           ignore (process_op ~pdf ~path_to_jbig2dec:"" ~path_to_convert:"" ~path_to_jbig2enc:"" ~color:(Cpdfaddtext.Grey 0.) ~f:(fun _ -> Nonintersecting) ~remove:(fun _ -> ()) ~stack ~state ~resources op);
+           ignore
+             (process_op
+                ~pdf
+                ~helpers:{path_to_jbig2dec = ""; path_to_convert = ""; path_to_jbig2enc = ""; color = Cpdfaddtext.Grey 0.; remove = (fun _ -> ())}
+                ~f:(fun _ -> Nonintersecting)
+                ~stack
+                ~state
+                ~resources
+                op);
            if compare_state !state old_state <> 0 || stack_length <> length !stack || effective_op op then opsout := op::!opsout)
       ops;
     (rev !opsout)
@@ -1614,7 +1635,14 @@ let to_json ~pdf ~mediabox ~resources ?(graphics=true) ?(text=true) ?(images=tru
                  ("bbox", `List [`Float x0; `Float y0; `Float x1; `Float y1; `Float x2; `Float y2; `Float x3; `Float y3])]);
     Encloses
   in
-    ignore (filter ~pdf ~path_to_jbig2dec:"" ~path_to_convert:"" ~path_to_jbig2enc:"" ~color:(Cpdfaddtext.Grey 0.) ~f ~remove:(fun _ -> ()) ~mediabox ~resources ~ops);
+    ignore
+      (filter
+         ~pdf
+         ~helpers:{path_to_jbig2dec = ""; path_to_convert = ""; path_to_jbig2enc = " "; color = Cpdfaddtext.Grey 0.; remove = (fun _ -> ())}
+         ~f
+         ~mediabox
+         ~resources
+         ~ops);
     `List (rev !jsons)
 
 let charcodes_of_string s = function
@@ -1642,8 +1670,12 @@ let test_extract_text pdf range ch =
            if mem pnum range then
              ignore
                (filter
-                 ~pdf ~path_to_jbig2dec:"" ~path_to_convert:"" ~path_to_jbig2enc:"" ~color:(Cpdfaddtext.Grey 0.) ~f ~remove:(fun _ -> ()) ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox)
-                 ~resources:page.Pdfpage.resources ~ops:(Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content)))
+                  ~pdf
+                  ~helpers:{path_to_jbig2dec = ""; path_to_convert = ""; path_to_jbig2enc = ""; color = Cpdfaddtext.Grey 0.; remove = (fun _ -> ())}
+                  ~f
+                  ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox)
+                  ~resources:page.Pdfpage.resources
+                  ~ops:(Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content)))
       (Pdfpage.pages_of_pagetree pdf)
       (ilist 1 (Pdfpage.endpage pdf));
       let utf8 = Pdftext.utf8_of_codepoints (flatten (rev !codepoints)) in

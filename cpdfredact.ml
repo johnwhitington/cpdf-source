@@ -45,12 +45,13 @@ let redact_page pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color 
   let ops =
     Cpdfcontent.filter
       ~pdf
-      ~path_to_jbig2dec
-      ~path_to_convert
-      ~path_to_jbig2enc
-      ~color
+      ~helpers:
+        {path_to_jbig2dec;
+         path_to_convert;
+         path_to_jbig2enc;
+         color;
+         remove = (fun s -> to_remove := s::!to_remove)}
       ~f:(function content -> if invert then invert_overlap (box_matches path content) else box_matches path content)
-      ~remove:(fun s -> to_remove := s::!to_remove)
       ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox)
       ~resources:page.Pdfpage.resources
       ~ops:(Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content)
@@ -282,7 +283,14 @@ let show_bounding_boxes ~fast ~paths ~light pdf range =
   let show_bounding_boxes_page page =
     let ops = Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content in
     let page_boxes = ref [] in
-      ignore (Cpdfcontent.filter ~pdf ~path_to_jbig2dec:"" ~path_to_convert:"" ~path_to_jbig2enc:"" ~color:(Cpdfaddtext.Grey 0.) ~f:(fun page_obj -> page_boxes =| page_obj; Nonintersecting) ~remove:(fun _ -> ()) ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox) ~resources:page.Pdfpage.resources ~ops);
+      ignore
+        (Cpdfcontent.filter
+           ~pdf
+           ~helpers:{path_to_jbig2dec = ""; path_to_convert = ""; path_to_jbig2enc = ""; color = Cpdfaddtext.Grey 0.; remove = (fun _ -> ())}
+           ~f:(fun page_obj -> page_boxes =| page_obj; Nonintersecting)
+           ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox)
+           ~resources:page.Pdfpage.resources
+           ~ops);
       !page_boxes
   in
   let bboxes = ref [] in

@@ -156,15 +156,18 @@ type t =
    content : content;
    state : state}
 
+type helpers =
+  {path_to_jbig2dec : string;
+   path_to_convert : string;
+   path_to_jbig2enc : string;
+   color : Cpdfaddtext.colour;
+   remove : string -> unit}
+
 (** Filter objects based on a predicate on [t]. *)
 val filter :
   pdf:Pdf.t ->
-  path_to_jbig2dec:string ->
-  path_to_convert:string ->
-  path_to_jbig2enc:string ->
-  color:Cpdfaddtext.colour ->
+  helpers:helpers ->
   f:(t -> overlap) ->
-  remove:(string -> unit) ->
   mediabox:(float * float * float * float) ->
   resources:Pdf.pdfobject ->
   ops:Pdfops.t list ->
