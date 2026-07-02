@@ -1,11 +1,5 @@
 open Pdfutil
 
-type operation = Remove | Leave | Chop
-
-type detection = Touching | Enclosing
-
-type spec = operation * detection option
-
 (* See if the given box is to be treated. For now:
 
   a) Glyphs - any intersection
@@ -40,7 +34,7 @@ let invert_overlap = function
   | _ -> Nonintersecting
 
 (* Redact a path on a page *)
-let redact_page pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~path ~invert page =
+let redact_page pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~path ~invert page =
   let to_remove = ref [] in
   let ops =
     Cpdfcontent.filter
@@ -50,7 +44,12 @@ let redact_page pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color 
          path_to_convert;
          path_to_jbig2enc;
          color;
-         remove = (fun s -> to_remove := s::!to_remove)}
+         remove = (fun s -> to_remove := s::!to_remove);
+         text_spec;
+         image_spec;
+         inline_image_spec;
+         vector_spec;
+         annotation_spec}
       ~f:(function content -> if invert then invert_overlap (box_matches path content) else box_matches path content)
       ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox)
       ~resources:page.Pdfpage.resources
@@ -134,18 +133,21 @@ let redact_annotations pdf range ~paths =
       pdf
       range
 
-let redact pdf ~text ~images ~inline_images ~vectors ~annotations ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~paths ~invert ~show ~color ~outline ~opacity ~linewidth ~underneath range =
+let redact pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~paths ~invert ~show ~color ~outline ~opacity ~linewidth ~underneath range =
   preprocess_jbig2lossy_to_jbig2lossless ~jbig2dec:path_to_jbig2dec ~path_to_jbig2enc pdf;
   Cpdfutil.progress_line "Redacting content...";
   let pdf =
     Cpdfpage.process_pages
       (Pdfpage.ppstub
-        (fun pnum page -> if mem pnum range then let path = List.nth paths (pnum - 1) in redact_page pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~path ~invert page else page))
+        (fun pnum page ->
+           if mem pnum range then
+             let path = List.nth paths (pnum - 1) in
+               redact_page pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~path ~invert page else page))
       pdf
       range
   in
     let pdf =
-      match annotations with
+      match annotation_spec with
       | Remove, _ -> redact_annotations pdf range ~paths
       | _ -> pdf
     in
@@ -172,7 +174,7 @@ let redact_add_rectangle_pnum pdf ~path:(minx, miny, maxx, maxy) ~color ~outline
     color outline linewidth opacity (Cpdfposition.PosLeft(minx, miny)) "/Absolute" underneath [pnum] pdf
 
 (* Apply redaction annotations. *)
-let apply pdf ~text ~images ~inline_images ~vectors ~annotations ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ?(typ="/Redact") ~invert ~show ~color ~outline ~opacity ~linewidth ~underneath range =
+let apply pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ?(typ="/Redact") ~invert ~show ~color ~outline ~opacity ~linewidth ~underneath range =
   preprocess_jbig2lossy_to_jbig2lossless ~jbig2dec:path_to_jbig2dec ~path_to_jbig2enc pdf;
   let rectangles = ref [] in
   let apply_page pnum page =
@@ -202,7 +204,7 @@ let apply pdf ~text ~images ~inline_images ~vectors ~annotations ~path_to_jbig2d
               | Some rect ->
                   let path = Pdf.parse_rectangle pdf rect in
                     rectangles =| (pnum, path);
-                    redact_page pdf ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~path ~invert page
+                    redact_page pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~path ~invert page
               | None ->
                   page)
             page
@@ -226,7 +228,7 @@ let apply pdf ~text ~images ~inline_images ~vectors ~annotations ~path_to_jbig2d
       fold_left
         (fun pdf (pnum, path) ->
            let pdf = 
-             match annotations with
+             match annotation_spec with
              | (Remove, _) -> redact_annotations pdf [pnum] ~paths:(many path (Pdfpage.endpage pdf))
              | _ -> pdf
            in
@@ -286,7 +288,7 @@ let show_bounding_boxes ~fast ~paths ~light pdf range =
       ignore
         (Cpdfcontent.filter
            ~pdf
-           ~helpers:{path_to_jbig2dec = ""; path_to_convert = ""; path_to_jbig2enc = ""; color = Cpdfaddtext.Grey 0.; remove = (fun _ -> ())}
+           ~helpers:Cpdfcontent.empty_helpers
            ~f:(fun page_obj -> page_boxes =| page_obj; Nonintersecting)
            ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox)
            ~resources:page.Pdfpage.resources

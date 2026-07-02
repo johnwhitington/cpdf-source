@@ -157,12 +157,35 @@ type t =
    content : content;
    state : state}
 
+type operation = Remove | Leave | Chop
+
+type detection = Touching | Enclosing
+
+type spec = operation * detection option
+
 type helpers =
   {path_to_jbig2dec : string;
    path_to_convert : string;
    path_to_jbig2enc : string;
    color : Cpdfaddtext.colour;
-   remove : string -> unit}
+   remove : string -> unit;
+   text_spec : spec;
+   image_spec : spec;
+   inline_image_spec : spec;
+   vector_spec : spec;
+   annotation_spec : spec}
+
+let empty_helpers =
+  {path_to_jbig2dec = "";
+   path_to_convert = "";
+   path_to_jbig2enc = "";
+   color = Cpdfaddtext.Grey 0.;
+   remove = (fun _ -> ());
+   text_spec = (Leave, None);
+   image_spec = (Leave, None);
+   inline_image_spec = (Leave, None);
+   vector_spec = (Leave, None);
+   annotation_spec = (Leave, None)}
 
 let initial_text_state () =
   {character_spacing = 0.;
@@ -1512,7 +1535,7 @@ let compress ~pdf ~mediabox ~resources ~ops =
            ignore
              (process_op
                 ~pdf
-                ~helpers:{path_to_jbig2dec = ""; path_to_convert = ""; path_to_jbig2enc = ""; color = Cpdfaddtext.Grey 0.; remove = (fun _ -> ())}
+                ~helpers:empty_helpers
                 ~f:(fun _ -> Nonintersecting)
                 ~stack
                 ~state
@@ -1635,14 +1658,7 @@ let to_json ~pdf ~mediabox ~resources ?(graphics=true) ?(text=true) ?(images=tru
                  ("bbox", `List [`Float x0; `Float y0; `Float x1; `Float y1; `Float x2; `Float y2; `Float x3; `Float y3])]);
     Encloses
   in
-    ignore
-      (filter
-         ~pdf
-         ~helpers:{path_to_jbig2dec = ""; path_to_convert = ""; path_to_jbig2enc = " "; color = Cpdfaddtext.Grey 0.; remove = (fun _ -> ())}
-         ~f
-         ~mediabox
-         ~resources
-         ~ops);
+    ignore (filter ~pdf ~helpers:empty_helpers ~f ~mediabox ~resources ~ops);
     `List (rev !jsons)
 
 let charcodes_of_string s = function
@@ -1671,7 +1687,7 @@ let test_extract_text pdf range ch =
              ignore
                (filter
                   ~pdf
-                  ~helpers:{path_to_jbig2dec = ""; path_to_convert = ""; path_to_jbig2enc = ""; color = Cpdfaddtext.Grey 0.; remove = (fun _ -> ())}
+                  ~helpers:empty_helpers
                   ~f
                   ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox)
                   ~resources:page.Pdfpage.resources

@@ -482,15 +482,15 @@ type font =
 let parse_redaction_spec s =
   let parse_redaction_operation l =
     match implode l with
-    | "remove" -> Cpdfredact.Remove
-    | "chop" -> Cpdfredact.Chop
-    | "leave" -> Cpdfredact.Leave
+    | "remove" -> Cpdfcontent.Remove
+    | "chop" -> Cpdfcontent.Chop
+    | "leave" -> Cpdfcontent.Leave
     | _ -> error "bad redaction specification"
   in
   let parse_redaction_detection l =
     match implode l with
-    | "touches" -> Cpdfredact.Touching
-    | "encloses" -> Cpdfredact.Enclosing
+    | "touches" -> Cpdfcontent.Touching
+    | "encloses" -> Cpdfcontent.Enclosing
     | _ -> error "bad redaction specification"
   in
   let before, after = cleavewhile (neq ',') (explode s) in
@@ -666,11 +666,11 @@ type args =
    mutable page_content_text : bool;
    mutable page_content_graphics : bool;
    mutable annotation_subtype : Pdfannot.subtype;
-   mutable redact_annotations : Cpdfredact.spec;
-   mutable redact_text : Cpdfredact.spec;
-   mutable redact_images : Cpdfredact.spec;
-   mutable redact_inline_images : Cpdfredact.spec;
-   mutable redact_vectors : Cpdfredact.spec;
+   mutable redact_annotations : Cpdfcontent.spec;
+   mutable redact_text : Cpdfcontent.spec;
+   mutable redact_images : Cpdfcontent.spec;
+   mutable redact_inline_images : Cpdfcontent.spec;
+   mutable redact_vectors : Cpdfcontent.spec;
    mutable redact_invert : bool;
    mutable redact_show : bool;
    mutable redact_proof : bool}
@@ -5421,7 +5421,7 @@ let rec go () =
       let paths = map (fun (minx, miny, w, h) -> (minx, miny, minx +. w, miny +. h)) rects in
       let pdf =
         Cpdfredact.redact
-          pdf ~text:args.redact_text ~images:args.redact_images ~inline_images:args.redact_inline_images ~vectors:args.redact_vectors ~annotations:args.redact_annotations ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc
+          pdf ~text_spec:args.redact_text ~image_spec:args.redact_images ~inline_image_spec:args.redact_inline_images ~vector_spec:args.redact_vectors ~annotation_spec:args.redact_annotations ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc
           ~paths ~invert:args.redact_invert ~show:args.redact_show ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth ~underneath:args.underneath range
       in
         write_pdf false pdf
@@ -5429,7 +5429,7 @@ let rec go () =
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
       let pdf =
-        Cpdfredact.apply pdf ~text:args.redact_text ~images:args.redact_images ~inline_images:args.redact_inline_images ~vectors:args.redact_vectors ~annotations:args.redact_annotations ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc
+        Cpdfredact.apply pdf ~text_spec:args.redact_text ~image_spec:args.redact_images ~inline_image_spec:args.redact_inline_images ~vector_spec:args.redact_vectors ~annotation_spec:args.redact_annotations ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc
         ~invert:args.redact_invert ~show:args.redact_show ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth ~underneath:args.underneath range
       in
         write_pdf false pdf
@@ -5438,7 +5438,7 @@ let rec go () =
       let range = parse_pagespec pdf (get_pagespec ()) in
       let pdf =
         Cpdfredact.apply
-          pdf ~text:args.redact_text ~images:args.redact_images ~inline_images:args.redact_inline_images ~vectors:args.redact_vectors ~annotations:args.redact_annotations ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc
+          pdf ~text_spec:args.redact_text ~image_spec:args.redact_images ~inline_image_spec:args.redact_inline_images ~vector_spec:args.redact_vectors ~annotation_spec:args.redact_annotations ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc
           ~typ:("/" ^ s) ~invert:args.redact_invert ~show:args.redact_show ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth ~underneath:args.underneath range
       in
         write_pdf false pdf

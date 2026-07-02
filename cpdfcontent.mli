@@ -156,12 +156,25 @@ type t =
    content : content;
    state : state}
 
+type operation = Remove | Leave | Chop
+
+type detection = Touching | Enclosing
+
+type spec = operation * detection option
+
 type helpers =
   {path_to_jbig2dec : string;
    path_to_convert : string;
    path_to_jbig2enc : string;
    color : Cpdfaddtext.colour;
-   remove : string -> unit}
+   remove : string -> unit;
+   text_spec : spec;
+   image_spec : spec;
+   inline_image_spec : spec;
+   vector_spec : spec;
+   annotation_spec : spec}
+
+val empty_helpers : helpers
 
 (** Filter objects based on a predicate on [t]. *)
 val filter :
