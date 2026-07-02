@@ -168,16 +168,22 @@ let redact
     if show then
       begin
         Cpdfutil.progress_line "Adding redaction appearance...";
-        let pdf = ref pdf in
-          iter
-            (fun pnum ->
-              let minx, miny, maxx, maxy = List.nth paths (pnum - 1) in
-                pdf :=
-                  Cpdfaddtext.addrectangle
-                    false (Printf.sprintf "%s %s" (string_of_float (maxx -. minx)) (string_of_float (maxy -. miny)))
-                    color outline linewidth opacity (Cpdfposition.PosLeft(minx, miny)) "/Absolute" underneath [pnum] !pdf)
-            range;
-          !pdf
+        if length (collate compare (sort compare paths)) = 1 then
+          let minx, miny, maxx, maxy = hd paths in
+            Cpdfaddtext.addrectangle
+              false (Printf.sprintf "%s %s" (string_of_float (maxx -. minx)) (string_of_float (maxy -. miny)))
+              color outline linewidth opacity (Cpdfposition.PosLeft(minx, miny)) "/Absolute" underneath range pdf
+        else
+          let pdf = ref pdf in
+            iter
+              (fun pnum ->
+                let minx, miny, maxx, maxy = List.nth paths (pnum - 1) in
+                  pdf :=
+                    Cpdfaddtext.addrectangle
+                      false (Printf.sprintf "%s %s" (string_of_float (maxx -. minx)) (string_of_float (maxy -. miny)))
+                      color outline linewidth opacity (Cpdfposition.PosLeft(minx, miny)) "/Absolute" underneath [pnum] !pdf)
+              range;
+            !pdf
       end
     else
       pdf
