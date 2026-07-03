@@ -6552,16 +6552,15 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
   \noindent\verb!-outline!\\
   \noindent\verb!-redact-no-show!\\
   \noindent\verb!-redact-invert!\\
-  \noindent\verb!-redact-proof!\\
   \noindent\verb!-redact-text [remove | leave],[touches | encloses]!\\
   \noindent\verb!-redact-images [remove | chop | leave],[touches | encloses]!\\
-  \noindent\verb!-redact-inline-images [remove | chop | leave],[touches | encloses]!\\
+  \noindent\verb!-redact-inline-images [remove | leave],[touches | encloses]!\\
   \noindent\verb!-redact-vectors [remove | leave],[touches | encloses]!\\
   \noindent\verb!-redact-annotations [remove | leave],[touches | encloses]!
  
   \end{framed}}
 
-(Introductory paragraphs, including present limitations).
+Redaction removes content from a PDF page, erasing it entirely rather than merely covering it up. \textit{NB: This chapter describes work-in-progress: Cpdf's redaction does yet in general extend to the redaction of metadata and is therefore presently unsuited to use on vital documents.}
 
 \section{Redacting whole pages}
 
@@ -6578,7 +6577,71 @@ To redact a whole page we give the page range, and such pages will be emptied of
 
 \section{Redacting content selectively}
 
+The \texttt{-redact-shape} operation allows a shape (presently just a rectangle) to be redacted in the given page range. For example:
+
+  \begin{framed}
+    \noindent\small\verb!cpdf -redact-shape "100 100 200 300" in.pdf 2 -o out.pdf!
+ 
+    \vspace{2.5mm}
+    \noindent Redact rectangle on page 2 of \texttt{in.pdf}, writing to \texttt{out.pdf}
+  \end{framed}
+
+\noindent The rectangle is given as "minx miny width height" as usual. What content is removed, and how it is detected and processed is defined by a number of options:
+
+\medskip
+
+\noindent{\small\begin{tabular}{lp{100pt}l}
+Option & Values & Default value \\\hline
+\texttt{-redact-text} & \texttt{[remove|leave],\newline[touches|encloses]\newline} & \texttt{remove,touches}\\
+\texttt{-redact-images} & \texttt{[remove|chop|leave],\newline[touches|encloses]\newline} & \texttt{leave}\\
+\texttt{-redact-inline-images} & \texttt{[remove|leave],\newline[touches|encloses]\newline} & \texttt{leave}\\
+\texttt{-redact-vectors} & \texttt{[remove|leave],\newline[touches|encloses]\newline} & \texttt{leave}\\
+\texttt{-redact-annotations} & \texttt{[remove|leave],\newline[touches|encloses]\newline} & \texttt{leave}
+\end{tabular}}
+
+\noindent The specification is made of two parts, the first required the second optional. For the first, the \texttt{remove} specifier will remove matching content, \texttt{leave} will leave the content unredacted, and \texttt{chop} -- for images only -- will cut out the part of the image to be redacted. For the second, the \texttt{touches} specifier will consider any content intersecting with the redaction rectangle, whereas \texttt{encloses} will consider only such content as is fully enclosed within the redaction rectangle. NB: Intersecting and enclosed here refer to operations on the rectangular bounding boxes of glyphs, images, paths etc. The exact shapes are not used.
+
 \section{Redaction annotations}
+
+Annotations denoting future redactions can be added to a PDF in Adobe Acrobat other interactive PDF software. Cpdf can apply these annotations to perform the redaction. Cpdf can also create such redaction annotations. To apply existing annotation redactions:
+
+  \begin{framed}
+    \noindent\small\verb!cpdf -redact-apply in.pdf 2 out.pdf!
+ 
+    \vspace{2.5mm}
+    \noindent Apply redaction annoations in \texttt{in.pdf}, writing to \texttt{out.pdf}
+  \end{framed}
+
+\noindent The redaction and annotation appearance options described above may be used here too. If the interactive software you are using to demarcate the annotations does not know about redaction annotations, you can use a different kind of annotation and Cpdf will use that annotation's bounding box as the redaction rectangle:
+
+  \begin{framed}
+    \noindent\small\verb!cpdf -redact-apply-type /Square in.pdf 2 out.pdf!
+ 
+    \vspace{2.5mm}
+    \noindent Apply Square (rectangle) annotations as if they were redaction annotations in \texttt{in.pdf}, writing to \texttt{out.pdf}
+  \end{framed}
+
+\noindent To add new redaction annotations, we may write
+
+  \begin{framed}
+    \noindent\small\verb!cpdf -annotate "100 100 200 300" in.pdf 1 out.pdf!
+ 
+    \vspace{2.5mm}
+    \noindent Add a redaction annotation to page 1 of \texttt{in.pdf}, writing to \texttt{out.pdf}
+  \end{framed}
+
+\noindent Recall that this does not redact content, merely marks it for future redaction.
+
+\section{Evidence of redaction}
+
+There are several ways to check that redaction has proceeded as we would have wished:
+
+\begin{description}
+\item[Inversion] Adding \texttt{-redact-invert} and writing to another PDF will keep all objects redaction would lose, and lose all objects redaction would keep. Each object (image, vector, glyph) ends up only the redacted or inverted output. For example, we might
+\item[Page content JSON] Page content can be extracted with \texttt{-page-content} as described in Section \ref{pagecontent} for the redacted and unredacted file, and a comparison made.
+\item[Full JSON] To check metadata as well, we can use \texttt{-output-json} from Chapter 15 and compare the output on redacted and unredacted files.
+\item[Text extraction] Whilst Cpdf does not yet have text extraction facilities, you can use another text extraction program to extract the text from the original file and the redacted file and check the differences.
+\end{description}
 
 \clearpage\pagestyle{empty}
 %We wanted to call this "Chapter M", but the following commands messed up the PDF bookmarks, so this chapter will simply have to float for now, until we can return to this problem.
@@ -7099,6 +7162,7 @@ To show only such boxes as lie within a given rectangle (for example, those whic
   \end{framed}
 
 \section{Extracting page content}
+\label{pagecontent}
 
 The \texttt{-page-content} operation outputs JSON describing the graphic objects, text, and images on the given pages of the given PDF:
 
