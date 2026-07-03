@@ -136,56 +136,35 @@ type state =
    mutable marked_content_point : (string * Pdf.pdfobject option) option;
    mutable marked_content : (string * Pdf.pdfobject option) list}
 
-type content =
-  | Glyph of int
-  | InlineImage of Pdf.pdfobject * Pdfio.bytes
-  | Image of string
-  | Path of drawn_path
-  | Shading of string
-  | Clip (* This is just for -show-bboxes. Clipping exists in the state otherwise. *)
-
 type bounding_box =
   Quad of float * float * float * float * float * float * float * float
 
-type overlap =
-  | Encloses
-  | Intersects of bounding_box
-  | Nonintersecting
+type content =
+  | Glyph of int
+  | InlineImage of Pdf.pdfobject * Pdfio.bytes
+  | Image of string * bool * bounding_box ref (* query chop? *)
+  | Path of drawn_path
+  | Shading of string
+  | Clip (* This is just for -show-bboxes. Clipping exists in the state otherwise. *)
 
 type t =
   {bounding_box : bounding_box;
    content : content;
    state : state}
 
-type operation = Remove | Leave | Chop
-
-type detection = Touching | Enclosing
-
-type spec = operation * detection option
-
 type helpers =
   {path_to_jbig2dec : string;
    path_to_convert : string;
    path_to_jbig2enc : string;
    color : Cpdfaddtext.colour;
-   remove : string -> unit;
-   text_spec : spec;
-   image_spec : spec;
-   inline_image_spec : spec;
-   vector_spec : spec;
-   annotation_spec : spec}
+   remove : string -> unit}
 
 let empty_helpers =
   {path_to_jbig2dec = "";
    path_to_convert = "";
    path_to_jbig2enc = "";
    color = Cpdfaddtext.Grey 0.;
-   remove = (fun _ -> ());
-   text_spec = (Leave, None);
-   image_spec = (Leave, None);
-   inline_image_spec = (Leave, None);
-   vector_spec = (Leave, None);
-   annotation_spec = (Leave, None)}
+   remove = (fun _ -> ())}
 
 let initial_text_state () =
   {character_spacing = 0.;
@@ -474,24 +453,21 @@ let process_tj ~f ~stack ~state ~resources s =
         Printf.printf "ascent = %f, descent = %f\n" ascent descent
       end;
     let op_of_triples triples =
-      if List.for_all (function (_, _, (Intersects _ | Encloses)) -> true | _ -> false) triples then
+      if List.for_all (function (_, _, true) -> true | _ -> false) triples then
         let total_width =
           ~-.(fold_left ( +. ) 0. (map (fun (c, w, _) -> w +. character_spacing /. !state.text_state.font_size +. (if c = 32 then 1. else 0.) *. word_spacing /. !state.text_state.font_size) triples) *. 1000.)
         in
           Pdfops.Op_TJ [Pdf.Real total_width]
-      else if List.for_all (function (_, _, Nonintersecting) -> true | _ -> false) triples then
+      else if List.for_all (function (_, _, false) -> true | _ -> false) triples then
         Pdfops.Op_Tj s
       else
         let compose_tj_group = function
           | [] -> assert false
-          | (_, _, Nonintersecting)::_ as l -> Pdf.String (string_of_charcodes (map (fun (c, _, _) -> c) l) fontobj)
-          | (_, _, (Encloses | Intersects _))::_ as l ->
+          | (_, _, false)::_ as l -> Pdf.String (string_of_charcodes (map (fun (c, _, _) -> c) l) fontobj)
+          | (_, _, true)::_ as l ->
               Pdf.Real (~-.(fold_left ( +. ) 0. (map (fun (c, w, _) -> w +. character_spacing /. !state.text_state.font_size +. (if c = 32 then 1. else 0.) *. word_spacing /. !state.text_state.font_size) l)) *. 1000.)
         in
-        let is_different a b =
-          neq (eq a Nonintersecting) (eq b Nonintersecting)
-        in
-          let groups = split_around_two (fun (_, _, f_result) (_, _, f_result') -> is_different f_result f_result') triples in
+          let groups = split_around_two (fun (_, _, f_result) (_, _, f_result') -> f_result <> f_result') triples in
             Pdfops.Op_TJ (map compose_tj_group groups)
     in
     let triples =
@@ -728,7 +704,7 @@ let emit_path_bounding_box ~content ~stroking ~f ~state =
     match bbox with
     | None -> 
         (*flprint "No bbox found in emit_path_bounding_box\n";*)
-        Nonintersecting
+        false
     | Some (minx, maxx, miny, maxy) ->
         (*Printf.printf "found bbox in emit_path_bounding_box: %f %f %f %f\n" minx maxx miny maxy;*)
         let minx, maxx, miny, maxy =
@@ -882,10 +858,7 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
           (* segs is empty, due to [Op_h] *)
           !state.partial_path <- PartialPath (sp, cp, [], []);
           !state.path <- {filled = true; stroked = false; path = (NonZero, rev subpaths)};
-          begin match emit_path_bounding_box ~content:(Path !state.path) ~stroking:false ~f ~state with
-          | Nonintersecting -> [op]
-          | Encloses | Intersects _ -> [Pdfops.Op_n]
-          end
+          if emit_path_bounding_box ~content:(Path !state.path) ~stroking:false ~f ~state then [Pdfops.Op_n] else []
       | _ -> [op]
       end
   | Pdfops.Op_S ->
@@ -901,10 +874,7 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
               !state.partial_path <- PartialPath (sp, cp, [], []);
               !state.path <- {filled = false; stroked = true; path = (EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths))}
             end;
-          begin match emit_path_bounding_box ~content:(Path !state.path) ~stroking:true ~f ~state with
-          | Nonintersecting -> [op]
-          | Encloses | Intersects _ -> [Pdfops.Op_n]
-          end
+          if emit_path_bounding_box ~content:(Path !state.path) ~stroking:true ~f ~state then [Pdfops.Op_n] else []
       | _ -> [op]
       end
   | Pdfops.Op_B ->
@@ -920,10 +890,7 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
               !state.partial_path <- PartialPath (sp, cp, [], []);
               !state.path <- {filled = true; stroked = true; path = (NonZero, rev ((Not_hole, Open, rev segs)::subpaths))}
             end;
-          begin match emit_path_bounding_box ~content:(Path !state.path) ~stroking:true ~f ~state with
-          | Nonintersecting -> [op]
-          | Encloses | Intersects _ -> [Pdfops.Op_n]
-          end
+          if emit_path_bounding_box ~content:(Path !state.path) ~stroking:true ~f ~state then [Pdfops.Op_n] else []
       | _ -> [op]
       end
   | Pdfops.Op_B' ->
@@ -940,10 +907,7 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
               !state.partial_path <- PartialPath (sp, cp, [], []);
               !state.path <- {filled = true; stroked = true; path = (EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths))}
             end;
-          begin match emit_path_bounding_box ~content:(Path !state.path) ~stroking:true ~f ~state with
-          | Nonintersecting -> [op]
-          | Encloses | Intersects _ -> [Pdfops.Op_n]
-          end
+          if emit_path_bounding_box ~content:(Path !state.path) ~stroking:true ~f ~state then [Pdfops.Op_n] else []
       | _ -> [op]
       end
   | Pdfops.Op_f' ->
@@ -959,10 +923,7 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
               !state.partial_path <- PartialPath (sp, cp, [], []);
               !state.path <- {filled = true; stroked = false; path = (EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths))}
             end;
-          begin match emit_path_bounding_box ~content:(Path !state.path) ~stroking:false ~f ~state with
-          | Nonintersecting -> [op]
-          | Encloses | Intersects _ -> [Pdfops.Op_n]
-          end
+          if emit_path_bounding_box ~content:(Path !state.path) ~stroking:false ~f ~state then [Pdfops.Op_n] else []
       | _ -> [op]
       end
   | Pdfops.Op_n ->
@@ -1161,17 +1122,13 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
           | Some r ->
               begin try
                 let minx, miny, maxx, maxy = Pdf.parse_rectangle pdf r in
-                  match f {state = copystate !state; content = Shading s; bounding_box = Quad (minx, miny, minx, maxy, maxx, maxy, maxx, miny)} with
-                  | Nonintersecting -> [op]
-                  | Intersects _ | Encloses -> []
+                  if f {state = copystate !state; content = Shading s; bounding_box = Quad (minx, miny, minx, maxy, maxx, maxy, maxx, miny)} then [] else [op]
               with
                 _ -> [op]
               end
           | None ->
               (* This is an unbounded shading, not recommended. So we use the current clipping path. *)
-              match emit_path_bounding_box ~content:(Shading s) ~stroking:false ~f ~state with
-              | Nonintersecting -> [op]
-              | Intersects _ | Encloses -> []
+              if emit_path_bounding_box ~content:(Shading s) ~stroking:false ~f ~state then [] else [op]
           end
       with
         _ -> [op]
@@ -1181,10 +1138,7 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
       let x1, y1 = Pdftransform.transform_matrix !state.ctm (0., 1.) in
       let x2, y2 = Pdftransform.transform_matrix !state.ctm (1., 1.) in
       let x3, y3 = Pdftransform.transform_matrix !state.ctm (1., 0.) in
-        begin match f {state = copystate !state; content = InlineImage (dict, data); bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} with
-        | Nonintersecting -> [op]
-        | _ -> []
-        end
+        if f {state = copystate !state; content = InlineImage (dict, data); bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} then [] else [op]
   | Pdfops.Op_Do s ->
       begin match Pdf.lookup_direct pdf "/XObject" resources with
       | Some d ->
@@ -1196,15 +1150,15 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
                   let x1, y1 = Pdftransform.transform_matrix !state.ctm (0., 1.) in
                   let x2, y2 = Pdftransform.transform_matrix !state.ctm (1., 1.) in
                   let x3, y3 = Pdftransform.transform_matrix !state.ctm (1., 0.) in
-                    begin match f {state = copystate !state; content = Image s; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} with
-                    | Encloses -> helpers.remove s; []
-                    | Intersects (Quad (x0, y0, x1, y1, x2, y2, x3, y3)) ->
+                  let r = ref (Quad (0., 0., 0., 0., 0., 0., 0., 0.)) in
+                  let out_1 = f {state = copystate !state; content = Image (s, false, ref (Quad (0., 0., 0., 0., 0., 0., 0., 0.))); bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} in
+                  let out_2 = f {state = copystate !state; content = Image (s, true, r); bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} in
+                    begin match out_1, out_2, !r with
+                    | true, _, _ -> helpers.remove s; []
+                    | false, true, Quad (x0, y0, x1, y1, x2, y2, x3, y3) ->
                         if chop_image pdf ~helpers xobjnum !state.ctm (x0, y0, x1, y1, x2, y2, x3, y3) then [op] else
-                          begin
-                            Pdfe.log "Failed to chop image, removing whole image instead\n";
-                            []
-                          end
-                    | Nonintersecting -> [op]
+                          begin Pdfe.log "Failed to chop image, removing whole image instead\n"; [] end
+                    | false, _, _ -> [op]
                     end
               | Some (Pdf.Name "/Form") ->
                   let matrix = Pdf.parse_matrix pdf "/Matrix" xobj in
@@ -1536,7 +1490,7 @@ let compress ~pdf ~mediabox ~resources ~ops =
              (process_op
                 ~pdf
                 ~helpers:empty_helpers
-                ~f:(fun _ -> Nonintersecting)
+                ~f:(fun _ -> false)
                 ~stack
                 ~state
                 ~resources
@@ -1637,7 +1591,7 @@ let json_of_object state = function
            ("bytes", `String bytes);
            ("text", `String (Pdftext.utf8_of_codepoints (Pdftext.codepoints_of_text (unopt state.text_state.font_data.text_extractor) bytes)))]
   | InlineImage (dict, data) -> `Assoc [("obj", `String "inline image"); ("inline image", json_of_inline_image (dict, data))]
-  | Image i -> `Assoc [("obj", `String "image"); ("image", `String i)]
+  | Image (i, _, _) -> `Assoc [("obj", `String "image"); ("image", `String i)]
   | Path p -> `Assoc [("obj", `String "path"); ("path", json_of_path p)]
   | Shading s -> `Assoc [("obj", `String "shading"); ("shading", `String s)]
   | Clip -> assert false (* Clipping path is part of the state. It exists in the content type only because we use it for -show-bboxes. *)
@@ -1656,7 +1610,7 @@ let to_json ~pdf ~mediabox ~resources ?(graphics=true) ?(text=true) ?(images=tru
         `Assoc ([("object", json_of_object state content);
                  ("state", json_of_state state content);
                  ("bbox", `List [`Float x0; `Float y0; `Float x1; `Float y1; `Float x2; `Float y2; `Float x3; `Float y3])]);
-    Encloses
+    true
   in
     ignore (filter ~pdf ~helpers:empty_helpers ~f ~mediabox ~resources ~ops);
     `List (rev !jsons)
@@ -1680,8 +1634,8 @@ let test_extract_text pdf range ch =
                  | _ -> string_of_char (char_of_int charcode)
                in
                codepoints := Pdftext.codepoints_of_text (unopt state.text_state.font_data.text_extractor) bytes::!codepoints;
-               Encloses
-           | _ -> Encloses
+               true
+           | _ -> true
          in
            if mem pnum range then
              ignore

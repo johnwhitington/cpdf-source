@@ -482,15 +482,15 @@ type font =
 let parse_redaction_spec s =
   let parse_redaction_operation l =
     match implode l with
-    | "remove" -> Cpdfcontent.Remove
-    | "chop" -> Cpdfcontent.Chop
-    | "leave" -> Cpdfcontent.Leave
+    | "remove" -> Cpdfredact.Remove
+    | "chop" -> Cpdfredact.Chop
+    | "leave" -> Cpdfredact.Leave
     | _ -> error "bad redaction specification"
   in
   let parse_redaction_detection l =
     match implode l with
-    | "touches" -> Cpdfcontent.Touching
-    | "encloses" -> Cpdfcontent.Enclosing
+    | "touches" -> Cpdfredact.Touching
+    | "encloses" -> Cpdfredact.Enclosing
     | _ -> error "bad redaction specification"
   in
   let before, after = cleavewhile (neq ',') (explode s) in
@@ -666,11 +666,11 @@ type args =
    mutable page_content_text : bool;
    mutable page_content_graphics : bool;
    mutable annotation_subtype : Pdfannot.subtype;
-   mutable redact_annotations : Cpdfcontent.spec;
-   mutable redact_text : Cpdfcontent.spec;
-   mutable redact_images : Cpdfcontent.spec;
-   mutable redact_inline_images : Cpdfcontent.spec;
-   mutable redact_vectors : Cpdfcontent.spec;
+   mutable redact_annotations : Cpdfredact.spec;
+   mutable redact_text : Cpdfredact.spec;
+   mutable redact_images : Cpdfredact.spec;
+   mutable redact_inline_images : Cpdfredact.spec;
+   mutable redact_vectors : Cpdfredact.spec;
    mutable redact_invert : bool;
    mutable redact_show : bool;
    mutable redact_proof : bool}

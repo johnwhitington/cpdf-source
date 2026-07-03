@@ -1,5 +1,13 @@
 open Pdfutil
 
+type operation = Remove | Leave | Chop
+
+type detection = Touching | Enclosing
+
+type spec = operation * detection option
+
+type test_result = Encloses | Intersects of Cpdfcontent.bounding_box | Nonintersecting
+
 (* See if the given box is to be treated. For now:
 
   a) Glyphs - any intersection
@@ -18,7 +26,7 @@ let box_matches (minx, miny, maxx, maxy) {Cpdfcontent.content; bounding_box = Qu
   let wholly_contained (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy) =
     bminx > minx && bmaxx < maxx && bminy > miny && bmaxy < maxy
   in
-    if wholly_contained (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy) then Cpdfcontent.Encloses else
+    if wholly_contained (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy) then Encloses else
      match any_intersection (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy) with
      | Some (minx, miny, maxx, maxy) -> Intersects (Cpdfcontent.Quad (minx, miny, minx, maxy, maxx, maxy, maxx, miny))
      | None -> Nonintersecting
@@ -27,11 +35,12 @@ let select_boxes shape boxes =
   match shape with 
   | None -> boxes
   | Some (minx, miny, maxx, maxy) ->
-      keep (fun box -> box_matches (minx, miny, maxx, maxy) box <> Cpdfcontent.Nonintersecting) boxes
+      keep (fun box -> box_matches (minx, miny, maxx, maxy) box <> Nonintersecting) boxes
 
-let invert_overlap = function
-  | Cpdfcontent.Nonintersecting -> Cpdfcontent.Encloses
-  | _ -> Nonintersecting
+let box_matches a b =
+  match box_matches a b with
+  | Intersects _ | Encloses -> true
+  | Nonintersecting -> false
 
 (* Redact a path on a page *)
 let redact_page pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~path ~invert page =
@@ -44,13 +53,8 @@ let redact_page pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~anno
          path_to_convert;
          path_to_jbig2enc;
          color;
-         remove = (fun s -> to_remove := s::!to_remove);
-         text_spec;
-         image_spec;
-         inline_image_spec;
-         vector_spec;
-         annotation_spec}
-      ~f:(function content -> if invert then invert_overlap (box_matches path content) else box_matches path content)
+         remove = (fun s -> to_remove := s::!to_remove)}
+      ~f:(function content -> if invert then not (box_matches path content) else box_matches path content)
       ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox)
       ~resources:page.Pdfpage.resources
       ~ops:(Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content)
@@ -91,12 +95,12 @@ let preprocess_jbig2lossy_to_jbig2lossless ?jbig2dec ~path_to_jbig2enc pdf =
 let detected ~detection ~invert path_minx path_miny path_maxx path_maxy test_minx test_miny test_maxx test_maxy =
   let fi x = if invert then not x else x in
     match detection with
-    | Cpdfcontent.Touching ->
+    | Touching ->
         begin match box_overlap_float test_minx test_miny test_maxx test_maxy path_minx path_miny path_maxx path_maxy with
         | Some _ -> fi true
         | None -> fi false
         end
-    | Cpdfcontent.Enclosing ->
+    | Enclosing ->
         fi (box_union_float (path_minx, path_miny, path_maxx, path_maxy) (test_minx, test_miny, test_maxx, test_maxy) = (path_minx, path_miny, path_maxx, path_maxy))
 
 (* Remove annotations as specified *)
@@ -314,7 +318,7 @@ let show_bounding_boxes ~fast ~paths ~light pdf range =
         (Cpdfcontent.filter
            ~pdf
            ~helpers:Cpdfcontent.empty_helpers
-           ~f:(fun page_obj -> page_boxes =| page_obj; Nonintersecting)
+           ~f:(fun page_obj -> page_boxes =| page_obj; false)
            ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox)
            ~resources:page.Pdfpage.resources
            ~ops);

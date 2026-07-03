@@ -1,13 +1,19 @@
 (** Redaction. *)
 
+type operation = Remove | Leave | Chop
+
+type detection = Touching | Enclosing
+
+type spec = operation * detection option
+
 (** Redact a PDF in the given shape in the given range. *)
 val redact : 
   Pdf.t ->
-  text_spec:Cpdfcontent.spec ->
-  image_spec:Cpdfcontent.spec ->
-  inline_image_spec:Cpdfcontent.spec ->
-  vector_spec:Cpdfcontent.spec ->
-  annotation_spec:Cpdfcontent.spec ->
+  text_spec:spec ->
+  image_spec:spec ->
+  inline_image_spec:spec ->
+  vector_spec:spec ->
+  annotation_spec:spec ->
   path_to_jbig2dec:string ->
   path_to_convert:string ->
   path_to_jbig2enc:string ->
@@ -25,11 +31,11 @@ val redact :
 (** Apply redaction annotations in a given range. *)
 val apply :
   Pdf.t ->
-  text_spec:Cpdfcontent.spec ->
-  image_spec:Cpdfcontent.spec ->
-  inline_image_spec:Cpdfcontent.spec ->
-  vector_spec:Cpdfcontent.spec ->
-  annotation_spec:Cpdfcontent.spec ->
+  text_spec:spec ->
+  image_spec:spec ->
+  inline_image_spec:spec ->
+  vector_spec:spec ->
+  annotation_spec:spec ->
   path_to_jbig2dec:string ->
   path_to_convert:string ->
   path_to_jbig2enc:string ->

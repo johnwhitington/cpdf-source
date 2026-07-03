@@ -21,21 +21,16 @@ type drawn_path =
    filled : bool;
    path : path}
 
-type content =
-  | Glyph of int
-  | InlineImage of Pdf.pdfobject * Pdfio.bytes
-  | Image of string
-  | Path of drawn_path
-  | Shading of string
-  | Clip
-
 type bounding_box =
   Quad of float * float * float * float * float * float * float * float
 
-type overlap =
-  | Encloses
-  | Intersects of bounding_box
-  | Nonintersecting
+type content =
+  | Glyph of int
+  | InlineImage of Pdf.pdfobject * Pdfio.bytes
+  | Image of string * bool * bounding_box ref
+  | Path of drawn_path
+  | Shading of string
+  | Clip
 
 type partial =
   | NoPartial
@@ -156,23 +151,12 @@ type t =
    content : content;
    state : state}
 
-type operation = Remove | Leave | Chop
-
-type detection = Touching | Enclosing
-
-type spec = operation * detection option
-
 type helpers =
   {path_to_jbig2dec : string;
    path_to_convert : string;
    path_to_jbig2enc : string;
    color : Cpdfaddtext.colour;
-   remove : string -> unit;
-   text_spec : spec;
-   image_spec : spec;
-   inline_image_spec : spec;
-   vector_spec : spec;
-   annotation_spec : spec}
+   remove : string -> unit}
 
 val empty_helpers : helpers
 
@@ -180,7 +164,7 @@ val empty_helpers : helpers
 val filter :
   pdf:Pdf.t ->
   helpers:helpers ->
-  f:(t -> overlap) ->
+  f:(t -> bool) ->
   mediabox:(float * float * float * float) ->
   resources:Pdf.pdfobject ->
   ops:Pdfops.t list ->
