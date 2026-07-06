@@ -6,16 +6,8 @@ type detection = Touching | Enclosing
 
 type spec = operation * detection option
 
-type test_result = Encloses | Intersects of Cpdfcontent.bounding_box | Nonintersecting
-
-(* See if the given box is to be treated. For now:
-
-  a) Glyphs - any intersection
-  b) Image - any intersection
-  c) InlineImage - any intersection
-  d) Path - path must be wholly contained in box
-  e) Shading - must be wholly contained in box *)
-let box_matches (minx, miny, maxx, maxy) {Cpdfcontent.content; bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} =
+let box_matches ~detection ~invert (minx, miny, maxx, maxy) {Cpdfcontent.bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} =
+  let fi x = if invert then not x else x in
   let bminx, bmaxx, bminy, bmaxy =
     fmin (fmin x0 x1) (fmin x2 x3), fmax (fmax x0 x1) (fmax x2 x3),
     fmin (fmin y0 y1) (fmin y2 y3), fmax (fmax y0 y1) (fmax y2 y3)
@@ -26,25 +18,25 @@ let box_matches (minx, miny, maxx, maxy) {Cpdfcontent.content; bounding_box = Qu
   let wholly_contained (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy) =
     bminx > minx && bmaxx < maxx && bminy > miny && bmaxy < maxy
   in
-    if wholly_contained (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy) then Encloses else
-     match any_intersection (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy) with
-     | Some (minx, miny, maxx, maxy) -> Intersects (Cpdfcontent.Quad (minx, miny, minx, maxy, maxx, maxy, maxx, miny))
-     | None -> Nonintersecting
-
-let select_boxes shape boxes =
-  match shape with 
-  | None -> boxes
-  | Some (minx, miny, maxx, maxy) ->
-      keep (fun box -> box_matches (minx, miny, maxx, maxy) box <> Nonintersecting) boxes
-
-let box_matches a b =
-  match box_matches a b with
-  | Intersects _ | Encloses -> true
-  | Nonintersecting -> false
+    match detection with
+    | Enclosing -> fi (wholly_contained (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy))
+    | Touching ->
+        match any_intersection (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy) with
+        | Some _ -> fi true
+        | None -> fi false
 
 (* Redact a path on a page *)
-let redact_page pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~path ~invert page =
+let redact_page pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~path:(minx, miny, maxx, maxy) ~invert page =
   let to_remove = ref [] in
+  let f {Cpdfcontent.bounding_box = Cpdfcontent.Quad (x0, y0, x1, y1, x2, y2, x3, y3); content; _} =
+    match content with
+    | Glyph _ -> false
+    | InlineImage _ -> false
+    | Image (_, false, _) -> false
+    | Image (_, true, bbr) -> false
+    | Path _ | Shading _ -> false
+    | Clip -> false
+  in
   let ops =
     Cpdfcontent.filter
       ~pdf
@@ -54,7 +46,7 @@ let redact_page pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~anno
          path_to_jbig2enc;
          color;
          remove = (fun s -> to_remove := s::!to_remove)}
-      ~f:(function content -> if invert then not (box_matches path content) else box_matches path content)
+      ~f
       ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox)
       ~resources:page.Pdfpage.resources
       ~ops:(Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content)
@@ -91,18 +83,6 @@ let preprocess_jbig2lossy_to_jbig2lossless ?jbig2dec ~path_to_jbig2enc pdf =
        | _ -> ())
      pdf
 
-(* Detect if something intersects, overlaps etc. *)
-let detected ~detection ~invert path_minx path_miny path_maxx path_maxy test_minx test_miny test_maxx test_maxy =
-  let fi x = if invert then not x else x in
-    match detection with
-    | Touching ->
-        begin match box_overlap_float test_minx test_miny test_maxx test_maxy path_minx path_miny path_maxx path_maxy with
-        | Some _ -> fi true
-        | None -> fi false
-        end
-    | Enclosing ->
-        fi (box_union_float (path_minx, path_miny, path_maxx, path_maxy) (test_minx, test_miny, test_maxx, test_maxy) = (path_minx, path_miny, path_maxx, path_maxy))
-
 (* Remove annotations as specified *)
 let redact_annotations pdf range ~detection ~invert ~paths =
   Cpdfutil.progress_line "Redacting annotations...";
@@ -118,8 +98,13 @@ let redact_annotations pdf range ~detection ~invert ~paths =
               | Some rect ->
                   let minx, miny, maxx, maxy = List.nth paths (pnum - 1) in
                   let aminx, aminy, amaxx, amaxy = Pdf.parse_rectangle pdf rect in
-                    if detected ~detection ~invert minx miny maxx maxy aminx aminy amaxx amaxy then to_delete =| i;
-                      page
+                  if box_matches ~detection ~invert (minx, miny, maxx, maxy)
+                    {Cpdfcontent.state = Cpdfcontent.initial_state (0., 0., 0., 0.);
+                     Cpdfcontent.content = Cpdfcontent.Glyph 0;
+                     Cpdfcontent.bounding_box = Quad (aminx, aminy, aminx, amaxy, amaxx, amaxy, amaxx, aminy)}
+                  then
+                      to_delete =| i;
+                  page
               | None ->
                   page)
             page
@@ -307,6 +292,12 @@ let show_annotation_bounding_boxes ~fast ~light pdf range =
         (ilist 1 (Pdfpage.endpage !pdf))
     in
       Cpdftweak.append_page_content_multiple_ops opss false fast !pdf
+
+let select_boxes shape boxes =
+  match shape with 
+  | None -> boxes
+  | Some (minx, miny, maxx, maxy) ->
+      keep (box_matches ~detection:Touching ~invert:false (minx, miny, maxx, maxy)) boxes
 
 let show_bounding_boxes ~fast ~paths ~light pdf range =
   let pdf = show_annotation_bounding_boxes ~fast ~light pdf range in

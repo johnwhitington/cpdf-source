@@ -146,6 +146,8 @@ type state =
    mutable marked_content_point : (string * Pdf.pdfobject option) option;
    mutable marked_content : (string * Pdf.pdfobject option) list}
 
+val initial_state : float * float * float * float -> state
+
 type t =
   {bounding_box : bounding_box;
    content : content;

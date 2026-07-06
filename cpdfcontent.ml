@@ -1455,11 +1455,8 @@ let postprocess_remove_empty_path_ops =
 
 (* We run process_op over each op, losing any operation which doesn't alter the state.
    This is used, for example, to clean up redacted paths. And, of course, for efficiency. *)
-(* Experimental, do not use. *)
-(* FIXME: The problem here (and elsewhere) is that Form Xobjects are treated differently, rather than recursively using 'filter'. We should have filter take a copy of itself to call itself? For example, in 'compress' Form Xobjects would not be compressed....*)
-(* FIXME: Check the fake 'f' here with Nonintersecting really is a no-op *)
-(* FIXME: Other kinds of compression are available - for example this does not compress 'm l l l l S' into 're S'. See also the PDF 1.0 spec for additional ideas. *)
-(* FIXME: Cleaning up paths - when an OP_n is removed, we have to scroll back and remove any path-creation ops. So this is not quite so simple.... *)
+(* - The problem here (and elsewhere) is that Form Xobjects are treated differently, rather than recursively using 'filter'. We should have filter take a copy of itself to call itself? For example, in 'compress' Form Xobjects would not be compressed....*)
+(* - Other kinds of compression are available - for example this does not compress 'm l l l l S' into 're S'. See also the PDF 1.0 spec for additional ideas. *)
 let compress ~pdf ~mediabox ~resources ~ops =
   let stack = ref [] in
   let state = ref (initial_state mediabox) in
