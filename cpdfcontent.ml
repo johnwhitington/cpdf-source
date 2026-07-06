@@ -858,7 +858,7 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
           (* segs is empty, due to [Op_h] *)
           !state.partial_path <- PartialPath (sp, cp, [], []);
           !state.path <- {filled = true; stroked = false; path = (NonZero, rev subpaths)};
-          if emit_path_bounding_box ~content:(Path !state.path) ~stroking:false ~f ~state then [Pdfops.Op_n] else []
+          if emit_path_bounding_box ~content:(Path !state.path) ~stroking:false ~f ~state then [Pdfops.Op_n] else [op]
       | _ -> [op]
       end
   | Pdfops.Op_S ->
@@ -874,7 +874,7 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
               !state.partial_path <- PartialPath (sp, cp, [], []);
               !state.path <- {filled = false; stroked = true; path = (EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths))}
             end;
-          if emit_path_bounding_box ~content:(Path !state.path) ~stroking:true ~f ~state then [Pdfops.Op_n] else []
+          if emit_path_bounding_box ~content:(Path !state.path) ~stroking:true ~f ~state then [Pdfops.Op_n] else [op]
       | _ -> [op]
       end
   | Pdfops.Op_B ->
@@ -890,7 +890,7 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
               !state.partial_path <- PartialPath (sp, cp, [], []);
               !state.path <- {filled = true; stroked = true; path = (NonZero, rev ((Not_hole, Open, rev segs)::subpaths))}
             end;
-          if emit_path_bounding_box ~content:(Path !state.path) ~stroking:true ~f ~state then [Pdfops.Op_n] else []
+          if emit_path_bounding_box ~content:(Path !state.path) ~stroking:true ~f ~state then [Pdfops.Op_n] else [op]
       | _ -> [op]
       end
   | Pdfops.Op_B' ->
@@ -907,7 +907,7 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
               !state.partial_path <- PartialPath (sp, cp, [], []);
               !state.path <- {filled = true; stroked = true; path = (EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths))}
             end;
-          if emit_path_bounding_box ~content:(Path !state.path) ~stroking:true ~f ~state then [Pdfops.Op_n] else []
+          if emit_path_bounding_box ~content:(Path !state.path) ~stroking:true ~f ~state then [Pdfops.Op_n] else [op]
       | _ -> [op]
       end
   | Pdfops.Op_f' ->
@@ -923,7 +923,7 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
               !state.partial_path <- PartialPath (sp, cp, [], []);
               !state.path <- {filled = true; stroked = false; path = (EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths))}
             end;
-          if emit_path_bounding_box ~content:(Path !state.path) ~stroking:false ~f ~state then [Pdfops.Op_n] else []
+          if emit_path_bounding_box ~content:(Path !state.path) ~stroking:false ~f ~state then [Pdfops.Op_n] else [op]
       | _ -> [op]
       end
   | Pdfops.Op_n ->
@@ -1178,20 +1178,6 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
                     Hashtbl.clear !state.text_state.font_cache;
                     let to_remove = ref [] in
                     let ops = process_form_xobject ~pdf ~f ~helpers:{helpers with remove = (fun s -> to_remove := s::!to_remove)} ~stack ~state ~resources xobj in
-                    (* TODO Not clear what to do here in general. Content of
-                       xobject will be processed each time. For redaction, we
-                       might need to redact each time, so that is correct: any
-                       use intersecting the area needs removal even when
-                       shared. We need to return to the question of shared
-                       content. Perhaps any redacted one needs automatically
-                       copying to a new name? But what about xobjects of
-                       xobjects and so on? *)
-                    (*if !to_remove <> [] then
-                      begin
-                        Printf.printf "To remove at xobject level... ";
-                        iter (Printf.printf "%s ") !to_remove;
-                        flprint "\n";
-                      end;*)
                     let resources' =
                       let xobjects =
                         match Pdf.lookup_chain pdf xobj ["/Resources"; "/XObject"] with

@@ -495,9 +495,9 @@ let parse_redaction_spec s =
   in
   let before, after = cleavewhile (neq ',') (explode s) in
     if after = [] then
-      (parse_redaction_operation before, Some (parse_redaction_detection (tl after)))
-    else
       (parse_redaction_operation before, None)
+    else
+      (parse_redaction_operation before, Some (parse_redaction_detection (tl after)))
 
 type args =
   {mutable op : op option;
