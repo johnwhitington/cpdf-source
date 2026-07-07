@@ -1,5 +1,4 @@
 (** Page content as objects *)
-
 type fpoint = float * float
 
 type winding_rule = EvenOdd | NonZero
