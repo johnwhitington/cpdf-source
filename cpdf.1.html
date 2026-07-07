@@ -1651,7 +1651,7 @@ page.</p>
 <p>Supply the so-called Relationship for this attachment.</p>
 </dd>
 </dl>
-<p><strong>cpdf -add-attached-files in.json in.pdf -o
+<p><strong>cpdf -attach-files-json in.json in.pdf -o
 out.pdf</strong></p>
 <p>Add attached files from JSON produced by
 <strong>-list-attached-files</strong> or otherwise.</p>
@@ -1705,7 +1705,7 @@ as do not reach a minimum resolution.</p>
 </dd>
 </dl>
 <p><strong>cpdf -extract-images in.pdf</strong> [&lt;range&gt;] [-im
-&lt;path&gt;] [-p2p &lt;path&gt;] [-dedup | -dedup-perpage] [-raw]
+&lt;path&gt;] [-p2p &lt;path&gt;] [-dedup | -dedup-per-page] [-raw]
 [-inline] [-merge-masks] <strong>-o &lt;path&gt;</strong></p>
 <p>Extract images to a given path e.g “output/%%%”, which would create
 output/001.jpg, output/002.png and so on. JPEG, JPEG2000 and lossless
@@ -1849,7 +1849,7 @@ no dpi threshold).</p>
 </dd>
 </dl>
 <p><strong>cpdf -rasterize in.pdf</strong> [&lt;range&gt;] [-gs
-&lt;path&gt;] [-rasterize[-gray | -1bpp | -jpeg | -jpeggray]]
+&lt;path&gt;] [-rasterize[-gray | -1bpp | -jpeg | -jpeg-gray]]
 [-rasterize-res &lt;n&gt;] [-rasterize-jpeg-quality &lt;n&gt;]
 [-rasterize-no-antialias | -rasterize-downsample] [-rasterize-annots]
 [-rasterize-alpha] <strong>-o out.pdf</strong></p>
@@ -2519,6 +2519,9 @@ out.pdf</strong></p>
 out.pdf</strong></p>
 <p>Apply annotations as if they were redaction annotations. See options
 below.</p>
+<p><strong>cpdf -annotate</strong> &lt;rectangle&gt;
+<strong>in.pdf</strong> [&lt;range&gt;] <strong>-o out.pdf</strong></p>
+<p>Create a redaction annotation.</p>
 <dl>
 <dt><strong>-color</strong> &lt;color&gt;</dt>
 <dd>

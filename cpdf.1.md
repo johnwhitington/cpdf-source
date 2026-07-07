@@ -1459,7 +1459,7 @@ Attach a file to a PDF, given its filename.
 
 : Supply the so-called Relationship for this attachment.
 
-**cpdf -add-attached-files in.json in.pdf -o out.pdf**
+**cpdf -attach-files-json in.json in.pdf -o out.pdf**
 
 Add attached files from JSON produced by **-list-attached-files** or otherwise.
 
@@ -1511,7 +1511,7 @@ minimum resolution.
 : Also list inline images.
 
 **cpdf -extract-images in.pdf** \[\<range>] \[-im \<path>] \[-p2p \<path>] \[-dedup |
--dedup-perpage] \[-raw] \[-inline] \[-merge-masks] **-o \<path>**
+-dedup-per-page] \[-raw] \[-inline] \[-merge-masks] **-o \<path>**
 
 Extract images to a given path e.g "output/%%%", which would create
 output/001.jpg, output/002.png and so on. JPEG, JPEG2000 and lossless JBIG2
@@ -1644,7 +1644,7 @@ full commentary, see cpdfmanual.pdf.
 : Use interpolation when resampling.
 
 **cpdf -rasterize in.pdf** \[\<range>] \[-gs \<path>]
-\[-rasterize\[-gray | -1bpp | -jpeg | -jpeggray]] \[-rasterize-res \<n>]
+\[-rasterize\[-gray | -1bpp | -jpeg | -jpeg-gray]] \[-rasterize-res \<n>]
 \[-rasterize-jpeg-quality \<n>] \[-rasterize-no-antialias |
 -rasterize-downsample] \[-rasterize-annots] \[-rasterize-alpha] **-o out.pdf** 
 
@@ -2306,6 +2306,10 @@ Apply redaction annotations. See options below.
 **cpdf -redact-apply-type** \<annotation type> \[redaction options] **in.pdf** \[\<range>] **-o out.pdf**
 
 Apply annotations as if they were redaction annotations. See options below.
+
+**cpdf -annotate** \<rectangle> **in.pdf** \[\<range>] **-o out.pdf**
+
+Create a redaction annotation.
 
 **-color** \<color>
 
