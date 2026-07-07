@@ -1064,16 +1064,6 @@ Add blank pages before or after each page in the given range.
 Add as many blank pages as are required before or after the original pages to
 make the file's length a multiple of the given number of pages
 
-**cpdf -redact** **in.pdf** \[\<range>] \[-process-struct-trees] **-o out.pdf**
-
-Remove the content of the pages in the given range entirely, including
-annotations and any resources. 
-
-**-process-struct-trees**
-
-: Process the document's structure tree to remove any parts which are marked as
-relating to the now-redacted pages.
-
 **cpdf \[-impose \<pagesize> | impose-xy "\<x> \<y>"]** **in.pdf**
 \[-impose-columns] \[-impose-rtl] \[-impose-btt] \[-impose-margin \<n>]
 \[-impose-spacing \<n>] \[-impose-linewidth \<n>] \[-fast]
@@ -2293,7 +2283,67 @@ Create a new, blank, PDF/UA-1 or PDF/UA-2 file with the given title.
 
 : Give the paper size, e.g "a3landscape" or "200pt 600pt"
 
-# 20. MISCELLANEOUS
+# 20. REDACTION
+
+**cpdf -redact** **in.pdf** \[\<range>] \[-process-struct-trees] **-o out.pdf**
+
+Remove the content of the pages in the given range entirely, including
+annotations and any resources. 
+
+**-process-struct-trees**
+
+: Process the document's structure tree to remove any parts which are marked as
+relating to the now-redacted pages.
+
+**cpdf -redact-shape** \<rectangle> \[redaction options] **in.pdf** \[\<range>] **-o out.pdf**
+
+Remove content in the given rectangle. See options below.
+
+**cpdf -redact-apply** \[redaction options] **in.pdf** \[\<range>] **-o out.pdf**
+
+Apply redaction annotations. See options below.
+
+**cpdf -redact-apply-type** \<annotation type> \[redaction options] **in.pdf** \[\<range>] **-o out.pdf**
+
+Apply annotations as if they were redaction annotations. See options below.
+
+**-color** \<color>
+
+: Set the fill color for the redaction appearance (default black).
+
+**-outline**
+
+: Make the redaction appearance outline-only.
+
+**-redact-no-show**
+
+: Don't show any redaction appearance.
+
+**-redact-invert**
+
+: Invert the redaction, leaving everything which would otherwise be redacted and removing everything which would otherwise be kept.
+
+**-redact-text** \[remove | leave],\[touches | encloses]
+
+: Default "remove,touches".
+
+**-redact-images** \[remove | chop | leave],\[touches | encloses]
+
+: Set image redaction specification. Default "leave".
+
+**-redact-inline-images** \[remove | leave],\[touches | encloses]
+
+: Set inline image redaction specification. Default "leave".
+
+**-redact-vectors** \[remove | leave],\[touches | encloses]
+
+: Set vectors redaction specification. Default "leave".
+
+**-redact-annotations** \[remove | leave],\[touches | encloses]
+
+: Set annotation redaction specification. Default "leave".
+
+# 21. MISCELLANEOUS
 
 **cpdf -draft** **in.pdf** \[\<range>] \[-boxes] \[-draft-remove-only \<n>] **-o out.pdf**
 
