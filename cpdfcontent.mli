@@ -27,7 +27,7 @@ type bounding_box =
 type content =
   | Glyph of int
   | InlineImage of Pdf.pdfobject * Pdfio.bytes
-  | Image of string * bool * bounding_box ref
+  | Image of string * bool * (float * float * float * float) option ref
   | Path of drawn_path
   | Shading of string
   | Clip

@@ -28,40 +28,52 @@ let box_matches ~detection ~invert (minx, miny, maxx, maxy) {Cpdfcontent.boundin
 (* Redact a path on a page *)
 let redact_page
   pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~path_to_jbig2dec
-  ~path_to_convert ~path_to_jbig2enc ~color ~path ~invert page
+  ~path_to_convert ~path_to_jbig2enc ~color ~path:((minx, miny, maxx, maxy) as path) ~invert page
 =
+  let fi x = if invert then not x else x in
   let to_remove = ref [] in
   let f c =
     match c.Cpdfcontent.content with
     | Cpdfcontent.Glyph _ ->
         begin match text_spec with
         | (Remove, Some detection) -> box_matches ~detection ~invert path c
-        | _ -> false
+        | _ -> fi false
         end
     | Path _ | Shading _ ->
         begin match vector_spec with
         | (Remove, Some detection) -> box_matches ~detection ~invert path c
-        | _ -> false
+        | _ -> fi false
         end
     | InlineImage _ ->
         begin match inline_image_spec with
         | (Remove, Some detection) -> box_matches ~detection ~invert path c
-        | _ -> false
+        | _ -> fi false
         end
     | Clip -> false
     | Image (_, false, _) ->
         (* First call. Plain. If false, second call will not run. If true, second call will run to determine whether to chop or remove. *)
         begin match image_spec with
         | ((Remove | Chop), Some detection) -> box_matches ~detection ~invert path c
-        | _ -> false 
+        | _ -> fi false 
         end
     | Image (_, true, bbr) ->
         (* Second call. Chop determination. If no chop, and first call was true, Cpdfcontent will delete. Otherwise chop. *)
         begin match image_spec with
         | (Chop, Some detection) ->
             (* If box matches, and the overlap is not the whole image, say yes to chop. *)
-            if box_matches ~detection ~invert path c then (* set reference *) true else false
-        | _ -> false
+            if box_matches ~detection ~invert path c then
+              begin
+                let bminx, bmaxx, bminy, bmaxy =
+                  match c.Cpdfcontent.bounding_box with Quad (x0, y0, x1, y1, x2, y2, x3, y3) ->
+                    fmin (fmin x0 x1) (fmin x2 x3), fmax (fmax x0 x1) (fmax x2 x3),
+                    fmin (fmin y0 y1) (fmin y2 y3), fmax (fmax y0 y1) (fmax y2 y3)
+                in
+                  bbr := box_overlap_float minx miny maxx maxy bminx bminy bmaxx bmaxy;
+                  fi true
+              end
+            else
+              fi false
+        | _ -> fi false
         end
   in
   let ops =

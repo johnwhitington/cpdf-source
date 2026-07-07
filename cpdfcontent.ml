@@ -142,7 +142,7 @@ type bounding_box =
 type content =
   | Glyph of int
   | InlineImage of Pdf.pdfobject * Pdfio.bytes
-  | Image of string * bool * bounding_box ref (* query chop? *)
+  | Image of string * bool * (float * float * float * float) option ref (* query chop? *)
   | Path of drawn_path
   | Shading of string
   | Clip (* This is just for -show-bboxes. Clipping exists in the state otherwise. *)
@@ -1150,13 +1150,13 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
                   let x1, y1 = Pdftransform.transform_matrix !state.ctm (0., 1.) in
                   let x2, y2 = Pdftransform.transform_matrix !state.ctm (1., 1.) in
                   let x3, y3 = Pdftransform.transform_matrix !state.ctm (1., 0.) in
-                  let r = ref (Quad (0., 0., 0., 0., 0., 0., 0., 0.)) in
-                  let out_1 = f {state = copystate !state; content = Image (s, false, ref (Quad (0., 0., 0., 0., 0., 0., 0., 0.))); bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} in
+                  let r = ref None in
+                  let out_1 = f {state = copystate !state; content = Image (s, false, ref None); bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} in
                   let out_2 = f {state = copystate !state; content = Image (s, true, r); bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} in
                     begin match out_1, out_2, !r with
                     | true, _, _ -> helpers.remove s; []
-                    | false, true, Quad (x0, y0, x1, y1, x2, y2, x3, y3) ->
-                        if chop_image pdf ~helpers xobjnum !state.ctm (x0, y0, x1, y1, x2, y2, x3, y3) then [op] else
+                    | false, true, Some (minx, miny, maxx, maxy) ->
+                        if chop_image pdf ~helpers xobjnum !state.ctm (minx, miny, minx, maxy, maxx, maxy, maxx, miny) then [op] else
                           begin Pdfe.log "Failed to chop image, removing whole image instead\n"; [] end
                     | false, _, _ -> [op]
                     end
