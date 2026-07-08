@@ -25,7 +25,7 @@ let magick_color c =
     | Cpdfaddtext.CMYK (c, y, m, k) -> Printf.sprintf "cmyk(%s, %s, %s, %s)" (expand c) (expand y) (expand m) (expand k)
 
 let rec magick_color_1bpp = function
-  | Cpdfaddtext.Grey g -> if g > 0.5 then "black" else "white"
+  | Cpdfaddtext.Grey g -> if g > 0.5 then "white" else "black"
   | Cpdfaddtext.RGB (r, g, b) -> magick_color_1bpp (Cpdfaddtext.Grey ((r +. g +. b) /. 3.))
   | Cpdfaddtext.CMYK (c, m, y, k) -> magick_color_1bpp (Cpdfaddtext.RGB ((1. -. c) *. (1. -. k), (1. -. m) *. (1. -. k), (1. -. y) *. (1. -. k)))
 
@@ -1657,10 +1657,10 @@ let redact_lossless pdf ~path_to_convert (minx, miny, maxx, maxy) ~color s dict 
     let command = 
       (Filename.quote_command path_to_convert
         ((if components = 4 then ["-depth"; "8"; "-size"; string_of_int w ^ "x" ^ string_of_int h] else []) @ [out] @
-        (if components = 1 then ["-define"; "png:color-type=0"; "-colorspace"; "Gray"]
-         else if components = 3 then ["-define"; "png:color-type=2"; "-colorspace"; "RGB"]
-         else if components = 4 then ["-colorspace"; "CMYK"] else []) @
-        ["-stroke"; "none"; "-fill"; magick_color_1bpp color; "-draw"; (Printf.sprintf "rectangle %f,%f %f,%f" minx (float_of_int h -. miny) maxx (float_of_int h -. maxy))] @ 
+        (if components = 1 then ["-define"; "png:color-type=0"; "-colorspace"; "Gray"; "-fill"; magick_color_1bpp color]
+         else if components = 3 then ["-define"; "png:color-type=2"; "-colorspace"; "RGB"; "-fill"; magick_color color]
+         else if components = 4 then ["-colorspace"; "CMYK"; "-fill"; magick_color color] else []) @
+        ["-stroke"; "none"; "-draw"; (Printf.sprintf "rectangle %f,%f %f,%f" minx (float_of_int h -. miny) maxx (float_of_int h -. maxy))] @ 
         (if components = 4 then ["-write"] else []) @ [out2] @
         (if components = 4 then ["-format"; "%w %h"; "info:"] else [])))
       ^

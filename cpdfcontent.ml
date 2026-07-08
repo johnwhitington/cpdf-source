@@ -1153,11 +1153,15 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
                   let r = ref None in
                   let out_1 = f {state = copystate !state; content = Image (s, false, ref None); bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} in
                   let out_2 = f {state = copystate !state; content = Image (s, true, r); bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} in
+                    Printf.printf
+                      "out_1 (not chop checking) = %b, out_2 (chop checking) = %b, !r = %s\n"
+                      out_1 out_2
+                      (match !r with None -> "None" | Some (minx, miny, maxx, maxy) -> Printf.sprintf "Some %f %f %f %f" minx miny maxx maxy);
                     begin match out_1, out_2, !r with
-                    | true, _, _ -> helpers.remove s; []
-                    | false, true, Some (minx, miny, maxx, maxy) ->
+                    | _, true, Some (minx, miny, maxx, maxy) ->
                         if chop_image pdf ~helpers xobjnum !state.ctm (minx, miny, minx, maxy, maxx, maxy, maxx, miny) then [op] else
                           begin Pdfe.log "Failed to chop image, removing whole image instead\n"; [] end
+                    | true, _, _ -> helpers.remove s; []
                     | false, _, _ -> [op]
                     end
               | Some (Pdf.Name "/Form") ->

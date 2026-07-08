@@ -6598,6 +6598,8 @@ Option & Values & Default value \\\hline
 
 \noindent The specification is made of two parts, the first required the second optional. For the first, the \texttt{remove} specifier will remove matching content, \texttt{leave} will leave the content unredacted, and \texttt{chop} -- for images only -- will cut out the part of the image to be redacted. For the second, the \texttt{touches} specifier will consider any content intersecting with the redaction rectangle, whereas \texttt{encloses} will consider only such content as is fully enclosed within the redaction rectangle. NB: Intersecting and enclosed here refer to operations on the rectangular bounding boxes of glyphs, images, paths etc. The exact shapes are not used.
 
+The appearance of the redaction is governed by the options \texttt{-color} (default black, format described in Chapter 8), \texttt{-outline} (default filled) and \texttt{-redact-no-show} (omit the redaction appearance entirely).
+
 \section{Redaction annotations}
 
 Annotations denoting future redactions can be added to a PDF in Adobe Acrobat other interactive PDF software. Cpdf can apply these annotations to perform the redaction. Cpdf can also create such redaction annotations. To apply existing annotation redactions:
@@ -6609,7 +6611,9 @@ Annotations denoting future redactions can be added to a PDF in Adobe Acrobat ot
     \noindent Apply redaction annoations in \texttt{in.pdf}, writing to \texttt{out.pdf}
   \end{framed}
 
-\noindent The redaction and annotation appearance options described above may be used here too. If the interactive software you are using to demarcate the annotations does not know about redaction annotations, you can use a different kind of annotation and Cpdf will use that annotation's bounding box as the redaction rectangle:
+\noindent The redaction and annotation appearance options described above may be used here too.
+
+If the interactive software you are using to demarcate the annotations does not know about redaction annotations, you can use a different kind of annotation and Cpdf will use that annotation's bounding box as the redaction rectangle:
 
   \begin{framed}
     \noindent\small\verb!cpdf -redact-apply-type /Square in.pdf 2 out.pdf!
