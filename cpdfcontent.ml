@@ -677,7 +677,7 @@ let transform_path m (w, subpaths) =
   in
     (w, map (fun (h, c, segments) -> (h, c, map transform_segment segments)) subpaths)
 
-(* Find the intersection of all the bboxes of all the clipping paths, to find the BBOX for bad shadings.*)
+(* Find the intersection of all the bboxes of all the clipping paths, to find the BBOX for bad shadings. *)
 let smallest_clip_bbox paths =
   let bboxes = map bbox_of_path paths in
   let overlap = ref (hd bboxes) in
@@ -696,17 +696,20 @@ let smallest_clip_bbox paths =
     !overlap
 
 let emit_path_bounding_box ~content ~stroking ~f ~state =
+  let debug = ref false in
   let bbox =
     match content with
-    | Clip | Shading _ -> smallest_clip_bbox (map (transform_path !state.ctm) !state.clipping_path)
+    | Clip | Shading _ ->
+        begin match content with Shading _ -> set debug | _ -> () end;
+        smallest_clip_bbox !state.clipping_path
     | _ -> bbox_of_path (transform_path !state.ctm !state.path.path)
   in
     match bbox with
     | None -> 
-        (*flprint "No bbox found in emit_path_bounding_box\n";*)
+        if !debug then flprint "No bbox found in emit_path_bounding_box\n";
         false
     | Some (minx, maxx, miny, maxy) ->
-        (*Printf.printf "found bbox in emit_path_bounding_box: %f %f %f %f\n" minx maxx miny maxy;*)
+        if !debug then Printf.printf "found bbox in emit_path_bounding_box: %f %f %f %f\n" minx maxx miny maxy;
         let minx, maxx, miny, maxy =
           if stroking then
              let dx0, dy0 = Pdftransform.transform_matrix !state.ctm (0., 0.) in
@@ -1127,14 +1130,24 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
         let shading = read_shading pdf Pdftransform.i_matrix Pdf.Null shading in
           begin match shading.shading_bbox with
           | Some r ->
+              flprint "bounded shading...\n";
               begin try
                 let minx, miny, maxx, maxy = Pdf.parse_rectangle pdf r in
+                  Printf.printf "bounded shading %f %f %f %f\n" minx miny maxx maxy;
+                let x0, y0 = Pdftransform.transform_matrix !state.ctm (minx, miny) in
+                let x1, y1 = Pdftransform.transform_matrix !state.ctm (maxx, maxy) in
+                  Printf.printf "transformed shading %f %f %f %f\n" x0 y0 x1 y1;
+                  let minx = fmin x0 x1 in 
+                  let miny = fmin y0 y1 in 
+                  let maxx = fmax x0 x1 in 
+                  let maxy = fmax y0 y1 in 
                   if f {state = copystate !state; content = Shading s; bounding_box = Quad (minx, miny, minx, maxy, maxx, maxy, maxx, miny)} then [] else [op]
               with
                 _ -> [op]
               end
           | None ->
               (* This is an unbounded shading, not recommended. So we use the current clipping path. *)
+              flprint "unbounded shading...\n";
               if emit_path_bounding_box ~content:(Shading s) ~stroking:false ~f ~state then [] else [op]
           end
       with
