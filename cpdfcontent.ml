@@ -733,10 +733,17 @@ let rec chop_image pdf ~helpers objnum ctm (x0, y0, x1, y1, x2, y2, x3, y3) =
   in
   let minx, miny, maxx, maxy =
     let inverse = Pdftransform.matrix_invert ctm in
-      let minx, miny = Pdftransform.transform_matrix inverse (x0, y0) in
-      let maxx, maxy = Pdftransform.transform_matrix inverse (x2, y2) in
-         minx *. float w, miny *. float h, maxx *. float w, maxy *. float h
+      let x0, y0 = Pdftransform.transform_matrix inverse (x0, y0) in
+      let x1, y1 = Pdftransform.transform_matrix inverse (x1, y1) in
+      let x2, y2 = Pdftransform.transform_matrix inverse (x2, y2) in
+      let x3, y3 = Pdftransform.transform_matrix inverse (x3, y3) in
+      let minx = fmin (fmin x0 x1) (fmin x2 x3) in 
+      let miny = fmin (fmin y0 y1) (fmin y2 y3) in 
+      let maxx = fmax (fmax x0 x1) (fmax x2 x3) in 
+      let maxy = fmax (fmax y0 y1) (fmax y2 y3) in 
+        minx *. float w, miny *. float h, maxx *. float w, maxy *. float h
   in
+    (*Printf.printf "Image path in image space (%f %f %f %f)\n" minx miny maxx maxy;*)
     Cpdfimage.redact
       pdf
       ~objnum
@@ -1153,12 +1160,13 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
                   let r = ref None in
                   let out_1 = f {state = copystate !state; content = Image (s, false, ref None); bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} in
                   let out_2 = f {state = copystate !state; content = Image (s, true, r); bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} in
-                    Printf.printf
+                    (*Printf.printf
                       "out_1 (not chop checking) = %b, out_2 (chop checking) = %b, !r = %s\n"
                       out_1 out_2
-                      (match !r with None -> "None" | Some (minx, miny, maxx, maxy) -> Printf.sprintf "Some %f %f %f %f" minx miny maxx maxy);
+                      (match !r with None -> "None" | Some (minx, miny, maxx, maxy) -> Printf.sprintf "Some %f %f %f %f" minx miny maxx maxy);*)
                     begin match out_1, out_2, !r with
                     | _, true, Some (minx, miny, maxx, maxy) ->
+                        (*Printf.printf "We are asked to chop in the image (%f, %f, %f, %f)\n" minx miny maxx maxy;*)
                         if chop_image pdf ~helpers xobjnum !state.ctm (minx, miny, minx, maxy, maxx, maxy, maxx, miny) then [op] else
                           begin Pdfe.log "Failed to chop image, removing whole image instead\n"; [] end
                     | true, _, _ -> helpers.remove s; []
