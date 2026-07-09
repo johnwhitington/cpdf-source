@@ -1053,10 +1053,10 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
       [Pdfops.Op_TJ (optimise_capital_tj (process_capital_tj ~f ~stack ~state ~resources l))]
   | Pdfops.Op_' s ->
       ignore (map (process_op ~pdf ~helpers ~f ~stack ~state ~resources) [Pdfops.Op_T']);
-      process_op ~pdf ~helpers ~f ~stack ~state ~resources (Pdfops.Op_Tj s)
+      Pdfops.Op_T'::process_op ~pdf ~helpers ~f ~stack ~state ~resources (Pdfops.Op_Tj s)
   | Pdfops.Op_'' (f1, f2, s) ->
       ignore (map (process_op ~pdf ~helpers ~f ~stack ~state ~resources) [(Pdfops.Op_Tw f1); (Pdfops.Op_Tc f2)]);
-      process_op ~pdf ~helpers ~f ~stack ~state ~resources (Pdfops.Op_' s)
+      Pdfops.Op_Tw f1::Pdfops.Op_Tc f2::process_op ~pdf ~helpers ~f ~stack ~state ~resources (Pdfops.Op_' s)
   | Pdfops.Op_d0 (f1, f2) ->
       !state.d0 <- Some (f1, f2);
       [op]
