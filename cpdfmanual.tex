@@ -6638,7 +6638,7 @@ If the interactive software you are using to demarcate the annotations does not 
 There are several ways to check that redaction has proceeded as we would have wished:
 
 \begin{description}
-\item[Inversion] Adding \texttt{-redact-invert} and writing to another PDF will keep all objects redaction would lose, and lose all objects redaction would keep. Each object (image, vector, glyph) ends up only the redacted or inverted output. For example, we might
+\item[Inversion] Adding \texttt{-redact-invert} and writing to another PDF will keep all objects redaction would lose, and lose all objects redaction would keep. Each object (image, vector, glyph) ends up only the redacted or inverted output (note that images are never chopped with \texttt{-redact-invert}).
 \item[Page content JSON] Page content can be extracted with \texttt{-page-content} as described in Section \ref{pagecontent} for the redacted and unredacted file, and a comparison made.
 \item[Full JSON] To check metadata as well, we can use \texttt{-output-json} from Chapter 15 and compare the output on redacted and unredacted files.
 \item[Text extraction] Whilst Cpdf does not yet have text extraction facilities, you can use another text extraction program to extract the text from the original file and the redacted file and check the differences.
