@@ -6642,6 +6642,7 @@ There are several ways to check that redaction has proceeded as we would have wi
 \item[Page content JSON] Page content can be extracted with \texttt{-page-content} as described in Section \ref{pagecontent} for the redacted and unredacted file, and a comparison made.
 \item[Full JSON] To check metadata as well, we can use \texttt{-output-json} from Chapter 15 and compare the output on redacted and unredacted files.
 \item[Text extraction] Whilst Cpdf does not yet have text extraction facilities, you can use another text extraction program to extract the text from the original file and the redacted file and check the differences.
+\item[Image extraction] Cpdf's image listing and extraction facilities (see Chapter 13) may be used to check that images have been redacted when in \texttt{chop} mode, and that no hidden images or image masks have survived.
 \end{description}
 
 \clearpage\pagestyle{empty}
