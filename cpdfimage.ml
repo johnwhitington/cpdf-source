@@ -903,6 +903,23 @@ let image_of_input ?subformat ?title ~process_struct_tree fobj i =
   let pdf, pageroot = Pdfpage.add_pagetree [page] pdf in
     Pdfpage.add_root pageroot [] pdf
 
+let suitable_num pdf dict =
+  match Pdf.lookup_direct pdf "/ColorSpace" dict with
+  | Some (Pdf.Name ("/DeviceRGB" | "/CalRGB")) -> 3
+  | Some (Pdf.Name ("/DeviceGray" | "/CalGray")) -> 1
+  | Some (Pdf.Name "/DeviceCMYK") -> 4
+  | Some (Pdf.Array [Pdf.Name "/Lab"; _]) -> 3
+  | Some (Pdf.Array [Pdf.Name "/ICCBased"; stream]) ->
+      begin match Pdf.lookup_direct pdf "/N" stream with
+      | Some (Pdf.Integer 3) -> 3
+      | Some (Pdf.Integer 1) -> 1
+      | Some (Pdf.Integer 4) -> 4
+      | _ -> 0
+      end
+  | Some (Pdf.Array (Pdf.Name ("/Separation")::_)) -> ~-1
+  | Some (Pdf.Array (Pdf.Name ("/Indexed")::_)) -> ~-2
+  | _ -> 0
+
 let jpeg_to_jpeg pdf ~force ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale ~interpolate ~q ~path_to_convert s dict reference =
   if q < 0. || q > 100. then error "Out of range quality";
   complain_convert path_to_convert;
@@ -914,6 +931,7 @@ let jpeg_to_jpeg pdf ~force ~pixel_threshold ~length_threshold ~percentage_thres
   if size < length_threshold then (if !debug_image_processing then Printf.printf "length threshold not met\n%!") else
   let out = Filename.temp_file "cpdf" "convertin.jpg" in
   let out2 = Filename.temp_file "cpdf" "convertout.jpg" in
+  let components = suitable_num pdf dict in
   let fh = open_out_bin out in
     begin match s with Pdf.Stream {contents = _, Pdf.Got d} -> Pdfio.bytes_to_output_channel fh d | _ -> () end;
     close_out fh;
@@ -925,7 +943,9 @@ let jpeg_to_jpeg pdf ~force ~pixel_threshold ~length_threshold ~percentage_thres
         []
     in
       let command = 
-        Filename.quote_command path_to_convert ([out] @ scaling @ ["-quality"; string_of_float q ^ "%"; out2])
+        Filename.quote_command path_to_convert ([out] @ scaling @ ["-quality"; string_of_float q ^ "%"] @
+        (if components = 3 then ["-define"; "colorspace:auto-grayscale=false"; "-type"; "truecolor"] else [])
+        @ [out2])
       in
         image_command command
     in
@@ -1024,23 +1044,6 @@ let jpeg2000_to_jpeg2000 pdf ~force ~pixel_threshold ~length_threshold ~percenta
       if !debug_image_processing then Printf.printf "external process failed\n%!";
     remove out;
     remove out2
-
-let suitable_num pdf dict =
-  match Pdf.lookup_direct pdf "/ColorSpace" dict with
-  | Some (Pdf.Name ("/DeviceRGB" | "/CalRGB")) -> 3
-  | Some (Pdf.Name ("/DeviceGray" | "/CalGray")) -> 1
-  | Some (Pdf.Name "/DeviceCMYK") -> 4
-  | Some (Pdf.Array [Pdf.Name "/Lab"; _]) -> 3
-  | Some (Pdf.Array [Pdf.Name "/ICCBased"; stream]) ->
-      begin match Pdf.lookup_direct pdf "/N" stream with
-      | Some (Pdf.Integer 3) -> 3
-      | Some (Pdf.Integer 1) -> 1
-      | Some (Pdf.Integer 4) -> 4
-      | _ -> 0
-      end
-  | Some (Pdf.Array (Pdf.Name ("/Separation")::_)) -> ~-1
-  | Some (Pdf.Array (Pdf.Name ("/Indexed")::_)) -> ~-2
-  | _ -> 0
 
 let lossless_out pdf ~invert_cmyk ~pixel_threshold ~length_threshold extension s dict reference =
   let old = !reference in
