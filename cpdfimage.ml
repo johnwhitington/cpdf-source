@@ -1744,12 +1744,14 @@ let redact_jpeg pdf ~path_to_convert (minx, miny, maxx, maxy) ~color s dict refe
   let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
   let out = Filename.temp_file "cpdf" "convertin.jpg" in
   let out2 = Filename.temp_file "cpdf" "convertout.jpg" in
+  let components = suitable_num pdf dict in
   let fh = open_out_bin out in
     begin match s with Pdf.Stream {contents = _, Pdf.Got d} -> Pdfio.bytes_to_output_channel fh d | _ -> () end;
     close_out fh;
     let retcode =
       let command = 
-        Filename.quote_command path_to_convert ([out; "-stroke"; "none"; "-fill"; magick_color color; "-draw"; (Printf.sprintf "rectangle %f,%f %f,%f" minx (float_of_int h -. miny) maxx (float_of_int h -. maxy)); out2])
+        Filename.quote_command path_to_convert
+          ([out; "-stroke"; "none"; "-fill"; magick_color color; "-draw"; (Printf.sprintf "rectangle %f,%f %f,%f" minx (float_of_int h -. miny) maxx (float_of_int h -. maxy))] @ (if components = 3 then ["-define"; "colorspace:auto-grayscale=false"; "-type"; "truecolor"] else []) @ [out2])
       in
         image_command command
     in
