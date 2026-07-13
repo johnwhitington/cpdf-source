@@ -5417,25 +5417,32 @@ let rec go () =
       let paths = map (fun (minx, miny, w, h) -> (minx, miny, minx +. w, miny +. h)) rects in
       let pdf =
         Cpdfredact.redact
-          pdf ~text_spec:args.redact_text ~image_spec:args.redact_images ~inline_image_spec:args.redact_inline_images ~vector_spec:args.redact_vectors ~annotation_spec:args.redact_annotations ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc
-          ~paths ~invert:args.redact_invert ~show:args.redact_show ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth ~underneath:args.underneath range
+          pdf ~text_spec:args.redact_text ~image_spec:args.redact_images ~inline_image_spec:args.redact_inline_images ~vector_spec:args.redact_vectors
+          ~annotation_spec:args.redact_annotations ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc
+          ~paths ~invert:args.redact_invert ~show:args.redact_show ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth
+          ~underneath:args.underneath range
       in
         write_pdf false pdf
   | RedactApply ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
       let pdf =
-        Cpdfredact.apply pdf ~text_spec:args.redact_text ~image_spec:args.redact_images ~inline_image_spec:args.redact_inline_images ~vector_spec:args.redact_vectors ~annotation_spec:args.redact_annotations ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc
-        ~invert:args.redact_invert ~show:args.redact_show ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth ~underneath:args.underneath range
+        Cpdfredact.apply
+          pdf ~text_spec:args.redact_text ~image_spec:args.redact_images ~inline_image_spec:args.redact_inline_images ~vector_spec:args.redact_vectors
+          ~annotation_spec:args.redact_annotations ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc
+          ~invert:args.redact_invert ~show:args.redact_show ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth
+          ~underneath:args.underneath range
       in
         write_pdf false pdf
-  | RedactApplyType s ->
+  | RedactApplyType typ ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
       let pdf =
         Cpdfredact.apply
-          pdf ~text_spec:args.redact_text ~image_spec:args.redact_images ~inline_image_spec:args.redact_inline_images ~vector_spec:args.redact_vectors ~annotation_spec:args.redact_annotations ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc
-          ~typ:("/" ^ s) ~invert:args.redact_invert ~show:args.redact_show ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth ~underneath:args.underneath range
+          pdf ~text_spec:args.redact_text ~image_spec:args.redact_images ~inline_image_spec:args.redact_inline_images ~vector_spec:args.redact_vectors
+          ~annotation_spec:args.redact_annotations ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc
+          ~typ ~invert:args.redact_invert ~show:args.redact_show ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth
+          ~underneath:args.underneath range
       in
         write_pdf false pdf
   | Rasterize ->
