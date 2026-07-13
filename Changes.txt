@@ -7,6 +7,11 @@ New features:
 * Apply other annotations as redactions with -redact-apply-type
 * Create redaction annotations with -add-annotation
 
+Fixes:
+
+o Reprocessing an RGB JPEG could resulting in a grayscale JPEG, leading to a
+malformed PDF.
+
 * = Supported by a grant from NLnet
 
 2.9.1 (May 2026)
