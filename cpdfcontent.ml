@@ -677,31 +677,21 @@ let transform_path m (w, subpaths) =
   in
     (w, map (fun (h, c, segments) -> (h, c, map transform_segment segments)) subpaths)
 
-(* Find the intersection of all the bboxes of all the clipping paths, to find the BBOX for bad shadings. *)
-let smallest_clip_bbox paths =
-  let bboxes = map bbox_of_path paths in
-  let overlap = ref (hd bboxes) in
-    iter
-      (function
-       | None -> overlap := None 
-       | Some (minx, maxx, miny, maxy) ->
-           overlap :=
-             match !overlap with
-             | None -> Some (minx, maxx, miny, maxy)
-             | Some (ominx, omaxx, ominy, omaxy) ->
-                 match box_overlap_float minx miny maxx maxy ominx ominy omaxx omaxy with
-                 | None -> None
-                 | Some (nminx, nminy, nmaxx, nmaxy) -> Some (nminy, nmaxx, nminy, nmaxy))
-      (tl bboxes);
-    !overlap
+(* Find the union of all the bboxes of all the clipping paths, to find the BBOX
+   for bad shadings. This is, in some cases, too conservative. But there's not
+   much choice absent being able to clip against any shape (which we may do in
+   the future). *)
+let clip_bbox_union paths =
+  let bboxes = option_map bbox_of_path paths in
+    Some (fold_left box_union_float (hd bboxes) (tl bboxes))
 
 let emit_path_bounding_box ~content ~stroking ~f ~state =
   let debug = ref false in
   let bbox =
     match content with
     | Clip | Shading _ ->
-        begin match content with Shading _ -> set debug | _ -> () end;
-        smallest_clip_bbox !state.clipping_path
+        (*begin match content with Shading _ -> set debug | _ -> () end;*)
+        clip_bbox_union !state.clipping_path
     | _ -> bbox_of_path (transform_path !state.ctm !state.path.path)
   in
     match bbox with
