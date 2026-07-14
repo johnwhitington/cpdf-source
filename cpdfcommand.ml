@@ -487,17 +487,16 @@ let parse_redaction_spec s =
     | "leave" -> Cpdfredact.Leave
     | _ -> error "bad redaction specification"
   in
-  let parse_redaction_detection l =
+  let parse_redaction_detection op l =
     match implode l with
-    | "touches" -> Cpdfredact.Touching
-    | "encloses" -> Cpdfredact.Enclosing
+    | "touches" -> if op = Cpdfredact.Leave then error "bad redaction specifiction" else Some Cpdfredact.Touching
+    | "encloses" -> if op = Cpdfredact.Leave then error "bad redaction specifiction" else Some Cpdfredact.Enclosing
+    | "" -> if op = Cpdfredact.Leave then None else Some Cpdfredact.Touching
     | _ -> error "bad redaction specification"
   in
   let before, after = cleavewhile (neq ',') (explode s) in
-    if after = [] then
-      (parse_redaction_operation before, None)
-    else
-      (parse_redaction_operation before, Some (parse_redaction_detection (tl after)))
+  let op = parse_redaction_operation before in
+    (op, parse_redaction_detection op (if after = [] then [] else tl after))
 
 type args =
   {mutable op : op option;
