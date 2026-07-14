@@ -677,13 +677,10 @@ let transform_path m (w, subpaths) =
   in
     (w, map (fun (h, c, segments) -> (h, c, map transform_segment segments)) subpaths)
 
-(* Find the union of all the bboxes of all the clipping paths, to find the BBOX
-   for bad shadings. This is, in some cases, too conservative. But there's not
-   much choice absent being able to clip against any shape (which we may do in
-   the future). *)
-let clip_bbox_union paths =
+(* Find the last of the clipping boxes, for bad shadings. *)
+let clip_bbox paths =
   let bboxes = option_map bbox_of_path paths in
-    Some (fold_left box_union_float (hd bboxes) (tl bboxes))
+    Some (hd bboxes)
 
 let emit_path_bounding_box ~content ~stroking ~f ~state =
   let debug = ref false in
@@ -691,7 +688,7 @@ let emit_path_bounding_box ~content ~stroking ~f ~state =
     match content with
     | Clip | Shading _ ->
         (*begin match content with Shading _ -> set debug | _ -> () end;*)
-        clip_bbox_union !state.clipping_path
+        clip_bbox !state.clipping_path
     | _ -> bbox_of_path (transform_path !state.ctm !state.path.path)
   in
     match bbox with
