@@ -68,8 +68,12 @@ let redact_page
                     fmin (fmin x0 x1) (fmin x2 x3), fmax (fmax x0 x1) (fmax x2 x3),
                     fmin (fmin y0 y1) (fmin y2 y3), fmax (fmax y0 y1) (fmax y2 y3)
                 in
-                  bbr := box_overlap_float minx miny maxx maxy bminx bminy bmaxx bmaxy;
-                  fi true
+                  let overlap = box_overlap_float minx miny maxx maxy bminx bminy bmaxx bmaxy in
+                    bbr := overlap;
+                    match overlap with
+                    | None -> fi false
+                    | Some (ominx, ominy, omaxx, omaxy) ->
+                        if (ominx, ominy, omaxx, omaxy) <> (bminx, bminy, bmaxx, bmaxy) then fi true else fi false
               end
             else
               fi false
