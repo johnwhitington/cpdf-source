@@ -184,7 +184,10 @@ let output_json_marks output calculate_page_number pdf fastrefnums marks =
     let r, g, b = m.Pdfmarks.colour in
       `Assoc
          [("level", `Int m.Pdfmarks.level);
-          ("text", `String (Pdftext.utf8_of_pdfdocstring (Pdftext.simplify_utf16be m.Pdfmarks.text)));
+          ("text",
+              `String
+                 (try Pdftext.utf8_of_pdfdocstring (Pdftext.simplify_utf16be m.Pdfmarks.text) with e ->
+                    Pdfe.logf "Warning: %s, returning the empty string\n" (Printexc.to_string e); ""));
           ("page", `Int (calculate_page_number m));
           ("open", `Bool m.Pdfmarks.isopen);
           ("target", json_of_target pdf fastrefnums m.Pdfmarks.target);
@@ -202,7 +205,10 @@ let process_string encoding s =
   | h::t -> h::replace c x y t
   in
     (* Convert to UTF8, raw, or stripped, and escape backslashed and quotation marks *)
-    let codepoints = Pdftext.codepoints_of_pdfdocstring s in
+    let codepoints =
+      try Pdftext.codepoints_of_pdfdocstring s with
+        e -> Pdfe.logf "Warning: %s, returning the empty string\n" (Printexc.to_string e); []
+    in
       let escaped =
         let bs = int_of_char '\\'
         and nl = int_of_char '\n'
@@ -219,7 +225,10 @@ let process_string encoding s =
             Buffer.contents b
         in
         match encoding with
-        | Cpdfmetadata.UTF8 -> Pdftext.utf8_of_codepoints escaped
+        | Cpdfmetadata.UTF8 ->
+            begin try Pdftext.utf8_of_codepoints escaped with
+              e -> Pdfe.logf "Warning: %s, returning the empty string\n" (Printexc.to_string e); ""
+            end
         | Cpdfmetadata.Stripped -> process_stripped escaped
         | Cpdfmetadata.Raw -> s
 
