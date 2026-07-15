@@ -108,7 +108,7 @@ let redact_page
          Pdfpage.content = [Pdfops.stream_of_ops ops];
          Pdfpage.resources = resources'}
 
-(* Redaction cannot copy with lossy JBIG2, because the round-tripping would
+(* Redaction cannot cope with lossy JBIG2, because the round-tripping would
    could introduce new losses, and we don't know the settings that were used
    upon the first compression.  So it's too dangerous. Therefore, we convert
    all JBIG2Lossy to lossless JBIG2 (if possible) or CCITTG4 (if not) before
@@ -255,15 +255,38 @@ let apply
         let page =
           fold_left
             (fun page i ->
-              match Pdf.lookup_direct pdf "/Rect" (Pdf.Indirect i) with
-              | Some rect ->
-                  let path = Pdf.parse_rectangle pdf rect in
-                    rectangles =| (pnum, path);
-                    redact_page
-                      pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec
-                      ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~path ~invert page
-              | None ->
-                  page)
+              match Pdf.lookup_direct pdf "/QuadPoints" (Pdf.Indirect i) with
+              | Some (Pdf.Array quadpoints) when quadpoints <> [] ->
+                  let paths =
+                    option_map
+                      (function
+                       | [x1; y1; x2; y2; x3; y3; x4; y4] ->
+                           let minx = fmin (fmin x1 x2) (fmin x3 x4) in
+                           let maxx = fmax (fmax x1 x2) (fmax x3 x4) in
+                           let miny = fmin (fmin y1 y2) (fmin y3 y4) in
+                           let maxy = fmax (fmax y1 y2) (fmax y3 y4) in
+                             Some (minx, miny, maxx, maxy)
+                       | _ -> None)
+                      (splitinto 8 (map (Pdf.getnum pdf) quadpoints))
+                  in
+                    rectangles := map (fun path -> (pnum, path)) paths @ !rectangles;
+                    fold_left
+                       (fun page path ->
+                          redact_page
+                            pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec
+                            ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~path ~invert page)
+                       page
+                       paths
+              | _ ->
+                  match Pdf.lookup_direct pdf "/Rect" (Pdf.Indirect i) with
+                  | Some rect ->
+                      let path = Pdf.parse_rectangle pdf rect in
+                        rectangles =| (pnum, path);
+                        redact_page
+                          pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec
+                          ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~path ~invert page
+                  | None ->
+                      page)
             page
             redact_annotation_objnums
         in
