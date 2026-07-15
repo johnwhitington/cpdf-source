@@ -943,7 +943,7 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
                 then (Not_hole, Closed, rev segments)::subpaths
                 else subpaths
             in
-              !state.clipping_path <- (NonZero, path)::!state.clipping_path
+              !state.clipping_path <- transform_path !state.ctm (NonZero, path)::!state.clipping_path
       | _ -> ()
       end;
       [op]
@@ -956,7 +956,7 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
                 then (Not_hole, Closed, rev segments)::subpaths
                 else subpaths
             in
-              !state.clipping_path <- (EvenOdd, path)::!state.clipping_path
+              !state.clipping_path <- transform_path !state.ctm (EvenOdd, path)::!state.clipping_path
       | _ -> ()
       end;
       [op]
@@ -1134,7 +1134,7 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
               end
           | None ->
               (* This is an unbounded shading, not recommended. So we use the current clipping path. *)
-              flprint "unbounded shading...\n";
+              (*flprint "unbounded shading...\n";*)
               if emit_path_bounding_box ~content:(Shading s) ~stroking:false ~f ~state then [] else [op]
           end
       with
