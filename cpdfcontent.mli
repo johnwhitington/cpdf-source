@@ -159,6 +159,7 @@ type helpers =
    color : Cpdfaddtext.colour;
    remove : string -> unit}
 
+(** The empty helpers, when a placeholder is required. *)
 val empty_helpers : helpers
 
 (** Filter objects based on a predicate on [t]. *)
@@ -171,6 +172,7 @@ val filter :
   ops:Pdfops.t list ->
   Pdfops.t list
 
+(** Remove erased path operations *)
 val postprocess_remove_empty_path_ops : Pdfops.t list -> Pdfops.t list
 
 (** Process graphics operations and output result as JSON. *)
