@@ -1199,10 +1199,18 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
                         let xobjects' = ref xobjects in
                           iter
                             (fun x ->
-                              (* If it's in the resources, remove it. If it's not
-                               there, it's an old-fashioned xobject with a resource
-                               in the page. We must call the main page removal procedure
-                               then! *)
+                              (* TODO: If it's in the resources, remove it. If
+                              it's not there, it's an old-fashioned xobject
+                              with a resource in the page. We must call the main page
+                              removal procedure then! But only if it's also not used
+                              anywhere else - difficult! Do we need a cleanup process
+                              on the whole file as part of our metadata scrubbing?
+                              TODO: In fact, removal should be a separate pass
+                              afterwards, because we cannot really deal with
+                              inherited form xobject resources any other way... So
+                              we can get rid of the removal helper in Cpdfcontent -
+                              indeed we must.
+                              See table 93 in spec, and implement fully. *)
                                if List.exists (function (k, _) -> k = x) !xobjects' then
                                  xobjects' := lose (function (k, _) -> k = x) !xobjects'
                                else
@@ -1213,7 +1221,8 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
                           | Some d -> d
                           | _ -> Pdf.Dictionary []
                         in
-                          Pdf.add_dict_entry resources "/XObject" (Pdf.Dictionary !xobjects')
+                          (* Don't accidentally overwrite inherited resources. *)
+                          if !xobjects' <> [] then Pdf.add_dict_entry resources "/XObject" (Pdf.Dictionary !xobjects') else resources
                     in
                     let ops =
                       lose (function Pdfops.Op_Do n when mem n !to_remove -> true | _ -> false) ops
@@ -1222,7 +1231,8 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
                     | Pdf.Stream ({contents = (dict, _)} as r) ->
                        begin match Pdfops.stream_of_ops ops with
                        | Pdf.Stream {contents = (_, Pdf.Got bytes)} ->
-                           r := (Pdf.add_dict_entry dict "/Resources" resources', Pdf.Got bytes)
+                           (* Don't accidentally overwrite inherited resources! *)
+                           if resources' <> Pdf.Dictionary [] then r := (Pdf.add_dict_entry dict "/Resources" resources', Pdf.Got bytes)
                        | _ -> assert false
                        end
                     | _ -> Pdfe.log "malformed stream"
@@ -1232,7 +1242,13 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
                     [op]
               | _ -> Pdfe.log "Unknown kind of xobject"; [op]
               end
-          | _ -> Pdfe.log "Unknown xobject"; [op]
+          | _ ->
+              (* TODO: For example, awlogo.pdf which illegally has a resource /X53
+              only in the page and not in the form. In the future, we must
+              find a way to process this - it may have been allowed in some
+              previous version of the spec - the word "should" is in there
+              somewhere! Presently we cannot erase (or even process) such an item. *)
+              Pdfe.log "Unknown xobject - unable to process"; [op]
           end
       | None -> Pdfe.log "xobject not found"; [op]
       end
