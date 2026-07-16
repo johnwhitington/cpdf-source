@@ -1,6 +1,6 @@
 % CPDF(1)
 % Coherent Graphics Ltd
-% May 2026
+% August 2026
 
 # NAME
 

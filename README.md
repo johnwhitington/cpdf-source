@@ -58,7 +58,7 @@ To build
 --------
 
 If downloading from Github, obtain the correct source. This means choosing the
-tag for a particular version, such as "v2.9.1". The head of the master branch
+tag for a particular version, such as "v2.9.2". The head of the master branch
 is unstable.
 
 1. Type `make` to make the cpdf executable and the library
@@ -83,45 +83,6 @@ Documentation
 The file `cpdfmanual.pdf` in this folder is the documentation for the command
 line tools. The documentation for the cpdf OCaml library is in `doc/html/cpdf/`
 in this folder once the library has been built.
-
-C API
------
-
-A C interface to cpdf is available, in source and binary form:
-
-[https://github.com/johnwhitington/cpdflib-source](https://github.com/johnwhitington/cpdflib-source)
-
-[https://github.com/coherentgraphics/cpdflib-binary](https://github.com/coherentgraphics/cpdflib-binary)
-
-Python API
-----------
-
-A Python interface to cpdf is available:
-
-[https://pypi.org/project/pycpdflib](https://pypi.org/project/pycpdflib)
-
-Java API
---------
-
-A Java interface to cpdf is available:
-
-[https://github.com/coherentgraphics/jcpdf](https://github.com/coherentgraphics/jcpdf)
-
-.NET API
---------
-
-A .NET interface to cpdf is available:
-
-[https://github.com/coherentgraphics/dotnet-libcpdf](https://github.com/coherentgraphics/dotnet-libcpdf)
-
-JavaScript API
---------------
-
-A JavaScript version of cpdf, for server and client side is available:
-
-Distribution: [https://www.npmjs.com/package/coherentpdf](https://www.npmjs.com/package/coherentpdf)
-
-Source: [https://github.com/coherentgraphics/coherentpdf.js](https://github.com/coherentgraphics/coherentpdf.js)
 
 Acknowledgments
 ---------------
