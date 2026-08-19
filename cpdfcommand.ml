@@ -4659,9 +4659,9 @@ let rec go () =
               split_pdf
                 enc args.original_filename args.chunksize args.linearize ~cpdflin:args.cpdflin
                 ~squeeze:args.squeeze output_spec pdf
-        | _, Stdout -> error "Can't split to standard output"
-        | _, NoOutputSpecified -> error "Split: No output format specified"
-        | _ -> error "Split: bad parameters"
+        | [_], Stdout -> error "Split: Can't split to standard output"
+        | [_], NoOutputSpecified -> error "Split: No output format specified"
+        | _ -> error "Split: too many input files"
       end
   | SplitOnBookmarks level ->
       begin match args.out with
