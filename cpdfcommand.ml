@@ -4661,7 +4661,8 @@ let rec go () =
                 ~squeeze:args.squeeze output_spec pdf
         | [_], Stdout -> error "Split: Can't split to standard output"
         | [_], NoOutputSpecified -> error "Split: No output format specified"
-        | _ -> error "Split: too many input files"
+        | [], _ -> error "Split: No input files"
+        | _ -> error "Split: Too many input files"
       end
   | SplitOnBookmarks level ->
       begin match args.out with
