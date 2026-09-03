@@ -1,4 +1,4 @@
-2.9.2 (August 2026)
+2.9.2 (September 2026)
 
 New features:
 
