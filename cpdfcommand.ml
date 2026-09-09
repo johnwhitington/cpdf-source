@@ -246,6 +246,7 @@ type op =
   | Portfolio
   | RemoveArticleThreads
   | RemovePagePiece
+  | RemoveSearchIndex
   | RemoveOutputIntents
   | RemoveWebCapture
   | RemoveProcsets
@@ -429,6 +430,7 @@ let string_of_op = function
   | Portfolio -> "Portfolio"
   | RemoveArticleThreads -> "RemoveArticleThreads"
   | RemovePagePiece -> "RemovePagePiece"
+  | RemoveSearchIndex -> "RemoveSearchIndex"
   | RemoveOutputIntents -> "RemoveOutputIntents"
   | RemoveWebCapture -> "RemoveWebCapture"
   | RemoveProcsets -> "RemoveProcsets"
@@ -3295,6 +3297,7 @@ let specs =
    ("-pfr", Arg.String (fun s -> match args.portfolio_files with h::t -> args.portfolio_files <- {h with relationship = Some s}::t | [] -> error "no portfolio file to take relationship"), " Set portfolio file relationship");
    ("-remove-article-threads", Arg.Unit (fun () -> setop RemoveArticleThreads ()), " Remove article threads");
    ("-remove-page-piece", Arg.Unit (fun () -> setop RemovePagePiece ()), " Remove page piece dictionaries");
+   ("-remove-search-index", Arg.Unit (fun () -> setop RemoveSearchIndex ()), " Remove search index");
    ("-remove-output-intents", Arg.Unit (fun () -> setop RemoveOutputIntents ()), " Remove output intents");
    ("-remove-web-capture", Arg.Unit (fun () -> setop RemoveWebCapture ()), " Remove web capture data");
    ("-remove-procsets", Arg.Unit (fun () -> setop RemoveProcsets ()), " Remove procsets");
@@ -4107,6 +4110,9 @@ let remove_article_threads pdf =
 
 let remove_page_piece pdf =
   Cpdfutil.remove_dict_entry pdf "/PieceInfo" None
+
+let remove_search_index pdf =
+  ignore (Pdf.remove_chain pdf ["/Root"; "/PieceInfo"; "/SearchIndex"])
 
 let remove_output_intents pdf =
   Cpdfutil.remove_dict_entry pdf "/OutputIntents" None
@@ -5473,6 +5479,10 @@ let rec go () =
   | RemovePagePiece ->
       let pdf = get_single_pdf args.op false in
         remove_page_piece pdf;
+        write_pdf false pdf
+  | RemoveSearchIndex ->
+      let pdf = get_single_pdf args.op false in
+        remove_search_index pdf;
         write_pdf false pdf
   | RemoveOutputIntents ->
       let pdf = get_single_pdf args.op false in
