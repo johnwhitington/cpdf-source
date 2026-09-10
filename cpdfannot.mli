@@ -3,7 +3,7 @@
 (* {2 Modern functions} *)
 
 (** Get annotations as JSON *)
-val get_annotations_json : Pdf.t -> int list -> Pdfio.bytes
+val get_annotations_json : ?subtype:string -> Pdf.t -> int list -> Pdfio.bytes
 
 (** Set annotations from JSON. *)
 val set_annotations_json : Pdf.t -> Pdfio.input -> unit

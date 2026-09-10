@@ -3,35 +3,35 @@ open Pdfutil
 open Cpdferror
 
 let rec subtype_of_string = function
-  | "Text" -> Pdfannot.Text
-  | "Link" -> Pdfannot.Link
-  | "FreeText" -> Pdfannot.FreeText
-  | "Line" -> Pdfannot.Line
-  | "Square" -> Pdfannot.Square
-  | "Circle" -> Pdfannot.Circle
-  | "Polygon" -> Pdfannot.Polygon
-  | "PolyLine" -> Pdfannot.PolyLine
-  | "Highlight" -> Pdfannot.Highlight
-  | "Underline" -> Pdfannot.Underline
-  | "Squiggly" -> Pdfannot.Squiggly
-  | "StrikeOut" -> Pdfannot.StrikeOut
-  | "Stamp" -> Pdfannot.Stamp
-  | "Caret" -> Pdfannot.Caret
-  | "Ink" -> Pdfannot.Ink
-  | "FileAttachment" -> Pdfannot.FileAttachment
-  | "Sound" -> Pdfannot.Sound
-  | "Movie" -> Pdfannot.Movie
-  | "Widget" -> Pdfannot.Widget
-  | "Screen" -> Pdfannot.Screen
-  | "PrinterMark" -> Pdfannot.PrinterMark
-  | "TrapNet" -> Pdfannot.TrapNet
-  | "Watermark" -> Pdfannot.Watermark
-  | "3D" -> Pdfannot.ThreeDee
-  | "Redact" -> Pdfannot.Redact
-  | "Projection" -> Pdfannot.Projection
+  | "/Text" -> Pdfannot.Text
+  | "/Link" -> Pdfannot.Link
+  | "/FreeText" -> Pdfannot.FreeText
+  | "/Line" -> Pdfannot.Line
+  | "/Square" -> Pdfannot.Square
+  | "/Circle" -> Pdfannot.Circle
+  | "/Polygon" -> Pdfannot.Polygon
+  | "/PolyLine" -> Pdfannot.PolyLine
+  | "/Highlight" -> Pdfannot.Highlight
+  | "/Underline" -> Pdfannot.Underline
+  | "/Squiggly" -> Pdfannot.Squiggly
+  | "/StrikeOut" -> Pdfannot.StrikeOut
+  | "/Stamp" -> Pdfannot.Stamp
+  | "/Caret" -> Pdfannot.Caret
+  | "/Ink" -> Pdfannot.Ink
+  | "/FileAttachment" -> Pdfannot.FileAttachment
+  | "/Sound" -> Pdfannot.Sound
+  | "/Movie" -> Pdfannot.Movie
+  | "/Widget" -> Pdfannot.Widget
+  | "/Screen" -> Pdfannot.Screen
+  | "/PrinterMark" -> Pdfannot.PrinterMark
+  | "/TrapNet" -> Pdfannot.TrapNet
+  | "/Watermark" -> Pdfannot.Watermark
+  | "/3D" -> Pdfannot.ThreeDee
+  | "/Redact" -> Pdfannot.Redact
+  | "/Projection" -> Pdfannot.Projection
   | s ->
       match explode s with
-      | 'P'::'o'::'p'::'u'::'p'::':'::r ->
+      | '/'::'P'::'o'::'p'::'u'::'p'::':'::r ->
           Pdfannot.Popup
             {subtype = subtype_of_string (implode r);
              annot_contents = None;
@@ -110,7 +110,7 @@ let excluded pdf annot =
 
 let extra = ref []
 
-let annotations_json_page calculate_pagenumber pdf page pagenum =
+let annotations_json_page ?subtype calculate_pagenumber pdf page pagenum =
   match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
   | Some (Pdf.Array annots) ->
       option_map
@@ -118,7 +118,15 @@ let annotations_json_page calculate_pagenumber pdf page pagenum =
            begin match annot with
            | Pdf.Indirect objnum ->
                let annot = Pdf.direct pdf annot in
-               if excluded pdf annot then None else
+               let keep =
+                 match subtype with
+                 | None -> true
+                 | Some x ->
+                     match Pdf.lookup_direct pdf "/Subtype" annot with
+                     | Some (Pdf.Name x') -> x = x'
+                     | _ -> false
+               in
+               if excluded pdf annot || not keep then None else
                let annot =
                  rewrite_destinations
                    (fun i -> calculate_pagenumber (Pdfdest.Fit (Pdfdest.PageObject i)))
@@ -135,7 +143,7 @@ let annotations_json_page calculate_pagenumber pdf page pagenum =
         annots
   | _ -> []
 
-let get_annotations_json pdf range =
+let get_annotations_json ?subtype pdf range =
   let refnums = Pdf.page_reference_numbers pdf in
   let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
   let calculate_pagenumber =  Pdfpage.pagenumber_of_target ~fastrefnums pdf in
@@ -145,7 +153,7 @@ let get_annotations_json pdf range =
   let pairs = combine pages pagenums in
   let pairs = option_map (fun (p, n) -> if mem n range then Some (p, n) else None) pairs in
   let pages, pagenums = split pairs in
-  let json = flatten (map2 (annotations_json_page calculate_pagenumber pdf) pages pagenums) in
+  let json = flatten (map2 (annotations_json_page ?subtype calculate_pagenumber pdf) pages pagenums) in
   let jsonobjnums : int list = map (function `List [_; `Int n; _] -> n | _ -> assert false) json in
   (*Printf.eprintf "%i extra roots to explore\n" (length !extra);
   iter (fun x -> Pdfe.log (Printf.sprintf "%s\n\n" (Pdfwrite.string_of_pdf x))) !extra;*)
