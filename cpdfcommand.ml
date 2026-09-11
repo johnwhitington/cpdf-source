@@ -211,6 +211,7 @@ type op =
   | OCGReplace of string
   | OCGRename
   | OCGOrderAll
+  | OCGRemove
   | StampAsXObject of string
   | PrintFontEncoding of string
   | TableOfContents
@@ -396,6 +397,7 @@ let string_of_op = function
   | OCGReplace _ -> "OCGReplace"
   | OCGRename -> "OCGRename"
   | OCGOrderAll -> "OCGOrderAll"
+  | OCGRemove -> "OCGRemove"
   | StampAsXObject _ -> "StampAsXObject"
   | TableOfContents -> "TableOfContents"
   | Typeset _ -> "Typeset"
@@ -3140,6 +3142,9 @@ let specs =
    ("-ocg-coalesce-on-name",
      Arg.Unit (setop OCGCoalesce),
      " Coalesce OCGs with like name");
+   ("-ocg-remove",
+     Arg.Unit (setop OCGRemove),
+     " Remove all optional content markers");
    ("-stamp-as-xobject",
      Arg.String setstampasxobject,
      " Stamp a file as a form xobject in another");
@@ -5268,6 +5273,10 @@ let rec go () =
   | OCGOrderAll ->
       let pdf = get_single_pdf args.op false in
         Cpdfocg.ocg_order_all pdf;
+        write_pdf false pdf
+  | OCGRemove ->
+      let pdf = get_single_pdf args.op false in
+        Cpdfocg.ocg_remove pdf;
         write_pdf false pdf
   | StampAsXObject stamp ->
       let stamp_pdf =

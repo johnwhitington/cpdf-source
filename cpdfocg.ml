@@ -427,3 +427,6 @@ let ocg_order_all pdf =
           | _ -> ()
           end
       | _ -> ()
+
+let ocg_remove pdf =
+  ()

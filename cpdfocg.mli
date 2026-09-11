@@ -17,3 +17,6 @@ val ocg_rename : string -> string -> Pdf.t -> unit
 
 (** Make sure every OCG is in the /Order. *) 
 val ocg_order_all : Pdf.t -> unit
+
+(** Remove all OCG data and markings from a PDF, making all content visible. *)
+val ocg_remove : Pdf.t -> unit

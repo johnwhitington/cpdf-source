@@ -4,6 +4,9 @@ New features
 
 * Remove search index with -remove-search-index
 * Add -annot-type to -list-annotations-json to filter
+* Remove all optional content markers with -ocg-remove
+
+* = Supported by a grant from NLnet
 
 2.9.2 (September 2026)
 
