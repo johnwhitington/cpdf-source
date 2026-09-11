@@ -428,5 +428,32 @@ let ocg_order_all pdf =
           end
       | _ -> ()
 
+(* Remove all OCGs, rendering all content visible.
+
+Initial, simple, algorithm:
+  1) Remove the OCProperties dictionary
+  2) Null out all references in the PDF to OCGs
+
+A future implementation might remove the marked-content operators themselves,
+and remove the entries from page and xobject resources dictionaries properly,
+to remove any trace the file ever had optional content. *)
 let ocg_remove pdf =
-  ()
+  let objnums = ref [] in
+    Pdf.objiter
+      (fun n o ->
+         match Pdf.lookup_direct pdf "/Type" o with
+         | Some (Pdf.Name "/OCG") -> objnums =| n
+         | _ -> ())
+      pdf;
+  let rec null_ocg_references pdf = function
+    | (Pdf.Dictionary d) -> Pdf.recurse_dict (null_ocg_references pdf) d
+    | (Pdf.Stream {contents = (Pdf.Dictionary dict, data)}) ->
+        Pdf.Stream {contents = (Pdf.recurse_dict (null_ocg_references pdf) dict, data)}
+    | Pdf.Array a -> Pdf.recurse_array (null_ocg_references pdf) a
+    | Pdf.Indirect i -> if mem i !objnums then Pdf.Null else Pdf.Indirect i
+    | x -> x
+  in
+    (* Rewrite any indirect reference in the file to an ocg_object_numbers member with a null *)
+    Pdf.objselfmap (null_ocg_references pdf) pdf;
+    (* Remove the main OCG dictionary. *)
+    ignore (Pdf.remove_chain pdf ["/Root"; "/OCProperties"]);
