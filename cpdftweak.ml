@@ -354,5 +354,21 @@ let replace_stream pdf objspec filename =
     | _ -> error "not a stream"
     end
 
+let remove_marked_content_ops pdf resources content =
+  let ops = Pdfops.parse_operators pdf resources content in
+    let rec process a = function
+      (Pdfops.Op_MP _ | Pdfops.Op_DP _ | Pdfops.Op_BMC _ | Pdfops.Op_BDC _ | Pdfops.Op_EMC)::t -> process a t
+    | h::t -> process (h::a) t
+    | [] -> rev a
+    in
+      [Pdfops.stream_of_ops (process [] ops)] 
+
 let remove_marked_content pdf range =
-  pdf
+  let remove_marked_content_page _ page =
+    let content' =
+      remove_marked_content_ops pdf page.Pdfpage.resources page.Pdfpage.content
+    in
+      Pdfpage.process_xobjects pdf page remove_marked_content_ops;
+      {page with Pdfpage.content = content'}
+  in
+    Cpdfpage.process_pages (Pdfpage.ppstub remove_marked_content_page) pdf range

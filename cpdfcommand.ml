@@ -3334,6 +3334,7 @@ let specs =
    ("-redact-annotations", Arg.String (fun s -> args.redact_annotations <- parse_redaction_spec s), " Specify annotation redaction mode");
    ("-redact-invert", Arg.Unit (fun () -> args.redact_invert <- true), " Invert redaction area");
    ("-redact-no-show", Arg.Unit (fun () -> args.redact_show <- false), " Do not show redaction area");
+   ("-remove-marked-content", Arg.Unit (fun s -> setop RemoveMarkedContent ()), " Remove marked content operators");
    (* Undocumented. *)
    ("-test-extract-text", Arg.Unit (fun () -> setop TestExtractText ()), "")]
 
