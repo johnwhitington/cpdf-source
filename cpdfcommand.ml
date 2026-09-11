@@ -261,6 +261,7 @@ type op =
   | PageContentJSON
   | TestExtractText
   | AddAnnotation
+  | RemoveMarkedContent
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -445,6 +446,7 @@ let string_of_op = function
   | RevealText -> "RevealText"
   | PageContentJSON -> "PageContentJSON"
   | AddAnnotation -> "AddAnnotation"
+  | RemoveMarkedContent -> "RemoveMarkedContent"
   | _ -> "<unfilled>"
 
 (* Inputs: filename, pagespec. *)
@@ -1090,10 +1092,6 @@ let banlist_of_args () =
 (* If a file is encrypted, decrypt it using the owner password or, if not
 present, the user password. If the user password is used, the operation to be
 performed is checked to see if it's allowable under the permissions regime. *)
-
-(* The bans. Each function has a list of bans. If any of these is present in the
-bans list in the input file, the operation cannot proceed. Other operations
-cannot proceed at all without owner password. *)
 let banned banlist = function
   (* Combine pages is not allowed because we would not know which file to get the -recrypt from *)
   | Decrypt | Encrypt | CombinePages _ -> true
@@ -5673,6 +5671,11 @@ let rec go () =
         Cpdfpage.process_pages
           (Pdfpage.ppstub (fun pnum page -> if mem pnum range then Pdfannot.add_annotation pdf page annot else page)) pdf range
       in
+        write_pdf false pdf
+  | RemoveMarkedContent ->
+      let pdf = get_single_pdf args.op true in
+      let range = parse_pagespec pdf (get_pagespec ()) in
+      let pdf = Cpdftweak.remove_marked_content pdf range in
         write_pdf false pdf
 
 (* Advise the user if a combination of command line flags makes little sense,

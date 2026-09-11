@@ -353,3 +353,6 @@ let replace_stream pdf objspec filename =
         s := (Pdf.add_dict_entry dict "/Length" (Pdf.Integer (bytes_size data)), Pdf.Got data)
     | _ -> error "not a stream"
     end
+
+let remove_marked_content pdf range =
+  pdf

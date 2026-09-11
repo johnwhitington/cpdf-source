@@ -5,6 +5,7 @@ New features
 * Remove search index with -remove-search-index
 * Add -annot-type to -list-annotations-json to filter
 * Remove all optional content with -ocg-remove
+* Remove marked content with -remove-marked-content
 
 * = Supported by a grant from NLnet
 
