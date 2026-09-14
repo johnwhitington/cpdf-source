@@ -1481,6 +1481,25 @@ let rec postprocess_remove_empty_path_ops_inner a ops =
 let postprocess_remove_empty_path_ops =
   postprocess_remove_empty_path_ops_inner []
 
+
+(* A text section may be removed if it contains only empty (or only
+   coordinate-moving) Tj/TJ elements, Td, and Tm operators. None of the effects
+   of the Tj/TJs can outlive the text section *) 
+let rec postprocess_remove_empty_text_sections_inner a ops =
+  ops
+
+let postprocess_remove_empty_text_sections =
+  postprocess_remove_empty_text_sections_inner []
+
+(* If a text section has no substantive Tj/Tj elements, but cannot be removed
+   by the postprocess_remove_empty_text_sections above, it may still be
+   strippped of all Td, Tm, Tj, TJ elements. *)
+let rec postprocess_strip_text_sections_inner a ops =
+  ops
+
+let postprocess_strip_text_sections =
+  postprocess_strip_text_sections_inner []
+
 (* We run process_op over each op, losing any operation which doesn't alter the state.
    This is used, for example, to clean up redacted paths. And, of course, for efficiency. *)
 (* - The problem here (and elsewhere) is that Form Xobjects are treated differently, rather than recursively using 'filter'. We should have filter take a copy of itself to call itself? For example, in 'compress' Form Xobjects would not be compressed....*)
