@@ -176,10 +176,7 @@ val filter :
 val postprocess_remove_empty_path_ops : Pdfops.t list -> Pdfops.t list
 
 (** Remove empty or ineffective text sections. *)
-val postprocess_remove_empty_text_sections : Pdfops.t list -> Pdfops.t list
-
-(** Strip text sections of un-needed operators where possible. *)
-val postprocess_strip_text_sections : Pdfops.t list -> Pdfops.t list
+val postprocess_text_sections : Pdfops.t list -> Pdfops.t list
 
 (** Process graphics operations and output result as JSON. *)
 val to_json :

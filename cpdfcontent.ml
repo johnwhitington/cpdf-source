@@ -1481,24 +1481,41 @@ let rec postprocess_remove_empty_path_ops_inner a ops =
 let postprocess_remove_empty_path_ops =
   postprocess_remove_empty_path_ops_inner []
 
-
 (* A text section may be removed if it contains only empty (or only
    coordinate-moving) Tj/TJ elements, Td, and Tm operators. None of the effects
-   of the Tj/TJs can outlive the text section *) 
-let rec postprocess_remove_empty_text_sections_inner a ops =
-  ops
+   of the Tj/TJs can outlive the text section.  If a text section has no
+   substantive Tj/Tj elements, but cannot be removed, it may still be strippped
+   of all Td, Tm, Tj, TJ elements. *)
+let only_TdTmTjTJ = function
+  | Pdfops.Op_Td _ | Op_Tm _ | Op_Tj _ | Op_TJ _ -> true | _ -> false
 
-let postprocess_remove_empty_text_sections =
-  postprocess_remove_empty_text_sections_inner []
+(* Contains more than just empty Tj/TJs. *)
+let substantive =
+  List.exists
+    (function
+     | Pdfops.Op_Tj x when String.length x > 0 -> true
+     | Op_TJ tjs when List.exists (function Pdf.String "" -> false | Pdf.String _ -> true | _ -> false) tjs -> true
+     | _ -> false)
 
-(* If a text section has no substantive Tj/Tj elements, but cannot be removed
-   by the postprocess_remove_empty_text_sections above, it may still be
-   strippped of all Td, Tm, Tj, TJ elements. *)
-let rec postprocess_strip_text_sections_inner a ops =
-  ops
+(* Contains only empty Tj/TJ elements and Td and Tm. *)
+let deleteable ops =
+  not (substantive ops) && List.for_all only_TdTmTjTJ ops
 
-let postprocess_strip_text_sections =
-  postprocess_strip_text_sections_inner []
+let strip ops =
+  if substantive ops then ops else
+    lose only_TdTmTjTJ ops
+
+let rec postprocess_text_sections_inner a = function
+  | Pdfops.Op_BT::t ->
+      let ops, rest = cleavewhile (neq Pdfops.Op_ET) t in
+        if deleteable ops
+          then postprocess_text_sections_inner a t
+          else postprocess_text_sections_inner (rev (Pdfops.Op_BT::strip ops @ [Pdfops.Op_ET]) @ a) (if rest = [] then [] else tl rest)
+  | h::t -> postprocess_text_sections_inner (h::a) t
+  | [] -> rev a
+
+let postprocess_text_sections =
+  postprocess_text_sections_inner []
 
 (* We run process_op over each op, losing any operation which doesn't alter the state.
    This is used, for example, to clean up redacted paths. And, of course, for efficiency. *)

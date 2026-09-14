@@ -96,8 +96,7 @@ let redact_page
   in
     let ops = lose (function Pdfops.Op_Do n when mem n !to_remove -> true | _ -> false) ops in
     let ops = Cpdfcontent.postprocess_remove_empty_path_ops ops in
-    let ops = Cpdfcontent.postprocess_remove_empty_text_sections ops in
-    let ops = Cpdfcontent.postprocess_strip_text_sections ops in
+    let ops = Cpdfcontent.postprocess_text_sections ops in
     let resources' =
       let xobjects =
         match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
