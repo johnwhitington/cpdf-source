@@ -1517,6 +1517,11 @@ let rec postprocess_text_sections_inner a = function
 let postprocess_text_sections =
   postprocess_text_sections_inner []
 
+(* We can't have inherited resources when dealing with removal of unused XObjects, so we have to preprocess like this. *)
+let pagetree_make_explicit pdf =
+  let pages = Pdfpage.pages_of_pagetree pdf in
+    Pdfpage.change_pages true pdf pages
+
 (* We run process_op over each op, losing any operation which doesn't alter the state.
    This is used, for example, to clean up redacted paths. And, of course, for efficiency. *)
 (* - The problem here (and elsewhere) is that Form Xobjects are treated differently, rather than recursively using 'filter'. We should have filter take a copy of itself to call itself? For example, in 'compress' Form Xobjects would not be compressed....*)
