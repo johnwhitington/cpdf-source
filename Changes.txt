@@ -7,6 +7,10 @@ New features
 * Remove all optional content with -ocg-remove
 * Remove marked content with -remove-marked-content
 
+Extended features:
+
+* Erase or filter text sections post-redaction
+
 * = Supported by a grant from NLnet
 
 2.9.2 (September 2026)
