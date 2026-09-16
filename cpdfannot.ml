@@ -340,6 +340,17 @@ let add_annotation (minx, miny, maxx, maxy) pdf range =
     let now_ms = (fun () -> Int64.of_float t) in
       Cpdfuuidm.to_binary_string (Cpdfuuidm.v7_non_monotonic_gen ~now_ms (Random.State.make_self_init ()) ())
   in
+  let m =
+    match Sys.getenv_opt "CPDF_REPRODUCIBLE_DATES" with
+    | Some "true" -> Cpdfstrftime.strftime ~time:Cpdfstrftime.dummy "D:%Y%m%d%H%M%S" 
+    | _ -> Cpdfstrftime.strftime "D:%Y%m%d%H%M%S"
+  in
+  let quadpoints =
+    [Pdf.Real minx; Pdf.Real miny;
+     Pdf.Real maxx; Pdf.Real miny;
+     Pdf.Real minx; Pdf.Real maxy;
+     Pdf.Real maxx; Pdf.Real maxy]
+  in
   let annot =
     {Pdfannot.subtype = Pdfannot.Redact;
      annot_contents = None;
@@ -351,6 +362,8 @@ let add_annotation (minx, miny, maxx, maxy) pdf range =
        Pdf.Dictionary
          [("/F", Pdf.Integer 4);
           ("/NM", Pdf.String nm);
+          ("/M", Pdf.String m);
+          ("/QuadPoints", Pdf.Array quadpoints);
           ("/AP", Pdf.Dictionary [("/D", Pdf.Indirect d_ro_r;); ("/N", Pdf.Indirect n); ("/R", Pdf.Indirect d_ro_r)]);
           ("/RO", Pdf.Indirect d_ro_r)]}
   in
