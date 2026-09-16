@@ -1,5 +1,5 @@
 # Build the cpdf command line tools
-NONDOC = cpdfyojson cpdfxmlm
+NONDOC = cpdfyojson cpdfxmlm cpdfuuidm
 
 DOC = cpdfutil cpdfunicodedata cpdferror cpdfdebug cpdfjson cpdfstrftime \
       cpdfcoord cpdfattach cpdfpagespec cpdfposition cpdfpresent cpdfmetadata \

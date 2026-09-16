@@ -87,11 +87,12 @@ in this folder once the library has been built.
 Acknowledgments
 ---------------
 
-The file [cpdfxmlm.ml](cpdfxmlm.ml) was written by Daniel Bünzli.
+The files [cpdfxmlm.ml](cpdfxmlm.ml) and [cpdfuuidm.ml](cpdfuudm.ml) were
+written by Daniel Bünzli.
 
 The file [cpdfyojson.ml](cpdfyojson.ml) was written by Martin Jambon and others.
 
-The files [gpc.c](gpc.c) and [gpc.h](gpc.c) were written by Alan Murta.
+The files [gpc.c](gpc.c) and [gpc.h](gpc.h) were written by Alan Murta.
 
 Unicode Data Files are under the Unicode Inc. License agreement.
 

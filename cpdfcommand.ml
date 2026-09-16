@@ -5668,6 +5668,12 @@ let rec go () =
               ("/AP", Pdf.Dictionary [("/D", Pdf.Indirect d_ro_r;); ("/N", Pdf.Indirect n); ("/R", Pdf.Indirect d_ro_r)]);
               ("/RO", Pdf.Indirect d_ro_r)]}
       in
+      (*let gen = Uuidm.v7_monotonic_gen ~now_ms:Uuidm.posix_ms_clock (Random.State.make_self_init ())
+
+let make_id () =
+  match gen () with
+  | Some uuid -> Uuidm.to_string uuid
+  | None -> failwith "clock did not advance, exhausted counter"*)
       let pdf =
         Cpdfpage.process_pages
           (Pdfpage.ppstub (fun pnum page -> if mem pnum range then Pdfannot.add_annotation pdf page annot else page)) pdf range
