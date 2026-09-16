@@ -14,6 +14,9 @@ val remove_annotations : int list -> Pdf.t -> Pdf.t
 (** Copy the annotations on a given set of pages *)
 val copy_annotations : int list -> Pdf.t -> Pdf.t -> unit
 
+(** Add an annotation (presently just redaction). *)
+val add_annotation : (float * float * float * float) -> Pdf.t -> int list -> Pdf.t
+
 (** Annotation type from a string. *)
 val subtype_of_string : string -> Pdfannot.subtype
 

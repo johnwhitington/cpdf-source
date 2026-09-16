@@ -276,3 +276,84 @@ let remove_annotations range pdf =
       page
   in
     Cpdfpage.process_pages (Pdfpage.ppstub remove_annotations_page) pdf range
+
+(* Add a (presently, redaction) annotation at the given position on the given pages. *)
+let add_annotation (minx, miny, maxx, maxy) pdf range =
+  let d_ro_r =
+    Pdf.addobj pdf
+      (match
+        Pdfops.stream_of_ops
+          [Pdfops.Op_g 0.;
+           Pdfops.Op_cm {Pdftransform.a = 1.; b = 0.; c = 0.; d = 1.; e = 0.; f = 0.};
+           Pdfops.Op_m (minx, miny);
+           Pdfops.Op_l (maxx, miny);
+           Pdfops.Op_l (maxx, maxy);
+           Pdfops.Op_l (minx, maxy);
+           Pdfops.Op_l (minx, miny);
+           Pdfops.Op_f]
+       with
+         Pdf.Stream ({contents = (dict, stream)} as s) ->
+           let dict = Pdf.add_dict_entry dict "/BBox"
+             (Pdf.Array [Pdf.Real (minx -. 0.5); Pdf.Real (miny -. 0.5); Pdf.Real (maxx +. 0.5); Pdf.Real (maxy +. 0.5)])
+           in
+           let dict = Pdf.add_dict_entry dict "/Matrix"
+             (Pdf.Array [Pdf.Real 1.; Pdf.Real 0.; Pdf.Real 0.; Pdf.Real 1.; Pdf.Real (~-.minx +. 0.5); (Pdf.Real (~-.miny +. 0.5))])
+           in
+           let dict = Pdf.add_dict_entry dict "/Resources" (Pdf.Dictionary []) in
+           let dict = Pdf.add_dict_entry dict "/Subtype" (Pdf.Name "/Form") in
+           let dict = Pdf.add_dict_entry dict "/Type" (Pdf.Name "/XObject") in
+           s := (dict, stream);
+           (Pdf.Stream s)
+       | _ -> assert false)
+  in
+  let n =
+    Pdf.addobj pdf
+      (match
+        Pdfops.stream_of_ops
+          [Pdfops.Op_RG (0.858826, 0.203918, 0.145096);
+           Pdfops.Op_cm {Pdftransform.a = 1.; b = 0.; c = 0.; d = 1.; e = 0.; f = 0.};
+           Pdfops.Op_w 1.5;
+           Pdfops.Op_J 2;
+           Pdfops.Op_m (minx, miny);
+           Pdfops.Op_l (maxx, miny);
+           Pdfops.Op_l (maxx, maxy);
+           Pdfops.Op_l (minx, maxy);
+           Pdfops.Op_l (minx, miny);
+           Pdfops.Op_S]
+       with
+         Pdf.Stream ({contents = (dict, stream)} as s) ->
+           let dict = Pdf.add_dict_entry dict "/BBox"
+             (Pdf.Array [Pdf.Real (minx -. 0.5); Pdf.Real (miny -. 0.5); Pdf.Real (maxx +. 0.5); Pdf.Real (maxy +. 0.5)])
+           in
+           let dict = Pdf.add_dict_entry dict "/Matrix"
+             (Pdf.Array [Pdf.Real 1.; Pdf.Real 0.; Pdf.Real 0.; Pdf.Real 1.; Pdf.Real (~-.minx +. 0.5); (Pdf.Real (~-.miny +. 0.5))])
+           in
+           let dict = Pdf.add_dict_entry dict "/Resources" (Pdf.Dictionary []) in
+           let dict = Pdf.add_dict_entry dict "/Subtype" (Pdf.Name "/Form") in
+           let dict = Pdf.add_dict_entry dict "/Type" (Pdf.Name "/XObject") in
+           s := (dict, stream);
+           (Pdf.Stream s)
+       | _ -> assert false)
+  in
+  let nm =
+    let t = Unix.gettimeofday () in
+    let now_ms = (fun () -> Int64.of_float t) in
+      Cpdfuuidm.to_binary_string (Cpdfuuidm.v7_non_monotonic_gen ~now_ms (Random.State.make_self_init ()) ())
+  in
+  let annot =
+    {Pdfannot.subtype = Pdfannot.Redact;
+     annot_contents = None;
+     subject = None;
+     rectangle = (minx, miny, maxx, maxy);
+     border = None;
+     colour = Some [0.858826; 0.203918; 0.145096];
+     annotrest =
+       Pdf.Dictionary
+         [("/F", Pdf.Integer 4);
+          ("/NM", Pdf.String nm);
+          ("/AP", Pdf.Dictionary [("/D", Pdf.Indirect d_ro_r;); ("/N", Pdf.Indirect n); ("/R", Pdf.Indirect d_ro_r)]);
+          ("/RO", Pdf.Indirect d_ro_r)]}
+  in
+
+    Cpdfpage.process_pages
+      (Pdfpage.ppstub (fun pnum page -> if mem pnum range then Pdfannot.add_annotation pdf page annot else page)) pdf range
