@@ -11,6 +11,7 @@ Extended features:
 
 * Erase or filter text sections post-redaction
 * Add /NM, /M and /QuadPoints to redaction annotations
+* More finely controlled redaction with 'covers' specification
 
 * = Supported by a grant from NLnet
 

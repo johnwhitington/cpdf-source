@@ -2,7 +2,7 @@
 
 type operation = Remove | Leave | Chop
 
-type detection = Touching | Enclosing
+type detection = Touching | Enclosing | Covering of float
 
 type spec = operation * detection option
 

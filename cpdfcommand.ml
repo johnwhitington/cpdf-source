@@ -484,7 +484,7 @@ type font =
   | OtherFont of string
 
 (* One item, or two separated by a comma. No whitespace. First is "remove" or
-   "leave" or "chop", second is "encloses" or "touches" *)
+   "leave" or "chop", second is "encloses" or "touches" or "covers<n>" *)
 let parse_redaction_spec s =
   let parse_redaction_operation l =
     match implode l with
@@ -494,11 +494,21 @@ let parse_redaction_spec s =
     | _ -> error "bad redaction specification"
   in
   let parse_redaction_detection op l =
-    match implode l with
-    | "touches" -> if op = Cpdfredact.Leave then error "bad redaction specifiction" else Some Cpdfredact.Touching
-    | "encloses" -> if op = Cpdfredact.Leave then error "bad redaction specifiction" else Some Cpdfredact.Enclosing
-    | "" -> if op = Cpdfredact.Leave then None else Some Cpdfredact.Touching
-    | _ -> error "bad redaction specification"
+    match l with
+    | 'c'::'o'::'v'::'e'::'r'::'s'::a::[] ->
+        begin try Some (Cpdfredact.Covering (float_of_int (int_of_string (string_of_char a)))) with
+        | _ -> raise (Pdf.PDFError "bad redaction percentage spec")
+        end
+    | 'c'::'o'::'v'::'e'::'r'::'s'::a::b::[] ->
+        begin try Some (Cpdfredact.Covering (float_of_int (int_of_string (string_of_char a ^ string_of_char b)))) with
+        | _ -> raise (Pdf.PDFError "bad redaction percentage spec")
+        end
+    | _ ->
+      match implode l with
+      | "touches" -> if op = Cpdfredact.Leave then error "bad redaction specifiction" else Some Cpdfredact.Touching
+      | "encloses" -> if op = Cpdfredact.Leave then error "bad redaction specifiction" else Some Cpdfredact.Enclosing
+      | "" -> if op = Cpdfredact.Leave then None else Some Cpdfredact.Touching
+      | _ -> error "bad redaction specification"
   in
   let before, after = cleavewhile (neq ',') (explode s) in
   let op = parse_redaction_operation before in

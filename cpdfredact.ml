@@ -2,11 +2,12 @@ open Pdfutil
 
 type operation = Remove | Leave | Chop
 
-type detection = Touching | Enclosing
+type detection = Touching | Enclosing | Covering of float
 
 type spec = operation * detection option
 
 let box_matches ~detection ~invert (minx, miny, maxx, maxy) {Cpdfcontent.bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} =
+  let area (minx, miny, maxx, maxy) = (maxx -. minx) *. (maxy -. miny) in
   let fi x = if invert then not x else x in
   let bminx, bmaxx, bminy, bmaxy =
     fmin (fmin x0 x1) (fmin x2 x3), fmax (fmax x0 x1) (fmax x2 x3),
@@ -18,12 +19,19 @@ let box_matches ~detection ~invert (minx, miny, maxx, maxy) {Cpdfcontent.boundin
   let wholly_contained (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy) =
     bminx > minx && bmaxx < maxx && bminy > miny && bmaxy < maxy
   in
-    match detection with
-    | Enclosing -> fi (wholly_contained (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy))
-    | Touching ->
-        match any_intersection (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy) with
-        | Some _ -> fi true
-        | None -> fi false
+    fi
+      (match detection with
+       | Enclosing -> wholly_contained (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy)
+       | Touching ->
+           begin match any_intersection (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy) with
+           | Some _ -> true
+           | None -> false
+           end
+       | Covering perc ->
+           match box_overlap_float minx miny maxx maxy bminx bminy bmaxx bmaxy with
+           | None -> false
+           | Some overlap ->
+               area overlap /. area (bminx, bminy, bmaxx, bmaxy) > (perc /. 100.))
 
 (* Redact a path on a page *)
 let redact_page
