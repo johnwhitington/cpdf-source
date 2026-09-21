@@ -6,6 +6,7 @@ New features
 * Add -annot-type to -list-annotations-json to filter
 * Remove all optional content with -ocg-remove
 * Remove marked content with -remove-marked-content
+* Optionally apply appearance of a redaction annotation
 
 Extended features:
 

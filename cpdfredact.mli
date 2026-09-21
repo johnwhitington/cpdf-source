@@ -31,6 +31,7 @@ val redact :
 (** Apply redaction annotations in a given range. *)
 val apply :
   Pdf.t ->
+  appearance:bool ->
   text_spec:spec ->
   image_spec:spec ->
   inline_image_spec:spec ->

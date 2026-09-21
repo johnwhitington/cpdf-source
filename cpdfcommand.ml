@@ -687,7 +687,8 @@ type args =
    mutable redact_inline_images : Cpdfredact.spec;
    mutable redact_vectors : Cpdfredact.spec;
    mutable redact_invert : bool;
-   mutable redact_show : bool}
+   mutable redact_show : bool;
+   mutable redact_apply_appearance : bool}
 
 let args =
   {op = None;
@@ -862,7 +863,8 @@ let args =
    redact_vectors = (Leave, None);
    redact_annotations = (Leave, None);
    redact_invert = false;
-   redact_show = true}
+   redact_show = true;
+   redact_apply_appearance = false}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -1021,7 +1023,8 @@ let reset_arguments () =
   args.redact_vectors <- (Leave, None);
   args.redact_annotations <- (Leave, None);
   args.redact_invert <- false;
-  args.redact_show <- true
+  args.redact_show <- true;
+  args.redact_apply_appearance <- false
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -3286,6 +3289,7 @@ let specs =
    ("-redact", Arg.Unit (fun () -> setop Redact ()), " Redact entire pages");
    ("-redact-shape", Arg.String (fun s -> setop (RedactShape s) ()), " Redact shape");
    ("-redact-apply", Arg.Unit (fun s -> setop RedactApply ()), " Apply redaction annotations");
+   ("-redact-apply-appearance", Arg.Unit (fun () -> args.redact_apply_appearance <- true), " Use appearance when applying redaction annotation");
    ("-redact-apply-type", Arg.String (fun s -> setop (RedactApplyType s) ()), "Apply redaction from non-redaction annotation");
    ("-rasterize", Arg.Unit (fun () -> setop Rasterize ()), " Rasterize pages");
    ("-rasterize-alpha", Arg.Unit (fun () -> args.rast_device <- "png16malpha"), " Rasterize in RGBA");
@@ -5457,7 +5461,7 @@ let rec go () =
       let range = parse_pagespec pdf (get_pagespec ()) in
       let pdf =
         Cpdfredact.apply
-          pdf ~text_spec:args.redact_text ~image_spec:args.redact_images ~inline_image_spec:args.redact_inline_images ~vector_spec:args.redact_vectors
+          pdf ~appearance:args.redact_apply_appearance ~text_spec:args.redact_text ~image_spec:args.redact_images ~inline_image_spec:args.redact_inline_images ~vector_spec:args.redact_vectors
           ~annotation_spec:args.redact_annotations ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc
           ~invert:args.redact_invert ~show:args.redact_show ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth
           ~underneath:args.underneath range
@@ -5468,7 +5472,7 @@ let rec go () =
       let range = parse_pagespec pdf (get_pagespec ()) in
       let pdf =
         Cpdfredact.apply
-          pdf ~text_spec:args.redact_text ~image_spec:args.redact_images ~inline_image_spec:args.redact_inline_images ~vector_spec:args.redact_vectors
+          pdf ~appearance:args.redact_apply_appearance ~text_spec:args.redact_text ~image_spec:args.redact_images ~inline_image_spec:args.redact_inline_images ~vector_spec:args.redact_vectors
           ~annotation_spec:args.redact_annotations ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc
           ~typ ~invert:args.redact_invert ~show:args.redact_show ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth
           ~underneath:args.underneath range
