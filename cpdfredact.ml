@@ -39,7 +39,6 @@ let redact_page
   ~path_to_convert ~path_to_jbig2enc ~color ~path:((minx, miny, maxx, maxy) as path) ~invert page
 =
   let fi x = if invert then not x else x in
-  let to_remove = ref [] in
   let f c =
     match c.Cpdfcontent.content with
     | Cpdfcontent.Glyph _ ->
@@ -95,27 +94,16 @@ let redact_page
         {path_to_jbig2dec;
          path_to_convert;
          path_to_jbig2enc;
-         color;
-         (*remove = (fun s -> to_remove := s::!to_remove)*)}
+         color}
       ~f
       ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox)
       ~resources:page.Pdfpage.resources
       ~ops:(Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content)
   in
-    let ops = lose (function Pdfops.Op_Do n when mem n !to_remove -> true | _ -> false) ops in
     let ops = Cpdfcontent.postprocess_remove_empty_path_ops ops in
     let ops = Cpdfcontent.postprocess_text_sections ops in
-    (*let resources' =
-      let xobjects =
-        match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
-        | Some (Pdf.Dictionary d) -> d
-        | _ -> []
-      in
-        Pdf.add_dict_entry page.Pdfpage.resources "/XObject" (Pdf.Dictionary (lose (fun (k, _) -> mem k !to_remove) xobjects))
-    in*)
       {page with
-         Pdfpage.content = [Pdfops.stream_of_ops ops];
-         (*Pdfpage.resources = resources'*)}
+         Pdfpage.content = [Pdfops.stream_of_ops ops]}
 
 (* Redaction cannot cope with lossy JBIG2, because the round-tripping would
    could introduce new losses, and we don't know the settings that were used

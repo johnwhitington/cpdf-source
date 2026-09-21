@@ -156,8 +156,7 @@ type helpers =
   {path_to_jbig2dec : string;
    path_to_convert : string;
    path_to_jbig2enc : string;
-   color : Cpdfaddtext.colour;
-   (*remove : string -> unit*)}
+   color : Cpdfaddtext.colour}
 
 (** The empty helpers, when a placeholder is required. *)
 val empty_helpers : helpers

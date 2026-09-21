@@ -156,15 +156,13 @@ type helpers =
   {path_to_jbig2dec : string;
    path_to_convert : string;
    path_to_jbig2enc : string;
-   color : Cpdfaddtext.colour;
-   (*remove : string -> unit*)}
+   color : Cpdfaddtext.colour}
 
 let empty_helpers =
   {path_to_jbig2dec = "";
    path_to_convert = "";
    path_to_jbig2enc = "";
-   color = Cpdfaddtext.Grey 0.;
-   (*remove = (fun _ -> ())*)}
+   color = Cpdfaddtext.Grey 0.}
 
 let initial_text_state () =
   {character_spacing = 0.;
@@ -1134,7 +1132,6 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
               end
           | None ->
               (* This is an unbounded shading, not recommended. So we use the current clipping path. *)
-              (*flprint "unbounded shading...\n";*)
               if emit_path_bounding_box ~content:(Shading s) ~stroking:false ~f ~state then [] else [op]
           end
       with
@@ -1169,7 +1166,7 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
                         (*Printf.printf "We are asked to chop in the image (%f, %f, %f, %f)\n" minx miny maxx maxy;*)
                         if chop_image pdf ~helpers xobjnum !state.ctm (minx, miny, minx, maxy, maxx, maxy, maxx, miny) then [op] else
                           begin Pdfe.log "Failed to chop image, removing whole image instead\n"; [] end
-                    | true, _, _ -> (*helpers.remove s;*) []
+                    | true, _, _ -> []
                     | false, _, _ -> [op]
                     end
               | Some (Pdf.Name "/Form") ->
@@ -1188,54 +1185,13 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
                     ignore (process_op ~pdf ~helpers ~f ~stack ~state ~resources (Pdfops.Op_W));
                     ignore (process_op ~pdf ~helpers ~f ~stack ~state ~resources (Pdfops.Op_n));
                     Hashtbl.clear !state.text_state.font_cache;
-                    (*let to_remove = ref [] in*)
-                    (*let ops =*) ignore (process_form_xobject ~pdf ~f ~helpers(*:{helpers with remove = (fun s -> to_remove := s::!to_remove)}*) ~stack ~state ~resources xobj);
-                    (*let resources' =
-                      let xobjects =
-                        match Pdf.lookup_chain pdf xobj ["/Resources"; "/XObject"] with
-                        | Some (Pdf.Dictionary d) -> d
-                        | _ -> []
-                      in
-                        (*let xobjects' = ref xobjects in
-                          iter
-                            (fun x ->
-                               if List.exists (function (k, _) -> k = x) !xobjects' then
-                                 xobjects' := lose (function (k, _) -> k = x) !xobjects'
-                               else
-                                 helpers.remove x)
-                            !to_remove;
-                        let resources =
-                          match Pdf.lookup_direct pdf "/Resources" xobj with
-                          | Some d -> d
-                          | _ -> Pdf.Dictionary []
-                        in
-                          (* Don't accidentally overwrite inherited resources. *)
-                          if !xobjects' <> [] then Pdf.add_dict_entry resources "/XObject" (Pdf.Dictionary !xobjects') else resources*)
-                    in*)
-                    (*let ops =
-                      lose (function Pdfops.Op_Do n when mem n !to_remove -> true | _ -> false) ops
-                    in*)
-                    (*begin match xobj with
-                    | Pdf.Stream ({contents = (dict, _)} as r) ->
-                       begin match Pdfops.stream_of_ops ops with
-                       | Pdf.Stream {contents = (r, Pdf.Got bytes)} ->
-                           (* Don't accidentally overwrite inherited resources! *)
-                           if resources' <> Pdf.Dictionary [] then r := (Pdf.add_dict_entry dict "/Resources" resources', Pdf.Got bytes)
-                       | _ -> assert false
-                       end
-                    | _ -> Pdfe.log "malformed stream"
-                    end;*)
+                    ignore (process_form_xobject ~pdf ~f ~helpers ~stack ~state ~resources xobj);
                     ignore (process_op ~pdf ~helpers ~f ~stack ~state ~resources Pdfops.Op_Q);
                     !state.text_state.font_cache <- saved_font_cache;
                     [op]
               | _ -> Pdfe.log "Unknown kind of xobject"; [op]
               end
           | _ ->
-              (* TODO: For example, awlogo.pdf which illegally has a resource /X53
-              only in the page and not in the form. In the future, we must
-              find a way to process this - it may have been allowed in some
-              previous version of the spec - the word "should" is in there
-              somewhere! Presently we cannot erase (or even process) such an item. *)
               Pdfe.log "Unknown xobject - unable to process"; [op]
           end
       | None -> Pdfe.log "xobject not found"; [op]
