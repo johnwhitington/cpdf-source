@@ -96,7 +96,7 @@ let redact_page
          path_to_convert;
          path_to_jbig2enc;
          color;
-         remove = (fun s -> to_remove := s::!to_remove)}
+         (*remove = (fun s -> to_remove := s::!to_remove)*)}
       ~f
       ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox)
       ~resources:page.Pdfpage.resources
@@ -105,17 +105,17 @@ let redact_page
     let ops = lose (function Pdfops.Op_Do n when mem n !to_remove -> true | _ -> false) ops in
     let ops = Cpdfcontent.postprocess_remove_empty_path_ops ops in
     let ops = Cpdfcontent.postprocess_text_sections ops in
-    let resources' =
+    (*let resources' =
       let xobjects =
         match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
         | Some (Pdf.Dictionary d) -> d
         | _ -> []
       in
         Pdf.add_dict_entry page.Pdfpage.resources "/XObject" (Pdf.Dictionary (lose (fun (k, _) -> mem k !to_remove) xobjects))
-    in
+    in*)
       {page with
          Pdfpage.content = [Pdfops.stream_of_ops ops];
-         Pdfpage.resources = resources'}
+         (*Pdfpage.resources = resources'*)}
 
 (* Redaction cannot cope with lossy JBIG2, because the round-tripping would
    could introduce new losses, and we don't know the settings that were used

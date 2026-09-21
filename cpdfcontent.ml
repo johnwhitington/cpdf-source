@@ -157,14 +157,14 @@ type helpers =
    path_to_convert : string;
    path_to_jbig2enc : string;
    color : Cpdfaddtext.colour;
-   remove : string -> unit}
+   (*remove : string -> unit*)}
 
 let empty_helpers =
   {path_to_jbig2dec = "";
    path_to_convert = "";
    path_to_jbig2enc = "";
    color = Cpdfaddtext.Grey 0.;
-   remove = (fun _ -> ())}
+   (*remove = (fun _ -> ())*)}
 
 let initial_text_state () =
   {character_spacing = 0.;
@@ -1169,7 +1169,7 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
                         (*Printf.printf "We are asked to chop in the image (%f, %f, %f, %f)\n" minx miny maxx maxy;*)
                         if chop_image pdf ~helpers xobjnum !state.ctm (minx, miny, minx, maxy, maxx, maxy, maxx, miny) then [op] else
                           begin Pdfe.log "Failed to chop image, removing whole image instead\n"; [] end
-                    | true, _, _ -> helpers.remove s; []
+                    | true, _, _ -> (*helpers.remove s;*) []
                     | false, _, _ -> [op]
                     end
               | Some (Pdf.Name "/Form") ->
@@ -1188,29 +1188,17 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
                     ignore (process_op ~pdf ~helpers ~f ~stack ~state ~resources (Pdfops.Op_W));
                     ignore (process_op ~pdf ~helpers ~f ~stack ~state ~resources (Pdfops.Op_n));
                     Hashtbl.clear !state.text_state.font_cache;
-                    let to_remove = ref [] in
-                    let ops = process_form_xobject ~pdf ~f ~helpers:{helpers with remove = (fun s -> to_remove := s::!to_remove)} ~stack ~state ~resources xobj in
-                    let resources' =
+                    (*let to_remove = ref [] in*)
+                    (*let ops =*) ignore (process_form_xobject ~pdf ~f ~helpers(*:{helpers with remove = (fun s -> to_remove := s::!to_remove)}*) ~stack ~state ~resources xobj);
+                    (*let resources' =
                       let xobjects =
                         match Pdf.lookup_chain pdf xobj ["/Resources"; "/XObject"] with
                         | Some (Pdf.Dictionary d) -> d
                         | _ -> []
                       in
-                        let xobjects' = ref xobjects in
+                        (*let xobjects' = ref xobjects in
                           iter
                             (fun x ->
-                              (* TODO: If it's in the resources, remove it. If
-                              it's not there, it's an old-fashioned xobject
-                              with a resource in the page. We must call the main page
-                              removal procedure then! But only if it's also not used
-                              anywhere else - difficult! Do we need a cleanup process
-                              on the whole file as part of our metadata scrubbing?
-                              TODO: In fact, removal should be a separate pass
-                              afterwards, because we cannot really deal with
-                              inherited form xobject resources any other way... So
-                              we can get rid of the removal helper in Cpdfcontent -
-                              indeed we must.
-                              See table 93 in spec, and implement fully. *)
                                if List.exists (function (k, _) -> k = x) !xobjects' then
                                  xobjects' := lose (function (k, _) -> k = x) !xobjects'
                                else
@@ -1222,21 +1210,21 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
                           | _ -> Pdf.Dictionary []
                         in
                           (* Don't accidentally overwrite inherited resources. *)
-                          if !xobjects' <> [] then Pdf.add_dict_entry resources "/XObject" (Pdf.Dictionary !xobjects') else resources
-                    in
-                    let ops =
+                          if !xobjects' <> [] then Pdf.add_dict_entry resources "/XObject" (Pdf.Dictionary !xobjects') else resources*)
+                    in*)
+                    (*let ops =
                       lose (function Pdfops.Op_Do n when mem n !to_remove -> true | _ -> false) ops
-                    in
-                    begin match xobj with
+                    in*)
+                    (*begin match xobj with
                     | Pdf.Stream ({contents = (dict, _)} as r) ->
                        begin match Pdfops.stream_of_ops ops with
-                       | Pdf.Stream {contents = (_, Pdf.Got bytes)} ->
+                       | Pdf.Stream {contents = (r, Pdf.Got bytes)} ->
                            (* Don't accidentally overwrite inherited resources! *)
                            if resources' <> Pdf.Dictionary [] then r := (Pdf.add_dict_entry dict "/Resources" resources', Pdf.Got bytes)
                        | _ -> assert false
                        end
                     | _ -> Pdfe.log "malformed stream"
-                    end;
+                    end;*)
                     ignore (process_op ~pdf ~helpers ~f ~stack ~state ~resources Pdfops.Op_Q);
                     !state.text_state.font_cache <- saved_font_cache;
                     [op]
