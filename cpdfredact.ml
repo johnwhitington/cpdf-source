@@ -222,11 +222,35 @@ let redact_add_rectangle_pnum pdf ~path:(minx, miny, maxx, maxy) ~color ~outline
     false (Printf.sprintf "%s %s" (string_of_float (maxx -. minx)) (string_of_float (maxy -. miny)))
     color outline linewidth opacity (Cpdfposition.PosLeft(minx, miny)) "/Absolute" underneath [pnum] pdf
 
+(* Stamp onto page from appearance stream in annotation. This is the /RO entry
+in the redaction annotations. Since redaction annotations are generally only
+created by modern PDF implementations, it's reasonable to assume this exists.
+In the future, when we support more kinds of annotation, we'll have to add
+appearance stream generation/regeneration. *)
+(* FIXME: Pull out names_used internals from Pdfpage to make a version just for /Resources/XObjects and fit it in here. *)
+let stamp_annotation_appearance pdf page i =
+  match Pdf.lookup_direct pdf "/RO" (Pdf.Indirect i) with
+  | Some (Pdf.Indirect ro) ->
+      (* An annotation appearance stream is an XObject, so we just add it to
+      the page's /Resources/XObjects with a fresh name and add '<name> Do'
+      to the end of page's content. *)
+      let xobjects =
+        match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
+        | Some d -> d
+        | None -> Pdf.Dictionary []
+      in
+        let resources = Pdf.replace_dict_entry page.Pdfpage.resources "/XObject" (Pdf.add_dict_entry xobjects "/NewName" (Pdf.Indirect ro)) in
+        let ops = Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content in
+        let ops = Pdfops.Op_Do "/NewName"::ops in
+          {page with resources; content = [Pdfops.stream_of_ops ops]}
+  | _ -> page
+
 (* Apply redaction annotations. *)
 let apply
   pdf ~appearance ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~path_to_jbig2dec
   ~path_to_convert ~path_to_jbig2enc ?(typ="/Redact") ~invert ~show ~color ~outline ~opacity ~linewidth ~underneath range
 =
+  let show = if appearance then false else show in
   preprocess_jbig2lossy_to_jbig2lossless ~jbig2dec:path_to_jbig2dec ~path_to_jbig2enc pdf;
   let rectangles = ref [] in
   let apply_page pnum page =
@@ -267,21 +291,27 @@ let apply
                       (splitinto 8 (map (Pdf.getnum pdf) quadpoints))
                   in
                     rectangles := map (fun path -> (pnum, path)) paths @ !rectangles;
-                    fold_left
+                    let page =
+                      fold_left
                        (fun page path ->
                           redact_page
                             pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec
                             ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~path ~invert page)
                        page
                        paths
+                    in
+                      if appearance then stamp_annotation_appearance pdf page i else page
               | _ ->
                   match Pdf.lookup_direct pdf "/Rect" (Pdf.Indirect i) with
                   | Some rect ->
                       let path = Pdf.parse_rectangle pdf rect in
                         rectangles =| (pnum, path);
+                      let page =
                         redact_page
                           pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec
                           ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~path ~invert page
+                      in
+                        if appearance then stamp_annotation_appearance pdf page i else page
                   | None ->
                       page)
             page
