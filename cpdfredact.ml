@@ -229,19 +229,18 @@ In the future, when we support more kinds of annotation, we'll have to add
 appearance stream generation/regeneration. *)
 (* FIXME: Pull out names_used internals from Pdfpage to make a version just for /Resources/XObjects and fit it in here. *)
 let stamp_annotation_appearance pdf page i =
-  match Pdf.lookup_direct pdf "/RO" (Pdf.Indirect i) with
+  flprint (Pdfwrite.string_of_pdf (Pdf.direct pdf (Pdf.Indirect i)));
+  match Pdf.lookup_immediate "/RO" (Pdf.direct pdf (Pdf.Indirect i)) with
   | Some (Pdf.Indirect ro) ->
-      (* An annotation appearance stream is an XObject, so we just add it to
-      the page's /Resources/XObjects with a fresh name and add '<name> Do'
-      to the end of page's content. *)
       let xobjects =
         match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
         | Some d -> d
         | None -> Pdf.Dictionary []
       in
-        let resources = Pdf.replace_dict_entry page.Pdfpage.resources "/XObject" (Pdf.add_dict_entry xobjects "/NewName" (Pdf.Indirect ro)) in
+        let resources = Pdf.add_dict_entry page.Pdfpage.resources "/XObject" (Pdf.add_dict_entry xobjects "/NewName" (Pdf.Indirect ro)) in
+        let matrix = Pdftransform.matrix_invert (Pdf.parse_matrix pdf "/Matrix" (Pdf.direct pdf (Pdf.Indirect ro))) in
         let ops = Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content in
-        let ops = Pdfops.Op_Do "/NewName"::ops in
+        let ops = Pdfops.Op_q::Pdfops.Op_cm matrix::Pdfops.Op_Do "/NewName"::Pdfops.Op_Q::ops in
           {page with resources; content = [Pdfops.stream_of_ops ops]}
   | _ -> page
 
@@ -250,6 +249,7 @@ let apply
   pdf ~appearance ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~path_to_jbig2dec
   ~path_to_convert ~path_to_jbig2enc ?(typ="/Redact") ~invert ~show ~color ~outline ~opacity ~linewidth ~underneath range
 =
+  Printf.printf "appearance = %b\n" appearance;
   let show = if appearance then false else show in
   preprocess_jbig2lossy_to_jbig2lossless ~jbig2dec:path_to_jbig2dec ~path_to_jbig2enc pdf;
   let rectangles = ref [] in
