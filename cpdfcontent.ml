@@ -746,6 +746,9 @@ let rec chop_image pdf ~helpers objnum ctm (x0, y0, x1, y1, x2, y2, x3, y3) =
         chop_image pdf ~helpers i ctm (x0, y0, x1, y1, x2, y2, x3, y3) 
     | _ -> true
 
+(* Storage for images to remove. *)
+let to_remove = ref []
+
 (* TODO Allow this to expand operations, optionally e.g for -remove-xobjects.
    TODO Allow filtering on object, but also on ops (only one of these options at a time though).
    TODO Allow iter and map to save creating all the sublists?
@@ -1115,13 +1118,13 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
         let shading = read_shading pdf Pdftransform.i_matrix Pdf.Null shading in
           begin match shading.shading_bbox with
           | Some r ->
-              flprint "bounded shading...\n";
+              (*flprint "bounded shading...\n";*)
               begin try
                 let minx, miny, maxx, maxy = Pdf.parse_rectangle pdf r in
-                  Printf.printf "bounded shading %f %f %f %f\n" minx miny maxx maxy;
+                  (*Printf.printf "bounded shading %f %f %f %f\n" minx miny maxx maxy;*)
                 let x0, y0 = Pdftransform.transform_matrix !state.ctm (minx, miny) in
                 let x1, y1 = Pdftransform.transform_matrix !state.ctm (maxx, maxy) in
-                  Printf.printf "transformed shading %f %f %f %f\n" x0 y0 x1 y1;
+                  (*Printf.printf "transformed shading %f %f %f %f\n" x0 y0 x1 y1;*)
                   let minx = fmin x0 x1 in 
                   let miny = fmin y0 y1 in 
                   let maxx = fmax x0 x1 in 
@@ -1165,8 +1168,8 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
                     | _, true, Some (minx, miny, maxx, maxy) ->
                         (*Printf.printf "We are asked to chop in the image (%f, %f, %f, %f)\n" minx miny maxx maxy;*)
                         if chop_image pdf ~helpers xobjnum !state.ctm (minx, miny, minx, maxy, maxx, maxy, maxx, miny) then [op] else
-                          begin Pdfe.log "Failed to chop image, removing whole image instead\n"; [] end
-                    | true, _, _ -> []
+                          begin Pdfe.log "Failed to chop image, removing whole image instead\n"; to_remove =| xobjnum; [] end
+                    | true, _, _ -> to_remove =| xobjnum; []
                     | false, _, _ -> [op]
                     end
               | Some (Pdf.Name "/Form") ->
@@ -1405,11 +1408,40 @@ and read_graphics_state_dictionary ~pdf ~helpers ~f ~stack ~state ~resources s =
     | _ -> ()
     end
 
+(* We can't have inherited resources when dealing with removal of unused XObjects, so we have to preprocess like this. *)
+let pagetree_make_explicit pdf =
+  let pages = Pdfpage.pages_of_pagetree pdf in
+    Pdfpage.change_pages true pdf pages
+
+(* We have collected the objnums of images to remove. We remove a) the objects
+   and b) any dictionary entry in the file which references the object. *)
+let postprocess_remove_unused_images pdf l =
+  let h = hashset_of_list l in
+  let remove_entry l =
+    lose
+      (function (k, Pdf.Indirect i) ->
+        Hashtbl.mem h i
+       | _ -> false)
+      l
+  in
+  let rec remove_reference_single_object = function
+  | (Pdf.Dictionary d) -> Pdf.recurse_dict remove_reference_single_object (remove_entry d)
+  | (Pdf.Stream {contents = (Pdf.Dictionary dict, data)}) ->
+      Pdf.Stream {contents = (Pdf.recurse_dict remove_reference_single_object (remove_entry dict), data)}
+  | Pdf.Array a -> Pdf.recurse_array remove_reference_single_object a
+  | x -> x
+  in
+    Pdf.objselfmap remove_reference_single_object pdf;
+    iter (Pdf.removeobj pdf) l
+
 (* Filter page content, given a predicate on page content. *)
 let filter ~pdf ~helpers ~f ~mediabox ~resources ~ops =
+  to_remove := [];
   let stack = ref [] in
   let state = ref (initial_state mediabox) in
-    flatten (map (process_op ~pdf ~helpers ~f ~stack ~state ~resources) ops)
+  let ops = flatten (map (process_op ~pdf ~helpers ~f ~stack ~state ~resources) ops) in
+    postprocess_remove_unused_images pdf (setify !to_remove);
+    ops
 
 let rec postprocess_remove_empty_path_ops_inner a ops =
   match
@@ -1460,11 +1492,6 @@ let rec postprocess_text_sections_inner a = function
 
 let postprocess_text_sections =
   postprocess_text_sections_inner []
-
-(* We can't have inherited resources when dealing with removal of unused XObjects, so we have to preprocess like this. *)
-let pagetree_make_explicit pdf =
-  let pages = Pdfpage.pages_of_pagetree pdf in
-    Pdfpage.change_pages true pdf pages
 
 (* We run process_op over each op, losing any operation which doesn't alter the state.
    This is used, for example, to clean up redacted paths. And, of course, for efficiency. *)
