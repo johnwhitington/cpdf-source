@@ -7,6 +7,7 @@ New features
 * Remove all optional content with -ocg-remove
 * Remove marked content with -remove-marked-content
 * Optionally apply appearance of a redaction annotation
+* Remove AcroForm with -remove-acroform
 
 Extended features:
 

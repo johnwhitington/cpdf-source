@@ -262,6 +262,7 @@ type op =
   | TestExtractText
   | AddAnnotation
   | RemoveMarkedContent
+  | RemoveAcroForm
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -447,6 +448,7 @@ let string_of_op = function
   | PageContentJSON -> "PageContentJSON"
   | AddAnnotation -> "AddAnnotation"
   | RemoveMarkedContent -> "RemoveMarkedContent"
+  | RemoveAcroForm -> "RemoveAcroForm"
   | _ -> "<unfilled>"
 
 (* Inputs: filename, pagespec. *)
@@ -3349,6 +3351,7 @@ let specs =
    ("-redact-invert", Arg.Unit (fun () -> args.redact_invert <- true), " Invert redaction area");
    ("-redact-no-show", Arg.Unit (fun () -> args.redact_show <- false), " Do not show redaction area");
    ("-remove-marked-content", Arg.Unit (fun s -> setop RemoveMarkedContent ()), " Remove marked content operators");
+   ("-remove-acroform", Arg.Unit (fun () -> setop RemoveAcroForm ()), " Remove AcroForm");
    (* Undocumented. *)
    ("-test-extract-text", Arg.Unit (fun () -> setop TestExtractText ()), "")]
 
@@ -4125,6 +4128,9 @@ let write_images device res quality boxname annots antialias downsample spec pdf
 
 let remove_article_threads pdf =
   Cpdfutil.remove_dict_entry pdf "/Threads" None
+
+let remove_acroform pdf =
+  ignore (Pdf.remove_chain pdf ["/Root"; "/AcroForm"])
 
 let remove_page_piece pdf =
   Cpdfutil.remove_dict_entry pdf "/PieceInfo" None
@@ -5619,6 +5625,10 @@ let rec go () =
       let pdf = get_single_pdf args.op true in
       let range = parse_pagespec pdf (get_pagespec ()) in
       let pdf = Cpdftweak.remove_marked_content pdf range in
+        write_pdf false pdf
+  | RemoveAcroForm ->
+      let pdf = get_single_pdf args.op false in
+        remove_acroform pdf;
         write_pdf false pdf
 
 (* Advise the user if a combination of command line flags makes little sense,
