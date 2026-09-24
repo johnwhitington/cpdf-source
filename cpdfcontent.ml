@@ -1416,6 +1416,11 @@ let pagetree_make_explicit pdf =
 (* We have collected the objnums of images to remove. We remove a) the objects
    and b) any dictionary entry in the file which references the object. *)
 let postprocess_remove_unused_images pdf l =
+  (*if l <> [] then
+    begin
+      flprint "postprocess_remove_unused_images\n";
+      iter (Printf.printf "%i ") l; flprint "\n";
+    end;*)
   let h = hashset_of_list l in
   let remove_entry l =
     lose
