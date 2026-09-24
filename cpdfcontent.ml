@@ -1188,7 +1188,15 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
                     ignore (process_op ~pdf ~helpers ~f ~stack ~state ~resources (Pdfops.Op_W));
                     ignore (process_op ~pdf ~helpers ~f ~stack ~state ~resources (Pdfops.Op_n));
                     Hashtbl.clear !state.text_state.font_cache;
-                    ignore (process_form_xobject ~pdf ~f ~helpers ~stack ~state ~resources xobj);
+                    let ops = process_form_xobject ~pdf ~f ~helpers ~stack ~state ~resources xobj in
+                    begin match xobj with
+                    | Pdf.Stream ({contents = (dict, _)} as r) ->
+                       begin match Pdfops.stream_of_ops ops with
+                       | Pdf.Stream {contents = (d, Pdf.Got bytes)} -> r := (d, Pdf.Got bytes)
+                       | _ -> assert false
+                       end
+                    | _ -> Pdfe.log "malformed stream"
+                    end;
                     ignore (process_op ~pdf ~helpers ~f ~stack ~state ~resources Pdfops.Op_Q);
                     !state.text_state.font_cache <- saved_font_cache;
                     [op]
