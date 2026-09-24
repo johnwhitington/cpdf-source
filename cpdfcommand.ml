@@ -539,6 +539,7 @@ type args =
    mutable fontsize : float;
    mutable embedstd14 : string option;
    mutable color : Cpdfaddtext.colour;
+   mutable redaction_annotation_outline_color : Cpdfaddtext.colour;
    mutable opacity : float;
    mutable position : Cpdfposition.position;
    mutable underneath : bool;
@@ -714,6 +715,7 @@ let args =
    fontsize = 12.;
    fontencoding = Pdftext.WinAnsiEncoding;
    color = Cpdfaddtext.RGB (0., 0., 0.);
+   redaction_annotation_outline_color = Cpdfaddtext.RGB (0.858826, 0.203918, 0.145096);
    opacity = 1.;
    position = Cpdfposition.TopLeft (100., 100.);
    underneath = false;
@@ -895,6 +897,7 @@ let reset_arguments () =
   args.fontsize <- 12.;
   args.fontencoding <- Pdftext.WinAnsiEncoding;
   args.color <- Cpdfaddtext.RGB (0., 0., 0.);
+  args.redaction_annotation_outline_color <- Cpdfaddtext.RGB (0.858826, 0.203918, 0.145096);
   args.opacity <- 1.;
   args.position <- Cpdfposition.TopLeft (100., 100.);
   args.underneath <- false;
@@ -1471,6 +1474,9 @@ let setaddtext s =
 
 let setcolor s =
   args.color <- Cpdfdrawcontrol.parse_colour s
+
+let setredactionannotationoutlinecolor s =
+  args.redaction_annotation_outline_color <- Cpdfdrawcontrol.parse_colour s
 
 let setopacity o =
   args.opacity <- o
@@ -2546,6 +2552,9 @@ let specs =
    ("-color",
       Arg.String setcolor,
       " Set the color");
+   ("-outline-color",
+      Arg.String setredactionannotationoutlinecolor,
+      " Set a second color");
    ("-opacity",
       Arg.Float setopacity,
       " Set the text opacity");
@@ -5619,7 +5628,7 @@ let rec go () =
       let range = parse_pagespec pdf (get_pagespec ()) in
       let x, y, w, h = Cpdfcoord.parse_rectangle pdf args.rectangle in
       let minx, miny, maxx, maxy = x, y, x +. w, y +. h in
-      let pdf = Cpdfannot.add_annotation (minx, miny, maxx, maxy) pdf range in
+      let pdf = Cpdfannot.add_annotation (minx, miny, maxx, maxy) ~color:args.color ~outline:args.redaction_annotation_outline_color pdf range in
         write_pdf false pdf
   | RemoveMarkedContent ->
       let pdf = get_single_pdf args.op true in

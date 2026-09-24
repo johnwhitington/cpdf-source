@@ -278,62 +278,41 @@ let remove_annotations range pdf =
     Cpdfpage.process_pages (Pdfpage.ppstub remove_annotations_page) pdf range
 
 (* Add a (presently, redaction) annotation at the given position on the given pages. *)
-let add_annotation (minx, miny, maxx, maxy) pdf range =
+let add_annotation (minx, miny, maxx, maxy) ~color ~outline pdf range =
+  let add_dict = function
+  | Pdf.Stream ({contents = (dict, stream)} as s) ->
+      let dict = Pdf.add_dict_entry dict "/BBox"
+        (Pdf.Array [Pdf.Real (minx -. 0.5); Pdf.Real (miny -. 0.5); Pdf.Real (maxx +. 0.5); Pdf.Real (maxy +. 0.5)])
+      in
+      let dict = Pdf.add_dict_entry dict "/Matrix"
+        (Pdf.Array [Pdf.Real 1.; Pdf.Real 0.; Pdf.Real 0.; Pdf.Real 1.; Pdf.Real (~-.minx +. 0.5); (Pdf.Real (~-.miny +. 0.5))])
+      in
+      let dict = Pdf.add_dict_entry dict "/Resources" (Pdf.Dictionary []) in
+      let dict = Pdf.add_dict_entry dict "/Subtype" (Pdf.Name "/Form") in
+      let dict = Pdf.add_dict_entry dict "/Type" (Pdf.Name "/XObject") in
+      s := (dict, stream);
+      (Pdf.Stream s)
+  | _ -> assert false
+  in
   let d_ro_r =
     Pdf.addobj pdf
-      (match
-        Pdfops.stream_of_ops
-          [Pdfops.Op_g 0.;
+      (add_dict
+        (Pdfops.stream_of_ops
+          [Cpdfaddtext.colour_op color;
            Pdfops.Op_cm {Pdftransform.a = 1.; b = 0.; c = 0.; d = 1.; e = 0.; f = 0.};
-           Pdfops.Op_m (minx, miny);
-           Pdfops.Op_l (maxx, miny);
-           Pdfops.Op_l (maxx, maxy);
-           Pdfops.Op_l (minx, maxy);
-           Pdfops.Op_l (minx, miny);
-           Pdfops.Op_f]
-       with
-         Pdf.Stream ({contents = (dict, stream)} as s) ->
-           let dict = Pdf.add_dict_entry dict "/BBox"
-             (Pdf.Array [Pdf.Real (minx -. 0.5); Pdf.Real (miny -. 0.5); Pdf.Real (maxx +. 0.5); Pdf.Real (maxy +. 0.5)])
-           in
-           let dict = Pdf.add_dict_entry dict "/Matrix"
-             (Pdf.Array [Pdf.Real 1.; Pdf.Real 0.; Pdf.Real 0.; Pdf.Real 1.; Pdf.Real (~-.minx +. 0.5); (Pdf.Real (~-.miny +. 0.5))])
-           in
-           let dict = Pdf.add_dict_entry dict "/Resources" (Pdf.Dictionary []) in
-           let dict = Pdf.add_dict_entry dict "/Subtype" (Pdf.Name "/Form") in
-           let dict = Pdf.add_dict_entry dict "/Type" (Pdf.Name "/XObject") in
-           s := (dict, stream);
-           (Pdf.Stream s)
-       | _ -> assert false)
+           Pdfops.Op_m (minx, miny); Pdfops.Op_l (maxx, miny); Pdfops.Op_l (maxx, maxy); Pdfops.Op_l (minx, maxy); Pdfops.Op_l (minx, miny);
+           Pdfops.Op_f]))
   in
   let n =
     Pdf.addobj pdf
-      (match
-        Pdfops.stream_of_ops
-          [Pdfops.Op_RG (0.858826, 0.203918, 0.145096);
+      (add_dict
+        (Pdfops.stream_of_ops
+          [Cpdfaddtext.colour_op_stroke outline;
            Pdfops.Op_cm {Pdftransform.a = 1.; b = 0.; c = 0.; d = 1.; e = 0.; f = 0.};
            Pdfops.Op_w 1.5;
            Pdfops.Op_J 2;
-           Pdfops.Op_m (minx, miny);
-           Pdfops.Op_l (maxx, miny);
-           Pdfops.Op_l (maxx, maxy);
-           Pdfops.Op_l (minx, maxy);
-           Pdfops.Op_l (minx, miny);
-           Pdfops.Op_S]
-       with
-         Pdf.Stream ({contents = (dict, stream)} as s) ->
-           let dict = Pdf.add_dict_entry dict "/BBox"
-             (Pdf.Array [Pdf.Real (minx -. 0.5); Pdf.Real (miny -. 0.5); Pdf.Real (maxx +. 0.5); Pdf.Real (maxy +. 0.5)])
-           in
-           let dict = Pdf.add_dict_entry dict "/Matrix"
-             (Pdf.Array [Pdf.Real 1.; Pdf.Real 0.; Pdf.Real 0.; Pdf.Real 1.; Pdf.Real (~-.minx +. 0.5); (Pdf.Real (~-.miny +. 0.5))])
-           in
-           let dict = Pdf.add_dict_entry dict "/Resources" (Pdf.Dictionary []) in
-           let dict = Pdf.add_dict_entry dict "/Subtype" (Pdf.Name "/Form") in
-           let dict = Pdf.add_dict_entry dict "/Type" (Pdf.Name "/XObject") in
-           s := (dict, stream);
-           (Pdf.Stream s)
-       | _ -> assert false)
+           Pdfops.Op_m (minx, miny); Pdfops.Op_l (maxx, miny); Pdfops.Op_l (maxx, maxy); Pdfops.Op_l (minx, maxy); Pdfops.Op_l (minx, miny);
+           Pdfops.Op_S]))
   in
   let nm =
     let t = Unix.gettimeofday () in
