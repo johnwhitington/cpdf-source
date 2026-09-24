@@ -325,10 +325,7 @@ let add_annotation (minx, miny, maxx, maxy) ~color ~outline pdf range =
     | _ -> Cpdfstrftime.strftime "D:%Y%m%d%H%M%S"
   in
   let quadpoints =
-    [Pdf.Real minx; Pdf.Real miny;
-     Pdf.Real maxx; Pdf.Real miny;
-     Pdf.Real minx; Pdf.Real maxy;
-     Pdf.Real maxx; Pdf.Real maxy]
+    [Pdf.Real minx; Pdf.Real miny; Pdf.Real maxx; Pdf.Real miny; Pdf.Real minx; Pdf.Real maxy; Pdf.Real maxx; Pdf.Real maxy]
   in
   let annot =
     {Pdfannot.subtype = Pdfannot.Redact;
@@ -346,6 +343,5 @@ let add_annotation (minx, miny, maxx, maxy) ~color ~outline pdf range =
           ("/AP", Pdf.Dictionary [("/D", Pdf.Indirect d_ro_r;); ("/N", Pdf.Indirect n); ("/R", Pdf.Indirect d_ro_r)]);
           ("/RO", Pdf.Indirect d_ro_r)]}
   in
-
     Cpdfpage.process_pages
       (Pdfpage.ppstub (fun pnum page -> if mem pnum range then Pdfannot.add_annotation pdf page annot else page)) pdf range
