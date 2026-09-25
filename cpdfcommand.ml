@@ -691,7 +691,11 @@ type args =
    mutable redact_vectors : Cpdfredact.spec;
    mutable redact_invert : bool;
    mutable redact_show : bool;
-   mutable redact_apply_appearance : bool}
+   mutable redact_apply_appearance : bool;
+   mutable redact_overlay_text : string option;
+   mutable redact_overlay_repeat : bool;
+   mutable redact_overlay_auto_size : bool;
+   mutable redact_overlay_text_colour : Cpdfaddtext.colour}
 
 let args =
   {op = None;
@@ -868,7 +872,11 @@ let args =
    redact_annotations = (Leave, None);
    redact_invert = false;
    redact_show = true;
-   redact_apply_appearance = false}
+   redact_apply_appearance = false;
+   redact_overlay_text = None;
+   redact_overlay_repeat = false;
+   redact_overlay_auto_size = false;
+   redact_overlay_text_colour = Cpdfaddtext.RGB (0.858826, 0.203918, 0.145096)}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -1029,7 +1037,11 @@ let reset_arguments () =
   args.redact_annotations <- (Leave, None);
   args.redact_invert <- false;
   args.redact_show <- true;
-  args.redact_apply_appearance <- false
+  args.redact_apply_appearance <- false;
+  args.redact_overlay_text <- None;
+  args.redact_overlay_repeat <- false;
+  args.redact_overlay_auto_size <- false;
+  args.redact_overlay_text_colour <- Cpdfaddtext.RGB (0.858826, 0.203918, 0.145096)
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -3361,6 +3373,9 @@ let specs =
    ("-redact-no-show", Arg.Unit (fun () -> args.redact_show <- false), " Do not show redaction area");
    ("-remove-marked-content", Arg.Unit (fun s -> setop RemoveMarkedContent ()), " Remove marked content operators");
    ("-remove-acroform", Arg.Unit (fun () -> setop RemoveAcroForm ()), " Remove AcroForm");
+   ("-redact-overlay", Arg.String (fun s -> args.redact_overlay_text <- Some s), " Supply overlay text for redaction annotation.");
+   ("-redact-repeat", Arg.Unit (fun () -> args.redact_overlay_repeat <- true), " Repeat overlay text");
+   ("-redact-auto-size", Arg.Unit (fun () -> args.redact_overlay_auto_size <- true), " Auto size overlay text");
    (* Undocumented. *)
    ("-test-extract-text", Arg.Unit (fun () -> setop TestExtractText ()), "")]
 
@@ -5628,7 +5643,18 @@ let rec go () =
       let range = parse_pagespec pdf (get_pagespec ()) in
       let x, y, w, h = Cpdfcoord.parse_rectangle pdf args.rectangle in
       let minx, miny, maxx, maxy = x, y, x +. w, y +. h in
-      let pdf = Cpdfannot.add_annotation (minx, miny, maxx, maxy) ~color:args.color ~outline:args.redaction_annotation_outline_color pdf range in
+      let pdf =
+        Cpdfannot.add_annotation
+          (minx, miny, maxx, maxy)
+          ~color:args.color
+          ~outline:args.redaction_annotation_outline_color
+          ~overlay:args.redact_overlay_text
+          ~overlay_text_colour:args.redact_overlay_text_colour
+          ~overlay_justification:args.justification
+          ~overlay_repeat:args.redact_overlay_repeat
+          ~overlay_auto_size:args.redact_overlay_auto_size
+          pdf range
+      in
         write_pdf false pdf
   | RemoveMarkedContent ->
       let pdf = get_single_pdf args.op true in

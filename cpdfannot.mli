@@ -15,7 +15,16 @@ val remove_annotations : int list -> Pdf.t -> Pdf.t
 val copy_annotations : int list -> Pdf.t -> Pdf.t -> unit
 
 (** Add an annotation (presently just redaction). *)
-val add_annotation : (float * float * float * float) -> color:Cpdfaddtext.colour -> outline:Cpdfaddtext.colour -> Pdf.t -> int list -> Pdf.t
+val add_annotation :
+  (float * float * float * float) ->
+    color:Cpdfaddtext.colour ->
+    outline:Cpdfaddtext.colour ->
+    overlay:string option ->
+    overlay_text_colour:Cpdfaddtext.colour ->
+    overlay_justification:Cpdfaddtext.justification ->
+    overlay_repeat:bool ->
+    overlay_auto_size:bool ->
+    Pdf.t -> int list -> Pdf.t
 
 (** Annotation type from a string. *)
 val subtype_of_string : string -> Pdfannot.subtype
