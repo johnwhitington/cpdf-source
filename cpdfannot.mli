@@ -24,6 +24,11 @@ val add_annotation :
     overlay_justification:Cpdfaddtext.justification ->
     overlay_repeat:bool ->
     overlay_auto_size:bool ->
+    font:Cpdfembed.cpdffont ->
+    font_size:float ->
+    opacity:float ->
+    linespacing:float ->
+    outline:bool ->
     Pdf.t -> int list -> Pdf.t
 
 (** Annotation type from a string. *)

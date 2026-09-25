@@ -5658,6 +5658,11 @@ let rec go () =
           ~overlay_justification:args.justification
           ~overlay_repeat:args.redact_overlay_repeat
           ~overlay_auto_size:args.redact_overlay_auto_size
+          ~font:(embed_font ())
+          ~font_size:args.fontsize
+          ~opacity:args.opacity
+          ~linespacing:args.linespacing
+          ~outline:args.outline
           pdf range
       in
         write_pdf false pdf

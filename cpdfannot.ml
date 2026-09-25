@@ -278,7 +278,11 @@ let remove_annotations range pdf =
     Cpdfpage.process_pages (Pdfpage.ppstub remove_annotations_page) pdf range
 
 (* Add a (presently, redaction) annotation at the given position on the given pages. *)
-let add_annotation (minx, miny, maxx, maxy) ~main_color ~outline_color ~overlay ~overlay_text_colour ~overlay_justification ~overlay_repeat ~overlay_auto_size pdf range =
+let add_annotation (minx, miny, maxx, maxy)
+  ~main_color ~outline_color ~overlay ~overlay_text_colour ~overlay_justification ~overlay_repeat ~overlay_auto_size
+  ~font ~font_size ~opacity ~linespacing ~outline
+  pdf range
+=
   let add_dict = function
   | Pdf.Stream ({contents = (dict, stream)} as s) ->
       let dict = Pdf.add_dict_entry dict "/BBox"
