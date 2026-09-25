@@ -302,10 +302,10 @@ let add_annotation (minx, miny, maxx, maxy)
     Pdf.addobj pdf
       (add_dict
         (Pdfops.stream_of_ops
-          [Cpdfaddtext.colour_op main_color;
+          ([Cpdfaddtext.colour_op main_color;
            Pdfops.Op_cm {Pdftransform.a = 1.; b = 0.; c = 0.; d = 1.; e = 0.; f = 0.};
            Pdfops.Op_m (minx, miny); Pdfops.Op_l (maxx, miny); Pdfops.Op_l (maxx, maxy); Pdfops.Op_l (minx, maxy); Pdfops.Op_l (minx, miny);
-           Pdfops.Op_f]))
+           Pdfops.Op_f])))
   in
   let n =
     Pdf.addobj pdf
