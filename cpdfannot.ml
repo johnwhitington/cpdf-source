@@ -278,7 +278,7 @@ let remove_annotations range pdf =
     Cpdfpage.process_pages (Pdfpage.ppstub remove_annotations_page) pdf range
 
 (* Add a (presently, redaction) annotation at the given position on the given pages. *)
-let add_annotation (minx, miny, maxx, maxy) ~color ~outline ~overlay ~overlay_text_colour ~overlay_justification ~overlay_repeat ~overlay_auto_size pdf range =
+let add_annotation (minx, miny, maxx, maxy) ~main_color ~outline_color ~overlay ~overlay_text_colour ~overlay_justification ~overlay_repeat ~overlay_auto_size pdf range =
   let add_dict = function
   | Pdf.Stream ({contents = (dict, stream)} as s) ->
       let dict = Pdf.add_dict_entry dict "/BBox"
@@ -298,7 +298,7 @@ let add_annotation (minx, miny, maxx, maxy) ~color ~outline ~overlay ~overlay_te
     Pdf.addobj pdf
       (add_dict
         (Pdfops.stream_of_ops
-          [Cpdfaddtext.colour_op color;
+          [Cpdfaddtext.colour_op main_color;
            Pdfops.Op_cm {Pdftransform.a = 1.; b = 0.; c = 0.; d = 1.; e = 0.; f = 0.};
            Pdfops.Op_m (minx, miny); Pdfops.Op_l (maxx, miny); Pdfops.Op_l (maxx, maxy); Pdfops.Op_l (minx, maxy); Pdfops.Op_l (minx, miny);
            Pdfops.Op_f]))
@@ -307,7 +307,7 @@ let add_annotation (minx, miny, maxx, maxy) ~color ~outline ~overlay ~overlay_te
     Pdf.addobj pdf
       (add_dict
         (Pdfops.stream_of_ops
-          [Cpdfaddtext.colour_op_stroke outline;
+          [Cpdfaddtext.colour_op_stroke outline_color;
            Pdfops.Op_cm {Pdftransform.a = 1.; b = 0.; c = 0.; d = 1.; e = 0.; f = 0.};
            Pdfops.Op_w 1.5;
            Pdfops.Op_J 2;

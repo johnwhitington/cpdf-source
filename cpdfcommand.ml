@@ -540,6 +540,7 @@ type args =
    mutable embedstd14 : string option;
    mutable color : Cpdfaddtext.colour;
    mutable redaction_annotation_outline_color : Cpdfaddtext.colour;
+   mutable redaction_annotation_main_color : Cpdfaddtext.colour;
    mutable opacity : float;
    mutable position : Cpdfposition.position;
    mutable underneath : bool;
@@ -694,8 +695,7 @@ type args =
    mutable redact_apply_appearance : bool;
    mutable redact_overlay_text : string option;
    mutable redact_overlay_repeat : bool;
-   mutable redact_overlay_auto_size : bool;
-   mutable redact_overlay_text_colour : Cpdfaddtext.colour}
+   mutable redact_overlay_auto_size : bool}
 
 let args =
   {op = None;
@@ -720,6 +720,7 @@ let args =
    fontencoding = Pdftext.WinAnsiEncoding;
    color = Cpdfaddtext.RGB (0., 0., 0.);
    redaction_annotation_outline_color = Cpdfaddtext.RGB (0.858826, 0.203918, 0.145096);
+   redaction_annotation_main_color = Cpdfaddtext.RGB (0., 0., 0.);
    opacity = 1.;
    position = Cpdfposition.TopLeft (100., 100.);
    underneath = false;
@@ -875,8 +876,7 @@ let args =
    redact_apply_appearance = false;
    redact_overlay_text = None;
    redact_overlay_repeat = false;
-   redact_overlay_auto_size = false;
-   redact_overlay_text_colour = Cpdfaddtext.RGB (0.858826, 0.203918, 0.145096)}
+   redact_overlay_auto_size = false}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -1040,8 +1040,7 @@ let reset_arguments () =
   args.redact_apply_appearance <- false;
   args.redact_overlay_text <- None;
   args.redact_overlay_repeat <- false;
-  args.redact_overlay_auto_size <- false;
-  args.redact_overlay_text_colour <- Cpdfaddtext.RGB (0.858826, 0.203918, 0.145096)
+  args.redact_overlay_auto_size <- false
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -1489,6 +1488,9 @@ let setcolor s =
 
 let setredactionannotationoutlinecolor s =
   args.redaction_annotation_outline_color <- Cpdfdrawcontrol.parse_colour s
+
+let setredactionannotationmaincolor s =
+  args.redaction_annotation_main_color <- Cpdfdrawcontrol.parse_colour s
 
 let setopacity o =
   args.opacity <- o
@@ -2564,9 +2566,12 @@ let specs =
    ("-color",
       Arg.String setcolor,
       " Set the color");
-   ("-outline-color",
+   ("-redact-outline-color",
       Arg.String setredactionannotationoutlinecolor,
-      " Set a second color");
+      " Set redaction annotation outline color");
+   ("-redact-color",
+      Arg.String setredactionannotationmaincolor,
+      " Set redaction annotation main color");
    ("-opacity",
       Arg.Float setopacity,
       " Set the text opacity");
@@ -5646,10 +5651,10 @@ let rec go () =
       let pdf =
         Cpdfannot.add_annotation
           (minx, miny, maxx, maxy)
-          ~color:args.color
-          ~outline:args.redaction_annotation_outline_color
+          ~main_color:args.redaction_annotation_main_color
+          ~outline_color:args.redaction_annotation_outline_color
           ~overlay:args.redact_overlay_text
-          ~overlay_text_colour:args.redact_overlay_text_colour
+          ~overlay_text_colour:args.color
           ~overlay_justification:args.justification
           ~overlay_repeat:args.redact_overlay_repeat
           ~overlay_auto_size:args.redact_overlay_auto_size
