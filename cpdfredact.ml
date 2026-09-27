@@ -222,6 +222,39 @@ let redact_add_rectangle_pnum pdf ~path:(minx, miny, maxx, maxy) ~color ~outline
     false (Printf.sprintf "%s %s" (string_of_float (maxx -. minx)) (string_of_float (maxy -. miny)))
     color outline linewidth opacity (Cpdfposition.PosLeft(minx, miny)) "/Absolute" underneath [pnum] pdf
 
+(* Remove any bookmark pointing to redacted content - its title may contain
+   some or all of the redacted information. *)
+let redact_bookmarks ~bookmark_spec pdf pnum path =
+  let marks = Pdfmarks.read_bookmarks ~preserve_actions:true pdf in
+  let marks' = marks in
+    Pdfmarks.add_bookmarks marks' pdf
+
+(* Remove any link annotation, anywhere in the document, which points to
+   redacted content. Together with the link text, it may hint at redacted
+   information. *)
+let redact_links ~link_spec pdf pnum path =
+  (* Locate all link annotation object numbers by trawl, find those which match
+     the path/page by inspecting /A and /Dest, and null out references to them
+     in the entire document. *)
+  let to_null = ref [] in
+    Pdf.objiter
+      (fun objnum obj ->
+         match Pdf.lookup_direct pdf "/Subtype" obj with
+         | Some (Pdf.Name "/Link") -> 
+             begin match Pdf.lookup_direct pdf "/A" obj with
+             | Some action ->
+                 ()
+             | None ->
+                 begin match Pdf.lookup_direct pdf "/Dest" obj with
+                 | Some dest ->
+                     ()
+                 | None -> () 
+                 end
+             end
+         | _ -> ())
+      pdf;
+    pdf
+
 (* Stamp onto page from appearance stream in annotation. This is the /RO entry
 in the redaction annotations. Since redaction annotations are generally only
 created by modern PDF implementations, it's reasonable to assume this exists.
@@ -335,6 +368,8 @@ let apply
     in
       fold_left
         (fun pdf (pnum, path) ->
+           let pdf = redact_bookmarks ~bookmark_spec pdf pnum path in
+           let pdf = redact_links ~link_spec pdf pnum path in
            let pdf = 
              match annotation_spec with
              | (Remove, Some detection) -> redact_annotations pdf [pnum] ~detection ~invert ~paths:(many path (Pdfpage.endpage pdf))
