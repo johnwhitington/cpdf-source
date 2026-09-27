@@ -14,6 +14,8 @@ val redact :
   inline_image_spec:spec ->
   vector_spec:spec ->
   annotation_spec:spec ->
+  bookmark_spec:spec ->
+  link_spec:spec ->
   path_to_jbig2dec:string ->
   path_to_convert:string ->
   path_to_jbig2enc:string ->
@@ -37,6 +39,8 @@ val apply :
   inline_image_spec:spec ->
   vector_spec:spec ->
   annotation_spec:spec ->
+  bookmark_spec:spec ->
+  link_spec:spec ->
   path_to_jbig2dec:string ->
   path_to_convert:string ->
   path_to_jbig2enc:string ->

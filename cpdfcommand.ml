@@ -690,6 +690,8 @@ type args =
    mutable redact_images : Cpdfredact.spec;
    mutable redact_inline_images : Cpdfredact.spec;
    mutable redact_vectors : Cpdfredact.spec;
+   mutable redact_bookmarks : Cpdfredact.spec;
+   mutable redact_links : Cpdfredact.spec;
    mutable redact_invert : bool;
    mutable redact_show : bool;
    mutable redact_apply_appearance : bool;
@@ -871,6 +873,8 @@ let args =
    redact_inline_images = (Leave, None);
    redact_vectors = (Leave, None);
    redact_annotations = (Leave, None);
+   redact_bookmarks = (Leave, None);
+   redact_links = (Leave, None);
    redact_invert = false;
    redact_show = true;
    redact_apply_appearance = false;
@@ -1035,6 +1039,8 @@ let reset_arguments () =
   args.redact_inline_images <- (Leave, None);
   args.redact_vectors <- (Leave, None);
   args.redact_annotations <- (Leave, None);
+  args.redact_bookmarks <- (Leave, None);
+  args.redact_links <- (Leave, None);
   args.redact_invert <- false;
   args.redact_show <- true;
   args.redact_apply_appearance <- false;
@@ -3378,9 +3384,11 @@ let specs =
    ("-redact-no-show", Arg.Unit (fun () -> args.redact_show <- false), " Do not show redaction area");
    ("-remove-marked-content", Arg.Unit (fun s -> setop RemoveMarkedContent ()), " Remove marked content operators");
    ("-remove-acroform", Arg.Unit (fun () -> setop RemoveAcroForm ()), " Remove AcroForm");
-   ("-redact-overlay", Arg.String (fun s -> args.redact_overlay_text <- Some s), " Supply overlay text for redaction annotation.");
+   ("-redact-overlay", Arg.String (fun s -> args.redact_overlay_text <- Some s), " Supply overlay text for redaction annotation");
    ("-redact-repeat", Arg.Unit (fun () -> args.redact_overlay_repeat <- true), " Repeat overlay text");
    ("-redact-auto-size", Arg.Unit (fun () -> args.redact_overlay_auto_size <- true), " Auto size overlay text");
+   ("-redact-bookmarks", Arg.String (fun s -> args.redact_bookmarks <- parse_redaction_spec s), " Specify bookmark redaction mode");
+   ("-redact-links", Arg.String (fun s -> args.redact_links <- parse_redaction_spec s), " Specify link redaction mode");
    (* Undocumented. *)
    ("-test-extract-text", Arg.Unit (fun () -> setop TestExtractText ()), "")]
 
@@ -5486,9 +5494,9 @@ let rec go () =
       let pdf =
         Cpdfredact.redact
           pdf ~text_spec:args.redact_text ~image_spec:args.redact_images ~inline_image_spec:args.redact_inline_images ~vector_spec:args.redact_vectors
-          ~annotation_spec:args.redact_annotations ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc
-          ~paths ~invert:args.redact_invert ~show:args.redact_show ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth
-          ~underneath:args.underneath range
+          ~bookmark_spec:args.redact_bookmarks ~link_spec:args.redact_links ~annotation_spec:args.redact_annotations ~path_to_jbig2dec:args.path_to_jbig2dec
+          ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc ~paths ~invert:args.redact_invert ~show:args.redact_show ~color:args.color
+          ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth ~underneath:args.underneath range
       in
         write_pdf false pdf
   | RedactApply ->
@@ -5496,8 +5504,9 @@ let rec go () =
       let range = parse_pagespec pdf (get_pagespec ()) in
       let pdf =
         Cpdfredact.apply
-          pdf ~appearance:args.redact_apply_appearance ~text_spec:args.redact_text ~image_spec:args.redact_images ~inline_image_spec:args.redact_inline_images ~vector_spec:args.redact_vectors
-          ~annotation_spec:args.redact_annotations ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc
+          pdf ~appearance:args.redact_apply_appearance ~text_spec:args.redact_text ~image_spec:args.redact_images ~inline_image_spec:args.redact_inline_images
+          ~vector_spec:args.redact_vectors ~annotation_spec:args.redact_annotations ~bookmark_spec:args.redact_bookmarks ~link_spec:args.redact_links
+          ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc
           ~invert:args.redact_invert ~show:args.redact_show ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth
           ~underneath:args.underneath range
       in
@@ -5508,9 +5517,9 @@ let rec go () =
       let pdf =
         Cpdfredact.apply
           pdf ~appearance:args.redact_apply_appearance ~text_spec:args.redact_text ~image_spec:args.redact_images ~inline_image_spec:args.redact_inline_images ~vector_spec:args.redact_vectors
-          ~annotation_spec:args.redact_annotations ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc
-          ~typ ~invert:args.redact_invert ~show:args.redact_show ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth
-          ~underneath:args.underneath range
+          ~annotation_spec:args.redact_annotations ~bookmark_spec:args.redact_bookmarks ~link_spec:args.redact_links ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im
+          ~path_to_jbig2enc:args.path_to_jbig2enc ~typ ~invert:args.redact_invert ~show:args.redact_show ~color:args.color ~outline:args.outline ~opacity:args.opacity
+          ~linewidth:args.linewidth ~underneath:args.underneath range
       in
         write_pdf false pdf
   | Rasterize ->

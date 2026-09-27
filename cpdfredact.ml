@@ -35,8 +35,8 @@ let box_matches ~detection ~invert (minx, miny, maxx, maxy) {Cpdfcontent.boundin
 
 (* Redact a path on a page *)
 let redact_page
-  pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~path_to_jbig2dec
-  ~path_to_convert ~path_to_jbig2enc ~color ~path:((minx, miny, maxx, maxy) as path) ~invert page
+  pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~bookmark_spec ~link_spec
+  ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~path:((minx, miny, maxx, maxy) as path) ~invert page
 =
   let fi x = if invert then not x else x in
   let f c =
@@ -172,8 +172,8 @@ let redact_annotations pdf range ~detection ~invert ~paths =
       range
 
 let redact
-  pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc
-  ~paths ~invert ~show ~color ~outline ~opacity ~linewidth ~underneath range
+  pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~bookmark_spec ~link_spec
+  ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~paths ~invert ~show ~color ~outline ~opacity ~linewidth ~underneath range
 =
   preprocess_jbig2lossy_to_jbig2lossless ~jbig2dec:path_to_jbig2dec ~path_to_jbig2enc pdf;
   Cpdfutil.progress_line "Redacting content...";
@@ -184,8 +184,8 @@ let redact
            if mem pnum range then
              let path = List.nth paths (pnum - 1) in
                redact_page
-                 pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~path_to_jbig2dec
-                 ~path_to_convert ~path_to_jbig2enc ~color ~path ~invert page else page))
+                 pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~bookmark_spec ~link_spec
+                 ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~path ~invert page else page))
       pdf
       range
   in
@@ -248,7 +248,7 @@ let stamp_annotation_appearance pdf page i =
 
 (* Apply redaction annotations. *)
 let apply
-  pdf ~appearance ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~path_to_jbig2dec
+  pdf ~appearance ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~bookmark_spec ~link_spec ~path_to_jbig2dec
   ~path_to_convert ~path_to_jbig2enc ?(typ="/Redact") ~invert ~show ~color ~outline ~opacity ~linewidth ~underneath range
 =
   let show = if appearance then false else show in
@@ -296,7 +296,7 @@ let apply
                       fold_left
                        (fun page path ->
                           redact_page
-                            pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec
+                            pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~bookmark_spec ~link_spec
                             ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~path ~invert page)
                        page
                        paths
@@ -309,7 +309,7 @@ let apply
                         rectangles =| (pnum, path);
                       let page =
                         redact_page
-                          pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec
+                          pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~bookmark_spec ~link_spec
                           ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~path ~invert page
                       in
                         if appearance then stamp_annotation_appearance pdf page i else page
