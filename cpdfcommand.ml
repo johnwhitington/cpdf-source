@@ -485,6 +485,12 @@ type font =
   | EmbeddedFont of string
   | OtherFont of string
 
+let parse_link_redaction_spec = function
+  | "remove,touching" -> Cpdfredact.LinkRemoveTouching
+  | "remove,page" -> Cpdfredact.LinkRemovePage
+  | "leave" -> Cpdfredact.LinkLeave
+  | _ -> error "bad link redaction specification"
+
 (* One item, or two separated by a comma. No whitespace. First is "remove" or
    "leave" or "chop", second is "encloses" or "touches" or "covers<n>" *)
 let parse_redaction_spec s =
@@ -690,8 +696,8 @@ type args =
    mutable redact_images : Cpdfredact.spec;
    mutable redact_inline_images : Cpdfredact.spec;
    mutable redact_vectors : Cpdfredact.spec;
-   mutable redact_bookmarks : Cpdfredact.spec;
-   mutable redact_links : Cpdfredact.spec;
+   mutable redact_bookmarks : Cpdfredact.link_spec;
+   mutable redact_links : Cpdfredact.link_spec;
    mutable redact_invert : bool;
    mutable redact_show : bool;
    mutable redact_apply_appearance : bool;
@@ -873,8 +879,8 @@ let args =
    redact_inline_images = (Leave, None);
    redact_vectors = (Leave, None);
    redact_annotations = (Leave, None);
-   redact_bookmarks = (Leave, None);
-   redact_links = (Leave, None);
+   redact_bookmarks = LinkLeave;
+   redact_links = LinkLeave;
    redact_invert = false;
    redact_show = true;
    redact_apply_appearance = false;
@@ -1039,8 +1045,8 @@ let reset_arguments () =
   args.redact_inline_images <- (Leave, None);
   args.redact_vectors <- (Leave, None);
   args.redact_annotations <- (Leave, None);
-  args.redact_bookmarks <- (Leave, None);
-  args.redact_links <- (Leave, None);
+  args.redact_bookmarks <- LinkLeave;
+  args.redact_links <- LinkLeave;
   args.redact_invert <- false;
   args.redact_show <- true;
   args.redact_apply_appearance <- false;
@@ -3387,8 +3393,8 @@ let specs =
    ("-redact-overlay", Arg.String (fun s -> args.redact_overlay_text <- Some s), " Supply overlay text for redaction annotation");
    ("-redact-repeat", Arg.Unit (fun () -> args.redact_overlay_repeat <- true), " Repeat overlay text");
    ("-redact-auto-size", Arg.Unit (fun () -> args.redact_overlay_auto_size <- true), " Auto size overlay text");
-   ("-redact-bookmarks", Arg.String (fun s -> args.redact_bookmarks <- parse_redaction_spec s), " Specify bookmark redaction mode");
-   ("-redact-links", Arg.String (fun s -> args.redact_links <- parse_redaction_spec s), " Specify link redaction mode");
+   ("-redact-bookmarks", Arg.String (fun s -> args.redact_bookmarks <- parse_link_redaction_spec s), " Specify bookmark redaction mode");
+   ("-redact-links", Arg.String (fun s -> args.redact_links <- parse_link_redaction_spec s), " Specify link redaction mode");
    (* Undocumented. *)
    ("-test-extract-text", Arg.Unit (fun () -> setop TestExtractText ()), "")]
 

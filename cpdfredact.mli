@@ -6,6 +6,8 @@ type detection = Touching | Enclosing | Covering of float
 
 type spec = operation * detection option
 
+type link_spec = LinkLeave | LinkRemovePage | LinkRemoveTouching
+
 (** Redact a PDF in the given shape in the given range. *)
 val redact : 
   Pdf.t ->
@@ -14,8 +16,8 @@ val redact :
   inline_image_spec:spec ->
   vector_spec:spec ->
   annotation_spec:spec ->
-  bookmark_spec:spec ->
-  link_spec:spec ->
+  bookmark_spec:link_spec ->
+  link_spec:link_spec ->
   path_to_jbig2dec:string ->
   path_to_convert:string ->
   path_to_jbig2enc:string ->
@@ -39,8 +41,8 @@ val apply :
   inline_image_spec:spec ->
   vector_spec:spec ->
   annotation_spec:spec ->
-  bookmark_spec:spec ->
-  link_spec:spec ->
+  bookmark_spec:link_spec ->
+  link_spec:link_spec ->
   path_to_jbig2dec:string ->
   path_to_convert:string ->
   path_to_jbig2enc:string ->

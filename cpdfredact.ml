@@ -6,6 +6,8 @@ type detection = Touching | Enclosing | Covering of float
 
 type spec = operation * detection option
 
+type link_spec = LinkLeave | LinkRemovePage | LinkRemoveTouching
+
 let box_matches ~detection ~invert (minx, miny, maxx, maxy) {Cpdfcontent.bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} =
   let area (minx, miny, maxx, maxy) = (maxx -. minx) *. (maxy -. miny) in
   let fi x = if invert then not x else x in
@@ -222,38 +224,99 @@ let redact_add_rectangle_pnum pdf ~path:(minx, miny, maxx, maxy) ~color ~outline
     false (Printf.sprintf "%s %s" (string_of_float (maxx -. minx)) (string_of_float (maxy -. miny)))
     color outline linewidth opacity (Cpdfposition.PosLeft(minx, miny)) "/Absolute" underneath [pnum] pdf
 
+(* Remove any link annotation, anywhere in the document, which points to
+   redacted content. Together with the link text, it may hint at redacted
+   information. 
+
+   Method: locate all link annotation object numbers by trawl, find those which
+   match the path/page by inspecting /A and /Dest, and null out references to
+   them in the entire document. *)
+
+let matches ~fastrefnums d link_spec pnum =
+  match link_spec with
+  | LinkLeave -> false
+  | LinkRemovePage ->
+      let targetpage =
+        match d with
+        | Pdfdest.XYZ (PageObject tp, _, _, _) -> Some tp
+        | FitR (PageObject tp, _, _, _, _) -> Some tp
+        | Fit (PageObject tp) -> Some tp
+        | FitH (PageObject tp, _) -> Some tp
+        | FitV (PageObject tp, _) -> Some tp
+        | FitB PageObject tp -> Some tp
+        | FitBH (PageObject tp, _) -> Some tp
+        | FitBV (PageObject tp, _) -> Some tp
+        | _ -> None
+      in
+        begin match targetpage with
+        | None -> false
+        | Some targetpage ->
+            match Hashtbl.find_opt fastrefnums targetpage with
+            | Some targetpnum -> targetpnum = pnum
+            | None -> false
+        end
+  | LinkRemoveTouching -> (* FIXME *)
+      match d with
+      | Pdfdest.XYZ (tp, l, t, z) -> false
+          (* Check against this rectangle - it is e.g a section heading. *)
+      | FitR (tp, l, b, r, t) -> false
+          (* Check against this rectangle *)
+      | Fit tp -> false
+      | FitH (tp, _) -> false
+      | FitV (tp, _) -> false
+      | FitB tp -> false
+      | FitBH (tp, _) -> false
+      | FitBV (tp, _) -> false
+      | _ -> false
+
+let redact_links ~link_spec pdf pnum path =
+  let refnums = Pdf.page_reference_numbers pdf in
+  let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
+  let to_remove = ref [] in
+    Pdf.objiter
+      (fun objnum obj ->
+         match Pdf.lookup_direct pdf "/Subtype" obj with
+         | Some (Pdf.Name "/Link") -> 
+             begin match Pdf.lookup_direct pdf "/A" obj with
+             | Some a ->
+                 begin match Pdf.lookup_direct pdf "/S" a, Pdf.lookup_direct pdf "/D" a with
+                 | Some (Pdf.Name "/GoTo"), Some d ->
+                     if matches ~fastrefnums (Pdfdest.read_destination ~shallow:false pdf d) link_spec pnum then to_remove =| objnum
+                 | _ -> ()
+                 end
+             | None ->
+                 begin match Pdf.lookup_direct pdf "/Dest" obj with
+                 | Some d ->
+                     if matches ~fastrefnums (Pdfdest.read_destination ~shallow:false pdf d) link_spec pnum then to_remove =| objnum
+                 | None -> () 
+                 end
+             end
+         | _ -> ())
+      pdf;
+    let h = hashset_of_list !to_remove in
+    let remove_entry l =
+      lose
+        (function (k, Pdf.Indirect i) ->
+          Hashtbl.mem h i
+         | _ -> false)
+        l
+    in
+    let rec remove_reference_single_object = function
+    | (Pdf.Dictionary d) -> Pdf.recurse_dict remove_reference_single_object (remove_entry d)
+    | (Pdf.Stream {contents = (Pdf.Dictionary dict, data)}) ->
+        Pdf.Stream {contents = (Pdf.recurse_dict remove_reference_single_object (remove_entry dict), data)}
+    | Pdf.Array a -> Pdf.recurse_array remove_reference_single_object a
+    | x -> x
+    in
+      Pdf.objselfmap remove_reference_single_object pdf;
+    pdf
+
 (* Remove any bookmark pointing to redacted content - its title may contain
    some or all of the redacted information. *)
 let redact_bookmarks ~bookmark_spec pdf pnum path =
   let marks = Pdfmarks.read_bookmarks ~preserve_actions:true pdf in
   let marks' = marks in
     Pdfmarks.add_bookmarks marks' pdf
-
-(* Remove any link annotation, anywhere in the document, which points to
-   redacted content. Together with the link text, it may hint at redacted
-   information. *)
-let redact_links ~link_spec pdf pnum path =
-  (* Locate all link annotation object numbers by trawl, find those which match
-     the path/page by inspecting /A and /Dest, and null out references to them
-     in the entire document. *)
-  let to_null = ref [] in
-    Pdf.objiter
-      (fun objnum obj ->
-         match Pdf.lookup_direct pdf "/Subtype" obj with
-         | Some (Pdf.Name "/Link") -> 
-             begin match Pdf.lookup_direct pdf "/A" obj with
-             | Some action ->
-                 ()
-             | None ->
-                 begin match Pdf.lookup_direct pdf "/Dest" obj with
-                 | Some dest ->
-                     ()
-                 | None -> () 
-                 end
-             end
-         | _ -> ())
-      pdf;
-    pdf
 
 (* Stamp onto page from appearance stream in annotation. This is the /RO entry
 in the redaction annotations. Since redaction annotations are generally only
