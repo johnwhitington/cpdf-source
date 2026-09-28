@@ -8,7 +8,7 @@ type spec = operation * detection option
 
 type link_spec = LinkLeave | LinkRemovePage | LinkRemoveTouching
 
-let box_matches ~detection ~invert (minx, miny, maxx, maxy) {Cpdfcontent.bounding_box = Quad (x0, y0, x1, y1, x2, y2, x3, y3)} =
+let box_matches ~detection ~invert (minx, miny, maxx, maxy) (Cpdfcontent.Quad (x0, y0, x1, y1, x2, y2, x3, y3)) =
   let area (minx, miny, maxx, maxy) = (maxx -. minx) *. (maxy -. miny) in
   let fi x = if invert then not x else x in
   let bminx, bmaxx, bminy, bmaxy =
@@ -45,24 +45,24 @@ let redact_page
     match c.Cpdfcontent.content with
     | Cpdfcontent.Glyph _ ->
         begin match text_spec with
-        | (Remove, Some detection) -> box_matches ~detection ~invert path c
+        | (Remove, Some detection) -> box_matches ~detection ~invert path c.bounding_box
         | _ -> fi false
         end
     | Path _ | Shading _ ->
         begin match vector_spec with
-        | (Remove, Some detection) -> box_matches ~detection ~invert path c
+        | (Remove, Some detection) -> box_matches ~detection ~invert path c.bounding_box
         | _ -> fi false
         end
     | InlineImage _ ->
         begin match inline_image_spec with
-        | (Remove, Some detection) -> box_matches ~detection ~invert path c
+        | (Remove, Some detection) -> box_matches ~detection ~invert path c.bounding_box
         | _ -> fi false
         end
     | Clip -> false
     | Image (_, false, _) ->
         (* First call. Plain. If false, second call will not run. If true, second call will run to determine whether to chop or remove. *)
         begin match image_spec with
-        | ((Remove | Chop), Some detection) -> box_matches ~detection ~invert path c
+        | ((Remove | Chop), Some detection) -> box_matches ~detection ~invert path c.bounding_box
         | _ -> fi false 
         end
     | Image (_, true, bbr) ->
@@ -70,7 +70,7 @@ let redact_page
         begin match image_spec with
         | (Chop, Some detection) ->
             (* If box matches, and the overlap is not the whole image, say yes to chop. *)
-            if box_matches ~detection ~invert path c then
+            if box_matches ~detection ~invert path c.bounding_box then
               begin
                 let bminx, bmaxx, bminy, bmaxy =
                   match c.Cpdfcontent.bounding_box with Quad (x0, y0, x1, y1, x2, y2, x3, y3) ->
@@ -140,12 +140,7 @@ let redact_annotations pdf range ~detection ~invert ~paths =
               | Some rect ->
                   let minx, miny, maxx, maxy = List.nth paths (pnum - 1) in
                   let aminx, aminy, amaxx, amaxy = Pdf.parse_rectangle pdf rect in
-                  if box_matches ~detection ~invert (minx, miny, maxx, maxy)
-                    {Cpdfcontent.state = Cpdfcontent.initial_state (0., 0., 0., 0.);
-                     Cpdfcontent.content = Cpdfcontent.Glyph 0;
-                     Cpdfcontent.bounding_box = Quad (aminx, aminy, aminx, amaxy, amaxx, amaxy, amaxx, aminy)}
-                  then
-                      to_delete =| i;
+                  if box_matches ~detection ~invert (minx, miny, maxx, maxy) (Quad (aminx, aminy, aminx, amaxy, amaxx, amaxy, amaxx, aminy)) then to_delete =| i;
                   page
               | None ->
                   page)
@@ -231,45 +226,70 @@ let redact_add_rectangle_pnum pdf ~path:(minx, miny, maxx, maxy) ~color ~outline
    Method: locate all link annotation object numbers by trawl, find those which
    match the path/page by inspecting /A and /Dest, and null out references to
    them in the entire document. *)
+let matches_path ~invert box (minx, miny, maxx, maxy) =
+  box_matches ~detection:Touching ~invert box (Cpdfcontent.Quad (minx, miny, maxx, miny, maxx, maxy, minx, maxy))
 
-let matches ~fastrefnums d link_spec pnum =
-  match link_spec with
-  | LinkLeave -> false
-  | LinkRemovePage ->
-      let targetpage =
-        match d with
-        | Pdfdest.XYZ (PageObject tp, _, _, _) -> Some tp
-        | FitR (PageObject tp, _, _, _, _) -> Some tp
-        | Fit (PageObject tp) -> Some tp
-        | FitH (PageObject tp, _) -> Some tp
-        | FitV (PageObject tp, _) -> Some tp
-        | FitB PageObject tp -> Some tp
-        | FitBH (PageObject tp, _) -> Some tp
-        | FitBV (PageObject tp, _) -> Some tp
-        | _ -> None
-      in
-        begin match targetpage with
-        | None -> false
-        | Some targetpage ->
-            match Hashtbl.find_opt fastrefnums targetpage with
-            | Some targetpnum -> targetpnum = pnum
-            | None -> false
-        end
-  | LinkRemoveTouching -> (* FIXME *)
-      match d with
-      | Pdfdest.XYZ (tp, l, t, z) -> false
-          (* Check against this rectangle - it is e.g a section heading. *)
-      | FitR (tp, l, b, r, t) -> false
-          (* Check against this rectangle *)
-      | Fit tp -> false
-      | FitH (tp, _) -> false
-      | FitV (tp, _) -> false
-      | FitB tp -> false
-      | FitBH (tp, _) -> false
-      | FitBV (tp, _) -> false
-      | _ -> false
+let targetpage = function
+  | Pdfdest.XYZ (PageObject tp, _, _, _) -> Some tp
+  | FitR (PageObject tp, _, _, _, _) -> Some tp
+  | Fit (PageObject tp) -> Some tp
+  | FitH (PageObject tp, _) -> Some tp
+  | FitV (PageObject tp, _) -> Some tp
+  | FitB PageObject tp -> Some tp
+  | FitBH (PageObject tp, _) -> Some tp
+  | FitBV (PageObject tp, _) -> Some tp
+  | _ -> None
 
-let redact_links ~link_spec pdf pnum path =
+let matches ~invert ~fastrefnums d link_spec pnum path =
+  match targetpage d with
+  | None -> false
+  | Some targetpage ->
+      match Hashtbl.find_opt fastrefnums targetpage with
+      | None -> false
+      | Some targetpnum ->
+          targetpnum = pnum &&
+            match link_spec with
+            | LinkLeave -> false
+            | LinkRemovePage -> true
+            | LinkRemoveTouching ->
+                (* We build, if possible, a rectangle to represent the target, and check against it. *)
+                let rec link_remove_touching = function
+                | Pdfdest.XYZ (_, l, t, z) ->
+                    (* Take point (l, t) if non-null. Reduces to another case if null... *)
+                    let minx, miny, maxx, maxy =
+                      0., 0., 0., 0. (* TODO *)
+                    in
+                      matches_path ~invert (minx, miny, maxx, maxy) path
+                | FitR (tp, l, b, r, t) ->
+                    (* Take box (l, b, r, t) if non-null. Reduces to another case if null... *)
+                    let minx, miny, maxx, maxy =
+                      0., 0., 0., 0. (* TODO *)
+                    in
+                      matches_path ~invert (minx, miny, maxx, maxy) path
+                | FitH (tp, t) | FitBH (tp, t) ->
+                    (* Consider a rectangle infinitely wide at position t (if not null). *)
+                    let l, b, r, t =
+                      (* TODO *)
+                      0., 0., 0., 0.
+                    in
+                      link_remove_touching (FitR (tp, l, b, r, t))
+                | FitV (tp, l) | FitBV (tp, l)->
+                    (* Consider a rectangle infinitely high at position t (if not null). *)
+                    let l, b, r, t =
+                      (* TODO *)
+                      0., 0., 0., 0.
+                    in
+                      link_remove_touching (FitR (tp, l, b, r, t))
+                | Fit _ | FitB _ -> 
+                    (* Shows whole page, so must match. *)
+                    true
+                | _ ->
+                    (* Unknown *)
+                    false
+                in
+                  link_remove_touching d
+
+let redact_links ~invert ~link_spec pdf pnum path =
   let refnums = Pdf.page_reference_numbers pdf in
   let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
   let to_remove = ref [] in
@@ -281,13 +301,13 @@ let redact_links ~link_spec pdf pnum path =
              | Some a ->
                  begin match Pdf.lookup_direct pdf "/S" a, Pdf.lookup_direct pdf "/D" a with
                  | Some (Pdf.Name "/GoTo"), Some d ->
-                     if matches ~fastrefnums (Pdfdest.read_destination ~shallow:false pdf d) link_spec pnum then to_remove =| objnum
+                     if matches ~invert ~fastrefnums (Pdfdest.read_destination ~shallow:false pdf d) link_spec pnum path then to_remove =| objnum
                  | _ -> ()
                  end
              | None ->
                  begin match Pdf.lookup_direct pdf "/Dest" obj with
                  | Some d ->
-                     if matches ~fastrefnums (Pdfdest.read_destination ~shallow:false pdf d) link_spec pnum then to_remove =| objnum
+                     if matches ~invert ~fastrefnums (Pdfdest.read_destination ~shallow:false pdf d) link_spec pnum path then to_remove =| objnum
                  | None -> () 
                  end
              end
@@ -313,13 +333,13 @@ let redact_links ~link_spec pdf pnum path =
 
 (* Remove any bookmark pointing to redacted content - its title may contain
    some or all of the redacted information. *)
-let redact_bookmarks ~bookmark_spec pdf pnum path =
+let redact_bookmarks ~invert ~bookmark_spec pdf pnum path =
   let marks = Pdfmarks.read_bookmarks ~preserve_actions:true pdf in
   let refnums = Pdf.page_reference_numbers pdf in
   let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
   let marks' =
     keep
-      (function {Pdfmarks.target} -> matches ~fastrefnums target bookmark_spec pnum)
+      (function {Pdfmarks.target} -> matches ~invert ~fastrefnums target bookmark_spec pnum path)
       marks
   in
     Pdfmarks.add_bookmarks marks' pdf
@@ -437,8 +457,8 @@ let apply
     in
       fold_left
         (fun pdf (pnum, path) ->
-           let pdf = redact_bookmarks ~bookmark_spec pdf pnum path in
-           let pdf = redact_links ~link_spec pdf pnum path in
+           let pdf = redact_bookmarks ~invert ~bookmark_spec pdf pnum path in
+           let pdf = redact_links ~invert ~link_spec pdf pnum path in
            let pdf = 
              match annotation_spec with
              | (Remove, Some detection) -> redact_annotations pdf [pnum] ~detection ~invert ~paths:(many path (Pdfpage.endpage pdf))
@@ -495,7 +515,7 @@ let select_boxes shape boxes =
   match shape with 
   | None -> boxes
   | Some (minx, miny, maxx, maxy) ->
-      keep (box_matches ~detection:Touching ~invert:false (minx, miny, maxx, maxy)) boxes
+      keep (fun box -> box_matches ~detection:Touching ~invert:false (minx, miny, maxx, maxy) box.Cpdfcontent.bounding_box) boxes
 
 let show_bounding_boxes ~fast ~paths ~light pdf range =
   let pdf = show_annotation_bounding_boxes ~fast ~light pdf range in
