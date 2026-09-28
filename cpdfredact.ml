@@ -315,7 +315,13 @@ let redact_links ~link_spec pdf pnum path =
    some or all of the redacted information. *)
 let redact_bookmarks ~bookmark_spec pdf pnum path =
   let marks = Pdfmarks.read_bookmarks ~preserve_actions:true pdf in
-  let marks' = marks in
+  let refnums = Pdf.page_reference_numbers pdf in
+  let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
+  let marks' =
+    keep
+      (function {Pdfmarks.target} -> matches ~fastrefnums target bookmark_spec pnum)
+      marks
+  in
     Pdfmarks.add_bookmarks marks' pdf
 
 (* Stamp onto page from appearance stream in annotation. This is the /RO entry
