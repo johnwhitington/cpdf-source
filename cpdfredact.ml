@@ -255,31 +255,20 @@ let matches ~invert ~fastrefnums d link_spec pnum path =
                 (* We build, if possible, a rectangle to represent the target, and check against it. *)
                 let rec link_remove_touching = function
                 | Pdfdest.XYZ (_, l, t, z) ->
-                    (* Take point (l, t) if non-null. Reduces to another case if null... *)
-                    let minx, miny, maxx, maxy =
-                      0., 0., 0., 0. (* TODO *)
-                    in
-                      matches_path ~invert (minx, miny, maxx, maxy) path
+                    (* Take point (l, t) if non-null. *)
+                    let l = if l = None then min_float else unopt t in
+                    let t = if t = None then min_float else unopt t in
+                      matches_path ~invert (l, t, l, t) path
                 | FitR (tp, l, b, r, t) ->
-                    (* Take box (l, b, r, t) if non-null. Reduces to another case if null... *)
-                    let minx, miny, maxx, maxy =
-                      0., 0., 0., 0. (* TODO *)
-                    in
-                      matches_path ~invert (minx, miny, maxx, maxy) path
-                | FitH (tp, t) | FitBH (tp, t) ->
+                    matches_path ~invert (l, b, r, t) path
+                | FitH (tp, Some t) | FitBH (tp, Some t) ->
                     (* Consider a rectangle infinitely wide at position t (if not null). *)
-                    let l, b, r, t =
-                      (* TODO *)
-                      0., 0., 0., 0.
-                    in
-                      link_remove_touching (FitR (tp, l, b, r, t))
-                | FitV (tp, l) | FitBV (tp, l)->
+                    link_remove_touching (FitR (tp, min_float, t, max_float, t))
+                | FitH _ | FitBH _ -> false
+                | FitV (tp, Some l) | FitBV (tp, Some l) ->
                     (* Consider a rectangle infinitely high at position t (if not null). *)
-                    let l, b, r, t =
-                      (* TODO *)
-                      0., 0., 0., 0.
-                    in
-                      link_remove_touching (FitR (tp, l, b, r, t))
+                    link_remove_touching (FitR (tp, l, min_float, l, max_float))
+                | FitV _ | FitBV _ -> false
                 | Fit _ | FitB _ -> 
                     (* Shows whole page, so must match. *)
                     true
