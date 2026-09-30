@@ -226,7 +226,9 @@ let redact_add_rectangle_pnum pdf ~path:(minx, miny, maxx, maxy) ~color ~outline
    Method: locate all link annotation object numbers by trawl, find those which
    match the path/page by inspecting /A and /Dest, and null out references to
    them in the entire document. *)
-let matches_path ~invert box (minx, miny, maxx, maxy) =
+let matches_path ~invert ((bminx, bminy, bmaxx, bmaxy) as box) (minx, miny, maxx, maxy) =
+  (*Printf.printf "matches_path, box = %f, %f, %f, %f\n" bminx bminy bmaxx bmaxy;
+  Printf.printf "matches_path, item = %f, %f, %f, %f\n" minx miny maxx maxy;*)
   box_matches ~detection:Touching ~invert box (Cpdfcontent.Quad (minx, miny, maxx, miny, maxx, maxy, minx, maxy))
 
 let targetpage = function
@@ -241,16 +243,12 @@ let targetpage = function
   | _ -> None
 
 let matches ~invert ~fastrefnums d link_spec pnum path =
-  Printf.printf "pnum %i\n" pnum;
-  Printf.printf "d: %s\n" (Pdfwrite.string_of_pdf (Pdfdest.pdfobject_of_destination d));
   match targetpage d with
   | None -> false
   | Some targetpage ->
-      Printf.printf "target page for this bookmark = %i\n" targetpage;
       match Hashtbl.find_opt fastrefnums targetpage with
       | None -> false
       | Some targetpnum ->
-          Printf.printf "target page number for this bookmark = %i\n" targetpnum;
           targetpnum = pnum &&
             match link_spec with
             | LinkLeave -> false
@@ -258,9 +256,9 @@ let matches ~invert ~fastrefnums d link_spec pnum path =
             | LinkRemoveTouching ->
                 (* We build, if possible, a rectangle to represent the target, and check against it. *)
                 let rec link_remove_touching = function
-                | Pdfdest.XYZ (_, l, t, z) ->
+                | Pdfdest.XYZ (_, l, t, _) ->
                     (* Take point (l, t) if non-null. *)
-                    let l = if l = None then min_float else unopt t in
+                    let l = if l = None then min_float else unopt l in
                     let t = if t = None then min_float else unopt t in
                       matches_path ~invert (l, t, l, t) path
                 | FitR (tp, l, b, r, t) ->
@@ -307,18 +305,13 @@ let redact_links ~invert ~link_spec pdf pnum path =
          | _ -> ())
       pdf;
     let h = hashset_of_list !to_remove in
-    let remove_entry l =
-      lose
-        (function (k, Pdf.Indirect i) ->
-          Hashtbl.mem h i
-         | _ -> false)
-        l
-    in
+    let remove_dict_entry = lose (function (k, Pdf.Indirect i) -> Hashtbl.mem h i | _ -> false) in
+    let remove_array_entry = lose (function (Pdf.Indirect i) -> Hashtbl.mem h i | _ -> false) in
     let rec remove_reference_single_object = function
-    | (Pdf.Dictionary d) -> Pdf.recurse_dict remove_reference_single_object (remove_entry d)
+    | (Pdf.Dictionary d) -> Pdf.recurse_dict remove_reference_single_object (remove_dict_entry d)
     | (Pdf.Stream {contents = (Pdf.Dictionary dict, data)}) ->
-        Pdf.Stream {contents = (Pdf.recurse_dict remove_reference_single_object (remove_entry dict), data)}
-    | Pdf.Array a -> Pdf.recurse_array remove_reference_single_object a
+        Pdf.Stream {contents = (Pdf.recurse_dict remove_reference_single_object (remove_dict_entry dict), data)}
+    | Pdf.Array a -> Pdf.recurse_array remove_reference_single_object (remove_array_entry a)
     | x -> x
     in
       Pdf.objselfmap remove_reference_single_object pdf;
@@ -327,7 +320,6 @@ let redact_links ~invert ~link_spec pdf pnum path =
 (* Remove any bookmark pointing to redacted content - its title may contain
    some or all of the redacted information. *)
 let redact_bookmarks ~invert ~bookmark_spec pdf pnum path =
-  flprint "redact_bookmarks\n";
   let marks = Pdfmarks.read_bookmarks ~preserve_actions:true pdf in
   let marks_deep = Pdfmarks.read_bookmarks ~preserve_actions:false pdf in
   let refnums = Pdf.page_reference_numbers pdf in

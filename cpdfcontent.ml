@@ -1424,19 +1424,9 @@ let pagetree_make_explicit pdf =
 (* We have collected the objnums of images to remove. We remove a) the objects
    and b) any dictionary entry in the file which references the object. *)
 let postprocess_remove_unused_images pdf l =
-  (*if l <> [] then
-    begin
-      flprint "postprocess_remove_unused_images\n";
-      iter (Printf.printf "%i ") l; flprint "\n";
-    end;*)
+  (*if l <> [] then begin flprint "postprocess_remove_unused_images\n"; iter (Printf.printf "%i ") l; flprint "\n"; end;*)
   let h = hashset_of_list l in
-  let remove_entry l =
-    lose
-      (function (k, Pdf.Indirect i) ->
-        Hashtbl.mem h i
-       | _ -> false)
-      l
-  in
+  let remove_entry = lose (function (k, Pdf.Indirect i) -> Hashtbl.mem h i | _ -> false) in
   let rec remove_reference_single_object = function
   | (Pdf.Dictionary d) -> Pdf.recurse_dict remove_reference_single_object (remove_entry d)
   | (Pdf.Stream {contents = (Pdf.Dictionary dict, data)}) ->
