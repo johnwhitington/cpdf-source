@@ -241,12 +241,16 @@ let targetpage = function
   | _ -> None
 
 let matches ~invert ~fastrefnums d link_spec pnum path =
+  Printf.printf "pnum %i\n" pnum;
+  Printf.printf "d: %s\n" (Pdfwrite.string_of_pdf (Pdfdest.pdfobject_of_destination d));
   match targetpage d with
   | None -> false
   | Some targetpage ->
+      Printf.printf "target page for this bookmark = %i\n" targetpage;
       match Hashtbl.find_opt fastrefnums targetpage with
       | None -> false
       | Some targetpnum ->
+          Printf.printf "target page number for this bookmark = %i\n" targetpnum;
           targetpnum = pnum &&
             match link_spec with
             | LinkLeave -> false
@@ -323,13 +327,21 @@ let redact_links ~invert ~link_spec pdf pnum path =
 (* Remove any bookmark pointing to redacted content - its title may contain
    some or all of the redacted information. *)
 let redact_bookmarks ~invert ~bookmark_spec pdf pnum path =
+  flprint "redact_bookmarks\n";
   let marks = Pdfmarks.read_bookmarks ~preserve_actions:true pdf in
+  let marks_deep = Pdfmarks.read_bookmarks ~preserve_actions:false pdf in
   let refnums = Pdf.page_reference_numbers pdf in
   let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
   let marks' =
-    keep
-      (function {Pdfmarks.target} -> matches ~invert ~fastrefnums target bookmark_spec pnum path)
+    map2
+      (fun mark {Pdfmarks.target} ->
+        if matches ~invert ~fastrefnums target bookmark_spec pnum path then
+          (* Blank it out. Can't remove since might make the tree malformed. *)
+          {mark with Pdfmarks.text = ""; target = NullDestination} 
+        else
+          mark)
       marks
+      marks_deep
   in
     Pdfmarks.add_bookmarks marks' pdf
 
