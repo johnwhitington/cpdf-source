@@ -431,7 +431,9 @@ These examples demonstrate just a few of the facilities provided by the Coherent
 
 \noindent Verify \texttt{in.pdf} for conformance to PDF/UA-1 using the Matterhorn protocol, returning results in JSON format.
 
-\section*{\hyperref[chap:misc]{Chapter 20: Miscellaneous}}
+\section*{\hyperref[chap:misc]{Chapter 20: Redaction}}
+
+\section*{\hyperref[chap:misc]{Chapter 21: Miscellaneous}}
 
 \begin{framed}\noindent\texttt{cpdf -blacktext in.pdf -o out.pdf}\end{framed}
 
@@ -3280,7 +3282,7 @@ As an alternative, pages can be chopped into two at a given position, horizontal
   \small\noindent\verb!cpdf -list-annotations in.pdf [<range>]!
 
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -list-annotations-json in.pdf [<range>]!
+  \small\noindent\verb!cpdf -list-annotations-json in.pdf [-annot-type <type>] [<range>]!
 
   \vspace{1.5mm}
   \small\noindent\verb!cpdf -set-annotations <filename> [-underneath]!\\
@@ -3333,6 +3335,17 @@ annotations on the selected pages to standard output. Each annotation is precede
 \end{verbatim}}
 
 \noindent Extra objects required for annotations, but which are not annotations themselves are also extracted. They omit the page number, being just a pair of the object number and object. The CPDFJSON format is described on page \pageref{cpdfjson}. There is an additional object, -1, which gives the Cpdf annotation format version, currently 1.
+
+To list only a certain type of annotation, add \texttt{-annot-type}:
+
+  \begin{framed}
+    \noindent\small\verb!cpdf -list-annotations-json in.pdf -annot-type /Link > annots.json!
+    
+    \vspace{2.5mm}
+    \noindent Print link annotations from \texttt{in.pdf} in JSON format, redirecting output to \texttt{annots.json}.
+  \end{framed}
+
+\noindent Note that Popup annotations related to the chosen annotation type will not be included in this case.
 
 \section{Setting annotations}
 
@@ -4984,10 +4997,13 @@ We can load a JSON PDF file with the \texttt{-j} option in place of a PDF file a
   \noindent\verb!cpdf -ocg-rename -ocg-rename-from <a> -ocg-rename-to <b> in.pdf -o out.pdf!
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf -ocg-order-all in.pdf -o out.pdf!
+  \noindent\verb!cpdf -ocg-remove in.pdf -o out.pdf!
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -ocg-coalesce-on-name in.pdf -o out.pdf!
+
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -ocg-order-all in.pdf -o out.pdf!
 
   \end{framed}}
 
@@ -5008,6 +5024,12 @@ In a PDF file, optional content groups are used to group graphical elements toge
 
   {\small\begin{framed}
   \noindent\verb!cpdf -ocg-rename -ocg-rename-from <a> -ocg-rename-to <b> in.pdf -o out.pdf!
+  \end{framed}}
+
+\noindent To remove the optional content group structure entirely, making all content visible:
+
+  {\small\begin{framed}
+  \noindent\verb!cpdf -ocg-remove in.pdf -o out.pdf!
   \end{framed}}
 
 \noindent To coalesce optional content groups: 
@@ -6541,6 +6563,11 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
   \vspace{1.5mm}
   \noindent\verb!cpdf -annotate <rectangle> in.pdf -o out.pdf!
 
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -remove-search-index <rectangle> in.pdf -o out.pdf!
+  \noindent\verb!cpdf -remove-marked-content <rectangle> in.pdf -o out.pdf!
+  \noindent\verb!cpdf -remove-acroform <rectangle> in.pdf -o out.pdf!
+
   \vspace{3.5mm}
   \noindent Redaction options:
 
@@ -6551,14 +6578,16 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
   \noindent\verb!-redact-no-show!\\
   \noindent\verb!-redact-invert!\\
   \noindent\verb!-redact-text [remove | leave],[touches | encloses]!\\
-  \noindent\verb!-redact-images [remove | chop | leave],[touches | encloses]!\\
-  \noindent\verb!-redact-inline-images [remove | leave],[touches | encloses]!\\
-  \noindent\verb!-redact-vectors [remove | leave],[touches | encloses]!\\
-  \noindent\verb!-redact-annotations [remove | leave],[touches | encloses]!
- 
+  \noindent\verb!-redact-images [remove | chop | leave],[touches | encloses | covers<n>]!\\
+  \noindent\verb!-redact-inline-images [remove | leave],[touches | encloses | covers<n>]!\\
+  \noindent\verb!-redact-vectors [remove | leave],[touches | encloses | covers<n>]!\\
+  \noindent\verb!-redact-annotations [remove | leave],[touches | encloses | covers<n>]!\\
+  \noindent\verb!-redact-bookmarks [remove | leave],[page | touches]!\\
+  \noindent\verb!-redact-links [remove | leave],[page | touches]!\\
+
   \end{framed}}
 
-Redaction removes content from a PDF page, erasing it entirely rather than merely covering it up. \textit{NB: This chapter describes work-in-progress: Cpdf's redaction does yet in general extend to the redaction of metadata and is therefore presently unsuited to use on vital documents.}
+Redaction removes content from a PDF, erasing it entirely rather than merely covering it up.
 
 \section{Redacting whole pages}
 
@@ -6633,6 +6662,44 @@ If the interactive software you are using to demarcate the annotations does not 
   \end{framed}
 
 \noindent Recall that this does not redact content, merely marks it for future redaction.
+
+\section{Removing other metadata}
+
+Three other options can help to remove metadata from a file where it might contain information we do not wish to release. To remove the search index:
+
+  \begin{framed}
+    \noindent\small\verb!cpdf -remove-search-index in.pdf -o out.pdf!
+ 
+    \vspace{2.5mm}
+    \noindent Remove the proprietary Adobe search index from a document
+  \end{framed}
+
+\noindent To remove marked content, proprietary or otherwise from all content streams in the document (n.b careful, will void PDF/UA status).
+
+  \begin{framed}
+    \noindent\small\verb!cpdf -remove-marked-content in.pdf -o out.pdf!
+ 
+    \vspace{2.5mm}
+    \noindent Remove all marked content from PDF streams.
+  \end{framed}
+
+\noindent Remove any AcroForm from the document:
+
+  \begin{framed}
+    \noindent\small\verb!cpdf -remove-acroform in.pdf -o out.pdf!
+ 
+    \vspace{2.5mm}
+    \noindent Remove AcroForm.
+  \end{framed}
+
+\noindent And one more from elsewhere in this manual:
+
+  \begin{framed}
+    \noindent\small\verb!cpdf -ocg-remove in.pdf -o out.pdf!
+ 
+    \vspace{2.5mm}
+    \noindent Remove the optional content structure from a document. See Chapter 16 for details.
+  \end{framed}
 
 \section{Evidence of redaction}
 
