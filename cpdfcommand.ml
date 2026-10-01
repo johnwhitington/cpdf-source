@@ -703,7 +703,8 @@ type args =
    mutable redact_apply_appearance : bool;
    mutable redact_overlay_text : string option;
    mutable redact_overlay_repeat : bool;
-   mutable redact_overlay_auto_size : bool}
+   mutable redact_overlay_auto_size : bool;
+   mutable redact_structure : bool}
 
 let args =
   {op = None;
@@ -886,7 +887,8 @@ let args =
    redact_apply_appearance = false;
    redact_overlay_text = None;
    redact_overlay_repeat = false;
-   redact_overlay_auto_size = false}
+   redact_overlay_auto_size = false;
+   redact_structure = false}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -1052,7 +1054,8 @@ let reset_arguments () =
   args.redact_apply_appearance <- false;
   args.redact_overlay_text <- None;
   args.redact_overlay_repeat <- false;
-  args.redact_overlay_auto_size <- false
+  args.redact_overlay_auto_size <- false;
+  args.redact_structure <- false
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -3395,6 +3398,7 @@ let specs =
    ("-redact-auto-size", Arg.Unit (fun () -> args.redact_overlay_auto_size <- true), " Auto size overlay text");
    ("-redact-bookmarks", Arg.String (fun s -> args.redact_bookmarks <- parse_link_redaction_spec s), " Specify bookmark redaction mode");
    ("-redact-links", Arg.String (fun s -> args.redact_links <- parse_link_redaction_spec s), " Specify link redaction mode");
+   ("-redact-structure", Arg.Unit (fun s -> args.redact_structure <- true), " Redact structure tree information");
    (* Undocumented. *)
    ("-test-extract-text", Arg.Unit (fun () -> setop TestExtractText ()), "")]
 
@@ -5491,7 +5495,7 @@ let rec go () =
   | Redact ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
-        write_pdf false (Cpdfpage.redact ~process_struct_tree:args.process_struct_trees pdf range)
+        write_pdf false (Cpdfredact.redact_whole_page ~redact_structure:args.redact_structure ~redact_links:args.redact_links ~redact_bookmarks:args.redact_bookmarks pdf range)
   | RedactShape rectspec ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
@@ -5500,7 +5504,8 @@ let rec go () =
       let pdf =
         Cpdfredact.redact
           pdf ~text_spec:args.redact_text ~image_spec:args.redact_images ~inline_image_spec:args.redact_inline_images ~vector_spec:args.redact_vectors
-          ~bookmark_spec:args.redact_bookmarks ~link_spec:args.redact_links ~annotation_spec:args.redact_annotations ~path_to_jbig2dec:args.path_to_jbig2dec
+          ~bookmark_spec:args.redact_bookmarks ~link_spec:args.redact_links ~annotation_spec:args.redact_annotations ~redact_structure:args.redact_structure
+          ~path_to_jbig2dec:args.path_to_jbig2dec
           ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc ~paths ~invert:args.redact_invert ~show:args.redact_show ~color:args.color
           ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth ~underneath:args.underneath range
       in
@@ -5512,6 +5517,7 @@ let rec go () =
         Cpdfredact.apply
           pdf ~appearance:args.redact_apply_appearance ~text_spec:args.redact_text ~image_spec:args.redact_images ~inline_image_spec:args.redact_inline_images
           ~vector_spec:args.redact_vectors ~annotation_spec:args.redact_annotations ~bookmark_spec:args.redact_bookmarks ~link_spec:args.redact_links
+          ~redact_structure:args.redact_structure
           ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc
           ~invert:args.redact_invert ~show:args.redact_show ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth
           ~underneath:args.underneath range
@@ -5523,7 +5529,7 @@ let rec go () =
       let pdf =
         Cpdfredact.apply
           pdf ~appearance:args.redact_apply_appearance ~text_spec:args.redact_text ~image_spec:args.redact_images ~inline_image_spec:args.redact_inline_images ~vector_spec:args.redact_vectors
-          ~annotation_spec:args.redact_annotations ~bookmark_spec:args.redact_bookmarks ~link_spec:args.redact_links ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im
+          ~annotation_spec:args.redact_annotations ~bookmark_spec:args.redact_bookmarks ~link_spec:args.redact_links ~redact_structure:args.redact_structure ~path_to_jbig2dec:args.path_to_jbig2dec ~path_to_convert:args.path_to_im
           ~path_to_jbig2enc:args.path_to_jbig2enc ~typ ~invert:args.redact_invert ~show:args.redact_show ~color:args.color ~outline:args.outline ~opacity:args.opacity
           ~linewidth:args.linewidth ~underneath:args.underneath range
       in

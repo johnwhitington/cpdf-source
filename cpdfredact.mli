@@ -1,5 +1,4 @@
 (** Redaction. *)
-
 type operation = Remove | Leave | Chop
 
 type detection = Touching | Enclosing | Covering of float
@@ -7,6 +6,9 @@ type detection = Touching | Enclosing | Covering of float
 type spec = operation * detection option
 
 type link_spec = LinkLeave | LinkRemovePage | LinkRemoveTouching
+
+(** Remove a whole page's content. *)
+val redact_whole_page : redact_structure:bool -> redact_links:link_spec -> redact_bookmarks:link_spec -> Pdf.t -> int list -> Pdf.t
 
 (** Redact a PDF in the given shape in the given range. *)
 val redact : 
@@ -18,6 +20,7 @@ val redact :
   annotation_spec:spec ->
   bookmark_spec:link_spec ->
   link_spec:link_spec ->
+  redact_structure:bool ->
   path_to_jbig2dec:string ->
   path_to_convert:string ->
   path_to_jbig2enc:string ->
@@ -43,6 +46,7 @@ val apply :
   annotation_spec:spec ->
   bookmark_spec:link_spec ->
   link_spec:link_spec ->
+  redact_structure:bool ->
   path_to_jbig2dec:string ->
   path_to_convert:string ->
   path_to_jbig2enc:string ->
@@ -59,4 +63,10 @@ val apply :
 
 (** Show bounding boxes in the given shape or, if None, the whole page in the
     given rage. [light] will use lighter colours. *)
-val show_bounding_boxes : fast:bool -> paths:(float * float * float * float) option list -> light:bool -> Pdf.t -> int list -> Pdf.t
+val show_bounding_boxes :
+  fast:bool ->
+  paths:(float * float * float * float) option list ->
+  light:bool ->
+  Pdf.t ->
+  int list ->
+  Pdf.t

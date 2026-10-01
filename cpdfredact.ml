@@ -169,7 +169,7 @@ let redact_annotations pdf range ~detection ~invert ~paths =
       range
 
 let redact
-  pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~bookmark_spec ~link_spec
+  pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~bookmark_spec ~link_spec ~redact_structure
   ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~paths ~invert ~show ~color ~outline ~opacity ~linewidth ~underneath range
 =
   preprocess_jbig2lossy_to_jbig2lossless ~jbig2dec:path_to_jbig2dec ~path_to_jbig2enc pdf;
@@ -363,7 +363,7 @@ let stamp_annotation_appearance pdf page i =
 
 (* Apply redaction annotations. *)
 let apply
-  pdf ~appearance ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~bookmark_spec ~link_spec ~path_to_jbig2dec
+  pdf ~appearance ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~bookmark_spec ~link_spec ~redact_structure ~path_to_jbig2dec
   ~path_to_convert ~path_to_jbig2enc ?(typ="/Redact") ~invert ~show ~color ~outline ~opacity ~linewidth ~underneath range
 =
   let show = if appearance then false else show in
@@ -546,3 +546,21 @@ let show_bounding_boxes ~fast ~paths ~light pdf range =
         (ilist 1 (Pdfpage.endpage !pdf))
     in
       Cpdftweak.append_page_content_multiple_ops opss false fast !pdf
+
+let redact_whole_page ~redact_structure ~redact_links ~redact_bookmarks pdf range =
+  let pdf =
+    Cpdfpage.process_pages
+      (Pdfpage.ppstub
+         (fun pnum page ->
+            if mem pnum range then
+              {page with
+                 Pdfpage.content = [];
+                 Pdfpage.resources = Pdf.Dictionary [];
+                 Pdfpage.rest = Pdf.remove_dict_entry page.Pdfpage.rest "/Annots"}
+            else
+              page))
+      pdf
+      range
+  in
+    if redact_structure then Pdfst.trim_structure_tree pdf (Cpdfpagespec.invert_range (Pdfpage.endpage pdf) range);
+    pdf

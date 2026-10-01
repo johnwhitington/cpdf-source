@@ -140,10 +140,6 @@ val alluprightonly : int list -> Pdf.t -> bool
 (** When a page is transformed, its patterns must be too. *)
 val change_pattern_matrices_page : Pdf.t -> Pdftransform.transform_matrix -> Pdfpage.t -> Pdfpage.t
 
-(** Very basic redaction - the removal of whole pages, optionally trimming the
-    structure tree to remove any content there. *)
-val redact : process_struct_tree:bool -> Pdf.t -> int list -> Pdf.t
-
 (** Remove a structure tree entirely from a file, including unmarking marked content. *)
 val remove_struct_tree : Pdf.t -> Pdf.t
 
