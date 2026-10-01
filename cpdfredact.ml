@@ -547,7 +547,7 @@ let show_bounding_boxes ~fast ~paths ~light pdf range =
     in
       Cpdftweak.append_page_content_multiple_ops opss false fast !pdf
 
-let redact_whole_page ~redact_structure ~redact_links ~redact_bookmarks pdf range =
+let redact_whole_page ~redact_structure ~link_spec ~bookmark_spec pdf range =
   let pdf =
     Cpdfpage.process_pages
       (Pdfpage.ppstub
@@ -563,4 +563,12 @@ let redact_whole_page ~redact_structure ~redact_links ~redact_bookmarks pdf rang
       range
   in
     if redact_structure then Pdfst.trim_structure_tree pdf (Cpdfpagespec.invert_range (Pdfpage.endpage pdf) range);
-    pdf
+    let pdf = ref pdf in
+      iter
+        (fun pnum ->
+           let path = (min_float, min_float, max_float, max_float) in
+           let pdf' = redact_bookmarks ~invert:false ~bookmark_spec !pdf pnum path in
+           let pdf'' = redact_links ~invert:false ~link_spec pdf' pnum path in
+             pdf := pdf'')
+        range;
+      !pdf

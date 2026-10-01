@@ -5495,7 +5495,7 @@ let rec go () =
   | Redact ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
-        write_pdf false (Cpdfredact.redact_whole_page ~redact_structure:args.redact_structure ~redact_links:args.redact_links ~redact_bookmarks:args.redact_bookmarks pdf range)
+        write_pdf false (Cpdfredact.redact_whole_page ~redact_structure:args.redact_structure ~link_spec:args.redact_links ~bookmark_spec:args.redact_bookmarks pdf range)
   | RedactShape rectspec ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in

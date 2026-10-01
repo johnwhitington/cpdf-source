@@ -8,7 +8,13 @@ type spec = operation * detection option
 type link_spec = LinkLeave | LinkRemovePage | LinkRemoveTouching
 
 (** Remove a whole page's content. *)
-val redact_whole_page : redact_structure:bool -> redact_links:link_spec -> redact_bookmarks:link_spec -> Pdf.t -> int list -> Pdf.t
+val redact_whole_page :
+  redact_structure:bool ->
+  link_spec:link_spec ->
+  bookmark_spec:link_spec ->
+  Pdf.t ->
+  int list ->
+  Pdf.t
 
 (** Redact a PDF in the given shape in the given range. *)
 val redact : 
