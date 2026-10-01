@@ -263,6 +263,7 @@ type op =
   | AddAnnotation
   | RemoveMarkedContent
   | RemoveAcroForm
+  | FlattenAnnotations
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -449,7 +450,8 @@ let string_of_op = function
   | AddAnnotation -> "AddAnnotation"
   | RemoveMarkedContent -> "RemoveMarkedContent"
   | RemoveAcroForm -> "RemoveAcroForm"
-  | _ -> "<unfilled>"
+  | TestExtractText -> "TestExtractText"
+  | FlattenAnnotations -> "FlattenAnnotations"
 
 (* Inputs: filename, pagespec. *)
 type input_kind = 
@@ -3398,7 +3400,7 @@ let specs =
    ("-redact-annotations", Arg.String (fun s -> args.redact_annotations <- parse_redaction_spec s), " Specify annotation redaction mode");
    ("-redact-invert", Arg.Unit (fun () -> args.redact_invert <- true), " Invert redaction area");
    ("-redact-no-show", Arg.Unit (fun () -> args.redact_show <- false), " Do not show redaction area");
-   ("-remove-marked-content", Arg.Unit (fun s -> setop RemoveMarkedContent ()), " Remove marked content operators");
+   ("-remove-marked-content", Arg.Unit (fun () -> setop RemoveMarkedContent ()), " Remove marked content operators");
    ("-remove-acroform", Arg.Unit (fun () -> setop RemoveAcroForm ()), " Remove AcroForm");
    ("-redact-overlay", Arg.String (fun s -> args.redact_overlay_text <- Some s), " Supply overlay text for redaction annotation");
    ("-redact-repeat", Arg.Unit (fun () -> args.redact_overlay_repeat <- true), " Repeat overlay text");
@@ -3406,6 +3408,7 @@ let specs =
    ("-redact-bookmarks", Arg.String (fun s -> args.redact_bookmarks <- parse_link_redaction_spec s), " Specify bookmark redaction mode");
    ("-redact-links", Arg.String (fun s -> args.redact_links <- parse_link_redaction_spec s), " Specify link redaction mode");
    ("-redact-structure", Arg.String (fun s -> args.redact_structure <- parse_structure_redaction_spec s), " Redact structure tree information");
+   ("-flatten-annotations", Arg.Unit (fun () -> setop FlattenAnnotations ()), " Flatten Annotations");
    (* Undocumented. *)
    ("-test-extract-text", Arg.Unit (fun () -> setop TestExtractText ()), "")]
 
@@ -5702,6 +5705,11 @@ let rec go () =
   | RemoveAcroForm ->
       let pdf = get_single_pdf args.op false in
         remove_acroform pdf;
+        write_pdf false pdf
+  | FlattenAnnotations ->
+      let pdf = get_single_pdf args.op false in
+      let range = parse_pagespec pdf (get_pagespec ()) in
+      let pdf = Cpdfannot.flatten pdf range in
         write_pdf false pdf
 
 (* Advise the user if a combination of command line flags makes little sense,

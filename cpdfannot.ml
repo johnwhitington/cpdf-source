@@ -349,3 +349,5 @@ let add_annotation (minx, miny, maxx, maxy)
   in
     Cpdfpage.process_pages
       (Pdfpage.ppstub (fun pnum page -> if mem pnum range then Pdfannot.add_annotation pdf page annot else page)) pdf range
+
+let flatten pdf range = pdf

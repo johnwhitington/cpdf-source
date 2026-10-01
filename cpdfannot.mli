@@ -31,6 +31,9 @@ val add_annotation :
     outline:bool ->
     Pdf.t -> int list -> Pdf.t
 
+(** Flatten annotations. *)
+val flatten : Pdf.t -> int list -> Pdf.t
+
 (** Annotation type from a string. *)
 val subtype_of_string : string -> Pdfannot.subtype
 
