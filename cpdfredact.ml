@@ -8,6 +8,8 @@ type spec = operation * detection option
 
 type link_spec = LinkLeave | LinkRemovePage | LinkRemoveTouching
 
+type struct_spec = StructLeave | StructRemoveInnermost | StructRemoveContaining | StructRemoveAll
+
 let box_matches ~detection ~invert (minx, miny, maxx, maxy) (Cpdfcontent.Quad (x0, y0, x1, y1, x2, y2, x3, y3)) =
   let area (minx, miny, maxx, maxy) = (maxx -. minx) *. (maxy -. miny) in
   let fi x = if invert then not x else x in
@@ -169,7 +171,7 @@ let redact_annotations pdf range ~detection ~invert ~paths =
       range
 
 let redact
-  pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~bookmark_spec ~link_spec ~redact_structure
+  pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~bookmark_spec ~link_spec ~struct_spec
   ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~paths ~invert ~show ~color ~outline ~opacity ~linewidth ~underneath range
 =
   preprocess_jbig2lossy_to_jbig2lossless ~jbig2dec:path_to_jbig2dec ~path_to_jbig2enc pdf;
@@ -363,7 +365,7 @@ let stamp_annotation_appearance pdf page i =
 
 (* Apply redaction annotations. *)
 let apply
-  pdf ~appearance ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~bookmark_spec ~link_spec ~redact_structure ~path_to_jbig2dec
+  pdf ~appearance ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~bookmark_spec ~link_spec ~struct_spec ~path_to_jbig2dec
   ~path_to_convert ~path_to_jbig2enc ?(typ="/Redact") ~invert ~show ~color ~outline ~opacity ~linewidth ~underneath range
 =
   let show = if appearance then false else show in
@@ -547,7 +549,7 @@ let show_bounding_boxes ~fast ~paths ~light pdf range =
     in
       Cpdftweak.append_page_content_multiple_ops opss false fast !pdf
 
-let redact_whole_page ~redact_structure ~link_spec ~bookmark_spec pdf range =
+let redact_whole_page ~struct_spec ~link_spec ~bookmark_spec pdf range =
   let pdf =
     Cpdfpage.process_pages
       (Pdfpage.ppstub
@@ -562,7 +564,7 @@ let redact_whole_page ~redact_structure ~link_spec ~bookmark_spec pdf range =
       pdf
       range
   in
-    if redact_structure then Pdfst.trim_structure_tree pdf (Cpdfpagespec.invert_range (Pdfpage.endpage pdf) range);
+    if struct_spec <> StructLeave then Pdfst.trim_structure_tree pdf (Cpdfpagespec.invert_range (Pdfpage.endpage pdf) range);
     let pdf = ref pdf in
       iter
         (fun pnum ->

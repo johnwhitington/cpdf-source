@@ -7,9 +7,11 @@ type spec = operation * detection option
 
 type link_spec = LinkLeave | LinkRemovePage | LinkRemoveTouching
 
+type struct_spec = StructLeave | StructRemoveInnermost | StructRemoveContaining | StructRemoveAll
+
 (** Remove a whole page's content. *)
 val redact_whole_page :
-  redact_structure:bool ->
+  struct_spec:struct_spec ->
   link_spec:link_spec ->
   bookmark_spec:link_spec ->
   Pdf.t ->
@@ -26,7 +28,7 @@ val redact :
   annotation_spec:spec ->
   bookmark_spec:link_spec ->
   link_spec:link_spec ->
-  redact_structure:bool ->
+  struct_spec:struct_spec ->
   path_to_jbig2dec:string ->
   path_to_convert:string ->
   path_to_jbig2enc:string ->
@@ -52,7 +54,7 @@ val apply :
   annotation_spec:spec ->
   bookmark_spec:link_spec ->
   link_spec:link_spec ->
-  redact_structure:bool ->
+  struct_spec:struct_spec ->
   path_to_jbig2dec:string ->
   path_to_convert:string ->
   path_to_jbig2enc:string ->
