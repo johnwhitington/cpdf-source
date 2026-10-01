@@ -9,6 +9,7 @@ New features
 * Optionally apply appearance of a redaction annotation
 * Remove AcroForm with -remove-acroform
 * Remove bookmarks and links to redacted content
+* Flatten annotations with -flatten-annotations
 
 Extended features:
 

@@ -350,4 +350,54 @@ let add_annotation (minx, miny, maxx, maxy)
     Cpdfpage.process_pages
       (Pdfpage.ppstub (fun pnum page -> if mem pnum range then Pdfannot.add_annotation pdf page annot else page)) pdf range
 
-let flatten pdf range = pdf
+(* Stamp onto page from appearance stream in annotation. This is the /RO entry
+in the redaction annotations. Since redaction annotations are generally only
+created by modern PDF implementations, it's reasonable to assume this exists.
+In the future, when we support more kinds of annotation, we'll have to add
+appearance stream generation/regeneration. *)
+let stamp_annotation_appearance pdf page appearance_stream_indirect =
+  let rec fresh_name ns n =
+    let newname = "/X" ^ string_of_int n in
+    if mem newname ns then fresh_name ns (n + 1) else newname
+  in
+    let xobjects, name =
+      match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
+      | Some (Pdf.Dictionary d) -> (Pdf.Dictionary d, fresh_name (map fst d) 0)
+      | _ -> (Pdf.Dictionary [], "/X0")
+    in
+      let resources = Pdf.add_dict_entry page.Pdfpage.resources "/XObject" (Pdf.add_dict_entry xobjects name (Pdf.Indirect appearance_stream_indirect)) in
+      let matrix = Pdftransform.matrix_invert (Pdf.parse_matrix pdf "/Matrix" (Pdf.direct pdf (Pdf.Indirect appearance_stream_indirect))) in
+      let ops = Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content in
+      let ops = Pdfops.Op_q::Pdfops.Op_cm matrix::Pdfops.Op_Do name::Pdfops.Op_Q::ops in
+        {page with resources; content = [Pdfops.stream_of_ops ops]}
+
+(* Flatten annotations, assuming they have "/RO" or similar (which is
+   correct?). For now, annotations are discarded whether they could be
+   flattened or not. *)
+let flatten pdf range =
+  Cpdfpage.process_pages  
+    (Pdfpage.ppstub
+      (fun pnum page ->
+         if mem pnum range then
+           let page = ref page in
+           let apn_objnums =
+             match Pdf.lookup_direct pdf "/Annots" !page.Pdfpage.rest with
+             | Some (Pdf.Array annots) ->
+                 option_map
+                   (function a ->
+                      begin match Pdf.lookup_direct pdf "/AP" a with
+                      | Some ap -> 
+                          begin match Pdf.lookup_immediate "/N" ap with
+                          | Some (Pdf.Indirect i) -> Some i
+                          | _ -> None
+                          end
+                      | None -> None
+                      end)
+                   annots
+             | _ -> []
+           in
+             iter (fun i -> page := stamp_annotation_appearance pdf !page i) apn_objnums;
+             {!page with Pdfpage.rest = Pdf.remove_dict_entry !page.Pdfpage.rest "/Annots"}
+         else page))
+      pdf
+      range

@@ -339,30 +339,6 @@ let redact_bookmarks ~invert ~bookmark_spec pdf pnum path =
   in
     Pdfmarks.add_bookmarks marks' pdf
 
-(* Stamp onto page from appearance stream in annotation. This is the /RO entry
-in the redaction annotations. Since redaction annotations are generally only
-created by modern PDF implementations, it's reasonable to assume this exists.
-In the future, when we support more kinds of annotation, we'll have to add
-appearance stream generation/regeneration. *)
-let stamp_annotation_appearance pdf page i =
-  let rec fresh_name ns n =
-    let newname = "/X" ^ string_of_int n in
-    if mem newname ns then fresh_name ns (n + 1) else newname
-  in
-    match Pdf.lookup_immediate "/RO" (Pdf.direct pdf (Pdf.Indirect i)) with
-    | Some (Pdf.Indirect ro) ->
-        let xobjects, name =
-          match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
-          | Some (Pdf.Dictionary d) -> (Pdf.Dictionary d, fresh_name (map fst d) 0)
-          | _ -> (Pdf.Dictionary [], "/X0")
-        in
-          let resources = Pdf.add_dict_entry page.Pdfpage.resources "/XObject" (Pdf.add_dict_entry xobjects name (Pdf.Indirect ro)) in
-          let matrix = Pdftransform.matrix_invert (Pdf.parse_matrix pdf "/Matrix" (Pdf.direct pdf (Pdf.Indirect ro))) in
-          let ops = Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content in
-          let ops = Pdfops.Op_q::Pdfops.Op_cm matrix::Pdfops.Op_Do name::Pdfops.Op_Q::ops in
-            {page with resources; content = [Pdfops.stream_of_ops ops]}
-    | _ -> page
-
 (* Apply redaction annotations. *)
 let apply
   pdf ~appearance ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~bookmark_spec ~link_spec ~struct_spec ~path_to_jbig2dec
@@ -418,7 +394,13 @@ let apply
                        page
                        paths
                     in
-                      if appearance then stamp_annotation_appearance pdf page i else page
+                      if appearance then
+                        begin match Pdf.lookup_immediate "/RO" (Pdf.direct pdf (Pdf.Indirect i)) with
+                        | Some (Pdf.Indirect ro) -> Cpdfannot.stamp_annotation_appearance pdf page ro
+                        | _ -> page
+                        end
+                      else
+                        page
               | _ ->
                   match Pdf.lookup_direct pdf "/Rect" (Pdf.Indirect i) with
                   | Some rect ->
@@ -429,7 +411,13 @@ let apply
                           pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~bookmark_spec ~link_spec
                           ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~path ~invert page
                       in
-                        if appearance then stamp_annotation_appearance pdf page i else page
+                        if appearance then
+                          begin match Pdf.lookup_immediate "/RO" (Pdf.direct pdf (Pdf.Indirect i)) with
+                          | Some (Pdf.Indirect ro) -> Cpdfannot.stamp_annotation_appearance pdf page ro
+                          | _ -> page
+                          end
+                        else
+                          page
                   | None ->
                       page)
             page

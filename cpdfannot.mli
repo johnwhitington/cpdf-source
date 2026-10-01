@@ -31,6 +31,9 @@ val add_annotation :
     outline:bool ->
     Pdf.t -> int list -> Pdf.t
 
+(** Stamp an annotation appearance. *)
+val stamp_annotation_appearance : Pdf.t -> Pdfpage.t -> int -> Pdfpage.t
+
 (** Flatten annotations. *)
 val flatten : Pdf.t -> int list -> Pdf.t
 
