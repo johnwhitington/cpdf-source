@@ -699,7 +699,7 @@ type args =
    mutable page_content_images : bool;
    mutable page_content_text : bool;
    mutable page_content_graphics : bool;
-   mutable annotation_subtype : Pdfannot.subtype option;
+   mutable annotation_subtypes : Pdfannot.subtype list;
    mutable redact_annotations : Cpdfredact.spec;
    mutable redact_text : Cpdfredact.spec;
    mutable redact_images : Cpdfredact.spec;
@@ -883,7 +883,7 @@ let args =
    page_content_images = true;
    page_content_text = true;
    page_content_graphics = true;
-   annotation_subtype = None;
+   annotation_subtypes = [];
    redact_text = (Remove, Some Touching);
    redact_images = (Leave, None);
    redact_inline_images = (Leave, None);
@@ -1050,7 +1050,7 @@ let reset_arguments () =
   args.page_content_images <- true;
   args.page_content_text <- true;
   args.page_content_graphics <- true;
-  args.annotation_subtype <- None;
+  args.annotation_subtypes <- [];
   args.redact_text <- (Remove, Some Touching);
   args.redact_images <- (Leave, None);
   args.redact_inline_images <- (Leave, None);
@@ -2223,6 +2223,12 @@ let addeltinfo s =
         Cpdfdrawcontrol.eltinfo h pdfobj
   | [] -> error "addeltinfo: bad format"
 
+let annotation_subtypes_of_string s =
+  match Pdfread.parse_single_object ("[" ^ s ^ "]") with
+  | Pdf.Array l -> option_map (function Pdf.Name n -> Some (Cpdfannot.subtype_of_string n) | _ -> None) l
+  | _ -> []
+  | exception _ -> []
+
 let rfindpdf = ref (fun () -> Pdf.empty ())
 
 let specs =
@@ -3392,7 +3398,7 @@ let specs =
    ("-pc-no-text", Arg.Unit (fun () -> args.page_content_text <- false), " Don't list text in page content");
    ("-pc-no-graphics", Arg.Unit (fun () -> args.page_content_graphics <- false), " Don't list paths and shadings in page content");
    ("-annotate", Arg.String (fun s -> setop AddAnnotation (); args.rectangle <- s), " Annotate pages");
-   ("-annot-type", Arg.String (fun s -> args.annotation_subtype <- Some (Cpdfannot.subtype_of_string s)), " Select annotation type");
+   ("-annot-type", Arg.String (fun s -> args.annotation_subtypes <- annotation_subtypes_of_string s), " Select annotation type");
    ("-redact-text", Arg.String (fun s -> args.redact_text <- parse_redaction_spec s), " Specify annotation redaction mode");
    ("-redact-images", Arg.String (fun s -> args.redact_images <- parse_redaction_spec s), " Specify annotation redaction mode");
    ("-redact-inline-images", Arg.String (fun s -> args.redact_inline_images <- parse_redaction_spec s), " Specify annotation redaction mode");
@@ -4877,12 +4883,7 @@ let rec go () =
       let pdf = get_single_pdf args.op true in
       let range = parse_pagespec pdf (get_pagespec ()) in
         if args.format_json then
-          let subtype =
-            match args.annotation_subtype with
-            | None -> None
-            | Some s -> Some (Pdfannot.string_of_subtype s)
-          in
-            flprint (Pdfio.string_of_bytes (Cpdfannot.get_annotations_json ?subtype pdf range))
+          flprint (Pdfio.string_of_bytes (Cpdfannot.get_annotations_json ~subtypes:args.annotation_subtypes pdf range))
         else
           Cpdfannot.list_annotations range args.encoding pdf
   | Shift ->
