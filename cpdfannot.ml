@@ -355,7 +355,8 @@ in the redaction annotations. Since redaction annotations are generally only
 created by modern PDF implementations, it's reasonable to assume this exists.
 In the future, when we support more kinds of annotation, we'll have to add
 appearance stream generation/regeneration. *)
-let stamp_annotation_appearance pdf page appearance_stream_indirect =
+let stamp_annotation_appearance pdf page annot appearance_i =
+  (*flprint "-------\n";*)
   let rec fresh_name ns n =
     let newname = "/X" ^ string_of_int n in
     if mem newname ns then fresh_name ns (n + 1) else newname
@@ -365,10 +366,40 @@ let stamp_annotation_appearance pdf page appearance_stream_indirect =
       | Some (Pdf.Dictionary d) -> (Pdf.Dictionary d, fresh_name (map fst d) 0)
       | _ -> (Pdf.Dictionary [], "/X0")
     in
-      let resources = Pdf.add_dict_entry page.Pdfpage.resources "/XObject" (Pdf.add_dict_entry xobjects name (Pdf.Indirect appearance_stream_indirect)) in
-      let matrix = Pdftransform.matrix_invert (Pdf.parse_matrix pdf "/Matrix" (Pdf.direct pdf (Pdf.Indirect appearance_stream_indirect))) in
+      let resources = Pdf.add_dict_entry page.Pdfpage.resources "/XObject" (Pdf.add_dict_entry xobjects name (Pdf.Indirect appearance_i)) in
+      let matrix = Pdf.parse_matrix pdf "/Matrix" (Pdf.direct pdf (Pdf.Indirect appearance_i)) in
+      let bminx, bminy, bmaxx, bmaxy =
+        match Pdf.lookup_direct pdf "/BBox" (Pdf.Indirect appearance_i) with
+        | None -> (0., 0., 0., 0.)
+        | Some x -> begin try Pdf.parse_rectangle pdf x with _ -> (0., 0., 0., 0.) end
+      in
+      (*Printf.printf "Box: %f, %f, %f, %f\n" bminx bminy bmaxx bmaxy;*)
+      let rminx, rminy, rmaxx, rmaxy =
+        match Pdf.lookup_direct pdf "/Rect" annot with
+        | None -> (0., 0., 0., 0.)
+        | Some x -> begin try Pdf.parse_rectangle pdf x with _ -> (0., 0., 0., 0.) end
+      in
+      (*Printf.printf "Rect: %f, %f, %f, %f\n" rminx rminy rmaxx rmaxy;*)
+      let tbx0, tby0 = Pdftransform.transform_matrix matrix (bminx, bminy) in
+      let tbx1, tby1 = Pdftransform.transform_matrix matrix (bmaxx, bmaxy) in
+      (*Printf.printf "Transformed_rect: %f, %f, %f, %f\n" tbx0 tby0 tbx1 tby1;*)
+      let tap_minx, tap_miny, tap_maxx, tap_maxy = fmin tbx0 tbx1, fmin tby0 tby1, fmax tbx0 tbx1, fmax tby0 tby1 in
+      (*Printf.printf "Tap: %f, %f, %f, %f\n" tap_minx tap_miny tap_maxx tap_maxy;*)
+      let a_matrix =
+        let dx, dy = rminx -. tap_minx, rminy -. tap_miny in
+        (*Printf.printf "dx, dy = %f, %f\n" dx dy;*)
+        let sx, sy = (rmaxx -. rminx) /. (tap_maxx -. tap_minx), (rmaxy -. rminy) /. (tap_maxy -. tap_miny) in
+          (*Printf.printf "sx, sy = %f, %f\n" sx sy;*)
+          Pdftransform.matrix_compose
+            (Pdftransform.mkscale (rminx, rminy) sx sy)
+            (Pdftransform.mktranslate dx dy)
+      in
+      (*let aa_matrix = Pdftransform.matrix_compose matrix a_matrix in*)
+      (*Printf.printf "matrix = %s\n" (Pdftransform.string_of_matrix matrix);
+      Printf.printf "a = %s\n" (Pdftransform.string_of_matrix a_matrix);
+      Printf.printf "aa = %s\n" (Pdftransform.string_of_matrix aa_matrix);*)
       let ops = Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content in
-      let ops = Pdfops.Op_q::Pdfops.Op_cm matrix::Pdfops.Op_Do name::Pdfops.Op_Q::ops in
+      let ops = Pdfops.Op_q::Pdfops.Op_cm a_matrix::Pdfops.Op_Do name::Pdfops.Op_Q::ops in
         {page with resources; content = [Pdfops.stream_of_ops ops]}
 
 (* Flatten annotations, assuming they have "/RO" or similar (which is
@@ -388,7 +419,7 @@ let flatten pdf range =
                       begin match Pdf.lookup_direct pdf "/AP" a with
                       | Some ap -> 
                           begin match Pdf.lookup_immediate "/N" ap with
-                          | Some (Pdf.Indirect i) -> Some i
+                          | Some (Pdf.Indirect i) -> Some (a, i)
                           | _ -> None
                           end
                       | None -> None
@@ -396,7 +427,7 @@ let flatten pdf range =
                    annots
              | _ -> []
            in
-             iter (fun i -> page := stamp_annotation_appearance pdf !page i) apn_objnums;
+             iter (fun (a, i) -> page := stamp_annotation_appearance pdf !page a i) apn_objnums;
              {!page with Pdfpage.rest = Pdf.remove_dict_entry !page.Pdfpage.rest "/Annots"}
          else page))
       pdf

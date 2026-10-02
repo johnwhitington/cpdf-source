@@ -396,7 +396,7 @@ let apply
                     in
                       if appearance then
                         begin match Pdf.lookup_immediate "/RO" (Pdf.direct pdf (Pdf.Indirect i)) with
-                        | Some (Pdf.Indirect ro) -> Cpdfannot.stamp_annotation_appearance pdf page ro
+                        | Some (Pdf.Indirect ro) -> Cpdfannot.stamp_annotation_appearance pdf page (Pdf.Indirect i) ro
                         | _ -> page
                         end
                       else
@@ -413,7 +413,7 @@ let apply
                       in
                         if appearance then
                           begin match Pdf.lookup_immediate "/RO" (Pdf.direct pdf (Pdf.Indirect i)) with
-                          | Some (Pdf.Indirect ro) -> Cpdfannot.stamp_annotation_appearance pdf page ro
+                          | Some (Pdf.Indirect ro) -> Cpdfannot.stamp_annotation_appearance pdf page (Pdf.Indirect i) ro
                           | _ -> page
                           end
                         else
