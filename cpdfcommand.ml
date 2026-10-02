@@ -700,6 +700,7 @@ type args =
    mutable page_content_text : bool;
    mutable page_content_graphics : bool;
    mutable annotation_subtypes : Pdfannot.subtype list;
+   mutable annotation_no_subtypes : Pdfannot.subtype list;
    mutable redact_annotations : Cpdfredact.spec;
    mutable redact_text : Cpdfredact.spec;
    mutable redact_images : Cpdfredact.spec;
@@ -884,6 +885,7 @@ let args =
    page_content_text = true;
    page_content_graphics = true;
    annotation_subtypes = [];
+   annotation_no_subtypes = [];
    redact_text = (Remove, Some Touching);
    redact_images = (Leave, None);
    redact_inline_images = (Leave, None);
@@ -1050,7 +1052,7 @@ let reset_arguments () =
   args.page_content_images <- true;
   args.page_content_text <- true;
   args.page_content_graphics <- true;
-  args.annotation_subtypes <- [];
+  args.annotation_no_subtypes <- [];
   args.redact_text <- (Remove, Some Touching);
   args.redact_images <- (Leave, None);
   args.redact_inline_images <- (Leave, None);
@@ -3399,6 +3401,7 @@ let specs =
    ("-pc-no-graphics", Arg.Unit (fun () -> args.page_content_graphics <- false), " Don't list paths and shadings in page content");
    ("-annotate", Arg.String (fun s -> setop AddAnnotation (); args.rectangle <- s), " Annotate pages");
    ("-annot-type", Arg.String (fun s -> args.annotation_subtypes <- annotation_subtypes_of_string s), " Select annotation type");
+   ("-annot-no-type", Arg.String (fun s -> args.annotation_no_subtypes <- annotation_subtypes_of_string s), " Select annotation types to avoid");
    ("-redact-text", Arg.String (fun s -> args.redact_text <- parse_redaction_spec s), " Specify annotation redaction mode");
    ("-redact-images", Arg.String (fun s -> args.redact_images <- parse_redaction_spec s), " Specify annotation redaction mode");
    ("-redact-inline-images", Arg.String (fun s -> args.redact_inline_images <- parse_redaction_spec s), " Specify annotation redaction mode");
