@@ -350,13 +350,8 @@ let add_annotation (minx, miny, maxx, maxy)
     Cpdfpage.process_pages
       (Pdfpage.ppstub (fun pnum page -> if mem pnum range then Pdfannot.add_annotation pdf page annot else page)) pdf range
 
-(* Stamp onto page from appearance stream in annotation. This is the /RO entry
-in the redaction annotations. Since redaction annotations are generally only
-created by modern PDF implementations, it's reasonable to assume this exists.
-In the future, when we support more kinds of annotation, we'll have to add
-appearance stream generation/regeneration. *)
+(* Stamp onto page from appearance stream in annotation. *)
 let stamp_annotation_appearance pdf page annot appearance_i =
-  (*flprint "-------\n";*)
   let rec fresh_name ns n =
     let newname = "/X" ^ string_of_int n in
     if mem newname ns then fresh_name ns (n + 1) else newname
@@ -373,38 +368,32 @@ let stamp_annotation_appearance pdf page annot appearance_i =
         | None -> (0., 0., 0., 0.)
         | Some x -> begin try Pdf.parse_rectangle pdf x with _ -> (0., 0., 0., 0.) end
       in
-      (*Printf.printf "Box: %f, %f, %f, %f\n" bminx bminy bmaxx bmaxy;*)
       let rminx, rminy, rmaxx, rmaxy =
         match Pdf.lookup_direct pdf "/Rect" annot with
         | None -> (0., 0., 0., 0.)
         | Some x -> begin try Pdf.parse_rectangle pdf x with _ -> (0., 0., 0., 0.) end
       in
-      (*Printf.printf "Rect: %f, %f, %f, %f\n" rminx rminy rmaxx rmaxy;*)
       let tbx0, tby0 = Pdftransform.transform_matrix matrix (bminx, bminy) in
       let tbx1, tby1 = Pdftransform.transform_matrix matrix (bmaxx, bmaxy) in
-      (*Printf.printf "Transformed_rect: %f, %f, %f, %f\n" tbx0 tby0 tbx1 tby1;*)
       let tap_minx, tap_miny, tap_maxx, tap_maxy = fmin tbx0 tbx1, fmin tby0 tby1, fmax tbx0 tbx1, fmax tby0 tby1 in
-      (*Printf.printf "Tap: %f, %f, %f, %f\n" tap_minx tap_miny tap_maxx tap_maxy;*)
       let a_matrix =
         let dx, dy = rminx -. tap_minx, rminy -. tap_miny in
-        (*Printf.printf "dx, dy = %f, %f\n" dx dy;*)
         let sx, sy = (rmaxx -. rminx) /. (tap_maxx -. tap_minx), (rmaxy -. rminy) /. (tap_maxy -. tap_miny) in
-          (*Printf.printf "sx, sy = %f, %f\n" sx sy;*)
-          Pdftransform.matrix_compose
-            (Pdftransform.mkscale (rminx, rminy) sx sy)
-            (Pdftransform.mktranslate dx dy)
+          Pdftransform.matrix_compose (Pdftransform.mkscale (rminx, rminy) sx sy) (Pdftransform.mktranslate dx dy)
       in
-      (*let aa_matrix = Pdftransform.matrix_compose matrix a_matrix in*)
-      (*Printf.printf "matrix = %s\n" (Pdftransform.string_of_matrix matrix);
-      Printf.printf "a = %s\n" (Pdftransform.string_of_matrix a_matrix);
-      Printf.printf "aa = %s\n" (Pdftransform.string_of_matrix aa_matrix);*)
+      let a_matrix_normalised =
+        {Pdftransform.a = safe_float a_matrix.a;
+         Pdftransform.b = safe_float a_matrix.b;
+         Pdftransform.c = safe_float a_matrix.c;
+         Pdftransform.d = safe_float a_matrix.d;
+         Pdftransform.e = safe_float a_matrix.e;
+         Pdftransform.f = safe_float a_matrix.f}
+      in
       let ops = Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content in
-      let ops = Pdfops.Op_q::Pdfops.Op_cm a_matrix::Pdfops.Op_Do name::Pdfops.Op_Q::ops in
+      let ops = Pdfops.Op_q::Pdfops.Op_cm a_matrix_normalised::Pdfops.Op_Do name::Pdfops.Op_Q::ops in
         {page with resources; content = [Pdfops.stream_of_ops ops]}
 
-(* Flatten annotations, assuming they have "/RO" or similar (which is
-   correct?). For now, annotations are discarded whether they could be
-   flattened or not. *)
+(* Flatten annotations to page. *)
 let flatten pdf range =
   Cpdfpage.process_pages  
     (Pdfpage.ppstub
