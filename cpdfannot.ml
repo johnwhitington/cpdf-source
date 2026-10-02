@@ -1,4 +1,4 @@
-(** A loose JSON equivalent of XFDF for annotations. *)
+(** Annotations. *)
 open Pdfutil
 open Cpdferror
 
@@ -102,20 +102,9 @@ let rewrite_destinations f pdf annot =
           end
      | None -> annot
 
-(* We exclude the same annotations as the XFDF spec does. (NB: not any more) *)
-let excluded pdf annot =
-  match Pdf.lookup_direct pdf "/Subtype" annot with
-  (*| Some (Pdf.Name ("/Movie" | "/Widget" | "/Screen" | "/PrinterMark" | "/TrapNet")) -> true*)
-  | _ -> false
-
 let extra = ref []
 
-let annotations_json_page ?subtypes calculate_pagenumber pdf page pagenum =
-  let subtypes =
-    match subtypes with
-    | None -> None
-    | Some l -> Some (map Pdfannot.string_of_subtype l)
-  in
+let annotations_json_page ?subtypes ?subtypes_no calculate_pagenumber pdf page pagenum =
   match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
   | Some (Pdf.Array annots) ->
       option_map
@@ -126,13 +115,20 @@ let annotations_json_page ?subtypes calculate_pagenumber pdf page pagenum =
                let keep =
                  match subtypes with
                  | None -> true
-                 | Some [] -> true
+                 | Some [] ->
+                     begin match subtypes_no with
+                     | None -> true
+                     | Some l ->
+                         match Pdf.lookup_direct pdf "/Subtype" annot with
+                         | Some (Pdf.Name x') -> not (mem (subtype_of_string x') l)
+                         | _ -> false
+                         end
                  | Some l ->
                      match Pdf.lookup_direct pdf "/Subtype" annot with
-                     | Some (Pdf.Name x') -> mem x' l
+                     | Some (Pdf.Name x') -> mem (subtype_of_string x') l
                      | _ -> true
                in
-               if excluded pdf annot || not keep then None else
+               if not keep then None else
                let annot =
                  rewrite_destinations
                    (fun i -> calculate_pagenumber (Pdfdest.Fit (Pdfdest.PageObject i)))
@@ -149,7 +145,7 @@ let annotations_json_page ?subtypes calculate_pagenumber pdf page pagenum =
         annots
   | _ -> []
 
-let get_annotations_json ?subtypes pdf range =
+let get_annotations_json ?subtypes ?subtypes_no pdf range =
   let refnums = Pdf.page_reference_numbers pdf in
   let fastrefnums = hashtable_of_dictionary (combine refnums (indx refnums)) in
   let calculate_pagenumber =  Pdfpage.pagenumber_of_target ~fastrefnums pdf in
@@ -159,10 +155,8 @@ let get_annotations_json ?subtypes pdf range =
   let pairs = combine pages pagenums in
   let pairs = option_map (fun (p, n) -> if mem n range then Some (p, n) else None) pairs in
   let pages, pagenums = split pairs in
-  let json = flatten (map2 (annotations_json_page ?subtypes calculate_pagenumber pdf) pages pagenums) in
+  let json = flatten (map2 (annotations_json_page ?subtypes ?subtypes_no calculate_pagenumber pdf) pages pagenums) in
   let jsonobjnums : int list = map (function `List [_; `Int n; _] -> n | _ -> assert false) json in
-  (*Printf.eprintf "%i extra roots to explore\n" (length !extra);
-  iter (fun x -> Pdfe.log (Printf.sprintf "%s\n\n" (Pdfwrite.string_of_pdf x))) !extra;*)
   let extra =
     map
       (fun n ->
@@ -176,9 +170,7 @@ let get_annotations_json ?subtypes pdf range =
             (fun x ->
                let x = Pdf.remove_dict_entry x "/Popup" in
                let x = Pdf.remove_dict_entry x "/Parent" in
-               let r = Pdf.objects_referenced [] [] pdf x in
-                 (*Printf.eprintf "%i extra for annot %s\n" (length r) (Pdfwrite.string_of_pdf x);*)
-                 r)
+                 Pdf.objects_referenced [] [] pdf x)
           !extra)))
   in
   let extra =

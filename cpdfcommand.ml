@@ -4886,7 +4886,7 @@ let rec go () =
       let pdf = get_single_pdf args.op true in
       let range = parse_pagespec pdf (get_pagespec ()) in
         if args.format_json then
-          flprint (Pdfio.string_of_bytes (Cpdfannot.get_annotations_json ~subtypes:args.annotation_subtypes pdf range))
+          flprint (Pdfio.string_of_bytes (Cpdfannot.get_annotations_json ~subtypes:args.annotation_subtypes ~subtypes_no:args.annotation_no_subtypes pdf range))
         else
           Cpdfannot.list_annotations range args.encoding pdf
   | Shift ->
