@@ -391,31 +391,65 @@ let stamp_annotation_appearance pdf page annot appearance_i =
       let ops = Pdfops.Op_q::Pdfops.Op_cm a_matrix_normalised::Pdfops.Op_Do name::Pdfops.Op_Q::ops in
         {page with resources; content = [Pdfops.stream_of_ops ops]}
 
-(* Flatten annotations to page. *)
-let flatten pdf range =
+(* Remove orphaned /Popup annotations from a collection of annotations on a page, in-situ.  *)
+let remove_orphaned_popups pdf annots =
+  let popup_objnums =
+    option_map
+      (function Pdf.Indirect i -> begin match Pdf.lookup_direct pdf "/Subtype" (Pdf.Indirect i) with Some (Pdf.Name "/Popup") -> Some i | _ -> None end | _ -> None)
+      annots
+  in
+  let orphaned =
+    option_map
+      (function i -> match Pdf.lookup_immediate "/Parent" (Pdf.direct pdf (Pdf.Indirect i)) with Some (Pdf.Indirect x) when not (mem (Pdf.Indirect x) annots) -> Some i | _ -> None)
+      popup_objnums
+  in
+    option_map
+      (function Pdf.Indirect i -> if mem i orphaned then None else Some (Pdf.Indirect i) | x -> Some x)
+      annots
+
+(* Flatten annotations to page. If no apperance, annotation remains. Orphaned /Popups cleaned. *)
+let flatten ?subtypes ?subtypes_no pdf range =
   Cpdfpage.process_pages  
     (Pdfpage.ppstub
       (fun pnum page ->
          if mem pnum range then
            let page = ref page in
-           let apn_objnums =
+           let annots =
              match Pdf.lookup_direct pdf "/Annots" !page.Pdfpage.rest with
-             | Some (Pdf.Array annots) ->
-                 option_map
-                   (function a ->
-                      begin match Pdf.lookup_direct pdf "/AP" a with
-                      | Some ap -> 
-                          begin match Pdf.lookup_immediate "/N" ap with
-                          | Some (Pdf.Indirect i) -> Some (a, i)
-                          | _ -> None
-                          end
-                      | None -> None
-                      end)
-                   annots
+             | Some (Pdf.Array annots) -> annots
              | _ -> []
            in
+           let apn_objnums =
+             option_map
+               (function a ->
+                  let subtype =
+                    match Pdf.lookup_direct pdf "/Subtype" a with
+                    | Some (Pdf.Name x) -> subtype_of_string x
+                    | _ -> Pdfannot.Unknown ""
+                  in
+
+                    begin match Pdf.lookup_direct pdf "/AP" a with
+                    | Some ap -> 
+                        begin match Pdf.lookup_immediate "/N" ap with
+                        | Some (Pdf.Indirect i) ->
+                            begin match subtypes with
+                            | Some [] | None ->
+                                begin match subtypes_no with
+                                | Some [] | None -> Some (a, i)
+                                | Some l ->
+                                    if mem subtype l then None else Some (a, i)
+                                end
+                            | Some l ->
+                                if mem subtype l then Some (a, i) else None
+                            end
+                        | _ -> None
+                        end
+                    | None -> None
+                    end)
+               annots
+           in
              iter (fun (a, i) -> page := stamp_annotation_appearance pdf !page a i) apn_objnums;
-             {!page with Pdfpage.rest = Pdf.remove_dict_entry !page.Pdfpage.rest "/Annots"}
+             {!page with Pdfpage.rest = Pdf.add_dict_entry !page.Pdfpage.rest "/Annots" (Pdf.Array (remove_orphaned_popups pdf annots))}
          else page))
       pdf
       range

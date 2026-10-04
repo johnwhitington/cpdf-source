@@ -35,7 +35,7 @@ val add_annotation :
 val stamp_annotation_appearance : Pdf.t -> Pdfpage.t -> Pdf.pdfobject -> int -> Pdfpage.t
 
 (** Flatten annotations. *)
-val flatten : Pdf.t -> int list -> Pdf.t
+val flatten : ?subtypes:Pdfannot.subtype list -> ?subtypes_no:Pdfannot.subtype list -> Pdf.t -> int list -> Pdf.t
 
 (** Annotation type from a string. *)
 val subtype_of_string : string -> Pdfannot.subtype
