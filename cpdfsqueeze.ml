@@ -52,8 +52,7 @@ let string_of_dedup_stats stats =
 
 type content_stream_stats =
   {pages_rewritten : int;
-   xobjects_rewritten : int;
-   rewritten_page_streams : int list}
+   xobjects_rewritten : int}
 
 let string_of_content_stream_stats stats =
   Printf.sprintf
@@ -84,28 +83,38 @@ let normalized_stream_dict_for_squeeze dict length =
 
 let squeeze_hash_for_object = function
   | Pdf.Stream {contents = (dict, stream)} ->
-      Hashtbl.hash
-        (Pdfwrite.string_of_pdf
-           (normalized_stream_dict_for_squeeze dict (stream_length stream)))
+      Hashtbl.hash_param 256 256
+        (normalized_stream_dict_for_squeeze dict (stream_length stream))
   | obj ->
-      Hashtbl.hash
-        (Pdfwrite.string_of_pdf (canonicalize_object_for_squeeze obj))
+      Hashtbl.hash_param 256 256 (canonicalize_object_for_squeeze obj)
 
 let bytes_equal left right =
   let left_length = bytes_size left in
     left_length = bytes_size right &&
+    if left_length <= Sys.max_string_length then
+      string_of_bytes left = string_of_bytes right
+    else
     let rec loop pos =
       pos = left_length ||
       (bget_unsafe left pos = bget_unsafe right pos && loop (pos + 1))
     in
       loop 0
 
+(* Sample across the body before paying for a full digest. Large streams with
+   the same headers commonly differ near the end; reading every byte merely to
+   separate those candidates makes ordinary-file deduplication slower. *)
 let hash_bytes_for_squeeze data =
-  let hash = ref 2166136261 in
-    for pos = 0 to bytes_size data - 1 do
-      hash := ((!hash lxor bget_unsafe data pos) * 16777619) land max_int
+  let length = bytes_size data in
+  let sample_length = min 256 length in
+  let sample = Bytes.create sample_length in
+    for pos = 0 to sample_length - 1 do
+      let offset =
+        if length <= 256 then pos
+        else (pos / 32) * ((length - 32) / 7) + pos mod 32
+      in
+        Bytes.unsafe_set sample pos (Char.chr (bget_unsafe data offset))
     done;
-    !hash
+    Hashtbl.hash sample
 
 let stream_data_for_squeeze stats = function
   | Pdf.Stream {contents = (_, Pdf.Got data)} -> data
@@ -122,9 +131,8 @@ let squeeze_hash_for_pair stats stream_hashes (objnum, obj) =
   match obj with
   | Pdf.Stream {contents = (dict, stream)} ->
       let header_hash =
-        Hashtbl.hash
-          (Pdfwrite.string_of_pdf
-             (normalized_stream_dict_for_squeeze dict (stream_length stream)))
+        Hashtbl.hash_param 256 256
+          (normalized_stream_dict_for_squeeze dict (stream_length stream))
       in
       let body_hash =
         try Hashtbl.find stream_hashes objnum with
@@ -137,8 +145,7 @@ let squeeze_hash_for_pair stats stream_hashes (objnum, obj) =
       in
         Hashtbl.hash (header_hash, body_hash)
   | _ ->
-      Hashtbl.hash
-        (Pdfwrite.string_of_pdf (canonicalize_object_for_squeeze obj))
+      Hashtbl.hash_param 256 256 (canonicalize_object_for_squeeze obj)
 
 let rec find_inherited_entry pdf entry obj =
   match Pdf.lookup_immediate entry obj with
@@ -175,8 +182,9 @@ let rec merge_resource_values pdf preferred fallback =
 
 let effective_resources pdf obj inherited_resources =
   match Pdf.lookup_immediate "/Resources" obj, inherited_resources with
-  | Some resources, Some inherited ->
+  | Some resources, Some inherited when pdf.Pdf.major = 1 && pdf.Pdf.minor < 2 ->
       merge_resource_values pdf resources inherited
+  | Some resources, Some _ -> resources
   | Some resources, None -> resources
   | None, Some inherited -> inherited
   | None, None ->
@@ -262,28 +270,28 @@ let decompress_pdf pdf =
     (Pdf.iter_stream (Pdfcodec.decode_pdfstream_until_unknown pdf) pdf);
     pdf
 
-let copy_stream_for_measurement = function
-  | Pdf.Stream _ as stream ->
-      Pdf.getstream stream;
-      begin match stream with
-      | Pdf.Stream {contents = (dict, Pdf.Got data)} ->
-          Pdf.Stream {contents = (dict, Pdf.Got (copybytes data))}
-      | _ -> assert false
-      end
-  | _ -> assert false
+(* Decoding replaces the stream reference. A fresh reference lets the parser
+   decode without changing the original compressed stream, even on failure. *)
+let copy_stream pdf stream =
+  match Pdf.direct pdf stream with
+  | Pdf.Stream contents -> Pdf.Stream (ref !contents)
+  | _ -> raise Not_found
 
-let recompressed_stream_size pdf stream =
-  let copy = copy_stream_for_measurement stream in
-    ignore (recompress_stream pdf copy);
-    match copy with
-    | Pdf.Stream {contents = (_, stream)} -> stream_length stream
-    | _ -> assert false
+let parse_content_streams pdf resources streams =
+  Pdfops.parse_operators pdf resources (map (copy_stream pdf) streams)
 
-let content_streams_size_after_recompression pdf objnums =
-  sum
-    (map
-       (fun objnum -> recompressed_stream_size pdf (Pdf.lookup_obj pdf objnum))
-       objnums)
+(* Include dictionary overhead, especially /Filter, when comparing tiny streams.
+   The common object/stream delimiters cancel for a single-stream replacement;
+   omitting them for multiple originals makes the check conservative. *)
+let serialized_stream_size = function
+  | Pdf.Stream {contents = (dict, stream)} ->
+      let length = stream_length stream in
+        length + String.length
+          (Pdfwrite.string_of_pdf (normalized_stream_dict_for_squeeze dict length))
+  | _ -> raise Not_found
+
+let content_streams_size pdf streams =
+  sum (map (fun stream -> serialized_stream_size (Pdf.direct pdf stream)) streams)
 
 let objects_equal_for_squeeze pdf stats (_, x) (_, y) =
   match x, y with
@@ -313,22 +321,35 @@ let objects_equal_for_squeeze pdf stats (_, x) (_, y) =
 let remove_unique_objects stats pairs =
   let buckets = Hashtbl.create 2048 in
   let stream_hashes = Hashtbl.create 2048 in
-  let refine_stream_bucket bucket =
+  let group_by_hash hash_for_pair bucket =
     let refined = Hashtbl.create 16 in
       iter
-        (fun ((_, obj) as pair) ->
-           let hash = squeeze_hash_for_pair stats stream_hashes pair in
+        (fun pair ->
+           let hash = hash_for_pair pair in
            let existing =
-             try Hashtbl.find refined hash with
-             | Not_found -> []
+             try Hashtbl.find refined hash with Not_found -> []
            in
              Hashtbl.replace refined hash (pair::existing))
         bucket;
       Hashtbl.fold
-        (fun _ refined_bucket acc ->
-           if list_has_multiple_elements refined_bucket then refined_bucket::acc else acc)
-        refined
-        []
+        (fun _ candidates acc ->
+           if list_has_multiple_elements candidates then candidates::acc else acc)
+        refined []
+  in
+  let refine_stream_bucket bucket =
+    let sampled = group_by_hash (squeeze_hash_for_pair stats stream_hashes) bucket in
+      flatten
+        (map
+           (fun candidates ->
+              if length candidates < 8 then [candidates] else
+                (* A full C digest bounds the equality work when samples collide.
+                   Digest collisions still go through actual byte comparisons. *)
+                group_by_hash
+                  (fun (_, obj) ->
+                     Digest.string (string_of_bytes (stream_data_for_squeeze stats obj)))
+                  candidates)
+           sampled)
+
   in
     iter
       (fun ((_, obj) as pair) ->
@@ -343,7 +364,10 @@ let remove_unique_objects stats pairs =
       (fun _ bucket acc ->
          if list_has_multiple_elements bucket then
            match bucket with
-           | (_, Pdf.Stream _)::_ -> refine_stream_bucket bucket @ acc
+           (* Comparing a few candidates directly avoids reading and hashing
+              every body just to reject one or two streams. *)
+           | (_, Pdf.Stream _)::_ when length bucket >= 8 ->
+               refine_stream_bucket bucket @ acc
            | _ -> bucket::acc
          else
            acc)
@@ -399,6 +423,7 @@ let removed_objects_in_groups groups =
 
 let apply_squeeze_groups pdf groups =
   let pdfr = ref pdf in
+  let object_stream_ids = Hashtbl.copy pdf.Pdf.objects.Pdf.object_stream_ids in
   let changetable = Hashtbl.create 512 in
     iter
       (function [] -> assert false | (h, _)::t ->
@@ -407,6 +432,16 @@ let apply_squeeze_groups pdf groups =
     pdfr := Pdf.renumber ~preserve_order:true changetable !pdfr;
     pdf.Pdf.root <- !pdfr.Pdf.root;
     pdf.Pdf.objects <- !pdfr.Pdf.objects;
+    (* Renumbering maps several deleted objects to one survivor. Their old
+       object-stream hints must not give that survivor several memberships:
+       the writer can then emit inconsistent xref entries and lose resources.
+       Keep only the original memberships of objects which still exist. *)
+    let surviving = hashset_of_list (Pdf.objnumbers pdf) in
+      Hashtbl.filter_map_inplace
+        (fun objnum stream_id ->
+           if Hashtbl.mem surviving objnum then Some stream_id else None)
+        object_stream_ids;
+      pdf.Pdf.objects.Pdf.object_stream_ids <- object_stream_ids;
     pdf.Pdf.trailerdict <- !pdfr.Pdf.trailerdict
 
 let squeeze_pairs pdf stats pairs =
@@ -428,39 +463,11 @@ let really_squeeze pdf =
     squeeze_pairs pdf stats !objs;
     stats
 
-let unique_existing_object_numbers pdf objnums =
-  let seen = Hashtbl.create 1024 in
-    fold_left
-      (fun existing objnum ->
-         if Hashtbl.mem seen objnum then existing else
-           begin
-             Hashtbl.add seen objnum ();
-             try
-               ignore (Pdf.lookup_obj pdf objnum);
-               objnum::existing
-             with
-             | Not_found -> existing
-           end)
-      []
-      objnums
-
-let squeeze_rewritten_page_data pdf objnums =
-  let stats = empty_dedup_stats () in
-  let objnums = unique_existing_object_numbers pdf objnums in
-    if objnums <> [] then
-      squeeze_pairs
-        pdf
-        stats
-        (map (fun objnum -> objnum, Pdf.lookup_obj pdf objnum) objnums);
-    stats
-
 (* Squeeze the form xobject at objnum.
 
-For old PDFs (< v1.2) any resources from the page (or its ancestors in
-the page tree!) are also needed - we must merge them with the ones from the
-xobject itself. However, it it safe for now -- in the unlikely event that the
-resources actually need to be available, the parse will fail, the squeeze of
-this object will fail, and we bail out. *)
+Old PDFs (< v1.2) may need resources from the page or its ancestors in addition
+to the form's own resources. Newer forms use their own resource dictionaries.
+Parsing uses private stream references so a skipped rewrite keeps its encoding. *)
 let xobjects_done = Hashtbl.create 256
 
 let squeeze_form_xobject_children recurse pdf resources =
@@ -476,25 +483,25 @@ let squeeze_form_xobject_children recurse pdf resources =
   | _ -> 0
 
 let rewrite_form_xobject_if_smaller pdf obj data rewritten_children =
-  let replacement =
-    Pdf.Stream
-      {contents =
-         (Pdf.Dictionary [("/Length", Pdf.Integer (bytes_size data))],
-          Pdf.Got data)}
-  in
-    if recompressed_stream_size pdf replacement <= recompressed_stream_size pdf obj then
-      begin
-        begin match obj with
-        | Pdf.Stream ({contents = (d, _)} as str) ->
-            str :=
-              (Pdf.add_dict_entry d "/Length" (Pdf.Integer (bytes_size data)),
-               Pdf.Got data)
-        | _ -> failwith "squeeze_form_xobject"
-        end;
-        rewritten_children + 1
-      end
-    else
-      rewritten_children
+  match obj with
+  | Pdf.Stream ({contents = (dict, _)} as original) ->
+      let dict =
+        Pdf.add_dict_entry
+          (Pdf.remove_dict_entry (Pdf.remove_dict_entry dict "/Filter") "/DecodeParms")
+          "/Length" (Pdf.Integer (bytes_size data))
+      in
+      let replacement = Pdf.Stream (ref (dict, Pdf.Got data)) in
+        ignore (recompress_stream pdf replacement);
+        if serialized_stream_size replacement <= serialized_stream_size obj then
+          begin
+            begin match replacement with
+            | Pdf.Stream contents -> original := !contents
+            | _ -> assert false
+            end;
+            rewritten_children + 1
+          end
+        else rewritten_children
+  | _ -> failwith "squeeze_form_xobject"
 
 let rec squeeze_form_xobject f pdf inherited_resources objnum =
   if Hashtbl.mem xobjects_done objnum then 0 else
@@ -514,7 +521,7 @@ let rec squeeze_form_xobject f pdf inherited_resources objnum =
               in
               begin match
                 Pdfops.stream_of_ops
-                  (f pdf mediabox resources (Pdfops.parse_operators pdf resources [Pdf.Indirect objnum]))
+                  (f pdf mediabox resources (parse_content_streams pdf resources [Pdf.Indirect objnum]))
               with
               | Pdf.Stream {contents = (_, Pdf.Got data)} ->
                   rewrite_form_xobject_if_smaller pdf obj data rewritten_children
@@ -534,16 +541,24 @@ let no_duplicates content_stream_numbers stream_numbers =
        | None -> true)
     stream_numbers
 
-(* Give a list of content stream numbers, given a page reference number *)
-let content_streams_of_page pdf refnum =
-  match Pdf.direct pdf (Pdf.lookup_obj pdf refnum) with
-  | Pdf.Dictionary dict ->
-      begin match lookup "/Contents" dict with
-      | Some (Pdf.Indirect i) -> [i]
-      | Some (Pdf.Array x) ->
-          option_map (function Pdf.Indirect i -> Some i | _ -> None) x
-      | _ -> []
+let page_content_streams pdf dict =
+  match lookup "/Contents" dict with
+  | Some contents ->
+      begin match Pdf.direct pdf contents with
+      | Pdf.Array streams -> streams
+      | Pdf.Stream _ -> [contents]
+      | _ -> raise Not_found
       end
+  | None -> raise Not_found
+
+(* Count the streams, rather than an indirect array containing the streams. *)
+let content_streams_of_page pdf refnum =
+  match Pdf.lookup_obj pdf refnum with
+  | Pdf.Dictionary dict ->
+      begin try
+        option_map (function Pdf.Indirect i -> Some i | _ -> None)
+          (page_content_streams pdf dict)
+      with Not_found -> [] end
   | _ -> []
 
 let content_stream_reference_counts numbers =
@@ -573,16 +588,6 @@ let squeeze_progress_reporter total_pages =
       then
         Printf.eprintf "%i/%i.%!" pagenum total_pages
 
-let page_content_streams pdf dict =
-  match lookup "/Contents" dict with
-  | Some (Pdf.Indirect i) ->
-      begin match Pdf.direct pdf (Pdf.Indirect i) with
-      | Pdf.Array x -> x
-      | _ -> [Pdf.Indirect i]
-      end
-  | Some (Pdf.Array x) -> x
-  | _ -> raise Not_found
-
 let squeeze_page_xobjects f pdf xobjects_rewritten resources =
   match Pdf.lookup_direct pdf "/XObject" resources with
   | Some (Pdf.Dictionary xobjs) ->
@@ -596,7 +601,7 @@ let squeeze_page_xobjects f pdf xobjects_rewritten resources =
   | _ -> ()
 
 let squeeze_page_content_streams
-  f pdf content_stream_counts rewritten_page_streams pages_rewritten xobjects_rewritten
+  f pdf content_stream_counts pages_rewritten xobjects_rewritten
   objnum
  =
   match Pdf.lookup_obj pdf objnum with
@@ -615,19 +620,17 @@ let squeeze_page_content_streams
             in
               if no_duplicates content_stream_counts content_stream_numbers then
                 let original_size =
-                  content_streams_size_after_recompression
-                    pdf
-                    content_stream_numbers
+                  content_streams_size pdf content_streams
                 in
                 let newstream =
                   Pdfops.stream_of_ops
-                    (f pdf mediabox resources (Pdfops.parse_operators pdf resources content_streams))
+                    (f pdf mediabox resources (parse_content_streams pdf resources content_streams))
                 in
-                  if recompressed_stream_size pdf newstream <= original_size then
+                  ignore (recompress_stream pdf newstream);
+                  if serialized_stream_size newstream <= original_size then
                     begin
                       incr pages_rewritten;
                       let newstream_objnum = Pdf.addobj pdf newstream in
-                        rewritten_page_streams := newstream_objnum::!rewritten_page_streams;
                       let newdict =
                         Pdf.add_dict_entry
                           d "/Contents" (Pdf.Indirect newstream_objnum)
@@ -652,7 +655,6 @@ let process_all_content_streams f pdf =
     in
       let pages_rewritten = ref 0 in
       let xobjects_rewritten = ref 0 in
-      let rewritten_page_streams = ref [] in
         Hashtbl.clear xobjects_done;
         Cpdfutil.progress_line_no_end
           (Printf.sprintf
@@ -664,7 +666,6 @@ let process_all_content_streams f pdf =
              squeeze_page_content_streams
                f pdf
                content_stream_counts
-               rewritten_page_streams
                pages_rewritten
                xobjects_rewritten
                objnum)
@@ -672,8 +673,7 @@ let process_all_content_streams f pdf =
           page_reference_numbers;
         Cpdfutil.progress_done ();
         {pages_rewritten = !pages_rewritten;
-         xobjects_rewritten = !xobjects_rewritten;
-         rewritten_page_streams = !rewritten_page_streams}
+         xobjects_rewritten = !xobjects_rewritten}
 
 (* Run object deduplication enough times for the number of objects to stabilize. *)
 let squeeze_to_fixed_point ?(log = fun _ -> ()) pdf =
@@ -712,43 +712,7 @@ let squeeze_page_data_phase log f pdf =
       "Squeezing page data and xobjects"
       (fun () -> process_all_content_streams f pdf)
   in
-    if pagedata_stats.pages_rewritten > 0 || pagedata_stats.xobjects_rewritten > 0 then
-      begin
-        time_operation
-          log
-          "Removing unreferenced objects after page data rewrite"
-          (fun () -> Pdf.remove_unreferenced pdf);
-        ignore
-          (time_operation
-             ~details:string_of_dedup_stats
-             log
-             "Deduplicating rewritten page data"
-             (fun () ->
-                if pagedata_stats.xobjects_rewritten > 0 then
-                  squeeze_to_fixed_point ~log pdf
-                else
-                  squeeze_rewritten_page_data pdf pagedata_stats.rewritten_page_streams))
-      end
-    else
-      log "Skipping page-data cleanup and deduplication; nothing was rewritten\n"
-
-let squeeze_recompression_phase log pdf =
-  let recompressed_streams =
-    time_operation
-      ~details:string_of_int
-      log
-      "Recompressing document"
-      (fun () -> recompress_pdf_count pdf)
-  in
-    if recompressed_streams > 0 then
-      ignore
-        (time_operation
-           ~details:string_of_dedup_stats
-           log
-           "Final squeeze pass"
-           (fun () -> squeeze_to_fixed_point ~log pdf))
-    else
-      log "Skipping post-recompression cleanup and final deduplication; no streams changed\n"
+    pagedata_stats.pages_rewritten > 0 || pagedata_stats.xobjects_rewritten > 0
 
 let squeeze ?logto ~reprocess ~pagedata pdf =
   let log x =
@@ -764,13 +728,28 @@ let squeeze ?logto ~reprocess ~pagedata pdf =
     try
       log (Printf.sprintf "Beginning squeeze: %i objects\n" (Pdf.objcard pdf));
       squeeze_initial_dedup log pdf;
-      if reprocess then
-        squeeze_page_data_phase log
+      (* Compress originals once before measuring rewrites; accepted replacements
+         are already compressed, so neither needs a second encoding pass. *)
+      let recompressed_streams =
+        time_operation ~details:string_of_int log "Recompressing document"
+          (fun () -> recompress_pdf_count pdf)
+      in
+      let reprocessed =
+        reprocess && squeeze_page_data_phase log
           (fun pdf mediabox resources ops ->
              Cpdfcontent.compress ~pdf ~mediabox:(Pdf.parse_rectangle pdf mediabox) ~resources ~ops)
-          pdf;
-      if pagedata then squeeze_page_data_phase log (fun _ _ _ ops -> ops) pdf;
-      squeeze_recompression_phase log pdf;
+          pdf
+      in
+      let rewritten =
+        pagedata && squeeze_page_data_phase log (fun _ _ _ ops -> ops) pdf
+      in
+        if reprocessed || rewritten then
+          time_operation log "Removing unreferenced objects after page data rewrite"
+            (fun () -> Pdf.remove_unreferenced pdf);
+        if reprocessed || rewritten || recompressed_streams > 0 then
+          ignore
+            (time_operation ~details:string_of_dedup_stats log "Final deduplication"
+               (fun () -> squeeze_to_fixed_point ~log pdf));
       log (Printf.sprintf "Finished squeeze\n")
     with
     | e ->
