@@ -37,9 +37,12 @@ let box_matches ~detection ~invert (minx, miny, maxx, maxy) (Cpdfcontent.Quad (x
            | Some overlap ->
                area overlap /. area (bminx, bminy, bmaxx, bmaxy) > (perc /. 100.))
 
+let postprocess_structure ~struct_spec pdf page ops =
+  ops
+
 (* Redact a path on a page *)
 let redact_page
-  pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~bookmark_spec ~link_spec
+  pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~bookmark_spec ~link_spec ~struct_spec
   ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~path:((minx, miny, maxx, maxy) as path) ~invert page
 =
   let fi x = if invert then not x else x in
@@ -94,11 +97,7 @@ let redact_page
   let ops =
     Cpdfcontent.filter
       ~pdf
-      ~helpers:
-        {path_to_jbig2dec;
-         path_to_convert;
-         path_to_jbig2enc;
-         color}
+      ~helpers: {path_to_jbig2dec; path_to_convert; path_to_jbig2enc; color}
       ~f
       ~mediabox:(Pdf.parse_rectangle pdf page.Pdfpage.mediabox)
       ~resources:page.Pdfpage.resources
@@ -106,6 +105,7 @@ let redact_page
   in
     let ops = Cpdfcontent.postprocess_remove_empty_path_ops ops in
     let ops = Cpdfcontent.postprocess_text_sections ops in
+    let ops = postprocess_structure ~struct_spec pdf page ops in
       {page with
          Pdfpage.content = [Pdfops.stream_of_ops ops]}
 
@@ -183,7 +183,7 @@ let redact
            if mem pnum range then
              let path = List.nth paths (pnum - 1) in
                redact_page
-                 pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~bookmark_spec ~link_spec
+                 pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~bookmark_spec ~link_spec ~struct_spec
                  ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~path ~invert page else page))
       pdf
       range
@@ -389,7 +389,7 @@ let apply
                       fold_left
                        (fun page path ->
                           redact_page
-                            pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~bookmark_spec ~link_spec
+                            pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~bookmark_spec ~link_spec ~struct_spec
                             ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~path ~invert page)
                        page
                        paths
@@ -408,7 +408,7 @@ let apply
                         rectangles =| (pnum, path);
                       let page =
                         redact_page
-                          pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~bookmark_spec ~link_spec
+                          pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~bookmark_spec ~link_spec ~struct_spec
                           ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~path ~invert page
                       in
                         if appearance then
