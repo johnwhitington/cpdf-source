@@ -859,7 +859,7 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
           (* segs is empty, due to [Op_h] *)
           !state.partial_path <- PartialPath (sp, cp, [], []);
           !state.path <- {filled = true; stroked = false; path = (NonZero, rev subpaths)};
-          if emit_path_bounding_box ~content:(Path !state.path) ~stroking:false ~f ~state then [Pdfops.Op_n; Pdfops.Op_MP "CPDF_REMOVED_PATH"] else [op]
+          if emit_path_bounding_box ~content:(Path !state.path) ~stroking:false ~f ~state then [Pdfops.Op_n; Pdfops.Op_MP "/CPDF_REMOVED_PATH"] else [op]
       | _ -> [op]
       end
   | Pdfops.Op_S ->
@@ -875,7 +875,7 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
               !state.partial_path <- PartialPath (sp, cp, [], []);
               !state.path <- {filled = false; stroked = true; path = (EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths))}
             end;
-          if emit_path_bounding_box ~content:(Path !state.path) ~stroking:true ~f ~state then [Pdfops.Op_n; Pdfops.Op_MP "CPDF_REMOVED_PATH"] else [op]
+          if emit_path_bounding_box ~content:(Path !state.path) ~stroking:true ~f ~state then [Pdfops.Op_n; Pdfops.Op_MP "/CPDF_REMOVED_PATH"] else [op]
       | _ -> [op]
       end
   | Pdfops.Op_B ->
@@ -891,7 +891,7 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
               !state.partial_path <- PartialPath (sp, cp, [], []);
               !state.path <- {filled = true; stroked = true; path = (NonZero, rev ((Not_hole, Open, rev segs)::subpaths))}
             end;
-          if emit_path_bounding_box ~content:(Path !state.path) ~stroking:true ~f ~state then [Pdfops.Op_n; Pdfops.Op_MP "CPDF_REMOVED_PATH"] else [op]
+          if emit_path_bounding_box ~content:(Path !state.path) ~stroking:true ~f ~state then [Pdfops.Op_n; Pdfops.Op_MP "/CPDF_REMOVED_PATH"] else [op]
       | _ -> [op]
       end
   | Pdfops.Op_B' ->
@@ -908,7 +908,7 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
               !state.partial_path <- PartialPath (sp, cp, [], []);
               !state.path <- {filled = true; stroked = true; path = (EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths))}
             end;
-          if emit_path_bounding_box ~content:(Path !state.path) ~stroking:true ~f ~state then [Pdfops.Op_n; Pdfops.Op_MP "CPDF_REMOVED_PATH"] else [op]
+          if emit_path_bounding_box ~content:(Path !state.path) ~stroking:true ~f ~state then [Pdfops.Op_n; Pdfops.Op_MP "/CPDF_REMOVED_PATH"] else [op]
       | _ -> [op]
       end
   | Pdfops.Op_f' ->
@@ -924,7 +924,7 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
               !state.partial_path <- PartialPath (sp, cp, [], []);
               !state.path <- {filled = true; stroked = false; path = (EvenOdd, rev ((Not_hole, Open, rev segs)::subpaths))}
             end;
-          if emit_path_bounding_box ~content:(Path !state.path) ~stroking:false ~f ~state then [Pdfops.Op_n; Pdfops.Op_MP "CPDF_REMOVED_PATH"] else [op]
+          if emit_path_bounding_box ~content:(Path !state.path) ~stroking:false ~f ~state then [Pdfops.Op_n; Pdfops.Op_MP "/CPDF_REMOVED_PATH"] else [op]
       | _ -> [op]
       end
   | Pdfops.Op_n ->
@@ -1039,10 +1039,10 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
       [op]
   | Pdfops.Op_Tj s ->
       clear tj_we_deleted;
-      (if !tj_we_deleted then [Pdfops.Op_MP "__CPDF_REMOVED_TEXT"] else []) @ [optimise_tj (process_tj ~f ~stack ~state ~resources s)]
+      (if !tj_we_deleted then [Pdfops.Op_MP "/CPDF_REMOVED_TEXT"] else []) @ [optimise_tj (process_tj ~f ~stack ~state ~resources s)]
   | Pdfops.Op_TJ l ->
       clear tj_we_deleted;
-      (if !tj_we_deleted then [Pdfops.Op_MP "__CPDF_REMOVED_TEXT"] else []) @ [Pdfops.Op_TJ (optimise_capital_tj (process_capital_tj ~f ~stack ~state ~resources l))]
+      (if !tj_we_deleted then [Pdfops.Op_MP "/CPDF_REMOVED_TEXT"] else []) @ [Pdfops.Op_TJ (optimise_capital_tj (process_capital_tj ~f ~stack ~state ~resources l))]
   | Pdfops.Op_' s ->
       ignore (map (process_op ~pdf ~helpers ~f ~stack ~state ~resources) [Pdfops.Op_T']);
       Pdfops.Op_T'::process_op ~pdf ~helpers ~f ~stack ~state ~resources (Pdfops.Op_Tj s)
@@ -1171,9 +1171,9 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
                     begin match out_1, out_2, !r with
                     | _, true, Some (minx, miny, maxx, maxy) ->
                         (*Printf.printf "We are asked to chop in the image (%f, %f, %f, %f)\n" minx miny maxx maxy;*)
-                        if chop_image pdf ~helpers xobjnum !state.ctm (minx, miny, minx, maxy, maxx, maxy, maxx, miny) then [Pdfops.Op_MP "__CPDF_CHOPPED_IMAGE"; op] else
-                          begin Pdfe.log "Failed to chop image, removing whole image instead\n"; to_remove =| xobjnum; [Pdfops.Op_MP "__CPDF_REMOVED_IMAGE"] end
-                    | true, _, _ -> to_remove =| xobjnum; [Pdfops.Op_MP "__CPDF_REMOVED_IMAGE"]
+                        if chop_image pdf ~helpers xobjnum !state.ctm (minx, miny, minx, maxy, maxx, maxy, maxx, miny) then [Pdfops.Op_MP "/CPDF_CHOPPED_IMAGE"; op] else
+                          begin Pdfe.log "Failed to chop image, removing whole image instead\n"; to_remove =| xobjnum; [Pdfops.Op_MP "/CPDF_REMOVED_IMAGE"] end
+                    | true, _, _ -> to_remove =| xobjnum; [Pdfops.Op_MP "/CPDF_REMOVED_IMAGE"]
                     | false, _, _ -> [op]
                     end
               | Some (Pdf.Name "/Form") ->

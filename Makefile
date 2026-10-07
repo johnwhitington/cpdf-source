@@ -5,8 +5,8 @@ DOC = cpdfutil cpdfunicodedata cpdferror cpdfdebug cpdfjson cpdfstrftime \
       cpdfcoord cpdfattach cpdfpagespec cpdfposition cpdfpresent cpdfmetadata \
       cpdfbookmarks cpdfpage cpdftruetype cpdfremovetext \
       cpdfembed cpdffont cpdftype cpdfaddtext cpdfpad cpdfocg \
-      cpdfdraft cpdfspot cpdfpagelabels cpdfcreate cpdfannot cpdfxobject \
-      cpdfimpose cpdfchop cpdftweak cpdfprinttree cpdfua cpdftexttopdf \
+      cpdfdraft cpdfspot cpdfpagelabels cpdfcreate cpdfxobject \
+      cpdfimpose cpdfchop cpdftweak cpdfprinttree cpdfua cpdftexttopdf cpdfannot \
       cpdftoc cpdfjpeg cpdfjpeg2000 cpdfpng cpdfimage cpdfdraw \
       cpdfcomposition cpdfcontent cpdfsqueeze cpdfshape cpdfcolours \
       cpdfdrawcontrol cpdfjs cpdfportfolio cpdfclip cpdfredact cpdfcommand
