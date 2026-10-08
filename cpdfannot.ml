@@ -278,26 +278,19 @@ let remove_annotations range pdf =
 (* We add the text by generating a page/pdf with the content and pulling its
    contents out, adding them to the content we have already. We extract any
    fonts from the resources too. *)
-let generate_appearance ops (minx, miny, maxx, maxy) =
-  let pdf =
-    Cpdftexttopdf.typeset
-      ~process_struct_tree:false
+let generate_appearance pdf ops (minx, miny, maxx, maxy) =
+  let page =
+    (* Typeset in this document, by just returning the page (but not adding it). Font objects etc will then be in the given PDF. *)
+    Cpdftexttopdf.typeset_fake_page
+      pdf
       ~font:(Cpdfembed.PreMadeFontPack (Cpdfembed.fontpack_of_standardfont (Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding))))
       ~papersize:(Pdfpaper.make Pdfunits.PdfPoint (maxx -. minx) (maxy -. miny))
       ~fontsize:12.
       (Pdfio.bytes_of_string "Redacted")
   in
-    Pdfwrite.pdf_to_file pdf "foo.pdf";
-  (* Fill in resources /F1 *)
-  (* Copy the object referred to from /Resources/Font/F1 into the main PDF, and any objects it references... Do we have code for that somewhere else? *)
-  (* Parse the contents and concatenate to the outline already created. *)
-  let page_objs =
-    []
-  in
-  let resources =
-    []
-  in
-    ops, resources
+    (* Get the ops and resources, and concatenate and return. *)
+    let page_ops = Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content in
+      ops @ page_ops, page.Pdfpage.resources
 
 (* Add a (presently, redaction) annotation at the given position on the given pages. *)
 let add_annotation (minx, miny, maxx, maxy)
@@ -313,7 +306,7 @@ let add_annotation (minx, miny, maxx, maxy)
       let dict = Pdf.add_dict_entry dict "/Matrix"
         (Pdf.Array [Pdf.Real 1.; Pdf.Real 0.; Pdf.Real 0.; Pdf.Real 1.; Pdf.Real (~-.minx +. 0.5); (Pdf.Real (~-.miny +. 0.5))])
       in
-      let dict = Pdf.add_dict_entry dict "/Resources" (Pdf.Dictionary resources) in
+      let dict = Pdf.add_dict_entry dict "/Resources" resources in
       let dict = Pdf.add_dict_entry dict "/Subtype" (Pdf.Name "/Form") in
       let dict = Pdf.add_dict_entry dict "/Type" (Pdf.Name "/XObject") in
       s := (dict, stream);
@@ -323,6 +316,7 @@ let add_annotation (minx, miny, maxx, maxy)
   let d_ro_r =
     let ops, resources =
       generate_appearance
+        pdf
         [Cpdfaddtext.colour_op main_color;
              Pdfops.Op_cm {Pdftransform.a = 1.; b = 0.; c = 0.; d = 1.; e = 0.; f = 0.};
              Pdfops.Op_m (minx, miny); Pdfops.Op_l (maxx, miny); Pdfops.Op_l (maxx, maxy); Pdfops.Op_l (minx, maxy); Pdfops.Op_l (minx, miny);
@@ -334,6 +328,7 @@ let add_annotation (minx, miny, maxx, maxy)
   let n =
     let ops, resources =
       generate_appearance
+        pdf
         [Cpdfaddtext.colour_op_stroke outline_color;
            Pdfops.Op_cm {Pdftransform.a = 1.; b = 0.; c = 0.; d = 1.; e = 0.; f = 0.};
            Pdfops.Op_w 1.5;

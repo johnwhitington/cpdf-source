@@ -54,6 +54,9 @@ let rec tag_paragraphs = function
 let tag_paragraphs l =
   Cpdftype.Tag ("P", 0)::tag_paragraphs l
 
+let typeset_fake_page pdf ~papersize ~font ~fontsize text =
+  Pdfpage.blankpage papersize
+
 let typeset ~process_struct_tree ?subformat ?title ~papersize ~font ~fontsize text =
   let process_struct_tree =
     match process_struct_tree, subformat with
