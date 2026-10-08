@@ -25,7 +25,7 @@ val add_annotation :
     overlay_repeat:bool ->
     overlay_auto_size:bool ->
     font:Cpdfembed.cpdffont ->
-    font_size:float ->
+    fontsize:float ->
     opacity:float ->
     linespacing:float ->
     outline:bool ->

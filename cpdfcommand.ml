@@ -5694,7 +5694,7 @@ let rec go () =
           ~overlay_repeat:args.redact_overlay_repeat
           ~overlay_auto_size:args.redact_overlay_auto_size
           ~font:(embed_font ())
-          ~font_size:args.fontsize
+          ~fontsize:args.fontsize
           ~opacity:args.opacity
           ~linespacing:args.linespacing
           ~outline:args.outline

@@ -278,15 +278,17 @@ let remove_annotations range pdf =
 (* We add the text by generating a page/pdf with the content and pulling its
    contents out, adding them to the content we have already. We extract any
    fonts from the resources too. *)
-let generate_appearance pdf ops (minx, miny, maxx, maxy) =
+let generate_appearance
+  ~overlay ~overlay_text_colour ~overlay_justification ~overlay_repeat ~overlay_auto_size
+  ~font ~fontsize ~opacity ~linespacing ~outline pdf ops (minx, miny, maxx, maxy)
+=
   let pages =
-    (* Typeset in this document, by just returning the page (but not adding it). Font objects etc will then be in the given PDF. *)
     Cpdftexttopdf.typeset_fake_pages
       pdf
-      ~font:(Cpdfembed.PreMadeFontPack (Cpdfembed.fontpack_of_standardfont (Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding))))
+      ~font
       ~papersize:(Pdfpaper.make Pdfunits.PdfPoint (maxx -. minx) (maxy -. miny))
-      ~fontsize:12.
-      (Pdfio.bytes_of_string "Redacted due to US legisation 2.3.4.1.4.4")
+      ~fontsize
+      (Pdfio.bytes_of_string overlay)
   in
     (* Get the ops and resources, and concatenate and return. *)
     let page =
@@ -300,7 +302,7 @@ let generate_appearance pdf ops (minx, miny, maxx, maxy) =
 (* Add a (presently, redaction) annotation at the given position on the given pages. *)
 let add_annotation (minx, miny, maxx, maxy)
   ~main_color ~outline_color ~overlay ~overlay_text_colour ~overlay_justification ~overlay_repeat ~overlay_auto_size
-  ~font ~font_size ~opacity ~linespacing ~outline
+  ~font ~fontsize ~opacity ~linespacing ~outline
   pdf range
 =
   let add_dict resources = function
@@ -320,27 +322,29 @@ let add_annotation (minx, miny, maxx, maxy)
   in
   let d_ro_r =
     let ops, resources =
-      generate_appearance
-        pdf
+      let ops =
         [Cpdfaddtext.colour_op main_color;
-             Pdfops.Op_cm {Pdftransform.a = 1.; b = 0.; c = 0.; d = 1.; e = 0.; f = 0.};
-             Pdfops.Op_m (minx, miny); Pdfops.Op_l (maxx, miny); Pdfops.Op_l (maxx, maxy); Pdfops.Op_l (minx, maxy); Pdfops.Op_l (minx, miny);
-             Pdfops.Op_f]
-        (minx, miny, maxx, maxy)
+         Pdfops.Op_cm {Pdftransform.a = 1.; b = 0.; c = 0.; d = 1.; e = 0.; f = 0.};
+         Pdfops.Op_m (minx, miny); Pdfops.Op_l (maxx, miny); Pdfops.Op_l (maxx, maxy); Pdfops.Op_l (minx, maxy); Pdfops.Op_l (minx, miny);
+         Pdfops.Op_f]
+      in
+        match overlay with
+        | None -> ops, Pdf.Dictionary []
+        | Some overlay ->
+            generate_appearance ~overlay ~overlay_text_colour ~overlay_justification ~overlay_repeat ~overlay_auto_size
+            ~font ~fontsize ~opacity ~linespacing ~outline pdf ops (minx, miny, maxx, maxy)
     in
       Pdf.addobj pdf (add_dict resources (Pdfops.stream_of_ops ops))
   in
   let n =
     let ops, resources =
-      generate_appearance
-        pdf
-        [Cpdfaddtext.colour_op_stroke outline_color;
-           Pdfops.Op_cm {Pdftransform.a = 1.; b = 0.; c = 0.; d = 1.; e = 0.; f = 0.};
-           Pdfops.Op_w 1.5;
-           Pdfops.Op_J 2;
-           Pdfops.Op_m (minx, miny); Pdfops.Op_l (maxx, miny); Pdfops.Op_l (maxx, maxy); Pdfops.Op_l (minx, maxy); Pdfops.Op_l (minx, miny);
-           Pdfops.Op_S]
-        (minx, miny, maxx, maxy)
+      [Cpdfaddtext.colour_op_stroke outline_color;
+         Pdfops.Op_cm {Pdftransform.a = 1.; b = 0.; c = 0.; d = 1.; e = 0.; f = 0.};
+         Pdfops.Op_w 1.5;
+         Pdfops.Op_J 2;
+         Pdfops.Op_m (minx, miny); Pdfops.Op_l (maxx, miny); Pdfops.Op_l (maxx, maxy); Pdfops.Op_l (minx, maxy); Pdfops.Op_l (minx, miny);
+         Pdfops.Op_S],
+      (Pdf.Dictionary [])
     in
       Pdf.addobj pdf (add_dict resources (Pdfops.stream_of_ops ops))
   in
