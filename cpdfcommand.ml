@@ -5387,8 +5387,11 @@ let rec go () =
   | Typeset filename ->
       let text = Pdfio.bytes_of_input_channel (open_in_bin filename) in
       let cpdffont = embed_font () in
-      let pdf = Cpdftexttopdf.typeset ~process_struct_tree:args.process_struct_trees 
-      ?subformat:args.subformat ?title:args.title ~font:cpdffont ~papersize:args.createpdf_pagesize ~fontsize:args.fontsize text in
+      let pdf =
+          Cpdftexttopdf.typeset
+            ~process_struct_tree:args.process_struct_trees ?subformat:args.subformat ?title:args.title ~font:cpdffont ~papersize:args.createpdf_pagesize
+            ~fontsize:args.fontsize ~colour:args.color ~opacity:args.opacity ~linespacing:args.linespacing ~outline:args.outline 
+      text in
         write_pdf false pdf
   | TextWidth s ->
       let rawwidth =

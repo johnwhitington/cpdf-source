@@ -288,6 +288,10 @@ let generate_appearance
       ~font
       ~papersize:(Pdfpaper.make Pdfunits.PdfPoint (maxx -. minx) (maxy -. miny))
       ~fontsize
+      ~colour:overlay_text_colour
+      ~opacity
+      ~linespacing
+      ~outline
       (Pdfio.bytes_of_string overlay)
   in
     (* Get the ops and resources, and concatenate and return. *)

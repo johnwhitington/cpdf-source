@@ -54,7 +54,7 @@ let rec tag_paragraphs = function
 let tag_paragraphs l =
   Cpdftype.Tag ("P", 0)::tag_paragraphs l
 
-let typeset_fake_pages pdf ~papersize ~font ~fontsize text =
+let typeset_fake_pages pdf ~papersize ~font ~fontsize ~colour ~opacity ~linespacing ~outline text =
   let margin = Pdfunits.points (Pdfpaper.width papersize) (Pdfpaper.unit papersize) /. 15.  in
   let codepoints = setify (Pdftext.codepoints_of_utf8 (Pdfio.string_of_bytes text)) in
   let fontpack =
@@ -68,7 +68,7 @@ let typeset_fake_pages pdf ~papersize ~font ~fontsize text =
   let instrs = of_utf8_with_newlines fontpack fontsize (Pdfio.string_of_bytes text) in
     fst (Cpdftype.typeset ~process_struct_tree:false margin margin margin margin papersize pdf instrs)
 
-let typeset ~process_struct_tree ?subformat ?title ~papersize ~font ~fontsize text =
+let typeset ~process_struct_tree ?subformat ?title ~papersize ~font ~fontsize ~colour ~opacity ~linespacing ~outline text =
   let process_struct_tree =
     match process_struct_tree, subformat with
     | _, (Some Cpdfua.PDFUA1 | Some Cpdfua.PDFUA2) | true, _ -> true
