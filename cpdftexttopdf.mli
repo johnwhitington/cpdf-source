@@ -5,4 +5,4 @@ val typeset : process_struct_tree:bool -> ?subformat:Cpdfua.subformat -> ?title:
 
 (** Typeset just one page, with resources in the PDF but not added to its page
     tree. Used for generating annotation appearances only. *)
-val typeset_fake_page : Pdf.t -> papersize:Pdfpaper.t -> font:Cpdfembed.cpdffont -> fontsize:float -> Pdfio.bytes -> Pdfpage.t
+val typeset_fake_pages : Pdf.t -> papersize:Pdfpaper.t -> font:Cpdfembed.cpdffont -> fontsize:float -> Pdfio.bytes -> Pdfpage.t list

@@ -279,18 +279,23 @@ let remove_annotations range pdf =
    contents out, adding them to the content we have already. We extract any
    fonts from the resources too. *)
 let generate_appearance pdf ops (minx, miny, maxx, maxy) =
-  let page =
+  let pages =
     (* Typeset in this document, by just returning the page (but not adding it). Font objects etc will then be in the given PDF. *)
-    Cpdftexttopdf.typeset_fake_page
+    Cpdftexttopdf.typeset_fake_pages
       pdf
       ~font:(Cpdfembed.PreMadeFontPack (Cpdfembed.fontpack_of_standardfont (Pdftext.StandardFont (Pdftext.TimesRoman, Pdftext.WinAnsiEncoding))))
       ~papersize:(Pdfpaper.make Pdfunits.PdfPoint (maxx -. minx) (maxy -. miny))
       ~fontsize:12.
-      (Pdfio.bytes_of_string "Redacted")
+      (Pdfio.bytes_of_string "Redacted due to US legisation 2.3.4.1.4.4")
   in
     (* Get the ops and resources, and concatenate and return. *)
-    let page_ops = Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content in
-      ops @ page_ops, page.Pdfpage.resources
+    let page =
+      match pages with
+      | [] -> assert false
+      | p::_ -> p
+    in
+      let page_ops = Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content in
+        ops @ [Pdfops.Op_cm (Pdftransform.mktranslate minx miny)] @ page_ops, page.Pdfpage.resources
 
 (* Add a (presently, redaction) annotation at the given position on the given pages. *)
 let add_annotation (minx, miny, maxx, maxy)

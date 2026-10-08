@@ -54,8 +54,19 @@ let rec tag_paragraphs = function
 let tag_paragraphs l =
   Cpdftype.Tag ("P", 0)::tag_paragraphs l
 
-let typeset_fake_page pdf ~papersize ~font ~fontsize text =
-  Pdfpage.blankpage papersize
+let typeset_fake_pages pdf ~papersize ~font ~fontsize text =
+  let margin = Pdfunits.points (Pdfpaper.width papersize) (Pdfpaper.unit papersize) /. 15.  in
+  let codepoints = setify (Pdftext.codepoints_of_utf8 (Pdfio.string_of_bytes text)) in
+  let fontpack =
+    match font with
+    | Cpdfembed.PreMadeFontPack t -> t
+    | Cpdfembed.EmbedInfo {fontfile; fontname; encoding} ->
+        Cpdfembed.embed_truetype pdf ~fontfile ~fontname ~codepoints ~encoding
+    | Cpdfembed.ExistingNamedFont ->
+        raise (Pdf.PDFError "Can't use existing named font for text-to-PDF")
+  in
+  let instrs = of_utf8_with_newlines fontpack fontsize (Pdfio.string_of_bytes text) in
+    fst (Cpdftype.typeset ~process_struct_tree:false margin margin margin margin papersize pdf instrs)
 
 let typeset ~process_struct_tree ?subformat ?title ~papersize ~font ~fontsize text =
   let process_struct_tree =
@@ -87,10 +98,7 @@ let typeset ~process_struct_tree ?subformat ?title ~papersize ~font ~fontsize te
         raise (Pdf.PDFError "Can't use existing named font for text-to-PDF")
   in
   let instrs = of_utf8_with_newlines fontpack fontsize (Pdfio.string_of_bytes text) in
-  (*flprint (Cpdftype.to_string instrs);
-  flprint "------------------------------";*)
   let tagged = if process_struct_tree then tag_paragraphs instrs else instrs in
-  (*flprint (Cpdftype.to_string tagged);*)
   let margin = Pdfunits.points (Pdfpaper.width papersize) (Pdfpaper.unit papersize) /. 15.  in
   let instrs =
     if tagged = [] then [] else
