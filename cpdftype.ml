@@ -60,6 +60,7 @@ type state =
    mutable width_table : float array; (* Widths for charcodes 0..255 *)
    mutable xpos : float;
    mutable ypos : float;
+   mutable linespacing : float;
    mutable dest : (Pdfdest.t * string option) option}
 
 let width_table_cache = null_hash ()
@@ -71,6 +72,7 @@ let initial_state () =
    width_table = [||];
    xpos = 0.;
    ypos = 0.;
+   linespacing = 1.3;
    dest = None}
 
 (* Mark as an artifact anything not already marked. *)
@@ -189,6 +191,8 @@ let layout lmargin rmargin papersize i =
         s.xpos <- s.xpos +. len;
         o := glue :: !o;
         if s.xpos >= xpos_max then layout_element NewLine
+    | Linespacing f ->
+        s.linespacing <- f
     | NewLine ->
         s.xpos <- lmargin;
         o := NewLine :: !o
@@ -214,7 +218,7 @@ let paginate tmargin bmargin papersize i =
        o := glue :: !o;
        if s.ypos > max_ypos then process NewPage
    | NewLine ->
-       s.ypos <- s.ypos +. s.fontsize *. 1.3;
+       s.ypos <- s.ypos +. s.fontsize *. s.linespacing;
        o := NewLine::!o;
        if s.ypos > max_ypos then process NewPage
    | Font (id, f, fs) ->
@@ -369,6 +373,10 @@ let typeset ~process_struct_tree lmargin rmargin tmargin bmargin papersize pdf i
        tags := (s, i)::!tags;
        ops := Pdfops.Op_BDC ("/" ^ s, Pdf.Dictionary [("/MCID", Pdf.Integer (mcid ()))])::!ops
    | EndTag -> ops := Pdfops.Op_EMC::!ops
+   | Outline b -> ops := Pdfops.Op_Tr (if b then 1 else 0)::!ops
+   | Colour c -> ops := Cpdfutil.colour_op c::Cpdfutil.colour_op_stroke c::!ops
+   | Opacity f -> () (* FIXME: Need Op_gs with a dictionary entry here. *) 
+   | Linespacing f -> () (* Will not appear - already processed... *)
   in
     Cpdfutil.progress_line "Typeset...";
     iter typeset_element i;
