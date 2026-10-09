@@ -327,7 +327,7 @@ let add_annotation (minx, miny, maxx, maxy)
   let d_ro_r =
     let ops, resources =
       let ops =
-        [Cpdfaddtext.colour_op main_color;
+        [Cpdfutil.colour_op main_color;
          Pdfops.Op_cm {Pdftransform.a = 1.; b = 0.; c = 0.; d = 1.; e = 0.; f = 0.};
          Pdfops.Op_m (minx, miny); Pdfops.Op_l (maxx, miny); Pdfops.Op_l (maxx, maxy); Pdfops.Op_l (minx, maxy); Pdfops.Op_l (minx, miny);
          Pdfops.Op_f]
@@ -342,7 +342,7 @@ let add_annotation (minx, miny, maxx, maxy)
   in
   let n =
     let ops, resources =
-      [Cpdfaddtext.colour_op_stroke outline_color;
+      [Cpdfutil.colour_op_stroke outline_color;
          Pdfops.Op_cm {Pdftransform.a = 1.; b = 0.; c = 0.; d = 1.; e = 0.; f = 0.};
          Pdfops.Op_w 1.5;
          Pdfops.Op_J 2;

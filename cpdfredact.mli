@@ -35,7 +35,7 @@ val redact :
   paths:(float * float * float * float) list ->
   invert:bool ->
   show:bool ->
-  color:Cpdfaddtext.colour ->
+  color:Cpdfutil.colour ->
   outline:bool ->
   opacity:float ->
   linewidth:float ->
@@ -61,7 +61,7 @@ val apply :
   ?typ:string ->
   invert:bool ->
   show:bool ->
-  color:Cpdfaddtext.colour ->
+  color:Cpdfutil.colour ->
   outline:bool ->
   opacity:float ->
   linewidth:float ->

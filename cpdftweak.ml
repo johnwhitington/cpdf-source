@@ -42,7 +42,7 @@ let blacktext_ops colour pdf resources content =
       | Pdfops.Op_BT::more ->
           incr textlevel;
           remove_colourops
-            (Cpdfaddtext.colour_op colour::Pdfops.Op_BT::prev)
+            (Cpdfutil.colour_op colour::Pdfops.Op_BT::prev)
             more
       | Pdfops.Op_ET::more ->
           decr textlevel;
@@ -100,7 +100,7 @@ let blacklines_ops c pdf resources content =
         blacken_strokeops (Pdfops.Op_CS "/DeviceRGB"::prev) t
     | (Pdfops.Op_SC _ | Pdfops.Op_SCN _ | Pdfops.Op_SCNName _ | Pdfops.Op_G _
        | Pdfops.Op_RG _ | Pdfops.Op_K _)::t ->
-           blacken_strokeops (Cpdfaddtext.colour_op_stroke c::prev) t
+           blacken_strokeops (Cpdfutil.colour_op_stroke c::prev) t
     | h::t -> blacken_strokeops (h::prev) t
   and operators =
     Pdfops.parse_operators pdf resources content
@@ -126,7 +126,7 @@ let blackfills_ops c pdf resources content =
         blacken_fillops (Pdfops.Op_cs "/DeviceRGB"::prev) t
     | (Pdfops.Op_sc _ | Pdfops.Op_scn _ | Pdfops.Op_scnName _ | Pdfops.Op_g _
        | Pdfops.Op_rg _ | Pdfops.Op_k _)::t ->
-           blacken_fillops (Cpdfaddtext.colour_op c::prev) t
+           blacken_fillops (Cpdfutil.colour_op c::prev) t
     | h::t -> blacken_fillops (h::prev) t
   and operators =
     Pdfops.parse_operators pdf resources content

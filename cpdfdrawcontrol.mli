@@ -14,7 +14,7 @@ val loadttfseparate : string -> string -> unit
 val fontpack_initialised : bool ref
 val drawops : (string * Cpdfdraw.drawops list) list ref
 val addop : Cpdfdraw.drawops -> unit
-val parse_colour : string -> Cpdfaddtext.colour
+val parse_colour : string -> Cpdfutil.colour
 val addtag : string -> unit
 val addstag : string -> unit
 val endtag : unit -> unit

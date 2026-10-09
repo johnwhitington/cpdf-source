@@ -4,13 +4,13 @@
 val thinlines : int list -> float -> Pdf.t -> Pdf.t
 
 (** Make all text on certain pages black. *)
-val blacktext : Cpdfaddtext.colour -> int list -> Pdf.t -> Pdf.t
+val blacktext : Cpdfutil.colour -> int list -> Pdf.t -> Pdf.t
 
 (** Make all lines on certain pages black. *)
-val blacklines : Cpdfaddtext.colour -> int list -> Pdf.t -> Pdf.t
+val blacklines : Cpdfutil.colour -> int list -> Pdf.t -> Pdf.t
 
 (** Make all fills on certain pages black. *)
-val blackfills : Cpdfaddtext.colour -> int list -> Pdf.t -> Pdf.t
+val blackfills : Cpdfutil.colour -> int list -> Pdf.t -> Pdf.t
 
 (** Change all text to rendering mode 0 (filled). *)
 val reveal_hidden_text : int list -> Pdf.t -> Pdf.t

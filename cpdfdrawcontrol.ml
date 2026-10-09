@@ -1,6 +1,7 @@
 (* Drawing operations. *)
 open Pdfutil
 open Cpdferror
+open Cpdfutil
 
 let embed_font = ref (fun () -> Printf.printf "BAD *\n%!"; Cpdfembed.ExistingNamedFont)
 let setdrawing = ref (fun () -> Printf.printf "BAD **\n%!")
@@ -70,7 +71,7 @@ let parse_colour s =
       let r = float_of_int ((c land 0xFF0000) lsr 16) /. 255. in
       let g = float_of_int ((c land 0x00FF00) lsr 8) /. 255. in
       let b = float_of_int (c land 0x0000FF) /. 255. in
-        Cpdfaddtext.RGB (r, g, b)
+        RGB (r, g, b)
   | None ->
       let getnum = function
         | Pdfgenlex.LexInt i -> float i
@@ -78,16 +79,16 @@ let parse_colour s =
         | _ -> error "Bad color"
       in
         match Pdfgenlex.lex_string s with
-        | [g] -> Cpdfaddtext.Grey (getnum g)
-        | [r; g; b] -> Cpdfaddtext.RGB (getnum r, getnum g, getnum b)
-        | [c; m; y; k] -> Cpdfaddtext.CMYK (getnum c, getnum m, getnum y, getnum k)
+        | [g] -> Grey (getnum g)
+        | [r; g; b] -> RGB (getnum r, getnum g, getnum b)
+        | [c; m; y; k] -> CMYK (getnum c, getnum m, getnum y, getnum k)
         | _ -> error "Bad color"
 
 let col_of_string s =  
   match parse_colour s with
-  | Cpdfaddtext.RGB (r, g, b) -> Cpdfdraw.RGB (r, g, b)
-  | Cpdfaddtext.Grey g -> Cpdfdraw.Grey g
-  | Cpdfaddtext.CMYK (c, m, y, k) -> Cpdfdraw.CMYK (c, m, y, k)
+  | RGB (r, g, b) -> Cpdfdraw.RGB (r, g, b)
+  | Grey g -> Cpdfdraw.Grey g
+  | CMYK (c, m, y, k) -> Cpdfdraw.CMYK (c, m, y, k)
   | exception _ -> Cpdfdraw.NoCol
 
 let setstroke s =

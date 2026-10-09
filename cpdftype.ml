@@ -27,6 +27,10 @@ type element =
 | BeginDocument
 | Tag of string * int
 | EndTag
+| Outline of bool
+| Colour of Cpdfutil.colour
+| Opacity of float
+| Linespacing of float
 
 let to_string_elt = function
   | Text t -> implode t
@@ -40,6 +44,10 @@ let to_string_elt = function
   | BeginDocument -> "BeginDocument"
   | Tag (s, i) -> "Tag " ^ s ^ " " ^ string_of_int i
   | EndTag -> "EndTag"
+  | Outline b -> "Outline " ^ string_of_bool b
+  | Colour c -> "Colour " ^ Pdfops.string_of_op (Cpdfutil.colour_op c)
+  | Opacity f -> "Opacity " ^ string_of_float f
+  | Linespacing f -> "Linespacing " ^ string_of_float f
 
 let to_string es = fold_left (fun a b -> a ^ "\n" ^ b) "" (map to_string_elt es)
 

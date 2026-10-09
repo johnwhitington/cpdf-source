@@ -26,3 +26,21 @@ val replace_dict_entry : Pdf.t -> string -> Pdf.pdfobject -> Pdf.pdfobject optio
 
 (** Check for injectible characters in a string, and error out if so. *)
 val check_injectible : string -> unit
+
+(** PDF colours *)
+type colour =
+  Grey of float
+| RGB of float * float * float
+| CMYK of float * float * float * float
+
+(** Build a colour operation for filling with the given colour. *)
+val colour_op : colour -> Pdfops.t
+
+(** Build a colour operation for filing with the given colour *)
+val colour_op_stroke : colour -> Pdfops.t
+
+(** Justification of multiline text *)
+type justification =
+  | LeftJustify
+  | CentreJustify
+  | RightJustify

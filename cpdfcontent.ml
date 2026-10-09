@@ -156,13 +156,13 @@ type helpers =
   {path_to_jbig2dec : string;
    path_to_convert : string;
    path_to_jbig2enc : string;
-   color : Cpdfaddtext.colour}
+   color : Cpdfutil.colour}
 
 let empty_helpers =
   {path_to_jbig2dec = "";
    path_to_convert = "";
    path_to_jbig2enc = "";
-   color = Cpdfaddtext.Grey 0.}
+   color = Cpdfutil.Grey 0.}
 
 let initial_text_state () =
   {character_spacing = 0.;

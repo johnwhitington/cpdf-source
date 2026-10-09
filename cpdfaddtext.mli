@@ -1,23 +1,5 @@
 (** Adding text *)
 
-(** Colours *)
-type colour =
-  Grey of float
-| RGB of float * float * float
-| CMYK of float * float * float * float
-
-(** Build a colour operation for filling with the given colour. *)
-val colour_op : colour -> Pdfops.t
-
-(** Build a colour operation for filing with the given colour *)
-val colour_op_stroke : colour -> Pdfops.t
-
-(** Justification of multiline text *)
-type justification =
-  | LeftJustify
-  | CentreJustify
-  | RightJustify
-
 (** Rotation *)
 type rotation = Rot0 | Rot90 | Rot180 | Rot270
 
@@ -33,7 +15,7 @@ val addtexts :
     Cpdfembed.cpdffont -> (*font*)
     int -> (* bates number *)
     int option -> (* bates padding width *)
-    colour -> (*colour*)
+    Cpdfutil.colour -> (*colour*)
     Cpdfposition.position -> (*position*)
     float -> (*linespacing*)
     float -> (*fontsize*)
@@ -42,7 +24,7 @@ val addtexts :
     int list ->(*page range*)
     string ->(*relative to box*)
     float ->(*opacity*)
-    justification ->(*justification*)
+    Cpdfutil.justification ->(*justification*)
     bool ->(*midline adjust?*)
     bool ->(*topline adjust?*)
     rotation -> (* rotation *)
@@ -57,7 +39,7 @@ val addtexts :
 val addrectangle :
     bool ->
     string ->
-    colour ->
+    Cpdfutil.colour ->
     bool ->
     float ->
     float ->

@@ -1,6 +1,7 @@
 open Pdfutil
 open Pdfio
 open Cpdferror
+open Cpdfutil
 
 let debug_image_processing = ref false
 
@@ -20,14 +21,14 @@ let complain_convert path =
 let magick_color c =
   let expand n = Printf.sprintf "%i%%" (int_of_float (n *. 100.)) in
     match c with
-    | Cpdfaddtext.Grey g -> Printf.sprintf "gray(%s)" (expand g)
-    | Cpdfaddtext.RGB (r, g, b) -> Printf.sprintf "rgb(%s, %s, %s)" (expand r) (expand g) (expand b)
-    | Cpdfaddtext.CMYK (c, y, m, k) -> Printf.sprintf "cmyk(%s, %s, %s, %s)" (expand c) (expand y) (expand m) (expand k)
+    | Grey g -> Printf.sprintf "gray(%s)" (expand g)
+    | RGB (r, g, b) -> Printf.sprintf "rgb(%s, %s, %s)" (expand r) (expand g) (expand b)
+    | CMYK (c, y, m, k) -> Printf.sprintf "cmyk(%s, %s, %s, %s)" (expand c) (expand y) (expand m) (expand k)
 
 let rec magick_color_1bpp = function
-  | Cpdfaddtext.Grey g -> if g > 0.5 then "white" else "black"
-  | Cpdfaddtext.RGB (r, g, b) -> magick_color_1bpp (Cpdfaddtext.Grey ((r +. g +. b) /. 3.))
-  | Cpdfaddtext.CMYK (c, m, y, k) -> magick_color_1bpp (Cpdfaddtext.RGB ((1. -. c) *. (1. -. k), (1. -. m) *. (1. -. k), (1. -. y) *. (1. -. k)))
+  | Grey g -> if g > 0.5 then "white" else "black"
+  | RGB (r, g, b) -> magick_color_1bpp (Grey ((r +. g +. b) /. 3.))
+  | CMYK (c, m, y, k) -> magick_color_1bpp (RGB ((1. -. c) *. (1. -. k), (1. -. m) *. (1. -. k), (1. -. y) *. (1. -. k)))
 
 let remove x =
   try (*Printf.printf "%s\n" x;*) Sys.remove x with _ -> ()

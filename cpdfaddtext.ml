@@ -1,11 +1,7 @@
 (* Superimpose text, page numbers etc. *)
 open Pdfutil
+open Cpdfutil
 open Cpdferror
-
-type colour =
-  Grey of float
-| RGB of float * float * float
-| CMYK of float * float * float * float
 
 (** Rotation *)
 type rotation = Rot0 | Rot90 | Rot180 | Rot270
@@ -36,16 +32,6 @@ let width_of_text font text =
          _ -> 0.
        end
   | _ -> 0.
-
-let colour_op = function
-  | RGB (r, g, b) -> Pdfops.Op_rg (r, g, b)
-  | Grey g -> Pdfops.Op_g g
-  | CMYK (c, y, m, k) -> Pdfops.Op_k (c, y, m, k)
-
-let colour_op_stroke = function
-  | RGB (r, g, b) -> Pdfops.Op_RG (r, g, b)
-  | Grey g -> Pdfops.Op_G g
-  | CMYK (c, y, m, k) -> Pdfops.Op_K (c, y, m, k)
 
 let ops
   rotation font fontpack fontpackpdfobjs fontname longest_w x y rotate hoffset voffset outline linewidth
@@ -83,8 +69,6 @@ let ops
     @ (match unique_extgstatename with None -> [] | Some n -> [Pdfops.Op_gs n])
     @ textops
     @ [Pdfops.Op_ET; Pdfops.Op_EMC; Pdfops.Op_Q; Pdfops.end_artifact]
-
-type justification = LeftJustify | CentreJustify | RightJustify
 
 (* Find the h-offset for justification based on the longest width, the current
 width, the justification and the position. *)

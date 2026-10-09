@@ -57,3 +57,23 @@ let check_injectible s =
       Pdfe.log "Insecure character in path name. Exiting\n";
       exit 2
     end
+
+type colour =
+  Grey of float
+| RGB of float * float * float
+| CMYK of float * float * float * float
+
+let colour_op = function
+  | RGB (r, g, b) -> Pdfops.Op_rg (r, g, b)
+  | Grey g -> Pdfops.Op_g g
+  | CMYK (c, y, m, k) -> Pdfops.Op_k (c, y, m, k)
+
+let colour_op_stroke = function
+  | RGB (r, g, b) -> Pdfops.Op_RG (r, g, b)
+  | Grey g -> Pdfops.Op_G g
+  | CMYK (c, y, m, k) -> Pdfops.Op_K (c, y, m, k)
+
+type justification =
+  | LeftJustify
+  | CentreJustify
+  | RightJustify

@@ -553,16 +553,16 @@ type args =
    mutable fontencoding : Pdftext.encoding;
    mutable fontsize : float;
    mutable embedstd14 : string option;
-   mutable color : Cpdfaddtext.colour;
-   mutable redaction_annotation_outline_color : Cpdfaddtext.colour;
-   mutable redaction_annotation_main_color : Cpdfaddtext.colour;
+   mutable color : Cpdfutil.colour;
+   mutable redaction_annotation_outline_color : Cpdfutil.colour;
+   mutable redaction_annotation_main_color : Cpdfutil.colour;
    mutable opacity : float;
    mutable position : Cpdfposition.position;
    mutable underneath : bool;
    mutable linespacing : float;
    mutable midline : bool;
    mutable topline : bool;
-   mutable justification : Cpdfaddtext.justification;
+   mutable justification : Cpdfutil.justification;
    mutable bates : int;
    mutable batespad : int option;
    mutable prerotate : bool;
@@ -737,16 +737,16 @@ let args =
    fontname = "Times-Roman";
    fontsize = 12.;
    fontencoding = Pdftext.WinAnsiEncoding;
-   color = Cpdfaddtext.RGB (0., 0., 0.);
-   redaction_annotation_outline_color = Cpdfaddtext.RGB (0.858826, 0.203918, 0.145096);
-   redaction_annotation_main_color = Cpdfaddtext.RGB (0., 0., 0.);
+   color = Cpdfutil.RGB (0., 0., 0.);
+   redaction_annotation_outline_color = Cpdfutil.RGB (0.858826, 0.203918, 0.145096);
+   redaction_annotation_main_color = Cpdfutil.RGB (0., 0., 0.);
    opacity = 1.;
    position = Cpdfposition.TopLeft (100., 100.);
    underneath = false;
    linespacing = 1.;
    midline = false;
    topline = false;
-   justification = Cpdfaddtext.LeftJustify;
+   justification = Cpdfutil.LeftJustify;
    bates = 0;
    batespad = None;
    prerotate = false;
@@ -927,15 +927,16 @@ let reset_arguments () =
   args.fontname <- "Times-Roman";
   args.fontsize <- 12.;
   args.fontencoding <- Pdftext.WinAnsiEncoding;
-  args.color <- Cpdfaddtext.RGB (0., 0., 0.);
-  args.redaction_annotation_outline_color <- Cpdfaddtext.RGB (0.858826, 0.203918, 0.145096);
+  args.color <- Cpdfutil.RGB (0., 0., 0.);
+  args.redaction_annotation_outline_color <- Cpdfutil.RGB (0.858826, 0.203918, 0.145096);
+  args.redaction_annotation_main_color <- Cpdfutil.RGB (0., 0., 0.);
   args.opacity <- 1.;
   args.position <- Cpdfposition.TopLeft (100., 100.);
   args.underneath <- false;
   args.linespacing <- 1.;
   args.midline <- false;
   args.topline <- false;
-  args.justification <- Cpdfaddtext.LeftJustify;
+  args.justification <- Cpdfutil.LeftJustify;
   args.bates <- 0;
   args.batespad <- None;
   args.prerotate <- false;
@@ -1581,7 +1582,7 @@ let setposright s =
 
 let settop n =
   args.position <- Cpdfposition.Top (Cpdfcoord.parse_single_number empty n);
-  args.justification <- Cpdfaddtext.CentreJustify
+  args.justification <- Cpdfutil.CentreJustify
 
 let settopleft n =
   let coord =
@@ -1592,7 +1593,7 @@ let settopleft n =
           Cpdfposition.TopLeft (x, x)
   in
     args.position <- coord;
-    args.justification <- Cpdfaddtext.LeftJustify
+    args.justification <- Cpdfutil.LeftJustify
 
 let settopright n =
   let coord =
@@ -1603,11 +1604,11 @@ let settopright n =
           Cpdfposition.TopRight (x, x)
   in
     args.position <- coord;
-    args.justification <- Cpdfaddtext.RightJustify
+    args.justification <- Cpdfutil.RightJustify
 
 let setleft n =
   args.position <- Cpdfposition.Left (Cpdfcoord.parse_single_number empty n);
-  args.justification <- Cpdfaddtext.LeftJustify
+  args.justification <- Cpdfutil.LeftJustify
 
 let setbottomleft n =
   let coord =
@@ -1618,11 +1619,11 @@ let setbottomleft n =
           Cpdfposition.BottomLeft (x, x)
   in
     args.position <- coord;
-    args.justification <- Cpdfaddtext.LeftJustify
+    args.justification <- Cpdfutil.LeftJustify
 
 let setbottom n =
   args.position <- Cpdfposition.Bottom (Cpdfcoord.parse_single_number empty n);
-  args.justification <- Cpdfaddtext.CentreJustify
+  args.justification <- Cpdfutil.CentreJustify
 
 let setbottomright n =
   let coord =
@@ -1633,23 +1634,23 @@ let setbottomright n =
           Cpdfposition.BottomRight (x, x)
   in
     args.position <- coord;
-    args.justification <- Cpdfaddtext.RightJustify
+    args.justification <- Cpdfutil.RightJustify
 
 let setright n =
   args.position <- Cpdfposition.Right (Cpdfcoord.parse_single_number empty n);
-  args.justification <- Cpdfaddtext.RightJustify
+  args.justification <- Cpdfutil.RightJustify
 
 let setdiagonal n =
   args.position <- Cpdfposition.Diagonal;
-  args.justification <- Cpdfaddtext.CentreJustify
+  args.justification <- Cpdfutil.CentreJustify
 
 let setreversediagonal n =
   args.position <- Cpdfposition.ReverseDiagonal;
-  args.justification <- Cpdfaddtext.CentreJustify
+  args.justification <- Cpdfutil.CentreJustify
 
 let setcenter n =
   args.position <- Cpdfposition.Centre;
-  args.justification <- Cpdfaddtext.CentreJustify
+  args.justification <- Cpdfutil.CentreJustify
 
 (* Calculate -bates automatically so that n is applied to the first page in the range *)  
 let setbatesrange n =
@@ -2656,13 +2657,13 @@ let specs =
       Arg.Unit setcenter,
       " Place text in the center of the page");
    ("-justify-left",
-      Arg.Unit (fun () -> args.justification <- Cpdfaddtext.LeftJustify),
+      Arg.Unit (fun () -> args.justification <- Cpdfutil.LeftJustify),
       " Justify multiline text left");
    ("-justify-right",
-      Arg.Unit (fun () -> args.justification <- Cpdfaddtext.RightJustify),
+      Arg.Unit (fun () -> args.justification <- Cpdfutil.RightJustify),
       " Justify multiline text right");
    ("-justify-center",
-      Arg.Unit (fun () -> args.justification <- Cpdfaddtext.CentreJustify),
+      Arg.Unit (fun () -> args.justification <- Cpdfutil.CentreJustify),
       " Justify multiline text center");
    ("-underneath",
       Arg.Unit (fun () -> args.underneath <- true),

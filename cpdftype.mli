@@ -11,6 +11,10 @@ type element =
 | BeginDocument
 | Tag of string * int
 | EndTag
+| Outline of bool
+| Colour of Cpdfutil.colour
+| Opacity of float
+| Linespacing of float
 
 type t = element list
 

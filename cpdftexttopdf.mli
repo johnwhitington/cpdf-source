@@ -8,7 +8,7 @@ val typeset :
   papersize:Pdfpaper.t ->
   font:Cpdfembed.cpdffont ->
   fontsize:float ->
-  colour:Cpdfaddtext.colour ->
+  colour:Cpdfutil.colour ->
   opacity:float ->
   linespacing:float ->
   outline:bool ->
@@ -22,7 +22,7 @@ val typeset_fake_pages :
   papersize:Pdfpaper.t ->
   font:Cpdfembed.cpdffont ->
   fontsize:float ->
-  colour:Cpdfaddtext.colour ->
+  colour:Cpdfutil.colour ->
   opacity:float ->
   linespacing:float ->
   outline:bool ->
