@@ -293,7 +293,7 @@ let generate_appearance
       ~linespacing
       ~linewidth
       ~outline
-      (Pdfio.bytes_of_string overlay)
+      (Pdfio.bytes_of_string (if overlay_repeat then fold_left (fun x y -> x ^ " " ^ y) "" (many overlay 100) else overlay))
   in
     (* Get the ops and resources, and concatenate and return. *)
     let page =
