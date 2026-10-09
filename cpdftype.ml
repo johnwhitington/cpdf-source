@@ -193,8 +193,6 @@ let layout lmargin rmargin papersize i =
         s.xpos <- s.xpos +. len;
         o := glue :: !o;
         if s.xpos >= xpos_max then layout_element NewLine
-    | Linespacing f ->
-        s.linespacing <- f
     | NewLine ->
         s.xpos <- lmargin;
         o := NewLine :: !o
@@ -242,6 +240,9 @@ let paginate tmargin bmargin papersize i =
    | EndTag ->
        tag := None;
        o := EndTag::!o
+   | Linespacing f ->
+       s.linespacing <- f;
+       o := Linespacing f::!o
    | x -> o := x::!o
   in
     iter process i;
@@ -341,7 +342,7 @@ let typeset ~process_struct_tree lmargin rmargin tmargin bmargin papersize pdf i
         s.ypos <- s.ypos +. len
     | NewLine ->
         s.xpos <- lmargin;
-        typeset_element (VGlue (s.fontsize *. 1.3))
+        typeset_element (VGlue (s.fontsize *. s.linespacing))
     | NewPage ->
         write_page ();
         thispagefontnums := [];
@@ -379,7 +380,7 @@ let typeset ~process_struct_tree lmargin rmargin tmargin bmargin papersize pdf i
    | Colour c -> ops := Cpdfutil.colour_op c::Cpdfutil.colour_op_stroke c::!ops
    | Opacity f -> () (* FIXME: Need Op_gs with a dictionary entry here. *) 
    | Linewidth f -> ops := Pdfops.Op_w f::!ops
-   | Linespacing f -> () (* Will not appear - already processed... *)
+   | Linespacing f -> s.linespacing <- f (* Will not appear - already processed... *)
   in
     Cpdfutil.progress_line "Typeset...";
     iter typeset_element i;
