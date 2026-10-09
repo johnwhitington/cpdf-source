@@ -11,6 +11,7 @@ val typeset :
   colour:Cpdfutil.colour ->
   opacity:float ->
   linespacing:float ->
+  linewidth:float ->
   outline:bool ->
   Pdfio.bytes ->
   Pdf.t
@@ -25,6 +26,7 @@ val typeset_fake_pages :
   colour:Cpdfutil.colour ->
   opacity:float ->
   linespacing:float ->
+  linewidth:float ->
   outline:bool ->
   Pdfio.bytes ->
   Pdfpage.t list

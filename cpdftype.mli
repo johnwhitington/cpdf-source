@@ -12,6 +12,7 @@ type element =
 | Tag of string * int
 | EndTag
 | Outline of bool
+| Linewidth of float
 | Colour of Cpdfutil.colour
 | Opacity of float
 | Linespacing of float

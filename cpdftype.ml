@@ -28,6 +28,7 @@ type element =
 | Tag of string * int
 | EndTag
 | Outline of bool
+| Linewidth of float
 | Colour of Cpdfutil.colour
 | Opacity of float
 | Linespacing of float
@@ -45,6 +46,7 @@ let to_string_elt = function
   | Tag (s, i) -> "Tag " ^ s ^ " " ^ string_of_int i
   | EndTag -> "EndTag"
   | Outline b -> "Outline " ^ string_of_bool b
+  | Linewidth f -> "Linewidth " ^ string_of_float f
   | Colour c -> "Colour " ^ Pdfops.string_of_op (Cpdfutil.colour_op c)
   | Opacity f -> "Opacity " ^ string_of_float f
   | Linespacing f -> "Linespacing " ^ string_of_float f
@@ -376,6 +378,7 @@ let typeset ~process_struct_tree lmargin rmargin tmargin bmargin papersize pdf i
    | Outline b -> ops := Pdfops.Op_Tr (if b then 1 else 0)::!ops
    | Colour c -> ops := Cpdfutil.colour_op c::Cpdfutil.colour_op_stroke c::!ops
    | Opacity f -> () (* FIXME: Need Op_gs with a dictionary entry here. *) 
+   | Linewidth f -> ops := Pdfops.Op_w f::!ops
    | Linespacing f -> () (* Will not appear - already processed... *)
   in
     Cpdfutil.progress_line "Typeset...";

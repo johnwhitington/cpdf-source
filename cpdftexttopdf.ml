@@ -1,8 +1,15 @@
 open Pdfutil
 open Cpdferror
 
-let of_utf8_with_newlines fontpack fontsize ~colour ~opacity ~linespacing ~outline t =
-  let items = ref [Cpdftype.Colour colour; Cpdftype.Opacity opacity; Cpdftype.Linespacing linespacing; Cpdftype.Outline outline] in
+let of_utf8_with_newlines fontpack fontsize ~colour ~opacity ~linespacing ~linewidth ~outline t =
+  let items =
+    ref
+      [Cpdftype.Colour colour;
+       Cpdftype.Linewidth linewidth;
+       Cpdftype.Opacity opacity;
+       Cpdftype.Linespacing linespacing;
+       Cpdftype.Outline outline]
+  in
   let currfont = ref ~-1 in
   let codepoints = Pdftext.codepoints_of_utf8 t in
   let currtext = ref [] in
@@ -54,7 +61,7 @@ let rec tag_paragraphs = function
 let tag_paragraphs l =
   Cpdftype.Tag ("P", 0)::tag_paragraphs l
 
-let typeset_fake_pages pdf ~papersize ~font ~fontsize ~colour ~opacity ~linespacing ~outline text =
+let typeset_fake_pages pdf ~papersize ~font ~fontsize ~colour ~opacity ~linespacing ~linewidth ~outline text =
   let margin = Pdfunits.points (Pdfpaper.width papersize) (Pdfpaper.unit papersize) /. 15.  in
   let codepoints = setify (Pdftext.codepoints_of_utf8 (Pdfio.string_of_bytes text)) in
   let fontpack =
@@ -65,10 +72,10 @@ let typeset_fake_pages pdf ~papersize ~font ~fontsize ~colour ~opacity ~linespac
     | Cpdfembed.ExistingNamedFont ->
         raise (Pdf.PDFError "Can't use existing named font for text-to-PDF")
   in
-  let instrs = of_utf8_with_newlines fontpack fontsize ~colour ~opacity ~linespacing ~outline (Pdfio.string_of_bytes text) in
+  let instrs = of_utf8_with_newlines fontpack fontsize ~colour ~opacity ~linespacing ~linewidth ~outline (Pdfio.string_of_bytes text) in
     fst (Cpdftype.typeset ~process_struct_tree:false margin margin margin margin papersize pdf instrs)
 
-let typeset ~process_struct_tree ?subformat ?title ~papersize ~font ~fontsize ~colour ~opacity ~linespacing ~outline text =
+let typeset ~process_struct_tree ?subformat ?title ~papersize ~font ~fontsize ~colour ~opacity ~linespacing ~linewidth ~outline text =
   let process_struct_tree =
     match process_struct_tree, subformat with
     | _, (Some Cpdfua.PDFUA1 | Some Cpdfua.PDFUA2) | true, _ -> true
@@ -97,7 +104,7 @@ let typeset ~process_struct_tree ?subformat ?title ~papersize ~font ~fontsize ~c
     | Cpdfembed.ExistingNamedFont ->
         raise (Pdf.PDFError "Can't use existing named font for text-to-PDF")
   in
-  let instrs = of_utf8_with_newlines fontpack fontsize ~colour ~opacity ~linespacing ~outline (Pdfio.string_of_bytes text) in
+  let instrs = of_utf8_with_newlines fontpack fontsize ~colour ~opacity ~linespacing ~linewidth ~outline (Pdfio.string_of_bytes text) in
   let tagged = if process_struct_tree then tag_paragraphs instrs else instrs in
   let margin = Pdfunits.points (Pdfpaper.width papersize) (Pdfpaper.unit papersize) /. 15.  in
   let instrs =

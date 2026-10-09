@@ -28,6 +28,7 @@ val add_annotation :
     fontsize:float ->
     opacity:float ->
     linespacing:float ->
+    linewidth:float ->
     outline:bool ->
     Pdf.t -> int list -> Pdf.t
 
