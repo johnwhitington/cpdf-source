@@ -2,8 +2,9 @@
    to lay it out, paginate it, and so on. It is then typeset to produce a list
    of pages.
 
-   For now, this is just an experiment for -table-of-contents and -typeset. To
-   be continued... *)
+   For now, this is just an experiment for -table-of-contents and -typeset and
+   generating redaction annotation appearance streams. To be continued...
+*)
 
 (* TODO At the moment, structure tree support is limited. Cpdftoc.ml and
    Cpdftexttopdf do it by post-processing. We need to fix this, which might
@@ -32,6 +33,7 @@ type element =
 | Colour of Cpdfutil.colour
 | Opacity of float
 | Linespacing of float
+| Justification of Cpdfutil.justification
 
 let to_string_elt = function
   | Text t -> implode t
@@ -50,6 +52,9 @@ let to_string_elt = function
   | Colour c -> "Colour " ^ Pdfops.string_of_op (Cpdfutil.colour_op c)
   | Opacity f -> "Opacity " ^ string_of_float f
   | Linespacing f -> "Linespacing " ^ string_of_float f
+  | Justification j ->
+      "Justification " ^
+      (match j with Cpdfutil.LeftJustify -> "LeftJustify" | Cpdfutil.CentreJustify -> "CentreJustify" | Cpdfutil.RightJustify -> "RightJustify")
 
 let to_string es = fold_left (fun a b -> a ^ "\n" ^ b) "" (map to_string_elt es)
 
@@ -67,7 +72,8 @@ type state =
    mutable colour : Cpdfutil.colour;
    mutable outline : bool;
    mutable opacity : float;
-   mutable linewidth : float}
+   mutable linewidth : float;
+   mutable justification : Cpdfutil.justification}
 
 let width_table_cache = null_hash ()
 
@@ -83,7 +89,8 @@ let initial_state () =
    colour = Cpdfutil.Grey 0.;
    outline = false;
    opacity = 1.;
-   linewidth = 1.}
+   linewidth = 1.;
+   justification = Cpdfutil.LeftJustify}
 
 (* Mark as an artifact anything not already marked. *)
 let add_artifacts ops =
@@ -251,6 +258,9 @@ let paginate tmargin bmargin papersize i =
    | Linespacing f ->
        s.linespacing <- f;
        o := Linespacing f::!o
+   | Justification j ->
+       s.justification <- j;
+       o := Justification j::!o
    | x -> o := x::!o
   in
     iter process i;
@@ -393,6 +403,7 @@ let typeset ~process_struct_tree lmargin rmargin tmargin bmargin papersize pdf i
    | Opacity f -> s.opacity <- f (* FIXME: Need Op_gs with a dictionary entry here. *) 
    | Linewidth f -> s.linewidth <- f; ops := Pdfops.Op_w f::!ops
    | Linespacing f -> s.linespacing <- f
+   | Justification j -> s.justification <- j
   in
     Cpdfutil.progress_line "Typeset...";
     iter typeset_element i;

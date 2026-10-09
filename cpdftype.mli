@@ -16,6 +16,7 @@ type element =
 | Colour of Cpdfutil.colour
 | Opacity of float
 | Linespacing of float
+| Justification of Cpdfutil.justification
 
 type t = element list
 
