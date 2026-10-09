@@ -63,7 +63,11 @@ type state =
    mutable xpos : float;
    mutable ypos : float;
    mutable linespacing : float;
-   mutable dest : (Pdfdest.t * string option) option}
+   mutable dest : (Pdfdest.t * string option) option;
+   mutable colour : Cpdfutil.colour;
+   mutable outline : bool;
+   mutable opacity : float;
+   mutable linewidth : float}
 
 let width_table_cache = null_hash ()
 
@@ -75,7 +79,11 @@ let initial_state () =
    xpos = 0.;
    ypos = 0.;
    linespacing = 1.3;
-   dest = None}
+   dest = None;
+   colour = Cpdfutil.Grey 0.;
+   outline = false;
+   opacity = 1.;
+   linewidth = 1.}
 
 (* Mark as an artifact anything not already marked. *)
 let add_artifacts ops =
@@ -351,7 +359,11 @@ let typeset ~process_struct_tree lmargin rmargin tmargin bmargin papersize pdf i
         mcidr := -1;
         if s.font <> None && s.fontid <> None then typeset_element (Font (unopt s.fontid, unopt s.font, s.fontsize));
         s.xpos <- lmargin;
-        s.ypos <- tmargin +. s.fontsize
+        s.ypos <- tmargin +. s.fontsize;
+        typeset_element (Colour s.colour);
+        typeset_element (Outline s.outline);
+        typeset_element (Opacity s.opacity);
+        typeset_element (Linewidth s.linewidth);
     | BeginDocument ->
         s.ypos <- tmargin +. s.fontsize
     | BeginDest (dest, contents) ->
@@ -376,11 +388,11 @@ let typeset ~process_struct_tree lmargin rmargin tmargin bmargin papersize pdf i
        tags := (s, i)::!tags;
        ops := Pdfops.Op_BDC ("/" ^ s, Pdf.Dictionary [("/MCID", Pdf.Integer (mcid ()))])::!ops
    | EndTag -> ops := Pdfops.Op_EMC::!ops
-   | Outline b -> ops := Pdfops.Op_Tr (if b then 1 else 0)::!ops
-   | Colour c -> ops := Cpdfutil.colour_op c::Cpdfutil.colour_op_stroke c::!ops
-   | Opacity f -> () (* FIXME: Need Op_gs with a dictionary entry here. *) 
-   | Linewidth f -> ops := Pdfops.Op_w f::!ops
-   | Linespacing f -> s.linespacing <- f (* Will not appear - already processed... *)
+   | Outline b -> s.outline <- b; ops := Pdfops.Op_Tr (if b then 1 else 0)::!ops
+   | Colour c -> s.colour <- c; ops := Cpdfutil.colour_op c::Cpdfutil.colour_op_stroke c::!ops
+   | Opacity f -> s.opacity <- f (* FIXME: Need Op_gs with a dictionary entry here. *) 
+   | Linewidth f -> s.linewidth <- f; ops := Pdfops.Op_w f::!ops
+   | Linespacing f -> s.linespacing <- f
   in
     Cpdfutil.progress_line "Typeset...";
     iter typeset_element i;
