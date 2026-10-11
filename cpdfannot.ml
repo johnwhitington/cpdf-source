@@ -296,19 +296,16 @@ let generate_appearance
         match Hashtbl.find_opt table codepoint with
         | Some (fontnumber, x) ->
             begin match List.nth fonts fontnumber with
-            | Pdftext.StandardFont (sf, encoding) ->
-                float_of_int (Pdfstandard14.textwidth false encoding sf (string_of_char (char_of_int x))) /. 1000.
-            | Pdftext.SimpleFont {fontmetrics = Some m} ->
-                Array.get (Array.map (fun x -> fontsize *. x /. 1000. ) m) x
+            | Pdftext.StandardFont (sf, encoding) -> float_of_int (Pdfstandard14.textwidth false encoding sf (string_of_char (char_of_int x))) /. 1000.
+            | Pdftext.SimpleFont {fontmetrics = Some m} -> Array.get (Array.map (fun x -> x /. 1000. ) m) x
             | _ -> raise (Pdf.PDFError "Cpdfannot: Unsupported font")
             end
-        | None ->
-            flprint "Could not find width\n"; 0.
+        | None -> 0.
       in
-      let width = maxx -. maxy in
+      let width = maxx -. minx in
       let width = width *. 0.866 in (* To acccount for 6.66% margin each side *)
       let text_width = fold_left ( +. ) 0. (map find_codepoint_width (Pdftext.codepoints_of_utf8 overlay)) in
-        fontsize *. (width /. text_width)
+        width /. text_width
     else
       fontsize
   in
@@ -319,15 +316,8 @@ let generate_appearance
   in
   let pages =
     Cpdftexttopdf.typeset_fake_pages
-      pdf
-      ~font
-      ~papersize:(Pdfpaper.make Pdfunits.PdfPoint (maxx -. minx) (maxy -. miny))
-      ~fontsize
-      ~colour:overlay_text_colour
-      ~opacity
-      ~linespacing
-      ~linewidth
-      ~outline
+      pdf ~font ~papersize:(Pdfpaper.make Pdfunits.PdfPoint (maxx -. minx) (maxy -. miny))
+      ~fontsize ~colour:overlay_text_colour ~opacity ~linespacing ~linewidth ~outline
       (Pdfio.bytes_of_string overlay)
   in
     (* Get the ops and resources, and concatenate and return. *)
