@@ -282,6 +282,41 @@ let generate_appearance
   ~overlay ~overlay_text_colour ~overlay_justification ~overlay_repeat ~overlay_auto_size
   ~font ~fontsize ~opacity ~linespacing ~linewidth ~outline pdf ops (minx, miny, maxx, maxy)
 =
+  let fontsize =
+    if overlay_auto_size then
+      let fonts, table =
+        match font with
+        | Cpdfembed.PreMadeFontPack t -> t
+        | Cpdfembed.EmbedInfo {fontfile; fontname; encoding} ->
+            Cpdfembed.embed_truetype (Pdf.empty ()) ~fontfile ~fontname ~codepoints:(Pdftext.codepoints_of_utf8 overlay) ~encoding:Pdftext.WinAnsiEncoding
+        | Cpdfembed.ExistingNamedFont ->
+            raise (Pdf.PDFError "Can't use existing named font for annotation creation")
+      in
+      let find_codepoint_width codepoint =
+        match Hashtbl.find_opt table codepoint with
+        | Some (fontnumber, x) ->
+            begin match List.nth fonts fontnumber with
+            | Pdftext.StandardFont (sf, encoding) ->
+                float_of_int (Pdfstandard14.textwidth false encoding sf (string_of_char (char_of_int x))) /. 1000.
+            | Pdftext.SimpleFont {fontmetrics = Some m} ->
+                Array.get (Array.map (fun x -> fontsize *. x /. 1000. ) m) x
+            | _ -> raise (Pdf.PDFError "Cpdfannot: Unsupported font")
+            end
+        | None ->
+            flprint "Could not find width\n"; 0.
+      in
+      let width = maxx -. maxy in
+      let width = width *. 0.866 in (* To acccount for 6.66% margin each side *)
+      let text_width = fold_left ( +. ) 0. (map find_codepoint_width (Pdftext.codepoints_of_utf8 overlay)) in
+        fontsize *. (width /. text_width)
+    else
+      fontsize
+  in
+  let overlay =
+    if overlay_repeat
+      then fold_left (fun x y -> x ^ (if overlay_repeat then string_of_char '\n' else " ") ^ y) "" (many overlay 100)
+      else overlay
+  in
   let pages =
     Cpdftexttopdf.typeset_fake_pages
       pdf
@@ -293,7 +328,7 @@ let generate_appearance
       ~linespacing
       ~linewidth
       ~outline
-      (Pdfio.bytes_of_string (if overlay_repeat then fold_left (fun x y -> x ^ " " ^ y) "" (many overlay 100) else overlay))
+      (Pdfio.bytes_of_string overlay)
   in
     (* Get the ops and resources, and concatenate and return. *)
     let page =
