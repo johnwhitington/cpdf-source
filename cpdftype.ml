@@ -281,6 +281,13 @@ let rec number_tags n = function
   | h::t -> h::number_tags n t
   | [] -> []
 
+(* TODO: We calculate the total width between newlines (include doc beginning and
+   list end as newlines) by summing widths of text and hglue then add hglue at
+   the beginning of the line to do the justification. Full for right-justified
+   or half for centred. No change for left justification. *)
+let process_justification w i =
+  i
+
 (* At this stage, just Font and Text and HGlue 0. and VGlue 0. and Newline and
    NewPage elements. Split on NewPages, typeset each page, add font
    dictionaries. New page only creates a page when that page has content. *)
@@ -295,6 +302,8 @@ let typeset ~process_struct_tree lmargin rmargin tmargin bmargin papersize pdf i
   Cpdfutil.progress_line "Paginate...";
   let i = paginate tmargin bmargin papersize i in
   if debug then (print_endline "***after pagination:\n\n"; print_endline (to_string i));
+  let width = Pdfunits.points (Pdfpaper.width papersize) (Pdfpaper.unit papersize) in
+  let i = process_justification (width -. lmargin -. rmargin) i in
   let height = Pdfunits.points (Pdfpaper.height papersize) (Pdfpaper.unit papersize) in
   let s = initial_state () in
   s.xpos <- lmargin;
