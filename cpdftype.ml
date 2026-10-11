@@ -266,9 +266,10 @@ let paginate tmargin bmargin papersize i =
     iter process i;
     rev !o
 
-let make_resources fontobjnums =
+let make_resources fontobjnums opacities =
   Pdf.Dictionary
-    [("/Font", Pdf.Dictionary (map (fun fo -> ("/F" ^ string_of_int fo, Pdf.Indirect fo)) (setify fontobjnums)))]
+    [("/Font", Pdf.Dictionary (map (fun fo -> ("/F" ^ string_of_int fo, Pdf.Indirect fo)) (setify fontobjnums)));
+     ("/ExtGState", Pdf.Dictionary (map (fun (n, o) -> (n, (Pdf.Dictionary [("/ca", Pdf.Real o); ("/CA", Pdf.Real o)]))) opacities))]
 
 let make_annotations pdf annots =
   if annots = [] then Pdf.Dictionary [] else
@@ -303,6 +304,7 @@ let typeset ~process_struct_tree lmargin rmargin tmargin bmargin papersize pdf i
   let ops = ref [] in
   let fonts = ref [] in
   let thispagefontnums = ref [] in
+  let thispageextgstate = ref [] in
   let thispageannotations = ref [] in
   let thisdestrectangles = ref [] in
   let pages = ref [] in
@@ -313,7 +315,7 @@ let typeset ~process_struct_tree lmargin rmargin tmargin bmargin papersize pdf i
     let page =
       {Pdfpage.content = if ops = [] then [] else [Pdfops.stream_of_ops ops];
        Pdfpage.mediabox = Pdfpage.rectangle_of_paper papersize;
-       Pdfpage.resources = make_resources !thispagefontnums;
+       Pdfpage.resources = make_resources !thispagefontnums !thispageextgstate;
        Pdfpage.rotate = Pdfpage.Rotate0;
        Pdfpage.rest = make_annotations pdf !thispageannotations}
     in
@@ -365,6 +367,7 @@ let typeset ~process_struct_tree lmargin rmargin tmargin bmargin papersize pdf i
         write_page ();
         thispagefontnums := [];
         thispageannotations := [];
+        thispageextgstate := [];
         ops := [];
         mcidr := -1;
         if s.font <> None && s.fontid <> None then typeset_element (Font (unopt s.fontid, unopt s.font, s.fontsize));
@@ -400,7 +403,14 @@ let typeset ~process_struct_tree lmargin rmargin tmargin bmargin papersize pdf i
    | EndTag -> ops := Pdfops.Op_EMC::!ops
    | Outline b -> s.outline <- b; ops := Pdfops.Op_Tr (if b then 1 else 0)::!ops
    | Colour c -> s.colour <- c; ops := Cpdfutil.colour_op c::Cpdfutil.colour_op_stroke c::!ops
-   | Opacity f -> s.opacity <- f (* FIXME: Need Op_gs with a dictionary entry here. *) 
+   | Opacity f ->
+       s.opacity <- f;
+       if f < 1.0 then
+        begin
+          let name = "/gs" ^ string_of_int (length !thispageextgstate) in
+            thispageextgstate := (name, f)::!thispageextgstate;
+            ops := Pdfops.Op_gs name::!ops
+        end
    | Linewidth f -> s.linewidth <- f; ops := Pdfops.Op_w f::!ops
    | Linespacing f -> s.linespacing <- f
    | Justification j -> s.justification <- j
