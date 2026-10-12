@@ -5727,7 +5727,7 @@ let rec go () =
   | FlattenAnnotations ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
-      let pdf = Cpdfannot.flatten pdf range in
+      let pdf = Cpdfannot.flatten ~subtypes:args.annotation_subtypes ~subtypes_no:args.annotation_no_subtypes pdf range in
         write_pdf false pdf
 
 (* Advise the user if a combination of command line flags makes little sense,

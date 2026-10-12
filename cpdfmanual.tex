@@ -1,8 +1,3 @@
-%Document -flatten-annotations
-%Document -annot-type can take multiples for -list-annotations-json
-%Document -annot-no-type
-%Document -color etc can now be used with -typeset and -table-of-contents
-
 %Possible improvements:
 %
 %1) Chapter 1 is too big
@@ -3302,6 +3297,10 @@ As an alternative, pages can be chopped into two at a given position, horizontal
 
   \vspace{1.5mm}
   \small\noindent\verb!cpdf -remove-annotations in.pdf [<range>] -o out.pdf!
+
+  \vspace{1.5mm}
+  \small\noindent\verb!cpdf -flatten-annotations in.pdf [<range>]!\\
+  \small\noindent\verb!     [-annot-type <subtypes> | -annot-no-type <subtypes>] -o out.pdf!
   \end{framed}
 
   \section{Listing Annotations}
@@ -3345,16 +3344,25 @@ annotations on the selected pages to standard output. Each annotation is precede
 
 \noindent Extra objects required for annotations, but which are not annotations themselves are also extracted. They omit the page number, being just a pair of the object number and object. The CPDFJSON format is described on page \pageref{cpdfjson}. There is an additional object, -1, which gives the Cpdf annotation format version, currently 1.
 
-To list only a certain type of annotation, add \texttt{-annot-type}:
+To list only one or more certain types of annotation, add \texttt{-annot-type}:
 
   \begin{framed}
-    \noindent\small\verb!cpdf -list-annotations-json in.pdf -annot-type /Link > annots.json!
+    \noindent\small\verb!cpdf -list-annotations-json in.pdf -annot-type /Link/Highlight > annots.json!
     
     \vspace{2.5mm}
-    \noindent Print link annotations from \texttt{in.pdf} in JSON format, redirecting output to \texttt{annots.json}.
+    \noindent Print link and highlight annotations from \texttt{in.pdf} in JSON format, redirecting output to \texttt{annots.json}.
   \end{framed}
 
-\noindent Note that Popup annotations related to the chosen annotation type will not be included in this case.
+To list all but one or more certain types of annotation, add \texttt{-annot-no-type}:
+
+  \begin{framed}
+    \noindent\small\verb!cpdf -list-annotations-json in.pdf -annot-no-type /Link/Highlight > annots.json!
+    
+    \vspace{2.5mm}
+    \noindent Print all but link and highlight annotations from \texttt{in.pdf} in JSON format, redirecting output to \texttt{annots.json}.
+  \end{framed}
+
+\noindent Note that Popup annotations related to the chosen annotation type will not be included in these cases.
 
 \section{Setting annotations}
 
@@ -3401,6 +3409,26 @@ given page range.
     \noindent Remove annotations from the first page of a file only.
   \end{framed}
 
+  \section{Flattening Annotations}
+\index{annotations!flattening}
+  The \texttt{-flatten-annotations} operation removes all annotations from the
+given page range, flattening their appearances onto the page as ordinary graphics operations.
+
+  \begin{framed}
+    \noindent\small\verb!cpdf -flatten-annotations in.pdf -o out.pdf!
+    
+    \vspace{2.5mm}
+    \noindent Flatten annotations.
+  \end{framed}
+
+\noindent We can use \texttt{-annot-type} or \texttt{-annot-no-type} to select annotations to flatten, or to refrain from flattening. For example:
+
+  \begin{framed}
+    \noindent\small\verb!cpdf -flatten-annotations in.pdf -annot-no-type /Link/Highlight -o out.pdf!
+    
+    \vspace{2.5mm}
+    \noindent Flatten annotations, except link and highlight annotations.
+  \end{framed}
 \ \ \ 
 
 \pagestyle{empty}\thispagestyle{fancy}
@@ -5106,7 +5134,8 @@ To ensure that every optional content group appears in the order list:
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -typeset <text file> [-create-pdf-papersize <size>]!\\
-  \noindent\verb!     [-font <font>] [-font-size <size>]!\\
+  \noindent\verb!     [-font <font>] [-font-size <size>] [-color <color>]!\\
+  \noindent\verb!     [-opacity <n>] [-line-spacing <n>] [-outline] [-linewidth <n>]!\\
   \noindent\verb!     [-subformat <subformat>] [-title <string>] -o out.pdf!
 
   \vspace{1.5mm}
@@ -5156,9 +5185,11 @@ A basic text to PDF convertor is included in Cpdf. It takes a UTF8 text file (AS
  \noindent\small\verb?     -font Courier -font-size 10 -o out.pdf?
 \end{framed}
 
-\noindent The standard paper sizes are listed in Section \ref{papersizes}, or you may specify the width and height directly, as described in the same chapter. The font may be specified as described in Section \ref{fonts}. The default font is Times-Roman and the default size is 12.
+\noindent The standard paper sizes are listed in Section \ref{papersizes}, or you may specify the width and height directly, as described in the same chapter. 
 
 To produce a PDF in PDF/UA-1 or PDF/UA-2 format add, say, \texttt{-subformat PDF/UA-2 -title "Thesis"} to the command line.
+
+The font may be specified as described in Section \ref{fonts}. The default font is Times-Roman and the default size is 12. See Chapter 8 for \texttt{-color}, \texttt{-opacity}, \texttt{-line-spacing}, \texttt{-outline}, and \texttt{-linewidth}.
 
 \section{Make a PDF from a PNG, JPEG or JPEG2000 image}
 \index{image!convert to PDF}

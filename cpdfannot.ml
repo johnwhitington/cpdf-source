@@ -470,7 +470,7 @@ let remove_orphaned_popups pdf annots =
       (function Pdf.Indirect i -> if mem i orphaned then None else Some (Pdf.Indirect i) | x -> Some x)
       annots
 
-(* Flatten annotations to page. If no apperance, annotation remains. Orphaned /Popups cleaned. *)
+(* Flatten annotations to page. If no appearance, annotation remains. Orphaned /Popups cleaned. *)
 let flatten ?subtypes ?subtypes_no pdf range =
   Cpdfpage.process_pages  
     (Pdfpage.ppstub
@@ -490,7 +490,6 @@ let flatten ?subtypes ?subtypes_no pdf range =
                     | Some (Pdf.Name x) -> subtype_of_string x
                     | _ -> Pdfannot.Unknown ""
                   in
-
                     begin match Pdf.lookup_direct pdf "/AP" a with
                     | Some ap -> 
                         begin match Pdf.lookup_immediate "/N" ap with
