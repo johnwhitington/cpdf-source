@@ -1,6 +1,7 @@
 %Document -flatten-annotations
 %Document -annot-type can take multiples for -list-annotations-json
 %Document -annot-no-type
+%Document -color etc can now be used with -typeset and -table-of-contents
 
 %Possible improvements:
 %
@@ -6566,10 +6567,10 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -redact-apply [options] in.pdf -o out.pdf!\\
-  \noindent\verb!cpdf -redact-apply-type <type> [options] in.pdf -o out.pdf!
+  \noindent\verb!cpdf -redact-apply-type <type> [application options] in.pdf -o out.pdf!
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf -annotate <rectangle> in.pdf -o out.pdf!
+  \noindent\verb!cpdf -annotate <rectangle> [annotation options] in.pdf -o out.pdf!
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -remove-search-index <rectangle> in.pdf -o out.pdf!
@@ -6577,7 +6578,7 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
   \noindent\verb!cpdf -remove-acroform <rectangle> in.pdf -o out.pdf!
 
   \vspace{3.5mm}
-  \noindent Redaction options:
+  \noindent Redaction application options:
 
   \vspace{1.5mm}
   \noindent\verb!-color <color>! \textit{(see Chapter 8 for color specifications)}\\
@@ -6599,6 +6600,26 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
   \noindent\verb!-redact-links [remove | leave],[page | touches]!\\
   \noindent\verb!-redact-apply-appearance!
 
+\vspace{3.5mm}
+\noindent Redaction annotation options:
+
+  \vspace{1.5mm}
+  \noindent\verb!-redact-color <color>! \textit{(see Chapter 8 for color specifications)}\\
+  \noindent\verb!-redact-outline-color <color>! \textit{(see Chapter 8)}\\
+  \noindent\verb!-redact-text-color <color>! \textit{(see Chapter 8)}\\
+  \noindent\verb!-redact-overlay <text>! \textit{Overlay text}\\
+  \noindent\verb!-redact-repeat <text>! \textit{Repeat overlay text}\\
+  \noindent\verb!-redact-auto-size <text>! \textit{Scale text to fit}\\
+  \noindent\verb!-font <font>! \textit{Overlay text font}\\
+  \noindent\verb!-fontsize <n>! \textit{Overlay text font size}\\
+  \noindent\verb!-opacity <n>! \textit{Overlay opacity}\\
+  \noindent\verb!-linespace <n>! \textit{Overlay text line spacing}\\
+  \noindent\verb!-outline <n>! \textit{Overlay text is in outline}\\
+  \noindent\verb!-linewidth <n>! \textit{Overlay text line width when outline}\\
+  \noindent\verb!-opacity <n>! \textit{Overlay opacity}\\
+  \noindent\verb!-jbig2dec <path>!\\
+  \noindent\verb!-jbig2enc <path>!\\
+  \noindent\verb!-magick <path>!\\
   \end{framed}}
 
 Redaction removes content from a PDF, erasing it entirely rather than merely covering it up.
