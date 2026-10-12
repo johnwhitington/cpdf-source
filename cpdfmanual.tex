@@ -6647,10 +6647,6 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
   \noindent\verb!-linespace <n>! \textit{Overlay text line spacing}\\
   \noindent\verb!-outline <n>! \textit{Overlay text is in outline}\\
   \noindent\verb!-linewidth <n>! \textit{Overlay text line width when outline}\\
-  \noindent\verb!-opacity <n>! \textit{Overlay opacity}\\
-  \noindent\verb!-jbig2dec <path>!\\
-  \noindent\verb!-jbig2enc <path>!\\
-  \noindent\verb!-magick <path>!\\
   \end{framed}}
 
 Redaction removes content from a PDF, erasing it entirely rather than merely covering it up.
@@ -6728,6 +6724,22 @@ If the interactive software you are using to demarcate the annotations does not 
   \end{framed}
 
 \noindent Recall that this does not redact content, merely marks it for future redaction.
+
+By default, the redaction shows as a black filled rectangle with a dark red outline. We can change this with \texttt{-redact-color} and \texttt{-redact-outline-color}.
+
+We can add text to, for example, show which rule required the redaction, with \texttt{-redact-overlay}:
+
+  \begin{framed}
+    \noindent\small\verb!cpdf -annotate "100 100 200 300" -redact-overlay "(b) (1) (A)"!
+    \noindent\small\verb!     in.pdf 1 out.pdf!
+ 
+    \vspace{2.5mm}
+    \noindent Add a description redaction annotation to page 1 of \texttt{in.pdf}, writing to \texttt{out.pdf}
+  \end{framed}
+
+The text colour may be changed with \texttt{-redact-text-color}. Another use of overlay text is to add repeated text to show where text has been redacted. We can do this by adding \texttt{-redact-repeat}. The text will be repeated, interspersed with spaces. To auto-size the text to the width of the redaction annotation, we can add \texttt{-redact-auto-size}. Where both \texttt{-redact-repeat} and \texttt{-redact-auto-size} are present, the given text is interspersed with newlines instead, each repetition scaled to fit one line.
+
+The following options from Chapter 8 may be used to style the text: \texttt{-font}, \texttt{-fontsize}, \texttt{-opacity}, \texttt{-linespace}, \texttt{-outline}, \texttt{-linewidth}.
 
 \section{Removing other metadata}
 
