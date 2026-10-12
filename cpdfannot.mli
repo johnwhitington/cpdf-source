@@ -17,7 +17,7 @@ val copy_annotations : int list -> Pdf.t -> Pdf.t -> unit
 (** Add an annotation (presently just redaction). *)
 val add_annotation :
   (float * float * float * float) ->
-    main_color:Cpdfutil.colour ->
+    fill_color:Cpdfutil.colour ->
     outline_color:Cpdfutil.colour ->
     overlay:string option ->
     overlay_text_colour:Cpdfutil.colour ->

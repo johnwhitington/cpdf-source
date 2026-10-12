@@ -555,7 +555,8 @@ type args =
    mutable embedstd14 : string option;
    mutable color : Cpdfutil.colour;
    mutable redaction_annotation_outline_color : Cpdfutil.colour;
-   mutable redaction_annotation_main_color : Cpdfutil.colour;
+   mutable redaction_annotation_fill_color : Cpdfutil.colour;
+   mutable redaction_annotation_text_color : Cpdfutil.colour;
    mutable opacity : float;
    mutable position : Cpdfposition.position;
    mutable underneath : bool;
@@ -739,7 +740,8 @@ let args =
    fontencoding = Pdftext.WinAnsiEncoding;
    color = Cpdfutil.RGB (0., 0., 0.);
    redaction_annotation_outline_color = Cpdfutil.RGB (0.858826, 0.203918, 0.145096);
-   redaction_annotation_main_color = Cpdfutil.RGB (0., 0., 0.);
+   redaction_annotation_fill_color = Cpdfutil.RGB (0., 0., 0.);
+   redaction_annotation_text_color = Cpdfutil.RGB (0.858826, 0.203918, 0.145096);
    opacity = 1.;
    position = Cpdfposition.TopLeft (100., 100.);
    underneath = false;
@@ -929,7 +931,8 @@ let reset_arguments () =
   args.fontencoding <- Pdftext.WinAnsiEncoding;
   args.color <- Cpdfutil.RGB (0., 0., 0.);
   args.redaction_annotation_outline_color <- Cpdfutil.RGB (0.858826, 0.203918, 0.145096);
-  args.redaction_annotation_main_color <- Cpdfutil.RGB (0., 0., 0.);
+  args.redaction_annotation_fill_color <- Cpdfutil.RGB (0., 0., 0.);
+  args.redaction_annotation_text_color <- Cpdfutil.RGB (0.858826, 0.203918, 0.145096);
   args.opacity <- 1.;
   args.position <- Cpdfposition.TopLeft (100., 100.);
   args.underneath <- false;
@@ -1517,7 +1520,10 @@ let setredactionannotationoutlinecolor s =
   args.redaction_annotation_outline_color <- Cpdfdrawcontrol.parse_colour s
 
 let setredactionannotationmaincolor s =
-  args.redaction_annotation_main_color <- Cpdfdrawcontrol.parse_colour s
+  args.redaction_annotation_fill_color <- Cpdfdrawcontrol.parse_colour s
+
+let setredactionannotationtextcolor s =
+  args.redaction_annotation_text_color <- Cpdfdrawcontrol.parse_colour s
 
 let setopacity o =
   args.opacity <- o
@@ -2605,6 +2611,9 @@ let specs =
    ("-redact-color",
       Arg.String setredactionannotationmaincolor,
       " Set redaction annotation main color");
+   ("-redact-text-color",
+      Arg.String setredactionannotationtextcolor,
+      " Set redaction annotation text color");
    ("-opacity",
       Arg.Float setopacity,
       " Set the text opacity");
@@ -5690,10 +5699,10 @@ let rec go () =
       let pdf =
         Cpdfannot.add_annotation
           (minx, miny, maxx, maxy)
-          ~main_color:args.redaction_annotation_main_color
+          ~fill_color:args.redaction_annotation_fill_color
           ~outline_color:args.redaction_annotation_outline_color
           ~overlay:args.redact_overlay_text
-          ~overlay_text_colour:args.color
+          ~overlay_text_colour:args.redaction_annotation_text_color
           ~overlay_justification:args.justification
           ~overlay_repeat:args.redact_overlay_repeat
           ~overlay_auto_size:args.redact_overlay_auto_size
