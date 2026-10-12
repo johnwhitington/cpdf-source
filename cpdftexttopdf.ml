@@ -61,8 +61,8 @@ let rec tag_paragraphs = function
 let tag_paragraphs l =
   Cpdftype.Tag ("P", 0)::tag_paragraphs l
 
-let typeset_fake_pages pdf ~papersize ~font ~fontsize ~colour ~opacity ~linespacing ~linewidth ~outline text =
-  let margin = Pdfunits.points (Pdfpaper.width papersize) (Pdfpaper.unit papersize) /. 15.  in
+let typeset_fake_pages pdf ~papersize ?margin ~font ~fontsize ~colour ~opacity ~linespacing ~linewidth ~outline text =
+  let margin = match margin with Some x -> x | None -> Pdfunits.points (Pdfpaper.width papersize) (Pdfpaper.unit papersize) /. 15. in
   let codepoints = setify (Pdftext.codepoints_of_utf8 (Pdfio.string_of_bytes text)) in
   let fontpack =
     match font with

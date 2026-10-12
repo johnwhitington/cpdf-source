@@ -312,12 +312,12 @@ let generate_appearance
   in
   let overlay =
     if overlay_repeat
-      then fold_left (fun x y -> x ^ (if overlay_repeat then string_of_char '\n' else " ") ^ y) "" (many overlay 100)
+      then fold_left (fun x y -> x ^ (if overlay_auto_size then string_of_char '\n' else " ") ^ y) "" (many overlay 1000)
       else overlay
   in
   let pages =
     Cpdftexttopdf.typeset_fake_pages
-      pdf ~font ~papersize:(Pdfpaper.make Pdfunits.PdfPoint (maxx -. minx) (maxy -. miny))
+      pdf ~font ~papersize:(Pdfpaper.make Pdfunits.PdfPoint (maxx -. minx) (maxy -. miny)) ~margin:0.
       ~fontsize ~colour:overlay_text_colour ~opacity ~linespacing ~linewidth ~outline
       (Pdfio.bytes_of_string overlay)
   in

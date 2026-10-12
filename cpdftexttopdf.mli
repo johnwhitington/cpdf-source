@@ -21,6 +21,7 @@ val typeset :
 val typeset_fake_pages :
   Pdf.t ->
   papersize:Pdfpaper.t ->
+  ?margin:float ->
   font:Cpdfembed.cpdffont ->
   fontsize:float ->
   colour:Cpdfutil.colour ->
