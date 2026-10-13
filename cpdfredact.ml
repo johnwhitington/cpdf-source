@@ -48,18 +48,61 @@ Which to do? Neeed 1, 2, 4. *)
 (* Cpdfcontent has annotated where objects have been removed. We use this to
    remove marked content sections (but not their contents) if they contain
    removed objects. Either the innermost, or all. Remove Cpdf's annotations too. *)
-let strip_cpdf_removal_annotations ops = ops
+let strip_cpdf_removal_annotations =
+  lose
+    (function Pdfops.Op_MP ("/CPDF_REMOVED_PATH" | "/CPDF_REMOVED_TEXT" | "/CPDF_CHOPPED_IMAGE" | "/CPDF_REMOVED_IMAGE") -> true | _ -> false)
+
+let remove_direct = function
+  | Pdf.Dictionary _ as d ->
+      Pdf.remove_dict_entry (Pdf.remove_dict_entry (Pdf.remove_dict_entry d "/Alt") "/ActualText") "/T"
+  | x -> x
+
+let structparents pdf page =
+  let parent_tree =
+    match Pdf.lookup_chain pdf pdf.Pdf.trailerdict ["/Root"; "/StructTreeRoot"; "/ParentTree"] with
+    | Some x -> Pdftree.read_number_tree pdf x
+    | None -> []
+  in
+    match Pdf.lookup_direct pdf "/StructParents" page.Pdfpage.rest with
+    | Some (Pdf.Integer i) ->
+        begin match lookup (string_of_int i) parent_tree with
+        | Some (Pdf.Indirect i) ->
+            begin match Pdf.direct pdf (Pdf.Indirect i) with
+            | Pdf.Array a -> Array.of_list (option_map (function Pdf.Indirect i -> Some i | _ -> None) a)
+            | _ -> [||]
+            end
+        | Some (Pdf.Array a) -> Array.of_list (option_map (function Pdf.Indirect i -> Some i | _ -> None) a)
+        | Some x -> [||]
+        | None -> [||]
+        end
+    | _ -> [||]
 
 let remove_all_structure pdf page ops =
-  strip_cpdf_removal_annotations
-    (map
+  let structparents = structparents pdf page in
+    map
       (fun op ->
        match op with
        | Pdfops.Op_BDC (n, d) ->
+           begin match Pdf.lookup_direct pdf "/MCID" d with
+           | Some (Pdf.Integer mcid) ->
+               (*Printf.printf "Looking for MCID %i\n" mcid;*)
+               begin try
+                 let n = Array.get structparents mcid in
+                 let o = Pdf.lookup_obj pdf n in
+                   (*Printf.printf "mcid points to %s\n" (Pdfwrite.string_of_pdf o);*)
+                   Printf.printf "Indirect %i: %s\n" n (Pdfwrite.string_of_pdf o);
+                   Printf.printf "Indirect --> %i: %s\n" n (Pdfwrite.string_of_pdf (remove_direct o));
+                   Pdf.addobj_given_num pdf (n, remove_direct o)
+               with
+                 Invalid_argument _ -> ()
+               end
+           | _ -> ()
+           end;
            Printf.printf "%s: %s\n" n (Pdfwrite.string_of_pdf d);
-           op
+           Printf.printf "--> %s: %s\n" n (Pdfwrite.string_of_pdf (remove_direct d));
+           Pdfops.Op_BDC (n, remove_direct d)
        | _ -> op)
-      ops)
+      ops
 
 let remove_innermost pdf page ops =
   (* TODO Identify innermost *)
@@ -72,11 +115,14 @@ let remove_containing pdf page ops =
   ops
 
 let postprocess_structure ~struct_spec pdf page ops =
-  match struct_spec with
-  | StructLeave -> ops
-  | StructRemoveAll -> remove_all_structure pdf page ops
-  | StructRemoveInnermost -> remove_innermost pdf page ops
-  | StructRemoveContaining -> remove_containing pdf page ops
+  let ops =
+    match struct_spec with
+    | StructLeave -> ops
+    | StructRemoveAll -> remove_all_structure pdf page ops
+    | StructRemoveInnermost -> remove_innermost pdf page ops
+    | StructRemoveContaining -> remove_containing pdf page ops
+  in
+    strip_cpdf_removal_annotations ops
 
 (* Redact a path on a page *)
 let redact_page
