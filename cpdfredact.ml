@@ -37,8 +37,46 @@ let box_matches ~detection ~invert (minx, miny, maxx, maxy) (Cpdfcontent.Quad (x
            | Some overlap ->
                area overlap /. area (bminx, bminy, bmaxx, bmaxy) > (perc /. 100.))
 
-let postprocess_structure ~struct_spec pdf page ops =
+(* TODO Can:
+     1) Process to erase data in Span;
+     2) Look up MCID and erase data there;
+     3) Remove the op itself.
+     4) Remove Cpdf annotation MP points
+
+Which to do? Neeed 1, 2, 4. *)
+
+(* Cpdfcontent has annotated where objects have been removed. We use this to
+   remove marked content sections (but not their contents) if they contain
+   removed objects. Either the innermost, or all. Remove Cpdf's annotations too. *)
+let remove_all_structure pdf page ops =
+  lose
+    (function
+     | Pdfops.Op_BDC (n, d) ->
+         Printf.printf "%s: %s\n" n (Pdfwrite.string_of_pdf d);
+         true
+     | Pdfops.Op_BMC _ -> true
+     | Pdfops.Op_EMC -> true
+     | Pdfops.Op_MP _ -> true
+     | Pdfops.Op_DP _ -> true
+     | _ -> false)
+    ops
+
+let remove_innermost pdf page ops =
+  (* TODO Identify innermost *)
+  (* TODO Do the actual removal *)
   ops
+
+let remove_containing pdf page ops =
+  (* TODO Identify containing *)
+  (* TODO Do the actual removal. *)
+  ops
+
+let postprocess_structure ~struct_spec pdf page ops =
+  match struct_spec with
+  | StructLeave -> ops
+  | StructRemoveAll -> remove_all_structure pdf page ops
+  | StructRemoveInnermost -> remove_innermost pdf page ops
+  | StructRemoveContaining -> remove_containing pdf page ops
 
 (* Redact a path on a page *)
 let redact_page
