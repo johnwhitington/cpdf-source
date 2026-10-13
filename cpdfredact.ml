@@ -40,7 +40,7 @@ let box_matches ~detection ~invert (minx, miny, maxx, maxy) (Cpdfcontent.Quad (x
 (* TODO Can:
      1) Process to erase data in Span;
      2) Look up MCID and erase data there;
-     3) Remove the op itself.
+     3) Remove the op itself <--- No need.
      4) Remove Cpdf annotation MP points
 
 Which to do? Neeed 1, 2, 4. *)
@@ -48,18 +48,18 @@ Which to do? Neeed 1, 2, 4. *)
 (* Cpdfcontent has annotated where objects have been removed. We use this to
    remove marked content sections (but not their contents) if they contain
    removed objects. Either the innermost, or all. Remove Cpdf's annotations too. *)
+let strip_cpdf_removal_annotations ops = ops
+
 let remove_all_structure pdf page ops =
-  lose
-    (function
-     | Pdfops.Op_BDC (n, d) ->
-         Printf.printf "%s: %s\n" n (Pdfwrite.string_of_pdf d);
-         true
-     | Pdfops.Op_BMC _ -> true
-     | Pdfops.Op_EMC -> true
-     | Pdfops.Op_MP _ -> true
-     | Pdfops.Op_DP _ -> true
-     | _ -> false)
-    ops
+  strip_cpdf_removal_annotations
+    (map
+      (fun op ->
+       match op with
+       | Pdfops.Op_BDC (n, d) ->
+           Printf.printf "%s: %s\n" n (Pdfwrite.string_of_pdf d);
+           op
+       | _ -> op)
+      ops)
 
 let remove_innermost pdf page ops =
   (* TODO Identify innermost *)
