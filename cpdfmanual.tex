@@ -6593,20 +6593,23 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
 \chapter{Redaction}\label{chap:20}\pagestyle{fancy}\index{redaction}\index{redact}
 
   {\small\begin{framed}
-  \noindent\verb!cpdf -redact [-process-struct-trees] in.pdf [<range>] -o out.pdf!\\
-  \noindent\verb!cpdf -redact-shape <rectangle> [options] in.pdf [<range>] -o out.pdf!
+  \noindent\verb!cpdf -redact!\\
+  \noindent\verb!     [-redact-structure remove,all] [-redact-bookmarks remove,page]!\\
+  \noindent\verb!     [-redact-links remove,page] in.pdf [<range>] -o out.pdf!\\
+  \noindent\verb!cpdf -redact-shape <rectangle> [application options]!\\
+  \noindent\verb!     in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf -redact-apply [options] in.pdf -o out.pdf!\\
+  \noindent\verb!cpdf -redact-apply [application options] in.pdf -o out.pdf!\\
   \noindent\verb!cpdf -redact-apply-type <type> [application options] in.pdf -o out.pdf!
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -annotate <rectangle> [annotation options] in.pdf -o out.pdf!
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf -remove-search-index <rectangle> in.pdf -o out.pdf!
-  \noindent\verb!cpdf -remove-marked-content <rectangle> in.pdf -o out.pdf!
-  \noindent\verb!cpdf -remove-acroform <rectangle> in.pdf -o out.pdf!
+  \noindent\verb!cpdf -remove-search-index in.pdf -o out.pdf!\\
+  \noindent\verb!cpdf -remove-marked-content n.pdf -o out.pdf!\\
+  \noindent\verb!cpdf -remove-acroform in.pdf -o out.pdf!
 
   \vspace{3.5mm}
   \noindent Redaction application options:
@@ -6617,37 +6620,37 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
   \noindent\verb!-linewidth <n>! \textit{(see Chapter 8)}\\
   \noindent\verb!-underneath! \textit{(see Chapter 8)}\\
   \noindent\verb!-outline! \textit{(see Chapter 8)}\\
-  \noindent\verb!-jbig2dec <path>!\\
-  \noindent\verb!-jbig2enc <path>!\\
-  \noindent\verb!-magick <path>!\\
+  \noindent\verb!-jbig2dec <path>! \textit{when chopping images only}\\
+  \noindent\verb!-jbig2enc <path>! \textit{when chopping images only}\\
+  \noindent\verb!-magick <path>! \textit{when chopping images only}\\
   \noindent\verb!-redact-no-show!\\
+  \noindent\verb!-redact-text [remove|leave],[touches|encloses]!\\
+  \noindent\verb!-redact-images [remove|chop|leave],[touches|encloses|covers<n>]!\\
+  \noindent\verb!-redact-inline-images [remove|leave],[touches|encloses| covers<n>]!\\
+  \noindent\verb!-redact-vectors [remove|leave],[touches|encloses|covers<n>]!\\
+  \noindent\verb!-redact-annotations [remove|leave],[touches|encloses|covers<n>]!\\
+  \noindent\verb!-redact-bookmarks [remove|leave],[page|touches]!\\
+  \noindent\verb!-redact-links [remove|leave],[page|touches]!\\
+  \noindent\verb!-redact-structure [remove|leave],[all|innermost|containing]!\\
+  \noindent\verb!-redact-apply-appearance!\\
   \noindent\verb!-redact-invert!\\
-  \noindent\verb!-redact-text [remove | leave],[touches | encloses]!\\
-  \noindent\verb!-redact-images [remove | chop | leave],[touches | encloses | covers<n>]!\\
-  \noindent\verb!-redact-inline-images [remove | leave],[touches | encloses | covers<n>]!\\
-  \noindent\verb!-redact-vectors [remove | leave],[touches | encloses | covers<n>]!\\
-  \noindent\verb!-redact-annotations [remove | leave],[touches | encloses | covers<n>]!\\
-  \noindent\verb!-redact-bookmarks [remove | leave],[page | touches]!\\
-  \noindent\verb!-redact-links [remove | leave],[page | touches]!\\
-  \noindent\verb!-redact-structure [remove | leave],[all | innermost | containing]!\\
-  \noindent\verb!-redact-apply-appearance!
 
 \vspace{3.5mm}
-\noindent Redaction annotation options:
+\noindent Redaction annotation creation options:
 
   \vspace{1.5mm}
   \noindent\verb!-redact-color <color>! \textit{(see Chapter 8 for color specifications)}\\
   \noindent\verb!-redact-outline-color <color>! \textit{(see Chapter 8)}\\
   \noindent\verb!-redact-text-color <color>! \textit{(see Chapter 8)}\\
-  \noindent\verb!-redact-overlay <text>! \textit{Overlay text}\\
-  \noindent\verb!-redact-repeat <text>! \textit{Repeat overlay text}\\
-  \noindent\verb!-redact-auto-size <text>! \textit{Scale text to fit}\\
-  \noindent\verb!-font <font>! \textit{Overlay text font}\\
-  \noindent\verb!-fontsize <n>! \textit{Overlay text font size}\\
-  \noindent\verb!-opacity <n>! \textit{Overlay opacity}\\
-  \noindent\verb!-linespace <n>! \textit{Overlay text line spacing}\\
-  \noindent\verb!-outline <n>! \textit{Overlay text is in outline}\\
-  \noindent\verb!-linewidth <n>! \textit{Overlay text line width when outline}\\
+  \noindent\verb!-redact-overlay <text>!\\
+  \noindent\verb!-redact-repeat <text>!\\
+  \noindent\verb!-redact-auto-size <text>!\\
+  \noindent\verb!-font <font>!\\
+  \noindent\verb!-fontsize <n>!\\
+  \noindent\verb!-opacity <n>!\\
+  \noindent\verb!-linespace <n>!\\
+  \noindent\verb!-outline <n>!\\
+  \noindent\verb!-linewidth <n>!\\
   \end{framed}}
 
 Redaction removes content from a PDF, erasing it entirely rather than merely covering it up.
@@ -6663,7 +6666,7 @@ To redact a whole page we give the page range, and such pages will be emptied of
     \noindent Redact pages 1,2 and 19-end of \texttt{in.pdf}, writing to \texttt{out.pdf}
   \end{framed}
 
-\noindent If \texttt{-redact-structure remove,all} is added to the command, the document's structure tree will be shorn of any parts which are marked as relating to the now-redacted pages. We can add \texttt{-redact-bookmarks remove,page} to remove bookmarks linking to this page, and \texttt{-redact-links remove,page} to remove any hyperlink in the whole PDF pointing to a redacted page.
+\noindent If \texttt{-redact-structure remove,all} is added to the command, the document's structure tree will be shorn of any parts which are marked as relating to the now-redacted pages. We can add \texttt{-redact-bookmarks remove,page} to remove bookmarks linking to the page range, and \texttt{-redact-links remove,page} to remove any hyperlink in the whole PDF pointing to any redacted page.
 
 \section{Redacting content selectively}
 
@@ -6695,7 +6698,7 @@ The appearance of the redaction is governed by the options \texttt{-color} (defa
 
 \section{Redaction annotations}
 
-Annotations denoting future redactions can be added to a PDF in Adobe Acrobat other interactive PDF software. Cpdf can apply these annotations to perform the redaction. Cpdf can also create such redaction annotations. To apply existing annotation redactions:
+Annotations denoting future redactions can be added to a PDF in Adobe Acrobat or other interactive PDF software. Cpdf can apply these annotations to perform the redaction. Cpdf can also create such redaction annotations. To apply existing annotation redactions:
 
   \begin{framed}
     \noindent\small\verb!cpdf -redact-apply in.pdf 2 out.pdf!
@@ -6704,7 +6707,7 @@ Annotations denoting future redactions can be added to a PDF in Adobe Acrobat ot
     \noindent Apply redaction annotations on page two of \texttt{in.pdf}, writing to \texttt{out.pdf}
   \end{framed}
 
-\noindent The redaction and annotation appearance options described above may be used here too.
+\noindent The redaction application appearance options described above may be used here too. Or, if we supply \texttt{-redact-show-appearance} the redaction annotation's own appearance will be used instead.
 
 If the interactive software you are using to demarcate the annotations does not know about redaction annotations, you can use a different kind of annotation and Cpdf will use that annotation's bounding box as the redaction rectangle:
 
@@ -6738,7 +6741,7 @@ We can add text to, for example, show which rule required the redaction, with \t
     \noindent Add a description redaction annotation to page 1 of \texttt{in.pdf}, writing to \texttt{out.pdf}
   \end{framed}
 
-The text colour may be changed with \texttt{-redact-text-color}. Another use of overlay text is to add repeated text to show where text has been redacted. We can do this by adding \texttt{-redact-repeat}. The text will be repeated, interspersed with spaces. To auto-size the text to the width of the redaction annotation, we can add \texttt{-redact-auto-size}. Where both \texttt{-redact-repeat} and \texttt{-redact-auto-size} are present, the given text is interspersed with newlines instead, each repetition scaled to fit one line.
+\noindent The text colour may be changed with \texttt{-redact-text-color}. Another use of overlay text is to add repeated text to show where text has been redacted. We can do this by adding \texttt{-redact-repeat}. The text will be repeated, interspersed with spaces. To auto-size the text to the width of the redaction annotation, we can add \texttt{-redact-auto-size}. Where both \texttt{-redact-repeat} and \texttt{-redact-auto-size} are present, the given text is interspersed with newlines instead, each repetition scaled to fit one line.
 
 The following options from Chapter 8 may be used to style the text: \texttt{-font}, \texttt{-fontsize}, \texttt{-opacity}, \texttt{-linespace}, \texttt{-outline}, \texttt{-linewidth}.
 
@@ -6768,7 +6771,7 @@ Three other options can help to remove metadata from a file where it might conta
     \noindent Remove the proprietary Adobe search index from a document
   \end{framed}
 
-\noindent To remove marked content, proprietary or otherwise from all content streams in the document (n.b careful, will void PDF/UA status).
+\noindent To remove marked content, proprietary or otherwise from all content streams in the document (n.b will void PDF/UA status).
 
   \begin{framed}
     \noindent\small\verb!cpdf -remove-marked-content in.pdf -o out.pdf!
@@ -6777,7 +6780,21 @@ Three other options can help to remove metadata from a file where it might conta
     \noindent Remove all marked content from PDF streams.
   \end{framed}
 
-\noindent Remove any AcroForm from the document:
+
+\noindent To remove the structure tree wholesale (n.b will void PDF/UA status):
+
+
+  \begin{framed}
+    \noindent\small\verb!cpdf -remove-struct-tree in.pdf -o out.pdf!
+ 
+    \vspace{2.5mm}
+    \noindent Remove all marked content from PDF streams.
+  \end{framed}
+
+
+
+
+\noindent To remove any AcroForm from the document:
 
   \begin{framed}
     \noindent\small\verb!cpdf -remove-acroform in.pdf -o out.pdf!
@@ -6800,7 +6817,7 @@ Three other options can help to remove metadata from a file where it might conta
 There are several ways to check that redaction has proceeded as we would have wished:
 
 \begin{description}
-\item[Inversion] Adding \texttt{-redact-invert} and writing to another PDF will keep all objects redaction would lose, and lose all objects redaction would keep. Each object (image, vector, glyph) ends up only the redacted or inverted output (note that images are never chopped with \texttt{-redact-invert} -- \texttt{chop} is considered the same as  \texttt{remove} in this context).
+\item[Inversion] Adding \texttt{-redact-invert} and writing to another PDF will keep all objects redaction would lose, and lose all objects redaction would keep. Each object (image, vector, glyph) ends up only the redacted or inverted output (note that images are never chopped with \texttt{-redact-invert} the specifier \texttt{chop} is considered the same as  \texttt{remove} in this context).
 \item[Page content JSON] Page content can be extracted with \texttt{-page-content} as described in Section \ref{pagecontent} for the redacted and unredacted file, and a comparison made.
 \item[Full JSON] To check metadata as well, we can use \texttt{-output-json} from Chapter 15 and compare the output on redacted and unredacted files.
 \item[Text extraction] Whilst Cpdf does not yet have text extraction facilities, you can use another text extraction program to extract the text from the original file and the redacted file and check the differences.
