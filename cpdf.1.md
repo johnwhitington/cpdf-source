@@ -1,6 +1,6 @@
 % CPDF(1)
 % Coherent Graphics Ltd
-% August 2026
+% October 2026
 
 # NAME
 
@@ -2285,67 +2285,179 @@ Create a new, blank, PDF/UA-1 or PDF/UA-2 file with the given title.
 
 # 20. REDACTION
 
-**cpdf -redact** **in.pdf** \[\<range>] \[-process-struct-trees] **-o out.pdf**
+**cpdf -redact** **in.pdf** \[\<range>] \[-redact-structure remove,all] \[-redact-links remove,page] \[-redact-bookmarks remove,page] **-o out.pdf**
 
 Remove the content of the pages in the given range entirely, including
 annotations and any resources. 
 
-**-process-struct-trees**
+**-redact-structure remove,all**
 
 : Process the document's structure tree to remove any parts which are marked as
 relating to the now-redacted pages.
 
-**cpdf -redact-shape** \<rectangle> \[redaction options] **in.pdf** \[\<range>] **-o out.pdf**
+**-redact-links remove,page**
+
+: Remove links pointing to this page.
+
+**-redact-bookmarks remove,page**
+
+: Remove bookmarks pointing to this page.
+
+**cpdf -redact-shape** \<rectangle> \[application options] **in.pdf** \[\<range>] **-o out.pdf**
 
 Remove content in the given rectangle. See options below.
 
-**cpdf -redact-apply** \[redaction options] **in.pdf** \[\<range>] **-o out.pdf**
+**cpdf -redact-apply** \[application options] **in.pdf** \[\<range>] **-o out.pdf**
 
 Apply redaction annotations. See options below.
 
-**cpdf -redact-apply-type** \<annotation type> \[redaction options] **in.pdf** \[\<range>] **-o out.pdf**
+**cpdf -redact-apply-type** \<annotation type> \[application options] **in.pdf** \[\<range>] **-o out.pdf**
 
 Apply annotations as if they were redaction annotations. See options below.
 
-**cpdf -annotate** \<rectangle> **in.pdf** \[\<range>] **-o out.pdf**
-
-Create a redaction annotation.
-
 **-color** \<color>
 
-: Set the fill color for the redaction appearance (default black).
+: Set the fill color for the redaction (default black).
+
+**-opacity** \<n>
+
+: Set redaction opacity.
+
+**-linewidth** \<n>
+
+: Set line width for redaction outline.
+
+**-underneath**
+
+: Apply the redaction underneath rather than on top of the page.
 
 **-outline**
 
 : Make the redaction appearance outline-only.
 
+**-jbig2dec** \<path>
+
+: Supply path to JBIG2 decoder. Only required when chopping images.
+
+**-jbig2enc** \<path>
+
+: Supply path to JBIG2 encoder. Only required when chopping images.
+
+**-magick** \<path>
+
+: Supply path to Imagemagick. Only required when chopping images.
+
 **-redact-no-show**
 
-: Don't show any redaction appearance.
+: Don't show the redaction shape at all, just redact.
+
+**-redact-text** \[remove|leave],\[touches|encloses]
+
+: Default "remove,touches".
+
+**-redact-images** \[remove|chop|leave],\[touches|encloses|covers\<n>]
+
+: Set image redaction specification. Default "leave".
+
+**-redact-inline-images** \[remove|leave],\[touches|encloses|covers\<n>]
+
+: Set inline image redaction specification. Default "leave".
+
+**-redact-vectors** \[remove|leave],\[touches|encloses|covers\<n>]
+
+: Set vectors redaction specification. Default "leave".
+
+**-redact-annotations** \[remove|leave],\[touches|encloses|covers\<n>]
+
+: Set annotation redaction specification. Default "leave".
+
+**-redact-links** \[remove|leave],\[page|touches]
+
+: Set link redaction specification. Default "leave".
+
+**-redact-bookmarks** \[remove|leave],\[page|touches]
+
+: Set bookmark redaction specification. Default "leave".
+
+**-redact-structure** \[remove|leave],\[all|innermost|containing]
+
+: Set structure redaction specification. Default "leave".
+
+**-redact-apply-appearance**
+
+: Use the redaction annotation's built-in appearance rather than defining it on the command line.
 
 **-redact-invert**
 
 : Invert the redaction, leaving everything which would otherwise be redacted and removing everything which would otherwise be kept.
 
-**-redact-text** \[remove | leave],\[touches | encloses]
+**cpdf -annotate** \<rectangle> **in.pdf** \[\<range>] [annotation options] **-o out.pdf**
 
-: Default "remove,touches".
+Create a redaction annotation.
 
-**-redact-images** \[remove | chop | leave],\[touches | encloses]
+**-redact-color** \<color>
 
-: Set image redaction specification. Default "leave".
+: Redaction annotation color.
 
-**-redact-inline-images** \[remove | leave],\[touches | encloses]
+**-redact-outline-color** \<color>
 
-: Set inline image redaction specification. Default "leave".
+: Redaction annotation outline color.
 
-**-redact-vectors** \[remove | leave],\[touches | encloses]
+**-redact-overlay** \<text>
 
-: Set vectors redaction specification. Default "leave".
+: Redaction annotation overlay text.
 
-**-redact-annotations** \[remove | leave],\[touches | encloses]
+**-redact-repeat**
 
-: Set annotation redaction specification. Default "leave".
+: Repeat the overlay text to fill the space, interspersed with spaces.
+
+**-redact-auto-size**
+
+: Auto-size annotation overlay text. If **-redact-repeat** also set, intersperse with newlines not spaces.
+
+**-font**
+
+: Set redaction annotation overlay text.
+
+**-fontsize**
+
+: Set redaction annotation overlay font size.
+
+**-opacity**
+
+: Set redaction annotation overlay font opacity.
+
+**-linespace**
+
+: Set redaction annotation overlay line spacing.
+
+**-outline**
+
+: Set redaction annotation text to be outline.
+
+**-linewidth**
+
+: Set line width for outline annotation text.
+
+**cpdf -remove-search-index in.pdf -o out.pdf**
+
+Remove the search index from a PDF.
+
+**cpdf -remove-marked-content in.pdf** \[\<range>] **-o out.pdf**
+
+Remove all marked content from the given pages.
+
+**cpdf -remove-acroform in.pdf -o out.pdf**
+
+Remove AcroForm.
+
+**cpdf -remove-struct-tree in.pdf -o out.pdf**
+
+Remove the structure tree from a PDF.
+
+**cpdf -ocg-remove in.pdf -o out.pdf**
+
+Remove the optional content structure from a PDF.
 
 # 21. MISCELLANEOUS
 
