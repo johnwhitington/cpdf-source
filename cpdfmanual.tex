@@ -6596,6 +6596,8 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
   \noindent\verb!cpdf -redact!\\
   \noindent\verb!     [-redact-structure remove,all] [-redact-bookmarks remove,page]!\\
   \noindent\verb!     [-redact-links remove,page] in.pdf [<range>] -o out.pdf!\\
+
+  \vspace{1.5mm}
   \noindent\verb!cpdf -redact-shape <rectangle> [application options]!\\
   \noindent\verb!     in.pdf [<range>] -o out.pdf!
 
@@ -6609,7 +6611,9 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
   \vspace{1.5mm}
   \noindent\verb!cpdf -remove-search-index in.pdf -o out.pdf!\\
   \noindent\verb!cpdf -remove-marked-content n.pdf -o out.pdf!\\
-  \noindent\verb!cpdf -remove-acroform in.pdf -o out.pdf!
+  \noindent\verb!cpdf -remove-acroform in.pdf -o out.pdf!\\
+  \noindent\verb!cpdf -remove-struct-tree in.pdf -o out.pdf!\\
+  \noindent\verb!cpdf -ocg-remove in.pdf -o out.pdf!
 
   \vspace{3.5mm}
   \noindent Redaction application options:
@@ -6657,7 +6661,7 @@ Redaction removes content from a PDF, erasing it entirely rather than merely cov
 
 \section{Redacting whole pages}
 
-To redact a whole page we give the page range, and such pages will be emptied of content, and any annotations and page resources removed. The page dimensions remain the same.
+To redact one or more whole pages we give the page range we use \texttt{-redact}. Such pages will be emptied of content, and any annotations and page resources removed. The page dimensions remain the same.
 
   \begin{framed}
     \noindent\small\verb!cpdf -redact in.pdf 1,2,19-end -o out.pdf!
@@ -6771,7 +6775,7 @@ Three other options can help to remove metadata from a file where it might conta
     \noindent Remove the proprietary Adobe search index from a document
   \end{framed}
 
-\noindent To remove marked content, proprietary or otherwise from all content streams in the document (n.b will void PDF/UA status).
+\noindent To remove marked content, proprietary or otherwise from all content streams in the document (NB: will void PDF/UA status).
 
   \begin{framed}
     \noindent\small\verb!cpdf -remove-marked-content in.pdf -o out.pdf!
@@ -6781,7 +6785,7 @@ Three other options can help to remove metadata from a file where it might conta
   \end{framed}
 
 
-\noindent To remove the structure tree wholesale (n.b will void PDF/UA status):
+\noindent To remove the structure tree wholesale (NB: will void PDF/UA status):
 
 
   \begin{framed}
