@@ -491,14 +491,14 @@ let parse_link_redaction_spec = function
   | "remove,touching" -> Cpdfredact.LinkRemoveTouching
   | "remove,page" -> Cpdfredact.LinkRemovePage
   | "leave" -> Cpdfredact.LinkLeave
-  | _ -> error "bad link redaction specification"
+  | s -> error ("bad link redaction specification " ^ s)
 
 let parse_structure_redaction_spec = function
   | "leave" -> Cpdfredact.StructLeave
   | "remove,innermost" -> Cpdfredact.StructRemoveInnermost
   | "remove,containing" -> Cpdfredact.StructRemoveContaining
   | "remove,all" -> Cpdfredact.StructRemoveAll
-  | _ -> error "bad structure redaction spec"
+  | s -> error ("bad structure redaction specification " ^ s)
 
 (* One item, or two separated by a comma. No whitespace. First is "remove" or
    "leave" or "chop", second is "encloses" or "touches" or "covers<n>" *)
@@ -508,24 +508,24 @@ let parse_redaction_spec s =
     | "remove" -> Cpdfredact.Remove
     | "chop" -> Cpdfredact.Chop
     | "leave" -> Cpdfredact.Leave
-    | _ -> error "bad redaction specification"
+    | _ -> error ("bad redaction specification " ^ s)
   in
   let parse_redaction_detection op l =
     match l with
     | 'c'::'o'::'v'::'e'::'r'::'s'::a::[] ->
         begin try Some (Cpdfredact.Covering (float_of_int (int_of_string (string_of_char a)))) with
-        | _ -> raise (Pdf.PDFError "bad redaction percentage spec")
+        | _ -> error ("bad redaction percentage specification " ^ s)
         end
     | 'c'::'o'::'v'::'e'::'r'::'s'::a::b::[] ->
         begin try Some (Cpdfredact.Covering (float_of_int (int_of_string (string_of_char a ^ string_of_char b)))) with
-        | _ -> raise (Pdf.PDFError "bad redaction percentage spec")
+        | _ -> error ("bad redaction percentage specification " ^ s)
         end
     | _ ->
       match implode l with
-      | "touches" -> if op = Cpdfredact.Leave then error "bad redaction specifiction" else Some Cpdfredact.Touching
-      | "encloses" -> if op = Cpdfredact.Leave then error "bad redaction specifiction" else Some Cpdfredact.Enclosing
+      | "touches" -> if op = Cpdfredact.Leave then error ("bad redaction specifiction " ^ s) else Some Cpdfredact.Touching
+      | "encloses" -> if op = Cpdfredact.Leave then error ("bad redaction specifiction " ^ s) else Some Cpdfredact.Enclosing
       | "" -> if op = Cpdfredact.Leave then None else Some Cpdfredact.Touching
-      | _ -> error "bad redaction specification"
+      | _ -> error ("bad redaction specification " ^ s)
   in
   let before, after = cleavewhile (neq ',') (explode s) in
   let op = parse_redaction_operation before in
