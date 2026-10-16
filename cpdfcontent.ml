@@ -1155,6 +1155,7 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
       | Some d ->
           begin match Pdf.indirect_number pdf s d, Pdf.lookup_direct pdf s d with
           | Some xobjnum, Some xobj ->
+              (*Printf.printf "%s\n%!" (Pdfwrite.string_of_pdf (Pdf.direct pdf xobj));*)
               begin match Pdf.lookup_direct pdf "/Subtype" xobj with
               | Some (Pdf.Name "/Image") ->
                   let x0, y0 = Pdftransform.transform_matrix !state.ctm (0., 0.) in
@@ -1204,7 +1205,7 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
                     ignore (process_op ~pdf ~helpers ~f ~stack ~state ~resources Pdfops.Op_Q);
                     !state.text_state.font_cache <- saved_font_cache;
                     [op]
-              | _ -> Pdfe.log "Unknown kind of xobject"; [op]
+              | _ -> Pdfe.log (Printf.sprintf "Unknown kind of xobject %s\n" s); [op]
               end
           | _ ->
               Pdfe.log "Unknown xobject - unable to process"; [op]
