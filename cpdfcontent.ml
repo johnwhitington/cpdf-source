@@ -1177,7 +1177,7 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
                     | true, _, _ -> to_remove =| xobjnum; [Pdfops.Op_MP "/CPDF_REMOVED_IMAGE"]
                     | false, _, _ -> [op]
                     end
-              | Some (Pdf.Name "/Form") ->
+              | _ ->
                   let matrix = Pdf.parse_matrix pdf "/Matrix" xobj in
                   let minx, miny, maxx, maxy =
                     match Pdf.lookup_direct pdf "/BBox" xobj with
@@ -1205,7 +1205,6 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
                     ignore (process_op ~pdf ~helpers ~f ~stack ~state ~resources Pdfops.Op_Q);
                     !state.text_state.font_cache <- saved_font_cache;
                     [op]
-              | _ -> Pdfe.log (Printf.sprintf "Unknown kind of xobject %s\n" s); [op]
               end
           | _ ->
               Pdfe.log "Unknown xobject - unable to process"; [op]
