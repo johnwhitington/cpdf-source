@@ -46,4 +46,5 @@ val replace_obj : Pdf.t -> string -> Pdf.pdfobject -> unit
 (** [remove_obj pdf objspec] removes the object described by the object specification. *)
 val remove_obj : Pdf.t -> string -> unit
 
+(** Remove marked content operators from all content streams. *)
 val remove_marked_content : Pdf.t -> int list -> Pdf.t

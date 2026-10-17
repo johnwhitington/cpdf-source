@@ -143,5 +143,5 @@ val change_pattern_matrices_page : Pdf.t -> Pdftransform.transform_matrix -> Pdf
 (** Remove a structure tree entirely from a file, including unmarking marked content. *)
 val remove_struct_tree : Pdf.t -> Pdf.t
 
-(** Mark a PDF as begin entirely artifacts (may be used after running [remove_struct_tree]. *)
+(** Mark a PDF as being entirely artifacts (may be used after running [remove_struct_tree]). *)
 val mark_all_as_artifact : Pdf.t -> Pdf.t

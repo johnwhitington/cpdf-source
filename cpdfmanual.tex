@@ -6724,6 +6724,8 @@ If the interactive software you are using to demarcate the annotations does not 
     \noindent Apply Square (rectangle) annotations as if they were redaction annotations in \texttt{in.pdf}, writing to \texttt{out.pdf}
   \end{framed}
 
+As above, the redaction itself is controlled through the options as \texttt{-redact-text}, \texttt{-redact-images} and so on.
+
 \section{Creating redaction annotations}
 
 \noindent To add new redaction annotations, we may write
@@ -6755,7 +6757,7 @@ The following options from Chapter 8 may be used to style the text: \texttt{-fon
 
 \section{Removing other metadata}
 
-Even when we have removed the required page content, it may leak in other places. For example, bookmarks or links which point to the redacted content or in PDF/UA logical structure.
+Even when we have removed the required page content, it may leak in other places. For example, bookmarks or links which point to the redacted content or in PDF/UA logical structure. Cpdf provides options to be added to all redaction commands (such as \texttt{-redact-shape}) to redact such data:
 
 \medskip
 
