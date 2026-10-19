@@ -1197,7 +1197,7 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
                     begin match xobj with
                     | Pdf.Stream ({contents = (dict, _)} as r) ->
                        begin match Pdfops.stream_of_ops ops with
-                       | Pdf.Stream {contents = (d, Pdf.Got bytes)} -> r := (d, Pdf.Got bytes)
+                       | Pdf.Stream {contents = (_, Pdf.Got bytes)} -> r := (dict, Pdf.Got bytes)
                        | _ -> assert false
                        end
                     | _ -> Pdfe.log "malformed stream"
