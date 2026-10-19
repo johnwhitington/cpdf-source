@@ -1153,7 +1153,9 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
   | Pdfops.Op_Do s ->
       begin match Pdf.lookup_direct pdf "/XObject" resources with
       | Some d ->
+          (*Printf.printf "%s\n" (Pdfwrite.string_of_pdf d);*)
           begin match Pdf.indirect_number pdf s d, Pdf.lookup_direct pdf s d with
+          | _, (Some Pdf.Null | None) -> [] (* We may already have removed this image! *)
           | Some xobjnum, Some xobj ->
               (*Printf.printf "%s\n%!" (Pdfwrite.string_of_pdf (Pdf.direct pdf xobj));*)
               begin match Pdf.lookup_direct pdf "/Subtype" xobj with
@@ -1177,7 +1179,7 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
                     | true, _, _ -> to_remove =| xobjnum; [Pdfops.Op_MP "/CPDF_REMOVED_IMAGE"]
                     | false, _, _ -> [op]
                     end
-              | _ ->
+              | Some (Pdf.Name "/Form") ->
                   let matrix = Pdf.parse_matrix pdf "/Matrix" xobj in
                   let minx, miny, maxx, maxy =
                     match Pdf.lookup_direct pdf "/BBox" xobj with
@@ -1200,11 +1202,14 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
                        | Pdf.Stream {contents = (_, Pdf.Got bytes)} -> r := (dict, Pdf.Got bytes)
                        | _ -> assert false
                        end
-                    | _ -> Pdfe.log "malformed stream"
+                    | s -> Pdfe.log ("malformed stream" ^ Pdfwrite.string_of_pdf s)
                     end;
                     ignore (process_op ~pdf ~helpers ~f ~stack ~state ~resources Pdfops.Op_Q);
                     !state.text_state.font_cache <- saved_font_cache;
                     [op]
+              | _ ->
+                 (* Malformed, may as well remove. *)
+                 []
               end
           | _ ->
               Pdfe.log "Unknown xobject - unable to process"; [op]
