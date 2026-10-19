@@ -281,7 +281,7 @@ let remove_annotations range pdf =
    Requires changes to Cpdftype. *)
 let generate_appearance
   ~overlay ~overlay_text_colour ~overlay_justification ~overlay_repeat ~overlay_auto_size
-  ~font ~fontsize ~text_opacity ~linespacing ~linewidth ~outline pdf ops (minx, miny, maxx, maxy)
+  ~font ~fontsize ~text_opacity ~linespacing ~linewidth ~outline ~applied_opacity pdf ops (minx, miny, maxx, maxy)
 =
   let fontsize =
     if overlay_auto_size then
@@ -327,8 +327,18 @@ let generate_appearance
       | [] -> assert false
       | p::_ -> p
     in
-      let page_ops = Pdfops.parse_operators pdf page.Pdfpage.resources page.Pdfpage.content in
-        ops @ [Pdfops.Op_cm (Pdftransform.mktranslate minx miny)] @ page_ops, page.Pdfpage.resources
+      (* Add opacity in. A hack to be removed. *)
+      let resources =
+        let d' =
+          match Pdf.lookup_direct pdf "/ExtGState" page.Pdfpage.resources with
+          | Some (Pdf.Dictionary d) -> d
+          | _ -> []
+        in
+        let d' = ("/gsaa", Pdf.Dictionary [("/ca", Pdf.Real applied_opacity); ("/CA", Pdf.Real applied_opacity)])::d' in
+          Pdf.add_dict_entry page.Pdfpage.resources "/ExtGState" (Pdf.Dictionary d')
+      in        
+      let page_ops = Pdfops.parse_operators pdf resources page.Pdfpage.content in
+        ops @ [Pdfops.Op_cm (Pdftransform.mktranslate minx miny)] @ page_ops, resources
 
 (* Add a (presently, redaction) annotation at the given position on the given pages. *)
 let add_annotation (minx, miny, maxx, maxy)
@@ -355,15 +365,16 @@ let add_annotation (minx, miny, maxx, maxy)
     let ops, resources =
       let ops =
         [Cpdfutil.colour_op fill_color;
+         Pdfops.Op_gs "/gsaa";
          Pdfops.Op_cm {Pdftransform.a = 1.; b = 0.; c = 0.; d = 1.; e = 0.; f = 0.};
          Pdfops.Op_m (minx, miny); Pdfops.Op_l (maxx, miny); Pdfops.Op_l (maxx, maxy); Pdfops.Op_l (minx, maxy); Pdfops.Op_l (minx, miny);
          Pdfops.Op_f]
       in
         match overlay with
-        | None -> ops, Pdf.Dictionary []
+        | None -> ops, Pdf.Dictionary [("/ExtGState", Pdf.Dictionary [("/gsaa", Pdf.Dictionary [("/ca", Pdf.Real applied_opacity); ("/CA", Pdf.Real applied_opacity)])])]
         | Some overlay ->
             generate_appearance ~overlay ~overlay_text_colour ~overlay_justification ~overlay_repeat ~overlay_auto_size
-            ~font ~fontsize ~text_opacity ~linespacing ~linewidth ~outline pdf ops (minx, miny, maxx, maxy)
+            ~font ~fontsize ~text_opacity ~linespacing ~linewidth ~outline ~applied_opacity pdf ops (minx, miny, maxx, maxy)
     in
       Pdf.addobj pdf (add_dict resources (Pdfops.stream_of_ops ops))
   in
@@ -371,11 +382,12 @@ let add_annotation (minx, miny, maxx, maxy)
     let ops, resources =
       [Cpdfutil.colour_op_stroke outline_color;
          Pdfops.Op_cm {Pdftransform.a = 1.; b = 0.; c = 0.; d = 1.; e = 0.; f = 0.};
+         Pdfops.Op_gs "/gsaa";
          Pdfops.Op_w 1.5;
          Pdfops.Op_J 2;
          Pdfops.Op_m (minx, miny); Pdfops.Op_l (maxx, miny); Pdfops.Op_l (maxx, maxy); Pdfops.Op_l (minx, maxy); Pdfops.Op_l (minx, miny);
          Pdfops.Op_S],
-      (Pdf.Dictionary [])
+         (Pdf.Dictionary [("/ExtGState", Pdf.Dictionary [("/gsaa", Pdf.Dictionary [("/ca", Pdf.Real applied_opacity); ("/CA", Pdf.Real applied_opacity)])])])
     in
       Pdf.addobj pdf (add_dict resources (Pdfops.stream_of_ops ops))
   in
