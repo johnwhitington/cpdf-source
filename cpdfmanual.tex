@@ -6646,6 +6646,7 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
   \noindent\verb!-redact-color <color>! \textit{(see Chapter 8 for color specifications)}\\
   \noindent\verb!-redact-outline-color <color>! \textit{(see Chapter 8)}\\
   \noindent\verb!-redact-text-color <color>! \textit{(see Chapter 8)}\\
+  \noindent\verb!-redact-opacity! \textit{Opacity for redaction fill and outline (see below for text opacity)}\\
   \noindent\verb!-redact-overlay <text>!\\
   \noindent\verb!-redact-repeat!\\
   \noindent\verb!-redact-auto-size!\\
@@ -6739,7 +6740,7 @@ As above, the redaction itself is controlled through the options as \texttt{-red
 
 \noindent Recall that this does not redact content, merely marks it for future redaction.
 
-By default, the redaction shows as a black filled rectangle with a dark red outline. We can change this with \texttt{-redact-color} and \texttt{-redact-outline-color}.
+By default, the redaction shows as a black filled rectangle with a dark red outline. We can change this with \texttt{-redact-color} and \texttt{-redact-outline-color} and \texttt{-redact-opacity}.
 
 We can add text to, for example, show which rule required the redaction, with \texttt{-redact-overlay}:
 

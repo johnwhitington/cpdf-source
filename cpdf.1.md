@@ -2403,6 +2403,10 @@ Create a redaction annotation.
 
 : Redaction annotation outline color.
 
+**-redact-opacity** \<n>
+
+: Redaction fill and outline opacity.
+
 **-redact-overlay** \<text>
 
 : Redaction annotation overlay text.
