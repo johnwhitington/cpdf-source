@@ -19,6 +19,7 @@ val add_annotation :
   (float * float * float * float) ->
     fill_color:Cpdfutil.colour ->
     outline_color:Cpdfutil.colour ->
+    applied_opacity:float ->
     overlay:string option ->
     overlay_text_colour:Cpdfutil.colour ->
     overlay_justification:Cpdfutil.justification ->
@@ -26,7 +27,7 @@ val add_annotation :
     overlay_auto_size:bool ->
     font:Cpdfembed.cpdffont ->
     fontsize:float ->
-    opacity:float ->
+    text_opacity:float ->
     linespacing:float ->
     linewidth:float ->
     outline:bool ->

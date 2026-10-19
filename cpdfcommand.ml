@@ -715,7 +715,8 @@ type args =
    mutable redact_overlay_text : string option;
    mutable redact_overlay_repeat : bool;
    mutable redact_overlay_auto_size : bool;
-   mutable redact_structure : Cpdfredact.struct_spec}
+   mutable redact_structure : Cpdfredact.struct_spec;
+   mutable redaction_annotation_applied_opacity : float}
 
 let args =
   {op = None;
@@ -901,7 +902,8 @@ let args =
    redact_overlay_text = None;
    redact_overlay_repeat = false;
    redact_overlay_auto_size = false;
-   redact_structure = Cpdfredact.StructLeave}
+   redact_structure = Cpdfredact.StructLeave;
+   redaction_annotation_applied_opacity = 1.}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -1070,7 +1072,8 @@ let reset_arguments () =
   args.redact_overlay_text <- None;
   args.redact_overlay_repeat <- false;
   args.redact_overlay_auto_size <- false;
-  args.redact_structure <- Cpdfredact.StructLeave
+  args.redact_structure <- Cpdfredact.StructLeave;
+  args.redaction_annotation_applied_opacity <- 1.
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -3417,6 +3420,9 @@ let specs =
    ("-redact-inline-images", Arg.String (fun s -> args.redact_inline_images <- parse_redaction_spec s), " Specify annotation redaction mode");
    ("-redact-vectors", Arg.String (fun s -> args.redact_vectors <- parse_redaction_spec s), " Specify annotation redaction mode");
    ("-redact-annotations", Arg.String (fun s -> args.redact_annotations <- parse_redaction_spec s), " Specify annotation redaction mode");
+   ("-redact-bookmarks", Arg.String (fun s -> args.redact_bookmarks <- parse_link_redaction_spec s), " Specify bookmark redaction mode");
+   ("-redact-links", Arg.String (fun s -> args.redact_links <- parse_link_redaction_spec s), " Specify link redaction mode");
+   ("-redact-structure", Arg.String (fun s -> args.redact_structure <- parse_structure_redaction_spec s), " Redact structure tree information");
    ("-redact-invert", Arg.Unit (fun () -> args.redact_invert <- true), " Invert redaction area");
    ("-redact-no-show", Arg.Unit (fun () -> args.redact_show <- false), " Do not show redaction area");
    ("-remove-marked-content", Arg.Unit (fun () -> setop RemoveMarkedContent ()), " Remove marked content operators");
@@ -3424,10 +3430,8 @@ let specs =
    ("-redact-overlay", Arg.String (fun s -> args.redact_overlay_text <- Some s), " Supply overlay text for redaction annotation");
    ("-redact-repeat", Arg.Unit (fun () -> args.redact_overlay_repeat <- true), " Repeat overlay text");
    ("-redact-auto-size", Arg.Unit (fun () -> args.redact_overlay_auto_size <- true), " Auto size overlay text");
-   ("-redact-bookmarks", Arg.String (fun s -> args.redact_bookmarks <- parse_link_redaction_spec s), " Specify bookmark redaction mode");
-   ("-redact-links", Arg.String (fun s -> args.redact_links <- parse_link_redaction_spec s), " Specify link redaction mode");
-   ("-redact-structure", Arg.String (fun s -> args.redact_structure <- parse_structure_redaction_spec s), " Redact structure tree information");
    ("-flatten-annotations", Arg.Unit (fun () -> setop FlattenAnnotations ()), " Flatten Annotations");
+   ("-redact-opacity", Arg.Float (fun f -> args.redaction_annotation_applied_opacity <- f), " Set redaction annotation applied opacity");
    (* Undocumented. *)
    ("-test-extract-text", Arg.Unit (fun () -> setop TestExtractText ()), "")]
 
@@ -5701,6 +5705,7 @@ let rec go () =
           (minx, miny, maxx, maxy)
           ~fill_color:args.redaction_annotation_fill_color
           ~outline_color:args.redaction_annotation_outline_color
+          ~applied_opacity:args.redaction_annotation_applied_opacity
           ~overlay:args.redact_overlay_text
           ~overlay_text_colour:args.redaction_annotation_text_color
           ~overlay_justification:args.justification
@@ -5708,7 +5713,7 @@ let rec go () =
           ~overlay_auto_size:args.redact_overlay_auto_size
           ~font:(embed_font ())
           ~fontsize:args.fontsize
-          ~opacity:args.opacity
+          ~text_opacity:args.opacity
           ~linespacing:args.linespacing
           ~linewidth:args.linewidth
           ~outline:args.outline

@@ -281,7 +281,7 @@ let remove_annotations range pdf =
    Requires changes to Cpdftype. *)
 let generate_appearance
   ~overlay ~overlay_text_colour ~overlay_justification ~overlay_repeat ~overlay_auto_size
-  ~font ~fontsize ~opacity ~linespacing ~linewidth ~outline pdf ops (minx, miny, maxx, maxy)
+  ~font ~fontsize ~text_opacity ~linespacing ~linewidth ~outline pdf ops (minx, miny, maxx, maxy)
 =
   let fontsize =
     if overlay_auto_size then
@@ -318,7 +318,7 @@ let generate_appearance
   let pages =
     Cpdftexttopdf.typeset_fake_pages
       pdf ~font ~papersize:(Pdfpaper.make Pdfunits.PdfPoint (maxx -. minx) (maxy -. miny)) ~margin:0.
-      ~fontsize ~colour:overlay_text_colour ~opacity ~linespacing ~linewidth ~outline
+      ~fontsize ~colour:overlay_text_colour ~opacity:text_opacity ~linespacing ~linewidth ~outline
       (Pdfio.bytes_of_string overlay)
   in
     (* Get the ops and resources, and concatenate and return. *)
@@ -332,8 +332,8 @@ let generate_appearance
 
 (* Add a (presently, redaction) annotation at the given position on the given pages. *)
 let add_annotation (minx, miny, maxx, maxy)
-  ~fill_color ~outline_color ~overlay ~overlay_text_colour ~overlay_justification ~overlay_repeat ~overlay_auto_size
-  ~font ~fontsize ~opacity ~linespacing ~linewidth ~outline
+  ~fill_color ~outline_color ~applied_opacity ~overlay ~overlay_text_colour ~overlay_justification ~overlay_repeat ~overlay_auto_size
+  ~font ~fontsize ~text_opacity ~linespacing ~linewidth ~outline
   pdf range
 =
   let add_dict resources = function
@@ -363,7 +363,7 @@ let add_annotation (minx, miny, maxx, maxy)
         | None -> ops, Pdf.Dictionary []
         | Some overlay ->
             generate_appearance ~overlay ~overlay_text_colour ~overlay_justification ~overlay_repeat ~overlay_auto_size
-            ~font ~fontsize ~opacity ~linespacing ~linewidth ~outline pdf ops (minx, miny, maxx, maxy)
+            ~font ~fontsize ~text_opacity ~linespacing ~linewidth ~outline pdf ops (minx, miny, maxx, maxy)
     in
       Pdf.addobj pdf (add_dict resources (Pdfops.stream_of_ops ops))
   in
