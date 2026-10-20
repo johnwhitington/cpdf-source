@@ -70,28 +70,28 @@ let structparents pdf page =
     | _ -> [||]
 
 let process_op pdf structparents = function
-   | Pdfops.Op_BDC (n, d) ->
-       begin match Pdf.lookup_direct pdf "/MCID" d with
-       | Some (Pdf.Integer mcid) ->
-           (*Printf.printf "Looking for MCID %i\n" mcid;*)
-           begin try
-             let n = Array.get structparents mcid in
-             let o = Pdf.lookup_obj pdf n in
-               (*Printf.printf "mcid points to %s\n" (Pdfwrite.string_of_pdf o);*)
-               (*Printf.printf "Indirect %i: %s\n" n (Pdfwrite.string_of_pdf o);
-               Printf.printf "Indirect --> %i: %s\n" n (Pdfwrite.string_of_pdf (remove_direct o));*)
-               Pdf.addobj_given_num pdf (n, remove_direct o)
-           with
-             Invalid_argument _ -> ()
-           end
-       | _ -> ()
-       end;
-       (*Printf.printf "%s: %s\n" n (Pdfwrite.string_of_pdf d);
-       Printf.printf "--> %s: %s\n" n (Pdfwrite.string_of_pdf (remove_direct d));*)
-       Pdfops.Op_BDC (n, remove_direct d)
-   | op -> op
+  | Pdfops.Op_BDC (n, d) ->
+      begin match Pdf.lookup_direct pdf "/MCID" d with
+      | Some (Pdf.Integer mcid) ->
+          (*Printf.printf "Looking for MCID %i\n" mcid;*)
+          begin try
+            let n = Array.get structparents mcid in
+            let o = Pdf.lookup_obj pdf n in
+              (*Printf.printf "mcid points to %s\n" (Pdfwrite.string_of_pdf o);*)
+              (*Printf.printf "Indirect %i: %s\n" n (Pdfwrite.string_of_pdf o);
+              Printf.printf "Indirect --> %i: %s\n" n (Pdfwrite.string_of_pdf (remove_direct o));*)
+              Pdf.addobj_given_num pdf (n, remove_direct o)
+          with
+            Invalid_argument _ -> ()
+          end
+      | _ -> ()
+      end;
+      (*Printf.printf "%s: %s\n" n (Pdfwrite.string_of_pdf d);
+      Printf.printf "--> %s: %s\n" n (Pdfwrite.string_of_pdf (remove_direct d));*)
+      Pdfops.Op_BDC (n, remove_direct d)
+  | op -> op
 
-(* For innermost, only consider MCID ones. *)
+(* Only consider MCID ones. *)
 let is_candidate_bdc pdf = function
    | Pdfops.Op_BDC (n, d) ->
        begin match Pdf.lookup_direct pdf "/MCID" d with
@@ -100,9 +100,12 @@ let is_candidate_bdc pdf = function
        end
    | op -> false
 
-let rec postprocess_structure_ops pdf ~struct_spec structparents removal a = function
-  | [] -> rev a
+let rec postprocess_structure_ops pdf ~struct_spec structparents removal level a = function
+  | [] ->
+      (*Printf.printf "Op is %s, level is %i\n" "ENDSTREAM" level;*)
+      rev a
   | op::t ->
+      (*Printf.printf "Op is %s, level is %i\n" (Pdfops.string_of_op op) level;*)
       let op =
          match struct_spec with
          | StructRemoveAll -> process_op pdf structparents op
@@ -111,22 +114,62 @@ let rec postprocess_structure_ops pdf ~struct_spec structparents removal a = fun
         if was_removed op then
           begin match struct_spec with
           | StructRemoveInnermost ->
-              begin match List.find_opt (is_candidate_bdc pdf) a with
-              | Some x -> ignore (process_op pdf structparents op)
-              | None -> ()
-              end
+              (* Go back up and process the innermost BDC which contains an MCID. *)
+              let finished = ref false in
+              let checklevel = ref level in
+              iter
+                (function
+                 | Pdfops.Op_EMC -> checklevel += 1
+                 | (Pdfops.Op_BDC _ | Pdfops.Op_BMC _) as op ->
+                     begin match op with
+                     | Pdfops.Op_BDC (_, d) ->
+                         (*Printf.printf
+                            "For %s, level = %i, !checklevel = %i, so process is %b\n"
+                            (Pdfwrite.string_of_pdf d) level !checklevel (!checklevel <= level && is_candidate_bdc pdf op && not !finished);*)
+                         if !checklevel <= level && is_candidate_bdc pdf op && not !finished then
+                           begin
+                             ignore (process_op pdf structparents op);
+                             set finished
+                           end;
+                     | _ -> ()
+                     end;
+                     checklevel -= 1
+                 | _ -> ())
+                a
           | StructRemoveContaining ->
-              iter (fun op -> ignore (process_op pdf structparents op)) a
+              (* Go back up and process any BDC which contains this MP. *)
+              let checklevel = ref level in
+              let highest = ref max_int in
+                iter
+                  (function
+                    | Pdfops.Op_EMC -> checklevel += 1
+                    | (Pdfops.Op_BDC _ | Pdfops.Op_BMC _) as op ->
+                        begin match op with
+                        | Pdfops.Op_BDC (_, d) ->
+                            (*Printf.printf
+                              "For %s, level = %i, !checklevel = %i, highest = %i so process is %b\n"
+                              (Pdfwrite.string_of_pdf d) level !checklevel !highest (!checklevel <= level && !checklevel < !highest);*)
+                            if !checklevel <= level && !checklevel < !highest then
+                              begin
+                                ignore (process_op pdf structparents op);
+                                highest := max !checklevel level
+                              end
+                        | _ -> ()
+                        end;
+                        checklevel -= 1
+                    | _ -> ())
+                  a
           | _ -> ()
           end;
-        postprocess_structure_ops pdf ~struct_spec structparents removal (op::a) t
+      let change = match op with | Pdfops.Op_BDC _ | Pdfops.Op_BMC _ -> 1 | Pdfops.Op_EMC -> -1 | _ -> 0 in
+        postprocess_structure_ops pdf ~struct_spec structparents removal (level + change) (op::a) t
 
 let postprocess_structure ~struct_spec pdf page ops =
   match struct_spec with
   | StructLeave -> strip_cpdf_removal_annotations ops
   | removal ->
       let structparents = structparents pdf page in
-      let ops = postprocess_structure_ops pdf ~struct_spec structparents removal [] ops in
+      let ops = postprocess_structure_ops pdf ~struct_spec structparents removal 0 [] ops in
         strip_cpdf_removal_annotations ops
 
 (* Redact a path on a page *)
