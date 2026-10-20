@@ -18,6 +18,7 @@ Extended features:
 * More finely controlled redaction with 'covers' specification
 * Create and style overlay text for redaction annotations
 * Text styling (e.g colours) works for -typeset, -toc etc.
+* Set margin for -typeset with -margin
 
 * = Supported by a grant from NLnet
 
