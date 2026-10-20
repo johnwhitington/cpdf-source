@@ -1843,13 +1843,17 @@ Typeset a text file into a PDF.
 
 : Give the paper size.
 
+**-margin** \<n>
+
+: Set the margin.
+
 **-font** \<font>
 
-: The font (default Times-Roman)
+: The font (default Times-Roman).
 
 **-font-size** \<n>
 
-: The font size (default 12pt)
+: The font size (default 12pt).
 
 **-subformat** \<subformat>
 

@@ -5134,7 +5134,7 @@ To ensure that every optional content group appears in the order list:
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -typeset <text file> [-create-pdf-papersize <size>]!\\
-  \noindent\verb!     [-font <font>] [-font-size <size>] [-color <color>]!\\
+  \noindent\verb!     [-font <font>] [-font-size <size>] [-color <color>] [-margin <n>]!\\
   \noindent\verb!     [-opacity <n>] [-line-spacing <n>] [-outline] [-linewidth <n>]!\\
   \noindent\verb!     [-subformat <subformat>] [-title <string>] -o out.pdf!
 
@@ -5185,7 +5185,7 @@ A basic text to PDF convertor is included in Cpdf. It takes a UTF8 text file (AS
  \noindent\small\verb?     -font Courier -font-size 10 -o out.pdf?
 \end{framed}
 
-\noindent The standard paper sizes are listed in Section \ref{papersizes}, or you may specify the width and height directly, as described in the same chapter. 
+\noindent The standard paper sizes are listed in Section \ref{papersizes}, or you may specify the width and height directly, as described in the same chapter. The margin may be set with \texttt{-margin}. The default is 7.5\% of the page width.
 
 To produce a PDF in PDF/UA-1 or PDF/UA-2 format add, say, \texttt{-subformat PDF/UA-2 -title "Thesis"} to the command line.
 

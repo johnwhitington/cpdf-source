@@ -6,6 +6,7 @@ val typeset :
   ?subformat:Cpdfua.subformat ->
   ?title:string ->
   papersize:Pdfpaper.t ->
+  ?margin:float ->
   font:Cpdfembed.cpdffont ->
   fontsize:float ->
   colour:Cpdfutil.colour ->

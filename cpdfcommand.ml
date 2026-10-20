@@ -716,7 +716,8 @@ type args =
    mutable redact_overlay_repeat : bool;
    mutable redact_overlay_auto_size : bool;
    mutable redact_structure : Cpdfredact.struct_spec;
-   mutable redaction_annotation_applied_opacity : float}
+   mutable redaction_annotation_applied_opacity : float;
+   mutable margin : float option}
 
 let args =
   {op = None;
@@ -903,7 +904,8 @@ let args =
    redact_overlay_repeat = false;
    redact_overlay_auto_size = false;
    redact_structure = Cpdfredact.StructLeave;
-   redaction_annotation_applied_opacity = 1.}
+   redaction_annotation_applied_opacity = 1.;
+   margin = None}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -1073,7 +1075,8 @@ let reset_arguments () =
   args.redact_overlay_repeat <- false;
   args.redact_overlay_auto_size <- false;
   args.redact_structure <- Cpdfredact.StructLeave;
-  args.redaction_annotation_applied_opacity <- 1.
+  args.redaction_annotation_applied_opacity <- 1.;
+  args.margin <- None
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -1488,6 +1491,10 @@ let setlinewidth s =
 let setimposemargin s =
   let f = Cpdfcoord.parse_single_number (Pdf.empty ()) s in
     args.impose_margin <- f
+
+let setmargin s =
+  let f = Cpdfcoord.parse_single_number (Pdf.empty ()) s in
+    args.margin <- Some f
 
 let setimposelinewidth s =
   let f = Cpdfcoord.parse_single_number (Pdf.empty ()) s in
@@ -3432,6 +3439,7 @@ let specs =
    ("-redact-auto-size", Arg.Unit (fun () -> args.redact_overlay_auto_size <- true), " Auto size overlay text");
    ("-flatten-annotations", Arg.Unit (fun () -> setop FlattenAnnotations ()), " Flatten Annotations");
    ("-redact-opacity", Arg.Float (fun f -> args.redaction_annotation_applied_opacity <- f), " Set redaction annotation applied opacity");
+   ("-margin", Arg.String (fun s -> setmargin s), " Set page magin");
    (* Undocumented. *)
    ("-test-extract-text", Arg.Unit (fun () -> setop TestExtractText ()), "")]
 
@@ -5403,7 +5411,7 @@ let rec go () =
       let cpdffont = embed_font () in
       let pdf =
         Cpdftexttopdf.typeset
-          ~process_struct_tree:args.process_struct_trees ?subformat:args.subformat ?title:args.title ~font:cpdffont ~papersize:args.createpdf_pagesize
+          ~process_struct_tree:args.process_struct_trees ?subformat:args.subformat ?title:args.title ?margin:args.margin ~font:cpdffont ~papersize:args.createpdf_pagesize
           ~fontsize:args.fontsize ~colour:args.color ~opacity:args.opacity ~linespacing:args.linespacing ~linewidth:args.linewidth ~outline:args.outline text
       in
         write_pdf false pdf

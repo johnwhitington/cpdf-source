@@ -312,7 +312,7 @@ let generate_appearance
   in
   let overlay =
     if overlay_repeat
-      then fold_left (fun x y -> x ^ (if overlay_auto_size then string_of_char '\n' else " ") ^ y) "" (many overlay 1000)
+      then fold_left (fun x y -> x ^ (if x = "" then "" else if overlay_auto_size then string_of_char '\n' else " ") ^ y) "" (many overlay 1000)
       else overlay
   in
   let pages =

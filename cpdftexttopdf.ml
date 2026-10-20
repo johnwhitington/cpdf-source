@@ -73,9 +73,11 @@ let typeset_fake_pages pdf ~papersize ?margin ~font ~fontsize ~colour ~opacity ~
         raise (Pdf.PDFError "Can't use existing named font for text-to-PDF")
   in
   let instrs = of_utf8_with_newlines fontpack fontsize ~colour ~opacity ~linespacing ~linewidth ~outline (Pdfio.string_of_bytes text) in
+  let firstfont = hd (keep (function Cpdftype.Font _ -> true | _ -> false) instrs) in 
+  let instrs = [firstfont; Cpdftype.BeginDocument] @ instrs in
     fst (Cpdftype.typeset ~process_struct_tree:false margin margin margin margin papersize pdf instrs)
 
-let typeset ~process_struct_tree ?subformat ?title ~papersize ~font ~fontsize ~colour ~opacity ~linespacing ~linewidth ~outline text =
+let typeset ~process_struct_tree ?subformat ?title ~papersize ?margin ~font ~fontsize ~colour ~opacity ~linespacing ~linewidth ~outline text =
   let process_struct_tree =
     match process_struct_tree, subformat with
     | _, (Some Cpdfua.PDFUA1 | Some Cpdfua.PDFUA2) | true, _ -> true
@@ -106,7 +108,11 @@ let typeset ~process_struct_tree ?subformat ?title ~papersize ~font ~fontsize ~c
   in
   let instrs = of_utf8_with_newlines fontpack fontsize ~colour ~opacity ~linespacing ~linewidth ~outline (Pdfio.string_of_bytes text) in
   let tagged = if process_struct_tree then tag_paragraphs instrs else instrs in
-  let margin = Pdfunits.points (Pdfpaper.width papersize) (Pdfpaper.unit papersize) /. 15.  in
+  let margin =
+    match margin with
+    | Some m -> m
+    | None -> Pdfunits.points (Pdfpaper.width papersize) (Pdfpaper.unit papersize) /. 15.
+  in
   let instrs =
     if tagged = [] then [] else
       let firstfont = hd (keep (function Cpdftype.Font _ -> true | _ -> false) tagged) in 
