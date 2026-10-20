@@ -3,7 +3,7 @@ let agpl = true
 let major_version = 2
 let minor_version = 9
 let minor_minor_version = 3
-let version_date = "to come"
+let version_date = "(20th Oct 2026)"
 
 open Pdfutil
 open Pdfio
