@@ -641,13 +641,18 @@ let redact_whole_page ~struct_spec ~link_spec ~bookmark_spec pdf range =
       pdf
       range
   in
+    Cpdfutil.progress_line "Trimming structure tree...";
     if struct_spec <> StructLeave then Pdfst.trim_structure_tree pdf (Cpdfpagespec.invert_range (Pdfpage.endpage pdf) range);
+    Cpdfutil.progress_line "Trimming links and bookmarks...";
     let pdf = ref pdf in
       iter
         (fun pnum ->
+           Cpdfutil.progress_page pnum;
            let path = (min_float, min_float, max_float, max_float) in
            let pdf' = redact_bookmarks ~invert:false ~bookmark_spec !pdf pnum path in
            let pdf'' = redact_links ~invert:false ~link_spec pdf' pnum path in
+             Cpdfutil.progress_endpage ();
              pdf := pdf'')
         range;
+      Cpdfutil.progress_done ();
       !pdf
