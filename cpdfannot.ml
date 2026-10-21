@@ -392,9 +392,10 @@ let add_annotation (minx, miny, maxx, maxy)
       Pdf.addobj pdf (add_dict resources (Pdfops.stream_of_ops ops))
   in
   let nm =
-    let t = Unix.gettimeofday () in
-    let now_ms = (fun () -> Int64.of_float t) in
-      Cpdfuuidm.to_binary_string (Cpdfuuidm.v7_non_monotonic_gen ~now_ms (Random.State.make_self_init ()) ())
+    (*let t = Unix.gettimeofday () in
+    let now_ms = (fun () -> Int64.of_float t) in*)
+      Int64.to_string (Random.int64 (Int64.of_int max_int)) (* Below needs OCaml 5 *)
+      (*Cpdfuuidm.to_binary_string (Cpdfuuidm.v7_non_monotonic_gen ~now_ms (Random.State.make_self_init ()) ())*)
   in
   let m =
     match Sys.getenv_opt "CPDF_REPRODUCIBLE_DATES" with

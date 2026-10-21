@@ -9,6 +9,7 @@ open Pdfutil
 open Pdfio
 
 let _ = set Pdfe.suppress_adjacent_duplicates
+let _ = Random.self_init ()
 
 type attachment =
   {ofilename : string;
