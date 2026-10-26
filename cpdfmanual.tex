@@ -13,15 +13,6 @@
 
 %\DocumentMetadata{lang=en, pdfversion=2.0, pdfstandard=ua-2, pdfstandard=a-4f, testphase={phase-III, title, table, math, firstaid}}
 \documentclass{book}
-% Edit here to produce cpdfmanual.pdf, cpdflibmanual.pdf, pycpdfmanual.pdf,
-% dotnetcpdflibmanual.pdf, jcpdflibmanual.pdf jscpdflibmanual.pdf etc.
-\usepackage{comment}
-\excludecomment{cpdflib}
-\excludecomment{pycpdflib}
-\excludecomment{dotnetcpdflib}
-\excludecomment{jcpdflib}
-\excludecomment{jscpdflib}
-%Our packages
 \usepackage{alltt}
 \usepackage{palatino}
 \usepackage{listings}
@@ -44,7 +35,7 @@
 \renewcommand{\footrulewidth}{0pt}
 \usepackage{pmboxdraw}
 \usepackage{longtable}
-%usepackage{multicol}
+
 \begin{document}
 
 \frontmatter
@@ -52,29 +43,12 @@
 
 \begin{flushright}
 
-
-
 \ifdefined\HCode
 {\sffamily \bfseries \Huge Coherent PDF Command Line Tools}
 \else
 {\sffamily \bfseries \Huge Coherent PDF
 
 \vspace{2mm}
-\begin{cpdflib}
-C API and 
-\end{cpdflib}
-\begin{pycpdflib}
-Python API and
-\end{pycpdflib}
-\begin{dotnetcpdflib}
-.NET API and
-\end{dotnetcpdflib}
-\begin{jcpdflib}
-Java API and
-\end{jcpdflib}
-\begin{jscpdflib}
-JavaScript API and
-\end{jscpdflib}
 Command Line Tools}
 \fi
 
@@ -454,236 +428,6 @@ These examples demonstrate just a few of the facilities provided by the Coherent
 
 \pagestyle{empty}\thispagestyle{plain}
 \cleardoublepage
-
-\begin{cpdflib}
-\chapter*{Example Program in C}
-
-This program loads a file \texttt{hello.pdf} from disk and writes out a document with the original included three times. Note the use of \texttt{cpdf\_startup}, \texttt{cpdf\_lastError} and \texttt{cpdf\_clearError}.
-
-\begin{small}
-\begin{verbatim}
-#include <stdbool.h>
-#include "cpdflibwrapper.h"
-
-int main (int argc, char ** argv)
-{
-  /* Initialise cpdf */
-  cpdf_startup(argv);
-
-  /* We will take the input hello.pdf and repeat it three times */
-  int mergepdf = cpdf_fromFile("hello.pdf", "");
-
-  /* Check the error state */
-  if (cpdf_lastError) return 1;
-
-  /* Clear the error state */
-  cpdf_clearError();
-
-  /* The array of PDFs to merge */
-  int pdfs[] = {mergepdf, mergepdf, mergepdf};
-
-  /* Merge them */
-  int merged = cpdf_mergeSimple(pdfs, 3);
-  
-  if (cpdf_lastError) return 1;
-
-  cpdf_clearError();
-
-  /* Write output */
-  cpdf_toFile(merged, "merged.pdf", false, false);
-
-  if (cpdf_lastError) return 1;
-
-  return 0;
-}
-\end{verbatim}
-\end{small}
-\end{cpdflib}
-
-\begin{pycpdflib}
-\chapter*{Example Program in Python}
-
-This program loads a file \texttt{hello.pdf} from disk and writes out a
-document with the original included three times.
-
-\begin{small}
-\begin{verbatim}
-#Merge example
-import pycpdflib
-
-#DLL loading depends on your own platform. These are the author's settings.
-if sys.platform.startswith('darwin'):
-    pycpdflib.loadDLL("/Users/john/repos/python-libcpdf/libpycpdf.so")
-elif sys.platform.startswith('linux'):
-    pycpdflib.loadDLL("../libpycpdf.so")
-elif sys.platform.startswith('win32') or sys.platform.startswith('cygwin'):
-    os.add_dll_directory("C:\\\\OCaml64/home/JohnWhitington/python-libcpdf/")
-    pycpdflib.loadDLL("libpycpdf.dll")
-
-#We will take the input hello.pdf and repeat it three times
-mergepdf = pycpdf.fromFile('hello.pdf', '')
-
-#The list of PDFs to merge
-pdfs = [mergepdf, mergepdf, mergepdf]
-
-#Merge them
-merged = pycpdflib.mergeSimple(pdfs)
-
-#Write output
-pycpdflib.toFile(merged, 'merged.pdf', False, False)
-\end{verbatim}
-\end{small}
-\end{pycpdflib}
-
-\begin{dotnetcpdflib}
-\chapter*{Example Program in C\#}
-
-This program loads a file \texttt{hello.pdf} from disk and writes out a
-document with the original included three times.
-
-\begin{small}
-\begin{verbatim}
-//Merge example
-using System;
-using System.Collections.Generic;
-using CoherentGraphics;
-
-// Initialise cpdf
-Cpdf.startup();
-
-// We will take the input hello.pdf and repeat it three times
-using (Cpdf.Pdf mergepdf = Cpdf.fromFile("hello.pdf", ""))
-{
-  // The list of PDFs to merge
-  List<Cpdf.Pdf> pdfs = new List<Cpdf.Pdf> {mergepdf, mergepdf, mergepdf};
-
-  // Merge them
-  Cpdf.Pdf merged = Cpdf.mergeSimple(pdfs);
-
-  // Write output
-  Cpdf.toFile(merged, "merged.pdf", false, false);
-  
-  // Dispose of merged PDF
-  merged.Dispose();
-}
-\end{verbatim}
-\end{small}
-
-\noindent Note the use of \texttt{using} and \texttt{Dispose()} to ensure the PDFs are thrown away when no longer required.
-
-\chapter*{Example Program in VB.NET}
-
-This program loads a file \texttt{hello.pdf} from disk and writes out a
-document with the original included three times.
-
-\begin{small}
-\begin{verbatim}
-' Merge example
-imports System
-imports System.Collections.Generic
-imports CoherentGraphics
-
-' Initialise cpdf
-Cpdf.startup()
-
-' We will take the input hello.pdf and repeat it three times
-Using mergepdf As Cpdf.Pdf = Cpdf.fromFile("hello.pdf", "")
-  ' The list of PDFs to merge
-  Dim pdfs As List(Of Cpdf.Pdf) =
-    new List(Of Cpdf.Pdf)({mergepdf, mergepdf, mergepdf})
-
-  ' Merge them
-  Dim merged As Cpdf.Pdf = Cpdf.mergeSimple(pdfs)
-
-  ' Write output
-  Cpdf.toFile(merged, "merged.pdf", false, false)
-
-  ' Dispose of merged PDF
-  merged.Dispose()
-End Using
-\end{verbatim}
-\end{small}
-
-\noindent Note the use of \texttt{Using} and \texttt{Dispose()} to ensure the PDFs are thrown away when no longer required.
-
-\end{dotnetcpdflib}
-
-\begin{jcpdflib}
-\chapter*{Example Program in Java}
-
-This program loads a file \texttt{hello.pdf} from disk and writes out a
-document with the original included three times.
-
-\begin{small}
-\begin{verbatim}
-//Merge example
-import com.coherentpdf.Jcpdf
-
-public static void main(String[] args)
-{
-   // Initialise cpdf
-   Jcpdf jcpdf = new Jcpdf();
-   try
-   {
-     jcpdf.startup();
-   }
-   catch (Jcpdf.CpdfError e)
-   {
-     System.out.println("Error during cpdf startup");
-   }
-   // We will take the input hello.pdf and repeat it three times
-   try (Jcpdf.Pdf mergepdf = jcpdf.fromFile("hello.pdf", ""))
-   {
-     // The array of PDFs to merge
-     Jcpdf.Pdf[] pdfs = {mergepdf, mergepdf, mergepdf};
-     // Merge them
-     Jcpdf.Pdf merged = jcpdf.mergeSimple(pdfs);
-     // Write output
-     jcpdf.toFile(merged, "merged.pdf", false, false);
-     // Dispose of merged PDF
-     merged.close();
-   }
-   catch (Jcpdf.CpdfError e)
-   {
-     System.out.println("Error during cpdf operation");
-   }
-}
-\end{verbatim}
-\end{small}
-
-\noindent Note the use of \texttt{try} and \texttt{close()} to ensure the PDFs are thrown away when no longer required.
-\end{jcpdflib}
-
-\begin{jscpdflib}
-\chapter*{Example Program in JavaScript}
-
-This program loads a file \texttt{hello.pdf} from disk and writes out a
-document with the original included three times.
-
-\begin{small}
-\begin{verbatim}
-//Merge example
-
-//Load coherentpdf.js
-const coherentpdf = require('./coherentpdf.js');
-
-//Load the file hello.pdf from the current directory
-var pdf = coherentpdf.fromFile('hello.pdf', '');
-
-//Merge three copies of it
-var merged = coherentpdf.mergeSimple([pdf, pdf, pdf]);
-
-//Write to merged.pdf
-coherentpdf.toFile(merged, 'merged.pdf', false, false);
-
-//Clean up the two PDFs
-coherentpdf.deletePdf(pdf);
-coherentpdf.deletePdf(merged);
-\end{verbatim}
-\end{small}
-
-\noindent To be run in node. A browser example is included in the distribution of coherentpdf.js.
-\end{jscpdflib}
 
 \pagestyle{plain}
 \tableofcontents\clearpage\pagestyle{empty}
@@ -1270,56 +1014,6 @@ We can incrementally update a PDF by adding \texttt{-update} to a Cpdf command:
 
 \noindent Note the filename is specified twice.
 
-\begin{cpdflib}
-\clearpage
-\section*{C Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/splits/c01}
-\lstinputlisting{docsplits/splits/c02}
-\end{small}
-\end{cpdflib}
-
-\begin{pycpdflib}
-\clearpage
-\section*{Python Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/pysplits/c01}
-\lstinputlisting{docsplits/pysplits/c02}
-\end{small}
-\end{pycpdflib}
-
-\begin{dotnetcpdflib}
-\clearpage
-\section*{.NET Interface}
-\begin{small}\tt
-\lstinputlisting{dotnetsplits/cm1}
-\lstinputlisting{dotnetsplits/c01}
-\lstinputlisting{dotnetsplits/c02}
-\end{small}
-\end{dotnetcpdflib}
-
-\begin{jcpdflib}
-\clearpage
-\section*{Java Interface}
-\begin{small}\tt
-\lstinputlisting{javasplits/cm1}
-\lstinputlisting{javasplits/c00}
-\lstinputlisting{javasplits/c01}
-\lstinputlisting{javasplits/c02}
-\end{small}
-\end{jcpdflib}
-
-\begin{jscpdflib}
-\clearpage
-\section*{JavaScript Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/javascriptsplits/cm1}
-\lstinputlisting{docsplits/javascriptsplits/c00}
-\lstinputlisting{docsplits/javascriptsplits/c01}
-\lstinputlisting{docsplits/javascriptsplits/c02}
-\end{small}
-\end{jscpdflib}
-
 \pagestyle{empty}
 \thispagestyle{fancy}
 
@@ -1534,46 +1228,6 @@ The encryption parameters described in Chapter \ref{encryption} may be added to 
 The \texttt{-process-struct-trees} option used in conjunction with any splitting command will trim the structure tree (the data which forms the logical structure of the PDF) for each output file. In its absence, the structure tree is preserved wholesale in each output file. Its use can be important when, for example, producing PDF/UA files.
 
 \pagestyle{empty}\thispagestyle{fancy}
-
-\begin{cpdflib}
-\clearpage
-\section*{C Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/splits/c03}
-\end{small}
-\end{cpdflib}
-
-\begin{pycpdflib}
-\clearpage
-\section*{Python Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/pysplits/c03}
-\end{small}
-\end{pycpdflib}
-
-\begin{dotnetcpdflib}
-\clearpage
-\section*{.NET Interface}
-\begin{small}\tt
-\lstinputlisting{dotnetsplits/c03}
-\end{small}
-\end{dotnetcpdflib}
-
-\begin{jcpdflib}
-\clearpage
-\section*{Java Interface}
-\begin{small}\tt
-\lstinputlisting{javasplits/c03}
-\end{small}
-\end{jcpdflib}
-
-\begin{jscpdflib}
-\clearpage
-\section*{JavaScript Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/javascriptsplits/c03}
-\end{small}
-\end{jscpdflib}
 
 \chapter{Pages}\label{chap:3}
 \pagestyle{fancy}
@@ -1937,46 +1591,6 @@ The \texttt{-show-boxes} operation displays the boxes present on each page as me
 \noindent  The \texttt{-trim-marks} operation adds trim marks to a PDF file. The trim box must be present.
 \thispagestyle{fancy}
 
-\begin{cpdflib}
-\clearpage
-\section*{C Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/splits/c04}
-\end{small}
-\end{cpdflib}
-
-\begin{pycpdflib}
-\clearpage
-\section*{Python Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/pysplits/c04}
-\end{small}
-\end{pycpdflib}
-
-\begin{dotnetcpdflib}
-\clearpage
-\section*{.NET Interface}
-\begin{small}\tt
-\lstinputlisting{dotnetsplits/c04}
-\end{small}
-\end{dotnetcpdflib}
-
-\begin{jcpdflib}
-\clearpage
-\section*{Java Interface}
-\begin{small}\tt
-\lstinputlisting{javasplits/c04}
-\end{small}
-\end{jcpdflib}
-
-\begin{jscpdflib}
-\clearpage
-\section*{JavaScript Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/javascriptsplits/c04}
-\end{small}
-\end{jscpdflib}
-
 \chapter{Encryption and Decryption}\label{chap:4}
 \pagestyle{fancy}
 \label{encryption}
@@ -2080,47 +1694,6 @@ metadata. Add \texttt{-no-encrypt-metadata} to the command line.
   \noindent The user password cannot decrypt a file.
 
 When appropriate passwords are not available, the option \texttt{-decrypt-force} may be added to the command line to process the file regardless.
-
-
-\begin{cpdflib}
-\clearpage
-\section*{C Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/splits/c05}
-\end{small}
-\end{cpdflib}
-
-\begin{pycpdflib}
-\clearpage
-\section*{Python Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/pysplits/c05}
-\end{small}
-\end{pycpdflib}
-
-\begin{dotnetcpdflib}
-\clearpage
-\section*{.NET Interface}
-\begin{small}\tt
-\lstinputlisting{dotnetsplits/c05}
-\end{small}
-\end{dotnetcpdflib}
-
-\begin{jcpdflib}
-\clearpage
-\section*{Java Interface}
-\begin{small}\tt
-\lstinputlisting{javasplits/c05}
-\end{small}
-\end{jcpdflib}
-
-\begin{jscpdflib}
-\clearpage
-\section*{JavaScript Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/javascriptsplits/c05}
-\end{small}
-\end{jscpdflib}
 
 \chapter{Compression}\label{chap:5}
 
@@ -2233,38 +1806,6 @@ We have discussed only methods of compression which do not remove content or met
 \end{description}
 
 \noindent To find out what is in a PDF, use \texttt{-composition[-json]} from Chapter 11.
-
-\begin{cpdflib}
-\clearpage
-\section*{C Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/splits/c06}
-\end{small}
-\end{cpdflib}
-
-\begin{pycpdflib}
-\clearpage
-\section*{Python Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/pysplits/c06}
-\end{small}
-\end{pycpdflib}
-
-\begin{jcpdflib}
-\clearpage
-\section*{Java Interface}
-\begin{small}\tt
-\lstinputlisting{javasplits/c06}
-\end{small}
-\end{jcpdflib}
-
-\begin{jscpdflib}
-\clearpage
-\section*{JavaScript Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/javascriptsplits/c06}
-\end{small}
-\end{jscpdflib}
 
 \chapter{Bookmarks}\label{chap:6}
 
@@ -2470,46 +2011,6 @@ Cpdf can automatically generate a table of contents from existing bookmarks, add
 
 \clearpage\pagestyle{empty}
 
-\begin{cpdflib}
-\clearpage
-\section*{C Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/splits/c07}
-\end{small}
-\end{cpdflib}
-
-\begin{pycpdflib}
-\clearpage
-\section*{Python Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/pysplits/c07}
-\end{small}
-\end{pycpdflib}
-
-\begin{dotnetcpdflib}
-\clearpage
-\section*{.NET Interface}
-\begin{small}\tt
-\lstinputlisting{dotnetsplits/c07}
-\end{small}
-\end{dotnetcpdflib}
-
-\begin{jcpdflib}
-\clearpage
-\section*{Java Interface}
-\begin{small}\tt
-\lstinputlisting{javasplits/c07}
-\end{small}
-\end{jcpdflib}
-
-\begin{jscpdflib}
-\clearpage
-\section*{JavaScript Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/javascriptsplits/c07}
-\end{small}
-\end{jscpdflib}
-
 \chapter{Presentations}\label{chap:7}\pagestyle{fancy}
 
   \begin{framed}
@@ -2583,46 +2084,6 @@ on automatically, and has no transition effect.
 
 \noindent To use different options on different page ranges, run Cpdf multiple times on
 the file using a different page range each time.
-
-\begin{cpdflib}
-\clearpage
-\section*{C Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/splits/c08}
-\end{small}
-\end{cpdflib}
-
-\begin{pycpdflib}
-\clearpage
-\section*{Python Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/pysplits/c08}
-\end{small}
-\end{pycpdflib}
-
-\begin{dotnetcpdflib}
-\clearpage
-\section*{.NET Interface}
-\begin{small}\tt
-\lstinputlisting{dotnetsplits/c08}
-\end{small}
-\end{dotnetcpdflib}
-
-\begin{jcpdflib}
-\clearpage
-\section*{Java Interface}
-\begin{small}\tt
-\lstinputlisting{javasplits/c08}
-\end{small}
-\end{jcpdflib}
-
-\begin{jscpdflib}
-\clearpage
-\section*{JavaScript Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/javascriptsplits/c08}
-\end{small}
-\end{jscpdflib}
 
 \chapter{Text and Stamps}\label{chap:8}
 \label{stamps}
@@ -3029,46 +2490,6 @@ These two operations add content directly to the beginning or end of the page da
 
 \ \ \
 
-\begin{cpdflib}
-\clearpage
-\section*{C Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/splits/c09}
-\end{small}
-\end{cpdflib}
-
-\begin{pycpdflib}
-\clearpage
-\section*{Python Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/pysplits/c09}
-\end{small}
-\end{pycpdflib}
-
-\begin{dotnetcpdflib}
-\clearpage
-\section*{.NET Interface}
-\begin{small}\tt
-\lstinputlisting{dotnetsplits/c09}
-\end{small}
-\end{dotnetcpdflib}
-
-\begin{jcpdflib}
-\clearpage
-\section*{Java Interface}
-\begin{small}\tt
-\lstinputlisting{javasplits/c09}
-\end{small}
-\end{jcpdflib}
-
-\begin{jscpdflib}
-\clearpage
-\section*{JavaScript Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/javascriptsplits/c09}
-\end{small}
-\end{jscpdflib}
-
 \chapter{Multipage Facilities}\pagestyle{fancy}\label{multipage}\label{chap:9}
   \begin{framed}
     \small\noindent\verb!cpdf -pad-before in.pdf [<range>] [-pad-with pad.pdf] -o out.pdf!
@@ -3241,46 +2662,6 @@ As an alternative, pages can be chopped into two at a given position, horizontal
 
 \noindent To reverse the order of pages in the output, specify \texttt{-chop-columns} in addition.
 
-\begin{cpdflib}
-\clearpage
-\section*{C Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/splits/c10}
-\end{small}
-\end{cpdflib}
-
-\begin{pycpdflib}
-\clearpage
-\section*{Python Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/pysplits/c10}
-\end{small}
-\end{pycpdflib}
-
-\begin{dotnetcpdflib}
-\clearpage
-\section*{.NET Interface}
-\begin{small}\tt
-\lstinputlisting{dotnetsplits/c10}
-\end{small}
-\end{dotnetcpdflib}
-
-\begin{jcpdflib}
-\clearpage
-\section*{Java Interface}
-\begin{small}\tt
-\lstinputlisting{javasplits/c10}
-\end{small}
-\end{jcpdflib}
-
-\begin{jscpdflib}
-\clearpage
-\section*{JavaScript Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/javascriptsplits/c10}
-\end{small}
-\end{jscpdflib}
-
 \chapter{Annotations}\label{chap:10}
   \begin{framed}
   \small\noindent\verb!cpdf -list-annotations in.pdf [<range>]!
@@ -3432,46 +2813,6 @@ given page range, flattening their appearances onto the page as ordinary graphic
 \ \ \ 
 
 \pagestyle{empty}\thispagestyle{fancy}
-
-\begin{cpdflib}
-\clearpage
-\section*{C Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/splits/c11}
-\end{small}
-\end{cpdflib}
-
-\begin{pycpdflib}
-\clearpage
-\section*{Python Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/pysplits/c11}
-\end{small}
-\end{pycpdflib}
-
-\begin{dotnetcpdflib}
-\clearpage
-\section*{.NET Interface}
-\begin{small}\tt
-\lstinputlisting{dotnetsplits/c11}
-\end{small}
-\end{dotnetcpdflib}
-
-\begin{jcpdflib}
-\clearpage
-\section*{Java Interface}
-\begin{small}\tt
-\lstinputlisting{javasplits/c11}
-\end{small}
-\end{jcpdflib}
-
-\begin{jscpdflib}
-\clearpage
-\section*{JavaScript Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/javascriptsplits/c11}
-\end{small}
-\end{jscpdflib}
 
 \chapter{Document Information and Metadata}\label{chap:11}
 \pagestyle{fancy}
@@ -4047,46 +3388,6 @@ $ cpdf -composition-json cpdfmanual.pdf
 
 \noindent Note that, due to small inaccuracies in the method, it is possible for the \texttt{Unclassified} numbers to be negative.
 
-\begin{cpdflib}
-\clearpage
-\section*{C Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/splits/c12}
-\end{small}
-\end{cpdflib}
-
-\begin{pycpdflib}
-\clearpage
-\section*{Python Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/pysplits/c12}
-\end{small}
-\end{pycpdflib}
-
-\begin{dotnetcpdflib}
-\clearpage
-\section*{.NET Interface}
-\begin{small}\tt
-\lstinputlisting{dotnetsplits/c12}
-\end{small}
-\end{dotnetcpdflib}
-
-\begin{jcpdflib}
-\clearpage
-\section*{Java Interface}
-\begin{small}\tt
-\lstinputlisting{javasplits/c12}
-\end{small}
-\end{jcpdflib}
-
-\begin{jscpdflib}
-\clearpage
-\section*{JavaScript Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/javascriptsplits/c12}
-\end{small}
-\end{jscpdflib}
-
 \chapter{File Attachments}\label{chap:12}\pagestyle{fancy}
 \index{attachments}
 \begin{framed}
@@ -4184,46 +3485,6 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 \noindent As an alternative, and as described, adding \texttt{-include-data} to the command line when calling \texttt{-list-attached-files -json} will include an extra JSON field \texttt{data} containing the file data for each attachment. 
 
 \ \ \ 
-
-\begin{cpdflib}
-\clearpage
-\section*{C Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/splits/c13}
-\end{small}
-\end{cpdflib}
-
-\begin{pycpdflib}
-\clearpage
-\section*{Python Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/pysplits/c13}
-\end{small}
-\end{pycpdflib}
-
-\begin{dotnetcpdflib}
-\clearpage
-\section*{.NET Interface}
-\begin{small}\tt
-\lstinputlisting{dotnetsplits/c13}
-\end{small}
-\end{dotnetcpdflib}
-
-\begin{jcpdflib}
-\clearpage
-\section*{Java Interface}
-\begin{small}\tt
-\lstinputlisting{javasplits/c13}
-\end{small}
-\end{jcpdflib}
-
-\begin{jscpdflib}
-\clearpage
-\section*{JavaScript Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/javascriptsplits/c13}
-\end{small}
-\end{jscpdflib}
 
 \chapter{Images}\label{chap:13}
 \begin{framed}
@@ -4572,47 +3833,6 @@ Option & Effect\\\hline
 
 \ \ \ 
 
-\begin{cpdflib}
-\clearpage
-\section*{C Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/splits/c14}
-\end{small}
-\end{cpdflib}
-
-\begin{pycpdflib}
-\clearpage
-\section*{Python Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/pysplits/c14}
-\end{small}
-\end{pycpdflib}
-\pagestyle{fancy}
-
-\begin{dotnetcpdflib}
-\clearpage
-\section*{.NET Interface}
-\begin{small}\tt
-\lstinputlisting{dotnetsplits/c14}
-\end{small}
-\end{dotnetcpdflib}
-
-\begin{jcpdflib}
-\clearpage
-\section*{Java Interface}
-\begin{small}\tt
-\lstinputlisting{javasplits/c14}
-\end{small}
-\end{jcpdflib}
-
-\begin{jscpdflib}
-\clearpage
-\section*{JavaScript Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/javascriptsplits/c14}
-\end{small}
-\end{jscpdflib}
-
 \pagestyle{empty}
 \thispagestyle{fancy}
 
@@ -4808,46 +4028,6 @@ We may extract a font file by giving the page number and the PDF font resource n
 
 \ \ \ 
 
-\begin{cpdflib}
-\clearpage
-\section*{C Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/splits/c15}
-\end{small}
-\end{cpdflib}
-
-\begin{pycpdflib}
-\clearpage
-\section*{Python Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/pysplits/c15}
-\end{small}
-\end{pycpdflib}
-
-\begin{dotnetcpdflib}
-\clearpage
-\section*{.NET Interface}
-\begin{small}\tt
-\lstinputlisting{dotnetsplits/c15}
-\end{small}
-\end{dotnetcpdflib}
-
-\begin{jcpdflib}
-\clearpage
-\section*{Java Interface}
-\begin{small}\tt
-\lstinputlisting{javasplits/c15}
-\end{small}
-\end{jcpdflib}
-
-\begin{jscpdflib}
-\clearpage
-\section*{JavaScript Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/javascriptsplits/c15}
-\end{small}
-\end{jscpdflib}
-
 \chapter{PDF and JSON}\label{chap:15}\pagestyle{fancy}\index{JSON}\index{JSON!output to}\index{JSON!input from}
   {\small\begin{framed}
   \noindent\verb!cpdf in.pdf -output-json -o out.json!\\
@@ -4980,46 +4160,6 @@ We can load a JSON PDF file with the \texttt{-j} option in place of a PDF file a
 
 \noindent It is not required that \texttt{/Length} entries in CPDFJSON stream dictionaries be correctly updated when the JSON file is edited: Cpdf will fix them when loading.
 
-\begin{cpdflib}
-\clearpage
-\section*{C Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/splits/c16}
-\end{small}
-\end{cpdflib}
-
-\begin{pycpdflib}
-\clearpage
-\section*{Python Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/pysplits/c16}
-\end{small}
-\end{pycpdflib}
-
-\begin{dotnetcpdflib}
-\clearpage
-\section*{.NET Interface}
-\begin{small}\tt
-\lstinputlisting{dotnetsplits/c16}
-\end{small}
-\end{dotnetcpdflib}
-
-\begin{jcpdflib}
-\clearpage
-\section*{Java Interface}
-\begin{small}\tt
-\lstinputlisting{javasplits/c16}
-\end{small}
-\end{jcpdflib}
-
-\begin{jscpdflib}
-\clearpage
-\section*{JavaScript Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/javascriptsplits/c16}
-\end{small}
-\end{jscpdflib}
-
 \clearpage\pagestyle{empty}
 \chapter{Optional Content Groups}\label{chap:16}\pagestyle{fancy}\index{optional content group}
 
@@ -5082,47 +4222,6 @@ To ensure that every optional content group appears in the order list:
   {\small\begin{framed}
   \noindent\verb!cpdf -ocg-order-all in.pdf -o out.pdf!
   \end{framed}}
-
-
-\begin{cpdflib}
-\clearpage
-\section*{C Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/splits/c17}
-\end{small}
-\end{cpdflib}
-
-\begin{pycpdflib}
-\clearpage
-\section*{Python Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/pysplits/c17}
-\end{small}
-\end{pycpdflib}
-
-\begin{dotnetcpdflib}
-\clearpage
-\section*{.NET Interface}
-\begin{small}\tt
-\lstinputlisting{dotnetsplits/c17}
-\end{small}
-\end{dotnetcpdflib}
-
-\begin{jcpdflib}
-\clearpage
-\section*{Java Interface}
-\begin{small}\tt
-\lstinputlisting{javasplits/c17}
-\end{small}
-\end{jcpdflib}
-
-\begin{jscpdflib}
-\clearpage
-\section*{JavaScript Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/javascriptsplits/c17}
-\end{small}
-\end{jscpdflib}
 
 \clearpage\pagestyle{empty}
 \chapter{Creating New PDFs}\label{chap:17}\pagestyle{fancy}\index{Create}
@@ -5237,46 +4336,6 @@ Cpdf can build multi-pages files from one or more PDF-appropriate JBIG2 fragment
 \noindent The \texttt{-jbig2-global} option may be used to change the JBIG2Globals stream in use. The \texttt{-jbig2-global-clear} option may be used to cease use of a globals stream and return to lossless mode.
 
 To produce a PDF in PDF/UA-1 or PDF/UA-2 format add, say, \texttt{-subformat PDF/UA-2 -title "Opus"} to the command line.
-
-\begin{cpdflib}
-\clearpage
-\section*{C Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/splits/c18}
-\end{small}
-\end{cpdflib}
-
-\begin{pycpdflib}
-\clearpage
-\section*{Python Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/pysplits/c18}
-\end{small}
-\end{pycpdflib}
-
-\begin{dotnetcpdflib}
-\clearpage
-\section*{.NET Interface}
-\begin{small}\tt
-\lstinputlisting{dotnetsplits/c18}
-\end{small}
-\end{dotnetcpdflib}
-
-\begin{jcpdflib}
-\clearpage
-\section*{Java Interface}
-\begin{small}\tt
-\lstinputlisting{javasplits/c18}
-\end{small}
-\end{jcpdflib}
-
-\begin{jscpdflib}
-\clearpage
-\section*{JavaScript Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/javascriptsplits/c18}
-\end{small}
-\end{jscpdflib}
 
 \clearpage\pagestyle{empty}
 \chapter{Drawing on PDFs}\label{chap:18}\pagestyle{fancy}\index{Draw}
@@ -6030,46 +5089,6 @@ Extra information may be added to structure tree nodes with \texttt{-eltinfo} / 
 A role map, which maps non-standard structure types to standard ones, may be set with \texttt{-rolemap}. For example \texttt{-rolemap "/S1/H1/S2/H2"} would map the S1 structure type to the standard type H1 and so on.
 
 To build a fresh PDF/UA or PDF/UA-2 file for use with \texttt{-draw} use \texttt{-create-pdf-ua-1} or \texttt{-create-pdf-ua-2} from chapter \ref{chap:19}.
-
-\begin{cpdflib}
-\clearpage
-\section*{C Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/splits/c19}
-\end{small}
-\end{cpdflib}
-
-\begin{pycpdflib}
-\clearpage
-\section*{Python Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/pysplits/c19}
-\end{small}
-\end{pycpdflib}
-
-\begin{dotnetcpdflib}
-\clearpage
-\section*{.NET Interface}
-\begin{small}\tt
-\lstinputlisting{dotnetsplits/c19}
-\end{small}
-\end{dotnetcpdflib}
-
-\begin{jcpdflib}
-\clearpage
-\section*{Java Interface}
-\begin{small}\tt
-\lstinputlisting{javasplits/c19}
-\end{small}
-\end{jcpdflib}
-
-\begin{jscpdflib}
-\clearpage
-\section*{JavaScript Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/javascriptsplits/c19}
-\end{small}
-\end{jscpdflib}
 
 \clearpage\pagestyle{empty}
 \chapter{Accessible PDFs with PDF/UA}\label{chap:19}\pagestyle{fancy}\index{PDF/UA}\index{accessibility}
@@ -7366,46 +6385,6 @@ The \texttt{-page-content} operation outputs JSON describing the graphic objects
 \noindent Since such output can be very large, the options \texttt{-pc-no-text}, \texttt{-pc-no-graphics} and \texttt{-pc-no-images} may be used to suppress unwanted elements.
 
 In the future, this JSON format will contain enough information to modify and round-trip page content.
-
-\begin{cpdflib}
-\clearpage
-\section*{C Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/splits/c20}
-\end{small}
-\end{cpdflib}
-
-\begin{pycpdflib}
-\clearpage
-\section*{Python Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/pysplits/c20}
-\end{small}
-\end{pycpdflib}
-
-\begin{dotnetcpdflib}
-\clearpage
-\section*{.NET Interface}
-\begin{small}\tt
-\lstinputlisting{dotnetsplits/c19}
-\end{small}
-\end{dotnetcpdflib}
-
-\begin{jcpdflib}
-\clearpage
-\section*{Java Interface}
-\begin{small}\tt
-\lstinputlisting{javasplits/c19}
-\end{small}
-\end{jcpdflib}
-
-\begin{jscpdflib}
-\clearpage
-\section*{JavaScript Interface}
-\begin{small}\tt
-\lstinputlisting{docsplits/javascriptsplits/c20}
-\end{small}
-\end{jscpdflib}
 
 \appendix
 \chapter{Dates}\pagestyle{empty}
