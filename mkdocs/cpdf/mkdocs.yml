@@ -1,1 +1,23 @@
 site_name: Cpdf
+nav:
+  - basic-usage.md
+  - merging-and-splitting.md
+  - pages.md
+  - encryption-and-decryption.md
+  - compression.md
+  - bookmarks.md
+  - presentations.md
+  - text-and-stamps.md
+  - multipage-facilities.md
+  - document-information-and-metadata.md
+  - file-attachments.md
+  - images.md
+  - fonts.md
+  - PDF-and-JSON.md
+  - optional-content-groups.md
+  - creating-new-PDFs.md
+  - drawing-on-PDFs.md
+  - accessible-PDFs-with-PDFUA.md
+  - redaction.md
+  - miscellaneous.md
+  - dates.md
