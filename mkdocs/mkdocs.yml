@@ -1,5 +1,6 @@
 site_name: Cpdf
 nav:
+  - index.md
   - basic-usage.md
   - merging-and-splitting.md
   - pages.md
@@ -9,6 +10,7 @@ nav:
   - presentations.md
   - text-and-stamps.md
   - multipage-facilities.md
+  - annotations.md
   - document-information-and-metadata.md
   - file-attachments.md
   - images.md
