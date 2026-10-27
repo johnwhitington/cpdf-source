@@ -1,4 +1,4 @@
-# PDF and JSON {#chap:15}
+# PDF and JSON
 
 cpdf in.pdf -output-json -o out.json
      [-output-json-parse-content-streams]

@@ -1,4 +1,4 @@
-# File Attachments {#chap:12}
+# File Attachments
 
 cpdf -attach-file <filename> [-to-page <page number>]
      [-afd <string>] [-afr <relationship>] [-attach-file ...]
