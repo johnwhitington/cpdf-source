@@ -167,8 +167,7 @@ case, add the `-recrypt` option:
 
 The password required (owner or user) depends upon the operation being
 performed. Separate facilities are provided to decrypt and encrypt files
-(See Section [\[crypt\]](#crypt){reference-type="ref"
-reference="crypt"}).
+(See Section FIXME).
 
 When appropriate passwords are not available, the option
 `-decrypt-force` may be added to the command line to process the file
@@ -216,8 +215,7 @@ is achieved with the `>` operator:
 
 `cpdf -info in.pdf > file.txt`
 
-Use the `-info` operation (See Section
-[11.1](#info){reference-type="ref" reference="info"}), redirecting the
+Use the `-info` operation (See Section FIXME), redirecting the
 output to `file.txt`.
 
 ## Doing Several Things at Once with AND

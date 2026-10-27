@@ -103,8 +103,7 @@ Here is a typical fragment:
     ...
 
 This JSON file contains the structure tree objects from the file, using
-the format described in chapter [15](#chap:15){reference-type="ref"
-reference="chap:15"}. There is a special entry in object `0` which gives
+the format described in chapter FIXME. There is a special entry in object `0` which gives
 the key to the page object numbers. In this example, there is one page
 with object number `52`.
 
@@ -590,7 +589,7 @@ manual remediation procedure described above.
 | If annotations are not required, they may be removed with                              |
 | `cpdf -remove-annotations in.pdf -o out.pdf`. Alternatively, use                       |
 | `-list-annotations-json` and `-set-annotations` as described in Chapter                |
-| [10](#chap:10){reference-type="ref" reference="chap:10"} to remove one or more         |
+| FIXME to remove one or more         |
 | specific annotations.                                                                  |
 +--------------------------+-------------------------------+-----------------------------+
 | **28-010**               | **A widget annotation is not  | **UA1:7.18.4-1**            |
@@ -604,7 +603,7 @@ manual remediation procedure described above.
 | If annotations are not required, they may be removed with                              |
 | `cpdf -remove-annotations in.pdf -o out.pdf`. Alternatively, use                       |
 | `-list-annotations-json` and `-set-annotations` as described in Chapter                |
-| [10](#chap:10){reference-type="ref" reference="chap:10"} to remove one or more         |
+| FIXME to remove one or more         |
 | specific annotations. Alternatively, edit the tree manually using                      |
 | `-extract-struct-tree` and `-replace-struct-tree` from this chapter.                   |
 +--------------------------+-------------------------------+-----------------------------+
@@ -627,7 +626,7 @@ manual remediation procedure described above.
 | If annotations are not required, they may be removed with                              |
 | `cpdf -remove-annotations in.pdf -o out.pdf`. Alternatively, use                       |
 | `-list-annotations-json` and `-set-annotations` as described in Chapter                |
-| [10](#chap:10){reference-type="ref" reference="chap:10"} to remove one or more         |
+| FIXME to remove one or more         |
 | specific annotations.                                                                  |
 +--------------------------+-------------------------------+-----------------------------+
 | **28-017**               | **A PrinterMark annotation is | **UA1:7.18.8-1**            |
@@ -637,7 +636,7 @@ manual remediation procedure described above.
 | If annotations are not required, they may be removed with                              |
 | `cpdf -remove-annotations in.pdf -o out.pdf`. Alternatively, use                       |
 | `-list-annotations-json` and `-set-annotations` as described in Chapter                |
-| [10](#chap:10){reference-type="ref" reference="chap:10"} to remove one or more         |
+| FIXME to remove one or more         |
 | specific annotations. Alternatively, edit the tree manually using                      |
 | `-extract-struct-tree` and `-replace-struct-tree` from this chapter.                   |
 +--------------------------+-------------------------------+-----------------------------+
@@ -648,7 +647,7 @@ manual remediation procedure described above.
 | If annotations are not required, they may be removed with                              |
 | `cpdf -remove-annotations in.pdf -o out.pdf`. Alternatively, use                       |
 | `-list-annotations-json` and `-set-annotations` as described in Chapter                |
-| [10](#chap:10){reference-type="ref" reference="chap:10"} to remove one or more         |
+| FIXME to remove one or more         |
 | specific annotations.                                                                  |
 +--------------------------+-------------------------------+-----------------------------+
 | **30-001**               | **A reference XObject is      | **UA1:7.2**                 |
