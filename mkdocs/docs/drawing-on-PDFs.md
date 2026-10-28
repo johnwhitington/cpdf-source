@@ -203,6 +203,8 @@ We can use a path to form a clipping region for subsequent content using
 
 Here is the result:
 
+![clip](manualimages/clip.svg)
+
 ## Path parameters
 
     -strokecol "g" | "r g b" | "c m y k" | <namedcolour> Set stroke colour
@@ -221,11 +223,15 @@ naming a colour as described in Chapter 8:
 
 Here is the result:
 
+![colfill](manualimages/colfill.svg)
+
 We can set line caps and joins with `-cap`, `-join`:
 
 `cpdf -create-pdf AND -draw -to "100 100" -join round -cap round -thick 40 -line "200 200" -line "220 100" -stroke -o out.pdf`
 
 Then we see:
+
+![capjoins](manualimages/capjoins.svg)
 
 The miter limit (see PDF reference for details) may be set with
 `-miter`.
@@ -239,6 +245,8 @@ white 20, phase 0:
 `cpdf -create-pdf AND -draw -to "100 100" -dash "30 20 0" -thick 20 -line "400 300" -stroke -o out.pdf`
 
 Here is the result:
+
+![dash](manualimages/dash.svg)
 
 ## The graphics stack and matrices
 
@@ -260,6 +268,8 @@ invocations may be nested. Here is a simple example:
 
 When we use `-pop` the colour returns to the saved one:
 
+![pop](manualimages/pop.svg)
+
 One very common use for a `-push`/`-pop` pair is to isolate the effects
 of an operation which modifies the current transformation matrix. These
 operations are used to translate, rotate, scale and so on. For example:
@@ -268,6 +278,8 @@ operations are used to translate, rotate, scale and so on. For example:
 
 This is the result. See how the graphics transformation is undone when
 `-push` is invoked:
+
+![matrix](manualimages/matrix.svg)
 
 This is important because, in the absence of `-push` and `-pop` there
 would be no way to reverse the effect of a graphics matrix modification
@@ -296,6 +308,8 @@ colour and transformation matrix and `-use` it again.
 Note that we must specify a bounding box for the XObject with
 `-xobj-bbox`. Here is the result:
 
+![xobj](manualimages/xobj.svg)
+
 XObjects may be nested.
 
 ## Images
@@ -313,6 +327,8 @@ and assign it a name. We can then use `-image` to use it at any point:
 
 Here is the result:
 
+![png](manualimages/png.svg)
+
 You can see we had to scale by the width and height of the image to draw
 it at the size we expect.
 
@@ -327,6 +343,8 @@ and 1 (fully opaque):
 `cpdf -create-pdf AND -draw -fill-opacity 0.5 -circle "250 300 150" -fill -circle "350 300 150" -fill -o out.pdf`
 
 Here is the result:
+
+![trans](manualimages/trans.svg)
 
 Notice that we used `-fill` twice, to ensure each circle was in a
 different path. If they had been part of the same path, the effect would
@@ -355,12 +373,16 @@ end with `-et`. For example:
 
 Here is the result:
 
+![text](manualimages/text.svg)
+
 If we use `-stext` instead of `-text` the usual special values from
 Chapter 8 (with the exception of URL links) may be used:
 
 `cpdf -create-pdf AND -draw -mtrans "50 50" -font-size 144 -bt -stext "Page %Page" -et -o out.pdf`
 
 Now we see:
+
+![stext](manualimages/stext.svg)
 
 We can use `-text` multiple times, interspersing operators which change
 the text state, such as font and font size:
@@ -369,6 +391,8 @@ the text state, such as font and font size:
 
 Here is the result:
 
+![fonts](manualimages/fonts.svg)
+
 We can alter the character space, word space, horizontal scaling (100 =
 no scaling, less than 100 shrink, more than 100 stretch), and text rise:
 
@@ -376,12 +400,16 @@ no scaling, less than 100 shrink, more than 100 stretch), and text rise:
 
 Now we see:
 
+![fontparams](manualimages/fontparams.svg)
+
 Text may appear on multiple lines. We set up the line spacing with
 `-leading` then make new lines with `-nl`:
 
 `cpdf -create-pdf AND -draw -mtrans "100 200" -font-size 50 -leading 55 -bt -text "This is" -nl -text "on multiple" -nl -text "lines" -et -o out.pdf`
 
 Now we have:
+
+![lines](manualimages/lines.svg)
 
 When composing text, we may need to find the width of a piece of text to
 see where to break it, or for right alignment. We can use `-text-width`
@@ -397,6 +425,8 @@ example, to use text as a clipping region:
 `cpdf -create-pdf AND -draw -rendermode 7 -mtrans "100 200" -font-size 50 -leading 55 -bt -text "This is" -nl -text "on multiple" -nl -text "lines" -et -circle "100 0 100" -fill -o out.pdf`
 
 Here is the result:
+
+![textclip](manualimages/textclip.svg)
 
 Here are the text rendering modes:
 
@@ -429,6 +459,8 @@ Notice the paragraph specification `L200pt=` for left justified,
 200pt-wide at the beginning of the string. Notice also we must give a
 value for `-leading`. Here is the result:
 
+![para](manualimages/para.svg)
+
 Multiple paragraphs with optional indenting may be laid out with
 `-paras`:
 
@@ -436,6 +468,8 @@ Multiple paragraphs with optional indenting may be laid out with
 
 We specify the newlines with `\n`, and the indentation with `-indent`.
 Here is the result.
+
+![paras](manualimages/paras.svg)
 
 Note that there is no automatic typesetting over multiple pages with
 `-paras`.
@@ -452,8 +486,8 @@ example:
 
 `cpdf -create-pdf AND -draw -bt -text "Page 1" -et -newpage -bt -text "Page 2" -et -o out.pdf`
 
-This will create a two page PDF with \"Page 1\" written on page one and
-\"Page 2\" written on page two.
+This will create a two page PDF with "Page 1" written on page one and
+"Page 2" written on page two.
 
 ## Structure information
 
@@ -499,6 +533,8 @@ We turned off auto-tagging with `-no-auto-tag`, then used `-tag H1` and
 `-end-tag` to tag the heading. Then we turned auto-tagging back on with
 `-auto-tag`. Here is the result, visually:
 
+![h1](manualimages/h1.svg)
+
 And here is the structure tree:
 
     StructTreeRoot
@@ -508,7 +544,7 @@ And here is the structure tree:
 
 Content tagging is flat - every part of the content of a page is part of
 only one `-tag`. The logical structure of a document, however, is a tree
-structure -- sections contain paragraphs, and so on. To build the
+structure - sections contain paragraphs, and so on. To build the
 logical structure tree, we add structure tags using `-stag` /
 `-end-stag` pairs which, of course, may be nested. For example, let's
 put our H1, and P sections in a Section structure tag:
