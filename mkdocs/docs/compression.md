@@ -93,27 +93,27 @@ unwanted metadata:
 
 `-remove-article-threads`
 
-: Removes article threads, which contain information on the logical
+> Removes article threads, which contain information on the logical
   order of a document's parts.
 
 `-remove-page-piece`
 
-: Removes page-piece information, which is a kind of private PDF
+> Removes page-piece information, which is a kind of private PDF
   information found in PDFs saved from image editors or converted from
   other formats.
 
 `-remove-web-capture`
 
-: Removes web capture data, a now-deprecated way of saving additional
+> Removes web capture data, a now-deprecated way of saving additional
   metadata in PDFs originating as web content.
 
 `-remove-procsets`
 
-: Removes ProcSets, a now-irrelevant data structure often in early PDFs
+> Removes ProcSets, a now-irrelevant data structure often in early PDFs
 
 `-remove-output-intents`
 
-: Removes Output Intents, a colour-matching system for documents
+> Removes Output Intents, a colour-matching system for documents
   intended to be printed.
 
 For each operation, the command looks like this:
@@ -126,42 +126,34 @@ circumstance. We list and briefly describe each here for convenience:
 
 `-remove-annotations`
 
-: Chapter FIXME.
-  Removes annotations from a PDF.
+> Chapter FIXME. Removes annotations from a PDF.
 
 `-remove-metadata`
 
-: Chapter FIXME.
-  Remove main XMP metadata.
+> Chapter FIXME. Remove main XMP metadata.
 
 `-remove-all-metadata`
 
-: Chapter FIXME.
-  Remove all XMP metadata.
+> Chapter FIXME. Remove all XMP metadata.
 
 `-remove-files`
 
-: Chapter FIXME.
-  Removes attached files from a PDF.
+> Chapter FIXME. Removes attached files from a PDF.
 
 `-process-images`
 
-: Chapter FIXME.
-  Lossy (and lossless) reprocessing of images within PDFs.
+> Chapter FIXME. Lossy (and lossless) reprocessing of images within PDFs.
 
 `-remove-fonts`
 
-: Chapter FIXME.
-  Remove embedded fonts from a PDF.
+> Chapter FIXME. Remove embedded fonts from a PDF.
 
 `-remove-all-text`
 
-: Chapter FIXME.
-  Remove text from a PDF.
+> Chapter FIXME. Remove text from a PDF.
 
 `-draft`
 
-: Chapter FIXME.
-  Remove images from a PDF.
+> Chapter FIXME. Remove images from a PDF.
 
 To find out what is in a PDF, use `-composition[-json]` from Chapter FIXME.

@@ -1,21 +1,21 @@
 # Bookmarks
 
-cpdf -list-bookmarks [-utf8] in.pdf
+    cpdf -list-bookmarks [-utf8] in.pdf
 
-cpdf -list-bookmarks-json [-preserve-actions] in.pdf
+    cpdf -list-bookmarks-json [-preserve-actions] in.pdf
 
-cpdf -remove-bookmarks in.pdf -o out.pdf
+    cpdf -remove-bookmarks in.pdf -o out.pdf
 
-cpdf -add-bookmarks <bookmark file> in.pdf -o out.pdf
+    cpdf -add-bookmarks <bookmark file> in.pdf -o out.pdf
 
-cpdf -add-bookmarks-json <bookmark file> in.pdf -o out.pdf
+    cpdf -add-bookmarks-json <bookmark file> in.pdf -o out.pdf
 
-cpdf -bookmarks-open-to-level <n> in.pdf -o out.pdf
+    cpdf -bookmarks-open-to-level <n> in.pdf -o out.pdf
 
-cpdf -table-of-contents [-toc-title] [-toc-no-bookmark] [-toc-dot-leaders]  
-     [-font <font>] [-font-size <size>] [-embed-std14 /path/to/fonts]  
-     [-process-struct-trees] [-subformat <subformat>]  
-     in.pdf -o out.pdf
+    cpdf -table-of-contents [-toc-title] [-toc-no-bookmark] [-toc-dot-leaders]  
+         [-font <font>] [-font-size <size>] [-embed-std14 /path/to/fonts]  
+         [-process-struct-trees] [-subformat <subformat>]  
+         in.pdf -o out.pdf
 
 PDF bookmarks (properly called the *document outline*) represent a tree
 of references to parts of the file, typically displayed at the side of
@@ -89,16 +89,16 @@ point to (i.e it can be more detailed than just giving the page). For
 example, it may point to a section heading halfway down a page. Here are
 the possibilities:
 
-  Format                                        Description
-  --------------------------------------------- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  \[*p* /XYZ *left* *top* *zoom*\]              Display page number *p* with (*left*, *top*) positioned at upper-left of window and magnification of *zoom*. Writing "null" for any of *left*, *top* or *zoom* specifies no change. A *zoom* of 0 is the same as "null".
-  \[*p* /Fit\]                                  Display page number *p* so as to fit fully within the window.
-  \[*p* /FitH *top*\]                           Display page number *p* with vertical coordinate *top* at the top of the window and the page magnified so its width fits the window. A null value for *top* implies no change.
-  \[*p* /FitV *left*\]                          Display page number *p* with horizontal coordinate *left* at the left of the window, and the page magnified so its height fits the window. A null value for *left* implies no change.
-  \[*p* /FitR *left* *bottom* *right* *top*\]   Display page number *p* magnified so as to fit entirely within the rectangle specified by the other parameters.
-  \[*p* /FitB\]                                 As for /Fit but with the page's bounding box (see below).
-  \[*p* /FitBH *top*\]                          As for /FitH but with the page's bounding box (see below).
-  \[*p* /FitBV *left*\]                         As for /FitV but with the page's bounding box (see below).
+| Format | Description |
+| ------ | ------------|
+| \[*p* /XYZ *left* *top* *zoom*\] | Display page number *p* with (*left*, *top*) positioned at upper-left of window and magnification of *zoom*. Writing "null" for any of *left*, *top* or *zoom* specifies no change. A *zoom* of 0 is the same as "null". |
+| \[*p* /Fit\]                                 | Display page number *p* so as to fit fully within the window. |
+| \[*p* /FitH *top*\]                          | Display page number *p* with vertical coordinate *top* at the top of the window and the page magnified so its width fits the window. A null value for *top* implies no change. |
+| \[*p* /FitV *left*\]                          | Display page number *p* with horizontal coordinate *left* at the left of the window, and the page magnified so its height fits the window. A null value for *left* implies no change. |
+| \[*p* /FitR *left* *bottom* *right* *top*\]   | Display page number *p* magnified so as to fit entirely within the rectangle specified by the other parameters. |
+| \[*p* /FitB\]                                 | As for /Fit but with the page's bounding box (see below). |
+| \[*p* /FitBH *top*\]                          | As for /FitH but with the page's bounding box (see below). |
+| \[*p* /FitBV *left*\]                         | As for /FitV but with the page's bounding box (see below). |
 
 The *bounding box* is the intersection of the page's crop box and the
 bounding box of the page contents. Some other kinds of destination may
@@ -170,8 +170,7 @@ the title into lines. The default font is 12pt Times Roman (and 24pt for
 the title). The base font and size may be changed with `-font` and
 `-font-size` (see Section FIXME for full details):
 
-`cpdf -table-of-contents -font "Courier-Bold" -font-size 8`\
-`     in.pdf -o out.pdf`
+`cpdf -table-of-contents -font "Courier-Bold" -font-size 8` in.pdf -o out.pdf`
 
 Dot leaders may be added with `-toc-dot-leaders`:
 

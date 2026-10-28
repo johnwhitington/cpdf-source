@@ -1,31 +1,31 @@
 # Multipage Facilities
 
-cpdf -pad-before in.pdf [<range>] [-pad-with pad.pdf] -o out.pdf
+    cpdf -pad-before in.pdf [<range>] [-pad-with pad.pdf] -o out.pdf
 
-cpdf -pad-after in.pdf [<range>] [-pad-with pad.pdf] -o out.pdf
+    cpdf -pad-after in.pdf [<range>] [-pad-with pad.pdf] -o out.pdf
 
-cpdf -pad-every [<integer>] in.pdf [-pad-with pad.pdf] -o out.pdf
+    cpdf -pad-every [<integer>] in.pdf [-pad-with pad.pdf] -o out.pdf
 
-cpdf -pad-multiple [<integer>] in.pdf -o out.pdf
+    cpdf -pad-multiple [<integer>] in.pdf -o out.pdf
 
-cpdf -pad-multiple-before [<integer>] in.pdf -o out.pdf
+    cpdf -pad-multiple-before [<integer>] in.pdf -o out.pdf
 
-cpdf [-impose <pagesize> | impose-xy "<x> <y>"]  
-     [-impose-columns] [-impose-rtl] [-impose-btt]  
-     [-impose-margin <margin>] [-impose-spacing <spacing>]  
-     [-impose-linewidth <width>] [-fast]  
-     [-process-struct-trees]  
-     in.pdf -o out.pdf
+    cpdf [-impose <pagesize> | impose-xy "<x> <y>"]  
+         [-impose-columns] [-impose-rtl] [-impose-btt]  
+         [-impose-margin <margin>] [-impose-spacing <spacing>]  
+         [-impose-linewidth <width>] [-fast]  
+         [-process-struct-trees]  
+         in.pdf -o out.pdf
 
-cpdf -twoup-stack [-fast] [-process-struct-trees] in.pdf -o out.pdf
+    cpdf -twoup-stack [-fast] [-process-struct-trees] in.pdf -o out.pdf
 
-cpdf -twoup [-fast] [-process-struct-trees] in.pdf -o out.pdf
+    cpdf -twoup [-fast] [-process-struct-trees] in.pdf -o out.pdf
 
-cpdf -chop "<x> <y>" [-chop-columns] [-chop-rtl] [-chop-btt]  
-     in.pdf [<range>] -o out.pdf
+    cpdf -chop "<x> <y>" [-chop-columns] [-chop-rtl] [-chop-btt]  
+         in.pdf [<range>] -o out.pdf
 
-cpdf [-chop-h <y> | -chop-v <x>] [-chop-columns]  
-     in.pdf [<range>] -o out.pdf
+    cpdf [-chop-h <y> | -chop-v <x>] [-chop-columns]  
+         in.pdf [<range>] -o out.pdf
 
 ## Inserting Blank Pages
 
@@ -36,11 +36,11 @@ specified by a range in the usual way:
 
 `cpdf -pad-before in.pdf 1 -o out.pdf`
 
-Add a blank page before page 1 (i.e. at the beginning of the document.)
+> Add a blank page before page 1 (i.e. at the beginning of the document.)
 
 `cpdf -pad-after in.pdf 2,16,38,84,121,147 -o out.pdf`
 
-Add a blank page after pages 2, 16, 38, 84, 121 and 147 (for instance,
+> Add a blank page after pages 2, 16, 38, 84, 121 and 147 (for instance,
 to add a clean page between chapters of a document.)
 
 The dimensions of the padded page are derived from the boxes (media box,
@@ -53,7 +53,7 @@ adds a blank page after pages 3 and 6:
 
 `cpdf -pad-every 3 in.pdf -o out.pdf`
 
-Add a blank page after every three pages
+> Add a blank page after every three pages
 
 In all three of these operations, one may specify `-pad-with` providing
 a (usually one-page) PDF file to be used instead of a blank page. For
@@ -64,7 +64,7 @@ multiple of `n` pages. For example:
 
 `cpdf -pad-multiple 8 in.pdf -o out.pdf`
 
-Add blank pages to `in.pdf` so it has a multiple of 8 pages.
+> Add blank pages to `in.pdf` so it has a multiple of 8 pages.
 
 The `-pad-multiple-before n` operation adds the padding pages at the
 beginning of the file instead.
@@ -84,11 +84,11 @@ by Cpdf:
 
 `cpdf -impose a0landscape in.pdf -o out.pdf`
 
-Impose as many pages as will fit on to new A0 landscape pages.
+> Impose as many pages as will fit on to new A0 landscape pages.
 
 `cpdf -impose-xy "3 4" in.pdf -o out.pdf`
 
-Impose 3 across and 4 down on to new pages of 3 times the width and 4
+> Impose 3 across and 4 down on to new pages of 3 times the width and 4
 times the height of the input ones.
 
 The x-value for `-impose-xy` may be set to zero to indicate an
@@ -128,11 +128,11 @@ down so that the media box is unchanged.
 
 `cpdf -twoup in.pdf -o out.pdf`
 
-Impose a document two-up, keeping the existing page size.
+> Impose a document two-up, keeping the existing page size.
 
 `cpdf -twoup-stack in.pdf -o out.pdf`
 
-Impose a document two-up on a larger page by rotation.
+> Impose a document two-up on a larger page by rotation.
 
 NB: For all imposition options, see also discussion of `-fast` in
 Section FIXME. The
@@ -147,7 +147,7 @@ a sort of de-imposition. For example:
 
 `cpdf -chop "2 3" in.pdf -o out.pdf`
 
-Chop each page into six.
+> Chop each page into six.
 
 The crop box is used if present; if not, the media box. By default, the
 pieces are arranged in the output file row by row, and from left to
@@ -159,7 +159,7 @@ horizontally with `-chop-h` or vertically with `-chop-v`:
 
 `cpdf -chop-h 400 in.pdf -o out.pdf`
 
-Chop each page into two, top and bottom, at 400pt mark.
+> Chop each page into two, top and bottom, at 400pt mark.
 
 To reverse the order of pages in the output, specify `-chop-columns` in
 addition.

@@ -1,26 +1,16 @@
 # Merging and Splitting
 
-    cpdf -merge in1.pdf [<range>] in2.pdf [<range>] [<more names/ranges>]  
-         [-collate] [-collate-n <n>] [-retain-numbering]  
-         [-merge-add-bookmarks [-merge-add-bookmarks-use-titles]]  
-         [-remove-duplicate-fonts] [-process-struct-trees]  
-         [-subformat <subformat>]  
-         -o out.pdf
+    cpdf -merge in1.pdf [<range>] in2.pdf [<range>] [<more names/ranges>] [-collate] [-collate-n <n>] [-retain-numbering] [-merge-add-bookmarks [-merge-add-bookmarks-use-titles]] [-remove-duplicate-fonts] [-process-struct-trees] [-subformat <subformat>] -o out.pdf
 
-    cpdf -portfolio in.pdf -pf <filename> [-pfd <string>]  
-         [-pfr <relationship>] [-pf ...] -o out.pdf
+    cpdf -portfolio in.pdf -pf <filename> [-pfd <string>] [-pfr <relationship>] [-pf ...] -o out.pdf
 
-    cpdf -split in.pdf [-chunk <chunksize>] [-process-struct-trees]  
-         [-utf8] -o <format>
+    cpdf -split in.pdf [-chunk <chunksize>] [-process-struct-trees] [-utf8] -o <format>
 
-    cpdf -split-bookmarks <level> in.pdf [-utf8] [-process-struct-trees]  
-         -o <format>
+    cpdf -split-bookmarks <level> in.pdf [-utf8] [-process-struct-trees] -o <format>
 
-    cpdf -split-max <file size> in.pdf [-utf8] [-process-struct-trees]  
-         -o <format>
+    cpdf -split-max <file size> in.pdf [-utf8] [-process-struct-trees] -o <format>
 
-    cpdf -spray in.pdf [-utf8] [-process-struct-trees]  
-         -o a.pdf [-o b.pdf [-o ...]]
+    cpdf -spray in.pdf [-utf8] [-process-struct-trees] -o a.pdf [-o b.pdf [-o ...]]
 
 ## Merging
 
@@ -84,7 +74,7 @@ to `out.pdf`.
 When opened in a supporting PDF viewer, such as Adobe Reader, a
 navigation pane is shown, allowing each file to be viewed. There are two
 columns of interest: the Description and the Relationship. By default,
-Cpdf uses the file name for the description, and \"Unspecified\" for the
+Cpdf uses the file name for the description, and "Unspecified" for the
 Relationship. We can specify the description by adding
 `-pfd "The description"` after the relevant `-pf`, and the relationship
 by adding `-pfr RelationshipName`.

@@ -52,18 +52,18 @@ Any time when a page size is
 required, instead of writing, for instance `"210mm 197mm"` one can
 instead write `a4portrait`. Here is a list of supported page sizes:
 
-  `a0portrait`         `a1portrait`          `a2portrait`
-  `a3portrait`         `a4portrait`          `a5portrait`
-  `a6portrait`         `a7portrait`          `a8portrait`
-  `a9portrait`         `a10portrait`         
+    a0portrait         a1portrait          a2portrait
+    a3portrait         a4portrait          a5portrait
+    a6portrait         a7portrait          a8portrait
+    a9portrait         a10portrait         
                                              
-  `a0landscape`        `a1landscape`         `a2landscape`
-  `a3landscape`        `a4landscape`         `a5landscape`
-  `a6landscape`        `a7landscape`         `a8landscape`
-  `a9landscape`        `a10landscape`        
+    a0landscape        a1landscape         a2landscape
+    a3landscape        a4landscape         a5landscape
+    a6landscape        a7landscape         a8landscape
+    a9landscape        a10landscape        
                                              
-  `usletterportrait`   `usletterlandscape`   
-  `uslegalportrait`    `uslegallandscape`    
+    usletterportrait   usletterlandscape   
+    uslegalportrait    uslegallandscape    
 
 Note that this also works when four numbers are required: for example,
 when setting the mediabox `"0 0 a3landscape"` will suffice.
@@ -78,16 +78,17 @@ any page rotation when considering what the X and Y axes relate to.
 
 `cpdf -scale-page "2 2" in.pdf -o out.pdf`
 
-Convert an A4 page to A2, for instance.
+> Convert an A4 page to A2, for instance.
 
 The `-scale-to-fit` operation scales each page in the range to fit a
 given page size, preserving aspect ratio and centring the result. If a
 crop box is present, it is preferred to the media box.
 
 `cpdf -scale-to-fit "297mm 210mm" in.pdf -o out.pdf`
+
 `cpdf -scale-to-fit a4portrait in.pdf -o out.pdf`
 
-Scale a file's pages to fit A4 portrait.
+> Scale a file's pages to fit A4 portrait.
 
 To avoid centring, supply `-top`, `-bottom`, `-left` or `-right` as
 appropriate. The scale can optionally be set to a proportion of the
@@ -95,14 +96,14 @@ available area, instead of filling it:
 
 `cpdf -scale-to-fit a4portrait -scale-to-fit-scale 0.9 in.pdf -o out.pdf`
 
-Scale a file's pages to fit A4 portrait, scaling the page 90% of its
+> Scale a file's pages to fit A4 portrait, scaling the page 90% of its
 possible size.
 
 To automatically calculate one or other dimension, use an asterisk:
 
 `cpdf -scale-to-fit "297mm *" in.pdf -o out.pdf`
 
-Scale a file's pages to fit 297mm width, maintaining proportion.
+> Scale a file's pages to fit 297mm width, maintaining proportion.
 
 To automatically rotate pages to maximise use of area on the output
 size, add the option `-scale-to-fit-rotate-[anti]clockwise`.
@@ -112,14 +113,14 @@ regard to aspect ratio:
 
 `cpdf -stretch a4landscape in.pdf -o out.pdf`
 
-Scale a file's pages and their content to fit A4 landscape.
+> Scale a file's pages and their content to fit A4 landscape.
 
 The `-center-to-fit` operation changes the page size without scaling the
 contents. It centers the old page on the new page.
 
 `cpdf -center-to-fit a3portrait in.pdf -o out.pdf`
 
-Set a file's pages to the given size and center the content.
+> Set a file's pages to the given size and center the content.
 
 Sizes with asterisks like `"* 500pt"` may also be used here.
 
@@ -129,7 +130,7 @@ the crop box (or, if absent, the media box), leaving the page dimensions
 
 `cpdf -scale-contents 0.5 in.pdf -o out.pdf`
 
-Scale a file's contents on all pages to 50% of its original dimensions.
+> Scale a file's contents on all pages to 50% of its original dimensions.
 
 To scale about a point other than the center, one can use the
 positioning commands described in FIXME. For
@@ -137,7 +138,7 @@ example:
 
 `cpdf -scale-contents 0.5 -topright 20 in.pdf -o out.pdf`
 
-Scale a file's contents on all pages to 50% of its original dimensions
+> Scale a file's contents on all pages to 50% of its original dimensions
 about a point 20pts from its top right corner.
 
 ## Shift Page Contents
@@ -147,7 +148,7 @@ X points horizontally and Y points vertically.
 
 `cpdf -shift "50 0" in.pdf even -o out.pdf`
 
-Shift pages to the right by 50 points (for instance, to increase the
+> Shift pages to the right by 50 points (for instance, to increase the
 binding margin).
 
 The `-shift-boxes` operation has the same effect, but operates by moving
@@ -157,7 +158,7 @@ the boxes being moved not the page:
 
 `cpdf -shift-boxes "-50 0" in.pdf even -o out.pdf`
 
-Shift pages to the right by 50 points (for instance, to increase the
+> Shift pages to the right by 50 points (for instance, to increase the
 binding margin).
 
 ## Rotating Pages
@@ -178,7 +179,7 @@ to the absolute value given.
 
 `cpdf -rotate 90 in.pdf -o out.pdf`
 
-Set the rotation of all the pages in the input file to ninety degrees
+> Set the rotation of all the pages in the input file to ninety degrees
 clockwise.
 
 The `-rotateby` operation changes the viewing rotation of all the given
@@ -186,14 +187,14 @@ pages by the relative value given.
 
 `cpdf -rotateby 90 in.pdf -o out.pdf`
 
-Rotate all the pages in the input file by ninety degrees clockwise.
+> Rotate all the pages in the input file by ninety degrees clockwise.
 
 The `-rotate-contents` operation rotates the contents of the page by the
 given relative value.
 
 `cpdf -rotate-contents 90 in.pdf -o out.pdf`
 
-Rotate all the page contents in the input file by ninety degrees
+> Rotate all the page contents in the input file by ninety degrees
 clockwise. Does not change the page dimensions.
 
 The `-upright` operation does whatever
@@ -206,7 +207,7 @@ properly only when the origin is (0, 0).
 
 `cpdf -upright in.pdf -o out.pdf`
 
-Make pages upright.
+> Make pages upright.
 
 ## Flipping Pages
 
@@ -217,11 +218,11 @@ mean, so you may like to use `-upright` (see above) first.
 
 `cpdf -hflip in.pdf even -o out.pdf`
 
-Flip the even pages in `in.pdf` horizontally.
+> Flip the even pages in `in.pdf` horizontally.
 
 `cpdf -vflip in.pdf -o out.pdf`
 
-Flip all the pages in `in.pdf` vertically.
+> Flip all the pages in `in.pdf` vertically.
 
 ## Boxes and Cropping
 
@@ -231,7 +232,7 @@ contents in any way), use the `-mediabox` operation.
 
 `cpdf -mediabox "0pt 0pt 500pt 500pt" in.pdf -o out.pdf`
 
-Set the media box to 500 points square.
+> Set the media box to 500 points square.
 
 The four numbers are minimum x, minimum y, width, height. x coordinates
 increase to the right, y coordinates increase upwards. To use absolute
@@ -252,16 +253,15 @@ Crop pages to the bottom left 200-millimeter square of the page.
 
 `cpdf -remove-cropbox in.pdf -o out.pdf`
 
-Remove cropping.
+> Remove cropping.
 
 Note that the crop box is only obeyed in some viewers. Similar
 operations are available for the bleed, art, and trim boxes (`-art`,
 `-remove-bleed` etc.)
 
-`cpdf -frombox <boxname> -tobox <boxname> [-mediabox-if-missing]`\
-`     in.pdf [<range>] -o out.pdf`
+`cpdf -frombox <boxname> -tobox <boxname> [-mediabox-if-missing] in.pdf [<range>] -o out.pdf`
 
-Copy the contents of one box to another.
+> Copy the contents of one box to another.
 
 This operation copies the contents of one box (Media box, Crop box, Trim
 box etc.) to another. If `-mediabox-if-missing` is added, the media box

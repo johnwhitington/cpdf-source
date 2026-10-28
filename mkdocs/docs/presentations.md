@@ -17,33 +17,33 @@ following transition styles are available:
 
 Split
 
-: Two lines sweep across the screen, revealing the new page. By default
+> Two lines sweep across the screen, revealing the new page. By default
   the lines are horizontal. Vertical lines are selected by using the
   `-vertical` option.
 
 Blinds
 
-: Multiple lines sweep across the screen, revealing the new page. By
+> Multiple lines sweep across the screen, revealing the new page. By
   default the lines are horizontal. Vertical lines are selected by using
   the `-vertical` option.
 
 Box
 
-: A rectangular box sweeps inward from the edges of the page. Use
+> A rectangular box sweeps inward from the edges of the page. Use
   `-outward` to make it sweep from the center to the edges.
 
 Wipe
 
-: A single line sweeps across the screen from one edge to the other in a
+> A single line sweeps across the screen from one edge to the other in a
   direction specified by the `-direction` option.
 
 Dissolve
 
-: The old page dissolves gradually to reveal the new one.
+> The old page dissolves gradually to reveal the new one.
 
 Glitter
 
-: The same as **Dissolve** but the effect sweeps across the page in the
+> The same as **Dissolve** but the effect sweeps across the page in the
   direction specified by the `-direction` option.
 
 To remove a transition style currently applied to the selected pages,

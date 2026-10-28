@@ -1,52 +1,52 @@
 # Document Information and Metadata
 
-cpdf -info[-json] [-utf8] [-in | -cm | -mm] in.pdf
+    cpdf -info[-json] [-utf8] [-in | -cm | -mm] in.pdf
 
-cpdf -page-info[-json] [-in | -cm | -mm] in.pdf [<range>]
+    cpdf -page-info[-json] [-in | -cm | -mm] in.pdf [<range>]
 
-cpdf -pages in.pdf
+    cpdf -pages in.pdf
 
-cpdf -sig-info [-json] in.pdf
+    cpdf -sig-info [-json] in.pdf
 
-cpdf -set-title \<title of document\>
-     [-also-set-xmp] [-just-set-xmp] in.pdf -o out.pdf
-(Also -set-author etc. See Section FIXME)
+    cpdf -set-title \<title of document\>
+         [-also-set-xmp] [-just-set-xmp] in.pdf -o out.pdf
+    (Also -set-author etc. See Section FIXME)
 
-cpdf -set-page-layout <layout> in.pdf -o out.pdf
+    cpdf -set-page-layout <layout> in.pdf -o out.pdf
 
-cpdf -set-page-mode <mode> in.pdf -o out.pdf
-cpdf -set-non-full-screen-page-mode <mode> in.pdf -o out.pdf
+    cpdf -set-page-mode <mode> in.pdf -o out.pdf
+    cpdf -set-non-full-screen-page-mode <mode> in.pdf -o out.pdf
 
-cpdf -hide-toolbar <true | false> in.pdf -o out.pdf
-     -hide-menubar
-     -hide-window-ui
-     -fit-window
-     -center-window
-     -display-doc-title
+    cpdf -hide-toolbar <true | false> in.pdf -o out.pdf
+         -hide-menubar
+         -hide-window-ui
+         -fit-window
+         -center-window
+         -display-doc-title
 
-cpdf -open-at-page <page number> in.pdf -o out.pdf
-cpdf -open-at-page-fit <page number> in.pdf -o out.pdf
-cpdf -open-at-page-custom <destination> in.pdf -o out.pdf
+    cpdf -open-at-page <page number> in.pdf -o out.pdf
+    cpdf -open-at-page-fit <page number> in.pdf -o out.pdf
+    cpdf -open-at-page-custom <destination> in.pdf -o out.pdf
 
-cpdf -set-language <language> in.pdf -o out.pdf
+    cpdf -set-language <language> in.pdf -o out.pdf
 
-cpdf -set-metadata <metadata-file> in.pdf -o out.pdf
-cpdf -remove-metadata in.pdf -o out.pdf
-cpdf -remove-all-metadata in.pdf -o out.pdf
-cpdf -print-metadata in.pdf
-cpdf -extract-all-metadata in.pdf -o <directory>
-cpdf -create-metadata in.pdf -o out.pdf
-cpdf -set-metadata-date <date> in.pdf -o out.pdf
+    cpdf -set-metadata <metadata-file> in.pdf -o out.pdf
+    cpdf -remove-metadata in.pdf -o out.pdf
+    cpdf -remove-all-metadata in.pdf -o out.pdf
+    cpdf -print-metadata in.pdf
+    cpdf -extract-all-metadata in.pdf -o <directory>
+    cpdf -create-metadata in.pdf -o out.pdf
+    cpdf -set-metadata-date <date> in.pdf -o out.pdf
 
-cpdf -add-page-labels in.pdf [<range>] -o out.pdf
-     [-label-style <style>] [-label-prefix <string>]
-     [-label-startval <integer>] [-labels-progress]
-cpdf -add-page-labels-json in.json in.pdf -o out.pdf
+    cpdf -add-page-labels in.pdf [<range>] -o out.pdf
+         [-label-style <style>] [-label-prefix <string>]
+         [-label-startval <integer>] [-labels-progress]
+    cpdf -add-page-labels-json in.json in.pdf -o out.pdf
 
-cpdf -remove-page-labels in.pdf -o out.pdf
-cpdf -print-page-labels[-json] in.pdf
+    cpdf -remove-page-labels in.pdf -o out.pdf
+    cpdf -print-page-labels[-json] in.pdf
 
-cpdf -composition[-json] in.pdf
+    cpdf -composition[-json] in.pdf
 
 ## Reading Document Information
 
@@ -221,17 +221,18 @@ viewer (for instance, Acrobat).
 Here is a summary of the commands for setting entries in the document
 information dictionary:
 
-  **Information**     **Example command-line fragment**
-  Title               `cpdf -set-title "Discourses"`
-  Author              `cpdf -set-author "Joe Smith"`
-  Subject             `cpdf -set-subject "Behavior"`
-  Keywords            `cpdf -set-keywords "Ape Primate"`
-  Creator             `cpdf -set-creator "Original Program"`
-  Producer            `cpdf -set-producer "Distilling Program"`
-  Creation Date       `cpdf -set-create "D:19970915110347-08'00'"`
-  Modification Date   `cpdf -set-modify "D:19970915110347-08'00'"`
-  Mark as Trapped     `cpdf -set-trapped`
-  Mark as Untrapped   `cpdf -set-untrapped`
+| Information | Example command-line fragment |
+| ----------- | -------------------------------|
+|  Title              | `cpdf -set-title "Discourses"` |
+|  Author             | `cpdf -set-author "Joe Smith"` |
+|  Subject            | `cpdf -set-subject "Behavior"` |
+|  Keywords           | `cpdf -set-keywords "Ape Primate"` |
+|  Creator            | `cpdf -set-creator "Original Program"` |
+|  Producer           | `cpdf -set-producer "Distilling Program"` |
+|  Creation Date      | `cpdf -set-create "D:19970915110347-08'00'"` |
+|  Modification Date  | `cpdf -set-modify "D:19970915110347-08'00'"` |
+|  Mark as Trapped    | `cpdf -set-trapped` |
+|  Mark as Untrapped  | `cpdf -set-untrapped` |
 
 (The details of the format for creation and modification dates can be
 found in Appendix FIXME. Using the date `"now"` uses the time and date at
@@ -246,7 +247,7 @@ For example, to set the title, the full command line would be
 `cpdf -set-title "A Night in London" in.pdf -o out.pdf`
 
 The text string is considered to be in UTF8 format, unless the `-raw`
-option is added---in which case, it is unprocessed, save for the
+option is added - in which case, it is unprocessed, save for the
 replacement of any octal escape sequence such as `\017`, which is
 replaced by a character of its value (here, 15).
 
@@ -262,6 +263,7 @@ To delete existing non-XMP metadata in line with PDF 2.0, use
 PDF files can contain one or more pieces of arbitrary metadata, often in
 XMP format. This is typically stored in an uncompressed stream, so that
 other applications can read it without having to decode the whole PDF.
+
 To set the main metadata:
 
 `cpdf -set-metadata data.xml in.pdf -o out.pdf`
@@ -324,12 +326,14 @@ The `-set-page-layout` operation specifies the page layout to be used
 when a document is opened in, for instance, Acrobat. The possible
 (case-sensitive) values are:
 
-  `SinglePage`       Display one page at a time
-  `OneColumn`        Display the pages in one column
-  `TwoColumnLeft`    Display the pages in two columns, odd numbered pages on the left
-  `TwoColumnRight`   Display the pages in two columns, even numbered pages on the left
-  `TwoPageLeft`      (PDF 1.5 and above) Display the pages two at a time, odd numbered pages on the left
-  `TwoPageRight`     (PDF 1.5 and above) Display the pages two at a time, even numbered pages on the left
+| Layout | Effect |
+| ------ | ------ |
+| `SinglePage`    |   Display one page at a time |
+| `OneColumn`     |   Display the pages in one column |
+|  `TwoColumnLeft`|    Display the pages in two columns, odd numbered pages on the left |
+|  `TwoColumnRight`|   Display the pages in two columns, even numbered pages on the left |
+|  `TwoPageLeft`    |  (PDF 1.5 and above) Display the pages two at a time, odd numbered pages on the left |
+|  `TwoPageRight`   |  (PDF 1.5 and above) Display the pages two at a time, even numbered pages on the left |
 
 For instance:
 
@@ -340,12 +344,14 @@ For instance:
 The *page mode* in a PDF file defines how a viewer should display the
 document when first opened. The possible (case-sensitive) values are:
 
-  `UseNone`          Neither document outline nor thumbnail images visible
-  `UseOutlines`      Document outline (bookmarks) visible
-  `UseThumbs`        Thumbnail images visible
-  `FullScreen`       Full-screen mode (no menu bar, window controls, or anything but the document visible)
-  `UseOC`            (PDF 1.5 and above) Optional content group panel visible
-  `UseAttachments`   (PDF 1.5 and above) Attachments panel visible
+| Mode | Effect |
+| ---- | ------ |
+|  `UseNone`      |    Neither document outline nor thumbnail images visible |
+|  `UseOutlines`  |    Document outline (bookmarks) visible |
+| `UseThumbs`     |   Thumbnail images visible |
+|  `FullScreen`   |    Full-screen mode (no menu bar, window controls, or anything but the document visible) |
+|  `UseOC`        |    (PDF 1.5 and above) Optional content group panel visible |
+|  `UseAttachments`|   (PDF 1.5 and above) Attachments panel visible |
 
 For instance:
 
@@ -363,12 +369,14 @@ As would be expected, `FullScreen` is not allowed here.
 The appearance of the PDF viewer upon opening a document may be set with
 these options. Each is boolean - supply `true` or `false`:
 
-  `-hide-toolbar`        Hide the viewer's toolbar
-  `-hide-menubar`        Document outline (bookmarks) visible
-  `-hide-window-ui`      Hide the viewer's scroll bars
-  `-fit-window`          Resize the document's windows to fit size of first page
-  `-center-window`       Position the document window in the center of the screen
-  `-display-doc-title`   Display the document title instead of the file name in the title bar
+| Option | Effect |
+| ------ | ------ |
+|  `-hide-toolbar`     |   Hide the viewer's toolbar |
+|  `-hide-menubar`     |   Document outline (bookmarks) visible |
+|  `-hide-window-ui`   |   Hide the viewer's scroll bars |
+|  `-fit-window`       |   Resize the document's windows to fit size of first page |
+|  `-center-window`    |   Position the document window in the center of the screen |
+| `-display-doc-title` |  Display the document title instead of the file name in the title bar |
 
 For instance:
 
@@ -408,12 +416,15 @@ print dialogue boxes by PDF readers. We use `-add-page-labels` to do
 this, by default with decimal arabic numbers (1,2,3...). We can add
 `-label-style` to choose what type of labels to add from these kinds:
 
-        `DecimalArabic` 1, 2, 3, 4, 5...
-       `LowercaseRoman` i, ii, iii, iv, v...
-       `UppercaseRoman` I, II, III, IV, V...
-     `LowercaseLetters` a, b, c, ..., z, aa, bb...
-     `UppercaseLetters` A, B, C, ..., Z, AA, BB...
-    `NoLabelPrefixOnly` No number, but a prefix will be used if defined.
+
+| Label style | Example |
+| ----------- | ------- |
+| `DecimalArabic` | 1, 2, 3, 4, 5... |
+|       `LowercaseRoman` | i, ii, iii, iv, v... |
+|       `UppercaseRoman` | I, II, III, IV, V... |
+|     `LowercaseLetters` | a, b, c, ..., z, aa, bb... |
+|     `UppercaseLetters` | A, B, C, ..., Z, AA, BB... |
+|    `NoLabelPrefixOnly` | No number, but a prefix will be used if defined. |
 
 We can use `-label-prefix` to add a textual prefix to each label.
 Consider a file with twenty pages and no current page labels (a PDF
@@ -425,14 +436,14 @@ A-5
 
 Here are the commands, in order:
 
-`cpdf -add-page-labels in.pdf 1-4 -label-style LowercaseRoman`
-`     -o out.pdf`
+`cpdf -add-page-labels in.pdf 1-4 -label-style LowercaseRoman -o out.pdf`
+
 `cpdf -add-page-labels out.pdf 5-14 -o out2.pdf`
-`cpdf -add-page-labels out2.pdf 15-20 -label-prefix "A-"`
-`     -label-startval 0 -o out3.pdf`
+
+`cpdf -add-page-labels out2.pdf 15-20 -label-prefix "A-" -label-startval 0 -o out3.pdf`
 
 By default the labels begin at page number 1 for each range. To override
-this, we can use `-label-startval` (we used $0$ in the final command),
+this, we can use `-label-startval` (we used 0 in the final command),
 where we want the numbers to begin at zero rather than one. The option
 `-labels-progress` can be added to make sure the start value progresses
 between sub-ranges when the page range specified is disjoint, e.g

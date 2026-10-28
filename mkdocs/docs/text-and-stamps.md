@@ -1,18 +1,18 @@
 # Text and Stamps
 
-cpdf -stamp-on source.pdf  
-     [-scale-stamp-to-fit] [<positioning command>]  
-     [-relative-to-[crop|trim|art|bleed]box]  
-     [-process-struct-trees] in.pdf [<range>] [-fast] -o out.pdf
+    cpdf -stamp-on source.pdf  
+         [-scale-stamp-to-fit] [<positioning command>]  
+         [-relative-to-[crop|trim|art|bleed]box]  
+         [-process-struct-trees] in.pdf [<range>] [-fast] -o out.pdf
 
-cpdf -stamp-under source.pdf  
-     [-scale-stamp-to-fit] [<positioning command>] 
-     [-relative-to-[crop|trim|art|bleed]box]  
-     [-process-struct-trees] in.pdf [<range>] [-fast] -o out.pdf
+    cpdf -stamp-under source.pdf  
+         [-scale-stamp-to-fit] [<positioning command>] 
+         [-relative-to-[crop|trim|art|bleed]box]  
+         [-process-struct-trees] in.pdf [<range>] [-fast] -o out.pdf
 
-cpdf -combine-pages over.pdf under.pdf  
-     [-fast] [-prerotate] [-no-warn-rotate] [-process-struct-trees]  
-     [-underneath] [-stamp-scale-to-fit] -o out.pdf
+    cpdf -combine-pages over.pdf under.pdf  
+         [-fast] [-prerotate] [-no-warn-rotate] [-process-struct-trees]  
+         [-underneath] [-stamp-scale-to-fit] -o out.pdf
 
     cpdf ([-add-text <text-format> | -add-rectangle <size>])  
           [-font <fontname>]          [-font-size <size-in-points>]  
@@ -28,17 +28,17 @@ cpdf -combine-pages over.pdf under.pdf
           [-url-border]               [-text-90 | -text-180 | -text-270]  
           in.pdf [<range>] -o out.pdf
 
-See also positioning commands below.
+    See also positioning commands below.
 
-cpdf -remove-text in.pdf [<range>] -o out.pdf
+    cpdf -remove-text in.pdf [<range>] -o out.pdf
 
-cpdf -prepend-content <content> in.pdf [<range>] -o out.pdf
+    cpdf -prepend-content <content> in.pdf [<range>] -o out.pdf
 
-cpdf -postpend-content <content> in.pdf [<range>] -o out.pdf
+    cpdf -postpend-content <content> in.pdf [<range>] -o out.pdf
 
-cpdf -stamp-as-xobject stamp.pdf in.pdf [<range>] -o out.pdf
+    cpdf -stamp-as-xobject stamp.pdf in.pdf [<range>] -o out.pdf
 
-NB: See discussion of `-fast` in Section FIXME.
+    NB: See discussion of `-fast` in Section FIXME.
 
 ## Add a Watermark or Logo
 
@@ -115,19 +115,21 @@ your computer system -- which may have more characters available.
 
 There are various special codes to include the page number in the text:
 
-  `%Page`            Page number in arabic notation (1, 2, 3...)
-  `%PageDiv2`        Page number in arabic notation divided by two
-  `%roman`           Page number in lower-case roman notation (i, ii, iii...)
-  `%Roman`           Page number in upper-case roman notation (I, II, III...)
-  `%EndPage`         Last page of document in arabic notation
-  `%Label`           The page label of the page
-  `%EndLabel`        The page label of the last page
-  `%filename`        The full file name of the input document
-  `%URL[text|URL]`   Add `text`, which links to `URL`. Add `-url-border` to show link area.
-  `%Bookmark<n>`     Bookmark text at level n (0, 1, 2, 3, 4)
+| Code | Effect|
+|------|-------|
+| `%Page`      | Page number in arabic notation (1, 2, 3...) |
+| `%PageDiv2` |       Page number in arabic notation divided by two |
+| `%roman`     |      Page number in lower-case roman notation (i, ii, iii...) |
+| `%Roman`     |      Page number in upper-case roman notation (I, II, III...) |
+| `%EndPage`   |      Last page of document in arabic notation |
+| `%Label`     |      The page label of the page |
+| `%EndLabel`  |      The page label of the last page |
+| `%filename`   |     The full file name of the input document |
+| `%URL[text|URL]` |   Add `text`, which links to `URL`. Add `-url-border` to show link area. |
+| `%Bookmark<n>`  |   Bookmark text at level n (0, 1, 2, 3, 4) |
 
 For example, the format `"Page %Page of %EndPage"` might become
-\"Page 5 of 17\".
+"Page 5 of 17".
 
 NB: In some circumstances (e.g in batch files) on Microsoft Windows, `%`
 is a special character, and must be escaped (written as `%%`). Consult
@@ -141,24 +143,26 @@ document.
 
 ### Date and Time Formats
 
-  `%a`   Abbreviated weekday name (Sun, Mon etc.)
-  `%A`   Full weekday name (Sunday, Monday etc.)
-  `%b`   Abbreviated month name (Jan, Feb etc.)
-  `%B`   Full month name (January, February etc.)
-  `%d`   Day of the month (01--31)
-  `%e`   Day of the month (1--31)
-  `%H`   Hour in 24-hour clock (00--23)
-  `%I`   Hour in 12-hour clock (01--12)
-  `%j`   Day of the year (001--366)
-  `%m`   Month of the year (01--12)
-  `%M`   Minute of the hour (00--59)
-  `%p`   \"a.m\" or \"p.m\"
-  `%S`   Second of the minute (00--61)
-  `%T`   Same as `%H:%M:%S`
-  `%u`   Weekday (1--7, 1 = Sunday)
-  `%w`   Weekday (0--6, 0 = Sunday)
-  `%Y`   Year (0000--9999)
-  `%%`   The % character.
+| Format | Effect |
+|-------|----------------------------------------------|
+|  `%a` |  Abbreviated weekday name (Sun, Mon etc.) |
+|  `%A` |  Full weekday name (Sunday, Monday etc.) |
+|  `%b` |  Abbreviated month name (Jan, Feb etc.) |
+|  `%B` |  Full month name (January, February etc.) |
+|  `%d` |  Day of the month (01--31) |
+| `%e`  | Day of the month (1--31) |
+|  `%H` |  Hour in 24-hour clock (00--23) |
+|  `%I` |  Hour in 12-hour clock (01--12) |
+|  `%j` |  Day of the year (001--366) |
+|  `%m` |  Month of the year (01--12) |
+|  `%M` |  Minute of the hour (00--59) |
+|  `%p` |  "a.m" or "p.m" |
+|  `%S` |  Second of the minute (00--61) |
+|  `%T` |  Same as `%H:%M:%S` |
+|  `%u` |  Weekday (1--7, 1 = Sunday) |
+|  `%w` |  Weekday (0--6, 0 = Sunday) |
+|  `%Y` |  Year (0000--9999) |
+|  `%%` |  The % character. |
 
 ### Bates Numbers
 
@@ -192,23 +196,23 @@ Position the right of the baseline of the text at (200pt, 200pt)
 
 Position may be set relative to certain common points:
 
-  ------------------------ --------------------------------------------------------------
-  `-top 10`                Center of baseline 10 pts down from the top center
-  `-topleft 10`            Left of baseline 10 pts down and in from top left
-  `-topleft "10 20"`       Left of baseline 10 pts down and 20 pts in from top left
-  `-topright 10`           Right of baseline 10 pts down and left from top right
-  `-topright "10 20"`      Right of baseline 10 pts down and 20 pts left from top right
-  `-left 10`               Left of baseline 10 pts in from center left
-  `-bottomleft 10`         Left of baseline 10 pts in and up from bottom left
-  `-bottomleft "10 20"`    Left of baseline 10 pts in and 20 pts up from bottom left
-  `-bottom 10`             Center of baseline 10 pts up from bottom center
-  `-bottomright 10`        Right of baseline 10 pts up and in from bottom right
-  `-bottomright "10 20"`   Right of baseline 10 pts up and 20 pts in from bottom right
-  `-right 10`              Right of baseline 10 pts in from the center right
-  `-diagonal`              Diagonal, bottom left to top right, centered on page
-  `-reverse-diagonal`      Diagonal, top left to bottom right, centered on page
-  `-center`                Centered on page
-  ------------------------ --------------------------------------------------------------
+  | Specifiation | Effect |
+  | ------------------------ | -------------------------------------------------------------- |
+  |`-top 10`               | Center of baseline 10 pts down from the top center |
+  |`-topleft 10`           | Left of baseline 10 pts down and in from top left |
+  |`-topleft "10 20"`      | Left of baseline 10 pts down and 20 pts in from top left |
+  |`-topright 10`          | Right of baseline 10 pts down and left from top right |
+  |`-topright "10 20"`     | Right of baseline 10 pts down and 20 pts left from top right |
+  |`-left 10`              | Left of baseline 10 pts in from center left |
+  |`-bottomleft 10`        | Left of baseline 10 pts in and up from bottom left |
+  |`-bottomleft "10 20"`   | Left of baseline 10 pts in and 20 pts up from bottom left |
+  |`-bottom 10`            | Center of baseline 10 pts up from bottom center |
+  |`-bottomright 10`       | Right of baseline 10 pts up and in from bottom right |
+  |`-bottomright "10 20"`  | Right of baseline 10 pts up and 20 pts in from bottom right |
+  |`-right 10`             | Right of baseline 10 pts in from the center right |
+  |`-diagonal`             | Diagonal, bottom left to top right, centered on page |
+  |`-reverse-diagonal`     | Diagonal, top left to bottom right, centered on page |
+  |`-center`               | Centered on page |
 
 No attempt is made to take account of the page rotation when
 interpreting the position, so `-prerotate` may be added to the command
@@ -308,7 +312,7 @@ as drafts:
 
 ### Multi-line Text
 
-The code $\backslash$`n` can be included in the text string to move to
+The code `\n` can be included in the text string to move to
 the next line. In this case, the vertical position refers to the
 baseline of the first line of text (if the position is at the top, top
 left or top right of the page) or the baseline of the last line of text
