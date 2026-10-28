@@ -1,15 +1,16 @@
 # File Attachments
 
-cpdf -attach-file <filename> [-to-page <page number>]
-     [-afd <string>] [-afr <relationship>] [-attach-file ...]
-     in.pdf -o out.pdf
-cpdf -attach-files-json in.json in.pdf -o out.pdf
+    cpdf -attach-file <filename> [-to-page <page number>]
+         [-afd <string>] [-afr <relationship>] [-attach-file ...]
+         in.pdf -o out.pdf
 
-cpdf -list-attached-files [-json] [-include-data] in.pdf
+    cpdf -attach-files-json in.json in.pdf -o out.pdf
 
-cpdf -remove-files in.pdf -o out.pdf
+    cpdf -list-attached-files [-json] [-include-data] in.pdf
 
-cpdf -dump-attachments in.pdf -o <directory>
+    cpdf -remove-files in.pdf -o out.pdf
+
+    cpdf -dump-attachments in.pdf -o <directory>
 
 PDF supports adding attachments (files of any kind, including other
 PDFs) to an existing file. The Cpdf tool supports adding and removing

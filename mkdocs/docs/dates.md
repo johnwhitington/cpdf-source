@@ -49,10 +49,10 @@ These are the possible data formats for `-set-metadata-date`:
 
 where:
 
-  `YYYY`   year
-  `MM`     month (01 = Jan)
-  `DD`     day of month (01 to 31)
-  `hh`     hour (00 to 23)
-  `mm`     minute (00 to 59)
-  `ss`     second (00 to 59)
-  `TZD`    time zone designator (`Z` or `+hh:mm` or `-hh::mm`)
+-  `YYYY`   is the year
+-  `MM`     is the month (01 = Jan)
+-  `DD`     is the day of month (01 to 31)
+-  `hh`     is the hour (00 to 23)
+-  `mm`     is the minute (00 to 59)
+-  `ss`     is the second (00 to 59)
+-  `TZD`    is the time zone designator (`Z` or `+hh:mm` or `-hh::mm`)

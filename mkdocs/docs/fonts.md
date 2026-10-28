@@ -1,19 +1,19 @@
 # Fonts
 
-cpdf -list-fonts[-json] in.pdf
+    cpdf -list-fonts[-json] in.pdf
 
-cpdf -print-font-table <font name> -print-font-table-page <n> in.pdf
+    cpdf -print-font-table <font name> -print-font-table-page <n> in.pdf
 
-cpdf -copy-font fromfile.pdf -copy-font-page <int>
-     -copy-font-name <name> in.pdf [<range>] -o out.pdf
+    cpdf -copy-font fromfile.pdf -copy-font-page <int>
+         -copy-font-name <name> in.pdf [<range>] -o out.pdf
 
-cpdf -remove-fonts in.pdf -o out.pdf
+    cpdf -remove-fonts in.pdf -o out.pdf
 
-cpdf -missing-fonts in.pdf
+    cpdf -missing-fonts in.pdf
 
-cpdf -embed-missing-fonts -gs <path to gs> in.pdf -o out.pdf
+    cpdf -embed-missing-fonts -gs <path to gs> in.pdf -o out.pdf
 
-cpdf -extract-font <page number>,<pdf font name> in.pdf -o out.font
+    cpdf -extract-font <page number>,<pdf font name> in.pdf -o out.font
 
 ## Listing Fonts
 
@@ -126,8 +126,7 @@ the name `/F10` on page 1 (this information can be found with
 `-list-fonts`), the following would copy the font to the file `in.pdf`
 on all pages, writing the output to `out.pdf`:
 
-`cpdf -copy-font fromfile.pdf -copy-font-name /F10`\
-`     -copy-font-page 1 in.pdf -o out.pdf`
+`cpdf -copy-font fromfile.pdf -copy-font-name /F10` -copy-font-page 1 in.pdf -o out.pdf`
 
 Text in this font can then be added by giving `-font /GHLIGA+c128`. Be
 aware that due to the vagaries of PDF font handling concerning which

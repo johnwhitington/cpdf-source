@@ -1,60 +1,61 @@
 # Redaction
 
-cpdf -redact
-     [-redact-structure remove,all] [-redact-bookmarks remove,page]
-     [-redact-links remove,page] in.pdf [<range>] -o out.pdf
-cpdf -redact-shape <rectangle> [application options]
-     in.pdf [<range>] -o out.pdf
+    cpdf -redact
+         [-redact-structure remove,all] [-redact-bookmarks remove,page]
+         [-redact-links remove,page] in.pdf [<range>] -o out.pdf
 
-cpdf -redact-apply [application options] in.pdf -o out.pdf
-cpdf -redact-apply-type <type> [application options] in.pdf -o out.pdf
+    cpdf -redact-shape <rectangle> [application options]
+         in.pdf [<range>] -o out.pdf
 
-cpdf -annotate <rectangle> [annotation options] in.pdf -o out.pdf
+    cpdf -redact-apply [application options] in.pdf -o out.pdf
+    cpdf -redact-apply-type <type> [application options] in.pdf -o out.pdf
 
-cpdf -remove-search-index in.pdf -o out.pdf
-cpdf -remove-marked-content in.pdf [<range>] -o out.pdf
-cpdf -remove-acroform in.pdf -o out.pdf
-cpdf -remove-struct-tree in.pdf -o out.pdf
-cpdf -ocg-remove in.pdf -o out.pdf
+    cpdf -annotate <rectangle> [annotation options] in.pdf -o out.pdf
 
-Redaction application options:
+    cpdf -remove-search-index in.pdf -o out.pdf
+    cpdf -remove-marked-content in.pdf [<range>] -o out.pdf
+    cpdf -remove-acroform in.pdf -o out.pdf
+    cpdf -remove-struct-tree in.pdf -o out.pdf
+    cpdf -ocg-remove in.pdf -o out.pdf
 
--color <color> *(see Chapter 8 for color specifications)*
--opacity <n> *(see Chapter 8)*
--linewidth <n> *(see Chapter 8)*
--underneath *(see Chapter 8)*
--outline *(see Chapter 8)*
--jbig2dec <path> *when chopping images only*
--jbig2enc <path> *when chopping images only*
--magick <path> *when chopping images only*
--redact-no-show
--redact-text [remove|leave],[touches|encloses]
--redact-images [remove|chop|leave],[touches|encloses|covers<n>]
--redact-inline-images [remove|leave],[touches|encloses| covers<n>]
--redact-vectors [remove|leave],[touches|encloses|covers<n>]
--redact-annotations [remove|leave],[touches|encloses|covers<n>]
--redact-bookmarks [remove|leave],[page|touches]
--redact-links [remove|leave],[page|touches]
--redact-structure [remove|leave],[all|innermost|containing]
--redact-apply-appearance
--redact-invert
+    Redaction application options:
 
-Redaction annotation creation options:
+    -color <color> (see Chapter 8 for color specifications)
+    -opacity <n> (see Chapter 8)
+    -linewidth <n> (see Chapter 8)
+    -underneath (see Chapter 8)
+    -outline (see Chapter 8)
+    -jbig2dec <path> when chopping images only
+    -jbig2enc <path> when chopping images only
+    -magick <path> when chopping images only
+    -redact-no-show
+    -redact-text [remove|leave],[touches|encloses]
+    -redact-images [remove|chop|leave],[touches|encloses|covers<n>]
+    -redact-inline-images [remove|leave],[touches|encloses| covers<n>]
+    -redact-vectors [remove|leave],[touches|encloses|covers<n>]
+    -redact-annotations [remove|leave],[touches|encloses|covers<n>]
+    -redact-bookmarks [remove|leave],[page|touches]
+    -redact-links [remove|leave],[page|touches]
+    -redact-structure [remove|leave],[all|innermost|containing]
+    -redact-apply-appearance
+    -redact-invert
 
--redact-color <color> *(see Chapter 8 for color specifications)*
--redact-outline-color <color> *(see Chapter 8)*
--redact-text-color <color> *(see Chapter 8)*
--redact-opacity *Opacity for redaction fill and outline (see below for
-text opacity)*
--redact-overlay <text>
--redact-repeat
--redact-auto-size
--font <font>
--fontsize <n>
--opacity <n>
--linespace <n>
--outline <n>
--linewidth <n>
+    Redaction annotation creation options:
+
+    -redact-color <color> (see Chapter 8 for color specifications)
+    -redact-outline-color <color> (see Chapter 8)
+    -redact-text-color <color> (see Chapter 8)
+    -redact-opacity Opacity for redaction fill and outline (see below for
+    text opacity)
+    -redact-overlay <text>
+    -redact-repeat
+    -redact-auto-size
+    -font <font>
+    -fontsize <n>
+    -opacity <n>
+    -linespace <n>
+    -outline <n>
+    -linewidth <n>
 
 Redaction removes content from a PDF, erasing it entirely rather than
 merely covering it up.
@@ -85,14 +86,14 @@ rectangle) to be redacted in the given page range. For example:
 
 Redact rectangle on page 2 of `in.pdf`, writing to `out.pdf`
 
-The rectangle is given as \"minx miny width height\" as usual. What
+The rectangle is given as "minx miny width height" as usual. What
 content is removed, and how it is detected and processed is defined by a
 number of options:
 
-The specification is made of two parts -- the first required, the second
+The specification is made of two parts - the first required, the second
 optional. For the first, the `remove` specifier will remove matching
-content, `leave` will leave the content unredacted, and `chop` -- for
-images only -- will cut out the part of the image to be redacted. For
+content, `leave` will leave the content unredacted, and `chop` - for
+images only - will cut out the part of the image to be redacted. For
 the second, the `touches` specifier will consider any content
 intersecting with the redaction rectangle, whereas `encloses` will
 consider only such content as is fully enclosed within the redaction
@@ -147,7 +148,7 @@ To add new redaction annotations, we may write
 
 `cpdf -annotate "100 100 200 300" in.pdf 1 out.pdf`
 
-Add a redaction annotation to page 1 of `in.pdf`, writing to `out.pdf`
+> Add a redaction annotation to page 1 of `in.pdf`, writing to `out.pdf`
 
 Recall that this does not redact content, merely marks it for future
 redaction.
@@ -159,10 +160,9 @@ red outline. We can change this with `-redact-color` and
 We can add text to, for example, show which rule required the redaction,
 with `-redact-overlay`:
 
-`cpdf -annotate "100 100 200 300" -redact-overlay "(b) (1) (A)"`
-`     in.pdf 1 out.pdf`
+`cpdf -annotate "100 100 200 300" -redact-overlay "(b) (1) (A)" in.pdf 1 out.pdf`
 
-Add a description redaction annotation to page 1 of `in.pdf`, writing to
+> Add a description redaction annotation to page 1 of `in.pdf`, writing to
 `out.pdf`
 
 The text colour may be changed with `-redact-text-color`. Another use of
@@ -174,7 +174,7 @@ of the redaction annotation, we can add `-redact-auto-size`. Where both
 interspersed with newlines instead, each repetition scaled to fit one
 line.
 
-The following options from Chapter 8 may be used to style the text:
+The following options from Chapter FIXME may be used to style the text:
 `-font`, `-fontsize`, `-opacity`, `-linespace`, `-outline`,
 `-linewidth`.
 
@@ -206,32 +206,32 @@ search index:
 
 `cpdf -remove-search-index in.pdf -o out.pdf`
 
-Remove the proprietary Adobe search index from a document
+> Remove the proprietary Adobe search index from a document
 
 To remove marked content, proprietary or otherwise from all content
 streams in the document (NB: will void PDF/UA status).
 
 `cpdf -remove-marked-content in.pdf -o out.pdf`
 
-Remove all marked content from PDF streams.
+> Remove all marked content from PDF streams.
 
 To remove the structure tree wholesale (NB: will void PDF/UA status):
 
 `cpdf -remove-struct-tree in.pdf -o out.pdf`
 
-Remove all marked content from PDF streams.
+> Remove all marked content from PDF streams.
 
 To remove any AcroForm from the document:
 
 `cpdf -remove-acroform in.pdf -o out.pdf`
 
-Remove AcroForm.
+> Remove AcroForm.
 
 And one more from elsewhere in this manual:
 
 `cpdf -ocg-remove in.pdf -o out.pdf`
 
-Remove the optional content structure from a document. See Chapter 16
+> Remove the optional content structure from a document. See Chapter 16
 for details.
 
 ## Evidence of redaction
@@ -241,7 +241,7 @@ have wished:
 
 Inversion
 
-: Adding `-redact-invert` and writing to another PDF will keep all
+> Adding `-redact-invert` and writing to another PDF will keep all
   objects redaction would lose, and lose all objects redaction would
   keep. Each object (image, vector, glyph) ends up only the redacted or
   inverted output (note that images are never chopped with
@@ -250,29 +250,29 @@ Inversion
 
 Page content JSON
 
-: Page content can be extracted with `-page-content` as described in
+> Page content can be extracted with `-page-content` as described in
   Section FIXME for the redacted and unredacted file, and a
   comparison made.
 
 Full JSON
 
-: To check metadata as well, we can use `-output-json` from Chapter 15
+> To check metadata as well, we can use `-output-json` from Chapter 15
   and compare the output on redacted and unredacted files.
 
 Text extraction
 
-: Whilst Cpdf does not yet have text extraction facilities, you can use
+> Whilst Cpdf does not yet have text extraction facilities, you can use
   another text extraction program to extract the text from the original
   file and the redacted file and check the differences.
 
 Image extraction
 
-: Cpdf's image listing and extraction facilities (see Chapter 13) may be
+> Cpdf's image listing and extraction facilities (see Chapter 13) may be
   used to check that images have been redacted when in `chop` mode, and
   that no hidden images or image masks have survived.
 
 Structure tree extraction
 
-: Cpdf's `-extract-struct-tree` (see Chapter 19) may be used to verify
+> Cpdf's `-extract-struct-tree` (see Chapter 19) may be used to verify
   the erasure of text in structure tree nodes referring to redacted
   content.

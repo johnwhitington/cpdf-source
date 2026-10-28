@@ -1,41 +1,41 @@
 # Images
 
-cpdf -list-images[-json] [-inline] in.pdf [<range>]
+    cpdf -list-images[-json] [-inline] in.pdf [<range>]
 
-cpdf -image-resolution[-json] <n> [-inline] in.pdf [<range>]
+    cpdf -image-resolution[-json] <n> [-inline] in.pdf [<range>]
 
-cpdf -list-images-used[-json] [-inline] in.pdf [<range>]
+    cpdf -list-images-used[-json] [-inline] in.pdf [<range>]
 
-cpdf -extract-images in.pdf [<range>] [-im <path>] [-p2p <path>]
-     [-dedup | -dedup-perpage] [-raw] [-inline] [-merge-masks] -o <path>
+    cpdf -extract-images in.pdf [<range>] [-im <path>] [-p2p <path>]
+         [-dedup | -dedup-perpage] [-raw] [-inline] [-merge-masks] -o <path>
 
-cpdf -extract-single-image <object number> [-im <path>] [-p2p <path>]
-     [-raw] [-merge-masks] in.pdf -o <filename>
+    cpdf -extract-single-image <object number> [-im <path>] [-p2p <path>]
+         [-raw] [-merge-masks] in.pdf -o <filename>
 
-cpdf -process-images [-process-images-info] in.pdf [<range>]
-     [-process-images-force]
-     [-im <path>] [-jbig2enc <path>] [-jbig2dec <path>]
-     [-lossless-resample[-dpi] <n> | -lossless-to-jpeg <n>]
-     [-jpeg-to-jpeg <n>] [-jpeg-to-jpeg-scale <n>]
-     [-lossless-to-jpeg2000 <n>] [-jpeg2000-to-jpeg2000 <n>]
-     [-jpeg-to-jpeg-dpi <n>] [-1bpp-method <method>]
-     [-jbig2-lossy-threshold <n>] [-pixel-threshold <n>]
-     [-length-threshold <n>] [-percentage-threshold <n>]
-     [-dpi-threshold <n>] [-resample-interpolate]
-     -o out.pdf
+    cpdf -process-images [-process-images-info] in.pdf [<range>]
+         [-process-images-force]
+         [-im <path>] [-jbig2enc <path>] [-jbig2dec <path>]
+         [-lossless-resample[-dpi] <n> | -lossless-to-jpeg <n>]
+         [-jpeg-to-jpeg <n>] [-jpeg-to-jpeg-scale <n>]
+         [-lossless-to-jpeg2000 <n>] [-jpeg2000-to-jpeg2000 <n>]
+         [-jpeg-to-jpeg-dpi <n>] [-1bpp-method <method>]
+         [-jbig2-lossy-threshold <n>] [-pixel-threshold <n>]
+         [-length-threshold <n>] [-percentage-threshold <n>]
+         [-dpi-threshold <n>] [-resample-interpolate]
+         -o out.pdf
 
-cpdf -rasterize in.pdf [<range>] -o out.pdf
-     [-rasterize[-gray|-1bpp|-jpeg|-jpeg-gray]
-     [-rasterize-res <n>] [-rasterize-jpeg-quality <n>]
-     [-rasterize-no-antialias | -rasterize-downsample]
-     [-rasterize-annots] | [-rasterize-alpha]
+    cpdf -rasterize in.pdf [<range>] -o out.pdf
+         [-rasterize[-gray|-1bpp|-jpeg|-jpeg-gray]
+         [-rasterize-res <n>] [-rasterize-jpeg-quality <n>]
+         [-rasterize-no-antialias | -rasterize-downsample]
+         [-rasterize-annots] | [-rasterize-alpha]
 
-cpdf -output-image in.pdf [<range>] -o <format>
-     [-rasterize[-gray|-1bpp|-jpeg|-jpeg-gray]
-     [-rasterize-res <n>] [-rasterize-jpeg-quality <n>]
-     [-rasterize-no-antialias | -rasterize-downsample]
-     [-rasterize-annots] [-rasterize-alpha]
-     [-tobox <BoxName>]
+    cpdf -output-image in.pdf [<range>] -o <format>
+         [-rasterize[-gray|-1bpp|-jpeg|-jpeg-gray]
+         [-rasterize-res <n>] [-rasterize-jpeg-quality <n>]
+         [-rasterize-no-antialias | -rasterize-downsample]
+         [-rasterize-annots] [-rasterize-alpha]
+         [-tobox <BoxName>]
 
 ## Listing images
 
@@ -150,8 +150,7 @@ Other images are written as PNGs, processed with either ImageMagick's
 "magick" command, or NetPBM's "pnmtopng" program, whichever is
 installed.
 
-`cpdf -extract-images in.pdf [<range>] [-im <path>] [-p2p <path]`
-`     [-dedup | -dedup-perpage] -o <path>`
+`cpdf -extract-images in.pdf [<range>] [-im <path>] [-p2p <path] [-dedup | -dedup-perpage] -o <path>`
 
 The `-im` or `-p2p` option is used to give the path to the external
 tool, one of which must be installed (unless `-raw` is added, which
@@ -213,8 +212,7 @@ quality level:
 ImageMagick is required. Use `-im` to supply it. If we specify
 `-process-images-info` too, we can see the work being done:
 
-`cpdf -process-images -process-images-info -jpeg-to-jpeg 65`\
-`     -im magick in.pdf -o out.pdf`
+`cpdf -process-images -process-images-info -jpeg-to-jpeg 65 -im magick in.pdf -o out.pdf`
 
 Here is sample output:
 
@@ -236,18 +234,17 @@ The `-lossless-to-jpeg` option converts lossless images within PDFs to
 JPEG too, at the given quality level. It may be specified in addition to
 `-jpeg-to-jpeg`:
 
-`cpdf -process-images -jpeg-to-jpeg 65 -lossless-to-jpeg 80`\
-`     -im magick in.pdf -o out.pdf`
+`cpdf -process-images -jpeg-to-jpeg 65 -lossless-to-jpeg 80 -im magick in.pdf -o out.pdf`
 
 Images are only processed if they meet certain thresholds. Changes to
 the default thresholds may be specified:
 
-  Option                    Effect                                                             Default value
-  ------------------------- ------------------------------------------------------------------ ----------------
-  `-pixel-threshold`        Images below this number of pixels not processed                   25
-  `-length-threshold`       Images with less than this number of bytes of data not processed   100
-  `-percentage-threshold`   Results not below this percentage of original size discarded       99
-  `-dpi-threshold`          Only images above this threshold at all use points processed       (no dpi check)
+| Option                 | Effect                                                             | Default value |
+| ---------------------- | ------------------------------------------------------------------ | ------------- |
+| `-pixel-threshold`     |   Images below this number of pixels not processed                 |  25             |
+| `-length-threshold`    |   Images with less than this number of bytes of data not processed |  100            |
+| `-percentage-threshold`|   Results not below this percentage of original size discarded     |  99             |
+| `-dpi-threshold`       |   Only images above this threshold at all use points processed     |  (no dpi check) |
 
 The `-process-images-force` option will process the image even if the
 resulting image requires more storage than the original.
@@ -267,42 +264,38 @@ To use interpolation, which may result in slightly larger data, add
 `-resample-interpolate`. To use a DPI target instead, use
 `-lossless-resample-dpi` instead:
 
-`cpdf -process-images -im magick -lossless-resample-dpi 300`\
-`     in.pdf -o out.pdf`
+`cpdf -process-images -im magick -lossless-resample-dpi 300 in.pdf -o out.pdf`
 
 We can also use resampling with `-jpeg-to-jpeg`, buy specifying
 `-jpeg-to-jpeg-scale`:
 
-`cpdf -process-images -im magick -jpeg-to-jpeg 70 -jpeg-to-jpeg-scale 50`\
-`     in.pdf -o out.pdf`
+`cpdf -process-images -im magick -jpeg-to-jpeg 70 -jpeg-to-jpeg-scale 50 in.pdf -o out.pdf`
 
 We can alternatively use a DPI target:
 
-`cpdf -process-images -im magick -jpeg-to-jpeg 70 -jpeg-to-jpeg-dpi 150`\
-`     in.pdf -o out.pdf`
+`cpdf -process-images -im magick -jpeg-to-jpeg 70 -jpeg-to-jpeg-dpi 150 in.pdf -o out.pdf`
 
 The methods so far introduced do not operate on 1 bit per pixel data.
 Different compression mechanisms are typically in use, and we need a
 different approach. The `-1bpp-method` option specifies what to do with
 losslessly compressed 1 bit-per-pixel images.
 
-  Method         Effect                                                       
-  -------------- ------------------------------------------------------------ --
-  `JBIG2`        Lossless JBIG2                                               
-  `JBIG2Lossy`   Lossy JBIG2, sharing JBIG2Globals data amongst all images.   
-  `CCITTG4`      CCITT Group 4 fax, the best non-JBIG2 option.                
-  `CCITTG3`      CCITT Group 3, obsolete.                                     
+| Method      |   Effect |                                                   
+|--------------|------------------------------------------------------------|
+|`JBIG2`       | Lossless JBIG2                                             |
+|`JBIG2Lossy`  | Lossy JBIG2, sharing JBIG2Globals data amongst all images. | 
+|`CCITTG4`     | CCITT Group 4 fax, the best non-JBIG2 option.              |  
+|`CCITTG3`     | CCITT Group 3, obsolete.                                   | 
 
 The JBIG2 options always require the `jbig2enc` program, whose location
 may be specified with `-jbig2enc`. To convert from any JBIG2 compression
 type to any other JBIG2 or non-JBIG2 compression type in addition
 requires the `jbig2dec` program which may be specified with `-jbig2dec`.
 
-For lossy JBIG2, the threshold for similarity of data may be set with\
+For lossy JBIG2, the threshold for similarity of data may be set with 
 `-jbig2-lossy-threshold`. For example:
 
-`cpdf -process-images -jbig2enc jbig2enc -1bpp-method JBIG2Lossy`\
-`     -jbig2-lossy-threshold 75 in.pdf -o out.pdf`
+`cpdf -process-images -jbig2enc jbig2enc -1bpp-method JBIG2Lossy -jbig2-lossy-threshold 75 in.pdf -o out.pdf`
 
 The `-process-images-force` option is always on when processing 1bpp
 images, though for true forcing the length and pixel thresholds must
@@ -320,19 +313,19 @@ resolution is 144dpi, and the raster data is losslessly compressed. It
 is the Crop Box which is rasterized, or the Media Box if absent. The
 following options may be added:
 
-  Option                      Effect                                               
-  --------------------------- ---------------------------------------------------- --
-  `-rasterize-gray`           Use grayscale instead of colour                      
-  `-rasterize-1bpp`           Use monochrome instead of colour                     
-  `-rasterize-jpeg`           Use JPEG instead of lossless compression             
-  `-rasterize-jpeg-gray`      Use grayscale JPEG instead of lossless compression   
-  `-rasterize-jpeg-quality`   Set JPEG image quality (0..100)                      
-  `-rasterize-res`            Set the resolution                                   
-  `-rasterize-annots`         Rasterize annotations instead of retaining           
-  `-rasterize-no-antialias`   Turn off antialiasing                                
-  `-rasterize-downsample`     Use better but slower antialiasing                   
-  `-rasterize-alpha`          Produce an alpha channel (lossless only)             
-  `-gs-quiet`                 Don't show `gs` output                               
+  | Option                    |  Effect |                                              
+  |--------------------------- | ---------------------------------------------------- |
+  |`-rasterize-gray`          | Use grayscale instead of colour |                     
+  |`-rasterize-1bpp`          | Use monochrome instead of colour |                    
+  |`-rasterize-jpeg`          | Use JPEG instead of lossless compression |          
+  |`-rasterize-jpeg-gray`     | Use grayscale JPEG instead of lossless compression |
+  |`-rasterize-jpeg-quality`  | Set JPEG image quality (0..100) | 
+  |`-rasterize-res`           | Set the resolution   |                    
+  |`-rasterize-annots`        | Rasterize annotations instead of retaining    |       
+  |`-rasterize-no-antialias`  | Turn off antialiasing            |                    
+  |`-rasterize-downsample`    | Use better but slower antialiasing |                   
+  |`-rasterize-alpha`         | Produce an alpha channel (lossless only) |             
+  |`-gs-quiet`                | Don't show `gs` output   |                      
 
 In addition to rasterization of pages, we can export them in PNG or JPEG
 format, again by the use of `gs`:
@@ -343,11 +336,10 @@ This will extract pages 10 onwards to the files `image010.png`,
 `image011.png` and so on. All the options above apply, and in addition
 we can choose which box is rasterized:
 
-  Option     Effect                     
-  ---------- -------------------------- --
-  `-tobox`   Choose rasterization box   
+  | Option  |   Effect   |                   
+  | ---------- | -------------------------- |
+  | `-tobox`   | Choose rasterization box |
 
 For example:
 
-`cpdf -gs gs -output-image -tobox /BleedBox -rasterize-jpeg in.pdf`\
-`     -o image%%%.jpeg`
+`cpdf -gs gs -output-image -tobox /BleedBox -rasterize-jpeg in.pdf -o image%%%.jpeg`

@@ -1,13 +1,13 @@
 # PDF and JSON
 
-cpdf in.pdf -output-json -o out.json
-     [-output-json-parse-content-streams]
-     [-output-json-no-stream-data]
-     [-output-json-decompress-streams]
-     [-output-json-clean-strings]
-     [-utf8]
+    cpdf in.pdf -output-json -o out.json
+         [-output-json-parse-content-streams]
+         [-output-json-no-stream-data]
+         [-output-json-decompress-streams]
+         [-output-json-clean-strings]
+         [-utf8]
 
-cpdf -j in.json -o out.pdf
+    cpdf -j in.json -o out.pdf
 
 In addition to reading and writing PDF files in the original Adobe format, Cpdf
 can read and write them in its own CPDFJSON format, for somewhat easier
@@ -27,17 +27,17 @@ special ones:
   format number, and flags used when writing (which may be required when
   reading):
 
-  - `/CPDFJSONformatversion` (CPDFJSON integer (see below), currently 3)
+      - `/CPDFJSONformatversion` (CPDFJSON integer (see below), currently 3)
 
-  - `/CPDFJSONcontentparsed` (boolean, true if content streams have been
-    parsed)
+      - `/CPDFJSONcontentparsed` (boolean, true if content streams have been
+        parsed)
 
-  - `/CPDFJSONstreamdataincluded` (boolean, true if stream data
-    included. Cannot round-trip if false).
+      - `/CPDFJSONstreamdataincluded` (boolean, true if stream data
+        included. Cannot round-trip if false).
 
-  - `/CPDFJSONmajorpdfversion` (CPDFJSON integer)
+      - `/CPDFJSONmajorpdfversion` (CPDFJSON integer)
 
-  - `/CPDFJSONminorpdfversion` (CPDFJSON integer)
+      - `/CPDFJSONminorpdfversion` (CPDFJSON integer)
 
 - Object 0: The PDF's trailer dictionary
 

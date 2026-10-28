@@ -1,56 +1,56 @@
 # Miscellaneous
 
-cpdf -draft [-boxes] [-draft-remove-only <n>] in.pdf [<range>] -o out.pdf
+    cpdf -draft [-boxes] [-draft-remove-only <n>] in.pdf [<range>] -o out.pdf
 
-cpdf -remove-all-text in.pdf [<range>] -o out.pdf
+    cpdf -remove-all-text in.pdf [<range>] -o out.pdf
 
-cpdf -blacktext in.pdf [<range>] -o out.pdf
-cpdf -blacklines in.pdf [<range>] -o out.pdf
-cpdf -blackfills in.pdf [<range>] -o out.pdf
-cpdf -reveal-text in.pdf [<range>] -o out.pdf
+    cpdf -blacktext in.pdf [<range>] -o out.pdf
+    cpdf -blacklines in.pdf [<range>] -o out.pdf
+    cpdf -blackfills in.pdf [<range>] -o out.pdf
+    cpdf -reveal-text in.pdf [<range>] -o out.pdf
 
-cpdf -thinlines <min thickness> in.pdf [<range>] -o out.pdf
+    cpdf -thinlines <min thickness> in.pdf [<range>] -o out.pdf
 
-cpdf -clean in.pdf -o out.pdf
+    cpdf -clean in.pdf -o out.pdf
 
-cpdf -set-version <version number> in.pdf -o out.pdf
+    cpdf -set-version <version number> in.pdf -o out.pdf
 
-cpdf -copy-id-from source.pdf in.pdf -o out.pdf
+    cpdf -copy-id-from source.pdf in.pdf -o out.pdf
 
-cpdf -remove-id in.pdf -o out.pdf
+    cpdf -remove-id in.pdf -o out.pdf
 
-cpdf -list-spot-colors in.pdf
+    cpdf -list-spot-colors in.pdf
 
-cpdf -print-dict-entry <key> [-json]  in.pdf
+    cpdf -print-dict-entry <key> [-json]  in.pdf
 
-cpdf -remove-dict-entry <key> [-dict-entry-search <term>]
-      in.pdf -o out.pdf
+    cpdf -remove-dict-entry <key> [-dict-entry-search <term>]
+          in.pdf -o out.pdf
 
-cpdf -replace-dict-entry <key> -replace-dict-entry-value <value>
-     [-dict-entry-search <term>] in.pdf -o out.pdf
+    cpdf -replace-dict-entry <key> -replace-dict-entry-value <value>
+         [-dict-entry-search <term>] in.pdf -o out.pdf
 
-cpdf -remove-clipping [<range>] in.pdf -o out.pdf
+    cpdf -remove-clipping [<range>] in.pdf -o out.pdf
 
-cpdf -obj[-json] <object specification> in.pdf
+    cpdf -obj[-json] <object specification> in.pdf
 
-cpdf -replace-obj <object specification>=<object> in.pdf -o out.pdf
-cpdf -remove-obj <object number> in.pdf -o out.pdf
+    cpdf -replace-obj <object specification>=<object> in.pdf -o out.pdf
+    cpdf -remove-obj <object number> in.pdf -o out.pdf
 
-cpdf -extract-stream[-decompress] <object specification>
-     in.pdf [-o out.dat | -stdout]
+    cpdf -extract-stream[-decompress] <object specification>
+         in.pdf [-o out.dat | -stdout]
 
-cpdf -replace-stream <object specification>
-     -replace-stream-with <filename>
-     in.pdf -o out.pdf
+    cpdf -replace-stream <object specification>
+         -replace-stream-with <filename>
+         in.pdf -o out.pdf
 
-cpdf -contains-javascript in.pdf
-cpdf -remove-javascript in.pdf -o out.pdf
+    cpdf -contains-javascript in.pdf
+    cpdf -remove-javascript in.pdf -o out.pdf
 
-cpdf -show-bboxes [-light] in.pdf [<range>] -o out.pdf
-cpdf -show-bboxes-shape <boxspec> [-light] in.pdf [<range>] -o out.pdf
+    cpdf -show-bboxes [-light] in.pdf [<range>] -o out.pdf
+    cpdf -show-bboxes-shape <boxspec> [-light] in.pdf [<range>] -o out.pdf
 
-cpdf -page-content [-pc-no-images] [-pc-no-graphics] [-pc-no-text]
-      in.pdf [<range>] -o out.json
+    cpdf -page-content [-pc-no-images] [-pc-no-graphics] [-pc-no-text]
+          in.pdf [<range>] -o out.json
 
 ## Draft Documents
 
@@ -114,8 +114,8 @@ text.
 ## Hairline Removal
 
 Quite often, applications will use very thin lines, or even the value of
-0, which in PDF means \"The thinnest possible line on the output
-device\". This might be fine for on-screen work, but when printed on a
+0, which in PDF means "The thinnest possible line on the output
+device". This might be fine for on-screen work, but when printed on a
 high resolution device, such as by a commercial printer, they may be too
 faint, or disappear altogether. The `-thinlines` operation prevents this
 by changing all lines thinner than `<minimal thickness>` to the given
@@ -142,13 +142,12 @@ writing any file.
 
 ## Change PDF Version Number
 
-[]{#setversion label="setversion"} To change the pdf version number, use
-the `-set-version` operation, giving the part of the version number
-after the decimal point. For example:
+To change the pdf version number, use the `-set-version` operation, giving the
+part of the version number after the decimal point. For example:
 
 `cpdf -set-version 4 in.pdf -o out.pdf`
 
-Change file to PDF 1.4.
+> Change file to PDF 1.4.
 
 This does not alter any of the actual data in the file --- just the
 supposed version number. For PDF versions starting with 2 add ten to the
@@ -161,7 +160,7 @@ input, writing to the output.
 
 `cpdf -copy-id-from source.pdf in.pdf -o out.pdf`
 
-Copy the id from `source.pdf` to the contents of `in.pdf`, writing to
+> Copy the id from `source.pdf` to the contents of `in.pdf`, writing to
 `out.pdf`.
 
 If there is no ID in the source file, the existing ID is retained. You
@@ -173,7 +172,7 @@ The `-remove-id` operation removes the ID from a document.
 
 `cpdf -remove-id in.pdf -o out.pdf`
 
-Remove the ID from `in.pdf`, writing to `out.pdf`.
+> Remove the ID from `in.pdf`, writing to `out.pdf`.
 
 You cannot use `-recrypt` with `-remove-id`.
 
@@ -184,7 +183,7 @@ given PDF file.
 
 `cpdf -list-spot-colors in.pdf`
 
-List the spot colors, one per line in `in.pdf`, writing to `stdout`.
+> List the spot colors, one per line in `in.pdf`, writing to `stdout`.
 
 ## PDF Dictionary Entries
 
@@ -193,20 +192,20 @@ with caution. To print a dictionary entry:
 
 `cpdf -print-dict-entry /URI in.pdf`
 
-Print all URLs in annotation hyperlinks in `in.pdf`, one per line.
+> Print all URLs in annotation hyperlinks in `in.pdf`, one per line.
 
 To report data in JSON format, add `-json`. To remove a dictionary
 entry:
 
 `cpdf -remove-dict-entry /One in.pdf -o out.pdf`
 
-Remove the entry for `/One` in every dictionary `in.pdf`, writing to
+> Remove the entry for `/One` in every dictionary `in.pdf`, writing to
 `out.pdf`.
 
 `cpdf -remove-dict-entry /One -dict-entry-search "\{I : 1\}"`\
 `     in.pdf -o out.pdf`
 
-Replace the entry for `/One` in every dictionary `in.pdf` if the key's
+> Replace the entry for `/One` in every dictionary `in.pdf` if the key's
 value is the given CPDFJSON value, writing to `out.pdf`. Alternatively,
 prefix `PDF` to give the value in PDF format.
 
@@ -216,13 +215,13 @@ format:
 `cpdf -replace-dict-entry /One -replace-dict-entry-value "PDF2"`\
 `     in.pdf -o out.pdf`
 
-Remove the entry for `/One` in every dictionary `in.pdf`, writing to
+> Remove the entry for `/One` in every dictionary `in.pdf`, writing to
 `out.pdf`.
 
 `cpdf -replace-dict-entry /One -dict-entry-search "\{I : 1\}"`\
 `     -replace-dict-entry-value "\{I : 2\}" in.pdf -o out.pdf`
 
-Remove the entry for `/One` in every dictionary `in.pdf` if the key's
+> Remove the entry for `/One` in every dictionary `in.pdf` if the key's
 value is the given value, writing to `out.pdf`.
 
 ## Removing Clipping
@@ -232,7 +231,7 @@ pages from the file.
 
 `cpdf -remove-clipping in.pdf -o out.pdf`
 
-Remove clipping paths in `in.pdf`, writing to `out.pdf`.
+> Remove clipping paths in `in.pdf`, writing to `out.pdf`.
 
 ## Exploring PDFs
 
@@ -306,15 +305,15 @@ By these mechanisms, ad-hoc exploration of PDF files is possible.
 
 We may also edit dictionary entries with `-replace-obj` by giving an
 object specification, and the new value in JSON or PDF format (prefix
-with \"PDF\" to denote PDF format):
+with "PDF" to denote PDF format):
 
 `cpdf -replace-obj /Root/MarkInfo/Marked=true in.pdf -o out.pdf`
 
-Replace or add dictionary entry in `in.pdf`, writing to `out.pdf`.
+> Replace or add dictionary entry in `in.pdf`, writing to `out.pdf`.
 
 `cpdf -replace-obj '/Root/Info/Title=PDF(New title)' in.pdf -o out.pdf`
 
-Replace or add dictionary entry in `in.pdf`, writing to `out.pdf`.
+> Replace or add dictionary entry in `in.pdf`, writing to `out.pdf`.
 
 Any part of the object specification not already present will be
 fabricated using direct nested dictionaries. For example, if `/MarkInfo`
@@ -325,13 +324,13 @@ An object may be remove with `-remove-obj`:
 
 `cpdf -remove-obj 6 in.pdf -o out.pdf`
 
-Remove object 6 from `in.pdf`, writing to `out.pdf`.
+> Remove object 6 from `in.pdf`, writing to `out.pdf`.
 
 Stream contents may be replaced with `-replace-stream`:
 
 `cpdf -replace-stream 4 -replace-stream-with in.dat in.pdf -o out.pdf`
 
-Replace stream object 4's contents with the contents of `in.dat`.
+> Replace stream object 4's contents with the contents of `in.dat`.
 
 The stream dictionary is unaffected, save for any correction to its
 length entry.
@@ -343,13 +342,13 @@ URIs:
 
 `cpdf -contains-javascript in.pdf -o out.pdf`
 
-Prints `true` if the PDF contains JavaScript, `false` otherwise.
+> Prints `true` if the PDF contains JavaScript, `false` otherwise.
 
 We can remove any such from the PDF:
 
 `cpdf -remove-javascript in.pdf -o out.pdf`
 
-Remove JavaScript from `in.pdf`, writing to `out.pdf`.
+> Remove JavaScript from `in.pdf`, writing to `out.pdf`.
 
 ## Debugging tools
 
@@ -358,31 +357,31 @@ output:
 
 `cpdf -debug in.pdf ...`
 
-Show debug information.
+> Show debug information.
 
 `cpdf -debug-crypt in.pdf ...`
 
-Show extra debug information to do with encryption.
+> Show extra debug information to do with encryption.
 
 `cpdf -debug-malformed in.pdf ...`
 
-Treat file as if malformed.
+> Treat file as if malformed.
 
 `cpdf -debug-stderr-to-stdout in.pdf ...`
 
-Intermingle `stderr` and `stdout` output on `stdout`.
+> Intermingle `stderr` and `stdout` output on `stdout`.
 
 `cpdf -debug-readable-ops in.pdf ...`
 
-Use newlines instead of spaces in page stream content.
+> Use newlines instead of spaces in page stream content.
 
 `cpdf -stay-on-error in.pdf ...`
 
-Do not call `exit()` after an error.
+> Do not call `exit()` after an error.
 
 `cpdf -remove-stream-content in.pdf -o out.pdf`
 
-Remove stream content when writing. This will create a document which is
+> Remove stream content when writing. This will create a document which is
 malformed, but easier to navigate in a text editor.
 
 ## Showing object bounding boxes
@@ -395,14 +394,14 @@ region:
 
 Here are the colours:
 
-  **Object**     **Colour**
-  -------------- ----------------
-  Path           Blue
-  Glyph          Black
-  Image          Green
-  Inline image   Red
-  Shading        Cyan
-  Clip           Black, dashed.
+| Object |      Colour | 
+| -------------- |----------------|
+| Path           | Blue |
+| Glyph          | Black |
+| Image          | Green |
+| Inline image   | Red | 
+| Shading        | Cyan |
+| Clip           | Black, dashed. |
 
 The option `-light` may be specified to use lighter versions of these
 colours if the PDF in question is dark.
