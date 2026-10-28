@@ -151,18 +151,16 @@ in points (1/72 inch). This creates the following PDF:
 Alternatively, we may use `-close` to draw the final line back to the
 starting point:
 
-`cpdf -create-pdf AND -draw -to "100 100" -line "400 400"`\
-`     -line "400 100" -close -stroke`\
-`     -o out.pdf`
+`cpdf -create-pdf AND -draw -to "100 100" -line "400 400" -line "400 100" -close -stroke -o out.pdf`
 
 We can have multiple such subpaths in a path, by closing and carrying
 on. We can fill our path with `-fill`:
 
-`cpdf -create-pdf AND -draw -to "100 100" -line "400 400"`\
-`     -line "400 100" -close -fill`\
-`     -o out.pdf`
+`cpdf -create-pdf AND -draw -to "100 100" -line "400 400" -line "400 100" -close -fill -o out.pdf`
 
 Now we have a filled triangle:
+
+![line](manualimages/fill.svg)
 
 The operations `-filleo`, `-strokefill` and `-strokefilleo` provide
 alternative combinations of stroke, fill, and winding rule.
@@ -171,18 +169,18 @@ We can save time when drawing rectangles by using the `-rect` operation,
 which takes the lower left coordinate, width and height. There is no
 need to explicitly close the rectangle.
 
-`cpdf -create-pdf AND -draw -rect "200 300 200 300" -stroke`\
-`     -o out.pdf`
+`cpdf -create-pdf AND -draw -rect "200 300 200 300" -stroke -o out.pdf`
 
 We can build bezier curves using `-bez`, `-bez23` and `-bez13`. The
 first adds a bezier path using six coordinates - for the control points
 first, and then for the end point (the start point is the current
 coordinate):
 
-`cpdf -create-pdf AND -draw -to "100 100" -bez "400 600 600 400 300 300"`\
-`     -stroke -o out.pdf`
+`cpdf -create-pdf AND -draw -to "100 100" -bez "400 600 600 400 300 300" -stroke -o out.pdf`
 
 Here is the result:
+
+![line](manualimages/bez.svg)
 
 The operation `-bez23` is a shorthand used when the first control point
 is equal to the current point. The operation `-bez13` is a shorthand
@@ -191,48 +189,41 @@ used when the second control point is equal to the final point.
 To avoid calculating the Bezier curves for a circle manually, Cpdf can
 generate them automatically when given the center and radius:
 
-`cpdf -create-pdf AND -draw -circle "200 200 100"`\
-`     -stroke -o out.pdf`
+`cpdf -create-pdf AND -draw -circle "200 200 100" -stroke -o out.pdf`
 
 ## Clipping with paths
 
-`-clip` Clip\
-`-clipeo` Clip, even odd
+    -clip Clip
+    -clipeo Clip, even odd
 
 We can use a path to form a clipping region for subsequent content using
 `-clip` or `-clipeo`. For example:
 
-`cpdf -create-pdf AND -draw -circle "300 300 100" -clip`\
-`     -circle "300 350 100" -fill -o out.pdf`
+`cpdf -create-pdf AND -draw -circle "300 300 100" -clip -circle "300 350 100" -fill -o out.pdf`
 
 Here is the result:
 
 ## Path parameters
 
-`-strokecol "g" | "r g b" | "c m y k" | <namedcolour>` Set stroke
-colour\
-`-fillcol "g" | "r g b" | "c m y k" | <namedcolour>` Set fill colour\
-`-thick <n>` Set stroke thickness\
-`-cap butt | round | square` Set cap\
-`-join miter | round | bevel` Set join\
-`-miter <n>` Set miter limit\
-`-dash <pattern>` Set dash pattern
+    -strokecol "g" | "r g b" | "c m y k" | <namedcolour> Set stroke colour
+    -fillcol "g" | "r g b" | "c m y k" | <namedcolour> Set fill colour
+    -thick <n> Set stroke thickness
+    -cap butt | round | square Set cap
+    -join miter | round | bevel Set join
+    -miter <n> Set miter limit
+    -dash <pattern> Set dash pattern
 
 We can set stroke and fill colours for our paths, either as greyscale
 (one component), RGB (three components) or CMYK (four components), or by
 naming a colour as described in Chapter 8:
 
-`cpdf -create-pdf AND -draw -circle "200 200 100" -thick 20`\
-`     -strokecol 0.5 -fillcol "0.2 0.7 0.2" -strokefill -o out.pdf`
+`cpdf -create-pdf AND -draw -circle "200 200 100" -thick 20 -strokecol 0.5 -fillcol "0.2 0.7 0.2" -strokefill -o out.pdf`
 
 Here is the result:
 
 We can set line caps and joins with `-cap`, `-join`:
 
-`cpdf -create-pdf AND -draw -to "100 100"`\
-`     -join round -cap round -thick 40`\
-`     -line "200 200" -line "220 100" -stroke`\
-`     -o out.pdf`
+`cpdf -create-pdf AND -draw -to "100 100" -join round -cap round -thick 40 -line "200 200" -line "220 100" -stroke -o out.pdf`
 
 Then we see:
 
@@ -245,34 +236,27 @@ lengths. The last is the phase, which defines how far along the pattern
 we start. For example, using a dash pattern of \"30 20 0\" i.e black 30,
 white 20, phase 0:
 
-`cpdf -create-pdf AND -draw -to "100 100"`\
-`     -dash "30 20 0" -thick 20 -line "400 300" -stroke`\
-`     -o out.pdf`
+`cpdf -create-pdf AND -draw -to "100 100" -dash "30 20 0" -thick 20 -line "400 300" -stroke -o out.pdf`
 
 Here is the result:
 
 ## The graphics stack and matrices
 
-`-push` Push graphics stack\
-`-pop` Pop graphics stack\
-`-matrix "a b c d e f"` Append to graphics matrix\
-`-mtrans "tx ty"` Translate the graphics matrix\
-`-mrot "x y a"` Rotate the graphics matrix counterclockwise around
-`(x, y)` by angle `a` in radians\
-`-mscale "x y sx sy"` Scale the graphics matrix around `(x, y)`\
-`-mshearx "x y a"` Shear the graphics matrix in X around `(x, y)` by
-angle `a`\
-`-msheary "x y a"` Shear the graphics matrix in Y around `(x, y)` by
-angle `a`
+    -push Push graphics stack
+    -pop Pop graphics stack
+    -matrix "a b c d e f" Append to graphics matrix
+    -mtrans "tx ty" Translate the graphics matrix
+    -mrot "x y a" Rotate the graphics matrix counterclockwise around (x, y) by angle a in radians
+    -mscale "x y sx sy" Scale the graphics matrix around (x, y)
+    -mshearx "x y a" Shear the graphics matrix in X around (x, y) by angle a
+    -msheary "x y a" Shear the graphics matrix in Y around (x, y) by angle a
 
 PDF maintains a stack of graphics state, which we can manipulate with
 `-push` which stores the current state, then modify the state for our
 own purposes, and then use `-pop` to restore the previous state. Such
 invocations may be nested. Here is a simple example:
 
-`cpdf -create-pdf AND -draw -circle "200 200 100" -fillcol red -fill`\
-`     -push -fillcol blue -circle "300 300 100" -fill`\
-`     -pop -circle "400 400 100" -fill  -o out.pdf`
+`cpdf -create-pdf AND -draw -circle "200 200 100" -fillcol red -fill -push -fillcol blue -circle "300 300 100" -fill -pop -circle "400 400 100" -fill  -o out.pdf`
 
 When we use `-pop` the colour returns to the saved one:
 
@@ -280,9 +264,7 @@ One very common use for a `-push`/`-pop` pair is to isolate the effects
 of an operation which modifies the current transformation matrix. These
 operations are used to translate, rotate, scale and so on. For example:
 
-`cpdf -create-pdf AND -draw -circle "200 200 100" -stroke -push`\
-`     -mrot "0 0 -0.3" -mscale "0 0 1.5 2" -circle "200 200 100" -stroke`\
-`     -pop -circle "200 200 50" -fill -o out.pdf`
+`cpdf -create-pdf AND -draw -circle "200 200 100" -stroke -push -mrot "0 0 -0.3" -mscale "0 0 1.5 2" -circle "200 200 100" -stroke -pop -circle "200 200 50" -fill -o out.pdf`
 
 This is the result. See how the graphics transformation is undone when
 `-push` is invoked:
@@ -297,10 +279,10 @@ command line.
 
 ## Re-use with XObjects
 
-`-xobj-bbox "x y w h"` Specify the bounding box for xobjects\
-`-xobj <name>` Begin saving a sequence of graphics operators\
-`-end-xobj` End saving a sequence of graphics operators\
-`-use <name>` Use a saved sequence of graphics operators
+    -xobj-bbox "x y w h" Specify the bounding box for xobjects
+    -xobj <name> Begin saving a sequence of graphics operators
+    -end-xobj End saving a sequence of graphics operators
+    -use <name> Use a saved sequence of graphics operators
 
 In our examples, we have sometimes had to write the same operations
 multiple times. To avoid this, PDF has a mechanism called an XObject.
@@ -309,9 +291,7 @@ contexts, or on different pages. For example, here we store an XObject
 which just strokes a circle. We then `-use` it once, and alter the
 colour and transformation matrix and `-use` it again.
 
-`cpdf -create-pdf AND -draw -xobj-bbox "0 0 200 200" -xobj A`\
-`     -circle "100 100 50" -stroke -end-xobj`\
-`     -use A -strokecol red -mtrans "20 20" -use A -o out.pdf`
+`cpdf -create-pdf AND -draw -xobj-bbox "0 0 200 200" -xobj A -circle "100 100 50" -stroke -end-xobj -use A -strokecol red -mtrans "20 20" -use A -o out.pdf`
 
 Note that we must specify a bounding box for the XObject with
 `-xobj-bbox`. Here is the result:
@@ -320,18 +300,16 @@ XObjects may be nested.
 
 ## Images
 
-`-draw-jpeg <name>=<filename>` Load a JPEG from file and name it\
-`-draw-png <name>=<filename>` Load a PNG from file and name it\
-`-draw-jpeg2000 <name>=<filename>` Load a JPEG2000 from file and name
-it\
-`-image <name>` Draw an image which has already been loaded
+    -draw-jpeg <name>=<filename> Load a JPEG from file and name it
+    -draw-png <name>=<filename> Load a PNG from file and name it
+    -draw-jpeg2000 <name>=<filename> Load a JPEG2000 from file and name it
+    -image <name> Draw an image which has already been loaded
 
 We can include a 24bit non-transparent and non-interlaced PNG, or any
 JPEG or JPEG2000 by using `-draw-jpeg[2000]` or `-draw-png` to load it
 and assign it a name. We can then use `-image` to use it at any point:
 
-`cpdf -create-pdf AND -draw -draw-png A=sheet.png`\
-`     -mscale "0 0 400 294" -image A -o out.pdf`
+`cpdf -create-pdf AND -draw -draw-png A=sheet.png -mscale "0 0 400 294" -image A -o out.pdf`
 
 Here is the result:
 
@@ -340,15 +318,13 @@ it at the size we expect.
 
 ## Transparency
 
-`-fill-opacity <n>` Set opacity\
-`-stroke-opacity <n>` Set stroke opacity
+    -fill-opacity <n> Set opacity
+    -stroke-opacity <n> Set stroke opacity
 
 We can set fill and stroke transparencies, between 0 (fully transparent)
 and 1 (fully opaque):
 
-`cpdf -create-pdf AND -draw -fill-opacity 0.5`\
-`     -circle "250 300 150" -fill -circle "350 300 150" -fill`\
-`     -o out.pdf`
+`cpdf -create-pdf AND -draw -fill-opacity 0.5 -circle "250 300 150" -fill -circle "350 300 150" -fill -o out.pdf`
 
 Here is the result:
 
@@ -358,61 +334,52 @@ be different.
 
 ## Text
 
-`-bt` Begin text\
-`-et` End text\
-`-text <text>` Draw text\
-`-stext <text>` Draw text with %specials\
-`-font <fontname>` Set font\
-`-font-size <n>` Set font size\
-`-leading <n>` Set leading\
-`-charspace <n>` Set character spacing\
-`-wordspace <n>` Set word space\
-`-textscale <n>` Set text scale\
-`-rendermode <n>` Set text rendering mode\
-`-rise <n>` Set text rise\
-`-nl` New line
+    -bt Begin text
+    -et End text
+    -text <text> Draw text
+    -stext <text> Draw text with %specials
+    -font <fontname> Set font
+    -font-size <n> Set font size
+    -leading <n> Set leading
+    -charspace <n> Set character spacing
+    -wordspace <n> Set word space
+    -textscale <n> Set text scale
+    -rendermode <n> Set text rendering mode
+    -rise <n> Set text rise
+    -nl New line
 
 We can draw text in a *text section*, which must start with `-bt` and
 end with `-et`. For example:
 
-`cpdf -create-pdf AND -draw -mtrans "50 50" -font Helvetica -font-size 144`\
-`     -bt -text "Hello" -et -o out.pdf`
+`cpdf -create-pdf AND -draw -mtrans "50 50" -font Helvetica -font-size 144 -bt -text "Hello" -et -o out.pdf`
 
 Here is the result:
 
 If we use `-stext` instead of `-text` the usual special values from
 Chapter 8 (with the exception of URL links) may be used:
 
-`cpdf -create-pdf AND -draw -mtrans "50 50" -font-size 144`\
-`     -bt -stext "Page %Page" -et -o out.pdf`
+`cpdf -create-pdf AND -draw -mtrans "50 50" -font-size 144 -bt -stext "Page %Page" -et -o out.pdf`
 
 Now we see:
 
 We can use `-text` multiple times, interspersing operators which change
 the text state, such as font and font size:
 
-`cpdf -create-pdf AND -draw -mtrans "10 20" -font-size 72`\
-`     -bt -text "Different " -font Times-BoldItalic -text "fonts"`\
-`     -font-size 36 -text " and sizes" -et -o out.pdf`
+`cpdf -create-pdf AND -draw -mtrans "10 20" -font-size 72 -bt -text "Different " -font Times-BoldItalic -text "fonts" -font-size 36 -text " and sizes" -et -o out.pdf`
 
 Here is the result:
 
 We can alter the character space, word space, horizontal scaling (100 =
 no scaling, less than 100 shrink, more than 100 stretch), and text rise:
 
-`cpdf -create-pdf AND -draw -mtrans "10 20" -font-size 72`\
-`     -bt -textscale 75 -charspace 5 -wordspace 20 -text "Different "`\
-`     -font Times-BoldItalic -text "fonts" -font-size 36 -rise 40`\
-`     -text " and sizes" -et -o out.pdf`
+`cpdf -create-pdf AND -draw -mtrans "10 20" -font-size 72 -bt -textscale 75 -charspace 5 -wordspace 20 -text "Different " -font Times-BoldItalic -text "fonts" -font-size 36 -rise 40 -text " and sizes" -et -o out.pdf`
 
 Now we see:
 
 Text may appear on multiple lines. We set up the line spacing with
 `-leading` then make new lines with `-nl`:
 
-`cpdf -create-pdf AND -draw -mtrans "100 200" -font-size 50`\
-`     -leading 55 -bt -text "This is" -nl -text "on multiple"`\
-`     -nl -text "lines" -et -o out.pdf`
+`cpdf -create-pdf AND -draw -mtrans "100 200" -font-size 50 -leading 55 -bt -text "This is" -nl -text "on multiple" -nl -text "lines" -et -o out.pdf`
 
 Now we have:
 
@@ -427,22 +394,20 @@ The result is in points.
 We can change the text rendering mode to show outline text or, in this
 example, to use text as a clipping region:
 
-`cpdf -create-pdf AND -draw -rendermode 7 -mtrans "100 200" -font-size 50`\
-`     -leading 55 -bt -text "This is" -nl -text "on multiple"`\
-`     -nl -text "lines" -et -circle "100 0 100" -fill -o out.pdf`
+`cpdf -create-pdf AND -draw -rendermode 7 -mtrans "100 200" -font-size 50 -leading 55 -bt -text "This is" -nl -text "on multiple" -nl -text "lines" -et -circle "100 0 100" -fill -o out.pdf`
 
 Here is the result:
 
 Here are the text rendering modes:
 
-  0   Fill text (default)                                   
-  1   Stroke text                                           
-  2   Fill, then stroke text                                
-  3   Neither fill nor stroke (invisible)                   
-  4   Fill text and add to path for clipping                
-  5   Stroke text and add to path for clipping              
-  6   Fill, then stroke text and add to path for clipping   
-  7   Add text to path for clipping                         
+    0   Fill text (default)                                   
+    1   Stroke text                                           
+    2   Fill, then stroke text                                
+    3   Neither fill nor stroke (invisible)                   
+    4   Fill text and add to path for clipping                
+    5   Stroke text and add to path for clipping              
+    6   Fill, then stroke text and add to path for clipping   
+    7   Add text to path for clipping                         
 
 NB: When writing text the `-font` option is not subject to `-push` and
 `-pop`. Text is set the the font most recently chosen on the command
@@ -458,10 +423,7 @@ NB: To use `-embed-std14`, put it before `-draw`.
 We can add a paragraph of text of a given width and justification (Left,
 Right, or Center) using the `-para` operation:
 
-`cpdf -create-pdf AND -draw -mtrans "200 400" -font-size 20 -leading 25`\
-`     -bt -para "L200pt=This is a paragraph of width 100pt, left-justif`\
-`     ied, containing more than one line..." -et`\
-`     -o out.pdf`
+`cpdf -create-pdf AND -draw -mtrans "200 400" -font-size 20 -leading 25 -bt -para "L200pt=This is a paragraph of width 100pt, left-justified, containing more than one line..." -et -o out.pdf`
 
 Notice the paragraph specification `L200pt=` for left justified,
 200pt-wide at the beginning of the string. Notice also we must give a
@@ -470,11 +432,7 @@ value for `-leading`. Here is the result:
 Multiple paragraphs with optional indenting may be laid out with
 `-paras`:
 
-`cpdf -create-pdf AND -draw -mtrans "200 500" -bt -font-size 20 -leading 25`\
-`     -indent 20 -paras "L300=This is the first paragraph, which is spread `\
-`     over multiple lines at this width...\nAnd here is the second, also ta`\
-`     king more than one line.\nHere is a little one." -et AND -decompress`\
-`     -o out.pdf`
+`cpdf -create-pdf AND -draw -mtrans "200 500" -bt -font-size 20 -leading 25 -indent 20 -paras "L300=This is the first paragraph, which is spread over multiple lines at this width...\nAnd here is the second, also taking more than one line.\nHere is a little one." -et AND -decompress -o out.pdf`
 
 We specify the newlines with `\n`, and the indentation with `-indent`.
 Here is the result.
@@ -492,9 +450,7 @@ Otherwise, it creates a fresh page of the same dimensions as the last
 page of the document, and sets the drawing range to just that page. For
 example:
 
-`cpdf -create-pdf AND -draw -bt -text "Page 1" -et`\
-`     -newpage -bt -text "Page 2" -et`\
-`     -o out.pdf`
+`cpdf -create-pdf AND -draw -bt -text "Page 1" -et -newpage -bt -text "Page 2" -et -o out.pdf`
 
 This will create a two page PDF with \"Page 1\" written on page one and
 \"Page 2\" written on page two.
@@ -517,8 +473,7 @@ To enable the generation of structure information, we add
 `-draw-struct-tree` to our command. NB It must precede `-draw` on the
 command line.
 
-`cpdf -create-pdf AND`\
-`     -draw-struct-tree -draw -bt -text "Hello, World" -et -o out.pdf`
+`cpdf -create-pdf AND -draw-struct-tree -draw -bt -text "Hello, World" -et -o out.pdf`
 
 Structure information in a PDF is in the form of a tree. We can now show
 the structure tree, and see that our paragraph on page one has been
@@ -538,12 +493,7 @@ individual pieces of content. We do this with a `-tag`/`-end-tag` pair.
 Note that nesting is not permitted here. For example, let us tag a
 heading:
 
-`cpdf -create-pdf AND -draw-struct-tree -draw -mtrans "50 700" `\
-`     -font-size 40 -no-auto-tags -tag H1 -bt -text "This is the heading"`\
-`     -et -end-tag -auto-tags -mtrans "0 -100" -font-size 20 -leading 25`\
-`     -bt -paras "L200pt=This is the first paragraph, which spreads over`\
-`more than one line\nHere is the second, which also has multiple lines..."`\
-`     -et -o out.pdf`
+`cpdf -create-pdf AND -draw-struct-tree -draw -mtrans "50 700" -font-size 40 -no-auto-tags -tag H1 -bt -text "This is the heading" -et -end-tag -auto-tags -mtrans "0 -100" -font-size 20 -leading 25 -bt -paras "L200pt=This is the first paragraph, which spreads over more than one line\nHere is the second, which also has multiple lines..." -et -o out.pdf`
 
 We turned off auto-tagging with `-no-auto-tag`, then used `-tag H1` and
 `-end-tag` to tag the heading. Then we turned auto-tagging back on with
@@ -563,12 +513,7 @@ logical structure tree, we add structure tags using `-stag` /
 `-end-stag` pairs which, of course, may be nested. For example, let's
 put our H1, and P sections in a Section structure tag:
 
-`cpdf -create-pdf AND -draw-struct-tree -draw -mtrans "50 700" `\
-`     -font-size 40 -no-auto-tags -stag Section -tag H1 -bt`\
-`     -text "This is the heading" -et -end-tag -auto-tags -mtrans "0 -100" `\
-`     -font-size 20 -leading 25 -bt -paras "L200pt=This is the first parag`\
-`raph, which spreads over more than one line\nHere is the second, which al`\
-`so has multiple lines..." -et -end-stag -o out.pdf`
+`cpdf -create-pdf AND -draw-struct-tree -draw -mtrans "50 700" -font-size 40 -no-auto-tags -stag Section -tag H1 -bt -text "This is the heading" -et -end-tag -auto-tags -mtrans "0 -100" -font-size 20 -leading 25 -bt -paras "L200pt=This is the first paragraph, which spreads over more than one line\nHere is the second, which also has multiple lines..." -et -end-stag -o out.pdf`
 
 Here is the structure tree:
 
@@ -589,9 +534,7 @@ wish to disable this, you may use `-no-auto-artifacts`. Whether or not
 you use `-no-auto-artifacts`, you may use `-artifact` / `end-artifact`
 pairs to mark artifacts manually. For example:
 
-`cpdf -create-pdf AND -draw-struct-tree -draw -no-auto-artifacts`\
-`     -artifact -mtrans "50 700" -end-artifact -bt -text "Hello" -et`\
-`     -o out.pdf`
+`cpdf -create-pdf AND -draw-struct-tree -draw -no-auto-artifacts -artifact -mtrans "50 700" -end-artifact -bt -text "Hello" -et -o out.pdf`
 
 Here we manually tagged the `-mtrans` as being an artifact. The text
 section was automatically tagged as a paragraph, and so all content has
