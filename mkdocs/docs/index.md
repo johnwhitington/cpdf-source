@@ -4,8 +4,6 @@ User Manual
 
 Version 2.9.3 (October 2026)
 
-![Coherent Graphics Ltd logo](logo.pdf)
-
 **Coherent Graphics Ltd**
 
 For bug reports, feature requests and comments, email `contact@coherentgraphics.co.uk`

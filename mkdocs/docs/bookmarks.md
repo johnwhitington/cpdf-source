@@ -105,7 +105,7 @@ bounding box of the page contents. Some other kinds of destination may
 be produced by `-list-bookmarks`. They will be preserved by
 `-add-bookmarks` and may be edited as your risk.
 
-## Remove Bookmarks {#removebookmarks}
+## Remove Bookmarks
 
 The `-remove-bookmarks` operations removes all bookmarks from the file.
 

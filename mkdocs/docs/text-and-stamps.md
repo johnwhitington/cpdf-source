@@ -231,7 +231,7 @@ top of the text.
 The options `-text-90`, `-text-180` and `-text-270` may be added to
 rotate the text.
 
-### Font and Size {#fonts}
+### Font and Size
 
 The standard PDF fonts may be set with the `-font` option. They are:
 

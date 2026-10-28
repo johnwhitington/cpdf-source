@@ -87,7 +87,7 @@ By adding `-inline` to the command line, inline images will be listed
 too. For inline images, the object number will be zero and the image
 name will be `/InlineImage`.
 
-## Listing images at point of use {#imageres}
+## Listing images at point of use
 
 To list all images in the given range of pages which fall below a given
 resolution (in dots-per-inch), use the `-image-resolution` function:

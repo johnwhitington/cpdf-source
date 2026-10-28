@@ -1,4 +1,7 @@
 site_name: Cpdf
+theme:
+  name: readthedocs
+  highlightjs: false
 nav:
   - index.md
   - basic-usage.md

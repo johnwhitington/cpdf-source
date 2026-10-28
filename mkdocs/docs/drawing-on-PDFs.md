@@ -1,153 +1,152 @@
 # Drawing on PDFs
 
-cpdf in.pdf [<range>] [-draw-struct-tree] [-underneath]
-     -draw <draw operations> -o out.pdf
+## Summary
 
-cpdf -text-width <text> [-font <font>] [-fontsize <fontsize>]
+    cpdf in.pdf [<range>] [-draw-struct-tree] [-underneath] -draw <draw operations> -o out.pdf
 
-Building and showing paths
+    cpdf -text-width <text> [-font <font>] [-fontsize <fontsize>]
 
--rect Draw rectangle
--to Move to
--line Add line to path
--bez Add Bezier curve to path
--bez23 Add Bezier curve to path
--bez13 Add Bezier curve to path
--circle Add circle to path
--stroke Stroke path
--fill Fill path
--filleo Fill path, even odd
--strokefill Stroke and fill path
--strokefilleo Stroke and fill path, even odd
--close Close path
+Building and showing paths:
 
-Clipping with paths
+    -rect Draw rectangle
+    -to Move to
+    -line Add line to path
+    -bez Add Bezier curve to path
+    -bez23 Add Bezier curve to path
+    -bez13 Add Bezier curve to path
+    -circle Add circle to path
+    -stroke Stroke path
+    -fill Fill path
+    -filleo Fill path, even odd
+    -strokefill Stroke and fill path
+    -strokefilleo Stroke and fill path, even odd
+    -close Close path
 
--clip Clip
--clipeo Clip, even odd
+Clipping with paths:
 
-Path parameters
+    -clip Clip
+    -clipeo Clip, even odd
 
--strokecol Set stroke colour
--fillcol Set fill colour
--thick Set stroke thickness
--cap Set cap
--join Set join
--miter Set miter limit
--dash Set dash pattern
+Path parameters:
 
-The graphics stack and matrices
+    -strokecol Set stroke colour
+    -fillcol Set fill colour
+    -thick Set stroke thickness
+    -cap Set cap
+    -join Set join
+    -miter Set miter limit
+    -dash Set dash pattern
 
--push Push graphics stack
--pop Pop graphics stack
--matrix Append to graphics matrix
--mtrans Translate the graphics matrix
--mrot Rotate the graphics matrix
--mscale Scale the graphics matrix
--mshearx Shear the graphics matrix in X
--msheary Shear the graphics matrix in Y
+The graphics stack and matrices:
 
-Re-use with XObjects
+    -push Push graphics stack
+    -pop Pop graphics stack
+    -matrix Append to graphics matrix
+    -mtrans Translate the graphics matrix
+    -mrot Rotate the graphics matrix
+    -mscale Scale the graphics matrix
+    -mshearx Shear the graphics matrix in X
+    -msheary Shear the graphics matrix in Y
 
--xobj-bbox Specify the bounding box for xobjects
--xobj Begin saving a sequence of graphics operators
--end-xobj End saving a sequence of graphics operators
--use Use a saved sequence of graphics operators
+Re-use with XObjects:
 
-Images
+    -xobj-bbox Specify the bounding box for xobjects
+    -xobj Begin saving a sequence of graphics operators
+    -end-xobj End saving a sequence of graphics operators
+    -use Use a saved sequence of graphics operators
 
--draw-jpeg Load a JPEG from file and name it
--draw-png Load a PNG from file and name it
--draw-jpeg2000 Load a JPEG2000 from file and name it
--image Draw an image which has already been loaded
+Images:
 
-Transparency
+    -draw-jpeg Load a JPEG from file and name it
+    -draw-png Load a PNG from file and name it
+    -draw-jpeg2000 Load a JPEG2000 from file and name it
+    -image Draw an image which has already been loaded
 
--fill-opacity Set opacity
--stroke-opacity Set stroke opacity
+Transparency:
 
-Text
+    -fill-opacity Set opacity
+    -stroke-opacity Set stroke opacity
 
--bt Begin text
--et End text
--text Draw text
--stext Draw text with %specials
--para Typeset a paragraph
--paras Typeset multiple paragraphs
--leading Set leading
--charspace Set character spacing
--wordspace Set word space
--textscale Set text scale
--rendermode Set text rendering mode
--rise Set text rise
--nl New line
+Text:
 
-The next page
+    -bt Begin text
+    -et End text
+    -text Draw text
+    -stext Draw text with %specials
+    -para Typeset a paragraph
+    -paras Typeset multiple paragraphs
+    -leading Set leading
+    -charspace Set character spacing
+    -wordspace Set word space
+    -textscale Set text scale
+    -rendermode Set text rendering mode
+    -rise Set text rise
+    -nl New line
 
--newpage Move to a fresh page
+The next page:
 
-Structure Information
+    -newpage Move to a fresh page
 
--draw-struct-tree Add structure information
--tag Begin marked content
--end-tag End marked content
--stag Begin structure tree branch
--end-stag End structure tree branch
--auto-tags Automatically tag paragraphs and images
--no-auto-tags Refrain from automatically tagging paragraphs and
-images
--artifact Begin manual artifact
--end-artifact End manual artifact
--no-auto-artifacts Prevent automatic addition of artifacts during
-postprocessing
--namespace Set the namespace for future branches of the tree
--eltinfo Set element information
--end-eltinfo Erase element information
--rolemap Set role map
+Structure Information:
+
+    -draw-struct-tree Add structure information
+    -tag Begin marked content
+    -end-tag End marked content
+    -stag Begin structure tree branch
+    -end-stag End structure tree branch
+    -auto-tags Automatically tag paragraphs and images
+    -no-auto-tags Refrain from automatically tagging paragraphs and
+    images
+    -artifact Begin manual artifact
+    -end-artifact End manual artifact
+    -no-auto-artifacts Prevent automatic addition of artifacts during
+    postprocessing
+    -namespace Set the namespace for future branches of the tree
+    -eltinfo Set element information
+    -end-eltinfo Erase element information
+    -rolemap Set role map
 
 ## Basics
 
-We can draw on an existing PDF (or a new one created with `-create-pdf`
-from the previous chapter) using the `-draw` operation. This provides
-commands for drawing vector graphics, simple text and adding images. For
-example:
+We can draw on an existing PDF (or a new one created with `-create-pdf` from
+the previous chapter) using the `-draw` operation. This provides commands for
+drawing vector graphics, simple text and adding images. For example:
 
 `cpdf -create-pdf AND -draw -bt -text Hello -et -o out.pdf`
 
 `cpdf in.pdf -draw -bt -text Hello -et -o out.pdf`
 
-The first example builds a new A4 portrait PDF with one page, and writes
-Hello in the default 12pt Times Roman font at the bottom left. The
-second does the same, but for every page of an existing PDF.
+The first example builds a new A4 portrait PDF with one page, and writes Hello
+in the default 12pt Times Roman font at the bottom left. The second does the
+same, but for every page of an existing PDF.
 
 ## Building and showing paths
 
-`-rect "x y w h"` Draw rectangle
-`-to "x y"` Move to
-`-line "x y"` Add line to path
-`-bez "x1 y1 x2 y2 x3 y3"` Add Bezier curve to path
-`-bez23 "x2 y2 x3 y3"` Add Bezier curve to path
-`-bez13 "x1 y1 x3 y3"` Add Bezier curve to path
-`-circle "x y r"` Add circle to path
-`-stroke` Stroke path
-`-fill` Fill path
-`-filleo` Fill path, even odd
-`-strokefill` Stroke and fill path
-`-strokefilleo` Stroke and fill path, even odd
-`-close` Close path
+    -rect "x y w h" Draw rectangle
+    -to "x y" Move to
+    -line "x y" Add line to path
+    -bez "x1 y1 x2 y2 x3 y3" Add Bezier curve to path
+    -bez23 "x2 y2 x3 y3" Add Bezier curve to path
+    -bez13 "x1 y1 x3 y3" Add Bezier curve to path
+    -circle "x y r" Add circle to path
+    -stroke Stroke path
+    -fill Fill path
+    -filleo Fill path, even odd
+    -strokefill Stroke and fill path
+    -strokefilleo Stroke and fill path, even odd
+    -close Close path
 
 To draw line art, we build paths and then stroke or fill them. For
 example:
 
-`cpdf -create-pdf AND -draw -to "100 100" -line "400 400" -stroke`\
-`     -line "400 100" -line "100 100" -stroke`\
-`     -o out.pdf`
+`cpdf -create-pdf AND -draw -to "100 100" -line "400 400" -stroke -line "400 100" -line "100 100" -stroke -o out.pdf`
 
-We use `-to` to start the path at a given coordinate, `-line` to extend
-the path with each line, and then `-stroke` to stroke the path.
-Coordinates in a PDF file have the origin $(0, 0)$ at the bottom-left of
-the page. All units are in points (1/72 inch). This creates the
-following PDF:
+We use `-to` to start the path at a given coordinate, `-line` to extend the
+path with each line, and then `-stroke` to stroke the path.  Coordinates in a
+PDF file have the origin $(0, 0)$ at the bottom-left of the page. All units are
+in points (1/72 inch). This creates the following PDF:
+
+![line](manualimages/line.svg)
 
 Alternatively, we may use `-close` to draw the final line back to the
 starting point:
