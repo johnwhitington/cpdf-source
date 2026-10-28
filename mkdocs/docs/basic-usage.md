@@ -117,27 +117,27 @@ For example:
 
 `cpdf in.pdf 1,2,7-end -o out.pdf`
 
-Remove pages three, four, five and six from a document.
+> Remove pages three, four, five and six from a document.
 
 `cpdf in.pdf 1-16odd -o out.pdf`
 
-Extract the odd pages 1,3,\...,13,15.
+> Extract the odd pages 1,3,\...,13,15.
 
 `cpdf in.pdf landscape -rotate 90 -o out.pdf`
 
-Rotate all landscape pages by ninety degrees.
+> Rotate all landscape pages by ninety degrees.
 
 `cpdf in.pdf 1,all -o out.pdf`
 
-Duplicate the front page of a document, perhaps as a fax cover sheet.
+> Duplicate the front page of a document, perhaps as a fax cover sheet.
 
 `cpdf in.pdf ~3-~1 -o out.pdf`
 
-Extract the last three pages of a document, in order.
+> Extract the last three pages of a document, in order.
 
 `cpdf in.pdf 2DUP1-10 -o out.pdf`
 
-Produce the pages 1,1,2,2,\....10,10.
+> Produce the pages 1,1,2,2,\....10,10.
 
 Page ranges may refer to non-existent pages, except in the case where a
 PDF file with no pages would be produced - such a file is invalid.
@@ -156,7 +156,8 @@ owner passwords. Either password is supplied by writing
 requiring it (before or after any range). The document will *not* be
 re-encrypted upon writing. For example:
 
-`cpdf in.pdf user=charles -info`\
+`cpdf in.pdf user=charles -info`
+
 `cpdf in.pdf owner=fred reverse -o out.pdf`
 
 To re-encrypt the file with its existing encryption upon writing, which
@@ -178,7 +179,7 @@ password, should it contain non-ASCII characters, must be normalized by
 applying the SASLPrep profile (RFC 4013) of the stringprep algorithm
 (RFC 3454) using the Normalize and BiDi options. It must then be
 converted to UTF8 and truncated to 127 bytes. Cpdf does not perform this
-pre-processing -- it takes its passwords from the command line without
+pre-processing - it takes its passwords from the command line without
 processing.
 
 ## Standard Input and Standard Output
@@ -191,11 +192,9 @@ together into a *pipe*, passing data from one to the next without the
 use of intermediate files. Use `-stdin` to read from standard input, and
 `-stdout` to write to standard input, either to pipe data between
 multiple programs, or multiple invocations of the same program. For
-example, this sequence of commands (all typed on one line)
+example, this sequence of commands
 
-    cpdf in.pdf reverse -stdout |
-    cpdf -stdin 1-5 -stdout |
-    cpdf -stdin reverse -o out.pdf
+    `cpdf in.pdf reverse -stdout | cpdf -stdin 1-5 -stdout | cpdf -stdin reverse -o out.pdf`
 
 extracts the last five pages of `in.pdf` in the correct order, writing
 them to `out.pdf`. It does this by reversing the input, taking the first
@@ -228,16 +227,14 @@ To use `AND`, simply leave off the output specifier (e.g `-o`) of one
 command, and the input specifier (e.g filename) of the next. For
 instance:
 
-`cpdf -merge in.pdf in2.pdf AND -add-text "Label"`\
-`     AND -merge in3.pdf -o out.pdf`
+`cpdf -merge in.pdf in2.pdf AND -add-text "Label" AND -merge in3.pdf -o out.pdf`
 
 Merge `in.pdf` and `in2.pdf` together, add text to both pages, append
 `in3.pdf` and write to `out.pdf`.
 
 To specify the range for each section, use `-range`:
 
-`cpdf -merge in.pdf in2.pdf AND -range 2-4 -add-text "Label"`
-`     AND -merge in3.pdf -o out.pdf`
+`cpdf -merge in.pdf in2.pdf AND -range 2-4 -add-text "Label" AND -merge in3.pdf -o out.pdf`
 
 ## Units
 
@@ -396,11 +393,11 @@ attempts to correct these problems silently.
 Grossly malformed files will be reconstructed. The reconstruction
 progress is shown on `stderr` (Standard Error):
 
-`$cpdf in.pdf -o out.pdf`\
-`couldn't lex object number`\
-`Attempting to reconstruct the malformed pdf in.pdf...`\
-`Read 5530 objects`\
-`Malformed PDF reconstruction succeeded!`
+    $cpdf in.pdf -o out.pdf`
+    couldn't lex object number`
+    Attempting to reconstruct the malformed pdf in.pdf...`
+    Read 5530 objects`
+    Malformed PDF reconstruction succeeded!
 
 In the unlikely event that Cpdf cannot reconstruct a malformed file, it
 is able to use the `gs` program to try to reconstruct the PDF file, if
@@ -460,7 +457,8 @@ given, the exit code is 1.
 
 ## Control Files
 
-`cpdf -args <filename>`\
+`cpdf -args <filename>`
+
 `cpdf -args-json <filename>`
 
 Some operating systems have a limit on the length of a command line. To
@@ -507,17 +505,17 @@ themselves be escaped (i.e. written `\\`).
 Some Cpdf commands write text to standard output, or read text from the
 command line or configuration files. These are:
 
-`-info`\
-`-list-bookmarks`\
-`-set-author` et al.\
-`-list-annotations`\
-`-dump-attachments`
+    -info
+    -list-bookmarks
+    -set-author et al
+    -list-annotations
+    -dump-attachments
 
 There are three options to control how the text is interpreted:
 
-`-utf8`\
-`-stripped`\
-`-raw`
+    -utf8
+    -stripped
+    -raw
 
 Add `-utf8` to use Unicode UTF8, `-stripped` to convert to 7 bit ASCII
 by dropping any high characters, or `-raw` to perform no processing. The
