@@ -10,7 +10,7 @@ These examples demonstrate just a few of the facilities provided by the
 Coherent PDF Command Line Tools. See each chapter for more commands and
 full details.
 
-### [Basic Usage](#chap:1)
+### [Basic Usage](basic-usage.md)
 
 `cpdf in.pdf 1-3,6 -o out.pdf`
 
@@ -32,7 +32,7 @@ files together and adding a copyright stamp to every page.
 > Read `args.txt` and use its contents as the command line arguments for
 Cpdf.
 
-### [Merging and Splitting](#chap:2)
+### [Merging and Splitting](merging-and-splitting.md)
 
 `cpdf -merge in.pdf in2.pdf -o out.pdf`
 
@@ -57,7 +57,7 @@ is the bookmark label.
 > Split `in.pdf`, writing pages 1,4,7... to `a.pdf`, 2,5,8... to `b.pdf`
 and 3,6,9... to `c.pdf`.
 
-### [Pages](#chap:3)
+### [Pages](pages.md)
 
 `cpdf -scale-page "2 2" in.pdf -o out.pdf`
 
@@ -83,7 +83,7 @@ to `out.pdf`.
 
 > Crop the pages in `in.pdf` to a 600 pts by 400 pts rectangle.
 
-### [Encryption and Decryption](#chap:4)
+### [Encryption and Decryption](encryption-and-decryption.md)
 
 `cpdf -encrypt AES256ISO fred joe in.pdf -o out.pdf`
 
@@ -95,7 +95,7 @@ to `out.pdf`.
 
 > Decrypt `in.pdf` using the owner password, writing to `out.pdf`.
 
-### [Compression](#chap:5)
+### [Compression](compression.md)
 
 `cpdf -compress in.pdf -o out.pdf`
 
@@ -110,7 +110,7 @@ to `out.pdf`.
 > Squeeze `in.pdf`, writing to `out.pdf`. Squeezing rearranges the
 structure of the PDF file to save space.
 
-### [Bookmarks](#chap:6)
+### [Bookmarks](bookmarks.md)
 
 `cpdf -list-bookmarks -utf8 in.pdf`
 
@@ -126,7 +126,7 @@ structure of the PDF file to save space.
 > Typeset a table of contents from existing bookmarks and prepend to the
 document.
 
-### [Presentations](#chap:7)
+### [Presentations](presentations.md)
 
 `cpdf -presentation in.pdf 2-end -trans Split -duration 10 -o out.pdf`
 
@@ -135,7 +135,7 @@ slide staying 10 seconds on screen unless manually advanced. The first
 page, being a title does not move on automatically, and has no
 transition effect.
 
-### [Text and Stamps](#chap:8)
+### [Text and Stamps](text-and-stamps.md)
 
 `cpdf -stamp-on watermark.pdf in.pdf -o out.pdf`
 
@@ -147,7 +147,7 @@ result to `out.pdf`.
 > Add a page number and date to all the pages in `in.pdf` using the
 Courier font, writing to `out.pdf`.
 
-### [Multipage Facilities](#chap:9)
+### [Multipage Facilities](multipage-facilities.md)
 
 `cpdf -impose-xy "2 1" in.pdf -o out.pdf`
 
@@ -161,7 +161,7 @@ Courier font, writing to `out.pdf`.
 
 > Chop each page into four quarters, including each in the output.
 
-### [Annotations](#chap:10)
+### [Annotations](annotations.md)
 
 `cpdf -list-annotations-json in.pdf > out.json`
 
@@ -177,7 +177,7 @@ to file `out.json`.
 
 > Remove the annotations from `in.pdf`, writing to `out.pdf`.
 
-### [Document Information and Metadata](#chap:11)
+### [Document Information and Metadata](document-information-and-metadata.md)
 
 `cpdf -info -utf8 in.pdf`
 
@@ -215,7 +215,7 @@ putting the result in `out.pdf`.
 
 > Show how much data in `in.pdf` is used for images, fonts etc.
 
-### [File Attachments](#chap:12)
+### [File Attachments](file-attachments.md)
 
 `cpdf -attach-file sheet.xls in.pdf -o out.pdf`
 
@@ -229,7 +229,7 @@ putting the result in `out.pdf`.
 
 > Dump attachments to file, given the directory to put them in.
 
-### [Images](#chap:13)
+### [Images](images.md)
 
 `cpdf -image-resolution 600 in.pdf`
 
@@ -253,7 +253,7 @@ imagemagick).
 
 > Rasterize PDF pages to PNG files.
 
-### [Fonts](#chap:14)
+### [Fonts](fonts.md)
 
 `cpdf -list-fonts in.pdf`
 
@@ -263,7 +263,7 @@ imagemagick).
 
 > List missing fonts.
 
-### [PDF and JSON](#chap:15)
+### [PDF and JSON](PDF-and-JSON.md)
 
 `cpdf in.pdf -output-json -utf8 -output-json-parse-content-streams -o out.json`
 
@@ -274,7 +274,7 @@ streams into individual JSON objects too.
 
 > Load a PDF in JSON format, writing to an output PDF.
 
-### [Optional Content Groups](#chap:16)
+### [Optional Content Groups](optional-content-groups.md)
 
 `cpdf -ocg-list in.pdf`
 
@@ -285,7 +285,7 @@ streams into individual JSON objects too.
 > Coalesce optional content groups after merging or stamping two files
 with OCGs with like names.
 
-### [Creating New PDFs](#chap:17)
+### [Creating New PDFs](creating-new-PDFs.md)
 
 `cpdf -create-pdf -create-pdf-pages 20 -create-pdf-papersize usletterportrait -o out.pdf`
 
@@ -299,7 +299,7 @@ with OCGs with like names.
 
 > Make a two-page PDF, the first from a JPEG and the second from a PNG.
 
-### [Drawing on PDFs](#chap:18)
+### [Drawing on PDFs](drawing-on-PDFs.md)
 
 `cpdf -create-pdf AND -draw -to "100 100" -line "400 400" -line "400 100" -close -fill -o out.pdf`
 
@@ -313,20 +313,20 @@ with OCGs with like names.
 
 > Create a new PDF and draw text on one page and then the next.
 
-### [Accessible PDFs with PDF/UA](#chap:misc)
+### [Accessible PDFs with PDF/UA](accessible-PDFs-with-PDFUA.md)
 
 `cpdf -verify 'PDF/UA-1(matterhorn)' -json in.pdf`
 
 > Verify `in.pdf` for conformance to PDF/UA-1 using the Matterhorn
 protocol, returning results in JSON format.
 
-### [Chapter 20: Redaction](#chap:misc)
+### [Chapter 20: Redaction](redaction.md)
 
 `cpdf -redact-shape "100 200 200 300" in.pdf 1 -o out.pdf`
 
 > Redact text on page one of `in.pdf`, writing to `out.pdf`.
 
-### [Chapter 21: Miscellaneous](#chap:misc)
+### [Chapter 21: Miscellaneous](miscellaneous.md)
 
 `cpdf -blacktext in.pdf -o out.pdf`
 
