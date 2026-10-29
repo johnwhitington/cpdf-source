@@ -1,3 +1,5 @@
+![logo](logo.png)
+
 # Coherent PDF Command Line Tools
 
 Version 2.9.3 (October 2026)
