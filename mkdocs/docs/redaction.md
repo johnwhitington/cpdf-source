@@ -20,11 +20,11 @@
 
     Redaction application options:
 
-    -color <color> (see Chapter 8 for color specifications)
-    -opacity <n> (see Chapter 8)
-    -linewidth <n> (see Chapter 8)
-    -underneath (see Chapter 8)
-    -outline (see Chapter 8)
+    -color <color> (see [Text and Stamps](text-and-stamps.md) for color specifications)
+    -opacity <n> (see [Text and Stamps](text-and-stamps.md)
+    -linewidth <n> (see [Text and Stamps](text-and-stamps.md))
+    -underneath (see [Text and Stamps](text-and-stamps.md))
+    -outline (see [Text and Stamps](text-and-stamps.md))
     -jbig2dec <path> when chopping images only
     -jbig2enc <path> when chopping images only
     -magick <path> when chopping images only
@@ -42,9 +42,9 @@
 
     Redaction annotation creation options:
 
-    -redact-color <color> (see Chapter 8 for color specifications)
-    -redact-outline-color <color> (see Chapter 8)
-    -redact-text-color <color> (see Chapter 8)
+    -redact-color <color> (see [Text and Stamps](text-and-stamps.md) for color specifications)
+    -redact-outline-color <color> (see [Text and Stamps](text-and-stamps.md))
+    -redact-text-color <color> (see [Text and Stamps](text-and-stamps.md))
     -redact-opacity Opacity for redaction fill and outline (see below for
     text opacity)
     -redact-overlay <text>
@@ -104,7 +104,7 @@ refer to operations on the rectangular bounding boxes of glyphs, images,
 paths etc. The exact shapes are not used.
 
 The appearance of the redaction is governed by the options `-color`
-(default black, format described in Chapter 8), `-outline` (default
+(default black, format described in [Text and Stamps](text-and-stamps.md)), `-outline` (default
 filled), `-linewidth`, `-underneath`, `-opacity`, and in the alternative
 `-redact-no-show` (omit the redaction appearance entirely).
 
@@ -174,7 +174,7 @@ of the redaction annotation, we can add `-redact-auto-size`. Where both
 interspersed with newlines instead, each repetition scaled to fit one
 line.
 
-The following options from Chapter FIXME may be used to style the text:
+The following options from [Text and Stamps](text-and-stamps.md) may be used to style the text:
 `-font`, `-fontsize`, `-opacity`, `-linespace`, `-outline`,
 `-linewidth`.
 
@@ -231,7 +231,7 @@ And one more from elsewhere in this manual:
 
 `cpdf -ocg-remove in.pdf -o out.pdf`
 
-> Remove the optional content structure from a document. See Chapter 16
+> Remove the optional content structure from a document. See [Optional Content Groups](optional-content-groups.md)
 for details.
 
 ## Evidence of redaction
@@ -250,13 +250,12 @@ Inversion
 
 Page content JSON
 
-> Page content can be extracted with `-page-content` as described in
-  Section FIXME for the redacted and unredacted file, and a
-  comparison made.
+> Page content can be extracted with `-page-content` as described in [Miscellaneous](miscellaneous.md)
+  for the redacted and unredacted file, and a comparison made.
 
 Full JSON
 
-> To check metadata as well, we can use `-output-json` from Chapter 15
+> To check metadata as well, we can use `-output-json` from [PDF and JSON](PDF-and-JSON.md)
   and compare the output on redacted and unredacted files.
 
 Text extraction
@@ -267,12 +266,12 @@ Text extraction
 
 Image extraction
 
-> Cpdf's image listing and extraction facilities (see Chapter 13) may be
+> Cpdf's image listing and extraction facilities (see [Images](images.md)) may be
   used to check that images have been redacted when in `chop` mode, and
   that no hidden images or image masks have survived.
 
 Structure tree extraction
 
-> Cpdf's `-extract-struct-tree` (see Chapter 19) may be used to verify
+> Cpdf's `-extract-struct-tree` (see [Accessible PDFs with PDF/UA](accessible-PDFs-with-PDFUA.md)) may be used to verify
   the erasure of text in structure tree nodes referring to redacted
   content.

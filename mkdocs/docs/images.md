@@ -192,7 +192,7 @@ not work for lossy JBIG2 images with JBIG2Globals streams.
 ## Removing an Image
 
 To remove a particular image, find its name using `-list-images-used`
-then apply the `-draft` and `-draft-remove-only` operations from Section FIXME.
+then apply the `-draft` and `-draft-remove-only` operations from [Miscellaneous](miscellaneous.md).
 
 ## Processing Images
 

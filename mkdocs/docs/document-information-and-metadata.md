@@ -10,7 +10,7 @@
 
     cpdf -set-title \<title of document\>
          [-also-set-xmp] [-just-set-xmp] in.pdf -o out.pdf
-    (Also -set-author etc. See Section FIXME)
+    (Also -set-author etc.)
 
     cpdf -set-page-layout <layout> in.pdf -o out.pdf
 
@@ -97,14 +97,13 @@ dictionary, and from any XMP metadata to standard output.
     XMP dc:description: Adobe Portable Document Format (PDF)
 
 The details of the format for creation and modification dates can be
-found in Appendix FIXME. If page boxes vary among pages, the entry will read
+found in [Dates](dates.md). If page boxes vary among pages, the entry will read
 `various`. Add `-in`, `-cm` or `-mm` to print boxes in inches,
 centimetres, or millimetres instead of points.
 
 By default, Cpdf strips to ASCII, discarding character codes in excess
 of 127. In order to preserve the original unicode, add the `-utf8`
-option. To disable all post-processing of the string, add `-raw`. See
-Section FIXME for more information.
+option. To disable all post-processing of the string, add `-raw`.
 
 The `-info-json` operation prints the information in JSON format
 instead. For example:
@@ -235,7 +234,7 @@ information dictionary:
 |  Mark as Untrapped  | `cpdf -set-untrapped` |
 
 (The details of the format for creation and modification dates can be
-found in Appendix FIXME. Using the date `"now"` uses the time and date at
+found in [Dates](dates.md). Using the date `"now"` uses the time and date at
 which the command is executed (unless the environment variable
 `CPDF_REPRODUCIBLE_DATES` is set to `true`). Note also that `-producer`
 and `-creator` may be used to set the producer and/or the creator when
@@ -256,7 +255,7 @@ field must exist already. To set only the field (not the document
 information dictionary), add `-just-set-xmp` instead.
 
 To delete existing non-XMP metadata in line with PDF 2.0, use
-`-remove-dict-entry "/Info"` as described in chapter FIXME.
+`-remove-dict-entry "/Info"` as described in [Miscellaneous](miscellaneous.md).
 
 ## XMP Metadata
 
@@ -296,8 +295,8 @@ To set the main XMP metadata date field, use:
 
 `cpdf -set-metadata-date <date> in.pdf -o out.pdf`
 
-The date format is defined in Appendix FIXME. Using the
-date `"now"` uses the time and date at which the command is executed.
+The date format is defined in [Dates](dates.md). Using the
+date "now" uses the time and date at which the command is executed.
 
 ## Upon Opening a Document
 
@@ -308,7 +307,7 @@ NB: If the file has a valid `/OpenAction` setting, which tells the PDF
 reader to open at a certain page or position on a page, this can
 override the page layout or display options described below. To prevent
 this, preprocess the file with the `-remove-dict-entry` functionality
-from Section FIXME:
+from [Miscellaneous](miscellaneous.md):
 
 `cpdf -remove-dict-entry /OpenAction in.pdf -o out.pdf`
 

@@ -30,9 +30,11 @@ The default is one page, A4 portrait.
 
 `cpdf -create-pdf -create-pdf-pages 20 -create-pdf-papersize usletterportrait -o out.pdf`
 
-The standard paper sizes are listed in Section FIXME, or you may specify the width and height
-directly, as described in the same chapter. To build new PDF/UA files,
-see `-create-pdf-ua-1` and `-create-pdf-ua-2` in chapter FIXME.
+The standard paper sizes are listed in [Page Sizes](pages.md#page-sizes), or
+you may specify the width and height directly, as described in the same
+chapter. To build new PDF/UA files, see `-create-pdf-ua-1` and
+`-create-pdf-ua-2` in [Creating new PDF/UA
+files](accessible-PDFs-with-PDFUA.md#drawing-pdfua-files).
 
 The `-create-pdf` operation may appear after `AND` too, naturally:
 
@@ -46,16 +48,17 @@ on whitespace. Both Windows and Unix line endings are allowed.
 
 `cpdf -typeset file.txt -create-pdf-papersize a3portrait -font Courier -font-size 10 -o out.pdf`
 
-The standard paper sizes are listed in Section FIXME, or you may specify the
+The standard paper sizes are listed in [Page Sizes](pages.md#page-sizes), or you may specify the
 width and height directly, as described in the same chapter. The margin may be
 set with `-margin`. The default is 7.5% of the page width.
 
 To produce a PDF in PDF/UA-1 or PDF/UA-2 format add, say,
 `-subformat PDF/UA-2 -title "Thesis"` to the command line.
 
-The font may be specified as described in Section FIXME. The default
-font is Times-Roman and the default size is 12. See Chapter FIXME for
-`-color`, `-opacity`, `-line-spacing`, `-outline`, and `-linewidth`.
+The font may be specified as described in [Font and
+Size](text-and-stamps.md#font-and-size). The default font is Times-Roman and
+the default size is 12. [Text and Stamps](text-and-stamps.md) for `-color`,
+`-opacity`, `-line-spacing`, `-outline`, and `-linewidth`.
 
 ## Make a PDF from a PNG, JPEG or JPEG2000 image
 

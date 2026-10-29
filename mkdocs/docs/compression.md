@@ -15,7 +15,7 @@
 
 Cpdf provides facilities for decompressing and compressing PDF streams,
 and for losslessly reprocessing the whole file to 'squeeze' it. For
-lossy recompression of images within a PDF, see Chapter 13.
+lossy recompression of images within a PDF, see [Images](images.md).
 
 ## Decompressing a Document
 
@@ -82,7 +82,7 @@ effect.
 
 ## Other Lossless Compression
 
-Chapter FIXME describes `-process-images`, which supports the lossless
+[Images](images.md) describes `-process-images`, which supports the lossless
 re-compression of images within a PDF, depending on the options given.
 
 ## Lossy Compression
@@ -126,34 +126,34 @@ circumstance. We list and briefly describe each here for convenience:
 
 `-remove-annotations`
 
-> Chapter FIXME. Removes annotations from a PDF.
+> In [Annotations](annotations.md). Removes annotations from a PDF.
 
 `-remove-metadata`
 
-> Chapter FIXME. Remove main XMP metadata.
+> In [Document Information and Metdata](document-information-and-metadata.md#xmp-metadata). Remove main XMP metadata.
 
 `-remove-all-metadata`
 
-> Chapter FIXME. Remove all XMP metadata.
+> In [Document Information and Metdata](document-information-and-metadata.md#xmp-metadata). Remove all XMP metadata.
 
 `-remove-files`
 
-> Chapter FIXME. Removes attached files from a PDF.
+> In [File Attachments](file-attachments.md). Removes attached files from a PDF.
 
 `-process-images`
 
-> Chapter FIXME. Lossy (and lossless) reprocessing of images within PDFs.
+> In [Images](images.md). Lossy (and lossless) reprocessing of images within PDFs.
 
 `-remove-fonts`
 
-> Chapter FIXME. Remove embedded fonts from a PDF.
+> In [Fonts](fonts.md). Remove embedded fonts from a PDF.
 
 `-remove-all-text`
 
-> Chapter FIXME. Remove text from a PDF.
+> In [Miscellaneous](miscellaneous.md). Remove text from a PDF.
 
 `-draft`
 
-> Chapter FIXME. Remove images from a PDF.
+> In [Miscellaneous](miscellaneous.md). Remove images from a PDF.
 
-To find out what is in a PDF, use `-composition[-json]` from Chapter FIXME.
+To find out what is in a PDF, use `-composition[-json]` from [Document Information and Metadata](document-information-and-metadata.md).

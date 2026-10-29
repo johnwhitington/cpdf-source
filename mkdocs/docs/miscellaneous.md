@@ -64,10 +64,9 @@ example:
 
 `cpdf -draft -boxes in.pdf -o out.pdf`
 
-To remove a single image only, specify `-draft-remove-only`, giving the
-name of the image obtained by a call to `-list-images-used` as described
-in Section FIXME
-and giving the appropriate page or page range. For example:
+To remove a single image only, specify `-draft-remove-only`, giving the name of
+the image obtained by a call to `-list-images-used` as described in
+[Images](images.md) and giving the appropriate page or page range. For example:
 
 `cpdf -draft -boxes -draft-remove-only "/Im1" in.pdf 7 -o out.pdf`
 

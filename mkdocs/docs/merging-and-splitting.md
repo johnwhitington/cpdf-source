@@ -179,11 +179,11 @@ This is the only time more than one `-o` is allowed.
 
 ## Encrypting with Split operations
 
-The encryption parameters described in Chapter
-FIXME may be added to the command line to encrypt each
-split PDF. Similarly, the `-recrypt` switch described in Chapter
-FIXME may by given to re-encrypt each file with the
-existing encryption of the source PDF.
+The encryption parameters described in [Encryption and
+Decryption](encryption-and-decryption.md) may be added to the command line to
+encrypt each split PDF. Similarly, the `-recrypt` switch described in
+[Encryption and Decryption](encryption-and-decryption.md) may by given to
+re-encrypt each file with the existing encryption of the source PDF.
 
 ## Splitting and structure trees
 

@@ -108,9 +108,9 @@ Structure Information:
 
 ## Basics
 
-We can draw on an existing PDF (or a new one created with `-create-pdf` from
-the previous chapter) using the `-draw` operation. This provides commands for
-drawing vector graphics, simple text and adding images. For example:
+We can draw on an existing PDF (or a new one created with `-create-pdf`) using
+the `-draw` operation. This provides commands for drawing vector graphics,
+simple text and adding images. For example:
 
 `cpdf -create-pdf AND -draw -bt -text Hello -et -o out.pdf`
 
@@ -217,7 +217,7 @@ Here is the result:
 
 We can set stroke and fill colours for our paths, either as greyscale
 (one component), RGB (three components) or CMYK (four components), or by
-naming a colour as described in Chapter 8:
+naming a colour:
 
 `cpdf -create-pdf AND -draw -circle "200 200 100" -thick 20 -strokecol 0.5 -fillcol "0.2 0.7 0.2" -strokefill -o out.pdf`
 
@@ -376,7 +376,7 @@ Here is the result:
 ![text](manualimages/text.svg)
 
 If we use `-stext` instead of `-text` the usual special values from
-Chapter 8 (with the exception of URL links) may be used:
+(Text and Stamps)[text-and-stamps.md] (with the exception of URL links) may be used:
 
 `cpdf -create-pdf AND -draw -mtrans "50 50" -font-size 144 -bt -stext "Page %Page" -et -o out.pdf`
 
@@ -594,4 +594,4 @@ may be set with `-rolemap`. For example `-rolemap "/S1/H1/S2/H2"` would
 map the S1 structure type to the standard type H1 and so on.
 
 To build a fresh PDF/UA or PDF/UA-2 file for use with `-draw` use
-`-create-pdf-ua-1` or `-create-pdf-ua-2` from chapter FIXME.
+`-create-pdf-ua-1` or `-create-pdf-ua-2` from [Accessible PDFs with PDF/UA](accessible-PDFs-with-PDFUA.md).

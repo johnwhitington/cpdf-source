@@ -38,7 +38,7 @@
 
     cpdf -stamp-as-xobject stamp.pdf in.pdf [<range>] -o out.pdf
 
-    NB: See discussion of `-fast` in Section FIXME.
+    NB: See discussion of `-fast` in [Malformed Files](basic-usage.md#malformed-files).
 
 ## Add a Watermark or Logo
 
@@ -53,7 +53,7 @@ stamps the file `logo.pdf` onto the odd pages of `in.pdf`, writing to
 
 `cpdf -stamp-under topsecret.pdf in.pdf -o out.pdf`
 
-The position commands in Section FIXME can be used to locate the stamp more precisely
+The position commands in [Position](#position) can be used to locate the stamp more precisely
 (they are calculated relative to the crop box of the stamp). Or,
 preprocess the stamp with `-shift` first.
 
@@ -218,8 +218,7 @@ No attempt is made to take account of the page rotation when
 interpreting the position, so `-prerotate` may be added to the command
 line if the file contains pages with a non-zero viewing rotation (to
 silence the rotation warning, add `-no-warn-rotate` instead) This is
-equivalent to pre-processing the document with `-upright` (see chapter
-3).
+equivalent to pre-processing the document with `-upright` (see [Pages](pages.md)).
 
 NB: The use of `-midline` with `-diagonal` and `-reverse-diagonal` is
 typical for proper placement.
@@ -278,9 +277,6 @@ Here we have used the Noto Sans font from Google. This and other Google
 fonts contain characters for a huge number of scripts, and are available
 free from <https://fonts.google.com/noto/>. But you may use any TrueType
 font.
-
-See Section FIXME
-for how to use an existing font from the source document.
 
 ### Colors
 

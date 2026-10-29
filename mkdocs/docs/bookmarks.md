@@ -50,7 +50,7 @@ doesn't move to a page.
 By default, Cpdf converts unicode to ASCII text, dropping characters
 outside the ASCII range. To prevent this, and return unicode UTF8
 output, add the `-utf8` option to the command. To prevent any
-processing, use the `-raw` option. See Section FIXME for more information. A newline in a bookmark
+processing, use the `-raw` option. See [Text Encodings](basic-usage.md#text-encodings) for more information. A newline in a bookmark
 is represented as `"\n"`.
 
 By using `-list-bookmarks-json` instead, the bookmarks are formatted as
@@ -77,7 +77,7 @@ Note that the colour (RGB each from 0.0 to 1.0) and shape of the text
 The `-preserve-actions` option will give the target in its original PDF
 form, rather than resolving it to a destination (see below).
 
-See Chapter 15 for more details of Cpdf's JSON formatting. There are two
+See [PDF and JSON](PDF-and-JSON.md) for more details of Cpdf's JSON formatting. There are two
 differences here: bookmark text is always UTF8, and the numbers for
 `level` and `page` are plain, rather than begin surrounded with
 ` { "I": }`.
@@ -168,7 +168,7 @@ Contents", though this may be changed:
 An empty title removes the title. The sequence `\n` may be used to split
 the title into lines. The default font is 12pt Times Roman (and 24pt for
 the title). The base font and size may be changed with `-font` and
-`-font-size` (see Section FIXME for full details):
+`-font-size` (see [Font and Size](text-and-stamps.md#font-and-size) for full details):
 
 `cpdf -table-of-contents -font "Courier-Bold" -font-size 8` in.pdf -o out.pdf`
 
@@ -182,9 +182,9 @@ document's bookmarks. To suppress this behaviour, add
 
 `cpdf -table-of-contents -toc-no-bookmark in.pdf -o out.pdf`
 
-To create a structure tree for the table of contents, and merge it with
-the existing one (for example, when adding a table of contents to a
-PDF/UA file), add `-process-struct-trees` to the command. For PDF/UA-2,
-add also `-subformat "PDF/UA-2"`. You may also need `-embed-std14` as
-described in chapter FIXME, since fully-embedded fonts are a requirement of
-some PDF subformats.
+To create a structure tree for the table of contents, and merge it with the
+existing one (for example, when adding a table of contents to a PDF/UA file),
+add `-process-struct-trees` to the command. For PDF/UA-2, add also `-subformat
+"PDF/UA-2"`. You may also need `-embed-std14` as described in [Font and
+Size](text-and-stamps.md#font-and-size), since fully-embedded fonts are a
+requirement of some PDF subformats.

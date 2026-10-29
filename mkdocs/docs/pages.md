@@ -133,7 +133,7 @@ the crop box (or, if absent, the media box), leaving the page dimensions
 > Scale a file's contents on all pages to 50% of its original dimensions.
 
 To scale about a point other than the center, one can use the
-positioning commands described in FIXME. For
+positioning commands described in [Position](text-and-stamps.md#position). For
 example:
 
 `cpdf -scale-contents 0.5 -topright 20 in.pdf -o out.pdf`

@@ -135,7 +135,7 @@ down so that the media box is unchanged.
 > Impose a document two-up on a larger page by rotation.
 
 NB: For all imposition options, see also discussion of `-fast` in
-Section FIXME. The
+[Malformed Files](basic-usage.md#malformed-files). The
 option `-process-struct-trees` will mark the file's content as an
 artifact for the purpose of imposition.
 
