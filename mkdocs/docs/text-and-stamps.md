@@ -109,7 +109,7 @@ NB: Cpdf can only use characters available in the font specified. If
 necessary, supply your own font with `-load-ttf` (see below). Times
 Roman as used in the preceding example refers to the Standard PDF font
 Times Roman, not the Times Roman which is likely to be supplied with
-your computer system -- which may have more characters available.
+your computer system - which may have more characters available.
 
 ### Page Numbers and other Special Codes
 
@@ -348,7 +348,7 @@ If your command line allows for the inclusion of unicode characters, the
 input text will be considered as UTF8 by Cpdf. Special characters which
 exist in the PDF WinAnsiEncoding Latin 1 code (such as many accented
 characters) will be reproduced in the PDF. This does not mean, however,
-that every special character can be reproduced -- it must exist in the
+that every special character can be reproduced - it must exist in the
 font. When using a custom font, Cpdf will attempt to convert from UTF8
 to the encoding of that font automatically.
 

@@ -14,7 +14,7 @@
 
 PDF supports adding attachments (files of any kind, including other
 PDFs) to an existing file. The Cpdf tool supports adding and removing
-*document-level attachments* --- that is, ones which are associated with
+*document-level attachments* - that is, ones which are associated with
 the document as a whole rather than with an individual page, and also
 *page-level attachments*, associated with a particular page.
 

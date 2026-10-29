@@ -495,7 +495,7 @@ A PDF may contain, in addition to its graphical content, a tree of
 information concerning the logical organization of the document into
 chapters, sections, paragraphs, figures and so on. When used with a
 standard set of pre-defined data types, this is known as Tagged PDF.
-Some PDF subformats, such as PDF/UA, mandate -- amongst other things --
+Some PDF subformats, such as PDF/UA, mandate - amongst other things -
 the full tagging of the file.
 
 When drawing on a fresh file, Cpdf can add such structure information.

@@ -214,8 +214,8 @@ example:
 
 `cpdf -verify "PDF/UA-1(matterhorn)" -verify-single "28-012" in.pdf`
 
-Presently, Matterhorn tests 31-001--016,018,030 are unimplemented.
-Matterhorn tests 31-027,10-001,11-001--005 are partially implemented.
+Presently, Matterhorn tests 31-001 to 016,018,030 are unimplemented.
+Matterhorn tests 31-027,10-001,11-001 to 005 are partially implemented.
 All others are implemented.
 
 ## PDF/UA compliance markers
@@ -276,8 +276,8 @@ drawing.
 Remediation of a file which claims to match PDF/UA but which does not (either
 failing human or mechanical tests) is a complex topic. In this section, we list
 possible remediations for a file which fails mechanical verification with Cpdf
-or another verification tool. Sometimes these will be clear and simple -- for
-example where some piece of document metadata is missing -- and sometimes they
+or another verification tool. Sometimes these will be clear and simple - for
+example where some piece of document metadata is missing - and sometimes they
 will be almost impossible. Of course, often the truth lies between those two
 extremes.
 

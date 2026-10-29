@@ -149,7 +149,7 @@ part of the version number after the decimal point. For example:
 
 > Change file to PDF 1.4.
 
-This does not alter any of the actual data in the file --- just the
+This does not alter any of the actual data in the file - just the
 supposed version number. For PDF versions starting with 2 add ten to the
 number. For example, for PDF version 2.0, use `-set-version 10`.
 

@@ -19,16 +19,16 @@ removing encryption entirely.
 
 There are five kinds of encryption:
 
-- 40-bit encryption (method `40bit`) in Acrobat 3 (PDF 1.1) and above --
-  *this is insecure -- do not use for new documents*
+- 40-bit encryption (method `40bit`) in Acrobat 3 (PDF 1.1) and above -
+  *this is insecure - do not use for new documents*
 
 - 128-bit encryption (method `128bit`) in Acrobat 5 (PDF 1.4) and above
-  -- *this is insecure -- do not use for new documents*
+  - *this is insecure - do not use for new documents*
 
 - 128-bit AES encryption (method `AES`) in Acrobat 7 (PDF 1.6) and above
 
-- 256-bit AES encryption (method `AES256`) in Acrobat 9 (PDF 1.7) --
-  *this is deprecated -- do not use for new documents*
+- 256-bit AES encryption (method `AES256`) in Acrobat 9 (PDF 1.7) -
+  *this is deprecated - do not use for new documents*
 
 - 256-bit AES encryption (method `AES256ISO`) in Acrobat 9 (PDF 1.7) and
   later. Also suitable for PDF 2.0.
