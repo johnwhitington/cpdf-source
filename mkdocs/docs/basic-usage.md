@@ -94,7 +94,7 @@ pages. Here are the rules for building input ranges:
   end of a page range to restrict to just those pages which are portrait
   or landscape. Note that the meaning of "portrait" and "landscape" does
   not take account of any viewing rotation in place (use `-upright` from
-  chapter 3 first, if required). A page with equal width and height is
+  [Pages](pages.md) first, if required). A page with equal width and height is
   considered neither portrait nor landscape.
 
 - The word `reverse` is the same as `end-1`.
@@ -168,7 +168,7 @@ case, add the `-recrypt` option:
 
 The password required (owner or user) depends upon the operation being
 performed. Separate facilities are provided to decrypt and encrypt files
-(See Section FIXME).
+(See [Encryption and Decryption](encryption-and-decryption.md)).
 
 When appropriate passwords are not available, the option
 `-decrypt-force` may be added to the command line to process the file
@@ -214,8 +214,9 @@ is achieved with the `>` operator:
 
 `cpdf -info in.pdf > file.txt`
 
-Use the `-info` operation (See Section FIXME), redirecting the
-output to `file.txt`.
+Use the `-info` operation (See [Document Information and
+Metadata](document-information-and-metadata.md)), redirecting the output to
+`file.txt`.
 
 ## Doing Several Things at Once with AND
 
@@ -306,13 +307,13 @@ writing the output to `out.pdf`.
 
 ## PDF Version Numbers
 
-When an operation which uses a part of the PDF standard which was
-introduced in a later version than that of the input file, the PDF
-version in the output file is set to the later version (most PDF viewers
-will try to load any PDF file, even if it is marked with a later version
-number). However, this automatic version changing may be suppressed with
-the `-keep-version` option. If you wish to manually alter the PDF
-version of a file, use the `-set-version` operation described in Section FIXME.
+When an operation which uses a part of the PDF standard which was introduced in
+a later version than that of the input file, the PDF version in the output file
+is set to the later version (most PDF viewers will try to load any PDF file,
+even if it is marked with a later version number). However, this automatic
+version changing may be suppressed with the `-keep-version` option. If you wish
+to manually alter the PDF version of a file, use the `-set-version` operation
+described in [Miscellaneous](miscellaneous.md).
 
 ## File IDs
 
@@ -431,18 +432,18 @@ section of the command line). This will use certain shortcuts which
 speed up processing, but would fail on a minority of pre-ISO files. The
 `-fast` option may be used with:
 
-Chapter FIXME
+[Pages](pages.md)
 
     -rotate-contents -upright -vflip -hflip
     -shift -scale-page -scale-to-fit -scale-contents -center-to-fit -stretch
     -show-boxes -hard-box -trim-marks
 
-Chapter FIXME
+[Text and Stamps](text-and-stamps.md)
 
     -add-text -add-rectangle
     -stamp-on -stamp-under -combine-pages
 
-Chapter FIXME
+[Multipage facilities](multipage-facilities.md)
 
     -impose -impose-xy -twoup -twoup-stack
 

@@ -102,10 +102,10 @@ Here is a typical fragment:
       ],
     ...
 
-This JSON file contains the structure tree objects from the file, using
-the format described in chapter FIXME. There is a special entry in object `0` which gives
-the key to the page object numbers. In this example, there is one page
-with object number `52`.
+This JSON file contains the structure tree objects from the file, using the
+format described in [PDF and JSON](PDF-and-JSON.md). There is a special entry
+in object `0` which gives the key to the page object numbers. In this example,
+there is one page with object number `52`.
 
 This JSON file can be edited, for example to change text strings, and
 reapplied to the same file from which it was extracted:
@@ -235,9 +235,10 @@ To remove such a marker we can use, for example:
 
 ## Merging and splitting PDF/UA files
 
-The `-process-struct-trees` option should always be used in conjunction
-with any splitting or merging command to preserve PDF/UA compliance.
-Sometimes `-subformat` may be required too. Details are given in chapter FIXME.
+The `-process-struct-trees` option should always be used in conjunction with
+any splitting or merging command to preserve PDF/UA compliance.  Sometimes
+`-subformat` may be required too. Details are given in [Merging and
+Splitting](merging-and-splitting.md).
 
 ## Creating new PDF/UA files
 
@@ -268,7 +269,7 @@ PDF/UA-2 version of our file:
 
 `cpdf -create-pdf-ua-2 "Hello" AND -embed-std14 /path/to/fonts -draw-struct-tree -draw -namespace PDF2 -stag Document -namespace PDF -bt -text "Hello, World" -et -end-stag -o out.pdf`
 
-See chapter FIXME for more details about adding structure information when
+See [Drawing on PDFs](drawing-on-PDFs.md) for more details about adding structure information when
 drawing.
 
 ## Remediation of PDF/UA verification errors
@@ -283,10 +284,10 @@ extremes.
 
 When all else fails, it may be possible to modify the basic structures of the
 PDF manually. This may be done by extracting the PDF to JSON using
-`-output-json` from chapter FIXME, modifying the file manually in a text editor
-or automatically with a JSON processing tool such as `jq` and converting back
-to a PDF with `-j`. If the remediation requires altering page content streams,
-the option `-output-json-parse-content-streams` may be used.
+`-output-json` [PDF and JSON](PDF-and-JSON.md), modifying the file manually in
+a text editor or automatically with a JSON processing tool such as `jq` and
+converting back to a PDF with `-j`. If the remediation requires altering page
+content streams, the option `-output-json-parse-content-streams` may be used.
 
 ### Remediation List
 
