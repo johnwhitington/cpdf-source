@@ -79,7 +79,7 @@ form, rather than resolving it to a destination (see below).
 
 See [PDF and JSON](PDF-and-JSON.md) for more details of Cpdf's JSON formatting. There are two
 differences here: bookmark text is always UTF8, and the numbers for
-`level` and `page` are plain, rather than begin surrounded with
+`level` and `page` are plain, rather than being surrounded with
 ` { "I": }`.
 
 ### Destinations
@@ -184,7 +184,7 @@ document's bookmarks. To suppress this behaviour, add
 
 To create a structure tree for the table of contents, and merge it with the
 existing one (for example, when adding a table of contents to a PDF/UA file),
-add `-process-struct-trees` to the command. For PDF/UA-2, add also `-subformat
-"PDF/UA-2"`. You may also need `-embed-std14` as described in [Font and
+add `-process-struct-trees` to the command. For PDF/UA-2, add also `-subformat "PDF/UA-2"`.
+You may also need `-embed-std14` as described in [Font and
 Size](text-and-stamps.md#font-and-size), since fully-embedded fonts are a
 requirement of some PDF subformats.

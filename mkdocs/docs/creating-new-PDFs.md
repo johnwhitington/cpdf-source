@@ -57,7 +57,7 @@ To produce a PDF in PDF/UA-1 or PDF/UA-2 format add, say,
 
 The font may be specified as described in [Font and
 Size](text-and-stamps.md#font-and-size). The default font is Times-Roman and
-the default size is 12. [Text and Stamps](text-and-stamps.md) for `-color`,
+the default size is 12. See [Text and Stamps](text-and-stamps.md) for `-color`,
 `-opacity`, `-line-spacing`, `-outline`, and `-linewidth`.
 
 ## Make a PDF from a PNG, JPEG or JPEG2000 image

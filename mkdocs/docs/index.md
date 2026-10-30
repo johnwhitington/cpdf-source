@@ -8,7 +8,7 @@ For bug reports, feature requests and comments, email [contact@coherentgraphics.
 
 The Coherent PDF tools provide a wide range of facilities for modifying
 PDF files created by other means. There is a single command-line program
-Cpdf (`cpdf.exe` under Microsoft Windows). The rest of this manual
+`cpdf` (`cpdf.exe` under Microsoft Windows). The rest of this manual
 describes the options that may be given to this program.
 
 ## Quickstart Examples
@@ -149,7 +149,7 @@ transition effect.
 > Stamp the file `watermark.pdf` on to each page of `in.pdf`, writing the
 result to `out.pdf`.
 
-`cpdf -topleft 10 -font Courier -add-text "Page \%Page\nDate \%d-\%m-\%Y" in.pdf -o out.pdf`
+`cpdf -topleft 10 -font Courier -add-text "Page %Page\nDate %d-%m-%Y" in.pdf -o out.pdf`
 
 > Add a page number and date to all the pages in `in.pdf` using the
 Courier font, writing to `out.pdf`.
@@ -327,7 +327,7 @@ with OCGs with like names.
 > Verify `in.pdf` for conformance to PDF/UA-1 using the Matterhorn
 protocol, returning results in JSON format.
 
-### [Chapter 20: Redaction](redaction.md)
+### [Redaction](redaction.md)
 
 `cpdf -redact-shape "100 200 200 300" in.pdf 1 -o out.pdf`
 
@@ -337,7 +337,7 @@ protocol, returning results in JSON format.
 
 > Apply redaction annotations.
 
-### [Chapter 21: Miscellaneous](miscellaneous.md)
+### [Miscellaneous](miscellaneous.md)
 
 `cpdf -blacktext in.pdf -o out.pdf`
 

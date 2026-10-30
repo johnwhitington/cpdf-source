@@ -238,44 +238,44 @@ When measurements are given to Cpdf, they are in points (1 point = 1/72
 inch). They may optionally be followed by some letters to change the
 measurement. The following are supported:
 
-    `pt` Points (72 points per inch). The default.
-    `cm` Centimeters
-    `mm` Millimeters
-    `in` Inches
+    pt Points (72 points per inch). The default.
+    cm Centimeters
+    mm Millimeters
+    in Inches
 
 For example, one may write `14mm` or `21.6in`. In addition, the
 following letters stand for various page dimensions:
 
-       `PW` Page width
-       `PH` Page height
-    `PMINX` Page minimum x coordinate
-    `PMINY` Page minimum y coordinate
-    `PMAXX` Page maximum x coordinate
-    `PMAXY` Page maximum y coordinate
-       `CW` Crop box width
-       `CH` Crop box height
-    `CMINX` Crop box minimum x coordinate
-    `CMINY` Crop box minimum y coordinate
-    `CMAXX` Crop box maximum x coordinate
-    `CMAXY` Crop box maximum y coordinate
-       `AW` Art box width
-       `AH` Art box height
-    `AMINX` Art box minimum x coordinate
-    `AMINY` Art box minimum y coordinate
-    `AMAXX` Art box maximum x coordinate
-    `AMAXY` Art box maximum y coordinate
-       `TW` Trim box width
-       `TH` Trim box height
-    `TMINX` Trim box minimum x coordinate
-    `TMINY` Trim box minimum y coordinate
-    `TMAXX` Trim box maximum x coordinate
-    `TMAXY` Trim box maximum y coordinate
-       `BW` Bleed box width
-       `BH` Bleed box height
-    `BMINX` Bleed box minimum x coordinate
-    `BMINY` Bleed box minimum y coordinate
-    `BMAXX` Bleed box maximum x coordinate
-    `BMAXY` Bleed box maximum y coordinate
+       PW Page width
+       PH Page height
+    PMINX Page minimum x coordinate
+    PMINY Page minimum y coordinate
+    PMAXX Page maximum x coordinate
+    PMAXY Page maximum y coordinate
+       CW Crop box width
+       CH Crop box height
+    CMINX Crop box minimum x coordinate
+    CMINY Crop box minimum y coordinate
+    CMAXX Crop box maximum x coordinate
+    CMAXY Crop box maximum y coordinate
+       AW Art box width
+       AH Art box height
+    AMINX Art box minimum x coordinate
+    AMINY Art box minimum y coordinate
+    AMAXX Art box maximum x coordinate
+    AMAXY Art box maximum y coordinate
+       TW Trim box width
+       TH Trim box height
+    TMINX Trim box minimum x coordinate
+    TMINY Trim box minimum y coordinate
+    TMAXX Trim box maximum x coordinate
+    TMAXY Trim box maximum y coordinate
+       BW Bleed box width
+       BH Bleed box height
+    BMINX Bleed box minimum x coordinate
+    BMINY Bleed box minimum y coordinate
+    BMAXX Bleed box maximum x coordinate
+    BMAXY Bleed box maximum y coordinate
 
 For example, we may write `PMINX PMINY` to stand for the coordinate of
 the lower left corner of the page.
@@ -385,10 +385,10 @@ attempts to correct these problems silently.
 Grossly malformed files will be reconstructed. The reconstruction
 progress is shown on `stderr` (Standard Error):
 
-    $cpdf in.pdf -o out.pdf`
-    couldn't lex object number`
-    Attempting to reconstruct the malformed pdf in.pdf...`
-    Read 5530 objects`
+    $cpdf in.pdf -o out.pdf
+    couldn't lex object number
+    Attempting to reconstruct the malformed pdf in.pdf...
+    Read 5530 objects
     Malformed PDF reconstruction succeeded!
 
 In the unlikely event that Cpdf cannot reconstruct a malformed file, it

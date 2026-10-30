@@ -105,13 +105,13 @@ If the output format does not provide enough numbers for the files
 generated, the result is unspecified. The following format operators may
 be used:
 
-    `%, %%, %%% etc.`  Sequence number padded to the number of percent signs
-    `@F`               Original filename without extension
-    `@N`               Sequence number without padding zeroes
-    `@S`               Start page of this chunk
-    `@E`               End page of this chunk
-    `@B`               Bookmark name at this page, if any.
-    `@b<w>@`           Bookmark name at this page, if any, truncated to `<w>` characters.
+    %, %%, %%% etc.   Sequence number padded to the number of percent signs
+    @F                Original filename without extension
+    @N                Sequence number without padding zeroes
+    @S                Start page of this chunk
+    @E                End page of this chunk
+    @B                Bookmark name at this page, if any.
+    @b<w>@            Bookmark name at this page, if any, truncated to <w> characters.
 
 Numbers padded to a fixed width field by zeroes may be obtained for `@S`
 and `@E` by following them with more `@` signs e.g `@E@@@` for a fixed

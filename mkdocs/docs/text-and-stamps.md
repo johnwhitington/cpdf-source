@@ -38,7 +38,7 @@
 
     cpdf -stamp-as-xobject stamp.pdf in.pdf [<range>] -o out.pdf
 
-    NB: See discussion of `-fast` in under Malformed Files in Basic Usage.
+    NB: See discussion of `-fast` under Malformed Files in Basic Usage.
 
 ## Add a Watermark or Logo
 
@@ -382,7 +382,7 @@ language to use these.
 
 `cpdf -postpend-content <content> in.pdf [<range>] -o out.pdf`
 
-The `-fast` option may be added (see Chapter 1). The `-stamp-as-xobject`
+The `-fast` option may be added (see [Basic Usage](basic-usage.md)). The `-stamp-as-xobject`
 operation puts a file in another as a Form XObject on the given pages.
 You can then use `-prepend-content` or `-postpend-content` to use it.
 

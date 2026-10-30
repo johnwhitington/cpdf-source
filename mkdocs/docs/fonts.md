@@ -4,7 +4,7 @@
 
     cpdf -print-font-table <font name> -print-font-table-page <n> in.pdf
 
-    cpdf -copy-font fromfile.pdf -copy-font-page <int>
+    cpdf -copy-font fromfile.pdf -copy-font-page <n>
          -copy-font-name <name> in.pdf [<range>] -o out.pdf
 
     cpdf -remove-fonts in.pdf -o out.pdf
