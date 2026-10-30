@@ -20,11 +20,11 @@
 
     Redaction application options:
 
-    -color <color> (see [Text and Stamps](text-and-stamps.md) for color specifications)
-    -opacity <n> (see [Text and Stamps](text-and-stamps.md)
-    -linewidth <n> (see [Text and Stamps](text-and-stamps.md))
-    -underneath (see [Text and Stamps](text-and-stamps.md))
-    -outline (see [Text and Stamps](text-and-stamps.md))
+    -color <color> (see Text and Stamps for color specifications)
+    -opacity <n> (see Text and Stamps)
+    -linewidth <n> (see Text and Stamps)
+    -underneath (see Text and Stamps)
+    -outline (see Text and Stamps)
     -jbig2dec <path> when chopping images only
     -jbig2enc <path> when chopping images only
     -magick <path> when chopping images only
@@ -42,11 +42,10 @@
 
     Redaction annotation creation options:
 
-    -redact-color <color> (see [Text and Stamps](text-and-stamps.md) for color specifications)
-    -redact-outline-color <color> (see [Text and Stamps](text-and-stamps.md))
-    -redact-text-color <color> (see [Text and Stamps](text-and-stamps.md))
-    -redact-opacity Opacity for redaction fill and outline (see below for
-    text opacity)
+    -redact-color <color> (see Text and Stamps for color specifications)
+    -redact-outline-color <color> (see Text and Stamps)
+    -redact-text-color <color> (see Text and Stamps)
+    -redact-opacity Opacity for redaction fill and outline (see below for text opacity)
     -redact-overlay <text>
     -redact-repeat
     -redact-auto-size
@@ -68,7 +67,7 @@ and page resources removed. The page dimensions remain the same.
 
 `cpdf -redact in.pdf 1,2,19-end -o out.pdf`
 
-Redact pages 1,2 and 19-end of `in.pdf`, writing to `out.pdf`
+> Redact pages 1,2 and 19-end of `in.pdf`, writing to `out.pdf`
 
 If `-redact-structure remove,all` is added to the command, the
 document's structure tree will be shorn of any parts which are marked as
@@ -84,7 +83,7 @@ rectangle) to be redacted in the given page range. For example:
 
 `cpdf -redact-shape "100 100 200 300" in.pdf 2 -o out.pdf`
 
-Redact rectangle on page 2 of `in.pdf`, writing to `out.pdf`
+> Redact rectangle on page 2 of `in.pdf`, writing to `out.pdf`
 
 The rectangle is given as "minx miny width height" as usual. What
 content is removed, and how it is detected and processed is defined by a
@@ -122,7 +121,7 @@ redactions:
 
 `cpdf -redact-apply in.pdf 2 out.pdf`
 
-Apply redaction annotations on page two of `in.pdf`, writing to
+> Apply redaction annotations on page two of `in.pdf`, writing to
 `out.pdf`
 
 The redaction application appearance options described above may be used
@@ -136,7 +135,7 @@ redaction rectangle:
 
 `cpdf -redact-apply-type /Square in.pdf 2 out.pdf`
 
-Apply Square (rectangle) annotations as if they were redaction
+> Apply Square (rectangle) annotations as if they were redaction
 annotations in `in.pdf`, writing to `out.pdf`
 
 As above, the redaction itself is controlled through the options as

@@ -74,7 +74,7 @@ For example:
 
 `cpdf -presentation in.pdf 2-end -trans Split -duration 10 -o out.pdf`
 
-The **Split** style, with vertical lines, and each slide staying ten
+> The **Split** style, with vertical lines, and each slide staying ten
 seconds unless manually advanced. The first page (being a title) does
 not move on automatically, and has no transition effect.
 

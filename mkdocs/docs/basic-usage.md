@@ -14,11 +14,6 @@
     -progress               -revision                -revisions
     -update
 
-The Coherent PDF tools provide a wide range of facilities for modifying
-PDF files created by other means. There is a single command-line program
-Cpdf (`cpdf.exe` under Microsoft Windows). The rest of this manual
-describes the options that may be given to this program.
-
 ## Documentation
 
 The operation `-help / --help` gives pointers to sources of
@@ -105,7 +100,7 @@ pages. Here are the rules for building input ranges:
 
 - Prepending `NOT` to a whole page range inverts it.
 
-- Prepending `<n>``DUP` to a whole page range duplicates each page of
+- Prepending `<n>DUP` to a whole page range duplicates each page of
   the range `<n>` times.
 
 - The range `annotated` includes in the output just such pages as
@@ -194,7 +189,7 @@ use of intermediate files. Use `-stdin` to read from standard input, and
 multiple programs, or multiple invocations of the same program. For
 example, this sequence of commands
 
-    `cpdf in.pdf reverse -stdout | cpdf -stdin 1-5 -stdout | cpdf -stdin reverse -o out.pdf`
+`cpdf in.pdf reverse -stdout | cpdf -stdin 1-5 -stdout | cpdf -stdin reverse -o out.pdf`
 
 extracts the last five pages of `in.pdf` in the correct order, writing
 them to `out.pdf`. It does this by reversing the input, taking the first
@@ -214,7 +209,7 @@ is achieved with the `>` operator:
 
 `cpdf -info in.pdf > file.txt`
 
-Use the `-info` operation (See [Document Information and
+> Use the `-info` operation (See [Document Information and
 Metadata](document-information-and-metadata.md)), redirecting the output to
 `file.txt`.
 
@@ -243,17 +238,14 @@ When measurements are given to Cpdf, they are in points (1 point = 1/72
 inch). They may optionally be followed by some letters to change the
 measurement. The following are supported:
 
-  ------ -------------------------------------------
     `pt` Points (72 points per inch). The default.
     `cm` Centimeters
     `mm` Millimeters
     `in` Inches
-  ------ -------------------------------------------
 
 For example, one may write `14mm` or `21.6in`. In addition, the
 following letters stand for various page dimensions:
 
-  --------- --------------------------------
        `PW` Page width
        `PH` Page height
     `PMINX` Page minimum x coordinate
@@ -284,9 +276,8 @@ following letters stand for various page dimensions:
     `BMINY` Bleed box minimum y coordinate
     `BMAXX` Bleed box maximum x coordinate
     `BMAXY` Bleed box maximum y coordinate
-  --------- --------------------------------
 
-For example, we may write `PMINX` `PMINY` to stand for the coordinate of
+For example, we may write `PMINX PMINY` to stand for the coordinate of
 the lower left corner of the page.
 
 Simple arithmetic may be performed using the words `add`, `sub`, `mul`
@@ -302,7 +293,7 @@ the original, the *producer* the program converting it to PDF.
 
 `cpdf -merge in.pdf in2.pdf -producer MyMerger -o out.pdf`
 
-Merge `in.pdf` and `in2.pdf`, setting the producer to `MyMerger` and
+> Merge `in.pdf` and `in2.pdf`, setting the producer to `MyMerger` and
 writing the output to `out.pdf`.
 
 ## PDF Version Numbers
@@ -323,7 +314,7 @@ systems to uniquely identify a file. To change the ID, behavior, use the
 
 `cpdf -change-id in.pdf -o out.pdf`
 
-Write `in.pdf` to `out.pdf`, changing the ID.
+> Write `in.pdf` to `out.pdf`, changing the ID.
 
 Setting the environment variable `CAMLPDF_REPRODUCIBLE_IDS` to `true`
 will use a standard value instead of generating one.
@@ -339,7 +330,7 @@ command being used. For example:
 
 `cpdf -l in.pdf -o out.pdf`
 
-Linearize the file `in.pdf`, writing to `out.pdf`.
+> Linearize the file `in.pdf`, writing to `out.pdf`.
 
 This requires the existence of an external linearize such as `qpdf`. If
 you are unable to install the linearizer, you must use `-cpdflin` to let
@@ -347,7 +338,7 @@ Cpdf know where to find it:
 
 `cpdf.exe -cpdflin "C:\\qpdf.exe" -l in.pdf -o out.pdf`
 
-Linearize the file `in.pdf`, writing to `out.pdf`.
+> Linearize the file `in.pdf`, writing to `out.pdf`.
 
 In extremis, you may place the linearizer and its resources in the
 current working directory, though this is not recommended.
@@ -365,14 +356,14 @@ streams, use `-no-preserve-objstm`:
 
 `cpdf -no-preserve-objstm in.pdf -o out.pdf`
 
-Write the file `in.pdf` to `out.pdf`, removing any object streams.
+> Write the file `in.pdf` to `out.pdf`, removing any object streams.
 
 To create new object streams if none exist, or augment the existing
 ones, use `-create-objstm`:
 
 `cpdf -create-objstm in.pdf -o out.pdf`
 
-Write the file `in.pdf` to `out.pdf`, preserving any existing object
+> Write the file `in.pdf` to `out.pdf`, preserving any existing object
 streams, and creating any new ones for new objects which have been
 added.
 
@@ -380,7 +371,7 @@ To create wholly new object streams, use both options together:
 
 `cpdf -create-objstm -no-preserve-objstm in.pdf -o out.pdf`
 
-Write the file `in.pdf` to `out.pdf` with wholly new object streams.
+> Write the file `in.pdf` to `out.pdf` with wholly new object streams.
 
 Files written with object streams will be set to PDF 1.5 or higher,
 unless `-keep-version` is used (see above).

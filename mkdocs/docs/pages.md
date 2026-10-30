@@ -213,7 +213,7 @@ properly only when the origin is (0, 0).
 
 The `-hflip` and `-vflip` operations flip the contents of the chosen
 pages horizontally or vertically. No account is taken of the current
-page rotation when considering what \"horizontally\" and \"vertically\"
+page rotation when considering what "horizontally" and "vertically"
 mean, so you may like to use `-upright` (see above) first.
 
 `cpdf -hflip in.pdf even -o out.pdf`
@@ -249,7 +249,7 @@ To remove any existing crop box, use `-remove-cropbox`.
 
 `cpdf -cropbox "0pt 0pt 200mm 200mm" in.pdf -o out.pdf`
 
-Crop pages to the bottom left 200-millimeter square of the page.
+> Crop pages to the bottom left 200-millimeter square of the page.
 
 `cpdf -remove-cropbox in.pdf -o out.pdf`
 

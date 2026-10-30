@@ -8,7 +8,7 @@
 
     cpdf -sig-info [-json] in.pdf
 
-    cpdf -set-title \<title of document\>
+    cpdf -set-title <title of document>
          [-also-set-xmp] [-just-set-xmp] in.pdf -o out.pdf
     (Also -set-author etc.)
 
@@ -314,8 +314,8 @@ from [Miscellaneous](miscellaneous.md):
 You can see if the file has such an open action by referring to the
 output of `-info`.
 
-NB: The initial view displayed by the dialog box File $\rightarrow$
-Properties $\rightarrow$ Initial View in Adobe Reader / Acrobat may not
+NB: The initial view displayed by the dialog box File ->
+Properties -> Initial View in Adobe Reader / Acrobat may not
 reflect exactly the options here. The options here set the flags within
 the PDF - Adobe products may show different wording.
 
@@ -331,8 +331,8 @@ when a document is opened in, for instance, Acrobat. The possible
 | `OneColumn`     |   Display the pages in one column |
 |  `TwoColumnLeft`|    Display the pages in two columns, odd numbered pages on the left |
 |  `TwoColumnRight`|   Display the pages in two columns, even numbered pages on the left |
-|  `TwoPageLeft`    |  (PDF 1.5 and above) Display the pages two at a time, odd numbered pages on the left |
-|  `TwoPageRight`   |  (PDF 1.5 and above) Display the pages two at a time, even numbered pages on the left |
+|  `TwoPageLeft`    |  Display the pages two at a time, odd numbered pages on the left |
+|  `TwoPageRight`   |  Display the pages two at a time, even numbered pages on the left |
 
 For instance:
 
@@ -349,8 +349,8 @@ document when first opened. The possible (case-sensitive) values are:
 |  `UseOutlines`  |    Document outline (bookmarks) visible |
 | `UseThumbs`     |   Thumbnail images visible |
 |  `FullScreen`   |    Full-screen mode (no menu bar, window controls, or anything but the document visible) |
-|  `UseOC`        |    (PDF 1.5 and above) Optional content group panel visible |
-|  `UseAttachments`|   (PDF 1.5 and above) Attachments panel visible |
+|  `UseOC`        |    Optional content group panel visible |
+|  `UseAttachments`|   Attachments panel visible |
 
 For instance:
 
@@ -394,7 +394,7 @@ To have that page scaled to fit the window in the viewer, use
 describing a single page is ok here.)
 
 Alternatively, we may specify a full destination, of the kind described
-on page :
+in [Bookmarks](bookmarks.md):
 
 `cpdf -open-at-page-custom "[3 /FitR 100 100 300 300]" in.pdf -o out.pdf`
 

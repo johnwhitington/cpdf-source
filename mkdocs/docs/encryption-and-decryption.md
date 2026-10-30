@@ -1,7 +1,7 @@
 # Encryption and Decryption
 
     cpdf -encrypt <method> [-pw=]<owner> [-pw=]<user>  
-    [-no-encrypt-metadata] <permissions> in.pdf -o out.pdf
+         [-no-encrypt-metadata] <permissions> in.pdf -o out.pdf
 
     cpdf -decrypt [-decrypt-force] in.pdf owner=<owner password> -o out.pdf
 
@@ -51,7 +51,7 @@ supports these:
 Add these options to the command line to prevent each operation.
 
 *Note: Adobe Acrobat and Adobe Reader may show slightly different
-permissions in info dialogues -- this is a result of policy changes and
+permissions in info dialogues - this is a result of policy changes and
 not a bug in Cpdf. You may need to experiment.*
 
 ## Encrypting a Document

@@ -38,7 +38,7 @@
 
     cpdf -stamp-as-xobject stamp.pdf in.pdf [<range>] -o out.pdf
 
-    NB: See discussion of `-fast` in [Malformed Files](basic-usage.md#malformed-files).
+    NB: See discussion of `-fast` in under Malformed Files in Basic Usage.
 
 ## Add a Watermark or Logo
 
@@ -149,19 +149,19 @@ document.
 |  `%A` |  Full weekday name (Sunday, Monday etc.) |
 |  `%b` |  Abbreviated month name (Jan, Feb etc.) |
 |  `%B` |  Full month name (January, February etc.) |
-|  `%d` |  Day of the month (01--31) |
-| `%e`  | Day of the month (1--31) |
-|  `%H` |  Hour in 24-hour clock (00--23) |
-|  `%I` |  Hour in 12-hour clock (01--12) |
-|  `%j` |  Day of the year (001--366) |
-|  `%m` |  Month of the year (01--12) |
-|  `%M` |  Minute of the hour (00--59) |
+|  `%d` |  Day of the month (01-31) |
+| `%e`  | Day of the month (1-31) |
+|  `%H` |  Hour in 24-hour clock (00-23) |
+|  `%I` |  Hour in 12-hour clock (01-12) |
+|  `%j` |  Day of the year (001-366) |
+|  `%m` |  Month of the year (01-12) |
+|  `%M` |  Minute of the hour (00-59) |
 |  `%p` |  "a.m" or "p.m" |
-|  `%S` |  Second of the minute (00--61) |
+|  `%S` |  Second of the minute (00-61) |
 |  `%T` |  Same as `%H:%M:%S` |
-|  `%u` |  Weekday (1--7, 1 = Sunday) |
-|  `%w` |  Weekday (0--6, 0 = Sunday) |
-|  `%Y` |  Year (0000--9999) |
+|  `%u` |  Weekday (1-7, 1 = Sunday) |
+|  `%w` |  Weekday (0-6, 0 = Sunday) |
+|  `%Y` |  Year (0000-9999) |
 |  `%%` |  The % character. |
 
 ### Bates Numbers
@@ -314,7 +314,7 @@ baseline of the first line of text (if the position is at the top, top
 left or top right of the page) or the baseline of the last line of text
 (if the position is at the bottom, bottom left or bottom right).
 
-    cpdf -add-text "Specification\n%Page of %EndPage" -topright 10 in.pdf -o out.pdf
+`cpdf -add-text "Specification\n%Page of %EndPage" -topright 10 in.pdf -o out.pdf`
 
 The `-midline` option may be used to make these vertical positions
 relative to the midline of a line of text rather than the baseline, as
@@ -323,7 +323,7 @@ usual.
 The `-line-spacing` option can be used to increase or decrease the line
 spacing, where a spacing of 1 is the standard.
 
-    cpdf -add-text "Specification\n%Page of %EndPage" -topright 10 -line-spacing 1.5 in.pdf -o out.pdf
+`cpdf -add-text "Specification\n%Page of %EndPage" -topright 10 -line-spacing 1.5 in.pdf -o out.pdf`
 
 Justification of multiple lines is handled by the `-justify-left`,
 `-justify-right` and`-justify-center` options. The defaults are left
@@ -332,7 +332,7 @@ right justification for those relative to the right, and center
 justification for positions relative to the center of the page. For
 example:
 
-    cpdf -add-text "Long line\nShort" -justify-right in.pdf -o out.pdf
+`cpdf -add-text "Long line\nShort" -justify-right in.pdf -o out.pdf`
 
 NB: The `-justify-` option must be after the position (e.g `-top-left`)
 option since positions will reset default justification. Diagonal text

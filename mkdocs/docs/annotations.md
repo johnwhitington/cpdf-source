@@ -10,7 +10,8 @@
 
     cpdf -remove-annotations in.pdf [<range>] -o out.pdf
 
-    cpdf -flatten-annotations in.pdf [<range>] [-annot-type <subtypes> | -annot-no-type <subtypes>] -o out.pdf
+    cpdf -flatten-annotations in.pdf [<range>]
+         [-annot-type <subtypes> | -annot-no-type <subtypes>] -o out.pdf
 
 ## Listing Annotations
 

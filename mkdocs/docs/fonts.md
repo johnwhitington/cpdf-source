@@ -126,7 +126,7 @@ the name `/F10` on page 1 (this information can be found with
 `-list-fonts`), the following would copy the font to the file `in.pdf`
 on all pages, writing the output to `out.pdf`:
 
-`cpdf -copy-font fromfile.pdf -copy-font-name /F10` -copy-font-page 1 in.pdf -o out.pdf`
+`cpdf -copy-font fromfile.pdf -copy-font-name /F10 -copy-font-page 1 in.pdf -o out.pdf`
 
 Text in this font can then be added by giving `-font /GHLIGA+c128`. Be
 aware that due to the vagaries of PDF font handling concerning which

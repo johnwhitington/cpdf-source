@@ -122,7 +122,7 @@ thickness. For example:
 
 `cpdf -thinlines 0.2mm in.pdf [<range>] -o out.pdf`
 
-Thicken all lines less than 0.2mm to that value.
+> Thicken all lines less than 0.2mm to that value.
 
 A negative value will instead thin lines to the absolute of the value
 given. By processing twice, with a positive then negative figure, it is
@@ -201,8 +201,7 @@ entry:
 > Remove the entry for `/One` in every dictionary `in.pdf`, writing to
 `out.pdf`.
 
-`cpdf -remove-dict-entry /One -dict-entry-search "\{I : 1\}"`\
-`     in.pdf -o out.pdf`
+`cpdf -remove-dict-entry /One -dict-entry-search "\{I : 1\}" in.pdf -o out.pdf`
 
 > Replace the entry for `/One` in every dictionary `in.pdf` if the key's
 value is the given CPDFJSON value, writing to `out.pdf`. Alternatively,
@@ -211,14 +210,12 @@ prefix `PDF` to give the value in PDF format.
 To replace a dictionary entry, give the replacement value in JSON or
 format:
 
-`cpdf -replace-dict-entry /One -replace-dict-entry-value "PDF2"`\
-`     in.pdf -o out.pdf`
+`cpdf -replace-dict-entry /One -replace-dict-entry-value "PDF2" in.pdf -o out.pdf`
 
 > Remove the entry for `/One` in every dictionary `in.pdf`, writing to
 `out.pdf`.
 
-`cpdf -replace-dict-entry /One -dict-entry-search "\{I : 1\}"`\
-`     -replace-dict-entry-value "\{I : 2\}" in.pdf -o out.pdf`
+`cpdf -replace-dict-entry /One -dict-entry-search "\{I : 1\}" -replace-dict-entry-value "\{I : 2\}" in.pdf -o out.pdf`
 
 > Remove the entry for `/One` in every dictionary `in.pdf` if the key's
 value is the given value, writing to `out.pdf`.

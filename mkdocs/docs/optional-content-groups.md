@@ -6,7 +6,7 @@
 
     cpdf -ocg-replace in.json in.pdf -o out.pdf
 
-    cpdf -ocg-rename -ocg-rename-from <\a> -ocg-rename-to <\b> in.pdf -o out.pdf
+    cpdf -ocg-rename -ocg-rename-from <a> -ocg-rename-to <b> in.pdf -o out.pdf
 
     cpdf -ocg-remove in.pdf -o out.pdf
 

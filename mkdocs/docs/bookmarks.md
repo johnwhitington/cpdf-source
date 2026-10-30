@@ -30,7 +30,7 @@ The `-list-bookmarks` operation prints (to standard output) the
 bookmarks in a file. The first column gives the level of the tree at
 which a particular bookmark is. Then the text of the bookmark in quotes.
 Then the page number which the bookmark points to. Then (optionally) the
-word \"open\" if the bookmark should have its children (at the level
+word "open" if the bookmark should have its children (at the level
 immediately below) visible when the file is loaded. Then the destination
 (see below). For example, upon executing
 

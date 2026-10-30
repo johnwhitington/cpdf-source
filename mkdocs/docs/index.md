@@ -6,6 +6,11 @@ Version 2.9.3 (October 2026)
 
 For bug reports, feature requests and comments, email [contact@coherentgraphics.co.uk](mailto:contact@coherentgraphics.co.uk)
 
+The Coherent PDF tools provide a wide range of facilities for modifying
+PDF files created by other means. There is a single command-line program
+Cpdf (`cpdf.exe` under Microsoft Windows). The rest of this manual
+describes the options that may be given to this program.
+
 ## Quickstart Examples
 
 These examples demonstrate just a few of the facilities provided by the
@@ -24,7 +29,7 @@ full details.
 > Select the even pages (2, 4, 6...) from `in.pdf` and write those pages
 to `out.pdf`.
 
-`cpdf -merge in.pdf in2.pdf AND -add-text "Copyright 2024" -o out.pdf`
+`cpdf -merge in.pdf in2.pdf AND -add-text "Copyright 2026" -o out.pdf`
 
 > Using `AND` to perform several operations in order, here merging two
 files together and adding a copyright stamp to every page.
@@ -326,7 +331,11 @@ protocol, returning results in JSON format.
 
 `cpdf -redact-shape "100 200 200 300" in.pdf 1 -o out.pdf`
 
-> Redact text on page one of `in.pdf`, writing to `out.pdf`.
+> Redact text in the given rectangle on page one of `in.pdf`, writing to `out.pdf`.
+
+`cpdf -redact-apply in.pdf -o out.pdf`
+
+> Apply redaction annotations.
 
 ### [Chapter 21: Miscellaneous](miscellaneous.md)
 

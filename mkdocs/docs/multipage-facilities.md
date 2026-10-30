@@ -78,8 +78,8 @@ by Cpdf:
 - the `-impose` operation which, given a page size fits multiple pages
   into it; and
 
-- the `-impose-xy` operation which, given an $x$ and $y$ value, builds
-  an output page which fits $x$ input pages horizontally and $y$ input
+- the `-impose-xy` operation which, given an x and y value, builds
+  an output page which fits x input pages horizontally and y input
   pages vertically.
 
 `cpdf -impose a0landscape in.pdf -o out.pdf`

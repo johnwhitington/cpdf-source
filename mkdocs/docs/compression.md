@@ -5,7 +5,7 @@
     cpdf -compress in.pdf -o out.pdf
 
     cpdf -squeeze in.pdf [-squeeze-log-to <filename>]  
-    [-squeeze-no-recompress] [-squeeze-no-pagedata] -o out.pdf
+         [-squeeze-no-recompress] [-squeeze-no-pagedata] -o out.pdf
 
     cpdf -remove-article-threads in.pdf -o out.pdf 
     cpdf -remove-page-piece in.pdf -o out.pdf  

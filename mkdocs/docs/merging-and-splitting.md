@@ -1,8 +1,13 @@
 # Merging and Splitting
 
-    cpdf -merge in1.pdf [<range>] in2.pdf [<range>] [<more names/ranges>] [-collate] [-collate-n <n>] [-retain-numbering] [-merge-add-bookmarks [-merge-add-bookmarks-use-titles]] [-remove-duplicate-fonts] [-process-struct-trees] [-subformat <subformat>] -o out.pdf
+    cpdf -merge in1.pdf [<range>] in2.pdf [<range>] [<more names/ranges>]
+         [-collate] [-collate-n <n>] [-retain-numbering]
+         [-merge-add-bookmarks [-merge-add-bookmarks-use-titles]]
+         [-remove-duplicate-fonts] [-process-struct-trees] [-subformat <subformat>]
+         -o out.pdf
 
-    cpdf -portfolio in.pdf -pf <filename> [-pfd <string>] [-pfr <relationship>] [-pf ...] -o out.pdf
+    cpdf -portfolio in.pdf -pf <filename>
+         [-pfd <string>] [-pfr <relationship>] [-pf ...] -o out.pdf
 
     cpdf -split in.pdf [-chunk <chunksize>] [-process-struct-trees] [-utf8] -o <format>
 
@@ -22,12 +27,12 @@ input pages in the order specified on the command line. Actually, the
 
 `cpdf -merge a.pdf 1 b.pdf 2-end -o out.pdf`
 
-Take page one of `a.pdf` and all but the first page of `b.pdf`, merge
+> Take page one of `a.pdf` and all but the first page of `b.pdf`, merge
 them and produce `out.pdf`.
 
 `cpdf -merge -idir files -o out.pdf`
 
-Merge all files from directory `files`, producing `out.pdf`.
+> Merge all files from directory `files`, producing `out.pdf`.
 
 Merge maintains and merges bookmarks, named destinations, annotations,
 tagged PDF information, and so on. PDF features which cannot be merged
@@ -68,7 +73,7 @@ and a JPEG:
 
 `cpdf -create-pdf AND -portfolio -pf one.pdf -pf two.jpeg -o out.pdf`
 
-Build a PDF portfolio with two files: `one.pdf` and `two.jpeg`, writing
+> Build a PDF portfolio with two files: `one.pdf` and `two.jpeg`, writing
 to `out.pdf`.
 
 When opened in a supporting PDF viewer, such as Adobe Reader, a
@@ -88,11 +93,11 @@ output file to be set.
 
 `cpdf -split a.pdf -o out%%%.pdf`
 
-Split `a.pdf` to the files `out001.pdf`, `out002.pdf` etc.
+> Split `a.pdf` to the files `out001.pdf`, `out002.pdf` etc.
 
 `cpdf a.pdf even AND -split -chunk 10 -o dir/out%%%.pdf`
 
-Split the even pages of `a.pdf` to the files `out001.pdf`, `out002.pdf`
+> Split the even pages of `a.pdf` to the files `out001.pdf`, `out002.pdf`
 etc. with at most ten pages in each file. The directory (folder) `dir`
 must exist.
 
@@ -125,7 +130,7 @@ level 0 and level 1 boundaries.
 
 `cpdf -split-bookmarks 0 a.pdf -o out%%%.pdf`
 
-Split `a.pdf` to the files `out001.pdf`, `out002.pdf` on bookmark
+> Split `a.pdf` to the files `out001.pdf`, `out002.pdf` on bookmark
 boundaries.
 
 There may be many bookmarks on a single page (for instance, if
@@ -137,7 +142,7 @@ bookmark:
 
 `cpdf -split-bookmarks 0 a.pdf -o @B.pdf`
 
-Split `a.pdf` on bookmark boundaries, using the bookmark text as the
+> Split `a.pdf` on bookmark boundaries, using the bookmark text as the
 filename.
 
 The bookmark text used for a name has the following characters are
@@ -150,7 +155,7 @@ The bookmark may be truncated by using the `@b` variant:
 
 `cpdf -split-bookmarks 0 a.pdf -o @b10@.pdf`
 
-Split `a.pdf` on bookmark boundaries, using the first 10 characters of
+> Split `a.pdf` on bookmark boundaries, using the first 10 characters of
 bookmark text as the filename.
 
 ## Splitting to Maximum Size
@@ -173,7 +178,7 @@ pages in turn to one or more outputs:
 
 `cpdf -spray in.pdf -o a.pdf -o b.pdf`
 
-Place odd pages of the input file in one file, and the even in another.
+> Place odd pages of the input file in one file, and the even in another.
 
 This is the only time more than one `-o` is allowed.
 
