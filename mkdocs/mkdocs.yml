@@ -1,4 +1,6 @@
 site_name: Cpdf
+markdown_extensions:
+  - attr_list
 theme:
   name: readthedocs
   highlightjs: false

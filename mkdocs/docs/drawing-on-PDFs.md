@@ -2,109 +2,108 @@
 
 ## Summary
 
-    cpdf in.pdf [<range>] [-draw-struct-tree] [-underneath] -draw <draw operations> -o out.pdf
+    cpdf in.pdf [<range>] [-draw-struct-tree] [-underneath]
+         -draw <draw operations> -o out.pdf
 
     cpdf -text-width <text> [-font <font>] [-fontsize <fontsize>]
 
 Building and showing paths:
 
-    -rect Draw rectangle
-    -to Move to
-    -line Add line to path
-    -bez Add Bezier curve to path
-    -bez23 Add Bezier curve to path
-    -bez13 Add Bezier curve to path
-    -circle Add circle to path
-    -stroke Stroke path
-    -fill Fill path
-    -filleo Fill path, even odd
-    -strokefill Stroke and fill path
-    -strokefilleo Stroke and fill path, even odd
-    -close Close path
+    -rect           Draw rectangle
+    -to             Move to
+    -line           Add line to path
+    -bez            Add Bezier curve to path
+    -bez23          Add Bezier curve to path
+    -bez13          Add Bezier curve to path
+    -circle         Add circle to path
+    -stroke         Stroke path
+    -fill           Fill path
+    -filleo         Fill path, even odd
+    -strokefill     Stroke and fill path
+    -strokefilleo   Stroke and fill path, even odd
+    -close          Close path
 
 Clipping with paths:
 
-    -clip Clip
-    -clipeo Clip, even odd
+    -clip           Clip
+    -clipeo         Clip, even odd
 
 Path parameters:
 
-    -strokecol Set stroke colour
-    -fillcol Set fill colour
-    -thick Set stroke thickness
-    -cap Set cap
-    -join Set join
-    -miter Set miter limit
-    -dash Set dash pattern
+    -strokecol      Set stroke colour
+    -fillcol        Set fill colour
+    -thick          Set stroke thickness
+    -cap            Set cap
+    -join           Set join
+    -miter          Set miter limit
+    -dash           Set dash pattern
 
 The graphics stack and matrices:
 
-    -push Push graphics stack
-    -pop Pop graphics stack
-    -matrix Append to graphics matrix
-    -mtrans Translate the graphics matrix
-    -mrot Rotate the graphics matrix
-    -mscale Scale the graphics matrix
-    -mshearx Shear the graphics matrix in X
-    -msheary Shear the graphics matrix in Y
+    -push           Push graphics stack
+    -pop            Pop graphics stack
+    -matrix         Append to graphics matrix
+    -mtrans         Translate the graphics matrix
+    -mrot           Rotate the graphics matrix
+    -mscale         Scale the graphics matrix
+    -mshearx        Shear the graphics matrix in X
+    -msheary        Shear the graphics matrix in Y
 
 Re-use with XObjects:
 
-    -xobj-bbox Specify the bounding box for xobjects
-    -xobj Begin saving a sequence of graphics operators
-    -end-xobj End saving a sequence of graphics operators
-    -use Use a saved sequence of graphics operators
+    -xobj-bbox      Specify the bounding box for xobjects
+    -xobj           Begin saving a sequence of graphics operators
+    -end-xobj       End saving a sequence of graphics operators
+    -use            Use a saved sequence of graphics operators
 
 Images:
 
-    -draw-jpeg Load a JPEG from file and name it
-    -draw-png Load a PNG from file and name it
-    -draw-jpeg2000 Load a JPEG2000 from file and name it
-    -image Draw an image which has already been loaded
+    -draw-jpeg      Load a JPEG from file and name it
+    -draw-png       Load a PNG from file and name it
+    -draw-jpeg2000  Load a JPEG2000 from file and name it
+    -image          Draw an image which has already been loaded
 
 Transparency:
 
-    -fill-opacity Set opacity
+    -fill-opacity   Set opacity
     -stroke-opacity Set stroke opacity
 
 Text:
 
-    -bt Begin text
-    -et End text
-    -text Draw text
-    -stext Draw text with %specials
-    -para Typeset a paragraph
-    -paras Typeset multiple paragraphs
-    -leading Set leading
-    -charspace Set character spacing
-    -wordspace Set word space
-    -textscale Set text scale
-    -rendermode Set text rendering mode
-    -rise Set text rise
-    -nl New line
+    -bt             Begin text
+    -et             End text
+    -text           Draw text
+    -stext          Draw text with %specials
+    -para           Typeset a paragraph
+    -paras          Typeset multiple paragraphs
+    -leading        Set leading
+    -charspace      Set character spacing
+    -wordspace      Set word space
+    -textscale      Set text scale
+    -rendermode     Set text rendering mode
+    -rise           Set text rise
+    -nl             New line
 
 The next page:
 
-    -newpage Move to a fresh page
+    -newpage        Move to a fresh page
 
 Structure Information:
 
-    -draw-struct-tree Add structure information
-    -tag Begin marked content
-    -end-tag End marked content
-    -stag Begin structure tree branch
-    -end-stag End structure tree branch
-    -auto-tags Automatically tag paragraphs and images
-    -no-auto-tags Refrain from automatically tagging paragraphs and
-    images
-    -artifact Begin manual artifact
-    -end-artifact End manual artifact
-    -no-auto-artifacts Prevent automatic addition of artifacts during
-    postprocessing
-    -namespace Set the namespace for future branches of the tree
-    -eltinfo Set element information
-    -end-eltinfo Erase element information
-    -rolemap Set role map
+    -draw-struct-tree  Add structure information
+    -tag               Begin marked content
+    -end-tag           End marked content
+    -stag              Begin structure tree branch
+    -end-stag          End structure tree branch
+    -auto-tags         Automatically tag paragraphs and images
+    -no-auto-tags      Refrain from automatically tagging paragraphs and images
+    -artifact          Begin manual artifact
+    -end-artifact      End manual artifact
+    -no-auto-artifacts Prevent automatic addition of artifacts during postprocessing
+    -namespace         Set the namespace for future branches of the tree
+    -eltinfo           Set element information
+    -end-eltinfo       Erase element information
+    -rolemap           Set role map
 
 ## Basics
 
@@ -122,19 +121,19 @@ same, but for every page of an existing PDF.
 
 ## Building and showing paths
 
-    -rect "x y w h" Draw rectangle
-    -to "x y" Move to
-    -line "x y" Add line to path
-    -bez "x1 y1 x2 y2 x3 y3" Add Bezier curve to path
-    -bez23 "x2 y2 x3 y3" Add Bezier curve to path
-    -bez13 "x1 y1 x3 y3" Add Bezier curve to path
-    -circle "x y r" Add circle to path
-    -stroke Stroke path
-    -fill Fill path
-    -filleo Fill path, even odd
-    -strokefill Stroke and fill path
-    -strokefilleo Stroke and fill path, even odd
-    -close Close path
+    -rect "x y w h"            Draw rectangle
+    -to "x y"                  Move to
+    -line "x y"                Add line to path
+    -bez "x1 y1 x2 y2 x3 y3"   Add Bezier curve to path
+    -bez23 "x2 y2 x3 y3"       Add Bezier curve to path
+    -bez13 "x1 y1 x3 y3"       Add Bezier curve to path
+    -circle "x y r"            Add circle to path
+    -stroke                    Stroke path
+    -fill                      Fill path
+    -filleo                    Fill path, even odd
+    -strokefill                Stroke and fill path
+    -strokefilleo              Stroke and fill path, even odd
+    -close                     Close path
 
 To draw line art, we build paths and then stroke or fill them. For
 example:
@@ -146,7 +145,7 @@ path with each line, and then `-stroke` to stroke the path.  Coordinates in a
 PDF file have the origin $(0, 0)$ at the bottom-left of the page. All units are
 in points (1/72 inch). This creates the following PDF:
 
-![line](manualimages/line.svg)
+![line](manualimages/line.svg){: style="height:400px;width:400px"}
 
 Alternatively, we may use `-close` to draw the final line back to the
 starting point:
@@ -160,7 +159,7 @@ on. We can fill our path with `-fill`:
 
 Now we have a filled triangle:
 
-![line](manualimages/fill.svg)
+![line](manualimages/fill.svg){: style="height:400px;width:400px"}
 
 The operations `-filleo`, `-strokefill` and `-strokefilleo` provide
 alternative combinations of stroke, fill, and winding rule.
@@ -180,7 +179,7 @@ coordinate):
 
 Here is the result:
 
-![line](manualimages/bez.svg)
+![line](manualimages/bez.svg){: style="height:400px;width:400px"}
 
 The operation `-bez23` is a shorthand used when the first control point
 is equal to the current point. The operation `-bez13` is a shorthand
@@ -203,17 +202,17 @@ We can use a path to form a clipping region for subsequent content using
 
 Here is the result:
 
-![clip](manualimages/clip.svg)
+![clip](manualimages/clip.svg){: style="height:400px;width:400px"}
 
 ## Path parameters
 
-    -strokecol "g" | "r g b" | "c m y k" | <namedcolour> Set stroke colour
-    -fillcol "g" | "r g b" | "c m y k" | <namedcolour> Set fill colour
-    -thick <n> Set stroke thickness
-    -cap butt | round | square Set cap
-    -join miter | round | bevel Set join
-    -miter <n> Set miter limit
-    -dash <pattern> Set dash pattern
+    -strokecol "g" | "r g b" | "c m y k" | <namedcolour>  Set stroke colour
+    -fillcol "g" | "r g b" | "c m y k" | <namedcolour>    Set fill colour
+    -thick <n>                                            Set stroke thickness
+    -cap butt | round | square                            Set cap
+    -join miter | round | bevel                           Set join
+    -miter <n>                                            Set miter limit
+    -dash <pattern>                                       Set dash pattern
 
 We can set stroke and fill colours for our paths, either as greyscale
 (one component), RGB (three components) or CMYK (four components), or by
@@ -223,7 +222,7 @@ naming a colour:
 
 Here is the result:
 
-![colfill](manualimages/colfill.svg)
+![colfill](manualimages/colfill.svg){: style="height:400px;width:400px"}
 
 We can set line caps and joins with `-cap`, `-join`:
 
@@ -231,7 +230,7 @@ We can set line caps and joins with `-cap`, `-join`:
 
 Then we see:
 
-![capjoins](manualimages/capjoins.svg)
+![capjoins](manualimages/capjoins.svg){: style="height:400px;width:400px"}
 
 The miter limit (see PDF reference for details) may be set with
 `-miter`.
@@ -239,25 +238,25 @@ The miter limit (see PDF reference for details) may be set with
 Lines may have dash patterns. A dash pattern consists of one or more
 numbers. All save the last form the list of dash lengths and gap
 lengths. The last is the phase, which defines how far along the pattern
-we start. For example, using a dash pattern of \"30 20 0\" i.e black 30,
+we start. For example, using a dash pattern of "30 20 0" i.e black 30,
 white 20, phase 0:
 
 `cpdf -create-pdf AND -draw -to "100 100" -dash "30 20 0" -thick 20 -line "400 300" -stroke -o out.pdf`
 
 Here is the result:
 
-![dash](manualimages/dash.svg)
+![dash](manualimages/dash.svg){: style="height:400px;width:400px"}
 
 ## The graphics stack and matrices
 
-    -push Push graphics stack
-    -pop Pop graphics stack
-    -matrix "a b c d e f" Append to graphics matrix
-    -mtrans "tx ty" Translate the graphics matrix
-    -mrot "x y a" Rotate the graphics matrix counterclockwise around (x, y) by angle a in radians
-    -mscale "x y sx sy" Scale the graphics matrix around (x, y)
-    -mshearx "x y a" Shear the graphics matrix in X around (x, y) by angle a
-    -msheary "x y a" Shear the graphics matrix in Y around (x, y) by angle a
+    -push                  Push graphics stack
+    -pop                   Pop graphics stack
+    -matrix "a b c d e f"  Append to graphics matrix
+    -mtrans "tx ty"        Translate the graphics matrix
+    -mrot "x y a"          Rotate the graphics matrix counterclockwise around (x, y) by angle a in radians
+    -mscale "x y sx sy"    Scale the graphics matrix around (x, y)
+    -mshearx "x y a"       Shear the graphics matrix in X around (x, y) by angle a
+    -msheary "x y a"       Shear the graphics matrix in Y around (x, y) by angle a
 
 PDF maintains a stack of graphics state, which we can manipulate with
 `-push` which stores the current state, then modify the state for our
@@ -268,7 +267,7 @@ invocations may be nested. Here is a simple example:
 
 When we use `-pop` the colour returns to the saved one:
 
-![pop](manualimages/pop.svg)
+![pop](manualimages/pop.svg){: style="height:400px;width:400px"}
 
 One very common use for a `-push`/`-pop` pair is to isolate the effects
 of an operation which modifies the current transformation matrix. These
@@ -279,7 +278,7 @@ operations are used to translate, rotate, scale and so on. For example:
 This is the result. See how the graphics transformation is undone when
 `-push` is invoked:
 
-![matrix](manualimages/matrix.svg)
+![matrix](manualimages/matrix.svg){: style="height:400px;width:400px"}
 
 This is important because, in the absence of `-push` and `-pop` there
 would be no way to reverse the effect of a graphics matrix modification
@@ -291,10 +290,10 @@ command line.
 
 ## Re-use with XObjects
 
-    -xobj-bbox "x y w h" Specify the bounding box for xobjects
-    -xobj <name> Begin saving a sequence of graphics operators
-    -end-xobj End saving a sequence of graphics operators
-    -use <name> Use a saved sequence of graphics operators
+    -xobj-bbox "x y w h"  Specify the bounding box for xobjects
+    -xobj <name>          Begin saving a sequence of graphics operators
+    -end-xobj             End saving a sequence of graphics operators
+    -use <name>           Use a saved sequence of graphics operators
 
 In our examples, we have sometimes had to write the same operations
 multiple times. To avoid this, PDF has a mechanism called an XObject.
@@ -308,16 +307,16 @@ colour and transformation matrix and `-use` it again.
 Note that we must specify a bounding box for the XObject with
 `-xobj-bbox`. Here is the result:
 
-![xobj](manualimages/xobj.svg)
+![xobj](manualimages/xobj.svg){: style="height:400px;width:400px"}
 
 XObjects may be nested.
 
 ## Images
 
-    -draw-jpeg <name>=<filename> Load a JPEG from file and name it
-    -draw-png <name>=<filename> Load a PNG from file and name it
-    -draw-jpeg2000 <name>=<filename> Load a JPEG2000 from file and name it
-    -image <name> Draw an image which has already been loaded
+    -draw-jpeg <name>=<filename>      Load a JPEG from file and name it
+    -draw-png <name>=<filename>       Load a PNG from file and name it
+    -draw-jpeg2000 <name>=<filename>  Load a JPEG2000 from file and name it
+    -image <name>                     Draw an image which has already been loaded
 
 We can include a 24bit non-transparent and non-interlaced PNG, or any
 JPEG or JPEG2000 by using `-draw-jpeg[2000]` or `-draw-png` to load it
@@ -327,16 +326,16 @@ and assign it a name. We can then use `-image` to use it at any point:
 
 Here is the result:
 
-![png](manualimages/png.svg)
+![png](manualimages/png.svg){: style="height:400px;width:400px"}
 
 You can see we had to scale by the width and height of the image to draw
 it at the size we expect.
 
 ## Transparency
 
-    -fill-opacity <n> Set opacity
-    -stroke-opacity <n> Set stroke opacity
-
+    -fill-opacity <n>    Set opacity
+    -stroke-opacity <n>  Set stroke opacity
+ 
 We can set fill and stroke transparencies, between 0 (fully transparent)
 and 1 (fully opaque):
 
@@ -344,7 +343,7 @@ and 1 (fully opaque):
 
 Here is the result:
 
-![trans](manualimages/trans.svg)
+![trans](manualimages/trans.svg){: style="height:400px;width:400px"}
 
 Notice that we used `-fill` twice, to ensure each circle was in a
 different path. If they had been part of the same path, the effect would
@@ -352,19 +351,19 @@ be different.
 
 ## Text
 
-    -bt Begin text
-    -et End text
-    -text <text> Draw text
-    -stext <text> Draw text with %specials
-    -font <fontname> Set font
-    -font-size <n> Set font size
-    -leading <n> Set leading
-    -charspace <n> Set character spacing
-    -wordspace <n> Set word space
-    -textscale <n> Set text scale
-    -rendermode <n> Set text rendering mode
-    -rise <n> Set text rise
-    -nl New line
+    -bt               Begin text
+    -et               End text
+    -text <text>      Draw text
+    -stext <text>     Draw text with %specials
+    -font <fontname>  Set font
+    -font-size <n>    Set font size
+    -leading <n>      Set leading
+    -charspace <n>    Set character spacing
+    -wordspace <n>    Set word space
+    -textscale <n>    Set text scale
+    -rendermode <n>   Set text rendering mode
+    -rise <n>         Set text rise
+    -nl               New line
 
 We can draw text in a *text section*, which must start with `-bt` and
 end with `-et`. For example:
@@ -373,16 +372,16 @@ end with `-et`. For example:
 
 Here is the result:
 
-![text](manualimages/text.svg)
+![text](manualimages/text.svg){: style="height:400px;width:400px"}
 
 If we use `-stext` instead of `-text` the usual special values from
-(Text and Stamps)[text-and-stamps.md] (with the exception of URL links) may be used:
+[Text and Stamps](text-and-stamps.md) (with the exception of URL links) may be used:
 
 `cpdf -create-pdf AND -draw -mtrans "50 50" -font-size 144 -bt -stext "Page %Page" -et -o out.pdf`
 
 Now we see:
 
-![stext](manualimages/stext.svg)
+![stext](manualimages/stext.svg){: style="height:400px;width:400px"}
 
 We can use `-text` multiple times, interspersing operators which change
 the text state, such as font and font size:
@@ -391,7 +390,7 @@ the text state, such as font and font size:
 
 Here is the result:
 
-![fonts](manualimages/fonts.svg)
+![fonts](manualimages/fonts.svg){: style="height:400px;width:400px"}
 
 We can alter the character space, word space, horizontal scaling (100 =
 no scaling, less than 100 shrink, more than 100 stretch), and text rise:
@@ -400,7 +399,7 @@ no scaling, less than 100 shrink, more than 100 stretch), and text rise:
 
 Now we see:
 
-![fontparams](manualimages/fontparams.svg)
+![fontparams](manualimages/fontparams.svg){: style="height:400px;width:400px"}
 
 Text may appear on multiple lines. We set up the line spacing with
 `-leading` then make new lines with `-nl`:
@@ -409,7 +408,7 @@ Text may appear on multiple lines. We set up the line spacing with
 
 Now we have:
 
-![lines](manualimages/lines.svg)
+![lines](manualimages/lines.svg){: style="height:400px;width:400px"}
 
 When composing text, we may need to find the width of a piece of text to
 see where to break it, or for right alignment. We can use `-text-width`
@@ -426,7 +425,7 @@ example, to use text as a clipping region:
 
 Here is the result:
 
-![textclip](manualimages/textclip.svg)
+![textclip](manualimages/textclip.svg){: style="height:400px;width:400px"}
 
 Here are the text rendering modes:
 
@@ -459,7 +458,7 @@ Notice the paragraph specification `L200pt=` for left justified,
 200pt-wide at the beginning of the string. Notice also we must give a
 value for `-leading`. Here is the result:
 
-![para](manualimages/para.svg)
+![para](manualimages/para.svg){: style="height:400px;width:400px"}
 
 Multiple paragraphs with optional indenting may be laid out with
 `-paras`:
@@ -469,7 +468,7 @@ Multiple paragraphs with optional indenting may be laid out with
 We specify the newlines with `\n`, and the indentation with `-indent`.
 Here is the result.
 
-![paras](manualimages/paras.svg)
+![paras](manualimages/paras.svg){: style="height:400px;width:400px"}
 
 Note that there is no automatic typesetting over multiple pages with
 `-paras`.
@@ -533,7 +532,7 @@ We turned off auto-tagging with `-no-auto-tag`, then used `-tag H1` and
 `-end-tag` to tag the heading. Then we turned auto-tagging back on with
 `-auto-tag`. Here is the result, visually:
 
-![h1](manualimages/h1.svg)
+![h1](manualimages/h1.svg){: style="height:400px;width:400px"}
 
 And here is the structure tree:
 
