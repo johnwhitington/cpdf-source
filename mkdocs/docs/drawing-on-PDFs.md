@@ -142,7 +142,7 @@ example:
 
 We use `-to` to start the path at a given coordinate, `-line` to extend the
 path with each line, and then `-stroke` to stroke the path.  Coordinates in a
-PDF file have the origin $(0, 0)$ at the bottom-left of the page. All units are
+PDF file have the origin (0, 0) at the bottom-left of the page. All units are
 in points (1/72 inch). This creates the following PDF:
 
 ![line](manualimages/line.svg){: style="height:400px;width:400px"}
