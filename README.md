@@ -1,9 +1,9 @@
 <img width="400" height="163" alt="cpdf logo" src="https://github.com/user-attachments/assets/af9e0a36-4bf3-49e0-b7c0-2534e7e1f0d6" />
 
-Coherent PDF Command Line Tools
-===============================
+Coherent PDF Command Line Tools Source
+======================================
 
-(If you are looking for binaries, there are here: https://www.github.com/coherentgraphics/cpdf-binaries )
+(If you are looking for binaries, there are here: https://www.github.com/coherentgraphics/cpdf-binaries or may be downloaded by clicking on "Releases" on this GitHub page)
 
 CPDF is distributed under the AGPL - see LICENSE.md. If you are unable to abide
 by the terms of the AGPL, you will need a commercial license.
