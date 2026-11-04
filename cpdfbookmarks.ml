@@ -314,8 +314,8 @@ let process_others encoding marks pdf splitlevel filename sequence startpage end
   | r -> (p, r)
   in
   let string_of_int_width w i =
-    if w < 0 then raise (Pdf.PDFError "width of field too narrow")
-    else if w > 8 then raise (Pdf.PDFError "width of field too broad") else
+    if w < 0 then raise (Pdf.PDFError "width of field too narrow (< 0)")
+    else if w > 8 then raise (Pdf.PDFError "width of field too broad (> 8)") else
       let formats =
         [|format_of_string "%i";
           format_of_string "%i";

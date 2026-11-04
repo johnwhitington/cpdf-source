@@ -291,7 +291,7 @@ let generate_appearance
         | Cpdfembed.EmbedInfo {fontfile; fontname; encoding} ->
             Cpdfembed.embed_truetype (Pdf.empty ()) ~fontfile ~fontname ~codepoints:(Pdftext.codepoints_of_utf8 overlay) ~encoding:Pdftext.WinAnsiEncoding
         | Cpdfembed.ExistingNamedFont ->
-            raise (Pdf.PDFError "Can't use existing named font for annotation creation")
+            raise (Pdf.PDFError "Can't use existing named font for annotation creation. Use a Standard 14 font or load a TrueType font.")
       in
       let find_codepoint_width codepoint =
         match Hashtbl.find_opt table codepoint with

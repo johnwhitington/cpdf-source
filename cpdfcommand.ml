@@ -4082,7 +4082,7 @@ let extract_stream pdf decomp objspec =
   in
     match args.out with
     | NoOutputSpecified ->
-        raise (Pdf.PDFError "No output specified")
+        raise (Pdf.PDFError "No output specified. Use -o or -stdout.")
     | File outname ->
         let fh = open_out_bin outname in
           output_string fh (Pdfio.string_of_bytes data);

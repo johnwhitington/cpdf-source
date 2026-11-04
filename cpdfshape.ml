@@ -30,15 +30,15 @@ let quarter s (cx, cy) r =
   let standard_quarter_points =
     [(1., 0.); (1., kappa); (kappa, 1.); (0., 1.)]
   and transform =
-    [Pdftransform.Translate(cx, cy);
-     Pdftransform.Scale((0., 0.), r, r);
-     Pdftransform.Rotate((0., 0.), s)]
+    [Pdftransform.Translate (cx, cy);
+     Pdftransform.Scale ((0., 0.), r, r);
+     Pdftransform.Rotate ((0., 0.), s)]
   in
     match
       map (Pdftransform.transform transform) standard_quarter_points
     with
-    | [p; q; r; s] -> Bezier(p, q, r, s)
-    | _ -> raise (Pdf.PDFError ("Shapes.quarter: inconsistency"))
+    | [p; q; r; s] -> Bezier (p, q, r, s)
+    | _ -> assert false
 
 (* Some of the following functions generate what is supposed to be a connected
 list of segments. However, since they operate by calculating each segment
@@ -52,7 +52,7 @@ let rec joinsegs segments =
   | [x] -> [x]
   | Bezier(_, _, _, d) as s::Bezier(_, b', c', d')::rest ->
       s::joinsegs (Bezier(d, b', c', d')::rest)
-  | _ -> raise (Pdf.PDFError "PDFShapes.joinsegs: Segment not supported")
+  | _ -> raise (Pdf.PDFError "joinsegs: Segment not supported")
 
 (* Approximate a circle using four bezier curves.*)
 let circle x y r =

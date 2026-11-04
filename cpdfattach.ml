@@ -166,9 +166,9 @@ let list_attached_files pdf =
                                        | _ -> raise Not_found
                                      with
                                        _ -> raise (Pdf.PDFError "could not retrieve attachment data"))}
-                          | None -> raise (Pdf.PDFError "/F not found")
+                          | None -> raise (Pdf.PDFError "Required /F not found")
                           end
-                      | _ -> raise (Pdf.PDFError "/EF not found"))
+                      | _ -> raise (Pdf.PDFError "Required /EF not found"))
                    (option_map
                      (function (Pdf.String s, ef) -> Some (s, ef) | _ -> None)
                      (Pdf.contents_of_nametree pdf nametree))

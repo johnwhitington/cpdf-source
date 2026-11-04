@@ -82,7 +82,7 @@ let rec process_form_xobject onlyremove boxes pdf form =
                     Pdf.Stream {contents = (dict', Pdf.Got data)}
               | _ -> assert false
               end
-          | _ -> raise (Pdf.PDFError "not a stream")
+          | _ -> raise (Pdf.PDFError "process_form_xobject: not a stream")
         in
           form', pdf
 
