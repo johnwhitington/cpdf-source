@@ -5,21 +5,40 @@ Coherent PDF Command Line Tools Source
 
 (Binaries are here https://www.github.com/coherentgraphics/cpdf-binaries or may be downloaded by clicking on "Releases" on this GitHub page.)
 
+Cpdf is a command line tool for processing PDFs:
+
+* Quality Split and Merge, keeping bookmarks. Extract pages. Split on Bookmarks.
+* Encrypt and Decrypt (including AES 128 and AES 256 encryption)
+* Scale, rotate, crop and flip pages. Scale pages to fit.
+* Copy, Remove and Add bookmarks
+* Stamp logos, watermarks, page numbers and multiline text. Transparency.
+* Embed TrueType fonts when adding text
+* Supports Unicode UTF8 text input and output
+* Make PDF-based presentations
+* Put multiple pages on a single page
+* List, copy, set, or remove annotations
+* Read and set document information and metadata
+* Add and remove file attachments to document or page.
+* Thicken hairlines, blacken text, make draft documents
+* Reconstruct malformed files
+* Detect missing fonts, low resolution images
+* Export and import PDF files in JSON format
+* Build table of contents
+* Convert text to PDF
+* Draw on PDF files with graphics and text
+* Create and process PDF/UA-1 and PDF/UA-2 files
+* Process images to, for example, reduce resolution
+* Rasterize PDF files
+
 CPDF is distributed under the AGPL - see LICENSE.md. If you are unable to abide
 by the terms of the AGPL, you will need a commercial license.
-
-See also original copyright and/or license statements in cpdfxmlm.ml*,
-cpdfyojson.ml*, cpdfua.ml, cpdfunicodedata.*, and compressor.
 
 For commercial licenses, email
 [contact@coherentgraphics.co.uk](mailto:contact@coherentgraphics.co.uk) or
 visit [https://www.coherentpdf.com/](https://www.coherentpdf.com/)
 
-Copyright Coherent Graphics Ltd 2026.
-
-Keep up to date by joining the very low volume cpdf-announce mailing list:
-
-https://groups.google.com/g/cpdf-announce/
+See also original copyright and/or license statements in cpdfxmlm.ml*,
+cpdfyojson.ml*, cpdfua.ml, cpdfunicodedata.*, and compressor. Copyright Coherent Graphics Ltd 2026.
 
 This code builds two things:
 
@@ -29,60 +48,22 @@ b) cpdf as an OCaml library, for which documentation is here:
 
 [https://coherentpdf.com/cpdf/](https://coherentpdf.com/cpdf/)
 
-Prerequisites to build
-----------------------
+See [BUILDING.md](BUILDING.md) for instructions.
 
-The OCaml compiler
+Keep up to date
+---------------
 
-[https://ocaml.org](https://ocaml.org)
+Join the very low volume cpdf-announce mailing list:
 
-The camlpdf library
-
-[https://github.com/johnwhitington/camlpdf](https://www.github.com/johnwhitington/camlpdf)
-
-The ocamlfind library manager
-
-[https://projects.camlcity.org/projects/findlib.html](https://projects.camlcity.org/projects/findlib.html)
-
-If you are using the OPAM package manager:
-
-[https://opam.ocaml.org](http://opam.ocaml.org)
-
-these can be installed by:
-
-```
-opam install camlpdf
-```
-
-To build
---------
-
-If downloading from Github, obtain the correct source. This means choosing the
-tag for a particular version, such as "v2.9.3". The head of the master branch
-is unstable.
-
-1. Type `make` to make the cpdf executable and the library
-
-2. Type `make install` to install the OCaml cpdf library.
-
-The `cpdf` executable should be manually placed somewhere suitable.
-
-Alternatively, the library and command-line binary can be installed by
-
-```
-opam install cpdf
-```
-
-Binaries: https://www.github.com/coherentgraphics/cpdf-binaries
-
-Cpdf may also be included in your package manager, but do check the version.
+https://groups.google.com/g/cpdf-announce/
 
 Documentation
 -------------
 
-The file `cpdfmanual.pdf` in this folder is the documentation for the command
-line tools. The documentation for the cpdf OCaml library is in `doc/html/cpdf/`
-in this folder once the library has been built.
+The file [cpdfmanual.pdf](cpdfmanual.pdf) in this folder is the user manual for
+the command line tools. The documentation for the cpdf OCaml library is in
+`doc/html/cpdf/` in this folder once the library has been built or can be found
+online at [https://coherentpdf.com/cpdf](https://coherentpdf.com/cpdf).
 
 Acknowledgments
 ---------------
