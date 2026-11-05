@@ -864,7 +864,9 @@ let set_metadata_date pdf date =
 (* Copy an /ID from one file to another *)
 let copy_id keepversion copyfrom copyto =
   match Pdf.lookup_direct copyfrom "/ID" copyfrom.Pdf.trailerdict with
-  | None -> copyto (* error "Source PDF file has no /ID entry to copy from" *)
+  | None ->
+      Pdfe.log "Warning: Source PDF file has no /ID entry to copy from";
+      copyto
   | Some id ->
       copyto.Pdf.trailerdict <-
         Pdf.add_dict_entry copyto.Pdf.trailerdict "/ID" id;
@@ -936,7 +938,7 @@ let set_page_layout pdf s =
                   Pdf.trailerdict = trailerdict'}
       | None -> error "bad root"
       end
-  | _ -> error "Unknown page layout"
+  | s -> error ("Unknown page layout " ^ s)
 
 (* Set page mode *)
 let set_page_mode pdf s =
@@ -957,7 +959,7 @@ let set_page_mode pdf s =
                   Pdf.trailerdict = trailerdict'}
       | None -> error "bad root"
       end
-  | _ -> error "Unknown page mode"
+  | s -> error ("Unknown page mode " ^ s)
 
 let set_non_full_screen_page_mode pdf s =
   match s with
@@ -983,12 +985,12 @@ let set_non_full_screen_page_mode pdf s =
                   Pdf.trailerdict = trailerdict'}
       | None -> error "bad root"
       end
-  | _ -> error "Unknown non full screen page mode"
+  | s -> error ("Unknown non full screen page mode " ^ s)
 
 (* Set open action *)
 let set_open_action pdf ?dest fit pagenumber =
   if pagenumber > Pdfpage.endpage pdf || pagenumber < 0 then
-    raise (error "set_open_action: invalid page number")
+    raise (error ("set_open_action: invalid page number " ^ string_of_int pagenumber))
   else
     let pageobjectnumber = select pagenumber (Pdf.page_reference_numbers pdf) in
       let destination =
@@ -1000,7 +1002,7 @@ let set_open_action pdf ?dest fit pagenumber =
                   let pageobjectnumber = select pagenum (Pdf.page_reference_numbers pdf) in
                     Pdf.Array (Pdf.Indirect pageobjectnumber::more)
                 with
-                  _ -> raise (Pdf.PDFError "bad page number in custom destination")
+                  _ -> raise (Pdf.PDFError ("bad page number in custom destination " ^ string_of_int pagenumber))
                 end
             | _ | exception _ ->
               raise (Pdf.PDFError "Bad destination syntax")

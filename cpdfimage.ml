@@ -922,7 +922,7 @@ let suitable_num pdf dict =
   | _ -> 0
 
 let jpeg_to_jpeg pdf ~force ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale ~interpolate ~q ~path_to_convert s dict reference =
-  if q < 0. || q > 100. then error "Out of range quality";
+  if q < 0. || q > 100. then error "Out of range quality. Must be 0..100";
   complain_convert path_to_convert;
   let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
   let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
@@ -986,7 +986,7 @@ let jpeg_to_jpeg pdf ~force ~pixel_threshold ~length_threshold ~percentage_thres
     remove out2
 
 let jpeg2000_to_jpeg2000 pdf ~force ~pixel_threshold ~length_threshold ~percentage_threshold ~jpeg_to_jpeg_scale ~interpolate ~q ~path_to_convert s dict reference =
-  if q < 0. || q > 100. then error "Out of range quality";
+  if q < 0. || q > 100. then error "Out of range quality. Must be 0..100";
   complain_convert path_to_convert;
   let w = match Pdf.lookup_direct pdf "/Width" dict with Some (Pdf.Integer i) -> i | _ -> error "bad width" in
   let h = match Pdf.lookup_direct pdf "/Height" dict with Some (Pdf.Integer i) -> i | _ -> error "bad height" in
@@ -1618,7 +1618,7 @@ let process
                   end
               | "JBIG2Lossy" -> ()
               | "None" -> ()
-              | _ -> error "unknown 1bpp method"
+              | s -> error ("unknown 1bpp method " ^ s)
               end
         | Some (Pdf.Name "/Image"), _, _, _ ->
             (* FIXME Define a proper data type to replace the mess of numbers for classification of lossless transforms. Also above for JPEG. *)

@@ -4,7 +4,7 @@ open Pdfutil
 let change_page_effect t d horizontal inward direction effect_duration page =
   let checkname = function
     | "Split" | "Blinds" | "Box" | "Wipe" | "Dissolve" | "Glitter" -> ()
-    | _ -> Cpdferror.error "Unknown presentation type"
+    | s -> Cpdferror.error ("Unknown presentation type " ^ s)
   in
     let rest = page.Pdfpage.rest in
       let transdict =

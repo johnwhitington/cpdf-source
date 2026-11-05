@@ -1199,7 +1199,7 @@ let decrypt_if_necessary (_, _, user_pw, owner_pw, was_dec_with_owner, _) op pdf
        * pages. This is prevented by permissions above, but in the case that the
        * owner password is blank (e.g christmas_tree_lights.pdf), we would end
        * up here. *)
-      soft_error "Combine pages: both files must be unencrypted for this operation, or add -decrypt-force"
+      soft_error "Combine pages: both files must be unencrypted for this operation, or add -decrypt-force to decrypt them automatically"
     | _ -> 
       match Pdfcrypt.decrypt_pdf_owner owner_pw pdf with
       | Some pdf ->
@@ -1219,7 +1219,7 @@ let decrypt_if_necessary (_, _, user_pw, owner_pw, was_dec_with_owner, _) op pdf
             if args.debugcrypt then Printf.printf "Managed to decrypt with user password\n";
             if operation_allowed pdf permissions op
               then pdf
-              else soft_error "User password cannot give permission for this operation. Supply owner or add -decrypt-force."
+              else soft_error "User password cannot give permission for this operation. Supply owner password or add -decrypt-force to decrypt automatically."
         | _ ->
            if args.debugcrypt then Printf.printf "Failed to decrypt with user password: raising soft_error";
            soft_error "Failed to decrypt file: wrong password?"
@@ -1247,7 +1247,7 @@ let setout name =
 let setchunk c =
   if c > 0
     then args.chunksize <- c
-    else error "invalid chunk size"
+    else error "Negative chunk size invalid"
 
 let fixdashes s =
   let bufferdashes chars =
@@ -1269,7 +1269,7 @@ let set_input_image f s =
       args.create_objstm <- true;
       args.inputs <- (AlreadyInMemory (pdf, s), "all", "", "", ref false, None)::args.inputs
   with
-    Sys_error _ -> error "Image file not found"
+    Sys_error _ -> error ("Image file not found " ^ s)
 
 let jbig2_global = ref None
 
@@ -1370,12 +1370,12 @@ let setrectangle s =
 let setrotate i =
   if i = 0 || i = 90 || i = 180 || i = 270
     then setop (Rotate i) ()
-    else error "bad rotation"
+    else error "bad rotation: 0, 90, 180, 270 only"
 
 let setrotateby i =
   if i = 0 || i = 90 || i = 180 || i = 270
     then setop (Rotateby i) ()
-    else error "bad rotation"
+    else error "bad rotation: 0, 90, 180, 270 only"
 
 let hidetoolbar b =
   try setop (HideToolbar (bool_of_string b)) () with
@@ -1421,7 +1421,7 @@ let setstdin () =
   if keep (function (StdIn, _, _, _, _, _) -> true | _ -> false) args.inputs = [] then
     args.inputs <- (StdIn, "all", "", "", ref false, None)::args.inputs
   else
-    error (Printf.sprintf "Can't presently use -stdin twice.")
+    error (Printf.sprintf "Can't use -stdin twice.")
 
 let settrans s = args.transition <- Some s
 let setduration f = args.duration <- Some f
@@ -1431,7 +1431,7 @@ let setdirection i =
   args.direction <-
     match i with
     | 0 | 90 | 180 | 270 | 315 -> i
-    | _ -> error "Bad direction"
+    | _ -> error "Bad direction. Must be 0, 90, 180, 270, 315"
 let seteffectduration f = args.effect_duration <- f
 let setcopyid s = setop (CopyId s) ()
 let setthinlines s = setop (ThinLines (Cpdfcoord.parse_single_number empty s)) ()
@@ -1474,12 +1474,12 @@ let setattachfile s =
 let setattachfiledescription s =
   match args.op with
   | Some (AttachFile (h::_)) -> h.odescription <- Some s
-  | _ -> error "no attachment to add description for"
+  | _ -> error "No attachment to add description for. Must specify attachment first."
 
 let setattachfilerelationship s =
   match args.op with
   | Some (AttachFile (h::_)) -> h.orelationship <- Some s
-  | _ -> error "no attachment to add relationship for"
+  | _ -> error "No attachment to add relationship for. Must specify attachement first."
 
 let setfontsize s =
   let f = Cpdfcoord.parse_single_number (Pdf.empty ()) s in
@@ -1833,7 +1833,7 @@ let setrange spec =
   | x -> ()
 
 let setrevision n =
-  if n < 0 then error "Revision number too low." else
+  if n < 0 then error "Revision number must not be negative" else
     match args.inputs with
       (a, b, c, d, e, _)::more ->
         args.inputs <- (a, b, c, d, e, Some n) :: more
@@ -1905,7 +1905,7 @@ let setlabelstyle s =
     | "UppercaseLetters" -> Pdfpagelabels.UppercaseLetters
     | "LowercaseLetters" -> Pdfpagelabels.LowercaseLetters
     | "NoLabelPrefixOnly" -> Pdfpagelabels.NoLabelPrefixOnly
-    | _ -> error "Unknown label style"
+    | _ -> error ("Unknown label style " ^ s)
   in
     args.labelstyle <- style
 
@@ -2098,7 +2098,7 @@ let setfont f =
         begin match Pdftext.standard_font_of_name ("/" ^ f) with
         | Some x -> StandardFont x
         | None ->
-            if f <> "" && hd (explode f) <> '/' then error "Font not found";
+            if f <> "" && hd (explode f) <> '/' then error ("Font not found " ^ f);
             OtherFont (convert f)
         end;
       args.fontname <-
@@ -3391,8 +3391,8 @@ let specs =
    ("-contains-javascript", Arg.Unit (fun () -> setop ContainsJavaScript ()), " Detect if a PDF contains JavaScript");
    ("-portfolio", Arg.Unit (fun () -> setop Portfolio ()), " Build a PDF portfolio");
    ("-pf", Arg.String (fun s -> args.portfolio_files <- {filename = s; relationship = None; description = None}::args.portfolio_files), " Add a portfolio file");
-   ("-pfd", Arg.String (fun s -> match args.portfolio_files with h::t -> args.portfolio_files <- {h with description = Some s}::t | [] -> error "no portfolio file to take description"), " Set portfolio file description");
-   ("-pfr", Arg.String (fun s -> match args.portfolio_files with h::t -> args.portfolio_files <- {h with relationship = Some s}::t | [] -> error "no portfolio file to take relationship"), " Set portfolio file relationship");
+   ("-pfd", Arg.String (fun s -> match args.portfolio_files with h::t -> args.portfolio_files <- {h with description = Some s}::t | [] -> error "no portfolio file to take description. Portfolio file goes first."), " Set portfolio file description");
+   ("-pfr", Arg.String (fun s -> match args.portfolio_files with h::t -> args.portfolio_files <- {h with relationship = Some s}::t | [] -> error "no portfolio file to take relationship"), " Set portfolio file relationship. Portfolio file goes first.");
    ("-remove-article-threads", Arg.Unit (fun () -> setop RemoveArticleThreads ()), " Remove article threads");
    ("-remove-page-piece", Arg.Unit (fun () -> setop RemovePagePiece ()), " Remove page piece dictionaries");
    ("-remove-search-index", Arg.Unit (fun () -> setop RemoveSearchIndex ()), " Remove search index");
@@ -3759,7 +3759,7 @@ let really_write_pdf ?(encryption = None) ?(is_decompress=false) mk_id pdf outna
             end
           else
             soft_error
-              "You must supply -recrypt here, or add -decrypt-force, or provide the owner password."
+              "You must supply -recrypt here (to make output encrypted), or add -decrypt-force (to decrypt anyway), or provide the owner password (to decrypt)."
         end
     end;
     begin
@@ -3992,7 +3992,7 @@ let write_json output pdf =
 
 let json_to_output json = function
   | NoOutputSpecified ->
-      error "no output name specified"
+      error "json_to_output: no output name specified"
   | Stdout ->
       output_string stdout (Cpdfyojson.Safe.pretty_to_string json);
   | File filename ->
@@ -4383,14 +4383,14 @@ let rec go () =
               in
                 let outpdf = Cpdffont.copy_font frompdf copyfontname args.copyfontpage range pdf in
                   write_pdf true outpdf
-      | _ -> error "copyfont: bad command line"
+      | _ -> error "copyfont: must supply an input file"
       end
   | RemoveFonts ->
       begin match args.inputs, args.out with
       | (_, pagespec, _, _, _, _)::_, _ ->
           let pdf = get_single_pdf (Some RemoveFonts) false in
             write_pdf true (Cpdffont.remove_fonts pdf)
-      | _ -> error "remove fonts: bad command line"
+      | _ -> error "remove fonts: must supply an input file"
       end
   | ExtractFontFile spec ->
       begin match args.inputs, args.out with
@@ -4403,7 +4403,7 @@ let rec go () =
                 end
             | _ -> error "extract font: bad specification"
             end
-      | _ -> error "extract fontfile: bad command line"
+      | _ -> error "extract fontfile: bad command line: must supply an input file"
       end 
   | CountPages ->
       begin match args.inputs with
@@ -4477,7 +4477,7 @@ let rec go () =
           let pdf = get_single_pdf args.op true in
             let range = parse_pagespec pdf pagespec in
               Cpdfpage.output_page_info ~json:args.format_json args.output_unit pdf range
-      | _ -> error "list-bookmarks: bad command line"
+      | _ -> error "list-bookmarks: bad command line: no input file"
       end
   | Metadata ->
       Cpdfmetadata.print_metadata (get_single_pdf (Some Metadata) true)
@@ -4487,7 +4487,7 @@ let rec go () =
           let pdf = get_single_pdf (Some Fonts) true in
           let range = parse_pagespec pdf pagespec in
             Cpdffont.print_fonts ~json:args.format_json pdf range
-      | _ -> error "-list-fonts: bad command line"
+      | _ -> error "-list-fonts: bad command line: no input file"
       end
   | ListBookmarks ->
       begin match args.inputs, args.out with
@@ -4496,7 +4496,7 @@ let rec go () =
           let range = parse_pagespec pdf pagespec in
             Cpdfbookmarks.list_bookmarks ~json:args.format_json ~json_preserve_actions:args.preserve_actions args.encoding range pdf (Pdfio.output_of_channel stdout);
             flush stdout
-      | _ -> error "list-bookmarks: bad command line"
+      | _ -> error "list-bookmarks: bad command line: no input file"
       end
   | Crop ->
       begin match args.inputs, args.out with
@@ -4506,7 +4506,7 @@ let rec go () =
               let range = parse_pagespec pdf pagespec in
                 let pdf = Cpdfpage.crop_pdf xywhlist pdf range in
                   write_pdf false pdf
-      | _ -> error "crop: bad command line"
+      | _ -> error "crop: bad command line: no input file"
       end
   | Art ->
       begin match args.inputs, args.out with
@@ -4516,7 +4516,7 @@ let rec go () =
               let range = parse_pagespec pdf pagespec in
                 let pdf = Cpdfpage.crop_pdf ~box:"/ArtBox" xywhlist pdf range in
                   write_pdf false pdf
-      | _ -> error "art: bad command line"
+      | _ -> error "art: bad command line: no input file"
       end
   | Bleed ->
       begin match args.inputs, args.out with
@@ -4526,7 +4526,7 @@ let rec go () =
               let range = parse_pagespec pdf pagespec in
                 let pdf = Cpdfpage.crop_pdf ~box:"/BleedBox" xywhlist pdf range in
                   write_pdf false pdf
-      | _ -> error "bleed: bad command line"
+      | _ -> error "bleed: bad command line: no input file"
       end
   | Trim ->
       begin match args.inputs, args.out with
@@ -4536,7 +4536,7 @@ let rec go () =
               let range = parse_pagespec pdf pagespec in
                 let pdf = Cpdfpage.crop_pdf ~box:"/TrimBox" xywhlist pdf range in
                   write_pdf false pdf
-      | _ -> error "trim: bad command line"
+      | _ -> error "trim: bad command line: no input file"
       end
   | MediaBox ->
       begin match args.inputs, args.out with
@@ -4546,7 +4546,7 @@ let rec go () =
               let range = parse_pagespec pdf pagespec in
                 let pdf = Cpdfpage.set_mediabox xywhlist pdf range in
                   write_pdf false pdf
-      | _ -> error "set media box: bad command line"
+      | _ -> error "set media box: bad command line: no input file"
       end
   | HardBox box ->
       begin match args.inputs, args.out with
@@ -4555,7 +4555,7 @@ let rec go () =
           let range = parse_pagespec pdf pagespec in
             let pdf = Cpdfpage.hard_box pdf range box args.mediabox_if_missing args.fast in
               write_pdf false pdf
-      | _ -> error "hard box: bad command line"
+      | _ -> error "hard box: bad command line: no input file"
       end
   | CopyBox ->
       begin match args.inputs, args.out with
@@ -4570,7 +4570,7 @@ let rec go () =
               in
                 let pdf = Cpdfpage.copy_box f t args.mediabox_if_missing pdf range in
                   write_pdf false pdf
-      | _ -> error "Copy Box: bad command line"
+      | _ -> error "Copy Box: bad command line: no input file"
       end
   | Decompress ->
       let pdf = get_single_pdf (Some Decompress) false in
@@ -4620,7 +4620,7 @@ let rec go () =
             let range = parse_pagespec pdf pagespec in
               let pdf = Cpdfpage.remove_cropping_pdf pdf range in
                 write_pdf false pdf
-      | _ -> error "remove-crop: bad command line"
+      | _ -> error "remove-crop: bad command line: no input file"
       end
   | RemoveArt ->
       begin match args.inputs, args.out with
@@ -4629,7 +4629,7 @@ let rec go () =
             let range = parse_pagespec pdf pagespec in
               let pdf = Cpdfpage.remove_art_pdf pdf range in
                 write_pdf false pdf
-      | _ -> error "remove-crop: bad command line"
+      | _ -> error "remove-crop: bad command line: no input file"
       end
   | RemoveTrim ->
       begin match args.inputs, args.out with
@@ -4638,7 +4638,7 @@ let rec go () =
             let range = parse_pagespec pdf pagespec in
               let pdf = Cpdfpage.remove_trim_pdf pdf range in
                 write_pdf false pdf
-      | _ -> error "remove-crop: bad command line"
+      | _ -> error "remove-crop: bad command line: no input file"
       end
   | RemoveBleed ->
       begin match args.inputs, args.out with
@@ -4647,7 +4647,7 @@ let rec go () =
             let range = parse_pagespec pdf pagespec in
               let pdf = Cpdfpage.remove_bleed_pdf pdf range in
                 write_pdf false pdf
-      | _ -> error "remove-crop: bad command line"
+      | _ -> error "remove-crop: bad command line: no input file"
       end
   | Rotate _ | Rotateby _ ->
       begin match args.inputs, args.out with
@@ -4662,7 +4662,7 @@ let rec go () =
               in
                 let pdf = rotate pdf range in
                   write_pdf false pdf
-      | _ -> error "rotate: bad command line"
+      | _ -> error "rotate: bad command line: no input file"
       end
   | RotateContents a ->
       begin match args.inputs, args.out with
@@ -4671,7 +4671,7 @@ let rec go () =
             let range = parse_pagespec pdf pagespec in
               let pdf = Cpdfpage.rotate_contents ~fast:args.fast a pdf range in
                 write_pdf false pdf
-      | _ -> error "rotate-contents: bad command line"
+      | _ -> error "rotate-contents: bad command line: no input file"
       end
   | Upright ->
       begin match args.inputs, args.out with
@@ -4680,7 +4680,7 @@ let rec go () =
             let range = parse_pagespec pdf pagespec in
               let pdf = Cpdfpage.upright ~fast:args.fast range pdf in
                 write_pdf false pdf
-      | _ -> error "rotate-contents: bad command line"
+      | _ -> error "rotate-contents: bad command line: no input file"
       end
   | (VFlip | HFlip) as flip ->
       begin match args.inputs, args.out with
@@ -4693,7 +4693,7 @@ let rec go () =
                   else Cpdfpage.hflip_pdf ~fast:args.fast pdf range
               in
                 write_pdf false pdf
-      | _ -> error "flip: bad command line"
+      | _ -> error "flip: bad command line: no input file"
       end
   | (SetAuthor _ | SetTitle _ | SetSubject _ | SetKeywords _
     | SetCreate _ | SetModify _ | SetCreator _ | SetProducer _
@@ -5309,12 +5309,12 @@ let rec go () =
       let fi =
         match args.inputs with
           [(InFile fi, _, _, _, _, _)] -> fi
-        | _ -> error "Input method not supported for -embed-missing-fonts"
+        | _ -> error "Input method not supported for -embed-missing-fonts. Must be from file."
       in
       let fo =
         match args.out with
           File fo -> fo
-        | _ -> error "Output method not supported for -embed-missing-fonts"
+        | _ -> error "Output method not supported for -embed-missing-fonts. Must be to file."
       in
         Cpdffont.embed_missing_fonts args.path_to_ghostscript args.gs_quiet fi fo
   | BookmarksOpenToLevel n ->

@@ -321,7 +321,7 @@ let find_obj pdf objspec =
     let obj = if objnum = 0 then pdf.Pdf.trailerdict else Pdf.lookup_obj pdf objnum in
     match Pdf.lookup_chain pdf obj chain with
     | Some x -> x
-    | None -> raise (Pdf.PDFError "find_obj: Chain not found")
+    | None -> raise (Pdf.PDFError ("find_obj: Chain not found " ^ objspec))
   in
     match explode objspec with
     | 'P'::more ->
@@ -339,7 +339,7 @@ let find_obj pdf objspec =
 
 let replace_obj pdf objspec obj =
   try Pdf.replace_chain pdf (split_chain objspec) obj with
-    _ -> raise (Pdf.PDFError "replace_obj: Chain not found")
+    _ -> raise (Pdf.PDFError ("replace_obj: Chain not found " ^ objspec))
 
 let remove_obj pdf objspec =
   Pdf.removeobj pdf (int_of_string objspec)

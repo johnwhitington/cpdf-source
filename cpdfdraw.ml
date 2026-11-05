@@ -184,7 +184,7 @@ let font_widths f fontsize =
           /. 1000.)
   | Pdftext.SimpleFont {fontmetrics = Some m} ->
       Array.map (fun x -> fontsize *. x /. 1000. ) m
-  | _ -> raise (Pdf.PDFError "Cpdfdraw: Unsupported font")
+  | _ -> raise (Pdf.PDFError "Cpdfdraw: Cannot draw with existing named font")
 
 let runs_of_utf8 ?(widthcache = null_hash ()) s =
   let identifier, fontpack = (res ()).current_fontpack in

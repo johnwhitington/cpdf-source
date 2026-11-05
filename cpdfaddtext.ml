@@ -178,9 +178,9 @@ let rec process_text time text m =
 (* text|url]abc -> text, url, abc *)
 let extract_url line =
   let text, rest = cleavewhile (neq '|') line in
-    if rest = [] then error "bad URL syntax in text" else
+    if rest = [] then error "bad %URL syntax in text" else
     let url, rest = cleavewhile (neq ']') (tl rest) in
-      if rest = [] then error "bad URL syntax in text" else
+      if rest = [] then error "bad %URL syntax in text" else
       (text, url, tl rest)
 
 (* multiple %URL[a|b] *)
@@ -797,7 +797,7 @@ let addrectangle
     let w, h =
       match Cpdfcoord.parse_units_string pdf page coord with
       | [w; h] -> w, h
-      | _ -> error "bad coordinate specification"
+      | _ -> error ("bad coordinate specification " ^ coord)
     in
     let x, y, _ =
       Cpdfposition.calculate_position false w mediabox position

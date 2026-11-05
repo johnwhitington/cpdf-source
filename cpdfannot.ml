@@ -257,7 +257,7 @@ let set_annotations_json pdf i =
               pdf.root <- pdf'.root;
               pdf.objects <- pdf'.objects;
               pdf.trailerdict <- pdf'.trailerdict
-  | _ -> error "Bad Annotations JSON file"
+  | _ -> error "Bad Annotations JSON file: not a list at top level"
 
 let copy_annotations range frompdf topdf =
   set_annotations_json topdf (Pdfio.input_of_bytes (get_annotations_json frompdf range))

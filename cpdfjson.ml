@@ -246,7 +246,7 @@ and object_of_json = function
   | _ -> error "not recognised in object_of_json"
 
 let pdf_of_json json =
-  let objs = match json with `List objs -> objs | _ -> error "bad json top level" in
+  let objs = match json with `List objs -> objs | _ -> error "bad json top level: must be a list" in
   let params = ref Pdf.Null in
   let trailerdict = ref Pdf.Null in
     let objects =
@@ -268,11 +268,11 @@ let pdf_of_json json =
   end;
   let major =
     match Pdf.lookup_direct (Pdf.empty ()) "/CPDFJSONmajorpdfversion" !params with 
-      Some (Pdf.Integer i) -> i | _ -> error "bad major version"
+      Some (Pdf.Integer i) -> i | _ -> error "bad major PDF version"
   in
   let minor =
     match Pdf.lookup_direct (Pdf.empty ()) "/CPDFJSONminorpdfversion" !params with 
-      Some (Pdf.Integer i) -> i | _ -> error "bad minor version"
+      Some (Pdf.Integer i) -> i | _ -> error "bad minor PDF version"
   in
   let root =
     match !trailerdict with Pdf.Dictionary d ->

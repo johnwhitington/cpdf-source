@@ -98,7 +98,7 @@ let attach_file ?memory keepversion topage pdf relationship description file =
                                pdf.Pdf.trailerdict "/Root" (Pdf.Indirect rootnum)}
           | Some pagenumber ->
               let pages = Pdfpage.pages_of_pagetree pdf in
-                if pagenumber < 0 || pagenumber > length pages then error "attach_file: Page not found" else
+                if pagenumber < 0 || pagenumber > length pages then error (Printf.sprintf "attach_file: Page %i not found" pagenumber) else
                   let page = select pagenumber pages in
                     let annots =
                       match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
