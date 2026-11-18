@@ -1,4 +1,5 @@
 open Pdfutil
+open Cpdferror
 
 (* Call out to GhostScript to rasterize. Read back in and replace the page contents with the resultant PNG. *)
 let rasterize tempfiles path_to_ghostscript gs_quiet path_to_im remake ?subformat ?title antialias downsample device res annots quality pdf range =
@@ -80,7 +81,48 @@ let rasterize tempfiles path_to_ghostscript gs_quiet path_to_im remake ?subforma
   in
     let pdf = if annots then Cpdfannot.remove_annotations range pdf else pdf in
     Sys.remove tmppdf;
-    pdf
+    (* Post-processing for remake. If remake is true, we build a new blank PDF
+    in the correct format and copy the pages across... *)
+    let pdf =
+      if remake then
+        let blank =
+          match subformat with
+          | Some Cpdfua.PDFUA1 ->
+              begin match title with None -> error "Provide -title" | _ -> () end;
+              Cpdfua.create_pdfua1 (unopt title) Pdfpaper.a4 1
+          | Some Cpdfua.PDFUA2 ->
+              begin match title with None -> error "Provide -title" | _ -> () end;
+              Cpdfua.create_pdfua2 (unopt title) Pdfpaper.a4 1
+          | None ->
+              Cpdfcreate.blank_document_paper Pdfpaper.a4 1
+        in
+          let renumbered = Pdf.renumber_pdfs [pdf; blank] in
+          let pdf, blank = hd renumbered, hd (tl renumbered) in
+          let pages = Pdfpage.pages_of_pagetree pdf in
+          let imageobjs =
+            map
+              (fun page ->
+                match Pdf.lookup_direct pdf "/XObject" page.Pdfpage.resources with
+                | Some (Pdf.Dictionary [(_, Pdf.Indirect i)]) -> i
+                | _ -> 0)
+              pages
+          in
+          let contentobjs =
+            map
+              (fun page ->
+                match page.Pdfpage.content with
+                | [Pdf.Indirect i] -> i
+                | _ -> 0)
+              pages
+          in
+            iter (fun n -> Pdf.addobj_given_num blank (n, Pdf.lookup_obj pdf n)) (imageobjs @ contentobjs);
+            let blank = Pdfpage.change_pages false blank pages in
+              Cpdfannot.copy_annotations (ilist 1 (Pdfpage.endpage pdf)) pdf blank;
+              blank
+      else
+        pdf
+    in
+      pdf
 
 let write_images tempfiles path_to_ghostscript gs_quiet device res quality boxname annots antialias downsample spec pdf range =
   if path_to_ghostscript = "" then begin
