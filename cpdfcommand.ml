@@ -265,6 +265,7 @@ type op =
   | RemoveMarkedContent
   | RemoveAcroForm
   | FlattenAnnotations
+  | Sanitize
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -453,6 +454,7 @@ let string_of_op = function
   | RemoveAcroForm -> "RemoveAcroForm"
   | TestExtractText -> "TestExtractText"
   | FlattenAnnotations -> "FlattenAnnotations"
+  | Sanitize -> "Sanitize"
 
 (* Inputs: filename, pagespec. *)
 type input_kind = 
@@ -4173,6 +4175,19 @@ let show_digital_signature_info pdf json =
            Printf.printf "%s, %s, %s, %s\n" sigtype sigfilter sigsubfilter signame)
         !sigs
 
+let sanitize pdf =
+  (* Remove attached files *)
+  (* Clean *)
+  (* Remove invisible text *)
+  (* remove JavaScript *)
+  (* Remove metadata *)
+  (* Remove XMP metadata *)
+  (* Remove thumbnails *)
+  (* Remove annotation responses *)
+  (* Reset form fields to default *)
+  (* Remove all link annotations *)
+  ()
+
 (* Main function *)
 let rec go () =
   check_bookmarks_mistake ();
@@ -5625,6 +5640,10 @@ let rec go () =
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
       let pdf = Cpdfannot.flatten ~subtypes:args.annotation_subtypes ~subtypes_no:args.annotation_no_subtypes pdf range in
+        write_pdf false pdf
+  | Sanitize ->
+      let pdf = get_single_pdf args.op false in
+        sanitize pdf;
         write_pdf false pdf
 
 (* Advise the user if a combination of command line flags makes little sense,
