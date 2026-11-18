@@ -3447,6 +3447,7 @@ let specs =
    ("-flatten-annotations", Arg.Unit (fun () -> setop FlattenAnnotations ()), " Flatten Annotations");
    ("-redact-opacity", Arg.Float (fun f -> args.redaction_annotation_applied_opacity <- f), " Set redaction annotation applied opacity");
    ("-margin", Arg.String (fun s -> setmargin s), " Set page magin");
+   ("-sanitize", Arg.Unit (setop Sanitize), " Santize document");
    (* Undocumented. *)
    ("-test-extract-text", Arg.Unit (fun () -> setop TestExtractText ()), "")]
 
@@ -4177,6 +4178,7 @@ let show_digital_signature_info pdf json =
 
 let clean_page_comments pdf =
   let state = !Pdfops.write_comments in
+  clear Pdfops.write_comments;
   let pdf = Cpdftweak.append_page_content "" false false (ilist 1 (Pdfpage.endpage pdf)) pdf in
     Pdfops.write_comments := state;
     pdf
