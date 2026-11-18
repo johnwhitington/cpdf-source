@@ -4097,128 +4097,7 @@ let extract_stream pdf decomp objspec =
 let print_version () =
   flprint
     ("cpdf " ^ (if agpl then "AGPL " else "") ^ "Version " ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ (if minor_minor_version = 0 then "" else "." ^ string_of_int minor_minor_version) ^ " " ^ version_date ^ " https://www.coherentpdf.com/\n-help for help." ^ "\n")
-
-(* Call out to GhostScript to rasterize. Read back in and replace the page contents with the resultant PNG. *)
-let rasterize remake ?subformat ?title antialias downsample device res annots quality pdf range =
-  if args.path_to_ghostscript = "" then begin
-    Pdfe.log "Please supply path to gs with -gs\n";
-    exit 2
-  end;
-  let tmppdf = Filename.temp_file "cpdf" ".pdf" in
-  tempfiles := tmppdf::!tempfiles;
-  Pdfwrite.pdf_to_file (Pdf.deep_copy pdf) tmppdf;
-  let pdf = Pdfpage.change_pages true pdf
-    (map2
-      (fun page pnum ->
-        if not (mem pnum range) then page else
-        let tmpout = Filename.temp_file "cpdf" ".png" in
-        tempfiles := tmpout::!tempfiles;
-        let antialias, res =
-          if downsample then ["-dDownScaleFactor=4"], res *. 4.  else
-            let bits = if antialias then "4" else "1" in
-              ["-dTextAlphaBits=" ^ bits; "-dGraphicsAlphaBits=" ^ bits], res
-        in
-        let gscall =
-          Filename.quote_command args.path_to_ghostscript
-            ((if args.gs_quiet then ["-dQUIET"] else []) @
-            antialias @
-            ["-dBATCH"; "-dNOPAUSE"; "-sDEVICE=" ^ device; "-dUseCropBox"; "-dShowAnnots=" ^ string_of_bool annots;
-             "-dJPEGQ=" ^ string_of_int quality; "-sOutputFile=" ^ tmpout; "-sPageList=" ^ string_of_int pnum;
-             "-r" ^ string_of_float res; tmppdf])
-        in
-          (*Printf.printf "CALL: %S\n" gscall;*)
-          begin match Sys.command gscall with
-          | 0 -> ()
-          | _ -> Pdfe.log "Rasterization failed\n"; exit 2
-          end;
-        let data = Pdfio.bytes_of_string (Pdfutil.contents_of_file tmpout) in
-        Sys.remove tmpout;
-        let image, _ = (if device = "jpeg" || device = "jpeggray" then Cpdfimage.obj_of_jpeg_data ~path_to_im:args.path_to_im else Cpdfimage.obj_of_png_data pdf) data in
-        let imageobj = Pdf.addobj pdf image in
-        let w, h =
-          match device with
-          | "jpeg" | "jpeggray" -> Cpdfjpeg.jpeg_dimensions data
-          | _ -> let png = Cpdfpng.read_png (Pdfio.input_of_bytes data) in (png.Cpdfpng.width, png.Cpdfpng.height)
-        in
-        let w, h =
-          match page.Pdfpage.rotate with
-          | Pdfpage.Rotate90 | Pdfpage.Rotate270 -> h, w
-          | _ -> w, h
-        in
-        let w, h = if downsample then w * 4, h * 4 else w, h in
-        let (minx, miny, maxx, maxy) =
-          Pdf.parse_rectangle
-            pdf
-            (match Pdf.lookup_direct pdf "/CropBox" page.Pdfpage.rest with
-             | Some r -> r
-             | None -> page.Pdfpage.mediabox)
-        in
-        let rotation = rad_of_deg (float_of_int (Pdfpage.int_of_rotation page.Pdfpage.rotate)) in
-        let tx, ty =
-          match page.Pdfpage.rotate with
-          | Pdfpage.Rotate0 -> (minx, miny)
-          | Pdfpage.Rotate270 -> (minx, miny +. (maxy -. miny))
-          | Pdfpage.Rotate90 -> (minx +. (maxx -. minx), miny)
-          | Pdfpage.Rotate180 -> (minx +. (maxx -. minx), miny +. (maxy -. miny))
-        in
-        let ops =
-          [Pdfops.Op_cm
-             (Pdftransform.matrix_of_transform
-               [Pdftransform.Translate (tx, ty);
-                Pdftransform.Scale ((0., 0.), float_of_int w *. 72. /. res, float_of_int h *. 72. /. res);
-                Pdftransform.Rotate ((0., 0.), rotation)]);
-           Pdfops.Op_BMC "/Artifact";
-           Pdfops.Op_Do "/I0";
-           Pdfops.Op_EMC]
-        in
-        {page with Pdfpage.content = [Pdfops.stream_of_ops ops];
-                   Pdfpage.resources = Pdf.Dictionary [("/XObject", Pdf.Dictionary [("/I0", Pdf.Indirect imageobj)])]})
-      (Pdfpage.pages_of_pagetree pdf)
-      (ilist 1 (Pdfpage.endpage pdf)))
-  in
-    let pdf = if annots then Cpdfannot.remove_annotations range pdf else pdf in
-    Sys.remove tmppdf;
-    pdf
-
-let write_images device res quality boxname annots antialias downsample spec pdf range =
-  if args.path_to_ghostscript = "" then begin
-    Pdfe.log "Please supply path to gs with -gs\n";
-    exit 2
-  end;
-  let tmppdf = Filename.temp_file "cpdf" ".pdf" in
-  tempfiles := tmppdf::!tempfiles;
-  Pdfwrite.pdf_to_file (Pdf.deep_copy pdf) tmppdf;
-  let endpage = Pdfpage.endpage pdf in
-  iter2
-    (fun page pnum ->
-       if not (mem pnum range) then () else
-       let out = Cpdfbookmarks.name_of_spec Cpdfmetadata.UTF8 [] pdf 0 spec pnum "" 0 0 in
-       let antialias, res =
-         if downsample then ["-dDownScaleFactor=4"], res *. 4.  else
-           let bits = if antialias then "4" else "1" in
-             ["-dTextAlphaBits=" ^ bits; "-dGraphicsAlphaBits=" ^ bits], res
-       in
-       let gscall =
-         Filename.quote_command args.path_to_ghostscript
-           ((if args.gs_quiet then ["-dQUIET"] else []) @
-            (if boxname = None then [] else (Cpdfutil.check_injectible (unopt boxname); ["-dUse" ^ (implode (tl (explode (unopt boxname))))])) @ 
-           antialias @
-           ["-dBATCH"; "-dNOPAUSE"; "-sDEVICE=" ^ device; "-dShowAnnots=" ^ string_of_bool annots;
-            "-dJPEGQ=" ^ string_of_int quality; "-sOutputFile=" ^ out; "-sPageList=" ^ string_of_int pnum;
-            "-r" ^ string_of_float res; tmppdf])
-       in
-         begin match Sys.getenv_opt "CPDF_SHOW_EXT" with
-         | Some "true" -> flprint (gscall ^ "\n")
-         | _ -> ()
-         end;
-         begin match Sys.command gscall with
-         | 0 -> ()
-         | _ -> Pdfe.log "Rasterization failed\n"; exit 2
-         end)
-    (Pdfpage.pages_of_pagetree pdf)
-    (ilist 1 endpage);
-  Sys.remove tmppdf
-
+    
 let remove_article_threads pdf =
   Cpdfutil.remove_dict_entry pdf "/Threads" None
 
@@ -5581,12 +5460,12 @@ let rec go () =
   | Rasterize ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
-        write_pdf false (rasterize args.rast_remake ?subformat:args.subformat ?title:args.title args.rast_antialias args.rast_downsample args.rast_device args.rast_res args.rast_annots args.rast_jpeg_quality pdf range)
+        write_pdf false (Cpdfrasterize.rasterize tempfiles args.path_to_ghostscript args.gs_quiet args.path_to_im args.rast_remake ?subformat:args.subformat ?title:args.title args.rast_antialias args.rast_downsample args.rast_device args.rast_res args.rast_annots args.rast_jpeg_quality pdf range)
   | OutputImage ->
       let spec = match args.out with File spec -> spec | _ -> error "Output must be to a file" in
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
-        write_images args.rast_device args.rast_res args.rast_jpeg_quality args.tobox args.rast_annots args.rast_antialias args.rast_downsample spec pdf range
+        Cpdfrasterize.write_images tempfiles args.path_to_ghostscript args.gs_quiet args.rast_device args.rast_res args.rast_jpeg_quality args.tobox args.rast_annots args.rast_antialias args.rast_downsample spec pdf range
   | RemoveJavaScript ->
       let pdf = get_single_pdf args.op false in
         Cpdfjs.remove_javascript pdf;
