@@ -718,7 +718,8 @@ type args =
    mutable redact_overlay_auto_size : bool;
    mutable redact_structure : Cpdfredact.struct_spec;
    mutable redaction_annotation_applied_opacity : float;
-   mutable margin : float option}
+   mutable margin : float option;
+   mutable rast_remake : bool}
 
 let args =
   {op = None;
@@ -906,7 +907,8 @@ let args =
    redact_overlay_auto_size = false;
    redact_structure = Cpdfredact.StructLeave;
    redaction_annotation_applied_opacity = 1.;
-   margin = None}
+   margin = None;
+   rast_remake = false}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -1077,7 +1079,8 @@ let reset_arguments () =
   args.redact_overlay_auto_size <- false;
   args.redact_structure <- Cpdfredact.StructLeave;
   args.redaction_annotation_applied_opacity <- 1.;
-  args.margin <- None
+  args.margin <- None;
+  args.rast_remake <- false
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -3373,6 +3376,7 @@ let specs =
    ("-redact-apply-appearance", Arg.Unit (fun () -> args.redact_apply_appearance <- true), " Use appearance when applying redaction annotation");
    ("-redact-apply-type", Arg.String (fun s -> setop (RedactApplyType s) ()), "Apply redaction from non-redaction annotation");
    ("-rasterize", Arg.Unit (fun () -> setop Rasterize ()), " Rasterize pages");
+   ("-rasterize-remake", Arg.Unit (fun () -> args.rast_remake <- true), " Remake PDF when rasterizing");
    ("-rasterize-alpha", Arg.Unit (fun () -> args.rast_device <- "png16malpha"), " Rasterize in RGBA");
    ("-rasterize-gray", Arg.Unit (fun () -> args.rast_device <- "pnggray"), " Rasterize in grayscale");
    ("-rasterize-1bpp", Arg.Unit (fun () -> args.rast_device <- "pngmono"), " Rasterize in monochrome");
@@ -4095,7 +4099,7 @@ let print_version () =
     ("cpdf " ^ (if agpl then "AGPL " else "") ^ "Version " ^ string_of_int major_version ^ "." ^ string_of_int minor_version ^ (if minor_minor_version = 0 then "" else "." ^ string_of_int minor_minor_version) ^ " " ^ version_date ^ " https://www.coherentpdf.com/\n-help for help." ^ "\n")
 
 (* Call out to GhostScript to rasterize. Read back in and replace the page contents with the resultant PNG. *)
-let rasterize antialias downsample device res annots quality pdf range =
+let rasterize remake ?subformat ?title antialias downsample device res annots quality pdf range =
   if args.path_to_ghostscript = "" then begin
     Pdfe.log "Please supply path to gs with -gs\n";
     exit 2
@@ -5577,7 +5581,7 @@ let rec go () =
   | Rasterize ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
-        write_pdf false (rasterize args.rast_antialias args.rast_downsample args.rast_device args.rast_res args.rast_annots args.rast_jpeg_quality pdf range)
+        write_pdf false (rasterize args.rast_remake ?subformat:args.subformat ?title:args.title args.rast_antialias args.rast_downsample args.rast_device args.rast_res args.rast_annots args.rast_jpeg_quality pdf range)
   | OutputImage ->
       let spec = match args.out with File spec -> spec | _ -> error "Output must be to a file" in
       let pdf = get_single_pdf args.op false in
