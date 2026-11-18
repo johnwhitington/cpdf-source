@@ -4175,18 +4175,26 @@ let show_digital_signature_info pdf json =
            Printf.printf "%s, %s, %s, %s\n" sigtype sigfilter sigsubfilter signame)
         !sigs
 
+let clean_page_comments pdf =
+  (* FIXME *)
+  pdf
+
 let sanitize pdf =
   (* Remove attached files *)
-  (* Clean *)
-  (* Remove invisible text *)
-  (* remove JavaScript *)
-  (* Remove metadata *)
+  let pdf = Cpdfattach.remove_attached_files pdf in
+  (* Clean comments *)
+  let pdf = clean_page_comments pdf in
+  (* Remove JavaScript *)
+  Cpdfjs.remove_javascript pdf;
   (* Remove XMP metadata *)
-  (* Remove thumbnails *)
-  (* Remove annotation responses *)
-  (* Reset form fields to default *)
-  (* Remove all link annotations *)
-  ()
+  let pdf = Cpdfmetadata.remove_all_metadata pdf in
+  (* FIXME Remove metadata. Do all individually or cut it in bulk somehow? *)
+  (* FIXME Remove thumbnails - implement this. *)
+  (* FIXME Remove annotation responses *)
+  (* FIXME Reset form fields to default *)
+  (* FIXME Remove all link annotations - expand remove_annotations to take subtypes / subtypes_not *)
+  (* FIXME Remove invisible text - Expand Cpdfremovetext.remove_all_text for this. How to detect empty-glyph OCR text? *)
+  pdf
 
 (* Main function *)
 let rec go () =
@@ -5643,7 +5651,7 @@ let rec go () =
         write_pdf false pdf
   | Sanitize ->
       let pdf = get_single_pdf args.op false in
-        sanitize pdf;
+      let pdf = sanitize pdf in
         write_pdf false pdf
 
 (* Advise the user if a combination of command line flags makes little sense,
