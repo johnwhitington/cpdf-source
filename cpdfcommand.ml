@@ -4176,9 +4176,12 @@ let show_digital_signature_info pdf json =
         !sigs
 
 let clean_page_comments pdf =
-  (* FIXME *)
-  pdf
+  let state = !Pdfops.write_comments in
+  let pdf = Cpdftweak.append_page_content "" false false (ilist 1 (Pdfpage.endpage pdf)) pdf in
+    Pdfops.write_comments := state;
+    pdf
 
+(* TODO Each piece of functionality here must be exposed as a command line option so we can draw an equivalence between the two... e.g clean_page_comments *)
 let sanitize pdf =
   (* Remove attached files *)
   let pdf = Cpdfattach.remove_attached_files pdf in

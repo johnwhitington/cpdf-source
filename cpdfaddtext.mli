@@ -58,4 +58,3 @@ val replace_pairs :
 
 val process_text :
   Cpdfstrftime.t -> string -> (string * (unit -> string)) list -> string
-
