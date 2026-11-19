@@ -262,23 +262,35 @@ let set_annotations_json pdf i =
 let copy_annotations range frompdf topdf =
   set_annotations_json topdf (Pdfio.input_of_bytes (get_annotations_json frompdf range))
 
-(* FIXME Remove also any /Popup connected with any removed annotation... *)
 (* Remove annotations *)
 let remove_annotations ?subtypes ?subtypes_no range pdf =
   let f ourmem page subtypes =
     begin match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
     | Some (Pdf.Array a) ->
+        let removed = ref [] in
         let a =
           option_map
             (function
              | Pdf.Indirect i ->
                  begin match Pdf.lookup_direct pdf "/Subtype" (Pdf.Indirect i) with
                  | Some (Pdf.Name n) ->
-                     if ourmem (subtype_of_string n) subtypes then None else Some (Pdf.Indirect i)
+                     if ourmem (subtype_of_string n) subtypes then (removed =| i; None) else Some (Pdf.Indirect i)
                  | _ -> Some (Pdf.Indirect i)
                  end
              | _ -> None)
             a
+        in
+        let popups =
+          option_map
+            (function i ->
+               begin match Pdf.lookup_immediate "/Popup" (Pdf.direct pdf (Pdf.Indirect i)) with
+               | Some (Pdf.Indirect p) -> Some p
+               | _ -> None
+               end)
+            !removed
+        in
+        let a =
+          option_map (function Pdf.Indirect i -> if mem i popups then None else Some (Pdf.Indirect i) | _ -> None) a
         in
           {page with Pdfpage.rest = Pdf.add_dict_entry page.Pdfpage.rest "/Annots" (Pdf.Array a)}
     | _ -> page
