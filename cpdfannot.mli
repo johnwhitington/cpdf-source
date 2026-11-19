@@ -9,7 +9,7 @@ val get_annotations_json : ?subtypes:Pdfannot.subtype list -> ?subtypes_no:Pdfan
 val set_annotations_json : Pdf.t -> Pdfio.input -> unit
 
 (** Remove the annotations on given pages. *)
-val remove_annotations : int list -> Pdf.t -> Pdf.t
+val remove_annotations : ?subtypes:Pdfannot.subtype list -> ?subtypes_no:Pdfannot.subtype list -> int list -> Pdf.t -> Pdf.t
 
 (** Copy the annotations on a given set of pages *)
 val copy_annotations : int list -> Pdf.t -> Pdf.t -> unit

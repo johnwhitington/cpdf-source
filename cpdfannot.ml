@@ -262,18 +262,40 @@ let set_annotations_json pdf i =
 let copy_annotations range frompdf topdf =
   set_annotations_json topdf (Pdfio.input_of_bytes (get_annotations_json frompdf range))
 
+(* FIXME Remove also any /Popup connected with any removed annotation... *)
 (* Remove annotations *)
-let remove_annotations range pdf =
-  let remove_annotations_page pagenum page =
-    if mem pagenum range then
-      let rest' =
-        Pdf.remove_dict_entry page.Pdfpage.rest "/Annots"
-      in
-        {page with Pdfpage.rest = rest'}
-    else
-      page
+let remove_annotations ?subtypes ?subtypes_no range pdf =
+  let f ourmem page subtypes =
+    begin match Pdf.lookup_direct pdf "/Annots" page.Pdfpage.rest with
+    | Some (Pdf.Array a) ->
+        let a =
+          option_map
+            (function
+             | Pdf.Indirect i ->
+                 begin match Pdf.lookup_direct pdf "/Subtype" (Pdf.Indirect i) with
+                 | Some (Pdf.Name n) ->
+                     if ourmem (subtype_of_string n) subtypes then None else Some (Pdf.Indirect i)
+                 | _ -> Some (Pdf.Indirect i)
+                 end
+             | _ -> None)
+            a
+        in
+          {page with Pdfpage.rest = Pdf.add_dict_entry page.Pdfpage.rest "/Annots" (Pdf.Array a)}
+    | _ -> page
+    end
   in
-    Cpdfpage.process_pages (Pdfpage.ppstub remove_annotations_page) pdf range
+    let remove_annotations_page pagenum page =
+      if mem pagenum range then
+        match subtypes, subtypes_no with
+        | Some (_::_ as subtypes), _ -> f mem page subtypes
+        | _, Some (_::_ as subtypes_no) -> f (fun s l -> not (mem s l)) page subtypes_no
+        | _, _ ->
+            let rest' = Pdf.remove_dict_entry page.Pdfpage.rest "/Annots" in
+              {page with Pdfpage.rest = rest'}
+      else
+        page
+    in
+      Cpdfpage.process_pages (Pdfpage.ppstub remove_annotations_page) pdf range
 
 (* We add the text by generating a page/pdf with the content and pulling its
    contents out, adding them to the content we have already. We extract any

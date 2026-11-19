@@ -266,6 +266,7 @@ type op =
   | RemoveAcroForm
   | FlattenAnnotations
   | Sanitize
+  | RemovePageComments
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -455,6 +456,7 @@ let string_of_op = function
   | TestExtractText -> "TestExtractText"
   | FlattenAnnotations -> "FlattenAnnotations"
   | Sanitize -> "Sanitize"
+  | RemovePageComments -> "RemovePageComments"
 
 (* Inputs: filename, pagespec. *)
 type input_kind = 
@@ -3448,6 +3450,7 @@ let specs =
    ("-redact-opacity", Arg.Float (fun f -> args.redaction_annotation_applied_opacity <- f), " Set redaction annotation applied opacity");
    ("-margin", Arg.String (fun s -> setmargin s), " Set page magin");
    ("-sanitize", Arg.Unit (setop Sanitize), " Santize document");
+   ("-remove-page-comments", Arg.Unit (setop RemovePageComments), " Remove page comments");
    (* Undocumented. *)
    ("-test-extract-text", Arg.Unit (fun () -> setop TestExtractText ()), "")]
 
@@ -4176,29 +4179,31 @@ let show_digital_signature_info pdf json =
            Printf.printf "%s, %s, %s, %s\n" sigtype sigfilter sigsubfilter signame)
         !sigs
 
-let clean_page_comments pdf =
+let remove_page_comments pdf =
   let state = !Pdfops.write_comments in
   clear Pdfops.write_comments;
   let pdf = Cpdftweak.append_page_content "" false false (ilist 1 (Pdfpage.endpage pdf)) pdf in
     Pdfops.write_comments := state;
     pdf
 
-(* TODO Each piece of functionality here must be exposed as a command line option so we can draw an equivalence between the two... e.g clean_page_comments *)
 let sanitize pdf =
-  (* Remove attached files *)
   let pdf = Cpdfattach.remove_attached_files pdf in
-  (* Clean comments *)
-  let pdf = clean_page_comments pdf in
-  (* Remove JavaScript *)
+  let pdf = remove_page_comments pdf in
   Cpdfjs.remove_javascript pdf;
-  (* Remove XMP metadata *)
   let pdf = Cpdfmetadata.remove_all_metadata pdf in
-  (* FIXME Remove metadata. Do all individually or cut it in bulk somehow? *)
-  (* FIXME Remove thumbnails - implement this. *)
-  (* FIXME Remove annotation responses *)
-  (* FIXME Reset form fields to default *)
-  (* FIXME Remove all link annotations - expand remove_annotations to take subtypes / subtypes_not *)
-  (* FIXME Remove invisible text - Expand Cpdfremovetext.remove_all_text for this. How to detect empty-glyph OCR text? *)
+  let pdf = Cpdfmetadata.set_pdf_info ("/Title", Pdf.String "", 0) pdf in
+  let pdf = Cpdfmetadata.set_pdf_info ("/Author", Pdf.String "", 0) pdf in
+  let pdf = Cpdfmetadata.set_pdf_info ("/Subject", Pdf.String "", 0) pdf in
+  let pdf = Cpdfmetadata.set_pdf_info ("/Keywords", Pdf.String "", 0) pdf in
+  let pdf = Cpdfmetadata.set_pdf_info ("/Creator", Pdf.String "", 0) pdf in
+  let pdf = Cpdfmetadata.set_pdf_info ("/Producer", Pdf.String "", 0) pdf in
+  let pdf = Cpdfmetadata.set_pdf_info ("/CreationDate", Pdf.String (Cpdfmetadata.expand_date "now"), 0) pdf in
+  let pdf = Cpdfmetadata.set_pdf_info ("/ModDate", Pdf.String (Cpdfmetadata.expand_date "now"), 0) pdf in
+  Cpdfutil.remove_dict_entry pdf "/Thumb" None;
+  let pdf = Cpdfannot.remove_annotations ~subtypes:[Pdfannot.Link] (ilist 1 (Pdfpage.endpage pdf)) pdf in
+  (* FIXME Remove invisible text - Expand Cpdfremovetext.remove_all_text for this. How to detect empty-glyph OCR text? Expose command line. *)
+  (* FIXME Remove annotation responses. FIXME expose command line. *)
+  (* FIXME Reset form fields to default. FIXME expose command line. *)
   pdf
 
 (* Main function *)
@@ -4798,7 +4803,7 @@ let rec go () =
   | RemoveAnnotations ->
       let pdf = get_single_pdf args.op false in
         let range = parse_pagespec pdf (get_pagespec ()) in
-          write_pdf false (Cpdfannot.remove_annotations range pdf)
+          write_pdf false (Cpdfannot.remove_annotations ~subtypes:args.annotation_subtypes ~subtypes_no:args.annotation_no_subtypes range pdf)
   | CopyAnnotations getfrom ->
       begin match args.inputs with
       | [(k, _, u, o, _, _) as input] ->
@@ -5657,6 +5662,10 @@ let rec go () =
   | Sanitize ->
       let pdf = get_single_pdf args.op false in
       let pdf = sanitize pdf in
+        write_pdf false pdf
+  | RemovePageComments ->
+      let pdf = get_single_pdf args.op false in
+      let pdf = remove_page_comments pdf in
         write_pdf false pdf
 
 (* Advise the user if a combination of command line flags makes little sense,
