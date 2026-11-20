@@ -27,23 +27,42 @@ let removetext range pdf =
       in
         Cpdfpage.process_pages (Pdfpage.ppstub removetext_page) pdf range
 
-let remove_all_text_ops pdf resources content =
+let remove_all_text_ops ?(only_invisible=false) trm pdf resources content =
   let is_textop = function
     Pdfops.Op_Tj _ | Pdfops.Op_' _ | Pdfops.Op_'' _ | Pdfops.Op_TJ _ -> true
   | _ -> false
   in
+    let trm = ref trm in
     let content' =
       let ops = Pdfops.parse_operators pdf resources content in
-        Pdfops.stream_of_ops
-          (option_map (function x -> if is_textop x then None else Some x) ops) 
+      let ops' =
+        option_map
+          (function op ->
+            if is_textop op && !trm = 3 then None else
+              match op with
+              | Pdfops.Op_Tr n -> trm := n; Some op
+              | op -> Some op)
+          ops
+      in
+        Pdfops.stream_of_ops ops'
+
     in
       [content']
 
-let remove_all_text_page pdf p =
+let remove_all_text_page ?(only_invisible=false) pdf p =
   let resources = p.Pdfpage.resources in
   let content = p.Pdfpage.content in
-    Pdfpage.process_xobjects pdf p remove_all_text_ops;
-    {p with Pdfpage.content = remove_all_text_ops pdf resources content}, pdf
+    (* TODO In the case of only_invisible, a devious file could legitimately
+       set the text rendering mode to invisible in the main page, then have the
+       text sections in XObjects, and we wouldn't catch it. When or if we have
+       an example file for this, we can replace process_xobjects here with
+       explicit handling of Op_Do in the main loop. (In fact, a very devious
+       file could set the text rendering mode multiple times to different
+       values and call the same XObject, but that would require deduplication
+       of any xobjects where the state upon entry differs. We don't have that
+       facility yet either. *)
+    Pdfpage.process_xobjects pdf p (remove_all_text_ops ~only_invisible 0);
+    {p with Pdfpage.content = (remove_all_text_ops ~only_invisible 0) pdf resources content}, pdf
 
 let remove_all_text ?(only_invisible=false) range pdf =
   let pages = Pdfpage.pages_of_pagetree pdf in

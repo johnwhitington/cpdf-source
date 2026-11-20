@@ -723,7 +723,8 @@ type args =
    mutable redact_structure : Cpdfredact.struct_spec;
    mutable redaction_annotation_applied_opacity : float;
    mutable margin : float option;
-   mutable rast_remake : bool}
+   mutable rast_remake : bool;
+   mutable only_invisible : bool}
 
 let args =
   {op = None;
@@ -912,7 +913,8 @@ let args =
    redact_structure = Cpdfredact.StructLeave;
    redaction_annotation_applied_opacity = 1.;
    margin = None;
-   rast_remake = false}
+   rast_remake = false;
+   only_invisible = false}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -1084,7 +1086,8 @@ let reset_arguments () =
   args.redact_structure <- Cpdfredact.StructLeave;
   args.redaction_annotation_applied_opacity <- 1.;
   args.margin <- None;
-  args.rast_remake <- false
+  args.rast_remake <- false;
+  args.only_invisible <- false
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -3451,6 +3454,7 @@ let specs =
    ("-margin", Arg.String (fun s -> setmargin s), " Set page magin");
    ("-sanitize", Arg.Unit (setop Sanitize), " Santize document");
    ("-remove-page-comments", Arg.Unit (setop RemovePageComments), " Remove page comments");
+   ("-only-invisible", Arg.Unit (fun () -> args.only_invisible <- true), " Only remove invisible text");
    (* Undocumented. *)
    ("-test-extract-text", Arg.Unit (fun () -> setop TestExtractText ()), "")]
 
@@ -5257,7 +5261,7 @@ let rec go () =
   | RemoveAllText ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
-        write_pdf false (Cpdfremovetext.remove_all_text range pdf)
+        write_pdf false (Cpdfremovetext.remove_all_text ~only_invisible:args.only_invisible range pdf)
   | ShowBoxes ->
       let pdf = get_single_pdf args.op false in
       let range = parse_pagespec pdf (get_pagespec ()) in
