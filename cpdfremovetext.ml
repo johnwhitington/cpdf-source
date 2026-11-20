@@ -1,7 +1,6 @@
 open Pdfutil
 
 let removetext range pdf =
-  (* Could fail on nesting, or other marked content inside our marked content.*)
   let rec remove_until_last_EMC level = function
     | [] -> []
     | Pdfops.Op_BMC "/CPDFSTAMP"::more ->
@@ -46,7 +45,7 @@ let remove_all_text_page pdf p =
     Pdfpage.process_xobjects pdf p remove_all_text_ops;
     {p with Pdfpage.content = remove_all_text_ops pdf resources content}, pdf
 
-let remove_all_text range pdf =
+let remove_all_text ?(only_invisible=false) range pdf =
   let pages = Pdfpage.pages_of_pagetree pdf in
     let pagenums = indx pages in
     let pdf = ref pdf in

@@ -4201,7 +4201,7 @@ let sanitize pdf =
   let pdf = Cpdfmetadata.set_pdf_info ("/ModDate", Pdf.String (Cpdfmetadata.expand_date "now"), 0) pdf in
   Cpdfutil.remove_dict_entry pdf "/Thumb" None;
   let pdf = Cpdfannot.remove_annotations ~subtypes:[Pdfannot.Link] (ilist 1 (Pdfpage.endpage pdf)) pdf in
-  (* FIXME Remove invisible text - Expand Cpdfremovetext.remove_all_text for this. How to detect empty-glyph OCR text? Expose command line. *)
+  let pdf = Cpdfremovetext.remove_all_text ~only_invisible:true (ilist 1 (Pdfpage.endpage pdf)) pdf in
   (* FIXME Remove annotation responses. FIXME expose command line. *)
   (* FIXME Reset form fields to default. FIXME expose command line. *)
   pdf

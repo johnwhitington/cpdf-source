@@ -4,4 +4,4 @@
 val removetext : int list -> Pdf.t -> Pdf.t
 
 (** Remove all text from the given pages *)
-val remove_all_text : int list -> Pdf.t -> Pdf.t 
+val remove_all_text : ?only_invisible:bool -> int list -> Pdf.t -> Pdf.t 
