@@ -724,7 +724,8 @@ type args =
    mutable redaction_annotation_applied_opacity : float;
    mutable margin : float option;
    mutable rast_remake : bool;
-   mutable only_invisible : bool}
+   mutable only_invisible : bool;
+   mutable redact_sanitize : bool}
 
 let args =
   {op = None;
@@ -914,7 +915,8 @@ let args =
    redaction_annotation_applied_opacity = 1.;
    margin = None;
    rast_remake = false;
-   only_invisible = false}
+   only_invisible = false;
+   redact_sanitize = false}
 
 (* Do not reset original_filename or cpdflin or was_encrypted or
 was_decrypted_with_owner or recrypt or producer or creator or path_to_* or
@@ -1087,7 +1089,8 @@ let reset_arguments () =
   args.redaction_annotation_applied_opacity <- 1.;
   args.margin <- None;
   args.rast_remake <- false;
-  args.only_invisible <- false
+  args.only_invisible <- false;
+  args.redact_sanitize <- false
 
 (* Prefer a) the one given with -cpdflin b) a local cpdflin, c) otherwise assume
 installed at a system place *)
@@ -3475,6 +3478,7 @@ let specs =
    ("-sanitize", Arg.Unit (setop Sanitize), " Santize document");
    ("-remove-page-comments", Arg.Unit (setop RemovePageComments), " Remove page comments");
    ("-only-invisible", Arg.Unit (fun () -> args.only_invisible <- true), " Only remove invisible text");
+   ("-redact-sanitize", Arg.Unit (fun () -> args.redact_sanitize <- true), " Sanitize after redaction");
    (* Undocumented. *)
    ("-test-extract-text", Arg.Unit (fun () -> setop TestExtractText ()), "")]
 
@@ -5487,6 +5491,7 @@ let rec go () =
           ~path_to_convert:args.path_to_im ~path_to_jbig2enc:args.path_to_jbig2enc ~paths ~invert:args.redact_invert ~show:args.redact_show ~color:args.color
           ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth ~underneath:args.underneath range
       in
+      let pdf = if args.redact_sanitize then sanitize pdf else pdf in
         write_pdf false pdf
   | RedactApply ->
       let pdf = get_single_pdf args.op false in
@@ -5500,6 +5505,7 @@ let rec go () =
           ~invert:args.redact_invert ~show:args.redact_show ~color:args.color ~outline:args.outline ~opacity:args.opacity ~linewidth:args.linewidth
           ~underneath:args.underneath range
       in
+      let pdf = if args.redact_sanitize then sanitize pdf else pdf in
         write_pdf false pdf
   | RedactApplyType typ ->
       let pdf = get_single_pdf args.op false in
@@ -5511,6 +5517,7 @@ let rec go () =
           ~path_to_jbig2enc:args.path_to_jbig2enc ~typ ~invert:args.redact_invert ~show:args.redact_show ~color:args.color ~outline:args.outline ~opacity:args.opacity
           ~linewidth:args.linewidth ~underneath:args.underneath range
       in
+      let pdf = if args.redact_sanitize then sanitize pdf else pdf in
         write_pdf false pdf
   | Rasterize ->
       let pdf = get_single_pdf args.op false in
