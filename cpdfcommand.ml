@@ -2273,11 +2273,21 @@ let rfindpdf = ref (fun () -> Pdf.empty ())
 These are directly translated into their equivalent command line options, and we perform them now. *)
 let perform_redaction_preset = function
   | "all-content" ->
-      () (* Simply change parameters to remove anything touched. *)
+      args.redact_vectors <- parse_redaction_spec "remove,touches";
+      args.redact_images <- parse_redaction_spec "remove,touches";
+      args.redact_inline_images <- parse_redaction_spec "remove,touches";
+      args.redact_annotations <- parse_redaction_spec "remove,touches"
+  | "all-content-scan" ->
+      args.redact_vectors <- parse_redaction_spec "remove,touches";
+      args.redact_images <- parse_redaction_spec "chop";
+      args.redact_inline_images <- parse_redaction_spec "remove,touches";
+      args.redact_annotations <- parse_redaction_spec "remove,touches"
   | "process-metadata" ->
-      () (* Simply change parameters to remove bookmarks, structure, links touched *)
+      args.redact_bookmarks <- parse_link_redaction_spec "remove,touches";
+      args.redact_links <- parse_link_redaction_spec "remove,touches";
+      args.redact_structure <- parse_structure_redaction_spec "remove,innermost"
   | "sanitize" ->
-      () (* Add -redact-sanitize to santize after redaction. *)
+      args.redact_sanitize <- true
   | x -> error ("Unknown redaction pre-set " ^ x)
 
 let parse_redaction_preset s =
