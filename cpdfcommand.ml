@@ -2261,6 +2261,25 @@ let annotation_subtypes_of_string s =
 
 let rfindpdf = ref (fun () -> Pdf.empty ())
 
+(* A redaction preset is a comma-separated unordeded list containing at most one from each list:
+
+   What to delete: text, all-content
+   Structure removal: process-metadata
+   Santization: sanitize
+
+These are directly translated into their equivalent command line options, and we perform them now. *)
+let perform_redaction_preset = function
+  | "all-content" ->
+      () (* Simply change parameters to remove anything touched. *)
+  | "process-metadata" ->
+      () (* Simply change parameters to remove bookmarks, structure, links touched *)
+  | "sanitize" ->
+      () (* Add -redact-sanitize to santize after redaction. *)
+  | x -> error ("Unknown redaction pre-set " ^ x)
+
+let parse_redaction_preset s =
+  iter perform_redaction_preset (String.split_on_char ',' s)
+
 let specs =
   [("-version",
       Arg.Unit (setop Version),
@@ -3378,6 +3397,7 @@ let specs =
    ("-remove-struct-tree", Arg.Unit (fun () -> setop RemoveStructTree ()), " Remove entire structure tree");
    ("-mark-as-artifact", Arg.Unit (fun () -> setop MarkAsArtifact ()), " Mark whole file as artifact");
    ("-redact", Arg.Unit (fun () -> setop Redact ()), " Redact entire pages");
+   ("-redact-preset", Arg.String parse_redaction_preset, " Set redaction parameters from a pre-set.");
    ("-redact-shape", Arg.String (fun s -> setop (RedactShape s) ()), " Redact shape");
    ("-redact-apply", Arg.Unit (fun s -> setop RedactApply ()), " Apply redaction annotations");
    ("-redact-apply-appearance", Arg.Unit (fun () -> args.redact_apply_appearance <- true), " Use appearance when applying redaction annotation");
