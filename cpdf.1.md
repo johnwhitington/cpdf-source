@@ -1646,7 +1646,7 @@ full commentary, see cpdfmanual.pdf.
 **cpdf -rasterize in.pdf** \[\<range>] \[-gs \<path>]
 \[-rasterize\[-gray | -1bpp | -jpeg | -jpeg-gray]] \[-rasterize-res \<n>]
 \[-rasterize-jpeg-quality \<n>] \[-rasterize-no-antialias |
--rasterize-downsample] \[-rasterize-annots] \[-rasterize-alpha] **-o out.pdf** 
+-rasterize-downsample] \[-rasterize-annots] \[-rasterize-alpha] \[-rasterize-remake] **-o out.pdf** 
 
 Rasterize each page, replacing the page content with the rasterized version
 in the output PDF.
@@ -1694,6 +1694,12 @@ in the output PDF.
 **-rasterize-alpha**
 
 : Produce an alpha channel (lossless only)
+
+**-rasterize-remake**
+
+: Create a new, plain PDF with the raster images, rather than slot them into
+the existing PDF. Add -subformat \<subformat> \[-title \<title>] as usual to
+build a PDF/UA file.
 
 **cpdf -output-image in.pdf** \[\<range>] \[-gs \<path>]
 \[-rasterize\[-gray | -1bpp | -jpeg | -jpeggray] \[-rasterize-res \<n>]

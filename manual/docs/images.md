@@ -29,6 +29,7 @@
          [-rasterize-res <n>] [-rasterize-jpeg-quality <n>]
          [-rasterize-no-antialias | -rasterize-downsample]
          [-rasterize-annots] | [-rasterize-alpha]
+         [-rasterize-remake]
 
     cpdf -output-image in.pdf [<range>] -o <format>
          [-rasterize[-gray|-1bpp|-jpeg|-jpeg-gray]
@@ -343,3 +344,5 @@ we can choose which box is rasterized:
 For example:
 
 `cpdf -gs gs -output-image -tobox /BleedBox -rasterize-jpeg in.pdf -o image%%%.jpeg`
+
+To create a new, plain PDF with the raster images, rather than slot them into the existing PDF, add `-rasterize-remake`. We may add `-subformat <subformat> [-title <title>]` as usual to build a PDF/UA file.

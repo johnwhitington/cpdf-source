@@ -1,25 +1,11 @@
-%2.9.4, the final version.
-% -rast-remake
+%2.9.4, the final version with PDF manual.
 % -sanitize -remove-page-comments
 % -extension of -remove-annotations to allow subtypes/subtypes-no
 % -only-invisible for -remove-all-text
 % -redact-sanitize
-% mention reveal hidden text
 
+% mention -reveal-hidden-text
 % Note in manual that we can use -blacktext to reveal text which might need redacting which we don't know is there...
-
-%Possible improvements:
-%
-%1) Chapter 1 is too big
-%2) Move quickstarts to each chapter?
-%3) Tables for command line options
-%4) A separate tutorial document with pictures
-%5) General rewriting of accretions
-%6) More examples where too terse e.g -process-images
-%7) Reorganize options to match new man page
-%8) Bolding on commands
-%9) One day: all in .md, marry with man page in some way.
-%10) Add an index (of commands, for example. Or more...)
 
 %\DocumentMetadata{lang=en, pdfversion=2.0, pdfstandard=ua-2, pdfstandard=a-4f, testphase={phase-III, title, table, math, firstaid}}
 \documentclass{book}
@@ -3534,7 +3520,8 @@ The \texttt{-dump-attachments} operation, when given a PDF file and a directory 
 \noindent\small\verb!     [-rasterize[-gray|-1bpp|-jpeg|-jpeg-gray]!\\
 \noindent\small\verb!     [-rasterize-res <n>] [-rasterize-jpeg-quality <n>]!\\
 \noindent\small\verb!     [-rasterize-no-antialias | -rasterize-downsample]!\\
-\noindent\small\verb!     [-rasterize-annots] | [-rasterize-alpha]!
+\noindent\small\verb!     [-rasterize-annots] | [-rasterize-alpha]!\\
+\noindent\small\verb!     [-rasterize-remake]!
 
 \vspace{1.5mm}
 
@@ -3840,6 +3827,8 @@ Option & Effect\\\hline
   \noindent\small\verb!cpdf -gs gs -output-image -tobox /BleedBox -rasterize-jpeg in.pdf!\\
   \noindent\small\verb!     -o image%%%.jpeg!
   \end{framed}
+
+\noindent To create a new, plain PDF with the raster images, rather than slot them into the existing PDF, add \texttt{-rasterize-remake}. We may add \texttt{-subformat <subformat> [-title <title>]} as usual to build a PDF/UA file.
 
 \ \ \ 
 

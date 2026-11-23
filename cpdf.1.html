@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="utf-8" />
-  <meta name="generator" content="pandoc 3.12.1" />
+  <meta name="generator" content="pandoc 3.14" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <meta name="author" content="Coherent Graphics Ltd" />
   <title>CPDF(1)</title>
@@ -36,27 +36,6 @@
       }
       h1 {
         font-size: 1.8em;
-      }
-    }
-    @media print {
-      html {
-        color-scheme: light only;
-      }
-      html, body, pre, code {
-        background-color: transparent;
-      }
-      body, a, a:visited, blockquote {
-        color: black;
-      }
-      pre, code {
-        padding: 0;
-      }
-      p, h2, h3 {
-        orphans: 3;
-        widows: 3;
-      }
-      h2, h3, h4 {
-        page-break-after: avoid;
       }
     }
     p {
@@ -164,6 +143,12 @@
       text-decoration: none;
     }
     span.smallcaps{font-variant: small-caps;}
+    em, em em em, em em em em em {
+      font-style: italic;
+    }
+    em em, em em em em {
+      font-style: normal;
+    }
     div.columns{display: flex; gap: 1.5em;}
     div.column{flex: auto;}
     @media screen {
@@ -180,7 +165,27 @@
       margin: 0 0.8em 0.2em -1.6em;
       vertical-align: middle;
     }
-  </style>
+    @media print {
+      html {
+        color-scheme: light only;
+      }
+      html, body, pre, code {
+        background-color: transparent;
+      }
+      body, a, a:visited, blockquote {
+        color: black;
+      }
+      pre, code {
+        padding: 0;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }  </style>
 </head>
 <body>
 <header id="title-block-header">
@@ -1858,7 +1863,7 @@ no dpi threshold).</p>
 &lt;path&gt;] [-rasterize[-gray | -1bpp | -jpeg | -jpeg-gray]]
 [-rasterize-res &lt;n&gt;] [-rasterize-jpeg-quality &lt;n&gt;]
 [-rasterize-no-antialias | -rasterize-downsample] [-rasterize-annots]
-[-rasterize-alpha] <strong>-o out.pdf</strong></p>
+[-rasterize-alpha] [-rasterize-remake] <strong>-o out.pdf</strong></p>
 <p>Rasterize each page, replacing the page content with the rasterized
 version in the output PDF.</p>
 <dl>
@@ -1905,6 +1910,12 @@ version in the output PDF.</p>
 <dt><strong>-rasterize-alpha</strong></dt>
 <dd>
 <p>Produce an alpha channel (lossless only)</p>
+</dd>
+<dt><strong>-rasterize-remake</strong></dt>
+<dd>
+<p>Create a new, plain PDF with the raster images, rather than slot them
+into the existing PDF. Add -subformat &lt;subformat&gt; [-title
+&lt;title&gt;] as usual to build a PDF/UA file.</p>
 </dd>
 </dl>
 <p><strong>cpdf -output-image in.pdf</strong> [&lt;range&gt;] [-gs
