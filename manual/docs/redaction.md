@@ -89,6 +89,14 @@ The rectangle is given as "minx miny width height" as usual. What
 content is removed, and how it is detected and processed is defined by a
 number of options:
 
+| Option | Values | Default value |
+| ------ | ------ | ------------- |
+| `-redact-text` | `[remove|leave],[touches|encloses|covers<n>]` | `remove,covers80` |
+| `-redact-images` | `[remove|chop|leave],[touches|encloses|covers<n>]` | `leave` |
+| `-redact-inline-images` | `[remove|leave],[touches|encloses|covers<n>]` | `leave` |
+| `-redact-vectors` | `[remove|leave],[touches|encloses|covers<n>]` | `leave` |
+| `-redact-annotations` | `[remove|leave],[touches|encloses|covers<n>]` | `leave` |
+
 The specification is made of two parts - the first required, the second
 optional. For the first, the `remove` specifier will remove matching
 content, `leave` will leave the content unredacted, and `chop` - for
@@ -184,6 +192,13 @@ other places. For example, bookmarks or links which point to the
 redacted content or in PDF/UA logical structure. Cpdf provides options
 to be added to all redaction commands (such as `-redact-shape`) to
 redact such data:
+
+| Option | Values | Default value |
+| ------ | ------ | ------------- |
+| `-redact-bookmarks` | `[remove|leave],[page|touches]` | `leave` |
+| `-redact-links` | `[remove|leave],[page|touches]` | `leave` |
+| `-redact-structure` | `[remove|leave],[all|innermost|containing]` | `leave` |
+
 
 For example, to remove bookmarks which link to the redacted areas, use
 `-redact-bookmarks remove,touches`. To remove links from other pages

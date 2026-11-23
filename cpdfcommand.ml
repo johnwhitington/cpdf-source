@@ -897,7 +897,7 @@ let args =
    page_content_graphics = true;
    annotation_subtypes = [];
    annotation_no_subtypes = [];
-   redact_text = (Remove, Some Touching);
+   redact_text = (Remove, Some (Covering 80.));
    redact_images = (Leave, None);
    redact_inline_images = (Leave, None);
    redact_vectors = (Leave, None);
@@ -1070,7 +1070,7 @@ let reset_arguments () =
   args.page_content_text <- true;
   args.page_content_graphics <- true;
   args.annotation_no_subtypes <- [];
-  args.redact_text <- (Remove, Some Touching);
+  args.redact_text <- (Remove, Some (Covering 80.));
   args.redact_images <- (Leave, None);
   args.redact_inline_images <- (Leave, None);
   args.redact_vectors <- (Leave, None);
