@@ -30,6 +30,8 @@
          [-dict-entry-search <term>] in.pdf -o out.pdf
 
     cpdf -remove-clipping [<range>] in.pdf -o out.pdf
+    
+    cpdf -remove-page-comments [<range>] in.pdf -o out.pdf
 
     cpdf -obj[-json] <object specification> in.pdf
 
@@ -231,6 +233,15 @@ pages from the file.
 `cpdf -remove-clipping in.pdf -o out.pdf`
 
 > Remove clipping paths in `in.pdf`, writing to `out.pdf`.
+
+## Removing Page Comments
+
+The `-remove-page-comments` operation removes any internal PDF graphics stream
+comments on given pages from the file.
+
+`cpdf -remove-page-comments in.pdf -o out.pdf`
+
+> Remove page comments in `in.pdf`, writing to `out.pdf`.
 
 ## Exploring PDFs
 

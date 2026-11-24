@@ -2561,6 +2561,10 @@ Low level operations to edit PDF objects directly. See cpdfmanual.pdf for detail
 
 Remove any clipping paths from a PDF.
 
+**cpdf -remove-page-comments in.pdf** \[\<range>] **-o out.pdf**
+
+Remove any internal PDF comments from the graphics streams of a document.
+
 **cpdf -obj[-json] \<object specification> in.pdf**
 
 **cpdf -replace-obj \<object specification>=\<object> in.pdf -o out.pdf**

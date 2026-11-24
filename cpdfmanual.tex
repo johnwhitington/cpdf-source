@@ -1,7 +1,5 @@
 % 2.9.4, the final version with PDF manual.
-% 1. -only-invisible for -remove-all-text
-% 2. -remove-page-comments (in miscellaneous?)
-% 3. -sanitize -redact-sanitize
+% 1. -sanitize -redact-sanitize
 
 % mention -reveal-hidden-text
 % Note in manual that we can use -blacktext to reveal text which might need redacting which we don't know is there...
@@ -5910,6 +5908,9 @@ There are several ways to check that redaction has proceeded as we would have wi
   \noindent\verb!cpdf -remove-clipping [<range>] in.pdf -o out.pdf!
 
   \vspace{1.5mm}
+  \noindent\verb!cpdf -remove-page-comments in.pdf [<range>] -o out.pdf!
+
+  \vspace{1.5mm}
   \noindent\verb!cpdf -obj[-json] <object specification> in.pdf!
 
   \vspace{1.5mm}
@@ -6139,7 +6140,6 @@ This is for editing data within the PDF's internal representation. Use with caut
 
 \section{Removing Clipping}
 
-
 The \texttt{-remove-clipping} operation removes any clipping paths on given pages from the file.
 
   \begin{framed}
@@ -6147,6 +6147,17 @@ The \texttt{-remove-clipping} operation removes any clipping paths on given page
 
   \vspace{2.5mm}
   \noindent Remove clipping paths in \texttt{in.pdf}, writing to \texttt{out.pdf}. 
+  \end{framed}
+
+\section{Removing Page Comments}
+
+Internally, PDF graphics streams may have internal comments in them. Normally, Cpdf will preserve these comments when processing page content. To remove any comments (for example, for security), we can do:
+
+  \begin{framed}
+  \small\noindent\verb!cpdf -remove-page-comments in.pdf -o out.pdf!
+
+  \vspace{2.5mm}
+  \noindent Remove page comments in \texttt{in.pdf}, writing to \texttt{out.pdf}. 
   \end{framed}
 
 \section{Exploring PDFs}
