@@ -2320,10 +2320,13 @@ Remove only one image, with the given name.
 The name can be obtained from, for example,
 \f[B]\-list\-images\-used\f[R].
 .PP
-\f[B]cpdf \-remove\-all\-text in.pdf\f[R] [<range>] \f[B]\-o
-out.pdf\f[R]
+\f[B]cpdf \-remove\-all\-text in.pdf\f[R] [<range>] [\-only\-invisible]
+\f[B]\-o out.pdf\f[R]
 .PP
 Remove all text from a PDF.
+.TP
+\f[B]\-only\-invisible\f[R]
+Remove only invisible text, such as that created by an OCR program.
 .PP
 \f[B]cpdf \-blacktext in.pdf\f[R] [<range>] \f[B]\-o out.pdf\f[R]
 .PP

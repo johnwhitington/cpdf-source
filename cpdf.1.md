@@ -2496,9 +2496,13 @@ Remove bit-mapped (photographic) images from a PDF.
 : Remove only one image, with the given name. The name can be obtained from,
 for example, **-list-images-used**.
 
-**cpdf -remove-all-text in.pdf** \[\<range>] **-o out.pdf**
+**cpdf -remove-all-text in.pdf** \[\<range>] \[-only-invisible] **-o out.pdf**
 
 Remove all text from a PDF.
+
+**-only-invisible**
+
+: Remove only invisible text, such as that created by an OCR program. 
 
 **cpdf -blacktext in.pdf** \[\<range>] **-o out.pdf**
 

@@ -5869,7 +5869,7 @@ There are several ways to check that redaction has proceeded as we would have wi
   \noindent\verb!cpdf -draft [-boxes] [-draft-remove-only <n>] in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf -remove-all-text in.pdf [<range>] -o out.pdf!
+  \noindent\verb!cpdf -remove-all-text [-only-invisible] in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -blacktext in.pdf [<range>] -o out.pdf!\\
@@ -5962,6 +5962,8 @@ objects or clipped in the original). For example:
   \begin{framed}
     \noindent\small\verb!cpdf -remove-all-text in.pdf -o out.pdf!
   \end{framed}
+
+\noindent The \texttt{-only-invisible} option only removes invisible (PDF Text Rendering Mode 3) text, such as that created by an OCR program.
 
   \section{Blackening Text, Lines and Fills}
 \index{blacken!text}

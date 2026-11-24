@@ -2,7 +2,7 @@
 
     cpdf -draft [-boxes] [-draft-remove-only <n>] in.pdf [<range>] -o out.pdf
 
-    cpdf -remove-all-text in.pdf [<range>] -o out.pdf
+    cpdf -remove-all-text [-only-invisible] in.pdf [<range>] -o out.pdf
 
     cpdf -blacktext in.pdf [<range>] -o out.pdf
     cpdf -blacklines in.pdf [<range>] -o out.pdf
@@ -76,6 +76,9 @@ output of `-list-images[-used]`. To remove text instead of images, use
 the `-remove-all-text` operation:
 
 `cpdf -remove-all-text in.pdf -o out.pdf`
+
+The -only-invisible option only removes invisible (PDF Text Rendering Mode 3)
+text, such as that created by an OCR program.
 
 ## Blackening Text, Lines and Fills
 
