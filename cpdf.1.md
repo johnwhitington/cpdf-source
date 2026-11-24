@@ -2409,6 +2409,10 @@ Apply annotations as if they were redaction annotations. See options below.
 
 : Invert the redaction, leaving everything which would otherwise be redacted and removing everything which would otherwise be kept.
 
+**-redact-sanitize**
+
+: Sanitize PDF after redacting. See cpdfmanual.pdf for details.
+
 **cpdf -annotate** \<rectangle> **in.pdf** \[\<range>] [annotation options] **-o out.pdf**
 
 Create a redaction annotation.
@@ -2480,6 +2484,11 @@ Remove the structure tree from a PDF.
 **cpdf -ocg-remove in.pdf -o out.pdf**
 
 Remove the optional content structure from a PDF.
+
+**cpdf -sanitize in.pdf -o out.pdf**
+
+Sanitize a PDF by removing attached files, page comments, JavaScript, XMP
+metadata, plain metadata, thumbnails, link annotations and invisible text.
 
 # 21. MISCELLANEOUS
 

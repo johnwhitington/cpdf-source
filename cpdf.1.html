@@ -2644,6 +2644,10 @@ defining it on the command line.</p>
 <p>Invert the redaction, leaving everything which would otherwise be
 redacted and removing everything which would otherwise be kept.</p>
 </dd>
+<dt><strong>-redact-sanitize</strong></dt>
+<dd>
+<p>Sanitize PDF after redacting. See cpdfmanual.pdf for details.</p>
+</dd>
 </dl>
 <p><strong>cpdf -annotate</strong> &lt;rectangle&gt;
 <strong>in.pdf</strong> [&lt;range&gt;] [annotation options] <strong>-o
@@ -2712,6 +2716,10 @@ also set, intersperse with newlines not spaces.</p>
 <p>Remove the structure tree from a PDF.</p>
 <p><strong>cpdf -ocg-remove in.pdf -o out.pdf</strong></p>
 <p>Remove the optional content structure from a PDF.</p>
+<p><strong>cpdf -sanitize in.pdf -o out.pdf</strong></p>
+<p>Sanitize a PDF by removing attached files, page comments, JavaScript,
+XMP metadata, plain metadata, thumbnails, link annotations and invisible
+text.</p>
 <h1 id="miscellaneous">21. MISCELLANEOUS</h1>
 <p><strong>cpdf -draft</strong> <strong>in.pdf</strong> [&lt;range&gt;]
 [-boxes] [-draft-remove-only &lt;n&gt;] <strong>-o out.pdf</strong></p>

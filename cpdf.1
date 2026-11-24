@@ -2242,6 +2242,10 @@ defining it on the command line.
 \f[B]\-redact\-invert\f[R]
 Invert the redaction, leaving everything which would otherwise be
 redacted and removing everything which would otherwise be kept.
+.TP
+\f[B]\-redact\-sanitize\f[R]
+Sanitize PDF after redacting.
+See cpdfmanual.pdf for details.
 .PP
 \f[B]cpdf \-annotate\f[R] <rectangle> \f[B]in.pdf\f[R] [<range>]
 [annotation options] \f[B]\-o out.pdf\f[R]
@@ -2306,6 +2310,12 @@ Remove the structure tree from a PDF.
 \f[B]cpdf \-ocg\-remove in.pdf \-o out.pdf\f[R]
 .PP
 Remove the optional content structure from a PDF.
+.PP
+\f[B]cpdf \-sanitize in.pdf \-o out.pdf\f[R]
+.PP
+Sanitize a PDF by removing attached files, page comments, JavaScript,
+XMP metadata, plain metadata, thumbnails, link annotations and invisible
+text.
 .SH 21. MISCELLANEOUS
 \f[B]cpdf \-draft\f[R] \f[B]in.pdf\f[R] [<range>] [\-boxes]
 [\-draft\-remove\-only <n>] \f[B]\-o out.pdf\f[R]

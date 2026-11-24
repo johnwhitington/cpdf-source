@@ -18,6 +18,10 @@
     cpdf -remove-struct-tree in.pdf -o out.pdf
     cpdf -ocg-remove in.pdf -o out.pdf
 
+    Document Sanitization:
+
+    cpdf -sanitize in.pdf -o out.pdf
+
     Redaction application options:
 
     -color <color> (see Text and Stamps for color specifications)
@@ -39,6 +43,7 @@
     -redact-structure [remove|leave],[all|innermost|containing]
     -redact-apply-appearance
     -redact-invert
+    -redact-sanitize
 
     Redaction annotation creation options:
 
@@ -247,6 +252,32 @@ And one more from elsewhere in this manual:
 
 > Remove the optional content structure from a document. See [Optional Content Groups](optional-content-groups.md)
 for details.
+
+## Sanitization
+
+The -sanitize operation performs a number of operations to remove identifying
+data from a PDF in one go:
+
+`cpdf -sanitize in.pdf -o out.pdf`
+
+> Sanitize a document
+
+The operations are:
+
+- Remove attached files
+- Remove page comments
+- Remove JavaScript
+- Remove all XMP metadata
+- Remove plain metadata (title, author etc.)
+- Remove thumbnails
+- Remove link annotations
+- Remove invisible text
+
+The direct Cpdf equivalent is:
+
+`cpdf in.pdf -remove-attached-files AND -remove-page-comments AND -remove-javascript AND -remove-all-metadata AND -set-title "" AND -set-author "" AND -set-subject "" AND -set-keywords "" AND -set-creator "" AND -set-producer "" AND -set-creation-date "" AND -set-modification-date "" AND -remove-thumbnails AND -remove-annotations -annot-subtypes /Link AND -remove-all-text -only-invisible -o out.pdf`
+
+Alternatively, sanitization may be performed during redaction by adding `-redact-sanitize` to the command line when using `-redact`, `-redact-shape` or `-redact-apply[-type]`.
 
 ## Evidence of redaction
 
