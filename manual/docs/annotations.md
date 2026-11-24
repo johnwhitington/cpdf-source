@@ -8,7 +8,8 @@
 
     cpdf -copy-annotations from.pdf to.pdf [<range>] -o out.pdf
 
-    cpdf -remove-annotations in.pdf [<range>] -o out.pdf
+    cpdf -remove-annotations in.pdf [<range>]
+         [-annot-type <subtypes> | -annot-no-type <subtypes>] -o out.pdf
 
     cpdf -flatten-annotations in.pdf [<range>]
          [-annot-type <subtypes> | -annot-no-type <subtypes>] -o out.pdf
@@ -114,6 +115,13 @@ given page range.
 `cpdf -remove-annotations in.pdf 1 -o out.pdf`
 
 > Remove annotations from the first page of a file only.
+
+We can use `-annot-type` or `-annot-no-type` to select annotations to
+remove, or to refrain from removing. For example:
+
+`cpdf -remove-annotations in.pdf 1 -annot-no-type /Link/Highlight -o out.pdf`
+
+> Remove annotations, except link and highlight annotations.
 
 ## Flattening Annotations
 

@@ -1365,11 +1365,12 @@ position. E.g <strong>-chop-h 200pt</strong>.</p>
 <p><strong>cpdf -list-annotations in.pdf</strong> [&lt;range&gt;]</p>
 <p>List textual content of annotations to standard output. Each
 annotation is preceded by the page number and followed by a newline.</p>
-<p><strong>cpdf -list-annotations-json in.pdf</strong>
-[&lt;range&gt;]</p>
+<p><strong>cpdf -list-annotations-json in.pdf</strong> [&lt;range&gt;]
+[-annot-type &lt;subtypes&gt;] [-annot-no-type &lt;subtypes&gt;]</p>
 <p>List annotation objects in JSON format. This includes all ancillary
 objects, to support round-tripping. See cpdfmanual.pdf for full format
-details.</p>
+details. Select types to list or avoid with, for example -annot-type
+/Link or -annot-no-type /Link/Highlight.</p>
 <p><strong>cpdf -set-annotations &lt;filename&gt;</strong>
 <strong>in.pdf</strong> [&lt;range&gt;] [-underneath] <strong>-o
 out.pdf</strong></p>
@@ -1387,8 +1388,17 @@ ones.</p>
 <p>Copy annotations from <strong>from.pdf</strong> to
 <strong>to.pdf</strong>.</p>
 <p><strong>cpdf -remove-annotations in.pdf</strong> [&lt;range&gt;]
+[-annot-type &lt;subtypes&gt;] [-annot-no-type &lt;subtypes&gt;]
 <strong>-o out.pdf</strong></p>
-<p>Remove annotations from the document.</p>
+<p>Remove annotations from the document. Select types to remove or avoid
+removing with, for example -annot-type /Link or -annot-no-type
+/Link/Highlight.</p>
+<p><strong>cpdf -flatten-annotations in.pdf</strong> [&lt;range&gt;]
+[-annot-type &lt;subtypes&gt;] [-annot-no-type &lt;subtypes&gt;]
+<strong>-o out.pdf</strong></p>
+<p>Flatten annotations (bake in as page content). Select types to
+flatten or avoid flattening with, for example -annot-type /Link or
+-annot-no-type /Link/Highlight.</p>
 <h1 id="document-information-and-metadata">11. DOCUMENT INFORMATION AND
 METADATA</h1>
 <p><strong>cpdf -info[-json]</strong> <strong>in.pdf</strong> [-utf8]

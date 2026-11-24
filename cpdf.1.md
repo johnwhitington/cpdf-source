@@ -1155,10 +1155,12 @@ E.g **-chop-h 200pt**.
 List textual content of annotations to standard output. Each annotation is
 preceded by the page number and followed by a newline.
 
-**cpdf -list-annotations-json in.pdf** \[\<range>]
+**cpdf -list-annotations-json in.pdf** \[\<range>] \[-annot-type \<subtypes>] \[-annot-no-type \<subtypes>]
 
-List annotation objects in JSON format. This includes all ancillary objects,
-to support round-tripping. See cpdfmanual.pdf for full format details.
+List annotation objects in JSON format. This includes all ancillary objects, to
+support round-tripping. See cpdfmanual.pdf for full format details. Select
+types to list or avoid with, for example -annot-type /Link or -annot-no-type
+/Link/Highlight.
 
 **cpdf -set-annotations \<filename>** **in.pdf** \[\<range>] \[-underneath] **-o out.pdf**
 
@@ -1173,9 +1175,15 @@ annotations already present.
 
 Copy annotations from **from.pdf** to **to.pdf**.
 
-**cpdf -remove-annotations in.pdf** \[\<range>] **-o out.pdf**
+**cpdf -remove-annotations in.pdf** \[\<range>] \[-annot-type \<subtypes>] \[-annot-no-type \<subtypes>] **-o out.pdf**
 
-Remove annotations from the document.
+Remove annotations from the document. Select types to remove or avoid removing with, for example -annot-type /Link or -annot-no-type
+/Link/Highlight.
+
+**cpdf -flatten-annotations in.pdf** \[\<range>] \[-annot-type \<subtypes>] \[-annot-no-type \<subtypes>] **-o out.pdf**
+
+Flatten annotations (bake in as page content). Select types to flatten or avoid
+flattening with, for example -annot-type /Link or -annot-no-type /Link/Highlight.
 
 # 11. DOCUMENT INFORMATION AND METADATA
 

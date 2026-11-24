@@ -1077,11 +1077,14 @@ List textual content of annotations to standard output.
 Each annotation is preceded by the page number and followed by a
 newline.
 .PP
-\f[B]cpdf \-list\-annotations\-json in.pdf\f[R] [<range>]
+\f[B]cpdf \-list\-annotations\-json in.pdf\f[R] [<range>] [\-annot\-type
+<subtypes>] [\-annot\-no\-type <subtypes>]
 .PP
 List annotation objects in JSON format.
 This includes all ancillary objects, to support round\-tripping.
 See cpdfmanual.pdf for full format details.
+Select types to list or avoid with, for example \-annot\-type /Link or
+\-annot\-no\-type /Link/Highlight.
 .PP
 \f[B]cpdf \-set\-annotations <filename>\f[R] \f[B]in.pdf\f[R] [<range>]
 [\-underneath] \f[B]\-o out.pdf\f[R]
@@ -1097,10 +1100,19 @@ out.pdf\f[R]
 .PP
 Copy annotations from \f[B]from.pdf\f[R] to \f[B]to.pdf\f[R].
 .PP
-\f[B]cpdf \-remove\-annotations in.pdf\f[R] [<range>] \f[B]\-o
-out.pdf\f[R]
+\f[B]cpdf \-remove\-annotations in.pdf\f[R] [<range>] [\-annot\-type
+<subtypes>] [\-annot\-no\-type <subtypes>] \f[B]\-o out.pdf\f[R]
 .PP
 Remove annotations from the document.
+Select types to remove or avoid removing with, for example \-annot\-type
+/Link or \-annot\-no\-type /Link/Highlight.
+.PP
+\f[B]cpdf \-flatten\-annotations in.pdf\f[R] [<range>] [\-annot\-type
+<subtypes>] [\-annot\-no\-type <subtypes>] \f[B]\-o out.pdf\f[R]
+.PP
+Flatten annotations (bake in as page content).
+Select types to flatten or avoid flattening with, for example
+\-annot\-type /Link or \-annot\-no\-type /Link/Highlight.
 .SH 11. DOCUMENT INFORMATION AND METADATA
 \f[B]cpdf \-info[\-json]\f[R] \f[B]in.pdf\f[R] [\-utf8] [\-in | \-cm |
 \-mm]

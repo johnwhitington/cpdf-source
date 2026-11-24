@@ -1,8 +1,7 @@
-%2.9.4, the final version with PDF manual.
-% -sanitize -remove-page-comments
-% -extension of -remove-annotations to allow subtypes/subtypes-no
-% -only-invisible for -remove-all-text
-% -redact-sanitize
+% 2.9.4, the final version with PDF manual.
+% 1. -only-invisible for -remove-all-text
+% 2. -remove-page-comments (in miscellaneous?)
+% 3. -sanitize -redact-sanitize
 
 % mention -reveal-hidden-text
 % Note in manual that we can use -blacktext to reveal text which might need redacting which we don't know is there...
@@ -2673,7 +2672,8 @@ As an alternative, pages can be chopped into two at a given position, horizontal
   \small\noindent\verb!cpdf -copy-annotations from.pdf to.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -remove-annotations in.pdf [<range>] -o out.pdf!
+  \small\noindent\verb!cpdf -remove-annotations in.pdf [<range>]!\\
+  \small\noindent\verb!     [-annot-type <subtypes>] [-annot-no-type <subtypes>] -o out.pdf!
 
   \vspace{1.5mm}
   \small\noindent\verb!cpdf -flatten-annotations in.pdf [<range>]!\\
@@ -2724,16 +2724,18 @@ annotations on the selected pages to standard output. Each annotation is precede
 To list only one or more certain types of annotation, add \texttt{-annot-type}:
 
   \begin{framed}
-    \noindent\small\verb!cpdf -list-annotations-json in.pdf -annot-type /Link/Highlight > annots.json!
+    \noindent\small\verb!cpdf -list-annotations-json in.pdf -annot-type /Link/Highlight!\\
+    \noindent\small\verb!> annots.json!\\
     
     \vspace{2.5mm}
     \noindent Print link and highlight annotations from \texttt{in.pdf} in JSON format, redirecting output to \texttt{annots.json}.
   \end{framed}
 
-To list all but one or more certain types of annotation, add \texttt{-annot-no-type}:
+\noindent To list all but one or more certain types of annotation, add \texttt{-annot-no-type}:
 
   \begin{framed}
-    \noindent\small\verb!cpdf -list-annotations-json in.pdf -annot-no-type /Link/Highlight > annots.json!
+    \noindent\small\verb!cpdf -list-annotations-json in.pdf -annot-no-type /Link/Highlight!\\
+    \noindent\small\verb!> annots.json!\\
     
     \vspace{2.5mm}
     \noindent Print all but link and highlight annotations from \texttt{in.pdf} in JSON format, redirecting output to \texttt{annots.json}.
@@ -2785,6 +2787,10 @@ given page range.
     \vspace{2.5mm}
     \noindent Remove annotations from the first page of a file only.
   \end{framed}
+
+We can use \texttt{-annot-type} or \texttt{-annot-no-type} to select annotations to remove, or to refrain from removing. For example \texttt{-annot-type /Link/Highlight} to remove only link and highlight annotations.
+
+\noindent Use
 
   \section{Flattening Annotations}
 \index{annotations!flattening}
