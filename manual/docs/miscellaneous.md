@@ -33,6 +33,8 @@
     
     cpdf -remove-page-comments [<range>] in.pdf -o out.pdf
 
+    cpdf -remove-thumbnails in.pdf -o out.pdf
+
     cpdf -obj[-json] <object specification> in.pdf
 
     cpdf -replace-obj <object specification>=<object> in.pdf -o out.pdf
@@ -241,6 +243,14 @@ comments on given pages from the file.
 `cpdf -remove-page-comments in.pdf -o out.pdf`
 
 > Remove page comments in `in.pdf`, writing to `out.pdf`.
+
+## Removing Thumbnails
+
+The `-remove-thumbnails` operation removes any stored page thumbnails.
+
+`cpdf -remove-thumbnails in.pdf -o out.pdf`
+
+> Remove thumbnails from `in.pdf`, writing to `out.pdf`.
 
 ## Exploring PDFs
 

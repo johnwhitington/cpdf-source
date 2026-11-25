@@ -2579,6 +2579,10 @@ Remove any clipping paths from a PDF.
 
 Remove any internal PDF comments from the graphics streams of a document.
 
+**cpdf -remove-thumbnails in.pdf -o out.pdf**
+
+Remove stored page thumbnails from a PDF.
+
 **cpdf -obj[-json] \<object specification> in.pdf**
 
 **cpdf -replace-obj \<object specification>=\<object> in.pdf -o out.pdf**
