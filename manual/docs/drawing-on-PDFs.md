@@ -548,7 +548,7 @@ logical structure tree, we add structure tags using `-stag` /
 `-end-stag` pairs which, of course, may be nested. For example, let's
 put our H1, and P sections in a Section structure tag:
 
-`cpdf -create-pdf AND -draw-struct-tree -draw -mtrans "50 700" -font-size 40 -no-auto-tags -stag Section -tag H1 -bt -text "This is the heading" -et -end-stag -auto-tags -mtrans "0 -100" -font-size 20 -leading 25 -bt -paras "L200pt=This is the first paragraph, which spreads over more than one line\nHere is the second, which also has multiple lines..." -et -end-stag -o out.pdf`
+`cpdf -create-pdf AND -draw-struct-tree -draw -mtrans "50 700" -font-size 40 -no-auto-tags -stag Section -tag H1 -bt -text "This is the heading" -et -end-tag -auto-tags -mtrans "0 -100" -font-size 20 -leading 25 -bt -paras "L200pt=This is the first paragraph, which spreads over more than one line\nHere is the second, which also has multiple lines..." -et -end-stag -o out.pdf`
 
 Here is the structure tree:
 

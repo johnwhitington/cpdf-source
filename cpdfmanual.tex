@@ -2489,13 +2489,13 @@ These two operations add content directly to the beginning or end of the page da
     \small\noindent\verb!cpdf -pad-after in.pdf [<range>] [-pad-with pad.pdf] -o out.pdf!
 
     \vspace{1.5mm}
-    \small\noindent\verb!cpdf -pad-every [<n>] in.pdf [-pad-with pad.pdf] -o out.pdf!
+    \small\noindent\verb!cpdf -pad-every <n> in.pdf [-pad-with pad.pdf] -o out.pdf!
 
     \vspace{1.5mm}
-    \small\noindent\verb!cpdf -pad-multiple [<n>] in.pdf -o out.pdf!
+    \small\noindent\verb!cpdf -pad-multiple <n> in.pdf -o out.pdf!
 
     \vspace{1.5mm}
-    \small\noindent\verb!cpdf -pad-multiple-before [<n>] in.pdf -o out.pdf!
+    \small\noindent\verb!cpdf -pad-multiple-before <n> in.pdf -o out.pdf!
 
 
 
@@ -4348,7 +4348,7 @@ To produce a PDF in PDF/UA-1 or PDF/UA-2 format add, say, \texttt{-subformat PDF
    \noindent\verb!cpdf in.pdf [<range>] [-draw-struct-tree] [-underneath]!\\
    \noindent\verb!     -draw <draw operations> -o out.pdf!\\
 
-   \noindent\verb!cpdf -text-width <text> [-font <font>] [-fontsize <fontsize>]!\\
+   \noindent\verb!cpdf -text-width <text> [-font <font>] [-font-size <font-size>]!\\
 
    \vspace{1.5mm}
    \noindent \textsc{Building and showing paths}\\
@@ -5026,13 +5026,13 @@ There are two types of tag we can add manually. One kind is used to tag individu
 \begin{framed}
    \noindent\small\verb!cpdf -create-pdf AND -draw-struct-tree -draw -mtrans "50 700" !\\
    \noindent\small\verb!     -font-size 40 -no-auto-tags -tag H1 -bt -text "This is the heading"!\\
-   \noindent\small\verb!     -et -end-stag -auto-tags -mtrans "0 -100" -font-size 20 -leading 25!\\
+   \noindent\small\verb!     -et -end-tag -auto-tags -mtrans "0 -100" -font-size 20 -leading 25!\\
    \noindent\small\verb!     -bt -paras "L200pt=This is the first paragraph, which spreads over!\\
    \noindent\small\verb!more than one line\nHere is the second, which also has multiple lines..."!\\
    \noindent\small\verb!     -et -o out.pdf!
 \end{framed}
 
-\noindent We turned off auto-tagging with \texttt{-no-auto-tags}, then used \texttt{-tag H1} and \texttt{-end-tag} to tag the heading. Then we turned auto-tagging back on with \texttt{-auto-tag}. Here is the result, visually:
+\noindent We turned off auto-tagging with \texttt{-no-auto-tags}, then used \texttt{-tag H1} and \texttt{-end-tag} to tag the heading. Then we turned auto-tagging back on with \texttt{-auto-tags}. Here is the result, visually:
 
 \bigskip
 \ifdefined\HCode
@@ -5679,7 +5679,7 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
   \noindent\verb!-redact-repeat!\\
   \noindent\verb!-redact-auto-size!\\
   \noindent\verb!-font <font>!\\
-  \noindent\verb!-fontsize <n>!\\
+  \noindent\verb!-font-size <n>!\\
   \noindent\verb!-opacity <n>!\\
   \noindent\verb!-line-spacing <n>!\\
   \noindent\verb!-outline <n>!\\
@@ -5782,7 +5782,7 @@ We can add text to, for example, show which rule required the redaction, with \t
 
 \noindent The text colour may be changed with \texttt{-redact-text-color}. Another use of overlay text is to add repeated text to show where text has been redacted. We can do this by adding \texttt{-redact-repeat}. The text will be repeated, interspersed with spaces. To auto-size the text to the width of the redaction annotation, we can add \texttt{-redact-auto-size}. Where both \texttt{-redact-repeat} and \texttt{-redact-auto-size} are present, the given text is interspersed with newlines instead, each repetition scaled to fit one line.
 
-The following options from Chapter 8 may be used to style the text: \texttt{-font}, \texttt{-fontsize}, \texttt{-opacity}, \texttt{-line-spacing}, \texttt{-outline}, \texttt{-linewidth}.
+The following options from Chapter 8 may be used to style the text: \texttt{-font}, \texttt{-font-size}, \texttt{-opacity}, \texttt{-line-spacing}, \texttt{-outline}, \texttt{-linewidth}.
 
 \section{Removing other metadata}
 
@@ -5953,7 +5953,7 @@ There are several ways to check that redaction has proceeded as we would have wi
   \noindent\verb!     [-dict-entry-search <term>] in.pdf -o out.pdf!
 
   \vspace{1.5mm}
-  \noindent\verb!cpdf -remove-clipping [<range>] in.pdf -o out.pdf!
+  \noindent\verb!cpdf -remove-clipping in.pdf [<range>] -o out.pdf!
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -remove-page-comments in.pdf [<range>] -o out.pdf!
