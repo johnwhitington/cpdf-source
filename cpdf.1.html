@@ -1865,16 +1865,21 @@ no dpi threshold).</p>
 </dd>
 </dl>
 <p><strong>cpdf -rasterize in.pdf</strong> [&lt;range&gt;] [-gs
-&lt;path&gt;] [-rasterize[-gray | -1bpp | -jpeg | -jpeg-gray]]
-[-rasterize-res &lt;n&gt;] [-rasterize-jpeg-quality &lt;n&gt;]
-[-rasterize-no-antialias | -rasterize-downsample] [-rasterize-annots]
-[-rasterize-alpha] [-rasterize-remake] <strong>-o out.pdf</strong></p>
+&lt;path&gt;] [-gs-quiet] [-rasterize[-gray | -1bpp | -jpeg |
+-jpeg-gray]] [-rasterize-res &lt;n&gt;] [-rasterize-jpeg-quality
+&lt;n&gt;] [-rasterize-no-antialias | -rasterize-downsample]
+[-rasterize-annots] [-rasterize-alpha] [-rasterize-remake] <strong>-o
+out.pdf</strong></p>
 <p>Rasterize each page, replacing the page content with the rasterized
 version in the output PDF.</p>
 <dl>
 <dt><strong>-gs</strong> &lt;path&gt;</dt>
 <dd>
 <p>Supply path to gs.</p>
+</dd>
+<dt><strong>-gs-quiet</strong></dt>
+<dd>
+<p>Suppress gs output.</p>
 </dd>
 <dt><strong>-rasterize-gray</strong></dt>
 <dd>

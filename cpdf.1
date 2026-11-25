@@ -1579,7 +1579,7 @@ dpi threshold).
 \f[B]\-resample\-interpolate\f[R]
 Use interpolation when resampling.
 .PP
-\f[B]cpdf \-rasterize in.pdf\f[R] [<range>] [\-gs <path>]
+\f[B]cpdf \-rasterize in.pdf\f[R] [<range>] [\-gs <path>] [\-gs\-quiet]
 [\-rasterize[\-gray | \-1bpp | \-jpeg | \-jpeg\-gray]] [\-rasterize\-res
 <n>] [\-rasterize\-jpeg\-quality <n>] [\-rasterize\-no\-antialias |
 \-rasterize\-downsample] [\-rasterize\-annots] [\-rasterize\-alpha]
@@ -1590,6 +1590,9 @@ version in the output PDF.
 .TP
 \f[B]\-gs\f[R] <path>
 Supply path to gs.
+.TP
+\f[B]\-gs\-quiet\f[R]
+Suppress gs output.
 .TP
 \f[B]\-rasterize\-gray\f[R]
 Use grayscale instead of colour.

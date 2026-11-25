@@ -120,8 +120,8 @@ The appearance of the redaction is governed by the options `-color`
 filled), `-linewidth`, `-underneath`, `-opacity`, and in the alternative
 `-redact-no-show` (omit the redaction appearance entirely).
 
-The options `-jbig2enc`, `-jbig2dec`, and `magick` may be required when
-`-redact-images` is in `chop` mode. The `magick` program is always
+The options `-jbig2enc`, `-jbig2dec`, and `-im` may be required when
+`-redact-images` is in `chop` mode. The ImageMagick program is always
 required; `-jbig2dec` and `-jbig2enc` only where the file contains JBIG2
 images.
 

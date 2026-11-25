@@ -202,7 +202,7 @@ Position may be set relative to certain common points:
   |`-topleft 10`           | Left of baseline 10 pts down and in from top left |
   |`-topleft "10 20"`      | Left of baseline 10 pts right and 20 pts down from top left |
   |`-topright 10`          | Right of baseline 10 pts down and left from top right |
-  |`-topright "10 20"`     | Right of baseline 10 pts right and 20 pts down from top right |
+  |`-topright "10 20"`     | Right of baseline 10 pts left and 20 pts down from top right |
   |`-left 10`              | Left of baseline 10 pts in from center left |
   |`-bottomleft 10`        | Left of baseline 10 pts in and up from bottom left |
   |`-bottomleft "10 20"`   | Left of baseline 10 pts right and 20 pts up from bottom left |

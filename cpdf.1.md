@@ -1647,7 +1647,7 @@ full commentary, see cpdfmanual.pdf.
 
 : Use interpolation when resampling.
 
-**cpdf -rasterize in.pdf** \[\<range>] \[-gs \<path>]
+**cpdf -rasterize in.pdf** \[\<range>] \[-gs \<path>] \[-gs-quiet]
 \[-rasterize\[-gray | -1bpp | -jpeg | -jpeg-gray]] \[-rasterize-res \<n>]
 \[-rasterize-jpeg-quality \<n>] \[-rasterize-no-antialias |
 -rasterize-downsample] \[-rasterize-annots] \[-rasterize-alpha] \[-rasterize-remake] **-o out.pdf** 
@@ -1658,6 +1658,10 @@ in the output PDF.
 **-gs** \<path>
 
 : Supply path to gs.
+
+**-gs-quiet**
+
+: Suppress gs output.
 
 **-rasterize-gray**
 
