@@ -105,10 +105,9 @@ The `-blackfills` operation blackens all fills on the given pages.
 Contrary to their names, all these operations can use another color, if
 specified with `-color`.
 
-The operation `-reveal-text` will change the text rendering mode of all
-text to 0 (stroke and fill). This should reveal hidden text. Note that
-hidden text added by an OCR program may have no associated font glyph
-data, and so will not re-appear:
+The operation `-reveal-text` will change the text rendering mode of all text to
+0 (fill). This should reveal hidden text. Note that hidden text added by an OCR
+program may have no associated font glyph data, and so will not re-appear:
 
 `cpdf -reveal-text in.pdf -o out.pdf`
 

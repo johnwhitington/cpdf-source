@@ -138,7 +138,7 @@ instead. For example:
       "FitWindow": null,
       "CenterWindow": null,
       "DisplayDocTitle": true,
-      "NonFullPageScreenMode": null,
+      "NonFullScreenPageMode": null,
       "AcroForm": false,
       "XFA": false,
       "Marked": false,

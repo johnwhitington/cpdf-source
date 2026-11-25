@@ -69,7 +69,7 @@ Here is an example of the output for a small PDF:
     [
       [
         -1,
-        { "/CPDFJSONformatversion": { "I": 2 },
+        { "/CPDFJSONformatversion": { "I": 3 },
           "/CPDFJSONcontentparsed": false,
           "/CPDFJSONstreamdataincluded": true,
           "/CPDFJSONmajorpdfversion": { "I": 1 },

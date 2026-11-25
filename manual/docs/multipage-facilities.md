@@ -4,13 +4,13 @@
 
     cpdf -pad-after in.pdf [<range>] [-pad-with pad.pdf] -o out.pdf
 
-    cpdf -pad-every [<integer>] in.pdf [-pad-with pad.pdf] -o out.pdf
+    cpdf -pad-every <integer> in.pdf [-pad-with pad.pdf] -o out.pdf
 
-    cpdf -pad-multiple [<integer>] in.pdf -o out.pdf
+    cpdf -pad-multiple <integer> in.pdf -o out.pdf
 
-    cpdf -pad-multiple-before [<integer>] in.pdf -o out.pdf
+    cpdf -pad-multiple-before <integer> in.pdf -o out.pdf
 
-    cpdf [-impose <pagesize> | impose-xy "<x> <y>"]  
+    cpdf [-impose <pagesize> | -impose-xy "<x> <y>"]  
          [-impose-columns] [-impose-rtl] [-impose-btt]  
          [-impose-margin <margin>] [-impose-spacing <spacing>]  
          [-impose-linewidth <width>] [-fast]  

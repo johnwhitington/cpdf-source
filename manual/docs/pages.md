@@ -13,7 +13,7 @@
 
     cpdf -center-to-fit "<x size> <y size>" [-fast] in.pdf [<range>] -o out.pdf
 
-    cpdf -scale-contents [<scale>] [<position>] [-fast]  
+    cpdf -scale-contents <scale> [<position>] [-fast]  
          in.pdf [<range>] -o out.pdf
 
     cpdf -shift "<shift x> <shift y>" [-fast] in.pdf [<range>] -o out.pdf
@@ -170,7 +170,7 @@ the page contents and/or the page dimensions (use `-upright` (described
 elsewhere in this chapter) afterwards or `-rotate-contents` to just
 rotate the page contents).
 
-The possible values for `-rotate` and `-rotate-by` are 0, 90, 180 and
+The possible values for `-rotate` and `-rotateby` are 0, 90, 180 and
 270, all interpreted as being clockwise. Any value may be used for
 `-rotate-contents`.
 

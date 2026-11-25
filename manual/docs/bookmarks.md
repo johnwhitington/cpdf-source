@@ -170,7 +170,7 @@ the title into lines. The default font is 12pt Times Roman (and 24pt for
 the title). The base font and size may be changed with `-font` and
 `-font-size` (see [Font and Size](text-and-stamps.md#font-and-size) for full details):
 
-`cpdf -table-of-contents -font "Courier-Bold" -font-size 8` in.pdf -o out.pdf`
+`cpdf -table-of-contents -font "Courier-Bold" -font-size 8 in.pdf -o out.pdf`
 
 Dot leaders may be added with `-toc-dot-leaders`:
 

@@ -31,9 +31,9 @@
     -outline (see Text and Stamps)
     -jbig2dec <path> when chopping images only
     -jbig2enc <path> when chopping images only
-    -magick <path> when chopping images only
+    -im <path> when chopping images only
     -redact-no-show
-    -redact-text [remove|leave],[touches|encloses]
+    -redact-text [remove|leave],[touches|encloses|covers<n>]
     -redact-images [remove|chop|leave],[touches|encloses|covers<n>]
     -redact-inline-images [remove|leave],[touches|encloses| covers<n>]
     -redact-vectors [remove|leave],[touches|encloses|covers<n>]
@@ -55,10 +55,10 @@
     -redact-repeat
     -redact-auto-size
     -font <font>
-    -fontsize <n>
+    -font-size <n>
     -opacity <n>
-    -linespace <n>
-    -outline <n>
+    -line-spacing <n>
+    -outline
     -linewidth <n>
 
 Redaction removes content from a PDF, erasing it entirely rather than
@@ -121,7 +121,7 @@ filled), `-linewidth`, `-underneath`, `-opacity`, and in the alternative
 `-redact-no-show` (omit the redaction appearance entirely).
 
 The options `-jbig2enc`, `-jbig2dec`, and `magick` may be required when
-`-redact-image` is in `chop` mode. The `magick` program is always
+`-redact-images` is in `chop` mode. The `magick` program is always
 required; `-jbig2dec` and `-jbig2enc` only where the file contains JBIG2
 images.
 
@@ -138,7 +138,7 @@ redactions:
 `out.pdf`
 
 The redaction application appearance options described above may be used
-here too. Or, if we supply `-redact-show-appearance` the redaction
+here too. Or, if we supply `-redact-apply-appearance` the redaction
 annotation's own appearance will be used instead.
 
 If the interactive software you are using to demarcate the annotations
@@ -187,7 +187,7 @@ interspersed with newlines instead, each repetition scaled to fit one
 line.
 
 The following options from [Text and Stamps](text-and-stamps.md) may be used to style the text:
-`-font`, `-fontsize`, `-opacity`, `-linespace`, `-outline`,
+`-font`, `-font-size`, `-opacity`, `-line-spacing`, `-outline`,
 `-linewidth`.
 
 ## Removing other metadata
@@ -275,7 +275,7 @@ The operations are:
 
 The direct Cpdf equivalent is:
 
-`cpdf in.pdf -remove-attached-files AND -remove-page-comments AND -remove-javascript AND -remove-all-metadata AND -set-title "" AND -set-author "" AND -set-subject "" AND -set-keywords "" AND -set-creator "" AND -set-producer "" AND -set-creation-date "" AND -set-modification-date "" AND -remove-thumbnails AND -remove-annotations -annot-subtypes /Link AND -remove-all-text -only-invisible -o out.pdf`
+`cpdf in.pdf -remove-files AND -remove-page-comments AND -remove-javascript AND -remove-all-metadata AND -set-title "" AND -set-author "" AND -set-subject "" AND -set-keywords "" AND -set-creator "" AND -set-producer "" AND -set-create "" AND -set-modify "" AND -remove-thumbnails AND -remove-annotations -annot-type /Link AND -remove-all-text -only-invisible -o out.pdf`
 
 Alternatively, sanitization may be performed during redaction by adding `-redact-sanitize` to the command line when using `-redact`, `-redact-shape` or `-redact-apply[-type]`.
 

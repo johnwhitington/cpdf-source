@@ -151,7 +151,7 @@ Other images are written as PNGs, processed with either ImageMagick's
 "magick" command, or NetPBM's "pnmtopng" program, whichever is
 installed.
 
-`cpdf -extract-images in.pdf [<range>] [-im <path>] [-p2p <path] [-dedup | -dedup-perpage] -o <path>`
+`cpdf -extract-images in.pdf [<range>] [-im <path>] [-p2p <path>] [-dedup | -dedup-perpage] -o <path>`
 
 The `-im` or `-p2p` option is used to give the path to the external
 tool, one of which must be installed (unless `-raw` is added, which
@@ -286,7 +286,7 @@ losslessly compressed 1 bit-per-pixel images.
 |`JBIG2`       | Lossless JBIG2                                             |
 |`JBIG2Lossy`  | Lossy JBIG2, sharing JBIG2Globals data amongst all images. | 
 |`CCITTG4`     | CCITT Group 4 fax, the best non-JBIG2 option.              |  
-|`CCITTG3`     | CCITT Group 3, obsolete.                                   | 
+|`CCITT`     | CCITT Group 3, obsolete.                                   | 
 
 The JBIG2 options always require the `jbig2enc` program, whose location
 may be specified with `-jbig2enc`. To convert from any JBIG2 compression

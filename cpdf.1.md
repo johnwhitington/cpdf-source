@@ -1,6 +1,6 @@
 % CPDF(1)
 % Coherent Graphics Ltd
-% October 2026
+% December 2026
 
 # NAME
 
@@ -374,7 +374,7 @@ information on positions.
 \[-scale-to-fit-rotate-clockwise] \[-scale-to-fit-rotate-anticlockwise] **-o
 out.pdf**
 
-Scale pages in the given range to fit the given size e.g "a4paper" or "10in
+Scale pages in the given range to fit the given size e.g "a4portrait" or "10in
 7in", without altering the aspect ratio. By default the content will be
 centered on the new page. See Chapter 8 for information on positions.
 
@@ -745,7 +745,7 @@ where to stamp it (default, bottom left of media box).
 marked as an artifact.
 
 **cpdf -combine-pages over.pdf under.pdf** [-fast] [-prerotate] [-no-warn-rotate]
-[-process-struct-trees] [-underneath] [-stamp-scale-to-fit] **-o out.pdf**
+[-process-struct-trees] [-underneath] [-scale-stamp-to-fit] **-o out.pdf**
 
 Combine the pages of two PDFs, page 1 of the first with page 1 of the second
 and so on.
@@ -1321,7 +1321,7 @@ Set the page mode: one of **UseNone**, **UseOutlines**, **UseThumbs**,
 **cpdf -set-non-full-screen-page-mode \<mode> in.pdf -o out.pdf**
 
 Set the non full screen mode for a PDF with FullScreen page mode: one of
-**UseNone**, **UseOutlines**, **UseThumbs**, **UseAttachments**.
+**UseNone**, **UseOutlines**, **UseThumbs**, **UseAttachments**, **UseOC**.
 
 **cpdf -hide-toolbar \<true | false> in.pdf -o out.pdf**
 
@@ -1519,7 +1519,7 @@ minimum resolution.
 : Also list inline images.
 
 **cpdf -extract-images in.pdf** \[\<range>] \[-im \<path>] \[-p2p \<path>] \[-dedup |
--dedup-per-page] \[-raw] \[-inline] \[-merge-masks] **-o \<path>**
+-dedup-perpage] \[-raw] \[-inline] \[-merge-masks] **-o \<path>**
 
 Extract images to a given path e.g "output/%%%", which would create
 output/001.jpg, output/002.png and so on. JPEG, JPEG2000 and lossless JBIG2
@@ -1538,7 +1538,7 @@ Other images are written as PNGs, processed with ImageMagick.
 
 : Deduplicate images, extracting only once even if multiply-included.
 
-**-dedup-per-page**
+**-dedup-perpage**
 
 : Deduplicate images, but only per-page.
 
@@ -1641,7 +1641,7 @@ full commentary, see cpdfmanual.pdf.
 
 **-percentage-threshold** \<n>
 
-: Results not below this percentage of original size discarded (default 90).
+: Results not below this percentage of original size discarded (default 99).
 
 **-dpi-threshold** \<n>
 
@@ -1675,7 +1675,7 @@ in the output PDF.
 
 : Use JPEG instead of lossless compression.
 
-**-rasterize-jpeggray**
+**-rasterize-jpeg-gray**
 
 : Use grayscale JPEG instead of lossless compression.
 
@@ -1710,7 +1710,7 @@ the existing PDF. Add -subformat \<subformat> \[-title \<title>] as usual to
 build a PDF/UA file.
 
 **cpdf -output-image in.pdf** \[\<range>] \[-gs \<path>]
-\[-rasterize\[-gray | -1bpp | -jpeg | -jpeggray] \[-rasterize-res \<n>]
+\[-rasterize\[-gray | -1bpp | -jpeg | -jpeg-gray] \[-rasterize-res \<n>]
 \[-rasterize-jpeg-quality \<n>] \[-rasterize-no-antialias |
 -rasterize-downsample] \[-rasterize-annots] \[-rasterize-alpha] \[-tobox
 \<boxname>] **-o \<format>** 
@@ -1938,7 +1938,7 @@ Draw on a PDF. See cpdfmanual.pdf for a tutorial, and full information.
 
 : Draw underneath instead of on top of any existing page content.
 
-**cpdf -text-width \<string>** \[-font \<font>] \[-fontsize \<n>]
+**cpdf -text-width \<string>** \[-font \<font>] \[-font-size \<n>]
 
 Return the width of a string of text in a one of the standard 14 fonts. Used
 for calculations of text position (e.g right-alignment).
@@ -1947,7 +1947,7 @@ for calculations of text position (e.g right-alignment).
 
 : Specify the font.
 
-**-fontsize** \<n>
+**-font-size** \<n>
 
 : Specify the font size.
 
@@ -2017,11 +2017,11 @@ for calculations of text position (e.g right-alignment).
 
 **Path parameters**
 
-**-strokecol** "g" | "r g b" | "c y m k" | \<namedcolour>
+**-strokecol** "g" | "r g b" | "c m y k" | \<namedcolour>
 
 : Set stroke colour.
 
-**-fillcol** "g" | "r g b" | "c y m k" | \<namedcolour>
+**-fillcol** "g" | "r g b" | "c m y k" | \<namedcolour>
 
 : Set fill colour.
 
@@ -2308,19 +2308,6 @@ Create a new, blank, PDF/UA-1 or PDF/UA-2 file with the given title.
 Remove the content of the pages in the given range entirely, including
 annotations and any resources. 
 
-**-redact-structure remove,all**
-
-: Process the document's structure tree to remove any parts which are marked as
-relating to the now-redacted pages.
-
-**-redact-links remove,page**
-
-: Remove links pointing to this page.
-
-**-redact-bookmarks remove,page**
-
-: Remove bookmarks pointing to this page.
-
 **cpdf -redact-shape** \<rectangle> \[application options] **in.pdf** \[\<range>] **-o out.pdf**
 
 Remove content in the given rectangle. See options below.
@@ -2369,9 +2356,9 @@ Apply annotations as if they were redaction annotations. See options below.
 
 : Don't show the redaction shape at all, just redact.
 
-**-redact-text** \[remove|leave],\[touches|encloses]
+**-redact-text** \[remove|leave],\[touches|encloses|covers\<n>]
 
-: Default "remove,touches".
+: Default "remove,covers80".
 
 **-redact-images** \[remove|chop|leave],\[touches|encloses|covers\<n>]
 
@@ -2425,6 +2412,10 @@ Create a redaction annotation.
 
 : Redaction annotation outline color.
 
+**-redact-text-color** \<color>
+
+: Redaction annotation text color.
+
 **-redact-opacity** \<n>
 
 : Redaction fill and outline opacity.
@@ -2445,7 +2436,7 @@ Create a redaction annotation.
 
 : Set redaction annotation overlay text.
 
-**-fontsize**
+**-font-size**
 
 : Set redaction annotation overlay font size.
 
@@ -2453,7 +2444,7 @@ Create a redaction annotation.
 
 : Set redaction annotation overlay font opacity.
 
-**-linespace**
+**-line-spacing**
 
 : Set redaction annotation overlay line spacing.
 

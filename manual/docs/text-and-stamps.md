@@ -12,17 +12,17 @@
 
     cpdf -combine-pages over.pdf under.pdf  
          [-fast] [-prerotate] [-no-warn-rotate] [-process-struct-trees]  
-         [-underneath] [-stamp-scale-to-fit] -o out.pdf
+         [-underneath] [-scale-stamp-to-fit] -o out.pdf
 
     cpdf ([-add-text <text-format> | -add-rectangle <size>])  
           [-font <fontname>]          [-font-size <size-in-points>]  
           [-load-ttf <name>=<file>]   [-embed-std14]  
-          [-color <color>]            [-line-spacing <number>]  
-          [-outline]                  [-linewidth <number>]  
+          [-color <color>]            [-line-spacing <n>]  
+          [-outline]                  [-linewidth <n>]  
           [-underneath]               [-relative-to-[crop|trim|art|bleed]box]  
           [-prerotate]                [-no-warn-rotate]  
-          [-bates <number>]           [-bates-at-range <number>]  
-          [-bates-pad-to <number>]    [-opacity <number>]  
+          [-bates <n>]                [-bates-at-range <n>]  
+          [-bates-pad-to <n>]         [-opacity <n>]  
           [-midline]                  [-topline]  
           [-fast]                     [-process-struct-trees]  
           [-url-border]               [-text-90 | -text-180 | -text-270]  
@@ -96,7 +96,7 @@ given font, font size and color.
 
 `cpdf -add-text "Copyright 2014 ACME Corp." in.pdf -o out.pdf`
 
-The default is black 12pt Times New Roman text in the top left of each
+The default is black 12pt Times Roman text in the top left of each
 page. The text can be placed underneath rather than over the page by
 adding the `-underneath` option.
 
@@ -200,7 +200,7 @@ Position may be set relative to certain common points:
   | ------------------------ | -------------------------------------------------------------- |
   |`-top 10`               | Center of baseline 10 pts down from the top center |
   |`-topleft 10`           | Left of baseline 10 pts down and in from top left |
-  |`-topleft "10 20"`      | Left of baseline 10 pts down and 20 pts in from top left |
+  |`-topleft "10 20"`      | Left of baseline 10 pts right and 20 pts down from top left |
   |`-topright 10`          | Right of baseline 10 pts down and left from top right |
   |`-topright "10 20"`     | Right of baseline 10 pts down and 20 pts left from top right |
   |`-left 10`              | Left of baseline 10 pts in from center left |
@@ -334,7 +334,7 @@ example:
 
 `cpdf -add-text "Long line\nShort" -justify-right in.pdf -o out.pdf`
 
-NB: The `-justify-` option must be after the position (e.g `-top-left`)
+NB: The `-justify-` option must be after the position (e.g `-topleft`)
 option since positions will reset default justification. Diagonal text
 is always center-justified.
 

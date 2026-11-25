@@ -191,7 +191,7 @@
 <header id="title-block-header">
 <h1 class="title">CPDF(1)</h1>
 <p class="author">Coherent Graphics Ltd</p>
-<p class="date">October 2026</p>
+<p class="date">December 2026</p>
 </header>
 <h1 id="name">NAME</h1>
 <p>cpdf - PDF command line tools.</p>
@@ -575,8 +575,8 @@ Chapter 8 for information on positions.</p>
 [&lt;position&gt;] [-scale-to-fit-scale &lt;scale&gt;]
 [-scale-to-fit-rotate-clockwise] [-scale-to-fit-rotate-anticlockwise]
 <strong>-o out.pdf</strong></p>
-<p>Scale pages in the given range to fit the given size e.g “a4paper” or
-“10in 7in”, without altering the aspect ratio. By default the content
+<p>Scale pages in the given range to fit the given size e.g “a4portrait”
+or “10in 7in”, without altering the aspect ratio. By default the content
 will be centered on the new page. See Chapter 8 for information on
 positions.</p>
 <dl>
@@ -942,7 +942,7 @@ will be marked as an artifact.</p>
 </dl>
 <p><strong>cpdf -combine-pages over.pdf under.pdf</strong> [-fast]
 [-prerotate] [-no-warn-rotate] [-process-struct-trees] [-underneath]
-[-stamp-scale-to-fit] <strong>-o out.pdf</strong></p>
+[-scale-stamp-to-fit] <strong>-o out.pdf</strong></p>
 <p>Combine the pages of two PDFs, page 1 of the first with page 1 of the
 second and so on.</p>
 <dl>
@@ -1545,7 +1545,8 @@ out.pdf</strong></p>
 out.pdf</strong></p>
 <p>Set the non full screen mode for a PDF with FullScreen page mode: one
 of <strong>UseNone</strong>, <strong>UseOutlines</strong>,
-<strong>UseThumbs</strong>, <strong>UseAttachments</strong>.</p>
+<strong>UseThumbs</strong>, <strong>UseAttachments</strong>,
+<strong>UseOC</strong>.</p>
 <p><strong>cpdf -hide-toolbar &lt;true | false&gt; in.pdf -o
 out.pdf</strong></p>
 <p>Hide or reveal the viewer’s toolbar.</p>
@@ -1726,7 +1727,7 @@ as do not reach a minimum resolution.</p>
 </dd>
 </dl>
 <p><strong>cpdf -extract-images in.pdf</strong> [&lt;range&gt;] [-im
-&lt;path&gt;] [-p2p &lt;path&gt;] [-dedup | -dedup-per-page] [-raw]
+&lt;path&gt;] [-p2p &lt;path&gt;] [-dedup | -dedup-perpage] [-raw]
 [-inline] [-merge-masks] <strong>-o &lt;path&gt;</strong></p>
 <p>Extract images to a given path e.g “output/%%%”, which would create
 output/001.jpg, output/002.png and so on. JPEG, JPEG2000 and lossless
@@ -1747,7 +1748,7 @@ ImageMagick.</p>
 <p>Deduplicate images, extracting only once even if
 multiply-included.</p>
 </dd>
-<dt><strong>-dedup-per-page</strong></dt>
+<dt><strong>-dedup-perpage</strong></dt>
 <dd>
 <p>Deduplicate images, but only per-page.</p>
 </dd>
@@ -1857,7 +1858,7 @@ For a full commentary, see cpdfmanual.pdf.</p>
 <dt><strong>-percentage-threshold</strong> &lt;n&gt;</dt>
 <dd>
 <p>Results not below this percentage of original size discarded (default
-90).</p>
+99).</p>
 </dd>
 <dt><strong>-dpi-threshold</strong> &lt;n&gt;</dt>
 <dd>
@@ -1893,7 +1894,7 @@ version in the output PDF.</p>
 <dd>
 <p>Use JPEG instead of lossless compression.</p>
 </dd>
-<dt><strong>-rasterize-jpeggray</strong></dt>
+<dt><strong>-rasterize-jpeg-gray</strong></dt>
 <dd>
 <p>Use grayscale JPEG instead of lossless compression.</p>
 </dd>
@@ -1929,7 +1930,7 @@ into the existing PDF. Add -subformat &lt;subformat&gt; [-title
 </dd>
 </dl>
 <p><strong>cpdf -output-image in.pdf</strong> [&lt;range&gt;] [-gs
-&lt;path&gt;] [-rasterize[-gray | -1bpp | -jpeg | -jpeggray]
+&lt;path&gt;] [-rasterize[-gray | -1bpp | -jpeg | -jpeg-gray]
 [-rasterize-res &lt;n&gt;] [-rasterize-jpeg-quality &lt;n&gt;]
 [-rasterize-no-antialias | -rasterize-downsample] [-rasterize-annots]
 [-rasterize-alpha] [-tobox &lt;boxname&gt;] <strong>-o
@@ -2156,7 +2157,7 @@ information.</p>
 </dd>
 </dl>
 <p><strong>cpdf -text-width &lt;string&gt;</strong> [-font &lt;font&gt;]
-[-fontsize &lt;n&gt;]</p>
+[-font-size &lt;n&gt;]</p>
 <p>Return the width of a string of text in a one of the standard 14
 fonts. Used for calculations of text position (e.g right-alignment).</p>
 <dl>
@@ -2164,7 +2165,7 @@ fonts. Used for calculations of text position (e.g right-alignment).</p>
 <dd>
 <p>Specify the font.</p>
 </dd>
-<dt><strong>-fontsize</strong> &lt;n&gt;</dt>
+<dt><strong>-font-size</strong> &lt;n&gt;</dt>
 <dd>
 <p>Specify the font size.</p>
 </dd>
@@ -2237,12 +2238,12 @@ fonts. Used for calculations of text position (e.g right-alignment).</p>
 </dl>
 <p><strong>Path parameters</strong></p>
 <dl>
-<dt><strong>-strokecol</strong> “g” | “r g b” | “c y m k” |
+<dt><strong>-strokecol</strong> “g” | “r g b” | “c m y k” |
 &lt;namedcolour&gt;</dt>
 <dd>
 <p>Set stroke colour.</p>
 </dd>
-<dt><strong>-fillcol</strong> “g” | “r g b” | “c y m k” |
+<dt><strong>-fillcol</strong> “g” | “r g b” | “c m y k” |
 &lt;namedcolour&gt;</dt>
 <dd>
 <p>Set fill colour.</p>
@@ -2532,21 +2533,6 @@ title.</p>
 [-redact-bookmarks remove,page] <strong>-o out.pdf</strong></p>
 <p>Remove the content of the pages in the given range entirely,
 including annotations and any resources.</p>
-<dl>
-<dt><strong>-redact-structure remove,all</strong></dt>
-<dd>
-<p>Process the document’s structure tree to remove any parts which are
-marked as relating to the now-redacted pages.</p>
-</dd>
-<dt><strong>-redact-links remove,page</strong></dt>
-<dd>
-<p>Remove links pointing to this page.</p>
-</dd>
-<dt><strong>-redact-bookmarks remove,page</strong></dt>
-<dd>
-<p>Remove bookmarks pointing to this page.</p>
-</dd>
-</dl>
 <p><strong>cpdf -redact-shape</strong> &lt;rectangle&gt; [application
 options] <strong>in.pdf</strong> [&lt;range&gt;] <strong>-o
 out.pdf</strong></p>
@@ -2596,9 +2582,10 @@ below.</p>
 <dd>
 <p>Don’t show the redaction shape at all, just redact.</p>
 </dd>
-<dt><strong>-redact-text</strong> [remove|leave],[touches|encloses]</dt>
+<dt><strong>-redact-text</strong>
+[remove|leave],[touches|encloses|covers&lt;n&gt;]</dt>
 <dd>
-<p>Default “remove,touches”.</p>
+<p>Default “remove,covers80”.</p>
 </dd>
 <dt><strong>-redact-images</strong>
 [remove|chop|leave],[touches|encloses|covers&lt;n&gt;]</dt>
@@ -2662,6 +2649,10 @@ out.pdf</strong></p>
 <dd>
 <p>Redaction annotation outline color.</p>
 </dd>
+<dt><strong>-redact-text-color</strong> &lt;color&gt;</dt>
+<dd>
+<p>Redaction annotation text color.</p>
+</dd>
 <dt><strong>-redact-opacity</strong> &lt;n&gt;</dt>
 <dd>
 <p>Redaction fill and outline opacity.</p>
@@ -2684,7 +2675,7 @@ also set, intersperse with newlines not spaces.</p>
 <dd>
 <p>Set redaction annotation overlay text.</p>
 </dd>
-<dt><strong>-fontsize</strong></dt>
+<dt><strong>-font-size</strong></dt>
 <dd>
 <p>Set redaction annotation overlay font size.</p>
 </dd>
@@ -2692,7 +2683,7 @@ also set, intersperse with newlines not spaces.</p>
 <dd>
 <p>Set redaction annotation overlay font opacity.</p>
 </dd>
-<dt><strong>-linespace</strong></dt>
+<dt><strong>-line-spacing</strong></dt>
 <dd>
 <p>Set redaction annotation overlay line spacing.</p>
 </dd>

@@ -55,4 +55,4 @@ where:
 -  `hh`     is the hour (00 to 23)
 -  `mm`     is the minute (00 to 59)
 -  `ss`     is the second (00 to 59)
--  `TZD`    is the time zone designator (`Z` or `+hh:mm` or `-hh::mm`)
+-  `TZD`    is the time zone designator (`Z` or `+hh:mm` or `-hh:mm`)

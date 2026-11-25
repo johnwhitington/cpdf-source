@@ -528,9 +528,9 @@ heading:
 
 `cpdf -create-pdf AND -draw-struct-tree -draw -mtrans "50 700" -font-size 40 -no-auto-tags -tag H1 -bt -text "This is the heading" -et -end-tag -auto-tags -mtrans "0 -100" -font-size 20 -leading 25 -bt -paras "L200pt=This is the first paragraph, which spreads over more than one line\nHere is the second, which also has multiple lines..." -et -o out.pdf`
 
-We turned off auto-tagging with `-no-auto-tag`, then used `-tag H1` and
+We turned off auto-tagging with `-no-auto-tags`, then used `-tag H1` and
 `-end-tag` to tag the heading. Then we turned auto-tagging back on with
-`-auto-tag`. Here is the result, visually:
+`-auto-tags`. Here is the result, visually:
 
 ![h1](manualimages/h1.svg){: style="height:400px;width:400px"}
 
@@ -548,7 +548,7 @@ logical structure tree, we add structure tags using `-stag` /
 `-end-stag` pairs which, of course, may be nested. For example, let's
 put our H1, and P sections in a Section structure tag:
 
-`cpdf -create-pdf AND -draw-struct-tree -draw -mtrans "50 700" -font-size 40 -no-auto-tags -stag Section -tag H1 -bt -text "This is the heading" -et -end-tag -auto-tags -mtrans "0 -100" -font-size 20 -leading 25 -bt -paras "L200pt=This is the first paragraph, which spreads over more than one line\nHere is the second, which also has multiple lines..." -et -end-stag -o out.pdf`
+`cpdf -create-pdf AND -draw-struct-tree -draw -mtrans "50 700" -font-size 40 -no-auto-tags -stag Section -tag H1 -bt -text "This is the heading" -et -end-stag -auto-tags -mtrans "0 -100" -font-size 20 -leading 25 -bt -paras "L200pt=This is the first paragraph, which spreads over more than one line\nHere is the second, which also has multiple lines..." -et -end-stag -o out.pdf`
 
 Here is the structure tree:
 
@@ -566,7 +566,7 @@ tells PDF processors that it is not logical content.
 By default, Cpdf with `-draw-struct-tree` will mark anything not
 automatically or manually tagged as content as an artifact. Should you
 wish to disable this, you may use `-no-auto-artifacts`. Whether or not
-you use `-no-auto-artifacts`, you may use `-artifact` / `end-artifact`
+you use `-no-auto-artifacts`, you may use `-artifact` / `-end-artifact`
 pairs to mark artifacts manually. For example:
 
 `cpdf -create-pdf AND -draw-struct-tree -draw -no-auto-artifacts -artifact -mtrans "50 700" -end-artifact -bt -text "Hello" -et -o out.pdf`
