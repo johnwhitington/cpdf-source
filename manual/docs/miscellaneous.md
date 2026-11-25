@@ -4,9 +4,9 @@
 
     cpdf -remove-all-text [-only-invisible] in.pdf [<range>] -o out.pdf
 
-    cpdf -blacktext in.pdf [<range>] -o out.pdf
-    cpdf -blacklines in.pdf [<range>] -o out.pdf
-    cpdf -blackfills in.pdf [<range>] -o out.pdf
+    cpdf -blacktext in.pdf [<range>] [-color <color>] -o out.pdf
+    cpdf -blacklines in.pdf [<range>] [-color <color>] -o out.pdf
+    cpdf -blackfills in.pdf [<range>] [-color <color>] -o out.pdf
     cpdf -reveal-text in.pdf [<range>] -o out.pdf
 
     cpdf -thinlines <min thickness> in.pdf [<range>] -o out.pdf
@@ -29,9 +29,9 @@
     cpdf -replace-dict-entry <key> -replace-dict-entry-value <value>
          [-dict-entry-search <term>] in.pdf -o out.pdf
 
-    cpdf -remove-clipping [<range>] in.pdf -o out.pdf
+    cpdf -remove-clipping in.pdf [<range>] -o out.pdf
     
-    cpdf -remove-page-comments [<range>] in.pdf -o out.pdf
+    cpdf -remove-page-comments in.pdf [<range>] -o out.pdf
 
     cpdf -remove-thumbnails in.pdf -o out.pdf
 

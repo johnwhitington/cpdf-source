@@ -275,7 +275,7 @@ The operations are:
 
 The direct Cpdf equivalent is:
 
-`cpdf in.pdf -remove-files AND -remove-page-comments AND -remove-javascript AND -remove-all-metadata AND -set-title "" AND -set-author "" AND -set-subject "" AND -set-keywords "" AND -set-creator "" AND -set-producer "" AND -set-create "" AND -set-modify "" AND -remove-thumbnails AND -remove-annotations -annot-type /Link AND -remove-all-text -only-invisible -o out.pdf`
+`cpdf in.pdf -remove-files AND -remove-page-comments AND -remove-javascript AND -remove-all-metadata AND -set-title "" AND -set-author "" AND -set-subject "" AND -set-keywords "" AND -set-creator "" AND -set-producer "" AND -set-create "now" AND -set-modify "now" AND -remove-thumbnails AND -remove-annotations -annot-type /Link AND -remove-all-text -only-invisible -o out.pdf`
 
 Alternatively, sanitization may be performed during redaction by adding `-redact-sanitize` to the command line when using `-redact`, `-redact-shape` or `-redact-apply[-type]`.
 

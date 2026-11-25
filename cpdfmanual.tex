@@ -1432,7 +1432,7 @@ asks the viewer (e.g. Acrobat) to rotate the page on-the-fly when viewing it
 contents and/or the page dimensions (use \texttt{-upright} (described elsewhere in this chapter) afterwards or
 \texttt{-rotate-contents} to just rotate the page contents).
 
-  The possible values for \texttt{-rotate} and \texttt{-rotate-by} are 0, 90,
+  The possible values for \texttt{-rotate} and \texttt{-rotateby} are 0, 90,
 180 and 270, all interpreted as being clockwise. Any value may be used for
 \texttt{-rotate-contents}.
   
@@ -1818,10 +1818,10 @@ We have discussed only methods of compression which do not remove content or met
   \small\noindent\verb!cpdf -bookmarks-open-to-level <n> in.pdf -o out.pdf!
 
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -table-of-contents [-toc-title] [-toc-no-bookmark] [-toc-dot-leaders]!\\
-  \small\noindent\verb!     [-font <font>] [-font-size <size>] [-embed-std14 /path/to/fonts]!\\
-  \small\noindent\verb!     [-process-struct-trees] [-subformat <subformat>]!\\
-  \small\noindent\verb!     in.pdf -o out.pdf!
+  \small\noindent\verb!cpdf -table-of-contents [-toc-title <title>] [-toc-no-bookmark]!\\
+  \small\noindent\verb!     [-toc-dot-leaders] [-font <font>] [-font-size <size>] !\\
+  \small\noindent\verb!     [-embed-std14 /path/to/fonts] [-process-struct-trees] !\\
+  \small\noindent\verb!     [-subformat <subformat>] in.pdf -o out.pdf!
 
   \end{framed}
 
@@ -2063,7 +2063,8 @@ only) specifies the direction of the effect. The following values are valid:
 
 \begin{framed}
   \small
-  \noindent\verb!cpdf -presentation in.pdf 2-end -trans Split -duration 10 -o out.pdf!
+  \noindent\verb!cpdf -presentation in.pdf 2-end -trans Split -vertical -duration 10!\\
+  \noindent\verb!     -o out.pdf!
 
   \vspace{2.5mm}
   \noindent The \textbf{Split} style, with vertical lines, and each slide staying ten
@@ -2093,7 +2094,7 @@ the file using a different page range each time.
   \vspace{1.5mm}
   \noindent\small\verb!cpdf -combine-pages over.pdf under.pdf!\\
   \noindent\small\verb!     [-fast] [-prerotate] [-no-warn-rotate] [-process-struct-trees]!\\
-  \noindent\small\verb!     [-underneath] [-stamp-scale-to-fit] -o out.pdf!
+  \noindent\small\verb!     [-underneath] [-scale-stamp-to-fit] -o out.pdf!
 
 %FIXME add -justify-left, right, center here.
 
@@ -2184,7 +2185,7 @@ font size and color.
     \noindent\small\verb!cpdf -add-text "Copyright 2014 ACME Corp." in.pdf -o out.pdf!
   \end{framed}
 
-  \noindent The default is black 12pt Times New Roman text in the top left of each page. The text can be placed underneath rather than over the page by adding the \texttt{-underneath} option.
+  \noindent The default is black 12pt Times Roman text in the top left of each page. The text can be placed underneath rather than over the page by adding the \texttt{-underneath} option.
   
   Text previously added by Cpdf may be removed by the \texttt{-remove-text} operation.
 \index{removing text}
@@ -2284,15 +2285,15 @@ The starting point can be set with the \texttt{-bates} option. For example:
     \noindent\begin{tabular}{ll}
       \small\verb!-top 10! & Center of baseline 10 pts down from the top center \\
       \small\verb!-topleft 10! & Left of baseline 10 pts down and in from top left \\
-      \small\verb!-topleft "10 20"! & Left of baseline 10 pts down and 20 pts in from top left \\
+      \small\verb!-topleft "10 20"! & Left of baseline 10 pts in and 20 pts down from top left \\
       \small\verb!-topright 10! & Right of baseline 10 pts down and left from top right\\
-      \small\verb!-topright "10 20"! & Right of baseline 10 pts down and 20 pts left from top right\\
+      \small\verb!-topright "10 20"! & Right of baseline 10 pts left and 20 pts down from top right\\
       \small\verb!-left 10! & Left of baseline 10 pts in from center left \\
       \small\verb!-bottomleft 10! & Left of baseline 10 pts in and up from bottom left \\
       \small\verb!-bottomleft "10 20"! & Left of baseline 10 pts in and 20 pts up from bottom left \\
       \small\verb!-bottom 10! & Center of baseline 10 pts up from bottom center\\
       \small\verb!-bottomright 10! & Right of baseline 10 pts up and in from bottom right \\
-      \small\verb!-bottomright "10 20"! & Right of baseline 10 pts up and 20 pts in from bottom right \\
+      \small\verb!-bottomright "10 20"! & Right of baseline 10 pts in and 20 pts up from bottom right \\
       \small\verb!-right 10! & Right of baseline 10 pts in from the center right \\
       \small\verb!-diagonal! & Diagonal, bottom left to top right, centered on page\\
       \small\verb!-reverse-diagonal! & Diagonal, top left to bottom right, centered on page\\    
@@ -2433,7 +2434,7 @@ for positions relative to the center of the page. For example:
 cpdf -add-text "Long line\nShort" -justify-right in.pdf -o out.pdf\end{verbatim}
 \end{framed}
 
-\noindent NB: The \texttt{-justify-} option must be after the position (e.g \texttt{-top-left}) option since positions will reset default justification. Diagonal text is always center-justified.
+\noindent NB: The \texttt{-justify-} option must be after the position (e.g \texttt{-topleft}) option since positions will reset default justification. Diagonal text is always center-justified.
 
 \subsection{Special Characters}
 
@@ -2455,7 +2456,7 @@ A rectangle may be placed on one or more pages by using the \texttt{-add-rectang
 
 \begin{framed}
   \small\begin{verbatim}
-cpdf -add-rectangle "200 300" -pos-right 30 -color red -outline
+cpdf -add-rectangle "200 300" -pos-right "30 30" -color red -outline
                     in.pdf -o out.pdf\end{verbatim}
 \end{framed}
 
@@ -2488,18 +2489,18 @@ These two operations add content directly to the beginning or end of the page da
     \small\noindent\verb!cpdf -pad-after in.pdf [<range>] [-pad-with pad.pdf] -o out.pdf!
 
     \vspace{1.5mm}
-    \small\noindent\verb!cpdf -pad-every [<integer>] in.pdf [-pad-with pad.pdf] -o out.pdf!
+    \small\noindent\verb!cpdf -pad-every [<n>] in.pdf [-pad-with pad.pdf] -o out.pdf!
 
     \vspace{1.5mm}
-    \small\noindent\verb!cpdf -pad-multiple [<integer>] in.pdf -o out.pdf!
+    \small\noindent\verb!cpdf -pad-multiple [<n>] in.pdf -o out.pdf!
 
     \vspace{1.5mm}
-    \small\noindent\verb!cpdf -pad-multiple-before [<integer>] in.pdf -o out.pdf!
+    \small\noindent\verb!cpdf -pad-multiple-before [<n>] in.pdf -o out.pdf!
 
 
 
     \vspace{1.5mm}
-    \small\noindent\verb!cpdf [-impose <pagesize> | impose-xy "<x> <y>"]!\\
+    \small\noindent\verb!cpdf [-impose <pagesize> | -impose-xy "<x> <y>"]!\\
     \small\noindent\verb!     [-impose-columns] [-impose-rtl] [-impose-btt]!\\
     \small\noindent\verb!     [-impose-margin <margin>] [-impose-spacing <spacing>]!\\
     \small\noindent\verb!     [-impose-linewidth <width>] [-fast]!\\
@@ -2657,7 +2658,8 @@ As an alternative, pages can be chopped into two at a given position, horizontal
   \small\noindent\verb!cpdf -list-annotations in.pdf [<range>]!
 
   \vspace{1.5mm}
-  \small\noindent\verb!cpdf -list-annotations-json in.pdf [-annot-type <type>] [<range>]!
+  \small\noindent\verb!cpdf -list-annotations-json in.pdf [<range>]!\\
+  \small\noindent\verb!     [-annot-type <subtypes>] [-annot-no-type <subtypes>]!
 
   \vspace{1.5mm}
   \small\noindent\verb!cpdf -set-annotations <filename> [-underneath]!\\
@@ -2971,7 +2973,7 @@ The \texttt{-info-json} operation prints the information in JSON format instead.
   "FitWindow": null,
   "CenterWindow": null,
   "DisplayDocTitle": true,
-  "NonFullPageScreenMode": null,
+  "NonFullScreenPageMode": null,
   "AcroForm": false,
   "XFA": false,
   "Marked": false,
@@ -3765,7 +3767,7 @@ Method & Effect\\\hline
 {\small\texttt{JBIG2}} & Lossless JBIG2 \\
 {\small\texttt{JBIG2Lossy}} & Lossy JBIG2, sharing JBIG2Globals data amongst all images.\\
 {\small\texttt{CCITTG4}} & CCITT Group 4 fax, the best non-JBIG2 option.\\
-{\small\texttt{CCITTG3}} & CCITT Group 3, obsolete.
+{\small\texttt{CCITT}} & CCITT Group 3, obsolete.
 \end{tabular}
 \bigskip
 
@@ -4092,7 +4094,7 @@ number, and flags used when writing (which may be required when reading):
 [
   [
     -1,
-    { "/CPDFJSONformatversion": { "I": 2 },
+    { "/CPDFJSONformatversion": { "I": 3 },
       "/CPDFJSONcontentparsed": false,
       "/CPDFJSONstreamdataincluded": true,
       "/CPDFJSONmajorpdfversion": { "I": 1 },
@@ -5024,13 +5026,13 @@ There are two types of tag we can add manually. One kind is used to tag individu
 \begin{framed}
    \noindent\small\verb!cpdf -create-pdf AND -draw-struct-tree -draw -mtrans "50 700" !\\
    \noindent\small\verb!     -font-size 40 -no-auto-tags -tag H1 -bt -text "This is the heading"!\\
-   \noindent\small\verb!     -et -end-tag -auto-tags -mtrans "0 -100" -font-size 20 -leading 25!\\
+   \noindent\small\verb!     -et -end-stag -auto-tags -mtrans "0 -100" -font-size 20 -leading 25!\\
    \noindent\small\verb!     -bt -paras "L200pt=This is the first paragraph, which spreads over!\\
    \noindent\small\verb!more than one line\nHere is the second, which also has multiple lines..."!\\
    \noindent\small\verb!     -et -o out.pdf!
 \end{framed}
 
-\noindent We turned off auto-tagging with \texttt{-no-auto-tag}, then used \texttt{-tag H1} and \texttt{-end-tag} to tag the heading. Then we turned auto-tagging back on with \texttt{-auto-tag}. Here is the result, visually:
+\noindent We turned off auto-tagging with \texttt{-no-auto-tags}, then used \texttt{-tag H1} and \texttt{-end-tag} to tag the heading. Then we turned auto-tagging back on with \texttt{-auto-tag}. Here is the result, visually:
 
 \bigskip
 \ifdefined\HCode
@@ -5651,9 +5653,9 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
   \noindent\verb!-outline! \textit{(see Chapter 8)}\\
   \noindent\verb!-jbig2dec <path>! \textit{when chopping images only}\\
   \noindent\verb!-jbig2enc <path>! \textit{when chopping images only}\\
-  \noindent\verb!-magick <path>! \textit{when chopping images only}\\
+  \noindent\verb!-im <path>! \textit{when chopping images only}\\
   \noindent\verb!-redact-no-show!\\
-  \noindent\verb!-redact-text [remove|leave],[touches|encloses]!\\
+  \noindent\verb!-redact-text [remove|leave],[touches|encloses|covers<n>]!\\
   \noindent\verb!-redact-images [remove|chop|leave],[touches|encloses|covers<n>]!\\
   \noindent\verb!-redact-inline-images [remove|leave],[touches|encloses| covers<n>]!\\
   \noindent\verb!-redact-vectors [remove|leave],[touches|encloses|covers<n>]!\\
@@ -5679,7 +5681,7 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
   \noindent\verb!-font <font>!\\
   \noindent\verb!-fontsize <n>!\\
   \noindent\verb!-opacity <n>!\\
-  \noindent\verb!-linespace <n>!\\
+  \noindent\verb!-line-spacing <n>!\\
   \noindent\verb!-outline <n>!\\
   \noindent\verb!-linewidth <n>!
   \end{framed}}
@@ -5727,25 +5729,25 @@ Option & Values & Default value \\\hline
 
 The appearance of the redaction is governed by the options \texttt{-color} (default black, format described in Chapter 8), \texttt{-outline} (default filled), \texttt{-linewidth}, \texttt{-underneath}, \texttt{-opacity}, and in the alternative \texttt{-redact-no-show} (omit the redaction appearance entirely).
 
-The options \texttt{-jbig2enc}, \texttt{-jbig2dec}, and \texttt{magick} may be required when \texttt{-redact-image} is in \texttt{chop} mode. The \texttt{magick} program is always required; \texttt{-jbig2dec} and \texttt{-jbig2enc} only where the file contains JBIG2 images.
+The options \texttt{-jbig2enc}, \texttt{-jbig2dec}, and \texttt{-im} may be required when \texttt{-redact-images} is in \texttt{chop} mode. The \texttt{magick} program is always required; \texttt{-jbig2dec} and \texttt{-jbig2enc} only where the file contains JBIG2 images.
 
 \section{Applying redaction annotations}
 
 Annotations denoting future redactions can be added to a PDF in Adobe Acrobat or other interactive PDF software. Cpdf can apply these annotations to perform the redaction. To apply existing annotation redactions:
 
   \begin{framed}
-    \noindent\small\verb!cpdf -redact-apply in.pdf 2 out.pdf!
+    \noindent\small\verb!cpdf -redact-apply in.pdf 2 -o out.pdf!
  
     \vspace{2.5mm}
     \noindent Apply redaction annotations on page two of \texttt{in.pdf}, writing to \texttt{out.pdf}
   \end{framed}
 
-\noindent The redaction application appearance options described above may be used here too. Or, if we supply \texttt{-redact-show-appearance} the redaction annotation's own appearance will be used instead.
+\noindent The redaction application appearance options described above may be used here too. Or, if we supply \texttt{-redact-apply-appearance} the redaction annotation's own appearance will be used instead.
 
 If the interactive software you are using to demarcate the annotations does not know about redaction annotations, you can use a different kind of annotation and Cpdf will use that annotation's bounding box as the redaction rectangle:
 
   \begin{framed}
-    \noindent\small\verb!cpdf -redact-apply-type /Square in.pdf 2 out.pdf!
+    \noindent\small\verb!cpdf -redact-apply-type /Square in.pdf 2 -o out.pdf!
  
     \vspace{2.5mm}
     \noindent Apply Square (rectangle) annotations as if they were redaction annotations in \texttt{in.pdf}, writing to \texttt{out.pdf}
@@ -5758,7 +5760,7 @@ As above, the redaction itself is controlled through the options as \texttt{-red
 \noindent To add new redaction annotations, we may write
 
   \begin{framed}
-    \noindent\small\verb!cpdf -annotate "100 100 200 300" in.pdf 1 out.pdf!
+    \noindent\small\verb!cpdf -annotate "100 100 200 300" in.pdf 1 -o out.pdf!
  
     \vspace{2.5mm}
     \noindent Add a redaction annotation to page 1 of \texttt{in.pdf}, writing to \texttt{out.pdf}
@@ -5780,7 +5782,7 @@ We can add text to, for example, show which rule required the redaction, with \t
 
 \noindent The text colour may be changed with \texttt{-redact-text-color}. Another use of overlay text is to add repeated text to show where text has been redacted. We can do this by adding \texttt{-redact-repeat}. The text will be repeated, interspersed with spaces. To auto-size the text to the width of the redaction annotation, we can add \texttt{-redact-auto-size}. Where both \texttt{-redact-repeat} and \texttt{-redact-auto-size} are present, the given text is interspersed with newlines instead, each repetition scaled to fit one line.
 
-The following options from Chapter 8 may be used to style the text: \texttt{-font}, \texttt{-fontsize}, \texttt{-opacity}, \texttt{-linespace}, \texttt{-outline}, \texttt{-linewidth}.
+The following options from Chapter 8 may be used to style the text: \texttt{-font}, \texttt{-fontsize}, \texttt{-opacity}, \texttt{-line-spacing}, \texttt{-outline}, \texttt{-linewidth}.
 
 \section{Removing other metadata}
 
@@ -5878,12 +5880,12 @@ The \texttt{-sanitize} operation performs a number of operations to remove ident
 \medskip
 
 \noindent\texttt{
-cpdf in.pdf -remove-attached-files AND -remove-page-comments AND\\
+cpdf in.pdf -remove-files AND -remove-page-comments AND\\
   -remove-javascript AND -remove-all-metadata AND -set-title "" AND\\
   -set-author "" AND -set-subject "" AND -set-keywords "" AND\\
-  -set-creator "" AND -set-producer "" AND -set-creation-date "" AND\\
-  -set-modification-date "" AND -remove-thumbnails AND\\
-  -remove-annotations -annot-subtypes /Link AND\\
+  -set-creator "" AND -set-producer "" AND -set-create "now" AND\\
+  -set-modify "now" AND -remove-thumbnails AND\\
+  -remove-annotations -annot-type /Link AND\\
   -remove-all-text -only-invisible -o out.pdf}
 
 \medskip
@@ -5955,6 +5957,9 @@ There are several ways to check that redaction has proceeded as we would have wi
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -remove-page-comments in.pdf [<range>] -o out.pdf!
+
+  \vspace{1.5mm}
+  \noindent\verb!cpdf -remove-thumbnails in.pdf -o out.pdf!
 
   \vspace{1.5mm}
   \noindent\verb!cpdf -obj[-json] <object specification> in.pdf!
@@ -6043,7 +6048,7 @@ which is part of a form.
 
 \noindent Contrary to their names, all these operations can use another color, if specified with \texttt{-color}.
 
-The operation \texttt{-reveal-text} will change the text rendering mode of all text to 0 (stroke and fill). This should reveal hidden text. Note that hidden text added by an OCR program may have no associated font glyph data, and so will not re-appear:
+The operation \texttt{-reveal-text} will change the text rendering mode of all text to 0 (fill). This should reveal hidden text. Note that hidden text added by an OCR program may have no associated font glyph data, and so will not re-appear:
 
   \begin{framed}
     \noindent\small\verb!cpdf -reveal-text in.pdf -o out.pdf!
@@ -6206,6 +6211,18 @@ Internally, PDF graphics streams may have internal comments in them. Normally, C
   \noindent Remove page comments in \texttt{in.pdf}, writing to \texttt{out.pdf}. 
   \end{framed}
 
+\section{Removing Thumbnails}
+
+To remove stored page thumbnails from a PDF:
+
+  \begin{framed}
+  \small\noindent\verb!cpdf -remove-thumbnails in.pdf -o out.pdf!
+
+  \vspace{2.5mm}
+  \noindent Remove thumbnails from \texttt{in.pdf}, writing to \texttt{out.pdf}. 
+  \end{framed}
+
+
 \section{Exploring PDFs}
 
 \noindent The \texttt{-obj} operation prints an object to standard output, given the object number. Number 0 is the trailer dictionary, so we begin there:
@@ -6328,7 +6345,7 @@ An object may be remove with \texttt{-remove-obj}:
 We can see if a PDF contains any JavaScript scripts or \texttt{javascript:} URIs:
 
   \begin{framed}
-  \small\noindent\verb!cpdf -contains-javascript in.pdf -o out.pdf!
+  \small\noindent\verb!cpdf -contains-javascript in.pdf!
 
   \vspace{2.5mm}
   \noindent Prints \texttt{true} if the PDF contains JavaScript, \texttt{false} otherwise. 
