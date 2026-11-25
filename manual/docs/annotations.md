@@ -2,7 +2,7 @@
 
     cpdf -list-annotations in.pdf [<range>]
 
-    cpdf -list-annotations-json in.pdf [-annot-type <type>] [<range>]
+    cpdf -list-annotations-json in.pdf [-annot-type <type>] [-annot-no-type <type>] [<range>]
 
     cpdf -set-annotations <filename> [-underneath] in.pdf [<range>] -o out.pdf
 

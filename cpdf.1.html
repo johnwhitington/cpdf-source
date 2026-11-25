@@ -492,8 +492,8 @@ PDF for each page or each chunk of pages.</p>
 [-process-struct-trees] [-utf8] <strong>-o &lt;format&gt;</strong></p>
 <p>The output format has many options (see cpdfmanual.pdf for details).
 But the simplest is just to number the outputs in sequence. For example
-<strong>cpdf in.pdf -o out%%%.pdf</strong> will produce out001.pdf,
-out002.pdf and so on.</p>
+<strong>cpdf -split in.pdf -o out%%%.pdf</strong> will produce
+out001.pdf, out002.pdf and so on.</p>
 <dl>
 <dt><strong>-chunk</strong> &lt;n&gt;</dt>
 <dd>
@@ -1628,19 +1628,13 @@ range specified is disjoint, e.g “1-9, 30-40” or “odd”.</p>
 </dl>
 <p><strong>cpdf -add-page-labels-json in.json -o out.pdf</strong></p>
 <p>Add page labels from a file like that produced by
-<strong>-print-page-labels-json -include-data</strong>.</p>
+<strong>-print-page-labels-json</strong>.</p>
 <p><strong>cpdf -remove-page-labels in.pdf -o out.pdf</strong></p>
 <p>Remove the page labels.</p>
 <p><strong>cpdf -print-page-labels[-json] in.pdf</strong></p>
 <p>Print the page labels in plain text
 (<strong>-print-page-labels</strong>) or JSON
 (<strong>-print-page-labels-json</strong>) format.</p>
-<dl>
-<dt><strong>-include-data</strong></dt>
-<dd>
-<p>In JSON format, include the attachment data as well as metadata.</p>
-</dd>
-</dl>
 <p><strong>cpdf -composition[-json] in.pdf</strong></p>
 <p>Print the composition of a PDF, showing how much space is taken by
 images, fonts etc.</p>
@@ -2736,14 +2730,14 @@ from, for example, <strong>-list-images-used</strong>.</p>
 program.</p>
 </dd>
 </dl>
-<p><strong>cpdf -blacktext in.pdf</strong> [&lt;range&gt;] <strong>-o
-out.pdf</strong></p>
+<p><strong>cpdf -blacktext in.pdf</strong> [&lt;range&gt;] [-color
+&lt;color&gt;] <strong>-o out.pdf</strong></p>
 <p>Make all text black.</p>
-<p><strong>cpdf -blacklines in.pdf</strong> [&lt;range&gt;] <strong>-o
-out.pdf</strong></p>
+<p><strong>cpdf -blacklines in.pdf</strong> [&lt;range&gt;] [-color
+&lt;color&gt;] <strong>-o out.pdf</strong></p>
 <p>Make all lines black.</p>
-<p><strong>cpdf -blackfills in.pdf</strong> [&lt;range&gt;] <strong>-o
-out.pdf</strong></p>
+<p><strong>cpdf -blackfills in.pdf</strong> [&lt;range&gt;] [-color
+&lt;color&gt;] <strong>-o out.pdf</strong></p>
 <p>Make all fills black.</p>
 <p><strong>cpdf -reveal-text in.pdf</strong> [&lt;range&gt;] <strong>-o
 out.pdf</strong></p>
@@ -2793,7 +2787,7 @@ in.pdf -o out.pdf</strong></p>
 <p><strong>cpdf -remove-obj &lt;object number&gt; in.pdf -o
 out.pdf</strong></p>
 <p><strong>cpdf -extract-stream[-decompress] &lt;object
-specification&gt; in.pdf -o out.dat</strong></p>
+specification&gt; in.pdf [-o out.dat | -stdout]</strong></p>
 <p><strong>cpdf -replace-stream &lt;object specification&gt;
 -replace-stream-with &lt;filename&gt; in.pdf -o out.pdf</strong></p>
 <p>Low level operations to explore and edit PDF files object-by-object.
@@ -2817,11 +2811,11 @@ output on <strong>stdout</strong>.</p>
 <p>Do not call exit() after an error.</p>
 <p><strong>cpdf -remove-stream-content in.pdf -o out.pdf</strong></p>
 <p>Remove stream content when writing.</p>
-<p><strong>cpdf -show-bboxes in.pdf</strong> [-light] <strong>-o
-out.pdf</strong></p>
-<p>Show bounding boxes of objects on page.</p>
-<p><strong>cpdf -show-bboxes-shape &lt;boxspec&gt;</strong> [-light]
+<p><strong>cpdf -show-bboxes in.pdf</strong> [&lt;range&gt;] [-light]
 <strong>-o out.pdf</strong></p>
+<p>Show bounding boxes of objects on page.</p>
+<p><strong>cpdf -show-bboxes-shape &lt;boxspec&gt; in.pdf</strong>
+[&lt;range&gt;] [-light] <strong>-o out.pdf</strong></p>
 <p>Show bounding boxes of objects on page which lie within a given
 rectangle “minx miny width height”.</p>
 <p><strong>cpdf -page-content in.pdf</strong> [&lt;range&gt;]

@@ -252,7 +252,7 @@ meet the standard. For `PDF/UA-2`, use `-create-pdf-ua-2` instead. To
 make it valid, you must also draw a top-level PDF/UA-2 Document tag as
 described below i.e:
 
-`cpdf -create-pdf-ua-2 "My Book" AND -draw -draw-struct-tree -namespace PDF2 -stag Document -end-stag -o out.pdf`
+`cpdf -create-pdf-ua-2 "My Book" AND -draw-struct-tree -draw -namespace PDF2 -stag Document -end-stag -o out.pdf`
 
 ## Drawing PDF/UA files
 

@@ -293,7 +293,7 @@ each page or each chunk of pages.
 \<format>**
 
 The output format has many options (see cpdfmanual.pdf for details). But the
-simplest is just to number the outputs in sequence. For example **cpdf in.pdf
+simplest is just to number the outputs in sequence. For example **cpdf -split in.pdf
 -o out%%%.pdf** will produce out001.pdf, out002.pdf and so on.
 
 **-chunk** \<n>
@@ -1417,7 +1417,7 @@ specified is disjoint, e.g "1-9, 30-40" or "odd".
 
 **cpdf -add-page-labels-json in.json -o out.pdf**
 
-Add page labels from a file like that produced by **-print-page-labels-json -include-data**.
+Add page labels from a file like that produced by **-print-page-labels-json**.
 
 **cpdf -remove-page-labels in.pdf -o out.pdf**
 
@@ -1427,10 +1427,6 @@ Remove the page labels.
 
 Print the page labels in plain text (**-print-page-labels**) or JSON
 (**-print-page-labels-json**) format.
-
-**-include-data**
-
-: In JSON format, include the attachment data as well as metadata.
 
 **cpdf -composition\[-json] in.pdf**
 
@@ -2504,15 +2500,15 @@ Remove all text from a PDF.
 
 : Remove only invisible text, such as that created by an OCR program. 
 
-**cpdf -blacktext in.pdf** \[\<range>] **-o out.pdf**
+**cpdf -blacktext in.pdf** \[\<range>] \[-color \<color>] **-o out.pdf**
 
 Make all text black.
 
-**cpdf -blacklines in.pdf** \[\<range>] **-o out.pdf**
+**cpdf -blacklines in.pdf** \[\<range>] \[-color \<color>] **-o out.pdf**
 
 Make all lines black.
 
-**cpdf -blackfills in.pdf** \[\<range>] **-o out.pdf**
+**cpdf -blackfills in.pdf** \[\<range>] \[-color \<color>] **-o out.pdf**
 
 Make all fills black.
 
@@ -2571,7 +2567,7 @@ Remove any internal PDF comments from the graphics streams of a document.
 
 **cpdf -remove-obj \<object number> in.pdf -o out.pdf**
 
-**cpdf -extract-stream\[-decompress] \<object specification> in.pdf -o out.dat**
+**cpdf -extract-stream\[-decompress] \<object specification> in.pdf [-o out.dat | -stdout]**
 
 **cpdf -replace-stream \<object specification> -replace-stream-with \<filename> in.pdf -o out.pdf**
 
@@ -2613,11 +2609,11 @@ Do not call exit() after an error.
 
 Remove stream content when writing.
 
-**cpdf -show-bboxes in.pdf** \[-light] **-o out.pdf**
+**cpdf -show-bboxes in.pdf** \[\<range>] \[-light] **-o out.pdf**
 
 Show bounding boxes of objects on page.
 
-**cpdf -show-bboxes-shape \<boxspec>** \[-light] **-o out.pdf**
+**cpdf -show-bboxes-shape \<boxspec> in.pdf** \[\<range>] \[-light] **-o out.pdf**
 
 Show bounding boxes of objects on page which lie within a given rectangle "minx miny width height".
 

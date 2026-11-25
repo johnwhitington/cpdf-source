@@ -7,8 +7,8 @@
     cpdf -redact-shape <rectangle> [application options]
          in.pdf [<range>] -o out.pdf
 
-    cpdf -redact-apply [application options] in.pdf -o out.pdf
-    cpdf -redact-apply-type <type> [application options] in.pdf -o out.pdf
+    cpdf -redact-apply [application options] in.pdf [<range>] -o out.pdf
+    cpdf -redact-apply-type <type> [application options] in.pdf [<range>] -o out.pdf
 
     cpdf -annotate <rectangle> [annotation options] in.pdf -o out.pdf
 
@@ -132,7 +132,7 @@ Acrobat or other interactive PDF software. Cpdf can apply these
 annotations to perform the redaction. To apply existing annotation
 redactions:
 
-`cpdf -redact-apply in.pdf 2 out.pdf`
+`cpdf -redact-apply in.pdf 2 -o out.pdf`
 
 > Apply redaction annotations on page two of `in.pdf`, writing to
 `out.pdf`
@@ -146,7 +146,7 @@ does not know about redaction annotations, you can use a different kind
 of annotation and Cpdf will use that annotation's bounding box as the
 redaction rectangle:
 
-`cpdf -redact-apply-type /Square in.pdf 2 out.pdf`
+`cpdf -redact-apply-type /Square in.pdf 2 -o out.pdf`
 
 > Apply Square (rectangle) annotations as if they were redaction
 annotations in `in.pdf`, writing to `out.pdf`
@@ -158,7 +158,7 @@ As above, the redaction itself is controlled through the options as
 
 To add new redaction annotations, we may write
 
-`cpdf -annotate "100 100 200 300" in.pdf 1 out.pdf`
+`cpdf -annotate "100 100 200 300" in.pdf 1 -o out.pdf`
 
 > Add a redaction annotation to page 1 of `in.pdf`, writing to `out.pdf`
 
@@ -172,7 +172,7 @@ red outline. We can change this with `-redact-color` and
 We can add text to, for example, show which rule required the redaction,
 with `-redact-overlay`:
 
-`cpdf -annotate "100 100 200 300" -redact-overlay "(b) (1) (A)" in.pdf 1 out.pdf`
+`cpdf -annotate "100 100 200 300" -redact-overlay "(b) (1) (A)" in.pdf 1 -o out.pdf`
 
 > Add a description redaction annotation to page 1 of `in.pdf`, writing to
 `out.pdf`

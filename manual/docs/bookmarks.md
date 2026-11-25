@@ -12,7 +12,7 @@
 
     cpdf -bookmarks-open-to-level <n> in.pdf -o out.pdf
 
-    cpdf -table-of-contents [-toc-title] [-toc-no-bookmark] [-toc-dot-leaders]  
+    cpdf -table-of-contents [-toc-title <title>] [-toc-no-bookmark] [-toc-dot-leaders]  
          [-font <font>] [-font-size <size>] [-embed-std14 /path/to/fonts]  
          [-process-struct-trees] [-subformat <subformat>]  
          in.pdf -o out.pdf

@@ -349,7 +349,7 @@ length entry.
 We can see if a PDF contains any JavaScript scripts or `javascript:`
 URIs:
 
-`cpdf -contains-javascript in.pdf -o out.pdf`
+`cpdf -contains-javascript in.pdf`
 
 > Prints `true` if the PDF contains JavaScript, `false` otherwise.
 
