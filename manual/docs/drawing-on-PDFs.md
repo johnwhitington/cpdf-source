@@ -5,7 +5,7 @@
     cpdf in.pdf [<range>] [-draw-struct-tree] [-underneath]
          -draw <draw operations> -o out.pdf
 
-    cpdf -text-width <text> [-font <font>] [-fontsize <fontsize>]
+    cpdf -text-width <text> [-font <font>] [-font-size <fontsize>]
 
 Building and showing paths:
 

@@ -427,7 +427,7 @@
 - -topline in addition to -midline
 - -producer and -creator may be used to alter producer and creator in conjunction with any other operation
 - -topline and -midline now apply to stamps
-- -list-spot-colours
+- -list-spot-colors
 - -bates-at-range and -bates-pad-to
 - -print-page-labels
 - -squeeze replaces smpdf

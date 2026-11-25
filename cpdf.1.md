@@ -1059,12 +1059,12 @@ Add blank pages before or after each page in the given range.
 
 : Use a separate PDF to act as the padding.
 
-**cpdf [-pad-multiple | -pad-multiple-before]** \[\<n>] **in.pdf -o out.pdf**
+**cpdf [-pad-multiple | -pad-multiple-before]** \<n> **in.pdf -o out.pdf**
 
 Add as many blank pages as are required before or after the original pages to
 make the file's length a multiple of the given number of pages
 
-**cpdf \[-impose \<pagesize> | impose-xy "\<x> \<y>"]** **in.pdf**
+**cpdf \[-impose \<pagesize> | -impose-xy "\<x> \<y>"]** **in.pdf**
 \[-impose-columns] \[-impose-rtl] \[-impose-btt] \[-impose-margin \<n>]
 \[-impose-spacing \<n>] \[-impose-linewidth \<n>] \[-fast]
 \[-process-struct-trees] **-o out.pdf**
@@ -1621,7 +1621,7 @@ full commentary, see cpdfmanual.pdf.
 
 **-1bpp-method** \<1bppmethod>
 
-: Specify method for 1bpp images. One of **JBIG2Lossy**, **JBIG2Lossless**, **CCITT**, **CCITTG4**.
+: Specify method for 1bpp images. One of **JBIG2Lossy**, **JBIG2**, **CCITT**, **CCITTG4**.
 
 **-jbig2-lossy-threshold** \<n>
 
@@ -2344,7 +2344,7 @@ Apply annotations as if they were redaction annotations. See options below.
 
 : Supply path to JBIG2 encoder. Only required when chopping images.
 
-**-magick** \<path>
+**-im** \<path>
 
 : Supply path to Imagemagick. Only required when chopping images.
 

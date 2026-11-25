@@ -980,14 +980,14 @@ Add a blank page after every n pages.
 \f[B]\-pad\-with\f[R] <filename>
 Use a separate PDF to act as the padding.
 .PP
-\f[B]cpdf [\-pad\-multiple | \-pad\-multiple\-before]\f[R] [<n>]
+\f[B]cpdf [\-pad\-multiple | \-pad\-multiple\-before]\f[R] <n>
 \f[B]in.pdf \-o out.pdf\f[R]
 .PP
 Add as many blank pages as are required before or after the original
 pages to make the file\(cqs length a multiple of the given number of
 pages
 .PP
-\f[B]cpdf [\-impose <pagesize> | impose\-xy \(lq<x> <y>\(rq]\f[R]
+\f[B]cpdf [\-impose <pagesize> | \-impose\-xy \(lq<x> <y>\(rq]\f[R]
 \f[B]in.pdf\f[R] [\-impose\-columns] [\-impose\-rtl] [\-impose\-btt]
 [\-impose\-margin <n>] [\-impose\-spacing <n>] [\-impose\-linewidth <n>]
 [\-fast] [\-process\-struct\-trees] \f[B]\-o out.pdf\f[R]
@@ -1556,7 +1556,7 @@ Reprocess JPEG 2000 images to the given quality level.
 .TP
 \f[B]\-1bpp\-method\f[R] <1bppmethod>
 Specify method for 1bpp images.
-One of \f[B]JBIG2Lossy\f[R], \f[B]JBIG2Lossless\f[R], \f[B]CCITT\f[R],
+One of \f[B]JBIG2Lossy\f[R], \f[B]JBIG2\f[R], \f[B]CCITT\f[R],
 \f[B]CCITTG4\f[R].
 .TP
 \f[B]\-jbig2\-lossy\-threshold\f[R] <n>
@@ -2185,7 +2185,7 @@ Only required when chopping images.
 Supply path to JBIG2 encoder.
 Only required when chopping images.
 .TP
-\f[B]\-magick\f[R] <path>
+\f[B]\-im\f[R] <path>
 Supply path to Imagemagick.
 Only required when chopping images.
 .TP

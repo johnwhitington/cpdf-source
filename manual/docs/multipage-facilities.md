@@ -4,11 +4,11 @@
 
     cpdf -pad-after in.pdf [<range>] [-pad-with pad.pdf] -o out.pdf
 
-    cpdf -pad-every <integer> in.pdf [-pad-with pad.pdf] -o out.pdf
+    cpdf -pad-every <n> in.pdf [-pad-with pad.pdf] -o out.pdf
 
-    cpdf -pad-multiple <integer> in.pdf -o out.pdf
+    cpdf -pad-multiple <n> in.pdf -o out.pdf
 
-    cpdf -pad-multiple-before <integer> in.pdf -o out.pdf
+    cpdf -pad-multiple-before <n> in.pdf -o out.pdf
 
     cpdf [-impose <pagesize> | -impose-xy "<x> <y>"]  
          [-impose-columns] [-impose-rtl] [-impose-btt]  
@@ -47,7 +47,7 @@ The dimensions of the padded page are derived from the boxes (media box,
 crop box etc.) of the page after or before which the padding is to be
 applied.
 
-The `-pad-every n` operation places a blank page after every n pages,
+The `-pad-every <n>` operation places a blank page after every n pages,
 excluding any last one. For example on a 9 page document this command
 adds a blank page after pages 3 and 6:
 
@@ -59,14 +59,14 @@ In all three of these operations, one may specify `-pad-with` providing
 a (usually one-page) PDF file to be used instead of a blank page. For
 example, a page saying "This page left intentionally blank".
 
-The `-pad-multiple n` operation adds blank pages so the document has a
+The `-pad-multiple <n>` operation adds blank pages so the document has a
 multiple of `n` pages. For example:
 
 `cpdf -pad-multiple 8 in.pdf -o out.pdf`
 
 > Add blank pages to `in.pdf` so it has a multiple of 8 pages.
 
-The `-pad-multiple-before n` operation adds the padding pages at the
+The `-pad-multiple-before <n>` operation adds the padding pages at the
 beginning of the file instead.
 
 ## Imposition

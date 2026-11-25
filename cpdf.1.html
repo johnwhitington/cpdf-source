@@ -1260,11 +1260,11 @@ pad.pdf] <strong>-o out.pdf</strong></dt>
 </dd>
 </dl>
 <p><strong>cpdf [-pad-multiple | -pad-multiple-before]</strong>
-[&lt;n&gt;] <strong>in.pdf -o out.pdf</strong></p>
+&lt;n&gt; <strong>in.pdf -o out.pdf</strong></p>
 <p>Add as many blank pages as are required before or after the original
 pages to make the file’s length a multiple of the given number of
 pages</p>
-<p><strong>cpdf [-impose &lt;pagesize&gt; | impose-xy “&lt;x&gt;
+<p><strong>cpdf [-impose &lt;pagesize&gt; | -impose-xy “&lt;x&gt;
 &lt;y&gt;”]</strong> <strong>in.pdf</strong> [-impose-columns]
 [-impose-rtl] [-impose-btt] [-impose-margin &lt;n&gt;] [-impose-spacing
 &lt;n&gt;] [-impose-linewidth &lt;n&gt;] [-fast] [-process-struct-trees]
@@ -1833,7 +1833,7 @@ For a full commentary, see cpdfmanual.pdf.</p>
 <dt><strong>-1bpp-method</strong> &lt;1bppmethod&gt;</dt>
 <dd>
 <p>Specify method for 1bpp images. One of <strong>JBIG2Lossy</strong>,
-<strong>JBIG2Lossless</strong>, <strong>CCITT</strong>,
+<strong>JBIG2</strong>, <strong>CCITT</strong>,
 <strong>CCITTG4</strong>.</p>
 </dd>
 <dt><strong>-jbig2-lossy-threshold</strong> &lt;n&gt;</dt>
@@ -2568,7 +2568,7 @@ below.</p>
 <dd>
 <p>Supply path to JBIG2 encoder. Only required when chopping images.</p>
 </dd>
-<dt><strong>-magick</strong> &lt;path&gt;</dt>
+<dt><strong>-im</strong> &lt;path&gt;</dt>
 <dd>
 <p>Supply path to Imagemagick. Only required when chopping images.</p>
 </dd>

@@ -202,13 +202,13 @@ Position may be set relative to certain common points:
   |`-topleft 10`           | Left of baseline 10 pts down and in from top left |
   |`-topleft "10 20"`      | Left of baseline 10 pts right and 20 pts down from top left |
   |`-topright 10`          | Right of baseline 10 pts down and left from top right |
-  |`-topright "10 20"`     | Right of baseline 10 pts down and 20 pts left from top right |
+  |`-topright "10 20"`     | Right of baseline 10 pts right and 20 pts down from top right |
   |`-left 10`              | Left of baseline 10 pts in from center left |
   |`-bottomleft 10`        | Left of baseline 10 pts in and up from bottom left |
-  |`-bottomleft "10 20"`   | Left of baseline 10 pts in and 20 pts up from bottom left |
+  |`-bottomleft "10 20"`   | Left of baseline 10 pts right and 20 pts up from bottom left |
   |`-bottom 10`            | Center of baseline 10 pts up from bottom center |
   |`-bottomright 10`       | Right of baseline 10 pts up and in from bottom right |
-  |`-bottomright "10 20"`  | Right of baseline 10 pts up and 20 pts in from bottom right |
+  |`-bottomright "10 20"`  | Right of baseline 10 pts left and 20 pts up from bottom right |
   |`-right 10`             | Right of baseline 10 pts in from the center right |
   |`-diagonal`             | Diagonal, bottom left to top right, centered on page |
   |`-reverse-diagonal`     | Diagonal, top left to bottom right, centered on page |
@@ -360,7 +360,7 @@ A rectangle may be placed on one or more pages by using the
 `-add-rectangle <size>` command. Most of the options discussed above for
 text placement apply in the same way. For example:
 
-    cpdf -add-rectangle "200 300" -pos-right 30 -color red -outline in.pdf -o out.pdf
+    cpdf -add-rectangle "200 300" -pos-right "30 30" -color red -outline in.pdf -o out.pdf
 
 This can be used to blank out or highlight part of the document. The
 following positioning options work as you would expect: `-topleft`,
