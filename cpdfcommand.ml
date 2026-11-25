@@ -267,6 +267,7 @@ type op =
   | FlattenAnnotations
   | Sanitize
   | RemovePageComments
+  | RemoveThumbnails
 
 let string_of_op = function
   | PrintFontEncoding _ -> "PrintFontEncoding"
@@ -457,6 +458,7 @@ let string_of_op = function
   | FlattenAnnotations -> "FlattenAnnotations"
   | Sanitize -> "Sanitize"
   | RemovePageComments -> "RemovePageComments"
+  | RemoveThumbnails -> "RemoveThumbnails"
 
 (* Inputs: filename, pagespec. *)
 type input_kind = 
@@ -3489,6 +3491,7 @@ let specs =
    ("-remove-page-comments", Arg.Unit (setop RemovePageComments), " Remove page comments");
    ("-only-invisible", Arg.Unit (fun () -> args.only_invisible <- true), " Only remove invisible text");
    ("-redact-sanitize", Arg.Unit (fun () -> args.redact_sanitize <- true), " Sanitize after redaction");
+   ("-remove-thumbnails", Arg.Unit (fun () -> setop RemoveThumbnails ()), " Remove thumbnails");
    (* Undocumented. *)
    ("-test-extract-text", Arg.Unit (fun () -> setop TestExtractText ()), "")]
 
@@ -5707,6 +5710,11 @@ let rec go () =
   | RemovePageComments ->
       let pdf = get_single_pdf args.op false in
       let pdf = remove_page_comments pdf in
+        write_pdf false pdf
+  | RemoveThumbnails ->
+      let pdf = get_single_pdf args.op false in
+      let pdf = remove_page_comments pdf in
+        Cpdfutil.remove_dict_entry pdf "/Thumb" None;
         write_pdf false pdf
 
 (* Advise the user if a combination of command line flags makes little sense,
