@@ -1764,22 +1764,36 @@ Give the number of pages.
 Give the paper size, e.g \(lqa3landscape\(rq or \(lq200pt 600pt\(rq
 .PP
 \f[B]cpdf \-typeset <filename>\f[R] [\-create\-pdf\-papersize
-<papersize>] [\-font <font>] [\-font\-size <n>] [\-subformat
-<subformat>] [\-title <string>] \f[B]\-o out.pdf\f[R]
+<papersize>] [\-font <font>] [\-font\-size <n>] [\-color <color>]
+[\-margin <n>] [\-opacity <n>] [\-line\-spacing <n>] [\-outline]
+[\-linewidth <n>] [\-subformat <subformat>] [\-title <string>] \f[B]\-o
+out.pdf\f[R]
 .PP
 Typeset a text file into a PDF.
 .TP
 \f[B]\-create\-pdf\-papersize\f[R] <papersize>
 Give the paper size.
 .TP
-\f[B]\-margin\f[R] <n>
-Set the margin.
-.TP
 \f[B]\-font\f[R] <font>
 The font (default Times\-Roman).
 .TP
 \f[B]\-font\-size\f[R] <n>
 The font size (default 12pt).
+.TP
+\f[B]\-color\f[R] <color>
+The text color.
+.TP
+\f[B]\-margin\f[R] <n>
+Set the margin.
+.TP
+\f[B]\-line\-spacing\f[R] <n>
+Set line spacing.
+.TP
+\f[B]\-outline\f[R]
+Use outline text.
+.TP
+\f[B]\-linewidth\f[R] <n>
+Set line width.
 .TP
 \f[B]\-subformat\f[R] <subformat>
 Specify PDF/UA\-1 or PDF/UA\-2 to make a conforming file.

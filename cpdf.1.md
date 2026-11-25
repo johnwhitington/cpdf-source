@@ -1844,18 +1844,16 @@ Create a new PDF (default: one page, A4 portrait).
 
 : Give the paper size, e.g "a3landscape" or "200pt 600pt"
 
-**cpdf -typeset \<filename>** \[-create-pdf-papersize \<papersize>] \[-font \<font>]
-\[-font-size \<n>] \[-subformat \<subformat>] \[-title \<string>] **-o out.pdf**
+**cpdf -typeset \<filename>** \[-create-pdf-papersize \<papersize>] \[-font
+\<font>] \[-font-size \<n>] \[-color \<color>]  \[-margin \<n>] \[-opacity \<n>]
+\[-line-spacing \<n>] \[-outline] \[-linewidth \<n>] \[-subformat \<subformat>]
+\[-title \<string>] **-o out.pdf**
 
 Typeset a text file into a PDF.
 
 **-create-pdf-papersize** \<papersize>
 
 : Give the paper size.
-
-**-margin** \<n>
-
-: Set the margin.
 
 **-font** \<font>
 
@@ -1864,6 +1862,26 @@ Typeset a text file into a PDF.
 **-font-size** \<n>
 
 : The font size (default 12pt).
+
+**-color** \<color>
+
+: The text color. 
+
+**-margin** \<n>
+
+: Set the margin.
+
+**-line-spacing** \<n>
+
+: Set line spacing.
+
+**-outline**
+
+: Use outline text.
+
+**-linewidth** \<n>
+
+: Set line width.
 
 **-subformat** \<subformat>
 
