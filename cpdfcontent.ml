@@ -382,7 +382,7 @@ let extra_metrics = function
   | Pdftext.CIDKeyedFont (_, {cid_fontdescriptor = {ascent; descent; fontbbox}}, _) ->
       begin match fontbbox with
       | (0., 0., 0., 0.) -> (ascent, descent)
-      | (_, miny, _, maxy) -> (miny, maxy)
+      | (_, miny, _, maxy) -> (maxy, miny)
       end
   | Pdftext.StandardFont (font, _) ->
       let header, _, _, _ = Pdfstandard14.afm_data font in
@@ -1039,10 +1039,12 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
       [op]
   | Pdfops.Op_Tj s ->
       clear tj_we_deleted;
-      (if !tj_we_deleted then [Pdfops.Op_MP "/CPDF_REMOVED_TEXT"] else []) @ [optimise_tj (process_tj ~f ~stack ~state ~resources s)]
+      let marker = if !tj_we_deleted then [Pdfops.Op_MP "/CPDF_REMOVED_TEXT"] else [] in
+        marker @ [optimise_tj (process_tj ~f ~stack ~state ~resources s)]
   | Pdfops.Op_TJ l ->
       clear tj_we_deleted;
-      (if !tj_we_deleted then [Pdfops.Op_MP "/CPDF_REMOVED_TEXT"] else []) @ [Pdfops.Op_TJ (optimise_capital_tj (process_capital_tj ~f ~stack ~state ~resources l))]
+      let marker = if !tj_we_deleted then [Pdfops.Op_MP "/CPDF_REMOVED_TEXT"] else [] in
+        marker @ [Pdfops.Op_TJ (optimise_capital_tj (process_capital_tj ~f ~stack ~state ~resources l))]
   | Pdfops.Op_' s ->
       ignore (map (process_op ~pdf ~helpers ~f ~stack ~state ~resources) [Pdfops.Op_T']);
       Pdfops.Op_T'::process_op ~pdf ~helpers ~f ~stack ~state ~resources (Pdfops.Op_Tj s)

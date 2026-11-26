@@ -495,7 +495,7 @@ type font =
   | OtherFont of string
 
 let parse_link_redaction_spec = function
-  | "remove,touching" -> Cpdfredact.LinkRemoveTouching
+  | "remove,touches" -> Cpdfredact.LinkRemoveTouching
   | "remove,page" -> Cpdfredact.LinkRemovePage
   | "leave" -> Cpdfredact.LinkLeave
   | s -> error ("bad link redaction specification " ^ s)
@@ -5713,7 +5713,6 @@ let rec go () =
         write_pdf false pdf
   | RemoveThumbnails ->
       let pdf = get_single_pdf args.op false in
-      let pdf = remove_page_comments pdf in
         Cpdfutil.remove_dict_entry pdf "/Thumb" None;
         write_pdf false pdf
 
