@@ -5688,6 +5688,9 @@ The following table lists each mechanically-verifiable test from the Matterhorn 
 
 Redaction removes content from a PDF, erasing it entirely rather than merely covering it up.
 
+\section{The redaction landscape}
+
+
 \section{Redacting whole pages}
 
 To redact one or more whole pages we give the page range we use \texttt{-redact}. Such pages will be emptied of content, and any annotations and page resources removed. The page dimensions remain the same.
@@ -5892,6 +5895,41 @@ cpdf in.pdf -remove-files AND -remove-page-comments AND\\
 
 \noindent Alternatively, sanitization may be performed during redaction by adding \texttt{-redact-sanitize} to the command line when using \texttt{-redact}, \texttt{-redact-shape} or \texttt{-redact-apply[-type]}.
 
+\section{Redaction pre-sets}
+
+We can use \texttt{-redaction-preset <presets>} as a shorthand for common combinations of the options already introduced:
+
+\begin{verbatim}
+all-content:
+  -redact-vectors "remove,touches"
+  -redact-images "remove,touches"
+  -redact-inline-images "remove,touches"
+  -redact-annotations "remove,touches"
+
+all-content-scan:
+  -redact-vectors "remove,touches"
+  -redact-images "chop"
+  -redact-inline-images "remove,touches"
+  -redact-annotations "remove,touches"
+
+process-metadata:
+  -redact-bookmarks "remove,touches"
+  -redact-links "remove,touches"
+  -redact-structure "remove,innermost"
+  
+sanitize:
+  -redact-sanitize
+\end{verbatim}
+
+\noindent For example:
+
+  \begin{framed}
+    \noindent\small\verb!cpdf -redact-apply -redact-preset "all-content,process-metadata"!\\
+    \noindent\small\verb!     in.pdf -o out.pdf!
+
+    \vspace{2.5mm}
+    \noindent Redact a document with presets.
+  \end{framed}
 
 \section{Evidence of redaction}
 
@@ -6054,7 +6092,7 @@ The operation \texttt{-reveal-text} will change the text rendering mode of all t
     \noindent\small\verb!cpdf -reveal-text in.pdf -o out.pdf!
   \end{framed}
 
-Using \texttt{-reveal-text} prior to \texttt{-blacktext} will reveal all possible text.
+\noindent Using \texttt{-reveal-text} prior to \texttt{-blacktext} will reveal all possible text.
 
   \section{Hairline Removal}
 \index{hairline removal}
