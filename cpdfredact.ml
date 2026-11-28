@@ -32,10 +32,16 @@ let box_matches ~detection ~invert (minx, miny, maxx, maxy) (Cpdfcontent.Quad (x
            | None -> false
            end
        | Covering perc ->
-           match box_overlap_float minx miny maxx maxy bminx bminy bmaxx bmaxy with
-           | None -> false
-           | Some overlap ->
-               area overlap /. area (bminx, bminy, bmaxx, bmaxy) > (perc /. 100.))
+           if area (bminx, bminy, bmaxx, bmaxy) = 0. then (* Avoid division by zero below, fall back to touching test. *)
+             begin match any_intersection (minx, miny, maxx, maxy) (bminx, bminy, bmaxx, bmaxy) with
+             | Some _ -> true
+             | None -> false
+             end
+           else
+             match box_overlap_float minx miny maxx maxy bminx bminy bmaxx bmaxy with
+             | None -> false
+             | Some overlap ->
+                 area overlap /. area (bminx, bminy, bmaxx, bmaxy) > (perc /. 100.))
 
 (* Cpdfcontent has annotated where objects have been removed. We use this to
    remove marked content sections (but not their contents) if they contain
@@ -174,7 +180,7 @@ let postprocess_structure ~struct_spec pdf page ops =
 
 (* Redact a path on a page *)
 let redact_page
-  pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~bookmark_spec ~link_spec ~struct_spec
+  pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~struct_spec
   ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~path:((minx, miny, maxx, maxy) as path) ~invert page
 =
   let fi x = if invert then not x else x in
@@ -302,57 +308,6 @@ let redact_annotations pdf range ~detection ~invert ~paths =
       pdf
       range
 
-let redact
-  pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~bookmark_spec ~link_spec ~struct_spec
-  ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~paths ~invert ~show ~color ~outline ~opacity ~linewidth ~underneath range
-=
-  preprocess_jbig2lossy_to_jbig2lossless ~jbig2dec:path_to_jbig2dec ~path_to_jbig2enc pdf;
-  Cpdfutil.progress_line "Redacting content...";
-  let pdf =
-    Cpdfpage.process_pages
-      (Pdfpage.ppstub
-        (fun pnum page ->
-           if mem pnum range then
-             let path = List.nth paths (pnum - 1) in
-               redact_page
-                 pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~bookmark_spec ~link_spec ~struct_spec
-                 ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~path ~invert page else page))
-      pdf
-      range
-  in
-    let pdf =
-      match annotation_spec with
-      | Remove, Some detection -> redact_annotations pdf range ~detection ~invert ~paths
-      | _ -> pdf
-    in
-    if show then
-      begin
-        Cpdfutil.progress_line "Adding redaction appearance...";
-        if length (collate compare (sort compare paths)) = 1 then
-          let minx, miny, maxx, maxy = hd paths in
-            Cpdfaddtext.addrectangle
-              false (Printf.sprintf "%s %s" (string_of_float (maxx -. minx)) (string_of_float (maxy -. miny)))
-              color outline linewidth opacity (Cpdfposition.PosLeft(minx, miny)) "/Absolute" underneath range pdf
-        else
-          let pdf = ref pdf in
-            iter
-              (fun pnum ->
-                let minx, miny, maxx, maxy = List.nth paths (pnum - 1) in
-                  pdf :=
-                    Cpdfaddtext.addrectangle
-                      false (Printf.sprintf "%s %s" (string_of_float (maxx -. minx)) (string_of_float (maxy -. miny)))
-                      color outline linewidth opacity (Cpdfposition.PosLeft(minx, miny)) "/Absolute" underneath [pnum] !pdf)
-              range;
-            !pdf
-      end
-    else
-      pdf
-
-let redact_add_rectangle_pnum pdf ~path:(minx, miny, maxx, maxy) ~color ~outline ~opacity ~linewidth ~underneath pnum =
-  Cpdfaddtext.addrectangle
-    false (Printf.sprintf "%s %s" (string_of_float (maxx -. minx)) (string_of_float (maxy -. miny)))
-    color outline linewidth opacity (Cpdfposition.PosLeft(minx, miny)) "/Absolute" underneath [pnum] pdf
-
 (* Remove any link annotation, anywhere in the document, which points to
    redacted content. Together with the link text, it may hint at redacted
    information. 
@@ -392,18 +347,18 @@ let matches ~invert ~fastrefnums d link_spec pnum path =
                 let rec link_remove_touching = function
                 | Pdfdest.XYZ (_, l, t, _) ->
                     (* Take point (l, t) if non-null. *)
-                    let l = if l = None then min_float else unopt l in
-                    let t = if t = None then min_float else unopt t in
+                    let l = if l = None then ~-. max_float else unopt l in
+                    let t = if t = None then ~-. max_float else unopt t in
                       matches_path ~invert (l, t, l, t) path
                 | FitR (tp, l, b, r, t) ->
                     matches_path ~invert (l, b, r, t) path
                 | FitH (tp, Some t) | FitBH (tp, Some t) ->
                     (* Consider a rectangle infinitely wide at position t (if not null). *)
-                    link_remove_touching (FitR (tp, min_float, t, max_float, t))
+                    link_remove_touching (FitR (tp, ~-. max_float, t, max_float, t))
                 | FitH _ | FitBH _ -> false
                 | FitV (tp, Some l) | FitBV (tp, Some l) ->
                     (* Consider a rectangle infinitely high at position t (if not null). *)
-                    link_remove_touching (FitR (tp, l, min_float, l, max_float))
+                    link_remove_touching (FitR (tp, l, ~-. max_float, l, max_float))
                 | FitV _ | FitBV _ -> false
                 | Fit _ | FitB _ -> 
                     (* Shows whole page, so must match. *)
@@ -413,6 +368,7 @@ let matches ~invert ~fastrefnums d link_spec pnum path =
                     false
                 in
                   link_remove_touching d
+
 
 let redact_links ~invert ~link_spec pdf pnum path =
   let refnums = Pdf.page_reference_numbers pdf in
@@ -471,6 +427,66 @@ let redact_bookmarks ~invert ~bookmark_spec pdf pnum path =
   in
     Pdfmarks.add_bookmarks marks' pdf
 
+let redact
+  pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~bookmark_spec ~link_spec ~struct_spec
+  ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~paths ~invert ~show ~color ~outline ~opacity ~linewidth ~underneath range
+=
+  preprocess_jbig2lossy_to_jbig2lossless ~jbig2dec:path_to_jbig2dec ~path_to_jbig2enc pdf;
+  Cpdfutil.progress_line "Redacting content...";
+  let pdf =
+    Cpdfpage.process_pages
+      (Pdfpage.ppstub
+        (fun pnum page ->
+           if mem pnum range then
+             let path = List.nth paths (pnum - 1) in
+               redact_page
+                 pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~struct_spec
+                 ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~path ~invert page else page))
+      pdf
+      range
+  in
+    let pdf = ref pdf in
+      iter2
+        (fun path pnum ->
+          pdf := redact_bookmarks ~invert ~bookmark_spec !pdf pnum path;
+          pdf := redact_links ~invert ~link_spec !pdf pnum path)
+        paths
+        range;
+      let pdf = !pdf in
+      let pdf =
+        match annotation_spec with
+        | Remove, Some detection -> redact_annotations pdf range ~detection ~invert ~paths
+        | _ -> pdf
+      in
+      if show then
+        begin
+          Cpdfutil.progress_line "Adding redaction appearance...";
+          if length (collate compare (sort compare paths)) = 1 then
+            let minx, miny, maxx, maxy = hd paths in
+              Cpdfaddtext.addrectangle
+                false (Printf.sprintf "%s %s" (string_of_float (maxx -. minx)) (string_of_float (maxy -. miny)))
+                color outline linewidth opacity (Cpdfposition.PosLeft(minx, miny)) "/Absolute" underneath range pdf
+          else
+            let pdf = ref pdf in
+              iter
+                (fun pnum ->
+                  let minx, miny, maxx, maxy = List.nth paths (pnum - 1) in
+                    pdf :=
+                      Cpdfaddtext.addrectangle
+                        false (Printf.sprintf "%s %s" (string_of_float (maxx -. minx)) (string_of_float (maxy -. miny)))
+                        color outline linewidth opacity (Cpdfposition.PosLeft(minx, miny)) "/Absolute" underneath [pnum] !pdf)
+                range;
+              !pdf
+        end
+      else
+        pdf
+
+let redact_add_rectangle_pnum pdf ~path:(minx, miny, maxx, maxy) ~color ~outline ~opacity ~linewidth ~underneath pnum =
+  Cpdfaddtext.addrectangle
+    false (Printf.sprintf "%s %s" (string_of_float (maxx -. minx)) (string_of_float (maxy -. miny)))
+    color outline linewidth opacity (Cpdfposition.PosLeft(minx, miny)) "/Absolute" underneath [pnum] pdf
+
+
 (* Apply redaction annotations. *)
 let apply
   pdf ~appearance ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~bookmark_spec ~link_spec ~struct_spec ~path_to_jbig2dec
@@ -521,7 +537,7 @@ let apply
                       fold_left
                        (fun page path ->
                           redact_page
-                            pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~bookmark_spec ~link_spec ~struct_spec
+                            pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~struct_spec
                             ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~path ~invert page)
                        page
                        paths
@@ -540,7 +556,7 @@ let apply
                         rectangles =| (pnum, path);
                       let page =
                         redact_page
-                          pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~bookmark_spec ~link_spec ~struct_spec
+                          pdf ~text_spec ~image_spec ~inline_image_spec ~vector_spec ~annotation_spec ~struct_spec
                           ~path_to_jbig2dec ~path_to_convert ~path_to_jbig2enc ~color ~path ~invert page
                       in
                         if appearance then
@@ -691,7 +707,7 @@ let redact_whole_page ~struct_spec ~link_spec ~bookmark_spec pdf range =
       iter
         (fun pnum ->
            Cpdfutil.progress_page pnum;
-           let path = (min_float, min_float, max_float, max_float) in
+           let path = (~-. max_float, ~-. max_float, max_float, max_float) in
            let pdf' = redact_bookmarks ~invert:false ~bookmark_spec !pdf pnum path in
            let pdf'' = redact_links ~invert:false ~link_spec pdf' pnum path in
              Cpdfutil.progress_endpage ();

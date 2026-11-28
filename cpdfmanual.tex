@@ -5690,7 +5690,7 @@ Redaction removes content from a PDF, erasing it entirely rather than merely cov
 
 \section{The redaction landscape}
 
-(need a sentence here)
+Before listing the commands Cpdf provides for different kinds of redaction it's important to define our terms and investigate the whole space of redaction possibilities.
 
 \subsection{Redaction before computers and with computers}
 
@@ -5706,7 +5706,18 @@ Redaction removes content from a PDF, erasing it entirely rather than merely cov
 
 \subsection{Redaction in Cpdf}
 
-Description of subsections to follow vis-a-vis what Cpdf supports and which pieces of its support are in which sections below.
+Cpdf supports redaction by rasterization, structural redaction and sanitization. Rasterization is dealt with by preprocessing with \texttt{-rasterize} (including \texttt{-rasterize-remake} for the most severe case) as described in Chapter 13. Structural redaction and sanitization are dealt with in this chapter:
+
+\begin{itemize}
+\item \textit{20.2 Redacting whole pages} describes how to redact whole pages by removing all their content and metadata.
+\item \textit{20.3 Redacting content selectively} describes how to redact a given rectangle on the page.
+\item \textit{20.4 Applying redaction annotations} describes how to use pre-existing annotations to redact content across a PDF.
+\item \textit{20.5 Creating redaction annotations} describes how to build our own redaction annotations, which may be redacted using any software.
+\item \textit{20.6 Removing metadata} describes additional options to remove metadata associated with redacted content.
+\item \textit{20.7 Santization} describes document-level sanitization of potentially revealing information.
+\item \textit{20.8 Redaction pre-sets} describes pre-sets which make Cpdf redaction command lines shorter and easier to manage.
+\item \textit{20.9 Evidence of redaction} describes ways for expert users to check Cpdf's redaction has succeeded. 
+\end{itemize}
 
 \section{Redacting whole pages}
 
@@ -5804,7 +5815,7 @@ We can add text to, for example, show which rule required the redaction, with \t
 
 The following options from Chapter 8 may be used to style the text: \texttt{-font}, \texttt{-font-size}, \texttt{-opacity}, \texttt{-line-spacing}, \texttt{-outline}, \texttt{-linewidth}.
 
-\section{Removing other metadata}
+\section{Removing metadata}
 
 Even when we have removed the required page content, it may leak in other places. For example, bookmarks or links which point to the redacted content or in PDF/UA logical structure. Cpdf provides options to be added to all redaction commands (such as \texttt{-redact-shape}) to redact such data:
 

@@ -262,7 +262,7 @@ let bbox_of_path (_, subpaths) =
   in
     fold_left
       box_union_float
-      (max_float, min_float, max_float, min_float)
+      (max_float, ~-. max_float, max_float, ~-. max_float)
       (map bbox_of_segment segments)
 
 (* Eventually this will be replaced with one operating on Pdfspace.t, of course. *)
@@ -1186,9 +1186,9 @@ let rec process_op ~pdf ~helpers ~f ~stack ~state ~resources op =
                   let minx, miny, maxx, maxy =
                     match Pdf.lookup_direct pdf "/BBox" xobj with
                     | Some x ->
-                        begin try Pdf.parse_rectangle pdf x with _ -> (min_float, min_float, max_float, max_float) end
+                        begin try Pdf.parse_rectangle pdf x with _ -> (~-. max_float, ~-. max_float, max_float, max_float) end
                     | None -> 
-                        (min_float, min_float, max_float, max_float)
+                        (~-. max_float, ~-. max_float, max_float, max_float)
                   in
                   let saved_font_cache = Hashtbl.copy !state.text_state.font_cache in
                     ignore (process_op ~pdf ~helpers ~f ~stack ~state ~resources Pdfops.Op_q);
